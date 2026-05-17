@@ -48,6 +48,19 @@ INA226_REFCIRCUIT = ReferenceCircuit(
     footprint="Package_SO:VSSOP-10_3x3mm_P0.5mm",
     description="Bidirectional I2C current/power monitor 16-bit, 36V common-mode",
     external_parts=(
+        # R_SENSE shunt - the defining current-sense element for each instance.
+        # 10 milliohm shunt accepts up to 8A continuous (P = I^2 * R = 0.64W
+        # at 8A, derating to 0.32W margin within 0.5W package rating). Any
+        # rail above 8A would need a smaller shunt; we standardise on 10mR
+        # for all six monitored rails so a single shared part can be stocked.
+        ExternalPart(
+            from_pin="IN+",
+            to_net="IN-",
+            part_token="R_SENSE_10mR_2010_1%",
+            justification="DS Sec 9.3 + Eq 7: R_SENSE = V_FS / I_max; "
+                          "10 milliohm gives 81.92mV full-scale at 8.192A "
+                          "(20mV/2.5uV/LSB resolution = INA226 native range)",
+        ),
         # VS supply decoupling
         ExternalPart(
             from_pin="VS",
@@ -55,17 +68,16 @@ INA226_REFCIRCUIT = ReferenceCircuit(
             part_token="100n_0402_X7R",
             justification="DS Sec 9.2: VS decoupling - 100nF close to pin",
         ),
-        # Differential input filter (recommended for noise immunity, DS Fig 32)
-        # 10 ohm + 100nF on each side - we use 100R for cleanliness
+        # Differential input filter (DS Fig 32 recommendation, 10R + 100nF)
         ExternalPart(
             from_pin="IN+",
             to_net="IN-",
             part_token="100n_0402_X7R",
-            justification="DS Sec 9.3: Differential filter cap between IN+ / IN- (optional)",
+            justification="DS Sec 9.3 + Fig 32: Differential filter cap "
+                          "between IN+ / IN- (noise immunity)",
         ),
-        # I2C pull-ups (on the shared bus - one set per bus, not per IC)
-        # We don't add pull-ups here because the bus shares pull-ups
-        # with other I2C devices; tracked elsewhere
+        # I2C pull-ups are shared on the bus (4.7k), provided by the FUSB302
+        # refcircuit on the +3V3_SC bus and need only one set per bus.
     ),
     strap_pins=(
         # Each INA226 instance gets its own A0/A1 strap to set bus address.

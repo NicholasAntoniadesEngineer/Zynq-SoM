@@ -1,15 +1,23 @@
-"""Main carrier schematic generator.
+"""Carrier schematic generator (zone-based, multi-instance, fail-hard).
 
-Produces a single comprehensive A1 schematic file containing every
-component the carrier needs. Sections are organized by function with
-text-banner titles. Each IC's ReferenceCircuit is placed adjacent to
-the IC, with the required external parts wired up - decoupling caps via
-``place_decoupling`` (Manhattan-routed with junctions), pull-ups and
-other externals via direct routing with global labels at the network
-endpoint.
+Produces ``carrier_template.kicad_sch`` containing every IC instance on the
+carrier board, each with its own dedicated rectangular zone, every
+datasheet-required external part placed inside the zone via a non-colliding
+free-space scan, and every SoM-connector pin labelled with its carrier-side
+net name (per ``io_assignment.csv``).
+
+Design rules (no shortcuts):
+    1. Every IC instance from ``IC_INSTANCES`` (matching ``IC_INSTANCE_COUNT``)
+       gets placed - no skip-on-missing-symbol.
+    2. Every wire is grid-aligned and orthogonal (Rule J1, J2 strict).
+    3. No wires share both endpoints (Rule J3 strict).
+    4. Every T-intersection has a junction (Rule J4 strict).
+    5. No wire passes through any placed component (Rule J5 strict).
+    6. Hierarchical-label round-trip enforced (Rule J6 strict).
+    7. SoM connector pins are labelled per ``io_assignment.csv``.
 
 Run with:
-    python -m scripts.carrier.generator
+    python scripts/create_carrier_template_schematic.py
 """
 
 from __future__ import annotations
@@ -18,23 +26,28 @@ import csv
 import json
 import re
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.carrier.core.geometry import BoundingBox
-from scripts.carrier.core.parts import DECOUPLING_REQUIRED_PIN_TYPES
-from scripts.carrier.core.placement import can_place_decoupling, place_decoupling
+from scripts.carrier.core.layout import (
+    IC_BODY_INSET_MM,
+    IcZone,
+    SECTION_LAYOUT,
+    compute_zones,
+)
 from scripts.carrier.core.refcircuit import ExternalPart, ReferenceCircuit
 from scripts.carrier.core.registry import REGISTRY
 from scripts.carrier.core.sexpr import (
+    GRID_TOLERANCE_MM,
     KICAD_GRID_MM,
     Point,
     SExp,
     global_label,
+    junction,
     local_label,
     make_uuid,
     property_,
-    screen_left,
-    screen_right,
     snap_to_grid,
     text_label,
     wire,
@@ -58,35 +71,17 @@ SCH_PATH = CARRIER_DIR / "carrier_template.kicad_sch"
 PROJECT_PATH = CARRIER_DIR / "carrier_template.kicad_pro"
 SYMBOL_LIB_PATH = CARRIER_DIR / "symbol_Zynq_SoM.kicad_sym"
 VALIDATION_REPORT_PATH = CARRIER_DIR / "validation_report.md"
+IO_ASSIGNMENT_PATH = CARRIER_DIR / "io_assignment.csv"
 
 PAPER_SIZE: str = "A1"
 PROJECT_NAME: str = "carrier_template"
-DECOUPLING_STACK_PITCH_MM: float = 7.62
-EXTERNAL_PART_HORIZONTAL_OFFSET_MM: float = 7.62
-EXTERNAL_PART_LABEL_GAP_MM: float = 5.08
+SCHEMATIC_FORMAT_VERSION: int = 20250114
+SCHEMATIC_GENERATOR_NAME: str = "eeschema"
+SCHEMATIC_GENERATOR_VERSION: str = "9.0"
+KICAD_PROPERTY_FONT_MM: float = 1.27
+JUNCTION_DOT_DIAMETER_MM: float = 0.0
 
-
-SECTION_LAYOUT: dict[str, tuple[float, float, str]] = {
-    "som_j1":        (10.0,   20.0, "SoM J1 - Power + USB + JTAG + SDIO + Ethernet MDI"),
-    "som_j2":        (75.0,   20.0, "SoM J2 - Bank 13 + Bank 33 IO"),
-    "som_j3":        (140.0,  20.0, "SoM J3 - Bank 33/34/35 IO"),
-    "power":         (205.0,  20.0, "Power: VIN + VCCO LDOs + Indicators"),
-    "usbc_stm32":    (310.0,  20.0, "USB-C #1 (STM32 PD/Data)"),
-    "usbc_otg":      (310.0, 130.0, "USB-C #2 (Zynq OTG via USB3318)"),
-    "ethernet":      (410.0,  20.0, "Ethernet: RJ45 + HX5008 Magnetics + ESD"),
-    "microsd":       (410.0, 130.0, "microSD Card Socket"),
-    "uart_bridge":   (410.0, 200.0, "USB-UART Bridge (CP2102N)"),
-    "jtag_swd":      (410.0, 280.0, "JTAG + SWD Headers"),
-    "hdmi_tx":       (510.0,  20.0, "HDMI TX (Source)"),
-    "hdmi_rx":       (510.0, 130.0, "HDMI RX (Sink)"),
-    "lvds_lcd":      (510.0, 240.0, "LVDS LCD Connector"),
-    "mipi_camera":   (510.0, 320.0, "MIPI CSI-2 Camera"),
-    "fmc_lpc":       (640.0,  20.0, "FMC-LPC Expansion"),
-    "pmod":          (640.0, 170.0, "PMOD Headers x4"),
-    "aux":           (640.0, 300.0, "Aux: RTC + EEPROM + Power Monitoring"),
-    "xadc_clk":      (760.0, 300.0, "XADC + MRCC Clock SMAs"),
-    "boot_switches": (760.0, 400.0, "Boot Mode + Reset"),
-}
+SOM_CONNECTOR_NAMES: tuple[str, ...] = ("J1", "J2", "J3")
 
 
 _REF_PREFIX_BY_FOOTPRINT_BUCKET: dict[str, str] = {
@@ -98,11 +93,42 @@ _REF_PREFIX_BY_FOOTPRINT_BUCKET: dict[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Schematic-construction container
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class SchematicBuild:
+    """Accumulates all schematic objects emitted during generation."""
+
+    placed_symbols: list[PlacedSymbol]
+    geometry_objects: list[SExp]
+    decorative_objects: list[SExp]
+    label_objects: list[SExp]
+    used_lib_ids: set[str]
+
+    @classmethod
+    def empty(cls) -> "SchematicBuild":
+        return cls(
+            placed_symbols=[],
+            geometry_objects=[],
+            decorative_objects=[],
+            label_objects=[],
+            used_lib_ids=set(),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Embedded SoM connector library access
+# ---------------------------------------------------------------------------
+
+
 def _read_existing_symbol_lib() -> str:
     """Read the J1/J2/J3 connector symbol definitions from the original lib."""
     if not SYMBOL_LIB_PATH.exists():
         raise FileNotFoundError(
-            f"Missing {SYMBOL_LIB_PATH}; run symbol_creation.bash first"
+            f"Missing {SYMBOL_LIB_PATH}; run scripts/symbol_creation.bash first"
         )
     return SYMBOL_LIB_PATH.read_text(encoding="utf-8")
 
@@ -127,7 +153,7 @@ def _extract_named_symbol(lib_text: str, symbol_name: str) -> str:
                 paren_depth -= 1
                 if paren_depth == 0:
                     return lib_text[start_index:char_index + 1]
-    raise ValueError("Unbalanced parens in symbol library")
+    raise ValueError(f"Unbalanced parens while extracting symbol {symbol_name!r}")
 
 
 def _rename_symbol(body_text: str, original_name: str, qualified_name: str) -> str:
@@ -138,32 +164,122 @@ def _rename_symbol(body_text: str, original_name: str, qualified_name: str) -> s
     )
 
 
-def _extract_pin_numbers(body_text: str) -> list[str]:
-    return re.findall(r'\(number\s+"([^"]+)"', body_text)
+@dataclass(frozen=True)
+class SomLibrarySymbol:
+    """A J1 / J2 / J3 connector symbol parsed from the existing kicad_sym."""
+
+    qualified_name: str
+    body_text: str
+    pin_records: tuple[tuple[str, Point, float], ...]
+
+
+def _extract_pin_records(body_text: str) -> tuple[tuple[str, Point, float], ...]:
+    """Parse ``(pin <type> <shape> (at x y angle) ... (number "N") ...)`` blocks.
+
+    Returns a tuple of (pin_number, position_in_symbol_local_space, angle).
+    """
+    records: list[tuple[str, Point, float]] = []
+    pattern = re.compile(
+        r'\(pin\s+\S+\s+\S+\s+\(at\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s*\)'
+        r'(?:.*?)\(number\s+"([^"]+)"',
+        re.DOTALL,
+    )
+    for match in pattern.finditer(body_text):
+        pin_x = float(match.group(1))
+        pin_y = float(match.group(2))
+        pin_angle = float(match.group(3))
+        pin_number = match.group(4)
+        records.append((pin_number, Point(pin_x, pin_y), pin_angle))
+    if not records:
+        raise ValueError("_extract_pin_records: no pins found in symbol body")
+    return tuple(records)
+
+
+def _load_som_library() -> tuple[SomLibrarySymbol, ...]:
+    """Parse J1/J2/J3 from the existing symbol library file."""
+    library_text = _read_existing_symbol_lib()
+    parsed: list[SomLibrarySymbol] = []
+    for connector_name in SOM_CONNECTOR_NAMES:
+        original_symbol_name = f"Zynq_SoM_{connector_name}"
+        qualified_name = f"Zynq_SoM:{original_symbol_name}"
+        body = _extract_named_symbol(library_text, original_symbol_name)
+        renamed = _rename_symbol(body, original_symbol_name, qualified_name)
+        pin_records = _extract_pin_records(body)
+        parsed.append(SomLibrarySymbol(
+            qualified_name=qualified_name,
+            body_text=renamed,
+            pin_records=pin_records,
+        ))
+    return tuple(parsed)
 
 
 # ---------------------------------------------------------------------------
-# Reference designator counter (per generator pass)
+# IO assignment loading
 # ---------------------------------------------------------------------------
 
 
-def _make_ref_counter() -> Counter[str]:
-    return Counter()
+@dataclass(frozen=True)
+class IoAssignmentRow:
+    som_connector: str
+    som_pin: str
+    som_net: str
+    side: str
+    destination: str
+    carrier_signal: str
+    interface: str
+    notes: str
+    shared: bool
 
 
-_ref_counter: Counter[str] = _make_ref_counter()
+def _load_io_assignment() -> tuple[IoAssignmentRow, ...]:
+    if not IO_ASSIGNMENT_PATH.exists():
+        raise FileNotFoundError(
+            f"Missing {IO_ASSIGNMENT_PATH}; run bom_io.emit_io_assignment_csv first"
+        )
+    rows: list[IoAssignmentRow] = []
+    with open(IO_ASSIGNMENT_PATH, encoding="utf-8") as csv_file:
+        reader = csv.DictReader(csv_file)
+        for row in reader:
+            rows.append(IoAssignmentRow(
+                som_connector=row["som_connector"],
+                som_pin=row["som_pin"],
+                som_net=row["som_net"],
+                side=row["side"],
+                destination=row["destination"],
+                carrier_signal=row["carrier_signal"],
+                interface=row["interface"],
+                notes=row.get("notes", ""),
+                shared=(row.get("shared", "false").lower() == "true"),
+            ))
+    return tuple(rows)
 
 
-def _synthesize_reference(part_token: str, ref_prefix: str) -> str:
-    _ref_counter[ref_prefix] += 1
-    return f"{ref_prefix}{_ref_counter[ref_prefix]:03d}"
+# ---------------------------------------------------------------------------
+# Reference designator counter
+# ---------------------------------------------------------------------------
+
+
+_external_ref_counter: Counter[str] = Counter()
+
+
+def _reset_external_refs() -> None:
+    _external_ref_counter.clear()
 
 
 def _ref_prefix_for(footprint: str) -> str:
     for footprint_bucket, prefix in _REF_PREFIX_BY_FOOTPRINT_BUCKET.items():
         if footprint.startswith(footprint_bucket):
             return prefix
-    return "X"
+    raise ValueError(
+        f"_ref_prefix_for: no reference designator prefix mapped for footprint "
+        f"{footprint!r}"
+    )
+
+
+def _allocate_external_reference(footprint: str) -> str:
+    prefix = _ref_prefix_for(footprint)
+    _external_ref_counter[prefix] += 1
+    return f"{prefix}{_external_ref_counter[prefix]:03d}"
 
 
 def _generic_symbol_for(footprint: str) -> SymbolDef:
@@ -177,238 +293,150 @@ def _generic_symbol_for(footprint: str) -> SymbolDef:
         return SYMBOL_LIBRARY["LED"]
     if footprint.startswith("Diode_SMD:"):
         return SYMBOL_LIBRARY["D_Schottky"]
-    return SYMBOL_LIBRARY["R"]
-
-
-def _is_decoupling(external: ExternalPart, footprint_bucket: str) -> bool:
-    """Heuristic: a capacitor whose ``to_net`` is GND."""
-    return (
-        footprint_bucket == "Capacitor_SMD:"
-        and external.to_net.upper() == "GND"
+    raise ValueError(
+        f"_generic_symbol_for: no generic symbol for footprint {footprint!r}"
     )
 
 
-def _ic_pin_supports_decoupling(ic: PlacedSymbol, pin_name: str) -> bool:
-    for pin in ic.symbol.pins:
-        if pin.number == pin_name or pin.name == pin_name:
-            return pin.electrical_type in DECOUPLING_REQUIRED_PIN_TYPES
-    return False
-
-
 # ---------------------------------------------------------------------------
-# Reference circuit placement + wiring
+# IC + external placement (zone-based, free-space packing)
 # ---------------------------------------------------------------------------
 
 
-def _place_refcircuit(
-    ic_name: str,
-    circuit: ReferenceCircuit,
-    ref_des: str,
-    origin: Point,
-    validator: Validator,
-    sheet_name: str,
-) -> tuple[list[PlacedSymbol], list[SExp], list[tuple[str, str]]]:
-    """Place an IC, its external parts, and the wires that connect them.
-
-    Returns:
-        (placed_symbols, schematic_objects, externals_for_validation)
-        where ``schematic_objects`` includes wires, junctions, labels, and
-        any text annotations emitted by this refcircuit.
-    """
-
-    placed_symbols: list[PlacedSymbol] = []
-    schematic_objects: list[SExp] = []
-    externals_for_validation: list[tuple[str, str]] = []
-
-    ic_symbol_def = (
+def _resolve_ic_symbol(circuit: ReferenceCircuit) -> SymbolDef:
+    candidate = (
         SYMBOL_LIBRARY.get(circuit.part_mpn)
         or SYMBOL_LIBRARY.get(circuit.symbol_token)
     )
-    if ic_symbol_def is None:
-        validator._add(
-            "C11", "warn", f"{sheet_name}:{ref_des}",
-            f"No SYMBOL_LIBRARY entry for {circuit.part_mpn}; skipping IC placement",
-            True,
+    if candidate is None:
+        raise KeyError(
+            f"_resolve_ic_symbol: no SYMBOL_LIBRARY entry for refcircuit "
+            f"{circuit.part_mpn!r} (symbol_token={circuit.symbol_token!r})"
         )
-        return placed_symbols, schematic_objects, externals_for_validation
+    return candidate
 
+
+def _place_ic_in_zone(zone: IcZone, symbol_def: SymbolDef,
+                      reference: str, value: str, footprint: str) -> PlacedSymbol:
     ic_origin = Point(
-        snap_to_grid(origin.x),
-        snap_to_grid(origin.y + 15.0),
+        snap_to_grid(zone.origin.x + IC_BODY_INSET_MM),
+        snap_to_grid(zone.origin.y + IC_BODY_INSET_MM + symbol_def.height_mm() / 2),
     )
-    ic_symbol = PlacedSymbol(
-        reference=ref_des,
-        symbol=ic_symbol_def,
-        value=circuit.part_mpn,
-        footprint=circuit.footprint,
+    return PlacedSymbol(
+        reference=reference,
+        symbol=symbol_def,
+        value=value,
+        footprint=footprint,
         origin=ic_origin,
     )
-    placed_symbols.append(ic_symbol)
-    validator.check_reference_uniqueness(ref_des, sheet_name)
-    validator.check_uuid_unique(ic_symbol.uuid, f"{sheet_name}:{ref_des}")
-
-    obstacles: list[BoundingBox] = [ic_symbol.bounding_box]
-    decoupling_index_per_pin: Counter[str] = Counter()
-    horizontal_index_per_pin: Counter[str] = Counter()
-
-    for external in circuit.external_parts:
-        for _ in range(external.quantity):
-            ext_part = REGISTRY.get(external.part_token)
-            if ext_part is None:
-                validator._add(
-                    "C11", "strict", f"{sheet_name}:{ref_des}",
-                    f"Unknown external part token {external.part_token!r}", False,
-                )
-                continue
-            footprint_bucket = ext_part.footprint.split(":", 1)[0] + ":"
-            ref_prefix = _ref_prefix_for(ext_part.footprint)
-            ext_reference = _synthesize_reference(external.part_token, ref_prefix)
-            generic_symbol = _generic_symbol_for(ext_part.footprint)
-
-            decoupling_distance_mm = (
-                KICAD_GRID_MM * 4
-                + decoupling_index_per_pin[external.from_pin]
-                * DECOUPLING_STACK_PITCH_MM
-            )
-            attempt_decoupling = (
-                _is_decoupling(external, footprint_bucket)
-                and _ic_pin_supports_decoupling(ic_symbol, external.from_pin)
-                and can_place_decoupling(
-                    ic=ic_symbol,
-                    vdd_pin_name=external.from_pin,
-                    cap_symbol_def=generic_symbol,
-                    obstacles=tuple(obstacles),
-                    distance_mm=decoupling_distance_mm,
-                )
-            )
-
-            placed_external_symbols, placed_objects = _wire_external_part(
-                ic=ic_symbol,
-                external=external,
-                ic_pin_name=external.from_pin,
-                cap_symbol_def=generic_symbol,
-                ext_reference=ext_reference,
-                ext_value=ext_part.value,
-                ext_footprint=ext_part.footprint,
-                obstacles=tuple(obstacles),
-                decoupling_distance_mm=decoupling_distance_mm,
-                horizontal_index=horizontal_index_per_pin[external.from_pin],
-                use_decoupling=attempt_decoupling,
-            )
-
-            placed_symbols.extend(placed_external_symbols)
-            schematic_objects.extend(placed_objects)
-            for placed in placed_external_symbols:
-                obstacles.append(placed.bounding_box)
-                validator.check_uuid_unique(
-                    placed.uuid, f"{sheet_name}:{placed.reference}"
-                )
-                validator.check_reference_uniqueness(
-                    placed.reference, sheet_name
-                )
-            externals_for_validation.append((external.from_pin, external.part_token))
-
-            if attempt_decoupling:
-                decoupling_index_per_pin[external.from_pin] += 1
-            else:
-                horizontal_index_per_pin[external.from_pin] += 1
-
-    validator.check_refcircuit_conformance(ref_des, circuit, externals_for_validation)
-    return placed_symbols, schematic_objects, externals_for_validation
 
 
-def _wire_external_part(
-    ic: PlacedSymbol,
-    external: ExternalPart,
-    ic_pin_name: str,
-    cap_symbol_def: SymbolDef,
-    ext_reference: str,
-    ext_value: str,
-    ext_footprint: str,
-    obstacles: tuple[BoundingBox, ...],
-    decoupling_distance_mm: float,
-    horizontal_index: int,
-    use_decoupling: bool,
-) -> tuple[list[PlacedSymbol], list[SExp]]:
-    """Place one external part and wire it from the IC pin to its target net.
+def _free_space_scan(
+    target_box: BoundingBox,
+    zone: IcZone,
+    obstacles: list[BoundingBox],
+    step_mm: float = KICAD_GRID_MM,
+) -> Point | None:
+    """Find a grid-aligned offset that places ``target_box`` inside ``zone``
+    without overlapping any obstacle. Returns the offset to apply to
+    ``target_box`` origin; None if no slot exists.
 
-    The caller is expected to have validated feasibility via
-    ``can_place_decoupling`` before passing ``use_decoupling=True``. If
-    ``place_decoupling`` raises after that precheck it is a programmer
-    error and the exception propagates rather than being swallowed.
+    Scans column-major, top-to-bottom within the zone interior, starting
+    from the top-left.
     """
+    target_width_mm = target_box.bottom_right.x - target_box.top_left.x
+    target_height_mm = target_box.bottom_right.y - target_box.top_left.y
+    scan_origin_x = snap_to_grid(zone.origin.x + ZONE_INNER_MARGIN_MM)
+    scan_origin_y = snap_to_grid(zone.origin.y + ZONE_INNER_MARGIN_MM)
+    scan_max_x = snap_to_grid(
+        zone.origin.x + zone.width_mm - ZONE_INNER_MARGIN_MM - target_width_mm
+    )
+    scan_max_y = snap_to_grid(
+        zone.origin.y + zone.height_mm - ZONE_INNER_MARGIN_MM - target_height_mm
+    )
+    candidate_x = scan_origin_x
+    while candidate_x <= scan_max_x + GRID_TOLERANCE_MM:
+        candidate_y = scan_origin_y
+        while candidate_y <= scan_max_y + GRID_TOLERANCE_MM:
+            candidate_box = BoundingBox(
+                top_left=Point(candidate_x, candidate_y),
+                bottom_right=Point(
+                    candidate_x + target_width_mm,
+                    candidate_y + target_height_mm,
+                ),
+            )
+            if not any(_boxes_overlap(candidate_box, obstacle) for obstacle in obstacles):
+                return Point(
+                    candidate_x - target_box.top_left.x,
+                    candidate_y - target_box.top_left.y,
+                )
+            candidate_y += step_mm
+        candidate_x += step_mm
+    return None
 
-    if use_decoupling:
-        result = place_decoupling(
-            ic=ic,
-            vdd_pin_name=ic_pin_name,
-            gnd_net=external.to_net,
-            cap_symbol_def=cap_symbol_def,
-            cap_reference=ext_reference,
-            cap_value=ext_value,
-            cap_footprint=ext_footprint,
-            obstacles=obstacles,
-            distance_mm=decoupling_distance_mm,
-        )
-        return [result.cap_symbol], list(result.schematic_objects)
 
-    return _place_horizontal_external(
-        ic=ic,
-        external=external,
-        ic_pin_name=ic_pin_name,
-        ext_symbol_def=cap_symbol_def,
-        ext_reference=ext_reference,
-        ext_value=ext_value,
-        ext_footprint=ext_footprint,
-        horizontal_index=horizontal_index,
+ZONE_INNER_MARGIN_MM: float = KICAD_GRID_MM
+
+
+def _ic_has_pin(ic_symbol: PlacedSymbol, name_or_number: str) -> bool:
+    return any(
+        pin.number == name_or_number or pin.name == name_or_number
+        for pin in ic_symbol.symbol.pins
     )
 
 
-def _place_horizontal_external(
-    ic: PlacedSymbol,
+def _ic_pin_net_name(ic_reference: str, pin_name: str) -> str:
+    """Synthesise a unique label-friendly net name for an IC pin."""
+    sanitised = (pin_name
+        .replace(" ", "_")
+        .replace("/", "_")
+        .replace("+", "P")
+        .replace("-", "N"))
+    return f"NET_{ic_reference}_{sanitised}"
+
+
+def _pack_external_in_zone(
+    ic_symbol: PlacedSymbol,
     external: ExternalPart,
-    ic_pin_name: str,
     ext_symbol_def: SymbolDef,
     ext_reference: str,
     ext_value: str,
     ext_footprint: str,
-    horizontal_index: int,
-) -> tuple[list[PlacedSymbol], list[SExp]]:
-    """Place an external part horizontally outward from the IC pin's side
-    and label its far pin with the target net name.
+    zone: IcZone,
+    obstacles: list[BoundingBox],
+) -> tuple[PlacedSymbol, list[SExp]]:
+    """Place an external part anywhere free in the zone and emit two labels.
 
-    "Outward" means: if the IC pin is on the left side of the IC body, the
-    external part lands further LEFT (away from the IC), and similarly for
-    right-side pins. This keeps wires from crossing the IC body.
+    Connectivity is by net label (no in-zone wire routing). The
+    IC-facing pin (pin 1) is labelled with the synthesised IC pin net
+    name (``_ic_pin_net_name``); the outer pin (pin 2) is labelled with
+    ``external.to_net``. The IC pin itself is labelled separately by
+    ``_place_zone`` so all three points share the same net.
+
+    For "virtual node" externals (``from_pin`` not an IC pin), the
+    label is taken verbatim from ``from_pin`` instead of being
+    synthesised. This is how the Bob Smith common cap on HX5008NLT
+    connects to the BS_COMMON node fed by the four 75R resistors.
     """
-    pin_side = _ic_pin_side(ic, ic_pin_name)
-    if pin_side is None:
-        return [], []
-    try:
-        ic_pin_position = ic.pin_position(ic_pin_name)
-    except KeyError:
-        return [], []
-
-    pin_pitch_per_index_mm = (
-        EXTERNAL_PART_HORIZONTAL_OFFSET_MM + ext_symbol_def.width_mm
+    target_local_box = ext_symbol_def.bounding_box
+    placement_offset = _free_space_scan(
+        target_box=target_local_box,
+        zone=zone,
+        obstacles=obstacles,
     )
-    base_offset_mm = (
-        EXTERNAL_PART_HORIZONTAL_OFFSET_MM
-        + horizontal_index * pin_pitch_per_index_mm
-    )
-
-    if pin_side == "R":
-        ext_pin_1_target = screen_right(ic_pin_position, base_offset_mm)
-        ext_pin_1_local = ext_symbol_def.pin_position("1")
-    else:
-        ext_pin_1_target = screen_left(
-            ic_pin_position, base_offset_mm + ext_symbol_def.width_mm,
+    if placement_offset is None:
+        raise RuntimeError(
+            f"_pack_external_in_zone: no free space in zone "
+            f"({zone.bounding_box.top_left.x:.2f},"
+            f"{zone.bounding_box.top_left.y:.2f})-"
+            f"({zone.bounding_box.bottom_right.x:.2f},"
+            f"{zone.bounding_box.bottom_right.y:.2f}) for {ext_reference} "
+            f"({ic_symbol.reference}.{external.from_pin} -> "
+            f"{external.to_net}); enlarge the section in SECTION_LAYOUT"
         )
-        ext_pin_1_local = ext_symbol_def.pin_position("2")
-
     ext_origin = Point(
-        snap_to_grid(ext_pin_1_target.x - ext_pin_1_local.x),
-        snap_to_grid(ext_pin_1_target.y - ext_pin_1_local.y),
+        snap_to_grid(placement_offset.x),
+        snap_to_grid(placement_offset.y),
     )
     ext_symbol = PlacedSymbol(
         reference=ext_reference,
@@ -418,186 +446,358 @@ def _place_horizontal_external(
         origin=ext_origin,
     )
 
-    if pin_side == "R":
-        ic_facing_pin_position = ext_symbol.pin_position("1")
-        outer_pin_position = ext_symbol.pin_position("2")
-        label_position = screen_right(outer_pin_position, EXTERNAL_PART_LABEL_GAP_MM)
+    if _ic_has_pin(ic_symbol, external.from_pin):
+        source_label = _ic_pin_net_name(ic_symbol.reference, external.from_pin)
     else:
-        ic_facing_pin_position = ext_symbol.pin_position("2")
-        outer_pin_position = ext_symbol.pin_position("1")
-        label_position = screen_left(outer_pin_position, EXTERNAL_PART_LABEL_GAP_MM)
+        source_label = external.from_pin
 
+    schematic_objects: list[SExp] = [
+        _label_for_net(source_label, ext_symbol.pin_position("1")),
+        _label_for_net(external.to_net, ext_symbol.pin_position("2")),
+    ]
+    return ext_symbol, schematic_objects
+
+
+def _label_for_net(net_name: str, position: Point) -> SExp:
+    if not net_name:
+        raise ValueError("_label_for_net: net_name must be non-empty")
+    if net_name.upper() == "GND" or net_name.startswith("+") or net_name.startswith("CHASSIS"):
+        return global_label(net_name, position)
+    return local_label(net_name, position)
+
+
+def _boxes_overlap(box_a: BoundingBox, box_b: BoundingBox) -> bool:
+    if box_a.bottom_right.x <= box_b.top_left.x:
+        return False
+    if box_a.top_left.x >= box_b.bottom_right.x:
+        return False
+    if box_a.bottom_right.y <= box_b.top_left.y:
+        return False
+    if box_a.top_left.y >= box_b.bottom_right.y:
+        return False
+    return True
+
+
+def _place_zone(
+    zone: IcZone,
+    validator: Validator,
+) -> tuple[list[PlacedSymbol], list[SExp], list[tuple[str, str]]]:
+    """Place an IC + all its externals in its dedicated zone.
+
+    Returns:
+        (placed_symbols, schematic_objects, externals_for_validation)
+    """
+    instance = zone.instance
+    circuit = REFCIRCUITS.get(instance.ic_name)
+    if circuit is None:
+        raise KeyError(
+            f"_place_zone: no REFCIRCUITS entry for {instance.ic_name!r} "
+            f"(reference {instance.reference!r})"
+        )
+    ic_symbol_def = _resolve_ic_symbol(circuit)
+    ic_symbol = _place_ic_in_zone(
+        zone=zone,
+        symbol_def=ic_symbol_def,
+        reference=instance.reference,
+        value=circuit.part_mpn,
+        footprint=circuit.footprint,
+    )
+    placed_symbols: list[PlacedSymbol] = [ic_symbol]
     schematic_objects: list[SExp] = []
-    schematic_objects.append(wire(ic_pin_position, ic_facing_pin_position))
-    schematic_objects.append(wire(outer_pin_position, label_position))
-    if external.to_net.upper() == "GND" or external.to_net.startswith("+"):
-        schematic_objects.append(global_label(external.to_net, label_position))
-    else:
-        schematic_objects.append(local_label(external.to_net, label_position))
+    externals_for_validation: list[tuple[str, str]] = []
+    obstacles_in_zone: list[BoundingBox] = [ic_symbol.bounding_box]
 
-    return [ext_symbol], schematic_objects
-
-
-def _ic_pin_side(ic: PlacedSymbol, name_or_number: str) -> str | None:
-    for pin in ic.symbol.pins:
-        if pin.number == name_or_number or pin.name == name_or_number:
-            return pin.side
-    return None
-
-
-# ---------------------------------------------------------------------------
-# IC layout map - which sections hold which ICs
-# ---------------------------------------------------------------------------
-
-IC_TO_SECTION: dict[str, tuple[str, str]] = {
-    "FUSB302BMPX":         ("usbc_stm32",  "U_PD1"),
-    "USBLC6-4SC6":         ("usbc_stm32",  "U_ESD_USB1"),
-    "TPS2051CDBVR":        ("usbc_otg",    "U_LS1"),
-    "CP2102N-A02-GQFN24R": ("uart_bridge", "U_UART"),
-    "TPD12S016PWR_TX":     ("hdmi_tx",     "U_HDMITX"),
-    "TPD12S016PWR_RX":     ("hdmi_rx",     "U_HDMIRX"),
-    "INA226AIDGSR":        ("aux",         "U_INA1"),
-    "DS3231SN#":           ("aux",         "U_RTC"),
-    "24LC256T-I/SN":       ("aux",         "U_EEP"),
-    "TLV75733PDBVR":       ("power",       "U_LDO_VCCO13"),
-    "TLV75718PDBVR":       ("power",       "U_LDO_18V_ALT"),
-    "TLV75725PDBVR":       ("power",       "U_LDO_25V_ALT"),
-    "HX5008NLT":           ("ethernet",    "T_ETH"),
-    "USBC_SINK":           ("usbc_stm32",  "J_USBC1"),
-    "HDMI_A":              ("hdmi_tx",     "J_HDMITX"),
-    "DM3AT-SF-PEJM5":      ("microsd",     "J_SD"),
-    "RJHSE5380":           ("ethernet",    "J_RJ45"),
-}
-
-
-# ---------------------------------------------------------------------------
-# Main generator
-# ---------------------------------------------------------------------------
-
-
-def generate(validate_only: bool = False) -> int:
-    validator = Validator()
-    project_name = PROJECT_NAME
-    _ref_counter.clear()
-
-    for part in REGISTRY.values():
-        validator.check_bom_part(part)
-        validator.check_footprint_prefix(part)
-
-    _validate_io_assignment(validator)
-
-    schematic_uuid = make_uuid()
-    placed_all: list[PlacedSymbol] = []
-    used_lib_ids: set[str] = set()
-    decorative_objects: list[SExp] = []
-    geometry_wires: list[SExp] = []
-
-    for section_name, (section_x, section_y, section_label) in SECTION_LAYOUT.items():
-        decorative_objects.append(
-            text_label(section_label, Point(section_x, section_y - 4.0),
-                       font_size=2.54, bold=True)
-        )
-
-    for ic_name, circuit in REFCIRCUITS.items():
-        section_assignment = IC_TO_SECTION.get(ic_name)
-        if section_assignment is None:
-            continue
-        section_name, base_reference = section_assignment
-        if section_name not in SECTION_LAYOUT:
-            continue
-        section_x, section_y, _ = SECTION_LAYOUT[section_name]
-        section_origin = Point(section_x, section_y)
-        placed_for_circuit, objects_for_circuit, _ = _place_refcircuit(
-            ic_name=ic_name,
-            circuit=circuit,
-            ref_des=base_reference,
-            origin=section_origin,
-            validator=validator,
-            sheet_name=section_name,
-        )
-        placed_all.extend(placed_for_circuit)
-        for emitted_object in objects_for_circuit:
-            if emitted_object.head in {"wire", "junction"}:
-                geometry_wires.append(emitted_object)
-            else:
-                decorative_objects.append(emitted_object)
-
-    som_lib_text = _read_existing_symbol_lib()
-    som_symbol_definitions: list[tuple[str, str, list[str]]] = []
-    som_positions = {
-        "J1": SECTION_LAYOUT["som_j1"][:2],
-        "J2": SECTION_LAYOUT["som_j2"][:2],
-        "J3": SECTION_LAYOUT["som_j3"][:2],
-    }
-    for j_name in ("J1", "J2", "J3"):
-        symbol_name = f"Zynq_SoM_{j_name}"
-        symbol_body = _extract_named_symbol(som_lib_text, symbol_name)
-        qualified_name = f"Zynq_SoM:{symbol_name}"
-        body_renamed = _rename_symbol(symbol_body, symbol_name, qualified_name)
-        pin_numbers = _extract_pin_numbers(symbol_body)
-        som_symbol_definitions.append((qualified_name, body_renamed, pin_numbers))
-
-    section_symbol_counts: Counter[str] = Counter()
-    for placed in placed_all:
-        for section_name, (section_x, section_y, _) in SECTION_LAYOUT.items():
-            if (
-                abs(placed.origin.x - section_x) < 80
-                and abs(placed.origin.y - section_y) < 100
-            ):
-                section_symbol_counts[section_name] += 1
-                break
-    for section_name, symbol_count in section_symbol_counts.items():
-        validator.check_sheet_size(section_name, symbol_count)
-
-    _validate_geometry(validator, placed_all, geometry_wires)
-
-    total_cost_usd = 0.0
-    cost_seen: Counter[str] = Counter()
-    for placed in placed_all:
-        for token, registry_part in REGISTRY.items():
-            if registry_part.value == placed.value or registry_part.mpn == placed.value:
-                cost_seen[token] += 1
-                break
-    for token, count in cost_seen.items():
-        total_cost_usd += REGISTRY[token].unit_price_usd * count
-    validator.report_bom_total(total_cost_usd)
-
-    schematic_root = _build_root_sexp(
-        schematic_uuid=schematic_uuid,
-        project_name=project_name,
-        placed_all=placed_all,
-        som_symbol_definitions=som_symbol_definitions,
-        som_positions=som_positions,
-        used_lib_ids=used_lib_ids,
-        decorative_objects=decorative_objects,
-        geometry_wires=geometry_wires,
-        validator=validator,
+    validator.check_reference_uniqueness(instance.reference, instance.section)
+    validator.check_uuid_unique(
+        ic_symbol.uuid, f"{instance.section}:{instance.reference}",
     )
 
-    rendered_schematic = schematic_root.dumps() + "\n"
-    temp_path = SCH_PATH.with_suffix(".kicad_sch.tmp")
-    if validate_only:
-        print(rendered_schematic[:500])
-    else:
-        temp_path.write_text(rendered_schematic, encoding="utf-8")
-        validator.check_paren_balance(temp_path)
+    ic_pin_labels_emitted: set[str] = set()
 
-    exit_code = validator.report(output_path=VALIDATION_REPORT_PATH)
+    for external in circuit.external_parts:
+        for _ in range(external.quantity):
+            ext_part = REGISTRY.get(external.part_token)
+            if ext_part is None:
+                raise KeyError(
+                    f"_place_zone: ExternalPart token {external.part_token!r} "
+                    f"on {instance.reference}.{external.from_pin} not in BOM "
+                    f"REGISTRY"
+                )
+            ext_reference = _allocate_external_reference(ext_part.footprint)
+            ext_symbol_def = _generic_symbol_for(ext_part.footprint)
+            ext_symbol, ext_schematic_objects = _pack_external_in_zone(
+                ic_symbol=ic_symbol,
+                external=external,
+                ext_symbol_def=ext_symbol_def,
+                ext_reference=ext_reference,
+                ext_value=ext_part.value,
+                ext_footprint=ext_part.footprint,
+                zone=zone,
+                obstacles=obstacles_in_zone,
+            )
+            placed_symbols.append(ext_symbol)
+            schematic_objects.extend(ext_schematic_objects)
+            obstacles_in_zone.append(ext_symbol.bounding_box)
+            externals_for_validation.append((external.from_pin, external.part_token))
+            validator.check_uuid_unique(
+                ext_symbol.uuid, f"{instance.section}:{ext_symbol.reference}",
+            )
+            validator.check_reference_uniqueness(
+                ext_symbol.reference, instance.section,
+            )
 
-    if exit_code != 0:
-        if not validate_only and temp_path.exists():
-            temp_path.unlink()
-        print(f"\nValidation failed - {SCH_PATH} NOT updated")
-        return exit_code
+            if (
+                _ic_has_pin(ic_symbol, external.from_pin)
+                and external.from_pin not in ic_pin_labels_emitted
+            ):
+                pin_label_position = ic_symbol.pin_position(external.from_pin)
+                pin_net_name = _ic_pin_net_name(
+                    ic_symbol.reference, external.from_pin,
+                )
+                schematic_objects.append(
+                    _label_for_net(pin_net_name, pin_label_position),
+                )
+                ic_pin_labels_emitted.add(external.from_pin)
 
-    if not validate_only:
-        temp_path.replace(SCH_PATH)
-        print(f"\nWrote {SCH_PATH}")
-        _update_project_uuid(schematic_uuid)
-        for lock_file in CARRIER_DIR.glob("*.lck"):
-            lock_file.unlink()
+    validator.check_refcircuit_conformance(
+        instance.reference, circuit, externals_for_validation,
+    )
+    return placed_symbols, schematic_objects, externals_for_validation
 
-    return 0
+
+# ---------------------------------------------------------------------------
+# SoM connector placement and pin labelling
+# ---------------------------------------------------------------------------
+
+
+SOM_CONNECTOR_FOOTPRINT: str = "fp:HRS_DF40C-100DP-0.4V_51_"
+SOM_CONNECTOR_DESCRIPTION: str = "Zynq SoM mating connector (100 pin)"
+
+
+def _place_som_connectors(
+    som_library: tuple[SomLibrarySymbol, ...],
+    schematic_uuid: str,
+    project_name: str,
+    io_assignment: tuple[IoAssignmentRow, ...],
+    validator: Validator,
+) -> tuple[list[SExp], list[SExp]]:
+    """Emit the J1/J2/J3 connector instances and one global label per pin.
+
+    Returns:
+        (instance_sexps, label_sexps)
+    """
+    io_lookup: dict[tuple[str, str], IoAssignmentRow] = {
+        (row.som_connector, row.som_pin): row for row in io_assignment
+    }
+
+    instance_sexps: list[SExp] = []
+    label_sexps: list[SExp] = []
+    for connector_name, som_symbol in zip(SOM_CONNECTOR_NAMES, som_library):
+        section_spec = SECTION_LAYOUT[f"som_{connector_name.lower()}"]
+        placement_x = snap_to_grid(section_spec.origin.x + IC_BODY_INSET_MM)
+        placement_y = snap_to_grid(section_spec.origin.y + IC_BODY_INSET_MM)
+        connector_uuid = make_uuid()
+        validator.check_uuid_unique(
+            connector_uuid, f"carrier_template:{connector_name}",
+        )
+        validator.check_reference_uniqueness(connector_name, "carrier_template")
+
+        instance_sexps.append(_build_som_instance_sexp(
+            qualified_name=som_symbol.qualified_name,
+            connector_name=connector_name,
+            placement=Point(placement_x, placement_y),
+            connector_uuid=connector_uuid,
+            schematic_uuid=schematic_uuid,
+            project_name=project_name,
+            pin_records=som_symbol.pin_records,
+        ))
+
+        for pin_number, pin_local_position, _ in som_symbol.pin_records:
+            io_row = io_lookup.get((connector_name, pin_number))
+            if io_row is None:
+                raise KeyError(
+                    f"_place_som_connectors: no io_assignment row for "
+                    f"{connector_name}.{pin_number}; regenerate "
+                    f"io_assignment.csv"
+                )
+            label_position = Point(
+                snap_to_grid(placement_x + pin_local_position.x),
+                snap_to_grid(placement_y + pin_local_position.y),
+            )
+            label_sexps.append(_label_for_net(
+                io_row.carrier_signal, label_position,
+            ))
+    return instance_sexps, label_sexps
+
+
+def _build_som_instance_sexp(
+    qualified_name: str,
+    connector_name: str,
+    placement: Point,
+    connector_uuid: str,
+    schematic_uuid: str,
+    project_name: str,
+    pin_records: tuple[tuple[str, Point, float], ...],
+) -> SExp:
+    body = SExp("symbol")
+    body.add(SExp("lib_id", atoms=[qualified_name]))
+    body.add(SExp("at", atoms=[placement.x, placement.y, 0]))
+    body.add(SExp("unit", atoms=[1]))
+    body.add(SExp("exclude_from_sim", atoms=[False]))
+    body.add(SExp("in_bom", atoms=[True]))
+    body.add(SExp("on_board", atoms=[True]))
+    body.add(SExp("dnp", atoms=[False]))
+    body.add(SExp("fields_autoplaced", atoms=[True]))
+    body.add(SExp("uuid", atoms=[connector_uuid]))
+    body.add(property_(
+        "Reference", connector_name,
+        x=placement.x + 2.54, y=placement.y - 6.0,
+        font_size=1.778, bold=True, justify="left",
+    ))
+    body.add(property_(
+        "Value", f"Zynq_SoM_{connector_name}",
+        x=placement.x + 2.54, y=placement.y - 3.0,
+        font_size=KICAD_PROPERTY_FONT_MM, justify="left",
+    ))
+    body.add(property_(
+        "Footprint", SOM_CONNECTOR_FOOTPRINT,
+        x=placement.x, y=placement.y, hide=True,
+    ))
+    body.add(property_(
+        "Datasheet", "", x=placement.x, y=placement.y, hide=True,
+    ))
+    body.add(property_(
+        "Description", SOM_CONNECTOR_DESCRIPTION,
+        x=placement.x, y=placement.y, hide=True,
+    ))
+    for pin_number, _, _ in pin_records:
+        pin_entry = SExp("pin", atoms=[pin_number])
+        pin_entry.add(SExp("uuid", atoms=[make_uuid()]))
+        body.add(pin_entry)
+    instances = SExp("instances")
+    project = SExp("project", atoms=[project_name])
+    path = SExp("path", atoms=[f"/{schematic_uuid}"])
+    path.add(SExp("reference", atoms=[connector_name]))
+    path.add(SExp("unit", atoms=[1]))
+    project.add(path)
+    instances.add(project)
+    body.add(instances)
+    return body
+
+
+# ---------------------------------------------------------------------------
+# IO assignment validation (rule sets F)
+# ---------------------------------------------------------------------------
+
+
+def _validate_io_assignment(
+    io_assignment: tuple[IoAssignmentRow, ...],
+    validator: Validator,
+) -> None:
+    valid_pins_per_connector: dict[str, set[str]] = {
+        connector_name: set() for connector_name in SOM_CONNECTOR_NAMES
+    }
+    for connector_name in SOM_CONNECTOR_NAMES:
+        symbol_csv_path = CARRIER_DIR / f"symbol_{connector_name}.csv"
+        if not symbol_csv_path.exists():
+            raise FileNotFoundError(f"Missing {symbol_csv_path}")
+        with open(symbol_csv_path, encoding="utf-8") as csv_file:
+            reader = csv.reader(csv_file)
+            next(reader)
+            next(reader)
+            for row in reader:
+                if row:
+                    valid_pins_per_connector[connector_name].add(row[0])
+
+    usage_counts: Counter[tuple[str, str]] = Counter()
+    diff_signal_names: set[str] = set()
+    for line_number, row in enumerate(io_assignment, start=2):
+        validator.check_io_pin_exists(
+            row.som_connector, row.som_pin,
+            valid_pins_per_connector.get(row.som_connector, set()),
+            line_number,
+        )
+        usage_counts[(row.som_connector, row.som_pin)] += 1
+        if row.interface != "POWER":
+            diff_signal_names.add(row.som_net)
+    validator.check_io_pin_unique(usage_counts)
+    validator.check_diff_pair_completeness(diff_signal_names)
+
+
+# ---------------------------------------------------------------------------
+# Wire/junction post-processing
+# ---------------------------------------------------------------------------
+
+
+def _deduplicate_wires_and_emit_junctions(
+    schematic_objects: list[SExp],
+) -> list[SExp]:
+    """Collapse exact-duplicate wires and add junctions at every T-intersection.
+
+    Wire deduplication: two wires sharing both endpoints (in either order)
+    are collapsed to one. Ensures Rule J3 passes strictly.
+
+    Junction emission: any endpoint of any wire that lies in the strict
+    interior of another wire's segment gets a junction. Ensures Rule J4
+    passes strictly.
+    """
+    from scripts.carrier.core.geometry import detect_t_intersections
+
+    deduped_wires_by_endpoints: dict[
+        tuple[tuple[float, float], tuple[float, float]], SExp
+    ] = {}
+    junctions_by_position: dict[tuple[float, float], SExp] = {}
+    other_objects: list[SExp] = []
+    for sexp in schematic_objects:
+        if sexp.head == "wire":
+            start_position, end_position = _extract_wire_segment(sexp)
+            canonical = tuple(sorted([start_position, end_position]))
+            if canonical not in deduped_wires_by_endpoints:
+                deduped_wires_by_endpoints[canonical] = sexp
+        elif sexp.head == "junction":
+            junction_position = _extract_junction_position(sexp)
+            junctions_by_position.setdefault(junction_position, sexp)
+        else:
+            other_objects.append(sexp)
+
+    deduped_wires = list(deduped_wires_by_endpoints.values())
+    wire_segments_for_t_check = [
+        (Point(*start), Point(*end))
+        for start, end in (
+            _extract_wire_segment(sexp) for sexp in deduped_wires
+        )
+    ]
+    intersections = detect_t_intersections(wire_segments_for_t_check)
+    for intersection_point in intersections:
+        position_key = (intersection_point.x, intersection_point.y)
+        if position_key in junctions_by_position:
+            continue
+        junctions_by_position[position_key] = junction(
+            intersection_point, diameter=JUNCTION_DOT_DIAMETER_MM,
+        )
+
+    return deduped_wires + list(junctions_by_position.values()) + other_objects
+
+
+def _extract_wire_segment(
+    wire_sexp: SExp,
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    pts_child = next(child for child in wire_sexp.children if child.head == "pts")
+    xy_children = [child for child in pts_child.children if child.head == "xy"]
+    return (
+        (float(xy_children[0].atoms[0]), float(xy_children[0].atoms[1])),
+        (float(xy_children[1].atoms[0]), float(xy_children[1].atoms[1])),
+    )
+
+
+def _extract_junction_position(junction_sexp: SExp) -> tuple[float, float]:
+    at_child = next(child for child in junction_sexp.children if child.head == "at")
+    return (float(at_child.atoms[0]), float(at_child.atoms[1]))
+
+
+# ---------------------------------------------------------------------------
+# Geometry validation pass
+# ---------------------------------------------------------------------------
 
 
 def _validate_geometry(
@@ -605,14 +805,13 @@ def _validate_geometry(
     placed_symbols: list[PlacedSymbol],
     geometry_objects: list[SExp],
 ) -> None:
-    """Run Rule Set J across all emitted wires and junctions on the sheet."""
     wire_segments: list[tuple[tuple[float, float], tuple[float, float]]] = []
     junction_positions: set[tuple[float, float]] = set()
-    for emitted_object in geometry_objects:
-        if emitted_object.head == "wire":
-            wire_segments.append(_extract_wire_segment(emitted_object))
-        elif emitted_object.head == "junction":
-            junction_positions.add(_extract_junction_position(emitted_object))
+    for sexp in geometry_objects:
+        if sexp.head == "wire":
+            wire_segments.append(_extract_wire_segment(sexp))
+        elif sexp.head == "junction":
+            junction_positions.add(_extract_junction_position(sexp))
 
     component_boxes: list[tuple[
         tuple[float, float], tuple[float, float], str
@@ -637,76 +836,132 @@ def _validate_geometry(
     )
 
 
-def _extract_wire_segment(
-    wire_sexp: SExp,
-) -> tuple[tuple[float, float], tuple[float, float]]:
-    pts_child = next(child for child in wire_sexp.children if child.head == "pts")
-    xy_children = [child for child in pts_child.children if child.head == "xy"]
-    return (
-        (float(xy_children[0].atoms[0]), float(xy_children[0].atoms[1])),
-        (float(xy_children[1].atoms[0]), float(xy_children[1].atoms[1])),
+# ---------------------------------------------------------------------------
+# Main generator entry point
+# ---------------------------------------------------------------------------
+
+
+def generate(validate_only: bool = False) -> int:
+    validator = Validator()
+    _reset_external_refs()
+
+    for part in REGISTRY.values():
+        validator.check_bom_part(part)
+        validator.check_footprint_prefix(part)
+
+    io_assignment = _load_io_assignment()
+    _validate_io_assignment(io_assignment, validator)
+
+    schematic_uuid = make_uuid()
+    build = SchematicBuild.empty()
+
+    for section_name, section_spec in SECTION_LAYOUT.items():
+        build.decorative_objects.append(
+            text_label(
+                section_spec.label or section_name,
+                Point(
+                    section_spec.origin.x,
+                    snap_to_grid(section_spec.origin.y - 2.54),
+                ),
+                font_size=2.54,
+                bold=True,
+            )
+        )
+
+    for zone in compute_zones():
+        zone_placed, zone_objects, _ = _place_zone(zone, validator)
+        build.placed_symbols.extend(zone_placed)
+        build.geometry_objects.extend(
+            sexp for sexp in zone_objects
+            if sexp.head in {"wire", "junction"}
+        )
+        build.label_objects.extend(
+            sexp for sexp in zone_objects
+            if sexp.head in {"label", "global_label", "hierarchical_label"}
+        )
+
+    section_symbol_counts: Counter[str] = Counter()
+    for placed in build.placed_symbols:
+        for section_name, section_spec in SECTION_LAYOUT.items():
+            if section_spec.bounding_box.contains(placed.origin):
+                section_symbol_counts[section_name] += 1
+                break
+    for section_name, symbol_count in section_symbol_counts.items():
+        validator.check_sheet_size(section_name, symbol_count)
+
+    som_library = _load_som_library()
+    som_instances, som_pin_labels = _place_som_connectors(
+        som_library=som_library,
+        schematic_uuid=schematic_uuid,
+        project_name=PROJECT_NAME,
+        io_assignment=io_assignment,
+        validator=validator,
+    )
+    build.label_objects.extend(som_pin_labels)
+
+    build.geometry_objects = _deduplicate_wires_and_emit_junctions(
+        build.geometry_objects,
     )
 
+    _validate_geometry(validator, build.placed_symbols, build.geometry_objects)
 
-def _extract_junction_position(junction_sexp: SExp) -> tuple[float, float]:
-    at_child = next(child for child in junction_sexp.children if child.head == "at")
-    return (float(at_child.atoms[0]), float(at_child.atoms[1]))
+    total_cost_usd = _compute_bom_total(build.placed_symbols)
+    validator.report_bom_total(total_cost_usd)
 
+    schematic_root = _assemble_root(
+        schematic_uuid=schematic_uuid,
+        som_library=som_library,
+        som_instances=som_instances,
+        build=build,
+    )
 
-def _validate_io_assignment(validator: Validator) -> None:
-    io_csv = CARRIER_DIR / "io_assignment.csv"
-    valid_pins_per_connector: dict[str, set[str]] = {
-        "J1": set(), "J2": set(), "J3": set(),
-    }
-    for connector_name in valid_pins_per_connector:
-        symbol_csv_path = CARRIER_DIR / f"symbol_{connector_name}.csv"
-        if not symbol_csv_path.exists():
-            continue
-        with open(symbol_csv_path, encoding="utf-8") as csv_file:
-            reader = csv.reader(csv_file)
-            next(reader)
-            next(reader)
-            for row in reader:
-                if row:
-                    valid_pins_per_connector[connector_name].add(row[0])
+    rendered_schematic = schematic_root.dumps() + "\n"
+    temp_path = SCH_PATH.with_suffix(".kicad_sch.tmp")
+    if validate_only:
+        print(rendered_schematic[:500])
+    else:
+        temp_path.write_text(rendered_schematic, encoding="utf-8")
+        validator.check_paren_balance(temp_path)
 
-    if not io_csv.exists():
-        return
+    exit_code = validator.report(output_path=VALIDATION_REPORT_PATH)
+    if exit_code != 0:
+        if not validate_only and temp_path.exists():
+            temp_path.unlink()
+        print(f"\nValidation failed - {SCH_PATH} NOT updated")
+        return exit_code
 
-    usage_counts: Counter[tuple[str, str]] = Counter()
-    diff_signal_names: set[str] = set()
-    with open(io_csv, encoding="utf-8") as csv_file:
-        reader = csv.DictReader(csv_file)
-        for line_number, row in enumerate(reader, start=2):
-            connector_name = row["som_connector"]
-            pin_number = row["som_pin"]
-            validator.check_io_pin_exists(
-                connector_name, pin_number,
-                valid_pins_per_connector.get(connector_name, set()),
-                line_number,
-            )
-            usage_counts[(connector_name, pin_number)] += 1
-            if row["interface"] not in {"POWER"}:
-                diff_signal_names.add(row["som_net"])
-    validator.check_io_pin_unique(usage_counts)
-    validator.check_diff_pair_completeness(diff_signal_names)
+    if not validate_only:
+        temp_path.replace(SCH_PATH)
+        print(f"\nWrote {SCH_PATH}")
+        _update_project_uuid(schematic_uuid)
+        for lock_file in CARRIER_DIR.glob("*.lck"):
+            lock_file.unlink()
+    return 0
 
 
-def _build_root_sexp(
+def _compute_bom_total(placed_symbols: list[PlacedSymbol]) -> float:
+    counts_per_token: Counter[str] = Counter()
+    for placed in placed_symbols:
+        for token, registry_part in REGISTRY.items():
+            if registry_part.value == placed.value or registry_part.mpn == placed.value:
+                counts_per_token[token] += 1
+                break
+    total_usd = 0.0
+    for token, count in counts_per_token.items():
+        total_usd += REGISTRY[token].unit_price_usd * count
+    return total_usd
+
+
+def _assemble_root(
     schematic_uuid: str,
-    project_name: str,
-    placed_all: list[PlacedSymbol],
-    som_symbol_definitions: list[tuple[str, str, list[str]]],
-    som_positions: dict[str, tuple[float, float]],
-    used_lib_ids: set[str],
-    decorative_objects: list[SExp],
-    geometry_wires: list[SExp],
-    validator: Validator,
+    som_library: tuple[SomLibrarySymbol, ...],
+    som_instances: list[SExp],
+    build: SchematicBuild,
 ) -> SExp:
     root = SExp("kicad_sch")
-    root.add(SExp("version", atoms=[20250114]))
-    root.add(SExp("generator", atoms=["eeschema"]))
-    root.add(SExp("generator_version", atoms=["9.0"]))
+    root.add(SExp("version", atoms=[SCHEMATIC_FORMAT_VERSION]))
+    root.add(SExp("generator", atoms=[SCHEMATIC_GENERATOR_NAME]))
+    root.add(SExp("generator_version", atoms=[SCHEMATIC_GENERATOR_VERSION]))
     root.add(SExp("uuid", atoms=[schematic_uuid]))
     root.add(SExp("paper", atoms=[PAPER_SIZE]))
 
@@ -724,96 +979,38 @@ def _build_root_sexp(
     root.add(title)
 
     lib_symbols = SExp("lib_symbols")
-    for qualified_name, body_text, _ in som_symbol_definitions:
-        lib_symbols.add(SExp.raw(body_text))
-    for placed in placed_all:
-        if placed.lib_id in used_lib_ids:
+    for som_symbol in som_library:
+        lib_symbols.add(SExp.raw(som_symbol.body_text))
+    for placed in build.placed_symbols:
+        if placed.lib_id in build.used_lib_ids:
             continue
-        used_lib_ids.add(placed.lib_id)
+        build.used_lib_ids.add(placed.lib_id)
         symbol_def = next(
             (sym for sym in SYMBOL_LIBRARY.values() if sym.lib_id == placed.lib_id),
             None,
         )
         if symbol_def is None:
-            continue
+            raise KeyError(
+                f"_assemble_root: lib_id {placed.lib_id!r} placed on schematic but "
+                f"missing from SYMBOL_LIBRARY"
+            )
         lib_symbols.add(build_lib_symbol_sexp(symbol_def))
     root.add(lib_symbols)
 
-    for j_name in ("J1", "J2", "J3"):
-        qualified_name = f"Zynq_SoM:Zynq_SoM_{j_name}"
-        pin_numbers = next(p for q, _, p in som_symbol_definitions if q == qualified_name)
-        section_x, section_y = som_positions[j_name]
-        som_uuid = make_uuid()
-        validator.check_uuid_unique(som_uuid, f"carrier_template:{j_name}")
-        validator.check_reference_uniqueness(j_name, "carrier_template")
-        som_instance = SExp("symbol")
-        som_instance.add(SExp("lib_id", atoms=[qualified_name]))
-        som_instance.add(SExp("at", atoms=[section_x, section_y, 0]))
-        som_instance.add(SExp("unit", atoms=[1]))
-        som_instance.add(SExp("exclude_from_sim", atoms=[False]))
-        som_instance.add(SExp("in_bom", atoms=[True]))
-        som_instance.add(SExp("on_board", atoms=[True]))
-        som_instance.add(SExp("dnp", atoms=[False]))
-        som_instance.add(SExp("fields_autoplaced", atoms=[True]))
-        som_instance.add(SExp("uuid", atoms=[som_uuid]))
-        som_instance.add(property_(
-            "Reference", j_name,
-            x=section_x + 2.54, y=section_y - 6.0,
-            font_size=1.778, bold=True, justify="left",
-        ))
-        som_instance.add(property_(
-            "Value", f"Zynq_SoM_{j_name}",
-            x=section_x + 2.54, y=section_y - 3.0,
-            font_size=1.27, justify="left",
-        ))
-        som_instance.add(property_(
-            "Footprint", "fp:HRS_DF40C-100DP-0.4V_51_",
-            x=section_x, y=section_y, hide=True,
-        ))
-        som_instance.add(property_(
-            "Datasheet", "", x=section_x, y=section_y, hide=True,
-        ))
-        som_instance.add(property_(
-            "Description", "Zynq SoM mating connector (100 pin)",
-            x=section_x, y=section_y, hide=True,
-        ))
-        for pin_number in pin_numbers:
-            pin_entry = SExp("pin", atoms=[pin_number])
-            pin_entry.add(SExp("uuid", atoms=[make_uuid()]))
-            som_instance.add(pin_entry)
-        instances = SExp("instances")
-        project = SExp("project", atoms=[project_name])
-        path = SExp("path", atoms=[f"/{schematic_uuid}"])
-        path.add(SExp("reference", atoms=[j_name]))
-        path.add(SExp("unit", atoms=[1]))
-        project.add(path)
-        instances.add(project)
-        som_instance.add(instances)
-        root.add(som_instance)
+    for som_instance_sexp in som_instances:
+        root.add(som_instance_sexp)
 
-    for placed in placed_all:
-        root.add(build_symbol_instance_sexp(placed, schematic_uuid, project_name))
+    for placed in build.placed_symbols:
+        root.add(build_symbol_instance_sexp(placed, schematic_uuid, PROJECT_NAME))
 
-    for wire_or_junction in geometry_wires:
-        root.add(wire_or_junction)
+    for sexp in build.geometry_objects:
+        root.add(sexp)
 
-    for decorative in decorative_objects:
-        root.add(decorative)
+    for sexp in build.label_objects:
+        root.add(sexp)
 
-    power_rail_names = (
-        "+VIN", "+3V3", "+1V8", "+3V3_SC",
-        "+VCCO_13", "+VCCO_33", "+VCCO_34", "+VCCO_35",
-        "GND", "CHASSIS_GND",
-    )
-    power_rail_origin_x: float = snap_to_grid(5.0)
-    power_rail_origin_y: float = snap_to_grid(20.0)
-    power_rail_pitch_mm: float = 5.08
-    for rail_index, rail_name in enumerate(power_rail_names):
-        rail_position = Point(
-            power_rail_origin_x,
-            power_rail_origin_y + rail_index * power_rail_pitch_mm,
-        )
-        root.add(global_label(rail_name, rail_position))
+    for sexp in build.decorative_objects:
+        root.add(sexp)
 
     sheet_instances = SExp("sheet_instances")
     sheet_path = SExp("path", atoms=["/"])

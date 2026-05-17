@@ -396,6 +396,19 @@ RESISTORS: tuple[BOMPart, ...] = (
         stock_at_lcsc=500_000,
         unit_price_usd=0.0008,
     ),
+    BOMPart(
+        token="R_SENSE_10mR_2010_1%",
+        value="0R01",
+        footprint="Resistor_SMD:R_2010_5025Metric",
+        lcsc="C7126",
+        mpn="RL2010FK-070R01L",
+        manufacturer="YAGEO",
+        package="2010",
+        datasheet_url="https://datasheet.lcsc.com/lcsc/YAGEO-RL2010FK-070R01L_C7126.pdf",
+        description="10 milliohm 1% 0.5W 2010 current-sense shunt (INA226 R_SENSE for rails up to 8A)",
+        stock_at_lcsc=83_000,
+        unit_price_usd=0.135,
+    ),
 )
 
 

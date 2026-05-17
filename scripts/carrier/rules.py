@@ -380,10 +380,10 @@ class Validator:
         sheet_name: str,
         wire_segments: list[tuple[tuple[float, float], tuple[float, float]]],
     ) -> None:
-        """J3 (warn): No two wires share both endpoints.
+        """J3 (strict): No two wires share both endpoints.
 
-        Warn-only because KiCad merges duplicate wires silently; this is a
-        cleanliness check, not a correctness check.
+        Promoted to strict for the production deliverable: duplicate wires
+        indicate a placement bug and bloat the schematic file.
         """
         seen_segments: set[
             tuple[tuple[float, float], tuple[float, float]]
@@ -392,11 +392,11 @@ class Validator:
             canonical = tuple(sorted([segment_start, segment_end]))
             location = f"sheet:{sheet_name}:wire{canonical}"
             if canonical in seen_segments:
-                self._add("J3", "warn", location,
+                self._add("J3", "strict", location,
                           f"Duplicate wire {canonical}", False)
             else:
                 seen_segments.add(canonical)
-                self._add("J3", "warn", location,
+                self._add("J3", "strict", location,
                           "Wire has unique endpoints", True)
 
     def check_t_intersection_junctions(
@@ -405,11 +405,10 @@ class Validator:
         wire_segments: list[tuple[tuple[float, float], tuple[float, float]]],
         junction_positions: set[tuple[float, float]],
     ) -> None:
-        """J4 (warn): Junctions exist at every T-intersection.
+        """J4 (strict): Junctions exist at every T-intersection.
 
-        Warn-only because some KiCad versions auto-emit junctions at
-        T-intersections during ERC; this check flags ones not pre-emitted
-        so the user can confirm connectivity in the schematic editor.
+        Promoted to strict: KiCad will not always auto-emit junctions during
+        ERC, and missing junctions silently break connectivity.
         """
         from scripts.carrier.core.geometry import detect_t_intersections
         from scripts.carrier.core.sexpr import GRID_TOLERANCE_MM, Point
@@ -427,10 +426,10 @@ class Validator:
                 for jx, jy in junction_positions
             )
             if has_junction:
-                self._add("J4", "warn", location,
+                self._add("J4", "strict", location,
                           "Junction present at T-intersection", True)
             else:
-                self._add("J4", "warn", location,
+                self._add("J4", "strict", location,
                           "MISSING junction at T-intersection", False)
 
     def check_no_wire_through_component(
@@ -441,16 +440,16 @@ class Validator:
             tuple[float, float], tuple[float, float], str
         ]],
     ) -> None:
-        """J5 (warn): No wire passes through a placed component's bounding box.
+        """J5 (strict): No wire passes through a placed component's bounding box.
 
         Each entry in ``component_bounding_boxes`` is
         ``(top_left, bottom_right, reference)``. To avoid an O(W*C)
         results explosion, this emits exactly one rule entry per wire.
 
-        Warn-only because the auto-generator places ICs and externals on
-        a coarse grid; the user is expected to rearrange visually post
-        generation. KiCad treats wire-through-component as an aesthetic
-        concern, not a connectivity error.
+        Promoted to strict for the production deliverable: a wire crossing
+        a component body is a real placement bug (the wire visually appears
+        to short to the part). The zone-based placement engine prevents this
+        by construction.
         """
         from scripts.carrier.core.geometry import BoundingBox
         from scripts.carrier.core.sexpr import Point
@@ -466,11 +465,11 @@ class Validator:
                     crossing_reference = component_reference
                     break
             if crossing_reference is None:
-                self._add("J5", "warn", location,
+                self._add("J5", "strict", location,
                           f"Wire {segment_start} -> {segment_end} clears all components",
                           True)
             else:
-                self._add("J5", "warn", location,
+                self._add("J5", "strict", location,
                           f"Wire {segment_start} -> {segment_end} crosses "
                           f"component {crossing_reference} bounding box",
                           False)

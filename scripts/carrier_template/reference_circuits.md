@@ -255,8 +255,9 @@ This document is reviewed by the EE before PCB tape-out to confirm the carrier d
 
 | IC pin / net | Other side | Part token | Qty | Justification |
 |---|---|---|---|---|
+| `IN+` | `IN-` | `R_SENSE_10mR_2010_1%` | 1 | DS Sec 9.3 + Eq 7: R_SENSE = V_FS / I_max; 10 milliohm gives 81.92mV full-scale at 8.192A (20mV/2.5uV/LSB resolution = INA226 native range) |
 | `VS` | `GND` | `100n_0402_X7R` | 1 | DS Sec 9.2: VS decoupling - 100nF close to pin |
-| `IN+` | `IN-` | `100n_0402_X7R` | 1 | DS Sec 9.3: Differential filter cap between IN+ / IN- (optional) |
+| `IN+` | `IN-` | `100n_0402_X7R` | 1 | DS Sec 9.3 + Fig 32: Differential filter cap between IN+ / IN- (noise immunity) |
 
 ### Pins requiring no external components (per datasheet)
 
@@ -628,6 +629,6 @@ This document is reviewed by the EE before PCB tape-out to confirm the carrier d
 
 - ICs with reference circuits: **17**
 - Total IC instances on carrier: **27**
-- Total external supporting parts (sum across all IC instances): **114**
+- Total external supporting parts (sum across all IC instances): **120**
 
 Every supporting part on this carrier traces back to a specific section/figure of an IC datasheet. Review this document before PCB tape-out to validate design intent.

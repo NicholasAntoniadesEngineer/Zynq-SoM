@@ -1,7 +1,7 @@
 # For PCBs designed using KiCad: https://www.kicad.org/
 # Format documentation: https://kicad.org/help/file-formats/
 
-# Temporary files
+# KiCad temp/backup files
 *.000
 *.bak
 *.bck
@@ -26,7 +26,30 @@ fp-info-cache
 *.dsn
 *.ses
 
-
-# Exported BOM files
+# Exported BOM files (we ship our own carrier_BOM.csv from the generator)
 *.xml
 
+# OS / editor / IDE artefacts
+.DS_Store
+**/.DS_Store
+.history/
+**/.history/
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.tox/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
