@@ -87,10 +87,6 @@ exec(open(os.path.expandvars("${KIPRJMOD}/scripts/create_carrier_template_plugin
 ```
 The `.kicad_pcb` template file can be found inside the `carrier_template` folder, together with the `.csv` files that will be used by [symbol_creation.bash](#symbol_creationbash) to create the SoM carrier connector symbols.
 
->[!NOTE]
->Schematic symbols need to be manually linked to the  generated footprints:
->- symbol references needs to be edited to match the  respective `.kicad_pcb` footprint references
->- symbol footprints needs to match the `.kicad_pcb` footprints
 ## `symbol_creation.bash`
 
 This bash script uses the previously generated `.csv` files to create a  symbol library (`.lib`) containing the SoM carrier  connector symbols.
@@ -102,6 +98,20 @@ source symbol_creation.bash
 The library file is saved as `symbol_Zynq_SoM.lib` (Kicad < V6.0). Conversion to the newer `.kicad_sym` format can be done during import by clicking the "Migrate Library" button inside Symbol Library Manager.
 
 ![](../pictures/SoM_carrier_symbols.png)
+
+## `create_carrier_template_schematic.py`
+
+This script generates a `.kicad_sch` schematic for the carrier_template project. It reads the connector symbols from `symbol_Zynq_SoM.kicad_sym`, embeds them in a new A3 schematic, and instantiates `J1`, `J2`, and `J3` with their footprints linked to the project footprint library (`fp:HRS_DF40C-100DP-0.4V_51_`).
+
+Run after `symbol_creation.bash` so that the symbol library exists.
+
+### Usage
+From the repository root:
+```bash
+python scripts/create_carrier_template_schematic.py
+```
+
+The script writes `scripts/carrier_template/carrier_template.kicad_sch` and updates the project file's `top_level_sheets` UUID so KiCad opens the schematic directly. Open `carrier_template.kicad_pro` in KiCad to see the three connector symbols ready for wiring.
 
 
 
