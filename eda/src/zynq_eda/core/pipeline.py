@@ -22,9 +22,10 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
-from zynq_eda.core.emit import emit_sheet
+from zynq_eda.core.emit import emit_project, emit_root_sheet, emit_sheet
 from zynq_eda.core.layout import SymbolGeometryCache
 from zynq_eda.core.layout.place import place_block
+from zynq_eda.core.layout.root import _BlockSheetSpec, build_root_sheet
 from zynq_eda.core.validate.audit import run_audit, summary_line
 from zynq_eda.core.validate.erc import run_erc
 from zynq_eda.core.validate.overlap import validate_overlap
@@ -34,6 +35,17 @@ from zynq_eda.core.validate.report import ValidationReport
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_CARRIER_OUTPUT_DIR = REPO_ROOT / "boards" / "carrier"
+
+
+def _root_filename_stem(only_block: str | None) -> str:
+    """Pick the root .kicad_sch / .kicad_pro filename stem.
+
+    Always emit a single, stable "carrier" project name. The ``--only`` flag
+    is an iteration shortcut (regenerate one sub-sheet), not a hint to
+    rename the root project — KiCad workflows assume the project file name
+    is stable across regenerations.
+    """
+    return "carrier"
 
 
 def run_carrier(
@@ -105,6 +117,8 @@ def run_carrier(
     block_validation = ValidationReport()
     parent_uuid = str(uuid.uuid4())
 
+    block_sub_sheets: list[tuple] = []  # (block, placed_sheet, relative_filename)
+
     for block in blocks:
         print(f"  block {block.name!r} ({block.title}):")
         sheet = place_block(block, geometry_cache=geometry_cache)
@@ -133,18 +147,57 @@ def run_carrier(
             sheet_uuid=sheet_uuid,
         )
         print(f"    emitted: {stats.output_path.relative_to(REPO_ROOT)}")
+        block_sub_sheets.append((block, sheet, f"sheets/{block.name}.kicad_sch"))
 
-    # --- Stage 7: Validation report (in-memory + ERC) ----------------------
+    # --- Stage 7: Root sheet + project file --------------------------------
     print()
-    print("Stage 7: Validation...")
+    print("Stage 7: Root sheet + project file...")
+    root_uuid = str(uuid.uuid4())
+    root_sheet = build_root_sheet(
+        title=carrier_project.CARRIER_TITLE,
+        block_specs=[
+            _BlockSheetSpec(block=blk, sub_sheet=sub, filename=fname)
+            for (blk, sub, fname) in block_sub_sheets
+        ],
+    )
+    root_bounds = validate_page_bounds(root_sheet)
+    root_overlap = validate_overlap(root_sheet)
+    block_validation.extend(root_bounds)
+    block_validation.extend(root_overlap)
+    print(
+        f"  root placed: {len(root_sheet.sheets)} sheet symbols, "
+        f"{len(root_sheet.symbols)} drivers, {len(root_sheet.wires)} wires"
+    )
+    print(
+        f"  root in-memory: bounds={len(root_bounds)}, overlap={len(root_overlap)}"
+    )
+
+    project_stem = _root_filename_stem(only_block)
+    root_sheet_path = resolved_output_dir / f"{project_stem}.kicad_sch"
+    root_stats = emit_root_sheet(
+        root_sheet,
+        root_sheet_path,
+        root_uuid=root_uuid,
+        project_name=project_stem,
+    )
+    print(f"  emitted: {root_stats.output_path.relative_to(REPO_ROOT)}")
+
+    project_path = resolved_output_dir / f"{project_stem}.kicad_pro"
+    emit_project(
+        output_path=project_path,
+        project_name=project_stem,
+        root_schematic_filename=root_sheet_path.name,
+        root_schematic_uuid=root_uuid,
+    )
+    print(f"  project: {project_path.relative_to(REPO_ROOT)}")
+
+    # --- Stage 7b: ERC on the full hierarchy via the root ------------------
+    print()
+    print("Stage 7b: Validation (ERC on root)...")
     if not skip_erc:
-        for block in blocks:
-            sheet_path = sheets_dir / f"{block.name}.kicad_sch"
-            erc_results, erc_errors, erc_warnings = run_erc(sheet_path)
-            block_validation.extend(erc_results)
-            print(
-                f"  ERC {block.name}: errors={erc_errors}, warnings={erc_warnings}"
-            )
+        erc_results, erc_errors, erc_warnings = run_erc(root_sheet_path)
+        block_validation.extend(erc_results)
+        print(f"  ERC root: errors={erc_errors}, warnings={erc_warnings}")
     else:
         print("  --skip-erc: skipping kicad-cli ERC")
 

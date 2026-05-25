@@ -53,12 +53,14 @@ def place_external_nets(
         seen_label_positions=seen_label_positions,
     )
 
-    _input_pwr_flags(
-        builder,
-        block=block,
-    )
-
-    _ground_label_and_flag(
+    # Power-rail drivers (power:PWR_FLAG, root-level power:GND) live on
+    # the *root* sheet now — see :mod:`zynq_eda.core.layout.root`. Emitting
+    # them per-block produces duplicate drivers once the blocks merge in
+    # the project hierarchy ("Power output × Power output" pin_to_pin
+    # errors). The sub-sheet still emits the ground HIERARCHICAL LABEL
+    # so the GND net can leave the sheet; the root sheet's power symbol
+    # then drives it across the whole hierarchy.
+    _ground_label_only(
         builder,
         block=block,
         ic_anchors=ic_anchors,
@@ -206,7 +208,7 @@ def _input_pwr_flags(
         ))
 
 
-def _ground_label_and_flag(
+def _ground_label_only(
     builder: BlockLayoutBuilder,
     *,
     block: Block,
@@ -215,7 +217,15 @@ def _ground_label_and_flag(
     right_x: float,
     seen_label_positions: set[tuple[float, float]],
 ) -> None:
-    """Emit one bottom-of-edge GND hierarchical label + PWR_FLAG + power:GND."""
+    """Emit one bottom-of-edge GND hierarchical label per declared GroundNet.
+
+    The block also gets a single ``power:GND`` symbol on the same label
+    so its sub-sheet remains visually legible (every IC's local GND
+    cluster anchors to a "real" GND symbol on the sheet). The PWR_FLAG
+    that previously sat next to this label moved to the root sheet's
+    cross-block driver pass — emitting it here would duplicate the
+    driver and trigger pin_to_pin Power-out conflicts across blocks.
+    """
     for ground_net in block.external_nets:
         if ground_net.power_kind != "ground":
             continue
@@ -239,8 +249,6 @@ def _ground_label_and_flag(
             rotation=rotation,
         ))
 
-        # power:GND symbol that "drives" the hierarchical label from outside
-        # the block's main column.
         gnd_symbol_position = Point(
             label_position.x,
             snap_to_grid(label_position.y + POWER_SYMBOL_OFFSET_MM),
@@ -251,24 +259,6 @@ def _ground_label_and_flag(
             reference=builder.next_ref("#PWR"),
             value="GND",
             position=gnd_symbol_position,
-            footprint="",
-            rotation=0.0,
-        ))
-
-        # PWR_FLAG on the same label so KiCad ERC sees GND driven.
-        gnd_flag_position = Point(
-            snap_to_grid(label_position.x + (-3.81 if ground_net.edge == SheetEdge.LEFT else 3.81)),
-            label_position.y,
-        )
-        builder.wires.append(PlacedWire(
-            start=label_position,
-            end=gnd_flag_position,
-        ))
-        builder.symbols.append(PlacedSymbol(
-            lib_id="power:PWR_FLAG",
-            reference=builder.next_ref("#FLG"),
-            value="GND",
-            position=gnd_flag_position,
             footprint="",
             rotation=0.0,
         ))

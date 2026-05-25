@@ -17,6 +17,7 @@ from zynq_eda.core.model.sheet import (
     PlacedJunction,
     PlacedLabel,
     PlacedNoConnect,
+    PlacedSheet,
     PlacedSymbol,
     PlacedWire,
     Sheet,
@@ -46,6 +47,7 @@ class BlockLayoutBuilder:
     junctions: list[PlacedJunction] = field(default_factory=list)
     no_connects: list[PlacedNoConnect] = field(default_factory=list)
     hierarchical_labels: list[PlacedHierarchicalLabel] = field(default_factory=list)
+    sheets: list[PlacedSheet] = field(default_factory=list)
     _ref_counters: dict[str, int] = field(
         default_factory=lambda: {"C": 100, "R": 100, "D": 100, "PWR": 100, "FLG": 100}
     )
@@ -68,5 +70,6 @@ class BlockLayoutBuilder:
             junctions=tuple(self.junctions),
             no_connects=tuple(self.no_connects),
             hierarchical_labels=tuple(self.hierarchical_labels),
+            sheets=tuple(self.sheets),
             description=block.description,
         )

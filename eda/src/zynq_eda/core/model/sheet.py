@@ -129,6 +129,69 @@ class PlacedHierarchicalLabel:
 
 
 @dataclass(frozen=True)
+class PlacedSheetPin:
+    """One sheet pin on a root-level :class:`PlacedSheet` symbol.
+
+    The pin lives on one edge of the sheet symbol's rectangle. The exact
+    page coordinate is derived at emission time from
+    ``parent_sheet.position`` + ``edge`` + ``position_along_edge``.
+    """
+
+    name: str
+    direction: Literal["input", "output", "bidirectional", "passive", "tri_state"]
+    edge: Literal["left", "right", "top", "bottom"]
+    position_along_edge: float  # mm from the edge's reference corner
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError("PlacedSheetPin.name must be non-empty")
+        if self.direction not in {
+            "input", "output", "bidirectional", "passive", "tri_state",
+        }:
+            raise ValueError(f"PlacedSheetPin.direction invalid: {self.direction!r}")
+        if self.edge not in {"left", "right", "top", "bottom"}:
+            raise ValueError(f"PlacedSheetPin.edge invalid: {self.edge!r}")
+        if self.position_along_edge < 0:
+            raise ValueError(
+                "PlacedSheetPin.position_along_edge must be >= 0, got "
+                f"{self.position_along_edge}"
+            )
+
+
+@dataclass(frozen=True)
+class PlacedSheet:
+    """A hierarchical sheet symbol on the root sheet (a "block box").
+
+    Each :class:`PlacedSheet` becomes one ``(sheet ...)`` s-expression in
+    the emitted root ``.kicad_sch``. Its ``filename`` points at the
+    sub-sheet (e.g. ``"sheets/power.kicad_sch"``); ``pins`` lists the
+    edge connections that mirror the sub-sheet's hierarchical labels.
+    """
+
+    name: str
+    filename: str
+    position: Point
+    size: tuple[float, float]
+    pins: tuple[PlacedSheetPin, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError("PlacedSheet.name must be non-empty")
+        if not self.filename:
+            raise ValueError("PlacedSheet.filename must be non-empty")
+        if len(self.size) != 2 or self.size[0] <= 0 or self.size[1] <= 0:
+            raise ValueError(f"PlacedSheet.size must be positive (w, h), got {self.size!r}")
+        assert_on_grid(self.position)
+        seen_pin_names: set[str] = set()
+        for pin in self.pins:
+            if pin.name in seen_pin_names:
+                raise ValueError(
+                    f"PlacedSheet {self.name!r}: duplicate pin name {pin.name!r}"
+                )
+            seen_pin_names.add(pin.name)
+
+
+@dataclass(frozen=True)
 class Sheet:
     """One A4 (or other-size) page of placed primitives."""
 
@@ -141,6 +204,7 @@ class Sheet:
     junctions: tuple[PlacedJunction, ...] = field(default_factory=tuple)
     no_connects: tuple[PlacedNoConnect, ...] = field(default_factory=tuple)
     hierarchical_labels: tuple[PlacedHierarchicalLabel, ...] = field(default_factory=tuple)
+    sheets: tuple[PlacedSheet, ...] = field(default_factory=tuple)
     description: str = ""
 
     def __post_init__(self) -> None:
