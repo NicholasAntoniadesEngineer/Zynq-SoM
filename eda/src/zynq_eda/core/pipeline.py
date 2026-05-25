@@ -11,10 +11,12 @@ Stages (see plan §"Generation pipeline"):
     5. Route       — pin-aware A* router + bus grouping + junctions.
     6. Emit        — sheet → .kicad_sch + project file.
     7. Validate    — page_bounds + overlap + routing + ERC.
-    8. Outputs     — (Stage 8) BOM.csv + io_assignment.csv + reference_circuits.md.
+    8. Outputs     — BOM.csv + io_assignment.csv + reference_circuits.md.
 
 Stage 4 currently implements Stages 0-7 end-to-end for the Power block only.
-Additional blocks land in Stage 6, the root sheet in Stage 7.
+Additional blocks land in Stage 6, the root sheet in Stage 7. Stage 8
+artifacts are emitted on every run, regardless of ERC outcome — they're
+inputs to manual review, not products of validation.
 """
 
 from __future__ import annotations
@@ -26,6 +28,11 @@ from zynq_eda.core.emit import emit_project, emit_root_sheet, emit_sheet
 from zynq_eda.core.layout import SymbolGeometryCache
 from zynq_eda.core.layout.place import place_block
 from zynq_eda.core.layout.root import _BlockSheetSpec, build_root_sheet
+from zynq_eda.core.registry import (
+    emit_bom,
+    emit_io_assignment,
+    emit_reference_circuits_md,
+)
 from zynq_eda.core.validate.audit import run_audit, summary_line
 from zynq_eda.core.validate.erc import run_erc
 from zynq_eda.core.validate.overlap import validate_overlap
@@ -209,6 +216,48 @@ def run_carrier(
     )
     print(f"  report: {validation_path.relative_to(REPO_ROOT)}")
 
+    # --- Stage 8: Outputs (BOM CSV + IO assignment CSV + reference circuits MD) ----
+    print()
+    print("Stage 8: Output emitters (BOM / IO / reference circuits)...")
+    from zynq_eda.catalog.registry.parts_registry import REGISTRY as _PARTS_REGISTRY
+
+    class _CatalogView:
+        """Adapter giving emit_bom an ``.all_parts()`` view of the registry."""
+
+        @staticmethod
+        def all_parts():
+            return list(_PARTS_REGISTRY.values())
+
+    bom_path = resolved_output_dir / "carrier_BOM.csv"
+    emit_bom(
+        blocks=blocks,
+        root_sheet=root_sheet,
+        sub_sheets=[sub for (_blk, sub, _fname) in block_sub_sheets],
+        parts_catalog=_CatalogView,
+        output_path=bom_path,
+    )
+    bom_row_count = _count_csv_rows(bom_path)
+    print(
+        f"  BOM:               {bom_path.relative_to(REPO_ROOT)} "
+        f"({bom_row_count} rows)"
+    )
+
+    io_path = resolved_output_dir / "io_assignment.csv"
+    emit_io_assignment(blocks=blocks, output_path=io_path)
+    io_row_count = _count_csv_rows(io_path)
+    print(
+        f"  IO assignment:     {io_path.relative_to(REPO_ROOT)} "
+        f"({io_row_count} rows)"
+    )
+
+    refcircuits_path = resolved_output_dir / "reference_circuits.md"
+    emit_reference_circuits_md(blocks=blocks, output_path=refcircuits_path)
+    ic_count = sum(len(b.ics) for b in blocks)
+    print(
+        f"  Reference circuits: {refcircuits_path.relative_to(REPO_ROOT)} "
+        f"({ic_count} ICs)"
+    )
+
     if block_validation.error_count > 0:
         print()
         print(
@@ -220,3 +269,9 @@ def run_carrier(
     print()
     print("All sheets generated cleanly.")
     return 0
+
+
+def _count_csv_rows(path: Path) -> int:
+    """Return the number of data rows (excluding the header) in a CSV file."""
+    with path.open("r", encoding="utf-8") as f:
+        return max(0, sum(1 for _ in f) - 1)
