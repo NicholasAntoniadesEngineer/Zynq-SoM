@@ -159,6 +159,8 @@ def _attach_ic_ground(
                 anchor=gnd_geom.anchor,
                 connection=gnd_geom.connection,
                 relative=gnd_geom.relative,
+                pin_rotation=getattr(gnd_geom, "pin_rotation", 0.0),
+                symbol_rotation=getattr(gnd_geom, "symbol_rotation", 0.0),
             )
 
     return first_geom

@@ -1,11 +1,15 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-25T16:57:04Z
+Generated: 2026-05-25T17:51:56Z
 
-**Errors:** 88  **Warnings:** 53  **Info:** 0
+**Errors:** 93  **Warnings:** 46  **Info:** 0
 
-## Errors (88)
+## Errors (93)
 
+- **page_bounds.symbol_outside**: symbol '#PWR124' ('CHASSIS_GND') outside page: x=293.37 > right edge 291.92 _(usb_pd.kicad_sch)_
+- **page_bounds.wire_outside**: wire end outside page: x=293.37 > right edge 291.92 _(usb_pd.kicad_sch)_
+- **page_bounds.symbol_outside**: symbol '#PWR108' ('CHASSIS_GND') outside page: x=293.37 > right edge 291.92 _(usbc_otg.kicad_sch)_
+- **page_bounds.wire_outside**: wire end outside page: x=293.37 > right edge 291.92 _(usbc_otg.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
@@ -40,7 +44,8 @@ Generated: 2026-05-25T16:57:04Z
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
+- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
+- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
@@ -95,11 +100,8 @@ Generated: 2026-05-25T16:57:04Z
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 
-## Warnings (53)
+## Warnings (46)
 
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 228600 _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 254000 _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 279400 _(carrier.kicad_sch)_
 - **erc.label_multiple_wires**: Label connects more than one wire at 2641600, 457200 _(carrier.kicad_sch)_
 - **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Connector_HDMI' _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
@@ -122,9 +124,6 @@ Generated: 2026-05-25T16:57:04Z
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.footprint_link_issues**: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 228600 _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 254000 _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 279400 _(carrier.kicad_sch)_
 - **erc.label_multiple_wires**: Label connects more than one wire at 2641600, 457200 _(carrier.kicad_sch)_
 - **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Connector_HDMI' _(carrier.kicad_sch)_
 - **erc.label_multiple_wires**: Label connects more than one wire at 2082800, 330200 _(carrier.kicad_sch)_
@@ -148,6 +147,5 @@ Generated: 2026-05-25T16:57:04Z
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both +5V and GND are attached to the same items; +5V will be used in the netlist _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both +3V3 and GND are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both +5V and ZYNQ_HDMI_TX_SDA are attached to the same items; +5V will be used in the netlist _(carrier.kicad_sch)_
 

@@ -23,11 +23,14 @@ from typing import Literal
 
 from zynq_eda.core.layout._builder import BlockLayoutBuilder
 from zynq_eda.core.layout._constants import (
+    HORIZONTAL_SWARM_PITCH_MM,
     PASSIVE_OFFSET_MM,
     PASSIVE_PIN_HALF,
+    PASSIVE_PITCH_MM,
     POWER_SYMBOL_LIB_IDS,
     POWER_SYMBOL_OFFSET_MM,
 )
+from zynq_eda.core.layout.geometry import page_side_from_pin
 from zynq_eda.core.model.block import IcInstance
 from zynq_eda.core.model.grid import Point, snap_to_grid
 from zynq_eda.core.model.refcircuit import ExternalPart
@@ -97,16 +100,34 @@ def passive_ref_prefix(part_token: str) -> str:
     return {"cap": "C", "res": "R", "diode": "D", "other": "R"}[kind]
 
 
-def pin_side(pin_relative: Point) -> Literal["left", "right", "top", "bottom"]:
+def pin_side(
+    pin_relative: Point,
+    *,
+    pin_rotation: float | None = None,
+    symbol_rotation: float = 0.0,
+) -> Literal["left", "right", "top", "bottom"]:
     """Determine which side of the IC body a pin emerges from on the *page*.
 
-    ``pin_relative`` is in symbol-local coords where +Y points up
-    (mathematical convention). The schematic page uses +Y down (graphics
-    convention), so a pin at symbol-y > 0 visually sits at the TOP of the
-    IC body on the page. We flip the Y sign before deciding so the
-    returned side matches the page-coord direction the cluster code uses
-    to lay out passives.
+    The correct way to determine a pin's edge is from its KiCad pin
+    ``rotation`` (the body-direction relative to the tip), combined with
+    the placed symbol's own rotation and the symbol-to-page Y-flip. See
+    :func:`zynq_eda.core.layout.geometry.page_side_from_pin` for the
+    derivation.
+
+    A historical fallback heuristic — comparing ``abs(pin.x)`` vs
+    ``abs(pin.y)`` — mis-classifies pins on ICs whose pin columns span a
+    larger y-range than the body width (e.g. FUSB302's 7 left-edge pins
+    spanning ±7.62 mm). When ``pin_rotation`` is supplied (preferred), we
+    use the rotation-derived result; otherwise we fall back to the legacy
+    heuristic for backwards compatibility.
     """
+    if pin_rotation is not None:
+        return page_side_from_pin(
+            pin_rotation=pin_rotation,
+            symbol_rotation=symbol_rotation,
+        )  # type: ignore[return-value]
+
+    # Legacy heuristic for callers that don't yet supply pin_rotation.
     page_local_y = -pin_relative.y  # symbol +Y → page -Y
     if abs(pin_relative.x) >= abs(page_local_y):
         return "right" if pin_relative.x > 0 else "left"
@@ -216,7 +237,7 @@ def place_one_passive_for_pin(
     external: ExternalPart,
     resolved_destination: str,
     ic_pin_geometry,
-    swarm_slot_offset: float,
+    slot_index: int,
     ic_reference: str,
 ) -> None:
     """Place a single passive next to an IC pin and wire it up.
@@ -228,15 +249,20 @@ def place_one_passive_for_pin(
             already mapped through :func:`resolve_destination_net`.
         ic_pin_geometry: The :class:`PinGeometry` of the IC pin this passive
             attaches to (returned by ``SymbolGeometryCache.pin_geometry_by_name``).
-        swarm_slot_offset: Per-slot distance to add to the primary offset
-            when multiple passives stack on the same pin.
+        slot_index: 0-based index of this passive within the per-pin swarm.
+            Used to derive the slot's geometric offset; the offset scale
+            depends on which body side the IC pin sits on (LEFT/RIGHT use
+            :data:`HORIZONTAL_SWARM_PITCH_MM`; TOP/BOTTOM use
+            :data:`PASSIVE_PITCH_MM`).
         ic_reference: The IC's reference designator (currently unused; kept
             for future per-IC accounting).
     """
-    side = pin_side(ic_pin_geometry.relative)
+    side = pin_side(
+        ic_pin_geometry.relative,
+        pin_rotation=getattr(ic_pin_geometry, "pin_rotation", 0.0),
+        symbol_rotation=getattr(ic_pin_geometry, "symbol_rotation", 0.0),
+    )
     pin_connection = ic_pin_geometry.connection
-
-    primary_offset = PASSIVE_OFFSET_MM + swarm_slot_offset
 
     # Choose passive_anchor + rotation per side so the NEAR pin (toward the
     # IC) lands one PASSIVE_PIN_HALF from passive_anchor in the right
@@ -248,7 +274,15 @@ def place_one_passive_for_pin(
     #     rotation 90 : pin 1 → (-3.81, 0), pin 2 → (+3.81, 0)
     #     rotation 180: pin 1 → (0, +3.81), pin 2 → (0, -3.81)
     #     rotation 270: pin 1 → (+3.81, 0), pin 2 → (-3.81, 0)
+    #
+    # Slot stacking pitch depends on the side: LEFT/RIGHT slots fan outward
+    # along the perpendicular-to-edge axis (each slot is one passive-body +
+    # one power-symbol-stub further out), so the pitch must clear
+    # 2*PASSIVE_PIN_HALF + POWER_SYMBOL_OFFSET. TOP/BOTTOM slots fan
+    # laterally along their own column (each slot has its own X column);
+    # the lateral pitch only needs to keep adjacent caps visually separated.
     if side == "left":
+        primary_offset = PASSIVE_OFFSET_MM + slot_index * HORIZONTAL_SWARM_PITCH_MM
         passive_anchor = Point(
             snap_to_grid(pin_connection.x - primary_offset),
             pin_connection.y,
@@ -257,6 +291,7 @@ def place_one_passive_for_pin(
         near_point = Point(snap_to_grid(passive_anchor.x + PASSIVE_PIN_HALF), passive_anchor.y)
         far_point = Point(snap_to_grid(passive_anchor.x - PASSIVE_PIN_HALF), passive_anchor.y)
     elif side == "right":
+        primary_offset = PASSIVE_OFFSET_MM + slot_index * HORIZONTAL_SWARM_PITCH_MM
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + primary_offset),
             pin_connection.y,
@@ -268,16 +303,18 @@ def place_one_passive_for_pin(
         # Each slot occupies its own X column (fan laterally) so the
         # vertical wire from the IC pin to slot N's near pin doesn't
         # cross slot 0..N-1's far pins, which would short different nets.
+        lateral_offset = slot_index * PASSIVE_PITCH_MM
         passive_anchor = Point(
-            snap_to_grid(pin_connection.x + swarm_slot_offset),
+            snap_to_grid(pin_connection.x + lateral_offset),
             snap_to_grid(pin_connection.y - PASSIVE_OFFSET_MM),
         )
         passive_rotation = 0.0
         near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
         far_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF))
     else:  # bottom
+        lateral_offset = slot_index * PASSIVE_PITCH_MM
         passive_anchor = Point(
-            snap_to_grid(pin_connection.x + swarm_slot_offset),
+            snap_to_grid(pin_connection.x + lateral_offset),
             snap_to_grid(pin_connection.y + PASSIVE_OFFSET_MM),
         )
         passive_rotation = 180.0
@@ -362,6 +399,8 @@ def cluster_ic_externals(
             anchor=pin_geom.anchor,
             connection=pin_geom.connection,
             relative=pin_geom.relative,
+            pin_rotation=getattr(pin_geom, "pin_rotation", 0.0),
+            symbol_rotation=getattr(pin_geom, "symbol_rotation", 0.0),
         )
         placed_passive_pin_names.add(pin_name)
 
@@ -371,13 +410,12 @@ def cluster_ic_externals(
                 ic=ic,
                 overrides_for_pin=overrides_for_pin,
             )
-            from zynq_eda.core.layout._constants import PASSIVE_PITCH_MM
             place_one_passive_for_pin(
                 builder,
                 external=external,
                 resolved_destination=resolved_destination,
                 ic_pin_geometry=pin_geom,
-                swarm_slot_offset=slot_index * PASSIVE_PITCH_MM,
+                slot_index=slot_index,
                 ic_reference=ic.reference,
             )
     return pin_geom_map

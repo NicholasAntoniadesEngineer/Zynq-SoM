@@ -30,11 +30,18 @@ class PinGeometryAbs:
 
     Stores absolute schematic-page coordinates (after Y-flip + rotation) so
     downstream wiring code doesn't have to re-derive them.
+
+    ``pin_rotation`` and ``symbol_rotation`` are preserved verbatim from the
+    :class:`PinGeometry` they were copied from, so the cluster / connector
+    code can determine the pin's page-side from the canonical
+    rotation-derived rule rather than the legacy position-axis heuristic.
     """
 
     anchor: Point
     connection: Point
     relative: Point
+    pin_rotation: float = 0.0
+    symbol_rotation: float = 0.0
 
 
 @dataclass

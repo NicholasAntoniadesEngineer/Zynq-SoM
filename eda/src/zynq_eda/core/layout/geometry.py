@@ -48,11 +48,22 @@ class PinGeometry:
         relative: Position of the pin relative to the symbol's anchor (before
             rotation/translation). Used to determine which side of the body
             the pin is on (left/right/top/bottom).
+        pin_rotation: The pin's intrinsic rotation in the KiCad symbol library
+            (0/90/180/270 degrees). Per KiCad convention, this rotation
+            indicates the direction from the pin's wire-end (tip) INTO the
+            symbol body — so a pin with rotation=0 sits on the LEFT edge of
+            the body (tip on the left, body extends to the right).
+        symbol_rotation: The placement rotation of the parent symbol on the
+            schematic page (0/90/180/270 degrees). Combined with
+            ``pin_rotation`` and the symbol-to-page Y-flip, this determines
+            the page-side a pin sits on.
     """
 
     anchor: Point
     connection: Point
     relative: Point
+    pin_rotation: float = 0.0
+    symbol_rotation: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -136,6 +147,69 @@ def _flip_y_then_rotate(symbol_relative: Point, rotation_deg: float) -> Point:
 
 # Backward-compatible alias kept for any external imports.
 _rotate_then_flip_y = _flip_y_then_rotate
+
+
+def _pin_rotation_from_symbol(lib_id: str, pin_number: str) -> float:
+    """Look up a pin's library-defined rotation (0/90/180/270)."""
+    symbol_def = ksa.get_symbol_cache().get_symbol(lib_id)
+    if symbol_def is None:
+        return 0.0
+    for pin in symbol_def.pins:
+        if pin.number == pin_number:
+            return float(pin.rotation)
+    return 0.0
+
+
+def page_side_from_pin(
+    pin_rotation: float,
+    symbol_rotation: float = 0.0,
+) -> str:
+    """Determine which page-edge (left/right/top/bottom) a pin sits on.
+
+    KiCad pin convention: ``pin.rotation`` indicates the direction from the
+    pin's tip (electrical endpoint) INTO the symbol body. So:
+
+        rotation   0 → body to the +X of tip → pin on LEFT edge of body
+        rotation  90 → body to the +Y of tip → pin on BOTTOM edge of body
+                       (in symbol coords where +Y is up; "bottom" means
+                       smallest symbol-y; after Y-flip the pin still sits
+                       at the body's bottom edge in PAGE coords since
+                       smallest-symbol-y maps to largest-page-y, and on
+                       the page +y is down → "bottom" visually).
+        rotation 180 → body to the -X of tip → pin on RIGHT edge of body
+        rotation 270 → body to the -Y of tip → pin on TOP edge of body
+
+    The Y-flip just changes the SIGN of pin y-coordinates; it does NOT
+    change which physical body edge a pin sits on. A pin at the "top"
+    of the body in symbol frame (largest symbol-y) is still at the
+    "top" of the body visually on the page (smallest page-y, i.e. above
+    the anchor).
+
+    If the placed symbol has its own rotation (0/90/180/270), the resulting
+    page side rotates by that many CW quarter-turns on the page.
+
+    Returns the page-relative side: ``"left"``, ``"right"``, ``"top"``,
+    ``"bottom"``.
+    """
+    # Step 1: pin rotation → which body edge the pin sits on. The Y-flip
+    # preserves edge identity (a top-edge pin is still a top-edge pin on
+    # the page; the y SIGN flips but the body's edges keep their labels).
+    pin_rotation_canonical = float(pin_rotation) % 360.0
+    page_side_before_symrot = {
+        0.0:   "left",    # pin tip on left edge, body to the right
+        90.0:  "bottom",  # pin tip below body, body above
+        180.0: "right",   # pin tip on right edge, body to the left
+        270.0: "top",     # pin tip above body, body below
+    }.get(pin_rotation_canonical, "left")
+
+    # Step 2: rotate by symbol_rotation clockwise on the page.
+    # A pin on "left" rotated 90° CW ends up on "top"; another 90° CW → "right"; etc.
+    symbol_rotation_canonical = float(symbol_rotation) % 360.0
+    cw_rotations = int(symbol_rotation_canonical // 90) % 4
+    rotation_table = ["left", "top", "right", "bottom"]
+    start_index = rotation_table.index(page_side_before_symrot)
+    final_side = rotation_table[(start_index + cw_rotations) % 4]
+    return final_side
 
 
 # UUID constants for the ephemeral preview schematic kicad-sch-api requires.
@@ -230,6 +304,15 @@ class SymbolGeometryCache:
         passed through to kicad-sch-api (only rotation 0 confirmed affected;
         rotations 90/180/270 will be handled when the layout engine starts
         using non-zero rotations on ICs).
+
+        The pin's own ``rotation`` (the direction the pin's tip-to-body
+        stub extends in the KiCad symbol library) is also recovered from
+        the underlying ``SchematicPin`` so callers can determine the
+        page-side a pin sits on without resorting to position-axis
+        heuristics. For ICs with densely-packed pins on a single edge
+        (e.g. FUSB302's 7 left-column pins spanning ±7.62 mm in y), the
+        axis-dominance heuristic mis-classifies the corner pins as top/
+        bottom, which collapses unrelated nets onto the same coordinate.
         """
         component_position = preview_component.position
         component_rotation = float(getattr(preview_component, "rotation", 0.0))
@@ -247,10 +330,19 @@ class SymbolGeometryCache:
             snap_to_grid(component_position.x + page_relative.x),
             snap_to_grid(component_position.y + page_relative.y),
         )
+        # Recover the pin's own (library-level) rotation. ``list_pins`` flattens
+        # SchematicPin fields into a dict but currently omits ``rotation``,
+        # so we read it directly from the cached SymbolDefinition.
+        pin_rotation = _pin_rotation_from_symbol(
+            preview_component.lib_id,
+            pin_number,
+        )
         return PinGeometry(
             anchor=anchor,
             connection=anchor,
             relative=symbol_relative,
+            pin_rotation=pin_rotation,
+            symbol_rotation=component_rotation,
         )
 
     # ----- public API -------------------------------------------------------
