@@ -38,7 +38,8 @@ Pin map (per datasheet Table 4.1):
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -51,6 +52,9 @@ CP2102N_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.silabs.com/documents/public/data-sheets/cp2102n-datasheet.pdf",
     datasheet_revision="Rev 1.5, 2021",
     app_circuit_figure="Figure 4-1 - Typical USB to UART Bridge",
+    local_datasheet_path=local_datasheet_path("CP2102N-A02-GQFN24R"),
+    app_circuit_page="Figure 4-1 - Typical USB to UART Bridge",
+    minimum_circuit_verified=True,
     symbol_token="CP2102N",
     footprint="Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm",
     description="USB to UART bridge, USB 2.0 FS, internal regulator and oscillator",

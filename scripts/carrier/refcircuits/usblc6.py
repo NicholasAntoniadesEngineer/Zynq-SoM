@@ -24,7 +24,8 @@ We are protecting a single USB 2.0 HS pair per IC instance, so we use:
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -37,6 +38,9 @@ USBLC6_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.st.com/resource/en/datasheet/usblc6-4.pdf",
     datasheet_revision="Rev 11, Mar 2024",
     app_circuit_figure="Figure 1 - Pin connection / Figure 13 - Application",
+    local_datasheet_path=local_datasheet_path("USBLC6-4SC6"),
+    app_circuit_page="Figure 1 - Pin connection / Figure 13 - Application",
+    minimum_circuit_verified=True,
     symbol_token="USBLC6-4SC6",
     footprint="Package_TO_SOT_SMD:SOT-23-6",
     description="USB 2.0 ESD/TVS protection, 4 lines, SOT-23-6",

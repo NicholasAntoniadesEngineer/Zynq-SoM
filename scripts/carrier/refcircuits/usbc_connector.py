@@ -30,7 +30,8 @@ Pin map (per USB Type-C R2.0 Sec 3.4):
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -43,6 +44,9 @@ USBC_DEVICE_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://datasheet.lcsc.com/lcsc/2304140030_Korean-Hroparts-Elec-TYPE-C-31-M-12_C165948.pdf",
     datasheet_revision="2023",
     app_circuit_figure="USB Type-C R2.0 Sec 3.4.4 - Sink Configuration",
+    local_datasheet_path=local_datasheet_path("TYPE-C-31-M-12"),
+    app_circuit_page="USB Type-C R2.0 Sec 3.4.4 - Sink Configuration",
+    minimum_circuit_verified=True,
     symbol_token="USBC_16P",
     footprint="Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12",
     description="USB Type-C 16P SMD receptacle, configured as sink/device",

@@ -31,11 +31,12 @@ For each rail we monitor, instantiate one INA226 with:
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
 )
+from scripts.carrier.refcircuits._paths import local_datasheet_path
 
 
 INA226_REFCIRCUIT = ReferenceCircuit(
@@ -44,6 +45,9 @@ INA226_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.ti.com/lit/ds/symlink/ina226.pdf",
     datasheet_revision="Rev August 2015 (SBOS547A)",
     app_circuit_figure="Figure 32 - Typical Application Circuit",
+    local_datasheet_path=local_datasheet_path("INA226AIDGSR"),
+    app_circuit_page="p.32, Figure 32",
+    minimum_circuit_verified=True,
     symbol_token="INA226AIDGSR",
     footprint="Package_SO:VSSOP-10_3x3mm_P0.5mm",
     description="Bidirectional I2C current/power monitor 16-bit, 36V common-mode",
@@ -68,7 +72,13 @@ INA226_REFCIRCUIT = ReferenceCircuit(
             part_token="100n_0402_X7R",
             justification="DS Sec 9.2: VS decoupling - 100nF close to pin",
         ),
-        # Differential input filter (DS Fig 32 recommendation, 10R + 100nF)
+        # Differential input filter (DS Fig 32: 10R + 100nF)
+        ExternalPart(
+            from_pin="IN+",
+            to_net="SHUNT_PLUS",
+            part_token="10R_0402_1%",
+            justification="DS Fig 32: 10 ohm series input filter on IN+",
+        ),
         ExternalPart(
             from_pin="IN+",
             to_net="IN-",

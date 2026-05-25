@@ -74,21 +74,21 @@ J1,72,GND,right,ground,GND,POWER,Star ground,false
 J1,73,SDIO_D2,left,J_SD,SDIO_D2,SDIO,microSD socket DM3AT-SF-PEJM5,false
 J1,74,IO_L1_P_35,right,J_XADC_SMA,IO_L1_P_35,XADC,Dedicated XADC differential analog input,false
 J1,75,GND,left,ground,GND,POWER,Star ground,false
-J1,76,IO_L6_VREF_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L6_VREF_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J1,76,IO_L6_VREF_N_35,right,J_FMC.LA12-LA23,IO_L6_VREF_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J1,77,ETH_PHY_MDI3_N,left,T_ETH,ETH_PHY_MDI3_N,ETHERNET,Direct to Pulse HX5008NLT magnetics module,false
-J1,78,IO_L6_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L6_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J1,78,IO_L6_P_35,right,J_FMC.LA12-LA23,IO_L6_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J1,79,ETH_PHY_MDI3_P,left,T_ETH,ETH_PHY_MDI3_P,ETHERNET,Direct to Pulse HX5008NLT magnetics module,false
-J1,80,IO_L4_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L4_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J1,80,IO_L4_P_35,right,J_FMC.LA12-LA23,IO_L4_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J1,81,GND,left,ground,GND,POWER,Star ground,false
 J1,82,GND,right,ground,GND,POWER,Star ground,false
 J1,83,ETH_PHY_MDI2_N,left,T_ETH,ETH_PHY_MDI2_N,ETHERNET,Direct to Pulse HX5008NLT magnetics module,false
-J1,84,IO_L4_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L4_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J1,84,IO_L4_N_35,right,J_FMC.LA12-LA23,IO_L4_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J1,85,ETH_PHY_MDI2_P,left,T_ETH,ETH_PHY_MDI2_P,ETHERNET,Direct to Pulse HX5008NLT magnetics module,false
 J1,86,IO_0_35,right,J_PMOD4,IO_0_35,PMOD,Bank 35 single-ended to PMOD4,false
 J1,87,GND,left,ground,GND,POWER,Star ground,false
-J1,88,IO_L5_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L5_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J1,88,IO_L5_N_35,right,J_FMC.LA12-LA23,IO_L5_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J1,89,ETH_PHY_MDI1_N,left,T_ETH,ETH_PHY_MDI1_N,ETHERNET,Direct to Pulse HX5008NLT magnetics module,false
-J1,90,IO_L5_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L5_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J1,90,IO_L5_P_35,right,J_FMC.LA12-LA23,IO_L5_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J1,91,ETH_PHY_MDI1_P,left,T_ETH,ETH_PHY_MDI1_P,ETHERNET,Direct to Pulse HX5008NLT magnetics module,false
 J1,92,IO_L1_N_35,right,J_XADC_SMA,IO_L1_N_35,XADC,Dedicated XADC differential analog input,false
 J1,93,GND,left,ground,GND,POWER,Star ground,false
@@ -98,7 +98,7 @@ J1,96,GND,right,ground,GND,POWER,Star ground,false
 J1,97,ETH_PHY_MDI0_P,left,T_ETH,ETH_PHY_MDI0_P,ETHERNET,Direct to Pulse HX5008NLT magnetics module,false
 J1,98,ETH_LED1,right,J_RJ45,ETH_LED1,ETHERNET,RJ45 LED 1 drive (active low),false
 J1,99,GND,left,ground,GND,POWER,Star ground,false
-J1,100,IO_L2_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L2_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J1,100,IO_L2_N_35,right,J_FMC.LA12-LA23,IO_L2_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J2,1,+VCCO_13,left,carrier_LDO,+VCCO_13,POWER,Bank 13 VCCO; carrier-side LDO (TLV757 family),false
 J2,2,+VCCO_13,right,carrier_LDO,+VCCO_13,POWER,Bank 13 VCCO; carrier-side LDO (TLV757 family),false
 J2,3,+VCCO_13,left,carrier_LDO,+VCCO_13,POWER,Bank 13 VCCO; carrier-side LDO (TLV757 family),false
@@ -120,7 +120,7 @@ J2,18,IO_L3_P_13,right,U_HDMITX,HDMI_TX_IO_L3_P_13,HDMI_TX,Bank 13 LVDS -> HDMI 
 J2,19,IO_L22_P_13,left,U_HDMITX,HDMI_TX_IO_L22_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,20,IO_L2_P_13,right,U_HDMITX,HDMI_TX_IO_L2_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,21,IO_L6_P_13,left,U_HDMITX,HDMI_TX_IO_L6_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
-J2,22,IO_L19_P_33,right,J_LCD_or_HDMIRX,IO_L19_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,22,IO_L19_P_33,right,J_LCD,IO_L19_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J2,23,IO_25_13,left,J_PMOD1,IO_25_13,PMOD,Bank 13 single-ended to PMOD1/2,false
 J2,24,IO_L5_N_13,right,U_HDMITX,HDMI_TX_IO_L5_N_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,25,GND,left,ground,GND,POWER,Star ground,false
@@ -142,7 +142,7 @@ J2,40,IO_L11_SRCC_N_13,right,U_HDMITX,HDMI_TX_IO_L11_SRCC_N_13,HDMI_TX,Bank 13 L
 J2,41,IO_L14_P_SRCC_13,left,U_HDMITX,HDMI_TX_IO_L14_P_SRCC_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,42,IO_L11_SRCC_P_13,right,U_HDMITX,HDMI_TX_IO_L11_SRCC_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,43,IO_L3_N_13,left,U_HDMITX,HDMI_TX_IO_L3_N_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
-J2,44,IO_L20_N_33,right,J_LCD_or_HDMIRX,IO_L20_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,44,IO_L20_N_33,right,J_LCD,IO_L20_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J2,45,GND,left,ground,GND,POWER,Star ground,false
 J2,46,GND,right,ground,GND,POWER,Star ground,false
 J2,47,IO_L12_MRCC_N_13,left,U_HDMITX,HDMI_TX_IO_L12_MRCC_N_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
@@ -150,14 +150,14 @@ J2,48,IO_L9_DQS_N_13,right,U_HDMITX,HDMI_TX_IO_L9_DQS_N_13,HDMI_TX,Bank 13 LVDS 
 J2,49,IO_L12_MRCC_P_13,left,U_HDMITX,HDMI_TX_IO_L12_MRCC_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,50,IO_L9_DQS_P_13,right,U_HDMITX,HDMI_TX_IO_L9_DQS_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,51,IO_L10_N_13,left,U_HDMITX,HDMI_TX_IO_L10_N_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
-J2,52,IO_L19_VREF_N_33,right,J_LCD_or_HDMIRX,IO_L19_VREF_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,52,IO_L19_VREF_N_33,right,J_LCD,IO_L19_VREF_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J2,53,IO_L10_P_13,left,U_HDMITX,HDMI_TX_IO_L10_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
-J2,54,IO_L15_N_33,right,J_LCD_or_HDMIRX,IO_L15_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,54,IO_L15_N_33,right,J_LCD,IO_L15_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J2,55,GND,left,ground,GND,POWER,Star ground,false
 J2,56,GND,right,ground,GND,POWER,Star ground,false
 J2,57,IO_L1P_13,left,J_PMOD1,IO_L1P_13,PMOD,Bank 13 single-ended to PMOD1/2,false
 J2,58,IO_L8_P_13,right,U_HDMITX,HDMI_TX_IO_L8_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
-J2,59,IO_L20_P_33,left,J_LCD_or_HDMIRX,IO_L20_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,59,IO_L20_P_33,left,J_LCD,IO_L20_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J2,60,IO_L8_N_13,right,U_HDMITX,HDMI_TX_IO_L8_N_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,61,IO_L4_P_13,left,U_HDMITX,HDMI_TX_IO_L4_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,62,IO_L7_P_13,right,U_HDMITX,HDMI_TX_IO_L7_P_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
@@ -165,34 +165,34 @@ J2,63,IO_L4_N_13,left,U_HDMITX,HDMI_TX_IO_L4_N_13,HDMI_TX,Bank 13 LVDS -> HDMI T
 J2,64,IO_L7_N_13,right,U_HDMITX,HDMI_TX_IO_L7_N_13,HDMI_TX,Bank 13 LVDS -> HDMI TMDS lane (via TPD12S016),false
 J2,65,GND,left,ground,GND,POWER,Star ground,false
 J2,66,GND,right,ground,GND,POWER,Star ground,false
-J2,67,IO_L22_P_33,left,J_LCD_or_HDMIRX,IO_L22_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,68,IO_L23_N_33,right,J_LCD_or_HDMIRX,IO_L23_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,69,IO_L22_N_33,left,J_LCD_or_HDMIRX,IO_L22_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,70,IO_L23_P_33,right,J_LCD_or_HDMIRX,IO_L23_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,71,IO_L21_DQS_P_33,left,J_LCD_or_HDMIRX,IO_L21_DQS_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,72,IO_L24_P_33,right,J_LCD_or_HDMIRX,IO_L24_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,73,IO_L21_DQS_N_33,left,J_LCD_or_HDMIRX,IO_L21_DQS_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,74,IO_L24_N_33,right,J_LCD_or_HDMIRX,IO_L24_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,67,IO_L22_P_33,left,J_LCD,IO_L22_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,68,IO_L23_N_33,right,J_LCD,IO_L23_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,69,IO_L22_N_33,left,J_LCD,IO_L22_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,70,IO_L23_P_33,right,J_LCD,IO_L23_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,71,IO_L21_DQS_P_33,left,J_LCD,IO_L21_DQS_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,72,IO_L24_P_33,right,J_LCD,IO_L24_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,73,IO_L21_DQS_N_33,left,J_LCD,IO_L21_DQS_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,74,IO_L24_N_33,right,J_LCD,IO_L24_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J2,75,GND,left,ground,GND,POWER,Star ground,false
 J2,76,GND,right,ground,GND,POWER,Star ground,false
-J2,77,IO_L15_P_33,left,J_LCD_or_HDMIRX,IO_L15_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,78,IO_L18_P_33,right,J_LCD_or_HDMIRX,IO_L18_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,77,IO_L15_P_33,left,J_LCD,IO_L15_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,78,IO_L18_P_33,right,J_LCD,IO_L18_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J2,79,IO_25_33,left,J_PMOD3,IO_25_33,PMOD,Bank 33 single-ended to PMOD3,false
-J2,80,IO_L18_N_33,right,J_LCD_or_HDMIRX,IO_L18_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,81,IO_L14_SRCC_P_33,left,J_LCD_or_HDMIRX,IO_L14_SRCC_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,82,IO_L17_P_33,right,J_LCD_or_HDMIRX,IO_L17_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,83,IO_L14_SRCC_N_33,left,J_LCD_or_HDMIRX,IO_L14_SRCC_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,84,IO_L17_N_33,right,J_LCD_or_HDMIRX,IO_L17_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,80,IO_L18_N_33,right,J_LCD,IO_L18_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,81,IO_L14_SRCC_P_33,left,J_LCD,IO_L14_SRCC_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,82,IO_L17_P_33,right,J_LCD,IO_L17_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,83,IO_L14_SRCC_N_33,left,J_LCD,IO_L14_SRCC_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,84,IO_L17_N_33,right,J_LCD,IO_L17_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J2,85,GND,left,ground,GND,POWER,Star ground,false
 J2,86,GND,right,ground,GND,POWER,Star ground,false
-J2,87,IO_L16_N_33,left,J_LCD_or_HDMIRX,IO_L16_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,88,IO_L12_MRCC_N_33,right,J_LCD_or_HDMIRX,IO_L12_MRCC_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,89,IO_L6_P_33,left,J_LCD_or_HDMIRX,IO_L6_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,90,IO_L12_MRCC_P_33,right,J_LCD_or_HDMIRX,IO_L12_MRCC_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,91,IO_L11_SRCC_N_33,left,J_LCD_or_HDMIRX,IO_L11_SRCC_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,92,IO_L10_P_33,right,J_LCD_or_HDMIRX,IO_L10_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,93,IO_L11_SRCC_P_33,left,J_LCD_or_HDMIRX,IO_L11_SRCC_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J2,94,IO_L10_N_33,right,J_LCD_or_HDMIRX,IO_L10_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J2,87,IO_L16_N_33,left,J_LCD,IO_L16_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,88,IO_L12_MRCC_N_33,right,J_LCD,IO_L12_MRCC_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,89,IO_L6_P_33,left,J_HDMIRX,IO_L6_P_33,HDMI_RX,Bank 33 LVDS -> HDMI RX TMDS,false
+J2,90,IO_L12_MRCC_P_33,right,J_LCD,IO_L12_MRCC_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J2,91,IO_L11_SRCC_N_33,left,J_HDMIRX,IO_L11_SRCC_N_33,HDMI_RX,Bank 33 LVDS -> HDMI RX TMDS,false
+J2,92,IO_L10_P_33,right,J_HDMIRX,IO_L10_P_33,HDMI_RX,Bank 33 LVDS -> HDMI RX TMDS,false
+J2,93,IO_L11_SRCC_P_33,left,J_HDMIRX,IO_L11_SRCC_P_33,HDMI_RX,Bank 33 LVDS -> HDMI RX TMDS,false
+J2,94,IO_L10_N_33,right,J_HDMIRX,IO_L10_N_33,HDMI_RX,Bank 33 LVDS -> HDMI RX TMDS,false
 J2,95,GND,left,ground,GND,POWER,Star ground,false
 J2,96,GND,right,ground,GND,POWER,Star ground,false
 J2,97,GND,left,ground,GND,POWER,Star ground,false
@@ -203,54 +203,54 @@ J3,1,+VCCO_35,left,carrier_LDO,+VCCO_35,POWER,Bank 35 VCCO; carrier-side LDO (TL
 J3,2,+VCCO_35,right,carrier_LDO,+VCCO_35,POWER,Bank 35 VCCO; carrier-side LDO (TLV757 family),false
 J3,3,GND,left,ground,GND,POWER,Star ground,false
 J3,4,+VCCO_35,right,carrier_LDO,+VCCO_35,POWER,Bank 35 VCCO; carrier-side LDO (TLV757 family),false
-J3,5,IO_L10_P_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L10_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,5,IO_L10_P_35,left,J_FMC.LA12-LA23,IO_L10_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,6,GND,right,ground,GND,POWER,Star ground,false
-J3,7,IO_L10_N_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L10_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,8,IO_L11_SRCC_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L11_SRCC_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,7,IO_L10_N_35,left,J_FMC.LA12-LA23,IO_L10_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
+J3,8,IO_L11_SRCC_P_35,right,J_FMC.LA12-LA23,IO_L11_SRCC_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,9,IO_L13_MRCC_P_35,left,J_MRCC_SMA,IO_L13_MRCC_P_35,CLOCK,MRCC clock input via SMA,false
-J3,10,IO_L11_SRCC_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L11_SRCC_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,10,IO_L11_SRCC_N_35,right,J_FMC.LA12-LA23,IO_L11_SRCC_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,11,IO_L13_MRCC_N_35,left,J_MRCC_SMA,IO_L13_MRCC_N_35,CLOCK,MRCC clock input via SMA,false
 J3,12,GND,right,ground,GND,POWER,Star ground,false
 J3,13,GND,left,ground,GND,POWER,Star ground,false
 J3,14,IO_L12_MRCC_P_35,right,J_MRCC_SMA,IO_L12_MRCC_P_35,CLOCK,MRCC clock input via SMA,false
-J3,15,IO_L15_DQS_N_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L15_DQS_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,15,IO_L15_DQS_N_35,left,J_FMC.LA12-LA23,IO_L15_DQS_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,16,IO_L12_MRCC_N_35,right,J_MRCC_SMA,IO_L12_MRCC_N_35,CLOCK,MRCC clock input via SMA,false
-J3,17,IO_L15_DQS_P_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L15_DQS_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,17,IO_L15_DQS_P_35,left,J_FMC.LA12-LA23,IO_L15_DQS_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,18,GND,right,ground,GND,POWER,Star ground,false
 J3,19,IO_L7_P_34,left,J_FMC.LA00-LA11,IO_L7_P_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
-J3,20,IO_L14_SRCC_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L14_SRCC_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,20,IO_L14_SRCC_N_35,right,J_FMC.LA12-LA23,IO_L14_SRCC_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,21,IO_L24_N_34,left,J_FMC.LA00-LA11,IO_L24_N_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
-J3,22,IO_L14_SRCC_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L14_SRCC_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,22,IO_L14_SRCC_P_35,right,J_FMC.LA12-LA23,IO_L14_SRCC_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,23,GND,left,ground,GND,POWER,Star ground,false
-J3,24,IO_L21_DQS_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L21_DQS_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,25,IO_L18_N_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L18_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,26,IO_L21_DQS_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L21_DQS_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,27,IO_L18_P_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L18_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,24,IO_L21_DQS_P_35,right,J_CAM,IO_L21_DQS_P_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
+J3,25,IO_L18_N_35,left,J_CAM,IO_L18_N_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
+J3,26,IO_L21_DQS_N_35,right,J_CAM,IO_L21_DQS_N_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
+J3,27,IO_L18_P_35,left,J_CAM,IO_L18_P_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
 J3,28,GND,right,ground,GND,POWER,Star ground,false
-J3,29,IO_L16_N_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L16_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,29,IO_L16_N_35,left,J_FMC.LA12-LA23,IO_L16_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,30,IO_L20_P_34,right,J_FMC.LA00-LA11,IO_L20_P_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
-J3,31,IO_L16_P_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L16_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,32,IO_L20_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L20_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,31,IO_L16_P_35,left,J_FMC.LA12-LA23,IO_L16_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
+J3,32,IO_L20_N_35,right,J_CAM,IO_L20_N_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
 J3,33,GND,left,ground,GND,POWER,Star ground,false
-J3,34,IO_L20_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L20_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,35,IO_L17_N_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L17_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,34,IO_L20_P_35,right,J_CAM,IO_L20_P_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
+J3,35,IO_L17_N_35,left,J_FMC.LA12-LA23,IO_L17_N_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,36,IO_L5_N_34,right,J_FMC.LA00-LA11,IO_L5_N_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
-J3,37,IO_L17_P_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L17_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,37,IO_L17_P_35,left,J_FMC.LA12-LA23,IO_L17_P_35,FMC_LA,Bank 35 LVDS -> FMC LA12..LA23 differential,false
 J3,38,GND,right,ground,GND,POWER,Star ground,false
 J3,39,IO_L3P_PUDC_34,left,J_PMOD4,IO_L3P_PUDC_34,PMOD,Bank 34 single-ended to PMOD4,false
 J3,40,IO_L7_N_34,right,J_FMC.LA00-LA11,IO_L7_N_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
 J3,41,IO_L4_N_34,left,J_FMC.LA00-LA11,IO_L4_N_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
-J3,42,IO_L22_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L22_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,42,IO_L22_P_35,right,J_CAM,IO_L22_P_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
 J3,43,GND,left,ground,GND,POWER,Star ground,false
-J3,44,IO_L22_N_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L22_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,45,IO_L23_N_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L23_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,44,IO_L22_N_35,right,J_CAM,IO_L22_N_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
+J3,45,IO_L23_N_35,left,J_CAM,IO_L23_N_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
 J3,46,IO_L12_MRCC_P_34,right,J_FMC.CLK0,IO_L12_MRCC_P_34,FMC_CLK,FMC LA clock pair (CLK0_M2C),false
-J3,47,IO_L23_P_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L23_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,47,IO_L23_P_35,left,J_CAM,IO_L23_P_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
 J3,48,GND,right,ground,GND,POWER,Star ground,false
-J3,49,IO_L24_N_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L24_N_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,50,IO_L19_P_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L19_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,51,IO_L24_P_35,left,J_FMC.LA12-LA23 or J_CAM,IO_L24_P_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
-J3,52,IO_L19_N_VREF_35,right,J_FMC.LA12-LA23 or J_CAM,IO_L19_N_VREF_35,FMC_LA/MIPI,Bank 35 LVDS -> FMC LA + MIPI camera (split),false
+J3,49,IO_L24_N_35,left,J_CAM,IO_L24_N_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
+J3,50,IO_L19_P_35,right,J_CAM,IO_L19_P_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
+J3,51,IO_L24_P_35,left,J_CAM,IO_L24_P_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
+J3,52,IO_L19_N_VREF_35,right,J_CAM,IO_L19_N_VREF_35,MIPI,Bank 35 LVDS -> MIPI camera FFC,false
 J3,53,GND,left,ground,GND,POWER,Star ground,false
 J3,54,IO_L11_SRCC_P_34,right,J_FMC.LA00-LA11,IO_L11_SRCC_P_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
 J3,55,IO_L8_P_34,left,J_FMC.LA00-LA11,IO_L8_P_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
@@ -283,19 +283,19 @@ J3,81,IO_L17_N_34,left,J_FMC.LA00-LA11,IO_L17_N_34,FMC_LA,Bank 34 LVDS -> FMC LA
 J3,82,IO_L24_P_34,right,J_FMC.LA00-LA11,IO_L24_P_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
 J3,83,GND,left,ground,GND,POWER,Star ground,false
 J3,84,IO_L22_N_34,right,J_FMC.LA00-LA11,IO_L22_N_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
-J3,85,IO_L2_P_33,left,J_LCD_or_HDMIRX,IO_L2_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J3,86,IO_L1_P_33,right,J_LCD_or_HDMIRX,IO_L1_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J3,87,IO_L2_N_33,left,J_LCD_or_HDMIRX,IO_L2_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J3,85,IO_L2_P_33,left,J_LCD,IO_L2_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J3,86,IO_L1_P_33,right,J_LCD,IO_L1_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J3,87,IO_L2_N_33,left,J_LCD,IO_L2_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J3,88,IO_L23_P_34,right,J_FMC.LA00-LA11,IO_L23_P_34,FMC_LA,Bank 34 LVDS -> FMC LA00..LA11 differential,false
-J3,89,IO_L1_N_33,left,J_LCD_or_HDMIRX,IO_L1_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J3,89,IO_L1_N_33,left,J_LCD,IO_L1_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J3,90,GND,right,ground,GND,POWER,Star ground,false
-J3,91,IO_L3_DQS_P_33,left,J_LCD_or_HDMIRX,IO_L3_DQS_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J3,92,IO_L5_P_33,right,J_LCD_or_HDMIRX,IO_L5_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J3,93,IO_L3_DQS_N_33,left,J_LCD_or_HDMIRX,IO_L3_DQS_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
-J3,94,IO_L5_N_33,right,J_LCD_or_HDMIRX,IO_L5_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J3,91,IO_L3_DQS_P_33,left,J_LCD,IO_L3_DQS_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J3,92,IO_L5_P_33,right,J_HDMIRX,IO_L5_P_33,HDMI_RX,Bank 33 LVDS -> HDMI RX TMDS,false
+J3,93,IO_L3_DQS_N_33,left,J_LCD,IO_L3_DQS_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
+J3,94,IO_L5_N_33,right,J_HDMIRX,IO_L5_N_33,HDMI_RX,Bank 33 LVDS -> HDMI RX TMDS,false
 J3,95,GND,left,ground,GND,POWER,Star ground,false
-J3,96,IO_L4_N_33,right,J_LCD_or_HDMIRX,IO_L4_N_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J3,96,IO_L4_N_33,right,J_LCD,IO_L4_N_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J3,97,+VCCO_34,left,carrier_LDO,+VCCO_34,POWER,Bank 34 VCCO; carrier-side LDO (TLV757 family),false
-J3,98,IO_L4_P_33,right,J_LCD_or_HDMIRX,IO_L4_P_33,LVDS_LCD/HDMI_RX,Bank 33 diff: LCD pairs + HDMI RX TMDS (split assignment),false
+J3,98,IO_L4_P_33,right,J_LCD,IO_L4_P_33,LVDS_LCD,Bank 33 LVDS -> LCD panel,false
 J3,99,+VCCO_34,left,carrier_LDO,+VCCO_34,POWER,Bank 34 VCCO; carrier-side LDO (TLV757 family),false
 J3,100,GND,right,ground,GND,POWER,Star ground,false

@@ -22,7 +22,8 @@ Pin map (per datasheet):
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -35,6 +36,9 @@ DS3231_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.analog.com/media/en/technical-documentation/data-sheets/DS3231.pdf",
     datasheet_revision="Rev 10, 2015",
     app_circuit_figure="Figure 1 - Typical Operating Circuit",
+    local_datasheet_path=local_datasheet_path("DS3231SN#"),
+    app_circuit_page="Figure 1 - Typical Operating Circuit",
+    minimum_circuit_verified=True,
     symbol_token="DS3231SN",
     footprint="Package_SO:SOIC-16W_7.5x10.3mm_P1.27mm",
     description="Accurate I2C RTC with internal TCXO, battery backup, SOIC-16W",

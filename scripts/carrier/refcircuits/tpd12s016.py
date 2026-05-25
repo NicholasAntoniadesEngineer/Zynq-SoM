@@ -37,7 +37,8 @@ Pin map (per datasheet Table 1):
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -100,6 +101,9 @@ TPD12S016_TX_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.ti.com/lit/ds/symlink/tpd12s016.pdf",
     datasheet_revision="Rev May 2017",
     app_circuit_figure="Figure 13 - HDMI Source Application",
+    local_datasheet_path=local_datasheet_path("TPD12S016PWR"),
+    app_circuit_page="Figure 13 - HDMI Source Application",
+    minimum_circuit_verified=True,
     symbol_token="TPD12S016PWR",
     footprint="Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm",
     description="HDMI source companion: ESD + I2C/HPD level shift + 5V switch",
@@ -140,6 +144,9 @@ TPD12S016_RX_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.ti.com/lit/ds/symlink/tpd12s016.pdf",
     datasheet_revision="Rev May 2017",
     app_circuit_figure="Figure 14 - HDMI Sink Application",
+    local_datasheet_path=local_datasheet_path("TPD12S016PWR"),
+    app_circuit_page="Figure 14 - HDMI Sink Application",
+    minimum_circuit_verified=True,
     symbol_token="TPD12S016PWR",
     footprint="Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm",
     description="HDMI sink companion: ESD + I2C/HPD level shift (no 5V switch)",

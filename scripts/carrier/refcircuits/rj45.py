@@ -23,7 +23,8 @@ LEDs drive 5-20mA typical (need series resistor).
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -36,6 +37,9 @@ RJ45_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.amphenol-cs.com/product-series/rjhse5380.html",
     datasheet_revision="2023",
     app_circuit_figure="Amphenol RJHSE5380 datasheet, pin diagram",
+    local_datasheet_path=local_datasheet_path("RJHSE5380"),
+    app_circuit_page="Amphenol RJHSE5380 datasheet, pin diagram",
+    minimum_circuit_verified=True,
     symbol_token="RJ45_RJHSE5380",
     footprint="Connector_RJ:RJ45_Amphenol_RJHSE5380_Horizontal",
     description="Bare shielded RJ45 with 2 integrated LEDs, right-angle TH",

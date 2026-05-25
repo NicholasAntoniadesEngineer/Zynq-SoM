@@ -1,11 +1,7 @@
-==============================================================================
-CARRIER GENERATOR VALIDATION REPORT
-==============================================================================
+# Carrier Generator Validation Report
 
-Strict checks:    1216 passed,    0 failed
-Warning checks:     82 passed,    0 flagged
+Generated: 2026-05-25T11:50:52Z
 
-All checks passed.
+**Errors:** 0  **Warnings:** 0
 
-RESULT: 0 strict / 0 warning(s)   ->   OK, writing output
-==============================================================================
+All validators passed with no findings.

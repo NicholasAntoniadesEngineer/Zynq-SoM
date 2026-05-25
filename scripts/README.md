@@ -121,50 +121,60 @@ The script runs 4 stages with strict validation between them:
 3. Generate `reference_circuits.md` - per-IC datasheet design-intent record for EE review before tape-out
 4. Generate `carrier_template.kicad_sch` with all symbols placed and labelled, embedded symbol library, hierarchical-ready structure
 
-A strict validator (`scripts/carrier/rules.py`) implements rule sets A through I (BOM, footprint coherence, schematic best practices, naming, hierarchical structure, IO assignment integrity, file integrity, manufacturing, industry-standards alignment). The validator **does not fail fast** - it collects every violation across the entire generation pass and reports them in a single aggregated report. Output files are written atomically (temp + rename) only if zero strict violations exist.
+A strict validator under ``scripts/carrier/validate/`` runs canonical refcircuit checks, BOM coherence, spatial rules, and KiCad ERC. The pipeline **fails** if any strict violation exists. Output files are written atomically (temp + rename) only if validation passes.
+
+Run the generator:
+
+```bash
+python -m scripts.carrier
+python -m scripts.carrier.audit_goals
+pytest scripts/carrier/tests -q
+```
+
+Use ``python -m scripts.carrier --skip-erc`` to skip KiCad ERC when ``kicad-cli`` is unavailable.
 
 ### Outputs
 
 | File | Purpose |
 |---|---|
-| `scripts/carrier_template/carrier_template.kicad_sch` | The schematic (~300 KB, ~18k lines) |
+| `scripts/carrier_template/carrier_template.kicad_sch` | Root hierarchical schematic (A1) |
+| `scripts/carrier_template/sheets/*.kicad_sch` | 20 functional sub-sheets |
 | `scripts/carrier_template/carrier_template.kicad_pro` | KiCad project (auto-updated UUID) |
-| `scripts/carrier_template/carrier_BOM.csv` | Master BOM (~50 parts, ~$33/board) |
-| `scripts/carrier_template/io_assignment.csv` | SoM pin to carrier interface map (300 rows) |
-| `scripts/carrier_template/reference_circuits.md` | Per-IC design-intent doc (~17 ICs, ~600 lines) |
-| `scripts/carrier_template/validation_report.md` | Last validation report (aggregated rule results) |
+| `scripts/carrier_template/carrier_BOM.csv` | Master BOM |
+| `scripts/carrier_template/io_assignment.csv` | SoM pin to carrier interface map |
+| `scripts/carrier_template/reference_circuits.md` | Per-IC design-intent doc (29 refcircuits) |
+| `scripts/carrier_template/validation_report.md` | Last validation report |
+| `scripts/carrier_template/carrier_build_logs.txt` | Build log |
 
 ### Package layout
 
 ```
 scripts/carrier/
-  core/
-    sexpr.py          - tiny S-expression emitter
-    parts.py          - BOMPart, ALLOWED_FOOTPRINT_PREFIXES, PACKAGE_TO_FOOTPRINT
-    refcircuit.py     - ReferenceCircuit, ExternalPart, StrapPin, LayoutNote
-    registry.py       - master BOM-part registry (single source of truth)
-    symbols.py        - embedded KiCad symbols for every active part
-  refcircuits/
-    <part>.py         - one Python spec per IC (FUSB302, USBLC6, TPS2051, ...)
-    __init__.py       - registry of all REFCIRCUITS + IC_INSTANCE_COUNT
-  rules.py            - validation engine (rule sets A-I + C11-C13)
-  sheet_emitter.py    - symbol-to-S-expression rendering
-  generator.py        - main schematic emitter
-  bom_io.py           - BOM and io_assignment CSV emitters
-  gen_refcircuits_doc.py - emits reference_circuits.md
+  pipeline.py           - orchestrator (python -m scripts.carrier)
+  model/                - Block, ReferenceCircuit, grid, nets
+  blocks/               - one factory per functional sub-sheet
+  refcircuits/          - one Python spec per IC (29 entries)
+  emit/                 - kicad-sch-api schematic emission
+  validate/             - canonical, BOM, spatial, ERC validators
+  validate/canonical/   - per-IC canonical rule registry (29 validators)
+  registry/             - parts registry + BOM/io_assignment CSV emitters
+  sheets/               - root layout + hierarchical project emission
+  symbols/              - carrier.kicad_sym custom symbols
+  datasheets/           - local PDF copies (strict %PDF- validation)
 ```
 
 ### Adding a new IC to the carrier
 
-1. Add the part to `scripts/carrier/core/registry.py` with verified LCSC stock
-2. Create `scripts/carrier/refcircuits/<part>.py` encoding the datasheet's Typical Application Circuit
+1. Add the part to `scripts/carrier/registry/parts_registry.py` with verified LCSC stock
+2. Create `scripts/carrier/refcircuits/<part>.py` encoding the datasheet Typical Application Circuit
 3. Register it in `scripts/carrier/refcircuits/__init__.py` (REFCIRCUITS + IC_INSTANCE_COUNT)
-4. Add an entry to `IC_TO_SECTION` in `scripts/carrier/generator.py` choosing the visual section
-5. Re-run; the validator will catch any token/footprint/stock issues
+4. Add a canonical validator in `scripts/carrier/validate/canonical/validators.py` and register in `registry.py`
+5. Add or extend a block factory in `scripts/carrier/blocks/` using `_hand_block.build_hand_section`
+6. Re-run; validation and `audit_goals` catch missing PDFs, tokens, or wiring
 
 ### Modifying the IO assignment
 
-`io_assignment.csv` is regenerated on every run from rules in `scripts/carrier/bom_io.py`. Edit the `_classify_destination()` / `_classify_pl_io()` functions there to remap pins.
+`io_assignment.csv` is regenerated on every run from rules in `scripts/carrier/registry/bom_io.py`. Edit the `_classify_destination()` / `_classify_pl_io()` functions there to remap pins.
 
 
 

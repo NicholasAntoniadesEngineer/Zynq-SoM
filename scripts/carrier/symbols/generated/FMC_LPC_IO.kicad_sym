@@ -1,0 +1,554 @@
+(kicad_symbol_lib
+	(version 20241209)
+	(generator "carrier-io-library")
+	(generator_version "1.0")
+	(symbol "FMC_LPC_IO"
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property "Reference" "J"
+			(at 0 0 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Value" "FMC_LPC_IO"
+			(at 0 -68.58 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" ""
+			(at 0 0 0)
+			(effects (font (size 1.27 1.27)) hide)
+		)
+		(symbol "FMC_LPC_IO_0_1"
+			(rectangle
+				(start -5.08 66.04)
+				(end 5.08 -66.04)
+				(stroke (width 0.254) (type default))
+				(fill (type background))
+			)
+		)
+		(symbol "FMC_LPC_IO_1_1"
+			(pin passive line
+				(at 5.08 64.77 180)
+				(length 2.54)
+				(name "IO_L6_VREF_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "1"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 62.23 180)
+				(length 2.54)
+				(name "IO_L6_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "2"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 59.69 180)
+				(length 2.54)
+				(name "IO_L4_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "3"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 57.15 180)
+				(length 2.54)
+				(name "IO_L4_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "4"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 54.61 180)
+				(length 2.54)
+				(name "IO_L5_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "5"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 52.07 180)
+				(length 2.54)
+				(name "IO_L5_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "6"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 49.53 180)
+				(length 2.54)
+				(name "IO_L2_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "7"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 46.99 180)
+				(length 2.54)
+				(name "IO_L10_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "8"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 44.45 180)
+				(length 2.54)
+				(name "IO_L10_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "9"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 41.91 180)
+				(length 2.54)
+				(name "IO_L11_SRCC_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "10"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 39.37 180)
+				(length 2.54)
+				(name "IO_L11_SRCC_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "11"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 36.83 180)
+				(length 2.54)
+				(name "IO_L15_DQS_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "12"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 34.29 180)
+				(length 2.54)
+				(name "IO_L15_DQS_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "13"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 31.75 180)
+				(length 2.54)
+				(name "IO_L7_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "14"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 29.21 180)
+				(length 2.54)
+				(name "IO_L14_SRCC_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "15"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 26.67 180)
+				(length 2.54)
+				(name "IO_L24_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "16"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 24.13 180)
+				(length 2.54)
+				(name "IO_L14_SRCC_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "17"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 21.59 180)
+				(length 2.54)
+				(name "IO_L16_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "18"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 19.05 180)
+				(length 2.54)
+				(name "IO_L20_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "19"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 16.51 180)
+				(length 2.54)
+				(name "IO_L16_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "20"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 13.97 180)
+				(length 2.54)
+				(name "IO_L17_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "21"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 11.43 180)
+				(length 2.54)
+				(name "IO_L5_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "22"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 8.89 180)
+				(length 2.54)
+				(name "IO_L17_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "23"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 6.35 180)
+				(length 2.54)
+				(name "IO_L7_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "24"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 3.81 180)
+				(length 2.54)
+				(name "IO_L4_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "25"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 1.27 180)
+				(length 2.54)
+				(name "IO_L12_MRCC_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "26"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -1.27 180)
+				(length 2.54)
+				(name "IO_L11_SRCC_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "27"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -3.81 180)
+				(length 2.54)
+				(name "IO_L8_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "28"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -6.35 180)
+				(length 2.54)
+				(name "IO_L11_SRCC_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "29"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -8.89 180)
+				(length 2.54)
+				(name "IO_L8_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "30"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -11.43 180)
+				(length 2.54)
+				(name "IO_L9_DQS_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "31"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -13.97 180)
+				(length 2.54)
+				(name "IO_L5_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "32"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -16.51 180)
+				(length 2.54)
+				(name "IO_L9_DQS_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "33"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -19.05 180)
+				(length 2.54)
+				(name "IO_L12_MRCC_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "34"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -21.59 180)
+				(length 2.54)
+				(name "IO_L13_MRCC_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "35"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -24.13 180)
+				(length 2.54)
+				(name "IO_L10_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "36"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -26.67 180)
+				(length 2.54)
+				(name "IO_L13_MRCC_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "37"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -29.21 180)
+				(length 2.54)
+				(name "IO_L10_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "38"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -31.75 180)
+				(length 2.54)
+				(name "IO_L15_DQS_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "39"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -34.29 180)
+				(length 2.54)
+				(name "IO_L14_SRCC_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "40"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -36.83 180)
+				(length 2.54)
+				(name "IO_L15_DQS_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "41"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -39.37 180)
+				(length 2.54)
+				(name "IO_L14_SRCC_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "42"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -41.91 180)
+				(length 2.54)
+				(name "IO_L18_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "43"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -44.45 180)
+				(length 2.54)
+				(name "IO_L16_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "44"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -46.99 180)
+				(length 2.54)
+				(name "IO_L20_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "45"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -49.53 180)
+				(length 2.54)
+				(name "IO_L16_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "46"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -52.07 180)
+				(length 2.54)
+				(name "IO_L6_VREF_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "47"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -54.61 180)
+				(length 2.54)
+				(name "IO_L17_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "48"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -57.15 180)
+				(length 2.54)
+				(name "IO_L17_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "49"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -59.69 180)
+				(length 2.54)
+				(name "IO_L24_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "50"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -62.23 180)
+				(length 2.54)
+				(name "IO_L22_N_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "51"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -64.77 180)
+				(length 2.54)
+				(name "IO_L23_P_34"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "52"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
+	(embedded_fonts no)
+)

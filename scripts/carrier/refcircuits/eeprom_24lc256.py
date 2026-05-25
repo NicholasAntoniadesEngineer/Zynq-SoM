@@ -23,7 +23,8 @@ Default I2C address: 1010_xxx_w where xxx = A2:A1:A0 -> 0x50..0x57
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -37,6 +38,9 @@ EEPROM_24LC256_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://ww1.microchip.com/downloads/aemDocuments/documents/MPD/ProductDocuments/DataSheets/21203P.pdf",
     datasheet_revision="Rev May 2020 (DS21203P)",
     app_circuit_figure="Figure 4-1 - Typical Application Circuit",
+    local_datasheet_path=local_datasheet_path("24LC256T-I/SN"),
+    app_circuit_page="Figure 4-1 - Typical Application Circuit",
+    minimum_circuit_verified=True,
     symbol_token="24LC256",
     footprint="Package_SO:SOIC-8_3.9x4.9mm_P1.27mm",
     description="256 Kbit I2C Serial EEPROM, SOIC-8",

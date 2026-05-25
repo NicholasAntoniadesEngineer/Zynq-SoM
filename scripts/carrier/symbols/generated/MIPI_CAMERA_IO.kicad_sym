@@ -1,0 +1,174 @@
+(kicad_symbol_lib
+	(version 20241209)
+	(generator "carrier-io-library")
+	(generator_version "1.0")
+	(symbol "MIPI_CAMERA_IO"
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property "Reference" "J"
+			(at 0 0 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Value" "MIPI_CAMERA_IO"
+			(at 0 -20.32 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" ""
+			(at 0 0 0)
+			(effects (font (size 1.27 1.27)) hide)
+		)
+		(symbol "MIPI_CAMERA_IO_0_1"
+			(rectangle
+				(start -5.08 17.78)
+				(end 5.08 -17.78)
+				(stroke (width 0.254) (type default))
+				(fill (type background))
+			)
+		)
+		(symbol "MIPI_CAMERA_IO_1_1"
+			(pin passive line
+				(at 5.08 16.51 180)
+				(length 2.54)
+				(name "IO_L21_DQS_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "1"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 13.97 180)
+				(length 2.54)
+				(name "IO_L18_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "2"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 11.43 180)
+				(length 2.54)
+				(name "IO_L21_DQS_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "3"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 8.89 180)
+				(length 2.54)
+				(name "IO_L18_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "4"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 6.35 180)
+				(length 2.54)
+				(name "IO_L20_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "5"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 3.81 180)
+				(length 2.54)
+				(name "IO_L20_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "6"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 1.27 180)
+				(length 2.54)
+				(name "IO_L22_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "7"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -1.27 180)
+				(length 2.54)
+				(name "IO_L22_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "8"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -3.81 180)
+				(length 2.54)
+				(name "IO_L23_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "9"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -6.35 180)
+				(length 2.54)
+				(name "IO_L23_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "10"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -8.89 180)
+				(length 2.54)
+				(name "IO_L24_N_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "11"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -11.43 180)
+				(length 2.54)
+				(name "IO_L19_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "12"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -13.97 180)
+				(length 2.54)
+				(name "IO_L24_P_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "13"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 5.08 -16.51 180)
+				(length 2.54)
+				(name "IO_L19_N_VREF_35"
+					(effects (font (size 1.27 1.27)) hide)
+				)
+				(number "14"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
+	(embedded_fonts no)
+)

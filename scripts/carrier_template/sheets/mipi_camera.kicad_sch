@@ -1,0 +1,847 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "4e29aabe-b753-4837-9da6-560fb8257f0c")
+	(paper "A4")
+	(title_block
+		(title "MIPI Camera FFC")
+	)
+	(lib_symbols
+		(symbol "MIPI_CAMERA_IO:MIPI_CAMERA_IO"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "MIPI_CAMERA_IO"
+				(at 0 -20.32 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					) hide
+				)
+			)
+			(symbol "MIPI_CAMERA_IO_0_1"
+				(rectangle
+					(start -5.08 17.78)
+					(end 5.08 -17.78)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "MIPI_CAMERA_IO_1_1"
+				(pin passive line
+					(at 5.08 16.51 180)
+					(length 2.54)
+					(name "IO_L18_N_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 13.97 180)
+					(length 2.54)
+					(name "IO_L18_P_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 11.43 180)
+					(length 2.54)
+					(name "IO_L19_N_VREF_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 8.89 180)
+					(length 2.54)
+					(name "IO_L19_P_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 6.35 180)
+					(length 2.54)
+					(name "IO_L20_N_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 3.81 180)
+					(length 2.54)
+					(name "IO_L20_P_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 1.27 180)
+					(length 2.54)
+					(name "IO_L21_DQS_N_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -1.27 180)
+					(length 2.54)
+					(name "IO_L21_DQS_P_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -3.81 180)
+					(length 2.54)
+					(name "IO_L22_N_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -6.35 180)
+					(length 2.54)
+					(name "IO_L22_P_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -8.89 180)
+					(length 2.54)
+					(name "IO_L23_N_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -11.43 180)
+					(length 2.54)
+					(name "IO_L23_P_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -13.97 180)
+					(length 2.54)
+					(name "IO_L24_N_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -16.51 180)
+					(length 2.54)
+					(name "IO_L24_P_35"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "MIPI_CAMERA_IO:MIPI_CAMERA_IO")
+		(at 50.8 101.6 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "0fc4f499-d74b-4c99-a161-8313efbb965f")
+		(property "Reference" "JCAM1"
+			(at 50.8 101.6 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MIPI_CAMERA_IO"
+			(at 50.8 81.28 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 50.8 101.6 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/98611567-681c-4c3c-b905-9465b552673e"
+			(at 53.34 106.6799 0)
+			(effects
+				(hide yes)
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "4d1e1987-8abf-46bf-a7b7-1ede211ebf49")
+		)
+		(pin "2"
+			(uuid "e6978180-17c0-4ed0-8ae0-768a2c65f58d")
+		)
+		(pin "3"
+			(uuid "be37de37-449b-4f36-846e-b4aaa38f509d")
+		)
+		(pin "4"
+			(uuid "d0d662c1-5561-41cd-b7b6-7e4c31652ffa")
+		)
+		(pin "5"
+			(uuid "ae2a8938-654c-4fc0-a558-fb393c530beb")
+		)
+		(pin "6"
+			(uuid "a804e36c-1c5a-4f2e-a894-bf202a2eb094")
+		)
+		(pin "7"
+			(uuid "4ef945c9-da36-4391-a596-5245cf2bef9e")
+		)
+		(pin "8"
+			(uuid "52b1d39b-5139-4ce2-bd84-1f47b99603f4")
+		)
+		(pin "9"
+			(uuid "9389f633-e2cd-4e12-8daf-680e027cb333")
+		)
+		(pin "10"
+			(uuid "dd38bbc6-19ee-4dec-8b38-ea3c68ab1462")
+		)
+		(pin "11"
+			(uuid "1a77338b-f837-40e3-ae6a-98af7ad57f93")
+		)
+		(pin "12"
+			(uuid "094a1dd5-409f-42ea-a101-237403265365")
+		)
+		(pin "13"
+			(uuid "585f900c-327e-4b22-9829-1e0aeb7719c4")
+		)
+		(pin "14"
+			(uuid "8350488f-993f-4566-b5fc-44735c86fcd6")
+		)
+		(instances
+			(project "MIPI Camera FFC"
+				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/98611567-681c-4c3c-b905-9465b552673e"
+					(reference "JCAM1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 274.32 86.36) (xy 287.02 86.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5920c4d8-e504-402b-bb4e-c5eba7545575")
+	)
+	(wire
+		(pts
+			(xy 274.32 88.9) (xy 287.02 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "694780c5-e829-4c9f-a9b1-c2059869f859")
+	)
+	(wire
+		(pts
+			(xy 274.32 91.44) (xy 287.02 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "72fd3e42-e147-4ebe-abee-97633f613cb1")
+	)
+	(wire
+		(pts
+			(xy 274.32 93.98) (xy 287.02 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6eb6569c-51d2-4ef0-a8f2-931a42ee1f28")
+	)
+	(wire
+		(pts
+			(xy 274.32 96.52) (xy 287.02 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b040a811-5c54-453b-86d9-cf71b04eb0ab")
+	)
+	(wire
+		(pts
+			(xy 274.32 97.79) (xy 287.02 97.79)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "988d2c8f-7c1e-4589-b3cf-cef2508d099d")
+	)
+	(wire
+		(pts
+			(xy 274.32 100.33) (xy 287.02 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b05fa938-ea9e-43cf-bbb6-9bf8eb72a7b4")
+	)
+	(wire
+		(pts
+			(xy 274.32 102.87) (xy 287.02 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "063d412c-c377-4530-8800-b8a46d21dd1f")
+	)
+	(wire
+		(pts
+			(xy 274.32 105.41) (xy 287.02 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f52117b-dc9b-49b0-87ba-be33c1f58520")
+	)
+	(wire
+		(pts
+			(xy 274.32 106.68) (xy 287.02 106.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a4d8a7c2-7756-4a5e-8d12-219b4e2cd391")
+	)
+	(wire
+		(pts
+			(xy 274.32 109.22) (xy 287.02 109.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "65c61e7f-d35d-4166-a942-49943c3fc819")
+	)
+	(wire
+		(pts
+			(xy 274.32 111.76) (xy 287.02 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "60682776-8a66-4afe-81dc-6b62b4fb952f")
+	)
+	(wire
+		(pts
+			(xy 274.32 114.3) (xy 287.02 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "431aeeb7-ec82-40e6-a255-0a76c6e78889")
+	)
+	(wire
+		(pts
+			(xy 274.32 116.84) (xy 287.02 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "32e899d4-9ac4-4cdb-a7f0-759e1ac10312")
+	)
+	(wire
+		(pts
+			(xy 55.88 86.36) (xy 274.32 86.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1c781db3-ac41-4088-97aa-0645b5f80b2c")
+	)
+	(wire
+		(pts
+			(xy 55.88 88.9) (xy 274.32 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "33d082fd-7117-4cb9-b822-f17a079e1609")
+	)
+	(wire
+		(pts
+			(xy 55.88 91.44) (xy 274.32 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f4cb8ba4-8c8b-460e-af4d-d7b049f5f6df")
+	)
+	(wire
+		(pts
+			(xy 55.88 93.98) (xy 274.32 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "35b09c69-c02f-4590-ada0-43d468436cb9")
+	)
+	(wire
+		(pts
+			(xy 55.88 96.52) (xy 274.32 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "79f92a15-0fca-4325-9510-fd3ba291b9ac")
+	)
+	(wire
+		(pts
+			(xy 54.61 97.79) (xy 274.32 97.79)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "590d93a7-e289-4730-9b7c-ef420f65970e")
+	)
+	(wire
+		(pts
+			(xy 54.61 100.33) (xy 274.32 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1cd845fb-c0e2-446e-b4e4-f0c4e6255396")
+	)
+	(wire
+		(pts
+			(xy 54.61 102.87) (xy 274.32 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "710160df-01f2-49fc-9dad-296c5042a138")
+	)
+	(wire
+		(pts
+			(xy 54.61 105.41) (xy 274.32 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "230b3640-b081-4f2c-ab42-a1e31ba31a85")
+	)
+	(wire
+		(pts
+			(xy 55.88 106.68) (xy 274.32 106.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a9676236-da87-461c-81e0-820838945ec8")
+	)
+	(wire
+		(pts
+			(xy 55.88 109.22) (xy 274.32 109.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a95b637-ed10-4ae0-8966-41bf49c1a9dd")
+	)
+	(wire
+		(pts
+			(xy 55.88 111.76) (xy 274.32 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d12c27c9-9e0d-4ed2-a8af-a245e79c96e2")
+	)
+	(wire
+		(pts
+			(xy 55.88 114.3) (xy 274.32 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "532d8702-60d9-4934-85b6-819c67d500ed")
+	)
+	(wire
+		(pts
+			(xy 55.88 116.84) (xy 274.32 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c11c8c0f-b6be-4386-a40b-a18abe1326ab")
+	)
+	(hierarchical_label "IO_L24_P_35"
+		(shape input)
+		(at 287.02 86.36 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "28c6f589-fd36-4da1-b7a6-b05e76fe6f18")
+	)
+	(hierarchical_label "IO_L24_N_35"
+		(shape input)
+		(at 287.02 88.9 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "4e3e7fdd-f453-4b0b-a799-1a35d6dc98e4")
+	)
+	(hierarchical_label "IO_L23_P_35"
+		(shape input)
+		(at 287.02 91.44 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "8dd823ad-78ee-47eb-884d-57ee0005e1bd")
+	)
+	(hierarchical_label "IO_L23_N_35"
+		(shape input)
+		(at 287.02 93.98 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d32e6a7c-6a8e-47e5-b7c1-20f2e7b42e2d")
+	)
+	(hierarchical_label "IO_L22_P_35"
+		(shape input)
+		(at 287.02 96.52 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "163c4e04-31e5-4dc7-8ef9-a691692ad284")
+	)
+	(hierarchical_label "IO_L22_N_35"
+		(shape input)
+		(at 287.02 97.79 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "fd68f656-785e-4d9f-8475-fb8740fb0ddb")
+	)
+	(hierarchical_label "IO_L21_DQS_P_35"
+		(shape input)
+		(at 287.02 100.33 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "ca24316c-31ef-4d5e-bc10-dcac0ad803c2")
+	)
+	(hierarchical_label "IO_L21_DQS_N_35"
+		(shape input)
+		(at 287.02 102.87 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "28ccefe4-8f53-40d1-928f-00a052c8701d")
+	)
+	(hierarchical_label "IO_L20_P_35"
+		(shape input)
+		(at 287.02 105.41 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f06a5d50-0e7d-4c0d-9fef-ed9317cf5596")
+	)
+	(hierarchical_label "IO_L20_N_35"
+		(shape input)
+		(at 287.02 106.68 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d40a127a-3e81-4dba-995c-1b574e9096a5")
+	)
+	(hierarchical_label "IO_L19_P_35"
+		(shape input)
+		(at 287.02 109.22 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "055b2fba-3ac4-4dea-9148-8dbb12fc8216")
+	)
+	(hierarchical_label "IO_L19_N_VREF_35"
+		(shape input)
+		(at 287.02 111.76 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "78d7ed4c-acb9-4e48-a0f8-6e297a012e8e")
+	)
+	(hierarchical_label "IO_L18_P_35"
+		(shape input)
+		(at 287.02 114.3 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "7a7a5772-135e-4075-a454-fac77aef7bfd")
+	)
+	(hierarchical_label "IO_L18_N_35"
+		(shape input)
+		(at 287.02 116.84 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "2acbdde0-6059-45f9-83aa-773d40b35fb5")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

@@ -21,11 +21,12 @@ Pin map (per datasheet):
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
 )
+from scripts.carrier.refcircuits._paths import local_datasheet_path
 
 
 def _make_tlv757_refcircuit(
@@ -41,6 +42,9 @@ def _make_tlv757_refcircuit(
         datasheet_url="https://www.ti.com/lit/ds/symlink/tlv757p.pdf",
         datasheet_revision="Rev Sep 2017",
         app_circuit_figure="Figure 18 - Typical Application",
+        local_datasheet_path=local_datasheet_path(mpn),
+        app_circuit_page="p.18, Figure 18",
+        minimum_circuit_verified=True,
         symbol_token=mpn,
         footprint="Package_TO_SOT_SMD:SOT-23-5",
         description=description,

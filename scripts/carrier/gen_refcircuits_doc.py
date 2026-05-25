@@ -12,11 +12,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts.carrier.core.registry import REGISTRY
+from scripts.carrier.registry.parts_registry import REGISTRY
 from scripts.carrier.refcircuits import IC_INSTANCE_COUNT, REFCIRCUITS
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_PATH = REPO_ROOT / "scripts" / "carrier_template" / "reference_circuits.md"
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+OUTPUT_PATH = SCRIPTS_DIR / "carrier_template" / "reference_circuits.md"
 
 
 def emit_refcircuits_md(output_path: Path = OUTPUT_PATH) -> int:
@@ -62,6 +62,11 @@ def emit_refcircuits_md(output_path: Path = OUTPUT_PATH) -> int:
             lines.append(f"- **Stock at LCSC**: {part.stock_at_lcsc:,}")
             lines.append(f"- **Unit price**: ${part.unit_price_usd:.4f}")
         lines.append(f"- **Datasheet**: [{circuit.datasheet_revision}]({circuit.datasheet_url})")
+        if circuit.local_datasheet_path:
+            lines.append(
+                f"- **Local PDF**: `{circuit.local_datasheet_path}` "
+                f"({circuit.app_circuit_page})"
+            )
         lines.append(f"- **Reference design citation**: {circuit.app_circuit_figure}")
         lines.append(f"- **Instances on carrier**: {count}")
         lines.append("")

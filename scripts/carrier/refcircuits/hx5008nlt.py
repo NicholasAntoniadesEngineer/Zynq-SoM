@@ -24,11 +24,12 @@ IEEE 802.3 for emissions control.
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
 )
+from scripts.carrier.refcircuits._paths import local_datasheet_path
 
 
 HX5008NLT_REFCIRCUIT = ReferenceCircuit(
@@ -37,6 +38,9 @@ HX5008NLT_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://productfinder.pulseeng.com/files/datasheets/HX5008NL.pdf",
     datasheet_revision="Rev 2.2",
     app_circuit_figure="Figure 1 - Application Schematic (1000BASE-T)",
+    local_datasheet_path=local_datasheet_path("HX5008NLT"),
+    app_circuit_page="p.4, Figure 1 + IEEE 802.3 Bob Smith",
+    minimum_circuit_verified=True,
     symbol_token="HX5008NLT",
     footprint="Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm",
     description="1000BASE-T 4-pair Ethernet magnetics module, SOIC-24",
@@ -52,10 +56,22 @@ HX5008NLT_REFCIRCUIT = ReferenceCircuit(
             justification="IEEE 802.3 Bob Smith termination, pair 0 center tap",
         ),
         ExternalPart(
+            from_pin="CT_PAIR0",
+            to_net="BS_COMMON",
+            part_token="1n_2kV_0603_safety",
+            justification="IEEE 802.3 Bob Smith 1nF per pair, pair 0",
+        ),
+        ExternalPart(
             from_pin="CT_PAIR1",
             to_net="BS_COMMON",
             part_token="75R_0603_1%",
             justification="IEEE 802.3 Bob Smith termination, pair 1 center tap",
+        ),
+        ExternalPart(
+            from_pin="CT_PAIR1",
+            to_net="BS_COMMON",
+            part_token="1n_2kV_0603_safety",
+            justification="IEEE 802.3 Bob Smith 1nF per pair, pair 1",
         ),
         ExternalPart(
             from_pin="CT_PAIR2",
@@ -64,10 +80,22 @@ HX5008NLT_REFCIRCUIT = ReferenceCircuit(
             justification="IEEE 802.3 Bob Smith termination, pair 2 center tap",
         ),
         ExternalPart(
+            from_pin="CT_PAIR2",
+            to_net="BS_COMMON",
+            part_token="1n_2kV_0603_safety",
+            justification="IEEE 802.3 Bob Smith 1nF per pair, pair 2",
+        ),
+        ExternalPart(
             from_pin="CT_PAIR3",
             to_net="BS_COMMON",
             part_token="75R_0603_1%",
             justification="IEEE 802.3 Bob Smith termination, pair 3 center tap",
+        ),
+        ExternalPart(
+            from_pin="CT_PAIR3",
+            to_net="BS_COMMON",
+            part_token="1n_2kV_0603_safety",
+            justification="IEEE 802.3 Bob Smith 1nF per pair, pair 3",
         ),
         ExternalPart(
             from_pin="BS_COMMON",

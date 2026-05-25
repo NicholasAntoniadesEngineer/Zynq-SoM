@@ -29,7 +29,8 @@ SDIO 3.0 requires:
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -42,6 +43,9 @@ MICROSD_DM3AT_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.hirose.com/en/product/document?clcode=CL0540-1284-2-51&productname=DM3AT-SF-PEJM5(51)&series=DM3",
     datasheet_revision="DM3 series, 2023",
     app_circuit_figure="SD Spec Part 1, Sec 4.5 - SD Bus Topology",
+    local_datasheet_path=local_datasheet_path("DM3AT-SF-PEJM5"),
+    app_circuit_page="SD Spec Part 1, Sec 4.5 - SD Bus Topology",
+    minimum_circuit_verified=True,
     symbol_token="microSD_DM3AT",
     footprint="Connector_Card:microSD_HiroseDM3AT-SF-PEJM5_Push-Push",
     description="microSD push-push socket with card-detect switch",

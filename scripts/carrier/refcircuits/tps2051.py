@@ -18,7 +18,8 @@ Pin map (per datasheet):
 
 from __future__ import annotations
 
-from scripts.carrier.core.refcircuit import (
+from scripts.carrier.refcircuits._paths import local_datasheet_path
+from scripts.carrier.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
@@ -31,6 +32,9 @@ TPS2051_REFCIRCUIT = ReferenceCircuit(
     datasheet_url="https://www.ti.com/lit/ds/symlink/tps2051c.pdf",
     datasheet_revision="Rev May 2014",
     app_circuit_figure="Figure 8-1 - Typical Application Circuit",
+    local_datasheet_path=local_datasheet_path("TPS2051CDBVR"),
+    app_circuit_page="Figure 8-1 - Typical Application Circuit",
+    minimum_circuit_verified=True,
     symbol_token="TPS2051CDBVR",
     footprint="Package_TO_SOT_SMD:SOT-23-5",
     description="USB current-limited load switch 0.5A, SOT-23-5",
