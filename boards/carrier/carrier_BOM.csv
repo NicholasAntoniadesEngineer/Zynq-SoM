@@ -1,16 +1,41 @@
 Reference,Qty,Value,Footprint,LCSC,MPN,Description,Datasheet
-"C101, C102, C105, C107, C108, C109, C110",7,100n,Capacitor_SMD:C_0402_1005Metric,C1525,CL05B104KO5NNNC,100nF 16V X7R MLCC 0402,https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B104KO5NNNC_C1525.pdf
-"C105, C106, C108",3,10u,Capacitor_SMD:C_0402_1005Metric,C15525,CL05A106MQ5NUNC,10uF 6.3V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/2304140030_Samsung-Electro-Mechanics-CL05A106MQ5NUNC_C15525.pdf
-"C100, C101, C103, C104, C106, C107",6,1u,Capacitor_SMD:C_0402_1005Metric,C52923,CL05A105KP5NNNC,1uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1810171717_Samsung-Electro-Mechanics-CL05A105KP5NNNC_C52923.pdf
+J1,1,DM3AT-SF-PEJM5,Connector_Card:microSD_HiroseDM3AT-SF-PEJM5_Push-Push,C114218,DM3AT-SF-PEJM5,microSD push-push socket with card-detect switch,https://www.hirose.com/en/product/document?clcode=CL0540-1284-2-51&productname=DM3AT-SF-PEJM5(51)&series=DM3
+J1,1,TYPE-C-31-M-12,Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12,C165948,TYPE-C-31-M-12,"USB Type-C 16-pin SMD receptacle, USB 2.0 + power",https://datasheet.lcsc.com/lcsc/2304140030_Korean-Hroparts-Elec-TYPE-C-31-M-12_C165948.pdf
+J1,1,HDMI-019S,Connector_HDMI:HDMI_A_SOFNG_HDMI-019S,C111617,HDMI-019S,HDMI Type-A receptacle 19-pin SMD right-angle,https://datasheet.lcsc.com/lcsc/SOFNG-HDMI-019S_C111617.pdf
+"J1, J2",2,PM254R-12-08-H85,Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical,C53026548,PM254R-12-08-H85,2x6 0.1in pin header right-angle (Digilent PMOD),https://datasheet.lcsc.com/lcsc/XFCN-PM254R-12-08-H85_C53026548.pdf
+"C100, C101, C102, C103, C104, C105, C107, C108, C109, C110",10,100n,Capacitor_SMD:C_0402_1005Metric,C1525,CL05B104KO5NNNC,100nF 16V X7R MLCC 0402,https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B104KO5NNNC_C1525.pdf
+C101,1,100u,Capacitor_SMD:C_0402_1005Metric,?,?,,
+"C101, C102, C103, C105, C106, C108",6,10u,Capacitor_SMD:C_0402_1005Metric,C15525,CL05A106MQ5NUNC,10uF 6.3V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/2304140030_Samsung-Electro-Mechanics-CL05A106MQ5NUNC_C15525.pdf
+"C100, C101, C102, C103, C104, C106, C107",7,1u,Capacitor_SMD:C_0402_1005Metric,C52923,CL05A105KP5NNNC,1uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1810171717_Samsung-Electro-Mechanics-CL05A105KP5NNNC_C52923.pdf
 "C103, C104",2,200p,Capacitor_SMD:C_0402_1005Metric,C1546,0402CG201J500NT,200pF 50V C0G MLCC 0402 (USB-PD CC cReceiver),https://datasheet.lcsc.com/lcsc/FH-Guangdong-Fenghua-AdvanTech-0402CG201J500NT_C1546.pdf
+"C100, C101",2,4u7,Capacitor_SMD:C_0402_1005Metric,C368809,CL05A475KP5NRNC,4.7uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1809181722_Samsung-Electro-Mechanics-CL05A475MP5NSNC_C368809.pdf
+"R100, R101",2,100R,Resistor_SMD:R_0402_1005Metric,C25076,0402WGF1000TCE,"100 ohm 1% 1/16W 0402 (LVDS termination, current limit)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1000TCE_C25076.pdf
 "R100, R101, R102",3,100k,Resistor_SMD:R_0402_1005Metric,C60491,RC0402FR-07100KL,100 kohm 1% 1/16W 0402 (HPD pull-up),https://datasheet.lcsc.com/lcsc/YAGEO-RC0402FR-07100KL_C60491.pdf
-R104,1,10k,Resistor_SMD:R_0402_1005Metric,C25744,0402WGF1002TCE,10 kohm 1% 1/16W 0402 (general pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1002TCE_C25744.pdf
-"R100, R107",2,1M,Resistor_SMD:R_0402_1005Metric,C25741,0402WGF1004TCE,"1 Mohm 1% 1/16W 0402 (shield to GND, high-impedance)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1004TCE_C25741.pdf
-"R102, R103",2,4k7,Resistor_SMD:R_0402_1005Metric,C25900,0402WGF4701TCE,4.7 kohm 1% 1/16W 0402 (I2C pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF4701TCE_C25900.pdf
-"R105, R106",2,5k1,Resistor_SMD:R_0402_1005Metric,C25905,0402WGF5101TCE,5.1 kohm 1% 1/16W 0402 (USB-C CC Rd termination),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF5101TCE_C25905.pdf
+"R100, R101, R102, R103, R104",5,10k,Resistor_SMD:R_0402_1005Metric,C25744,0402WGF1002TCE,10 kohm 1% 1/16W 0402 (general pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1002TCE_C25744.pdf
+"R100, R102, R107",3,1M,Resistor_SMD:R_0402_1005Metric,C25741,0402WGF1004TCE,"1 Mohm 1% 1/16W 0402 (shield to GND, high-impedance)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1004TCE_C25741.pdf
+"R101, R103, R105, R107, R108",5,1n,Resistor_SMD:R_0402_1005Metric,?,?,,
+"R104, R105",2,2k2,Resistor_SMD:R_0402_1005Metric,?,?,,
+"R109, R110",2,330R,Resistor_SMD:R_0402_1005Metric,C25104,0402WGF3300TCE,330 ohm 1% 1/16W 0402 (LED current limit),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF3300TCE_C25104.pdf
+"R100, R101, R102, R103",4,4k7,Resistor_SMD:R_0402_1005Metric,C25900,0402WGF4701TCE,4.7 kohm 1% 1/16W 0402 (I2C pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF4701TCE_C25900.pdf
+"R100, R101, R105, R106",4,5k1,Resistor_SMD:R_0402_1005Metric,C25905,0402WGF5101TCE,5.1 kohm 1% 1/16W 0402 (USB-C CC Rd termination),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF5101TCE_C25905.pdf
+"R100, R102, R104, R106",4,75R,Resistor_SMD:R_0402_1005Metric,?,?,,
+U1,1,CP2102N-A02-GQFN24R,Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm,C969151,CP2102N-A02-GQFN24R,"USB-to-UART bridge, internal oscillator, QFN-24",https://www.silabs.com/documents/public/data-sheets/cp2102n-datasheet.pdf
+U2,1,24LC256T-I/SN,Package_SO:SOIC-8_3.9x4.9mm_P1.27mm,C5458,24LC256T-I/SN,"256 kbit I2C EEPROM (board ID / EDID), SOIC-8",https://ww1.microchip.com/downloads/aemDocuments/documents/MPD/ProductDocuments/DataSheets/21203P.pdf
+U1,1,TPS2051CDBVR,Package_TO_SOT_SMD:SOT-23-5,C129581,TPS2051CDBVR,"USB load switch 0.5A current-limit, fault flag, SOT-23-5",https://www.ti.com/lit/ds/symlink/tps2051c.pdf
 U3,1,TLV75718PDBVR,Package_TO_SOT_SMD:SOT-23-5,C507270,TLV75718PDBVR,1.8V 1A LDO SOT-23-5 (VCCO 1.8V bank supply),https://www.ti.com/lit/ds/symlink/tlv757p.pdf
 U2,1,TLV75725PDBVR,Package_TO_SOT_SMD:SOT-23-5,C2872563,TLV75725PDBVR,2.5V 1A LDO SOT-23-5 (VCCO 2.5V bank supply),https://www.ti.com/lit/ds/symlink/tlv757p.pdf
 U1,1,TLV75733PDBVR,Package_TO_SOT_SMD:SOT-23-5,C485517,TLV75733PDBVR,"3.3V 1A LDO SOT-23-5 (VCCO 3.3V bank supply, default)",https://www.ti.com/lit/ds/symlink/tlv757p.pdf
+U1,1,INA226AIDGSR,Package_SO:VSSOP-10_3x3mm_P0.5mm,C49851,INA226AIDGSR,"Bidirectional I2C current/power monitor, 36V common-mode",https://www.ti.com/lit/ds/symlink/ina226.pdf
+J1,1,1.0-15P,Connector_FFC-FPC:FFC_15P_1mm,?,?,,
+J1,1,FPC-05F-40PH20,Connector_FFC-FPC:FPC-05F-40PH20,?,?,,
+"J1, J2, J3",3,FX10A-168P-SV(91),Connector_FFC-FPC:FX10A-168P-SV1,?,?,,
 U1,1,FUSB302BMPX,Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm,C442699,FUSB302BMPX,"USB Type-C PD controller, I2C, WQFN-14 (2.5x2.5mm)",https://www.onsemi.com/pdf/datasheet/fusb302b-d.pdf
+T1,1,HX5008NLT,Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm,C962544,HX5008NLT,"1000BASE-T 4-port LAN magnetics module, SOIC-24",https://productfinder.pulseeng.com/files/datasheets/HX5008NL.pdf
+J1,1,ZX-PM2.54-2-7PY,Connector_PinHeader_2.54mm:PinHeader_2x07_P2.54mm_Vertical,C7499342,ZX-PM2.54-2-7PY,2x7 0.1in pin header (Xilinx JTAG header),https://datasheet.lcsc.com/lcsc/Megastar-ZX-PM2-54-2-7PY_C7499342.pdf
+J1,1,RJHSE5380,Connector_RJ:RJ45_Amphenol_RJHSE5380_Horizontal,C464586,RJHSE5380,"RJ45 8P8C bare shielded jack, integrated LEDs (no magnetics)",https://www.amphenol-cs.com/product-series/rjhse5380.html
+J2,1,HX-PZ1.27-2x5P-TP,Connector_PinHeader_1.27mm:PinHeader_2x05_P1.27mm_Vertical,?,?,,
+SW1,1,DS-04P,Switch_SMD:DIP_Switch_x4,?,?,,
+SW2,1,TS-1002S-06026C,Button_Switch_SMD:SW_SPST_Tactile_6x6mm,?,?,,
+U1,1,TPD12S016PWR,Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm,C201665,TPD12S016PWR,"HDMI companion: I2C level shifter, 12-ch ESD, 5V load switch",https://www.ti.com/lit/ds/symlink/tpd12s016.pdf
 J1,1,TYPE-C-31-M-12,Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12,C165948,TYPE-C-31-M-12,"USB Type-C 16-pin SMD receptacle, USB 2.0 + power",https://datasheet.lcsc.com/lcsc/2304140030_Korean-Hroparts-Elec-TYPE-C-31-M-12_C165948.pdf
 U2,1,USBLC6-4SC6,Package_TO_SOT_SMD:SOT-23-6,C111212,USBLC6-4SC6,USB 2.0 ESD protection 4-line SOT-23-6 (rev 6),https://www.st.com/resource/en/datasheet/usblc6-4.pdf

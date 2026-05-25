@@ -47,7 +47,7 @@ def build_hdmi_rx() -> Block:
             ConnectorInstance(
                 reference="J1",
                 refcircuit=REFCIRCUITS["HDMI_A"],
-                lib_id="Connector:HDMI_A_Receptacle",
+                lib_id="Connector_Generic:Conn_01x19",
                 edge=SheetEdge.RIGHT,
                 pin_to_net=(
                     ("1",  "ZYNQ_HDMI_RX_TMDS_2_P"),
