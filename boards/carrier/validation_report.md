@@ -1,27 +1,11 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-25T16:51:54Z
+Generated: 2026-05-25T16:57:04Z
 
-**Errors:** 104  **Warnings:** 53  **Info:** 0
+**Errors:** 88  **Warnings:** 53  **Info:** 0
 
-## Errors (104)
+## Errors (88)
 
-- **page_bounds.symbol_outside**: symbol 'PWR219' ('GND') outside page: y=259.08 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR220' ('GND') outside page: y=251.46 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR221' ('GND') outside page: y=327.66 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR222' ('+3V3') outside page: y=302.26 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR223' ('GND') outside page: y=302.26 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR224' ('+3V3') outside page: y=279.40 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR225' ('GND') outside page: y=378.46 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR226' ('GND') outside page: y=353.06 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR227' ('GND') outside page: y=492.76 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR228' ('+3V3') outside page: y=426.72 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR229' ('GND') outside page: y=421.64 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR230' ('+3V3') outside page: y=381.00 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR231' ('GND') outside page: y=525.78 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR232' ('GND') outside page: y=449.58 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR233' ('GND') outside page: y=579.12 > bottom edge 204.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR234' ('GND') outside page: y=500.38 > bottom edge 204.92 _(carrier_root.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
@@ -57,48 +41,48 @@ Generated: 2026-05-25T16:51:54Z
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
@@ -117,23 +101,16 @@ Generated: 2026-05-25T16:51:54Z
 - **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 254000 _(carrier.kicad_sch)_
 - **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 279400 _(carrier.kicad_sch)_
 - **erc.label_multiple_wires**: Label connects more than one wire at 2641600, 457200 _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Connector_HDMI' _(carrier.kicad_sch)_
+- **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
+- **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: Footprint 'FPC-05F-40PH20' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: Footprint 'VSSOP-10_3x3mm_P0.5mm' not found in library 'Package_SO' _(carrier.kicad_sch)_
 - **erc.label_multiple_wires**: Label connects more than one wire at 2489200, 304800 _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Connector_HDMI' _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2082800, 330200 _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: Footprint 'microSD_HiroseDM3AT-SF-PEJM5_Push-Push' not found in library 'Connector_Card' _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: Footprint 'FFC_15P_1mm' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Switch_SMD' _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: Footprint 'SW_SPST_Tactile_6x6mm' not found in library 'Button_Switch_SMD' _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: Footprint 'VSSOP-10_3x3mm_P0.5mm' not found in library 'Package_SO' _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 228600 _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 254000 _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 279400 _(carrier.kicad_sch)_
-- **erc.label_multiple_wires**: Label connects more than one wire at 2641600, 457200 _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Connector_HDMI' _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
@@ -141,29 +118,36 @@ Generated: 2026-05-25T16:51:54Z
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.footprint_link_issues**: Footprint 'RJ45_Amphenol_RJHSE5380_Horizontal' not found in library 'Connector_RJ' _(carrier.kicad_sch)_
-- **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
-- **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: Footprint 'FPC-05F-40PH20' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
-- **erc.footprint_link_issues**: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: Footprint 'FFC_15P_1mm' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.isolated_pin_label**: Label connected to only one pin _(carrier.kicad_sch)_
 - **erc.footprint_link_issues**: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
+- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 228600 _(carrier.kicad_sch)_
+- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 254000 _(carrier.kicad_sch)_
+- **erc.label_multiple_wires**: Label connects more than one wire at 2336800, 279400 _(carrier.kicad_sch)_
+- **erc.label_multiple_wires**: Label connects more than one wire at 2641600, 457200 _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Connector_HDMI' _(carrier.kicad_sch)_
+- **erc.label_multiple_wires**: Label connects more than one wire at 2082800, 330200 _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: Footprint 'microSD_HiroseDM3AT-SF-PEJM5_Push-Push' not found in library 'Connector_Card' _(carrier.kicad_sch)_
 - **erc.footprint_link_issues**: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Switch_SMD' _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: Footprint 'SW_SPST_Tactile_6x6mm' not found in library 'Button_Switch_SMD' _(carrier.kicad_sch)_
+- **erc.footprint_link_issues**: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both GND and VBUS_OTG are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both GND and ZYNQ_HDMI_RX_TMDS_2_P are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both GND and PMOD0_IO6 are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both ETH_LINE_MDI_3_N and ETH_LINE_MDI_3_P are attached to the same items; ETH_LINE_MDI_3_N will be used in the netlist _(carrier.kicad_sch)_
+- **erc.ground_pin_not_ground**: Pin GND not connected to ground net _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both +VIN and GND are attached to the same items; +VIN will be used in the netlist _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both GND and ZYNQ_HDMI_RX_CEC are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
-- **erc.ground_pin_not_ground**: Pin GND not connected to ground net _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both GND and PMOD0_IO6 are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both +3V3 and GND are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both GND and VBUS_OTG are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both +5V and GND are attached to the same items; +5V will be used in the netlist _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both ETH_LINE_MDI_3_N and ETH_LINE_MDI_3_P are attached to the same items; ETH_LINE_MDI_3_N will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both +3V3 and GND are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
 

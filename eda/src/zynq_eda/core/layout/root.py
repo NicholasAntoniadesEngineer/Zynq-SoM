@@ -44,7 +44,12 @@ from zynq_eda.core.model.sheet import (
 )
 
 
-_ROOT_PAPER_SIZE = "A4"
+_ROOT_PAPER_SIZE = "A2"
+"""Root sheet is A2 (594×420 mm). With 18 block sheet symbols arranged
+3 columns × 6 rows, each row consumes ~50 mm of height (sheet body +
+inter-row gap), so the column overruns A3's 297 mm height. A2 gives
+420 mm headroom and keeps the index legible at print size."""
+
 _SHEET_SYMBOL_MIN_WIDTH_MM = 50.8
 _SHEET_SYMBOL_MIN_HEIGHT_MM = 38.1
 _SHEET_PIN_PITCH_MM = 5.08
@@ -52,6 +57,11 @@ _SHEET_PIN_TOP_INSET_MM = 7.62  # space at the top for the sheetname/file labels
 _SHEET_COLUMN_GAP_MM = 25.4
 _SHEET_ROW_GAP_MM = 12.7
 _ROOT_TOP_MARGIN_MM = 25.4
+_ROOT_COLUMN_COUNT = 3
+"""Three columns of sheet symbols across the A3 root.
+
+A3 width (420 mm) / 3 columns ≈ 140 mm per column — comfortably wider
+than the widest sheet symbol's typical 50–80 mm pin-name extent."""
 
 
 @dataclass(frozen=True)
@@ -122,9 +132,11 @@ def _place_sheet_symbols(
         ``power``'s ``+VIN`` pin land on the page?". ``spec_pins`` maps
         ``block.name`` → its list of :class:`PlacedSheetPin`.
     """
-    column_x_values = (
-        snap_to_grid(INTERIOR_MARGIN_MM + 10.16),
-        snap_to_grid(paper_w / 2 + _SHEET_COLUMN_GAP_MM / 2),
+    usable_w = paper_w - 2 * INTERIOR_MARGIN_MM
+    column_pitch = usable_w / _ROOT_COLUMN_COUNT
+    column_x_values = tuple(
+        snap_to_grid(INTERIOR_MARGIN_MM + column_pitch * i + 10.16)
+        for i in range(_ROOT_COLUMN_COUNT)
     )
 
     placed: list[PlacedSheet] = []
