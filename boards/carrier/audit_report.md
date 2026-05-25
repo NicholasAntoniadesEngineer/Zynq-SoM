@@ -1,6 +1,6 @@
 # Carrier — Component Completeness Audit
 
-Generated: 2026-05-25T13:55:44Z
+Generated: 2026-05-25T14:36:50Z
 
 **Errors:** 0  **Warnings:** 3  **Info:** 0
 

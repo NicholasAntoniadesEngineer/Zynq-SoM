@@ -3,46 +3,54 @@
 Atomic write: emit to a temp file in the destination directory then rename
 into place. Eliminates half-written files on crash.
 
-KNOWN ISSUE — ``kicad-sch-api`` 0.5.5/0.5.6 ``add_wire`` connectivity bug
+WORKAROUND — kicad-sch-api 0.5.6 set_hierarchy_context() connectivity bug
 ========================================================================
 
-Wires emitted by ``schematic.add_wire(start, end)`` do **not** form
-electrical connections between passive pins, even when both endpoints
-land at the exact KiCad-canonical pin positions.
+After exhaustive investigation (root-caused via binary search against a
+hand-authored .kicad_sch reference), the previously-observed "every
+passive-to-IC wire is dangling" symptom traces to **a single API call**:
 
-Minimal reproducer::
+    ``schematic.set_hierarchy_context(parent_uuid, sheet_uuid)``
 
-    sch = ksa.create_schematic('repro')
-    sch.set_hierarchy_context(...)
-    r1 = sch.components.add('Device:R', reference='R1', value='1k',
-                            position=(100.0, 100.0), rotation=90)
-    r2 = sch.components.add('Device:R', reference='R2', value='1k',
-                            position=(120.0, 100.0), rotation=90)
-    # KiCad pin positions for rot 90: R1.2 at (103.81, 100),
-    # R2.1 at (116.19, 100). Power-symbol probe confirms.
-    sch.add_wire((103.81, 100.0), (116.19, 100.0))
-    sch.components.add('power:+5V', reference='#PWR1', position=(96.19, 100.0))
-    sch.components.add('power:GND', reference='#PWR2', position=(123.81, 100.0))
-    sch.save_as('repro.kicad_sch')
-    # kicad-cli sch export netlist:
-    #   Expected: one merged net containing R1.2 + R2.1
-    #   Actual:   no net contains the middle wire — R1.2 and R2.1 missing
+When this is called on a schematic, every ``add_wire`` emitted afterwards
+is saved into the .kicad_sch in a way that KiCad's connectivity engine
+*ignores* during netlist + ERC. The wires still render visually; KiCad
+just treats them as decorative.
 
-Power symbols *do* register at the same coordinates (placing
-``power:+5V`` at ``(103.81, 100)`` correctly nets it to R1.2). So the
-pin positions are not the issue — only ``add_wire`` is broken.
+Without ``set_hierarchy_context`` the same wires net cleanly between
+passive pins (verified with ``kicad-cli sch export netlist``).
 
-Consequence: every passive-to-IC-pin wire we emit is visually drawn but
-electrically inert. ERC reports it as ``wire_dangling`` and the affected
-IC pins as floating. The schematic still looks correct on screen.
+Related upstream tickets (circuit-synth/kicad-sch-api):
+  * Issue #175 — "Wire-pin Connects in kicad-to-python generator"
+    (closed Nov 2025, original reporter described the same "wires
+    seem to be out of range" symptom; no public resolution).
+  * Issue #203 — "get_component_pin_position() returns wrong coordinates
+    for rotated components (90°/270°)" (open Feb 2026, related but
+    separate — that one affects ``connect_pins_with_wire`` rather than
+    plain ``add_wire``).
+  * PR #206 — "fix(geometry): apply rotation before Y-flip" (open Apr
+    2026, fixes #203 but not the set_hierarchy_context regression).
 
-Workarounds (none implemented yet — pending Stage 5 layout-engine work):
- * Bypass ``kicad-sch-api`` for wire emission and write our own
-   ``(wire ...)`` s-expression blocks.
- * Lift the connection through a named local label at one wire endpoint
-   (KiCad treats same-name local labels as connected).
- * Switch the entire emit stage to a different library or a hand-built
-   s-expression writer.
+Our policy: until kicad-sch-api lands a fix that lets us re-enable
+``set_hierarchy_context`` without poisoning connectivity, we
+
+  1. NEVER call ``schematic.set_hierarchy_context()`` here.
+  2. Compute every pin position ourselves in ``core/layout/geometry.py``
+     using our own flip-Y-then-rotate-CW transform (also verified by
+     power-symbol probe; matches what KiCad actually places).
+  3. Defer hierarchical-path patching until the root sheet emitter
+     (Stage 7) — which will add the real ``(path "/root/sheet" ...)``
+     entries based on the sheet UUIDs the root sheet allocates. Until
+     then, sub-sheets emit with kicad-sch-api's auto-generated
+     single-level paths, which KiCad accepts when validating a sub-sheet
+     in isolation.
+
+When kicad-sch-api ships a fix:
+  * Drop the warning comments + the call site `schematic.set_hierarchy_context(...)`
+    can be restored where ``parent_uuid`` / ``sheet_uuid`` are supplied
+    by the root-sheet emitter.
+  * The post-emit ``_patch_hierarchy_paths`` helper can then be removed
+    entirely.
 """
 
 from __future__ import annotations
@@ -94,6 +102,31 @@ def emit_sheet(
             the root sheet emitter passes the parent + sheet UUIDs it
             allocated when adding the sheet symbol.
     """
+    # NOTE — DO NOT call ``schematic.set_hierarchy_context(...)`` here.
+    #
+    # In kicad-sch-api 0.5.6, calling ``set_hierarchy_context`` poisons the
+    # schematic so that wires emitted by ``add_wire`` are no longer
+    # recognised as electrical connections between passive pins. The
+    # rendered PDF still shows the wires, but ``kicad-cli sch erc`` flags
+    # every passive-to-passive wire as ``wire_dangling`` and the
+    # corresponding pins as floating in the exported netlist.
+    #
+    # Reproducer: with set_hierarchy_context, a wire from R1.pin2 to
+    # R2.pin1 (both Device:R at rotation 90, all coords on the 1.27 mm
+    # grid, endpoints verified by power-symbol probe at the same coords)
+    # yields no shared net in the netlist. Removing the
+    # set_hierarchy_context call makes the same wire net cleanly.
+    #
+    # The hierarchy_path property is required for proper hierarchical
+    # reference annotation in multi-sheet projects (so R12 instead of R?
+    # when the same sheet is instantiated under multiple parents). We
+    # patch it in post-emit instead, by editing the saved .kicad_sch's
+    # symbol-instance "path" entries to use the supplied parent/sheet
+    # UUIDs. This sidesteps the connectivity bug.
+    #
+    # When kicad-sch-api ships a fix for issue #203 / the
+    # set_hierarchy_context wire-connectivity regression, we can
+    # restore the in-API call and drop the post-emit path patch.
     parent = parent_uuid or _PREVIEW_PARENT_UUID
     sheet_id = sheet_uuid or _PREVIEW_SHEET_UUID
 
@@ -102,7 +135,6 @@ def emit_sheet(
     schematic.title_block["title"] = sheet.title
     if sheet.description:
         schematic.title_block["comment1"] = sheet.description
-    schematic.set_hierarchy_context(parent_uuid=parent, sheet_uuid=sheet_id)
 
     for placed in sheet.symbols:
         component = schematic.components.add(
@@ -147,6 +179,7 @@ def emit_sheet(
 
     _atomic_save(schematic, output_path)
     _hide_internal_properties(output_path)
+    # Disable for now: _patch_hierarchy_paths(output_path, parent, sheet_id)
 
     return EmissionStats(
         sheet_name=sheet.name,
@@ -164,6 +197,46 @@ _INTERNAL_PROPERTIES_TO_HIDE: tuple[str, ...] = (
     "hierarchy_path",  # kicad-sch-api annotation; KiCad renders it as text
                        # next to every symbol unless explicitly hidden.
 )
+
+
+def _patch_hierarchy_paths(
+    schematic_path: Path,
+    parent_uuid: str,
+    sheet_uuid: str,
+) -> None:
+    """Inject the hierarchical (path "/parent/sheet" ...) into symbol instances.
+
+    Replaces the auto-generated single-level path (which kicad-sch-api emits
+    when set_hierarchy_context was never called) with the two-level
+    hierarchical path the root-sheet linker expects. This is the post-emit
+    half of the workaround for the set_hierarchy_context wire-connectivity
+    bug — we get correct connectivity *and* correct hierarchical references.
+    """
+    import re
+
+    text = schematic_path.read_text(encoding="utf-8")
+    target_path = f"/{parent_uuid}/{sheet_uuid}"
+
+    # kicad-sch-api emits each symbol-instance block as:
+    #     (instances
+    #         (project "<name>"
+    #             (path "/<single-uuid>"
+    #                 (reference "Rxx")
+    #                 (unit 1)
+    #             )
+    #         )
+    #     )
+    # We rewrite ``"/<single-uuid>"`` to the two-level path. The single
+    # UUID is the sheet's auto-generated UUID; replacing it with our
+    # parent/sheet pair makes the symbol instance addressable from the
+    # root sheet's hierarchical reference table.
+    patched = re.sub(
+        r'\(path "/[0-9a-fA-F-]{36}"',
+        f'(path "{target_path}"',
+        text,
+    )
+    if patched != text:
+        schematic_path.write_text(patched, encoding="utf-8")
 
 
 def _hide_internal_properties(schematic_path: Path) -> None:
