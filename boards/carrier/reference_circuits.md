@@ -22,101 +22,21 @@ Auto-generated design-intent record. For every IC on the carrier, this document 
 ## U1 — TLV75733PDBVR
 
 **Block:** power  
-**Datasheet:** [TLV75733PDBVR](https://www.ti.com/lit/ds/symlink/tlv757p.pdf) (Figure 18 - Typical Application, p.18, Figure 18)  
+**Datasheet:** [TLV75733PDBVR](https://www.ti.com/lit/ds/symlink/tlv757p.pdf) (Figure 7-4 - TLV757P Typical Application, p.19, Figure 7-4)  
 **Footprint:** Package_TO_SOT_SMD:SOT-23-5  
+**Supply rail:** +VIN  
 **Min-circuit verified:** yes  
 
-3.3V 1A LDO (VCCO bank supply, default)
+3.3V 1A LDO (main +3V3 carrier rail, SOT-23-5)
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| IN | GND | 1u_0402_X7R | 1 | DS Sec 8.2.2: 1uF input cap |
-| OUT | GND | 1u_0402_X7R | 1 | DS Sec 8.2.2: 1uF output cap (min 1uF for stability) |
-| OUT | GND | 100n_0402_X7R | 1 | DS Sec 8.2.2: HF bypass on output for transient response |
-| EN | IN | 100k_0402_1% | 1 | DS Sec 8.3.3: EN pull-up to IN for always-on (or GPIO control) |
-| NR_SS | GND | 10n_0402_X7R | 1 | DS Sec 7.5: 10nF NR/SS cap for low-noise startup (optional but recommended) |
-
-### Pin overrides
-
-_None._
-
-### Layout notes
-
-- Place 1uF output cap within 5mm of OUT pin for 3.3V stability (rule) — _DS Sec 10.2 Layout_
-
-## U2 — TLV75725PDBVR
-
-**Block:** power  
-**Datasheet:** [TLV75725PDBVR](https://www.ti.com/lit/ds/symlink/tlv757p.pdf) (Figure 18 - Typical Application, p.18, Figure 18)  
-**Footprint:** Package_TO_SOT_SMD:SOT-23-5  
-**Min-circuit verified:** yes  
-
-2.5V 1A LDO (VCCO bank supply, alternate)
-
-### External parts
-
-| From pin | To net | Part token | Qty | Why |
-|---|---|---|---|---|
-| IN | GND | 1u_0402_X7R | 1 | DS Sec 8.2.2: 1uF input cap |
-| OUT | GND | 1u_0402_X7R | 1 | DS Sec 8.2.2: 1uF output cap (min 1uF for stability) |
-| OUT | GND | 100n_0402_X7R | 1 | DS Sec 8.2.2: HF bypass on output for transient response |
-| EN | IN | 100k_0402_1% | 1 | DS Sec 8.3.3: EN pull-up to IN for always-on (or GPIO control) |
-| NR_SS | GND | 10n_0402_X7R | 1 | DS Sec 7.5: 10nF NR/SS cap for low-noise startup (optional but recommended) |
-
-### Pin overrides
-
-_None._
-
-### Layout notes
-
-- Place 1uF output cap within 5mm of OUT pin for 2.5V stability (rule) — _DS Sec 10.2 Layout_
-
-## U3 — TLV75718PDBVR
-
-**Block:** power  
-**Datasheet:** [TLV75718PDBVR](https://www.ti.com/lit/ds/symlink/tlv757p.pdf) (Figure 18 - Typical Application, p.18, Figure 18)  
-**Footprint:** Package_TO_SOT_SMD:SOT-23-5  
-**Min-circuit verified:** yes  
-
-1.8V 1A LDO (VCCO bank supply, alternate)
-
-### External parts
-
-| From pin | To net | Part token | Qty | Why |
-|---|---|---|---|---|
-| IN | GND | 1u_0402_X7R | 1 | DS Sec 8.2.2: 1uF input cap |
-| OUT | GND | 1u_0402_X7R | 1 | DS Sec 8.2.2: 1uF output cap (min 1uF for stability) |
-| OUT | GND | 100n_0402_X7R | 1 | DS Sec 8.2.2: HF bypass on output for transient response |
-| EN | IN | 100k_0402_1% | 1 | DS Sec 8.3.3: EN pull-up to IN for always-on (or GPIO control) |
-| NR_SS | GND | 10n_0402_X7R | 1 | DS Sec 7.5: 10nF NR/SS cap for low-noise startup (optional but recommended) |
-
-### Pin overrides
-
-_None._
-
-### Layout notes
-
-- Place 1uF output cap within 5mm of OUT pin for 1.8V stability (rule) — _DS Sec 10.2 Layout_
-
-## U1 — INA226AIDGSR
-
-**Block:** power_mon  
-**Datasheet:** [INA226AIDGSR](https://www.ti.com/lit/ds/symlink/ina226.pdf) (Figure 32 - Typical Application Circuit, p.32, Figure 32)  
-**Footprint:** Package_SO:VSSOP-10_3x3mm_P0.5mm  
-**Min-circuit verified:** yes  
-
-Bidirectional I2C current/power monitor 16-bit, 36V common-mode
-
-### External parts
-
-| From pin | To net | Part token | Qty | Why |
-|---|---|---|---|---|
-| IN+ | IN- | R_SENSE_10mR_2010_1% | 1 | DS Sec 9.3 + Eq 7: R_SENSE = V_FS / I_max; 10 milliohm gives 81.92mV full-scale at 8.192A (20mV/2.5uV/LSB resolution = INA226 native range) |
-| VS | GND | 100n_0402_X7R | 1 | DS Sec 9.2: VS decoupling - 100nF close to pin |
-| IN+ | SHUNT_PLUS | 10R_0402_1% | 1 | DS Fig 32: 10 ohm series input filter on IN+ |
-| IN+ | IN- | 100n_0402_X7R | 1 | DS Sec 9.3 + Fig 32: Differential filter cap between IN+ / IN- (noise immunity) |
+| IN | GND | 1u_0402_X7R | 1 | DS Sec 7.1.1 + Fig 7-4: 1 uF ceramic input cap close to pin 1 |
+| OUT | GND | 1u_0402_X7R | 1 | DS Sec 7.1.1 + Fig 7-4: 1 uF ceramic output cap (>= 0.47 uF effective for stability) |
+| OUT | GND | 100n_0402_X7R | 1 | Additional HF bypass on output for transient response (complements 1 uF bulk) |
+| EN | IN | 100k_0402_1% | 1 | DS Sec 6.4.1: EN pull-up to IN for always-on (V_EN >= V_HI = 1V); replace with GPIO for sequencing |
 
 ### Pin overrides
 
@@ -124,12 +44,112 @@ _None._
 
 ### No external required
 
-_Pins explicitly left bare:_ ALERT
+_Pins explicitly left bare:_ NC
 
 ### Layout notes
 
-- Kelvin-sense the shunt: route IN+ / IN- as differential Kelvin connections from each side of the shunt resistor (rule) — _DS Sec 11 Layout - required for sub-mV accuracy_
-- Place R_sense in the high-side of the rail (between source and load) (rule) — _DS Sec 9.3 Application_
+- Place 1 uF input and 1 uF output caps within 5 mm of pins 1 (IN) and 5 (OUT) respectively for 3.3V stability (rule) — _DS Sec 7.4.1 Layout Guidelines_
+- Use a copper ground plane under the LDO and add thermal vias around the device to distribute heat (P_D = (V_IN - V_OUT) * I_OUT) (guideline) — _DS Sec 7.4.1 + Sec 7.1.5 Power Dissipation_
+- Keep IN trace short and low-impedance; if the input source is more than a few inches away, add additional bulk input capacitance in parallel with the 1 uF ceramic (guideline) — _DS Sec 7.3 Power Supply Recommendations_
+
+## U2 — TLV75725PDBVR
+
+**Block:** power  
+**Datasheet:** [TLV75725PDBVR](https://www.ti.com/lit/ds/symlink/tlv757p.pdf) (Figure 7-4 - TLV757P Typical Application, p.19, Figure 7-4)  
+**Footprint:** Package_TO_SOT_SMD:SOT-23-5  
+**Supply rail:** +VIN  
+**Min-circuit verified:** yes  
+
+2.5V 1A LDO (SSTL/DCI reference supply, SOT-23-5)
+
+### External parts
+
+| From pin | To net | Part token | Qty | Why |
+|---|---|---|---|---|
+| IN | GND | 1u_0402_X7R | 1 | DS Sec 7.1.1 + Fig 7-4: 1 uF ceramic input cap close to pin 1 |
+| OUT | GND | 1u_0402_X7R | 1 | DS Sec 7.1.1 + Fig 7-4: 1 uF ceramic output cap (>= 0.47 uF effective for stability) |
+| OUT | GND | 100n_0402_X7R | 1 | Additional HF bypass on output for transient response (complements 1 uF bulk) |
+| EN | IN | 100k_0402_1% | 1 | DS Sec 6.4.1: EN pull-up to IN for always-on (V_EN >= V_HI = 1V); replace with GPIO for sequencing |
+
+### Pin overrides
+
+_None._
+
+### No external required
+
+_Pins explicitly left bare:_ NC
+
+### Layout notes
+
+- Place 1 uF input and 1 uF output caps within 5 mm of pins 1 (IN) and 5 (OUT) respectively for 2.5V stability (rule) — _DS Sec 7.4.1 Layout Guidelines_
+- Use a copper ground plane under the LDO and add thermal vias around the device to distribute heat (P_D = (V_IN - V_OUT) * I_OUT) (guideline) — _DS Sec 7.4.1 + Sec 7.1.5 Power Dissipation_
+- Keep IN trace short and low-impedance; if the input source is more than a few inches away, add additional bulk input capacitance in parallel with the 1 uF ceramic (guideline) — _DS Sec 7.3 Power Supply Recommendations_
+
+## U3 — TLV75718PDBVR
+
+**Block:** power  
+**Datasheet:** [TLV75718PDBVR](https://www.ti.com/lit/ds/symlink/tlv757p.pdf) (Figure 7-4 - TLV757P Typical Application, p.19, Figure 7-4)  
+**Footprint:** Package_TO_SOT_SMD:SOT-23-5  
+**Supply rail:** +VIN  
+**Min-circuit verified:** yes  
+
+1.8V 1A LDO (FPGA 1.8V bank supply, SOT-23-5)
+
+### External parts
+
+| From pin | To net | Part token | Qty | Why |
+|---|---|---|---|---|
+| IN | GND | 1u_0402_X7R | 1 | DS Sec 7.1.1 + Fig 7-4: 1 uF ceramic input cap close to pin 1 |
+| OUT | GND | 1u_0402_X7R | 1 | DS Sec 7.1.1 + Fig 7-4: 1 uF ceramic output cap (>= 0.47 uF effective for stability) |
+| OUT | GND | 100n_0402_X7R | 1 | Additional HF bypass on output for transient response (complements 1 uF bulk) |
+| EN | IN | 100k_0402_1% | 1 | DS Sec 6.4.1: EN pull-up to IN for always-on (V_EN >= V_HI = 1V); replace with GPIO for sequencing |
+
+### Pin overrides
+
+_None._
+
+### No external required
+
+_Pins explicitly left bare:_ NC
+
+### Layout notes
+
+- Place 1 uF input and 1 uF output caps within 5 mm of pins 1 (IN) and 5 (OUT) respectively for 1.8V stability (rule) — _DS Sec 7.4.1 Layout Guidelines_
+- Use a copper ground plane under the LDO and add thermal vias around the device to distribute heat (P_D = (V_IN - V_OUT) * I_OUT) (guideline) — _DS Sec 7.4.1 + Sec 7.1.5 Power Dissipation_
+- Keep IN trace short and low-impedance; if the input source is more than a few inches away, add additional bulk input capacitance in parallel with the 1 uF ceramic (guideline) — _DS Sec 7.3 Power Supply Recommendations_
+
+## U1 — INA226AIDGSR
+
+**Block:** power_mon  
+**Datasheet:** [INA226AIDGSR](https://www.ti.com/lit/ds/symlink/ina226.pdf) (Figure 8-1 - Typical Circuit Configuration, p.28, Figure 8-1)  
+**Footprint:** Package_SO:VSSOP-10_3x3mm_P0.5mm  
+**Supply rail:** +3V3  
+**Min-circuit verified:** yes  
+
+Bidirectional I2C current/voltage/power monitor, 16-bit, 36 V common-mode, VSSOP-10
+
+### External parts
+
+| From pin | To net | Part token | Qty | Why |
+|---|---|---|---|---|
+| Vin+ | Vin- | R_SENSE_10mR_2010_1% | 1 | DS Sec 6.5 + Eq 7: R_SENSE = V_FS / I_max. 10 mOhm gives 81.92 mV full-scale at 8.192 A (matches the 16-bit / 2.5 uV LSB native range); standardised across all 6 carrier instances |
+| VS | GND | 100n_0402_X7R | 1 | DS Sec 8.3 + Fig 8-1: 0.1 uF C_BYPASS on VS as close as possible to the device |
+| SDA | +3V3 | 4k7_0402_1% | 1 | DS Fig 8-1 + Sec 8.2.1.2: I2C SDA pull-up to bus supply |
+| SCL | +3V3 | 4k7_0402_1% | 1 | DS Fig 8-1 + Sec 8.2.1.2: I2C SCL pull-up to bus supply |
+| ~{Alert} | +3V3 | 4k7_0402_1% | 1 | DS Sec 8.2.1.2 + Fig 8-1: ALERT open-drain pull-up to V_VS |
+
+### Pin overrides
+
+| Pin | Net |
+|---|---|
+| Vbus | +VIN |
+
+### Layout notes
+
+- Kelvin-connect IN+ and IN- to the shunt resistor pads (4-wire or true Kelvin geometry). Route the sense traces away from the high-current shunt-to-load and shunt-to-source paths (rule) — _DS Sec 8.4.1 Layout Guidelines_
+- Place the 0.1 uF VS bypass cap as close as possible to the VS (pin 6) and GND (pin 7) pins of the device (rule) — _DS Sec 8.3 Power Supply Recommendations + Fig 8-4_
+- Route Vin+ / Vin- as a tight differential pair from the shunt back to pins 9/10 to reject common-mode noise on long sense traces (guideline) — _DS Sec 8.4.1 Layout Guidelines_
+- Connect the Vbus pin (8) directly to the monitored power rail via a via to the power plane; the bus voltage measurement is independent of V_S, so noisy or switching rails can be sensed without affecting the device supply — _DS Fig 8-4 note (1)_
 
 ## U1 — FUSB302BMPX
 
@@ -210,28 +230,36 @@ _Pins explicitly left bare:_ I/O1, I/O2, I/O3, I/O4
 ## U1 — TPS2051CDBVR
 
 **Block:** usbc_otg  
-**Datasheet:** [TPS2051CDBVR](https://www.ti.com/lit/ds/symlink/tps2051c.pdf) (Figure 8-1 - Typical Application Circuit, Figure 8-1 - Typical Application Circuit)  
+**Datasheet:** [TPS2051CDBVR](https://www.ti.com/lit/ds/symlink/tps2051c.pdf) (Figure 23 - Typical Application Schematic, p.17, Figure 23)  
 **Footprint:** Package_TO_SOT_SMD:SOT-23-5  
+**Supply rail:** +VIN  
 **Min-circuit verified:** yes  
 
-USB current-limited load switch 0.5A, SOT-23-5
+USB current-limited load switch, 0.5 A, active-high enable, SOT-23-5
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| IN | GND | 1u_0402_X7R | 1 | DS Sec 8.2.2.1: 1uF ceramic on IN pin |
-| OUT | GND | 100u_1206_X5R | 1 | DS Sec 8.2.2.1: 1-150uF on OUT pin; meets USB 2.0 Vbus capacitance |
-| OC_N | +3V3 | 10k_0402_1% | 1 | DS Sec 7.3.2: /OC is open-drain, requires pull-up to logic supply |
-| EN_N | +3V3 | 10k_0402_1% | 1 | DS Sec 7.3.1: /EN default state high (disabled); GPIO pulls low to enable |
+| IN | GND | 1u_0402_X7R | 1 | DS Sec 9.2.2.1 + Fig 23: 0.1 uF min on IN (we use 1 uF for transient/inrush headroom) |
+| IN | GND | 100n_0402_X7R | 1 | DS Fig 23 + Sec 11 Layout: 0.1 uF ceramic close to IN/GND pins |
+| OUT | GND | 100u_1206_X5R | 1 | DS Sec 9.2.2.1 + Fig 23: 120-150 uF for USB-2.0 VBUS; 100 uF 1206 carries the standard with derating |
+| OUT | GND | 100n_0402_X7R | 1 | HF bypass on OUT for USB transient response (complements bulk cap) |
+| ~{FLT} | +3V3 | 10k_0402_1% | 1 | DS Sec 8.3.5 + Fig 23: ~FLT is open-drain, 10k pull-up to logic supply |
 
 ### Pin overrides
 
-_None._
+| Pin | Net |
+|---|---|
+| EN | STM32_USBOTG_VBUS_EN |
+| ~{FLT} | STM32_USBOTG_OC_N |
 
 ### Layout notes
 
-- Output cap >= 1uF, <= 150uF; place close to OUT pin for transient response (rule) — _DS Sec 8.2.2.1_
+- Place the 0.1 uF input bypass cap near the IN and GND pins with a low-inductance trace (rule) — _DS Sec 11.1 Layout Guidelines #1_
+- Place the >= 10 uF output cap near the OUT and GND pins with a low-inductance trace (a 120-150 uF bulk is required for USB 2.0 VBUS standard compliance) (rule) — _DS Sec 11.1 Layout Guidelines #2 + USB 2.0 VBUS spec_
+- Add copper pour around the device on both sides of the SOT-23-5 to spread heat (DS Sec 11.3: theta_JA depends strongly on PCB copper area at the 0.5 A rated current) (guideline) — _DS Sec 11.3 Power Dissipation and Junction Temperature_
+- EN must not be left floating -- the input is driven directly from a STM32 GPIO. Keep the EN trace short to avoid noise coupling into the enable network at switch turn-on (rule) — _DS Sec 8.3.2 Enable: enable must not be left open_
 
 ## U1 — CP2102N-A02-GQFN24R
 
