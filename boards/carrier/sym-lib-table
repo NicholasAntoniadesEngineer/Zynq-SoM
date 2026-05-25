@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "zynq_eda")(type "KiCad")(uri "${KIPRJMOD}/../../shared/symbols/zynq_eda.kicad_sym")(options "")(descr "Shared carrier IC + connector symbols"))
+  (lib (name "som_connector")(type "KiCad")(uri "${KIPRJMOD}/symbol_Zynq_SoM.kicad_sym")(options "")(descr "SoM J1/J2/J3 connector breakout (legacy local)"))
+)
