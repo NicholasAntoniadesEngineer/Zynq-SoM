@@ -98,8 +98,15 @@ def build_usb_pd() -> Block:
         external_nets=(
             # Block consumes +3V3 to power the FUSB302 VDD pin.
             PowerInputNet("+3V3", edge=SheetEdge.LEFT),
-            # Block produces +VIN from the USB-C VBUS.
-            PowerOutputNet("+VIN", edge=SheetEdge.LEFT),
+            # +VIN sourced from the USB-C VBUS pins. Declared as input
+            # (not output) because the USB-C connector's VBUS pins are
+            # typed `power_input` in the KiCad symbol, not `power_output`
+            # — so KiCad's ERC needs a root-level PWR_FLAG to satisfy
+            # the `power_pin_not_driven` rule on the VBUS pins themselves
+            # and on downstream consumers (INA226 Vbus). Declaring as
+            # PowerInputNet keeps +VIN OUT of `nets_with_producer` so
+            # root.py emits the flag.
+            PowerInputNet("+VIN", edge=SheetEdge.LEFT),
             # Inter-block signal nets going to/from the STM32.
             SignalNet("STM32_I2C2_SDA",     direction="bidirectional", edge=SheetEdge.LEFT),
             SignalNet("STM32_I2C2_SCL",     direction="input",         edge=SheetEdge.LEFT),

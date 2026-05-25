@@ -211,26 +211,48 @@ def _place_one_connector(
     # label is safe: KiCad merges same-name labels across the sheet via
     # power symbols elsewhere (the cluster's cap-to-GND symbol satisfies
     # the GND driver requirement; PWR_FLAGs on input nets handle the rest).
+    #
+    # Stub direction MUST be ALONG the pin's natural extension direction
+    # (continuing OUTWARD from the connector body), NOT perpendicular to
+    # the pin row. Perpendicular stubs of length >= pin pitch (5.08 mm
+    # is two USB-C pin pitches) span adjacent pin Y rows, creating a
+    # vertical wire that connects every pin's stub into one giant short
+    # — historically this shorted GND with USBOTG_DP, VBUS_OTG, EDID
+    # I2C, HDMI TMDS pairs, and every other connector signal that
+    # shared a column with a GND pin. The fix uses the pin's page-side
+    # (derived from pin_rotation + symbol_rotation) to pick the OUTWARD
+    # direction, so the stub always extends past the pin tip and
+    # never crosses another pin's row.
+    from zynq_eda.core.layout.geometry import page_side_from_pin
     for pin_id, net_name in connector.pin_to_net:
         pin_geom = _resolve_pin(pin_id)
         if pin_geom is None:
             continue
 
-        # Stub extends INTO the page from the pin (away from the
-        # connector body) so labels don't overlap the body.
-        # Choose direction from the pin's page-relative position vs the
-        # connector anchor.
-        page_dx = pin_geom.connection.x - anchor.x
-        page_dy = pin_geom.connection.y - anchor.y
-        if abs(page_dx) >= abs(page_dy):
+        side = page_side_from_pin(
+            pin_rotation=getattr(pin_geom, "pin_rotation", 0.0),
+            symbol_rotation=getattr(pin_geom, "symbol_rotation", connector.rotation),
+        )
+        STUB_LEN = 2.54
+        if side == "left":
             stub_end = Point(
-                snap_to_grid(pin_geom.connection.x + (5.08 if page_dx > 0 else -5.08)),
+                snap_to_grid(pin_geom.connection.x - STUB_LEN),
                 pin_geom.connection.y,
             )
-        else:
+        elif side == "right":
+            stub_end = Point(
+                snap_to_grid(pin_geom.connection.x + STUB_LEN),
+                pin_geom.connection.y,
+            )
+        elif side == "top":
             stub_end = Point(
                 pin_geom.connection.x,
-                snap_to_grid(pin_geom.connection.y + (5.08 if page_dy > 0 else -5.08)),
+                snap_to_grid(pin_geom.connection.y - STUB_LEN),
+            )
+        else:  # bottom
+            stub_end = Point(
+                pin_geom.connection.x,
+                snap_to_grid(pin_geom.connection.y + STUB_LEN),
             )
 
         builder.wires.append(PlacedWire(

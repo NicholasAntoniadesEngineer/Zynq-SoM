@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "f5d419d1-7997-48be-abc6-b1c90a9f0930")
+	(uuid "f8141e1f-0070-4b2b-8a73-327c86fbe667")
 	(paper "A4")
 	(title_block
 		(title "Power Monitoring (INA226 on +VIN)")
@@ -845,7 +845,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "612c5376-8ae8-4f0e-937e-2e83d453cd79")
+		(uuid "2433cd07-0abd-4ccf-a732-dd1cc3a35a37")
 		(property "Reference" "U1"
 			(at 123.19 71.12 0.0000)
 			(effects
@@ -892,38 +892,38 @@
 			)
 		)
 		(pin "1"
-			(uuid "96d9d1e3-6a8b-452f-87f1-818c9ec3f742")
+			(uuid "96974224-92f7-4e3c-8969-9088434001b7")
 		)
 		(pin "2"
-			(uuid "d2209fcf-c047-4085-99e9-7c412729582b")
+			(uuid "31c6e5c5-8aae-4287-b53f-39816c17666a")
 		)
 		(pin "3"
-			(uuid "7b70022a-19c8-4f6b-8a82-e6ddaf2ca650")
+			(uuid "9ae4a82d-1574-4d29-b3e0-bed49ac633ef")
 		)
 		(pin "4"
-			(uuid "3ba173e6-be22-43e3-ab25-d184022b4598")
+			(uuid "6b4a82df-f5d2-47f8-b2ac-e42d092e7901")
 		)
 		(pin "5"
-			(uuid "6ceefd74-a785-4c51-a204-fdf1ea6d42d2")
+			(uuid "caf47caa-bc9d-40b6-8d52-4ddf9de13fde")
 		)
 		(pin "6"
-			(uuid "fcc1a580-e797-4e87-8cea-53464b275991")
+			(uuid "df7b25b9-4ec4-402d-97d0-f2f8f1013fd9")
 		)
 		(pin "7"
-			(uuid "e9862b4c-e1b2-4f6d-abd8-0aeaa03c6293")
+			(uuid "24863aae-1ffd-491a-bfa2-e10e63e6057b")
 		)
 		(pin "8"
-			(uuid "8a9f63b6-c493-479a-9d57-20f7093b745f")
+			(uuid "7d931b4c-7030-4864-8115-104977aa9139")
 		)
 		(pin "9"
-			(uuid "a9b54602-880a-4927-a11a-298b9b003cf1")
+			(uuid "bc927e23-78a9-40dd-8eba-4333d7624fcf")
 		)
 		(pin "10"
-			(uuid "ad4308fb-ef3c-40f8-8024-a4a687ff1c28")
+			(uuid "4c4c149a-73b6-4d34-94d4-77e7b8ce8d9e")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "U1")
 					(unit 1)
 				)
@@ -939,7 +939,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "52baf18d-7b6a-4483-a62c-a81a6744dd36")
+		(uuid "c742f212-8063-40f0-973c-497dc4111763")
 		(property "Reference" "R100"
 			(at 109.22 60.198 0.0000)
 			(effects
@@ -968,14 +968,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "7aca1bd9-391e-49e6-875d-564fa7c51030")
+			(uuid "024df6b5-04a5-4c93-bcd9-f1d5bb7eae14")
 		)
 		(pin "2"
-			(uuid "e9c3ecf7-8ae3-40be-9896-a5dd933b964f")
+			(uuid "4aab7f8f-0497-4eed-8b3d-16a4bdf5acab")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "R100")
 					(unit 1)
 				)
@@ -991,7 +991,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e3b1b68a-2527-4dfe-9734-0f8c53b320aa")
+		(uuid "9f5a21d8-4dbd-46b4-8d84-0d8fb014bd59")
 		(property "Reference" "C100"
 			(at 130.175 39.37 0.0000)
 			(effects
@@ -1020,14 +1020,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "1df31666-947d-4bf1-8d87-aea85fb3f25c")
+			(uuid "826a673e-e005-44f7-a591-adb2590ad9f3")
 		)
 		(pin "2"
-			(uuid "60e9f8b7-455c-42d3-8d6a-37e46381c49e")
+			(uuid "070b2cca-13ea-4e71-a139-53fcc8236438")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1043,7 +1043,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "36241e34-5f45-4385-bed9-a2a12b77e071")
+		(uuid "9105c942-4a4c-41b9-8a69-43c807573682")
 		(property "Reference" "#PWR100"
 			(at 129.54 21.59 0.0000)
 			(effects
@@ -1072,11 +1072,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "b0050883-23d5-4f96-99d0-c0414d6b45db")
+			(uuid "09f518fe-f889-4393-b161-4f1b9cb1765f")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -1092,7 +1092,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e9608a90-7664-4481-988d-19fc69b379c1")
+		(uuid "02d5b6f5-f9b6-4bd1-9aac-17ed32060418")
 		(property "Reference" "R101"
 			(at 149.86 61.722 180)
 			(effects
@@ -1121,14 +1121,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "bfa02d9d-ecb0-456d-bd0a-8e56289bb2e1")
+			(uuid "68fa7ac5-828e-4630-80a6-19665d4d4dc3")
 		)
 		(pin "2"
-			(uuid "5924ce79-eb65-4304-a8dc-43eb85408281")
+			(uuid "67e274e5-30d1-452a-a83b-c1800abb9906")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "R101")
 					(unit 1)
 				)
@@ -1144,7 +1144,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "f8dc0f9d-dcb7-46ae-aa7b-9f0cf47a5c0c")
+		(uuid "4e1eb60c-2caf-45a1-888c-f9d6b7588d5a")
 		(property "Reference" "#PWR101"
 			(at 158.75 55.88 0.0000)
 			(effects
@@ -1173,11 +1173,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "4eef7ff4-1773-4110-bf16-decee31495ff")
+			(uuid "414b1092-7d06-4d51-891d-e6a144737eb8")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -1193,7 +1193,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "7a06bf7b-a137-456c-a566-0451619dae19")
+		(uuid "7228b04a-a39b-4d0e-bd54-46b6fb15a5c8")
 		(property "Reference" "R102"
 			(at 149.86 64.262 180)
 			(effects
@@ -1222,14 +1222,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "8c193d07-7f89-4937-9044-6ee7116e4988")
+			(uuid "506796f9-675b-4779-98d6-a9a60edef40c")
 		)
 		(pin "2"
-			(uuid "6704bb26-e073-4318-9aef-8c7b02dbbabb")
+			(uuid "5bd152b1-78f8-429d-a22b-a392e1888ecf")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "R102")
 					(unit 1)
 				)
@@ -1245,7 +1245,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "14c913cf-40b8-401e-9c92-915e5bb55cdb")
+		(uuid "ed5f46f6-5391-4020-b5bf-359704ca1779")
 		(property "Reference" "#PWR102"
 			(at 158.75 58.42 0.0000)
 			(effects
@@ -1274,11 +1274,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "c8e7dafd-eb04-4c41-907a-e9b0313c63d7")
+			(uuid "0b493b17-8af1-4b50-8b8f-99f7634a199f")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -1294,7 +1294,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "7d2f4625-c33c-40df-b5cf-344365217fe2")
+		(uuid "58a215f1-267f-4644-a7aa-00dfa82096ec")
 		(property "Reference" "R103"
 			(at 149.86 69.342 180)
 			(effects
@@ -1323,14 +1323,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "6bead118-5b32-49c1-a690-77a129549c6f")
+			(uuid "3c0dc4c6-0adc-4cb2-acd0-52b3f30b86e1")
 		)
 		(pin "2"
-			(uuid "48360ca6-44d7-47e3-a781-5c1aff98f46a")
+			(uuid "3394ca27-00c8-46b6-8629-38f795bcd44d")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "R103")
 					(unit 1)
 				)
@@ -1346,7 +1346,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "4553e015-1eb3-437b-8860-4b5ca06f462b")
+		(uuid "4c52f332-1855-4e08-bf4f-7a0061ba2fca")
 		(property "Reference" "#PWR103"
 			(at 158.75 63.5 0.0000)
 			(effects
@@ -1375,11 +1375,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "bcd3b63d-35c8-47a7-923f-251c8bf5fefc")
+			(uuid "b55a6553-6176-4e11-ac82-9b8d50d2f0a6")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "#PWR103")
 					(unit 1)
 				)
@@ -1395,7 +1395,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e999ffa2-6526-4585-910e-979119b955df")
+		(uuid "671a3845-1a50-47fd-93ff-9548539e4e16")
 		(property "Reference" "#PWR104"
 			(at 129.54 71.12 0.0000)
 			(effects
@@ -1424,11 +1424,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "c7031b43-8892-4299-908a-3cac707a3173")
+			(uuid "d75daa30-78ea-4d92-b972-f3c36df501b5")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "#PWR104")
 					(unit 1)
 				)
@@ -1444,7 +1444,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "ef9667e6-b977-41bd-a7ef-a097f22813d8")
+		(uuid "206f4844-41db-456a-adda-24239a9633a8")
 		(property "Reference" "#PWR105"
 			(at 15.24 96.52 0.0000)
 			(effects
@@ -1473,11 +1473,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "c1267808-dd92-45bb-b2a0-983ed761eda4")
+			(uuid "e0476d78-a917-4e32-9c9e-09d790b510f2")
 		)
 		(instances
 			(project "Power Monitoring (INA226 on +VIN)"
-				(path "/f5d419d1-7997-48be-abc6-b1c90a9f0930"
+				(path "/f8141e1f-0070-4b2b-8a73-327c86fbe667"
 					(reference "#PWR105")
 					(unit 1)
 				)
@@ -1492,7 +1492,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0d0cdf5b-fc55-434e-b751-ea986e76a36e")
+		(uuid "0d388515-9b0d-4f18-b0fb-70bcb82b7eaa")
 	)
 	(wire
 		(pts
@@ -1502,7 +1502,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6387753e-f46e-49c1-8c22-54160605d8fe")
+		(uuid "e52d69e5-0403-4359-b6f1-222d04b10920")
 	)
 	(wire
 		(pts
@@ -1512,7 +1512,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "fe4ddc94-1a16-4822-aa72-bf65b2e521c8")
+		(uuid "da9ac9fe-80b5-48d3-bac7-b9d0d790cf87")
 	)
 	(wire
 		(pts
@@ -1522,7 +1522,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "346cf4fd-b09c-4cdd-b084-4fe84738776e")
+		(uuid "c70d6415-c28d-4e6e-a14c-dd27312fc64a")
 	)
 	(wire
 		(pts
@@ -1532,7 +1532,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "775d56e2-e6f8-4b55-a0e6-1f3642fc6876")
+		(uuid "8bd1825a-b984-43f8-9f7b-7d33c79354de")
 	)
 	(wire
 		(pts
@@ -1542,7 +1542,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7abd94c5-8ee7-44ea-aa74-c105b35fb223")
+		(uuid "daa67ae3-d87b-405d-bd5d-59d8c1a608a6")
 	)
 	(wire
 		(pts
@@ -1552,7 +1552,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7fb23e3f-2fc2-43fa-b2c3-60193cc9dd07")
+		(uuid "4f0ef4f5-b412-4912-9855-8770343d3f32")
 	)
 	(wire
 		(pts
@@ -1562,7 +1562,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a582d992-41ce-48c3-a726-dcebd60c04ab")
+		(uuid "cfcf4ddd-8c11-4c2f-aec6-95c8308f5be0")
 	)
 	(wire
 		(pts
@@ -1572,7 +1572,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "15df4a06-e47b-4dad-843e-e2bf528190d1")
+		(uuid "d8b7ec41-0666-4580-8ddf-f3a5e70a46a8")
 	)
 	(wire
 		(pts
@@ -1582,7 +1582,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f0606d5b-702e-4796-b2c1-91fd7beb0885")
+		(uuid "4d2ece8b-2011-41a4-9afc-8c97785f8cee")
 	)
 	(wire
 		(pts
@@ -1592,7 +1592,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5964d24c-0f3a-4c07-9704-0fe5693b95b9")
+		(uuid "65625a0a-9fe6-46a5-87a1-5e4a4fe859cc")
 	)
 	(wire
 		(pts
@@ -1602,7 +1602,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "21e27cc7-c285-46d4-8171-2a603b3c42da")
+		(uuid "41c70207-9b3d-4f59-8677-9bd817172ba5")
 	)
 	(label "Vin-"
 		(at 105.41 62.23 0.0000)
@@ -1612,7 +1612,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "afa041d6-848e-4ea3-aa5f-15d7a398977d")
+		(uuid "1b0d3312-8934-4249-bfe4-dadfcbbd56ff")
 	)
 	(label "+VIN"
 		(at 114.3 52.07 0.0000)
@@ -1622,7 +1622,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "290365a9-0f47-4504-ab2c-0124065c0509")
+		(uuid "a6e7bddb-4cf3-4d71-b3eb-db157fff49b6")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1633,19 +1633,19 @@
 			)
 			(justify left)
 		)
-		(uuid "6e5c88df-5037-4099-a632-19dc9a131228")
+		(uuid "8d555676-2489-4a15-a8fd-7237b14b5b5d")
 	)
 	(no_connect
 		(at 139.7 52.07)
-		(uuid "2c51b929-81d2-491a-b7c5-93f991a047ee")
+		(uuid "64c4637d-dfb6-49aa-8a93-9de3bb9a6aac")
 	)
 	(no_connect
 		(at 139.7 54.61)
-		(uuid "80737754-a83d-47e3-a29d-e497876a6332")
+		(uuid "491dcc76-2ee4-4c49-a8aa-e3c1d4d0bd59")
 	)
 	(no_connect
 		(at 119.38 64.77)
-		(uuid "0aa5286a-bcbf-49b0-bef7-c88262f45885")
+		(uuid "6ee26881-2a36-4f79-a55a-e2fed3e674cd")
 	)
 	(sheet_instances
 		(path "/"
