@@ -16,7 +16,7 @@ LCSC stock figures are snapshot at design time; actual stock varies.
 
 from __future__ import annotations
 
-from scripts.carrier.registry.parts import BOMPart
+from zynq_eda.catalog.registry.parts import BOMPart
 
 
 # ---------------------------------------------------------------------------

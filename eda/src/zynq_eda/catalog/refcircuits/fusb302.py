@@ -11,14 +11,14 @@ and PD message framing. Host MCU (STM32G431 on the SoM) communicates over I2C.
 
 from __future__ import annotations
 
-from scripts.carrier.model.grid import Point
-from scripts.carrier.model.refcircuit import (
+from zynq_eda.core.model.grid import Point
+from zynq_eda.core.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
 )
-from scripts.carrier.model.templates import IcBlockTemplate, PinGroup, PinGroupOffset
-from scripts.carrier.refcircuits._paths import local_datasheet_path
+from zynq_eda.core.model.templates import IcBlockTemplate, PinGroup, PinGroupOffset
+from zynq_eda.catalog.refcircuits._paths import local_datasheet_path
 
 
 FUSB302_BLOCK_TEMPLATE = IcBlockTemplate(

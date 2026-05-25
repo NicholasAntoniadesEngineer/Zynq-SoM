@@ -14,8 +14,8 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-from scripts.carrier.refcircuits import REFCIRCUITS
-from scripts.carrier.registry.parts_registry import REGISTRY
+from zynq_eda.catalog.refcircuits import REFCIRCUITS
+from zynq_eda.catalog.registry.parts_registry import REGISTRY
 
 
 CARRIER_DIR = Path(__file__).resolve().parents[1]
@@ -384,7 +384,7 @@ def ensure_datasheets_present() -> None:
         raise RuntimeError(
             "Datasheet / refcircuit gate failed:\n  "
             + "\n  ".join(missing)
-            + "\nRun: python -m scripts.carrier.datasheets.fetch_datasheets"
+            + "\nRun: python -m zynq_eda.catalog.datasheets.fetch_datasheets"
         )
 
 

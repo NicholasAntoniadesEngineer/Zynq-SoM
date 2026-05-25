@@ -29,8 +29,8 @@ SDIO 3.0 requires:
 
 from __future__ import annotations
 
-from scripts.carrier.refcircuits._paths import local_datasheet_path
-from scripts.carrier.model.refcircuit import (
+from zynq_eda.catalog.refcircuits._paths import local_datasheet_path
+from zynq_eda.core.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,

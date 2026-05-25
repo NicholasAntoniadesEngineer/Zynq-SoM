@@ -9,15 +9,15 @@ Submodules:
 
 Re-exports the most-used names so blocks can write::
 
-    from scripts.carrier.registry import REGISTRY, get_part, BOMPart
+    from zynq_eda.catalog.registry import REGISTRY, get_part, BOMPart
 """
 
-from scripts.carrier.registry.parts import (
+from zynq_eda.catalog.registry.parts import (
     ALLOWED_FOOTPRINT_PREFIXES,
     BOMPart,
     PartInstance,
 )
-from scripts.carrier.registry.parts_registry import (
+from zynq_eda.catalog.registry.parts_registry import (
     REGISTRY,
     REGISTRY_LIST,
     all_parts,

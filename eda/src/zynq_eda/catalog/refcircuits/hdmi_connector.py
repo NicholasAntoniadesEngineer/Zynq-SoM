@@ -24,12 +24,12 @@ Pin map (per HDMI 1.4 Sec 4.2):
 
 from __future__ import annotations
 
-from scripts.carrier.model.refcircuit import (
+from zynq_eda.core.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
 )
-from scripts.carrier.refcircuits._paths import local_datasheet_path
+from zynq_eda.catalog.refcircuits._paths import local_datasheet_path
 
 
 HDMI_A_REFCIRCUIT = ReferenceCircuit(

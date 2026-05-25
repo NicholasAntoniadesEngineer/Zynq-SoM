@@ -18,8 +18,8 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from scripts.carrier.registry.parts_registry import REGISTRY
-from scripts.carrier.refcircuits import (
+from zynq_eda.catalog.registry.parts_registry import REGISTRY
+from zynq_eda.catalog.refcircuits import (
     IC_INSTANCE_COUNT,
     REFCIRCUITS,
     build_quantity_per_token,

@@ -4,41 +4,41 @@ from __future__ import annotations
 
 from collections import Counter
 
-from scripts.carrier.model.refcircuit import ReferenceCircuit
+from zynq_eda.core.model.refcircuit import ReferenceCircuit
 
-from scripts.carrier.refcircuits.fusb302 import FUSB302_REFCIRCUIT
-from scripts.carrier.refcircuits.usblc6 import USBLC6_REFCIRCUIT
-from scripts.carrier.refcircuits.tps2051 import TPS2051_REFCIRCUIT
-from scripts.carrier.refcircuits.tpd12s016 import (
+from zynq_eda.catalog.refcircuits.fusb302 import FUSB302_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.usblc6 import USBLC6_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.tps2051 import TPS2051_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.tpd12s016 import (
     TPD12S016_RX_REFCIRCUIT,
     TPD12S016_TX_REFCIRCUIT,
 )
-from scripts.carrier.refcircuits.cp2102n import CP2102N_REFCIRCUIT
-from scripts.carrier.refcircuits.ina226 import INA226_REFCIRCUIT
-from scripts.carrier.refcircuits.ds3231 import DS3231_REFCIRCUIT
-from scripts.carrier.refcircuits.eeprom_24lc256 import EEPROM_24LC256_REFCIRCUIT
-from scripts.carrier.refcircuits.eeprom_24lc256_edid import EEPROM_24LC256_EDID_REFCIRCUIT
-from scripts.carrier.refcircuits.tlv757 import (
+from zynq_eda.catalog.refcircuits.cp2102n import CP2102N_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.ina226 import INA226_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.ds3231 import DS3231_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.eeprom_24lc256 import EEPROM_24LC256_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.eeprom_24lc256_edid import EEPROM_24LC256_EDID_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.tlv757 import (
     TLV75718_REFCIRCUIT,
     TLV75725_REFCIRCUIT,
     TLV75733_REFCIRCUIT,
 )
-from scripts.carrier.refcircuits.hx5008nlt import HX5008NLT_REFCIRCUIT
-from scripts.carrier.refcircuits.usbc_connector import USBC_DEVICE_REFCIRCUIT
-from scripts.carrier.refcircuits.hdmi_connector import HDMI_A_REFCIRCUIT
-from scripts.carrier.refcircuits.microsd import MICROSD_DM3AT_REFCIRCUIT
-from scripts.carrier.refcircuits.rj45 import RJ45_REFCIRCUIT
-from scripts.carrier.refcircuits.power_input import POWER_INPUT_REFCIRCUIT
-from scripts.carrier.refcircuits.fmc_lpc import FMC_LPC_REFCIRCUIT
-from scripts.carrier.refcircuits.pmod import PMOD_REFCIRCUIT
-from scripts.carrier.refcircuits.lvds_lcd import LVDS_LCD_REFCIRCUIT
-from scripts.carrier.refcircuits.mipi_camera import MIPI_CAMERA_REFCIRCUIT
-from scripts.carrier.refcircuits.jtag_header import JTAG_HEADER_REFCIRCUIT
-from scripts.carrier.refcircuits.swd_header import SWD_HEADER_REFCIRCUIT
-from scripts.carrier.refcircuits.sma_clock import SMA_CLOCK_REFCIRCUIT
-from scripts.carrier.refcircuits.user_led import USER_LED_REFCIRCUIT
-from scripts.carrier.refcircuits.tactile_switch import TACTILE_SWITCH_REFCIRCUIT
-from scripts.carrier.refcircuits.dip_switch import DIP_SWITCH_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.hx5008nlt import HX5008NLT_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.usbc_connector import USBC_DEVICE_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.hdmi_connector import HDMI_A_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.microsd import MICROSD_DM3AT_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.rj45 import RJ45_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.power_input import POWER_INPUT_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.fmc_lpc import FMC_LPC_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.pmod import PMOD_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.lvds_lcd import LVDS_LCD_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.mipi_camera import MIPI_CAMERA_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.jtag_header import JTAG_HEADER_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.swd_header import SWD_HEADER_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.sma_clock import SMA_CLOCK_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.user_led import USER_LED_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.tactile_switch import TACTILE_SWITCH_REFCIRCUIT
+from zynq_eda.catalog.refcircuits.dip_switch import DIP_SWITCH_REFCIRCUIT
 
 
 REFCIRCUITS: dict[str, ReferenceCircuit] = {

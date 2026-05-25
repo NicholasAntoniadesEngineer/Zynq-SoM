@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from scripts.carrier.model.refcircuit import ExternalPart, ReferenceCircuit
-from scripts.carrier.refcircuits._paths import local_datasheet_path
+from zynq_eda.core.model.refcircuit import ExternalPart, ReferenceCircuit
+from zynq_eda.catalog.refcircuits._paths import local_datasheet_path
 
 
 USER_LED_REFCIRCUIT = ReferenceCircuit(

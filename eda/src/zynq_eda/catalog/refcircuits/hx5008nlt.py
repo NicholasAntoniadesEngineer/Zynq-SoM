@@ -24,12 +24,12 @@ IEEE 802.3 for emissions control.
 
 from __future__ import annotations
 
-from scripts.carrier.model.refcircuit import (
+from zynq_eda.core.model.refcircuit import (
     ExternalPart,
     LayoutNote,
     ReferenceCircuit,
 )
-from scripts.carrier.refcircuits._paths import local_datasheet_path
+from zynq_eda.catalog.refcircuits._paths import local_datasheet_path
 
 
 HX5008NLT_REFCIRCUIT = ReferenceCircuit(
