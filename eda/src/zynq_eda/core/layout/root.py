@@ -352,11 +352,22 @@ def _connect_cross_block_nets(
                     rotation=0.0,
                 ))
 
-                if (
+                # One PWR_FLAG per power rail that lacks an on-board
+                # driver: this includes both "input" nets (USB-C VBUS,
+                # external supplies) and "ground" nets — power:GND has
+                # a power_input pin so it doesn't drive GND, and our
+                # generated power symbols all consume rather than
+                # produce. Without a PWR_FLAG the rail trips
+                # ``power_pin_not_driven``. Skip when a sub-sheet IC
+                # declares the net as ``power_kind="output"`` (e.g. an
+                # LDO produces +3V3) — that IC's power_out pin is the
+                # legitimate driver and an extra PWR_FLAG would conflict.
+                needs_flag = (
                     net_name not in flagged_nets
                     and net_name not in nets_with_producer
-                    and _is_power_input_net(spec, net_name)
-                ):
+                    and _net_needs_root_driver(spec, net_name)
+                )
+                if needs_flag:
                     flagged_nets.add(net_name)
                     flag_pt = _outboard_point(pin_pt, sheet_pin.edge, POWER_SYMBOL_OFFSET_MM)
                     wires.append(PlacedWire(start=pin_pt, end=flag_pt))
@@ -385,6 +396,20 @@ def _is_power_input_net(spec: _BlockSheetSpec, net_name: str) -> bool:
     """True iff *net_name* is declared as ``power_kind="input"`` on this block."""
     for net in spec.block.external_nets:
         if net.name == net_name and net.power_kind == "input":
+            return True
+    return False
+
+
+def _net_needs_root_driver(spec: _BlockSheetSpec, net_name: str) -> bool:
+    """True iff *net_name* is a power rail consumed but not produced anywhere.
+
+    Covers ``input`` (LDO inputs / external rails entering the board) and
+    ``ground`` (every GND-family rail — chassis GND, signal GND). Either
+    requires a PWR_FLAG to satisfy KiCad's ``power_pin_not_driven`` check
+    when no on-board producer exists.
+    """
+    for net in spec.block.external_nets:
+        if net.name == net_name and net.power_kind in ("input", "ground"):
             return True
     return False
 

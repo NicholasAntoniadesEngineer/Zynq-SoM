@@ -69,6 +69,20 @@ def place_external_nets(
         seen_label_positions=seen_label_positions,
     )
 
+    # Surface every declared external_net that didn't already get a hier
+    # label via IC pin overrides. Anchor each orphan hier label AT an
+    # existing same-name local label's coordinate, so KiCad merges the
+    # hier label and the local label into one net (the local label is
+    # already on a real wire endpoint inside the sub-sheet — anything
+    # else dangles the hier label per ERC).
+    _orphan_net_labels(
+        builder,
+        block=block,
+        left_x=left_x,
+        right_x=right_x,
+        seen_label_positions=seen_label_positions,
+    )
+
     return edge_labeled
 
 
@@ -205,6 +219,58 @@ def _input_pwr_flags(
             position=flag_position,
             footprint="",
             rotation=0.0,
+        ))
+
+
+def _orphan_net_labels(
+    builder: BlockLayoutBuilder,
+    *,
+    block: Block,
+    left_x: float,
+    right_x: float,
+    seen_label_positions: set[tuple[float, float]],
+) -> None:
+    """Surface declared external_nets that have no hier label yet.
+
+    Strategy: find a same-name local label that the cluster/connector
+    code already emitted (those sit at real wire endpoints on real
+    component pins), then drop a hierarchical label at the EXACT same
+    coordinate. KiCad collapses co-located same-name labels into one
+    electrical net, so the hier label inherits the real net.
+
+    Without an existing local label to anchor onto, we skip the net —
+    no point dropping a hier label that floats with no connection.
+    Such nets stay invisible to the root sheet; the user must add an
+    explicit ``external_parts`` driver or a per-block wire to expose
+    them.
+    """
+    already_labeled = {label.net_name for label in builder.hierarchical_labels}
+    local_labels_by_name: dict[str, list] = {}
+    for lab in builder.labels:
+        local_labels_by_name.setdefault(lab.net_name, []).append(lab)
+
+    for net in block.external_nets:
+        if net.name in already_labeled:
+            continue
+        matching = local_labels_by_name.get(net.name)
+        if not matching:
+            # No local label of this name exists — net only lives inside
+            # the sub-sheet via component pins (no connector driver and
+            # no override label). Surfacing it as a hier label would
+            # produce a dangling label per ERC. Skip.
+            continue
+        anchor_label = matching[0]
+        key = (anchor_label.position.x, anchor_label.position.y)
+        if key in seen_label_positions:
+            continue
+        seen_label_positions.add(key)
+        # Hier-label rotation: match the local label so they overlap
+        # visually rather than rotating awkwardly opposite each other.
+        builder.hierarchical_labels.append(PlacedHierarchicalLabel(
+            net_name=net.name,
+            position=anchor_label.position,
+            direction=net.direction,
+            rotation=anchor_label.rotation,
         ))
 
 
