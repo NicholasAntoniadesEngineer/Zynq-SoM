@@ -96,33 +96,46 @@ def pin_connection_from_anchor(
     return anchor
 
 
-def _rotate_then_flip_y(symbol_relative: Point, rotation_deg: float) -> Point:
+def _flip_y_then_rotate(symbol_relative: Point, rotation_deg: float) -> Point:
     """Convert a symbol-local pin offset to a page-local offset.
 
     KiCad symbols use +Y up (math convention); schematic pages use +Y down.
-    Placing a symbol applies a Y-flip to the symbol's coordinates. We must
-    therefore:
+    The placement transform is (verified empirically against the
+    netlist KiCad produces from ``connect_pins_with_wire`` + power symbols):
 
-        1. Rotate ``symbol_relative`` by ``rotation_deg`` *in symbol coords*
-           (CCW about origin), then
-        2. Negate the Y component to go from symbol-local to page-local.
+        1. Y-flip in symbol coords: (x, y) → (x, -y)
+        2. Rotate by ``rotation_deg`` *clockwise* in page coords:
+             90  CW: (x, y) → (y, -x)
+             180:    (x, y) → (-x, -y)
+             270 CW: (x, y) → (-y, x)
+
+    The CW direction matches what you see in the schematic editor (where
+    +Y is down) when you press R to rotate. Counterintuitively, this is
+    different from what ``kicad-sch-api.get_pin_position()`` returns —
+    that API has its own bug where it returns symbol-frame coords without
+    the flip.
 
     Rotation values are KiCad-canonical: 0, 90, 180, 270.
     """
-    x, y = symbol_relative.x, symbol_relative.y
+    flipped_x = symbol_relative.x
+    flipped_y = -symbol_relative.y
     if rotation_deg == 0.0:
-        rotated_x, rotated_y = x, y
+        rotated_x, rotated_y = flipped_x, flipped_y
     elif rotation_deg == 90.0:
-        rotated_x, rotated_y = -y, x
+        rotated_x, rotated_y = flipped_y, -flipped_x
     elif rotation_deg == 180.0:
-        rotated_x, rotated_y = -x, -y
+        rotated_x, rotated_y = -flipped_x, -flipped_y
     elif rotation_deg == 270.0:
-        rotated_x, rotated_y = y, -x
+        rotated_x, rotated_y = -flipped_y, flipped_x
     else:
         raise ValueError(
             f"Unsupported rotation {rotation_deg!r}; KiCad allows 0/90/180/270 only"
         )
-    return Point(rotated_x, -rotated_y)
+    return Point(rotated_x, rotated_y)
+
+
+# Backward-compatible alias kept for any external imports.
+_rotate_then_flip_y = _flip_y_then_rotate
 
 
 # UUID constants for the ephemeral preview schematic kicad-sch-api requires.
@@ -229,7 +242,7 @@ class SymbolGeometryCache:
             float(pin_info["position"].x),
             float(pin_info["position"].y),
         )
-        page_relative = _rotate_then_flip_y(symbol_relative, component_rotation)
+        page_relative = _flip_y_then_rotate(symbol_relative, component_rotation)
         anchor = Point(
             snap_to_grid(component_position.x + page_relative.x),
             snap_to_grid(component_position.y + page_relative.y),

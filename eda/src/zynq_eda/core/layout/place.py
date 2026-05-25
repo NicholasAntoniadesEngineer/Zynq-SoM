@@ -191,21 +191,34 @@ def _place_one_passive_for_pin(
     # away from the IC.
     primary_offset = PASSIVE_OFFSET_MM + swarm_slot_offset
 
-    # Choose the passive's centre + rotation so its NEAR pin lands one
-    # ``PASSIVE_PIN_HALF`` from the centre toward the IC.
+    # Pick the passive's centre + rotation so its NEAR pin (toward the IC)
+    # and FAR pin (away from the IC) land at predictable absolute positions.
+    #
+    # Under KiCad's "Y-flip then rotate CW" placement transform,
+    # Device:C / Device:R pin positions resolve to:
+    #
+    #   rotation  0 : pin 1 → (0,  -3.81), pin 2 → (0, +3.81)  [pin 1 on top]
+    #   rotation 90 : pin 1 → (-3.81, 0),  pin 2 → (+3.81, 0)  [pin 1 on left]
+    #   rotation 180: pin 1 → (0, +3.81),  pin 2 → (0, -3.81)
+    #   rotation 270: pin 1 → (+3.81, 0),  pin 2 → (-3.81, 0)
+    #
+    # We choose ``passive_rotation`` so the geometric NEAR pin lines up
+    # exactly on the IC-pin axis (regardless of which numbered pin lands
+    # there — wires connect by position, not by pin number).
     if side == "left":
-        # IC pin is on the IC's left edge → passive sits to the LEFT of the IC
-        # pin → passive's near pin is on its RIGHT side.
+        # IC pin on body's left edge → passive sits to the LEFT of IC pin.
+        # rotation 270 puts pin 1 on the RIGHT (toward IC); pin 2 on the
+        # LEFT (away, toward power symbol).
         passive_anchor = Point(
             snap_to_grid(pin_connection.x - primary_offset),
             pin_connection.y,
         )
-        passive_rotation = 90.0
+        passive_rotation = 270.0
         near_point = Point(snap_to_grid(passive_anchor.x + PASSIVE_PIN_HALF), passive_anchor.y)
         far_point = Point(snap_to_grid(passive_anchor.x - PASSIVE_PIN_HALF), passive_anchor.y)
     elif side == "right":
-        # IC pin on the IC's right edge → passive sits to the RIGHT of the IC
-        # pin → passive's near pin is on its LEFT side.
+        # IC pin on body's right edge → passive sits to the RIGHT of IC pin.
+        # rotation 90 puts pin 1 on the LEFT (toward IC); pin 2 on the right.
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + primary_offset),
             pin_connection.y,
@@ -214,8 +227,10 @@ def _place_one_passive_for_pin(
         near_point = Point(snap_to_grid(passive_anchor.x - PASSIVE_PIN_HALF), passive_anchor.y)
         far_point = Point(snap_to_grid(passive_anchor.x + PASSIVE_PIN_HALF), passive_anchor.y)
     elif side == "top":
-        # IC pin emerges from the top of the body → passive sits ABOVE
-        # (smaller Y) → passive's near pin is on its BOTTOM side.
+        # IC pin emerges from the top of the body → passive sits ABOVE.
+        # rotation 0 puts pin 1 above the anchor (away from IC) and pin 2
+        # below (toward IC). Near pin (toward IC) is on the BOTTOM of the
+        # passive.
         passive_anchor = Point(
             pin_connection.x,
             snap_to_grid(pin_connection.y - primary_offset),
@@ -224,13 +239,15 @@ def _place_one_passive_for_pin(
         near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
         far_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF))
     else:  # bottom
-        # IC pin emerges from the bottom → passive sits BELOW → its near pin
-        # is on its TOP side.
+        # IC pin emerges from the bottom → passive sits BELOW the IC pin.
+        # rotation 180 puts pin 1 below the anchor (away from IC) and pin 2
+        # above (toward IC). Near pin (toward IC) is on the TOP of the
+        # passive.
         passive_anchor = Point(
             pin_connection.x,
             snap_to_grid(pin_connection.y + primary_offset),
         )
-        passive_rotation = 0.0
+        passive_rotation = 180.0
         near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF))
         far_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
 
@@ -641,6 +658,25 @@ def _place_external_nets(
             reference=builder.next_ref("#PWR"),
             value="GND",
             position=gnd_symbol_position,
+            footprint="",
+            rotation=0.0,
+        ))
+        # One PWR_FLAG per sheet on GND so ERC sees the global GND net as
+        # driven. The power:GND symbols on each cap are power_in pins and
+        # don't satisfy the "needs power_out" check on their own.
+        gnd_flag_position = Point(
+            snap_to_grid(label_position.x + (-3.81 if ground_net.edge == SheetEdge.LEFT else 3.81)),
+            label_position.y,
+        )
+        builder.wires.append(PlacedWire(
+            start=label_position,
+            end=gnd_flag_position,
+        ))
+        builder.symbols.append(PlacedSymbol(
+            lib_id="power:PWR_FLAG",
+            reference=builder.next_ref("#FLG"),
+            value="GND",
+            position=gnd_flag_position,
             footprint="",
             rotation=0.0,
         ))
