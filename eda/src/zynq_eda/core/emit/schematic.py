@@ -2,6 +2,47 @@
 
 Atomic write: emit to a temp file in the destination directory then rename
 into place. Eliminates half-written files on crash.
+
+KNOWN ISSUE — ``kicad-sch-api`` 0.5.5/0.5.6 ``add_wire`` connectivity bug
+========================================================================
+
+Wires emitted by ``schematic.add_wire(start, end)`` do **not** form
+electrical connections between passive pins, even when both endpoints
+land at the exact KiCad-canonical pin positions.
+
+Minimal reproducer::
+
+    sch = ksa.create_schematic('repro')
+    sch.set_hierarchy_context(...)
+    r1 = sch.components.add('Device:R', reference='R1', value='1k',
+                            position=(100.0, 100.0), rotation=90)
+    r2 = sch.components.add('Device:R', reference='R2', value='1k',
+                            position=(120.0, 100.0), rotation=90)
+    # KiCad pin positions for rot 90: R1.2 at (103.81, 100),
+    # R2.1 at (116.19, 100). Power-symbol probe confirms.
+    sch.add_wire((103.81, 100.0), (116.19, 100.0))
+    sch.components.add('power:+5V', reference='#PWR1', position=(96.19, 100.0))
+    sch.components.add('power:GND', reference='#PWR2', position=(123.81, 100.0))
+    sch.save_as('repro.kicad_sch')
+    # kicad-cli sch export netlist:
+    #   Expected: one merged net containing R1.2 + R2.1
+    #   Actual:   no net contains the middle wire — R1.2 and R2.1 missing
+
+Power symbols *do* register at the same coordinates (placing
+``power:+5V`` at ``(103.81, 100)`` correctly nets it to R1.2). So the
+pin positions are not the issue — only ``add_wire`` is broken.
+
+Consequence: every passive-to-IC-pin wire we emit is visually drawn but
+electrically inert. ERC reports it as ``wire_dangling`` and the affected
+IC pins as floating. The schematic still looks correct on screen.
+
+Workarounds (none implemented yet — pending Stage 5 layout-engine work):
+ * Bypass ``kicad-sch-api`` for wire emission and write our own
+   ``(wire ...)`` s-expression blocks.
+ * Lift the connection through a named local label at one wire endpoint
+   (KiCad treats same-name local labels as connected).
+ * Switch the entire emit stage to a different library or a hand-built
+   s-expression writer.
 """
 
 from __future__ import annotations
