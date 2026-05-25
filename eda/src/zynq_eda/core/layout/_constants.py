@@ -54,7 +54,11 @@ INTERIOR_MARGIN_MM = snap_to_grid(15.24)
 
 POWER_SYMBOL_LIB_IDS: dict[str, str] = {
     "GND":         "power:GND",
-    "+VIN":        "power:+5V",
+    # NOTE: +VIN no longer aliases to power:+5V. Aliasing two distinct nets
+    # (+VIN and +5V) into one KiCad power-rail symbol made the root
+    # sheet's per-net PWR_FLAGs collide on a single global net, triggering
+    # pin_to_pin Power-out x Power-out errors. Treat +VIN as its own
+    # custom rail with a root-level PWR_FLAG; +5V keeps its global symbol.
     "+VIN_IN":     "power:+5V",
     "+5V":         "power:+5V",
     "+3V3":        "power:+3V3",

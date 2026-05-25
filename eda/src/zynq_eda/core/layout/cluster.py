@@ -149,14 +149,26 @@ def resolve_destination_net(
         override net.
       * Otherwise return the raw value (handled as a power symbol or
         local label).
+
+    Finally, the resolved destination is passed through
+    ``ic.external_part_net_remap`` so the project can rewrite catalog-level
+    rail names (e.g. ``+3V3_SC`` → ``+3V3``) onto the block's actual
+    rails. The remap runs LAST so it applies regardless of which branch
+    above produced the destination.
     """
     if raw_destination == "IN" and getattr(ic, "power_input_net", ""):
-        return ic.power_input_net
-    if raw_destination == "OUT" and getattr(ic, "power_output_net", ""):
-        return ic.power_output_net
-    if raw_destination in overrides_for_pin:
-        return overrides_for_pin[raw_destination]
-    return raw_destination
+        destination = ic.power_input_net
+    elif raw_destination == "OUT" and getattr(ic, "power_output_net", ""):
+        destination = ic.power_output_net
+    elif raw_destination in overrides_for_pin:
+        destination = overrides_for_pin[raw_destination]
+    else:
+        destination = raw_destination
+
+    remap = dict(getattr(ic, "external_part_net_remap", ()) or ())
+    if destination in remap:
+        destination = remap[destination]
+    return destination
 
 
 def _attach_far_endpoint(

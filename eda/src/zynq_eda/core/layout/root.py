@@ -337,6 +337,14 @@ def _connect_cross_block_nets(
     nets_with_producer = _nets_with_producer(block_specs)
     flagged_nets: set[str] = set()
 
+    # Aggregate every block's declarations for each net so we can ask
+    # "is this net declared as a power input/output/ground/signal anywhere?"
+    # without re-walking block_specs for each sheet pin.
+    net_kinds: dict[str, set[str]] = {}
+    for spec in block_specs:
+        for declared in spec.block.external_nets:
+            net_kinds.setdefault(declared.name, set()).add(declared.power_kind)
+
     # Count how many blocks expose each net to inform the multi-block-
     # vs-single-block branching above.
     net_block_count: dict[str, int] = {}
@@ -378,6 +386,49 @@ def _connect_cross_block_nets(
                     net_name not in flagged_nets
                     and net_name not in nets_with_producer
                     and _net_needs_root_driver(spec, net_name)
+                )
+                if needs_flag:
+                    flagged_nets.add(net_name)
+                    flag_pt = _outboard_point(pin_pt, sheet_pin.edge, POWER_SYMBOL_OFFSET_MM)
+                    wires.append(PlacedWire(start=pin_pt, end=flag_pt))
+                    symbols.append(PlacedSymbol(
+                        lib_id="power:PWR_FLAG",
+                        reference=_next_ref("FLG"),
+                        value=net_name,
+                        position=flag_pt,
+                        footprint="",
+                        rotation=0.0,
+                    ))
+                continue
+
+            # Custom power rail with no global power-symbol mapping
+            # (e.g. +VIN, which used to alias to power:+5V but no longer
+            # does — aliasing two distinct rails onto one global power
+            # symbol collapsed their PWR_FLAGs into one net and tripped
+            # Power-out × Power-out conflicts). Without a power symbol
+            # we drive the net via:
+            #
+            #   1. A local label of the net's name on every sheet pin
+            #      occurrence — same-name local labels on one sheet are
+            #      merged into one net by KiCad, which links sheet pins
+            #      across all sub-sheets that expose this name.
+            #   2. Exactly one ``power:PWR_FLAG`` somewhere on that net,
+            #      so ERC sees a real driver (``power_pin_not_driven``
+            #      fires otherwise on input-power pins). Skipped when an
+            #      on-board producer already drives the rail (e.g. a
+            #      block declares ``power_kind="output"`` for +VIN, like
+            #      usb_pd's VBUS-to-+VIN bus).
+            kinds = net_kinds.get(net_name, set())
+            is_custom_power_rail = bool(kinds & {"input", "output", "ground"})
+            if is_custom_power_rail:
+                labels.append(PlacedLabel(
+                    net_name=net_name,
+                    position=pin_pt,
+                    rotation=0.0,
+                ))
+                needs_flag = (
+                    net_name not in flagged_nets
+                    and net_name not in nets_with_producer
                 )
                 if needs_flag:
                     flagged_nets.add(net_name)

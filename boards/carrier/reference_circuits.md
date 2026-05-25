@@ -154,29 +154,31 @@ Bidirectional I2C current/voltage/power monitor, 16-bit, 36 V common-mode, VSSOP
 ## U1 — FUSB302BMPX
 
 **Block:** usb_pd  
-**Datasheet:** [FUSB302BMPX](https://www.onsemi.com/pdf/datasheet/fusb302b-d.pdf) (Figure 5 - Typical Application Schematic, p.22, Figure 5)  
+**Datasheet:** [FUSB302BMPX](https://www.onsemi.com/pdf/datasheet/fusb302b-d.pdf) (Figure 18 - Reference Schematic Diagram, p.30, Figure 18 + Table 43)  
 **Footprint:** Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm  
 **Supply rail:** +3V3  
 **Min-circuit verified:** yes  
 
-USB Type-C / PD CC controller, I2C-controlled
+USB Type-C / PD CC controller, I2C-controlled, WQFN-14
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| VDD | GND | 1u_0402_X7R | 1 | DS 8.2.2 VDD bulk |
-| VDD | GND | 100n_0402_X7R | 1 | DS 8.2.2 VDD bypass |
-| VBUS | GND | 100n_0402_X7R | 1 | DS Fig 5 VBUS bypass |
-| VBUS | +VIN | 1M_0402_1% | 1 | DS Fig 5 VBUS sense divider upper leg (R1) |
-| VBUS | GND | 100k_0402_1% | 1 | DS Fig 5 VBUS sense divider lower leg (R2) |
-| CC1 | GND | 200p_0402_C0G | 1 | USB-PD cReceiver, DS Fig 5 |
-| CC2 | GND | 200p_0402_C0G | 1 | USB-PD cReceiver, DS Fig 5 |
-| VCONN_1 | GND | 10u_0603_X7R | 1 | Type-C VCONN bulk per EVB |
-| VCONN_2 | GND | 10u_0603_X7R | 1 | Type-C VCONN bulk per EVB |
-| SDA | +3V3_SC | 4k7_0402_1% | 1 | DS 7.2 I2C pull-up |
-| SCL | +3V3_SC | 4k7_0402_1% | 1 | DS 7.2 I2C pull-up |
-| INT_N | +3V3_SC | 10k_0402_1% | 1 | DS 7.2 INT_N pull-up |
+| VDD | GND | 1u_0402_X7R | 1 | DS Table 43 C_VDD2: 1uF VDD bulk |
+| VDD | GND | 100n_0402_X7R | 1 | DS Table 43 C_VDD1: 100nF VDD HF bypass |
+| VBUS | GND | 100n_0402_X7R | 1 | DS Fig 18: VBUS pin bypass (HF noise filter) |
+| VBUS | +VIN | 1M_0402_1% | 1 | Carrier VBUS sense divider upper leg (1M, R1) |
+| VBUS | GND | 100k_0402_1% | 1 | Carrier VBUS sense divider lower leg (100k, R2) |
+| CC1 | GND | 200p_0402_C0G | 1 | DS Table 43 C_RECV: 200pF on CC1 (min of 200-600pF) |
+| CC2 | GND | 200p_0402_C0G | 1 | DS Table 43 C_RECV: 200pF on CC2 (min of 200-600pF) |
+| VCONN_1 | GND | 10u_0603_X7R | 1 | DS Table 43 C_BULK: 10uF VCONN bulk (min 10uF) |
+| VCONN_1 | GND | 100n_0402_X7R | 1 | DS Table 43 C_VCONN: 100nF VCONN HF bypass |
+| VCONN_2 | GND | 10u_0603_X7R | 1 | DS Table 43 C_BULK: 10uF VCONN bulk (paralleled pad) |
+| VCONN_2 | GND | 100n_0402_X7R | 1 | DS Table 43 C_VCONN: 100nF VCONN HF bypass (paralleled pad) |
+| SDA | +3V3_SC | 4k7_0402_1% | 1 | DS Table 43 R_PU: 4.7k I2C SDA pull-up (1.71V-VDD range) |
+| SCL | +3V3_SC | 4k7_0402_1% | 1 | DS Table 43 R_PU: 4.7k I2C SCL pull-up |
+| INT_N | +3V3_SC | 4k7_0402_1% | 1 | DS Table 43 R_PU_INT: 4.7k INT_N pull-up (open-drain) |
 
 ### Pin overrides
 
@@ -192,24 +194,26 @@ USB Type-C / PD CC controller, I2C-controlled
 
 ### Layout notes
 
-- Place 1uF VDD cap within 5mm of pin 3; star-ground EP to PCB GND plane (rule) — _DS Sec 10.2 Layout_
-- CC1/CC2 traces: 90 ohm differential impedance, matched length within 5mm (rule) — _USB-C R2.0 Sec 3.2.1_
-- VBUS trace from USB-C connector to FUSB302 VBUS pin: keep <= 10mm (guideline) — _Minimize VBUS sense latency_
+- VDD decoupling: place 100nF (C_VDD1) within 1mm of VDD pin, 1uF (C_VDD2) within 3mm. Return current through shortest GND via (rule) — _DS Table 43 + general decoupling practice_
+- CC1/CC2 traces: 90 ohm differential impedance to USB-C connector, matched length within 5mm. Place C_RECV (200pF) next to FUSB302, not next to the USB-C connector (USB-PD reference uses C_RECV as the receiver filter cap) (rule) — _USB-C R2.0 Sec 3.2.1 + DS Fig 18 (C_RECV at FUSB302 side)_
+- VBUS trace from USB-C VBUS to FUSB302 pin 2: keep under 10mm, route as a wide trace (>= 0.3mm) to minimise series inductance for the VBUS sense comparator (vBC_LVL trip thresholds <= 1.31V) (guideline) — _DS Table 10 (vBC_LVL) + VBUS sense latency_
+- Connect the exposed pad (EP, pin 15 / GND_EP) to the PCB GND plane with a 3x3 via stitch for thermal + electrical performance (rule) — _DS Fig 5 mechanical drawing (EP=Connect to GND for Thermal)_
+- I2C pull-ups (4.7k) tie to the same +3V3_SC rail as the STM32 I2C controller; DS Table 13 note 6 requires VPU between 1.71V and VDD (rule) — _DS Table 13 note 6 (I2C pull-up voltage 1.71V-VDD)_
 
 ## U2 — USBLC6-4SC6
 
 **Block:** usb_pd  
-**Datasheet:** [USBLC6-4SC6](https://www.st.com/resource/en/datasheet/usblc6-4.pdf) (Figure 1 - Pin connection / Figure 13 - Application, Figure 1 - Pin connection / Figure 13 - Application)  
+**Datasheet:** [USBLC6-4SC6](https://www.st.com/resource/en/datasheet/usblc6-4.pdf) (Figure 14 - USB 2.0 port application; Figure 18 - PCB layout, p.8 Fig 14 (application) + p.9 Fig 18 (layout / C_BUS))  
 **Footprint:** Package_TO_SOT_SMD:SOT-23-6  
 **Min-circuit verified:** yes  
 
-USB 2.0 ESD/TVS protection, 4 lines, SOT-23-6
+USB 2.0 / 480 Mb/s ESD protection, 4 lines, SOT-23-6L
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| VBUS | GND | 100n_0402_X7R | 1 | DS Fig 13: VBUS decoupling cap |
+| VBUS | GND | 100n_0402_X7R | 1 | DS Fig 18 C_BUS: 100nF V_BUS decoupling (PCB layout) |
 
 ### Pin overrides
 
@@ -224,8 +228,11 @@ _Pins explicitly left bare:_ I/O1, I/O2, I/O3, I/O4
 
 ### Layout notes
 
-- Place USBLC6 within 5mm of the USB connector pins to minimize stub length (rule) — _DS Sec 4 Layout - protection must precede device_
-- Route USB D+/D- as 90 ohm differential pair with length match within 5mm (rule) — _USB 2.0 spec Sec 7.1.6_
+- Place USBLC6 within 5mm of the USB connector on the data-line side -- the ESD protection MUST sit between the connector and the device being protected (DS Sec 2.3: 'put the protection device as close as possible to the disturbance source') (rule) — _DS Sec 2.3 / Fig 7 (optimised layout) + Fig 8_
+- Route USB D+/D- THROUGH the USBLC6 pads (tee-stub branch is unacceptable). The data line enters on one side of the SOT-23-6 and exits on the other; do not place the device on a stub off the main pair (DS Sec 2.3 Fig 7 'unsuitable layout' vs 'optimised layout') (rule) — _DS Fig 7 (layout optimisation)_
+- Maintain 90 ohm differential impedance through the USBLC6 footprint. Length-match D+/D- through the package (the 0.04 pF C(I/O-I/O) typ value keeps the imbalance under USB 2.0 spec) (rule) — _USB 2.0 Sec 7.1.6 + DS Table 2 (line capacitance)_
+- Tie the GND pin (pin 2) directly to the PCB GND plane with the shortest possible trace -- the negative-going clamp current returns here, and L_GND.di/dt adds directly to the clamp voltage seen by the protected line (DS Sec 2.2) (rule) — _DS Sec 2.2 (overvoltage due to parasitic inductances)_
+- Tie the V_BUS pin (pin 3) to the USB +5V (or +VIN) rail through the shortest possible trace; the positive clamp diodes shunt to V_BUS, so L_VBUS in series with C_BUS hurts response time. The 100nF C_BUS cap should be within 2mm of pin 3 (rule) — _DS Sec 2.2 + Fig 18_
 
 ## U1 — TPS2051CDBVR
 
@@ -264,35 +271,52 @@ USB current-limited load switch, 0.5 A, active-high enable, SOT-23-5
 ## U1 — CP2102N-A02-GQFN24R
 
 **Block:** uart_bridge  
-**Datasheet:** [CP2102N-A02-GQFN24R](https://www.silabs.com/documents/public/data-sheets/cp2102n-datasheet.pdf) (Figure 4-1 - Typical USB to UART Bridge, Figure 4-1 - Typical USB to UART Bridge)  
+**Datasheet:** [CP2102N-A02-GQFN24R](https://www.silabs.com/documents/public/data-sheets/cp2102n-datasheet.pdf) (Figure 2.1 (bus-powered, internal regulator) + Figure 2.5 (USB pins), p.5 Fig 2.1 + p.8 Fig 2.5 (bus-powered USB connection))  
 **Footprint:** Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm  
+**Supply rail:** +VIN  
 **Min-circuit verified:** yes  
 
-USB to UART bridge, USB 2.0 FS, internal regulator and oscillator
+USB to UART bridge, USB 2.0 FS, internal 3.3V regulator + 48 MHz oscillator, QFN-24
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| VBUS | GND | 100n_0402_X7R | 1 | DS Sec 4.4: VBUS decoupling cap |
-| VDD | GND | 4u7_0402_X5R | 1 | DS Fig 4-1: 4.7uF VDD bulk cap (recommended for USB compliance) |
-| VDD | GND | 100n_0402_X7R | 1 | DS Fig 4-1: 100nF VDD high-frequency bypass |
-| REGIN | GND | 1u_0402_X7R | 1 | DS Sec 4.3: REGIN bypass cap when using internal regulator |
-| RST_N | VDD | 10k_0402_1% | 1 | DS Sec 4.5: RST_N requires pull-up to VDD |
-| RST_N | GND | 100n_0402_X7R | 1 | DS Sec 4.5: 100nF RST_N filter to GND for noise immunity |
+| VREGIN | GND | 4u7_0402_X5R | 1 | DS Fig 2.1: 4.7uF VREGIN bulk (5V regulator input) |
+| VREGIN | GND | 100n_0402_X7R | 1 | DS Fig 2.1: 100nF VREGIN HF bypass |
+| VDD | GND | 4u7_0402_X5R | 1 | DS Fig 2.1: 4.7uF VDD bulk (regulator output, 3.3V) |
+| VDD | GND | 100n_0402_X7R | 1 | DS Fig 2.1: 100nF VDD HF bypass |
+| VIO | GND | 100n_0402_X7R | 1 | DS Sec 2.1: 0.1uF bypass on every power pin (VIO=VDD) |
+| VBUS | +VIN | 22k1_0402_1% | 1 | DS Sec 2.3 / Fig 2.5: 22.1k upper leg of VBUS sense divider |
+| VBUS | GND | 47k5_0402_1% | 1 | DS Sec 2.3 / Fig 2.5: 47.5k lower leg of VBUS sense divider |
+| ~{RST} | CP2102N_VDD33 | 1k_0402_1% | 1 | DS Sec 2.1: 1 kohm RSTb pull-up to VIO (recommended) |
 
 ### Pin overrides
 
-_None._
+| Pin | Net |
+|---|---|
+| VREGIN | +VIN |
+| VDD | CP2102N_VDD33 |
+| VIO | CP2102N_VDD33 |
+| D+ | USB_UART_DP |
+| D- | USB_UART_DM |
+| TXD | ZYNQ_PS_UART0_RXD |
+| RXD | ZYNQ_PS_UART0_TXD |
+| ~{RTS} | ZYNQ_PS_UART0_CTS_N |
+| ~{CTS} | ZYNQ_PS_UART0_RTS_N |
 
 ### No external required
 
-_Pins explicitly left bare:_ D+, D-, RXD, TXD
+_Pins explicitly left bare:_ D+, D-, NC, RS485/GPIO.2, RXD, SUSPEND, TXD, ~{DCD}, ~{DSR}, ~{DTR}, ~{RI}/CLK, ~{RXT}/GPIO.1, ~{SUSPEND}, ~{TXT}/GPIO.0, ~{WAKEUP}/GPIO.3
 
 ### Layout notes
 
-- Place D+/D- matched length to USB-C connector, 90 ohm differential impedance (rule) — _USB 2.0 Sec 7.1.6_
-- Connect exposed pad (EP) to GND plane with multiple vias for thermal dissipation (rule) — _DS Sec 11.1 Layout_
+- Each power pin (VREGIN pin 7, VDD pin 6, VIO pin 5) gets its OWN 4.7uF + 0.1uF bypass placed as close to the pin as possible. Do not share a single 4.7uF across VDD + VIO -- the DS caption is explicit: 'each power pin placed as close to the pins as possible' (rule) — _DS Sec 2.1 Fig 2.1 + Fig 2.2 figure captions_
+- VBUS sense divider (22.1k/47.5k) is MANDATORY for bus-powered operation -- the VBUS pin abs-max is VIO+2.5V (DS Table 3.10) but USB cable VBUS reaches 5.25V. Divider scales it into spec while still meeting VIH=VIO-0.6V at low end. Do not omit (rule) — _DS Sec 2.3 + Table 3.10 (abs-max VBUS pin)_
+- Connect exposed pad (EP, pin 25 / center) to GND plane with a 3x3 via stitch. EP is the chip's primary thermal path and the low-impedance GND return (rule) — _DS Sec 6.2 / 7.2 PCB Land Pattern notes_
+- USB D+/D- routing: 90 ohm differential impedance to the USB-B (or USB-C) connector pads, length-matched within 2mm. Place USBLC6 ESD protection inline between the connector and the CP2102N D+/D- pins (if the parent block includes ESD) (rule) — _USB 2.0 Sec 7.1.6 + standard ESD-placement practice_
+- RSTb pin (pin 9, ~RST in the symbol) is driven LOW during power-on and power-fail reset. 1 kohm pull-up to VIO holds it high otherwise. No external C is required -- DS Fig 2.1 shows only the pull-up — _DS Sec 2.1 (RSTb behaviour) + Fig 2.1 (no R-C filter)_
+- No external crystal: the CP2102N integrates a 48 MHz oscillator (DS Table 3.5, +/- 0.7% over temp/supply). Do NOT add a crystal to the unused pins — _DS Sec 3.1.5 + Table 3.5 (Internal Oscillator)_
 
 ## U1 — TPD12S016PWR
 
@@ -448,21 +472,21 @@ _Pins explicitly left bare:_ MDI0_N, MDI0_P, MDI1_N, MDI1_P, MDI2_N, MDI2_P, MDI
 ## SW1 — DS-04P
 
 **Block:** boot_switches  
-**Datasheet:** [DS-04P](https://datasheet.lcsc.com/lcsc/Hanbo-Electronic-DS-04P_C18198092.pdf) (Boot mode strap switches, Zynq boot mode: pull-up on each strap bit)  
+**Datasheet:** [DS-04P](https://datasheet.lcsc.com/lcsc/Hanbo-Electronic-DS-04P_C18198092.pdf) (Boot-strap topology: pull-up + DIP-to-GND, DS-04P schematic p. 1 + Zynq-7000 TRM Sec 6.3.6 boot-mode strap usage)  
 **Footprint:** Switch_SMD:DIP_Switch_x4  
 **Supply rail:** +3V3  
 **Min-circuit verified:** yes  
 
-4-position 1.27mm DIP boot mode switch
+4-position SMD SPST DIP switch on 1.27 mm pitch (boot-mode straps)
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| SW1 | +3V3 | 10k_0402_1% | 1 | Boot strap bit 0 pull-up (switch to GND when ON) |
-| SW2 | +3V3 | 10k_0402_1% | 1 | Boot strap bit 1 pull-up |
-| SW3 | +3V3 | 10k_0402_1% | 1 | Boot strap bit 2 pull-up |
-| SW4 | +3V3 | 10k_0402_1% | 1 | Boot strap bit 3 pull-up |
+| SW1 | +3V3 | 10k_0402_1% | 1 | Zynq-7000 TRM Sec 6.3.6: strap pull-up (>=4.7k, <=20k) |
+| SW2 | +3V3 | 10k_0402_1% | 1 | Zynq-7000 TRM Sec 6.3.6: strap pull-up |
+| SW3 | +3V3 | 10k_0402_1% | 1 | Zynq-7000 TRM Sec 6.3.6: strap pull-up |
+| SW4 | +3V3 | 10k_0402_1% | 1 | Zynq-7000 TRM Sec 6.3.6: strap pull-up |
 
 ### Pin overrides
 
@@ -473,26 +497,33 @@ _Pins explicitly left bare:_ MDI0_N, MDI0_P, MDI1_N, MDI1_P, MDI2_N, MDI2_P, MDI
 | SW3 | ZYNQ_BOOT_MODE_2 |
 | SW4 | ZYNQ_BOOT_MODE_3 |
 
+### No external required
+
+_Pins explicitly left bare:_ GND
+
 ### Layout notes
 
-_None recorded._
+- Place the 10k pull-ups within 10 mm of the DIP switch so the strap network is short and immune to coupling (rule) — _Zynq-7000 TRM Sec 6.3.6: strap timing margin at PS_POR_B release_
+- Provide silkscreen labelling (1 / 2 / 3 / 4 and ON marking) so the boot mode is visible without instructions (rule) — _User-facing component requires legible orientation_
+- Route strap traces to the SoM J1 mate via short, direct paths - do not loop or share vias with other PS signals (guideline)
+- Boot straps are latched only at PS_POR_B release - the DIP switch is not hot-swappable. Document this in the user guide — _Zynq-7000 TRM Sec 6.3.6 timing_
 
 ## SW2 — TS-1002S-06026C
 
 **Block:** boot_switches  
-**Datasheet:** [TS-1002S-06026C](https://datasheet.lcsc.com/lcsc/XUNPU-TS-1002S-06026C_C455112.pdf) (Typical tact switch to GPIO, Switch DS + debounce cap to GND)  
+**Datasheet:** [TS-1002S-06026C](https://datasheet.lcsc.com/lcsc/XUNPU-TS-1002S-06026C_C455112.pdf) (Datasheet 'CIRCUIT DIAGRAM' + typical GPIO push-button topology, TS-1002S mechanical p. 1 + typical GPIO debounce topology)  
 **Footprint:** Button_Switch_SMD:SW_SPST_Tactile_6x6mm  
 **Supply rail:** +3V3  
 **Min-circuit verified:** yes  
 
-6x6mm tactile switch with pull-up and debounce
+6x6 mm SMD momentary tactile switch (active-low GPIO input)
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| SW | +3V3 | 10k_0402_1% | 1 | Pull-up: switch active-low to GND |
-| SW | GND | 100n_0402_X7R | 1 | Debounce / ESD shunt at switch node |
+| SW | +3V3 | 10k_0402_1% | 1 | GPIO pull-up: button shorts SW to GND when pressed |
+| SW | GND | 100n_0402_X7R | 1 | Hardware debounce (RC ~ 1 ms with 10k pull-up) + ESD shunt at button face |
 
 ### Pin overrides
 
@@ -500,6 +531,12 @@ _None recorded._
 |---|---|
 | SW | ZYNQ_PS_SRST_N |
 
+### No external required
+
+_Pins explicitly left bare:_ GND
+
 ### Layout notes
 
-_None recorded._
+- Place the 100 nF debounce cap within 5 mm of the switch so the RC network sees the bounce node directly (rule) — _Debounce cap must be local to be effective_
+- Place the switch on the carrier edge or top side for user access; provide silkscreen labelling (e.g. 'PS_RST') (guideline)
+- Route the GPIO trace from switch to host SoM as a short, low-impedance signal; avoid running it parallel to clocks (guideline) — _Tactile switches act as ESD entry points_

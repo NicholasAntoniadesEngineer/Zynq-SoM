@@ -105,6 +105,13 @@ class IcInstance:
             tied to. Used for LDOs and similar power-converter ICs only.
         net_overrides: Per-pin overrides on top of
             ``refcircuit.pin_net_overrides`` (block-specific connectivity).
+        external_part_net_remap: Catalog-level net-name renames applied
+            during cluster placement. Each ``(catalog_net, block_net)``
+            pair rewrites the destination of any ``ExternalPart.to_net``
+            referencing ``catalog_net`` to ``block_net``. Used when a
+            shared refcircuit names an internal rail (e.g. FUSB302's
+            ``+3V3_SC`` for its scoped I2C pull-ups) that the project
+            wants merged onto the carrier's main rail (e.g. ``+3V3``).
     """
 
     reference: str
@@ -113,6 +120,7 @@ class IcInstance:
     power_input_net: str = ""
     power_output_net: str = ""
     net_overrides: tuple[tuple[str, str], ...] = ()
+    external_part_net_remap: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
         if not self.reference:

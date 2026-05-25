@@ -24,7 +24,6 @@ from zynq_eda.catalog.components import REFCIRCUITS
 from zynq_eda.core.model.block import (
     Block,
     ConnectorInstance,
-    ExternalNet,
     GroundNet,
     IcInstance,
     PowerInputNet,
@@ -65,8 +64,18 @@ def build_uart_bridge() -> Block:
                 # external-parts hookup (VBUS decoupling + shield discharge are
                 # equally applicable for any USB-2.0 receptacle). The pin map
                 # below is what actually defines the per-pin connectivity.
+                #
+                # SYMBOL CHOICE: Connector:Conn_01x05_Pin (generic 5-pin header
+                # with all-Passive pin types) rather than Connector:USB_B_Micro
+                # (whose pin 1 = VBUS is type Power-output). The carrier-side
+                # decision here is "a 5-pin header carrying VBUS / D- / D+ /
+                # ID / GND"; the physical receptacle (Molex / Wuerth / Hirose
+                # micro-USB-B) is the PCB designer's choice and lands at the
+                # PCB-layout stage. Using a Passive-pin symbol avoids
+                # Power-output vs Power-output ERC conflicts when this VBUS
+                # net merges with the USB-PD block's +VIN driver.
                 refcircuit=REFCIRCUITS["USBC_SINK"],
-                lib_id="Connector:USB_B_Micro",
+                lib_id="Connector:Conn_01x05_Pin",
                 edge=SheetEdge.RIGHT,
                 pin_to_net=(
                     ("1", "+VIN"),               # VBUS  (cable power → CP2102N REGIN)
@@ -74,7 +83,9 @@ def build_uart_bridge() -> Block:
                     ("3", "USB_UART_DP"),        # D+
                     ("4", "USB_UART_ID"),        # ID (unused, optional pull-down)
                     ("5", "GND"),                # GND
-                    ("SH", "CHASSIS_GND"),       # Shield → chassis (1M + 100nF)
+                    # SH (shield) handled by the host receptacle's mechanical
+                    # shell on the real micro-USB-B part; the generic 5-pin
+                    # header symbol has no SH pin.
                 ),
             ),
         ),
@@ -95,12 +106,11 @@ def build_uart_bridge() -> Block:
             SignalNet("ZYNQ_PS_UART0_TXD",   direction="output", edge=SheetEdge.LEFT),
             SignalNet("ZYNQ_PS_UART0_RTS_N", direction="input",  edge=SheetEdge.LEFT),
             SignalNet("ZYNQ_PS_UART0_CTS_N", direction="output", edge=SheetEdge.LEFT),
-            # Chassis ground (decoupled from signal GND through 1M + 100nF).
-            ExternalNet(
-                name="CHASSIS_GND",
-                direction="passive",
-                edge=SheetEdge.LEFT,
-                power_kind="ground",
-            ),
+            # CHASSIS_GND removed alongside the generic-5-pin header swap:
+            # the Conn_01x05_Pin symbol has no shield pin (a real micro-USB
+            # receptacle's shell ties to chassis at the PCB-layout stage),
+            # so no internal wire references CHASSIS_GND on this sub-sheet.
+            # Declaring it as an external net would emit a hierarchical
+            # label that ERC flags as ``isolated_pin_label``.
         ),
     )

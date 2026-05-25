@@ -50,6 +50,11 @@ def build_usb_pd() -> Block:
                 refcircuit=REFCIRCUITS["FUSB302BMPX"],
                 lib_id="zynq_eda:FUSB302BMPX",
                 power_input_net="+3V3",
+                # FUSB302's I2C pull-ups in the shared refcircuit target
+                # +3V3_SC (a catalog-scoped rail name). On the carrier they
+                # land on the main +3V3 rail; remap collapses the otherwise-
+                # orphan +3V3_SC net onto +3V3 so ERC sees a driven net.
+                external_part_net_remap=(("+3V3_SC", "+3V3"),),
             ),
             IcInstance(
                 reference="U2",

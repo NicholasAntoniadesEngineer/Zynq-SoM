@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "d098820b-6b05-45b6-a265-04800c405fac")
+	(uuid "2becd18e-9db6-4f05-b804-07d550dd2041")
 	(paper "A4")
 	(title_block
 		(title "SoM Mate J2 (PL bank 13 high-speed I/O)")
@@ -369,7 +369,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "842377ab-2437-4446-9124-c0a46a1bbf23")
+		(uuid "df79c029-329c-4f7e-97b2-819e017272ed")
 		(property "Reference" "J2"
 			(at 60.96 40.64 0.0000)
 			(effects
@@ -416,14 +416,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "95e84601-9d9b-49ad-87e3-4bf5fe9bc6b5")
+			(uuid "a7d8c6c5-8d47-4559-bca8-00df55828775")
 		)
 		(pin "2"
-			(uuid "6dcc8c44-b7fd-4e96-b841-a1fb7a93d67e")
+			(uuid "28a1dc4b-fbc5-4142-81b3-2980aca8367d")
 		)
 		(instances
 			(project "SoM Mate J2 (PL bank 13 high-speed I/O)"
-				(path "/d098820b-6b05-45b6-a265-04800c405fac"
+				(path "/2becd18e-9db6-4f05-b804-07d550dd2041"
 					(reference "J2")
 					(unit 1)
 				)
@@ -439,7 +439,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "bfa9f506-0d10-4b8e-af19-77e86efc77b4")
+		(uuid "a2c9f737-ec08-4a02-8a24-5931623dab49")
 		(property "Reference" "C100"
 			(at 45.72 34.925 270)
 			(effects
@@ -468,14 +468,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "27468be2-c6ba-4fb4-b9b2-d5151a67cf38")
+			(uuid "b18bf23d-07b9-4a50-b2f6-e0bcf735dc0f")
 		)
 		(pin "2"
-			(uuid "d90d0e35-bffb-433a-b7ed-471230bb1a69")
+			(uuid "82d0d525-01f3-4b4a-afdb-c5a3391b1abc")
 		)
 		(instances
 			(project "SoM Mate J2 (PL bank 13 high-speed I/O)"
-				(path "/d098820b-6b05-45b6-a265-04800c405fac"
+				(path "/2becd18e-9db6-4f05-b804-07d550dd2041"
 					(reference "C100")
 					(unit 1)
 				)
@@ -491,7 +491,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c3fc83a6-dd3a-4ce6-8b79-59e6dabf1196")
+		(uuid "95e737b8-70ec-4fc6-936f-41e45f8e97bb")
 		(property "Reference" "#PWR100"
 			(at 34.29 29.21 0.0000)
 			(effects
@@ -520,11 +520,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "ca3cec8a-026d-4db2-af51-f5b7ae7784b8")
+			(uuid "5fe47a7e-eaff-4ba1-8af4-4feb7656d4d1")
 		)
 		(instances
 			(project "SoM Mate J2 (PL bank 13 high-speed I/O)"
-				(path "/d098820b-6b05-45b6-a265-04800c405fac"
+				(path "/2becd18e-9db6-4f05-b804-07d550dd2041"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -540,7 +540,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c073e54d-9081-4855-bf39-887c8f0a7fd4")
+		(uuid "61d41b36-0283-410d-8372-d67a3a4cd63f")
 		(property "Reference" "C101"
 			(at 30.48 34.925 270)
 			(effects
@@ -569,14 +569,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "f1d5ee55-604b-4d21-94a9-c52e468eb8ec")
+			(uuid "b1cc20f8-775c-404d-8f4d-bfa1aa7fdd4e")
 		)
 		(pin "2"
-			(uuid "acac038a-373a-4447-8a93-e6d746c3e22a")
+			(uuid "9e2175a6-f191-42c6-9c3b-ff6dc7985021")
 		)
 		(instances
 			(project "SoM Mate J2 (PL bank 13 high-speed I/O)"
-				(path "/d098820b-6b05-45b6-a265-04800c405fac"
+				(path "/2becd18e-9db6-4f05-b804-07d550dd2041"
 					(reference "C101")
 					(unit 1)
 				)
@@ -592,7 +592,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "dc65313b-b95b-48b9-861e-53bf053eb946")
+		(uuid "3074138b-8c55-487a-8ac9-bb6857b902d5")
 		(property "Reference" "#PWR101"
 			(at 19.05 29.21 0.0000)
 			(effects
@@ -621,11 +621,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "5fd6b30d-c139-486b-9cd1-749e340e5fbd")
+			(uuid "fb6aa9fd-e962-4e01-abfc-669a55a6f521")
 		)
 		(instances
 			(project "SoM Mate J2 (PL bank 13 high-speed I/O)"
-				(path "/d098820b-6b05-45b6-a265-04800c405fac"
+				(path "/2becd18e-9db6-4f05-b804-07d550dd2041"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -641,7 +641,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "f94f1741-6d06-4461-ad22-77937f9c4fc2")
+		(uuid "7aa76d69-05d9-4ab6-a796-bc098bf014f0")
 		(property "Reference" "#PWR102"
 			(at 281.94 34.29 0.0000)
 			(effects
@@ -670,11 +670,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "c74529de-1714-4cd1-b164-525296607e00")
+			(uuid "0a42e113-b47d-4cda-9ebe-9e56b4e606bf")
 		)
 		(instances
 			(project "SoM Mate J2 (PL bank 13 high-speed I/O)"
-				(path "/d098820b-6b05-45b6-a265-04800c405fac"
+				(path "/2becd18e-9db6-4f05-b804-07d550dd2041"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -689,7 +689,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4cce1d03-d75c-4699-b900-3870a26841ce")
+		(uuid "ef1866c8-9199-4f3d-88d2-4f84e43d3ad2")
 	)
 	(wire
 		(pts
@@ -699,7 +699,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "34d7278b-91e2-4c71-b2cc-01b18628a19d")
+		(uuid "c9a0b6c2-9344-46b8-86d2-9f83e6afa6db")
 	)
 	(wire
 		(pts
@@ -709,7 +709,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "643b921a-63a4-43f9-902a-3f0e725042c3")
+		(uuid "8df2d994-b5a3-4068-ba8b-ae96e2b7491e")
 	)
 	(wire
 		(pts
@@ -719,7 +719,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "52154830-71c5-454b-92df-1a9cae647f21")
+		(uuid "682b1df1-b08c-41d7-ba90-3f73f5550c77")
 	)
 	(wire
 		(pts
@@ -729,7 +729,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "60d9e55b-5369-4c13-a85d-7240f56e123a")
+		(uuid "d0223748-4005-48f6-8fa4-0bf0a8c82d01")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -740,7 +740,11 @@
 			)
 			(justify left)
 		)
-		(uuid "af61a6cf-0fea-4362-ad91-a4a6c2d4abf3")
+		(uuid "e90f0f8f-ff02-4904-8886-77f9e0be773c")
+	)
+	(no_connect
+		(at 53.34 38.1)
+		(uuid "3c40c31b-a31c-41fa-ae3c-1c255518641d")
 	)
 	(sheet_instances
 		(path "/"

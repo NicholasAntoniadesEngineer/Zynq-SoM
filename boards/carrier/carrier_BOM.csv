@@ -1,21 +1,25 @@
 Reference,Qty,Value,Footprint,LCSC,MPN,Description,Datasheet
-J1,1,DM3AT-SF-PEJM5,Connector_Card:microSD_HiroseDM3AT-SF-PEJM5_Push-Push,C114218,DM3AT-SF-PEJM5,microSD push-push socket with card-detect switch,https://www.hirose.com/en/product/document?clcode=CL0540-1284-2-51&productname=DM3AT-SF-PEJM5(51)&series=DM3
 J1,1,TYPE-C-31-M-12,Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12,C165948,TYPE-C-31-M-12,"USB Type-C 16-pin SMD receptacle, USB 2.0 + power",https://datasheet.lcsc.com/lcsc/2304140030_Korean-Hroparts-Elec-TYPE-C-31-M-12_C165948.pdf
+J1,1,DM3AT-SF-PEJM5,Connector_Card:microSD_HiroseDM3AT-SF-PEJM5_Push-Push,C114218,DM3AT-SF-PEJM5,microSD push-push socket with card-detect switch,https://www.hirose.com/en/product/document?clcode=CL0540-1284-2-51&productname=DM3AT-SF-PEJM5(51)&series=DM3
 J1,1,HDMI-019S,Connector_HDMI:HDMI_A_SOFNG_HDMI-019S,C111617,HDMI-019S,HDMI Type-A receptacle 19-pin SMD right-angle,https://datasheet.lcsc.com/lcsc/SOFNG-HDMI-019S_C111617.pdf
 "J1, J2",2,PM254R-12-08-H85,Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical,C53026548,PM254R-12-08-H85,2x6 0.1in pin header right-angle (Digilent PMOD),https://datasheet.lcsc.com/lcsc/XFCN-PM254R-12-08-H85_C53026548.pdf
-"C100, C101, C102, C103, C104, C105, C106, C107, C108, C109, C110",11,100n,Capacitor_SMD:C_0402_1005Metric,C1525,CL05B104KO5NNNC,100nF 16V X7R MLCC 0402,https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B104KO5NNNC_C1525.pdf
+"C100, C101, C102, C103, C104, C105, C106, C108, C109, C111, C112",11,100n,Capacitor_SMD:C_0402_1005Metric,C1525,CL05B104KO5NNNC,100nF 16V X7R MLCC 0402,https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B104KO5NNNC_C1525.pdf
 C102,1,100u,Capacitor_SMD:C_0402_1005Metric,?,?,,
-"C101, C103, C104, C105, C106, C108",6,10u,Capacitor_SMD:C_0402_1005Metric,C15525,CL05A106MQ5NUNC,10uF 6.3V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/2304140030_Samsung-Electro-Mechanics-CL05A106MQ5NUNC_C15525.pdf
+"C101, C104, C105, C107, C110",5,10u,Capacitor_SMD:C_0402_1005Metric,C15525,CL05A106MQ5NUNC,10uF 6.3V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/2304140030_Samsung-Electro-Mechanics-CL05A106MQ5NUNC_C15525.pdf
 "C100, C101, C103, C104, C106, C107",6,1u,Capacitor_SMD:C_0402_1005Metric,C52923,CL05A105KP5NNNC,1uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1810171717_Samsung-Electro-Mechanics-CL05A105KP5NNNC_C52923.pdf
 "C103, C104",2,200p,Capacitor_SMD:C_0402_1005Metric,C1546,0402CG201J500NT,200pF 50V C0G MLCC 0402 (USB-PD CC cReceiver),https://datasheet.lcsc.com/lcsc/FH-Guangdong-Fenghua-AdvanTech-0402CG201J500NT_C1546.pdf
-"C100, C101",2,4u7,Capacitor_SMD:C_0402_1005Metric,C368809,CL05A475KP5NRNC,4.7uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1809181722_Samsung-Electro-Mechanics-CL05A475MP5NSNC_C368809.pdf
+"C100, C102",2,4u7,Capacitor_SMD:C_0402_1005Metric,C368809,CL05A475KP5NRNC,4.7uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1809181722_Samsung-Electro-Mechanics-CL05A475MP5NSNC_C368809.pdf
 "R100, R101",2,100R,Resistor_SMD:R_0402_1005Metric,C25076,0402WGF1000TCE,"100 ohm 1% 1/16W 0402 (LVDS termination, current limit)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1000TCE_C25076.pdf
 "R100, R101, R102",3,100k,Resistor_SMD:R_0402_1005Metric,C60491,RC0402FR-07100KL,100 kohm 1% 1/16W 0402 (HPD pull-up),https://datasheet.lcsc.com/lcsc/YAGEO-RC0402FR-07100KL_C60491.pdf
 "R100, R101, R102, R103, R104",5,10k,Resistor_SMD:R_0402_1005Metric,C25744,0402WGF1002TCE,10 kohm 1% 1/16W 0402 (general pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1002TCE_C25744.pdf
 "R100, R103, R107",3,1M,Resistor_SMD:R_0402_1005Metric,C25741,0402WGF1004TCE,"1 Mohm 1% 1/16W 0402 (shield to GND, high-impedance)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1004TCE_C25741.pdf
+R102,1,1k,Resistor_SMD:R_0402_1005Metric,C11702,0402WGF1001TCE,1 kohm 1% 1/16W 0402,https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1001TCE_C11702.pdf
 "R101, R103, R105, R107, R108",5,1n,Resistor_SMD:R_0402_1005Metric,?,?,,
+R102,1,22R,Resistor_SMD:R_0402_1005Metric,C25105,0402WGF220JTCE,22 ohm 1% 1/16W 0402,https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF220JTCE_C25105.pdf
+R100,1,22k1,Resistor_SMD:R_0402_1005Metric,C25768,0402WGF2212TCE,22.1 kohm 1% 1/16W 0402 (CP2102N VBUS sense divider upper),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF2212TCE_C25768.pdf
 "R109, R110",2,330R,Resistor_SMD:R_0402_1005Metric,C25104,0402WGF3300TCE,330 ohm 1% 1/16W 0402 (LED current limit),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF3300TCE_C25104.pdf
-"R101, R102, R103",3,4k7,Resistor_SMD:R_0402_1005Metric,C25900,0402WGF4701TCE,4.7 kohm 1% 1/16W 0402 (I2C pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF4701TCE_C25900.pdf
+R101,1,47k5,Resistor_SMD:R_0402_1005Metric,C25819,0402WGF4752TCE,47.5 kohm 1% 1/16W 0402 (CP2102N VBUS sense divider lower),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF4752TCE_C25819.pdf
+"R101, R102, R103, R104",4,4k7,Resistor_SMD:R_0402_1005Metric,C25900,0402WGF4701TCE,4.7 kohm 1% 1/16W 0402 (I2C pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF4701TCE_C25900.pdf
 "R101, R102, R105, R106",4,5k1,Resistor_SMD:R_0402_1005Metric,C25905,0402WGF5101TCE,5.1 kohm 1% 1/16W 0402 (USB-C CC Rd termination),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF5101TCE_C25905.pdf
 "R100, R102, R104, R106",4,75R,Resistor_SMD:R_0402_1005Metric,?,?,,
 R100,1,R,Resistor_SMD:R_0402_1005Metric,?,?,,

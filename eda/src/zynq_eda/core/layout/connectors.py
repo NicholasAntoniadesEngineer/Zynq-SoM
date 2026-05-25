@@ -173,6 +173,35 @@ def _place_one_connector(
             continue
         builder.no_connects.append(PlacedNoConnect(position=pin_geom.connection))
 
+    # 2b. Auto-NC EVERY remaining pin that no other pass touched. Mirrors
+    # the IC-pin auto-NC in :func:`place._add_no_connects_for_unused_pins`.
+    # Connectors expose declarative pin maps via :attr:`pin_to_net` (and
+    # external_parts may add a few more via the cluster pass above);
+    # anything left over is a pin the project chose not to use, so ERC's
+    # ``pin_not_connected`` complaint would otherwise fire. Examples we
+    # need to silence: SoM-mate connector GND/SHIELD power pins (treated as
+    # ground references but not in pin_to_net), USB-B-micro shield pins,
+    # tactile-switch second-pin (paired-pin device whose other pin shares
+    # the same net via the symbol's internal short).
+    claimed_pin_names: set[str] = set(placed_pin_names) | {
+        pin for pin, _ in connector.pin_to_net
+    }
+    for pin_info in geometry_cache.all_pins(connector.lib_id, rotation=connector.rotation):
+        pin_name = str(pin_info["name"])
+        pin_number = str(pin_info["number"])
+        if pin_name in claimed_pin_names or pin_number in claimed_pin_names:
+            continue
+        try:
+            pin_geom = geometry_cache.pin_geometry_by_name(
+                connector.lib_id,
+                anchor,
+                pin_number,
+                rotation=connector.rotation,
+            )
+        except KeyError:
+            continue
+        builder.no_connects.append(PlacedNoConnect(position=pin_geom.connection))
+
     # 3. Wire each pin in ``pin_to_net`` to its declared net.
     #
     # We use *lateral* local-label stubs only — NEVER inline power symbols.
