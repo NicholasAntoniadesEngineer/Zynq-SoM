@@ -1,10 +1,10 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-25T18:11:44Z
+Generated: 2026-05-25T18:35:55Z
 
-**Errors:** 48  **Warnings:** 46  **Info:** 0
+**Errors:** 35  **Warnings:** 46  **Info:** 0
 
-## Errors (48)
+## Errors (35)
 
 - **page_bounds.symbol_outside**: symbol '#PWR124' ('CHASSIS_GND') outside page: x=293.37 > right edge 291.92 _(usb_pd.kicad_sch)_
 - **page_bounds.wire_outside**: wire end outside page: x=293.37 > right edge 291.92 _(usb_pd.kicad_sch)_
@@ -34,21 +34,8 @@ Generated: 2026-05-25T18:11:44Z
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
 - **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
-- **erc.wire_dangling**: Wires not connected to anything _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
@@ -92,15 +79,15 @@ Generated: 2026-05-25T18:11:44Z
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both GND and ZYNQ_HDMI_RX_TMDS_1_N are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both GND and ZYNQ_HDMI_RX_TMDS_CLK_N are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both GND and PMOD0_IO6 are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both ETH_LINE_MDI_3_N and ETH_LINE_MDI_3_P are attached to the same items; ETH_LINE_MDI_3_N will be used in the netlist _(carrier.kicad_sch)_
 - **erc.ground_pin_not_ground**: Pin GND not connected to ground net _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both +VIN and GND are attached to the same items; +VIN will be used in the netlist _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both +5V and GND are attached to the same items; +5V will be used in the netlist _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both GND and ZYNQ_HDMI_TX_TMDS_2_P are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
 

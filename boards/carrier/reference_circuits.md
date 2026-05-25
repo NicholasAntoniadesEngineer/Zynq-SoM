@@ -269,55 +269,55 @@ _Pins explicitly left bare:_ D+, D-, RXD, TXD
 ## U1 — TPD12S016PWR
 
 **Block:** hdmi_tx  
-**Datasheet:** [TPD12S016PWR](https://www.ti.com/lit/ds/symlink/tpd12s016.pdf) (Figure 13 - HDMI Source Application, Figure 13 - HDMI Source Application)  
+**Datasheet:** [TPD12S016PWR](https://www.ti.com/lit/ds/symlink/tpd12s016.pdf) (Figure 15 - HDMI Source using one GPIO (CT_HPD), p.18 Figure 15 + p.21 Sec 10 layout)  
 **Footprint:** Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm  
+**Supply rail:** +3V3  
 **Min-circuit verified:** yes  
 
-HDMI source companion: ESD + I2C/HPD level shift + 5V switch
+HDMI source companion: 12-ch ESD + DDC/CEC/HPD level shifters + 5V load switch
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| VCCA | GND | 1u_0402_X7R | 1 | DS Sec 9.2: VCCA (5V) bulk decoupling |
-| VCCA | GND | 100n_0402_X7R | 1 | DS Sec 9.2: VCCA HF bypass |
-| VCCB | GND | 1u_0402_X7R | 1 | DS Sec 9.2: VCCB (3.3V logic) bulk decoupling |
-| VCCB | GND | 100n_0402_X7R | 1 | DS Sec 9.2: VCCB HF bypass |
-| SDA_B | +3V3 | 4k7_0402_1% | 1 | DS Sec 8.3.3: I2C MCU-side pull-up to VCCB |
-| SCL_B | +3V3 | 4k7_0402_1% | 1 | DS Sec 8.3.3: I2C MCU-side pull-up to VCCB |
-| HPD_B | GND | 100k_0402_1% | 1 | DS Sec 8.3.4: HPD_B pull-down (MCU input) |
-| CT_CP_HPD | +3V3 | 10k_0402_1% | 1 | DS Sec 8.3.4: CT_CP_HPD GPIO controls direction + 5V switch |
+| VCCA | GND | 100n_0402_X7R | 1 | DS Fig 15: 100nF V_CCA decoupling close to pin 24 |
+| VCCB | GND | 100n_0402_X7R | 1 | DS Fig 15: 100nF V_CC5V decoupling close to pin 11 |
+| CT_CP_HPD | +3V3 | 10k_0402_1% | 1 | DS Sec 8.2.1 / Fig 15: CT_HPD = HIGH enables 5V load switch + HPD detection (active-high control input) |
 
 ### Pin overrides
 
-_None._
+| Pin | Net |
+|---|---|
+| VCCA | +3V3 |
+| VCCB | +5V |
 
 ### No external required
 
-_Pins explicitly left bare:_ CLK+, CLK-, D0+, D0-, D1+, D1-, D2+, D2-
+_Pins explicitly left bare:_ CEC_A, CLK+, CLK-, D0+, D0-, D1+, D1-, D2+, D2-, HPD_A, HPD_B, SCL_A, SCL_B, SDA_A, SDA_B
 
 ### Layout notes
 
-- Place TPD12S016 between HDMI connector and Zynq PL within 20mm of connector (rule) — _DS Sec 11.1 - ESD protection must precede device_
-- TMDS pairs: 100 ohm differential, length-match within 0.5mm across pairs (rule) — _HDMI 1.4 Sec 4.2.3_
+- Place TPD12S016 as close as possible to HDMI connector pin 1 (< 10mm) to minimise unprotected TMDS stub length (rule) — _DS Sec 10.1: ESD energy must dissipate at protection pins before reaching downstream traces_
+- TMDS pairs: route as 100R differential, length-matched within 0.5mm intra-pair and <= 2mm inter-pair skew across all four pairs (rule) — _HDMI 1.4 Sec 4.2.3 + TPD12S016 DS Sec 7.3.4_
+- Route TMDS lines straight (no 90-degree turns) and avoid vias between connector and TPD12S016 protection pins (rule) — _DS Sec 10.1: minimise EMI coupling and impedance discontinuity on the ESD path_
+- Place the 100nF V_CCA and V_CC5V decoupling caps within 5mm of their respective supply pins (24 and 11) (rule) — _DS Sec 10.1: minimise impedance on the ESD return path_
+- Provide a large ground via field under the device and tie all GND pins (6, 14, 19) to a continuous ground plane (rule) — _DS Sec 10.2: low-impedance GND is essential for ESD dissipation_
 
 ## U2 — 24LC256T-I/SN
 
 **Block:** hdmi_tx  
-**Datasheet:** [24LC256T-I/SN](https://ww1.microchip.com/downloads/aemDocuments/documents/MPD/ProductDocuments/DataSheets/21203P.pdf) (Figure 4-1 + HDMI DDC EDID wiring, DS21203P Fig 4-1 + HDMI DDC at +5V)  
+**Datasheet:** [24LC256T-I/SN](https://ww1.microchip.com/downloads/aemDocuments/documents/MPD/ProductDocuments/DataSheets/21203P.pdf) (DS Sec 5.0 + HDMI 1.4 Sec 8.1.4 (EDID at 0xA0), p.8 Sec 5.0 Device Addressing + HDMI 1.4 EDID spec)  
 **Footprint:** Package_SO:SOIC-8_3.9x4.9mm_P1.27mm  
 **Supply rail:** +5V  
 **Min-circuit verified:** yes  
 
-256 Kbit I2C EDID EEPROM on HDMI DDC bus
+256 Kbit I2C EDID EEPROM on HDMI DDC bus (5V, addr 0x50)
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| VCC | GND | 100n_0402_X7R | 1 | DS Sec 2.0: VCC decoupling cap |
-| SDA | +5V | 2k2_0402_1% | 1 | HDMI DDC SDA pull-up to +5V (shared with connector) |
-| SCL | +5V | 2k2_0402_1% | 1 | HDMI DDC SCL pull-up to +5V (shared with connector) |
+| VCC | GND | 100n_0402_X7R | 1 | DS Sec 2.0: 100nF V_CC decoupling cap close to pin 8 |
 
 ### Pin overrides
 
@@ -327,72 +327,79 @@ _None._
 
 | Pin | Tied to | Purpose | Why |
 |---|---|---|---|
-| A0 | GND | EDID I2C address bit 0 = 0 | DS Sec 5.1 |
-| A1 | +5V | EDID I2C address bit 1 = 1 (address 0x54) | HDMI EDID typical address 0xA0/0xA1 |
-| A2 | GND | EDID I2C address bit 2 = 0 | DS Sec 5.1 |
-| WP | GND | Write protect disabled for EDID programming | DS Sec 7.0 |
+| A0 | GND | A0 = 0 (mandatory for EDID I2C addr 0x50) | HDMI 1.4 Sec 8.1.4 / VESA E-DDC Sec 2.2.5 |
+| A1 | GND | A1 = 0 | HDMI 1.4 Sec 8.1.4 / VESA E-DDC Sec 2.2.5 |
+| A2 | GND | A2 = 0 (full EDID address = 0xA0/0xA1) | HDMI 1.4 Sec 8.1.4 / VESA E-DDC Sec 2.2.5 |
+| WP | GND | Write protect disabled (Zynq PS programs EDID at first boot) | DS Sec 2.4: WP=GND -> writes enabled |
+
+### No external required
+
+_Pins explicitly left bare:_ SCL, SDA
 
 ### Layout notes
 
-- Route DDC SDA/SCL to HDMI connector within 20mm (rule)
+- Place EDID EEPROM on the HDMI cable side of TPD12S016, between TPD12S016 SDA_B / SCL_B and HDMI connector pins 15 / 16 (rule) — _HDMI 1.4 Sec 8.1 / TPD12S016 DS Fig 15_
+- Route DDC SDA / SCL traces <= 20mm with V_CC bypass within 5mm of pin 8 to stay within HDMI 1.4 DDC capacitive-load budget (rule) — _HDMI 1.4 Sec 8.1.1 + DS Sec 2.0_
+- EDID EEPROM V_CC must come from the same +5V node that supplies TPD12S016 5V_OUT (TX role) so DDC pull-ups and EEPROM share a single 5V reference (rule) — _HDMI 1.4 Sec 8.1.1 (DDC voltage level)_
 
 ## U1 — TPD12S016PWR
 
 **Block:** hdmi_rx  
-**Datasheet:** [TPD12S016PWR](https://www.ti.com/lit/ds/symlink/tpd12s016.pdf) (Figure 14 - HDMI Sink Application, Figure 14 - HDMI Sink Application)  
+**Datasheet:** [TPD12S016PWR](https://www.ti.com/lit/ds/symlink/tpd12s016.pdf) (Figure 15 / Sec 7.3.8 (back-drive on V_CC5V in sink role), p.18 Figure 15 + p.15 Sec 7.3.8 back-drive protection)  
 **Footprint:** Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm  
+**Supply rail:** +3V3  
 **Min-circuit verified:** yes  
 
-HDMI sink companion: ESD + I2C/HPD level shift (no 5V switch)
+HDMI sink companion: 12-ch ESD + DDC/CEC/HPD level shifters (5V sourced by upstream)
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| VCCA | GND | 1u_0402_X7R | 1 | DS Sec 9.2: VCCA (5V) bulk decoupling |
-| VCCA | GND | 100n_0402_X7R | 1 | DS Sec 9.2: VCCA HF bypass |
-| VCCB | GND | 1u_0402_X7R | 1 | DS Sec 9.2: VCCB (3.3V logic) bulk decoupling |
-| VCCB | GND | 100n_0402_X7R | 1 | DS Sec 9.2: VCCB HF bypass |
-| SDA_B | +3V3 | 4k7_0402_1% | 1 | DS Sec 8.3.3: I2C MCU-side pull-up to VCCB |
-| SCL_B | +3V3 | 4k7_0402_1% | 1 | DS Sec 8.3.3: I2C MCU-side pull-up to VCCB |
-| HPD_B | GND | 100k_0402_1% | 1 | DS Sec 8.3.4: HPD_B pull-down (MCU input) |
-| CT_CP_HPD | +3V3 | 10k_0402_1% | 1 | DS Sec 8.3.4: CT_CP_HPD always-on for sink mode |
+| VCCA | GND | 100n_0402_X7R | 1 | DS Fig 15: 100nF V_CCA decoupling close to pin 24 |
+| VCCB | GND | 100n_0402_X7R | 1 | DS Fig 15: 100nF V_CC5V decoupling close to pin 11 |
+| CT_CP_HPD | +3V3 | 10k_0402_1% | 1 | DS Sec 8.2.1 / Fig 15: CT_HPD = HIGH enables 5V load switch + HPD detection (active-high control input) |
 
 ### Pin overrides
 
-_None._
+| Pin | Net |
+|---|---|
+| VCCA | +3V3 |
+| VCCB | ZYNQ_HDMI_RX_5V_SENSE |
 
 ### No external required
 
-_Pins explicitly left bare:_ CLK+, CLK-, D0+, D0-, D1+, D1-, D2+, D2-
+_Pins explicitly left bare:_ CEC_A, CLK+, CLK-, D0+, D0-, D1+, D1-, D2+, D2-, HPD_A, HPD_B, SCL_A, SCL_B, SDA_A, SDA_B
 
 ### Layout notes
 
-- HDMI RX 5V comes from connected source, not generated locally
-- TMDS RX termination: 50 ohm to AVCC inside Zynq RX block; do NOT add external Rs (rule) — _HDMI 1.4 Sec 4.2.5_
+- Place TPD12S016 within 10mm of the HDMI receptacle to keep TMDS stubs short and the ESD path direct (rule) — _DS Sec 10.1_
+- TMDS RX termination is handled internally by the Zynq HP I/O (50R to AVCC); do NOT add external termination on the cable side (rule) — _HDMI 1.4 Sec 4.2.5 + Zynq SelectIO TMDS_33 documentation_
+- 5V_OUT pin (13) carries +5V SOURCED BY THE UPSTREAM transmitter; TPD12S016 back-drive protection (DS Sec 7.3.8) prevents reverse current into our 5V rail
+- Tie all GND pins to a single low-impedance ground plane and place decoupling caps within 5mm of V_CCA (24) and V_CC5V (11) (rule) — _DS Sec 10.1_
 
 ## T1 — HX5008NLT
 
 **Block:** ethernet  
-**Datasheet:** [HX5008NLT](https://productfinder.pulseeng.com/files/datasheets/HX5008NL.pdf) (Figure 1 - Application Schematic (1000BASE-T), p.4, Figure 1 + IEEE 802.3 Bob Smith)  
+**Datasheet:** [HX5008NLT](https://productfinder.pulseeng.com/files/datasheets/HX5008NL.pdf) (DS Sheet 2 SCHEMATIC + IEEE 802.3 Sec 40.7.1 Bob Smith network, Sheet 2 SCHEMATIC + ELECTRICAL CHARACTERISTICS)  
 **Footprint:** Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm  
 **Min-circuit verified:** yes  
 
-1000BASE-T 4-pair Ethernet magnetics module, SOIC-24
+1000BASE-T 4-pair Ethernet magnetics module (1:1, 325uH, 1500V isolation)
 
 ### External parts
 
 | From pin | To net | Part token | Qty | Why |
 |---|---|---|---|---|
-| CT_PAIR0 | BS_COMMON | 75R_0603_1% | 1 | IEEE 802.3 Bob Smith termination, pair 0 center tap |
-| CT_PAIR0 | BS_COMMON | 1n_2kV_0603_safety | 1 | IEEE 802.3 Bob Smith 1nF per pair, pair 0 |
-| CT_PAIR1 | BS_COMMON | 75R_0603_1% | 1 | IEEE 802.3 Bob Smith termination, pair 1 center tap |
-| CT_PAIR1 | BS_COMMON | 1n_2kV_0603_safety | 1 | IEEE 802.3 Bob Smith 1nF per pair, pair 1 |
-| CT_PAIR2 | BS_COMMON | 75R_0603_1% | 1 | IEEE 802.3 Bob Smith termination, pair 2 center tap |
-| CT_PAIR2 | BS_COMMON | 1n_2kV_0603_safety | 1 | IEEE 802.3 Bob Smith 1nF per pair, pair 2 |
-| CT_PAIR3 | BS_COMMON | 75R_0603_1% | 1 | IEEE 802.3 Bob Smith termination, pair 3 center tap |
-| CT_PAIR3 | BS_COMMON | 1n_2kV_0603_safety | 1 | IEEE 802.3 Bob Smith 1nF per pair, pair 3 |
-| BS_COMMON | CHASSIS_GND | 1n_2kV_0603_safety | 1 | IEEE 802.3 / EN 55032: 1nF/2kV common-mode cap to chassis GND |
+| CT_PAIR0 | BS_COMMON | 75R_0603_1% | 1 | IEEE 802.3 Sec 40.7.1 (Bob Smith): 75R from pair 0 line-side centre tap to common point |
+| CT_PAIR0 | BS_COMMON | 1n_2kV_0603_safety | 1 | IEEE 802.3 Sec 40.7.1: 1nF/2kV (safety-rated) AC-couples pair 0 centre tap into the Bob Smith common node |
+| CT_PAIR1 | BS_COMMON | 75R_0603_1% | 1 | IEEE 802.3 Sec 40.7.1 (Bob Smith): 75R from pair 1 line-side centre tap to common point |
+| CT_PAIR1 | BS_COMMON | 1n_2kV_0603_safety | 1 | IEEE 802.3 Sec 40.7.1: 1nF/2kV (safety-rated) AC-couples pair 1 centre tap into the Bob Smith common node |
+| CT_PAIR2 | BS_COMMON | 75R_0603_1% | 1 | IEEE 802.3 Sec 40.7.1 (Bob Smith): 75R from pair 2 line-side centre tap to common point |
+| CT_PAIR2 | BS_COMMON | 1n_2kV_0603_safety | 1 | IEEE 802.3 Sec 40.7.1: 1nF/2kV (safety-rated) AC-couples pair 2 centre tap into the Bob Smith common node |
+| CT_PAIR3 | BS_COMMON | 75R_0603_1% | 1 | IEEE 802.3 Sec 40.7.1 (Bob Smith): 75R from pair 3 line-side centre tap to common point |
+| CT_PAIR3 | BS_COMMON | 1n_2kV_0603_safety | 1 | IEEE 802.3 Sec 40.7.1: 1nF/2kV (safety-rated) AC-couples pair 3 centre tap into the Bob Smith common node |
+| BS_COMMON | CHASSIS_GND | 1n_2kV_0603_safety | 1 | IEEE 802.3 Sec 40.7.1 + EN 55032: 1nF/2kV safety cap AC-couples Bob Smith common to chassis GND for EMI return |
 
 ### Pin overrides
 
@@ -400,13 +407,15 @@ _None._
 
 ### No external required
 
-_Pins explicitly left bare:_ MDI0_N, MDI0_P, MDI1_N, MDI1_P, MDI2_N, MDI2_P, MDI3_N, MDI3_P, TD0_N, TD0_P, TD1_N, TD1_P, TD2_N, TD2_P, TD3_N, TD3_P
+_Pins explicitly left bare:_ MDI0_N, MDI0_P, MDI1_N, MDI1_P, MDI2_N, MDI2_P, MDI3_N, MDI3_P, PHY0_N, PHY0_P, PHY1_N, PHY1_P, PHY2_N, PHY2_P, PHY3_N, PHY3_P, TD0_N, TD0_P, TD1_N, TD1_P, TD2_N, TD2_P, TD3_N, TD3_P
 
 ### Layout notes
 
-- Route each MDI pair as 100 ohm differential impedance, matched length within 0.5mm (rule) — _IEEE 802.3 / Pulse layout guide_
-- Chassis GND must be isolated from signal GND - join only at one point near RJ45 (rule) — _EMI compliance_
-- Place magnetics module within 30mm of RJ45 connector (rule) — _Reduce common-mode noise_
+- Each MDI pair: 100R differential impedance, length-matched within 0.5mm intra-pair, <= 2mm skew across the four pairs (rule) — _IEEE 802.3 Sec 40.7 + Pulse layout guide_
+- CHASSIS_GND is an island bonded to signal GND only at a single star point near the carrier's power-entry connector (rule) — _EMC ground-loop avoidance + IEEE 802.3 Sec 14.7_
+- Place magnetics within 30mm of the RJ45 connector and keep MDI traces straight from magnetics to jack (no vias) (rule) — _Pulse HX5008NL layout guide + minimise common-mode noise_
+- Route the four Bob Smith 75R + 1nF/2kV networks together near the magnetics' line side; use the 2kV safety caps (NOT generic 1nF MLCCs) for IEC 60950 / IEEE 802.3 isolation compliance (rule) — _IEEE 802.3 Sec 40.7.1 + safety isolation_
+- Keep PHY-side MDI traces (TD0..3 pairs) on a different copper layer or 3x spacing from the line-side MX traces to preserve the 1500 V_RMS hi-pot isolation through the magnetics (rule) — _HX5008NL DS Sheet 2 (1500 V_RMS minimum I/O isolation)_
 
 ## SW1 — DS-04P
 
