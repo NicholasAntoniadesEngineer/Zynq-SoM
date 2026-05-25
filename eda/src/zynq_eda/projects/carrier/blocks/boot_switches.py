@@ -18,6 +18,7 @@ from __future__ import annotations
 from zynq_eda.catalog.components import REFCIRCUITS
 from zynq_eda.core.model.block import (
     Block,
+    ConnectorInstance,
     GroundNet,
     IcInstance,
     PowerInputNet,
@@ -56,16 +57,22 @@ def build_boot_switches() -> Block:
                     ("SW4", "ZYNQ_BOOT_MODE_3"),
                 ),
             ),
-            # Tactile push-button — PS active-low reset
-            IcInstance(
+        ),
+        connectors=(
+            # Tactile push-button — PS active-low reset.
+            # SW_TACT has TWO pins both named "SW" (numbered 1 and 2).
+            # IcInstance.net_overrides is keyed by pin name, which can't
+            # disambiguate duplicate names — use a ConnectorInstance
+            # with pin_to_net keyed by pin number so each pin gets its
+            # own net.
+            ConnectorInstance(
                 reference="SW2",
                 refcircuit=REFCIRCUITS["TS-1002S-06026C"],
                 lib_id="zynq_eda:SW_TACT",
-                power_input_net="+3V3",
-                # SW_TACT has two pins both named "SW"; the refcircuit treats
-                # them as one node. Map that node to the active-low PS reset.
-                net_overrides=(
-                    ("SW", "ZYNQ_PS_SRST_N"),
+                edge=SheetEdge.RIGHT,
+                pin_to_net=(
+                    ("1", "ZYNQ_PS_SRST_N"),
+                    ("2", "GND"),
                 ),
             ),
         ),

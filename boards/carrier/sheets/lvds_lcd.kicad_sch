@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "e2f88535-e9d1-4ed1-90a1-def0ab21c2fb")
+	(uuid "9d386065-1a67-41c2-b160-b7a101add63e")
 	(paper "A4")
 	(title_block
 		(title "LVDS LCD (40-pin 0.5 mm FFC)")
@@ -390,7 +390,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "209cb3af-8a97-4aa1-992b-c6184d4673c8")
+		(uuid "cd6ef481-815f-4224-b79a-116fb8c2f566")
 		(property "Reference" "J1"
 			(at 236.22 43.18 0.0000)
 			(effects
@@ -437,20 +437,20 @@
 			)
 		)
 		(pin "1"
-			(uuid "feb6a954-efba-41f6-8ddc-ba07fd277ed9")
+			(uuid "2e5af192-e3fa-4056-a984-01135fe36057")
 		)
 		(pin "2"
-			(uuid "c8cc8a7b-2c47-48a0-9a76-8318a8aaa60d")
+			(uuid "24ad0e01-2532-4b15-b8ee-eb1af10e15cd")
 		)
 		(pin "3"
-			(uuid "52b5e2a7-58c8-403a-b5f9-cd317280c592")
+			(uuid "e32adf60-659f-43bf-b300-951b40c20cca")
 		)
 		(pin "4"
-			(uuid "da159060-3f9d-4d36-a4f7-0b3feb8a30f9")
+			(uuid "a188bbea-1ce4-482e-89c5-0a258f0af938")
 		)
 		(instances
 			(project "LVDS LCD (40-pin 0.5 mm FFC)"
-				(path "/e2f88535-e9d1-4ed1-90a1-def0ab21c2fb"
+				(path "/9d386065-1a67-41c2-b160-b7a101add63e"
 					(reference "J1")
 					(unit 1)
 				)
@@ -466,7 +466,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9f3f5364-d024-4ac8-8c98-c826038ac4dc")
+		(uuid "1b5722cb-cb8d-4ef9-b3a0-a3f22c681625")
 		(property "Reference" "R100"
 			(at 218.44 30.988 0.0000)
 			(effects
@@ -495,14 +495,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "be07a1e8-7bac-42c8-ae73-e6a9fcfcd990")
+			(uuid "f891a9d9-911e-4e86-b863-9df00392010e")
 		)
 		(pin "2"
-			(uuid "028d64d8-5da2-4fa8-9c34-2c909f318d65")
+			(uuid "50540964-9b4a-4d7a-b45c-b6bec248a676")
 		)
 		(instances
 			(project "LVDS LCD (40-pin 0.5 mm FFC)"
-				(path "/e2f88535-e9d1-4ed1-90a1-def0ab21c2fb"
+				(path "/9d386065-1a67-41c2-b160-b7a101add63e"
 					(reference "R100")
 					(unit 1)
 				)
@@ -518,7 +518,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "1f6fa522-d578-4f49-90c3-3b75aeade57c")
+		(uuid "25f7c50e-e90b-4d9b-9775-6d4383d82ca0")
 		(property "Reference" "R101"
 			(at 218.44 36.068 0.0000)
 			(effects
@@ -547,14 +547,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "d2a0d09c-8eec-4680-ac6c-15de683981a5")
+			(uuid "512ebef6-139e-411b-820c-a4f451453ea0")
 		)
 		(pin "2"
-			(uuid "742e4209-84b8-4e46-87bd-f3d85750e264")
+			(uuid "8e8eef15-3bef-4756-a54a-87cd7ed29706")
 		)
 		(instances
 			(project "LVDS LCD (40-pin 0.5 mm FFC)"
-				(path "/e2f88535-e9d1-4ed1-90a1-def0ab21c2fb"
+				(path "/9d386065-1a67-41c2-b160-b7a101add63e"
 					(reference "R101")
 					(unit 1)
 				)
@@ -570,7 +570,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "84428da7-8f66-4cb6-ae0c-45a800292e23")
+		(uuid "8fa278cd-f26a-4a56-a128-60b5bfd76722")
 		(property "Reference" "#PWR100"
 			(at 15.24 34.29 0.0000)
 			(effects
@@ -599,11 +599,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "aaddb51e-8439-47cb-9dc3-fdfbb68c7349")
+			(uuid "976b0f10-1a53-445b-bb5e-28475ea1a1e6")
 		)
 		(instances
 			(project "LVDS LCD (40-pin 0.5 mm FFC)"
-				(path "/e2f88535-e9d1-4ed1-90a1-def0ab21c2fb"
+				(path "/9d386065-1a67-41c2-b160-b7a101add63e"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -618,7 +618,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a0015b52-9c3d-40d6-9565-8dac3b56e4a4")
+		(uuid "91241439-1d8c-42b0-b0ec-9739f814d2c9")
 	)
 	(wire
 		(pts
@@ -628,7 +628,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d84c5270-faa7-4c89-b756-3790410dc4cd")
+		(uuid "3d6efd51-c49c-4dd9-b0b4-60d3ee5f67a9")
 	)
 	(wire
 		(pts
@@ -638,7 +638,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "bd30a7e4-eee9-4274-9726-f366987ab555")
+		(uuid "65e63f01-6301-4bb0-a336-4be85f19184f")
 	)
 	(wire
 		(pts
@@ -648,7 +648,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "06975b2d-ea37-44ca-865e-916f0612a85e")
+		(uuid "8b93337f-1d5a-466c-8bad-6e34d7d8c395")
 	)
 	(wire
 		(pts
@@ -658,7 +658,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e413e553-aba8-4c29-9a27-4bcb7ba4928e")
+		(uuid "f742e630-cb3e-4001-a42a-939a5b48e03c")
 	)
 	(wire
 		(pts
@@ -668,7 +668,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "dfca8b47-e6da-4a58-8547-153853f830ed")
+		(uuid "7ed58489-e410-49a7-9a34-87f2682d6a34")
 	)
 	(wire
 		(pts
@@ -678,7 +678,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ecc0fe49-eff3-4df4-9531-7fc9b6b80eb0")
+		(uuid "795dfb85-167d-4725-ab7f-cec8c27a3f98")
 	)
 	(label "LVDS_CLK-"
 		(at 214.63 33.02 0.0000)
@@ -688,7 +688,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "cab8548d-947d-4c90-823a-b9414aa51ba9")
+		(uuid "befe8827-f2fc-4792-9833-a26885deeb56")
 	)
 	(label "LVDS_DATA0-"
 		(at 214.63 38.1 0.0000)
@@ -698,7 +698,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "6bab6bff-c9a2-4cfb-b4e4-5bd2363e7bf7")
+		(uuid "5d009f63-843b-4c70-b6c5-a0dac5e0d31f")
 	)
 	(label "GND"
 		(at 223.52 33.02 0.0000)
@@ -708,7 +708,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "db99cc01-4ebb-460b-ade8-9bcb8dd616dc")
+		(uuid "5c20badf-b30b-4351-9082-23c93b22ad77")
 	)
 	(label "+3V3"
 		(at 223.52 35.56 0.0000)
@@ -718,7 +718,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "0eb27555-ef55-42e4-a16a-d6b1bfd5a0fd")
+		(uuid "88d15cd1-3294-46ee-a272-01cff3103428")
 	)
 	(label "+3V3"
 		(at 223.52 38.1 0.0000)
@@ -728,7 +728,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "e366cbc0-7c2b-487d-ac64-8b401c7b8315")
+		(uuid "06408279-57a4-4abd-ad21-107df9131bee")
 	)
 	(label "ZYNQ_LCD_EDID_SDA"
 		(at 223.52 40.64 0.0000)
@@ -738,7 +738,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "ee094edf-a91d-46c0-b616-959950f8d786")
+		(uuid "c8b14020-fd3f-4906-8374-21564dd88882")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -749,7 +749,7 @@
 			)
 			(justify left)
 		)
-		(uuid "6b012000-632b-4d62-8082-127ae41f6d01")
+		(uuid "7cdd6f9b-fe3c-4d22-9259-fee3e335768f")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
@@ -760,7 +760,7 @@
 			)
 			(justify left)
 		)
-		(uuid "eeb6dbf5-4805-4cab-ad9b-d8bf05ff392f")
+		(uuid "da5898bb-5392-42bf-8f9b-c0815c4b66bf")
 	)
 	(hierarchical_label "ZYNQ_LCD_EDID_SDA"
 		(shape input)
@@ -771,7 +771,7 @@
 			)
 			(justify left)
 		)
-		(uuid "ea897730-ff54-4da8-9307-6f40863026fe")
+		(uuid "82fc2f97-4ee1-4d61-95a4-6cd09ea8f1e1")
 	)
 	(sheet_instances
 		(path "/"

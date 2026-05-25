@@ -17,7 +17,6 @@ Auto-generated design-intent record. For every IC on the carrier, this document 
 - [U1 — TPD12S016PWR](#u1-tpd12s016pwr)
 - [T1 — HX5008NLT](#t1-hx5008nlt)
 - [SW1 — DS-04P](#sw1-ds-04p)
-- [SW2 — TS-1002S-06026C](#sw2-ts-1002s-06026c)
 
 ## U1 — TLV75733PDBVR
 
@@ -507,36 +506,3 @@ _Pins explicitly left bare:_ GND
 - Provide silkscreen labelling (1 / 2 / 3 / 4 and ON marking) so the boot mode is visible without instructions (rule) — _User-facing component requires legible orientation_
 - Route strap traces to the SoM J1 mate via short, direct paths - do not loop or share vias with other PS signals (guideline)
 - Boot straps are latched only at PS_POR_B release - the DIP switch is not hot-swappable. Document this in the user guide — _Zynq-7000 TRM Sec 6.3.6 timing_
-
-## SW2 — TS-1002S-06026C
-
-**Block:** boot_switches  
-**Datasheet:** [TS-1002S-06026C](https://datasheet.lcsc.com/lcsc/XUNPU-TS-1002S-06026C_C455112.pdf) (Datasheet 'CIRCUIT DIAGRAM' + typical GPIO push-button topology, TS-1002S mechanical p. 1 + typical GPIO debounce topology)  
-**Footprint:** Button_Switch_SMD:SW_SPST_Tactile_6x6mm  
-**Supply rail:** +3V3  
-**Min-circuit verified:** yes  
-
-6x6 mm SMD momentary tactile switch (active-low GPIO input)
-
-### External parts
-
-| From pin | To net | Part token | Qty | Why |
-|---|---|---|---|---|
-| SW | +3V3 | 10k_0402_1% | 1 | GPIO pull-up: button shorts SW to GND when pressed |
-| SW | GND | 100n_0402_X7R | 1 | Hardware debounce (RC ~ 1 ms with 10k pull-up) + ESD shunt at button face |
-
-### Pin overrides
-
-| Pin | Net |
-|---|---|
-| SW | ZYNQ_PS_SRST_N |
-
-### No external required
-
-_Pins explicitly left bare:_ GND
-
-### Layout notes
-
-- Place the 100 nF debounce cap within 5 mm of the switch so the RC network sees the bounce node directly (rule) — _Debounce cap must be local to be effective_
-- Place the switch on the carrier edge or top side for user access; provide silkscreen labelling (e.g. 'PS_RST') (guideline)
-- Route the GPIO trace from switch to host SoM as a short, low-impedance signal; avoid running it parallel to clocks (guideline) — _Tactile switches act as ESD entry points_
