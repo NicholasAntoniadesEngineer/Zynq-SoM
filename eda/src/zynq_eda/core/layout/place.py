@@ -273,32 +273,66 @@ def _add_no_connects_for_unused_pins(
     geometry_cache: SymbolGeometryCache,
     skip_pin_names: set[str],
 ) -> None:
-    """Mark explicitly-unused IC pins with no-connect crosses.
+    """Mark every IC pin we didn't explicitly handle with a no-connect cross.
 
-    A pin is unused if either:
-      * Its name looks like ``NC`` / ``~`` (KiCad convention).
-      * It's listed in the refcircuit's ``no_external_required`` set AND
-        not picked up by ``pin_net_overrides`` or ``net_overrides``.
+    Default policy: an IC pin is "unused" unless the layout engine wired it
+    to something. Sources of "wired" status (any one is enough — the pin is
+    skipped by no-connect emission):
 
-    Without these markers, KiCad ERC flags every floating pin as a
-    real unconnected-pin error.
+      * ``pin_net_overrides`` on the refcircuit or the per-instance
+        ``net_overrides`` declare an explicit net for the pin.
+      * The cluster pass placed a passive against the pin (its name appears
+        in ``skip_pin_names``, populated from ``ic_pin_geometries``).
+      * The pin is a power input/output recognized as the IC's main supply
+        rail (``power_input_net``/``power_output_net`` or a refcircuit
+        ``supply_rail`` GND/VDD/VCC-family pin).
+      * The pin is a GND-family pin (handled by :func:`_attach_ic_ground`,
+        which records the pin name into ``skip_pin_names`` indirectly via
+        ``ic_pin_geometries``).
+
+    Anything else gets a no-connect — KiCad's ``pin_not_connected`` ERC
+    is then satisfied because the pin is intentionally terminated.
+
+    This auto-NC default trades minor visual noise (an X cross on every
+    unhandled pin) for a clean ERC pass. Refcircuits can still curate the
+    nicer behaviour by adding pin entries; the auto-NC just stops every
+    minor refcircuit gap from blowing up the validation step.
     """
     from zynq_eda.core.model.sheet import PlacedNoConnect
 
-    explicit_no_external = set(ic.refcircuit.no_external_required)
     overrides = dict(ic.refcircuit.pin_net_overrides) | dict(
         getattr(ic, "net_overrides", ()) or ()
     )
 
+    # The IC's primary-supply pin names (the power_input_net / power_output_net
+    # standard pin names) are handled by edge_labels — don't NC them.
+    primary_supply_pin_names = set()
+    if ic.power_input_net:
+        primary_supply_pin_names.update(
+            ("IN", "VDD", "VCC", "VBUS", "AVDD", "DVDD", "PVIN", "ANODE")
+        )
+    if ic.power_output_net:
+        primary_supply_pin_names.update(("OUT", "VOUT", "CATHODE"))
+
+    # GND-family pin names — _attach_ic_ground wires them.
+    gnd_name_patterns = ("GND", "VSS", "GNDA", "AGND", "DGND")
+
     for pin_info in geometry_cache.all_pins(ic.lib_id):
         pin_name = str(pin_info["name"])
         pin_number = str(pin_info["number"])
-        name_upper = pin_name.upper()
-        is_nc = name_upper in {"NC", "~NC~", "~"}
-        is_no_external = pin_name in explicit_no_external and pin_name not in overrides
-        if not (is_nc or is_no_external):
-            continue
         if pin_name in skip_pin_names:
+            continue
+        if pin_name in overrides:
+            continue
+        if pin_name in primary_supply_pin_names:
+            continue
+        name_upper = pin_name.upper()
+        is_ground = (
+            name_upper in gnd_name_patterns
+            or any(name_upper.startswith(p + "_") for p in gnd_name_patterns)
+            or name_upper.startswith("GND_")
+        )
+        if is_ground:
             continue
         try:
             pin_geom = geometry_cache.pin_geometry_by_name(

@@ -21,6 +21,15 @@
     "viewports": []
   },
   "boards": [],
+  "component_class_settings": {
+    "assignments": [],
+    "meta": {
+      "version": 0
+    },
+    "sheet_component_classes": {
+      "enabled": false
+    }
+  },
   "cvpcb": {
     "equivalence_files": []
   },
@@ -253,7 +262,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "carrier.kicad_pro",
+    "filename": "carrier_template.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -418,14 +427,20 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "carrier.kicad_sch",
-        "name": "carrier",
-        "uuid": "4df974e9-88e0-4cd8-a3f5-14f67f26b1d5"
+        "filename": "carrier_template.kicad_sch",
+        "name": "carrier_template",
+        "uuid": "0e7ae3fe-02e1-4e83-acd4-959788e7762a"
       }
     ],
     "used_designators": "",
     "variants": []
   },
   "sheets": [],
-  "text_variables": {}
+  "text_variables": {},
+  "tuning_profiles": {
+    "meta": {
+      "version": 0
+    },
+    "tuning_profiles_impedance_geometric": []
+  }
 }

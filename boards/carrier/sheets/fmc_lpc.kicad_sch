@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "122dffa9-ed4e-4f88-bbd4-c381f7887d2a")
+	(uuid "35147f98-f95b-4bb0-9627-ee6d8a76689a")
 	(paper "A4")
 	(title_block
 		(title "FMC LPC Expansion (VITA 57.1 LPC connector)")
@@ -369,7 +369,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "4f7587d1-d3fd-43f4-b7fd-f2a57eb06773")
+		(uuid "04b46980-8b94-456c-aafe-8ab0d825c736")
 		(property "Reference" "J1"
 			(at 236.22 40.64 0.0000)
 			(effects
@@ -416,14 +416,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "2d9be83f-f413-4ac5-8555-e6746e7ea122")
+			(uuid "2ab8ac9f-775f-45a2-94dd-b919ecac7e2b")
 		)
 		(pin "2"
-			(uuid "3738cb60-2541-46f3-9607-39b09d3a4b27")
+			(uuid "b82bb96a-b903-4693-8ba8-a8f4bac6c9af")
 		)
 		(instances
 			(project "FMC LPC Expansion (VITA 57.1 LPC connector)"
-				(path "/122dffa9-ed4e-4f88-bbd4-c381f7887d2a"
+				(path "/35147f98-f95b-4bb0-9627-ee6d8a76689a"
 					(reference "J1")
 					(unit 1)
 				)
@@ -439,7 +439,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d73e83eb-56a0-4006-9d51-e991d8228414")
+		(uuid "514a0173-9f50-4314-98cc-9430d216f0ae")
 		(property "Reference" "C100"
 			(at 220.98 34.925 270)
 			(effects
@@ -468,14 +468,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "49ffcfad-10de-4f59-ac1f-aa9e1291e104")
+			(uuid "484ef9c2-ac1e-4a41-aea3-d0012dfc52c0")
 		)
 		(pin "2"
-			(uuid "2d85e57b-abce-4458-988e-10d96eac83dc")
+			(uuid "d8889ac0-9251-47d5-a300-01c5f0cafabc")
 		)
 		(instances
 			(project "FMC LPC Expansion (VITA 57.1 LPC connector)"
-				(path "/122dffa9-ed4e-4f88-bbd4-c381f7887d2a"
+				(path "/35147f98-f95b-4bb0-9627-ee6d8a76689a"
 					(reference "C100")
 					(unit 1)
 				)
@@ -491,7 +491,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c5a7411d-2739-4668-8687-841700f81ca4")
+		(uuid "ac275917-5738-49bc-9365-cb6c6c9968c9")
 		(property "Reference" "#PWR100"
 			(at 209.55 29.21 0.0000)
 			(effects
@@ -520,11 +520,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "03a31f90-5583-48ab-89e1-eaf46e8ae291")
+			(uuid "3c969ff2-9b02-4a54-91f9-99026bfd3a73")
 		)
 		(instances
 			(project "FMC LPC Expansion (VITA 57.1 LPC connector)"
-				(path "/122dffa9-ed4e-4f88-bbd4-c381f7887d2a"
+				(path "/35147f98-f95b-4bb0-9627-ee6d8a76689a"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -540,7 +540,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "03d0492e-aaf7-4c03-819a-533c3dcfbb7e")
+		(uuid "cbd5d8d7-9def-46e9-bdd5-fac3e79ca817")
 		(property "Reference" "C101"
 			(at 205.74 34.925 270)
 			(effects
@@ -569,14 +569,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "4732a0e2-ad87-4af2-8dfa-932785ae25a9")
+			(uuid "12a14ae6-d09b-4516-8156-497aa88d2b5a")
 		)
 		(pin "2"
-			(uuid "3351fa70-ca93-4e36-96cd-6e670824da84")
+			(uuid "9d8c6400-e784-46a1-8140-0d97599390ad")
 		)
 		(instances
 			(project "FMC LPC Expansion (VITA 57.1 LPC connector)"
-				(path "/122dffa9-ed4e-4f88-bbd4-c381f7887d2a"
+				(path "/35147f98-f95b-4bb0-9627-ee6d8a76689a"
 					(reference "C101")
 					(unit 1)
 				)
@@ -592,7 +592,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "7dfcf497-1fa3-496a-b7fd-e53af08dfbb6")
+		(uuid "5b25d031-a7be-4bcf-86d3-8946b46e84e7")
 		(property "Reference" "#PWR101"
 			(at 194.31 29.21 0.0000)
 			(effects
@@ -621,11 +621,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "aee5c778-df30-4fc4-957b-948c6c7c4e5a")
+			(uuid "d32197b8-9e6b-4e96-9ced-c2a300344694")
 		)
 		(instances
 			(project "FMC LPC Expansion (VITA 57.1 LPC connector)"
-				(path "/122dffa9-ed4e-4f88-bbd4-c381f7887d2a"
+				(path "/35147f98-f95b-4bb0-9627-ee6d8a76689a"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -641,7 +641,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "dcbb7cd0-d710-418d-86fc-6925089644eb")
+		(uuid "61c532ff-8c16-4498-ac27-1bbdd9e630f4")
 		(property "Reference" "#PWR102"
 			(at 15.24 34.29 0.0000)
 			(effects
@@ -670,11 +670,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "6221d4c7-9d42-4e2a-8ba6-5d3841c38978")
+			(uuid "da5f76ef-6d1c-4690-a031-a39195b88d0a")
 		)
 		(instances
 			(project "FMC LPC Expansion (VITA 57.1 LPC connector)"
-				(path "/122dffa9-ed4e-4f88-bbd4-c381f7887d2a"
+				(path "/35147f98-f95b-4bb0-9627-ee6d8a76689a"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -689,7 +689,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9f194466-da17-4778-8df7-d9341d275262")
+		(uuid "15f8e432-8ec9-413d-aa12-753143bfc297")
 	)
 	(wire
 		(pts
@@ -699,7 +699,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0a640e92-a18e-44da-aeca-c368f6e5e0d0")
+		(uuid "7c4b3218-6e88-4481-ac34-3fe636ddf035")
 	)
 	(wire
 		(pts
@@ -709,7 +709,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4ff3bcb9-b36c-4ee6-b035-f1910fbabe36")
+		(uuid "ab51e410-6d07-4220-b4a7-83280038c0a7")
 	)
 	(wire
 		(pts
@@ -719,7 +719,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "39b96a5e-7d9c-45df-bcf8-f1d492df692b")
+		(uuid "7b7cc7e0-3e23-4589-b042-a98400db6833")
 	)
 	(wire
 		(pts
@@ -729,7 +729,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "41985db1-5f63-4232-a299-2da511a0eef8")
+		(uuid "aa72e0df-579a-4920-a846-3913b6cbf352")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -740,7 +740,7 @@
 			)
 			(justify left)
 		)
-		(uuid "021ed4bf-11fc-4a8a-a50b-3c227cbe404b")
+		(uuid "3269968e-2e44-40bd-8406-5c10ce4f0fc0")
 	)
 	(sheet_instances
 		(path "/"
