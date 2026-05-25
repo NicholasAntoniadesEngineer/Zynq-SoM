@@ -5,6 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from zynq_eda.core.model.block import Block
+from zynq_eda.projects.carrier.blocks.boot_switches import build_boot_switches
+from zynq_eda.projects.carrier.blocks.jtag_swd import build_jtag_swd
+from zynq_eda.projects.carrier.blocks.microsd import build_microsd
 from zynq_eda.projects.carrier.blocks.power import build_power
 from zynq_eda.projects.carrier.blocks.usb_pd import build_usb_pd
 
@@ -32,8 +35,11 @@ SHARED_SYMBOL_LIBRARIES: tuple[Path, ...] = (
 
 
 _BLOCK_FACTORIES = {
-    "power":  build_power,
-    "usb_pd": build_usb_pd,
+    "power":         build_power,
+    "usb_pd":        build_usb_pd,
+    "microsd":       build_microsd,
+    "boot_switches": build_boot_switches,
+    "jtag_swd":      build_jtag_swd,
     # Additional blocks land in Stage 6 as they get implemented.
 }
 

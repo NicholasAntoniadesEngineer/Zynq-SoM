@@ -2,13 +2,13 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "0aa2a6ca-15f5-452c-9f8e-01deb6be6b27")
+	(uuid "778b73a9-dd54-4ef5-b563-575e52e7dd47")
 	(paper "A4")
 	(title_block
-		(title "Boot Mode + Reset Switches")
+		(title "Boot Mode Straps + PS Reset (DIP-4 + Tactile)")
 	)
 	(lib_symbols
-		(symbol "carrier:SW_DIP_4"
+		(symbol "zynq_eda:SW_DIP_4"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -115,260 +115,6 @@
 						)
 					)
 					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "power:GND"
-			(power global)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "#PWR"
-				(at 0 -6.35 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "GND"
-				(at 0 -3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "global power"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "GND_0_1"
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "GND_1_1"
-				(pin power_in line
-					(at 0 0 270)
-					(length 0)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "power:+3V3"
-			(power global)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "#PWR"
-				(at 0 -3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "+3V3"
-				(at 0 3.556 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"+3V3\""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "global power"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "+3V3_0_1"
-				(polyline
-					(pts
-						(xy -0.762 1.27) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 2.54) (xy 0.762 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "+3V3_1_1"
-				(pin power_in line
-					(at 0 0 90)
-					(length 0)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -519,7 +265,146 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "carrier:SW_TACT"
+		(symbol "power:+3V3"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "zynq_eda:SW_TACT"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -755,19 +640,134 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "power:GND"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "GND"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "GND_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "GND_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(symbol
-		(lib_id "carrier:SW_DIP_4")
-		(at 101.6 101.6 0)
+		(lib_id "zynq_eda:SW_DIP_4")
+		(at 129.54 59.69 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "5ed0e277-8670-4320-8f2d-e479d5932384")
-		(property "Reference" "SWBOOT1"
-			(at 101.6 111.76 0.0000)
+		(uuid "57e29a32-ba8e-4529-91d5-46bf4633fd97")
+		(property "Reference" "SW1"
+			(at 129.54 69.85 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -776,7 +776,7 @@
 			)
 		)
 		(property "Value" "DS-04P"
-			(at 101.6 93.98 0.0000)
+			(at 129.54 52.07 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -785,7 +785,7 @@
 			)
 		)
 		(property "Footprint" "Switch_SMD:DIP_Switch_x4"
-			(at 101.6 101.6 0.0000)
+			(at 129.54 59.69 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -793,91 +793,92 @@
 				(hide yes)
 			)
 		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 104.14 106.6799 0)
+		(property "LCSC" "C18198092"
+			(at 132.08 64.7699 0)
 			(effects
-				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
 		)
+		(property "Datasheet" "https://datasheet.lcsc.com/lcsc/Hanbo-Electronic-DS-04P_C18198092.pdf"
+			(at 129.54 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
-			(uuid "82c4a815-dc55-48fc-9419-ea0772d34040")
+			(uuid "d1115e14-8173-40fb-9b0f-c70816da52dd")
 		)
 		(pin "2"
-			(uuid "cc909262-187e-4e45-bee8-06686ff61ea4")
+			(uuid "a16f3eac-a775-4ab0-8838-7399caaa7a1b")
 		)
 		(pin "3"
-			(uuid "f08134ea-5ab6-4ee0-9f80-4c2158ca8c1f")
+			(uuid "e881fc83-b2ab-442e-a245-2808e9851ef2")
 		)
 		(pin "4"
-			(uuid "059db5d4-39cf-4e30-b418-76b67bc47555")
+			(uuid "58a52474-90be-43fb-aa01-483e37394a45")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "SWBOOT1")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "SW1")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 76.2 152.4 0)
+		(lib_id "Device:R")
+		(at 111.76 54.61 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "90140933-4308-48e7-874e-35b66ecdf470")
-		(property "Reference" "#PWR1001"
-			(at 76.2 146.05 0.0000)
+		(uuid "d4f64b18-fdde-409f-bcd6-63f6264a4b56")
+		(property "Reference" "R100"
+			(at 111.76 52.578 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
-				(hide yes)
 			)
 		)
-		(property "Value" "GND"
-			(at 76.2 157.48 0)
+		(property "Value" "10k"
+			(at 111.76 54.61 0.0000)
 			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 76.2 152.4 0.0000)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 78.74 157.4799 0)
-			(effects
-				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 109.982 54.61 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "1"
-			(uuid "abfed004-41e3-4024-8360-22fc7d6c5da6")
+			(uuid "6379cdd7-48e0-426d-a12a-856668d558f7")
+		)
+		(pin "2"
+			(uuid "fdaa1216-be51-497e-a7d1-4a67856a11e8")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "#PWR1001")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "R100")
 					(unit 1)
 				)
 			)
@@ -885,16 +886,16 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 152.4 76.2 0)
+		(at 102.87 54.61 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "f36f8473-3e14-410b-944f-e98d07e4564a")
-		(property "Reference" "#PWR1002"
-			(at 152.4 72.39 0.0000)
+		(uuid "8fe208f0-e251-4225-ae86-e3aee68a98d8")
+		(property "Reference" "#PWR100"
+			(at 102.87 50.8 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -904,7 +905,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 152.4 71.12 0)
+			(at 102.87 49.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -912,31 +913,21 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 152.4 76.2 0.0000)
+			(at 102.87 54.61 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
-			)
-		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 154.94 81.2799 0)
-			(effects
-				(hide yes)
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
 			)
 		)
 		(pin "1"
-			(uuid "4f0c1d7b-465d-4c27-aeaf-040e09e6ffa7")
+			(uuid "a06e30f9-8be9-4c22-9c57-f47dba685076")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "#PWR1002")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "#PWR100")
 					(unit 1)
 				)
 			)
@@ -944,16 +935,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 139.7 88.9 0)
+		(at 111.76 57.15 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "625d0188-645a-429b-a684-d231995be689")
-		(property "Reference" "CBSWBOOT12"
-			(at 141.732 88.9 90)
+		(uuid "fd86323c-34be-418b-a038-30330a757eba")
+		(property "Reference" "R101"
+			(at 111.76 55.118 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -962,7 +953,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 139.7 88.9 90)
+			(at 111.76 57.15 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -971,7 +962,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 137.922 88.9 90)
+			(at 109.982 57.15 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -979,26 +970,65 @@
 				(hide yes)
 			)
 		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 142.24 93.9799 0)
+		(pin "1"
+			(uuid "c6d0c0af-d928-4657-87d7-545973b7b11a")
+		)
+		(pin "2"
+			(uuid "d6d535a8-7870-4baf-a3cf-e02c6982b1ba")
+		)
+		(instances
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "R101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 102.87 57.15 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "d3ebcebe-c076-485c-91b3-4527294fdd51")
+		(property "Reference" "#PWR101"
+			(at 102.87 53.34 0.0000)
 			(effects
-				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 102.87 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 102.87 57.15 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "1"
-			(uuid "f12fa0d8-a562-4dff-af7a-2bc3f5708555")
-		)
-		(pin "2"
-			(uuid "8a163b83-56ab-4448-aa71-ba49e336ba41")
+			(uuid "4e285820-84cd-4bae-9dd1-842353e1864f")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "CBSWBOOT12")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "#PWR101")
 					(unit 1)
 				)
 			)
@@ -1006,16 +1036,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 139.7 99.06 0)
+		(at 111.76 59.69 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6c62eb5b-158a-4251-8c38-d566ae35cce9")
-		(property "Reference" "CBSWBOOT14"
-			(at 141.732 99.06 90)
+		(uuid "a6477017-5d17-4663-b930-364947411beb")
+		(property "Reference" "R102"
+			(at 111.76 57.658 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1024,7 +1054,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 139.7 99.06 90)
+			(at 111.76 59.69 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1033,7 +1063,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 137.922 99.06 90)
+			(at 109.982 59.69 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1041,26 +1071,65 @@
 				(hide yes)
 			)
 		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 142.24 104.1399 0)
+		(pin "1"
+			(uuid "42a37e4c-5c1e-42ed-853c-370ac35562bc")
+		)
+		(pin "2"
+			(uuid "23bcc668-e0e7-4344-95ec-64e3a71ebdf2")
+		)
+		(instances
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "R102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 102.87 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "df2af16e-69bf-4ef3-a030-9618d6997c51")
+		(property "Reference" "#PWR102"
+			(at 102.87 55.88 0.0000)
 			(effects
-				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 102.87 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 102.87 59.69 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "1"
-			(uuid "f27852c8-eb4d-41a2-99f9-f64c9213ea45")
-		)
-		(pin "2"
-			(uuid "8403673e-3202-4e64-aa9a-21973465c6a2")
+			(uuid "31f40e82-9e81-45da-8de3-2b2ba83b549f")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "CBSWBOOT14")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "#PWR102")
 					(unit 1)
 				)
 			)
@@ -1068,16 +1137,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 139.7 109.22 0)
+		(at 111.76 62.23 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c099a82b-c186-4d5b-8c5c-4322dba2de4e")
-		(property "Reference" "CBSWBOOT16"
-			(at 141.732 109.22 90)
+		(uuid "20bac97a-5612-4612-85c2-82f1c7f55115")
+		(property "Reference" "R103"
+			(at 111.76 60.198 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1086,7 +1155,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 139.7 109.22 90)
+			(at 111.76 62.23 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1095,113 +1164,90 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 137.922 109.22 90)
+			(at 109.982 62.23 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
-			)
-		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 142.24 114.2999 0)
-			(effects
-				(hide yes)
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
 			)
 		)
 		(pin "1"
-			(uuid "b65e3111-4d98-47cd-852c-0ab24573cb40")
+			(uuid "8d01f10c-155e-4240-9b91-d79d7ac53a4d")
 		)
 		(pin "2"
-			(uuid "51d89bee-a5ad-4586-a8c7-f343bd47e89b")
+			(uuid "31013368-44a9-4af6-9ee7-7c18513c07f9")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "CBSWBOOT16")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "R103")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 139.7 119.38 0)
+		(lib_id "power:+3V3")
+		(at 102.87 62.23 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "cb747225-a554-4ecf-8dbd-6ce8d6f9ac88")
-		(property "Reference" "CBSWBOOT18"
-			(at 141.732 119.38 90)
+		(uuid "4a1f2435-6495-4787-90ff-47f793f6454f")
+		(property "Reference" "#PWR103"
+			(at 102.87 58.42 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
-		(property "Value" "10k"
-			(at 139.7 119.38 90)
+		(property "Value" "+3V3"
+			(at 102.87 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 137.922 119.38 90)
+		(property "Footprint" ""
+			(at 102.87 62.23 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
-			)
-		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 142.24 124.4599 0)
-			(effects
-				(hide yes)
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
 			)
 		)
 		(pin "1"
-			(uuid "68f13976-e4ab-4d61-987b-114c49393f3d")
-		)
-		(pin "2"
-			(uuid "7a1c7d75-5e85-4c33-a953-3dc6d2fbb9e4")
+			(uuid "c6161b01-2982-447c-bdcf-e97345a68b07")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "CBSWBOOT18")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "#PWR103")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "carrier:SW_TACT")
-		(at 190.5 101.6 0)
+		(lib_id "zynq_eda:SW_TACT")
+		(at 129.54 105.41 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d164a617-3040-4acc-967e-1d03efe54c8d")
-		(property "Reference" "SWRST1"
-			(at 190.5 106.68 0.0000)
+		(uuid "7c2d7e23-3f97-4fda-981c-3115e3ba25f6")
+		(property "Reference" "SW2"
+			(at 129.54 110.49 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1210,7 +1256,7 @@
 			)
 		)
 		(property "Value" "TS-1002S-06026C"
-			(at 190.5 96.52 0.0000)
+			(at 129.54 100.33 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1219,7 +1265,7 @@
 			)
 		)
 		(property "Footprint" "Button_Switch_SMD:SW_SPST_Tactile_6x6mm"
-			(at 190.5 101.6 0.0000)
+			(at 129.54 105.41 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1227,85 +1273,86 @@
 				(hide yes)
 			)
 		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 193.04 106.6799 0)
+		(property "LCSC" "C455112"
+			(at 132.08 110.4899 0)
 			(effects
-				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
 		)
+		(property "Datasheet" "https://datasheet.lcsc.com/lcsc/XUNPU-TS-1002S-06026C_C455112.pdf"
+			(at 129.54 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
-			(uuid "1ba0887f-641e-4c6d-a7f8-75af87799f91")
+			(uuid "4dda6de1-c3ae-459f-9ce2-26846af2fd72")
 		)
 		(pin "2"
-			(uuid "d7208e93-f10a-4f93-aa2b-802f3b7e2ba1")
+			(uuid "20b4a2e5-379e-4978-9cce-944af0975040")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "SWRST1")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "SW2")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 165.1 152.4 0)
+		(lib_id "Device:R")
+		(at 111.76 105.41 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "cecc0b90-55f3-435c-9f9b-66603a04ca91")
-		(property "Reference" "#PWR1058"
-			(at 165.1 146.05 0.0000)
+		(uuid "070f70bf-5dc5-4a3d-b0e1-7813f6247c8e")
+		(property "Reference" "R104"
+			(at 111.76 103.378 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
-				(hide yes)
 			)
 		)
-		(property "Value" "GND"
-			(at 165.1 157.48 0)
+		(property "Value" "10k"
+			(at 111.76 105.41 0.0000)
 			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 165.1 152.4 0.0000)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 167.64 157.4799 0)
-			(effects
-				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 109.982 105.41 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "1"
-			(uuid "74ec4841-dd89-4c28-986b-f669c9a6ca26")
+			(uuid "6e49e384-502d-4d17-974d-8c945506804e")
+		)
+		(pin "2"
+			(uuid "4179ca64-eb92-4382-85fa-a897bdd19510")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "#PWR1058")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "R104")
 					(unit 1)
 				)
 			)
@@ -1313,16 +1360,16 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 241.3 76.2 0)
+		(at 102.87 105.41 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d565f8c4-a062-403a-9133-68ec27c978db")
-		(property "Reference" "#PWR1059"
-			(at 241.3 72.39 0.0000)
+		(uuid "7358fb4c-b609-4cb8-b2fe-500c9795dc14")
+		(property "Reference" "#PWR104"
+			(at 102.87 101.6 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1332,7 +1379,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 241.3 71.12 0)
+			(at 102.87 100.33 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1340,93 +1387,21 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 241.3 76.2 0.0000)
+			(at 102.87 105.41 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
-			)
-		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 243.84 81.2799 0)
-			(effects
-				(hide yes)
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
 			)
 		)
 		(pin "1"
-			(uuid "b492222c-fd77-452b-a196-493235c8ae7e")
+			(uuid "07db4206-aa35-4df9-935f-4ea237049f7c")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "#PWR1059")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 228.6 88.9 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced no)
-		(uuid "3b516cb7-bdde-4fd2-a7f3-e03c50d9faf1")
-		(property "Reference" "CRSWRST12"
-			(at 230.632 88.9 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 228.6 88.9 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 226.822 88.9 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 231.14 93.9799 0)
-			(effects
-				(hide yes)
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "1"
-			(uuid "e1de2a78-2a83-4c35-86b4-dd36f029be31")
-		)
-		(pin "2"
-			(uuid "d21ac0c8-2940-4635-a992-76f4fd8da61d")
-		)
-		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "CRSWRST12")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "#PWR104")
 					(unit 1)
 				)
 			)
@@ -1434,16 +1409,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 228.6 99.06 0)
+		(at 106.68 105.41 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9c673adb-039f-41ce-beb8-b2f9c0eef231")
-		(property "Reference" "CRSWRST14"
-			(at 229.235 101.6 0.0000)
+		(uuid "0433b9b0-54a9-428b-a680-3035d6bceb26")
+		(property "Reference" "C100"
+			(at 109.22 104.775 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1452,7 +1427,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 229.235 96.52 0.0000)
+			(at 104.14 104.775 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1461,7 +1436,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 229.5652 95.25 0.0000)
+			(at 107.6452 101.6 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1469,26 +1444,114 @@
 				(hide yes)
 			)
 		)
-		(property "hierarchy_path" "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-			(at 231.14 104.1399 0)
+		(pin "1"
+			(uuid "8deb87c2-835e-442a-802c-a3dae58988f5")
+		)
+		(pin "2"
+			(uuid "1fa962cd-e710-4a7f-837c-2e70a79315ae")
+		)
+		(instances
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "C100")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 97.79 105.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "daf8b060-a304-4749-83e8-05f5561cecd8")
+		(property "Reference" "#PWR105"
+			(at 97.79 99.06 0.0000)
 			(effects
-				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 97.79 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 97.79 105.41 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "1"
-			(uuid "f878aa91-03d2-464e-af13-874ffe3a06e7")
-		)
-		(pin "2"
-			(uuid "17adf533-22d3-46b4-a487-676678f21b16")
+			(uuid "016ca91d-ec50-4793-8ef3-e72297ab0fd8")
 		)
 		(instances
-			(project "Boot Mode + Reset Switches"
-				(path "/0e7ae3fe-02e1-4e83-acd4-959788e7762a/ce299670-61bf-49a0-a225-03f3ac638ab1"
-					(reference "CRSWRST14")
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "#PWR105")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 15.24 148.59 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "9dbe9339-efae-4be2-b1fa-44abad0292cf")
+		(property "Reference" "#PWR106"
+			(at 15.24 142.24 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 15.24 153.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 15.24 148.59 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4ee71654-1ba6-4b48-bfe2-f196cd370b43")
+		)
+		(instances
+			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
+				(path "/778b73a9-dd54-4ef5-b563-575e52e7dd47"
+					(reference "#PWR106")
 					(unit 1)
 				)
 			)
@@ -1496,325 +1559,249 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 88.9) (xy 152.4 88.9)
+			(xy 121.92 54.61) (xy 115.57 54.61)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "726bdd51-0f25-44c9-8ec1-6b07554e9d41")
+		(uuid "86af3998-1f8c-4974-8e54-9b20daf27c6a")
 	)
 	(wire
 		(pts
-			(xy 152.4 88.9) (xy 152.4 76.2)
+			(xy 102.87 54.61) (xy 107.95 54.61)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "08ebad67-98ca-4fd4-bba3-2885d12d7e68")
+		(uuid "df0996c8-715d-4ba4-a0e7-5ea81d8e6067")
 	)
 	(wire
 		(pts
-			(xy 95.25 106.68) (xy 139.7 106.68)
+			(xy 121.92 57.15) (xy 115.57 57.15)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9bdd7052-1b5b-4cfc-87a2-a05b66cf9744")
+		(uuid "70fcecbe-e72e-439e-83ba-37f868359d09")
 	)
 	(wire
 		(pts
-			(xy 139.7 106.68) (xy 139.7 88.9)
+			(xy 102.87 57.15) (xy 107.95 57.15)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "1d211672-1a47-45eb-beef-38a436225ff8")
+		(uuid "b539a87d-d981-4fca-9488-6fdb4f812052")
 	)
 	(wire
 		(pts
-			(xy 139.7 99.06) (xy 152.4 99.06)
+			(xy 121.92 59.69) (xy 115.57 59.69)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "602b4505-666e-40f7-9ed7-da1036c1b8f3")
+		(uuid "489f09d2-ab40-4465-8e0b-8b07d6a83ad9")
 	)
 	(wire
 		(pts
-			(xy 152.4 99.06) (xy 152.4 76.2)
+			(xy 102.87 59.69) (xy 107.95 59.69)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "83707fc8-8f88-4e70-916f-66d57f8f8bd6")
+		(uuid "acb287c3-4814-4419-8f0f-9ec47ecb37e0")
 	)
 	(wire
 		(pts
-			(xy 95.25 104.14) (xy 139.7 104.14)
+			(xy 121.92 62.23) (xy 115.57 62.23)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "1e59cd96-c318-41ee-8b78-cac25bda8fe2")
+		(uuid "45420879-f811-4090-b23b-301cca219f7d")
 	)
 	(wire
 		(pts
-			(xy 139.7 104.14) (xy 139.7 99.06)
+			(xy 102.87 62.23) (xy 107.95 62.23)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9335e4f7-0bcd-4fe7-a3f8-63dbaa19c04a")
+		(uuid "24c3e5d8-211b-4e95-b46d-c2b86a4bad33")
 	)
 	(wire
 		(pts
-			(xy 139.7 109.22) (xy 152.4 109.22)
+			(xy 121.92 105.41) (xy 115.57 105.41)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "aa18dadd-2d54-4440-9262-a8a38839d542")
+		(uuid "795c8497-e9cb-4661-a8b7-aca1bd921281")
 	)
 	(wire
 		(pts
-			(xy 152.4 109.22) (xy 152.4 76.2)
+			(xy 102.87 105.41) (xy 107.95 105.41)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "c5058715-79a1-436a-aa28-b682e03b8766")
+		(uuid "d1f11b17-e9eb-45e6-87d5-d204a220529d")
 	)
 	(wire
 		(pts
-			(xy 95.25 101.6) (xy 139.7 101.6)
+			(xy 121.92 105.41) (xy 110.49 105.41)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "123d2347-9733-40c9-8f4e-e10888ec88d9")
+		(uuid "9aef118f-af3c-48b7-87f1-45b20c720576")
 	)
 	(wire
 		(pts
-			(xy 139.7 101.6) (xy 139.7 109.22)
+			(xy 102.87 105.41) (xy 97.79 105.41)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "b6df3d9e-efd4-426e-bb89-20ccffb02a44")
+		(uuid "526b24b1-2c0d-4e92-9b70-037adbbbc9d4")
 	)
 	(wire
 		(pts
-			(xy 139.7 119.38) (xy 152.4 119.38)
+			(xy 121.92 54.61) (xy 15.24 54.61)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "e5b040d2-4403-4615-a39b-33cfb567a81b")
+		(uuid "ce7351d9-5c3f-45e3-a28c-d57af5115756")
 	)
 	(wire
 		(pts
-			(xy 152.4 119.38) (xy 152.4 76.2)
+			(xy 121.92 57.15) (xy 15.24 57.15)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "3816dd97-e35b-4c8f-8911-634ee99d245c")
+		(uuid "1ee16053-5e4a-4cd2-8a13-9a6acb670973")
 	)
 	(wire
 		(pts
-			(xy 95.25 99.06) (xy 139.7 99.06)
+			(xy 121.92 59.69) (xy 15.24 59.69)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "0ba8f35d-263f-4b02-a5bd-3204705de341")
+		(uuid "fc1f0d3f-1809-4b39-bf21-70687d1b447b")
 	)
 	(wire
 		(pts
-			(xy 139.7 99.06) (xy 139.7 119.38)
+			(xy 121.92 62.23) (xy 15.24 62.23)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "a9f9e91c-1a60-4289-ad5e-aba53a8fe08c")
+		(uuid "548b0bc6-a418-471c-bce1-d538ee8e6725")
 	)
 	(wire
 		(pts
-			(xy 274.32 106.68) (xy 287.02 106.68)
+			(xy 121.92 105.41) (xy 15.24 105.41)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "d53d1947-d53b-41fc-83b7-103c4432698e")
+		(uuid "3c6e0a31-0481-4a54-b006-e0c75b63624e")
 	)
 	(wire
 		(pts
-			(xy 95.25 106.68) (xy 274.32 106.68)
+			(xy 15.24 143.51) (xy 15.24 148.59)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "185e3407-278e-4605-9ead-67d998dd582d")
+		(uuid "b6bb278e-c366-4de5-99f5-90f28e39cdc4")
 	)
-	(wire
-		(pts
-			(xy 228.6 88.9) (xy 241.3 88.9)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "711fd386-66cd-4c86-94e1-67bf28844ab5")
-	)
-	(wire
-		(pts
-			(xy 241.3 88.9) (xy 241.3 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "af353bf8-1649-4aba-96f4-2ff94b78a02d")
-	)
-	(wire
-		(pts
-			(xy 184.15 101.6) (xy 228.6 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "60002a28-783e-4317-93c5-26626cc6dd45")
-	)
-	(wire
-		(pts
-			(xy 228.6 101.6) (xy 228.6 88.9)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1886b926-50a2-4628-a8ac-53728e6150eb")
-	)
-	(wire
-		(pts
-			(xy 228.6 99.06) (xy 165.1 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "30e3c51e-0882-42f7-8046-a3d6ab48de60")
-	)
-	(wire
-		(pts
-			(xy 165.1 99.06) (xy 165.1 152.4)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0dd6f171-3420-4c3a-bfa9-3446cee01e9d")
-	)
-	(wire
-		(pts
-			(xy 184.15 101.6) (xy 228.6 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f289a75d-3dd0-4158-b8ee-b25285340b72")
-	)
-	(wire
-		(pts
-			(xy 228.6 101.6) (xy 228.6 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "cca765a7-0bf1-47d1-bbe7-b56ffa364f4b")
-	)
-	(wire
-		(pts
-			(xy 274.32 101.6) (xy 287.02 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b8cdc0ed-e88f-4684-87d1-af6fca33e33b")
-	)
-	(wire
-		(pts
-			(xy 184.15 101.6) (xy 274.32 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4bef4869-2ccd-4faa-a7b9-c8f2ee89b51f")
-	)
-	(label "+3V3"
-		(at 152.4 76.2 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "db411d60-37bb-4585-8ebc-37c7bce652db")
-	)
-	(label "+3V3"
-		(at 241.3 76.2 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "a1109b88-bb41-4717-9ff5-e6a4e0aba260")
-	)
-	(hierarchical_label "STM32_BOOT0"
+	(hierarchical_label "ZYNQ_BOOT_MODE_0"
 		(shape input)
-		(at 287.02 106.68 0.0000)
+		(at 15.24 54.61 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "1c2b9965-ac84-44a1-a309-3071b9933e29")
+		(uuid "0edca634-4b17-4ac7-b601-12933884e3d9")
 	)
-	(hierarchical_label "STM32_NRST"
+	(hierarchical_label "ZYNQ_BOOT_MODE_1"
 		(shape input)
-		(at 287.02 101.6 0.0000)
+		(at 15.24 57.15 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "b9d284b6-488c-41d0-a75b-b2b22bd39a73")
+		(uuid "ef836588-988b-4621-99b5-c2872113d1b1")
+	)
+	(hierarchical_label "ZYNQ_BOOT_MODE_2"
+		(shape input)
+		(at 15.24 59.69 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b5753f4a-b1e4-4e13-86c3-6f00f1629fb1")
+	)
+	(hierarchical_label "ZYNQ_BOOT_MODE_3"
+		(shape input)
+		(at 15.24 62.23 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "ae426325-d93f-4456-82a8-5044b93e6271")
+	)
+	(hierarchical_label "ZYNQ_PS_SRST_N"
+		(shape input)
+		(at 15.24 105.41 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "7b193d49-730a-479d-95c7-65bb09d7b96e")
+	)
+	(hierarchical_label "GND"
+		(shape input)
+		(at 15.24 143.51 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "4e498942-8d9b-442d-8a8a-d0b819a95acb")
 	)
 	(sheet_instances
 		(path "/"
