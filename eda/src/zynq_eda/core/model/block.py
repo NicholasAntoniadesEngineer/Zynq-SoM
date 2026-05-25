@@ -44,6 +44,50 @@ PaperSize = Literal["A4", "A3", "A2", "A1", "A0"]
 
 
 @dataclass(frozen=True)
+class ConnectorInstance:
+    """One connector placement on a block.
+
+    Connectors differ from ICs in that they sit on a sheet edge (USB-C on
+    the right, FMC on the left, etc.) and carry an explicit per-pin net
+    map supplied by the project — not derived from a refcircuit's
+    ``external_parts``.
+
+    Attributes:
+        reference: Designator (``J1``). Must be unique within the block.
+        refcircuit: The connector's datasheet-derived
+            :class:`ReferenceCircuit` (for BOM + datasheet hyperlinking).
+        lib_id: KiCad ``Library:SymbolName`` ID for the connector symbol.
+        edge: Which sheet edge to place the connector on
+            (typically ``LEFT`` or ``RIGHT``).
+        pin_to_net: Tuple of ``(pin_id, net_name)`` pairs. ``pin_id`` is
+            either a KiCad pin number (``"1"``) or a pin name
+            (``"VBUS"``) — both are tried in order.
+        rotation: Symbol rotation (0/90/180/270 degrees).
+    """
+
+    reference: str
+    refcircuit: "ReferenceCircuit"
+    lib_id: str
+    edge: "SheetEdge"
+    pin_to_net: tuple[tuple[str, str], ...] = ()
+    rotation: float = 0.0
+
+    def __post_init__(self) -> None:
+        if not self.reference:
+            raise ValueError("ConnectorInstance.reference must be non-empty")
+        if not self.lib_id or ":" not in self.lib_id:
+            raise ValueError(
+                "ConnectorInstance.lib_id must be 'Library:SymbolName', got "
+                f"{self.lib_id!r}"
+            )
+        if self.rotation not in (0.0, 90.0, 180.0, 270.0):
+            raise ValueError(
+                "ConnectorInstance.rotation must be 0/90/180/270, got "
+                f"{self.rotation}"
+            )
+
+
+@dataclass(frozen=True)
 class IcInstance:
     """One IC placement on a block.
 
@@ -147,6 +191,7 @@ class Block:
     title: str
     paper_size: PaperSize = "A4"
     ics: tuple[IcInstance, ...] = field(default_factory=tuple)
+    connectors: tuple[ConnectorInstance, ...] = field(default_factory=tuple)
     external_nets: tuple[ExternalNet, ...] = field(default_factory=tuple)
     description: str = ""
 
@@ -167,6 +212,13 @@ class Block:
                     f"Block {self.name!r}: duplicate IC reference {ic.reference!r}"
                 )
             seen_refs.add(ic.reference)
+        for connector in self.connectors:
+            if connector.reference in seen_refs:
+                raise ValueError(
+                    f"Block {self.name!r}: duplicate connector reference "
+                    f"{connector.reference!r}"
+                )
+            seen_refs.add(connector.reference)
 
         seen_net_names: set[str] = set()
         for net in self.external_nets:

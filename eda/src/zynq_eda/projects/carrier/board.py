@@ -6,6 +6,7 @@ from pathlib import Path
 
 from zynq_eda.core.model.block import Block
 from zynq_eda.projects.carrier.blocks.power import build_power
+from zynq_eda.projects.carrier.blocks.usb_pd import build_usb_pd
 
 
 CARRIER_TITLE = "Zynq SoM Carrier"
@@ -31,8 +32,9 @@ SHARED_SYMBOL_LIBRARIES: tuple[Path, ...] = (
 
 
 _BLOCK_FACTORIES = {
-    "power": build_power,
-    # Additional blocks land in Stages 5-6.
+    "power":  build_power,
+    "usb_pd": build_usb_pd,
+    # Additional blocks land in Stage 6 as they get implemented.
 }
 
 
