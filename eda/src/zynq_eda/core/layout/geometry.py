@@ -91,19 +91,38 @@ def pin_connection_from_anchor(
     relative: Point,
     pin_length: float = DEFAULT_PIN_LENGTH_MM,
 ) -> Point:
-    """Return the schematic wire-attachment point outside the symbol body.
+    """Compatibility alias: with the corrected geometry, the connection IS
+    the anchor (no extra pin-length offset). Kept for any external callers."""
+    return anchor
 
-    Given a pin's anchor (the pin's endpoint, *inside* the body) and its
-    relative-to-symbol-origin position, return the point one pin-length
-    *outside* the body. That's where wires attach.
+
+def _rotate_then_flip_y(symbol_relative: Point, rotation_deg: float) -> Point:
+    """Convert a symbol-local pin offset to a page-local offset.
+
+    KiCad symbols use +Y up (math convention); schematic pages use +Y down.
+    Placing a symbol applies a Y-flip to the symbol's coordinates. We must
+    therefore:
+
+        1. Rotate ``symbol_relative`` by ``rotation_deg`` *in symbol coords*
+           (CCW about origin), then
+        2. Negate the Y component to go from symbol-local to page-local.
+
+    Rotation values are KiCad-canonical: 0, 90, 180, 270.
     """
-    if abs(relative.x) >= abs(relative.y):
-        if relative.x > 0:
-            return Point(snap_to_grid(anchor.x - pin_length), anchor.y)
-        return Point(snap_to_grid(anchor.x + pin_length), anchor.y)
-    if relative.y > 0:
-        return Point(anchor.x, snap_to_grid(anchor.y - pin_length))
-    return Point(anchor.x, snap_to_grid(anchor.y + pin_length))
+    x, y = symbol_relative.x, symbol_relative.y
+    if rotation_deg == 0.0:
+        rotated_x, rotated_y = x, y
+    elif rotation_deg == 90.0:
+        rotated_x, rotated_y = -y, x
+    elif rotation_deg == 180.0:
+        rotated_x, rotated_y = -x, -y
+    elif rotation_deg == 270.0:
+        rotated_x, rotated_y = y, -x
+    else:
+        raise ValueError(
+            f"Unsupported rotation {rotation_deg!r}; KiCad allows 0/90/180/270 only"
+        )
+    return Point(rotated_x, -rotated_y)
 
 
 # UUID constants for the ephemeral preview schematic kicad-sch-api requires.
@@ -184,24 +203,41 @@ class SymbolGeometryCache:
         preview_component,
         pin_number: str,
     ) -> PinGeometry:
-        absolute_position = preview_component.get_pin_position(pin_number)
-        anchor = Point(
-            snap_to_grid(float(absolute_position.x)),
-            snap_to_grid(float(absolute_position.y)),
-        )
+        """Return the pin's PAGE-coordinate position.
+
+        ``kicad-sch-api``'s ``get_pin_position`` does NOT apply the Y-flip
+        between symbol-local coords (+Y up, KiCad symbol editor convention)
+        and schematic-page coords (+Y down). It returns
+        ``component.position + symbol_relative_pin_position`` directly,
+        which puts the pin on the wrong side of the symbol vertically.
+
+        We recompute manually: use the placed component's position as the
+        anchor, take the pin's symbol-relative position from ``list_pins``,
+        and apply the symbol-to-page Y-flip ourselves. Rotation is currently
+        passed through to kicad-sch-api (only rotation 0 confirmed affected;
+        rotations 90/180/270 will be handled when the layout engine starts
+        using non-zero rotations on ICs).
+        """
+        component_position = preview_component.position
+        component_rotation = float(getattr(preview_component, "rotation", 0.0))
         pin_info = next(
             item
             for item in preview_component.list_pins()
             if item["number"] == pin_number
         )
-        relative = Point(
-            snap_to_grid(float(pin_info["position"].x)),
-            snap_to_grid(float(pin_info["position"].y)),
+        symbol_relative = Point(
+            float(pin_info["position"].x),
+            float(pin_info["position"].y),
+        )
+        page_relative = _rotate_then_flip_y(symbol_relative, component_rotation)
+        anchor = Point(
+            snap_to_grid(component_position.x + page_relative.x),
+            snap_to_grid(component_position.y + page_relative.y),
         )
         return PinGeometry(
             anchor=anchor,
-            connection=pin_connection_from_anchor(anchor, relative),
-            relative=relative,
+            connection=anchor,
+            relative=symbol_relative,
         )
 
     # ----- public API -------------------------------------------------------
