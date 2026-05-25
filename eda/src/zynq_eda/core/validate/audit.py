@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from zynq_eda.catalog.refcircuits import IC_INSTANCE_COUNT, REFCIRCUITS
+from zynq_eda.catalog.components import IC_INSTANCE_COUNT, REFCIRCUITS
 from zynq_eda.catalog.registry import REGISTRY
 from zynq_eda.core.validate.report import ValidationReport, ValidationResult
 
@@ -41,20 +41,21 @@ _ZERO_EXTERNAL_ALLOWED: frozenset[str] = frozenset({
 })
 
 
-_CATALOG_DATASHEETS_DIR = (
-    Path(__file__).resolve().parents[2] / "catalog" / "datasheets"
-)
+_CATALOG_DIR = Path(__file__).resolve().parents[2] / "catalog"
 
 
 def _resolve_datasheet_path(rel_path: str) -> Path:
-    """Resolve a refcircuit's ``local_datasheet_path`` against catalog/datasheets/."""
-    # local_datasheet_path is a string like "datasheets/FUSB302BMPX.pdf"
-    # We strip the leading "datasheets/" if present so the resolution works
-    # whether it's "datasheets/foo.pdf" or just "foo.pdf".
-    candidate = rel_path
+    """Resolve a refcircuit's ``local_datasheet_path`` against ``catalog/``.
+
+    Modern path: ``components/<part>/datasheet.pdf`` (per-component folder).
+    Legacy path (for any refcircuit still using the flat layout):
+    ``datasheets/<MPN>.pdf`` — resolved by stripping the prefix.
+    """
+    candidate = rel_path.lstrip("/")
     if candidate.startswith("datasheets/"):
-        candidate = candidate[len("datasheets/"):]
-    return _CATALOG_DATASHEETS_DIR / candidate
+        # legacy flat layout
+        return _CATALOG_DIR / candidate
+    return _CATALOG_DIR / candidate
 
 
 def _check_pdf_magic(pdf_path: Path) -> bool:
@@ -83,7 +84,7 @@ def audit_refcircuits(report: ValidationReport) -> None:
                     severity="error",
                     message=(
                         f"{mpn!r}: datasheet not found at "
-                        f"{pdf_path.relative_to(_CATALOG_DATASHEETS_DIR.parents[2])}"
+                        f"{pdf_path.relative_to(_CATALOG_DIR.parent)}"
                     ),
                 ))
             elif not _check_pdf_magic(pdf_path):

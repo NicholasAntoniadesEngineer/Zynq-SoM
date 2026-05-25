@@ -62,7 +62,7 @@ def test_refcircuits_load() -> None:
     datasheet covers both the TX and RX instances and the 24LC256 datasheet
     covers both the data EEPROM and EDID EEPROM instances.
     """
-    from zynq_eda.catalog.refcircuits import IC_INSTANCE_COUNT, REFCIRCUITS
+    from zynq_eda.catalog.components import IC_INSTANCE_COUNT, REFCIRCUITS
 
     assert len(REFCIRCUITS) == 29
     assert len(IC_INSTANCE_COUNT) == 29
@@ -73,9 +73,11 @@ def test_refcircuits_load() -> None:
         for rc in REFCIRCUITS.values()
         if rc.local_datasheet_path
     }
-    # 29 refcircuits → 27 distinct PDFs (TPD12S016PWR.pdf serves both TX/RX
-    # variants; 24LC256T-I_SN.pdf serves both data and EDID instances).
-    assert len(distinct_pdfs) == 27
+    # 29 refcircuits → 28 distinct PDFs under components/<part>/datasheet.pdf:
+    # only TPD12S016PWR.pdf serves more than one refcircuit (both TX and RX
+    # variants live in the same folder). The EDID 24LC256 has its own copy
+    # in eeprom_24lc256_edid/ so each component folder is self-contained.
+    assert len(distinct_pdfs) == 28
 
     unverified = [
         mpn for mpn, rc in REFCIRCUITS.items()

@@ -14,7 +14,7 @@ The Zynq drives the LVDS via PL bank 13 SelectIO at 350 mV LVDS_25 levels.
 
 from __future__ import annotations
 
-from zynq_eda.catalog.refcircuits import REFCIRCUITS
+from zynq_eda.catalog.components import REFCIRCUITS
 from zynq_eda.core.model.block import (
     Block,
     ConnectorInstance,

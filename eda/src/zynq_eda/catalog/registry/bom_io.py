@@ -19,7 +19,7 @@ from collections import Counter
 from pathlib import Path
 
 from zynq_eda.catalog.registry.parts_registry import REGISTRY
-from zynq_eda.catalog.refcircuits import (
+from zynq_eda.catalog.components import (
     IC_INSTANCE_COUNT,
     REFCIRCUITS,
     build_quantity_per_token,

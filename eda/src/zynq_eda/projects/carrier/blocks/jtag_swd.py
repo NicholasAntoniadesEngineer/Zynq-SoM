@@ -16,7 +16,7 @@ Two debug connectors live on the carrier's edge:
 
 from __future__ import annotations
 
-from zynq_eda.catalog.refcircuits import REFCIRCUITS
+from zynq_eda.catalog.components import REFCIRCUITS
 from zynq_eda.core.model.block import (
     Block,
     ConnectorInstance,

@@ -12,7 +12,7 @@ detection signal only (TPD12S016 has a 5V sense pin).
 
 from __future__ import annotations
 
-from zynq_eda.catalog.refcircuits import REFCIRCUITS
+from zynq_eda.catalog.components import REFCIRCUITS
 from zynq_eda.core.model.block import (
     Block,
     ConnectorInstance,

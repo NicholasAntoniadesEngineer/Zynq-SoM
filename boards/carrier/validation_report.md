@@ -1,6 +1,6 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-25T17:56:04Z
+Generated: 2026-05-25T18:11:44Z
 
 **Errors:** 48  **Warnings:** 46  **Info:** 0
 
@@ -87,18 +87,18 @@ Generated: 2026-05-25T17:56:04Z
 - **erc.footprint_link_issues**: The current configuration does not include the footprint library 'Switch_SMD' _(carrier.kicad_sch)_
 - **erc.footprint_link_issues**: Footprint 'SW_SPST_Tactile_6x6mm' not found in library 'Button_Switch_SMD' _(carrier.kicad_sch)_
 - **erc.footprint_link_issues**: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC' _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both GND and USBOTG_DP are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both GND and VBUS_OTG are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both GND and ZYNQ_HDMI_RX_TMDS_2_P are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both GND and PMOD1_IO6 are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both GND and ZYNQ_HDMI_RX_TMDS_1_N are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both GND and PMOD0_IO6 are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both ETH_LINE_MDI_3_N and ETH_LINE_MDI_3_P are attached to the same items; ETH_LINE_MDI_3_N will be used in the netlist _(carrier.kicad_sch)_
 - **erc.ground_pin_not_ground**: Pin GND not connected to ground net _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both +VIN and GND are attached to the same items; +VIN will be used in the netlist _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
