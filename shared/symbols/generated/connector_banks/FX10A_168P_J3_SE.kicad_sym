@@ -1,0 +1,1706 @@
+(
+	kicad_symbol_lib
+	(version 20241209)
+	(generator "connector-bank-extractor")
+	(generator_version "1.0")
+	(
+		symbol
+		"FX10A_168P_J3_SE"
+		(
+			pin_numbers
+			(hide no)
+		)
+		(
+			pin_names
+			(offset 1.016)
+			(hide no)
+		)
+		(exclude_from_sim yes)
+		(in_bom yes)
+		(on_board yes)
+		(
+			property
+			"Reference"
+			"J"
+			(at 0 38.1 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+			property
+			"Value"
+			"FX10A-168P-SV(91)"
+			(at 0 -38.1 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+			property
+			"Footprint"
+			"Connector_FFC-FPC:FX10A-168P-SV1"
+			(at 0 0 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+				hide
+			)
+		)
+		(
+			symbol
+			"FX10A_168P_J3_SE_0_1"
+			(
+				rectangle
+				(start -5.08 35.56)
+				(end 5.08 -35.56)
+				(
+					stroke
+					(width 0.254)
+					(type default)
+				)
+				(
+					fill
+					(type background)
+				)
+			)
+		)
+		(
+			symbol
+			"FX10A_168P_J3_SE_1_1"
+			(
+				pin
+				passive
+				line
+				(at -7.62 33.02 0)
+				(length 2.54)
+				(
+					name
+					"A43"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A43"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 30.480000000000004 0)
+				(length 2.54)
+				(
+					name
+					"A44"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A44"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 27.940000000000005 0)
+				(length 2.54)
+				(
+					name
+					"A45"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A45"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 25.400000000000006 0)
+				(length 2.54)
+				(
+					name
+					"A46"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A46"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 22.860000000000007 0)
+				(length 2.54)
+				(
+					name
+					"A47"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A47"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 20.320000000000007 0)
+				(length 2.54)
+				(
+					name
+					"A48"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A48"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 17.78000000000001 0)
+				(length 2.54)
+				(
+					name
+					"A49"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A49"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 15.240000000000009 0)
+				(length 2.54)
+				(
+					name
+					"A50"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A50"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 12.70000000000001 0)
+				(length 2.54)
+				(
+					name
+					"A51"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A51"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 10.16000000000001 0)
+				(length 2.54)
+				(
+					name
+					"A52"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A52"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 7.620000000000011 0)
+				(length 2.54)
+				(
+					name
+					"A53"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A53"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 5.080000000000011 0)
+				(length 2.54)
+				(
+					name
+					"A54"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A54"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 2.5400000000000107 0)
+				(length 2.54)
+				(
+					name
+					"A28"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A28"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 1.0658141036401503e-14 0)
+				(length 2.54)
+				(
+					name
+					"A29"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A29"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -2.5399999999999894 0)
+				(length 2.54)
+				(
+					name
+					"A30"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A30"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -5.079999999999989 0)
+				(length 2.54)
+				(
+					name
+					"A31"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A31"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -7.6199999999999894 0)
+				(length 2.54)
+				(
+					name
+					"A32"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A32"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -10.15999999999999 0)
+				(length 2.54)
+				(
+					name
+					"A33"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A33"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -12.699999999999989 0)
+				(length 2.54)
+				(
+					name
+					"A34"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A34"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -15.239999999999988 0)
+				(length 2.54)
+				(
+					name
+					"A35"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A35"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -17.779999999999987 0)
+				(length 2.54)
+				(
+					name
+					"A36"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A36"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -20.319999999999986 0)
+				(length 2.54)
+				(
+					name
+					"A37"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A37"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -22.859999999999985 0)
+				(length 2.54)
+				(
+					name
+					"A38"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A38"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -25.399999999999984 0)
+				(length 2.54)
+				(
+					name
+					"A39"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A39"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -27.939999999999984 0)
+				(length 2.54)
+				(
+					name
+					"A40"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A40"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -30.479999999999983 0)
+				(length 2.54)
+				(
+					name
+					"A41"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A41"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at -7.62 -33.01999999999998 0)
+				(length 2.54)
+				(
+					name
+					"A42"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"A42"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 33.02 180)
+				(length 2.54)
+				(
+					name
+					"B43"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B43"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 30.480000000000004 180)
+				(length 2.54)
+				(
+					name
+					"B44"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B44"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 27.940000000000005 180)
+				(length 2.54)
+				(
+					name
+					"B45"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B45"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 25.400000000000006 180)
+				(length 2.54)
+				(
+					name
+					"B46"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B46"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 22.860000000000007 180)
+				(length 2.54)
+				(
+					name
+					"B47"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B47"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 20.320000000000007 180)
+				(length 2.54)
+				(
+					name
+					"B48"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B48"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 17.78000000000001 180)
+				(length 2.54)
+				(
+					name
+					"B49"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B49"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 15.240000000000009 180)
+				(length 2.54)
+				(
+					name
+					"B50"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B50"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 12.70000000000001 180)
+				(length 2.54)
+				(
+					name
+					"B51"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B51"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 10.16000000000001 180)
+				(length 2.54)
+				(
+					name
+					"B52"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B52"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 7.620000000000011 180)
+				(length 2.54)
+				(
+					name
+					"B53"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B53"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 5.080000000000011 180)
+				(length 2.54)
+				(
+					name
+					"B54"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B54"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 2.5400000000000107 180)
+				(length 2.54)
+				(
+					name
+					"B28"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B28"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 1.0658141036401503e-14 180)
+				(length 2.54)
+				(
+					name
+					"B29"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B29"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -2.5399999999999894 180)
+				(length 2.54)
+				(
+					name
+					"B30"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B30"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -5.079999999999989 180)
+				(length 2.54)
+				(
+					name
+					"B31"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B31"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -7.6199999999999894 180)
+				(length 2.54)
+				(
+					name
+					"B32"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B32"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -10.15999999999999 180)
+				(length 2.54)
+				(
+					name
+					"B33"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B33"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -12.699999999999989 180)
+				(length 2.54)
+				(
+					name
+					"B34"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B34"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -15.239999999999988 180)
+				(length 2.54)
+				(
+					name
+					"B35"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B35"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -17.779999999999987 180)
+				(length 2.54)
+				(
+					name
+					"B36"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B36"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -20.319999999999986 180)
+				(length 2.54)
+				(
+					name
+					"B37"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B37"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -22.859999999999985 180)
+				(length 2.54)
+				(
+					name
+					"B38"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B38"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -25.399999999999984 180)
+				(length 2.54)
+				(
+					name
+					"B39"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B39"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -27.939999999999984 180)
+				(length 2.54)
+				(
+					name
+					"B40"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B40"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -30.479999999999983 180)
+				(length 2.54)
+				(
+					name
+					"B41"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B41"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				passive
+				line
+				(at 7.62 -33.01999999999998 180)
+				(length 2.54)
+				(
+					name
+					"B42"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"B42"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
+	(embedded_fonts no)
+)

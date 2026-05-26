@@ -41,6 +41,27 @@ def _natural_ref_key(ref: str) -> tuple[str, int, str]:
     return prefix, int(digits) if digits else 0, suffix
 
 
+def _physical_designator(ref: str) -> str:
+    """Strip the trailing unit suffix from a multi-unit designator.
+
+    For multi-unit components the carrier emits one PlacedSymbol per unit
+    with a designator like ``J1A`` / ``J1B`` / ``J1C`` (KiCad's annotation
+    convention for a multi-unit part with reference J1). The BOM qty should
+    count the physical part, not the unit, so we collapse ``J1A``/``J1B``/
+    ``J1C`` → ``J1`` before counting.
+
+    Stripping rule: if the reference matches ``<LETTERS><DIGITS><LETTER>``
+    (e.g. ``J1A``, ``U10B``), the trailing letter is treated as the unit
+    suffix and removed. Single-unit refs (``J1``, ``C100``) and refs
+    without a digit body are left unchanged.
+    """
+    if len(ref) < 3:
+        return ref
+    if not (ref[-1].isalpha() and ref[-2].isdigit() and ref[0].isalpha()):
+        return ref
+    return ref[:-1]
+
+
 def _collect_symbols(
     *,
     blocks: list[Block],
@@ -129,15 +150,25 @@ def emit_bom(
 
     by_value_footprint, by_mpn_footprint = _build_catalog_indexes(parts_catalog)
 
-    # Aggregate: (lib_id, value, footprint) → list of references
-    groups: dict[tuple[str, str, str], list[str]] = defaultdict(list)
-    seen_refs: set[tuple[tuple[str, str, str], str]] = set()
+    # Aggregate: (value, footprint) → list of references.
+    #
+    # We deliberately key on (value, footprint) — NOT (lib_id, value, footprint) —
+    # so that high-pin-count connectors split across multiple sub-sheets with
+    # distinct sub-symbol lib_ids (e.g. ``FX10A_168P_J1_MIO`` /
+    # ``FX10A_168P_J1_PS_AUX`` / ``FX10A_168P_J1_PL_POWER`` for the three banks
+    # of the J1 SoM mate) collapse to ONE BOM row per physical part. Each
+    # bank's sub-symbol shares the parent's MPN ``"FX10A-168P-SV(91)"`` and
+    # footprint, so the BOM rolls up correctly. The references are kept
+    # distinct (J1A, J1B, J1C…) so layout / fab can still identify which
+    # bank lives on which sheet.
+    groups: dict[tuple[str, str], list[str]] = defaultdict(list)
+    seen_refs: set[tuple[tuple[str, str], str]] = set()
     for _block, sym in _collect_symbols(
         blocks=blocks, root_sheet=root_sheet, sub_sheets=sub_sheets,
     ):
         if sym.lib_id.startswith(_POWER_LIB_PREFIX):
             continue
-        key = (sym.lib_id, sym.value, sym.footprint)
+        key = (sym.value, sym.footprint)
         # Same reference can legitimately appear once per sheet — but if a
         # block reuses U1 on both power and usb_pd, that's already validated
         # as distinct designators upstream. Dedupe defensively here.
@@ -148,10 +179,14 @@ def emit_bom(
         groups[key].append(sym.reference)
 
     rows: list[dict[str, str]] = []
-    for (lib_id, value, footprint), refs in sorted(
-        groups.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2]),
+    for (value, footprint), refs in sorted(
+        groups.items(), key=lambda kv: (kv[0][0], kv[0][1]),
     ):
         refs_sorted = sorted(refs, key=_natural_ref_key)
+        # Qty counts PHYSICAL parts. For multi-unit references like J1A/J1B/J1C
+        # (three banks of one physical FX10A connector), collapse to ``J1``
+        # before counting so qty=1 — not 3.
+        physical_refs = {_physical_designator(ref) for ref in refs_sorted}
         part = _lookup_part(
             value=value,
             footprint=footprint,
@@ -160,7 +195,7 @@ def emit_bom(
         )
         rows.append({
             "Reference": ", ".join(refs_sorted),
-            "Qty": str(len(refs_sorted)),
+            "Qty": str(len(physical_refs)),
             "Value": value,
             "Footprint": footprint,
             "LCSC": part.lcsc if part is not None else "?",

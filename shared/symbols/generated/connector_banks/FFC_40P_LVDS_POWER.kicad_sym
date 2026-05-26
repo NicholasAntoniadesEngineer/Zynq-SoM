@@ -1,0 +1,596 @@
+(
+	kicad_symbol_lib
+	(version 20241209)
+	(generator "connector-bank-extractor")
+	(generator_version "1.0")
+	(
+		symbol
+		"FFC_40P_LVDS_POWER"
+		(
+			pin_numbers
+			(hide no)
+		)
+		(
+			pin_names
+			(offset 1.016)
+			(hide no)
+		)
+		(exclude_from_sim yes)
+		(in_bom yes)
+		(on_board yes)
+		(
+			property
+			"Reference"
+			"J"
+			(at 0 25.4 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+			property
+			"Value"
+			"FPC-05F-40PH20"
+			(at 0 -25.4 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+			property
+			"Footprint"
+			"Connector_FFC-FPC:XUNPU_FPC-05F-40PH20"
+			(at 0 0 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+				hide
+			)
+		)
+		(
+			symbol
+			"FFC_40P_LVDS_POWER_0_1"
+			(
+				rectangle
+				(start -5.08 22.86)
+				(end 5.08 -22.86)
+				(
+					stroke
+					(width 0.254)
+					(type default)
+				)
+				(
+					fill
+					(type background)
+				)
+			)
+		)
+		(
+			symbol
+			"FFC_40P_LVDS_POWER_1_1"
+			(
+				pin
+				power_in
+				line
+				(at -7.62 20.32 0)
+				(length 2.54)
+				(
+					name
+					"GND_1"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"1"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 17.78 0)
+				(length 2.54)
+				(
+					name
+					"+3V3"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"2"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 15.240000000000002 0)
+				(length 2.54)
+				(
+					name
+					"+3V3_3"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"3"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 12.700000000000003 0)
+				(length 2.54)
+				(
+					name
+					"+12V"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"27"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 10.160000000000004 0)
+				(length 2.54)
+				(
+					name
+					"+12V_28"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"28"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 7.620000000000004 0)
+				(length 2.54)
+				(
+					name
+					"+12V_29"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"29"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 5.080000000000004 0)
+				(length 2.54)
+				(
+					name
+					"+12V_30"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"30"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 2.5400000000000036 0)
+				(length 2.54)
+				(
+					name
+					"GND_31"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"31"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 3.552713678800501e-15 0)
+				(length 2.54)
+				(
+					name
+					"GND_32"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"32"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -2.5399999999999965 0)
+				(length 2.54)
+				(
+					name
+					"GND_33"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"33"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -5.0799999999999965 0)
+				(length 2.54)
+				(
+					name
+					"GND_34"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"34"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -7.6199999999999966 0)
+				(length 2.54)
+				(
+					name
+					"GND_35"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"35"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -10.159999999999997 0)
+				(length 2.54)
+				(
+					name
+					"GND_36"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"36"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -12.699999999999996 0)
+				(length 2.54)
+				(
+					name
+					"GND_37"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"37"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -15.239999999999995 0)
+				(length 2.54)
+				(
+					name
+					"GND_38"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"38"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -17.779999999999994 0)
+				(length 2.54)
+				(
+					name
+					"GND_39"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"39"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -20.319999999999993 0)
+				(length 2.54)
+				(
+					name
+					"GND_40"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"40"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
+	(embedded_fonts no)
+)

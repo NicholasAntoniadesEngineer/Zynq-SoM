@@ -1,24 +1,22 @@
-"""Carrier SoM J1 mate: PS-side MIO + system rails.
+"""Carrier SoM J1 mate — bank A: PS MIO + system rails.
 
-J1 of the Zynq SoM (per the hand-authored SoM schematic at
-``boards/som/Zynq_SoM.kicad_sch``) carries the Zynq PS MIO bank
-plus the carrier's main power inlet (+VIN) and the system reset.
+This is one of three sub-sheets that together cover the FX10A 168-pin
+J1 SoM mate. The connector is too dense (168 pins on 0.5 mm pitch) to
+render legibly on a single A3 sheet, so we split it across three banks
+that share the same physical connector reference (J1A / J1B / J1C in
+KiCad annotation).
 
-This block is the CARRIER-side mate (FX10A-168P-SV-91 connector). Pins
-route to:
+BANK SPLIT MECHANISM
+====================
+We use distinct sub-symbols (one per bank) carved out of the parent
+``FX10A_168P`` symbol's pin list. Each bank's KiCad symbol has the
+parent's pin names and numbers preserved (so the footprint mapping is
+identical) but only this bank's pins are drawn. All bank sub-symbols
+share the same Value (``FX10A-168P-SV(91)``) and Footprint, so the BOM
+emitter — keyed on (value, footprint) — collapses them to one BOM line
+per physical connector.
 
-  * +VIN, +3V3, GND
-  * Zynq PS UART0 (TXD/RXD to the CP2102 USB-UART bridge)
-  * Zynq PS USB0 D±, OTG_ID  → USB-PD / USB-OTG sheets
-  * Zynq PS I2C1 (SCL/SDA) → INA226 power monitor + FUSB302 I2C2
-  * Zynq PS SD1 → microSD sheet
-  * Zynq PS GPIO_0/1/2 → boot mode + reset
-  * PS_SRST_N (system reset)
-
-The exhaustive pin-by-pin map needs a parallel-sheet IO-assignment
-pass derived from the SoM schematic; this block declares the contract
-and a representative subset to validate sheet emission. Stage 8's
-``io_assignment.csv`` is the authoritative source for the full map.
+Bank A: PS MIO (A1..A27 + B1..B27) — UART, USB0, I2C, SD1, GPIO.
 """
 
 from __future__ import annotations
@@ -35,23 +33,25 @@ from zynq_eda.core.model.block import (
 from zynq_eda.core.model.interface import SheetEdge
 
 
-def build_som_j1() -> Block:
+def build_som_j1_mio() -> Block:
     return Block(
-        name="som_j1",
-        title="SoM Mate J1 (PS MIO + system rails)",
-        paper_size="A4",
+        name="som_j1_mio",
+        title="SoM Mate J1 bank A (PS MIO + system rails)",
+        paper_size="A3",
         description=(
-            "Carrier-side mate to the Zynq SoM J1 connector "
-            "(FX10A-168P-SV-91). Routes Zynq PS MIO + system rails + "
-            "PS_SRST_N. Full pin map driven by io_assignment.csv."
+            "Bank A of the J1 FX10A 168-pin SoM mate. Routes Zynq PS MIO "
+            "(UART0, USB0, I2C1, SD1, GPIO) and system rails (+VIN, +3V3). "
+            "Pin map: parent FX10A pins A1..A27 + B1..B27. "
+            "Sister sheets som_j1_ps_aux and som_j1_pl_power_gnd carry "
+            "the remaining J1 pins; all share the same physical connector J1."
         ),
         connectors=(
             ConnectorInstance(
-                reference="J1",
+                reference="J1A",
                 refcircuit=REFCIRCUITS["FX10A-168P-SV(91)"],
-                lib_id="zynq_eda:FX10A_168P",
+                lib_id="FX10A_168P_J1_MIO:FX10A_168P_J1_MIO",
                 edge=SheetEdge.LEFT,
-                pin_to_net=_som_j1_pin_to_net(),
+                pin_to_net=_som_j1_mio_pin_to_net(),
             ),
         ),
         external_nets=(
@@ -77,8 +77,8 @@ def build_som_j1() -> Block:
     )
 
 
-def _som_j1_pin_to_net() -> tuple[tuple[str, str], ...]:
-    """Representative subset; full map lives in io_assignment.csv."""
+def _som_j1_mio_pin_to_net() -> tuple[tuple[str, str], ...]:
+    """Pin map for bank A (representative subset; full map → io_assignment.csv)."""
     return (
         ("A1",  "+VIN"),  ("A2",  "+VIN"),
         ("A3",  "GND"),   ("A4",  "GND"),

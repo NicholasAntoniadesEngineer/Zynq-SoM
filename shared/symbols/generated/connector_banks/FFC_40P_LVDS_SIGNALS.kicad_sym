@@ -1,0 +1,776 @@
+(
+	kicad_symbol_lib
+	(version 20241209)
+	(generator "connector-bank-extractor")
+	(generator_version "1.0")
+	(
+		symbol
+		"FFC_40P_LVDS_SIGNALS"
+		(
+			pin_numbers
+			(hide no)
+		)
+		(
+			pin_names
+			(offset 1.016)
+			(hide no)
+		)
+		(exclude_from_sim yes)
+		(in_bom yes)
+		(on_board yes)
+		(
+			property
+			"Reference"
+			"J"
+			(at 0 33.02 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+			property
+			"Value"
+			"FPC-05F-40PH20"
+			(at 0 -33.02 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+			property
+			"Footprint"
+			"Connector_FFC-FPC:XUNPU_FPC-05F-40PH20"
+			(at 0 0 0)
+			(
+				effects
+				(
+					font
+					(size 1.27 1.27)
+				)
+				hide
+			)
+		)
+		(
+			symbol
+			"FFC_40P_LVDS_SIGNALS_0_1"
+			(
+				rectangle
+				(start -5.08 30.48)
+				(end 5.08 -30.48)
+				(
+					stroke
+					(width 0.254)
+					(type default)
+				)
+				(
+					fill
+					(type background)
+				)
+			)
+		)
+		(
+			symbol
+			"FFC_40P_LVDS_SIGNALS_1_1"
+			(
+				pin
+				bidirectional
+				line
+				(at -7.62 27.94 0)
+				(length 2.54)
+				(
+					name
+					"EDID_SDA"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"4"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				input
+				line
+				(at -7.62 25.400000000000002 0)
+				(length 2.54)
+				(
+					name
+					"EDID_SCL"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"5"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 22.860000000000003 0)
+				(length 2.54)
+				(
+					name
+					"GND_6"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"6"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 20.320000000000004 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_CLK-"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"7"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 17.780000000000005 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_CLK+"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"8"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 15.240000000000006 0)
+				(length 2.54)
+				(
+					name
+					"GND_9"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"9"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 12.700000000000006 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_DATA0-"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"10"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 10.160000000000007 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_DATA0+"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"11"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 7.620000000000007 0)
+				(length 2.54)
+				(
+					name
+					"GND_12"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"12"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 5.080000000000007 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_DATA1-"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"13"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 2.540000000000007 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_DATA1+"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"14"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 7.105427357601002e-15 0)
+				(length 2.54)
+				(
+					name
+					"GND_15"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"15"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 -2.539999999999993 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_DATA2-"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"16"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 -5.079999999999993 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_DATA2+"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"17"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -7.619999999999993 0)
+				(length 2.54)
+				(
+					name
+					"GND_18"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"18"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 -10.159999999999993 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_DATA3-"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"19"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				output
+				line
+				(at -7.62 -12.699999999999992 0)
+				(length 2.54)
+				(
+					name
+					"LVDS_DATA3+"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"20"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -15.239999999999991 0)
+				(length 2.54)
+				(
+					name
+					"GND_21"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"21"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				input
+				line
+				(at -7.62 -17.77999999999999 0)
+				(length 2.54)
+				(
+					name
+					"RESET_N"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"22"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				power_in
+				line
+				(at -7.62 -20.31999999999999 0)
+				(length 2.54)
+				(
+					name
+					"GND_23"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"23"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				input
+				line
+				(at -7.62 -22.85999999999999 0)
+				(length 2.54)
+				(
+					name
+					"STBY_N"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"24"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				input
+				line
+				(at -7.62 -25.399999999999988 0)
+				(length 2.54)
+				(
+					name
+					"PWM"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"25"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(
+				pin
+				input
+				line
+				(at -7.62 -27.939999999999987 0)
+				(length 2.54)
+				(
+					name
+					"BL_EN"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+						(hide no)
+					)
+				)
+				(
+					number
+					"26"
+					(
+						effects
+						(
+							font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
+	(embedded_fonts no)
+)
