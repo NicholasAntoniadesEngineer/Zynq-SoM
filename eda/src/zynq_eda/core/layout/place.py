@@ -35,20 +35,56 @@ def _ic_anchors_for_block(
     column_x: float,
     top_y: float,
     row_pitch: float,
+    geometry_cache: "SymbolGeometryCache | None" = None,
 ) -> dict[str, Point]:
-    """Place ICs in a single vertical column.
+    """Place ICs in a single vertical column with bbox-aware spacing.
 
-    The simple column heuristic suffices for the current blocks (LDO bank,
-    USB-PD, etc.). When a block needs explicit per-IC anchors (e.g. an IC
-    matrix or a multi-IC bus arrangement), :class:`IcInstance` will gain a
-    ``layout_hint`` field in Stage 5.5.
+    For each IC after the first, compute the next anchor as:
+      prev_anchor.y + prev_ic_half_height + cap_chain_clearance
+                    + next_ic_half_height
+    so that the IC's body + its TOP-side decoupling cap chain don't
+    collide with the prior IC. Falls back to the static ``row_pitch``
+    when ``geometry_cache`` is unavailable or the IC's lib_id can't
+    be resolved.
     """
     anchors: dict[str, Point] = {}
+    # Top-side cap chain clearance: PASSIVE_OFFSET (10.16) + stagger
+    # (5.08) + cap-body-half (3.81) + power-symbol stub (5.08) +
+    # 2 grid-unit safety margin (5.08). Caps a TOP-attached cap chain
+    # reaches roughly this far above the IC's top edge.
+    CAP_CHAIN_CLEARANCE_MM = 29.21
+
+    current_y = top_y
+    prev_max_y_extent = 0.0  # half-height of previous IC (from anchor downward)
     for index, ic in enumerate(block.ics):
-        anchors[ic.reference] = Point(
-            snap_to_grid(column_x),
-            snap_to_grid(top_y + index * row_pitch),
-        )
+        # Compute this IC's half-heights (above + below anchor).
+        ic_half_up = 0.0
+        ic_half_down = 0.0
+        if geometry_cache is not None:
+            try:
+                bbox = geometry_cache.bounding_box(ic.lib_id, rotation=0.0)
+                ic_half_up = abs(bbox.min_y)   # min_y is negative (above anchor)
+                ic_half_down = abs(bbox.max_y) # max_y is positive (below anchor)
+            except Exception:
+                pass
+
+        if index == 0:
+            anchor_y = top_y
+        else:
+            # Next anchor sits at:
+            #   prev_anchor.y + prev_ic_half_down + cap_chain_clearance
+            #     + this_ic_half_up
+            # (prev_max_y_extent already captures prev_ic_half_down)
+            anchor_y = current_y + prev_max_y_extent + CAP_CHAIN_CLEARANCE_MM + ic_half_up
+            # Fall back to static pitch if bbox-aware result would be tighter
+            # than the safe minimum (shouldn't normally happen).
+            anchor_y = max(anchor_y, current_y + row_pitch)
+
+        anchor_y = snap_to_grid(anchor_y)
+        anchors[ic.reference] = Point(snap_to_grid(column_x), anchor_y)
+        current_y = anchor_y
+        prev_max_y_extent = ic_half_down
+
     return anchors
 
 
@@ -472,6 +508,7 @@ def place_block(
         column_x=ic_column_x,
         top_y=ic_top_y,
         row_pitch=ic_row_pitch,
+        geometry_cache=geometry_cache,
     )
 
     ic_pin_geometries: dict[str, dict[str, PinGeometryAbs]] = {}

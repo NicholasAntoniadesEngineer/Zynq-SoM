@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "21bfe881-5790-4ed9-a5d4-ad21b1d7ced8")
+	(uuid "c7c12d42-0aeb-4abe-99d2-a72b561e9edd")
 	(paper "A3")
 	(title_block
 		(title "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)")
@@ -1002,7 +1002,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "51050806-4af5-4de1-86e6-44083d7bbb6a")
+		(uuid "8e48d84d-6fd6-40ab-ab9d-507f590f1de9")
 		(property "Reference" "J1"
 			(at 344.17 95.25 0.0000)
 			(effects
@@ -1051,53 +1051,53 @@
 			)
 		)
 		(pin "1"
-			(uuid "4563f5fa-46d3-432e-bbd0-2b2aaf16deec")
+			(uuid "400a8194-e046-4b1c-aba0-083f9ba06629")
 		)
 		(pin "2"
-			(uuid "6304de02-0ae4-420f-b3a4-2e0df028d2ea")
+			(uuid "3e18bc0a-5ad7-4176-95f6-0e0c2effc7c3")
 		)
 		(pin "3"
-			(uuid "a1096614-80e0-45f1-9aa6-b7598fed93a6")
+			(uuid "d810cac4-866b-426f-a285-3b088531c36c")
 		)
 		(pin "4"
-			(uuid "9a7a8273-ed1a-4393-9377-cee2bca06402")
+			(uuid "19a9ca24-1408-4c6e-abd4-aaed688d5619")
 		)
 		(pin "5"
-			(uuid "48630275-2c7e-46f2-b418-feedafa91fca")
+			(uuid "33b1e5fa-4449-46a3-9116-430bebaf772a")
 		)
 		(pin "6"
-			(uuid "a0ec0c05-9ba2-4f84-950e-91cf7d24c647")
+			(uuid "d36fa458-97b5-4824-9a02-ca34434710ba")
 		)
 		(pin "7"
-			(uuid "7ae45dc1-a8c8-4d7e-a262-0751f3b4a9c6")
+			(uuid "2a94a821-30d2-491a-b7f4-d3b44d55a151")
 		)
 		(pin "8"
-			(uuid "3e549657-eda1-43b1-a4b9-d1bf5264d0cc")
+			(uuid "d3b805b6-3118-4dae-a3bf-b30d78412712")
 		)
 		(pin "9"
-			(uuid "1ec47cd6-4e0d-449d-911d-5beee2bcc468")
+			(uuid "82cac37c-a98a-4488-982c-75129020049d")
 		)
 		(pin "10"
-			(uuid "b64298b8-428f-4100-a28e-b8dd080f444e")
+			(uuid "5c6e9d2a-7e8e-46c7-a725-58a4c6bdc85d")
 		)
 		(pin "11"
-			(uuid "4de1ddb0-2459-40bd-95e9-fae604d8d4b9")
+			(uuid "4072ea5f-5390-4a11-a56b-b84800accb3e")
 		)
 		(pin "12"
-			(uuid "02829499-7ff9-419b-8ee2-0d97e04752de")
+			(uuid "949ad2fa-658c-47b4-b8bc-30a30c5905d9")
 		)
 		(pin "13"
-			(uuid "5b762c96-6bd2-47bf-b634-c8b90149ae74")
+			(uuid "fe230732-2d17-4e53-9d3b-3369f4ae8010")
 		)
 		(pin "14"
-			(uuid "32dc3121-b3bf-4ca8-ae10-67ed429c2824")
+			(uuid "f4c0b773-7438-4669-896f-4976eab716a4")
 		)
 		(pin "15"
-			(uuid "de20ef7d-01a5-4eed-a97d-266ef77fbcbc")
+			(uuid "d784fe94-38e0-46c5-89cd-328a7d81638b")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "J1")
 					(unit 1)
 				)
@@ -1113,7 +1113,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e102e26e-5550-4c82-84d5-7352fd6adfc4")
+		(uuid "80e23019-3f39-40e5-84b6-774d6a9cc974")
 		(property "Reference" "C100"
 			(at 323.85 107.315 270)
 			(effects
@@ -1142,14 +1142,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "4716aa86-005d-4f2a-9d59-39e5e0388779")
+			(uuid "c7bf4ba4-5f44-4669-a934-1ce5be32d441")
 		)
 		(pin "2"
-			(uuid "465f9321-1e2e-4123-8dac-1b352cdd0990")
+			(uuid "242e8a34-743a-4ba6-8c76-5a5e3d5b5eb7")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1165,7 +1165,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "07631d17-1a62-47f5-8f59-4da5a975b478")
+		(uuid "8fda5ed2-41b0-44a8-ae41-495bbee2060d")
 		(property "Reference" "#PWR100"
 			(at 312.42 101.6 0.0000)
 			(effects
@@ -1194,11 +1194,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "56142c60-7af6-4b3c-8e49-3b63ade902a8")
+			(uuid "474fd09e-9471-4b30-a120-682d4bfeda68")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -1214,7 +1214,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3e0a1b68-ea2a-4167-81f4-77615a4b11db")
+		(uuid "29afdabc-d145-4ef6-9672-798de8e9bb3d")
 		(property "Reference" "C101"
 			(at 308.61 107.315 270)
 			(effects
@@ -1243,14 +1243,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "3de91c55-a670-43f3-9f10-63cec4ac86dd")
+			(uuid "d5a4f380-90ef-4e3b-8daf-127b28d4f2d6")
 		)
 		(pin "2"
-			(uuid "76e21bd7-56b5-4aae-8256-9682dad1b373")
+			(uuid "b55c73dd-588e-4c3d-bf1c-7e94454bb185")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1266,7 +1266,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3198a75a-ab26-4b06-9db5-6a0dd3984e2f")
+		(uuid "e3923277-17f2-4b73-ac18-5eeff1751ec9")
 		(property "Reference" "#PWR101"
 			(at 297.18 101.6 0.0000)
 			(effects
@@ -1295,11 +1295,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "1dbc3aa3-3527-48b1-8c13-4d7986409286")
+			(uuid "b7be4011-9ee1-4b78-b5d1-ff29e409bfe1")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -1315,7 +1315,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "21c9c149-5502-40fa-af5d-0fbfd5cc8ace")
+		(uuid "c2563abe-c272-48cd-9286-2188c0202cdf")
 		(property "Reference" "R100"
 			(at 321.31 95.758 0.0000)
 			(effects
@@ -1344,14 +1344,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "93441b92-1dfa-4176-9fa8-9c8a7065d824")
+			(uuid "1b8891b9-3365-444e-beea-294116b77566")
 		)
 		(pin "2"
-			(uuid "a0f2c6ec-a07f-4fa4-83d2-7ea85b4e101f")
+			(uuid "8bb0a572-5139-4c50-bbfd-ed74d64b80be")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "R100")
 					(unit 1)
 				)
@@ -1367,7 +1367,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "82f5b93a-79db-48c2-ba12-dd6878c51100")
+		(uuid "c2cbda0c-be21-402c-9733-99c52ea645ad")
 		(property "Reference" "#PWR102"
 			(at 312.42 93.98 0.0000)
 			(effects
@@ -1396,11 +1396,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "75fc1894-86de-43bf-aa40-404c44165044")
+			(uuid "49569539-f336-4ab2-84e4-136d9449fe7e")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -1416,7 +1416,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "4200415b-ea42-4976-9db5-752d661b299c")
+		(uuid "c03631ba-df4a-4eb9-9a37-aa70244c93d7")
 		(property "Reference" "R101"
 			(at 321.31 100.838 0.0000)
 			(effects
@@ -1445,14 +1445,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "a32dbd66-0774-40bc-92cb-81ec9d6f3c57")
+			(uuid "7452940e-7367-47d5-ba4d-4c2c53964941")
 		)
 		(pin "2"
-			(uuid "05b5e25d-a822-4fd7-9775-c87efab522bb")
+			(uuid "86ad43e4-0eec-4fad-91fd-12f6e5cd663b")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "R101")
 					(unit 1)
 				)
@@ -1468,7 +1468,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e9a131a2-9bce-46c3-9e35-3fada727b6bc")
+		(uuid "e033f72a-9c2e-4bf2-b062-873a1c9f471e")
 		(property "Reference" "#PWR103"
 			(at 312.42 99.06 0.0000)
 			(effects
@@ -1497,11 +1497,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "8e10eab7-9ff9-4486-81c4-0cce4e7e4ad1")
+			(uuid "090c7369-7cd8-45ce-9782-e873992d697c")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "#PWR103")
 					(unit 1)
 				)
@@ -1517,7 +1517,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e572159e-5890-4ce0-a52b-ebb96b01bc28")
+		(uuid "21cbb1ae-1f79-47de-af8e-f527e0d4aed8")
 		(property "Reference" "R102"
 			(at 321.31 85.598 0.0000)
 			(effects
@@ -1546,14 +1546,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "31797e0c-7ba5-4a8b-bf5c-d1358a245c25")
+			(uuid "7e8431d7-f6a4-422a-8e33-41c37051c415")
 		)
 		(pin "2"
-			(uuid "281a9924-7d1a-47ea-bbe9-9a74a06bc200")
+			(uuid "14243f2d-3204-4b35-8148-31d34901bd9b")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "R102")
 					(unit 1)
 				)
@@ -1569,7 +1569,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a57bdb70-82ed-4a93-b305-f2c797d85db1")
+		(uuid "b5f5c4f9-4cc0-4d31-a745-e2d8db25019a")
 		(property "Reference" "#PWR104"
 			(at 312.42 81.28 0.0000)
 			(effects
@@ -1598,11 +1598,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "d5094013-cc61-4be4-8223-2723a361ad7e")
+			(uuid "8e2edbf8-5eba-4f6e-a591-66adcc245152")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "#PWR104")
 					(unit 1)
 				)
@@ -1618,7 +1618,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9247d8a1-0e03-46e7-8f87-18085e79702b")
+		(uuid "f8857dae-839f-4deb-8c7e-92cc17e2de4b")
 		(property "Reference" "#FLG100"
 			(at 330.2 109.855 0.0000)
 			(effects
@@ -1647,11 +1647,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "d6fdb381-a9d4-4c82-9e6a-094c5ad30e7a")
+			(uuid "ca00b817-819f-40b4-b7cc-eef14f0c12cc")
 		)
 		(instances
 			(project "MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)"
-				(path "/21bfe881-5790-4ed9-a5d4-ad21b1d7ced8"
+				(path "/c7c12d42-0aeb-4abe-99d2-a72b561e9edd"
 					(reference "#FLG100")
 					(unit 1)
 				)
@@ -1666,7 +1666,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e99430f9-c2b1-4d26-8579-eacc9539d43e")
+		(uuid "b6427bb5-0bb3-4674-b700-ce669982e77b")
 	)
 	(wire
 		(pts
@@ -1676,7 +1676,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1294985c-6368-4b94-84a2-61349d8e1c96")
+		(uuid "10c038f0-a629-4196-9e56-7e7a1c933a01")
 	)
 	(wire
 		(pts
@@ -1686,7 +1686,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "dab2fca6-adaa-40f4-94c5-b947dd7cef63")
+		(uuid "7bf25478-643f-41ed-a037-9b02955fccfa")
 	)
 	(wire
 		(pts
@@ -1696,7 +1696,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "70d7df87-72f6-4ac6-a1e2-1de9fd9d988f")
+		(uuid "93da5004-b98e-4f2f-8332-1ba6b9de5305")
 	)
 	(wire
 		(pts
@@ -1706,7 +1706,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "843cf9df-e19d-4ed4-9f6e-cf331eb976ce")
+		(uuid "b7ffadeb-31db-4e25-9521-86b3b6f9b9d3")
 	)
 	(wire
 		(pts
@@ -1716,7 +1716,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5d328176-2f42-42ec-baed-6711ab0aa709")
+		(uuid "986f96bc-f2bd-44c7-9c82-348b13d97656")
 	)
 	(wire
 		(pts
@@ -1726,7 +1726,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "853aa054-e20a-47c6-990e-eabfe69f8e31")
+		(uuid "ef83f834-731c-4d4c-9b69-8b042662233a")
 	)
 	(wire
 		(pts
@@ -1736,7 +1736,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "40b05158-60d9-4350-84f6-76a7e02abda5")
+		(uuid "b0ade51b-b8a3-4a7e-94dc-19c2453a8f72")
 	)
 	(wire
 		(pts
@@ -1746,7 +1746,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "386510ac-582d-43b6-9844-53ca46b19883")
+		(uuid "49ae5ac2-41b8-4a4a-81db-eb6f08656c7b")
 	)
 	(wire
 		(pts
@@ -1756,7 +1756,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f4efa873-0e78-4734-8298-2d2e2fc71584")
+		(uuid "b0c26019-3f06-41c1-b1bf-d0a44ed5e594")
 	)
 	(wire
 		(pts
@@ -1766,7 +1766,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "840f1839-c292-49ae-92f3-661fe04a95cb")
+		(uuid "59d5239b-b653-4c3c-86f3-7eb61a959da9")
 	)
 	(wire
 		(pts
@@ -1776,7 +1776,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "da084b86-31d4-4027-ae4a-761970ce8530")
+		(uuid "06f3bd36-c312-4944-a9c2-22fa8ce5c4d0")
 	)
 	(wire
 		(pts
@@ -1786,7 +1786,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "867dbbd5-6837-4516-b3ee-60999a841d10")
+		(uuid "14f80d97-e6f3-421b-a3a6-b233f6ee3aa6")
 	)
 	(wire
 		(pts
@@ -1796,7 +1796,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "264f5445-769e-41e7-a9d5-136fe877fd12")
+		(uuid "f692e881-6d70-42b0-877b-8692ee08799a")
 	)
 	(wire
 		(pts
@@ -1806,7 +1806,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ae4cd814-ad14-4400-a144-505ce292defa")
+		(uuid "fcb921d8-a195-4de1-bc47-cdc5a42f17ad")
 	)
 	(wire
 		(pts
@@ -1816,7 +1816,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "88528dfa-3f7b-4ac7-ba68-153fd2b36f5b")
+		(uuid "7f0f7b53-8088-4000-817c-b8ddf5bc5845")
 	)
 	(wire
 		(pts
@@ -1826,7 +1826,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4fcb8119-f5fb-47c1-bf7c-dba4cbefe31f")
+		(uuid "32210ef1-4c7f-477a-9601-c1232f5f4bfd")
 	)
 	(wire
 		(pts
@@ -1836,7 +1836,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1e3ef459-95ae-43ae-92c0-6e3d415f5282")
+		(uuid "16ff1f8c-281e-4c67-b2ae-fc118d624298")
 	)
 	(wire
 		(pts
@@ -1846,31 +1846,31 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "948302fa-a2eb-487a-b497-b948405df64b")
+		(uuid "2215454a-2328-49ee-9f22-f7984766a50c")
 	)
 	(junction
 		(at 325.12 107.95)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "de5e15cb-3313-4f9b-ac9c-0de69098ca45")
+		(uuid "863e8d29-fb3f-4bab-8985-bf5467596626")
 	)
 	(junction
 		(at 317.5 107.95)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "2ace476c-975d-40f3-8c8e-1130d4cc51a4")
+		(uuid "3d08b6ef-ae7f-49c4-b107-1c7d7bccd13a")
 	)
 	(junction
 		(at 312.42 107.95)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "209f2fa2-9bd1-4863-8467-9471b8a16a4f")
+		(uuid "d604a098-1c65-4361-bfbe-2fa4059db50d")
 	)
 	(junction
 		(at 330.2 107.95)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "c1de94df-9f41-4cd8-a209-6ad0a966d351")
+		(uuid "67ba1bb5-1d57-4758-abe3-5bcb6aed70b3")
 	)
 	(label "GND"
 		(at 334.01 52.07 180)
@@ -1880,7 +1880,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "80c458e9-502a-476d-9815-2b77d0c57af5")
+		(uuid "2eb0bc2d-3309-4957-aeda-e9301acb51a0")
 	)
 	(label "GND"
 		(at 334.01 67.31 180)
@@ -1890,7 +1890,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "21640497-d361-4e95-be0b-ac4f22d7acb1")
+		(uuid "96b38317-6d2b-4a8b-b47e-8aaab76d5e95")
 	)
 	(label "GND"
 		(at 334.01 82.55 180)
@@ -1900,7 +1900,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "32b91031-0c36-44c9-a148-29bee462e2e0")
+		(uuid "536abbfc-ebc9-4bf2-a2bc-8b3e50198db6")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1911,7 +1911,7 @@
 			)
 			(justify left)
 		)
-		(uuid "1dac7c92-7cf3-4c9d-898e-bd55e2e94a2b")
+		(uuid "81b27477-e076-417d-aa44-145f96319495")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
@@ -1922,7 +1922,7 @@
 			)
 			(justify left)
 		)
-		(uuid "d85cbf57-8f5a-4715-9690-9ddda19dee1a")
+		(uuid "56b9ff22-eae7-48a8-9251-a81b0f17a7c4")
 	)
 	(hierarchical_label "ZYNQ_CAM_MIPI_D0_P"
 		(shape input)
@@ -1933,7 +1933,7 @@
 			)
 			(justify left)
 		)
-		(uuid "785d52b7-c03d-4c4d-84d6-cd4128681809")
+		(uuid "2246a720-75a3-4690-a248-b4460ac8826e")
 	)
 	(hierarchical_label "ZYNQ_CAM_MIPI_D0_N"
 		(shape input)
@@ -1944,7 +1944,7 @@
 			)
 			(justify left)
 		)
-		(uuid "8040fc6a-a1b6-49c2-a8ac-315cb793c6fc")
+		(uuid "b4f9369a-bbd2-4115-9d38-df180f88fab2")
 	)
 	(hierarchical_label "ZYNQ_CAM_MIPI_D1_P"
 		(shape input)
@@ -1955,7 +1955,7 @@
 			)
 			(justify left)
 		)
-		(uuid "784b6c7f-112c-4b08-afc5-e778e0ff241f")
+		(uuid "03fabf32-21d2-448d-8f42-4250ce9079eb")
 	)
 	(hierarchical_label "ZYNQ_CAM_MIPI_D1_N"
 		(shape input)
@@ -1966,7 +1966,7 @@
 			)
 			(justify left)
 		)
-		(uuid "83bdb937-72b7-4010-87aa-03e2ac1fa6dc")
+		(uuid "d3d26a2c-e856-4d85-b219-35d8cbb30aa6")
 	)
 	(hierarchical_label "ZYNQ_CAM_MIPI_CLK_P"
 		(shape input)
@@ -1977,7 +1977,7 @@
 			)
 			(justify left)
 		)
-		(uuid "fa5f6ed1-7fde-46b7-8c4d-31475461d238")
+		(uuid "ce3de033-aeff-47d8-a67e-465a7a3a9064")
 	)
 	(hierarchical_label "ZYNQ_CAM_MIPI_CLK_N"
 		(shape input)
@@ -1988,7 +1988,7 @@
 			)
 			(justify left)
 		)
-		(uuid "3b59a3ea-2c85-40ca-bcf5-4d8aa7b4b75f")
+		(uuid "fd882d0c-0eec-4419-9c76-aa773ad800c4")
 	)
 	(hierarchical_label "ZYNQ_CAM_GPIO0"
 		(shape input)
@@ -1999,7 +1999,7 @@
 			)
 			(justify left)
 		)
-		(uuid "53768204-49ae-4d08-b466-006307ee96bc")
+		(uuid "79e1bea4-c34e-481b-a674-c26815bd8e0c")
 	)
 	(hierarchical_label "ZYNQ_CAM_GPIO1"
 		(shape input)
@@ -2010,7 +2010,7 @@
 			)
 			(justify left)
 		)
-		(uuid "e69a2e5f-cc47-4762-9e18-8038d70f5737")
+		(uuid "201fd510-b990-46cd-90a4-7c1795a8034a")
 	)
 	(hierarchical_label "ZYNQ_CAM_SCL"
 		(shape input)
@@ -2021,7 +2021,7 @@
 			)
 			(justify left)
 		)
-		(uuid "f969287a-eae2-42ea-abb4-f80cde4f61fd")
+		(uuid "a6c875ee-8b61-43e8-91a4-213fb3a48122")
 	)
 	(hierarchical_label "ZYNQ_CAM_SDA"
 		(shape input)
@@ -2032,7 +2032,7 @@
 			)
 			(justify left)
 		)
-		(uuid "11864887-6914-4127-a020-5dd19f830389")
+		(uuid "4d9caf4a-e1a7-4895-ae68-fc72cd346bd5")
 	)
 	(sheet_instances
 		(path "/"

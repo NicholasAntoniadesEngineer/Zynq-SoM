@@ -51,8 +51,8 @@
 				)
 				(symbol "FUSB302BMPX_1_1"
 					(rectangle
-						(start 0 10.16)
-						(end 20.32 -10.16)
+						(start 0 20.32)
+						(end 20.32 -20.32)
 						(stroke
 							(width 0)
 							(type default)
@@ -62,7 +62,7 @@
 						)
 					)
 					(pin input line
-						(at -2.54 7.62 0)
+						(at -2.54 15.24 0)
 						(length 2.54)
 						(name "VBUS"
 							(effects
@@ -80,7 +80,7 @@
 						)
 					)
 					(pin power_in line
-						(at -2.54 5.08 0)
+						(at -2.54 10.16 0)
 						(length 2.54)
 						(name "GND"
 							(effects
@@ -98,7 +98,7 @@
 						)
 					)
 					(pin power_in line
-						(at -2.54 2.54 0)
+						(at -2.54 5.08 0)
 						(length 2.54)
 						(name "VDD"
 							(effects
@@ -134,7 +134,7 @@
 						)
 					)
 					(pin bidirectional line
-						(at -2.54 -2.54 0)
+						(at -2.54 -5.08 0)
 						(length 2.54)
 						(name "CC2"
 							(effects
@@ -152,7 +152,7 @@
 						)
 					)
 					(pin bidirectional line
-						(at -2.54 -5.08 0)
+						(at -2.54 -10.16 0)
 						(length 2.54)
 						(name "VCONN_1"
 							(effects
@@ -170,7 +170,7 @@
 						)
 					)
 					(pin bidirectional line
-						(at -2.54 -7.62 0)
+						(at -2.54 -15.24 0)
 						(length 2.54)
 						(name "VCONN_2"
 							(effects
@@ -188,7 +188,7 @@
 						)
 					)
 					(pin bidirectional line
-						(at 22.86 7.62 180)
+						(at 22.86 15.24 180)
 						(length 2.54)
 						(name "SDA"
 							(effects
@@ -206,7 +206,7 @@
 						)
 					)
 					(pin bidirectional line
-						(at 22.86 5.08 180)
+						(at 22.86 10.16 180)
 						(length 2.54)
 						(name "SCL"
 							(effects
@@ -224,7 +224,7 @@
 						)
 					)
 					(pin output line
-						(at 22.86 2.54 180)
+						(at 22.86 5.08 180)
 						(length 2.54)
 						(name "INT_N"
 							(effects
@@ -260,7 +260,7 @@
 						)
 					)
 					(pin power_in line
-						(at 22.86 -2.54 180)
+						(at 22.86 -5.08 180)
 						(length 2.54)
 						(name "GND"
 							(effects
@@ -278,7 +278,7 @@
 						)
 					)
 					(pin power_in line
-						(at 22.86 -5.08 180)
+						(at 22.86 -10.16 180)
 						(length 2.54)
 						(name "GND"
 							(effects
@@ -296,7 +296,7 @@
 						)
 					)
 					(pin power_in line
-						(at 22.86 -7.62 180)
+						(at 22.86 -15.24 180)
 						(length 2.54)
 						(name "GND_EP"
 							(effects
@@ -874,15 +874,15 @@
 		)
 		(symbol "TPD12S016PWR_0_1"
 			(rectangle
-				(start -10.16 15.24)
-				(end 10.16 -15.24)
+				(start -10.16 30.48)
+				(end 10.16 -30.48)
 				(stroke (width 0.254) (type default))
 				(fill (type background))
 			)
 		)
 		(symbol "TPD12S016PWR_1_1"
 			(pin power_in line
-				(at -10.16 12.7 0)
+				(at -10.16 25.4 0)
 				(length 2.54)
 				(name "VCCA"
 					(effects (font (size 1.27 1.27)))
@@ -892,7 +892,7 @@
 				)
 			)
 			(pin power_in line
-				(at -10.16 10.16 0)
+				(at -10.16 20.32 0)
 				(length 2.54)
 				(name "VCCB"
 					(effects (font (size 1.27 1.27)))
@@ -902,7 +902,7 @@
 				)
 			)
 			(pin bidirectional line
-				(at -10.16 7.62 0)
+				(at -10.16 15.24 0)
 				(length 2.54)
 				(name "SDA_B"
 					(effects (font (size 1.27 1.27)))
@@ -912,7 +912,7 @@
 				)
 			)
 			(pin bidirectional line
-				(at -10.16 5.08 0)
+				(at -10.16 10.16 0)
 				(length 2.54)
 				(name "SCL_B"
 					(effects (font (size 1.27 1.27)))
@@ -922,7 +922,7 @@
 				)
 			)
 			(pin input line
-				(at -10.16 2.54 0)
+				(at -10.16 5.08 0)
 				(length 2.54)
 				(name "HPD_B"
 					(effects (font (size 1.27 1.27)))
@@ -942,7 +942,7 @@
 				)
 			)
 			(pin power_in line
-				(at -10.16 -2.54 0)
+				(at -10.16 -5.08 0)
 				(length 2.54)
 				(name "GND"
 					(effects (font (size 1.27 1.27)))
@@ -952,7 +952,7 @@
 				)
 			)
 			(pin passive line
-				(at -10.16 -5.08 0)
+				(at -10.16 -10.16 0)
 				(length 2.54)
 				(name "D0+"
 					(effects (font (size 1.27 1.27)))
@@ -962,7 +962,7 @@
 				)
 			)
 			(pin passive line
-				(at -10.16 -7.62 0)
+				(at -10.16 -15.24 0)
 				(length 2.54)
 				(name "D0-"
 					(effects (font (size 1.27 1.27)))
@@ -972,7 +972,7 @@
 				)
 			)
 			(pin passive line
-				(at -10.16 -10.16 0)
+				(at -10.16 -20.32 0)
 				(length 2.54)
 				(name "D1+"
 					(effects (font (size 1.27 1.27)))
@@ -982,7 +982,7 @@
 				)
 			)
 			(pin passive line
-				(at -10.16 -12.7 0)
+				(at -10.16 -25.4 0)
 				(length 2.54)
 				(name "D1-"
 					(effects (font (size 1.27 1.27)))
@@ -992,7 +992,7 @@
 				)
 			)
 			(pin passive line
-				(at -10.16 -15.24 0)
+				(at -10.16 -30.48 0)
 				(length 2.54)
 				(name "D2+"
 					(effects (font (size 1.27 1.27)))
@@ -1002,7 +1002,7 @@
 				)
 			)
 			(pin passive line
-				(at -10.16 -17.78 0)
+				(at -10.16 -35.56 0)
 				(length 2.54)
 				(name "D2-"
 					(effects (font (size 1.27 1.27)))
@@ -1012,7 +1012,7 @@
 				)
 			)
 			(pin passive line
-				(at -10.16 -20.32 0)
+				(at -10.16 -40.64 0)
 				(length 2.54)
 				(name "CLK+"
 					(effects (font (size 1.27 1.27)))
@@ -1022,7 +1022,7 @@
 				)
 			)
 			(pin passive line
-				(at -10.16 -22.86 0)
+				(at -10.16 -45.72 0)
 				(length 2.54)
 				(name "CLK-"
 					(effects (font (size 1.27 1.27)))
@@ -1032,7 +1032,7 @@
 				)
 			)
 			(pin bidirectional line
-				(at 10.16 12.7 180)
+				(at 10.16 25.4 180)
 				(length 2.54)
 				(name "SDA_A"
 					(effects (font (size 1.27 1.27)))
@@ -1042,7 +1042,7 @@
 				)
 			)
 			(pin bidirectional line
-				(at 10.16 10.16 180)
+				(at 10.16 20.32 180)
 				(length 2.54)
 				(name "SCL_A"
 					(effects (font (size 1.27 1.27)))
@@ -1052,7 +1052,7 @@
 				)
 			)
 			(pin bidirectional line
-				(at 10.16 7.62 180)
+				(at 10.16 15.24 180)
 				(length 2.54)
 				(name "CEC_A"
 					(effects (font (size 1.27 1.27)))
@@ -1062,7 +1062,7 @@
 				)
 			)
 			(pin passive line
-				(at 10.16 5.08 180)
+				(at 10.16 10.16 180)
 				(length 2.54)
 				(name "HPD_A"
 					(effects (font (size 1.27 1.27)))
@@ -1072,7 +1072,7 @@
 				)
 			)
 			(pin passive line
-				(at 10.16 2.54 180)
+				(at 10.16 5.08 180)
 				(length 2.54)
 				(name "D0+"
 					(effects (font (size 1.27 1.27)))
@@ -1092,7 +1092,7 @@
 				)
 			)
 			(pin passive line
-				(at 10.16 -2.54 180)
+				(at 10.16 -5.08 180)
 				(length 2.54)
 				(name "D1+"
 					(effects (font (size 1.27 1.27)))
@@ -1102,7 +1102,7 @@
 				)
 			)
 			(pin passive line
-				(at 10.16 -5.08 180)
+				(at 10.16 -10.16 180)
 				(length 2.54)
 				(name "D1-"
 					(effects (font (size 1.27 1.27)))
@@ -1112,7 +1112,7 @@
 				)
 			)
 			(pin passive line
-				(at 10.16 -7.62 180)
+				(at 10.16 -15.24 180)
 				(length 2.54)
 				(name "D2+"
 					(effects (font (size 1.27 1.27)))
@@ -1122,7 +1122,7 @@
 				)
 			)
 			(pin passive line
-				(at 10.16 -10.16 180)
+				(at 10.16 -20.32 180)
 				(length 2.54)
 				(name "D2-"
 					(effects (font (size 1.27 1.27)))
@@ -1132,7 +1132,7 @@
 				)
 			)
 			(pin passive line
-				(at 10.16 -12.7 180)
+				(at 10.16 -25.4 180)
 				(length 2.54)
 				(name "CLK+"
 					(effects (font (size 1.27 1.27)))
@@ -1142,7 +1142,7 @@
 				)
 			)
 			(pin passive line
-				(at 10.16 -15.24 180)
+				(at 10.16 -30.48 180)
 				(length 2.54)
 				(name "CLK-"
 					(effects (font (size 1.27 1.27)))
