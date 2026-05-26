@@ -44,17 +44,17 @@ from zynq_eda.core.model.sheet import (
 )
 
 
-_ROOT_PAPER_SIZE = "A1"
-"""Root sheet is A1 (841×594 mm).
+_ROOT_PAPER_SIZE = "A0"
+"""Root sheet is A0 (1189×841 mm).
 
-Was A2 (594×420 mm). Bumped to A1 because the full carrier surfaces all
-hier-labels for declared external_nets on connector sheets — once the
-FFC_40P (LVDS) and FFC_15P (MIPI) connector symbols carry every pin
-(see ``shared/symbols/zynq_eda.kicad_sym``), the LVDS sheet box grows to
-~96 mm tall to host its 19 hierarchical labels (3 power + 8 LVDS pairs +
-EDID I2C + RESET_N + STBY_N + PWM + BL_EN). With 6 blocks per column,
-that overruns A2's 420 mm height. A1 gives 594 mm of headroom — enough
-for the worst-case column (LVDS + PMOD + FMC LPC = three tall blocks)."""
+Was A1 (841×594 mm). Bumped to A0 because the FX10A_168P + FMC_LPC
+connectors carry every physical pin once their library symbols cover
+the full 168 / 160 contacts: the fmc_lpc sub-sheet now surfaces 84
+hierarchical labels and som_j2 surfaces 70. With 6 blocks per column
+those two sheet symbols alone become ~370-440 mm tall; A1's 594 mm
+height was overrun by ~480 mm in the worst column. A0 + the
+shortest-column-first bin packing in :func:`_place_sheet_symbols`
+keeps every block inside the page."""
 
 _SHEET_SYMBOL_MIN_WIDTH_MM = 50.8
 _SHEET_SYMBOL_MIN_HEIGHT_MM = 38.1
@@ -150,8 +150,15 @@ def _place_sheet_symbols(
     spec_pins: dict[str, list[PlacedSheetPin]] = {}
 
     y_cursor = [snap_to_grid(_ROOT_TOP_MARGIN_MM)] * len(column_x_values)
-    for index, spec in enumerate(block_specs):
-        column = index % len(column_x_values)
+    for spec in block_specs:
+        # Shortest-column-first bin packing. Some blocks (FMC LPC,
+        # SoM mate J2) expose ~70-84 hierarchical labels and become
+        # 370-440 mm tall sheet symbols. Distributing them by index
+        # (round-robin) overruns the root paper's vertical extent
+        # whenever two tall blocks land in the same column. Picking
+        # the column with the lowest current y_cursor keeps the
+        # tallest sheets distributed across separate columns.
+        column = min(range(len(column_x_values)), key=lambda c: y_cursor[c])
         anchor_x = column_x_values[column]
         anchor_y = y_cursor[column]
 

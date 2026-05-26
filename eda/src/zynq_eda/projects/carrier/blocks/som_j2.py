@@ -31,7 +31,7 @@ def build_som_j2() -> Block:
     return Block(
         name="som_j2",
         title="SoM Mate J2 (PL bank 13 high-speed I/O)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Carrier-side mate to the Zynq SoM J2 connector "
             "(FX10A-168P-SV-91). PL bank 13 SelectIO routes to FMC LPC, "
@@ -41,7 +41,7 @@ def build_som_j2() -> Block:
             ConnectorInstance(
                 reference="J2",
                 refcircuit=REFCIRCUITS["FX10A-168P-SV(91)"],
-                lib_id="zynq_eda:FMC_LPC",
+                lib_id="zynq_eda:FX10A_168P",
                 edge=SheetEdge.LEFT,
                 pin_to_net=_som_j2_pin_to_net(),
             ),

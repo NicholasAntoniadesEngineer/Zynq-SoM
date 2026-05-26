@@ -33,7 +33,7 @@ def build_fmc_lpc() -> Block:
     return Block(
         name="fmc_lpc",
         title="FMC LPC Expansion (VITA 57.1 LPC connector)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "VITA 57.1 LPC FMC connector breakout. 34 LA pairs + 4 CLK "
             "pairs route to Zynq PL bank 13 via the SoM J2 mate. Power "
@@ -118,7 +118,8 @@ def _fmc_lpc_pin_to_net():
     for gnd_pin in (
         "C1", "C2", "C5", "C8", "C11", "C14", "C17", "C20", "C23", "C26", "C29", "C32",
         "D1", "D2", "D5", "D8", "D11", "D14", "D17", "D20", "D23", "D26", "D29",
-        "G1", "G4", "G7", "G10", "G13", "G16", "G19", "G22", "G25", "G28", "G31", "G34", "G37",
+        # G7 is LA00_N (pair partner of G6); not a GND pin per VITA 57.1.
+        "G1", "G4", "G10", "G13", "G16", "G19", "G22", "G25", "G28", "G31", "G34", "G37",
         "H1", "H7", "H10", "H13", "H16", "H19", "H22", "H25", "H28", "H31", "H34", "H37", "H40",
     ):
         pairs.append((gnd_pin, "GND"))

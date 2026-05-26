@@ -94,8 +94,9 @@ def place_connectors(
         # top pins land off the top of the page.
         y_cursor = snap_to_grid(INTERIOR_MARGIN_MM + 20.32)
         for connector in connectors:
-            pin_count = _connector_pin_count(connector, geometry_cache)
-            symbol_half_height = max(20.32, (pin_count * 2.54) / 2.0 + 2.54)
+            symbol_half_height = _connector_symbol_half_height(
+                connector, geometry_cache
+            )
             anchor_y = snap_to_grid(y_cursor + symbol_half_height)
             anchor = Point(column_x, anchor_y)
             _place_one_connector(
@@ -116,6 +117,31 @@ def _connector_pin_count(
         return sum(1 for _ in geometry_cache.all_pins(connector.lib_id))
     except Exception:
         return 4
+
+
+def _connector_symbol_half_height(
+    connector: ConnectorInstance,
+    geometry_cache: SymbolGeometryCache,
+) -> float:
+    """Return half the connector symbol's actual page-frame height.
+
+    Uses the real bounding box (from the .kicad_sym pin coordinates,
+    rotated by the symbol's placement rotation) instead of the previous
+    pin-count heuristic. The heuristic assumed all pins on one side and
+    doubled the height for two-column connectors like FX10A_168P /
+    FMC_LPC, causing 168-pin SoM-mate symbols to overflow the page.
+    """
+    try:
+        bbox = geometry_cache.bounding_box(
+            connector.lib_id,
+            rotation=connector.rotation,
+        )
+    except Exception:
+        # Fall back to the pin-count heuristic for symbols whose
+        # bounding box can't be resolved (e.g. unregistered libraries).
+        pin_count = _connector_pin_count(connector, geometry_cache)
+        return max(20.32, (pin_count * 2.54) / 2.0 + 2.54)
+    return max(20.32, bbox.height / 2.0 + 2.54)
 
 
 def _place_one_connector(

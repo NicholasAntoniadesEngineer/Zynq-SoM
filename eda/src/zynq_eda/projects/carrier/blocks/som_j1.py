@@ -39,7 +39,7 @@ def build_som_j1() -> Block:
     return Block(
         name="som_j1",
         title="SoM Mate J1 (PS MIO + system rails)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Carrier-side mate to the Zynq SoM J1 connector "
             "(FX10A-168P-SV-91). Routes Zynq PS MIO + system rails + "
@@ -49,7 +49,7 @@ def build_som_j1() -> Block:
             ConnectorInstance(
                 reference="J1",
                 refcircuit=REFCIRCUITS["FX10A-168P-SV(91)"],
-                lib_id="zynq_eda:FMC_LPC",
+                lib_id="zynq_eda:FX10A_168P",
                 edge=SheetEdge.LEFT,
                 pin_to_net=_som_j1_pin_to_net(),
             ),
