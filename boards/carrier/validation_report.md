@@ -1,30 +1,29 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-26T19:46:30Z
+Generated: 2026-05-26T19:50:48Z
 
-**Errors:** 0  **Warnings:** 491  **Info:** 0
+**Errors:** 0  **Warnings:** 486  **Info:** 0
 
-## Warnings (491)
+## Warnings (486)
 
 - **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
 - **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FMC_LPC_LA_LOW' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J1_PL_POWER' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J3_DIFF' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FFC_40P_LVDS_SIGNALS' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FMC_LPC_LA_HIGH' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J2_DIFF' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J3_SE' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FMC_LPC_LA_LOW' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FMC_LPC_LA_LOW.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J1_PL_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J1_PL_POWER.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J3_DIFF' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J3_DIFF.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FFC_40P_LVDS_SIGNALS' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FFC_40P_LVDS_SIGNALS.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FMC_LPC_LA_HIGH' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FMC_LPC_LA_HIGH.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J2_DIFF' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J2_DIFF.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J3_SE' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J3_SE.kicad_sym' _(carrier.kicad_sch)_
 - **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
 - **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FFC_40P_LVDS_POWER' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FMC_LPC_PWR_CLK_JTAG' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J1_MIO' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J2_SE' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J3_POWER' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J1_PS_AUX' _(carrier.kicad_sch)_
-- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J2_POWER' _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FFC_40P_LVDS_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FFC_40P_LVDS_POWER.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FMC_LPC_PWR_CLK_JTAG' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FMC_LPC_PWR_CLK_JTAG.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J1_MIO' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J1_MIO.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J2_SE' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J2_SE.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J3_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J3_POWER.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J1_PS_AUX' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J1_PS_AUX.kicad_sym' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J2_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J2_POWER.kicad_sym' _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both GND and +VIN are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -126,8 +125,8 @@ Generated: 2026-05-26T19:46:30Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_XADC_VAUX2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_XADC_VAUX3_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_USER_MRCC_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both Vin- and +VIN are attached to the same items; Vin- will be used in the netlist _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -204,11 +203,11 @@ Generated: 2026-05-26T19:46:30Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_LA32_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_LA32_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_BOOT_MODE_0 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both +3V3 and ZYNQ_BOOT_MODE_0 are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_BOOT_MODE_1 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_BOOT_MODE_2 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_BOOT_MODE_3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_PS_SRST_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both +3V3 and ZYNQ_PS_SRST_N are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VCCO_13 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_LA00_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -272,7 +271,6 @@ Generated: 2026-05-26T19:46:30Z
 - **erc.hier_label_mismatch**: Hierarchical label AUX_IO_9 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label AUX_IO_10 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_I2C2_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_I2C2_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -292,10 +290,9 @@ Generated: 2026-05-26T19:46:30Z
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label CHASSIS_GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_5V_SENSE has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both +3V3 and GND are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both +3V3 and ZYNQ_HDMI_RX_5V_SENSE are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -309,7 +306,6 @@ Generated: 2026-05-26T19:46:30Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_HPD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both GND and +3V3 are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
@@ -402,7 +398,6 @@ Generated: 2026-05-26T19:46:30Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_CAM_GPIO1 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_CAM_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_CAM_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_USBOTG_VBUS_EN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_USBOTG_OC_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_

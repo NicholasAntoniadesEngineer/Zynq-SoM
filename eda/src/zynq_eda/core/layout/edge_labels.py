@@ -364,6 +364,17 @@ def _input_pwr_flags(
     Ground nets are handled separately by :func:`_ground_label_and_flag`.
     """
     flag_emitted_for_net: set[str] = set()
+    # Pre-compute which external nets are SOURCED on this block by a
+    # connector pin. Connectors are the "entry point" — only the
+    # sourcing block emits the PWR_FLAG to avoid Power-output ×
+    # Power-output conflicts across sheets (e.g. +VIN appears on both
+    # usb_pd and power as PowerInputNet, but the USB-C connector on
+    # usb_pd is the real source).
+    nets_sourced_by_connector: set[str] = set()
+    for conn in getattr(block, "connectors", ()) or ():
+        for _pin_id, net_name in (getattr(conn, "pin_to_net", ()) or ()):
+            nets_sourced_by_connector.add(net_name)
+
     for net in block.external_nets:
         # Emit PWR_FLAG for power-input, power-output (when no IC driver),
         # AND ground variants that aren't the canonical "GND" (which
@@ -386,6 +397,15 @@ def _input_pwr_flags(
             )
             if has_power_out_driver:
                 continue
+        # For input nets: emit PWR_FLAG only when this block is the
+        # SOURCE of the net (i.e. has a connector pin providing it).
+        # Pure consumer blocks see the net via cross-sheet binding;
+        # adding a PWR_FLAG there double-drives the net and produces
+        # Power-output × Power-output pin_to_pin warnings. Special
+        # case: ``CHASSIS_GND``-style ground variants without a
+        # connector source still need a flag (no other driver exists).
+        if net.power_kind == "input" and net.name not in nets_sourced_by_connector:
+            continue
         if net.name in flag_emitted_for_net:
             continue
         flag_emitted_for_net.add(net.name)
