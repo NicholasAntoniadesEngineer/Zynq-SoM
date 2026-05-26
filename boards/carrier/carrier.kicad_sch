@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "76bdf880-1d78-407c-8c4b-8aac36691348")
+	(uuid "cae4e11d-6dcd-432b-ba7b-3ba19d05ab24")
 	(paper "A3" portrait)
 	(title_block
 		(title "Zynq SoM Carrier")
@@ -16,7 +16,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "a8a2e49a-2c02-45b8-868d-0e94925d3e2a")
+		(uuid "c9da9919-4b2a-41e7-a3b6-6824323c4479")
 	)
 	(label "Sheet 1/28"
 		(at 186.69 345.44 0.0000)
@@ -26,7 +26,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "6e1da4e0-98af-45a2-b17d-1a23ae5d85a5")
+		(uuid "e260ae20-59c3-4ce9-9667-4c506d2ced02")
 	)
 	(label "Rev A1"
 		(at 186.69 350.52 0.0000)
@@ -36,7 +36,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "b92dac79-22bd-4be3-a9be-f7af3c6b66a4")
+		(uuid "dff04910-aa33-488b-a594-df6fa4703cb2")
 	)
 	(label "2026-05-26"
 		(at 186.69 355.6 0.0000)
@@ -46,7 +46,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "e4b966de-dc2f-4b48-96ba-62baa19181c0")
+		(uuid "b265e9db-6d22-4ba4-afdf-ed2181ab5e98")
 	)
 	(label "Zynq SoM Carrier - Block Index"
 		(at 99.06 12.7 0.0000)
@@ -56,7 +56,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c6d61e83-3252-4f3c-9546-4460e27f62ea")
+		(uuid "8a5972c7-6d07-4fc8-bb13-48a8b1c4eac3")
 	)
 	(sheet
 		(at 15.24 25.4)
@@ -73,7 +73,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "6bf33066-f0b7-4353-bc39-c7ee9c54477b")
+		(uuid "cfa72b28-ec7a-46a3-8b83-2451be2874b9")
 		(property "Sheetname" "power"
 			(at 15.24 24.6884 0)
 			(effects
@@ -92,9 +92,59 @@
 				(justify left top)
 			)
 		)
+		(pin "+VIN" input
+			(at 15.24 44.45 180)
+			(uuid "44d3327d-1c17-46c5-9a76-caceea597c28")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 15.24 43.18 180)
+			(uuid "107494b0-cdf2-4aed-961f-7892eb5d94be")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+3V3" output
+			(at 15.24 41.91 180)
+			(uuid "96e14601-767c-4818-9dba-6804c4b72130")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+2V5" output
+			(at 15.24 40.64 180)
+			(uuid "d19ab018-5420-4c43-bb0e-e527c0f4551c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+1V8" output
+			(at 15.24 39.37 180)
+			(uuid "d451f48f-12bc-4d9a-b6e3-1027d10e8a24")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -115,7 +165,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "b417dfbc-112b-4f4d-9878-b6aa0ce56618")
+		(uuid "8231710c-7ca9-466c-8e30-c182ef855c58")
 		(property "Sheetname" "power_mon"
 			(at 81.28 24.6884 0)
 			(effects
@@ -134,9 +184,69 @@
 				(justify left top)
 			)
 		)
+		(pin "+VIN" input
+			(at 81.28 44.45 180)
+			(uuid "ae8f989e-10a3-4633-a6e0-2cf1b631aec5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+3V3" input
+			(at 81.28 43.18 180)
+			(uuid "9bfdab27-7cf0-4560-9b36-60319ba9eaed")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 81.28 41.91 180)
+			(uuid "135a51e8-c50d-4ab9-bc03-471ef67a6f99")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_I2C2_SDA" bidirectional
+			(at 81.28 40.64 180)
+			(uuid "8a2f6448-80c3-461d-b183-c4b7c30e4329")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_I2C2_SCL" input
+			(at 81.28 39.37 180)
+			(uuid "6aba832e-030b-4e17-bed5-eba237f080f3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_INA226_ALERT_N" output
+			(at 81.28 38.1 180)
+			(uuid "c5ec0244-1a72-4187-919a-a6a9fbe0d169")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -157,7 +267,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "8b38b0bc-0531-4515-b643-ea69befcfe24")
+		(uuid "ea415c9d-2f5c-42bc-87e3-d8d54f1e1e5c")
 		(property "Sheetname" "usb_pd"
 			(at 147.32 24.6884 0)
 			(effects
@@ -176,9 +286,119 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 147.32 44.45 180)
+			(uuid "fb1306c8-2a12-438f-8705-974229dca155")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+VIN" input
+			(at 147.32 43.18 180)
+			(uuid "5edd45bf-2003-49e6-9193-9b1ca1df5f0d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_I2C2_SDA" bidirectional
+			(at 147.32 41.91 180)
+			(uuid "65987f02-013c-4e72-b57e-1e116adb4af2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_I2C2_SCL" input
+			(at 147.32 40.64 180)
+			(uuid "ae842a7e-5004-4eca-b686-6b9bf090c1c5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_FUSB302_INT" output
+			(at 147.32 39.37 180)
+			(uuid "c388d9c6-1081-41a3-b925-e562439e0955")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_USB_CC1" bidirectional
+			(at 147.32 38.1 180)
+			(uuid "7ff43c2a-d485-476c-b1a2-05c39c1f6b3b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_USB_CC2" bidirectional
+			(at 147.32 36.83 180)
+			(uuid "f0d79519-f112-4124-a8da-3abfe0a9e89c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "USB_DP" bidirectional
+			(at 147.32 35.56 180)
+			(uuid "68ed9631-2c71-49b6-80f3-d7dd9d238135")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "USB_DM" bidirectional
+			(at 147.32 34.29 180)
+			(uuid "7c40f476-051e-4e01-b037-7571ec388ec9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 147.32 33.02 180)
+			(uuid "3d9f6e06-1753-4327-82e9-bf8aa7a1b719")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "CHASSIS_GND" passive
+			(at 147.32 31.75 180)
+			(uuid "f3a56f26-c919-44f1-8882-c53b26c9998d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -199,7 +419,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "12483b15-e34f-453d-983e-35d977aaf6e2")
+		(uuid "d0003932-2ead-481b-9854-3b5e7b7dc2d5")
 		(property "Sheetname" "usbc_otg"
 			(at 213.36 24.6884 0)
 			(effects
@@ -218,9 +438,89 @@
 				(justify left top)
 			)
 		)
+		(pin "+VIN" input
+			(at 213.36 44.45 180)
+			(uuid "d28f3a42-2e9f-49d3-a8f0-df4d1a14b31c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 213.36 43.18 180)
+			(uuid "d81edc64-f112-43b1-8278-082bbbd55c71")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "USBOTG_DP" bidirectional
+			(at 213.36 41.91 180)
+			(uuid "33d4ad32-96f2-4f97-84de-12f7cf676213")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "USBOTG_DM" bidirectional
+			(at 213.36 40.64 180)
+			(uuid "45e9fff3-3f84-4c0f-bacb-414950db3075")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_USBOTG_ID" input
+			(at 213.36 39.37 180)
+			(uuid "14c19c5e-4b38-492b-9f3e-4e4bac34b771")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_USBOTG_VBUS_EN" input
+			(at 213.36 38.1 180)
+			(uuid "8e05c9e4-a619-4086-8b57-260fd345dc54")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_USBOTG_OC_N" output
+			(at 213.36 36.83 180)
+			(uuid "ea00671a-02e3-442b-882f-6b3d1b3a07a3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "CHASSIS_GND" passive
+			(at 213.36 35.56 180)
+			(uuid "8b8a8c18-eb32-4b4e-9312-73aebdde5bea")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -241,7 +541,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "83bee60d-4a07-4b80-841e-2893c8d474b5")
+		(uuid "c9b5de92-864b-4a30-b46d-8cc07793bd71")
 		(property "Sheetname" "uart_bridge"
 			(at 15.24 75.4884 0)
 			(effects
@@ -260,9 +560,69 @@
 				(justify left top)
 			)
 		)
+		(pin "+VIN" input
+			(at 15.24 95.25 180)
+			(uuid "2122f1c2-64e4-4dfd-ad6f-24a42ef0dac4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 15.24 93.98 180)
+			(uuid "b7953a0a-6a08-4067-a4bf-cefbc2206128")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_UART0_RXD" input
+			(at 15.24 92.71 180)
+			(uuid "9c0783f0-4bee-48fb-823f-5bb9e816cec8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_UART0_TXD" output
+			(at 15.24 91.44 180)
+			(uuid "b327a974-bb15-4cf9-9e3d-74c142e7d3dc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_UART0_RTS_N" input
+			(at 15.24 90.17 180)
+			(uuid "4b3df06c-2d62-47d2-addf-706a575255d2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_UART0_CTS_N" output
+			(at 15.24 88.9 180)
+			(uuid "8a790c48-433e-41ab-b66f-1c78238363f5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -283,7 +643,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "f0623feb-9a16-4d1d-b1e2-b4b3a282a2c9")
+		(uuid "eb31bcf5-625b-4e8a-acd2-b0c42067c0fa")
 		(property "Sheetname" "hdmi_tx"
 			(at 81.28 75.4884 0)
 			(effects
@@ -302,9 +662,159 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 81.28 95.25 180)
+			(uuid "cab8b4b5-0fca-47a4-a3d3-68b40649c546")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+5V" input
+			(at 81.28 93.98 180)
+			(uuid "e211e387-673f-42a5-b2ac-b27e7a83bf83")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 81.28 92.71 180)
+			(uuid "fa0faedf-6680-49b2-a0da-133fe9ad8c3c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_0_P" output
+			(at 81.28 91.44 180)
+			(uuid "eeb43a07-bce2-42db-8057-f386a3db1bcd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_0_N" output
+			(at 81.28 90.17 180)
+			(uuid "233d5d30-c97c-489e-a930-111a8b556f64")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_1_P" output
+			(at 81.28 88.9 180)
+			(uuid "0395d4a9-2b73-428d-a34b-ec8954f473e9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_1_N" output
+			(at 81.28 87.63 180)
+			(uuid "4ba6b820-c9c7-4003-be37-89d690cebca7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_2_P" output
+			(at 81.28 86.36 180)
+			(uuid "0f45376e-a880-4e1e-8465-e9f061f49fb9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_2_N" output
+			(at 81.28 85.09 180)
+			(uuid "5f4652fa-b6cd-4881-8126-24b3eca47848")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_CLK_P" output
+			(at 81.28 83.82 180)
+			(uuid "1ac992e8-2b42-4318-bd78-b5315a3a61fd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_CLK_N" output
+			(at 81.28 82.55 180)
+			(uuid "42d84ac4-33c9-4613-a682-4b61887222f5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_CEC" bidirectional
+			(at 81.28 81.28 180)
+			(uuid "0e2ad3ee-379a-482d-bacc-12579f31e4fe")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_HPD" input
+			(at 81.28 80.01 180)
+			(uuid "09e705a2-2894-4c6a-b0fc-b6149130d08c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_SCL" output
+			(at 81.28 78.74 180)
+			(uuid "dc0ec01c-56eb-46dc-832a-4d1f0c35896f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_SDA" bidirectional
+			(at 81.28 77.47 180)
+			(uuid "6d8d653b-c842-42c9-b7a4-8bfdb35cfde5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -325,7 +835,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "65bcf56d-b805-4669-b03d-a08c5f636ef4")
+		(uuid "902e2f3f-dfc3-4d09-896b-df29af7af43b")
 		(property "Sheetname" "hdmi_rx"
 			(at 147.32 75.4884 0)
 			(effects
@@ -344,9 +854,159 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 147.32 95.25 180)
+			(uuid "bd8485e3-d951-44e9-bc0c-637581292374")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 147.32 93.98 180)
+			(uuid "d8823b71-9a91-44c3-8efa-ac6096aac626")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_0_P" input
+			(at 147.32 92.71 180)
+			(uuid "8837edca-efcf-41c3-9137-42883cc1793e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_0_N" input
+			(at 147.32 91.44 180)
+			(uuid "f66dac7e-3b93-4ccc-92ba-7f8afa8290ec")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_1_P" input
+			(at 147.32 90.17 180)
+			(uuid "2e490033-a9e6-436e-a27a-cbc7ebd44ec2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_1_N" input
+			(at 147.32 88.9 180)
+			(uuid "17b3fa73-0a60-416c-82f8-1942a6ebc43d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_2_P" input
+			(at 147.32 87.63 180)
+			(uuid "2df0c5ce-1894-4de1-b605-e9a3b36dd3b3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_2_N" input
+			(at 147.32 86.36 180)
+			(uuid "5716bfa0-3d15-469b-b5bb-ef274ccc9ef9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_CLK_P" input
+			(at 147.32 85.09 180)
+			(uuid "0e5dc2f9-5cf2-4666-8a80-79b19283692d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_CLK_N" input
+			(at 147.32 83.82 180)
+			(uuid "3e032fdb-9739-44b7-b126-106e67e25616")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_CEC" bidirectional
+			(at 147.32 82.55 180)
+			(uuid "41c9c733-6081-47b1-8d21-abf044f6f941")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_HPD" output
+			(at 147.32 81.28 180)
+			(uuid "12348b19-ae6e-4bed-9c03-dd651a7a4f25")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_5V_SENSE" input
+			(at 147.32 80.01 180)
+			(uuid "d6a71db1-bc88-49de-9e34-e7781894f5af")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_SCL" input
+			(at 147.32 78.74 180)
+			(uuid "07b669da-322d-4353-977d-e17969c95a50")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_SDA" bidirectional
+			(at 147.32 77.47 180)
+			(uuid "0b7a2022-6ef4-41bc-a8c3-835bddc185a1")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -367,7 +1027,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "c35f190d-ed5d-4ddf-bdb4-bd4cb7e3c126")
+		(uuid "4e1470c5-8270-40e6-9e5e-2e7b483a6dfa")
 		(property "Sheetname" "ethernet"
 			(at 213.36 75.4884 0)
 			(effects
@@ -386,9 +1046,139 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 213.36 95.25 180)
+			(uuid "38a7f255-7bd9-4821-a814-5981991e55d6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 213.36 93.98 180)
+			(uuid "9d2e6ff5-4160-4967-8591-a348fc3e51a6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "CHASSIS_GND" passive
+			(at 213.36 92.71 180)
+			(uuid "765bfbba-79e8-438e-975f-1b25746e2716")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_MDI_0_P" bidirectional
+			(at 213.36 91.44 180)
+			(uuid "6c6952bb-8989-4ec2-b34c-fcdc56ae22f4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_MDI_0_N" bidirectional
+			(at 213.36 90.17 180)
+			(uuid "5dc43070-ec63-4e79-9b7f-7348f993c786")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_MDI_1_P" bidirectional
+			(at 213.36 88.9 180)
+			(uuid "56e9feb2-7829-4a39-8b1e-40c6c82517e0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_MDI_1_N" bidirectional
+			(at 213.36 87.63 180)
+			(uuid "0730312c-f222-487d-9863-e9c2f4b7d162")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_MDI_2_P" bidirectional
+			(at 213.36 86.36 180)
+			(uuid "77661d03-f386-4c5e-9f19-150b8b32e4e4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_MDI_2_N" bidirectional
+			(at 213.36 85.09 180)
+			(uuid "7a362f39-8e84-4971-988c-519fd8613b20")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_MDI_3_P" bidirectional
+			(at 213.36 83.82 180)
+			(uuid "30aff58c-9034-45cd-b846-06e56d5c3f11")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_MDI_3_N" bidirectional
+			(at 213.36 82.55 180)
+			(uuid "ba22826c-9ff5-46da-b212-03d64c22ec4d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_LED_LINK" output
+			(at 213.36 81.28 180)
+			(uuid "db1db3fc-46cf-4f04-80e7-daeafd5a93d2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_ETH_LED_ACT" output
+			(at 213.36 80.01 180)
+			(uuid "f2e0dd04-de11-4ff7-a6a6-967c6191f7b7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -409,7 +1199,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "05045af7-1079-4ab3-b463-610b943d04c4")
+		(uuid "a945ace8-c485-47c3-bba7-64daa179ce43")
 		(property "Sheetname" "microsd"
 			(at 15.24 126.2884 0)
 			(effects
@@ -428,9 +1218,99 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 15.24 146.05 180)
+			(uuid "f2f76e9b-a3df-4535-9bd6-cccacb104526")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 15.24 144.78 180)
+			(uuid "86d6cbfb-7a55-4af0-8ae7-d33111b51a43")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_SD1_DAT0" bidirectional
+			(at 15.24 143.51 180)
+			(uuid "3da35b43-dfab-4109-859a-95ac8f56974e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_SD1_DAT1" bidirectional
+			(at 15.24 142.24 180)
+			(uuid "76b43c6e-b593-4f9c-8d9c-90d7cf1d1729")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_SD1_DAT2" bidirectional
+			(at 15.24 140.97 180)
+			(uuid "55608d07-108c-42c9-8abf-0ad5be8a32ec")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_SD1_DAT3" bidirectional
+			(at 15.24 139.7 180)
+			(uuid "d77e7aba-367f-401a-a2ec-1976c89920a4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_SD1_CMD" bidirectional
+			(at 15.24 138.43 180)
+			(uuid "6a2f0c98-340e-4ea2-a1f3-1c22b38baf7e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_SD1_CLK" output
+			(at 15.24 137.16 180)
+			(uuid "0ac85f94-b193-4d90-aa23-7093555c47d7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_SD1_CD_N" input
+			(at 15.24 135.89 180)
+			(uuid "604548f0-2ac6-45ba-b88c-adcabc29266a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -451,7 +1331,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "082bf978-b1db-49f7-bb99-54af209e0c84")
+		(uuid "04f54945-abd1-41ab-859f-8b0b74d5b59e")
 		(property "Sheetname" "lvds_lcd_signals"
 			(at 81.28 126.2884 0)
 			(effects
@@ -470,9 +1350,179 @@
 				(justify left top)
 			)
 		)
+		(pin "GND" passive
+			(at 81.28 146.05 180)
+			(uuid "c9744cab-560c-4cc0-b753-daf3e2f0ba38")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA0_P" output
+			(at 81.28 144.78 180)
+			(uuid "f23c4fc4-cdfb-4683-93cb-7877e9218478")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA0_N" output
+			(at 81.28 143.51 180)
+			(uuid "510affc1-4336-47da-a66d-4e275c203af2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA1_P" output
+			(at 81.28 142.24 180)
+			(uuid "9fb8de7a-54bd-407c-8bc6-d86dd5d2eb55")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA1_N" output
+			(at 81.28 140.97 180)
+			(uuid "baccb444-168e-42da-8f22-b063a525f0c3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA2_P" output
+			(at 81.28 139.7 180)
+			(uuid "96b009c6-c54a-420e-a024-09eb4824b396")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA2_N" output
+			(at 81.28 138.43 180)
+			(uuid "35504685-c4dc-40ba-bdf2-a4002cc8abdb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA3_P" output
+			(at 81.28 137.16 180)
+			(uuid "a10d2377-b821-49cb-86bc-e2ac1d0e04ea")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA3_N" output
+			(at 81.28 135.89 180)
+			(uuid "f8dd71d4-feb1-4f87-9361-dd27df50a47f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_CLK_P" output
+			(at 81.28 134.62 180)
+			(uuid "473a51dc-cf43-4ab3-be54-33b7d99f79e9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_CLK_N" output
+			(at 81.28 133.35 180)
+			(uuid "91ac01e6-022d-4dd0-8b41-bb3a9b095d29")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_EDID_SCL" output
+			(at 81.28 132.08 180)
+			(uuid "8138de12-c9da-4f12-a794-1fb895ca4410")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_EDID_SDA" bidirectional
+			(at 81.28 130.81 180)
+			(uuid "e14326cb-1a9c-469c-a60e-f56265fbc1ee")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_RESET_N" output
+			(at 81.28 129.54 180)
+			(uuid "741add2b-b5c7-4d99-9a3e-5a6c700b84df")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_STBY_N" output
+			(at 81.28 128.27 180)
+			(uuid "c83b5b75-5640-4c2b-9869-46680787a8fc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_PWM" output
+			(at 81.28 127 180)
+			(uuid "2833d328-dc79-4a08-bdb9-ed1a0de6b414")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_BL_EN" output
+			(at 81.28 125.73 180)
+			(uuid "cf22cc96-f2c3-4971-b9e7-42aa03c140fd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -493,7 +1543,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "eed9ad61-f9ef-4807-8f65-af96c849decd")
+		(uuid "cf8abc52-1592-4a84-9e34-878b866a25b1")
 		(property "Sheetname" "lvds_lcd_power"
 			(at 147.32 126.2884 0)
 			(effects
@@ -512,9 +1562,39 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 147.32 146.05 180)
+			(uuid "fab7e066-91d0-4d3f-be92-6c3ae429e99b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+12V" input
+			(at 147.32 144.78 180)
+			(uuid "7164a698-71a2-4e90-86ab-3d40e13c552c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 147.32 143.51 180)
+			(uuid "6571d75d-2f95-4078-923f-2d2935d8e938")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -535,7 +1615,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "bbecd731-d68b-4e66-b128-6f6e51421163")
+		(uuid "97741aaf-6206-4bd2-8b28-b75bd8e95af0")
 		(property "Sheetname" "mipi_camera"
 			(at 213.36 126.2884 0)
 			(effects
@@ -554,9 +1634,129 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 213.36 146.05 180)
+			(uuid "85c32563-1f3b-4a2d-8f4f-af233c31ffd7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 213.36 144.78 180)
+			(uuid "e7b735b5-ce68-48f5-842a-3f2063b27398")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_D0_P" input
+			(at 213.36 143.51 180)
+			(uuid "d30b382a-bad3-4af0-9a74-add85b8863bf")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_D0_N" input
+			(at 213.36 142.24 180)
+			(uuid "6661f1b0-ec49-4a8e-85b2-2e8484be5b3a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_D1_P" input
+			(at 213.36 140.97 180)
+			(uuid "211222fd-1a7e-4c55-b006-9c92f418f705")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_D1_N" input
+			(at 213.36 139.7 180)
+			(uuid "faa87d06-97ff-49dd-93d7-c077f35f95ea")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_CLK_P" input
+			(at 213.36 138.43 180)
+			(uuid "dcd94a5a-2a5d-44aa-a843-5284a36d4fba")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_CLK_N" input
+			(at 213.36 137.16 180)
+			(uuid "da90d261-3f47-4ee8-a891-82a47b73ef14")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_GPIO0" output
+			(at 213.36 135.89 180)
+			(uuid "b9235b89-f47d-4e9e-b9b1-39eaff2dbc01")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_GPIO1" output
+			(at 213.36 134.62 180)
+			(uuid "4ad15dd4-b50e-47ad-88e0-38059d7ef337")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_SCL" output
+			(at 213.36 133.35 180)
+			(uuid "0bd6ba47-89ab-4dce-a748-eadd46331824")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_SDA" bidirectional
+			(at 213.36 132.08 180)
+			(uuid "c37902bf-a0dd-43ad-9035-15dd979b892b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -577,7 +1777,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "77623eb5-56aa-4e12-b597-7f6855ae4efb")
+		(uuid "06bff0d6-67bb-4db0-b5d1-168286336027")
 		(property "Sheetname" "fmc_lpc_la_low"
 			(at 15.24 177.0884 0)
 			(effects
@@ -596,9 +1796,339 @@
 				(justify left top)
 			)
 		)
+		(pin "GND" passive
+			(at 15.24 196.85 180)
+			(uuid "2b4f27c6-ca45-4b54-91b3-5bf6e5660ba7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA00_P" bidirectional
+			(at 15.24 195.58 180)
+			(uuid "1ecbefb9-0f13-4be3-a633-c8b215b7286d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA00_N" bidirectional
+			(at 15.24 194.31 180)
+			(uuid "3a105c0c-f598-49cd-8e37-9bc2434a0f1a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA01_P" bidirectional
+			(at 15.24 193.04 180)
+			(uuid "68567317-b11e-47b1-8934-ba970ae829d2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA01_N" bidirectional
+			(at 15.24 191.77 180)
+			(uuid "0c23845b-bd36-4b3f-aca9-b816a5f1cac5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA02_P" bidirectional
+			(at 15.24 190.5 180)
+			(uuid "ef954814-ee91-4354-baef-d1466f31d2ab")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA02_N" bidirectional
+			(at 15.24 189.23 180)
+			(uuid "34443319-4106-4ef3-877b-d20c0534c0b0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA03_P" bidirectional
+			(at 15.24 187.96 180)
+			(uuid "77c19da4-66fa-4314-b607-5821d62d8c18")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA03_N" bidirectional
+			(at 15.24 186.69 180)
+			(uuid "57e4da5a-9c68-4e15-9bd2-2eeb94dff921")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA04_P" bidirectional
+			(at 15.24 185.42 180)
+			(uuid "3bcb2a48-47eb-4351-85a4-a4ff93ea25c7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA04_N" bidirectional
+			(at 15.24 184.15 180)
+			(uuid "2f4d598e-c605-4442-8b3b-c6a1786b9fe0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA05_P" bidirectional
+			(at 15.24 182.88 180)
+			(uuid "030b3b25-9b3d-49e3-b5c0-2949a47e3d67")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA05_N" bidirectional
+			(at 15.24 181.61 180)
+			(uuid "c187d64e-21cc-4c24-8de2-91b367bc340e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA06_P" bidirectional
+			(at 15.24 180.34 180)
+			(uuid "faa446d1-7a30-4943-b9a3-29b02741032e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA06_N" bidirectional
+			(at 15.24 179.07 180)
+			(uuid "a8890842-8f25-4f32-8075-8decb466f2ce")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA07_P" bidirectional
+			(at 15.24 177.8 180)
+			(uuid "77f6047d-63d6-4603-a6f1-7131382cb68b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA07_N" bidirectional
+			(at 15.24 176.53 180)
+			(uuid "5848945e-5fa3-463b-9cb1-8f1edc0e7648")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA08_P" bidirectional
+			(at 15.24 175.26 180)
+			(uuid "621a7679-df16-4039-bbd4-217468ac8f73")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA08_N" bidirectional
+			(at 15.24 173.99 180)
+			(uuid "c0f413da-5704-4fe6-9f5a-81f2b1bec800")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA09_P" bidirectional
+			(at 15.24 172.72 180)
+			(uuid "cf9ebee4-603c-479d-999e-bc3a993cfbe7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA09_N" bidirectional
+			(at 15.24 171.45 180)
+			(uuid "4099870e-6e95-4881-8263-46d1f693d8a4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA10_P" bidirectional
+			(at 15.24 170.18 180)
+			(uuid "926ef8a7-408b-422d-930f-b0f8d759b0b7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA10_N" bidirectional
+			(at 15.24 168.91 180)
+			(uuid "81626ff1-6c3e-48c1-a0b7-2e9c44c1e170")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA11_P" bidirectional
+			(at 15.24 167.64 180)
+			(uuid "a55a962b-57a1-437f-b6d8-3aa79065e0ca")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA11_N" bidirectional
+			(at 15.24 166.37 180)
+			(uuid "139a5eff-9b05-4e28-bd54-bbf988c05d15")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA12_P" bidirectional
+			(at 15.24 165.1 180)
+			(uuid "fa20c599-05aa-4e05-821d-e085ddf6272d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA12_N" bidirectional
+			(at 15.24 163.83 180)
+			(uuid "63d87940-f340-4ccd-bdd1-874e18148aeb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA13_P" bidirectional
+			(at 15.24 162.56 180)
+			(uuid "5fad820a-be82-4482-bef4-5d67cc1830f3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA13_N" bidirectional
+			(at 15.24 161.29 180)
+			(uuid "93dadd4c-d039-49d4-804a-c83dd8e2c567")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA14_P" bidirectional
+			(at 15.24 160.02 180)
+			(uuid "d60b7b1d-09b9-4bdd-9e87-457c7959e093")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA14_N" bidirectional
+			(at 15.24 158.75 180)
+			(uuid "b191a3fa-e7d9-4848-ac85-c859f154404f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA15_P" bidirectional
+			(at 15.24 157.48 180)
+			(uuid "317757cf-e143-490b-a4b0-281ff757886b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA15_N" bidirectional
+			(at 15.24 156.21 180)
+			(uuid "9f4bb718-10e6-430d-88a7-543b9ffe6d7b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -619,7 +2149,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "063ab28d-680b-4f64-b97c-5aaf0918f38b")
+		(uuid "b2c997ee-5bc0-417d-a765-0309a6292c14")
 		(property "Sheetname" "fmc_lpc_la_high"
 			(at 81.28 177.0884 0)
 			(effects
@@ -638,9 +2168,379 @@
 				(justify left top)
 			)
 		)
+		(pin "GND" passive
+			(at 81.28 196.85 180)
+			(uuid "82fa0028-7b15-4370-9b3d-36f526d3e2f2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA16_P" bidirectional
+			(at 81.28 195.58 180)
+			(uuid "520eabff-bd1a-4f7a-b667-9f085d0a5959")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA16_N" bidirectional
+			(at 81.28 194.31 180)
+			(uuid "b4076f9a-82fe-4cf9-bce9-9a9da6579b75")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA17_P" bidirectional
+			(at 81.28 193.04 180)
+			(uuid "5ef6465f-f555-4ec5-9136-d5e1eb31c53a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA17_N" bidirectional
+			(at 81.28 191.77 180)
+			(uuid "f95bf991-e7f5-4be8-a37a-c9356c5edee7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA18_P" bidirectional
+			(at 81.28 190.5 180)
+			(uuid "5b1d5af5-048f-4ba1-abef-99d1b28866de")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA18_N" bidirectional
+			(at 81.28 189.23 180)
+			(uuid "5bb0eebd-ac99-4172-9c0b-6f6519239db6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA19_P" bidirectional
+			(at 81.28 187.96 180)
+			(uuid "97fd3db8-fd47-4970-b24c-3f85a3074dfa")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA19_N" bidirectional
+			(at 81.28 186.69 180)
+			(uuid "b45f2331-e762-4051-ae76-8055529e48e5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA20_P" bidirectional
+			(at 81.28 185.42 180)
+			(uuid "9af408a1-4eae-400f-8da2-87ddc4d6dd60")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA20_N" bidirectional
+			(at 81.28 184.15 180)
+			(uuid "1dace130-911c-48c7-8a38-0f93ae7d46fc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA21_P" bidirectional
+			(at 81.28 182.88 180)
+			(uuid "336e2f4d-1a22-4e92-83a5-b56055b6a515")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA21_N" bidirectional
+			(at 81.28 181.61 180)
+			(uuid "5d12d658-720f-4163-b70b-957594111245")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA22_P" bidirectional
+			(at 81.28 180.34 180)
+			(uuid "e3e35de4-c3c0-4eb7-9bc1-0d87fef69303")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA22_N" bidirectional
+			(at 81.28 179.07 180)
+			(uuid "e8dcbc56-396f-45a5-be9f-5b01512faef0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA23_P" bidirectional
+			(at 81.28 177.8 180)
+			(uuid "acc5a597-79a9-4acc-a843-654c43d2b34d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA23_N" bidirectional
+			(at 81.28 176.53 180)
+			(uuid "29dc11e7-8f29-49f5-93c4-67976544338a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA24_P" bidirectional
+			(at 81.28 175.26 180)
+			(uuid "a066e48d-8cff-4006-97b6-c7777251bf6f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA24_N" bidirectional
+			(at 81.28 173.99 180)
+			(uuid "1324f102-ed69-491b-b166-bbbcb5e021db")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA25_P" bidirectional
+			(at 81.28 172.72 180)
+			(uuid "f33e989a-d649-4a54-98dd-ad31894f9621")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA25_N" bidirectional
+			(at 81.28 171.45 180)
+			(uuid "bd4fc2f8-3355-4830-a47c-c215bcb932c5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA26_P" bidirectional
+			(at 81.28 170.18 180)
+			(uuid "c8b26943-3e13-456f-b4ed-c9cab42ba96b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA26_N" bidirectional
+			(at 81.28 168.91 180)
+			(uuid "ba19b3ea-6c6f-4184-bbfa-f52d25ea1420")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA27_P" bidirectional
+			(at 81.28 167.64 180)
+			(uuid "66f9768b-03ad-4592-97b7-99b8579362b3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA27_N" bidirectional
+			(at 81.28 166.37 180)
+			(uuid "a8a8231e-f313-47ae-b53a-1498b3cc23e7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA28_P" bidirectional
+			(at 81.28 165.1 180)
+			(uuid "4bb8d551-d4ab-42a6-8f30-2d9921e2bd18")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA28_N" bidirectional
+			(at 81.28 163.83 180)
+			(uuid "caa3c050-0e3b-4e49-ac28-5d15b58074ac")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA29_P" bidirectional
+			(at 81.28 162.56 180)
+			(uuid "e22f0eaa-0a25-45d8-80a4-18da959dad64")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA29_N" bidirectional
+			(at 81.28 161.29 180)
+			(uuid "200b66ba-894f-4578-b6f1-3e0ac5ff4cc8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA30_P" bidirectional
+			(at 81.28 160.02 180)
+			(uuid "9812affb-dab4-48a5-ad7a-c1a4c65bc1c3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA30_N" bidirectional
+			(at 81.28 158.75 180)
+			(uuid "827f4329-dc2b-44fd-a12c-7c0dca570c2e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA31_P" bidirectional
+			(at 81.28 157.48 180)
+			(uuid "671a46f5-4f4f-4e28-b2d5-b008f4a093f3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA31_N" bidirectional
+			(at 81.28 156.21 180)
+			(uuid "1056bfbb-f0ff-4d4c-b5f7-18c82a532067")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA32_P" bidirectional
+			(at 81.28 154.94 180)
+			(uuid "4fc7b06b-8c11-42de-8126-b26e63f3de59")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA32_N" bidirectional
+			(at 81.28 153.67 180)
+			(uuid "86dec66c-ff68-47a0-ab51-b486cb8f3c2e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA33_P" bidirectional
+			(at 81.28 152.4 180)
+			(uuid "43f72126-f9f5-4dc2-8b14-b24dafd7e620")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA33_N" bidirectional
+			(at 81.28 151.13 180)
+			(uuid "171b0c0d-c448-4cd3-8bfc-f505a2cd8261")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -661,7 +2561,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "28067907-fd60-40ff-901f-3d3a889cb997")
+		(uuid "449fee89-2102-4048-9639-33a8d2ddf777")
 		(property "Sheetname" "fmc_lpc_power_clk_jtag"
 			(at 147.32 177.0884 0)
 			(effects
@@ -680,9 +2580,169 @@
 				(justify left top)
 			)
 		)
+		(pin "+12V" input
+			(at 147.32 196.85 180)
+			(uuid "825887b6-c56e-43f9-8414-6e254226b758")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+3V3" input
+			(at 147.32 195.58 180)
+			(uuid "415cf28c-c111-4509-a3c3-6f1d55d27cd6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+VADJ" input
+			(at 147.32 194.31 180)
+			(uuid "d772bd0d-a72d-4185-9cb2-528ea82fdce8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 147.32 193.04 180)
+			(uuid "eed48c0a-7873-4f01-a147-3c9e4e657f04")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_CLK0_M2C_P" input
+			(at 147.32 191.77 180)
+			(uuid "5af8eb0b-cfb9-4eb1-b22b-e95b43aeb85c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_CLK0_M2C_N" input
+			(at 147.32 190.5 180)
+			(uuid "c8818b9d-9cde-4558-b0be-6abc6907e95d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_CLK1_M2C_P" input
+			(at 147.32 189.23 180)
+			(uuid "4dbc2828-09d6-44ad-a783-f872b1f3eea9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_CLK1_M2C_N" input
+			(at 147.32 187.96 180)
+			(uuid "e9e64980-af68-425b-8289-83ca9bede6b9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_SCL" output
+			(at 147.32 186.69 180)
+			(uuid "d25efa25-15a9-4d41-808d-631514f17ceb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_SDA" bidirectional
+			(at 147.32 185.42 180)
+			(uuid "4c5e875b-690a-4757-afb7-2cec41a79ec2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_TCK" input
+			(at 147.32 184.15 180)
+			(uuid "35785b35-fbb0-4aef-b416-5c0108733da0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_TDI" input
+			(at 147.32 182.88 180)
+			(uuid "a530ea22-834e-4311-96f9-64d792bfc126")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_TDO" output
+			(at 147.32 181.61 180)
+			(uuid "4e6ee682-93cf-49d7-8049-c366d98d2d7a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_TMS" input
+			(at 147.32 180.34 180)
+			(uuid "404e755f-0725-4dff-8016-4703b7bad01c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_TRST_N" input
+			(at 147.32 179.07 180)
+			(uuid "a5d41985-ab85-48b1-acc1-310e0bbf6324")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_PRSNT_N" input
+			(at 147.32 177.8 180)
+			(uuid "2d5c631d-c8dd-4341-ba8f-6e6f6ef52fb6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -703,7 +2763,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "b093ee71-c1df-410b-bf03-176caa75a839")
+		(uuid "d30083a8-09bc-4d49-8db4-c02c60280e7f")
 		(property "Sheetname" "pmod"
 			(at 213.36 177.0884 0)
 			(effects
@@ -722,9 +2782,189 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 213.36 196.85 180)
+			(uuid "40b44992-79f2-4bc9-bbc0-ed8622b8f913")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 213.36 195.58 180)
+			(uuid "7a565059-04c1-47ee-8529-f3712dacb143")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO0" bidirectional
+			(at 213.36 194.31 180)
+			(uuid "e2fc34db-172c-4248-8d03-1fee118044e1")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO1" bidirectional
+			(at 213.36 193.04 180)
+			(uuid "5d8d7cdc-4e22-4085-98be-0c3ca1877ad6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO2" bidirectional
+			(at 213.36 191.77 180)
+			(uuid "75c795b6-ae81-43e6-a738-35a9644e9630")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO3" bidirectional
+			(at 213.36 190.5 180)
+			(uuid "6bba539e-6eaa-4cdd-a9f2-1e43e4334b80")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO4" bidirectional
+			(at 213.36 189.23 180)
+			(uuid "09bf1430-9d87-424a-9d4c-117d5b7031b4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO5" bidirectional
+			(at 213.36 187.96 180)
+			(uuid "9e0c8028-1893-4b77-aa1a-43a4f193df65")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO6" bidirectional
+			(at 213.36 186.69 180)
+			(uuid "d5f0848d-c4de-4d9d-b3e9-b957d0d635fd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO7" bidirectional
+			(at 213.36 185.42 180)
+			(uuid "6a3b1226-5fcb-4a3c-884d-a0962abcd7cf")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO0" bidirectional
+			(at 213.36 184.15 180)
+			(uuid "5c840665-8e6c-4890-a2fa-bf0a62fcc2f8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO1" bidirectional
+			(at 213.36 182.88 180)
+			(uuid "bd08a6a4-eccb-4282-a5a7-504f83c1121d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO2" bidirectional
+			(at 213.36 181.61 180)
+			(uuid "1191d2ee-6ba2-4b81-a74d-36143ab90dc2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO3" bidirectional
+			(at 213.36 180.34 180)
+			(uuid "ba55d4c9-5cea-413a-aef9-570abd794548")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO4" bidirectional
+			(at 213.36 179.07 180)
+			(uuid "66d4e160-ee6a-42a5-9f98-e85f3a2a9963")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO5" bidirectional
+			(at 213.36 177.8 180)
+			(uuid "9bef4baa-dee5-4554-8aae-e81e269298c5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO6" bidirectional
+			(at 213.36 176.53 180)
+			(uuid "5a6987f5-6034-4888-babe-7e5a804502a0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO7" bidirectional
+			(at 213.36 175.26 180)
+			(uuid "0da632ec-94b8-4056-ade6-bb79824134d4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -745,7 +2985,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "db60db78-ff7a-463a-ba60-4e3acbc77814")
+		(uuid "f8fe925c-4c1d-4721-b80a-64199abc1191")
 		(property "Sheetname" "jtag_swd"
 			(at 15.24 227.8884 0)
 			(effects
@@ -764,9 +3004,99 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 15.24 247.65 180)
+			(uuid "bed71078-ac5b-46d2-891d-7d000e0f76fb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 15.24 246.38 180)
+			(uuid "075d5bc2-8813-4dd1-8bb4-bc9fa62d5c26")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_JTAG_TCK" input
+			(at 15.24 245.11 180)
+			(uuid "95801ff8-c6df-4afe-9bb0-9a93f3b484e9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_JTAG_TMS" input
+			(at 15.24 243.84 180)
+			(uuid "7146af65-3d52-402a-824b-cb54ad68a4ea")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_JTAG_TDI" input
+			(at 15.24 242.57 180)
+			(uuid "c6a094b9-a65b-4727-a873-522bda0ff40a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_JTAG_TDO" output
+			(at 15.24 241.3 180)
+			(uuid "41bca4da-dacc-45c9-a1bd-9717e19c6801")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_SWDIO" bidirectional
+			(at 15.24 240.03 180)
+			(uuid "d600d658-d617-4d40-a0c6-7029d6bdb1ef")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_SWCLK" input
+			(at 15.24 238.76 180)
+			(uuid "7c0c8a07-b3a6-4cbe-a140-ccd8a3aa421f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "STM32_NRST" input
+			(at 15.24 237.49 180)
+			(uuid "cbe9a990-f23a-48be-a59e-7e3f7c8be9a6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -787,7 +3117,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "a01184e3-8866-4f0c-9078-66da679304b2")
+		(uuid "0aba1a7a-4ffa-45eb-b3d4-53961e731c00")
 		(property "Sheetname" "boot_switches"
 			(at 81.28 227.8884 0)
 			(effects
@@ -806,9 +3136,79 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 81.28 247.65 180)
+			(uuid "33fbaef4-971a-4086-a80b-19d437159916")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 81.28 246.38 180)
+			(uuid "754dd82b-6b36-4ae8-bdee-e2473b064d71")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_BOOT_MODE_0" output
+			(at 81.28 245.11 180)
+			(uuid "34cab54b-550a-4df5-9a19-32e4070429cc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_BOOT_MODE_1" output
+			(at 81.28 243.84 180)
+			(uuid "b8f84d5e-967a-4e2b-8605-2220ac816ae8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_BOOT_MODE_2" output
+			(at 81.28 242.57 180)
+			(uuid "538ebd09-57e2-44d5-9679-28fb5c803420")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_BOOT_MODE_3" output
+			(at 81.28 241.3 180)
+			(uuid "a4864ff0-8326-4870-ba38-52ef1f0e3d20")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SRST_N" output
+			(at 81.28 240.03 180)
+			(uuid "038d7e5a-2b94-4de4-954a-211071c48c1c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -829,7 +3229,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "9632c2a4-3767-4276-bc48-89967964f772")
+		(uuid "cf525227-c6fc-434e-81f9-489bf9937f9d")
 		(property "Sheetname" "som_j1_mio"
 			(at 147.32 227.8884 0)
 			(effects
@@ -848,9 +3248,189 @@
 				(justify left top)
 			)
 		)
+		(pin "+VIN" input
+			(at 147.32 247.65 180)
+			(uuid "c18f5528-13bb-45b6-91b6-4564cc1381c7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+3V3" output
+			(at 147.32 246.38 180)
+			(uuid "a260643e-f921-4987-9238-20e82489400a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 147.32 245.11 180)
+			(uuid "9197e2cb-5876-420f-a37a-484cbdbf06f5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_UART0_TXD" output
+			(at 147.32 243.84 180)
+			(uuid "a19384ba-5908-49c0-8ac7-77fa7c69db43")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_UART0_RXD" input
+			(at 147.32 242.57 180)
+			(uuid "b5ed5f63-859f-4c2d-991f-1418342cd1d8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_USB0_DP" bidirectional
+			(at 147.32 241.3 180)
+			(uuid "05c638f1-1d5d-43f6-a647-1b16b168d2d6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_USB0_DM" bidirectional
+			(at 147.32 240.03 180)
+			(uuid "57bf8aeb-7710-40c2-9941-51b8c75ab2a8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_USB0_OTG_ID" input
+			(at 147.32 238.76 180)
+			(uuid "a05211e5-59a2-426a-b9b2-c165ec6f2aa4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_I2C1_SCL" output
+			(at 147.32 237.49 180)
+			(uuid "18e2f940-3003-46fa-97f8-30c50b261bd7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_I2C1_SDA" bidirectional
+			(at 147.32 236.22 180)
+			(uuid "b81a7917-72d6-40a6-bf10-d7f460ded80f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SD1_CLK" output
+			(at 147.32 234.95 180)
+			(uuid "83cff06d-0f6c-4a4f-99cd-d2ef2ab54f3d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SD1_CMD" bidirectional
+			(at 147.32 233.68 180)
+			(uuid "2383d30a-838a-44bf-8bc7-bc1a03e667c6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SD1_DAT0" bidirectional
+			(at 147.32 232.41 180)
+			(uuid "2293bbe4-5ad2-407e-837a-98935b2b16cd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SD1_DAT1" bidirectional
+			(at 147.32 231.14 180)
+			(uuid "b264a289-6409-4296-9790-6cf62593b430")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SD1_DAT2" bidirectional
+			(at 147.32 229.87 180)
+			(uuid "0388dd3e-d52b-4b69-b44e-8534dd20f0d5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SD1_DAT3" bidirectional
+			(at 147.32 228.6 180)
+			(uuid "6761731f-de7b-4ebe-98ba-259d3bc3f64d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SD1_CD_N" input
+			(at 147.32 227.33 180)
+			(uuid "7f997aae-6907-4d42-b9cc-333a0f824689")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_SRST_N" input
+			(at 147.32 226.06 180)
+			(uuid "8fe73258-9b16-4fec-9833-e0015806b8e3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -871,7 +3451,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "62bf4a05-267d-4e99-83f3-3b9765d80958")
+		(uuid "1345aad4-7d3e-430f-a023-3dcbf1248bf2")
 		(property "Sheetname" "som_j1_ps_aux"
 			(at 213.36 227.8884 0)
 			(effects
@@ -890,9 +3470,139 @@
 				(justify left top)
 			)
 		)
+		(pin "+3V3" input
+			(at 213.36 247.65 180)
+			(uuid "e7a80726-f21c-4854-b3bd-6abb3d56bed6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 213.36 246.38 180)
+			(uuid "7003ddc1-07cf-48b9-9d0a-f9302dd23be2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_PS_CLK" input
+			(at 213.36 245.11 180)
+			(uuid "28729270-83f4-43bd-b300-aeb30c1f25a2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_POR_B_N" input
+			(at 213.36 243.84 180)
+			(uuid "7abfa3db-a556-4166-933f-a70ab332bd73")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_TCK" input
+			(at 213.36 242.57 180)
+			(uuid "87360408-efc3-4cce-9883-adfa3033f2cc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_TDI" input
+			(at 213.36 241.3 180)
+			(uuid "f92a7654-701d-46df-86a6-57d5880c8295")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_TDO" output
+			(at 213.36 240.03 180)
+			(uuid "b763a303-6335-41e7-bfd0-dd6acbf24c78")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_TMS" input
+			(at 213.36 238.76 180)
+			(uuid "76b3546b-1a7d-462d-bc17-a39526c11832")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_MIO_BOOT_0" input
+			(at 213.36 237.49 180)
+			(uuid "d317e9e5-06ed-41cd-8731-a2f2ac13867b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_MIO_BOOT_1" input
+			(at 213.36 236.22 180)
+			(uuid "a8da1c44-ce00-4c4d-a4f0-cc486cdf9096")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_MIO_BOOT_2" input
+			(at 213.36 234.95 180)
+			(uuid "9cb65c75-3b1d-4340-a51c-2f35e6aa59a6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_MIO_BOOT_3" input
+			(at 213.36 233.68 180)
+			(uuid "b3295cfb-7a0c-446e-b148-91a73fdf0703")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PS_MIO_BOOT_4" input
+			(at 213.36 232.41 180)
+			(uuid "5a511282-536b-4311-815a-4f76da42cd0a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -913,7 +3623,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "bb7a4395-3d9d-41ce-9975-c585e78852d4")
+		(uuid "b35e2d86-b1bf-42d4-8739-b1f2ce1d28fd")
 		(property "Sheetname" "som_j1_pl_power_gnd"
 			(at 15.24 278.6884 0)
 			(effects
@@ -932,9 +3642,79 @@
 				(justify left top)
 			)
 		)
+		(pin "+VCCO_13" input
+			(at 15.24 298.45 180)
+			(uuid "f6950c31-8389-4169-bf79-551af9ae24e7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+VCCO_34" input
+			(at 15.24 297.18 180)
+			(uuid "c927859a-eb81-4c04-b3a8-b31d37e5acc0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "+VCCO_35" input
+			(at 15.24 295.91 180)
+			(uuid "3abfecb9-996c-4e6c-92ba-5221aea9fb92")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 15.24 294.64 180)
+			(uuid "fef296db-4465-4afc-9106-c59b79c359aa")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PL_DONE" output
+			(at 15.24 293.37 180)
+			(uuid "6edac332-bb48-4983-b6bd-5a886f93c791")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PL_INIT_B_N" input
+			(at 15.24 292.1 180)
+			(uuid "b70a73d1-b1ce-4484-ad3e-fbe1c96bc13b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_PL_PROG_B_N" input
+			(at 15.24 290.83 180)
+			(uuid "b599b3e9-ded8-4c63-98ee-adacbbdc9276")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -955,7 +3735,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "9d0444e8-e3bd-44f2-873d-5c19575c5a6c")
+		(uuid "a53d34c4-6022-41f2-93f4-8463b28cfc6f")
 		(property "Sheetname" "som_j2_diff_pairs"
 			(at 81.28 278.6884 0)
 			(effects
@@ -974,9 +3754,289 @@
 				(justify left top)
 			)
 		)
+		(pin "+VCCO_13" input
+			(at 81.28 298.45 180)
+			(uuid "4960e4ed-54f8-4ba4-94ac-a515184d38fe")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 81.28 297.18 180)
+			(uuid "fb5449b5-5bc2-4e5c-8bb8-7d88930f38db")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA00_P" bidirectional
+			(at 81.28 295.91 180)
+			(uuid "32f0a726-1b9e-4033-b7e3-0b9bc7cec7e6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA00_N" bidirectional
+			(at 81.28 294.64 180)
+			(uuid "b3ad61ad-9741-4bb7-9c1a-dda42f6840fe")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA01_P" bidirectional
+			(at 81.28 293.37 180)
+			(uuid "b67fbdcb-1a30-4cf8-98a1-56cdeb745f75")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA01_N" bidirectional
+			(at 81.28 292.1 180)
+			(uuid "425eb2de-f7b4-4d33-88dd-3e1cc5769d8f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA02_P" bidirectional
+			(at 81.28 290.83 180)
+			(uuid "828f3037-7355-4607-a25c-ac822db7c4ca")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA02_N" bidirectional
+			(at 81.28 289.56 180)
+			(uuid "4815517c-4a07-47e7-b007-3cc4b4ed63dd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA03_P" bidirectional
+			(at 81.28 288.29 180)
+			(uuid "9cb03089-61e9-4097-abb6-053fd1b931d0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA03_N" bidirectional
+			(at 81.28 287.02 180)
+			(uuid "00c4dc1b-95c5-4155-b0f5-462c5e6c87a2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA04_P" bidirectional
+			(at 81.28 285.75 180)
+			(uuid "d1b67cf3-da76-4602-9933-4791949d326e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA04_N" bidirectional
+			(at 81.28 284.48 180)
+			(uuid "42182430-9f1c-4526-9739-47185ac43be1")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA05_P" bidirectional
+			(at 81.28 283.21 180)
+			(uuid "d992d0ad-9e0f-4d11-a712-82ebed922e87")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA05_N" bidirectional
+			(at 81.28 281.94 180)
+			(uuid "142d7996-dd37-44cf-8caa-8955202a9c44")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA06_P" bidirectional
+			(at 81.28 280.67 180)
+			(uuid "8486db2c-9e06-4d97-a897-71cf1f318ffb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA06_N" bidirectional
+			(at 81.28 279.4 180)
+			(uuid "f8d8ad33-21cd-4bdb-ac00-2d5102aba141")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA07_P" bidirectional
+			(at 81.28 278.13 180)
+			(uuid "1d55e84b-f69d-48dd-9d27-78bc1d92935b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA07_N" bidirectional
+			(at 81.28 276.86 180)
+			(uuid "ee56eb24-c2ee-4b66-9476-b48a453b614e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA08_P" bidirectional
+			(at 81.28 275.59 180)
+			(uuid "88a48a89-abd8-429e-aa39-7d8daea36b70")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA08_N" bidirectional
+			(at 81.28 274.32 180)
+			(uuid "e0e52e63-eeb9-4aca-96de-a2ebc677c967")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA09_P" bidirectional
+			(at 81.28 273.05 180)
+			(uuid "ef9ab133-5604-474d-8e3e-d86d3ae3ed8d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA09_N" bidirectional
+			(at 81.28 271.78 180)
+			(uuid "206c9cc2-5586-402f-80b2-7aad7e60410e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA10_P" bidirectional
+			(at 81.28 270.51 180)
+			(uuid "134dee1e-482f-4c36-a7e1-ab3ab85cc00f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA10_N" bidirectional
+			(at 81.28 269.24 180)
+			(uuid "c321b28c-5b56-4619-b9c4-4a93a8478761")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA11_P" bidirectional
+			(at 81.28 267.97 180)
+			(uuid "9b40f36b-2666-4a44-9614-1c888b3ff0fd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA11_N" bidirectional
+			(at 81.28 266.7 180)
+			(uuid "b359b776-fe7f-4999-a72f-8b806a275920")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA12_P" bidirectional
+			(at 81.28 265.43 180)
+			(uuid "6b1bf824-bc18-45b4-9cc7-cfc1e1e6a376")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA12_N" bidirectional
+			(at 81.28 264.16 180)
+			(uuid "936a487e-17c2-42d4-a92d-ba3d821975e1")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -997,7 +4057,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "2e4ab09f-ad8e-4747-920a-200180a0c4fc")
+		(uuid "6a77e452-4e8e-40fe-9fb7-68254babe618")
 		(property "Sheetname" "som_j2_se"
 			(at 147.32 278.6884 0)
 			(effects
@@ -1016,9 +4076,489 @@
 				(justify left top)
 			)
 		)
+		(pin "+VCCO_13" input
+			(at 147.32 298.45 180)
+			(uuid "06c17a27-c8af-4e99-879a-889332b2332d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 147.32 297.18 180)
+			(uuid "66577008-284f-4c73-a817-c6da85fb3b3e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA13_P" bidirectional
+			(at 147.32 295.91 180)
+			(uuid "1d055012-ddc4-4968-8e73-5c63c7d8138f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA13_N" bidirectional
+			(at 147.32 294.64 180)
+			(uuid "9a2dd332-a09f-41a4-81dd-fc56373eba50")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA14_P" bidirectional
+			(at 147.32 293.37 180)
+			(uuid "91e1590d-1d75-4227-b0de-1bc1cb24263e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA14_N" bidirectional
+			(at 147.32 292.1 180)
+			(uuid "04d625ba-6571-4600-8c23-68b5ecff9f4c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA15_P" bidirectional
+			(at 147.32 290.83 180)
+			(uuid "a71a9858-10c4-4b36-a502-85198eb58866")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA15_N" bidirectional
+			(at 147.32 289.56 180)
+			(uuid "7a149463-f460-4269-aa34-fedcdd7612ed")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA16_P" bidirectional
+			(at 147.32 288.29 180)
+			(uuid "835e266c-18fc-4447-9a5c-fc34fe5cb993")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA16_N" bidirectional
+			(at 147.32 287.02 180)
+			(uuid "f22904f4-8f5a-44d9-a62d-668852d010cd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA17_P" bidirectional
+			(at 147.32 285.75 180)
+			(uuid "b77422b8-653d-49b8-ad9b-3396f17d5b2f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA17_N" bidirectional
+			(at 147.32 284.48 180)
+			(uuid "00bbdfb4-593c-44c6-b84b-83b632d6af16")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA18_P" bidirectional
+			(at 147.32 283.21 180)
+			(uuid "881c4f80-409e-454d-9cfc-35171cb770d5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA18_N" bidirectional
+			(at 147.32 281.94 180)
+			(uuid "8e841e78-87f3-47a8-8d4a-d10511f84e42")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA19_P" bidirectional
+			(at 147.32 280.67 180)
+			(uuid "c90344dc-4c04-4a0e-b119-aa1b91f333a9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA19_N" bidirectional
+			(at 147.32 279.4 180)
+			(uuid "bbbc48a6-8f92-4e66-9ed9-24bbadf36175")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA20_P" bidirectional
+			(at 147.32 278.13 180)
+			(uuid "75e3635b-11e2-4d36-a1db-a920cb1f7d7a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA20_N" bidirectional
+			(at 147.32 276.86 180)
+			(uuid "6311a873-08f7-4606-856c-a7b7384bd46a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA21_P" bidirectional
+			(at 147.32 275.59 180)
+			(uuid "56bacbd4-8c6e-4b97-81ea-04ccc52659f2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA21_N" bidirectional
+			(at 147.32 274.32 180)
+			(uuid "d830e0b7-e79e-4b19-b35b-8dbe550c631c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA22_P" bidirectional
+			(at 147.32 273.05 180)
+			(uuid "574516fa-d550-4f85-9bc6-ba882f4c5314")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA22_N" bidirectional
+			(at 147.32 271.78 180)
+			(uuid "52182f03-9a66-4020-a844-3dd263412a31")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA23_P" bidirectional
+			(at 147.32 270.51 180)
+			(uuid "a99da2cb-9138-4942-9155-7ba1aa6d91c7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA23_N" bidirectional
+			(at 147.32 269.24 180)
+			(uuid "51392b5e-8663-4c6e-9cbd-71ea4eb0edbc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA24_P" bidirectional
+			(at 147.32 267.97 180)
+			(uuid "149dacc9-6088-442d-bbe6-ebf212bbc1bb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA24_N" bidirectional
+			(at 147.32 266.7 180)
+			(uuid "2c4267bc-5962-4acb-a3e7-6802b8e8fedf")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA25_P" bidirectional
+			(at 147.32 265.43 180)
+			(uuid "c1a5d28e-a6ee-47ec-a3e3-811c27ff4fbd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA25_N" bidirectional
+			(at 147.32 264.16 180)
+			(uuid "c950d443-6dff-4d31-9b9d-7c6dd4e64ef7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA26_P" bidirectional
+			(at 147.32 262.89 180)
+			(uuid "02eb48f2-75d8-4102-b129-42ede3f0d5b9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA26_N" bidirectional
+			(at 147.32 261.62 180)
+			(uuid "7679b5d5-8113-4248-aa21-66821f43e2e0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA27_P" bidirectional
+			(at 147.32 260.35 180)
+			(uuid "cfd8cfc1-7148-4080-9797-ba0a7b4249af")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA27_N" bidirectional
+			(at 147.32 259.08 180)
+			(uuid "75846bda-5ce7-4e39-9105-537c753cc324")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA28_P" bidirectional
+			(at 147.32 257.81 180)
+			(uuid "2a90cc3b-cdc5-409b-b48e-38573883f9ac")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA28_N" bidirectional
+			(at 147.32 256.54 180)
+			(uuid "d9d2c8ff-c9bf-49b7-9114-f7ff00ddb726")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA29_P" bidirectional
+			(at 147.32 255.27 180)
+			(uuid "435c132c-a86b-409e-bcf8-d2f623aee4e4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA29_N" bidirectional
+			(at 147.32 254 180)
+			(uuid "515afbdc-0374-4f25-a810-386db1bb39a6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA30_P" bidirectional
+			(at 147.32 252.73 180)
+			(uuid "24204060-da06-4734-9d6d-58a03861ffec")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA30_N" bidirectional
+			(at 147.32 251.46 180)
+			(uuid "2e4dcf69-d513-4025-837c-24b210961a4a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA31_P" bidirectional
+			(at 147.32 250.19 180)
+			(uuid "23f9d19a-4e6f-4acc-8088-a91826df13d4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA31_N" bidirectional
+			(at 147.32 248.92 180)
+			(uuid "59bcf0a8-adcb-4b5f-abf1-cca16d2afc26")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA32_P" bidirectional
+			(at 147.32 247.65 180)
+			(uuid "222daea0-e308-41c3-944f-2241b0f0147d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA32_N" bidirectional
+			(at 147.32 246.38 180)
+			(uuid "d6648d09-de65-4905-851e-976806ea1f8f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA33_P" bidirectional
+			(at 147.32 245.11 180)
+			(uuid "6b188fe6-7c9e-471a-9208-dff6c339ec81")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_LA33_N" bidirectional
+			(at 147.32 243.84 180)
+			(uuid "74890285-03b7-4862-827b-c2cf7293f7a4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_CLK0_M2C_P" input
+			(at 147.32 242.57 180)
+			(uuid "66ca1cc2-358b-47b3-b176-19847ee779ea")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_CLK0_M2C_N" input
+			(at 147.32 241.3 180)
+			(uuid "9f621b0a-a63b-48b7-9efb-46087b5c7864")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_CLK1_M2C_P" input
+			(at 147.32 240.03 180)
+			(uuid "c345112b-f5f2-49ab-9f1f-26ae7eea9326")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_FMC_CLK1_M2C_N" input
+			(at 147.32 238.76 180)
+			(uuid "c7868b97-4a30-4b3e-aaa2-79d49c0f5a62")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -1039,7 +4579,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "9cca49c5-1b5d-4708-be34-d24ea3fe92e8")
+		(uuid "2897391e-a1ba-45b4-a362-f523e03a3937")
 		(property "Sheetname" "som_j2_power"
 			(at 213.36 278.6884 0)
 			(effects
@@ -1058,9 +4598,289 @@
 				(justify left top)
 			)
 		)
+		(pin "+VCCO_13" input
+			(at 213.36 298.45 180)
+			(uuid "09e6fbb1-e781-4f87-a69b-7f1a5a2e8e61")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 213.36 297.18 180)
+			(uuid "0c9695fc-b314-4ad9-9035-13b63396c2e0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_0_P" bidirectional
+			(at 213.36 295.91 180)
+			(uuid "5af6bbfb-91ca-4972-9a4a-bf5f8579c9f6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_0_N" bidirectional
+			(at 213.36 294.64 180)
+			(uuid "387b1799-4605-446d-8549-08527bfbc8d8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_1_P" bidirectional
+			(at 213.36 293.37 180)
+			(uuid "e1872d88-2e29-40d5-a342-9ad92cd23a20")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_1_N" bidirectional
+			(at 213.36 292.1 180)
+			(uuid "42f9f434-fda0-41e5-bb7e-cdcfe09092e9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_2_P" bidirectional
+			(at 213.36 290.83 180)
+			(uuid "71ebb474-aee3-4e4d-a77d-d8246cd73474")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_2_N" bidirectional
+			(at 213.36 289.56 180)
+			(uuid "b0cdcbdb-0e60-49d1-9552-c8c9aa875f58")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_CLK_P" bidirectional
+			(at 213.36 288.29 180)
+			(uuid "7980d984-f320-4f05-8ce5-8a1664bf94c8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_TX_TMDS_CLK_N" bidirectional
+			(at 213.36 287.02 180)
+			(uuid "8a744bb9-4462-448d-b994-176b67426dcc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_0_P" bidirectional
+			(at 213.36 285.75 180)
+			(uuid "547e7f43-d5dc-4ff2-8570-00d774cba0da")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_0_N" bidirectional
+			(at 213.36 284.48 180)
+			(uuid "8f4b261f-74f9-4829-85ac-5fc2a8fd9fc9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_1_P" bidirectional
+			(at 213.36 283.21 180)
+			(uuid "6a752c69-2bb8-49f3-bc4a-38548b89da66")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_1_N" bidirectional
+			(at 213.36 281.94 180)
+			(uuid "557ccc05-c210-4b03-863c-fee0ffe2e370")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_2_P" bidirectional
+			(at 213.36 280.67 180)
+			(uuid "d3ced73f-1584-4a90-bdcf-3bdd9d46c8f4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_2_N" bidirectional
+			(at 213.36 279.4 180)
+			(uuid "7dbdae89-ecff-4b79-8614-f39f170c61ff")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_CLK_P" bidirectional
+			(at 213.36 278.13 180)
+			(uuid "caa5a646-1ac4-4302-8846-dae1dff390b4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_HDMI_RX_TMDS_CLK_N" bidirectional
+			(at 213.36 276.86 180)
+			(uuid "d2807679-b932-4f64-b59d-6169c0d2d313")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA0_P" output
+			(at 213.36 275.59 180)
+			(uuid "5af8a062-d6b2-43da-9974-99fe22bc49fe")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA0_N" output
+			(at 213.36 274.32 180)
+			(uuid "e15c1b47-9a55-4186-8723-425945149fd2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA1_P" output
+			(at 213.36 273.05 180)
+			(uuid "11aa900a-c14a-4777-9c29-850c5b0da861")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA1_N" output
+			(at 213.36 271.78 180)
+			(uuid "eb088933-9b07-4ba5-9f60-9f26dd9cec3c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA2_P" output
+			(at 213.36 270.51 180)
+			(uuid "ad45e502-17db-4dbe-a50a-5facdd2814c1")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA2_N" output
+			(at 213.36 269.24 180)
+			(uuid "d3b88656-4437-4e99-9add-8c187861e7a9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA3_P" output
+			(at 213.36 267.97 180)
+			(uuid "6eb975a9-2efc-4bcf-8567-50f0584adb46")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_DA3_N" output
+			(at 213.36 266.7 180)
+			(uuid "1307fd8a-66fb-4e0b-992c-b660bfa2ece9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_CLK_P" output
+			(at 213.36 265.43 180)
+			(uuid "a2e77cb1-6497-4c8b-b712-f51f86f9752a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_LCD_LVDS_CLK_N" output
+			(at 213.36 264.16 180)
+			(uuid "c3fe977e-6555-45b2-8b03-d050b33d5d04")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -1081,7 +4901,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "96b6af59-a285-4b3d-a6ca-ccc091a4b131")
+		(uuid "685bd79f-86e9-48f5-98cb-e1eb51877ebf")
 		(property "Sheetname" "som_j3_diff_pairs"
 			(at 15.24 329.4884 0)
 			(effects
@@ -1100,9 +4920,209 @@
 				(justify left top)
 			)
 		)
+		(pin "+VCCO_35" input
+			(at 15.24 349.25 180)
+			(uuid "f4b36adf-3bd0-4bc0-9788-110296807c19")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 15.24 347.98 180)
+			(uuid "53e6158e-cc6e-411e-9e1c-fa1c908affe2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_D0_P" input
+			(at 15.24 346.71 180)
+			(uuid "da438bb2-2543-47e6-aebd-ec4f19d44c50")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_D0_N" input
+			(at 15.24 345.44 180)
+			(uuid "bfc8dc3a-a08f-462f-8212-274f71e73624")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_D1_P" input
+			(at 15.24 344.17 180)
+			(uuid "c3e7a003-d62f-42d8-a2cd-6db51c8eaa1c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_D1_N" input
+			(at 15.24 342.9 180)
+			(uuid "462b3f7e-adb3-4774-b274-0a82ac0458c9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_CLK_P" input
+			(at 15.24 341.63 180)
+			(uuid "0749986b-c7f1-4af2-9625-d18892193c69")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_MIPI_CLK_N" input
+			(at 15.24 340.36 180)
+			(uuid "8e5e180f-ce52-4c46-9d16-910543298aef")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VP" input
+			(at 15.24 339.09 180)
+			(uuid "0f7e8fc9-161b-4299-b895-946e17241087")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VN" input
+			(at 15.24 337.82 180)
+			(uuid "ccee414a-b9da-4e75-ab2c-9d2d0edaad7c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VAUX0_P" input
+			(at 15.24 336.55 180)
+			(uuid "dbd9bc09-4b71-47d2-af6b-dbd2c689f717")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VAUX0_N" input
+			(at 15.24 335.28 180)
+			(uuid "26f3bb3d-a28f-407f-bd23-eaf1b3bd3cb2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VAUX1_P" input
+			(at 15.24 334.01 180)
+			(uuid "0bd6f526-8e56-4d57-ba76-ba75ad856fb0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VAUX1_N" input
+			(at 15.24 332.74 180)
+			(uuid "e4986b8c-b429-456f-98c6-a7d9172c472a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VAUX2_P" input
+			(at 15.24 331.47 180)
+			(uuid "4c1cecf0-f5b0-4ebd-bc70-317d013f90a3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VAUX2_N" input
+			(at 15.24 330.2 180)
+			(uuid "b298f9cd-ca63-4344-be1e-7298b4a9cfc9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VAUX3_P" input
+			(at 15.24 328.93 180)
+			(uuid "58dff6f8-1690-499f-9cef-d8f866bb4e68")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_XADC_VAUX3_N" input
+			(at 15.24 327.66 180)
+			(uuid "b4982d03-e9a5-4842-9a95-1dcf6b34beb4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_USER_MRCC_P" input
+			(at 15.24 326.39 180)
+			(uuid "33bcf5ce-661f-4e6f-8e3c-e8ffc0ea03bf")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_USER_MRCC_N" input
+			(at 15.24 325.12 180)
+			(uuid "d54f3ec5-fc81-4677-8849-adc929a31215")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -1123,7 +5143,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "999ab7fa-b7fa-4e24-9ee4-73d687107eb0")
+		(uuid "c9ec4b0d-7b66-455b-8b4e-4eee9217d15e")
 		(property "Sheetname" "som_j3_se"
 			(at 81.28 329.4884 0)
 			(effects
@@ -1142,9 +5162,349 @@
 				(justify left top)
 			)
 		)
+		(pin "+VCCO_35" input
+			(at 81.28 349.25 180)
+			(uuid "e16f9e25-ab01-4258-8588-0983266ee463")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 81.28 347.98 180)
+			(uuid "62d62666-4508-48c7-93ee-3d985d3ed87d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO0" bidirectional
+			(at 81.28 346.71 180)
+			(uuid "6473a551-1ecb-45c7-8030-326accdd82cb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO1" bidirectional
+			(at 81.28 345.44 180)
+			(uuid "c5566feb-1515-4bd8-8cf7-ef3e1278d590")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO2" bidirectional
+			(at 81.28 344.17 180)
+			(uuid "70087460-865f-47fb-bd1f-5bfa94327209")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO3" bidirectional
+			(at 81.28 342.9 180)
+			(uuid "d721f9a5-904a-470e-9332-5f4ad11198a1")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO4" bidirectional
+			(at 81.28 341.63 180)
+			(uuid "118c0c9c-ef64-4872-8b16-393e73996d9a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO5" bidirectional
+			(at 81.28 340.36 180)
+			(uuid "d1266023-0afb-49c6-ac45-a330f171bf89")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO6" bidirectional
+			(at 81.28 339.09 180)
+			(uuid "6f38f98d-81b4-4192-9cf3-8f76ccb8e715")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD0_IO7" bidirectional
+			(at 81.28 337.82 180)
+			(uuid "cda227fd-8949-4858-9865-aef28db4a955")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO0" bidirectional
+			(at 81.28 336.55 180)
+			(uuid "24e9d834-54aa-4cf5-8029-99d1b69bc1df")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO1" bidirectional
+			(at 81.28 335.28 180)
+			(uuid "daa3bcd0-15f9-45a0-9d64-5bac3b924e8a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO2" bidirectional
+			(at 81.28 334.01 180)
+			(uuid "d3bf2117-d656-4f21-b1cd-718f1cd8da4c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO3" bidirectional
+			(at 81.28 332.74 180)
+			(uuid "df668759-a8eb-42fb-a43f-48094c05e86a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO4" bidirectional
+			(at 81.28 331.47 180)
+			(uuid "278d8be3-a0bd-4531-a71a-e430d56fff13")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO5" bidirectional
+			(at 81.28 330.2 180)
+			(uuid "b9488429-97b8-4842-96f9-c280c1eafec3")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO6" bidirectional
+			(at 81.28 328.93 180)
+			(uuid "80187197-d683-4807-935b-f559fa3c6512")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PMOD1_IO7" bidirectional
+			(at 81.28 327.66 180)
+			(uuid "7f699b96-70b8-45dd-9d26-4f2c0dd8022b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_0" bidirectional
+			(at 81.28 326.39 180)
+			(uuid "5094befe-95ca-42e6-b25b-d2b21c0100cb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_1" bidirectional
+			(at 81.28 325.12 180)
+			(uuid "098403d4-dbf7-44dc-9ab1-300bcd75472c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_2" bidirectional
+			(at 81.28 323.85 180)
+			(uuid "6c17f1df-d4ca-446c-aef3-2cefdbf51c78")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_3" bidirectional
+			(at 81.28 322.58 180)
+			(uuid "1b57c537-a56e-47c3-84f6-be813dfe3183")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_4" bidirectional
+			(at 81.28 321.31 180)
+			(uuid "da7a288d-fb91-4e49-8a82-517f13da61a2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_5" bidirectional
+			(at 81.28 320.04 180)
+			(uuid "9a12930c-cfdb-428f-8011-33f355ca4765")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_6" bidirectional
+			(at 81.28 318.77 180)
+			(uuid "9a1daed3-553e-43f1-8081-305d78bfbb2e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_7" bidirectional
+			(at 81.28 317.5 180)
+			(uuid "7e482e0d-05b1-4137-b01e-548b3b9a327c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_8" bidirectional
+			(at 81.28 316.23 180)
+			(uuid "858ec17f-491c-4b08-9fcf-7bf279c38920")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_9" bidirectional
+			(at 81.28 314.96 180)
+			(uuid "e6ac8caf-575e-4b8b-af91-4b44b12caf43")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_10" bidirectional
+			(at 81.28 313.69 180)
+			(uuid "3713fdfd-5f5d-45a6-9977-17344b8c3962")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_11" bidirectional
+			(at 81.28 312.42 180)
+			(uuid "b498ee64-ed52-4c05-87ed-1f1d8df251cc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_12" bidirectional
+			(at 81.28 311.15 180)
+			(uuid "5392deaf-df59-403c-a083-f5f10da3772e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_13" bidirectional
+			(at 81.28 309.88 180)
+			(uuid "da015c57-ebf1-4d03-b1ee-5ecbc70a861d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_14" bidirectional
+			(at 81.28 308.61 180)
+			(uuid "46f02756-41b4-4bcb-acae-e999cd844e65")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "AUX_IO_15" bidirectional
+			(at 81.28 307.34 180)
+			(uuid "bf3bbc51-f630-4d97-b136-a02c19a015dd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)
@@ -1165,7 +5525,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "b3a9b7ba-4a06-4c44-b477-b0ad06e0123d")
+		(uuid "b3124d0b-05bd-4e1c-abaa-d2bfa7b9118b")
 		(property "Sheetname" "som_j3_power"
 			(at 147.32 329.4884 0)
 			(effects
@@ -1184,9 +5544,69 @@
 				(justify left top)
 			)
 		)
+		(pin "+VCCO_35" input
+			(at 147.32 349.25 180)
+			(uuid "1d5b8274-354d-431c-a402-85b2455016c7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GND" passive
+			(at 147.32 347.98 180)
+			(uuid "9fe5debd-5dc3-4420-8a8f-657a3b8cd931")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_GPIO0" bidirectional
+			(at 147.32 346.71 180)
+			(uuid "24e22630-8775-4950-88bd-cd324898e09e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_GPIO1" bidirectional
+			(at 147.32 345.44 180)
+			(uuid "e86f9aba-ced7-4106-be1a-b6de63c7d62b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_SCL" bidirectional
+			(at 147.32 344.17 180)
+			(uuid "109f9954-d4d6-4775-89f3-b4f4829cb924")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "ZYNQ_CAM_SDA" bidirectional
+			(at 147.32 342.9 180)
+			(uuid "fa6b3396-0925-4980-8232-73233063d5c2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(instances
 			(project "carrier"
-				(path "/76bdf880-1d78-407c-8c4b-8aac36691348"
+				(path "/cae4e11d-6dcd-432b-ba7b-3ba19d05ab24"
 					(page "2")
 				)
 			)

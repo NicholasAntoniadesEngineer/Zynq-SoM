@@ -41,7 +41,7 @@ def build_usbc_otg() -> Block:
     return Block(
         name="usbc_otg",
         title="USB-C OTG Port (TPS2051C VBUS switch + USB-C)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Dedicated USB-C OTG port for the Zynq PS USB controller. "
             "TPS2051C current-limited switch gates +VIN onto VBUS_OTG when "

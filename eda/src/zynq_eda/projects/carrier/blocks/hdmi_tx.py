@@ -36,7 +36,7 @@ def build_hdmi_tx() -> Block:
     return Block(
         name="hdmi_tx",
         title="HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Zynq HDMI source via TPD12S016PWR ESD/level-translator and an "
             "HDMI Type-A receptacle. 24LC256 EEPROM holds the EDID payload "

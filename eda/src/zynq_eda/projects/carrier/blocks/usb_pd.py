@@ -36,7 +36,7 @@ def build_usb_pd() -> Block:
     return Block(
         name="usb_pd",
         title="USB-C Power Delivery (FUSB302 + USBLC6 + USB-C)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "USB-C port controlled by FUSB302 over I2C. USBLC6-4SC6 protects "
             "the USB 2.0 D+/D- lines. VBUS from the USB-C connector is the "

@@ -40,7 +40,7 @@ def build_power() -> Block:
     return Block(
         name="power",
         title="Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Three TLV757P-family LDOs convert +VIN (5V from USB-C) into the "
             "three regulated rails the carrier needs: +3V3 (main), +2V5 "

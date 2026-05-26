@@ -27,7 +27,7 @@ def build_lvds_lcd_power() -> Block:
     return Block(
         name="lvds_lcd_power",
         title="LVDS LCD bank B (panel + backlight power)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Bank B of the 40-pin 0.5 mm LVDS LCD FFC connector. Carries "
             "the +3V3 panel logic supply, +12V backlight power, and the "

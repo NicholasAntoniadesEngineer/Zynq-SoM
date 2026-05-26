@@ -32,7 +32,7 @@ def build_microsd() -> Block:
     return Block(
         name="microsd",
         title="microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Hirose DM3AT push-push microSD socket wired to Zynq PS SD1 in "
             "4-bit SDIO mode. Card-detect uses the dedicated DET_A/DET_B "

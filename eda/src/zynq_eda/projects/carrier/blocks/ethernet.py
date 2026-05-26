@@ -37,7 +37,7 @@ def build_ethernet() -> Block:
     return Block(
         name="ethernet",
         title="Ethernet (PHY MDI → HX5008 magnetics → RJ45)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "1000BASE-T Ethernet port: HX5008NLT integrated magnetics + "
             "Bob-Smith termination network drive an RJHSE5380 RJ45 with "

@@ -32,7 +32,7 @@ def build_jtag_swd() -> Block:
     return Block(
         name="jtag_swd",
         title="Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Zynq PS JTAG (2x7 2.54mm, Xilinx UG470 pinout) and STM32 "
             "SWD (2x5 1.27mm ARM Cortex debug). SWD has pull-ups on "

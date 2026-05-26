@@ -28,7 +28,7 @@ def build_hdmi_rx() -> Block:
     return Block(
         name="hdmi_rx",
         title="HDMI Receiver (HDMI-A → TPD12S016 → Zynq)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Zynq HDMI sink via TPD12S016PWR. The +5V coming in from the "
             "source is sensed but not consumed (TPD12S016 isolates it). "

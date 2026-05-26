@@ -39,7 +39,7 @@ def build_power_mon() -> Block:
     return Block(
         name="power_mon",
         title="Power Monitoring (INA226 on +VIN)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "INA226 high-side bidirectional current/power monitor on the +VIN "
             "rail. Sensed across a series shunt (10 mOhm 2010 1%), read by "

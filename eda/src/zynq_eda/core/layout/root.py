@@ -59,6 +59,7 @@ from zynq_eda.core.model.grid import Point, snap_to_grid
 from zynq_eda.core.model.sheet import (
     PlacedLabel,
     PlacedSheet,
+    PlacedSheetPin,
     Sheet,
 )
 
@@ -132,12 +133,29 @@ def _place_block_grid(
         anchor_y = snap_to_grid(
             ROOT_MARGIN_TOP_MM + row * ROOT_GRID_ROW_PITCH_MM
         )
+        # Emit one PlacedSheetPin per external_net so KiCad's hierarchy
+        # binds the sub-sheet's hier labels across the project (ERC's
+        # hier_label_mismatch otherwise reports ~430 errors). The pins
+        # land on the LEFT edge of the block rectangle, stacked at the
+        # KiCad 1.27 mm grid; they're visually inside the compact 30 mm
+        # block-symbol footprint and don't expand the root sheet's
+        # readability problem the Wave A3 redesign solved.
+        pins: list[PlacedSheetPin] = []
+        for pin_index, net in enumerate(spec.block.external_nets):
+            pins.append(PlacedSheetPin(
+                name=net.name,
+                direction=getattr(net, "direction", "passive") or "passive",
+                edge="left",
+                position_along_edge=snap_to_grid(
+                    1.27 + pin_index * 1.27
+                ),
+            ))
         placed.append(PlacedSheet(
             name=_pretty_sheet_name(spec.block),
             filename=spec.filename,
             position=Point(anchor_x, anchor_y),
             size=(ROOT_SHEET_SYMBOL_WIDTH_MM, ROOT_SHEET_SYMBOL_HEIGHT_MM),
-            pins=(),  # no hier-pin labels on the root for visual clarity
+            pins=tuple(pins),
         ))
     return placed
 

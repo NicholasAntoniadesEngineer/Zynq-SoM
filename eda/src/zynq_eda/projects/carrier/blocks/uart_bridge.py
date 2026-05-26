@@ -37,7 +37,7 @@ def build_uart_bridge() -> Block:
     return Block(
         name="uart_bridge",
         title="USB-UART Bridge (CP2102N → Zynq PS UART0)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Silicon Labs CP2102N-A02-GQFN24R USB-to-UART bridge for the "
             "Zynq PS UART0 debug console. Self-powered from a dedicated "

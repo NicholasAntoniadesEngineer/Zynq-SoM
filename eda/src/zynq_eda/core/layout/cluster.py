@@ -204,6 +204,7 @@ def _attach_far_endpoint(
     passive_rotation: float,
     pin_side: str,
     geometry_cache=None,
+    suppress_label: bool = False,
 ) -> None:
     """Connect a passive's far terminal to either a power symbol or a label.
 
@@ -233,11 +234,27 @@ def _attach_far_endpoint(
             "top": 90.0,
             "bottom": 270.0,
         }.get(pin_side, 0.0)
-        builder.add_label(PlacedLabel(
-            net_name=destination_net,
-            position=far_point,
-            rotation=label_rotation,
-        ))
+        # When the caller has flagged this far terminal as redundant
+        # (the destination net is already routed via another connector
+        # pin on the same instance, e.g. LVDS pair termination), skip
+        # the label entirely. KiCad's hier-label-by-name merge binds
+        # the wire to the destination pin's net without a duplicate
+        # label here, which prevents the visual collision between two
+        # hier labels on adjacent connector-pin rows that the
+        # _orphan_net_labels pass would otherwise produce.
+        if suppress_label:
+            return
+        # If the destination net is already represented by a hierarchical
+        # label elsewhere on this sheet (rarely hits at cluster-time
+        # since hier labels are added later, but kept as a safety net),
+        # suppress this redundant text label.
+        existing_hier_names = {h.net_name for h in builder.hierarchical_labels}
+        if destination_net not in existing_hier_names:
+            builder.add_label(PlacedLabel(
+                net_name=destination_net,
+                position=far_point,
+                rotation=label_rotation,
+            ))
         return
 
     # Outboard direction: continue from passive_anchor through far_point,
@@ -289,6 +306,7 @@ def place_one_passive_for_pin(
     ic_reference: str,
     horizontal_swarm_pitch_mm: float = HORIZONTAL_SWARM_PITCH_MM,
     geometry_cache=None,
+    suppress_far_label: bool = False,
 ) -> None:
     """Place a single passive next to an IC pin and wire it up.
 
@@ -472,6 +490,7 @@ def place_one_passive_for_pin(
         passive_rotation=passive_rotation,
         pin_side=side,
         geometry_cache=geometry_cache,
+        suppress_label=suppress_far_label,
     )
 
 
@@ -502,7 +521,29 @@ def cluster_ic_externals(
     # Connector pin_to_net is also an alias for "this pin is on net X" —
     # let it override pin_net_overrides too so passive clusters route to the
     # correct destination.
-    overrides_for_pin |= dict(getattr(ic, "pin_to_net", ()) or ())
+    pin_to_net = tuple(getattr(ic, "pin_to_net", ()) or ())
+    overrides_for_pin |= dict(pin_to_net)
+    # pin_to_net keys are PIN NUMBERS (e.g. "10"), but refcircuit external
+    # parts often reference the destination by PIN NAME (e.g. "LVDS_DATA0-").
+    # Map each pin number's net to that pin's NAME too so the cluster
+    # resolver finds it whether the refcircuit referenced by number or name.
+    # Without this, an LVDS 100Ω termination with to_net="LVDS_DATA0-" emits
+    # a stray local label of that name instead of routing onto the carrier's
+    # ZYNQ_LCD_LVDS_DA0_N net.
+    if pin_to_net and geometry_cache is not None and getattr(ic, "lib_id", None):
+        try:
+            symbol_rotation = float(getattr(ic, "rotation", 0.0))
+            number_to_name = {}
+            for pin_info in geometry_cache.all_pins(ic.lib_id, rotation=symbol_rotation):
+                number_to_name[str(pin_info["number"])] = str(pin_info["name"])
+            for pin_number, net in pin_to_net:
+                pin_name = number_to_name.get(str(pin_number))
+                if pin_name and pin_name not in overrides_for_pin:
+                    overrides_for_pin[pin_name] = net
+        except Exception:
+            # geometry cache may not have this symbol registered; skip
+            # the name aliasing and rely on the numeric mapping.
+            pass
 
     if getattr(ic, "power_input_net", ""):
         overrides_for_pin.setdefault("IN", ic.power_input_net)
@@ -545,6 +586,18 @@ def cluster_ic_externals(
                 ic=ic,
                 overrides_for_pin=overrides_for_pin,
             )
+            # If the resolved destination is a net that another connector
+            # pin on THIS same instance also routes to (e.g. the LVDS
+            # termination going to ZYNQ_LCD_LVDS_DA0_N when connector
+            # pin 10 already maps that same net), suppress the cluster's
+            # far-terminal label. KiCad's hier-label-by-name merge binds
+            # the nets electrically; the redundant label otherwise lands
+            # at the wrong Y (the from_pin's Y, not the destination
+            # pin's Y) and visually collides with the connector's own
+            # hier label for the differential partner.
+            destination_via_connector_pin = resolved_destination in {
+                net for _pin, net in pin_to_net
+            } and resolved_destination != external.to_net
             place_one_passive_for_pin(
                 builder,
                 external=external,
@@ -554,5 +607,6 @@ def cluster_ic_externals(
                 ic_reference=ic.reference,
                 horizontal_swarm_pitch_mm=horizontal_pitch_mm,
                 geometry_cache=geometry_cache,
+                suppress_far_label=destination_via_connector_pin,
             )
     return pin_geom_map

@@ -32,7 +32,7 @@ def build_mipi_camera() -> Block:
     return Block(
         name="mipi_camera",
         title="MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Raspberry-Pi-compatible 15-pin MIPI CSI-2 camera connector. "
             "2-lane CSI-2 + clock at LVDS_25 to Zynq PL bank 35. I2C for "

@@ -444,7 +444,7 @@ def place_block(
     geometry_cache: SymbolGeometryCache,
     ic_column_x: float = 130.0,
     ic_top_y: float = 60.0,
-    ic_row_pitch: float = 45.72,
+    ic_row_pitch: float = 76.2,
 ) -> Sheet:
     """Render a :class:`Block` into a placed :class:`Sheet`.
 
@@ -453,7 +453,17 @@ def place_block(
         geometry_cache: Pre-loaded symbol geometry cache.
         ic_column_x: X coordinate of the IC column on the sheet.
         ic_top_y: Y coordinate of the first IC.
-        ic_row_pitch: Vertical distance between consecutive ICs.
+        ic_row_pitch: Vertical distance between consecutive ICs. Must
+            accommodate the tallest expected IC body plus its TOP-side
+            decoupling-cap chain (cap body + power-symbol stub, up to
+            ~24 mm). 76.2 mm (30 grid units) clears the TPD12S016 (33 mm
+            body) + a stacked decoupling cap above the next IC's VCC
+            pin without the cap landing inside the prior IC's body.
+            The earlier 45.72 mm produced U1/C102 overlap on hdmi_tx
+            because TPD12S016 extends +21.59 mm above its anchor while
+            the EEPROM's TOP cap was placed 22.86 mm below the EEPROM
+            anchor (cap+stagger = 15.24 mm + half-cap-body = 18.05 mm),
+            requiring at least 50.8 mm of row pitch.
     """
     builder = BlockLayoutBuilder()
 

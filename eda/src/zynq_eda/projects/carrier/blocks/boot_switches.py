@@ -32,7 +32,7 @@ def build_boot_switches() -> Block:
     return Block(
         name="boot_switches",
         title="Boot Mode Straps + PS Reset (DIP-4 + Tactile)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "User boot-mode selection (SW1: 4-position DIP into Zynq "
             "BOOT_MODE[3:0]) and active-low PS reset push-button (SW2 → "

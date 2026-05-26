@@ -129,6 +129,43 @@ class PlacedHierarchicalLabel:
 
 
 @dataclass(frozen=True)
+class PlacedGlobalLabel:
+    """A global-scope net label.
+
+    KiCad's `(global_label ...)` primitive: any two global labels with
+    the same ``net_name`` merge into the SAME net across the whole
+    project, irrespective of which sheet they're on. We use this for
+    cross-block signal nets so the root sheet doesn't need explicit
+    sheet pins / connecting wires for every signal — pasting the
+    signal name at each sub-sheet endpoint is enough.
+
+    The ``direction`` (KiCad calls it "shape") drives the arrow glyph
+    rendered next to the label; it doesn't change the electrical
+    behaviour.
+    """
+
+    net_name: str
+    position: Point
+    direction: Literal["input", "output", "bidirectional", "passive", "tri_state"] = "bidirectional"
+    rotation: float = 0.0
+
+    def __post_init__(self) -> None:
+        if not self.net_name:
+            raise ValueError("PlacedGlobalLabel.net_name must be non-empty")
+        if self.direction not in {
+            "input", "output", "bidirectional", "passive", "tri_state",
+        }:
+            raise ValueError(
+                f"PlacedGlobalLabel.direction invalid: {self.direction!r}"
+            )
+        if self.rotation not in (0.0, 90.0, 180.0, 270.0):
+            raise ValueError(
+                f"PlacedGlobalLabel.rotation invalid: {self.rotation}"
+            )
+        assert_on_grid(self.position)
+
+
+@dataclass(frozen=True)
 class PlacedSheetPin:
     """One sheet pin on a root-level :class:`PlacedSheet` symbol.
 
@@ -213,6 +250,7 @@ class Sheet:
     junctions: tuple[PlacedJunction, ...] = field(default_factory=tuple)
     no_connects: tuple[PlacedNoConnect, ...] = field(default_factory=tuple)
     hierarchical_labels: tuple[PlacedHierarchicalLabel, ...] = field(default_factory=tuple)
+    global_labels: tuple[PlacedGlobalLabel, ...] = field(default_factory=tuple)
     sheets: tuple[PlacedSheet, ...] = field(default_factory=tuple)
     description: str = ""
     paper_portrait: bool = False

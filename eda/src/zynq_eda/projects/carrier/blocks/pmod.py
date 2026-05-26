@@ -22,7 +22,7 @@ def build_pmod() -> Block:
     return Block(
         name="pmod",
         title="PMOD Headers (2× Digilent 12-pin Type 1A)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Two PMOD headers per Digilent PMOD Interface Spec v1.3.0 "
             "(Type 1A, single-ended GPIO). Each provides 8 GPIO + 3V3 + "

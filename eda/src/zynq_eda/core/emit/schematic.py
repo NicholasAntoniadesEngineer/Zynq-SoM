@@ -179,6 +179,21 @@ def emit_sheet(
             rotation=hlabel.rotation,
         )
 
+    # Global labels: KiCad merges same-name global labels across all
+    # sheets into one electrical net. kicad-sch-api's ``add_global_label``
+    # signature: (text, position, shape="input", effects=None) — rotation
+    # is set separately by editing the saved primitive. For our use case
+    # (cross-block signal merging) the rotation can be inherited from the
+    # hier label position; we pass it to ``schematic.add_global_label`` and
+    # let kicad-sch-api stamp the default 0° orientation. If a future need
+    # arises for non-zero rotation, the post-emit text edit can add it.
+    for glabel in getattr(sheet, "global_labels", ()):
+        schematic.add_global_label(
+            glabel.net_name,
+            position=glabel.position.as_tuple(),
+            shape=glabel.direction,
+        )
+
     for junction in sheet.junctions:
         schematic.add_junction(junction.position.as_tuple())
 

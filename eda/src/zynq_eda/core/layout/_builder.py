@@ -21,6 +21,7 @@ from zynq_eda.core.layout.occupancy import Occupancy
 from zynq_eda.core.model.block import Block
 from zynq_eda.core.model.grid import Point
 from zynq_eda.core.model.sheet import (
+    PlacedGlobalLabel,
     PlacedHierarchicalLabel,
     PlacedJunction,
     PlacedLabel,
@@ -68,6 +69,7 @@ class BlockLayoutBuilder:
     junctions: list[PlacedJunction] = field(default_factory=list)
     no_connects: list[PlacedNoConnect] = field(default_factory=list)
     hierarchical_labels: list[PlacedHierarchicalLabel] = field(default_factory=list)
+    global_labels: list[PlacedGlobalLabel] = field(default_factory=list)
     sheets: list[PlacedSheet] = field(default_factory=list)
     occupancy: Occupancy = field(default_factory=Occupancy)
     _ref_counters: dict[str, int] = field(
@@ -136,6 +138,29 @@ class BlockLayoutBuilder:
         bbox = _hierarchical_label_bbox(hlabel)
         self.occupancy.add(bbox)
 
+    def add_global_label(self, glabel: PlacedGlobalLabel) -> None:
+        """Append a global label AND register its text bbox.
+
+        Global labels render visually similar to hier labels (with a
+        different glyph), so we reuse the hier-label bbox helper.
+        """
+        self.global_labels.append(glabel)
+        # Build a hier-equivalent for bbox computation.
+        as_hier = PlacedHierarchicalLabel(
+            net_name=glabel.net_name,
+            position=glabel.position,
+            direction=glabel.direction,
+            rotation=glabel.rotation,
+        )
+        bbox = _hierarchical_label_bbox(as_hier)
+        # Mark the bbox owner so ignore_owners can target it explicitly.
+        from dataclasses import replace as _dc_replace
+        bbox = _dc_replace(
+            bbox,
+            owner_id=f"glabel:{glabel.net_name}@{glabel.position.x:.1f},{glabel.position.y:.1f}",
+        )
+        self.occupancy.add(bbox)
+
     def finalize(self, block: Block) -> Sheet:
         """Freeze the accumulator into a :class:`Sheet`.
 
@@ -158,6 +183,7 @@ class BlockLayoutBuilder:
             junctions=tuple(self.junctions),
             no_connects=tuple(self.no_connects),
             hierarchical_labels=tuple(self.hierarchical_labels),
+            global_labels=tuple(self.global_labels),
             sheets=tuple(self.sheets),
             description=block.description,
         )

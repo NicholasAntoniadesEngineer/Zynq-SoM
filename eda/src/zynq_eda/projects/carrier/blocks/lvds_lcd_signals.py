@@ -29,7 +29,7 @@ def build_lvds_lcd_signals() -> Block:
     return Block(
         name="lvds_lcd_signals",
         title="LVDS LCD bank A (data + clock + backlight ctrl)",
-        paper_size="A4",
+        paper_size="A3",
         description=(
             "Bank A of the 40-pin 0.5 mm LVDS LCD FFC connector. Carries "
             "the LVDS data pairs (DA0..DA3 ±), LVDS clock pair (CLK ±), "

@@ -1,12 +1,219 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-26T15:14:50Z
+Generated: 2026-05-26T18:44:27Z
 
-**Errors:** 0  **Warnings:** 3  **Info:** 0
+**Errors:** 191  **Warnings:** 16  **Info:** 0
 
-## Warnings (3)
+## Errors (191)
 
-- **overlap.symbol_symbol**: symbol 'U1' body @ (129.5, 64.8) overlaps symbol 'C102' body @ (129.5, 82.5) [strict=False] _(hdmi_tx.kicad_sch)_
-- **overlap.wire_symbol**: wire #25 @ (129.5, 76.2) overlaps symbol 'U1' body @ (129.5, 64.8) [strict=False] _(hdmi_tx.kicad_sch)_
-- **overlap.label_hlabel**: label 'LVDS_DATA0-' @ (195.2, 54.6) overlaps hierarchical label 'ZYNQ_LCD_LVDS_DA0_P' @ (203.2, 54.6) [strict=False] _(lvds_lcd_signals.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
+- **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
+- **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
+- **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
+- **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
+- **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+
+## Warnings (16)
+
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FMC_LPC_LA_LOW' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J1_PL_POWER' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J3_DIFF' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FFC_40P_LVDS_SIGNALS' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FMC_LPC_LA_HIGH' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J2_DIFF' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J3_SE' _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FFC_40P_LVDS_POWER' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FMC_LPC_PWR_CLK_JTAG' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J1_MIO' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J2_SE' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J3_POWER' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J1_PS_AUX' _(carrier.kicad_sch)_
+- **erc.lib_symbol_issues**: The current configuration does not include the symbol library 'FX10A_168P_J2_POWER' _(carrier.kicad_sch)_
 
