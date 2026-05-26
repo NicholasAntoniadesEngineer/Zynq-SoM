@@ -94,6 +94,12 @@ FUSB302_REFCIRCUIT = ReferenceCircuit(
     description="USB Type-C / PD CC controller, I2C-controlled, WQFN-14",
     supply_rail="+3V3",
     layout_template=FUSB302_BLOCK_TEMPLATE,
+    # FUSB302 has 15 external_parts across 7-8 pins (VDD/VBUS/VCONN x2,
+    # CC1/CC2 caps, SCL/SDA/INT_N pull-ups). The default LEFT/RIGHT
+    # swarm pitch (15.24 mm) packs the cap value labels tightly enough
+    # that the rendered text overlaps between adjacent slot columns.
+    # Opt into the 20.32 mm dense pitch for breathing room.
+    dense_swarm=True,
     pin_net_overrides=(
         ("CC1", "STM32_USB_CC1"),
         ("CC2", "STM32_USB_CC2"),

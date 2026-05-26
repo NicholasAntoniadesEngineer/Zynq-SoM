@@ -1,6 +1,6 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-26T19:50:48Z
+Generated: 2026-05-26T20:18:46Z
 
 **Errors:** 0  **Warnings:** 486  **Info:** 0
 
@@ -128,7 +128,6 @@ Generated: 2026-05-26T19:50:48Z
 - **erc.multiple_net_names**: Both Vin- and +VIN are attached to the same items; Vin- will be used in the netlist _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +5V has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both +3V3 and GND are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
@@ -292,7 +291,7 @@ Generated: 2026-05-26T19:50:48Z
 - **erc.hier_label_mismatch**: Hierarchical label CHASSIS_GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_5V_SENSE has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.multiple_net_names**: Both +3V3 and ZYNQ_HDMI_RX_5V_SENSE are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both +3V3 and GND are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -306,6 +305,7 @@ Generated: 2026-05-26T19:50:48Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_HPD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Power output and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both GND and +3V3 are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_

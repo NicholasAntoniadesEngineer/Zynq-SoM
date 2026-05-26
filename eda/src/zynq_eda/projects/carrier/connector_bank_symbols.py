@@ -177,7 +177,14 @@ def generate_all_bank_symbols() -> tuple[Path, ...]:
             output_path=out_path,
             value_text=value_text,
             footprint=footprint,
-            show_pin_names=True,
+            # Hide pin NAMES — they collide visually with pin NUMBERS at
+            # the pin row when both render at the same position (KiCad
+            # stacks the name + number text at the pin location). The
+            # carrier provides clear net labels at the wire stub-end via
+            # connectors.py, so the symbol's intrinsic pin names are
+            # redundant inside the symbol body. Pin NUMBERS stay visible
+            # (they identify the physical pad on the package).
+            show_pin_names=False,
         )
         written.append(out_path.resolve())
     return tuple(written)

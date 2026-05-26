@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "0581b0cc-f557-480d-b636-a648ea624db7")
+	(uuid "8cd0a2dc-44f9-4538-896c-c5337a332f1c")
 	(paper "A3")
 	(title_block
 		(title "Boot Mode Straps + PS Reset (DIP-4 + Tactile)")
@@ -769,7 +769,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "b53b7ef5-00a5-435c-9da2-2715c99d8b81")
+		(uuid "2cf9871d-4f51-4980-932e-fb5f7a9d6693")
 		(property "Reference" "SW1"
 			(at 129.54 69.85 0.0000)
 			(effects
@@ -818,20 +818,20 @@
 			)
 		)
 		(pin "1"
-			(uuid "8400842f-c9e6-41b8-bd2a-cca823097245")
+			(uuid "830ab972-dbd9-4d0d-bbfd-26500943503b")
 		)
 		(pin "2"
-			(uuid "16076fbf-94bd-418e-8945-d68a40c3b58c")
+			(uuid "b64811d8-6b9e-4b26-ae9d-d24cfb25e163")
 		)
 		(pin "3"
-			(uuid "861c8850-6b1d-4983-a145-b842dd0420d9")
+			(uuid "2e438be2-5248-4ad2-a653-fbe69bc6cefb")
 		)
 		(pin "4"
-			(uuid "6b108552-314a-418f-ad2e-ab929c96792f")
+			(uuid "041e5f35-df08-45f2-a940-ad800edf8b44")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "SW1")
 					(unit 1)
 				)
@@ -847,7 +847,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "49caa9b5-ebda-43fb-9e8b-e43323f46031")
+		(uuid "c8673639-641c-487d-84e8-1b50b06efb1f")
 		(property "Reference" "R100"
 			(at 111.76 52.578 0.0000)
 			(effects
@@ -876,14 +876,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "0c96ffc4-af02-45b9-8544-19f809422b40")
+			(uuid "a1b4790f-ad9d-42ba-9380-4ce7f0fd3d62")
 		)
 		(pin "2"
-			(uuid "03488787-a780-48a5-98f7-d70fdd1c7338")
+			(uuid "26a2f06d-07da-4d33-9da7-ea18dbabc569")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "R100")
 					(unit 1)
 				)
@@ -899,7 +899,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "15c6ad3e-bedc-4069-8298-a46e1b3e2df2")
+		(uuid "6de8195a-32e6-4117-8d69-c37fd32aff56")
 		(property "Reference" "#PWR100"
 			(at 102.87 50.8 0.0000)
 			(effects
@@ -928,11 +928,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "aea05e0f-cf7d-45ba-abfe-cb8aba5171ca")
+			(uuid "62b5e474-6c7c-4fcc-befc-74637933d8f3")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -948,7 +948,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "836f9fe3-e5fb-4c6b-9d9f-71cc1011304b")
+		(uuid "1adf4917-6561-41ff-8ae9-c0d24464c3e5")
 		(property "Reference" "R101"
 			(at 106.68 55.118 0.0000)
 			(effects
@@ -977,14 +977,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "76e6afea-f39d-4e07-b9cf-45b4949e3b5a")
+			(uuid "53785295-f8c4-460d-97ef-d5663db56424")
 		)
 		(pin "2"
-			(uuid "69187f96-6770-401c-8e08-f86d2e24a660")
+			(uuid "5df6b87e-fb85-458c-bf18-0fc4cbce80d5")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "R101")
 					(unit 1)
 				)
@@ -1000,7 +1000,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "36255c86-2d24-431c-b7dc-3e36a472128a")
+		(uuid "5418a577-f8f1-4b33-8c6b-5b396b70fd22")
 		(property "Reference" "#PWR101"
 			(at 97.79 53.34 0.0000)
 			(effects
@@ -1029,11 +1029,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "e9a1b7dc-1b6a-482d-961b-5fa344985ec1")
+			(uuid "a4722ff5-34b0-430d-bda8-6b7e3c2c065d")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -1049,7 +1049,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "26002a27-6886-414c-b698-e789cb29a700")
+		(uuid "de574294-ece9-4793-9614-53c6765b53a0")
 		(property "Reference" "R102"
 			(at 111.76 57.658 0.0000)
 			(effects
@@ -1078,14 +1078,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "3ff20dcc-94b0-40f6-bc34-1b8336ad01a6")
+			(uuid "3791b779-abb2-4b14-be12-65d01f7538ca")
 		)
 		(pin "2"
-			(uuid "ae3ab5a3-e9be-4e26-9782-4368c075399e")
+			(uuid "ff6a914c-38aa-49b6-89c9-7b6dc4708deb")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "R102")
 					(unit 1)
 				)
@@ -1101,7 +1101,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "7b92e846-a433-4714-94b0-1156cbc2c358")
+		(uuid "ae2aff0e-cece-42f1-bd03-1ebc4c78802c")
 		(property "Reference" "#PWR102"
 			(at 102.87 55.88 0.0000)
 			(effects
@@ -1130,11 +1130,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "2ada6915-fbf2-4d3d-878c-dcb6df85dd79")
+			(uuid "a0cb1c7c-f4bf-4ed3-842f-e80836116dbf")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -1150,7 +1150,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "146a791f-7f7f-456d-b9f9-1825ca6eea6f")
+		(uuid "f9bf9a35-851b-4250-94f4-d32f1bb097b1")
 		(property "Reference" "R103"
 			(at 106.68 60.198 0.0000)
 			(effects
@@ -1179,14 +1179,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "90ba98fe-4977-4813-a9d0-dd284350e4d1")
+			(uuid "212f59b2-9062-40d2-8957-ba8b04265633")
 		)
 		(pin "2"
-			(uuid "8e899d90-752d-41ef-9aab-2a02fc26a8d4")
+			(uuid "d8c4ef8c-7d15-4e84-a0c8-3a01854bddc2")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "R103")
 					(unit 1)
 				)
@@ -1202,7 +1202,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "304c423b-84a9-4030-aa06-ccb1b19d3a1d")
+		(uuid "72967059-bf26-412c-b87c-e4e5ce38c798")
 		(property "Reference" "#PWR103"
 			(at 97.79 58.42 0.0000)
 			(effects
@@ -1231,11 +1231,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "13f4168a-6774-43af-b00f-b628a18f79e7")
+			(uuid "6cd61e00-f608-46af-b25a-629ba77e2fa3")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "#PWR103")
 					(unit 1)
 				)
@@ -1251,7 +1251,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a7c31920-3278-4188-884b-e008dea587e8")
+		(uuid "8310af17-b2e8-4558-9d41-3ef5ff29d3c7")
 		(property "Reference" "SW2"
 			(at 344.17 60.96 0.0000)
 			(effects
@@ -1300,14 +1300,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "fc439e5a-7d3c-42dd-995c-c9fabedbef43")
+			(uuid "35a36717-23a8-4f78-85db-4aaf4264a13b")
 		)
 		(pin "2"
-			(uuid "f4daa195-0502-4b46-9c6f-db78aa9cf281")
+			(uuid "05f899de-de19-4965-8b77-a34ca3886781")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "SW2")
 					(unit 1)
 				)
@@ -1323,7 +1323,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "89dfff7b-c044-49b3-9e6d-6d9b1c52d9e7")
+		(uuid "f856df42-c8ad-4de2-9b02-0fef53d19ec2")
 		(property "Reference" "R104"
 			(at 326.39 53.848 0.0000)
 			(effects
@@ -1352,14 +1352,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "05af9e8b-0a1a-4a71-9938-2b2cdb68d3c7")
+			(uuid "e8dce118-1fc5-4400-86c6-4fe7db508d1c")
 		)
 		(pin "2"
-			(uuid "80d129dc-532f-4fe9-ac97-47c0559cb917")
+			(uuid "b8e44012-dbf1-4be9-ac9f-148c29d3487d")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "R104")
 					(unit 1)
 				)
@@ -1375,7 +1375,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "8b8ebbc9-783d-4f99-8691-6dd3fc36fab6")
+		(uuid "c7d06080-1f78-4e73-b830-ab4a9b8603ab")
 		(property "Reference" "#PWR104"
 			(at 317.5 52.07 0.0000)
 			(effects
@@ -1404,11 +1404,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "33554054-f023-443e-bbb2-95f431d61158")
+			(uuid "a467c345-864c-40d6-af0b-2f3bcc79385e")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "#PWR104")
 					(unit 1)
 				)
@@ -1424,7 +1424,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "16232aca-cf79-47bb-9a90-39174dd63208")
+		(uuid "db199df4-f9b3-4259-8fad-ab25800dcb6f")
 		(property "Reference" "C100"
 			(at 313.69 55.245 270)
 			(effects
@@ -1453,14 +1453,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "05593203-1c9d-4ccd-8d70-759d05ace0c8")
+			(uuid "1d9153dd-d763-49a2-83eb-046d576e8e54")
 		)
 		(pin "2"
-			(uuid "ea874a6f-2766-4e79-bcb2-bfc49e035fb5")
+			(uuid "c014bf8d-9dd5-4640-b352-dfc04d7e47b5")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1476,7 +1476,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "aa0623fe-cfbc-4921-817b-a386d9d8f72b")
+		(uuid "c75b38d8-6076-4a32-b0a5-914315f6ae52")
 		(property "Reference" "#PWR105"
 			(at 302.26 49.53 0.0000)
 			(effects
@@ -1505,11 +1505,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "c6ec50f2-4982-44b3-ad97-c5d67702ba88")
+			(uuid "bb235354-a7e3-484b-92b5-02e0e1cd7e54")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/0581b0cc-f557-480d-b636-a648ea624db7"
+				(path "/8cd0a2dc-44f9-4538-896c-c5337a332f1c"
 					(reference "#PWR105")
 					(unit 1)
 				)
@@ -1524,7 +1524,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "3a8c9790-aad8-42db-b3ea-c42bd7768f1c")
+		(uuid "aafc4562-7aa4-4122-9ec2-73200435c7a2")
 	)
 	(wire
 		(pts
@@ -1534,7 +1534,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "002b47e4-db80-4f7c-80c3-241d73a2d5ae")
+		(uuid "aa56d3e1-68d5-41b7-ad54-4ea3f2bf278e")
 	)
 	(wire
 		(pts
@@ -1544,7 +1544,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "97589979-5d95-40c2-90d5-84798f089655")
+		(uuid "069968c8-c078-4038-bee2-bfdc74b4fbc7")
 	)
 	(wire
 		(pts
@@ -1554,7 +1554,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d9e71d20-9838-45dc-875d-f116ed7f655e")
+		(uuid "32855bed-2fda-4328-9e4a-f1b5758553da")
 	)
 	(wire
 		(pts
@@ -1564,7 +1564,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "da3989a9-683e-4c42-8a75-f6c926454836")
+		(uuid "10cb98e8-dffa-4f22-8315-35394b223b0c")
 	)
 	(wire
 		(pts
@@ -1574,7 +1574,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "df43afa6-bf9b-40eb-9c53-cea942f88c1d")
+		(uuid "824598f9-0d6e-4fc3-988d-e0ed45e930d6")
 	)
 	(wire
 		(pts
@@ -1584,97 +1584,97 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1d602df3-1d09-49b1-851b-0211482f7094")
+		(uuid "d636e600-e4cb-4afe-8eb8-d3cb4f0fd41a")
 	)
 	(junction
 		(at 115.57 54.61)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "1359fec0-a66c-4121-bf86-c998dfdfa7b9")
+		(uuid "5f142179-c36d-4900-9f6b-ab446270ef9f")
 	)
 	(junction
 		(at 107.95 54.61)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "3196f5c8-6092-4f19-8a94-7770c1a71c74")
+		(uuid "50004e4d-1889-4af3-bd03-ed02179f5dcf")
 	)
 	(junction
 		(at 102.87 54.61)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "cd72607a-0d3c-46cc-a078-f15be9ea40d4")
+		(uuid "625f75e5-e193-44d2-8787-e7049e81d1bf")
 	)
 	(junction
 		(at 110.49 57.15)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "fd696bce-117e-4ae1-b065-1fe450eb0318")
+		(uuid "20ae5796-27e3-4705-a8f5-8c92c8c71f36")
 	)
 	(junction
 		(at 102.87 57.15)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "822281bc-7882-4656-92f1-648997a8c106")
+		(uuid "c1c37eff-3364-473c-8c85-df540f10f2b7")
 	)
 	(junction
 		(at 97.79 57.15)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "be9a5175-184f-4f59-8d89-609871e1d096")
+		(uuid "8ffea39b-7a9b-4008-b05c-c0d8ae0a45eb")
 	)
 	(junction
 		(at 115.57 59.69)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "8e8cd540-674e-4192-8af8-ee1e519454f9")
+		(uuid "832d5f28-6463-48c1-b42b-26177c719f3f")
 	)
 	(junction
 		(at 107.95 59.69)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "7a578f02-7466-451f-b1b8-3d755d80500d")
+		(uuid "71ebf187-b38d-4fba-94f6-d3b4945a201b")
 	)
 	(junction
 		(at 102.87 59.69)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "73d90dc3-62a4-4f18-bec7-4c01b31e2756")
+		(uuid "d0569e7c-d228-4613-b680-bae61d851a66")
 	)
 	(junction
 		(at 110.49 62.23)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "a1a8f3ee-5baf-4d7a-bc9f-f685e0cfe511")
+		(uuid "bc0bb455-a22a-4343-8e4d-61cf1ab89e5c")
 	)
 	(junction
 		(at 102.87 62.23)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "78886900-18f1-4d77-9ed0-7abd441741a8")
+		(uuid "9dad8c5d-939b-4418-ace5-d5507f96de52")
 	)
 	(junction
 		(at 97.79 62.23)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "0e648008-a8d6-481a-b6a7-efd9da7492d1")
+		(uuid "a87e6a5e-508a-4332-9a56-6cd78c79f3b7")
 	)
 	(junction
 		(at 330.2 55.88)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "a5433115-39c0-41aa-bcfa-50c235c773a3")
+		(uuid "98d998c4-9c2f-4274-a162-ed168fd8462e")
 	)
 	(junction
 		(at 322.58 55.88)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "a79ff988-ceb1-43ab-b3a8-92a88fd118db")
+		(uuid "7e25007e-7e97-459e-85b9-4d41d0801da1")
 	)
 	(junction
 		(at 317.5 55.88)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "ad488380-a06d-43f9-9e03-c6df92058887")
+		(uuid "ab33cd74-4f10-4d72-acc9-00d38eaaf887")
 	)
 	(hierarchical_label "ZYNQ_BOOT_MODE_0"
 		(shape input)
@@ -1685,7 +1685,7 @@
 			)
 			(justify left)
 		)
-		(uuid "1d33fa73-6d7f-435d-a9f2-f19f9ba2383c")
+		(uuid "da058a99-3663-4bed-8e1a-ec9f2dbb8d3a")
 	)
 	(hierarchical_label "ZYNQ_BOOT_MODE_1"
 		(shape input)
@@ -1696,7 +1696,7 @@
 			)
 			(justify left)
 		)
-		(uuid "e86e6c8c-714f-4eac-aafb-611d6d72c69c")
+		(uuid "e0bed9ce-2f56-4b24-aa25-03173b0084a2")
 	)
 	(hierarchical_label "ZYNQ_BOOT_MODE_2"
 		(shape input)
@@ -1707,7 +1707,7 @@
 			)
 			(justify left)
 		)
-		(uuid "0e9ae9d7-7b8f-4e2f-94ed-b1dbe8f239d7")
+		(uuid "841dac70-93bd-49e9-8af8-9896a88e500a")
 	)
 	(hierarchical_label "ZYNQ_BOOT_MODE_3"
 		(shape input)
@@ -1718,7 +1718,7 @@
 			)
 			(justify left)
 		)
-		(uuid "f33c4164-4df5-414f-b9a5-c00fb8f3ffee")
+		(uuid "e907c562-d19c-4bd3-85c9-41e73e6a9d9a")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1729,7 +1729,7 @@
 			)
 			(justify left)
 		)
-		(uuid "88b46cd7-c19a-4d53-ab11-1a9517c54879")
+		(uuid "44257767-31ed-44b5-b6c9-2c98e58e3692")
 	)
 	(hierarchical_label "ZYNQ_PS_SRST_N"
 		(shape input)
@@ -1740,7 +1740,7 @@
 			)
 			(justify left)
 		)
-		(uuid "f1864cec-888a-4562-9568-7cdeb04d6707")
+		(uuid "d3a3c95a-cfed-4c7e-b6a2-54e27ee61252")
 	)
 	(sheet_instances
 		(path "/"
