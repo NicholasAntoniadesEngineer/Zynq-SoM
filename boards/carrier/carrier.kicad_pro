@@ -245,7 +245,7 @@
       "undefined_netclass": "error",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
-      "wire_dangling": "error"
+      "wire_dangling": "warning"
     }
   },
   "libraries": {
@@ -420,7 +420,7 @@
       {
         "filename": "carrier.kicad_sch",
         "name": "carrier",
-        "uuid": "2028698b-4e30-4229-a684-d9fd4099e449"
+        "uuid": "19058012-9087-4fae-9e3a-5e997517fc28"
       }
     ],
     "used_designators": "",

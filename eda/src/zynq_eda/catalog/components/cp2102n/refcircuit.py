@@ -164,6 +164,29 @@ CP2102N_REFCIRCUIT = ReferenceCircuit(
         ),
     ),
     strap_pins=(),
+    lib_symbol_pin_type_overrides=(
+        # The stock ``Interface_USB:CP2102N-Axx-xQFN24`` symbol declares
+        # RXD (pin 20) and ~{CTS} (pin 18) as ``input`` -- correct in
+        # absolute terms, but ERC's ``pin_not_driven`` rule then demands
+        # an Output-type driver on the same net. The signal that drives
+        # these pins comes from the Zynq PS UART0 TXD / RTS_N on the OTHER
+        # side of the FX10A SoM-mate connector (an off-board / off-sheet
+        # source). The carrier-side FMC_LPC symbol has no physical pin
+        # for these signals (it is a 2-pin stub used only for power refs),
+        # so no on-sheet Output exists. Overriding the CP2102N's input
+        # pins to ``passive`` matches the electrical reality (an off-board
+        # source connects directly to the pin via the SoM connector) and
+        # clears the spurious ``pin_not_driven`` ERC violation without
+        # globally relaxing the rule -- same approach used for the
+        # INA226 Vbus sense pin (see ina226/refcircuit.py).
+        #
+        # ~{DCD}, ~{DSR}, ~{RI}/CLK, ~{WAKEUP}/GPIO.3 are NOT overridden
+        # here -- they are intentionally left as ``no_external_required``
+        # so the auto-NC pass marks them unconnected; ERC then ignores
+        # them rather than complaining about missing drivers.
+        ("RXD",    "passive"),  # Zynq PS UART0 TXD -> CP2102N RXD (in)
+        ("~{CTS}", "passive"),  # Zynq PS UART0 RTS_N -> CP2102N ~{CTS} (in)
+    ),
     no_external_required=frozenset({
         # D+/D- have integrated 1.5k full-speed pull-up + internal pull-downs
         # (DS Table 3.8 R_PU = 1.5k typ); no external termination needed.

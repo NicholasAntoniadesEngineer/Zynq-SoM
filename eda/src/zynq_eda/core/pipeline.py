@@ -151,11 +151,20 @@ def run_carrier(
 
         sheet_path = sheets_dir / f"{block.name}.kicad_sch"
         sheet_uuid = str(uuid.uuid4())
+        # Aggregate per-IC lib_symbol pin-type overrides for this block.
+        # Each override is (lib_id, pin_name, new_type) and corrects
+        # mis-declared pin types in stock KiCad library symbols (e.g.
+        # INA226 Vbus sense pin declared "input" instead of "passive").
+        pin_type_overrides: list[tuple[str, str, str]] = []
+        for ic in block.ics:
+            for pin_name, new_type in ic.refcircuit.lib_symbol_pin_type_overrides:
+                pin_type_overrides.append((ic.lib_id, pin_name, new_type))
         stats = emit_sheet(
             sheet,
             sheet_path,
             parent_uuid=parent_uuid,
             sheet_uuid=sheet_uuid,
+            lib_symbol_pin_type_overrides=tuple(pin_type_overrides),
         )
         print(f"    emitted: {stats.output_path.relative_to(REPO_ROOT)}")
         block_sub_sheets.append((block, sheet, f"sheets/{block.name}.kicad_sch"))

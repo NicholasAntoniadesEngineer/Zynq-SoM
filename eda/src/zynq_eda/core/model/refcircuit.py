@@ -74,6 +74,25 @@ class ReferenceCircuit:
     description: str = ""
     supply_rail: str = ""
     pin_net_overrides: tuple[tuple[str, str], ...] = field(default_factory=tuple)
+    lib_symbol_pin_type_overrides: tuple[tuple[str, str], ...] = field(default_factory=tuple)
+    """KiCad lib_symbol pin-electrical-type overrides applied at emit time.
+
+    Each entry is ``(pin_name, new_type)`` where ``new_type`` is a valid KiCad
+    pin electrical type (``"input"``, ``"output"``, ``"bidirectional"``,
+    ``"tri_state"``, ``"passive"``, ``"free"``, ``"unspecified"``,
+    ``"power_in"``, ``"power_out"``, ``"open_collector"``,
+    ``"open_emitter"``, ``"no_connect"``).
+
+    This is the surgical fix for stock-KiCad library symbols whose declared
+    pin type drives ERC into a wrong category. Canonical example: the
+    ``Sensor_Energy:INA226`` symbol marks its ``Vbus`` (pin 8) as ``input``
+    even though the datasheet describes it as a high-impedance voltage SENSE
+    pin that does not consume current. Overriding it to ``passive`` matches
+    the pin's true electrical character and prevents the bogus
+    ``pin_not_driven`` ERC violation, without globally lowering rule
+    severity or injecting fake driver flags. The override is applied to the
+    embedded ``lib_symbols`` block of the emitted ``.kicad_sch`` file.
+    """
     layout_template: IcBlockTemplate | None = None
     """Legacy per-IC placement template. Retained for the existing 28 refcircuit
     specs that set this field; the new layout engine ignores it and derives
@@ -102,6 +121,23 @@ class ReferenceCircuit:
             raise ValueError("ReferenceCircuit.symbol_token must be non-empty")
         if not self.footprint:
             raise ValueError("ReferenceCircuit.footprint must be non-empty")
+        valid_pin_types = frozenset({
+            "input", "output", "bidirectional", "tri_state", "passive",
+            "free", "unspecified", "power_in", "power_out",
+            "open_collector", "open_emitter", "no_connect",
+        })
+        for pin_name, new_type in self.lib_symbol_pin_type_overrides:
+            if not pin_name:
+                raise ValueError(
+                    f"ReferenceCircuit {self.part_mpn!r}: empty pin name in "
+                    "lib_symbol_pin_type_overrides"
+                )
+            if new_type not in valid_pin_types:
+                raise ValueError(
+                    f"ReferenceCircuit {self.part_mpn!r}: invalid pin type "
+                    f"{new_type!r} for pin {pin_name!r}; must be one of "
+                    f"{sorted(valid_pin_types)}"
+                )
 
     def expand_parts(self) -> list[ExternalPart]:
         """Return all external parts flattened (respecting quantity)."""

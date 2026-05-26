@@ -90,6 +90,7 @@ def emit_sheet(
     *,
     parent_uuid: str | None = None,
     sheet_uuid: str | None = None,
+    lib_symbol_pin_type_overrides: tuple[tuple[str, str, str], ...] = (),
 ) -> EmissionStats:
     """Render a :class:`Sheet` to a ``.kicad_sch`` file (atomic write).
 
@@ -101,6 +102,13 @@ def emit_sheet(
             for standalone-sheet tests). For real hierarchical projects,
             the root sheet emitter passes the parent + sheet UUIDs it
             allocated when adding the sheet symbol.
+        lib_symbol_pin_type_overrides: ``(lib_id, pin_name, new_type)``
+            tuples patched into the embedded ``lib_symbols`` block after
+            kicad-sch-api has written the file. Used to correct stock
+            KiCad symbols whose declared pin electrical type causes
+            spurious ERC violations (e.g. ``Sensor_Energy:INA226`` Vbus
+            sense pin declared ``input`` instead of ``passive``). See
+            :class:`ReferenceCircuit.lib_symbol_pin_type_overrides`.
     """
     # NOTE — DO NOT call ``schematic.set_hierarchy_context(...)`` here.
     #
@@ -179,6 +187,8 @@ def emit_sheet(
 
     _atomic_save(schematic, output_path)
     _hide_internal_properties(output_path)
+    if lib_symbol_pin_type_overrides:
+        _patch_lib_symbol_pin_types(output_path, lib_symbol_pin_type_overrides)
     # Disable for now: _patch_hierarchy_paths(output_path, parent, sheet_id)
 
     return EmissionStats(
@@ -294,6 +304,93 @@ def _hide_internal_properties(schematic_path: Path) -> None:
 
     if modified:
         schematic_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+
+
+def _patch_lib_symbol_pin_types(
+    schematic_path: Path,
+    overrides: tuple[tuple[str, str, str], ...],
+) -> None:
+    """Rewrite pin electrical types inside the embedded ``lib_symbols`` block.
+
+    kicad-sch-api caches stock KiCad library symbols verbatim from the
+    user's library, which means a wrong pin-type declaration in the
+    stock symbol (e.g. ``Sensor_Energy:INA226`` Vbus pin marked
+    ``input`` when it is functionally a high-Z sense node) propagates
+    into our emitted ``.kicad_sch`` and drives bogus ERC violations.
+
+    Each override is ``(lib_id, pin_name, new_type)``. We locate the
+    matching ``(symbol "<lib_id>" ...)`` block, then within it find
+    each ``(pin <old_type> line ...) ... (name "<pin_name>" ...)``
+    and rewrite the type token.
+
+    The rewrite is bounded to the targeted ``(symbol ...)`` block
+    (i.e. only the lib-symbol definition, not symbol instances) by
+    bracket-depth tracking, and bounded to the targeted ``(pin ...)``
+    block by a small look-ahead window.
+    """
+    import re
+
+    text = schematic_path.read_text(encoding="utf-8")
+    original = text
+
+    for lib_id, pin_name, new_type in overrides:
+        # Find the (symbol "lib_id" ...) block within lib_symbols.
+        sym_open = re.compile(
+            r'\(symbol\s+"' + re.escape(lib_id) + r'"',
+        )
+        m = sym_open.search(text)
+        if not m:
+            continue
+
+        # Track bracket depth from the opening paren of the (symbol ...).
+        block_start = m.start()
+        depth = 0
+        i = block_start
+        block_end = -1
+        in_string = False
+        while i < len(text):
+            ch = text[i]
+            if ch == '"' and (i == 0 or text[i - 1] != "\\"):
+                in_string = not in_string
+            elif not in_string:
+                if ch == "(":
+                    depth += 1
+                elif ch == ")":
+                    depth -= 1
+                    if depth == 0:
+                        block_end = i + 1
+                        break
+            i += 1
+        if block_end < 0:
+            continue
+
+        block = text[block_start:block_end]
+
+        # Within the block, find each (pin <type> line ...) (name "<pin_name>" ...)
+        # and rewrite the <type>. Pin definitions look like:
+        #     (pin input line
+        #         (at X Y rot)
+        #         (length L)
+        #         (name "<pin_name>" ...)
+        #         (number "N" ...)
+        #     )
+        # We capture the type with a non-greedy match up to the `name` line.
+        pin_pattern = re.compile(
+            r'(\(pin\s+)([a-z_]+)(\s+line\s*\n[^()]*?\(at[^)]*\)\s*\n[^()]*?\(length[^)]*\)\s*\n[^()]*?\(name\s+"'
+            + re.escape(pin_name)
+            + r'")',
+            re.MULTILINE,
+        )
+
+        def _repl(match: re.Match[str]) -> str:
+            return match.group(1) + new_type + match.group(3)
+
+        new_block, n = pin_pattern.subn(_repl, block)
+        if n > 0:
+            text = text[:block_start] + new_block + text[block_end:]
+
+    if text != original:
+        schematic_path.write_text(text, encoding="utf-8")
 
 
 def _atomic_save(schematic: ksa.Schematic, output_path: Path) -> None:

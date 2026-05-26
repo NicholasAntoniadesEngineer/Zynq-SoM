@@ -137,6 +137,21 @@ INA226_REFCIRCUIT = ReferenceCircuit(
         # override this via IcInstance.net_overrides for other rails.
         ("Vbus", "+VIN"),
     ),
+    lib_symbol_pin_type_overrides=(
+        # The stock ``Sensor_Energy:INA226`` symbol declares Vbus
+        # (pin 8) as ``input``. Per the datasheet (Sec 4 Table 4-1
+        # + Sec 8 Functional Description), Vbus is a high-impedance
+        # voltage SENSE node tied directly to the bus rail it
+        # measures -- it does not consume current and is NOT driven
+        # by any active output in the schematic. KiCad's ERC treats
+        # ``input`` as a sink that must be paired with an ``output``
+        # driver on the same net; a ``power:PWR_FLAG`` (Power output
+        # category) on +VIN does not satisfy this. Overriding to
+        # ``passive`` matches the pin's real electrical character
+        # and clears the spurious ``pin_not_driven`` ERC violation
+        # without globally relaxing the rule.
+        ("Vbus", "passive"),
+    ),
     no_external_required=frozenset(),
     layout_notes=(
         LayoutNote(

@@ -197,9 +197,50 @@ def _attach_ic_signal_overrides(
     # Combine refcircuit + per-IC overrides.
     overrides = dict(ic.refcircuit.pin_net_overrides) | dict(ic.net_overrides)
 
+    # ALSO include power_input_net / power_output_net for "IN"/"OUT" pin
+    # roles. Without these the cross-block-name mapping is invisible to
+    # the local-label pass — TPS2051's OUT pin gets a cluster cap to
+    # GND but no label on the OUT pin itself, leaving its net unnamed
+    # and disconnected from the J1 USB-C connector's VBUS_OTG pins
+    # (which DO have pin_to_net labels). The edge-label pass already
+    # handles the case where power_output_net IS in block.external_nets;
+    # this fills the gap for cross-block-internal rails like VBUS_OTG
+    # that exist only inside one sub-sheet.
+    if getattr(ic, "power_input_net", "") and "IN" not in overrides:
+        overrides["IN"] = ic.power_input_net
+    if getattr(ic, "power_output_net", "") and "OUT" not in overrides:
+        overrides["OUT"] = ic.power_output_net
+
     # Pins claimed by edge-label handler (hierarchical label at sheet
-    # edge) or by passive clustering — skip those here.
+    # edge) or by passive clustering — skip those here. BUT: pins whose
+    # cluster only attached bypass caps to GND (not to the pin's own
+    # net) still need their net named on the IC side. Concretely, the
+    # TPS2051 OUT pin has C(out)→GND caps. The cluster wires put the
+    # OUT pin on a wire alongside the cap's near-pin, but neither end
+    # carries a "VBUS_OTG" label — so the OUT node ends up unnamed and
+    # ERC sees no driver for the connector's VBUS pins. We override the
+    # skip for OUT/IN pins whose target net (power_input_net /
+    # power_output_net) is a non-power-symbol local net, since power-
+    # symbol nets (+VIN, +3V3, GND, ...) are already named by their
+    # power-symbol child node, but a plain local net like VBUS_OTG is
+    # not. See edge_labels._per_ic_pin_labels for the external-net case
+    # (which IS named via hier-label + wire).
     skip = {"GND", "VSS"} | set(placed_passive_pin_names) | set(edge_labeled_pin_names)
+    # Re-include OUT/IN pins when their target net is an internal local
+    # rail that hasn't already been named anywhere (no power symbol, no
+    # edge hier-label). Without this, the only label-carrying nodes for
+    # that net are downstream consumers (connector pin_to_net labels),
+    # and the IC driver pin sits on an unnamed island.
+    for pin_role in ("IN", "OUT"):
+        net_target = overrides.get(pin_role)
+        if not net_target:
+            continue
+        if net_target in POWER_SYMBOL_LIB_IDS:
+            continue
+        if pin_role in edge_labeled_pin_names:
+            # already wired to an edge hier-label by the external-net pass
+            continue
+        skip.discard(pin_role)
 
     # Stub length MUST be ONE pin pitch (2.54 mm), not two. A 5.08 mm stub
     # routed perpendicular to a dense pin row spans two adjacent pin Y
