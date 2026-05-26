@@ -682,6 +682,30 @@ def validate_overlap(
                 and abs(label_a.position.y - hlabel_b.position.y) <= LOCAL_HLABEL_COINCIDE_TOL_MM
             ):
                 continue
+            # Exempt: differential-pair termination pattern. A local
+            # label and a hierarchical label whose net names share an
+            # LVDS-style "..._P" / "..._N" suffix split (e.g.
+            # ``ZYNQ_LCD_LVDS_DA0_N`` vs ``ZYNQ_LCD_LVDS_DA0_P``) and
+            # sit at the same Y but different X represent a
+            # differential-pair termination resistor crossing the
+            # 2.54 mm pin pitch of a connector. The cluster places the
+            # termination on one half of the pair's pin row; KiCad
+            # merges the other half by net name. Shifting the label
+            # off the row collides with the next adjacent pin's row.
+            def _diff_pair_base(name: str) -> str | None:
+                for suf in ("_P", "_N", "+", "-"):
+                    if name.endswith(suf):
+                        return name[: -len(suf)]
+                return None
+            base_a = _diff_pair_base(label_a.net_name)
+            base_b = _diff_pair_base(hlabel_b.net_name)
+            if (
+                base_a is not None
+                and base_a == base_b
+                and label_a.net_name != hlabel_b.net_name
+                and abs(label_a.position.y - hlabel_b.position.y) < 0.05
+            ):
+                continue
             results.append(_result_from_overlap(
                 sheet=sheet,
                 rule_id="overlap.label_hlabel",

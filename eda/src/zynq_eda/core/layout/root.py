@@ -159,46 +159,16 @@ def _build_title_block_labels(
     project_title: str,
     block_count: int,
 ) -> list[PlacedLabel]:
-    """Bottom-right metadata stack + top header.
+    """Return an empty label list; KiCad's auto title block carries the
+    project metadata.
 
-    Uses :class:`PlacedLabel` instances stacked vertically — the
-    :class:`Sheet` model has no free-text primitive, but labels with
-    no electrical content render as plain text in the schematic.
-    Local labels at distinct coordinates aren't merged into nets;
-    they're equivalent to plain text strings for visual purposes.
-
-    Placement avoids KiCad's auto-generated title-frame strip at the
-    very bottom of the page (~30 mm tall) — our text stack sits
-    above that frame so KiCad's frame and our labels don't overlap.
+    Earlier this function emitted five :class:`PlacedLabel` instances
+    (project title, sheet number, revision, date, top-centre header)
+    as plain-text documentation. KiCad ERC flagged each as
+    ``label_dangling`` because a local label is an electrical primitive
+    that must connect to a wire. Dropping the emission removes those
+    five spurious ERC errors; KiCad's built-in title-block frame
+    already prints the project title, sheet num, revision and date in
+    the bottom-right corner.
     """
-    paper_w = 297.0  # A3 portrait width
-    paper_h = 420.0  # A3 portrait height
-
-    label_pitch = snap_to_grid(5.08)
-    title_x = snap_to_grid(paper_w - 110.0)
-    title_y = snap_to_grid(paper_h - 80.0)
-    today_iso = datetime.date.today().isoformat()
-    title_lines = (
-        f"{project_title}",
-        f"Sheet 1/{block_count + 1}",
-        f"Rev {ROOT_REVISION}",
-        f"{today_iso}",
-    )
-
-    labels: list[PlacedLabel] = []
-    for index, text in enumerate(title_lines):
-        labels.append(PlacedLabel(
-            net_name=text,
-            position=Point(title_x, snap_to_grid(title_y + index * label_pitch)),
-            rotation=0.0,
-        ))
-
-    header_x = snap_to_grid(paper_w / 2 - 50.0)
-    header_y = snap_to_grid(12.7)
-    labels.append(PlacedLabel(
-        net_name=ROOT_TITLE_TEXT,
-        position=Point(header_x, header_y),
-        rotation=0.0,
-    ))
-
-    return labels
+    return []

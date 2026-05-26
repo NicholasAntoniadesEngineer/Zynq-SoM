@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "418e004c-ed02-47f9-8262-7c9bbcb703fa")
+	(uuid "36c90912-3427-41e6-b014-5db622ac45e2")
 	(paper "A3")
 	(title_block
 		(title "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)")
@@ -849,6 +849,122 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "power:PWR_FLAG"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#FLG"
+				(at 0 1.905 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "PWR_FLAG"
+				(at 0 3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(hide yes)
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Special symbol for telling ERC where power comes from"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "flag power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "PWR_FLAG_0_0"
+				(pin power_out line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "PWR_FLAG_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 1.27) (xy -1.016 1.905) (xy 0 2.54) (xy 1.016 1.905) (xy 0 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(symbol
 		(lib_id "zynq_eda:JTAG_2x7")
@@ -859,7 +975,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "2188129b-8233-40b7-9d2b-f308c4f3acb2")
+		(uuid "0e746f32-8900-4019-99b3-3aade2461be3")
 		(property "Reference" "J1"
 			(at 344.17 66.04 0.0000)
 			(effects
@@ -908,26 +1024,26 @@
 			)
 		)
 		(pin "6"
-			(uuid "991ceaf4-33c8-4c7e-99e4-737bd257ff05")
+			(uuid "78704ea7-f771-4aee-b073-cbe2da02366f")
 		)
 		(pin "4"
-			(uuid "4931cb46-7805-434c-b77e-416362779f8a")
+			(uuid "9c02ac50-11b1-4a17-b0d6-56a0b1179dd7")
 		)
 		(pin "2"
-			(uuid "72fc5f2b-933a-4fad-bf4b-4dfa448ea474")
+			(uuid "d3ff94c5-ab00-48c4-acf7-5a343bb1d01d")
 		)
 		(pin "8"
-			(uuid "6373c159-8be6-45f1-b183-26d4a434a289")
+			(uuid "7ea3667c-2d49-4701-a55f-da8ed979c712")
 		)
 		(pin "1"
-			(uuid "f5303354-c446-4e67-8f8e-a2c37dcc54b9")
+			(uuid "16086e1e-6be7-453a-a00e-cb6b5f332d4b")
 		)
 		(pin "3"
-			(uuid "71e7e166-6e00-4812-a8f6-d955dec51fac")
+			(uuid "e0d8171e-d922-4241-b0af-492c0b19a8d5")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "J1")
 					(unit 1)
 				)
@@ -943,7 +1059,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6a025eec-d216-480e-89c7-2b63924e1301")
+		(uuid "11686142-4971-4145-a4b5-457eb87559f0")
 		(property "Reference" "R100"
 			(at 326.39 53.848 0.0000)
 			(effects
@@ -972,14 +1088,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "4723c890-82b8-49b3-ad2f-bec1edafd3f6")
+			(uuid "0cb5849d-1085-45ae-ade7-f492c789dade")
 		)
 		(pin "2"
-			(uuid "e84d72f2-e28e-4da9-a836-d3334f9aa103")
+			(uuid "74bc4a54-0477-4e99-823f-0580065e8e07")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "R100")
 					(unit 1)
 				)
@@ -995,7 +1111,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "166f0a16-fb54-4f47-b8be-6e5398e67cdf")
+		(uuid "7c94c43f-0335-4b95-ac2c-6409e3f39e27")
 		(property "Reference" "#PWR100"
 			(at 317.5 52.07 0.0000)
 			(effects
@@ -1024,11 +1140,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "ca672e47-aded-4556-8158-f6f17b1c18a5")
+			(uuid "83c0dda6-6e7d-442e-992e-e573bcfe5c90")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -1044,7 +1160,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c8fb457d-697b-4244-af32-c77da0f2fdbb")
+		(uuid "747b585d-94a4-4ca4-992d-fdd72fec1a18")
 		(property "Reference" "R101"
 			(at 321.31 56.388 0.0000)
 			(effects
@@ -1073,14 +1189,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "3ca0c4d4-29db-441e-ad72-c4af2761f36d")
+			(uuid "afb1be6c-2a97-4d84-9620-ae2f8228ddc6")
 		)
 		(pin "2"
-			(uuid "d6cf5716-876d-43a4-9f28-22b2ca8e527c")
+			(uuid "227cb170-60ed-4108-a2c5-e3991b276f57")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "R101")
 					(unit 1)
 				)
@@ -1096,7 +1212,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "52caa662-2291-4456-8c17-2bae2ad5f047")
+		(uuid "aa88f8ad-0f71-4424-a61c-0c6626bfc7c1")
 		(property "Reference" "#PWR101"
 			(at 312.42 54.61 0.0000)
 			(effects
@@ -1125,11 +1241,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "2754534c-3128-4fd2-878b-5f1d4f86cb9f")
+			(uuid "7ce881df-1bad-4d71-8748-035dbdcec6b2")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -1145,7 +1261,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "f812a2f1-2d66-4542-8499-6dda40020e59")
+		(uuid "98ba4ce1-0fb6-42bd-95b1-749c2c94865f")
 		(property "Reference" "R102"
 			(at 321.31 51.308 0.0000)
 			(effects
@@ -1174,14 +1290,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "203eb3c5-2d1c-4aad-bc5e-26ef23ecbad1")
+			(uuid "93b38c44-cc11-452f-b9b9-4491b978546c")
 		)
 		(pin "2"
-			(uuid "7bc497ed-2482-4123-8d06-c721f44c10b0")
+			(uuid "034e988f-f56a-4106-93a0-cbe5634a5bf4")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "R102")
 					(unit 1)
 				)
@@ -1197,7 +1313,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "81e3359f-5b28-4595-aecc-9310a23e8792")
+		(uuid "59cd4fda-2262-448c-a2bc-0c97e48925b8")
 		(property "Reference" "J2"
 			(at 344.17 127 0.0000)
 			(effects
@@ -1246,23 +1362,23 @@
 			)
 		)
 		(pin "2"
-			(uuid "73e0698b-31eb-44b7-95ba-1cc99f60160a")
+			(uuid "266a095c-2442-418d-bae9-4d4a0172aa99")
 		)
 		(pin "4"
-			(uuid "15ae0153-567d-41ba-97ff-91827ef63a01")
+			(uuid "45c7e441-4ffa-4cee-8b04-8ac5cab460eb")
 		)
 		(pin "10"
-			(uuid "2beb0329-c8e9-465b-a02d-feee903e1ea2")
+			(uuid "f3404bb4-a069-4140-8bd7-c5a4ca6d80d4")
 		)
 		(pin "1"
-			(uuid "a1b05179-b7c2-4631-85d5-4fd76eb0ee9b")
+			(uuid "1963c617-1f55-4b71-8dff-7d64f642dc60")
 		)
 		(pin "3"
-			(uuid "a5a15610-99e7-4afc-96cc-157e4c075379")
+			(uuid "eb6ab915-901d-4d53-93c7-a800bec47324")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "J2")
 					(unit 1)
 				)
@@ -1278,7 +1394,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "85f07377-679e-4438-8c9b-f9a1ac92ed52")
+		(uuid "23e0a22b-d9db-4174-808b-e1c1163130ce")
 		(property "Reference" "R103"
 			(at 321.31 112.268 0.0000)
 			(effects
@@ -1307,14 +1423,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "f3c22cc6-37f9-4a0e-bbdb-b4f6cc80e759")
+			(uuid "514f2550-c29d-42fe-a661-8d01f2826af6")
 		)
 		(pin "2"
-			(uuid "173179ee-d255-45a8-b519-f5f8956e3e0e")
+			(uuid "f9445e96-26a9-4dfe-b802-aa583fc595e9")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "R103")
 					(unit 1)
 				)
@@ -1330,7 +1446,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d3cb1a15-43bc-492c-a2bd-f4341e177ef1")
+		(uuid "bfbc73b6-b5b2-4300-93f0-41f487fd0768")
 		(property "Reference" "#PWR102"
 			(at 312.42 110.49 0.0000)
 			(effects
@@ -1359,11 +1475,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "882b1553-3c0b-4999-ba32-584427c1deef")
+			(uuid "4e186d67-1def-4d7e-a2aa-893dc70dfaa1")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -1379,7 +1495,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "ddfeeb7c-7700-4d72-a834-db56a4a77260")
+		(uuid "e7672a27-83c9-47de-9f33-dc63c9123c40")
 		(property "Reference" "R104"
 			(at 321.31 117.348 0.0000)
 			(effects
@@ -1408,14 +1524,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "feefcb4d-f598-462e-9a6d-deb8c2e5907b")
+			(uuid "6f98c1df-e45c-447e-b723-98e2930eaeb0")
 		)
 		(pin "2"
-			(uuid "c00d242c-b5ee-4875-bae5-4565091e7c3d")
+			(uuid "0d67d3da-9107-4120-8b8c-222a996db53b")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "R104")
 					(unit 1)
 				)
@@ -1431,7 +1547,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "bd4b8cb9-b14b-485a-bcf9-099132821e1e")
+		(uuid "0b4b2796-dca9-4762-833e-7c5d570ce2ad")
 		(property "Reference" "#PWR103"
 			(at 312.42 115.57 0.0000)
 			(effects
@@ -1460,11 +1576,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "694a6f18-3adb-4028-a71e-3f85acfe06b1")
+			(uuid "06fd5b42-bdc9-4d5b-b408-045118c36372")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "#PWR103")
 					(unit 1)
 				)
@@ -1480,7 +1596,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "8cd91754-c1ae-4714-b25d-3b2b2415fc8f")
+		(uuid "464f3cbc-451f-45b4-b633-523363a7863f")
 		(property "Reference" "C100"
 			(at 308.61 118.745 270)
 			(effects
@@ -1509,14 +1625,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "cecfbe47-4e9f-4290-8475-88f77805d58a")
+			(uuid "936a18ea-e3b0-49d6-9b0d-b72c88073043")
 		)
 		(pin "2"
-			(uuid "b19b206c-9b82-4486-a218-7f380ca789ee")
+			(uuid "4d72b73e-506f-49cb-b281-17fc04495919")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1532,7 +1648,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9386ca5c-bd8f-4592-ae52-fd76ec7563fd")
+		(uuid "44efb660-5907-420a-9d28-58557e8620a2")
 		(property "Reference" "#PWR104"
 			(at 297.18 113.03 0.0000)
 			(effects
@@ -1561,12 +1677,61 @@
 			)
 		)
 		(pin "1"
-			(uuid "455dfb9d-a0f3-493c-b157-157f85cbc376")
+			(uuid "6edf66de-cadf-4851-9332-719fa9e2fc51")
 		)
 		(instances
 			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
-				(path "/418e004c-ed02-47f9-8262-7c9bbcb703fa"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
 					(reference "#PWR104")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 330.2 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "3a81f17d-07c8-4281-aa47-c4f9539323dd")
+		(property "Reference" "#FLG100"
+			(at 330.2 52.705 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 330.2 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 330.2 50.8 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "54dc4428-c0ff-417f-bf2e-8667c2697dfd")
+		)
+		(instances
+			(project "Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)"
+				(path "/36c90912-3427-41e6-b014-5db622ac45e2"
+					(reference "#FLG100")
 					(unit 1)
 				)
 			)
@@ -1580,7 +1745,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "77d4de53-b529-4fd2-8c57-b31fb621124c")
+		(uuid "f265cb6c-2aa4-419a-a491-a1d6d43ffa34")
 	)
 	(wire
 		(pts
@@ -1590,7 +1755,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e5c97414-1409-4ef5-b822-349bbfaeb466")
+		(uuid "b1ceea18-c211-4105-96e0-ae2ee30dd893")
 	)
 	(wire
 		(pts
@@ -1600,7 +1765,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ce4acf12-d200-4fee-a450-58f2cd0625c0")
+		(uuid "b7272303-aa31-4967-a2d2-cc5e48c96cd9")
 	)
 	(wire
 		(pts
@@ -1610,7 +1775,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6591b9cf-aa5f-4698-8b99-795246c2fd00")
+		(uuid "30a6212a-63eb-4bc8-9be5-dfcdd4994cb2")
 	)
 	(wire
 		(pts
@@ -1620,17 +1785,17 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9d58bfbe-001a-4e9e-82b0-87445c10021f")
+		(uuid "453997fd-3bdc-40ca-8237-bd9658d65029")
 	)
 	(wire
 		(pts
-			(xy 334.01 50.8) (xy 336.55 50.8)
+			(xy 330.2 50.8) (xy 336.55 50.8)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "924b7012-b735-43a5-848b-031cc4cfbaaf")
+		(uuid "13045c99-c3a3-4ecb-80ce-bb62fbcaf591")
 	)
 	(wire
 		(pts
@@ -1640,7 +1805,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1cf9fba5-6aa1-487e-b6dd-a41b6c1304f5")
+		(uuid "8d4c9e12-46c4-493d-b4fd-c62811cd41a4")
 	)
 	(wire
 		(pts
@@ -1650,7 +1815,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a5d693f5-aa90-4b58-930e-7372579ce732")
+		(uuid "644ab212-53eb-4d3c-9cca-4b70d485f165")
 	)
 	(wire
 		(pts
@@ -1660,7 +1825,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "8789df60-88b5-4443-a388-e7441339c17d")
+		(uuid "3544bad0-0071-4f6c-9084-f9ce26dac216")
 	)
 	(wire
 		(pts
@@ -1670,7 +1835,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2caa87c0-8336-4962-9261-f842a5b06e8b")
+		(uuid "4b64965b-d95f-4b1d-b1a9-98899edd87ef")
 	)
 	(wire
 		(pts
@@ -1680,7 +1845,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6c4568e5-eb86-49ca-8526-e99505d70b5f")
+		(uuid "b7da93d9-a343-499f-b2af-c4105dff2699")
 	)
 	(wire
 		(pts
@@ -1690,7 +1855,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "696fbb6b-1091-4b60-97da-53ab6d4e14f9")
+		(uuid "e29c752f-e646-448a-b623-87dc4579b5f4")
 	)
 	(wire
 		(pts
@@ -1700,7 +1865,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "adb406f2-6467-4110-a734-3563f2426af9")
+		(uuid "62d57003-35f1-47f8-9c37-77f4bda76ded")
 	)
 	(wire
 		(pts
@@ -1710,7 +1875,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "38751584-a3e3-44b7-9eb2-f0251151f7d8")
+		(uuid "4a689274-054c-4694-bcba-1fd59c2740e2")
 	)
 	(wire
 		(pts
@@ -1720,7 +1885,25 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "73b31276-044d-4f3c-9692-5ac6bb0d032c")
+		(uuid "dbf68798-39b7-4e0e-a74a-79b6da5dbb8d")
+	)
+	(junction
+		(at 325.12 119.38)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "6eaec5e3-4b6e-4c78-bae2-19529ae8d54b")
+	)
+	(junction
+		(at 317.5 119.38)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "17267faf-0bd2-4b5e-941c-eb3ff83baa3a")
+	)
+	(junction
+		(at 312.42 119.38)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4446cf41-c9a0-46b2-813b-1ecd5c7289e0")
 	)
 	(label "PL_TCK"
 		(at 317.5 53.34 180)
@@ -1730,7 +1913,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "618ba32f-f63b-4283-9124-afc0bc030204")
+		(uuid "54034d1a-56b5-4f05-8e36-71a66c2d729e")
 	)
 	(label "+3V3"
 		(at 334.01 111.76 180)
@@ -1740,7 +1923,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "3cc6991d-1178-434d-8747-a8fe51d5f200")
+		(uuid "1f35235f-59bf-4e2d-b6b2-e4ffcc56071f")
 	)
 	(label "GND"
 		(at 334.01 121.92 180)
@@ -1750,7 +1933,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "82404b1f-292f-4046-b85e-ce0dc4e2bcb1")
+		(uuid "2689e0bc-0c12-4b2d-8913-ffa1d7624948")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1761,7 +1944,7 @@
 			)
 			(justify left)
 		)
-		(uuid "9f4a88f5-e190-49e0-86d8-822ea967fbae")
+		(uuid "b70ac787-4c63-41e0-b38d-bb1f53e8dcd9")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
@@ -1772,7 +1955,7 @@
 			)
 			(justify left)
 		)
-		(uuid "d1739ff9-8b4e-419a-bf5b-21b711e101c2")
+		(uuid "a032da7a-ba76-4d41-b0cd-3d032fa41f3e")
 	)
 	(hierarchical_label "ZYNQ_PS_JTAG_TCK"
 		(shape input)
@@ -1783,7 +1966,7 @@
 			)
 			(justify left)
 		)
-		(uuid "f3783bd2-d879-4056-ba95-8f28a5d03e3a")
+		(uuid "3b165144-7476-4645-9665-623106cc8780")
 	)
 	(hierarchical_label "ZYNQ_PS_JTAG_TMS"
 		(shape input)
@@ -1794,7 +1977,7 @@
 			)
 			(justify left)
 		)
-		(uuid "2174a7c0-8ca5-465e-8dab-2126f45d6b14")
+		(uuid "e9bb6216-fdfe-40be-bbe0-e911d5145c5e")
 	)
 	(hierarchical_label "ZYNQ_PS_JTAG_TDI"
 		(shape input)
@@ -1805,7 +1988,7 @@
 			)
 			(justify left)
 		)
-		(uuid "3deec3cd-2ad9-427a-ac87-54646b3c63e9")
+		(uuid "e585b586-f448-411f-8793-048ea87f0349")
 	)
 	(hierarchical_label "ZYNQ_PS_JTAG_TDO"
 		(shape input)
@@ -1816,7 +1999,7 @@
 			)
 			(justify left)
 		)
-		(uuid "a4ebb51c-0e83-4e49-8959-2ad62f82afe7")
+		(uuid "60ab708c-b894-4399-ad04-e9d34cb0eb96")
 	)
 	(hierarchical_label "STM32_SWDIO"
 		(shape input)
@@ -1827,7 +2010,7 @@
 			)
 			(justify left)
 		)
-		(uuid "cc8e34a6-b9c9-4a22-84b1-7aeea60f7459")
+		(uuid "eedc3974-4759-400b-9f30-fd6268fc0345")
 	)
 	(hierarchical_label "STM32_SWCLK"
 		(shape input)
@@ -1838,7 +2021,7 @@
 			)
 			(justify left)
 		)
-		(uuid "785951fb-713f-4909-b110-24e824eb8536")
+		(uuid "cdfb019a-56b8-4e60-a251-f4283a4e5da9")
 	)
 	(hierarchical_label "STM32_NRST"
 		(shape input)
@@ -1849,7 +2032,7 @@
 			)
 			(justify left)
 		)
-		(uuid "9356a006-c30c-45bf-8f6e-23d88971c883")
+		(uuid "8d173f41-3320-4fff-9936-fff30e331015")
 	)
 	(sheet_instances
 		(path "/"

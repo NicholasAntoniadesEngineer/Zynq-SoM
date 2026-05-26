@@ -523,4 +523,4 @@ def place_block(
             ),
         )
 
-    return builder.finalize(block)
+    return builder.finalize(block, geometry_cache=geometry_cache)

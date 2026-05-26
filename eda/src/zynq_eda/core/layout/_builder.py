@@ -161,7 +161,7 @@ class BlockLayoutBuilder:
         )
         self.occupancy.add(bbox)
 
-    def finalize(self, block: Block) -> Sheet:
+    def finalize(self, block: Block, *, geometry_cache=None) -> Sheet:
         """Freeze the accumulator into a :class:`Sheet`.
 
         Wires are passed through :func:`dedup_collinear_contained_wires`
@@ -171,8 +171,24 @@ class BlockLayoutBuilder:
         net-spanning wire — KiCad merges them electrically but the
         redundant segments show as ``overlap.wire_wire`` validator
         hits and visually clutter the schematic).
+
+        After dedup, intermediate symbol-pin tips that fell on the
+        original short wires would otherwise lose their connection
+        (KiCad treats "wire passing through pin mid-span" as
+        unconnected — needs an explicit junction at the crossing).
+        We auto-inject junctions at every symbol pin tip that lands
+        strictly on the interior of a deduped wire so the long
+        merged rail electrically connects every passive in its span.
         """
         deduped_wires = dedup_collinear_contained_wires(list(self.wires))
+        junctions = list(self.junctions)
+        if geometry_cache is not None:
+            junctions = _inject_junctions_for_passthrough_pins(
+                deduped_wires=deduped_wires,
+                symbols=self.symbols,
+                existing_junctions=junctions,
+                geometry_cache=geometry_cache,
+            )
         return Sheet(
             name=block.name,
             title=block.title,
@@ -180,7 +196,7 @@ class BlockLayoutBuilder:
             symbols=tuple(self.symbols),
             wires=tuple(deduped_wires),
             labels=tuple(self.labels),
-            junctions=tuple(self.junctions),
+            junctions=tuple(junctions),
             no_connects=tuple(self.no_connects),
             hierarchical_labels=tuple(self.hierarchical_labels),
             global_labels=tuple(self.global_labels),
@@ -282,6 +298,79 @@ def dedup_collinear_contained_wires(wires: list[PlacedWire]) -> list[PlacedWire]
 
 # Backward-compat alias
 _unused_dedup_shared_endpoint_wires = dedup_collinear_contained_wires
+
+
+def _inject_junctions_for_passthrough_pins(
+    *,
+    deduped_wires: list[PlacedWire],
+    symbols: list[PlacedSymbol],
+    existing_junctions: list[PlacedJunction],
+    geometry_cache,
+) -> list[PlacedJunction]:
+    """Add junctions where a symbol pin tip lands on a wire's interior.
+
+    KiCad ERC treats "wire passes through pin mid-span" as UNCONNECTED
+    unless a junction marks the crossing. When ``dedup_collinear_contained_wires``
+    merges several short cluster wires into one long rail, the
+    intermediate passive-pin endpoints become mid-span crossings on the
+    merged wire. Without junctions, those passives flag as
+    ``pin_not_connected`` despite being visually on the rail.
+
+    We scan every (wire, symbol) pair: for each pin tip on the wire's
+    interior (strict, not equal to the wire's endpoints), inject a
+    junction at the pin coordinate so KiCad recognises the connection.
+    """
+    PINS_GRID_TOL = 0.01  # mm — KiCad-grid tolerance
+
+    existing = {(round(j.position.x, 3), round(j.position.y, 3))
+                for j in existing_junctions}
+    new_junctions = list(existing_junctions)
+
+    # Pre-compute pin tip positions per symbol.
+    symbol_pin_tips: list[Point] = []
+    for sym in symbols:
+        if sym.reference.startswith("#PWR"):
+            # Power symbols have one pin; include it.
+            pass
+        try:
+            positions = geometry_cache.absolute_pin_positions(
+                sym.lib_id,
+                sym.position,
+                rotation=getattr(sym, "rotation", 0.0),
+            )
+        except Exception:
+            continue
+        symbol_pin_tips.extend(positions.values())
+
+    def _on_wire_interior(point: Point, wire: PlacedWire) -> bool:
+        """True iff `point` is on the wire's open interior (strict)."""
+        x1, y1 = wire.start.x, wire.start.y
+        x2, y2 = wire.end.x, wire.end.y
+        if abs(y1 - y2) < PINS_GRID_TOL:
+            # Horizontal wire — y must match, x must be strictly between
+            if abs(point.y - y1) > PINS_GRID_TOL:
+                return False
+            lo, hi = (min(x1, x2), max(x1, x2))
+            return lo + PINS_GRID_TOL < point.x < hi - PINS_GRID_TOL
+        elif abs(x1 - x2) < PINS_GRID_TOL:
+            # Vertical wire
+            if abs(point.x - x1) > PINS_GRID_TOL:
+                return False
+            lo, hi = (min(y1, y2), max(y1, y2))
+            return lo + PINS_GRID_TOL < point.y < hi - PINS_GRID_TOL
+        return False  # diagonal — shouldn't happen
+
+    for wire in deduped_wires:
+        for tip in symbol_pin_tips:
+            if not _on_wire_interior(tip, wire):
+                continue
+            key = (round(tip.x, 3), round(tip.y, 3))
+            if key in existing:
+                continue
+            new_junctions.append(PlacedJunction(position=tip))
+            existing.add(key)
+
+    return new_junctions
 
 
 # ---- Label-bbox helpers (mirror the validator's) ---------------------------

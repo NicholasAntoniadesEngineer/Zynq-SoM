@@ -89,6 +89,15 @@ def place_external_nets(
         seen_label_positions=seen_label_positions,
     )
 
+    # Per-block PWR_FLAGs for power-input external_nets that don't have
+    # an on-page driver (e.g. +12V on lvds_lcd_power comes from an
+    # external barrel jack, +VIN on power from the USB-C ingress).
+    # Without these, KiCad ERC reports power_pin_not_driven on every
+    # power-input pin downstream. The Wave A3 root-redesign moved the
+    # PWR_FLAG emission off the root sheet for visual clarity, so we
+    # surface them on each consumer block here instead.
+    _input_pwr_flags(builder, block=block)
+
     return edge_labeled
 
 
@@ -356,7 +365,17 @@ def _input_pwr_flags(
     """
     flag_emitted_for_net: set[str] = set()
     for net in block.external_nets:
-        if net.power_kind not in ("input", "output"):
+        # Emit PWR_FLAG for power-input, power-output (when no IC driver),
+        # AND ground variants that aren't the canonical "GND" (which
+        # KiCad's power:GND symbol already drives). Examples: CHASSIS_GND,
+        # AGND, DGND — each represented by a power:Earth / power-style
+        # symbol that needs a PWR_FLAG driver per ERC.
+        if net.power_kind not in ("input", "output", "ground"):
+            continue
+        if net.power_kind == "ground" and net.name.upper() == "GND":
+            # Canonical GND is driven by the cluster's power:GND symbol
+            # (KiCad's standard ground driver) — adding a PWR_FLAG would
+            # double-drive the net.
             continue
         # Output nets only need a PWR_FLAG when the block itself doesn't
         # contain a power_out pin to drive them. We detect this by checking
@@ -436,6 +455,21 @@ def _orphan_net_labels(
     for lab in builder.labels:
         local_labels_by_name.setdefault(lab.net_name, []).append(lab)
 
+    # Pre-compute X bounds the connector-pin labels sit near so we can
+    # prefer them over cluster-far-terminal labels when both exist for
+    # the same net. Connectors are placed at the LEFT or RIGHT sheet
+    # edge; their per-pin labels land at ``stub_end`` which is one
+    # ``STUB_LEN`` (2.54 mm) outside the connector body — i.e. close to
+    # the sheet edge. Cluster far-terminal labels are typically deep
+    # inside the page (10-20 mm from the IC body). Picking the most
+    # edge-adjacent label as the hier-label anchor ensures the hier
+    # label sits where the user expects (at the connector edge) rather
+    # than at a passive cluster's far-far terminal.
+    def _anchor_priority(lab) -> float:
+        # Prefer labels closer to either sheet edge: smaller of
+        # (distance-to-left-edge, distance-to-right-edge).
+        return min(lab.position.x - left_x, right_x - lab.position.x)
+
     for net in block.external_nets:
         if net.name in already_labeled:
             continue
@@ -446,7 +480,8 @@ def _orphan_net_labels(
             # no override label). Surfacing it as a hier label would
             # produce a dangling label per ERC. Skip.
             continue
-        anchor_label = matching[0]
+        # Pick the most-edge-adjacent local label as the hier anchor.
+        anchor_label = min(matching, key=_anchor_priority)
         key = (anchor_label.position.x, anchor_label.position.y)
         if key in seen_label_positions:
             continue
@@ -468,7 +503,7 @@ def _orphan_net_labels(
         # connectivity intact across the sheet's other labels.
         try:
             builder.labels.remove(anchor_label)
-            matching.pop(0)
+            matching.remove(anchor_label)
         except ValueError:
             pass
 

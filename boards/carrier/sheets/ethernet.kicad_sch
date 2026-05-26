@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "2869a97a-6408-4b4c-a294-61526499cda0")
+	(uuid "8ae7abce-1535-4023-b30d-17ba91e28929")
 	(paper "A3")
 	(title_block
 		(title "Ethernet (PHY MDI → HX5008 magnetics → RJ45)")
@@ -1241,6 +1241,122 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "power:PWR_FLAG"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#FLG"
+				(at 0 1.905 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "PWR_FLAG"
+				(at 0 3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(hide yes)
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Special symbol for telling ERC where power comes from"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "flag power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "PWR_FLAG_0_0"
+				(pin power_out line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "PWR_FLAG_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 1.27) (xy -1.016 1.905) (xy 0 2.54) (xy 1.016 1.905) (xy 0 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(symbol
 		(lib_id "zynq_eda:HX5008NLT")
@@ -1251,7 +1367,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "dce5d064-76bc-4d84-9dad-4fa396844d10")
+		(uuid "3a0c8aa7-1a69-494d-9590-4684373b16f8")
 		(property "Reference" "T1"
 			(at 129.54 72.39 0.0000)
 			(effects
@@ -1300,74 +1416,74 @@
 			)
 		)
 		(pin "1"
-			(uuid "55bc51f5-db94-42d5-bc6d-62f85de8047b")
+			(uuid "70153d87-07a9-44c5-b691-06fae0588475")
 		)
 		(pin "2"
-			(uuid "cd56ac59-a7a2-4614-b59f-b798f5d29b86")
+			(uuid "02787c4a-ebeb-46e6-972e-68abcad959f7")
 		)
 		(pin "3"
-			(uuid "d1f4a6ed-a8bb-4eb8-b863-e13ef71ee640")
+			(uuid "d03ed69d-bc33-4e80-aec6-58b55f5afb18")
 		)
 		(pin "4"
-			(uuid "5e0ff0bf-4198-443e-859c-14ec4d3dfe0d")
+			(uuid "61e745ba-a876-49aa-aaa7-94be4a2e1679")
 		)
 		(pin "5"
-			(uuid "caffdb63-27fb-4f6b-82e8-2ecdcff1282b")
+			(uuid "6ecf19e7-311a-4f0b-8f29-8a941870e1cc")
 		)
 		(pin "6"
-			(uuid "4a4ec1fd-e677-44de-9ae1-a5402b58f952")
+			(uuid "b398b5fe-95d5-4cb8-aa52-49dc95fe4d3c")
 		)
 		(pin "7"
-			(uuid "57e1b65b-6b77-410c-830b-6e4576bfe8be")
+			(uuid "5c73f59b-79c7-46a6-a10e-1e10b7a94719")
 		)
 		(pin "8"
-			(uuid "72ca36b8-a2d8-45e5-a463-6102aa956a0c")
+			(uuid "330510b0-2ef3-4b39-9b2e-fa203dd04529")
 		)
 		(pin "19"
-			(uuid "d5cdaa63-7149-426f-b9dc-d4ac8b7ef419")
+			(uuid "268c0961-1f4f-4561-ba2b-c4ca853c364a")
 		)
 		(pin "20"
-			(uuid "85e1070c-c9c5-41ff-85ca-eb49f0222b0a")
+			(uuid "0a1536b8-f8b2-4d79-b34d-b031123970f0")
 		)
 		(pin "21"
-			(uuid "68d78eb5-68ec-4ae6-a77b-a6ff4513edf0")
+			(uuid "f994c9a2-8ce5-4f7f-add8-2b9b060f2cd2")
 		)
 		(pin "22"
-			(uuid "3b9a3649-59bf-4dbf-9268-06fc2f52aa86")
+			(uuid "0d966b77-9ee8-4e20-a955-b5e7ed304c06")
 		)
 		(pin "23"
-			(uuid "ba5abb25-93a2-4dfe-87a5-add259b0ecf0")
+			(uuid "833e8753-5571-4cfd-af17-61b54182fea2")
 		)
 		(pin "24"
-			(uuid "82e3f7b8-73b5-4be3-9719-92bf989ef7a3")
+			(uuid "abdfc46b-18f9-4cc4-95c3-0d689796224d")
 		)
 		(pin "25"
-			(uuid "d58ec519-a3f7-41d5-9276-a239d87014fd")
+			(uuid "8dc4daa4-d8b9-41b1-b9de-c6c512078458")
 		)
 		(pin "26"
-			(uuid "f14aa14a-4a29-438a-b6ad-e284ed13c62f")
+			(uuid "6cf21451-f6aa-4a53-ab5b-29da8dc1eec2")
 		)
 		(pin "9"
-			(uuid "54b12514-f8f6-4e86-82e2-b82cd20d2964")
+			(uuid "d6fae089-7512-4a5f-bc66-4d9cdb5e66f6")
 		)
 		(pin "10"
-			(uuid "0fa621a2-4d91-4697-80aa-35b7b529320f")
+			(uuid "618dc95f-4176-4ac7-9724-292ee9b3edab")
 		)
 		(pin "11"
-			(uuid "7c37e57d-7dca-4de8-a05e-a7fc9178d7a9")
+			(uuid "4a113736-2818-4b70-b17b-75aee2f2e886")
 		)
 		(pin "12"
-			(uuid "19d6a45f-3b49-4549-a91b-3b886dfb4d4b")
+			(uuid "b59c6ed9-c41c-4814-ac7f-9ecc110efb0a")
 		)
 		(pin "13"
-			(uuid "df898f60-020a-4e06-9f70-a30326268d43")
+			(uuid "ca3a883f-4642-40a9-a1f8-4c925e805b71")
 		)
 		(pin "14"
-			(uuid "2b029578-83a1-49b9-b997-3ad632406ab4")
+			(uuid "7f5d627a-f7b9-47d8-b4c2-f654c31736d7")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "T1")
 					(unit 1)
 				)
@@ -1383,7 +1499,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "ebee13d7-1504-47f4-aa2d-9f48405a1cf6")
+		(uuid "df71323f-c08b-4b05-a4a2-1a467bbe6087")
 		(property "Reference" "R100"
 			(at 104.14 70.358 0.0000)
 			(effects
@@ -1412,14 +1528,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "dcb66389-fc71-4bcf-be27-d41c19251cdf")
+			(uuid "f43ff230-acda-48fe-901f-3112f7d42cc5")
 		)
 		(pin "2"
-			(uuid "cd89a16a-2979-4d35-835c-72c9844a4af4")
+			(uuid "bf4d506b-c784-4dd5-8f27-88027a6ab028")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R100")
 					(unit 1)
 				)
@@ -1435,7 +1551,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0a002291-e92b-454f-90e7-d855c7dcfd0e")
+		(uuid "163ce5d3-1538-484a-a733-228a9a743b22")
 		(property "Reference" "R101"
 			(at 83.82 70.358 0.0000)
 			(effects
@@ -1464,14 +1580,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "9500d0a5-442b-4fdc-8648-2321977791d6")
+			(uuid "4295759e-4c92-486b-a8b0-123d941050cb")
 		)
 		(pin "2"
-			(uuid "82cb04bb-9756-45e0-8834-ec39d32f874c")
+			(uuid "1c2e8964-eb56-42ff-8d9c-492b59680688")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R101")
 					(unit 1)
 				)
@@ -1487,7 +1603,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "48dbaf6d-60fd-4132-ae8d-af1441321ec2")
+		(uuid "8ad8511e-1aaf-491a-8295-f725e8edced6")
 		(property "Reference" "R102"
 			(at 109.22 72.898 0.0000)
 			(effects
@@ -1516,14 +1632,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "5c8e14b5-3cf3-4f43-b5cf-585e3518b574")
+			(uuid "e6b76cda-b0b4-40fb-857a-059dd0eb0ae0")
 		)
 		(pin "2"
-			(uuid "41c0db9b-e687-4431-86f2-c3984d0d2492")
+			(uuid "1434cd97-3f63-4dcf-ad80-0eafbea6d1c1")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R102")
 					(unit 1)
 				)
@@ -1539,7 +1655,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "aee1a88b-61de-4813-a7c9-728543f99e66")
+		(uuid "695bf17c-f278-4c57-8701-a302cd84d0a9")
 		(property "Reference" "R103"
 			(at 88.9 72.898 0.0000)
 			(effects
@@ -1568,14 +1684,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "77410443-7730-49b1-a69f-09f386433a41")
+			(uuid "c5e5bd04-9ac5-4439-97c6-e82cb1915005")
 		)
 		(pin "2"
-			(uuid "c5164186-78ba-4a13-8b06-de4cb8e08b50")
+			(uuid "a7e76f68-641e-4189-baab-027a0ef60d6c")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R103")
 					(unit 1)
 				)
@@ -1591,7 +1707,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "8bc4bcf8-afb0-42a2-9420-bfb9f904cfbe")
+		(uuid "21b59b5f-7043-4ae2-8852-bf5351869ed6")
 		(property "Reference" "R104"
 			(at 104.14 75.438 0.0000)
 			(effects
@@ -1620,14 +1736,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "fb76f08c-f2ff-4cb1-8a1f-1fa4c186da88")
+			(uuid "8bcea81b-7f73-494c-81c3-6ee273d8ca1f")
 		)
 		(pin "2"
-			(uuid "b26492c6-2a49-4ddb-892d-e900f9e49c65")
+			(uuid "b72e5290-9d89-4a2c-b2e3-02505a230e4e")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R104")
 					(unit 1)
 				)
@@ -1643,7 +1759,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "fb746a54-bac4-4e4b-9d18-f80d541ac2e2")
+		(uuid "67002b6d-ebb5-48cc-8faf-c70596a1ff4c")
 		(property "Reference" "R105"
 			(at 83.82 75.438 0.0000)
 			(effects
@@ -1672,14 +1788,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "708a2971-f9f6-4fca-aa0f-1cee13710108")
+			(uuid "325457f1-69af-42d3-97b5-81975222b562")
 		)
 		(pin "2"
-			(uuid "fb7ec400-127b-4782-9b07-c909eeb58785")
+			(uuid "5280e45e-c29f-476e-a3b5-c7a5883e203e")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R105")
 					(unit 1)
 				)
@@ -1695,7 +1811,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "251ae6e8-23ee-4349-b295-6f5036fe1b8a")
+		(uuid "e0bc4fa5-5332-4ad2-84d5-07098cee4324")
 		(property "Reference" "R106"
 			(at 109.22 77.978 0.0000)
 			(effects
@@ -1724,14 +1840,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "d36bdb8a-f4eb-4fe1-9d53-dc6a333ce5f7")
+			(uuid "02d22bf1-1016-4627-aa48-95c0cfbaefaf")
 		)
 		(pin "2"
-			(uuid "edb57242-05c5-4ada-801d-9f2debe3ba15")
+			(uuid "6a78c094-b825-4ad8-bac8-6d6b2f6f06d3")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R106")
 					(unit 1)
 				)
@@ -1747,7 +1863,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "791fe788-0860-4e7a-a6eb-fca1143090a7")
+		(uuid "c977ed36-9a40-4559-a31e-a4426e68f729")
 		(property "Reference" "R107"
 			(at 88.9 77.978 0.0000)
 			(effects
@@ -1776,14 +1892,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "518bbeac-7e2e-45b4-bf45-cf38ffb3d5aa")
+			(uuid "d0dce128-2c92-42fb-91b0-cc17d63d6d49")
 		)
 		(pin "2"
-			(uuid "f0190277-994d-4c32-aa93-14940253f53d")
+			(uuid "cbce41ed-eb1f-47cc-a581-d9c645092308")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R107")
 					(unit 1)
 				)
@@ -1799,7 +1915,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6be556be-1195-4428-82b9-16314a582d69")
+		(uuid "478fe1a6-bde0-4503-8645-bbf957a1a952")
 		(property "Reference" "R108"
 			(at 104.14 80.518 0.0000)
 			(effects
@@ -1828,14 +1944,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "724859ba-6da5-4333-81b6-22ac13a1dc73")
+			(uuid "c21a6097-e176-47be-ad70-2755b8d48ba5")
 		)
 		(pin "2"
-			(uuid "99b59198-eec6-4530-a1c1-6a847669edb7")
+			(uuid "0d196f9f-da91-4050-babf-86a6e4d64b4a")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R108")
 					(unit 1)
 				)
@@ -1851,7 +1967,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "b90eb572-e11b-45ad-a53f-6d4ca42514cb")
+		(uuid "36ab5986-0790-442b-a378-ae13ba0a9c29")
 		(property "Reference" "#PWR100"
 			(at 95.25 76.2 0.0000)
 			(effects
@@ -1880,11 +1996,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "df7272af-b4ae-41c4-9a3b-3facaba3172e")
+			(uuid "28ac2a26-971d-4ca4-bf98-a0169eb4ca32")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -1900,7 +2016,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "62c554ab-6913-46fe-96b6-5c1ead911a7f")
+		(uuid "614ef20f-60c3-49f6-907b-4b54550c1663")
 		(property "Reference" "#PWR101"
 			(at 114.3 78.74 0.0000)
 			(effects
@@ -1929,11 +2045,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "ab341dee-9d8d-43b8-8bfb-7f8f33e96d66")
+			(uuid "ea1e079c-968d-44c9-a9a7-5256f5326fad")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -1949,7 +2065,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "02bb69f9-0ee9-4340-a2a0-f9d321aa4313")
+		(uuid "bb73418b-8646-4c59-9ab4-84c5a6d79404")
 		(property "Reference" "J1"
 			(at 344.17 63.5 0.0000)
 			(effects
@@ -1998,41 +2114,41 @@
 			)
 		)
 		(pin "1"
-			(uuid "69c45b9d-810b-4468-a87a-d7164d960c56")
+			(uuid "1142a6d6-9e38-4891-b06c-bc0f46dd5d9b")
 		)
 		(pin "2"
-			(uuid "ca3e746b-fe2a-4b34-a726-55334d1a6c36")
+			(uuid "3cac5ad4-e536-4b70-bde7-5005d5ee7f7f")
 		)
 		(pin "3"
-			(uuid "12677ff1-2aaf-4bc1-8bea-081330607943")
+			(uuid "795d43d5-ed5e-4fcc-964c-816d76a13c0e")
 		)
 		(pin "4"
-			(uuid "a0e4c546-54e6-4f6c-9725-a3b8be2dae41")
+			(uuid "0eef7a2c-354e-40e6-ade2-53f7f46fa78e")
 		)
 		(pin "5"
-			(uuid "a1cdfad3-3d2b-4d6e-a771-a60b4a16eda6")
+			(uuid "81e4c6d2-3eaf-402a-a207-6637505bc3f6")
 		)
 		(pin "6"
-			(uuid "8c61949b-ac45-480b-8322-2be114374ccd")
+			(uuid "adf30adb-5539-48bb-866b-58a0198ddfbf")
 		)
 		(pin "7"
-			(uuid "485eb657-81f6-4664-97da-c7de5188d28b")
+			(uuid "8628dd27-84c4-46d8-b93b-b7229e1836ad")
 		)
 		(pin "8"
-			(uuid "a6ffac21-4f00-4cc9-964d-b58480424c86")
+			(uuid "ca268302-f5bd-4795-bc9e-5230eaf3205e")
 		)
 		(pin "9"
-			(uuid "34265704-a2c8-485f-8fa3-05ef682908a0")
+			(uuid "193f329e-266a-42ec-8910-74aeb69f463e")
 		)
 		(pin "11"
-			(uuid "db9d315d-32b2-41ae-8f4c-f4fbeebb2078")
+			(uuid "63d4c67e-80b0-4c15-920a-ebf21fdc74c8")
 		)
 		(pin "SH"
-			(uuid "fc6eea9e-7f98-46ec-91e2-345193ee69b0")
+			(uuid "e89caab7-fa80-4de8-9469-fb58edcd59f2")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "J1")
 					(unit 1)
 				)
@@ -2048,7 +2164,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "286e577a-8e58-4404-9fce-a30fa54e5a8d")
+		(uuid "03a217db-f703-4dbf-b0c0-64bc55fd38a1")
 		(property "Reference" "R109"
 			(at 367.03 55.372 180)
 			(effects
@@ -2077,14 +2193,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "916de86b-4482-48b2-a488-5620e7109515")
+			(uuid "ab61864e-0275-4386-8ca5-6e939be62a19")
 		)
 		(pin "2"
-			(uuid "1b71277b-cb57-4b0e-b57f-de7da4fca8d7")
+			(uuid "6a0b90f7-c887-47b2-905b-c87106404652")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R109")
 					(unit 1)
 				)
@@ -2100,7 +2216,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "280693f8-8135-4c7d-99a3-1e2b1f54200b")
+		(uuid "5193c596-3e2a-45f1-b2af-aea8ad77dba1")
 		(property "Reference" "#PWR102"
 			(at 375.92 49.53 0.0000)
 			(effects
@@ -2129,11 +2245,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "706b7f16-227f-48bd-963f-50db68a357e5")
+			(uuid "42eb6bd7-3a47-49e3-bfdc-faf87701f3b9")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -2149,7 +2265,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "1bfc5c27-1da1-43e0-b3d1-9b69f4f57670")
+		(uuid "30906d4f-93b7-4710-9824-f6b54169fac2")
 		(property "Reference" "R110"
 			(at 361.95 57.912 180)
 			(effects
@@ -2178,14 +2294,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "c38cc790-094c-4918-9b08-31beec1197a0")
+			(uuid "b73c0ebc-0077-469b-b3f5-beb29435d1c6")
 		)
 		(pin "2"
-			(uuid "763ca2b6-9fae-4866-b94b-cf06f86b4e5e")
+			(uuid "b857508f-052c-47f0-a559-8b83a8124a37")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "R110")
 					(unit 1)
 				)
@@ -2201,7 +2317,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "30fdb9d8-1dcd-426b-a03b-a6234cb7e2b2")
+		(uuid "012109f7-ffcb-4668-ba65-7cd15012b9ba")
 		(property "Reference" "#PWR103"
 			(at 370.84 52.07 0.0000)
 			(effects
@@ -2230,12 +2346,61 @@
 			)
 		)
 		(pin "1"
-			(uuid "96941d3f-87ee-4be1-9b64-e8109f59808c")
+			(uuid "615c005c-48a6-4641-a237-897a535bc06c")
 		)
 		(instances
 			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
-				(path "/2869a97a-6408-4b4c-a294-61526499cda0"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
 					(reference "#PWR103")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 91.44 82.55 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "e77d462e-64df-4f19-899b-b560415f42b7")
+		(property "Reference" "#FLG100"
+			(at 91.44 84.455 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "CHASSIS_GND"
+			(at 91.44 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 91.44 82.55 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2b217300-38d9-4697-8f65-1d8da16451f2")
+		)
+		(instances
+			(project "Ethernet (PHY MDI → HX5008 magnetics → RJ45)"
+				(path "/8ae7abce-1535-4023-b30d-17ba91e28929"
+					(reference "#FLG100")
 					(unit 1)
 				)
 			)
@@ -2249,7 +2414,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4bdd5aee-8488-4d27-a3a1-ce6dd38162c9")
+		(uuid "514864d6-78cf-4f38-8ad9-2f4dec434106")
 	)
 	(wire
 		(pts
@@ -2259,7 +2424,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "65760201-7262-471d-90b8-16aa1781eba4")
+		(uuid "1d0bbddc-1a81-46c4-a750-8671cb7c9d4a")
 	)
 	(wire
 		(pts
@@ -2269,7 +2434,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "cf538ca4-786d-4130-9a68-beab07367b02")
+		(uuid "3b9d8d6e-99e2-458d-acb8-39ad7aed1340")
 	)
 	(wire
 		(pts
@@ -2279,17 +2444,17 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4193b268-2c28-4ba8-b148-b93b6860f6a3")
+		(uuid "cd0003b8-d613-4cb3-87ce-e5c2d98bbc7e")
 	)
 	(wire
 		(pts
-			(xy 95.25 82.55) (xy 100.33 82.55)
+			(xy 91.44 82.55) (xy 100.33 82.55)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "54d4ff1f-af2d-479b-b5a8-ec7e5ebde387")
+		(uuid "0059eefc-13fb-4702-b645-25c77b29e038")
 	)
 	(wire
 		(pts
@@ -2299,7 +2464,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4044516d-2c0f-4f73-8106-93e5c35ad60e")
+		(uuid "777eb8cd-aed7-4fc0-a09b-79afb2c06fa0")
 	)
 	(wire
 		(pts
@@ -2309,7 +2474,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0c0a05f2-2b85-4086-b536-f0ea06ead0d1")
+		(uuid "797be37c-5e11-4b02-ac4c-c4ae14cf7c0e")
 	)
 	(wire
 		(pts
@@ -2319,7 +2484,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "103c5198-9000-4d03-86dc-e4dab47f2c3a")
+		(uuid "e0472347-9220-4e97-9114-6104ee78e1e1")
 	)
 	(wire
 		(pts
@@ -2329,7 +2494,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "313b1486-5c13-4b06-8e55-f4d9fc837820")
+		(uuid "61f98af1-4636-46fe-9700-e1dc59eca8ec")
 	)
 	(wire
 		(pts
@@ -2339,7 +2504,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "04f78612-c707-4c01-b00b-7648611dc704")
+		(uuid "c193d826-10f7-4d1f-a6b1-57c03c278806")
 	)
 	(wire
 		(pts
@@ -2349,7 +2514,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e5bd61db-fdc8-4683-a39c-d552a8422d99")
+		(uuid "fbdc59fa-7f2b-45e7-9a0d-13b3f0bdf3aa")
 	)
 	(wire
 		(pts
@@ -2359,7 +2524,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "53e015bd-b121-4eb6-98f9-fbe73fd237e7")
+		(uuid "26251c9d-fba9-4850-a4e1-131c702d69fc")
 	)
 	(wire
 		(pts
@@ -2369,7 +2534,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9b432c91-f21f-4fe7-82be-bddc0042da04")
+		(uuid "b7e49d47-026d-43b0-b3b1-0ffb469a57ae")
 	)
 	(wire
 		(pts
@@ -2379,7 +2544,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "70e6a376-943e-4099-b5b8-fbfe4376d19a")
+		(uuid "c57a624e-aa02-4cc0-9fdb-6bf8317c6775")
 	)
 	(wire
 		(pts
@@ -2389,7 +2554,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6c6a1922-3e73-44cb-9aca-825d7c17c8ef")
+		(uuid "d8e6d215-2697-46b9-ad01-1605ade9cf2a")
 	)
 	(wire
 		(pts
@@ -2399,7 +2564,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2b4956b3-f8f9-4f02-bad2-759adbdc66fb")
+		(uuid "32b27ba6-2f76-4623-a033-7e2574f7b2d7")
 	)
 	(wire
 		(pts
@@ -2409,7 +2574,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e6661953-e152-41c4-b6f0-c94e7d787caf")
+		(uuid "ee049029-2b96-4389-9a15-aeb2dcb65627")
 	)
 	(wire
 		(pts
@@ -2419,7 +2584,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1676f51b-b94f-4976-be29-074448f7cda1")
+		(uuid "38f0edc4-4ac0-4a4d-8e64-b9c42deaebca")
 	)
 	(wire
 		(pts
@@ -2429,7 +2594,61 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7b4d4d10-23e3-416b-9453-40375c3dd68d")
+		(uuid "8ea8d0fe-9725-4892-a550-89d6fd245ec8")
+	)
+	(junction
+		(at 107.95 72.39)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a3c78dd3-d8ba-4486-9cf7-632793444b91")
+	)
+	(junction
+		(at 100.33 72.39)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b27d12a1-b233-42ff-8369-03b29c635b93")
+	)
+	(junction
+		(at 113.03 74.93)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "1cbe3f73-4d82-4a9d-bcf9-e98e48f4f534")
+	)
+	(junction
+		(at 105.41 74.93)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d65ffd4a-7bfc-4233-a86a-8f597aa4855d")
+	)
+	(junction
+		(at 107.95 77.47)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b7be6317-6e1a-47a9-b783-3b61a32a562c")
+	)
+	(junction
+		(at 100.33 77.47)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "cbb2b0a5-3f3f-4e0a-bf4b-9e29ebe1d6d0")
+	)
+	(junction
+		(at 113.03 80.01)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "f6b58378-e66c-4c93-97e4-ad4ede71d731")
+	)
+	(junction
+		(at 105.41 80.01)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "62baac9d-6d75-4393-bf01-a1d411ed11f3")
+	)
+	(junction
+		(at 95.25 82.55)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "228fada9-7bd2-4a12-a368-3da402650735")
 	)
 	(label "BS_COMMON"
 		(at 100.33 72.39 180)
@@ -2439,7 +2658,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "1c1ca4d7-8cba-4cc6-836d-f968d23733c8")
+		(uuid "acfb4612-3eb1-4067-9f4d-f2bff5a664c4")
 	)
 	(label "BS_COMMON"
 		(at 80.01 72.39 180)
@@ -2449,7 +2668,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "ea4de690-8bf2-4ff0-960b-bbace30d9a87")
+		(uuid "e2b6b105-f664-4f69-9063-4ee480d316ee")
 	)
 	(label "BS_COMMON"
 		(at 105.41 74.93 180)
@@ -2459,7 +2678,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "e1ad56b8-2542-4856-a9f5-4272c7878ef2")
+		(uuid "8c59bbf9-0fea-49b5-a897-584aafd7d647")
 	)
 	(label "BS_COMMON"
 		(at 85.09 74.93 180)
@@ -2469,7 +2688,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "38f1777d-62a0-43ef-be02-e8fce2373c73")
+		(uuid "9c0b3ebd-af2e-4cc9-a31a-b307a14373ad")
 	)
 	(label "BS_COMMON"
 		(at 100.33 77.47 180)
@@ -2479,7 +2698,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "13fb0238-2c4e-4482-9c9b-e0252ffd85d2")
+		(uuid "f110c187-6445-4cea-8aae-6677cbfb21fa")
 	)
 	(label "BS_COMMON"
 		(at 80.01 77.47 180)
@@ -2489,7 +2708,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "be3340b5-8be1-427f-809c-e326ebc0aac0")
+		(uuid "f812050f-d7fd-4f4b-9e4f-c00a44882cb9")
 	)
 	(label "BS_COMMON"
 		(at 105.41 80.01 180)
@@ -2499,7 +2718,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "7a819f7a-def3-4abc-9305-cf2a57d93e25")
+		(uuid "e871c6af-944b-4267-b8bf-931cb87846f6")
 	)
 	(label "BS_COMMON"
 		(at 85.09 80.01 180)
@@ -2509,7 +2728,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "10df9c4d-013b-4f69-aaf5-395c30da8293")
+		(uuid "fc50a5c0-ac34-4fbf-8554-f4404cd745c9")
 	)
 	(label "ETH_LINE_MDI_0_P"
 		(at 334.01 50.8 180)
@@ -2519,7 +2738,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "2a4f6abb-4b36-49ca-b61a-0ce8517f708d")
+		(uuid "95a04c8c-02b7-4ead-8cf0-598b79bac186")
 	)
 	(label "ETH_LINE_MDI_0_N"
 		(at 334.01 53.34 180)
@@ -2529,7 +2748,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "64d292d6-2de6-41d7-ae04-ea00467548cb")
+		(uuid "5d46d953-7a33-4cfd-b9f3-24c9101f46f2")
 	)
 	(label "ETH_LINE_MDI_1_P"
 		(at 334.01 55.88 180)
@@ -2539,7 +2758,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "0615a24e-eec1-40ac-96f2-311288b45ef6")
+		(uuid "b9e5e8f8-711f-4d72-9fd0-e9bd8aa01d6e")
 	)
 	(label "ETH_LINE_MDI_2_P"
 		(at 334.01 58.42 180)
@@ -2549,7 +2768,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "accae6f9-a06a-4a4f-b10c-1462dad70ffa")
+		(uuid "4b1385b5-6a22-4a63-a000-a46405635a38")
 	)
 	(label "ETH_LINE_MDI_2_N"
 		(at 334.01 60.96 180)
@@ -2559,7 +2778,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "89b93097-e56a-4af5-b485-8da0c367ee59")
+		(uuid "8e67d0c2-489a-4d44-b68d-35a1d3619ef4")
 	)
 	(label "ETH_LINE_MDI_1_N"
 		(at 334.01 63.5 180)
@@ -2569,7 +2788,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "57aa7ef6-21d0-413f-a857-81d79ad2938d")
+		(uuid "e2a05540-454b-4b6c-a2c9-f209632ecd62")
 	)
 	(label "ETH_LINE_MDI_3_P"
 		(at 334.01 66.04 180)
@@ -2579,7 +2798,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "a31ed56a-5160-4fce-a440-a4b692d548f4")
+		(uuid "297bd69d-807e-430b-be03-4692cd4383f1")
 	)
 	(label "ETH_LINE_MDI_3_N"
 		(at 334.01 68.58 180)
@@ -2589,7 +2808,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c89b736b-76b7-46e3-88ee-7a5fda355644")
+		(uuid "7d8d56b0-ae23-47c2-befc-aa1a317dfbbf")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -2600,7 +2819,7 @@
 			)
 			(justify left)
 		)
-		(uuid "f0e798ad-595f-48c5-bd0a-5f52becadda5")
+		(uuid "7a13a069-5914-4c0c-8862-3cb8bafd9e39")
 	)
 	(hierarchical_label "CHASSIS_GND"
 		(shape input)
@@ -2611,79 +2830,79 @@
 			)
 			(justify left)
 		)
-		(uuid "79d4e412-c0a9-4075-9a1d-717857cc4e0c")
+		(uuid "851292fa-6ea1-4e09-8fc0-7f933a9697a2")
 	)
 	(no_connect
 		(at 351.79 58.42)
-		(uuid "9824f2fb-191b-455f-8cec-d4ec025d6ee6")
+		(uuid "dac4de5c-de01-4afa-b668-0de73a8db5a1")
 	)
 	(no_connect
 		(at 351.79 58.42)
-		(uuid "d3ee9816-6e77-4cd3-834d-89a17d6bc4e9")
+		(uuid "2400da0d-1ab9-4b85-9b7b-14de8c15a71b")
 	)
 	(no_connect
 		(at 121.92 52.07)
-		(uuid "83f7e0dd-f507-430c-a0ac-3ee1d8c01f7e")
+		(uuid "e5d87d70-5209-444c-8b19-895dc0392e8a")
 	)
 	(no_connect
 		(at 121.92 54.61)
-		(uuid "0cadd483-911e-4c78-8391-ca69f3bdbea4")
+		(uuid "0b456711-41bb-4e4c-9acb-0bdba538a1e4")
 	)
 	(no_connect
 		(at 121.92 57.15)
-		(uuid "2a51a5a5-2914-4229-a566-b86130754654")
+		(uuid "a410fc37-c013-4d45-a321-1ec6883d5d29")
 	)
 	(no_connect
 		(at 121.92 59.69)
-		(uuid "56512e39-5b3f-4f8f-b2d0-c1f8316fe7bd")
+		(uuid "e7f1b2fb-48b1-45ed-91b3-c1661e450f7b")
 	)
 	(no_connect
 		(at 121.92 62.23)
-		(uuid "4aacc80f-388c-4213-8cd8-cea4b1b49311")
+		(uuid "06b5ec45-157d-4771-9bad-e96001a2355c")
 	)
 	(no_connect
 		(at 121.92 64.77)
-		(uuid "bf365503-1aa7-493b-af47-1bc5e0788774")
+		(uuid "e49096b5-0c8b-4338-addf-982c12831214")
 	)
 	(no_connect
 		(at 121.92 67.31)
-		(uuid "3adde3b0-a319-4c94-a05a-07a689ec30df")
+		(uuid "471cd67b-ba3f-40a5-a0d4-a4a4571f56ea")
 	)
 	(no_connect
 		(at 121.92 69.85)
-		(uuid "ac0d1d4f-e40c-4f2c-8755-7869d6529a80")
+		(uuid "984e0b75-544d-43df-97b2-282780033288")
 	)
 	(no_connect
 		(at 137.16 52.07)
-		(uuid "46ecf34b-d1f8-49b4-ba3a-9df5f4c2856d")
+		(uuid "b63ed4c7-8602-48ba-b1ac-dc9e26ca95bd")
 	)
 	(no_connect
 		(at 137.16 54.61)
-		(uuid "8a3c58d5-4195-4aac-8cf2-d3f2e51f2351")
+		(uuid "e60aace9-c8f7-476c-ab72-d0ada24c8c31")
 	)
 	(no_connect
 		(at 137.16 57.15)
-		(uuid "0b627204-b567-445c-b158-12bf0fbd7475")
+		(uuid "7a109cf3-c368-4ba4-923d-4ef116adda69")
 	)
 	(no_connect
 		(at 137.16 59.69)
-		(uuid "20a91fbd-a7be-4789-8931-ed13912a9bc4")
+		(uuid "cd312bc0-551f-4c86-99c1-2444ca561e49")
 	)
 	(no_connect
 		(at 137.16 62.23)
-		(uuid "9eb47929-aeb4-49d9-bfa7-aed2b47d56c1")
+		(uuid "c1418a4f-b6ed-40da-af8e-b0ccb3e7c81d")
 	)
 	(no_connect
 		(at 137.16 64.77)
-		(uuid "44e7e0cb-c8c5-461a-aa2f-566407570c44")
+		(uuid "4db0478f-134e-4725-9170-a8785bba3ada")
 	)
 	(no_connect
 		(at 137.16 67.31)
-		(uuid "c69ff81f-9c81-4593-9ec9-8cab2465702c")
+		(uuid "20ed626f-788d-47fb-b62a-2b661436d49e")
 	)
 	(no_connect
 		(at 137.16 69.85)
-		(uuid "ce0ddbc1-c421-4cf7-b3a2-b6afa7221809")
+		(uuid "5f6f65e1-4022-4adb-ab9a-bb6414ebcd87")
 	)
 	(sheet_instances
 		(path "/"

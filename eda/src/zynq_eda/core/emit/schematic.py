@@ -195,7 +195,7 @@ def emit_sheet(
         )
 
     for junction in sheet.junctions:
-        schematic.add_junction(junction.position.as_tuple())
+        schematic.junctions.add(position=junction.position.as_tuple())
 
     for no_connect in sheet.no_connects:
         schematic.no_connects.add(position=no_connect.position.as_tuple())

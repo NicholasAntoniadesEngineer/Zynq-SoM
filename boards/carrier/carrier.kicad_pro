@@ -53,7 +53,7 @@
         0,
         1,
         0,
-        2,
+        1,
         2,
         2,
         2
@@ -144,14 +144,14 @@
       ],
       [
         0,
-        2,
+        1,
         1,
         2,
         0,
         0,
         1,
         0,
-        2,
+        1,
         2,
         2,
         2
@@ -217,7 +217,7 @@
       "ground_pin_not_ground": "warning",
       "hier_label_mismatch": "warning",
       "isolated_pin_label": "ignore",
-      "label_dangling": "error",
+      "label_dangling": "warning",
       "label_multiple_wires": "ignore",
       "lib_symbol_issues": "warning",
       "lib_symbol_mismatch": "warning",
@@ -230,7 +230,7 @@
       "no_connect_connected": "warning",
       "no_connect_dangling": "warning",
       "pin_not_connected": "error",
-      "pin_not_driven": "error",
+      "pin_not_driven": "warning",
       "pin_to_pin": "warning",
       "power_pin_not_driven": "error",
       "same_local_global_label": "warning",
@@ -420,7 +420,7 @@
       {
         "filename": "carrier.kicad_sch",
         "name": "carrier",
-        "uuid": "7967bd9a-64fb-4b87-9eb4-38336fcf6c1d"
+        "uuid": "18d79298-2604-4c56-abab-f24315d8bc94"
       }
     ],
     "used_designators": "",

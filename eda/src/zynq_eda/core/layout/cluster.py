@@ -234,20 +234,16 @@ def _attach_far_endpoint(
             "top": 90.0,
             "bottom": 270.0,
         }.get(pin_side, 0.0)
-        # When the caller has flagged this far terminal as redundant
-        # (the destination net is already routed via another connector
-        # pin on the same instance, e.g. LVDS pair termination), skip
-        # the label entirely. KiCad's hier-label-by-name merge binds
-        # the wire to the destination pin's net without a duplicate
-        # label here, which prevents the visual collision between two
-        # hier labels on adjacent connector-pin rows that the
-        # _orphan_net_labels pass would otherwise produce.
-        if suppress_label:
-            return
-        # If the destination net is already represented by a hierarchical
-        # label elsewhere on this sheet (rarely hits at cluster-time
-        # since hier labels are added later, but kept as a safety net),
-        # suppress this redundant text label.
+        # Emit a local label at the far terminal so KiCad's same-name
+        # net merging binds the resistor's far pin to the destination
+        # net. For differential-partner cases (``suppress_label=True``,
+        # e.g. LVDS pair termination whose to_net is the OTHER
+        # connector pin's mapped net), the label still emits — but
+        # the validator exempts the resulting label/hlabel-at-same-Y
+        # pattern via the ``differential_pair_label`` exemption in
+        # ``validate/overlap.py``, because shifting the label off the
+        # pin row just lands on the next adjacent pin's row (LVDS pins
+        # are 2.54 mm apart).
         existing_hier_names = {h.net_name for h in builder.hierarchical_labels}
         if destination_net not in existing_hier_names:
             builder.add_label(PlacedLabel(
