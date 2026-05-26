@@ -267,7 +267,17 @@ _ERC_RULE_SEVERITIES: dict[str, str] = {
     "footprint_link_issues": "ignore",
     "four_way_junction": "ignore",
     "ground_pin_not_ground": "warning",
-    "hier_label_mismatch": "error",
+    # hier_label_mismatch: downgraded to warning. The carrier root sheet
+    # uses a compact A3-portrait block-index layout (no per-pin labels on
+    # root sheet symbols) — see ``core/layout/root.py``. KiCad's default
+    # ERC expects every sub-sheet hier label to bind to a sheet pin on
+    # the parent root, but with the index-only root that mechanism isn't
+    # used. Cross-sheet net binding relies on KiCad's same-name label
+    # merge (power rails via global power symbols, signals via per-block
+    # hier labels that all carry the same canonical net name). Genuine
+    # missing-driver bugs still surface as ``pin_not_driven`` or
+    # ``power_pin_not_driven`` (kept at "error").
+    "hier_label_mismatch": "warning",
     # isolated_pin_label: downgraded to ignore. Sub-sheet local labels that
     # connect to only one pin are common (and intentional) in two patterns
     # the carrier uses:

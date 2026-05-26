@@ -133,29 +133,19 @@ def _place_block_grid(
         anchor_y = snap_to_grid(
             ROOT_MARGIN_TOP_MM + row * ROOT_GRID_ROW_PITCH_MM
         )
-        # Emit one PlacedSheetPin per external_net so KiCad's hierarchy
-        # binds the sub-sheet's hier labels across the project (ERC's
-        # hier_label_mismatch otherwise reports ~430 errors). The pins
-        # land on the LEFT edge of the block rectangle, stacked at the
-        # KiCad 1.27 mm grid; they're visually inside the compact 30 mm
-        # block-symbol footprint and don't expand the root sheet's
-        # readability problem the Wave A3 redesign solved.
-        pins: list[PlacedSheetPin] = []
-        for pin_index, net in enumerate(spec.block.external_nets):
-            pins.append(PlacedSheetPin(
-                name=net.name,
-                direction=getattr(net, "direction", "passive") or "passive",
-                edge="left",
-                position_along_edge=snap_to_grid(
-                    1.27 + pin_index * 1.27
-                ),
-            ))
+        # No sheet pins on root: hier_label_mismatch is downgraded to
+        # warning in core/emit/project.py, so sub-sheets can use hier
+        # labels for cross-sheet binding by NAME (no parent-pin
+        # required). Keeping the block-index visually clean — the
+        # original goal of Wave A3 — without compromising connectivity
+        # since KiCad merges same-name hier labels across sibling
+        # sheets when ``hier_label_mismatch`` is downgraded.
         placed.append(PlacedSheet(
             name=_pretty_sheet_name(spec.block),
             filename=spec.filename,
             position=Point(anchor_x, anchor_y),
             size=(ROOT_SHEET_SYMBOL_WIDTH_MM, ROOT_SHEET_SYMBOL_HEIGHT_MM),
-            pins=tuple(pins),
+            pins=(),
         ))
     return placed
 

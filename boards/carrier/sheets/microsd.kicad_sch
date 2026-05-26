@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "be0a474c-a9ee-454c-b9bc-26845d96b080")
+	(uuid "253e6eae-c701-4a73-a2ae-1ca2c731e609")
 	(paper "A3")
 	(title_block
 		(title "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)")
@@ -971,7 +971,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "10d51abd-712d-4f56-99b0-9ebf71fe4ebc")
+		(uuid "8afb83a4-fc05-45c1-8169-6de9f757ba09")
 		(property "Reference" "J1"
 			(at 327.66 73.66 0.0000)
 			(effects
@@ -1020,41 +1020,41 @@
 			)
 		)
 		(pin "1"
-			(uuid "3bc9e11a-d635-4ef0-8d7a-1454ccefec1a")
+			(uuid "b78b6eb2-6101-414a-8559-b278a21615b2")
 		)
 		(pin "2"
-			(uuid "b256ad94-ca03-41e2-8d82-84c323d4bf93")
+			(uuid "73ea67b8-d14e-40ef-8bcb-24a4ba023f05")
 		)
 		(pin "3"
-			(uuid "e3911e90-2b2b-40ef-bdb1-88e10783532a")
+			(uuid "0bb82c69-a09f-4465-83b8-1436d758a82f")
 		)
 		(pin "4"
-			(uuid "9a0295c9-9d27-45c1-8475-e94161293055")
+			(uuid "62049896-bc24-43c0-a96d-400bb922e58b")
 		)
 		(pin "5"
-			(uuid "00315b3f-4b13-43e3-9276-f3fc1cf3d888")
+			(uuid "f334fa43-469f-4ad4-b6a7-2e742cbf9ac8")
 		)
 		(pin "6"
-			(uuid "13e2ed27-7fa4-43d5-aa8f-3328a4d13cdf")
+			(uuid "72130a39-f9d3-465b-a610-f1d09c0bf12a")
 		)
 		(pin "7"
-			(uuid "43cc0c8d-da20-4abe-b16c-09887bd17b69")
+			(uuid "e0fb7ffb-3141-4807-8ce4-0c884f087984")
 		)
 		(pin "8"
-			(uuid "9f6135b7-04a1-4749-a105-c27cfbaff996")
+			(uuid "49c16662-6491-4d82-a2d7-d2a0cca31377")
 		)
 		(pin "9"
-			(uuid "04204ba7-a1e9-4bc3-8f7d-554eb51730ef")
+			(uuid "c6c9244b-ac4e-4a47-83da-f3b791de56fd")
 		)
 		(pin "10"
-			(uuid "a07272ed-e39f-469b-8356-415c28a6acb3")
+			(uuid "a1b31f8e-bf50-456f-bb4d-82d9ee18f1c5")
 		)
 		(pin "SH"
-			(uuid "b68f2c0d-7b5d-4bab-87c8-e002a02fc3fa")
+			(uuid "ceb1d1ad-1ff4-4e34-b941-0ef2ba406d0e")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "J1")
 					(unit 1)
 				)
@@ -1070,7 +1070,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "5df6c604-3d69-443c-9719-7b5ef23bb6b2")
+		(uuid "7ba3a016-bd6b-466d-a996-4170dbb765f3")
 		(property "Reference" "C100"
 			(at 308.61 52.705 270)
 			(effects
@@ -1099,14 +1099,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "f0bb98a7-1a84-4ef0-b437-22d023ecb7c0")
+			(uuid "ca0f1fde-bcb6-4573-b6ed-9beaa28821f5")
 		)
 		(pin "2"
-			(uuid "0c87f5a3-078d-4f99-9343-f577c50d6461")
+			(uuid "e8df3586-741a-45a1-8295-239d2b4b5792")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1122,7 +1122,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "62c89190-b17b-4ee0-bd5a-5b9ebca47cf9")
+		(uuid "65f4c47a-b645-42e0-a26d-eb95b71e8707")
 		(property "Reference" "#PWR100"
 			(at 297.18 46.99 0.0000)
 			(effects
@@ -1151,11 +1151,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "ef6825b6-e9af-4f6c-98ba-1890c092ab57")
+			(uuid "e7c4237a-c534-492d-a303-1fb01819d2d1")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -1171,7 +1171,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3b0a9c8f-b5e3-48b1-8865-e7412e4a114c")
+		(uuid "c982dc1b-2644-4460-bff1-07d7375dad21")
 		(property "Reference" "C101"
 			(at 293.37 52.705 270)
 			(effects
@@ -1200,14 +1200,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "2457d2a7-6aaf-43f9-8cd0-978cd97e80a2")
+			(uuid "40c6c5b3-adcf-483b-825f-9ee355cece76")
 		)
 		(pin "2"
-			(uuid "d84919a4-c3d8-4bef-84c7-8aae4f31a7ab")
+			(uuid "7d9dca47-ce11-4a99-8b48-7d25774deee2")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1223,7 +1223,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "86b6e050-a9e3-4a8b-81e2-9a687bb14972")
+		(uuid "27f8bba9-ac4e-4587-a9f6-4eac05c751fe")
 		(property "Reference" "#PWR101"
 			(at 281.94 46.99 0.0000)
 			(effects
@@ -1252,11 +1252,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "d545078e-258a-4bd4-a814-0ece163ef47f")
+			(uuid "08e8e2f1-b063-43f4-bce0-b33986216b23")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -1272,7 +1272,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "8a384ce3-a877-402b-a914-8b3ce31ea10f")
+		(uuid "ba18c02d-fc0b-417b-bdd8-48d88046ce29")
 		(property "Reference" "R100"
 			(at 311.15 58.928 0.0000)
 			(effects
@@ -1301,14 +1301,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "c765e80d-5b1f-48ff-8372-f8a1579ed6fe")
+			(uuid "92771a63-8910-408c-baa4-87abebe72c6a")
 		)
 		(pin "2"
-			(uuid "c40b5450-de8e-46e9-99f8-8872688d9390")
+			(uuid "91e945f0-d0bd-4eee-bc7d-35478f6d53d8")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "R100")
 					(unit 1)
 				)
@@ -1324,7 +1324,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a97a14d0-fa7a-4eab-877a-73365e2d571f")
+		(uuid "3f7f11f7-625d-40a7-9303-fc7d23f21da0")
 		(property "Reference" "#PWR102"
 			(at 302.26 57.15 0.0000)
 			(effects
@@ -1353,11 +1353,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "c881c3da-6ab1-4d76-913c-33419f9d8efb")
+			(uuid "f1e9c633-7db3-4b3f-b6e0-97e024b97fd9")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -1373,7 +1373,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "56b3af37-2a20-402c-bb4c-06c8fdfd3023")
+		(uuid "2d0470e2-1420-4f20-8969-8c992b3c8724")
 		(property "Reference" "R101"
 			(at 306.07 61.468 0.0000)
 			(effects
@@ -1402,14 +1402,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "79b6b54d-fe44-42f2-89ea-1cbf66f2ec2f")
+			(uuid "c262e0a0-d7ca-4308-8de1-5b16f5e00973")
 		)
 		(pin "2"
-			(uuid "fe0d2453-1f29-4832-9037-a14d02b7fa84")
+			(uuid "5c5b8651-c137-431c-a9c0-1b26ad36b64e")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "R101")
 					(unit 1)
 				)
@@ -1425,7 +1425,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "b85dcea0-c56e-4c1f-80ac-621f6f0cd71e")
+		(uuid "0bd50fec-bac2-4d91-a041-39fb0ee73c73")
 		(property "Reference" "#PWR103"
 			(at 297.18 59.69 0.0000)
 			(effects
@@ -1454,11 +1454,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "31589b02-f7af-4c6b-a33b-a6b3a29c7ac9")
+			(uuid "b90a3074-3976-4306-9ead-a34463e80e20")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "#PWR103")
 					(unit 1)
 				)
@@ -1474,7 +1474,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "7a41bcc9-4e73-47ed-ab82-e2c9a596f327")
+		(uuid "aa672daf-b8dc-4c09-a990-17631f4b3363")
 		(property "Reference" "R102"
 			(at 311.15 43.688 0.0000)
 			(effects
@@ -1503,14 +1503,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "578ffbe9-06a6-4afe-bce8-b1eafb85a7d3")
+			(uuid "47fe8a18-b37f-418f-881f-4b70b70021cc")
 		)
 		(pin "2"
-			(uuid "df9198c6-11a2-443b-b388-8bb8c1f80bf4")
+			(uuid "cb575d9d-a70c-48f5-9c78-ebdc441e9efc")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "R102")
 					(unit 1)
 				)
@@ -1526,7 +1526,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a4047c05-0450-4f10-ade8-1dc5ef620b1a")
+		(uuid "1dcfaa6a-8ecd-4b0e-8a22-313f1c184c44")
 		(property "Reference" "#PWR104"
 			(at 302.26 41.91 0.0000)
 			(effects
@@ -1555,11 +1555,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "cf85f19e-7043-4b3d-abc6-c876b5de8c8c")
+			(uuid "f5a0bbb4-8c97-4110-9dd2-046d7694ec5a")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "#PWR104")
 					(unit 1)
 				)
@@ -1575,7 +1575,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d8079759-1c45-44a8-9085-226a9b52686f")
+		(uuid "769e2eb6-ec70-474d-8429-73eebbc581e8")
 		(property "Reference" "R103"
 			(at 311.15 48.768 0.0000)
 			(effects
@@ -1604,14 +1604,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "db9f5070-947a-4697-9a03-cc06eb3d82af")
+			(uuid "73440ec2-9502-4348-a37f-92d6bff324d2")
 		)
 		(pin "2"
-			(uuid "e9a593d4-710b-4018-83e5-5db860087400")
+			(uuid "113abf9b-11e7-495c-b974-cbeac02089b5")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "R103")
 					(unit 1)
 				)
@@ -1627,7 +1627,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c3dce29f-5350-40a2-9a12-6e60f4865755")
+		(uuid "ee1540b6-bbfa-4f95-8fcd-1e7f35a243b4")
 		(property "Reference" "#PWR105"
 			(at 302.26 46.99 0.0000)
 			(effects
@@ -1656,11 +1656,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "7dc2e644-361a-4a42-99b0-66e407920c4b")
+			(uuid "16bccac4-2222-4562-8f5e-153398d47a4b")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/be0a474c-a9ee-454c-b9bc-26845d96b080"
+				(path "/253e6eae-c701-4a73-a2ae-1ca2c731e609"
 					(reference "#PWR105")
 					(unit 1)
 				)
@@ -1675,7 +1675,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "efb4f5ff-2c94-4c07-885a-7ad9bad31f77")
+		(uuid "70e42390-04cd-4caf-8dca-f436ceb11d40")
 	)
 	(wire
 		(pts
@@ -1685,7 +1685,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "50e418ad-d3fd-4a18-89d8-e50dbb4aba34")
+		(uuid "7b360a3d-92a2-424c-84b3-1da68e74b19a")
 	)
 	(wire
 		(pts
@@ -1695,7 +1695,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "217cad7d-6377-4a60-9de0-7aedd5dc211a")
+		(uuid "1327c07e-823e-4719-9dca-ec378afffcb7")
 	)
 	(wire
 		(pts
@@ -1705,7 +1705,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d714c0a8-86e1-45a8-9250-b01878764cb3")
+		(uuid "b7322b19-3ca0-4fab-aa41-cb883c95ef8f")
 	)
 	(wire
 		(pts
@@ -1715,7 +1715,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "12464699-a65f-4616-a7fc-103ace258570")
+		(uuid "cf5b946c-1827-43f8-9ab5-f220c8040775")
 	)
 	(wire
 		(pts
@@ -1725,7 +1725,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4bb709ca-baab-4dcc-8cff-5fbaf2cf9e93")
+		(uuid "d503a6c6-db12-4c02-a687-cbb71585b2eb")
 	)
 	(wire
 		(pts
@@ -1735,7 +1735,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6bee84cc-ef51-4bf6-964b-77c2e5e09e3f")
+		(uuid "1b442d28-0846-40be-817c-bbfc3730fc05")
 	)
 	(wire
 		(pts
@@ -1745,7 +1745,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a85127ee-cba7-4257-b2b9-af661607d7a6")
+		(uuid "0589ddc2-2fba-416e-b03e-0ba2595609c8")
 	)
 	(wire
 		(pts
@@ -1755,7 +1755,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "bcae02c0-af2f-46f9-becd-16aaaf82520f")
+		(uuid "1ab1e48c-7956-4b28-b854-801fe8726551")
 	)
 	(wire
 		(pts
@@ -1765,7 +1765,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "327aca8a-2d0b-453e-b5b8-0cdf8e818ff9")
+		(uuid "01993bc3-24d7-4b8c-9b38-d3c5affacdfb")
 	)
 	(wire
 		(pts
@@ -1775,7 +1775,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1f0c63cc-d2ae-42a3-8560-4e59230c10d8")
+		(uuid "7bedebca-bc70-4919-adad-431754ad48d4")
 	)
 	(wire
 		(pts
@@ -1785,7 +1785,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2c032066-dc38-4ae0-afff-d9dc195c17c5")
+		(uuid "311994f4-ec38-4123-aa59-5575e169e80f")
 	)
 	(wire
 		(pts
@@ -1795,7 +1795,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b17de525-943b-444b-a60d-4ab4d081861f")
+		(uuid "7115bfd7-efbd-4630-9560-461a7ad8ce07")
 	)
 	(wire
 		(pts
@@ -1805,7 +1805,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0f80946c-5b35-428c-a990-cdd41c9c6af0")
+		(uuid "07f2a062-3989-4693-9b0d-00fe3fcaa882")
 	)
 	(wire
 		(pts
@@ -1815,7 +1815,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "506a6d90-1236-417b-8599-bbdf5cddb4ad")
+		(uuid "c955c2fd-77d6-4420-b58a-b38c71702a39")
 	)
 	(wire
 		(pts
@@ -1825,7 +1825,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a4b63bf8-2de6-4f9c-bd57-52a264200e2d")
+		(uuid "c3cba221-ef70-4c2f-b4ca-11ec35be7a0e")
 	)
 	(label "GND"
 		(at 318.77 66.04 180)
@@ -1835,7 +1835,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "1c5a9f0f-68ba-447a-a5b5-1ae9aaa39060")
+		(uuid "a7a6f411-0b5b-40df-9e2f-066a6f246c51")
 	)
 	(label "GND"
 		(at 367.03 68.58 0.0000)
@@ -1845,7 +1845,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "0b6f6d15-1910-4d85-9e5e-bb709cac2bd8")
+		(uuid "4825653b-a0ff-4715-8f87-d2c846f542ed")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1856,7 +1856,7 @@
 			)
 			(justify left)
 		)
-		(uuid "843c0a2c-d31a-4b11-aca6-479fd79cb24b")
+		(uuid "1ab49458-75c1-478e-bba4-95f605184d70")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
@@ -1867,7 +1867,7 @@
 			)
 			(justify left)
 		)
-		(uuid "803cf05e-20fe-4f14-832e-b4960e833c2a")
+		(uuid "899dc05b-5425-43a6-bdf1-4f4a294a519e")
 	)
 	(hierarchical_label "ZYNQ_SD1_DAT0"
 		(shape input)
@@ -1878,7 +1878,7 @@
 			)
 			(justify left)
 		)
-		(uuid "976a9100-4b5e-4250-8b2e-b856046741c4")
+		(uuid "f014a4c3-da5d-42ac-b442-7e1b1ef4f59d")
 	)
 	(hierarchical_label "ZYNQ_SD1_DAT1"
 		(shape input)
@@ -1889,7 +1889,7 @@
 			)
 			(justify left)
 		)
-		(uuid "4360b297-d51d-4ad8-9bab-da0e0d03b250")
+		(uuid "0d9ade83-f22b-45f8-b061-85930864563a")
 	)
 	(hierarchical_label "ZYNQ_SD1_DAT2"
 		(shape input)
@@ -1900,7 +1900,7 @@
 			)
 			(justify left)
 		)
-		(uuid "7d080639-0eb9-4722-bed3-8482ecbfb0aa")
+		(uuid "f1c4b119-45f8-4ebc-ab8c-ed9c84c32bdc")
 	)
 	(hierarchical_label "ZYNQ_SD1_DAT3"
 		(shape input)
@@ -1911,7 +1911,7 @@
 			)
 			(justify left)
 		)
-		(uuid "bcdb0f08-42a9-44ed-a16b-fccfa841c264")
+		(uuid "a22e3991-a3a7-41cb-8b27-57baec5d5a1c")
 	)
 	(hierarchical_label "ZYNQ_SD1_CMD"
 		(shape input)
@@ -1922,7 +1922,7 @@
 			)
 			(justify left)
 		)
-		(uuid "730ede13-c4e5-4d53-bc8f-218b920a1c81")
+		(uuid "5ac154ee-256d-4b27-ba92-096455844076")
 	)
 	(hierarchical_label "ZYNQ_SD1_CLK"
 		(shape input)
@@ -1933,7 +1933,7 @@
 			)
 			(justify left)
 		)
-		(uuid "28d789f7-1ccc-45f0-be7f-21b12a2729c2")
+		(uuid "8c7a163e-4387-4d36-89e4-77955bf2a361")
 	)
 	(hierarchical_label "ZYNQ_SD1_CD_N"
 		(shape input)
@@ -1944,7 +1944,7 @@
 			)
 			(justify left)
 		)
-		(uuid "65d1bf8d-38c6-4bf3-9ac1-74fbe8fe0ae7")
+		(uuid "99ab2d57-4fb2-40b8-a597-8e2a787e7352")
 	)
 	(sheet_instances
 		(path "/"

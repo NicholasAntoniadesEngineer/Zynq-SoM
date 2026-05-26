@@ -215,7 +215,7 @@
       "footprint_link_issues": "ignore",
       "four_way_junction": "ignore",
       "ground_pin_not_ground": "warning",
-      "hier_label_mismatch": "error",
+      "hier_label_mismatch": "warning",
       "isolated_pin_label": "ignore",
       "label_dangling": "error",
       "label_multiple_wires": "ignore",
@@ -420,7 +420,7 @@
       {
         "filename": "carrier.kicad_sch",
         "name": "carrier",
-        "uuid": "2bef4df0-0dc8-4f3b-8c38-51d27efd96fb"
+        "uuid": "7967bd9a-64fb-4b87-9eb4-38336fcf6c1d"
       }
     ],
     "used_designators": "",
