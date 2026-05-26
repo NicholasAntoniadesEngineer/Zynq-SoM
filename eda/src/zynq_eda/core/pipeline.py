@@ -133,7 +133,7 @@ def run_carrier(
         # In-memory validators run before emission so a broken sheet doesn't
         # overwrite a known-good file.
         bounds_results = validate_page_bounds(sheet)
-        overlap_results = validate_overlap(sheet)
+        overlap_results = validate_overlap(sheet, geometry=geometry_cache)
         block_validation.extend(bounds_results)
         block_validation.extend(overlap_results)
         print(
@@ -181,7 +181,7 @@ def run_carrier(
         ],
     )
     root_bounds = validate_page_bounds(root_sheet)
-    root_overlap = validate_overlap(root_sheet)
+    root_overlap = validate_overlap(root_sheet, geometry=geometry_cache)
     block_validation.extend(root_bounds)
     block_validation.extend(root_overlap)
     print(

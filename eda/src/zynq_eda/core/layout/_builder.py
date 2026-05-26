@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from zynq_eda.core.layout.occupancy import Occupancy
 from zynq_eda.core.model.block import Block
 from zynq_eda.core.model.grid import Point
 from zynq_eda.core.model.sheet import (
@@ -46,7 +47,13 @@ class PinGeometryAbs:
 
 @dataclass
 class BlockLayoutBuilder:
-    """Mutable accumulator of placed primitives while building a block."""
+    """Mutable accumulator of placed primitives while building a block.
+
+    ``occupancy`` is a live spatial index that placement helpers populate
+    in lockstep with ``symbols``/``wires``/``labels``. Wave B will add
+    ``occupancy.add(...)`` calls inside each helper so collision checks
+    happen *during* placement instead of only after the fact.
+    """
 
     symbols: list[PlacedSymbol] = field(default_factory=list)
     wires: list[PlacedWire] = field(default_factory=list)
@@ -55,6 +62,7 @@ class BlockLayoutBuilder:
     no_connects: list[PlacedNoConnect] = field(default_factory=list)
     hierarchical_labels: list[PlacedHierarchicalLabel] = field(default_factory=list)
     sheets: list[PlacedSheet] = field(default_factory=list)
+    occupancy: Occupancy = field(default_factory=Occupancy)
     _ref_counters: dict[str, int] = field(
         default_factory=lambda: {"C": 100, "R": 100, "D": 100, "PWR": 100, "FLG": 100}
     )
