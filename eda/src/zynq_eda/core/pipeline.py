@@ -144,6 +144,10 @@ def run_carrier(
             f"    in-memory validators: bounds={len(bounds_results)}, "
             f"overlap={len(overlap_results)}"
         )
+        for r in bounds_results:
+            print(f"      BOUNDS: {r.message}")
+        for r in overlap_results:
+            print(f"      OVERLAP: {r.message}")
 
         sheet_path = sheets_dir / f"{block.name}.kicad_sch"
         sheet_uuid = str(uuid.uuid4())

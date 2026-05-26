@@ -192,6 +192,7 @@ def _attach_ic_signal_overrides(
     edge-label placer wires them straight to the sheet edge).
     """
     from zynq_eda.core.layout._constants import POWER_SYMBOL_LIB_IDS, POWER_SYMBOL_OFFSET_MM
+    from zynq_eda.core.layout.geometry import page_side_from_pin
 
     # Combine refcircuit + per-IC overrides.
     overrides = dict(ic.refcircuit.pin_net_overrides) | dict(ic.net_overrides)
@@ -200,7 +201,15 @@ def _attach_ic_signal_overrides(
     # edge) or by passive clustering — skip those here.
     skip = {"GND", "VSS"} | set(placed_passive_pin_names) | set(edge_labeled_pin_names)
 
-    STUB_MM = 5.08
+    # Stub length MUST be ONE pin pitch (2.54 mm), not two. A 5.08 mm stub
+    # routed perpendicular to a dense pin row spans two adjacent pin Y
+    # positions, so adjacent pins' stubs overlap into one giant vertical
+    # wire that shorts them. Same bug + same fix as the connector pass in
+    # commit 8eb7e02 (see connectors.py:_place_one_connector). Picking
+    # the stub direction from page_side_from_pin (the pin's outward axis)
+    # ensures the stub extends past the pin tip and never crosses an
+    # adjacent pin's row.
+    STUB_MM = 2.54
 
     for pin_name, net_name in overrides.items():
         if pin_name in skip:
@@ -214,26 +223,23 @@ def _attach_ic_signal_overrides(
         except KeyError:
             continue
 
-        # Decide stub direction from the pin's side of the IC body.
-        rel = pin_geom.relative
-        if abs(rel.x) >= abs(rel.y):
-            stub_dx = -STUB_MM if rel.x > 0 else STUB_MM
-            stub_dy = 0.0
-        else:
-            stub_dx = 0.0
-            stub_dy = -STUB_MM if rel.y > 0 else STUB_MM
-
-        # Wait — flip-Y means the visible "side" is opposite of relative
-        # sign. We use the *page-coord* direction by checking which axis is
-        # dominant in pin_geom.connection - ic_anchor.
-        page_dx = pin_geom.connection.x - ic_anchor.x
-        page_dy = pin_geom.connection.y - ic_anchor.y
-        if abs(page_dx) >= abs(page_dy):
-            stub_dx = STUB_MM if page_dx > 0 else -STUB_MM
-            stub_dy = 0.0
-        else:
-            stub_dx = 0.0
-            stub_dy = STUB_MM if page_dy > 0 else -STUB_MM
+        # Stub direction = the pin's natural outward axis, derived from
+        # (pin_rotation, symbol_rotation). This guarantees the stub
+        # continues OUTWARD from the IC body along the pin's own axis,
+        # so it can never collide with an adjacent pin's stub (adjacent
+        # pins are offset perpendicular to that axis).
+        side = page_side_from_pin(
+            pin_rotation=getattr(pin_geom, "pin_rotation", 0.0),
+            symbol_rotation=getattr(pin_geom, "symbol_rotation", 0.0),
+        )
+        if side == "left":
+            stub_dx, stub_dy = -STUB_MM, 0.0
+        elif side == "right":
+            stub_dx, stub_dy = STUB_MM, 0.0
+        elif side == "top":
+            stub_dx, stub_dy = 0.0, -STUB_MM
+        else:  # bottom
+            stub_dx, stub_dy = 0.0, STUB_MM
 
         stub_end = Point(
             snap_to_grid(pin_geom.connection.x + stub_dx),

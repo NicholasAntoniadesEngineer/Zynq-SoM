@@ -312,10 +312,16 @@ def place_one_passive_for_pin(
         near_point = Point(snap_to_grid(passive_anchor.x - PASSIVE_PIN_HALF), passive_anchor.y)
         far_point = Point(snap_to_grid(passive_anchor.x + PASSIVE_PIN_HALF), passive_anchor.y)
     elif side == "top":
-        # Each slot occupies its own X column (fan laterally) so the
-        # vertical wire from the IC pin to slot N's near pin doesn't
-        # cross slot 0..N-1's far pins, which would short different nets.
-        lateral_offset = slot_index * PASSIVE_PITCH_MM
+        # Slot 0 sits directly above the IC pin. Slot N (N≥1) fans
+        # LATERALLY but at HORIZONTAL_SWARM_PITCH_MM (15.24 mm = 6 grid
+        # units), NOT PASSIVE_PITCH_MM (5.08 mm = 2 grid units). The
+        # narrower 5.08 mm pitch matches exactly 2× the KiCad symbol
+        # pin pitch — so slot 1 of pin A landed on top of slot 0 of pin
+        # A+2 (e.g. CP2102N VREGIN slot-1 collided with VDD slot-0,
+        # both at (132.08, 21.59)). 15.24 mm pushes slot 1 past the
+        # next 5 pin positions, eliminating the collision regardless
+        # of which adjacent pins also have clusters.
+        lateral_offset = slot_index * HORIZONTAL_SWARM_PITCH_MM
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + lateral_offset),
             snap_to_grid(pin_connection.y - PASSIVE_OFFSET_MM),
@@ -324,7 +330,9 @@ def place_one_passive_for_pin(
         near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
         far_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF))
     else:  # bottom
-        lateral_offset = slot_index * PASSIVE_PITCH_MM
+        # Mirror of the top branch — see comment above for why we use
+        # HORIZONTAL_SWARM_PITCH_MM instead of PASSIVE_PITCH_MM.
+        lateral_offset = slot_index * HORIZONTAL_SWARM_PITCH_MM
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + lateral_offset),
             snap_to_grid(pin_connection.y + PASSIVE_OFFSET_MM),

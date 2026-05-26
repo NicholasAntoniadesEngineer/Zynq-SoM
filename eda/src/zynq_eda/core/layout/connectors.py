@@ -33,7 +33,15 @@ from zynq_eda.core.model.sheet import (
 )
 
 
-CONNECTOR_EDGE_INSET_MM = snap_to_grid(60.96)
+CONNECTOR_EDGE_INSET_MM = snap_to_grid(76.2)
+"""Distance from the sheet edge to a connector's column_x.
+
+This must be large enough that a connector placed at the right edge
+still leaves room for its cluster passive swarm (which extends
+*outward* from the connector body — up to ~32 mm for a slot-1 cap +
+power-symbol stub off a wide-body USB-C connector). 60.96 mm wasn't
+enough — A4 right-edge USB-C connectors put their CHASSIS_GND symbols
+1-2 mm beyond the paper edge. 76.2 mm gives ~15 mm clearance."""
 """Distance from a sheet edge to a connector's anchor.
 
 Wide enough that two or three rows of passive stacks alongside the
