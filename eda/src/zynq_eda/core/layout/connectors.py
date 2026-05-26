@@ -275,26 +275,35 @@ def _place_one_connector(
             symbol_rotation=getattr(pin_geom, "symbol_rotation", connector.rotation),
         )
         STUB_LEN = 2.54
+        # Label rotation reads OUTWARD (away from the connector body)
+        # so the text never sweeps back across the body's bbox. KiCad
+        # rotation convention: 0=text reads right, 90=up, 180=left,
+        # 270=down. With the label anchored at stub_end and text
+        # reading outward, the bbox extends away from the body.
         if side == "left":
             stub_end = Point(
                 snap_to_grid(pin_geom.connection.x - STUB_LEN),
                 pin_geom.connection.y,
             )
+            label_rotation = 180.0
         elif side == "right":
             stub_end = Point(
                 snap_to_grid(pin_geom.connection.x + STUB_LEN),
                 pin_geom.connection.y,
             )
+            label_rotation = 0.0
         elif side == "top":
             stub_end = Point(
                 pin_geom.connection.x,
                 snap_to_grid(pin_geom.connection.y - STUB_LEN),
             )
+            label_rotation = 90.0
         else:  # bottom
             stub_end = Point(
                 pin_geom.connection.x,
                 snap_to_grid(pin_geom.connection.y + STUB_LEN),
             )
+            label_rotation = 270.0
 
         builder.wires.append(PlacedWire(
             start=pin_geom.connection,
@@ -303,5 +312,5 @@ def _place_one_connector(
         builder.labels.append(PlacedLabel(
             net_name=net_name,
             position=stub_end,
-            rotation=0.0,
+            rotation=label_rotation,
         ))

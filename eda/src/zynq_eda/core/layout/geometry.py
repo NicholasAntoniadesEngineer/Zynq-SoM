@@ -235,7 +235,7 @@ class SymbolGeometryCache:
     """
 
     _loaded_library_paths: set[Path] = field(default_factory=set)
-    _bbox_cache: dict[tuple[str, float], SymbolBoundingBox] = field(default_factory=dict)
+    _bbox_cache: dict[tuple[str, float, bool], SymbolBoundingBox] = field(default_factory=dict)
     _pins_cache: dict[tuple[str, float], tuple[dict[str, object], ...]] = field(
         default_factory=dict,
     )
@@ -419,34 +419,48 @@ class SymbolGeometryCache:
         lib_id: str,
         rotation: float = 0.0,
         body_padding_mm: float = DEFAULT_PIN_LENGTH_MM,
+        tight_body: bool = True,
     ) -> SymbolBoundingBox:
         """Return the bounding box of a symbol relative to its anchor.
 
-        The box spans:
+        Two modes:
 
-            - horizontally: from ``min(pin.relative.x) - body_padding_mm``
-              to ``max(pin.relative.x) + body_padding_mm``
-            - vertically:   from ``min(pin.relative.y) - body_padding_mm``
-              to ``max(pin.relative.y) + body_padding_mm``
+          * ``tight_body=True`` (default — used by the overlap validator
+            and by occupancy-aware placement). Returns the VISIBLE body
+            box: the convex hull of pin body-side endpoints (= pin tips
+            walked INWARD by one pin length toward the body centroid).
+            Pin stubs themselves are NOT included, so wires terminating
+            at a pin tip don't read as "wire crosses the body".
+          * ``tight_body=False`` (legacy). Returns the OUTER hull: pin
+            tips PLUS ``body_padding_mm``. Useful for placement spacing
+            calculations where the pin stubs must clear the next
+            symbol's stubs too.
 
-        ``body_padding_mm`` accounts for the visible symbol outline that
-        extends slightly beyond the pin endpoints. ``DEFAULT_PIN_LENGTH_MM``
-        (1.27 mm) is a reasonable default for most ICs.
+        The default flipped from the legacy outer hull to the visible
+        body in Wave B because the outer hull caused ~700 false-positive
+        overlap warnings (every wire that legitimately terminated on a
+        pin was reported as wire×symbol; every label at a wire endpoint
+        was reported as label×symbol). The visible body matches what
+        the user actually sees on the page.
         """
-        cache_key = (lib_id, rotation)
+        cache_key = (lib_id, rotation, tight_body)
         cached = self._bbox_cache.get(cache_key)
         if cached is not None:
             return cached
 
         preview = self._preview_component(lib_id, Point(0.0, 0.0), rotation)
-        xs: list[float] = []
-        ys: list[float] = []
+        # Collect pin tips. ``list_pins()`` returns positions in the symbol's
+        # LIBRARY frame (no rotation), with +Y up. The same flip-Y-then-rotate
+        # transform used in :meth:`_resolve_pin_geometry` converts these to
+        # PAGE-relative coords (relative to the symbol anchor at the origin).
+        pin_tips: list[Point] = []
         for pin_info in preview.list_pins():
             position = pin_info["position"]
-            xs.append(float(position.x))
-            ys.append(float(position.y))
+            symbol_relative = Point(float(position.x), float(position.y))
+            page_relative = _flip_y_then_rotate(symbol_relative, rotation)
+            pin_tips.append(page_relative)
 
-        if not xs:
+        if not pin_tips:
             # A symbol with no pins is unusual but possible (e.g. mounting hole);
             # return a small box so downstream layout still has dimensions.
             box = SymbolBoundingBox(
@@ -455,12 +469,60 @@ class SymbolGeometryCache:
                 max_x=body_padding_mm,
                 max_y=body_padding_mm,
             )
-        else:
+        elif tight_body:
+            # Tight body: walk each pin tip INWARD by one pin length
+            # (toward the centroid of all pin tips). The result is a
+            # box around the visible symbol outline, with pin stubs
+            # excluded. We use the bbox of pin tips as a stand-in for
+            # the centroid because that gives a consistent inset on
+            # all four sides for rectangular pin arrangements.
+            min_x = min(p.x for p in pin_tips)
+            max_x = max(p.x for p in pin_tips)
+            min_y = min(p.y for p in pin_tips)
+            max_y = max(p.y for p in pin_tips)
+            inset = DEFAULT_PIN_LENGTH_MM
+            # Only inset on axes where the bbox span is wider than 2*inset
+            # — for short symbols (e.g. a 2-pin passive 2.54mm tall) we
+            # can't safely inset on the long axis without collapsing.
+            x_inset = inset if (max_x - min_x) > 2.0 * inset else 0.0
+            y_inset = inset if (max_y - min_y) > 2.0 * inset else 0.0
+            box_min_x = min_x + x_inset
+            box_min_y = min_y + y_inset
+            box_max_x = max_x - x_inset
+            box_max_y = max_y - y_inset
+            # Ensure a minimum BODY extent (~1 mm) on each axis so that
+            # 2-pin passives (Device:R / Device:C) whose pin tips lie
+            # on a single line still register a non-zero body in the
+            # transverse direction. Without this minimum, the tight
+            # bbox collapses to a line and the body becomes invisible
+            # to the overlap validator — wires passing PERPENDICULAR
+            # through a passive's body get a false "no overlap"
+            # because the bbox has zero width.
+            MIN_BODY_HALF_EXTENT_MM = 0.635
+            if (box_max_x - box_min_x) < 2.0 * MIN_BODY_HALF_EXTENT_MM:
+                center_x = (box_min_x + box_max_x) / 2.0
+                box_min_x = center_x - MIN_BODY_HALF_EXTENT_MM
+                box_max_x = center_x + MIN_BODY_HALF_EXTENT_MM
+            if (box_max_y - box_min_y) < 2.0 * MIN_BODY_HALF_EXTENT_MM:
+                center_y = (box_min_y + box_max_y) / 2.0
+                box_min_y = center_y - MIN_BODY_HALF_EXTENT_MM
+                box_max_y = center_y + MIN_BODY_HALF_EXTENT_MM
             box = SymbolBoundingBox(
-                min_x=min(xs) - body_padding_mm,
-                min_y=min(ys) - body_padding_mm,
-                max_x=max(xs) + body_padding_mm,
-                max_y=max(ys) + body_padding_mm,
+                min_x=box_min_x,
+                min_y=box_min_y,
+                max_x=box_max_x,
+                max_y=box_max_y,
+            )
+        else:
+            min_x = min(p.x for p in pin_tips)
+            max_x = max(p.x for p in pin_tips)
+            min_y = min(p.y for p in pin_tips)
+            max_y = max(p.y for p in pin_tips)
+            box = SymbolBoundingBox(
+                min_x=min_x - body_padding_mm,
+                min_y=min_y - body_padding_mm,
+                max_x=max_x + body_padding_mm,
+                max_y=max_y + body_padding_mm,
             )
 
         self._bbox_cache[cache_key] = box

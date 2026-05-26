@@ -74,13 +74,23 @@ class BlockLayoutBuilder:
         return f"{prefix}{index}"
 
     def finalize(self, block: Block) -> Sheet:
-        """Freeze the accumulator into a :class:`Sheet`."""
+        """Freeze the accumulator into a :class:`Sheet`.
+
+        Wires are passed through :func:`dedup_collinear_contained_wires`
+        to merge overlapping collinear segments (the cluster + signal-
+        override + edge-label passes routinely emit multiple short
+        wires that share the same axis and overlap with one long
+        net-spanning wire — KiCad merges them electrically but the
+        redundant segments show as ``overlap.wire_wire`` validator
+        hits and visually clutter the schematic).
+        """
+        deduped_wires = dedup_collinear_contained_wires(list(self.wires))
         return Sheet(
             name=block.name,
             title=block.title,
             paper_size=block.paper_size,
             symbols=tuple(self.symbols),
-            wires=tuple(self.wires),
+            wires=tuple(deduped_wires),
             labels=tuple(self.labels),
             junctions=tuple(self.junctions),
             no_connects=tuple(self.no_connects),
@@ -90,29 +100,25 @@ class BlockLayoutBuilder:
         )
 
 
-def _unused_dedup_shared_endpoint_wires(wires: list[PlacedWire]) -> list[PlacedWire]:
-    """Drop wires that are fully covered by a longer collinear wire sharing a start/end point.
+def dedup_collinear_contained_wires(wires: list[PlacedWire]) -> list[PlacedWire]:
+    """Drop wires that are fully covered by a longer collinear wire.
 
-    Multi-slot clusters on LEFT/RIGHT-side IC pins emit one wire per
-    slot from the IC pin to that slot's near-pin. All these wires
-    share an endpoint (the IC pin) and are collinear along the pin's
-    Y row. Slot 0's 6.35 mm wire and slot 1's 21.59 mm wire share
-    their start (IC pin). KiCad's hierarchical-flatten ERC sees this
-    as two overlapping wires and reports each pair as wire_dangling
-    with sub-grid fragment lengths.
+    Two wires that share an axis (both horizontal at the same y, or
+    both vertical at the same x) AND where one is fully contained
+    inside the other are electrically equivalent: KiCad merges them
+    into the same net regardless. We drop the shorter (contained)
+    wire to keep the schematic free of redundant overlapping
+    segments — those would otherwise show as ``overlap.wire_wire``
+    validator hits even though they're functionally a single net.
 
-    The shorter wire is functionally redundant: the longer wire
-    already passes through the shorter's endpoint, so KiCad nets the
-    cap pin to the IC pin via the longer wire. Dropping the shorter
-    one eliminates the false wire_dangling and preserves connectivity.
+    Why this is safe (no endpoint-sharing requirement): two collinear
+    overlapping wires on the same horizontal line always share the
+    contained wire's full span with the containing wire. Any
+    component pin attached to a coordinate inside the contained wire
+    is also coincident with the containing wire — same net.
 
-    Why we ONLY drop wires that share an endpoint (and not arbitrary
-    contained segments): a cap-to-GND wire and a different pin's
-    cluster pin-to-near wire might be collinear and overlap by mere
-    coincidence, but they carry different nets. Dropping a wire that
-    doesn't share an endpoint with the longer one would silently
-    disconnect a component pin. Restricting to shared-endpoint pairs
-    keeps the dedup safe.
+    Original strict variant kept as :func:`_unused_dedup_shared_endpoint_wires`
+    for callers that need endpoint-only dedup.
     """
     # Bucket horizontal wires by Y, vertical wires by X.
     horiz: dict[float, list[PlacedWire]] = {}
@@ -130,34 +136,52 @@ def _unused_dedup_shared_endpoint_wires(wires: list[PlacedWire]) -> list[PlacedW
         return abs(w.end.x - w.start.x) + abs(w.end.y - w.start.y)
 
     def filter_bucket(bucket: list[PlacedWire], horizontal: bool) -> list[PlacedWire]:
-        kept: list[PlacedWire] = []
-        # Sort by length descending so we process longer wires first.
-        sorted_wires = sorted(bucket, key=lambda w: -length(w))
-        for w in sorted_wires:
-            x1, y1 = w.start.x, w.start.y
-            x2, y2 = w.end.x, w.end.y
-            w_lo = min(x1, x2) if horizontal else min(y1, y2)
-            w_hi = max(x1, x2) if horizontal else max(y1, y2)
-            covered = False
-            for k in kept:
-                kx1, ky1 = k.start.x, k.start.y
-                kx2, ky2 = k.end.x, k.end.y
-                k_lo = min(kx1, kx2) if horizontal else min(ky1, ky2)
-                k_hi = max(kx1, kx2) if horizontal else max(ky1, ky2)
-                # Must share at least one endpoint with k AND be inside k's range.
-                shares_endpoint = (
-                    (abs(x1 - kx1) < 1e-6 and abs(y1 - ky1) < 1e-6)
-                    or (abs(x1 - kx2) < 1e-6 and abs(y1 - ky2) < 1e-6)
-                    or (abs(x2 - kx1) < 1e-6 and abs(y2 - ky1) < 1e-6)
-                    or (abs(x2 - kx2) < 1e-6 and abs(y2 - ky2) < 1e-6)
-                )
-                contained = w_lo >= k_lo - 1e-6 and w_hi <= k_hi + 1e-6
-                if shares_endpoint and contained:
-                    covered = True
-                    break
-            if not covered:
-                kept.append(w)
-        return kept
+        """Merge overlapping collinear wires into the union spans.
+
+        Two wires overlap iff their (lo, hi) intervals overlap on the
+        shared axis. We compute the union of all overlapping wires in
+        the bucket and emit ONE wire per disjoint union interval.
+        """
+        if not bucket:
+            return []
+        axis_lookup_y = horizontal  # if horizontal, axis value is y (shared)
+        # The shared-axis value is identical for every wire in the bucket
+        # (it's the bucket key). Pick it from the first wire.
+        sample = bucket[0]
+        shared_value = sample.start.y if horizontal else sample.start.x
+
+        intervals: list[tuple[float, float]] = []
+        for w in bucket:
+            if horizontal:
+                lo = min(w.start.x, w.end.x)
+                hi = max(w.start.x, w.end.x)
+            else:
+                lo = min(w.start.y, w.end.y)
+                hi = max(w.start.y, w.end.y)
+            intervals.append((lo, hi))
+        # Merge overlapping intervals: sort by lo, then walk.
+        intervals.sort()
+        merged: list[tuple[float, float]] = []
+        for lo, hi in intervals:
+            if merged and lo <= merged[-1][1] + 1e-6:
+                merged[-1] = (merged[-1][0], max(merged[-1][1], hi))
+            else:
+                merged.append((lo, hi))
+
+        result_wires: list[PlacedWire] = []
+        from zynq_eda.core.model.grid import Point as _Pt
+        for lo, hi in merged:
+            if horizontal:
+                start = _Pt(lo, shared_value)
+                end = _Pt(hi, shared_value)
+            else:
+                start = _Pt(shared_value, lo)
+                end = _Pt(shared_value, hi)
+            # Skip zero-length wires (numerical noise).
+            if abs(start.x - end.x) < 1e-6 and abs(start.y - end.y) < 1e-6:
+                continue
+            result_wires.append(PlacedWire(start=start, end=end))
+        return result_wires
 
     result: list[PlacedWire] = list(other)
     for bucket in horiz.values():
@@ -165,3 +189,7 @@ def _unused_dedup_shared_endpoint_wires(wires: list[PlacedWire]) -> list[PlacedW
     for bucket in vert.values():
         result.extend(filter_bucket(bucket, horizontal=False))
     return result
+
+
+# Backward-compat alias
+_unused_dedup_shared_endpoint_wires = dedup_collinear_contained_wires

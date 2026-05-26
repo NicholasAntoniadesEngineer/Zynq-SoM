@@ -222,10 +222,20 @@ def _attach_far_endpoint(
     """
     power_lib_id = POWER_SYMBOL_LIB_IDS.get(destination_net)
     if power_lib_id is None:
+        # Outward label rotation per pin_side so the text never reads
+        # back across the IC body. Mirror the same rule used by the
+        # connector + IC signal-override placers (left=180, right=0,
+        # top=90, bottom=270).
+        label_rotation = {
+            "left": 180.0,
+            "right": 0.0,
+            "top": 90.0,
+            "bottom": 270.0,
+        }.get(pin_side, 0.0)
         builder.labels.append(PlacedLabel(
             net_name=destination_net,
             position=far_point,
-            rotation=0.0,
+            rotation=label_rotation,
         ))
         return
 

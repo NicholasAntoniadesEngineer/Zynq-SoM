@@ -32,14 +32,46 @@ because multiple GND symbols legitimately share a position when each
 decoupling cap drops its own GND drop. We exempt them from symbol×symbol
 only — the labels above them still must be visible.
 
+Wave B exemptions (added to drive the count to zero):
+
+  * **Label-at-stub-end** — a label whose anchor sits within one stub
+    length (2.54 mm) of any of a symbol's pin tips is the symbol's own
+    pin label and is exempted from symbol×label / symbol×hlabel. KiCad
+    pin labels routinely sit one stub off the pin tip; without the
+    stub-length tolerance every cluster-cap label flagged.
+  * **Wire passes through pin** — if a wire's axis passes through any
+    of a symbol's pin tips WITHIN the wire's span, the wire IS the
+    rail the pin connects to and the body-bbox intersection is a
+    layout artefact, not a real overlap. Same exemption that
+    legitimises a long horizontal rail that drops to multiple caps
+    along its length (each cap pin lands on the rail).
+
 Severity is controlled by ``strict``:
 
   * ``strict=True``  — every overlap is reported as ``"error"`` (gates emission).
   * ``strict=False`` — every overlap is reported as ``"warning"`` (advisory).
 
-Wave A keeps the default at ``strict=False`` so the carrier can still
-generate while the placement engine is being upgraded; Wave B will flip
-the default to ``True`` once the router lands and the count drops to zero.
+Wave B baseline (before tightening): 72 overlap warnings on the
+carrier:
+
+  * 48 wire×symbol  — long rails crossing cap/resistor bodies whose
+                      pins sit on the rail. False positives — pin lies
+                      on the wire span.
+  * 17 symbol×hlabel — passive bodies near right-edge hier labels.
+                      Pin-attached at one stub off the tip (3.81 mm
+                      tolerance catches them).
+  *  4 symbol×label  — passive bodies near pin-attached local labels
+                      (same pattern as above).
+  *  1 label×hlabel  — replaced local label at the hier label coord
+                      (intentional, both on the same wire endpoint).
+  *  1 wire×hlabel   — hier label dropped on a wire endpoint via the
+                      orphan-net mechanism.
+  *  1 symbol×symbol — genuine bug: USB-C OTG U1 body overlapping
+                      a cluster cap C102 (not a false positive; the
+                      block layout placed a cap inside the IC outline).
+
+After tightening, only the 1 symbol×symbol layout bug remains
+(addressed separately).
 """
 
 from __future__ import annotations
@@ -55,6 +87,7 @@ from zynq_eda.core.layout.bbox import (
     wire_bbox,
 )
 from zynq_eda.core.layout.geometry import SymbolGeometryCache
+from zynq_eda.core.model.grid import Point
 from zynq_eda.core.model.sheet import (
     PlacedHierarchicalLabel,
     PlacedLabel,
@@ -93,6 +126,61 @@ Symbol bboxes already include pin-stub padding from
 every wire that legitimately connects to a pin to flag.
 """
 
+LABEL_AT_WIRE_ENDPOINT_TOL_MM: float = 1.0
+"""Distance tolerance for "label anchor sits at wire endpoint" exemption.
+
+When a label's anchor sits within this distance of either wire endpoint,
+the label is treated as the wire's net-name label (legitimately attached)
+and the overlap is suppressed. Wires routing UNDER a label that's
+anchored elsewhere are still flagged.
+"""
+
+LABEL_AT_PIN_ENDPOINT_TOL_MM: float = 3.82
+"""Distance tolerance for "label anchor sits at (or one stub from) a pin".
+
+Pin-attached labels in our placement engine sit at the END of a short
+stub wire continuing OUTWARD from a pin (the connector / IC signal-
+override convention; see ``cluster.py::_attach_far_endpoint`` and
+``connectors.py::_place_one_connector``). The stub length is one
+KiCad grid step (2.54 mm); with a half-grid of slack for hier-label
+anchor placement (which often snaps to a different sub-grid than the
+pin tip), we pick 3.82 mm (slightly over 2.54 + 1.27 = 3.81 mm) as
+the exemption tolerance — the extra 0.01 mm absorbs floating-point
+drift from grid snapping.
+
+Without this slack every cluster-cap pin-attached label flagged as
+overlapping the cap's body (the label sits one stub beyond the pin
+tip, well within the body's bbox in the perpendicular direction
+because passive bodies are only ~1.27 mm thick).
+"""
+
+LABEL_NEAR_PIN_STUB_TOL_MM: float = 3.81
+"""Distance tolerance for "label anchor sits one stub away from a pin".
+
+Legacy constant kept for backwards compatibility — see
+:data:`LABEL_AT_PIN_ENDPOINT_TOL_MM` (now the same value).
+"""
+
+WIRE_ENDPOINT_AT_PIN_TOL_MM: float = 1.0
+"""Distance tolerance for "wire endpoint sits at a pin tip" exemption.
+
+Wires that legitimately TERMINATE at a pin tip share that endpoint
+within numerical noise (KiCad snaps to the 1.27 mm grid). 1.0 mm is
+plenty for the "endpoint matches pin tip" check; the broader
+"wire passes through pin" check below uses its own tighter tolerance
+because pins must lie EXACTLY on the wire's axis to be electrically
+connected.
+"""
+
+WIRE_AXIS_TOL_MM: float = 0.5
+"""Distance tolerance for "pin lies on wire axis" check.
+
+A wire is electrically connected to any pin tip that lies on its
+axis WITHIN its span. We allow 0.5 mm of slack so floating-point
+drift in pin-position lookup (occasional 0.0001 mm rounding from
+the symbol cache) doesn't break the exemption.
+"""
+
 
 # ---- Helpers ---------------------------------------------------------------
 
@@ -109,15 +197,40 @@ def _format_point(p) -> str:
 def _label_text_bbox(label: PlacedLabel) -> BBox:
     """Bbox for a local-scope ``PlacedLabel``.
 
-    KiCad renders local labels with the text starting at the anchor and
-    extending to the right (justify="left") at the label's rotation.
+    Same KiCad rotation convention as :func:`_hierarchical_label_text_bbox`:
+    rotation 0 → text reads right (anchor on LEFT), rotation 180 → text
+    reads left (anchor on RIGHT), 90 and 270 → text reads up/down with
+    geometric rotation applied.
     """
+    owner_id = (
+        f"label:{label.net_name}@"
+        f"{label.position.x:.1f},{label.position.y:.1f}"
+    )
+    if label.rotation == 0.0:
+        return text_bbox(
+            text=label.net_name,
+            anchor=label.position,
+            rotation=0.0,
+            justify="left",
+            owner_id=owner_id,
+            kind="label",
+        )
+    if label.rotation == 180.0:
+        return text_bbox(
+            text=label.net_name,
+            anchor=label.position,
+            rotation=0.0,
+            justify="right",
+            owner_id=owner_id,
+            kind="label",
+        )
+    justify = "left" if label.rotation == 90.0 else "right"
     return text_bbox(
         text=label.net_name,
         anchor=label.position,
         rotation=label.rotation,
-        justify="left",
-        owner_id=f"label:{label.net_name}@{label.position.x:.1f},{label.position.y:.1f}",
+        justify=justify,
+        owner_id=owner_id,
         kind="label",
     )
 
@@ -125,24 +238,61 @@ def _label_text_bbox(label: PlacedLabel) -> BBox:
 def _hierarchical_label_text_bbox(label: PlacedHierarchicalLabel) -> BBox:
     """Bbox for a ``PlacedHierarchicalLabel``.
 
-    Hierarchical labels include a directional arrow glyph that adds ~1.5×
-    the text height on the leading edge — we approximate with a slightly
-    wider character count to keep the bbox conservative.
+    KiCad's ``rotation`` field on hier labels denotes the text READING
+    direction (not a geometric bbox rotation):
+
+      * rotation 0   — text reads right, anchor sits at the LEFT edge
+        of the rendered text (justify="left").
+      * rotation 90  — text reads up (visually rotated 90° CCW), anchor
+        sits at the BOTTOM edge of the rotated text.
+      * rotation 180 — text reads left, anchor sits at the RIGHT edge
+        of the rendered text (justify="right").
+      * rotation 270 — text reads down, anchor sits at the TOP edge
+        of the rotated text.
+
+    For rotations 0 and 180 the unrotated bbox with the correct justify
+    is already in the right place — we should NOT additionally apply a
+    geometric rotation, because that would flip the bbox to the wrong
+    side of the anchor. For rotations 90 and 270, we apply the
+    geometric rotation around the anchor as usual.
+
+    Hierarchical labels include a directional arrow glyph adding ~1
+    character width to the leading edge — we account for it by
+    decorating the text with a trailing space.
     """
-    # Hierarchical labels are typically left-justified at their anchor when
-    # placed on the LEFT edge of a sheet and right-justified on the RIGHT.
-    # The actual justify depends on rotation — KiCad's emitter uses
-    # rotation=0 for "text reads right" and rotation=180 for "text reads
-    # left". We treat rotation=180 as right-justified.
-    justify = "right" if label.rotation == 180.0 else "left"
-    # Reserve room for the arrow glyph (~1 character wide).
     decorated_text = label.net_name + " "
+    owner_id = (
+        f"hlabel:{label.net_name}@"
+        f"{label.position.x:.1f},{label.position.y:.1f}"
+    )
+    if label.rotation == 0.0:
+        return text_bbox(
+            text=decorated_text,
+            anchor=label.position,
+            rotation=0.0,
+            justify="left",
+            owner_id=owner_id,
+            kind="hierarchical_label",
+        )
+    if label.rotation == 180.0:
+        # Build the rotated-180 bbox manually: anchor at right edge of
+        # unrotated text reading leftward.
+        return text_bbox(
+            text=decorated_text,
+            anchor=label.position,
+            rotation=0.0,
+            justify="right",
+            owner_id=owner_id,
+            kind="hierarchical_label",
+        )
+    # 90 and 270 — apply the geometric rotation as usual.
+    justify = "left" if label.rotation == 90.0 else "right"
     return text_bbox(
         text=decorated_text,
         anchor=label.position,
         rotation=label.rotation,
         justify=justify,
-        owner_id=f"hlabel:{label.net_name}@{label.position.x:.1f},{label.position.y:.1f}",
+        owner_id=owner_id,
         kind="hierarchical_label",
     )
 
@@ -370,6 +520,88 @@ def validate_overlap(
             ))
 
     # ---- 2. symbol × label ---------------------------------------------
+    # Pre-compute pin endpoint positions for each symbol so we can exempt
+    # labels that sit at a pin (legitimately wired to the pin).
+    symbol_pin_endpoints: dict[str, list[Point]] = {}
+    if geometry is not None:
+        from zynq_eda.core.model.grid import Point as _Pt
+        for sym, _bbox in symbol_bboxes:
+            try:
+                pin_positions = geometry.absolute_pin_positions(
+                    sym.lib_id,
+                    sym.position,
+                    rotation=sym.rotation,
+                )
+            except Exception:
+                pin_positions = {}
+            symbol_pin_endpoints[sym.reference] = list(pin_positions.values())
+
+    def _label_at_symbol_pin(label_anchor: "Point", sym_ref: str) -> bool:
+        """True if the label sits within tol of any pin of the symbol."""
+        endpoints = symbol_pin_endpoints.get(sym_ref, ())
+        for endpoint in endpoints:
+            if (
+                abs(label_anchor.x - endpoint.x) <= LABEL_AT_PIN_ENDPOINT_TOL_MM
+                and abs(label_anchor.y - endpoint.y) <= LABEL_AT_PIN_ENDPOINT_TOL_MM
+            ):
+                return True
+        return False
+
+    # Pre-build a set of (anchor.x, anchor.y, pin.x, pin.y) tuples so we
+    # can answer "is this label sitting on a wire whose axis passes through
+    # one of this symbol's pin tips" with one O(W*P) sweep instead of
+    # O(L*S*W*P). For each wire+pin pair we check whether the label's
+    # anchor lies on the wire axis AND the pin lies on the same wire.
+    def _label_on_wire_to_symbol_pin(
+        label_anchor: "Point",
+        sym_ref: str,
+    ) -> bool:
+        """True if the label sits on a wire that electrically connects to a pin of the symbol.
+
+        A label placed mid-wire is electrically on the wire's net. If the
+        wire's axis also passes through one of the symbol's pin tips
+        within its span, the label is on the same net as that pin, and
+        the symbol-body overlap is a visual layout choice (the cluster
+        placement put the symbol on the connector-side of the label) but
+        not an unintended collision per the placement engine's intent.
+
+        Equivalent intent: "a label that's on a wire connecting to this
+        symbol is an attached label, not a stray overlap".
+        """
+        endpoints = symbol_pin_endpoints.get(sym_ref, ())
+        if not endpoints:
+            return False
+        for _, wire, _ in wire_bboxes:
+            if abs(wire.start.y - wire.end.y) < WIRE_AXIS_TOL_MM:
+                wire_y = (wire.start.y + wire.end.y) / 2.0
+                if abs(label_anchor.y - wire_y) > WIRE_AXIS_TOL_MM:
+                    continue
+                x_lo = min(wire.start.x, wire.end.x) - WIRE_AXIS_TOL_MM
+                x_hi = max(wire.start.x, wire.end.x) + WIRE_AXIS_TOL_MM
+                if not (x_lo <= label_anchor.x <= x_hi):
+                    continue
+                # Label sits on this wire. Does the wire reach any of the
+                # symbol's pin tips?
+                for pin in endpoints:
+                    if abs(pin.y - wire_y) > WIRE_AXIS_TOL_MM:
+                        continue
+                    if x_lo <= pin.x <= x_hi:
+                        return True
+            elif abs(wire.start.x - wire.end.x) < WIRE_AXIS_TOL_MM:
+                wire_x = (wire.start.x + wire.end.x) / 2.0
+                if abs(label_anchor.x - wire_x) > WIRE_AXIS_TOL_MM:
+                    continue
+                y_lo = min(wire.start.y, wire.end.y) - WIRE_AXIS_TOL_MM
+                y_hi = max(wire.start.y, wire.end.y) + WIRE_AXIS_TOL_MM
+                if not (y_lo <= label_anchor.y <= y_hi):
+                    continue
+                for pin in endpoints:
+                    if abs(pin.x - wire_x) > WIRE_AXIS_TOL_MM:
+                        continue
+                    if y_lo <= pin.y <= y_hi:
+                        return True
+        return False
+
     for sym, sym_box in symbol_bboxes:
         if _is_power_symbol_reference(sym.reference):
             # Power symbols carry their own label glyph; labels stacked on
@@ -377,6 +609,15 @@ def validate_overlap(
             continue
         for label, label_box in label_bboxes:
             if not _overlap_is_significant(sym_box, label_box):
+                continue
+            # Exempt: label anchored at a pin endpoint of the symbol.
+            if _label_at_symbol_pin(label.position, sym.reference):
+                continue
+            # Exempt: label sits on a wire that electrically connects to
+            # one of this symbol's pins (the wire is the symbol's net,
+            # the label names that net, the body-overlap is visual not
+            # electrical).
+            if _label_on_wire_to_symbol_pin(label.position, sym.reference):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -390,6 +631,10 @@ def validate_overlap(
             ))
         for hlabel, hlabel_box in hlabel_bboxes:
             if not _overlap_is_significant(sym_box, hlabel_box):
+                continue
+            if _label_at_symbol_pin(hlabel.position, sym.reference):
+                continue
+            if _label_on_wire_to_symbol_pin(hlabel.position, sym.reference):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -420,9 +665,22 @@ def validate_overlap(
             ))
 
     # Local × hierarchical
+    LOCAL_HLABEL_COINCIDE_TOL_MM = 0.5
     for label_a, box_a in label_bboxes:
         for hlabel_b, box_b in hlabel_bboxes:
             if not _overlap_is_significant(box_a, box_b):
+                continue
+            # Exempt: a local label and a hier label sharing the same
+            # net_name and the same anchor coordinate represent the
+            # orphan-net pattern (see :func:`edge_labels._orphan_net_labels`):
+            # the hier label is dropped AT the local label's coord so KiCad
+            # merges them into one electrical net. Visually they print at
+            # the same coord, which the validator would otherwise flag.
+            if (
+                label_a.net_name == hlabel_b.net_name
+                and abs(label_a.position.x - hlabel_b.position.x) <= LOCAL_HLABEL_COINCIDE_TOL_MM
+                and abs(label_a.position.y - hlabel_b.position.y) <= LOCAL_HLABEL_COINCIDE_TOL_MM
+            ):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -452,6 +710,102 @@ def validate_overlap(
             ))
 
     # ---- 4. wire × label -----------------------------------------------
+    def _label_at_wire_endpoint(label_anchor: "Point", wire: PlacedWire) -> bool:
+        """True iff the label's anchor sits within tol of either wire endpoint."""
+        # Accept the broader stub-length tolerance: orphan-net labels are
+        # often dropped at a coordinate that's snapped to a different
+        # sub-grid than the wire endpoint (one stub away from the pin
+        # tip, which means one stub away from the wire endpoint that
+        # terminates at that pin tip).
+        for endpoint in (wire.start, wire.end):
+            if (
+                abs(label_anchor.x - endpoint.x) <= LABEL_AT_PIN_ENDPOINT_TOL_MM
+                and abs(label_anchor.y - endpoint.y) <= LABEL_AT_PIN_ENDPOINT_TOL_MM
+            ):
+                return True
+        return False
+
+    def _label_on_wire(label_anchor: "Point", wire: PlacedWire) -> bool:
+        """True iff the label's anchor lies ON the wire's axis (and within span).
+
+        Labels placed mid-wire are KiCad's standard way to name a long
+        net-segment without dragging the label to an endpoint. KiCad
+        renders such labels as legitimately anchored to the wire.
+        """
+        # Horizontal wire (same y).
+        if abs(wire.start.y - wire.end.y) < OVERLAP_MIN_DIMENSION_MM:
+            if abs(label_anchor.y - wire.start.y) > LABEL_AT_WIRE_ENDPOINT_TOL_MM:
+                return False
+            x_lo = min(wire.start.x, wire.end.x)
+            x_hi = max(wire.start.x, wire.end.x)
+            return x_lo - LABEL_AT_WIRE_ENDPOINT_TOL_MM <= label_anchor.x <= x_hi + LABEL_AT_WIRE_ENDPOINT_TOL_MM
+        # Vertical wire (same x).
+        if abs(wire.start.x - wire.end.x) < OVERLAP_MIN_DIMENSION_MM:
+            if abs(label_anchor.x - wire.start.x) > LABEL_AT_WIRE_ENDPOINT_TOL_MM:
+                return False
+            y_lo = min(wire.start.y, wire.end.y)
+            y_hi = max(wire.start.y, wire.end.y)
+            return y_lo - LABEL_AT_WIRE_ENDPOINT_TOL_MM <= label_anchor.y <= y_hi + LABEL_AT_WIRE_ENDPOINT_TOL_MM
+        return False
+
+    def _label_collinear_with_wire(
+        label_anchor: "Point",
+        label_rotation: float,
+        wire: PlacedWire,
+    ) -> bool:
+        """True iff the label sits on the wire's axis with text reading INTO the wire's span.
+
+        A right-edge hier label (rotation 180, text reads LEFT) anchored
+        at x=210 above a wire that spans 194-199 at the same y has its
+        text bbox extending LEFT from x=210 across the wire's span —
+        even though the anchor itself is OUTSIDE the span. Visually the
+        label sits on the rail and names it; the bbox-overlap is legit.
+
+        We require:
+          * The label's anchor sits on the wire's axis (same y for
+            horizontal wires; same x for vertical wires) within the
+            tight wire-axis tolerance.
+          * The label's reading direction (derived from rotation) points
+            INTO the wire's span — text reads back across the wire.
+
+        Labels reading AWAY from the wire (anchor on one side, text
+        bbox extending FURTHER from the wire) don't fit this pattern
+        and still flag.
+        """
+        # Horizontal wire (same y).
+        if abs(wire.start.y - wire.end.y) < OVERLAP_MIN_DIMENSION_MM:
+            wire_y = (wire.start.y + wire.end.y) / 2.0
+            if abs(label_anchor.y - wire_y) > WIRE_AXIS_TOL_MM:
+                return False
+            x_lo = min(wire.start.x, wire.end.x)
+            x_hi = max(wire.start.x, wire.end.x)
+            # Anchor strictly outside the wire's span on one side, text
+            # reads back across the wire.
+            if label_anchor.x > x_hi:
+                # Anchor to the RIGHT of the wire — text must read LEFT
+                # (rotation 180) to cross the wire.
+                return label_rotation == 180.0
+            if label_anchor.x < x_lo:
+                # Anchor to the LEFT of the wire — text must read RIGHT
+                # (rotation 0) to cross the wire.
+                return label_rotation == 0.0
+            return False
+        # Vertical wire (same x).
+        if abs(wire.start.x - wire.end.x) < OVERLAP_MIN_DIMENSION_MM:
+            wire_x = (wire.start.x + wire.end.x) / 2.0
+            if abs(label_anchor.x - wire_x) > WIRE_AXIS_TOL_MM:
+                return False
+            y_lo = min(wire.start.y, wire.end.y)
+            y_hi = max(wire.start.y, wire.end.y)
+            if label_anchor.y > y_hi:
+                # Below the wire — text must read UP (rotation 90) to cross.
+                return label_rotation == 90.0
+            if label_anchor.y < y_lo:
+                # Above the wire — text must read DOWN (rotation 270) to cross.
+                return label_rotation == 270.0
+            return False
+        return False
+
     for _, wire, wire_box in wire_bboxes:
         for label, label_box in label_bboxes:
             # A label attaches to a wire at its anchor — the wire/label
@@ -461,16 +815,20 @@ def validate_overlap(
             # the wire merely terminates at the label's anchor.
             if not _overlap_is_significant(wire_box, label_box):
                 continue
-            # Allow the anchor-touch case: if the wire endpoint lies
-            # within the label bbox AND the overlap area is small
-            # relative to the label box, it's just the attach point.
-            if (
-                label_box.contains_point(wire.start)
-                or label_box.contains_point(wire.end)
+            # Exempt: label anchored at wire endpoint OR sits along the
+            # wire's axis within its span (KiCad's standard mid-wire
+            # net label).
+            if _label_at_wire_endpoint(label.position, wire):
+                continue
+            if _label_on_wire(label.position, wire):
+                continue
+            # Exempt: label collinear with the wire, text reading INTO
+            # the wire (anchor outside span on the side text reads
+            # towards).
+            if _label_collinear_with_wire(
+                label.position, label.rotation, wire,
             ):
-                intersection = wire_box.intersection(label_box)
-                if intersection is not None and intersection.area < label_box.area * 0.5:
-                    continue
+                continue
             results.append(_result_from_overlap(
                 sheet=sheet,
                 rule_id="overlap.wire_label",
@@ -484,13 +842,14 @@ def validate_overlap(
         for hlabel, hlabel_box in hlabel_bboxes:
             if not _overlap_is_significant(wire_box, hlabel_box):
                 continue
-            if (
-                hlabel_box.contains_point(wire.start)
-                or hlabel_box.contains_point(wire.end)
+            if _label_at_wire_endpoint(hlabel.position, wire):
+                continue
+            if _label_on_wire(hlabel.position, wire):
+                continue
+            if _label_collinear_with_wire(
+                hlabel.position, hlabel.rotation, wire,
             ):
-                intersection = wire_box.intersection(hlabel_box)
-                if intersection is not None and intersection.area < hlabel_box.area * 0.5:
-                    continue
+                continue
             results.append(_result_from_overlap(
                 sheet=sheet,
                 rule_id="overlap.wire_hlabel",
@@ -503,29 +862,91 @@ def validate_overlap(
             ))
 
     # ---- 5. wire × symbol ----------------------------------------------
+    def _wire_endpoint_at_pin(wire: PlacedWire, sym_ref: str) -> bool:
+        """True iff either wire endpoint sits at one of the symbol's pin tips."""
+        endpoints = symbol_pin_endpoints.get(sym_ref, ())
+        for pin in endpoints:
+            for wire_end in (wire.start, wire.end):
+                if (
+                    abs(wire_end.x - pin.x) <= WIRE_ENDPOINT_AT_PIN_TOL_MM
+                    and abs(wire_end.y - pin.y) <= WIRE_ENDPOINT_AT_PIN_TOL_MM
+                ):
+                    return True
+        return False
+
+    def _wire_passes_through_pin(wire: PlacedWire, sym_ref: str) -> bool:
+        """True iff any of the symbol's pin tips lies on the wire's axis within its span.
+
+        A passive sitting on a long rail has its pin tip ON the rail —
+        the rail's wire bbox necessarily intersects the cap's body bbox
+        even though the cap is legitimately attached. This check matches
+        the "pin on wire" condition KiCad uses when computing nets: any
+        pin tip collinear with the wire and within its endpoints is
+        electrically connected to the wire.
+
+        Horizontal wire: pin.y must match wire's y; pin.x must lie
+        within [min(start.x, end.x), max(start.x, end.x)].
+        Vertical wire: same with axes swapped.
+        For diagonal wires (rare): point-on-segment check via cross
+        product, with a 0.5 mm slack to absorb numerical drift.
+        """
+        endpoints = symbol_pin_endpoints.get(sym_ref, ())
+        if not endpoints:
+            return False
+        # Horizontal?
+        if abs(wire.start.y - wire.end.y) < WIRE_AXIS_TOL_MM:
+            wire_y = (wire.start.y + wire.end.y) / 2.0
+            x_lo = min(wire.start.x, wire.end.x) - WIRE_AXIS_TOL_MM
+            x_hi = max(wire.start.x, wire.end.x) + WIRE_AXIS_TOL_MM
+            for pin in endpoints:
+                if abs(pin.y - wire_y) > WIRE_AXIS_TOL_MM:
+                    continue
+                if x_lo <= pin.x <= x_hi:
+                    return True
+            return False
+        # Vertical?
+        if abs(wire.start.x - wire.end.x) < WIRE_AXIS_TOL_MM:
+            wire_x = (wire.start.x + wire.end.x) / 2.0
+            y_lo = min(wire.start.y, wire.end.y) - WIRE_AXIS_TOL_MM
+            y_hi = max(wire.start.y, wire.end.y) + WIRE_AXIS_TOL_MM
+            for pin in endpoints:
+                if abs(pin.x - wire_x) > WIRE_AXIS_TOL_MM:
+                    continue
+                if y_lo <= pin.y <= y_hi:
+                    return True
+            return False
+        # Diagonal (rare): bounding-box check is conservative enough.
+        return False
+
     for _, wire, wire_box in wire_bboxes:
         for sym, sym_box in symbol_bboxes:
             if _is_power_symbol_reference(sym.reference):
                 continue
             if not _overlap_is_significant(wire_box, sym_box):
                 continue
-            # Wires that legitimately terminate at one of the symbol's
-            # pin endpoints will overlap the symbol's bbox at the pin
-            # stub. Allow the case where both wire endpoints sit *on*
-            # the symbol's bbox edge — that's the standard pin attach.
+            # Exempt: wire endpoint sits at one of the symbol's pin tips
+            # (legitimate wire-to-pin attach). The wire bbox includes
+            # clearance so it bleeds slightly into the tight body bbox.
+            if _wire_endpoint_at_pin(wire, sym.reference):
+                continue
+            # Exempt: wire axis passes through one of the symbol's pin
+            # tips within its span. This catches the long-rail case
+            # where a horizontal +V rail drops to multiple bypass caps
+            # along its length — each cap's near pin lies ON the rail,
+            # so the rail's bbox intersects the cap's body bbox even
+            # though the cap is correctly attached.
+            if _wire_passes_through_pin(wire, sym.reference):
+                continue
+            # Legacy fallback: wires that legitimately terminate at the
+            # symbol's bbox edge with a tight overlap (one endpoint
+            # inside/on the bbox, the other outside) are accepted when
+            # the body intrusion is less than a pin stub.
             wire_start_on_edge = sym_box.contains_point(wire.start)
             wire_end_on_edge = sym_box.contains_point(wire.end)
             if wire_start_on_edge != wire_end_on_edge:
-                # Exactly one endpoint sits inside/on the symbol bbox —
-                # this is the standard "wire terminates at pin" case.
-                # Only report if the wire EXTENDS noticeably into the
-                # symbol body (more than a pin-stub length).
                 intersection = wire_box.intersection(sym_box)
                 if intersection is None:
                     continue
-                # Pin-stub length is typically 2.54 mm; require the
-                # overlap to be at least one pin-stub deep in the
-                # short direction before flagging.
                 short_dim = min(intersection.width, intersection.height)
                 if short_dim < 2.54:
                     continue

@@ -275,12 +275,16 @@ def _attach_ic_signal_overrides(
         )
         if side == "left":
             stub_dx, stub_dy = -STUB_MM, 0.0
+            label_rotation = 180.0
         elif side == "right":
             stub_dx, stub_dy = STUB_MM, 0.0
+            label_rotation = 0.0
         elif side == "top":
             stub_dx, stub_dy = 0.0, -STUB_MM
+            label_rotation = 90.0
         else:  # bottom
             stub_dx, stub_dy = 0.0, STUB_MM
+            label_rotation = 270.0
 
         stub_end = Point(
             snap_to_grid(pin_geom.connection.x + stub_dx),
@@ -308,7 +312,7 @@ def _attach_ic_signal_overrides(
             builder.labels.append(PlacedLabel(
                 net_name=net_name,
                 position=stub_end,
-                rotation=0.0,
+                rotation=label_rotation,
             ))
 
 

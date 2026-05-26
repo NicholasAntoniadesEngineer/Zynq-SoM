@@ -84,6 +84,7 @@ def place_external_nets(
         block=block,
         left_x=left_x,
         right_x=right_x,
+        paper_w=paper_w,
         seen_label_positions=seen_label_positions,
     )
 
@@ -349,6 +350,7 @@ def _orphan_net_labels(
     block: Block,
     left_x: float,
     right_x: float,
+    paper_w: float,
     seen_label_positions: set[tuple[float, float]],
 ) -> None:
     """Surface declared external_nets that have no hier label yet.
@@ -396,10 +398,12 @@ def _orphan_net_labels(
         if key in seen_label_positions:
             continue
         seen_label_positions.add(key)
-        # Rotation derived from declared net edge: 180 = text reads left
-        # of arrow (LEFT-edge convention), 0 = text reads right of arrow
-        # (RIGHT-edge convention). Always points the text OUTBOARD.
-        hier_rotation = 180.0 if net.edge == SheetEdge.LEFT else 0.0
+        # Inherit the local label's rotation — it was already chosen so
+        # the text reads OUTWARD from the host pin (so the bbox extends
+        # away from the host symbol body). Stamping the hier label with
+        # the same rotation keeps its text on the same side as the
+        # local label it's replacing.
+        hier_rotation = anchor_label.rotation
         builder.hierarchical_labels.append(PlacedHierarchicalLabel(
             net_name=net.name,
             position=anchor_label.position,
@@ -489,7 +493,10 @@ def _ground_label_only(
             if key in seen_label_positions:
                 continue
             seen_label_positions.add(key)
-            hier_rotation = 180.0 if ground_net.edge == SheetEdge.LEFT else 0.0
+            # Inherit the local label's rotation so the hier label text
+            # reads in the same outward direction (away from the host
+            # symbol body). See ``_orphan_net_labels`` for the rationale.
+            hier_rotation = anchor_label.rotation
             builder.hierarchical_labels.append(PlacedHierarchicalLabel(
                 net_name=ground_net.name,
                 position=anchor_label.position,
