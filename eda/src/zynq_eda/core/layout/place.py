@@ -479,6 +479,7 @@ def place_block(
         block=block,
         ic_pin_geometries=ic_pin_geometries,
         ic_anchors=ic_anchors,
+        geometry_cache=geometry_cache,
     )
 
     # Per-IC signal-override stubs + no-connect markers run AFTER edge-label

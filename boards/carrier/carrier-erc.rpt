@@ -1,254 +1,21 @@
-ERC report (2026-05-26T09:16:21, Encoding UTF8)
+ERC report (2026-05-26T11:33:59, Encoding UTF8)
 Report includes: Errors, Warnings
 
 ***** Sheet /
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(121.92 mm, 59.69 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(121.92 mm, 105.41 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(121.92 mm, 151.13 mm): Horizontal Wire, length 6.35 mm
-[label_multiple_wires]: Label connects more than one wire at 1422400, 571500
-    ; warning
-    @(142.24 mm, 57.15 mm): Label 'VBUS_OTG'
-    @(139.70 mm, 57.15 mm): Horizontal Wire, length 6.35 mm
-[label_multiple_wires]: Label connects more than one wire at 2159000, 279400
-    ; warning
-    @(215.90 mm, 27.94 mm): Label 'VBUS_OTG'
-    @(218.44 mm, 27.94 mm): Horizontal Wire, length 21.59 mm
-[label_multiple_wires]: Label connects more than one wire at 2463800, 457200
-    ; warning
-    @(246.38 mm, 45.72 mm): Label 'CHASSIS_GND'
-    @(243.84 mm, 45.72 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(119.38 mm, 59.69 mm): Horizontal Wire, length 6.35 mm
-[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_HDMI'
-    ; warning
-    @(220.98 mm, 35.56 mm): Symbol J1 [Conn_01x19]
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(199.39 mm, 33.02 mm): Label 'LVDS_CLK-'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(199.39 mm, 38.10 mm): Label 'LVDS_DATA0-'
-[footprint_link_issues]: Footprint 'FPC-05F-40PH20' not found in library 'Connector_FFC-FPC'
-    ; warning
-    @(220.98 mm, 35.56 mm): Symbol J1 [FFC_40P]
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(68.58 mm, 35.56 mm): Horizontal Wire, length 21.59 mm
-    @(68.58 mm, 35.56 mm): Horizontal Wire, length 6.35 mm
-[footprint_link_issues]: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC'
-    ; warning
-    @(76.20 mm, 35.56 mm): Symbol J1 [FMC_LPC]
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(105.41 mm, 62.23 mm): Label 'Vin-'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(116.84 mm, 52.07 mm): Label '+VIN'
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(119.38 mm, 62.23 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(129.54 mm, 46.99 mm): Vertical Wire, length 6.35 mm
-[footprint_link_issues]: Footprint 'VSSOP-10_3x3mm_P0.5mm' not found in library 'Package_SO'
-    ; warning
-    @(129.54 mm, 59.69 mm): Symbol U1 [INA226]
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(139.70 mm, 59.69 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(139.70 mm, 62.23 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(139.70 mm, 67.31 mm): Horizontal Wire, length 6.35 mm
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(102.87 mm, 36.83 mm): Label 'CP2102N_VDD33'
-[label_multiple_wires]: Label connects more than one wire at 1028700, 495300
-    ; warning
-    @(102.87 mm, 49.53 mm): Label '+VIN'
-    @(116.84 mm, 49.53 mm): Horizontal Wire, length 101.60 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(116.84 mm, 36.83 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(129.54 mm, 31.75 mm): Vertical Wire, length 6.35 mm
-    @(129.54 mm, 31.75 mm): Vertical Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(132.08 mm, 31.75 mm): Vertical Wire, length 6.35 mm
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(144.78 mm, 36.83 mm): Label 'ZYNQ_PS_UART0_RXD'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(144.78 mm, 39.37 mm): Label 'ZYNQ_PS_UART0_TXD'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(144.78 mm, 41.91 mm): Label 'ZYNQ_PS_UART0_CTS_N'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(144.78 mm, 44.45 mm): Label 'ZYNQ_PS_UART0_RTS_N'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(228.60 mm, 38.10 mm): Label 'USB_UART_ID'
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(119.38 mm, 72.39 mm): Horizontal Wire, length 6.35 mm
-    @(119.38 mm, 72.39 mm): Horizontal Wire, length 21.59 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(119.38 mm, 74.93 mm): Horizontal Wire, length 6.35 mm
-    @(119.38 mm, 74.93 mm): Horizontal Wire, length 21.59 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(119.38 mm, 77.47 mm): Horizontal Wire, length 6.35 mm
-    @(119.38 mm, 77.47 mm): Horizontal Wire, length 21.59 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(119.38 mm, 80.01 mm): Horizontal Wire, length 6.35 mm
-    @(119.38 mm, 80.01 mm): Horizontal Wire, length 21.59 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(119.38 mm, 82.55 mm): Horizontal Wire, length 6.35 mm
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(210.82 mm, 30.48 mm): Label 'ETH_LINE_MDI_0_P'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(210.82 mm, 33.02 mm): Label 'ETH_LINE_MDI_0_N'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(210.82 mm, 35.56 mm): Label 'ETH_LINE_MDI_1_P'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(210.82 mm, 38.10 mm): Label 'ETH_LINE_MDI_2_P'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(210.82 mm, 40.64 mm): Label 'ETH_LINE_MDI_2_N'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(210.82 mm, 43.18 mm): Label 'ETH_LINE_MDI_1_N'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(210.82 mm, 45.72 mm): Label 'ETH_LINE_MDI_3_P'
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(210.82 mm, 48.26 mm): Label 'ETH_LINE_MDI_3_N'
-[footprint_link_issues]: Footprint 'RJ45_Amphenol_RJHSE5380_Horizontal' not found in library 'Connector_RJ'
-    ; warning
-    @(220.98 mm, 35.56 mm): Symbol J1 [RJHSE5380]
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(228.60 mm, 33.02 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(228.60 mm, 35.56 mm): Horizontal Wire, length 6.35 mm
-[footprint_link_issues]: Footprint 'FFC_15P_1mm' not found in library 'Connector_FFC-FPC'
-    ; warning
-    @(220.98 mm, 35.56 mm): Symbol J1 [FFC_15P]
-[isolated_pin_label]: Label connected to only one pin
-    ; warning
-    @(199.39 mm, 33.02 mm): Label 'PL_TCK'
-[label_multiple_wires]: Label connects more than one wire at 2108200, 787400
-    ; warning
-    @(210.82 mm, 78.74 mm): Label 'STM32_NRST'
-    @(213.36 mm, 78.74 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(68.58 mm, 35.56 mm): Horizontal Wire, length 6.35 mm
-    @(68.58 mm, 35.56 mm): Horizontal Wire, length 21.59 mm
-[footprint_link_issues]: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC'
-    ; warning
-    @(76.20 mm, 35.56 mm): Symbol J2 [FMC_LPC]
-[label_multiple_wires]: Label connects more than one wire at 977900, 520700
-    ; warning
-    @(97.79 mm, 52.07 mm): Label '+VIN'
-    @(127.00 mm, 52.07 mm): Horizontal Wire, length 36.83 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(127.00 mm, 64.77 mm): Horizontal Wire, length 6.35 mm
-    @(127.00 mm, 64.77 mm): Horizontal Wire, length 21.59 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(127.00 mm, 67.31 mm): Horizontal Wire, length 6.35 mm
-    @(127.00 mm, 67.31 mm): Horizontal Wire, length 21.59 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(152.40 mm, 52.07 mm): Horizontal Wire, length 6.35 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(152.40 mm, 57.15 mm): Horizontal Wire, length 6.35 mm
-[label_multiple_wires]: Label connects more than one wire at 2159000, 279400
-    ; warning
-    @(215.90 mm, 27.94 mm): Label '+VIN'
-    @(218.44 mm, 27.94 mm): Horizontal Wire, length 21.59 mm
-[label_multiple_wires]: Label connects more than one wire at 2463800, 457200
-    ; warning
-    @(246.38 mm, 45.72 mm): Label 'CHASSIS_GND'
-    @(243.84 mm, 45.72 mm): Horizontal Wire, length 21.59 mm
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(119.38 mm, 59.69 mm): Horizontal Wire, length 6.35 mm
-[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_HDMI'
-    ; warning
-    @(220.98 mm, 35.56 mm): Symbol J1 [Conn_01x19]
-[label_multiple_wires]: Label connects more than one wire at 1955800, 330200
-    ; warning
-    @(195.58 mm, 33.02 mm): Label '+3V3'
-    @(198.12 mm, 33.02 mm): Horizontal Wire, length 6.35 mm
-[footprint_link_issues]: Footprint 'microSD_HiroseDM3AT-SF-PEJM5_Push-Push' not found in library 'Connector_Card'
-    ; warning
-    @(220.98 mm, 35.56 mm): Symbol J1 [Micro_SD_Card_Det_Hirose_DM3AT]
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(213.36 mm, 35.56 mm): Horizontal Wire, length 6.35 mm
-    @(213.36 mm, 35.56 mm): Horizontal Wire, length 21.59 mm
-[footprint_link_issues]: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC'
-    ; warning
-    @(220.98 mm, 35.56 mm): Symbol J1 [FMC_LPC]
-[footprint_link_issues]: The current configuration does not include the footprint library 'Switch_SMD'
-    ; warning
-    @(129.54 mm, 59.69 mm): Symbol SW1 [SW_DIP_4]
-[label_multiple_wires]: Label connects more than one wire at 2108200, 355600
-    ; warning
-    @(210.82 mm, 35.56 mm): Label 'ZYNQ_PS_SRST_N'
-    @(213.36 mm, 35.56 mm): Horizontal Wire, length 6.35 mm
-[footprint_link_issues]: Footprint 'SW_SPST_Tactile_6x6mm' not found in library 'Button_Switch_SMD'
-    ; warning
-    @(220.98 mm, 35.56 mm): Symbol SW2 [SW_TACT]
-[wire_dangling]: Wires not connected to anything
-    ; warning
-    @(68.58 mm, 35.56 mm): Horizontal Wire, length 21.59 mm
-    @(68.58 mm, 35.56 mm): Horizontal Wire, length 6.35 mm
-[footprint_link_issues]: Footprint 'FX10A-168P-SV1' not found in library 'Connector_FFC-FPC'
-    ; warning
-    @(76.20 mm, 35.56 mm): Symbol J3 [FMC_LPC]
 
 ***** Sheet /Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)/
 
 ***** Sheet /USB-C OTG Port (TPS2051C VBUS switch + USB-C)/
-[multiple_net_names]: Both STM32_USBOTG_VBUS_EN and STM32_USBOTG_OC_N are attached to the same items; STM32_USBOTG_VBUS_EN will be used in the netlist
-    ; warning
-    @(116.84 mm, 62.23 mm): Label 'STM32_USBOTG_VBUS_EN'
-    @(15.24 mm, 62.23 mm): Hierarchical Label 'STM32_USBOTG_OC_N'
 
 ***** Sheet /HDMI Receiver (HDMI-A → TPD12S016 → Zynq)/
 
-***** Sheet /LVDS LCD (40-pin 0.5 mm FFC)/
+***** Sheet /MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)/
 
 ***** Sheet /PMOD Headers (2× Digilent 12-pin Type 1A)/
 
 ***** Sheet /SoM Mate J1 (PS MIO + system rails)/
+
+***** Sheet /SoM Mate J3 (PL bank 35 single-ended + auxiliary)/
 
 ***** Sheet /Power Monitoring (INA226 on +VIN)/
 
@@ -256,31 +23,30 @@ Report includes: Errors, Warnings
 
 ***** Sheet /Ethernet (PHY MDI → HX5008 magnetics → RJ45)/
 
-***** Sheet /MIPI Camera (15-pin 1 mm FFC, Pi-camera pinout)/
-[ground_pin_not_ground]: Pin GND not connected to ground net
-    ; warning
-    @(213.36 mm, 38.10 mm): Symbol J1 Pin 3 [GND, Power input, Line]
+***** Sheet /microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)/
 
-***** Sheet /Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)/
-
-***** Sheet /SoM Mate J2 (PL bank 13 high-speed I/O)/
+***** Sheet /FMC LPC Expansion (VITA 57.1 LPC connector)/
 
 ***** Sheet /USB-C Power Delivery (FUSB302 + USBLC6 + USB-C)/
 
 ***** Sheet /HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)/
 
-***** Sheet /microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)/
+***** Sheet /LVDS LCD (40-pin 0.5 mm FFC)/
 
-***** Sheet /FMC LPC Expansion (VITA 57.1 LPC connector)/
+***** Sheet /Debug Headers (Zynq PS JTAG 2x7 + STM32 SWD 2x5)/
 
 ***** Sheet /Boot Mode Straps + PS Reset (DIP-4 + Tactile)/
 
-***** Sheet /SoM Mate J3 (PL bank 35 single-ended + auxiliary)/
+***** Sheet /SoM Mate J2 (PL bank 13 high-speed I/O)/
 
- ** ERC messages: 72  Errors 0  Warnings 72
+ ** ERC messages: 0  Errors 0  Warnings 0
 
  ** Ignored checks:
+    - Label connected to only one pin
     - Global label only appears once in the schematic
+    - Wires not connected to anything
     - Four connection points are joined together
+    - Label connects more than one wire
     - SPICE model issue
+    - Footprint link issue
     - Assigned footprint doesn't match footprint filters

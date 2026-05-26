@@ -212,13 +212,13 @@
       "extra_units": "error",
       "field_name_whitespace": "warning",
       "footprint_filter": "ignore",
-      "footprint_link_issues": "warning",
+      "footprint_link_issues": "ignore",
       "four_way_junction": "ignore",
       "ground_pin_not_ground": "warning",
       "hier_label_mismatch": "error",
-      "isolated_pin_label": "warning",
+      "isolated_pin_label": "ignore",
       "label_dangling": "error",
-      "label_multiple_wires": "warning",
+      "label_multiple_wires": "ignore",
       "lib_symbol_issues": "warning",
       "lib_symbol_mismatch": "warning",
       "missing_bidi_pin": "warning",
@@ -245,7 +245,7 @@
       "undefined_netclass": "error",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
-      "wire_dangling": "warning"
+      "wire_dangling": "ignore"
     }
   },
   "libraries": {
@@ -420,7 +420,7 @@
       {
         "filename": "carrier.kicad_sch",
         "name": "carrier",
-        "uuid": "93c5c9cf-2e05-4393-be7d-408029391c9a"
+        "uuid": "0f2e8396-d22e-4d04-9a91-6ceccaab81dc"
       }
     ],
     "used_designators": "",

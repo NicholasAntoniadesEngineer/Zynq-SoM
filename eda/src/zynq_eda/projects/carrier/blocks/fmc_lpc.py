@@ -114,14 +114,29 @@ def _fmc_lpc_pin_to_net():
         ("C36", "+VADJ"), ("C38", "+VADJ"), ("C40", "+VADJ"),
         ("D35", "+VADJ"), ("D37", "+VADJ"), ("D39", "+VADJ"),
     ))
-    # Grounds — VITA 57.1 mandates every other row is GND on the connector.
-    for gnd_pin in (
+    # Grounds — VITA 57.1 mandates the C/D/G/H rows carry GND between
+    # the LA-pair / power / mgmt assignments. The static GND candidate
+    # list below was populated from the published VITA 57.1 LPC pinout
+    # but originally double-claimed pins that also serve as LA-pair P/N
+    # (e.g. H7 = LA02_P, D8 = LA01_P, G10 = LA03_N, ...). KiCad ERC
+    # surfaces those as ``multiple_net_names`` warnings because the same
+    # physical pin ends up wired to two distinct hierarchical nets. We
+    # filter out any pin that already appears in the LA-pair / clock /
+    # management / power tables above, so GND is strictly disjoint.
+    claimed: set[str] = {pin for pin, _ in pairs}
+    gnd_candidates = (
         "C1", "C2", "C5", "C8", "C11", "C14", "C17", "C20", "C23", "C26", "C29", "C32",
         "D1", "D2", "D5", "D8", "D11", "D14", "D17", "D20", "D23", "D26", "D29",
         # G7 is LA00_N (pair partner of G6); not a GND pin per VITA 57.1.
         "G1", "G4", "G10", "G13", "G16", "G19", "G22", "G25", "G28", "G31", "G34", "G37",
         "H1", "H7", "H10", "H13", "H16", "H19", "H22", "H25", "H28", "H31", "H34", "H37", "H40",
-    ):
+    )
+    for gnd_pin in gnd_candidates:
+        if gnd_pin in claimed:
+            # Pin is already in the LA-pair / clock / mgmt / power list.
+            # Trust the more specific assignment; the spec puts the LA pin
+            # there, not GND.
+            continue
         pairs.append((gnd_pin, "GND"))
     return tuple(pairs)
 

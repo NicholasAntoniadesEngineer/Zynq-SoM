@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from zynq_eda.core.layout._builder import BlockLayoutBuilder, PinGeometryAbs
 from zynq_eda.core.layout._constants import INTERIOR_MARGIN_MM, POWER_SYMBOL_OFFSET_MM
+from zynq_eda.core.layout.geometry import SymbolGeometryCache
 from zynq_eda.core.model.block import Block, ExternalNet, IcInstance
 from zynq_eda.core.model.grid import Point, snap_to_grid
 from zynq_eda.core.model.interface import SheetEdge
@@ -29,6 +30,7 @@ def place_external_nets(
     block: Block,
     ic_pin_geometries: dict[str, dict[str, PinGeometryAbs]],
     ic_anchors: dict[str, Point],
+    geometry_cache: SymbolGeometryCache,
 ) -> set[tuple[str, str]]:
     """Place per-IC hierarchical labels + PWR_FLAGs.
 
@@ -48,6 +50,8 @@ def place_external_nets(
         block=block,
         declared_nets=declared_nets,
         ic_pin_geometries=ic_pin_geometries,
+        ic_anchors=ic_anchors,
+        geometry_cache=geometry_cache,
         left_x=left_x,
         right_x=right_x,
         seen_label_positions=seen_label_positions,
@@ -92,6 +96,8 @@ def _per_ic_pin_labels(
     block: Block,
     declared_nets: dict[str, ExternalNet],
     ic_pin_geometries: dict[str, dict[str, PinGeometryAbs]],
+    ic_anchors: dict[str, Point],
+    geometry_cache: SymbolGeometryCache,
     left_x: float,
     right_x: float,
     seen_label_positions: set[tuple[float, float]],
@@ -105,6 +111,17 @@ def _per_ic_pin_labels(
 
     for ic in block.ics:
         ic_geoms = ic_pin_geometries.get(ic.reference, {})
+
+        # Pre-compute the full pin map (every pin, not just the clustered
+        # ones) for cross-pin-crossing detection below. Keyed by pin number
+        # because that's what ``absolute_pin_positions`` returns.
+        try:
+            all_pin_positions = geometry_cache.absolute_pin_positions(
+                ic.lib_id,
+                ic_anchors[ic.reference],
+            )
+        except KeyError:
+            all_pin_positions = {}
 
         # Build the candidate list: (pin_name, target_net). Sources:
         # 1. Refcircuit + per-instance pin_net_overrides — the IC's explicit
@@ -135,13 +152,47 @@ def _per_ic_pin_labels(
                 # Pin's override doesn't match an external net — leave it
                 # for the signal-override pass to handle as a local label.
                 continue
-            if pin_role not in ic_geoms:
-                # Pin missing from the symbol (refcircuit name mismatch).
-                continue
+            if pin_role in ic_geoms:
+                pin_connection = ic_geoms[pin_role].connection
+            else:
+                # Pin has no external-part cluster, so it wasn't recorded in
+                # ``ic_geoms``. Resolve directly from the symbol library so
+                # signal-only override pins (e.g. TPS2051 EN) still get a
+                # hierarchical edge label when their target net is external.
+                # Without this, the pin's hier label gets created later by
+                # ``_orphan_net_labels`` at the local-label coord -- which
+                # may sit on a wire already carrying a different net and
+                # produce a ``multiple_net_names`` ERC warning.
+                try:
+                    pin_geom = geometry_cache.pin_geometry_by_name(
+                        ic.lib_id,
+                        ic_anchors[ic.reference],
+                        pin_role,
+                    )
+                except KeyError:
+                    # Pin missing from the symbol (refcircuit name mismatch).
+                    continue
+                pin_connection = pin_geom.connection
             net = declared_nets[net_name]
-            pin_connection = ic_geoms[pin_role].connection
             label_x = left_x if net.edge == SheetEdge.LEFT else right_x
-            label_position = Point(label_x, snap_to_grid(pin_connection.y))
+
+            # Cross-pin-crossing avoidance: if the straight horizontal wire
+            # from pin_connection to (label_x, pin_y) would pass through any
+            # OTHER pin on this IC at the same Y, that other pin's stub
+            # (placed later by ``_attach_ic_signal_overrides``) would land
+            # on the same wire and KiCad ERC reports ``multiple_net_names``.
+            # Detect the conflict and offset the wire's edge segment to a
+            # neighbouring Y so the two nets stay electrically distinct.
+            pin_y = snap_to_grid(pin_connection.y)
+            route_y = _routed_y_avoiding_pin_crossings(
+                pin_x=pin_connection.x,
+                pin_y=pin_y,
+                target_x=label_x,
+                all_pin_positions=all_pin_positions,
+                blocked_label_ys={y for (_x, y) in seen_label_positions},
+            )
+
+            label_position = Point(label_x, route_y)
             key = (label_position.x, label_position.y)
             if key in seen_label_positions:
                 # Two IC pins want the same edge label slot — leave the
@@ -156,13 +207,83 @@ def _per_ic_pin_labels(
                 direction=net.direction,
                 rotation=rotation,
             ))
-            builder.wires.append(PlacedWire(
-                start=pin_connection,
-                end=label_position,
-            ))
+            if route_y == pin_y:
+                # Straight horizontal wire (no crossing).
+                builder.wires.append(PlacedWire(
+                    start=pin_connection,
+                    end=label_position,
+                ))
+            else:
+                # Dogleg around the crossing pin: vertical from pin to
+                # routed Y, then horizontal to the sheet edge.
+                turn = Point(snap_to_grid(pin_connection.x), route_y)
+                builder.wires.append(PlacedWire(start=pin_connection, end=turn))
+                builder.wires.append(PlacedWire(start=turn, end=label_position))
             edge_labeled.add((ic.reference, pin_role))
 
     return edge_labeled
+
+
+def _routed_y_avoiding_pin_crossings(
+    *,
+    pin_x: float,
+    pin_y: float,
+    target_x: float,
+    all_pin_positions: dict[str, Point],
+    blocked_label_ys: set[float],
+) -> float:
+    """Pick a Y for the edge-bound segment that avoids crossing other pins.
+
+    Default is the pin's own Y (straight wire). If any OTHER pin of the
+    same IC sits at the pin's Y between ``pin_x`` and ``target_x`` (the
+    edge segment's X range), pick the nearest grid step above or below
+    that is free of pin crossings on that span. Falls back to ``pin_y``
+    if no clean slot exists within a small search window.
+
+    Snaps every candidate Y to the schematic grid so blocked-Y comparison
+    is exact (avoids float drift from ``pin_y + n * 2.54``).
+    """
+    GRID_MM = 2.54
+    MAX_OFFSET_STEPS = 4  # 10.16 mm of vertical room either way
+    EPS = 1e-3
+
+    x_lo, x_hi = min(pin_x, target_x), max(pin_x, target_x)
+
+    def pin_collides(y: float) -> bool:
+        for other in all_pin_positions.values():
+            if abs(other.y - y) > EPS:
+                continue
+            if abs(other.x - pin_x) < EPS and abs(other.y - pin_y) < EPS:
+                # Same pin — skip (the source we're routing from).
+                continue
+            if x_lo - EPS < other.x < x_hi + EPS:
+                return True
+        return False
+
+    def is_blocked(y: float) -> bool:
+        # Float-tolerant membership against the blocked set (the set's
+        # values come from a previous snap_to_grid pass, so direct == may
+        # still differ by a hair of ULP drift).
+        return any(abs(b - y) < EPS for b in blocked_label_ys)
+
+    pin_y_snapped = snap_to_grid(pin_y)
+    if not pin_collides(pin_y_snapped) and not is_blocked(pin_y_snapped):
+        return pin_y_snapped
+
+    # Search outward in increasing steps to find a clean Y. Prefer the
+    # smaller offset; tie-break with the +Y direction.
+    for step in range(1, MAX_OFFSET_STEPS + 1):
+        for sign in (1, -1):
+            candidate = snap_to_grid(pin_y_snapped + sign * step * GRID_MM)
+            if pin_collides(candidate):
+                continue
+            if is_blocked(candidate):
+                continue
+            return candidate
+
+    # Nothing clean within range — fall back to the pin's Y. Caller may
+    # still produce an ERC warning, but at least the layout is legal.
+    return pin_y_snapped
 
 
 def _input_pwr_flags(
