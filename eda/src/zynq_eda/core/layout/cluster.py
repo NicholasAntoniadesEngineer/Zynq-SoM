@@ -203,6 +203,7 @@ def _attach_far_endpoint(
     destination_net: str,
     passive_rotation: float,
     pin_side: str,
+    geometry_cache=None,
 ) -> None:
     """Connect a passive's far terminal to either a power symbol or a label.
 
@@ -232,7 +233,7 @@ def _attach_far_endpoint(
             "top": 90.0,
             "bottom": 270.0,
         }.get(pin_side, 0.0)
-        builder.labels.append(PlacedLabel(
+        builder.add_label(PlacedLabel(
             net_name=destination_net,
             position=far_point,
             rotation=label_rotation,
@@ -264,18 +265,18 @@ def _attach_far_endpoint(
 
     is_ground = "GND" in destination_net.upper() or destination_net.upper() == "CHASSIS_GND"
     if is_ground:
-        builder.wires.append(PlacedWire(start=far_point, end=symbol_position))
+        builder.add_wire(PlacedWire(start=far_point, end=symbol_position))
     else:
-        builder.wires.append(PlacedWire(start=symbol_position, end=far_point))
+        builder.add_wire(PlacedWire(start=symbol_position, end=far_point))
 
-    builder.symbols.append(PlacedSymbol(
+    builder.add_symbol(PlacedSymbol(
         lib_id=power_lib_id,
         reference=builder.next_ref("#PWR"),
         value=destination_net,
         position=symbol_position,
         footprint="",
         rotation=0.0,
-    ))
+    ), geometry=geometry_cache)
 
 
 def place_one_passive_for_pin(
@@ -287,6 +288,7 @@ def place_one_passive_for_pin(
     slot_index: int,
     ic_reference: str,
     horizontal_swarm_pitch_mm: float = HORIZONTAL_SWARM_PITCH_MM,
+    geometry_cache=None,
 ) -> None:
     """Place a single passive next to an IC pin and wire it up.
 
@@ -423,26 +425,45 @@ def place_one_passive_for_pin(
         far_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
 
     ref_prefix = passive_ref_prefix(external.part_token)
-    builder.symbols.append(PlacedSymbol(
+    passive_ref = builder.next_ref(ref_prefix)
+    builder.add_symbol(PlacedSymbol(
         lib_id=passive_lib_id(external.part_token),
-        reference=builder.next_ref(ref_prefix),
+        reference=passive_ref,
         value=passive_value(external.part_token),
         position=passive_anchor,
         footprint=passive_footprint(external.part_token),
         rotation=passive_rotation,
-    ))
+    ), geometry=geometry_cache)
 
     # For non-zero-swarm-slot top/bottom passives, the near pin is not on
-    # the IC pin's column — L-route to land cleanly without crossing other
-    # passives' far pins.
-    if pin_connection == near_point:
-        pass
-    elif pin_connection.x == near_point.x or pin_connection.y == near_point.y:
-        builder.wires.append(PlacedWire(start=pin_connection, end=near_point))
-    else:
-        corner = Point(pin_connection.x, near_point.y)
-        builder.wires.append(PlacedWire(start=pin_connection, end=corner))
-        builder.wires.append(PlacedWire(start=corner, end=near_point))
+    # the IC pin's column — route via the occupancy-aware router so the
+    # L-bend avoids crossing intermediate cap bodies that sit in a row
+    # at the same Y as the lateral segment.
+    if pin_connection != near_point:
+        if pin_connection.x == near_point.x or pin_connection.y == near_point.y:
+            # Direct H or V — still go through the router so it can
+            # detour if the path is blocked by another body.
+            from zynq_eda.core.route.router import route_orthogonal
+            segments = route_orthogonal(
+                pin_connection,
+                near_point,
+                builder.occupancy,
+                avoid_owners=frozenset({f"symbol:{ic_reference}", f"symbol:{passive_ref}"}),
+            )
+            for seg in segments:
+                builder.add_wire(seg)
+        else:
+            # Diagonal — route via router (will try direct, single-L,
+            # double-L variants in order).
+            from zynq_eda.core.route.router import route_orthogonal
+            segments = route_orthogonal(
+                pin_connection,
+                near_point,
+                builder.occupancy,
+                avoid_owners=frozenset({f"symbol:{ic_reference}", f"symbol:{passive_ref}"}),
+            )
+            for seg in segments:
+                builder.add_wire(seg)
 
     _attach_far_endpoint(
         builder,
@@ -450,6 +471,7 @@ def place_one_passive_for_pin(
         destination_net=resolved_destination,
         passive_rotation=passive_rotation,
         pin_side=side,
+        geometry_cache=geometry_cache,
     )
 
 
@@ -458,6 +480,7 @@ def cluster_ic_externals(
     *,
     ic,
     pin_geom_resolver,
+    geometry_cache=None,
 ) -> dict[str, "PinGeometryAbs"]:
     """Materialise every ``ExternalPart`` on ``ic.refcircuit``.
 
@@ -530,5 +553,6 @@ def cluster_ic_externals(
                 slot_index=slot_index,
                 ic_reference=ic.reference,
                 horizontal_swarm_pitch_mm=horizontal_pitch_mm,
+                geometry_cache=geometry_cache,
             )
     return pin_geom_map

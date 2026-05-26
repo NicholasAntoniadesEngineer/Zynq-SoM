@@ -22,6 +22,7 @@ from zynq_eda.core.model.sheet import (
     PlacedSymbol,
     PlacedWire,
 )
+from zynq_eda.core.route.router import route_orthogonal
 
 
 def place_external_nets(
@@ -124,6 +125,21 @@ def _per_ic_pin_labels(
         except KeyError:
             all_pin_positions = {}
 
+        # Compute the IC's body bbox y range so the dogleg avoidance
+        # avoids routing through the body itself.
+        try:
+            body_bbox = geometry_cache.bounding_box(
+                ic.lib_id,
+                rotation=0.0,
+            )
+            ic_anchor = ic_anchors[ic.reference]
+            ic_body_y_range = (
+                body_bbox.min_y + ic_anchor.y,
+                body_bbox.max_y + ic_anchor.y,
+            )
+        except Exception:
+            ic_body_y_range = None
+
         # Build the candidate list: (pin_name, target_net). Sources:
         # 1. Refcircuit + per-instance pin_net_overrides — the IC's explicit
         #    "this pin is on net X" declarations. Highest priority.
@@ -191,6 +207,7 @@ def _per_ic_pin_labels(
                 target_x=label_x,
                 all_pin_positions=all_pin_positions,
                 blocked_label_ys={y for (_x, y) in seen_label_positions},
+                ic_body_y_range=ic_body_y_range,
             )
 
             label_position = Point(label_x, route_y)
@@ -202,24 +219,41 @@ def _per_ic_pin_labels(
             seen_label_positions.add(key)
 
             rotation = 180.0 if net.edge == SheetEdge.LEFT else 0.0
-            builder.hierarchical_labels.append(PlacedHierarchicalLabel(
+            builder.add_hierarchical_label(PlacedHierarchicalLabel(
                 net_name=net_name,
                 position=label_position,
                 direction=net.direction,
                 rotation=rotation,
             ))
+            # Route from pin_connection to label_position, avoiding the
+            # IC's own body bbox (the wire is BY DESIGN attached to one
+            # of its pins, so the body overlap is expected and exempted).
+            # The router considers OTHER symbol bodies as obstacles.
+            ic_owner = f"symbol:{ic.reference}"
             if route_y == pin_y:
-                # Straight horizontal wire (no crossing).
-                builder.wires.append(PlacedWire(
-                    start=pin_connection,
-                    end=label_position,
-                ))
+                # Straight horizontal — pin_connection y equals
+                # label_position y. The router picks "direct" if clear,
+                # falls back to single-L / double-L if it has to detour
+                # around an obstacle.
+                segments = route_orthogonal(
+                    pin_connection,
+                    label_position,
+                    builder.occupancy,
+                    avoid_owners=frozenset({ic_owner}),
+                )
             else:
-                # Dogleg around the crossing pin: vertical from pin to
-                # routed Y, then horizontal to the sheet edge.
+                # Dogleg pre-computed Y: route through (pin.x, route_y)
+                # then horizontally to the label. We do the dogleg by
+                # hand so the pin-crossing-avoidance logic stays
+                # respected (the router only does collision avoidance,
+                # not pin-crossing detection).
                 turn = Point(snap_to_grid(pin_connection.x), route_y)
-                builder.wires.append(PlacedWire(start=pin_connection, end=turn))
-                builder.wires.append(PlacedWire(start=turn, end=label_position))
+                segments = [
+                    PlacedWire(start=pin_connection, end=turn),
+                    PlacedWire(start=turn, end=label_position),
+                ]
+            for seg in segments:
+                builder.add_wire(seg)
             edge_labeled.add((ic.reference, pin_role))
 
     return edge_labeled
@@ -232,6 +266,7 @@ def _routed_y_avoiding_pin_crossings(
     target_x: float,
     all_pin_positions: dict[str, Point],
     blocked_label_ys: set[float],
+    ic_body_y_range: tuple[float, float] | None = None,
 ) -> float:
     """Pick a Y for the edge-bound segment that avoids crossing other pins.
 
@@ -241,11 +276,18 @@ def _routed_y_avoiding_pin_crossings(
     that is free of pin crossings on that span. Falls back to ``pin_y``
     if no clean slot exists within a small search window.
 
+    When ``ic_body_y_range`` is supplied (``(min_y, max_y)`` of the IC
+    body bbox), candidate Ys INSIDE that range are also skipped — the
+    dogleg shouldn't route a wire through the body it's escaping from.
+    The body-Y exclusion only applies to candidates OTHER than ``pin_y``
+    (which by definition is inside the body's Y range and IS where the
+    pin sits — that's the legitimate path out).
+
     Snaps every candidate Y to the schematic grid so blocked-Y comparison
     is exact (avoids float drift from ``pin_y + n * 2.54``).
     """
     GRID_MM = 2.54
-    MAX_OFFSET_STEPS = 4  # 10.16 mm of vertical room either way
+    MAX_OFFSET_STEPS = 6  # 15.24 mm of vertical room either way
     EPS = 1e-3
 
     x_lo, x_hi = min(pin_x, target_x), max(pin_x, target_x)
@@ -267,6 +309,13 @@ def _routed_y_avoiding_pin_crossings(
         # still differ by a hair of ULP drift).
         return any(abs(b - y) < EPS for b in blocked_label_ys)
 
+    def y_inside_body(y: float) -> bool:
+        """True iff y sits STRICTLY inside the IC body's Y range."""
+        if ic_body_y_range is None:
+            return False
+        body_min_y, body_max_y = ic_body_y_range
+        return body_min_y + EPS < y < body_max_y - EPS
+
     pin_y_snapped = snap_to_grid(pin_y)
     if not pin_collides(pin_y_snapped) and not is_blocked(pin_y_snapped):
         return pin_y_snapped
@@ -279,6 +328,10 @@ def _routed_y_avoiding_pin_crossings(
             if pin_collides(candidate):
                 continue
             if is_blocked(candidate):
+                continue
+            if y_inside_body(candidate):
+                # Dogleg into the body is worse than the original
+                # collision — skip and search further.
                 continue
             return candidate
 
@@ -330,11 +383,11 @@ def _input_pwr_flags(
             snap_to_grid(anchor_label.position.x + flag_offset),
             anchor_label.position.y,
         )
-        builder.wires.append(PlacedWire(
+        builder.add_wire(PlacedWire(
             start=anchor_label.position,
             end=flag_position,
         ))
-        builder.symbols.append(PlacedSymbol(
+        builder.add_symbol(PlacedSymbol(
             lib_id="power:PWR_FLAG",
             reference=builder.next_ref("#FLG"),
             value=net.name,
@@ -404,7 +457,7 @@ def _orphan_net_labels(
         # the same rotation keeps its text on the same side as the
         # local label it's replacing.
         hier_rotation = anchor_label.rotation
-        builder.hierarchical_labels.append(PlacedHierarchicalLabel(
+        builder.add_hierarchical_label(PlacedHierarchicalLabel(
             net_name=net.name,
             position=anchor_label.position,
             direction=net.direction,
@@ -497,7 +550,7 @@ def _ground_label_only(
             # reads in the same outward direction (away from the host
             # symbol body). See ``_orphan_net_labels`` for the rationale.
             hier_rotation = anchor_label.rotation
-            builder.hierarchical_labels.append(PlacedHierarchicalLabel(
+            builder.add_hierarchical_label(PlacedHierarchicalLabel(
                 net_name=ground_net.name,
                 position=anchor_label.position,
                 direction=ground_net.direction,
@@ -545,7 +598,7 @@ def _ground_label_only(
                 continue
             seen_label_positions.add(key)
             rotation = 180.0 if ground_net.edge == SheetEdge.LEFT else 0.0
-            builder.hierarchical_labels.append(PlacedHierarchicalLabel(
+            builder.add_hierarchical_label(PlacedHierarchicalLabel(
                 net_name=ground_net.name,
                 position=anchor_sym.position,
                 direction=ground_net.direction,

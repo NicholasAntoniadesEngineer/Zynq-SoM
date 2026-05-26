@@ -153,7 +153,7 @@ def _place_one_connector(
 ) -> None:
     from zynq_eda.core.layout.cluster import cluster_ic_externals
 
-    builder.symbols.append(PlacedSymbol(
+    builder.add_symbol(PlacedSymbol(
         lib_id=connector.lib_id,
         reference=connector.reference,
         value=connector.refcircuit.part_mpn,
@@ -164,7 +164,7 @@ def _place_one_connector(
             ("LCSC", connector.refcircuit.lcsc),
             ("Datasheet", connector.refcircuit.datasheet_url),
         ),
-    ))
+    ), geometry=geometry_cache)
 
     # 1. Materialise the connector's datasheet-required passives (VBUS bulk
     #    caps, shield discharge resistor, sink Rd, etc.) via the same
@@ -185,6 +185,7 @@ def _place_one_connector(
         builder,
         ic=connector,
         pin_geom_resolver=_resolve_pin,
+        geometry_cache=geometry_cache,
     )
     placed_pin_names.update(pin_geoms.keys())
 
@@ -305,11 +306,11 @@ def _place_one_connector(
             )
             label_rotation = 270.0
 
-        builder.wires.append(PlacedWire(
+        builder.add_wire(PlacedWire(
             start=pin_geom.connection,
             end=stub_end,
         ))
-        builder.labels.append(PlacedLabel(
+        builder.add_label(PlacedLabel(
             net_name=net_name,
             position=stub_end,
             rotation=label_rotation,

@@ -57,9 +57,10 @@ def _place_ic_body(
     *,
     ic: IcInstance,
     ic_anchor: Point,
+    geometry_cache: SymbolGeometryCache | None = None,
 ) -> None:
     """Append the IC body's :class:`PlacedSymbol` to the builder."""
-    builder.symbols.append(PlacedSymbol(
+    builder.add_symbol(PlacedSymbol(
         lib_id=ic.lib_id,
         reference=ic.reference,
         value=ic.refcircuit.part_mpn,
@@ -70,7 +71,7 @@ def _place_ic_body(
             ("LCSC", ic.refcircuit.lcsc),
             ("Datasheet", ic.refcircuit.datasheet_url),
         ),
-    ))
+    ), geometry=geometry_cache)
 
 
 def _attach_ic_ground(
@@ -142,18 +143,18 @@ def _attach_ic_ground(
                 snap_to_grid(gnd_geom.connection.y + page_dy_dir * OFFSET),
             )
 
-        builder.wires.append(PlacedWire(
+        builder.add_wire(PlacedWire(
             start=gnd_geom.connection,
             end=gnd_symbol_pos,
         ))
-        builder.symbols.append(PlacedSymbol(
+        builder.add_symbol(PlacedSymbol(
             lib_id="power:GND",
             reference=builder.next_ref("#PWR"),
             value="GND",
             position=gnd_symbol_pos,
             footprint="",
             rotation=0.0,
-        ))
+        ), geometry=geometry_cache)
         if first_geom is None:
             first_geom = PinGeometryAbs(
                 anchor=gnd_geom.anchor,
@@ -290,7 +291,7 @@ def _attach_ic_signal_overrides(
             snap_to_grid(pin_geom.connection.x + stub_dx),
             snap_to_grid(pin_geom.connection.y + stub_dy),
         )
-        builder.wires.append(PlacedWire(
+        builder.add_wire(PlacedWire(
             start=pin_geom.connection,
             end=stub_end,
         ))
@@ -299,17 +300,17 @@ def _attach_ic_signal_overrides(
         if power_lib_id is not None:
             # Power symbol attached just outboard of the stub end.
             symbol_position = stub_end
-            builder.symbols.append(PlacedSymbol(
+            builder.add_symbol(PlacedSymbol(
                 lib_id=power_lib_id,
                 reference=builder.next_ref("#PWR"),
                 value=net_name,
                 position=symbol_position,
                 footprint="",
                 rotation=0.0,
-            ))
+            ), geometry=geometry_cache)
         else:
             from zynq_eda.core.model.sheet import PlacedLabel
-            builder.labels.append(PlacedLabel(
+            builder.add_label(PlacedLabel(
                 net_name=net_name,
                 position=stub_end,
                 rotation=label_rotation,
@@ -404,7 +405,7 @@ def _place_ic_with_passives(
     geometry_cache: SymbolGeometryCache,
 ) -> dict[str, PinGeometryAbs]:
     """Place the IC body, every external part, the GND attachment, and NCs."""
-    _place_ic_body(builder, ic=ic, ic_anchor=ic_anchor)
+    _place_ic_body(builder, ic=ic, ic_anchor=ic_anchor, geometry_cache=geometry_cache)
 
     def _resolve_pin(pin_name: str):
         try:
@@ -420,6 +421,7 @@ def _place_ic_with_passives(
         builder,
         ic=ic,
         pin_geom_resolver=_resolve_pin,
+        geometry_cache=geometry_cache,
     )
 
     gnd_geom = _attach_ic_ground(

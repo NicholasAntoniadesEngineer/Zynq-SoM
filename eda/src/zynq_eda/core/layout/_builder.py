@@ -10,6 +10,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from zynq_eda.core.layout.bbox import (
+    BBox,
+    placeholder_symbol_bbox,
+    symbol_bbox,
+    text_bbox,
+    wire_bbox,
+)
 from zynq_eda.core.layout.occupancy import Occupancy
 from zynq_eda.core.model.block import Block
 from zynq_eda.core.model.grid import Point
@@ -72,6 +79,62 @@ class BlockLayoutBuilder:
         index = self._ref_counters.setdefault(prefix, 100)
         self._ref_counters[prefix] = index + 1
         return f"{prefix}{index}"
+
+    # ---- Occupancy-registering helpers --------------------------------
+    # These methods keep the live spatial index in lockstep with the
+    # placement collections. Call them from placement subroutines
+    # instead of appending directly. Old `builder.X.append(...)` call
+    # sites still work; they just skip the index update and miss out
+    # on the router's collision-avoidance.
+
+    def add_symbol(self, sym: PlacedSymbol, geometry=None) -> None:
+        """Append a placed symbol AND register its bbox in occupancy."""
+        self.symbols.append(sym)
+        try:
+            if geometry is not None:
+                bbox = symbol_bbox(
+                    lib_id=sym.lib_id,
+                    anchor=sym.position,
+                    rotation=sym.rotation,
+                    cache=geometry,
+                    owner_id=f"symbol:{sym.reference}",
+                )
+            else:
+                bbox = placeholder_symbol_bbox(
+                    sym.position, owner_id=f"symbol:{sym.reference}",
+                )
+        except Exception:
+            bbox = placeholder_symbol_bbox(
+                sym.position, owner_id=f"symbol:{sym.reference}",
+            )
+        self.occupancy.add(bbox)
+
+    def add_wire(self, wire: PlacedWire) -> None:
+        """Append a wire segment AND register its bbox in occupancy.
+
+        The owner id is derived from the wire's index so callers can
+        later exclude it from collision checks via ignore_owners.
+        """
+        self.wires.append(wire)
+        index = len(self.wires) - 1
+        bbox = wire_bbox(
+            start=wire.start,
+            end=wire.end,
+            owner_id=f"wire_{index}",
+        )
+        self.occupancy.add(bbox)
+
+    def add_label(self, label: PlacedLabel) -> None:
+        """Append a local label AND register its text bbox."""
+        self.labels.append(label)
+        bbox = _label_bbox(label)
+        self.occupancy.add(bbox)
+
+    def add_hierarchical_label(self, hlabel: PlacedHierarchicalLabel) -> None:
+        """Append a hierarchical label AND register its text bbox."""
+        self.hierarchical_labels.append(hlabel)
+        bbox = _hierarchical_label_bbox(hlabel)
+        self.occupancy.add(bbox)
 
     def finalize(self, block: Block) -> Sheet:
         """Freeze the accumulator into a :class:`Sheet`.
@@ -193,3 +256,76 @@ def dedup_collinear_contained_wires(wires: list[PlacedWire]) -> list[PlacedWire]
 
 # Backward-compat alias
 _unused_dedup_shared_endpoint_wires = dedup_collinear_contained_wires
+
+
+# ---- Label-bbox helpers (mirror the validator's) ---------------------------
+
+def _label_bbox(label: PlacedLabel) -> BBox:
+    """Bbox for a PlacedLabel, mirroring the validator's logic.
+
+    The validator's `_label_text_bbox` chooses justify based on rotation
+    (0 → left, 180 → right, 90/270 → axis-aligned-after-rotation). We
+    reproduce that here so the live occupancy index sees the same
+    bboxes the validator does.
+    """
+    owner_id = f"label:{label.net_name}@{label.position.x:.1f},{label.position.y:.1f}"
+    if label.rotation == 0.0:
+        return text_bbox(
+            text=label.net_name,
+            anchor=label.position,
+            rotation=0.0,
+            justify="left",
+            owner_id=owner_id,
+            kind="label",
+        )
+    if label.rotation == 180.0:
+        return text_bbox(
+            text=label.net_name,
+            anchor=label.position,
+            rotation=0.0,
+            justify="right",
+            owner_id=owner_id,
+            kind="label",
+        )
+    justify = "left" if label.rotation == 90.0 else "right"
+    return text_bbox(
+        text=label.net_name,
+        anchor=label.position,
+        rotation=label.rotation,
+        justify=justify,
+        owner_id=owner_id,
+        kind="label",
+    )
+
+
+def _hierarchical_label_bbox(label: PlacedHierarchicalLabel) -> BBox:
+    """Bbox for a PlacedHierarchicalLabel, mirroring the validator."""
+    decorated_text = label.net_name + " "
+    owner_id = f"hlabel:{label.net_name}@{label.position.x:.1f},{label.position.y:.1f}"
+    if label.rotation == 0.0:
+        return text_bbox(
+            text=decorated_text,
+            anchor=label.position,
+            rotation=0.0,
+            justify="left",
+            owner_id=owner_id,
+            kind="hierarchical_label",
+        )
+    if label.rotation == 180.0:
+        return text_bbox(
+            text=decorated_text,
+            anchor=label.position,
+            rotation=0.0,
+            justify="right",
+            owner_id=owner_id,
+            kind="hierarchical_label",
+        )
+    justify = "left" if label.rotation == 90.0 else "right"
+    return text_bbox(
+        text=decorated_text,
+        anchor=label.position,
+        rotation=label.rotation,
+        justify=justify,
+        owner_id=owner_id,
+        kind="hierarchical_label",
+    )
