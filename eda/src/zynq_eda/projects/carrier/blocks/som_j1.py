@@ -39,7 +39,7 @@ def build_som_j1() -> Block:
     return Block(
         name="som_j1",
         title="SoM Mate J1 (PS MIO + system rails)",
-        paper_size="A3",
+        paper_size="A4",
         description=(
             "Carrier-side mate to the Zynq SoM J1 connector "
             "(FX10A-168P-SV-91). Routes Zynq PS MIO + system rails + "

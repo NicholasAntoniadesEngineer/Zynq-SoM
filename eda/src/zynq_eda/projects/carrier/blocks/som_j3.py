@@ -29,7 +29,7 @@ def build_som_j3() -> Block:
     return Block(
         name="som_j3",
         title="SoM Mate J3 (PL bank 35 single-ended + auxiliary)",
-        paper_size="A3",
+        paper_size="A4",
         description=(
             "Carrier-side mate to the Zynq SoM J3 connector "
             "(FX10A-168P-SV-91). PL bank 35 SelectIO routes to PMODs, "

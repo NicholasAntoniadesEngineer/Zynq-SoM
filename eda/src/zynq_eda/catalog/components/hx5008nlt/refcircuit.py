@@ -97,6 +97,11 @@ HX5008NLT_REFCIRCUIT = ReferenceCircuit(
     symbol_token="HX5008NLT",
     footprint="Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm",
     description="1000BASE-T 4-pair Ethernet magnetics module (1:1, 325uH, 1500V isolation)",
+    # Bob-Smith network packs 4 adjacent CT_PAIRn pins × 2 passives each;
+    # the default 15.24 mm horizontal slot pitch overprints the value
+    # labels ("75R" + "1n") of adjacent slots. Opt into the wider 20.32 mm
+    # pitch so each cap/resistor's value text reads cleanly on the PDF.
+    dense_swarm=True,
     external_parts=(
         *_bob_smith_pair(0),
         *_bob_smith_pair(1),

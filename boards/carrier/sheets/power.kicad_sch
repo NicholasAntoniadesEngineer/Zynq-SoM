@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "3d0cd462-1487-4989-bb40-530533be3ebd")
+	(uuid "f3d04ee9-b223-4e72-bcf5-06ab6528d238")
 	(paper "A4")
 	(title_block
 		(title "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)")
@@ -48,6 +48,7 @@
 				(do_not_autoplace no)
 				(hide yes)
 				(effects
+					(hide yes)
 					(font
 						(size 1.27 1.27)
 					)
@@ -254,6 +255,7 @@
 				(do_not_autoplace no)
 				(hide yes)
 				(effects
+					(hide yes)
 					(font
 						(size 1.27 1.27)
 					)
@@ -410,6 +412,7 @@
 				(do_not_autoplace no)
 				(hide yes)
 				(effects
+					(hide yes)
 					(font
 						(size 1.27 1.27)
 					)
@@ -522,6 +525,7 @@
 				(do_not_autoplace no)
 				(hide yes)
 				(effects
+					(hide yes)
 					(font
 						(size 1.27 1.27)
 					)
@@ -653,6 +657,7 @@
 				(do_not_autoplace no)
 				(hide yes)
 				(effects
+					(hide yes)
 					(font
 						(size 1.27 1.27)
 					)
@@ -848,6 +853,7 @@
 				(do_not_autoplace no)
 				(hide yes)
 				(effects
+					(hide yes)
 					(font
 						(size 1.27 1.27)
 					)
@@ -1013,7 +1019,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a540ac01-9cd4-46a0-8c02-e92d1e99f8e9")
+		(uuid "f7f6b1d6-dd03-47a7-8b87-d76aa432f630")
 		(property "Reference" "U1"
 			(at 125.73 65.405 0.0000)
 			(effects
@@ -1044,6 +1050,7 @@
 		(property "LCSC" "C485517"
 			(at 132.08 64.7699 0)
 			(effects
+				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
@@ -1053,6 +1060,7 @@
 		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tlv757p.pdf"
 			(at 129.54 59.69 0)
 			(effects
+				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
@@ -1060,23 +1068,23 @@
 			)
 		)
 		(pin "1"
-			(uuid "73b66cc9-6da9-46f7-8e0a-689c656d8917")
+			(uuid "3ed8a7a0-f850-412b-a172-e42b097d75db")
 		)
 		(pin "2"
-			(uuid "293c040e-dac1-4a35-bcf0-edbe030ad15e")
+			(uuid "4e0b0b6c-9d78-4b76-8855-9c84240a0909")
 		)
 		(pin "3"
-			(uuid "3c48f9a4-488e-4004-b06c-bea55db915d7")
+			(uuid "f8bcc913-5be8-426f-adc6-9741a1ce0a63")
 		)
 		(pin "4"
-			(uuid "a8c13454-2d71-49cf-bc71-282339176989")
+			(uuid "ed0a6c11-aa7e-4bf3-8295-b6b65c18be7b")
 		)
 		(pin "5"
-			(uuid "1637751e-d9b3-40bd-a00f-7fd2ec4ad976")
+			(uuid "d2a07e6f-3050-47d3-a8d7-f6d86b17fe18")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "U1")
 					(unit 1)
 				)
@@ -1092,7 +1100,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a5104187-81be-4aaf-8e0f-5834cbfe6cc1")
+		(uuid "5e1ba053-5d4b-4c32-94f5-80c09351b782")
 		(property "Reference" "C100"
 			(at 109.22 56.515 270)
 			(effects
@@ -1121,14 +1129,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "f10987bb-9955-466c-9f41-5d9b5091a71e")
+			(uuid "4906e811-e37e-4329-bb62-fa412d9b5679")
 		)
 		(pin "2"
-			(uuid "8c0f2d87-94b2-4acf-bb60-3cc3ac6a85f0")
+			(uuid "f93beed5-50d6-4cd1-97ed-e098411b5874")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1144,7 +1152,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "98f58d1a-2284-4adf-ba1a-0b2296f17c0c")
+		(uuid "e4353d6a-8cc0-497c-b43b-6a14d6f24723")
 		(property "Reference" "#PWR100"
 			(at 97.79 50.8 0.0000)
 			(effects
@@ -1173,11 +1181,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "39fda08a-d637-4168-9a9f-1ef294af7dc9")
+			(uuid "40c751e7-5cd1-4987-9557-309f2a5c7c68")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -1193,7 +1201,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "543ef870-316c-49ad-a590-a3ca155650d0")
+		(uuid "5f7d0285-5208-4925-a187-51ed3672eac2")
 		(property "Reference" "C101"
 			(at 149.86 57.785 90)
 			(effects
@@ -1222,14 +1230,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "b8e619d7-d196-4950-ac84-1e8730c4ddee")
+			(uuid "3256fa8d-ae46-4d49-bc46-f6b36079ee37")
 		)
 		(pin "2"
-			(uuid "5bc443f8-0b61-4322-b186-185e086c5ce6")
+			(uuid "90dbdc52-7f4a-4e9c-ae11-2c82a18da9f4")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1245,7 +1253,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "28331c1a-868c-4198-aea1-97b467c61a5f")
+		(uuid "08a2b70c-cc2f-48fb-bd2d-1c344ff7d5f6")
 		(property "Reference" "#PWR101"
 			(at 161.29 50.8 0.0000)
 			(effects
@@ -1274,11 +1282,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "4206a058-a2ad-4727-9d6c-bf52d5b9e49f")
+			(uuid "951f201a-9503-454e-805a-170f4e1b96fc")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -1294,7 +1302,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0be4d505-1517-433f-9084-26472691334b")
+		(uuid "0f84f1d7-9bba-46b5-9f62-894c6027ac9f")
 		(property "Reference" "C102"
 			(at 165.1 57.785 90)
 			(effects
@@ -1323,14 +1331,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "3445f459-2a3a-4f23-afe0-d4615c5a9d1b")
+			(uuid "faf4e8aa-370f-4a8f-9ffc-aeb105e3c70f")
 		)
 		(pin "2"
-			(uuid "15966e1e-812f-4860-bf4b-9f163aca5c8c")
+			(uuid "43667286-5db2-4c8d-a759-e8770280c62a")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C102")
 					(unit 1)
 				)
@@ -1346,7 +1354,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "42e16470-be85-459e-ab56-03eaffe36ba0")
+		(uuid "0c1e5fd9-e173-4e23-8d17-f4e2d6d5091a")
 		(property "Reference" "#PWR102"
 			(at 176.53 50.8 0.0000)
 			(effects
@@ -1375,11 +1383,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "5947a1be-a7d2-41fe-a1eb-8aa33bd0ab47")
+			(uuid "e831a7d1-69be-4428-b334-d2a754711873")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -1395,7 +1403,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6c48a021-fb91-4a60-8812-0bd7e8275975")
+		(uuid "efc2c3de-e75d-4877-99c4-ddf3077b8a2a")
 		(property "Reference" "R100"
 			(at 111.76 57.658 0.0000)
 			(effects
@@ -1424,14 +1432,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "ec462be2-6c99-4555-8ee8-3d528172f446")
+			(uuid "d40d7833-a3f2-4acf-b3e1-592e9b27c4b4")
 		)
 		(pin "2"
-			(uuid "52a80705-8d00-4ed4-9d7e-451129662841")
+			(uuid "8ad9f904-ead1-43bc-b6c0-becc1d93f8a6")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "R100")
 					(unit 1)
 				)
@@ -1447,7 +1455,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "ec7d8663-78a7-46a2-a439-3b1b847a22da")
+		(uuid "26eb93be-0259-4b26-ac86-c8d111fe5f3e")
 		(property "Reference" "#PWR103"
 			(at 129.54 66.04 0.0000)
 			(effects
@@ -1476,11 +1484,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "b5b845e8-8308-4594-b9d4-5d8d9347f68a")
+			(uuid "9b4e6291-b5e2-49a4-92ea-3e9eed50e1f0")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR103")
 					(unit 1)
 				)
@@ -1496,7 +1504,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "4404e886-c233-4859-bd6b-0c280ce5c2c9")
+		(uuid "767ceddd-cfb2-467f-8b2c-c464f797c15f")
 		(property "Reference" "U2"
 			(at 125.73 111.125 0.0000)
 			(effects
@@ -1527,6 +1535,7 @@
 		(property "LCSC" "C2872563"
 			(at 132.08 110.4899 0)
 			(effects
+				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
@@ -1536,6 +1545,7 @@
 		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tlv757p.pdf"
 			(at 129.54 105.41 0)
 			(effects
+				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
@@ -1543,23 +1553,23 @@
 			)
 		)
 		(pin "1"
-			(uuid "eb13eefd-fba2-466d-8813-aabd229c0cee")
+			(uuid "7d254827-025e-43f8-af08-8f87d3f73d20")
 		)
 		(pin "2"
-			(uuid "2b354a6e-ff2b-419f-9159-1dd9493305d6")
+			(uuid "33971315-df3d-4b2d-99de-46eaaabe59dc")
 		)
 		(pin "3"
-			(uuid "3574332b-8a97-4929-9598-5700ad192ed7")
+			(uuid "1aa1bd2e-cc0f-4a96-8255-f6bd53ab03fa")
 		)
 		(pin "4"
-			(uuid "4f4d2f6c-ac9e-49f5-9578-cd33269921ab")
+			(uuid "ea40ed25-29f6-4e10-85ec-4021a30b7eaf")
 		)
 		(pin "5"
-			(uuid "bd592648-bc74-413c-9361-2a193656c648")
+			(uuid "5d296348-bcb7-4dea-aec0-6b62989737e0")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "U2")
 					(unit 1)
 				)
@@ -1575,7 +1585,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "813bdddd-994c-4ff7-99c5-a050aa8d8864")
+		(uuid "7847a4f2-5486-45e3-831e-af2108430b8d")
 		(property "Reference" "C103"
 			(at 109.22 102.235 270)
 			(effects
@@ -1604,14 +1614,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "d373d7e8-eac1-4bcf-9485-c4cf961e2e6f")
+			(uuid "68bae9be-3a56-449e-931e-0e2958caf7ba")
 		)
 		(pin "2"
-			(uuid "55eeae9e-8f6c-4e10-bf67-e206a2113733")
+			(uuid "45a38e43-f0e4-4610-91e2-a7f5368c8074")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C103")
 					(unit 1)
 				)
@@ -1627,7 +1637,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d82de4e6-d463-4276-86bd-573f9e82296d")
+		(uuid "5f256b48-4a28-425d-86db-b7cb316e3090")
 		(property "Reference" "#PWR104"
 			(at 97.79 96.52 0.0000)
 			(effects
@@ -1656,11 +1666,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "168e31e6-0192-418f-91ee-63a94176485a")
+			(uuid "1606fb66-b06c-47ac-ba56-518ab06dae76")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR104")
 					(unit 1)
 				)
@@ -1676,7 +1686,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "fb1b2ed5-83d8-4070-a3d1-3bd1cdb40ac2")
+		(uuid "af0fa547-5936-4845-a453-c6e7b604473e")
 		(property "Reference" "C104"
 			(at 149.86 103.505 90)
 			(effects
@@ -1705,14 +1715,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "ed217cd1-b58e-41a2-aba5-e09c7078115b")
+			(uuid "beadb331-fd1c-4706-8c52-a22f3a45b1bb")
 		)
 		(pin "2"
-			(uuid "8d3f7873-616d-4eb2-a03b-0948f12f6800")
+			(uuid "fd3d0d92-9144-4993-8a72-a51ce4a9bf3c")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C104")
 					(unit 1)
 				)
@@ -1728,7 +1738,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "88bf5d55-75f3-4232-b26d-16d6e61e4956")
+		(uuid "acb527c6-86d5-4087-bab4-66c20ff4ae81")
 		(property "Reference" "#PWR105"
 			(at 161.29 96.52 0.0000)
 			(effects
@@ -1757,11 +1767,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "9bd98a79-ad3b-4019-a67d-47d470c5ffdc")
+			(uuid "67278764-0f17-44cd-b0bf-c2b1e1ab8b19")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR105")
 					(unit 1)
 				)
@@ -1777,7 +1787,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3f6d4f82-4779-4051-a02f-30f2a021db93")
+		(uuid "d874a6a1-b653-4241-85fd-128b4f238299")
 		(property "Reference" "C105"
 			(at 165.1 103.505 90)
 			(effects
@@ -1806,14 +1816,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "40f834cc-682f-49f5-bb21-aa382cb9a970")
+			(uuid "063c3824-28fa-4e6a-a521-1c7ab91d31e6")
 		)
 		(pin "2"
-			(uuid "0599592b-0fbe-4c2b-bb3c-465be8fb7146")
+			(uuid "d7a5583f-68f3-4668-b319-70d195212bb2")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C105")
 					(unit 1)
 				)
@@ -1829,7 +1839,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "53611971-7ea6-4382-b430-1fe406c5e88f")
+		(uuid "ed24ae44-cced-4e14-b645-ad822db35a2e")
 		(property "Reference" "#PWR106"
 			(at 176.53 96.52 0.0000)
 			(effects
@@ -1858,11 +1868,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "68a9dd19-c27a-4551-b7db-abf290ebf605")
+			(uuid "fd2f1375-d0d0-4e0f-852b-8f9a258063f6")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR106")
 					(unit 1)
 				)
@@ -1878,7 +1888,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "ca69c5d4-54da-4a78-b997-d55ddd13ad03")
+		(uuid "af946014-f3e8-4abe-8311-5fb85bb7c3ef")
 		(property "Reference" "R101"
 			(at 111.76 103.378 0.0000)
 			(effects
@@ -1907,14 +1917,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "8c042a81-5c9f-4313-aa68-f8cfa00dd12e")
+			(uuid "511acca5-1c14-4c21-9a9a-902506d7eb0b")
 		)
 		(pin "2"
-			(uuid "8cf9311f-266c-4118-a7ba-87db2e3c516f")
+			(uuid "af215c5d-483c-4f84-a007-26609d721a04")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "R101")
 					(unit 1)
 				)
@@ -1930,7 +1940,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "75d66453-c94f-4680-9c0d-3d32e17f9b13")
+		(uuid "036c9ca6-0cb5-47bc-a372-7c31c56ca5d3")
 		(property "Reference" "#PWR107"
 			(at 129.54 111.76 0.0000)
 			(effects
@@ -1959,11 +1969,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "b08e7173-b5f2-4449-b347-aa11f0af4af9")
+			(uuid "d0b02835-cbbf-4ad9-9ee0-7f274c489cfc")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR107")
 					(unit 1)
 				)
@@ -1979,7 +1989,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "37e4b54e-3b87-430c-8bf8-6255fb3cd368")
+		(uuid "d92b098e-6b3a-4e1d-a910-09282802ad7f")
 		(property "Reference" "U3"
 			(at 125.73 156.845 0.0000)
 			(effects
@@ -2010,6 +2020,7 @@
 		(property "LCSC" "C507270"
 			(at 132.08 156.2099 0)
 			(effects
+				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
@@ -2019,6 +2030,7 @@
 		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tlv757p.pdf"
 			(at 129.54 151.13 0)
 			(effects
+				(hide yes)
 				(font
 					(size 1.27 1.27)
 				)
@@ -2026,23 +2038,23 @@
 			)
 		)
 		(pin "1"
-			(uuid "5920eeab-e9e8-47d3-957f-13b2a0e2b73f")
+			(uuid "f58e652d-642d-47d1-b771-c18df73c72d9")
 		)
 		(pin "2"
-			(uuid "b28972e5-7e89-454e-8764-5340e79801b0")
+			(uuid "c7296837-ee51-4164-9086-b75c0c1c57dd")
 		)
 		(pin "3"
-			(uuid "f57cae1d-9c9f-4e49-9bb2-7d619675c450")
+			(uuid "e493d704-1587-4460-97bb-c22fd0979e10")
 		)
 		(pin "4"
-			(uuid "bc67198e-9193-4e92-9b67-9864c64f825f")
+			(uuid "1114472f-0f78-47dc-95b3-72d9a48bedcd")
 		)
 		(pin "5"
-			(uuid "0875afe5-82b1-4beb-858c-469892ea2ad2")
+			(uuid "1eaf5017-10ad-4ff0-af03-d58771804e61")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "U3")
 					(unit 1)
 				)
@@ -2058,7 +2070,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "35148388-f736-4c9f-bb63-3813f6278aef")
+		(uuid "c7677196-b501-4c37-a84e-5cc4dd67c111")
 		(property "Reference" "C106"
 			(at 109.22 147.955 270)
 			(effects
@@ -2087,14 +2099,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "9c785846-4f50-49e2-8f3c-aa6de64aec39")
+			(uuid "ed411a41-e128-4633-b95d-47332dab7601")
 		)
 		(pin "2"
-			(uuid "2c5118a4-6ab1-45a9-a474-0784b04b3dee")
+			(uuid "220e9612-63f3-4d2f-b7cf-ab09b4938345")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C106")
 					(unit 1)
 				)
@@ -2110,7 +2122,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "1499ec33-ba6b-474f-9ef4-2c05dc7e6cdc")
+		(uuid "b5af6260-646d-4ecd-b8ef-c8711a1b3129")
 		(property "Reference" "#PWR108"
 			(at 97.79 142.24 0.0000)
 			(effects
@@ -2139,11 +2151,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "fb95738a-47be-4e74-98b8-07af33efaa45")
+			(uuid "2b43422d-73a8-4aa3-a1a8-2da0d81f6f8b")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR108")
 					(unit 1)
 				)
@@ -2159,7 +2171,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3f8bf570-433d-433b-8724-3d6b2d7eaf86")
+		(uuid "d78f3fc7-79d8-4fb2-a4ec-a57cc1da09ec")
 		(property "Reference" "C107"
 			(at 149.86 149.225 90)
 			(effects
@@ -2188,14 +2200,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "d18698f7-9f58-4ac9-94e3-bcccfd2a8e82")
+			(uuid "526bf39c-c7e3-4fa0-b970-550e03c33e77")
 		)
 		(pin "2"
-			(uuid "bca6fc9c-68f0-490f-a784-c735cf65680a")
+			(uuid "8359f2eb-90be-49a0-9d93-3295c6e1d29a")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C107")
 					(unit 1)
 				)
@@ -2211,7 +2223,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "36de8c79-5dd8-4b6a-8829-dd92d4c21b2b")
+		(uuid "d565260e-4a1a-4988-8519-e75a7b8cd7a5")
 		(property "Reference" "#PWR109"
 			(at 161.29 142.24 0.0000)
 			(effects
@@ -2240,11 +2252,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "0e8e16f0-5213-4c7b-8798-18bb7ce68e24")
+			(uuid "abbdb2d7-0921-417d-b05c-fc7400515531")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR109")
 					(unit 1)
 				)
@@ -2260,7 +2272,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "aceaee67-594e-4b9d-adf7-9f85440d8dc1")
+		(uuid "f7b0298c-2382-4faf-918a-325e4746b4e7")
 		(property "Reference" "C108"
 			(at 165.1 149.225 90)
 			(effects
@@ -2289,14 +2301,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "7722ce4a-2339-4d6b-aed0-7ee41f50881f")
+			(uuid "5f39cf7d-583d-4c79-b018-5b991c81521d")
 		)
 		(pin "2"
-			(uuid "5f20ac8e-4933-4f3b-a27f-e1d2c28b5694")
+			(uuid "ef345e03-2e87-43fe-802c-fc589c5d2f3b")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "C108")
 					(unit 1)
 				)
@@ -2312,7 +2324,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0f1df80f-d54f-4bb4-a51a-1071bc856e73")
+		(uuid "91c3e236-015b-4cd0-8d44-ec40302a8b0d")
 		(property "Reference" "#PWR110"
 			(at 176.53 142.24 0.0000)
 			(effects
@@ -2341,11 +2353,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "dffbb80e-1eb3-47cf-86e2-507a52b5d05c")
+			(uuid "dc6696bd-f009-43d8-ba76-3e5bc921898e")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR110")
 					(unit 1)
 				)
@@ -2361,7 +2373,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6f2f21af-b7d6-4617-a19a-659cda003a32")
+		(uuid "f7b109f8-5539-41b0-ba33-913965a2794f")
 		(property "Reference" "R102"
 			(at 111.76 149.098 0.0000)
 			(effects
@@ -2390,14 +2402,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "089bbeeb-a7da-4166-90bd-5d4028518d02")
+			(uuid "d85018c5-a2da-468a-896a-161617c97328")
 		)
 		(pin "2"
-			(uuid "2a0284a7-6a36-472c-ae53-ad90d5e49814")
+			(uuid "37553d60-cee9-4aee-80e1-7877bc691900")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "R102")
 					(unit 1)
 				)
@@ -2413,7 +2425,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d89c055d-f5ce-4bce-979c-e9f380cfd686")
+		(uuid "00dea08f-9448-41b6-9055-446e032dd6c7")
 		(property "Reference" "#PWR111"
 			(at 129.54 157.48 0.0000)
 			(effects
@@ -2442,61 +2454,12 @@
 			)
 		)
 		(pin "1"
-			(uuid "d48769d6-3c96-4624-899f-09214e92aa3a")
+			(uuid "01b6dda8-7b32-4a13-919c-5525ea9f97d1")
 		)
 		(instances
 			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
+				(path "/f3d04ee9-b223-4e72-bcf5-06ab6528d238"
 					(reference "#PWR111")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 15.24 194.31 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced no)
-		(uuid "ac14cf4d-4694-477f-80a7-e4d6cbaa346d")
-		(property "Reference" "#PWR112"
-			(at 15.24 187.96 0.0000)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 15.24 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 15.24 194.31 0.0000)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "c6f017a0-e4b0-4d36-8974-cac8fd1ab89b")
-		)
-		(instances
-			(project "Power Architecture (USB-C +5V → +3V3 / +2V5 / +1V8)"
-				(path "/3d0cd462-1487-4989-bb40-530533be3ebd"
-					(reference "#PWR112")
 					(unit 1)
 				)
 			)
@@ -2510,7 +2473,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4e42fdaf-6b3d-4c6f-8b31-bdc9e5063992")
+		(uuid "c2757a77-1f3e-4e58-97fa-52c1c3958522")
 	)
 	(wire
 		(pts
@@ -2520,7 +2483,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c20beb5d-31d4-4f98-a632-9228539f690b")
+		(uuid "27edaea0-410c-4c7a-90b5-9ea987f31dac")
 	)
 	(wire
 		(pts
@@ -2530,7 +2493,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4952c375-9abe-40fb-a8c3-745170a2305f")
+		(uuid "2ea0da1e-8281-42ba-b1aa-bdac1b8ceedd")
 	)
 	(wire
 		(pts
@@ -2540,7 +2503,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b225c327-67b3-4226-8824-8e5fc9c1ffc4")
+		(uuid "05d2a72d-d02d-4774-b8c8-d5c3028d6c4b")
 	)
 	(wire
 		(pts
@@ -2550,7 +2513,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6c0851a3-0724-4c7c-87f0-0c9d7efc6f54")
+		(uuid "500b09bd-b526-43e5-bd7f-537d894da109")
 	)
 	(wire
 		(pts
@@ -2560,7 +2523,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6d948e58-20ef-48d8-ada3-e90bb3ee46fb")
+		(uuid "0a558e08-8506-4e30-9f27-54fdfdd13463")
 	)
 	(wire
 		(pts
@@ -2570,7 +2533,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c95ddfa7-9b42-48a2-97bb-ec986182ff1f")
+		(uuid "b359156e-954c-4fde-91b1-fb30342022b9")
 	)
 	(wire
 		(pts
@@ -2580,7 +2543,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c2779e04-b492-4b83-b94f-87154cb24993")
+		(uuid "628b278b-ee28-4246-8df3-ad1cf50987ca")
 	)
 	(wire
 		(pts
@@ -2590,7 +2553,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ad36beed-d90a-4278-88df-828d31b0ebe3")
+		(uuid "a7b649b2-cd20-4954-8a0f-e5b90659afe6")
 	)
 	(wire
 		(pts
@@ -2600,7 +2563,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b14cf747-6adb-48bb-a7f3-5030126c57dd")
+		(uuid "4437e47e-dff4-4d28-a7d4-71ced9c6b5c7")
 	)
 	(wire
 		(pts
@@ -2610,7 +2573,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "75b1e7e1-8550-4658-a0d8-d4464e2ea8ba")
+		(uuid "dbe30800-a116-4783-974b-f4b5b8c06216")
 	)
 	(wire
 		(pts
@@ -2620,7 +2583,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7d30660e-68f3-4cb0-b43b-c8ddfa2cd52d")
+		(uuid "f626c895-e828-448f-bc8c-8743babb6471")
 	)
 	(wire
 		(pts
@@ -2630,7 +2593,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6d830959-693b-4fc1-ae90-7fd5f59444e0")
+		(uuid "1e426029-93bf-467a-9370-0f92c4acea20")
 	)
 	(wire
 		(pts
@@ -2640,7 +2603,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "394ccc39-42c0-4691-9d45-5a2094d36047")
+		(uuid "4f2132cf-1024-4591-b389-a9243d4374b9")
 	)
 	(wire
 		(pts
@@ -2650,7 +2613,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c1a96136-6cce-42fa-8f17-eb19dfb2c984")
+		(uuid "73b28dca-defb-4100-91f3-dbae92462d32")
 	)
 	(wire
 		(pts
@@ -2660,7 +2623,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1ace53a2-9244-4dd8-ab69-4a93ebc9ad22")
+		(uuid "0815301e-aa70-4bbd-92a5-c24cd1e8beaa")
 	)
 	(wire
 		(pts
@@ -2670,7 +2633,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b91f45aa-6594-4233-aacd-7636af0ceb08")
+		(uuid "e5f44407-536a-4c46-bc64-64149093fbab")
 	)
 	(wire
 		(pts
@@ -2680,7 +2643,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e712c7be-2ae0-4780-8823-fa12d3f2f545")
+		(uuid "6616ad00-ecfb-47c7-a121-c0f356dc9dc7")
 	)
 	(wire
 		(pts
@@ -2690,7 +2653,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "49f2552d-7345-40f8-9329-866611408dd1")
+		(uuid "163dd520-de75-4a9a-b038-94b98485c2ce")
 	)
 	(wire
 		(pts
@@ -2700,7 +2663,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0127ee6c-95cf-4ec4-937c-b062048da1a7")
+		(uuid "2e0cad39-e33a-4f83-9c6d-3069ae662cef")
 	)
 	(wire
 		(pts
@@ -2710,7 +2673,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "974b6c84-0ec3-4307-bf90-0516d9070ce8")
+		(uuid "99548f9d-3c85-4fb3-b706-719c636fca52")
 	)
 	(wire
 		(pts
@@ -2720,7 +2683,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a090f428-a67e-4616-bcb2-853646675240")
+		(uuid "c811306a-c9d2-493c-ade4-d729e8991d87")
 	)
 	(wire
 		(pts
@@ -2730,7 +2693,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "474c23f2-78c7-41ed-bf91-9446c755dc83")
+		(uuid "75dff77b-57dc-4246-b905-e0d23d289ebb")
 	)
 	(wire
 		(pts
@@ -2740,7 +2703,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f090412f-68ea-4830-8f2a-78827f66264f")
+		(uuid "d34e3a10-c3f0-497d-8034-8f82f7012231")
 	)
 	(wire
 		(pts
@@ -2750,7 +2713,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "acd2a647-2f71-4bca-aefc-984a3b5bcd79")
+		(uuid "598b51b9-3e3c-4c7d-9a4e-b4df9555923d")
 	)
 	(wire
 		(pts
@@ -2760,7 +2723,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5ad2ff97-a986-40a2-9a36-77e292728ca6")
+		(uuid "28be6136-a908-4b77-969c-c5d59404f669")
 	)
 	(wire
 		(pts
@@ -2770,7 +2733,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0cb7e03f-5b1a-4113-9c1a-96e8d24900e4")
+		(uuid "92cf6764-de31-48a5-8ac3-3509cf737b18")
 	)
 	(wire
 		(pts
@@ -2780,7 +2743,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "163a18dc-65d5-4f1a-a850-bc7d5a184dfb")
+		(uuid "5f6e04ec-b5cc-49cd-b033-ccb3ad220fe0")
 	)
 	(wire
 		(pts
@@ -2790,7 +2753,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c66159cf-e3df-4958-9b8a-2dfa78c75c73")
+		(uuid "b03f9294-56ea-40cd-8b45-0bf526da0755")
 	)
 	(wire
 		(pts
@@ -2800,7 +2763,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "30fe2a45-c750-4a3a-94d6-2279b9c0d38f")
+		(uuid "1dd8ad0d-d6f3-41f3-92d9-a717b40b4a74")
 	)
 	(wire
 		(pts
@@ -2810,7 +2773,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b99cd3bb-c040-4854-aba3-1f3f7ddbf725")
+		(uuid "6d368170-4c56-4a56-9e42-ddc6037315c0")
 	)
 	(wire
 		(pts
@@ -2820,7 +2783,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6c089cfa-3054-4ea3-94e3-1a40f232efdc")
+		(uuid "5cfebe06-d12d-498a-8a23-64ef7cea08ed")
 	)
 	(wire
 		(pts
@@ -2830,17 +2793,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "eff5fcdb-eef1-4861-a4b6-9ed310eb20aa")
-	)
-	(wire
-		(pts
-			(xy 15.24 189.23) (xy 15.24 194.31)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "820a843f-772c-4870-a578-aa91bdf23296")
+		(uuid "b782a471-f273-46be-8ad2-93ab29a343b1")
 	)
 	(label "+VIN"
 		(at 107.95 59.69 0.0000)
@@ -2850,7 +2803,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c8c472a5-ae08-4682-aebb-7accfec43e6a")
+		(uuid "371d7b8f-9cec-49a2-a37e-b7a19e162e36")
 	)
 	(label "+VIN"
 		(at 107.95 105.41 0.0000)
@@ -2860,7 +2813,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "9f88753a-7bca-4a1f-9b3a-338f216cf3ed")
+		(uuid "c1c06c7e-2139-4e57-990d-060b7359af66")
 	)
 	(label "+VIN"
 		(at 107.95 151.13 0.0000)
@@ -2870,7 +2823,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "7601635b-921c-4b81-8590-43eeb849ab77")
+		(uuid "05c0c69e-dbde-476f-a78e-b86735e56c68")
 	)
 	(hierarchical_label "+VIN"
 		(shape input)
@@ -2881,7 +2834,7 @@
 			)
 			(justify left)
 		)
-		(uuid "9ffd246b-82c8-4890-ba32-c63868dd7931")
+		(uuid "e48d0ae2-f486-43c5-adfb-83a7a1434dff")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
@@ -2892,7 +2845,7 @@
 			)
 			(justify left)
 		)
-		(uuid "2935e717-ebd8-4a0e-b874-6c528be63866")
+		(uuid "481edc6d-6bbd-434f-aeef-98864db93092")
 	)
 	(hierarchical_label "+VIN"
 		(shape input)
@@ -2903,7 +2856,7 @@
 			)
 			(justify left)
 		)
-		(uuid "d3d4bf85-0c11-45e8-8b29-7323674c5451")
+		(uuid "5921ad92-8c5b-42c6-ab6e-ec622388198a")
 	)
 	(hierarchical_label "+2V5"
 		(shape input)
@@ -2914,7 +2867,7 @@
 			)
 			(justify left)
 		)
-		(uuid "702c9847-081f-4daf-a55a-ff83218921b0")
+		(uuid "167f1bff-a649-4d67-980a-a39ed6b2c33f")
 	)
 	(hierarchical_label "+VIN"
 		(shape input)
@@ -2925,7 +2878,7 @@
 			)
 			(justify left)
 		)
-		(uuid "90d50053-c3bf-4d3c-a567-a7244fa6f12a")
+		(uuid "b51454df-ede8-4c82-9918-455ca81e0994")
 	)
 	(hierarchical_label "+1V8"
 		(shape input)
@@ -2936,30 +2889,30 @@
 			)
 			(justify left)
 		)
-		(uuid "bad8b447-377a-418c-aae6-6e464e5288e2")
+		(uuid "b642106f-c889-4404-8170-320bfceb22c3")
 	)
 	(hierarchical_label "GND"
 		(shape input)
-		(at 15.24 189.23 180)
+		(at 129.54 163.83 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "376cbb58-6fea-4b4a-afd8-27c1f046bc65")
+		(uuid "a545fdef-fe83-4faa-b39e-2dc08f5733c5")
 	)
 	(no_connect
 		(at 134.62 59.69)
-		(uuid "8d56e17b-5c8e-46c3-999f-1b0e25c2e71e")
+		(uuid "2b2f3555-3fa1-4e1d-ae4f-9cb00e0dc8f4")
 	)
 	(no_connect
 		(at 134.62 105.41)
-		(uuid "741cf711-8389-4a31-a48c-312bcaf2eb91")
+		(uuid "55211dc6-5281-41dd-a304-ab23d324aa68")
 	)
 	(no_connect
 		(at 134.62 151.13)
-		(uuid "86b791e4-39d2-40c0-8b14-7b22fa4ac431")
+		(uuid "19be24ac-6913-4137-ab30-a6b93532e486")
 	)
 	(sheet_instances
 		(path "/"

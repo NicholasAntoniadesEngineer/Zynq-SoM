@@ -29,6 +29,25 @@ the destination's power symbol (:data:`POWER_SYMBOL_OFFSET_MM` =
 power symbol and slot N's near pin — anything smaller and the
 endpoints land on top of each other and KiCad merges them into one
 net, shorting GND to whatever slot N's destination is.
+
+This is the GLOBAL default. Refcircuits that need more space (dense
+multi-pin × multi-slot networks like the HX5008 Bob-Smith — 4 pins ×
+2 slots each, value-label collisions visible at 15.24 mm) can opt into
+:data:`DENSE_HORIZONTAL_SWARM_PITCH_MM` via
+``ReferenceCircuit.dense_swarm = True``. Doing it per-refcircuit
+instead of globally avoids shifting connector-pin label rows on
+unrelated sheets (FMC LPC, SoM-mate) where the 15.24 mm slot pitch
+aligns with the root-sheet hierarchical-pin layout.
+"""
+
+DENSE_HORIZONTAL_SWARM_PITCH_MM = snap_to_grid(20.32)
+"""Wider LEFT/RIGHT swarm pitch for refcircuits with packed value labels.
+
+Used when ``ReferenceCircuit.dense_swarm`` is ``True``. 20.32 mm =
+4 × 5.08 = 16 × grid adds 7.62 mm of clearance between adjacent
+passive slots — enough for two value-text fields (e.g. "75R" + "1n"
+side by side) to render without overlap. Increases cluster footprint
+by ~33 % so it's opt-in per refcircuit, not the default.
 """
 
 PASSIVE_OFFSET_MM = snap_to_grid(10.16)

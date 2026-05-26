@@ -359,6 +359,17 @@ def _orphan_net_labels(
     coordinate. KiCad collapses co-located same-name labels into one
     electrical net, so the hier label inherits the real net.
 
+    The hier label's rotation is derived from the DECLARED net edge
+    (180 for LEFT-edge nets, 0 for RIGHT-edge nets) — NOT inherited
+    from the local label's default rotation 0. Picking the rotation
+    from net.edge makes the hier-label text always read OUTBOARD of
+    the connector pin tail it's anchored to, away from the connector
+    body's pin-name text. (HDMI RX is the classic example: the HDMI-A
+    connector sits on the RIGHT edge but the TMDS signals are declared
+    with ``edge=SheetEdge.LEFT``; without the explicit rotation flip,
+    the hier-label text would read INTO the HDMI body, overlapping the
+    pin-name text printed there.)
+
     Without an existing local label to anchor onto, we skip the net —
     no point dropping a hier label that floats with no connection.
     Such nets stay invisible to the root sheet; the user must add an
@@ -385,16 +396,15 @@ def _orphan_net_labels(
         if key in seen_label_positions:
             continue
         seen_label_positions.add(key)
-        # Hier-label rotation: match the local label's orientation. The
-        # hier label REPLACES the local label at this coord — KiCad
-        # renders only the hier label's arrow + text, and would
-        # double-print if we left the local label in place. Drop the
-        # local label so the rendering is clean.
+        # Rotation derived from declared net edge: 180 = text reads left
+        # of arrow (LEFT-edge convention), 0 = text reads right of arrow
+        # (RIGHT-edge convention). Always points the text OUTBOARD.
+        hier_rotation = 180.0 if net.edge == SheetEdge.LEFT else 0.0
         builder.hierarchical_labels.append(PlacedHierarchicalLabel(
             net_name=net.name,
             position=anchor_label.position,
             direction=net.direction,
-            rotation=anchor_label.rotation,
+            rotation=hier_rotation,
         ))
         # Strip the now-redundant local label that the hier label
         # supersedes. KiCad's label-merging by name keeps electrical
@@ -415,48 +425,133 @@ def _ground_label_only(
     right_x: float,
     seen_label_positions: set[tuple[float, float]],
 ) -> None:
-    """Emit one bottom-of-edge GND hierarchical label per declared GroundNet.
+    """Emit one GND hierarchical label per declared GroundNet, anchored to a real wire.
 
-    The block also gets a single ``power:GND`` symbol on the same label
-    so its sub-sheet remains visually legible (every IC's local GND
-    cluster anchors to a "real" GND symbol on the sheet). The PWR_FLAG
-    that previously sat next to this label moved to the root sheet's
-    cross-block driver pass — emitting it here would duplicate the
-    driver and trigger pin_to_pin Power-out conflicts across blocks.
+    Strategy (in order of preference; each tries to anchor onto a real
+    wire endpoint so the hier label never floats with no connection):
+
+      1. **Same-name local label** — for ground nets whose name appears
+         on a local label (the connector pass emits one per GND-bound
+         connector pin), drop the hier label at that coordinate and
+         remove the local label. KiCad merges co-located same-name
+         labels into one electrical net.
+      2. **Same-name power symbol** — the cluster pass attaches GND
+         passives via ``power:GND`` symbols at real wire endpoints. Drop
+         the hier label AT the power-symbol coord; the symbol is already
+         a wire terminus so the hier label inherits a real connection.
+         (``CHASSIS_GND`` uses ``power:Earth``; both share the symbol's
+         ``value`` field for matching.)
+      3. **Skip** — if neither exists, the sub-sheet has no wired GND
+         endpoint to surface. Historically we emitted a phantom edge
+         hier label + standalone power:GND symbol; that "dangling stub"
+         was visible junk on the left edge of every otherwise-clean
+         sheet (the cosmetic issue this commit fixes). Skipping the
+         emission leaves connectivity intact (the block's GND comes
+         through the cluster passives' power symbols, all merged via
+         KiCad's global ``power:GND`` net) and removes the floating
+         edge label.
+
+    PWR_FLAG drivers live on the root sheet (see :mod:`root`); emitting
+    one here would duplicate the driver and trigger ``pin_to_pin``
+    Power-out conflicts.
     """
+    # Pre-index existing GND local labels so we can anchor at any of them.
+    local_labels_by_name: dict[str, list] = {}
+    for lab in builder.labels:
+        local_labels_by_name.setdefault(lab.net_name, []).append(lab)
+
+    # Pre-index already-placed power symbols by their displayed net name
+    # (the ``value`` field) so we can re-use a same-name ``power:GND`` /
+    # ``power:Earth`` placed by the cluster pass as the hier-label anchor.
+    # Power symbols sit at real wire endpoints by construction, so this
+    # is electrically equivalent to anchoring at a local-label coord but
+    # works for the common case where the cluster pass chose a symbol
+    # instead of a label (GND destinations almost always do).
+    power_symbols_by_value: dict[str, list[PlacedSymbol]] = {}
+    for sym in builder.symbols:
+        if sym.lib_id.startswith("power:"):
+            power_symbols_by_value.setdefault(sym.value, []).append(sym)
+
     for ground_net in block.external_nets:
         if ground_net.power_kind != "ground":
             continue
-        label_x = left_x if ground_net.edge == SheetEdge.LEFT else right_x
-        ic_y_values = [anchor.y for anchor in ic_anchors.values()]
-        if ic_y_values:
-            label_y = snap_to_grid(max(ic_y_values) + 38.1)
-        else:
-            label_y = snap_to_grid(INTERIOR_MARGIN_MM + 20.32)
-        label_position = Point(label_x, label_y)
-        key = (label_position.x, label_position.y)
-        if key in seen_label_positions:
+
+        # Preferred path 1: piggyback on an existing local label sitting
+        # on a real wire. KiCad merges co-located same-name labels into
+        # one electrical net, so the hier label inherits the local
+        # label's wire endpoint and no longer dangles. Rotation is set
+        # from the DECLARED net edge so the GND text reads outboard of
+        # the connector body (mirrors ``_orphan_net_labels``).
+        matching = local_labels_by_name.get(ground_net.name)
+        if matching:
+            anchor_label = matching[0]
+            key = (anchor_label.position.x, anchor_label.position.y)
+            if key in seen_label_positions:
+                continue
+            seen_label_positions.add(key)
+            hier_rotation = 180.0 if ground_net.edge == SheetEdge.LEFT else 0.0
+            builder.hierarchical_labels.append(PlacedHierarchicalLabel(
+                net_name=ground_net.name,
+                position=anchor_label.position,
+                direction=ground_net.direction,
+                rotation=hier_rotation,
+            ))
+            # Drop the now-redundant local label — KiCad would render
+            # both, double-printing the GND text at the same coord.
+            try:
+                builder.labels.remove(anchor_label)
+                matching.pop(0)
+            except ValueError:
+                pass
             continue
-        seen_label_positions.add(key)
 
-        rotation = 180.0 if ground_net.edge == SheetEdge.LEFT else 0.0
-        builder.hierarchical_labels.append(PlacedHierarchicalLabel(
-            net_name=ground_net.name,
-            position=label_position,
-            direction=ground_net.direction,
-            rotation=rotation,
-        ))
+        # Preferred path 2: piggyback on a same-name power symbol. The
+        # cluster pass placed it at a real wire endpoint (the far
+        # terminal of a GND-bound cap or resistor); putting the hier
+        # label at the same coordinate ties it into the live wire
+        # without a separate dangling stub.
+        #
+        # Pick the symbol whose Y is FURTHEST from any existing hier
+        # label's Y. Same-Y collisions on the LEFT/RIGHT edge collapse
+        # to adjacent sheet-pin rows on the root sheet (5.08 mm apart),
+        # and the per-pin power-symbol + PWR_FLAG stacks overlap in
+        # weird ways — historically that triggered ``multiple_net_names``
+        # warnings when a +VIN label landed on the same column as a
+        # GND power-symbol stack. Maximising Y-separation between the
+        # GND hier label and the already-placed power-input labels
+        # eliminates the per-pin overlap regardless of pitch.
+        matching_syms = power_symbols_by_value.get(ground_net.name)
+        if matching_syms:
+            existing_ys = {
+                lab.position.y for lab in builder.hierarchical_labels
+            }
 
-        gnd_symbol_position = Point(
-            label_position.x,
-            snap_to_grid(label_position.y + POWER_SYMBOL_OFFSET_MM),
-        )
-        builder.wires.append(PlacedWire(start=label_position, end=gnd_symbol_position))
-        builder.symbols.append(PlacedSymbol(
-            lib_id="power:GND",
-            reference=builder.next_ref("#PWR"),
-            value="GND",
-            position=gnd_symbol_position,
-            footprint="",
-            rotation=0.0,
-        ))
+            def _y_distance_score(sym: PlacedSymbol) -> float:
+                if not existing_ys:
+                    return 0.0
+                # Higher score = more distant Y. min-distance ascending.
+                return -min(abs(sym.position.y - ey) for ey in existing_ys)
+
+            anchor_sym = min(matching_syms, key=_y_distance_score)
+            key = (anchor_sym.position.x, anchor_sym.position.y)
+            if key in seen_label_positions:
+                continue
+            seen_label_positions.add(key)
+            rotation = 180.0 if ground_net.edge == SheetEdge.LEFT else 0.0
+            builder.hierarchical_labels.append(PlacedHierarchicalLabel(
+                net_name=ground_net.name,
+                position=anchor_sym.position,
+                direction=ground_net.direction,
+                rotation=rotation,
+            ))
+            continue
+
+        # No local label and no same-name power symbol on this sheet —
+        # the block doesn't have a wired GND endpoint to surface. The
+        # legacy phantom edge-label + standalone power:GND fallback
+        # produced a floating stub on the left edge of every sheet that
+        # had only connector-fed GND pins. Skip emission entirely:
+        # connectivity stays intact via KiCad's global ``power:GND``
+        # net (any cluster passive grounded through a power:GND symbol
+        # joins the global), and no floating graphic is drawn.
+        continue

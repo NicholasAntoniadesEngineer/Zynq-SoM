@@ -59,6 +59,13 @@ keeps every block inside the page."""
 _SHEET_SYMBOL_MIN_WIDTH_MM = 50.8
 _SHEET_SYMBOL_MIN_HEIGHT_MM = 38.1
 _SHEET_PIN_PITCH_MM = 5.08
+"""Vertical pitch between adjacent sheet pins on a root-sheet block symbol.
+
+5.08 mm (4 grid steps) — keeps the per-pin label text clear (KiCad
+text at 1.27 mm size needs ~0.76 mm/char + clearance) while still
+fitting 18 sub-sheets on A0. Bumping to 7.62 overflows the A0
+height because som_j2 (70 hier labels) + fmc_lpc (84) become too
+tall to stack."""
 _SHEET_PIN_TOP_INSET_MM = 7.62  # space at the top for the sheetname/file labels
 _SHEET_COLUMN_GAP_MM = 25.4
 _SHEET_ROW_GAP_MM = 12.7

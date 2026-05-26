@@ -23,6 +23,7 @@ from typing import Literal
 
 from zynq_eda.core.layout._builder import BlockLayoutBuilder
 from zynq_eda.core.layout._constants import (
+    DENSE_HORIZONTAL_SWARM_PITCH_MM,
     HORIZONTAL_SWARM_PITCH_MM,
     PASSIVE_ADJACENT_PIN_STAGGER_MM,
     PASSIVE_OFFSET_MM,
@@ -275,6 +276,7 @@ def place_one_passive_for_pin(
     ic_pin_geometry,
     slot_index: int,
     ic_reference: str,
+    horizontal_swarm_pitch_mm: float = HORIZONTAL_SWARM_PITCH_MM,
 ) -> None:
     """Place a single passive next to an IC pin and wire it up.
 
@@ -288,10 +290,15 @@ def place_one_passive_for_pin(
         slot_index: 0-based index of this passive within the per-pin swarm.
             Used to derive the slot's geometric offset; the offset scale
             depends on which body side the IC pin sits on (LEFT/RIGHT use
-            :data:`HORIZONTAL_SWARM_PITCH_MM`; TOP/BOTTOM use
+            ``horizontal_swarm_pitch_mm``; TOP/BOTTOM use
             :data:`PASSIVE_PITCH_MM`).
         ic_reference: The IC's reference designator (currently unused; kept
             for future per-IC accounting).
+        horizontal_swarm_pitch_mm: Slot pitch (mm) along the LEFT/RIGHT
+            fan-out axis. Defaults to :data:`HORIZONTAL_SWARM_PITCH_MM`;
+            callers pass :data:`DENSE_HORIZONTAL_SWARM_PITCH_MM` for
+            refcircuits that opt into a wider pitch via
+            ``ReferenceCircuit.dense_swarm``.
     """
     side = pin_side(
         ic_pin_geometry.relative,
@@ -350,7 +357,7 @@ def place_one_passive_for_pin(
     if side == "left":
         primary_offset = (
             PASSIVE_OFFSET_MM
-            + slot_index * HORIZONTAL_SWARM_PITCH_MM
+            + slot_index * horizontal_swarm_pitch_mm
             + pin_stagger
         )
         passive_anchor = Point(
@@ -363,7 +370,7 @@ def place_one_passive_for_pin(
     elif side == "right":
         primary_offset = (
             PASSIVE_OFFSET_MM
-            + slot_index * HORIZONTAL_SWARM_PITCH_MM
+            + slot_index * horizontal_swarm_pitch_mm
             + pin_stagger
         )
         passive_anchor = Point(
@@ -383,7 +390,7 @@ def place_one_passive_for_pin(
         # both at (132.08, 21.59)). 15.24 mm pushes slot 1 past the
         # next 5 pin positions, eliminating the collision regardless
         # of which adjacent pins also have clusters.
-        lateral_offset = slot_index * HORIZONTAL_SWARM_PITCH_MM
+        lateral_offset = slot_index * horizontal_swarm_pitch_mm
         primary_offset = PASSIVE_OFFSET_MM + pin_stagger
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + lateral_offset),
@@ -395,7 +402,7 @@ def place_one_passive_for_pin(
     else:  # bottom
         # Mirror of the top branch — see comment above for why we use
         # HORIZONTAL_SWARM_PITCH_MM instead of PASSIVE_PITCH_MM.
-        lateral_offset = slot_index * HORIZONTAL_SWARM_PITCH_MM
+        lateral_offset = slot_index * horizontal_swarm_pitch_mm
         primary_offset = PASSIVE_OFFSET_MM + pin_stagger
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + lateral_offset),
@@ -469,6 +476,17 @@ def cluster_ic_externals(
     if getattr(ic, "power_output_net", ""):
         overrides_for_pin.setdefault("OUT", ic.power_output_net)
 
+    # Pick LEFT/RIGHT slot pitch from refcircuit.dense_swarm. Most
+    # refcircuits use the default 15.24 mm (which aligns with the
+    # connector hier-pin row pitch on the root sheet). Dense networks
+    # (HX5008 Bob-Smith) opt into 20.32 mm via ``dense_swarm = True``
+    # to give the per-slot value labels enough room to read.
+    horizontal_pitch_mm = (
+        DENSE_HORIZONTAL_SWARM_PITCH_MM
+        if getattr(ic.refcircuit, "dense_swarm", False)
+        else HORIZONTAL_SWARM_PITCH_MM
+    )
+
     pin_geom_map: dict[str, "PinGeometryAbs"] = {}
     placed_passive_pin_names: set[str] = set()
     for pin_name, externals in by_pin.items():
@@ -501,5 +519,6 @@ def cluster_ic_externals(
                 ic_pin_geometry=pin_geom,
                 slot_index=slot_index,
                 ic_reference=ic.reference,
+                horizontal_swarm_pitch_mm=horizontal_pitch_mm,
             )
     return pin_geom_map

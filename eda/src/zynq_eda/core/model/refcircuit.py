@@ -97,6 +97,18 @@ class ReferenceCircuit:
     """Legacy per-IC placement template. Retained for the existing 28 refcircuit
     specs that set this field; the new layout engine ignores it and derives
     placement from real symbol pin geometry instead."""
+    dense_swarm: bool = False
+    """Opt into the wider LEFT/RIGHT cluster-passive pitch.
+
+    When ``True``, the cluster pass uses
+    :data:`zynq_eda.core.layout._constants.DENSE_HORIZONTAL_SWARM_PITCH_MM`
+    (20.32 mm) instead of the default
+    :data:`zynq_eda.core.layout._constants.HORIZONTAL_SWARM_PITCH_MM`
+    (15.24 mm). Reserved for refcircuits whose passive cluster has multiple
+    adjacent IC pins each with multiple slots — e.g. the HX5008 Bob-Smith
+    network (4 CT_PAIRn pins × 2 passives each), where the value-text
+    fields (``75R``, ``1n``) overlap at the default pitch.
+    """
 
     def __post_init__(self) -> None:
         if not self.part_mpn:

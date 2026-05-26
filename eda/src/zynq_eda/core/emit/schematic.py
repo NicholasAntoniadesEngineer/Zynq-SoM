@@ -206,6 +206,12 @@ def emit_sheet(
 _INTERNAL_PROPERTIES_TO_HIDE: tuple[str, ...] = (
     "hierarchy_path",  # kicad-sch-api annotation; KiCad renders it as text
                        # next to every symbol unless explicitly hidden.
+    "LCSC",            # BOM-tracking LCSC code (e.g. "C6624664"); useful in
+                       # the BOM CSV + the schematic property table, but
+                       # rendering it next to every symbol on every page
+                       # clutters the schematic with stray text strings.
+    "Datasheet",       # Same — URLs are long and visually noisy when
+                       # rendered as floating text next to every IC.
 )
 
 
