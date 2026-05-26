@@ -212,14 +212,24 @@ def emit_bank_symbol(
     left_pins.sort(key=_pin_y, reverse=True)
     right_pins.sort(key=_pin_y, reverse=True)
 
-    pitch = 2.54
+    # Pin pitch + body width tuned for VISIBLE pin names. At the default
+    # 2.54 mm pitch, pin name text (e.g. "FMC_LA00_P", "ZYNQ_PS_MIO0")
+    # at 1.27 mm font height ≈ 1.9 mm row + 1.5 mm intra-name kerning
+    # crowds adjacent rows on KiCad's rendered PDF (the user's screenshot
+    # showed rows visually stacked). Bumping pitch to 5.08 mm (2 KiCad
+    # grid units) gives 3.18 mm clear vertical gap between text rows so
+    # each pin's intrinsic name is readable on its own line. Body
+    # half-width of 12.7 mm leaves room for the longest typical pin
+    # name (~12 chars ≈ 9 mm) plus 3.7 mm padding inside the body.
+    pitch = 5.08
+    box_half_width = 12.7
     max_col = max(len(left_pins), len(right_pins), 1)
     box_height = max(5.08, (max_col + 1) * pitch)
     box_top = box_height / 2.0
     box_bottom = -box_height / 2.0
 
-    left_x  = -box_half_width - pitch  # pin tip outside body
-    right_x =  box_half_width + pitch
+    left_x  = -box_half_width - 2.54  # pin tip 2.54 mm outside body (one stub)
+    right_x =  box_half_width + 2.54
     cursor = box_top - pitch
     for pin in left_pins:
         # Left-side pins have rotation 0 (tip facing right, body to its right).

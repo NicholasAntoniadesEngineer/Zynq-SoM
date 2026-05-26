@@ -527,3 +527,273 @@ class SymbolGeometryCache:
 
         self._bbox_cache[cache_key] = box
         return box
+
+    # ---------------------------------------------------------------------
+    # Intrinsic text bbox helpers — pin NAME + pin NUMBER labels KiCad
+    # renders from the .kicad_sym definition at emit time. These are NOT
+    # PlacedLabel primitives the engine creates; they're painted by the
+    # schematic editor based on each pin's (name "...") + (number "...")
+    # fields and the symbol's (pin_names ...) / (pin_numbers ...)
+    # directives. Without registering their bboxes in occupancy, our
+    # PlacedLabels and cluster passives land on top of them on dense
+    # connectors (USB-C, FX10A, FFC). See Wave D.
+    # ---------------------------------------------------------------------
+
+    def _read_pin_text_directives(
+        self, lib_id: str
+    ) -> tuple[tuple[float, bool], tuple[float, bool]]:
+        """Return ((name_offset_mm, name_hidden), (number_offset_mm, number_hidden)).
+
+        KiCad defaults when the directive is absent:
+          pin_names   → offset 0.508 mm, hide no
+          pin_numbers → offset 0      (no offset concept; numbers render
+                                       above the pin line), hide no
+
+        We use 0.508 as the default pin_name offset because that's KiCad's
+        own default; an explicit ``(pin_names (offset N))`` overrides it.
+        """
+        import sexpdata as _sx
+
+        cache_key = ("_pin_text_directives", lib_id)
+        cached = self._bbox_cache.get(cache_key)
+        if cached is not None:
+            return cached  # type: ignore[return-value]
+
+        symbol_def = _ksa_get_symbol_cache().get_symbol(lib_id)
+        name_offset, name_hidden = 0.508, False
+        num_offset, num_hidden = 0.0, False
+        if symbol_def is not None:
+            raw = getattr(symbol_def, "raw_kicad_data", None) or ()
+            for item in raw:
+                if not isinstance(item, list) or not item:
+                    continue
+                head = item[0]
+                head_name = getattr(head, "value", lambda: None)()
+                if head_name == "pin_names":
+                    name_offset, name_hidden = _parse_pin_text_directive(
+                        item, default_offset=0.508
+                    )
+                elif head_name == "pin_numbers":
+                    num_offset, num_hidden = _parse_pin_text_directive(
+                        item, default_offset=0.0
+                    )
+
+        result = ((name_offset, name_hidden), (num_offset, num_hidden))
+        self._bbox_cache[cache_key] = result  # type: ignore[assignment]
+        return result
+
+    def intrinsic_pin_label_bboxes(
+        self,
+        lib_id: str,
+        anchor: Point,
+        rotation: float = 0.0,
+        *,
+        owner_id: str = "",
+    ):
+        """Return PAGE-coord bboxes for every intrinsic pin-NAME label.
+
+        When the symbol's ``(pin_names (hide yes))`` directive applies,
+        returns an empty tuple (no labels are rendered).
+
+        For each visible pin:
+          - anchor at pin tip + ``pin_names_offset`` INTO the body
+          - rotation derived from the pin's page-side (so text reads from
+            the tip toward the body interior)
+          - justify so the text grows AWAY from the pin tip
+
+        The text width is conservatively over-estimated via :func:`text_bbox`.
+        """
+        from zynq_eda.core.layout.bbox import (
+            BBox,
+            DEFAULT_TEXT_SIZE_MM,
+            text_bbox,
+        )
+
+        (name_offset, name_hidden), _ = self._read_pin_text_directives(lib_id)
+        if name_hidden:
+            return ()
+
+        # Pre-fetch pin number → rotation map for page-side computation.
+        # Reuse the existing _pin_rotation_from_symbol helper.
+        bboxes = []
+        preview = self._preview_component(lib_id, anchor, rotation)
+        for pin_info in preview.list_pins():
+            name = str(pin_info.get("name", "") or "")
+            if not name or name == "~":
+                continue
+            pin_number = str(pin_info["number"])
+            symbol_relative = Point(
+                float(pin_info["position"].x),
+                float(pin_info["position"].y),
+            )
+            page_relative = _flip_y_then_rotate(symbol_relative, rotation)
+            pin_tip_abs = Point(
+                anchor.x + page_relative.x,
+                anchor.y + page_relative.y,
+            )
+            pin_rot = _pin_rotation_from_symbol(lib_id, pin_number)
+            side = page_side_from_pin(pin_rot, rotation)
+
+            # Position the name's text-anchor + justify per page-side.
+            # Text grows INTO the symbol body (away from the pin tip).
+            if side == "left":
+                # Tip on left edge, body extends RIGHT.
+                # Name text starts ``name_offset`` to the RIGHT of tip,
+                # reads LEFT-to-RIGHT.
+                text_anchor = Point(pin_tip_abs.x + name_offset, pin_tip_abs.y)
+                text_justify: str = "left"
+                text_rotation = 0.0
+            elif side == "right":
+                # Tip on right edge, body extends LEFT.
+                text_anchor = Point(pin_tip_abs.x - name_offset, pin_tip_abs.y)
+                text_justify = "right"
+                text_rotation = 0.0
+            elif side == "top":
+                # Tip on top edge, body extends DOWN.
+                # Text reads top-to-bottom from the body inward.
+                text_anchor = Point(pin_tip_abs.x, pin_tip_abs.y + name_offset)
+                text_justify = "left"
+                text_rotation = 90.0
+            else:  # bottom
+                text_anchor = Point(pin_tip_abs.x, pin_tip_abs.y - name_offset)
+                text_justify = "right"
+                text_rotation = 90.0
+
+            bbox = text_bbox(
+                text=name,
+                anchor=text_anchor,
+                size_mm=DEFAULT_TEXT_SIZE_MM,
+                rotation=text_rotation,
+                justify=text_justify,  # type: ignore[arg-type]
+                owner_id=f"{owner_id}:pin_name:{pin_number}" if owner_id else f"pin_name:{pin_number}",
+                kind="intrinsic_pin_name",
+            )
+            bboxes.append(bbox)
+        return tuple(bboxes)
+
+    def intrinsic_pin_number_bboxes(
+        self,
+        lib_id: str,
+        anchor: Point,
+        rotation: float = 0.0,
+        *,
+        owner_id: str = "",
+    ):
+        """Return PAGE-coord bboxes for every intrinsic pin-NUMBER label.
+
+        Pin numbers render PERPENDICULAR to the pin line, slightly above
+        the line near the pin tip. KiCad's default offset is ~0.51 mm
+        above the line; text size matches pin_name.
+
+        When ``(pin_numbers (hide yes))`` applies, returns ().
+        """
+        from zynq_eda.core.layout.bbox import (
+            BBox,
+            DEFAULT_TEXT_SIZE_MM,
+            text_bbox,
+        )
+
+        _, (_num_offset, num_hidden) = self._read_pin_text_directives(lib_id)
+        if num_hidden:
+            return ()
+
+        # Pin number sits ABOVE the pin line, halfway along the stub
+        # (between tip and body edge). Stub length is typically 2.54 mm.
+        # For LEFT-edge pin: number text at (tip.x + 1.27, tip.y - 0.6 mm).
+        # The slight vertical offset above the line is what makes the
+        # text visible on dense connectors.
+        OFFSET_ALONG_PIN = 1.27  # halfway along the 2.54 mm stub
+        OFFSET_ABOVE_LINE = 0.6  # bumps text above the pin line
+
+        bboxes = []
+        preview = self._preview_component(lib_id, anchor, rotation)
+        for pin_info in preview.list_pins():
+            pin_number = str(pin_info["number"])
+            if not pin_number:
+                continue
+            symbol_relative = Point(
+                float(pin_info["position"].x),
+                float(pin_info["position"].y),
+            )
+            page_relative = _flip_y_then_rotate(symbol_relative, rotation)
+            pin_tip_abs = Point(
+                anchor.x + page_relative.x,
+                anchor.y + page_relative.y,
+            )
+            pin_rot = _pin_rotation_from_symbol(lib_id, pin_number)
+            side = page_side_from_pin(pin_rot, rotation)
+
+            if side == "left":
+                # Number sits between tip and body, above the line.
+                text_anchor = Point(
+                    pin_tip_abs.x + OFFSET_ALONG_PIN,
+                    pin_tip_abs.y - OFFSET_ABOVE_LINE,
+                )
+                text_justify: str = "center"
+                text_rotation = 0.0
+            elif side == "right":
+                text_anchor = Point(
+                    pin_tip_abs.x - OFFSET_ALONG_PIN,
+                    pin_tip_abs.y - OFFSET_ABOVE_LINE,
+                )
+                text_justify = "center"
+                text_rotation = 0.0
+            elif side == "top":
+                text_anchor = Point(
+                    pin_tip_abs.x + OFFSET_ABOVE_LINE,
+                    pin_tip_abs.y + OFFSET_ALONG_PIN,
+                )
+                text_justify = "center"
+                text_rotation = 90.0
+            else:  # bottom
+                text_anchor = Point(
+                    pin_tip_abs.x + OFFSET_ABOVE_LINE,
+                    pin_tip_abs.y - OFFSET_ALONG_PIN,
+                )
+                text_justify = "center"
+                text_rotation = 90.0
+
+            bbox = text_bbox(
+                text=pin_number,
+                anchor=text_anchor,
+                size_mm=DEFAULT_TEXT_SIZE_MM,
+                rotation=text_rotation,
+                justify=text_justify,  # type: ignore[arg-type]
+                owner_id=f"{owner_id}:pin_number:{pin_number}" if owner_id else f"pin_number:{pin_number}",
+                kind="intrinsic_pin_number",
+            )
+            bboxes.append(bbox)
+        return tuple(bboxes)
+
+
+def _ksa_get_symbol_cache():
+    """Lazy import so the helper can live below the class definition."""
+    import kicad_sch_api as _ksa
+    return _ksa.get_symbol_cache()
+
+
+def _parse_pin_text_directive(
+    directive_sexp: list,
+    *,
+    default_offset: float,
+) -> tuple[float, bool]:
+    """Parse a ``(pin_names ...)`` or ``(pin_numbers ...)`` s-expression.
+
+    Returns ``(offset_mm, hide_bool)``. Missing tokens default to
+    ``(default_offset, False)``.
+    """
+    offset = default_offset
+    hide = False
+    for token in directive_sexp[1:]:
+        if not isinstance(token, list) or not token:
+            continue
+        head_name = getattr(token[0], "value", lambda: None)()
+        if head_name == "offset" and len(token) > 1:
+            try:
+                offset = float(token[1])
+            except (TypeError, ValueError):
+                pass
+        elif head_name == "hide" and len(token) > 1:
+            val = getattr(token[1], "value", lambda: None)()
+            hide = (val == "yes")
+    return offset, hide

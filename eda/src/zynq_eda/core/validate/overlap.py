@@ -985,7 +985,105 @@ def validate_overlap(
                 description_right=f"symbol {sym.reference!r} body",
             ))
 
-    # ---- 6. wire × wire ------------------------------------------------
+    # ---- 6b. label × intrinsic_pin_name / intrinsic_pin_number ---------
+    # The placed labels are our PlacedLabel / PlacedHierarchicalLabel
+    # primitives. Intrinsic pin-name and pin-number labels are TEXT
+    # that KiCad will paint from the .kicad_sym definition at every
+    # pin position. Without checking these, our labels can land on
+    # top of the pin-name / pin-number text (the symptom the user
+    # reported on USB-C OTG, FX10A bank symbols, etc.).
+    intrinsic_bboxes: list[tuple[PlacedSymbol, BBox]] = []
+    if geometry is not None:
+        for sym, _ in symbol_bboxes:
+            if _is_power_symbol_reference(sym.reference):
+                continue
+            try:
+                for b in geometry.intrinsic_pin_label_bboxes(
+                    sym.lib_id, sym.position, sym.rotation,
+                    owner_id=sym.reference,
+                ):
+                    intrinsic_bboxes.append((sym, b))
+                for b in geometry.intrinsic_pin_number_bboxes(
+                    sym.lib_id, sym.position, sym.rotation,
+                    owner_id=sym.reference,
+                ):
+                    intrinsic_bboxes.append((sym, b))
+            except Exception:
+                continue
+
+    def _at_own_pin(text_anchor: "Point", sym_ref: str) -> bool:
+        """True if the placed label's anchor sits at any pin of this symbol.
+
+        The pin name/number is the symbol's intrinsic label for that
+        pin; our PlacedLabel anchored at the same pin's stub is the
+        net assignment for that pin. Both live on the same pin row,
+        and visually they're stacked but semantically attached — one
+        names the IC pin, the other names the net. Exempt.
+        """
+        endpoints = symbol_pin_endpoints.get(sym_ref, ())
+        for endpoint in endpoints:
+            if (
+                abs(text_anchor.x - endpoint.x) <= LABEL_AT_PIN_ENDPOINT_TOL_MM
+                and abs(text_anchor.y - endpoint.y) <= LABEL_AT_PIN_ENDPOINT_TOL_MM
+            ):
+                return True
+        return False
+
+    for label, label_box in label_bboxes:
+        for sym, intrinsic_box in intrinsic_bboxes:
+            if not _overlap_is_significant(label_box, intrinsic_box):
+                continue
+            # Exempt: our label anchored at the pin's stub (it IS the
+            # net label for that pin — visually adjacent to the pin
+            # name / number is by design, not an overlap to fix).
+            if _at_own_pin(label.position, sym.reference):
+                continue
+            rule_id = (
+                "overlap.label_intrinsic_pin_name"
+                if intrinsic_box.kind == "intrinsic_pin_name"
+                else "overlap.label_intrinsic_pin_number"
+            )
+            results.append(_result_from_overlap(
+                sheet=sheet,
+                rule_id=rule_id,
+                severity=severity,
+                left=label_box,
+                right=intrinsic_box,
+                strict=strict,
+                description_left=f"label {label.net_name!r}",
+                description_right=f"{intrinsic_box.kind.replace('_', ' ')} {intrinsic_box.owner_id!r}",
+            ))
+
+    for hlabel, hlabel_box in hlabel_bboxes:
+        for sym, intrinsic_box in intrinsic_bboxes:
+            if not _overlap_is_significant(hlabel_box, intrinsic_box):
+                continue
+            if _at_own_pin(hlabel.position, sym.reference):
+                continue
+            rule_id = (
+                "overlap.hlabel_intrinsic_pin_name"
+                if intrinsic_box.kind == "intrinsic_pin_name"
+                else "overlap.hlabel_intrinsic_pin_number"
+            )
+            results.append(_result_from_overlap(
+                sheet=sheet,
+                rule_id=rule_id,
+                severity=severity,
+                left=hlabel_box,
+                right=intrinsic_box,
+                strict=strict,
+                description_left=f"hier label {hlabel.net_name!r}",
+                description_right=f"{intrinsic_box.kind.replace('_', ' ')} {intrinsic_box.owner_id!r}",
+            ))
+
+    # ---- 6c. intrinsic × intrinsic (same-IC pin name vs pin number) ---
+    # Within a single symbol, the pin name + pin number share the pin
+    # row by design (it's how KiCad displays a pin). Cross-symbol
+    # intrinsic overlaps would mean two symbols' bodies are too close,
+    # which symbol×symbol already catches. So we skip this category.
+
+    # ---- 7. wire × wire ------------------------------------------------
+    # (Renumbered from 6 — intrinsic-text checks slotted in as 6b/6c.)
     for i, (_, wire_a, box_a) in enumerate(wire_bboxes):
         for _, wire_b, box_b in wire_bboxes[i + 1:]:
             if not _overlap_is_significant(box_a, box_b):

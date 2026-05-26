@@ -177,14 +177,12 @@ def generate_all_bank_symbols() -> tuple[Path, ...]:
             output_path=out_path,
             value_text=value_text,
             footprint=footprint,
-            # Hide pin NAMES — they collide visually with pin NUMBERS at
-            # the pin row when both render at the same position (KiCad
-            # stacks the name + number text at the pin location). The
-            # carrier provides clear net labels at the wire stub-end via
-            # connectors.py, so the symbol's intrinsic pin names are
-            # redundant inside the symbol body. Pin NUMBERS stay visible
-            # (they identify the physical pad on the package).
-            show_pin_names=False,
+            # Per Wave D plan: pin names stay VISIBLE. Placement engine
+            # registers their bboxes in occupancy so PlacedLabels and
+            # cluster passives can avoid them. Hiding labels is masking
+            # the problem; the answer is better layout (multi-cap
+            # spreading, dynamic stubs, occupancy-aware placement).
+            show_pin_names=True,
         )
         written.append(out_path.resolve())
     return tuple(written)
