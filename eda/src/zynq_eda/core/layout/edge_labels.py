@@ -264,14 +264,25 @@ def _orphan_net_labels(
         if key in seen_label_positions:
             continue
         seen_label_positions.add(key)
-        # Hier-label rotation: match the local label so they overlap
-        # visually rather than rotating awkwardly opposite each other.
+        # Hier-label rotation: match the local label's orientation. The
+        # hier label REPLACES the local label at this coord — KiCad
+        # renders only the hier label's arrow + text, and would
+        # double-print if we left the local label in place. Drop the
+        # local label so the rendering is clean.
         builder.hierarchical_labels.append(PlacedHierarchicalLabel(
             net_name=net.name,
             position=anchor_label.position,
             direction=net.direction,
             rotation=anchor_label.rotation,
         ))
+        # Strip the now-redundant local label that the hier label
+        # supersedes. KiCad's label-merging by name keeps electrical
+        # connectivity intact across the sheet's other labels.
+        try:
+            builder.labels.remove(anchor_label)
+            matching.pop(0)
+        except ValueError:
+            pass
 
 
 def _ground_label_only(

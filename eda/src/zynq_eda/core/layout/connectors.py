@@ -87,18 +87,25 @@ def place_connectors(
         )
         # Place connectors vertically; first connector near the top, then
         # stack downward. Y spacing scales with the connector's pin count
-        # so dense connectors get more vertical room.
+        # so dense connectors get more vertical room. The connector's
+        # anchor is the symbol body's CENTROID, so for tall single-column
+        # symbols (e.g. FFC_40P with 40 pins ≈ 100 mm tall) we have to
+        # offset the anchor by half the symbol height -- otherwise the
+        # top pins land off the top of the page.
         y_cursor = snap_to_grid(INTERIOR_MARGIN_MM + 20.32)
         for connector in connectors:
-            anchor = Point(column_x, y_cursor)
+            pin_count = _connector_pin_count(connector, geometry_cache)
+            symbol_half_height = max(20.32, (pin_count * 2.54) / 2.0 + 2.54)
+            anchor_y = snap_to_grid(y_cursor + symbol_half_height)
+            anchor = Point(column_x, anchor_y)
             _place_one_connector(
                 builder,
                 connector=connector,
                 anchor=anchor,
                 geometry_cache=geometry_cache,
             )
-            pin_count = _connector_pin_count(connector, geometry_cache)
-            y_cursor = snap_to_grid(y_cursor + max(40.64, pin_count * 2.54 + 20.32))
+            # Advance cursor past the placed symbol's full height + gap.
+            y_cursor = snap_to_grid(anchor_y + symbol_half_height + 20.32)
 
 
 def _connector_pin_count(

@@ -142,6 +142,8 @@ Bidirectional I2C current/voltage/power monitor, 16-bit, 36 V common-mode, VSSOP
 | Pin | Net |
 |---|---|
 | Vbus | +VIN |
+| Vin+ | +VIN |
+| Vin- | Vin- |
 
 ### Layout notes
 

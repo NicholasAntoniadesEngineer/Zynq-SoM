@@ -76,6 +76,13 @@ LVDS_LCD_REFCIRCUIT = ReferenceCircuit(
         # at the connector. Many integrated panels include this internally,
         # but adding it here lets the carrier drive an external panel
         # via a longer FFC. Resistor placed close to the connector.
+        #
+        # NOTE: from_pin/to_net values match the FFC_40P symbol's pin names
+        # (see shared/symbols/zynq_eda.kicad_sym). When the carrier supplies
+        # a pin_to_net map on ConnectorInstance, the symbol pin name
+        # (e.g. "LVDS_CLK+") still has to exist on the symbol so cluster
+        # placement can find its geometry. The to_net for non-net symbol
+        # pin names is resolved via pin_to_net overrides.
         ExternalPart(
             from_pin="LVDS_CLK+",
             to_net="LVDS_CLK-",
@@ -88,22 +95,24 @@ LVDS_LCD_REFCIRCUIT = ReferenceCircuit(
             part_token="100R_0402_1%",
             justification="IEEE 1596.3 / TIA-644-A: 100 ohm differential termination at receiver",
         ),
-        # +3V3 panel-logic bypass at the connector.
+        # +3V3 panel-logic bypass at the connector. ``+3V3`` is the
+        # symbol pin name; pin_to_net wires it to the same net so
+        # to_net="GND" lands on the global GND.
         ExternalPart(
-            from_pin="VCC_3V3",
+            from_pin="+3V3",
             to_net="GND",
             part_token="10u_0603_X7R",
             justification="Bulk decoupling for panel logic supply at FFC",
         ),
         ExternalPart(
-            from_pin="VCC_3V3",
+            from_pin="+3V3",
             to_net="GND",
             part_token="100n_0402_X7R",
             justification="HF bypass for panel logic supply at FFC",
         ),
         # +12V backlight bypass.
         ExternalPart(
-            from_pin="P12V",
+            from_pin="+12V",
             to_net="GND",
             part_token="10u_0603_X7R",
             justification="Bulk decoupling for backlight rail at FFC",

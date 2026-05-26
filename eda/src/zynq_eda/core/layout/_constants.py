@@ -34,6 +34,25 @@ net, shorting GND to whatever slot N's destination is.
 PASSIVE_OFFSET_MM = snap_to_grid(10.16)
 """Distance from an IC pin to its nearest passive's anchor."""
 
+PASSIVE_ADJACENT_PIN_STAGGER_MM = snap_to_grid(5.08)
+"""Extra perpendicular offset for caps on alternating-parity IC pin rows/cols.
+
+When two adjacent IC pins (e.g. VCCA at Y=46.99 and VCCB at Y=49.53, 2.54 mm
+apart on the same body side) each get a cluster cap, the caps' anchors
+otherwise share the same X column for LEFT/RIGHT pins (or same Y row for
+TOP/BOTTOM pins). At 2.54 mm pin pitch this packs the cap bodies + their
+"Value" / "Reference" text labels too tightly — adjacent labels collide
+and the parallel-plate cap symbols visually merge into one blob.
+
+Solution: stagger by the IC pin's coordinate parity. Pins whose
+``pin.y // 2.54`` (LEFT/RIGHT) or ``pin.x // 2.54`` (TOP/BOTTOM) is odd
+get an extra ``PASSIVE_ADJACENT_PIN_STAGGER_MM`` added to their primary
+(perpendicular-to-edge) offset. This places even-row and odd-row caps in
+two distinct columns/rows, opening up enough whitespace for both bodies
+and labels to read cleanly. 5.08 mm = 2 × grid keeps the layout tight
+while guaranteeing the alternating caps' bounding boxes don't overlap.
+"""
+
 PIN_TO_PASSIVE_NEAR_MM = snap_to_grid(2.54)
 """Gap between an IC pin endpoint and the passive's near terminal."""
 

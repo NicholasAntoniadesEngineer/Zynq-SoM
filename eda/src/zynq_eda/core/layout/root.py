@@ -44,11 +44,17 @@ from zynq_eda.core.model.sheet import (
 )
 
 
-_ROOT_PAPER_SIZE = "A2"
-"""Root sheet is A2 (594×420 mm). With 18 block sheet symbols arranged
-3 columns × 6 rows, each row consumes ~50 mm of height (sheet body +
-inter-row gap), so the column overruns A3's 297 mm height. A2 gives
-420 mm headroom and keeps the index legible at print size."""
+_ROOT_PAPER_SIZE = "A1"
+"""Root sheet is A1 (841×594 mm).
+
+Was A2 (594×420 mm). Bumped to A1 because the full carrier surfaces all
+hier-labels for declared external_nets on connector sheets — once the
+FFC_40P (LVDS) and FFC_15P (MIPI) connector symbols carry every pin
+(see ``shared/symbols/zynq_eda.kicad_sym``), the LVDS sheet box grows to
+~96 mm tall to host its 19 hierarchical labels (3 power + 8 LVDS pairs +
+EDID I2C + RESET_N + STBY_N + PWM + BL_EN). With 6 blocks per column,
+that overruns A2's 420 mm height. A1 gives 594 mm of headroom — enough
+for the worst-case column (LVDS + PMOD + FMC LPC = three tall blocks)."""
 
 _SHEET_SYMBOL_MIN_WIDTH_MM = 50.8
 _SHEET_SYMBOL_MIN_HEIGHT_MM = 38.1

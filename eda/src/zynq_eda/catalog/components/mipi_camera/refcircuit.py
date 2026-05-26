@@ -59,19 +59,23 @@ MIPI_CAMERA_REFCIRCUIT = ReferenceCircuit(
     description="15-pin 1.0 mm pitch FPC receptacle for MIPI CSI-2 camera (Pi-camera compatible)",
     supply_rail="+3V3",
     external_parts=(
-        # +3V3 bulk decoupling at the FFC. The Pi camera draws short bursts
-        # of ~250 mA during sensor readout.
+        # +3V3 supply decoupling at the FFC. The Pi camera draws short
+        # bursts of ~250 mA during sensor readout, so a bulk + HF stack
+        # local to the connector keeps droop within the sensor's tolerance.
+        # ``+3V3`` is the symbol's pin-15 name (see
+        # shared/symbols/zynq_eda.kicad_sym FFC_15P), which the carrier's
+        # pin_to_net wires to the global +3V3 rail.
         ExternalPart(
-            from_pin="VCC_1V8",
+            from_pin="+3V3",
             to_net="GND",
-            part_token="100n_0402_X7R",
-            justification="HF bypass for sensor 1.8V I/O supply at FFC (if used)",
+            part_token="10u_0603_X7R",
+            justification="Bulk decoupling for sensor supply at FFC (~250 mA readout bursts)",
         ),
         ExternalPart(
-            from_pin="VCC_2V8",
+            from_pin="+3V3",
             to_net="GND",
             part_token="100n_0402_X7R",
-            justification="HF bypass for sensor analog supply at FFC (if used)",
+            justification="HF bypass for sensor supply at FFC",
         ),
         # Camera I2C pull-ups - carrier owns these (sensor side is open-drain).
         ExternalPart(

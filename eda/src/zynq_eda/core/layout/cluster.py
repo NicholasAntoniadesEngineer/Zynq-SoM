@@ -24,6 +24,7 @@ from typing import Literal
 from zynq_eda.core.layout._builder import BlockLayoutBuilder
 from zynq_eda.core.layout._constants import (
     HORIZONTAL_SWARM_PITCH_MM,
+    PASSIVE_ADJACENT_PIN_STAGGER_MM,
     PASSIVE_OFFSET_MM,
     PASSIVE_PIN_HALF,
     PASSIVE_PITCH_MM,
@@ -71,11 +72,23 @@ def passive_lib_id(part_token: str) -> str:
 def passive_value(part_token: str) -> str:
     """Extract the symbol's ``Value`` field text from a part token.
 
+    Prefers the canonical ``BOMPart.value`` from the parts registry when
+    the token is registered (e.g. ``R_SENSE_10mR_2010_1%`` -> ``0R01``
+    rather than the heuristic-derived ``R``). Falls back to a
+    split-on-underscore heuristic for tokens that aren't in the registry
+    yet — useful during incremental authoring.
+
     Examples:
-        "100n_0402_X7R" → "100n"
-        "10k_0402_1%"   → "10k"
-        "schottky_SS14" → "SS14"
+        "100n_0402_X7R"          -> "100n"
+        "10k_0402_1%"            -> "10k"
+        "R_SENSE_10mR_2010_1%"   -> "0R01"  (via registry)
+        "schottky_SS14"          -> "SS14"
     """
+    try:
+        from zynq_eda.catalog.registry.parts_registry import get_part
+        return get_part(part_token).value
+    except (KeyError, ImportError):
+        pass
     parts = part_token.split("_")
     if not parts:
         return part_token
@@ -85,7 +98,18 @@ def passive_value(part_token: str) -> str:
 
 
 def passive_footprint(part_token: str) -> str:
-    """Best-effort KiCad footprint for the part token."""
+    """Best-effort KiCad footprint for the part token.
+
+    Prefers the registry's ``BOMPart.footprint`` so wide-package shunts
+    (e.g. ``R_SENSE_10mR_2010_1%`` -> 2010 / 5025Metric) and other
+    non-default packages emit correct footprints. Falls back to a
+    per-passive-kind default for tokens missing from the registry.
+    """
+    try:
+        from zynq_eda.catalog.registry.parts_registry import get_part
+        return get_part(part_token).footprint
+    except (KeyError, ImportError):
+        pass
     kind = passive_kind(part_token)
     if kind == "cap":
         return "Capacitor_SMD:C_0402_1005Metric"
@@ -276,6 +300,36 @@ def place_one_passive_for_pin(
     )
     pin_connection = ic_pin_geometry.connection
 
+    # Adjacent-pin stagger: when two IC pins on the same body side are at
+    # KiCad's 2.54 mm pin pitch (the common case for VCC pairs, VBUS+VDD,
+    # etc.), each gets a cluster cap. Without intervention, both caps'
+    # anchors share the same column (LEFT/RIGHT) or row (TOP/BOTTOM), and
+    # the cap bodies + their Value/Reference text overlap at 2.54 mm
+    # spacing. Staggering odd-parity pins by an extra
+    # PASSIVE_ADJACENT_PIN_STAGGER_MM perpendicular to the body edge
+    # places the two caps in two distinct columns/rows, restoring
+    # readability while preserving the existing slot-fanning behaviour
+    # for multi-cap-per-pin clusters.
+    #
+    # Parity is derived from the IC pin's absolute coordinate divided by
+    # the KiCad pin pitch (2.54 mm). LEFT/RIGHT pins parity-stagger on Y;
+    # TOP/BOTTOM pins parity-stagger on X. The result is a checker-board
+    # pattern of cap positions that visually decongests dense pin packs.
+    #
+    # Use ``int(coord/2.54 + 0.5)`` (round-half-up) instead of
+    # ``round()`` — Python's ``round`` uses banker's rounding which maps
+    # half-pitch-offset pins like Y=46.99 (=18.5*2.54) and Y=49.53
+    # (=19.5*2.54) to the same parity (both round to even), defeating
+    # the stagger. The ``+0.5`` shift before truncation breaks the tie
+    # consistently so adjacent half-pitch-offset rows land on opposite
+    # parities.
+    KICAD_PIN_PITCH = 2.54
+    if side in ("left", "right"):
+        parity = int(pin_connection.y / KICAD_PIN_PITCH + 0.5) & 1
+    else:
+        parity = int(pin_connection.x / KICAD_PIN_PITCH + 0.5) & 1
+    pin_stagger = parity * PASSIVE_ADJACENT_PIN_STAGGER_MM
+
     # Choose passive_anchor + rotation per side so the NEAR pin (toward the
     # IC) lands one PASSIVE_PIN_HALF from passive_anchor in the right
     # direction. Empirically, under KiCad's "flip-Y then rotate CW" placement
@@ -294,7 +348,11 @@ def place_one_passive_for_pin(
     # laterally along their own column (each slot has its own X column);
     # the lateral pitch only needs to keep adjacent caps visually separated.
     if side == "left":
-        primary_offset = PASSIVE_OFFSET_MM + slot_index * HORIZONTAL_SWARM_PITCH_MM
+        primary_offset = (
+            PASSIVE_OFFSET_MM
+            + slot_index * HORIZONTAL_SWARM_PITCH_MM
+            + pin_stagger
+        )
         passive_anchor = Point(
             snap_to_grid(pin_connection.x - primary_offset),
             pin_connection.y,
@@ -303,7 +361,11 @@ def place_one_passive_for_pin(
         near_point = Point(snap_to_grid(passive_anchor.x + PASSIVE_PIN_HALF), passive_anchor.y)
         far_point = Point(snap_to_grid(passive_anchor.x - PASSIVE_PIN_HALF), passive_anchor.y)
     elif side == "right":
-        primary_offset = PASSIVE_OFFSET_MM + slot_index * HORIZONTAL_SWARM_PITCH_MM
+        primary_offset = (
+            PASSIVE_OFFSET_MM
+            + slot_index * HORIZONTAL_SWARM_PITCH_MM
+            + pin_stagger
+        )
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + primary_offset),
             pin_connection.y,
@@ -322,9 +384,10 @@ def place_one_passive_for_pin(
         # next 5 pin positions, eliminating the collision regardless
         # of which adjacent pins also have clusters.
         lateral_offset = slot_index * HORIZONTAL_SWARM_PITCH_MM
+        primary_offset = PASSIVE_OFFSET_MM + pin_stagger
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + lateral_offset),
-            snap_to_grid(pin_connection.y - PASSIVE_OFFSET_MM),
+            snap_to_grid(pin_connection.y - primary_offset),
         )
         passive_rotation = 0.0
         near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
@@ -333,9 +396,10 @@ def place_one_passive_for_pin(
         # Mirror of the top branch — see comment above for why we use
         # HORIZONTAL_SWARM_PITCH_MM instead of PASSIVE_PITCH_MM.
         lateral_offset = slot_index * HORIZONTAL_SWARM_PITCH_MM
+        primary_offset = PASSIVE_OFFSET_MM + pin_stagger
         passive_anchor = Point(
             snap_to_grid(pin_connection.x + lateral_offset),
-            snap_to_grid(pin_connection.y + PASSIVE_OFFSET_MM),
+            snap_to_grid(pin_connection.y + primary_offset),
         )
         passive_rotation = 180.0
         near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF))

@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "4718041d-79d9-47b4-a7a3-c5b4d3fe755d")
+	(uuid "b92ae4c0-2fff-4c5c-b52d-dd9038c345ab")
 	(paper "A4")
 	(title_block
 		(title "SoM Mate J1 (PS MIO + system rails)")
@@ -362,16 +362,16 @@
 	)
 	(symbol
 		(lib_id "zynq_eda:FMC_LPC")
-		(at 76.2 35.56 0)
+		(at 76.2 55.88 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "cdc2f19d-331b-4209-b540-8a04d12b2ff5")
+		(uuid "823f5e88-a8a0-4793-98f8-ffc6b0d1a16c")
 		(property "Reference" "J1"
-			(at 76.2 40.64 0.0000)
+			(at 76.2 60.96 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -380,7 +380,7 @@
 			)
 		)
 		(property "Value" "FX10A-168P-SV(91)"
-			(at 76.2 27.94 0.0000)
+			(at 76.2 48.26 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -389,7 +389,7 @@
 			)
 		)
 		(property "Footprint" "Connector_FFC-FPC:FX10A-168P-SV1"
-			(at 76.2 35.56 0.0000)
+			(at 76.2 55.88 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -398,7 +398,7 @@
 			)
 		)
 		(property "LCSC" "C6624664"
-			(at 78.74 40.6399 0)
+			(at 78.74 60.9599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -407,7 +407,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.hirose.com/en/product/document?clcode=CL0681-2024-7-91&productname=FX10A-168P-SV(91)&series=FX10A"
-			(at 76.2 35.56 0)
+			(at 76.2 55.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -416,14 +416,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "92d45a7a-d137-45b0-9cd7-d489952374b2")
+			(uuid "a9c638fd-eb9a-40fc-914c-857abb71e576")
 		)
 		(pin "2"
-			(uuid "0e81331c-592a-4305-a961-d66918debe59")
+			(uuid "c1988348-6af3-4fa3-a776-7386686a1e0b")
 		)
 		(instances
 			(project "SoM Mate J1 (PS MIO + system rails)"
-				(path "/4718041d-79d9-47b4-a7a3-c5b4d3fe755d"
+				(path "/b92ae4c0-2fff-4c5c-b52d-dd9038c345ab"
 					(reference "J1")
 					(unit 1)
 				)
@@ -432,16 +432,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 58.42 35.56 270)
+		(at 58.42 55.88 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "aecbd6f4-f9b8-4e22-af1f-601cb30c4a92")
+		(uuid "770a3f17-2dcf-4301-a868-5030e0f6e49b")
 		(property "Reference" "C100"
-			(at 60.96 34.925 270)
+			(at 60.96 55.245 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -450,7 +450,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 55.88 34.925 270)
+			(at 55.88 55.245 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -459,7 +459,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 59.3852 31.75 0.0000)
+			(at 59.3852 52.07 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -468,14 +468,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "23f493a0-5481-4193-b8e7-9cd099e964d9")
+			(uuid "24fdfb00-bb04-4301-9f1d-2538d33bd7f7")
 		)
 		(pin "2"
-			(uuid "a5631352-0013-4275-9865-ff67597e4c0b")
+			(uuid "079bf0d1-4104-455c-95bf-14e9406ccc96")
 		)
 		(instances
 			(project "SoM Mate J1 (PS MIO + system rails)"
-				(path "/4718041d-79d9-47b4-a7a3-c5b4d3fe755d"
+				(path "/b92ae4c0-2fff-4c5c-b52d-dd9038c345ab"
 					(reference "C100")
 					(unit 1)
 				)
@@ -484,16 +484,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 49.53 35.56 0)
+		(at 49.53 55.88 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "560925b6-bcd7-42eb-a990-2e24122aac8d")
+		(uuid "7d747e69-1601-49de-a4a9-2e25961a1ef1")
 		(property "Reference" "#PWR100"
-			(at 49.53 29.21 0.0000)
+			(at 49.53 49.53 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -503,7 +503,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 49.53 40.64 0)
+			(at 49.53 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -511,7 +511,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 49.53 35.56 0.0000)
+			(at 49.53 55.88 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -520,11 +520,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "bbcc1842-0af2-4e0d-a67d-82fdff92bc24")
+			(uuid "d4eb0b9a-4ac4-4531-8f94-b269a55474ae")
 		)
 		(instances
 			(project "SoM Mate J1 (PS MIO + system rails)"
-				(path "/4718041d-79d9-47b4-a7a3-c5b4d3fe755d"
+				(path "/b92ae4c0-2fff-4c5c-b52d-dd9038c345ab"
 					(reference "#PWR100")
 					(unit 1)
 				)
@@ -533,16 +533,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 43.18 35.56 270)
+		(at 43.18 55.88 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "4aa86867-0dad-425f-9d90-0fa4dbaaf557")
+		(uuid "f0b333fa-9ff5-435b-90bf-3d877adf7e88")
 		(property "Reference" "C101"
-			(at 45.72 34.925 270)
+			(at 45.72 55.245 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -551,7 +551,7 @@
 			)
 		)
 		(property "Value" "10u"
-			(at 40.64 34.925 270)
+			(at 40.64 55.245 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -559,8 +559,8 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 44.1452 31.75 0.0000)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 44.1452 52.07 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -569,14 +569,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "3d4adfb6-f1d2-4981-84e9-72e8152edde7")
+			(uuid "df3127be-8367-411f-839a-7043ad28e1f6")
 		)
 		(pin "2"
-			(uuid "6f635149-cefd-4f84-9bea-adbcd9568e1a")
+			(uuid "da2281d3-fac8-4aaa-9528-77e18304eb22")
 		)
 		(instances
 			(project "SoM Mate J1 (PS MIO + system rails)"
-				(path "/4718041d-79d9-47b4-a7a3-c5b4d3fe755d"
+				(path "/b92ae4c0-2fff-4c5c-b52d-dd9038c345ab"
 					(reference "C101")
 					(unit 1)
 				)
@@ -585,16 +585,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 34.29 35.56 0)
+		(at 34.29 55.88 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "bb20463f-cdf7-4b23-bca5-9c236054ee0b")
+		(uuid "aef94c59-39fe-4cfe-9d12-72e21c44c9fd")
 		(property "Reference" "#PWR101"
-			(at 34.29 29.21 0.0000)
+			(at 34.29 49.53 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -604,7 +604,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 34.29 40.64 0)
+			(at 34.29 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -612,7 +612,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 34.29 35.56 0.0000)
+			(at 34.29 55.88 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -621,11 +621,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "148b7792-6852-473a-875c-88b00ff5f150")
+			(uuid "d956b81d-5d2d-4c4f-862a-346d00afea17")
 		)
 		(instances
 			(project "SoM Mate J1 (PS MIO + system rails)"
-				(path "/4718041d-79d9-47b4-a7a3-c5b4d3fe755d"
+				(path "/b92ae4c0-2fff-4c5c-b52d-dd9038c345ab"
 					(reference "#PWR101")
 					(unit 1)
 				)
@@ -641,7 +641,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "2bfc7cf7-5705-4ff1-9e0e-289a6182a1d4")
+		(uuid "589d9e44-52ce-4e2d-b9af-ee88efaa318e")
 		(property "Reference" "#PWR102"
 			(at 281.94 34.29 0.0000)
 			(effects
@@ -670,11 +670,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "0a8255a1-3bed-4c17-9696-36244f4481d7")
+			(uuid "825aa61a-8eed-4929-8d19-1e5fbae9c1b6")
 		)
 		(instances
 			(project "SoM Mate J1 (PS MIO + system rails)"
-				(path "/4718041d-79d9-47b4-a7a3-c5b4d3fe755d"
+				(path "/b92ae4c0-2fff-4c5c-b52d-dd9038c345ab"
 					(reference "#PWR102")
 					(unit 1)
 				)
@@ -683,43 +683,43 @@
 	)
 	(wire
 		(pts
-			(xy 68.58 35.56) (xy 62.23 35.56)
+			(xy 68.58 55.88) (xy 62.23 55.88)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "6c7e639c-6d54-46dc-bef8-c15cf5b51a00")
+		(uuid "fad1cbc9-602b-4884-9c42-5df33c869141")
 	)
 	(wire
 		(pts
-			(xy 54.61 35.56) (xy 49.53 35.56)
+			(xy 54.61 55.88) (xy 49.53 55.88)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "2278405c-5322-435f-b08b-1c47dc867c0c")
+		(uuid "dae4db4c-6ecb-432e-a9c1-dac7fc8b4fcc")
 	)
 	(wire
 		(pts
-			(xy 68.58 35.56) (xy 46.99 35.56)
+			(xy 68.58 55.88) (xy 46.99 55.88)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9df95497-f511-48a1-a12f-df195ee2fca5")
+		(uuid "911160c0-0cc1-42f9-b0db-327f5bffe870")
 	)
 	(wire
 		(pts
-			(xy 39.37 35.56) (xy 34.29 35.56)
+			(xy 39.37 55.88) (xy 34.29 55.88)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "3b7442d5-ea08-40ba-95a0-5c4de04af2ee")
+		(uuid "3ca6eabc-43cb-4f29-a457-35275f35c797")
 	)
 	(wire
 		(pts
@@ -729,7 +729,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "93d6f87d-87e0-4330-9662-0306ba4bc9b7")
+		(uuid "77e76f25-12e7-46fd-b5da-a7172c56c845")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -740,11 +740,11 @@
 			)
 			(justify left)
 		)
-		(uuid "8c906fe4-110f-4ddf-91a4-20107fe5b3c2")
+		(uuid "a36009bb-ed7b-4dae-a911-3d2a9044eb67")
 	)
 	(no_connect
-		(at 68.58 38.1)
-		(uuid "17a8b862-a564-426b-8b82-08d66dd241c8")
+		(at 68.58 58.42)
+		(uuid "ba74a15d-a6b2-42f6-9b97-bb204654fa04")
 	)
 	(sheet_instances
 		(path "/"

@@ -1591,11 +1591,11 @@
 		(in_bom yes)
 		(on_board yes)
 		(property "Reference" "J"
-			(at 0 7.62 0)
+			(at 0 54.61 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Value" "FFC_40P"
-			(at 0 -10.16 0)
+			(at 0 -54.61 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Footprint" ""
@@ -1604,50 +1604,410 @@
 		)
 		(symbol "FFC_40P_0_1"
 			(rectangle
-				(start -7.62 5.08)
-				(end 7.62 -7.62)
+				(start -7.62 52.07)
+				(end 7.62 -52.07)
 				(stroke (width 0.254) (type default))
 				(fill (type background))
 			)
 		)
 		(symbol "FFC_40P_1_1"
-			(pin passive line
-				(at -7.62 2.54 0)
+			(pin power_in line
+				(at -7.62 49.53 0)
 				(length 2.54)
-				(name "LVDS_CLK+"
+				(name "GND_1"
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "1"
 					(effects (font (size 1.27 1.27)))
 				)
 			)
-			(pin passive line
-				(at -7.62 0 0)
+			(pin power_in line
+				(at -7.62 46.99 0)
 				(length 2.54)
-				(name "LVDS_CLK-"
+				(name "+3V3"
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "2"
 					(effects (font (size 1.27 1.27)))
 				)
 			)
-			(pin passive line
-				(at -7.62 -2.54 0)
+			(pin power_in line
+				(at -7.62 44.45 0)
 				(length 2.54)
-				(name "LVDS_DATA0+"
+				(name "+3V3_3"
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "3"
 					(effects (font (size 1.27 1.27)))
 				)
 			)
-			(pin passive line
-				(at -7.62 -5.08 0)
+			(pin bidirectional line
+				(at -7.62 41.91 0)
+				(length 2.54)
+				(name "EDID_SDA"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "4"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 39.37 0)
+				(length 2.54)
+				(name "EDID_SCL"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "5"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 36.83 0)
+				(length 2.54)
+				(name "GND_6"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "6"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 34.29 0)
+				(length 2.54)
+				(name "LVDS_CLK-"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "7"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 31.75 0)
+				(length 2.54)
+				(name "LVDS_CLK+"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "8"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 29.21 0)
+				(length 2.54)
+				(name "GND_9"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "9"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 26.67 0)
 				(length 2.54)
 				(name "LVDS_DATA0-"
 					(effects (font (size 1.27 1.27)))
 				)
-				(number "4"
+				(number "10"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 24.13 0)
+				(length 2.54)
+				(name "LVDS_DATA0+"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "11"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 21.59 0)
+				(length 2.54)
+				(name "GND_12"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "12"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 19.05 0)
+				(length 2.54)
+				(name "LVDS_DATA1-"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "13"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 16.51 0)
+				(length 2.54)
+				(name "LVDS_DATA1+"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "14"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 13.97 0)
+				(length 2.54)
+				(name "GND_15"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "15"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 11.43 0)
+				(length 2.54)
+				(name "LVDS_DATA2-"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "16"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 8.89 0)
+				(length 2.54)
+				(name "LVDS_DATA2+"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "17"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 6.35 0)
+				(length 2.54)
+				(name "GND_18"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "18"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 3.81 0)
+				(length 2.54)
+				(name "LVDS_DATA3-"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "19"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 1.27 0)
+				(length 2.54)
+				(name "LVDS_DATA3+"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "20"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -1.27 0)
+				(length 2.54)
+				(name "GND_21"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "21"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 -3.81 0)
+				(length 2.54)
+				(name "RESET_N"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "22"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -6.35 0)
+				(length 2.54)
+				(name "GND_23"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "23"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 -8.89 0)
+				(length 2.54)
+				(name "STBY_N"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "24"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 -11.43 0)
+				(length 2.54)
+				(name "PWM"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "25"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 -13.97 0)
+				(length 2.54)
+				(name "BL_EN"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "26"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -16.51 0)
+				(length 2.54)
+				(name "+12V"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "27"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -19.05 0)
+				(length 2.54)
+				(name "+12V_28"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "28"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -21.59 0)
+				(length 2.54)
+				(name "+12V_29"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "29"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -24.13 0)
+				(length 2.54)
+				(name "+12V_30"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "30"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -26.67 0)
+				(length 2.54)
+				(name "GND_31"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "31"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -29.21 0)
+				(length 2.54)
+				(name "GND_32"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "32"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -31.75 0)
+				(length 2.54)
+				(name "GND_33"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "33"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -34.29 0)
+				(length 2.54)
+				(name "GND_34"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "34"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -36.83 0)
+				(length 2.54)
+				(name "GND_35"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "35"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -39.37 0)
+				(length 2.54)
+				(name "GND_36"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "36"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -41.91 0)
+				(length 2.54)
+				(name "GND_37"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "37"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -44.45 0)
+				(length 2.54)
+				(name "GND_38"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "38"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -46.99 0)
+				(length 2.54)
+				(name "GND_39"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "39"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -49.53 0)
+				(length 2.54)
+				(name "GND_40"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "40"
 					(effects (font (size 1.27 1.27)))
 				)
 			)
@@ -1659,11 +2019,11 @@
 		(in_bom yes)
 		(on_board yes)
 		(property "Reference" "J"
-			(at 0 7.62 0)
+			(at 0 22.86 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Value" "FFC_15P"
-			(at 0 -7.62 0)
+			(at 0 -22.86 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Footprint" ""
@@ -1672,40 +2032,160 @@
 		)
 		(symbol "FFC_15P_0_1"
 			(rectangle
-				(start -7.62 5.08)
-				(end 7.62 -5.08)
+				(start -7.62 20.32)
+				(end 7.62 -20.32)
 				(stroke (width 0.254) (type default))
 				(fill (type background))
 			)
 		)
 		(symbol "FFC_15P_1_1"
 			(pin power_in line
-				(at -7.62 2.54 0)
+				(at -7.62 17.78 0)
 				(length 2.54)
-				(name "VCC_1V8"
+				(name "GND_1"
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "1"
 					(effects (font (size 1.27 1.27)))
 				)
 			)
-			(pin power_in line
-				(at -7.62 0 0)
+			(pin input line
+				(at -7.62 15.24 0)
 				(length 2.54)
-				(name "VCC_2V8"
+				(name "CSI_D0-"
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "2"
 					(effects (font (size 1.27 1.27)))
 				)
 			)
-			(pin power_in line
-				(at -7.62 -2.54 0)
+			(pin input line
+				(at -7.62 12.7 0)
 				(length 2.54)
-				(name "GND"
+				(name "CSI_D0+"
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "3"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 10.16 0)
+				(length 2.54)
+				(name "GND_4"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "4"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 7.62 0)
+				(length 2.54)
+				(name "CSI_D1-"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "5"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 5.08 0)
+				(length 2.54)
+				(name "CSI_D1+"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "6"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 2.54 0)
+				(length 2.54)
+				(name "GND_7"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "7"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 0 0)
+				(length 2.54)
+				(name "CSI_CLK-"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "8"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 -2.54 0)
+				(length 2.54)
+				(name "CSI_CLK+"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "9"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -5.08 0)
+				(length 2.54)
+				(name "GND_10"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "10"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 -7.62 0)
+				(length 2.54)
+				(name "CAM_GPIO0"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "11"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin output line
+				(at -7.62 -10.16 0)
+				(length 2.54)
+				(name "CAM_GPIO1"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "12"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin input line
+				(at -7.62 -12.7 0)
+				(length 2.54)
+				(name "CAM_SCL"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "13"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin bidirectional line
+				(at -7.62 -15.24 0)
+				(length 2.54)
+				(name "CAM_SDA"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "14"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin power_in line
+				(at -7.62 -17.78 0)
+				(length 2.54)
+				(name "+3V3"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "15"
 					(effects (font (size 1.27 1.27)))
 				)
 			)

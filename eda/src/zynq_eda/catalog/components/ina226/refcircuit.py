@@ -136,6 +136,20 @@ INA226_REFCIRCUIT = ReferenceCircuit(
         # through the existing power_mon block; per-instance blocks
         # override this via IcInstance.net_overrides for other rails.
         ("Vbus", "+VIN"),
+        # Vin+ (pin 10) is the supply-side shunt-sense input; it sits on
+        # the +VIN rail and the shunt R_SENSE connects from here to Vin-.
+        # Per DS Sec 4 Table 4-1, Vin+ is a high-impedance differential
+        # sense input -- naming it explicitly so the IC pin shares the
+        # same +VIN node as Vbus and the R_SENSE near-side terminal.
+        ("Vin+", "+VIN"),
+        # Vin- (pin 9) is the load-side shunt-sense input, electrically
+        # one shunt resistor downstream of +VIN. The shunt's far terminal
+        # carries a local label "Vin-" (raw to_net from the R_SENSE
+        # ExternalPart), so we name the IC pin with the same label so
+        # KiCad joins the IC pin and the shunt's far terminal on one net.
+        # Without this entry the IC pin is electrically isolated and the
+        # shunt is just a floating two-pin resistor.
+        ("Vin-", "Vin-"),
     ),
     lib_symbol_pin_type_overrides=(
         # The stock ``Sensor_Energy:INA226`` symbol declares Vbus
