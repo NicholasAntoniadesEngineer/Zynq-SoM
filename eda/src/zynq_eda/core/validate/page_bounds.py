@@ -6,7 +6,7 @@ drifting outside the A4 frame.
 
 from __future__ import annotations
 
-from zynq_eda.core.model.sheet import PAPER_DIMENSIONS_MM, Sheet
+from zynq_eda.core.model.sheet import Sheet
 from zynq_eda.core.validate.report import ValidationResult
 
 
@@ -38,7 +38,9 @@ def validate_page_bounds(
 ) -> list[ValidationResult]:
     """Return errors for any symbol/wire/label outside the paper bounds."""
     results: list[ValidationResult] = []
-    paper_w, paper_h = PAPER_DIMENSIONS_MM[sheet.paper_size]
+    # Use the sheet's effective dimensions (honours ``paper_portrait``)
+    # rather than the raw landscape entry from :data:`PAPER_DIMENSIONS_MM`.
+    paper_w, paper_h = sheet.paper_dimensions
 
     for symbol in sheet.symbols:
         msg = _check_point(symbol.position.x, symbol.position.y, paper_w, paper_h, margin_mm)

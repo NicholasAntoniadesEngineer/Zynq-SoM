@@ -1,19 +1,10 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-26T13:30:24Z
+Generated: 2026-05-26T13:35:41Z
 
-**Errors:** 6  **Warnings:** 762  **Info:** 0
+**Errors:** 0  **Warnings:** 760  **Info:** 0
 
-## Errors (6)
-
-- **page_bounds.symbol_outside**: symbol 'PWR241' ('GND') outside page: y=904.24 > bottom edge 835.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR242' ('GND') outside page: y=957.58 > bottom edge 835.92 _(carrier_root.kicad_sch)_
-- **page_bounds.symbol_outside**: symbol 'PWR243' ('GND') outside page: y=942.34 > bottom edge 835.92 _(carrier_root.kicad_sch)_
-- **page_bounds.label_outside**: label '+VCCO_35' outside page: y=909.32 > bottom edge 835.92 _(carrier_root.kicad_sch)_
-- **page_bounds.label_outside**: label '+VCCO_35' outside page: y=962.66 > bottom edge 835.92 _(carrier_root.kicad_sch)_
-- **page_bounds.label_outside**: label '+VCCO_35' outside page: y=967.74 > bottom edge 835.92 _(carrier_root.kicad_sch)_
-
-## Warnings (762)
+## Warnings (760)
 
 - **overlap.symbol_label**: symbol 'R100' body @ (111.8, 59.7) overlaps label '+VIN' @ (109.5, 59.7) [strict=False] _(power.kicad_sch)_
 - **overlap.symbol_label**: symbol 'R101' body @ (111.8, 105.4) overlaps label '+VIN' @ (109.5, 105.4) [strict=False] _(power.kicad_sch)_
@@ -775,6 +766,4 @@ Generated: 2026-05-26T13:30:24Z
 - **overlap.wire_label**: wire #7 @ (67.3, 57.1) overlaps label 'GND' @ (67.2, 57.1) [strict=False] _(som_j3_power.kicad_sch)_
 - **overlap.wire_label**: wire #8 @ (67.3, 59.7) overlaps label 'GND' @ (67.2, 59.7) [strict=False] _(som_j3_power.kicad_sch)_
 - **overlap.wire_label**: wire #9 @ (67.3, 62.2) overlaps label 'GND' @ (67.2, 62.2) [strict=False] _(som_j3_power.kicad_sch)_
-- **overlap.wire_label**: wire #4 @ (78.7, 241.3) overlaps label '+12V' @ (77.7, 241.3) [strict=False] _(carrier_root.kicad_sch)_
-- **overlap.wire_label**: wire #5 @ (464.8, 386.1) overlaps label '+VADJ' @ (464.2, 386.1) [strict=False] _(carrier_root.kicad_sch)_
 

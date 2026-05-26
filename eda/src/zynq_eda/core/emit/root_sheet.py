@@ -123,6 +123,8 @@ def emit_root_sheet(
 
     _atomic_save(schematic, output_path)
     _hide_internal_properties(output_path)
+    if sheet.paper_portrait:
+        _patch_paper_portrait(output_path, sheet.paper_size)
 
     return RootEmissionStats(
         sheet_name=sheet.name,
@@ -136,3 +138,19 @@ def emit_root_sheet(
         sheet_symbol_count=len(sheet.sheets),
         sheet_pin_count=sheet_pin_total,
     )
+
+
+def _patch_paper_portrait(schematic_path: Path, paper_size: str) -> None:
+    """Inject the ``portrait`` orientation token into the ``(paper ...)`` line.
+
+    kicad-sch-api writes paper as ``(paper "A3")`` (landscape default).
+    KiCad accepts ``(paper "A3" portrait)`` to flip orientation. We
+    rewrite the line post-save because kicad-sch-api 0.5.6 doesn't
+    expose a portrait flag on ``set_paper_size``.
+    """
+    text = schematic_path.read_text(encoding="utf-8")
+    landscape_token = f'(paper "{paper_size}")'
+    portrait_token = f'(paper "{paper_size}" portrait)'
+    if landscape_token in text:
+        text = text.replace(landscape_token, portrait_token, 1)
+        schematic_path.write_text(text, encoding="utf-8")

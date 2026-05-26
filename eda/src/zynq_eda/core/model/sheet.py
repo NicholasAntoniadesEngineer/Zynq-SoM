@@ -193,7 +193,16 @@ class PlacedSheet:
 
 @dataclass(frozen=True)
 class Sheet:
-    """One A4 (or other-size) page of placed primitives."""
+    """One A4 (or other-size) page of placed primitives.
+
+    ``paper_portrait`` swaps width/height for the named paper size. KiCad
+    natively writes A0–A4 in landscape; setting ``paper_portrait=True``
+    flips the page orientation and the :class:`Sheet`'s reported
+    ``paper_width_mm`` / ``paper_height_mm``. Used by the root index
+    page (A3 portrait, 297 wide × 420 tall) so its block grid stacks
+    naturally vertical. The emitter rewrites the ``(paper "A3")``
+    s-expression to ``(paper "A3" portrait)`` at save time.
+    """
 
     name: str
     title: str
@@ -206,6 +215,7 @@ class Sheet:
     hierarchical_labels: tuple[PlacedHierarchicalLabel, ...] = field(default_factory=tuple)
     sheets: tuple[PlacedSheet, ...] = field(default_factory=tuple)
     description: str = ""
+    paper_portrait: bool = False
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -217,7 +227,10 @@ class Sheet:
 
     @property
     def paper_dimensions(self) -> tuple[float, float]:
-        return PAPER_DIMENSIONS_MM[self.paper_size]
+        landscape = PAPER_DIMENSIONS_MM[self.paper_size]
+        if self.paper_portrait:
+            return (landscape[1], landscape[0])
+        return landscape
 
     @property
     def paper_width_mm(self) -> float:

@@ -111,3 +111,68 @@ POWER_SYMBOL_LIB_IDS: dict[str, str] = {
 A net name not in this map is rendered as a local label instead of a
 power-symbol attachment.
 """
+
+
+# ---- Root sheet (block index) layout ---------------------------------------
+
+ROOT_PAPER_SIZE = "A3"
+"""Root index page size: A3 portrait (297 mm × 420 mm).
+
+Reference designs (PYNQ-Z2, Arty Z7, MicroZed I/O Carrier, BeagleBone
+Black) use a clean A3 portrait root sheet showing block symbols by
+NAME ONLY. This carrier uses a 4-column × 7-row grid that comfortably
+fits up to 28 blocks.
+
+NOTE: A3 in KiCad is defined as 420 × 297 (landscape). KiCad sets
+portrait via :data:`schematic.set_paper_size("A3", portrait=True)`.
+The :class:`Sheet` model treats the *paper_size* string as the named
+KiCad size; the orientation is implicit (portrait for the root
+index, landscape for everything else)."""
+
+ROOT_GRID_COLS = 4
+"""Columns of block rectangles in the root index grid."""
+
+ROOT_GRID_ROWS = 7
+"""Rows of block rectangles in the root index grid (4×7 = 28 cells)."""
+
+ROOT_GRID_ROW_PITCH_MM = snap_to_grid(50.8)
+"""Vertical pitch between adjacent grid rows on the root index.
+
+50.8 mm (20 grid steps) × 7 rows = 355.6 mm of grid content. A3
+portrait height is 420 mm; subtracting ~20 mm top margin + ~45 mm
+bottom title-block area leaves ~355 mm for the 7-row stack — fits
+exactly."""
+
+ROOT_GRID_COL_PITCH_MM = snap_to_grid(66.04)
+"""Horizontal pitch between adjacent grid columns on the root index.
+
+66.04 mm (52 grid steps) × 4 cols = 264.16 mm of grid content. A3
+portrait width is 297 mm; subtracting ~15 mm left margin leaves
+~282 mm. 264.16 mm of grid content keeps the right column ~15 mm
+from the right edge — symmetric margins."""
+
+ROOT_SHEET_SYMBOL_WIDTH_MM = snap_to_grid(50.8)
+"""Width of each block rectangle on the root index.
+
+50.8 mm × 50 grid steps wide is enough to fit the block name as a
+single line at standard KiCad text size (1.27 mm) for names up to
+~30 chars."""
+
+ROOT_SHEET_SYMBOL_HEIGHT_MM = snap_to_grid(20.32)
+"""Height of each block rectangle on the root index.
+
+20.32 mm is the minimum-acceptable sheet symbol height in KiCad and
+keeps the rectangles visually compact. No sheet pins are exposed on
+the root, so the symbol only needs to hold the block name."""
+
+ROOT_MARGIN_TOP_MM = snap_to_grid(25.4)
+"""Top margin (header text + first grid row's anchor offset)."""
+
+ROOT_MARGIN_LEFT_MM = snap_to_grid(15.24)
+"""Left margin (first column's anchor offset)."""
+
+ROOT_TITLE_TEXT = "Zynq SoM Carrier - Block Index"
+"""Short header rendered at the top of the root index."""
+
+ROOT_REVISION = "A1"
+"""Revision tag rendered in the bottom-right title block."""
