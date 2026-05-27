@@ -701,6 +701,36 @@ def _enumerate_routes(
             if segs:
                 candidates.append((f"detour_x_{offset:+.2f}", segs))
 
+    # K=4: Exit-then-detour (4 segments) — route exits the source's X
+    # column quickly via a short horizontal, then changes Y to a row
+    # outside any obstacles, runs across, and drops to the endpoint's
+    # Y at the destination X. Needed when the source pin sits on a
+    # column that has many OTHER foreign pins (no Z-bend Y-type works
+    # because the vertical at source.x would traverse foreign pins).
+    #
+    # Route: (start) → (start.x + dh, start.y) → (start.x + dh, my)
+    #        → (end.x, my) → (end.x, end.y)
+    EXIT_DETOUR_DH = (2.54, 5.08, 7.62, 10.16, 12.7, 15.24, 20.32, 25.4)
+    EXIT_DETOUR_DY = (
+        2.54, -2.54, 5.08, -5.08, 7.62, -7.62, 10.16, -10.16,
+        12.7, -12.7, 15.24, -15.24, 20.32, -20.32, 25.4, -25.4,
+        30.48, -30.48,
+    )
+    for dh in EXIT_DETOUR_DH:
+        for sign_h in (1, -1):
+            for dy in EXIT_DETOUR_DY:
+                mx = snap_to_grid(start.x + sign_h * dh)
+                my = snap_to_grid(start.y + dy)
+                pts = [start, Point(mx, start.y), Point(mx, my),
+                       Point(end.x, my), Point(end.x, end.y)]
+                segs = tuple(filter(None, (
+                    _make_wire(pts[i], pts[i + 1]) for i in range(len(pts) - 1)
+                )))
+                if segs:
+                    candidates.append(
+                        (f"exit_{sign_h}{dh:.1f}_dy{dy:+.1f}", segs)
+                    )
+
     # K=4: S-bend (5 segments) — route goes (start) → A → B → C → D →
     # (end), where A/B/C/D form a double-detour pattern. Useful when
     # both midpoint-X and midpoint-Y are blocked: the wire can dogleg
