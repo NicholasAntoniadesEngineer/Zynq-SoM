@@ -1361,40 +1361,14 @@ def cluster_ic_externals(
             # pins' clusters.
             builder.occupancy.remove_by_owner(placeholder_prefix)
 
-        # After all slots placed: if THIS pin's source net is a named
-        # (non-power) net, emit a near-side LABEL at the cluster
-        # trunk's outward endpoint so the pin is identified by name
-        # ONCE — without this, the IC pin would sit on an unnamed wire
-        # and downstream consumers (connector pins on the same net,
-        # ERC) would see disconnected islands. This consolidates ALL
-        # IC-pin labeling into the cluster pass; ``_attach_ic_signal_overrides``
-        # then only handles pins WITHOUT a cluster cap.
-        source_pin_net = overrides_for_pin.get(pin_name, "")
-        if (
-            source_pin_net
-            and source_pin_net not in POWER_SYMBOL_LIB_IDS
-            and source_pin_net != "GND"
-            and this_pin_side in ("left", "right")
-        ):
-            _trunk_end = pin_geom_map[pin_name].cluster_trunk_end
-            if _trunk_end is not None:
-                # Skip if a same-name label already sits at this exact
-                # anchor (a connector-side cluster on the same trunk
-                # may have emitted it already).
-                _label_key = (
-                    source_pin_net,
-                    round(_trunk_end.x, 3),
-                    round(_trunk_end.y, 3),
-                )
-                _existing = {
-                    (l.net_name, round(l.position.x, 3), round(l.position.y, 3))
-                    for l in builder.labels
-                }
-                if _label_key not in _existing:
-                    label_rotation = 180.0 if this_pin_side == "left" else 0.0
-                    builder.add_label(PlacedLabel(
-                        net_name=source_pin_net,
-                        position=_trunk_end,
-                        rotation=label_rotation,
-                    ))
+        # Cluster-internal naming intentionally NOT emitted here.
+        # Naming a clustered IC pin's source net is the job of the
+        # block-level ``_orphan_net_labels`` pass (when the net is in
+        # ``block.external_nets``) — it anchors a hier-label at an
+        # existing same-name local label and KiCad merges by name.
+        # When the source net is purely internal (e.g. INA226's
+        # ``Vin-`` shunt return), the cluster's FAR-side local label
+        # IS that source-net label by construction (R_SENSE.far →
+        # "Vin-" label at far_point), and the source pin attaches to
+        # the same net via the cluster wire. No extra label needed.
     return pin_geom_map

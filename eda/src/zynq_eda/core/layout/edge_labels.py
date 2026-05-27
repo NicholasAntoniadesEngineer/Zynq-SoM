@@ -59,38 +59,27 @@ def place_external_nets(
     ic_anchors: dict[str, Point],
     geometry_cache: SymbolGeometryCache,
 ) -> set[tuple[str, str]]:
-    """Place per-IC hierarchical labels + PWR_FLAGs.
+    """Place per-NET edge labels + PWR_FLAGs (NOT per-pin).
 
-    Returns the set of ``(ic_reference, pin_name)`` pairs that already
-    received an edge-label wiring, so :func:`place._attach_ic_signal_overrides`
-    can skip them and avoid creating duplicate connections.
+    Per-pin edge-label routing now lives in
+    :func:`zynq_eda.core.layout.place._emit_edge_label_pin` (called by
+    the unified per-pin dispatcher). This function handles only the
+    block-wide net services:
+
+      * ``_ground_label_only`` — block-level GND hier-label.
+      * ``_orphan_net_labels`` — hier-labels for declared external_nets
+        anchored at an existing same-name local label (so KiCad merges
+        by name).
+      * ``_input_pwr_flags`` — PWR_FLAG drivers for input rails.
+
+    Returns the empty set — the legacy ``edge_labeled`` mechanism
+    coordinated signal_overrides skip flags; that machinery is gone.
     """
     paper_w, _paper_h = PAPER_DIMENSIONS_MM[block.paper_size]
     left_x = snap_to_grid(INTERIOR_MARGIN_MM)
     right_x = snap_to_grid(paper_w - INTERIOR_MARGIN_MM)
 
-    declared_nets: dict[str, ExternalNet] = {net.name: net for net in block.external_nets}
-
     seen_label_positions: set[tuple[float, float]] = set()
-    edge_labeled: set[tuple[str, str]] = _per_ic_pin_labels(
-        builder,
-        block=block,
-        declared_nets=declared_nets,
-        ic_pin_geometries=ic_pin_geometries,
-        ic_anchors=ic_anchors,
-        geometry_cache=geometry_cache,
-        left_x=left_x,
-        right_x=right_x,
-        seen_label_positions=seen_label_positions,
-    )
-
-    # Power-rail drivers (power:PWR_FLAG, root-level power:GND) live on
-    # the *root* sheet now — see :mod:`zynq_eda.core.layout.root`. Emitting
-    # them per-block produces duplicate drivers once the blocks merge in
-    # the project hierarchy ("Power output × Power output" pin_to_pin
-    # errors). The sub-sheet still emits the ground HIERARCHICAL LABEL
-    # so the GND net can leave the sheet; the root sheet's power symbol
-    # then drives it across the whole hierarchy.
     _ground_label_only(
         builder,
         block=block,
@@ -99,13 +88,6 @@ def place_external_nets(
         right_x=right_x,
         seen_label_positions=seen_label_positions,
     )
-
-    # Surface every declared external_net that didn't already get a hier
-    # label via IC pin overrides. Anchor each orphan hier label AT an
-    # existing same-name local label's coordinate, so KiCad merges the
-    # hier label and the local label into one net (the local label is
-    # already on a real wire endpoint inside the sub-sheet — anything
-    # else dangles the hier label per ERC).
     _orphan_net_labels(
         builder,
         block=block,
@@ -114,17 +96,8 @@ def place_external_nets(
         paper_w=paper_w,
         seen_label_positions=seen_label_positions,
     )
-
-    # Per-block PWR_FLAGs for power-input external_nets that don't have
-    # an on-page driver (e.g. +12V on lvds_lcd_power comes from an
-    # external barrel jack, +VIN on power from the USB-C ingress).
-    # Without these, KiCad ERC reports power_pin_not_driven on every
-    # power-input pin downstream. The Wave A3 root-redesign moved the
-    # PWR_FLAG emission off the root sheet for visual clarity, so we
-    # surface them on each consumer block here instead.
     _input_pwr_flags(builder, block=block)
-
-    return edge_labeled
+    return set()
 
 
 def _per_ic_pin_labels(
