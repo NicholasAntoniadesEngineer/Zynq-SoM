@@ -62,19 +62,24 @@ def emit_hier_label_offset(
     wire endpoint if neither fits. Returns the chosen label position
     and the optional stub wire (``None`` when no offset was applied).
     """
-    candidates: list[Point]
-    if wire_axis == "horizontal":
-        candidates = [
-            Point(wire_endpoint.x, snap_to_grid(wire_endpoint.y - _LABEL_PERPENDICULAR_OFFSET_MM)),
-            Point(wire_endpoint.x, snap_to_grid(wire_endpoint.y + _LABEL_PERPENDICULAR_OFFSET_MM)),
-        ]
-    else:
-        candidates = [
-            Point(snap_to_grid(wire_endpoint.x - _LABEL_PERPENDICULAR_OFFSET_MM), wire_endpoint.y),
-            Point(snap_to_grid(wire_endpoint.x + _LABEL_PERPENDICULAR_OFFSET_MM), wire_endpoint.y),
-        ]
+    # Escalating perpendicular offset ladder: try ±1 grid, then ±2,
+    # ±3 ... up to 10 grid steps (25.4 mm). For dense connector pin
+    # rows the first few offsets land on adjacent pins' labels; the
+    # ladder pushes further out until a clean slot is found.
+    candidates: list[Point] = []
+    for step in range(1, 11):
+        offset = step * _LABEL_PERPENDICULAR_OFFSET_MM
+        if wire_axis == "horizontal":
+            candidates.append(Point(wire_endpoint.x, snap_to_grid(wire_endpoint.y - offset)))
+            candidates.append(Point(wire_endpoint.x, snap_to_grid(wire_endpoint.y + offset)))
+        else:
+            candidates.append(Point(snap_to_grid(wire_endpoint.x - offset), wire_endpoint.y))
+            candidates.append(Point(snap_to_grid(wire_endpoint.x + offset), wire_endpoint.y))
+
+    from zynq_eda.core.layout.bbox import wire_bbox
 
     for candidate in candidates:
+        # Label bbox clearance (2 mm gap against all non-wire kinds).
         probe = PlacedHierarchicalLabel(
             net_name=net_name,
             position=candidate,
@@ -87,16 +92,34 @@ def emit_hier_label_offset(
             ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
             padding_mm=VISUAL_CLEARANCE_MM,
         )
-        if not hits:
-            stub = PlacedWire(start=wire_endpoint, end=candidate)
-            builder.add_wire(stub)
-            builder.add_hierarchical_label(PlacedHierarchicalLabel(
-                net_name=net_name,
-                position=candidate,
-                direction=direction,
-                rotation=rotation,
-            ))
-            return candidate, stub
+        if hits:
+            continue
+        # Stub-wire clearance: the stub from wire_endpoint to the
+        # offset label position MUST NOT cross any existing wire,
+        # symbol body, or label text. Probe the stub bbox before
+        # committing.
+        stub_bbox = wire_bbox(
+            start=wire_endpoint,
+            end=candidate,
+            owner_id="_hlabel_stub_probe",
+        )
+        stub_hits = builder.occupancy.collides(
+            stub_bbox,
+            ignore_kinds=frozenset({"junction", "no_connect"}),
+            padding_mm=0.0,
+        )
+        if stub_hits:
+            continue
+        # Both label position and stub wire are clean — emit.
+        stub = PlacedWire(start=wire_endpoint, end=candidate)
+        builder.add_wire(stub)
+        builder.add_hierarchical_label(PlacedHierarchicalLabel(
+            net_name=net_name,
+            position=candidate,
+            direction=direction,
+            rotation=rotation,
+        ))
+        return candidate, stub
 
     # No clean offset slot — fall back to the wire endpoint itself.
     builder.add_hierarchical_label(PlacedHierarchicalLabel(
@@ -710,10 +733,28 @@ def _input_pwr_flags(
         else:
             flag_x = anchor_label.position.x
         flag_position = Point(flag_x, anchor_label.position.y)
-        builder.add_wire(PlacedWire(
-            start=anchor_label.position,
-            end=flag_position,
-        ))
+        # Route the hier-label → PWR_FLAG wire via the router so it
+        # respects the no-cross / no-through rules. Anchor label is the
+        # only owner we exempt — its text bbox is at the anchor.
+        from zynq_eda.core.route.router import route_orthogonal_detail
+        flag_avoid = frozenset({
+            f"hlabel:{anchor_label.net_name}@"
+            f"{anchor_label.position.x:.1f},{anchor_label.position.y:.1f}",
+        })
+        flag_route = route_orthogonal_detail(
+            anchor_label.position,
+            flag_position,
+            builder.occupancy,
+            avoid_owners=flag_avoid,
+        )
+        if flag_route.gave_up:
+            raise RuntimeError(
+                f"_input_pwr_flags: router gave up routing hier label "
+                f"{anchor_label.net_name!r} @ {anchor_label.position} → "
+                f"PWR_FLAG @ {flag_position}."
+            )
+        for seg in flag_route.segments:
+            builder.add_wire(seg)
         builder.add_symbol(PlacedSymbol(
             lib_id="power:PWR_FLAG",
             reference=builder.next_ref("#FLG"),

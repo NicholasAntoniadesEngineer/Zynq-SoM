@@ -197,10 +197,31 @@ def _attach_ic_ground(
                 snap_to_grid(gnd_geom.connection.y + page_dy_dir * OFFSET),
             )
 
-        builder.add_wire(PlacedWire(
-            start=gnd_geom.connection,
-            end=gnd_symbol_pos,
-        ))
+        # Route the GND-pin → power:GND-symbol wire via the router so
+        # it gets the full collision check (no wire crosses any other
+        # wire/body/text). Source pin's intrinsic name text is exempt
+        # because the wire's endpoint is at the pin tip by design.
+        from zynq_eda.core.route.router import route_orthogonal_detail
+        from zynq_eda.core.layout._builder import pin_intrinsic_owner_ids
+        ic_pin_avoid: set[str] = {f"symbol:{ic.reference}"}
+        if pin_number:
+            ic_pin_avoid |= set(
+                pin_intrinsic_owner_ids(ic.reference, (pin_number,))
+            )
+        gnd_route = route_orthogonal_detail(
+            gnd_geom.connection,
+            gnd_symbol_pos,
+            builder.occupancy,
+            avoid_owners=frozenset(ic_pin_avoid),
+        )
+        if gnd_route.gave_up:
+            raise RuntimeError(
+                f"_attach_ic_ground: router gave up routing IC {ic.reference!r} "
+                f"GND pin {pin_name!r} @ {gnd_geom.connection} to "
+                f"power:GND symbol @ {gnd_symbol_pos}. Upstream fix needed."
+            )
+        for seg in gnd_route.segments:
+            builder.add_wire(seg)
         # Rotate the GND symbol so its body extends OUTWARD (away from
         # the IC) instead of into the wire path. See
         # :func:`zynq_eda.core.layout.cluster._outward_power_symbol_rotation`.
@@ -354,10 +375,37 @@ def _attach_ic_signal_overrides(
             snap_to_grid(pin_geom.connection.x + stub_dx),
             snap_to_grid(pin_geom.connection.y + stub_dy),
         )
-        builder.add_wire(PlacedWire(
-            start=pin_geom.connection,
-            end=stub_end,
-        ))
+        # Route the override stub via the router so it never crosses
+        # another wire or pin name. Source pin's own intrinsic text is
+        # exempted (the stub's start IS the source pin tip).
+        from zynq_eda.core.route.router import route_orthogonal_detail
+        from zynq_eda.core.layout._builder import pin_intrinsic_owner_ids
+        try:
+            pin_number = next(
+                str(pi["number"]) for pi in geometry_cache.all_pins(ic.lib_id)
+                if str(pi["name"]) == pin_name
+            )
+        except StopIteration:
+            pin_number = ""
+        stub_avoid: set[str] = {f"symbol:{ic.reference}"}
+        if pin_number:
+            stub_avoid |= set(
+                pin_intrinsic_owner_ids(ic.reference, (pin_number,))
+            )
+        stub_route = route_orthogonal_detail(
+            pin_geom.connection,
+            stub_end,
+            builder.occupancy,
+            avoid_owners=frozenset(stub_avoid),
+        )
+        if stub_route.gave_up:
+            raise RuntimeError(
+                f"_attach_ic_signal_overrides: router gave up routing "
+                f"IC {ic.reference!r} pin {pin_name!r} @ {pin_geom.connection} "
+                f"to stub end @ {stub_end} (net {net_name!r})."
+            )
+        for seg in stub_route.segments:
+            builder.add_wire(seg)
 
         power_lib_id = POWER_SYMBOL_LIB_IDS.get(net_name)
         if power_lib_id is not None:
