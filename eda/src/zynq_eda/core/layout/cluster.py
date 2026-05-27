@@ -1244,11 +1244,58 @@ def cluster_ic_externals(
                 pin_geom.connection.x + outward_sign_lr * furthest_lateral
             )
 
+        # Sibling-aware property-text placement (LEFT/RIGHT only): before
+        # placing slot K, register PLACEHOLDER body bboxes for every
+        # OTHER slot in this pin's cluster so slot K's Value-text
+        # picker (``pick_dynamic_value_shift``) avoids positions that
+        # would overlap a sibling slot's body or reference text. The
+        # placeholders are tagged with a unique owner_id prefix so we
+        # can clean them up after slot K is placed.
+        sibling_body_bboxes: list = []
+        if this_pin_side in ("left", "right") and len(externals) > 1 and geometry_cache is not None:
+            from zynq_eda.core.layout.bbox import symbol_bbox as _sym_bbox
+            outward_sign_lr = -1 if this_pin_side == "left" else 1
+            for s_idx, ext in enumerate(externals):
+                slot_x = snap_to_grid(
+                    pin_geom.connection.x
+                    + outward_sign_lr * (
+                        (pin_lane_offset_map.get(pin_name) or PASSIVE_OFFSET_MM)
+                        + s_idx * PASSIVE_PITCH_MM
+                    )
+                )
+                slot_anchor = Point(
+                    slot_x,
+                    snap_to_grid(
+                        pin_geom.connection.y - PASSIVE_PIN_HALF - CAP_VERTICAL_OFFSET_MM
+                    ),
+                )
+                try:
+                    sibling_bbox = _sym_bbox(
+                        lib_id=passive_lib_id(ext.part_token),
+                        anchor=slot_anchor,
+                        rotation=0.0,
+                        cache=geometry_cache,
+                        owner_id=f"_sibling_placeholder:{ic.reference}:{pin_name}:{s_idx}",
+                    )
+                    sibling_body_bboxes.append((s_idx, sibling_bbox))
+                except Exception:
+                    pass
+
         for slot_index, external in enumerate(externals):
             resolved_destination = slot_destinations[slot_index]
             destination_via_connector_pin = resolved_destination in {
                 net for _pin, net in pin_to_net
             } and resolved_destination != external.to_net
+
+            # Add sibling placeholders for THIS slot's processing —
+            # exclude the slot we're about to place (its real bbox
+            # comes in via add_symbol).
+            placeholder_prefix = f"_sibling_placeholder:{ic.reference}:{pin_name}"
+            for s_idx, sb in sibling_body_bboxes:
+                if s_idx == slot_index:
+                    continue
+                builder.occupancy.add(sb)
+
             place_one_passive_for_pin(
                 builder,
                 external=external,
@@ -1270,4 +1317,8 @@ def cluster_ic_externals(
                     all_same_dest and slot_index == 0
                 ) else None,
             )
+
+            # Clean up placeholders so they don't interfere with later
+            # pins' clusters.
+            builder.occupancy.remove_by_owner(placeholder_prefix)
     return pin_geom_map

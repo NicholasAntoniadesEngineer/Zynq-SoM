@@ -58,6 +58,20 @@ class Occupancy:
         """Drop every stored bbox."""
         self._bboxes.clear()
 
+    def remove_by_owner(self, owner_prefix: str) -> int:
+        """Drop every stored bbox whose owner_id startswith ``owner_prefix``.
+
+        Returns the number of bboxes removed. Used by placement helpers
+        that temporarily reserve a slot with a placeholder bbox during
+        sibling-aware text positioning, then release it once the real
+        symbol is placed.
+        """
+        before = len(self._bboxes)
+        self._bboxes = [
+            b for b in self._bboxes if not b.owner_id.startswith(owner_prefix)
+        ]
+        return before - len(self._bboxes)
+
     # ---- querying ----------------------------------------------------------
 
     def collides(
