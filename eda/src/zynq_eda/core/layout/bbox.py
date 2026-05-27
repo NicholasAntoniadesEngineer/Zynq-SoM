@@ -51,7 +51,7 @@ per-sheet validator only sees the more granular kinds.
 DEFAULT_TEXT_SIZE_MM: float = 1.27
 """Default KiCad text height in millimetres (50 mil)."""
 
-DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO: float = 0.6
+DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO: float = 0.85
 """Approximate character width as a fraction of text height.
 
 KiCad's default schematic font is a stroke font with character widths

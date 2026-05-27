@@ -146,6 +146,19 @@ def _set_pin_at(pin_block, x: float, y: float, rotation: float) -> None:
             return
 
 
+def _set_pin_length(pin_block, length_mm: float) -> None:
+    """Set the pin's ``(length N)`` field. Inserts one if missing."""
+    for item in pin_block[1:]:
+        if isinstance(item, list) and item \
+           and getattr(item[0], "value", lambda: None)() == "length":
+            if len(item) >= 2:
+                item[1] = length_mm
+            return
+    # Append a new (length ...) clause if not found.
+    import sexpdata as _sx
+    pin_block.append([_sx.Symbol("length"), length_mm])
+
+
 def emit_bank_symbol(
     *,
     parent_lib_path: Path,
@@ -223,23 +236,32 @@ def emit_bank_symbol(
     # name (~12 chars ≈ 9 mm) plus 3.7 mm padding inside the body.
     pitch = 5.08
     box_half_width = 12.7
+    # Pin length: extended to 5.08 mm (was 2.54 KiCad default). KiCad
+    # renders the pin number text mid-stub. At 2.54 mm length there's
+    # barely 2.5 mm of horizontal room for a 2-3 char pin number, and
+    # the number text bbox sits right against the net-label bbox at
+    # the pin tip. Doubling the pin length gives 5 mm of stub area —
+    # pin number text fits with clear space on both sides.
+    pin_length = 5.08
     max_col = max(len(left_pins), len(right_pins), 1)
     box_height = max(5.08, (max_col + 1) * pitch)
     box_top = box_height / 2.0
     box_bottom = -box_height / 2.0
 
-    left_x  = -box_half_width - 2.54  # pin tip 2.54 mm outside body (one stub)
-    right_x =  box_half_width + 2.54
+    left_x  = -box_half_width - pin_length  # pin tip one pin-length outside body
+    right_x =  box_half_width + pin_length
     cursor = box_top - pitch
     for pin in left_pins:
         # Left-side pins have rotation 0 (tip facing right, body to its right).
         _set_pin_at(pin, left_x, cursor, 0)
+        _set_pin_length(pin, pin_length)
         _hide_pin_name(pin, hide=not show_pin_names)
         cursor -= pitch
     cursor = box_top - pitch
     for pin in right_pins:
         # Right-side pins have rotation 180 (tip faces left, body to its left).
         _set_pin_at(pin, right_x, cursor, 180)
+        _set_pin_length(pin, pin_length)
         _hide_pin_name(pin, hide=not show_pin_names)
         cursor -= pitch
 
