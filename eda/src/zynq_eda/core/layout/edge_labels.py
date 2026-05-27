@@ -770,9 +770,17 @@ def _orphan_net_labels(
         # Strip the now-redundant local label that the hier label
         # supersedes. KiCad's label-merging by name keeps electrical
         # connectivity intact across the sheet's other labels.
+        # ALSO remove its bbox from occupancy — leaving a stale bbox
+        # behind blocks subsequent route_orthogonal_detail probes that
+        # legitimately want to end at this position (e.g.
+        # _input_pwr_flags's route from this anchor to PWR_FLAG).
         try:
             builder.labels.remove(anchor_label)
             matching.remove(anchor_label)
+            builder.occupancy.remove_by_owner(
+                f"label:{anchor_label.net_name}@"
+                f"{anchor_label.position.x:.1f},{anchor_label.position.y:.1f}"
+            )
         except ValueError:
             pass
 
