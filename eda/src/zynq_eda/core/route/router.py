@@ -116,6 +116,22 @@ in lockstep with the validator's threshold tightening (the previous
 """
 
 
+_WIRE_VS_WIRE_CLEARANCE_MM: float = 0.3
+"""Clearance applied to wire-vs-wire collision checks (separate from
+the symbol/label clearance).
+
+Adjacent IC pin rows sit at KiCad's 2.54 mm pin pitch. The default
+2 mm clearance would treat any two parallel wires < 4 mm apart as
+colliding — that includes every legitimate adjacent-pin wire pair.
+Reducing the wire-vs-wire clearance to 0.3 mm means the router still
+rejects ACTUAL crossings / collinear overlaps (which would be ≥ wire
+thickness 0.254 mm) but tolerates parallel wires at full pin pitch.
+
+Wire-vs-symbol/label clearance remains at the full 2 mm so wires
+cannot graze the visible body or text bbox of a placed primitive.
+"""
+
+
 def _segments_collide(
     segments: Sequence[PlacedWire],
     occupancy: Occupancy,
@@ -134,16 +150,37 @@ def _segments_collide(
     floating-point noise, so the router and validator agree on what
     counts as an overlap.
 
-    ``clearance_mm`` is added on top via ``occupancy.collides``'s
-    ``padding_mm``.
+    ``clearance_mm`` is applied to symbol / label / sheet / intrinsic-
+    text bboxes. Wire-vs-wire collisions use the much tighter
+    :data:`_WIRE_VS_WIRE_CLEARANCE_MM` since 2 mm of padding is
+    geometrically incompatible with KiCad's 2.54 mm pin pitch — two
+    adjacent pins' wires would always false-collide.
     """
-    skip_kinds = frozenset(
+    skip_kinds_full = frozenset(
         kind for kind in (
             "symbol", "label", "hierarchical_label", "sheet_pin",
             "wire", "no_connect", "junction", "sheet",
             "intrinsic_pin_name", "intrinsic_pin_number",
         ) if kind not in avoid_kinds
     )
+    # Symbol-side check (full clearance) ignores wires; wire-side check
+    # (tight clearance) ignores everything except wires. When the
+    # caller has explicitly excluded "wire" from avoid_kinds, the
+    # wire-side pass also skips wires.
+    skip_kinds_for_symbols = skip_kinds_full | frozenset({"wire"})
+    if "wire" in avoid_kinds:
+        skip_kinds_for_wires = frozenset(
+            kind for kind in (
+                "symbol", "label", "hierarchical_label", "sheet_pin",
+                "no_connect", "junction", "sheet",
+                "intrinsic_pin_name", "intrinsic_pin_number",
+            )
+        )
+    else:
+        # Wires are not in avoid_kinds → caller wants the router to
+        # ignore wires as obstacles entirely.
+        skip_kinds_for_wires = skip_kinds_full | frozenset({"wire"})
+
     for segment in segments:
         bbox = wire_bbox(
             segment.start,
@@ -152,15 +189,34 @@ def _segments_collide(
             clearance_mm=0.0,
             owner_id="_router_probe",
         )
-        hits = occupancy.collides(
+        # Pass 1: symbol / label / text collisions (full clearance).
+        symbol_hits = occupancy.collides(
             bbox,
             ignore_owners=ignore_owners,
-            ignore_kinds=skip_kinds,
+            ignore_kinds=skip_kinds_for_symbols,
             padding_mm=clearance_mm,
         )
-        # Filter sub-noise-floor intersections so the router doesn't
-        # reject what the validator accepts.
-        for hit in hits:
+        # Pass 2: wire collisions (tight clearance).
+        wire_hits = occupancy.collides(
+            bbox,
+            ignore_owners=ignore_owners,
+            ignore_kinds=skip_kinds_for_wires,
+            padding_mm=_WIRE_VS_WIRE_CLEARANCE_MM,
+        )
+
+        # Build a set of wire owners whose wires SHARE AN ENDPOINT with
+        # this candidate segment. Two wires meeting at a single point
+        # (L-corner, T-junction, X-junction) are CONNECTED, not crossing
+        # — KiCad's net merge convention. The router must allow such
+        # connections; otherwise no two wires on the same net could ever
+        # share a corner (every cluster trunk + edge label + sheet-edge
+        # route would falsely block each other at the IC pin tip).
+        seg_endpoints = (
+            (round(segment.start.x, 3), round(segment.start.y, 3)),
+            (round(segment.end.x, 3), round(segment.end.y, 3)),
+        )
+
+        for hit in list(symbol_hits) + list(wire_hits):
             intersection = bbox.intersection(hit)
             if intersection is None:
                 continue
@@ -168,7 +224,113 @@ def _segments_collide(
                 intersection.width >= _ROUTER_NOISE_FLOOR_MM
                 and intersection.height >= _ROUTER_NOISE_FLOOR_MM
             ):
+                # If the hit is a wire that shares an endpoint with the
+                # candidate, treat it as a legitimate connection and
+                # don't flag.
+                if hit.kind == "wire":
+                    existing_wire = _wire_for_owner(occupancy, hit.owner_id)
+                    if existing_wire is not None and _shares_endpoint(
+                        seg_endpoints, existing_wire,
+                    ):
+                        continue
                 return True
+    return False
+
+
+def _wire_for_owner(occupancy: Occupancy, owner_id: str) -> "PlacedWire | None":
+    """Return the wire whose owner_id matches, if any.
+
+    The router's occupancy stores wires by index (``wire_<n>``); the
+    builder's ``wires`` list is the source of truth for the actual
+    endpoints. Cross-reference by index parsed from the owner id.
+    """
+    if not owner_id.startswith("wire_"):
+        return None
+    try:
+        index = int(owner_id.split("_", 1)[1])
+    except (ValueError, IndexError):
+        return None
+    # The occupancy doesn't expose the wires list directly. We
+    # reconstruct from the bbox: a wire's bbox start ≈ (min_x, y) and
+    # end ≈ (max_x, y) for horizontal, mirror for vertical. This is a
+    # best-effort fallback that's sufficient for the endpoint-sharing
+    # check (we only need the wire's two endpoints).
+    for box in occupancy:
+        if box.owner_id == owner_id:
+            # Reconstruct PlacedWire-like endpoints from the bbox.
+            from zynq_eda.core.model.sheet import PlacedWire
+            # Try horizontal interpretation
+            if box.width > box.height:
+                return PlacedWire(
+                    start=Point(box.min.x, (box.min.y + box.max.y) / 2.0),
+                    end=Point(box.max.x, (box.min.y + box.max.y) / 2.0),
+                )
+            else:
+                return PlacedWire(
+                    start=Point((box.min.x + box.max.x) / 2.0, box.min.y),
+                    end=Point((box.min.x + box.max.x) / 2.0, box.max.y),
+                )
+    return None
+
+
+def _shares_endpoint(
+    candidate_endpoints: tuple[tuple[float, float], tuple[float, float]],
+    existing: "PlacedWire",
+) -> bool:
+    """True iff the candidate segment shares an endpoint with ``existing``
+    OR forms a T-junction with it (one wire's endpoint sits on the other
+    wire's interior).
+
+    Both cases are LEGITIMATE wire connections — not crossings — in KiCad.
+    A junction marker placed at the meeting point makes the connection
+    electrically explicit. The cluster code emits explicit junctions where
+    needed (trunk-drop intersections); the validator allows perpendicular
+    crossings at junction points (see ``overlap.wire_cross``).
+    """
+    EPS = 0.05
+    candidate_start = candidate_endpoints[0]
+    candidate_end = candidate_endpoints[1]
+    existing_endpoints = (
+        (round(existing.start.x, 3), round(existing.start.y, 3)),
+        (round(existing.end.x, 3), round(existing.end.y, 3)),
+    )
+
+    # Case 1: corner — share an endpoint exactly.
+    for cep in candidate_endpoints:
+        for eep in existing_endpoints:
+            if abs(cep[0] - eep[0]) < EPS and abs(cep[1] - eep[1]) < EPS:
+                return True
+
+    # Case 2: T-junction — candidate's endpoint sits on existing wire's
+    # interior, OR existing wire's endpoint sits on candidate's interior.
+    def _point_on_segment_interior(
+        point: tuple[float, float],
+        seg_a: tuple[float, float],
+        seg_b: tuple[float, float],
+    ) -> bool:
+        """Strictly-interior containment with EPS tolerance."""
+        if abs(seg_a[0] - seg_b[0]) < EPS:
+            # Vertical segment
+            if abs(point[0] - seg_a[0]) > EPS:
+                return False
+            lo, hi = (min(seg_a[1], seg_b[1]), max(seg_a[1], seg_b[1]))
+            return lo + EPS < point[1] < hi - EPS
+        if abs(seg_a[1] - seg_b[1]) < EPS:
+            # Horizontal segment
+            if abs(point[1] - seg_a[1]) > EPS:
+                return False
+            lo, hi = (min(seg_a[0], seg_b[0]), max(seg_a[0], seg_b[0]))
+            return lo + EPS < point[0] < hi - EPS
+        return False
+
+    # Candidate endpoint on existing interior
+    for cep in candidate_endpoints:
+        if _point_on_segment_interior(cep, existing_endpoints[0], existing_endpoints[1]):
+            return True
+    # Existing endpoint on candidate interior
+    for eep in existing_endpoints:
+        if _point_on_segment_interior(eep, candidate_start, candidate_end):
+            return True
     return False
 
 
@@ -321,6 +483,7 @@ def route_orthogonal_detail(
     avoid_owners: frozenset[str] = frozenset(),
     avoid_kinds: frozenset[BBoxKind] = DEFAULT_AVOID_KINDS,
     clearance_mm: float = DEFAULT_CLEARANCE_MM,
+    forbidden_traversal_points: frozenset[tuple[float, float]] = frozenset(),
 ) -> "RouteAttempt":
     """Same as :func:`route_orthogonal` but exposes the picked shape.
 
@@ -353,6 +516,10 @@ def route_orthogonal_detail(
     for shape, segments in _enumerate_routes(start, end):
         if not segments:
             continue
+        if _segments_traverse_forbidden_point(
+            segments, forbidden_traversal_points,
+        ):
+            continue
         if not _segments_collide(
             segments, occupancy, avoid_owners, avoid_kinds, clearance_mm,
         ):
@@ -363,6 +530,68 @@ def route_orthogonal_detail(
     # struct directly (and must handle gave_up) or use the simpler
     # ``route_orthogonal`` which raises :class:`UnroutableError`.
     return RouteAttempt(segments=(), gave_up=True, shape="giveup")
+
+
+def _segments_traverse_forbidden_point(
+    segments: Sequence[PlacedWire],
+    forbidden_points: frozenset[tuple[float, float]],
+) -> bool:
+    """True iff any segment passes THROUGH a forbidden point (interior
+    or endpoint, except the route's own start/end).
+
+    Used to keep edge-label routes from accidentally tapping a different
+    pin's tip when the router picks a Z-bend that traverses the pin
+    column. The forbidden set holds (x, y) for every override pin tip
+    on the IC EXCEPT the source pin itself; if the picked route
+    touches any of these, the route would mix the source's net into
+    that pin and we reject it.
+    """
+    if not forbidden_points:
+        return False
+    EPS = 0.05
+    if not segments:
+        return False
+    route_start = (round(segments[0].start.x, 3), round(segments[0].start.y, 3))
+    route_end = (round(segments[-1].end.x, 3), round(segments[-1].end.y, 3))
+
+    for seg in segments:
+        seg_endpoints = (
+            (round(seg.start.x, 3), round(seg.start.y, 3)),
+            (round(seg.end.x, 3), round(seg.end.y, 3)),
+        )
+        for fp in forbidden_points:
+            # Skip the route's own start/end — those are legitimate
+            # connection points for the route's source/destination.
+            if (
+                abs(fp[0] - route_start[0]) < EPS
+                and abs(fp[1] - route_start[1]) < EPS
+            ):
+                continue
+            if (
+                abs(fp[0] - route_end[0]) < EPS
+                and abs(fp[1] - route_end[1]) < EPS
+            ):
+                continue
+            # Check whether the forbidden point lies on the segment
+            # (endpoints or interior).
+            for ep in seg_endpoints:
+                if abs(fp[0] - ep[0]) < EPS and abs(fp[1] - ep[1]) < EPS:
+                    return True
+            # Interior check
+            sa, sb = seg_endpoints
+            if abs(sa[0] - sb[0]) < EPS:
+                # Vertical segment
+                if abs(fp[0] - sa[0]) < EPS:
+                    lo, hi = (min(sa[1], sb[1]), max(sa[1], sb[1]))
+                    if lo + EPS < fp[1] < hi - EPS:
+                        return True
+            elif abs(sa[1] - sb[1]) < EPS:
+                # Horizontal segment
+                if abs(fp[1] - sa[1]) < EPS:
+                    lo, hi = (min(sa[0], sb[0]), max(sa[0], sb[0]))
+                    if lo + EPS < fp[0] < hi - EPS:
+                        return True
+    return False
 
 
 # ---- Route enumeration -----------------------------------------------------

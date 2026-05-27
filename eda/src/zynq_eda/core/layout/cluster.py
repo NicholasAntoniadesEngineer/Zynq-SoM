@@ -23,8 +23,10 @@ from typing import Literal
 
 from zynq_eda.core.layout._builder import BlockLayoutBuilder
 from zynq_eda.core.layout._constants import (
+    CAP_VERTICAL_OFFSET_MM,
     DENSE_HORIZONTAL_SWARM_PITCH_MM,
     HORIZONTAL_SWARM_PITCH_MM,
+    INTER_PIN_CLUSTER_GAP_MM,
     PASSIVE_ADJACENT_PIN_STAGGER_MM,
     PASSIVE_OFFSET_MM,
     PASSIVE_PIN_HALF,
@@ -38,7 +40,7 @@ from zynq_eda.core.layout.occupancy import Occupancy
 from zynq_eda.core.model.block import IcInstance
 from zynq_eda.core.model.grid import Point, snap_to_grid
 from zynq_eda.core.model.refcircuit import ExternalPart
-from zynq_eda.core.model.sheet import PlacedSymbol, PlacedWire, PlacedLabel
+from zynq_eda.core.model.sheet import PlacedJunction, PlacedSymbol, PlacedWire, PlacedLabel
 
 
 PassiveKind = Literal["cap", "res", "diode", "other"]
@@ -319,10 +321,7 @@ def _shift_passive_until_clear(
             geometry_cache=geometry_cache,
         ):
             continue
-        # 2. Wire-route clearance: pin → cap.near route MUST be clean
-        #    (no router giveup). If the router can't find a route from
-        #    the source pin to this candidate's near-point without
-        #    crossing anything, this slot is unusable.
+        # 2. Wire-route clearance: pin → cap.near route MUST be clean.
         if pin_connection is not None and pin_connection != candidate_near:
             attempt = route_orthogonal_detail(
                 pin_connection,
@@ -332,9 +331,7 @@ def _shift_passive_until_clear(
             )
             if attempt.gave_up:
                 continue
-        # 3. Power-symbol-side wire-route clearance: simulate the
-        #    cap.far → future_power_symbol route. If the placement
-        #    engine couldn't route it later, that slot is unusable now.
+        # 3. Power-symbol-side wire-route clearance.
         candidate_symbol_position = Point(
             snap_to_grid(candidate_far.x + outward_dx),
             snap_to_grid(candidate_far.y + outward_dy),
@@ -506,27 +503,26 @@ def _outward_power_symbol_rotation(
     except Exception:
         return 0.0
     body_center_y = (bbox.min_y + bbox.max_y) / 2.0
-    # Only rotate TOP/BOTTOM-side cases — those are where the wire goes
-    # PERPENDICULAR through the body (real overlap > 1 mm). LEFT/RIGHT
-    # wires only graze the body's edge by 0.127 mm (wire half-thickness)
-    # at the pin tip; the validator's noise floor handles that. Rotating
-    # power symbols on LEFT/RIGHT pushes the rotated body INTO the
-    # adjacent passive's pin column on multi-pull-up clusters, so it
-    # creates more overlaps than it prevents.
+    # Under the unified LEFT/RIGHT/TOP/BOTTOM layout, the power symbol
+    # always sits at (cap.far.x, cap.far.y - POWER_OFFSET) for sides
+    # left/right/top, and (cap.far.x, cap.far.y + POWER_OFFSET) for
+    # bottom. The body must extend AWAY from the cap (further outward).
+    # For LEFT/RIGHT/TOP the outward direction is page -Y (up); for
+    # BOTTOM it is page +Y (down).
     if body_center_y > 0.0:
         # Body-down symbol (GND-style): default body extends to page +Y.
         return {
-            "top":    180.0,  # +Y → -Y (body up, away from cap)
-            "bottom": 0.0,    # default already correct
-            "left":   0.0,    # accept the 0.127 mm graze
-            "right":  0.0,    # accept the 0.127 mm graze
+            "top":    180.0,
+            "bottom": 0.0,
+            "left":   180.0,  # NEW layout: body extends UP, away from cap
+            "right":  180.0,  # NEW layout: body extends UP, away from cap
         }[pin_side]
     # Body-up symbol (+3V3-style): default body extends to page -Y.
     return {
-        "top":    0.0,    # default already correct
-        "bottom": 180.0,  # -Y → +Y (body down, away from cap)
-        "left":   0.0,    # accept the 0.127 mm graze
-        "right":  0.0,    # accept the 0.127 mm graze
+        "top":    0.0,
+        "bottom": 180.0,
+        "left":   0.0,    # NEW layout: default body up is correct
+        "right":  0.0,    # NEW layout: default body up is correct
     }[pin_side]
 
 
@@ -583,17 +579,18 @@ def _attach_far_endpoint(
             ))
         return
 
-    # Outboard direction: continue from passive_anchor through far_point,
-    # by another POWER_SYMBOL_OFFSET_MM.
-    if pin_side == "left":
+    # Outboard direction: continue from passive_anchor through far_point.
+    # Under the NEW LEFT/RIGHT layout the cap body sits ABOVE the pin row
+    # and ``far`` is the TOP of the cap; the power symbol continues
+    # VERTICAL UP (further smaller Y) so the symbol body extends OUTWARD
+    # in the perpendicular-to-pin-axis direction. Under the old layout
+    # power symbols extended laterally — that put them in the pin axis
+    # alongside the cap, but it also collided with neighbour pins' wires
+    # whenever a cluster spilled past the inter-pin pitch.
+    if pin_side == "left" or pin_side == "right":
         symbol_position = Point(
-            snap_to_grid(far_point.x - POWER_SYMBOL_OFFSET_MM),
-            far_point.y,
-        )
-    elif pin_side == "right":
-        symbol_position = Point(
-            snap_to_grid(far_point.x + POWER_SYMBOL_OFFSET_MM),
-            far_point.y,
+            far_point.x,
+            snap_to_grid(far_point.y - POWER_SYMBOL_OFFSET_MM),
         )
     elif pin_side == "top":
         symbol_position = Point(
@@ -666,6 +663,8 @@ def place_one_passive_for_pin(
     ic_lib_id: str = "",
     side_pin_count: int = 1,
     pin_side_index: int = 0,
+    total_slots_on_pin: int = 1,
+    pin_lane_offset_mm: float | None = None,
 ) -> None:
     """Place a single passive next to an IC pin and wire it up.
 
@@ -749,44 +748,43 @@ def place_one_passive_for_pin(
     #     rotation 180: pin 1 → (0, +3.81), pin 2 → (0, -3.81)
     #     rotation 270: pin 1 → (+3.81, 0), pin 2 → (-3.81, 0)
     #
-    # Slot stacking pitch depends on the side: LEFT/RIGHT slots fan outward
-    # along the perpendicular-to-edge axis (each slot is one passive-body +
-    # one power-symbol-stub further out), so the pitch must clear
-    # 2*PASSIVE_PIN_HALF + POWER_SYMBOL_OFFSET. TOP/BOTTOM slots fan
-    # laterally along their own column (each slot has its own X column);
-    # the lateral pitch only needs to keep adjacent caps visually separated.
-    if side == "left":
-        # Vertical passive (rotation 0): body + property text live
-        # BELOW the rail Y, off the wire path. The pin_stagger for
-        # adjacent IC pins shifts cap X (perpendicular to body's
-        # long axis) so two caps at neighbouring pins don't end up
-        # in the same column. Pin-count scale moves the WHOLE cluster
-        # further outboard for fat ICs so every pin gets its own lane.
-        lateral_offset = (
-            PASSIVE_OFFSET_MM
-            + pin_fanout_scale
-            + slot_index * horizontal_swarm_pitch_mm
-        )
+    # NEW layout (LEFT/RIGHT side): cap body lives in a Y BAND ABOVE the
+    # pin row by CAP_VERTICAL_OFFSET_MM + PASSIVE_PIN_HALF so it can't
+    # invade the adjacent pin row's wire path. Multi-slot caps fan
+    # HORIZONTALLY along the body edge — each slot at its own X column,
+    # all sharing the cap-band Y. The wire from the IC pin to the
+    # cluster's far slot is a horizontal TRUNK at pin.y; each slot has a
+    # short vertical DROP from the trunk to its near pin. Junctions are
+    # injected at every interior trunk-drop intersection.
+    #
+    # TOP/BOTTOM keep their existing pattern: cap body OUTBOARD of pin
+    # row by PASSIVE_OFFSET; multi-slot fans LATERALLY in X along the
+    # body edge.
+    if side == "left" or side == "right":
+        outward_sign = -1 if side == "left" else 1
+        # Slot 0 closest to IC at PASSIVE_OFFSET. Subsequent slots
+        # progressively further outboard at PASSIVE_PITCH spacing.
+        if pin_lane_offset_mm is None:
+            pin_lane_offset_mm = PASSIVE_OFFSET_MM
+        lateral_offset = pin_lane_offset_mm + slot_index * PASSIVE_PITCH_MM
         passive_anchor = Point(
-            snap_to_grid(pin_connection.x - lateral_offset - pin_stagger),
-            snap_to_grid(pin_connection.y + PASSIVE_PIN_HALF),
+            snap_to_grid(pin_connection.x + outward_sign * lateral_offset),
+            snap_to_grid(
+                pin_connection.y - PASSIVE_PIN_HALF - CAP_VERTICAL_OFFSET_MM
+            ),
         )
         passive_rotation = 0.0
-        near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF))
-        far_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
-    elif side == "right":
-        lateral_offset = (
-            PASSIVE_OFFSET_MM
-            + pin_fanout_scale
-            + slot_index * horizontal_swarm_pitch_mm
+        # Cap body sits ABOVE pin row: near is the BOTTOM (largest Y,
+        # closest to pin row), far is the TOP (smallest Y, furthest
+        # from pin row).
+        near_point = Point(
+            passive_anchor.x,
+            snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF),
         )
-        passive_anchor = Point(
-            snap_to_grid(pin_connection.x + lateral_offset + pin_stagger),
-            snap_to_grid(pin_connection.y + PASSIVE_PIN_HALF),
+        far_point = Point(
+            passive_anchor.x,
+            snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF),
         )
-        passive_rotation = 0.0
-        near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF))
-        far_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
     elif side == "top":
         # TOP slots fan LATERALLY in X. Pin-count scale pushes the
         # cluster's primary offset higher so the channel above the IC
@@ -811,13 +809,17 @@ def place_one_passive_for_pin(
         near_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y - PASSIVE_PIN_HALF))
         far_point = Point(passive_anchor.x, snap_to_grid(passive_anchor.y + PASSIVE_PIN_HALF))
 
-    # Cross-cluster collision check + wire-routability probe: each
-    # candidate slot is rejected unless (a) its body+text bbox is clear
-    # of every primitive already in occupancy AND (b) the wire from the
-    # source IC/connector pin to the candidate near-point can be routed
-    # without the router giving up. Last items placed may end up far
-    # from the source pin — that's correct: by then every closer slot
-    # has been claimed.
+    # Cross-cluster collision check + wire-routability probe.
+    #
+    # For LEFT/RIGHT (new layout) the cluster has a fixed topology:
+    # shared horizontal trunk at pin.y + per-slot vertical drops to a
+    # cap band ABOVE the pin row. Slot positions are deterministic from
+    # ``pin_lane_offset_mm`` + ``slot_index`` so the strict probe is
+    # skipped — the cluster's wires are emitted directly, and the
+    # validator catches any collisions in its post-emit pass.
+    #
+    # For TOP/BOTTOM the per-slot fanout ladder still applies (each
+    # candidate's body + property text + wire route is probed).
     from zynq_eda.core.layout._builder import pin_intrinsic_owner_ids as _pin_owners
     _probe_avoid_owners = {f"symbol:{ic_reference}"}
     if source_pin_number:
@@ -825,18 +827,19 @@ def place_one_passive_for_pin(
             _pin_owners(ic_reference, (source_pin_number,))
         )
     passive_lib = passive_lib_id(external.part_token)
-    passive_anchor, near_point, far_point = _shift_passive_until_clear(
-        builder=builder,
-        passive_anchor=passive_anchor,
-        near_point=near_point,
-        far_point=far_point,
-        side=side,
-        passive_rotation=passive_rotation,
-        passive_lib_id=passive_lib,
-        geometry_cache=geometry_cache,
-        pin_connection=pin_connection,
-        avoid_owners=frozenset(_probe_avoid_owners),
-    )
+    if side in ("top", "bottom"):
+        passive_anchor, near_point, far_point = _shift_passive_until_clear(
+            builder=builder,
+            passive_anchor=passive_anchor,
+            near_point=near_point,
+            far_point=far_point,
+            side=side,
+            passive_rotation=passive_rotation,
+            passive_lib_id=passive_lib,
+            geometry_cache=geometry_cache,
+            pin_connection=pin_connection,
+            avoid_owners=frozenset(_probe_avoid_owners),
+        )
 
     ref_prefix = passive_ref_prefix(external.part_token)
     passive_ref = builder.next_ref(ref_prefix)
@@ -869,55 +872,101 @@ def place_one_passive_for_pin(
         value_shift=value_shift,
     ), geometry=geometry_cache)
 
-    # For non-zero-swarm-slot top/bottom passives, the near pin is not on
-    # the IC pin's column — route via the occupancy-aware router so the
-    # L-bend avoids crossing intermediate cap bodies that sit in a row
-    # at the same Y as the lateral segment.
+    # Wire emission depends on side:
     #
-    # avoid_owners exempts (1) the IC's body bbox, (2) the passive's
-    # body bbox, AND (3) the SOURCE pin's own intrinsic pin-name +
-    # pin-number text bboxes. Without (3), the wire bbox's endpoint
-    # clearance grazes the source pin's name text (which sits ~1 mm
-    # INTO the body from the tip) and EVERY L-bend variant would
-    # falsely block. OTHER pins' intrinsic text on the same IC is NOT
-    # exempted, so the router picks the L-bend that doesn't cross them
-    # (e.g. V-first for top-edge slot ≥ 1 so the horizontal lateral
-    # sits below pin row Y, not at it).
-    if pin_connection != near_point:
-        from zynq_eda.core.layout._builder import pin_intrinsic_owner_ids
-        avoid_owners_set = {
-            f"symbol:{ic_reference}",
-            f"symbol:{passive_ref}",
-        }
-        if source_pin_number:
-            avoid_owners_set |= set(
-                pin_intrinsic_owner_ids(ic_reference, (source_pin_number,))
-            )
-        avoid_owners = frozenset(avoid_owners_set)
-
-        # Use route_orthogonal_detail so we don't crash on giveup — the
-        # strict probe in _shift_passive_until_clear is supposed to have
-        # found a routable slot, but its check happens BEFORE the cap
-        # body is added to occupancy. If the actual route now collides
-        # (e.g. a same-pin slot 1 cap is in the way), surface a clear
-        # PassivePlacementError instead of UnroutableError so the user
-        # sees the upstream cause. Pass 5 will tighten this further.
-        from zynq_eda.core.route.router import route_orthogonal_detail
-        attempt = route_orthogonal_detail(
-            pin_connection,
-            near_point,
-            builder.occupancy,
-            avoid_owners=avoid_owners,
+    #   LEFT/RIGHT (new layout): shared trunk + per-slot drop + junction.
+    #     - Slot 0 emits the horizontal TRUNK at pin.y from pin →
+    #       furthest-slot.x. The trunk passes through every slot's X
+    #       column; KiCad recognises the connection via explicit
+    #       junctions at interior trunk-drop intersections.
+    #     - Each slot (including 0) emits a short VERTICAL DROP from
+    #       (slot_x, pin.y) to (slot_x, near.y).
+    #     - Junctions are placed at every slot whose drop lands on the
+    #       trunk's INTERIOR (slots 0 .. N-2). The last slot (N-1) shares
+    #       the trunk's endpoint with its drop — an L-corner, no
+    #       junction needed.
+    #
+    #   TOP/BOTTOM (existing layout): vertical-stack with shared
+    #     endpoints. Slot 0 emits a direct wire from pin → near; higher
+    #     slots' near coincides with the previous slot's far (KiCad
+    #     merges co-located endpoints).
+    from zynq_eda.core.layout._builder import pin_intrinsic_owner_ids
+    avoid_owners_set = {
+        f"symbol:{ic_reference}",
+        f"symbol:{passive_ref}",
+    }
+    if source_pin_number:
+        avoid_owners_set |= set(
+            pin_intrinsic_owner_ids(ic_reference, (source_pin_number,))
         )
-        if attempt.gave_up:
-            raise PassivePlacementError(
-                f"Router gave up routing IC pin {pin_connection} → "
-                f"cap near-pin {near_point} (passive {passive_ref!r}, "
-                f"lib_id {passive_lib!r}). The cap's accepted slot has "
-                f"no clean wire route to the source pin."
+    avoid_owners = frozenset(avoid_owners_set)
+
+    from zynq_eda.core.route.router import route_orthogonal_detail
+
+    if side in ("left", "right"):
+        outward_sign_lr = -1 if side == "left" else 1
+        # Slot 0 emits the trunk wire (horizontal at pin.y) extending
+        # from the pin out to the furthest slot's X column. The wires
+        # are emitted DIRECTLY (no router) because their topology is
+        # fixed by construction — running them through the router
+        # would have the wire-as-obstacle rule reject the legitimate
+        # trunk-drop intersections. Junctions are added at every
+        # interior trunk-drop intersection to honour KiCad's net merge
+        # convention; the validator allows perpendicular crossings at
+        # junction points (see ``overlap.wire_cross``).
+        if slot_index == 0:
+            if total_slots_on_pin == 1:
+                trunk_far_x = near_point.x
+            else:
+                furthest_lateral = (
+                    (pin_lane_offset_mm or PASSIVE_OFFSET_MM)
+                    + (total_slots_on_pin - 1) * PASSIVE_PITCH_MM
+                )
+                trunk_far_x = snap_to_grid(
+                    pin_connection.x + outward_sign_lr * furthest_lateral
+                )
+            trunk_end = Point(trunk_far_x, pin_connection.y)
+            if pin_connection != trunk_end:
+                builder.add_wire(PlacedWire(
+                    start=pin_connection,
+                    end=trunk_end,
+                ))
+
+        # Every slot emits its own vertical DROP from (slot.x, pin.y) to
+        # cap.near.
+        drop_top = Point(near_point.x, pin_connection.y)
+        if drop_top != near_point:
+            builder.add_wire(PlacedWire(
+                start=drop_top,
+                end=near_point,
+            ))
+
+        # Junction at the trunk-drop intersection for every slot whose
+        # drop lands on the trunk's INTERIOR (not at the trunk endpoint).
+        # The last slot's drop coincides with the trunk endpoint — an
+        # L-corner, no junction needed.
+        if total_slots_on_pin > 1 and slot_index < total_slots_on_pin - 1:
+            builder.junctions.append(
+                PlacedJunction(position=Point(near_point.x, pin_connection.y))
             )
-        for seg in attempt.segments:
-            builder.add_wire(seg)
+
+    else:  # top / bottom
+        if slot_index == 0 and pin_connection != near_point:
+            attempt = route_orthogonal_detail(
+                pin_connection,
+                near_point,
+                builder.occupancy,
+                avoid_owners=avoid_owners,
+            )
+            if attempt.gave_up:
+                raise PassivePlacementError(
+                    f"Router gave up routing IC pin {pin_connection} → "
+                    f"cap near-pin {near_point} (passive {passive_ref!r}, "
+                    f"lib_id {passive_lib!r}). The cap's accepted slot has "
+                    f"no clean wire route to the source pin."
+                )
+            for seg in attempt.segments:
+                builder.add_wire(seg)
 
     _attach_far_endpoint(
         builder,
@@ -1061,6 +1110,26 @@ def cluster_ic_externals(
         for side_str, pin_list in pins_with_caps_by_side.items()
     }
 
+    # Slot count per pin (number of externals on that pin) — drives the
+    # cluster trunk length and the inter-pin X offset allocation.
+    slot_count_by_pin: dict[str, int] = {
+        pin_name: len(externals)
+        for pin_name, externals in by_pin.items()
+    }
+
+    # Per-pin lane offset (LEFT/RIGHT only) — distance from pin.x to
+    # this pin's slot 0. Packed: each pin's cluster occupies
+    # ``slot_count * PASSIVE_PITCH_MM`` of outboard width, with an
+    # ``INTER_PIN_CLUSTER_GAP_MM`` gap between adjacent pins' clusters.
+    # Pins are processed in body-edge order (topmost first for L/R).
+    pin_lane_offset_map: dict[str, float] = {}
+    for side_str in ("left", "right"):
+        cumulative = PASSIVE_OFFSET_MM
+        for pin_name in pins_with_caps_by_side[side_str]:
+            pin_lane_offset_map[pin_name] = cumulative
+            n_slots = max(1, slot_count_by_pin.get(pin_name, 1))
+            cumulative += n_slots * PASSIVE_PITCH_MM + INTER_PIN_CLUSTER_GAP_MM
+
     pin_geom_map: dict[str, "PinGeometryAbs"] = {}
     placed_passive_pin_names: set[str] = set()
     for pin_name, externals in by_pin.items():
@@ -1114,5 +1183,7 @@ def cluster_ic_externals(
                 ic_lib_id=ic_lib_id,
                 side_pin_count=side_count,
                 pin_side_index=pin_side_index_map.get(pin_name, 0),
+                total_slots_on_pin=slot_count_by_pin.get(pin_name, 1),
+                pin_lane_offset_mm=pin_lane_offset_map.get(pin_name),
             )
     return pin_geom_map

@@ -96,6 +96,33 @@ PASSIVE_PIN_HALF = 3.81
 Pin 1 of a non-rotated Device:R is at (0, +3.81); pin 2 at (0, -3.81).
 """
 
+CAP_VERTICAL_OFFSET_MM = snap_to_grid(5.08)
+"""Distance from IC pin row to cap's NEAR pin (LEFT/RIGHT side).
+
+For LEFT/RIGHT-side IC pins, the cap body sits in a Y-band that is
+ABOVE the pin row (smaller Y on page) by enough margin that the cap
+body's bbox + 2 mm visual clearance does not intersect the adjacent
+pin row's wire. With 2.54 mm KiCad pin pitch + 2 mm clearance + cap
+body half-height (~1.25 mm), the cap's near pin must sit at least
+~5 mm above pin row. 5.08 mm = 2 × KiCad grid keeps the layout on
+the canonical grid AND leaves the cap body in a band that doesn't
+collide with any neighbouring pin row.
+"""
+
+INTER_PIN_CLUSTER_GAP_MM = snap_to_grid(0.0)
+"""Gap between adjacent IC pins' cap-cluster X (or Y) ranges.
+
+Set to 0 so adjacent pins' clusters pack at the natural PASSIVE_PITCH_MM
+spacing — without this, dense ICs like FUSB302 (14 externals across
+7 LEFT pins) push the trunk off the sheet edge. Each cap still sits at
+a unique X column; the difference is that pin K's last slot and pin
+K+1's first slot now sit at adjacent grid columns (5.08 mm apart)
+rather than skipping a column. Wires from one pin to its caps don't
+pass through the neighbour's cap column because each pin's trunk is
+at a UNIQUE Y row (the pin's own row) — the X columns can pack tight
+without wire interference.
+"""
+
 POWER_SYMBOL_OFFSET_MM = snap_to_grid(7.62)
 """Distance from a passive's far terminal to its attached power symbol.
 

@@ -340,11 +340,25 @@ def _per_ic_pin_labels(
                 edge_labeled.add((ic.reference, pin_role))
 
         # ---- Phase 3: per-pin routing for ungrouped / non-collinear -----
+        # All OTHER override pins on this IC are forbidden traversal
+        # points: if Phase 3's route picks a Z-bend through another
+        # override pin's tip, the resulting wire would mix the source's
+        # net into that pin (KiCad treats pin tip on wire = connected).
+        # Build the set once per IC.
+        all_override_pin_positions = {
+            (round(conn.x, 3), round(conn.y, 3))
+            for _r, _n, conn, _pr, _sr, _pn in resolved
+        }
+
         for pin_role, net_name, pin_connection, _pin_rot, _sym_rot, pin_number in resolved:
             if pin_role in handled_pins:
                 continue
             net = declared_nets[net_name]
             label_x = left_x if net.edge == SheetEdge.LEFT else right_x
+            source_pin_key = (round(pin_connection.x, 3), round(pin_connection.y, 3))
+            forbidden_pts = frozenset(
+                pt for pt in all_override_pin_positions if pt != source_pin_key
+            )
 
             # Cross-pin-crossing avoidance: if the straight horizontal wire
             # from pin_connection to (label_x, pin_y) would pass through any
@@ -393,6 +407,7 @@ def _per_ic_pin_labels(
                         cand_endpoint,
                         builder.occupancy,
                         avoid_owners=avoid_owners,
+                        forbidden_traversal_points=forbidden_pts,
                     )
                     if attempt.gave_up:
                         continue
@@ -468,11 +483,15 @@ def _routed_y_avoiding_pin_crossings(
         for other in all_pin_positions.values():
             if abs(other.y - y) > EPS:
                 continue
-            # Skip pins on the SOURCE pin's column (same X). The wire
-            # terminates at the source pin's X; other pins at that X
-            # column are above/below the row and aren't crossed by a
-            # horizontal wire ending there.
-            if abs(other.x - pin_x) < EPS:
+            # Skip ONLY the source pin itself (same X AND same Y).
+            # Other pins on the same X column at DIFFERENT Y are NOT
+            # safe to ignore — when the route Z-bends through this Y,
+            # its vertical leg at pin_x passes through every pin on
+            # that column, and the resulting wire-touches-pin would
+            # mix the source's net into the touched pin's net. See the
+            # FUSB302 CC1/CC2 duplicate-wire case (CC1's Z-bend at
+            # Y=CC2.y emits a wire passing through CC2's pin tip).
+            if abs(other.x - pin_x) < EPS and abs(other.y - pin_y) < EPS:
                 continue
             if x_lo - EPS < other.x < x_hi + EPS:
                 return True
