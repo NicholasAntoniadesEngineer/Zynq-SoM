@@ -40,7 +40,8 @@ from zynq_eda.core.model.sheet import PlacedWire
 # ---- Defaults --------------------------------------------------------------
 
 DEFAULT_AVOID_KINDS: frozenset[BBoxKind] = frozenset(
-    {"symbol", "label", "hierarchical_label", "sheet"}
+    {"symbol", "label", "hierarchical_label", "sheet",
+     "intrinsic_pin_name", "intrinsic_pin_number"}
 )
 """Bbox kinds the router avoids by default.
 
@@ -272,6 +273,41 @@ def route_orthogonal_detail(
     # 4-5. Double-L (two variants).
     candidates.append(("double_l_h", _double_l(start, end, horizontal_first=True)))
     candidates.append(("double_l_v", _double_l(start, end, horizontal_first=False)))
+
+    # 6+. Z-bend with FORCED detour. When both endpoints share an
+    # axis (same X or same Y), the midpoint of double-L collapses
+    # onto the same axis and produces no detour. To detour AROUND
+    # intrinsic-text or other obstacles in the way, try offset
+    # detour Ys (for same-Y endpoints) or detour Xs (for same-X).
+    # We try multiple offset magnitudes; the first clear one wins.
+    DETOUR_OFFSETS_MM = (5.08, 7.62, 10.16, 12.7, 15.24, 20.32, 25.4)
+    if abs(start.y - end.y) < 0.01:
+        # Same Y → need a Y_detour different from start.y to bend
+        # the wire vertically out of the obstacle row.
+        for offset in DETOUR_OFFSETS_MM:
+            for direction in (-1, +1):
+                my = start.y + direction * offset
+                c1 = Point(start.x, my)
+                c2 = Point(end.x, my)
+                segs = tuple(filter(None, (
+                    _make_wire(start, c1),
+                    _make_wire(c1, c2),
+                    _make_wire(c2, end),
+                )))
+                candidates.append((f"z_bend_y_off_{offset:.2f}_{direction:+d}", segs))
+    if abs(start.x - end.x) < 0.01:
+        # Same X → need an X_detour for horizontal-out detour.
+        for offset in DETOUR_OFFSETS_MM:
+            for direction in (-1, +1):
+                mx = start.x + direction * offset
+                c1 = Point(mx, start.y)
+                c2 = Point(mx, end.y)
+                segs = tuple(filter(None, (
+                    _make_wire(start, c1),
+                    _make_wire(c1, c2),
+                    _make_wire(c2, end),
+                )))
+                candidates.append((f"z_bend_x_off_{offset:.2f}_{direction:+d}", segs))
 
     # Pick the first shape whose every segment is clear.
     for shape, segments in candidates:

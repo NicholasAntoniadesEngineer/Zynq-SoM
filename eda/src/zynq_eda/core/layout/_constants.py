@@ -50,8 +50,23 @@ side by side) to render without overlap. Increases cluster footprint
 by ~33 % so it's opt-in per refcircuit, not the default.
 """
 
-PASSIVE_OFFSET_MM = snap_to_grid(10.16)
-"""Distance from an IC pin to its nearest passive's anchor."""
+PASSIVE_OFFSET_MM = snap_to_grid(17.78)
+"""Distance from an IC pin to its nearest passive's anchor.
+
+Sized so the cluster's far-terminal label (which can be ~16 chars,
+e.g. ``ZYNQ_PS_JTAG_TCK`` or ``LVDS_DATA0_N``) doesn't collide with
+the connector pin's hier label sitting at the pin's stub-end on the
+same Y row. Math:
+
+  hier label bbox extends from (pin - NET_LABEL_STUB) to
+    (pin - NET_LABEL_STUB - text_width) — i.e. ~14 mm leftward
+  cluster far label sits at (pin - PASSIVE_OFFSET - PASSIVE_PIN_HALF)
+    = (pin - 17.78 - 3.81) = (pin - 21.59) extending leftward
+  gap between them = (pin - 14.54) - (pin - 21.59) = 7 mm clear.
+
+The previous 10.16 mm gave only 0.6 mm clear — labels visually
+touched on dense connectors (JTAG header, LVDS pair termination).
+"""
 
 PASSIVE_ADJACENT_PIN_STAGGER_MM = snap_to_grid(5.08)
 """Extra perpendicular offset for caps on alternating-parity IC pin rows/cols.

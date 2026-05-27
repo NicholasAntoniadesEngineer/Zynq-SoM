@@ -1082,6 +1082,53 @@ def validate_overlap(
     # intrinsic overlaps would mean two symbols' bodies are too close,
     # which symbol×symbol already catches. So we skip this category.
 
+    # ---- 6d. wire × intrinsic_pin_name / intrinsic_pin_number ----------
+    # A wire that crosses through pin-name or pin-number text mid-
+    # segment is visually painting text and a wire on top of each
+    # other. KiCad ERC misses this because wires and intrinsic text
+    # are different layers; the bbox math sees it. Exempts wires
+    # whose endpoints sit at one of the symbol's pin tips (those
+    # wires legitimately attach to the pin and the intrinsic
+    # text living next to the tip is by design).
+    for _, wire, wire_box in wire_bboxes:
+        # Determine which symbol(s) the wire's endpoints attach to.
+        attached_symbols: set[str] = set()
+        for sym, _ in symbol_bboxes:
+            endpoints = symbol_pin_endpoints.get(sym.reference, ())
+            for endpoint in endpoints:
+                if (
+                    (abs(wire.start.x - endpoint.x) <= LABEL_AT_PIN_ENDPOINT_TOL_MM
+                     and abs(wire.start.y - endpoint.y) <= LABEL_AT_PIN_ENDPOINT_TOL_MM)
+                    or (abs(wire.end.x - endpoint.x) <= LABEL_AT_PIN_ENDPOINT_TOL_MM
+                        and abs(wire.end.y - endpoint.y) <= LABEL_AT_PIN_ENDPOINT_TOL_MM)
+                ):
+                    attached_symbols.add(sym.reference)
+                    break
+
+        for sym, intrinsic_box in intrinsic_bboxes:
+            if not _overlap_is_significant(wire_box, intrinsic_box):
+                continue
+            # Exempt: wire is connected to this symbol at one of its
+            # pins — the intrinsic text is the pin's own label, sitting
+            # next to the pin tip the wire attaches to.
+            if sym.reference in attached_symbols:
+                continue
+            rule_id = (
+                "overlap.wire_intrinsic_pin_name"
+                if intrinsic_box.kind == "intrinsic_pin_name"
+                else "overlap.wire_intrinsic_pin_number"
+            )
+            results.append(_result_from_overlap(
+                sheet=sheet,
+                rule_id=rule_id,
+                severity=severity,
+                left=wire_box,
+                right=intrinsic_box,
+                strict=strict,
+                description_left=f"wire #{wire_box.owner_id.split('_')[-1]}",
+                description_right=f"{intrinsic_box.kind.replace('_', ' ')} {intrinsic_box.owner_id!r}",
+            ))
+
     # ---- 7. wire × wire ------------------------------------------------
     # (Renumbered from 6 — intrinsic-text checks slotted in as 6b/6c.)
     for i, (_, wire_a, box_a) in enumerate(wire_bboxes):

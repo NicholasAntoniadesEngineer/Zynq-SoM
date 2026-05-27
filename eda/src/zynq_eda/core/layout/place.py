@@ -479,7 +479,7 @@ def place_block(
     *,
     geometry_cache: SymbolGeometryCache,
     ic_column_x: float = 130.0,
-    ic_top_y: float = 60.0,
+    ic_top_y: float = 76.2,
     ic_row_pitch: float = 76.2,
 ) -> Sheet:
     """Render a :class:`Block` into a placed :class:`Sheet`.
