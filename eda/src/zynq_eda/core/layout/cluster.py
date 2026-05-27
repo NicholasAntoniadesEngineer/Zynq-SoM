@@ -1167,12 +1167,34 @@ def cluster_ic_externals(
             # canonical validator will surface this mismatch later.
             continue
         from zynq_eda.core.layout._builder import PinGeometryAbs
+        # Compute the cluster trunk's outward endpoint for LEFT/RIGHT
+        # pins. Connector pin-to-net labels read this so they can
+        # anchor at the trunk's far end (off-cluster) instead of at
+        # the pin tip (which sits on the cluster trunk wire).
+        _this_side = pin_side(
+            pin_geom.relative,
+            pin_rotation=getattr(pin_geom, "pin_rotation", 0.0),
+            symbol_rotation=getattr(pin_geom, "symbol_rotation", 0.0),
+        )
+        _trunk_end_point: "Point | None" = None
+        if _this_side in ("left", "right"):
+            _lane = pin_lane_offset_map.get(pin_name, PASSIVE_OFFSET_MM)
+            _n_slots = max(1, slot_count_by_pin.get(pin_name, 1))
+            _outward_sign_lr = -1 if _this_side == "left" else 1
+            _trunk_end_point = Point(
+                snap_to_grid(
+                    pin_geom.connection.x
+                    + _outward_sign_lr * (_lane + (_n_slots - 1) * PASSIVE_PITCH_MM)
+                ),
+                snap_to_grid(pin_geom.connection.y),
+            )
         pin_geom_map[pin_name] = PinGeometryAbs(
             anchor=pin_geom.anchor,
             connection=pin_geom.connection,
             relative=pin_geom.relative,
             pin_rotation=getattr(pin_geom, "pin_rotation", 0.0),
             symbol_rotation=getattr(pin_geom, "symbol_rotation", 0.0),
+            cluster_trunk_end=_trunk_end_point,
         )
         placed_passive_pin_names.add(pin_name)
 

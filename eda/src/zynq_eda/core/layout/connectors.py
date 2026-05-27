@@ -266,6 +266,17 @@ def _place_one_connector(
     # direction, so the stub always extends past the pin tip and
     # never crosses another pin's row.
     from zynq_eda.core.layout.geometry import page_side_from_pin
+
+    # Build a pin_number → pin_name map so we can correlate
+    # ``pin_to_net`` entries (keyed by pin NUMBER in the connector's
+    # decl) with the cluster's ``pin_geoms`` dict (keyed by pin NAME).
+    _number_to_name: dict[str, str] = {}
+    try:
+        for pi in geometry_cache.all_pins(connector.lib_id, rotation=connector.rotation):
+            _number_to_name[str(pi["number"])] = str(pi["name"])
+    except Exception:
+        pass
+
     for pin_id, net_name in connector.pin_to_net:
         pin_geom = _resolve_pin(pin_id)
         if pin_geom is None:
@@ -275,11 +286,6 @@ def _place_one_connector(
             pin_rotation=getattr(pin_geom, "pin_rotation", 0.0),
             symbol_rotation=getattr(pin_geom, "symbol_rotation", connector.rotation),
         )
-        # Wave F rule: NO STUBS. Net label anchors DIRECTLY at the
-        # connector pin tip (which is itself 2.54 mm outboard of the
-        # symbol body — KiCad's standard pin length). No extra wire
-        # between pin and label; the label is electrically connected
-        # to the pin's net by virtue of sitting at the pin tip.
         # Label rotation places the TEXT extending outward (away from
         # the body) so it never crosses the body or the intrinsic
         # pin name text inside the body.
@@ -292,8 +298,53 @@ def _place_one_connector(
         else:  # bottom
             label_rotation = 270.0  # text reads downward (away from body)
 
+        # If this connector pin has a CLUSTER cap on it (pin_geoms is
+        # the per-pin geometry map returned by ``cluster_ic_externals``),
+        # the cluster has already emitted a trunk wire from the pin tip
+        # outward to the cap. Placing the label at the pin tip would
+        # put the label text on top of the trunk wire's centerline,
+        # violating the project's no-overlap rule. Instead, anchor the
+        # label at the cluster trunk's OUTWARD ENDPOINT — the text
+        # then extends past the trunk into open space.
+        #
+        # ``pin_geoms`` is keyed by pin NAME (from refcircuit
+        # external_parts.from_pin), while ``pin_to_net`` is keyed by
+        # pin NUMBER. Look up by number → name first; fall back to
+        # the pin_id verbatim in case the refcircuit used names too.
+        _resolved_name = _number_to_name.get(str(pin_id), str(pin_id))
+        cluster_pg = pin_geoms.get(_resolved_name) or pin_geoms.get(str(pin_id))
+        if cluster_pg is not None and cluster_pg.cluster_trunk_end is not None:
+            label_position = cluster_pg.cluster_trunk_end
+        else:
+            label_position = pin_geom.connection
+
+        # Dedup: USB-C-style connectors expose multiple physical pads
+        # for the same net (4×VBUS, 4×GND) collapsed into a few
+        # symbol pins. With the trunk-end label anchor, two of those
+        # pins can resolve to the EXACT same label position — often
+        # one from a LEFT-side pin (rot=180) and one from a RIGHT-side
+        # pin (rot=0) that happen to converge at the connector's body
+        # midline. Skip duplicates by (net, position) regardless of
+        # rotation — KiCad merges labels by name, so one label suffices
+        # for net identification.
+        _label_key = (
+            net_name,
+            round(label_position.x, 3),
+            round(label_position.y, 3),
+        )
+        _existing_keys = {
+            (
+                lbl.net_name,
+                round(lbl.position.x, 3),
+                round(lbl.position.y, 3),
+            )
+            for lbl in builder.labels
+        }
+        if _label_key in _existing_keys:
+            continue
+
         builder.add_label(PlacedLabel(
             net_name=net_name,
-            position=pin_geom.connection,
+            position=label_position,
             rotation=label_rotation,
         ))

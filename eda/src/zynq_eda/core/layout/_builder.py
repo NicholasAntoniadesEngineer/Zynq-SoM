@@ -45,6 +45,13 @@ class PinGeometryAbs:
     :class:`PinGeometry` they were copied from, so the cluster / connector
     code can determine the pin's page-side from the canonical
     rotation-derived rule rather than the legacy position-axis heuristic.
+
+    ``cluster_trunk_end`` is the OUTWARD endpoint of this pin's cluster
+    trunk wire (LEFT/RIGHT only) — i.e. the X column of the furthest
+    slot's drop. Downstream code (e.g. connector pin-to-net labels)
+    uses it to place the source-net label at the trunk's far end so
+    the label text doesn't sit on the trunk wire's centerline.
+    ``None`` for pins without a LEFT/RIGHT cluster.
     """
 
     anchor: Point
@@ -52,6 +59,7 @@ class PinGeometryAbs:
     relative: Point
     pin_rotation: float = 0.0
     symbol_rotation: float = 0.0
+    cluster_trunk_end: Point | None = None
 
 
 @dataclass
