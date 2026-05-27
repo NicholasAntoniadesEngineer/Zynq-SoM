@@ -10,8 +10,102 @@ Ground nets share one bottom-edge label and a single PWR_FLAG.
 
 from __future__ import annotations
 
-from zynq_eda.core.layout._builder import BlockLayoutBuilder, PinGeometryAbs
-from zynq_eda.core.layout._constants import INTERIOR_MARGIN_MM, POWER_SYMBOL_OFFSET_MM
+from typing import Literal
+
+from zynq_eda.core.layout._builder import (
+    BlockLayoutBuilder,
+    PinGeometryAbs,
+    pin_intrinsic_owner_ids,
+    _hierarchical_label_bbox,
+)
+from zynq_eda.core.layout._constants import (
+    INTERIOR_MARGIN_MM,
+    POWER_SYMBOL_OFFSET_MM,
+    VISUAL_CLEARANCE_MM,
+)
+
+
+_LABEL_PERPENDICULAR_OFFSET_MM: float = 2.54
+"""How far perpendicular-to-wire we shift a label's anchor.
+
+Used by :func:`emit_label_perpendicular_to_wire` to push every hier or
+local label's anchor OFF the wire's centerline so the label text never
+sits along the wire. A 2.54 mm shift puts the text fully above (or
+below) the wire's perpendicular bbox padding and out of the wire's own
+half-thickness graze region.
+"""
+
+
+def emit_hier_label_offset(
+    builder: BlockLayoutBuilder,
+    *,
+    wire_endpoint: Point,
+    wire_axis: Literal["horizontal", "vertical"],
+    net_name: str,
+    direction,
+    rotation: float,
+) -> tuple[Point, "PlacedWire | None"]:
+    """Place a hierarchical label OFFSET perpendicular to its connecting wire.
+
+    Why offset: KiCad places a hier-label's text immediately adjacent to
+    its flag in the rotation direction. For a wire that approaches the
+    flag along the same axis as the text reads, the wire visually
+    passes UNDER the text. The user's hard rule — labels must sit
+    NEXT TO wires, not ON them — bans this. To satisfy the rule, we
+    shift the label's anchor by :data:`_LABEL_PERPENDICULAR_OFFSET_MM`
+    perpendicular to the wire and emit a short stub joining the wire
+    endpoint to the shifted anchor.
+
+    Probes the +offset direction first; if the label's bbox collides
+    with anything in occupancy (using :data:`VISUAL_CLEARANCE_MM` as
+    padding), tries the -offset direction; falls back to the original
+    wire endpoint if neither fits. Returns the chosen label position
+    and the optional stub wire (``None`` when no offset was applied).
+    """
+    candidates: list[Point]
+    if wire_axis == "horizontal":
+        candidates = [
+            Point(wire_endpoint.x, snap_to_grid(wire_endpoint.y - _LABEL_PERPENDICULAR_OFFSET_MM)),
+            Point(wire_endpoint.x, snap_to_grid(wire_endpoint.y + _LABEL_PERPENDICULAR_OFFSET_MM)),
+        ]
+    else:
+        candidates = [
+            Point(snap_to_grid(wire_endpoint.x - _LABEL_PERPENDICULAR_OFFSET_MM), wire_endpoint.y),
+            Point(snap_to_grid(wire_endpoint.x + _LABEL_PERPENDICULAR_OFFSET_MM), wire_endpoint.y),
+        ]
+
+    for candidate in candidates:
+        probe = PlacedHierarchicalLabel(
+            net_name=net_name,
+            position=candidate,
+            direction=direction,
+            rotation=rotation,
+        )
+        probe_bbox = _hierarchical_label_bbox(probe)
+        hits = builder.occupancy.collides(
+            probe_bbox,
+            ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
+            padding_mm=VISUAL_CLEARANCE_MM,
+        )
+        if not hits:
+            stub = PlacedWire(start=wire_endpoint, end=candidate)
+            builder.add_wire(stub)
+            builder.add_hierarchical_label(PlacedHierarchicalLabel(
+                net_name=net_name,
+                position=candidate,
+                direction=direction,
+                rotation=rotation,
+            ))
+            return candidate, stub
+
+    # No clean offset slot — fall back to the wire endpoint itself.
+    builder.add_hierarchical_label(PlacedHierarchicalLabel(
+        net_name=net_name,
+        position=wire_endpoint,
+        direction=direction,
+        rotation=rotation,
+    ))
+    return wire_endpoint, None
 from zynq_eda.core.layout.geometry import SymbolGeometryCache
 from zynq_eda.core.model.block import Block, ExternalNet, IcInstance
 from zynq_eda.core.model.grid import Point, snap_to_grid
@@ -22,7 +116,9 @@ from zynq_eda.core.model.sheet import (
     PlacedSymbol,
     PlacedWire,
 )
+from zynq_eda.core.layout.geometry import page_side_from_pin
 from zynq_eda.core.route.router import route_orthogonal
+from zynq_eda.core.route.shared_trunk import detect_collinear, route_shared_trunk
 
 
 def place_external_nets(
@@ -134,7 +230,7 @@ def _per_ic_pin_labels(
         except KeyError:
             all_pin_positions = {}
 
-        # Compute the IC's body bbox y range so the dogleg avoidance
+        # Compute the IC's body bbox X+Y range so the dogleg avoidance
         # avoids routing through the body itself.
         try:
             body_bbox = geometry_cache.bounding_box(
@@ -146,8 +242,13 @@ def _per_ic_pin_labels(
                 body_bbox.min_y + ic_anchor.y,
                 body_bbox.max_y + ic_anchor.y,
             )
+            ic_body_x_range = (
+                body_bbox.min_x + ic_anchor.x,
+                body_bbox.max_x + ic_anchor.x,
+            )
         except Exception:
             ic_body_y_range = None
+            ic_body_x_range = None
 
         # Build the candidate list: (pin_name, target_net). Sources:
         # 1. Refcircuit + per-instance pin_net_overrides — the IC's explicit
@@ -173,32 +274,145 @@ def _per_ic_pin_labels(
                     continue
                 candidates.append((pin_name, ic.power_output_net))
 
+        # Pre-build a pin NAME → pin NUMBER map so each candidate can
+        # carry its own pin number through to the per-pin and shared-
+        # trunk routers (which add the source pin's intrinsic text owner
+        # ids to ``avoid_owners`` so the wire's endpoint clearance
+        # doesn't graze the source pin's own pin-name text).
+        name_to_number: dict[str, str] = {}
+        try:
+            for pin_info in geometry_cache.all_pins(
+                ic.lib_id,
+                rotation=float(getattr(ic, "rotation", 0.0)),
+            ):
+                name_to_number[str(pin_info["name"])] = str(pin_info["number"])
+        except Exception:
+            pass
+
+        # ---- Phase 1: resolve every candidate's pin geometry ------------
+        # We need the pin connection + rotation info for ALL candidates
+        # before we can group them. Singleton groups fall through to the
+        # per-pin path; multi-pin collinear groups try the shared-trunk
+        # router first.
+        resolved: list[tuple[str, str, Point, float, float, str]] = []
         for pin_role, net_name in candidates:
             if net_name not in declared_nets:
-                # Pin's override doesn't match an external net — leave it
-                # for the signal-override pass to handle as a local label.
                 continue
+            pin_number = name_to_number.get(pin_role, "")
             if pin_role in ic_geoms:
-                pin_connection = ic_geoms[pin_role].connection
-            else:
-                # Pin has no external-part cluster, so it wasn't recorded in
-                # ``ic_geoms``. Resolve directly from the symbol library so
-                # signal-only override pins (e.g. TPS2051 EN) still get a
-                # hierarchical edge label when their target net is external.
-                # Without this, the pin's hier label gets created later by
-                # ``_orphan_net_labels`` at the local-label coord -- which
-                # may sit on a wire already carrying a different net and
-                # produce a ``multiple_net_names`` ERC warning.
-                try:
-                    pin_geom = geometry_cache.pin_geometry_by_name(
-                        ic.lib_id,
-                        ic_anchors[ic.reference],
-                        pin_role,
-                    )
-                except KeyError:
-                    # Pin missing from the symbol (refcircuit name mismatch).
-                    continue
-                pin_connection = pin_geom.connection
+                pg = ic_geoms[pin_role]
+                resolved.append((
+                    pin_role, net_name, pg.connection,
+                    getattr(pg, "pin_rotation", 0.0),
+                    getattr(pg, "symbol_rotation", float(getattr(ic, "rotation", 0.0))),
+                    pin_number,
+                ))
+                continue
+            try:
+                pg = geometry_cache.pin_geometry_by_name(
+                    ic.lib_id,
+                    ic_anchors[ic.reference],
+                    pin_role,
+                )
+            except KeyError:
+                continue
+            resolved.append((
+                pin_role, net_name, pg.connection,
+                getattr(pg, "pin_rotation", 0.0),
+                getattr(pg, "symbol_rotation", float(getattr(ic, "rotation", 0.0))),
+                pin_number,
+            ))
+
+        # ---- Phase 2: try shared-trunk routing for collinear groups -----
+        # Group by net_name; for each group of ≥2 pins where the pins are
+        # collinear (share Y or share X), attempt a single shared trunk
+        # with one hier label + per-pin stubs. This eliminates the
+        # cluster of parallel same-Y wires that otherwise crosses every
+        # pin's intrinsic pin-name text bbox.
+        handled_pins: set[str] = set()
+        by_net: dict[str, list[tuple[str, Point, float, float, str]]] = {}
+        for pin_role, net_name, conn, pin_rot, sym_rot, pin_number in resolved:
+            by_net.setdefault(net_name, []).append(
+                (pin_role, conn, pin_rot, sym_rot, pin_number)
+            )
+
+        for net_name, group in by_net.items():
+            if len(group) < 2:
+                continue
+            pin_positions = [conn for _r, conn, _pr, _sr, _pn in group]
+            axis = detect_collinear(pin_positions)
+            if axis is None:
+                continue
+
+            net = declared_nets[net_name]
+            label_x = left_x if net.edge == SheetEdge.LEFT else right_x
+
+            # Choose label Y from the collinear coordinate so the label
+            # sits at the natural pin-row Y (the trunk router will emit
+            # a small vertical connector if the trunk itself is offset).
+            label_y = snap_to_grid(pin_positions[0].y)
+            label_position = Point(label_x, label_y)
+            label_key = (label_position.x, label_position.y)
+            if label_key in seen_label_positions:
+                continue
+
+            # body_inside_direction from the first pin's page-side.
+            first_role, _, first_pin_rot, first_sym_rot, _first_pn = group[0]
+            side = page_side_from_pin(
+                pin_rotation=first_pin_rot,
+                symbol_rotation=first_sym_rot,
+            )
+            body_inside = {
+                "left": "right",
+                "right": "left",
+                "top": "down",
+                "bottom": "up",
+            }.get(side, "right")
+
+            # avoid_owners exempts ONLY the source pins' own pin-name +
+            # pin-number intrinsic bboxes (otherwise the trunk router's
+            # stub wires endpoint clearance grazes each pin's own name
+            # text and the route falsely blocks). The IC body is NOT
+            # exempted — without that, trunks span the whole page
+            # straight through the IC interior when LEFT-edge nets
+            # come off RIGHT-side pins.
+            source_pin_numbers = tuple(
+                pn for _r, _c, _pr, _sr, pn in group if pn
+            )
+            avoid_owners_set: set[str] = set()
+            avoid_owners_set |= set(
+                pin_intrinsic_owner_ids(ic.reference, source_pin_numbers)
+            )
+            route = route_shared_trunk(
+                pin_positions=pin_positions,
+                label_position=label_position,
+                occupancy=builder.occupancy,
+                body_inside_direction=body_inside,
+                avoid_owners=frozenset(avoid_owners_set),
+            )
+            if route.gave_up:
+                continue
+
+            seen_label_positions.add(label_key)
+            rotation = 180.0 if net.edge == SheetEdge.LEFT else 0.0
+            builder.add_hierarchical_label(PlacedHierarchicalLabel(
+                net_name=net_name,
+                position=label_position,
+                direction=net.direction,
+                rotation=rotation,
+            ))
+            for seg in route.segments:
+                builder.add_wire(seg)
+            for junc in route.junctions:
+                builder.junctions.append(junc)
+            for pin_role, _, _, _, _ in group:
+                handled_pins.add(pin_role)
+                edge_labeled.add((ic.reference, pin_role))
+
+        # ---- Phase 3: per-pin routing for ungrouped / non-collinear -----
+        for pin_role, net_name, pin_connection, _pin_rot, _sym_rot, pin_number in resolved:
+            if pin_role in handled_pins:
+                continue
             net = declared_nets[net_name]
             label_x = left_x if net.edge == SheetEdge.LEFT else right_x
 
@@ -217,51 +431,68 @@ def _per_ic_pin_labels(
                 all_pin_positions=all_pin_positions,
                 blocked_label_ys={y for (_x, y) in seen_label_positions},
                 ic_body_y_range=ic_body_y_range,
+                ic_body_x_range=ic_body_x_range,
             )
 
-            label_position = Point(label_x, route_y)
-            key = (label_position.x, label_position.y)
-            if key in seen_label_positions:
-                # Two IC pins want the same edge label slot — leave the
-                # second one for signal-override (it'll get a local label).
+            # Incremental Y search: start at the heuristic-picked
+            # route_y; if the pin → endpoint route can't be cleanly
+            # drawn (router gives up because existing wires/bodies
+            # block every shape), bump Y outward by one grid step and
+            # retry. Last edge labels placed may end up far from
+            # their natural row — by then every closer row has been
+            # claimed by earlier wires.
+            avoid_owners_set: set[str] = set()
+            if pin_number:
+                avoid_owners_set |= set(
+                    pin_intrinsic_owner_ids(ic.reference, (pin_number,))
+                )
+            avoid_owners = frozenset(avoid_owners_set)
+
+            from zynq_eda.core.route.router import route_orthogonal_detail
+            picked_route_y: float | None = None
+            picked_segments: list = []
+            for y_step in range(0, 15):
+                for sign in (1, -1) if y_step > 0 else (1,):
+                    cand_y = snap_to_grid(route_y + sign * y_step * 2.54)
+                    cand_endpoint = Point(label_x, cand_y)
+                    key = (cand_endpoint.x, cand_endpoint.y)
+                    if key in seen_label_positions:
+                        continue
+                    attempt = route_orthogonal_detail(
+                        pin_connection,
+                        cand_endpoint,
+                        builder.occupancy,
+                        avoid_owners=avoid_owners,
+                    )
+                    if attempt.gave_up:
+                        continue
+                    picked_route_y = cand_y
+                    picked_segments = list(attempt.segments)
+                    break
+                if picked_route_y is not None:
+                    break
+            if picked_route_y is None:
+                # No clean route at any Y — give up on this pin's
+                # edge-label and let signal-override emit a local
+                # label instead. Hard-fail later if validator catches.
                 continue
+            wire_endpoint = Point(label_x, picked_route_y)
+            key = (wire_endpoint.x, wire_endpoint.y)
             seen_label_positions.add(key)
 
             rotation = 180.0 if net.edge == SheetEdge.LEFT else 0.0
-            builder.add_hierarchical_label(PlacedHierarchicalLabel(
+            # Perpendicular-offset emit: label sits 2.54 mm above (or
+            # below) the wire endpoint so the label text never sits on
+            # the wire's centerline.
+            label_position, _stub = emit_hier_label_offset(
+                builder,
+                wire_endpoint=wire_endpoint,
+                wire_axis="horizontal",
                 net_name=net_name,
-                position=label_position,
                 direction=net.direction,
                 rotation=rotation,
-            ))
-            # Route from pin_connection to label_position, avoiding the
-            # IC's own body bbox (the wire is BY DESIGN attached to one
-            # of its pins, so the body overlap is expected and exempted).
-            # The router considers OTHER symbol bodies as obstacles.
-            ic_owner = f"symbol:{ic.reference}"
-            if route_y == pin_y:
-                # Straight horizontal — pin_connection y equals
-                # label_position y. The router picks "direct" if clear,
-                # falls back to single-L / double-L if it has to detour
-                # around an obstacle.
-                segments = route_orthogonal(
-                    pin_connection,
-                    label_position,
-                    builder.occupancy,
-                    avoid_owners=frozenset({ic_owner}),
-                )
-            else:
-                # Dogleg pre-computed Y: route through (pin.x, route_y)
-                # then horizontally to the label. We do the dogleg by
-                # hand so the pin-crossing-avoidance logic stays
-                # respected (the router only does collision avoidance,
-                # not pin-crossing detection).
-                turn = Point(snap_to_grid(pin_connection.x), route_y)
-                segments = [
-                    PlacedWire(start=pin_connection, end=turn),
-                    PlacedWire(start=turn, end=label_position),
-                ]
-            for seg in segments:
+            )
+            for seg in picked_segments:
                 builder.add_wire(seg)
             edge_labeled.add((ic.reference, pin_role))
 
@@ -276,21 +507,23 @@ def _routed_y_avoiding_pin_crossings(
     all_pin_positions: dict[str, Point],
     blocked_label_ys: set[float],
     ic_body_y_range: tuple[float, float] | None = None,
+    ic_body_x_range: tuple[float, float] | None = None,
 ) -> float:
     """Pick a Y for the edge-bound segment that avoids crossing other pins.
 
-    Default is the pin's own Y (straight wire). If any OTHER pin of the
-    same IC sits at the pin's Y between ``pin_x`` and ``target_x`` (the
-    edge segment's X range), pick the nearest grid step above or below
-    that is free of pin crossings on that span. Falls back to ``pin_y``
-    if no clean slot exists within a small search window.
+    Strategy:
 
-    When ``ic_body_y_range`` is supplied (``(min_y, max_y)`` of the IC
-    body bbox), candidate Ys INSIDE that range are also skipped — the
-    dogleg shouldn't route a wire through the body it's escaping from.
-    The body-Y exclusion only applies to candidates OTHER than ``pin_y``
-    (which by definition is inside the body's Y range and IS where the
-    pin sits — that's the legitimate path out).
+    1. **Straight wire (pin_y)** — preferred when the straight wire
+       does NOT cross the IC body horizontally and no other pin sits
+       on it within the X span.
+    2. **Outside-body Y** — when the straight wire would cross the IC
+       body horizontally (e.g. a wire from a RIGHT-side pin to a LEFT-
+       edge label whose path traverses the IC interior), pick a Y
+       OUTSIDE the body's Y range. The wire then needs a vertical
+       segment from pin_y to the dogleg-Y and another back, but it
+       doesn't slice through the body interior.
+    3. **Outward grid step** — fall back to the existing per-pin
+       crossing avoidance.
 
     Snaps every candidate Y to the schematic grid so blocked-Y comparison
     is exact (avoids float drift from ``pin_y + n * 2.54``).
@@ -305,8 +538,11 @@ def _routed_y_avoiding_pin_crossings(
         for other in all_pin_positions.values():
             if abs(other.y - y) > EPS:
                 continue
-            if abs(other.x - pin_x) < EPS and abs(other.y - pin_y) < EPS:
-                # Same pin — skip (the source we're routing from).
+            # Skip pins on the SOURCE pin's column (same X). The wire
+            # terminates at the source pin's X; other pins at that X
+            # column are above/below the row and aren't crossed by a
+            # horizontal wire ending there.
+            if abs(other.x - pin_x) < EPS:
                 continue
             if x_lo - EPS < other.x < x_hi + EPS:
                 return True
@@ -325,8 +561,27 @@ def _routed_y_avoiding_pin_crossings(
         body_min_y, body_max_y = ic_body_y_range
         return body_min_y + EPS < y < body_max_y - EPS
 
+    def wire_crosses_body_x(y_candidate: float) -> bool:
+        """True iff a horizontal wire from (pin_x, y) to (target_x, y)
+        TRAVERSES the IC body's X range — i.e. the wire span extends
+        past BOTH body edges in opposite directions from the body.
+
+        Wires that legitimately terminate at a pin on one body side
+        and exit the OPPOSITE side don't qualify because their span
+        stays on one side of body's min OR max edge.
+        """
+        if ic_body_x_range is None or not y_inside_body(y_candidate):
+            return False
+        bx_lo, bx_hi = ic_body_x_range
+        return x_lo < bx_lo and x_hi > bx_hi
+
     pin_y_snapped = snap_to_grid(pin_y)
-    if not pin_collides(pin_y_snapped) and not is_blocked(pin_y_snapped):
+    straight_ok = (
+        not pin_collides(pin_y_snapped)
+        and not is_blocked(pin_y_snapped)
+        and not wire_crosses_body_x(pin_y_snapped)
+    )
+    if straight_ok:
         return pin_y_snapped
 
     # Search outward in increasing steps to find a clean Y. Prefer the
@@ -342,6 +597,8 @@ def _routed_y_avoiding_pin_crossings(
                 # Dogleg into the body is worse than the original
                 # collision — skip and search further.
                 continue
+            # Outside body — also implies wire_crosses_body_x(candidate)
+            # is False, so we're done.
             return candidate
 
     # Nothing clean within range — fall back to the pin's Y. Caller may
@@ -417,11 +674,42 @@ def _input_pwr_flags(
         if anchor_label is None:
             continue
 
-        flag_offset = -3.81 if net.edge == SheetEdge.LEFT else 3.81
-        flag_position = Point(
-            snap_to_grid(anchor_label.position.x + flag_offset),
-            anchor_label.position.y,
-        )
+        # Place the PWR_FLAG beyond the FAR edge of EVERY hier label
+        # already placed on the same side of the sheet, then CLAMP to
+        # page bounds so the FLG body never prints off-page. The FLG
+        # body is ~2 × 2.5 mm so even on a 2.54 mm grid it bleeds into
+        # the adjacent label row when placed at the same X as the
+        # labels — pushing past the longest label's bbox edge is the
+        # only way to get the FLG fully clear of every label row.
+        from zynq_eda.core.layout._builder import _hierarchical_label_bbox
+        from zynq_eda.core.layout._constants import INTERIOR_MARGIN_MM as _MARGIN
+        from zynq_eda.core.model.sheet import PAPER_DIMENSIONS_MM
+        FLG_HALF_WIDTH_MM = 1.02
+        SAFETY_MARGIN_MM = 1.0
+        paper_w, _ = PAPER_DIMENSIONS_MM[block.paper_size]
+        page_min_x = snap_to_grid(_MARGIN + FLG_HALF_WIDTH_MM)
+        page_max_x = snap_to_grid(paper_w - _MARGIN - FLG_HALF_WIDTH_MM)
+        if anchor_label.rotation == 180.0:
+            edge_x_candidates = [
+                _hierarchical_label_bbox(lbl).min.x
+                for lbl in builder.hierarchical_labels
+                if lbl.rotation == 180.0
+            ]
+            global_min_x = min(edge_x_candidates) if edge_x_candidates else anchor_label.position.x
+            flag_x = snap_to_grid(global_min_x - FLG_HALF_WIDTH_MM - SAFETY_MARGIN_MM)
+            flag_x = max(flag_x, page_min_x)
+        elif anchor_label.rotation == 0.0:
+            edge_x_candidates = [
+                _hierarchical_label_bbox(lbl).max.x
+                for lbl in builder.hierarchical_labels
+                if lbl.rotation == 0.0
+            ]
+            global_max_x = max(edge_x_candidates) if edge_x_candidates else anchor_label.position.x
+            flag_x = snap_to_grid(global_max_x + FLG_HALF_WIDTH_MM + SAFETY_MARGIN_MM)
+            flag_x = min(flag_x, page_max_x)
+        else:
+            flag_x = anchor_label.position.x
+        flag_position = Point(flag_x, anchor_label.position.y)
         builder.add_wire(PlacedWire(
             start=anchor_label.position,
             end=flag_position,
@@ -511,13 +799,26 @@ def _orphan_net_labels(
         # away from the host symbol body). Stamping the hier label with
         # the same rotation keeps its text on the same side as the
         # local label it's replacing.
+        #
+        # PERPENDICULAR OFFSET: the local label was placed AT the wire
+        # endpoint (cap far-pin or connector pin tip), so its text
+        # extends ALONG the wire. Shift the inherited hier-label
+        # 2.54 mm perpendicular to that wire and emit a stub. Wire
+        # axis is derived from the original rotation — rotation 0/180
+        # implies horizontal text → horizontal wire; rotation 90/270
+        # implies vertical text → vertical wire.
         hier_rotation = anchor_label.rotation
-        builder.add_hierarchical_label(PlacedHierarchicalLabel(
+        wire_axis: Literal["horizontal", "vertical"] = (
+            "horizontal" if hier_rotation in (0.0, 180.0) else "vertical"
+        )
+        emit_hier_label_offset(
+            builder,
+            wire_endpoint=anchor_label.position,
+            wire_axis=wire_axis,
             net_name=net.name,
-            position=anchor_label.position,
             direction=net.direction,
             rotation=hier_rotation,
-        ))
+        )
         # Strip the now-redundant local label that the hier label
         # supersedes. KiCad's label-merging by name keeps electrical
         # connectivity intact across the sheet's other labels.
@@ -604,13 +905,20 @@ def _ground_label_only(
             # Inherit the local label's rotation so the hier label text
             # reads in the same outward direction (away from the host
             # symbol body). See ``_orphan_net_labels`` for the rationale.
+            # Use the perpendicular-offset emit so the inherited hier
+            # label sits 2.54 mm off the wire endpoint, never on it.
             hier_rotation = anchor_label.rotation
-            builder.add_hierarchical_label(PlacedHierarchicalLabel(
+            wire_axis: Literal["horizontal", "vertical"] = (
+                "horizontal" if hier_rotation in (0.0, 180.0) else "vertical"
+            )
+            emit_hier_label_offset(
+                builder,
+                wire_endpoint=anchor_label.position,
+                wire_axis=wire_axis,
                 net_name=ground_net.name,
-                position=anchor_label.position,
                 direction=ground_net.direction,
                 rotation=hier_rotation,
-            ))
+            )
             # Drop the now-redundant local label — KiCad would render
             # both, double-printing the GND text at the same coord.
             try:
@@ -637,28 +945,13 @@ def _ground_label_only(
         # eliminates the per-pin overlap regardless of pitch.
         matching_syms = power_symbols_by_value.get(ground_net.name)
         if matching_syms:
-            existing_ys = {
-                lab.position.y for lab in builder.hierarchical_labels
-            }
-
-            def _y_distance_score(sym: PlacedSymbol) -> float:
-                if not existing_ys:
-                    return 0.0
-                # Higher score = more distant Y. min-distance ascending.
-                return -min(abs(sym.position.y - ey) for ey in existing_ys)
-
-            anchor_sym = min(matching_syms, key=_y_distance_score)
-            key = (anchor_sym.position.x, anchor_sym.position.y)
-            if key in seen_label_positions:
-                continue
-            seen_label_positions.add(key)
-            rotation = 180.0 if ground_net.edge == SheetEdge.LEFT else 0.0
-            builder.add_hierarchical_label(PlacedHierarchicalLabel(
-                net_name=ground_net.name,
-                position=anchor_sym.position,
-                direction=ground_net.direction,
-                rotation=rotation,
-            ))
+            # KiCad's ``power:GND`` and ``power:Earth`` are GLOBAL net
+            # drivers — they propagate the net across every sub-sheet
+            # without a hier label. Emitting a hier label at the power
+            # symbol's anchor produces a real visible overlap (the
+            # label's text bbox lands on the power-symbol body), and
+            # the hier label is redundant electrically. Skip the emit
+            # for sheets that already have the same-named power symbol.
             continue
 
         # No local label and no same-name power symbol on this sheet —

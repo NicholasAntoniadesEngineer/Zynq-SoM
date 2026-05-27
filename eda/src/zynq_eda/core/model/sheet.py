@@ -29,7 +29,16 @@ PAPER_DIMENSIONS_MM: dict[PaperSize, tuple[float, float]] = {
 
 @dataclass(frozen=True)
 class PlacedSymbol:
-    """A single placed symbol on the sheet (ic / passive / connector)."""
+    """A single placed symbol on the sheet (ic / passive / connector).
+
+    ``value_shift`` is an optional override of the Value property's
+    rendered position relative to the symbol anchor at rotation 0.
+    Set by the cluster passive placer (which probes for a clear slot
+    around the body) and consumed by both the emitter (writes the
+    shifted position into the .kicad_sch) and the validator (rebuilds
+    the Value bbox at the shifted anchor). Tuple format:
+    ``(dx_mm, dy_mm, text_rotation_override_or_None)``.
+    """
 
     lib_id: str
     reference: str
@@ -38,6 +47,7 @@ class PlacedSymbol:
     footprint: str
     rotation: float = 0.0
     properties: tuple[tuple[str, str], ...] = ()
+    value_shift: tuple[float, float, float | None] | None = None
 
     def __post_init__(self) -> None:
         if not self.lib_id or ":" not in self.lib_id:

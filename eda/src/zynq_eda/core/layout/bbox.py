@@ -51,19 +51,28 @@ per-sheet validator only sees the more granular kinds.
 DEFAULT_TEXT_SIZE_MM: float = 1.27
 """Default KiCad text height in millimetres (50 mil)."""
 
-DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO: float = 0.85
+DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO: float = 0.65
 """Approximate character width as a fraction of text height.
 
-KiCad's default schematic font is a stroke font with character widths
-that hover around 0.6 of the glyph height — close enough for collision
-checks; the validator uses this to draw a *conservative* bounding box
-around rendered text. A slight overestimate is preferable to an
-underestimate because labels that *visually* overlap by a few mm but
-have boxes that just barely miss should still flag.
+KiCad's default schematic stroke font averages ~0.6× the glyph
+height per character (narrow letters like "I" are 0.3×, wide ones
+like "M"/"W" are 0.8×). 0.65 is a tight middle estimate — pinning
+this lower than the previous 0.85 keeps the bbox close to the
+actual rendered glyph extent so the strict validator doesn't fire
+on phantom 0.5 mm slivers between adjacent rows of pin numbers
+and net labels.
 """
 
-DEFAULT_TEXT_HEIGHT_RATIO: float = 1.5
-"""Total text-box height as a fraction of nominal size (cap + descender)."""
+DEFAULT_TEXT_HEIGHT_RATIO: float = 1.0
+"""Total text-box height as a fraction of nominal size.
+
+KiCad strokes a 1.27 mm size text character at roughly 1.27 mm tall.
+The previous 1.5 ratio was a 50% over-estimate that added phantom
+overlap padding between adjacent rows of text. With the strict
+validator we want the bbox to reflect the actual visible glyph
+extent so genuine overlaps fire and near-misses on adjacent grid
+rows don't.
+"""
 
 DEFAULT_WIRE_THICKNESS_MM: float = 0.254
 """Default KiCad wire stroke width (10 mil)."""
@@ -348,21 +357,36 @@ def wire_bbox(
 ) -> BBox:
     """Return a thin rectangular bbox enclosing a straight wire segment.
 
-    The bbox spans the axis-aligned rectangle defined by the two
-    endpoints, then expanded outward by ``thickness_mm / 2 + clearance_mm``
-    on every side so labels sitting near (but not exactly on) the wire
-    still report as overlapping.
+    For axis-aligned wires (horizontal or vertical — the common case),
+    the bbox pads ONLY in the perpendicular direction by
+    ``thickness_mm / 2 + clearance_mm``. The parallel (along-axis)
+    extent stays at the exact start/end coordinates — no half-thickness
+    padding past the endpoints. This way a wire terminating at a label
+    or symbol anchor doesn't show a phantom overlap from the wire's
+    perpendicular stroke padding extending past the wire end into the
+    attached primitive.
 
-    Works for horizontal, vertical, and (rarely seen) diagonal wires.
-    For diagonals the result is the AABB of the endpoints plus
-    clearance — a conservative over-approximation that is acceptable
-    given diagonals are unusual in KiCad schematics.
+    For diagonal wires the AABB-with-margin fallback is used.
     """
     margin = (thickness_mm / 2.0) + clearance_mm
-    min_x = min(start.x, end.x) - margin
-    max_x = max(start.x, end.x) + margin
-    min_y = min(start.y, end.y) - margin
-    max_y = max(start.y, end.y) + margin
+    horizontal = abs(start.y - end.y) < 1e-6
+    vertical = abs(start.x - end.x) < 1e-6
+    if horizontal and not vertical:
+        min_x = min(start.x, end.x)
+        max_x = max(start.x, end.x)
+        min_y = min(start.y, end.y) - margin
+        max_y = max(start.y, end.y) + margin
+    elif vertical and not horizontal:
+        min_x = min(start.x, end.x) - margin
+        max_x = max(start.x, end.x) + margin
+        min_y = min(start.y, end.y)
+        max_y = max(start.y, end.y)
+    else:
+        # Zero-length (same point) OR diagonal — pad both directions.
+        min_x = min(start.x, end.x) - margin
+        max_x = max(start.x, end.x) + margin
+        min_y = min(start.y, end.y) - margin
+        max_y = max(start.y, end.y) + margin
     return BBox(
         min=Point(min_x, min_y),
         max=Point(max_x, max_y),

@@ -400,8 +400,14 @@ def test_validate_overlap_strict_flag_changes_severity() -> None:
     assert all(r.severity == "error" for r in results)
 
 
-def test_validate_overlap_power_symbol_exempt_from_symbol_symbol() -> None:
-    """Two #PWR symbols at the same anchor are allowed."""
+def test_validate_overlap_stacked_power_symbols_flagged() -> None:
+    """Two #PWR symbols at the same anchor produce a symbol×symbol
+    overlap. The old validator carved out a power-symbol exemption
+    that hid real visible stacking bugs (e.g. two power:GND symbols
+    landing at the same coord when an IC has both pin GND and pin
+    GND_EP). The strict validator catches it and the placement engine
+    is responsible for deduplicating same-net same-coord drivers.
+    """
     pwr_a = PlacedSymbol(
         lib_id="power:GND",
         reference="#PWR001",
@@ -419,7 +425,7 @@ def test_validate_overlap_power_symbol_exempt_from_symbol_symbol() -> None:
     sheet = _tiny_sheet(symbols=(pwr_a, pwr_b))
     results = validate_overlap(sheet)
     symbol_symbol = [r for r in results if r.rule_id == "overlap.symbol_symbol"]
-    assert symbol_symbol == []
+    assert len(symbol_symbol) == 1
 
 
 def test_validate_overlap_label_label_collision_flagged() -> None:

@@ -19,6 +19,8 @@ Current limitations (lifted progressively in Stage 5+):
 
 from __future__ import annotations
 
+from typing import Literal
+
 from zynq_eda.core.layout._builder import BlockLayoutBuilder, PinGeometryAbs
 from zynq_eda.core.layout.cluster import cluster_ic_externals
 from zynq_eda.core.layout.connectors import place_connectors
@@ -133,6 +135,13 @@ def _attach_ic_ground(
     gnd_name_patterns = ("GND", "VSS", "GNDA", "AGND", "DGND")
     OFFSET = 5.08
 
+    # Dedup by pin TIP page coordinate — many ICs have multiple GND
+    # pins sharing the same physical location (e.g. CP2102N pin 2 and
+    # pin 25 (EP) are both at the same (X, Y)). Without this dedup,
+    # we emit two stacked power:GND symbols at the same coord and the
+    # strict validator (correctly) flags the symbol_symbol overlap.
+    placed_gnd_coords: set[tuple[float, float]] = set()
+
     for pin_info in geometry_cache.all_pins(ic.lib_id):
         pin_name = str(pin_info["name"])
         pin_number = str(pin_info["number"])
@@ -154,6 +163,11 @@ def _attach_ic_ground(
         except KeyError:
             continue
 
+        coord_key = (round(gnd_geom.connection.x, 3), round(gnd_geom.connection.y, 3))
+        if coord_key in placed_gnd_coords:
+            continue
+        placed_gnd_coords.add(coord_key)
+
         # Place the power:GND symbol *outboard* of the pin so it doesn't
         # land on an adjacent pin in a densely-packed pinout.
         #
@@ -165,6 +179,9 @@ def _attach_ic_ground(
         # the body's top/bottom centre line use a vertical extension.
         rel = gnd_geom.relative
         if rel.x != 0.0:
+            outward_side: Literal["left", "right", "top", "bottom"] = (
+                "left" if rel.x < 0 else "right"
+            )
             gnd_symbol_pos = Point(
                 snap_to_grid(gnd_geom.connection.x + (-OFFSET if rel.x < 0 else OFFSET)),
                 gnd_geom.connection.y,
@@ -173,6 +190,7 @@ def _attach_ic_ground(
             # Truly top/bottom-centre pin — use vertical (page-coord),
             # which means negating Y when the symbol-relative Y is positive
             # (top of body, since +Y is up in symbol space).
+            outward_side = "top" if rel.y > 0 else "bottom"
             page_dy_dir = -1 if rel.y > 0 else 1
             gnd_symbol_pos = Point(
                 gnd_geom.connection.x,
@@ -183,13 +201,22 @@ def _attach_ic_ground(
             start=gnd_geom.connection,
             end=gnd_symbol_pos,
         ))
+        # Rotate the GND symbol so its body extends OUTWARD (away from
+        # the IC) instead of into the wire path. See
+        # :func:`zynq_eda.core.layout.cluster._outward_power_symbol_rotation`.
+        from zynq_eda.core.layout.cluster import _outward_power_symbol_rotation
+        gnd_rotation = _outward_power_symbol_rotation(
+            lib_id="power:GND",
+            pin_side=outward_side,
+            geometry_cache=geometry_cache,
+        )
         builder.add_symbol(PlacedSymbol(
             lib_id="power:GND",
             reference=builder.next_ref("#PWR"),
             value="GND",
             position=gnd_symbol_pos,
             footprint="",
-            rotation=0.0,
+            rotation=gnd_rotation,
         ), geometry=geometry_cache)
         if first_geom is None:
             first_geom = PinGeometryAbs(

@@ -35,6 +35,146 @@ DEFAULT_PIN_LENGTH_MM = KICAD_GRID_MM
 """Length of the visible pin stub outside the symbol body (KiCad default: 1.27 mm)."""
 
 
+# Per-lib_id Value-property shift applied by the post-emit patch
+# (:func:`zynq_eda.core.emit.schematic._shift_passive_value_off_body`).
+# The validator MUST mirror this shift so its bbox prediction matches
+# what KiCad actually renders. Each tuple is
+# ``(dx, dy, text_rotation_override)`` in PAGE coords at symbol
+# rotation 0; the symbol rotation is applied on top.
+VALUE_SHIFT_BY_LIB_ID: dict[str, tuple[float, float, float | None]] = {
+    "Device:R":           (-2.032, 0.0, 90.0),
+    "Device:R_Small":     (-2.032, 0.0, 90.0),
+    "Device:C":           (-2.54, 0.0, 90.0),
+    "Device:C_Small":     (-2.54, 0.0, 90.0),
+    "Device:C_Polarized": (-2.54, 0.0, 90.0),
+    "Device:D":           (-2.54, 0.0, 90.0),
+    "Device:D_Schottky":  (-2.54, 0.0, 90.0),
+    "Device:D_Zener":     (-2.54, 0.0, 90.0),
+    "Device:LED":         (-2.54, 0.0, 90.0),
+}
+"""DEFAULT shift candidates per lib_id. Used as the FIRST attempt at
+placement time; if that anchor collides, the placement engine probes a
+ladder of alternate shifts (perpendicular, opposite-side, larger offset)
+and picks the first one whose Value bbox is clear of all existing
+primitives. See :func:`pick_dynamic_value_shift`.
+"""
+
+
+def pick_dynamic_value_shift(
+    *,
+    lib_id: str,
+    anchor: "Point",
+    symbol_rotation: float,
+    occupancy,
+    geometry_cache,
+    owner_id: str = "",
+    value_text: str = "00000",
+) -> "tuple[float, float, float | None] | None":
+    """Pick a Value-property displacement that doesn't collide with anything.
+
+    Walks a ladder of candidate offsets (the default for the lib_id, then
+    perpendicular and farther positions) and returns the first whose
+    rendered text bbox is clear of every primitive currently in
+    ``occupancy`` AND of the cap's own body. Returns ``None`` if no
+    candidate fits — caller should accept the default and let the
+    validator surface the resulting overlap.
+
+    The cap's own body is checked SEPARATELY (not from occupancy) because
+    the cap is typically added to occupancy AFTER its property positions
+    are resolved — so occupancy doesn't yet contain the body. Passing
+    the body through the same clearance gate ensures Value text never
+    sits on top of its own component, which is the most visible failure
+    mode on dense cluster stacks.
+
+    The returned tuple matches :data:`VALUE_SHIFT_BY_LIB_ID` — ``(dx, dy,
+    text_rotation_override)`` — so callers can store it for both the
+    emit pass and the validator. Coordinates are PAGE-relative at symbol
+    rotation 0; ``symbol_rotation`` is applied here so the returned
+    displacement is already in absolute PAGE-rotated form.
+    """
+    from zynq_eda.core.layout.bbox import (
+        DEFAULT_TEXT_SIZE_MM,
+        symbol_bbox,
+        text_bbox,
+    )
+
+    if lib_id not in VALUE_SHIFT_BY_LIB_ID:
+        return None
+
+    # Compute the cap's own body bbox so the probe can avoid it.
+    try:
+        own_body = symbol_bbox(
+            lib_id=lib_id,
+            anchor=anchor,
+            rotation=symbol_rotation,
+            cache=geometry_cache,
+            owner_id=f"{owner_id}:own_body_probe",
+        )
+    except Exception:
+        own_body = None
+
+    default_shift = VALUE_SHIFT_BY_LIB_ID[lib_id]
+    dx0, dy0, rot0 = default_shift
+
+    rad = 2.54  # one grid pitch
+    candidates: list[tuple[float, float, float | None]] = [
+        default_shift,                          # default per lib_id
+        (dx0 - rad, dy0, rot0),                 # farther same side
+        (dx0 - 2 * rad, dy0, rot0),             # even farther same side
+        (-dx0, dy0, rot0),                      # mirror in X
+        (-dx0 + rad, dy0, rot0),                # farther mirror
+        (-dx0 + 2 * rad, dy0, rot0),            # even farther mirror
+        (dx0, dy0 - 2 * rad, 0.0),              # above body (perpendicular)
+        (dx0, dy0 + 2 * rad, 0.0),              # below body
+        (-dx0, dy0 - 2 * rad, 0.0),             # mirror above
+        (-dx0, dy0 + 2 * rad, 0.0),             # mirror below
+        (dx0, dy0 - 3 * rad, 0.0),              # further above
+        (dx0, dy0 + 3 * rad, 0.0),              # further below
+        (0.0, dy0 - 4 * rad, 0.0),              # well above on body axis
+        (0.0, dy0 + 4 * rad, 0.0),              # well below on body axis
+    ]
+
+    for dx, dy, text_rot in candidates:
+        sym_rot = int(symbol_rotation) % 360
+        if sym_rot == 0:
+            rdx, rdy = dx, dy
+        elif sym_rot == 90:
+            rdx, rdy = dy, -dx
+        elif sym_rot == 180:
+            rdx, rdy = -dx, -dy
+        elif sym_rot == 270:
+            rdx, rdy = -dy, dx
+        else:
+            rdx, rdy = dx, dy
+        from zynq_eda.core.model.grid import Point as _Pt
+        text_anchor = _Pt(anchor.x + rdx, anchor.y + rdy)
+        candidate_bbox = text_bbox(
+            text=value_text,
+            anchor=text_anchor,
+            size_mm=DEFAULT_TEXT_SIZE_MM,
+            rotation=0.0,
+            justify="center",
+            owner_id=f"{owner_id}:value_probe",
+            kind="symbol",
+        )
+        from zynq_eda.core.layout._constants import VISUAL_CLEARANCE_MM
+        # Reject candidates that intersect the cap's OWN body (with
+        # the 2 mm clearance gate). Without this, the probe accepts a
+        # shift like (-2.54, 0) for Device:C whose 4 mm-wide Value
+        # text still grazes the body bbox by ~0.5 mm.
+        if own_body is not None and candidate_bbox.intersects(own_body, padding_mm=VISUAL_CLEARANCE_MM):
+            continue
+        hits = occupancy.collides(
+            candidate_bbox,
+            ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
+            padding_mm=VISUAL_CLEARANCE_MM,
+        )
+        if not hits:
+            return (dx, dy, text_rot)
+
+    return None
+
+
 @dataclass(frozen=True)
 class PinGeometry:
     """Resolved geometry for a single pin instance.
@@ -147,6 +287,218 @@ def _flip_y_then_rotate(symbol_relative: Point, rotation_deg: float) -> Point:
 
 # Backward-compatible alias kept for any external imports.
 _rotate_then_flip_y = _flip_y_then_rotate
+
+
+def _visible_body_bbox_from_graphics(
+    lib_id: str,
+    rotation: float,
+) -> "SymbolBoundingBox | None":
+    """Return the bbox of the symbol's VISIBLE graphics (rectangle /
+    polyline / circle / arc) in page coords relative to anchor (0, 0).
+
+    Walks every graphics primitive defined in the symbol's
+    ``.kicad_sym`` block — including the per-unit ``(symbol "X_0_1"
+    ...)`` and ``(symbol "X_1_1" ...)`` sub-blocks — and aggregates
+    their min/max into a single AABB. Applies the standard
+    ``_flip_y_then_rotate`` transform so the returned coords match
+    page space.
+
+    Returns ``None`` when the symbol has no graphics blocks (e.g.
+    pure-pin connector wrappers). Callers should fall back to
+    pin-tip extents in that case.
+    """
+    symbol_def = ksa.get_symbol_cache().get_symbol(lib_id)
+    if symbol_def is None:
+        return None
+    raw = getattr(symbol_def, "raw_kicad_data", None) or ()
+    extents: list[tuple[float, float, float, float]] = []
+    _gather_graphics_extents(raw, extents)
+    if not extents:
+        return None
+    sym_min_x = min(e[0] for e in extents)
+    sym_min_y = min(e[1] for e in extents)
+    sym_max_x = max(e[2] for e in extents)
+    sym_max_y = max(e[3] for e in extents)
+    # Transform the four corners through the standard flip-then-rotate
+    # so the bbox is in PAGE coords. Then re-derive min/max from the
+    # rotated corners.
+    corners = [
+        _flip_y_then_rotate(Point(sym_min_x, sym_min_y), rotation),
+        _flip_y_then_rotate(Point(sym_max_x, sym_min_y), rotation),
+        _flip_y_then_rotate(Point(sym_min_x, sym_max_y), rotation),
+        _flip_y_then_rotate(Point(sym_max_x, sym_max_y), rotation),
+    ]
+    return SymbolBoundingBox(
+        min_x=min(c.x for c in corners),
+        min_y=min(c.y for c in corners),
+        max_x=max(c.x for c in corners),
+        max_y=max(c.y for c in corners),
+    )
+
+
+def _gather_graphics_extents(
+    node,
+    out: list[tuple[float, float, float, float]],
+) -> None:
+    """Walk an S-expression node and append ``(min_x, min_y, max_x, max_y)``
+    extents for every visible graphics primitive found inside.
+
+    Recurses into nested ``(symbol "..._N_M" ...)`` sub-blocks so the
+    per-unit graphics (which is where rectangles typically live) are
+    captured.
+    """
+    if not isinstance(node, list):
+        return
+    if not node:
+        return
+    head = node[0]
+    head_name = getattr(head, "value", lambda: None)()
+    if head_name == "rectangle":
+        # (rectangle (start X Y) (end X Y) ...)
+        start = _read_xy_child(node, "start")
+        end = _read_xy_child(node, "end")
+        if start is not None and end is not None:
+            min_x = min(start[0], end[0])
+            min_y = min(start[1], end[1])
+            max_x = max(start[0], end[0])
+            max_y = max(start[1], end[1])
+            out.append((min_x, min_y, max_x, max_y))
+        return
+    if head_name == "polyline":
+        # (polyline (pts (xy X Y) (xy X Y) ...) ...)
+        # Exclude points at the symbol origin (0, 0) — those are
+        # typically pin-stub anchors (e.g. power:GND's polyline starts
+        # at the pin tip (0,0) before drawing the triangle below).
+        # Including the origin makes the body bbox extend up to the
+        # pin tip, so any wire connecting to the pin's tip overlaps
+        # the body bbox by the wire's thickness. The VISIBLE glyph
+        # excludes the pin stub; the bbox should too.
+        ORIGIN_TOL = 0.01
+        pts: list[tuple[float, float]] = []
+        for child in node[1:]:
+            if isinstance(child, list) and child and getattr(child[0], "value", lambda: None)() == "pts":
+                for xy in child[1:]:
+                    if isinstance(xy, list) and len(xy) >= 3 and getattr(xy[0], "value", lambda: None)() == "xy":
+                        try:
+                            px, py = float(xy[1]), float(xy[2])
+                        except (TypeError, ValueError):
+                            continue
+                        if abs(px) < ORIGIN_TOL and abs(py) < ORIGIN_TOL:
+                            continue  # skip pin-stub anchor
+                        pts.append((px, py))
+        if pts:
+            xs = [p[0] for p in pts]
+            ys = [p[1] for p in pts]
+            out.append((min(xs), min(ys), max(xs), max(ys)))
+        return
+    if head_name == "circle":
+        # (circle (center X Y) (radius R) ...)
+        center = _read_xy_child(node, "center")
+        radius = None
+        for child in node[1:]:
+            if isinstance(child, list) and child and getattr(child[0], "value", lambda: None)() == "radius":
+                if len(child) >= 2:
+                    try:
+                        radius = float(child[1])
+                    except (TypeError, ValueError):
+                        radius = None
+                break
+        if center is not None and radius is not None:
+            out.append((
+                center[0] - radius, center[1] - radius,
+                center[0] + radius, center[1] + radius,
+            ))
+        return
+    if head_name == "arc":
+        # (arc (start X Y) (mid X Y) (end X Y) ...)  conservative bbox
+        # over all three vertices (overestimates slightly but never
+        # underestimates).
+        pts2: list[tuple[float, float]] = []
+        for tag in ("start", "mid", "end"):
+            v = _read_xy_child(node, tag)
+            if v is not None:
+                pts2.append(v)
+        if pts2:
+            xs = [p[0] for p in pts2]
+            ys = [p[1] for p in pts2]
+            out.append((min(xs), min(ys), max(xs), max(ys)))
+        return
+    # Recurse into nested blocks (unit sub-symbols).
+    for child in node[1:]:
+        if isinstance(child, list):
+            _gather_graphics_extents(child, out)
+
+
+def _property_is_hidden(prop_node: list) -> bool:
+    """True iff the symbol property's ``(effects … hide)`` is set
+    (or legacy ``(hide yes)``)."""
+    for child in prop_node[1:]:
+        if not isinstance(child, list) or not child:
+            continue
+        head_name = getattr(child[0], "value", lambda: None)()
+        if head_name == "hide":
+            # (hide yes) — older format
+            if len(child) >= 2:
+                val = getattr(child[1], "value", lambda: None)()
+                if val == "yes":
+                    return True
+        elif head_name == "effects":
+            # (effects ... hide) — newer format: bare "hide" token
+            # OR (hide yes) nested.
+            for eff in child[1:]:
+                if not isinstance(eff, list):
+                    if getattr(eff, "value", lambda: None)() == "hide":
+                        return True
+                    continue
+                if not eff:
+                    continue
+                eff_head = getattr(eff[0], "value", lambda: None)()
+                if eff_head == "hide":
+                    if len(eff) >= 2:
+                        val = getattr(eff[1], "value", lambda: None)()
+                        if val == "yes":
+                            return True
+                    else:
+                        return True
+    return False
+
+
+def _read_property_at(
+    prop_node: list,
+) -> tuple[float, float, float] | None:
+    """Find ``(at X Y R)`` inside a property block. Returns ``(X, Y, R)``."""
+    for child in prop_node[1:]:
+        if not isinstance(child, list) or len(child) < 3:
+            continue
+        head_name = getattr(child[0], "value", lambda: None)()
+        if head_name != "at":
+            continue
+        try:
+            x = float(child[1])
+            y = float(child[2])
+            r = float(child[3]) if len(child) >= 4 else 0.0
+            return (x, y, r)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _read_xy_child(
+    parent: list,
+    tag: str,
+) -> tuple[float, float] | None:
+    """Find ``(tag X Y …)`` inside ``parent`` and return ``(X, Y)``."""
+    for child in parent[1:]:
+        if not isinstance(child, list) or len(child) < 3:
+            continue
+        head_name = getattr(child[0], "value", lambda: None)()
+        if head_name != tag:
+            continue
+        try:
+            return (float(child[1]), float(child[2]))
+        except (TypeError, ValueError):
+            return None
+    return None
 
 
 def _pin_rotation_from_symbol(lib_id: str, pin_number: str) -> float:
@@ -421,38 +773,39 @@ class SymbolGeometryCache:
         body_padding_mm: float = DEFAULT_PIN_LENGTH_MM,
         tight_body: bool = True,
     ) -> SymbolBoundingBox:
-        """Return the bounding box of a symbol relative to its anchor.
+        """Return the symbol's VISIBLE body bbox in page coords.
 
-        Two modes:
+        The body is the rectangle KiCad actually paints — derived from
+        the ``(rectangle …)``, ``(polyline …)``, ``(circle …)``, and
+        ``(arc …)`` graphics blocks in the symbol's ``.kicad_sym``
+        definition. Pin stubs are NOT included; pin tips sit one
+        ``length`` outboard of the visible body edge.
 
-          * ``tight_body=True`` (default — used by the overlap validator
-            and by occupancy-aware placement). Returns the VISIBLE body
-            box: the convex hull of pin body-side endpoints (= pin tips
-            walked INWARD by one pin length toward the body centroid).
-            Pin stubs themselves are NOT included, so wires terminating
-            at a pin tip don't read as "wire crosses the body".
-          * ``tight_body=False`` (legacy). Returns the OUTER hull: pin
-            tips PLUS ``body_padding_mm``. Useful for placement spacing
-            calculations where the pin stubs must clear the next
-            symbol's stubs too.
+        Symbols without any graphics blocks (rare — most are pure-pin
+        wrapper symbols like the generated bank symbols) fall back to
+        the convex hull of pin TIPS inset by one pin length, which is
+        a reasonable approximation of "where the body would be drawn".
 
-        The default flipped from the legacy outer hull to the visible
-        body in Wave B because the outer hull caused ~700 false-positive
-        overlap warnings (every wire that legitimately terminated on a
-        pin was reported as wire×symbol; every label at a wire endpoint
-        was reported as label×symbol). The visible body matches what
-        the user actually sees on the page.
+        The ``body_padding_mm`` and ``tight_body`` parameters are kept
+        for backwards compatibility but no longer affect behaviour —
+        the bbox is always the visible body extent.
         """
-        cache_key = (lib_id, rotation, tight_body)
+        cache_key = (lib_id, rotation, "visible")
         cached = self._bbox_cache.get(cache_key)
         if cached is not None:
             return cached
 
+        # First try the explicit graphics blocks. This gives the bbox
+        # KiCad actually paints — independent of where pin tips sit.
+        graphics_box = _visible_body_bbox_from_graphics(lib_id, rotation)
+        if graphics_box is not None:
+            self._bbox_cache[cache_key] = graphics_box
+            return graphics_box
+
+        # Fallback: convex hull of pin tips, inset by one pin length so
+        # the box approximates where the body edge SHOULD be. This is
+        # for graphics-less symbols (some custom wrappers).
         preview = self._preview_component(lib_id, Point(0.0, 0.0), rotation)
-        # Collect pin tips. ``list_pins()`` returns positions in the symbol's
-        # LIBRARY frame (no rotation), with +Y up. The same flip-Y-then-rotate
-        # transform used in :meth:`_resolve_pin_geometry` converts these to
-        # PAGE-relative coords (relative to the symbol anchor at the origin).
         pin_tips: list[Point] = []
         for pin_info in preview.list_pins():
             position = pin_info["position"]
@@ -461,68 +814,44 @@ class SymbolGeometryCache:
             pin_tips.append(page_relative)
 
         if not pin_tips:
-            # A symbol with no pins is unusual but possible (e.g. mounting hole);
-            # return a small box so downstream layout still has dimensions.
             box = SymbolBoundingBox(
                 min_x=-body_padding_mm,
                 min_y=-body_padding_mm,
                 max_x=body_padding_mm,
                 max_y=body_padding_mm,
             )
-        elif tight_body:
-            # Tight body: walk each pin tip INWARD by one pin length
-            # (toward the centroid of all pin tips). The result is a
-            # box around the visible symbol outline, with pin stubs
-            # excluded. We use the bbox of pin tips as a stand-in for
-            # the centroid because that gives a consistent inset on
-            # all four sides for rectangular pin arrangements.
+        else:
             min_x = min(p.x for p in pin_tips)
             max_x = max(p.x for p in pin_tips)
             min_y = min(p.y for p in pin_tips)
             max_y = max(p.y for p in pin_tips)
             inset = DEFAULT_PIN_LENGTH_MM
-            # Only inset on axes where the bbox span is wider than 2*inset
-            # — for short symbols (e.g. a 2-pin passive 2.54mm tall) we
-            # can't safely inset on the long axis without collapsing.
             x_inset = inset if (max_x - min_x) > 2.0 * inset else 0.0
             y_inset = inset if (max_y - min_y) > 2.0 * inset else 0.0
             box_min_x = min_x + x_inset
             box_min_y = min_y + y_inset
             box_max_x = max_x - x_inset
             box_max_y = max_y - y_inset
-            # Ensure a minimum BODY extent (~1 mm) on each axis so that
-            # 2-pin passives (Device:R / Device:C) whose pin tips lie
-            # on a single line still register a non-zero body in the
-            # transverse direction. Without this minimum, the tight
-            # bbox collapses to a line and the body becomes invisible
-            # to the overlap validator — wires passing PERPENDICULAR
-            # through a passive's body get a false "no overlap"
-            # because the bbox has zero width.
-            MIN_BODY_HALF_EXTENT_MM = 0.635
-            if (box_max_x - box_min_x) < 2.0 * MIN_BODY_HALF_EXTENT_MM:
+            # Symbols whose pins all sit on a single line (cap/resistor
+            # with both pins on the same X column) collapse to a line
+            # here. Give them a tiny 0.05 mm half-extent on the
+            # collapsed axis so wires perpendicular to the body
+            # register, but DON'T extend bbox in a way that grazes
+            # labels anchored at the pin tip.
+            COLLAPSED_HALF_EXTENT_MM = 0.05
+            if (box_max_x - box_min_x) < 0.01:
                 center_x = (box_min_x + box_max_x) / 2.0
-                box_min_x = center_x - MIN_BODY_HALF_EXTENT_MM
-                box_max_x = center_x + MIN_BODY_HALF_EXTENT_MM
-            if (box_max_y - box_min_y) < 2.0 * MIN_BODY_HALF_EXTENT_MM:
+                box_min_x = center_x - COLLAPSED_HALF_EXTENT_MM
+                box_max_x = center_x + COLLAPSED_HALF_EXTENT_MM
+            if (box_max_y - box_min_y) < 0.01:
                 center_y = (box_min_y + box_max_y) / 2.0
-                box_min_y = center_y - MIN_BODY_HALF_EXTENT_MM
-                box_max_y = center_y + MIN_BODY_HALF_EXTENT_MM
+                box_min_y = center_y - COLLAPSED_HALF_EXTENT_MM
+                box_max_y = center_y + COLLAPSED_HALF_EXTENT_MM
             box = SymbolBoundingBox(
                 min_x=box_min_x,
                 min_y=box_min_y,
                 max_x=box_max_x,
                 max_y=box_max_y,
-            )
-        else:
-            min_x = min(p.x for p in pin_tips)
-            max_x = max(p.x for p in pin_tips)
-            min_y = min(p.y for p in pin_tips)
-            max_y = max(p.y for p in pin_tips)
-            box = SymbolBoundingBox(
-                min_x=min_x - body_padding_mm,
-                min_y=min_y - body_padding_mm,
-                max_x=max_x + body_padding_mm,
-                max_y=max_y + body_padding_mm,
             )
 
         self._bbox_cache[cache_key] = box
@@ -761,6 +1090,115 @@ class SymbolGeometryCache:
                 justify=text_justify,  # type: ignore[arg-type]
                 owner_id=f"{owner_id}:pin_number:{pin_number}" if owner_id else f"pin_number:{pin_number}",
                 kind="intrinsic_pin_number",
+            )
+            bboxes.append(bbox)
+        return tuple(bboxes)
+
+    def property_text_bboxes(
+        self,
+        lib_id: str,
+        anchor: Point,
+        rotation: float = 0.0,
+        *,
+        owner_id: str = "",
+        value_override: str | None = None,
+        reference_override: str | None = None,
+        value_shift: "tuple[float, float, float | None] | None" = None,
+    ):
+        """Return PAGE-coord bboxes for every visible property text on a
+        placed symbol.
+
+        Inspects the ``(property "Reference" "..." (at PX PY R) (effects ...))``
+        and ``(property "Value" ...)`` blocks in the symbol's library
+        definition. Properties with ``(effects ... hide)`` (or
+        ``(hide yes)``) are skipped — KiCad won't render them.
+
+        ``value_override`` and ``reference_override`` substitute the
+        actual text strings the placement engine will write into the
+        emitted sheet (e.g. "C100" / "4u7" instead of the library
+        defaults "C" / "C").
+        """
+        from zynq_eda.core.layout.bbox import (
+            DEFAULT_TEXT_SIZE_MM,
+            text_bbox,
+        )
+
+        symbol_def = _ksa_get_symbol_cache().get_symbol(lib_id)
+        if symbol_def is None:
+            return ()
+        raw = getattr(symbol_def, "raw_kicad_data", None) or ()
+
+        bboxes = []
+        for item in raw:
+            if not isinstance(item, list) or not item:
+                continue
+            head_name = getattr(item[0], "value", lambda: None)()
+            if head_name != "property":
+                continue
+            if len(item) < 3:
+                continue
+            prop_name = item[1] if isinstance(item[1], str) else None
+            prop_text = item[2] if isinstance(item[2], str) else None
+            if prop_name not in ("Reference", "Value"):
+                continue
+            if _property_is_hidden(item):
+                continue
+            at_xy_rot = _read_property_at(item)
+            if at_xy_rot is None:
+                continue
+            prop_x, prop_y, _prop_rot = at_xy_rot
+            # Position relative to symbol anchor, in SYMBOL coords.
+            sym_relative = Point(prop_x, prop_y)
+            page_relative = _flip_y_then_rotate(sym_relative, rotation)
+            text_anchor = Point(
+                anchor.x + page_relative.x,
+                anchor.y + page_relative.y,
+            )
+            # The post-emit patch shifts the Value property for known
+            # passive lib_ids to keep its text off the body. Mirror that
+            # shift here so the validator's bbox matches what KiCad
+            # actually renders. Without this, the validator computes
+            # the LIB-default position (body centre) while the .kicad_sch
+            # has the property at the shifted position, producing both
+            # false positives (validator flags non-overlap) and false
+            # negatives (validator misses real shifted-property overlaps).
+            if prop_name == "Value":
+                # Prefer the per-instance shift (resolved at placement
+                # time against occupancy); fall back to the static
+                # default per lib_id.
+                shift = value_shift or VALUE_SHIFT_BY_LIB_ID.get(lib_id)
+                if shift is not None:
+                    dx, dy, _text_rot_override = shift
+                    sym_rot = int(rotation) % 360
+                    if sym_rot == 0:
+                        rdx, rdy = dx, dy
+                    elif sym_rot == 90:
+                        rdx, rdy = dy, -dx
+                    elif sym_rot == 180:
+                        rdx, rdy = -dx, -dy
+                    elif sym_rot == 270:
+                        rdx, rdy = -dy, dx
+                    else:
+                        rdx, rdy = dx, dy
+                    text_anchor = Point(
+                        anchor.x + rdx,
+                        anchor.y + rdy,
+                    )
+            # Substitute the actual text the engine will emit.
+            display_text = prop_text or ""
+            if prop_name == "Reference" and reference_override is not None:
+                display_text = reference_override
+            elif prop_name == "Value" and value_override is not None:
+                display_text = value_override
+            # Reference / Value render center-justified by default.
+            bbox = text_bbox(
+                text=display_text,
+                anchor=text_anchor,
+                size_mm=DEFAULT_TEXT_SIZE_MM,
+                rotation=0.0,
+                justify="center",
+                owner_id=f"{owner_id}:property:{prop_name}" if owner_id else f"property:{prop_name}",
+                kind="symbol",
             )
             bboxes.append(bbox)
         return tuple(bboxes)

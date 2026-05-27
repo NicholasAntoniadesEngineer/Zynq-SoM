@@ -103,9 +103,15 @@ def test_double_l_when_both_single_l_blocked() -> None:
     result = route_orthogonal_detail(
         Point(10.16, 20.32), Point(50.8, 60.96), occupancy,
     )
-    # Either shape "double_l_h" or "double_l_v" is acceptable — the
-    # router tries h-first first.
-    assert result.shape in ("double_l_h", "double_l_v")
+    # The router picks a Z-bend through some mid-X or mid-Y. The
+    # midpoint variants ("z_x_+0.00" / "z_y_+0.00") are equivalent to
+    # the historical "double_l_h" / "double_l_v" names. Either family
+    # is acceptable here — the key invariant is that the router found
+    # a clean 3-segment route, not a giveup.
+    assert not result.gave_up
+    assert result.shape.startswith("z_") or result.shape in (
+        "double_l_h", "double_l_v",
+    )
     assert len(result.segments) >= 2  # may collapse to fewer when a segment is zero-length
 
 
@@ -139,9 +145,14 @@ def test_ignore_owners_lets_route_through_own_symbol() -> None:
 
 
 def test_avoid_kinds_lets_route_through_wire() -> None:
-    """Bbox kinds outside avoid_kinds are not obstacles."""
+    """Caller can override avoid_kinds to ignore some bbox kinds.
+
+    The DEFAULT avoid_kinds includes "wire" (project rule: no two
+    wires may cross). Callers that want the old "wires are not
+    obstacles" behaviour can pass an explicit avoid_kinds without
+    "wire" — this test verifies the override path.
+    """
     occupancy = Occupancy()
-    # A wire bbox in the path — by default it's not in avoid_kinds.
     wire_bbox = BBox(
         min=Point(20.0, 18.0),
         max=Point(40.0, 22.0),
@@ -149,11 +160,40 @@ def test_avoid_kinds_lets_route_through_wire() -> None:
         owner_id="prior_wire",
     )
     occupancy.add(wire_bbox)
+    # Override: explicitly EXCLUDE "wire" from avoid_kinds. The router
+    # then routes through the wire as it did before the project rule
+    # made wires obstacles by default.
+    avoid_no_wires = frozenset(
+        {"symbol", "label", "hierarchical_label", "sheet",
+         "intrinsic_pin_name", "intrinsic_pin_number"}
+    )
+    result = route_orthogonal_detail(
+        Point(10.16, 20.32), Point(50.8, 60.96), occupancy,
+        avoid_kinds=avoid_no_wires,
+    )
+    assert result.shape == "single_l_h"
+
+
+def test_wire_crossing_is_avoided_by_default() -> None:
+    """With the default avoid_kinds, the router DOES NOT cross wires.
+
+    The project rule bans wire crossings; verify the router picks a
+    detour route when a wire sits on the direct path.
+    """
+    occupancy = Occupancy()
+    # A vertical wire blocking the h-first horizontal segment.
+    occupancy.add(BBox(
+        min=Point(20.0, 10.0),
+        max=Point(22.0, 30.0),
+        kind="wire",
+        owner_id="prior_wire",
+    ))
     result = route_orthogonal_detail(
         Point(10.16, 20.32), Point(50.8, 60.96), occupancy,
     )
-    # Wires don't block the h-first L (wires are in skip-kinds).
-    assert result.shape == "single_l_h"
+    # Either an alternative shape (single_l_v / z-bend / ...) or a
+    # giveup — but NEVER a single_l_h that crosses the wire.
+    assert result.shape != "single_l_h"
 
 
 # ---- Trivial cases --------------------------------------------------------

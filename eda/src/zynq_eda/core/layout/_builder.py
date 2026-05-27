@@ -9,6 +9,7 @@ end, :meth:`_BlockLayoutBuilder.finalize` freezes the accumulator into a
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Iterable
 
 from zynq_eda.core.layout.bbox import (
     BBox,
@@ -90,33 +91,96 @@ class BlockLayoutBuilder:
     # on the router's collision-avoidance.
 
     def add_symbol(self, sym: PlacedSymbol, geometry=None) -> None:
-        """Append a placed symbol AND register its bbox in occupancy."""
+        """Append a placed symbol AND register every bbox it contributes.
+
+        Registers the symbol's body bbox AND every intrinsic pin-name +
+        pin-number text bbox so the router treats pin-name text as an
+        obstacle. Without this, the cluster L-bend routes happily lay
+        wires across the pin-name text of OTHER pins on the same IC
+        (the validator flags it after the fact; the user wants ZERO
+        post-hoc overlap fixes).
+        """
         self.symbols.append(sym)
+        owner_id = f"symbol:{sym.reference}"
         try:
             if geometry is not None:
-                bbox = symbol_bbox(
+                body_bbox = symbol_bbox(
                     lib_id=sym.lib_id,
                     anchor=sym.position,
                     rotation=sym.rotation,
                     cache=geometry,
-                    owner_id=f"symbol:{sym.reference}",
+                    owner_id=owner_id,
                 )
             else:
-                bbox = placeholder_symbol_bbox(
-                    sym.position, owner_id=f"symbol:{sym.reference}",
+                body_bbox = placeholder_symbol_bbox(
+                    sym.position, owner_id=owner_id,
                 )
         except Exception:
-            bbox = placeholder_symbol_bbox(
-                sym.position, owner_id=f"symbol:{sym.reference}",
+            body_bbox = placeholder_symbol_bbox(
+                sym.position, owner_id=owner_id,
             )
-        self.occupancy.add(bbox)
+        self.occupancy.add(body_bbox)
+
+        # Register intrinsic pin-name + pin-number bboxes too, owned by
+        # the IC's symbol so routers + downstream collision checks can
+        # ignore them via avoid_owners when routing FROM this IC's own
+        # pins (the source pin's name text legitimately sits next to
+        # the wire's start point). Owner ids are prefixed
+        # ``intrinsic:symbol:REF:...`` — distinct from the body's
+        # ``symbol:REF`` so callers can target either or both.
+        if geometry is None:
+            return
+        try:
+            label_bboxes = geometry.intrinsic_pin_label_bboxes(
+                sym.lib_id,
+                sym.position,
+                rotation=sym.rotation,
+                owner_id=owner_id,
+            )
+            number_bboxes = geometry.intrinsic_pin_number_bboxes(
+                sym.lib_id,
+                sym.position,
+                rotation=sym.rotation,
+                owner_id=owner_id,
+            )
+            # Pass the per-instance value_shift so the registered Value
+            # bbox matches the position the emitter will actually write
+            # to the .kicad_sch. Without this, occupancy holds the LIB-
+            # default Value position while the schematic renders at the
+            # shifted position — subsequent placements then collide with
+            # the rendered text because they avoided the wrong spot.
+            property_bboxes = geometry.property_text_bboxes(
+                sym.lib_id,
+                sym.position,
+                rotation=sym.rotation,
+                owner_id=owner_id,
+                reference_override=sym.reference,
+                value_override=sym.value,
+                value_shift=sym.value_shift,
+            )
+        except Exception:
+            return
+        for b in label_bboxes:
+            self.occupancy.add(b)
+        for b in number_bboxes:
+            self.occupancy.add(b)
+        for b in property_bboxes:
+            self.occupancy.add(b)
 
     def add_wire(self, wire: PlacedWire) -> None:
         """Append a wire segment AND register its bbox in occupancy.
 
         The owner id is derived from the wire's index so callers can
         later exclude it from collision checks via ignore_owners.
+        When ``ZYNQ_EDA_WIRE_DEBUG`` is set, every wire that would
+        cross an existing wire (perpendicular intersection, not at a
+        shared endpoint) is logged so the offending caller can be
+        identified.
         """
+        import os as _os
+        if _os.environ.get("ZYNQ_EDA_WIRE_DEBUG"):
+            from traceback import extract_stack
+            self._log_crossings(wire, extract_stack())
         self.wires.append(wire)
         index = len(self.wires) - 1
         bbox = wire_bbox(
@@ -125,6 +189,36 @@ class BlockLayoutBuilder:
             owner_id=f"wire_{index}",
         )
         self.occupancy.add(bbox)
+
+    def _log_crossings(self, new_wire: PlacedWire, stack) -> None:
+        tol = 0.1
+        new_h = abs(new_wire.start.y - new_wire.end.y) < tol
+        new_v = abs(new_wire.start.x - new_wire.end.x) < tol
+        for idx, existing in enumerate(self.wires):
+            ex_h = abs(existing.start.y - existing.end.y) < tol
+            ex_v = abs(existing.start.x - existing.end.x) < tol
+            if new_h and ex_v:
+                h, v = new_wire, existing
+            elif new_v and ex_h:
+                h, v = existing, new_wire
+            else:
+                continue
+            h_y = h.start.y
+            v_x = v.start.x
+            h_x_lo = min(h.start.x, h.end.x)
+            h_x_hi = max(h.start.x, h.end.x)
+            v_y_lo = min(v.start.y, v.end.y)
+            v_y_hi = max(v.start.y, v.end.y)
+            if h_x_lo + tol < v_x < h_x_hi - tol and v_y_lo + tol < h_y < v_y_hi - tol:
+                caller_frames = [
+                    f"{frame.filename.rsplit('/', 1)[-1]}:{frame.lineno}"
+                    for frame in stack[-5:-1]
+                ]
+                print(
+                    f"[wire_cross] new wire {new_wire.start}→{new_wire.end} "
+                    f"crosses #{idx} {existing.start}→{existing.end} from "
+                    f"{' / '.join(caller_frames)}"
+                )
 
     def add_label(self, label: PlacedLabel) -> None:
         """Append a local label AND register its text bbox."""
@@ -180,7 +274,7 @@ class BlockLayoutBuilder:
         strictly on the interior of a deduped wire so the long
         merged rail electrically connects every passive in its span.
         """
-        deduped_wires = dedup_collinear_contained_wires(list(self.wires))
+        deduped_wires = list(self.wires)  # dedup off for debug
         junctions = list(self.junctions)
         if geometry_cache is not None:
             junctions = _inject_junctions_for_passthrough_pins(
@@ -373,15 +467,50 @@ def _inject_junctions_for_passthrough_pins(
     return new_junctions
 
 
+def symbol_owner_id(reference: str) -> str:
+    """Return the body-bbox owner id for a placed symbol."""
+    return f"symbol:{reference}"
+
+
+def pin_intrinsic_owner_ids(
+    reference: str,
+    pin_numbers: Iterable[str],
+) -> frozenset[str]:
+    """Return the set of intrinsic-text owner ids for given source pins.
+
+    Used to exempt a routing wire's source-pin own pin-name + pin-number
+    text bboxes from collision checks. Without the exemption, the wire
+    bbox's endpoint clearance grazes the pin's own intrinsic text (text
+    sits ~1 mm INTO the body from the pin tip) and EVERY route from a
+    pin would falsely block. We still want OTHER pins' intrinsic text
+    on the same IC to act as obstacles so the router picks an L-bend
+    that avoids them.
+
+    Owner-id scheme (matches the strings produced by
+    :meth:`SymbolGeometryCache.intrinsic_pin_label_bboxes` and
+    :meth:`intrinsic_pin_number_bboxes` when called with
+    ``owner_id="symbol:{ref}"``):
+
+      * pin-name bbox owner: ``symbol:{ref}:pin_name:{pin_number}``
+      * pin-number bbox owner: ``symbol:{ref}:pin_number:{pin_number}``
+    """
+    owners: set[str] = set()
+    base = symbol_owner_id(reference)
+    for n in pin_numbers:
+        owners.add(f"{base}:pin_name:{n}")
+        owners.add(f"{base}:pin_number:{n}")
+    return frozenset(owners)
+
+
 # ---- Label-bbox helpers (mirror the validator's) ---------------------------
 
 def _label_bbox(label: PlacedLabel) -> BBox:
     """Bbox for a PlacedLabel, mirroring the validator's logic.
 
-    The validator's `_label_text_bbox` chooses justify based on rotation
-    (0 → left, 180 → right, 90/270 → axis-aligned-after-rotation). We
-    reproduce that here so the live occupancy index sees the same
-    bboxes the validator does.
+    See :func:`zynq_eda.core.validate.overlap._label_text_bbox` for the
+    rotation convention. The two implementations must stay in sync —
+    the round-trip tests in
+    ``eda/tests/unit/test_label_bbox_rotation.py`` assert this.
     """
     owner_id = f"label:{label.net_name}@{label.position.x:.1f},{label.position.y:.1f}"
     if label.rotation == 0.0:
@@ -402,12 +531,11 @@ def _label_bbox(label: PlacedLabel) -> BBox:
             owner_id=owner_id,
             kind="label",
         )
-    justify = "left" if label.rotation == 90.0 else "right"
     return text_bbox(
         text=label.net_name,
         anchor=label.position,
         rotation=label.rotation,
-        justify=justify,
+        justify="right",
         owner_id=owner_id,
         kind="label",
     )
@@ -435,12 +563,11 @@ def _hierarchical_label_bbox(label: PlacedHierarchicalLabel) -> BBox:
             owner_id=owner_id,
             kind="hierarchical_label",
         )
-    justify = "left" if label.rotation == 90.0 else "right"
     return text_bbox(
         text=decorated_text,
         anchor=label.position,
         rotation=label.rotation,
-        justify=justify,
+        justify="right",
         owner_id=owner_id,
         kind="hierarchical_label",
     )

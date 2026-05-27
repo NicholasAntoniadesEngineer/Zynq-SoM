@@ -202,6 +202,14 @@ def emit_sheet(
 
     _atomic_save(schematic, output_path)
     _hide_internal_properties(output_path)
+    _shift_passive_value_off_body(
+        output_path,
+        per_instance_shifts={
+            placed.reference: placed.value_shift
+            for placed in sheet.symbols
+            if placed.value_shift is not None
+        },
+    )
     if lib_symbol_pin_type_overrides:
         _patch_lib_symbol_pin_types(output_path, lib_symbol_pin_type_overrides)
     # Disable for now: _patch_hierarchy_paths(output_path, parent, sheet_id)
@@ -266,6 +274,89 @@ def _patch_hierarchy_paths(
         f'(path "{target_path}"',
         text,
     )
+    if patched != text:
+        schematic_path.write_text(patched, encoding="utf-8")
+
+
+from zynq_eda.core.layout.geometry import VALUE_SHIFT_BY_LIB_ID
+
+
+def _shift_passive_value_off_body(
+    schematic_path: Path,
+    per_instance_shifts: "dict[str, tuple[float, float, float | None]] | None" = None,
+) -> None:
+    """Move the Value-property text of cluster passives OFF the body.
+
+    KiCad's stock ``Device:R`` / ``Device:C`` symbols set the Value
+    property at the body's geometric centre. KiCad renders the text
+    visually ON TOP of the symbol body — readable in isolation but
+    visually messy when stacked and indistinguishable from labels
+    crossing the body. This pass rewrites the ``(property "Value" …
+    (at X Y R) …)`` block for every supported passive lib_id so the
+    text sits to the side of the body opposite the Reference.
+
+    ``per_instance_shifts`` maps a reference designator ("R100", "C12") to
+    the resolved ``(dx, dy, text_rot)`` triple the placement engine
+    picked dynamically against the occupancy index. When a reference
+    has an entry, we use it; otherwise we fall back to the static
+    :data:`VALUE_SHIFT_BY_LIB_ID` per lib_id.
+
+    The transform is rotation-aware: for a symbol rotated 90° CW on
+    the page, the desired displacement rotates 90° CW too, so the
+    text ends up perpendicular to the body's new orientation.
+    """
+    import re
+
+    per_instance = per_instance_shifts or {}
+    text = schematic_path.read_text(encoding="utf-8")
+    # Match every (symbol (lib_id "X") (at X Y R) … (property "Reference"
+    # "<REF>" …) … (property "Value" "<VAL>" (at VX VY VR) …)) block.
+    # We need the symbol's rotation, anchor, AND reference to pick the
+    # right per-instance shift.
+    pattern = re.compile(
+        r'(\(symbol\s*\(lib_id "([^"]+)"\)\s*\(at\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\)'
+        r'[\s\S]*?\(property "Reference" "([^"]+)"'
+        r'[\s\S]*?\(property "Value" "[^"]*"\s*\(at )([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\)',
+        re.MULTILINE,
+    )
+
+    def _rewrite(match: "re.Match[str]") -> str:
+        prefix = match.group(1)
+        lib_id = match.group(2)
+        anchor_x = float(match.group(3))
+        anchor_y = float(match.group(4))
+        symbol_rotation = float(match.group(5))
+        reference = match.group(6)
+
+        shift = per_instance.get(reference) or VALUE_SHIFT_BY_LIB_ID.get(lib_id)
+        if shift is None:
+            return match.group(0)
+        dx, dy, text_rotation_override = shift
+
+        # Rotate the displacement by the symbol's CW rotation in page
+        # coords (+Y down). (x, y) → CW 90 → (y, -x), etc.
+        sym_rot = int(symbol_rotation) % 360
+        if sym_rot == 0:
+            rdx, rdy = dx, dy
+        elif sym_rot == 90:
+            rdx, rdy = dy, -dx
+        elif sym_rot == 180:
+            rdx, rdy = -dx, -dy
+        elif sym_rot == 270:
+            rdx, rdy = -dy, dx
+        else:
+            return match.group(0)
+
+        new_x = anchor_x + rdx
+        new_y = anchor_y + rdy
+        if text_rotation_override is not None:
+            new_text_rot = (text_rotation_override + symbol_rotation) % 360
+        else:
+            new_text_rot = float(match.group(9))
+
+        return f"{prefix}{new_x:g} {new_y:g} {new_text_rot:g})"
+
+    patched = pattern.sub(_rewrite, text)
     if patched != text:
         schematic_path.write_text(patched, encoding="utf-8")
 

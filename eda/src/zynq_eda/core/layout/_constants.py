@@ -68,7 +68,7 @@ The previous 10.16 mm gave only 0.6 mm clear — labels visually
 touched on dense connectors (JTAG header, LVDS pair termination).
 """
 
-PASSIVE_ADJACENT_PIN_STAGGER_MM = snap_to_grid(5.08)
+PASSIVE_ADJACENT_PIN_STAGGER_MM = snap_to_grid(10.16)
 """Extra perpendicular offset for caps on alternating-parity IC pin rows/cols.
 
 When two adjacent IC pins (e.g. VCCA at Y=46.99 and VCCB at Y=49.53, 2.54 mm
@@ -96,11 +96,43 @@ PASSIVE_PIN_HALF = 3.81
 Pin 1 of a non-rotated Device:R is at (0, +3.81); pin 2 at (0, -3.81).
 """
 
-POWER_SYMBOL_OFFSET_MM = snap_to_grid(5.08)
-"""Distance from a passive's far terminal to its attached power symbol."""
+POWER_SYMBOL_OFFSET_MM = snap_to_grid(7.62)
+"""Distance from a passive's far terminal to its attached power symbol.
+
+Must be large enough that the cluster passive's Reference text (rendered
+~2.03 mm to one side of the body, ~3.3 mm wide for "R100"-style refs)
+and the power symbol's Value text (rendered ~3.56 mm above the symbol
+anchor, ~3.3 mm wide for "+3V3") don't overlap. Geometry:
+
+  R Reference bbox X span: [R.x + 0.38, R.x + 3.68]
+  PWR  Value     bbox X span: [(R.x + offset) - 1.65, (R.x + offset) + 1.65]
+
+For no overlap with a 0.1 mm noise floor: offset >= 3.68 + 1.65 + 0.1
+= 5.43 mm. 5.08 mm gave 0.25 mm overlap (above the noise floor); 7.62 mm
+(3 × KiCad grid) clears with 2.5 mm of margin and still keeps clusters
+visually tight.
+"""
 
 INTERIOR_MARGIN_MM = snap_to_grid(15.24)
 """Minimum distance from a sheet edge to any placed item."""
+
+
+VISUAL_CLEARANCE_MM: float = 2.0
+"""Minimum gap (mm) between any two visible primitives.
+
+Drives EVERY placement helper that probes occupancy for a free slot:
+cluster passive shifts, dynamic Value-text positions, outboard label
+positions, and the post-placement validator's "everything must breathe"
+rule. Bboxes whose edges sit closer than this are treated as colliding
+even when their geometry does not actually overlap — the user has
+ruled that elements appearing to touch (text against text, text
+against body, body against wire) is the same as overlapping for
+visual purposes.
+
+2 mm = 0.79 × the KiCad grid pitch (2.54 mm). Smaller than one full
+grid step but large enough that adjacent property labels read as
+separate elements.
+"""
 
 
 # ---- Power-symbol library mapping ------------------------------------------
