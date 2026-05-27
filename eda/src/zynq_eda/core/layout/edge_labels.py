@@ -36,99 +36,6 @@ half-thickness graze region.
 """
 
 
-def emit_hier_label_offset(
-    builder: BlockLayoutBuilder,
-    *,
-    wire_endpoint: Point,
-    wire_axis: Literal["horizontal", "vertical"],
-    net_name: str,
-    direction,
-    rotation: float,
-) -> tuple[Point, "PlacedWire | None"]:
-    """Place a hierarchical label OFFSET perpendicular to its connecting wire.
-
-    Why offset: KiCad places a hier-label's text immediately adjacent to
-    its flag in the rotation direction. For a wire that approaches the
-    flag along the same axis as the text reads, the wire visually
-    passes UNDER the text. The user's hard rule — labels must sit
-    NEXT TO wires, not ON them — bans this. To satisfy the rule, we
-    shift the label's anchor by :data:`_LABEL_PERPENDICULAR_OFFSET_MM`
-    perpendicular to the wire and emit a short stub joining the wire
-    endpoint to the shifted anchor.
-
-    Probes the +offset direction first; if the label's bbox collides
-    with anything in occupancy (using :data:`VISUAL_CLEARANCE_MM` as
-    padding), tries the -offset direction; falls back to the original
-    wire endpoint if neither fits. Returns the chosen label position
-    and the optional stub wire (``None`` when no offset was applied).
-    """
-    # Escalating perpendicular offset ladder: try ±1 grid, then ±2,
-    # ±3 ... up to 10 grid steps (25.4 mm). For dense connector pin
-    # rows the first few offsets land on adjacent pins' labels; the
-    # ladder pushes further out until a clean slot is found.
-    candidates: list[Point] = []
-    for step in range(1, 11):
-        offset = step * _LABEL_PERPENDICULAR_OFFSET_MM
-        if wire_axis == "horizontal":
-            candidates.append(Point(wire_endpoint.x, snap_to_grid(wire_endpoint.y - offset)))
-            candidates.append(Point(wire_endpoint.x, snap_to_grid(wire_endpoint.y + offset)))
-        else:
-            candidates.append(Point(snap_to_grid(wire_endpoint.x - offset), wire_endpoint.y))
-            candidates.append(Point(snap_to_grid(wire_endpoint.x + offset), wire_endpoint.y))
-
-    from zynq_eda.core.layout.bbox import wire_bbox
-
-    for candidate in candidates:
-        # Label bbox clearance (2 mm gap against all non-wire kinds).
-        probe = PlacedHierarchicalLabel(
-            net_name=net_name,
-            position=candidate,
-            direction=direction,
-            rotation=rotation,
-        )
-        probe_bbox = _hierarchical_label_bbox(probe)
-        hits = builder.occupancy.collides(
-            probe_bbox,
-            ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
-            padding_mm=VISUAL_CLEARANCE_MM,
-        )
-        if hits:
-            continue
-        # Stub-wire clearance: the stub from wire_endpoint to the
-        # offset label position MUST NOT cross any existing wire,
-        # symbol body, or label text. Probe the stub bbox before
-        # committing.
-        stub_bbox = wire_bbox(
-            start=wire_endpoint,
-            end=candidate,
-            owner_id="_hlabel_stub_probe",
-        )
-        stub_hits = builder.occupancy.collides(
-            stub_bbox,
-            ignore_kinds=frozenset({"junction", "no_connect"}),
-            padding_mm=0.0,
-        )
-        if stub_hits:
-            continue
-        # Both label position and stub wire are clean — emit.
-        stub = PlacedWire(start=wire_endpoint, end=candidate)
-        builder.add_wire(stub)
-        builder.add_hierarchical_label(PlacedHierarchicalLabel(
-            net_name=net_name,
-            position=candidate,
-            direction=direction,
-            rotation=rotation,
-        ))
-        return candidate, stub
-
-    # No clean offset slot — fall back to the wire endpoint itself.
-    builder.add_hierarchical_label(PlacedHierarchicalLabel(
-        net_name=net_name,
-        position=wire_endpoint,
-        direction=direction,
-        rotation=rotation,
-    ))
-    return wire_endpoint, None
 from zynq_eda.core.layout.geometry import SymbolGeometryCache
 from zynq_eda.core.model.block import Block, ExternalNet, IcInstance
 from zynq_eda.core.model.grid import Point, snap_to_grid
@@ -504,17 +411,17 @@ def _per_ic_pin_labels(
             seen_label_positions.add(key)
 
             rotation = 180.0 if net.edge == SheetEdge.LEFT else 0.0
-            # Perpendicular-offset emit: label sits 2.54 mm above (or
-            # below) the wire endpoint so the label text never sits on
-            # the wire's centerline.
-            label_position, _stub = emit_hier_label_offset(
-                builder,
-                wire_endpoint=wire_endpoint,
-                wire_axis="horizontal",
+            # Pass 3 of the overlap-free plan: hier-label sits AT the
+            # wire endpoint, no stub. Text rotation is chosen so the
+            # text extends OUTWARD from the page (off the sheet edge),
+            # away from the wire's interior approach. The pin → label
+            # route was already picked above with a clean Y row.
+            builder.add_hierarchical_label(PlacedHierarchicalLabel(
                 net_name=net_name,
+                position=wire_endpoint,
                 direction=net.direction,
                 rotation=rotation,
-            )
+            ))
             for seg in picked_segments:
                 builder.add_wire(seg)
             edge_labeled.add((ic.reference, pin_role))
@@ -835,31 +742,19 @@ def _orphan_net_labels(
         if key in seen_label_positions:
             continue
         seen_label_positions.add(key)
-        # Inherit the local label's rotation — it was already chosen so
-        # the text reads OUTWARD from the host pin (so the bbox extends
-        # away from the host symbol body). Stamping the hier label with
-        # the same rotation keeps its text on the same side as the
-        # local label it's replacing.
-        #
-        # PERPENDICULAR OFFSET: the local label was placed AT the wire
-        # endpoint (cap far-pin or connector pin tip), so its text
-        # extends ALONG the wire. Shift the inherited hier-label
-        # 2.54 mm perpendicular to that wire and emit a stub. Wire
-        # axis is derived from the original rotation — rotation 0/180
-        # implies horizontal text → horizontal wire; rotation 90/270
-        # implies vertical text → vertical wire.
+        # Pass 3: hier-label sits AT the local label's wire-endpoint
+        # position (no perpendicular stub). Inherits the local label's
+        # rotation so the text continues to read OUTWARD from the host
+        # symbol body. KiCad merges co-located same-name labels into
+        # one electrical net, so the hier label inherits the local
+        # label's wire endpoint connection.
         hier_rotation = anchor_label.rotation
-        wire_axis: Literal["horizontal", "vertical"] = (
-            "horizontal" if hier_rotation in (0.0, 180.0) else "vertical"
-        )
-        emit_hier_label_offset(
-            builder,
-            wire_endpoint=anchor_label.position,
-            wire_axis=wire_axis,
+        builder.add_hierarchical_label(PlacedHierarchicalLabel(
             net_name=net.name,
+            position=anchor_label.position,
             direction=net.direction,
             rotation=hier_rotation,
-        )
+        ))
         # Strip the now-redundant local label that the hier label
         # supersedes. KiCad's label-merging by name keeps electrical
         # connectivity intact across the sheet's other labels.
@@ -943,23 +838,16 @@ def _ground_label_only(
             if key in seen_label_positions:
                 continue
             seen_label_positions.add(key)
-            # Inherit the local label's rotation so the hier label text
-            # reads in the same outward direction (away from the host
-            # symbol body). See ``_orphan_net_labels`` for the rationale.
-            # Use the perpendicular-offset emit so the inherited hier
-            # label sits 2.54 mm off the wire endpoint, never on it.
+            # Pass 3: hier-label sits AT the local label's wire
+            # endpoint (no perpendicular stub). Inherits the local
+            # label's rotation so text continues to read outward.
             hier_rotation = anchor_label.rotation
-            wire_axis: Literal["horizontal", "vertical"] = (
-                "horizontal" if hier_rotation in (0.0, 180.0) else "vertical"
-            )
-            emit_hier_label_offset(
-                builder,
-                wire_endpoint=anchor_label.position,
-                wire_axis=wire_axis,
+            builder.add_hierarchical_label(PlacedHierarchicalLabel(
                 net_name=ground_net.name,
+                position=anchor_label.position,
                 direction=ground_net.direction,
                 rotation=hier_rotation,
-            )
+            ))
             # Drop the now-redundant local label — KiCad would render
             # both, double-printing the GND text at the same coord.
             try:

@@ -198,81 +198,6 @@ def resolve_destination_net(
     return destination
 
 
-def _pick_outboard_label_position(
-    builder: BlockLayoutBuilder,
-    *,
-    far_point: Point,
-    destination_net: str,
-    label_rotation: float,
-    pin_side: str,
-) -> tuple[Point, "PlacedWire | None"]:
-    """Find an outboard label position for a cluster far-terminal label.
-
-    Tries the far_point itself first; if its bbox collides with already-
-    placed primitives, walks outboard via a 2.54 mm ladder until a
-    clear slot is found. Returns ``(label_position, optional_wire)`` —
-    the wire is None when the position is the far_point itself, else
-    a short PlacedWire from far_point to the chosen position so the
-    label remains electrically connected to the cap.
-
-    Outboard direction: away from the IC body, in the direction the
-    cap's far pin sticks out from the cluster. For LEFT-side pins
-    this is -X; RIGHT-side +X; TOP -Y; BOTTOM +Y.
-    """
-    from zynq_eda.core.layout._builder import _label_bbox
-    from zynq_eda.core.model.grid import snap_to_grid
-
-    # Always step at LEAST OUTBOARD_MIN_MM outboard of the far pin so
-    # the label sits in the OPEN routing channel beyond the cap stack,
-    # not on top of it. The far pin is one PASSIVE_PIN_HALF outboard
-    # of the cap body; +2.54 mm puts the label clear of the cap and
-    # gives edge-label wires room to route through the channel.
-    OUTBOARD_MIN_MM = 2.54
-    OFFSET_LADDER_MM = (
-        OUTBOARD_MIN_MM,
-        OUTBOARD_MIN_MM + 2.54,
-        OUTBOARD_MIN_MM + 5.08,
-        OUTBOARD_MIN_MM + 7.62,
-        OUTBOARD_MIN_MM + 10.16,
-    )
-
-    def _direction_unit() -> tuple[float, float]:
-        if pin_side == "left":
-            return (-1.0, 0.0)
-        if pin_side == "right":
-            return (1.0, 0.0)
-        if pin_side == "top":
-            return (0.0, -1.0)
-        return (0.0, 1.0)
-
-    ux, uy = _direction_unit()
-
-    for offset in OFFSET_LADDER_MM:
-        candidate = Point(
-            snap_to_grid(far_point.x + ux * offset),
-            snap_to_grid(far_point.y + uy * offset),
-        )
-        probe_label = PlacedLabel(
-            net_name=destination_net,
-            position=candidate,
-            rotation=label_rotation,
-        )
-        probe_box = _label_bbox(probe_label)
-        hits = builder.occupancy.collides(
-            probe_box,
-            ignore_owners=frozenset(),
-            ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
-            padding_mm=VISUAL_CLEARANCE_MM,
-        )
-        if not hits:
-            return candidate, PlacedWire(start=far_point, end=candidate)
-
-    # No clear slot in the ladder — fall back to the far point so the
-    # label is still electrically anchored. The validator may flag the
-    # resulting overlap, but the net wiring is correct.
-    return far_point, None
-
-
 _MAX_PASSIVE_SHIFT_STEPS = 30
 """Maximum lateral shift attempts before declaring a cluster unroutable.
 
@@ -663,26 +588,15 @@ def _attach_far_endpoint(
         }.get(pin_side, 0.0)
         existing_hier_names = {h.net_name for h in builder.hierarchical_labels}
         if destination_net not in existing_hier_names:
-            # Step 4: Place the label OUTBOARD of the cap stack instead
-            # of AT the far pin. The far-pin position sits right next
-            # to the cap body, in the open routing channel between IC
-            # and page edge — adjacent caps' labels stack at the same
-            # Y and edge-label wires get blocked by these labels'
-            # bboxes. Try a ladder of outboard offsets and pick the
-            # first slot where the label's bbox doesn't collide with
-            # already-placed primitives.
-            label_position, label_wire = _pick_outboard_label_position(
-                builder,
-                far_point=far_point,
-                destination_net=destination_net,
-                label_rotation=label_rotation,
-                pin_side=pin_side,
-            )
-            if label_wire is not None:
-                builder.add_wire(label_wire)
+            # Pass 3: local label sits AT the cap's far_point — the
+            # wire endpoint itself, no perpendicular stub. The label
+            # rotation makes the text extend OUTWARD (away from the
+            # IC body) along the pin axis. Adjacent caps' labels will
+            # not collide because each cap's far_point is on its own
+            # Y row (cluster shift enforces this).
             builder.add_label(PlacedLabel(
                 net_name=destination_net,
-                position=label_position,
+                position=far_point,
                 rotation=label_rotation,
             ))
         return
