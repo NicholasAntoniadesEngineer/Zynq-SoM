@@ -287,10 +287,30 @@ def route_orthogonal(
         clearance_mm=clearance_mm,
     )
     if result.gave_up:
-        import os as _os
-        if _os.environ.get("ZYNQ_EDA_ROUTER_DEBUG"):
-            print(f"[router] giveup {start} → {end}")
+        raise UnroutableError(start, end)
     return result.segments_as_list()
+
+
+class UnroutableError(RuntimeError):
+    """Raised by :func:`route_orthogonal` when no clean route exists.
+
+    The router enumerates a fixed ladder of route shapes (direct,
+    single-L, Z-bend across ±76 mm of detour offsets, S-bend); if every
+    candidate collides with the occupancy index, this error fires so
+    the placement engine never silently emits a colliding wire. The
+    fix is upstream — move a component, widen the cluster channel,
+    or change the wire's source/destination — never a fallback that
+    crosses something.
+    """
+
+    def __init__(self, start: Point, end: Point) -> None:
+        super().__init__(
+            f"No collision-free route from {start} to {end}. "
+            f"The placement engine must reposition or surface the "
+            f"impossibility — no fallback wire is emitted."
+        )
+        self.start = start
+        self.end = end
 
 
 def route_orthogonal_detail(
@@ -338,18 +358,11 @@ def route_orthogonal_detail(
         ):
             return RouteAttempt(segments=segments, gave_up=False, shape=shape)
 
-    # No clean route exists. The placement engine MUST treat
-    # ``gave_up=True`` as a hard error and either rearrange placement or
-    # surface the impossibility to the user. We return the best-effort
-    # single-L fallback so the net stays electrically connected (KiCad
-    # ERC would otherwise see a dangling pin), but the validator will
-    # flag the resulting overlap and the build will hard-fail. The
-    # downstream fix lives in the placement helper that's asking for
-    # an impossible route, not here.
-    fallback = _single_l(start, end, horizontal_first=False)
-    if not fallback:
-        fallback = _single_l(start, end, horizontal_first=True)
-    return RouteAttempt(segments=fallback, gave_up=True, shape="giveup")
+    # No clean route exists. Return EMPTY segments with gave_up=True so
+    # no colliding wire is ever emitted. Callers consume the detail
+    # struct directly (and must handle gave_up) or use the simpler
+    # ``route_orthogonal`` which raises :class:`UnroutableError`.
+    return RouteAttempt(segments=(), gave_up=True, shape="giveup")
 
 
 # ---- Route enumeration -----------------------------------------------------

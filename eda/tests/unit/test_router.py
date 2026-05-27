@@ -116,16 +116,34 @@ def test_double_l_when_both_single_l_blocked() -> None:
 
 
 def test_giveup_when_everything_blocks() -> None:
-    """Pathologically blocked path → router gives up and returns fallback."""
+    """Pathologically blocked path → router returns gave_up=True with EMPTY segments.
+
+    The router NEVER emits a colliding fallback wire — that's the
+    project's hard rule. Callers using :func:`route_orthogonal_detail`
+    must check ``gave_up`` and handle it; callers using the simpler
+    :func:`route_orthogonal` will see :class:`UnroutableError` raised.
+    """
     occupancy = Occupancy()
-    # Surround the whole path with obstacles.
     occupancy.add(_symbol_bbox(0.0, 0.0, 100.0, 100.0))
     result = route_orthogonal_detail(
         Point(10.16, 20.32), Point(50.8, 60.96), occupancy,
     )
     assert result.gave_up is True
     assert result.shape == "giveup"
-    assert len(result.segments) > 0
+    assert len(result.segments) == 0  # no fallback, no colliding wire
+
+
+def test_route_orthogonal_raises_unroutable_error() -> None:
+    """The simple wrapper raises UnroutableError when the router gives up."""
+    import pytest
+    from zynq_eda.core.route.router import UnroutableError, route_orthogonal
+
+    occupancy = Occupancy()
+    occupancy.add(_symbol_bbox(0.0, 0.0, 100.0, 100.0))
+    with pytest.raises(UnroutableError):
+        route_orthogonal(
+            Point(10.16, 20.32), Point(50.8, 60.96), occupancy,
+        )
 
 
 # ---- ignore_owners / ignore_kinds ----------------------------------------
