@@ -341,7 +341,12 @@ def _emit_edge_label_pin(
     net = declared_nets[net_name]
     label_x = label_x_left if net.edge == SheetEdge.LEFT else label_x_right
 
-    avoid: set[str] = {f"symbol:{ic.reference}"}
+    # Exempt ONLY the source pin's intrinsic text bboxes — NOT the IC
+    # body. Exempting the body would let the router route the wire
+    # straight through the IC body's interior (USBLC6 I/O2 → LEFT-edge
+    # USB_DM label crosses U2 body). The router must dogleg AROUND
+    # the body via Z-bend offsets.
+    avoid: set[str] = set()
     if pin_number:
         avoid |= set(pin_intrinsic_owner_ids(ic.reference, (pin_number,)))
 
