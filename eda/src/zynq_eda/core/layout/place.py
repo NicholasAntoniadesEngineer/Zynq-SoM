@@ -322,14 +322,17 @@ def _emit_edge_label_pin(
     label_x_left: float,
     label_x_right: float,
     geometry_cache: SymbolGeometryCache,
-) -> None:
+    reserved_label_ys: set[float],
+) -> float:
     """Route the pin → hier-label at the appropriate sheet edge.
 
-    Builds a Y-candidate ladder (pin's own Y first, then ±2.54 mm steps
-    out to ±15 grid steps), asks ``_first_clean_route`` for the first
-    candidate whose route is clean, and emits the hier-label at the
-    chosen endpoint. Hard-fails with a diagnostic when no candidate
-    routes cleanly.
+    Builds a Y-candidate ladder PRE-FILTERED to skip Ys already reserved
+    by sibling EDGE_LABEL pins on the same IC (set-membership, NOT an
+    in-loop skip). The first non-gave-up route from `_first_clean_route`
+    wins. Hard-fails with a diagnostic when no candidate routes cleanly.
+
+    Returns the Y of the picked endpoint so the dispatcher can update
+    ``reserved_label_ys`` for the next pin's allocation.
     """
     from zynq_eda.core.layout._builder import pin_intrinsic_owner_ids
     from zynq_eda.core.model.sheet import PlacedHierarchicalLabel
@@ -345,10 +348,16 @@ def _emit_edge_label_pin(
     pin_y = snap_to_grid(pin_geom.connection.y)
     Y_LADDER_STEPS = 15
     Y_STEP_MM = 2.54
-    candidates = [Point(label_x, pin_y)] + [
-        Point(label_x, snap_to_grid(pin_y + sign * step * Y_STEP_MM))
+    raw_candidates = [pin_y] + [
+        snap_to_grid(pin_y + sign * step * Y_STEP_MM)
         for step in range(1, Y_LADDER_STEPS + 1)
         for sign in (1, -1)
+    ]
+    # PRE-FILTER (not in-loop skip): drop Ys already reserved by other
+    # EDGE_LABEL pins on this IC. Two pins at the same Y would land
+    # hier-labels on top of each other; the partition happens upfront.
+    candidates = [
+        Point(label_x, y) for y in raw_candidates if y not in reserved_label_ys
     ]
 
     picked = _first_clean_route(
@@ -362,7 +371,8 @@ def _emit_edge_label_pin(
         raise RuntimeError(
             f"_emit_edge_label_pin: no clean route for IC {ic.reference!r} "
             f"pin #{pin_number} (net {net_name!r}) from "
-            f"{pin_geom.connection} to any Y candidate at X={label_x}. "
+            f"{pin_geom.connection} to any unreserved Y at X={label_x}. "
+            f"reserved_label_ys={sorted(reserved_label_ys)}. "
             f"forbidden_traversal_points={sorted(forbidden_traversal_points)}. "
             f"Upstream: move the IC anchor, widen the cluster channel, "
             f"or drop the override."
@@ -377,6 +387,7 @@ def _emit_edge_label_pin(
         direction=net.direction,
         rotation=rotation,
     ))
+    return end_point.y
 
 
 def _emit_power_symbol_pin(
@@ -538,17 +549,25 @@ def _emit_ic_pin_connections(
             builder, ic=ic, pin_geom=geom, pin_number=num,
             geometry_cache=geometry_cache,
         )
+    # EDGE_LABEL pins on the same IC must each land at a DIFFERENT Y at
+    # the sheet edge — otherwise their hier-labels stack at the same
+    # anchor (USBLC6 I/O1+I/O2 share Y=147.32). ``reserved_label_ys``
+    # is a growing set; the emitter pre-filters its Y candidate ladder
+    # against it BEFORE picking a route. No in-loop skip.
+    reserved_label_ys: set[float] = set()
     for (_n, num, geom, net) in buckets["EDGE_LABEL"]:
         forbidden = all_pin_positions - {
             (round(geom.connection.x, 3), round(geom.connection.y, 3))
         }
-        _emit_edge_label_pin(
+        picked_y = _emit_edge_label_pin(
             builder, ic=ic, pin_geom=geom, pin_number=num, net_name=net,
             declared_nets=declared_nets,
             forbidden_traversal_points=forbidden,
             label_x_left=label_x_left, label_x_right=label_x_right,
             geometry_cache=geometry_cache,
+            reserved_label_ys=reserved_label_ys,
         )
+        reserved_label_ys.add(picked_y)
     for (_n, num, geom, net) in buckets["POWER_SYMBOL"]:
         _emit_power_symbol_pin(
             builder, ic=ic, pin_geom=geom, pin_number=num, net_name=net,
