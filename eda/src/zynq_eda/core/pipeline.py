@@ -130,8 +130,11 @@ def run_carrier(
         print(f"  block {block.name!r} ({block.title}):")
         sheet = place_block(block, geometry_cache=geometry_cache)
 
-        # In-memory validators run before emission so a broken sheet doesn't
-        # overwrite a known-good file.
+        # Fail-fast: validate IMMEDIATELY after placement. If the sheet
+        # violates any rule, halt before writing a broken .kicad_sch
+        # to disk. Per the project's zero-overlap rule, any error here
+        # means upstream placement needs to change — no warning, no
+        # silent acceptance.
         bounds_results = validate_page_bounds(sheet, geometry=geometry_cache)
         overlap_results = validate_overlap(sheet, geometry=geometry_cache, strict=True)
         block_validation.extend(bounds_results)
@@ -148,6 +151,22 @@ def run_carrier(
             print(f"      BOUNDS: {r.message}")
         for r in overlap_results:
             print(f"      OVERLAP: {r.message}")
+        if bounds_results or overlap_results:
+            # Persist whatever validation has accumulated so the user
+            # can see the report, then halt the entire build.
+            validation_path = resolved_output_dir / "validation_report.md"
+            block_validation.write_markdown(
+                validation_path, title="Carrier — Validation Report (PARTIAL)"
+            )
+            print()
+            print(
+                f"BUILD HALTED: block {block.name!r} produced "
+                f"{len(bounds_results) + len(overlap_results)} validation "
+                f"errors. No .kicad_sch emitted for this block or any "
+                f"subsequent block. See "
+                f"{validation_path.relative_to(REPO_ROOT)}."
+            )
+            return 1
 
         sheet_path = sheets_dir / f"{block.name}.kicad_sch"
         sheet_uuid = str(uuid.uuid4())

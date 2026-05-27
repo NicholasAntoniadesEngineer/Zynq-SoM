@@ -990,14 +990,28 @@ def place_one_passive_for_pin(
             )
         avoid_owners = frozenset(avoid_owners_set)
 
-        from zynq_eda.core.route.router import route_orthogonal
-        segments = route_orthogonal(
+        # Use route_orthogonal_detail so we don't crash on giveup — the
+        # strict probe in _shift_passive_until_clear is supposed to have
+        # found a routable slot, but its check happens BEFORE the cap
+        # body is added to occupancy. If the actual route now collides
+        # (e.g. a same-pin slot 1 cap is in the way), surface a clear
+        # PassivePlacementError instead of UnroutableError so the user
+        # sees the upstream cause. Pass 5 will tighten this further.
+        from zynq_eda.core.route.router import route_orthogonal_detail
+        attempt = route_orthogonal_detail(
             pin_connection,
             near_point,
             builder.occupancy,
             avoid_owners=avoid_owners,
         )
-        for seg in segments:
+        if attempt.gave_up:
+            raise PassivePlacementError(
+                f"Router gave up routing IC pin {pin_connection} → "
+                f"cap near-pin {near_point} (passive {passive_ref!r}, "
+                f"lib_id {passive_lib!r}). The cap's accepted slot has "
+                f"no clean wire route to the source pin."
+            )
+        for seg in attempt.segments:
             builder.add_wire(seg)
 
     _attach_far_endpoint(
