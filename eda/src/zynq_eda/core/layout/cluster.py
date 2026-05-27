@@ -665,6 +665,8 @@ def place_one_passive_for_pin(
     pin_side_index: int = 0,
     total_slots_on_pin: int = 1,
     pin_lane_offset_mm: float | None = None,
+    consolidate_far_with_slot_0: bool = False,
+    far_trunk_extent_x: float | None = None,
 ) -> None:
     """Place a single passive next to an IC pin and wire it up.
 
@@ -968,6 +970,31 @@ def place_one_passive_for_pin(
             for seg in attempt.segments:
                 builder.add_wire(seg)
 
+    # Far-side consolidation (LEFT/RIGHT): when every slot on this pin
+    # routes to the same destination net, slot 0 emits a SHARED
+    # horizontal trunk at the cap-band's far Y connecting all the
+    # caps' far pins, plus ONE power symbol attached to slot 0's far.
+    # Slots K > 0 skip emitting their own power symbol because KiCad
+    # auto-injects a junction at each cap's far pin where it lands on
+    # the shared trunk (pin tip on wire interior = junction).
+    if consolidate_far_with_slot_0 and slot_index > 0 and side in ("left", "right"):
+        # Slots K > 0 in the consolidated group: do not emit far wire
+        # or power symbol — slot 0 already covered this dest net.
+        return
+
+    if (
+        side in ("left", "right")
+        and slot_index == 0
+        and far_trunk_extent_x is not None
+        and far_trunk_extent_x != far_point.x
+    ):
+        # Slot 0 emits the far-side horizontal trunk that all
+        # consolidated slots' far pins land on.
+        builder.add_wire(PlacedWire(
+            start=far_point,
+            end=Point(snap_to_grid(far_trunk_extent_x), far_point.y),
+        ))
+
     _attach_far_endpoint(
         builder,
         far_point=far_point,
@@ -1160,12 +1187,43 @@ def cluster_ic_externals(
         )
         side_count = side_pin_counts.get(this_pin_side, 1)
 
-        for slot_index, external in enumerate(externals):
-            resolved_destination = resolve_destination_net(
-                raw_destination=external.to_net,
-                ic=ic,
-                overrides_for_pin=overrides_for_pin,
+        # Pre-resolve every slot's destination net so we can detect whether
+        # ALL slots on this pin share a single destination. When they do,
+        # the LEFT/RIGHT new layout consolidates the far-side endpoints
+        # into one shared trunk + one power symbol (avoids duplicate
+        # power symbols emitting overlapping Value-text at adjacent X
+        # columns).
+        slot_destinations: list[str] = []
+        for ext in externals:
+            slot_destinations.append(
+                resolve_destination_net(
+                    raw_destination=ext.to_net,
+                    ic=ic,
+                    overrides_for_pin=overrides_for_pin,
+                )
             )
+        all_same_dest = (
+            this_pin_side in ("left", "right")
+            and len(slot_destinations) > 1
+            and len(set(slot_destinations)) == 1
+        )
+        # When consolidating, the far-side trunk extends from slot 0's
+        # far.x to the FURTHEST slot's far.x at far.y. The furthest
+        # slot's X is computed the same way slot 0's trunk_far_x is
+        # computed in place_one_passive_for_pin.
+        far_trunk_extent_x: float | None = None
+        if all_same_dest:
+            outward_sign_lr = -1 if this_pin_side == "left" else 1
+            furthest_lateral = (
+                (pin_lane_offset_map.get(pin_name) or PASSIVE_OFFSET_MM)
+                + (len(externals) - 1) * PASSIVE_PITCH_MM
+            )
+            far_trunk_extent_x = snap_to_grid(
+                pin_geom.connection.x + outward_sign_lr * furthest_lateral
+            )
+
+        for slot_index, external in enumerate(externals):
+            resolved_destination = slot_destinations[slot_index]
             destination_via_connector_pin = resolved_destination in {
                 net for _pin, net in pin_to_net
             } and resolved_destination != external.to_net
@@ -1185,5 +1243,9 @@ def cluster_ic_externals(
                 pin_side_index=pin_side_index_map.get(pin_name, 0),
                 total_slots_on_pin=slot_count_by_pin.get(pin_name, 1),
                 pin_lane_offset_mm=pin_lane_offset_map.get(pin_name),
+                consolidate_far_with_slot_0=all_same_dest,
+                far_trunk_extent_x=far_trunk_extent_x if (
+                    all_same_dest and slot_index == 0
+                ) else None,
             )
     return pin_geom_map
