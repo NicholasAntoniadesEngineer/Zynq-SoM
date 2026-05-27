@@ -170,13 +170,47 @@ class BlockLayoutBuilder:
     def add_wire(self, wire: PlacedWire) -> None:
         """Append a wire segment AND register its bbox in occupancy.
 
-        The owner id is derived from the wire's index so callers can
-        later exclude it from collision checks via ignore_owners.
+        Pass 7 of the overlap-free plan: rejects duplicate wires (same
+        endpoints in either order). A duplicate emission ALWAYS
+        indicates a bug in the contributing code path — two helpers
+        are routing the same connection — and the user has ruled this
+        a hard error. Silently dropping the duplicate would mask the
+        bug; raising surfaces it.
+
+        Zero-length wires (start == end) are silently dropped as a
+        no-op (the router can produce these for degenerate routes).
+
         When ``ZYNQ_EDA_WIRE_DEBUG`` is set, every wire that would
         cross an existing wire (perpendicular intersection, not at a
         shared endpoint) is logged so the offending caller can be
         identified.
         """
+        if (
+            abs(wire.start.x - wire.end.x) < 1e-6
+            and abs(wire.start.y - wire.end.y) < 1e-6
+        ):
+            # Zero-length wire — no-op.
+            return
+        for existing in self.wires:
+            same_dir = (
+                abs(existing.start.x - wire.start.x) < 1e-6
+                and abs(existing.start.y - wire.start.y) < 1e-6
+                and abs(existing.end.x - wire.end.x) < 1e-6
+                and abs(existing.end.y - wire.end.y) < 1e-6
+            )
+            reversed_dir = (
+                abs(existing.start.x - wire.end.x) < 1e-6
+                and abs(existing.start.y - wire.end.y) < 1e-6
+                and abs(existing.end.x - wire.start.x) < 1e-6
+                and abs(existing.end.y - wire.start.y) < 1e-6
+            )
+            if same_dir or reversed_dir:
+                raise RuntimeError(
+                    f"add_wire: duplicate wire {wire.start} → {wire.end} — "
+                    f"two code paths are routing the same connection. "
+                    f"Fix the upstream emitter. Existing wire at index "
+                    f"{self.wires.index(existing)}."
+                )
         import os as _os
         if _os.environ.get("ZYNQ_EDA_WIRE_DEBUG"):
             from traceback import extract_stack
