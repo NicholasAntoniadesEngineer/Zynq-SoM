@@ -607,21 +607,23 @@ def _attach_far_endpoint(
         )
 
     is_ground = "GND" in destination_net.upper() or destination_net.upper() == "CHASSIS_GND"
-    # Route via the occupancy-aware router instead of emitting a direct
-    # wire — when another cluster passive (e.g. a same-net series
-    # resistor) sits on the straight line between far_point and the
-    # power symbol, the direct wire passes THROUGH its body. The
-    # router detours around it via an L- or Z-bend.
-    from zynq_eda.core.route.router import route_orthogonal
-    if is_ground:
-        far_to_power_segments = route_orthogonal(
-            far_point, symbol_position, builder.occupancy,
+    # Route cap.far → power-symbol via the router (detail mode so we
+    # can surface the failure cleanly). On giveup, raise — the
+    # placement engine's strict probe should have already accepted
+    # only positions where this route is clean.
+    from zynq_eda.core.route.router import route_orthogonal_detail
+    src, dst = (far_point, symbol_position) if is_ground else (symbol_position, far_point)
+    far_to_power = route_orthogonal_detail(
+        src, dst, builder.occupancy,
+    )
+    if far_to_power.gave_up:
+        raise PassivePlacementError(
+            f"_attach_far_endpoint: router gave up routing cap.far "
+            f"{far_point} → power symbol {symbol_position} for net "
+            f"{destination_net!r}. The strict probe should have "
+            f"caught this — placement bug."
         )
-    else:
-        far_to_power_segments = route_orthogonal(
-            symbol_position, far_point, builder.occupancy,
-        )
-    for seg in far_to_power_segments:
+    for seg in far_to_power.segments:
         builder.add_wire(seg)
 
     # Rotate the power symbol so its visible body extends AWAY from the
@@ -724,10 +726,17 @@ def place_one_passive_for_pin(
         parity = int(pin_connection.x / KICAD_PIN_PITCH + 0.5) & 1
     pin_stagger = parity * PASSIVE_ADJACENT_PIN_STAGGER_MM
 
-    # NOTE: cluster cap positions stay at their natural pin-aligned
-    # column. WIRES fan out — not the caps. Each wire takes its own
-    # routing channel via the router's wire-as-obstacle rule.
-    pin_fanout_scale = 0.0
+    # Pass 4 — stair-step fanout. Each pin gets its OWN outboard column
+    # so caps for adjacent pins live in distinct lanes. Wires from each
+    # pin to its cap (and from cap.far to power-symbol) then don't
+    # share an X column with another pin's cap body, which is what was
+    # causing wire×cap-body crossings before. The PER_PIN_UNIT_MM
+    # (10.16 mm = 4 KiCad grid) is sized so adjacent pins' bodies have
+    # the 2 mm visual clearance AND the wire from a further-out pin
+    # can detour over/under the previous pin's body via the router's
+    # Z-bend ladder.
+    PER_PIN_UNIT_MM = 10.16
+    pin_fanout_scale = pin_side_index * PER_PIN_UNIT_MM
 
     # Choose passive_anchor + rotation per side so the NEAR pin (toward the
     # IC) lands one PASSIVE_PIN_HALF from passive_anchor in the right
