@@ -350,38 +350,20 @@ def _shift_passive_until_clear(
                 continue
         return candidate_anchor, candidate_near, candidate_far
 
-    # If we got here, the strict probe rejected EVERY candidate. Fall
-    # back to body-clean check only — accept the first position whose
-    # body and property text are clear. The validator will surface any
-    # resulting wire crossing as a hard error; the build still fails,
-    # but at a single specific overlap rather than a placement crash
-    # so the user can investigate the exact constraint that broke.
-    for dx, dy in _fanout_offsets(side):
-        candidate_anchor = Point(
-            snap_to_grid(passive_anchor.x + dx),
-            snap_to_grid(passive_anchor.y + dy),
-        )
-        candidate_near = Point(
-            snap_to_grid(near_point.x + dx),
-            snap_to_grid(near_point.y + dy),
-        )
-        candidate_far = Point(
-            snap_to_grid(far_point.x + dx),
-            snap_to_grid(far_point.y + dy),
-        )
-        if not _candidate_passive_collides(
-            anchor=candidate_anchor,
-            rotation=passive_rotation,
-            lib_id=passive_lib_id,
-            occupancy=builder.occupancy,
-            geometry_cache=geometry_cache,
-        ):
-            return candidate_anchor, candidate_near, candidate_far
-
+    # Pass 5 of the overlap-free plan: NO body-only fallback. The
+    # strict probe (body + property text + pin→near route + far→
+    # power-symbol route) is the SOLE acceptance criterion. When it
+    # rejects every candidate, hard-fail with a diagnostic. The fix
+    # is upstream — widen PER_PIN_UNIT_MM (Pass 4) or move the IC
+    # anchor so the cluster has more room.
     raise PassivePlacementError(
         f"No collision-free slot found for passive {passive_lib_id!r} on "
-        f"side {side!r} after exhausting fanout candidates starting from "
-        f"{passive_anchor}"
+        f"side {side!r} after exhausting the fanout ladder starting from "
+        f"{passive_anchor}. The strict probe rejected every candidate — "
+        f"either the cap body collided with an existing primitive, or the "
+        f"pin → cap.near / cap.far → power-symbol wire route was blocked. "
+        f"Upstream fix: widen the cluster channel (Pass 4 stair-step "
+        f"fanout) or relocate the IC anchor."
     )
 
 
