@@ -259,6 +259,7 @@ def _attach_ic_signal_overrides(
     geometry_cache: SymbolGeometryCache,
     placed_passive_pin_names: set[str],
     edge_labeled_pin_names: set[str],
+    cluster_pin_geoms: dict | None = None,
 ) -> None:
     """Attach a label (or power symbol) to every IC pin in ``pin_net_overrides``.
 
@@ -296,36 +297,14 @@ def _attach_ic_signal_overrides(
     if getattr(ic, "power_output_net", "") and "OUT" not in overrides:
         overrides["OUT"] = ic.power_output_net
 
-    # Pins claimed by edge-label handler (hierarchical label at sheet
-    # edge) or by passive clustering — skip those here. BUT: pins whose
-    # cluster only attached bypass caps to GND (not to the pin's own
-    # net) still need their net named on the IC side. Concretely, the
-    # TPS2051 OUT pin has C(out)→GND caps. The cluster wires put the
-    # OUT pin on a wire alongside the cap's near-pin, but neither end
-    # carries a "VBUS_OTG" label — so the OUT node ends up unnamed and
-    # ERC sees no driver for the connector's VBUS pins. We override the
-    # skip for OUT/IN pins whose target net (power_input_net /
-    # power_output_net) is a non-power-symbol local net, since power-
-    # symbol nets (+VIN, +3V3, GND, ...) are already named by their
-    # power-symbol child node, but a plain local net like VBUS_OTG is
-    # not. See edge_labels._per_ic_pin_labels for the external-net case
-    # (which IS named via hier-label + wire).
+    # Pins claimed by edge-label handler (hier-label at sheet edge) or
+    # by passive clustering — skip those here. The cluster's near-side
+    # label-at-trunk-end emission (cluster_ic_externals) now names
+    # every clustered IC pin whose source net is a non-power named net,
+    # so signal_overrides only needs to handle pins WITHOUT any cluster
+    # cap. Single-handler-per-pin invariant: no two passes can both
+    # emit a wire / label for the same physical pin.
     skip = {"GND", "VSS"} | set(placed_passive_pin_names) | set(edge_labeled_pin_names)
-    # Re-include OUT/IN pins when their target net is an internal local
-    # rail that hasn't already been named anywhere (no power symbol, no
-    # edge hier-label). Without this, the only label-carrying nodes for
-    # that net are downstream consumers (connector pin_to_net labels),
-    # and the IC driver pin sits on an unnamed island.
-    for pin_role in ("IN", "OUT"):
-        net_target = overrides.get(pin_role)
-        if not net_target:
-            continue
-        if net_target in POWER_SYMBOL_LIB_IDS:
-            continue
-        if pin_role in edge_labeled_pin_names:
-            # already wired to an edge hier-label by the external-net pass
-            continue
-        skip.discard(pin_role)
 
     # Stub length MUST be ONE pin pitch (2.54 mm), not two. A 5.08 mm stub
     # routed perpendicular to a dense pin row spans two adjacent pin Y
@@ -610,12 +589,25 @@ def place_block(
         geometry_cache=geometry_cache,
     )
 
-    # Per-IC signal-override stubs + no-connect markers run AFTER edge-label
-    # placement so they can skip pins the edge labeler already wired up.
+    # Per-IC signal-override stubs + no-connect markers. The "expected
+    # edge-labeled" set is computed UPFRONT from declared external nets
+    # — every pin whose override net is in ``block.external_nets``
+    # belongs to the edge-label handler EXCLUSIVELY. signal_overrides
+    # skips those whether or not edge_labels actually succeeded in
+    # routing them; the alternative is double-handling and conflicting
+    # wires/labels. Single-handler-per-pin invariant.
+    declared_net_names = {net.name for net in block.external_nets}
     for ic in block.ics:
         edge_labeled_pin_names = {
             pin_name for (ic_ref, pin_name) in edge_labeled if ic_ref == ic.reference
         }
+        # Add pins whose override-net is declared external — those are
+        # the edge-label handler's territory even if its routing failed
+        # for this run.
+        ic_overrides = dict(ic.refcircuit.pin_net_overrides) | dict(getattr(ic, "net_overrides", ()) or ())
+        for pin_name, net_name in ic_overrides.items():
+            if net_name in declared_net_names:
+                edge_labeled_pin_names.add(pin_name)
         _attach_ic_signal_overrides(
             builder,
             ic=ic,

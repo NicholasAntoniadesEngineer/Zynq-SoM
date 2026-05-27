@@ -120,6 +120,7 @@ def route_shared_trunk(
     avoid_owners: frozenset[str] = frozenset(),
     avoid_kinds: frozenset[BBoxKind] = DEFAULT_AVOID_KINDS,
     clearance_mm: float = 0.5,
+    forbidden_traversal_points: frozenset[tuple[float, float]] = frozenset(),
 ) -> SharedTrunkRoute:
     """Route a collinear multi-pin group as trunk + stubs.
 
@@ -159,6 +160,14 @@ def route_shared_trunk(
     if axis == "y":
         pin_row = pin_positions[0].y
         sign = -1 if body_inside_direction == "down" else +1
+        # Build a set of Y values that the trunk must NOT land on —
+        # these are the Y coordinates of OTHER override pins on the
+        # same IC (passed in via forbidden_traversal_points). The
+        # trunk at a forbidden Y would touch a pin tip on a different
+        # net and mix the source's net into that pin.
+        forbidden_ys = frozenset(
+            round(fp[1], 3) for fp in forbidden_traversal_points
+        )
         trunk_y = _find_clear_trunk_coord(
             pin_row=pin_row,
             pin_xs=tuple(p.x for p in pin_positions),
@@ -169,6 +178,7 @@ def route_shared_trunk(
             avoid_owners=avoid_owners,
             avoid_kinds=avoid_kinds,
             clearance_mm=clearance_mm,
+            forbidden_coords=forbidden_ys,
         )
         if trunk_y is None:
             return SharedTrunkRoute(
@@ -194,6 +204,9 @@ def route_shared_trunk(
     # axis == "x"
     pin_col = pin_positions[0].x
     sign = -1 if body_inside_direction == "right" else +1
+    forbidden_xs = frozenset(
+        round(fp[0], 3) for fp in forbidden_traversal_points
+    )
     trunk_x = _find_clear_trunk_coord(
         pin_row=pin_col,
         pin_xs=tuple(p.y for p in pin_positions),
@@ -204,6 +217,7 @@ def route_shared_trunk(
         avoid_owners=avoid_owners,
         avoid_kinds=avoid_kinds,
         clearance_mm=clearance_mm,
+        forbidden_coords=forbidden_xs,
     )
     if trunk_x is None:
         return SharedTrunkRoute(
@@ -238,6 +252,7 @@ def _find_clear_trunk_coord(
     avoid_owners: frozenset[str],
     avoid_kinds: frozenset[BBoxKind],
     clearance_mm: float,
+    forbidden_coords: frozenset[float] = frozenset(),
 ) -> float | None:
     """Try offsets from pin_row in the given sign direction; return the
     first one where:
@@ -259,6 +274,13 @@ def _find_clear_trunk_coord(
 
     for offset in TRUNK_OFFSET_LADDER_MM:
         candidate = snap_to_grid(pin_row + sign * offset)
+
+        # Reject candidates that land on a FORBIDDEN coordinate (e.g.,
+        # another override pin's Y row when the trunk is horizontal).
+        # A trunk wire at that coordinate would touch the foreign pin
+        # and mix the source net into the wrong net.
+        if any(abs(candidate - fc) < 0.05 for fc in forbidden_coords):
+            continue
 
         # Check trunk segment is clear
         if horizontal_trunk:

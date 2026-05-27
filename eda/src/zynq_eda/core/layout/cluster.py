@@ -907,15 +907,13 @@ def place_one_passive_for_pin(
 
     if side in ("left", "right"):
         outward_sign_lr = -1 if side == "left" else 1
-        # Slot 0 emits the trunk wire (horizontal at pin.y) extending
-        # from the pin out to the furthest slot's X column. The wires
-        # are emitted DIRECTLY (no router) because their topology is
-        # fixed by construction — running them through the router
-        # would have the wire-as-obstacle rule reject the legitimate
-        # trunk-drop intersections. Junctions are added at every
-        # interior trunk-drop intersection to honour KiCad's net merge
-        # convention; the validator allows perpendicular crossings at
-        # junction points (see ``overlap.wire_cross``).
+        # Slot 0 emits the trunk wire from pin → furthest slot's X
+        # at pin.y. Trunk + every slot's drop go through the router so
+        # the wire-as-obstacle rule rejects ANY route that would cross
+        # an existing wire (no implicit pass-throughs). The router's
+        # T-junction exemption allows the drop's endpoint to land on
+        # the trunk's interior (legitimate connection); a perpendicular
+        # CROSSING of a different wire is rejected and the route fails.
         if slot_index == 0:
             if total_slots_on_pin == 1:
                 trunk_far_x = near_point.x
@@ -929,24 +927,51 @@ def place_one_passive_for_pin(
                 )
             trunk_end = Point(trunk_far_x, pin_connection.y)
             if pin_connection != trunk_end:
-                builder.add_wire(PlacedWire(
-                    start=pin_connection,
-                    end=trunk_end,
-                ))
+                trunk_attempt = route_orthogonal_detail(
+                    pin_connection,
+                    trunk_end,
+                    builder.occupancy,
+                    avoid_owners=avoid_owners,
+                )
+                if trunk_attempt.gave_up:
+                    raise PassivePlacementError(
+                        f"Router gave up routing IC pin "
+                        f"{pin_connection} → trunk end {trunk_end} "
+                        f"for cluster on pin "
+                        f"({total_slots_on_pin} slots, "
+                        f"ref {passive_ref!r}). Every candidate route "
+                        f"crossed an existing wire. Upstream: widen "
+                        f"the cluster channel or relocate the IC anchor."
+                    )
+                for seg in trunk_attempt.segments:
+                    builder.add_wire(seg)
 
         # Every slot emits its own vertical DROP from (slot.x, pin.y) to
-        # cap.near.
+        # cap.near. The drop's TOP coincides with the trunk's interior
+        # (slot 0..N-2) or endpoint (slot N-1); the router's T-junction
+        # exemption recognises this as a legitimate connection.
         drop_top = Point(near_point.x, pin_connection.y)
         if drop_top != near_point:
-            builder.add_wire(PlacedWire(
-                start=drop_top,
-                end=near_point,
-            ))
+            drop_attempt = route_orthogonal_detail(
+                drop_top,
+                near_point,
+                builder.occupancy,
+                avoid_owners=avoid_owners,
+            )
+            if drop_attempt.gave_up:
+                raise PassivePlacementError(
+                    f"Router gave up routing trunk-drop "
+                    f"{drop_top} → cap.near {near_point} "
+                    f"(passive {passive_ref!r}, slot {slot_index} of "
+                    f"{total_slots_on_pin}). Every candidate crossed."
+                )
+            for seg in drop_attempt.segments:
+                builder.add_wire(seg)
 
-        # Junction at the trunk-drop intersection for every slot whose
-        # drop lands on the trunk's INTERIOR (not at the trunk endpoint).
-        # The last slot's drop coincides with the trunk endpoint — an
-        # L-corner, no junction needed.
+        # Explicit junction at the trunk-drop interior intersection
+        # (slot 0..N-2). The validator's wire_cross rule exempts
+        # perpendicular crossings at junction points; without the
+        # junction the trunk + drop intersection would be flagged.
         if total_slots_on_pin > 1 and slot_index < total_slots_on_pin - 1:
             builder.junctions.append(
                 PlacedJunction(position=Point(near_point.x, pin_connection.y))
@@ -989,11 +1014,25 @@ def place_one_passive_for_pin(
         and far_trunk_extent_x != far_point.x
     ):
         # Slot 0 emits the far-side horizontal trunk that all
-        # consolidated slots' far pins land on.
-        builder.add_wire(PlacedWire(
-            start=far_point,
-            end=Point(snap_to_grid(far_trunk_extent_x), far_point.y),
-        ))
+        # consolidated slots' far pins land on. Route through the
+        # router so the wire-as-obstacle rule rejects any route that
+        # would cross unrelated wires.
+        far_trunk_end = Point(snap_to_grid(far_trunk_extent_x), far_point.y)
+        far_trunk_attempt = route_orthogonal_detail(
+            far_point,
+            far_trunk_end,
+            builder.occupancy,
+            avoid_owners=avoid_owners,
+        )
+        if far_trunk_attempt.gave_up:
+            raise PassivePlacementError(
+                f"Router gave up routing far-side trunk "
+                f"{far_point} → {far_trunk_end} for consolidated "
+                f"power-symbol cluster ({total_slots_on_pin} slots, "
+                f"ref {passive_ref!r}). Every candidate crossed."
+            )
+        for seg in far_trunk_attempt.segments:
+            builder.add_wire(seg)
 
     _attach_far_endpoint(
         builder,
@@ -1321,4 +1360,41 @@ def cluster_ic_externals(
             # Clean up placeholders so they don't interfere with later
             # pins' clusters.
             builder.occupancy.remove_by_owner(placeholder_prefix)
+
+        # After all slots placed: if THIS pin's source net is a named
+        # (non-power) net, emit a near-side LABEL at the cluster
+        # trunk's outward endpoint so the pin is identified by name
+        # ONCE — without this, the IC pin would sit on an unnamed wire
+        # and downstream consumers (connector pins on the same net,
+        # ERC) would see disconnected islands. This consolidates ALL
+        # IC-pin labeling into the cluster pass; ``_attach_ic_signal_overrides``
+        # then only handles pins WITHOUT a cluster cap.
+        source_pin_net = overrides_for_pin.get(pin_name, "")
+        if (
+            source_pin_net
+            and source_pin_net not in POWER_SYMBOL_LIB_IDS
+            and source_pin_net != "GND"
+            and this_pin_side in ("left", "right")
+        ):
+            _trunk_end = pin_geom_map[pin_name].cluster_trunk_end
+            if _trunk_end is not None:
+                # Skip if a same-name label already sits at this exact
+                # anchor (a connector-side cluster on the same trunk
+                # may have emitted it already).
+                _label_key = (
+                    source_pin_net,
+                    round(_trunk_end.x, 3),
+                    round(_trunk_end.y, 3),
+                )
+                _existing = {
+                    (l.net_name, round(l.position.x, 3), round(l.position.y, 3))
+                    for l in builder.labels
+                }
+                if _label_key not in _existing:
+                    label_rotation = 180.0 if this_pin_side == "left" else 0.0
+                    builder.add_label(PlacedLabel(
+                        net_name=source_pin_net,
+                        position=_trunk_end,
+                        rotation=label_rotation,
+                    ))
     return pin_geom_map

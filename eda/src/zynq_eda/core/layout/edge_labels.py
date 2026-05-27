@@ -259,6 +259,15 @@ def _per_ic_pin_labels(
         # with one hier label + per-pin stubs. This eliminates the
         # cluster of parallel same-Y wires that otherwise crosses every
         # pin's intrinsic pin-name text bbox.
+        #
+        # Compute forbidden coordinates: every OTHER override pin on
+        # this IC. The shared trunk must NOT land on these — otherwise
+        # the trunk wire would touch a foreign pin tip and mix this
+        # net into the wrong net.
+        all_resolved_pin_positions = {
+            (round(conn.x, 3), round(conn.y, 3))
+            for _r, _n, conn, _pr, _sr, _pn in resolved
+        }
         handled_pins: set[str] = set()
         by_net: dict[str, list[tuple[str, Point, float, float, str]]] = {}
         for pin_role, net_name, conn, pin_rot, sym_rot, pin_number in resolved:
@@ -313,12 +322,23 @@ def _per_ic_pin_labels(
             avoid_owners_set |= set(
                 pin_intrinsic_owner_ids(ic.reference, source_pin_numbers)
             )
+            # Forbid the trunk from landing on ANY other override pin's
+            # row/column on this IC. Mixing nets at a foreign pin tip
+            # would silently connect this net to the wrong pin.
+            group_pin_keys = {
+                (round(c.x, 3), round(c.y, 3)) for c in pin_positions
+            }
+            forbidden_pts = frozenset(
+                pt for pt in all_resolved_pin_positions
+                if pt not in group_pin_keys
+            )
             route = route_shared_trunk(
                 pin_positions=pin_positions,
                 label_position=label_position,
                 occupancy=builder.occupancy,
                 body_inside_direction=body_inside,
                 avoid_owners=frozenset(avoid_owners_set),
+                forbidden_traversal_points=forbidden_pts,
             )
             if route.gave_up:
                 continue
