@@ -2771,6 +2771,32 @@ def _emit_cluster_pins(
                         )
                         if not hits:
                             _plan_register_symbol(plan, pwr_sym_dup, geometry)
+                elif not emitted and not slot0_is_power:
+                    # Fallback for LOCAL-LABEL destinations on sub-slots:
+                    # emit a duplicate label at this slot's cap.far ONLY
+                    # if it doesn't overlap any existing primitive
+                    # (including OTHER same-net labels — the strict
+                    # overlap mandate doesn't admit same-net duplicates
+                    # overlapping). KiCad merges by name, so the net
+                    # connectivity is preserved when emission succeeds.
+                    from zynq_eda.core.model.sheet import PlacedLabel
+                    from zynq_eda.core.layout._builder import _label_bbox
+                    dup_label_rot = {
+                        "left": 180.0, "right": 0.0,
+                        "top": 90.0, "bottom": 270.0,
+                    }[spec.page_side]
+                    dup_label = PlacedLabel(
+                        net_name=destination_net,
+                        position=cap_far,
+                        rotation=dup_label_rot,
+                    )
+                    dup_bb = _label_bbox(dup_label)
+                    hits = plan.occupancy.collides(
+                        dup_bb,
+                        ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
+                    )
+                    if not hits:
+                        _add_label_with_bbox(plan, dup_label)
                 continue
             emitted_destinations_for_pin.add(destination_net)
             first_cap_far_by_dest_for_pin[destination_net] = cap_far
