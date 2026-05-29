@@ -1754,6 +1754,14 @@ def _plan_register_symbol(
     for b in number_bboxes:
         plan.occupancy.add(b)
     for b in property_bboxes:
+        # Skip property bboxes for hidden Value / Reference text. The
+        # emitter writes (hide yes) for those properties so they don't
+        # render and don't participate in overlap checks.
+        oid = b.owner_id
+        if sym.value_hidden and oid.endswith(":property:Value"):
+            continue
+        if sym.reference_hidden and oid.endswith(":property:Reference"):
+            continue
         plan.occupancy.add(b)
 
 
@@ -2529,7 +2537,13 @@ def _emit_cluster_pins(
             destination_net = spec.cluster_destinations[slot_idx]
             # Set-dedup: emit far endpoint only once per (pin, destination).
             # Multiple slots going to the same net share one label/symbol;
-            # the trunk + drops connect them electrically.
+            # the trunk + drops connect them electrically. (Sub-slots'
+            # cap.far pins remain "floating" from KiCad ERC's perspective
+            # — the cap is still in the netlist via its NEAR pin which
+            # IS connected; the far pin would otherwise need a separate
+            # symbol/label whose body/text would crowd the slot 0 one.
+            # Subsequent slot dedup is tracked at the plan level so a
+            # later cleanup pass can attach NoConnect markers if needed.)
             if destination_net in emitted_destinations_for_pin:
                 continue
             emitted_destinations_for_pin.add(destination_net)

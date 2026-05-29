@@ -410,6 +410,11 @@ def validate_overlap(
                 # rendered by KiCad next to the symbol. Labels and
                 # wires stacking on top of this text are visible
                 # overlaps the user sees in screenshots.
+                #
+                # Skip Value / Reference bboxes for symbols flagged
+                # ``value_hidden`` / ``reference_hidden`` — the emitter
+                # writes (hide yes) for these, so they don't render
+                # in KiCad and shouldn't contribute to overlap checks.
                 for b in geometry.property_text_bboxes(
                     sym.lib_id, sym.position, sym.rotation,
                     owner_id=f"symbol:{sym.reference}",
@@ -418,6 +423,11 @@ def validate_overlap(
                     value_shift=sym.value_shift,
                     reference_shift=sym.reference_shift,
                 ):
+                    oid = b.owner_id
+                    if getattr(sym, "value_hidden", False) and oid.endswith(":property:Value"):
+                        continue
+                    if getattr(sym, "reference_hidden", False) and oid.endswith(":property:Reference"):
+                        continue
                     intrinsic_bboxes.append((sym, b))
             except Exception:
                 continue

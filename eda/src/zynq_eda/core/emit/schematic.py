@@ -202,6 +202,17 @@ def emit_sheet(
 
     _atomic_save(schematic, output_path)
     _hide_internal_properties(output_path)
+    _hide_marked_properties(
+        output_path,
+        hide_value_refs={
+            placed.reference for placed in sheet.symbols
+            if placed.value_hidden
+        },
+        hide_reference_refs={
+            placed.reference for placed in sheet.symbols
+            if placed.reference_hidden
+        },
+    )
     _shift_passive_value_off_body(
         output_path,
         per_instance_shifts={
@@ -483,6 +494,91 @@ def _hide_internal_properties(schematic_path: Path) -> None:
         if in_target_property and stripped == ")":
             in_target_property = False
             awaiting_effects = False
+
+        new_lines.append(line)
+
+    if modified:
+        schematic_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+
+
+def _hide_marked_properties(
+    schematic_path: Path,
+    *,
+    hide_value_refs: "set[str]",
+    hide_reference_refs: "set[str]",
+) -> None:
+    """Inject ``(hide yes)`` into Value / Reference property effects of
+    symbols whose REFERENCE designator appears in the given sets.
+
+    Used for duplicate cluster power symbols (slots N≥1 sharing a
+    destination with slot 0) and similar "anonymous duplicate" cases:
+    the symbol still merges by Value field in KiCad's netlist but its
+    rendered text doesn't compete for space with slot 0's text.
+
+    Mirrors :func:`_hide_internal_properties` line-by-line scanner,
+    but scopes the hide to specific (symbol-reference, property-name)
+    pairs.
+    """
+    if not hide_value_refs and not hide_reference_refs:
+        return
+
+    lines = schematic_path.read_text(encoding="utf-8").splitlines()
+    new_lines: list[str] = []
+    modified = False
+
+    current_reference: str | None = None
+    in_target_property = False
+    awaiting_effects = False
+    target_prop_name: str | None = None
+
+    import re
+    ref_property_re = re.compile(
+        r'\(property "Reference" "([^"]+)"'
+    )
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Track the current symbol's Reference designator. Each
+        # symbol's first encountered (property "Reference" ...) sets
+        # current_reference; nested re-entries (lib_symbols, etc.) are
+        # benign because we hide only when the SECOND property block
+        # for that ref is matched (the actual instance property).
+        ref_match = ref_property_re.search(stripped)
+        if ref_match:
+            current_reference = ref_match.group(1)
+
+        # Detect Value or Reference property line and decide if hiding.
+        if stripped.startswith("(property "):
+            tokens = stripped.split()
+            if len(tokens) >= 2:
+                name = tokens[1].strip('"')
+                if name == "Value" and current_reference in hide_value_refs:
+                    in_target_property = True
+                    awaiting_effects = True
+                    target_prop_name = "Value"
+                elif name == "Reference" and current_reference in hide_reference_refs:
+                    in_target_property = True
+                    awaiting_effects = True
+                    target_prop_name = "Reference"
+                else:
+                    in_target_property = False
+                    awaiting_effects = False
+
+        if awaiting_effects and stripped == "(effects":
+            new_lines.append(line)
+            existing_indent = line[: len(line) - len(line.lstrip())]
+            new_lines.append(f"{existing_indent}\t(hide yes)")
+            awaiting_effects = False
+            in_target_property = False
+            target_prop_name = None
+            modified = True
+            continue
+
+        if in_target_property and stripped == ")":
+            in_target_property = False
+            awaiting_effects = False
+            target_prop_name = None
 
         new_lines.append(line)
 
