@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "d6b18bca-75a2-4e5f-8a89-77bb735ce623")
+	(uuid "b45e8c27-2a22-410f-aa7a-38d683c81bd5")
 	(paper "A3")
 	(title_block
 		(title "USB-C OTG Port (TPS2051C VBUS switch + USB-C)")
@@ -1292,7 +1292,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a2560102-b26d-4e3d-a847-6f3de14bb4d9")
+		(uuid "c1408f19-dd23-45e0-8f95-15b6fa87e27c")
 		(property "Reference" "U1"
 			(at 110.49 13.97 0.0000)
 			(effects
@@ -1341,23 +1341,23 @@
 			)
 		)
 		(pin "1"
-			(uuid "dbc5a15a-37cf-4083-85d2-2a5e79333373")
+			(uuid "ce0e937c-24b6-49a0-9f42-21c77264ca26")
 		)
 		(pin "2"
-			(uuid "e268d728-45ae-4d4c-8719-1fc34fd93d5f")
+			(uuid "e9cf3c1a-0d26-4fd2-b804-cf5323bb1896")
 		)
 		(pin "3"
-			(uuid "f48cb305-5ded-472c-9d68-f282bb4e7679")
+			(uuid "5686dbe1-b7f9-49bd-9d75-4c1f6e1f0b18")
 		)
 		(pin "4"
-			(uuid "6b170a8d-9b24-4ba2-896c-30405cf422bb")
+			(uuid "18981b6e-88bb-4af2-b94d-ebc8a50b3d4f")
 		)
 		(pin "5"
-			(uuid "1a69a81f-9839-4885-be4a-edbbae53b6f4")
+			(uuid "08e94318-df45-4d96-9773-a69ea515e929")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "U1")
 					(unit 1)
 				)
@@ -1373,7 +1373,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e4468846-3b37-4af6-870d-a3ba600b4d03")
+		(uuid "53b7f67b-e9d9-4387-ae8d-8501e9d81efd")
 		(property "Reference" "J1"
 			(at 284.48 74.93 0.0000)
 			(effects
@@ -1422,59 +1422,59 @@
 			)
 		)
 		(pin "A1"
-			(uuid "d6d4a2ce-639b-4a93-b34c-0f43b69a5e73")
+			(uuid "1b363f6d-a04d-45a1-ad66-9862162f9c76")
 		)
 		(pin "A4"
-			(uuid "8df3c9f3-df36-42bf-8561-3c0f917cd140")
+			(uuid "a33a4da3-bec2-4645-9425-4b0bd7222c04")
 		)
 		(pin "A5"
-			(uuid "25a23fde-c771-4299-82b6-c934d5a3b9d8")
+			(uuid "696e9fa3-b7c0-408e-80ce-473edc101fd5")
 		)
 		(pin "A6"
-			(uuid "95021879-801b-4729-9b89-8c8bc9d3af1d")
+			(uuid "8eba5ba5-4b39-459f-835e-bfc4e81bc731")
 		)
 		(pin "A7"
-			(uuid "0a6f6078-a349-4f6a-b3a1-d614a34cfa91")
+			(uuid "c67623b3-bdb3-4d40-8b61-84f848b9127b")
 		)
 		(pin "A8"
-			(uuid "b70989ef-055d-4bb8-bcd1-e9cf30316262")
+			(uuid "5faf6a43-04c4-4e00-9ae5-05187cf94853")
 		)
 		(pin "A9"
-			(uuid "82800dc4-8a21-4b2f-9399-863945e5b891")
+			(uuid "d2ddf7e4-3c14-4b4c-88e0-fc6c1b700375")
 		)
 		(pin "A12"
-			(uuid "a857f47c-2eda-4ebe-a755-9a054e1555a6")
+			(uuid "e31c79de-afb9-48c0-8933-33f8729cdfc5")
 		)
 		(pin "B1"
-			(uuid "5f93bf27-c6c1-4090-a17a-ba67b9b0b621")
+			(uuid "635aa9b0-c6cd-4747-a45f-520b0574a58a")
 		)
 		(pin "B4"
-			(uuid "2cf44719-ca98-42e4-b1e5-f55df5b86b71")
+			(uuid "0f6de804-089d-46f7-b278-837c34ffb380")
 		)
 		(pin "B5"
-			(uuid "c52afb58-a741-4024-b4e2-b6214a53dcf7")
+			(uuid "684ca588-bba3-4fdc-ae31-75cfe21f7d02")
 		)
 		(pin "B6"
-			(uuid "ddd51349-96ca-4b88-bea5-9546124eb51f")
+			(uuid "83a346f9-1a70-482d-860c-52c1ac41215e")
 		)
 		(pin "B7"
-			(uuid "4d128242-9c32-48fc-9b22-2829284b17c8")
+			(uuid "64a79e98-c1a1-4e74-b7b0-50e0a7032c35")
 		)
 		(pin "B8"
-			(uuid "248ac6b8-7c8c-4c15-96de-132f5044dad0")
+			(uuid "cefdfbce-d68c-4ed0-8668-9763a25de00b")
 		)
 		(pin "B9"
-			(uuid "8af4d6d0-8102-444e-a067-6ce4df91c8b3")
+			(uuid "4dfb4086-a5f8-4943-9f1f-7004be5e294d")
 		)
 		(pin "B12"
-			(uuid "5127a14b-d136-45f0-8e14-25aaf504ee99")
+			(uuid "fd388173-1414-4006-8d1d-e5f11630822f")
 		)
 		(pin "SH"
-			(uuid "b9ecdd13-848e-4de5-b013-10207b74d0b6")
+			(uuid "ddfe68c9-4859-416d-88dc-3e8880c35950")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "J1")
 					(unit 1)
 				)
@@ -1490,7 +1490,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "2320dc67-7fae-4385-bf70-953abc52955a")
+		(uuid "6ec6c06d-aad6-48a9-a0e1-8d90469b5339")
 		(property "Reference" "#PWR200"
 			(at 118.11 21.59 0.0000)
 			(effects
@@ -1519,11 +1519,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "d3bedaf3-d5d2-4aaf-980c-cf8166fc3236")
+			(uuid "6702b74e-b9e2-4ced-9517-d20e7d2057f5")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR200")
 					(unit 1)
 				)
@@ -1539,7 +1539,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "7bad0682-646a-43c1-85e5-daec0b1c3677")
+		(uuid "9bdccbff-383c-4c5d-845b-787515af7450")
 		(property "Reference" "#PWR201"
 			(at 275.59 40.64 270)
 			(effects
@@ -1568,11 +1568,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "2edf9b2f-50fc-4d20-99e1-a9d57af55057")
+			(uuid "58e4793a-647a-4dc6-926c-850e9f758dd4")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR201")
 					(unit 1)
 				)
@@ -1588,7 +1588,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "dab9c02e-a0a9-4842-942a-20bdf19f30b7")
+		(uuid "3f67aff7-4684-4df6-9462-16f4c97cf0df")
 		(property "Reference" "#PWR202"
 			(at 275.59 76.2 270)
 			(effects
@@ -1617,11 +1617,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "f73d6d8a-fe29-49c2-99bc-251f8cdc4216")
+			(uuid "8f3e7fd0-a967-4b39-bb69-669f8adade75")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR202")
 					(unit 1)
 				)
@@ -1637,7 +1637,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c3cddf55-5685-49d4-81dc-846761bfa68a")
+		(uuid "08c7bb82-aeef-4973-a8a3-272dc43d6ea4")
 		(property "Reference" "#PWR203"
 			(at 313.69 40.64 90)
 			(effects
@@ -1666,11 +1666,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "81a3eb5b-683d-43b0-b39c-a5d143444cf8")
+			(uuid "b6b24e53-7254-4613-b28b-eb59bc6ed5bf")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR203")
 					(unit 1)
 				)
@@ -1686,7 +1686,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9f5f0e21-9fc1-4cf6-aeda-3fa4dbf533e1")
+		(uuid "1f7d3bbe-615b-4e46-afcb-69e91fa73968")
 		(property "Reference" "#PWR204"
 			(at 313.69 76.2 90)
 			(effects
@@ -1715,11 +1715,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "dffe6d40-3084-462d-adab-424ebe48dd20")
+			(uuid "34fae6d4-49e8-4715-ac3e-8b05ed24ca1a")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR204")
 					(unit 1)
 				)
@@ -1735,7 +1735,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "95304cf5-efe2-4cdf-b7a6-04389a06de89")
+		(uuid "81ad3d3e-5a28-4414-94b0-571423d8ca58")
 		(property "Reference" "C100"
 			(at 167.005 15.24 0.0000)
 			(effects
@@ -1764,14 +1764,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "4a41277c-6c44-4350-a348-647c86473817")
+			(uuid "e41c44b7-05d9-4126-a0c7-f69f982a87e1")
 		)
 		(pin "2"
-			(uuid "c483c4de-23da-4aef-bdd5-dca6019f9867")
+			(uuid "b110f977-5697-4d7a-b018-1a966ff6b61f")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1787,7 +1787,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "34e53178-14e3-423b-919c-087e61f997b0")
+		(uuid "70e53d27-4099-4a83-8019-f10799d96882")
 		(property "Reference" "#PWR300"
 			(at 166.37 15.24 180)
 			(effects
@@ -1816,11 +1816,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "a4ea0986-ad44-4e95-a403-4d39a6449930")
+			(uuid "e681eae0-c976-4a18-995b-b1ff6082ded0")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR300")
 					(unit 1)
 				)
@@ -1836,7 +1836,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "933f79ed-3334-4e81-a323-992324069046")
+		(uuid "bf70c9d5-2973-45dc-a8c0-864c9ff21e20")
 		(property "Reference" "C101"
 			(at 172.085 15.24 0.0000)
 			(effects
@@ -1865,14 +1865,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "30ca65cd-6352-462a-9e10-35575ce50c67")
+			(uuid "a8b9b7f8-49f1-494c-9bfd-50aa133c1276")
 		)
 		(pin "2"
-			(uuid "f1f7db3f-cc13-4074-a8d2-02ff765af2b3")
+			(uuid "e23f9776-10f5-4a1a-a09b-c6db38383c53")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1888,7 +1888,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "8f9e7e09-d90e-4e50-a531-a303d0d64133")
+		(uuid "3162006e-751c-4b4c-ac6b-61a3d3f9e177")
 		(property "Reference" "R100"
 			(at 193.802 17.78 90)
 			(effects
@@ -1917,14 +1917,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "a0a0885c-62ed-4cf9-8bc8-cdb0284ed1e8")
+			(uuid "ce9b4c8c-dbf0-41bc-98d1-98d094fbfd4b")
 		)
 		(pin "2"
-			(uuid "ddad8235-40ff-4334-9a5d-1a0d4983742d")
+			(uuid "4872b1f4-d829-4cbc-b9c1-6dc65aa80f17")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "R100")
 					(unit 1)
 				)
@@ -1940,7 +1940,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "f717f984-8adf-4de0-b2a8-cbc4e3814e93")
+		(uuid "355b3cb7-d7d8-4fbd-a022-31e8ca22122e")
 		(property "Reference" "#PWR301"
 			(at 186.69 10.16 0.0000)
 			(effects
@@ -1969,11 +1969,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "7e314949-fbb7-402e-884f-2c42d00f79c9")
+			(uuid "62b3ceb9-adec-414e-9c81-2b21b4a18e56")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR301")
 					(unit 1)
 				)
@@ -1989,7 +1989,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "b08afed1-a185-4797-96e2-9a3f9c8e11ae")
+		(uuid "57705f05-56b2-471a-a06d-d0fa81a7e4c9")
 		(property "Reference" "C102"
 			(at 70.485 15.24 0.0000)
 			(effects
@@ -2018,14 +2018,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "8a3ea0da-d00a-4719-902d-ba7d7f257e58")
+			(uuid "cc32226f-5f3a-4ed8-a2eb-ab287721a615")
 		)
 		(pin "2"
-			(uuid "a50c1637-838c-4be6-b913-d36e4d1a5942")
+			(uuid "054a85ea-8c11-44f4-bca7-210be3ec6352")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C102")
 					(unit 1)
 				)
@@ -2041,7 +2041,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0082b3fc-ad42-4e5f-bc7b-02edaf1252b8")
+		(uuid "6a68d495-ffcb-42d3-bfe7-68e70b70e68f")
 		(property "Reference" "#PWR302"
 			(at 69.85 15.24 180)
 			(effects
@@ -2070,11 +2070,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "331b1cd7-420b-41a3-b33c-7a141ee37877")
+			(uuid "a7c9f88e-e10f-49a0-882b-749872f26591")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR302")
 					(unit 1)
 				)
@@ -2090,7 +2090,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "dc280e44-567d-4f9c-b2eb-d2f16f8cc7c3")
+		(uuid "2f09646e-7943-4cbf-99d2-9bba961eed1a")
 		(property "Reference" "C103"
 			(at 65.405 15.24 0.0000)
 			(effects
@@ -2119,14 +2119,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "d826a404-df86-4ad6-a755-d514ee48cb31")
+			(uuid "0d1d0bce-78ba-4c84-bc7c-d6c1f2e2ba0b")
 		)
 		(pin "2"
-			(uuid "edee38ea-1c63-469f-8a9a-af14560367a0")
+			(uuid "cdb911e1-82bb-4a45-8c61-7baf89a63ed5")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C103")
 					(unit 1)
 				)
@@ -2142,7 +2142,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9ecbdcad-8fc2-4a7f-8e54-466a9fa0f1eb")
+		(uuid "6fbb67b0-7782-4435-862d-0d290b556efd")
 		(property "Reference" "C104"
 			(at 234.315 43.18 0.0000)
 			(effects
@@ -2171,14 +2171,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "d0468999-b8d2-44b4-b1f7-a627f724e7fc")
+			(uuid "56f26f43-63f4-40af-8994-72bcf50211a3")
 		)
 		(pin "2"
-			(uuid "98508cc4-18ca-40a5-a9eb-32d6f4595da4")
+			(uuid "3f958b2c-6476-4551-894f-ec5c042fb337")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C104")
 					(unit 1)
 				)
@@ -2194,7 +2194,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "2853c9d8-8776-4244-abd3-9e41ad621924")
+		(uuid "54b47870-4832-4bb9-a0be-3e108018345f")
 		(property "Reference" "#PWR303"
 			(at 233.68 43.18 180)
 			(effects
@@ -2223,11 +2223,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "4218d7aa-ed95-4b12-9c75-05ff1de888f2")
+			(uuid "7bdf50d0-6eca-4091-b138-f05e488f287f")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR303")
 					(unit 1)
 				)
@@ -2243,7 +2243,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "bd4d49a3-5e96-4d2b-8a4a-67f1293ee4f1")
+		(uuid "15e5e969-0b95-42ea-a3ea-92a935123672")
 		(property "Reference" "C105"
 			(at 229.235 43.18 0.0000)
 			(effects
@@ -2272,14 +2272,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "cca23f2f-41cb-46c5-b7a9-582396029ec3")
+			(uuid "e693cd04-1878-4022-996e-45affb744745")
 		)
 		(pin "2"
-			(uuid "6076d0bc-587c-4ee0-bfeb-7cd5dad64899")
+			(uuid "ac4efe4d-d37a-4d81-b803-32e167bd2b9d")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C105")
 					(unit 1)
 				)
@@ -2295,7 +2295,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "26f7b8a2-dedb-4d63-aa20-9c3ab330d2dd")
+		(uuid "e4f4c6c0-f5a3-4ac5-8986-4a32cb6c36f4")
 		(property "Reference" "R101"
 			(at 271.272 45.72 90)
 			(effects
@@ -2324,14 +2324,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "101c15bd-d103-46d8-8912-b22b715e5c5d")
+			(uuid "1a77a383-7ba4-4c78-8d3d-ce9b709d96a8")
 		)
 		(pin "2"
-			(uuid "38beed92-6d11-427c-a1df-b0c8f66cdd28")
+			(uuid "db3a7b9a-4e45-4561-9344-664038d9b043")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "R101")
 					(unit 1)
 				)
@@ -2347,7 +2347,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "972dd479-cc60-4bd5-8a37-cff47a755dcb")
+		(uuid "6081915a-c398-46dc-b7f5-699ef8b66f75")
 		(property "Reference" "#PWR304"
 			(at 264.16 48.26 180)
 			(effects
@@ -2376,11 +2376,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "0402fa33-cefb-4255-b910-4016e673c56d")
+			(uuid "bf020aa8-7ed8-4e11-86c3-f2aed2ea2369")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR304")
 					(unit 1)
 				)
@@ -2396,7 +2396,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "72edc146-8539-4dbc-83ce-ea31be70dfda")
+		(uuid "e2d0e024-dd9e-4f9b-b4cd-375078233b4c")
 		(property "Reference" "C106"
 			(at 234.315 68.58 0.0000)
 			(effects
@@ -2425,14 +2425,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "67def853-a8c3-4363-b6ad-0b25c8e8482c")
+			(uuid "ae12755d-00df-4bd4-8dc6-a7230d183188")
 		)
 		(pin "2"
-			(uuid "222d5df9-9bb0-47bb-a204-6ced282d0060")
+			(uuid "5eb3fd0e-a3d8-4375-a102-55def90be08a")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C106")
 					(unit 1)
 				)
@@ -2448,7 +2448,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "ae40813b-fc4b-4a21-853b-7a268d99e681")
+		(uuid "408efc8b-3a92-4585-a763-befd82aee284")
 		(property "Reference" "#PWR305"
 			(at 233.68 68.58 180)
 			(effects
@@ -2477,11 +2477,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "36d5b8b6-f254-4203-be21-fc3c17f30f86")
+			(uuid "dbeafa0a-7b98-46d1-af6c-9b8472fe02f9")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR305")
 					(unit 1)
 				)
@@ -2497,7 +2497,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e395d94d-41f7-4663-80b0-5e7e87c2687d")
+		(uuid "02adedb2-2625-4340-bca5-299f907668c9")
 		(property "Reference" "C107"
 			(at 229.235 68.58 0.0000)
 			(effects
@@ -2526,14 +2526,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "54ef45b6-1499-4ecb-ac27-4169ab69fc44")
+			(uuid "1f6911b3-3ab3-4f70-9725-d69cf25efdc2")
 		)
 		(pin "2"
-			(uuid "79bacfde-505e-4478-b177-e3d89c45a7d7")
+			(uuid "d327114c-495d-4952-a260-7426c1b2c8d6")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C107")
 					(unit 1)
 				)
@@ -2549,7 +2549,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "5ef0bffe-7922-4fe5-9859-4e739b5253cf")
+		(uuid "a78613f9-465e-4528-b557-f4232d977b96")
 		(property "Reference" "C108"
 			(at 356.235 43.18 0.0000)
 			(effects
@@ -2578,14 +2578,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "f0caf90b-b525-4a84-89dd-81ad1ba56630")
+			(uuid "f9c48461-977a-4946-8d52-cadf8a8c8faa")
 		)
 		(pin "2"
-			(uuid "44aeb952-b158-4c50-aecc-ef04dfed0fc5")
+			(uuid "e6418c5a-417c-48c6-bada-784ce4912fc4")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C108")
 					(unit 1)
 				)
@@ -2601,7 +2601,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "60200cc2-47fd-4fd9-9189-3016689224de")
+		(uuid "22d2fdc6-0612-420b-aeac-9643750e0e42")
 		(property "Reference" "#PWR306"
 			(at 355.6 43.18 180)
 			(effects
@@ -2630,11 +2630,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "a78acdb7-6123-410b-813e-792b881ee713")
+			(uuid "2eb28d8a-9565-45dd-8149-bce931a83317")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR306")
 					(unit 1)
 				)
@@ -2650,7 +2650,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "b45dcb4a-ed44-4888-bc90-c513cd585840")
+		(uuid "45706547-2a63-4125-947c-78db4aa38445")
 		(property "Reference" "C109"
 			(at 361.315 43.18 0.0000)
 			(effects
@@ -2679,14 +2679,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "4236e444-1ed9-44fe-a230-b1e086e67076")
+			(uuid "e4aac60e-68de-49b8-af84-67add5e7e017")
 		)
 		(pin "2"
-			(uuid "52ffc8a5-32d4-44d3-9cb0-eeccc9afa4c3")
+			(uuid "1ead8421-c93b-4bd5-847f-966cebbd6e7e")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C109")
 					(unit 1)
 				)
@@ -2702,7 +2702,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c2f6b09d-046a-4bd0-b1ca-97938dee5e69")
+		(uuid "18b95b40-f410-4b26-b893-264aef56319f")
 		(property "Reference" "R102"
 			(at 332.232 45.72 90)
 			(effects
@@ -2731,14 +2731,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "a15c0e90-d084-4930-8a44-40a456a3a7ee")
+			(uuid "17f4c1e7-5d30-4f7a-99b4-408a7d0b7624")
 		)
 		(pin "2"
-			(uuid "2352b954-7b9f-4a35-a759-cc487edee22b")
+			(uuid "cbebc71d-bd80-46a8-8140-7cd650511c00")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "R102")
 					(unit 1)
 				)
@@ -2754,7 +2754,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "2e85a845-737b-43df-a7a5-fc4e008f0c4c")
+		(uuid "85d1ad7c-ca12-4062-a95a-ad36335473cd")
 		(property "Reference" "#PWR307"
 			(at 325.12 48.26 180)
 			(effects
@@ -2783,11 +2783,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "8d96ba8f-e143-40e2-a2d2-a8c0ecc2d067")
+			(uuid "4ee56ae0-9c49-4bd9-baa4-aaf447cf7180")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR307")
 					(unit 1)
 				)
@@ -2803,7 +2803,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "12e38cdb-be2e-4ecf-8551-ada92ea25d93")
+		(uuid "874cfeb2-609c-43db-bdb2-566a2b6cfd17")
 		(property "Reference" "C110"
 			(at 356.235 68.58 0.0000)
 			(effects
@@ -2832,14 +2832,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "3303c786-7dd3-488b-b6f8-3f006160f41c")
+			(uuid "011c59aa-72bd-4c09-ad50-96aafa0d9e22")
 		)
 		(pin "2"
-			(uuid "da807e2e-291c-4f5f-9b20-957ef64473ed")
+			(uuid "f9db1f2f-a997-46a8-b2f9-7bec5abb016a")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C110")
 					(unit 1)
 				)
@@ -2855,7 +2855,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9e12ae1c-f304-420d-bf55-7566a128e436")
+		(uuid "bf6fd76f-d06d-4f61-9c80-a5bf09396421")
 		(property "Reference" "#PWR308"
 			(at 355.6 68.58 180)
 			(effects
@@ -2884,11 +2884,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "bf1189b7-49f4-4790-bd61-4ea860597acf")
+			(uuid "dc2f72e8-a9b1-44b7-8b1b-f2119bf7d57a")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR308")
 					(unit 1)
 				)
@@ -2904,7 +2904,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "81d26068-6283-4b18-8d9e-0c2b7a9aee5d")
+		(uuid "567cd8c3-d874-40c1-bf63-166e582c5bd5")
 		(property "Reference" "C111"
 			(at 361.315 68.58 0.0000)
 			(effects
@@ -2933,14 +2933,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "445ac9ae-1a46-4a25-a32a-cdcf56d6cffd")
+			(uuid "d9539122-8472-42ae-92f5-bc9c49c1a401")
 		)
 		(pin "2"
-			(uuid "49a5ecc7-1353-486a-995e-274ae8370763")
+			(uuid "71b4ddbf-55e8-4f9b-8b86-aa27f4673aa8")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C111")
 					(unit 1)
 				)
@@ -2956,7 +2956,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c7d24a6d-0205-4643-a4e2-dafdb74911fc")
+		(uuid "f6591ddf-e878-4148-906a-c32660f0f3bc")
 		(property "Reference" "R103"
 			(at 347.472 83.82 0)
 			(effects
@@ -2985,14 +2985,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "bba9259a-375f-4163-8d6e-339ddd9b1b91")
+			(uuid "03aaae3c-03ee-489f-8fa0-4d360c73c3c8")
 		)
 		(pin "2"
-			(uuid "366ee49c-c43e-4939-9ef6-b228ecf0e3ac")
+			(uuid "2f7263e2-6fc1-4e32-a4fd-1a066ad24e49")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "R103")
 					(unit 1)
 				)
@@ -3008,7 +3008,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "5cde5e98-e1ca-4671-baf0-75e37034e6fa")
+		(uuid "1347e002-f029-42ea-afb6-58e4ef073cf3")
 		(property "Reference" "#PWR309"
 			(at 345.44 78.74 180)
 			(effects
@@ -3037,11 +3037,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "1f60d5e8-f91d-4881-8598-25436388560f")
+			(uuid "94df1c2d-d15c-4f7e-913c-3bd2c1c5f9c2")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "#PWR309")
 					(unit 1)
 				)
@@ -3057,7 +3057,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d8c4ce60-604f-42a6-9eb4-b5bf5d10ba0c")
+		(uuid "d9ecb1c4-507f-4f54-b551-0fd7e377df09")
 		(property "Reference" "C112"
 			(at 351.155 78.74 0.0000)
 			(effects
@@ -3086,14 +3086,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "e62692c3-a3bd-4f9c-aef6-f230c17afc96")
+			(uuid "3ec9fdb2-2163-4641-8e28-70e86815aaec")
 		)
 		(pin "2"
-			(uuid "ddee38e5-81e9-4220-aab6-d969495cfa19")
+			(uuid "f5a198f5-82e1-41e2-b045-f29fac8be384")
 		)
 		(instances
 			(project "USB-C OTG Port (TPS2051C VBUS switch + USB-C)"
-				(path "/d6b18bca-75a2-4e5f-8a89-77bb735ce623"
+				(path "/b45e8c27-2a22-410f-aa7a-38d683c81bd5"
 					(reference "C112")
 					(unit 1)
 				)
@@ -3108,7 +3108,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "faad5187-d932-4f9d-a131-a006c963236d")
+		(uuid "e3fde88b-8941-4895-b46f-0764286d8dfd")
 	)
 	(wire
 		(pts
@@ -3118,7 +3118,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "58f56194-a415-4c86-8b88-1ec6f7e4e318")
+		(uuid "310a0088-1690-40b0-a933-d529f379cd81")
 	)
 	(wire
 		(pts
@@ -3128,7 +3128,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "411df8a8-c686-4b97-bff2-97ed4f47958b")
+		(uuid "1717ac2f-6096-4532-98c8-a4ca5bd8ed37")
 	)
 	(wire
 		(pts
@@ -3138,7 +3138,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "aed5fb51-37ba-4441-9612-ca883d476497")
+		(uuid "e754d961-3cfb-4fe1-b681-93f6cd01b255")
 	)
 	(wire
 		(pts
@@ -3148,7 +3148,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "aa0eff19-f02c-424b-96ac-5b246553b698")
+		(uuid "98d4358f-eb5d-46d6-ab29-88c9d946be83")
 	)
 	(wire
 		(pts
@@ -3158,7 +3158,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a41ec3cf-336b-4753-964a-3b216c0cec85")
+		(uuid "7247c446-8345-45d6-acca-fa1e3897c679")
 	)
 	(wire
 		(pts
@@ -3168,7 +3168,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "efc2f8de-1baa-427f-ae5f-901c8f1bd3b8")
+		(uuid "a4da965d-c7c0-4592-833a-64d1f9c80f45")
 	)
 	(wire
 		(pts
@@ -3178,7 +3178,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1302d8ef-5d45-42bf-87e3-52c116724bd8")
+		(uuid "55ac21a6-ee9a-45f0-8116-6e7c44145501")
 	)
 	(wire
 		(pts
@@ -3188,7 +3188,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2b268182-0c2a-4dba-bf16-36478260b3a5")
+		(uuid "3ac6c218-a237-40b1-b120-ca2ffb0a5b48")
 	)
 	(wire
 		(pts
@@ -3198,7 +3198,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "689ec3f2-2174-44df-bfb4-ba0fb9b1337b")
+		(uuid "c6e556e6-fa3b-4e78-8179-1d79103de86d")
 	)
 	(wire
 		(pts
@@ -3208,7 +3208,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2f2bf7a1-db2d-497d-9d7f-33438910d5dd")
+		(uuid "296c0006-ee7b-4085-8b93-6652e741b1bf")
 	)
 	(wire
 		(pts
@@ -3218,7 +3218,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "502e6be9-23f5-4e6f-b456-f43d51497b6e")
+		(uuid "89b7bce0-061c-4fe8-89a7-2103809082ca")
 	)
 	(wire
 		(pts
@@ -3228,7 +3228,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "bd5eed30-ec6b-4203-a32b-4069663f2260")
+		(uuid "2b603856-263f-4c0f-93f9-33e8c2eeb752")
 	)
 	(wire
 		(pts
@@ -3238,7 +3238,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "15b0fc11-531f-41d9-b024-d7a61eeaa3cd")
+		(uuid "4f6952fa-81f6-48a9-bde0-44397a388acb")
 	)
 	(wire
 		(pts
@@ -3248,7 +3248,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4d33e969-01c5-4670-9cbe-3496d0fb8f20")
+		(uuid "7a45dd8b-33ed-4ccd-9e32-74ea03623a47")
 	)
 	(wire
 		(pts
@@ -3258,7 +3258,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c8e7bce8-79e6-4761-a9c3-6b44e50868c1")
+		(uuid "34c5b47a-12cc-442f-9f6b-2f72e946469a")
 	)
 	(wire
 		(pts
@@ -3268,7 +3268,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "51748ac5-5d24-4675-a8ba-52237359a0da")
+		(uuid "5968cef2-8caf-4d0f-a739-f6b09246be0f")
 	)
 	(wire
 		(pts
@@ -3278,7 +3278,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "135dcc84-007c-430d-9570-7233d771b536")
+		(uuid "fb3a21f8-040f-4f03-bf7b-833b117f3216")
 	)
 	(wire
 		(pts
@@ -3288,7 +3288,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d2264492-6965-4600-8f58-a80948f44e90")
+		(uuid "c27bfd44-f0f4-48fd-b0bc-0c0d0d72e3a8")
 	)
 	(wire
 		(pts
@@ -3298,7 +3298,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1082721d-23cd-45a0-83b6-8e5abbe25a8c")
+		(uuid "e8b3bed8-817d-441c-b688-744c39543445")
 	)
 	(wire
 		(pts
@@ -3308,7 +3308,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "57ea144e-2c0e-4d97-83d9-b291d1805cf4")
+		(uuid "b192cfb0-6385-4d33-8151-dddd330a0d94")
 	)
 	(wire
 		(pts
@@ -3318,7 +3318,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "44d8c79c-70bb-4a8f-9aaa-1182b781f706")
+		(uuid "444748bb-8020-4786-8217-71c688244673")
 	)
 	(wire
 		(pts
@@ -3328,7 +3328,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "abe6632c-1d48-4b2e-9f58-ccc4046e2e21")
+		(uuid "324e1756-ad2a-4379-8c4b-98532e3f905b")
 	)
 	(wire
 		(pts
@@ -3338,7 +3338,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "410ab99d-115d-45d6-8524-be90cef2d4b3")
+		(uuid "17f96087-4032-4676-b8ff-3b1e78e56500")
 	)
 	(wire
 		(pts
@@ -3348,7 +3348,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ca59ff6d-e0e4-4484-940e-b5d1b9d012ae")
+		(uuid "73e45007-cc98-4873-b14c-68b51849dc58")
 	)
 	(wire
 		(pts
@@ -3358,7 +3358,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "71bc34b2-db12-4d9d-9b13-42eb622d5937")
+		(uuid "edd7ea05-56de-4352-b8dd-39bd4afcc0fb")
 	)
 	(wire
 		(pts
@@ -3368,7 +3368,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ea5d869d-d979-4e99-b83e-191ad20c7979")
+		(uuid "00918c5e-cf14-4435-9c98-70d25bbc181c")
 	)
 	(wire
 		(pts
@@ -3378,7 +3378,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4c98d468-4fe5-4672-b69b-4ece0ca53ec8")
+		(uuid "be6ee475-9554-42dc-9868-18b5649dfa6b")
 	)
 	(wire
 		(pts
@@ -3388,7 +3388,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b1709c0e-c1e3-409e-a591-ecb56491a098")
+		(uuid "46add389-0606-4e05-a358-c2f6e19c1bf4")
 	)
 	(wire
 		(pts
@@ -3398,7 +3398,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d012bac9-7e27-453d-8b21-6f692e0733f8")
+		(uuid "a6c06589-f9e0-4588-b934-cb6a2134efad")
 	)
 	(wire
 		(pts
@@ -3408,7 +3408,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c9adcbe8-0838-4f6d-8fb7-275e0577794c")
+		(uuid "5a18ecf6-ab06-4cf1-a2a3-bd6fb3af19d6")
 	)
 	(wire
 		(pts
@@ -3418,7 +3418,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "bc258341-e90f-4539-8e01-13594efcb153")
+		(uuid "b76756e1-39bd-4fb4-93a5-c31d5a55dfc0")
 	)
 	(wire
 		(pts
@@ -3428,7 +3428,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5ba50209-16e5-4198-99d9-48c434dea390")
+		(uuid "09432a8d-ebca-4d8f-a846-bffa17787ea5")
 	)
 	(wire
 		(pts
@@ -3438,7 +3438,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1e063fbe-ba2b-4628-a763-d9700d7fa52e")
+		(uuid "f703f637-cd4d-4d78-8e36-62110ef3c4df")
 	)
 	(wire
 		(pts
@@ -3448,7 +3448,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c44535c2-732d-4d74-a44b-4cd7186d8ed0")
+		(uuid "2a780b65-2880-4358-9617-d0fd905e4752")
 	)
 	(wire
 		(pts
@@ -3458,7 +3458,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "99e6b0c4-8d59-4a51-bc80-dc83cf116012")
+		(uuid "3fa33625-7e7e-42e2-a235-d7b03160f658")
 	)
 	(wire
 		(pts
@@ -3468,7 +3468,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "83cbff57-35f1-4be3-b52b-b00aa0ccac92")
+		(uuid "2c1e871b-fffc-42c7-af6e-9321540c1d49")
 	)
 	(wire
 		(pts
@@ -3478,7 +3478,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "19d25b8d-1032-4126-b6a4-77d73a75946a")
+		(uuid "37633db4-7973-4231-a29c-ad722cc5f570")
 	)
 	(wire
 		(pts
@@ -3488,7 +3488,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "02a4acae-8e35-475f-a554-fcc5c3dd59d9")
+		(uuid "f6cc6cda-d988-47ed-9f6f-60d5e1308d24")
 	)
 	(wire
 		(pts
@@ -3498,7 +3498,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5c84296f-460e-41a1-bc6e-1e967f6e7281")
+		(uuid "130b33ed-13a8-4f19-b73f-d44d35079263")
 	)
 	(wire
 		(pts
@@ -3508,7 +3508,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "fb96f6b0-8fb1-4700-94b7-bb9be44e5c22")
+		(uuid "d9ba9dfb-5c35-492a-be5b-30dd0f356b9c")
 	)
 	(wire
 		(pts
@@ -3518,7 +3518,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d0e0a2f8-d856-4bf2-aad2-192b2aa5aa2c")
+		(uuid "c4463456-8df8-44e2-a831-1ce042514b75")
 	)
 	(wire
 		(pts
@@ -3528,7 +3528,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0168f552-7021-405d-b5d6-556971d70622")
+		(uuid "11dc27d5-c5e5-4e3e-b8f4-e963ab40364a")
 	)
 	(wire
 		(pts
@@ -3538,49 +3538,49 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b7782ca2-a318-4bfe-85c7-9d70d7c2eb69")
+		(uuid "a741652b-b8f4-4411-9686-4ac63fa5b8d0")
 	)
 	(junction
 		(at 166.37 17.78)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "5c73008c-82b3-4101-b3fd-50dc798d20a7")
+		(uuid "7990c584-9b63-4a29-b5ba-eef2f8ad9982")
 	)
 	(junction
 		(at 69.85 17.78)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "fa7770ed-f010-49a9-974e-6eb71d72e6c0")
+		(uuid "11cb089e-75ff-4375-adff-f08f22dc1bdf")
 	)
 	(junction
 		(at 233.68 45.72)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "45adee35-9972-490b-8ef8-80d543d58dd7")
+		(uuid "2e33d80e-a42a-4345-9ba0-654b4c1df8ee")
 	)
 	(junction
 		(at 233.68 71.12)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "1bf6fe0c-00cc-4a98-9f9a-6f5b340bdb8e")
+		(uuid "719b8705-35df-4928-861e-88f79a452554")
 	)
 	(junction
 		(at 355.6 45.72)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "298b73c9-4f58-47e6-847f-c0c6a283b957")
+		(uuid "7c3b1532-0890-496a-bf5b-4a37abff4696")
 	)
 	(junction
 		(at 355.6 71.12)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "9a7ca14c-f2d2-40bb-949a-a4e9897521c6")
+		(uuid "9ae6c1ce-c97d-4b6d-a369-0e636cdaf84d")
 	)
 	(junction
 		(at 345.44 81.28)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "d649ba49-6935-4e02-8127-8bc26ab70aba")
+		(uuid "f123059a-5c3e-4eed-b1e0-04d40e0f2d97")
 	)
 	(hierarchical_label "STM32_USBOTG_VBUS_EN"
 		(shape input)
@@ -3591,7 +3591,7 @@
 			)
 			(justify left)
 		)
-		(uuid "6233f929-d73a-4831-983d-5b4c7e200805")
+		(uuid "a3131343-6b50-4284-b6cb-3f0f69c7a5d5")
 	)
 	(hierarchical_label "USBOTG_DP"
 		(shape input)
@@ -3602,7 +3602,7 @@
 			)
 			(justify left)
 		)
-		(uuid "eb57ee3b-29ae-4dce-a941-0e4808631f13")
+		(uuid "d09bd5d1-cc2d-4408-87d4-6ec26df76503")
 	)
 	(hierarchical_label "USBOTG_DM"
 		(shape input)
@@ -3613,7 +3613,7 @@
 			)
 			(justify left)
 		)
-		(uuid "fb0357f7-5933-470e-a2d6-83cb2adb8627")
+		(uuid "0ce36cfb-b131-4aa6-9085-69ee980c4e73")
 	)
 	(hierarchical_label "STM32_USBOTG_ID"
 		(shape input)
@@ -3624,7 +3624,7 @@
 			)
 			(justify left)
 		)
-		(uuid "c0e30604-6e8d-4f92-bd3e-ca1123e710ad")
+		(uuid "20e435c1-87a5-4950-906a-331fff6f4f54")
 	)
 	(hierarchical_label "USBOTG_DP"
 		(shape input)
@@ -3635,7 +3635,7 @@
 			)
 			(justify left)
 		)
-		(uuid "a5b2dc2d-3d30-4e87-b87b-5a56574a25c3")
+		(uuid "58b0af4f-399c-4303-b0c5-6c3b534ded93")
 	)
 	(hierarchical_label "USBOTG_DM"
 		(shape input)
@@ -3646,11 +3646,11 @@
 			)
 			(justify left)
 		)
-		(uuid "a1662778-c306-4718-a50a-666fe19b412e")
+		(uuid "2fa88d40-1d88-4616-ba25-18cd3095bb3a")
 	)
 	(no_connect
 		(at 307.34 66.04)
-		(uuid "61fdf0af-063e-4ea3-bdeb-da56ff15351c")
+		(uuid "0d06a12d-e216-446f-a85d-fb9b38f1aa84")
 	)
 	(sheet_instances
 		(path "/"

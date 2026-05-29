@@ -2241,15 +2241,31 @@ def _try_emit_cluster_share_wire(
     # THROUGH slot 0's power-symbol body (the body sits along the X
     # axis the wire travels), so we skip those clusters.
     if page_side in ("left", "right"):
+        # LEFT/RIGHT: direct horizontal wire at common Y.
         if abs(from_cap_far.y - to_cap_far.y) > 1e-6:
             return False
         seg1 = PlacedWire(start=from_cap_far, end=to_cap_far)
         segs = (seg1,)
     else:
-        # TOP/BOTTOM share-wire would cut through slot 0's power
-        # symbol body — leave the sub-slot floating. The 50-error
-        # ERC count includes ~5 of these per uart_bridge / similar.
-        return False
+        # TOP/BOTTOM: cap.fars share X but differ in Y. A direct
+        # vertical wire at the shared X would cut through slot 0's
+        # power-symbol body (which lives along that X axis). Route a
+        # sideways Z-bend: hop horizontally to the OUTBOARD direction
+        # by 3 grid steps (clears typical power-symbol body width
+        # ~5 mm), run vertical at that X, hop back. The horizontal
+        # hop is at cap.far Y where it skims the cap body's edge —
+        # below the noise floor.
+        if abs(from_cap_far.x - to_cap_far.x) > 1e-6:
+            return False
+        # Outboard direction in X: for TOP/BOTTOM, "outboard" is
+        # the direction the cap.far horizontal pin points (positive
+        # X — see _cluster_passive_near_far). Use +3*GRID = 7.62 mm.
+        SIDE_HOP_MM = 3 * KICAD_GRID_MM
+        hop_x = snap_to_grid(from_cap_far.x + SIDE_HOP_MM)
+        seg1 = PlacedWire(start=from_cap_far, end=Point(hop_x, from_cap_far.y))
+        seg2 = PlacedWire(start=seg1.end, end=Point(hop_x, to_cap_far.y))
+        seg3 = PlacedWire(start=seg2.end, end=to_cap_far)
+        segs = (seg1, seg2, seg3)
     # Identify owners at the two endpoints: these are LEGITIMATE
     # termination points for this wire, not obstacles. We exempt:
     #   - Any cap symbol whose body contains the endpoint (cap.far IS
@@ -2672,12 +2688,89 @@ def _emit_cluster_pins(
             if destination_net in emitted_destinations_for_pin:
                 first_cap_far = first_cap_far_by_dest_for_pin.get(destination_net)
                 slot0_is_power = destination_net in power_dest_destinations_for_pin
+                emitted = False
                 if (first_cap_far is not None
                         and first_cap_far != cap_far
                         and slot0_is_power):
-                    _try_emit_cluster_share_wire(
+                    emitted = _try_emit_cluster_share_wire(
                         plan, cap_far, first_cap_far, spec.page_side,
                     )
+                if not emitted and slot0_is_power:
+                    # Fallback for power destinations only: emit a
+                    # DUPLICATE power symbol at this slot's cap.far,
+                    # but with Value + Reference HIDDEN so the
+                    # property text doesn't compete for space with
+                    # slot 0's visible symbol. KiCad merges by Value
+                    # field whether hidden or not, so the sub-slot's
+                    # cap.far pin is electrically on the same net.
+                    # Layout-clean: body is at cap.far (cap body's
+                    # edge); hidden text contributes no bbox.
+                    power_lib_id_dup = _power_symbol_for_destination(destination_net)
+                    if power_lib_id_dup is not None:
+                        rot_dup = _outward_power_symbol_rotation(
+                            lib_id=power_lib_id_dup, pin_side=spec.page_side,
+                            geometry_cache=geometry,
+                        )
+                        pwr_ref_index_dup = next_ref_counters.setdefault("PWR", 300)
+                        next_ref_counters["PWR"] = pwr_ref_index_dup + 1
+                        pwr_sym_dup = PlacedSymbol(
+                            lib_id=power_lib_id_dup,
+                            reference=f"#PWR{pwr_ref_index_dup}",
+                            value=destination_net,
+                            position=cap_far,
+                            footprint="",
+                            rotation=rot_dup,
+                            value_hidden=True,
+                            reference_hidden=True,
+                        )
+                        # Probe: only emit if body bbox is clean.
+                        from zynq_eda.core.layout.bbox import (
+                            placeholder_symbol_bbox, symbol_bbox,
+                        )
+                        try:
+                            body_bb = symbol_bbox(
+                                lib_id=pwr_sym_dup.lib_id,
+                                anchor=pwr_sym_dup.position,
+                                rotation=pwr_sym_dup.rotation,
+                                cache=geometry,
+                                owner_id=f"symbol:{pwr_sym_dup.reference}",
+                            )
+                        except Exception:
+                            body_bb = placeholder_symbol_bbox(
+                                pwr_sym_dup.position,
+                                owner_id=f"symbol:{pwr_sym_dup.reference}",
+                            )
+                        # Find owners at cap.far to exempt (the cap
+                        # whose far pin is here).
+                        EPS = 0.05
+                        exempt: set[str] = set()
+                        for s_sym in plan.symbols:
+                            if (abs(s_sym.position.x - cap_far.x) < EPS
+                                    and abs(s_sym.position.y - cap_far.y) < EPS):
+                                exempt.add(f"symbol:{s_sym.reference}")
+                                exempt.add(f"symbol:{s_sym.reference}:property:Value")
+                                exempt.add(f"symbol:{s_sym.reference}:property:Reference")
+                            elif int(s_sym.rotation) % 180 == 0:
+                                if (abs(s_sym.position.x - cap_far.x) < EPS
+                                        and (abs(s_sym.position.y - PASSIVE_PIN_HALF - cap_far.y) < EPS
+                                             or abs(s_sym.position.y + PASSIVE_PIN_HALF - cap_far.y) < EPS)):
+                                    exempt.add(f"symbol:{s_sym.reference}")
+                                    exempt.add(f"symbol:{s_sym.reference}:property:Value")
+                                    exempt.add(f"symbol:{s_sym.reference}:property:Reference")
+                            else:
+                                if (abs(s_sym.position.y - cap_far.y) < EPS
+                                        and (abs(s_sym.position.x - PASSIVE_PIN_HALF - cap_far.x) < EPS
+                                             or abs(s_sym.position.x + PASSIVE_PIN_HALF - cap_far.x) < EPS)):
+                                    exempt.add(f"symbol:{s_sym.reference}")
+                                    exempt.add(f"symbol:{s_sym.reference}:property:Value")
+                                    exempt.add(f"symbol:{s_sym.reference}:property:Reference")
+                        hits = plan.occupancy.collides(
+                            body_bb,
+                            ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
+                            ignore_owners=exempt,
+                        )
+                        if not hits:
+                            _plan_register_symbol(plan, pwr_sym_dup, geometry)
                 continue
             emitted_destinations_for_pin.add(destination_net)
             first_cap_far_by_dest_for_pin[destination_net] = cap_far
@@ -3159,6 +3252,22 @@ def _emit_connector_pin_to_net_labels(
 # ---------------------------------------------------------------------------
 
 
+def _ensure_junction(plan: LayoutPlan, position: Point) -> None:
+    """Add a junction at ``position`` if one isn't already there.
+
+    Junctions tie a wire's endpoint to the interior of another wire.
+    KiCad treats interior-touch without a junction as crossing-not-
+    connecting; the junction makes the electrical link explicit.
+    """
+    from zynq_eda.core.model.sheet import PlacedJunction
+    EPS = 1e-6
+    for existing in plan.junctions:
+        if (abs(existing.position.x - position.x) < EPS
+                and abs(existing.position.y - position.y) < EPS):
+            return
+    plan.junctions.append(PlacedJunction(position=position))
+
+
 def _add_wire_with_bbox(plan: LayoutPlan, wire: PlacedWire) -> bool:
     """Append a wire to plan.wires AND register its bbox in occupancy.
 
@@ -3205,15 +3314,29 @@ def _add_wire_with_bbox(plan: LayoutPlan, wire: PlacedWire) -> bool:
         if same_dir or rev_dir:
             return False
         # Subset check — same orientation and contained.
+        # When the new wire's endpoints fall in the INTERIOR of an
+        # existing wire, KiCad needs a junction marker at each
+        # endpoint for the electrical connection to be live (interior
+        # touch without a junction is treated as crossing-without-
+        # connecting). Drop a junction for each interior endpoint
+        # before suppressing the duplicate wire.
         ex_is_h = abs(existing.start.y - existing.end.y) < 1e-6
         ex_is_v = abs(existing.start.x - existing.end.x) < 1e-6
         if new_is_h and ex_is_h and abs(existing.start.y - wire.start.y) < 1e-6:
             ex_x_lo, ex_x_hi = sorted((existing.start.x, existing.end.x))
             if ex_x_lo <= new_x_lo + 1e-6 and ex_x_hi + 1e-6 >= new_x_hi:
+                from zynq_eda.core.model.sheet import PlacedJunction
+                for endpoint in (wire.start, wire.end):
+                    if (ex_x_lo + 1e-6 < endpoint.x < ex_x_hi - 1e-6):
+                        _ensure_junction(plan, endpoint)
                 return False  # new wire is subset of existing horizontal
         elif new_is_v and ex_is_v and abs(existing.start.x - wire.start.x) < 1e-6:
             ex_y_lo, ex_y_hi = sorted((existing.start.y, existing.end.y))
             if ex_y_lo <= new_y_lo + 1e-6 and ex_y_hi + 1e-6 >= new_y_hi:
+                from zynq_eda.core.model.sheet import PlacedJunction
+                for endpoint in (wire.start, wire.end):
+                    if (ex_y_lo + 1e-6 < endpoint.y < ex_y_hi - 1e-6):
+                        _ensure_junction(plan, endpoint)
                 return False  # new wire is subset of existing vertical
     plan.wires.append(wire)
     index = len(plan.wires) - 1
