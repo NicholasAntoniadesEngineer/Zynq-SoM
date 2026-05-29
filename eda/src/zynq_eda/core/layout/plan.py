@@ -2962,17 +2962,26 @@ def _route_cluster_pins(
                 pin_pos, trunk_far, plan.occupancy,
                 avoid_owners=frozenset(avoid_permissive),
             )
+        trunk_segments_actual: tuple[PlacedWire, ...] = ()
         if not trunk_attempt.gave_up:
             for seg in trunk_attempt.segments:
                 _add_wire_with_bbox(plan, seg)
+            trunk_segments_actual = trunk_attempt.segments
         else:
             # Fall back to direct trunk if router can't find a path.
             # The validator surfaces the resulting overlap so it can
             # be addressed by widening PASSIVE_OFFSET or staggering.
             trunk_wire = PlacedWire(start=pin_pos, end=trunk_far)
             _add_wire_with_bbox(plan, trunk_wire)
+            trunk_segments_actual = (trunk_wire,)
 
-        # Per-slot drops + far wires + junctions.
+        # Per-slot drops + far wires + junctions. The trunk may have
+        # taken a Z-bend (router picked an offset to avoid an obstacle),
+        # so the horizontal portion of the trunk isn't necessarily at
+        # ``pin_pos.y``. Look up the actual horizontal trunk Y at each
+        # slot's X — drops must start at the ACTUAL trunk row,
+        # otherwise the drop endpoint dangles and KiCad ERC fires
+        # pin_not_connected on the cap's near-pin.
         for slot_idx in range(n_slots):
             slot_pos = _cluster_slot_position(
                 pin_pos, spec.page_side, slot_idx,
@@ -2982,13 +2991,53 @@ def _route_cluster_pins(
             cap_near, cap_far = _cluster_passive_near_far(
                 slot_pos, spec.page_side,
             )
-            # Drop: from trunk (at slot X, pin Y) to cap.near.
-            # Direct wire — slot positions are reserved so the drop
-            # path is clear by construction.
+            # Find the trunk segment that PASSES THROUGH the slot's
+            # primary-axis X (for LEFT/RIGHT clusters) or Y (TOP/BOTTOM)
+            # — pick the SMALLEST-stride segment (the actual horizontal
+            # leg, not the source's exit-detour stub).
             if spec.page_side in ("left", "right"):
-                drop_start = Point(slot_pos.x, pin_pos.y)
+                drop_x = slot_pos.x
+                drop_y = pin_pos.y  # default fallback
+                best_span = float("inf")
+                for seg in trunk_segments_actual:
+                    is_h = abs(seg.start.y - seg.end.y) < 1e-6
+                    if not is_h:
+                        continue
+                    x_lo, x_hi = sorted((seg.start.x, seg.end.x))
+                    if x_lo - 1e-6 <= drop_x <= x_hi + 1e-6:
+                        span = x_hi - x_lo
+                        if span < best_span:
+                            best_span = span
+                            drop_y = seg.start.y
+                # Prefer the LONGEST horizontal (the main trunk leg)
+                # not the exit stub. Re-pick on max-span.
+                best_span = -1.0
+                for seg in trunk_segments_actual:
+                    is_h = abs(seg.start.y - seg.end.y) < 1e-6
+                    if not is_h:
+                        continue
+                    x_lo, x_hi = sorted((seg.start.x, seg.end.x))
+                    if x_lo - 1e-6 <= drop_x <= x_hi + 1e-6:
+                        span = x_hi - x_lo
+                        if span > best_span:
+                            best_span = span
+                            drop_y = seg.start.y
+                drop_start = Point(drop_x, drop_y)
             else:
-                drop_start = Point(pin_pos.x, slot_pos.y)
+                drop_y = slot_pos.y
+                drop_x = pin_pos.x
+                best_span = -1.0
+                for seg in trunk_segments_actual:
+                    is_v = abs(seg.start.x - seg.end.x) < 1e-6
+                    if not is_v:
+                        continue
+                    y_lo, y_hi = sorted((seg.start.y, seg.end.y))
+                    if y_lo - 1e-6 <= drop_y <= y_hi + 1e-6:
+                        span = y_hi - y_lo
+                        if span > best_span:
+                            best_span = span
+                            drop_x = seg.start.x
+                drop_start = Point(drop_x, drop_y)
             drop_wire = PlacedWire(start=drop_start, end=cap_near)
             _add_wire_with_bbox(plan, drop_wire)
 

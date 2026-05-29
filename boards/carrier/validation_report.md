@@ -1,42 +1,49 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-29T18:49:24Z
+Generated: 2026-05-29T18:53:27Z
 
-**Errors:** 15  **Warnings:** 402  **Info:** 0
+**Errors:** 6  **Warnings:** 418  **Info:** 0
 
-## Errors (15)
+## Errors (6)
 
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 
-## Warnings (402)
+## Warnings (418)
 
 - **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FMC_LPC_LA_LOW' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FMC_LPC_LA_LOW.kicad_sym' _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J1_PL_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J1_PL_POWER.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J3_DIFF' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J3_DIFF.kicad_sym' _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FFC_40P_LVDS_SIGNALS' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FFC_40P_LVDS_SIGNALS.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FMC_LPC_LA_HIGH' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FMC_LPC_LA_HIGH.kicad_sym' _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J2_DIFF' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J2_DIFF.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J3_SE' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J3_SE.kicad_sym' _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FFC_40P_LVDS_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FFC_40P_LVDS_POWER.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FMC_LPC_PWR_CLK_JTAG' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FMC_LPC_PWR_CLK_JTAG.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J1_MIO' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J1_MIO.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J2_SE' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J2_SE.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J3_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J3_POWER.kicad_sym' _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
+- **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J1_PS_AUX' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J1_PS_AUX.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J2_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J2_POWER.kicad_sym' _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_PS_UART0_RXD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
