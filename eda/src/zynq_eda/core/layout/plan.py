@@ -2204,6 +2204,123 @@ def _power_symbol_for_destination(
     return POWER_SYMBOL_LIB_IDS.get(destination_net)
 
 
+def _try_emit_cluster_share_wire(
+    plan: LayoutPlan,
+    from_cap_far: Point,
+    to_cap_far: Point,
+    page_side: PageSide,
+) -> bool:
+    """Try to emit a 3-segment Z-bend share-wire from ``from_cap_far``
+    to ``to_cap_far`` for a cluster sub-slot.
+
+    Routes UP-OVER-DOWN (smaller Y for LEFT/RIGHT pin sides, larger X
+    for TOP/BOTTOM) so the horizontal/vertical middle leg doesn't run
+    along the cap-far Y/X where other slot caps' body edges sit.
+
+    The middle leg uses one KICAD_GRID_MM step away from cap.far Y/X.
+    Each segment is collision-checked against the plan's current
+    occupancy; if ANY segment conflicts, the whole share-wire is
+    skipped (and the sub-slot's cap.far pin remains floating from
+    KiCad ERC's perspective). The validator's overlap mandate takes
+    priority over ERC connectivity.
+
+    Returns True iff the share-wire was emitted.
+    """
+    from zynq_eda.core.layout._constants import KICAD_GRID_MM
+    from zynq_eda.core.layout.bbox import wire_bbox
+    from zynq_eda.core.model.grid import snap_to_grid
+    from zynq_eda.core.model.sheet import PlacedWire
+
+    # The share-wire is a single direct segment at the shared axis:
+    # SAME Y for LEFT/RIGHT clusters (horizontal wire) or SAME X for
+    # TOP/BOTTOM (vertical). The wire skims the top/bottom edges of
+    # the intervening cap bodies. For LEFT/RIGHT it also skims the
+    # bottom edge of slot 0's power-symbol body — fine, intersection
+    # is one wire thickness (~0.127 mm), below the validator's
+    # 0.15 mm noise floor. For TOP/BOTTOM the vertical wire runs
+    # THROUGH slot 0's power-symbol body (the body sits along the X
+    # axis the wire travels), so we skip those clusters.
+    if page_side in ("left", "right"):
+        if abs(from_cap_far.y - to_cap_far.y) > 1e-6:
+            return False
+        seg1 = PlacedWire(start=from_cap_far, end=to_cap_far)
+        segs = (seg1,)
+    else:
+        # TOP/BOTTOM share-wire would cut through slot 0's power
+        # symbol body — leave the sub-slot floating. The 50-error
+        # ERC count includes ~5 of these per uart_bridge / similar.
+        return False
+    # Identify owners at the two endpoints: these are LEGITIMATE
+    # termination points for this wire, not obstacles. We exempt:
+    #   - Any cap symbol whose body contains the endpoint (cap.far IS
+    #     one of the cap's pin tips).
+    #   - The power symbol / local label placed at slot 0's cap.far
+    #     anchor.
+    # For each owner, we also exempt its property-text owner_ids so
+    # the body bbox + Value + Reference text don't block.
+    from zynq_eda.core.layout._constants import PASSIVE_PIN_HALF
+    EPS = 0.05
+    exempt_owners: set[str] = set()
+
+    def _exempt_symbol(ref: str) -> None:
+        exempt_owners.add(f"symbol:{ref}")
+        exempt_owners.add(f"symbol:{ref}:property:Value")
+        exempt_owners.add(f"symbol:{ref}:property:Reference")
+
+    for endpoint in (from_cap_far, to_cap_far):
+        for sym in plan.symbols:
+            # Power symbol / local-label proxy / GND symbol placed
+            # AT cap.far has position == endpoint.
+            if (abs(sym.position.x - endpoint.x) < EPS
+                    and abs(sym.position.y - endpoint.y) < EPS):
+                _exempt_symbol(sym.reference)
+                continue
+            # Vertical cap: pins offset by ±PASSIVE_PIN_HALF in Y.
+            # Horizontal cap: pins offset by ±PASSIVE_PIN_HALF in X.
+            if int(sym.rotation) % 180 == 0:
+                # Vertical: same X, Y offset.
+                if (abs(sym.position.x - endpoint.x) < EPS
+                        and (abs(sym.position.y - PASSIVE_PIN_HALF - endpoint.y) < EPS
+                             or abs(sym.position.y + PASSIVE_PIN_HALF - endpoint.y) < EPS)):
+                    _exempt_symbol(sym.reference)
+            else:
+                # Horizontal: same Y, X offset.
+                if (abs(sym.position.y - endpoint.y) < EPS
+                        and (abs(sym.position.x - PASSIVE_PIN_HALF - endpoint.x) < EPS
+                             or abs(sym.position.x + PASSIVE_PIN_HALF - endpoint.x) < EPS)):
+                    _exempt_symbol(sym.reference)
+        for lab in plan.labels:
+            if (abs(lab.position.x - endpoint.x) < EPS
+                    and abs(lab.position.y - endpoint.y) < EPS):
+                exempt_owners.add(
+                    f"label:{lab.net_name}@{lab.position.x:.1f},{lab.position.y:.1f}"
+                )
+
+    # Probe every segment against current occupancy. If any segment's
+    # bbox would collide with a NON-wire primitive (symbol bodies,
+    # labels, intrinsic text) NOT exempted as an endpoint terminator,
+    # abort — emitting would break the overlap mandate.
+    EXEMPT_KINDS = frozenset({"junction", "no_connect", "wire"})
+    for seg in segs:
+        if seg.start == seg.end:
+            continue
+        bb = wire_bbox(seg.start, seg.end, owner_id="share_probe")
+        hits = plan.occupancy.collides(
+            bb, ignore_kinds=EXEMPT_KINDS, ignore_owners=exempt_owners,
+        )
+        if hits:
+            return False
+
+    # Clean — emit all three segments.
+    emitted = False
+    for seg in segs:
+        if seg.start == seg.end:
+            continue
+        if _add_wire_with_bbox(plan, seg):
+            emitted = True
+    return emitted
+
+
 def _refine_cluster_value_shifts(
     plan: LayoutPlan, geometry, *, consider_wires: bool = False,
 ) -> None:
@@ -2483,6 +2600,14 @@ def _emit_cluster_pins(
         # far-end label/symbol. Each unique destination gets ONE label
         # (the trunk + drops connect all slots to it electrically).
         emitted_destinations_for_pin: set[str] = set()
+        # Track first slot's cap.far per destination so subsequent
+        # slots can wire to it (closes ERC pin_not_connected).
+        first_cap_far_by_dest_for_pin: dict[str, Point] = {}
+        # Track which destinations were emitted as POWER SYMBOLS
+        # (vs local labels). Share-wires only target power symbol
+        # endpoints because wires can terminate at symbol pin tips
+        # but not at label anchors.
+        power_dest_destinations_for_pin: set[str] = set()
         multi_slot_widen = len(part_tokens_for_pin) > 1
         for slot_idx, part_token in enumerate(part_tokens_for_pin):
             slot_pos = _cluster_slot_position(
@@ -2536,17 +2661,26 @@ def _emit_cluster_pins(
             _, cap_far = _cluster_passive_near_far(slot_pos, spec.page_side)
             destination_net = spec.cluster_destinations[slot_idx]
             # Set-dedup: emit far endpoint only once per (pin, destination).
-            # Multiple slots going to the same net share one label/symbol;
-            # the trunk + drops connect them electrically. (Sub-slots'
-            # cap.far pins remain "floating" from KiCad ERC's perspective
-            # — the cap is still in the netlist via its NEAR pin which
-            # IS connected; the far pin would otherwise need a separate
-            # symbol/label whose body/text would crowd the slot 0 one.
-            # Subsequent slot dedup is tracked at the plan level so a
-            # later cleanup pass can attach NoConnect markers if needed.)
+            # Multiple slots going to the same net share one symbol/label
+            # at slot 0; subsequent slots OPTIONALLY get a share-wire
+            # to that slot 0 endpoint when slot 0 has a POWER SYMBOL
+            # (wires legitimately terminate at symbol pin tips) AND
+            # the wire's path is clear of bodies. Label terminators
+            # are excluded — KiCad's strict wire×label rule
+            # (perpendicular offset only) blocks wires ending at label
+            # anchors.
             if destination_net in emitted_destinations_for_pin:
+                first_cap_far = first_cap_far_by_dest_for_pin.get(destination_net)
+                slot0_is_power = destination_net in power_dest_destinations_for_pin
+                if (first_cap_far is not None
+                        and first_cap_far != cap_far
+                        and slot0_is_power):
+                    _try_emit_cluster_share_wire(
+                        plan, cap_far, first_cap_far, spec.page_side,
+                    )
                 continue
             emitted_destinations_for_pin.add(destination_net)
+            first_cap_far_by_dest_for_pin[destination_net] = cap_far
             power_lib_id = _power_symbol_for_destination(destination_net)
             if power_lib_id is not None:
                 # Place the power symbol AT cap.far. KiCad merges its
@@ -2566,6 +2700,7 @@ def _emit_cluster_pins(
                     rotation=rotation,
                 )
                 _plan_register_symbol(plan, pwr_sym, geometry)
+                power_dest_destinations_for_pin.add(destination_net)
             else:
                 # Local label at cap.far naming the destination net.
                 # Set-dedup: multiple slots on the same pin going to the
@@ -2593,6 +2728,12 @@ def _emit_cluster_pins(
                         rotation=label_rot,
                     )
                     _add_label_with_candidate_ladder(plan, lbl)
+                    # Already tracked above for power destinations;
+                    # also record for the label branch so subsequent
+                    # slots can share via Z-bend (if path is clear).
+                    first_cap_far_by_dest_for_pin.setdefault(
+                        destination_net, cap_far,
+                    )
 
 
 def _route_cluster_pins(

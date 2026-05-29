@@ -1,31 +1,11 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-29T18:02:37Z
+Generated: 2026-05-29T18:24:48Z
 
-**Errors:** 50  **Warnings:** 427  **Info:** 0
+**Errors:** 29  **Warnings:** 427  **Info:** 0
 
-## Errors (50)
+## Errors (29)
 
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
@@ -50,7 +30,6 @@ Generated: 2026-05-29T18:02:37Z
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
@@ -303,8 +282,8 @@ Generated: 2026-05-29T18:02:37Z
 - **erc.hier_label_mismatch**: Hierarchical label AUX_IO_12 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label AUX_IO_14 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.multiple_net_names**: Both GND and +VIN are attached to the same items; GND will be used in the netlist _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label USB_DP has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label USB_DM has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label USB_DP has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_CLK_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
