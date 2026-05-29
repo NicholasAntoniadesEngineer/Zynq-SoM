@@ -1,25 +1,25 @@
 Reference,Qty,Value,Footprint,LCSC,MPN,Description,Datasheet
-R100,1,0R01,Resistor_SMD:R_2010_5025Metric,C7126,RL2010FK-070R01L,10 milliohm 1% 0.5W 2010 current-sense shunt (INA226 R_SENSE for rails up to 8A),https://datasheet.lcsc.com/lcsc/YAGEO-RL2010FK-070R01L_C7126.pdf
+R103,1,0R01,Resistor_SMD:R_2010_5025Metric,C7126,RL2010FK-070R01L,10 milliohm 1% 0.5W 2010 current-sense shunt (INA226 R_SENSE for rails up to 8A),https://datasheet.lcsc.com/lcsc/YAGEO-RL2010FK-070R01L_C7126.pdf
 J1,1,1.0-15P,Connector_FFC-FPC:FFC_15P_1mm,?,?,,
-"R100, R101",2,100R,Resistor_SMD:R_0402_1005Metric,C25076,0402WGF1000TCE,"100 ohm 1% 1/16W 0402 (LVDS termination, current limit)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1000TCE_C25076.pdf
+"R102, R103",2,100R,Resistor_SMD:R_0402_1005Metric,C25076,0402WGF1000TCE,"100 ohm 1% 1/16W 0402 (LVDS termination, current limit)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1000TCE_C25076.pdf
 "R100, R101, R102, R104",4,100k,Resistor_SMD:R_0402_1005Metric,C60491,RC0402FR-07100KL,100 kohm 1% 1/16W 0402 (HPD pull-up),https://datasheet.lcsc.com/lcsc/YAGEO-RC0402FR-07100KL_C60491.pdf
-"C100, C101, C102, C103, C104, C105, C106, C108, C109, C111, C112",11,100n,Capacitor_SMD:C_0402_1005Metric,C1525,CL05B104KO5NNNC,100nF 16V X7R MLCC 0402,https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B104KO5NNNC_C1525.pdf
-C102,1,100u,Capacitor_SMD:C_1206_3216Metric,C15008,CL31A107MQHNNNE,100uF 6.3V X5R MLCC 1206,https://datasheet.lcsc.com/lcsc/1810181513_Samsung-Electro-Mechanics-CL31A107MQHNNNE_C15008.pdf
-"R100, R101, R102, R103, R104",5,10k,Resistor_SMD:R_0402_1005Metric,C25744,0402WGF1002TCE,10 kohm 1% 1/16W 0402 (general pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1002TCE_C25744.pdf
-"C104, C110",2,10u,Capacitor_SMD:C_0402_1005Metric,C15525,CL05A106MQ5NUNC,10uF 6.3V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/2304140030_Samsung-Electro-Mechanics-CL05A106MQ5NUNC_C15525.pdf
+"C100, C101, C102, C103, C104, C105, C106, C107, C108, C109, C111, C112, C113, C115, C117, C118",16,100n,Capacitor_SMD:C_0402_1005Metric,C1525,CL05B104KO5NNNC,100nF 16V X7R MLCC 0402,https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B104KO5NNNC_C1525.pdf
+C100,1,100u,Capacitor_SMD:C_1206_3216Metric,C15008,CL31A107MQHNNNE,100uF 6.3V X5R MLCC 1206,https://datasheet.lcsc.com/lcsc/1810181513_Samsung-Electro-Mechanics-CL31A107MQHNNNE_C15008.pdf
+"R100, R101, R102, R103, R104, R105",6,10k,Resistor_SMD:R_0402_1005Metric,C25744,0402WGF1002TCE,10 kohm 1% 1/16W 0402 (general pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1002TCE_C25744.pdf
+"C104, C106, C108, C110, C112, C114, C116",7,10u,Capacitor_SMD:C_0402_1005Metric,C15525,CL05A106MQ5NUNC,10uF 6.3V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/2304140030_Samsung-Electro-Mechanics-CL05A106MQ5NUNC_C15525.pdf
 "C100, C102, C105, C107",4,10u,Capacitor_SMD:C_0603_1608Metric,C19702,CL10A106KP8NNNC,10uF 6.3V X7R MLCC 0603 (VCONN bulk),https://datasheet.lcsc.com/lcsc/1810181513_Samsung-Electro-Mechanics-CL10A106KP8NNNC_C19702.pdf
 "R100, R103, R107",3,1M,Resistor_SMD:R_0402_1005Metric,C25741,0402WGF1004TCE,"1 Mohm 1% 1/16W 0402 (shield to GND, high-impedance)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1004TCE_C25741.pdf
 R102,1,1k,Resistor_SMD:R_0402_1005Metric,C11702,0402WGF1001TCE,1 kohm 1% 1/16W 0402,https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1001TCE_C11702.pdf
 "R101, R103, R105, R107, R108",5,1n_2kV,Capacitor_SMD:C_0603_1608Metric,C70133,GRM188R72E102KW07D,1nF 250V X7R safety MLCC 0603 (Bob Smith termination),https://datasheet.lcsc.com/lcsc/GRM188R72E102KW07D_C70133.pdf
-"C100, C101, C103, C104, C106, C107",6,1u,Capacitor_SMD:C_0402_1005Metric,C52923,CL05A105KP5NNNC,1uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1810171717_Samsung-Electro-Mechanics-CL05A105KP5NNNC_C52923.pdf
+"C100, C101, C102, C103, C104, C106, C107",7,1u,Capacitor_SMD:C_0402_1005Metric,C52923,CL05A105KP5NNNC,1uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1810171717_Samsung-Electro-Mechanics-CL05A105KP5NNNC_C52923.pdf
 "C103, C104",2,200p,Capacitor_SMD:C_0402_1005Metric,C1546,0402CG201J500NT,200pF 50V C0G MLCC 0402 (USB-PD CC cReceiver),https://datasheet.lcsc.com/lcsc/FH-Guangdong-Fenghua-AdvanTech-0402CG201J500NT_C1546.pdf
-R102,1,22R,Resistor_SMD:R_0402_1005Metric,C25105,0402WGF220JTCE,22 ohm 1% 1/16W 0402,https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF220JTCE_C25105.pdf
+R100,1,22R,Resistor_SMD:R_0402_1005Metric,C25105,0402WGF220JTCE,22 ohm 1% 1/16W 0402,https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF220JTCE_C25105.pdf
 R100,1,22k1,Resistor_SMD:R_0402_1005Metric,C25768,0402WGF2212TCE,22.1 kohm 1% 1/16W 0402 (CP2102N VBUS sense divider upper),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF2212TCE_C25768.pdf
 U2,1,24LC256T-I/SN,Package_SO:SOIC-8_3.9x4.9mm_P1.27mm,C5458,24LC256T-I/SN,"256 kbit I2C EEPROM (board ID / EDID), SOIC-8",https://ww1.microchip.com/downloads/aemDocuments/documents/MPD/ProductDocuments/DataSheets/21203P.pdf
 "R109, R110",2,330R,Resistor_SMD:R_0402_1005Metric,C25104,0402WGF3300TCE,330 ohm 1% 1/16W 0402 (LED current limit),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF3300TCE_C25104.pdf
 R101,1,47k5,Resistor_SMD:R_0402_1005Metric,C25819,0402WGF4752TCE,47.5 kohm 1% 1/16W 0402 (CP2102N VBUS sense divider lower),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF4752TCE_C25819.pdf
 "R100, R101, R102, R103, R104",5,4k7,Resistor_SMD:R_0402_1005Metric,C25900,0402WGF4701TCE,4.7 kohm 1% 1/16W 0402 (I2C pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF4701TCE_C25900.pdf
-"C100, C102",2,4u7,Capacitor_SMD:C_0402_1005Metric,C368809,CL05A475KP5NRNC,4.7uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1809181722_Samsung-Electro-Mechanics-CL05A475MP5NSNC_C368809.pdf
+"C100, C101, C103",3,4u7,Capacitor_SMD:C_0402_1005Metric,C368809,CL05A475KP5NRNC,4.7uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1809181722_Samsung-Electro-Mechanics-CL05A475MP5NSNC_C368809.pdf
 "R101, R102, R105, R106",4,5k1,Resistor_SMD:R_0402_1005Metric,C25905,0402WGF5101TCE,5.1 kohm 1% 1/16W 0402 (USB-C CC Rd termination),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF5101TCE_C25905.pdf
 "R100, R102, R104, R106",4,75R,Resistor_SMD:R_0603_1608Metric,C22790,0603WAF750JT5E,75 ohm 1% 1/10W 0603 (Bob Smith Ethernet termination),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0603WAF750JT5E_C22790.pdf
 U1,1,CP2102N-A02-GQFN24R,Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm,C969151,CP2102N-A02-GQFN24R,"USB-to-UART bridge, internal oscillator, QFN-24",https://www.silabs.com/documents/public/data-sheets/cp2102n-datasheet.pdf
