@@ -87,9 +87,6 @@ and labels to read cleanly. 5.08 mm = 2 × grid keeps the layout tight
 while guaranteeing the alternating caps' bounding boxes don't overlap.
 """
 
-PIN_TO_PASSIVE_NEAR_MM = snap_to_grid(2.54)
-"""Gap between an IC pin endpoint and the passive's near terminal."""
-
 PASSIVE_PIN_HALF = 3.81
 """Half the 7.62 mm pin-to-pin separation on Device:R/Device:C.
 
@@ -107,27 +104,6 @@ body half-height (~1.25 mm), the cap's near pin must sit at least
 ~5 mm above pin row. 5.08 mm = 2 × KiCad grid keeps the layout on
 the canonical grid AND leaves the cap body in a band that doesn't
 collide with any neighbouring pin row.
-"""
-
-INTER_PIN_CLUSTER_GAP_MM = snap_to_grid(12.7)
-"""Gap between adjacent IC pins' cap-cluster X (or Y) ranges.
-
-The default gap for the FALLBACK uniform-spacing path used when no
-``per_pin_lane_offset_map`` is supplied. The real per-pin lane widths
-are computed dynamically in ``plan_block`` based on each pin's
-hier-label text width (Part III lane-reservation architecture):
-
-    lane_width(pin) = max(
-        n_slots * PASSIVE_PITCH_MM,        # cluster footprint
-        text_width(net_name) + 2 * VISUAL_CLEARANCE_MM,  # hier-label fit
-    )
-
-For FUSB302 (7 LEFT-side pins × 1 slot @ X=130 with 5.08mm page margin)
-the cumulative outboard width must stay below 130 - 5.08 = 124.92 mm.
-With PASSIVE_OFFSET_MM = 17.78 as the first pin's offset, that leaves
-107 mm budget for 6 inter-pin gaps (each = n_slots*PITCH + GAP).
-12.7 mm × 6 = 76.2 mm gap budget + 6 × 5.08 = 30.5 mm slot footprint =
-107 mm exactly. Anything larger pushes the last pin off-page.
 """
 
 POWER_SYMBOL_OFFSET_MM = snap_to_grid(7.62)
@@ -186,23 +162,6 @@ without merging visually."""
 # every other visible primitive. A router 0 mm pass was attempted
 # during the thrashing era and removed in Part III — it softened
 # the visual-touch rule the user has set in stone.
-
-HLABEL_LADDER_STEPS: int = 20
-"""Number of grid-step Y offsets the hier-label candidate ladder tries
-on each side of the anchor (perpendicular y_offset candidates). The
-ladder spans ``HLABEL_LADDER_STEPS * KICAD_GRID_MM`` mm in each
-direction = 50.8 mm by default."""
-
-HLABEL_SHEET_EDGE_LADDER_STEPS: int = 30
-"""Y-step count for the sheet-edge Y ladder (LEFT/RIGHT edge target
-candidates). 30 × 2.54 = 76.2 mm of Y search around the anchor's
-natural row."""
-
-HLABEL_TOP_BOTTOM_LADDER_STEPS: int = 30
-"""X-step count for TOP/BOTTOM sheet-edge candidates. Each step is
-``KICAD_GRID_MM`` mm; 30 steps = 76.2 mm of X search around anchor.x
-for routing UP to the top edge or DOWN to the bottom edge."""
-
 
 # ---- Predictive planner lane reservation -----------------------------------
 

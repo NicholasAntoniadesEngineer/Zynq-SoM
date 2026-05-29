@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3")
+	(uuid "8e77c8db-7fbb-494a-a083-ee8c1f46a500")
 	(paper "A3")
 	(title_block
 		(title "LVDS LCD bank B (panel + backlight power)")
@@ -781,7 +781,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "2155546b-5ed9-4aa2-a6ac-b9e405edc2a3")
+		(uuid "d1a860ab-7f27-4343-a7c6-5c8d0b9791fd")
 		(property "Reference" "J5B"
 			(at 392.43 129.54 0.0000)
 			(effects
@@ -830,59 +830,59 @@
 			)
 		)
 		(pin "1"
-			(uuid "70f37b05-2f19-494a-bdce-b9261470b1d3")
+			(uuid "ea992738-4e0c-441d-9301-ba7e38631e44")
 		)
 		(pin "2"
-			(uuid "96eb9bd2-b50c-4505-b365-3f47f637bca7")
+			(uuid "3e56d65c-466f-44a6-9042-3375a2fcf037")
 		)
 		(pin "3"
-			(uuid "358a207b-f919-43c1-83de-14d10fcccc0c")
+			(uuid "30c69f4f-9cc1-4bf9-9eb6-891766ee75ac")
 		)
 		(pin "27"
-			(uuid "18e9a06e-6c3e-45ae-a62f-624edc9ed7b5")
+			(uuid "d5074d11-ebdc-46a9-83c9-9c2a29358764")
 		)
 		(pin "28"
-			(uuid "1e14fd54-ea78-4767-8919-8ac4ce5131a5")
+			(uuid "849c62c5-b01f-4190-a5b7-88e2c92ad566")
 		)
 		(pin "29"
-			(uuid "5172476a-e277-46dd-8132-35a5db311ad6")
+			(uuid "2f9e39e5-9b03-45e5-99fc-848b0afa09f9")
 		)
 		(pin "30"
-			(uuid "e345728d-3cc2-4889-84bc-c57d8ceec8f9")
+			(uuid "b37a6706-24ca-45db-8ede-2b44106f2895")
 		)
 		(pin "31"
-			(uuid "d5697888-6e7d-4c2b-af2a-0b638d22bcf3")
+			(uuid "561a2770-fc88-4aca-9543-982c36e6b0fb")
 		)
 		(pin "32"
-			(uuid "97af403b-958a-4b78-afc5-f10cc19ed652")
+			(uuid "7a74f1ad-cd74-425b-8ddb-6ceb63f38eba")
 		)
 		(pin "33"
-			(uuid "0fe24136-bffa-481f-9511-a70a4dd36be2")
+			(uuid "49050272-f382-484a-a02b-be577c92084d")
 		)
 		(pin "34"
-			(uuid "29737147-bafc-4017-becd-89b5291c849c")
+			(uuid "4075da83-ef86-44a7-947f-cc1ba612560a")
 		)
 		(pin "35"
-			(uuid "60b556e0-0663-47c9-a5a4-a47139db951c")
+			(uuid "8b0e652e-10aa-419b-a5ac-5a7c1dffde20")
 		)
 		(pin "36"
-			(uuid "62353b0f-373f-4b62-8937-40ba999c3d4e")
+			(uuid "bc64ebab-2f9a-4720-8001-497810949e2c")
 		)
 		(pin "37"
-			(uuid "94e4ea39-982f-463d-985d-f5c0abafc830")
+			(uuid "ecea918f-b3f2-4ed1-aebd-4d510fc8d206")
 		)
 		(pin "38"
-			(uuid "ac6eb183-92c7-4769-86b0-e7f5b09c90bf")
+			(uuid "8132a6c2-7732-4435-bb74-53ecc9a760c0")
 		)
 		(pin "39"
-			(uuid "99a7147f-0361-494f-807f-dfa6886060b1")
+			(uuid "b728b174-2bab-497e-a9ea-2ec5f817bfc5")
 		)
 		(pin "40"
-			(uuid "f9375c57-a698-44b4-a9e0-049ca026d124")
+			(uuid "776c213a-d043-4440-98c4-c248401913c2")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "J5B")
 					(unit 1)
 				)
@@ -898,7 +898,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3c533a6c-d464-4edc-8ef3-a4be513ca756")
+		(uuid "fd020211-96cf-4e6a-ac59-430a857e37ee")
 		(property "Reference" "#PWR200"
 			(at 368.3 40.64 270)
 			(effects
@@ -927,11 +927,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "4532d3f0-a9b4-400e-99e4-420c6f175b52")
+			(uuid "24b0eb13-ea43-4aa3-8be1-acf654333726")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR200")
 					(unit 1)
 				)
@@ -947,7 +947,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "184ee278-8c76-45f8-9a70-aa31fc803d59")
+		(uuid "5338557a-855b-4883-9623-235570c4b1ee")
 		(property "Reference" "#PWR201"
 			(at 368.3 76.2 270)
 			(effects
@@ -976,11 +976,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "c756dd02-98fe-4042-abd7-1b5b0c5d85f4")
+			(uuid "8328c7b9-6f5a-4c6e-81bb-ac3c2065410e")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR201")
 					(unit 1)
 				)
@@ -996,7 +996,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "b8038fa9-1e37-4beb-91e8-046c533f1128")
+		(uuid "2b5ab6ed-37d6-4ee9-bd6a-b783f84293f6")
 		(property "Reference" "#PWR202"
 			(at 368.3 81.28 270)
 			(effects
@@ -1025,11 +1025,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "839c1a60-c7a8-4638-a619-155670322881")
+			(uuid "9124f77c-560a-4ea9-bbca-1967b5ea9c4d")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR202")
 					(unit 1)
 				)
@@ -1045,7 +1045,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "28bcd2b3-1573-4fd9-945e-520d2b1e40b4")
+		(uuid "7d35b0e3-f465-444c-8ec1-ca0ca4d13939")
 		(property "Reference" "#PWR203"
 			(at 368.3 86.36 270)
 			(effects
@@ -1074,11 +1074,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "1f202bdf-3824-43af-be07-1739925e685b")
+			(uuid "0b6b1d10-f78f-42c8-a0e7-6a72333efda2")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR203")
 					(unit 1)
 				)
@@ -1094,7 +1094,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "ab97855a-c83f-43cb-bee3-d018684b0962")
+		(uuid "76ca6607-8d62-4e64-aff1-399ca17088ad")
 		(property "Reference" "#PWR204"
 			(at 368.3 91.44 270)
 			(effects
@@ -1123,11 +1123,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "4cb64032-f95d-4321-8d5e-d2d11ee8753e")
+			(uuid "829d5aa9-eaea-46a4-b26b-7b42fc2eec92")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR204")
 					(unit 1)
 				)
@@ -1143,7 +1143,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "55f28741-f72b-48dc-935e-05df6bfb5abb")
+		(uuid "c9d2135f-63d9-4f5b-9bf7-51d7d1706ba6")
 		(property "Reference" "#PWR205"
 			(at 368.3 96.52 270)
 			(effects
@@ -1172,11 +1172,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "ab2e6353-b598-4a8f-b609-68958fd5b4f8")
+			(uuid "a4eac250-c968-4fe3-8ee7-5b3b41426da4")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR205")
 					(unit 1)
 				)
@@ -1192,7 +1192,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "397fa956-e443-49d7-93fc-f7809a0d1525")
+		(uuid "14a3429c-e5ed-4d27-9657-88473c999d69")
 		(property "Reference" "#PWR206"
 			(at 368.3 101.6 270)
 			(effects
@@ -1221,11 +1221,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "47049473-44c8-46ef-b76d-050b7a03b3da")
+			(uuid "9ef794df-35b7-4bbd-99cf-f3f8f723205e")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR206")
 					(unit 1)
 				)
@@ -1241,7 +1241,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "fd5ce887-9403-49b6-8ae3-f25bf00dbe54")
+		(uuid "b3aa707f-f962-41a8-bfaf-a68afcf3ec32")
 		(property "Reference" "#PWR207"
 			(at 368.3 106.68 270)
 			(effects
@@ -1270,11 +1270,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "2be3d6b1-9dfe-4c43-b5da-1f2e26cb8ac6")
+			(uuid "876ec015-6238-41c3-bdc8-8ee6c6d49b53")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR207")
 					(unit 1)
 				)
@@ -1290,7 +1290,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "f7872aa4-bb77-46b8-9ee7-3ba2d8d87a73")
+		(uuid "cfc4d46d-11c7-4ae0-8b7e-991e4076b016")
 		(property "Reference" "#PWR208"
 			(at 368.3 111.76 270)
 			(effects
@@ -1319,11 +1319,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "554e1933-66ab-4ebe-af5b-b295b694f72c")
+			(uuid "9325b8e8-1d7c-4b4f-9016-a8c4a97ab9e8")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR208")
 					(unit 1)
 				)
@@ -1339,7 +1339,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c3e5bbad-ec1d-4414-a1e7-c4e2865f23b1")
+		(uuid "326eef80-3db3-4e2a-a7dd-97ca7e72a61d")
 		(property "Reference" "#PWR209"
 			(at 368.3 116.84 270)
 			(effects
@@ -1368,11 +1368,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "83584b03-77d4-4f0e-8a93-94d34b520cb0")
+			(uuid "c67949fd-5bf3-4a56-b58e-817746960a2a")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR209")
 					(unit 1)
 				)
@@ -1388,7 +1388,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3ceacca1-5111-4d8c-84fa-ce2f39802a62")
+		(uuid "b23af76e-4cc1-49ee-b8dd-fa54ac3985d7")
 		(property "Reference" "#PWR210"
 			(at 368.3 121.92 270)
 			(effects
@@ -1417,11 +1417,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "a2511dd7-c11d-4454-872c-fcfcb0864eab")
+			(uuid "6b03e01c-d8d2-403f-a65f-ad771882e182")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR210")
 					(unit 1)
 				)
@@ -1437,7 +1437,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "30809435-3888-415f-8f74-3127c991fc47")
+		(uuid "d6b322c9-491d-4c54-a49d-9746215e52bd")
 		(property "Reference" "C100"
 			(at 327.025 43.18 0.0000)
 			(effects
@@ -1466,14 +1466,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "b68eab95-3239-4e6d-a4a6-0ad10307fb12")
+			(uuid "efee9fbc-df3a-47c1-b2d9-d10a77f98d6c")
 		)
 		(pin "2"
-			(uuid "0dfd7143-42ab-43c6-a3c1-c2ef53ccd401")
+			(uuid "1d02c49d-51bb-4cc6-8471-1739e0c92b7f")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1489,7 +1489,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "27800251-d98f-4745-b197-79157accc0b9")
+		(uuid "6526c4f9-2301-418f-be9f-821cea0cc0e4")
 		(property "Reference" "#PWR300"
 			(at 326.39 43.18 180)
 			(effects
@@ -1518,11 +1518,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "b30db124-04a7-45bc-9dbe-0b2391f127a9")
+			(uuid "9cc38900-e160-40b3-bbd2-2473f76309a5")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR300")
 					(unit 1)
 				)
@@ -1538,7 +1538,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "101011b0-5488-4c66-bf65-e3da7eec8926")
+		(uuid "1ba22534-3a3f-4812-861c-5036920eec9a")
 		(property "Reference" "C101"
 			(at 321.945 43.18 0.0000)
 			(effects
@@ -1567,14 +1567,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "255f8b23-313c-4bb2-ba67-8a17e1a22661")
+			(uuid "11097c33-3f69-4afe-a022-3318fe9b5d88")
 		)
 		(pin "2"
-			(uuid "13dc7823-5deb-48a2-be95-960217131ff0")
+			(uuid "7855c359-84d2-4f61-ac12-a5c6d4c32dd5")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1590,7 +1590,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d79b5191-e553-4469-bcb2-a0f47690ed48")
+		(uuid "ba8fbc68-e86d-4bdb-9908-6de145a1f331")
 		(property "Reference" "C102"
 			(at 337.185 53.34 0.0000)
 			(effects
@@ -1619,14 +1619,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "7456c7c2-c215-44a5-9ecd-638190ad462a")
+			(uuid "3610fefe-57ee-41fd-9c7f-123bcbd8f729")
 		)
 		(pin "2"
-			(uuid "fc5915b7-b0e7-4207-ab3f-0b00c41169d5")
+			(uuid "2dfb6065-e3b9-45e9-b87a-165ebd7c8a24")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "C102")
 					(unit 1)
 				)
@@ -1642,7 +1642,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0680db16-a661-4376-9432-3706aab655f4")
+		(uuid "9698116e-30d6-4769-9f0d-fe775ee96cee")
 		(property "Reference" "#PWR301"
 			(at 336.55 53.34 180)
 			(effects
@@ -1671,11 +1671,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "8db3c5f2-4dd3-443f-a0f5-adde07defe3c")
+			(uuid "9f04bf04-0cd2-4085-93ba-6fab9427f2d9")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#PWR301")
 					(unit 1)
 				)
@@ -1691,7 +1691,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "746164ac-b519-41fa-85a6-e23e74eb8d5c")
+		(uuid "0da8cf79-a178-4783-873a-b29dd7f1973f")
 		(property "Reference" "#FLG100"
 			(at 354.33 67.945 0.0000)
 			(effects
@@ -1720,11 +1720,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "e2609e4d-a835-40ed-9378-d98799977e0f")
+			(uuid "49ee7c44-7aed-4e13-8d0a-979baba9b5d3")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#FLG100")
 					(unit 1)
 				)
@@ -1740,7 +1740,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6ab99028-abfc-4d95-b4cc-e176d0a7fb60")
+		(uuid "06b9cf7a-707b-4d58-a82b-e3d3f3c6aed7")
 		(property "Reference" "#FLG101"
 			(at 374.65 52.705 0.0000)
 			(effects
@@ -1769,11 +1769,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "104873c1-b45b-48bf-ad97-dc9c87a3bbdc")
+			(uuid "ccf62b72-6ed8-4ce3-8e5e-090a428ccb07")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/c6d43cc4-c6e9-42e9-a45a-23ba17a0bce3"
+				(path "/8e77c8db-7fbb-494a-a083-ee8c1f46a500"
 					(reference "#FLG101")
 					(unit 1)
 				)
@@ -1788,7 +1788,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a9a99dfe-1d24-4980-afaa-9d31a252d3cf")
+		(uuid "0fc687b7-b706-475c-8f40-2e9af95bef85")
 	)
 	(wire
 		(pts
@@ -1798,7 +1798,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "07ae3edc-8f5f-4b95-b5f7-7c21887c4b75")
+		(uuid "9c185efc-9efe-4bdf-9a5a-7157a9aad2f1")
 	)
 	(wire
 		(pts
@@ -1808,7 +1808,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "02c1c6c5-81b9-4e3c-bafa-c5d4cd2c3eb2")
+		(uuid "3023d576-5916-4cc4-b2fd-f4b51975905a")
 	)
 	(wire
 		(pts
@@ -1818,7 +1818,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7b6aae17-5100-4b8c-b7ff-d347935fe496")
+		(uuid "55367ffc-ed32-40bd-8b56-bad83b6926d0")
 	)
 	(wire
 		(pts
@@ -1828,7 +1828,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a240121e-cc84-46b1-972e-bf840f3a83da")
+		(uuid "1547b77f-0fe5-4c66-8ee9-2e99255efba9")
 	)
 	(wire
 		(pts
@@ -1838,7 +1838,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f8de6b5c-d935-4f8a-b1c4-92219f7c3955")
+		(uuid "938b3ad5-4e76-4296-82f2-75d17e60df13")
 	)
 	(wire
 		(pts
@@ -1848,7 +1848,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "34b68e29-df3a-46f8-bff6-c0156af459c9")
+		(uuid "e52e9cf2-41db-41ea-ac22-d1563acfd9a6")
 	)
 	(wire
 		(pts
@@ -1858,7 +1858,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "da7fc23b-e58a-4495-98d6-7d73d584d5a3")
+		(uuid "848251c5-10f0-481a-a140-6db1c5d033bf")
 	)
 	(wire
 		(pts
@@ -1868,19 +1868,19 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b3c38fe2-822a-47d0-a10e-53e317e0dfb4")
+		(uuid "0384196e-7eeb-4648-965a-fbbae79ff54d")
 	)
 	(junction
 		(at 326.39 45.72)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "037d6504-ad14-4f84-b7b2-d09bfc002cca")
+		(uuid "f26a332d-837d-484e-bdcc-36efa8be2bf3")
 	)
 	(junction
 		(at 354.33 66.04)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "d35b2720-0de8-428c-9a03-4845c40f4838")
+		(uuid "c0f4434d-fef2-41cf-8acc-792a35fa9b3e")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
@@ -1891,7 +1891,7 @@
 			)
 			(justify left)
 		)
-		(uuid "12118878-78b1-4751-95af-6415828df350")
+		(uuid "bc61dcec-3bf6-420b-a9a9-86d95dac1611")
 	)
 	(hierarchical_label "+12V"
 		(shape input)
@@ -1902,7 +1902,7 @@
 			)
 			(justify left)
 		)
-		(uuid "ef29de7e-4653-43fa-8ed0-867592d9a1e5")
+		(uuid "24b57a3f-a77e-42ed-b6b6-81782143210c")
 	)
 	(hierarchical_label "+12V"
 		(shape input)
@@ -1913,7 +1913,7 @@
 			)
 			(justify left)
 		)
-		(uuid "6141bd25-2f63-4329-8ae4-6a0e0c5ee26b")
+		(uuid "32bb49de-fd88-42bb-bdf8-6c8a609ad6c2")
 	)
 	(hierarchical_label "+12V"
 		(shape input)
@@ -1924,7 +1924,7 @@
 			)
 			(justify left)
 		)
-		(uuid "caae5253-e579-45a8-b97a-99259128b3a5")
+		(uuid "86bf44f2-41dd-4c4d-bb5e-cd16be64f2d2")
 	)
 	(sheet_instances
 		(path "/"

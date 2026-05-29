@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "e7b4de92-1a62-4241-bbf0-74e07660bc0c")
+	(uuid "fac59238-3ab6-4182-a82b-28b67fac845e")
 	(paper "A3")
 	(title_block
 		(title "SoM Mate J1 bank A (PS MIO + system rails)")
@@ -1212,7 +1212,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3e84e1f1-3c94-4f11-9c7c-e2bfa3181098")
+		(uuid "1e898a46-97ed-4dda-9bee-7e92e1d848f9")
 		(property "Reference" "J1A"
 			(at 69.85 180.34 0.0000)
 			(effects
@@ -1261,170 +1261,170 @@
 			)
 		)
 		(pin "A1"
-			(uuid "2abf4816-30b9-49a4-8fb4-c72042c35451")
+			(uuid "f7c553fd-71c6-4ac9-9f29-02186ef40cb0")
 		)
 		(pin "A2"
-			(uuid "b7d35ffc-f160-4220-8b4d-08bb9d5a0e27")
+			(uuid "316da5b9-5d5b-49d9-8a74-a772baa84f94")
 		)
 		(pin "A3"
-			(uuid "180006e9-c1a7-40ed-92f3-5bef4f96ed3b")
+			(uuid "3f1caf52-0166-4456-a444-9189070b999c")
 		)
 		(pin "A4"
-			(uuid "3fd2d81f-856f-436e-baeb-b6f976237846")
+			(uuid "c7038623-0f99-48f7-9aeb-aaed236a8e10")
 		)
 		(pin "A5"
-			(uuid "95410a62-76fa-433a-a18d-77b51a746ae2")
+			(uuid "3c8423c5-8ed5-468b-a224-41eed50f5d66")
 		)
 		(pin "A6"
-			(uuid "a0d54d16-2119-4834-bd95-5e861f9d092f")
+			(uuid "a85d70fd-0662-48dd-b58d-29f3db845065")
 		)
 		(pin "A7"
-			(uuid "ad480110-d10b-4857-bbfc-a723cf2a4968")
+			(uuid "f75b3a24-e4a6-45e1-9a91-ab8043e3c86b")
 		)
 		(pin "A8"
-			(uuid "967c22b8-a48f-4213-9042-1ea6d53eb7ce")
+			(uuid "17b76502-0b26-424f-828a-19f2bbc9f298")
 		)
 		(pin "A9"
-			(uuid "7bbd8b25-3307-42b2-ac2e-25e275624bf7")
+			(uuid "b09f892b-62ec-43df-980a-12b52e8f448e")
 		)
 		(pin "A10"
-			(uuid "5a5f169c-8653-4e01-bf7c-349cdec6519f")
+			(uuid "0d17a432-777a-4463-9c95-7d1b8b0f2979")
 		)
 		(pin "A11"
-			(uuid "f400bae3-bdbd-42f2-9144-3ea2758b864f")
+			(uuid "d771ccc8-1645-4db9-a978-c890100a0593")
 		)
 		(pin "A12"
-			(uuid "283d1717-700c-450e-adb7-615727131247")
+			(uuid "7f2f3690-8768-4cde-b292-b7653af4a857")
 		)
 		(pin "A13"
-			(uuid "bf8235cd-67e2-44a8-bcb0-e6607c20cf82")
+			(uuid "c76db482-2cb4-4553-80c6-1b721376c5e2")
 		)
 		(pin "A14"
-			(uuid "65b73f62-7b30-47ea-be28-2c00a9fcd603")
+			(uuid "3a1c8c6d-ac18-4048-b57d-7d4f015f908c")
 		)
 		(pin "A15"
-			(uuid "59a1b299-508d-4f68-bafe-b5b584058f36")
+			(uuid "af17f80c-4620-45bc-bb47-669ef5a9596e")
 		)
 		(pin "A16"
-			(uuid "69a73444-ea20-4881-9b02-2cd140b034a8")
+			(uuid "3fa745fd-2946-4cd5-8e46-a201a9871cfc")
 		)
 		(pin "A17"
-			(uuid "a35714ae-c3e8-493b-90ca-c55108200a44")
+			(uuid "6bf2dd1c-7060-40fc-9e33-bb04307501e6")
 		)
 		(pin "A18"
-			(uuid "b328b7cc-d1d4-4ea2-8fb9-0e43f6fec557")
+			(uuid "dc38a63f-3f99-4a59-ba79-2d622a764204")
 		)
 		(pin "A19"
-			(uuid "c4bfc64a-f44e-4479-bcc1-781e34fcab32")
+			(uuid "54100ba1-2491-413e-864f-6a98aa66a71a")
 		)
 		(pin "A20"
-			(uuid "9a556fa8-bbca-4183-8255-a5e19286181f")
+			(uuid "03e45615-0d58-401a-88d4-4d0bd1a03bdf")
 		)
 		(pin "A21"
-			(uuid "a8defb34-8755-4cb9-b85f-0474fc627c70")
+			(uuid "dc888fc5-02fd-4ff6-8c4a-02e53297ad5e")
 		)
 		(pin "A22"
-			(uuid "7b55fb7d-c8b3-4d12-be2f-3893557cbeb8")
+			(uuid "549d3234-8022-4791-b166-1ee6fd8ab828")
 		)
 		(pin "A23"
-			(uuid "462323f1-80b0-422e-ac6e-2f27edfe1d84")
+			(uuid "002a22f4-aa84-4f23-b029-fa8cd4d77292")
 		)
 		(pin "A24"
-			(uuid "116530ed-ae54-4387-88c4-fd680dc0e241")
+			(uuid "d8bcbc70-bd91-4f48-aa94-955c001bfb8c")
 		)
 		(pin "A25"
-			(uuid "2c53bad7-2d47-4781-a9d0-864b6c86e194")
+			(uuid "d72fb4d3-fbe0-4c46-82db-d14e997882eb")
 		)
 		(pin "A26"
-			(uuid "61739f6c-5574-410b-9e35-eb1f8512dde2")
+			(uuid "52284c38-e288-4af3-bfd6-212cdba514a9")
 		)
 		(pin "A27"
-			(uuid "63ad554e-cc71-4f40-9081-ec26f42ac8ab")
+			(uuid "af722ad3-e331-47a6-a00d-fc13846d8ec2")
 		)
 		(pin "B1"
-			(uuid "6064f732-68b3-4abc-beab-1a026c41e7f2")
+			(uuid "f68084c1-59f2-4989-8c61-f2d04c5bf923")
 		)
 		(pin "B2"
-			(uuid "9f216f4d-499a-40f8-a578-b327f0f0749d")
+			(uuid "20a591b5-e66f-449d-881a-574e848deeca")
 		)
 		(pin "B3"
-			(uuid "cd25a9c9-b9f9-4f73-9030-7fc149f70b24")
+			(uuid "113cd84d-4bf0-4d2b-861f-36784c5c3634")
 		)
 		(pin "B4"
-			(uuid "8805ef35-c564-4825-90b6-921a0abfc307")
+			(uuid "40696753-a020-46d5-b365-16a706ac51d0")
 		)
 		(pin "B5"
-			(uuid "4e9c5a20-9e12-4238-b0cc-6c5a64c4972c")
+			(uuid "e302dddb-ad94-4c04-b29e-3a29ad728cab")
 		)
 		(pin "B6"
-			(uuid "4c98777e-33e1-4ac5-98ec-c3cea620bcde")
+			(uuid "380e3daf-2b81-4c71-9e85-62ac615efa56")
 		)
 		(pin "B7"
-			(uuid "daa84761-2468-4575-8f8a-66524923b1c1")
+			(uuid "61901a36-4a39-4eae-90a5-901156ffec8c")
 		)
 		(pin "B8"
-			(uuid "c0208b53-a9c9-4919-be7c-4f37052dc4c7")
+			(uuid "211451db-038f-4b49-89e1-2222a4657c8f")
 		)
 		(pin "B9"
-			(uuid "52741705-a10b-408b-ac6a-00bd68b54793")
+			(uuid "a293b3e1-2a2b-4db0-a383-d331916b3477")
 		)
 		(pin "B10"
-			(uuid "b9ab5717-8f05-469c-b9a3-b1d55b1c5a39")
+			(uuid "334f02da-8125-43cb-a172-cf3f7c899b35")
 		)
 		(pin "B11"
-			(uuid "60d623e4-db88-46de-a385-6c1e5c6df233")
+			(uuid "d225f321-caf2-42c3-960c-490aa8761a19")
 		)
 		(pin "B12"
-			(uuid "07ea3e7c-6e3d-4df0-82b0-ed5112b08664")
+			(uuid "30861261-9dd3-4f3e-842b-825111ac1900")
 		)
 		(pin "B13"
-			(uuid "29321104-3be9-4360-a8ff-5da8b8e2fa56")
+			(uuid "415cc856-5039-4396-8c92-3a6ce39d06dc")
 		)
 		(pin "B14"
-			(uuid "df5433e0-4c99-4e76-9b7a-7bc6ef89ebf9")
+			(uuid "fd2af394-9ec6-40d2-88b6-429c9c7aaed5")
 		)
 		(pin "B15"
-			(uuid "6a9bd515-4459-4259-8f27-518fb189b7fc")
+			(uuid "5fad7053-252f-453d-90f8-021f1c43e131")
 		)
 		(pin "B16"
-			(uuid "b0fb375a-462f-4202-b60f-76b40dbbb6d8")
+			(uuid "1ff3dd2a-86d2-4468-bc39-e2ccddfeb72d")
 		)
 		(pin "B17"
-			(uuid "76553833-7f25-4447-a639-a5e7dc508afd")
+			(uuid "e3d30a4f-a0f2-42df-8e88-d718786d63aa")
 		)
 		(pin "B18"
-			(uuid "d60316bc-76ec-4279-a0a3-b36d3e36932f")
+			(uuid "95c95292-c03d-4af4-8374-ed004b1d825a")
 		)
 		(pin "B19"
-			(uuid "d50dfbd1-d3bc-4bdb-835d-1f6591ad0e1d")
+			(uuid "71c25fa6-8f33-42fd-acce-37a4e30e9259")
 		)
 		(pin "B20"
-			(uuid "5f4e18e3-3e2c-418a-bc1d-2c7c08614cd9")
+			(uuid "ddcff62d-86b4-4920-91a4-1fb31c90a115")
 		)
 		(pin "B21"
-			(uuid "5f359f79-1b5f-4828-98d5-0c0f9d5db63c")
+			(uuid "846a0708-9ae2-4394-9b94-4d3246a9ab96")
 		)
 		(pin "B22"
-			(uuid "44225e04-1cc4-4843-95bc-59c22dda6c58")
+			(uuid "3a5986a1-e91e-49af-b00d-2a936ae36e06")
 		)
 		(pin "B23"
-			(uuid "4fcf14b1-95b7-451d-be47-c00e4635aed2")
+			(uuid "61805045-07dd-499d-9393-e6575b4c3740")
 		)
 		(pin "B24"
-			(uuid "da9402ba-133b-4fa4-83fa-b5281ec795b7")
+			(uuid "c0670e0a-88a9-41d1-835e-52df57749c69")
 		)
 		(pin "B25"
-			(uuid "8f67db67-e400-46e2-8163-433ee722c66e")
+			(uuid "58f65669-45ba-444c-9e8b-45f2b626fd2d")
 		)
 		(pin "B26"
-			(uuid "71d548f9-e598-47cf-9310-54b9dcc563bb")
+			(uuid "dfbc12cf-464b-4a04-9271-cd664b878991")
 		)
 		(pin "B27"
-			(uuid "70f2b021-15ac-4616-9b84-b1765c897bcb")
+			(uuid "d4df9e2d-28d4-4b6c-b7d7-ac0085441319")
 		)
 		(instances
 			(project "SoM Mate J1 bank A (PS MIO + system rails)"
-				(path "/e7b4de92-1a62-4241-bbf0-74e07660bc0c"
+				(path "/fac59238-3ab6-4182-a82b-28b67fac845e"
 					(reference "J1A")
 					(unit 1)
 				)
@@ -1440,7 +1440,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "4c1b281c-8d37-44cd-ab8f-f19096acd12a")
+		(uuid "bbc8350a-d73b-4569-bf24-44c39d2a93a4")
 		(property "Reference" "#FLG100"
 			(at 52.07 67.945 0.0000)
 			(effects
@@ -1469,11 +1469,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "f3809f08-8bf2-4534-8a78-558261926acc")
+			(uuid "ef8e1458-2751-456d-95e2-d0707cbde475")
 		)
 		(instances
 			(project "SoM Mate J1 bank A (PS MIO + system rails)"
-				(path "/e7b4de92-1a62-4241-bbf0-74e07660bc0c"
+				(path "/fac59238-3ab6-4182-a82b-28b67fac845e"
 					(reference "#FLG100")
 					(unit 1)
 				)
@@ -1489,7 +1489,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "b9145e0e-3bef-429c-9afa-68d00a8b06ef")
+		(uuid "2a6e1270-2a31-4d07-b609-55ee8f739a4a")
 		(property "Reference" "#FLG101"
 			(at 52.07 47.625 0.0000)
 			(effects
@@ -1518,11 +1518,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "38197019-d641-4aa4-b54b-a232d5ac775c")
+			(uuid "826d9150-3d83-4948-a829-b1e17d739547")
 		)
 		(instances
 			(project "SoM Mate J1 bank A (PS MIO + system rails)"
-				(path "/e7b4de92-1a62-4241-bbf0-74e07660bc0c"
+				(path "/fac59238-3ab6-4182-a82b-28b67fac845e"
 					(reference "#FLG101")
 					(unit 1)
 				)
@@ -1537,7 +1537,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "70c9e63f-f133-43dc-9221-e30ec4b4c477")
+		(uuid "18968947-9019-462d-a3d2-d4b5467ea4c6")
 	)
 	(wire
 		(pts
@@ -1547,7 +1547,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "76e16067-632e-44bb-a6a9-e126819da43c")
+		(uuid "3682098e-3612-49c9-9855-7c1ac12ca3ad")
 	)
 	(wire
 		(pts
@@ -1557,7 +1557,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f0eed5e7-7538-455a-a7ed-0b3fe472b473")
+		(uuid "0ae2759e-6dc7-448f-bea8-ae5762ffb593")
 	)
 	(wire
 		(pts
@@ -1567,7 +1567,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5daffc58-09d3-40ca-a297-8df31d38b204")
+		(uuid "676bf152-43d7-4319-a4e5-7824c5fd99e0")
 	)
 	(wire
 		(pts
@@ -1577,7 +1577,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6b914615-cbb0-4e71-a054-f2d04c6056d2")
+		(uuid "98ef9558-50cb-4740-a759-6420e9477d74")
 	)
 	(wire
 		(pts
@@ -1587,7 +1587,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ec3c2e0d-86ec-4f1e-b5b2-4eb74d72fdbf")
+		(uuid "9b303c2c-68ff-4936-ba4e-afd3c26a63b1")
 	)
 	(wire
 		(pts
@@ -1597,7 +1597,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f44717b8-d118-465a-9695-487b3e0c234e")
+		(uuid "f74a08e4-a959-4fa5-8e10-7fdc6328f4a4")
 	)
 	(wire
 		(pts
@@ -1607,7 +1607,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "91c6e127-7b9c-4e39-b2fe-8bda0e908d9f")
+		(uuid "90ce88f6-afc8-4fee-b6c1-2a0588cb76ab")
 	)
 	(wire
 		(pts
@@ -1617,7 +1617,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "56f7dc8d-0330-4a5c-b6b5-830db6834e76")
+		(uuid "8f1e3022-31a0-42f6-ad14-31110d906fb9")
 	)
 	(wire
 		(pts
@@ -1627,7 +1627,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9e711314-f91b-4c3d-94c6-ac6105a45a91")
+		(uuid "367fdc3e-6b4f-4def-a4b4-2e67de3cced5")
 	)
 	(wire
 		(pts
@@ -1637,7 +1637,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c4365ec3-d6fb-4aa7-b464-77bd9af4a75f")
+		(uuid "84c8efa6-d6ba-4bd4-b5b0-51a0e8f940e5")
 	)
 	(wire
 		(pts
@@ -1647,7 +1647,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e72fbc45-fa4b-4b8c-8065-518a6b463fa6")
+		(uuid "1be50377-3fa6-414f-b929-783947dd83de")
 	)
 	(wire
 		(pts
@@ -1657,7 +1657,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "76ddc659-b4c1-41c3-90f4-ca6444b6ce03")
+		(uuid "eb87c625-a832-4087-80a2-e44ac8e57aea")
 	)
 	(wire
 		(pts
@@ -1667,7 +1667,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "71735bc3-55a3-476e-8ace-e3d1d203483f")
+		(uuid "2f16622e-47b7-48e9-ace9-369c91f5dceb")
 	)
 	(wire
 		(pts
@@ -1677,7 +1677,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a1801dca-b0f6-4907-a555-54fa6cc26e5b")
+		(uuid "03af0419-180c-4ef4-b4a1-f281021e8a0d")
 	)
 	(wire
 		(pts
@@ -1687,7 +1687,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2284eb14-4131-4d78-b5e8-fbb94eeb3953")
+		(uuid "c8f09126-ba68-4830-ac32-a49a36b35db4")
 	)
 	(wire
 		(pts
@@ -1697,7 +1697,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7506d729-d348-46f4-9514-961ee13eb375")
+		(uuid "22477d53-8514-4f81-9e66-c001add25c65")
 	)
 	(wire
 		(pts
@@ -1707,7 +1707,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "01f32362-b351-4a9e-83e3-7ee334ca1ded")
+		(uuid "38cfb845-7ddc-4fdc-8f87-4e477432affd")
 	)
 	(wire
 		(pts
@@ -1717,7 +1717,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "934a2416-effa-4362-b782-8ebf87f3f4a8")
+		(uuid "47688df9-f825-43dd-9319-81a8ebd7646d")
 	)
 	(wire
 		(pts
@@ -1727,7 +1727,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ad6ee8ca-a08e-487b-8e4e-06adbc3d91fd")
+		(uuid "be07dd2f-d728-48ac-bef6-033ea6a18a31")
 	)
 	(wire
 		(pts
@@ -1737,7 +1737,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b796e065-bec0-463d-a195-2c4a349b9f5f")
+		(uuid "521ba055-2ab7-4160-922f-5f30b4fe6807")
 	)
 	(hierarchical_label "+VIN"
 		(shape input)
@@ -1748,7 +1748,7 @@
 			)
 			(justify left)
 		)
-		(uuid "fa448787-1cf3-44b4-8aaf-87d7e93312be")
+		(uuid "2519daeb-1eb8-4423-881c-5112996209f5")
 	)
 	(hierarchical_label "+VIN"
 		(shape input)
@@ -1759,7 +1759,7 @@
 			)
 			(justify left)
 		)
-		(uuid "3470e90a-dcd2-49ba-afe5-6b19c7892306")
+		(uuid "cd6ec869-e633-475f-ab41-e99563653bb5")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1770,7 +1770,7 @@
 			)
 			(justify left)
 		)
-		(uuid "d0ad8eb4-2505-4bfa-8eab-3c341a77feb5")
+		(uuid "5d54c9d4-fa7c-42e1-802f-ff1561257fe8")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1781,7 +1781,7 @@
 			)
 			(justify left)
 		)
-		(uuid "b40e8450-6451-458a-a72f-9de80e0bd1e4")
+		(uuid "aebbfa91-9a28-4805-a05d-92accee7b5ec")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
@@ -1792,7 +1792,7 @@
 			)
 			(justify left)
 		)
-		(uuid "768f9a01-fd58-49f1-816f-b102a6092fc8")
+		(uuid "97ea6c31-6930-487f-88ea-c92108057206")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
@@ -1803,7 +1803,7 @@
 			)
 			(justify left)
 		)
-		(uuid "06e21572-54e2-47b5-a876-a7308a1213d1")
+		(uuid "c8f79469-072f-465e-a86b-98c22b326591")
 	)
 	(hierarchical_label "ZYNQ_PS_UART0_TXD"
 		(shape input)
@@ -1814,7 +1814,7 @@
 			)
 			(justify left)
 		)
-		(uuid "57798871-768f-4890-ac54-0156df431936")
+		(uuid "8ac60a2a-cc7b-4d4c-bdde-4af4d56621dc")
 	)
 	(hierarchical_label "ZYNQ_PS_UART0_RXD"
 		(shape input)
@@ -1825,7 +1825,7 @@
 			)
 			(justify left)
 		)
-		(uuid "69026c2f-4ad8-4ea1-a55f-4b3c5e555f5b")
+		(uuid "f3b48d6a-82e5-4911-b29d-708c77da4b65")
 	)
 	(hierarchical_label "ZYNQ_PS_USB0_DP"
 		(shape input)
@@ -1836,7 +1836,7 @@
 			)
 			(justify left)
 		)
-		(uuid "a81069cd-59fe-4bbb-b1e9-21614195ce0b")
+		(uuid "e645580a-52b3-48b7-8900-a74c719fe76c")
 	)
 	(hierarchical_label "ZYNQ_PS_USB0_DM"
 		(shape input)
@@ -1847,7 +1847,7 @@
 			)
 			(justify left)
 		)
-		(uuid "57dc5475-3194-4250-819d-b7a92b5a952e")
+		(uuid "57b582a0-ae96-49c0-b3ed-aea4487591b6")
 	)
 	(hierarchical_label "ZYNQ_PS_USB0_OTG_ID"
 		(shape input)
@@ -1858,7 +1858,7 @@
 			)
 			(justify left)
 		)
-		(uuid "52878365-e444-4f8f-ba98-1c256db822a2")
+		(uuid "4ef7e52f-f21a-40c7-90bc-c0bd0072718a")
 	)
 	(hierarchical_label "ZYNQ_PS_I2C1_SCL"
 		(shape input)
@@ -1869,7 +1869,7 @@
 			)
 			(justify left)
 		)
-		(uuid "e7103dd6-72ae-4a01-9c5d-9ef99d02ab9b")
+		(uuid "4561d318-bbca-4ccb-98c0-fb0784f30677")
 	)
 	(hierarchical_label "ZYNQ_PS_I2C1_SDA"
 		(shape input)
@@ -1880,7 +1880,7 @@
 			)
 			(justify left)
 		)
-		(uuid "09b3c736-fa9b-4e66-9b8d-4e56630526b6")
+		(uuid "faa2b8fa-d5e7-4ce6-822d-c83bf46046fd")
 	)
 	(hierarchical_label "ZYNQ_PS_SD1_CLK"
 		(shape input)
@@ -1891,7 +1891,7 @@
 			)
 			(justify left)
 		)
-		(uuid "05c6150d-58b9-47d0-8370-555118e33ccc")
+		(uuid "3abf4db5-f9ed-4f6c-8648-8b6bda4f560d")
 	)
 	(hierarchical_label "ZYNQ_PS_SD1_CMD"
 		(shape input)
@@ -1902,7 +1902,7 @@
 			)
 			(justify left)
 		)
-		(uuid "5f652fde-34bd-43a3-95fa-2a91308da2d1")
+		(uuid "a6e1c948-94f4-48ad-96e3-b776e2f10622")
 	)
 	(hierarchical_label "ZYNQ_PS_SD1_DAT0"
 		(shape input)
@@ -1913,7 +1913,7 @@
 			)
 			(justify left)
 		)
-		(uuid "0c9a6cec-63a4-4e82-baf6-0a23783a1880")
+		(uuid "13ddcc41-c6eb-48ff-aa80-1a84047f4193")
 	)
 	(hierarchical_label "ZYNQ_PS_SD1_DAT1"
 		(shape input)
@@ -1924,7 +1924,7 @@
 			)
 			(justify left)
 		)
-		(uuid "8386adcc-99ae-4d20-81dd-91664574a192")
+		(uuid "ce545177-0290-4efb-a7a8-6a40bda98aa5")
 	)
 	(hierarchical_label "ZYNQ_PS_SD1_DAT2"
 		(shape input)
@@ -1935,7 +1935,7 @@
 			)
 			(justify left)
 		)
-		(uuid "951fe631-9b87-4089-97f3-fa649279c59a")
+		(uuid "89115bbc-a871-4c33-bf1e-d15147d6e971")
 	)
 	(hierarchical_label "ZYNQ_PS_SD1_DAT3"
 		(shape input)
@@ -1946,7 +1946,7 @@
 			)
 			(justify left)
 		)
-		(uuid "388b05b3-3c95-4c68-83a1-9d5d70f44472")
+		(uuid "9ff8f204-20be-45d8-a290-f4c6ee1648dd")
 	)
 	(hierarchical_label "ZYNQ_PS_SD1_CD_N"
 		(shape input)
@@ -1957,7 +1957,7 @@
 			)
 			(justify left)
 		)
-		(uuid "e004cac6-9783-4a03-b933-c838dfe397ed")
+		(uuid "dd36e577-4f7c-44d7-80f9-b6c91a7697d6")
 	)
 	(hierarchical_label "ZYNQ_PS_SRST_N"
 		(shape input)
@@ -1968,139 +1968,139 @@
 			)
 			(justify left)
 		)
-		(uuid "d3deab9f-e386-4f7e-8e6a-0862b307d799")
+		(uuid "0e9db5de-926d-4c9e-b176-b00775ee8a68")
 	)
 	(no_connect
 		(at 52.07 71.12)
-		(uuid "2e8c6e7a-87b0-4bc6-85cf-2927bd15f67d")
+		(uuid "60ffbdf2-d29b-41fb-83dc-9265e12e822f")
 	)
 	(no_connect
 		(at 52.07 76.2)
-		(uuid "19c97cf1-7158-42ce-86ff-17697a1e964f")
+		(uuid "baca90bb-0022-4b8b-98ff-df48e9248721")
 	)
 	(no_connect
 		(at 52.07 81.28)
-		(uuid "4d15e216-b163-40fe-9193-bff2564cd23a")
+		(uuid "7f21108c-e8e9-4280-b99c-0f7cf1b9ca55")
 	)
 	(no_connect
 		(at 52.07 86.36)
-		(uuid "955e4a43-022f-48fc-b983-03dfcc2d50f5")
+		(uuid "9ee47dd9-5701-437b-a2b8-3baeb0ad8341")
 	)
 	(no_connect
 		(at 52.07 91.44)
-		(uuid "e75c5c26-30a2-4d9b-b9ad-857396e1880f")
+		(uuid "491cc99b-f195-4723-b790-f4758983b21d")
 	)
 	(no_connect
 		(at 52.07 96.52)
-		(uuid "409752c6-237e-47be-b379-7c44c41ce77c")
+		(uuid "505e6d86-68f1-4043-828b-ed39ca83c6e5")
 	)
 	(no_connect
 		(at 52.07 101.6)
-		(uuid "31635877-b934-4fbc-90dc-b7c1c8a2b517")
+		(uuid "e8dfa689-d854-429d-b94d-839a14277bc5")
 	)
 	(no_connect
 		(at 52.07 106.68)
-		(uuid "0077fe32-e831-4c66-9781-08e957fcbda1")
+		(uuid "9581e25a-6ea5-4233-9ab5-9bba026a57eb")
 	)
 	(no_connect
 		(at 52.07 111.76)
-		(uuid "ca1a4eff-bbcf-4051-8265-7641a8ec3c1c")
+		(uuid "274652e7-2f40-4290-bffb-2474d9ac674c")
 	)
 	(no_connect
 		(at 52.07 116.84)
-		(uuid "e09d0925-59c8-432b-9671-879c7ee33f57")
+		(uuid "4054dbf2-8edd-4e4f-aaa5-229d38d01a55")
 	)
 	(no_connect
 		(at 52.07 121.92)
-		(uuid "88755f55-aaa4-4a6e-a346-e7333e7e8b14")
+		(uuid "3e26c33e-5a90-46da-b90d-106675cf8d7d")
 	)
 	(no_connect
 		(at 52.07 127)
-		(uuid "7a927dee-0895-49e3-ad99-005a6ca70260")
+		(uuid "fa688eaa-9a43-4d9d-b771-17cfc127604a")
 	)
 	(no_connect
 		(at 52.07 132.08)
-		(uuid "8c510232-04dd-4a16-bc96-8bd05cd751ae")
+		(uuid "479f3711-e02a-4b84-82ea-a3e48272248b")
 	)
 	(no_connect
 		(at 52.07 137.16)
-		(uuid "6858021f-5fc3-4339-bdda-876623c4a8e4")
+		(uuid "2b8321c1-9809-46b5-918b-1c50be122bd0")
 	)
 	(no_connect
 		(at 52.07 142.24)
-		(uuid "97767c48-9dfa-49e3-9802-86b76506ae9a")
+		(uuid "04058a5b-c5af-4c2d-9a9a-d096bd51c7da")
 	)
 	(no_connect
 		(at 52.07 147.32)
-		(uuid "70ca2bae-8bb5-4a59-a2b5-86f44cf04fc8")
+		(uuid "eabf265f-c44a-48c5-9e00-1c6a120a25f1")
 	)
 	(no_connect
 		(at 52.07 152.4)
-		(uuid "0d43e160-32be-4946-af2e-5685339ef6d2")
+		(uuid "956492fc-0593-4d17-87e8-0ab65575cce1")
 	)
 	(no_connect
 		(at 52.07 157.48)
-		(uuid "48e65f45-27c8-42e5-87d3-81a2005c21b9")
+		(uuid "ab90f320-f40d-47b6-9c0f-0340dc762299")
 	)
 	(no_connect
 		(at 52.07 162.56)
-		(uuid "e8b3bbff-91db-45f3-a400-a6090dc7e099")
+		(uuid "07a3dac1-0f09-4a5f-9824-d1755704afce")
 	)
 	(no_connect
 		(at 52.07 167.64)
-		(uuid "5b172483-b75a-48a8-b042-8ef71afbf834")
+		(uuid "cad883e3-eebe-4a42-a625-9b990dfee3e3")
 	)
 	(no_connect
 		(at 52.07 172.72)
-		(uuid "a1bc7145-0520-4fce-bebb-16028cdd200e")
+		(uuid "a21bee7a-10f3-48a0-9cbd-0eb124938c25")
 	)
 	(no_connect
 		(at 87.63 116.84)
-		(uuid "54baacc9-cdaa-4a3a-980b-8e344399775f")
+		(uuid "ce1d2121-6eed-42e8-bb8a-7e7ef3546fcc")
 	)
 	(no_connect
 		(at 87.63 121.92)
-		(uuid "0dc2aff5-73bd-411b-8629-62690ea76b07")
+		(uuid "e502de56-aae6-43ba-9173-6dffcaae6590")
 	)
 	(no_connect
 		(at 87.63 127)
-		(uuid "9e1ee0f3-be0b-4646-b5c5-6b6e9e053c50")
+		(uuid "98169410-e3ab-42ec-8d04-032def14a802")
 	)
 	(no_connect
 		(at 87.63 132.08)
-		(uuid "1ba0dd73-ba70-4827-af33-f537cf19a752")
+		(uuid "37b5824e-8f4a-4dec-992b-b6be9b8fda90")
 	)
 	(no_connect
 		(at 87.63 137.16)
-		(uuid "10a12b9b-7d4e-413e-bb2b-f4190ad17b64")
+		(uuid "b01a2bc1-f13a-4be2-9403-5caf5ff5981b")
 	)
 	(no_connect
 		(at 87.63 142.24)
-		(uuid "82cb93f3-307b-41ae-87c7-ad5576e3d78a")
+		(uuid "4d0b88db-181c-4959-a141-5c4bcf7a38e7")
 	)
 	(no_connect
 		(at 87.63 147.32)
-		(uuid "51764af4-cbc7-4027-a33f-b3788f5e098f")
+		(uuid "b3e3c03f-f039-49c1-ac07-bdda1b86d539")
 	)
 	(no_connect
 		(at 87.63 152.4)
-		(uuid "8b1329d0-0969-4bd0-820c-e3aa2a4c8ba8")
+		(uuid "08727716-7f57-4875-ac8d-1ba5ed45e6e1")
 	)
 	(no_connect
 		(at 87.63 157.48)
-		(uuid "00953ce6-8567-46ca-a0f5-0e3faf7747a0")
+		(uuid "f64fbc2a-2f87-4d2b-8a88-ad4f98a9cfa4")
 	)
 	(no_connect
 		(at 87.63 162.56)
-		(uuid "f3752e0e-9540-4c22-a38b-58c36c64a04f")
+		(uuid "b2d78097-507e-4830-8c63-e69855d8901e")
 	)
 	(no_connect
 		(at 87.63 167.64)
-		(uuid "72bb3ec6-8a2c-4004-b5e5-a65f7a939b48")
+		(uuid "0fbb48bd-a7eb-40ef-90f6-bd10220a0cfa")
 	)
 	(no_connect
 		(at 87.63 172.72)
-		(uuid "bbde6c48-4d5f-41bc-a3d3-1f81e137d287")
+		(uuid "680dc9b2-9c99-4aad-83f1-0ae87dbb5d6a")
 	)
 	(sheet_instances
 		(path "/"

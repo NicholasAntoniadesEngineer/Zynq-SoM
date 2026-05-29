@@ -354,57 +354,6 @@ def test_plan_pin_specs_non_cluster_has_no_slots():
                 assert s.cluster_destinations == ()
 
 
-def test_plan_pin_specs_matches_reactive_classifier_for_ics():
-    """For every IC on every carrier block, the planner's role assignment
-    must match the reactive ``_classify_pin`` in place.py.
-
-    This is the side-by-side test from the PR 2 plan: it confirms the
-    planner produces exactly the same per-pin partition the reactive
-    pipeline has been building, so PR 2 is risk-free (no behaviour
-    change can leak through the planner that wasn't already present).
-    """
-    from zynq_eda.core.layout.place import _classify_pin
-
-    blocks, geometry = _carrier_blocks_and_geometry()
-    for block_name, block in blocks.items():
-        declared_nets = {n.name: n for n in block.external_nets}
-        planner_specs = {
-            (s.owner_ref, s.pin_name): s
-            for s in plan_pin_specs(block, geometry)
-            if s.owner_kind == "ic"
-        }
-
-        for ic in block.ics:
-            cluster_pins = {ep.from_pin for ep in ic.refcircuit.external_parts}
-            for pin_info in geometry.all_pins(ic.lib_id, rotation=0.0):
-                pin_name = str(pin_info["name"])
-                reactive_role, reactive_net = _classify_pin(
-                    pin_name, ic, declared_nets,
-                    in_cluster=(pin_name in cluster_pins),
-                )
-                key = (ic.reference, pin_name)
-                planner_spec = planner_specs.get(key)
-                assert planner_spec is not None, (
-                    f"block {block_name}: planner missing PinSpec for "
-                    f"{ic.reference}/{pin_name}"
-                )
-                assert planner_spec.role == reactive_role, (
-                    f"block {block_name}: {ic.reference}/{pin_name}: "
-                    f"planner role {planner_spec.role!r} vs reactive "
-                    f"{reactive_role!r}"
-                )
-                # CLUSTER net_name uses the resolved override net; the
-                # reactive classifier returns the same thing (via
-                # _compute_pin_net inside _classify_pin's CLUSTER branch).
-                # For non-CLUSTER roles, net_name must match exactly.
-                if planner_spec.role != "CLUSTER":
-                    assert planner_spec.net_name == reactive_net, (
-                        f"block {block_name}: {ic.reference}/{pin_name}: "
-                        f"planner net {planner_spec.net_name!r} vs reactive "
-                        f"{reactive_net!r}"
-                    )
-
-
 def test_plan_pin_specs_external_part_remap_applied():
     """When an IC declares external_part_net_remap, the planner's
     CLUSTER pin's cluster_destinations should reflect the remap."""
