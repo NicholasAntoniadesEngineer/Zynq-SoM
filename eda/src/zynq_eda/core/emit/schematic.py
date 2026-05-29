@@ -210,6 +210,14 @@ def emit_sheet(
             if placed.value_shift is not None
         },
     )
+    _shift_passive_reference_off_body(
+        output_path,
+        per_instance_shifts={
+            placed.reference: placed.reference_shift
+            for placed in sheet.symbols
+            if placed.reference_shift is not None
+        },
+    )
     if lib_symbol_pin_type_overrides:
         _patch_lib_symbol_pin_types(output_path, lib_symbol_pin_type_overrides)
     # Disable for now: _patch_hierarchy_paths(output_path, parent, sheet_id)
@@ -278,7 +286,10 @@ def _patch_hierarchy_paths(
         schematic_path.write_text(patched, encoding="utf-8")
 
 
-from zynq_eda.core.layout.geometry import VALUE_SHIFT_BY_LIB_ID
+from zynq_eda.core.layout.geometry import (
+    REFERENCE_SHIFT_BY_LIB_ID,
+    VALUE_SHIFT_BY_LIB_ID,
+)
 
 
 def _shift_passive_value_off_body(
@@ -335,6 +346,67 @@ def _shift_passive_value_off_body(
 
         # Rotate the displacement by the symbol's CW rotation in page
         # coords (+Y down). (x, y) → CW 90 → (y, -x), etc.
+        sym_rot = int(symbol_rotation) % 360
+        if sym_rot == 0:
+            rdx, rdy = dx, dy
+        elif sym_rot == 90:
+            rdx, rdy = dy, -dx
+        elif sym_rot == 180:
+            rdx, rdy = -dx, -dy
+        elif sym_rot == 270:
+            rdx, rdy = -dy, dx
+        else:
+            return match.group(0)
+
+        new_x = anchor_x + rdx
+        new_y = anchor_y + rdy
+        if text_rotation_override is not None:
+            new_text_rot = (text_rotation_override + symbol_rotation) % 360
+        else:
+            new_text_rot = float(match.group(9))
+
+        return f"{prefix}{new_x:g} {new_y:g} {new_text_rot:g})"
+
+    patched = pattern.sub(_rewrite, text)
+    if patched != text:
+        schematic_path.write_text(patched, encoding="utf-8")
+
+
+def _shift_passive_reference_off_body(
+    schematic_path: Path,
+    per_instance_shifts: "dict[str, tuple[float, float, float | None]] | None" = None,
+) -> None:
+    """Move the Reference-property text of cluster passives OFF the body.
+
+    Mirror of :func:`_shift_passive_value_off_body` but for the Reference
+    property. Per-instance shifts override the static default per lib_id.
+    """
+    import re
+
+    per_instance = per_instance_shifts or {}
+    text = schematic_path.read_text(encoding="utf-8")
+    pattern = re.compile(
+        r'(\(symbol\s*\(lib_id "([^"]+)"\)\s*\(at\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\)'
+        r'[\s\S]*?\(property "Reference" "([^"]+)"\s*\(at )([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\)',
+        re.MULTILINE,
+    )
+
+    def _rewrite(match: "re.Match[str]") -> str:
+        prefix = match.group(1)
+        lib_id = match.group(2)
+        anchor_x = float(match.group(3))
+        anchor_y = float(match.group(4))
+        symbol_rotation = float(match.group(5))
+        reference = match.group(6)
+
+        shift = (
+            per_instance.get(reference)
+            or REFERENCE_SHIFT_BY_LIB_ID.get(lib_id)
+        )
+        if shift is None:
+            return match.group(0)
+        dx, dy, text_rotation_override = shift
+
         sym_rot = int(symbol_rotation) % 360
         if sym_rot == 0:
             rdx, rdy = dx, dy

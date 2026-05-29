@@ -109,18 +109,25 @@ the canonical grid AND leaves the cap body in a band that doesn't
 collide with any neighbouring pin row.
 """
 
-INTER_PIN_CLUSTER_GAP_MM = snap_to_grid(0.0)
+INTER_PIN_CLUSTER_GAP_MM = snap_to_grid(12.7)
 """Gap between adjacent IC pins' cap-cluster X (or Y) ranges.
 
-Set to 0 so adjacent pins' clusters pack at the natural PASSIVE_PITCH_MM
-spacing — without this, dense ICs like FUSB302 (14 externals across
-7 LEFT pins) push the trunk off the sheet edge. Each cap still sits at
-a unique X column; the difference is that pin K's last slot and pin
-K+1's first slot now sit at adjacent grid columns (5.08 mm apart)
-rather than skipping a column. Wires from one pin to its caps don't
-pass through the neighbour's cap column because each pin's trunk is
-at a UNIQUE Y row (the pin's own row) — the X columns can pack tight
-without wire interference.
+The default gap for the FALLBACK uniform-spacing path used when no
+``per_pin_lane_offset_map`` is supplied. The real per-pin lane widths
+are computed dynamically in ``plan_block`` based on each pin's
+hier-label text width (Part III lane-reservation architecture):
+
+    lane_width(pin) = max(
+        n_slots * PASSIVE_PITCH_MM,        # cluster footprint
+        text_width(net_name) + 2 * VISUAL_CLEARANCE_MM,  # hier-label fit
+    )
+
+For FUSB302 (7 LEFT-side pins × 1 slot @ X=130 with 5.08mm page margin)
+the cumulative outboard width must stay below 130 - 5.08 = 124.92 mm.
+With PASSIVE_OFFSET_MM = 17.78 as the first pin's offset, that leaves
+107 mm budget for 6 inter-pin gaps (each = n_slots*PITCH + GAP).
+12.7 mm × 6 = 76.2 mm gap budget + 6 × 5.08 = 30.5 mm slot footprint =
+107 mm exactly. Anything larger pushes the last pin off-page.
 """
 
 POWER_SYMBOL_OFFSET_MM = snap_to_grid(7.62)
@@ -142,6 +149,96 @@ visually tight.
 
 INTERIOR_MARGIN_MM = snap_to_grid(15.24)
 """Minimum distance from a sheet edge to any placed item."""
+
+
+# ---- Routing & label-placement constants -----------------------------------
+
+KICAD_GRID_MM: float = snap_to_grid(2.54)
+"""KiCad's canonical schematic grid step. All routing coordinates are
+on multiples of this value. Used as the per-step Y-offset for the
+hier-label candidate ladder, the cluster's per-pin trunk-end Y offset,
+and the router's Z-bend / exit-detour DH / DY enumeration."""
+
+OVERLAP_NOISE_FLOOR_MM: float = 0.15
+"""Validator's noise floor — intersections smaller than this on EITHER
+axis are not flagged as overlaps. The router uses the same value as
+its collision tolerance so the two passes agree on what counts as an
+overlap. SOURCE OF TRUTH lives here; ``_overlap_is_significant`` and
+``_ROUTER_NOISE_FLOOR_MM`` both reference this value."""
+
+from zynq_eda.core.layout.bbox import DEFAULT_WIRE_THICKNESS_MM
+WIRE_THICKNESS_MM: float = DEFAULT_WIRE_THICKNESS_MM
+"""KiCad's default schematic wire stroke thickness. Used to compute
+wire bbox padding (half-thickness on each side perpendicular to the
+wire's axis). The validator and router must agree on this value or
+near-miss collisions will mis-classify. SOURCE OF TRUTH lives in
+``bbox.py:DEFAULT_WIRE_THICKNESS_MM`` (the wire_bbox helper's default);
+this module re-exports for layout-engine consumers."""
+
+WIRE_VS_WIRE_CLEARANCE_MM: float = 0.3
+"""Wire-to-wire clearance. KiCad's pin pitch is 2.54 mm; a 2 mm
+clearance would false-collide adjacent pin pitch routing. 0.3 mm is
+enough that distinct same-direction wires render as separate strokes
+without merging visually."""
+
+# NOTE: there is no separate WIRE_VS_INTRINSIC_TEXT_CLEARANCE_MM.
+# Intrinsic pin text uses the same VISUAL_CLEARANCE_MM (2 mm) as
+# every other visible primitive. A router 0 mm pass was attempted
+# during the thrashing era and removed in Part III — it softened
+# the visual-touch rule the user has set in stone.
+
+HLABEL_LADDER_STEPS: int = 20
+"""Number of grid-step Y offsets the hier-label candidate ladder tries
+on each side of the anchor (perpendicular y_offset candidates). The
+ladder spans ``HLABEL_LADDER_STEPS * KICAD_GRID_MM`` mm in each
+direction = 50.8 mm by default."""
+
+HLABEL_SHEET_EDGE_LADDER_STEPS: int = 30
+"""Y-step count for the sheet-edge Y ladder (LEFT/RIGHT edge target
+candidates). 30 × 2.54 = 76.2 mm of Y search around the anchor's
+natural row."""
+
+HLABEL_TOP_BOTTOM_LADDER_STEPS: int = 30
+"""X-step count for TOP/BOTTOM sheet-edge candidates. Each step is
+``KICAD_GRID_MM`` mm; 30 steps = 76.2 mm of X search around anchor.x
+for routing UP to the top edge or DOWN to the bottom edge."""
+
+
+# ---- Predictive planner lane reservation -----------------------------------
+
+MAX_LANE_ROWS: int = 3
+"""Maximum number of label-stack rows the planner will allocate per
+edge of an owner (IC / connector). The greedy lane packer in Phase 3
+(``plan_edge_stacks``) fills row 0 first, then row 1, then row 2, and
+hard-fails when a lane won't fit in any of the first ``MAX_LANE_ROWS``.
+
+3 rows is the design ceiling — beyond that, the connector body and the
+hier-label rows visually compete for the page and the user is better
+served splitting the block. The diagnostic on overflow names the
+specific block.py edit (toggle ExternalNet.edge, split block, A2 paper).
+"""
+
+LANE_ROW_PITCH_MM: float = snap_to_grid(20.32)
+"""Outboard X step between successive lane rows on the same edge.
+
+Each row sits this far further OUT from the previous row (which
+contains the inboard lanes). 20.32 mm = 8 grid units = enough for
+one hier-label's text bbox (1.27 mm × 25 chars ≈ 21 mm) + 2 mm clearance
+on the inboard side."""
+
+GND_SYMBOL_HALF_EXTENT_MM: float = 3.81
+"""Half-width of the ``power:GND`` symbol's visible body (excluding pin).
+Used by Phase 2 to size GND lanes for non-cluster GND-role pins."""
+
+FLG_BODY_EXTENT_MM: float = 2.54
+"""Half-extent of the ``power:PWR_FLAG`` symbol's body in the direction
+parallel to its attached wire. Used by Phase 2 to size PWR_FLAG lanes."""
+
+HLABEL_ANCHOR_OFFSET_MM: float = snap_to_grid(2.54)
+"""Minimum X distance between the pin's outermost cluster passive (or
+the pin tip if no cluster) and the hier-label's anchor. Provides
+visual breathing room between the cluster's last drop wire and the
+hier-label text bbox."""
 
 
 VISUAL_CLEARANCE_MM: float = 2.0

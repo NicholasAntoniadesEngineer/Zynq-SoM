@@ -64,7 +64,8 @@ from zynq_eda.core.validate.report import Severity, ValidationResult
 
 # ---- Tolerances ------------------------------------------------------------
 
-OVERLAP_MIN_DIMENSION_MM: float = 0.15
+from zynq_eda.core.layout._constants import OVERLAP_NOISE_FLOOR_MM as _CENTRAL_NOISE_FLOOR_MM
+OVERLAP_MIN_DIMENSION_MM: float = _CENTRAL_NOISE_FLOOR_MM
 """Minimum overlap dimension (mm) before a collision is reported.
 
 Bboxes whose intersection rectangle is thinner than this on *either* axis
@@ -415,6 +416,7 @@ def validate_overlap(
                     reference_override=sym.reference,
                     value_override=sym.value,
                     value_shift=sym.value_shift,
+                    reference_shift=sym.reference_shift,
                 ):
                     intrinsic_bboxes.append((sym, b))
             except Exception:

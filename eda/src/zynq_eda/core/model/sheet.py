@@ -48,6 +48,13 @@ class PlacedSymbol:
     rotation: float = 0.0
     properties: tuple[tuple[str, str], ...] = ()
     value_shift: tuple[float, float, float | None] | None = None
+    reference_shift: tuple[float, float, float | None] | None = None
+    """Optional override of the Reference property's rendered position
+    relative to the symbol anchor at rotation 0. Mirrors ``value_shift``
+    semantics. When set, the emitter writes the shifted position into
+    the .kicad_sch and the validator rebuilds the Reference bbox at the
+    shifted anchor. Tuple format: ``(dx_mm, dy_mm, text_rotation_override
+    _or_None)``."""
 
     def __post_init__(self) -> None:
         if not self.lib_id or ":" not in self.lib_id:

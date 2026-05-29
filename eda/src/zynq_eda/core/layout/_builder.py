@@ -165,6 +165,7 @@ class BlockLayoutBuilder:
                 reference_override=sym.reference,
                 value_override=sym.value,
                 value_shift=sym.value_shift,
+                reference_shift=sym.reference_shift,
             )
         except Exception:
             return

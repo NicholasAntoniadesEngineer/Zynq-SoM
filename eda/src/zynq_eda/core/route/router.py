@@ -104,32 +104,14 @@ def _make_wire(start: Point, end: Point) -> PlacedWire | None:
     return PlacedWire(start=start, end=end)
 
 
-_ROUTER_NOISE_FLOOR_MM: float = 0.15
-"""Match the validator's :data:`~zynq_eda.core.validate.overlap.OVERLAP_MIN_DIMENSION_MM`.
-
-Two bboxes whose intersection is thinner than this on either axis
-don't count as a collision — same rule the validator applies. Keeps
-the router and validator in lock-step: anything the router approves
-the validator accepts, and vice versa. Bumped from 0.1 mm to 0.15 mm
-in lockstep with the validator's threshold tightening (the previous
-0.1 mm flagged the wire's own half-thickness graze at pin tips).
-"""
-
-
-_WIRE_VS_WIRE_CLEARANCE_MM: float = 0.3
-"""Clearance applied to wire-vs-wire collision checks (separate from
-the symbol/label clearance).
-
-Adjacent IC pin rows sit at KiCad's 2.54 mm pin pitch. The default
-2 mm clearance would treat any two parallel wires < 4 mm apart as
-colliding — that includes every legitimate adjacent-pin wire pair.
-Reducing the wire-vs-wire clearance to 0.3 mm means the router still
-rejects ACTUAL crossings / collinear overlaps (which would be ≥ wire
-thickness 0.254 mm) but tolerates parallel wires at full pin pitch.
-
-Wire-vs-symbol/label clearance remains at the full 2 mm so wires
-cannot graze the visible body or text bbox of a placed primitive.
-"""
+from zynq_eda.core.layout._constants import (
+    OVERLAP_NOISE_FLOOR_MM as _ROUTER_NOISE_FLOOR_MM,
+    WIRE_THICKNESS_MM,
+    WIRE_VS_WIRE_CLEARANCE_MM as _WIRE_VS_WIRE_CLEARANCE_MM,
+)
+# Re-export aliases preserve the existing in-module reference names so
+# the rest of router.py reads naturally. The SOURCE OF TRUTH for these
+# values is :mod:`zynq_eda.core.layout._constants`.
 
 
 def _segments_collide(
@@ -163,10 +145,16 @@ def _segments_collide(
             "intrinsic_pin_name", "intrinsic_pin_number",
         ) if kind not in avoid_kinds
     )
-    # Symbol-side check (full clearance) ignores wires; wire-side check
-    # (tight clearance) ignores everything except wires. When the
-    # caller has explicitly excluded "wire" from avoid_kinds, the
-    # wire-side pass also skips wires.
+    # TWO-tier clearance — matches the validator's two regimes:
+    #   * symbol body / sheet pin / labels / intrinsic text: 2 mm
+    #     visual margin (the user has ruled that elements appearing
+    #     to touch is the same as overlapping for visual purposes)
+    #   * wires: 0.3 mm (KiCad pin pitch is 2.54 mm; 2 mm would
+    #     false-collide adjacent pin pitch routing)
+    # (Part III: the prior 3-tier with 0 mm intrinsic clearance was
+    # softening — removed. If a route can't be drawn 2 mm from a pin
+    # number text, hard-fail; upstream fix moves the symbol or widens
+    # the lane.)
     skip_kinds_for_symbols = skip_kinds_full | frozenset({"wire"})
     if "wire" in avoid_kinds:
         skip_kinds_for_wires = frozenset(
@@ -185,18 +173,19 @@ def _segments_collide(
         bbox = wire_bbox(
             segment.start,
             segment.end,
-            thickness_mm=0.254,
+            thickness_mm=WIRE_THICKNESS_MM,
             clearance_mm=0.0,
             owner_id="_router_probe",
         )
-        # Pass 1: symbol / label / text collisions (full clearance).
+        # Pass 1: symbol / label / sheet-pin / intrinsic-text collisions
+        # (full 2 mm visual clearance — same for all visible primitives).
         symbol_hits = occupancy.collides(
             bbox,
             ignore_owners=ignore_owners,
             ignore_kinds=skip_kinds_for_symbols,
             padding_mm=clearance_mm,
         )
-        # Pass 2: wire collisions (tight clearance).
+        # Pass 2: wire collisions (tight 0.3 mm clearance).
         wire_hits = occupancy.collides(
             bbox,
             ignore_owners=ignore_owners,
@@ -278,14 +267,23 @@ def _shares_endpoint(
     existing: "PlacedWire",
 ) -> bool:
     """True iff the candidate segment shares an endpoint with ``existing``
-    OR forms a T-junction with it (one wire's endpoint sits on the other
-    wire's interior).
+    OR forms a PERPENDICULAR T-junction with it (one wire's endpoint
+    sits on the other wire's interior AND the two wires are at right
+    angles).
 
     Both cases are LEGITIMATE wire connections — not crossings — in KiCad.
     A junction marker placed at the meeting point makes the connection
     electrically explicit. The cluster code emits explicit junctions where
     needed (trunk-drop intersections); the validator allows perpendicular
     crossings at junction points (see ``overlap.wire_cross``).
+
+    CRITICAL: T-junction must be PERPENDICULAR. Two COLLINEAR wires
+    that overlap in a range (e.g. a long horizontal at Y=58 and another
+    horizontal at Y=58 with overlapping X spans) are NOT a T-junction —
+    they're a duplicate/overlapping wire which the validator (correctly)
+    flags as wire_collinear_overlap. Returning True here for collinear
+    overlap would let the router emit a wire that visually duplicates
+    an existing one.
     """
     EPS = 0.05
     candidate_start = candidate_endpoints[0]
@@ -295,14 +293,56 @@ def _shares_endpoint(
         (round(existing.end.x, 3), round(existing.end.y, 3)),
     )
 
+    # EXACT DUPLICATE: both endpoints of candidate match BOTH endpoints
+    # of existing (in either direction). This is NOT a legitimate
+    # connection — it's two code paths emitting the same wire. Return
+    # False so the router rejects the candidate; add_wire's downstream
+    # duplicate detection raises with the architectural diagnostic.
+    def _pt_eq(a, b):
+        return abs(a[0] - b[0]) < EPS and abs(a[1] - b[1]) < EPS
+
+    same_direction = (
+        _pt_eq(candidate_start, existing_endpoints[0])
+        and _pt_eq(candidate_end, existing_endpoints[1])
+    )
+    reversed_direction = (
+        _pt_eq(candidate_start, existing_endpoints[1])
+        and _pt_eq(candidate_end, existing_endpoints[0])
+    )
+    if same_direction or reversed_direction:
+        return False
+
     # Case 1: corner — share an endpoint exactly.
     for cep in candidate_endpoints:
         for eep in existing_endpoints:
             if abs(cep[0] - eep[0]) < EPS and abs(cep[1] - eep[1]) < EPS:
                 return True
 
-    # Case 2: T-junction — candidate's endpoint sits on existing wire's
-    # interior, OR existing wire's endpoint sits on candidate's interior.
+    # Determine axis of each wire (horizontal/vertical) for the
+    # perpendicularity test.
+    def _axis(a: tuple[float, float], b: tuple[float, float]) -> str | None:
+        if abs(a[0] - b[0]) < EPS:
+            return "vertical"
+        if abs(a[1] - b[1]) < EPS:
+            return "horizontal"
+        return None
+
+    cand_axis = _axis(candidate_start, candidate_end)
+    exist_axis = _axis(existing_endpoints[0], existing_endpoints[1])
+    perpendicular = (
+        cand_axis is not None
+        and exist_axis is not None
+        and cand_axis != exist_axis
+    )
+
+    if not perpendicular:
+        # Collinear (or non-axis-aligned) — no T-junction exemption.
+        return False
+
+    # Case 2: PERPENDICULAR T-junction — candidate's endpoint sits on
+    # existing wire's interior, OR existing wire's endpoint sits on
+    # candidate's interior. Only allowed when the two wires are at
+    # right angles.
     def _point_on_segment_interior(
         point: tuple[float, float],
         seg_a: tuple[float, float],
@@ -323,11 +363,9 @@ def _shares_endpoint(
             return lo + EPS < point[0] < hi - EPS
         return False
 
-    # Candidate endpoint on existing interior
     for cep in candidate_endpoints:
         if _point_on_segment_interior(cep, existing_endpoints[0], existing_endpoints[1]):
             return True
-    # Existing endpoint on candidate interior
     for eep in existing_endpoints:
         if _point_on_segment_interior(eep, candidate_start, candidate_end):
             return True
@@ -734,6 +772,40 @@ def _enumerate_routes(
                     candidates.append(
                         (f"exit_{sign_h}{dh:.1f}_dy{dy:+.1f}", segs)
                     )
+
+    # K=5: TWO-LEVEL DETOUR — exit source X via dh1 to my1, run horizontal,
+    # change to my2 via an intermediate X, run horizontal to dest X, drop.
+    # Handles obstacles at MULTIPLE distinct Y values along the route path
+    # (e.g. PWR_FLAG → hier-label routes blocked by pull-up resistors at
+    # Y_pin AND pull-up reference text at Y_pin±2 AND existing wires at
+    # other Ys in the path). 6 segments, bounded fan-out (~12 dh × 2 ×
+    # 16 dy × 16 dy2 = ~6000 candidates — heavy but the collision check
+    # short-circuits on first clean).
+    TWO_LEVEL_DH = (2.54, 5.08, 7.62, 10.16, 12.7, 15.24, 20.32, 25.4)
+    TWO_LEVEL_DY = (
+        2.54, -2.54, 5.08, -5.08, 7.62, -7.62, 10.16, -10.16,
+        12.7, -12.7, 15.24, -15.24, 20.32, -20.32, 25.4, -25.4,
+    )
+    for dh in TWO_LEVEL_DH:
+        for sign_h in (1, -1):
+            for dy1 in TWO_LEVEL_DY:
+                for dy2 in TWO_LEVEL_DY:
+                    if abs(dy1 - dy2) < 0.01:
+                        continue  # Skip degenerate (same Y on both levels)
+                    mx1 = snap_to_grid(start.x + sign_h * dh)
+                    my1 = snap_to_grid(start.y + dy1)
+                    my2 = snap_to_grid(start.y + dy2)
+                    mx2 = snap_to_grid((mx1 + end.x) / 2.0)
+                    pts = [start, Point(mx1, start.y), Point(mx1, my1),
+                           Point(mx2, my1), Point(mx2, my2),
+                           Point(end.x, my2), Point(end.x, end.y)]
+                    segs = tuple(filter(None, (
+                        _make_wire(pts[i], pts[i + 1]) for i in range(len(pts) - 1)
+                    )))
+                    if segs:
+                        candidates.append(
+                            (f"twolvl_{sign_h}{dh:.1f}_y{dy1:+.1f}_y{dy2:+.1f}", segs)
+                        )
 
     # K=4: S-bend (5 segments) — route goes (start) → A → B → C → D →
     # (end), where A/B/C/D form a double-detour pattern. Useful when

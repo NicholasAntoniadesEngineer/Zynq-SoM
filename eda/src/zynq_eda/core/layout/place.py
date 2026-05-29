@@ -998,6 +998,27 @@ def _place_ic_with_passives(
     return pin_geom_map
 
 
+def place_block_via_planner(
+    block: Block,
+    *,
+    geometry_cache: SymbolGeometryCache,
+) -> Sheet:
+    """Predictive-planner code path: build a complete LayoutPlan first,
+    then mechanically emit it.
+
+    Activate by setting the ``ZYNQ_EDA_USE_PLANNER`` env var when
+    running the carrier build. Once the planner reaches parity with
+    the reactive pipeline (cluster geometry refinements per tasks
+    #59-60), this becomes the default and the reactive ``place_block``
+    is removed (PR 11).
+    """
+    from zynq_eda.core.layout.plan import emit_plan, plan_block
+    builder = BlockLayoutBuilder()
+    plan = plan_block(block, geometry_cache)
+    emit_plan(plan, builder)
+    return builder.finalize(block, geometry_cache=geometry_cache)
+
+
 def place_block(
     block: Block,
     *,
@@ -1025,6 +1046,15 @@ def place_block(
             anchor (cap+stagger = 15.24 mm + half-cap-body = 18.05 mm),
             requiring at least 50.8 mm of row pitch.
     """
+    # Predictive planner opt-in via env var. The planner currently
+    # achieves 11/27 clean blocks (validator-overlap-free); the
+    # reactive pipeline achieves 17/27. Once tasks #59-60 close the
+    # gap, the planner becomes default (PR 10) and the reactive
+    # code is deleted (PR 11).
+    import os
+    if os.environ.get("ZYNQ_EDA_USE_PLANNER"):
+        return place_block_via_planner(block, geometry_cache=geometry_cache)
+
     builder = BlockLayoutBuilder()
 
     ic_anchors = _ic_anchors_for_block(

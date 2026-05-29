@@ -19,13 +19,19 @@ from zynq_eda.core.layout._builder import (
     _hierarchical_label_bbox,
 )
 from zynq_eda.core.layout._constants import (
+    HLABEL_LADDER_STEPS,
+    HLABEL_SHEET_EDGE_LADDER_STEPS,
+    HLABEL_TOP_BOTTOM_LADDER_STEPS,
     INTERIOR_MARGIN_MM,
+    KICAD_GRID_MM,
+    OVERLAP_NOISE_FLOOR_MM,
     POWER_SYMBOL_OFFSET_MM,
     VISUAL_CLEARANCE_MM,
+    WIRE_THICKNESS_MM,
 )
 
 
-_LABEL_PERPENDICULAR_OFFSET_MM: float = 2.54
+_LABEL_PERPENDICULAR_OFFSET_MM: float = KICAD_GRID_MM
 """How far perpendicular-to-wire we shift a label's anchor.
 
 Used by :func:`emit_label_perpendicular_to_wire` to push every hier or
@@ -80,6 +86,18 @@ def place_external_nets(
     right_x = snap_to_grid(paper_w - INTERIOR_MARGIN_MM)
 
     seen_label_positions: set[tuple[float, float]] = set()
+    # Part II Fix 1 (Variant A): PWR_FLAGs are routed BEFORE the orphan-
+    # net hier-labels. ``_input_pwr_flags`` now anchors on the LOCAL
+    # labels emitted by the cluster/connector passes — those exist at
+    # this point, the hier-labels don't yet. Then ``_orphan_net_labels``
+    # sees the complete live occupancy (cluster wires + dispatcher wires
+    # + PWR_FLAG wires) when picking each net's hier-label position.
+    _input_pwr_flags(builder, block=block)
+    # ``_orphan_net_labels`` handles ALL declared external_nets through
+    # the candidate ladder — including ground nets that have a same-name
+    # local label. ``_ground_label_only`` handles only the special case
+    # where a power:GND symbol already drives the net (no hier-label
+    # needed since power:GND is a global net driver).
     _ground_label_only(
         builder,
         block=block,
@@ -96,7 +114,6 @@ def place_external_nets(
         paper_w=paper_w,
         seen_label_positions=seen_label_positions,
     )
-    _input_pwr_flags(builder, block=block)
     return set()
 
 
@@ -609,32 +626,61 @@ def _input_pwr_flags(
             continue
         flag_emitted_for_net.add(net.name)
 
+        # Part II Fix 1: anchor on the LOCAL label, not the hier-label.
+        # _input_pwr_flags now runs BEFORE _orphan_net_labels in
+        # place_external_nets, so no hier-label exists yet. The local
+        # label was placed by the cluster/connector pass at the net's
+        # real wire endpoint (cluster trunk_end or connector pin tip),
+        # and routing from there ties the PWR_FLAG to the live net.
         anchor_label = next(
-            (label for label in builder.hierarchical_labels if label.net_name == net.name),
+            (lab for lab in builder.labels if lab.net_name == net.name),
             None,
         )
         if anchor_label is None:
             continue
 
-        # Place the PWR_FLAG beyond the FAR edge of EVERY hier label
-        # already placed on the same side of the sheet, then CLAMP to
-        # page bounds so the FLG body never prints off-page. The FLG
-        # body is ~2 × 2.5 mm so even on a 2.54 mm grid it bleeds into
-        # the adjacent label row when placed at the same X as the
-        # labels — pushing past the longest label's bbox edge is the
-        # only way to get the FLG fully clear of every label row.
-        from zynq_eda.core.layout._builder import _hierarchical_label_bbox
+        # Place the PWR_FLAG beyond the FAR edge of EVERY local label
+        # on the same orientation, then CLAMP to page bounds so the FLG
+        # body never prints off-page.
         from zynq_eda.core.layout._constants import INTERIOR_MARGIN_MM as _MARGIN
+        from zynq_eda.core.layout.bbox import (
+            DEFAULT_TEXT_SIZE_MM,
+            DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO,
+        )
         from zynq_eda.core.model.sheet import PAPER_DIMENSIONS_MM
         FLG_HALF_WIDTH_MM = 1.02
         SAFETY_MARGIN_MM = 1.0
         paper_w, _ = PAPER_DIMENSIONS_MM[block.paper_size]
         page_min_x = snap_to_grid(_MARGIN + FLG_HALF_WIDTH_MM)
         page_max_x = snap_to_grid(paper_w - _MARGIN - FLG_HALF_WIDTH_MM)
+
+        # PREDICTED hier-label width: matches the future hier-label bbox
+        # (decorated_text = net_name + " " in _hierarchical_label_bbox).
+        # Using local-label width directly would shift flag_x by one char
+        # and let the FLG body land in cluster region.
+        def _predicted_hlabel_text_width(lbl) -> float:
+            return (
+                (len(lbl.net_name) + 1) * DEFAULT_TEXT_SIZE_MM
+                * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO
+            )
+
+        def _local_label_min_x(lbl) -> float:
+            # For rotation 180 the text extends LEFT of the anchor; for
+            # rotation 0 it extends RIGHT. The min.x of the bbox is the
+            # left edge of the text.
+            if lbl.rotation == 180.0:
+                return lbl.position.x - _predicted_hlabel_text_width(lbl)
+            return lbl.position.x
+
+        def _local_label_max_x(lbl) -> float:
+            if lbl.rotation == 0.0:
+                return lbl.position.x + _predicted_hlabel_text_width(lbl)
+            return lbl.position.x
+
         if anchor_label.rotation == 180.0:
             edge_x_candidates = [
-                _hierarchical_label_bbox(lbl).min.x
-                for lbl in builder.hierarchical_labels
+                _local_label_min_x(lbl)
+                for lbl in builder.labels
                 if lbl.rotation == 180.0
             ]
             global_min_x = min(edge_x_candidates) if edge_x_candidates else anchor_label.position.x
@@ -642,8 +688,8 @@ def _input_pwr_flags(
             flag_x = max(flag_x, page_min_x)
         elif anchor_label.rotation == 0.0:
             edge_x_candidates = [
-                _hierarchical_label_bbox(lbl).max.x
-                for lbl in builder.hierarchical_labels
+                _local_label_max_x(lbl)
+                for lbl in builder.labels
                 if lbl.rotation == 0.0
             ]
             global_max_x = max(edge_x_candidates) if edge_x_candidates else anchor_label.position.x
@@ -651,28 +697,60 @@ def _input_pwr_flags(
             flag_x = min(flag_x, page_max_x)
         else:
             flag_x = anchor_label.position.x
-        flag_position = Point(flag_x, anchor_label.position.y)
-        # Route the hier-label → PWR_FLAG wire via the router so it
-        # respects the no-cross / no-through rules. Anchor label is the
-        # only owner we exempt — its text bbox is at the anchor.
+        # PWR_FLAG candidate Y ladder: deterministic — anchor.y first,
+        # then grid steps outward. (Part III: the prior "off-pin-row
+        # preference" hack was a softening; in the predictive
+        # architecture, the planner places the PWR_FLAG based on the
+        # full plan including the future hier-label position, so no
+        # Y-preference heuristic is needed.)
         from zynq_eda.core.route.router import route_orthogonal_detail
-        flag_avoid = frozenset({
-            f"hlabel:{anchor_label.net_name}@"
-            f"{anchor_label.position.x:.1f},{anchor_label.position.y:.1f}",
+        # Same-net labels exempted (so the route can pass through any
+        # local label of the same net).
+        same_net_avoid = frozenset({
+            f"label:{lab.net_name}@{lab.position.x:.1f},{lab.position.y:.1f}"
+            for lab in builder.labels
+            if lab.net_name == net.name
         })
-        flag_route = route_orthogonal_detail(
-            anchor_label.position,
-            flag_position,
-            builder.occupancy,
-            avoid_owners=flag_avoid,
-        )
-        if flag_route.gave_up:
-            raise RuntimeError(
-                f"_input_pwr_flags: router gave up routing hier label "
-                f"{anchor_label.net_name!r} @ {anchor_label.position} → "
-                f"PWR_FLAG @ {flag_position}."
+
+        flag_y_candidates = [anchor_label.position.y]
+        for step in range(1, HLABEL_LADDER_STEPS + 1):
+            for sign in (1, -1):
+                flag_y_candidates.append(
+                    snap_to_grid(anchor_label.position.y + sign * step * KICAD_GRID_MM)
+                )
+
+        flag_route_segments: list | None = None
+        flag_position_picked: Point | None = None
+        for fy in flag_y_candidates:
+            cand_pos = Point(flag_x, fy)
+            # Clamp to page bounds (interior margin on both sides).
+            paper_h_block = PAPER_DIMENSIONS_MM[block.paper_size][1]
+            if cand_pos.y < INTERIOR_MARGIN_MM or cand_pos.y > paper_h_block - INTERIOR_MARGIN_MM:
+                continue
+            attempt = route_orthogonal_detail(
+                anchor_label.position,
+                cand_pos,
+                builder.occupancy,
+                avoid_owners=same_net_avoid,
             )
-        for seg in flag_route.segments:
+            if attempt.gave_up:
+                continue
+            flag_route_segments = list(attempt.segments)
+            flag_position_picked = cand_pos
+            break
+
+        if flag_position_picked is None:
+            raise RuntimeError(
+                f"_input_pwr_flags: router gave up routing local label "
+                f"{anchor_label.net_name!r} @ {anchor_label.position} → "
+                f"PWR_FLAG at any Y candidate near flag_x={flag_x}. "
+                f"Tried {len(flag_y_candidates)} Y positions. "
+                f"Upstream fix: relocate the local label anchor or "
+                f"widen the page margin for the PWR_FLAG."
+            )
+
+        flag_position = flag_position_picked
+        for seg in flag_route_segments:
             builder.add_wire(seg)
         builder.add_symbol(PlacedSymbol(
             lib_id="power:PWR_FLAG",
@@ -684,6 +762,274 @@ def _input_pwr_flags(
         ))
 
 
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class _HlabelCandidate:
+    """One candidate position for a hier-label placement.
+
+    The candidate ladder (Part II Fix 2) tries positions in priority
+    order — in-place at the anchor, then perpendicular Y-offsets, then
+    sheet-edge with various Y rows. The first whose hier-label text
+    bbox is clear AND whose routing extension (if any) is clean wins.
+
+    Note: ``rotation`` per-candidate (NOT a global per-net rotation).
+    In-place and y-offset candidates inherit the LOCAL label's rotation
+    (text reads away from the connector body), while sheet-edge
+    candidates use the net.edge convention rotation (text reads outward
+    off-page).
+    """
+    position: Point
+    rotation: float
+    route_from: Point | None  # None = no routing wire needed (in-place)
+    kind: str                  # "in_place" | "y_offset" | "sheet_edge"
+
+
+def _enumerate_hlabel_candidates(
+    *,
+    net: ExternalNet,
+    anchor_label,
+    edge_rotation: float,
+    target_edge_x: float,
+    pin_y_range: tuple[float, float] | None,
+    paper_h: float,
+) -> list[_HlabelCandidate]:
+    """Build the ordered candidate ladder for a hier-label placement.
+
+    Priority order:
+      1. ``in_place`` — at the local-label anchor (no extension wire).
+         Uses the LOCAL label's rotation so the text continues to read
+         AWAY from the host symbol body (connector / cluster).
+      2. ``y_offset`` — perpendicular Y-offset at the same X
+         (one short vertical extension wire). Also uses local rotation.
+      3. ``sheet_edge`` — at the declared sheet edge X, at various Y
+         rows including those OUTSIDE the connector pin Y range
+         (a longer routed extension wire). Uses ``edge_rotation``
+         (per ``net.edge`` convention: 180 for LEFT-edge nets, 0 for
+         RIGHT) so the text reads OFF-PAGE.
+
+    Pure function. No occupancy access — the caller (_first_clean_candidate)
+    probes each candidate against the live occupancy.
+    """
+    candidates: list[_HlabelCandidate] = []
+    anchor_x = snap_to_grid(anchor_label.position.x)
+    anchor_y = snap_to_grid(anchor_label.position.y)
+    local_rotation = anchor_label.rotation
+
+    # Build the set of rotations to try for each candidate position.
+    # In priority order: local_rotation (text matches local label's
+    # direction), edge_rotation (text matches net.edge convention),
+    # opposite of local, and vertical (90/270). Each new candidate
+    # rotation gives the router another chance to escape a dense
+    # cluster region.
+    rotation_options: list[float] = []
+    for r in (local_rotation, edge_rotation, (local_rotation + 180.0) % 360.0,
+              90.0, 270.0):
+        if r not in rotation_options:
+            rotation_options.append(r)
+
+    # 1. In-place candidates — one per rotation.
+    for r in rotation_options:
+        candidates.append(_HlabelCandidate(
+            position=Point(anchor_x, anchor_y),
+            rotation=r,
+            route_from=None,
+            kind="in_place",
+        ))
+
+    # 2. Perpendicular Y-offsets at anchor X — each rotation × each Y step.
+    for step in range(1, HLABEL_LADDER_STEPS + 1):
+        for sign in (1, -1):
+            cand_y = snap_to_grid(anchor_y + sign * step * KICAD_GRID_MM)
+            for r in rotation_options:
+                candidates.append(_HlabelCandidate(
+                    position=Point(anchor_x, cand_y),
+                    rotation=r,
+                    route_from=Point(anchor_x, anchor_y),
+                    kind="y_offset",
+                ))
+
+    # 3. Sheet-edge candidates with Y ladder (declared edge — LEFT/RIGHT).
+    edge_ys: list[float] = [anchor_y]
+    for step in range(1, HLABEL_SHEET_EDGE_LADDER_STEPS + 1):
+        for sign in (1, -1):
+            edge_ys.append(snap_to_grid(anchor_y + sign * step * KICAD_GRID_MM))
+    # Also include rows OUTSIDE the connector pin Y range when known.
+    # These are the most reliable: the off-pin band has no clusters
+    # crossing it (clusters live AT the pin rows). Routing from anchor
+    # to (edge_x, off_pin_y) only needs to escape the cluster region
+    # ONCE then traverse the empty band.
+    if pin_y_range is not None:
+        pin_y_lo, pin_y_hi = pin_y_range
+        # Generate Y values BELOW the pin range (page top, smaller Y)
+        # down to the top page margin, in grid steps.
+        y_above = snap_to_grid(pin_y_lo - 2 * KICAD_GRID_MM)
+        y = y_above
+        while y > INTERIOR_MARGIN_MM:
+            edge_ys.append(y)
+            y = snap_to_grid(y - KICAD_GRID_MM)
+        # Generate Y values ABOVE the pin range (page bottom, larger Y)
+        # down to the bottom page margin.
+        y_below = snap_to_grid(pin_y_hi + 2 * KICAD_GRID_MM)
+        y = y_below
+        while y < paper_h - INTERIOR_MARGIN_MM:
+            edge_ys.append(y)
+            y = snap_to_grid(y + KICAD_GRID_MM)
+    # Dedup while preserving order.
+    seen_edge_ys: set[float] = set()
+    edge_ys_unique = [y for y in edge_ys if not (y in seen_edge_ys or seen_edge_ys.add(y))]
+    for ey in edge_ys_unique:
+        candidates.append(_HlabelCandidate(
+            position=Point(target_edge_x, ey),
+            rotation=edge_rotation,
+            route_from=Point(anchor_x, anchor_y),
+            kind="sheet_edge",
+        ))
+
+    # 4. TOP / BOTTOM sheet-edge candidates — vertical-route fallback
+    # for dense blocks where the LEFT/RIGHT routes can't escape the
+    # connector region. Hier-labels at top/bottom rotate 270/90 so
+    # text reads OFF-PAGE vertically.
+    top_y = snap_to_grid(INTERIOR_MARGIN_MM)
+    bottom_y = snap_to_grid(paper_h - INTERIOR_MARGIN_MM)
+    x_steps = [anchor_x]
+    for step in range(1, HLABEL_TOP_BOTTOM_LADDER_STEPS + 1):
+        for sign in (1, -1):
+            x_steps.append(snap_to_grid(anchor_x + sign * step * KICAD_GRID_MM))
+    # Dedup X candidates.
+    seen_xs: set[float] = set()
+    x_steps_unique = [x for x in x_steps if not (x in seen_xs or seen_xs.add(x))]
+    for x in x_steps_unique:
+        # TOP candidate (rotation 270 = text reads downward, off-page top)
+        candidates.append(_HlabelCandidate(
+            position=Point(x, top_y),
+            rotation=270.0,
+            route_from=Point(anchor_x, anchor_y),
+            kind="top_edge",
+        ))
+        # BOTTOM candidate (rotation 90 = text reads upward, off-page bottom)
+        candidates.append(_HlabelCandidate(
+            position=Point(x, bottom_y),
+            rotation=90.0,
+            route_from=Point(anchor_x, anchor_y),
+            kind="bottom_edge",
+        ))
+
+    return candidates
+
+
+def _first_clean_candidate(
+    candidates: list[_HlabelCandidate],
+    *,
+    builder: BlockLayoutBuilder,
+    net: ExternalNet,
+    anchor_label_owner_id: str,
+    same_net_label_owner_ids: frozenset[str],
+    route_avoid_owners: frozenset[str],
+    forbidden_traversal_points: frozenset[tuple[float, float]],
+    reserved_endpoints: set[tuple[float, float]],
+    failures_log: list | None = None,
+):
+    """Return ``(candidate, route_segments)`` for the first clean candidate.
+
+    Probes each candidate's hier-label text bbox against live
+    occupancy AND probes the routing extension (if any) for cleanliness.
+    Returns ``None`` when every candidate fails. When ``failures_log``
+    is provided, appends ``(candidate, reason, blocker_owner_id)`` for
+    each failed candidate — useful for diagnostics.
+
+    Pure-functional: no in-loop control flow. The generator-expression-
+    with-``next`` pattern mirrors :func:`_first_clean_route` in
+    ``place.py:213-235``.
+    """
+    from zynq_eda.core.layout._builder import _hierarchical_label_bbox
+    from zynq_eda.core.layout.bbox import wire_bbox
+    from zynq_eda.core.route.router import route_orthogonal_detail
+    from zynq_eda.core.validate.overlap import _overlap_is_significant
+
+    NOISE = OVERLAP_NOISE_FLOOR_MM
+
+    def _try(cand: _HlabelCandidate):
+        # Reject candidates whose endpoint is already reserved.
+        endpoint_key = (cand.position.x, cand.position.y)
+        if endpoint_key in reserved_endpoints:
+            if failures_log is not None:
+                failures_log.append((cand, "endpoint_reserved", None))
+            return None
+
+        # Probe hier-label text bbox against the live occupancy.
+        prospective = PlacedHierarchicalLabel(
+            net_name=net.name,
+            position=cand.position,
+            direction=net.direction,
+            rotation=cand.rotation,
+        )
+        bbox = _hierarchical_label_bbox(prospective)
+        # STRICT rule: the hier-label's text bbox must not overlap
+        # ANYTHING in live occupancy. The ONLY exemption is the
+        # anchor local label that is about to be REMOVED (the
+        # hier-label is replacing it; the local label's bbox is
+        # phantom from this point onward and stripped from
+        # occupancy below). Junctions / no-connects are not text
+        # bboxes — they're 0.5 mm dots that don't impede label
+        # placement and are intentionally not flagged as overlaps.
+        hits = builder.occupancy.collides(
+            bbox,
+            ignore_owners=frozenset({anchor_label_owner_id}),
+            ignore_kinds=frozenset({"junction", "no_connect"}),
+        )
+        significant = [h for h in hits if _overlap_is_significant(bbox, h)]
+        if significant:
+            if failures_log is not None:
+                failures_log.append((cand, "bbox_blocked", significant[0].owner_id))
+            return None
+
+        # No extension needed — endpoint coincides with anchor.
+        if cand.route_from is None:
+            return (cand, [])
+
+        # Extension route required. STRICT: only the anchor local
+        # label (about to be removed) is exempt. Other same-net
+        # local labels remain obstacles — a route passing through
+        # one would be a visual wire×label overlap the validator
+        # (correctly) flags.
+        attempt = route_orthogonal_detail(
+            cand.route_from,
+            cand.position,
+            builder.occupancy,
+            avoid_owners=frozenset({anchor_label_owner_id}) | route_avoid_owners,
+            forbidden_traversal_points=forbidden_traversal_points,
+        )
+        if attempt.gave_up:
+            if failures_log is not None:
+                failures_log.append((cand, "route_gave_up", None))
+            return None
+
+        # The route's own segments must not enter the new label bbox at
+        # a non-endpoint location.
+        for seg in attempt.segments:
+            seg_bb = wire_bbox(
+                start=seg.start, end=seg.end,
+                thickness_mm=WIRE_THICKNESS_MM, clearance_mm=0.0,
+                owner_id="probe_seg",
+            )
+            inter = bbox.intersection(seg_bb)
+            if inter and inter.width >= NOISE and inter.height >= NOISE:
+                # The route's wire goes through the new label's bbox.
+                # Endpoint contact (router terminates AT cand.position)
+                # produces a bbox-edge graze well below NOISE; only an
+                # interior crossing of >= NOISE width AND height fails.
+                if failures_log is not None:
+                    failures_log.append((cand, "route_through_bbox", None))
+                return None
+        return (cand, list(attempt.segments))
+
+    attempts = (_try(c) for c in candidates)
+    clean = (r for r in attempts if r is not None)
+    return next(clean, None)
+
+
 def _orphan_net_labels(
     builder: BlockLayoutBuilder,
     *,
@@ -693,96 +1039,187 @@ def _orphan_net_labels(
     paper_w: float,
     seen_label_positions: set[tuple[float, float]],
 ) -> None:
-    """Surface declared external_nets that have no hier label yet.
+    """Surface declared external_nets via a hier-label at a clean spot.
 
-    Strategy: find a same-name local label that the cluster/connector
-    code already emitted (those sit at real wire endpoints on real
-    component pins), then drop a hierarchical label at the EXACT same
-    coordinate. KiCad collapses co-located same-name labels into one
-    electrical net, so the hier label inherits the real net.
+    For each declared external_net with no hier-label yet:
+      1. Locate the same-name local label (anchor).
+      2. Build a CANDIDATE LADDER via ``_enumerate_hlabel_candidates``:
+         in-place → perpendicular Y-offset → sheet-edge with Y ladder.
+      3. Pick the FIRST candidate whose hier-label text bbox is clear
+         of live occupancy AND whose extension route (if any) is clean.
+      4. Hard-fail with a structured diagnostic when every candidate
+         fails — surface the upstream layout fix needed.
 
-    The hier label's rotation is derived from the DECLARED net edge
-    (180 for LEFT-edge nets, 0 for RIGHT-edge nets) — NOT inherited
-    from the local label's default rotation 0. Picking the rotation
-    from net.edge makes the hier-label text always read OUTBOARD of
-    the connector pin tail it's anchored to, away from the connector
-    body's pin-name text. (HDMI RX is the classic example: the HDMI-A
-    connector sits on the RIGHT edge but the TMDS signals are declared
-    with ``edge=SheetEdge.LEFT``; without the explicit rotation flip,
-    the hier-label text would read INTO the HDMI body, overlapping the
-    pin-name text printed there.)
-
-    Without an existing local label to anchor onto, we skip the net —
-    no point dropping a hier label that floats with no connection.
-    Such nets stay invisible to the root sheet; the user must add an
-    explicit ``external_parts`` driver or a per-block wire to expose
-    them.
+    No in-loop skips: ``_first_clean_candidate`` is a pure function
+    using the ``next(gen)`` pattern.
     """
+    paper_h = PAPER_DIMENSIONS_MM[block.paper_size][1]
+
     already_labeled = {label.net_name for label in builder.hierarchical_labels}
     local_labels_by_name: dict[str, list] = {}
     for lab in builder.labels:
         local_labels_by_name.setdefault(lab.net_name, []).append(lab)
 
-    # Pre-compute X bounds the connector-pin labels sit near so we can
-    # prefer them over cluster-far-terminal labels when both exist for
-    # the same net. Connectors are placed at the LEFT or RIGHT sheet
-    # edge; their per-pin labels land at ``stub_end`` which is one
-    # ``STUB_LEN`` (2.54 mm) outside the connector body — i.e. close to
-    # the sheet edge. Cluster far-terminal labels are typically deep
-    # inside the page (10-20 mm from the IC body). Picking the most
-    # edge-adjacent label as the hier-label anchor ensures the hier
-    # label sits where the user expects (at the connector edge) rather
-    # than at a passive cluster's far-far terminal.
     def _anchor_priority(lab) -> float:
-        # Prefer labels closer to either sheet edge: smaller of
-        # (distance-to-left-edge, distance-to-right-edge).
         return min(lab.position.x - left_x, right_x - lab.position.x)
 
-    for net in block.external_nets:
-        if net.name in already_labeled:
-            continue
-        matching = local_labels_by_name.get(net.name)
-        if not matching:
-            # No local label of this name exists — net only lives inside
-            # the sub-sheet via component pins (no connector driver and
-            # no override label). Surfacing it as a hier label would
-            # produce a dangling label per ERC. Skip.
-            continue
-        # Pick the most-edge-adjacent local label as the hier anchor.
-        anchor_label = min(matching, key=_anchor_priority)
-        key = (anchor_label.position.x, anchor_label.position.y)
-        if key in seen_label_positions:
-            continue
-        seen_label_positions.add(key)
-        # Pass 3: hier-label sits AT the local label's wire-endpoint
-        # position (no perpendicular stub). Inherits the local label's
-        # rotation so the text continues to read OUTWARD from the host
-        # symbol body. KiCad merges co-located same-name labels into
-        # one electrical net, so the hier label inherits the local
-        # label's wire endpoint connection.
-        hier_rotation = anchor_label.rotation
+    # Compute the connector-pin Y range (used to prefer sheet-edge
+    # candidates OUTSIDE this range so hier-labels land in clear
+    # off-pin Y space). Y range is taken from ALL local labels —
+    # those sit at real connector pin tails / cluster trunk-ends, so
+    # their Y range maps the dense routing band.
+    pin_y_range: tuple[float, float] | None = None
+    label_ys = [lab.position.y for lab in builder.labels]
+    if label_ys:
+        pin_y_range = (min(label_ys), max(label_ys))
+
+    # All OTHER local-label positions become forbidden traversal points
+    # so an extension route can't accidentally touch another net's
+    # anchor (which would short two nets together).
+    all_anchor_positions = {
+        (round(lab.position.x, 3), round(lab.position.y, 3))
+        for lab in builder.labels
+    }
+
+    reserved_endpoints: set[tuple[float, float]] = set(seen_label_positions)
+
+    # Build the per-net work list UPFRONT (pre-filter, no in-loop skips).
+    # GND nets are already handled by ``_ground_label_only`` (which ran
+    # before us and added them to ``already_labeled`` or skipped them
+    # entirely if a power:GND symbol drives the sheet's global net).
+    work_items = [
+        (net, min(local_labels_by_name[net.name], key=_anchor_priority))
+        for net in block.external_nets
+        if net.name not in already_labeled
+        and net.name in local_labels_by_name
+    ]
+
+    for net, anchor_label in work_items:
+        # Compute rotation for SHEET-EDGE candidates from the declared
+        # net edge (text reads outward off-page at the sheet boundary).
+        # For IN-PLACE / Y-OFFSET candidates, the candidate ladder uses
+        # the LOCAL label's rotation (text reads outward from the host
+        # symbol body — the cluster/connector that owns the local
+        # label). See ``_enumerate_hlabel_candidates`` for the split.
+        edge_rotation = (
+            180.0 if getattr(net, "edge", SheetEdge.LEFT) == SheetEdge.LEFT
+            else 0.0
+        )
+        target_edge_x = (
+            left_x if getattr(net, "edge", SheetEdge.LEFT) == SheetEdge.LEFT
+            else right_x
+        )
+
+        anchor_key = (round(anchor_label.position.x, 3),
+                      round(anchor_label.position.y, 3))
+        anchor_owner_id = (
+            f"label:{anchor_label.net_name}@"
+            f"{anchor_label.position.x:.1f},{anchor_label.position.y:.1f}"
+        )
+        # Same-net labels: ALL local labels with this net_name are
+        # electrically equivalent — overlap-checks should ignore them
+        # as obstacles (a hier-label bbox or extension wire that
+        # overlaps a same-net local label IS connecting to the same
+        # net; no validator overlap concern).
+        same_net_label_owner_ids = frozenset(
+            f"label:{lab.net_name}@{lab.position.x:.1f},{lab.position.y:.1f}"
+            for lab in local_labels_by_name.get(net.name, [])
+        )
+        # Forbidden traversal points: other nets' local label positions
+        # (so an extension route can't accidentally tie ours into theirs).
+        forbidden_pts = frozenset(
+            pt for pt in all_anchor_positions
+            if pt != anchor_key
+            and pt not in {
+                (round(l.position.x, 3), round(l.position.y, 3))
+                for l in local_labels_by_name.get(net.name, [])
+            }
+        )
+
+        candidates = _enumerate_hlabel_candidates(
+            net=net,
+            anchor_label=anchor_label,
+            edge_rotation=edge_rotation,
+            target_edge_x=target_edge_x,
+            pin_y_range=pin_y_range,
+            paper_h=paper_h,
+        )
+
+        failures_log: list = []
+        picked = _first_clean_candidate(
+            candidates,
+            builder=builder,
+            net=net,
+            anchor_label_owner_id=anchor_owner_id,
+            same_net_label_owner_ids=same_net_label_owner_ids,
+            route_avoid_owners=frozenset(),
+            forbidden_traversal_points=forbidden_pts,
+            reserved_endpoints=reserved_endpoints,
+            failures_log=failures_log,
+        )
+
+        if picked is None:
+            # Build a categorised failure summary.
+            from collections import Counter
+            reasons = Counter(reason for _c, reason, _b in failures_log)
+            blockers = Counter(
+                blocker for _c, _r, blocker in failures_log
+                if blocker is not None
+            )
+            top_blockers = blockers.most_common(5)
+            # Show 3 representative failed candidates (one per kind).
+            by_kind: dict[str, str] = {}
+            for cand, reason, blocker in failures_log:
+                if cand.kind not in by_kind:
+                    by_kind[cand.kind] = (
+                        f"{cand.kind} @ ({cand.position.x:.1f},"
+                        f"{cand.position.y:.1f}) → {reason}"
+                        + (f" [blocked by {blocker}]" if blocker else "")
+                    )
+            sample = "; ".join(by_kind.values())
+            raise RuntimeError(
+                f"_orphan_net_labels: no clean candidate for net "
+                f"{net.name!r} (anchor local label @ "
+                f"{anchor_label.position}, rotation={anchor_label.rotation}, "
+                f"net.edge rotation={edge_rotation}). "
+                f"Tried {len(candidates)} candidates. "
+                f"Failure reasons: {dict(reasons)}. "
+                f"Top blocking owners: {top_blockers}. "
+                f"Sample failures: {sample}. "
+                f"Upstream fix: widen the cluster channel "
+                f"(PASSIVE_OFFSET_MM in _constants.py), move the IC "
+                f"anchor, relocate the connector, or declare the net "
+                f"on the opposite sheet edge."
+            )
+
+        cand, segments = picked
+
+        # Emit the extension wires (if any).
+        for seg in segments:
+            builder.add_wire(seg)
+
+        # Place the hier-label using the CANDIDATE's rotation (which
+        # is the local label's rotation for in-place / y_offset, the
+        # net-edge convention rotation for sheet_edge).
         builder.add_hierarchical_label(PlacedHierarchicalLabel(
             net_name=net.name,
-            position=anchor_label.position,
+            position=cand.position,
             direction=net.direction,
-            rotation=hier_rotation,
+            rotation=cand.rotation,
         ))
-        # Strip the now-redundant local label that the hier label
-        # supersedes. KiCad's label-merging by name keeps electrical
-        # connectivity intact across the sheet's other labels.
-        # ALSO remove its bbox from occupancy — leaving a stale bbox
-        # behind blocks subsequent route_orthogonal_detail probes that
-        # legitimately want to end at this position (e.g.
-        # _input_pwr_flags's route from this anchor to PWR_FLAG).
+
+        # Strip the now-redundant local label (it's been replaced by
+        # the hier-label in the net's electrical role). Remove its
+        # bbox from occupancy so subsequent passes don't see a stale
+        # text-bbox blocking new routes.
         try:
             builder.labels.remove(anchor_label)
-            matching.remove(anchor_label)
-            builder.occupancy.remove_by_owner(
-                f"label:{anchor_label.net_name}@"
-                f"{anchor_label.position.x:.1f},{anchor_label.position.y:.1f}"
-            )
+            builder.occupancy.remove_by_owner(anchor_owner_id)
         except ValueError:
             pass
+
+        reserved_endpoints.add((cand.position.x, cand.position.y))
+        seen_label_positions.add((cand.position.x, cand.position.y))
 
 
 def _ground_label_only(
@@ -845,36 +1282,20 @@ def _ground_label_only(
         if ground_net.power_kind != "ground":
             continue
 
-        # Preferred path 1: piggyback on an existing local label sitting
-        # on a real wire. KiCad merges co-located same-name labels into
-        # one electrical net, so the hier label inherits the local
-        # label's wire endpoint and no longer dangles. Rotation is set
-        # from the DECLARED net edge so the GND text reads outboard of
-        # the connector body (mirrors ``_orphan_net_labels``).
+        # If a same-name LOCAL label exists, ``_orphan_net_labels`` will
+        # promote it to a hier-label via the candidate ladder (which
+        # picks a position that doesn't overlap any wire/symbol). We
+        # do NOT directly emit the hier-label here — that would skip
+        # the ladder's bbox-clearance probe and risk wire×hlabel
+        # overlaps (boot_switches' GND was hit by this).
         matching = local_labels_by_name.get(ground_net.name)
         if matching:
-            anchor_label = matching[0]
-            key = (anchor_label.position.x, anchor_label.position.y)
-            if key in seen_label_positions:
-                continue
-            seen_label_positions.add(key)
-            # Pass 3: hier-label sits AT the local label's wire
-            # endpoint (no perpendicular stub). Inherits the local
-            # label's rotation so text continues to read outward.
-            hier_rotation = anchor_label.rotation
-            builder.add_hierarchical_label(PlacedHierarchicalLabel(
-                net_name=ground_net.name,
-                position=anchor_label.position,
-                direction=ground_net.direction,
-                rotation=hier_rotation,
-            ))
-            # Drop the now-redundant local label — KiCad would render
-            # both, double-printing the GND text at the same coord.
-            try:
-                builder.labels.remove(anchor_label)
-                matching.pop(0)
-            except ValueError:
-                pass
+            # Defer to ``_orphan_net_labels`` — its candidate ladder
+            # picks a position that doesn't overlap any wire/symbol.
+            # Direct emission here would put the hier-label AT the
+            # local label coord (a wire endpoint), but the wire body
+            # extending past that endpoint can graze the hier-label
+            # text bbox (boot_switches GND hit this).
             continue
 
         # Preferred path 2: piggyback on a same-name power symbol. The

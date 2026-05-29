@@ -71,10 +71,28 @@ def _pmod_pin_to_net(*, slot: int) -> tuple[tuple[str, str], ...]:
 
 
 def _pmod_external_nets():
-    yield PowerInputNet("+3V3", edge=SheetEdge.LEFT)
-    yield GroundNet("GND", edge=SheetEdge.LEFT)
+    # The PMOD connector body has pins emerging on BOTH sides. The
+    # ``Conn_02x06_Odd_Even`` symbol places ODD pin numbers (1, 3, 5,
+    # 7, 9, 11) on the LEFT column (X = pin_tip_left = 334) with
+    # local label rotation 180 (text OUT-PAGE LEFT) and EVEN pin
+    # numbers (2, 4, 6, 8, 10, 12) on the RIGHT column (X = 346.71)
+    # with rotation 0 (text OUT-PAGE RIGHT). Each net's declared
+    # ``edge`` MUST match the physical column its pin sits on,
+    # otherwise the hier-label has to be routed ACROSS the connector
+    # body (LEFT-declared net on a RIGHT-column pin), which is
+    # geometrically unrouteable past the body bbox.
+    #
+    # PMOD Type 1A pin map (per ``_pmod_pin_to_net``):
+    #   pin 1=IO0(LEFT), 2=IO1(RIGHT), 3=IO2(LEFT), 4=IO3(RIGHT),
+    #   5=GND(LEFT), 6=+3V3(RIGHT),
+    #   7=IO4(LEFT), 8=IO5(RIGHT), 9=IO6(LEFT), 10=IO7(RIGHT),
+    #   11=GND(LEFT), 12=+3V3(RIGHT)
+    yield PowerInputNet("+3V3", edge=SheetEdge.RIGHT)  # pin 6/12 on RIGHT column
+    yield GroundNet("GND", edge=SheetEdge.LEFT)         # pin 5/11 on LEFT column
     for slot in range(2):
         for io in range(8):
+            # Even IO indices = LEFT column pins, odd IO indices = RIGHT.
+            edge = SheetEdge.LEFT if io % 2 == 0 else SheetEdge.RIGHT
             yield SignalNet(
-                f"PMOD{slot}_IO{io}", "bidirectional", edge=SheetEdge.LEFT,
+                f"PMOD{slot}_IO{io}", "bidirectional", edge=edge,
             )

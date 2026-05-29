@@ -52,6 +52,126 @@ VALUE_SHIFT_BY_LIB_ID: dict[str, tuple[float, float, float | None]] = {
     "Device:D_Zener":     (-2.54, 0.0, 90.0),
     "Device:LED":         (-2.54, 0.0, 90.0),
 }
+
+
+def pick_dynamic_reference_shift(
+    *,
+    lib_id: str,
+    anchor: "Point",
+    symbol_rotation: float,
+    occupancy,
+    geometry_cache,
+    owner_id: str = "",
+    reference_text: str = "C100",
+    consider_wires: bool = False,
+    padding_mm: float | None = None,
+) -> "tuple[float, float, float | None] | None":
+    """Pick a Reference-property displacement that doesn't collide.
+
+    Mirror of :func:`pick_dynamic_value_shift` but for Reference text.
+    Tries the same 26-candidate ladder, returning the first whose
+    rendered text bbox is clear of the cap's own body and of every
+    primitive currently in ``occupancy``.
+
+    Returns ``None`` if no candidate fits — caller then falls back to
+    the KiCad lib-default Reference position.
+    """
+    from zynq_eda.core.layout.bbox import (
+        DEFAULT_TEXT_SIZE_MM,
+        symbol_bbox,
+        text_bbox,
+    )
+
+    # Only apply for known passive lib_ids (Device:R/C family).
+    if lib_id not in VALUE_SHIFT_BY_LIB_ID:
+        return None
+
+    try:
+        own_body = symbol_bbox(
+            lib_id=lib_id,
+            anchor=anchor,
+            rotation=symbol_rotation,
+            cache=geometry_cache,
+            owner_id=f"{owner_id}:own_body_probe",
+        )
+    except Exception:
+        own_body = None
+
+    # Reference defaults to OPPOSITE side from Value. For Device:R/C
+    # whose Value shift is (-2.54, 0, 90), Reference goes to (+2.54, 0, 90).
+    value_default = VALUE_SHIFT_BY_LIB_ID[lib_id]
+    dx0 = -value_default[0]
+    dy0 = value_default[1]
+    rot0 = value_default[2]
+
+    rad = 2.54  # one grid pitch
+    candidates: list[tuple[float, float, float | None]] = [
+        (dx0, dy0, rot0),                       # baseline opposite-Value
+        (dx0 + rad, dy0, rot0),                 # farther out
+        (dx0 + 2 * rad, dy0, rot0),
+        (dx0, dy0 - 2 * rad, 0.0),              # above
+        (dx0, dy0 + 2 * rad, 0.0),              # below
+        (dx0 + rad, dy0 - 2 * rad, 0.0),        # diag upper
+        (dx0 + rad, dy0 + 2 * rad, 0.0),        # diag lower
+        (dx0, dy0 - 3 * rad, 0.0),              # further above
+        (dx0, dy0 + 3 * rad, 0.0),              # further below
+        (0.0, dy0 - 4 * rad, 0.0),              # on body axis above
+        (0.0, dy0 + 4 * rad, 0.0),              # on body axis below
+    ]
+
+    from zynq_eda.core.layout._constants import VISUAL_CLEARANCE_MM
+
+    for dx, dy, text_rot in candidates:
+        sym_rot = int(symbol_rotation) % 360
+        if sym_rot == 0:
+            rdx, rdy = dx, dy
+        elif sym_rot == 90:
+            rdx, rdy = dy, -dx
+        elif sym_rot == 180:
+            rdx, rdy = -dx, -dy
+        elif sym_rot == 270:
+            rdx, rdy = -dy, dx
+        else:
+            rdx, rdy = dx, dy
+        from zynq_eda.core.model.grid import Point as _Pt
+        text_anchor = _Pt(anchor.x + rdx, anchor.y + rdy)
+        candidate_bbox = text_bbox(
+            text=reference_text,
+            anchor=text_anchor,
+            size_mm=DEFAULT_TEXT_SIZE_MM,
+            rotation=0.0,
+            justify="center",
+            owner_id=f"{owner_id}:ref_probe",
+            kind="symbol",
+        )
+        if own_body is not None and candidate_bbox.intersects(
+            own_body, padding_mm=VISUAL_CLEARANCE_MM,
+        ):
+            continue
+        ignore_kinds_set: set = {"junction", "no_connect"}
+        if not consider_wires:
+            ignore_kinds_set.add("wire")
+        effective_padding = (
+            VISUAL_CLEARANCE_MM if padding_mm is None else padding_mm
+        )
+        hits = occupancy.collides(
+            candidate_bbox,
+            ignore_kinds=frozenset(ignore_kinds_set),
+            padding_mm=effective_padding,
+        )
+        if not hits:
+            return (dx, dy, text_rot)
+    return None
+
+
+REFERENCE_SHIFT_BY_LIB_ID: dict[str, tuple[float, float, float | None]] = {}
+"""Opt-in Reference-text displacement per passive lib_id.
+
+Empty by default — Reference text uses the KiCad-library default
+position unless a per-instance ``reference_shift`` is set on the
+PlacedSymbol. Future work (pick_dynamic_reference_shift) will populate
+this table for clusters where the default position causes overlaps.
+"""
 """DEFAULT shift candidates per lib_id. Used as the FIRST attempt at
 placement time; if that anchor collides, the placement engine probes a
 ladder of alternate shifts (perpendicular, opposite-side, larger offset)
@@ -69,6 +189,8 @@ def pick_dynamic_value_shift(
     geometry_cache,
     owner_id: str = "",
     value_text: str = "00000",
+    consider_wires: bool = False,
+    padding_mm: float | None = None,
 ) -> "tuple[float, float, float | None] | None":
     """Pick a Value-property displacement that doesn't collide with anything.
 
@@ -132,6 +254,20 @@ def pick_dynamic_value_shift(
         (dx0, dy0 + 3 * rad, 0.0),              # further below
         (0.0, dy0 - 4 * rad, 0.0),              # well above on body axis
         (0.0, dy0 + 4 * rad, 0.0),              # well below on body axis
+        # Extended ladder: combine X and Y shifts for tight cluster
+        # cases where simple X-or-Y moves all collide.
+        (dx0 - rad, dy0 - 2 * rad, 0.0),        # diagonal upper-far same
+        (dx0 - rad, dy0 + 2 * rad, 0.0),        # diagonal lower-far same
+        (-dx0 + rad, dy0 - 2 * rad, 0.0),       # diagonal upper-far mirror
+        (-dx0 + rad, dy0 + 2 * rad, 0.0),       # diagonal lower-far mirror
+        (dx0 - 2 * rad, dy0 - 2 * rad, 0.0),    # diag upper x2 same
+        (dx0 - 2 * rad, dy0 + 2 * rad, 0.0),    # diag lower x2 same
+        (-dx0 + 2 * rad, dy0 - 2 * rad, 0.0),   # diag upper x2 mirror
+        (-dx0 + 2 * rad, dy0 + 2 * rad, 0.0),   # diag lower x2 mirror
+        (0.0, dy0 - 5 * rad, 0.0),              # well above further
+        (0.0, dy0 + 5 * rad, 0.0),              # well below further
+        (dx0 - 3 * rad, dy0, rot0),             # extra-far same side
+        (-dx0 + 3 * rad, dy0, rot0),            # extra-far mirror
     ]
 
     for dx, dy, text_rot in candidates:
@@ -164,10 +300,16 @@ def pick_dynamic_value_shift(
         # text still grazes the body bbox by ~0.5 mm.
         if own_body is not None and candidate_bbox.intersects(own_body, padding_mm=VISUAL_CLEARANCE_MM):
             continue
+        ignore_kinds_set: set = {"junction", "no_connect"}
+        if not consider_wires:
+            ignore_kinds_set.add("wire")
+        effective_padding = (
+            VISUAL_CLEARANCE_MM if padding_mm is None else padding_mm
+        )
         hits = occupancy.collides(
             candidate_bbox,
-            ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
-            padding_mm=VISUAL_CLEARANCE_MM,
+            ignore_kinds=frozenset(ignore_kinds_set),
+            padding_mm=effective_padding,
         )
         if not hits:
             return (dx, dy, text_rot)
@@ -1104,6 +1246,7 @@ class SymbolGeometryCache:
         value_override: str | None = None,
         reference_override: str | None = None,
         value_shift: "tuple[float, float, float | None] | None" = None,
+        reference_shift: "tuple[float, float, float | None] | None" = None,
     ):
         """Return PAGE-coord bboxes for every visible property text on a
         placed symbol.
@@ -1167,6 +1310,25 @@ class SymbolGeometryCache:
                 # time against occupancy); fall back to the static
                 # default per lib_id.
                 shift = value_shift or VALUE_SHIFT_BY_LIB_ID.get(lib_id)
+                if shift is not None:
+                    dx, dy, _text_rot_override = shift
+                    sym_rot = int(rotation) % 360
+                    if sym_rot == 0:
+                        rdx, rdy = dx, dy
+                    elif sym_rot == 90:
+                        rdx, rdy = dy, -dx
+                    elif sym_rot == 180:
+                        rdx, rdy = -dx, -dy
+                    elif sym_rot == 270:
+                        rdx, rdy = -dy, dx
+                    else:
+                        rdx, rdy = dx, dy
+                    text_anchor = Point(
+                        anchor.x + rdx,
+                        anchor.y + rdy,
+                    )
+            elif prop_name == "Reference":
+                shift = reference_shift or REFERENCE_SHIFT_BY_LIB_ID.get(lib_id)
                 if shift is not None:
                     dx, dy, _text_rot_override = shift
                     sym_rot = int(rotation) % 360
