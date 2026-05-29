@@ -1754,14 +1754,6 @@ def _plan_register_symbol(
     for b in number_bboxes:
         plan.occupancy.add(b)
     for b in property_bboxes:
-        # Skip property bboxes for hidden Value / Reference text. The
-        # emitter writes (hide yes) for those properties so they don't
-        # render and don't participate in overlap checks.
-        oid = b.owner_id
-        if sym.value_hidden and oid.endswith(":property:Value"):
-            continue
-        if sym.reference_hidden and oid.endswith(":property:Reference"):
-            continue
         plan.occupancy.add(b)
 
 
@@ -2305,36 +2297,48 @@ def _try_emit_cluster_share_wire(
                         and (abs(sym.position.x - PASSIVE_PIN_HALF - endpoint.x) < EPS
                              or abs(sym.position.x + PASSIVE_PIN_HALF - endpoint.x) < EPS)):
                     _exempt_symbol(sym.reference)
-        for lab in plan.labels:
-            if (abs(lab.position.x - endpoint.x) < EPS
-                    and abs(lab.position.y - endpoint.y) < EPS):
-                exempt_owners.add(
-                    f"label:{lab.net_name}@{lab.position.x:.1f},{lab.position.y:.1f}"
-                )
+        # NOTE: labels at the endpoint are deliberately NOT exempted.
+        # A share-wire that runs into a slot-0 label's text is a real
+        # wire×label overlap (the label reads along the wire's axis).
+        # Leaving labels as obstacles makes such share-wires fail the
+        # probe, so the caller falls back to a clean duplicate label.
 
-    # Probe every segment against current occupancy. If any segment's
-    # bbox would collide with a NON-wire primitive (symbol bodies,
-    # labels, intrinsic text) NOT exempted as an endpoint terminator,
-    # abort — emitting would break the overlap mandate.
+    # Probe the cheap hand-built segments against occupancy. Exempt the
+    # endpoint terminators (cap bodies + slot-0 symbol/label). If any
+    # segment hits a real obstacle, fall through to the full router.
     EXEMPT_KINDS = frozenset({"junction", "no_connect", "wire"})
-    for seg in segs:
-        if seg.start == seg.end:
-            continue
-        bb = wire_bbox(seg.start, seg.end, owner_id="share_probe")
-        hits = plan.occupancy.collides(
-            bb, ignore_kinds=EXEMPT_KINDS, ignore_owners=exempt_owners,
-        )
-        if hits:
-            return False
 
-    # Clean — emit all three segments.
-    emitted = False
-    for seg in segs:
-        if seg.start == seg.end:
-            continue
-        if _add_wire_with_bbox(plan, seg):
-            emitted = True
-    return emitted
+    def _segments_clean(candidate_segs) -> bool:
+        for seg in candidate_segs:
+            if seg.start == seg.end:
+                continue
+            bb = wire_bbox(seg.start, seg.end, owner_id="share_probe")
+            if plan.occupancy.collides(
+                bb, ignore_kinds=EXEMPT_KINDS, ignore_owners=exempt_owners,
+            ):
+                return False
+        return True
+
+    def _emit(candidate_segs) -> bool:
+        ok = False
+        for seg in candidate_segs:
+            if seg.start == seg.end:
+                continue
+            if _add_wire_with_bbox(plan, seg):
+                ok = True
+        return ok
+
+    if _segments_clean(segs):
+        return _emit(segs)
+
+    # Hand-built path blocked (a body sits between the two far pins).
+    # We do NOT fall back to a free-form router here — every router
+    # detour we tried crossed an intervening cap/symbol body, which
+    # the strict validator (correctly) rejects. Return False; the
+    # caller emits a VISIBLE same-net label at this cap.far instead
+    # (KiCad merges same-name labels, so the pin is still on the net).
+    # That keeps the layout overlap-free while staying fully visible.
+    return False
 
 
 def _refine_cluster_value_shifts(
@@ -2619,11 +2623,6 @@ def _emit_cluster_pins(
         # Track first slot's cap.far per destination so subsequent
         # slots can wire to it (closes ERC pin_not_connected).
         first_cap_far_by_dest_for_pin: dict[str, Point] = {}
-        # Track which destinations were emitted as POWER SYMBOLS
-        # (vs local labels). Share-wires only target power symbol
-        # endpoints because wires can terminate at symbol pin tips
-        # but not at label anchors.
-        power_dest_destinations_for_pin: set[str] = set()
         multi_slot_widen = len(part_tokens_for_pin) > 1
         for slot_idx, part_token in enumerate(part_tokens_for_pin):
             slot_pos = _cluster_slot_position(
@@ -2686,99 +2685,22 @@ def _emit_cluster_pins(
             # (perpendicular offset only) blocks wires ending at label
             # anchors.
             if destination_net in emitted_destinations_for_pin:
+                # Sub-slot sharing a destination with an earlier slot.
+                # Connect this slot's cap.far to the earlier slot's
+                # cap.far with a VISIBLE wire so the pin isn't floating.
+                # The router finds a clean multi-bend path around any
+                # bodies; if none exists, emit a VISIBLE duplicate label
+                # naming the net (KiCad merges same-name labels). NEVER
+                # hide text — if neither a wire nor a visible label
+                # fits, leave the pin floating so ERC surfaces it for a
+                # routing/placement fix.
                 first_cap_far = first_cap_far_by_dest_for_pin.get(destination_net)
-                slot0_is_power = destination_net in power_dest_destinations_for_pin
-                emitted = False
-                if (first_cap_far is not None
-                        and first_cap_far != cap_far
-                        and slot0_is_power):
-                    emitted = _try_emit_cluster_share_wire(
+                wired = False
+                if first_cap_far is not None and first_cap_far != cap_far:
+                    wired = _try_emit_cluster_share_wire(
                         plan, cap_far, first_cap_far, spec.page_side,
                     )
-                if not emitted and slot0_is_power:
-                    # Fallback for power destinations only: emit a
-                    # DUPLICATE power symbol at this slot's cap.far,
-                    # but with Value + Reference HIDDEN so the
-                    # property text doesn't compete for space with
-                    # slot 0's visible symbol. KiCad merges by Value
-                    # field whether hidden or not, so the sub-slot's
-                    # cap.far pin is electrically on the same net.
-                    # Layout-clean: body is at cap.far (cap body's
-                    # edge); hidden text contributes no bbox.
-                    power_lib_id_dup = _power_symbol_for_destination(destination_net)
-                    if power_lib_id_dup is not None:
-                        rot_dup = _outward_power_symbol_rotation(
-                            lib_id=power_lib_id_dup, pin_side=spec.page_side,
-                            geometry_cache=geometry,
-                        )
-                        pwr_ref_index_dup = next_ref_counters.setdefault("PWR", 300)
-                        next_ref_counters["PWR"] = pwr_ref_index_dup + 1
-                        pwr_sym_dup = PlacedSymbol(
-                            lib_id=power_lib_id_dup,
-                            reference=f"#PWR{pwr_ref_index_dup}",
-                            value=destination_net,
-                            position=cap_far,
-                            footprint="",
-                            rotation=rot_dup,
-                            value_hidden=True,
-                            reference_hidden=True,
-                        )
-                        # Probe: only emit if body bbox is clean.
-                        from zynq_eda.core.layout.bbox import (
-                            placeholder_symbol_bbox, symbol_bbox,
-                        )
-                        try:
-                            body_bb = symbol_bbox(
-                                lib_id=pwr_sym_dup.lib_id,
-                                anchor=pwr_sym_dup.position,
-                                rotation=pwr_sym_dup.rotation,
-                                cache=geometry,
-                                owner_id=f"symbol:{pwr_sym_dup.reference}",
-                            )
-                        except Exception:
-                            body_bb = placeholder_symbol_bbox(
-                                pwr_sym_dup.position,
-                                owner_id=f"symbol:{pwr_sym_dup.reference}",
-                            )
-                        # Find owners at cap.far to exempt (the cap
-                        # whose far pin is here).
-                        EPS = 0.05
-                        exempt: set[str] = set()
-                        for s_sym in plan.symbols:
-                            if (abs(s_sym.position.x - cap_far.x) < EPS
-                                    and abs(s_sym.position.y - cap_far.y) < EPS):
-                                exempt.add(f"symbol:{s_sym.reference}")
-                                exempt.add(f"symbol:{s_sym.reference}:property:Value")
-                                exempt.add(f"symbol:{s_sym.reference}:property:Reference")
-                            elif int(s_sym.rotation) % 180 == 0:
-                                if (abs(s_sym.position.x - cap_far.x) < EPS
-                                        and (abs(s_sym.position.y - PASSIVE_PIN_HALF - cap_far.y) < EPS
-                                             or abs(s_sym.position.y + PASSIVE_PIN_HALF - cap_far.y) < EPS)):
-                                    exempt.add(f"symbol:{s_sym.reference}")
-                                    exempt.add(f"symbol:{s_sym.reference}:property:Value")
-                                    exempt.add(f"symbol:{s_sym.reference}:property:Reference")
-                            else:
-                                if (abs(s_sym.position.y - cap_far.y) < EPS
-                                        and (abs(s_sym.position.x - PASSIVE_PIN_HALF - cap_far.x) < EPS
-                                             or abs(s_sym.position.x + PASSIVE_PIN_HALF - cap_far.x) < EPS)):
-                                    exempt.add(f"symbol:{s_sym.reference}")
-                                    exempt.add(f"symbol:{s_sym.reference}:property:Value")
-                                    exempt.add(f"symbol:{s_sym.reference}:property:Reference")
-                        hits = plan.occupancy.collides(
-                            body_bb,
-                            ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
-                            ignore_owners=exempt,
-                        )
-                        if not hits:
-                            _plan_register_symbol(plan, pwr_sym_dup, geometry)
-                elif not emitted and not slot0_is_power:
-                    # Fallback for LOCAL-LABEL destinations on sub-slots:
-                    # emit a duplicate label at this slot's cap.far ONLY
-                    # if it doesn't overlap any existing primitive
-                    # (including OTHER same-net labels — the strict
-                    # overlap mandate doesn't admit same-net duplicates
-                    # overlapping). KiCad merges by name, so the net
-                    # connectivity is preserved when emission succeeds.
+                if not wired:
                     from zynq_eda.core.model.sheet import PlacedLabel
                     from zynq_eda.core.layout._builder import _label_bbox
                     dup_label_rot = {
@@ -2790,12 +2712,10 @@ def _emit_cluster_pins(
                         position=cap_far,
                         rotation=dup_label_rot,
                     )
-                    dup_bb = _label_bbox(dup_label)
-                    hits = plan.occupancy.collides(
-                        dup_bb,
+                    if not plan.occupancy.collides(
+                        _label_bbox(dup_label),
                         ignore_kinds=frozenset({"wire", "junction", "no_connect"}),
-                    )
-                    if not hits:
+                    ):
                         _add_label_with_bbox(plan, dup_label)
                 continue
             emitted_destinations_for_pin.add(destination_net)
@@ -2819,7 +2739,6 @@ def _emit_cluster_pins(
                     rotation=rotation,
                 )
                 _plan_register_symbol(plan, pwr_sym, geometry)
-                power_dest_destinations_for_pin.add(destination_net)
             else:
                 # Local label at cap.far naming the destination net.
                 # Set-dedup: multiple slots on the same pin going to the
@@ -3778,6 +3697,107 @@ def _route_edge_label_pin_wires(
             _add_label_with_bbox(plan, lbl)
 
 
+def _emit_orphan_external_net_hlabels(
+    plan: LayoutPlan, block: Block, geometry,
+) -> None:
+    """Emit a hier-label for every declared external_net that doesn't
+    already have a hier-label on the plan.
+
+    Input power nets sourced via a connector's pin_to_net where the
+    pin is classified as CLUSTER (e.g. microsd J1 Pin 4 → +3V3) don't
+    get an EDGE_LABEL hier-label by the normal pin-classification path.
+    Without a hier-label on the sub-sheet, the net has no exit to the
+    parent sheet and KiCad ERC fires ``power_pin_not_driven``. This
+    pass closes that gap: walk ``block.external_nets``, find the ones
+    with no existing hier-label of the same name on the plan, and emit
+    one at a clean position on the declared edge.
+
+    The hier-label is placed AT the first wire/symbol/label on the
+    net so KiCad's same-name-label merging electrically ties it to
+    the rest of the net. The wire from any pin already on this net
+    flows into the hier-label by virtue of the merging.
+    """
+    from zynq_eda.core.layout._builder import _hierarchical_label_bbox
+    from zynq_eda.core.layout._constants import (
+        INTERIOR_MARGIN_MM, KICAD_GRID_MM,
+    )
+    from zynq_eda.core.model.grid import snap_to_grid
+    from zynq_eda.core.model.interface import SheetEdge
+    from zynq_eda.core.model.sheet import PAPER_DIMENSIONS_MM
+    from zynq_eda.core.layout.bbox import wire_bbox as _wbbox
+
+    existing_hlabel_nets = {hl.net_name for hl in plan.hierarchical_labels}
+
+    paper_w, paper_h = PAPER_DIMENSIONS_MM[block.paper_size]
+
+    for net in block.external_nets:
+        if net.name in existing_hlabel_nets:
+            continue
+        # Canonical GND has its own dedicated handling via the planner's
+        # GND-pin classification + ``power:GND`` symbol emission. Don't
+        # emit an orphan hier-label here — it would compete with the
+        # ``power:GND`` symbols and KiCad's flatten pass might not
+        # merge them correctly with the canonical GND net.
+        if net.name.upper() == "GND":
+            continue
+        # Find an anchor point: any wire endpoint, label, or symbol pin
+        # on this net. We look up nets via pin_to_net mappings — find
+        # any connector pin assigned to this net and use its page
+        # position.
+        anchor_pos: Point | None = None
+        for connector in block.connectors:
+            for (pin_name, mapped_net) in connector.pin_to_net:
+                if mapped_net != net.name:
+                    continue
+                # Resolve pin's page coord.
+                try:
+                    anchor_plan = plan.get_anchor(connector.reference)
+                    pin_geom = geometry.pin_geometry_by_name(
+                        connector.lib_id, anchor_plan.anchor, pin_name,
+                        rotation=anchor_plan.rotation,
+                    )
+                    anchor_pos = pin_geom.connection
+                    break
+                except (KeyError, Exception):
+                    continue
+            if anchor_pos is not None:
+                break
+        if anchor_pos is None:
+            # No connector pin owns this net — skip.
+            continue
+        # Pick a hier-label position on the declared edge: same row as
+        # the pin, X at the edge's margin.
+        if net.edge == SheetEdge.LEFT:
+            hl_x = snap_to_grid(INTERIOR_MARGIN_MM)
+            hl_rot = 0.0  # text extends RIGHT (inward)
+        else:
+            hl_x = snap_to_grid(paper_w - INTERIOR_MARGIN_MM)
+            hl_rot = 180.0  # text extends LEFT (inward)
+        # Search a Y range starting at the anchor's Y, sweeping ±10
+        # grid units. Need a Y where the hier-label bbox doesn't
+        # overlap anything.
+        from zynq_eda.core.model.sheet import PlacedHierarchicalLabel
+        direction = getattr(net, "direction", "input")
+        for dy in [0] + [s * KICAD_GRID_MM for s in (1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 8, -8, 10, -10)]:
+            cand_y = snap_to_grid(anchor_pos.y + dy)
+            if cand_y < INTERIOR_MARGIN_MM or cand_y > paper_h - INTERIOR_MARGIN_MM:
+                continue
+            candidate = PlacedHierarchicalLabel(
+                net_name=net.name,
+                position=Point(hl_x, cand_y),
+                direction=direction,
+                rotation=hl_rot,
+            )
+            cand_bbox = _hierarchical_label_bbox(candidate)
+            hits = plan.occupancy.collides(
+                cand_bbox,
+                ignore_kinds=frozenset({"junction", "no_connect"}),
+            )
+            if not hits:
+                _add_hierarchical_label_with_bbox(plan, candidate)
+                break
+
+
 def plan_labels(plan: LayoutPlan, block: Block, geometry) -> None:
     """Phase 8 — emit every label / hierarchical label.
 
@@ -3793,6 +3813,13 @@ def plan_labels(plan: LayoutPlan, block: Block, geometry) -> None:
     # wire endpoint follows the candidate ladder's shift. Calling it
     # again here would emit duplicates / re-shift.
     _emit_local_label_pins(plan, geometry)
+    # Emit hier-labels for declared external_nets that aren't already
+    # represented by an EDGE_LABEL pin's hier-label. Without this, an
+    # input power net (e.g. microsd "+3V3") whose pin is classified as
+    # CLUSTER never gets a hier-label, and KiCad ERC fires
+    # power_pin_not_driven because the net has no labeled exit
+    # to the parent sheet.
+    _emit_orphan_external_net_hlabels(plan, block, geometry)
 
 
 # ---------------------------------------------------------------------------

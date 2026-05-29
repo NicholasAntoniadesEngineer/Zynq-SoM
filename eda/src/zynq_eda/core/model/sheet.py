@@ -55,19 +55,6 @@ class PlacedSymbol:
     the .kicad_sch and the validator rebuilds the Reference bbox at the
     shifted anchor. Tuple format: ``(dx_mm, dy_mm, text_rotation_override
     _or_None)``."""
-    value_hidden: bool = False
-    """When True, the Value property is emitted with ``(hide yes)``: the
-    text doesn't render and the validator skips its bbox. Used for
-    duplicate power symbols on cluster sub-slots (slots N≥1 sharing
-    the same destination as slot 0) — the FIRST slot's symbol shows
-    the net name; subsequent slots' symbols still merge by Value field
-    in KiCad's netlist but contribute no visible text. Eliminates the
-    duplicate-text overlap without losing electrical connectivity."""
-    reference_hidden: bool = False
-    """Mirrors ``value_hidden`` for the Reference property. Used for
-    cluster sub-slot power symbols where the Reference designator
-    (e.g. #PWR301, #PWR302) would otherwise stack on top of slot 0's
-    Reference text."""
 
     def __post_init__(self) -> None:
         if not self.lib_id or ":" not in self.lib_id:

@@ -174,17 +174,6 @@ class BlockLayoutBuilder:
         for b in number_bboxes:
             self.occupancy.add(b)
         for b in property_bboxes:
-            # Skip Value / Reference property bboxes for symbols where
-            # those props are flagged hidden (e.g. duplicate cluster
-            # power symbols on sub-slots): the emitter writes
-            # (hide yes) and the validator's bbox check would otherwise
-            # report overlaps with sibling power symbols that share
-            # the same X column.
-            oid = b.owner_id
-            if sym.value_hidden and oid.endswith(":property:Value"):
-                continue
-            if sym.reference_hidden and oid.endswith(":property:Reference"):
-                continue
             self.occupancy.add(b)
 
     def add_wire(self, wire: PlacedWire) -> None:
