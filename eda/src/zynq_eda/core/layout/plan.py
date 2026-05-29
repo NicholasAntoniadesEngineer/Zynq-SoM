@@ -3402,6 +3402,12 @@ def plan_routes(plan: LayoutPlan, block: Block, geometry) -> None:
     """
     _route_cluster_pins(plan, block, geometry)
     _route_gnd_pin_wires(plan, geometry)
+    # EDGE_LABEL hier-labels must be emitted BEFORE their wires so the
+    # candidate ladder's X/Y shifts get reflected in the wire's
+    # endpoint — otherwise wires terminate at the ORIGINAL
+    # lane.label_anchor and the (shifted) hier-label sits in mid-air
+    # disconnected from the pin, tripping ERC pin_not_connected.
+    _emit_edge_label_hlabels(plan, block, geometry)
     _route_edge_label_pin_wires(plan, block, geometry)
 
 
@@ -3633,6 +3639,17 @@ def _route_edge_label_pin_wires(
         if pos is not None and lane is not None
         and lane.label_anchor is not None
     ]
+    # Build per-net lists of emitted hier-label positions. The
+    # candidate ladder may have shifted X/Y from lane.label_anchor;
+    # the wire must terminate at the ACTUAL emitted position. For
+    # double-row connectors (USB-C, FMC) the same net has hier-labels
+    # on BOTH sides, so we pick the one closest to the pin's lane.
+    hlabel_positions_by_net: dict[str, list[Point]] = {}
+    for hlab in plan.hierarchical_labels:
+        hlabel_positions_by_net.setdefault(hlab.net_name, []).append(
+            hlab.position
+        )
+
     # Dedup by (owner_ref, pin_number) — pin_name can repeat in
     # double-row connectors (USB-C, FMC).
     seen = set()
@@ -3641,7 +3658,27 @@ def _route_edge_label_pin_wires(
         if key in seen:
             continue
         seen.add(key)
+        # Find the emitted hier-label position closest to lane.label_anchor
+        # (the unshifted target). Restrict to candidates within ±5 grid
+        # steps in both axes so we don't accidentally pick the
+        # opposite-side hier-label on a double-row connector.
         target = lane.label_anchor
+        candidates = hlabel_positions_by_net.get(spec.net_name, [])
+        from zynq_eda.core.layout._constants import KICAD_GRID_MM
+        MAX_SHIFT_MM = 5 * KICAD_GRID_MM
+        best = None
+        best_dist = float("inf")
+        for cp in candidates:
+            dx = abs(cp.x - lane.label_anchor.x)
+            dy = abs(cp.y - lane.label_anchor.y)
+            if dx > MAX_SHIFT_MM or dy > MAX_SHIFT_MM:
+                continue
+            d = dx * dx + dy * dy
+            if d < best_dist:
+                best_dist = d
+                best = cp
+        if best is not None:
+            target = best
         avoid: set[str] = {f"symbol:{spec.owner_ref}"}
         if spec.pin_number:
             avoid |= set(pin_intrinsic_owner_ids(
@@ -3676,7 +3713,10 @@ def plan_labels(plan: LayoutPlan, block: Block, geometry) -> None:
     Lane reservation guarantees label text bboxes fit; a collision is
     a planner bug.
     """
-    _emit_edge_label_hlabels(plan, block, geometry)
+    # NOTE: ``_emit_edge_label_hlabels`` is now called inside
+    # ``plan_routes`` (before ``_route_edge_label_pin_wires``) so the
+    # wire endpoint follows the candidate ladder's shift. Calling it
+    # again here would emit duplicates / re-shift.
     _emit_local_label_pins(plan, geometry)
 
 

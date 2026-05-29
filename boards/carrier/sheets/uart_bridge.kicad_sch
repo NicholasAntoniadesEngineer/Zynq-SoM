@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "edce6d3b-f799-4484-a6e0-8bb5263e135b")
+	(uuid "967e9394-ff42-428b-b7b9-6e71288f2757")
 	(paper "A3")
 	(title_block
 		(title "USB-UART Bridge (CP2102N → Zynq PS UART0)")
@@ -1404,7 +1404,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "aeecfd63-bfad-4b9f-a607-6ea65c3942a9")
+		(uuid "8c84311d-1206-4d52-9a0b-767276e7af60")
 		(property "Reference" "U1"
 			(at 132.08 160.02 0.0000)
 			(effects
@@ -1453,83 +1453,83 @@
 			)
 		)
 		(pin "1"
-			(uuid "b3a1f9af-9fe4-4abc-984c-1430b98e670e")
+			(uuid "3a75f28b-b7bd-4f14-9162-5dbd675726fe")
 		)
 		(pin "2"
-			(uuid "e6f0603e-cc21-4c2d-ad1b-ba09e18d7b12")
+			(uuid "66042c02-0c87-4217-8142-63d7856e74a0")
 		)
 		(pin "3"
-			(uuid "6b714192-19f6-4da7-a4d7-dc950a3a8eb3")
+			(uuid "076aeed3-14d9-40ab-affb-8e4268fd224a")
 		)
 		(pin "4"
-			(uuid "ca62c8b4-cac8-4703-abec-067fd246f2e9")
+			(uuid "858f431e-743a-4c66-8f62-2db483422663")
 		)
 		(pin "5"
-			(uuid "edb3dfff-776e-485d-b4fa-1d86352c9671")
+			(uuid "cf9ebf19-8a6c-4b32-998b-1a8eccfafb08")
 		)
 		(pin "6"
-			(uuid "82b23d91-13e4-4c48-8d75-e9e010ebcd62")
+			(uuid "6b1936ed-6e66-46e8-97cd-067dd7da3a33")
 		)
 		(pin "7"
-			(uuid "e9d8395c-4390-4dbb-b48e-ca1f7b464354")
+			(uuid "7eb1b4d3-90c1-4004-bd01-981062f2e1a8")
 		)
 		(pin "8"
-			(uuid "60038e51-710f-4825-b818-cffb660e8b54")
+			(uuid "48b0c143-7f93-4959-b51d-bafe51771ad7")
 		)
 		(pin "9"
-			(uuid "8feda1ed-8707-433e-b55e-3b65993c8f40")
+			(uuid "d984e211-fd08-4d13-b2de-0cb8326a0769")
 		)
 		(pin "10"
-			(uuid "cf49f898-83ac-4ca6-a196-66a2f8f38e40")
+			(uuid "0718db1d-2c89-44ce-a348-e78baf91581b")
 		)
 		(pin "11"
-			(uuid "be4ded0f-c32e-4ca2-9c6d-2be3f656ddac")
+			(uuid "2d15eb5b-fcaa-405e-8137-a460e5172ab2")
 		)
 		(pin "12"
-			(uuid "05ec02e4-f246-48e7-a7db-adffa0ecb74d")
+			(uuid "42b34c64-521e-4c04-b1c3-f3f2f88b1345")
 		)
 		(pin "13"
-			(uuid "a71b489f-cb27-40c9-8648-812df70c2bbf")
+			(uuid "c5c45a43-d979-42a7-85ef-daa6c5527f0d")
 		)
 		(pin "14"
-			(uuid "a94e2549-2268-4d8e-87b6-61cdc058393b")
+			(uuid "fff65564-af34-4a09-bd5e-48d0a6b13b21")
 		)
 		(pin "15"
-			(uuid "872a6501-e835-4a15-bedf-c2184d733ea2")
+			(uuid "74184479-2839-4161-9240-fcf9981ea19e")
 		)
 		(pin "16"
-			(uuid "fe057259-652b-4eef-a2b2-69c885cc2ba1")
+			(uuid "7a7191bd-f6b4-447c-92c6-95939095ef5d")
 		)
 		(pin "17"
-			(uuid "2eaea94a-1258-49a6-bcf6-64c36e2801f2")
+			(uuid "f5d63952-eb2c-4238-a312-af89d27d049e")
 		)
 		(pin "18"
-			(uuid "338a6014-74d5-435a-8850-e039f26e5607")
+			(uuid "1bd0a293-a0e9-4ba9-8a7e-d13ae6ee8ae8")
 		)
 		(pin "19"
-			(uuid "ed986e9a-ec41-4646-911f-e6ce59f9ed80")
+			(uuid "0e5d46c1-7f17-4186-a098-cf97eff4f49a")
 		)
 		(pin "20"
-			(uuid "6b792c40-d585-4a5a-a6c9-840d82bb7429")
+			(uuid "fb3425c6-989b-473d-bde1-c13389148157")
 		)
 		(pin "21"
-			(uuid "b1321a52-94eb-45c7-b7ad-3bde63ab314f")
+			(uuid "f8b8d1a9-4a79-4f77-b74d-b78fbaeeeddb")
 		)
 		(pin "22"
-			(uuid "b491d7ae-8629-48bc-8b3e-f35ee43cd533")
+			(uuid "fef558d6-cdd3-4a58-ac24-f4c933fb25e6")
 		)
 		(pin "23"
-			(uuid "e18ce4c9-e31f-4d22-be73-ee1ec05f5931")
+			(uuid "bdeefbc4-f49c-499a-afdb-5fc98cf6b02e")
 		)
 		(pin "24"
-			(uuid "20ef066d-a048-41fe-83d7-501c8f62a44e")
+			(uuid "5ae3141c-3d74-4500-886e-94c055d6fd0c")
 		)
 		(pin "25"
-			(uuid "56a0ffde-df26-4113-81f7-d4d1f02cf64d")
+			(uuid "c57e393f-62a3-4bf4-8f0e-928556415534")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "U1")
 					(unit 1)
 				)
@@ -1545,7 +1545,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "8aa28538-16d9-4caa-a438-5e40b3e82a7e")
+		(uuid "be4d94e0-ee30-4f79-8cbf-80168dcf8a33")
 		(property "Reference" "J1"
 			(at 332.74 48.26 0.0000)
 			(effects
@@ -1594,23 +1594,23 @@
 			)
 		)
 		(pin "1"
-			(uuid "22fae8d2-6d41-44e5-89c1-025e1ed219a2")
+			(uuid "098b0f35-bbe1-40af-b5c4-30dde38ab419")
 		)
 		(pin "2"
-			(uuid "83d7aa6c-0606-4d40-88df-6ef80778eef3")
+			(uuid "167d9886-b6ac-4e78-80ce-4e51297b52c1")
 		)
 		(pin "3"
-			(uuid "fcb1b06e-f901-4473-a700-80c2d29b811c")
+			(uuid "d240743c-30b9-4a2e-b56d-9587f1e52004")
 		)
 		(pin "4"
-			(uuid "efc14e84-7a17-4af7-8209-bae380e2e9b0")
+			(uuid "9544da99-34dc-4a0d-9906-174357e6974d")
 		)
 		(pin "5"
-			(uuid "199f208b-dfda-4b28-95d1-f6e8a3d2d164")
+			(uuid "5bb4305f-fbef-473f-b0a7-be3bfd49ea85")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "J1")
 					(unit 1)
 				)
@@ -1626,7 +1626,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "48f40cda-912b-418a-8ce7-5334a3084559")
+		(uuid "0479f428-3e98-46da-88ee-2be464425d60")
 		(property "Reference" "#PWR200"
 			(at 140.97 154.94 0.0000)
 			(effects
@@ -1655,11 +1655,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "0cf9fc9a-b367-4e07-8981-381eede311b6")
+			(uuid "641d70eb-6f7c-4297-8618-c9831348783f")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "#PWR200")
 					(unit 1)
 				)
@@ -1675,7 +1675,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "81b84f17-8f9c-4c49-863a-583bfd0f0573")
+		(uuid "eefef366-2ac5-44f7-9814-27c4a6a74028")
 		(property "Reference" "C100"
 			(at 158.75 87.63 90)
 			(effects
@@ -1704,14 +1704,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "6a309b1c-6f47-42e3-88a6-8d86dc0d59e5")
+			(uuid "6ee636a9-4382-4fc6-9894-44ea2cb7fba6")
 		)
 		(pin "2"
-			(uuid "ceb4542d-d130-4248-9bda-75b557d866df")
+			(uuid "bec79dcf-b0d7-4892-bc91-517bc67aa266")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1727,7 +1727,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "757f20c2-71eb-48c8-9f4e-e42480134625")
+		(uuid "fb75243f-21c3-4977-bcaa-302093087854")
 		(property "Reference" "#PWR300"
 			(at 152.4 93.98 180)
 			(effects
@@ -1756,11 +1756,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "b87e5aac-f9f8-451b-8b36-814a8280fb0b")
+			(uuid "56a5c26c-b2bd-44bf-874b-775f6e3ef414")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "#PWR300")
 					(unit 1)
 				)
@@ -1776,7 +1776,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6aa0937c-3076-40fd-b842-890761e12450")
+		(uuid "9d995418-d2d2-4747-91ad-23a405c4bf95")
 		(property "Reference" "C101"
 			(at 140.97 69.85 90)
 			(effects
@@ -1805,14 +1805,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "e07f50da-38cc-445f-868b-3fc7ad3420d9")
+			(uuid "1fb52e4f-ba36-4fd9-9b50-88c130479c4f")
 		)
 		(pin "2"
-			(uuid "9fa22ef3-a05b-46d1-aaa9-d907263f7c10")
+			(uuid "31812d63-b649-4bbd-99e4-72f9e303ff6f")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1828,7 +1828,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e53b9ddb-a065-4470-b609-c05b75f435e6")
+		(uuid "1e43ca1c-8958-4ad2-ad3d-b5bf25cb034a")
 		(property "Reference" "#PWR301"
 			(at 149.86 78.74 180)
 			(effects
@@ -1857,11 +1857,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "3aeebc5d-b633-4cf3-bc5a-1e54fd66df8c")
+			(uuid "1200a487-8ad7-4980-82d2-dd35300be440")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "#PWR301")
 					(unit 1)
 				)
@@ -1877,7 +1877,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "35b706ef-1602-4558-aa23-408258ada76b")
+		(uuid "92cf5c46-a344-4070-b858-b18758bbcd0a")
 		(property "Reference" "C102"
 			(at 146.05 59.69 180)
 			(effects
@@ -1906,14 +1906,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "42efb3ab-d023-440d-b0b7-ae83697ad413")
+			(uuid "73873f11-1e42-4bec-8f6a-ecd73c5a2502")
 		)
 		(pin "2"
-			(uuid "2abca2e1-b3a5-40dd-9777-b5bb3ec87715")
+			(uuid "649ef806-7e4b-4b26-b865-2478c1e8ef39")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "C102")
 					(unit 1)
 				)
@@ -1929,7 +1929,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0de9b8d4-1ff1-44ad-9f92-db03a5e85ad2")
+		(uuid "d3cb00ac-0e68-404d-97be-c0cbd4cace36")
 		(property "Reference" "C103"
 			(at 151.13 77.47 90)
 			(effects
@@ -1958,14 +1958,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "a2ac0e0d-7d7a-419c-be11-54a2eb4fefcc")
+			(uuid "a798c9f7-39a7-4392-b122-61a6efe943e6")
 		)
 		(pin "2"
-			(uuid "e97ac9a2-3492-439d-936d-a78de63679fb")
+			(uuid "08d67b8a-f97a-4378-b260-c37bbf73400b")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "C103")
 					(unit 1)
 				)
@@ -1981,7 +1981,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "1a490ff8-5d03-41ed-96f8-6cc3c9904cbf")
+		(uuid "4eb9e4e2-d7e4-4713-946a-bab1cd23b66e")
 		(property "Reference" "#PWR302"
 			(at 147.32 86.36 180)
 			(effects
@@ -2010,11 +2010,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "a78c138e-16d0-49cd-95f1-44d44d691f84")
+			(uuid "3c3f01be-c92b-41d1-b146-550855f1f43a")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "#PWR302")
 					(unit 1)
 				)
@@ -2030,7 +2030,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0b64cce3-5adf-4798-b2a4-16855e95a869")
+		(uuid "559ee992-bf91-49a8-b327-3de52a0b17d8")
 		(property "Reference" "C104"
 			(at 138.43 72.39 90)
 			(effects
@@ -2059,14 +2059,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "56fde81b-5667-4e04-81f4-01605b76c75d")
+			(uuid "0b9635b3-c8dd-4d5d-8336-635cf5f71d13")
 		)
 		(pin "2"
-			(uuid "061a1526-a934-4196-8ed7-82ddce4f79b0")
+			(uuid "ce00eda4-9a12-4fc8-b4ac-f5d4a23247f5")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "C104")
 					(unit 1)
 				)
@@ -2082,7 +2082,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "046b4123-090f-4e57-a87a-5bf29aba7cb7")
+		(uuid "a78b3aa4-81ba-4652-8848-ed96f8e048e1")
 		(property "Reference" "R100"
 			(at 76.962 118.11 90)
 			(effects
@@ -2111,14 +2111,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "b7bf9c40-9060-435e-9088-7ead95e6cbb9")
+			(uuid "c0d3af11-ce1d-4ea6-a7df-ceb808cf7942")
 		)
 		(pin "2"
-			(uuid "3d0a7de3-10d4-4840-ba4d-6210147f456a")
+			(uuid "fb4c5fc6-cb8f-4713-86ac-4f4960156a33")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "R100")
 					(unit 1)
 				)
@@ -2134,7 +2134,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "421e3de0-d0c0-4fe3-8586-1a7c2cf57a3c")
+		(uuid "34413461-8a68-4e9b-972c-2c46a9e97807")
 		(property "Reference" "R101"
 			(at 66.802 125.73 0)
 			(effects
@@ -2163,14 +2163,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "5b7dcff4-c592-4138-b29f-0b0f59d2a75d")
+			(uuid "911d11bb-780c-4ac9-b3d6-8d1cad3c12f8")
 		)
 		(pin "2"
-			(uuid "c8b47286-e486-499d-9fc3-2aa506e4e9f8")
+			(uuid "61344d88-c001-4c4f-8bd2-2e13e769134e")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "R101")
 					(unit 1)
 				)
@@ -2186,7 +2186,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9390a764-6748-4eb9-9825-763542d1d19e")
+		(uuid "3c03e4f2-55df-4c45-b51a-9593252f81c2")
 		(property "Reference" "#PWR303"
 			(at 64.77 120.65 180)
 			(effects
@@ -2215,11 +2215,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "b789d0e2-5d9a-477e-9485-8abd3e664e4f")
+			(uuid "9329b1d4-134a-4242-8368-4c46e3670a49")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "#PWR303")
 					(unit 1)
 				)
@@ -2235,7 +2235,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "fabcbf84-9974-41b6-96b8-30b7725a78c3")
+		(uuid "12afd91c-f91a-49a1-8ed2-9398141375a3")
 		(property "Reference" "R102"
 			(at 76.962 105.41 90)
 			(effects
@@ -2264,14 +2264,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "bca093fd-5441-47e3-9e32-3b197906a92d")
+			(uuid "f8313425-a5f5-425b-96af-5e2cedf51be3")
 		)
 		(pin "2"
-			(uuid "00ac1a20-bcfd-4aa2-9697-7cf83ca7b487")
+			(uuid "6dc8bab9-7bf1-4745-bb71-d8fb99429bf7")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "R102")
 					(unit 1)
 				)
@@ -2287,7 +2287,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "094af61c-fdfe-466f-b9ba-5da00b0cb03c")
+		(uuid "33cebf5d-506b-4eba-a18d-745b332bd65b")
 		(property "Reference" "#FLG100"
 			(at 358.14 37.465 0.0000)
 			(effects
@@ -2316,11 +2316,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "5d8e0cc1-5e65-4ade-b30f-b4149878bc19")
+			(uuid "8f196b86-8aa3-4a31-ac23-310034a89ad3")
 		)
 		(instances
 			(project "USB-UART Bridge (CP2102N → Zynq PS UART0)"
-				(path "/edce6d3b-f799-4484-a6e0-8bb5263e135b"
+				(path "/967e9394-ff42-428b-b7b9-6e71288f2757"
 					(reference "#FLG100")
 					(unit 1)
 				)
@@ -2335,7 +2335,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d524e02f-a742-4b10-bcf6-cfa3f7add4f5")
+		(uuid "f392c04b-7cc3-49df-acd1-dc184ede6d9c")
 	)
 	(wire
 		(pts
@@ -2345,7 +2345,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "8af1fb20-33c4-4746-9ae4-4df0313b45fd")
+		(uuid "514b788e-f52d-4abd-990c-a9ef92f57548")
 	)
 	(wire
 		(pts
@@ -2355,7 +2355,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "858dfbb7-31c9-4208-b289-4503749f57cb")
+		(uuid "c7cc1711-2121-4a39-bc24-2d25e9bbd67d")
 	)
 	(wire
 		(pts
@@ -2365,7 +2365,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "926538be-1162-4c4f-bab6-de4dd242adeb")
+		(uuid "d6bc9d51-8cf7-4aa5-9c25-bc0d3f39ca8e")
 	)
 	(wire
 		(pts
@@ -2375,7 +2375,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6ded3a89-0c26-46c7-ae07-8f37b35630f3")
+		(uuid "114eb8f3-1304-4182-bbd5-4d0ccd2f319e")
 	)
 	(wire
 		(pts
@@ -2385,7 +2385,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "07299201-e1c5-42bf-812c-75a0ebbdbb65")
+		(uuid "f65773c2-86cf-405c-9b58-1fd6dfa6fc0d")
 	)
 	(wire
 		(pts
@@ -2395,7 +2395,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e6d01c50-290e-4471-a9fb-2e144812c750")
+		(uuid "341705f0-a5db-43dc-968c-ceb283b01850")
 	)
 	(wire
 		(pts
@@ -2405,7 +2405,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b6fe4cb2-78b3-49ac-bcbc-afcd7b9c6dc3")
+		(uuid "ba41027e-d9bf-4963-b134-8663365a29b3")
 	)
 	(wire
 		(pts
@@ -2415,7 +2415,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "41ed51e0-9020-4bdd-9ca5-68d389cee15e")
+		(uuid "3e7c5962-391d-45bf-b58b-64f47026d68d")
 	)
 	(wire
 		(pts
@@ -2425,7 +2425,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f7991503-02bf-49b6-97f6-4149661e766b")
+		(uuid "4a3bbc7a-6191-450e-8546-335dca27e070")
 	)
 	(wire
 		(pts
@@ -2435,7 +2435,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a9f0160c-64f0-4e22-bcbe-25566600f70a")
+		(uuid "0db080af-47d5-422e-ae00-9bbdffa3dd10")
 	)
 	(wire
 		(pts
@@ -2445,7 +2445,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e5907be4-8f3d-4bd7-b48a-b44ff161fce9")
+		(uuid "d55a219a-0d3d-4911-9d10-4fb80ffb1b69")
 	)
 	(wire
 		(pts
@@ -2455,7 +2455,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1e241923-1683-4007-8966-fc0c6df5fe31")
+		(uuid "8f14f984-2dd3-4bf6-9a34-45c9fc18422a")
 	)
 	(wire
 		(pts
@@ -2465,7 +2465,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f7aa643c-ea9d-4cc0-adf7-2ede6fd81774")
+		(uuid "68911849-1396-475b-8424-910713907b11")
 	)
 	(wire
 		(pts
@@ -2475,7 +2475,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f8de1a03-636d-45ae-81bf-c043c3c11e7b")
+		(uuid "4464cab1-1f58-4b40-811f-06fcdc5fda82")
 	)
 	(wire
 		(pts
@@ -2485,7 +2485,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9230cf26-1ebb-43bd-ab96-0dbbcf27d020")
+		(uuid "4861603c-f069-461a-855b-b4ae6e2cb3b5")
 	)
 	(wire
 		(pts
@@ -2495,7 +2495,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "3bb465cf-db34-44d2-9464-4ae638d161f8")
+		(uuid "24463797-b215-4c4d-ba5d-3a8400b4f669")
 	)
 	(wire
 		(pts
@@ -2505,7 +2505,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7b7b4662-c2f0-4309-958f-8345a5d86c22")
+		(uuid "0945506e-8b38-4509-8b46-820dda9457ea")
 	)
 	(wire
 		(pts
@@ -2515,7 +2515,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "206f1465-ad3b-401e-9771-431b8643433e")
+		(uuid "821c3aed-4345-4525-af5a-9e4bd851fb21")
 	)
 	(wire
 		(pts
@@ -2525,7 +2525,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6b09f910-e730-47e3-a8e7-3fbd79b4f50c")
+		(uuid "7f396190-53bc-4222-b725-199883e67220")
 	)
 	(wire
 		(pts
@@ -2535,7 +2535,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2a64c6b3-3645-49f4-9b8e-6af474e0d00f")
+		(uuid "a96f38e0-de72-43b1-8dfe-d70ca991d190")
 	)
 	(wire
 		(pts
@@ -2545,7 +2545,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1a91e391-0423-4893-bf09-452fb44aff2f")
+		(uuid "16b436f7-ae9b-4d77-b531-fafaf5ef9f63")
 	)
 	(wire
 		(pts
@@ -2555,7 +2555,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "641ec4ec-ac05-414f-90e1-377463d96e73")
+		(uuid "b0cbe393-7718-4855-9c37-2caba0abc617")
 	)
 	(wire
 		(pts
@@ -2565,7 +2565,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c89068cc-8144-4415-9356-dd559b7f2eb0")
+		(uuid "00ead574-9020-4c00-96fd-07db6bcd97ff")
 	)
 	(wire
 		(pts
@@ -2575,7 +2575,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9374632a-3a36-450b-8509-69e7f5ba46d5")
+		(uuid "4d618be2-9261-47c6-a76b-46de779542e2")
 	)
 	(wire
 		(pts
@@ -2585,7 +2585,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0f411eb0-6bcc-4927-af9f-bb139b10e2ec")
+		(uuid "fb3e7b5e-6716-4529-973d-ffa6e05db224")
 	)
 	(wire
 		(pts
@@ -2595,37 +2595,37 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "764f6d98-9bb7-46e9-a9a6-5c41f65f80cc")
+		(uuid "57eba0b5-2e18-4d00-a91e-6e5d1ebf5916")
 	)
 	(junction
 		(at 140.97 72.39)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "3762838c-ba44-4429-998f-de235155f721")
+		(uuid "1a7814a8-22f3-44b7-a966-4cf6c376c553")
 	)
 	(junction
 		(at 138.43 80.01)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "a7e58883-1417-4d64-af80-d83c1ae38567")
+		(uuid "aa7dbe90-97e1-43fc-9288-44dddb1480ff")
 	)
 	(junction
 		(at 69.85 123.19)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "339322d6-53fa-4809-a991-88ca297cc103")
+		(uuid "61f6dbae-46a5-4c9a-b600-6586172eeb07")
 	)
 	(junction
 		(at 358.14 35.56)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "4a8caddc-4168-44d3-8ec5-93aa0632d0d3")
+		(uuid "b6efe521-15c7-478d-b936-0e9cc9ce8faa")
 	)
 	(junction
 		(at 138.43 105.41)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "31e11dbe-8b97-485c-af44-4d57c28e9a27")
+		(uuid "3128032c-5add-4462-a04d-e666e346ab7a")
 	)
 	(label "+VIN"
 		(at 69.85 114.3 180)
@@ -2635,7 +2635,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "967f9eb1-35cf-48eb-9525-e282cc794961")
+		(uuid "f18d6a5c-88f8-4547-90ab-561cb0c1a328")
 	)
 	(label "CP2102N_VDD33"
 		(at 69.85 101.6 180)
@@ -2645,7 +2645,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "17a397d1-f524-43e5-9b6a-d30b88bede1c")
+		(uuid "977864fb-5b4b-4dc5-9d20-ff9eafdcfe80")
 	)
 	(label "USB_UART_DP"
 		(at 128.27 128.27 180)
@@ -2655,7 +2655,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "5f53287b-f2ce-40a3-afbf-bcbe01d5b0d3")
+		(uuid "5378d673-d321-4d10-b8bd-20b5f8978eb6")
 	)
 	(label "USB_UART_DM"
 		(at 128.27 125.73 180)
@@ -2665,7 +2665,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c1df08e1-7f71-4497-b03d-4d60f1624a33")
+		(uuid "c8472eeb-9976-40ca-b9c6-04cd1a42ee87")
 	)
 	(label "USB_UART_DM"
 		(at 337.82 38.1 0.0000)
@@ -2675,7 +2675,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "8f7a52ae-7d6d-43c2-968c-29b98ce00158")
+		(uuid "e9eea832-d622-49d3-9844-697d67c6a337")
 	)
 	(label "USB_UART_DP"
 		(at 337.82 40.64 0.0000)
@@ -2685,7 +2685,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "f0a1dce1-6034-4483-a67b-ec9dca3e4898")
+		(uuid "3a7d86e1-fc21-4d22-88c3-268a4bbaa3b4")
 	)
 	(label "USB_UART_ID"
 		(at 337.82 43.18 0.0000)
@@ -2695,7 +2695,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "0ce39dfd-d18d-4d6c-84e6-ea90f2a80ea8")
+		(uuid "eef7b31f-6c93-46da-8b94-afb20b70dd62")
 	)
 	(hierarchical_label "ZYNQ_PS_UART0_RTS_N"
 		(shape input)
@@ -2706,7 +2706,7 @@
 			)
 			(justify left)
 		)
-		(uuid "97db75da-0904-4530-991e-dcd80ffb2e0b")
+		(uuid "da3ab833-5131-4741-b1c4-25544a87684d")
 	)
 	(hierarchical_label "ZYNQ_PS_UART0_CTS_N"
 		(shape input)
@@ -2717,7 +2717,7 @@
 			)
 			(justify left)
 		)
-		(uuid "161cec69-fd51-4e52-af3d-f12febb21c54")
+		(uuid "8d582664-a329-4c21-9747-aeb321e904bd")
 	)
 	(hierarchical_label "ZYNQ_PS_UART0_TXD"
 		(shape input)
@@ -2728,7 +2728,7 @@
 			)
 			(justify left)
 		)
-		(uuid "cb4f77ad-3d23-48e0-8db2-4ca8a3d6d686")
+		(uuid "57ba09dd-3382-436b-adae-0e493338306f")
 	)
 	(hierarchical_label "ZYNQ_PS_UART0_RXD"
 		(shape input)
@@ -2739,7 +2739,7 @@
 			)
 			(justify left)
 		)
-		(uuid "6956e7a1-575f-4572-bfa9-d11dfcc8f73b")
+		(uuid "3d24c504-c27d-47c0-b669-20c081123c34")
 	)
 	(hierarchical_label "+VIN"
 		(shape input)
@@ -2750,7 +2750,7 @@
 			)
 			(justify left)
 		)
-		(uuid "e8c7f26e-dd26-4d83-ae7d-057934f7f353")
+		(uuid "16007b22-396c-403e-abde-85acbbd1897f")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -2761,55 +2761,55 @@
 			)
 			(justify left)
 		)
-		(uuid "cf933a4f-9892-4db1-a9c9-38248d595a6f")
+		(uuid "458a94e6-ff6e-40a0-b4fb-ff0db2594c74")
 	)
 	(no_connect
 		(at 153.67 128.27)
-		(uuid "9b6d537b-0776-4ad2-91eb-e4463b9403fd")
+		(uuid "a12b82a9-21d4-461c-a1d4-fa48b07bf1c8")
 	)
 	(no_connect
 		(at 130.81 156.21)
-		(uuid "1da1e1dd-bfee-46bb-814f-dad2beebe9d1")
+		(uuid "20e106aa-6819-4c6c-884b-0518539cafe6")
 	)
 	(no_connect
 		(at 153.67 148.59)
-		(uuid "4fe9fa8e-5685-4cf3-bd45-3d6df3e41170")
+		(uuid "74f2b4ac-2ee3-43a3-bd9e-0d6876bbd1a6")
 	)
 	(no_connect
 		(at 153.67 146.05)
-		(uuid "a9f77c6e-8743-4679-bb22-09904c51890c")
+		(uuid "59ee17cb-39a5-4298-92a6-4ef819b9312d")
 	)
 	(no_connect
 		(at 153.67 143.51)
-		(uuid "9b02ef34-1a46-4de6-a7ba-3d028807aee0")
+		(uuid "1d8bfc62-582e-4492-af45-df299cac95d6")
 	)
 	(no_connect
 		(at 153.67 140.97)
-		(uuid "bbc199c9-8a43-4af8-912e-5009ea82c186")
+		(uuid "f3ec66b2-ae3c-4112-a388-7e17d7b9e262")
 	)
 	(no_connect
 		(at 153.67 135.89)
-		(uuid "b92806fd-001f-47f5-a19b-205160ba3666")
+		(uuid "14ea2912-91f7-45e5-af6f-af5e5d907fbb")
 	)
 	(no_connect
 		(at 151.13 156.21)
-		(uuid "50a0a74c-312b-4328-80b2-46b0adfd376c")
+		(uuid "17aa7733-1c1e-4512-b528-8b5ff754ea22")
 	)
 	(no_connect
 		(at 153.67 133.35)
-		(uuid "5e22290f-2faa-4a70-a537-7f8c4cd9a7b7")
+		(uuid "b46737a8-458f-4aec-a779-9374ed18f0f1")
 	)
 	(no_connect
 		(at 153.67 120.65)
-		(uuid "85f27891-d877-4af8-aedb-ea7248be0334")
+		(uuid "130f261f-6c89-434f-8d2c-eeecb77de8c9")
 	)
 	(no_connect
 		(at 153.67 123.19)
-		(uuid "30b9a997-fd6b-4359-989a-e85d37b40b99")
+		(uuid "0a7f1f23-46c3-4bd9-9abe-d5ab0b06a1ff")
 	)
 	(no_connect
 		(at 153.67 125.73)
-		(uuid "4a9e33b2-1484-4f86-83cb-1af0b7bc843b")
+		(uuid "106c5662-f37d-475f-a09a-7c3c5b4577a9")
 	)
 	(sheet_instances
 		(path "/"
