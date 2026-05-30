@@ -66,7 +66,9 @@ LABEL_TEXT = "VOUT5"
 
 
 def _expected_width(text: str) -> float:
-    return float(len(text)) * DEFAULT_TEXT_SIZE_MM * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO
+    # Faithful per-glyph width (KiCad SVG textLength calibration).
+    from zynq_eda.core.layout.bbox import text_width
+    return text_width(text)
 
 
 def _expected_height() -> float:

@@ -73,36 +73,27 @@ HDMI_A_REFCIRCUIT = ReferenceCircuit(
         # Sink role:  caps decouple the +5V sense input from the upstream
         # cable; TPD12S016 V_CC5V pin only needs ~50uA so no bulk required.
         ExternalPart(
-            from_pin="+5V",
+            from_pin="Pin_18",
             to_net="GND",
             part_token="1u_0402_X7R",
             justification="HDMI 1.4 Sec 4.2.7 / TPD12S016 DS Fig 15: 1uF bulk "
                           "on +5V at the connector to support load-switch turn-on",
         ),
         ExternalPart(
-            from_pin="+5V",
+            from_pin="Pin_18",
             to_net="GND",
             part_token="100n_0402_X7R",
             justification="HDMI 1.4 Sec 4.2.7: 100nF HF bypass at the +5V pin",
         ),
-        # Shield-to-chassis discharge per HDMI 1.4 Sec 4.2.7 and the
-        # generally-recommended 'soft' chassis bond used on most HDMI
-        # implementations: 1Mohm bleeds static charge to chassis while
-        # 100nF X7R provides a high-frequency EMI return path.
-        ExternalPart(
-            from_pin="SHIELD",
-            to_net="CHASSIS_GND",
-            part_token="1M_0402_1%",
-            justification="HDMI 1.4 Sec 4.2.7: 1Mohm DC bleed from connector "
-                          "shell to chassis ground to drain static charge",
-        ),
-        ExternalPart(
-            from_pin="SHIELD",
-            to_net="CHASSIS_GND",
-            part_token="100n_0402_X7R",
-            justification="HDMI 1.4 Sec 4.2.7: 100nF parallel cap provides HF "
-                          "return path between shield and chassis (EMI compliance)",
-        ),
+        # Shield-to-chassis discharge (HDMI 1.4 Sec 4.2.7: 1Mohm DC bleed +
+        # 100nF HF return) is INTENTIONALLY OMITTED here: the blocks place
+        # this connector on the generic `Connector_Generic:Conn_01x19`
+        # symbol, which exposes only signal pins (Pin_1..Pin_19) and has NO
+        # shell/SHIELD pin to attach to. The shell-to-CHASSIS_GND bond is
+        # therefore handled at the board/footprint level (mounting-lug net),
+        # not in this schematic. To model it in-schematic, swap the block's
+        # connector symbol for a shielded HDMI-A receptacle that exposes a
+        # shell pin, then re-add the 1M + 100n from that pin to CHASSIS_GND.
     ),
     strap_pins=(),
     no_external_required=frozenset({

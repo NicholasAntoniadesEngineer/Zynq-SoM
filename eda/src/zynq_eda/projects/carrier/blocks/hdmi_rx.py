@@ -41,6 +41,15 @@ def build_hdmi_rx() -> Block:
                 refcircuit=REFCIRCUITS["TPD12S016PWR_RX"],
                 lib_id="zynq_eda:TPD12S016PWR",
                 power_input_net="+3V3",
+                # Controller-side (A) DDC/CEC/HPD -> Zynq RX HDMI nets (was
+                # floating). Same TMDS duplicate-pin symbol limitation as
+                # hdmi_tx; TMDS handled connector<->Zynq directly.
+                net_overrides=(
+                    ("SDA_A", "ZYNQ_HDMI_RX_SDA"),
+                    ("SCL_A", "ZYNQ_HDMI_RX_SCL"),
+                    ("CEC_A", "ZYNQ_HDMI_RX_CEC"),
+                    ("HPD_A", "ZYNQ_HDMI_RX_HPD"),
+                ),
             ),
         ),
         connectors=(

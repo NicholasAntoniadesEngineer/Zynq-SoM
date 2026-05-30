@@ -49,6 +49,30 @@ def build_ethernet() -> Block:
                 reference="T1",
                 refcircuit=REFCIRCUITS["HX5008NLT"],
                 lib_id="zynq_eda:HX5008NLT",
+                # Without these the magnetics' signal pins have no net and
+                # are auto-NC'd — the PHY<->line datapath is electrically
+                # OPEN (ERC-clean but non-functional). PHY-side pairs go to
+                # the SoM PHY (ZYNQ_ETH_MDI_*); line-side pairs (TD*) go to
+                # the RJ45 via ETH_LINE_MDI_* (J1 pin_to_net below uses the
+                # same nets). CT_PAIR*/BS_COMMON stay cluster (Bob-Smith).
+                net_overrides=(
+                    ("PHY0_P", "ZYNQ_ETH_MDI_0_P"),
+                    ("PHY0_N", "ZYNQ_ETH_MDI_0_N"),
+                    ("PHY1_P", "ZYNQ_ETH_MDI_1_P"),
+                    ("PHY1_N", "ZYNQ_ETH_MDI_1_N"),
+                    ("PHY2_P", "ZYNQ_ETH_MDI_2_P"),
+                    ("PHY2_N", "ZYNQ_ETH_MDI_2_N"),
+                    ("PHY3_P", "ZYNQ_ETH_MDI_3_P"),
+                    ("PHY3_N", "ZYNQ_ETH_MDI_3_N"),
+                    ("TD0_P", "ETH_LINE_MDI_0_P"),
+                    ("TD0_N", "ETH_LINE_MDI_0_N"),
+                    ("TD1_P", "ETH_LINE_MDI_1_P"),
+                    ("TD1_N", "ETH_LINE_MDI_1_N"),
+                    ("TD2_P", "ETH_LINE_MDI_2_P"),
+                    ("TD2_N", "ETH_LINE_MDI_2_N"),
+                    ("TD3_P", "ETH_LINE_MDI_3_P"),
+                    ("TD3_N", "ETH_LINE_MDI_3_N"),
+                ),
             ),
         ),
         connectors=(
@@ -68,14 +92,14 @@ def build_ethernet() -> Block:
                     ("6", "ETH_LINE_MDI_1_N"),
                     ("7", "ETH_LINE_MDI_3_P"),
                     ("8", "ETH_LINE_MDI_3_N"),
-                    ("LEDL+", "+3V3"),
-                    ("LEDL-", "ZYNQ_ETH_LED_LINK"),
-                    ("LEDR+", "+3V3"),
-                    ("LEDR-", "ZYNQ_ETH_LED_ACT"),
-                    ("SH1", "CHASSIS_GND"),
-                    ("SH2", "CHASSIS_GND"),
-                    ("SH3", "CHASSIS_GND"),
-                    ("SH4", "CHASSIS_GND"),
+                    # The RJHSE5380 symbol exposes the LED ANODES (LED1_A,
+                    # LED2_A) and a single SHIELD pin — not LEDL+/-/SH1..4.
+                    # Each LED anode is current-limited to +3V3 by the rj45
+                    # refcircuit (series R) and driven (sunk) by the PHY LED
+                    # output net; the shell bonds to CHASSIS_GND.
+                    ("LED1_A", "ZYNQ_ETH_LED_LINK"),
+                    ("LED2_A", "ZYNQ_ETH_LED_ACT"),
+                    ("SHIELD", "CHASSIS_GND"),
                 ),
             ),
         ),

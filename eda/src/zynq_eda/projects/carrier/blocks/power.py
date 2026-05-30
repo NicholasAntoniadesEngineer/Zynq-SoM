@@ -55,6 +55,9 @@ def build_power() -> Block:
                 lib_id="Regulator_Linear:TLV75733PDBV",
                 power_input_net="+VIN",
                 power_output_net="+3V3",
+                # EN always-on pull-up targets the LDO INPUT rail; the
+                # generic refcircuit names it "IN", remapped per-instance.
+                external_part_net_remap=(("IN", "+VIN"),),
             ),
             IcInstance(
                 reference="U2",
@@ -62,6 +65,7 @@ def build_power() -> Block:
                 lib_id="Regulator_Linear:TLV75725PDBV",
                 power_input_net="+VIN",
                 power_output_net="+2V5",
+                external_part_net_remap=(("IN", "+VIN"),),
             ),
             IcInstance(
                 reference="U3",
@@ -69,6 +73,7 @@ def build_power() -> Block:
                 lib_id="Regulator_Linear:TLV75718PDBV",
                 power_input_net="+VIN",
                 power_output_net="+1V8",
+                external_part_net_remap=(("IN", "+VIN"),),
             ),
         ),
         external_nets=(

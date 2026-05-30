@@ -123,7 +123,10 @@ EXPECTED_TEXT_HEIGHT = DEFAULT_TEXT_SIZE_MM * DEFAULT_TEXT_HEIGHT_RATIO
 
 
 def _expected_text_width(text: str) -> float:
-    return float(len(text)) * DEFAULT_TEXT_SIZE_MM * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO
+    # Faithful per-glyph width (calibrated from KiCad's SVG textLength),
+    # the single source of truth used by both planner and validators.
+    from zynq_eda.core.layout.bbox import text_width
+    return text_width(text)
 
 
 def test_text_bbox_left_justify_puts_anchor_at_left_edge() -> None:

@@ -104,6 +104,50 @@ def validate_page_bounds(
                 location=f"{sheet.name}.kicad_sch",
             ))
 
+        # 1b. Symbol PROPERTY TEXT (Reference + Value). These render OUTSIDE
+        # the body bbox and frequently overflow the page edge before the
+        # body does (e.g. a cap reference shifted above a cap near the top
+        # margin). Check each visible property's text bbox too — the same
+        # faithful per-glyph bbox the overlap validator uses.
+        if geometry is not None:
+            text_bboxes = []
+            try:
+                text_bboxes.extend(geometry.property_text_bboxes(
+                    lib_id=sym.lib_id,
+                    anchor=sym.position,
+                    rotation=sym.rotation,
+                    owner_id=f"symbol:{sym.reference}",
+                    value_override=sym.value,
+                    reference_override=sym.reference,
+                    value_shift=sym.value_shift,
+                    reference_shift=sym.reference_shift,
+                ))
+                # Intrinsic pin name / number text also renders next to the
+                # body and can protrude past the margin on an edge-hugging or
+                # rotated part. Same faithful bboxes the overlap validator uses.
+                text_bboxes.extend(geometry.intrinsic_pin_label_bboxes(
+                    sym.lib_id, sym.position, sym.rotation,
+                    owner_id=f"symbol:{sym.reference}",
+                ))
+                text_bboxes.extend(geometry.intrinsic_pin_number_bboxes(
+                    sym.lib_id, sym.position, sym.rotation,
+                    owner_id=f"symbol:{sym.reference}",
+                ))
+            except Exception:
+                pass
+            for pbox in text_bboxes:
+                reason = _bbox_off_page(pbox, paper_w, paper_h, margin_mm)
+                if reason:
+                    results.append(ValidationResult(
+                        rule_id="page_bounds.symbol_text_outside",
+                        severity="error",
+                        message=(
+                            f"symbol {sym.reference!r} ({sym.value!r}) text bbox "
+                            f"outside page: {reason}"
+                        ),
+                        location=f"{sheet.name}.kicad_sch",
+                    ))
+
     # --- 2. Wires (full segment bbox) ---
     for index, wire in enumerate(sheet.wires):
         bbox = wire_bbox(

@@ -48,12 +48,35 @@ def build_hdmi_tx() -> Block:
                 refcircuit=REFCIRCUITS["TPD12S016PWR_TX"],
                 lib_id="zynq_eda:TPD12S016PWR",
                 power_input_net="+3V3",
+                # Connect the controller-side (A) DDC/CEC/HPD pins to the
+                # Zynq HDMI nets so the TPD's ESD/level-shift taps those
+                # lines (was floating/NC). NOTE: the symbol gives the 8
+                # TMDS pins DUPLICATE names (cable #101-108 AND controller
+                # #13-20 both "D0+"...), so net_overrides (name-keyed)
+                # cannot route the cable vs controller TMDS separately and
+                # cannot put the level-shifter in series — a symbol-pin
+                # rename + cable-side-net split is required for full TMDS
+                # series routing (tracked follow-up). The TMDS datapath is
+                # wired connector<->Zynq directly by the block today.
+                net_overrides=(
+                    ("SDA_A", "ZYNQ_HDMI_TX_SDA"),
+                    ("SCL_A", "ZYNQ_HDMI_TX_SCL"),
+                    ("CEC_A", "ZYNQ_HDMI_TX_CEC"),
+                    ("HPD_A", "ZYNQ_HDMI_TX_HPD"),
+                ),
             ),
             IcInstance(
                 reference="U2",
                 refcircuit=REFCIRCUITS["24LC256T-I/SN_EDID"],
                 lib_id="Memory_EEPROM:24LC256",
-                power_input_net="+3V3",
+                # EDID EEPROM sits on the DDC bus; supply per its +5V
+                # refcircuit (resolves the +3V3/+5V contradiction toward
+                # the documented +5V cable-side rail).
+                power_input_net="+5V",
+                net_overrides=(
+                    ("SDA", "ZYNQ_HDMI_TX_SDA"),
+                    ("SCL", "ZYNQ_HDMI_TX_SCL"),
+                ),
             ),
         ),
         connectors=(

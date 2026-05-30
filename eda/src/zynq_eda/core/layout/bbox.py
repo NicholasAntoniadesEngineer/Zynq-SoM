@@ -51,27 +51,56 @@ per-sheet validator only sees the more granular kinds.
 DEFAULT_TEXT_SIZE_MM: float = 1.27
 """Default KiCad text height in millimetres (50 mil)."""
 
-DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO: float = 0.65
-"""Approximate character width as a fraction of text height.
+DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO: float = 1.0
+"""Fallback per-character width (fraction of text size) for any glyph
+not in :data:`KICAD_CHAR_WIDTH_RATIO`.
 
-KiCad's default schematic stroke font averages ~0.6× the glyph
-height per character (narrow letters like "I" are 0.3×, wide ones
-like "M"/"W" are 0.8×). 0.65 is a tight middle estimate — pinning
-this lower than the previous 0.85 keeps the bbox close to the
-actual rendered glyph extent so the strict validator doesn't fire
-on phantom 0.5 mm slivers between adjacent rows of pin numbers
-and net labels.
+This is the FAITHFUL average. Width must NOT be under-estimated: a too-
+small text box lets the strict validator pass renders that visually
+overlap (the failure mode the user flagged — adjacent cap references
+overprinting as "C102C101"). Per-glyph widths below are calibrated from
+KiCad's own SVG export (``textLength`` is KiCad's authoritative rendered
+width); use :func:`text_width`, not this flat fallback, wherever possible.
 """
 
-DEFAULT_TEXT_HEIGHT_RATIO: float = 1.0
-"""Total text-box height as a fraction of nominal size.
+# Per-character width as a fraction of the nominal text size, CALIBRATED
+# from KiCad's stroke-font renderer. Fitted from 4869 ``<text textLength=…>``
+# samples exported by ``kicad-cli sch export svg`` across all 28 carrier
+# sheets (least-squares per-glyph solve). Summing these for a string
+# reproduces KiCad's rendered string width to within ~2%, so the strict
+# overlap/bounds validators see what KiCad actually draws — not a
+# deliberately shrunk box. DO NOT lower these to silence overlap errors;
+# that is the softening the project forbids. Re-derive them only from a
+# fresh KiCad render if the font ever changes.
+KICAD_CHAR_WIDTH_RATIO: dict[str, float] = {
+    " ": 0.68, "!": 0.40, "#": 1.30, "%": 1.55, "(": 0.50, ")": 0.50,
+    "*": 0.90, "+": 1.24, ",": 0.38, "-": 1.20, ".": 0.38, "/": 1.01,
+    "0": 1.00, "1": 1.03, "2": 1.03, "3": 1.03, "4": 1.04, "5": 1.04,
+    "6": 1.03, "7": 1.03, "8": 1.04, "9": 1.05, ":": 0.68, ";": 0.68,
+    "<": 1.10, "=": 1.10, ">": 1.10, "?": 0.90,
+    "A": 0.88, "B": 1.02, "C": 1.02, "D": 1.05, "E": 0.95, "F": 0.85,
+    "G": 1.03, "H": 1.08, "I": 0.52, "J": 0.83, "K": 1.11, "L": 0.83,
+    "M": 1.16, "N": 1.11, "O": 1.06, "P": 0.99, "Q": 0.95, "R": 0.97,
+    "S": 0.98, "T": 0.79, "U": 1.12, "V": 0.87, "W": 1.20, "X": 0.95,
+    "Y": 0.96, "Z": 0.96, "_": 0.71,
+    "a": 0.85, "b": 1.03, "c": 0.84, "d": 0.91, "e": 0.83, "f": 0.50,
+    "g": 0.90, "h": 0.89, "i": 0.63, "j": 0.64, "k": 0.83, "l": 0.61,
+    "m": 1.36, "n": 0.91, "o": 0.93, "p": 0.94, "q": 0.92, "r": 0.61,
+    "s": 0.75, "t": 0.63, "u": 0.96, "v": 0.82, "w": 1.10, "x": 0.83,
+    "y": 0.82, "z": 0.82,
+}
 
-KiCad strokes a 1.27 mm size text character at roughly 1.27 mm tall.
-The previous 1.5 ratio was a 50% over-estimate that added phantom
-overlap padding between adjacent rows of text. With the strict
-validator we want the bbox to reflect the actual visible glyph
-extent so genuine overlaps fire and near-misses on adjacent grid
-rows don't.
+DEFAULT_TEXT_HEIGHT_RATIO: float = 1.0
+"""Visible text-box height as a fraction of nominal size.
+
+In KiCad the text ``size`` IS the cap height — a 1.27 mm field renders
+1.27 mm-tall uppercase/digit glyphs. (KiCad's SVG export shows font-size
+1.6933 mm only because SVG fonts express the full em, = capheight / 0.75;
+the visible glyph height is still 1.27 mm.) So the faithful visible-height
+ratio is 1.0. Over-estimating here (e.g. 1.4) inflates vertical clearance
+and makes the validator fire on wires that pass cleanly beneath a pin-
+number row — a different infidelity from the width under-estimate, and
+equally wrong.
 """
 
 DEFAULT_WIRE_THICKNESS_MM: float = 0.254
@@ -277,6 +306,24 @@ def _rotate_bbox(box: BBox, anchor: Point, rotation_deg: float) -> BBox:
 
 # ---- Public bbox factories -------------------------------------------------
 
+def text_width(text: str, size_mm: float = DEFAULT_TEXT_SIZE_MM) -> float:
+    """Return the rendered width (mm) of ``text`` at ``size_mm``.
+
+    Sums KiCad's per-glyph advance widths (:data:`KICAD_CHAR_WIDTH_RATIO`,
+    calibrated from KiCad's own SVG ``textLength`` export) so the result
+    matches what KiCad actually draws — to within ~2%. Unknown glyphs use
+    :data:`DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO`. This is the single source of
+    truth for text width across the planner (lane reservation, label
+    placement) and the validators (overlap, page bounds); keeping them on
+    the SAME faithful model is what guarantees "validator-clean" == "looks
+    clean in KiCad".
+    """
+    return size_mm * sum(
+        KICAD_CHAR_WIDTH_RATIO.get(ch, DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO)
+        for ch in text
+    )
+
+
 def text_bbox(
     text: str,
     anchor: Point,
@@ -288,11 +335,10 @@ def text_bbox(
 ) -> BBox:
     """Estimate the rendered text bounding box on the page.
 
-    Width is computed as ``len(text) * size_mm * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO``;
-    height as ``size_mm * DEFAULT_TEXT_HEIGHT_RATIO``. These ratios over-
-    estimate by ~10-15% on typical labels — that's intentional: a
-    slightly oversized box catches near-misses (labels visually grazing
-    a wire) at the cost of occasional false positives.
+    Width is KiCad's faithful per-glyph rendered width (:func:`text_width`);
+    height is ``size_mm * DEFAULT_TEXT_HEIGHT_RATIO``. Both are calibrated
+    to KiCad's actual stroke-font output so the strict validators flag what
+    visually overlaps and nothing they pass overprints in KiCad.
 
     The ``justify`` parameter controls how the anchor relates to the
     unrotated text box:
@@ -315,8 +361,7 @@ def text_bbox(
             f"text_bbox: rotation must be 0/90/180/270, got {rotation!r}"
         )
 
-    char_count = max(0, len(text))
-    width = float(char_count) * size_mm * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO
+    width = text_width(text, size_mm)
     height = size_mm * DEFAULT_TEXT_HEIGHT_RATIO
 
     # Build the unrotated box around the anchor according to ``justify``.

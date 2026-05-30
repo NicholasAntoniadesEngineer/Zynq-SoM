@@ -34,6 +34,7 @@ from zynq_eda.core.registry import (
     emit_reference_circuits_md,
 )
 from zynq_eda.core.validate.audit import run_audit, summary_line
+from zynq_eda.core.validate.external_parts import validate_external_part_pins
 from zynq_eda.core.validate.erc import run_erc
 from zynq_eda.core.validate.overlap import validate_overlap
 from zynq_eda.core.validate.page_bounds import validate_page_bounds
@@ -114,6 +115,23 @@ def run_carrier(
     print("Stage 2: Building blocks...")
     blocks = carrier_project.build_blocks(only=only_block)
     print(f"  built {len(blocks)} block(s): {', '.join(b.name for b in blocks)}")
+
+    # --- Stage 2.5: ExternalPart.from_pin reachability ---------------------
+    # Every supporting part (decoupling cap, pull-up, series R) must attach
+    # to a REAL symbol pin. A from_pin that names no pin is silently dropped
+    # at layout time, hiding genuinely-missing circuitry. Gate the build on
+    # it like overlap/bounds — a dropped part is a correctness defect.
+    ext_part_results = validate_external_part_pins(blocks, geometry_cache)
+    for r in ext_part_results:
+        print(f"      EXTERNAL_PART: {r.message}")
+    if ext_part_results:
+        print()
+        print(
+            f"BUILD HALTED: {len(ext_part_results)} ExternalPart.from_pin "
+            f"error(s) — supporting parts would be silently dropped. Fix the "
+            f"refcircuit from_pin or the symbol (see messages above)."
+        )
+        return 1
 
     # --- Stages 4-6: Layout + Emit ------------------------------------------
     print()

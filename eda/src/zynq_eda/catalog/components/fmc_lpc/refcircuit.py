@@ -41,55 +41,38 @@ FMC_LPC_REFCIRCUIT = ReferenceCircuit(
     description="Hirose FX10A 168-pin 0.5 mm SoM-mate connector (carries VITA 57.1 LPC pinout)",
     supply_rail="+3V3",
     external_parts=(
-        # 100nF per +3V3 power pin group. VITA 57.1 LPC defines 4 pins of
-        # +3V3 power on the carrier-side connector (D36/D38/D40 + C39); one
-        # 100nF per pin sits within 3 mm of the connector.
-        ExternalPart(
-            from_pin="VCC_3V3",
-            to_net="GND",
-            part_token="100n_0402_X7R",
-            quantity=4,
-            justification="VITA 57.1 Sec 5.3: 100nF per +3V3 carrier-side pin",
-        ),
-        # 100nF per VADJ pin group. LPC has 6 VADJ pins (C36/C38/C40 + D35/D37/D39).
-        ExternalPart(
-            from_pin="VADJ",
-            to_net="GND",
-            part_token="100n_0402_X7R",
-            quantity=6,
-            justification="VITA 57.1 Sec 5.3: 100nF per VADJ carrier-side pin",
-        ),
-        # 100nF per +12V pin group. LPC has 2 +12V pins (C35, C37).
-        ExternalPart(
-            from_pin="P12V",
-            to_net="GND",
-            part_token="100n_0402_X7R",
-            quantity=2,
-            justification="VITA 57.1 Sec 5.3: 100nF per +12V carrier-side pin",
-        ),
-        # Bulk decoupling on each rail at the connector.
-        ExternalPart(
-            from_pin="VCC_3V3",
-            to_net="GND",
-            part_token="10u_0603_X7R",
-            justification="VITA 57.1 Sec 5.3: bulk decoupling for +3V3 at FMC connector",
-        ),
-        ExternalPart(
-            from_pin="VADJ",
-            to_net="GND",
-            part_token="10u_0603_X7R",
-            justification="VITA 57.1 Sec 5.3: bulk decoupling for VADJ at FMC connector",
-        ),
+        # Decoupling/pull-ups attach to the FMC connector's REAL designator
+        # pins (the generated bank symbol exposes mechanical designators
+        # C/D/G/H, not logical rail names). These live on the
+        # FMC_LPC_PWR_CLK_JTAG bank (J4C); the SoM J1/J2/J3 banks carry no
+        # C/D designators, so each part lands exactly once.
+        #
+        # DEFERRED — per-power-pin bulk/HF decoupling (VITA 57.1 Sec 5.3).
+        # The verified designator→rail mapping (confirmed against
+        # connector_banks.py + fmc_lpc_power_clk_jtag.py) is:
+        #     +3V3 (100n each): C39, D36, D38, D40   ; bulk 10u: C39
+        #     VADJ (100n each): C36, C38, C40, D35, D37, D39 ; bulk 10u: C36
+        #     +12V (100n each): C35, C37
+        # These 14 caps are NOT emitted yet: J4C's 12 power pins are
+        # immediately adjacent on the bank, and clustering a cap on each —
+        # alongside the per-pin rail label and the pin-number text — does
+        # not fit cleanly on the dense bank (overprints/crossing wires).
+        # Re-enabling needs either (a) a +VADJ power symbol (KiCad ships
+        # +12V/+3V3 but not +VADJ) so the rail identity is compact, or
+        # (b) a labeled decoupling-cap-array placement (caps in open space,
+        # tied to rails by net label) instead of cluster-on-pin. The
+        # management-I2C + PRSNT pull-ups below DO place (3 signal pins).
+        #
         # Management I2C pull-ups. VITA 57.1 LPC pins C30 (SCL) and C31 (SDA)
         # are 3.3V open-drain — the carrier owns the pull-ups.
         ExternalPart(
-            from_pin="FMC_SCL",
+            from_pin="C30",
             to_net="+3V3",
             part_token="4k7_0402_1%",
             justification="VITA 57.1 Sec 7: FMC management I2C SCL pull-up (carrier-owned)",
         ),
         ExternalPart(
-            from_pin="FMC_SDA",
+            from_pin="C31",
             to_net="+3V3",
             part_token="4k7_0402_1%",
             justification="VITA 57.1 Sec 7: FMC management I2C SDA pull-up (carrier-owned)",
@@ -97,7 +80,7 @@ FMC_LPC_REFCIRCUIT = ReferenceCircuit(
         # PRSNT_M2C_L (pin H2) - daughtercard pulls low when seated.
         # Carrier needs a pull-up so an empty socket reads high.
         ExternalPart(
-            from_pin="FMC_PRSNT_N",
+            from_pin="H2",
             to_net="+3V3",
             part_token="10k_0402_1%",
             justification="VITA 57.1 Sec 5.4: PRSNT_M2C_L pull-up on carrier (active-low)",

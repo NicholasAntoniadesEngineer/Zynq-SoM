@@ -80,27 +80,27 @@ def _carrier_blocks_and_geometry():
 
 
 def test_hlabel_text_width_adds_decoration_space():
-    # Hier-label adds a trailing space (one char of width).
-    bare = len("X") * DEFAULT_TEXT_SIZE_MM * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO
-    decorated = _hlabel_text_width_mm("X")
-    assert decorated == pytest.approx(bare + DEFAULT_TEXT_SIZE_MM
-                                      * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO)
+    # Hier-label adds a trailing space (the arrow decoration) on top of
+    # the faithful per-glyph width.
+    from zynq_eda.core.layout.bbox import text_width
+    assert _hlabel_text_width_mm("X") == pytest.approx(text_width("X "))
 
 
 def test_label_text_width_no_decoration():
-    expected = (len("ABC") * DEFAULT_TEXT_SIZE_MM
-                * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO)
-    assert _label_text_width_mm("ABC") == pytest.approx(expected)
+    from zynq_eda.core.layout.bbox import text_width
+    assert _label_text_width_mm("ABC") == pytest.approx(text_width("ABC"))
 
 
 def test_hlabel_text_width_27_char_stress_case():
-    # The plan's stress case — ZYNQ_FMC_LAxx_P (27 chars) should land
-    # in the 21–23 mm range with a 1.27 mm font and 0.65 width ratio.
+    # The plan's stress case — a 27-char FMC lane net. With KiCad's
+    # faithful per-glyph widths (mean ~1.0x the 1.27 mm size) it lands
+    # around 28-32 mm; the exact value comes from the per-glyph table.
+    from zynq_eda.core.layout.bbox import text_width
     name = "ZYNQ_FMC_LA00_P_2_LANE_2_RD"  # exactly 27 chars
     assert len(name) == 27
     width = _hlabel_text_width_mm(name)
-    # Expected: 28 chars × 1.27 × 0.65 ≈ 23.11 mm.
-    assert 22.0 <= width <= 24.0
+    assert width == pytest.approx(text_width(name + " "))
+    assert 26.0 <= width <= 34.0
 
 
 # ---------------------------------------------------------------------------

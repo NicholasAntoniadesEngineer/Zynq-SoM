@@ -106,6 +106,16 @@ class PinSpec:
     pin_relative: Point
     cluster_slot_count: int = 0
     cluster_destinations: tuple[str, ...] = ()
+    # A CLUSTER pin's OWN net (the signal/power the pin carries), distinct
+    # from cluster_destinations (where its passives' far ends go). KiCad
+    # priority makes such a pin role=CLUSTER, but its own net must STILL be
+    # emitted as a label/hier-label/power-symbol at the pin tip — otherwise
+    # the signal is silently dropped (boot straps, JTAG, MIPI I2C, microSD
+    # DAT, FMC pull-ups). cluster_owner_role is how that own net would be
+    # classified if the pin weren't a cluster (EDGE_LABEL / POWER_SYMBOL /
+    # LOCAL_LABEL), or None when the pin has no own net (e.g. GND / unnamed).
+    cluster_owner_net: str = ""
+    cluster_owner_role: "PinRole | None" = None
 
     def __post_init__(self) -> None:  # pragma: no cover - simple guards
         if self.owner_kind not in ("ic", "connector"):
@@ -143,6 +153,13 @@ class PinSpec:
             raise ValueError(
                 f"Non-CLUSTER pin {self.owner_ref}/{self.pin_name} must have "
                 f"cluster_slot_count == 0, got {self.cluster_slot_count}"
+            )
+        if self.role != "CLUSTER" and (
+            self.cluster_owner_net or self.cluster_owner_role is not None
+        ):
+            raise ValueError(
+                f"Non-CLUSTER pin {self.owner_ref}/{self.pin_name} must not set "
+                f"cluster_owner_net/role"
             )
 
 
@@ -492,6 +509,31 @@ def _remap_cluster_destination(to_net: str, ic: IcInstance) -> str:
     return remap.get(to_net, to_net)
 
 
+def _subclassify_own_net(net: str, declared_nets: dict) -> "PinRole | None":
+    """Classify a CLUSTER pin's OWN net into the role it WOULD have if the
+    pin weren't a cluster, so the cluster pass can still emit a label for it.
+
+    Returns None when there is no own net to emit (empty, or a GND-family
+    net the cluster/GND machinery already handles).
+    """
+    from zynq_eda.core.layout._constants import POWER_SYMBOL_LIB_IDS as _PWR
+    if not net:
+        return None
+    if net == "GND" or _is_gnd_pin_name(net):
+        return None
+    # Prefer a compact, conventional POWER SYMBOL for power-rail own-nets
+    # (even when the rail is also a declared external net — a KiCad power
+    # symbol connects it globally). This is checked BEFORE EDGE_LABEL so a
+    # power pin that also carries decoupling gets a small power symbol on
+    # its trunk (via the rail-tap pass) instead of a verbose hier-label
+    # that would crowd the cluster's drop wires + pin number.
+    if net in _PWR:
+        return "POWER_SYMBOL"
+    if net in declared_nets:
+        return "EDGE_LABEL"
+    return "LOCAL_LABEL"
+
+
 def _classify_ic_pin(
     pin_name: str,
     ic: IcInstance,
@@ -684,6 +726,10 @@ def plan_pin_specs(
             side = page_side_from_pin(pin_rotation=pin_rot, symbol_rotation=0.0)
             if role == "CLUSTER":
                 dests = tuple(cluster_externals_by_pin[pin_name])
+                # The IC cluster pin's OWN net is what _classify_ic_pin
+                # resolved into `net` (pin override / power_input/output).
+                owner_net = net
+                owner_role = _subclassify_own_net(owner_net, declared_nets)
                 spec = PinSpec(
                     owner_kind="ic",
                     owner_ref=ic.reference,
@@ -696,6 +742,8 @@ def plan_pin_specs(
                     pin_relative=rel,
                     cluster_slot_count=len(dests),
                     cluster_destinations=dests,
+                    cluster_owner_net=owner_net if owner_role else "",
+                    cluster_owner_role=owner_role,
                 )
             else:
                 spec = PinSpec(
@@ -738,6 +786,10 @@ def plan_pin_specs(
             )
             if role == "CLUSTER":
                 dests = tuple(cluster_externals_by_pin[pin_name])
+                # The connector cluster pin's OWN net comes from pin_to_net
+                # (NOT the external-part destination, which is `net`).
+                owner_net = pin_to_net.get(pin_name, "")
+                owner_role = _subclassify_own_net(owner_net, declared_nets)
                 spec = PinSpec(
                     owner_kind="connector",
                     owner_ref=connector.reference,
@@ -750,6 +802,8 @@ def plan_pin_specs(
                     pin_relative=rel,
                     cluster_slot_count=len(dests),
                     cluster_destinations=dests,
+                    cluster_owner_net=owner_net if owner_role else "",
+                    cluster_owner_role=owner_role,
                 )
             else:
                 spec = PinSpec(
@@ -781,16 +835,11 @@ def _hlabel_text_width_mm(net_name: str) -> float:
     so the width prediction matches what the validator will measure
     after emission.
     """
-    from zynq_eda.core.layout.bbox import (
-        DEFAULT_TEXT_SIZE_MM,
-        DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO,
-    )
-    # +1 char for the decorating arrow/trailing space.
-    return (
-        (len(net_name) + 1)
-        * DEFAULT_TEXT_SIZE_MM
-        * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO
-    )
+    from zynq_eda.core.layout.bbox import text_width
+    # Trailing space accounts for the hier-label's arrow decoration, so
+    # the reserved lane width matches the faithful per-glyph width the
+    # validator measures after emission.
+    return text_width(net_name + " ")
 
 
 def _label_text_width_mm(net_name: str) -> float:
@@ -799,15 +848,8 @@ def _label_text_width_mm(net_name: str) -> float:
     Local labels render the bare net name with no decoration; this is
     one char narrower than the hier-label equivalent.
     """
-    from zynq_eda.core.layout.bbox import (
-        DEFAULT_TEXT_SIZE_MM,
-        DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO,
-    )
-    return (
-        len(net_name)
-        * DEFAULT_TEXT_SIZE_MM
-        * DEFAULT_TEXT_WIDTH_PER_CHAR_RATIO
-    )
+    from zynq_eda.core.layout.bbox import text_width
+    return text_width(net_name)
 
 
 def _lane_width_for_spec(spec: PinSpec) -> float:
@@ -2921,12 +2963,16 @@ def _route_cluster_pins(
                 _add_wire_with_bbox(plan, seg)
             trunk_segments_actual = trunk_attempt.segments
         else:
-            # Fall back to direct trunk if router can't find a path.
-            # The validator surfaces the resulting overlap so it can
-            # be addressed by widening PASSIVE_OFFSET or staggering.
-            trunk_wire = PlacedWire(start=pin_pos, end=trunk_far)
-            _add_wire_with_bbox(plan, trunk_wire)
-            trunk_segments_actual = (trunk_wire,)
+            # The router gave up even with the permissive avoid set (own
+            # cap bodies exempted). Do NOT emit a direct wire through the
+            # obstacle — that would draw a wire crossing another body, the
+            # exact "emit-through-obstacle" anti-pattern the router contract
+            # forbids (and which _route_pin_to_target rejects with False).
+            # Emit nothing: the cap near-pins are left unconnected, so KiCad
+            # ERC fires pin_not_connected — surfacing the unroutable trunk
+            # loudly for a placement fix (widen PASSIVE_OFFSET / stagger /
+            # move the obstacle) instead of hiding a visible wire overlap.
+            trunk_segments_actual = ()
 
         # Per-slot drops + far wires + junctions. The trunk may have
         # taken a Z-bend (router picked an offset to avoid an obstacle),
@@ -3614,6 +3660,141 @@ def _route_pin_to_target(
     return True
 
 
+def _emit_cluster_pin_own_nets(
+    plan: LayoutPlan, block: Block, geometry,
+) -> None:
+    """Post-route pass: emit the label/hier-label naming each CLUSTER pin's
+    OWN net at the pin tip.
+
+    A pin with an ``ExternalPart`` is classified ``CLUSTER`` and the cluster
+    pass only wires its passives' far ends; the pin's own signal/power net
+    (boot-strap, JTAG, MIPI I2C, microSD DAT, FMC pull-up signal, ...) was
+    previously DROPPED, leaving the pin connected to its passive but not to
+    the rest of the design. Here we name the pin: the pin tip is the trunk
+    origin (same net as the pin), so a label there merges with the trunk
+    while the passives keep their own cluster_destinations — closing the
+    signal without shorting a series resistor (series-R: pin net is BEFORE
+    the resistor; pull-up: pin net IS the trunk). Runs AFTER routing so the
+    trunk + drop wires are in occupancy and the label is placed clear of
+    them (rotation candidates, then route-out into clear interior).
+
+    POWER_SYMBOL own-nets (a power pin that also has decoupling) are handled
+    by :func:`_emit_power_rail_taps`.
+    """
+    from zynq_eda.core.layout._builder import (
+        _hierarchical_label_bbox, _label_bbox,
+    )
+    from zynq_eda.core.layout._constants import (
+        INTERIOR_MARGIN_MM, KICAD_GRID_MM, OVERLAP_NOISE_FLOOR_MM,
+    )
+    from zynq_eda.core.model.grid import snap_to_grid
+    from zynq_eda.core.model.sheet import (
+        PlacedHierarchicalLabel, PlacedLabel,
+    )
+
+    for spec in plan.pin_specs:
+        if spec.role != "CLUSTER":
+            continue
+        role = spec.cluster_owner_role
+        net = spec.cluster_owner_net
+        if role not in ("EDGE_LABEL", "LOCAL_LABEL") or not net:
+            continue
+        pin_pos = _resolve_pin_page_coord(plan, spec, geometry)
+        if pin_pos is None:
+            continue
+        is_hier = role == "EDGE_LABEL"
+        side = spec.page_side
+
+        def _make(pos: Point, rot: float):
+            if is_hier:
+                return PlacedHierarchicalLabel(
+                    net_name=net, position=pos,
+                    direction="bidirectional", rotation=rot,
+                )
+            return PlacedLabel(net_name=net, position=pos, rotation=rot)
+
+        def _bbox(obj):
+            return (_hierarchical_label_bbox(obj) if is_hier
+                    else _label_bbox(obj))
+
+        def _add(obj):
+            if is_hier:
+                _add_hierarchical_label_with_bbox(plan, obj)
+            else:
+                _add_label_with_bbox(plan, obj)
+
+        same_net_ids = frozenset(
+            f"label:{lab.net_name}@{lab.position.x:.1f},{lab.position.y:.1f}"
+            for lab in plan.labels if lab.net_name == net
+        ) | frozenset(
+            f"hlabel:{h.net_name}"
+            for h in plan.hierarchical_labels if h.net_name == net
+        )
+
+        def _clean(obj) -> bool:
+            bb = _bbox(obj)
+            for h in plan.occupancy.collides(
+                bb, ignore_owners=same_net_ids,
+                ignore_kinds=frozenset({"junction", "no_connect"}),
+            ):
+                inter = bb.intersection(h)
+                if (inter is not None
+                        and inter.width >= OVERLAP_NOISE_FLOOR_MM
+                        and inter.height >= OVERLAP_NOISE_FLOOR_MM):
+                    return False
+            return True
+
+        outboard = {
+            "left": 180.0, "right": 0.0, "top": 90.0, "bottom": 270.0,
+        }[side]
+        # At the pin tip the trunk leaves OUTBOARD and the body sits
+        # INBOARD, so try the two PERPENDICULAR directions first, then
+        # outboard, then inboard.
+        if side in ("left", "right"):
+            inboard = 0.0 if outboard == 180.0 else 180.0
+            rots = (90.0, 270.0, outboard, inboard)
+        else:
+            inboard = 270.0 if outboard == 90.0 else 90.0
+            rots = (0.0, 180.0, outboard, inboard)
+        placed = False
+        for rot in rots:
+            obj = _make(pin_pos, rot)
+            if _clean(obj):
+                _add(obj)
+                placed = True
+                break
+        if placed:
+            continue
+
+        # Boxed in at the pin tip: route the net out to a clear interior
+        # point (perpendicular out of the row, then outboard) and label
+        # there. The carrier wire merges with the trunk at the pin tip.
+        out_sign = -1 if side == "left" else (1 if side == "right" else 0)
+        if out_sign != 0:
+            for up in range(0, 9):
+                ty = snap_to_grid(pin_pos.y - up * KICAD_GRID_MM)
+                for ox in range(2, 28):
+                    tx = snap_to_grid(pin_pos.x + out_sign * ox * KICAD_GRID_MM)
+                    if out_sign < 0 and tx <= INTERIOR_MARGIN_MM:
+                        break
+                    target = Point(tx, ty)
+                    obj = _make(target, outboard)
+                    if not _clean(obj):
+                        continue
+                    if _route_pin_to_target(
+                        plan, pin_pos, target, avoid_owners=frozenset(),
+                    ):
+                        _add(obj)
+                        placed = True
+                        break
+                if placed:
+                    break
+        if not placed:
+            # Last resort: name it outboard at the pin tip so the pin is
+            # connected + visible; any residual overlap surfaces honestly.
+            _add(_make(pin_pos, outboard))
+
+
 def _route_gnd_pin_wires(plan: LayoutPlan, geometry) -> None:
     """GND pins are connected directly: the GND symbol sits AT the pin
     tip and KiCad merges them. No routed wire is emitted.
@@ -4298,6 +4479,108 @@ def plan_labels(plan: LayoutPlan, block: Block, geometry) -> None:
     _emit_orphan_external_net_hlabels(plan, block, geometry)
 
 
+def _grid_center_shift(
+    lo: float, hi: float, page: float,
+    margin: float = 5.08, grid: float = 1.27,
+) -> float:
+    """Return a grid-multiple translation that centres the content span
+    [lo, hi] within [margin, page-margin], or pulls it inside the margin
+    if it currently overflows. Returns 0.0 if no grid shift keeps the span
+    within both margins (content too wide for the page)."""
+    import math
+    content = hi - lo
+    free = page - 2.0 * margin - content
+    if free < grid:
+        # No meaningful centering room; only correct a margin overflow.
+        if lo < margin:
+            ideal = margin - lo
+        elif hi > page - margin:
+            ideal = (page - margin) - hi
+        else:
+            ideal = 0.0
+    else:
+        ideal = margin + free / 2.0 - lo
+    lo_bound = margin - lo            # dx >= lo_bound  => lo+dx >= margin
+    hi_bound = (page - margin) - hi   # dx <= hi_bound  => hi+dx <= page-margin
+    k_lo = math.ceil(lo_bound / grid - 1e-9)
+    k_hi = math.floor(hi_bound / grid + 1e-9)
+    if k_lo > k_hi:
+        return 0.0  # span can't fit within margins at any grid shift
+    k = max(k_lo, min(k_hi, round(ideal / grid)))
+    return k * grid
+
+
+def _translated_primitive(prim, dx: float, dy: float):
+    """Return a copy of a Placed* primitive shifted by (dx, dy). Relative
+    fields (value_shift / reference_shift) ride along with position."""
+    from dataclasses import replace
+    from zynq_eda.core.model.sheet import PlacedWire
+    if isinstance(prim, PlacedWire):
+        return replace(
+            prim,
+            start=Point(prim.start.x + dx, prim.start.y + dy),
+            end=Point(prim.end.x + dx, prim.end.y + dy),
+        )
+    return replace(
+        prim, position=Point(prim.position.x + dx, prim.position.y + dy),
+    )
+
+
+def _balance_plan(plan: LayoutPlan, block: Block) -> None:
+    """Final pass: rigidly translate the ENTIRE plan so its content is
+    centred within the page margins.
+
+    A uniform translation preserves every pairwise relationship, and the
+    overlap validator is purely pairwise-relative, so this CANNOT create or
+    remove an overlap — overlap count is invariant. The grid-multiple shift
+    keeps all primitives on-grid and the clamp keeps them inside the 5.08 mm
+    margin. This fixes the "all components jammed against one page edge with
+    an empty page centre" pathology (e.g. ethernet) without disturbing any
+    block's internal, already-validated geometry.
+
+    Guard: a hier-label must not cross the page midline (its parent-sheet
+    edge is derived from x < paper_w/2); if x-centering would flip any
+    hier-label's side, x-centering is skipped for the block.
+    """
+    from zynq_eda.core.model.sheet import PAPER_DIMENSIONS_MM
+    boxes = plan.occupancy._bboxes
+    if not boxes:
+        return
+    paper_w, paper_h = PAPER_DIMENSIONS_MM[block.paper_size]
+    min_x = min(b.min.x for b in boxes)
+    max_x = max(b.max.x for b in boxes)
+    min_y = min(b.min.y for b in boxes)
+    max_y = max(b.max.y for b in boxes)
+    dx = _grid_center_shift(min_x, max_x, paper_w)
+    dy = _grid_center_shift(min_y, max_y, paper_h)
+
+    # Hier-label midline guard: never push a hier-label across paper_w/2.
+    if dx != 0.0:
+        mid = paper_w / 2.0
+        for h in plan.hierarchical_labels:
+            if (h.position.x < mid) != (h.position.x + dx < mid):
+                dx = 0.0
+                break
+    if dx == 0.0 and dy == 0.0:
+        return
+
+    plan.symbols[:] = [_translated_primitive(s, dx, dy) for s in plan.symbols]
+    plan.wires[:] = [_translated_primitive(w, dx, dy) for w in plan.wires]
+    plan.labels[:] = [_translated_primitive(l, dx, dy) for l in plan.labels]
+    plan.hierarchical_labels[:] = [
+        _translated_primitive(h, dx, dy) for h in plan.hierarchical_labels
+    ]
+    plan.junctions[:] = [
+        _translated_primitive(j, dx, dy) for j in plan.junctions
+    ]
+    plan.no_connects[:] = [
+        _translated_primitive(n, dx, dy) for n in plan.no_connects
+    ]
+    plan.occupancy._bboxes[:] = [
+        b.translate(dx, dy) for b in plan.occupancy._bboxes
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Top-level planner entry point
 # ---------------------------------------------------------------------------
@@ -4355,6 +4638,11 @@ def plan_block(block: Block, geometry) -> LayoutPlan:
     # route boxed-in labels out to clear interior space.
     _refine_cluster_far_label_rotations(plan, geometry)
 
+    # Post-routing pass: name each cluster pin's OWN net (the signal/power
+    # the pin carries) at the pin tip, so it isn't silently dropped. Runs
+    # after routing so the trunk/drops are in occupancy.
+    _emit_cluster_pin_own_nets(plan, block, geometry)
+
     # Post-routing pass with consider_wires=True: with wires now in
     # occupancy, re-pick any Value shifts that conflict with wires.
     _refine_cluster_value_shifts(plan, geometry, consider_wires=True)
@@ -4390,6 +4678,11 @@ def plan_block(block: Block, geometry) -> LayoutPlan:
     # Tap the trunk with the rail's power symbol (visible, on a short
     # stub in clear lane space) so the net is named and driven.
     _emit_power_rail_taps(plan, block, geometry, next_ref_counters)
+
+    # Final pass — rigidly centre all content within the page margins.
+    # Overlap-invariant (uniform translate); fixes edge-cramming / empty
+    # page centre and pulls any margin-overflowing text back in-bounds.
+    _balance_plan(plan, block)
 
     return plan
 

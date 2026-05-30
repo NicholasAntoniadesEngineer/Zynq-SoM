@@ -73,31 +73,31 @@ MICROSD_DM3AT_REFCIRCUIT = ReferenceCircuit(
         # add them on the carrier side.
         ExternalPart(
             from_pin="DAT0",
-            to_net="VDD",
+            to_net="+3V3",
             part_token="10k_0402_1%",
             justification="SD Spec Part 1 Sec 6.5: DAT0 pull-up (10-100k recommended)",
         ),
         ExternalPart(
             from_pin="DAT1",
-            to_net="VDD",
+            to_net="+3V3",
             part_token="10k_0402_1%",
             justification="SD Spec Part 1 Sec 6.5: DAT1 pull-up (10-100k recommended)",
         ),
         ExternalPart(
             from_pin="DAT2",
-            to_net="VDD",
+            to_net="+3V3",
             part_token="10k_0402_1%",
             justification="SD Spec Part 1 Sec 6.5: DAT2 pull-up (10-100k recommended)",
         ),
         ExternalPart(
-            from_pin="DAT3_CD",
-            to_net="VDD",
+            from_pin="DAT3/CD",
+            to_net="+3V3",
             part_token="10k_0402_1%",
             justification="SD Spec Part 1 Sec 6.5: DAT3/CD pull-up (also enables card-internal CD)",
         ),
         ExternalPart(
             from_pin="CMD",
-            to_net="VDD",
+            to_net="+3V3",
             part_token="10k_0402_1%",
             justification="SD Spec Part 1 Sec 6.5: CMD pull-up (10-100k recommended)",
         ),
@@ -105,7 +105,7 @@ MICROSD_DM3AT_REFCIRCUIT = ReferenceCircuit(
         # sheet, DET_B is the host-side CD_N signal that needs a pull-up
         # so the host reads a clean high when no card is inserted.
         ExternalPart(
-            from_pin="CD_SW",
+            from_pin="DET_B",
             to_net="+3V3",
             part_token="10k_0402_1%",
             justification="Mechanical CD switch is open-when-empty; pull-up biases host GPIO high",

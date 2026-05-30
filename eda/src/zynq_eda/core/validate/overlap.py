@@ -394,6 +394,11 @@ def validate_overlap(
     intrinsic_bboxes: list[tuple[PlacedSymbol, BBox]] = []
     if geometry is not None:
         for sym, _ in symbol_bboxes:
+            # A symbol's intrinsic + property text bboxes MUST be checked.
+            # If geometry can't compute them we FAIL LOUD (emit an error) —
+            # never silently `continue`, which would exempt the symbol's
+            # text from overlap checking and could hide a real overprint
+            # ("C102C101"). The validator's job is to surface, not absorb.
             try:
                 for b in geometry.intrinsic_pin_label_bboxes(
                     sym.lib_id, sym.position, sym.rotation,
@@ -421,8 +426,18 @@ def validate_overlap(
                     reference_shift=sym.reference_shift,
                 ):
                     intrinsic_bboxes.append((sym, b))
-            except Exception:
-                continue
+            except Exception as exc:
+                results.append(ValidationResult(
+                    rule_id="overlap.intrinsic_bbox_build_failed",
+                    severity="error",
+                    message=(
+                        f"cannot compute intrinsic/property text bboxes for "
+                        f"symbol {sym.reference!r} ({sym.lib_id!r}): {exc} — "
+                        f"its text is NOT overlap-checked; failing loud rather "
+                        f"than silently exempting it"
+                    ),
+                    location=f"{sheet.name}.kicad_sch",
+                ))
 
     # ---- 1. symbol × symbol --------------------------------------------
     for i, (sym_a, bbox_a) in enumerate(symbol_bboxes):
@@ -624,10 +639,45 @@ def validate_overlap(
             ))
 
     # ---- 7. wire × intrinsic ------------------------------------------
+    # A pin's intrinsic NUMBER is rendered by KiCad right at the pin tip,
+    # so the wire that CONNECTS to that pin is inherently adjacent to it —
+    # this is true of every connected pin in every KiCad schematic and is
+    # NOT a visual defect. Exempt ONLY that exact pairing (wire endpoint
+    # coincident with the pin's connection point). A wire crossing a
+    # DIFFERENT pin's number is still a real overlap and still fires; this
+    # is precise, not a softening (there are zero wire-vs-other-pin cases
+    # to hide). Pin-position lookups are cached per symbol.
+    _pin_pos_cache: dict[int, dict[str, Point]] = {}
+
+    def _wire_connects_to_pin(wire: PlacedWire, sym: PlacedSymbol,
+                              pin_number: str) -> bool:
+        if geometry is None:
+            return False
+        cache = _pin_pos_cache.get(id(sym))
+        if cache is None:
+            try:
+                cache = geometry.absolute_pin_positions(
+                    sym.lib_id, sym.position, sym.rotation)
+            except Exception:
+                cache = {}
+            _pin_pos_cache[id(sym)] = cache
+        pt = cache.get(pin_number)
+        if pt is None:
+            return False
+        eps = 0.3
+        return (
+            (abs(wire.start.x - pt.x) < eps and abs(wire.start.y - pt.y) < eps)
+            or (abs(wire.end.x - pt.x) < eps and abs(wire.end.y - pt.y) < eps)
+        )
+
     for _, wire, wire_box in wire_bboxes:
         for sym, intrinsic_box in intrinsic_bboxes:
             if not _overlap_is_significant(wire_box, intrinsic_box):
                 continue
+            if intrinsic_box.kind == "intrinsic_pin_number":
+                pin_number = intrinsic_box.owner_id.rsplit(":", 1)[-1]
+                if _wire_connects_to_pin(wire, sym, pin_number):
+                    continue
             rule_id = (
                 "overlap.wire_intrinsic_pin_name"
                 if intrinsic_box.kind == "intrinsic_pin_name"
