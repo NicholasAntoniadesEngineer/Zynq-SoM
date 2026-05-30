@@ -1,15 +1,8 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-30T09:58:23Z
+Generated: 2026-05-30T10:48:25Z
 
-**Errors:** 4  **Warnings:** 465  **Info:** 0
-
-## Errors (4)
-
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+**Errors:** 0  **Warnings:** 465  **Info:** 0
 
 ## Warnings (465)
 

@@ -86,19 +86,27 @@ def test_every_plan_emits_edge_label_hlabels_at_lane_anchors():
     for block_name, block in blocks.items():
         plan = plan_block(block, geometry)
         edge_pins = [s for s in plan.pin_specs if s.role == "EDGE_LABEL"]
-        if not edge_pins:
-            assert len(plan.hierarchical_labels) == 0
-            continue
-        # The candidate ladder (sub-plan J.4) may shift labels' X AND Y
-        # outboard from their default lane.label_anchor by ±1..2 grid
-        # steps when bbox conflicts are detected. Test that every
-        # expected net is emitted exactly once (set-equality on nets).
-        expected_nets = {spec.net_name for spec in edge_pins}
+        # Hier-labels are emitted for EDGE_LABEL pins AND for block-level
+        # external nets that must cross the sheet boundary but reach it
+        # via another primitive — a cluster destination (e.g. usb_pd's
+        # +VIN VBUS-divider tap or its CHASSIS_GND cap) or a connector
+        # pin net. The candidate ladder (sub-plan J.4) may additionally
+        # shift a label's X AND Y outboard by ±1..2 grid steps. So the
+        # correct contract is:
+        #   (a) every EDGE_LABEL pin's net IS emitted as a hier-label, and
+        #   (b) no hier-label appears for a net that is neither an
+        #       EDGE_LABEL pin net nor a declared external net.
+        expected_edge_nets = {spec.net_name for spec in edge_pins}
+        external_net_names = {n.name for n in block.external_nets}
         emitted_nets = {h.net_name for h in plan.hierarchical_labels}
-        assert emitted_nets == expected_nets, (
-            f"block {block_name}: hier-label net set != expected. "
-            f"Missing: {expected_nets - emitted_nets}. "
-            f"Extra: {emitted_nets - expected_nets}"
+        assert expected_edge_nets <= emitted_nets, (
+            f"block {block_name}: EDGE_LABEL nets missing from hier-labels: "
+            f"{expected_edge_nets - emitted_nets}"
+        )
+        assert emitted_nets <= (expected_edge_nets | external_net_names), (
+            f"block {block_name}: hier-labels for unexpected nets (neither "
+            f"EDGE_LABEL nor external): "
+            f"{emitted_nets - (expected_edge_nets | external_net_names)}"
         )
 
 

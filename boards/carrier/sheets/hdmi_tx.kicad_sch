@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "b5db056d-6c7c-4dfe-a3f0-4adefc963bdd")
+	(uuid "e427f2ba-ce45-4624-9c9f-ca4f2bccf69e")
 	(paper "A3")
 	(title_block
 		(title "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)")
@@ -2113,7 +2113,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "933818e8-8a46-4241-a4b9-7cd88993f60d")
+		(uuid "b24c5d96-740a-424a-a56d-2e990ee577df")
 		(property "Reference" "U1"
 			(at 115.57 58.42 0.0000)
 			(effects
@@ -2162,89 +2162,89 @@
 			)
 		)
 		(pin "1"
-			(uuid "541fb6ea-dc96-447c-a3b3-b1158e05fb7b")
+			(uuid "9cfaf05d-7384-42d3-8420-a0098e9d7d94")
 		)
 		(pin "2"
-			(uuid "4c2443cd-8f78-447c-be45-2839ebca6046")
+			(uuid "8028bbbc-d578-4439-95a6-73c064665b50")
 		)
 		(pin "9"
-			(uuid "f691f45a-f7ee-4a4d-87e5-2b6fd224fa75")
+			(uuid "b54e6130-4a34-4297-95a0-2f4226128603")
 		)
 		(pin "10"
-			(uuid "94dca509-7a03-4bb2-89f1-ff31e827b425")
+			(uuid "e7e18793-035d-4678-a328-a5071f5ccbd6")
 		)
 		(pin "7"
-			(uuid "3125c3bf-079c-427d-9f73-4c9748b81657")
+			(uuid "1967fe55-e883-4016-b753-90cc652c82b4")
 		)
 		(pin "6"
-			(uuid "f1d5bfd3-f44f-4d92-b9b7-90f7c5b2f8a8")
+			(uuid "2861b6db-1702-4cab-a775-a0f14f5b90cc")
 		)
 		(pin "3"
-			(uuid "f118f535-8ef8-4510-a614-2634896445df")
+			(uuid "cc52446d-ab3d-4838-8a7f-9ad14f197bb3")
 		)
 		(pin "101"
-			(uuid "13e406dc-0773-40fa-bcd1-2c02ae4d766f")
+			(uuid "1c4cfe52-6761-4ad4-a6b3-a51d1db07fec")
 		)
 		(pin "102"
-			(uuid "23a0cd99-55f8-48ef-84c7-b197419aa65c")
+			(uuid "ba169b51-1082-4dee-9cf3-925f486e4ac8")
 		)
 		(pin "103"
-			(uuid "585a3fed-5574-492f-a177-3be60831b719")
+			(uuid "1405cf08-3155-4eaf-998e-ed0778dcf659")
 		)
 		(pin "104"
-			(uuid "8689e2d5-5fe4-4452-84fe-07a7f8939ea1")
+			(uuid "a585aeb8-1b84-45fe-b9db-45547ee036e4")
 		)
 		(pin "105"
-			(uuid "7df9abfc-6a45-4b76-aa4a-b1b0489d3a88")
+			(uuid "5d333e0d-4fb7-42e3-b0bb-9b4d7c8b2178")
 		)
 		(pin "106"
-			(uuid "d5451464-fedc-4497-86e8-69b62d596301")
+			(uuid "e0167531-ba8f-4b5f-9bea-163f4542bc16")
 		)
 		(pin "107"
-			(uuid "bb074e20-a8c1-4770-8e23-4e9be00313d8")
+			(uuid "04370486-fa55-4f2a-84c1-280096338de4")
 		)
 		(pin "108"
-			(uuid "5836e3a5-28e7-46bc-95f4-c0d112db9a38")
+			(uuid "534f9339-a1ed-43d7-920b-83974ab0273e")
 		)
 		(pin "4"
-			(uuid "b7c5c943-ce39-4a4b-aace-238a71fee1e9")
+			(uuid "36074df9-b45a-4773-afb5-84a4441d6452")
 		)
 		(pin "5"
-			(uuid "0decb751-2b13-4cbb-a01c-3674a51ef070")
+			(uuid "3cd41ee5-753a-40c4-979c-327dee7b8e13")
 		)
 		(pin "11"
-			(uuid "b65ce9fc-2935-44d9-94a9-f840e0a43f86")
+			(uuid "67359b90-ec00-4f80-8385-481b2199131c")
 		)
 		(pin "12"
-			(uuid "4376f682-32dd-4a2a-9ac2-3b35eb6b32cc")
+			(uuid "7388ecb2-e0ef-4fc9-b767-14cad3329845")
 		)
 		(pin "13"
-			(uuid "933f2d3d-7e68-4a45-ad0c-86c91c87f72f")
+			(uuid "93a462ad-c5e8-4924-ae55-e807826dda41")
 		)
 		(pin "14"
-			(uuid "e90ad8a7-56d1-46b4-8fed-d81a136c7884")
+			(uuid "4478f364-4448-4288-b99e-9e6619fb9d24")
 		)
 		(pin "15"
-			(uuid "394ff2b4-f77c-488e-a00e-b0438ebd10f9")
+			(uuid "fe92cc8d-986e-41fc-a93a-c1ba6bcce6f4")
 		)
 		(pin "16"
-			(uuid "83f46922-20e7-42ab-bf2a-a7dd9a6cd070")
+			(uuid "cc3da693-eedd-4b07-883d-1b150a28abf7")
 		)
 		(pin "17"
-			(uuid "9e4f7b6f-64f3-4995-874d-90aaf7094c09")
+			(uuid "0f2f675d-22a1-480e-9f49-c0f9d723265a")
 		)
 		(pin "18"
-			(uuid "f826cddf-d11f-43d9-8ef2-c4a1459cf82e")
+			(uuid "16de7b19-36ac-455f-a066-796ec84668d8")
 		)
 		(pin "19"
-			(uuid "fe109c9e-d2b2-4018-99c0-f3e6b975a219")
+			(uuid "a7e2f185-cf08-4425-9585-e780e9d0c9a5")
 		)
 		(pin "20"
-			(uuid "e8d6944a-1d83-4514-99a2-15476413d072")
+			(uuid "5a4ea198-9d18-4ad3-9943-14e4a463a445")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "U1")
 					(unit 1)
 				)
@@ -2260,7 +2260,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9612626b-4460-4dd3-b108-fe126897d292")
+		(uuid "9551a262-6f81-4a28-82a7-fb51e698b10e")
 		(property "Reference" "U2"
 			(at 16.51 163.83 0.0000)
 			(effects
@@ -2309,32 +2309,32 @@
 			)
 		)
 		(pin "1"
-			(uuid "e5899808-e2fa-4602-948e-22f0d18acaa1")
+			(uuid "554bf99b-e96d-4274-a03c-577b6464e2c3")
 		)
 		(pin "2"
-			(uuid "fc8731be-a633-4675-acde-ef86b634fcdf")
+			(uuid "7883dda4-a257-41ff-87f1-2fa36565bb7f")
 		)
 		(pin "3"
-			(uuid "ab3e9826-3bf4-4d0e-af14-79fb391565db")
+			(uuid "17654d33-7b07-465f-8d20-b64eb61ea63f")
 		)
 		(pin "4"
-			(uuid "81aad419-9dad-453b-9ca5-24b0066687b0")
+			(uuid "7fe6eba8-a8bf-4e34-b8ff-27d3d705bc80")
 		)
 		(pin "5"
-			(uuid "4e21a71d-4ba7-44c5-92e1-5578bcd018ef")
+			(uuid "cfa2ac82-14c2-43eb-9cc5-e5095ec85349")
 		)
 		(pin "6"
-			(uuid "d571bd0d-06e2-4b57-a64b-daecfbc6b666")
+			(uuid "51463306-dbac-48db-82ea-a566b30c4ad5")
 		)
 		(pin "7"
-			(uuid "3c0e9cdf-e109-4aac-97f0-8b293b48c21b")
+			(uuid "d3b8084e-08b9-43cd-b949-9d8c036d29e2")
 		)
 		(pin "8"
-			(uuid "30c70323-c7c4-46a6-a4ae-3f6c145b2f40")
+			(uuid "e662d3c6-5f38-4ddb-9eb7-dbdf7d81edd3")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "U2")
 					(unit 1)
 				)
@@ -2350,7 +2350,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3571d1ea-5aef-45ef-8211-50044d294a85")
+		(uuid "990ab9bf-4ce4-47c7-bc58-19a42bedc40c")
 		(property "Reference" "J1"
 			(at 403.86 85.09 0.0000)
 			(effects
@@ -2399,65 +2399,65 @@
 			)
 		)
 		(pin "1"
-			(uuid "f035b76d-3233-420c-9b55-2f329290f893")
+			(uuid "e8e88feb-bffa-4238-ac08-072f9c9eba48")
 		)
 		(pin "2"
-			(uuid "8acd27c3-a290-471e-82ad-d7722041616c")
+			(uuid "0d9546a3-bc92-432b-ac81-b550ea0e91df")
 		)
 		(pin "3"
-			(uuid "d6d81e95-e230-4fa7-8c5d-dd66a4866935")
+			(uuid "89c712f1-9417-47cc-a0e0-efa15acc7a13")
 		)
 		(pin "4"
-			(uuid "dacee927-d05c-4762-973f-d111caa200c4")
+			(uuid "6319b61a-6ade-49ed-a701-d578427c8a1f")
 		)
 		(pin "5"
-			(uuid "5eadd692-49df-40e5-a7d3-e26c870df85d")
+			(uuid "169944e8-dc73-49e9-9a83-b177af0e89b3")
 		)
 		(pin "6"
-			(uuid "f3d078c4-e8e4-4621-af5d-b8cdf5c989a8")
+			(uuid "1af1cce3-0ac1-4ed0-bdcc-550cbf5c8fca")
 		)
 		(pin "7"
-			(uuid "414a6d9e-2a7d-45aa-a026-2534203e57f2")
+			(uuid "7895a2ea-b08f-4ea8-8421-7d4460f5bc70")
 		)
 		(pin "8"
-			(uuid "d49e2fe2-2537-4de4-9c20-03fe31668832")
+			(uuid "1b37182a-f0fa-48d4-b803-80cab33ac4e7")
 		)
 		(pin "9"
-			(uuid "f04974fd-c5f6-4ff5-9578-fbf76ec4775d")
+			(uuid "af754068-05f5-443a-84ea-46fcb35da0cf")
 		)
 		(pin "10"
-			(uuid "0d94d74e-a88b-4de7-8171-c3f39ee57d3c")
+			(uuid "535162b8-ed42-4559-ae63-02a9459d34ce")
 		)
 		(pin "11"
-			(uuid "58b35487-0942-4a6e-a9e0-c1b738cb8069")
+			(uuid "c7990033-6df3-450b-9c89-2ae33a709434")
 		)
 		(pin "12"
-			(uuid "1b026bb5-6658-45f0-951e-22a0f312536f")
+			(uuid "c9cd135c-7c53-4fcd-818e-d1dc80cceab9")
 		)
 		(pin "13"
-			(uuid "3b8bdf5e-25a0-401e-b249-a5e943b9b486")
+			(uuid "5657f436-972c-4666-9f60-8b7c6d880687")
 		)
 		(pin "14"
-			(uuid "628f95db-f448-4139-a140-e14b6d8abeab")
+			(uuid "f44af3e0-078e-4dcd-a3ec-db3b6deadb91")
 		)
 		(pin "15"
-			(uuid "0a9e4aba-42f0-4ec8-886e-2252031cddff")
+			(uuid "bd21aa3e-9ed8-44a3-afd1-574900aee03c")
 		)
 		(pin "16"
-			(uuid "ff298a4d-c494-4cbe-ba74-96c491939e1c")
+			(uuid "3fb7fe03-746b-4ed3-ba55-29055d4ea30f")
 		)
 		(pin "17"
-			(uuid "ebe8680d-c5ed-4e9f-81da-30eef86a13bd")
+			(uuid "42c77b1d-d410-4998-ba74-1626063081fd")
 		)
 		(pin "18"
-			(uuid "362d6e21-22f9-49be-98fb-72dc5aaee92d")
+			(uuid "c7148288-ee46-471b-8c31-dd4c9ca8d690")
 		)
 		(pin "19"
-			(uuid "d0f6a366-e5de-472b-b6ea-7e54e2d2a436")
+			(uuid "db0e55ae-e371-4c38-bfbb-d55e29201cc0")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "J1")
 					(unit 1)
 				)
@@ -2473,7 +2473,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a7952bd8-5d1b-47bb-886c-8c349aba61d6")
+		(uuid "923317f4-b15c-4882-93e1-e97dd6eeb8a6")
 		(property "Reference" "#PWR200"
 			(at 99.06 50.8 270)
 			(effects
@@ -2502,11 +2502,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "b05e2a0e-c534-45ca-ba4c-c1b2707938c7")
+			(uuid "6082b601-33ac-46cb-a88d-2471d78617c5")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "#PWR200")
 					(unit 1)
 				)
@@ -2522,7 +2522,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "27eb2884-4d6f-413f-8b0e-36b76c006cbe")
+		(uuid "3ddb9fd2-da8c-4e65-b419-452d757bd792")
 		(property "Reference" "#PWR201"
 			(at 22.86 158.75 0.0000)
 			(effects
@@ -2551,11 +2551,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "c89ae314-2cf5-4138-a01e-13c99839636d")
+			(uuid "d89e7ad9-3b85-40aa-8ec7-ed46115017d0")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "#PWR201")
 					(unit 1)
 				)
@@ -2571,7 +2571,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "09f4036e-831c-46ed-9abe-6708b2aa0c3e")
+		(uuid "265a6319-ceda-4d66-b7a1-5554e3e8d025")
 		(property "Reference" "C100"
 			(at 57.785 17.78 0.0000)
 			(effects
@@ -2600,14 +2600,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "85ac31c8-e64b-4fd5-93e5-4e9176275066")
+			(uuid "543f354f-65cc-4add-9c56-b573aabf9903")
 		)
 		(pin "2"
-			(uuid "f0e94a1c-202b-4d2f-88b4-b9f583fa396f")
+			(uuid "c60c2c5c-1f3d-4a7a-9219-8955f3d2eb9d")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "C100")
 					(unit 1)
 				)
@@ -2623,7 +2623,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "20007385-f85c-45cc-8e10-1b00d6f7d497")
+		(uuid "baba2f5a-9a34-4644-b464-61cb2d785eaa")
 		(property "Reference" "#PWR300"
 			(at 57.15 17.78 180)
 			(effects
@@ -2652,11 +2652,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "84ed8645-6766-4ae4-9700-136e8907f694")
+			(uuid "df076636-143c-4b84-83b9-b833f6547ca0")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "#PWR300")
 					(unit 1)
 				)
@@ -2672,7 +2672,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "50b0153f-8fce-44c4-b982-43f351a7e9f3")
+		(uuid "e4e8c7e3-39f9-4eff-8c89-4762b6a4c2e9")
 		(property "Reference" "C101"
 			(at 88.265 22.86 0.0000)
 			(effects
@@ -2701,14 +2701,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "12a4f499-a727-4bcf-bc38-92bca0deb275")
+			(uuid "32eb0ff5-1ebb-4a9d-99e5-45c9d2b935ab")
 		)
 		(pin "2"
-			(uuid "88809050-ad2e-4bba-8301-dba43ed24cca")
+			(uuid "41368701-bf17-4fe1-bd4e-d0f12635f7e7")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "C101")
 					(unit 1)
 				)
@@ -2724,7 +2724,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "7a6e0a77-136a-46d0-a77c-e5c661fe2d45")
+		(uuid "b4ef0030-3a0f-4ade-9a37-7cb0112ade93")
 		(property "Reference" "#PWR301"
 			(at 87.63 22.86 180)
 			(effects
@@ -2753,11 +2753,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "951a9c57-76cd-4a2a-b94a-581e2c8b3b88")
+			(uuid "218976c1-0e73-49e9-9963-d418f6c6d2ac")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "#PWR301")
 					(unit 1)
 				)
@@ -2773,7 +2773,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a4b9b857-12ce-4bcf-a073-e3caddf18be1")
+		(uuid "09de829f-fbb5-49d0-984b-ee13283b8419")
 		(property "Reference" "R100"
 			(at 64.262 40.64 90)
 			(effects
@@ -2802,14 +2802,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "b6226c5b-7fac-455e-8238-0962271afa2a")
+			(uuid "892f03a9-4b17-4968-8523-967a3c5cf226")
 		)
 		(pin "2"
-			(uuid "2b206dbb-072f-40fc-895a-fe6adca55cc8")
+			(uuid "76609f14-b429-4a31-9fe6-b6fefd9359ec")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "R100")
 					(unit 1)
 				)
@@ -2825,7 +2825,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3e418b00-f9ae-4e79-a0f1-93dbf9590ee6")
+		(uuid "7aede5a7-32f4-488b-9c29-d1dd06126cfc")
 		(property "Reference" "#PWR302"
 			(at 57.15 33.02 0.0000)
 			(effects
@@ -2854,11 +2854,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "5544cab6-9d70-495d-98c7-81087046bce1")
+			(uuid "7f1ac6ce-e81d-4321-984a-b912b1d7c243")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "#PWR302")
 					(unit 1)
 				)
@@ -2874,7 +2874,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "eb4f71d3-b9b5-4469-a017-8fe2eb05ad60")
+		(uuid "a3e89929-101c-4106-b9f8-14748ff3dc56")
 		(property "Reference" "C102"
 			(at 27.94 124.46 180)
 			(effects
@@ -2903,14 +2903,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "6d881251-054b-4d07-8afc-d013a4dbb413")
+			(uuid "dfcc1ca1-07b7-4853-9d9f-5b6d1822b551")
 		)
 		(pin "2"
-			(uuid "b72def22-c9b9-490a-b0b6-e00d4282fe92")
+			(uuid "0eb9f109-7e5f-4283-91b2-5d77af5b384b")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "C102")
 					(unit 1)
 				)
@@ -2926,7 +2926,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "cfe490db-b7fa-411c-b2d5-d54f7f06176a")
+		(uuid "03f5dd64-5b39-46b0-b4c9-5a6a3357fa56")
 		(property "Reference" "#PWR303"
 			(at 31.75 138.43 180)
 			(effects
@@ -2955,11 +2955,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "82cdcc38-dc68-4b01-a66a-f54120f5472f")
+			(uuid "d12c38f6-bb70-4689-a554-99b700825208")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "#PWR303")
 					(unit 1)
 				)
@@ -2975,7 +2975,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "12ef6048-0ff0-4381-8327-adeb9734cfc5")
+		(uuid "184b81e7-7005-4dbc-891c-1d72295656fe")
 		(property "Reference" "#FLG100"
 			(at 377.19 92.075 0.0000)
 			(effects
@@ -3004,11 +3004,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "44828cec-f488-4aca-bd3b-64e4844d2088")
+			(uuid "37623032-8e11-4c9f-be9d-e00589de2569")
 		)
 		(instances
 			(project "HDMI Transmitter (Zynq → TPD12S016 → HDMI-A)"
-				(path "/b5db056d-6c7c-4dfe-a3f0-4adefc963bdd"
+				(path "/e427f2ba-ce45-4624-9c9f-ca4f2bccf69e"
 					(reference "#FLG100")
 					(unit 1)
 				)
@@ -3023,7 +3023,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b89b4f23-a24e-4469-9145-bd09ae598144")
+		(uuid "2d9f8f0b-e98a-4716-91f8-c59b27a33490")
 	)
 	(wire
 		(pts
@@ -3033,7 +3033,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5cc391e7-32c5-430e-97ba-66cbff5f0a04")
+		(uuid "714bdfaa-3ed1-4d50-b931-0aaa3c417cc3")
 	)
 	(wire
 		(pts
@@ -3043,7 +3043,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "47135023-4f61-4145-ad27-35253200da16")
+		(uuid "e58e87a5-3e89-4f85-9b6e-344c3f3c1b30")
 	)
 	(wire
 		(pts
@@ -3053,7 +3053,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "43d75c6a-c4bc-4932-81ec-5c4244402c20")
+		(uuid "416bb3e7-e3a5-4928-8310-985b6bb624c2")
 	)
 	(wire
 		(pts
@@ -3063,7 +3063,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e4db48bc-25db-4938-b903-09ed0fecea20")
+		(uuid "ea78e358-c96c-440c-b405-1e2884b92fef")
 	)
 	(wire
 		(pts
@@ -3073,7 +3073,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6a4f3bd6-aff3-49ec-925d-38850928bcb5")
+		(uuid "e305c54d-4a43-48f4-9089-c7fa81f54032")
 	)
 	(wire
 		(pts
@@ -3083,7 +3083,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "51c78102-6872-4e86-8e24-7b631ada222f")
+		(uuid "602d3430-c130-4668-8db7-8e700d8504a9")
 	)
 	(wire
 		(pts
@@ -3093,7 +3093,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "fd0c11cb-5e0f-43c3-82ec-0af45f531b58")
+		(uuid "a6068302-3498-4299-9cc7-6238201f77de")
 	)
 	(wire
 		(pts
@@ -3103,7 +3103,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "736ba969-ec6c-4a37-93a1-1770d8351f41")
+		(uuid "32738170-4b79-4d42-a4f3-03ab7707949d")
 	)
 	(wire
 		(pts
@@ -3113,7 +3113,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "76600099-9f9d-45ed-b005-35a3f6999b47")
+		(uuid "59320fa6-b5ee-41c8-ad11-3740e666e082")
 	)
 	(wire
 		(pts
@@ -3123,7 +3123,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "743d9cf9-e57f-4ccb-a565-ea3442c721ed")
+		(uuid "ec5be25f-0658-4015-862c-4f6f85816caf")
 	)
 	(wire
 		(pts
@@ -3133,7 +3133,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "cf750bde-817b-4934-adbf-06f02115faa0")
+		(uuid "32790c2b-ffac-4ef0-8454-cc21d1934166")
 	)
 	(wire
 		(pts
@@ -3143,7 +3143,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1de37761-449f-4786-921c-f265c4325bc8")
+		(uuid "fc029150-348b-4395-ba76-811dba6cc211")
 	)
 	(wire
 		(pts
@@ -3153,7 +3153,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d9cd0430-bab6-4c72-9dd0-6feeb0fcedc5")
+		(uuid "9cc029c3-549e-4bea-b451-6b03d4ceb8bc")
 	)
 	(wire
 		(pts
@@ -3163,7 +3163,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "fac8ab6b-0d41-4487-9bbe-e88216c610fd")
+		(uuid "e0266cf2-d975-4e2c-a9b3-7f06dad3b417")
 	)
 	(wire
 		(pts
@@ -3173,7 +3173,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ea04588e-6193-487e-9349-693554ad4edf")
+		(uuid "c89da7b8-8bc7-4229-a8f5-ab7ada2cb429")
 	)
 	(wire
 		(pts
@@ -3183,7 +3183,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f662a2c3-90b9-4b87-ba93-458453c66198")
+		(uuid "9688bd95-f365-43a0-87ce-4b999507ae2c")
 	)
 	(wire
 		(pts
@@ -3193,7 +3193,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "35f85487-a3b3-4a68-a718-93e9317194ff")
+		(uuid "500ce534-860d-4d6b-aac7-2864e9169892")
 	)
 	(wire
 		(pts
@@ -3203,7 +3203,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4bc3961d-b30d-4d3c-a9f3-4c210ea18225")
+		(uuid "37702eac-21d9-4f6f-a3e2-ab748e06ad72")
 	)
 	(wire
 		(pts
@@ -3213,7 +3213,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "29276c52-b913-4270-af1a-629b340c4e1e")
+		(uuid "b01e44fe-d172-4bee-844e-ff7499f2c394")
 	)
 	(wire
 		(pts
@@ -3223,7 +3223,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "bc550e3c-0fa3-48d4-a1c8-ee2570237253")
+		(uuid "c02f6dc0-894d-4e75-a3a6-1c9dc2f384e3")
 	)
 	(wire
 		(pts
@@ -3233,7 +3233,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "dc38bb2c-8c32-4185-ac75-e7fd94da15bd")
+		(uuid "c853d674-b6c9-465c-aa5e-d5941a12897d")
 	)
 	(wire
 		(pts
@@ -3243,7 +3243,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a7936b30-0524-443e-9ae3-f137b2a9453e")
+		(uuid "cc328ad2-fadd-421e-8f52-aa34bca0efaf")
 	)
 	(wire
 		(pts
@@ -3253,7 +3253,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "63f8ef33-a581-4e4e-9c10-fd35ce2385a9")
+		(uuid "0d8605da-fa3f-4c33-b2be-41625237f2ff")
 	)
 	(wire
 		(pts
@@ -3263,7 +3263,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "057cfc22-8b8c-4864-bb49-74029c2b41bf")
+		(uuid "d8f60f50-0741-4a08-9acd-17644155b14a")
 	)
 	(wire
 		(pts
@@ -3273,7 +3273,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c58ca5c3-1e7b-4c75-99a2-d6e3d98dfd3a")
+		(uuid "f2a91fab-3247-4448-b966-116252155c57")
 	)
 	(wire
 		(pts
@@ -3283,7 +3283,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "fb3507fb-fbb4-4f4f-8d06-2622077eb9cb")
+		(uuid "64500ece-b6b3-4206-9eaa-8399a66c2f21")
 	)
 	(wire
 		(pts
@@ -3293,7 +3293,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ad1036d6-45f5-4823-94c2-a3c13e6c77b4")
+		(uuid "bdc4e35d-1313-4e7e-8c23-27fe5d7346f9")
 	)
 	(wire
 		(pts
@@ -3303,7 +3303,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "061330e1-b90e-4021-8c05-943abf7deb05")
+		(uuid "d69cd468-09ea-48c3-9b36-30087de28734")
 	)
 	(wire
 		(pts
@@ -3313,7 +3313,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "3cc9cda4-4fef-450c-aca9-f3297b662c90")
+		(uuid "2244f3c2-2c74-44ee-8d1e-335234a6b5fb")
 	)
 	(wire
 		(pts
@@ -3323,13 +3323,13 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "8420811c-aca7-4b29-9433-56270704de3d")
+		(uuid "1aa4c056-25ae-4ab0-991d-aca87be37efa")
 	)
 	(junction
 		(at 382.27 80.01)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "7657b9ea-a3e8-4b99-a9b3-3d90ae83c0c2")
+		(uuid "6adc7769-b23d-4f50-8473-149c3cad693a")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_TMDS_2_P"
 		(shape input)
@@ -3340,7 +3340,7 @@
 			)
 			(justify left)
 		)
-		(uuid "3ab4e1c3-b026-42b6-956c-f39e26424698")
+		(uuid "7319b815-f322-45c1-8d97-b57224a9a61a")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -3351,7 +3351,7 @@
 			)
 			(justify left)
 		)
-		(uuid "fa184e1e-2c71-4ae3-9a68-eba5bfcfa86e")
+		(uuid "49ff48ec-fe31-4f04-8f2a-d3581ce90445")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_TMDS_2_N"
 		(shape input)
@@ -3362,7 +3362,7 @@
 			)
 			(justify left)
 		)
-		(uuid "043c089f-8662-4cb4-9d04-ea91cf4e81a5")
+		(uuid "52a9e158-f13e-4b9d-af36-62fcd1a85ffa")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_TMDS_1_P"
 		(shape input)
@@ -3373,7 +3373,7 @@
 			)
 			(justify left)
 		)
-		(uuid "0e210cec-35d5-4244-9817-e05db0771f35")
+		(uuid "577b41a6-2ed7-4896-a1db-9f6c3548d6fb")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -3384,7 +3384,7 @@
 			)
 			(justify left)
 		)
-		(uuid "e068049d-c2d9-40a5-90d5-15d014e862c9")
+		(uuid "8a294f07-e4d1-4def-a059-c42030f09b71")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_TMDS_1_N"
 		(shape input)
@@ -3395,7 +3395,7 @@
 			)
 			(justify left)
 		)
-		(uuid "f0b2c053-ff7c-4fc0-a720-09141b008228")
+		(uuid "ab3764c6-47cf-4b45-8ab7-ad9d6194488c")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_TMDS_0_P"
 		(shape input)
@@ -3406,7 +3406,7 @@
 			)
 			(justify left)
 		)
-		(uuid "607c8ed9-293f-47bb-a987-a12740adc5de")
+		(uuid "f044b3e7-eeaa-4940-b98f-52243756fd27")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -3417,7 +3417,7 @@
 			)
 			(justify left)
 		)
-		(uuid "205b3187-66c1-4215-8e93-300ec1d6c19d")
+		(uuid "2ca0ff14-b518-458d-b03b-2551483a8c9b")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_TMDS_0_N"
 		(shape input)
@@ -3428,7 +3428,7 @@
 			)
 			(justify left)
 		)
-		(uuid "9984de8d-71a1-4782-8c6f-09544abc3979")
+		(uuid "402f6c55-f506-4600-a187-5b6311059117")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_TMDS_CLK_P"
 		(shape input)
@@ -3439,7 +3439,7 @@
 			)
 			(justify left)
 		)
-		(uuid "e3a910b1-7c13-4dfa-8671-03370328f5cf")
+		(uuid "f23fb310-9aeb-4a8b-8bec-89e73c90e0dd")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -3450,7 +3450,7 @@
 			)
 			(justify left)
 		)
-		(uuid "80855c2e-e843-4550-bfe8-b02db18d04b4")
+		(uuid "bba4f3dd-792e-4897-897c-7f21d095630e")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_TMDS_CLK_N"
 		(shape input)
@@ -3461,7 +3461,7 @@
 			)
 			(justify left)
 		)
-		(uuid "352733f7-9058-4176-b377-9a9457e9e071")
+		(uuid "33f918e9-db2b-49b2-93bb-2144736984af")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_CEC"
 		(shape input)
@@ -3472,7 +3472,7 @@
 			)
 			(justify left)
 		)
-		(uuid "d2fbc385-7aa1-4eaa-86e4-3406f0caf6f3")
+		(uuid "61bc3975-2cfd-46b5-82b1-fbfcaafb09c0")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -3483,7 +3483,7 @@
 			)
 			(justify left)
 		)
-		(uuid "9a78e4b6-8b85-483c-85a0-ee3d3bd38944")
+		(uuid "38460977-2b4c-49e3-ae85-5e0eb3bb26dd")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_SCL"
 		(shape input)
@@ -3494,7 +3494,7 @@
 			)
 			(justify left)
 		)
-		(uuid "328732da-2a6d-43b9-b271-b61099d1b115")
+		(uuid "acdcd4f2-3c11-4d05-9c8d-c14cf85188e9")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_SDA"
 		(shape input)
@@ -3505,7 +3505,7 @@
 			)
 			(justify left)
 		)
-		(uuid "4448045b-7897-4711-b3dc-cb4351448427")
+		(uuid "321f9507-10c2-42be-aedd-403d3200b3a0")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -3516,7 +3516,7 @@
 			)
 			(justify left)
 		)
-		(uuid "716a656a-7a61-42d5-b2c8-274e78df360a")
+		(uuid "1afc3049-027d-42af-a65b-29ac2b7aafde")
 	)
 	(hierarchical_label "+5V"
 		(shape input)
@@ -3527,7 +3527,7 @@
 			)
 			(justify left)
 		)
-		(uuid "124253f8-2294-43e5-bc59-f09cb615d9f0")
+		(uuid "e797b10f-5d3f-477a-bf23-666a5713091d")
 	)
 	(hierarchical_label "ZYNQ_HDMI_TX_HPD"
 		(shape input)
@@ -3538,123 +3538,123 @@
 			)
 			(justify left)
 		)
-		(uuid "cb2f0e6f-8280-43f3-a4a4-cbb22bc261f7")
+		(uuid "cfff8b72-d61b-4342-840d-5fcdb78b5d65")
 	)
 	(no_connect
 		(at 105.41 30.48)
-		(uuid "d233ae88-d9e7-4dff-923f-c4f7d05f3f6c")
+		(uuid "44ac8ddb-b392-4a21-9634-5b9206014df2")
 	)
 	(no_connect
 		(at 105.41 35.56)
-		(uuid "a904ea4c-d07e-4551-a1bc-8b4125128df5")
+		(uuid "ce5741de-c620-48cc-882b-e6ef411ed7b6")
 	)
 	(no_connect
 		(at 105.41 40.64)
-		(uuid "18b844c3-4fe2-4bc7-8e77-16add040a867")
+		(uuid "94647826-c6ce-412d-b6d8-9f5277ed0017")
 	)
 	(no_connect
 		(at 105.41 55.88)
-		(uuid "f7fb736b-6f7d-4db1-962a-6fc01fb39046")
+		(uuid "f2f67ef2-6440-4a80-8b9c-06644db7567a")
 	)
 	(no_connect
 		(at 105.41 60.96)
-		(uuid "e25da31d-7c4a-44a1-9df2-5df927f4defc")
+		(uuid "7001d1b6-91dd-40f9-9991-67bfbf34b970")
 	)
 	(no_connect
 		(at 105.41 66.04)
-		(uuid "4b2246bc-f568-4d40-a53d-31a49a69aacf")
+		(uuid "fd0bb2ec-bf08-4a37-8b91-83f576a4d127")
 	)
 	(no_connect
 		(at 105.41 71.12)
-		(uuid "50cb5c33-5dc5-425d-883a-9695d861fed0")
+		(uuid "bb6870cb-d8fc-4f93-999e-1659d349cffd")
 	)
 	(no_connect
 		(at 105.41 76.2)
-		(uuid "cbc25035-967b-4868-a836-d600d9cb3f65")
+		(uuid "68aa93d0-6c51-4cb1-a9cd-6d9b4f33af5a")
 	)
 	(no_connect
 		(at 105.41 81.28)
-		(uuid "15a91dac-0b10-4d4e-80d0-15fbab924db1")
+		(uuid "b34e18d0-29f5-4e7a-8678-5ca3c6285226")
 	)
 	(no_connect
 		(at 105.41 86.36)
-		(uuid "61b50b2b-9fc1-46f1-9dbc-b389d2d04413")
+		(uuid "31892ff4-9b4f-427a-9de1-038b797d69a4")
 	)
 	(no_connect
 		(at 105.41 91.44)
-		(uuid "250ff44a-221b-4dde-a994-01aced7bbc7c")
+		(uuid "1d945fe6-3c30-4abc-b753-e925ede06d14")
 	)
 	(no_connect
 		(at 125.73 20.32)
-		(uuid "9c0e1b9e-04a6-4f10-9def-c330640689d9")
+		(uuid "02d448d1-147c-4c70-8888-17f8b7515c60")
 	)
 	(no_connect
 		(at 125.73 25.4)
-		(uuid "8c200037-a842-492e-abe5-9671e872a002")
+		(uuid "c918173e-9b7c-44ee-8f38-80960619dc36")
 	)
 	(no_connect
 		(at 125.73 30.48)
-		(uuid "c7a6d93f-d566-470c-a577-913c9789ea3f")
+		(uuid "d5b2937c-8cc5-44b2-a256-3ceda3f49a26")
 	)
 	(no_connect
 		(at 125.73 35.56)
-		(uuid "d5c761db-5715-4374-8438-27e0281e3cb2")
+		(uuid "73835268-bb3f-4b20-a128-a6cb125de46a")
 	)
 	(no_connect
 		(at 125.73 40.64)
-		(uuid "fbc14cc6-9733-45d4-890b-4438cc6fe28c")
+		(uuid "1f196732-7f05-4da8-9e4c-dabded74b585")
 	)
 	(no_connect
 		(at 125.73 45.72)
-		(uuid "0c31be1c-aa6f-4141-a10c-f36ebeb244d9")
+		(uuid "07f8c776-40d4-4c10-ac9a-3b4f15f7bf1c")
 	)
 	(no_connect
 		(at 125.73 50.8)
-		(uuid "29f9be56-248a-4d07-a991-9c3d12448829")
+		(uuid "7218e32a-3f9d-4d10-a24c-1aaca9e275c5")
 	)
 	(no_connect
 		(at 125.73 55.88)
-		(uuid "81b9bf9c-3bac-4119-8201-51ef8717f311")
+		(uuid "25526c12-0e14-4b3e-99f9-d5a78c7be525")
 	)
 	(no_connect
 		(at 125.73 60.96)
-		(uuid "ae45f45e-7c4a-4b4e-9d42-7f5c9d0e99a6")
+		(uuid "4cf0512f-aee3-4bfc-bfa6-57471332ed77")
 	)
 	(no_connect
 		(at 125.73 66.04)
-		(uuid "c2b3ba90-285d-4ead-8936-aa248f3974bc")
+		(uuid "f34c7708-cf4e-4c72-833d-3ce7c3dc38b1")
 	)
 	(no_connect
 		(at 125.73 71.12)
-		(uuid "75f071e7-ed3b-4afd-930b-be4331287f28")
+		(uuid "8723dcd8-478b-4b3c-8969-3df687e39a8a")
 	)
 	(no_connect
 		(at 125.73 76.2)
-		(uuid "f5042cda-2f46-45af-8647-7dbe63e8e52b")
+		(uuid "2634ce8f-e626-4ca6-8c5d-e3d8254fc194")
 	)
 	(no_connect
 		(at 12.7 154.94)
-		(uuid "822e6a64-6411-439a-a459-90d5dcdc3d37")
+		(uuid "a22fc10d-cc39-4458-96d7-c855f88217c0")
 	)
 	(no_connect
 		(at 12.7 157.48)
-		(uuid "2aa54c12-0b29-47dc-8deb-4c884b2e11fd")
+		(uuid "10161f41-fde3-460c-bf0d-27d2b0bd1a43")
 	)
 	(no_connect
 		(at 12.7 160.02)
-		(uuid "457445bd-d725-4810-9137-0497d3efbc41")
+		(uuid "b90d775f-c193-40b2-ada7-4433d0f1c186")
 	)
 	(no_connect
 		(at 33.02 154.94)
-		(uuid "9ffbb7c3-c0ef-4e05-9cb3-8083acb6d615")
+		(uuid "92ce1223-9cb4-4f8c-86fc-2d6a8f9e5b4e")
 	)
 	(no_connect
 		(at 33.02 157.48)
-		(uuid "c7bc5214-a849-46c6-99fd-f9927eb1ecef")
+		(uuid "35afa69a-5f96-488f-8233-ee82e424682c")
 	)
 	(no_connect
 		(at 33.02 160.02)
-		(uuid "9231b9e2-c7e5-4980-888f-e9f8cd2aef91")
+		(uuid "c78a744e-6cf9-4fe4-8e77-89e681330124")
 	)
 	(sheet_instances
 		(path "/"

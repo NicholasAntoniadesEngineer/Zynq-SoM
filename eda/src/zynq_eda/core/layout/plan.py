@@ -2628,10 +2628,43 @@ def _emit_cluster_pins(
         # far-end label/symbol. Each unique destination gets ONE label
         # (the trunk + drops connect all slots to it electrically).
         emitted_destinations_for_pin: set[str] = set()
-        # Track first slot's cap.far per destination so subsequent
-        # slots can wire to it (closes ERC pin_not_connected).
-        first_cap_far_by_dest_for_pin: dict[str, Point] = {}
         multi_slot_widen = len(part_tokens_for_pin) > 1
+
+        # Pre-compute every slot's cap.far so the shared terminator for
+        # a destination can be anchored at the OUTERMOST slot (the one
+        # whose far pin is furthest from the IC pin). A non-power LABEL
+        # renders its text OUTBOARD; anchoring it at the outermost slot
+        # makes that text extend into clear page interior instead of
+        # covering the inner slots — which is exactly what blocks the
+        # inner slots' share-wire AND their dup-label (the floating-pin
+        # ERC class on the ethernet Bob-Smith network). Inner slots then
+        # connect to the anchor with a clean wire whose path lies INBOARD
+        # of the label anchor, clear of the text. Power-symbol
+        # destinations keep the innermost (first) anchor: the symbol is
+        # small with no long text, and re-anchoring it would perturb the
+        # already-clean GND clusters.
+        slot_far_by_idx: list[Point] = []
+        for _si in range(len(part_tokens_for_pin)):
+            _sp = _cluster_slot_position(
+                pin_pos, spec.page_side, _si,
+                dense_swarm=dense_swarm,
+                multi_slot_widen=multi_slot_widen,
+            )
+            _, _cf = _cluster_passive_near_far(_sp, spec.page_side)
+            slot_far_by_idx.append(_cf)
+
+        def _far_dist_sq(i: int, _pin=pin_pos, _fars=slot_far_by_idx) -> float:
+            d = _fars[i]
+            return (d.x - _pin.x) ** 2 + (d.y - _pin.y) ** 2
+
+        anchor_idx_by_dest: dict[str, int] = {}
+        for _si, _dnet in enumerate(spec.cluster_destinations):
+            _is_power = _power_symbol_for_destination(_dnet) is not None
+            _cur = anchor_idx_by_dest.get(_dnet)
+            if _cur is None:
+                anchor_idx_by_dest[_dnet] = _si
+            elif not _is_power and _far_dist_sq(_si) > _far_dist_sq(_cur):
+                anchor_idx_by_dest[_dnet] = _si
         for slot_idx, part_token in enumerate(part_tokens_for_pin):
             slot_pos = _cluster_slot_position(
                 pin_pos, spec.page_side, slot_idx,
@@ -2692,21 +2725,26 @@ def _emit_cluster_pins(
             # are excluded — KiCad's strict wire×label rule
             # (perpendicular offset only) blocks wires ending at label
             # anchors.
-            if destination_net in emitted_destinations_for_pin:
-                # Sub-slot sharing a destination with an earlier slot.
-                # Connect this slot's cap.far to the earlier slot's
-                # cap.far with a VISIBLE wire so the pin isn't floating.
-                # The router finds a clean multi-bend path around any
-                # bodies; if none exists, emit a VISIBLE duplicate label
-                # naming the net (KiCad merges same-name labels). NEVER
-                # hide text — if neither a wire nor a visible label
+            anchor_idx = anchor_idx_by_dest.get(destination_net)
+            if slot_idx != anchor_idx:
+                # Sub-slot: the destination's shared terminator lives at
+                # the ANCHOR slot's cap.far. Connect this slot's cap.far
+                # to the anchor cap.far with a VISIBLE wire so the pin
+                # isn't floating. The wire path lies inboard of the
+                # anchor label's outboard-pointing text, so it stays
+                # clear. If no clean wire fits, emit a VISIBLE duplicate
+                # label naming the net (KiCad merges same-name labels).
+                # NEVER hide text — if neither a wire nor a visible label
                 # fits, leave the pin floating so ERC surfaces it for a
                 # routing/placement fix.
-                first_cap_far = first_cap_far_by_dest_for_pin.get(destination_net)
+                anchor_far = (
+                    slot_far_by_idx[anchor_idx]
+                    if anchor_idx is not None else None
+                )
                 wired = False
-                if first_cap_far is not None and first_cap_far != cap_far:
+                if anchor_far is not None and anchor_far != cap_far:
                     wired = _try_emit_cluster_share_wire(
-                        plan, cap_far, first_cap_far, spec.page_side,
+                        plan, cap_far, anchor_far, spec.page_side,
                     )
                 if not wired:
                     from zynq_eda.core.model.sheet import PlacedLabel
@@ -2727,7 +2765,6 @@ def _emit_cluster_pins(
                         _add_label_with_bbox(plan, dup_label)
                 continue
             emitted_destinations_for_pin.add(destination_net)
-            first_cap_far_by_dest_for_pin[destination_net] = cap_far
             power_lib_id = _power_symbol_for_destination(destination_net)
             if power_lib_id is not None:
                 # Place the power symbol AT cap.far. KiCad merges its
@@ -2751,11 +2788,9 @@ def _emit_cluster_pins(
                 # Local label at cap.far naming the destination net.
                 # Set-dedup: multiple slots on the same pin going to the
                 # same non-power destination share a single label.
-                from zynq_eda.core.model.sheet import PlacedLabel
-                label_rot = {
-                    "left": 180.0, "right": 0.0,
-                    "top": 90.0, "bottom": 270.0,
-                }[spec.page_side]
+                # The label is anchored at the OUTERMOST slot (see the
+                # anchor-selection pre-pass) and its text rotation is
+                # chosen to clear the dense stacked-cluster neighbourhood.
                 existing_keys = {
                     (lab.net_name,
                      round(lab.position.x, 3),
@@ -2768,17 +2803,8 @@ def _emit_cluster_pins(
                     round(cap_far.y, 3),
                 )
                 if key not in existing_keys:
-                    lbl = PlacedLabel(
-                        net_name=destination_net,
-                        position=cap_far,
-                        rotation=label_rot,
-                    )
-                    _add_label_with_candidate_ladder(plan, lbl)
-                    # Already tracked above for power destinations;
-                    # also record for the label branch so subsequent
-                    # slots can share via Z-bend (if path is clear).
-                    first_cap_far_by_dest_for_pin.setdefault(
-                        destination_net, cap_far,
+                    _add_cluster_far_label_rotated(
+                        plan, destination_net, cap_far, spec.page_side,
                     )
 
 
@@ -3635,6 +3661,238 @@ def _add_label_with_bbox(plan: LayoutPlan, label: PlacedLabel) -> None:
     plan.occupancy.add(_label_bbox(label))
 
 
+def _add_cluster_far_label_rotated(
+    plan: LayoutPlan,
+    net_name: str,
+    cap_far: Point,
+    page_side: PageSide,
+    *,
+    record: bool = True,
+) -> None:
+    """Place a cluster's shared destination label AT ``cap_far`` (the cap's
+    far pin) choosing the first text ROTATION whose bbox is clear.
+
+    The label sits exactly on the cap's far pin, so it stays electrically
+    connected no matter which way the text points — rotating it only moves
+    where the TEXT renders, never the connection. We therefore keep the
+    anchor fixed (position shifts would detach the label from the pin and
+    silently break the net) and steer only the text direction.
+
+    Candidate order:
+      1. OUTBOARD — the conventional look. Keeps every already-clean
+         cluster label byte-identical to before this change.
+      2. the two PERPENDICULAR directions — into the band above/below the
+         far-pin row, which is clear in the dense stacked-cluster case
+         (e.g. ethernet's Bob-Smith network, where the outboard text would
+         otherwise cross an adjacent pair's drop wire).
+      3. INBOARD — last resort.
+    Falls back to OUTBOARD if none is clear, so the pin is still named and
+    visible and any residual overlap surfaces honestly in validation.
+    """
+    from zynq_eda.core.model.sheet import PlacedLabel
+
+    if record:
+        if not hasattr(plan, "_cluster_far_labels"):
+            plan._cluster_far_labels = []  # type: ignore[attr-defined]
+        plan._cluster_far_labels.append(  # type: ignore[attr-defined]
+            (net_name, cap_far, page_side)
+        )
+
+    rot = _clean_far_label_rotation(plan, net_name, cap_far, page_side)
+    if rot is None:
+        rot = {
+            "left": 180.0, "right": 0.0, "top": 90.0, "bottom": 270.0,
+        }[page_side]
+    _add_label_with_bbox(
+        plan,
+        PlacedLabel(net_name=net_name, position=cap_far, rotation=rot),
+    )
+
+
+def _clean_far_label_rotation(
+    plan: LayoutPlan,
+    net_name: str,
+    cap_far: Point,
+    page_side: PageSide,
+) -> float | None:
+    """Return the first text ROTATION whose label bbox AT ``cap_far`` is
+    clear of occupancy (same-net labels exempt), or None if every
+    direction collides.
+
+    Order: OUTBOARD (conventional look — keeps already-clean labels
+    unchanged), then the two PERPENDICULAR directions (into the band
+    above/below the far-pin row), then INBOARD.
+    """
+    from zynq_eda.core.layout._builder import _label_bbox
+    from zynq_eda.core.layout._constants import OVERLAP_NOISE_FLOOR_MM
+    from zynq_eda.core.model.sheet import PlacedLabel
+
+    outboard = {
+        "left": 180.0, "right": 0.0, "top": 90.0, "bottom": 270.0,
+    }[page_side]
+    if page_side in ("left", "right"):
+        inboard = 0.0 if outboard == 180.0 else 180.0
+        cand_rots = (outboard, 90.0, 270.0, inboard)
+    else:
+        inboard = 270.0 if outboard == 90.0 else 90.0
+        cand_rots = (outboard, 0.0, 180.0, inboard)
+
+    same_net_owner_ids = frozenset(
+        f"label:{lab.net_name}@{lab.position.x:.1f},{lab.position.y:.1f}"
+        for lab in plan.labels
+        if lab.net_name == net_name
+    )
+
+    def _clean(lbl: PlacedLabel) -> bool:
+        bbox = _label_bbox(lbl)
+        for h in plan.occupancy.collides(
+            bbox,
+            ignore_owners=same_net_owner_ids,
+            ignore_kinds=frozenset({"junction", "no_connect"}),
+        ):
+            inter = bbox.intersection(h)
+            if inter is None:
+                continue
+            if (inter.width >= OVERLAP_NOISE_FLOOR_MM
+                    and inter.height >= OVERLAP_NOISE_FLOOR_MM):
+                return False
+        return True
+
+    for rot in cand_rots:
+        if _clean(PlacedLabel(
+                net_name=net_name, position=cap_far, rotation=rot)):
+            return rot
+    return None
+
+
+def _emit_cluster_far_label_routed_out(
+    plan: LayoutPlan,
+    net_name: str,
+    cap_far: Point,
+    page_side: PageSide,
+) -> bool:
+    """Boxed-in fallback: when NO text rotation fits the shared cluster
+    label at ``cap_far`` (every direction blocked by the dense comb),
+    ROUTE the net out of the congested region to a clear interior point
+    and place the label there.
+
+    A clean orthogonal wire (the full obstacle-avoiding router) carries
+    the connection from the cap far pin to the label, so the pin is driven
+    and everything stays visible — no hiding, no overlap. Returns True iff
+    a clear, routable label spot was found and emitted.
+
+    Targets are scanned nearest-first: climb perpendicular OUT of the
+    row (into the clear band above the far-pin row) and march OUTBOARD
+    into the page interior, keeping the carrier wire short.
+    """
+    from zynq_eda.core.layout._builder import _label_bbox
+    from zynq_eda.core.layout._constants import (
+        INTERIOR_MARGIN_MM, KICAD_GRID_MM, OVERLAP_NOISE_FLOOR_MM,
+    )
+    from zynq_eda.core.model.grid import snap_to_grid
+    from zynq_eda.core.model.sheet import PlacedLabel
+
+    if page_side not in ("left", "right"):
+        return False
+    out_sign = -1 if page_side == "left" else 1
+    outboard_rot = 180.0 if out_sign < 0 else 0.0
+
+    same_net_owner_ids = frozenset(
+        f"label:{lab.net_name}@{lab.position.x:.1f},{lab.position.y:.1f}"
+        for lab in plan.labels
+        if lab.net_name == net_name
+    )
+
+    def _label_clean(lbl: PlacedLabel) -> bool:
+        bbox = _label_bbox(lbl)
+        for h in plan.occupancy.collides(
+            bbox, ignore_owners=same_net_owner_ids,
+            ignore_kinds=frozenset({"junction", "no_connect"}),
+        ):
+            inter = bbox.intersection(h)
+            if (inter is not None
+                    and inter.width >= OVERLAP_NOISE_FLOOR_MM
+                    and inter.height >= OVERLAP_NOISE_FLOOR_MM):
+                return False
+        return True
+
+    for up in range(0, 9):              # perpendicular steps up out of the row
+        ty = snap_to_grid(cap_far.y - up * KICAD_GRID_MM)
+        for ox in range(2, 28):         # outboard steps into the interior
+            tx = snap_to_grid(cap_far.x + out_sign * ox * KICAD_GRID_MM)
+            if out_sign < 0 and tx <= INTERIOR_MARGIN_MM:
+                break
+            target = Point(tx, ty)
+            lbl = PlacedLabel(
+                net_name=net_name, position=target, rotation=outboard_rot,
+            )
+            if not _label_clean(lbl):
+                continue
+            if _route_pin_to_target(
+                plan, cap_far, target, avoid_owners=frozenset(),
+            ):
+                # Route committed; the label sits at its far end, text
+                # reading further outboard into clear space.
+                _add_label_with_bbox(plan, lbl)
+                return True
+    return False
+
+
+def _refine_cluster_far_label_rotations(plan: LayoutPlan, geometry) -> None:
+    """Post-route pass: finalise each cluster far label now that trunk +
+    drop wires are present in occupancy.
+
+    The far labels are placed in Phase 6 (``_emit_cluster_pins``), BEFORE
+    the cluster drop wires are routed in Phase 7. An outboard rotation
+    that probed clear in Phase 6 can end up crossing an adjacent stacked
+    pair's drop wire (the ethernet Bob-Smith case: pair-2's outboard
+    ``BS_COMMON`` text runs straight through pair-0's drop, which only
+    exists after routing). With every wire now in occupancy we, per label:
+
+      1. re-pick a clear text ROTATION at the cap far pin (anchor fixed,
+         so connectivity is preserved); else
+      2. ROUTE the net out to a clear interior point and label there; else
+      3. last resort — place it outboard so the pin is named and visible
+         and any residual overlap surfaces honestly in validation.
+    """
+    from zynq_eda.core.model.sheet import PlacedLabel
+
+    records = list(getattr(plan, "_cluster_far_labels", ()))
+    for net_name, cap_far, page_side in records:
+        owner_id = f"label:{net_name}@{cap_far.x:.1f},{cap_far.y:.1f}"
+        idx = next(
+            (i for i, lab in enumerate(plan.labels)
+             if lab.net_name == net_name
+             and abs(lab.position.x - cap_far.x) < 1e-3
+             and abs(lab.position.y - cap_far.y) < 1e-3),
+            None,
+        )
+        if idx is None:
+            continue
+        plan.labels.pop(idx)
+        plan.occupancy.remove_by_owner(owner_id)
+
+        rot = _clean_far_label_rotation(plan, net_name, cap_far, page_side)
+        if rot is not None:
+            _add_label_with_bbox(
+                plan,
+                PlacedLabel(
+                    net_name=net_name, position=cap_far, rotation=rot),
+            )
+            continue
+        if _emit_cluster_far_label_routed_out(
+                plan, net_name, cap_far, page_side):
+            continue
+        outboard = {
+            "left": 180.0, "right": 0.0, "top": 90.0, "bottom": 270.0,
+        }[page_side]
+        _add_label_with_bbox(
+            plan,
+            PlacedLabel(
+                net_name=net_name, position=cap_far, rotation=outboard),
+        )
+
+
 def _add_label_with_candidate_ladder(
     plan: LayoutPlan, label: PlacedLabel,
 ) -> PlacedLabel:
@@ -4091,6 +4349,11 @@ def plan_block(block: Block, geometry) -> LayoutPlan:
 
     # Phase 7 — wires (currently: GND routes; cluster routes deferred)
     plan_routes(plan, block, geometry)
+
+    # Post-routing pass: re-rotate cluster far labels (placed in Phase 6)
+    # whose outboard text now crosses a drop wire routed in Phase 7, or
+    # route boxed-in labels out to clear interior space.
+    _refine_cluster_far_label_rotations(plan, geometry)
 
     # Post-routing pass with consider_wires=True: with wires now in
     # occupancy, re-pick any Value shifts that conflict with wires.
