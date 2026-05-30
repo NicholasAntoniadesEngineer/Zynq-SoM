@@ -3161,6 +3161,18 @@ def _emit_pwr_flags(
                     snap_to_grid(flag_x + x_step_sign * step * KICAD_GRID_MM),
                     snap_to_grid(anchor.position.y + y_step * KICAD_GRID_MM),
                 ))
+        # Anchor-X column, offset in Y: when the outboard default would put
+        # the flag's (long) value text off the page margin — e.g. a
+        # CHASSIS_GND flag next to a left-edge anchor whose text points
+        # inboard — placing the flag at the anchor's OWN x (text then sits
+        # over the in-bounds page interior) and connecting with a VERTICAL
+        # wire avoids both the off-margin overflow and crossing the anchor's
+        # horizontal text. Tried after the short-wire options, before fallback.
+        for y_step in (2, -2, 3, -3, 4, -4, 5, -5, 6, -6):
+            candidates.append(Point(
+                anchor.position.x,
+                snap_to_grid(anchor.position.y + y_step * KICAD_GRID_MM),
+            ))
 
         chosen_pos: Point | None = None
         pwr_index_preview = next_ref_counters.get("FLG", 100)
@@ -4678,6 +4690,14 @@ def plan_block(block: Block, geometry) -> LayoutPlan:
     # Tap the trunk with the rail's power symbol (visible, on a short
     # stub in clear lane space) so the net is named and driven.
     _emit_power_rail_taps(plan, block, geometry, next_ref_counters)
+
+    # Final cluster text-shift refinement: re-pick Value/Reference shifts
+    # against the COMPLETE wire/label set (including own-net labels, PWR
+    # flags, GND stamp and rail taps emitted above), so cap text that those
+    # late wires now cross is moved clear. The earlier refinements ran
+    # before those passes existed.
+    _refine_cluster_reference_shifts(plan, geometry, consider_wires=True)
+    _refine_cluster_value_shifts(plan, geometry, consider_wires=True)
 
     # Final pass — rigidly centre all content within the page margins.
     # Overlap-invariant (uniform translate); fixes edge-cramming / empty
