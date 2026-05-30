@@ -45,23 +45,41 @@ FMC_LPC_REFCIRCUIT = ReferenceCircuit(
         # pins (the generated bank symbol exposes mechanical designators
         # C/D/G/H, not logical rail names). These live on the
         # FMC_LPC_PWR_CLK_JTAG bank (J4C); the SoM J1/J2/J3 banks carry no
-        # C/D designators, so each part lands exactly once.
-        #
-        # DEFERRED — per-power-pin bulk/HF decoupling (VITA 57.1 Sec 5.3).
-        # The verified designator→rail mapping (confirmed against
-        # connector_banks.py + fmc_lpc_power_clk_jtag.py) is:
-        #     +3V3 (100n each): C39, D36, D38, D40   ; bulk 10u: C39
-        #     VADJ (100n each): C36, C38, C40, D35, D37, D39 ; bulk 10u: C36
-        #     +12V (100n each): C35, C37
-        # These 14 caps are NOT emitted yet: J4C's 12 power pins are
-        # immediately adjacent on the bank, and clustering a cap on each —
-        # alongside the per-pin rail label and the pin-number text — does
-        # not fit cleanly on the dense bank (overprints/crossing wires).
-        # Re-enabling needs either (a) a +VADJ power symbol (KiCad ships
-        # +12V/+3V3 but not +VADJ) so the rail identity is compact, or
-        # (b) a labeled decoupling-cap-array placement (caps in open space,
-        # tied to rails by net label) instead of cluster-on-pin. The
-        # management-I2C + PRSNT pull-ups below DO place (3 signal pins).
+        # C/D designators, so each part lands exactly once. The J4C
+        # ConnectorInstance sets decoupling_array=True, so these are drawn
+        # as a labelled cap bank in open space (not clustered on the dense
+        # adjacent power pins). Per-power-pin 100nF + per-rail 10u bulk
+        # (VITA 57.1 Sec 5.3); designators verified vs connector_banks.py +
+        # fmc_lpc_power_clk_jtag.py pin_to_net.
+        *(
+            ExternalPart(
+                from_pin=p, to_net="GND", part_token="100n_0402_X7R",
+                justification="VITA 57.1 Sec 5.3: 100nF per +3V3 carrier-side pin",
+            )
+            for p in ("C39", "D36", "D38", "D40")
+        ),
+        *(
+            ExternalPart(
+                from_pin=p, to_net="GND", part_token="100n_0402_X7R",
+                justification="VITA 57.1 Sec 5.3: 100nF per VADJ carrier-side pin",
+            )
+            for p in ("C36", "C38", "C40", "D35", "D37", "D39")
+        ),
+        *(
+            ExternalPart(
+                from_pin=p, to_net="GND", part_token="100n_0402_X7R",
+                justification="VITA 57.1 Sec 5.3: 100nF per +12V carrier-side pin",
+            )
+            for p in ("C35", "C37")
+        ),
+        ExternalPart(
+            from_pin="C39", to_net="GND", part_token="10u_0603_X7R",
+            justification="VITA 57.1 Sec 5.3: bulk decoupling for +3V3 at FMC connector",
+        ),
+        ExternalPart(
+            from_pin="C36", to_net="GND", part_token="10u_0603_X7R",
+            justification="VITA 57.1 Sec 5.3: bulk decoupling for VADJ at FMC connector",
+        ),
         #
         # Management I2C pull-ups. VITA 57.1 LPC pins C30 (SCL) and C31 (SDA)
         # are 3.3V open-drain — the carrier owns the pull-ups.

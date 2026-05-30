@@ -218,6 +218,22 @@ def test_input_pwr_flag_nets_power_block_outputs_no_driver_match():
     assert "+3V3" not in flags
 
 
+def test_input_pwr_flag_nets_rule_b_undriven_power_input():
+    """Rule B: a local (hier-label) rail consumed by an IC power-INPUT pin
+    but with no connector source / power-output driver gets a PWR_FLAG so
+    KiCad's ``power_pin_not_driven`` doesn't fire. Needs geometry (the rule
+    reads symbol pin TYPES). +3V3 stays exempt — it's a global power
+    symbol driven by a flag elsewhere."""
+    blocks, geometry = _carrier_blocks_and_geometry()
+    # power: the three LDO IN pins consume +VIN (not connector-sourced).
+    power_flags = _input_pwr_flag_nets(blocks["power"], geometry)
+    assert "+VIN" in power_flags
+    assert "+3V3" not in power_flags  # power-symbol rail, driven elsewhere
+    # hdmi_rx: TPD VCCB sits on the cable-side 5V-sense hier-label.
+    rx_flags = _input_pwr_flag_nets(blocks["hdmi_rx"], geometry)
+    assert "ZYNQ_HDMI_RX_5V_SENSE" in rx_flags
+
+
 # ---------------------------------------------------------------------------
 # plan_lane_widths integration
 # ---------------------------------------------------------------------------
@@ -244,9 +260,12 @@ def test_plan_lane_widths_one_lane_per_nonzero_pin():
         nc_pwr_count = sum(
             1 for s in specs if s.role in ("NC", "POWER_SYMBOL")
         )
-        # PWR_FLAG lanes count matches the input-net selector.
+        # PWR_FLAG lanes count matches the input-net selector. The
+        # selector is geometry-aware (Rule B flags undriven power-input
+        # pins on local hier-label nets), so pass the same geometry the
+        # lane builder used.
         pwr_flag_lanes = [l for l in lanes if l.lane_kind == "pwr_flag"]
-        assert len(pwr_flag_lanes) == len(_input_pwr_flag_nets(block))
+        assert len(pwr_flag_lanes) == len(_input_pwr_flag_nets(block, geometry))
 
         # Sanity: lane widths are non-negative.
         for lane in lanes:

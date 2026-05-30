@@ -43,6 +43,10 @@ def build_fmc_lpc_power_clk_jtag() -> Block:
                 lib_id="FMC_LPC_PWR_CLK_JTAG:FMC_LPC_PWR_CLK_JTAG",
                 edge=SheetEdge.RIGHT,
                 pin_to_net=_fmc_lpc_pwr_clk_jtag_pin_to_net(),
+                # The FMC power/I2C/PRSNT decoupling lives on this bank's
+                # dense adjacent designator pins — draw it as a labelled cap
+                # bank in open space rather than clustered on the pins.
+                decoupling_array=True,
             ),
         ),
         external_nets=tuple(_fmc_pwr_clk_jtag_external_nets()),

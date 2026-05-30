@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "14b8029c-8d16-4843-9c2a-262bcf951a95")
+	(uuid "a6b616b9-5b59-4513-aba4-ea23ae3c5e28")
 	(paper "A3")
 	(title_block
 		(title "Boot Mode Straps + PS Reset (DIP-4 + Tactile)")
@@ -762,16 +762,16 @@
 	)
 	(symbol
 		(lib_id "zynq_eda:SW_DIP_4")
-		(at 113.03 30.48 0)
+		(at 132.08 149.86 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "975da811-086f-4a78-9e84-0943950a5f3e")
+		(uuid "8097fe9c-336d-4b3e-9541-7e10766ba5ca")
 		(property "Reference" "SW1"
-			(at 113.03 40.64 0.0000)
+			(at 132.08 160.02 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -780,7 +780,7 @@
 			)
 		)
 		(property "Value" "DS-04P"
-			(at 113.03 22.86 0.0000)
+			(at 132.08 165.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -789,7 +789,7 @@
 			)
 		)
 		(property "Footprint" "Switch_SMD:DIP_Switch_x4"
-			(at 113.03 30.48 0.0000)
+			(at 132.08 149.86 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -798,7 +798,7 @@
 			)
 		)
 		(property "LCSC" "C18198092"
-			(at 115.57 35.5599 0)
+			(at 134.62 154.9399 0)
 			(effects
 				(hide yes)
 				(font
@@ -808,7 +808,7 @@
 			)
 		)
 		(property "Datasheet" "https://datasheet.lcsc.com/lcsc/Hanbo-Electronic-DS-04P_C18198092.pdf"
-			(at 113.03 30.48 0)
+			(at 132.08 149.86 0)
 			(effects
 				(hide yes)
 				(font
@@ -818,20 +818,20 @@
 			)
 		)
 		(pin "1"
-			(uuid "b7ca72b3-2528-4bf5-b62e-5082ed0c73cd")
+			(uuid "8d11fc82-9efe-4de1-85f0-c6d16b7a127c")
 		)
 		(pin "2"
-			(uuid "b11cd443-6497-4cc8-999f-c4fdc9e46bed")
+			(uuid "5a3ce853-0999-4a01-bb8f-26231e4100bf")
 		)
 		(pin "3"
-			(uuid "149d4548-75fc-426e-9c6d-b5683d09c120")
+			(uuid "c5d9d7c8-2ed1-4f34-bb2c-f8cff5d83405")
 		)
 		(pin "4"
-			(uuid "4a0cc794-ffc6-4ad5-85f3-0aec9af977f2")
+			(uuid "35d65aed-ebc0-42f1-a91a-e064ec58ed8c")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "SW1")
 					(unit 1)
 				)
@@ -840,16 +840,16 @@
 	)
 	(symbol
 		(lib_id "zynq_eda:SW_TACT")
-		(at 321.31 40.64 0)
+		(at 336.55 160.02 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "4cc5ee4d-328c-4ec0-bd2b-f6b075dd4289")
+		(uuid "77716b27-5f3a-4b33-ab31-b171df35def8")
 		(property "Reference" "SW2"
-			(at 321.31 45.72 0.0000)
+			(at 336.55 165.1 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -858,7 +858,7 @@
 			)
 		)
 		(property "Value" "TS-1002S-06026C"
-			(at 321.31 35.56 0.0000)
+			(at 336.55 170.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -867,7 +867,7 @@
 			)
 		)
 		(property "Footprint" "Button_Switch_SMD:SW_SPST_Tactile_6x6mm"
-			(at 321.31 40.64 0.0000)
+			(at 336.55 160.02 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -876,7 +876,7 @@
 			)
 		)
 		(property "LCSC" "C455112"
-			(at 323.85 45.7199 0)
+			(at 339.09 165.0999 0)
 			(effects
 				(hide yes)
 				(font
@@ -886,7 +886,7 @@
 			)
 		)
 		(property "Datasheet" "https://datasheet.lcsc.com/lcsc/XUNPU-TS-1002S-06026C_C455112.pdf"
-			(at 321.31 40.64 0)
+			(at 336.55 160.02 0)
 			(effects
 				(hide yes)
 				(font
@@ -896,14 +896,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "0ef1b688-c56f-4c32-b40c-ac59e713cf48")
+			(uuid "60975192-b953-4088-9719-fe07c67c73b8")
 		)
 		(pin "2"
-			(uuid "21800a7f-2a72-4ac5-b342-44d6f4689a8f")
+			(uuid "7a673bde-b801-4af8-81ab-382edc34ea3c")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "SW2")
 					(unit 1)
 				)
@@ -912,16 +912,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 57.15 15.24 0)
+		(at 76.2 134.62 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "136f437a-32bc-4066-9c9f-0c7a47d5b194")
+		(uuid "ee908f13-52c1-498e-9c13-e54290042bd5")
 		(property "Reference" "R100"
-			(at 57.15 25.4 0)
+			(at 83.312 134.62 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -930,7 +930,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 52.578 15.24 90)
+			(at 69.088 134.62 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -939,7 +939,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 55.372 15.24 90)
+			(at 74.422 134.62 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -948,14 +948,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "f94ef263-8d7b-416b-8f7c-fb93377c5d71")
+			(uuid "fd138718-256d-4549-90d0-ddf76270bb40")
 		)
 		(pin "2"
-			(uuid "d07b0fae-1097-4d27-9151-d3154559ed05")
+			(uuid "4ddc0bca-3475-457e-a2eb-14153e6b9b18")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "R100")
 					(unit 1)
 				)
@@ -964,16 +964,16 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 57.15 11.43 0)
+		(at 76.2 130.81 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "102cb263-df9b-437f-8f69-a4bd5c4996dc")
+		(uuid "117865e9-c629-4b76-9519-2b8a68c93c04")
 		(property "Reference" "#PWR300"
-			(at 57.15 7.62 0.0000)
+			(at 76.2 127 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -983,7 +983,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 57.15 6.35 0)
+			(at 76.2 125.73 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -991,7 +991,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 57.15 11.43 0.0000)
+			(at 76.2 130.81 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1000,11 +1000,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "99045a7d-bbfa-4e0d-a26f-7f8b47320d2f")
+			(uuid "f06a62e0-a6bb-4356-a092-5c842764e96b")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "#PWR300")
 					(unit 1)
 				)
@@ -1013,16 +1013,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 87.63 20.32 0)
+		(at 106.68 139.7 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d4be5281-51c3-4f40-9f31-5ef0668be03b")
+		(uuid "6a4ff9cc-e156-49c8-81be-a8d7edbdea8a")
 		(property "Reference" "R101"
-			(at 94.742 20.32 90)
+			(at 113.792 139.7 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1031,7 +1031,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 83.058 20.32 90)
+			(at 99.568 139.7 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1040,7 +1040,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 85.852 20.32 90)
+			(at 104.902 139.7 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1049,14 +1049,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "6c440eb3-b916-4fd5-94f1-f82aadaae638")
+			(uuid "829b03f7-bb78-4d98-90fd-ac655898eff9")
 		)
 		(pin "2"
-			(uuid "1d0ea5f5-23b8-4b14-864e-53bee60dce47")
+			(uuid "a8c8865e-a8f6-451d-81b7-16fe7d8a50b1")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "R101")
 					(unit 1)
 				)
@@ -1065,16 +1065,16 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 87.63 16.51 0)
+		(at 106.68 135.89 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "48c085d6-eb83-47bf-9e13-d68bd1b87b0f")
+		(uuid "dcb8c843-e2da-42e6-b1f4-a6aea76b48b5")
 		(property "Reference" "#PWR301"
-			(at 87.63 12.7 0.0000)
+			(at 106.68 132.08 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1084,7 +1084,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 87.63 11.43 0)
+			(at 106.68 130.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1092,7 +1092,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 87.63 16.51 0.0000)
+			(at 106.68 135.89 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1101,11 +1101,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "93503676-8238-410d-9932-54a9f97d24fa")
+			(uuid "988a6d91-0c4f-4d20-b854-6a8a0355551f")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "#PWR301")
 					(unit 1)
 				)
@@ -1114,16 +1114,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 67.31 25.4 0)
+		(at 86.36 144.78 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "01d60910-2282-43c8-9af2-488fde2772b1")
+		(uuid "44f0144c-17de-4186-8629-f86e0d48c0bd")
 		(property "Reference" "R102"
-			(at 74.422 25.4 90)
+			(at 93.472 144.78 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1132,7 +1132,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 62.738 25.4 90)
+			(at 79.248 144.78 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1141,7 +1141,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 65.532 25.4 90)
+			(at 84.582 144.78 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1150,14 +1150,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "e224f71a-1652-49e8-b83b-c2540c5d8c34")
+			(uuid "124b8814-5484-4737-9e39-6cadc41731cf")
 		)
 		(pin "2"
-			(uuid "3a2e92df-2ef8-4366-a996-88b7e28ef4fc")
+			(uuid "f00f0ebf-e80c-4da1-b5bd-4834d2edd7e9")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "R102")
 					(unit 1)
 				)
@@ -1166,16 +1166,16 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 67.31 21.59 0)
+		(at 86.36 140.97 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c3688768-3609-4e5d-aa13-a1b1bfb54960")
+		(uuid "e921165f-1e8b-43ee-844c-2f77910a34dd")
 		(property "Reference" "#PWR302"
-			(at 67.31 17.78 0.0000)
+			(at 86.36 137.16 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1185,7 +1185,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 67.31 16.51 0)
+			(at 86.36 135.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1193,7 +1193,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 67.31 21.59 0.0000)
+			(at 86.36 140.97 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1202,11 +1202,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "26ed17fd-9817-4c36-9338-007e88fea61a")
+			(uuid "d728e9e8-7dce-4c63-90a1-033b7ffb4e0d")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "#PWR302")
 					(unit 1)
 				)
@@ -1215,16 +1215,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 46.99 30.48 0)
+		(at 66.04 149.86 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "5ee7da48-81ff-4bff-918f-6cf81a38d660")
+		(uuid "a99767d3-67a3-45b7-9399-487a331ec4cc")
 		(property "Reference" "R103"
-			(at 54.102 30.48 90)
+			(at 73.152 149.86 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1233,7 +1233,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 42.418 30.48 90)
+			(at 58.928 149.86 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1242,7 +1242,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 45.212 30.48 90)
+			(at 64.262 149.86 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1251,14 +1251,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "81280ad1-fc7f-4c99-b9d3-3b743715769b")
+			(uuid "b38af96c-a89d-44ce-a26d-fc6e60ff5d0f")
 		)
 		(pin "2"
-			(uuid "f5a5f13a-c3db-42d0-88a5-e7d9946651b9")
+			(uuid "fab29fe8-9d10-4c71-971a-57ce16f0446d")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "R103")
 					(unit 1)
 				)
@@ -1267,16 +1267,16 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 46.99 26.67 0)
+		(at 66.04 146.05 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "4834c7fa-4cd4-468f-826c-cb79338121cd")
+		(uuid "445bc19c-cf78-41ef-9108-2ac7500fccf1")
 		(property "Reference" "#PWR303"
-			(at 46.99 22.86 0.0000)
+			(at 66.04 142.24 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1286,7 +1286,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 46.99 21.59 0)
+			(at 66.04 140.97 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1294,7 +1294,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 46.99 26.67 0.0000)
+			(at 66.04 146.05 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1303,11 +1303,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "e3e7c199-9ed9-4d78-ae00-7a2e11d1a42c")
+			(uuid "7528c4ef-2fc9-430e-8cc6-fb6100874b85")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "#PWR303")
 					(unit 1)
 				)
@@ -1316,16 +1316,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 285.75 35.56 0)
+		(at 300.99 154.94 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "6ac02041-4568-494d-9111-c461133c49c5")
+		(uuid "b90a26c3-9c2e-46fd-83b1-8e48727954cd")
 		(property "Reference" "R104"
-			(at 292.862 35.56 90)
+			(at 308.102 154.94 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1334,7 +1334,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 283.718 43.18 0)
+			(at 298.958 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1343,7 +1343,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 283.972 35.56 90)
+			(at 299.212 154.94 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1352,14 +1352,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "32af310c-65b0-4d6d-b9ed-0d50c96e7c56")
+			(uuid "72a4a91c-f41b-4131-bfcf-b7d08de6796c")
 		)
 		(pin "2"
-			(uuid "1d9810d1-0fba-4e55-8fbe-557fd2a7f2be")
+			(uuid "12e1693c-203e-4e34-9413-ca0fba297c24")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "R104")
 					(unit 1)
 				)
@@ -1368,16 +1368,16 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 285.75 31.75 0)
+		(at 300.99 151.13 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "1cdb6724-469c-4db7-919a-6ce7446361e9")
+		(uuid "fe5b1c01-441b-4ecc-b855-70a522ad5162")
 		(property "Reference" "#PWR304"
-			(at 285.75 27.94 0.0000)
+			(at 300.99 147.32 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1387,7 +1387,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 285.75 26.67 0)
+			(at 300.99 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1395,7 +1395,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 285.75 31.75 0.0000)
+			(at 300.99 151.13 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1404,11 +1404,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "24b86146-9092-4250-aebb-8a9a41fa79db")
+			(uuid "82d488d0-8fa9-4adf-92d1-7fbfe632d703")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "#PWR304")
 					(unit 1)
 				)
@@ -1417,16 +1417,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 280.67 35.56 0)
+		(at 295.91 154.94 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "7cd5f7bf-295b-4a23-94e1-dedd1fafeaec")
+		(uuid "644250db-dc8d-450e-8583-2cbc7776f6c8")
 		(property "Reference" "C100"
-			(at 281.305 38.1 0.0000)
+			(at 296.545 157.48 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1435,7 +1435,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 273.05 35.56 90)
+			(at 288.29 154.94 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1444,7 +1444,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 281.6352 31.75 0.0000)
+			(at 296.8752 151.13 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1453,14 +1453,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "f769a0a5-38a3-409a-9803-88605630223c")
+			(uuid "f9de6b8f-f021-456e-9a1c-b9a230089f41")
 		)
 		(pin "2"
-			(uuid "e0090b69-67bd-4a75-920a-545d1ecbfbed")
+			(uuid "81809478-a81e-42da-bfca-8a78d6ae80e4")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1469,16 +1469,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 280.67 31.75 180)
+		(at 295.91 151.13 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "acd4656c-5bb7-4dde-bce7-45f4c010eaac")
+		(uuid "763a06b2-57f5-40cf-8c67-ed0b5d018e34")
 		(property "Reference" "#PWR305"
-			(at 280.67 38.1 180)
+			(at 295.91 157.48 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1488,7 +1488,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 280.67 26.67 0)
+			(at 295.91 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1496,7 +1496,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 280.67 31.75 0.0000)
+			(at 295.91 151.13 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1505,11 +1505,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "f11b439e-cc9a-42e9-a5f4-e9388b6e322a")
+			(uuid "f214ec79-b03f-4120-88aa-bb018963a7b6")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "#PWR305")
 					(unit 1)
 				)
@@ -1518,16 +1518,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 356.87 35.56 0)
+		(at 372.11 154.94 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "0478ad51-ba04-4b3a-8216-bdff467ac78f")
+		(uuid "e3bedf92-5de8-4d2a-b87c-11e0568c675b")
 		(property "Reference" "R105"
-			(at 358.902 43.18 0)
+			(at 374.142 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1536,7 +1536,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 352.298 35.56 90)
+			(at 364.998 154.94 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1545,7 +1545,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 355.092 35.56 90)
+			(at 370.332 154.94 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1554,14 +1554,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "53c5d7f4-577b-4606-b71f-d835d45e1f41")
+			(uuid "dac9f760-723a-40e4-86d2-54fb0d772892")
 		)
 		(pin "2"
-			(uuid "94ed7f80-b2ad-4258-8416-c6d2ddf517dc")
+			(uuid "a2e81b85-c588-4782-af6b-fdc0ac1ab594")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "R105")
 					(unit 1)
 				)
@@ -1570,16 +1570,16 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 356.87 31.75 0)
+		(at 372.11 151.13 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "efad6593-f9fd-4c82-8308-d0e71f3f318b")
+		(uuid "c2d4a546-335c-40ae-b14d-b1441d490308")
 		(property "Reference" "#PWR306"
-			(at 356.87 27.94 0.0000)
+			(at 372.11 147.32 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1589,7 +1589,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 356.87 26.67 0)
+			(at 372.11 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1597,7 +1597,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 356.87 31.75 0.0000)
+			(at 372.11 151.13 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1606,11 +1606,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "92065029-f015-4e83-bb63-ecf0b59939fb")
+			(uuid "99a5d5a1-c12c-4444-89c1-538e00babf70")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "#PWR306")
 					(unit 1)
 				)
@@ -1619,16 +1619,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 361.95 35.56 0)
+		(at 377.19 154.94 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c6b2485e-dbce-447b-8040-ac272382dd7b")
+		(uuid "b177a536-886f-448c-bd6f-d15515d19e92")
 		(property "Reference" "C101"
-			(at 362.585 38.1 0.0000)
+			(at 377.825 157.48 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1637,7 +1637,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 369.57 35.56 90)
+			(at 384.81 154.94 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1646,7 +1646,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 362.9152 31.75 0.0000)
+			(at 378.1552 151.13 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1655,14 +1655,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "b53b23f7-c03f-4b69-b24f-674f9fe26583")
+			(uuid "cb17b3c1-d6f6-4eb7-acb2-e24d878e0283")
 		)
 		(pin "2"
-			(uuid "b6778f9f-cad8-4515-9ddb-57bac4cad502")
+			(uuid "3cfd4b30-495f-4607-bf6d-68405a7fe7b3")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1671,16 +1671,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 361.95 31.75 180)
+		(at 377.19 151.13 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "824ca7be-d3f9-4f09-8996-1497f532f7e2")
+		(uuid "e1da4291-7a2f-43cf-abc7-f6b2751d14cf")
 		(property "Reference" "#PWR307"
-			(at 361.95 38.1 180)
+			(at 377.19 157.48 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1690,7 +1690,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 361.95 26.67 0)
+			(at 377.19 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1698,7 +1698,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 361.95 31.75 0.0000)
+			(at 377.19 151.13 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1707,11 +1707,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "ce4a493f-bc42-402e-95bb-5db2dc4a15ba")
+			(uuid "2eed5597-a8cc-4269-9b43-06bfeae96a39")
 		)
 		(instances
 			(project "Boot Mode Straps + PS Reset (DIP-4 + Tactile)"
-				(path "/14b8029c-8d16-4843-9c2a-262bcf951a95"
+				(path "/a6b616b9-5b59-4513-aba4-ea23ae3c5e28"
 					(reference "#PWR307")
 					(unit 1)
 				)
@@ -1720,226 +1720,390 @@
 	)
 	(wire
 		(pts
-			(xy 105.41 20.32) (xy 105.41 22.86)
+			(xy 124.46 139.7) (xy 124.46 142.24)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "77c87f21-77fb-4d44-a718-8235d8279f6f")
+		(uuid "785c6891-9b08-48c4-b264-e6d0bd4925de")
 	)
 	(wire
 		(pts
-			(xy 105.41 22.86) (xy 57.15 22.86)
+			(xy 124.46 142.24) (xy 76.2 142.24)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "4e2a1264-38a5-4cb3-8d86-98ae2b388996")
+		(uuid "b6abdf25-dd87-489e-ae97-c2d511e10e3e")
 	)
 	(wire
 		(pts
-			(xy 57.15 22.86) (xy 57.15 20.32)
+			(xy 76.2 142.24) (xy 76.2 139.7)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "3f7641b2-1473-4463-a474-c5a5c5767367")
+		(uuid "c064e197-17c3-4264-abe3-5bfd08d63642")
 	)
 	(wire
 		(pts
-			(xy 57.15 22.86) (xy 57.15 19.05)
+			(xy 76.2 138.43) (xy 76.2 139.7)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "2872dfbe-8b3e-4ac7-9a1d-f26778df0003")
+		(uuid "bb89e31e-7ffb-46b6-863a-e6d54477d2d8")
 	)
 	(wire
 		(pts
-			(xy 105.41 25.4) (xy 87.63 25.4)
+			(xy 124.46 144.78) (xy 106.68 144.78)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "7ec8b749-c652-4283-99c8-af5ec66fdce0")
+		(uuid "82c0d9e1-06cf-4e14-9689-ef53a68032ca")
 	)
 	(wire
 		(pts
-			(xy 87.63 25.4) (xy 87.63 24.13)
+			(xy 106.68 144.78) (xy 106.68 143.51)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "720c94da-54d7-4c58-b046-066a4205464e")
+		(uuid "a66c5672-0277-4fc7-8b9b-72bb246169b2")
 	)
 	(wire
 		(pts
-			(xy 105.41 30.48) (xy 67.31 30.48)
+			(xy 124.46 149.86) (xy 86.36 149.86)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "65bd0cbc-0a10-444a-9669-91cbaa2dbb84")
+		(uuid "190b7039-f8eb-4d2c-afa3-9f31b2fae3dd")
 	)
 	(wire
 		(pts
-			(xy 67.31 30.48) (xy 67.31 29.21)
+			(xy 86.36 149.86) (xy 86.36 148.59)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "f7ddd2d9-a4d1-41ea-a54b-869e8b988053")
+		(uuid "2649ac94-fca8-4066-aa90-158ff6800670")
 	)
 	(wire
 		(pts
-			(xy 105.41 35.56) (xy 46.99 35.56)
+			(xy 124.46 154.94) (xy 66.04 154.94)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "b6e764c4-2c7c-4b5d-80ce-85560ecc2b11")
+		(uuid "0f36d636-1cc7-4057-a534-e3f445424fa6")
 	)
 	(wire
 		(pts
-			(xy 46.99 35.56) (xy 46.99 34.29)
+			(xy 66.04 154.94) (xy 66.04 153.67)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "61169819-6745-4a90-bf97-473d07ec2249")
+		(uuid "bbf9f7f5-995b-436e-8548-3436b86df5d2")
 	)
 	(wire
 		(pts
-			(xy 313.69 40.64) (xy 280.67 40.64)
+			(xy 328.93 160.02) (xy 295.91 160.02)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "f114411b-bdcf-4509-aeb3-ed135b9bae05")
+		(uuid "e26daac7-9385-49b3-8799-9503505e2d07")
 	)
 	(wire
 		(pts
-			(xy 285.75 40.64) (xy 285.75 39.37)
+			(xy 300.99 160.02) (xy 300.99 158.75)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "cc3873a5-e2ca-4d58-a7d6-057978b40546")
+		(uuid "7fc02e4d-e9ef-4cab-b0b1-e4597ef8a820")
 	)
 	(wire
 		(pts
-			(xy 280.67 40.64) (xy 280.67 39.37)
+			(xy 295.91 160.02) (xy 295.91 158.75)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "6171ddff-051c-4aa6-994c-cd18bf7439c5")
+		(uuid "a347cac9-0f02-4d0e-ae54-e7be98eea6a2")
 	)
 	(wire
 		(pts
-			(xy 328.93 40.64) (xy 361.95 40.64)
+			(xy 344.17 160.02) (xy 377.19 160.02)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "048016f5-e380-4811-998a-b6462a06a4da")
+		(uuid "3d8f7b1d-3b78-4c66-80cd-a06c5e3a98cf")
 	)
 	(wire
 		(pts
-			(xy 356.87 40.64) (xy 356.87 39.37)
+			(xy 372.11 160.02) (xy 372.11 158.75)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "55f02b17-1e2b-4b37-b82d-a30c0320c599")
+		(uuid "41373982-3ad8-461a-a867-a19473da318b")
 	)
 	(wire
 		(pts
-			(xy 361.95 40.64) (xy 361.95 39.37)
+			(xy 377.19 160.02) (xy 377.19 158.75)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "8e0a20d2-f215-4b94-a3b9-eeb58254a06a")
+		(uuid "7539f876-df43-41cf-9ea2-8fa9942faf8c")
 	)
 	(wire
 		(pts
-			(xy 280.67 40.64) (xy 278.13 40.64)
+			(xy 124.46 142.24) (xy 124.46 147.32)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "7351a692-7cb9-4bbb-a7e5-16207134927b")
+		(uuid "4e66705e-c326-46d1-8c24-71bc9e3dd358")
 	)
 	(wire
 		(pts
-			(xy 361.95 40.64) (xy 364.49 40.64)
+			(xy 124.46 147.32) (xy 73.66 147.32)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "49fdab94-d561-4d05-ab24-1cf28ce06696")
+		(uuid "c0e78281-c4c8-4407-9dd6-ac7ac391f3f9")
+	)
+	(wire
+		(pts
+			(xy 73.66 147.32) (xy 73.66 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a641cbf7-9220-40a5-9833-e4b3bf386cd5")
+	)
+	(wire
+		(pts
+			(xy 63.5 147.32) (xy 73.66 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a4919d45-149e-4bec-a6e3-6687719da0c6")
+	)
+	(wire
+		(pts
+			(xy 63.5 147.32) (xy 63.5 144.78)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c8141242-3ea5-406b-b5c1-76673a95daeb")
+	)
+	(wire
+		(pts
+			(xy 124.46 149.86) (xy 124.46 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1a959a03-b1a6-419e-851c-d6e51f63ad75")
+	)
+	(wire
+		(pts
+			(xy 124.46 152.4) (xy 55.88 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "977b7a20-653b-4fde-8470-3e7806ae3ff2")
+	)
+	(wire
+		(pts
+			(xy 55.88 152.4) (xy 55.88 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "67ade2e3-74fe-451a-824a-07948cf82da8")
+	)
+	(wire
+		(pts
+			(xy 63.5 154.94) (xy 66.04 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0931c85b-90c9-4140-9f54-8f1698e0e7f0")
+	)
+	(wire
+		(pts
+			(xy 295.91 160.02) (xy 293.37 160.02)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "86e5071c-9ea4-4549-b329-4a609bf9939e")
+	)
+	(wire
+		(pts
+			(xy 377.19 160.02) (xy 379.73 160.02)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "641a2b27-0d33-4325-b29d-2f3cd68b1e6e")
 	)
 	(junction
-		(at 285.75 40.64)
+		(at 76.2 139.7)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "862c8b71-476b-4f89-9f91-d4eee9f869ad")
+		(uuid "41efee25-1893-4616-8ba2-50553728ce95")
 	)
 	(junction
-		(at 356.87 40.64)
+		(at 300.99 160.02)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "00f422db-a462-4184-90fd-0b9e2998d62b")
+		(uuid "1917e99e-3dfa-447d-8f54-22e739027344")
+	)
+	(junction
+		(at 372.11 160.02)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "8ada42ec-925e-490f-a3b9-88be7a75c929")
+	)
+	(junction
+		(at 124.46 142.24)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "72402302-4067-433a-9f35-7468765f0063")
+	)
+	(junction
+		(at 124.46 144.78)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "698ba348-d607-4005-bd58-5b417e01f53c")
+	)
+	(junction
+		(at 73.66 147.32)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "bc1624fb-2ed7-43d6-a097-00b767c3f160")
+	)
+	(junction
+		(at 66.04 154.94)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "631de8d1-4d3b-410a-98b7-307c910e13a9")
 	)
 	(label "GND"
-		(at 278.13 40.64 180)
+		(at 293.37 160.02 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "771dae2b-7480-4e1b-9156-08a9a22d38d9")
+		(uuid "f760c6b8-996c-40ef-b3e1-4fb15f4b7553")
 	)
 	(label "GND"
-		(at 364.49 40.64 0.0000)
+		(at 379.73 160.02 0.0000)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "4e024407-dbfe-41c8-accc-63b82ccd3683")
+		(uuid "d6340003-ec4e-4f95-b8a0-c8df139c192a")
 	)
-	(hierarchical_label "ZYNQ_PS_SRST_N"
+	(hierarchical_label "ZYNQ_BOOT_MODE_0"
 		(shape input)
-		(at 15.24 40.64 0.0000)
+		(at 73.66 139.7 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "930b4b05-7108-4dab-96eb-a173c11d05e3")
+		(uuid "281a93ee-1df2-4e96-9d4d-d5fff6f27b86")
+	)
+	(hierarchical_label "ZYNQ_BOOT_MODE_1"
+		(shape input)
+		(at 63.5 144.78 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "1b0a4bc2-bff8-47bd-a13c-bb253bf88388")
+	)
+	(hierarchical_label "ZYNQ_BOOT_MODE_2"
+		(shape input)
+		(at 55.88 149.86 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "2f1b4b91-8c1b-4fc5-9331-c8aae06f7d02")
+	)
+	(hierarchical_label "ZYNQ_BOOT_MODE_3"
+		(shape input)
+		(at 63.5 154.94 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "2f6518a0-5532-4afc-8ccf-d5fbc62510f9")
+	)
+	(hierarchical_label "ZYNQ_PS_SRST_N"
+		(shape input)
+		(at 31.75 160.02 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "ba03471f-9f94-42b2-aecc-db0900e88546")
 	)
 	(sheet_instances
 		(path "/"

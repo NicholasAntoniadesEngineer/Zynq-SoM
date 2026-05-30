@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "d01b8ac5-f76a-4e24-b78d-9e2902fb53a3")
+	(uuid "a8978354-7bb7-4af9-921f-d25be005f396")
 	(paper "A3")
 	(title_block
 		(title "FMC LPC bank C (power + clock + JTAG + mgmt)")
@@ -670,19 +670,316 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Device:C"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "C"
+				(at 0.635 -2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" ""
+				(at 0.9652 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(hide yes)
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Unpolarized capacitor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "C_0_1"
+				(polyline
+					(pts
+						(xy -2.032 0.762) (xy 2.032 0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "C_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.794)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(hide yes)
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(symbol
 		(lib_id "FMC_LPC_PWR_CLK_JTAG:FMC_LPC_PWR_CLK_JTAG")
-		(at 325.12 88.9 0)
+		(at 312.42 160.02 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "894f506a-f8c6-4342-9ef5-25dca70df9df")
+		(uuid "8c93ffb4-3019-4251-ba65-ecc76542c223")
 		(property "Reference" "J4C"
-			(at 325.12 144.78 0.0000)
+			(at 312.42 215.9 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -691,7 +988,7 @@
 			)
 		)
 		(property "Value" "FX10A-168P-SV(91)"
-			(at 325.12 33.02 0.0000)
+			(at 312.42 104.14 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -700,7 +997,7 @@
 			)
 		)
 		(property "Footprint" "Connector_FFC-FPC:FX10A-168P-SV1"
-			(at 325.12 88.9 0.0000)
+			(at 312.42 160.02 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -709,7 +1006,7 @@
 			)
 		)
 		(property "LCSC" "C6624664"
-			(at 327.66 93.9799 0)
+			(at 314.96 165.0999 0)
 			(effects
 				(hide yes)
 				(font
@@ -719,7 +1016,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.hirose.com/en/product/document?clcode=CL0681-2024-7-91&productname=FX10A-168P-SV(91)&series=FX10A"
-			(at 325.12 88.9 0)
+			(at 312.42 160.02 0)
 			(effects
 				(hide yes)
 				(font
@@ -729,86 +1026,86 @@
 			)
 		)
 		(pin "C30"
-			(uuid "feb08054-cb58-44d1-bfcb-1e788fb704b2")
+			(uuid "8cb012ff-2b2e-4c54-9008-dda15276a345")
 		)
 		(pin "C31"
-			(uuid "73ce4706-99f5-45f4-95c3-03c040d9317d")
+			(uuid "e1f8ade6-8e5c-4ed3-9ac8-9a131e3c3314")
 		)
 		(pin "C32"
-			(uuid "969670a3-5fed-4317-97eb-c7c30a9368e9")
+			(uuid "56059ceb-a54b-414f-8ce2-1359b90a4e0c")
 		)
 		(pin "C35"
-			(uuid "b7286713-3f71-4976-bb68-c23a66d78499")
+			(uuid "f9e5b22a-1449-4a2c-8a64-1c5ea158c4e7")
 		)
 		(pin "C36"
-			(uuid "f635490c-1c09-4ba4-ad2e-145c4abac033")
+			(uuid "299abbb3-79a9-4ffc-880c-03358a2287a7")
 		)
 		(pin "C37"
-			(uuid "54ccfdb4-7338-4aea-a616-1875cb33fbe2")
+			(uuid "12d7aa1b-8dd9-4978-a4a0-4a7a6388f56e")
 		)
 		(pin "C38"
-			(uuid "a42713f3-765b-41cc-837b-bf2f35524820")
+			(uuid "c3c0e9c0-b8b0-4a1b-a721-16f40b86e3d2")
 		)
 		(pin "C39"
-			(uuid "84e26221-a552-4d58-bd55-25602136c436")
+			(uuid "3bae2a55-ad55-470c-9c7d-b0cfd494d852")
 		)
 		(pin "C40"
-			(uuid "7a6ca2f4-f370-464c-a267-0b3b1a0a6670")
+			(uuid "e2b029ac-42d4-43e9-afbb-1f7ea8931477")
 		)
 		(pin "D29"
-			(uuid "c7c7bae0-b978-4f3a-bfad-6b58e9e3ba60")
+			(uuid "2534dffc-e586-4f1f-b875-a88fed561ac2")
 		)
 		(pin "D30"
-			(uuid "5eac89a1-c860-4ab4-a175-265fa3f7402f")
+			(uuid "ab7fcf06-bf79-4ce1-80cd-f89c3bba5519")
 		)
 		(pin "D31"
-			(uuid "0176fa0c-7f9f-4455-af13-5244f08e3595")
+			(uuid "9a376bd8-29af-4f28-ac0c-7842dc565621")
 		)
 		(pin "D32"
-			(uuid "2c840b10-649e-4036-9404-9955f77c3470")
+			(uuid "5ca726b4-d2a6-4729-9435-a313f5076b66")
 		)
 		(pin "D33"
-			(uuid "5c1702dd-9e11-47a3-ad1d-a837f170d3c2")
+			(uuid "f335dba2-6c1d-4a7c-87ed-f4e0e4e722a1")
 		)
 		(pin "D35"
-			(uuid "841bcc5d-a757-4f55-bfc3-d1dfcd6b2391")
+			(uuid "bc7f52ef-bd05-405e-8bc8-0ec1052acd02")
 		)
 		(pin "D36"
-			(uuid "019fade6-7123-464f-bcaf-085a434104af")
+			(uuid "f49538d6-29fb-4ce6-abdf-bb4458fb67dd")
 		)
 		(pin "D37"
-			(uuid "bc5ff551-7e5d-4b76-8909-67a14f45d82b")
+			(uuid "5b250cf4-7ff7-4671-9be0-5349449b58e6")
 		)
 		(pin "D38"
-			(uuid "30cb4f08-2685-4060-a940-55ee886c48d7")
+			(uuid "a4b31854-9286-4243-8e37-857830413fa0")
 		)
 		(pin "D39"
-			(uuid "8070528d-5725-4562-a629-110fc9a22169")
+			(uuid "7cd075eb-15f3-48ba-abaa-835b2450bb16")
 		)
 		(pin "D40"
-			(uuid "f0893763-09c1-4a09-8fc2-a85c1e041064")
+			(uuid "fe8081d0-fe4b-43bf-8216-ec31159a3a08")
 		)
 		(pin "G2"
-			(uuid "29a50148-2625-4c2a-88ea-5b4911323335")
+			(uuid "2996574c-b23d-47a2-9819-5d727b7c2cb5")
 		)
 		(pin "G3"
-			(uuid "5834f88b-a222-441f-a793-906d0f1948e8")
+			(uuid "713d334b-a142-4f11-a373-628cc0fceef5")
 		)
 		(pin "H2"
-			(uuid "4b1d5cbe-7b19-4b54-82a8-4078e8b6ce3b")
+			(uuid "92e39b4b-a40b-4b27-8da8-a4a7f3dac500")
 		)
 		(pin "H4"
-			(uuid "584269a3-6b17-468e-bd1f-e7ea9744e55a")
+			(uuid "0c60c513-09e8-437f-9a8d-66db867296d4")
 		)
 		(pin "H5"
-			(uuid "3c1fe45c-331a-4162-9f68-26b9c7c83824")
+			(uuid "edccdb0e-b619-465c-9bec-93d8fafe466a")
 		)
 		(pin "H40"
-			(uuid "87da7cc4-3686-4bfb-925e-bd6b1e66ab30")
+			(uuid "7e2061a2-78c0-456f-8bce-84445730e837")
 		)
 		(instances
 			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
-				(path "/d01b8ac5-f76a-4e24-b78d-9e2902fb53a3"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
 					(reference "J4C")
 					(unit 1)
 				)
@@ -817,16 +1114,16 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 307.34 55.88 0)
+		(at 292.1 127 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "e4f85dec-e267-4a63-bc69-1dcfbef6a311")
+		(uuid "6316d3d8-0377-43a0-85f3-097f6e54515e")
 		(property "Reference" "#FLG100"
-			(at 307.34 57.785 0.0000)
+			(at 292.1 128.905 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -836,7 +1133,7 @@
 			)
 		)
 		(property "Value" "+12V"
-			(at 307.34 50.8 0)
+			(at 292.1 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -844,7 +1141,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 307.34 55.88 0.0000)
+			(at 292.1 127 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -853,11 +1150,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "95265874-90df-4b52-8ee5-f15d3424df27")
+			(uuid "b163af07-89ca-4357-84f5-acece339d84a")
 		)
 		(instances
 			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
-				(path "/d01b8ac5-f76a-4e24-b78d-9e2902fb53a3"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
 					(reference "#FLG100")
 					(unit 1)
 				)
@@ -866,16 +1163,16 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 307.34 76.2 0)
+		(at 292.1 147.32 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "9f6228a4-5cb1-4639-b78a-c8a7d2b31ef5")
+		(uuid "61cc940f-3e9b-4502-a0b3-3bc86090fd44")
 		(property "Reference" "#FLG101"
-			(at 307.34 78.105 0.0000)
+			(at 292.1 149.225 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -885,7 +1182,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 307.34 71.12 0)
+			(at 292.1 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -893,7 +1190,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 307.34 76.2 0.0000)
+			(at 292.1 147.32 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -902,11 +1199,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "488f3703-b3ce-4e25-834e-f5a66ab6904c")
+			(uuid "8906c1f1-5a36-45a8-8a13-76f7c82b9a4f")
 		)
 		(instances
 			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
-				(path "/d01b8ac5-f76a-4e24-b78d-9e2902fb53a3"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
 					(reference "#FLG101")
 					(unit 1)
 				)
@@ -915,16 +1212,16 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 285.75 60.96 0)
+		(at 270.51 132.08 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "48d6be83-1b90-4ea9-9711-1e7ff5b6121e")
+		(uuid "ce945af3-eb2d-4a0e-850e-4928a476b08b")
 		(property "Reference" "#FLG102"
-			(at 285.75 62.865 0.0000)
+			(at 270.51 133.985 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -934,7 +1231,7 @@
 			)
 		)
 		(property "Value" "+VADJ"
-			(at 285.75 55.88 0)
+			(at 270.51 127 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -942,7 +1239,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 285.75 60.96 0.0000)
+			(at 270.51 132.08 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -951,12 +1248,896 @@
 			)
 		)
 		(pin "1"
-			(uuid "3832ee29-6c74-4881-95ef-dd5bb3767092")
+			(uuid "b67cd52f-563d-4b50-87f3-867a649456c1")
 		)
 		(instances
 			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
-				(path "/d01b8ac5-f76a-4e24-b78d-9e2902fb53a3"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
 					(reference "#FLG102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 86.36 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "1428d011-1f37-43ab-8c7f-91bebdf3284c")
+		(property "Reference" "C100"
+			(at 41.91 81.28 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 88.9 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 82.55 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "728a9135-77dd-42e2-ac0d-b85d8ee0a1b5")
+		)
+		(pin "2"
+			(uuid "fa501587-1c1d-45a3-8b17-a2ba0fb7e008")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C100")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 91.44 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "397a4e05-2b38-4097-a867-12a19db7afa2")
+		(property "Reference" "C101"
+			(at 34.29 88.9 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 93.98 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 87.63 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "529d5598-07fe-4183-9d5f-89bc870231d5")
+		)
+		(pin "2"
+			(uuid "e151d360-f341-42b0-a42b-f2934b3754a5")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 96.52 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "23cb1351-c66a-4dd2-af2d-9739b96ef12d")
+		(property "Reference" "C102"
+			(at 34.29 93.98 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 99.06 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 92.71 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c0a574ab-8b37-4a27-9506-a5a047c25889")
+		)
+		(pin "2"
+			(uuid "ce04af68-0309-4e99-ada3-51d82be45ca8")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 101.6 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "e23a93b2-4a5a-40f5-ae35-06e2ef27e33e")
+		(property "Reference" "C103"
+			(at 34.29 99.06 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 104.14 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 97.79 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "179c8968-6acf-427e-8537-efaf14d5d289")
+		)
+		(pin "2"
+			(uuid "a82e0ee7-c2db-49e7-94e8-6e44ba28e38e")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C103")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 106.68 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "7e0b73b8-3c49-4d9b-b66a-f4e8a9fe21d9")
+		(property "Reference" "C104"
+			(at 34.29 104.14 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 109.22 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 102.87 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2fc50636-f3df-46ef-b198-d76f820c014a")
+		)
+		(pin "2"
+			(uuid "33516b69-23a5-4f92-b380-802ecedaf7b8")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C104")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 111.76 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "d3c42841-e5fc-41b2-9fae-e99f5b732386")
+		(property "Reference" "C105"
+			(at 34.29 109.22 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 114.3 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 107.95 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "112a6474-9d12-430f-b2df-dbdb90c1d0c9")
+		)
+		(pin "2"
+			(uuid "545ae5f7-322f-4b21-8bfe-c4e34b04d64f")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C105")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 116.84 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "d75191f8-7ae8-4c3b-9a21-cb72ee9d2f3f")
+		(property "Reference" "C106"
+			(at 34.29 114.3 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 119.38 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 113.03 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e17a4c11-e7b5-4c07-a420-8522c4a5ff18")
+		)
+		(pin "2"
+			(uuid "b4927bd9-8809-46aa-8f83-60abac0de599")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C106")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 121.92 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "e70ea24e-da06-4229-a722-07c3c3be6b41")
+		(property "Reference" "C107"
+			(at 34.29 119.38 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 124.46 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 118.11 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "cc82b3e7-cdad-4eab-99b7-62609c5b3655")
+		)
+		(pin "2"
+			(uuid "4771fef8-5cf5-47bf-a1e0-242ebe702847")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C107")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 127 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "32ad7d9c-dfed-4525-965d-1b62db19872b")
+		(property "Reference" "C108"
+			(at 34.29 124.46 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 129.54 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 123.19 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "dcc02aeb-801d-40a3-bcef-9cad9dc4ca86")
+		)
+		(pin "2"
+			(uuid "4f270f12-ad28-4a5f-b4b6-3b0451534d70")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C108")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 132.08 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "1fcbb216-52a4-4920-b151-3bee53616809")
+		(property "Reference" "C109"
+			(at 34.29 129.54 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 134.62 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 128.27 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a15f29f7-1bd7-4c61-aa30-2e808730cde7")
+		)
+		(pin "2"
+			(uuid "435f7e43-ad7d-4f25-a9e2-184b9ddaa1b4")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C109")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 137.16 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "219046f2-4e68-4cce-b31c-40f27aed5d80")
+		(property "Reference" "C110"
+			(at 34.29 134.62 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 139.7 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 133.35 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "b835c338-a613-461f-8a20-742dabb1a86e")
+		)
+		(pin "2"
+			(uuid "d5ccae54-9813-4bfa-ad6c-83e3dfd737dc")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C110")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 142.24 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "8feb2e27-af50-475f-99dc-b163349752de")
+		(property "Reference" "C111"
+			(at 34.29 139.7 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 41.91 144.78 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 42.8752 138.43 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "8b262131-f80e-4853-96be-9f0fc8480702")
+		)
+		(pin "2"
+			(uuid "74a79e28-abad-438c-9805-25d57cbb9e01")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C111")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 147.32 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "ae7b4040-08f6-4ced-af1a-cac1e85b8d17")
+		(property "Reference" "C112"
+			(at 34.29 144.78 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10u"
+			(at 41.91 149.86 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 42.8752 143.51 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "654a9c8e-4ff4-45ec-bc7c-7df23050df4f")
+		)
+		(pin "2"
+			(uuid "342bfc9f-e7af-4fd1-9274-5c02afd87b43")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C112")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 41.91 152.4 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "017ffec2-0065-4eb6-a6f8-2054f166f55c")
+		(property "Reference" "C113"
+			(at 34.29 149.86 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10u"
+			(at 41.91 154.94 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 42.8752 148.59 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c3af1866-c2a4-4199-b10b-68c297c65c7c")
+		)
+		(pin "2"
+			(uuid "bf10c3fb-826f-43b0-9bca-0c7a7c6c752c")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "C113")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 41.91 157.48 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "8e4790a7-6e23-480c-a00c-8f98b815e1e0")
+		(property "Reference" "R100"
+			(at 34.29 155.448 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "4k7"
+			(at 41.91 159.512 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 40.132 157.48 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "8ff875cf-0111-46a4-a0f4-7da81f27a89c")
+		)
+		(pin "2"
+			(uuid "a370a19a-8716-4a83-9f71-7690d4995939")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "R100")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 41.91 162.56 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "57cbd5e0-6584-41ea-85ce-0c97f14f3a12")
+		(property "Reference" "R101"
+			(at 34.29 160.528 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "4k7"
+			(at 41.91 164.592 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 40.132 162.56 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "9d2ab374-8f5c-4261-b70f-7754ead012d0")
+		)
+		(pin "2"
+			(uuid "057ce121-5316-4594-b4e1-1f64c799249e")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "R101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 41.91 167.64 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "38bdc741-0fac-4876-878d-8a7aee9f95d6")
+		(property "Reference" "R102"
+			(at 34.29 165.608 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 41.91 169.672 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 40.132 167.64 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "0d23db2b-1f75-4706-9487-a2270f3cb205")
+		)
+		(pin "2"
+			(uuid "5197fb42-8409-4ab1-87e8-979237752de2")
+		)
+		(instances
+			(project "FMC LPC bank C (power + clock + JTAG + mgmt)"
+				(path "/a8978354-7bb7-4af9-921f-d25be005f396"
+					(reference "R102")
 					(unit 1)
 				)
 			)
@@ -964,555 +2145,907 @@
 	)
 	(wire
 		(pts
-			(xy 307.34 40.64) (xy 274.32 40.64)
+			(xy 294.64 111.76) (xy 257.81 111.76)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "6dd769b5-484d-47ab-82cc-c771f1df3c13")
+		(uuid "a173c917-b6f4-4bbb-be6e-fc8d52597297")
 	)
 	(wire
 		(pts
-			(xy 307.34 45.72) (xy 294.64 45.72)
+			(xy 294.64 116.84) (xy 278.13 116.84)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "bbdc6c3e-bbbd-4a1f-8da9-0ddc7836defd")
+		(uuid "18dda93c-6cf1-4a0e-a787-4f7bf1b37bb6")
 	)
 	(wire
 		(pts
-			(xy 307.34 50.8) (xy 281.94 50.8)
+			(xy 294.64 121.92) (xy 267.97 121.92)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "ed44f585-177b-45e5-a817-3bf00826978a")
+		(uuid "92e1d472-af5d-4967-b80b-7664779bda8a")
 	)
 	(wire
 		(pts
-			(xy 307.34 55.88) (xy 302.26 55.88)
+			(xy 294.64 127) (xy 287.02 127)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "44af7efe-e280-4bc1-b04f-bf7f3fbf4612")
+		(uuid "da833362-a682-489b-ba74-ccf4323fe12a")
 	)
 	(wire
 		(pts
-			(xy 307.34 60.96) (xy 280.67 60.96)
+			(xy 294.64 132.08) (xy 265.43 132.08)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "cd02f507-a163-4eba-9909-179970ddff24")
+		(uuid "d585c0f4-e32a-4d7f-b9c4-e948282f9871")
 	)
 	(wire
 		(pts
-			(xy 307.34 66.04) (xy 302.26 66.04)
+			(xy 294.64 137.16) (xy 287.02 137.16)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "af143ebb-d8cb-4bce-a132-5905317afd8e")
+		(uuid "1b8917af-544e-4a32-924b-2bae146b782a")
 	)
 	(wire
 		(pts
-			(xy 307.34 71.12) (xy 280.67 71.12)
+			(xy 294.64 142.24) (xy 265.43 142.24)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "87e7375e-6255-40df-943f-9ff64d751969")
+		(uuid "77ff0be3-7a55-42e5-8f06-ebe8af9ac320")
 	)
 	(wire
 		(pts
-			(xy 307.34 76.2) (xy 302.26 76.2)
+			(xy 294.64 147.32) (xy 287.02 147.32)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "fade4bba-6aa9-4903-9bc6-a92fbec397d0")
+		(uuid "26bdbefd-1e18-4e2c-99ad-9e30acf70f1e")
 	)
 	(wire
 		(pts
-			(xy 307.34 81.28) (xy 280.67 81.28)
+			(xy 294.64 152.4) (xy 265.43 152.4)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "7156e70c-a6ef-42f3-9c05-cc16cd11536b")
+		(uuid "2b7bbe78-d25c-4d4a-9794-5940cf3706b4")
 	)
 	(wire
 		(pts
-			(xy 307.34 86.36) (xy 294.64 86.36)
+			(xy 294.64 157.48) (xy 278.13 157.48)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "bf29a228-18c7-4d28-b4f6-dfaee058d4ba")
+		(uuid "4f7ed3dd-e619-4ced-81c9-a1c8a2ed5f19")
 	)
 	(wire
 		(pts
-			(xy 307.34 91.44) (xy 274.32 91.44)
+			(xy 294.64 162.56) (xy 257.81 162.56)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "4df6bc05-bffc-4773-a79b-baec3fedfbdc")
+		(uuid "d88c25c2-4830-41db-ba74-ac81ed7b5288")
 	)
 	(wire
 		(pts
-			(xy 307.34 96.52) (xy 294.64 96.52)
+			(xy 294.64 167.64) (xy 278.13 167.64)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "d0b5a4c8-648b-4e12-9ea5-c3acc090d88c")
+		(uuid "f34a6814-fa2e-4b63-9755-b939e2743fe6")
 	)
 	(wire
 		(pts
-			(xy 307.34 101.6) (xy 274.32 101.6)
+			(xy 294.64 172.72) (xy 257.81 172.72)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "09eb5c66-b44c-4fbe-af1b-e4501bceedbc")
+		(uuid "6c858aed-03d8-4a6a-8cbf-89f8f411a2cb")
 	)
 	(wire
 		(pts
-			(xy 307.34 106.68) (xy 292.1 106.68)
+			(xy 294.64 177.8) (xy 274.32 177.8)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "d84b942c-7994-419f-97c1-db8cd7585663")
+		(uuid "2e6f60ed-21d4-414a-8752-015b5fb346ae")
 	)
 	(wire
 		(pts
-			(xy 307.34 111.76) (xy 280.67 111.76)
+			(xy 294.64 182.88) (xy 265.43 182.88)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "3fe481aa-8c5f-4231-82d8-323a4f103357")
+		(uuid "7e144ccb-0be0-4c6d-aa55-95bfb35dc844")
 	)
 	(wire
 		(pts
-			(xy 307.34 116.84) (xy 302.26 116.84)
+			(xy 294.64 187.96) (xy 287.02 187.96)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "7bd6f237-db9d-4c97-8865-8bb29ee9d440")
+		(uuid "4369a3af-7279-4b5c-92db-4688bc79bb6d")
 	)
 	(wire
 		(pts
-			(xy 307.34 121.92) (xy 280.67 121.92)
+			(xy 294.64 193.04) (xy 265.43 193.04)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "a67c1e5d-c58d-4546-bff1-016eab322b6a")
+		(uuid "c5cb2058-1b29-4b4a-89fb-3e0d24d06121")
 	)
 	(wire
 		(pts
-			(xy 307.34 127) (xy 302.26 127)
+			(xy 294.64 198.12) (xy 287.02 198.12)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9dcf089d-bbf4-467c-8359-9a4cfbaddc04")
+		(uuid "0fb67909-5aa6-4482-846a-dcf65282c8b9")
 	)
 	(wire
 		(pts
-			(xy 307.34 132.08) (xy 280.67 132.08)
+			(xy 294.64 203.2) (xy 265.43 203.2)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9524ede9-38c6-47e5-9bc7-9239c6826947")
+		(uuid "2c0de845-7eb4-4229-a0df-45d532a236ba")
 	)
 	(wire
 		(pts
-			(xy 307.34 137.16) (xy 302.26 137.16)
+			(xy 294.64 208.28) (xy 287.02 208.28)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "30de2c2e-3834-4d92-8db6-f8fde6581a13")
+		(uuid "6956c19e-d40e-49b3-8c4c-58f3198035c6")
 	)
 	(wire
 		(pts
-			(xy 342.9 40.64) (xy 381 40.64)
+			(xy 330.2 111.76) (xy 375.92 111.76)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "7dd5bffa-0ebd-455a-80f0-e89b69926a22")
+		(uuid "bfda194a-b2e9-4c25-bf8d-73f09a479a71")
 	)
 	(wire
 		(pts
-			(xy 342.9 45.72) (xy 360.68 45.72)
+			(xy 330.2 116.84) (xy 355.6 116.84)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "b8a80dfd-2379-421b-bbaf-04a5e162641a")
+		(uuid "7a02a64d-7935-4885-a08d-2b3602dababb")
 	)
 	(wire
 		(pts
-			(xy 342.9 50.8) (xy 378.46 50.8)
+			(xy 330.2 121.92) (xy 372.11 121.92)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "61be1153-0ea8-4d1c-952f-33aad1115c6e")
+		(uuid "a1e45d83-b015-4728-a703-64c51749ad5a")
 	)
 	(wire
 		(pts
-			(xy 342.9 55.88) (xy 360.68 55.88)
+			(xy 330.2 127) (xy 355.6 127)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "d5130f82-e6b9-480d-8421-926f8d08497d")
+		(uuid "7869dd77-95d7-4603-98fd-5ad9f1756edb")
 	)
 	(wire
 		(pts
-			(xy 342.9 60.96) (xy 381 60.96)
+			(xy 330.2 132.08) (xy 375.92 132.08)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "e1a541a8-2c8c-406b-ac6e-dd5237a3bad4")
+		(uuid "10ff2eec-1879-4e64-aff1-c3d336531f2b")
 	)
 	(wire
 		(pts
-			(xy 342.9 66.04) (xy 347.98 66.04)
+			(xy 330.2 137.16) (xy 336.55 137.16)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "06e56a3c-7693-4763-ab1d-6dd22f269fd0")
+		(uuid "297a951c-75e2-4398-af67-a7c44d0016fc")
 	)
 	(junction
-		(at 285.75 60.96)
+		(at 292.1 127)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "352fcc29-1da3-4c8d-9558-e922ebfb4e32")
+		(uuid "3ec494e2-43c3-4242-8e17-98b804a1fe6d")
+	)
+	(junction
+		(at 292.1 147.32)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0f371907-1a47-4322-9fc6-338b8fdd9e2a")
+	)
+	(junction
+		(at 270.51 132.08)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b2980637-7dd3-427f-950f-9bd2aa16b4d1")
+	)
+	(label "+3V3"
+		(at 38.1 86.36 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "aeea8042-7aec-43f5-a6c2-36ee05c953cb")
+	)
+	(label "GND"
+		(at 45.72 86.36 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "31837f53-0c07-4914-b9c9-2ba7fc7b3375")
+	)
+	(label "+3V3"
+		(at 38.1 91.44 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9c9c5af1-b8ec-4542-91ac-79bd07ad51c2")
+	)
+	(label "GND"
+		(at 45.72 91.44 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4aed75ea-24ba-4bb4-893f-b9b944aeb4aa")
+	)
+	(label "+3V3"
+		(at 38.1 96.52 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d18e5c04-513f-4621-83d2-756dcf965901")
+	)
+	(label "GND"
+		(at 45.72 96.52 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "fbf36c60-da3b-4756-9aef-1d23adfe77c6")
+	)
+	(label "+3V3"
+		(at 38.1 101.6 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "60aa3134-f88e-4dfc-acf2-5ffc74074886")
+	)
+	(label "GND"
+		(at 45.72 101.6 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "3eb7fc58-0664-4d72-95a7-03ff1b50b03a")
+	)
+	(label "+VADJ"
+		(at 38.1 106.68 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "5863c9bb-1291-41f6-b665-d5d64338fd50")
+	)
+	(label "GND"
+		(at 45.72 106.68 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b97d294a-265a-430c-adb4-61247cc65b4d")
+	)
+	(label "+VADJ"
+		(at 38.1 111.76 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "553e416d-5085-4804-b57b-007501a8b2e1")
+	)
+	(label "GND"
+		(at 45.72 111.76 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "485964eb-5ec9-446e-bd2a-5840b043663c")
+	)
+	(label "+VADJ"
+		(at 38.1 116.84 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "f77c2a7b-8855-40df-85cc-04feeb518d4b")
+	)
+	(label "GND"
+		(at 45.72 116.84 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "cd0e06bf-e9cc-4815-8c64-c5e4a7d18a35")
+	)
+	(label "+VADJ"
+		(at 38.1 121.92 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ef705fe9-7416-4665-a320-8a892ebd2cc3")
+	)
+	(label "GND"
+		(at 45.72 121.92 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4abe7143-c4ac-4521-9257-6bab8b5590b8")
+	)
+	(label "+VADJ"
+		(at 38.1 127 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c50f9b61-3145-4dec-b91e-379468f3c776")
+	)
+	(label "GND"
+		(at 45.72 127 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "30f5013c-1ab8-4808-babc-21b1968dba26")
+	)
+	(label "+VADJ"
+		(at 38.1 132.08 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ef7bcbdb-6637-4cb5-ba1c-f6d8ef57ae5d")
+	)
+	(label "GND"
+		(at 45.72 132.08 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8b6cec03-026d-45fb-9150-22cd42f5717f")
+	)
+	(label "+12V"
+		(at 38.1 137.16 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "3a29b0ba-174c-4463-b903-a36e47c6e468")
+	)
+	(label "GND"
+		(at 45.72 137.16 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "23536743-007c-4467-a24b-7ba1a82a4195")
+	)
+	(label "+12V"
+		(at 38.1 142.24 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "046d5eba-44e6-4451-9d66-f6155fd90e4e")
+	)
+	(label "GND"
+		(at 45.72 142.24 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4acfad0a-4e3f-4997-8d62-d7c0272b7b4d")
+	)
+	(label "+3V3"
+		(at 38.1 147.32 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4517fd02-41a7-439d-87f8-92ebef6fceb0")
+	)
+	(label "GND"
+		(at 45.72 147.32 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "45e362da-2796-4e14-8aa6-c13690ebad3a")
+	)
+	(label "+VADJ"
+		(at 38.1 152.4 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "58033759-3b62-4f35-b8e8-886ca86784d1")
+	)
+	(label "GND"
+		(at 45.72 152.4 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "0d498310-5a1a-4175-a5ea-8697ab2025ec")
+	)
+	(label "ZYNQ_FMC_SCL"
+		(at 38.1 157.48 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4a587e36-f600-4f71-8ec2-72027b4c9fe2")
+	)
+	(label "+3V3"
+		(at 45.72 157.48 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "cb564417-56b7-4cf7-956c-79f33c95d71b")
+	)
+	(label "ZYNQ_FMC_SDA"
+		(at 38.1 162.56 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d3476eec-3873-4643-b25c-2519323597ec")
+	)
+	(label "+3V3"
+		(at 45.72 162.56 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "211ed436-d402-4346-b014-606367c6902d")
+	)
+	(label "ZYNQ_FMC_PRSNT_N"
+		(at 38.1 167.64 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "92abc847-e41b-4a6f-9303-13c17a5ee35a")
+	)
+	(label "+3V3"
+		(at 45.72 167.64 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "cc58d2a0-28e5-46d4-9e44-d5ab77d7fbe9")
 	)
 	(hierarchical_label "ZYNQ_FMC_SCL"
 		(shape input)
-		(at 274.32 40.64 180)
+		(at 257.81 111.76 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "635bad62-9d9b-4325-9f12-96ee42552b18")
+		(uuid "205b23ae-e53a-414f-91d5-3c0f0e9e6ede")
 	)
 	(hierarchical_label "ZYNQ_FMC_SDA"
 		(shape input)
-		(at 294.64 45.72 180)
+		(at 278.13 116.84 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "d6947573-1cd4-4bd3-a5c1-363a0dd14c45")
+		(uuid "40f8eee1-2107-48a7-867c-6f462f3fba9f")
 	)
 	(hierarchical_label "GND"
 		(shape input)
-		(at 281.94 50.8 180)
+		(at 267.97 121.92 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "c719a424-c670-485b-add8-ba86c51dce9e")
+		(uuid "428803ba-61fc-4669-85d2-e969b95bba4e")
 	)
 	(hierarchical_label "+12V"
 		(shape input)
-		(at 302.26 55.88 180)
+		(at 287.02 127 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "6eee70e4-2c71-4362-8ed0-91d943dd7ae5")
+		(uuid "21002078-9f60-4f33-915b-d875af0b7c8b")
 	)
 	(hierarchical_label "+VADJ"
 		(shape input)
-		(at 280.67 60.96 180)
+		(at 265.43 132.08 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "b94237ff-0ff2-4413-8d2a-bf8df80fc12f")
+		(uuid "4c078729-0aad-4d06-8735-fc64ee64012a")
 	)
 	(hierarchical_label "+12V"
 		(shape input)
-		(at 302.26 66.04 180)
+		(at 287.02 137.16 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "3c701887-1d0e-4157-aa21-f5e8d1cc1ec8")
+		(uuid "0c64bf26-bcf9-4ceb-8576-ec2b6ac69881")
 	)
 	(hierarchical_label "+VADJ"
 		(shape input)
-		(at 280.67 71.12 180)
+		(at 265.43 142.24 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "6f38ca98-3c47-4e7b-b460-bbae3519874f")
+		(uuid "654a2d16-3f28-4deb-86c4-2b18efb98c26")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
-		(at 302.26 76.2 180)
+		(at 287.02 147.32 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "e02abfcf-579e-4746-9b15-4c603ef9ff4f")
+		(uuid "7e463945-390c-4c85-9176-bc849089ddd1")
 	)
 	(hierarchical_label "+VADJ"
 		(shape input)
-		(at 280.67 81.28 180)
+		(at 265.43 152.4 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "48985e40-aa6c-4e0c-b5a1-7713ebb232fc")
+		(uuid "eb5d62d9-84fa-488e-b2fd-4b11ba81d441")
 	)
 	(hierarchical_label "ZYNQ_FMC_TCK"
 		(shape input)
-		(at 294.64 86.36 180)
+		(at 278.13 157.48 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "0467083e-d568-47bc-a91a-1215884b6d3e")
+		(uuid "077ac590-28a3-44c9-845c-29a92e5acace")
 	)
 	(hierarchical_label "ZYNQ_FMC_TDI"
 		(shape input)
-		(at 274.32 91.44 180)
+		(at 257.81 162.56 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "bc2cb80d-d1aa-4a9b-98ad-fb3ec21a4eda")
+		(uuid "7a7ed618-dbd9-49a2-a95a-e5caa1f95aa5")
 	)
 	(hierarchical_label "ZYNQ_FMC_TDO"
 		(shape input)
-		(at 294.64 96.52 180)
+		(at 278.13 167.64 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "8449e003-4ec0-422b-9332-c7e507269e8a")
+		(uuid "5b7305c3-0e53-49e2-8cde-64d06c02d9be")
 	)
 	(hierarchical_label "ZYNQ_FMC_TMS"
 		(shape input)
-		(at 274.32 101.6 180)
+		(at 257.81 172.72 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "db6490b5-b08f-487a-ac25-5502b6d05a0a")
+		(uuid "c4c81c3e-2e63-45cd-b5cf-8ead2dc3cedb")
 	)
 	(hierarchical_label "ZYNQ_FMC_TRST_N"
 		(shape input)
-		(at 292.1 106.68 180)
+		(at 274.32 177.8 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "8ab83bad-b600-43e5-af11-af269362379d")
+		(uuid "8c1e54d4-0ff8-47d5-a490-bb0d50ba058a")
 	)
 	(hierarchical_label "+VADJ"
 		(shape input)
-		(at 280.67 111.76 180)
+		(at 265.43 182.88 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "57a17c0b-21fa-4da6-869a-a8d8a51c1a65")
+		(uuid "e90be3eb-6875-4a8f-8d22-fd0da9025042")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
-		(at 302.26 116.84 180)
+		(at 287.02 187.96 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "bc707191-6944-4f0e-b754-f16d717789aa")
+		(uuid "e8e28f43-3df7-4d8f-9d50-696342ba990f")
 	)
 	(hierarchical_label "+VADJ"
 		(shape input)
-		(at 280.67 121.92 180)
+		(at 265.43 193.04 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "3106a245-d54d-440d-86bd-ecb24c2c1bd9")
+		(uuid "2894f993-0970-46d6-bda7-ce2ab1d9eea9")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
-		(at 302.26 127 180)
+		(at 287.02 198.12 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "0bd4ddca-0329-46b4-9edb-026b7a0856ba")
+		(uuid "6d7a5aec-549b-49b8-a6e8-f098737f46ff")
 	)
 	(hierarchical_label "+VADJ"
 		(shape input)
-		(at 280.67 132.08 180)
+		(at 265.43 203.2 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "a2fcb31e-680d-476e-af40-aa081407fb38")
+		(uuid "5f0b2181-7991-4cb5-bf08-86930cda980f")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
-		(at 302.26 137.16 180)
+		(at 287.02 208.28 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "9afeb57a-2586-459a-aa4a-a943178c561f")
+		(uuid "1f440565-c52b-44d6-8625-cd137c1679d0")
 	)
 	(hierarchical_label "ZYNQ_FMC_CLK1_M2C_P"
 		(shape input)
-		(at 381 40.64 0.0000)
+		(at 375.92 111.76 0.0000)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "82e17de8-20e3-4118-84fb-f22c7634f842")
+		(uuid "9c872cc5-1070-4cd9-a160-5d507f6e6f11")
 	)
 	(hierarchical_label "ZYNQ_FMC_CLK1_M2C_N"
 		(shape input)
-		(at 360.68 45.72 0.0000)
+		(at 355.6 116.84 0.0000)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "c9ffc576-4851-43e9-aec5-d5aee05b24b5")
+		(uuid "6aeefeaf-bf59-44ef-94bd-b2b2a4ef356f")
 	)
 	(hierarchical_label "ZYNQ_FMC_PRSNT_N"
 		(shape input)
-		(at 378.46 50.8 0.0000)
+		(at 372.11 121.92 0.0000)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "66cb217f-e39f-4d74-9ae4-d33761b6c712")
+		(uuid "68002f79-68f1-41d8-b332-ab41c351b807")
 	)
 	(hierarchical_label "ZYNQ_FMC_CLK0_M2C_P"
 		(shape input)
-		(at 360.68 55.88 0.0000)
+		(at 355.6 127 0.0000)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "2c68a256-c8aa-46c6-8021-0ab531d8ea94")
+		(uuid "a3893554-3ea3-413a-8b8b-d328061c2ba3")
 	)
 	(hierarchical_label "ZYNQ_FMC_CLK0_M2C_N"
 		(shape input)
-		(at 381 60.96 0.0000)
+		(at 375.92 132.08 0.0000)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "a33af015-eb35-48dd-b536-3d499859212b")
+		(uuid "cac79d4b-f1a5-4ba2-b84a-4bd0266c1fc3")
 	)
 	(hierarchical_label "GND"
 		(shape input)
-		(at 347.98 66.04 0.0000)
+		(at 336.55 137.16 0.0000)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "df49ac4f-7744-4452-8e6c-6e1d925ee8b6")
+		(uuid "f2e27f2c-18fb-42a0-906c-4e54e2bb64fc")
 	)
 	(sheet_instances
 		(path "/"

@@ -180,6 +180,50 @@ primitives. See :func:`pick_dynamic_value_shift`.
 """
 
 
+def _library_value_shift(
+    *,
+    lib_id: str,
+    anchor: "Point",
+    symbol_rotation: float,
+    geometry_cache,
+    value_text: str,
+) -> "tuple[float, float, float | None] | None":
+    """Return the symbol-coord ``(dx, dy, None)`` shift that reproduces a
+    symbol's *library-default* Value-text position.
+
+    Used to seed :func:`pick_dynamic_value_shift`'s candidate ladder for
+    lib_ids without a curated entry in :data:`VALUE_SHIFT_BY_LIB_ID`. The
+    Value's page-coord offset from the anchor is read from the library
+    definition, then inverse-rotated back into symbol coords so the
+    ``(dx, dy)`` round-trips through :meth:`property_text_bboxes`'
+    rotation handling.
+    """
+    try:
+        bbs = geometry_cache.property_text_bboxes(
+            lib_id, anchor, rotation=symbol_rotation,
+            owner_id="probe", value_override=value_text,
+        )
+    except Exception:
+        return None
+    val_bb = next(
+        (b for b in bbs if b.owner_id.endswith(":property:Value")), None,
+    )
+    if val_bb is None:
+        return None
+    px = val_bb.center.x - anchor.x
+    py = val_bb.center.y - anchor.y
+    sym_rot = int(symbol_rotation) % 360
+    if sym_rot == 90:
+        dx, dy = -py, px
+    elif sym_rot == 180:
+        dx, dy = -px, -py
+    elif sym_rot == 270:
+        dx, dy = py, -px
+    else:
+        dx, dy = px, py
+    return (dx, dy, 0.0)
+
+
 def pick_dynamic_value_shift(
     *,
     lib_id: str,
@@ -220,9 +264,6 @@ def pick_dynamic_value_shift(
         text_bbox,
     )
 
-    if lib_id not in VALUE_SHIFT_BY_LIB_ID:
-        return None
-
     # Compute the cap's own body bbox so the probe can avoid it.
     try:
         own_body = symbol_bbox(
@@ -235,7 +276,24 @@ def pick_dynamic_value_shift(
     except Exception:
         own_body = None
 
-    default_shift = VALUE_SHIFT_BY_LIB_ID[lib_id]
+    if lib_id in VALUE_SHIFT_BY_LIB_ID:
+        default_shift = VALUE_SHIFT_BY_LIB_ID[lib_id]
+    else:
+        # No curated ladder for this lib_id (connector / power symbol /
+        # arbitrary IC). Synthesise the baseline from the symbol's OWN
+        # library Value position so the ladder below perturbs around the
+        # text's natural placement. This generalises the picker to any
+        # symbol whose Value text overprints a neighbour (e.g. a long
+        # connector part-name colliding with an adjacent power symbol).
+        default_shift = _library_value_shift(
+            lib_id=lib_id,
+            anchor=anchor,
+            symbol_rotation=symbol_rotation,
+            geometry_cache=geometry_cache,
+            value_text=value_text,
+        )
+        if default_shift is None:
+            return None
     dx0, dy0, rot0 = default_shift
 
     rad = 2.54  # one grid pitch

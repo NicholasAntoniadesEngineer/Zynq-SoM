@@ -46,6 +46,10 @@ def build_microsd() -> Block:
                 refcircuit=REFCIRCUITS["DM3AT-SF-PEJM5"],
                 lib_id="Connector:Micro_SD_Card_Det_Hirose_DM3AT",
                 edge=SheetEdge.RIGHT,
+                # DAT/CMD pull-ups + VDD decoupling + CD pull-up draw as a
+                # labelled cap bank (their far-end power symbols otherwise
+                # overprint the connecting wires on the dense pin stack).
+                decoupling_array=True,
                 pin_to_net=(
                     # SDIO bus pins (per Hirose DM3 pinout)
                     ("1", "ZYNQ_SD1_DAT2"),

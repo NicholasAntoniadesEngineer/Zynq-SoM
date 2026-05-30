@@ -54,6 +54,9 @@ def build_uart_bridge() -> Block:
                 # CP2102N is self-powered from the cable VBUS; tie its
                 # regulator input (REGIN) and VBUS-sense pin to +VIN.
                 power_input_net="+VIN",
+                # Several supply decoupling caps on adjacent pins overprint
+                # when clustered — draw them as a labelled cap bank instead.
+                decoupling_array=True,
             ),
         ),
         connectors=(

@@ -343,6 +343,10 @@ HDMI source companion: 12-ch ESD + DDC/CEC/HPD level shifters + 5V load switch
 |---|---|
 | VCCA | +3V3 |
 | VCCB | +5V |
+| SDA_A | ZYNQ_HDMI_TX_SDA |
+| SCL_A | ZYNQ_HDMI_TX_SCL |
+| CEC_A | ZYNQ_HDMI_TX_CEC |
+| HPD_A | ZYNQ_HDMI_TX_HPD |
 
 ### No external required
 
@@ -374,7 +378,10 @@ _Pins explicitly left bare:_ CEC_A, CLK+, CLK-, D0+, D0-, D1+, D1-, D2+, D2-, HP
 
 ### Pin overrides
 
-_None._
+| Pin | Net |
+|---|---|
+| SDA | ZYNQ_HDMI_TX_SDA |
+| SCL | ZYNQ_HDMI_TX_SCL |
 
 ### Strap pins
 
@@ -419,6 +426,10 @@ HDMI sink companion: 12-ch ESD + DDC/CEC/HPD level shifters (5V sourced by upstr
 |---|---|
 | VCCA | +3V3 |
 | VCCB | ZYNQ_HDMI_RX_5V_SENSE |
+| SDA_A | ZYNQ_HDMI_RX_SDA |
+| SCL_A | ZYNQ_HDMI_RX_SCL |
+| CEC_A | ZYNQ_HDMI_RX_CEC |
+| HPD_A | ZYNQ_HDMI_RX_HPD |
 
 ### No external required
 
@@ -456,7 +467,24 @@ _Pins explicitly left bare:_ CEC_A, CLK+, CLK-, D0+, D0-, D1+, D1-, D2+, D2-, HP
 
 ### Pin overrides
 
-_None._
+| Pin | Net |
+|---|---|
+| PHY0_P | ZYNQ_ETH_MDI_0_P |
+| PHY0_N | ZYNQ_ETH_MDI_0_N |
+| PHY1_P | ZYNQ_ETH_MDI_1_P |
+| PHY1_N | ZYNQ_ETH_MDI_1_N |
+| PHY2_P | ZYNQ_ETH_MDI_2_P |
+| PHY2_N | ZYNQ_ETH_MDI_2_N |
+| PHY3_P | ZYNQ_ETH_MDI_3_P |
+| PHY3_N | ZYNQ_ETH_MDI_3_N |
+| TD0_P | ETH_LINE_MDI_0_P |
+| TD0_N | ETH_LINE_MDI_0_N |
+| TD1_P | ETH_LINE_MDI_1_P |
+| TD1_N | ETH_LINE_MDI_1_N |
+| TD2_P | ETH_LINE_MDI_2_P |
+| TD2_N | ETH_LINE_MDI_2_N |
+| TD3_P | ETH_LINE_MDI_3_P |
+| TD3_N | ETH_LINE_MDI_3_N |
 
 ### No external required
 

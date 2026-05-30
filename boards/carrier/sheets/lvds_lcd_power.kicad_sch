@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "410abcf1-c962-466b-99f3-51d3cd433749")
+	(uuid "09e8be27-a229-4028-8ffd-5c64a1d70132")
 	(paper "A3")
 	(title_block
 		(title "LVDS LCD bank B (panel + backlight power)")
@@ -774,16 +774,16 @@
 	)
 	(symbol
 		(lib_id "FFC_40P_LVDS_POWER:FFC_40P_LVDS_POWER")
-		(at 392.43 81.28 0)
+		(at 392.43 148.59 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d5a8dfbf-6823-4011-8f41-696951b0f09f")
+		(uuid "fa0e3cdf-78bd-4060-914d-b6307d26ee38")
 		(property "Reference" "J5B"
-			(at 392.43 129.54 0.0000)
+			(at 392.43 196.85 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -792,7 +792,7 @@
 			)
 		)
 		(property "Value" "FPC-05F-40PH20"
-			(at 392.43 33.02 0.0000)
+			(at 392.43 100.33 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -801,7 +801,7 @@
 			)
 		)
 		(property "Footprint" "Connector_FFC-FPC:FPC-05F-40PH20"
-			(at 392.43 81.28 0.0000)
+			(at 392.43 148.59 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -810,7 +810,7 @@
 			)
 		)
 		(property "LCSC" "C2856812"
-			(at 394.97 86.3599 0)
+			(at 394.97 153.6699 0)
 			(effects
 				(hide yes)
 				(font
@@ -820,7 +820,7 @@
 			)
 		)
 		(property "Datasheet" "https://datasheet.lcsc.com/lcsc/XUNPU-FPC-05F-40PH20_C2856812.pdf"
-			(at 392.43 81.28 0)
+			(at 392.43 148.59 0)
 			(effects
 				(hide yes)
 				(font
@@ -830,59 +830,59 @@
 			)
 		)
 		(pin "1"
-			(uuid "cd86b8c1-84db-43c0-ac94-80365b8ba553")
+			(uuid "0cb6fd3c-80be-428b-b8d2-cd9b3708433d")
 		)
 		(pin "2"
-			(uuid "4c310534-2e2e-4192-9c08-e16bd6c0433a")
+			(uuid "464d020e-d3f5-4981-89db-f3b921508e12")
 		)
 		(pin "3"
-			(uuid "d5949dd3-aba7-4308-9d18-67c7cc94e0ba")
+			(uuid "4570c8e1-38b7-42ce-a700-a75e5f9edb23")
 		)
 		(pin "27"
-			(uuid "24e1279b-125f-4bc0-a298-bb7743ad8f6b")
+			(uuid "bdae57e7-ad53-4c1c-900b-14fb247c2f7e")
 		)
 		(pin "28"
-			(uuid "5ab973c3-a3dd-4b02-8217-80d30e1b802f")
+			(uuid "51ee77c8-c428-459b-9f66-f5ace8ac5f13")
 		)
 		(pin "29"
-			(uuid "2b24f6a2-b2b6-4ec1-8c83-a7747ccdf6f8")
+			(uuid "32e73868-f579-40b3-96aa-a799dda94277")
 		)
 		(pin "30"
-			(uuid "f92054b5-0ddd-4b6a-9a37-e742628b73c7")
+			(uuid "7f70a7c6-7408-4737-9004-1a869deefd83")
 		)
 		(pin "31"
-			(uuid "f9645359-9b11-4767-9a73-d1962a2814dc")
+			(uuid "5681fc8e-b77a-48bf-8c54-164b4aab754c")
 		)
 		(pin "32"
-			(uuid "b553ccb9-6367-4b06-951e-d60bbce27725")
+			(uuid "3d53e478-ac4d-480d-a450-380793a81a11")
 		)
 		(pin "33"
-			(uuid "e948891f-1b49-429c-ae2e-c238479613c2")
+			(uuid "7b357c3e-bd47-4046-9c64-5e40307468d3")
 		)
 		(pin "34"
-			(uuid "01efaf2d-ede9-4686-830d-7e55c8a2c227")
+			(uuid "6756f407-bd9e-4b82-80f0-3f2c334afa7e")
 		)
 		(pin "35"
-			(uuid "35cd9483-589d-43e9-86bf-b84a8b3e072e")
+			(uuid "dd8261e4-9999-40c3-aa25-d534f64e5e2e")
 		)
 		(pin "36"
-			(uuid "b6b3bcf7-4951-41ce-b35b-e9cdcfd2e2b8")
+			(uuid "da6988f7-4ce7-4815-b658-94231e38bb6b")
 		)
 		(pin "37"
-			(uuid "128a4579-098d-4cc3-bb4c-b357eefb3306")
+			(uuid "0faab7a5-ec3c-4f71-9aeb-2126faf7dbd0")
 		)
 		(pin "38"
-			(uuid "f10143ba-fb34-41d0-8445-5a47fea8ac59")
+			(uuid "67430142-e563-4959-86d4-483559e265a9")
 		)
 		(pin "39"
-			(uuid "a552316d-af17-4189-9c1d-ed7148ffa232")
+			(uuid "25cbea87-2a46-4673-88a3-cc21dd920f86")
 		)
 		(pin "40"
-			(uuid "8ded9c74-3a22-45c4-874b-c01254c7110c")
+			(uuid "4ebbc508-c020-484f-b001-82d5292acd9a")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "J5B")
 					(unit 1)
 				)
@@ -891,16 +891,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 40.64 270)
+		(at 374.65 107.95 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "79cb3c55-a621-4142-91a9-3496cdd06fca")
+		(uuid "bb37e54b-dc34-4027-92a4-9896f1deca69")
 		(property "Reference" "#PWR200"
-			(at 368.3 40.64 270)
+			(at 368.3 107.95 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -910,7 +910,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 40.64 0)
+			(at 379.73 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -918,7 +918,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 40.64 0.0000)
+			(at 374.65 107.95 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -927,11 +927,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "528fd0e5-6512-4248-b68f-4cd778b2aa24")
+			(uuid "2e9ed7d2-e3a1-4a64-bcc2-d9203916dc79")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR200")
 					(unit 1)
 				)
@@ -940,16 +940,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 76.2 270)
+		(at 374.65 143.51 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c912153c-0be3-464e-b189-bde878143527")
+		(uuid "d3f00831-9cad-426e-8934-6e5480f4c405")
 		(property "Reference" "#PWR201"
-			(at 368.3 76.2 270)
+			(at 368.3 143.51 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -959,7 +959,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 76.2 0)
+			(at 379.73 143.51 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -967,7 +967,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 76.2 0.0000)
+			(at 374.65 143.51 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -976,11 +976,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "09a9270b-a0fd-4171-991a-2c8ed132b71d")
+			(uuid "36f52092-8eaf-4cf4-a8bb-a776c2fb04d8")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR201")
 					(unit 1)
 				)
@@ -989,16 +989,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 81.28 270)
+		(at 374.65 148.59 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d897c4b7-9dc6-48da-93be-1bd9fb7e20b4")
+		(uuid "64dfc06e-ce0a-494e-a963-d64c760b2d81")
 		(property "Reference" "#PWR202"
-			(at 368.3 81.28 270)
+			(at 368.3 148.59 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1008,7 +1008,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 81.28 0)
+			(at 379.73 148.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1016,7 +1016,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 81.28 0.0000)
+			(at 374.65 148.59 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1025,11 +1025,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "a7ac001f-b34e-43b1-8aad-8129a948451b")
+			(uuid "6656b1f1-a500-4d01-a0eb-00e5b48867ac")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR202")
 					(unit 1)
 				)
@@ -1038,16 +1038,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 86.36 270)
+		(at 374.65 153.67 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "065f37ae-b4c1-4f69-b435-1a15cf7647fd")
+		(uuid "7142cfa1-a742-4711-9e64-83c397065d66")
 		(property "Reference" "#PWR203"
-			(at 368.3 86.36 270)
+			(at 368.3 153.67 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1057,7 +1057,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 86.36 0)
+			(at 379.73 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1065,7 +1065,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 86.36 0.0000)
+			(at 374.65 153.67 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1074,11 +1074,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "dd092fb5-b5a4-4006-8206-a1ea7bb5535a")
+			(uuid "e209b7bd-e079-4bea-8255-b0b1ce27b7aa")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR203")
 					(unit 1)
 				)
@@ -1087,16 +1087,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 91.44 270)
+		(at 374.65 158.75 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d221307c-7eb7-4322-96f0-1444c02449a2")
+		(uuid "a178f714-fbfb-4d5e-993a-cc8862161477")
 		(property "Reference" "#PWR204"
-			(at 368.3 91.44 270)
+			(at 368.3 158.75 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1106,7 +1106,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 91.44 0)
+			(at 379.73 158.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1114,7 +1114,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 91.44 0.0000)
+			(at 374.65 158.75 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1123,11 +1123,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "752a8f35-252d-4f92-9415-92751f02a2ed")
+			(uuid "90a8e765-8174-46fb-8611-f7ca696960a7")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR204")
 					(unit 1)
 				)
@@ -1136,16 +1136,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 96.52 270)
+		(at 374.65 163.83 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "1f2ae796-f137-4ce1-aad3-dcaeef06c8a2")
+		(uuid "da34a075-9fbb-4795-a8bf-768f07ec664c")
 		(property "Reference" "#PWR205"
-			(at 368.3 96.52 270)
+			(at 368.3 163.83 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1155,7 +1155,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 96.52 0)
+			(at 379.73 163.83 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1163,7 +1163,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 96.52 0.0000)
+			(at 374.65 163.83 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1172,11 +1172,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "d88bdc6e-e545-4f96-a853-df45ff27f8f4")
+			(uuid "87385264-6792-4e96-981a-475d22889e02")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR205")
 					(unit 1)
 				)
@@ -1185,16 +1185,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 101.6 270)
+		(at 374.65 168.91 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "04279efd-9c70-4fbd-954d-65138607e83b")
+		(uuid "9122a949-ecba-4160-9bf9-8b5990e7d607")
 		(property "Reference" "#PWR206"
-			(at 368.3 101.6 270)
+			(at 368.3 168.91 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1204,7 +1204,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 101.6 0)
+			(at 379.73 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1212,7 +1212,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 101.6 0.0000)
+			(at 374.65 168.91 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1221,11 +1221,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "5c629cf4-48df-4aa6-a977-f3da833962f1")
+			(uuid "8a5fd887-76a0-470a-8911-5fa6218fcbf2")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR206")
 					(unit 1)
 				)
@@ -1234,16 +1234,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 106.68 270)
+		(at 374.65 173.99 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "3857712e-95e0-4f45-9df7-bf1f3a721017")
+		(uuid "7cf5a50b-67a5-4004-a9df-f25ceafc4a8f")
 		(property "Reference" "#PWR207"
-			(at 368.3 106.68 270)
+			(at 368.3 173.99 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1253,7 +1253,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 106.68 0)
+			(at 379.73 173.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1261,7 +1261,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 106.68 0.0000)
+			(at 374.65 173.99 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1270,11 +1270,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "a2bc9966-0673-4d41-89da-fb308e9a95f1")
+			(uuid "38c4bfa6-0ab6-408a-a668-e202cd993b47")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR207")
 					(unit 1)
 				)
@@ -1283,16 +1283,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 111.76 270)
+		(at 374.65 179.07 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "689ef9ba-0970-4c02-96b3-4408aaefcb27")
+		(uuid "0700c92f-6dc3-442d-9814-9f1bc95f5395")
 		(property "Reference" "#PWR208"
-			(at 368.3 111.76 270)
+			(at 368.3 179.07 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1302,7 +1302,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 111.76 0)
+			(at 379.73 179.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1310,7 +1310,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 111.76 0.0000)
+			(at 374.65 179.07 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1319,11 +1319,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "8205eb90-2ed6-40d0-b0fb-d4a898e6ed97")
+			(uuid "5781e31a-604f-4a5a-bb72-eb43ac3e69bc")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR208")
 					(unit 1)
 				)
@@ -1332,16 +1332,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 116.84 270)
+		(at 374.65 184.15 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a748c1f1-3913-49c3-a9a8-adb24996a92a")
+		(uuid "349a23dc-3531-49db-8632-01584aba6673")
 		(property "Reference" "#PWR209"
-			(at 368.3 116.84 270)
+			(at 368.3 184.15 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1351,7 +1351,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 116.84 0)
+			(at 379.73 184.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1359,7 +1359,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 116.84 0.0000)
+			(at 374.65 184.15 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1368,11 +1368,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "d516454a-50f8-41a9-9268-63b6f0695259")
+			(uuid "7135ca9e-3a56-4090-b35d-b7381a839397")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR209")
 					(unit 1)
 				)
@@ -1381,16 +1381,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 374.65 121.92 270)
+		(at 374.65 189.23 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "b46d1368-639f-49ab-af23-3c5c39c20579")
+		(uuid "7e758b1d-ea33-473e-811a-18c171c247db")
 		(property "Reference" "#PWR210"
-			(at 368.3 121.92 270)
+			(at 368.3 189.23 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1400,7 +1400,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 379.73 121.92 0)
+			(at 379.73 189.23 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1408,7 +1408,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 121.92 0.0000)
+			(at 374.65 189.23 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1417,11 +1417,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "d717be22-e914-45ac-9224-e5718ad8f178")
+			(uuid "6c106207-82a0-41d6-ae89-1af2b5457340")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR210")
 					(unit 1)
 				)
@@ -1430,16 +1430,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 326.39 40.64 0)
+		(at 326.39 107.95 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "389b32a4-5d27-491e-9219-53cbc6e42820")
+		(uuid "8ce70765-3591-4fa1-bad8-0f08f893cb5a")
 		(property "Reference" "C100"
-			(at 327.025 43.18 0.0000)
+			(at 327.025 110.49 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1448,7 +1448,7 @@
 			)
 		)
 		(property "Value" "10u"
-			(at 334.01 35.56 0)
+			(at 334.01 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1457,7 +1457,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 327.3552 36.83 0.0000)
+			(at 327.3552 104.14 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1466,14 +1466,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "a5326118-6584-4ca7-b88f-4729da14f0d8")
+			(uuid "4ca7c755-01d4-49c8-93c6-d16e6e2f058e")
 		)
 		(pin "2"
-			(uuid "06df6401-8831-41ee-9619-8c54c1ee1f3d")
+			(uuid "26179c97-51d6-4bc8-8770-1fe0fc0e12f0")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1482,16 +1482,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 326.39 36.83 180)
+		(at 326.39 104.14 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "84fec4a9-ed8f-4d1e-808c-6cfad199c1b0")
+		(uuid "7f02998f-88de-4440-9015-2f40c6e42b51")
 		(property "Reference" "#PWR300"
-			(at 326.39 43.18 180)
+			(at 326.39 110.49 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1501,7 +1501,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 326.39 31.75 0)
+			(at 326.39 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1509,7 +1509,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 326.39 36.83 0.0000)
+			(at 326.39 104.14 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1518,11 +1518,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "0666a501-2b12-4953-8f6f-921065a289d0")
+			(uuid "91cfaa9a-8984-4b2a-a97a-55ca8df5f9f6")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR300")
 					(unit 1)
 				)
@@ -1531,16 +1531,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 321.31 40.64 0)
+		(at 321.31 107.95 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "60d143e3-137c-4a68-a593-02d6eb778d0f")
+		(uuid "91c7aa37-81ab-4865-8fa1-f295020db49a")
 		(property "Reference" "C101"
-			(at 321.945 43.18 0.0000)
+			(at 321.945 110.49 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1549,7 +1549,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 313.69 40.64 90)
+			(at 318.77 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1558,7 +1558,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 322.2752 36.83 0.0000)
+			(at 322.2752 104.14 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1567,14 +1567,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "89495f19-eac0-4a78-a3b0-3034a9825800")
+			(uuid "a4f1341d-65b6-4f60-bf58-c18944f78f94")
 		)
 		(pin "2"
-			(uuid "a730579c-6cdc-40a4-9915-6c8afa6729a8")
+			(uuid "41552bd7-9d86-4e39-8525-2a41c27fd56c")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1583,16 +1583,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 336.55 50.8 0)
+		(at 336.55 118.11 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "541c8222-b1fd-4486-abab-533292da3771")
+		(uuid "a71d498e-1c09-49ec-88ec-2f9df52d563e")
 		(property "Reference" "C102"
-			(at 337.185 53.34 0.0000)
+			(at 337.185 120.65 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1601,7 +1601,7 @@
 			)
 		)
 		(property "Value" "10u"
-			(at 328.93 50.8 90)
+			(at 328.93 118.11 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1610,7 +1610,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 337.5152 46.99 0.0000)
+			(at 337.5152 114.3 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1619,14 +1619,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "0b05bbb3-59f4-47af-abf3-d6faf0cd0cea")
+			(uuid "ced8e106-3cd5-45c9-acbf-edd3f7824c7b")
 		)
 		(pin "2"
-			(uuid "d06141c3-06b1-42fc-943c-4f5c258b385b")
+			(uuid "5b9e730c-892d-4b8c-a5d3-f4aec9574e37")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "C102")
 					(unit 1)
 				)
@@ -1635,16 +1635,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 336.55 46.99 180)
+		(at 336.55 114.3 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "a5dd9216-d2fa-472f-a05b-cbb1c9a5ec4b")
+		(uuid "7d789a0a-0a43-429e-b121-63120d75bc26")
 		(property "Reference" "#PWR301"
-			(at 336.55 53.34 180)
+			(at 336.55 120.65 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1654,7 +1654,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 336.55 41.91 0)
+			(at 336.55 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1662,7 +1662,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 336.55 46.99 0.0000)
+			(at 336.55 114.3 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1671,11 +1671,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "387547f6-9769-47dd-b359-22a39057118f")
+			(uuid "979d9c5c-ad71-4395-b74f-6a585bc2aad2")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#PWR301")
 					(unit 1)
 				)
@@ -1684,16 +1684,16 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 354.33 66.04 0)
+		(at 341.63 123.19 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "d8dab560-1b08-45a1-85e1-8ce289fc5a6e")
+		(uuid "86465749-1458-4b10-bd9d-9f2e55e7a803")
 		(property "Reference" "#FLG100"
-			(at 354.33 67.945 0.0000)
+			(at 341.63 125.095 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1703,7 +1703,7 @@
 			)
 		)
 		(property "Value" "+12V"
-			(at 354.33 60.96 0)
+			(at 341.63 118.11 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1711,7 +1711,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 354.33 66.04 0.0000)
+			(at 341.63 123.19 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1720,11 +1720,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "6248806b-beee-4cda-a120-3ef63a31ed32")
+			(uuid "78a62870-9dc5-4fe8-b66f-4e23bd58317a")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#FLG100")
 					(unit 1)
 				)
@@ -1733,16 +1733,16 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 374.65 50.8 0)
+		(at 372.11 118.11 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "cbe67daa-c0d6-4c10-bae7-dded6993fe65")
+		(uuid "9bc7dcbd-5791-446e-8430-50c419a79b73")
 		(property "Reference" "#FLG101"
-			(at 374.65 52.705 0.0000)
+			(at 372.11 120.015 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1752,7 +1752,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 374.65 45.72 0)
+			(at 372.11 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1760,7 +1760,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 50.8 0.0000)
+			(at 372.11 118.11 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1769,11 +1769,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "57d243fe-a219-401a-bada-020c0b54c946")
+			(uuid "f5ff6246-e015-4e1c-abb5-94f33204cc99")
 		)
 		(instances
 			(project "LVDS LCD bank B (panel + backlight power)"
-				(path "/410abcf1-c962-466b-99f3-51d3cd433749"
+				(path "/09e8be27-a229-4028-8ffd-5c64a1d70132"
 					(reference "#FLG101")
 					(unit 1)
 				)
@@ -1782,179 +1782,212 @@
 	)
 	(wire
 		(pts
-			(xy 321.31 36.83) (xy 326.39 36.83)
+			(xy 321.31 104.14) (xy 326.39 104.14)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "881b31b8-0ea3-41cd-84be-d53f33c46e14")
+		(uuid "1a5d45e9-ac32-4d1f-b401-7acd58348bab")
 	)
 	(wire
 		(pts
-			(xy 374.65 45.72) (xy 321.31 45.72)
+			(xy 374.65 113.03) (xy 321.31 113.03)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "981e9dc2-28f5-4998-a0b2-ce0f2d1d6d85")
+		(uuid "efd88c0e-11ea-42de-9a6a-5ac136ca142d")
 	)
 	(wire
 		(pts
-			(xy 326.39 45.72) (xy 326.39 44.45)
+			(xy 326.39 113.03) (xy 326.39 111.76)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "91b76cd5-7bdf-4221-862e-10393dbfb5d9")
+		(uuid "5f2ded8c-c576-41bb-adf7-be0b02c7aeda")
 	)
 	(wire
 		(pts
-			(xy 321.31 45.72) (xy 321.31 44.45)
+			(xy 321.31 113.03) (xy 321.31 111.76)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "470dcfd9-2b05-41c3-8b11-7974aab4cc27")
+		(uuid "8792a76f-e71d-4823-9761-33a69770f385")
 	)
 	(wire
 		(pts
-			(xy 374.65 55.88) (xy 336.55 55.88)
+			(xy 374.65 123.19) (xy 336.55 123.19)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "81e1ed9d-3e41-44f1-861c-6acebede74de")
+		(uuid "f511163d-a9ca-4368-ac79-21956b1627f3")
 	)
 	(wire
 		(pts
-			(xy 336.55 55.88) (xy 336.55 54.61)
+			(xy 336.55 123.19) (xy 336.55 121.92)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "c6380295-a22c-47d6-810e-6b82ac43ee56")
+		(uuid "6f97ce57-1383-4756-ad70-45aa089be6a6")
 	)
 	(wire
 		(pts
-			(xy 374.65 50.8) (xy 369.57 50.8)
+			(xy 374.65 118.11) (xy 367.03 118.11)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "1d91d2cf-2d1e-4d09-9b56-3ba0dca26f49")
+		(uuid "27d4e063-12e0-40ce-8fcc-d51e78f3f3a2")
 	)
 	(wire
 		(pts
-			(xy 374.65 60.96) (xy 369.57 60.96)
+			(xy 374.65 128.27) (xy 367.03 128.27)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9dbfe36f-95c7-4d91-b127-710d686db52c")
+		(uuid "9bbb855e-032c-43d0-b607-567407cd40bf")
 	)
 	(wire
 		(pts
-			(xy 374.65 66.04) (xy 349.25 66.04)
+			(xy 374.65 133.35) (xy 346.71 133.35)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9413532d-a38a-4fa0-b3c7-f5ee06311cd9")
+		(uuid "c949f18a-4e1b-4a0b-9655-37d46ae2fe7c")
 	)
 	(wire
 		(pts
-			(xy 374.65 71.12) (xy 369.57 71.12)
+			(xy 374.65 138.43) (xy 367.03 138.43)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9332f16e-5468-4442-a688-08dccf63ccc6")
+		(uuid "3ef22583-6aa5-4843-96d9-883fa2281508")
 	)
 	(wire
 		(pts
-			(xy 321.31 45.72) (xy 318.77 45.72)
+			(xy 334.01 123.19) (xy 336.55 123.19)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "735d8cb4-69f8-4365-8d35-bd78fdbf7d7e")
+		(uuid "f90d0d11-071c-47df-bf8c-d58f18e14189")
+	)
+	(wire
+		(pts
+			(xy 321.31 113.03) (xy 318.77 113.03)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2753e1c9-b89f-46b5-ae02-5e20d00ee613")
 	)
 	(junction
-		(at 326.39 45.72)
+		(at 326.39 113.03)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "4ab096a8-bfe7-4578-9d34-9fea1bff5b9e")
+		(uuid "a87ce2ac-6202-4efd-a439-7afbb442926d")
 	)
 	(junction
-		(at 354.33 66.04)
+		(at 336.55 123.19)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "09c69f37-65cd-49db-9347-59fd783e6a1e")
+		(uuid "cfd4021a-572e-4d43-91fa-1a3d5946dae1")
+	)
+	(junction
+		(at 372.11 118.11)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "68b9c6f9-abf2-480f-aeef-ce8aa72ed9e8")
+	)
+	(junction
+		(at 341.63 123.19)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "747a88f6-0d5d-481f-8164-3b5001575be1")
 	)
 	(label "+3V3"
-		(at 318.77 45.72 180)
+		(at 318.77 113.03 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "924c04da-7d0e-43e9-b804-16ca902a6707")
+		(uuid "c8e5272b-e9f7-4973-b3f3-e79d66796618")
 	)
 	(hierarchical_label "+3V3"
 		(shape input)
-		(at 369.57 50.8 180)
+		(at 367.03 118.11 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "05e8222b-0d3c-47f2-a691-e131a6480715")
+		(uuid "ddbe7347-c77f-4edd-a19b-e1d6d5da918d")
 	)
 	(hierarchical_label "+12V"
 		(shape input)
-		(at 369.57 60.96 180)
+		(at 367.03 128.27 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "a654f615-c5e1-477c-8b46-0ca9dfd5827f")
+		(uuid "d4854780-f087-479f-b629-7204e9eac111")
 	)
 	(hierarchical_label "+12V"
 		(shape input)
-		(at 349.25 66.04 180)
+		(at 346.71 133.35 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "7c0f2ed5-144e-46f1-a78b-3d45cbf4bd55")
+		(uuid "313ee27a-e284-475a-8f2b-a4d6a60032e7")
 	)
 	(hierarchical_label "+12V"
 		(shape input)
-		(at 369.57 71.12 180)
+		(at 367.03 138.43 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "41d3b5f7-ec32-4293-941b-cd994dd34169")
+		(uuid "4eda1e04-1e57-4265-9496-7f9c8412ec54")
+	)
+	(hierarchical_label "+12V"
+		(shape input)
+		(at 334.01 123.19 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "c4b434f6-d37e-4a82-865f-be1ab7d6f52b")
 	)
 	(sheet_instances
 		(path "/"

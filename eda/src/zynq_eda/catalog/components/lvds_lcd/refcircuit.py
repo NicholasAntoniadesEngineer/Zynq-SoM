@@ -72,29 +72,22 @@ LVDS_LCD_REFCIRCUIT = ReferenceCircuit(
     description="40-pin 0.5 mm pitch FFC receptacle for LVDS LCD panel",
     supply_rail="+3V3",
     external_parts=(
-        # LVDS far-end terminations - 100 ohm differential across each pair
-        # at the connector. Many integrated panels include this internally,
-        # but adding it here lets the carrier drive an external panel
-        # via a longer FFC. Resistor placed close to the connector.
+        # NO carrier-side LVDS differential termination.
         #
-        # NOTE: from_pin/to_net values match the FFC_40P symbol's pin names
-        # (see shared/symbols/zynq_eda.kicad_sym). When the carrier supplies
-        # a pin_to_net map on ConnectorInstance, the symbol pin name
-        # (e.g. "LVDS_CLK+") still has to exist on the symbol so cluster
-        # placement can find its geometry. The to_net for non-net symbol
-        # pin names is resolved via pin_to_net overrides.
-        ExternalPart(
-            from_pin="LVDS_CLK+",
-            to_net="LVDS_CLK-",
-            part_token="100R_0402_1%",
-            justification="IEEE 1596.3 / TIA-644-A: 100 ohm differential termination at receiver",
-        ),
-        ExternalPart(
-            from_pin="LVDS_DATA0+",
-            to_net="LVDS_DATA0-",
-            part_token="100R_0402_1%",
-            justification="IEEE 1596.3 / TIA-644-A: 100 ohm differential termination at receiver",
-        ),
+        # Per IEEE 1596.3 / TIA-644-A the 100 ohm parallel differential
+        # termination belongs at the RECEIVER (the LCD panel), NOT at the
+        # transmitter. This carrier is the LVDS SOURCE — the Zynq drives
+        # ZYNQ_LCD_LVDS_{CLK,DA0..3}_{P,N} OUT to the panel — so a 100 ohm
+        # resistor across each pair here would shunt the driver's current
+        # source and halve the differential swing. The panel terminates.
+        # (The previous revision placed two source-side 100 ohm resistors
+        # — on CLK and DATA0 only, an electrically-incorrect, asymmetric
+        # "safety" termination; removed.)
+        #
+        # NOTE on pin-name destinations: a cluster part's ``to_net`` may
+        # name a SYMBOL PIN (e.g. a differential partner) — the planner
+        # resolves it through the carrier ``pin_to_net`` map to the real
+        # net, so such parts land on the carrier net, not an orphan label.
         # +3V3 panel-logic bypass at the connector. ``+3V3`` is the
         # symbol pin name; pin_to_net wires it to the same net so
         # to_net="GND" lands on the global GND.

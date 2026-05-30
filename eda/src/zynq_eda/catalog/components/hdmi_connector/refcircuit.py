@@ -67,15 +67,23 @@ HDMI_A_REFCIRCUIT = ReferenceCircuit(
     footprint="Connector_HDMI:HDMI_A_SOFNG_HDMI-019S",
     description="HDMI Type-A receptacle, 19-pin SMD right-angle, shielded",
     external_parts=(
-        # DEFERRED — +5V VBUS bulk + bypass at the connector (HDMI 1.4 Sec
-        # 4.2.7: 1uF bulk + 100nF HF on Pin_18->GND). Pin_18 (+5V) sits in
-        # the MIDDLE of the 19-pin stack, hemmed in by the adjacent pins'
-        # hier-labels on one side and the connector body on the other, so a
-        # cluster cap on it routes in a loop around the body (overprint).
-        # Re-enable once the connector decoupling can be drawn as a labeled
-        # cap-array in open space (caps tied to +5V/GND by net label) rather
-        # than clustered on the pin — same pattern flagged for the FMC
-        # connector. The +5V net itself IS connected (Pin_18 hier-label).
+        # +5V VBUS bulk + bypass at the connector (HDMI 1.4 Sec 4.2.7: 1uF
+        # bulk + 100nF HF on Pin_18->GND). Pin_18 (+5V) is mid-stack, so the
+        # hdmi_tx/hdmi_rx ConnectorInstances set decoupling_array=True and
+        # these are drawn as a labelled cap bank in open space rather than
+        # clustered on the crammed pin.
+        ExternalPart(
+            from_pin="Pin_18",
+            to_net="GND",
+            part_token="1u_0402_X7R",
+            justification="HDMI 1.4 Sec 4.2.7: 1uF bulk on +5V at the connector",
+        ),
+        ExternalPart(
+            from_pin="Pin_18",
+            to_net="GND",
+            part_token="100n_0402_X7R",
+            justification="HDMI 1.4 Sec 4.2.7: 100nF HF bypass at the +5V pin",
+        ),
         #
         # Shield-to-chassis discharge (HDMI 1.4 Sec 4.2.7: 1Mohm DC bleed +
         # 100nF HF return) is INTENTIONALLY OMITTED here: the blocks place
