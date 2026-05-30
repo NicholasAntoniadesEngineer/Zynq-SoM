@@ -596,26 +596,6 @@ def _build_pin_to_net_map(
     return out
 
 
-def _decoupling_array_from_net(ep, owner, *, is_ic: bool, geometry) -> str:
-    """Resolve the FROM-pin net of a ``decoupling_array`` external part.
-
-    The labelled cap-bank ties BOTH of a part's terminals to a net by
-    name, so a part is only array-eligible when its ``from_pin`` lands on
-    a NAMED net. A part whose ``from_pin`` is a bare device pin with no
-    net (e.g. a reset pull-up onto an IC's ``~{RST}``) has no name to
-    label the from-terminal with — arraying it would dangle that pin —
-    so it stays clustered on the pin instead. Returns the from-net name,
-    or ``""`` when the pin has no resolvable net (⇒ not array-eligible).
-    """
-    if is_ic:
-        return _resolve_ic_pin_net(ep.from_pin, owner)
-    try:
-        n2n = _connector_name_to_number(owner, geometry)
-    except Exception:
-        n2n = {}
-    return _build_pin_to_net_map(owner, n2n).get(ep.from_pin, "")
-
-
 def _classify_connector_pin(
     pin_name: str,
     connector: ConnectorInstance,
@@ -730,18 +710,7 @@ def plan_pin_specs(
     # --- ICs ---------------------------------------------------------------
     for ic in block.ics:
         cluster_externals_by_pin: dict[str, list[str]] = {}
-        # decoupling_array owners place their parts as a labeled column in
-        # open space (Phase 9d), NOT clustered on pins — so don't mark any
-        # pin as CLUSTER here; the pins classify by their own net. A part
-        # whose from_pin has no NAMED net (e.g. a reset pull-up onto a bare
-        # ~{RST}) is NOT array-eligible (the bank can't label that
-        # terminal) — it stays clustered on its pin even on an array owner.
-        _array = getattr(ic, "decoupling_array", False)
         for ep in ic.refcircuit.external_parts:
-            if _array and _decoupling_array_from_net(
-                ep, ic, is_ic=True, geometry=geometry,
-            ):
-                continue
             dests = cluster_externals_by_pin.setdefault(ep.from_pin, [])
             for _ in range(ep.quantity):
                 dests.append(_remap_cluster_destination(ep.to_net, ic))
@@ -799,12 +768,7 @@ def plan_pin_specs(
         pin_to_net = _build_pin_to_net_map(connector, name_to_number)
 
         cluster_externals_by_pin = {}
-        _array = getattr(connector, "decoupling_array", False)
         for ep in connector.refcircuit.external_parts:
-            if _array and _decoupling_array_from_net(
-                ep, connector, is_ic=False, geometry=geometry,
-            ):
-                continue
             dests = cluster_externals_by_pin.setdefault(ep.from_pin, [])
             for _ in range(ep.quantity):
                 # A refcircuit cluster destination may reference a SYMBOL
@@ -2528,13 +2492,10 @@ def _refine_cluster_value_shifts(
         sym = sym_by_ref.get(ref)
         if sym is None:
             continue
-        # Power/flag symbols (#PWR.., #FLG..) carry a positionally
-        # meaningful rail label (GND / +3V3) that must stay at its pin —
-        # never relocate it; the conflicting partner (a connector / IC
-        # Value) is moved instead. pick_dynamic_value_shift now handles
-        # any lib_id (it synthesises a ladder from the library Value
-        # position when the lib_id has no curated entry), so this
-        # refinement is no longer limited to cluster passives.
+        # Power/flag symbols (#PWR.., #FLG..) keep their rail-name Value at
+        # the library position. Relocating it regresses dense power-symbol
+        # sheets (verified: moving usb_pd's FUSB302 rail labels opened 6
+        # new overlaps), so the conflicting partner is moved instead.
         if sym.reference.startswith("#PWR") or sym.reference.startswith("#FLG"):
             continue
         if _conflict_count(val_bbox) == 0:
@@ -4651,166 +4612,6 @@ def plan_labels(plan: LayoutPlan, block: Block, geometry) -> None:
     _emit_orphan_external_net_hlabels(plan, block, geometry)
 
 
-def _emit_decoupling_array(
-    plan: LayoutPlan, block: Block, geometry, next_ref_counters: dict,
-) -> None:
-    """Place each ``decoupling_array`` owner's external_parts as a tidy
-    COLUMN of standalone passives in open page space, each terminal tied
-    to its net by a LOCAL LABEL (KiCad merges by net name).
-
-    This is the general fix for dense connectors/ICs where clustering many
-    decoupling caps / pull-ups onto adjacent pins overprints (FMC power
-    bank, HDMI +5V on a mid-stack pin, CP2102N supply caps). The caps are
-    drawn as a labelled bank — exactly how decoupling is hand-drawn — so
-    placement is decoupled from the crammed pin geometry. The owner's pins
-    are connected independently (signal hier-label / power symbol), and the
-    labels here merge onto those same nets.
-
-    Each part is a horizontal passive (rotation 90); its LEFT pin carries a
-    ``from_net`` label (the pin's own net) reading left, its RIGHT pin a
-    ``to_net`` label (the part's destination) reading right. A clear column
-    region is found by scanning; if none fits the parts are left unplaced
-    (the from_pin guard already proved the nets are valid, and an unplaced
-    decoupling cap surfaces in the BOM diff rather than as an overlap).
-    """
-    from zynq_eda.core.layout._constants import (
-        INTERIOR_MARGIN_MM, KICAD_GRID_MM, PASSIVE_PIN_HALF,
-    )
-    from zynq_eda.core.layout.bbox import symbol_bbox, text_width
-    from zynq_eda.core.layout._builder import _label_bbox
-    from zynq_eda.core.layout.cluster import (
-        passive_footprint, passive_lib_id, passive_ref_prefix, passive_value,
-    )
-    from zynq_eda.core.model.grid import snap_to_grid
-    from zynq_eda.core.model.sheet import (
-        PAPER_DIMENSIONS_MM, PlacedLabel, PlacedSymbol,
-    )
-
-    owners = (
-        [(o, True) for o in block.ics
-         if getattr(o, "decoupling_array", False)]
-        + [(o, False) for o in block.connectors
-           if getattr(o, "decoupling_array", False)]
-    )
-    if not owners:
-        return
-    paper_w, paper_h = PAPER_DIMENSIONS_MM[block.paper_size]
-    pitch = 2 * KICAD_GRID_MM  # 5.08 mm between cap rows
-    ignore = frozenset({"junction", "no_connect", "wire"})
-
-    for owner, is_ic in owners:
-        if is_ic:
-            def _from(pin, _o=owner):
-                return _resolve_ic_pin_net(pin, _o)
-
-            def _to(net, _o=owner):
-                return _remap_cluster_destination(net, _o)
-        else:
-            try:
-                _n2n = _connector_name_to_number(owner, geometry)
-            except Exception:
-                _n2n = {}
-            _ptn = _build_pin_to_net_map(owner, _n2n)
-
-            def _from(pin, _p=_ptn):
-                return _p.get(pin, "")
-
-            def _to(net, _p=_ptn):
-                # Resolve a symbol-pin-name destination (e.g. a diff
-                # partner) through pin_to_net to the carrier net; real net
-                # names pass through unchanged.
-                return _p.get(net, net)
-
-        parts: list[tuple[str, str, str]] = []
-        for ep in owner.refcircuit.external_parts:
-            fn, tn = _from(ep.from_pin), _to(ep.to_net)
-            # A part whose from_pin has no NAMED net is NOT array-eligible
-            # (its from-terminal can't be labelled); it was left clustered
-            # on its pin by plan_pin_specs, so skip it here to avoid
-            # double-placing / a dangling terminal.
-            if not fn:
-                continue
-            for _ in range(ep.quantity):
-                parts.append((ep.part_token, fn, tn))
-        if not parts:
-            continue
-
-        n = len(parts)
-        col_h = (n - 1) * pitch
-        max_left = max((text_width(fn) for _, fn, _ in parts if fn),
-                       default=0.0) + KICAD_GRID_MM
-        max_right = max((text_width(tn) for _, _, tn in parts if tn),
-                        default=0.0) + KICAD_GRID_MM
-
-        def _column_clear(xc: float, y0: float) -> bool:
-            for i, (tok, fn, tn) in enumerate(parts):
-                yi = y0 + i * pitch
-                pos = Point(xc, yi)
-                try:
-                    body = symbol_bbox(
-                        lib_id=passive_lib_id(tok), anchor=pos,
-                        rotation=90.0, cache=geometry,
-                        owner_id="decoupling_array_probe",
-                    )
-                    if plan.occupancy.collides(body, ignore_kinds=ignore):
-                        return False
-                except Exception:
-                    pass
-                if fn and plan.occupancy.collides(_label_bbox(PlacedLabel(
-                        net_name=fn,
-                        position=Point(snap_to_grid(xc - PASSIVE_PIN_HALF), yi),
-                        rotation=180.0)), ignore_kinds=ignore):
-                    return False
-                if tn and plan.occupancy.collides(_label_bbox(PlacedLabel(
-                        net_name=tn,
-                        position=Point(snap_to_grid(xc + PASSIVE_PIN_HALF), yi),
-                        rotation=0.0)), ignore_kinds=ignore):
-                    return False
-            return True
-
-        # Scan for a clear column (left->right, top->bottom).
-        x_lo = snap_to_grid(INTERIOR_MARGIN_MM + max_left + PASSIVE_PIN_HALF)
-        x_hi = paper_w - INTERIOR_MARGIN_MM - max_right - PASSIVE_PIN_HALF
-        y_hi = paper_h - INTERIOR_MARGIN_MM - col_h
-        chosen: tuple[float, float] | None = None
-        xc = x_lo
-        while xc <= x_hi and chosen is None:
-            y0 = snap_to_grid(INTERIOR_MARGIN_MM)
-            while y0 <= y_hi:
-                if _column_clear(xc, y0):
-                    chosen = (xc, y0)
-                    break
-                y0 = snap_to_grid(y0 + pitch)
-            xc = snap_to_grid(xc + 4 * KICAD_GRID_MM)
-        if chosen is None:
-            continue
-        xc, y0 = chosen
-        for i, (tok, fn, tn) in enumerate(parts):
-            yi = snap_to_grid(y0 + i * pitch)
-            pos = Point(xc, yi)
-            prefix = passive_ref_prefix(tok)
-            idx = next_ref_counters.setdefault(prefix, 100)
-            next_ref_counters[prefix] = idx + 1
-            _plan_register_symbol(plan, PlacedSymbol(
-                lib_id=passive_lib_id(tok),
-                reference=f"{prefix}{idx}",
-                value=passive_value(tok),
-                position=pos,
-                footprint=passive_footprint(tok),
-                rotation=90.0,
-            ), geometry)
-            if fn:
-                _add_label_with_bbox(plan, PlacedLabel(
-                    net_name=fn,
-                    position=Point(snap_to_grid(xc - PASSIVE_PIN_HALF), yi),
-                    rotation=180.0))
-            if tn:
-                _add_label_with_bbox(plan, PlacedLabel(
-                    net_name=tn,
-                    position=Point(snap_to_grid(xc + PASSIVE_PIN_HALF), yi),
-                    rotation=0.0))
-
-
 def _grid_center_shift(
     lo: float, hi: float, page: float,
     margin: float = 5.08, grid: float = 1.27,
@@ -5010,12 +4811,6 @@ def plan_block(block: Block, geometry) -> LayoutPlan:
     # Tap the trunk with the rail's power symbol (visible, on a short
     # stub in clear lane space) so the net is named and driven.
     _emit_power_rail_taps(plan, block, geometry, next_ref_counters)
-
-    # Phase 9d — decoupling-cap arrays. Owners flagged decoupling_array
-    # place their external_parts as a labelled column of standalone
-    # passives in open space (net-label-merged), instead of clustering them
-    # on crammed connector/IC pins.
-    _emit_decoupling_array(plan, block, geometry, next_ref_counters)
 
     # Final cluster text-shift refinement: re-pick Value/Reference shifts
     # against the COMPLETE wire/label set (including own-net labels, PWR

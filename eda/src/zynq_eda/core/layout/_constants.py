@@ -234,6 +234,13 @@ POWER_SYMBOL_LIB_IDS: dict[str, str] = {
     "+2V5":        "power:+2V5",
     "+1V8":        "power:+1V8",
     "+1V2":        "power:+1V2",
+    "+12V":        "power:+12V",
+    # FMC adjustable I/O rail — custom compact power symbol (zynq_eda lib).
+    # Rendering +VADJ as a power-symbol graphic (not a long hier-label)
+    # de-crowds the dense FMC power bank: the 6 +VADJ pins + 2 +12V pins
+    # tap their rail with a small symbol on a short stub instead of a
+    # wide text label that the decoupling wires would cross.
+    "+VADJ":       "zynq_eda:+VADJ",
     "CHASSIS_GND": "power:Earth",
 }
 """Maps canonical net names to KiCad power-symbol ``lib_id``s.

@@ -71,13 +71,6 @@ class ConnectorInstance:
     edge: "SheetEdge"
     pin_to_net: tuple[tuple[str, str], ...] = ()
     rotation: float = 0.0
-    decoupling_array: bool = False
-    """When True, this owner's ``external_parts`` are NOT clustered on
-    their pins; instead they are placed as a tidy column of standalone
-    passives in open page space, each terminal tied to its net by a LOCAL
-    LABEL (KiCad merges by net name). Use for dense connectors/ICs where
-    clustering many decoupling caps on adjacent pins overprints. The pins
-    themselves classify normally (signal hier-label / power symbol)."""
 
     def __post_init__(self) -> None:
         if not self.reference:
@@ -128,10 +121,6 @@ class IcInstance:
     power_output_net: str = ""
     net_overrides: tuple[tuple[str, str], ...] = ()
     external_part_net_remap: tuple[tuple[str, str], ...] = ()
-    decoupling_array: bool = False
-    """When True, ``external_parts`` are placed as a labeled column of
-    standalone passives in open space (net-label-merged) rather than
-    clustered on their pins — see :class:`ConnectorInstance`."""
 
     def __post_init__(self) -> None:
         if not self.reference:

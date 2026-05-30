@@ -84,7 +84,6 @@ def build_hdmi_tx() -> Block:
                 reference="J1",
                 refcircuit=REFCIRCUITS["HDMI_A"],
                 lib_id="Connector_Generic:Conn_01x19",
-                decoupling_array=True,
                 edge=SheetEdge.RIGHT,
                 pin_to_net=(
                     ("1",  "ZYNQ_HDMI_TX_TMDS_2_P"),
