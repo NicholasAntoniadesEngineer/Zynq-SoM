@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "70ef6d86-3b89-447f-8068-195206dd242e")
+	(uuid "f6f2fcfa-8e56-425c-9f61-f2f13726dc5c")
 	(paper "A3" portrait)
 	(title_block
 		(title "Zynq SoM Carrier")
@@ -23,7 +23,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "a2ce1786-85e3-424f-9e22-75409e34fc38")
+		(uuid "50c239a9-3708-478f-a040-97b576f7fe3d")
 		(property "Sheetname" "power"
 			(at 15.24 24.6884 0)
 			(effects
@@ -44,7 +44,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -65,7 +65,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "48d4a18a-ff75-47c9-8f29-336580dacc4d")
+		(uuid "20cede35-7c7e-421d-a7d0-131e333a8c62")
 		(property "Sheetname" "power_mon"
 			(at 81.28 24.6884 0)
 			(effects
@@ -86,7 +86,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -107,7 +107,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "90da2972-5cf6-49ee-8bb2-5c0a9cd318b4")
+		(uuid "4198465c-efc2-4ec9-aecb-64cf29a6175d")
 		(property "Sheetname" "usb_pd"
 			(at 147.32 24.6884 0)
 			(effects
@@ -128,7 +128,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -149,7 +149,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "2433d0ca-2a45-4918-bcc4-8e147f78c5dd")
+		(uuid "41b4c4b4-6dfd-49b7-af24-c5b1d9820261")
 		(property "Sheetname" "usbc_otg"
 			(at 213.36 24.6884 0)
 			(effects
@@ -170,7 +170,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -191,7 +191,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "8a82fab6-a008-44b8-97cf-9ad568434c71")
+		(uuid "7189673b-cdef-4d5c-9b23-4db629e91e7f")
 		(property "Sheetname" "uart_bridge"
 			(at 15.24 75.4884 0)
 			(effects
@@ -212,7 +212,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -233,7 +233,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "2bcd66f8-6785-4a99-90a7-f57426f2ee5b")
+		(uuid "5aeed8a3-9ae8-4d47-bfb4-d72de24a9597")
 		(property "Sheetname" "hdmi_tx"
 			(at 81.28 75.4884 0)
 			(effects
@@ -254,7 +254,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -275,7 +275,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "6554bb52-90be-4cca-90fc-3e56d8457f62")
+		(uuid "cc64e52d-3451-4655-9dae-d98d1444b97e")
 		(property "Sheetname" "hdmi_rx"
 			(at 147.32 75.4884 0)
 			(effects
@@ -296,7 +296,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -317,7 +317,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "1abb50f3-dd47-476f-b1d8-7f9c0da71317")
+		(uuid "c12c0a53-d704-4c91-aee7-1c0dec3adbbc")
 		(property "Sheetname" "ethernet"
 			(at 213.36 75.4884 0)
 			(effects
@@ -338,7 +338,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -359,7 +359,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "1aa9566e-99a8-4002-93c9-e53c5c95592a")
+		(uuid "8dbeb7e3-73b7-4cb3-8acb-0379bb9ae79c")
 		(property "Sheetname" "microsd"
 			(at 15.24 126.2884 0)
 			(effects
@@ -380,7 +380,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -401,7 +401,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "25019ee8-38c0-4d1b-9a87-370a4eba56dd")
+		(uuid "8ac3bcbd-7d51-4407-b64c-18b9bf0b835e")
 		(property "Sheetname" "lvds_lcd_signals"
 			(at 81.28 126.2884 0)
 			(effects
@@ -422,7 +422,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -443,7 +443,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "1d7cc9a9-5410-4407-8e4a-ce00530ee838")
+		(uuid "eccdcfc7-f784-49c6-8021-b3210ae55d99")
 		(property "Sheetname" "lvds_lcd_power"
 			(at 147.32 126.2884 0)
 			(effects
@@ -464,7 +464,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -485,7 +485,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "c14753ec-0f62-4301-ac24-b54b3ddeac01")
+		(uuid "07435271-ef13-43fe-a4ea-0f9c44c0e2e8")
 		(property "Sheetname" "mipi_camera"
 			(at 213.36 126.2884 0)
 			(effects
@@ -506,7 +506,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -527,7 +527,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "6c72dcd5-23a5-4f0c-83c9-c4a979ca8683")
+		(uuid "b8cebb86-ded6-4523-ab62-9243aeaa062a")
 		(property "Sheetname" "fmc_lpc_la_low"
 			(at 15.24 177.0884 0)
 			(effects
@@ -548,7 +548,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -569,7 +569,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "c0f2c700-83dd-44c5-a033-7c8054d59fb7")
+		(uuid "72d08e57-3b1f-45aa-b536-a014f6d310a7")
 		(property "Sheetname" "fmc_lpc_la_high"
 			(at 81.28 177.0884 0)
 			(effects
@@ -590,7 +590,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -611,7 +611,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "d1c86b74-bf24-409e-bfca-abd401641333")
+		(uuid "536035f4-61d0-4cf2-af26-fe442424147e")
 		(property "Sheetname" "fmc_lpc_power_clk_jtag"
 			(at 147.32 177.0884 0)
 			(effects
@@ -632,7 +632,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -653,7 +653,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "24cf383d-5b88-4548-80d4-0eceed8d9a31")
+		(uuid "120bcb5f-46bf-47a7-95a9-d1c16606cd45")
 		(property "Sheetname" "pmod"
 			(at 213.36 177.0884 0)
 			(effects
@@ -674,7 +674,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -695,7 +695,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "471f8725-054d-4961-99d9-a506f08bccbb")
+		(uuid "2930452d-0262-4a46-9cf9-f5c49aa2b7fd")
 		(property "Sheetname" "jtag_swd"
 			(at 15.24 227.8884 0)
 			(effects
@@ -716,7 +716,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -737,7 +737,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "f315b423-c9ed-4bfc-bb87-c0c646391b95")
+		(uuid "c388db31-309f-4109-a8ce-a3536bf965d5")
 		(property "Sheetname" "boot_switches"
 			(at 81.28 227.8884 0)
 			(effects
@@ -758,7 +758,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -779,7 +779,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "123d1169-539e-4c69-a0aa-9bbdb0b0ffc4")
+		(uuid "0faab89f-13a2-4ffb-ba62-c4c5a9b87eea")
 		(property "Sheetname" "som_j1_mio"
 			(at 147.32 227.8884 0)
 			(effects
@@ -800,7 +800,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -821,7 +821,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "b699efd4-7c9f-4e53-9224-345a2f5567d3")
+		(uuid "379fa766-635f-4959-b635-752be2f2357e")
 		(property "Sheetname" "som_j1_ps_aux"
 			(at 213.36 227.8884 0)
 			(effects
@@ -842,7 +842,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -863,7 +863,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "c9d816a2-f0c3-4567-8346-9e23c71feb3c")
+		(uuid "008da2b4-0083-4fb4-a723-b79615b45dd6")
 		(property "Sheetname" "som_j1_pl_power_gnd"
 			(at 15.24 278.6884 0)
 			(effects
@@ -884,7 +884,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -905,7 +905,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "d74b0fe8-7796-46f3-963d-715eaaad60d3")
+		(uuid "c990cbbd-f175-4a62-8e81-ce4568f8bafb")
 		(property "Sheetname" "som_j2_diff_pairs"
 			(at 81.28 278.6884 0)
 			(effects
@@ -926,7 +926,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -947,7 +947,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "f1da7e4c-b2fc-430e-a2b3-78577f1042a1")
+		(uuid "19274caa-eb97-46ae-bf26-d7afd4765500")
 		(property "Sheetname" "som_j2_se"
 			(at 147.32 278.6884 0)
 			(effects
@@ -968,7 +968,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -989,7 +989,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "caa1efd8-40b5-42f0-b332-f2cd36fc1647")
+		(uuid "c2da52e5-6e05-4c55-a3c6-1eb1a8a61715")
 		(property "Sheetname" "som_j2_power"
 			(at 213.36 278.6884 0)
 			(effects
@@ -1010,7 +1010,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -1031,7 +1031,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "49ac4f61-56af-42b7-9819-74b98b582881")
+		(uuid "a98f7b04-d5cf-4435-bf12-44a784df5425")
 		(property "Sheetname" "som_j3_diff_pairs"
 			(at 15.24 329.4884 0)
 			(effects
@@ -1052,7 +1052,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -1073,7 +1073,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "e05dfb3c-dd08-4fe9-8b0e-6257732422b8")
+		(uuid "5084ded1-9c53-4814-8b39-fa6e3767d2d4")
 		(property "Sheetname" "som_j3_se"
 			(at 81.28 329.4884 0)
 			(effects
@@ -1094,7 +1094,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)
@@ -1115,7 +1115,7 @@
 		(fill
 			(color 0 0 0 0.0000)
 		)
-		(uuid "272f3815-f7d7-41f5-89c3-fc34b88d8234")
+		(uuid "b36669cb-dd6c-4f7c-b2d9-422d8f8a644d")
 		(property "Sheetname" "som_j3_power"
 			(at 147.32 329.4884 0)
 			(effects
@@ -1136,7 +1136,7 @@
 		)
 		(instances
 			(project "carrier"
-				(path "/70ef6d86-3b89-447f-8068-195206dd242e"
+				(path "/f6f2fcfa-8e56-425c-9f61-f2f13726dc5c"
 					(page "2")
 				)
 			)

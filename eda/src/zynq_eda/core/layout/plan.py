@@ -906,8 +906,16 @@ def _input_pwr_flag_nets(block: Block) -> tuple[str, ...]:
         if net.power_kind not in ("input", "output", "ground"):
             continue
         if net.power_kind == "ground" and net.name.upper() == "GND":
-            # Canonical GND driven by power:GND — no PWR_FLAG.
-            continue
+            # KiCad's ``power:GND`` symbol pin is itself a power-INPUT,
+            # so a flattened GND net carrying only power-input pins
+            # (connector GND pins + power:GND symbols) has no driver
+            # and trips ``power_pin_not_driven``. Drive it with a
+            # SINGLE PWR_FLAG, emitted in the ``power`` block — the
+            # circuit's ground source. One flag marks the whole
+            # flattened GND net driven; emitting it only here keeps
+            # every other (denser) block free of an extra flag+wire.
+            if block.name != "power":
+                continue
         if net.power_kind == "output":
             has_driver = any(ic.power_output_net == net.name for ic in block.ics)
             if has_driver:
@@ -3196,6 +3204,216 @@ def _emit_pwr_flags(
             )
 
 
+def _emit_power_rail_taps(
+    plan: LayoutPlan, block: Block, geometry, next_ref_counters: dict,
+) -> None:
+    """For every connector CLUSTER pin whose OWN net is a declared power
+    rail (e.g. a microSD VDD pin on +3V3), tap the cluster trunk with
+    that rail's power symbol so the trunk net is named and driven.
+
+    The cluster pass wires the pin's decoupling-cap FAR pins to their
+    destination (GND); the pin's own rail identity is never placed. We
+    add a VISIBLE power symbol on a short perpendicular stub off the
+    trunk, scanning outboard trunk points and both perpendicular
+    directions for clear space. Every primitive is collision-checked;
+    if no clear spot exists the tap is skipped (ERC surfaces it rather
+    than a silent overlap). Nothing is hidden.
+    """
+    from zynq_eda.core.layout._constants import (
+        INTERIOR_MARGIN_MM, KICAD_GRID_MM, POWER_SYMBOL_LIB_IDS,
+    )
+    from zynq_eda.core.layout.bbox import symbol_bbox, wire_bbox
+    from zynq_eda.core.model.grid import Point, snap_to_grid
+
+    # Map each connector pin (by number) to its declared net.
+    pin_net: dict[tuple[str, str], str] = {}
+    for conn in block.connectors:
+        name_to_number = {}
+        try:
+            name_to_number = _connector_name_to_number(conn, geometry)
+        except Exception:
+            pass
+        pin_to_net = _build_pin_to_net_map(conn, name_to_number)
+        for spec in plan.pin_specs:
+            if spec.owner_ref != conn.reference or spec.role != "CLUSTER":
+                continue
+            net = pin_to_net.get(spec.pin_name) or pin_to_net.get(spec.pin_number)
+            if net and net in POWER_SYMBOL_LIB_IDS:
+                pin_net[(spec.owner_ref, spec.pin_number)] = net
+
+    for spec in plan.pin_specs:
+        key = (spec.owner_ref, spec.pin_number)
+        net = pin_net.get(key)
+        if net is None:
+            continue
+        # Don't double-tap if the pin's own rail already has a symbol
+        # whose pin sits on this pin's trunk (rare).
+        pin_pos = _resolve_pin_page_coord(plan, spec, geometry)
+        if pin_pos is None:
+            continue
+        side = spec.page_side
+        out_sign = -1 if side == "left" else (1 if side == "right" else 0)
+        if out_sign == 0:
+            continue  # TOP/BOTTOM rail taps not handled here
+        from zynq_eda.core.model.sheet import PlacedLabel, PlacedWire
+        from zynq_eda.core.layout._builder import _label_bbox
+        # The trunk net is named by EXTENDING the cluster trunk past its
+        # TRUE far end into the open interior, then placing a VISIBLE
+        # ``<rail>`` local label at the extension's end (text reading
+        # further outboard, into clear space BEYOND every wire). KiCad
+        # merges same-name labels, so the trunk joins the rail net and
+        # is driven by its PWR_FLAG. Probed strictly; first clear wins.
+        #
+        # The true far end = the outboard end of the contiguous run of
+        # horizontal wires at the pin's row that contains the pin tip
+        # (the trunk may stretch well past the outermost cap drop).
+        row_y = pin_pos.y
+        intervals = []
+        for w in plan.wires:
+            if abs(w.start.y - row_y) < 0.1 and abs(w.end.y - row_y) < 0.1:
+                intervals.append((min(w.start.x, w.end.x),
+                                  max(w.start.x, w.end.x)))
+        # Merge the interval containing pin_pos.x to find its far edge.
+        lo, hi = pin_pos.x, pin_pos.x
+        changed = True
+        while changed:
+            changed = False
+            for a, b in intervals:
+                if b >= lo - 0.1 and a <= hi + 0.1:  # overlaps current run
+                    if a < lo - 0.1:
+                        lo = a; changed = True
+                    if b > hi + 0.1:
+                        hi = b; changed = True
+        trunk_far = Point(lo if out_sign < 0 else hi, row_y)
+        placed = False
+        for j in range(1, 13):  # extend outboard from the trunk far end
+            end = Point(
+                snap_to_grid(trunk_far.x + out_sign * j * KICAD_GRID_MM),
+                pin_pos.y,
+            )
+            if end.x <= INTERIOR_MARGIN_MM or end == trunk_far:
+                break
+            ext_bb = wire_bbox(trunk_far, end, owner_id="railtap:ext")
+            # The extension wire must be clean against bodies/labels
+            # (other wires are OK to share endpoints; the dedup adds a
+            # junction where it meets the existing trunk).
+            if plan.occupancy.collides(
+                ext_bb, ignore_kinds=frozenset(
+                    {"junction", "no_connect", "wire"}),
+            ):
+                continue
+            # Label at the extension end, reading outboard.
+            lbl_rot = 180.0 if out_sign < 0 else 0.0
+            lbl = PlacedLabel(net_name=net, position=end, rotation=lbl_rot)
+            if plan.occupancy.collides(
+                _label_bbox(lbl),
+                ignore_kinds=frozenset({"junction", "no_connect"}),
+            ):
+                continue
+            _add_wire_with_bbox(plan, PlacedWire(start=trunk_far, end=end))
+            _add_label_with_bbox(plan, lbl)
+            placed = True
+            break
+
+
+def _connector_name_to_number(conn, geometry) -> dict:
+    """Map a connector's pin names to numbers via the geometry cache."""
+    out = {}
+    try:
+        for info in geometry.all_pins(conn.lib_id, rotation=0.0):
+            out[str(info["name"])] = str(info["number"])
+    except Exception:
+        pass
+    return out
+
+
+def _emit_gnd_drive_stamp(
+    plan: LayoutPlan, block: Block, geometry, next_ref_counters: dict,
+) -> None:
+    """Emit one self-contained ``GND is driven`` stamp: a ``power:GND``
+    symbol and a ``power:PWR_FLAG`` joined by a short vertical wire,
+    placed in the first clear spot found by scanning the page interior.
+
+    KiCad needs at least one PWR_FLAG on the flattened GND net or it
+    reports ``power_pin_not_driven`` on every connector GND power-input
+    pin. The stamp is fully visible (two standard symbols + a wire);
+    nothing is hidden. Every primitive's bbox is collision-checked, so
+    the stamp never overlaps anything — if the scan finds no clear
+    spot the stamp is skipped (and the ERC error remains, surfacing a
+    page-room problem rather than a silent overlap).
+    """
+    from zynq_eda.core.layout.bbox import symbol_bbox, wire_bbox
+    from zynq_eda.core.layout._constants import INTERIOR_MARGIN_MM, KICAD_GRID_MM
+    from zynq_eda.core.model.grid import Point, snap_to_grid
+    from zynq_eda.core.model.sheet import (
+        PAPER_DIMENSIONS_MM, PlacedSymbol, PlacedWire,
+    )
+
+    paper_w, paper_h = PAPER_DIMENSIONS_MM[block.paper_size]
+    # Stamp geometry: GND symbol pin at the TOP of a 2-grid vertical
+    # wire (body hangs DOWN), PWR_FLAG pin at the BOTTOM-... actually
+    # place the GND symbol pin at ``gnd_pos`` (body below) and the
+    # PWR_FLAG ``flag_pos`` one wire-length ABOVE (flag body up), wire
+    # between the two pin tips. Both pins sit on the same net.
+    WIRE_LEN = 2 * KICAD_GRID_MM  # 5.08 mm
+
+    def _stamp_clean(gnd_pos: Point, flag_pos: Point) -> bool:
+        try:
+            gnd_bb = symbol_bbox(lib_id="power:GND", anchor=gnd_pos,
+                                 rotation=0.0, cache=geometry,
+                                 owner_id="gndstamp:gnd")
+            flag_bb = symbol_bbox(lib_id="power:PWR_FLAG", anchor=flag_pos,
+                                  rotation=0.0, cache=geometry,
+                                  owner_id="gndstamp:flag")
+        except Exception:
+            return False
+        wbb = wire_bbox(gnd_pos, flag_pos, owner_id="gndstamp:wire")
+        for bb in (gnd_bb, flag_bb, wbb):
+            if (bb.min.x < INTERIOR_MARGIN_MM
+                    or bb.max.x > paper_w - INTERIOR_MARGIN_MM
+                    or bb.min.y < INTERIOR_MARGIN_MM
+                    or bb.max.y > paper_h - INTERIOR_MARGIN_MM):
+                return False
+            if plan.occupancy.collides(
+                bb, ignore_kinds=frozenset({"junction", "no_connect"}),
+            ):
+                return False
+        return True
+
+    # Scan the page interior on a coarse grid, top-left to bottom-right,
+    # for the first clear spot. Step by 4 grid units (10.16 mm).
+    step = 4 * KICAD_GRID_MM
+    y = snap_to_grid(INTERIOR_MARGIN_MM + WIRE_LEN + step)
+    chosen: tuple[Point, Point] | None = None
+    while y < paper_h - INTERIOR_MARGIN_MM and chosen is None:
+        x = snap_to_grid(INTERIOR_MARGIN_MM + step)
+        while x < paper_w - INTERIOR_MARGIN_MM:
+            gnd_pos = Point(x, y)
+            flag_pos = Point(x, snap_to_grid(y - WIRE_LEN))
+            if _stamp_clean(gnd_pos, flag_pos):
+                chosen = (gnd_pos, flag_pos)
+                break
+            x = snap_to_grid(x + step)
+        y = snap_to_grid(y + step)
+
+    if chosen is None:
+        return  # no clear spot — leave ERC to surface a room problem
+    gnd_pos, flag_pos = chosen
+    gnd_idx = next_ref_counters.setdefault("PWR", 300)
+    next_ref_counters["PWR"] = gnd_idx + 1
+    flg_idx = next_ref_counters.setdefault("FLG", 100)
+    next_ref_counters["FLG"] = flg_idx + 1
+    _plan_register_symbol(plan, PlacedSymbol(
+        lib_id="power:GND", reference=f"#PWR{gnd_idx}", value="GND",
+        position=gnd_pos, footprint="", rotation=0.0,
+    ), geometry)
+    _plan_register_symbol(plan, PlacedSymbol(
+        lib_id="power:PWR_FLAG", reference=f"#FLG{flg_idx}", value="GND",
+        position=flag_pos, footprint="", rotation=0.0,
+    ), geometry)
+    _add_wire_with_bbox(plan, PlacedWire(start=gnd_pos, end=flag_pos))
+
+
 # ---------------------------------------------------------------------------
 # Local label emission (Phase 8 extension)
 # ---------------------------------------------------------------------------
@@ -3890,6 +4108,25 @@ def plan_block(block: Block, geometry) -> LayoutPlan:
     # Reuse ref counters from Phase 6.
     next_ref_counters = getattr(plan, "_ref_counters", {})
     _emit_pwr_flags(plan, block, geometry, next_ref_counters)
+
+    # Phase 9b — GND drive stamp. The flattened GND net is power-input
+    # only (power:GND symbol pins + connector GND pins are all
+    # power-INPUT type), so KiCad ERC fires ``power_pin_not_driven``
+    # unless a PWR_FLAG marks GND as externally driven. Emit ONE
+    # self-contained drive stamp (power:GND + PWR_FLAG joined by a
+    # short wire) in clear space on the ``power`` block — the circuit's
+    # ground source. One stamp drives the whole flattened GND net.
+    if block.name == "power":
+        _emit_gnd_drive_stamp(plan, block, geometry, next_ref_counters)
+
+    # Phase 9c — power-rail taps. A connector/IC pin classified CLUSTER
+    # because it hosts decoupling caps still has its OWN net (e.g. a
+    # microSD VDD pin on +3V3). The cluster only wires the cap far pins
+    # to GND; the pin's own power-rail identity is never placed on its
+    # trunk, leaving an unnamed undriven island → power_pin_not_driven.
+    # Tap the trunk with the rail's power symbol (visible, on a short
+    # stub in clear lane space) so the net is named and driven.
+    _emit_power_rail_taps(plan, block, geometry, next_ref_counters)
 
     return plan
 

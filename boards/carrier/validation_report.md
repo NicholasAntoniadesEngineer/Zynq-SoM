@@ -1,19 +1,17 @@
 # Carrier — Validation Report
 
-Generated: 2026-05-29T21:06:56Z
+Generated: 2026-05-30T09:58:23Z
 
-**Errors:** 6  **Warnings:** 464  **Info:** 0
+**Errors:** 4  **Warnings:** 465  **Info:** 0
 
-## Errors (6)
+## Errors (4)
 
-- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
-- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
 
-## Warnings (464)
+## Warnings (465)
 
 - **erc.unconnected_wire_endpoint**: Unconnected wire endpoint _(carrier.kicad_sch)_
 - **erc.label_dangling**: Label not connected _(carrier.kicad_sch)_
@@ -79,6 +77,7 @@ Generated: 2026-05-29T21:06:56Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_SD1_DAT1 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_SD1_DAT3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_SD1_CLK has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.multiple_net_names**: Both +3V3 and ZYNQ_SD1_CLK are attached to the same items; +3V3 will be used in the netlist _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_SD1_CD_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_LA06_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
