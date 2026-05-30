@@ -67,24 +67,16 @@ HDMI_A_REFCIRCUIT = ReferenceCircuit(
     footprint="Connector_HDMI:HDMI_A_SOFNG_HDMI-019S",
     description="HDMI Type-A receptacle, 19-pin SMD right-angle, shielded",
     external_parts=(
-        # +5V VBUS bulk + bypass at the connector (HDMI 1.4 Sec 4.2.7).
-        # Source role: caps absorb load-switch turn-on transients (DS Sec
-        # 6.6: T_ON ~ 77us with 0.1uF + 500R, T_OFF ~ 7us).
-        # Sink role:  caps decouple the +5V sense input from the upstream
-        # cable; TPD12S016 V_CC5V pin only needs ~50uA so no bulk required.
-        ExternalPart(
-            from_pin="Pin_18",
-            to_net="GND",
-            part_token="1u_0402_X7R",
-            justification="HDMI 1.4 Sec 4.2.7 / TPD12S016 DS Fig 15: 1uF bulk "
-                          "on +5V at the connector to support load-switch turn-on",
-        ),
-        ExternalPart(
-            from_pin="Pin_18",
-            to_net="GND",
-            part_token="100n_0402_X7R",
-            justification="HDMI 1.4 Sec 4.2.7: 100nF HF bypass at the +5V pin",
-        ),
+        # DEFERRED — +5V VBUS bulk + bypass at the connector (HDMI 1.4 Sec
+        # 4.2.7: 1uF bulk + 100nF HF on Pin_18->GND). Pin_18 (+5V) sits in
+        # the MIDDLE of the 19-pin stack, hemmed in by the adjacent pins'
+        # hier-labels on one side and the connector body on the other, so a
+        # cluster cap on it routes in a loop around the body (overprint).
+        # Re-enable once the connector decoupling can be drawn as a labeled
+        # cap-array in open space (caps tied to +5V/GND by net label) rather
+        # than clustered on the pin — same pattern flagged for the FMC
+        # connector. The +5V net itself IS connected (Pin_18 hier-label).
+        #
         # Shield-to-chassis discharge (HDMI 1.4 Sec 4.2.7: 1Mohm DC bleed +
         # 100nF HF return) is INTENTIONALLY OMITTED here: the blocks place
         # this connector on the generic `Connector_Generic:Conn_01x19`
