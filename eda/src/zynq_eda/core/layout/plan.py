@@ -2233,7 +2233,14 @@ def _cluster_slot_position(
     # bodies even when the pin pitch is tight.
     #   LEFT/RIGHT: outboard direction is X.
     #   TOP/BOTTOM: outboard direction is Y.
-    outboard = PASSIVE_OFFSET_MM + slot_index * PASSIVE_PITCH_MM + stagger
+    # Apply the multi_slot_widen/dense_swarm pitch ladder (computed above)
+    # ONLY for TOP/BOTTOM clusters — that is where same-row Reference/Value
+    # text collides (e.g. the CP2102N's stacked top-edge supply caps). The
+    # LEFT/RIGHT clusters that are already clean keep the original
+    # PASSIVE_PITCH_MM so their geometry is unchanged (widening them
+    # regresses clean blocks: usb_pd/ethernet).
+    slot_pitch = pitch if page_side in ("top", "bottom") else PASSIVE_PITCH_MM
+    outboard = PASSIVE_OFFSET_MM + slot_index * slot_pitch + stagger
     if page_side == "left":
         return Point(
             snap_to_grid(pin_pos.x - outboard),
@@ -3006,14 +3013,22 @@ def _route_cluster_pins(
         # the PERMISSIVE avoid set (allow crossing own caps; validator
         # will flag this but the wire connects functionally).
         from zynq_eda.core.route.router import route_orthogonal_detail
+        # Forbid a wrong-way exit stub: the source pin's own intrinsic
+        # number/name text is exempt from avoidance (avoid_strict), so the
+        # trunk could detour back THROUGH it before heading outboard —
+        # which is how a trunk crosses its own connector's pin name. Block
+        # the wrong-way band so the trunk leaves toward its far end.
+        trunk_forbid = _wrong_way_forbidden_points(pin_pos, trunk_far)
         trunk_attempt = route_orthogonal_detail(
             pin_pos, trunk_far, plan.occupancy,
             avoid_owners=frozenset(avoid_strict),
+            forbidden_traversal_points=trunk_forbid,
         )
         if trunk_attempt.gave_up:
             trunk_attempt = route_orthogonal_detail(
                 pin_pos, trunk_far, plan.occupancy,
                 avoid_owners=frozenset(avoid_permissive),
+                forbidden_traversal_points=trunk_forbid,
             )
         trunk_segments_actual: tuple[PlacedWire, ...] = ()
         if not trunk_attempt.gave_up:
@@ -3900,26 +3915,46 @@ def _emit_cluster_pin_own_nets(
             continue
 
         # Boxed in at the pin tip: route the net out to a clear interior
-        # point (perpendicular out of the row, then outboard) and label
-        # there. The carrier wire merges with the trunk at the pin tip.
+        # point and label there (the carrier wire merges with the trunk at
+        # the pin tip). Search clear targets NEAREST-FIRST in BOTH vertical
+        # directions, and — crucially — re-check the label is still clear
+        # AFTER the carrier wire is routed (the wire is added by
+        # _route_pin_to_target and can itself cross the label); if it does,
+        # roll the wire back and try the next target. Transactional, so the
+        # placed label is always genuinely clear.
+        from zynq_eda.core.model.sheet import PAPER_DIMENSIONS_MM as _PD
+        _pw, _ph = _PD[block.paper_size]
         out_sign = -1 if side == "left" else (1 if side == "right" else 0)
         if out_sign != 0:
-            for up in range(0, 9):
-                ty = snap_to_grid(pin_pos.y - up * KICAD_GRID_MM)
-                for ox in range(2, 28):
+            dy_order = [0]
+            for _k in range(1, 13):
+                dy_order += [-_k, _k]
+            for _dyk in dy_order:
+                ty = snap_to_grid(pin_pos.y + _dyk * KICAD_GRID_MM)
+                for ox in range(2, 34):
                     tx = snap_to_grid(pin_pos.x + out_sign * ox * KICAD_GRID_MM)
                     if out_sign < 0 and tx <= INTERIOR_MARGIN_MM:
+                        break
+                    if out_sign > 0 and tx >= _pw - INTERIOR_MARGIN_MM:
                         break
                     target = Point(tx, ty)
                     obj = _make(target, outboard)
                     if not _clean(obj):
                         continue
+                    n_before = len(plan.wires)
                     if _route_pin_to_target(
                         plan, pin_pos, target, avoid_owners=frozenset(),
+                        forbidden_traversal_points=(
+                            _wrong_way_forbidden_points(pin_pos, target)),
                     ):
-                        _add(obj)
-                        placed = True
-                        break
+                        if _clean(obj):
+                            _add(obj)
+                            placed = True
+                            break
+                        while len(plan.wires) > n_before:
+                            plan.occupancy.remove_by_owner(
+                                f"wire_{len(plan.wires) - 1}")
+                            plan.wires.pop()
                 if placed:
                     break
         if not placed:
@@ -4400,6 +4435,45 @@ def _emit_edge_label_hlabels(plan: LayoutPlan, block: Block, geometry) -> None:
         _add_hierarchical_label_with_bbox(plan, picked)
 
 
+def _wrong_way_forbidden_points(
+    start: Point, target: Point,
+    *, reach_grids: int = 14, perp_grids: int = 10,
+) -> frozenset[tuple[float, float]]:
+    """Grid points just PAST ``start`` in the direction OPPOSITE ``target``.
+
+    Passed as ``forbidden_traversal_points`` so the router cannot pick a
+    wrong-way exit detour — a segment that leaves the pin moving AWAY from
+    its target (into an avoidance-EXEMPT owner body or the pin's own
+    intrinsic text) before doubling back. That detour is exactly how a
+    cluster trunk / edge-label wire ends up crossing its own connector
+    body or a neighbouring pin name. The band sits only on the wrong-way
+    side of the start (columns/rows at ``start +/- k*grid`` for the
+    primary axis, spanning a perpendicular range), so a legitimate route
+    toward the target is never blocked.
+    """
+    from zynq_eda.core.layout._constants import KICAD_GRID_MM as G
+    dx = target.x - start.x
+    dy = target.y - start.y
+    pts: set[tuple[float, float]] = set()
+    if abs(dx) >= abs(dy):
+        if abs(dx) < 1e-6:
+            return frozenset()
+        sgn = -1.0 if dx > 0 else 1.0  # opposite the target along X
+        for k in range(1, reach_grids + 1):
+            wx = round(start.x + sgn * k * G, 3)
+            for j in range(-perp_grids, perp_grids + 1):
+                pts.add((wx, round(start.y + j * G, 3)))
+    else:
+        if abs(dy) < 1e-6:
+            return frozenset()
+        sgn = -1.0 if dy > 0 else 1.0  # opposite the target along Y
+        for k in range(1, reach_grids + 1):
+            wy = round(start.y + sgn * k * G, 3)
+            for j in range(-perp_grids, perp_grids + 1):
+                pts.add((round(start.x + j * G, 3), wy))
+    return frozenset(pts)
+
+
 def _route_edge_label_pin_wires(
     plan: LayoutPlan, block: Block, geometry,
 ) -> None:
@@ -4468,23 +4542,103 @@ def _route_edge_label_pin_wires(
             avoid |= set(pin_intrinsic_owner_ids(
                 spec.owner_ref, (spec.pin_number,),
             ))
+        # The owner body is exempt from avoidance (so the route may start
+        # at a pin sitting on the body edge), but that lets a blocked
+        # route detour the WRONG way THROUGH the body. Forbid wrong-way
+        # exit points so the wire heads toward its label, never across the
+        # connector body into the page margin.
         ok = _route_pin_to_target(
             plan, pin_pos, target,
             avoid_owners=frozenset(avoid),
+            forbidden_traversal_points=_wrong_way_forbidden_points(
+                pin_pos, target,
+            ),
         )
         if not ok:
-            # Soft-fail: skip this wire and emit a placeholder label
-            # at the pin tip. The reactive build does the same when
-            # a clean route can't be found.
-            from zynq_eda.core.model.sheet import PlacedLabel
+            # Route to the hier-label failed (pin boxed in by dense cap
+            # text). A placeholder net-name label (it merges with the
+            # already-emitted hier-label by net name) must go somewhere
+            # IN-BOUNDS and CLEAR — dropping it at an edge-hugging pin tip
+            # overflows the page margin (its long net name runs off-page).
+            # Try the pin tip across rotations first; else route the label
+            # OUT to a clear interior point; else fall back to the pin tip.
+            from zynq_eda.core.model.sheet import PlacedLabel, PAPER_DIMENSIONS_MM
+            from zynq_eda.core.layout.bbox import text_bbox as _vtb
+            from zynq_eda.core.layout._builder import _label_bbox
+            from zynq_eda.core.layout._constants import (
+                INTERIOR_MARGIN_MM, KICAD_GRID_MM, OVERLAP_NOISE_FLOOR_MM,
+            )
+            from zynq_eda.core.model.grid import snap_to_grid
+            pw, ph = PAPER_DIMENSIONS_MM[block.paper_size]
             label_rot = {
                 "left": 180.0, "right": 0.0, "top": 90.0, "bottom": 270.0,
             }[spec.page_side]
-            lbl = PlacedLabel(
-                net_name=spec.net_name, position=pin_pos,
-                rotation=label_rot,
-            )
-            _add_label_with_bbox(plan, lbl)
+
+            def _inb(pos, rot):  # validator-EXACT in-bounds (page_bounds.py)
+                just = "right" if rot == 180.0 else "left"
+                bb = _vtb(text=spec.net_name, anchor=pos, rotation=rot,
+                          justify=just, owner_id="probe")
+                return (bb.min.x >= INTERIOR_MARGIN_MM
+                        and bb.max.x <= pw - INTERIOR_MARGIN_MM
+                        and bb.min.y >= INTERIOR_MARGIN_MM
+                        and bb.max.y <= ph - INTERIOR_MARGIN_MM)
+
+            def _cln(pos, rot):  # occupancy-clear (overlap noise floor)
+                bb = _label_bbox(PlacedLabel(
+                    net_name=spec.net_name, position=pos, rotation=rot))
+                for h in plan.occupancy.collides(
+                        bb, ignore_kinds=frozenset({"junction", "no_connect"})):
+                    it = bb.intersection(h)
+                    if (it is not None and it.width >= OVERLAP_NOISE_FLOOR_MM
+                            and it.height >= OVERLAP_NOISE_FLOOR_MM):
+                        return False
+                return True
+
+            placed = False
+            for rot in (label_rot, 90.0, 270.0, 0.0, 180.0):
+                if _inb(pin_pos, rot) and _cln(pin_pos, rot):
+                    _add_label_with_bbox(plan, PlacedLabel(
+                        net_name=spec.net_name, position=pin_pos, rotation=rot))
+                    placed = True
+                    break
+            out_sign = (-1 if spec.page_side == "left"
+                        else 1 if spec.page_side == "right" else 0)
+            if not placed and out_sign != 0:
+                dy_order = [0]
+                for _k in range(1, 13):
+                    dy_order += [-_k, _k]
+                for _dyk in dy_order:
+                    ty = snap_to_grid(pin_pos.y + _dyk * KICAD_GRID_MM)
+                    for ox in range(2, 36):
+                        tx = snap_to_grid(pin_pos.x + out_sign * ox * KICAD_GRID_MM)
+                        if out_sign < 0 and tx <= INTERIOR_MARGIN_MM:
+                            break
+                        if out_sign > 0 and tx >= pw - INTERIOR_MARGIN_MM:
+                            break
+                        tgt = Point(tx, ty)
+                        if not (_inb(tgt, label_rot) and _cln(tgt, label_rot)):
+                            continue
+                        n_before = len(plan.wires)
+                        if _route_pin_to_target(
+                                plan, pin_pos, tgt, avoid_owners=frozenset(avoid),
+                                forbidden_traversal_points=(
+                                    _wrong_way_forbidden_points(pin_pos, tgt))):
+                            if _cln(tgt, label_rot):  # carrier wire didn't cross it
+                                _add_label_with_bbox(plan, PlacedLabel(
+                                    net_name=spec.net_name, position=tgt,
+                                    rotation=label_rot))
+                                placed = True
+                                break
+                            # transactional rollback: drop the carrier wire(s)
+                            while len(plan.wires) > n_before:
+                                plan.occupancy.remove_by_owner(
+                                    f"wire_{len(plan.wires) - 1}")
+                                plan.wires.pop()
+                    if placed:
+                        break
+            if not placed:
+                _add_label_with_bbox(plan, PlacedLabel(
+                    net_name=spec.net_name, position=pin_pos, rotation=label_rot))
 
 
 def _emit_orphan_external_net_hlabels(
