@@ -116,7 +116,11 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
         d1 = _nearest(cps[1], ic_pins)[1]
         near, far = (cps[0], cps[1]) if d0 <= d1 else (cps[1], cps[0])
         ic_pin = _nearest(near, ic_pins)[0]
-        tasks.append((ic_pin, near, frozenset({ic_oid, cap_oid})))
+        # Ignore ONLY the cap (so the route can end inside its footprint). The
+        # IC stays an obstacle so the drop routes AROUND its pin-name text; the
+        # IC pin (start) is reachable because route_astar force-walks the start
+        # cell. Ignoring the whole IC would let wires plow through its text.
+        tasks.append((ic_pin, near, frozenset({cap_oid})))
         if targets:
             tgt, _d = _nearest(far, [t for t, _ in targets])
             tgt_oid = next((o for t, o in targets if t == tgt), "")
