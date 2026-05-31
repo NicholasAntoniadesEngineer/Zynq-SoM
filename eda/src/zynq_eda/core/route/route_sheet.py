@@ -24,7 +24,7 @@ from zynq_eda.core.layout.module import Module
 from zynq_eda.core.model.block import Block
 from zynq_eda.core.model.sheet import PlacedJunction, PlacedWire, Sheet
 from zynq_eda.core.layout.bbox import wire_bbox
-from zynq_eda.core.route.route_module import reroute_module
+from zynq_eda.core.route.route_module import _obstacles, reroute_module
 
 
 def route_sheet(
@@ -61,7 +61,10 @@ def assemble_sheet(
         junctions.extend(routed.junctions)
 
     # Stage D: label every connector pin, clearing the placed symbols + wires.
-    occupied = [symbol_footprint(s, geometry) for s in symbols]
+    # Use PER-PRIMITIVE obstacles (body + each pin-name/number box) so a label
+    # can sit in the gap between pin texts rather than being pushed clear of the
+    # whole connector's merged footprint.
+    occupied = _obstacles(symbols, geometry)
     for w in wires:
         occupied.append(wire_bbox(w.start, w.end, owner_id="routed"))
     conns = [(c.instance, c.symbol) for c in arr.connectors]
