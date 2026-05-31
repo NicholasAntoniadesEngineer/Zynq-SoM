@@ -77,8 +77,25 @@ def _edge_str(connector: ConnectorInstance) -> str:
     return "middle"
 
 
-def _connector_symbol(connector: ConnectorInstance, anchor: Point) -> PlacedSymbol:
+def _connector_symbol(
+    connector: ConnectorInstance,
+    anchor: Point,
+    geometry: SymbolGeometryCache | None = None,
+) -> PlacedSymbol:
     rc = connector.refcircuit
+    # A connector's wide part-name Value text (e.g. "HX-PZ1.27-2x5P-TP", ~21 mm)
+    # defaults to a position that can sit ON a pin row, where a pin's outboard
+    # label stub then crosses it. Shift Value BELOW the body, clear of every pin
+    # row, so the pin-label lanes stay free. Shift is in symbol-local coords at
+    # rotation 0 (page +Y down); we place it one clearance below the body bottom.
+    value_shift = None
+    if geometry is not None:
+        try:
+            bb = geometry.bounding_box(connector.lib_id, rotation=0.0)
+            below = bb.max_y + VISUAL_CLEARANCE_MM + 1.27  # body bottom + gap
+            value_shift = (0.0, below, None)
+        except Exception:
+            value_shift = None
     return PlacedSymbol(
         lib_id=connector.lib_id,
         reference=connector.reference,
@@ -86,6 +103,7 @@ def _connector_symbol(connector: ConnectorInstance, anchor: Point) -> PlacedSymb
         position=Point(snap_to_grid(anchor.x), snap_to_grid(anchor.y)),
         footprint=getattr(rc, "footprint", ""),
         rotation=connector.rotation,
+        value_shift=value_shift,
     )
 
 
@@ -93,13 +111,13 @@ def _center_symbol_in_region(
     connector: ConnectorInstance, region: Region, geometry: SymbolGeometryCache
 ) -> PlacedSymbol:
     """Place a connector so its full footprint centre lands at the region centre."""
-    probe = _connector_symbol(connector, Point(0.0, 0.0))
+    probe = _connector_symbol(connector, Point(0.0, 0.0), geometry)
     foot = symbol_footprint(probe, geometry)
     anchor = Point(
         snap_to_grid(region.cx - foot.center.x),
         snap_to_grid(region.cy - foot.center.y),
     )
-    return _connector_symbol(connector, anchor)
+    return _connector_symbol(connector, anchor, geometry)
 
 
 def arrange_block(
@@ -123,7 +141,7 @@ def arrange_block(
 
     placed_conns: list[tuple[ConnectorInstance, PlacedSymbol]] = []
     for connector in block.connectors:
-        placed_conns.append((connector, _connector_symbol(connector, Point(0.0, 0.0))))
+        placed_conns.append((connector, _connector_symbol(connector, Point(0.0, 0.0), geometry)))
 
     # ---- Footprint per unit → regions → centre each unit in its region -------
     units: list[Unit] = []

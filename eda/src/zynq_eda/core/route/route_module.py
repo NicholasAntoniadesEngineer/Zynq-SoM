@@ -156,6 +156,7 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
                 obstacles.append(wire_bbox(w.start, w.end, owner_id="routed"))
         if not wires:
             continue
+        wires = _dedupe_overlaps(wires)  # collapse same-net overlaps/overshoots
         cand = replace(module, wires=tuple(wires), junctions=tuple(_junctions(wires)))
         n = _module_findings(cand, geometry)
         if n < best_n:
@@ -166,12 +167,84 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
     return best
 
 
+def _dedupe_overlaps(wires: list[PlacedWire]) -> list[PlacedWire]:
+    """Union all wires into NON-OVERLAPPING maximal axis runs.
+
+    Independent A* drops on the SAME merge net (e.g. ethernet's BS_COMMON) can
+    lay segments that overlap or overshoot one another — a wire×wire overlap the
+    validator flags even within one net. Rasterise every segment to unit grid
+    edges, dedupe, then re-merge collinear adjacent edges into maximal runs, so
+    each grid edge is covered exactly once and overshoots collapse away."""
+    from zynq_eda.core.model.grid import snap_to_grid as _snap
+
+    GRID = 1.27
+    h_by_y: dict[float, set[float]] = {}
+    v_by_x: dict[float, set[float]] = {}
+    for w in wires:
+        a, b = w.start, w.end
+        if abs(a.x - b.x) < 1e-6:  # vertical
+            x = a.x
+            lo, hi = sorted((a.y, b.y))
+            cells = v_by_x.setdefault(x, set())
+            y = lo
+            while y < hi - 1e-9:
+                cells.add(round(y, 4)); y = _snap(y + GRID)
+        elif abs(a.y - b.y) < 1e-6:  # horizontal
+            y = a.y
+            lo, hi = sorted((a.x, b.x))
+            cells = h_by_y.setdefault(y, set())
+            x = lo
+            while x < hi - 1e-9:
+                cells.add(round(x, 4)); x = _snap(x + GRID)
+    out: list[PlacedWire] = []
+    for y, xs in h_by_y.items():
+        for s, e in _runs(sorted(xs), GRID):
+            out.append(PlacedWire(Point(s, y), Point(_snap(e + GRID), y)))
+    for x, ys in v_by_x.items():
+        for s, e in _runs(sorted(ys), GRID):
+            out.append(PlacedWire(Point(x, s), Point(x, _snap(e + GRID))))
+    return out
+
+
+def _runs(coords: list[float], grid: float):
+    """Yield (start, last_cell_start) maximal runs of grid-adjacent coords."""
+    if not coords:
+        return
+    cs = ce = coords[0]
+    for c in coords[1:]:
+        if c <= ce + grid + 1e-9:
+            ce = c
+        else:
+            yield (cs, ce); cs = ce = c
+    yield (cs, ce)
+
+
 def _junctions(wires: list[PlacedWire]) -> list[PlacedJunction]:
-    """A junction wherever >= 3 wire endpoints coincide (a real merge tap)."""
+    """Junction at every real merge: >= 3 wire ends coincide OR a wire end
+    lands strictly inside another wire's span (a T-tap)."""
     from collections import Counter
 
     ends: Counter = Counter()
     for w in wires:
         ends[(w.start.x, w.start.y)] += 1
         ends[(w.end.x, w.end.y)] += 1
-    return [PlacedJunction(Point(x, y)) for (x, y), n in ends.items() if n >= 3]
+    juncs: set[tuple[float, float]] = set()
+    for (x, y), n in ends.items():
+        deg = n
+        p = Point(x, y)
+        for w in wires:
+            if _strict_interior(p, w.start, w.end):
+                deg += 2
+        if deg >= 3:
+            juncs.add((x, y))
+    return [PlacedJunction(Point(x, y)) for x, y in juncs]
+
+
+def _strict_interior(p: Point, a: Point, b: Point) -> bool:
+    if abs(a.x - b.x) < 1e-6 and abs(p.x - a.x) < 1e-6:
+        lo, hi = sorted((a.y, b.y))
+        return lo + 1e-6 < p.y < hi - 1e-6
+    if abs(a.y - b.y) < 1e-6 and abs(p.y - a.y) < 1e-6:
+        lo, hi = sorted((a.x, b.x))
+        return lo + 1e-6 < p.x < hi - 1e-6
+    return False
