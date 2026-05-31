@@ -28,6 +28,7 @@ from zynq_eda.core.emit import emit_project, emit_root_sheet, emit_sheet
 from zynq_eda.core.layout import SymbolGeometryCache
 from zynq_eda.core.layout.place import place_block
 from zynq_eda.core.layout.root import _BlockSheetSpec, build_root_sheet
+from zynq_eda.core.route.route_sheet import route_sheet
 from zynq_eda.core.registry import (
     emit_bom,
     emit_io_assignment,
@@ -160,7 +161,19 @@ def run_carrier(
     for block in blocks:
         print(f"  block {block.name!r} ({block.title}):")
         try:
-            sheet = place_block(block, geometry_cache=geometry_cache)
+            # Convergent engine (Stages A–D): module solve → arrange → route →
+            # label. Falls back to the legacy planner only if it raises (so a
+            # block the new engine can't yet handle still builds in survey mode).
+            try:
+                sheet = route_sheet(block, geometry_cache)
+            except Exception as route_error:  # noqa: BLE001
+                if not survey:
+                    raise
+                print(
+                    f"      ROUTE_SHEET FAILED ({type(route_error).__name__}: "
+                    f"{route_error}); falling back to legacy place_block"
+                )
+                sheet = place_block(block, geometry_cache=geometry_cache)
         except Exception as place_error:  # noqa: BLE001 — survey must not abort
             if not survey:
                 raise
