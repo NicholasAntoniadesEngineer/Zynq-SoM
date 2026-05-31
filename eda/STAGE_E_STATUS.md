@@ -133,3 +133,35 @@ REMAINING 134 = 123 pin_not_connected + 11 power_pin_not_driven:
 Best next step: make power-input rails NOT in POWER_SYMBOL_LIB_IDS (just +VIN)
 emit as GLOBAL labels at every consumer + one PWR_FLAG → clears the 11 with low
 risk. Then tackle the dense IC-edge stub routing for the 123.
+
+## UPDATE 3 — CORRECTED diagnosis of the 11 power_pin_not_driven
+
+Earlier I assumed the 11 were +VIN. WRONG. Verified via `kicad-cli sch erc
+--format json`: the 11 are CONNECTOR power-input pins, e.g.:
+  J1 Pin A4 [VBUS, Power input]   (×2)
+  J1 Pin 3  [GND, Power input]
+  J1 Pin 4  [VDD, Power input]
+  J1 Pin 6  [VSS, Power input]
+  J5A Pin 6 [GND_6, Power input], J5B Pin 1 [GND_1], J5B Pin 2 [+3V3], …
+These are connector pins whose SYMBOL declares them Power-input type. They're
+labeled with hier-labels (GND/+3V3/VDD…) by the labeler, but ERC still wants a
+power-OUTPUT or PWR_FLAG on THAT pin's net. The GND/+3V3 PWR_FLAG stamps exist
+(global power net) but evidently the connector pin's hier-label net isn't
+binding to the power-symbol net, OR these pin NAMES (GND_1, VSS, VBUS) are
+distinct power nets in KiCad's eyes.
+  → INVESTIGATE: do these connector pins' hier-labels actually merge with the
+    power:GND / power:+3V3 nets at the (sheet-pin-less) root? If KiCad treats a
+    "Power input" pin's net by the pin's OWN name (GND_1) it won't merge with
+    "GND". The legacy build handled this — compare its emitted netlist. Likely
+    fix: lib_symbol_pin_type_overrides to make these connector power pins
+    "passive" (they're just connector pads, not real power consumers), the same
+    mechanism used for INA226 Vbus. That's per-connector-symbol, low-risk.
+
+Tried & reverted (didn't help, the diagnosis above is why): flag-at-existing-
++VIN-label. +VIN was never the problem.
+
+So the TRUE remaining work:
+- 11 power_pin_not_driven: connector Power-input pads → override to passive
+  (lib_symbol_pin_type_overrides per connector symbol) OR add PWR_FLAG per net.
+- 123 pin_not_connected: dense IC-edge label stubs need routing (validator-
+  faithful) — unchanged from UPDATE 2.
