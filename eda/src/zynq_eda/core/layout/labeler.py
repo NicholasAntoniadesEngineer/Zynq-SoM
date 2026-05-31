@@ -173,13 +173,17 @@ def _place_edge(side, grp, ext_dir, occupied, lanes):
         direction = ext_dir.get(net, "passive")
         base_lane = coord_lane[coord_of(tip)]
         chosen = None
-        fallback = None
+        best_fb = None
+        best_fb_clashes = None
         # Start at this pin's lane base, then walk straight outward by single
         # grid steps until the label clears every obstacle (e.g. the
         # connector's own pin-number text). Walking by GRID — not by whole
         # lane-widths — means no clear slot between obstacles is ever skipped.
+        # If nothing fully clears within reach, keep the MINIMUM-clash position
+        # (best available) rather than the first — never relaxing the gap, just
+        # choosing the least-bad spot for the validator to surface.
         lane_base = _BASE_OUT + base_lane * lane_w
-        for extra in range(0, 14):
+        for extra in range(0, 16):
             dist = lane_base + extra * _GRID
             anchor = _outboard_anchor(tip, side, dist)
             for rot in rots:
@@ -190,18 +194,20 @@ def _place_edge(side, grp, ext_dir, occupied, lanes):
                 probe = [bb] + (
                     [wire_bbox(stub.start, stub.end, owner_id="s")] if stub else []
                 )
-                if fallback is None:
-                    fallback = (obj, bb, stub)
-                clash = any(
-                    pb.intersects(o, padding_mm=VISUAL_CLEARANCE_MM)
-                    for pb in probe for o in occupied + local
+                nclash = sum(
+                    1
+                    for pb in probe
+                    for o in occupied + local
+                    if pb.intersects(o, padding_mm=VISUAL_CLEARANCE_MM)
                 )
-                if not clash:
+                if best_fb is None or nclash < best_fb_clashes:
+                    best_fb, best_fb_clashes = (obj, bb, stub), nclash
+                if nclash == 0:
                     chosen = (obj, bb, stub)
                     break
             if chosen is not None:
                 break
-        pick = chosen or fallback
+        pick = chosen or best_fb
         if pick is None:
             continue
         out.append(pick)
