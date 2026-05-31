@@ -111,64 +111,96 @@ def label_connectors(
             by_edge[side].append((pg.connection, net))
 
         for side, grp in by_edge.items():
-            _place_edge(
-                side, grp, ext_dir, occupied, labels, hlabels, wires
-            )
+            best = None
+            best_clashes = None
+            # Try a few lane counts; keep whichever places this edge with the
+            # fewest clashes against the current page (render-is-judge). A
+            # single straight outboard column (lanes=1) is always a candidate,
+            # so multi-lane can only ever help, never regress.
+            for lanes in (1, 2, 3, 4):
+                trial = _place_edge(side, grp, ext_dir, occupied, lanes)
+                clashes = _count_clashes(trial, occupied)
+                if best is None or clashes < best_clashes:
+                    best, best_clashes = trial, clashes
+                if best_clashes == 0:
+                    break
+            for obj, bb, stub in best:
+                occupied.append(bb)
+                if stub is not None:
+                    wires.append(stub)
+                    occupied.append(wire_bbox(stub.start, stub.end, owner_id="stub"))
+                if isinstance(obj, PlacedHierarchicalLabel):
+                    hlabels.append(obj)
+                else:
+                    labels.append(obj)
     return labels, hlabels, wires
 
 
-def _place_edge(side, grp, ext_dir, occupied, labels, hlabels, wires):
-    """Lane-interleave one connector edge's labels."""
-    horizontal = side in ("left", "right")
-    along = (lambda tn: tn[0].y) if horizontal else (lambda tn: tn[0].x)
-    grp = sorted(grp, key=along)
+def _count_clashes(trial, occupied):
+    """How many placed (label box, stub box) collide with the page or peers."""
+    boxes = []
+    n = 0
+    for obj, bb, stub in trial:
+        probe = [bb] + ([wire_bbox(stub.start, stub.end, owner_id="s")] if stub else [])
+        for pb in probe:
+            if any(pb.intersects(o, padding_mm=VISUAL_CLEARANCE_MM) for o in occupied):
+                n += 1
+            elif any(pb.intersects(o, padding_mm=VISUAL_CLEARANCE_MM) for o in boxes):
+                n += 1
+        boxes.extend(probe)
+    return n
 
-    distinct = sorted({along(tn) for tn in grp})
-    pitch = min(
-        (distinct[i + 1] - distinct[i] for i in range(len(distinct) - 1)),
-        default=5.08,
-    )
-    pitch = max(pitch, _GRID)
-    lanes = max(1, ceil((_LABEL_HEIGHT_MM + VISUAL_CLEARANCE_MM) / pitch))
+
+def _place_edge(side, grp, ext_dir, occupied, lanes):
+    """Return [(label_obj, bbox, stub_or_None)] for one edge with ``lanes``
+    interleaved outboard columns. Does NOT mutate occupied (caller commits)."""
+    horizontal = side in ("left", "right")
+    # Coordinate ALONG the edge (the axis pins march down): y for left/right
+    # columns, x for top/bottom rows.
+    coord_of = (lambda p: p.y) if horizontal else (lambda p: p.x)
+    grp = sorted(grp, key=lambda tn: coord_of(tn[0]))
+
+    distinct = sorted({coord_of(t) for t, _ in grp})
     max_w = max(_decorated_width(net, net in ext_dir) for _t, net in grp)
     lane_w = max_w + VISUAL_CLEARANCE_MM
-    # Round-robin lane per distinct along-edge coordinate, so vertically
-    # adjacent rows fall in different lanes (per-lane pitch = lanes * pitch).
     coord_lane = {c: i % lanes for i, c in enumerate(distinct)}
 
     rots = _SIDE_ROTS[side]
+    out: list = []
+    local: list = []  # bboxes placed so far this edge, for self-clearance
     for tip, net in grp:
         is_ext = net in ext_dir
         direction = ext_dir.get(net, "passive")
-        base_lane = coord_lane[along(tip)]
-        placed = None
-        # Try the assigned lane first, then push further out (extra lanes).
-        for extra in range(0, 6):
+        base_lane = coord_lane[coord_of(tip)]
+        chosen = None
+        fallback = None
+        for extra in range(0, 4):
             dist = _BASE_OUT + (base_lane + extra * lanes) * lane_w
             anchor = _outboard_anchor(tip, side, dist)
             for rot in rots:
                 obj, bb = _make(net, anchor, is_ext, direction, rot)
                 if not _is_outboard(bb, tip, side):
                     continue
-                if placed is None:
-                    placed = (obj, bb)  # first outboard candidate = fallback
-                if not any(
-                    bb.intersects(o, padding_mm=VISUAL_CLEARANCE_MM) for o in occupied
-                ):
-                    placed = (obj, bb)
+                stub = None if obj.position == tip else PlacedWire(tip, obj.position)
+                probe = [bb] + (
+                    [wire_bbox(stub.start, stub.end, owner_id="s")] if stub else []
+                )
+                if fallback is None:
+                    fallback = (obj, bb, stub)
+                clash = any(
+                    pb.intersects(o, padding_mm=VISUAL_CLEARANCE_MM)
+                    for pb in probe for o in occupied + local
+                )
+                if not clash:
+                    chosen = (obj, bb, stub)
                     break
-            else:
-                continue
-            break
-        if placed is None:
+            if chosen is not None:
+                break
+        pick = chosen or fallback
+        if pick is None:
             continue
-        obj, bb = placed
-        occupied.append(bb)
-        if obj.position != tip:
-            stub = PlacedWire(tip, obj.position)
-            wires.append(stub)
-            occupied.append(wire_bbox(stub.start, stub.end, owner_id="stub"))
-        if is_ext:
-            hlabels.append(obj)
-        else:
-            labels.append(obj)
+        out.append(pick)
+        local.append(pick[1])
+        if pick[2] is not None:
+            local.append(wire_bbox(pick[2].start, pick[2].end, owner_id="s"))
+    return out
