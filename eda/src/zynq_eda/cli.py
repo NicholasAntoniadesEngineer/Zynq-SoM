@@ -75,6 +75,16 @@ def build_parser() -> argparse.ArgumentParser:
             "reports missing components (useful for in-progress runs)."
         ),
     )
+    parser.add_argument(
+        "--survey",
+        action="store_true",
+        help=(
+            "Measurement mode: place, validate (advisory), and emit EVERY "
+            "block sheet without halting on findings, then write "
+            "survey_report.md. Skips root/ERC/outputs. Intended to be "
+            "paired with `python -m zynq_eda.core.render --all`."
+        ),
+    )
     return parser
 
 
@@ -102,6 +112,7 @@ def main(argv: list[str] | None = None) -> int:
             audit_only=args.audit_only,
             skip_erc=args.skip_erc,
             allow_incomplete=args.allow_incomplete,
+            survey=args.survey,
         )
 
     print(f"Unknown board: {args.board!r}", file=sys.stderr)

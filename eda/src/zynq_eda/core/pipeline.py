@@ -63,8 +63,20 @@ def run_carrier(
     audit_only: bool,
     skip_erc: bool,
     allow_incomplete: bool,
+    survey: bool = False,
 ) -> int:
-    """Generate the carrier board. Returns the process exit code."""
+    """Generate the carrier board. Returns the process exit code.
+
+    When ``survey`` is set, the per-block layout loop never halts: every
+    block is placed (placement failures are caught and recorded, not
+    raised), validated *advisory-only* (``strict=False``), and emitted to
+    ``sheets/`` regardless of findings — so all 27 sheets can be rendered
+    and reconciled against the eye in one pass. The survey deliberately
+    skips the root sheet / ERC / BOM stages and writes a per-block
+    ``survey_report.md`` instead. This is a measurement mode; it never
+    weakens the gating build (the default ``survey=False`` path is
+    unchanged and still halts on the first finding).
+    """
     resolved_output_dir = output_dir or DEFAULT_CARRIER_OUTPUT_DIR
     resolved_output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -143,18 +155,31 @@ def run_carrier(
     parent_uuid = str(uuid.uuid4())
 
     block_sub_sheets: list[tuple] = []  # (block, placed_sheet, relative_filename)
+    survey_rows: list[tuple[str, int, int, str]] = []  # (name, bounds, overlap, note)
 
     for block in blocks:
         print(f"  block {block.name!r} ({block.title}):")
-        sheet = place_block(block, geometry_cache=geometry_cache)
+        try:
+            sheet = place_block(block, geometry_cache=geometry_cache)
+        except Exception as place_error:  # noqa: BLE001 — survey must not abort
+            if not survey:
+                raise
+            print(f"      PLACE FAILED: {type(place_error).__name__}: {place_error}")
+            survey_rows.append(
+                (block.name, -1, -1, f"place failed: {type(place_error).__name__}")
+            )
+            continue
 
         # Fail-fast: validate IMMEDIATELY after placement. If the sheet
         # violates any rule, halt before writing a broken .kicad_sch
         # to disk. Per the project's zero-overlap rule, any error here
         # means upstream placement needs to change — no warning, no
-        # silent acceptance.
+        # silent acceptance. In survey mode the findings are advisory
+        # (strict=False) and never halt — the goal is to see them all.
         bounds_results = validate_page_bounds(sheet, geometry=geometry_cache)
-        overlap_results = validate_overlap(sheet, geometry=geometry_cache, strict=True)
+        overlap_results = validate_overlap(
+            sheet, geometry=geometry_cache, strict=not survey
+        )
         block_validation.extend(bounds_results)
         block_validation.extend(overlap_results)
         print(
@@ -169,7 +194,7 @@ def run_carrier(
             print(f"      BOUNDS: {r.message}")
         for r in overlap_results:
             print(f"      OVERLAP: {r.message}")
-        if bounds_results or overlap_results:
+        if not survey and (bounds_results or overlap_results):
             # Persist whatever validation has accumulated so the user
             # can see the report, then halt the entire build.
             validation_path = resolved_output_dir / "validation_report.md"
@@ -185,6 +210,10 @@ def run_carrier(
                 f"{validation_path.relative_to(REPO_ROOT)}."
             )
             return 1
+        if survey:
+            survey_rows.append(
+                (block.name, len(bounds_results), len(overlap_results), "ok")
+            )
 
         sheet_path = sheets_dir / f"{block.name}.kicad_sch"
         sheet_uuid = str(uuid.uuid4())
@@ -205,6 +234,23 @@ def run_carrier(
         )
         print(f"    emitted: {stats.output_path.relative_to(REPO_ROOT)}")
         block_sub_sheets.append((block, sheet, f"sheets/{block.name}.kicad_sch"))
+
+    if survey:
+        survey_path = resolved_output_dir / "survey_report.md"
+        _write_survey_report(survey_path, survey_rows)
+        emitted = sum(1 for _n, b, _o, note in survey_rows if note == "ok")
+        total_overlap = sum(o for _n, _b, o, note in survey_rows if note == "ok")
+        total_bounds = sum(b for _n, b, _o, note in survey_rows if note == "ok")
+        failed = [n for n, _b, _o, note in survey_rows if note != "ok"]
+        print()
+        print(
+            f"--survey: emitted {emitted}/{len(blocks)} sheet(s); "
+            f"advisory totals: overlap={total_overlap}, bounds={total_bounds}"
+            + (f", placement-failed={failed}" if failed else "")
+        )
+        print(f"  report: {survey_path.relative_to(REPO_ROOT)}")
+        print("  render all: python -m zynq_eda.core.render --all")
+        return 0
 
     # --- Stage 7: Root sheet + project file --------------------------------
     print()
@@ -325,3 +371,42 @@ def _count_csv_rows(path: Path) -> int:
     """Return the number of data rows (excluding the header) in a CSV file."""
     with path.open("r", encoding="utf-8") as f:
         return max(0, sum(1 for _ in f) - 1)
+
+
+def _write_survey_report(
+    path: Path, rows: list[tuple[str, int, int, str]]
+) -> None:
+    """Write the per-block survey table (advisory overlap/bounds counts).
+
+    ``rows`` are ``(block_name, bounds_count, overlap_count, note)``;
+    a placement-failed block carries ``-1`` counts and a failure note.
+    """
+    from datetime import datetime, timezone
+
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    ok = [r for r in rows if r[3] == "ok"]
+    total_overlap = sum(o for _n, _b, o, _note in ok)
+    total_bounds = sum(b for _n, b, _o, _note in ok)
+    lines = [
+        "# Carrier — Layout Survey (advisory, non-gating)",
+        "",
+        f"Generated: {stamp}",
+        "",
+        f"Emitted {len(ok)}/{len(rows)} sheets. "
+        f"Advisory totals across emitted sheets: "
+        f"**overlap={total_overlap}, bounds={total_bounds}**.",
+        "",
+        "These are the in-memory geometric validators only. The supreme "
+        "judge is the render — see `boards/carrier/render/*.png` "
+        "(`python -m zynq_eda.core.render --all`).",
+        "",
+        "| Block | bounds | overlap | note |",
+        "|---|---:|---:|---|",
+    ]
+    for name, bounds, overlap, note in rows:
+        b = "—" if bounds < 0 else str(bounds)
+        o = "—" if overlap < 0 else str(overlap)
+        lines.append(f"| {name} | {b} | {o} | {note} |")
+    lines.append("")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -22,6 +22,10 @@ dev = [
     "pytest==9.0.3",
     "ruff",
 ]
+render = [
+    "pymupdf>=1.24",
+    "pillow>=10",
+]
 
 [project.scripts]
 zynq_eda = "zynq_eda.cli:main"

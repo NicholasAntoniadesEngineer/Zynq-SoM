@@ -97,6 +97,18 @@ class ReferenceCircuit:
     """Legacy per-IC placement template. Retained for the existing 28 refcircuit
     specs that set this field; the new layout engine ignores it and derives
     placement from real symbol pin geometry instead."""
+    spread_stagger: bool = False
+    """Opt into DOUBLED adjacent-pin stagger (10 columns instead of 5) for a
+    dense pull-up / power-symbol array.
+
+    When ``True``, ``_cluster_slot_position`` spreads adjacent-pin clusters
+    into twice as many outboard columns, so pins 5 rows apart (which share a
+    column under the default 5-bucket stagger) no longer stack their far-end
+    power symbols. Per-component opt-in (like :attr:`dense_swarm`) so it
+    applies ONLY to the array that needs it (e.g. the microSD DM3AT's six
+    +3V3 pull-ups) and leaves every other block's cluster geometry — and
+    its already-clean overlap state — untouched.
+    """
     dense_swarm: bool = False
     """Opt into the wider LEFT/RIGHT cluster-passive pitch.
 

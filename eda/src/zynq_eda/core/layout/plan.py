@@ -1816,6 +1816,7 @@ def _plan_register_symbol(
         placeholder_symbol_bbox,
         symbol_bbox,
     )
+    from zynq_eda.core.layout.text_obstacles import collect_text_bboxes
 
     plan.symbols.append(sym)
     owner_id = f"symbol:{sym.reference}"
@@ -1833,30 +1834,14 @@ def _plan_register_symbol(
         )
     plan.occupancy.add(body_bbox)
 
-    # Intrinsic pin name + number bboxes + property text bboxes.
-    try:
-        label_bboxes = geometry.intrinsic_pin_label_bboxes(
-            sym.lib_id, sym.position,
-            rotation=sym.rotation, owner_id=owner_id,
-        )
-        number_bboxes = geometry.intrinsic_pin_number_bboxes(
-            sym.lib_id, sym.position,
-            rotation=sym.rotation, owner_id=owner_id,
-        )
-        property_bboxes = geometry.property_text_bboxes(
-            sym.lib_id, sym.position,
-            rotation=sym.rotation, owner_id=owner_id,
-            reference_override=sym.reference,
-            value_override=sym.value,
-            value_shift=sym.value_shift,
-        )
-    except Exception:
-        return
-    for b in label_bboxes:
-        plan.occupancy.add(b)
-    for b in number_bboxes:
-        plan.occupancy.add(b)
-    for b in property_bboxes:
+    # Intrinsic pin name + number + property text bboxes. These are
+    # obstacles the router and labeler MUST see. Collect them via the
+    # shared source of truth, which FAILS LOUD — it never silently drops a
+    # symbol's text from occupancy (that blinds placement/routing to text
+    # the validator still measures, and was a real divergence: the planner
+    # previously omitted reference_shift and swallowed all errors here).
+    # Mirrors validate_overlap exactly (same value_shift + reference_shift).
+    for b in collect_text_bboxes(sym, geometry, owner_id=owner_id):
         plan.occupancy.add(b)
 
 
@@ -2194,6 +2179,7 @@ def _cluster_slot_position(
     *,
     dense_swarm: bool = False,
     multi_slot_widen: bool = False,
+    spread_stagger: bool = False,
 ) -> Point:
     """Return the page-coord anchor for slot ``slot_index`` of a cluster
     whose pin sits at ``pin_pos`` on the given page side.
@@ -2226,7 +2212,17 @@ def _cluster_slot_position(
     else:
         pitch = PASSIVE_PITCH_MM
 
-    stagger = _adjacent_pin_stagger_offset(pin_pos, page_side)
+    if spread_stagger and page_side in ("left", "right"):
+        # Per-refcircuit opt-in for a dense pull-up / power-symbol array:
+        # DOUBLE the columns. The default 5-bucket stagger collides pins 5
+        # rows apart (they share a column → far-end symbols stack); add a
+        # +5.08 mm offset on alternate 5-row cycles so consecutive cycles
+        # occupy distinct columns. Bounded (+5.08 mm max extra reach), so no
+        # far-fan / routing blow-up.
+        _row = int(pin_pos.y / 2.54 + 0.5 + 0.001)
+        stagger = (_row % 5) * 10.16 + ((_row // 5) % 2) * 5.08
+    else:
+        stagger = _adjacent_pin_stagger_offset(pin_pos, page_side)
     # For ALL sides: stagger adds to the OUTBOARD distance from pin
     # along the cluster's trunk axis. This places adjacent pins'
     # caps at DIFFERENT row distances from the pin, separating their
@@ -2722,6 +2718,7 @@ def _emit_cluster_pins(
         if owner is None:
             continue
         dense_swarm = bool(getattr(owner.refcircuit, "dense_swarm", False))
+        spread_stagger = bool(getattr(owner.refcircuit, "spread_stagger", False))
         part_tokens_for_pin = [
             ep.part_token for ep in owner.refcircuit.external_parts
             if ep.from_pin == spec.pin_name
@@ -2756,6 +2753,7 @@ def _emit_cluster_pins(
                 pin_pos, spec.page_side, _si,
                 dense_swarm=dense_swarm,
                 multi_slot_widen=multi_slot_widen,
+                spread_stagger=spread_stagger,
             )
             _, _cf = _cluster_passive_near_far(_sp, spec.page_side)
             slot_far_by_idx.append(_cf)
@@ -2777,6 +2775,7 @@ def _emit_cluster_pins(
                 pin_pos, spec.page_side, slot_idx,
                 dense_swarm=dense_swarm,
                 multi_slot_widen=multi_slot_widen,
+                spread_stagger=spread_stagger,
             )
             cap_rotation = _cluster_passive_rotation(spec.page_side)
             cap_lib_id = passive_lib_id(part_token)
@@ -2954,6 +2953,9 @@ def _route_cluster_pins(
         dense_swarm = bool(
             getattr(getattr(owner, "refcircuit", None), "dense_swarm", False)
         ) if owner is not None else False
+        spread_stagger = bool(
+            getattr(getattr(owner, "refcircuit", None), "spread_stagger", False)
+        ) if owner is not None else False
 
         multi_slot_widen = n_slots > 1
         # Compute trunk endpoint = farthest slot's X.
@@ -2961,6 +2963,7 @@ def _route_cluster_pins(
             pin_pos, spec.page_side, n_slots - 1,
             dense_swarm=dense_swarm,
             multi_slot_widen=multi_slot_widen,
+            spread_stagger=spread_stagger,
         )
         # Trunk runs at pin Y from pin tip to far slot X.
         if spec.page_side in ("left", "right"):
@@ -2988,6 +2991,7 @@ def _route_cluster_pins(
                 pin_pos, spec.page_side, slot_idx,
                 dense_swarm=dense_swarm,
                 multi_slot_widen=multi_slot_widen,
+                spread_stagger=spread_stagger,
             )
             for sym in plan.symbols:
                 if (abs(sym.position.x - slot_pos.x) < 0.1
@@ -3059,6 +3063,7 @@ def _route_cluster_pins(
                 pin_pos, spec.page_side, slot_idx,
                 dense_swarm=dense_swarm,
                 multi_slot_widen=multi_slot_widen,
+                spread_stagger=spread_stagger,
             )
             cap_near, cap_far = _cluster_passive_near_far(
                 slot_pos, spec.page_side,

@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 
 Severity = Literal["error", "warning", "info"]
@@ -19,12 +19,22 @@ Severity = Literal["error", "warning", "info"]
 
 @dataclass(frozen=True)
 class ValidationResult:
-    """One outcome from one validator rule."""
+    """One outcome from one validator rule.
+
+    ``bbox_a`` / ``bbox_b`` optionally carry the two geometric bboxes that
+    triggered a spatial finding (overlap / crowding). They are kept as
+    opaque objects (avoiding a layout import here) and consumed by the
+    render overlay (:mod:`zynq_eda.core.render.overlay`) to draw each
+    finding exactly where it sits on the rendered page — the mechanism
+    that lets a human confirm the validator matches the eye.
+    """
 
     rule_id: str
     severity: Severity
     message: str
     location: str = ""
+    bbox_a: Any | None = None
+    bbox_b: Any | None = None
 
     def __post_init__(self) -> None:
         if not self.rule_id:

@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "164e1607-226e-4999-9fcb-f01fd5e48bc7")
+	(uuid "348bff7e-05f9-45c5-a9d8-b39632de1840")
 	(paper "A3")
 	(title_block
 		(title "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)")
@@ -524,7 +524,148 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "power:PWR_FLAG"
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(hide yes)
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:+3V3"
 			(power global)
 			(pin_numbers
 				(hide yes)
@@ -538,8 +679,8 @@
 			(on_board yes)
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "#FLG"
-				(at 0 1.905 0)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -549,8 +690,8 @@
 					)
 				)
 			)
-			(property "Value" "PWR_FLAG"
-				(at 0 3.81 0)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -582,7 +723,7 @@
 					)
 				)
 			)
-			(property "Description" "Special symbol for telling ERC where power comes from"
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -593,7 +734,7 @@
 					)
 				)
 			)
-			(property "ki_keywords" "flag power"
+			(property "ki_keywords" "global power"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -604,8 +745,46 @@
 					)
 				)
 			)
-			(symbol "PWR_FLAG_0_0"
-				(pin power_out line
+			(symbol "+3V3_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_1_1"
+				(pin power_in line
 					(at 0 0 90)
 					(length 0)
 					(name ""
@@ -621,20 +800,6 @@
 								(size 1.27 1.27)
 							)
 						)
-					)
-				)
-			)
-			(symbol "PWR_FLAG_0_1"
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 1.27) (xy -1.016 1.905) (xy 0 2.54) (xy 1.016 1.905) (xy 0 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
 					)
 				)
 			)
@@ -796,30 +961,33 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:R"
+		(symbol "power:PWR_FLAG"
+			(power global)
 			(pin_numbers
 				(hide yes)
 			)
 			(pin_names
 				(offset 0)
+				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R"
-				(at 2.032 0 90)
+			(property "Reference" "#FLG"
+				(at 0 1.905 0)
 				(show_name no)
 				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 				)
 			)
-			(property "Value" "R"
-				(at 0 0 90)
+			(property "Value" "PWR_FLAG"
+				(at 0 3.81 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -829,7 +997,7 @@
 				)
 			)
 			(property "Footprint" ""
-				(at -1.778 0 90)
+				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -851,7 +1019,7 @@
 					)
 				)
 			)
-			(property "Description" "Resistor"
+			(property "Description" "Special symbol for telling ERC where power comes from"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -862,7 +1030,7 @@
 					)
 				)
 			)
-			(property "ki_keywords" "R res resistor"
+			(property "ki_keywords" "flag power"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -873,34 +1041,10 @@
 					)
 				)
 			)
-			(property "ki_fp_filters" "R_*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R_0_1"
-				(rectangle
-					(start -1.016 -2.54)
-					(end 1.016 2.54)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "R_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 1.27)
+			(symbol "PWR_FLAG_0_0"
+				(pin power_out line
+					(at 0 0 90)
+					(length 0)
 					(name ""
 						(effects
 							(font
@@ -916,22 +1060,18 @@
 						)
 					)
 				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 1.27)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
+			)
+			(symbol "PWR_FLAG_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 1.27) (xy -1.016 1.905) (xy 0 2.54) (xy 1.016 1.905) (xy 0 1.27)
 					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
 					)
 				)
 			)
@@ -940,16 +1080,16 @@
 	)
 	(symbol
 		(lib_id "Connector:Micro_SD_Card_Det_Hirose_DM3AT")
-		(at 364.49 161.29 0)
+		(at 369.57 153.67 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "8de4395c-028e-417c-95f7-e710e431f80c")
+		(uuid "dd978ad0-3b0b-46ed-9172-c638fbf01dbb")
 		(property "Reference" "J1"
-			(at 347.98 179.07 0.0000)
+			(at 353.06 171.45 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -958,7 +1098,7 @@
 			)
 		)
 		(property "Value" "DM3AT-SF-PEJM5"
-			(at 381 179.07 0.0000)
+			(at 386.08 171.45 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -967,7 +1107,7 @@
 			)
 		)
 		(property "Footprint" "Connector_Card:microSD_HiroseDM3AT-SF-PEJM5_Push-Push"
-			(at 416.56 179.07 0.0000)
+			(at 421.64 171.45 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -976,7 +1116,7 @@
 			)
 		)
 		(property "LCSC" "C114218"
-			(at 367.03 166.3699 0)
+			(at 372.11 158.7499 0)
 			(effects
 				(hide yes)
 				(font
@@ -986,7 +1126,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.hirose.com/en/product/document?clcode=CL0540-1284-2-51&productname=DM3AT-SF-PEJM5(51)&series=DM3"
-			(at 364.49 161.29 0)
+			(at 369.57 153.67 0)
 			(effects
 				(hide yes)
 				(font
@@ -996,41 +1136,41 @@
 			)
 		)
 		(pin "1"
-			(uuid "adb0cb60-9ea7-4af6-b378-ccf4e00a3240")
+			(uuid "b555bcbe-6ada-4f2d-9844-bb60fdfd0714")
 		)
 		(pin "2"
-			(uuid "4131eeaa-5a86-4416-8eff-16d1a32da2b7")
+			(uuid "58f996d6-ff71-4e31-85c9-2fb93731347b")
 		)
 		(pin "3"
-			(uuid "0dc9f899-2f1a-4752-bab2-69f824ae1ad5")
+			(uuid "f934c04d-4d84-408c-b048-285eb879e25b")
 		)
 		(pin "4"
-			(uuid "c87cb2b5-79f9-43bc-8f6f-c497708aa415")
+			(uuid "9c309bdb-5fed-44d9-a850-4ca6712fe44a")
 		)
 		(pin "5"
-			(uuid "664288f4-5e2d-4ad8-9baf-2f871fd6d805")
+			(uuid "d963785b-1f7d-4678-bb6a-ce1819253dfd")
 		)
 		(pin "6"
-			(uuid "7996a9a1-aac4-4033-8b1e-dc366d04f293")
+			(uuid "5540e8f5-f7b3-4e86-ba53-82a512a7cc0f")
 		)
 		(pin "7"
-			(uuid "3b0bc399-bc62-4cd0-82c9-f4d537eae46d")
+			(uuid "5e1f9af8-028d-404b-8bcd-05ba4d850afd")
 		)
 		(pin "8"
-			(uuid "cb7eec6e-cc8b-4631-96db-989f778686a4")
+			(uuid "3855785b-c720-4248-a7a7-27a4d76b979c")
 		)
 		(pin "9"
-			(uuid "23e9de51-b287-4a51-92e8-5bac4ca0fb8a")
+			(uuid "6cf5fa81-9742-4c96-8ae9-9325bcfa1d97")
 		)
 		(pin "10"
-			(uuid "75dc29c2-9c9b-4a73-b7bd-311aa7e28fb7")
+			(uuid "6303b4a5-a3d8-4177-abd6-546412b5254d")
 		)
 		(pin "SH"
-			(uuid "b4d1e672-725d-4fdb-ad6c-014b393dddde")
+			(uuid "ff563c75-115d-4b56-8fc1-738527dce7ab")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
 					(reference "J1")
 					(unit 1)
 				)
@@ -1039,16 +1179,16 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 341.63 163.83 270)
+		(at 346.71 156.21 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "492880fd-0c28-4475-9f9c-065c5acf7858")
+		(uuid "4fbaba20-b500-4a24-9fdf-7dcf2efbf063")
 		(property "Reference" "#PWR200"
-			(at 335.28 163.83 270)
+			(at 340.36 156.21 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1058,7 +1198,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 346.71 163.83 0)
+			(at 351.79 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1066,7 +1206,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 341.63 163.83 0.0000)
+			(at 346.71 156.21 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1075,11 +1215,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "86e35ab9-b48b-4187-87b0-27c9fea53a34")
+			(uuid "c10ebfa8-ca50-4094-9b4c-eb454a2d1871")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
 					(reference "#PWR200")
 					(unit 1)
 				)
@@ -1087,17 +1227,69 @@
 		)
 	)
 	(symbol
-		(lib_id "power:PWR_FLAG")
-		(at 337.82 151.13 0)
+		(lib_id "Device:R")
+		(at 303.53 138.43 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "dd7c25fb-c9fa-4504-995b-ded4a02e1ae5")
-		(property "Reference" "#FLG100"
-			(at 337.82 153.035 0.0000)
+		(uuid "14a27bb9-c84c-4eea-84e8-35e785233d4f")
+		(property "Reference" "R100"
+			(at 310.642 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 296.418 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 301.752 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3fd9453c-6299-43f2-83d1-5d1be734e617")
+		)
+		(pin "2"
+			(uuid "4e586f0c-6ed2-41af-88b7-324a41090013")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "R100")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 303.53 134.62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "c62ab225-96a7-4310-a81a-18e1b1049dbe")
+		(property "Reference" "#PWR300"
+			(at 303.53 130.81 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1107,7 +1299,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 337.82 146.05 0)
+			(at 303.53 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1115,7 +1307,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 337.82 151.13 0.0000)
+			(at 303.53 134.62 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1124,12 +1316,214 @@
 			)
 		)
 		(pin "1"
-			(uuid "b253647c-4be9-4d36-95bf-5b2ac38e8ad5")
+			(uuid "983eba34-109a-4997-be02-bd80243c4468")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
-					(reference "#FLG100")
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "#PWR300")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 293.37 140.97 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "18d13021-122c-4ca9-81c2-e1b670dbdd77")
+		(property "Reference" "R101"
+			(at 293.37 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 286.258 140.97 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 291.592 140.97 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "09751f2c-9cce-4cc4-a315-4e8641ac15f8")
+		)
+		(pin "2"
+			(uuid "6f34cad9-cb05-4ebd-a6aa-4ad5f693e09d")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "R101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 293.37 137.16 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "72aaf5d9-01ca-4f8b-9dc3-96679e536dd5")
+		(property "Reference" "#PWR301"
+			(at 293.37 133.35 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 293.37 132.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 293.37 137.16 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ac1d0a95-915d-459b-b79d-81bc77ab6381")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "#PWR301")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 283.21 143.51 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "55a14b1e-e154-4753-ac0b-08c192da2e6e")
+		(property "Reference" "R102"
+			(at 283.21 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 276.098 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 281.432 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "7ba20555-c7a2-4661-8485-33af4065c276")
+		)
+		(pin "2"
+			(uuid "4050fe6b-adeb-463a-b972-19eb4612c2a6")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "R102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 283.21 139.7 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "61cd64f7-4b32-446d-96e9-cad8c56da8d4")
+		(property "Reference" "#PWR302"
+			(at 283.21 135.89 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 283.21 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 283.21 139.7 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "33c6792d-2418-4aa0-ae6a-4be72d95f896")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "#PWR302")
 					(unit 1)
 				)
 			)
@@ -1137,16 +1531,16 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 39.37 124.46 90)
+		(at 328.93 146.05 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "65e172ae-2152-4bb6-93a7-c15a382b49b0")
+		(uuid "3a4f7880-83c5-49ae-8cf9-fb772e71c1a8")
 		(property "Reference" "C100"
-			(at 39.37 119.38 180)
+			(at 329.565 148.59 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1155,7 +1549,7 @@
 			)
 		)
 		(property "Value" "4u7"
-			(at 39.37 127 180)
+			(at 336.55 146.05 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1164,7 +1558,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 40.3352 120.65 0.0000)
+			(at 329.8952 142.24 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1173,14 +1567,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "e61bbf7a-e49a-4735-b178-45e62e2007df")
+			(uuid "59ea156d-4de5-47ae-a34e-6dd29e4345bf")
 		)
 		(pin "2"
-			(uuid "f4c7a124-4df2-4c94-84d4-b886962f2b29")
+			(uuid "73911baf-2aef-4f46-ad12-0756d178df20")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
 					(reference "C100")
 					(unit 1)
 				)
@@ -1188,17 +1582,66 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
-		(at 39.37 129.54 90)
+		(lib_id "power:GND")
+		(at 328.93 142.24 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "8cbacbab-294c-4503-8436-19a4642f3c63")
+		(uuid "ee32c53d-0caa-462e-8189-45324cb5988a")
+		(property "Reference" "#PWR303"
+			(at 328.93 148.59 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 328.93 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 328.93 142.24 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c8399aaa-eb38-43b4-ad57-b7fbfc0523f8")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "#PWR303")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 323.85 146.05 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "27bfd527-f7d5-4dfa-bc2f-bd9e7ee45ba9")
 		(property "Reference" "C101"
-			(at 31.75 127 90)
+			(at 324.485 148.59 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1207,7 +1650,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 39.37 132.08 180)
+			(at 321.31 140.97 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1216,7 +1659,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 40.3352 125.73 0.0000)
+			(at 324.8152 142.24 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1225,14 +1668,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "d4d923e6-e5a7-4d5d-a5f3-c039d5685980")
+			(uuid "a7333aaf-99c5-453f-9939-e7042de7d8dc")
 		)
 		(pin "2"
-			(uuid "ffd2dd05-2f6a-4030-80bc-504e6159c942")
+			(uuid "fbbccd55-ee46-4833-8f9e-b56709c11dbf")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
 					(reference "C101")
 					(unit 1)
 				)
@@ -1241,172 +1684,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 39.37 134.62 90)
+		(at 298.45 153.67 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "93bd8855-1b98-43a6-9296-44f6897608ec")
-		(property "Reference" "R100"
-			(at 31.75 132.588 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 39.37 136.652 180)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 37.592 134.62 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "38948d23-a801-4640-a860-529a82dabb91")
-		)
-		(pin "2"
-			(uuid "c4369062-69b7-4082-8a54-43a84bc50c71")
-		)
-		(instances
-			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
-					(reference "R100")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 39.37 139.7 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced no)
-		(uuid "f3c0a2bc-ba69-4d73-8490-ac8f4cd320da")
-		(property "Reference" "R101"
-			(at 31.75 137.668 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 39.37 141.732 180)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 37.592 139.7 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "213b1c3b-723c-463a-9201-72aeba04931b")
-		)
-		(pin "2"
-			(uuid "68a1071b-bc91-4b80-b89e-4b293e2ecfa9")
-		)
-		(instances
-			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
-					(reference "R101")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 39.37 144.78 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced no)
-		(uuid "af291937-beca-45f6-94b4-b0932745b52b")
-		(property "Reference" "R102"
-			(at 31.75 142.748 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 39.37 146.812 180)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 37.592 144.78 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "c1e32bdf-3235-41b9-958a-92d03492448a")
-		)
-		(pin "2"
-			(uuid "8aa5a05b-18bb-430e-adbb-21032871e857")
-		)
-		(instances
-			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
-					(reference "R102")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 39.37 149.86 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced no)
-		(uuid "cd7bb3c7-02fe-449c-8971-9b261bd75a76")
+		(uuid "10799526-40c2-45c9-aa47-eab535b4ff38")
 		(property "Reference" "R103"
-			(at 31.75 147.828 90)
+			(at 305.562 153.67 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1415,7 +1702,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 39.37 151.892 180)
+			(at 291.338 153.67 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1424,7 +1711,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 37.592 149.86 90)
+			(at 296.672 153.67 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1433,14 +1720,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "63b73918-ed6d-4a18-92d9-a053cf0b4217")
+			(uuid "68c70502-2c11-4ce9-835e-b6b5dce9b6e4")
 		)
 		(pin "2"
-			(uuid "71c4a6ab-ac1a-4fcf-9d5a-64d1de30089c")
+			(uuid "f0a58db1-8e0f-4272-a761-92d68a82ff0a")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
 					(reference "R103")
 					(unit 1)
 				)
@@ -1448,35 +1735,35 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 39.37 154.94 90)
+		(lib_id "power:+3V3")
+		(at 298.45 149.86 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "148f5934-c316-4b70-b307-69b9d5f13a24")
-		(property "Reference" "R104"
-			(at 31.75 152.908 90)
+		(uuid "687381f2-2b48-42f7-b8c5-76107de6c820")
+		(property "Reference" "#PWR304"
+			(at 298.45 146.05 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
-		(property "Value" "10k"
-			(at 39.37 156.972 180)
+		(property "Value" "+3V3"
+			(at 298.45 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 37.592 154.94 90)
+		(property "Footprint" ""
+			(at 298.45 149.86 0.0000)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1485,15 +1772,12 @@
 			)
 		)
 		(pin "1"
-			(uuid "16fb8bcf-89e5-4ff8-bf9b-1ec1c8014050")
-		)
-		(pin "2"
-			(uuid "f06a4241-659d-4c59-88dd-d4f30f3d2e16")
+			(uuid "dce66488-2c8c-4c8d-b5b6-5fc0e6e54661")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
-					(reference "R104")
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "#PWR304")
 					(unit 1)
 				)
 			)
@@ -1501,16 +1785,16 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 39.37 160.02 90)
+		(at 288.29 156.21 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "c644e1b7-34ed-477e-8142-00c722648bd2")
-		(property "Reference" "R105"
-			(at 31.75 157.988 90)
+		(uuid "0cb6ae84-cf62-4dbc-b6b8-25999d5cf157")
+		(property "Reference" "R104"
+			(at 288.29 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1519,7 +1803,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 39.37 162.052 180)
+			(at 281.178 156.21 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1528,7 +1812,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 37.592 160.02 90)
+			(at 286.512 156.21 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1537,15 +1821,214 @@
 			)
 		)
 		(pin "1"
-			(uuid "43c34fb7-aea8-451e-8430-be922e4f1ff1")
+			(uuid "d1919765-2a2a-4c44-9ea4-43c486700ac9")
 		)
 		(pin "2"
-			(uuid "2d9bbb83-aabf-40a2-90f3-d1dc7e7fcadb")
+			(uuid "9d0a3472-8f8a-41ad-84c0-352935c3cefd")
 		)
 		(instances
 			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
-				(path "/164e1607-226e-4999-9fcb-f01fd5e48bc7"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "R104")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 288.29 152.4 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "d25c577d-cee7-4bff-992e-9ff828d6327c")
+		(property "Reference" "#PWR305"
+			(at 288.29 148.59 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 288.29 147.32 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 288.29 152.4 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "281f584a-2b3e-4b55-9209-2454b7208e7a")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "#PWR305")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 313.69 161.29 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "826b15ba-ce57-45c5-a056-5759bea85992")
+		(property "Reference" "R105"
+			(at 320.802 161.29 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 306.578 161.29 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 311.912 161.29 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "eb08eb9f-3ac7-4662-b5e2-442819a3f61c")
+		)
+		(pin "2"
+			(uuid "a6151c01-ea1e-4855-9d9f-23638c873927")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
 					(reference "R105")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 313.69 157.48 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "8e6792e1-c16c-4142-a840-25cfbe3b4f2b")
+		(property "Reference" "#PWR306"
+			(at 313.69 153.67 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 313.69 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 313.69 157.48 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e9e5f16c-07f4-4503-8f4f-3fe20b0df079")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "#PWR306")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 17.78 151.13 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced no)
+		(uuid "7c378eb5-e76d-4ad7-afb8-7cae6658da1f")
+		(property "Reference" "#FLG100"
+			(at 17.78 153.035 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 17.78 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 17.78 151.13 0.0000)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "0f28bffe-b2a6-4eba-a4d7-1ba84e4c6fa6")
+		)
+		(instances
+			(project "microSD Card Socket (DM3AT-SF-PEJM5 on Zynq PS SD1)"
+				(path "/348bff7e-05f9-45c5-a9d8-b39632de1840"
+					(reference "#FLG100")
 					(unit 1)
 				)
 			)
@@ -1553,415 +2036,657 @@
 	)
 	(wire
 		(pts
-			(xy 341.63 151.13) (xy 322.58 151.13)
+			(xy 323.85 142.24) (xy 328.93 142.24)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "5055ad56-7c13-4543-b29f-f116c42ec287")
+		(uuid "871e5904-e4fa-42df-8257-0fc7450ca117")
 	)
 	(wire
 		(pts
-			(xy 341.63 153.67) (xy 281.94 153.67)
+			(xy 346.71 143.51) (xy 346.71 148.59)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "51e03c69-9c47-4ad9-a25c-19c91299a337")
+		(uuid "98584c8e-2d6a-4ff7-a46b-093db188c504")
 	)
 	(wire
 		(pts
-			(xy 341.63 156.21) (xy 302.26 156.21)
+			(xy 346.71 148.59) (xy 303.53 148.59)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "a8ba2041-09ed-42cb-979a-9f81bf473abb")
+		(uuid "9eba0d98-531f-4437-becd-c95477156910")
 	)
 	(wire
 		(pts
-			(xy 341.63 158.75) (xy 332.74 158.75)
+			(xy 303.53 148.59) (xy 303.53 143.51)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "cf24eb7f-1baf-4993-84f7-b57b00a888da")
+		(uuid "eca0ad91-e7b9-40fc-b96f-7a7dca644508")
 	)
 	(wire
 		(pts
-			(xy 341.63 161.29) (xy 283.21 161.29)
+			(xy 303.53 142.24) (xy 303.53 143.51)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "e87e81c2-42a3-4ba1-9b09-d7c33f710f3b")
+		(uuid "ba54c8eb-d39d-4ab4-b225-4f23db0ca49c")
 	)
 	(wire
 		(pts
-			(xy 341.63 166.37) (xy 322.58 166.37)
+			(xy 293.37 148.59) (xy 303.53 148.59)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "5340bd93-61c1-4ef8-bcc8-77ef5f55e2e7")
+		(uuid "8bb8eb97-07b1-494f-af3f-94aeecb1c67b")
 	)
 	(wire
 		(pts
-			(xy 341.63 168.91) (xy 281.94 168.91)
+			(xy 293.37 148.59) (xy 293.37 146.05)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "432dc901-8264-476c-9cd4-77b50409ef0d")
+		(uuid "e8ab6dad-0ef9-42e2-961a-126b61c514fe")
 	)
 	(wire
 		(pts
-			(xy 341.63 173.99) (xy 322.58 173.99)
+			(xy 293.37 144.78) (xy 293.37 146.05)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "969a81a7-bfd6-43f8-b61f-a789a00ffc65")
+		(uuid "481a1275-3e19-4d9e-b743-a907dd03dcaf")
 	)
 	(wire
 		(pts
-			(xy 341.63 171.45) (xy 313.69 171.45)
+			(xy 346.71 148.59) (xy 346.71 151.13)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "d199951f-d249-42a5-a280-8e448dcda467")
+		(uuid "0f641da0-c4f3-4494-9d4e-5222819cd6c6")
 	)
 	(wire
 		(pts
-			(xy 384.81 173.99) (xy 394.97 173.99)
+			(xy 346.71 151.13) (xy 283.21 151.13)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "c9176296-7cf7-452b-8670-eefc1453c812")
+		(uuid "16562217-f828-40bb-ada5-fc93158f862a")
 	)
 	(wire
 		(pts
-			(xy 337.82 158.75) (xy 337.82 156.21)
+			(xy 283.21 151.13) (xy 283.21 148.59)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "5931db10-d3e3-4bb9-ae15-eb9edeb5deb3")
+		(uuid "7e298645-bc51-4d43-a963-ca4036000b20")
 	)
 	(wire
 		(pts
-			(xy 337.82 156.21) (xy 337.82 153.67)
+			(xy 283.21 147.32) (xy 283.21 148.59)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "00c4075f-4c72-4267-a510-43b33ba1de06")
+		(uuid "49246c4a-22e5-4afe-aa8d-1fce57bac8ac")
 	)
 	(wire
 		(pts
-			(xy 337.82 153.67) (xy 337.82 151.13)
+			(xy 328.93 151.13) (xy 328.93 149.86)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "d28d4fdb-57d0-46eb-9220-015fb34e535b")
+		(uuid "6d22dab4-924a-4309-82d5-80ef36efb45b")
+	)
+	(wire
+		(pts
+			(xy 323.85 151.13) (xy 323.85 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ddc0da95-3c22-4e48-85d3-58f68b1dbb12")
+	)
+	(wire
+		(pts
+			(xy 346.71 158.75) (xy 298.45 158.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "24cadd90-902a-40e5-954d-a66496448528")
+	)
+	(wire
+		(pts
+			(xy 298.45 158.75) (xy 298.45 157.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b4157aa8-efa2-4901-b4df-086a00ca495d")
+	)
+	(wire
+		(pts
+			(xy 346.71 161.29) (xy 346.71 163.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aacd191b-8ca2-4566-b0dc-3211cb62b724")
+	)
+	(wire
+		(pts
+			(xy 346.71 163.83) (xy 288.29 163.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d32b4239-8957-403f-81e4-880c43ea37b4")
+	)
+	(wire
+		(pts
+			(xy 288.29 163.83) (xy 288.29 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1ffac5c1-135b-4d13-94a2-9508441c69cd")
+	)
+	(wire
+		(pts
+			(xy 288.29 160.02) (xy 288.29 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "635c76de-29d8-4064-a2e3-2385f08bad55")
+	)
+	(wire
+		(pts
+			(xy 346.71 166.37) (xy 313.69 166.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fca32932-3092-432b-b3e1-c8bdfc014211")
+	)
+	(wire
+		(pts
+			(xy 313.69 166.37) (xy 313.69 165.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f2ab894d-1d31-463c-9a3f-c5552dd4ba06")
+	)
+	(wire
+		(pts
+			(xy 346.71 153.67) (xy 346.71 151.13)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e1363ff0-bdf0-4a84-a459-8fc21e860ed6")
+	)
+	(wire
+		(pts
+			(xy 285.75 151.13) (xy 285.75 153.67)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0d6453f9-b2b9-4c43-83f5-aa07be21220c")
+	)
+	(wire
+		(pts
+			(xy 311.15 163.83) (xy 311.15 166.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d3ff7022-8cbf-4f01-bf64-5cb10985fb57")
+	)
+	(wire
+		(pts
+			(xy 389.89 166.37) (xy 400.05 166.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c2ec3c52-fe56-413a-9e9d-23907ed1742c")
+	)
+	(wire
+		(pts
+			(xy 346.71 146.05) (xy 341.63 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "261bff84-0ba8-45ce-a2b0-a2c7324fcad8")
+	)
+	(wire
+		(pts
+			(xy 341.63 146.05) (xy 341.63 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "daf66ca7-ed25-44a9-ba24-1d74f11e885b")
+	)
+	(wire
+		(pts
+			(xy 341.63 135.89) (xy 336.55 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6e095a22-acaf-4eb1-b272-c01f0cdae9be")
+	)
+	(wire
+		(pts
+			(xy 341.63 148.59) (xy 341.63 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6f380372-de1c-45d7-919b-0453d01e5e6d")
+	)
+	(wire
+		(pts
+			(xy 341.63 149.86) (xy 283.21 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ef83320c-5012-4ed9-b61c-8fa0fa44e096")
+	)
+	(wire
+		(pts
+			(xy 283.21 151.13) (xy 275.59 151.13)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "667853ca-6d51-422f-8067-9c98eaf56389")
+	)
+	(wire
+		(pts
+			(xy 285.75 158.75) (xy 298.45 158.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "84c66027-a183-4d04-8655-1087ad248e6b")
+	)
+	(wire
+		(pts
+			(xy 346.71 161.29) (xy 341.63 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2d10157b-c201-482f-a632-d5abebce92b9")
+	)
+	(wire
+		(pts
+			(xy 346.71 166.37) (xy 346.71 168.91)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e77ba357-9a0b-4e92-ac19-1bcf50a456f1")
+	)
+	(wire
+		(pts
+			(xy 346.71 168.91) (xy 313.69 168.91)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5ed12890-66c0-49ac-8b4b-5290e3e3be54")
+	)
+	(wire
+		(pts
+			(xy 22.86 151.13) (xy 17.78 151.13)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dab10036-a7d0-4950-937c-fa441d160655")
 	)
 	(junction
-		(at 337.82 158.75)
+		(at 303.53 143.51)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "f6dee9cb-a28d-48f0-9ba5-60a2d90d82e4")
+		(uuid "f78e7ef9-ad05-4e07-86ed-e9cdc11ee848")
 	)
 	(junction
-		(at 337.82 151.13)
+		(at 346.71 146.05)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "c52f6fb2-6225-4e8f-9b87-96502a5206db")
+		(uuid "d027cc2f-0202-4391-b7f0-eb6a901b07c7")
 	)
-	(label "+3V3"
-		(at 35.56 124.46 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "75edde88-c6a9-492a-981f-247bc7248264")
+	(junction
+		(at 303.53 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "f4bfcfff-6f61-4166-b13b-94f59fee0a88")
 	)
-	(label "GND"
-		(at 43.18 124.46 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "f3ed71bc-fbd1-4c91-a533-6f2b72b12080")
+	(junction
+		(at 293.37 146.05)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "24478572-64fd-45ed-b662-95f2674f8b8c")
 	)
-	(label "+3V3"
-		(at 35.56 129.54 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "805680b6-140c-4b2d-b493-8e15146dab3e")
+	(junction
+		(at 283.21 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "e4f81ce8-6105-45c4-bb3d-511a80f8892d")
 	)
-	(label "GND"
-		(at 43.18 129.54 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "988a6f79-f4fe-49a9-a15a-a4c7567c69c9")
+	(junction
+		(at 323.85 151.13)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a006eeab-c578-4b96-8c5a-e1f4da080a26")
 	)
-	(label "ZYNQ_SD1_DAT0"
-		(at 35.56 134.62 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "c7c3ef87-526a-4f0e-b524-c0fb659bd8d1")
+	(junction
+		(at 328.93 151.13)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0520a1d9-ba85-4c04-bbbd-43346b6f1485")
 	)
-	(label "+3V3"
-		(at 43.18 134.62 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "3ca5834b-88cd-4d90-befc-5a42ae39ef08")
+	(junction
+		(at 288.29 161.29)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "f085b50d-5a8d-4565-804d-23ad8149af8d")
 	)
-	(label "ZYNQ_SD1_DAT1"
-		(at 35.56 139.7 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "62b504e5-9717-4662-a865-f03be22fe311")
+	(junction
+		(at 285.75 151.13)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "31db5da0-d1ae-490f-8896-9b12e9325e29")
 	)
-	(label "+3V3"
-		(at 43.18 139.7 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "634ee830-edec-4113-9e93-86f62c13a476")
+	(junction
+		(at 311.15 163.83)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "78114203-32b0-4dfc-ab95-5ce2fe0f6b63")
 	)
-	(label "ZYNQ_SD1_DAT2"
-		(at 35.56 144.78 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "f8d2be25-bbff-485b-b85c-fd48e23f276a")
+	(junction
+		(at 321.31 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "8e6f32c8-0732-4d42-bab1-717aa9ca2c21")
 	)
-	(label "+3V3"
-		(at 43.18 144.78 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "40b8a2e4-5e82-4ea7-8d7a-436b06269ae1")
+	(junction
+		(at 316.23 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "5318d93c-0160-4363-98b1-e266b70a7117")
 	)
-	(label "ZYNQ_SD1_DAT3"
-		(at 35.56 149.86 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "1b3336c7-054d-40bc-97b7-1b35e5e69bf3")
+	(junction
+		(at 341.63 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "3c9e3cbf-c283-4c8f-91a9-060e9f42c8c5")
 	)
-	(label "+3V3"
-		(at 43.18 149.86 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "75e51e93-ba19-4b0d-849a-d1ad82167f88")
+	(junction
+		(at 283.21 149.86)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "ba643909-d159-4a51-b052-6470338f0a65")
 	)
-	(label "ZYNQ_SD1_CMD"
-		(at 35.56 154.94 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "a2e64936-31b2-4c5b-874a-6dbfee844cad")
+	(junction
+		(at 298.45 158.75)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "35f8682d-cf39-46e2-aa5c-c5b5cccf12d0")
 	)
-	(label "+3V3"
-		(at 43.18 154.94 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "f6a1e708-3c95-4316-9a98-a1a739dc1f0b")
+	(junction
+		(at 341.63 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "2daf3fa1-fb9d-422e-8263-83ff8c10bb83")
 	)
-	(label "ZYNQ_SD1_CD_N"
-		(at 35.56 160.02 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "33be6b01-e8b3-4a9f-8965-fd496b0d11f5")
+	(junction
+		(at 339.09 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "26b32dae-f720-4c58-b9c9-7ea7862e8143")
 	)
-	(label "+3V3"
-		(at 43.18 160.02 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "a1659b65-07b3-42c0-af06-2c6cb4b8e1f0")
+	(junction
+		(at 336.55 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d7125f47-0ae1-448e-96b2-2e9661aaf7f3")
 	)
-	(hierarchical_label "ZYNQ_SD1_DAT2"
-		(shape input)
-		(at 322.58 151.13 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "7fc55d89-7428-4f71-815f-2403921f8651")
+	(junction
+		(at 334.01 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a9b5eb3c-99eb-4f1b-8c33-e8eef5478bf3")
 	)
-	(hierarchical_label "ZYNQ_SD1_DAT3"
-		(shape input)
-		(at 281.94 153.67 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "6635c1f6-65ac-49de-8a2e-fc8755377830")
+	(junction
+		(at 331.47 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "43f5c89d-b10f-44a5-a753-724156a13ad3")
 	)
-	(hierarchical_label "ZYNQ_SD1_CMD"
-		(shape input)
-		(at 302.26 156.21 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "eaa7c3eb-d365-4476-868c-f4f4236e6ad4")
+	(junction
+		(at 328.93 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "e5975e9a-f033-45e2-b1f6-8a6d77588d37")
 	)
-	(hierarchical_label "+3V3"
-		(shape input)
-		(at 332.74 158.75 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "f7fc2a53-8e80-49e2-be0d-c8e640b86daf")
+	(junction
+		(at 326.39 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "8c442faa-e9a4-4e08-94b5-e5371784197e")
+	)
+	(junction
+		(at 323.85 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c2570ffa-f709-47a4-bcc7-837e44a60a80")
+	)
+	(junction
+		(at 321.31 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "f226eaa1-621c-485f-80f2-1ee7de189fec")
+	)
+	(junction
+		(at 318.77 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "eec6430b-8573-4961-af33-44e18c55c238")
+	)
+	(junction
+		(at 316.23 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4ab5aef4-515d-4d73-afc4-588326e7bfb4")
+	)
+	(junction
+		(at 328.93 149.86)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "63913ba3-779e-4df2-a3e4-ac515dbf7ac0")
+	)
+	(junction
+		(at 323.85 149.86)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a80d3676-8d52-4571-8c82-e1136a55370f")
+	)
+	(junction
+		(at 298.45 149.86)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "72624cbc-639a-4aea-ac8d-45bdacd4f4d8")
 	)
 	(hierarchical_label "ZYNQ_SD1_CLK"
 		(shape input)
-		(at 283.21 161.29 180)
+		(at 285.75 153.67 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "a7e3eb00-c658-4f85-89bb-86fb67111a0e")
+		(uuid "e18a5898-77ee-42d7-b69d-2897bfeed186")
+	)
+	(hierarchical_label "GND"
+		(shape input)
+		(at 311.15 166.37 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "fd3d48d9-8a34-4143-b236-e53aa4362dec")
+	)
+	(hierarchical_label "GND"
+		(shape input)
+		(at 400.05 166.37 0.0000)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "e2e9728d-2574-4bde-a6bd-5baa461fcb7f")
+	)
+	(hierarchical_label "ZYNQ_SD1_DAT2"
+		(shape input)
+		(at 346.71 143.51 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "fd1f0e88-7b05-411a-b302-71f466dfd5cb")
+	)
+	(hierarchical_label "ZYNQ_SD1_DAT3"
+		(shape input)
+		(at 336.55 135.89 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f2744943-dcfc-4dc0-b528-36263ab4e9cd")
+	)
+	(hierarchical_label "ZYNQ_SD1_CMD"
+		(shape input)
+		(at 275.59 151.13 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "8984ec9e-eb86-4687-8a31-32ce956918f1")
 	)
 	(hierarchical_label "ZYNQ_SD1_DAT0"
 		(shape input)
-		(at 322.58 166.37 180)
+		(at 285.75 158.75 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "056a1487-7cb3-45e5-b5bc-8c1ec69b8c41")
+		(uuid "55d1736d-6183-4e52-a002-5fb06ea1dbb9")
 	)
 	(hierarchical_label "ZYNQ_SD1_DAT1"
 		(shape input)
-		(at 281.94 168.91 180)
+		(at 341.63 161.29 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "945c3981-0d62-456b-84a8-d387ec0aff98")
+		(uuid "b34efa58-b6b6-460e-9c2c-55e8f0bbae4f")
 	)
 	(hierarchical_label "ZYNQ_SD1_CD_N"
 		(shape input)
-		(at 322.58 173.99 180)
+		(at 313.69 168.91 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "21f9cd37-92a2-4442-962d-f6b13c45cee4")
+		(uuid "196c1292-a66f-4b74-981b-abcad4751c69")
 	)
-	(hierarchical_label "GND"
+	(hierarchical_label "+3V3"
 		(shape input)
-		(at 313.69 171.45 180)
+		(at 22.86 151.13 0.0000)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "b74daad9-3668-49fa-a8ef-88682bba5c6f")
-	)
-	(hierarchical_label "GND"
-		(shape input)
-		(at 394.97 173.99 0.0000)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "a5c02b9a-dd18-4fe3-a569-6e61f55ac142")
+		(uuid "5c2c1437-5d70-491b-b2e3-83ee186da158")
 	)
 	(sheet_instances
 		(path "/"

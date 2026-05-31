@@ -1,6 +1,9 @@
 # For PCBs designed using KiCad: https://www.kicad.org/
 # Format documentation: https://kicad.org/help/file-formats/
 
+# Generated schematic renders (regenerable via `python -m zynq_eda.core.render --all`)
+boards/*/render/
+
 # KiCad temp/backup files
 *.000
 *.bak

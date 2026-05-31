@@ -41,6 +41,12 @@ from zynq_eda.core.model.refcircuit import (
 MICROSD_DM3AT_REFCIRCUIT = ReferenceCircuit(
     part_mpn="DM3AT-SF-PEJM5",
     lcsc="C114218",
+    # Six +3V3 pull-ups on DAT/CMD pins land in only five stagger columns by
+    # default, so two pairs (DAT0/DAT3, DAT1/CMD) share a column and their
+    # +3V3 power symbols stack/collide. Opt into the doubled stagger so each
+    # pull-up gets its own column. (Per-component, like dense_swarm — leaves
+    # every other block's clean cluster geometry untouched.)
+    spread_stagger=True,
     datasheet_url="https://www.hirose.com/en/product/document?clcode=CL0540-1284-2-51&productname=DM3AT-SF-PEJM5(51)&series=DM3",
     datasheet_revision="DM3 series catalog, 2020-08",
     app_circuit_figure="SD Spec Part 1 Sec 4.5 'SD Bus Topology' + Sec 6.3 power; DM3AT catalog p. 3",

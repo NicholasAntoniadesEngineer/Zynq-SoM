@@ -18,7 +18,27 @@ validator. When an overlap is reported, the fix lives in the
 placement helper that emitted the offending primitive, NOT in this
 file.
 
-Checks (every pair flagged on bbox intersection > 0.1 mm × 0.1 mm):
+Two standards of proximity are enforced, both as hard findings:
+
+  * **Overlap** — bboxes actually intersect (above the
+    :data:`OVERLAP_MIN_DIMENSION_MM` noise floor).
+  * **Crowding** — bboxes sit closer than :data:`VISUAL_CLEARANCE_MM`
+    (2 mm) without touching. Per the Laws, "tight-but-passing is a
+    FAILURE": two visible primitives with under 2 mm of breathing room
+    read as touching to the eye, so they are reported.
+
+The 2 mm clearance is applied to every pair of *visible* primitives that
+must never abut — symbol bodies, net/hier labels, intrinsic + property
+text. Wire-involving pairs (wire×label, wire×symbol, wire×intrinsic,
+wire×wire) are still checked for true overlap with their existing
+single-point electrical exemptions, but the 2 mm margin is NOT yet added
+to them: a wire legitimately runs right up to the pin / label / junction
+it connects to, and telling "connected" from "crowded" needs the
+net-attachment model the routing rebuild introduces. That margin lands
+with the router rewrite — it never weakens these checks, which still fire
+on every true overlap today.
+
+Checks:
 
   1. ``symbol × symbol``
   2. ``symbol × label`` / ``symbol × hlabel``
@@ -43,7 +63,6 @@ from typing import Iterable
 
 from zynq_eda.core.layout.bbox import (
     BBox,
-    BBoxKind,
     placeholder_symbol_bbox,
     symbol_bbox,
     text_bbox,
@@ -64,7 +83,10 @@ from zynq_eda.core.validate.report import Severity, ValidationResult
 
 # ---- Tolerances ------------------------------------------------------------
 
-from zynq_eda.core.layout._constants import OVERLAP_NOISE_FLOOR_MM as _CENTRAL_NOISE_FLOOR_MM
+from zynq_eda.core.layout._constants import (
+    OVERLAP_NOISE_FLOOR_MM as _CENTRAL_NOISE_FLOOR_MM,
+    VISUAL_CLEARANCE_MM,
+)
 OVERLAP_MIN_DIMENSION_MM: float = _CENTRAL_NOISE_FLOOR_MM
 """Minimum overlap dimension (mm) before a collision is reported.
 
@@ -230,9 +252,19 @@ def _format_point(p: Point) -> str:
     return f"({p.x:.1f}, {p.y:.1f})"
 
 
-def _overlap_is_significant(a: BBox, b: BBox) -> bool:
-    """True iff the bboxes' intersection rectangle exceeds the noise
-    floor on BOTH dimensions."""
+def _overlap_is_significant(a: BBox, b: BBox, clearance_mm: float = 0.0) -> bool:
+    """True iff ``a`` and ``b`` collide.
+
+    With ``clearance_mm == 0`` (the default) this is a pure *overlap*
+    test: the intersection rectangle must exceed the noise floor on BOTH
+    axes. With ``clearance_mm > 0`` it becomes a *proximity* test — True
+    when the boxes overlap OR sit within ``clearance_mm`` of each other on
+    both axes. The proximity form enforces the Laws' breathing room: two
+    visible primitives with less than the clearance between them read as
+    touching to the eye and are a FAILURE ("tight-but-passing").
+    """
+    if clearance_mm > 0.0:
+        return a.intersects(b, padding_mm=clearance_mm)
     intersection = a.intersection(b)
     if intersection is None:
         return False
@@ -262,6 +294,8 @@ def _result_from_overlap(
         severity=severity,
         message=message,
         location=f"{sheet.name}.kicad_sch",
+        bbox_a=left,
+        bbox_b=right,
     )
 
 
@@ -442,7 +476,7 @@ def validate_overlap(
     # ---- 1. symbol × symbol --------------------------------------------
     for i, (sym_a, bbox_a) in enumerate(symbol_bboxes):
         for sym_b, bbox_b in symbol_bboxes[i + 1:]:
-            if not _overlap_is_significant(bbox_a, bbox_b):
+            if not _overlap_is_significant(bbox_a, bbox_b, VISUAL_CLEARANCE_MM):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -458,7 +492,7 @@ def validate_overlap(
     # Sub-sheet × sub-sheet (root sheet only)
     for i, (sub_a, bbox_a) in enumerate(sheet_bboxes):
         for sub_b, bbox_b in sheet_bboxes[i + 1:]:
-            if not _overlap_is_significant(bbox_a, bbox_b):
+            if not _overlap_is_significant(bbox_a, bbox_b, VISUAL_CLEARANCE_MM):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -474,7 +508,7 @@ def validate_overlap(
     # ---- 2. symbol × label / symbol × hlabel ----------------------------
     for sym, sym_box in symbol_bboxes:
         for label, label_box in label_bboxes:
-            if not _overlap_is_significant(sym_box, label_box):
+            if not _overlap_is_significant(sym_box, label_box, VISUAL_CLEARANCE_MM):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -487,7 +521,7 @@ def validate_overlap(
                 description_right=f"label {label.net_name!r}",
             ))
         for hlabel, hlabel_box in hlabel_bboxes:
-            if not _overlap_is_significant(sym_box, hlabel_box):
+            if not _overlap_is_significant(sym_box, hlabel_box, VISUAL_CLEARANCE_MM):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -503,7 +537,7 @@ def validate_overlap(
     # ---- 3. label × label / label × hlabel / hlabel × hlabel -----------
     for i, (label_a, box_a) in enumerate(label_bboxes):
         for label_b, box_b in label_bboxes[i + 1:]:
-            if not _overlap_is_significant(box_a, box_b):
+            if not _overlap_is_significant(box_a, box_b, VISUAL_CLEARANCE_MM):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -517,7 +551,7 @@ def validate_overlap(
             ))
     for label_a, box_a in label_bboxes:
         for hlabel_b, box_b in hlabel_bboxes:
-            if not _overlap_is_significant(box_a, box_b):
+            if not _overlap_is_significant(box_a, box_b, VISUAL_CLEARANCE_MM):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -531,7 +565,7 @@ def validate_overlap(
             ))
     for i, (hlabel_a, box_a) in enumerate(hlabel_bboxes):
         for hlabel_b, box_b in hlabel_bboxes[i + 1:]:
-            if not _overlap_is_significant(box_a, box_b):
+            if not _overlap_is_significant(box_a, box_b, VISUAL_CLEARANCE_MM):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -601,7 +635,7 @@ def validate_overlap(
     # ---- 6. label × intrinsic / hlabel × intrinsic -----------------
     for label, label_box in label_bboxes:
         for sym, intrinsic_box in intrinsic_bboxes:
-            if not _overlap_is_significant(label_box, intrinsic_box):
+            if not _overlap_is_significant(label_box, intrinsic_box, VISUAL_CLEARANCE_MM):
                 continue
             rule_id = (
                 "overlap.label_intrinsic_pin_name"
@@ -620,7 +654,7 @@ def validate_overlap(
             ))
     for hlabel, hlabel_box in hlabel_bboxes:
         for sym, intrinsic_box in intrinsic_bboxes:
-            if not _overlap_is_significant(hlabel_box, intrinsic_box):
+            if not _overlap_is_significant(hlabel_box, intrinsic_box, VISUAL_CLEARANCE_MM):
                 continue
             rule_id = (
                 "overlap.hlabel_intrinsic_pin_name"
@@ -704,7 +738,7 @@ def validate_overlap(
         for sym_b, box_b in intrinsic_bboxes[i + 1:]:
             if sym_a is sym_b:
                 continue
-            if not _overlap_is_significant(box_a, box_b):
+            if not _overlap_is_significant(box_a, box_b, VISUAL_CLEARANCE_MM):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
@@ -756,7 +790,6 @@ def validate_overlap(
             # visually a cross. The placement engine emits junctions
             # at deliberate merge points (cluster trunks, signal
             # branches).
-            cross_key = (round(crossing.x, 3), round(crossing.y, 3))
             if any(
                 abs(crossing.x - jx) < OVERLAP_MIN_DIMENSION_MM
                 and abs(crossing.y - jy) < OVERLAP_MIN_DIMENSION_MM
