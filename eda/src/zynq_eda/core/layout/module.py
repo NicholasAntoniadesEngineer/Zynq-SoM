@@ -29,6 +29,7 @@ both correct and readable; the render is the judge.
 
 from __future__ import annotations
 
+import collections
 from dataclasses import dataclass
 from typing import Literal
 
@@ -67,6 +68,14 @@ PageSide = Literal["left", "right", "top", "bottom"]
 
 # GND-family pin/net names that resolve to the power:GND symbol.
 _GND_NAMES = frozenset({"GND", "GNDA", "AGND", "DGND", "PGND", "GND_1", "VSS"})
+
+# Cell footprints' centres sit off-grid (text-asymmetric), but symbol anchors
+# must stay on the 1.27 mm grid; snapping each projected displacement back to
+# grid can leave a pair up to ~one grid short of the LAW's 2.54 mm clearance.
+# So the projector TARGETS clearance + one grid of margin: quantisation then
+# always lands at >= 2.54 mm, and the extra breathing room is itself desirable.
+# Validation still uses the strict 2.54 mm — this only over-satisfies it.
+_PROJECT_GAP = VISUAL_CLEARANCE_MM + 1.27
 
 
 # ---------------------------------------------------------------------------
@@ -175,6 +184,8 @@ class _Cell:
     far_kind: Literal["power", "gnd", "signal"]
     passive: PlacedSymbol       # the cap/resistor body
     far_symbol: PlacedSymbol | None  # power symbol at the far terminal, if any
+    emit_label: bool = True     # False for the 2nd+ tap of a merge net (one
+                                # shared label per net; the bus trunk is Stage C)
 
     def members(self) -> list[PlacedSymbol]:
         return [self.passive] + ([self.far_symbol] if self.far_symbol else [])
@@ -307,6 +318,14 @@ def solve_module(
     # start in DISTINCT columns and the projector fans them in X rather than
     # stacking them in Y. The projector then guarantees clearance and the
     # pull-in compacts; co-pin passives still share a trunk in _wire_group.
+    # Count destinations so a net hit by >= 2 parts (a MERGE node, e.g.
+    # ethernet's BS_COMMON) that isn't a power rail gets ONE shared label, not
+    # one per tap. The drawn bus trunk joining the taps is Stage C (router).
+    net_count: collections.Counter = collections.Counter()
+    for ep in rc.expand_parts():
+        net_count[_remap_to_net(ic, ep.to_net)] += 1
+    labeled_merge_nets: set[str] = set()
+
     edge_slot: dict[str, int] = {}
     cells: list[_Cell] = []
     c_ref = ref_start
@@ -341,13 +360,22 @@ def solve_module(
         far_kind, far_lib = _classify_far(to_net)
         _, far = _passive_pins(seed, side)
         far_symbol: PlacedSymbol | None = None
+        emit_label = True
         if far_lib is not None:
             far_symbol, _tip = _place_far_symbol(
                 far, side, far_lib, to_net, f"#PWR{p_ref}", geometry,
             )
             p_ref += 1
+        elif net_count[to_net] >= 2:
+            # Merge net: label it once; later taps carry the net via their port.
+            if to_net in labeled_merge_nets:
+                emit_label = False
+            else:
+                labeled_merge_nets.add(to_net)
 
-        cells.append(_Cell(pin, side, to_net, far_kind, passive, far_symbol))
+        cells.append(
+            _Cell(pin, side, to_net, far_kind, passive, far_symbol, emit_label)
+        )
 
     if unresolved:
         raise ValueError(
@@ -365,7 +393,7 @@ def solve_module(
     for _ in range(40):
         cell_rects = [_cell_rect(c, geometry) for c in cells]
         centers = remove_overlaps(
-            [ic_rect, *cell_rects], gap=VISUAL_CLEARANCE_MM, movable=movable
+            [ic_rect, *cell_rects], gap=_PROJECT_GAP, movable=movable
         )
         moved = False
         for cell, rect, (ncx, ncy) in zip(cells, cell_rects, centers[1:]):
@@ -403,7 +431,7 @@ def _signal_far(cell: _Cell) -> tuple[Point, Point, float]:
 
 def _cell_rect(cell: _Cell, geometry: SymbolGeometryCache) -> Rect:
     boxes = [symbol_footprint(m, geometry) for m in cell.members()]
-    if cell.far_symbol is None:
+    if cell.far_symbol is None and cell.emit_label:
         # The far end is a net label, not a power symbol — reserve its text
         # box too, so the projector spreads neighbours clear of the LABEL and
         # not merely the passive body (the left-cluster crowding's root cause).
@@ -583,12 +611,16 @@ def _wire_group(
             if tip != far:
                 wires.append(PlacedWire(far, tip))
             ports.append(ModulePort(cell.to_net, far, side, cell.far_kind))
-        else:
+        elif cell.emit_label:
             _far, tip, rot = _signal_far(cell)
             if tip != far:
                 wires.append(PlacedWire(far, tip))
             labels.append(PlacedLabel(net_name=cell.to_net, position=tip, rotation=rot))
             ports.append(ModulePort(cell.to_net, tip, side, "signal"))
+        else:
+            # Merge-net tap with no own label: expose the far pin as a port so
+            # Stage C's router joins it into the shared bus trunk + junctions.
+            ports.append(ModulePort(cell.to_net, far, side, "signal"))
 
 
 def _far_symbol_tip(far: Point, side: PageSide) -> Point:
