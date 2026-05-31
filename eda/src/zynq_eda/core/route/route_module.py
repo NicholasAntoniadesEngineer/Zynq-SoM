@@ -101,7 +101,7 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
     for lbl in module.labels:
         targets.append((lbl.position, ""))
 
-    obstacles = _obstacles(module.symbols, geometry)
+    base_obstacles = _obstacles(module.symbols, geometry)
     clr = VISUAL_CLEARANCE_MM
 
     # Build all routing tasks first: a DROP (IC pin -> cap near) and a STUB
@@ -127,29 +127,43 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
             ignore = {cap_oid} | ({tgt_oid} if tgt_oid else set())
             tasks.append((far, tgt, frozenset(ignore)))
 
-    # Net-order shortest-first; stamp each routed wire into the obstacle set so
-    # later routes avoid earlier ones (no wire-wire crossings).
-    tasks.sort(key=lambda t: abs(t[0].x - t[1].x) + abs(t[0].y - t[1].y))
-    new_wires: list[PlacedWire] = []
-    for start, end, ignore in tasks:
-        seg = route_astar(
-            start, end, obstacles,
-            avoid_owners=ignore, avoid_kinds=_AVOID_KINDS, clearance_mm=clr,
-        )
-        if not seg:
+    # Try a few net orderings; each stamps its routed wires into the obstacle
+    # set so later routes avoid earlier ones. Different orders resolve
+    # contention differently, so keep the cleanest result (a tiny rip-up-and-
+    # reroute by re-ordering). Stop early on a perfectly clean route.
+    def _len(t):
+        return abs(t[0].x - t[1].x) + abs(t[0].y - t[1].y)
+
+    orderings = [
+        sorted(tasks, key=_len),            # shortest-first
+        sorted(tasks, key=_len, reverse=True),  # longest-first
+        list(tasks),                        # cap-declaration order
+    ]
+    best = module
+    best_n = before
+    for order in orderings:
+        obstacles = list(base_obstacles)
+        wires: list[PlacedWire] = []
+        for start, end, ignore in order:
+            seg = route_astar(
+                start, end, obstacles,
+                avoid_owners=ignore, avoid_kinds=_AVOID_KINDS, clearance_mm=clr,
+            )
+            if not seg:
+                continue
+            wires.extend(seg)
+            for w in seg:
+                obstacles.append(wire_bbox(w.start, w.end, owner_id="routed"))
+        if not wires:
             continue
-        new_wires.extend(seg)
-        for w in seg:
-            obstacles.append(wire_bbox(w.start, w.end, owner_id="routed"))
-
-    if not new_wires:
-        return module
-
-    junctions = _junctions(new_wires)
-    candidate = replace(module, wires=tuple(new_wires), junctions=tuple(junctions))
-    after = _module_findings(candidate, geometry)
-    # Keep the reroute ONLY if it is strictly better (no-regression Law).
-    return candidate if after < before else module
+        cand = replace(module, wires=tuple(wires), junctions=tuple(_junctions(wires)))
+        n = _module_findings(cand, geometry)
+        if n < best_n:
+            best, best_n = cand, n
+        if best_n == 0:
+            break
+    # Keep the best reroute ONLY if it beat the original (no-regression Law).
+    return best
 
 
 def _junctions(wires: list[PlacedWire]) -> list[PlacedJunction]:
