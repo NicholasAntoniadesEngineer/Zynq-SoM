@@ -174,11 +174,13 @@ def _place_edge(side, grp, ext_dir, occupied, lanes):
         base_lane = coord_lane[coord_of(tip)]
         chosen = None
         fallback = None
-        # Walk the assigned lane outward; also try one and two extra base grids
-        # so a label can clear inboard obstacles (e.g. the connector's own
-        # pin-number text on the dual-row right edge) without changing lane.
-        for extra in range(0, 8):
-            dist = _BASE_OUT + extra * _GRID + (base_lane + (extra // 2) * lanes) * lane_w
+        # Start at this pin's lane base, then walk straight outward by single
+        # grid steps until the label clears every obstacle (e.g. the
+        # connector's own pin-number text). Walking by GRID — not by whole
+        # lane-widths — means no clear slot between obstacles is ever skipped.
+        lane_base = _BASE_OUT + base_lane * lane_w
+        for extra in range(0, 14):
+            dist = lane_base + extra * _GRID
             anchor = _outboard_anchor(tip, side, dist)
             for rot in rots:
                 obj, bb = _make(net, anchor, is_ext, direction, rot)
