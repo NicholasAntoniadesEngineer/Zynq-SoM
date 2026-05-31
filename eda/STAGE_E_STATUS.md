@@ -96,3 +96,40 @@ REMAINING 135 ERC errors = 120 `pin_not_connected` + 15 `power_pin_not_driven`:
 
 The strict build halts on ERC (not overlap — overlap is 0). Done bar:
 27/27 overlap=0 (MET) AND ERC=0 (135 to go) AND renders reviewed (MET for placement).
+
+## UPDATE 2 — power stamps landed (ERC 135→134); IC-edge labels need a router
+
+DONE (committed eabc855, overlap stays 0/27):
+- `edge_labels.power_drive_stamps` + `pipeline._assign_power_stamps`: one
+  PWR_FLAG+rail-symbol stamp per power-symbol net, scanned into clear space,
+  body-orientation computed so the connecting wire stays out of both bodies.
+  Drives GND/+3V3/+2V5/+1V8/+5V/+12V/+VADJ/CHASSIS_GND. power_pin_not_driven 15→11.
+
+INVESTIGATED & RULED OUT this pass (don't repeat):
+- A* stub routing in the exposer (`route_astar`): REGRESSED overlap badly —
+  route_astar uses a different clearance model than our validator-true bboxes,
+  so its wires cross bodies/labels. Reverted.
+- +VIN global-label+flag stamp: REGRESSED ERC (134→138). +VIN is rendered as
+  LOCAL labels on the consuming sheets; a GLOBAL label won't merge with locals
+  (different scope), so the flag drives a separate empty net. Reverted. To drive
+  +VIN: either (a) make +VIN a power symbol (none exists in libs — would need a
+  new zynq_eda:+VIN symbol like +VADJ), or (b) emit +VIN as GLOBAL labels
+  everywhere it's consumed (change the exposer/labeler to use PlacedGlobalLabel
+  for power-input rails not in POWER_SYMBOL_LIB_IDS), then one flag drives it.
+- Multi-direction escape (try all 4 sides): only 8 of ~49 stuck pins become
+  placeable. The rest are genuinely boxed in by dense module wiring + connectors.
+
+REMAINING 134 = 123 pin_not_connected + 11 power_pin_not_driven:
+- **123 pin_not_connected**: ~39 dense IC-edge pins (ethernet PHY ×8 blocked by
+  the BS_COMMON bus, usb_pd FUSB302 left edge, uart, boot_switches) ×~3 instances.
+  These need their label stubs ROUTED around obstacles. The right fix is a
+  validator-faithful stub router (build a small A* that rasterises the SAME
+  bboxes the validator measures — like core/route/grid.py's RouteGrid but
+  reusing the validator's label/symbol bbox funcs), OR move these labels through
+  labeler.py's lane interleaving (it already handles dense edges for connectors).
+- **11 power_pin_not_driven**: all +VIN (see ruled-out note above for the two
+  viable routes).
+
+Best next step: make power-input rails NOT in POWER_SYMBOL_LIB_IDS (just +VIN)
+emit as GLOBAL labels at every consumer + one PWR_FLAG → clears the 11 with low
+risk. Then tackle the dense IC-edge stub routing for the 123.
