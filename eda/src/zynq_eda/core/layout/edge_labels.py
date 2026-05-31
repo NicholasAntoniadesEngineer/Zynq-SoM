@@ -97,6 +97,128 @@ def _abs_pin(sym: PlacedSymbol, pin_id: str, geometry: SymbolGeometryCache) -> P
         return None
 
 
+def _body_up_rotation(lib: str, geometry: SymbolGeometryCache) -> float:
+    """Rotation (0 or 180) that puts the symbol's body ABOVE its pin."""
+    for rot in (0.0, 180.0):
+        try:
+            bb = geometry.bounding_box(lib, rotation=rot)
+            rel = geometry.absolute_pin_positions(lib, Point(0.0, 0.0), rot)
+            pin_y = next(iter(rel.values())).y if rel else 0.0
+        except Exception:
+            return 0.0
+        if (bb.min_y + bb.max_y) / 2.0 < pin_y:  # body above pin (smaller y)
+            return rot
+    return 0.0
+
+
+def _body_down_rotation(lib: str, geometry: SymbolGeometryCache) -> float:
+    """Rotation (0 or 180) that puts the symbol's body BELOW its pin."""
+    up = _body_up_rotation(lib, geometry)
+    return 180.0 if up == 0.0 else 0.0
+
+
+def power_drive_stamps(
+    nets,
+    paper_size: str,
+    geometry: SymbolGeometryCache,
+    occupied: list[BBox],
+    flg_start: int = 800,
+):
+    """Emit one ``power:PWR_FLAG`` drive stamp per power ``net`` in clear space.
+
+    A power symbol (power:GND / power:+3V3 / …) is power-INPUT; KiCad ERC fires
+    ``power_pin_not_driven`` unless at least one PWR_FLAG marks the (global) net
+    as externally driven. Each stamp is a PWR_FLAG joined to the rail's power
+    symbol by a short wire, scanned into the first clear interior spot so it
+    never overlaps anything (if no spot, the stamp is skipped → ERC surfaces a
+    page-room problem rather than a silent overlap). Returns (symbols, wires).
+    Caller is responsible for emitting each net only ONCE across the project
+    (global nets: one flag drives the whole net)."""
+    from zynq_eda.core.layout._constants import INTERIOR_MARGIN_MM, KICAD_GRID_MM
+    from zynq_eda.core.model.sheet import PAPER_DIMENSIONS_MM
+
+    paper_w, paper_h = PAPER_DIMENSIONS_MM[paper_size]
+    WIRE_LEN = 2 * KICAD_GRID_MM
+    step = 4 * KICAD_GRID_MM
+    out_syms: list[PlacedSymbol] = []
+    out_wires: list[PlacedWire] = []
+    flg = flg_start
+    pwr = flg_start
+
+    for net in nets:
+        lib = POWER_SYMBOL_LIB_IDS.get(net)
+        if lib is None:
+            continue
+        chosen = _scan_clear_stamp(
+            net, lib, None, None, WIRE_LEN, step,
+            paper_w, paper_h, INTERIOR_MARGIN_MM, geometry, occupied, flg, pwr,
+        )
+        if chosen is None:
+            continue
+        rail_sym, flag_sym, wire, boxes = chosen
+        out_syms.append(rail_sym); out_syms.append(flag_sym)
+        out_wires.append(wire)
+        occupied.extend(boxes)
+        flg += 1; pwr += 1
+    return out_syms, out_wires
+
+
+def _scan_clear_stamp(
+    net, lib, rail_pin, flag_pin, wire_len, step,
+    paper_w, paper_h, margin, geometry, occupied, flg, pwr,
+):
+    """Scan the page interior for a clear spot to drop a (rail + PWR_FLAG)
+    stamp. Returns (rail_sym, flag_sym, wire, [bboxes]) or None.
+
+    Geometry: the two pins meet on a short vertical wire; each symbol is rotated
+    so its BODY points AWAY from the wire (rail body up via rotation 0/180 to
+    keep its body above its pin; PWR_FLAG rotated 180 so its body points DOWN).
+    This keeps the connecting wire out of both bodies (the wire-through-body
+    overlap)."""
+    # Rail at TOP with body UP (away from the wire going down); PWR_FLAG at
+    # BOTTOM with body DOWN (away from the wire going up). Pick each rotation so
+    # the body sits on the far side of the pin from the wire.
+    rail_rot = _body_up_rotation(lib, geometry)        # body above its pin
+    flag_rot = _body_down_rotation("power:PWR_FLAG", geometry)  # body below its pin
+    try:
+        rr = geometry.absolute_pin_positions(lib, Point(0.0, 0.0), rail_rot)
+        rp = next(iter(rr.values())) if rr else Point(0.0, 0.0)
+        fr = geometry.absolute_pin_positions("power:PWR_FLAG", Point(0.0, 0.0), flag_rot)
+        fp = next(iter(fr.values())) if fr else Point(0.0, 0.0)
+    except Exception:
+        return None
+    y = snap_to_grid(margin + wire_len + step)
+    while y < paper_h - margin:
+        x = snap_to_grid(margin + step)
+        while x < paper_w - margin:
+            rail_tip = Point(x, snap_to_grid(y - wire_len))  # top of wire
+            flag_tip = Point(x, y)                            # bottom of wire
+            rail_anchor = Point(snap_to_grid(rail_tip.x - rp.x), snap_to_grid(rail_tip.y - rp.y))
+            flag_anchor = Point(snap_to_grid(flag_tip.x - fp.x), snap_to_grid(flag_tip.y - fp.y))
+            try:
+                rb = symbol_bbox(lib, rail_anchor, rail_rot, geometry, f"stamp:{net}")
+                fb = symbol_bbox("power:PWR_FLAG", flag_anchor, flag_rot, geometry, "stamp:flag")
+            except Exception:
+                x = snap_to_grid(x + step); continue
+            wb = wire_bbox(rail_tip, flag_tip, owner_id="stamp:wire")
+            boxes = [rb, fb, wb]
+            if all(
+                margin <= bb.min.x and bb.max.x <= paper_w - margin
+                and margin <= bb.min.y and bb.max.y <= paper_h - margin
+                and all(not bb.intersects(o, padding_mm=VISUAL_CLEARANCE_MM) for o in occupied)
+                for bb in boxes
+            ):
+                rail_sym = PlacedSymbol(lib_id=lib, reference=f"#PWR{pwr}", value=net,
+                                        position=rail_anchor, footprint="", rotation=rail_rot)
+                flag_sym = PlacedSymbol(lib_id="power:PWR_FLAG", reference=f"#FLG{flg}",
+                                        value=net, position=flag_anchor, footprint="",
+                                        rotation=flag_rot)
+                return rail_sym, flag_sym, PlacedWire(rail_tip, flag_tip), boxes
+            x = snap_to_grid(x + step)
+        y = snap_to_grid(y + step)
+    return None
+
+
 def _pin_rotation(sym: PlacedSymbol, spec, geometry: SymbolGeometryCache) -> float:
     """The pin's library rotation (tip→body direction) for page-side lookup."""
     from zynq_eda.core.layout.geometry import _pin_rotation_from_symbol

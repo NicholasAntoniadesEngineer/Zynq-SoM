@@ -20,7 +20,11 @@ from zynq_eda.core.layout.arrange import Arrangement, arrange_block
 from zynq_eda.core.layout.footprint import symbol_footprint
 from zynq_eda.core.layout.geometry import SymbolGeometryCache
 from zynq_eda.core.layout.labeler import label_connectors
-from zynq_eda.core.layout.edge_labels import expose_ic_pin_nets, no_connect_markers
+from zynq_eda.core.layout.edge_labels import (
+    expose_ic_pin_nets,
+    no_connect_markers,
+    power_drive_stamps,
+)
 from zynq_eda.core.layout.module import Module
 from zynq_eda.core.model.block import Block
 from zynq_eda.core.model.sheet import PlacedJunction, PlacedWire, Sheet
@@ -33,15 +37,20 @@ def route_sheet(
     geometry: SymbolGeometryCache,
     *,
     reroute: bool = True,
+    stamp_nets: set[str] | None = None,
 ) -> Sheet:
     """Return the complete wired :class:`Sheet` for ``block``.
 
     Runs Stage B placement, optionally re-routes dense modules with A*, then
     assembles symbols + labels + wires + junctions. Connectors are bodies only
     (their pin nets become edge hier-labels in Stage D).
+
+    ``stamp_nets`` is the set of global power nets this sheet should emit a
+    PWR_FLAG drive stamp for (the pipeline assigns each net to the first sheet
+    that contains it, so each global net is driven exactly once).
     """
     arr = arrange_block(block, geometry)
-    return assemble_sheet(arr, geometry, block, reroute=reroute)
+    return assemble_sheet(arr, geometry, block, reroute=reroute, stamp_nets=stamp_nets)
 
 
 def assemble_sheet(
@@ -50,6 +59,7 @@ def assemble_sheet(
     block: Block,
     *,
     reroute: bool = True,
+    stamp_nets: set[str] | None = None,
 ) -> Sheet:
     symbols = list(arr.sheet.symbols)
     labels = list(arr.sheet.labels)
@@ -97,6 +107,17 @@ def assemble_sheet(
     # Stage E.2: No-Connect markers on every still-unused pin (connector spares
     # + NC IC pins), so ERC stops firing pin_not_connected on unused pins.
     no_connects = no_connect_markers(block, conns, geometry, ic_symbols)
+
+    # Stage E.3: PWR_FLAG drive stamps for the global power nets assigned to this
+    # sheet, so ERC stops firing power_pin_not_driven (a power symbol is power-
+    # INPUT; a PWR_FLAG marks the net externally driven). One flag per global
+    # net drives it project-wide; the pipeline assigns each net once.
+    if stamp_nets:
+        ssyms, swires = power_drive_stamps(
+            sorted(stamp_nets), arr.sheet.paper_size, geometry, occupied
+        )
+        symbols.extend(ssyms)
+        wires.extend(swires)
 
     return Sheet(
         name=arr.sheet.name,

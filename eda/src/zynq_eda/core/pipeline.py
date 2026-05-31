@@ -46,6 +46,32 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_CARRIER_OUTPUT_DIR = REPO_ROOT / "boards" / "carrier"
 
 
+def _assign_power_stamps(blocks) -> dict:
+    """Map block.name → set of global power nets that block should drive.
+
+    Each power-symbol net (GND, +3V3, …) needs exactly ONE PWR_FLAG stamp
+    project-wide. Assign each declared power net (power_kind output/ground/input)
+    to the FIRST block in build order that declares it, so the stamp lands once,
+    on a sheet that genuinely carries the rail."""
+    from zynq_eda.core.layout._constants import POWER_SYMBOL_LIB_IDS
+
+    assignment: dict[str, set[str]] = {}
+    claimed: set[str] = set()
+    # Pass 1: producers/ground first (output/ground), then consumers (input).
+    for kinds in (("output", "ground"), ("input",)):
+        for block in blocks:
+            for net in getattr(block, "external_nets", ()):  # type: ignore[attr-defined]
+                if net.power_kind not in kinds:
+                    continue
+                if net.name in claimed:
+                    continue
+                if net.name not in POWER_SYMBOL_LIB_IDS:
+                    continue  # only power-symbol nets need a flag
+                assignment.setdefault(block.name, set()).add(net.name)
+                claimed.add(net.name)
+    return assignment
+
+
 def _root_filename_stem(only_block: str | None) -> str:
     """Pick the root .kicad_sch / .kicad_pro filename stem.
 
@@ -158,6 +184,12 @@ def run_carrier(
     block_sub_sheets: list[tuple] = []  # (block, placed_sheet, relative_filename)
     survey_rows: list[tuple[str, int, int, str]] = []  # (name, bounds, overlap, note)
 
+    # Assign each global power net ONE driving sheet (the first block that
+    # produces it — power_kind output/ground — else the first that consumes it),
+    # so exactly one PWR_FLAG stamp drives each net project-wide. Power symbols
+    # are power-INPUT; without a flag, ERC fires power_pin_not_driven.
+    stamp_assignment = _assign_power_stamps(blocks)
+
     for block in blocks:
         print(f"  block {block.name!r} ({block.title}):")
         try:
@@ -165,7 +197,10 @@ def run_carrier(
             # label. Falls back to the legacy planner only if it raises (so a
             # block the new engine can't yet handle still builds in survey mode).
             try:
-                sheet = route_sheet(block, geometry_cache)
+                sheet = route_sheet(
+                    block, geometry_cache,
+                    stamp_nets=stamp_assignment.get(block.name),
+                )
             except Exception as route_error:  # noqa: BLE001
                 if not survey:
                     raise
