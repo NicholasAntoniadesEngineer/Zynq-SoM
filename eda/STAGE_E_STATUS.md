@@ -67,3 +67,32 @@ Verification loop:
   REPO-ROOT `boards/carrier/` (not under eda/).
 
 Done bar: 27/27 overlap=0 (MET) AND ERC clean (TODO) AND renders reviewed.
+
+## UPDATE — Stage E in progress: ERC 489 → 135
+
+DONE this pass (all committed, overlap stays 0/27):
+- `edge_labels.no_connect_markers` — NC on every spare connector pad + NC IC pin.
+  Cleared 330 `pin_not_connected`.
+- `edge_labels.expose_ic_pin_nets` — attaches each floating IC pin's net
+  (power symbol / hier-label / local label) on a clearance-checked outboard
+  stub. True page-side escape, validator-own bboxes, full power-symbol footprint.
+  Floating IC pins 72 → 39.
+- `route_sheet` feeds module labels into the obstacle set (fixed the usb_pd
+  +VIN/CC2 clash; root cause was module labels missing from `occupied`).
+
+REMAINING 135 ERC errors = 120 `pin_not_connected` + 15 `power_pin_not_driven`:
+- **120 pin_not_connected** = 39 IC pins the exposer's straight-outboard walk
+  couldn't clear, ×~3 (root + sub-sheet instances). Concentration:
+  ethernet 17 (PHY MDI pairs, left edge, blocked by the BS_COMMON bus loop),
+  usb_pd 10, uart_bridge 5, boot_switches 4, others ≤2.
+  → FIX: route these dense IC-edge labels through the LANE-INTERLEAVING logic
+    in `labeler.py` (same as connectors) instead of the exposer's simple walk,
+    OR let the exposer try perpendicular offset + longer reach when straight
+    outboard is blocked. The 8 ethernet PHY pins are 5.08 mm pitch so they fit
+    vertically — they just need to escape PAST the bus.
+- **15 power_pin_not_driven** — no PWR_FLAG / GND drive stamp emitted. Port
+  legacy `plan._emit_pwr_flags` + `_emit_gnd_drive_stamp` + `_emit_power_rail_taps`:
+  one PWR_FLAG per undriven power-input net, one GND drive stamp on `power`.
+
+The strict build halts on ERC (not overlap — overlap is 0). Done bar:
+27/27 overlap=0 (MET) AND ERC=0 (135 to go) AND renders reviewed (MET for placement).
