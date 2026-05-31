@@ -200,7 +200,7 @@ visual breathing room between the cluster's last drop wire and the
 hier-label text bbox."""
 
 
-VISUAL_CLEARANCE_MM: float = 2.0
+VISUAL_CLEARANCE_MM: float = snap_to_grid(2.54)
 """Minimum gap (mm) between any two visible primitives.
 
 Drives EVERY placement helper that probes occupancy for a free slot:
@@ -212,9 +212,9 @@ ruled that elements appearing to touch (text against text, text
 against body, body against wire) is the same as overlapping for
 visual purposes.
 
-2 mm = 0.79 × the KiCad grid pitch (2.54 mm). Smaller than one full
-grid step but large enough that adjacent property labels read as
-separate elements.
+One full KiCad grid step (2.54 mm): the spread-to-fill placement rebuild
+targets zero crowding at this clearance, so every pair of visible
+primitives reads as cleanly separated with a full grid of breathing room.
 """
 
 

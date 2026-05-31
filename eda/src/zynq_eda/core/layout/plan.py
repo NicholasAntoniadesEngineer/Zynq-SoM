@@ -1468,99 +1468,22 @@ def plan_anchors(
 
     anchors: list[AnchorPlan] = []
 
-    # --- ICs: vertical column, anchor.x = base_margin + LEFT_extent + half_w
-    # The first IC sits below the top margin; subsequent ICs stack with
-    # bbox-aware spacing + cap-chain clearance.
-    ic_y_cursor = snap_to_grid(INTERIOR_MARGIN_MM + 20.32)
-    prev_ic_half_down = 0.0
-    for index, ic in enumerate(block.ics):
-        try:
-            body = geometry.bounding_box(ic.lib_id, rotation=0.0)
-            body_half_w = body.width / 2.0
-            body_half_h_up = abs(body.min_y)
-            body_half_h_down = abs(body.max_y)
-        except Exception:
-            body = None
-            body_half_w = body_half_h_up = body_half_h_down = 0.0
+    # ---- Region-partition placement (spread-to-fill) ----------------------
+    # Each unit (an IC with its cluster lanes, or a connector) is sized to its
+    # footprint, the usable page is partitioned into one region per unit, and
+    # the unit is centred in its region with breathing room. This replaces the
+    # old tight left-column / edge-column packing that crammed everything into
+    # a fraction of the page and caused the chronic crowding. Connectors keep
+    # their standard pin pitch — only their region (the space around them) is
+    # generous; their pins are never spread.
+    from zynq_eda.core.layout._constants import VISUAL_CLEARANCE_MM
+    from zynq_eda.core.layout.bbox import placeholder_symbol_bbox
+    from zynq_eda.core.layout.regions import Unit, partition_and_assign
 
-        left_extent = _outboard(ic.reference, "left")
-        right_extent = _outboard(ic.reference, "right")
-        top_extent = _outboard(ic.reference, "top")
-        # Total upward reach above anchor = max pin Y above anchor +
-        # TOP cluster outboard reach + cap body half + safety pad.
-        top_pin_above = top_reach_by_owner.get(ic.reference, 0.0)
-        top_chain_reach_above_anchor = (
-            top_pin_above + top_extent if top_extent > 0 else 0.0
-        )
+    pad = 2.0 * VISUAL_CLEARANCE_MM  # breathing margin folded into each footprint
 
-        anchor_x = snap_to_grid(
-            INTERIOR_MARGIN_MM + left_extent + body_half_w
-        )
-        max_anchor_x = paper_w - INTERIOR_MARGIN_MM - right_extent - body_half_w
-        if anchor_x > max_anchor_x:
-            raise RuntimeError(
-                f"plan_anchors: IC {ic.reference} ({ic.lib_id}): the "
-                f"LEFT lane stack ({left_extent:.1f} mm) + body width "
-                f"({2*body_half_w:.1f} mm) + RIGHT lane stack "
-                f"({right_extent:.1f} mm) + 2*margin "
-                f"({2*INTERIOR_MARGIN_MM:.1f} mm) exceed page width "
-                f"({paper_w:.1f} mm). Upstream fix (try in priority order):\n"
-                f"  1. Move some declared external_nets to a single "
-                f"sheet edge so only one side carries lane width.\n"
-                f"  2. Move {ic.reference} to a separate block.\n"
-                f"  3. Increase paper_size from {block.paper_size!r}."
-            )
-
-        if index == 0:
-            # Anchor must clear: (a) the IC body's own top half, and
-            # (b) any TOP-side cluster cap chain reaching above the
-            # body. Take the larger to leave room for both cases.
-            need_above_body = max(body_half_h_up, top_chain_reach_above_anchor)
-            anchor_y = snap_to_grid(
-                INTERIOR_MARGIN_MM + need_above_body
-            )
-        else:
-            # For stacked ICs, the bottom of the previous IC plus the
-            # cap-chain clearance must be below the top of this IC's
-            # body / cap chain. Use whichever is larger.
-            need_above_body = max(body_half_h_up, top_chain_reach_above_anchor)
-            anchor_y = snap_to_grid(
-                ic_y_cursor + prev_ic_half_down
-                + _IC_CAP_CHAIN_CLEARANCE_MM + need_above_body
-            )
-
-        anchor = Point(anchor_x, anchor_y)
-        if body is not None:
-            body_bbox_page = _shift_symbol_bbox_to_page(body, anchor)
-        else:
-            from zynq_eda.core.layout.bbox import placeholder_symbol_bbox
-            body_bbox_page = placeholder_symbol_bbox(
-                anchor, owner_id="planner:body",
-            )
-
-        anchors.append(AnchorPlan(
-            owner_ref=ic.reference,
-            owner_kind="ic",
-            anchor=anchor,
-            rotation=0.0,
-            body_bbox_page=body_bbox_page,
-        ))
-        ic_y_cursor = anchor_y
-        prev_ic_half_down = body_half_h_down
-
-    # --- Connectors: own column on declared edge -----------------------------
-    # Group connectors by edge so each edge has its own Y cursor.
-    connectors_by_edge: dict[SheetEdge, list[ConnectorInstance]] = {
-        SheetEdge.LEFT: [], SheetEdge.RIGHT: [],
-    }
-    for connector in block.connectors:
-        connectors_by_edge.setdefault(connector.edge, []).append(connector)
-
-    # Compute max OUTBOARD-text extension per (owner_ref, edge) — the
-    # text bbox of a hier-label extends OUTBOARD past lane.x_end (for
-    # RIGHT) or lane.x_start (for LEFT) by ~text_width mm; the
-    # connector anchor must be inset enough to leave room for this
-    # additional text reach beyond the lane's outboard edge.
+    # Outboard hier/local-label TEXT reach per (owner, edge): the label text
+    # extends past the lane's outboard edge by ~its width.
     text_overflow_by_owner_edge: dict[tuple[str, PageSide], float] = {}
     for stack in edge_stacks:
         if stack.owner_ref == block.name:
@@ -1569,72 +1492,99 @@ def plan_anchors(
             for lane in row:
                 if lane.lane_kind not in ("hier_label", "local_label"):
                     continue
-                # label_text_extent_mm encodes the full lane width
-                # (HLABEL_ANCHOR_OFFSET + text_width + 2*VISUAL_CLEARANCE);
-                # the actual text extension past x_end is text_width
-                # which we approximate as lane.label_text_extent_mm.
                 key = (stack.owner_ref, stack.edge)
-                existing = text_overflow_by_owner_edge.get(key, 0.0)
                 text_overflow_by_owner_edge[key] = max(
-                    existing, lane.label_text_extent_mm,
+                    text_overflow_by_owner_edge.get(key, 0.0),
+                    lane.label_text_extent_mm,
                 )
 
-    for edge_enum, connectors in connectors_by_edge.items():
-        if not connectors:
-            continue
-        edge_side: PageSide = (
-            "left" if edge_enum == SheetEdge.LEFT else "right"
+    def _body_extents(lib_id: str, rotation: float):
+        try:
+            b = geometry.bounding_box(lib_id, rotation=rotation)
+            return b, b.width / 2.0, abs(b.min_y), abs(b.max_y)
+        except Exception:
+            return None, 0.0, 0.0, 0.0
+
+    # Size each unit's footprint (body + outboard lane extents) and remember
+    # how to place its anchor within the region it is assigned.
+    info: dict[str, dict] = {}
+    units: list[Unit] = []
+    for ic in block.ics:
+        body, half_w, half_up, half_down = _body_extents(ic.lib_id, 0.0)
+        left = _outboard(ic.reference, "left")
+        right = _outboard(ic.reference, "right")
+        top = _outboard(ic.reference, "top")
+        bottom = _outboard(ic.reference, "bottom")
+        top_above = top_reach_by_owner.get(ic.reference, 0.0)
+        top_reach = (top_above + top) if top > 0 else top_above
+        footprint_w = left + 2.0 * half_w + right + pad
+        footprint_h = top_reach + half_up + half_down + bottom + pad
+        info[ic.reference] = {
+            "kind": "ic", "body": body, "half_w": half_w, "half_up": half_up,
+            "left": left, "top_reach": top_reach, "rotation": 0.0, "edge": None,
+        }
+        units.append(Unit(ic.reference, footprint_w, footprint_h, None))
+
+    for connector in block.connectors:
+        body, half_w, half_up, half_down = _body_extents(
+            connector.lib_id, connector.rotation,
         )
-        y_cursor = snap_to_grid(INTERIOR_MARGIN_MM + 20.32)
-        for connector in connectors:
-            try:
-                body = geometry.bounding_box(
-                    connector.lib_id, rotation=connector.rotation,
-                )
-                body_half_w = body.width / 2.0
-                body_half_h_up = abs(body.min_y)
-                body_half_h_down = abs(body.max_y)
-            except Exception:
-                body = None
-                body_half_w = body_half_h_up = body_half_h_down = 0.0
+        edge_side: PageSide = (
+            "left" if connector.edge == SheetEdge.LEFT else "right"
+        )
+        out = _outboard(connector.reference, edge_side)
+        tov = text_overflow_by_owner_edge.get(
+            (connector.reference, edge_side), 0.0
+        )
+        footprint_w = out + tov + 2.0 * half_w + pad
+        footprint_h = half_up + half_down + pad
+        info[connector.reference] = {
+            "kind": "connector", "body": body, "half_w": half_w,
+            "half_up": half_up, "out": out, "tov": tov,
+            "rotation": connector.rotation, "edge": edge_side,
+        }
+        units.append(Unit(connector.reference, footprint_w, footprint_h, edge_side))
 
-            outboard = _outboard(connector.reference, edge_side)
-            # Text past lane.x_end (RIGHT) / lane.x_start (LEFT) on the
-            # OUTBOARD edge — needed because the hier-label TEXT extends
-            # OUTBOARD past the lane's outboard edge by ~text_width.
-            edge_text_overflow = text_overflow_by_owner_edge.get(
-                (connector.reference, edge_side), 0.0
-            )
-            if edge_side == "left":
+    regions = partition_and_assign(units, paper_w, paper_h, INTERIOR_MARGIN_MM)
+
+    # Centre each unit's footprint within its region (slack distributed as
+    # breathing room on every side); connectors hug their declared edge.
+    for u in units:
+        meta = info[u.ref]
+        reg = regions[u.ref]
+        slack_x = max(0.0, reg.width - u.w)
+        slack_y = max(0.0, reg.height - u.h)
+        base_x = reg.x0 + slack_x / 2.0 + pad / 2.0
+        base_y = reg.y0 + slack_y / 2.0 + pad / 2.0
+        if meta["kind"] == "ic":
+            anchor_x = snap_to_grid(base_x + meta["left"] + meta["half_w"])
+            anchor_y = snap_to_grid(base_y + meta["top_reach"] + meta["half_up"])
+        else:
+            if meta["edge"] == "left":
                 anchor_x = snap_to_grid(
-                    INTERIOR_MARGIN_MM + outboard
-                    + edge_text_overflow + body_half_w
+                    base_x + meta["out"] + meta["tov"] + meta["half_w"]
                 )
             else:
                 anchor_x = snap_to_grid(
-                    paper_w - INTERIOR_MARGIN_MM - outboard
-                    - edge_text_overflow - body_half_w
+                    reg.x1 - slack_x / 2.0 - pad / 2.0
+                    - meta["out"] - meta["tov"] - meta["half_w"]
                 )
-
-            anchor_y = snap_to_grid(y_cursor + body_half_h_up)
-            anchor = Point(anchor_x, anchor_y)
-            if body is not None:
-                body_bbox_page = _shift_symbol_bbox_to_page(body, anchor)
-            else:
-                from zynq_eda.core.layout.bbox import placeholder_symbol_bbox
-                body_bbox_page = placeholder_symbol_bbox(
-                    anchor, owner_id="planner:body",
-                )
-            anchors.append(AnchorPlan(
-                owner_ref=connector.reference,
-                owner_kind="connector",
-                anchor=anchor,
-                rotation=connector.rotation,
-                body_bbox_page=body_bbox_page,
-            ))
-            y_cursor = snap_to_grid(
-                anchor_y + body_half_h_down + 20.32
+            anchor_y = snap_to_grid(base_y + meta["half_up"])
+        anchor = Point(anchor_x, anchor_y)
+        body = meta["body"]
+        if body is not None:
+            body_bbox_page = _shift_symbol_bbox_to_page(body, anchor)
+        else:
+            body_bbox_page = placeholder_symbol_bbox(
+                anchor, owner_id="planner:body",
             )
+        anchors.append(AnchorPlan(
+            owner_ref=u.ref,
+            owner_kind=meta["kind"],
+            anchor=anchor,
+            rotation=meta["rotation"],
+            body_bbox_page=body_bbox_page,
+        ))
 
     return tuple(anchors)
 
