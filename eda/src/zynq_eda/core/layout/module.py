@@ -54,6 +54,7 @@ from zynq_eda.core.layout.geometry import (
     SymbolGeometryCache,
     page_side_from_pin,
 )
+from zynq_eda.core.route.grid import route_terminals
 from zynq_eda.core.layout.separate import Rect, remove_overlaps
 from zynq_eda.core.model.block import IcInstance
 from zynq_eda.core.model.grid import Point, snap_to_grid
@@ -527,100 +528,106 @@ def _finalize(
     geometry: SymbolGeometryCache,
 ) -> Module:
     symbols: list[PlacedSymbol] = [ic_sym]
-    wires: list[PlacedWire] = []
-    junctions: list[PlacedJunction] = []
+    far_wires: list[PlacedWire] = []   # passive far → power-symbol/label stubs
     labels: list[PlacedLabel] = []
     ports: list[ModulePort] = []
 
-    # Group cells by the pin they hang off so co-pin passives share a trunk.
+    # Group cells by the pin they hang off so co-pin passives share a trunk net.
     by_pin: dict[tuple[float, float], list[_Cell]] = {}
     for cell in cells:
         by_pin.setdefault((round(cell.pin.x, 3), round(cell.pin.y, 3)), []).append(cell)
 
+    # Build the per-pin TRUNK nets (IC pin + each passive's near terminal) and
+    # the far-end stubs (clean short verticals into the power symbol / label).
+    # Track each trunk net's OWN symbols (the IC body + that pin's passives +
+    # their power symbols) so the router may traverse only ITS OWN halos — a
+    # trunk wire treats a SIBLING net's passive as an obstacle (no plowing
+    # through it), but may escape its own IC body / dock its own passives.
+    trunk_nets: dict[str, list[Point]] = {}
+    own_syms: dict[str, list[PlacedSymbol]] = {}
+    escape_dirs: dict[str, list[tuple[int, int]]] = {}
+    # Page side → outboard unit cell step (page +Y is down).
+    _OUT = {"left": (-1, 0), "right": (1, 0), "top": (0, -1), "bottom": (0, 1)}
     for group in by_pin.values():
         side = group[0].side
         pin = group[0].pin
-        _wire_group(pin, side, group, geometry, wires, junctions, labels, ports, symbols)
+        terminals: list[Point] = [pin]
+        # IC pin escapes OUTBOARD (its page side); each passive near-pin escapes
+        # back TOWARD the IC (opposite side) so it docks onto the trunk.
+        dirs: list[tuple[int, int]] = [_OUT[side]]
+        inboard = (-_OUT[side][0], -_OUT[side][1])
+        net_key = f"{ic.reference}@{pin.x:.2f},{pin.y:.2f}"
+        members: list[PlacedSymbol] = [ic_sym]
+        for cell in group:
+            symbols.append(cell.passive)
+            members.append(cell.passive)
+            near, far = _passive_pins(cell.passive.position, side)
+            terminals.append(near)
+            dirs.append(inboard)
+            if cell.far_symbol is not None:
+                symbols.append(cell.far_symbol)
+                members.append(cell.far_symbol)
+                tip = _far_symbol_tip(far, side)
+                if tip != far:
+                    far_wires.append(PlacedWire(far, tip))
+                ports.append(ModulePort(cell.to_net, far, side, cell.far_kind))
+            elif cell.emit_label:
+                _far, tip, rot = _signal_far(cell)
+                if tip != far:
+                    far_wires.append(PlacedWire(far, tip))
+                labels.append(PlacedLabel(net_name=cell.to_net, position=tip, rotation=rot))
+                ports.append(ModulePort(cell.to_net, tip, side, "signal"))
+            else:
+                # Merge-net tap with no own label: expose the far pin as a port
+                # so the sheet-level router joins it into the shared bus.
+                ports.append(ModulePort(cell.to_net, far, side, "signal"))
+        trunk_nets[net_key] = terminals
+        own_syms[net_key] = members
+        escape_dirs[net_key] = dirs
 
+    # Route the trunks with the cached-grid A* router against the real obstacle
+    # set (every body + text + the far stubs), so the trunk wires weave AROUND
+    # bodies and pin text instead of crossing them (the Stage-A wire findings).
+    obstacles = [symbol_footprint(s, geometry) for s in symbols]
+    for l in labels:
+        obstacles.append(
+            text_bbox(l.net_name, l.position, rotation=l.rotation, justify="left",
+                      kind="label", owner_id=f"label:{l.net_name}")
+        )
+    for w in far_wires:
+        obstacles.append(wire_bbox(w.start, w.end))
+
+    # Per-net own-symbol exempt: only the IC body the pin lives on + that pin's
+    # own passives/power symbols are traversable for this trunk. The IC body is
+    # shared by every trunk (each pin must escape it); sibling passives are NOT
+    # exempt, so a trunk never plows through another net's cap.
+    own_obstacles = {
+        name: [symbol_footprint(s, geometry) for s in members]
+        for name, members in own_syms.items()
+    }
+    trunk_wires, trunk_juncs, failures = route_terminals(
+        obstacles, trunk_nets, own_obstacles=own_obstacles, escape_dirs=escape_dirs
+    )
+    if failures:
+        nets = sorted({n for n, _ in failures})
+        raise ValueError(
+            f"solve_module({ic.reference}): router could not connect "
+            f"{len(failures)} terminal(s) on nets {nets} — no silent drops "
+            f"(the Laws). Placement must open a wider channel."
+        )
+
+    wires = far_wires + list(trunk_wires)
     bbox = _module_bbox(symbols, wires, labels, geometry)
     return Module(
         ic_ref=ic.reference,
         anchor=anchor,
         symbols=tuple(symbols),
         wires=tuple(wires),
-        junctions=tuple(junctions),
+        junctions=tuple(trunk_juncs),
         labels=tuple(labels),
         ports=tuple(ports),
         bbox=bbox,
     )
-
-
-def _wire_group(
-    pin: Point,
-    side: PageSide,
-    group: list[_Cell],
-    geometry: SymbolGeometryCache,
-    wires: list[PlacedWire],
-    junctions: list[PlacedJunction],
-    labels: list[PlacedLabel],
-    ports: list[ModulePort],
-    symbols: list[PlacedSymbol],
-) -> None:
-    """Emit a trunk from the IC pin out to the farthest co-pin passive, a
-    drop to each passive's near terminal, junctions at mid-trunk taps, and the
-    far-end stub + power-symbol/label for each passive."""
-    horizontal = side in ("left", "right")
-    nears: list[tuple[_Cell, Point, Point]] = []  # (cell, near, far)
-    for cell in group:
-        near, far = _passive_pins(cell.passive.position, side)
-        nears.append((cell, near, far))
-
-    # Trunk extent along the outboard axis (at the pin's cross-coord).
-    if horizontal:
-        outs = [near.x for _c, near, _f in nears]
-        trunk_end = max(outs, key=lambda x: abs(x - pin.x))
-        if trunk_end != pin.x:
-            wires.append(PlacedWire(pin, Point(trunk_end, pin.y)))
-    else:
-        outs = [near.y for _c, near, _f in nears]
-        trunk_end = max(outs, key=lambda y: abs(y - pin.y))
-        if trunk_end != pin.y:
-            wires.append(PlacedWire(pin, Point(pin.x, trunk_end)))
-
-    for cell, near, far in nears:
-        # The passive body itself is a placed symbol on the sheet.
-        symbols.append(cell.passive)
-        # Drop from the trunk to the passive's near terminal.
-        if horizontal:
-            tap = Point(near.x, pin.y)
-            if tap != near:
-                wires.append(PlacedWire(tap, near))
-            is_mid = abs(near.x - pin.x) < abs(trunk_end - pin.x)
-        else:
-            tap = Point(pin.x, near.y)
-            if tap != near:
-                wires.append(PlacedWire(tap, near))
-            is_mid = abs(near.y - pin.y) < abs(trunk_end - pin.y)
-        if is_mid and tap != pin:
-            junctions.append(PlacedJunction(tap))
-
-        # Far end: power symbol (with a short visible stub) or a net label.
-        if cell.far_symbol is not None:
-            symbols.append(cell.far_symbol)
-            tip = _far_symbol_tip(far, side)
-            if tip != far:
-                wires.append(PlacedWire(far, tip))
-            ports.append(ModulePort(cell.to_net, far, side, cell.far_kind))
-        elif cell.emit_label:
-            _far, tip, rot = _signal_far(cell)
-            if tip != far:
-                wires.append(PlacedWire(far, tip))
-            labels.append(PlacedLabel(net_name=cell.to_net, position=tip, rotation=rot))
-            ports.append(ModulePort(cell.to_net, tip, side, "signal"))
-        else:
-            # Merge-net tap with no own label: expose the far pin as a port so
-            # Stage C's router joins it into the shared bus trunk + junctions.
-            ports.append(ModulePort(cell.to_net, far, side, "signal"))
 
 
 def _far_symbol_tip(far: Point, side: PageSide) -> Point:
