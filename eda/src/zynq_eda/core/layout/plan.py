@@ -406,6 +406,13 @@ class LayoutPlan:
 
     _anchor_by_ref: dict[str, AnchorPlan] = field(default_factory=dict)
     _lane_by_owner_pin: dict[tuple[str, str], LaneAllocation] = field(default_factory=dict)
+    # Adaptive cluster-slot anchor overrides, keyed by
+    # (round(pin.x,3), round(pin.y,3), page_side, slot_index). Empty on a
+    # first-pass plan; seeded on the second pass with the separated
+    # positions from :func:`_compute_slot_overrides`. Read by
+    # :func:`_cluster_slot_position` so BOTH placement and routing lay the
+    # cap (and its derived far pin / wires) at the separated position.
+    _slot_overrides: dict[tuple[float, float, str, int], Point] = field(default_factory=dict)
 
     def __len__(self) -> int:
         return (
@@ -2180,9 +2187,14 @@ def _cluster_slot_position(
     dense_swarm: bool = False,
     multi_slot_widen: bool = False,
     spread_stagger: bool = False,
+    plan: "LayoutPlan | None" = None,
 ) -> Point:
     """Return the page-coord anchor for slot ``slot_index`` of a cluster
     whose pin sits at ``pin_pos`` on the given page side.
+
+    When ``plan`` carries a slot override for this (pin, side, slot) — the
+    second pass after adaptive separation — that override is returned
+    verbatim, so placement and routing agree on the separated position.
 
     For LEFT/RIGHT pins the trunk runs horizontally; caps sit ABOVE
     the trunk (smaller page Y) by :data:`CAP_VERTICAL_OFFSET_MM`. Each
@@ -2193,6 +2205,13 @@ def _cluster_slot_position(
     accordingly. (Less common; only a few blocks use TOP/BOTTOM
     clustered pins.)
     """
+    if plan is not None and plan._slot_overrides:
+        _ov = plan._slot_overrides.get(
+            (round(pin_pos.x, 3), round(pin_pos.y, 3), page_side, slot_index)
+        )
+        if _ov is not None:
+            return _ov
+
     from zynq_eda.core.layout._constants import (
         DENSE_HORIZONTAL_SWARM_PITCH_MM,
         PASSIVE_OFFSET_MM,
@@ -2754,6 +2773,7 @@ def _emit_cluster_pins(
                 dense_swarm=dense_swarm,
                 multi_slot_widen=multi_slot_widen,
                 spread_stagger=spread_stagger,
+                plan=plan,
             )
             _, _cf = _cluster_passive_near_far(_sp, spec.page_side)
             slot_far_by_idx.append(_cf)
@@ -2776,6 +2796,7 @@ def _emit_cluster_pins(
                 dense_swarm=dense_swarm,
                 multi_slot_widen=multi_slot_widen,
                 spread_stagger=spread_stagger,
+                plan=plan,
             )
             cap_rotation = _cluster_passive_rotation(spec.page_side)
             cap_lib_id = passive_lib_id(part_token)
@@ -2964,6 +2985,7 @@ def _route_cluster_pins(
             dense_swarm=dense_swarm,
             multi_slot_widen=multi_slot_widen,
             spread_stagger=spread_stagger,
+            plan=plan,
         )
         # Trunk runs at pin Y from pin tip to far slot X.
         if spec.page_side in ("left", "right"):
@@ -2992,6 +3014,7 @@ def _route_cluster_pins(
                 dense_swarm=dense_swarm,
                 multi_slot_widen=multi_slot_widen,
                 spread_stagger=spread_stagger,
+                plan=plan,
             )
             for sym in plan.symbols:
                 if (abs(sym.position.x - slot_pos.x) < 0.1
@@ -3064,6 +3087,7 @@ def _route_cluster_pins(
                 dense_swarm=dense_swarm,
                 multi_slot_widen=multi_slot_widen,
                 spread_stagger=spread_stagger,
+                plan=plan,
             )
             cap_near, cap_far = _cluster_passive_near_far(
                 slot_pos, spec.page_side,
@@ -4878,7 +4902,145 @@ def _balance_plan(plan: LayoutPlan, block: Block) -> None:
 # ---------------------------------------------------------------------------
 
 
-def plan_block(block: Block, geometry) -> LayoutPlan:
+def _compute_slot_overrides(plan: LayoutPlan, block: Block, geometry) -> dict:
+    """Adaptive cluster-slot separation — the principled spreading pass.
+
+    Given a fully-planned (pass-1) layout, treat each cluster cap slot (the
+    cap plus the far power-symbol at its far pin, located by deterministic
+    slot geometry) as a movable rigid unit and EVERYTHING else — IC /
+    connector bodies, power symbols, hier-labels, local labels — as FIXED
+    obstacles, then run the exact overlap-removal solver over the COMPLETE
+    footprints (body + all text). Returns
+    ``{(pin_x, pin_y, side, slot): new_cap_anchor}`` overrides that a pass-2
+    re-plan feeds to :func:`_cluster_slot_position`; the far pin and the
+    trunk/drop/far wires all derive from the cap anchor, so they follow.
+
+    Because the solver is told every obstacle, it only ever ADDS clearance —
+    a cap is never pushed into another primitive, so no block regresses (a
+    blanket pitch widen does, as measured). The far symbol's position
+    derives from the cap anchor in BOTH placement and routing, so moving the
+    anchor keeps everything connected.
+    """
+    from zynq_eda.core.layout._builder import (
+        _hierarchical_label_bbox,
+        _label_bbox,
+    )
+    from zynq_eda.core.layout._constants import VISUAL_CLEARANCE_MM
+    from zynq_eda.core.layout.footprint import bbox_to_rect, symbol_footprint
+    from zynq_eda.core.layout.separate import Rect, remove_overlaps
+    from zynq_eda.core.model.grid import snap_to_grid
+
+    def _k(p: Point) -> tuple[float, float]:
+        return (round(p.x, 2), round(p.y, 2))
+
+    sym_by_pos: dict[tuple[float, float], list] = {}
+    for s in plan.symbols:
+        sym_by_pos.setdefault(_k(s.position), []).append(s)
+
+    # The final `_balance_plan` pass uniformly translates the whole sheet
+    # after placement, so the slot formula's (pre-balance) positions are
+    # shifted from where the caps actually sit. Recover that constant offset
+    # from any IC/connector anchor vs its placed body symbol, and apply it
+    # when matching caps. (The override stored below is pre-balance — what
+    # _cluster_slot_position returns before balance — so it is just the
+    # pre-balance slot position plus the separation delta; the offset
+    # cancels there.)
+    sym_by_ref = {s.reference: s for s in plan.symbols}
+    off_x = off_y = 0.0
+    for a in plan.anchors:
+        placed = sym_by_ref.get(a.owner_ref)
+        if placed is not None:
+            off_x = placed.position.x - a.anchor.x
+            off_y = placed.position.y - a.anchor.y
+            break
+
+    # Reconstruct each cluster slot from its deterministic geometry and
+    # collect the placed cap (+ far symbol) that sit there.
+    records: list = []  # (pin_pos, side, slot_index, members, slot_pos)
+    moved_refs: set[str] = set()
+    for spec in plan.pin_specs:
+        if spec.role != "CLUSTER":
+            continue
+        pin_pos = _resolve_pin_page_coord(plan, spec, geometry)
+        if pin_pos is None:
+            continue
+        owner = _resolve_owner(block, spec.owner_ref)
+        rc = getattr(owner, "refcircuit", None)
+        dn = bool(getattr(rc, "dense_swarm", False))
+        sg = bool(getattr(rc, "spread_stagger", False))
+        n = spec.cluster_slot_count
+        mw = n > 1
+        for si in range(n):
+            sp = _cluster_slot_position(
+                pin_pos, spec.page_side, si,
+                dense_swarm=dn, multi_slot_widen=mw, spread_stagger=sg,
+            )
+            cap = sym_by_pos.get(_k(Point(sp.x + off_x, sp.y + off_y)), [])
+            if not cap:
+                continue
+            _, cf = _cluster_passive_near_far(sp, spec.page_side)
+            members = list(cap) + list(
+                sym_by_pos.get(_k(Point(cf.x + off_x, cf.y + off_y)), [])
+            )
+            for m in members:
+                moved_refs.add(m.reference)
+            records.append((pin_pos, spec.page_side, si, members, sp))
+
+    if not records:
+        return {}
+
+    rects: list = []
+    movable: list[bool] = []
+    rec_of_unit: list = []
+    # Movable units: one per cluster slot (union footprint of its members).
+    for rec in records:
+        boxes = [symbol_footprint(m, geometry) for m in rec[3]]
+        minx = min(b.min.x for b in boxes)
+        miny = min(b.min.y for b in boxes)
+        maxx = max(b.max.x for b in boxes)
+        maxy = max(b.max.y for b in boxes)
+        rects.append(
+            Rect((minx + maxx) / 2.0, (miny + maxy) / 2.0, maxx - minx, maxy - miny)
+        )
+        movable.append(True)
+        rec_of_unit.append(rec)
+    # Fixed obstacles: every symbol that is not a movable cluster member,
+    # plus every hier-label and local label (so caps are never pushed into
+    # them — the source of the blanket-widen regression).
+    for s in plan.symbols:
+        if s.reference in moved_refs:
+            continue
+        rects.append(bbox_to_rect(symbol_footprint(s, geometry)))
+        movable.append(False)
+        rec_of_unit.append(None)
+    for hl in plan.hierarchical_labels:
+        rects.append(bbox_to_rect(_hierarchical_label_bbox(hl)))
+        movable.append(False)
+        rec_of_unit.append(None)
+    for lb in plan.labels:
+        rects.append(bbox_to_rect(_label_bbox(lb)))
+        movable.append(False)
+        rec_of_unit.append(None)
+
+    new_centers = remove_overlaps(rects, gap=VISUAL_CLEARANCE_MM, movable=movable)
+
+    overrides: dict = {}
+    for rect, rec, (ncx, ncy) in zip(rects, rec_of_unit, new_centers):
+        if rec is None:
+            continue
+        pin_pos, side, si, _members, sp = rec
+        dx = ncx - rect.cx
+        dy = ncy - rect.cy
+        if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+            continue
+        new_sp = Point(snap_to_grid(sp.x + dx), snap_to_grid(sp.y + dy))
+        overrides[(round(pin_pos.x, 3), round(pin_pos.y, 3), side, si)] = new_sp
+    return overrides
+
+
+def plan_block(
+    block: Block, geometry, *, slot_overrides: dict | None = None
+) -> LayoutPlan:
     """Top-level planner: build the complete :class:`LayoutPlan` for
     one block.
 
@@ -4889,6 +5051,10 @@ def plan_block(block: Block, geometry) -> LayoutPlan:
     Returns a frozen :class:`LayoutPlan` ready for :func:`emit_plan`.
     """
     plan = LayoutPlan()
+    if slot_overrides:
+        # Second pass: lay cluster caps at the separated anchors so both
+        # placement (Phase 6) and routing (Phase 7) agree on them.
+        plan._slot_overrides = dict(slot_overrides)
 
     # Phase 1
     plan.pin_specs = plan_pin_specs(block, geometry)
