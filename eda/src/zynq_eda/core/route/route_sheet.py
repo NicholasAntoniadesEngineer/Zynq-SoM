@@ -20,6 +20,7 @@ from zynq_eda.core.layout.arrange import Arrangement, arrange_block
 from zynq_eda.core.layout.footprint import symbol_footprint
 from zynq_eda.core.layout.geometry import SymbolGeometryCache
 from zynq_eda.core.layout.labeler import label_connectors
+from zynq_eda.core.layout.edge_labels import expose_ic_pin_nets, no_connect_markers
 from zynq_eda.core.layout.module import Module
 from zynq_eda.core.model.block import Block
 from zynq_eda.core.model.sheet import PlacedJunction, PlacedWire, Sheet
@@ -67,17 +68,44 @@ def assemble_sheet(
     occupied = _obstacles(symbols, geometry)
     for w in wires:
         occupied.append(wire_bbox(w.start, w.end, owner_id="routed"))
+    # Module-emitted labels (e.g. a cluster pin's own-net local label) are real
+    # obstacles too — include them so the connector labeler AND the IC-pin
+    # exposer place clear of them (else two labels land on the same row).
+    from zynq_eda.core.validate.overlap import _label_text_bbox
+    for lbl in labels:
+        occupied.append(_label_text_bbox(lbl))
     conns = [(c.instance, c.symbol) for c in arr.connectors]
     clabels, chlabels, cwires = label_connectors(block, conns, geometry, occupied)
     wires.extend(cwires)
+
+    ic_symbols = {
+        m.ic_ref: next(s for s in m.symbols if s.reference == m.ic_ref)
+        for m in arr.modules
+    }
+
+    # Stage E.1: expose every still-floating IC pin's net — power symbol (GND /
+    # rails), hier-label (sheet-edge nets), or local label — on a clearance-
+    # checked outboard stub, so no IC pin is left electrically dangling.
+    connected = {(round(w.start.x, 2), round(w.start.y, 2)) for w in wires}
+    connected |= {(round(w.end.x, 2), round(w.end.y, 2)) for w in wires}
+    esyms, elabels, ehlabels, ewires = expose_ic_pin_nets(
+        block, ic_symbols, geometry, occupied, connected
+    )
+    symbols.extend(esyms)
+    wires.extend(ewires)
+
+    # Stage E.2: No-Connect markers on every still-unused pin (connector spares
+    # + NC IC pins), so ERC stops firing pin_not_connected on unused pins.
+    no_connects = no_connect_markers(block, conns, geometry, ic_symbols)
 
     return Sheet(
         name=arr.sheet.name,
         title=arr.sheet.title,
         paper_size=arr.sheet.paper_size,
         symbols=tuple(symbols),
-        labels=tuple(labels + clabels),
-        hierarchical_labels=tuple(chlabels),
+        labels=tuple(labels + clabels + elabels),
+        hierarchical_labels=tuple(chlabels + ehlabels),
         wires=tuple(wires),
         junctions=tuple(junctions),
+        no_connects=tuple(no_connects),
     )
