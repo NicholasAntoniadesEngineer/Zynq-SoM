@@ -239,6 +239,28 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
                 return (0, 1 if ddy >= 0 else -1)
         return (0, 0)
 
+    # Reserve each label-pin's escape LANE as a routing obstacle: an IC pin with
+    # no net of its own (it gets an edge label later) needs its immediate
+    # outboard clear, or an adjacent net's wire boxes it in and the exposer can't
+    # place the label — the residual dense-IC floats (e.g. U2 USB_DP boxed in by
+    # the USB_DM wire 1.27 mm away). Foreign wires must route AROUND these lanes.
+    netpts = [p for _n, terms in module.nets for p in terms]
+    for s, sp, c in sym_info:
+        if s.reference != module.ic_ref:
+            continue
+        for pp in sp:
+            if any(abs(pp.x - q.x) < 0.05 and abs(pp.y - q.y) < 0.05 for q in netpts):
+                continue  # this pin is wired into a net already
+            ddx, ddy = pp.x - c.x, pp.y - c.y
+            if abs(ddx) >= abs(ddy):
+                ox, oy = (1.0 if ddx >= 0 else -1.0), 0.0
+            else:
+                ox, oy = 0.0, (1.0 if ddy >= 0 else -1.0)
+            ex, ey = pp.x + ox * 1.27, pp.y + oy * 1.27
+            obstacles.append(BBox(
+                min=Point(ex - 1.0, ey - 1.0), max=Point(ex + 1.0, ey + 1.0),
+                kind="symbol", owner_id="lane:reserve"))
+
     from zynq_eda.core.layout.footprint import symbol_footprint
     nets: dict[str, list[Point]] = {}
     escape_dirs: dict[str, list[tuple[int, int]]] = {}
