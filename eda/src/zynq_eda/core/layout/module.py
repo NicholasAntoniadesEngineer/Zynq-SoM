@@ -803,13 +803,20 @@ def _finalize(
             if placed is None and net not in sym_by_net:
                 # No clear 1-grid spot AND no existing far symbol of this net to
                 # trunk to (e.g. T1's GND pin: ethernet has only BS_COMMON /
-                # CHASSIS_GND symbols). Leaving the pin unwired lets the exposer
-                # merge it onto the adjacent foreign trunk (T1 pin-14 GND was
-                # captured by BS_COMMON). So walk a LOCAL symbol a few grids out
-                # — the pin sits on an open module edge, so a short walk clears.
-                placed = _place_pin_power_symbol(
-                    pt, side, far_lib, net, f"#PWR{p_ref}", geometry, obs, max_steps=4,
-                )
+                # CHASSIS_GND symbols). The pin is boxed by the module's OWN
+                # (stale) trunk wires — which the sheet router RE-ROUTES anyway.
+                # So place the symbol clear of BODIES only and add the pin as a
+                # routing terminal: reroute then routes the foreign merge bus
+                # AROUND this pin (now a terminal) and drops a clean stub to the
+                # symbol (T1 pin-14 GND, captured by BS_COMMON before this).
+                obs_bodies = [symbol_footprint(s, geometry) for s in symbols]
+                for sd in (side, "left", "bottom", "right", "top"):
+                    placed = _place_pin_power_symbol(
+                        pt, sd, far_lib, net, f"#PWR{p_ref}", geometry, obs_bodies,
+                        max_steps=6,
+                    )
+                    if placed is not None:
+                        break
             if placed is not None:
                 sym, tip = placed
                 symbols.append(sym)

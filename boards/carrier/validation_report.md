@@ -1,12 +1,8 @@
 # Carrier — Validation Report
 
-Generated: 2026-06-05T18:26:07Z
+Generated: 2026-06-05T18:32:10Z
 
-**Errors:** 1  **Warnings:** 454  **Info:** 0
-
-## Errors (1)
-
-- **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
+**Errors:** 0  **Warnings:** 454  **Info:** 0
 
 ## Warnings (454)
 
@@ -113,6 +109,7 @@ Generated: 2026-06-05T18:26:07Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_XADC_VAUX3_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_USER_MRCC_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.no_connect_connected**: A pin with a "no connection" flag is connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_1_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_CLK_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -127,7 +124,6 @@ Generated: 2026-06-05T18:26:07Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_2_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_0_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_CEC has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.no_connect_connected**: A pin with a "no connection" flag is connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_EDID_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_EDID_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_CLK_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
