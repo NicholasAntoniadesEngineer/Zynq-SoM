@@ -603,7 +603,20 @@ def validate_overlap(
         for hlabel, hlabel_box in hlabel_bboxes:
             if not _overlap_is_significant(wire_box, hlabel_box):
                 continue
-            if _wire_terminates_at(wire, hlabel.position):
+            # A hierarchical label IS a wire-borne connection — KiCad renders it
+            # ON the wire it attaches to, so the connecting wire legitimately
+            # ENDS at the hlabel anchor (its arrow glyph sits on that endpoint).
+            # Exempt exactly that pairing (a wire endpoint coincident with the
+            # hlabel anchor). A wire crossing a DIFFERENT hlabel, or one crossing
+            # this hlabel's text away from its endpoint, still fires — this is
+            # the same wire-at-connection exemption already applied to pins, not
+            # the local-label "must be perpendicular" rule (kept strict below).
+            if (
+                (abs(wire.start.x - hlabel.position.x) < 0.3
+                 and abs(wire.start.y - hlabel.position.y) < 0.3)
+                or (abs(wire.end.x - hlabel.position.x) < 0.3
+                    and abs(wire.end.y - hlabel.position.y) < 0.3)
+            ):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
