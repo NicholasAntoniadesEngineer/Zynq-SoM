@@ -1,6 +1,6 @@
 # Carrier — Validation Report
 
-Generated: 2026-06-05T19:51:09Z
+Generated: 2026-06-05T20:00:53Z
 
 **Errors:** 0  **Warnings:** 453  **Info:** 0
 
@@ -109,7 +109,6 @@ Generated: 2026-06-05T19:51:09Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_XADC_VAUX3_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_USER_MRCC_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_CEC has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_HPD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_1_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -117,6 +116,7 @@ Generated: 2026-06-05T19:51:09Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_0_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_1_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_CLK_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -259,7 +259,6 @@ Generated: 2026-06-05T19:51:09Z
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label CHASSIS_GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_1_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_CLK_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -268,6 +267,7 @@ Generated: 2026-06-05T19:51:09Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_HPD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_1_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_CLK_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_5V_SENSE has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_0_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
