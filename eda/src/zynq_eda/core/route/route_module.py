@@ -259,12 +259,37 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
     wires, junctions, failures = route_terminals(
         obstacles, nets, escape_dirs=escape_dirs
     )
-    if failures:
-        import sys
-        fset = sorted({n for n, _ in failures})
-        print(f"      reroute_module({module.ic_ref}): {len(failures)} unrouted "
-              f"terminal(s) on nets {fset[:6]}", file=sys.stderr)
-    return replace(module, wires=tuple(wires), junctions=tuple(junctions))
+
+    # Recover terminals the grid router couldn't escape (dense IC edges): connect
+    # each to the NEAREST other terminal of its net with a SHORT, CLEAN L-route
+    # only — one that crosses no body/text. A long or blocked connection is left
+    # floating for the sheet-level labeler rather than forced through a body
+    # (overlap is the hard invariant; the dense-edge labeler handles the rest).
+    wlist = list(wires)
+    for net_key, term in failures:
+        others = [p for p in nets.get(net_key, []) if p != term]
+        if not others:
+            continue
+        tgt = min(others, key=lambda p: abs(p.x - term.x) + abs(p.y - term.y))
+        if abs(tgt.x - term.x) + abs(tgt.y - term.y) > 12.7:
+            continue  # too far for a clean stub — leave for the labeler
+        if abs(term.x - tgt.x) < 1e-6 or abs(term.y - tgt.y) < 1e-6:
+            cand = [PlacedWire(term, tgt)]
+            seg = cand if not _l_hits(cand, obstacles) else None
+        else:
+            seg = None
+            for corner in (Point(tgt.x, term.y), Point(term.x, tgt.y)):
+                cand = [PlacedWire(term, corner), PlacedWire(corner, tgt)]
+                if not _l_hits(cand, obstacles):
+                    seg = cand
+                    break
+        if seg is None:
+            continue
+        wlist.extend(seg)
+        for w in seg:
+            obstacles.append(wire_bbox(w.start, w.end, owner_id="routed"))
+
+    return replace(module, wires=tuple(wlist), junctions=tuple(_junctions(wlist)))
 
 
 def _dedupe_overlaps(wires: list[PlacedWire]) -> list[PlacedWire]:

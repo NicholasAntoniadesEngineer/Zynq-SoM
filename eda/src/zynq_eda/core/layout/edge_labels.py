@@ -306,9 +306,9 @@ def expose_ic_pin_nets(
         )
         if placed is None:
             continue
-        prim, bb, stub = placed
+        prim, bb, stubs = placed
         occupied.append(bb)
-        if stub is not None:
+        for stub in stubs:
             out_wires.append(stub)
             occupied.append(wire_bbox(stub.start, stub.end, owner_id="ic_stub"))
         already_connected.add(key)
@@ -356,37 +356,88 @@ def _place_ic_pin_primitive(
                 return False
         return True
 
-    for extra in range(1, 14):
-        dist = snap_to_grid(extra * VISUAL_CLEARANCE_MM)
-        anchor = Point(snap_to_grid(tip.x + ux * dist), snap_to_grid(tip.y + uy * dist))
-        stub = None if anchor == tip else PlacedWire(tip, anchor)
+    def _make(anchor: Point):
+        """Build the net-bearing primitive + its validator-true bbox at anchor."""
         if lib is not None:
             rotation = _outward_power_symbol_rotation(
                 lib_id=lib, pin_side=side, geometry_cache=geometry,
             )
             rel = geometry.absolute_pin_positions(lib, Point(0.0, 0.0), rotation)
             pin_rel = next(iter(rel.values())) if rel else Point(0.0, 0.0)
-            sym_anchor = Point(snap_to_grid(anchor.x - pin_rel.x), snap_to_grid(anchor.y - pin_rel.y))
+            sym_anchor = Point(snap_to_grid(anchor.x - pin_rel.x),
+                               snap_to_grid(anchor.y - pin_rel.y))
             prim = PlacedSymbol(lib_id=lib, reference=pwr_ref, value=net,
                                 position=sym_anchor, footprint="", rotation=rotation)
             try:
-                # Full footprint (body + Value text) so the power symbol's own
-                # rail-name text is cleared too, not just its body.
                 from zynq_eda.core.layout.footprint import symbol_footprint
-                bb = symbol_footprint(prim, geometry)
-            except Exception:
-                continue
-        elif is_ext:
+                return prim, symbol_footprint(prim, geometry)
+            except Exception:  # noqa: BLE001
+                return None, None
+        if is_ext:
             prim = PlacedHierarchicalLabel(
                 net_name=net, position=anchor, direction=ext_dir[net], rotation=rot_label,
             )
-            bb = _hlabel_bb(prim)
-        else:
-            prim = PlacedLabel(net_name=net, position=anchor, rotation=rot_label)
-            bb = _label_bb(prim)
-        stub_box = wire_bbox(stub.start, stub.end, owner_id="s") if stub else None
-        if _clear(bb, is_stub=False) and (stub_box is None or _clear(stub_box, is_stub=True)):
-            return prim, bb, stub
+            return prim, _hlabel_bb(prim)
+        prim = PlacedLabel(net_name=net, position=anchor, rotation=rot_label)
+        return prim, _label_bb(prim)
+
+    # Lane-interleaving search: for each outboard distance, also try
+    # PERPENDICULAR lane offsets (an L-stub: pin -> elbow -> anchor) so adjacent
+    # pins in a dense column stagger into distinct lanes instead of stacking and
+    # colliding. Straight-out (offset 0) is tried first to keep the simple case
+    # tidy; offsets fan out only when the lane is blocked.
+    px, py = -uy, ux  # perpendicular unit
+    for extra in range(1, 16):
+        dist = snap_to_grid(extra * VISUAL_CLEARANCE_MM)
+        elbow = Point(snap_to_grid(tip.x + ux * dist), snap_to_grid(tip.y + uy * dist))
+        for poff in (0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5):
+            pd = snap_to_grid(poff * VISUAL_CLEARANCE_MM)
+            anchor = Point(snap_to_grid(elbow.x + px * pd), snap_to_grid(elbow.y + py * pd))
+            prim, bb = _make(anchor)
+            if prim is None:
+                continue
+            stubs: list[PlacedWire] = []
+            if elbow != tip:
+                stubs.append(PlacedWire(tip, elbow))
+            if anchor != elbow:
+                stubs.append(PlacedWire(elbow, anchor))
+            stub_boxes = [wire_bbox(s.start, s.end, owner_id="s") for s in stubs]
+            if _clear(bb, is_stub=False) and all(
+                _clear(sb, is_stub=True) for sb in stub_boxes
+            ):
+                return prim, bb, stubs
+
+    # Pass 2: the straight/L stub is blocked by the module's own passives (dense
+    # IC edge). Find a clear label slot further out and ROUTE the stub to it
+    # AROUND the obstacles with the grid tree router — it lands its endpoints
+    # exactly on the pin tip (route_astar quantises off-pin) and routes at wire
+    # clearance. LABELS only: a power symbol's body isn't an obstacle yet (it's
+    # placed from the route anchor), so a routed stub would cross it. The routed
+    # stub is REJECTED if it perpendicular-crosses an existing wire (the
+    # validator forbids any crossing) — so this only ever adds clean wiring.
+    if lib is not None:
+        return None
+    from zynq_eda.core.route.grid import route_terminals as _rt
+    wire_obs = [o for o in occupied if o.kind == "wire"]
+    for extra in range(2, 22):
+        dist = snap_to_grid(extra * VISUAL_CLEARANCE_MM)
+        elbow = Point(snap_to_grid(tip.x + ux * dist), snap_to_grid(tip.y + uy * dist))
+        for poff in (0, 1, -1, 2, -2, 3, -3, 4, -4, 6, -6, 8, -8):
+            pd = snap_to_grid(poff * VISUAL_CLEARANCE_MM)
+            anchor = Point(snap_to_grid(elbow.x + px * pd), snap_to_grid(elbow.y + py * pd))
+            prim, bb = _make(anchor)
+            if prim is None or not _clear(bb, is_stub=False):
+                continue
+            try:
+                rw, _rj, rf = _rt(occupied, {"s": [tip, anchor]},
+                                  escape_dirs={"s": [(ux, uy), (0, 0)]})
+            except Exception:  # noqa: BLE001
+                continue
+            if rf or not rw:
+                continue
+            if any(_seg_crosses_wire(w, wo) for w in rw for wo in wire_obs):
+                continue  # would cross an existing wire — reject (no overlap)
+            return prim, bb, list(rw)
     return None
 
 
@@ -400,3 +451,24 @@ def _hlabel_bb(h: PlacedHierarchicalLabel) -> BBox:
 def _label_bb(l: PlacedLabel) -> BBox:
     from zynq_eda.core.validate.overlap import _label_text_bbox
     return _label_text_bbox(l)
+
+
+def _seg_crosses_wire(seg: PlacedWire, wo: BBox) -> bool:
+    """True iff axis-aligned ``seg`` perpendicular-crosses the wire whose bbox
+    is ``wo`` (orientation inferred from the thin bbox). Mirrors the overlap
+    validator's no-crossing rule so a routed stub never lays a wire cross."""
+    s_horiz = abs(seg.start.y - seg.end.y) < 1e-6
+    w_horiz = (wo.max.x - wo.min.x) >= (wo.max.y - wo.min.y)
+    if s_horiz == w_horiz:
+        return False  # parallel — collinear overlap handled elsewhere
+    if s_horiz:
+        hy = seg.start.y
+        hx_lo, hx_hi = sorted((seg.start.x, seg.end.x))
+        vx = (wo.min.x + wo.max.x) / 2.0
+        vy_lo, vy_hi = wo.min.y, wo.max.y
+    else:
+        vx = seg.start.x
+        vy_lo, vy_hi = sorted((seg.start.y, seg.end.y))
+        hy = (wo.min.y + wo.max.y) / 2.0
+        hx_lo, hx_hi = wo.min.x, wo.max.x
+    return hx_lo - 1e-6 < vx < hx_hi + 1e-6 and vy_lo - 1e-6 < hy < vy_hi + 1e-6

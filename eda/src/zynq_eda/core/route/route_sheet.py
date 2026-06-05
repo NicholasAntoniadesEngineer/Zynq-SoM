@@ -119,17 +119,40 @@ def assemble_sheet(
     # can sit in the gap between pin texts rather than being pushed clear of the
     # whole connector's merged footprint.
     occupied = _obstacles(symbols, geometry)
+    # Property text (Reference/Value) too — so the connector labeler and the IC
+    # exposer route their stubs clear of it (it's what the overlap validator
+    # measures; omitting it let stubs cross "C101"/"100n" text).
+    for s in symbols:
+        try:
+            occupied.extend(geometry.property_text_bboxes(
+                s.lib_id, s.position, s.rotation,
+                owner_id=f"symbol:{s.reference}",
+                reference_override=s.reference, value_override=s.value,
+                value_shift=s.value_shift, reference_shift=s.reference_shift))
+        except Exception:  # noqa: BLE001
+            pass
     for w in wires:
         occupied.append(wire_bbox(w.start, w.end, owner_id="routed"))
     # Module-emitted labels (e.g. a cluster pin's own-net local label) are real
     # obstacles too — include them so the connector labeler AND the IC-pin
     # exposer place clear of them (else two labels land on the same row).
-    from zynq_eda.core.validate.overlap import _label_text_bbox
+    from zynq_eda.core.validate.overlap import (
+        _hierarchical_label_text_bbox,
+        _label_text_bbox,
+    )
     for lbl in labels:
         occupied.append(_label_text_bbox(lbl))
     conns = [(c.instance, c.symbol) for c in arr.connectors]
     clabels, chlabels, cwires = label_connectors(block, conns, geometry, occupied)
     wires.extend(cwires)
+    # Connector wires + labels are obstacles for the IC-pin exposer that runs
+    # next, so its routed stubs don't cross them (wire×wire / wire×label).
+    for w in cwires:
+        occupied.append(wire_bbox(w.start, w.end, owner_id="conn_wire"))
+    for lbl in clabels:
+        occupied.append(_label_text_bbox(lbl))
+    for hl in chlabels:
+        occupied.append(_hierarchical_label_text_bbox(hl))
 
     ic_symbols = {
         m.ic_ref: next(s for s in m.symbols if s.reference == m.ic_ref)
