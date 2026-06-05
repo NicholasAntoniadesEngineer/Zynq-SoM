@@ -1407,11 +1407,11 @@
 		(in_bom yes)
 		(on_board yes)
 		(property "Reference" "J"
-			(at 0 7.62 0)
+			(at 0 12.7 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Value" "RJHSE5380"
-			(at 0 -7.62 0)
+			(at 0 -28.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Footprint" ""
@@ -1420,15 +1420,15 @@
 		)
 		(symbol "RJHSE5380_0_1"
 			(rectangle
-				(start -7.62 10.16)
-				(end 7.62 -10.16)
+				(start -10.16 10.16)
+				(end 10.16 -10.16)
 				(stroke (width 0.254) (type default))
 				(fill (type background))
 			)
 		)
 		(symbol "RJHSE5380_1_1"
 			(pin passive line
-				(at -7.62 10.16 0)
+				(at -10.16 10.16 0)
 				(length 2.54)
 				(name "MDI0_P"
 					(effects (font (size 1.27 1.27)))
@@ -1438,7 +1438,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 5.08 0)
+				(at -10.16 5.08 0)
 				(length 2.54)
 				(name "MDI0_N"
 					(effects (font (size 1.27 1.27)))
@@ -1448,7 +1448,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 0 0)
+				(at -10.16 0 0)
 				(length 2.54)
 				(name "MDI1_P"
 					(effects (font (size 1.27 1.27)))
@@ -1458,7 +1458,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -5.08 0)
+				(at -10.16 -5.08 0)
 				(length 2.54)
 				(name "MDI1_N"
 					(effects (font (size 1.27 1.27)))
@@ -1468,7 +1468,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -10.16 0)
+				(at -10.16 -10.16 0)
 				(length 2.54)
 				(name "MDI2_P"
 					(effects (font (size 1.27 1.27)))
@@ -1478,7 +1478,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -15.24 0)
+				(at -10.16 -15.24 0)
 				(length 2.54)
 				(name "MDI2_N"
 					(effects (font (size 1.27 1.27)))
@@ -1488,7 +1488,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -20.32 0)
+				(at -10.16 -20.32 0)
 				(length 2.54)
 				(name "MDI3_P"
 					(effects (font (size 1.27 1.27)))
@@ -1498,7 +1498,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -25.4 0)
+				(at -10.16 -25.4 0)
 				(length 2.54)
 				(name "MDI3_N"
 					(effects (font (size 1.27 1.27)))
@@ -1508,7 +1508,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 5.08 180)
+				(at 10.16 5.08 180)
 				(length 2.54)
 				(name "LED1_A"
 					(effects (font (size 1.27 1.27)))
@@ -1518,7 +1518,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 0 180)
+				(at 10.16 0 180)
 				(length 2.54)
 				(name "LED2_A"
 					(effects (font (size 1.27 1.27)))
@@ -1528,7 +1528,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 -5.08 180)
+				(at 10.16 -5.08 180)
 				(length 2.54)
 				(name "SHIELD"
 					(effects (font (size 1.27 1.27)))

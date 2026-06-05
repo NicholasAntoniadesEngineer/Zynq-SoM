@@ -264,30 +264,35 @@ def _hier_justify_for_rotation(rot: float) -> str:
 
 
 def _patch_hier_label_justify(schematic_path: Path) -> None:
-    """Set each hierarchical_label's text justify to match its edge so the text
-    reads AWAY from the body (KiCad-rendered direction), not piled onto the pin
-    name. The bbox functions already model text on that side; this makes the
-    emitted render agree. Pure text patch on the saved file."""
+    """Set each hierarchical_label AND local label's horizontal justify to match
+    its edge so the text reads AWAY from the body (KiCad-rendered direction), not
+    piled onto the pin name / into the body. The bbox functions already model
+    text on that side; this makes the emitted render agree. Pure text patch."""
     try:
         lines = schematic_path.read_text(encoding="utf-8").split("\n")
     except Exception:  # noqa: BLE001
         return
     out: list[str] = []
-    in_hl = False
+    in_lbl = False
     rot = 0.0
     for line in lines:
         s = line.strip()
-        if s.startswith("(hierarchical_label"):
-            in_hl, rot = True, 0.0
-        elif in_hl and s.startswith("(at "):
+        if s.startswith("(hierarchical_label") or s.startswith("(label "):
+            in_lbl, rot = True, 0.0
+        elif in_lbl and s.startswith("(at "):
             try:
                 rot = float(s.rstrip(")").split()[3])
             except (IndexError, ValueError):
                 rot = 0.0
-        elif in_hl and s.startswith("(justify"):
+        elif in_lbl and s.startswith("(justify"):
             indent = line[: len(line) - len(line.lstrip())]
-            line = f"{indent}(justify {_hier_justify_for_rotation(rot)})"
-            in_hl = False
+            # Keep any vertical token (top/bottom/mirror); rewrite the horizontal.
+            rest = [t for t in s[len("(justify"):].rstrip(")").split()
+                    if t in ("top", "bottom", "mirror")]
+            h = _hier_justify_for_rotation(rot)
+            tail = (" " + " ".join(rest)) if rest else ""
+            line = f"{indent}(justify {h}{tail})"
+            in_lbl = False
         out.append(line)
     schematic_path.write_text("\n".join(out), encoding="utf-8")
 
