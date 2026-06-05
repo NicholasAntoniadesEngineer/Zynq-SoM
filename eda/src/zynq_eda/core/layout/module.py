@@ -111,6 +111,12 @@ class Module:
     labels: tuple[PlacedLabel, ...]
     ports: tuple[ModulePort, ...]
     bbox: BBox
+    # Net topology for the connectivity-correct router: each entry is
+    # (net_label, terminal_points_that_must_be_joined). The router connects
+    # each net's terminals into an orthogonal tree with EXACT on-pin endpoints.
+    # This is the ground truth the grid routers lacked — it says WHICH pins
+    # share a net, so every pin is wired (no silent drops, no cap-only model).
+    nets: tuple[tuple[str, tuple[Point, ...]], ...] = ()
 
     def translated(self, dx: float, dy: float) -> "Module":
         """Return a copy shifted by ``(dx, dy)`` — the ONLY motion Stage B
@@ -150,6 +156,10 @@ class Module:
                 for p in self.ports
             ),
             bbox=self.bbox.translate(dx, dy),
+            nets=tuple(
+                (name, tuple(Point(p.x + dx, p.y + dy) for p in pts))
+                for name, pts in self.nets
+            ),
         )
 
 
@@ -617,6 +627,44 @@ def _finalize(
         )
 
     wires = far_wires + list(trunk_wires)
+
+    # ---- Net topology for the connectivity-correct router -----------------
+    # Trunk nets (near side): the IC pin + the NEAR pins of the caps hanging off
+    # it. Far nets (far side): each cap's FAR pin joined to its power-symbol pin
+    # (own 2-terminal net) or, for signal/merge destinations, grouped by net so
+    # every tap of a merge node (ethernet's BS_COMMON) plus its shared label is
+    # one net. reroute_module wires each net's terminals with exact on-pin
+    # endpoints — the ground truth the grid routers never had.
+    net_terms: list[tuple[str, tuple[Point, ...]]] = []
+    for net_key, terms in trunk_nets.items():
+        if len(terms) >= 2:
+            net_terms.append((net_key, tuple(terms)))
+    signal_groups: dict[str, list[Point]] = {}
+    signal_label: dict[str, Point] = {}
+    for cell in cells:
+        _near, far = _passive_pins(cell.passive.position, cell.side)
+        if cell.far_symbol is not None:
+            try:
+                sympins = list(geometry.absolute_pin_positions(
+                    cell.far_symbol.lib_id, cell.far_symbol.position,
+                    cell.far_symbol.rotation).values())
+            except Exception:  # noqa: BLE001
+                sympins = []
+            net_terms.append(
+                (f"{cell.to_net}@{far.x:.1f},{far.y:.1f}", tuple([far, *sympins]))
+            )
+        else:
+            signal_groups.setdefault(cell.to_net, []).append(far)
+            if cell.emit_label:
+                _f, tip, _rot = _signal_far(cell)
+                signal_label[cell.to_net] = tip
+    for to_net, fars in signal_groups.items():
+        pts = list(fars)
+        if to_net in signal_label:
+            pts.append(signal_label[to_net])
+        if len(pts) >= 2:
+            net_terms.append((to_net, tuple(pts)))
+
     bbox = _module_bbox(symbols, wires, labels, geometry)
     return Module(
         ic_ref=ic.reference,
@@ -627,6 +675,7 @@ def _finalize(
         labels=tuple(labels),
         ports=tuple(ports),
         bbox=bbox,
+        nets=tuple(net_terms),
     )
 
 

@@ -24,6 +24,7 @@ from zynq_eda.core.layout.text_obstacles import collect_text_bboxes
 from zynq_eda.core.model.grid import Point
 from zynq_eda.core.model.sheet import PlacedJunction, PlacedSymbol, PlacedWire, Sheet
 from zynq_eda.core.route.astar import route_astar
+from zynq_eda.core.route.grid import route_terminals
 
 _AVOID_KINDS = frozenset(
     {"symbol", "intrinsic_pin_name", "intrinsic_pin_number", "label", "wire"}
@@ -76,95 +77,194 @@ def _nearest(p: Point, candidates: list[Point]) -> tuple[Point, float]:
     return best, bestd
 
 
-def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
-    """Return ``module`` with clean A*-routed wiring if that helps, else as-is."""
-    before = _module_findings(module, geometry)
-    if before == 0:
-        return module  # already clean — never touch it
+def _dedupe_points(pts: list[Point]) -> list[Point]:
+    out: list[Point] = []
+    for p in pts:
+        if not any(abs(p.x - q.x) < 1e-6 and abs(p.y - q.y) < 1e-6 for q in out):
+            out.append(p)
+    return out
 
-    ic_syms = [s for s in module.symbols if s.reference == module.ic_ref]
-    if not ic_syms:
-        return module
-    ic = ic_syms[0]
-    ic_oid = f"symbol:{ic.reference}"
-    ic_pins = _pins(ic, geometry)
-    if not ic_pins:
-        return module
 
-    passives = [s for s in module.symbols if s.lib_id.startswith("Device:")]
-    powers = [s for s in module.symbols if s.lib_id.startswith("power:")]
-    # Far-end attachment targets: power-symbol pins + label anchors.
-    targets: list[tuple[Point, str]] = []
-    for pw in powers:
-        for pt in _pins(pw, geometry):
-            targets.append((pt, f"symbol:{pw.reference}"))
-    for lbl in module.labels:
-        targets.append((lbl.position, ""))
+def _net_span(pts: tuple[Point, ...]) -> float:
+    if len(pts) < 2:
+        return 0.0
+    xs = [p.x for p in pts]
+    ys = [p.y for p in pts]
+    return (max(xs) - min(xs)) + (max(ys) - min(ys))
 
-    base_obstacles = _obstacles(module.symbols, geometry)
-    clr = VISUAL_CLEARANCE_MM
 
-    # Build all routing tasks first: a DROP (IC pin -> cap near) and a STUB
-    # (cap far -> nearest power pin / label) per passive.
-    tasks: list[tuple[Point, Point, frozenset]] = []
-    for cap in passives:
-        cap_oid = f"symbol:{cap.reference}"
-        cps = _pins(cap, geometry)
-        if len(cps) < 2:
-            continue
-        d0 = _nearest(cps[0], ic_pins)[1]
-        d1 = _nearest(cps[1], ic_pins)[1]
-        near, far = (cps[0], cps[1]) if d0 <= d1 else (cps[1], cps[0])
-        ic_pin = _nearest(near, ic_pins)[0]
-        # Ignore ONLY the cap (so the route can end inside its footprint). The
-        # IC stays an obstacle so the drop routes AROUND its pin-name text; the
-        # IC pin (start) is reachable because route_astar force-walks the start
-        # cell. Ignoring the whole IC would let wires plow through its text.
-        tasks.append((ic_pin, near, frozenset({cap_oid})))
-        if targets:
-            tgt, _d = _nearest(far, [t for t, _ in targets])
-            tgt_oid = next((o for t, o in targets if t == tgt), "")
-            ignore = {cap_oid} | ({tgt_oid} if tgt_oid else set())
-            tasks.append((far, tgt, frozenset(ignore)))
-
-    # Try a few net orderings; each stamps its routed wires into the obstacle
-    # set so later routes avoid earlier ones. Different orders resolve
-    # contention differently, so keep the cleanest result (a tiny rip-up-and-
-    # reroute by re-ordering). Stop early on a perfectly clean route.
-    def _len(t):
-        return abs(t[0].x - t[1].x) + abs(t[0].y - t[1].y)
-
-    orderings = [
-        sorted(tasks, key=_len),            # shortest-first
-        sorted(tasks, key=_len, reverse=True),  # longest-first
-        list(tasks),                        # cap-declaration order
-    ]
-    best = module
-    best_n = before
-    for order in orderings:
-        obstacles = list(base_obstacles)
-        wires: list[PlacedWire] = []
-        for start, end, ignore in order:
-            seg = route_astar(
-                start, end, obstacles,
-                avoid_owners=ignore, avoid_kinds=_AVOID_KINDS, clearance_mm=clr,
-            )
-            if not seg:
+def _mst_edges(points: list[Point]) -> list[tuple[Point, Point]]:
+    """Manhattan minimum spanning tree edges (Prim's, O(n^2) — n is tiny)."""
+    n = len(points)
+    if n < 2:
+        return []
+    in_tree = [False] * n
+    in_tree[0] = True
+    edges: list[tuple[Point, Point]] = []
+    for _ in range(n - 1):
+        best = None
+        for i in range(n):
+            if not in_tree[i]:
                 continue
-            wires.extend(seg)
-            for w in seg:
-                obstacles.append(wire_bbox(w.start, w.end, owner_id="routed"))
-        if not wires:
-            continue
-        wires = _dedupe_overlaps(wires)  # collapse same-net overlaps/overshoots
-        cand = replace(module, wires=tuple(wires), junctions=tuple(_junctions(wires)))
-        n = _module_findings(cand, geometry)
-        if n < best_n:
-            best, best_n = cand, n
-        if best_n == 0:
+            for j in range(n):
+                if in_tree[j]:
+                    continue
+                d = abs(points[i].x - points[j].x) + abs(points[i].y - points[j].y)
+                if best is None or d < best[0]:
+                    best = (d, i, j)
+        if best is None:
             break
-    # Keep the best reroute ONLY if it beat the original (no-regression Law).
-    return best
+        _, i, j = best
+        in_tree[j] = True
+        edges.append((points[i], points[j]))
+    return edges
+
+
+def _seg_crosses_body(seg: PlacedWire, ob: BBox, margin: float = 0.6) -> bool:
+    """True iff the axis-aligned ``seg`` runs THROUGH ``ob``'s interior.
+
+    ``margin`` insets the body so a wire grazing the body edge (e.g. starting
+    at a pin ON that edge) doesn't count — only a wire crossing the interior
+    does. This avoids the false positives an endpoint-exclusion scheme needs.
+    """
+    ax, ay, bx, by = seg.start.x, seg.start.y, seg.end.x, seg.end.y
+    if abs(ay - by) < 1e-6:  # horizontal
+        if ob.min.y + margin < ay < ob.max.y - margin:
+            lo, hi = sorted((ax, bx))
+            return lo < ob.max.x - margin and hi > ob.min.x + margin
+        return False
+    if abs(ax - bx) < 1e-6:  # vertical
+        if ob.min.x + margin < ax < ob.max.x - margin:
+            lo, hi = sorted((ay, by))
+            return lo < ob.max.y - margin and hi > ob.min.y + margin
+        return False
+    return False
+
+
+def _l_hits(segs: list[PlacedWire], obstacles: list[BBox]) -> bool:
+    for seg in segs:
+        for ob in obstacles:
+            if ob.kind == "wire":
+                continue
+            if _seg_crosses_body(seg, ob):
+                return True
+    return False
+
+
+def _l_route(a: Point, b: Point, obstacles: list[BBox]) -> list[PlacedWire]:
+    """Connect ``a``-``b`` with an orthogonal route whose endpoints are EXACTLY
+    a and b. Prefer the L-orientation that crosses no body; else A*; else the
+    direct L (accept an overlap rather than ever leave the pin unwired — the
+    Laws: spread/route better, never silently drop)."""
+    if abs(a.x - b.x) < 1e-6 and abs(a.y - b.y) < 1e-6:
+        return []
+    if abs(a.x - b.x) < 1e-6 or abs(a.y - b.y) < 1e-6:
+        return [PlacedWire(a, b)]
+    c1 = Point(b.x, a.y)
+    c2 = Point(a.x, b.y)
+    for corner in (c1, c2):
+        segs = [PlacedWire(a, corner), PlacedWire(corner, b)]
+        if not _l_hits(segs, obstacles):
+            return segs
+    seg = route_astar(a, b, obstacles, avoid_kinds=_AVOID_KINDS,
+                      clearance_mm=VISUAL_CLEARANCE_MM)
+    if seg:
+        return list(seg)
+    return [PlacedWire(a, c1), PlacedWire(c1, b)]
+
+
+def _route_net_tree(points: list[Point], obstacles: list[BBox]) -> list[PlacedWire]:
+    wires: list[PlacedWire] = []
+    for a, b in _mst_edges(points):
+        wires.extend(_l_route(a, b, obstacles))
+    return _dedupe_overlaps(wires)
+
+
+def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
+    """Wire every module net into an orthogonal tree with EXACT on-pin endpoints.
+
+    Connectivity-correct BY CONSTRUCTION: ``module.nets`` declares which pins
+    share a net; each net's terminals are joined by a Manhattan MST, every edge
+    an obstacle-aware L-route (A* / direct-L fallback). No pin is left unwired
+    and no wire ends short of a pin — the failures of the old overlap-only
+    reroute (it returned early when overlap was 0, silently dropped failed
+    route_astar tasks, modelled only caps, and could not express a merge bus
+    like ethernet's BS_COMMON). Longest nets route first so the big buses claim
+    clear channels before the short drops fill in. Wires that pass through a pin
+    are split at it downstream (route_sheet) so every tap lands on a pin tip.
+    """
+    if not module.nets:
+        return module
+
+    # Route against the SAME bboxes the overlap validator measures — symbol
+    # bodies + intrinsic pin text (via _obstacles) PLUS property text
+    # (Reference/Value) and the module's own labels — so any route the grid
+    # router finds is overlap-clean by construction (no wire×text / wire×label).
+    obstacles = _obstacles(module.symbols, geometry)
+    for s in module.symbols:
+        try:
+            obstacles.extend(geometry.property_text_bboxes(
+                s.lib_id, s.position, s.rotation,
+                owner_id=f"symbol:{s.reference}",
+                reference_override=s.reference, value_override=s.value,
+                value_shift=s.value_shift, reference_shift=s.reference_shift))
+        except Exception:  # noqa: BLE001
+            pass
+    from zynq_eda.core.validate.overlap import _label_text_bbox
+    for lbl in module.labels:
+        try:
+            obstacles.append(_label_text_bbox(lbl))
+        except Exception:  # noqa: BLE001
+            pass
+
+    # Per-symbol body centre, so each terminal's ESCAPE direction can point
+    # OUTBOARD from the body it sits on. Without this, route_terminals' fallback
+    # ("away from the net centroid") sends a left-edge IC pin whose caps are
+    # further left to escape RIGHT — into the IC body — and the net fails.
+    sym_info: list[tuple] = []
+    for s in module.symbols:
+        try:
+            c = symbol_bbox(s.lib_id, s.position, s.rotation, geometry,
+                            f"symbol:{s.reference}").center
+        except Exception:  # noqa: BLE001
+            c = s.position
+        sym_info.append((s, _pins(s, geometry), c))
+
+    def _term_dir(pt: Point) -> tuple[int, int]:
+        for _s, sp, c in sym_info:
+            if any(abs(pt.x - q.x) < 0.05 and abs(pt.y - q.y) < 0.05 for q in sp):
+                ddx, ddy = pt.x - c.x, pt.y - c.y
+                if abs(ddx) >= abs(ddy):
+                    return (1 if ddx >= 0 else -1, 0)
+                return (0, 1 if ddy >= 0 else -1)
+        return (0, 0)
+
+    nets: dict[str, list[Point]] = {}
+    escape_dirs: dict[str, list[tuple[int, int]]] = {}
+    for i, (name, terms) in enumerate(module.nets):
+        pts = _dedupe_points(list(terms))
+        if len(pts) >= 2:
+            key = f"{name}#{i}"
+            nets[key] = pts
+            escape_dirs[key] = [_term_dir(p) for p in pts]
+    if not nets:
+        return module
+
+    # Grid A* multi-terminal tree router: avoids every body, text box, and
+    # foreign net's wires (no crossings), connects each net into a tree with
+    # junction dots at taps, and lands endpoints on the 1.27 mm pin grid. Any
+    # net it genuinely cannot route is reported in ``failures`` (never silently
+    # dropped); the connectivity validator surfaces the residual so placement
+    # can open a wider channel rather than the wire crossing a body.
+    wires, junctions, failures = route_terminals(
+        obstacles, nets, escape_dirs=escape_dirs
+    )
+    if failures:
+        import sys
+        fset = sorted({n for n, _ in failures})
+        print(f"      reroute_module({module.ic_ref}): {len(failures)} unrouted "
+              f"terminal(s) on nets {fset[:6]}", file=sys.stderr)
+    return replace(module, wires=tuple(wires), junctions=tuple(junctions))
 
 
 def _dedupe_overlaps(wires: list[PlacedWire]) -> list[PlacedWire]:

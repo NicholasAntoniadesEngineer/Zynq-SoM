@@ -27,9 +27,52 @@ from zynq_eda.core.layout.edge_labels import (
 )
 from zynq_eda.core.layout.module import Module
 from zynq_eda.core.model.block import Block
+from zynq_eda.core.model.grid import Point
 from zynq_eda.core.model.sheet import PlacedJunction, PlacedWire, Sheet
 from zynq_eda.core.layout.bbox import wire_bbox
 from zynq_eda.core.route.route_module import _obstacles, reroute_module
+
+
+def _strictly_interior(p: Point, a: Point, b: Point, eps: float = 0.05) -> bool:
+    """True iff ``p`` lies strictly inside the axis-aligned segment ``a``-``b``
+    (on it, but not at either endpoint)."""
+    if abs(a.x - b.x) < eps and abs(p.x - a.x) < eps:  # vertical
+        lo, hi = sorted((a.y, b.y))
+        return lo + eps < p.y < hi - eps
+    if abs(a.y - b.y) < eps and abs(p.y - a.y) < eps:  # horizontal
+        lo, hi = sorted((a.x, b.x))
+        return lo + eps < p.x < hi - eps
+    return False
+
+
+def _split_wires_at_pins(
+    wires: list[PlacedWire], pin_points: list[Point], eps: float = 0.05
+) -> list[PlacedWire]:
+    """Split every wire at each pin that lies on its INTERIOR.
+
+    KiCad does not connect a pin a wire merely passes over (it must end on
+    the pin, or carry a junction). Trunk/overshoot wires routinely run THROUGH
+    their own net's pins, leaving them on a wire interior → ``pin_not_connected``.
+    Cutting each such wire at the pin turns the pin into a wire ENDPOINT, which
+    KiCad connects. The router blocks foreign pins, so a wire only ever crosses
+    its OWN net's pins; splitting there is always electrically correct.
+    """
+    out: list[PlacedWire] = []
+    for w in wires:
+        cuts = [p for p in pin_points if _strictly_interior(p, w.start, w.end, eps)]
+        if not cuts:
+            out.append(w)
+            continue
+        vertical = abs(w.start.x - w.end.x) < eps
+        pts = [w.start, w.end] + cuts
+        pts.sort(key=(lambda q: q.y) if vertical else (lambda q: q.x))
+        uniq: list[Point] = [pts[0]]
+        for q in pts[1:]:
+            if abs(q.x - uniq[-1].x) > eps or abs(q.y - uniq[-1].y) > eps:
+                uniq.append(q)
+        for a, b in zip(uniq, uniq[1:]):
+            out.append(PlacedWire(a, b))
+    return out
 
 
 def route_sheet(
@@ -118,6 +161,21 @@ def assemble_sheet(
         )
         symbols.extend(ssyms)
         wires.extend(swires)
+
+    # Final connectivity pass: split every wire at each pin that lies on its
+    # interior, so a pin a trunk/overshoot wire passes THROUGH becomes a wire
+    # ENDPOINT (which KiCad connects). This is the electrical closure that makes
+    # validate_connectivity == 0 achievable without a router rewrite — the two
+    # grid routers land wires near pins; this lands them ON pins.
+    all_pin_pts: list[Point] = []
+    for s in symbols:
+        try:
+            all_pin_pts.extend(
+                geometry.absolute_pin_positions(s.lib_id, s.position, s.rotation).values()
+            )
+        except Exception:  # noqa: BLE001 — a symbol without resolvable pins just isn't a cut site
+            continue
+    wires = _split_wires_at_pins(wires, all_pin_pts)
 
     return Sheet(
         name=arr.sheet.name,
