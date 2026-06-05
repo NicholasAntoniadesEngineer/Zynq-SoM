@@ -770,6 +770,16 @@ def _finalize(
             placed = _place_pin_power_symbol(
                 pt, side, far_lib, net, f"#PWR{p_ref}", geometry, obs, max_steps=1,
             )
+            if placed is None and net not in sym_by_net:
+                # No clear 1-grid spot AND no existing far symbol of this net to
+                # trunk to (e.g. T1's GND pin: ethernet has only BS_COMMON /
+                # CHASSIS_GND symbols). Leaving the pin unwired lets the exposer
+                # merge it onto the adjacent foreign trunk (T1 pin-14 GND was
+                # captured by BS_COMMON). So walk a LOCAL symbol a few grids out
+                # — the pin sits on an open module edge, so a short walk clears.
+                placed = _place_pin_power_symbol(
+                    pt, side, far_lib, net, f"#PWR{p_ref}", geometry, obs, max_steps=4,
+                )
             if placed is not None:
                 sym, tip = placed
                 symbols.append(sym)

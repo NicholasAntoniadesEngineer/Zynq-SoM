@@ -1,12 +1,11 @@
 # Carrier — Validation Report
 
-Generated: 2026-06-05T17:24:18Z
+Generated: 2026-06-05T17:45:52Z
 
-**Errors:** 4  **Warnings:** 452  **Info:** 0
+**Errors:** 3  **Warnings:** 452  **Info:** 0
 
-## Errors (4)
+## Errors (3)
 
-- **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
 - **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_

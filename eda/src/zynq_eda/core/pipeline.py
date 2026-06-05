@@ -57,19 +57,29 @@ def _assign_power_stamps(blocks) -> dict:
     from zynq_eda.core.layout._constants import POWER_SYMBOL_LIB_IDS
 
     # Nets declared as a power OUTPUT anywhere are driven by that block's IC
-    # power-output pin (e.g. an LDO's +3V3/+2V5/+1V8) — they need NO PWR_FLAG.
-    # Stamping them is redundant AND, for an isolated rail+flag island, KiCad
-    # ERC doesn't accept the island as a driver, so the stamp pins read floating.
+    # power-output pin (e.g. an LDO's +3V3/+2V5/+1V8) — normally no PWR_FLAG.
+    # BUT in this no-root-sheet-pins design the LDO's output net (emitted as a
+    # local /power/<rail> hier-label) does NOT merge with the GLOBAL power-symbol
+    # net the rail's CONSUMERS sit on (power:+3V3 symbols across 14 sheets). So a
+    # rail that is ALSO consumed as a power INPUT elsewhere has an undriven global
+    # symbol net and DOES need exactly one flag — only a rail that is output-only
+    # (never consumed via a power symbol, e.g. +2V5/+1V8 here) can skip it.
+    consumed_input: set[str] = {
+        net.name
+        for block in blocks
+        for net in getattr(block, "external_nets", ())  # type: ignore[attr-defined]
+        if net.power_kind == "input"
+    }
     driven: set[str] = {
         net.name
         for block in blocks
         for net in getattr(block, "external_nets", ())  # type: ignore[attr-defined]
         if net.power_kind == "output"
-    }
+    } - consumed_input
 
     assignment: dict[str, set[str]] = {}
     claimed: set[str] = set()
-    # Only nets with NO output driver need a flag: ground first, then inputs.
+    # Only nets with NO reachable output driver need a flag: ground, then inputs.
     for kinds in (("ground",), ("input",)):
         for block in blocks:
             for net in getattr(block, "external_nets", ()):  # type: ignore[attr-defined]
