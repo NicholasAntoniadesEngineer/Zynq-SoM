@@ -387,7 +387,11 @@ def _place_ic_pin_primitive(
     # colliding. Straight-out (offset 0) is tried first to keep the simple case
     # tidy; offsets fan out only when the lane is blocked.
     px, py = -uy, ux  # perpendicular unit
-    for extra in range(1, 16):
+    # extra=0 first: the primitive COINCIDENT with the pin (no stub) — the
+    # symbol/label pin lands on the IC pin (pin-to-pin / label-at-pin), the body
+    # sits outboard. Tightest and crossing-free; the outboard walk follows if the
+    # coincident spot is blocked.
+    for extra in range(0, 16):
         dist = snap_to_grid(extra * VISUAL_CLEARANCE_MM)
         elbow = Point(snap_to_grid(tip.x + ux * dist), snap_to_grid(tip.y + uy * dist))
         for poff in (0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5):

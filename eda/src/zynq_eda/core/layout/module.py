@@ -665,6 +665,40 @@ def _finalize(
         if len(pts) >= 2:
             net_terms.append((to_net, tuple(pts)))
 
+    # Bare IC power/GND pins (no decoupling cap of their own) → connect each to
+    # the NEAREST power symbol of its net already in the module, so every IC
+    # supply/ground pin is wired by the router instead of left for the exposer
+    # to place a fresh symbol in the congested outboard (the GND-pin floats).
+    sym_by_net: dict[str, list[Point]] = {}
+    for cell in cells:
+        if cell.far_symbol is not None:
+            try:
+                for pp in geometry.absolute_pin_positions(
+                    cell.far_symbol.lib_id, cell.far_symbol.position,
+                    cell.far_symbol.rotation).values():
+                    sym_by_net.setdefault(cell.to_net, []).append(pp)
+            except Exception:  # noqa: BLE001
+                pass
+    if sym_by_net:
+        trunk_keys = {(round(t.x, 2), round(t.y, 2))
+                      for terms in trunk_nets.values() for t in terms}
+        try:
+            ic_names = {str(pi["number"]): str(pi["name"])
+                        for pi in geometry.all_pins(ic.lib_id, 0.0)}
+            ic_pos = geometry.absolute_pin_positions(ic.lib_id, anchor, 0.0)
+        except Exception:  # noqa: BLE001
+            ic_names, ic_pos = {}, {}
+        for num, pt in ic_pos.items():
+            if (round(pt.x, 2), round(pt.y, 2)) in trunk_keys:
+                continue  # already on a trunk
+            nm = ic_names.get(str(num), "")
+            # GND, GND_EP (exposed pad), GND_1 … all map to the GND symbol net.
+            net = "GND" if (nm in _GND_NAMES or nm.startswith("GND")) else nm
+            if net in sym_by_net:
+                tgt = min(sym_by_net[net],
+                          key=lambda q: abs(q.x - pt.x) + abs(q.y - pt.y))
+                net_terms.append((f"{net}@ic{num}", (pt, tgt)))
+
     bbox = _module_bbox(symbols, wires, labels, geometry)
     return Module(
         ic_ref=ic.reference,

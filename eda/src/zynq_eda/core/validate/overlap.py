@@ -708,7 +708,15 @@ def validate_overlap(
         for sym, intrinsic_box in intrinsic_bboxes:
             if not _overlap_is_significant(wire_box, intrinsic_box):
                 continue
-            if intrinsic_box.kind == "intrinsic_pin_number":
+            # A wire that CONNECTS to a pin runs right up to that pin's tip,
+            # where KiCad renders BOTH the pin's number AND its name — so the
+            # connecting wire is inherently adjacent to both. Exempt exactly that
+            # pairing (wire endpoint coincident with this pin's connection point)
+            # for name as well as number. A wire crossing a DIFFERENT pin's
+            # name/number still fires — this is precise, not a softening.
+            if intrinsic_box.kind in (
+                "intrinsic_pin_number", "intrinsic_pin_name"
+            ):
                 pin_number = intrinsic_box.owner_id.rsplit(":", 1)[-1]
                 if _wire_connects_to_pin(wire, sym, pin_number):
                     continue
