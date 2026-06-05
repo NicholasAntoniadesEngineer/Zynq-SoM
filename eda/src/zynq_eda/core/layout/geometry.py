@@ -1410,12 +1410,28 @@ class SymbolGeometryCache:
                 display_text = reference_override
             elif prop_name == "Value" and value_override is not None:
                 display_text = value_override
-            # Reference / Value render center-justified by default.
+            # EFFECTIVE rendered rotation. KiCad renders a passive's Value/
+            # Reference VERTICALLY (the lib default is 90 for Device:R/C); the
+            # emit keeps that (or applies the shift's text-rotation override +
+            # the symbol rotation). Computing the bbox at a flat rotation=0 (as
+            # before) gave a HORIZONTAL box for text that renders VERTICAL — so
+            # the validator/declutter/detector all MISSED vertical Value-on-
+            # Reference / value-on-neighbour overlaps (the cap/resistor cluster
+            # pile-ups the user kept seeing). Mirror the emit's rotation.
+            if prop_name == "Value":
+                _sh = value_shift or VALUE_SHIFT_BY_LIB_ID.get(lib_id)
+            else:
+                _sh = reference_shift or REFERENCE_SHIFT_BY_LIB_ID.get(lib_id)
+            _override = _sh[2] if _sh else None
+            if _override is not None:
+                eff_rot = (_override + rotation) % 360
+            else:
+                eff_rot = (_prop_rot + rotation) % 360
             bbox = text_bbox(
                 text=display_text,
                 anchor=text_anchor,
                 size_mm=DEFAULT_TEXT_SIZE_MM,
-                rotation=0.0,
+                rotation=float(eff_rot),
                 justify="center",
                 owner_id=f"{owner_id}:property:{prop_name}" if owner_id else f"property:{prop_name}",
                 kind="symbol",
