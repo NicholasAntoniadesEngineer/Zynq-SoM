@@ -239,14 +239,29 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
                 return (0, 1 if ddy >= 0 else -1)
         return (0, 0)
 
+    from zynq_eda.core.layout.footprint import symbol_footprint
     nets: dict[str, list[Point]] = {}
     escape_dirs: dict[str, list[tuple[int, int]]] = {}
+    own_obstacles: dict[str, list[BBox]] = {}
     for i, (name, terms) in enumerate(module.nets):
         pts = _dedupe_points(list(terms))
         if len(pts) >= 2:
             key = f"{name}#{i}"
             nets[key] = pts
             escape_dirs[key] = [_term_dir(p) for p in pts]
+            # Own-symbol footprints for THIS net: the symbols a terminal sits
+            # on. route_terminals exempts their clearance HALO (not the body
+            # core) so a pin boxed by its own body can escape — the config
+            # module.py uses, which routes the dense trunks (floating 8->3).
+            own: list[BBox] = []
+            for s, sp, _c in sym_info:
+                if any(abs(p.x - q.x) < 0.05 and abs(p.y - q.y) < 0.05
+                       for p in sp for q in pts):
+                    try:
+                        own.append(symbol_footprint(s, geometry))
+                    except Exception:  # noqa: BLE001
+                        pass
+            own_obstacles[key] = own
     if not nets:
         return module
 
@@ -257,7 +272,7 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
     # dropped); the connectivity validator surfaces the residual so placement
     # can open a wider channel rather than the wire crossing a body.
     wires, junctions, failures = route_terminals(
-        obstacles, nets, escape_dirs=escape_dirs
+        obstacles, nets, own_obstacles=own_obstacles, escape_dirs=escape_dirs
     )
 
     # Recover terminals the grid router couldn't escape (dense IC edges): connect
@@ -289,6 +304,11 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
         for w in seg:
             obstacles.append(wire_bbox(w.start, w.end, owner_id="routed"))
 
+    # Collapse collinear same-axis runs (own_obstacles routing can lay two
+    # collinear segments that overlap) into maximal non-overlapping wires.
+    # Electrically neutral (overlapping wires already share a node in KiCad)
+    # and clears the wire×wire findings; route_sheet re-splits at pins after.
+    wlist = _dedupe_overlaps(wlist)
     return replace(module, wires=tuple(wlist), junctions=tuple(_junctions(wlist)))
 
 
@@ -344,9 +364,33 @@ def _runs(coords: list[float], grid: float):
     yield (cs, ce)
 
 
+def _cross_point(a: PlacedWire, b: PlacedWire) -> tuple[float, float] | None:
+    """Mutual-interior crossing of perpendicular ``a``/``b``, else None."""
+    a_h = abs(a.start.y - a.end.y) < 1e-6
+    a_v = abs(a.start.x - a.end.x) < 1e-6
+    b_h = abs(b.start.y - b.end.y) < 1e-6
+    b_v = abs(b.start.x - b.end.x) < 1e-6
+    if a_h and b_v:
+        h, v = a, b
+    elif a_v and b_h:
+        h, v = b, a
+    else:
+        return None
+    hy = h.start.y
+    vx = v.start.x
+    hx0, hx1 = sorted((h.start.x, h.end.x))
+    vy0, vy1 = sorted((v.start.y, v.end.y))
+    if hx0 < vx < hx1 and vy0 < hy < vy1:
+        return (vx, hy)
+    return None
+
+
 def _junctions(wires: list[PlacedWire]) -> list[PlacedJunction]:
-    """Junction at every real merge: >= 3 wire ends coincide OR a wire end
-    lands strictly inside another wire's span (a T-tap)."""
+    """Junction at every real merge: >= 3 wire ends coincide, a wire end lands
+    strictly inside another wire's span (a T-tap), OR two wires cross at their
+    mutual interior (an X). The crossings here are same-net (route_terminals
+    blocks foreign wires), so a junction makes the crossing an explicit merge —
+    which is what KiCad and the overlap validator's wire_cross rule require."""
     from collections import Counter
 
     ends: Counter = Counter()
@@ -362,6 +406,11 @@ def _junctions(wires: list[PlacedWire]) -> list[PlacedJunction]:
                 deg += 2
         if deg >= 3:
             juncs.add((x, y))
+    for i, a in enumerate(wires):
+        for b in wires[i + 1:]:
+            cp = _cross_point(a, b)
+            if cp is not None:
+                juncs.add(cp)
     return [PlacedJunction(Point(x, y)) for x, y in juncs]
 
 
