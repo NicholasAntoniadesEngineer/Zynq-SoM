@@ -1159,11 +1159,11 @@
 		(in_bom yes)
 		(on_board yes)
 		(property "Reference" "T"
-			(at 0 12.7 0)
+			(at 0 22.86 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Value" "HX5008NLT"
-			(at 0 -10.16 0)
+			(at 0 -22.86 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Footprint" ""
@@ -1172,15 +1172,15 @@
 		)
 		(symbol "HX5008NLT_0_1"
 			(rectangle
-				(start -7.62 20.32)
-				(end 7.62 -15.24)
+				(start -10.16 20.32)
+				(end 10.16 -15.24)
 				(stroke (width 0.254) (type default))
 				(fill (type background))
 			)
 		)
 		(symbol "HX5008NLT_1_1"
 			(pin passive line
-				(at -7.62 15.24 0)
+				(at -10.16 15.24 0)
 				(length 2.54)
 				(name "PHY0_P"
 					(effects (font (size 1.27 1.27)))
@@ -1190,7 +1190,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 10.16 0)
+				(at -10.16 10.16 0)
 				(length 2.54)
 				(name "PHY0_N"
 					(effects (font (size 1.27 1.27)))
@@ -1200,7 +1200,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 5.08 0)
+				(at -10.16 5.08 0)
 				(length 2.54)
 				(name "PHY1_P"
 					(effects (font (size 1.27 1.27)))
@@ -1210,7 +1210,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 0 0)
+				(at -10.16 0 0)
 				(length 2.54)
 				(name "PHY1_N"
 					(effects (font (size 1.27 1.27)))
@@ -1220,7 +1220,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -5.08 0)
+				(at -10.16 -5.08 0)
 				(length 2.54)
 				(name "PHY2_P"
 					(effects (font (size 1.27 1.27)))
@@ -1230,7 +1230,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -10.16 0)
+				(at -10.16 -10.16 0)
 				(length 2.54)
 				(name "PHY2_N"
 					(effects (font (size 1.27 1.27)))
@@ -1240,7 +1240,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -15.24 0)
+				(at -10.16 -15.24 0)
 				(length 2.54)
 				(name "PHY3_P"
 					(effects (font (size 1.27 1.27)))
@@ -1250,7 +1250,7 @@
 				)
 			)
 			(pin passive line
-				(at -7.62 -20.32 0)
+				(at -10.16 -20.32 0)
 				(length 2.54)
 				(name "PHY3_N"
 					(effects (font (size 1.27 1.27)))
@@ -1260,7 +1260,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 15.24 180)
+				(at 10.16 15.24 180)
 				(length 2.54)
 				(name "TD0_P"
 					(effects (font (size 1.27 1.27)))
@@ -1270,7 +1270,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 10.16 180)
+				(at 10.16 10.16 180)
 				(length 2.54)
 				(name "TD0_N"
 					(effects (font (size 1.27 1.27)))
@@ -1280,7 +1280,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 5.08 180)
+				(at 10.16 5.08 180)
 				(length 2.54)
 				(name "TD1_P"
 					(effects (font (size 1.27 1.27)))
@@ -1290,7 +1290,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 0 180)
+				(at 10.16 0 180)
 				(length 2.54)
 				(name "TD1_N"
 					(effects (font (size 1.27 1.27)))
@@ -1300,7 +1300,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 -5.08 180)
+				(at 10.16 -5.08 180)
 				(length 2.54)
 				(name "TD2_P"
 					(effects (font (size 1.27 1.27)))
@@ -1310,7 +1310,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 -10.16 180)
+				(at 10.16 -10.16 180)
 				(length 2.54)
 				(name "TD2_N"
 					(effects (font (size 1.27 1.27)))
@@ -1320,7 +1320,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 -15.24 180)
+				(at 10.16 -15.24 180)
 				(length 2.54)
 				(name "TD3_P"
 					(effects (font (size 1.27 1.27)))
@@ -1330,7 +1330,7 @@
 				)
 			)
 			(pin passive line
-				(at 7.62 -20.32 180)
+				(at 10.16 -20.32 180)
 				(length 2.54)
 				(name "TD3_N"
 					(effects (font (size 1.27 1.27)))
