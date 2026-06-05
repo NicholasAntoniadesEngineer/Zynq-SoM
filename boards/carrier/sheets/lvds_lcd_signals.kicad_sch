@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "6e1c864e-8bfe-4f0b-8333-8bcc49a32fa6")
+	(uuid "8fbcb523-ccf6-44d8-a58e-51dd1bca738c")
 	(paper "A3")
 	(title_block
 		(title "LVDS LCD bank A (data + clock + backlight ctrl)")
@@ -95,7 +95,7 @@
 						)
 					)
 				)
-				(pin power_in line
+				(pin passive line
 					(at -17.78 45.72 0)
 					(length 5.08)
 					(name "GND_6"
@@ -152,7 +152,7 @@
 						)
 					)
 				)
-				(pin power_in line
+				(pin passive line
 					(at -17.78 30.48 0)
 					(length 5.08)
 					(name "GND_9"
@@ -209,7 +209,7 @@
 						)
 					)
 				)
-				(pin power_in line
+				(pin passive line
 					(at -17.78 15.24 0)
 					(length 5.08)
 					(name "GND_12"
@@ -266,7 +266,7 @@
 						)
 					)
 				)
-				(pin power_in line
+				(pin passive line
 					(at -17.78 0.0000 0)
 					(length 5.08)
 					(name "GND_15"
@@ -323,7 +323,7 @@
 						)
 					)
 				)
-				(pin power_in line
+				(pin passive line
 					(at -17.78 -15.24 0)
 					(length 5.08)
 					(name "GND_18"
@@ -380,7 +380,7 @@
 						)
 					)
 				)
-				(pin power_in line
+				(pin passive line
 					(at -17.78 -30.48 0)
 					(length 5.08)
 					(name "GND_21"
@@ -418,7 +418,7 @@
 						)
 					)
 				)
-				(pin power_in line
+				(pin passive line
 					(at -17.78 -40.64 0)
 					(length 5.08)
 					(name "GND_23"
@@ -507,7 +507,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced no)
-		(uuid "be955f39-022b-4b80-aabe-459e164f7aff")
+		(uuid "6e4b9552-0008-4c96-8b7d-7bf04baf33e0")
 		(property "Reference" "J5A"
 			(at 212.09 210.82 0.0000)
 			(effects
@@ -536,77 +536,77 @@
 			)
 		)
 		(pin "4"
-			(uuid "690d4a23-5853-43b1-8360-155b8e0d0748")
+			(uuid "141dc26d-ef18-49cf-b850-e9507d20c16c")
 		)
 		(pin "5"
-			(uuid "e6cf27b9-09d1-40db-bf31-5185ca487959")
+			(uuid "a64b981b-8cb4-44e2-b413-a57d381c8e1b")
 		)
 		(pin "6"
-			(uuid "c8e76ef3-25c4-4230-97ff-85eaf0238139")
+			(uuid "d25814db-5b3b-4662-b566-f449f0559f20")
 		)
 		(pin "7"
-			(uuid "e7b88cba-c97b-4576-97e0-c50be37c628a")
+			(uuid "72e33c9c-9c1d-4db7-9c3b-0d37459f0414")
 		)
 		(pin "8"
-			(uuid "6a4ade6d-fbba-4ba6-b7f9-90b808761e44")
+			(uuid "a7ea4304-8c36-4605-bdc1-7e3674d16858")
 		)
 		(pin "9"
-			(uuid "70db71ab-9a04-4baa-befb-9bde36e75d29")
+			(uuid "16b8261e-7912-4f22-91bb-64407dd7e75f")
 		)
 		(pin "10"
-			(uuid "096d0d19-48ac-4068-9c24-a6b366c7c5e8")
+			(uuid "d9f7ea4c-9813-498b-a515-a422a10eaee9")
 		)
 		(pin "11"
-			(uuid "e59794b8-c1c8-4eb1-96b7-6e1a3c40925b")
+			(uuid "67f7ee09-e312-4115-be7f-6a4a0cea7b17")
 		)
 		(pin "12"
-			(uuid "18a480b7-3ab6-44a7-8791-8ef7640c72e4")
+			(uuid "4070bd8a-6b7b-42e1-9e4c-02b8ec6953ee")
 		)
 		(pin "13"
-			(uuid "bf42f026-48b8-4fc2-ac5d-97efd03dc95d")
+			(uuid "408b26a3-d67e-4287-9e41-3c78acd93d2b")
 		)
 		(pin "14"
-			(uuid "98c845bf-706c-4cb3-92ba-4381809edc12")
+			(uuid "47b1749a-b935-4eda-b2af-5604c2bdf9d7")
 		)
 		(pin "15"
-			(uuid "440b74b5-94e7-4db7-9ecb-6f358965f745")
+			(uuid "fb3d3597-df98-46c4-a5f2-b611a5c868d6")
 		)
 		(pin "16"
-			(uuid "c43941f7-e9dc-4a73-b1c9-97fdb6aed569")
+			(uuid "3763d5f4-551d-47bc-abe1-ff996c566128")
 		)
 		(pin "17"
-			(uuid "691c0396-3b59-4a9e-836e-5458f991005e")
+			(uuid "cbac8931-a98f-498d-8da3-497ff875b90d")
 		)
 		(pin "18"
-			(uuid "c41cb2c7-b21b-4d30-8208-8e7475b478be")
+			(uuid "b8c075ac-ef3b-49ce-a038-7dd85c543195")
 		)
 		(pin "19"
-			(uuid "7f157f1d-7bac-4f8b-b44a-89b053751068")
+			(uuid "9b416a7d-3e45-4882-abd5-a3fd75496692")
 		)
 		(pin "20"
-			(uuid "b0bf3a9f-460b-42e3-a28a-ad8d9b2b84eb")
+			(uuid "7165c45e-b4b0-4eb1-9a99-af829ee3dddf")
 		)
 		(pin "21"
-			(uuid "58beb78c-fecb-49c1-b425-74a1f6c91905")
+			(uuid "b9f1c43b-1a19-4d40-b5aa-df98209be1d2")
 		)
 		(pin "22"
-			(uuid "0e96c987-2d03-4fdb-9b7a-37bdd966c81f")
+			(uuid "694a61c7-87b1-46bb-952e-a0631703ca66")
 		)
 		(pin "23"
-			(uuid "1ebed7a1-1333-48bf-bfe9-2e0e937be2ab")
+			(uuid "c7a802a4-1e51-46f2-a47a-b96bdd988ed5")
 		)
 		(pin "24"
-			(uuid "7b147f3c-13ad-4533-8828-db54eb7ffb0e")
+			(uuid "5c1c9347-d940-4c8a-8d92-0c044bd7d872")
 		)
 		(pin "25"
-			(uuid "c331673d-ab34-456c-a200-6831ae7a64a9")
+			(uuid "141e343b-6d83-491d-8d7c-3099b0998c4d")
 		)
 		(pin "26"
-			(uuid "89afc804-6765-4787-8ea9-1e69cf764a7c")
+			(uuid "958dc6fa-8d0b-4d24-b699-896468effb06")
 		)
 		(instances
 			(project "LVDS LCD bank A (data + clock + backlight ctrl)"
-				(path "/6e1c864e-8bfe-4f0b-8333-8bcc49a32fa6"
+				(path "/8fbcb523-ccf6-44d8-a58e-51dd1bca738c"
 					(reference "J5A")
 					(unit 1)
 				)
@@ -621,7 +621,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "73492c85-6200-49f1-b539-c285478ede4a")
+		(uuid "6130746e-538b-4402-bcce-4dfa40c9d226")
 	)
 	(wire
 		(pts
@@ -631,7 +631,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "4d5aad6b-4505-44ac-8e19-137e23a6f59f")
+		(uuid "e548b464-9fed-408c-936b-21d2729c3006")
 	)
 	(wire
 		(pts
@@ -641,7 +641,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d109165b-e3d8-4051-9d0e-b07021fe4347")
+		(uuid "b544a3b4-b7fa-4738-8446-21b6a20ea37d")
 	)
 	(wire
 		(pts
@@ -651,7 +651,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9f180454-49ea-4e0f-8dc7-6f439c4fc796")
+		(uuid "d8d0bbf3-a1e5-448d-8a7c-e6cc33e0dfd6")
 	)
 	(wire
 		(pts
@@ -661,7 +661,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d90f2adf-c414-4238-84ef-ce76b9d5f7e0")
+		(uuid "473c356f-55fc-45f8-b946-264380a2b40d")
 	)
 	(wire
 		(pts
@@ -671,7 +671,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "032d556a-65b2-43d7-924b-8b22c3907061")
+		(uuid "dc8a0443-6b33-49eb-aeaa-07e378103e8a")
 	)
 	(wire
 		(pts
@@ -681,7 +681,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b60ebcc0-e4a7-46a8-bc35-7166fe46960e")
+		(uuid "abac801e-0558-46e8-b875-941c7f4d5575")
 	)
 	(wire
 		(pts
@@ -691,7 +691,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "807fd543-f19e-4a78-9b0d-0c5cb40913c3")
+		(uuid "a3c3e473-47d5-4604-824e-7a0719ac1022")
 	)
 	(wire
 		(pts
@@ -701,7 +701,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "706f968b-d242-49b0-b11d-7010f679c351")
+		(uuid "5041c5e0-fa48-478c-92dd-837b48ac5734")
 	)
 	(wire
 		(pts
@@ -711,7 +711,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "571c6dfc-5ecb-4ba7-8888-1f050c7ea4be")
+		(uuid "c28fb4c1-e274-4145-9256-9658b12832d2")
 	)
 	(wire
 		(pts
@@ -721,7 +721,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "795e221b-a1f3-4d68-98ad-0b5e14a989f2")
+		(uuid "72ddf410-107a-4f33-9cc6-3b5ce735a8b2")
 	)
 	(wire
 		(pts
@@ -731,7 +731,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "320fb034-af43-4baf-ab4e-8c05dce4ffad")
+		(uuid "e7d4b46e-30da-4cc6-8d2c-d8d39bccc3e9")
 	)
 	(wire
 		(pts
@@ -741,7 +741,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a65d6598-7dcc-4df8-931c-707235902009")
+		(uuid "c6eba917-6048-4ebc-984e-4ba4e4a638f2")
 	)
 	(wire
 		(pts
@@ -751,7 +751,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "56f69a7d-54bf-4f80-836e-1ca321b954de")
+		(uuid "bf05892a-3c74-4514-895b-92d5ba5760e4")
 	)
 	(wire
 		(pts
@@ -761,7 +761,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ab7e0470-45f1-4288-8eb0-630a2b9ee362")
+		(uuid "9dd322db-283a-402b-b651-e7dee0423fc2")
 	)
 	(wire
 		(pts
@@ -771,7 +771,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1d447bd7-4403-4039-9be3-eabce6be7501")
+		(uuid "c8fa72a7-6e09-437b-b400-b52c88ce75d1")
 	)
 	(wire
 		(pts
@@ -781,7 +781,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7f8764ae-6837-46e7-9ff2-d145c98677a0")
+		(uuid "e09d80f1-1d8b-4954-9e56-ecd58cb76125")
 	)
 	(wire
 		(pts
@@ -791,7 +791,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6e569be2-ff55-4570-bf6f-06327a06b0bf")
+		(uuid "3f2842eb-efee-4a3f-bcea-cabf6ea3067a")
 	)
 	(wire
 		(pts
@@ -801,7 +801,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ace38c84-2c48-483d-81a8-a2a21e55e49e")
+		(uuid "2c13bdf8-cf77-4360-868c-44d100a5d04b")
 	)
 	(wire
 		(pts
@@ -811,7 +811,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "eb25c77d-1bd8-459b-a13b-66d641ae244f")
+		(uuid "452a23f2-5a52-4a33-983a-575070541f6b")
 	)
 	(wire
 		(pts
@@ -821,7 +821,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9749a14a-eb2d-47a5-b2df-0a1dd01685e8")
+		(uuid "aca3c036-b3c0-4fb5-9afe-615888302793")
 	)
 	(wire
 		(pts
@@ -831,7 +831,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "50204d43-0b23-49e4-99a8-63436e955342")
+		(uuid "e4fb750b-0ccb-45ba-a3ae-7c2f0043ef2b")
 	)
 	(wire
 		(pts
@@ -841,7 +841,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2dbcf7a5-c47c-47b4-808d-fe40b28fd840")
+		(uuid "ec7dfe85-3548-4a2a-a065-cf0a13ff86a7")
 	)
 	(hierarchical_label "ZYNQ_LCD_EDID_SDA"
 		(shape input)
@@ -852,7 +852,7 @@
 			)
 			(justify left)
 		)
-		(uuid "5050addf-1274-401f-aec1-52c7d1a96f00")
+		(uuid "814aa3fe-ee46-42fe-b97e-b62fa8b71c33")
 	)
 	(hierarchical_label "ZYNQ_LCD_EDID_SCL"
 		(shape input)
@@ -863,7 +863,7 @@
 			)
 			(justify left)
 		)
-		(uuid "803bd6aa-1319-474c-b1bc-f1d475d8abc9")
+		(uuid "e5cd1e2a-ac34-47e8-b076-067ac3107785")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -874,7 +874,7 @@
 			)
 			(justify left)
 		)
-		(uuid "afcded2a-469f-43e4-8f6a-d39242f1b35f")
+		(uuid "6c2dc09f-b788-4a7a-80c6-5f42936465a0")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_CLK_N"
 		(shape input)
@@ -885,7 +885,7 @@
 			)
 			(justify left)
 		)
-		(uuid "77a0590e-d066-4683-9737-369118588ab0")
+		(uuid "8741900b-4b42-488e-ab47-3d18a707b418")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_CLK_P"
 		(shape input)
@@ -896,7 +896,7 @@
 			)
 			(justify left)
 		)
-		(uuid "1b17100e-c3f2-4194-9ac0-839fec3d7172")
+		(uuid "3ea0bd6d-8a4d-46b3-b255-20730f14be67")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -907,7 +907,7 @@
 			)
 			(justify left)
 		)
-		(uuid "ff53a806-f1f7-487f-93aa-89da51f294bb")
+		(uuid "13ebe531-d55b-4265-b436-5b351a801d34")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_DA0_N"
 		(shape input)
@@ -918,7 +918,7 @@
 			)
 			(justify left)
 		)
-		(uuid "49432824-1305-4a67-8b5b-7a92bfc5b7e8")
+		(uuid "79ed6e3f-306e-4b62-a7a4-8dcf2d51a90a")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_DA0_P"
 		(shape input)
@@ -929,7 +929,7 @@
 			)
 			(justify left)
 		)
-		(uuid "478233be-7882-4a71-9867-1f42ef5fc934")
+		(uuid "8408617c-1d80-475e-9db3-d4732a05940d")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -940,7 +940,7 @@
 			)
 			(justify left)
 		)
-		(uuid "191c5080-0a10-4617-9a1d-3935e4d0bfed")
+		(uuid "0c88ad3a-b3c9-4a4c-b23b-933ce5ca8fc5")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_DA1_N"
 		(shape input)
@@ -951,7 +951,7 @@
 			)
 			(justify left)
 		)
-		(uuid "c165468b-9ca6-4925-9652-c35b96337c8b")
+		(uuid "d8d1e277-91cc-4393-90cd-4e796c54ed1f")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_DA1_P"
 		(shape input)
@@ -962,7 +962,7 @@
 			)
 			(justify left)
 		)
-		(uuid "17c9e4d5-c4e6-47d6-9efb-e3581be670ed")
+		(uuid "b6614f49-ca57-45de-b522-e3b8c42b8e74")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -973,7 +973,7 @@
 			)
 			(justify left)
 		)
-		(uuid "67a6d7b0-ed98-459b-ae89-f4c11a73da38")
+		(uuid "a1425116-0a2b-4626-b7e8-34b02b9638a8")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_DA2_N"
 		(shape input)
@@ -984,7 +984,7 @@
 			)
 			(justify left)
 		)
-		(uuid "c2f1af66-9724-4a34-afa1-e33d725d71cd")
+		(uuid "d54007d5-ad76-4044-965a-374820297f10")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_DA2_P"
 		(shape input)
@@ -995,7 +995,7 @@
 			)
 			(justify left)
 		)
-		(uuid "9c331a0c-c403-41b3-9f10-5a2cf861f82f")
+		(uuid "020d6b12-0133-40d2-87e4-0bb37d2cae49")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1006,7 +1006,7 @@
 			)
 			(justify left)
 		)
-		(uuid "67a7527c-3306-4590-a1f4-839f3be6dff3")
+		(uuid "abe145f5-4a15-4fc9-a089-69ecf1fa1d99")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_DA3_N"
 		(shape input)
@@ -1017,7 +1017,7 @@
 			)
 			(justify left)
 		)
-		(uuid "c85b3e79-f0e8-466b-8831-f8dfcf8c90b4")
+		(uuid "520eac30-0958-4719-91a7-15fddffa8592")
 	)
 	(hierarchical_label "ZYNQ_LCD_LVDS_DA3_P"
 		(shape input)
@@ -1028,7 +1028,7 @@
 			)
 			(justify left)
 		)
-		(uuid "4523012a-2048-4f95-89f4-f7a24bc0d4bd")
+		(uuid "ab148b71-c268-42b1-b38a-b42f70147798")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1039,7 +1039,7 @@
 			)
 			(justify left)
 		)
-		(uuid "2eb366c9-dbd7-496c-b26f-6d5a4f969a98")
+		(uuid "724ce1a8-7888-4337-af1b-32e2fbb5175f")
 	)
 	(hierarchical_label "ZYNQ_LCD_RESET_N"
 		(shape input)
@@ -1050,7 +1050,7 @@
 			)
 			(justify left)
 		)
-		(uuid "78ecfaa6-c8ba-43a0-bac6-04287df2ae0c")
+		(uuid "29eb3e60-4d74-48da-841a-bfbe131cdf94")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1061,7 +1061,7 @@
 			)
 			(justify left)
 		)
-		(uuid "76fc2a98-b3a5-459a-8ef6-d3b0d9db51ef")
+		(uuid "b4d6dbc8-fd3c-4862-8196-0f5667eaf6d2")
 	)
 	(hierarchical_label "ZYNQ_LCD_STBY_N"
 		(shape input)
@@ -1072,7 +1072,7 @@
 			)
 			(justify left)
 		)
-		(uuid "6486c4f1-8b8c-42f4-a86f-8d456d818f1d")
+		(uuid "47dab144-069c-4060-bcae-37933101d8bb")
 	)
 	(hierarchical_label "ZYNQ_LCD_PWM"
 		(shape input)
@@ -1083,7 +1083,7 @@
 			)
 			(justify left)
 		)
-		(uuid "55f5dbb8-564f-419b-b387-cbadf85baed2")
+		(uuid "a42e2bf1-cd4b-4ca2-9d71-22c4cce7a038")
 	)
 	(hierarchical_label "ZYNQ_LCD_BL_EN"
 		(shape input)
@@ -1094,7 +1094,7 @@
 			)
 			(justify left)
 		)
-		(uuid "7269f1ab-ee6d-484d-b843-f7086040b61b")
+		(uuid "abde8aaa-6ae7-45d3-b078-02f6f70a5970")
 	)
 	(sheet_instances
 		(path "/"

@@ -56,15 +56,26 @@ def _assign_power_stamps(blocks) -> dict:
     on a sheet that genuinely carries the rail."""
     from zynq_eda.core.layout._constants import POWER_SYMBOL_LIB_IDS
 
+    # Nets declared as a power OUTPUT anywhere are driven by that block's IC
+    # power-output pin (e.g. an LDO's +3V3/+2V5/+1V8) — they need NO PWR_FLAG.
+    # Stamping them is redundant AND, for an isolated rail+flag island, KiCad
+    # ERC doesn't accept the island as a driver, so the stamp pins read floating.
+    driven: set[str] = {
+        net.name
+        for block in blocks
+        for net in getattr(block, "external_nets", ())  # type: ignore[attr-defined]
+        if net.power_kind == "output"
+    }
+
     assignment: dict[str, set[str]] = {}
     claimed: set[str] = set()
-    # Pass 1: producers/ground first (output/ground), then consumers (input).
-    for kinds in (("output", "ground"), ("input",)):
+    # Only nets with NO output driver need a flag: ground first, then inputs.
+    for kinds in (("ground",), ("input",)):
         for block in blocks:
             for net in getattr(block, "external_nets", ()):  # type: ignore[attr-defined]
                 if net.power_kind not in kinds:
                     continue
-                if net.name in claimed:
+                if net.name in claimed or net.name in driven:
                     continue
                 if net.name not in POWER_SYMBOL_LIB_IDS:
                     continue  # only power-symbol nets need a flag
@@ -286,6 +297,24 @@ def run_carrier(
         for ic in block.ics:
             for pin_name, new_type in ic.refcircuit.lib_symbol_pin_type_overrides:
                 pin_type_overrides.append((ic.lib_id, pin_name, new_type))
+        # A connector's power pins are PADS (physical connection points), not
+        # power consumers — KiCad's stock/generated symbols mark them
+        # "power_input", which fires bogus power_pin_not_driven on every pad
+        # whose net has no in-sheet driver (J1 VBUS/GND, J5B GND_1/+3V3, …).
+        # Override them to "passive": harmless on driven nets, clears the error
+        # on undriven pads. (Real power consumers are ICs, handled above.)
+        for conn in block.connectors:
+            seen: set[str] = set()
+            try:
+                conn_pins = list(geometry_cache.all_pins(conn.lib_id))
+            except Exception:  # noqa: BLE001
+                conn_pins = []
+            for pin in conn_pins:
+                if "power" in str(pin.get("type", "")).lower():
+                    nm = str(pin.get("name", "")).strip()
+                    if nm and nm not in seen:
+                        seen.add(nm)
+                        pin_type_overrides.append((conn.lib_id, nm, "passive"))
         stats = emit_sheet(
             sheet,
             sheet_path,
