@@ -292,6 +292,55 @@ def _place_far_symbol(
     return sym, tip
 
 
+def _place_pin_power_symbol(
+    pin: Point,
+    side: PageSide,
+    lib_id: str,
+    net: str,
+    reference: str,
+    geometry: SymbolGeometryCache,
+    obstacles: list[BBox],
+    max_steps: int = 1,
+) -> tuple[PlacedSymbol, Point] | None:
+    """Place a LOCAL power symbol just outboard of a bare IC power/GND pin.
+
+    Returns ``(symbol, pin_tip)`` where ``pin_tip`` is the symbol's pin
+    connection point — the module then wires the IC pin to ``pin_tip`` with a
+    short stub. The symbol is walked outboard (1 … ``max_steps`` grid) until its
+    footprint clears every obstacle (the IC body + every placed symbol/wire/
+    label). A local symbol joins the GLOBAL rail without a long trunk across the
+    IC's other pins — the cross-net wire a net-blind junction would otherwise
+    weld into a short (e.g. the INA226 GND trunk over SDA/SCL/Alert). Capped at
+    ``max_steps`` so it is used ONLY on a genuinely OPEN pin edge (default 1 grid
+    clear); a congested edge returns ``None`` and the caller keeps the proven
+    far-symbol trunk — no regression on dense power ICs. Returns ``None`` if no
+    clear outboard spot exists within reach."""
+    ux, uy = {"left": (-1.0, 0.0), "right": (1.0, 0.0),
+              "top": (0.0, -1.0), "bottom": (0.0, 1.0)}[side]
+    rotation = _outward_power_symbol_rotation(
+        lib_id=lib_id, pin_side=side, geometry_cache=geometry,
+    )
+    try:
+        rel = geometry.absolute_pin_positions(lib_id, Point(0.0, 0.0), rotation)
+    except Exception:  # noqa: BLE001
+        return None
+    pin_rel = next(iter(rel.values())) if rel else Point(0.0, 0.0)
+    for step in range(1, max_steps + 1):
+        dist = snap_to_grid(step * VISUAL_CLEARANCE_MM)
+        tip = Point(snap_to_grid(pin.x + ux * dist), snap_to_grid(pin.y + uy * dist))
+        anchor = Point(snap_to_grid(tip.x - pin_rel.x), snap_to_grid(tip.y - pin_rel.y))
+        sym = PlacedSymbol(lib_id=lib_id, reference=reference, value=net,
+                           position=anchor, footprint="", rotation=rotation)
+        try:
+            sbox = symbol_footprint(sym, geometry)
+        except Exception:  # noqa: BLE001
+            continue
+        if all(not sbox.intersects(o, padding_mm=VISUAL_CLEARANCE_MM)
+               for o in obstacles):
+            return sym, tip
+    return None
+
+
 # ---------------------------------------------------------------------------
 # The solve
 # ---------------------------------------------------------------------------
@@ -421,7 +470,7 @@ def solve_module(
         _pull_in_cells(cells, ic_rect, geometry)
 
     # ---- Emit wires / junctions / labels / ports from the final geometry --
-    return _finalize(ic, anchor, ic_sym, cells, geometry)
+    return _finalize(ic, anchor, ic_sym, cells, geometry, p_ref)
 
 
 def _signal_far(cell: _Cell) -> tuple[Point, Point, float]:
@@ -536,6 +585,7 @@ def _finalize(
     ic_sym: PlacedSymbol,
     cells: list[_Cell],
     geometry: SymbolGeometryCache,
+    p_ref: int = 700,
 ) -> Module:
     symbols: list[PlacedSymbol] = [ic_sym]
     far_wires: list[PlacedWire] = []   # passive far → power-symbol/label stubs
@@ -665,10 +715,14 @@ def _finalize(
         if len(pts) >= 2:
             net_terms.append((to_net, tuple(pts)))
 
-    # Bare IC power/GND pins (no decoupling cap of their own) → connect each to
-    # the NEAREST power symbol of its net already in the module, so every IC
-    # supply/ground pin is wired by the router instead of left for the exposer
-    # to place a fresh symbol in the congested outboard (the GND-pin floats).
+    # Bare IC power/GND pins (no decoupling cap of their own) need connecting.
+    # PREFER a LOCAL power symbol when the pin's immediate outboard grid cell is
+    # OPEN: a local GND/+3V3 flag at the pin joins the GLOBAL rail with a tiny
+    # stub and NO trunk across the IC — which is what kills the long-trunk-over-
+    # signal-pins short the net-blind junctioner welds (INA226 GND over
+    # SDA/SCL/Alert). On a CONGESTED edge (no clear 1-grid spot) fall back to the
+    # proven wire to the nearest existing far power symbol of the net, so dense
+    # power ICs (FUSB302) keep their exact prior clean layout — no regression.
     sym_by_net: dict[str, list[Point]] = {}
     for cell in cells:
         if cell.far_symbol is not None:
@@ -679,22 +733,51 @@ def _finalize(
                     sym_by_net.setdefault(cell.to_net, []).append(pp)
             except Exception:  # noqa: BLE001
                 pass
-    if sym_by_net:
-        trunk_keys = {(round(t.x, 2), round(t.y, 2))
-                      for terms in trunk_nets.values() for t in terms}
-        try:
-            ic_names = {str(pi["number"]): str(pi["name"])
-                        for pi in geometry.all_pins(ic.lib_id, 0.0)}
-            ic_pos = geometry.absolute_pin_positions(ic.lib_id, anchor, 0.0)
-        except Exception:  # noqa: BLE001
-            ic_names, ic_pos = {}, {}
-        for num, pt in ic_pos.items():
+    trunk_keys = {(round(t.x, 2), round(t.y, 2))
+                  for terms in trunk_nets.values() for t in terms}
+    try:
+        ic_names = {str(pi["number"]): str(pi["name"])
+                    for pi in geometry.all_pins(ic.lib_id, 0.0)}
+        ic_pos = geometry.absolute_pin_positions(ic.lib_id, anchor, 0.0)
+    except Exception:  # noqa: BLE001
+        ic_names, ic_pos = {}, {}
+    if ic_pos:
+        # Obstacle set the local symbol must clear: IC body, every placed
+        # symbol/passive/far-symbol, every wire, every label text.
+        obs = [symbol_footprint(s, geometry) for s in symbols]
+        for w in wires:
+            obs.append(wire_bbox(w.start, w.end))
+        for l in labels:
+            obs.append(text_bbox(l.net_name, l.position, rotation=l.rotation,
+                                 justify="left", kind="label",
+                                 owner_id=f"label:{l.net_name}"))
+        body = symbol_footprint(ic_sym, geometry)
+        bcx, bcy = body.center.x, body.center.y
+        for num, pt in sorted(ic_pos.items(), key=lambda kv: str(kv[0])):
             if (round(pt.x, 2), round(pt.y, 2)) in trunk_keys:
                 continue  # already on a trunk
             nm = ic_names.get(str(num), "")
             # GND, GND_EP (exposed pad), GND_1 … all map to the GND symbol net.
             net = "GND" if (nm in _GND_NAMES or nm.startswith("GND")) else nm
-            if net in sym_by_net:
+            _kind, far_lib = _classify_far(net)
+            if far_lib is None:
+                continue  # not a power-symbol net — exposer handles signal pins
+            # Outboard side = the body edge the pin sits on (away from centre).
+            if abs(pt.x - bcx) >= abs(pt.y - bcy):
+                side: PageSide = "right" if pt.x >= bcx else "left"
+            else:
+                side = "bottom" if pt.y >= bcy else "top"
+            placed = _place_pin_power_symbol(
+                pt, side, far_lib, net, f"#PWR{p_ref}", geometry, obs, max_steps=1,
+            )
+            if placed is not None:
+                sym, tip = placed
+                symbols.append(sym)
+                obs.append(symbol_footprint(sym, geometry))
+                net_terms.append((f"{net}@ic{num}", (pt, tip)))
+                p_ref += 1
+            elif net in sym_by_net:
+                # Congested edge → keep the proven far-symbol trunk (old path).
                 tgt = min(sym_by_net[net],
                           key=lambda q: abs(q.x - pt.x) + abs(q.y - pt.y))
                 net_terms.append((f"{net}@ic{num}", (pt, tgt)))
