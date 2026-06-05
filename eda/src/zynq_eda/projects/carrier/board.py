@@ -109,13 +109,33 @@ def block_names() -> tuple[str, ...]:
     return tuple(_BLOCK_FACTORIES.keys())
 
 
-def build_blocks(only: str | None = None) -> list[Block]:
-    """Return the carrier's block list. When ``only`` is set, return just that block."""
+def build_blocks(
+    only: str | None = None,
+    only_blocks: tuple[str, ...] | None = None,
+) -> list[Block]:
+    """Return the carrier's block list.
+
+    ``only`` returns just that one block (single-block iteration shortcut).
+    ``only_blocks`` returns the named subset in registry order — the isolation
+    harness for driving a few hard sheets to 100% (overlap=0 AND ERC=0) before
+    ratcheting the rest of the blocks back in. With neither set, all blocks
+    build. Registry order is always preserved so the root index grid stays sane.
+    """
+    if only is not None and only_blocks:
+        raise ValueError("Pass either only= or only_blocks=, not both.")
     if only is not None:
-        if only not in _BLOCK_FACTORIES:
+        only_blocks = (only,)
+    if only_blocks:
+        unknown = [name for name in only_blocks if name not in _BLOCK_FACTORIES]
+        if unknown:
             raise KeyError(
-                f"Unknown block {only!r}. Known blocks: "
+                f"Unknown block(s) {unknown}. Known blocks: "
                 + ", ".join(sorted(_BLOCK_FACTORIES.keys()))
             )
-        return [_BLOCK_FACTORIES[only]()]
+        wanted = set(only_blocks)
+        return [
+            factory()
+            for name, factory in _BLOCK_FACTORIES.items()
+            if name in wanted
+        ]
     return [factory() for factory in _BLOCK_FACTORIES.values()]

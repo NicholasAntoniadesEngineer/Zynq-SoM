@@ -35,6 +35,7 @@ from zynq_eda.core.registry import (
     emit_reference_circuits_md,
 )
 from zynq_eda.core.validate.audit import run_audit, summary_line
+from zynq_eda.core.validate.connectivity import validate_connectivity
 from zynq_eda.core.validate.external_parts import validate_external_part_pins
 from zynq_eda.core.validate.erc import run_erc
 from zynq_eda.core.validate.overlap import validate_overlap
@@ -87,6 +88,7 @@ def run_carrier(
     *,
     output_dir: Path | None,
     only_block: str | None,
+    only_blocks: tuple[str, ...] | None = None,
     audit_only: bool,
     skip_erc: bool,
     allow_incomplete: bool,
@@ -152,7 +154,7 @@ def run_carrier(
     # --- Stage 2: Build blocks ---------------------------------------------
     print()
     print("Stage 2: Building blocks...")
-    blocks = carrier_project.build_blocks(only=only_block)
+    blocks = carrier_project.build_blocks(only=only_block, only_blocks=only_blocks)
     print(f"  built {len(blocks)} block(s): {', '.join(b.name for b in blocks)}")
 
     # --- Stage 2.5: ExternalPart.from_pin reachability ---------------------
@@ -230,13 +232,24 @@ def run_carrier(
         )
         block_validation.extend(bounds_results)
         block_validation.extend(overlap_results)
+        # Connectivity — the electrical twin of overlap: every pin must
+        # attach to a wire endpoint / label / no-connect / junction / pin.
+        # ADVISORY for now (strict=False, never halts): the router does not
+        # yet satisfy it on dense modules, so this surfaces the floating-pin
+        # count per sheet for the router rebuild to drive to zero — exactly
+        # the advisory→gated path overlap took. Calibrated faithful to KiCad
+        # ERC pin_not_connected (a documented <=4-pin power-symbol geometry
+        # edge case aside, tracked separately).
+        connectivity_results = validate_connectivity(
+            sheet, geometry=geometry_cache, strict=False
+        )
         print(
             f"    placed: {len(sheet.symbols)} symbols, {len(sheet.wires)} wires, "
             f"{len(sheet.labels)} labels, {len(sheet.hierarchical_labels)} hlabels"
         )
         print(
             f"    in-memory validators: bounds={len(bounds_results)}, "
-            f"overlap={len(overlap_results)}"
+            f"overlap={len(overlap_results)}, floating_pins={len(connectivity_results)}"
         )
         for r in bounds_results:
             print(f"      BOUNDS: {r.message}")

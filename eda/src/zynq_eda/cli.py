@@ -58,6 +58,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Generate just one block (iteration shortcut).",
     )
     parser.add_argument(
+        "--only-blocks",
+        metavar="A,B,C",
+        help=(
+            "Generate just this comma-separated subset of blocks. The "
+            "isolation harness: drive a few hard sheets fully clean "
+            "(overlap=0 AND ERC=0) before ratcheting the rest back in."
+        ),
+    )
+    parser.add_argument(
         "--audit-only",
         action="store_true",
         help="Run Stage 0 component-completeness audit and exit.",
@@ -106,9 +115,15 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 2
+        only_blocks = (
+            tuple(name.strip() for name in args.only_blocks.split(",") if name.strip())
+            if args.only_blocks
+            else None
+        )
         return pipeline.run_carrier(
             output_dir=args.output,
             only_block=args.only,
+            only_blocks=only_blocks,
             audit_only=args.audit_only,
             skip_erc=args.skip_erc,
             allow_incomplete=args.allow_incomplete,
