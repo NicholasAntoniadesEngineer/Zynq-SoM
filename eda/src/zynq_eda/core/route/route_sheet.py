@@ -16,6 +16,8 @@ obstacle set; clean-routing modules keep their (already clean) naive wires.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from zynq_eda.core.layout.arrange import Arrangement, arrange_block
 from zynq_eda.core.layout.footprint import symbol_footprint
 from zynq_eda.core.layout.geometry import SymbolGeometryCache
@@ -72,6 +74,75 @@ def _split_wires_at_pins(
                 uniq.append(q)
         for a, b in zip(uniq, uniq[1:]):
             out.append(PlacedWire(a, b))
+    return out
+
+
+def _declutter_property_text(symbols, wires, geometry):
+    """Nudge a symbol's Value/Reference text off any wire that crosses it.
+
+    Dense trunk/bus routing legitimately runs a wire past a component (e.g.
+    ethernet's BS_COMMON bus past the Bob-Smith resistors); the component's
+    property text ("75R", "R100") can land in the wire's path. Rather than
+    relax the overlap rule, shift the text to the nearest grid position that
+    clears every wire AND doesn't land on another symbol's footprint — render-
+    clean by construction. Positions/pins are untouched, so connectivity holds.
+    """
+    wbbs = [wire_bbox(w.start, w.end, owner_id="w") for w in wires]
+    foots = []
+    for s in symbols:
+        try:
+            foots.append((f"symbol:{s.reference}", symbol_footprint(s, geometry)))
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _box(sym, kind, vs, rs):
+        try:
+            for b in geometry.property_text_bboxes(
+                sym.lib_id, sym.position, sym.rotation,
+                owner_id=f"symbol:{sym.reference}", reference_override=sym.reference,
+                value_override=sym.value, value_shift=vs, reference_shift=rs):
+                if b.owner_id.endswith(f":property:{kind}"):
+                    return b
+        except Exception:  # noqa: BLE001
+            return None
+        return None
+
+    def _hits_wire(box):
+        return any(box.intersects(wb, padding_mm=0.0) for wb in wbbs)
+
+    def _hits_other(box, own):
+        return any(oid != own and box.intersects(ft, padding_mm=0.5)
+                   for oid, ft in foots)
+
+    out = []
+    for sym in symbols:
+        own = f"symbol:{sym.reference}"
+        vs, rs = sym.value_shift, sym.reference_shift
+        changed = False
+        for kind in ("Value", "Reference"):
+            box = _box(sym, kind, vs, rs)
+            if box is None or not _hits_wire(box):
+                continue
+            base = (vs if kind == "Value" else rs) or (0.0, 0.0, None)
+            found = None
+            for d in range(1, 9):
+                for dx, dy in ((0, -d), (0, d), (-d, 0), (d, 0),
+                               (-d, -d), (d, -d), (-d, d), (d, d)):
+                    cand = (base[0] + dx * 1.27, base[1] + dy * 1.27, base[2])
+                    nb = _box(sym, kind, cand if kind == "Value" else vs,
+                              cand if kind == "Reference" else rs)
+                    if nb is not None and not _hits_wire(nb) and not _hits_other(nb, own):
+                        found = cand
+                        break
+                if found:
+                    break
+            if found is not None:
+                if kind == "Value":
+                    vs = found
+                else:
+                    rs = found
+                changed = True
+        out.append(replace(sym, value_shift=vs, reference_shift=rs) if changed else sym)
     return out
 
 
@@ -190,6 +261,10 @@ def assemble_sheet(
     # ENDPOINT (which KiCad connects). This is the electrical closure that makes
     # validate_connectivity == 0 achievable without a router rewrite — the two
     # grid routers land wires near pins; this lands them ON pins.
+    # Declutter: shift any Value/Reference text a wire crosses to clear space
+    # (positions/pins untouched, so connectivity holds).
+    symbols = _declutter_property_text(symbols, wires, geometry)
+
     all_pin_pts: list[Point] = []
     for s in symbols:
         try:
