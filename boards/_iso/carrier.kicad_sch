@@ -1,0 +1,143 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "e7b7760e-fe16-4ace-bb71-ac6bb16cb427")
+	(paper "A3" portrait)
+	(title_block
+		(title "Zynq SoM Carrier")
+	)
+	(lib_symbols)
+	(sheet
+		(at 15.24 25.4)
+		(size 50.8 20.32)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "fb2ea38f-cd4c-4b92-9805-09a26d3844bf")
+		(property "Sheetname" "power"
+			(at 15.24 24.6884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/power.kicad_sch"
+			(at 15.24 46.3046 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "carrier"
+				(path "/e7b7760e-fe16-4ace-bb71-ac6bb16cb427"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 81.28 25.4)
+		(size 50.8 20.32)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "bf34fa36-ee14-4dd5-b52a-c9ff5c217e7e")
+		(property "Sheetname" "usb_pd"
+			(at 81.28 24.6884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/usb_pd.kicad_sch"
+			(at 81.28 46.3046 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "carrier"
+				(path "/e7b7760e-fe16-4ace-bb71-ac6bb16cb427"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 147.32 25.4)
+		(size 50.8 20.32)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "ca6d135b-639b-4df9-b9e7-60df475ff5f3")
+		(property "Sheetname" "ethernet"
+			(at 147.32 24.6884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sheets/ethernet.kicad_sch"
+			(at 147.32 46.3046 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "carrier"
+				(path "/e7b7760e-fe16-4ace-bb71-ac6bb16cb427"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

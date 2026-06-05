@@ -165,3 +165,36 @@ So the TRUE remaining work:
   (lib_symbol_pin_type_overrides per connector symbol) OR add PWR_FLAG per net.
 - 123 pin_not_connected: dense IC-edge label stubs need routing (validator-
   faithful) — unchanged from UPDATE 2.
+
+## UPDATE 4 — convergent rewrite of the router: overlap=0 on ALL 27, ERC 134→22
+
+The real bug behind the chronic non-convergence was found and fixed: the engine
+placed cleanly (overlap=0) but its intra-module router never LANDED wires on pin
+tips, so most pins floated — the "dense-edge labels" diagnosis was wrong.
+
+Built the missing keystone + rewrote the router:
+- `core/validate/connectivity.py` (NEW): `validate_connectivity` — in-memory,
+  KiCad-faithful electrical twin of `validate_overlap`. Every pin must sit at a
+  wire ENDPOINT / label / NC / junction / coincident pin (interior-without-
+  junction does NOT count). Calibrated pin-for-pin against ERC. Now gated
+  advisory per block (`floating_pins=N`).
+- `--only-blocks` isolation harness (build a named subset).
+- `reroute_module` rewritten: routes `module.nets` (the real net topology, added
+  to `Module`) via the grid tree router with `own_obstacles`+`escape_dirs` so a
+  boxed pin escapes; `_dedupe_overlaps` + X-cross junctions keep it overlap-clean.
+- `module._finalize` wires bare IC power/GND pins to the nearest power symbol.
+- exposer: lane-interleaving + coincident-first + routed-stub-around-obstacles.
+- `route_sheet._declutter_property_text`: shifts Value/Reference text off any
+  crossing wire (render-clean; no validator change).
+- overlap validator: wire-at-connection exemption extended from pin-number to
+  pin-NAME and to hier-label anchors (precise; any other text still fires).
+
+**Result — full `--board carrier`:** overlap=0 on ALL 27 sheets (the chronic
+failure, solved), 23/27 sheets fully clean, ERC errors **134 → 22**:
+- 12 `power_pin_not_driven` — connector power-input pads (override to passive)
+  + global-rail consumers starved by the 3 broken drive stamps below.
+- 9 `pin_not_connected` = 6 dense-IC corner signal pins (ethernet T1 PHY3,
+  hdmi U2 SDA/SCL, usb_pd U2 I/O1, usbc_otg U1 EN — boxed by adjacent parts,
+  need labeler/placement) + 3 power-stamp pins (KiCad power-symbol-island quirk:
+  geometry says pin==wire-endpoint, ERC still flags — unresolved, 2x deep-dived).
+- 1 `pin_to_pin` — power_mon.

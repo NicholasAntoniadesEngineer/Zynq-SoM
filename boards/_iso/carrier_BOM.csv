@@ -1,0 +1,18 @@
+Reference,Qty,Value,Footprint,LCSC,MPN,Description,Datasheet
+"R103, R104, R203, R303",4,100k,Resistor_SMD:R_0402_1005Metric,C60491,RC0402FR-07100KL,100 kohm 1% 1/16W 0402 (HPD pull-up),https://datasheet.lcsc.com/lcsc/YAGEO-RC0402FR-07100KL_C60491.pdf
+"C101, C102, C108, C110, C200, C202, C302",7,100n,Capacitor_SMD:C_0402_1005Metric,C1525,CL05B104KO5NNNC,100nF 16V X7R MLCC 0402,https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B104KO5NNNC_C1525.pdf
+"C107, C109",2,10u,Capacitor_SMD:C_0603_1608Metric,C19702,CL10A106KP8NNNC,10uF 6.3V X7R MLCC 0603 (VCONN bulk),https://datasheet.lcsc.com/lcsc/1810181513_Samsung-Electro-Mechanics-CL10A106KP8NNNC_C19702.pdf
+R103,1,1M,Resistor_SMD:R_0402_1005Metric,C25741,0402WGF1004TCE,"1 Mohm 1% 1/16W 0402 (shield to GND, high-impedance)",https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF1004TCE_C25741.pdf
+"R101, R103, R105, R107, R108",5,1n_2kV,Capacitor_SMD:C_0603_1608Metric,C70133,GRM188R72E102KW07D,1nF 250V X7R safety MLCC 0603 (Bob Smith termination),https://datasheet.lcsc.com/lcsc/GRM188R72E102KW07D_C70133.pdf
+"C100, C101, C200, C201, C300, C301",6,1u,Capacitor_SMD:C_0402_1005Metric,C52923,CL05A105KP5NNNC,1uF 10V X5R MLCC 0402,https://datasheet.lcsc.com/lcsc/1810171717_Samsung-Electro-Mechanics-CL05A105KP5NNNC_C52923.pdf
+"C105, C106",2,200p,Capacitor_SMD:C_0402_1005Metric,C1546,0402CG201J500NT,200pF 50V C0G MLCC 0402 (USB-PD CC cReceiver),https://datasheet.lcsc.com/lcsc/FH-Guangdong-Fenghua-AdvanTech-0402CG201J500NT_C1546.pdf
+"R111, R112, R113",3,4k7,Resistor_SMD:R_0402_1005Metric,C25900,0402WGF4701TCE,4.7 kohm 1% 1/16W 0402 (I2C pull-up),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0402WGF4701TCE_C25900.pdf
+"R100, R102, R104, R106",4,75R,Resistor_SMD:R_0603_1608Metric,C22790,0603WAF750JT5E,75 ohm 1% 1/10W 0603 (Bob Smith Ethernet termination),https://datasheet.lcsc.com/lcsc/UNI-ROYAL-Uniroyal-Elec-0603WAF750JT5E_C22790.pdf
+U1,1,FUSB302BMPX,Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm,C442699,FUSB302BMPX,"USB Type-C PD controller, I2C, WQFN-14 (2.5x2.5mm)",https://www.onsemi.com/pdf/datasheet/fusb302b-d.pdf
+T1,1,HX5008NLT,Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm,C962544,HX5008NLT,"1000BASE-T 4-port LAN magnetics module, SOIC-24",https://productfinder.pulseeng.com/files/datasheets/HX5008NL.pdf
+J1,1,RJHSE5380,Connector_RJ:RJ45_Amphenol_RJHSE5380_Horizontal,C464586,RJHSE5380,"RJ45 8P8C bare shielded jack, integrated LEDs (no magnetics)",https://www.amphenol-cs.com/product-series/rjhse5380.html
+U3,1,TLV75718PDBVR,Package_TO_SOT_SMD:SOT-23-5,C507270,TLV75718PDBVR,1.8V 1A LDO SOT-23-5 (VCCO 1.8V bank supply),https://www.ti.com/lit/ds/symlink/tlv757p.pdf
+U2,1,TLV75725PDBVR,Package_TO_SOT_SMD:SOT-23-5,C2872563,TLV75725PDBVR,2.5V 1A LDO SOT-23-5 (VCCO 2.5V bank supply),https://www.ti.com/lit/ds/symlink/tlv757p.pdf
+U1,1,TLV75733PDBVR,Package_TO_SOT_SMD:SOT-23-5,C485517,TLV75733PDBVR,"3.3V 1A LDO SOT-23-5 (VCCO 3.3V bank supply, default)",https://www.ti.com/lit/ds/symlink/tlv757p.pdf
+J1,1,TYPE-C-31-M-12,Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12,C165948,TYPE-C-31-M-12,"USB Type-C 16-pin SMD receptacle, USB 2.0 + power",https://datasheet.lcsc.com/lcsc/2304140030_Korean-Hroparts-Elec-TYPE-C-31-M-12_C165948.pdf
+U2,1,USBLC6-4SC6,Package_TO_SOT_SMD:SOT-23-6,C111212,USBLC6-4SC6,USB 2.0 ESD protection 4-line SOT-23-6 (rev 6),https://www.st.com/resource/en/datasheet/usblc6-4.pdf
