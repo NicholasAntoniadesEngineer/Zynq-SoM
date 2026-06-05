@@ -1,10 +1,10 @@
 # Carrier — Validation Report
 
-Generated: 2026-06-05T18:32:10Z
+Generated: 2026-06-05T19:36:56Z
 
-**Errors:** 0  **Warnings:** 454  **Info:** 0
+**Errors:** 0  **Warnings:** 453  **Info:** 0
 
-## Warnings (454)
+## Warnings (453)
 
 - **erc.lib_symbol_issues**: The symbol library 'FMC_LPC_LA_LOW' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FMC_LPC_LA_LOW.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J1_PL_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J1_PL_POWER.kicad_sym' _(carrier.kicad_sch)_
@@ -74,11 +74,11 @@ Generated: 2026-06-05T18:32:10Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_PS_JTAG_TMS has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_PS_JTAG_TDI has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_PS_JTAG_TDO has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_SWDIO has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_SWCLK has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_NRST has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
 - **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VCCO_13 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -109,30 +109,29 @@ Generated: 2026-06-05T18:32:10Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_XADC_VAUX3_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_USER_MRCC_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.no_connect_connected**: A pin with a "no connection" flag is connected _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_CEC has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_HPD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_1_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_CLK_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_0_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_HPD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_1_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_CLK_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +5V has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_2_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_TMDS_0_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_TX_CEC has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_EDID_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_EDID_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_CLK_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_CLK_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_DA0_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_DA0_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_DA1_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_DA1_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_DA2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_DA2_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_LCD_LVDS_DA3_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -246,52 +245,52 @@ Generated: 2026-06-05T18:32:10Z
 - **erc.hier_label_mismatch**: Hierarchical label AUX_IO_8 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label AUX_IO_9 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label AUX_IO_10 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label USB_DP has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label USB_DM has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_USB_CC1 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label USB_DP has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label USB_DM has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_USB_CC2 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label CHASSIS_GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_CEC has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_HPD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_1_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_CLK_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_0_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_HPD has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_1_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_CLK_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_5V_SENSE has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_2_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_TMDS_0_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label ZYNQ_HDMI_RX_CEC has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +12V has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_SCL has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +12V has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label +VADJ has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_TCK has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_TDI has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_TDO has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_TMS has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_TRST_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label +VADJ has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_CLK1_M2C_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_CLK1_M2C_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_PRSNT_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_CLK0_M2C_P has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_FMC_CLK0_M2C_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +VIN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label +3V3 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
@@ -366,9 +365,9 @@ Generated: 2026-06-05T18:32:10Z
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_CAM_SDA has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_USBOTG_VBUS_EN has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.pin_not_driven**: Input pin not driven by any Output pins _(carrier.kicad_sch)_
+- **erc.hier_label_mismatch**: Hierarchical label STM32_USBOTG_ID has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label USBOTG_DP has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label USBOTG_DM has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
-- **erc.hier_label_mismatch**: Hierarchical label STM32_USBOTG_ID has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label CHASSIS_GND has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label ZYNQ_ETH_MDI_3_N has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_

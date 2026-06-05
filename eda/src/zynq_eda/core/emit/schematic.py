@@ -220,6 +220,7 @@ def emit_sheet(
     )
     if lib_symbol_pin_type_overrides:
         _patch_lib_symbol_pin_types(output_path, lib_symbol_pin_type_overrides)
+    _patch_hier_label_justify(output_path)
     # Disable for now: _patch_hierarchy_paths(output_path, parent, sheet_id)
 
     return EmissionStats(
@@ -244,6 +245,51 @@ _INTERNAL_PROPERTIES_TO_HIDE: tuple[str, ...] = (
     "Datasheet",       # Same — URLs are long and visually noisy when
                        # rendered as floating text next to every IC.
 )
+
+
+def _hier_justify_for_rotation(rot: float) -> str:
+    """KiCad renders a hier-label's text on the side set by justify, regardless
+    of rotation: ``left`` puts the text to the RIGHT of the anchor, ``right`` to
+    the LEFT. So a LEFT-edge label (rotation 180, text must read away from the
+    body = leftward) needs ``justify right``; a RIGHT-edge label (rotation 0)
+    keeps ``left``. Top/bottom (90/270) read along the vertical axis."""
+    # Empirically (KiCad render): justify left -> text RIGHT (rot 0/180) / UP
+    # (rot 90/270); justify right -> text LEFT / DOWN. Edge -> text reads away
+    # from the body:  right edge (rot 0) right, left edge (rot 180) left,
+    # top edge (rot 90) up, bottom edge (rot 270) down.
+    r = round(rot) % 360
+    if r in (180, 270):
+        return "right"   # left edge -> text LEFT; bottom edge -> text DOWN
+    return "left"        # right edge (0) -> text RIGHT; top edge (90) -> text UP
+
+
+def _patch_hier_label_justify(schematic_path: Path) -> None:
+    """Set each hierarchical_label's text justify to match its edge so the text
+    reads AWAY from the body (KiCad-rendered direction), not piled onto the pin
+    name. The bbox functions already model text on that side; this makes the
+    emitted render agree. Pure text patch on the saved file."""
+    try:
+        lines = schematic_path.read_text(encoding="utf-8").split("\n")
+    except Exception:  # noqa: BLE001
+        return
+    out: list[str] = []
+    in_hl = False
+    rot = 0.0
+    for line in lines:
+        s = line.strip()
+        if s.startswith("(hierarchical_label"):
+            in_hl, rot = True, 0.0
+        elif in_hl and s.startswith("(at "):
+            try:
+                rot = float(s.rstrip(")").split()[3])
+            except (IndexError, ValueError):
+                rot = 0.0
+        elif in_hl and s.startswith("(justify"):
+            indent = line[: len(line) - len(line.lstrip())]
+            line = f"{indent}(justify {_hier_justify_for_rotation(rot)})"
+            in_hl = False
+        out.append(line)
+    schematic_path.write_text("\n".join(out), encoding="utf-8")
 
 
 def _patch_hierarchy_paths(
