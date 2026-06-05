@@ -70,6 +70,10 @@ PageSide = Literal["left", "right", "top", "bottom"]
 # GND-family pin/net names that resolve to the power:GND symbol.
 _GND_NAMES = frozenset({"GND", "GNDA", "AGND", "DGND", "PGND", "GND_1", "VSS"})
 
+# A non-power net with >= this many taps is a high-fan-in MERGE node (ethernet
+# BS_COMMON has 8). Such a bus is routed off the IC's signal-label edge.
+_MERGE_FANIN = 3
+
 # Cell footprints' centres sit off-grid (text-asymmetric), but symbol anchors
 # must stay on the 1.27 mm grid; snapping each projected displacement back to
 # grid can leave a pair up to ~one grid short of the LAW's 2.54 mm clearance.
@@ -197,6 +201,8 @@ class _Cell:
     far_symbol: PlacedSymbol | None  # power symbol at the far terminal, if any
     emit_label: bool = True     # False for the 2nd+ tap of a merge net (one
                                 # shared label per net; the bus trunk is Stage C)
+    merge: bool = False         # tap of a high-fan-in non-power merge bus routed
+                                # BELOW the IC (exempt from pull-in)
 
     def members(self) -> list[PlacedSymbol]:
         return [self.passive] + ([self.far_symbol] if self.far_symbol else [])
@@ -239,12 +245,14 @@ def _passive_rotation(side: PageSide) -> float:
     return 0.0 if side in ("left", "right") else 90.0
 
 
-def _seed_anchor(pin: Point, side: PageSide, slot: int) -> Point:
+def _seed_anchor(pin: Point, side: PageSide, slot: int, extra_out: float = 0.0) -> Point:
     """Initial passive anchor: outboard from the pin (datasheet intent).
 
     Only a SEED — the projector + pull-in produce the final position. Slots
-    fan outboard so the projector starts from a sane, near-feasible state."""
-    outboard = PASSIVE_OFFSET_MM + slot * PASSIVE_PITCH_MM
+    fan outboard so the projector starts from a sane, near-feasible state.
+    ``extra_out`` pushes the seed further outboard (a merge bus routed below the
+    IC, to clear the body before the projector spreads it sideways)."""
+    outboard = PASSIVE_OFFSET_MM + slot * PASSIVE_PITCH_MM + extra_out
     if side == "left":
         return Point(snap_to_grid(pin.x - outboard), snap_to_grid(pin.y - CAP_VERTICAL_OFFSET_MM))
     if side == "right":
@@ -401,10 +409,29 @@ def solve_module(
             continue
         pin = pg.connection
         side = page_side_from_pin(pg.pin_rotation, 0.0)
+        # A high-fan-in NON-power merge bus (ethernet BS_COMMON: 8 Bob-Smith
+        # taps) on a vertical edge shares that edge with bare SIGNAL pins whose
+        # long edge labels need the whole outboard lane (T1's PHY MDI labels).
+        # Route its taps BELOW the IC instead so the bus never crowds those
+        # lanes — the merge taps are interchangeable (all on one node), so the
+        # extra L from the pin is electrically free. Only fires for such a bus.
+        is_merge = (net_count[to_net] >= _MERGE_FANIN
+                    and _classify_far(to_net)[1] is None and side in ("left", "right"))
+        if is_merge:
+            side = "bottom"
         slot = edge_slot.get(side, 0)
         edge_slot[side] = slot + 1
 
-        seed = _seed_anchor(pin, side, slot)
+        if is_merge:
+            # Seed the bus as a horizontal ROW just below the IC body, fanning
+            # AWAY from the pin column (so the projector keeps it compact and
+            # clear of the body + the other-edge label lanes), then drop each
+            # tap straight down from its pin. Skips pull-in (would tug it back up).
+            body_bottom = ic_rect.cy + ic_rect.h / 2.0
+            seed = Point(snap_to_grid(pin.x - slot * PASSIVE_PITCH_MM),
+                         snap_to_grid(body_bottom + PASSIVE_OFFSET_MM))
+        else:
+            seed = _seed_anchor(pin, side, slot)
         lib = passive_lib_id(ep.part_token)
         prefix = passive_ref_prefix(ep.part_token)
         passive = PlacedSymbol(
@@ -434,7 +461,8 @@ def solve_module(
                 labeled_merge_nets.add(to_net)
 
         cells.append(
-            _Cell(pin, side, to_net, far_kind, passive, far_symbol, emit_label)
+            _Cell(pin, side, to_net, far_kind, passive, far_symbol, emit_label,
+                  merge=is_merge)
         )
 
     if unresolved:
@@ -525,6 +553,8 @@ def _pull_in_cells(
     exactly the clearance boundary, never below)."""
     step = snap_to_grid(VISUAL_CLEARANCE_MM)
     for i, cell in enumerate(cells):
+        if cell.merge:
+            continue  # merge-bus row stays below the IC (clear of label lanes)
         # Outboard unit vector (cell sits outboard of pin; pull-in is -outboard).
         if cell.side == "left":
             ux, uy = 1.0, 0.0
