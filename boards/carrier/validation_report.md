@@ -1,19 +1,19 @@
 # Carrier — Validation Report
 
-Generated: 2026-06-05T12:21:33Z
+Generated: 2026-06-05T12:41:25Z
 
-**Errors:** 6  **Warnings:** 452  **Info:** 0
+**Errors:** 6  **Warnings:** 451  **Info:** 0
 
 ## Errors (6)
 
-- **erc.pin_to_pin**: Pins of type Open collector and Output are connected _(carrier.kicad_sch)_
+- **erc.pin_to_pin**: Pins of type Open collector and Power output are connected _(carrier.kicad_sch)_
 - **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.power_pin_not_driven**: Input Power pin not driven by any Output Power pins _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 - **erc.pin_not_connected**: Pin not connected _(carrier.kicad_sch)_
 
-## Warnings (452)
+## Warnings (451)
 
 - **erc.lib_symbol_issues**: The symbol library 'FMC_LPC_LA_LOW' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FMC_LPC_LA_LOW.kicad_sym' _(carrier.kicad_sch)_
 - **erc.lib_symbol_issues**: The symbol library 'FX10A_168P_J1_PL_POWER' was not found at '/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/boards/carrier/../../shared/symbols/generated/connector_banks/FX10A_168P_J1_PL_POWER.kicad_sym' _(carrier.kicad_sch)_
@@ -262,7 +262,6 @@ Generated: 2026-06-05T12:21:33Z
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
 - **erc.pin_to_pin**: Pins of type Bidirectional and Power output are connected _(carrier.kicad_sch)_
-- **erc.pin_to_pin**: Pins of type Output and Power output are connected _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label STM32_USB_CC1 has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label USB_DP has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_
 - **erc.hier_label_mismatch**: Hierarchical label USB_DM has no matching sheet pin in the parent sheet _(carrier.kicad_sch)_

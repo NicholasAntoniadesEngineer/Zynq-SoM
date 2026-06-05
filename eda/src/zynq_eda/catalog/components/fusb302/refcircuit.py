@@ -264,4 +264,14 @@ FUSB302_REFCIRCUIT = ReferenceCircuit(
             justification="DS Table 13 note 6 (I2C pull-up voltage 1.71V-VDD)",
         ),
     ),
+    lib_symbol_pin_type_overrides=(
+        # FUSB302 INT_N is open-DRAIN (datasheet); the stock symbol marks it
+        # "output". It shares the STM32 interrupt line with the INA226
+        # open-collector ALERT — output + open-collector on one net trips ERC
+        # pin_to_pin, and open_collector alone leaves the line with no driver.
+        # Mark it passive: the interrupt line is pulled by the open-drain side,
+        # and INT_N is just a tap on it — same mechanism as the INA226 Vbus
+        # passive override. Removes the spurious pin_to_pin.
+        ("INT_N", "passive"),
+    ),
 )
