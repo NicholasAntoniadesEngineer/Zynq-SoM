@@ -101,6 +101,47 @@ def _split_wires_at_pins(
     return out
 
 
+def _propagate_wire_net_tokens(
+    wires: list[PlacedWire],
+    point_net: dict[tuple[float, float], str],
+) -> None:
+    """Spread known net tokens across connected wire chains (in place).
+
+    Builds an adjacency over wire endpoints (a wire is an edge between its two
+    rounded endpoints) and BFS-floods each already-known token to every endpoint
+    reachable through same-wire connections. Endpoints that already carry a token
+    are NOT overwritten (the seed wins; a clash would be a same-rail merge, whose
+    members are one net by name anyway). The result lets the splitter recognise
+    the net at a wire's bare-bend endpoints, so it can legally cut that wire at an
+    interior SAME-net pin. Only physically-wired endpoints share a token, so this
+    never invents a cross-net identity (LAW 0).
+    """
+    from collections import deque
+
+    adj: dict[tuple[float, float], list[tuple[float, float]]] = {}
+    for w in wires:
+        a = (round(w.start.x, 2), round(w.start.y, 2))
+        b = (round(w.end.x, 2), round(w.end.y, 2))
+        if a == b:
+            continue
+        adj.setdefault(a, []).append(b)
+        adj.setdefault(b, []).append(a)
+
+    # Flood from every seeded node; first token to reach a node sticks. A node
+    # that already carries a token is a stop (the seed that set it floods its own
+    # side), so the only writes are to previously-unknown bend endpoints.
+    seeds = [n for n in adj if n in point_net]
+    for seed in seeds:
+        token = point_net[seed]
+        q = deque([seed])
+        while q:
+            node = q.popleft()
+            for nb in adj.get(node, ()):
+                if nb not in point_net:
+                    point_net[nb] = token
+                    q.append(nb)
+
+
 def _declutter_property_text(symbols, wires, geometry, labels=()):
     """Place each symbol's Value/Reference text clear of EVERYTHING visible.
 
@@ -400,7 +441,28 @@ def assemble_sheet(
         point_net[(round(lb.position.x, 2), round(lb.position.y, 2))] = lb.net_name
     for hl in chlabels + ehlabels:
         point_net[(round(hl.position.x, 2), round(hl.position.y, 2))] = hl.net_name
+    # Propagate each known net token along PHYSICALLY-CONNECTED wire chains
+    # (shared endpoints), so a wire whose endpoints are bare bends inherits the
+    # net carried by a terminal/label/power anchor it is wired to. Without this,
+    # the splitter cannot cut a wire that RUNS THROUGH an interior pin when both
+    # its own endpoints are mid-net bends (e.g. usb_pd's +VIN feed runs through
+    # R104.2 between two bends) — the pin then floats. Two wires share an
+    # endpoint ONLY when the router (per-net) joined them, and the touch-guard
+    # has already removed any foreign touch, so a propagated token is always the
+    # endpoint's TRUE net — a cut it enables only ever taps a SAME-net pin (LAW 0).
+    _propagate_wire_net_tokens(wires, point_net)
     wires = _split_wires_at_pins(wires, all_pin_pts, point_net=point_net)
+
+    # Drop ORPHANED power symbols: a module can emit a GND/rail power symbol
+    # whose only connecting wire the touch-guard later dropped (e.g. ethernet's
+    # T1.14 GND, walled off by the BS_COMMON trunk). Power is a GLOBAL net joined
+    # BY NAME, so a power symbol carries no electrical weight on its own — a
+    # floating one is pure ERC noise (pin_not_connected + a stray glyph). The
+    # exposer re-attaches the pin with a FRESH, routed power symbol; this removes
+    # the now-redundant orphan so the sheet shows exactly one connected GND mark.
+    # Only power symbols are eligible (signal symbols never float by design), and
+    # only when their pin coincides with no wire-endpoint / pin / junction.
+    symbols = _drop_orphan_power_symbols(symbols, wires, junctions, geometry)
 
     return Sheet(
         name=arr.sheet.name,
@@ -413,3 +475,57 @@ def assemble_sheet(
         junctions=tuple(junctions),
         no_connects=tuple(no_connects),
     )
+
+
+def _drop_orphan_power_symbols(symbols, wires, junctions, geometry):
+    """Remove power-symbol bodies whose single pin is electrically dangling.
+
+    A power symbol (``power:GND`` / ``power:+3V3`` / …) connects its net BY
+    NAME, so it only earns its place on the sheet if its pin actually touches a
+    wire (the local stub joining it to its IC/connector pin). When that stub was
+    dropped upstream (a touch-guard short avoidance), the symbol floats — KiCad
+    ERC fires ``pin_not_connected`` on it and the render shows a stray glyph.
+    Such a symbol is redundant (the rail is still driven elsewhere by name), so
+    it is removed. Non-power symbols and connected power symbols are untouched.
+    """
+    eps = 0.05
+    ends: list[Point] = []
+    for w in wires:
+        ends.append(w.start)
+        ends.append(w.end)
+    for j in junctions:
+        ends.append(j.position)
+    # Other symbols' pins (a power symbol abutting a pin directly is connected).
+    other_pins: list[Point] = []
+    for s in symbols:
+        if s.lib_id.startswith("power:"):
+            continue
+        try:
+            other_pins.extend(
+                geometry.absolute_pin_positions(s.lib_id, s.position, s.rotation).values()
+            )
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _touches(p: Point) -> bool:
+        for q in ends:
+            if abs(p.x - q.x) < eps and abs(p.y - q.y) < eps:
+                return True
+        for q in other_pins:
+            if abs(p.x - q.x) < eps and abs(p.y - q.y) < eps:
+                return True
+        return False
+
+    kept = []
+    for s in symbols:
+        if s.lib_id.startswith("power:"):
+            try:
+                pins = list(geometry.absolute_pin_positions(
+                    s.lib_id, s.position, s.rotation).values())
+            except Exception:  # noqa: BLE001
+                kept.append(s)
+                continue
+            if pins and not any(_touches(p) for p in pins):
+                continue  # orphan — drop it
+        kept.append(s)
+    return kept

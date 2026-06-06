@@ -202,6 +202,66 @@ def _collinear_overlap(a: PlacedWire, b: PlacedWire, eps: float = 0.05) -> bool:
     return False
 
 
+def _truncate_at_foreign(
+    w: PlacedWire,
+    foreign_wires: list[PlacedWire],
+    foreign_pins: list[Point],
+    grid: float = 1.27,
+) -> list[PlacedWire]:
+    """Split ``w`` into the maximal sub-runs that touch NO foreign net.
+
+    The touch-guard's blunt instrument is to DROP a whole wire that touches a
+    foreign net — but a long trunk often touches a foreign wall at ONE end while
+    its other end still cleanly reaches its own net's pins (e.g. usb_pd R104.2's
+    feed wire runs THROUGH R104.2 and only its far tip grazes the x=107.95 wall).
+    Dropping the whole wire needlessly strands the clean pin. Instead, rasterise
+    ``w`` to unit-grid sub-segments, classify each by whether IT touches a
+    foreign net, and return the maximal CLEAN runs. A kept run touches no foreign
+    net by construction → it can never short (LAW 0). An all-foreign or zero-len
+    wire yields ``[]`` (fully dropped, as before).
+    """
+    ax, ay, bx, by = w.start.x, w.start.y, w.end.x, w.end.y
+    horiz = abs(ay - by) < 1e-6
+    vert = abs(ax - bx) < 1e-6
+    if not (horiz or vert):
+        # Diagonal (shouldn't occur for grid wires): fall back to all-or-nothing.
+        return [] if _route_hits_foreign([w], foreign_wires, foreign_pins) else [w]
+    if horiz:
+        lo, hi = sorted((ax, bx))
+        coords = []
+        x = lo
+        while x < hi - 1e-9:
+            coords.append((Point(x, ay), Point(min(x + grid, hi), ay)))
+            x += grid
+    else:
+        lo, hi = sorted((ay, by))
+        coords = []
+        y = lo
+        while y < hi - 1e-9:
+            coords.append((Point(ax, y), Point(ax, min(y + grid, hi))))
+            y += grid
+    if not coords:
+        return [] if _route_hits_foreign([w], foreign_wires, foreign_pins) else [w]
+    clean_flags = [
+        not _route_hits_foreign([PlacedWire(s, e)], foreign_wires, foreign_pins)
+        for s, e in coords
+    ]
+    # Merge consecutive clean unit-segments into maximal runs.
+    runs: list[PlacedWire] = []
+    i = 0
+    n = len(coords)
+    while i < n:
+        if not clean_flags[i]:
+            i += 1
+            continue
+        j = i
+        while j < n and clean_flags[j]:
+            j += 1
+        runs.append(PlacedWire(coords[i][0], coords[j - 1][1]))
+        i = j
+    return runs
+
+
 def _route_hits_foreign(
     segs: list[PlacedWire],
     foreign_wires: list[PlacedWire],
@@ -444,10 +504,19 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
                            if _base_net(k, module.ic_ref) != nb for w in ws]
                 kept = []
                 for w in net_wires[nk]:
-                    if _route_hits_foreign([w], foreign, []):
-                        changed = True  # this wire shorts a foreign net — drop it
+                    if not _route_hits_foreign([w], foreign, []):
+                        kept.append(w)
                         continue
-                    kept.append(w)
+                    # Touches a foreign net somewhere. Rather than dropping the
+                    # whole wire (which strands clean pins on its other end),
+                    # keep the maximal sub-runs that touch NO foreign net — those
+                    # cannot short (LAW 0). Only a genuine change (a sub-run was
+                    # trimmed away) re-triggers the fixpoint loop.
+                    runs = _truncate_at_foreign(w, foreign, [])
+                    if not (len(runs) == 1 and runs[0].start == w.start
+                            and runs[0].end == w.end):
+                        changed = True
+                    kept.extend(runs)
                 net_wires[nk] = kept
 
     # Collapse collinear runs and place junctions PER NET — both net-local, so a
