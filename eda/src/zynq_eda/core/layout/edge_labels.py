@@ -76,7 +76,12 @@ def no_connect_markers(
     except Exception:
         specs = []
     for spec in specs:
-        if spec.role != "NC":
+        # NC = the planner's NC role OR any IC pin with NO net at all (e.g. the
+        # FUSB302 VCONN_1/VCONN_2 — unused by design). Such a pin is wired by
+        # nothing, so an explicit No-Connect is the correct mark; leaving it bare
+        # is a false ERC pin_not_connected (a floating pin that is NOT a defect).
+        no_net = not (spec.net_name or spec.cluster_owner_net)
+        if spec.role != "NC" and not no_net:
             continue
         if spec.owner_kind == "connector":
             continue  # handled above from geometry (covers spare pads too)
