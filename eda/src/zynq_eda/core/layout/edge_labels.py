@@ -353,10 +353,26 @@ def _place_ic_pin_primitive(
             and o.min.y - PIN_NEAR <= tip.y <= o.max.y + PIN_NEAR
         )
 
+    # Match the OVERLAP VALIDATOR's per-kind tolerance (the keystone: placement-
+    # clean == validator-clean). The validator measures wire×label / wire×symbol
+    # as TRUE overlap (a wire legitimately abuts the label/pin it connects to),
+    # NOT the 2.54 mm crowding clearance it applies to body/text/label pairs.
+    # Checking a label against a parallel wire at 2.54 mm is therefore strictly
+    # OVER-strict — it rejects placements the validator (and a human) accept,
+    # which is exactly what stranded the dense signal-pin labels (CP2102N
+    # RXD/TXD/RTS, FUSB302 CC) one row from a neighbouring trunk wire. Use the
+    # validator's own significant-overlap test for wires; keep the breathing-room
+    # clearance for everything visible (bodies, text, other labels).
+    from zynq_eda.core.validate.overlap import _overlap_is_significant
+
     def _clear(probe_box, *, is_stub):
         for o in occupied:
             if is_stub and _stub_exempt(o):
                 continue  # stub may touch ITS OWN pin's body/text
+            if o.kind == "wire":
+                if _overlap_is_significant(probe_box, o):
+                    return False
+                continue
             if probe_box.intersects(o, padding_mm=VISUAL_CLEARANCE_MM):
                 return False
         return True
@@ -386,35 +402,47 @@ def _place_ic_pin_primitive(
         prim = PlacedLabel(net_name=net, position=anchor, rotation=rot_label)
         return prim, _label_bb(prim)
 
-    # Lane-interleaving search: for each outboard distance, also try
-    # PERPENDICULAR lane offsets (an L-stub: pin -> elbow -> anchor) so adjacent
-    # pins in a dense column stagger into distinct lanes instead of stacking and
-    # colliding. Straight-out (offset 0) is tried first to keep the simple case
-    # tidy; offsets fan out only when the lane is blocked.
     px, py = -uy, ux  # perpendicular unit
-    # extra=0 first: the primitive COINCIDENT with the pin (no stub) — the
-    # symbol/label pin lands on the IC pin (pin-to-pin / label-at-pin), the body
-    # sits outboard. Tightest and crossing-free; the outboard walk follows if the
-    # coincident spot is blocked.
-    for extra in range(0, 16):
+
+    def _try(extra: int, poff: int):
         dist = snap_to_grid(extra * VISUAL_CLEARANCE_MM)
         elbow = Point(snap_to_grid(tip.x + ux * dist), snap_to_grid(tip.y + uy * dist))
-        for poff in (0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5):
-            pd = snap_to_grid(poff * VISUAL_CLEARANCE_MM)
-            anchor = Point(snap_to_grid(elbow.x + px * pd), snap_to_grid(elbow.y + py * pd))
-            prim, bb = _make(anchor)
-            if prim is None:
-                continue
-            stubs: list[PlacedWire] = []
-            if elbow != tip:
-                stubs.append(PlacedWire(tip, elbow))
-            if anchor != elbow:
-                stubs.append(PlacedWire(elbow, anchor))
-            stub_boxes = [wire_bbox(s.start, s.end, owner_id="s") for s in stubs]
-            if _clear(bb, is_stub=False) and all(
-                _clear(sb, is_stub=True) for sb in stub_boxes
-            ):
-                return prim, bb, stubs
+        pd = snap_to_grid(poff * VISUAL_CLEARANCE_MM)
+        anchor = Point(snap_to_grid(elbow.x + px * pd), snap_to_grid(elbow.y + py * pd))
+        prim, bb = _make(anchor)
+        if prim is None:
+            return None
+        stubs: list[PlacedWire] = []
+        if elbow != tip:
+            stubs.append(PlacedWire(tip, elbow))
+        if anchor != elbow:
+            stubs.append(PlacedWire(elbow, anchor))
+        stub_boxes = [wire_bbox(s.start, s.end, owner_id="s") for s in stubs]
+        if _clear(bb, is_stub=False) and all(
+            _clear(sb, is_stub=True) for sb in stub_boxes
+        ):
+            return prim, bb, stubs
+        return None
+
+    # Pass 1a — STRAIGHT-OUT STAGGER (poff=0, all distances FIRST): keep the
+    # label on the pin's OWN row and walk it outboard until its text clears any
+    # neighbour label. This is the hand-drawn convention for a dense pin column
+    # (CP2102N RXD/TXD/RTS at 2.54 mm pitch): adjacent labels can't coexist on
+    # the SAME outboard distance (their 2.54 mm clearance overlaps), so they
+    # STAGGER to different distances — never piling onto a neighbour's pin row
+    # (which the old extra-outer/poff-inner order did, colliding with that pin's
+    # own label). extra=0 is COINCIDENT (label pin on the IC pin), tightest first.
+    for extra in range(0, 22):
+        got = _try(extra, 0)
+        if got is not None:
+            return got
+    # Pass 1b — PERPENDICULAR lane interleave: only when no straight-out stagger
+    # fits (the row is genuinely walled by a body/text), fan into neighbour lanes.
+    for extra in range(0, 16):
+        for poff in (1, -1, 2, -2, 3, -3, 4, -4, 5, -5):
+            got = _try(extra, poff)
+            if got is not None:
+                return got
 
     # Pass 2: the straight/L stub is blocked by the module's own passives (dense
     # IC edge). Find a clear label slot further out and ROUTE the stub to it

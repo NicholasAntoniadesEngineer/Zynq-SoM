@@ -344,6 +344,47 @@ def assemble_sheet(
                 ref_pin_net[(cref, str(pid))] = net
     point_net: dict[tuple[float, float], str] = {}
     all_pin_pts: list[Point] = []
+    # Seed the cut map from each module's OWN net topology FIRST: every terminal
+    # of a module net (IC pin, each passive's near/far pin, the far power-symbol
+    # pin) carries that net's identity. Passive pins are NOT in plan_pin_specs,
+    # so without this a trunk wire that RUNS THROUGH an interior cap pin (e.g.
+    # usb_pd C107 on the FUSB302 +VIN trunk) can never be cut there and the cap
+    # floats. The token is the net's electrical identity (rails collapse to GND /
+    # +3V3 / …; per-pin trunks stay distinct via _base_net), so a cut here only
+    # ever taps a SAME-net pin — never a short (LAW 0). plan_pin_specs / power /
+    # labels OVERRIDE below with the real net name where they know it; the
+    # splitter matches by the token carried at the wire's ENDPOINTS, so the
+    # endpoints and any interior cut of one trunk share one consistent token.
+    from zynq_eda.core.route.route_module import _base_net
+    # Coordinate -> real net for every IC pin, so a per-pin trunk's token equals
+    # the SAME real net string plan_pin_specs assigns its IC-pin endpoint — the
+    # endpoint and any interior cap-pin cut then carry one identical token (no
+    # string mismatch that would block a legal same-net cut).
+    coord_net: dict[tuple[float, float], str] = {}
+    for ref, sym in ic_symbols.items():
+        try:
+            pp = geometry.absolute_pin_positions(sym.lib_id, sym.position, sym.rotation)
+        except Exception:  # noqa: BLE001
+            continue
+        for num, pt in pp.items():
+            n = ref_pin_net.get((ref, str(num)))
+            if n:
+                coord_net[(round(pt.x, 2), round(pt.y, 2))] = n
+    for m in arr.modules:
+        for key, terms in m.nets:
+            # Prefer the real net name carried by any IC-pin terminal of this
+            # net; fall back to _base_net (rails collapse to GND/+3V3; per-pin
+            # trunks stay distinct). One token per module net keeps endpoint and
+            # interior cuts consistent — a cut here only ever taps a SAME-net pin.
+            token = next(
+                (coord_net[(round(t.x, 2), round(t.y, 2))] for t in terms
+                 if (round(t.x, 2), round(t.y, 2)) in coord_net),
+                _base_net(key, m.ic_ref),
+            )
+            for t in terms:
+                k = (round(t.x, 2), round(t.y, 2))
+                all_pin_pts.append(t)
+                point_net.setdefault(k, token)
     for s in symbols:
         try:
             pp = geometry.absolute_pin_positions(s.lib_id, s.position, s.rotation)

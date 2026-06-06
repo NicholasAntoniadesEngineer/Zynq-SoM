@@ -38,6 +38,28 @@ _AVOID_KINDS = frozenset(
 )
 
 
+def _base_net(key: str, ic_ref: str) -> str:
+    """Resolve a routing net-KEY to its electrical net identity.
+
+    ``module.nets`` carries MANY keys that are the SAME physical net: a global
+    rail (GND, +3V3, …) is split into one ``GND@<far>`` cell per decoupling cap
+    plus a ``GND@ic<n>`` per bare IC GND pin — every one of them is GND, joined
+    by NAME through power symbols. Two such keys are NOT foreign: their wires
+    may touch freely (the touch is the same net merging, never a short).
+
+    Per-pin TRUNK keys are ``{ic_ref}@{x},{y}`` — each is a DISTINCT local net
+    (one IC pin + its own caps' near terminals), so they stay mutually foreign;
+    we key those by the full string. The discriminator is the base before
+    ``@``/``#``: a base equal to the module's IC reference is a trunk (unique),
+    anything else is a named rail/signal whose same-base keys share one net.
+    """
+    base = key.split("#", 1)[0]
+    base = base.split("@", 1)[0]
+    if base == ic_ref:
+        return key.split("#", 1)[0]  # per-pin trunk — keep distinct (full @-key)
+    return base  # named rail/signal — all same-base keys are one net
+
+
 def _module_findings(module: Module, geometry: SymbolGeometryCache) -> int:
     """Count overlap/crowding findings for the module as a standalone sheet."""
     from zynq_eda.core.validate.overlap import validate_overlap
@@ -368,8 +390,15 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
         tgt = min(others, key=lambda p: abs(p.x - term.x) + abs(p.y - term.y))
         if abs(tgt.x - term.x) + abs(tgt.y - term.y) > 12.7:
             continue  # too far for a clean stub — leave for the labeler
-        foreign_wires = [w for k, ws in net_wires.items() if k != net_key for w in ws]
-        foreign_pins = [p for k, p in all_pins if k != net_key]
+        # FOREIGN = a DIFFERENT electrical net (LAW 0). Same-rail keys (every
+        # GND@* / +3V3@* cell of the one global rail) are the SAME net — joined
+        # by name through power symbols — so touching them is connectivity, not
+        # a short; they must NOT block a recovery stub.
+        nb = _base_net(net_key, module.ic_ref)
+        foreign_wires = [w for k, ws in net_wires.items()
+                         if _base_net(k, module.ic_ref) != nb for w in ws]
+        foreign_pins = [p for k, p in all_pins
+                        if _base_net(k, module.ic_ref) != nb]
         if abs(term.x - tgt.x) < 1e-6 or abs(term.y - tgt.y) < 1e-6:
             cands = [[PlacedWire(term, tgt)]]
         else:
@@ -403,7 +432,16 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
         while changed:
             changed = False
             for nk in list(net_wires.keys()):
-                foreign = [w for k, ws in net_wires.items() if k != nk for w in ws]
+                # FOREIGN = a DIFFERENT electrical net only. A global rail is
+                # split into many keys (GND@<cap> + GND@ic<n>); their wires
+                # share the rail's power-symbol pins and so necessarily touch —
+                # that touch is the rail merging by name, NOT a short (LAW 0).
+                # Dropping such a wire orphans a passive/IC pin (the exposer only
+                # reconnects IC pins, so a freed CAP pin floats forever). Only
+                # treat a wire as shorting when its net base truly differs.
+                nb = _base_net(nk, module.ic_ref)
+                foreign = [w for k, ws in net_wires.items()
+                           if _base_net(k, module.ic_ref) != nb for w in ws]
                 kept = []
                 for w in net_wires[nk]:
                     if _route_hits_foreign([w], foreign, []):

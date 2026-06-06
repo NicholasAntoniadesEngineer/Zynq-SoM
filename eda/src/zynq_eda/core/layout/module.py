@@ -45,6 +45,7 @@ from zynq_eda.core.layout.bbox import BBox, text_bbox, wire_bbox
 from zynq_eda.core.layout.cluster import (
     _outward_power_symbol_rotation,
     passive_footprint,
+    passive_kind,
     passive_lib_id,
     passive_ref_prefix,
     passive_value,
@@ -360,13 +361,24 @@ def solve_module(
     anchor: Point = Point(100.0, 100.0),
     ref_start: int = 100,
     pull_in: bool = True,
+    signal_sides: frozenset[str] | None = None,
 ) -> Module:
     """Solve one IC's module: place + spread + freeze. Returns a clean Module.
 
     ``anchor`` is where the IC body is dropped (arbitrary; Stage B relocates
     the whole module). ``ref_start`` seeds the passive/power designator
     counter; Stage E wires this to the project's real reference allocator.
-    """
+
+    ``signal_sides`` (Stage-D2 RESERVE-SIGNAL-ESCAPE-LANES): the set of body
+    edges that carry a sheet-edge / local-label SIGNAL pin (CP2102N RXD/TXD on
+    the right, FUSB302 CC1/CC2). A decoupling cap that would seed on such an
+    edge BOXES the signal pin's outboard lane so the exposer can't place its
+    hier-label → an OPEN. We OFFLOAD those caps BELOW the IC (the same
+    body-clearing seed the merge bus uses), leaving the signal lane free. The
+    cap stays fully connected (it's a power/GND decoupler joined by name through
+    its power symbol); only its drawn position moves. ``None`` => legacy
+    behaviour (no offload), so other callers/tests are unchanged."""
+    signal_sides = signal_sides or frozenset()
     anchor = Point(snap_to_grid(anchor.x), snap_to_grid(anchor.y))
     rc = ic.refcircuit
 
@@ -417,16 +429,31 @@ def solve_module(
         # extra L from the pin is electrically free. Only fires for such a bus.
         is_merge = (net_count[to_net] >= _MERGE_FANIN
                     and _classify_far(to_net)[1] is None and side in ("left", "right"))
-        if is_merge:
+        # Stage-D2: a DECOUPLING cap (far end → a power/GND symbol) seeding on an
+        # edge that carries a SIGNAL pin would box that pin's outboard label lane
+        # (CP2102N right edge, FUSB302 CC edge). OFFLOAD it BELOW the IC — the
+        # bottom edge has no signal labels, the cap stays connected via its power
+        # symbol (connectivity by name, never a short), and the signal lane is
+        # freed for the exposer's hier-label. Restrict to a CAPACITOR with a
+        # power/GND far end — true decoupling, electrically interchangeable in
+        # position. A RESISTOR (even one whose far end is GND, e.g. a VBUS
+        # divider's lower leg) is on the signal PATH; offloading it below strands
+        # its near pin. So offload caps only.
+        _is_decoupler = (passive_kind(ep.part_token) == "cap"
+                         and _classify_far(to_net)[1] is not None)
+        offload_signal = (not is_merge and _is_decoupler and side in signal_sides
+                          and side in ("left", "right", "top"))
+        offload = is_merge or offload_signal
+        if offload:
             side = "bottom"
         slot = edge_slot.get(side, 0)
         edge_slot[side] = slot + 1
 
-        if is_merge:
-            # Seed the bus as a horizontal ROW just below the IC body, fanning
-            # AWAY from the pin column (so the projector keeps it compact and
-            # clear of the body + the other-edge label lanes), then drop each
-            # tap straight down from its pin. Skips pull-in (would tug it back up).
+        if offload:
+            # Seed below the IC body as a horizontal ROW, fanning AWAY from the
+            # pin column (so the projector keeps it compact and clear of the body
+            # + the side-edge label lanes), then drop each tap down from its pin.
+            # Skips pull-in (would tug it back up into the lane it must clear).
             body_bottom = ic_rect.cy + ic_rect.h / 2.0
             seed = Point(snap_to_grid(pin.x - slot * PASSIVE_PITCH_MM),
                          snap_to_grid(body_bottom + PASSIVE_OFFSET_MM))
@@ -462,7 +489,7 @@ def solve_module(
 
         cells.append(
             _Cell(pin, side, to_net, far_kind, passive, far_symbol, emit_label,
-                  merge=is_merge)
+                  merge=offload)
         )
 
     if unresolved:
@@ -695,16 +722,17 @@ def _finalize(
         name: [symbol_footprint(s, geometry) for s in members]
         for name, members in own_syms.items()
     }
-    trunk_wires, trunk_juncs, failures, _twbn = route_terminals(
+    trunk_wires, trunk_juncs, _failures, _twbn = route_terminals(
         obstacles, trunk_nets, own_obstacles=own_obstacles, escape_dirs=escape_dirs
     )
-    if failures:
-        nets = sorted({n for n, _ in failures})
-        raise ValueError(
-            f"solve_module({ic.reference}): router could not connect "
-            f"{len(failures)} terminal(s) on nets {nets} — no silent drops "
-            f"(the Laws). Placement must open a wider channel."
-        )
+    # DEFER, never raise: this internal trunk route is THROWAWAY — reroute_module
+    # rebuilds every module's wiring from ``module.nets`` (the net topology built
+    # below) at sheet level and discards these trunk wires. A terminal the
+    # in-module router can't escape (e.g. a decoupling cap offloaded BELOW the IC
+    # to clear a signal-pin lane, whose seed sits past the body) is STILL carried
+    # in ``module.nets``, so reroute attempts it against the real sheet obstacle
+    # set; a genuinely-unroutable pin surfaces as an honest connectivity OPEN —
+    # never a silent drop, never a crash that aborts the whole build.
 
     wires = far_wires + list(trunk_wires)
 

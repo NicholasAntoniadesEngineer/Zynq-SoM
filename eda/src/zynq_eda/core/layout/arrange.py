@@ -120,6 +120,31 @@ def _center_symbol_in_region(
     return _connector_symbol(connector, anchor, geometry)
 
 
+def _signal_sides_by_ic(
+    block: Block, geometry: SymbolGeometryCache
+) -> dict[str, frozenset[str]]:
+    """Map each IC reference to the set of body edges carrying a SIGNAL pin.
+
+    A signal pin = a planner ``EDGE_LABEL`` / ``LOCAL_LABEL`` pin with a net —
+    exactly the pins :func:`expose_ic_pin_nets` must drop a hier/local label on,
+    whose outboard lane therefore must stay clear of decoupling caps. ``page_side``
+    is the planner's own per-pin edge (its label-justify uses the same), so the
+    offload edge and the exposer's placement edge always agree."""
+    try:
+        from zynq_eda.core.layout.plan import plan_pin_specs
+        specs = plan_pin_specs(block, geometry)
+    except Exception:  # noqa: BLE001 — no planner ⇒ legacy (no offload)
+        return {}
+    out: dict[str, set[str]] = {}
+    for sp in specs:
+        if sp.owner_kind != "ic" or sp.role not in ("EDGE_LABEL", "LOCAL_LABEL"):
+            continue
+        if not (sp.net_name or sp.cluster_owner_net):
+            continue
+        out.setdefault(sp.owner_ref, set()).add(sp.page_side)
+    return {ref: frozenset(sides) for ref, sides in out.items()}
+
+
 def arrange_block(
     block: Block,
     geometry: SymbolGeometryCache,
@@ -133,11 +158,21 @@ def arrange_block(
     """
     paper_w, paper_h = PAPER_DIMENSIONS_MM[block.paper_size]
 
+    # ---- Per-IC SIGNAL edges (Stage-D2): which body edges carry a sheet-edge /
+    # local-label signal pin whose outboard lane the exposer needs CLEAR. A
+    # decoupling cap seeding on such an edge boxes that pin's label → an OPEN;
+    # solve_module offloads those caps below the IC. Computed once from the
+    # planner (the SAME classifier the exposer dispatches on) and threaded in.
+    signal_sides_by_ic = _signal_sides_by_ic(block, geometry)
+
     # ---- Solve each IC into a frozen module (Stage A); place each connector --
     modules: list[Module] = []
     for i, ic in enumerate(block.ics):
         # Disjoint reference ranges per IC so designators never collide.
-        modules.append(solve_module(ic, geometry, ref_start=100 + 100 * i))
+        modules.append(solve_module(
+            ic, geometry, ref_start=100 + 100 * i,
+            signal_sides=signal_sides_by_ic.get(ic.reference, frozenset()),
+        ))
 
     placed_conns: list[tuple[ConnectorInstance, PlacedSymbol]] = []
     for connector in block.connectors:
