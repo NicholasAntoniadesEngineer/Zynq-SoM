@@ -14,7 +14,14 @@ clean module is never touched and a reroute can never regress a sheet.
 
 from __future__ import annotations
 
+import os
 from dataclasses import replace
+
+# Module-level wire-touch short guard. The net-aware sheet splitter handles the
+# pin-tap shorts; this guard additionally drops a module wire that TOUCHES a
+# foreign net's wire (shared point / collinear / cross). Toggleable so we can
+# measure whether it's still load-bearing vs the splitter alone.
+_ENABLE_TOUCH_GUARD = os.environ.get("ZYNQ_TOUCH_GUARD", "1") != "0"
 
 from zynq_eda.core.layout._constants import VISUAL_CLEARANCE_MM
 from zynq_eda.core.layout.bbox import BBox, symbol_bbox, wire_bbox
@@ -383,6 +390,27 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
         net_wires.setdefault(net_key, []).extend(seg)
         for w in seg:
             obstacles.append(wire_bbox(w.start, w.end, owner_id="routed"))
+
+    # HARD non-touching GUARANTEE (LAW 0): the grid can route two nets into the
+    # same channel where their wires merely TOUCH (a shared endpoint / collinear
+    # run / crossing) — KiCad then merges them = SHORT, even though each net
+    # avoided the other's cells. Drop any wire that touches a FOREIGN net's wire;
+    # the freed terminal floats and the sheet exposer reconnects it BY NAME
+    # (power symbol / hier-label) which cannot short. Iterate to a fixpoint so a
+    # drop that removes a touch doesn't strand a now-stale verdict.
+    if _ENABLE_TOUCH_GUARD:
+        changed = True
+        while changed:
+            changed = False
+            for nk in list(net_wires.keys()):
+                foreign = [w for k, ws in net_wires.items() if k != nk for w in ws]
+                kept = []
+                for w in net_wires[nk]:
+                    if _route_hits_foreign([w], foreign, []):
+                        changed = True  # this wire shorts a foreign net — drop it
+                        continue
+                    kept.append(w)
+                net_wires[nk] = kept
 
     # Collapse collinear runs and place junctions PER NET — both net-local, so a
     # junction can only ever mark a same-net merge. route_sheet re-splits at pins.

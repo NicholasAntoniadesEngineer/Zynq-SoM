@@ -48,20 +48,44 @@ def _strictly_interior(p: Point, a: Point, b: Point, eps: float = 0.05) -> bool:
 
 
 def _split_wires_at_pins(
-    wires: list[PlacedWire], pin_points: list[Point], eps: float = 0.05
+    wires: list[PlacedWire],
+    pin_points: list[Point],
+    eps: float = 0.05,
+    point_net: dict[tuple[float, float], str] | None = None,
 ) -> list[PlacedWire]:
-    """Split every wire at each pin that lies on its INTERIOR.
+    """Split every wire at each SAME-NET pin that lies on its INTERIOR.
 
     KiCad does not connect a pin a wire merely passes over (it must end on
     the pin, or carry a junction). Trunk/overshoot wires routinely run THROUGH
     their own net's pins, leaving them on a wire interior → ``pin_not_connected``.
     Cutting each such wire at the pin turns the pin into a wire ENDPOINT, which
-    KiCad connects. The router blocks foreign pins, so a wire only ever crosses
-    its OWN net's pins; splitting there is always electrically correct.
+    KiCad connects.
+
+    CRITICAL (LAW 0): splitting at a FOREIGN pin would tap it onto this wire's
+    net = a SHORT. So when ``point_net`` (a point→intended-net map covering pins,
+    labels and power symbols) is given, a wire is cut at an interior pin ONLY if
+    that pin's net matches the wire's net — the net carried by a pin/label/power
+    anchor at EITHER wire endpoint. A wire with no anchored endpoint (a mid-net
+    bend) carries no provable net, so it is never cut at a bare pin (the pin
+    floats honestly for the exposer rather than risking a short).
     """
+    def _wire_nets(w: PlacedWire) -> set[str]:
+        if point_net is None:
+            return set()
+        nets: set[str] = set()
+        for e in (w.start, w.end):
+            n = point_net.get((round(e.x, 2), round(e.y, 2)))
+            if n:
+                nets.add(n)
+        return nets
+
     out: list[PlacedWire] = []
     for w in wires:
         cuts = [p for p in pin_points if _strictly_interior(p, w.start, w.end, eps)]
+        if point_net is not None and cuts:
+            wnets = _wire_nets(w)
+            cuts = [p for p in cuts
+                    if point_net.get((round(p.x, 2), round(p.y, 2))) in wnets]
         if not cuts:
             out.append(w)
             continue
@@ -300,15 +324,42 @@ def assemble_sheet(
         labels=labels + clabels + elabels + chlabels + ehlabels,
     )
 
+    # Point -> intended-net map so the splitter only taps SAME-net pins (LAW 0:
+    # cutting a wire at a FOREIGN pin shorts it). Covers IC/cluster pins
+    # (plan_pin_specs), connector pins (pin_to_net), power symbols and labels.
+    from zynq_eda.core.layout.plan import plan_pin_specs
+    ref_pin_net: dict[tuple[str, str], str] = {}
+    try:
+        for sp in plan_pin_specs(block, geometry):
+            net = sp.net_name or sp.cluster_owner_net
+            if net:
+                ref_pin_net[(sp.owner_ref, str(sp.pin_number))] = net
+    except Exception:  # noqa: BLE001
+        pass
+    for c in getattr(block, "connectors", ()) or ():
+        cref = getattr(c, "reference", None) or getattr(
+            getattr(c, "instance", None), "reference", None)
+        for pid, net in getattr(c, "pin_to_net", ()) or ():
+            if cref and net:
+                ref_pin_net[(cref, str(pid))] = net
+    point_net: dict[tuple[float, float], str] = {}
     all_pin_pts: list[Point] = []
     for s in symbols:
         try:
-            all_pin_pts.extend(
-                geometry.absolute_pin_positions(s.lib_id, s.position, s.rotation).values()
-            )
-        except Exception:  # noqa: BLE001 — a symbol without resolvable pins just isn't a cut site
+            pp = geometry.absolute_pin_positions(s.lib_id, s.position, s.rotation)
+        except Exception:  # noqa: BLE001 — a symbol without resolvable pins isn't a cut site
             continue
-    wires = _split_wires_at_pins(wires, all_pin_pts)
+        is_pwr = s.lib_id.startswith("power:")
+        for num, pt in pp.items():
+            all_pin_pts.append(pt)
+            net = s.value if is_pwr else ref_pin_net.get((s.reference, str(num)))
+            if net:
+                point_net[(round(pt.x, 2), round(pt.y, 2))] = net
+    for lb in labels + clabels + elabels:
+        point_net[(round(lb.position.x, 2), round(lb.position.y, 2))] = lb.net_name
+    for hl in chlabels + ehlabels:
+        point_net[(round(hl.position.x, 2), round(hl.position.y, 2))] = hl.net_name
+    wires = _split_wires_at_pins(wires, all_pin_pts, point_net=point_net)
 
     return Sheet(
         name=arr.sheet.name,
