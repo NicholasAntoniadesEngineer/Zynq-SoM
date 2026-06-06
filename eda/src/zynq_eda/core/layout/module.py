@@ -695,7 +695,7 @@ def _finalize(
         name: [symbol_footprint(s, geometry) for s in members]
         for name, members in own_syms.items()
     }
-    trunk_wires, trunk_juncs, failures = route_terminals(
+    trunk_wires, trunk_juncs, failures, _twbn = route_terminals(
         obstacles, trunk_nets, own_obstacles=own_obstacles, escape_dirs=escape_dirs
     )
     if failures:

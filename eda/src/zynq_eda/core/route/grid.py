@@ -435,11 +435,12 @@ def route_terminals(
 
     wires: list[PlacedWire] = []
     junctions: list[PlacedJunction] = []
+    wires_by_net: dict[str, list[PlacedWire]] = {}
     for name, segs in seg_by_net.items():
         merged = _merge_net_segments(segs)
-        for a, b in merged:
-            if a != b:
-                wires.append(PlacedWire(a, b))
+        wl = [PlacedWire(a, b) for a, b in merged if a != b]
+        wires_by_net[name] = wl
+        wires.extend(wl)
         junctions.extend(_net_junctions(merged))
 
     seen_j: set[tuple[float, float]] = set()
@@ -449,4 +450,6 @@ def route_terminals(
         if k not in seen_j:
             seen_j.add(k)
             jout.append(j)
-    return wires, jout, failures
+    # wires_by_net lets callers add fallback segments to the RIGHT net and then
+    # compute junctions PER-NET — never junctioning a foreign crossing (a short).
+    return wires, jout, failures, wires_by_net

@@ -489,6 +489,29 @@ def _flip_y_then_rotate(symbol_relative: Point, rotation_deg: float) -> Point:
 _rotate_then_flip_y = _flip_y_then_rotate
 
 
+def _property_page_relative(symbol_relative: Point, rotation_deg: float) -> Point:
+    """Page offset for a symbol's PROPERTY text (Reference/Value).
+
+    Unlike PINS, kicad-sch-api does NOT apply the +Y-up→+Y-down flip to
+    property text — it writes the lib ``(at X Y)`` Y straight as the page Y and
+    only applies the symbol's CW rotation. So Device:C's Reference at lib
+    (0.635, 2.54) lands at page +2.54 (BELOW the symbol), NOT the pin
+    transform's flipped −2.54 (above). Using :func:`_flip_y_then_rotate` here
+    put the no-shift Reference on the WRONG side, hiding value-on-reference
+    pile-ups from the validator/declutter (the usb_pd C105/C106 "200p"-on-
+    "C105"). Rotation only, no flip.
+    """
+    x, y = symbol_relative.x, symbol_relative.y
+    r = int(round(rotation_deg)) % 360
+    if r == 90:
+        return Point(y, -x)
+    if r == 180:
+        return Point(-x, -y)
+    if r == 270:
+        return Point(-y, x)
+    return Point(x, y)
+
+
 def _visible_body_bbox_from_graphics(
     lib_id: str,
     rotation: float,
@@ -1305,9 +1328,23 @@ class SymbolGeometryCache:
         reference_override: str | None = None,
         value_shift: "tuple[float, float, float | None] | None" = None,
         reference_shift: "tuple[float, float, float | None] | None" = None,
+        correct_property_pos: bool = False,
     ):
         """Return PAGE-coord bboxes for every visible property text on a
         placed symbol.
+
+        ``correct_property_pos`` selects how a NO-shift property's page Y is
+        derived. KiCad does NOT Y-flip property text (it writes the lib ``at``
+        Y straight as page Y), so the geometrically correct form is the no-flip
+        :func:`_property_page_relative`. But the layout engine (module solve +
+        arrange + the overlap validator) was BUILT on the historical pin-style
+        :func:`_flip_y_then_rotate` placement, and switching it globally shifts
+        every passive cell enough to box dense IC pins out of a label (usbc_otg
+        EN, uart TXD, hdmi SDA/SCL float). So the DEFAULT stays flip (layout-
+        stable); the declutter passes ``correct_property_pos=True`` to separate
+        Value-on-Reference at the TRUE rendered position. Once the declutter
+        sets an explicit shift, both forms agree (anchor+shift), so the final
+        footprint the validator measures is correct regardless.
 
         Inspects the ``(property "Reference" "..." (at PX PY R) (effects ...))``
         and ``(property "Value" ...)`` blocks in the symbol's library
@@ -1350,7 +1387,20 @@ class SymbolGeometryCache:
             prop_x, prop_y, _prop_rot = at_xy_rot
             # Position relative to symbol anchor, in SYMBOL coords.
             sym_relative = Point(prop_x, prop_y)
-            page_relative = _flip_y_then_rotate(sym_relative, rotation)
+            # PROPERTY text is NOT Y-flipped by kicad-sch-api (unlike pins): the
+            # lib (at X Y) Y is written straight as the page Y, only the symbol
+            # CW rotation applies. Device:C Reference lib (0.635, 2.54) -> page
+            # +2.54 (BELOW), not the pin-transform's flipped -2.54 (ABOVE). The
+            # no-flip form is geometrically correct (it's what KiCad renders), so
+            # the declutter uses it (correct_property_pos=True) to catch value-
+            # on-reference pile-ups (usb_pd C105/C106 '200p' on 'C105'). The
+            # layout/validator default to the historical flip for stability —
+            # see the docstring; once a shift is set both forms agree.
+            page_relative = (
+                _property_page_relative(sym_relative, rotation)
+                if correct_property_pos
+                else _flip_y_then_rotate(sym_relative, rotation)
+            )
             text_anchor = Point(
                 anchor.x + page_relative.x,
                 anchor.y + page_relative.y,

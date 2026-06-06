@@ -121,7 +121,8 @@ def _declutter_property_text(symbols, wires, geometry, labels=()):
             for b in geometry.property_text_bboxes(
                 sym.lib_id, sym.position, sym.rotation,
                 owner_id=f"symbol:{sym.reference}", reference_override=sym.reference,
-                value_override=sym.value, value_shift=vs, reference_shift=rs):
+                value_override=sym.value, value_shift=vs, reference_shift=rs,
+                correct_property_pos=True):
                 if b.owner_id.endswith(f":property:{kind}"):
                     return b
         except Exception:  # noqa: BLE001
@@ -233,18 +234,6 @@ def assemble_sheet(
     # can sit in the gap between pin texts rather than being pushed clear of the
     # whole connector's merged footprint.
     occupied = _obstacles(symbols, geometry)
-    # Property text (Reference/Value) too — so the connector labeler and the IC
-    # exposer route their stubs clear of it (it's what the overlap validator
-    # measures; omitting it let stubs cross "C101"/"100n" text).
-    for s in symbols:
-        try:
-            occupied.extend(geometry.property_text_bboxes(
-                s.lib_id, s.position, s.rotation,
-                owner_id=f"symbol:{s.reference}",
-                reference_override=s.reference, value_override=s.value,
-                value_shift=s.value_shift, reference_shift=s.reference_shift))
-        except Exception:  # noqa: BLE001
-            pass
     for w in wires:
         occupied.append(wire_bbox(w.start, w.end, owner_id="routed"))
     # Module-emitted labels (e.g. a cluster pin's own-net local label) are real

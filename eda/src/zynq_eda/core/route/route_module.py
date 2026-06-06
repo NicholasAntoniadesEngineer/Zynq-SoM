@@ -151,6 +151,52 @@ def _l_hits(segs: list[PlacedWire], obstacles: list[BBox]) -> bool:
     return False
 
 
+def _on_seg(p: Point, w: PlacedWire, eps: float = 0.05) -> bool:
+    """True iff point ``p`` lies on axis-aligned segment ``w`` (endpoints incl.)."""
+    ax, ay, bx, by = w.start.x, w.start.y, w.end.x, w.end.y
+    if abs(ay - by) < eps:   # horizontal
+        return abs(p.y - ay) < eps and min(ax, bx) - eps <= p.x <= max(ax, bx) + eps
+    if abs(ax - bx) < eps:   # vertical
+        return abs(p.x - ax) < eps and min(ay, by) - eps <= p.y <= max(ay, by) + eps
+    return False
+
+
+def _collinear_overlap(a: PlacedWire, b: PlacedWire, eps: float = 0.05) -> bool:
+    if abs(a.start.y - a.end.y) < eps and abs(b.start.y - b.end.y) < eps \
+            and abs(a.start.y - b.start.y) < eps:
+        a0, a1 = sorted((a.start.x, a.end.x)); b0, b1 = sorted((b.start.x, b.end.x))
+        return min(a1, b1) - max(a0, b0) > eps
+    if abs(a.start.x - a.end.x) < eps and abs(b.start.x - b.end.x) < eps \
+            and abs(a.start.x - b.start.x) < eps:
+        a0, a1 = sorted((a.start.y, a.end.y)); b0, b1 = sorted((b.start.y, b.end.y))
+        return min(a1, b1) - max(a0, b0) > eps
+    return False
+
+
+def _route_hits_foreign(
+    segs: list[PlacedWire],
+    foreign_wires: list[PlacedWire],
+    foreign_pins: list[Point],
+) -> bool:
+    """A fallback route SHORTS a foreign net if it threads a foreign pin or
+    crosses / overlaps / T-taps a foreign-net wire. LAW 0: never short to
+    connect — leave the terminal floating for the sheet labeler instead."""
+    for seg in segs:
+        for p in foreign_pins:
+            if _on_seg(p, seg):
+                return True
+        for fw in foreign_wires:
+            if _cross_point(seg, fw) is not None:
+                return True
+            if _collinear_overlap(seg, fw):
+                return True
+            if any(_on_seg(e, fw) for e in (seg.start, seg.end)):
+                return True
+            if any(_on_seg(e, seg) for e in (fw.start, fw.end)):
+                return True
+    return False
+
+
 def _l_route(a: Point, b: Point, obstacles: list[BBox]) -> list[PlacedWire]:
     """Connect ``a``-``b`` with an orthogonal route whose endpoints are EXACTLY
     a and b. Prefer the L-orientation that crosses no body; else A*; else the
@@ -293,16 +339,21 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
     # net it genuinely cannot route is reported in ``failures`` (never silently
     # dropped); the connectivity validator surfaces the residual so placement
     # can open a wider channel rather than the wire crossing a body.
-    wires, junctions, failures = route_terminals(
+    wires, _juncs, failures, wires_by_net = route_terminals(
         obstacles, nets, own_obstacles=own_obstacles, escape_dirs=escape_dirs
     )
 
+    # Keep wires grouped BY NET so junctions/dedupe stay net-local. A junction is
+    # ONLY ever a SAME-net merge — never a foreign crossing (LAW 0: a junction at
+    # a different-net crossing is a SHORT, invisible to ERC/overlap=0).
+    net_wires: dict[str, list[PlacedWire]] = {k: list(v) for k, v in wires_by_net.items()}
+    all_pins: list[tuple[str, Point]] = [(k, p) for k, pts in nets.items() for p in pts]
+
     # Recover terminals the grid router couldn't escape (dense IC edges): connect
     # each to the NEAREST other terminal of its net with a SHORT, CLEAN L-route
-    # only — one that crosses no body/text. A long or blocked connection is left
-    # floating for the sheet-level labeler rather than forced through a body
-    # (overlap is the hard invariant; the dense-edge labeler handles the rest).
-    wlist = list(wires)
+    # that crosses no body/text AND no FOREIGN wire/pin. A blocked or shorting
+    # connection is left floating for the sheet-level labeler — never forced
+    # through a foreign net (overlap + netlist integrity are hard invariants).
     for net_key, term in failures:
         others = [p for p in nets.get(net_key, []) if p != term]
         if not others:
@@ -310,28 +361,42 @@ def reroute_module(module: Module, geometry: SymbolGeometryCache) -> Module:
         tgt = min(others, key=lambda p: abs(p.x - term.x) + abs(p.y - term.y))
         if abs(tgt.x - term.x) + abs(tgt.y - term.y) > 12.7:
             continue  # too far for a clean stub — leave for the labeler
+        foreign_wires = [w for k, ws in net_wires.items() if k != net_key for w in ws]
+        foreign_pins = [p for k, p in all_pins if k != net_key]
         if abs(term.x - tgt.x) < 1e-6 or abs(term.y - tgt.y) < 1e-6:
-            cand = [PlacedWire(term, tgt)]
-            seg = cand if not _l_hits(cand, obstacles) else None
+            cands = [[PlacedWire(term, tgt)]]
         else:
-            seg = None
-            for corner in (Point(tgt.x, term.y), Point(term.x, tgt.y)):
-                cand = [PlacedWire(term, corner), PlacedWire(corner, tgt)]
-                if not _l_hits(cand, obstacles):
-                    seg = cand
-                    break
+            cands = [
+                [PlacedWire(term, Point(tgt.x, term.y)), PlacedWire(Point(tgt.x, term.y), tgt)],
+                [PlacedWire(term, Point(term.x, tgt.y)), PlacedWire(Point(term.x, tgt.y), tgt)],
+            ]
+        seg = None
+        for cand in cands:
+            if _l_hits(cand, obstacles):
+                continue
+            if _route_hits_foreign(cand, foreign_wires, foreign_pins):
+                continue
+            seg = cand
+            break
         if seg is None:
-            continue
-        wlist.extend(seg)
+            continue  # honest float — never a short
+        net_wires.setdefault(net_key, []).extend(seg)
         for w in seg:
             obstacles.append(wire_bbox(w.start, w.end, owner_id="routed"))
 
-    # Collapse collinear same-axis runs (own_obstacles routing can lay two
-    # collinear segments that overlap) into maximal non-overlapping wires.
-    # Electrically neutral (overlapping wires already share a node in KiCad)
-    # and clears the wire×wire findings; route_sheet re-splits at pins after.
-    wlist = _dedupe_overlaps(wlist)
-    return replace(module, wires=tuple(wlist), junctions=tuple(_junctions(wlist)))
+    # Collapse collinear runs and place junctions PER NET — both net-local, so a
+    # junction can only ever mark a same-net merge. route_sheet re-splits at pins.
+    flat: list[PlacedWire] = []
+    juncs: list[PlacedJunction] = []
+    seen_j: set[tuple[float, float]] = set()
+    for ws in net_wires.values():
+        ded = _dedupe_overlaps(ws)
+        flat.extend(ded)
+        for j in _junctions(ded):
+            k = (j.position.x, j.position.y)
+            if k not in seen_j:
+                seen_j.add(k); juncs.append(j)
+    return replace(module, wires=tuple(flat), junctions=tuple(juncs))
 
 
 def _dedupe_overlaps(wires: list[PlacedWire]) -> list[PlacedWire]:

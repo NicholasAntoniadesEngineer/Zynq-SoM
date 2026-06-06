@@ -793,29 +793,18 @@ def validate_overlap(
             ))
 
     # ---- 8b. wire × wire (perpendicular crossing) ----------------------
-    # PROJECT RULE: no two wires may cross, period. KiCad treats a
-    # cross with a junction dot as an intentional same-net merge, but
-    # the user has ruled this visually ambiguous and disallowed.
-    # Any two wires whose centerlines cross at a point that ISN'T a
-    # shared endpoint flags as an overlap.
-    junction_points = {(j.position.x, j.position.y) for j in sheet.junctions}
+    # PROJECT RULE: no two wires may cross, PERIOD — not even with a junction
+    # dot. A junction at a crossing is NOT exempt: LAW 0 — a junction connects
+    # everything geometrically passing through it, so junctioning a crossing is
+    # at best a visually-ambiguous merge and at worst a SHORT (a foreign net's
+    # wire passing through another net's junction). The router must route AROUND;
+    # an unroutable net floats honestly for the labeler, never crosses.
     for i, (_, wire_a, box_a) in enumerate(wire_bboxes):
         for _, wire_b, box_b in wire_bboxes[i + 1:]:
             crossing = _wires_cross_perpendicular(wire_a, wire_b)
             if crossing is None:
                 continue
             if _wires_share_endpoint(wire_a, wire_b):
-                continue
-            # Allow crossings at a junction point — KiCad's net merge
-            # convention is honoured there even though it's still
-            # visually a cross. The placement engine emits junctions
-            # at deliberate merge points (cluster trunks, signal
-            # branches).
-            if any(
-                abs(crossing.x - jx) < OVERLAP_MIN_DIMENSION_MM
-                and abs(crossing.y - jy) < OVERLAP_MIN_DIMENSION_MM
-                for jx, jy in junction_points
-            ):
                 continue
             results.append(_result_from_overlap(
                 sheet=sheet,
