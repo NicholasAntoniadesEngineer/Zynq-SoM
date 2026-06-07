@@ -53,7 +53,17 @@ def build_usbc_otg() -> Block:
             IcInstance(
                 reference="U1",
                 refcircuit=REFCIRCUITS["TPS2051CDBVR"],
-                lib_id="Power_Management:TPS2051CDBV",
+                # Carrier-local copy of Power_Management:TPS2051CDBV with EN
+                # (pin 4) re-pinned to the BOTTOM edge. On the stock symbol EN
+                # sits on the LEFT edge, where the +VIN trunk wall (the vertical
+                # leg feeding the IN pin, ~4.5 mm from the EN tip) seals every
+                # outboard label lane — the long STM32_USBOTG_VBUS_EN hier-label
+                # cannot fit, leaving EN an honest floating pin. Pointing EN down
+                # sends its label into the open bottom-left page space below the
+                # IC. A local symbol copy is naturally scoped to THIS block only,
+                # so the 26 other sheets are unaffected. Pin numbers/names are
+                # otherwise identical, so the netlist is unchanged (LAW 0).
+                lib_id="zynq_eda:TPS2051CDBV_OTG",
                 power_input_net="+VIN",
                 power_output_net="VBUS_OTG",
             ),

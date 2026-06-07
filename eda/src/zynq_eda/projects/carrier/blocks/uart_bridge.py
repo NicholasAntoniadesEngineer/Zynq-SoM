@@ -50,7 +50,21 @@ def build_uart_bridge() -> Block:
             IcInstance(
                 reference="U1",
                 refcircuit=REFCIRCUITS["CP2102N-A02-GQFN24R"],
-                lib_id="Interface_USB:CP2102N-Axx-xQFN24",
+                # Carrier-local copy of Interface_USB:CP2102N-Axx-xQFN24. On the
+                # stock symbol the USB D+/D- pins (3/4) and the four UART signal
+                # pins ~{CTS}/~{RTS}/RXD/TXD (18/19/20/21) are packed at 2.54 mm
+                # pitch, so:
+                #   * D+/D- (left edge) sit in the same column the VBUS-divider
+                #     trunk runs down, sealing their outboard label lanes; and
+                #   * TXD (top-right) is squeezed between the IC Value text above
+                #     and the adjacent RXD label below — no clear escape row.
+                # The local copy re-pins D+/D- LOW on the left (clear of the
+                # divider crowd) and spreads the four right-edge UART pins to a
+                # 5.08 mm pitch so each long ZYNQ_PS_UART0_* hier-label gets its
+                # own clear lane. Local copy ⇒ scoped to THIS block only (the 26
+                # other sheets keep the stock symbol). Pin numbers/names are
+                # unchanged, so the emitted netlist is identical (LAW 0).
+                lib_id="zynq_eda:CP2102N_UART",
                 # CP2102N is self-powered from the cable VBUS; tie its
                 # regulator input (REGIN) and VBUS-sense pin to +VIN.
                 power_input_net="+VIN",
