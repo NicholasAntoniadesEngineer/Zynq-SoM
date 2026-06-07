@@ -444,19 +444,90 @@ def _place_ic_pin_primitive(
             if got is not None:
                 return got
 
-    # Pass 2: the straight/L stub is blocked by the module's own passives (dense
-    # IC edge). Find a clear label slot further out and ROUTE the stub to it
-    # AROUND the obstacles with the grid tree router — it lands its endpoints
-    # exactly on the pin tip (route_astar quantises off-pin) and routes at wire
-    # clearance. LABELS only: a power symbol's body isn't an obstacle yet (it's
-    # placed from the route anchor), so a routed stub would cross it. The routed
-    # stub is REJECTED if it perpendicular-crosses an existing wire (the
-    # validator forbids any crossing) — so this only ever adds clean wiring.
-    if lib is not None:
+    # Pass 2 — STRATEGY A: SCOPED 2D-RING ESCAPE. The straight/L stub is walled
+    # by the module's own passives + a FOREIGN net's trunk wrapping this pin (the
+    # "boxed" pin). Sweep a BOUNDED ring of clear label slots (nearest first) and,
+    # for the first one to which the grid tree router can lay a CLEAN multi-bend
+    # stub around the obstacles, take it. "Clean" is the FULL validator contract,
+    # not just crossing-free: every routed segment must (a) clear all non-wire
+    # obstacles + the NEW label's own text box at VISUAL_CLEARANCE_MM (a routed
+    # wire must not run under foreign text — the bug that put a stub through the
+    # usbc EN label), (b) never significant-overlap a foreign wire, and (c) never
+    # perpendicular-cross any wire. The router itself only avoids the static
+    # bitmap, so we RE-VALIDATE its output here against the same boxes the overlap
+    # validator uses → placement-clean == validator-clean (the keystone).
+    #
+    # This is the EXPENSIVE path, so it is reached ONLY for the handful of pins
+    # the cheap straight/L stagger (Pass 1a/1b) could not seat. PERF: the
+    # obstacle grid is rasterised ONCE here (EscapeRouter), then reused for every
+    # ring probe — vs the old route_terminals-per-anchor which re-rasterised the
+    # whole sheet ~200×/pin and blew the build past the time budget. We early-out
+    # on the first clean slot and bound the ring radius to keep the per-sheet
+    # build ~<60s.
+    #
+    # Handles BOTH labels and power symbols. _make builds the power symbol with
+    # its pin AT the anchor and body pointing OUTBOARD, so the routed stub (which
+    # docks at the anchor from the inboard side) never crosses the body — and the
+    # body-crossing guard below re-checks it anyway (the gate measures every
+    # routed segment against the placed primitive's own bbox).
+    from zynq_eda.core.route.grid import EscapeRouter
+    try:
+        router = EscapeRouter(occupied, tip, (ux, uy))
+    except Exception:  # noqa: BLE001
         return None
-    from zynq_eda.core.route.grid import route_terminals as _rt
-    wire_obs = [o for o in occupied if o.kind == "wire"]
-    for extra in range(2, 22):
+    # For a power symbol the "outboard / text" direction is the body direction
+    # (body sits on the +outboard side of the pin); for a label it is the text
+    # direction. Either way the docking segment must arrive from the NON-body /
+    # NON-text side, and no other segment may run through the placed primitive's
+    # bbox. (ux,uy) already points outboard, so it serves both.
+
+    def _route_seg_clean(seg: PlacedWire, anchor: Point, prim_bb: BBox) -> bool:
+        """True iff a routed segment is VALIDATOR-clean — measured by the SAME
+        rule validate_overlap applies to a wire, not the crowding clearance.
+
+        A wire legitimately runs right up to a body/pin/label edge (KiCad
+        convention), so the validator flags wire×anything only at SIGNIFICANT
+        (true, clearance-0) overlap — never at the 2.54 mm crowding clearance it
+        uses between two text/body objects. Checking a routed wire at 2.54 mm is
+        strictly over-strict (it rejected the hdmi SCL stub running 1.9 mm below
+        a parallel SDA label, which the validator and a human accept). So:
+          * wire × any obstacle  → significant overlap only,
+          * wire × wire          → also reject a perpendicular crossing,
+          * own-pin body/text     → exempt (the wire connects to that pin),
+          * the NEW primitive bbox (label text / power-symbol body) → the docking
+            segment (endpoint == anchor, arriving from the NON-outboard side) may
+            touch it; any OTHER segment running THROUGH it is a wire-over-label /
+            wire-through-body overlap → reject.
+        """
+        sb = wire_bbox(seg.start, seg.end, owner_id="s")
+        for o in occupied:
+            if _stub_exempt(o):
+                continue
+            # A wire must NEVER perpendicular-cross another wire (LAW 1: no
+            # crossing, ever — not even "resolved" by a junction).
+            if o.kind == "wire" and _seg_crosses_wire(seg, o):
+                return False
+            # Any SIGNIFICANT overlap with a foreign obstacle (wire body-stack,
+            # symbol body, pin/value text, or another label) is a real overlap
+            # the validator flags — measured at the wire's true-overlap rule.
+            if _overlap_is_significant(sb, o):
+                return False
+        # The new primitive's own bbox: docking segment may touch from the
+        # non-outboard side; any through-bbox run is rejected.
+        at_s = abs(seg.start.x - anchor.x) < 1e-6 and abs(seg.start.y - anchor.y) < 1e-6
+        at_e = abs(seg.end.x - anchor.x) < 1e-6 and abs(seg.end.y - anchor.y) < 1e-6
+        docks = False
+        if at_s or at_e:
+            far = seg.end if at_s else seg.start
+            along = (far.x - anchor.x) * ux + (far.y - anchor.y) * uy
+            docks = along <= 1e-6  # arrives from opposite/perpendicular to body/text
+        if not docks and _overlap_is_significant(sb, prim_bb):
+            return False
+        return True
+
+    # Ring order: nearest outboard distance first, then nearest perpendicular
+    # lane — the first clean+routable slot wins (early-out). Bounded radius.
+    for extra in range(2, 18):
         dist = snap_to_grid(extra * VISUAL_CLEARANCE_MM)
         elbow = Point(snap_to_grid(tip.x + ux * dist), snap_to_grid(tip.y + uy * dist))
         for poff in (0, 1, -1, 2, -2, 3, -3, 4, -4, 6, -6, 8, -8):
@@ -466,14 +537,18 @@ def _place_ic_pin_primitive(
             if prim is None or not _clear(bb, is_stub=False):
                 continue
             try:
-                rw, _rj, rf = _rt(occupied, {"s": [tip, anchor]},
-                                  escape_dirs={"s": [(ux, uy), (0, 0)]})
+                segs = router.route_to(anchor)
             except Exception:  # noqa: BLE001
                 continue
-            if rf or not rw:
+            if not segs:
                 continue
-            if any(_seg_crosses_wire(w, wo) for w in rw for wo in wire_obs):
-                continue  # would cross an existing wire — reject (no overlap)
+            rw = [PlacedWire(a, b) for a, b in segs if a != b]
+            if not rw:
+                continue
+            # FULL clean-route gate: re-validate every routed segment against the
+            # real overlap contract (the router only knew the static bitmap).
+            if not all(_route_seg_clean(w, anchor, bb) for w in rw):
+                continue
             return prim, bb, list(rw)
     return None
 

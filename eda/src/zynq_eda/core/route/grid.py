@@ -453,3 +453,69 @@ def route_terminals(
     # wires_by_net lets callers add fallback segments to the RIGHT net and then
     # compute junctions PER-NET — never junctioning a foreign crossing (a short).
     return wires, jout, failures, wires_by_net
+
+
+class EscapeRouter:
+    """Single-source escape router on a CACHED grid (one rasterisation reused
+    for many target probes).
+
+    :func:`route_terminals` rebuilds the obstacle bitmap on every call, which is
+    O(obstacles) — far too slow when a boxed IC pin must probe a whole RING of
+    candidate label slots (the Strategy-A 2D-ring escape: ~200 probes/pin). This
+    builds the grid ONCE for a fixed pin ``tip`` and exposes :meth:`route_to`,
+    which routes ``tip → target`` reusing that grid (so the ring sweep is
+    grid_build_once + ring_size × A*, not ring_size × grid_build).
+
+    The escape semantics match route_terminals' single-net case exactly: the tip
+    is exempt (it may abut its own body) and a bounded ESCAPE LANE is exempted in
+    the outboard direction so a pin quantised into its own body core can launch.
+    No own-net halo is exempted here (a label-escape pin has no own passives on
+    this stub), and every foreign body/pin/wire stays blocked → no foreign
+    crossing is ever laid.
+    """
+
+    def __init__(self, obstacles, tip: Point, escape_dir: tuple[float, float],
+                 *, clearance_mm: float = _SYMBOL_WIRE_CLEARANCE_MM) -> None:
+        self.grid = RouteGrid(obstacles, clearance_mm=clearance_mm, bounds_pts=[tip])
+        self.tip = tip
+        self.tip_cell = self.grid.cell(tip)
+        # Exempt the tip cell + a bounded outboard lane to the first free cell
+        # (the pin tip can round INTO its own body core after grid+stroke
+        # inflation). Identical to route_terminals' per-terminal lane.
+        exempt: set[tuple[int, int]] = {self.tip_cell}
+        sx = 1 if escape_dir[0] > 0 else (-1 if escape_dir[0] < 0 else 0)
+        sy = 1 if escape_dir[1] > 0 else (-1 if escape_dir[1] < 0 else 0)
+        cx, cy = self.tip_cell
+        for _ in range(_ESCAPE_MAX):
+            cx, cy = cx + sx, cy + sy
+            if not self.grid.in_bounds((cx, cy)):
+                break
+            exempt.add((cx, cy))
+            if (cx, cy) not in self.grid.blocked:
+                break
+        self.exempt = frozenset(exempt)
+
+    def route_to(self, target: Point) -> list[tuple[Point, Point]] | None:
+        """Route ``tip → target`` on the cached grid. The target cell + a 1-cell
+        ring around it are exempt so the wire can dock at the label anchor even
+        when that anchor abuts an obstacle's clearance halo. Returns straight
+        (Point, Point) runs, or None if unreachable."""
+        goal = self.grid.cell(target)
+        if not self.grid.in_bounds(goal):
+            return None
+        exempt = set(self.exempt)
+        exempt.add(goal)
+        path = self.grid.route(self.tip_cell, {goal}, exempt=frozenset(exempt))
+        if path is None:
+            return None
+        segs = _cells_to_segments(path, self.grid)
+        # Anchor the endpoints EXACTLY on tip/target (grid.point may quantise a
+        # sub-grid pin to the nearest cell centre; the pin/label sits on the
+        # 1.27 mm grid here so this is a no-op in practice but keeps endpoints
+        # docked precisely).
+        if segs:
+            _a0, b0 = segs[0]
+            segs[0] = (self.tip, b0)
+            an, _bn = segs[-1]
+            segs[-1] = (an, target)
+        return segs
