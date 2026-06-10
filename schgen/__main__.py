@@ -212,6 +212,29 @@ def main(argv: list[str] | None = None) -> int:
     m.add_argument("-o", "--output", type=Path, default=None)
     m.add_argument("--allow-missing", action="store_true")
     m.set_defaults(func=cmd_bom)
+    pa = sub.add_parser("part", help="parts/ library pipeline (LCSC/EasyEDA)")
+    pa_sub = pa.add_subparsers(dest="part_cmd", required=True)
+    padd = pa_sub.add_parser(
+        "add", help="fetch an LCSC part and generate parts/<MPN>/ "
+                    "(part.py + symbol + faithful footprint + 3D)")
+    padd.add_argument("lcsc_id", help="LCSC id, e.g. C132291")
+    padd.add_argument("--name", default=None,
+                      help="folder/symbol name override (default: MPN)")
+    padd.add_argument("--from-json", type=Path, default=None,
+                      help="offline mode: use a saved EasyEDA API response")
+    padd.add_argument("-o", "--parts-dir", type=Path, default=None,
+                      help="parts library root (default: <repo>/parts)")
+    from schgen.part_gen import cmd_part_add
+    padd.set_defaults(func=cmd_part_add)
+    pf = sub.add_parser(
+        "preflight", help="live JLC/LCSC stock + Basic/Extended + cost check")
+    pf.add_argument("subsystems", nargs="+")
+    pf.add_argument("--qty", type=int, default=1,
+                    help="number of boards (default 1)")
+    pf.add_argument("--allow-missing", action="store_true",
+                    help="parts without LCSC ids are reported but not fatal")
+    from schgen.preflight import cmd_preflight
+    pf.set_defaults(func=cmd_preflight)
     args = p.parse_args(argv)
     return args.func(args)
 
