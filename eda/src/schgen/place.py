@@ -173,6 +173,10 @@ class _Line:
     net: str
     pin_pt: tuple[float, float]
     attach: str | None        # ref of pull-up R / filter C tapping this line
+    # (pull-up ref, pull-down ref) when the net is a divider mid-point:
+    attach_div: tuple[str, str] | None = None
+    net_class: NetClass = NetClass.PORT
+    pin_etype: str = ""       # electrical type of the IC pin on this line
 
 
 class _Builder:
@@ -240,8 +244,9 @@ class _Builder:
         self.pl.boxes.append(Box(*tm.centered_box(part.value, vp[0], vp[1]),
                                  "value", ref))
 
-    def label(self, net: str, x: float, y: float, rot: int) -> None:
-        self.pl.hlabels.append(HierLabel(net, x, y, rot))
+    def label(self, net: str, x: float, y: float, rot: int,
+              shape: str = "bidirectional") -> None:
+        self.pl.hlabels.append(HierLabel(net, x, y, rot, shape=shape))
         self.pl.boxes.append(Box(*tm.glabel_box(net, x, y, rot),
                                  "label", f"label:{net}"))
 
@@ -327,30 +332,57 @@ class _Builder:
         for side in ("left", "right"):
             sgn = -1 if side == "left" else 1
             lines: list[_Line] = []
-            for pin, pt in sides[side]:
+            # consecutive same-net POWER/GROUND pins share one rail bus, so
+            # group the side's pins into runs first (sorted top-to-bottom)
+            runs: list[list[tuple[Pin, tuple[float, float], object]]] = []
+            for pin, pt in sorted(sides[side], key=lambda t: t[1][1]):
                 net = self.net_of(ic_ref, pin.number)
-                if net is None:
-                    self.pl.no_connects.append(NoConnect(*pt))
+                is_rail = net is not None and net.net_class in (
+                    NetClass.POWER, NetClass.GROUND)
+                prev = runs[-1][-1][2] if runs else None
+                if (is_rail and prev is not None
+                        and getattr(prev, "name", None) == net.name):
+                    runs[-1].append((pin, pt, net))
+                else:
+                    runs.append([(pin, pt, net)])
+            for run in runs:
+                net0 = run[0][2]
+                if net0 is None:
+                    for _, pt, _ in run:
+                        self.pl.no_connects.append(NoConnect(*pt))
                     continue
-                if net.net_class == NetClass.POWER:
-                    # short exclusive corner stub up to a rail symbol
-                    jx = pt[0] + sgn * 3.81
-                    top = (jx, pt[1] - 5.08)
-                    self.pl.plan(net.name, pt, (jx, pt[1]), top)
-                    self.power(net.name, *top)
+                if net0.net_class in (NetClass.POWER, NetClass.GROUND):
+                    jx = run[0][1][0] + sgn * 3.81
+                    if len(run) == 1:
+                        # short exclusive corner stub up/down to a rail symbol
+                        pt = run[0][1]
+                        dy = -5.08 if net0.net_class is NetClass.POWER else 5.08
+                        end = (jx, pt[1] + dy)
+                        self.pl.plan(net0.name, pt, (jx, pt[1]), end)
+                    else:
+                        # one vertical bus joins the run; the rail symbol sits
+                        # directly on the outermost bus corner
+                        ys = [pt[1] for _, pt, _ in run]
+                        for _, pt, _ in run:
+                            self.pl.plan(net0.name, pt, (jx, pt[1]))
+                        for y0, y1 in zip(ys, ys[1:]):
+                            self.pl.plan(net0.name, (jx, y0), (jx, y1))
+                        end = ((jx, ys[0])
+                               if net0.net_class is NetClass.POWER
+                               else (jx, ys[-1]))
+                    self.power(net0.name, *end)
                     continue
-                if net.net_class == NetClass.GROUND:
-                    jx = pt[0] + sgn * 3.81
-                    bot = (jx, pt[1] + 5.08)
-                    self.pl.plan(net.name, pt, (jx, pt[1]), bot)
-                    self.power(net.name, *bot)
-                    continue
-                attach = None
-                if net.name in pullup_of:
-                    attach = pullup_of[net.name][0]
-                elif net.name in hang_cap_of:
-                    attach = hang_cap_of[net.name]
-                lines.append(_Line(net.name, pt, attach))
+                for pin, pt, net in run:
+                    attach = attach_div = None
+                    if net.name in pullup_of and net.name in hang_cap_of:
+                        attach_div = (pullup_of[net.name][0],
+                                      hang_cap_of[net.name])
+                    elif net.name in pullup_of:
+                        attach = pullup_of[net.name][0]
+                    elif net.name in hang_cap_of:
+                        attach = hang_cap_of[net.name]
+                    lines.append(_Line(net.name, pt, attach, attach_div,
+                                       net.net_class, pin.etype))
             if not lines:
                 continue
             # left side hangs pull-ups UP -> iterate top line first;
@@ -359,24 +391,48 @@ class _Builder:
             hang_sgn = -1 if side == "left" else 1
             rank_pin_y = lines[0].pin_pt[1] + hang_sgn * sp.hang_stub
             prev_label_edge: float | None = None
+            prev_label_y: float | None = None
+            # two label boxes only contend when their rows are this close:
+            label_clash_dy = tm.GLABEL_H * tm.SIZE + 0.5
             for ln in lines:
                 px, py = ln.pin_pt
                 lx = px + sgn * sp.port_run
-                if prev_label_edge is not None:
+                if (prev_label_edge is not None and prev_label_y is not None
+                        and abs(py - prev_label_y) < label_clash_dy):
                     want = prev_label_edge + sgn * (sp.stagger_extra
                                                     + sp.label_tap_gap)
                     lx = min(lx, gfloor(want)) if sgn < 0 else max(lx, gceil(want))
+                if ln.net_class is not NetClass.PORT:
+                    # internal SIGNAL line: drawn wire only — never a label.
+                    tap = (lx, py)
+                    self.pl.plan(ln.net, (px, py), tap)
+                    if ln.attach_div:
+                        self._divider(ln, tap)
+                    elif ln.attach:
+                        self._attach_column(ln, tap, rank_pin_y, side)
+                    continue
                 rot = 180 if side == "left" else 0
-                if ln.attach:
+                if ln.attach or ln.attach_div:
                     tap = (lx - sgn * sp.label_tap_gap, py)  # between label & pin
                     self.pl.plan(ln.net, (px, py), tap)
                     self.pl.plan(ln.net, tap, (lx, py))
-                    self._attach_column(ln, tap, rank_pin_y, side)
+                    if ln.attach_div:
+                        self._divider(ln, tap)
+                    else:
+                        self._attach_column(ln, tap, rank_pin_y, side)
                 else:
                     self.pl.plan(ln.net, (px, py), (lx, py))
-                self.label(ln.net, lx, py, rot)
+                # the label is the sheet's port: its direction mirrors the IC
+                # pin (an input pin's port label DRIVES the net — KiCad's ERC
+                # driver model — and renders the datasheet-correct chevron)
+                shape = {"input": "input", "output": "output",
+                         "tri_state": "tri_state", "open_collector": "output",
+                         "open_emitter": "output"}.get(ln.pin_etype,
+                                                       "bidirectional")
+                self.label(ln.net, lx, py, rot, shape=shape)
                 gb = tm.glabel_box(ln.net, lx, py, rot)
                 prev_label_edge = gb[0] if sgn < 0 else gb[2]
+                prev_label_y = py
 
         # ---- top/bottom power pins ------------------------------------------------
         for pin, pt in sides["top"]:
@@ -405,7 +461,15 @@ class _Builder:
 
         # ---- decoupling cluster -----------------------------------------------------
         col_x = ax - sp.cluster_dx
-        cy = ay + sp.cluster_dy
+        # a tall IC body pushes the cap row below itself, never beside/inside;
+        # a wide cluster shifts left so its columns clear the body's bottom
+        # edge apparatus (GND stub/symbol) entirely
+        n_caps = sum(len(v) for v in cluster.values())
+        if n_caps:
+            span = (n_caps - 1) * sp.cap_pitch
+            col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
+        col_x_start = col_x
+        cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
         for rail, caps in cluster.items():
             tops: list[float] = []
             for ref in caps:
@@ -425,7 +489,7 @@ class _Builder:
 
         # ---- power-flag corner -------------------------------------------------------
         fy = cy + sp.flags_dy
-        fx = ax - sp.cluster_dx
+        fx = min(ax - sp.cluster_dx, col_x_start)
         rails = [n for n in c.nets.values()
                  if n.net_class in (NetClass.POWER, NetClass.GROUND)]
         for net in rails:
@@ -470,6 +534,35 @@ class _Builder:
             far_pt = (tap[0], anchor_y + pin_off)
         self.passive(ref, tap[0], anchor_y, rot)
         self.power(far_net.name, *far_pt)
+
+    def _divider(self, ln: _Line, tap: tuple[float, float]) -> None:
+        """Divider mid-point sense line (datasheet style): the pull-up R is
+        stacked vertically ABOVE the tap up to its rail symbol, the pull-down
+        R BELOW it down to its ground symbol; both signal pins land EXACTLY
+        on the tap, so the line ends in a clean vertical divider."""
+        assert ln.attach_div is not None
+        top_ref, bot_ref = ln.attach_div
+        for ref, below in ((top_ref, False), (bot_ref, True)):
+            part = self.c.parts[ref]
+            sdef = self.lib.get(part.lib_id)
+            pins = sorted(self.lib.pin_numbers(part.lib_id))
+            sig_pin = [p for p in pins
+                       if (n := self.net_of(ref, p)) and n.name == ln.net][0]
+            far_pin = self.other_pin(ref, sig_pin)
+            far_net = self.net_of(ref, far_pin)
+            assert far_net is not None
+            sig_y = _pin(sdef, sig_pin).y
+            pin_off = abs(sig_y)
+            if below:
+                anchor_y = tap[1] + pin_off
+                rot = 0 if sig_y > 0 else 180
+                far_pt = (tap[0], anchor_y + pin_off)
+            else:
+                anchor_y = tap[1] - pin_off
+                rot = 180 if sig_y > 0 else 0
+                far_pt = (tap[0], anchor_y - pin_off)
+            self.passive(ref, tap[0], anchor_y, rot)
+            self.power(far_net.name, *far_pt)
 
     def _vertical_passive(self, ref: str, x: float, cy: float,
                           rail_on_top: bool) -> None:

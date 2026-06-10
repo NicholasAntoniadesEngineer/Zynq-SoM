@@ -130,11 +130,16 @@ def _embed_symbol(lib: Library, lib_id: str) -> list:
 
 def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
     c = design.circuit
+    # The root sheet uuid MUST also be the symbol-instance path ("/<uuid>"):
+    # with a bare "/" KiCad cannot resolve instance references, and every net
+    # whose name would be pad-derived (no label, no power symbol) silently
+    # drops out of ERC and the exported netlist.
+    root_uuid = _u()
     doc: list = [Sym("kicad_sch"),
                  [Sym("version"), 20250114],
                  [Sym("generator"), "schgen"],
                  [Sym("generator_version"), "1.0"],
-                 [Sym("uuid"), _u()],
+                 [Sym("uuid"), root_uuid],
                  [Sym("paper"), design.paper]]
 
     lib_ids = sorted({p.lib_id for p in design.parts}
@@ -186,7 +191,7 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
             node.append([Sym("pin"), p.number, [Sym("uuid"), _u()]])
         node.append([Sym("instances"),
                      [Sym("project"), c.name,
-                      [Sym("path"), "/",
+                      [Sym("path"), f"/{root_uuid}",
                        [Sym("reference"), ref], [Sym("unit"), 1]]]])
         return node
 

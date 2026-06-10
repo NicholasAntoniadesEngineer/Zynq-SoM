@@ -67,7 +67,23 @@ Reference/Value text placed by the same overlap rules as everything else.
   same-axis overlaps between different nets' wires (ports of this session's
   /tmp/audit.py + /tmp/gate.py detectors).
 - `erc_gate.py`: `kicad-cli sch erc` errors == 0 (necessary, not sufficient).
+  Fragment-sheet policy (M3): `pin_not_driven` runs at WARNING — the same
+  policy as the hand-audited carrier project — because a standalone
+  subsystem's PORT-net inputs are by construction driven only after
+  hierarchical assembly, and KiCad counts no global-label shape as a driver
+  (verified empirically). The build compensates with a STRICTER schgen-side
+  check (`_check_inputs_driven`): every `input` pin must sit on a net with a
+  real same-sheet driver-class pin, a power rail, or an explicit PORT net.
+  Unlike KiCad's check it cannot be silenced by a stray passive on an
+  internal net. Everything else stays at kicad-cli factory severity.
 - Render PNG for human review on every build.
+
+### Emit invariant learned the hard way (M3)
+The root sheet uuid MUST be reused as the symbol-instance path
+(`/<root-uuid>`, not `/`): otherwise KiCad cannot resolve instance
+references, and every net whose name would be pad-derived (no label, no
+power symbol — i.e. every plain internal wired net) silently drops out of
+both ERC and the exported netlist while the file still LOOKS perfect.
 
 ## CLI
 `python -m schgen build eda/src/schgen/subsystems/usb_pd.py -o out/`
