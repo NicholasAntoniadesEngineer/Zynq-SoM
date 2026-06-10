@@ -48,9 +48,12 @@ after every verified step.
   EN and module load-switch EN); per-rail PG LEDs.
 - **HDMI**: BOTH TX and RX on rev A. **LCD**: generic 40-pin TTL RGB888 FFC (0.5mm) +
   touch I2C + on-carrier backlight boost. **Camera**: RPi 15-pin FFC, 2-lane MIPI CSI-2.
-- **microSD**: 1.8V direct per the SoM design. OPEN VERIFICATION: standard SD cards
-  initialize at 3.3V — verify against the SoM schematic how external SD init is handled
-  and FLAG if a carrier-side translator (TXS02612-class) is actually required.
+- **microSD**: VERIFIED 2026-06-10 against the SoM netlist: SDIO_CLK/CMD/D0..D3 run
+  J1 -> Zynq U2 directly (no SoM-side translator), and the SoM README declares these
+  pins 1.8V. Standard SD cards initialize at 3.3V (1.8V only after the UHS-I switch),
+  so a 1.8V-only slot cannot enumerate cards. DECISION (flag resolved): the carrier
+  microSD subsystem MUST include an SDIO level translator (TXS02612-class): 1.8V on
+  the SoM side, 3.3V card side, powered from +3V3/+1V8.
 - **Form factor**: free, connector-driven (~120x100 class expected; user owns outline).
 - **Stackup**: JLCPCB 4-layer JLC04161H-7628 — constraints export uses its impedance
   geometry tables (90R USB, 100R TMDS/LVDS/MIPI diff).
