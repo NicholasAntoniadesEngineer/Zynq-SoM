@@ -32,6 +32,7 @@ A4_CENTER = (148.59, 100.33)
 POWER_LIBS = {
     "+3V3": "power:+3V3",
     "+5V": "power:+5V",
+    "+1V8": "power:+1V8",
     "GND": "power:GND",
     "VBUS": "power:VBUS",
     "+VIN": "schgen:+VIN",
@@ -237,8 +238,12 @@ class _Builder:
         else:
             cx_ref = body.x0 - 0.42 - w_ref / 2
             cx_val = body.x0 - 0.42 - w_val / 2
-        rp = (cx_ref, y - 1.27, 0)
-        vp = (cx_val, y + 1.27, 0)
+        # KiCad composes property-text angle with the symbol rotation: a
+        # 90/270-rotated passive needs angle 90 so the text renders upright
+        # horizontal (the boxes below already assume horizontal text).
+        ta = 90 if rot % 180 == 90 else 0
+        rp = (cx_ref, y - 1.27, ta)
+        vp = (cx_val, y + 1.27, ta)
         self.pl.parts.append(PlacedPart(ref, part.lib_id, part.value, x, y, rot,
                                         part.footprint, ref_pos=rp, val_pos=vp))
         self.pl.boxes.append(body)
