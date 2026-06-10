@@ -19,8 +19,9 @@ schematics from Python subsystem definitions.
   See `schgen/DESIGN.md` for the architecture and the three immutable gates.
 - `shared/` — KiCad assets shared between SoM and carrier (symbols,
   footprints, 3D models).
-- `legacy/` — the previous generator (`zynq_eda`) and its generated carrier,
-  kept as the pinout/reference source of truth. Not maintained.
+- `carrier/som_interface.json` — the SoM↔carrier connector contract (J1/J2/J3
+  pin→net), extracted PROGRAMMATICALLY from the SoM project:
+  `python -m schgen som-interface som/Zynq_SoM.kicad_sch`. Never hand-edited.
 - `tools/`, `docs/`, `scripts/` — utilities, block diagrams, references.
 
 ## Building a carrier subsystem

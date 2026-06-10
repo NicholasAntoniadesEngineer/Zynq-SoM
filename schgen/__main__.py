@@ -200,6 +200,13 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("-o", "--outdir", type=Path, default=None)
     b.add_argument("--no-render", action="store_true")
     b.set_defaults(func=cmd_build)
+    si = sub.add_parser("som-interface",
+                        help="extract J-connector pin->net contract from the SoM project")
+    si.add_argument("som_sch")
+    si.add_argument("--refs", default="J1,J2,J3")
+    si.add_argument("-o", "--output", default="carrier/som_interface.json")
+    from schgen.som_interface import cmd as _si_cmd
+    si.set_defaults(func=lambda a: _si_cmd(a))
     m = sub.add_parser("bom", help="export JLCPCB assembly BOM from circuits")
     m.add_argument("subsystems", nargs="+")
     m.add_argument("-o", "--output", type=Path, default=None)
