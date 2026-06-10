@@ -39,10 +39,17 @@ def circuit() -> Circuit:
         c.net(net.name, f"{ref}.1")
         c.net("GND", f"{ref}.2")
 
-    # I2C + interrupt to the STM32, pulled to +3V3
-    c.port("STM32_I2C2_SDA", "U1.7")
-    c.port("STM32_I2C2_SCL", "U1.6")
-    c.port("STM32_FUSB302_INT", "U1.5")
+    # I2C + interrupt to the STM32, pulled to +3V3. The SoM contract exposes
+    # raw STM32_GPIO* names; the generated J1 sheet (wave 3) carries the
+    # GPIO->I2C2/INT function map, so these ports are explicitly deferred.
+    J1_MAP = "som_j1_connector (wave 3 STM32 GPIO function map)"
+    c.port("STM32_I2C2_SDA", "U1.7",
+           kind="i2c", role="sda", bus="STM32_I2C2", speed_hz=400_000,
+           expect=J1_MAP)
+    c.port("STM32_I2C2_SCL", "U1.6",
+           kind="i2c", role="scl", bus="STM32_I2C2", speed_hz=400_000,
+           expect=J1_MAP)
+    c.port("STM32_FUSB302_INT", "U1.5", expect=J1_MAP)
     c.pullup("U1.7", "4k7", "+3V3")               # R1
     c.pullup("U1.6", "4k7", "+3V3")               # R2
     c.pullup("U1.5", "4k7", "+3V3")               # R3

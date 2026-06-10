@@ -207,6 +207,16 @@ def main(argv: list[str] | None = None) -> int:
     si.add_argument("-o", "--output", default="carrier/som_interface.json")
     from schgen.som_interface import cmd as _si_cmd
     si.set_defaults(func=lambda a: _si_cmd(a))
+    lk = sub.add_parser(
+        "link", help="board-level link: port graph + constraints + block "
+                     "diagram + hierarchical root sheet with netlist gate")
+    lk.add_argument("subsystems", nargs="*",
+                    help="names in carrier/subsystems/ (default: all)")
+    lk.add_argument("-o", "--outdir", type=Path, default=None)
+    lk.add_argument("--no-board", action="store_true",
+                    help="skip root-sheet emission + board netlist gate")
+    from schgen.link import cmd_link
+    lk.set_defaults(func=cmd_link)
     m = sub.add_parser("bom", help="export JLCPCB assembly BOM from circuits")
     m.add_argument("subsystems", nargs="+")
     m.add_argument("-o", "--output", type=Path, default=None)

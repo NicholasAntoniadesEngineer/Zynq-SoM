@@ -102,6 +102,34 @@ class NoConnect:
 
 
 @dataclass
+class SheetPin:
+    """A hierarchical pin on a sheet symbol (root-side of a sub-sheet's
+    hierarchical_label of the same name). ``rotation`` encodes the edge the
+    pin sits on, KiCad-style: 0 right edge, 180 left edge."""
+    name: str
+    x: float
+    y: float
+    rotation: int = 180
+    shape: str = "bidirectional"
+
+
+@dataclass
+class SheetSymbol:
+    """A sub-sheet instance on a (root) sheet. ``uuid`` is fixed by the board
+    generator because it is a component of every symbol-instance path inside
+    the sub-sheet file ("/<root-uuid>/<this-uuid>")."""
+    name: str            # Sheetname property
+    file: str            # Sheetfile property (relative path)
+    x: float
+    y: float
+    w: float
+    h: float
+    uuid: str
+    pins: list[SheetPin] = field(default_factory=list)
+    page: str = "2"
+
+
+@dataclass
 class PlacedDesign:
     circuit: Circuit
     parts: list[PlacedPart] = field(default_factory=list)
@@ -111,6 +139,7 @@ class PlacedDesign:
     hlabels: list[HierLabel] = field(default_factory=list)
     llabels: list[LocalLabel] = field(default_factory=list)
     no_connects: list[NoConnect] = field(default_factory=list)
+    sheets: list[SheetSymbol] = field(default_factory=list)
     paper: str = PAPER_DEFAULT
     standalone: bool = True   # True: PORT labels emit as global_label
 
@@ -141,13 +170,26 @@ def _embed_symbol(lib: Library, lib_id: str) -> list:
     return block
 
 
-def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
+def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
+         instance_path: str | None = None,
+         project: str | None = None,
+         sheet_uuid: str | None = None) -> Path:
+    """Serialise one sheet.
+
+    Standalone (default): the sheet is its own root; the file uuid doubles as
+    the symbol-instance path. Hierarchy mode (board linker): the parent
+    generator owns the uuids — ``sheet_uuid`` is this file's uuid and
+    ``instance_path`` is the full root-to-here path ("/<root>/<sheet-symbol>")
+    each symbol instance must carry, with ``project`` the root project name.
+    """
     c = design.circuit
     # The root sheet uuid MUST also be the symbol-instance path ("/<uuid>"):
     # with a bare "/" KiCad cannot resolve instance references, and every net
     # whose name would be pad-derived (no label, no power symbol) silently
     # drops out of ERC and the exported netlist.
-    root_uuid = _u()
+    root_uuid = sheet_uuid or _u()
+    inst_path = instance_path or f"/{root_uuid}"
+    inst_project = project or c.name
     doc: list = [Sym("kicad_sch"),
                  [Sym("version"), 20250114],
                  [Sym("generator"), "schgen"],
@@ -184,6 +226,36 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
                     [Sym("at"), ll.x, ll.y, ll.rotation],
                     _effects(justify=just),
                     [Sym("uuid"), _u()]])
+    for sh in design.sheets:
+        node: list = [Sym("sheet"),
+                      [Sym("at"), sh.x, sh.y],
+                      [Sym("size"), sh.w, sh.h],
+                      [Sym("exclude_from_sim"), Sym("no")],
+                      [Sym("in_bom"), Sym("yes")],
+                      [Sym("on_board"), Sym("yes")],
+                      [Sym("dnp"), Sym("no")],
+                      [Sym("fields_autoplaced"), Sym("yes")],
+                      [Sym("stroke"), [Sym("width"), 0.1524],
+                       [Sym("type"), Sym("solid")]],
+                      [Sym("fill"), [Sym("color"), 0, 0, 0, 0.0]],
+                      [Sym("uuid"), sh.uuid],
+                      [Sym("property"), "Sheetname", sh.name,
+                       [Sym("at"), sh.x, sh.y - 0.7116, 0],
+                       _effects(justify="left bottom")],
+                      [Sym("property"), "Sheetfile", sh.file,
+                       [Sym("at"), sh.x, sh.y + sh.h + 0.5846, 0],
+                       _effects(justify="left top")]]
+        for sp in sh.pins:
+            just = "right" if sp.rotation in (180, 270) else "left"
+            node.append([Sym("pin"), sp.name, Sym(sp.shape),
+                         [Sym("at"), sp.x, sp.y, sp.rotation],
+                         _effects(justify=just),
+                         [Sym("uuid"), _u()]])
+        node.append([Sym("instances"),
+                     [Sym("project"), inst_project,
+                      [Sym("path"), f"/{root_uuid}",
+                       [Sym("page"), sh.page]]]])
+        doc.append(node)
 
     def _sym_instance(ref: str, lib_id: str, value: str, x: float, y: float,
                       rot: int, footprint: str,
@@ -215,8 +287,8 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
         for p in sdef.pins:
             node.append([Sym("pin"), p.number, [Sym("uuid"), _u()]])
         node.append([Sym("instances"),
-                     [Sym("project"), c.name,
-                      [Sym("path"), f"/{root_uuid}",
+                     [Sym("project"), inst_project,
+                      [Sym("path"), inst_path,
                        [Sym("reference"), ref], [Sym("unit"), 1]]]])
         return node
 

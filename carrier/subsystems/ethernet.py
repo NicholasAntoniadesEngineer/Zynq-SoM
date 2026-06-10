@@ -40,12 +40,15 @@ FOOTPRINT = "Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm"
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 
-# pin number -> PORT net (PHY side = SoM PHY, line side = RJ45)
+# pin number -> PORT net. PHY side uses the SoM contract spellings VERBATIM
+# (carrier/som_interface.json: ETH_PHY_MDI0_P .. ETH_PHY_MDI3_N) — the linker
+# binds by exact name; the old ZYNQ_ETH_MDI_0_P spelling was name drift.
+# Line side goes to the RJ45 connector subsystem (wave 2).
 PHY_PORTS = {
-    1: "ZYNQ_ETH_MDI_0_P", 2: "ZYNQ_ETH_MDI_0_N",
-    3: "ZYNQ_ETH_MDI_1_P", 4: "ZYNQ_ETH_MDI_1_N",
-    5: "ZYNQ_ETH_MDI_2_P", 6: "ZYNQ_ETH_MDI_2_N",
-    7: "ZYNQ_ETH_MDI_3_P", 8: "ZYNQ_ETH_MDI_3_N",
+    1: "ETH_PHY_MDI0_P", 2: "ETH_PHY_MDI0_N",
+    3: "ETH_PHY_MDI1_P", 4: "ETH_PHY_MDI1_N",
+    5: "ETH_PHY_MDI2_P", 6: "ETH_PHY_MDI2_N",
+    7: "ETH_PHY_MDI3_P", 8: "ETH_PHY_MDI3_N",
 }
 LINE_PORTS = {
     19: "ETH_LINE_MDI_0_P", 20: "ETH_LINE_MDI_0_N",
@@ -63,6 +66,15 @@ def circuit() -> Circuit:
         c.port(net, f"T1.{pin}")
     for pin, net in LINE_PORTS.items():
         c.port(net, f"T1.{pin}")
+
+    # typed ports: every MDI pair is 100R differential (1000BASE-T).
+    # PHY side binds to the SoM contract; line side awaits the RJ45 subsystem.
+    for n in range(4):
+        c.port_type(f"ETH_PHY_MDI{n}_P", kind="diff_pair",
+                    pair_with=f"ETH_PHY_MDI{n}_N", impedance=100)
+        c.port_type(f"ETH_LINE_MDI_{n}_P", kind="diff_pair",
+                    pair_with=f"ETH_LINE_MDI_{n}_N", impedance=100,
+                    expect="rj45_connector (wave 2)")
 
     # Bob-Smith: per line-side centre tap, 75R || 1n(2kV) into BS_COMMON
     for n in range(4):

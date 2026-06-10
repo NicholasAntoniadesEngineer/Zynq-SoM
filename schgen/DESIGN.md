@@ -90,6 +90,35 @@ both ERC and the exported netlist while the file still LOOKS perfect.
 → writes `usb_pd.kicad_sch`, `usb_pd.png`, prints the three gate verdicts.
 Build FAILS (non-zero exit) unless ALL gates pass.
 
+## Board linker (`schgen link`, P3)
+`python -m schgen link [subsystems...]` (default: all of `carrier/subsystems/`).
+- **Typed ports** (`model.py`): `c.port(..., kind=...)` / `c.port_type(net, ...)` —
+  kinds `single | diff_pair | usb_hs_pair | tmds_pair | i2c | sd_bus`. Pair kinds
+  carry `pair_with` + differential impedance (90R default USB, 100R default TMDS);
+  i2c carries role/bus/speed; sd_bus carries `level_v`. Untyped ports stay `single`.
+  `expect="..."` is the EXPLICIT deferral for ports whose binding subsystem lands in
+  a later wave — never a silent skip.
+- **Linking** (`link.py`): every PORT must resolve to a same-named PORT on another
+  sheet or a SoM net in `carrier/som_interface.json`. One enumerated alias map for
+  rail spellings only (`+VIN`<->`VIN`); signals never fuzz — near-misses are
+  name-drift ERRORS (the detector caught the real `ZYNQ_ETH_MDI_0_P` vs
+  `ETH_PHY_MDI0_P` drift). Errors: undefined port, name drift, pair polarity,
+  kind/impedance/sd-level mismatch. Warnings: deferred ports, unbound SoM nets.
+- **Board gate** (`board.py`): re-emits each sheet with true hierarchical labels and
+  board-unique references (U1 -> U101/U201), generates a root `board.kicad_sch`
+  (sheet symbols + hier pins mirroring each sub-sheet label's shape, stub + GLOBAL
+  label per port — a root LOCAL label on a multi-pin sub-sheet net trips a
+  kicad-cli label_dangling false positive, minimal-repro'd), keeps ONE PWR_FLAG per
+  rail board-wide, then PROVES via `kicad-cli sch export netlist` on the root that
+  every port net and rail comes back as ONE net with every expected pin. Root
+  ERC = 0 (same `pin_not_driven`-as-warning fragment policy as single sheets).
+- **Constraints** (`constraints.py`): `carrier/out/layout_constraints.kicad_dru` +
+  `.csv` — JLC04161H-7628 geometry (90R diff 0.2611/0.2032 mm, 100R diff
+  0.2052/0.2032 mm, JLCPCB calculator values for THIS stackup; the 0.127/0.127
+  figures circulating belong to the thinner 3313 prepreg), net classes per typed
+  port, length-match groups per pair/bus.
+- **Diagram** (`diagram.py`): `carrier/out/block_diagram.svg` from the port graph.
+
 ## Milestones
 M1: model + gates + emit a hand-placed trivial RC subsystem end-to-end (proves the
     gates + emitter). M2: FUSB302 (usb_pd) — the hardest cluster — fully generated,

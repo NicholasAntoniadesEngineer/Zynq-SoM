@@ -48,15 +48,21 @@ def circuit() -> Circuit:
     c.series("+VIN", "CP2102N_VBUS_SNS", "22k1")    # R2
     c.series("CP2102N_VBUS_SNS", "GND", "47k5")     # R3
 
-    # USB data to the connector
+    # USB data to the connector — a 90R differential pair (USB 2.0 HS);
+    # the USB receptacle subsystem lands in wave 2.
     c.port("USB_UART_DP", "U1.3")
     c.port("USB_UART_DM", "U1.4")
+    c.port_type("USB_UART_DP", kind="usb_hs_pair", pair_with="USB_UART_DM",
+                expect="usb_uart_connector (wave 2)")
 
-    # UART to the Zynq PS UART0 — TXD->RXD / RTS->CTS crossover naming
-    c.port("ZYNQ_PS_UART0_RXD", "U1.21")     # bridge TXD drives Zynq RXD
-    c.port("ZYNQ_PS_UART0_TXD", "U1.20")     # Zynq TXD feeds bridge RXD
-    c.port("ZYNQ_PS_UART0_CTS_N", "U1.19")   # bridge ~RTS drives Zynq ~CTS
-    c.port("ZYNQ_PS_UART0_RTS_N", "U1.18")   # Zynq ~RTS feeds bridge ~CTS
+    # UART to the Zynq PS UART0 — TXD->RXD / RTS->CTS crossover naming.
+    # The SoM contract exposes raw ZYNQ_PS_MIO* names; the generated J1 sheet
+    # (wave 3) carries the MIO->UART0 function map, so these are deferred.
+    J1_MAP = "som_j1_connector (wave 3 MIO function map)"
+    c.port("ZYNQ_PS_UART0_RXD", "U1.21", expect=J1_MAP)    # bridge TXD -> Zynq RXD
+    c.port("ZYNQ_PS_UART0_TXD", "U1.20", expect=J1_MAP)    # Zynq TXD -> bridge RXD
+    c.port("ZYNQ_PS_UART0_CTS_N", "U1.19", expect=J1_MAP)  # bridge ~RTS -> Zynq ~CTS
+    c.port("ZYNQ_PS_UART0_RTS_N", "U1.18", expect=J1_MAP)  # Zynq ~RTS -> bridge ~CTS
 
     # unused by design: ~RI/CLK, GPIO.0-3, SUSPEND/~SUSPEND, ~DSR/~DTR/~DCD,
     # and the two physical NC pins (10, 16)

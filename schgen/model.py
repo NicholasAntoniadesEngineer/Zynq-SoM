@@ -30,6 +30,58 @@ class NetClass(enum.Enum):
 _GROUND_RE = re.compile(r"^(GND|GNDA|GNDD|GNDPWR|AGND|DGND|PGND|VSS|CHASSIS_GND)")
 _POWER_RE = re.compile(r"^\+|^VBUS$|^VDD|^VCC")
 
+# ---- typed ports --------------------------------------------------------------
+# A PORT net may optionally carry a PortType: layout-relevant electrical intent
+# (impedance class, pairing, bus grouping, signaling level). The linker
+# (schgen/link.py) and the constraints exporter (schgen/constraints.py) consume
+# these; untyped ports default to kind "single" and keep working unchanged.
+
+PORT_KINDS = frozenset({
+    "single",        # plain signal (default)
+    "diff_pair",     # generic differential pair (explicit impedance)
+    "usb_hs_pair",   # USB 2.0 high-speed D+/D- (90R differential)
+    "tmds_pair",     # HDMI/DVI TMDS lane (100R differential)
+    "i2c",           # i2c bus member (role scl/sda, bus group, speed)
+    "sd_bus",        # SD/SDIO bus member (signaling level_v, bus group)
+})
+_PAIR_KINDS = frozenset({"diff_pair", "usb_hs_pair", "tmds_pair"})
+_DEFAULT_IMPEDANCE = {"usb_hs_pair": 90, "tmds_pair": 100}
+
+# polarity inference for pair nets, by UPPERCASE name suffix (longest first).
+_POLARITY_SUFFIXES: tuple[tuple[str, str], ...] = (
+    ("_DP", "P"), ("_DM", "N"), ("_DN", "N"),
+    ("DP", "P"), ("DM", "N"), ("DN", "N"),
+    ("_P", "P"), ("_N", "N"),
+    ("D+", "P"), ("D-", "N"),
+    ("+", "P"), ("-", "N"),
+    ("P", "P"), ("N", "N"),
+)
+
+
+def pair_polarity(name: str) -> str | None:
+    """Infer 'P'/'N' from a net name's suffix; None if not inferable."""
+    up = name.upper()
+    for suffix, pol in _POLARITY_SUFFIXES:
+        if up.endswith(suffix):
+            return pol
+    return None
+
+
+@dataclass(frozen=True)
+class PortType:
+    kind: str = "single"
+    pair_with: str | None = None     # complement net (pair kinds)
+    impedance: int | None = None     # differential impedance, ohms (pair kinds)
+    role: str | None = None          # i2c: "scl" | "sda"
+    bus: str | None = None           # bus/group name (i2c, sd_bus)
+    speed_hz: int | None = None      # i2c bus speed
+    level_v: float | None = None     # sd_bus signaling level (volts)
+    expect: str | None = None        # EXPLICIT deferral: name of the future
+    #                                  subsystem expected to bind this port.
+    #                                  The linker downgrades "resolves nowhere"
+    #                                  to a WARNING for expect-marked ports —
+    #                                  never silently, always author-declared.
+
 
 @dataclass(frozen=True)
 class PinRef:
@@ -70,6 +122,7 @@ class Circuit:
         self.parts: dict[str, Part] = {}
         self.nets: dict[str, Net] = {}
         self.nc_pins: set[PinRef] = set()      # author-declared no-connects
+        self.port_types: dict[str, PortType] = {}   # PORT net -> PortType
         self._ref_counters: dict[str, int] = {}
 
     # ---- parts -------------------------------------------------------------
@@ -122,9 +175,90 @@ class Circuit:
                 n.pins.append(pr)
         return n
 
-    def port(self, name: str, *pins: PinRef | str) -> Net:
-        """An external-interface net (hier label at the sheet edge)."""
-        return self.net(name, *pins, net_class=NetClass.PORT)
+    def port(self, name: str, *pins: PinRef | str,
+             kind: str | None = None, **type_kwargs) -> Net:
+        """An external-interface net (hier label at the sheet edge).
+
+        Optional typing: ``kind=`` plus :class:`PortType` kwargs (``pair_with``,
+        ``impedance``, ``role``, ``bus``, ``speed_hz``, ``level_v``,
+        ``expect``) forward to :meth:`port_type`. Untyped ports stay exactly
+        as before (default kind "single").
+        """
+        n = self.net(name, *pins, net_class=NetClass.PORT)
+        if kind is not None or type_kwargs:
+            self.port_type(name, kind=kind or "single", **type_kwargs)
+        return n
+
+    def port_type(self, net: str, kind: str = "single", *,
+                  pair_with: str | None = None,
+                  impedance: int | None = None,
+                  role: str | None = None,
+                  bus: str | None = None,
+                  speed_hz: int | None = None,
+                  level_v: float | None = None,
+                  expect: str | None = None) -> PortType:
+        """Attach layout/electrical intent to an already-declared PORT net.
+
+        Pair kinds (diff_pair / usb_hs_pair / tmds_pair) require ``pair_with``
+        (the complement net, which must already be a PORT); the reciprocal
+        type is registered on the complement automatically. ``diff_pair``
+        requires an explicit ``impedance``; usb_hs_pair defaults to 90R and
+        tmds_pair to 100R. i2c requires ``role`` ("scl"/"sda"); sd_bus
+        requires ``level_v``.
+        """
+        if kind not in PORT_KINDS:
+            raise CircuitError(f"port_type({net!r}): unknown kind {kind!r} "
+                               f"(known: {sorted(PORT_KINDS)})")
+        n = self.nets.get(net)
+        if n is None or n.net_class != NetClass.PORT:
+            raise CircuitError(f"port_type({net!r}): not a declared PORT net")
+        if kind in _PAIR_KINDS:
+            if pair_with is None:
+                raise CircuitError(f"port_type({net!r}): {kind} needs pair_with=")
+            comp = self.nets.get(pair_with)
+            if comp is None or comp.net_class != NetClass.PORT:
+                raise CircuitError(
+                    f"port_type({net!r}): pair_with {pair_with!r} is not a "
+                    f"declared PORT net")
+            if impedance is None:
+                impedance = _DEFAULT_IMPEDANCE.get(kind)
+            if impedance is None:
+                raise CircuitError(
+                    f"port_type({net!r}): diff_pair needs explicit impedance=")
+        elif pair_with is not None:
+            raise CircuitError(f"port_type({net!r}): pair_with only valid for "
+                               f"pair kinds, not {kind!r}")
+        if kind == "i2c":
+            if role not in ("scl", "sda"):
+                raise CircuitError(
+                    f"port_type({net!r}): i2c needs role='scl' or 'sda'")
+        elif role is not None:
+            raise CircuitError(f"port_type({net!r}): role only valid for i2c")
+        if kind == "sd_bus" and level_v is None:
+            raise CircuitError(f"port_type({net!r}): sd_bus needs level_v=")
+        pt = PortType(kind=kind, pair_with=pair_with, impedance=impedance,
+                      role=role, bus=bus, speed_hz=speed_hz, level_v=level_v,
+                      expect=expect)
+        prev = self.port_types.get(net)
+        if prev is not None and prev != pt:
+            raise CircuitError(
+                f"port_type({net!r}): retyped {prev} -> {pt} (conflict)")
+        self.port_types[net] = pt
+        if kind in _PAIR_KINDS and pair_with is not None:
+            recip = PortType(kind=kind, pair_with=net, impedance=impedance,
+                             bus=bus, expect=expect)
+            comp_prev = self.port_types.get(pair_with)
+            if comp_prev is None:
+                self.port_types[pair_with] = recip
+            elif comp_prev != recip:
+                raise CircuitError(
+                    f"port_type({net!r}): complement {pair_with!r} already "
+                    f"typed {comp_prev}, conflicts with {recip}")
+        return pt
+
+    def port_type_of(self, net: str) -> PortType:
+        """The PortType for a PORT net; untyped ports read as 'single'."""
+        return self.port_types.get(net, PortType())
 
     def nc(self, *pins: PinRef | str) -> None:
         """Author-declared no-connect — pin is INTENTIONALLY unused."""
