@@ -1,0 +1,433 @@
+(footprint
+	"TPD12S016PWR"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL — TPD12S016PWR (TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL) (EasyEDA/LCSC C201665, faithful conversion)"
+	)
+	(tags "Interface - Specialized")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -5.02 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"TPD12S016PWR"
+		(at 0 5.02 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C201665.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"TPD12S016PWR (TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C201665"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -3.8999 3.1862)
+		(end -3.8699 3.1862)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center -3.683 3.429)
+		(end -3.4831 3.429)
+		(stroke
+			(width 0.4)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_line
+		(start -3.9 -2.2)
+		(end 3.9 -2.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.9 -2.2)
+		(end 3.9 2.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.9 2.2)
+		(end -3.9 2.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -3.9 2.2)
+		(end -3.9 -2.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.937 -1.905)
+		(end 3.937 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.8862 1.7526)
+		(end -3.8862 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.8862 1.905)
+		(end 3.937 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.8862 -1.7526)
+		(end -3.8862 -1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.8862 -1.905)
+		(end 3.937 -1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.8862 -0.4826)
+		(end -3.8862 -1.7526)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.8862 1.7526)
+		(end -3.8862 0.4826)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_arc
+		(start -3.8862 -0.4572)
+		(mid -3.4163 0.0127)
+		(end -3.8862 0.4826)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_poly
+		(pts
+			(xy -3.529 1.143)
+			(xy -2.821 1.143)
+			(xy -3.529 1.143)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.SilkS")
+	)
+	(pad
+		"6"
+		smd
+		rect
+		(at -0.3249 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"5"
+		smd
+		rect
+		(at -0.9749 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"4"
+		smd
+		rect
+		(at -1.6248 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"3"
+		smd
+		rect
+		(at -2.2748 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at -2.9248 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -3.5748 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"7"
+		smd
+		rect
+		(at 0.3249 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"12"
+		smd
+		rect
+		(at 3.5748 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"11"
+		smd
+		rect
+		(at 2.9251 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"10"
+		smd
+		rect
+		(at 2.2751 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"9"
+		smd
+		rect
+		(at 1.6251 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"8"
+		smd
+		rect
+		(at 0.9751 3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"20"
+		smd
+		rect
+		(at -0.9749 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"21"
+		smd
+		rect
+		(at -1.6248 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"22"
+		smd
+		rect
+		(at -2.2748 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"23"
+		smd
+		rect
+		(at -2.9248 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"24"
+		smd
+		rect
+		(at -3.5748 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"19"
+		smd
+		rect
+		(at -0.3249 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"13"
+		smd
+		rect
+		(at 3.5748 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"14"
+		smd
+		rect
+		(at 2.9251 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"15"
+		smd
+		rect
+		(at 2.2751 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"16"
+		smd
+		rect
+		(at 1.6251 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"17"
+		smd
+		rect
+		(at 0.9751 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"18"
+		smd
+		rect
+		(at 0.3249 -3.0226)
+		(size 0.399999 1.650009)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(model
+		"TPD12S016PWR.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 270)
+		)
+	)
+)

@@ -1,0 +1,572 @@
+(footprint
+	"DSHP04TSGER"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4 — DSHP04TSGER_C3293144 (SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4) (EasyEDA/LCSC C3293144, faithful conversion)"
+	)
+	(tags "DIP Switches")
+	(attr through_hole)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -5.81 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"DSHP04TSGER"
+		(at 0 5.81 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C3293144.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"DSHP04TSGER_C3293144 (SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C3293144"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -3.3399 4.175)
+		(end -3.3099 4.175)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 3.3401 2.7)
+		(end -3.3399 2.7)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -3.3399 2.7)
+		(end -3.3399 -2.7)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -3.3399 -2.7)
+		(end 3.3401 -2.7)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.3401 -2.7)
+		(end 3.3401 2.7)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 2.5401 -2.54)
+		(end 2.5401 2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2701 -2.54)
+		(end 1.2701 2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2699 -2.54)
+		(end -1.2699 2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2699 2.54)
+		(end -1.2699 -2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2699 -2.54)
+		(end -1.2699 2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2699 2.54)
+		(end -1.2699 -2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.0001 2.54)
+		(end 0.0001 -2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.0001 -2.54)
+		(end 0.0001 2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.0001 2.54)
+		(end 0.0001 -2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.5399 -2.54)
+		(end -2.5399 2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2701 2.54)
+		(end 1.2701 -2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 3.3501 -2.7)
+		(end -3.3499 -2.7)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.3499 -2.7)
+		(end -3.3499 2.7)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.3499 2.7)
+		(end 3.3501 2.7)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 3.3501 2.7)
+		(end 3.3501 -2.7)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.0001 0.635)
+		(end 1.2701 0.635)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2701 0.635)
+		(end 2.5401 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 2.5401 1.905)
+		(end 1.2701 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2701 1.905)
+		(end 0.0001 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.0001 1.905)
+		(end -1.2699 0.635)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2699 0.635)
+		(end 0.0001 0.635)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.0001 0.635)
+		(end 1.2701 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2699 0.635)
+		(end -2.5399 0.635)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.5399 0.635)
+		(end -1.2699 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2699 1.905)
+		(end 0.0001 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.9049 0.635)
+		(end -1.2699 1.27)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2699 1.27)
+		(end -0.6349 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -0.6349 0.635)
+		(end 0.0001 1.27)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.0001 1.27)
+		(end 0.6351 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.6351 0.635)
+		(end 1.2701 1.27)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2701 1.27)
+		(end 1.9051 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2701 0.635)
+		(end 2.5401 0.635)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.9051 0.635)
+		(end 2.5401 1.27)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.5399 1.27)
+		(end -1.9049 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.5399 1.905)
+		(end -1.2699 1.905)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_text
+		user
+		"ON"
+		(at 1.8707 -1.524 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.508 0.508)
+				(thickness 0.1)
+			)
+		)
+	)
+	(fp_text
+		user
+		"ON"
+		(at 0.6008 -1.5239 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.508 0.508)
+				(thickness 0.1)
+			)
+		)
+	)
+	(fp_text
+		user
+		"ON"
+		(at -0.6691 -1.5239 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.508 0.508)
+				(thickness 0.1)
+			)
+		)
+	)
+	(fp_text
+		user
+		"ON"
+		(at -1.9392 -1.524 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.508 0.508)
+				(thickness 0.1)
+			)
+		)
+	)
+	(pad
+		"6"
+		smd
+		rect
+		(at 0.635 -3.81)
+		(size 0.762 1.524)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"3"
+		smd
+		rect
+		(at 0.635 3.81)
+		(size 0.762 1.524)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at -0.635 3.81)
+		(size 0.762 1.524)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"7"
+		smd
+		rect
+		(at -0.635 -3.81)
+		(size 0.762 1.524)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"8"
+		smd
+		rect
+		(at -1.905 -3.81)
+		(size 0.762 1.524)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -1.905 3.81)
+		(size 0.762 1.524)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"4"
+		smd
+		rect
+		(at 1.905 3.81)
+		(size 0.762 1.524)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"5"
+		smd
+		rect
+		(at 1.905 -3.81)
+		(size 0.762 1.524)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(model
+		"DSHP04TSGER.wrl"
+		(offset
+			(xyz 0.0001 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 180)
+		)
+	)
+)

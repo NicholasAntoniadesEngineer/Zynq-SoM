@@ -1,0 +1,357 @@
+(footprint
+	"TF-01A"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr "TF-SMD_TF-01A — TF-01A (TF-SMD_TF-01A) (EasyEDA/LCSC C91145, faithful conversion)")
+	(tags "SIM Card Connectors")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -7.28 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"TF-01A"
+		(at 0 7.57 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C91145.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"TF-01A (TF-SMD_TF-01A)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C91145"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center 8.05 -5.474)
+		(end 8.08 -5.474)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center 3.0495 5.5661)
+		(end 3.2494 5.5661)
+		(stroke
+			(width 0.4)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_circle
+		(center -4.9505 5.5661)
+		(end -4.7506 5.5661)
+		(stroke
+			(width 0.4)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_line
+		(start -7.38 9.575)
+		(end -7.38 -4.925)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -7.38 -4.925)
+		(end 7.38 -4.925)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 7.38 -4.925)
+		(end 7.38 9.575)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 7.38 9.575)
+		(end -7.38 9.575)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -7.366 -3.4061)
+		(end -7.366 4.103)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.366 4.1665)
+		(end 7.366 -3.3265)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.366 6.516)
+		(end -7.366 9.5761)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.366 9.5761)
+		(end 7.366 9.576)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.366 9.576)
+		(end 7.366 6.666)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.366 9.0907)
+		(end -7.366 8.866)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.366 8.866)
+		(end 1 8.866)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1 8.866)
+		(end 3.937 9.5631)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at 2.24 -5.2761)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 1.14 -5.2761)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"3"
+		smd
+		rect
+		(at 0.0399 -5.2761)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"4"
+		smd
+		rect
+		(at -1.0601 -5.2761)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"5"
+		smd
+		rect
+		(at -2.16 -5.2761)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"6"
+		smd
+		rect
+		(at -3.26 -5.2761)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"7"
+		smd
+		rect
+		(at -4.3601 -5.2761)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"8"
+		smd
+		rect
+		(at -5.4599 -5.2761)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"9"
+		smd
+		rect
+		(at -6.56 -5.2757)
+		(size 0.599999 1.299997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"10"
+		smd
+		rect
+		(at -7.76 -4.4257)
+		(size 1.199998 1.399997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"13"
+		smd
+		rect
+		(at 6.92 -4.4257)
+		(size 1.199998 1.399997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"12"
+		smd
+		rect
+		(at 7.76 5.2761)
+		(size 1.199998 1.999996)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"11"
+		smd
+		rect
+		(at -7.76 5.2761)
+		(size 1.199998 1.999996)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		""
+		np_thru_hole
+		circle
+		(at -4.95 5.5661)
+		(size 0.999998 0.999998)
+		(drill 0.999998)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		""
+		np_thru_hole
+		circle
+		(at 3.05 5.5661)
+		(size 0.999998 0.999998)
+		(drill 0.999998)
+		(layers "*.Cu" "*.Mask")
+	)
+	(model
+		"TF-01A.wrl"
+		(offset
+			(xyz 0 -2.175 -0.6)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
