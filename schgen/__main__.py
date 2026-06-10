@@ -226,7 +226,7 @@ def main(argv: list[str] | None = None) -> int:
     pa_sub = pa.add_subparsers(dest="part_cmd", required=True)
     padd = pa_sub.add_parser(
         "add", help="fetch an LCSC part and generate parts/<MPN>/ "
-                    "(part.py + symbol + faithful footprint + 3D)")
+                    "(<MPN>.py + symbol + faithful footprint + 3D)")
     padd.add_argument("lcsc_id", help="LCSC id, e.g. C132291")
     padd.add_argument("--name", default=None,
                       help="folder/symbol name override (default: MPN)")

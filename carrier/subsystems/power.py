@@ -22,7 +22,7 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   translator + 1.8 V peripherals, well under 600 mA). Symbol: the KiCad
   AP2112K-* drawings all derive from Regulator_Linear:AP2204K-1.5
   (identical SOT-23-5 pin map 1=VIN 2=GND 3=EN 4=NC 5=VOUT, confirmed
-  against the EasyEDA pin table in parts/AP2112K-1.8TRG1/part.py).
+  against the EasyEDA pin table in parts/AP2112K-1.8TRG1/AP2112K-1.8TRG1.py).
 - FB dividers: +5V = 73.2k/10k -> 4.96 V (C14890 Ext 28,920 + C25804 Basic);
   +3V3 = 100k/22k -> 3.30 V (C25803 + C31850, both Basic).
 - PG LEDs (bringup dossier section 3.3): KT-0603R red (C2286 Basic) + 1k
@@ -35,7 +35,7 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   LDO 1u in / 1u out (C15849). All Basic except C1591 (reclassified
   Extended per today's API — kept: 50 V rating covers the 20 V input).
 
-Pin maps cross-checked: parts/<MPN>/part.py (EasyEDA) == KiCad stock
+Pin maps cross-checked: parts/<MPN>/<MPN>.py (EasyEDA) == KiCad stock
 symbols used here (TPS54302: 1 GND 2 SW 3 VIN 4 FB 5 EN 6 BOOT;
 Q_NMOS_GSD == AO3400A SOT-23 1 G 2 S 3 D).
 """
