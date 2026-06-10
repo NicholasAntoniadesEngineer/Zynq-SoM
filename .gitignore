@@ -4,6 +4,9 @@
 # Generated schematic renders (regenerable via `python -m zynq_eda.core.render --all`)
 boards/*/render/
 
+# schgen build artifacts (regenerable via `python -m schgen build <subsystem>`)
+out/
+
 # KiCad temp/backup files
 *.000
 *.bak

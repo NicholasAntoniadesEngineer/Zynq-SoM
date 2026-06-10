@@ -37,13 +37,23 @@ class PlacedPart:
 
 @dataclass
 class PlacedPower:
-    """A power/GND symbol instance; net name == value."""
+    """A power/GND symbol instance; net name == value (KiCad derives the
+    global net from the Value field). ``net`` overrides for PWR_FLAG, whose
+    value is not a net name. ``show_value`` renders the rail name text at
+    ``val_pos`` (page coords) — placement owns that position like any text."""
     lib_id: str          # power:GND / power:+3V3 …
     value: str           # GND / +3V3 …
     ref: str             # #PWR01 …
     x: float
     y: float
     rotation: int = 0
+    net: str = ""                                    # default: value
+    val_pos: tuple[float, float, int] | None = None
+    show_value: bool = False
+
+    @property
+    def net_name(self) -> str:
+        return self.net or self.value
 
 
 @dataclass
@@ -155,7 +165,7 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
                       rot: int, footprint: str,
                       ref_pos: tuple[float, float, int] | None,
                       val_pos: tuple[float, float, int] | None,
-                      hide_text: bool) -> list:
+                      hide_ref: bool, hide_val: bool) -> list:
         sdef = lib.get(lib_id)
         node: list = [Sym("symbol"),
                       [Sym("lib_id"), lib_id],
@@ -168,8 +178,8 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
                       [Sym("uuid"), _u()]]
         rp = ref_pos or (x, y - 2.54, 0)
         vp = val_pos or (x, y + 2.54, 0)
-        node.append(_prop("Reference", ref, rp[0], rp[1], rp[2], hide=hide_text))
-        node.append(_prop("Value", value, vp[0], vp[1], vp[2], hide=hide_text))
+        node.append(_prop("Reference", ref, rp[0], rp[1], rp[2], hide=hide_ref))
+        node.append(_prop("Value", value, vp[0], vp[1], vp[2], hide=hide_val))
         node.append(_prop("Footprint", footprint, x, y, 0, hide=True))
         node.append(_prop("Datasheet", "", x, y, 0, hide=True))
         for p in sdef.pins:
@@ -182,10 +192,11 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
 
     for p in design.parts:
         doc.append(_sym_instance(p.ref, p.lib_id, p.value, p.x, p.y, p.rotation,
-                                 p.footprint, p.ref_pos, p.val_pos, False))
+                                 p.footprint, p.ref_pos, p.val_pos, False, False))
     for pw in design.powers:
         doc.append(_sym_instance(pw.ref, pw.lib_id, pw.value, pw.x, pw.y,
-                                 pw.rotation, "", None, None, True))
+                                 pw.rotation, "", None, pw.val_pos,
+                                 True, not pw.show_value))
 
     doc.append([Sym("sheet_instances"),
                 [Sym("path"), "/", [Sym("page"), "1"]]])

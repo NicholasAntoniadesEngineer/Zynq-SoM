@@ -32,6 +32,7 @@ class Pin:
     y: float
     rotation: int         # 0=points right(+x), 90=up, 180=left, 270=down
     length: float
+    hidden: bool = False  # stacked/invisible pin: no rendered text
 
 
 @dataclass
@@ -113,6 +114,7 @@ def _parse_symbol(lib_id: str, block: list) -> SymbolDef:
             ln = sexpr.find(p, "length")
             nm = sexpr.find(p, "name")
             num = sexpr.find(p, "number")
+            hd = sexpr.find(p, "hide")
             pins.append(Pin(
                 number=str(num[1]) if num and len(num) > 1 else "",
                 name=str(nm[1]) if nm and len(nm) > 1 else "",
@@ -120,6 +122,8 @@ def _parse_symbol(lib_id: str, block: list) -> SymbolDef:
                 x=float(at[1]), y=float(at[2]),
                 rotation=int(float(at[3])) % 360 if len(at) > 3 else 0,
                 length=float(ln[1]) if ln and len(ln) > 1 else 2.54,
+                hidden=bool(hd and len(hd) > 1 and str(hd[1]) == "yes")
+                       or sexpr.Sym("hide") in p,
             ))
         for r in sexpr.find_all(node, "rectangle"):
             for tag in ("start", "end"):
