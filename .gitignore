@@ -6,6 +6,7 @@ boards/*/render/
 
 # schgen build artifacts (regenerable via `python -m schgen build <subsystem>`)
 out/
+carrier/out/
 
 # KiCad temp/backup files
 *.000
