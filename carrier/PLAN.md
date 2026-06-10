@@ -39,3 +39,22 @@
 Netlist-first; gates immutable; wire-heavy datasheet style; everything programmatically
 generated (no hand-assembled implementations, no hand-copied pinouts); commit AND push
 after every verified step.
+
+## Decisions round 2 (user, 2026-06-10)
+- **Power input**: USB-C PD ONLY, 20V/3A (60W) via FUSB302. No barrel jack.
+- **Carrier rails**: +5V (buck from VIN), +3V3 (buck from +5V), +1V8 (for SD/peripherals).
+  FMC VADJ = FIXED 2.5V from a local LDO inside the FMC subsystem (not a global rail).
+- **Bring-up**: DIP switches + STM32 override (switch OR/AND GPIO into every regulator
+  EN and module load-switch EN); per-rail PG LEDs.
+- **HDMI**: BOTH TX and RX on rev A. **LCD**: generic 40-pin TTL RGB888 FFC (0.5mm) +
+  touch I2C + on-carrier backlight boost. **Camera**: RPi 15-pin FFC, 2-lane MIPI CSI-2.
+- **microSD**: 1.8V direct per the SoM design. OPEN VERIFICATION: standard SD cards
+  initialize at 3.3V — verify against the SoM schematic how external SD init is handled
+  and FLAG if a carrier-side translator (TXS02612-class) is actually required.
+- **Form factor**: free, connector-driven (~120x100 class expected; user owns outline).
+- **Stackup**: JLCPCB 4-layer JLC04161H-7628 — constraints export uses its impedance
+  geometry tables (90R USB, 100R TMDS/LVDS/MIPI diff).
+- **Assembly**: prefer JLC Basic; Extended where design quality demands; preflight
+  reports Extended-reel count + total cost.
+- **Debug**: Zynq JTAG on Xilinx 2x7 2mm (14-pin) header; STM32 SWD on ARM 10-pin
+  1.27mm. Both probe-standard.
