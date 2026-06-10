@@ -1,0 +1,173 @@
+"""Symbol library layer: load symbol defs, extract pin geometry, enforce grid.
+
+HARD INVARIANT: every pin connection point lies on the 1.27 mm grid (after any
+0/90/180/270 placement rotation). Violations raise at LOAD — never discovered
+as a mis-landed wire later. Symbol-relative coords here use KiCad's symbol
+convention (+Y up); :func:`pin_page_position` converts to page coords (+Y down)
+in ONE place, so there is exactly one transform in the whole program.
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass
+from pathlib import Path
+
+from schgen import sexpr
+
+GRID = 1.27
+
+_SEARCH_PATHS = [
+    Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols"),
+    Path(__file__).resolve().parents[3] / "shared" / "symbols",
+]
+
+
+@dataclass(frozen=True)
+class Pin:
+    number: str
+    name: str
+    etype: str            # passive / power_in / input / …
+    x: float              # symbol-relative, KiCad +Y-up
+    y: float
+    rotation: int         # 0=points right(+x), 90=up, 180=left, 270=down
+    length: float
+
+
+@dataclass
+class SymbolDef:
+    lib_id: str
+    raw: list              # parsed s-expr of the (symbol ...) block, for embedding
+    pins: list[Pin]
+    body: tuple[float, float, float, float]   # x0,y0,x1,y1 symbol-relative +Y-up
+    pin_names_hidden: bool
+    pin_numbers_hidden: bool
+
+
+class SymbolError(ValueError):
+    pass
+
+
+def _on_grid(v: float) -> bool:
+    return abs(v / GRID - round(v / GRID)) < 1e-4
+
+
+class Library:
+    def __init__(self, extra_paths: list[Path] | None = None) -> None:
+        self.paths = list(extra_paths or []) + _SEARCH_PATHS
+        self._files: dict[str, list] = {}
+        self._defs: dict[str, SymbolDef] = {}
+
+    def _lib_file(self, libname: str) -> list:
+        if libname not in self._files:
+            for base in self.paths:
+                f = base / f"{libname}.kicad_sym"
+                if f.exists():
+                    self._files[libname] = sexpr.loads(f.read_text())
+                    break
+            else:
+                raise SymbolError(f"library {libname!r} not found in {self.paths}")
+        return self._files[libname]
+
+    def get(self, lib_id: str) -> SymbolDef:
+        if lib_id in self._defs:
+            return self._defs[lib_id]
+        libname, _, symname = lib_id.partition(":")
+        root = self._lib_file(libname)
+        block = None
+        for s in sexpr.find_all(root, "symbol"):
+            if len(s) > 1 and s[1] == symname:
+                block = s
+                break
+        if block is None:
+            raise SymbolError(f"symbol {symname!r} not in {libname}")
+        d = _parse_symbol(lib_id, block)
+        for p in d.pins:
+            if not (_on_grid(p.x) and _on_grid(p.y)):
+                raise SymbolError(
+                    f"{lib_id} pin {p.number} at ({p.x},{p.y}) is OFF-GRID — "
+                    f"fix the symbol; schgen never lands wires off-grid")
+        self._defs[lib_id] = d
+        return d
+
+    def pin_numbers(self, lib_id: str) -> set[str]:
+        return {p.number for p in self.get(lib_id).pins}
+
+
+def _parse_symbol(lib_id: str, block: list) -> SymbolDef:
+    pins: list[Pin] = []
+    xs: list[float] = []
+    ys: list[float] = []
+
+    pn = sexpr.find(block, "pin_names")
+    pnames_hidden = bool(pn and (sexpr.find(pn, "hide") or sexpr.Sym("hide") in pn))
+    pnum = sexpr.find(block, "pin_numbers")
+    pnums_hidden = bool(pnum and (sexpr.find(pnum, "hide") or sexpr.Sym("hide") in pnum))
+
+    def walk(node: list) -> None:
+        nonlocal xs, ys
+        for sub in sexpr.find_all(node, "symbol"):
+            walk(sub)
+        for p in sexpr.find_all(node, "pin"):
+            at = sexpr.find(p, "at") or [None, 0, 0, 0]
+            ln = sexpr.find(p, "length")
+            nm = sexpr.find(p, "name")
+            num = sexpr.find(p, "number")
+            pins.append(Pin(
+                number=str(num[1]) if num and len(num) > 1 else "",
+                name=str(nm[1]) if nm and len(nm) > 1 else "",
+                etype=str(p[1]) if len(p) > 1 else "passive",
+                x=float(at[1]), y=float(at[2]),
+                rotation=int(float(at[3])) % 360 if len(at) > 3 else 0,
+                length=float(ln[1]) if ln and len(ln) > 1 else 2.54,
+            ))
+        for r in sexpr.find_all(node, "rectangle"):
+            for tag in ("start", "end"):
+                pt = sexpr.find(r, tag)
+                if pt:
+                    xs.append(float(pt[1])); ys.append(float(pt[2]))
+        for poly in sexpr.find_all(node, "polyline"):
+            ptsl = sexpr.find(poly, "pts")
+            for xy in sexpr.find_all(ptsl or [], "xy"):
+                xs.append(float(xy[1])); ys.append(float(xy[2]))
+        for c in sexpr.find_all(node, "circle"):
+            ctr = sexpr.find(c, "center"); rad = sexpr.find(c, "radius")
+            if ctr and rad:
+                xs += [float(ctr[1]) - float(rad[1]), float(ctr[1]) + float(rad[1])]
+                ys += [float(ctr[2]) - float(rad[1]), float(ctr[2]) + float(rad[1])]
+        for a in sexpr.find_all(node, "arc"):
+            for tag in ("start", "mid", "end"):
+                pt = sexpr.find(a, tag)
+                if pt:
+                    xs.append(float(pt[1])); ys.append(float(pt[2]))
+
+    walk(block)
+    if not xs:   # body fallback: hull of pin roots
+        xs = [p.x for p in pins] or [0.0]
+        ys = [p.y for p in pins] or [0.0]
+    body = (min(xs), min(ys), max(xs), max(ys))
+    return SymbolDef(lib_id=lib_id, raw=block, pins=pins, body=body,
+                     pin_names_hidden=pnames_hidden, pin_numbers_hidden=pnums_hidden)
+
+
+# ---- the ONE coordinate transform ------------------------------------------
+
+def pin_page_position(pin: Pin, anchor_x: float, anchor_y: float,
+                      rotation: int) -> tuple[float, float]:
+    """Page position (+Y down) of a pin's connection point for a symbol placed
+    at ``(anchor_x, anchor_y)`` with ``rotation`` (CCW degrees, KiCad).
+
+    KiCad maps symbol-space (+Y up) to page-space (+Y down): page = anchor +
+    R(rot) applied with the y-flip folded in. Verified against KiCad's own
+    netlist extraction in the gate tests.
+    """
+    r = math.radians(rotation % 360)
+    c, s = round(math.cos(r)), round(math.sin(r))
+    # Map symbol(+Y up) -> page(+Y down) at rotation 0: (x, y) -> (x, -y).
+    # Then rotate CCW-on-screen by theta; with +Y down, R_ccw = [[c, s], [-s, c]].
+    # offset = R_ccw @ (x, -y):
+    #   theta=0   -> ( x, -y)      theta=90  -> (-y, -x)
+    #   theta=180 -> (-x,  y)      theta=270 -> ( y,  x)
+    px = anchor_x + (pin.x * c - pin.y * s)
+    py = anchor_y + (-pin.x * s - pin.y * c)
+    return (round(px, 4), round(py, 4))
