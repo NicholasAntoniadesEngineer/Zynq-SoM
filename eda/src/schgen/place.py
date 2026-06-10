@@ -19,7 +19,8 @@ from dataclasses import dataclass, field
 
 from schgen import route, sexpr
 from schgen import textmetrics as tm
-from schgen.emit import HierLabel, NoConnect, PlacedPart, PlacedPower
+from schgen.emit import (HierLabel, LocalLabel, NoConnect, PlacedPart,
+                         PlacedPower)
 from schgen.model import Circuit, NetClass, PinRef
 from schgen.symbols import GRID, Library, Pin, SymbolDef, pin_page_position
 from schgen.verify import visual_gate
@@ -34,6 +35,7 @@ POWER_LIBS = {
     "GND": "power:GND",
     "VBUS": "power:VBUS",
     "+VIN": "schgen:+VIN",
+    "CHASSIS_GND": "schgen:CHASSIS_GND",
 }
 
 
@@ -84,6 +86,7 @@ class Placement:
     parts: list[PlacedPart] = field(default_factory=list)
     powers: list[PlacedPower] = field(default_factory=list)
     hlabels: list[HierLabel] = field(default_factory=list)
+    llabels: list[LocalLabel] = field(default_factory=list)
     no_connects: list[NoConnect] = field(default_factory=list)
     plans: dict[str, list[list[tuple[float, float]]]] = field(default_factory=dict)
     boxes: list[Box] = field(default_factory=list)
@@ -248,6 +251,13 @@ class _Builder:
               shape: str = "bidirectional") -> None:
         self.pl.hlabels.append(HierLabel(net, x, y, rot, shape=shape))
         self.pl.boxes.append(Box(*tm.glabel_box(net, x, y, rot),
+                                 "label", f"label:{net}"))
+
+    def llabel(self, net: str, x: float, y: float, rot: int = 0) -> None:
+        """Local net-name label ON a drawn wire (names the net for KiCad's
+        netlist export; the wiring itself is untouched — never a label-bus)."""
+        self.pl.llabels.append(LocalLabel(net, x, y, rot))
+        self.pl.boxes.append(Box(*tm.llabel_box(net, x, y, rot),
                                  "label", f"label:{net}"))
 
     # -- net query helpers ------------------------------------------------------
@@ -603,6 +613,8 @@ def _translate(pl: Placement, dx: float, dy: float) -> None:
         pw.val_pos = mv(pw.val_pos)
     for h in pl.hlabels:
         h.x = round(h.x + dx, 3); h.y = round(h.y + dy, 3)
+    for ll in pl.llabels:
+        ll.x = round(ll.x + dx, 3); ll.y = round(ll.y + dy, 3)
     for n in pl.no_connects:
         n.x = round(n.x + dx, 3); n.y = round(n.y + dy, 3)
     for net, paths in pl.plans.items():
@@ -612,8 +624,8 @@ def _translate(pl: Placement, dx: float, dy: float) -> None:
                 for b in pl.boxes]
 
 
-def build(c: Circuit, lib: Library, sp: Spacing) -> Placement:
-    pl = _Builder(c, lib, sp).build()
+def center_on_sheet(pl: Placement) -> Placement:
+    """Translate a placement so its bounding box centers on the A4 sheet."""
     xs = [v for b in pl.boxes for v in (b.x0, b.x1)]
     ys = [v for b in pl.boxes for v in (b.y0, b.y1)]
     for paths in pl.plans.values():
@@ -627,13 +639,24 @@ def build(c: Circuit, lib: Library, sp: Spacing) -> Placement:
     return pl
 
 
-def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
+def build(c: Circuit, lib: Library, sp: Spacing) -> Placement:
+    return center_on_sheet(_Builder(c, lib, sp).build())
+
+
+def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8,
+                    builder=None):
     """Feasibility loop: route + visual gate as the oracle; spacing expands,
-    rules never relax. Returns (placement, routed, SheetGeometry)."""
+    rules never relax. Returns (placement, routed, SheetGeometry).
+
+    ``builder`` (default: the generic IC template :func:`build`) is any
+    ``(circuit, lib, spacing) -> Placement`` callable — subsystems with a
+    datasheet-specific layout (e.g. magnetics + termination ladder) supply
+    their own template; gates and router invariants are identical."""
     sp = Spacing()
     last = "?"
+    make = builder or build
     for _ in range(max_attempts):
-        pl = build(c, lib, sp)
+        pl = make(c, lib, sp)
         try:
             routed = route.route(c, pl, lib)
         except route.RouteError as e:

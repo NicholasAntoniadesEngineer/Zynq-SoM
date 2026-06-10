@@ -36,6 +36,25 @@ def centered_box(text: str, cx: float, cy: float, size: float = SIZE,
     return (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
 
 
+def llabel_box(text: str, x: float, y: float, rotation: int = 0,
+               size: float = SIZE) -> tuple[float, float, float, float]:
+    """Rendered extent of a LOCAL net label anchored at (x, y) on a wire.
+
+    rotation 0: text extends +x from the anchor, sitting just above the wire;
+    rotation 180: text extends -x. The thin gap under the text is the label's
+    own wire-offset — the wire underneath is the attachment, not a collision.
+    """
+    w, h = text_wh(text, size)
+    w += 0.7
+    gap = 0.127
+    r = rotation % 360
+    if r == 0:
+        return (x, y - gap - h, x + w, y - gap)
+    if r == 180:
+        return (x - w, y - gap - h, x, y - gap)
+    raise ValueError(f"unsupported local-label rotation {rotation}")
+
+
 def glabel_box(text: str, x: float, y: float, rotation: int,
                size: float = SIZE) -> tuple[float, float, float, float]:
     """Rendered outline of a global/hier label anchored at (x, y).

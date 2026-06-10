@@ -105,7 +105,8 @@ def cmd_build(args: argparse.Namespace) -> int:
     print(f"model: {len(c.parts)} parts, {len(c.nets)} nets, "
           f"{len(c.nc_pins)} author NCs — complete (inputs driven)")
 
-    placement, routed, geo = place.place_and_route(c, lib)
+    placement, routed, geo = place.place_and_route(
+        c, lib, builder=getattr(mod, "placer", None))
     design = PlacedDesign(
         circuit=c,
         parts=placement.parts,
@@ -113,6 +114,7 @@ def cmd_build(args: argparse.Namespace) -> int:
         wires=[Wire(s.x0, s.y0, s.x1, s.y1) for s in routed.segs],
         junctions=[EJunction(x, y) for x, y in routed.junctions],
         hlabels=placement.hlabels,
+        llabels=placement.llabels,
         no_connects=placement.no_connects,
     )
     outdir = args.outdir or (REPO_ROOT / "out" / "schgen")

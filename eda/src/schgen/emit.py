@@ -84,6 +84,18 @@ class HierLabel:
 
 
 @dataclass
+class LocalLabel:
+    """A sheet-local net-name label placed ON a drawn wire. It never replaces
+    wiring (the net is fully drawn); it gives an internal SIGNAL net its name —
+    required because kicad-cli's netlist export omits unnamed nets, which would
+    blind the netlist gate to a purely-drawn net."""
+    name: str
+    x: float
+    y: float
+    rotation: int = 0
+
+
+@dataclass
 class NoConnect:
     x: float
     y: float
@@ -97,6 +109,7 @@ class PlacedDesign:
     wires: list[Wire] = field(default_factory=list)
     junctions: list[Junction] = field(default_factory=list)
     hlabels: list[HierLabel] = field(default_factory=list)
+    llabels: list[LocalLabel] = field(default_factory=list)
     no_connects: list[NoConnect] = field(default_factory=list)
     paper: str = PAPER_DEFAULT
     standalone: bool = True   # True: PORT labels emit as global_label
@@ -109,7 +122,7 @@ def _u() -> str:
 def _effects(size: float = 1.27, hide: bool = False, justify: str | None = None):
     e: list = [Sym("effects"), [Sym("font"), [Sym("size"), size, size]]]
     if justify:
-        e.append([Sym("justify"), Sym(justify)])
+        e.append([Sym("justify"), *[Sym(t) for t in justify.split()]])
     if hide:
         e.append([Sym("hide"), Sym("yes")])
     return e
@@ -163,6 +176,12 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library) -> Path:
         doc.append([Sym(tag), h.name,
                     [Sym("shape"), Sym(h.shape)],
                     [Sym("at"), h.x, h.y, h.rotation],
+                    _effects(justify=just),
+                    [Sym("uuid"), _u()]])
+    for ll in design.llabels:
+        just = "right bottom" if ll.rotation == 180 else "left bottom"
+        doc.append([Sym("label"), ll.name,
+                    [Sym("at"), ll.x, ll.y, ll.rotation],
                     _effects(justify=just),
                     [Sym("uuid"), _u()]])
 
