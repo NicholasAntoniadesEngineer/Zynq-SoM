@@ -96,4 +96,11 @@ def circuit() -> Circuit:
 
     # (user LEDs live on the user_io sheet, bound to real bank-13 pins —
     # this sheet only GATES their +3V3_USER_LED rail via switch #8)
+
+    # power-tree budget (round 4): this sheet's own load on each gated rail
+    # is its status LED — (3.3-2.0)/330R ~= 3.9 mA on the 3V3 rails,
+    # (5-2)/1k = 3 mA on +5V_USB (dossier 3.3)
+    for _mod, _in, out_rail, _rs, _ri, led_r, _li in MODULES:
+        amps = 0.004 if led_r == "330R" else 0.003
+        c.draws(out_rail, amps, f"status LED ({led_r}) on the gated output")
     return c

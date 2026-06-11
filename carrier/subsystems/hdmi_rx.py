@@ -92,4 +92,8 @@ def circuit() -> Circuit:
 
     # pin 14 UTILITY/HEAC+: reserved, HEAC unused by design
     c.nc("J1.14")
+
+    # power-tree budget (round 4): only the CEC 27k pull-up loads the gated
+    # rail (~0.12 mA when CEC is driven low); EEPROM runs from the cable 5V
+    c.draws("+3V3_HDMI_RX", 0.001, "CEC 27k pull-up (EEPROM is cable-fed)")
     return c

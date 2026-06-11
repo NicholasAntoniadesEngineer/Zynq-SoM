@@ -129,6 +129,10 @@ class Circuit:
         self.nc_pins: set[PinRef] = set()      # author-declared no-connects
         self.port_types: dict[str, PortType] = {}   # PORT net -> PortType
         self.hints: dict[str, str] = {}        # net -> declarative style hint
+        # power-tree budget declarations: rail -> [(amps, note), ...]
+        self.loads: dict[str, list[tuple[float, str]]] = {}
+        # test-point coverage waivers: net -> reason (gate lists them)
+        self.tp_waivers: dict[str, str] = {}
         self._ref_counters: dict[str, int] = {}
 
     # ---- parts -------------------------------------------------------------
@@ -331,6 +335,64 @@ class Circuit:
         if net not in self.nets:
             raise CircuitError(f"hint({net!r}): not a declared net")
         self.hints[net] = style
+
+    # ---- power-tree budget declarations (consumed by schgen/powertree.py) ----
+    def draws(self, rail: str, amps: float, note: str = "") -> None:
+        """Declare this subsystem's WORST-CASE current draw on a POWER rail.
+
+        Declarative electrical intent, never geometry: the power-tree budget
+        gate (round 4) sums every sheet's declarations through the regulator
+        tree extracted from the netlists and FAILS the build on any
+        regulator/source overrun. ``note`` should cite the dossier/datasheet
+        figure the number comes from."""
+        n = self.nets.get(rail)
+        if n is None:
+            raise CircuitError(f"draws({rail!r}): not a declared net")
+        if n.net_class is not NetClass.POWER:
+            raise CircuitError(f"draws({rail!r}): not a POWER rail "
+                               f"({n.net_class.value})")
+        if not (amps > 0):
+            raise CircuitError(f"draws({rail!r}): amps must be > 0")
+        self.loads.setdefault(rail, []).append((float(amps), note))
+
+    # ---- test points (consumed by schgen/testpoints.py) ----------------------
+    TP_LIB_ID = "Connector:TestPoint"
+    TP_FOOTPRINT = "TestPoint:TestPoint_Pad_D1.5mm"
+
+    def testpoint(self, net: str, ref: str | None = None) -> Part:
+        """A probe point on ``net``: KiCad TestPoint symbol on a pad-only
+        footprint — copper, no component, NO BOM line (the BOM/preflight
+        exporters skip ``BOM=exclude`` parts). The placement ENGINE owns its
+        geometry (a dedicated probe row); authoring stays netlist-only.
+
+        Only POWER/GROUND/PORT nets are probeable (the coverage gate's
+        domain); the net must already carry at least one real pin."""
+        n = self.nets.get(net)
+        if n is None:
+            raise CircuitError(f"testpoint({net!r}): not a declared net")
+        if n.net_class is NetClass.SIGNAL:
+            raise CircuitError(
+                f"testpoint({net!r}): internal SIGNAL net — probe points "
+                f"cover rails and PORT buses (make it a port or waive)")
+        if not n.pins:
+            raise CircuitError(f"testpoint({net!r}): net has no pins yet — "
+                               f"declare the circuit first")
+        if ref is None:
+            ref = self.auto_ref("TP")
+        p = self.part(ref, self.TP_LIB_ID, net, self.TP_FOOTPRINT,
+                      BOM="exclude")
+        self.net(net, f"{ref}.1")
+        return p
+
+    def waive_tp(self, net: str, reason: str) -> None:
+        """EXPLICIT test-point waiver: this net deliberately has no probe
+        point. The coverage gate lists every waiver verbatim in its report —
+        a waiver is documentation, never silence."""
+        if net not in self.nets:
+            raise CircuitError(f"waive_tp({net!r}): not a declared net")
+        if not reason.strip():
+            raise CircuitError(f"waive_tp({net!r}): a reason is required")
+        self.tp_waivers[net] = reason.strip()
 
     def nc(self, *pins: PinRef | str) -> None:
         """Author-declared no-connect — pin is INTENTIONALLY unused."""

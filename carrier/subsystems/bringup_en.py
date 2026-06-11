@@ -87,4 +87,8 @@ def circuit() -> Circuit:
         c.net("GND", f"{u.ref}.3")
         for cap in c.decouple(f"{u.ref}.5", "100n", footprint=C_FP):
             cap.fields["LCSC"] = LCSC_100N
+
+    # power-tree budget (round 4): 3 LVC gates (uA static) + A/B 100k pull
+    # networks (33 uA each when driven)
+    c.draws("+3V3_SC", 0.002, "3x SN74LVC1G08 + 100k pull networks")
     return c

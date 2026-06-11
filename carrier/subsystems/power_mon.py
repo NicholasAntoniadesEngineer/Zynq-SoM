@@ -77,4 +77,8 @@ def circuit() -> Circuit:
 
     # WARNING/PV/TC: open-drain status outputs, I2C-readable — unused
     c.nc("U1.WARNING", "U1.PV", "U1.TC", "U2.WARNING", "U2.PV", "U2.TC")
+
+    # power-tree budget (round 4): 2x INA3221 IQ ~350 uA (dossier section 2)
+    # + ALERT 10k pull-up when asserted (~0.3 mA) — rounded up
+    c.draws("+3V3_SC", 0.002, "2x INA3221 ~0.7 mA + ALERT pull-up")
     return c

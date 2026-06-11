@@ -73,4 +73,8 @@ def circuit() -> Circuit:
 
     # VCONN sourcing unused by design
     c.nc("U1.12", "U1.13")
+
+    # power-tree budget (round 4): FUSB302B IDD < 1 mA (DS), INT_N pull-up
+    # 4k7 sinks ~0.7 mA when asserted — rounded up
+    c.draws("+3V3_SC", 0.005, "FUSB302B VDD (<1 mA) + INT_N 4k7 pull-up")
     return c

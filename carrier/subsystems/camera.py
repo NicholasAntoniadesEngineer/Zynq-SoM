@@ -81,4 +81,9 @@ def circuit() -> Circuit:
     c.net("+3V3_CAM", "J1.15", "C1.1", "C2.1")
     c.net("GND", "J1.1", "J1.4", "J1.7", "J1.10", "C1.2", "C2.2",
           "J1.16", "J1.17")
+
+    # power-tree budget (round 4): RPi V2 module ~250 mA typ, dossier budget
+    # 300 mA (camera_csi.md section 0) incl. the I2C pull-ups
+    c.draws("+3V3_CAM", 0.300, "RPi camera module budget "
+                               "(camera_csi.md: V2 typ ~250 mA)")
     return c

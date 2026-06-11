@@ -133,4 +133,11 @@ def circuit() -> Circuit:
     cr = c.part(c.auto_ref("C"), "Device:C", "100n", C_FP, LCSC=LCSC_100N)
     c.port("STM32_NRST", "SW5.1", "SW5.2", f"{cr.ref}.1")
     c.net("GND", "SW5.3", "SW5.4", f"{cr.ref}.2")
+
+    # power-tree budget (round 4, dossier R3: subsystem total < 5 mA):
+    # TCA9535 uA-class + 12 closed-DIP pull currents (33 uA each) + I2C/INT
+    # pull-ups when sinking
+    c.draws("+3V3_SC", 0.005, "TCA9535 + DIP/I2C/INT pull networks "
+                              "(dossier R3 < 5 mA)")
+    c.draws("+3V3", 0.001, "2x user-button 10k pull-ups when pressed")
     return c

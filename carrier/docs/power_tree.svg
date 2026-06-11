@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1270 1048" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
+<rect width="1270" height="1048" fill="white"/>
+<text x="30" y="28" font-size="15" font-weight="bold">carrier power tree — budget gate (PASS)</text>
+<path d="M880,70 C940,70 910,334 1020,334" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="318" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="329" fill="#2563eb">(1) 0.01/0.52A</text>
+<path d="M880,70 C940,70 910,268 1020,268" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="252" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="263" fill="#2563eb">(2) 0.01/0.52A</text>
+<path d="M880,70 C940,70 910,400 1020,400" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="384" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="395" fill="#2563eb">(3) 0.10/1.00A</text>
+<path d="M880,70 C940,70 910,202 1020,202" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="186" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="197" fill="#2563eb">(4) 0.30/0.52A</text>
+<path d="M880,70 C940,70 910,532 1020,532" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="516" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="527" fill="#2563eb">(5) 0.25/1.00A</text>
+<path d="M550,70 C610,70 580,136 690,136" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="584" y="120" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="586" y="131" fill="#2563eb">(6) 0.50/1.00A</text>
+<path d="M880,70 C940,70 910,466 1020,466" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="450" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="461" fill="#2563eb">(7) 0.20/0.52A</text>
+<path d="M880,70 C940,70 910,598 1020,598" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="582" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="593" fill="#2563eb">(8) 0.01/0.52A</text>
+<path d="M880,70 C940,70 910,136 1020,136" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="120" width="98" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="131" fill="#2563eb">(9) 0.40/0.40A</text>
+<path d="M220,136 C280,136 250,70 360,70" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="254" y="54" width="105" height="14" fill="white" fill-opacity="0.85"/>
+<text x="256" y="65" fill="#2563eb">(10) 2.21/3.00A</text>
+<path d="M550,70 C610,70 580,70 690,70" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="584" y="54" width="105" height="14" fill="white" fill-opacity="0.85"/>
+<text x="586" y="65" fill="#2563eb">(11) 2.32/3.00A</text>
+<path d="M880,70 C940,70 910,70 1020,70" fill="none" stroke="#2563eb" stroke-width="2"/>
+<rect x="914" y="54" width="105" height="14" fill="white" fill-opacity="0.85"/>
+<text x="916" y="65" fill="#2563eb">(12) 0.01/0.60A</text>
+<line x1="220" y1="136" x2="360" y2="136" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
+<rect x="30" y="50" width="190" height="40" rx="8" fill="#fef3c7" stroke="#92400e" stroke-width="1.5"/>
+<text x="40" y="66" font-weight="bold" font-size="12">+3V3_SC (3.3 V)</text>
+<text x="40" y="82" fill="#374151">load 0.023 A / 2 A</text>
+<rect x="30" y="116" width="190" height="40" rx="8" fill="#fef3c7" stroke="#92400e" stroke-width="1.5"/>
+<text x="40" y="132" font-weight="bold" font-size="12">+VIN (20 V)</text>
+<text x="40" y="148" fill="#374151">load 1.114 A / 3 A</text>
+<rect x="360" y="50" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="370" y="66" font-weight="bold" font-size="12">+5V (5 V)</text>
+<text x="370" y="82" fill="#374151">load 2.210 A</text>
+<rect x="360" y="116" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="370" y="132" font-weight="bold" font-size="12">+VIN_SYS (20 V)</text>
+<text x="370" y="148" fill="#374151">load 0.000 A</text>
+<rect x="690" y="50" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="700" y="66" font-weight="bold" font-size="12">+3V3 (3.3 V)</text>
+<text x="700" y="82" fill="#374151">load 2.322 A</text>
+<rect x="690" y="116" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="700" y="132" font-weight="bold" font-size="12">+5V_USB (5 V)</text>
+<text x="700" y="148" fill="#374151">load 0.503 A</text>
+<rect x="1020" y="50" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="66" font-weight="bold" font-size="12">+1V8 (1.8 V)</text>
+<text x="1030" y="82" fill="#374151">load 0.006 A</text>
+<rect x="1020" y="116" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="132" font-weight="bold" font-size="12">+2V5_VADJ (2.5 V)</text>
+<text x="1030" y="148" fill="#374151">load 0.400 A</text>
+<rect x="1020" y="182" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="198" font-weight="bold" font-size="12">+3V3_CAM (3.3 V)</text>
+<text x="1030" y="214" fill="#374151">load 0.304 A</text>
+<rect x="1020" y="248" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="264" font-weight="bold" font-size="12">+3V3_HDMI_RX (3.3 V)</text>
+<text x="1030" y="280" fill="#374151">load 0.005 A</text>
+<rect x="1020" y="314" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="330" font-weight="bold" font-size="12">+3V3_HDMI_TX (3.3 V)</text>
+<text x="1030" y="346" fill="#374151">load 0.006 A</text>
+<rect x="1020" y="380" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="396" font-weight="bold" font-size="12">+3V3_LCD (3.3 V)</text>
+<text x="1030" y="412" fill="#374151">load 0.104 A</text>
+<rect x="1020" y="446" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="462" font-weight="bold" font-size="12">+3V3_PMOD (3.3 V)</text>
+<text x="1030" y="478" fill="#374151">load 0.204 A</text>
+<rect x="1020" y="512" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="528" font-weight="bold" font-size="12">+3V3_SD (3.3 V)</text>
+<text x="1030" y="544" fill="#374151">load 0.254 A</text>
+<rect x="1020" y="578" width="190" height="40" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
+<text x="1030" y="594" font-weight="bold" font-size="12">+3V3_USER_LED (3.3 V)</text>
+<text x="1030" y="610" fill="#374151">load 0.010 A</text>
+<text x="30" y="674" font-weight="bold" fill="#6b7280">unsourced rails (PLAN deferrals / findings):</text>
+<text x="30" y="692" fill="#6b7280">+1V8_REG (0.000 A)</text>
+<text x="230" y="692" fill="#6b7280">+3V3_REG (0.000 A)</text>
+<text x="430" y="692" fill="#6b7280">+5V_HDMI_TX (0.055 A)</text>
+<text x="630" y="692" fill="#6b7280">+5V_LCD (0.450 A)</text>
+<text x="30" y="710" fill="#6b7280">+5V_REG (0.000 A)</text>
+<text x="230" y="710" fill="#6b7280">+VCCO_13 (0.000 A)</text>
+<text x="430" y="710" fill="#6b7280">+VCCO_33 (0.000 A)</text>
+<text x="630" y="710" fill="#6b7280">+VCCO_34 (0.000 A)</text>
+<text x="30" y="728" fill="#6b7280">+VCCO_35 (0.000 A)</text>
+<text x="30" y="788" font-weight="bold">regulators:</text>
+<text x="30" y="806" fill="#374151">(1) bringup_modules:U1 SY6280AAC +3V3 -&gt; +3V3_HDMI_TX — load 0.006 A / limit 0.523 A [load_switch]</text>
+<text x="30" y="822" fill="#374151">(2) bringup_modules:U2 SY6280AAC +3V3 -&gt; +3V3_HDMI_RX — load 0.005 A / limit 0.523 A [load_switch]</text>
+<text x="30" y="838" fill="#374151">(3) bringup_modules:U3 SY6280AAC +3V3 -&gt; +3V3_LCD — load 0.104 A / limit 1.000 A [load_switch]</text>
+<text x="30" y="854" fill="#374151">(4) bringup_modules:U4 SY6280AAC +3V3 -&gt; +3V3_CAM — load 0.304 A / limit 0.523 A [load_switch]</text>
+<text x="30" y="870" fill="#374151">(5) bringup_modules:U5 SY6280AAC +3V3 -&gt; +3V3_SD — load 0.254 A / limit 1.000 A [load_switch]</text>
+<text x="30" y="886" fill="#374151">(6) bringup_modules:U6 SY6280AAC +5V -&gt; +5V_USB — load 0.503 A / limit 1.000 A [load_switch]</text>
+<text x="30" y="902" fill="#374151">(7) bringup_modules:U7 SY6280AAC +3V3 -&gt; +3V3_PMOD — load 0.204 A / limit 0.523 A [load_switch]</text>
+<text x="30" y="918" fill="#374151">(8) bringup_modules:U8 SY6280AAC +3V3 -&gt; +3V3_USER_LED — load 0.010 A / limit 0.523 A [load_switch]</text>
+<text x="30" y="934" fill="#374151">(9) fmc:U1 TLV75725PDBVR +3V3 -&gt; +2V5_VADJ — load 0.400 A / limit 0.400 A [ldo]</text>
+<text x="30" y="950" fill="#374151">(10) power:U1 TPS54302DDCR +VIN -&gt; +5V — load 2.210 A / limit 3.000 A [buck]</text>
+<text x="30" y="966" fill="#374151">(11) power:U2 TPS54302DDCR +5V -&gt; +3V3 — load 2.322 A / limit 3.000 A [buck]</text>
+<text x="30" y="982" fill="#374151">(12) power:U3 AP2112K-1.8 +3V3 -&gt; +1V8 — load 0.006 A / limit 0.600 A [ldo]</text>
+</svg>

@@ -77,4 +77,8 @@ def circuit() -> Circuit:
     # bringup_modules): a POWER net with its own symbol, like +5V_USB.
     c.net("+3V3_PMOD", *vcc_pins, "C1.1", "C2.1", "C3.1", "C4.1")
     c.net("GND", *gnd_pins, "C1.2", "C2.2", "C3.2", "C4.2")
+
+    # power-tree budget (round 4): 2 host ports x ~100 mA module budget
+    # (Digilent Pmod spec, debug_boot_pmod.md)
+    c.draws("+3V3_PMOD", 0.200, "2x Pmod module budget ~100 mA each")
     return c

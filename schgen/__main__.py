@@ -475,6 +475,17 @@ def cmd_board(args: argparse.Namespace) -> int:
     print(f"BOM: {man_dir / 'bom_jlc.csv'} ({len(rows)} line items"
           f"{f', {len(missing)} missing LCSC' if missing else ''})")
 
+    # power-tree budget gate (round 4): regulator tree from the netlists +
+    # declared draws -> headroom proof, numbered SVG, verdict report.
+    from schgen import powertree
+    pt_res = powertree.run(sheets, rep_dir, CARRIER / "docs")
+    print(f"POWER TREE: {'PASS' if pt_res.ok else 'FAIL'} "
+          f"({len(pt_res.regs)} regulators, {len(pt_res.findings)} findings"
+          f" -> {rep_dir / 'power_tree.txt'})")
+    for e in pt_res.errors:
+        print(f"  POWER TREE ERROR: {e}")
+    ok_all = ok_all and pt_res.ok
+
     # Vivado pin constraints (round 4): every carrier PORT bound through
     # J2/J3 to a Zynq PL ball, ball map live-extracted from the SoM project
     # and cross-checked against the committed contract.
@@ -619,6 +630,14 @@ def main(argv: list[str] | None = None) -> int:
                     help="keep the scratch dir with all mutants")
     from schgen.selftest import cmd_selftest
     st.set_defaults(func=cmd_selftest)
+    pt = sub.add_parser(
+        "powertree", help="power-tree budget gate: regulator tree from the "
+                          "netlists + declared draws -> headroom proof, "
+                          "numbered SVG diagram, verdict report")
+    pt.add_argument("subsystems", nargs="*",
+                    help="names in carrier/subsystems/ (default: all)")
+    from schgen.powertree import cmd_powertree
+    pt.set_defaults(func=cmd_powertree)
     pf = sub.add_parser(
         "preflight", help="live JLC/LCSC stock + Basic/Extended + cost check")
     pf.add_argument("subsystems", nargs="+")

@@ -68,4 +68,9 @@ def circuit() -> Circuit:
     c.net("BOOT_SPARE", "SW1.4", "R6.2")
     c.net("GND", "SW1.5")
     c.net("+3V3_SC", "R4.1", "R5.1", "R6.1")
+
+    # power-tree budget (round 4): BOOT0 strap 3.3V/(100R+1k5) ~= 2 mA when
+    # closed + 3x 10k BOOTSEL/spare pulls (0.33 mA each held)
+    c.draws("+3V3_SC", 0.004, "BOOT0 strap ~2 mA closed + BOOTSEL pulls")
+    c.draws("+3V3", 0.002, "JTAG TMS/TDI 4k7 insurance pulls when driven")
     return c

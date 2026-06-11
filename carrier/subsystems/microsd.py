@@ -81,4 +81,11 @@ def circuit() -> Circuit:
     c.nc("U1.DAT2B1", "U1.DAT3B1", "U1.CMDB1", "U1.CLKB1",
          "U1.DAT0B1", "U1.DAT1B1")
     c.nc("U2.NC", "U2.VCC")        # NC pads 4/9 + floating VCC (as designed)
+
+    # power-tree budget (round 4): SD card 3.3 V class up to ~200 mA write
+    # bursts (SD phys spec) + 6x 10k pulls + TXS VCCB — inside the 1 A
+    # SY6280 cell-5 limit; TXS02612 VCCA side is uA-class but budgeted
+    c.draws("+3V3_SD", 0.250, "SD card write burst ~200 mA + pull-ups + "
+                              "TXS02612 VCCB")
+    c.draws("+1V8", 0.005, "TXS02612 VCCA (SoM-side level)")
     return c

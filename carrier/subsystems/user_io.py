@@ -68,4 +68,9 @@ def circuit() -> Circuit:
         c.port(net, f"{sref}.1", f"{sref}.2", f"{rref}.2", expect=J2_MAP)
         c.net("+3V3", f"{rref}.1")
         c.net("GND", f"{sref}.3", f"{sref}.4")
+
+    # power-tree budget (round 4): 4 LEDs x (3.3-2.0)/1k ~= 1.3 mA each;
+    # 4 button pull-ups 0.33 mA each when held
+    c.draws("+3V3_USER_LED", 0.006, "4 user LEDs @ ~1.3 mA (1k series)")
+    c.draws("+3V3", 0.002, "4x button 10k pull-ups when pressed")
     return c

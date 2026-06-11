@@ -81,4 +81,11 @@ def connector_circuit(jref: str, name: str, title: str) -> Circuit:
     if all(s in c.nets for s in SD_BUS):
         for s in SD_BUS:
             c.port_type(s, kind="sd_bus", bus="SDIO", level_v=1.8)
+    # power-tree budget (round 4): the SoM module itself is a +VIN load
+    # (J1.1-14 -> on-module MPM3834/MPM3822/TPSM82864 regulators feeding
+    # Zynq + DDR3L + PHYs) — 10 W-class worst case at 20 V, ESTIMATE pending
+    # an SoM power-budget measurement
+    if jref == "J1":
+        c.draws("+VIN", 0.500, "SoM module (Zynq+DDR3L+PHYs) ~10 W class "
+                               "at 20 V — estimate, refine at bring-up")
     return c

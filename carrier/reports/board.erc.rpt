@@ -1,4 +1,4 @@
-ERC report (Encoding UTF8)
+ERC report (2026-06-11T20:01:33, Encoding UTF8)
 Report includes: Errors
 
 ***** Sheet /
@@ -26,6 +26,10 @@ Report includes: Errors
 ***** Sheet /lcd/
 
 ***** Sheet /microsd/
+[pin_to_pin]: Pins of type Power output and Power output are connected
+    ; error
+    @(43.18 mm, 180.34 mm): Symbol #FLG1201 Pin 1 [Power output, Line]
+    @(148.59 mm, 106.68 mm): Symbol U1503 Pin 5 [VOUT, Power output, Line]
 
 ***** Sheet /pd_input/
 
@@ -49,7 +53,7 @@ Report includes: Errors
 
 ***** Sheet /user_io/
 
- ** ERC messages: 0  Errors 0  Warnings 0
+ ** ERC messages: 1  Errors 1  Warnings 0
 
  ** Ignored checks:
     - Global label only appears once in the schematic

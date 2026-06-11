@@ -155,4 +155,10 @@ def circuit() -> Circuit:
     c.net("PG_1V8_D", "Q1.3", "R9.2")
     c.net("PG_1V8_K", "R9.1", "D3.1")
     c.net("+3V3", "D3.2")
+
+    # ---- power-tree budget declarations (round 4 gate) ----------------------
+    c.draws("+5V", 0.004, "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA")
+    c.draws("+3V3", 0.009, "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain "
+                           "(330R ~3.9 mA) + FB divider 27 uA")
+    c.draws("+1V8", 0.001, "PG FET gate divider 10k+100k (16 uA), rounded up")
     return c

@@ -116,4 +116,11 @@ def circuit() -> Circuit:
 
     # pin 14 = HEC/Utility, reserved (N.C. on non-HEAC devices, HDMI 1.4)
     c.nc("J1.14")
+
+    # power-tree budget (round 4): TPD12S016 ICCA < 1 mA + the two 10k
+    # straps; the cable's +5V is the TPD's integrated 55 mA-limited switch
+    # (DS Sec 7.3.10) fed from +5V_HDMI_TX
+    c.draws("+3V3_HDMI_TX", 0.002, "TPD12S016 ICCA + LS_OE/CT_HPD straps")
+    c.draws("+5V_HDMI_TX", 0.055, "HDMI source +5V to cable — TPD12S016 "
+                                  "switch limit 55 mA (DS 7.3.10)")
     return c
