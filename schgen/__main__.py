@@ -502,6 +502,20 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  TESTPOINT ERROR: {e}")
     ok_all = ok_all and tp_res.ok
 
+    # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
+    # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds
+    # hard. The closed-form analytics ARE the gate; the ngspice .op
+    # cross-check layer runs whenever ngspice is installed (1% agreement
+    # enforced) and degrades honestly to analytic-only when it is not.
+    from schgen import spice
+    sp_res = spice.run(sheets, rep_dir, allow_ngspice=True)
+    print(f"SPICE: {'PASS' if sp_res.ok else 'FAIL'} "
+          f"({sp_res.n_checks} checks, {sp_res.engine} "
+          f"-> {rep_dir / 'spice.txt'})")
+    for e in sp_res.errors:
+        print(f"  SPICE ERROR: {e}")
+    ok_all = ok_all and sp_res.ok
+
     # Vivado pin constraints (round 4): every carrier PORT bound through
     # J2/J3 to a Zynq PL ball, ball map live-extracted from the SoM project
     # and cross-checked against the committed contract.
@@ -654,6 +668,16 @@ def main(argv: list[str] | None = None) -> int:
                     help="names in carrier/subsystems/ (default: all)")
     from schgen.powertree import cmd_powertree
     pt.set_defaults(func=cmd_powertree)
+    sx = sub.add_parser(
+        "spice", help="auto-extracted divider/RC/ISET/FB spot-checks with "
+                      "hard thresholds — analytic closed-form gate + an "
+                      "ngspice cross-check layer when installed")
+    sx.add_argument("subsystems", nargs="*",
+                    help="names in carrier/subsystems/ (default: all)")
+    sx.add_argument("--no-ngspice", action="store_true",
+                    help="closed-form only (skip the ngspice layer)")
+    from schgen.spice import cmd_spice
+    sx.set_defaults(func=cmd_spice)
     pf = sub.add_parser(
         "preflight", help="live JLC/LCSC stock + Basic/Extended + cost check")
     pf.add_argument("subsystems", nargs="+")

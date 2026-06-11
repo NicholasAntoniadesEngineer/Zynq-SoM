@@ -42,7 +42,7 @@
 <path d="M260,1802 C340,1802 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="1796" fill="#2563eb">74 nets</text>
 <path d="M260,1906 C340,1906 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="1922" fill="#6b7280">6 nets (deferred)</text>
+<text x="270" y="1922" fill="#6b7280">7 nets (deferred)</text>
 <path d="M260,1994 C340,1994 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="1988" fill="#2563eb">2 nets</text>
 <path d="M260,2002 C340,2002 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
@@ -346,7 +346,7 @@
 <rect x="40" y="1864" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1884" font-weight="bold" font-size="14">uart_bridge</text>
 <text x="52" y="1904" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="1920" fill="#6b7280">6 deferred</text>
+<text x="52" y="1920" fill="#6b7280">7 deferred</text>
 <rect x="40" y="1960" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1980" font-weight="bold" font-size="14">usb_pd</text>
 <text x="52" y="2000" fill="#1e40af">2 SoM-bound port(s)</text>
@@ -366,6 +366,6 @@
 <text x="572" y="1136" fill="#374151">rails: +1V8, +3V3, +3V3_SC, +VCCO_13, +VCCO_33, +VCCO_34, +VCCO_35, +VIN, GND</text>
 <rect x="560" y="1230" width="220" height="80" rx="10" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="6,4"/>
 <text x="572" y="1254" fill="#6b7280" font-weight="bold">later waves</text>
-<text x="572" y="1276" fill="#6b7280">120 deferred port(s)</text>
+<text x="572" y="1276" fill="#6b7280">121 deferred port(s)</text>
 <text x="572" y="1294" fill="#6b7280">rj45, usb conn, J1-J3 sheets</text>
 </svg>

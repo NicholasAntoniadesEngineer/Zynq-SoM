@@ -367,12 +367,12 @@ rails (26):
   +VCCO_33 <- sheets: som_j2 -> SoM 3 pins
   +VCCO_34 <- sheets: som_j3 -> SoM 2 pins
   +VCCO_35 <- sheets: som_j3 -> SoM 3 pins
-  +VIN (alias of SoM 'VIN') <- sheets: pd_input, power, power_mon, som_j1, uart_bridge, usb_pd -> SoM 14 pins
+  +VIN (alias of SoM 'VIN') <- sheets: pd_input, power, power_mon, som_j1, usb_pd -> SoM 14 pins
   +VIN_SYS — carrier-local rail (sheets: power_mon)
   CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, usbc_otg)
   GND <- sheets: bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io -> SoM 63 pins
 
-deferred ports — author-declared, awaiting later waves (120) [WARNING]:
+deferred ports — author-declared, awaiting later waves (121) [WARNING]:
   bringup_en:STM32_RAIL_EN_5V0 — awaiting som_j3_connector (wave 3 STM32 GPIO function map)
   bringup_en:STM32_RAIL_EN_3V3 — awaiting som_j3_connector (wave 3 STM32 GPIO function map)
   bringup_en:STM32_RAIL_EN_1V8 — awaiting som_j3_connector (wave 3 STM32 GPIO function map)
@@ -485,6 +485,7 @@ deferred ports — author-declared, awaiting later waves (120) [WARNING]:
   lcd:LCD_BL_PWM — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
   microsd:SD_CARD_DETECT — awaiting som_j1_connector (STM32 GPIO function map)
   power_mon:PMON_ALERT_N — awaiting bringup (TCA9535 spare port P11)
+  uart_bridge:USB_UART_VBUS — awaiting usb_uart_connector (wave 2)
   uart_bridge:USB_UART_DP — awaiting usb_uart_connector (wave 2)
   uart_bridge:USB_UART_DM — awaiting usb_uart_connector (wave 2)
   uart_bridge:ZYNQ_PS_UART0_RXD — awaiting som_j1_connector (wave 3 MIO function map)
@@ -498,4 +499,4 @@ unbound SoM nets — no consumer yet, later waves (0) [WARNING]:
 
 errors: none
 
-LINK: PASS (0 errors, 120 warnings)
+LINK: PASS (0 errors, 121 warnings)

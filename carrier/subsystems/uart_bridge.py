@@ -3,8 +3,9 @@
 Reference circuit per the SiLabs CP2102N datasheet (self-powered config):
 VREGIN + VDD + VIO tied directly to the +3V3 rail; decoupling 100n + 10u on
 VREGIN, 100n on VDD, 100n on VIO; ~RST pulled up 1k to the rail; VBUS sensed
-through a 22k1 / 47k5 divider from +VIN to GND (datasheet self-powered VBUS
-divider) with the mid-point on the VBUS pin. D+/D- go to the USB connector
+through a 22k1 / 47k5 divider from the UART USB connector's own 5 V VBUS
+(port USB_UART_VBUS, wave-2 receptacle; datasheet self-powered VBUS divider)
+with the mid-point on the VBUS pin. D+/D- go to the USB connector
 (ports USB_UART_DP/DM); the four UART signals cross over to the Zynq PS UART0
 (bridge TXD -> ZYNQ_PS_UART0_RXD etc.). All GPIO / modem-control / suspend
 pins are unused by design -> explicit author no-connects.
@@ -48,12 +49,18 @@ def circuit() -> Circuit:
     c.net("CP2102N_RST_N", "U1.9")
     c.pullup("U1.9", "1k", "+3V3").fields["LCSC"] = "C21190"    # R1, Basic
 
-    # VBUS sense divider, datasheet self-powered config:
-    # +VIN -[22k1]- CP2102N_VBUS_SNS -[47k5]- GND, mid-point to the VBUS pin
+    # VBUS sense divider, datasheet self-powered config: senses the UART
+    # USB connector's OWN 5 V VBUS (the cable-attach detect this pin is
+    # for). FIX 2026-06-11, caught by the schgen spice gate: this divider
+    # was authored from +VIN — after PD negotiation that rail is 20 V and
+    # the divider would put 13.6 V on a 5.8 V abs-max pin, destroying the
+    # bridge. USB_UART_VBUS is the wave-2 USB-UART receptacle's VBUS.
+    # USB_UART_VBUS -[22k1]- CP2102N_VBUS_SNS -[47k5]- GND, mid to pin 8
     # (22.1k = C25961, 47.5k = C23061 — both UNI-ROYAL 1% 0603, Extended,
     # stock 87k/91k live-verified 2026-06-11)
+    c.port("USB_UART_VBUS", expect="usb_uart_connector (wave 2)")
     c.net("CP2102N_VBUS_SNS", "U1.8")
-    c.series("+VIN", "CP2102N_VBUS_SNS", "22k1") \
+    c.series("USB_UART_VBUS", "CP2102N_VBUS_SNS", "22k1") \
         .fields["LCSC"] = "C25961"                  # R2
     c.series("CP2102N_VBUS_SNS", "GND", "47k5") \
         .fields["LCSC"] = "C23061"                  # R3
