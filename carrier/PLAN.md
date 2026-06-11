@@ -135,3 +135,16 @@ carrier/
 ```
 No scratch dir; everything regenerated in place, deterministic. The authoring-v2/refactor
 agent implements this (CLI output paths + .gitignore + README references).
+
+## GAP REGISTRY (audit 2026-06-11 — decided but not yet owned)
+1. **pd_input sheet MISSING**: the USB-C PD *receptacle* itself (VBUS -> +VIN path,
+   CC1/CC2 wiring to the FUSB302 sheet's STM32_USB_CC1/2 ports, shield). usb_pd has
+   only the FUSB302. Without it the board has no power inlet. Owner: next free agent.
+2. **Passive part folders (round-1 decision)**: passives still inline c.part(...,
+   LCSC=...) — round 1 says EVERY part incl. passives gets a folder. Authoring v2's
+   missing-passive error implies the folders; VERIFY at M3 harvest that R/C/L folders
+   actually exist and subsystems reference them, else it silently stays inline.
+3. **Rule engine P4**: in M3 scope via round 3, but VERIFY at harvest it landed
+   (rules in parts/<MPN>/<MPN>.py + retrofit) — not silently dropped.
+4. **SC firmware contract**: BOOTSEL decode + BMODE drive + PA13/14 reserved (debug
+   dossier "firmware contract") — needs a tracked note in som/ before rev-A bring-up.
