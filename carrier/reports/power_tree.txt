@@ -2,22 +2,24 @@ schgen power-tree budget gate
 ================================================================
 
 sources:
-  +VIN        20.0 V  limit 3.00 A  load 1.114 A  (37%)  — USB-C PD sink contract 20 V / 3 A (pd_input J1)
+  +VIN        20.0 V  limit 3.00 A  load 1.256 A  (42%)  — USB-C PD sink contract 20 V / 3 A (pd_input J1)
   +3V3_SC      3.3 V  limit 2.00 A  load 0.023 A  (1%)  — SoM MPM3822 always-on SC rail (J1.37); limit is the SoM regulator's 2 A — SoM-side SC loads (STM32 etc.) not included in the carrier tally
 
-regulators (12) — numbered as in carrier/docs/power_tree.svg:
+regulators (14) — numbered as in carrier/docs/power_tree.svg:
   ( 1) bringup_modules:U1   SY6280AAC           +3V3 -> +3V3_HDMI_TX   load 0.006 A / limit 0.523 A (1%)  in 0.006 A [load_switch] ILIM = 6800/13000R = 523 mA
-  ( 2) bringup_modules:U2   SY6280AAC           +3V3 -> +3V3_HDMI_RX   load 0.005 A / limit 0.523 A (1%)  in 0.005 A [load_switch] ILIM = 6800/13000R = 523 mA
-  ( 3) bringup_modules:U3   SY6280AAC           +3V3 -> +3V3_LCD       load 0.104 A / limit 1.000 A (10%)  in 0.104 A [load_switch] ILIM = 6800/6800R = 1000 mA
-  ( 4) bringup_modules:U4   SY6280AAC           +3V3 -> +3V3_CAM       load 0.304 A / limit 0.523 A (58%)  in 0.304 A [load_switch] ILIM = 6800/13000R = 523 mA
-  ( 5) bringup_modules:U5   SY6280AAC           +3V3 -> +3V3_SD        load 0.254 A / limit 1.000 A (25%)  in 0.254 A [load_switch] ILIM = 6800/6800R = 1000 mA
-  ( 6) bringup_modules:U6   SY6280AAC            +5V -> +5V_USB        load 0.503 A / limit 1.000 A (50%)  in 0.503 A [load_switch] ILIM = 6800/6800R = 1000 mA
-  ( 7) bringup_modules:U7   SY6280AAC           +3V3 -> +3V3_PMOD      load 0.204 A / limit 0.523 A (39%)  in 0.204 A [load_switch] ILIM = 6800/13000R = 523 mA
-  ( 8) bringup_modules:U8   SY6280AAC           +3V3 -> +3V3_USER_LED  load 0.010 A / limit 0.523 A (2%)  in 0.010 A [load_switch] ILIM = 6800/13000R = 523 mA
-  ( 9) fmc:U1   TLV75725PDBVR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO derated to 0.4 A continuous (DBV RthJA 231 C/W, fmc.md section 3)
-  (10) power:U1   TPS54302DDCR        +VIN -> +5V            load 2.210 A / limit 3.000 A (74%)  in 0.614 A [buck] TI 3 A synchronous buck (SW->L->rail)
-  (11) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.322 A / limit 3.000 A (77%)  in 1.703 A [buck] TI 3 A synchronous buck (SW->L->rail)
-  (12) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
+  ( 2) bringup_modules:U10  SY6280AAC            +5V -> +5V_LCD        load 0.453 A / limit 1.000 A (45%)  in 0.453 A [load_switch] ILIM = 6800/6800R = 1000 mA
+  ( 3) bringup_modules:U2   SY6280AAC           +3V3 -> +3V3_HDMI_RX   load 0.005 A / limit 0.523 A (1%)  in 0.005 A [load_switch] ILIM = 6800/13000R = 523 mA
+  ( 4) bringup_modules:U3   SY6280AAC           +3V3 -> +3V3_LCD       load 0.104 A / limit 1.000 A (10%)  in 0.104 A [load_switch] ILIM = 6800/6800R = 1000 mA
+  ( 5) bringup_modules:U4   SY6280AAC           +3V3 -> +3V3_CAM       load 0.304 A / limit 0.523 A (58%)  in 0.304 A [load_switch] ILIM = 6800/13000R = 523 mA
+  ( 6) bringup_modules:U5   SY6280AAC           +3V3 -> +3V3_SD        load 0.254 A / limit 1.000 A (25%)  in 0.254 A [load_switch] ILIM = 6800/6800R = 1000 mA
+  ( 7) bringup_modules:U6   SY6280AAC            +5V -> +5V_USB        load 0.503 A / limit 1.000 A (50%)  in 0.503 A [load_switch] ILIM = 6800/6800R = 1000 mA
+  ( 8) bringup_modules:U7   SY6280AAC           +3V3 -> +3V3_PMOD      load 0.204 A / limit 0.523 A (39%)  in 0.204 A [load_switch] ILIM = 6800/13000R = 523 mA
+  ( 9) bringup_modules:U8   SY6280AAC           +3V3 -> +3V3_USER_LED  load 0.010 A / limit 0.523 A (2%)  in 0.010 A [load_switch] ILIM = 6800/13000R = 523 mA
+  (10) bringup_modules:U9   SY6280AAC            +5V -> +5V_HDMI_TX    load 0.058 A / limit 0.523 A (11%)  in 0.058 A [load_switch] ILIM = 6800/13000R = 523 mA
+  (11) fmc:U1   TLV75725PDBVR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO derated to 0.4 A continuous (DBV RthJA 231 C/W, fmc.md section 3)
+  (12) power:U1   TPS54302DDCR        +VIN -> +5V            load 2.721 A / limit 3.000 A (91%)  in 0.756 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (13) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.322 A / limit 3.000 A (77%)  in 1.703 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (14) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
 
 shunt bridges (series R rail->rail, power_mon):
   power_mon:RS1 +VIN -> +VIN_SYS
@@ -46,7 +48,7 @@ declared draws (c.draws — every number cites its source):
   +3V3_PMOD             4.0 mA  bringup_modules    status LED (330R) on the gated output
   +3V3_PMOD           200.0 mA  pmod               2x Pmod module budget ~100 mA each
   +3V3_SC               2.0 mA  bringup_en         3x SN74LVC1G08 + 100k pull networks
-  +3V3_SC               5.0 mA  bringup_en_modules 9x SN74LVC1G08 + 100k pull networks
+  +3V3_SC               5.0 mA  bringup_en_modules 11x SN74LVC1G08 + 100k pull networks
   +3V3_SC               5.0 mA  bringup_rails      TCA9535 + DIP/I2C/INT pull networks (dossier R3 < 5 mA)
   +3V3_SC               4.0 mA  debug_boot         BOOT0 strap ~2 mA closed + BOOTSEL pulls
   +3V3_SC               2.0 mA  power_mon          2x INA3221 ~0.7 mA + ALERT pull-up
@@ -56,7 +58,9 @@ declared draws (c.draws — every number cites its source):
   +3V3_USER_LED         4.0 mA  bringup_modules    status LED (330R) on the gated output
   +3V3_USER_LED         6.0 mA  user_io            4 user LEDs @ ~1.3 mA (1k series)
   +5V                   4.0 mA  power              PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA
+  +5V_HDMI_TX           3.0 mA  bringup_modules    status LED (1k) on the gated output
   +5V_HDMI_TX          55.0 mA  hdmi_tx            HDMI source +5V to cable — TPD12S016 switch limit 55 mA (DS 7.3.10)
+  +5V_LCD               3.0 mA  bringup_modules    status LED (1k) on the gated output
   +5V_LCD             450.0 mA  lcd                SY7201 boost input @133 mA LED string (lcd_backlight.md operating point + margin)
   +5V_USB               3.0 mA  bringup_modules    status LED (1k) on the gated output
   +5V_USB             500.0 mA  usbc_otg           downstream USB device budget, TPS2051C current-limited
@@ -76,21 +80,19 @@ rail totals (declared + child regulator inputs):
   +3V3_SC            0.023 A  @ 3.3 V
   +3V3_SD            0.254 A  @ 3.3 V
   +3V3_USER_LED      0.010 A  @ 3.3 V
-  +5V                2.210 A  @ 5.0 V
-  +5V_HDMI_TX        0.055 A  @ 5.0 V
-  +5V_LCD            0.450 A  @ 5.0 V
+  +5V                2.721 A  @ 5.0 V
+  +5V_HDMI_TX        0.058 A  @ 5.0 V
+  +5V_LCD            0.453 A  @ 5.0 V
   +5V_REG            0.000 A  @ 5.0 V
   +5V_USB            0.503 A  @ 5.0 V
   +VCCO_13           0.000 A  @ 3.3 V
   +VCCO_33           0.000 A  @ 3.3 V
   +VCCO_34           0.000 A  @ 3.3 V
   +VCCO_35           0.000 A  @ 2.5 V
-  +VIN               1.114 A  @ 20.0 V
+  +VIN               1.256 A  @ 20.0 V
   +VIN_SYS           0.000 A  @ 20.0 V
 
-FINDINGS — decisions needed (4):
-  * UNSOURCED RAIL +5V_HDMI_TX (declared load 0.055 A): no regulator output, no source contract — needs a gate/tie decision before layout
-  * UNSOURCED RAIL +5V_LCD (declared load 0.450 A): no regulator output, no source contract — needs a gate/tie decision before layout
+FINDINGS — decisions needed (2):
   * VBUS PRE-CONTRACT CAPACITANCE (decision needed, PLAN round-4 flag): +VIN carries 30.3 uF NOMINAL un-switched (pd_input:C1=100n + pd_input:C2=10u + power:C1=100n + power:C2=10u + power:C3=10u + usb_pd:C3=100n). At the 5 V default-VBUS bias the X7R/X5R parts derate to roughly 15-24 uF effective — ABOVE the ~10 uF cSnkBulk guidance a PD sink should present before an explicit contract (USB PD r3 / Type-C tSrcInrush margins usually absorb this, but it is out of spec). REMEDY A (preferred): an inrush-limited +VIN path ahead of the bucks — a 24 V-capable eFuse/hot-swap switch with dV/dt control (TI TPS25982 24 V eFuse class, or a discrete P-FET soft-start: AO3401A-class + 100k/100n gate RC giving a ~1 ms ramp -> inrush ~= C*dV/dt = 20u * 20 V / 1 ms = 0.4 A); isolates ALL downstream bulk from the source's inrush window and keeps the bucks' input bulk intact. REMEDY B: trim power.py's un-switched input bulk (2x 10u C13585 -> 1x 4u7): pre-contract drops to ~15 uF nominal (~10-12 uF effective at 5 V) — meets the guidance, BUT at 20 V the remaining 25 V X5R bulk derates to ~35% (~1.6-3.5 uF effective), thin against the TPS54302's recommended >=10 uF effective input capacitance; remedy B trades a compliance margin for a stability margin. Numbers above are computed from the committed netlists; decision owner: power.py.
   * PARALLEL-SOURCE QUESTION on +1V8, +3V3: these rails are OUTPUTS of carrier regulators (power.py TPS54302/AP2112K) AND appear on SoM J1 contract pins (+3V3: J1.24-27, +1V8: J1.56/58/60) while the SoM's own Power sheet regulates same-named rails on-module (MPM3834 stages with 3V3_EN/PG + 1V8_EN/PG). If the SoM exports its rails on those pins, linking them to the carrier's bucks puts two regulators in parallel on one net — needs an explicit decision (rename one side, sense-only pins, or drop one source) before layout. Facts from som_interface.json + som/schematic/Power.kicad_sch; nothing changed here.
 
@@ -103,4 +105,4 @@ warnings (5):
 
 errors: none
 
-POWER TREE: PASS (0 errors, 4 findings, 5 warnings)
+POWER TREE: PASS (0 errors, 2 findings, 5 warnings)

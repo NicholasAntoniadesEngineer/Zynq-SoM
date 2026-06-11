@@ -64,8 +64,8 @@ def circuit() -> Circuit:
     c.net("LCD_VLED_N", "J1.1", "R1.1", "U1.FB")             # current sense
     c.port("LCD_BL_PWM", "U1.EN/PWM", expect=J3_MAP)
 
-    # round-4 coverage gate: the (unsourced — power-tree finding) boost
-    # feed rail + the touch I2C bus this sheet owns
+    # round-4 coverage gate: the gated boost feed rail (sourced by the
+    # round-5 bringup_modules SY6280) + the touch I2C bus this sheet owns
     c.testpoint("+5V_LCD")
     c.testpoint("LCD_CTP_SDA")
     c.testpoint("LCD_CTP_SCL")

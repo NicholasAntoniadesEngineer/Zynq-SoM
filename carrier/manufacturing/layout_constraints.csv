@@ -95,7 +95,9 @@ STM32_RAIL_EN_5V0,bringup_en,single,Default,,,,,,,deferred: som_j3_connector (wa
 BU_DIP_CAM,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_HDMI_RX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_HDMI_TX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_HDMI_TX_5V,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_LCD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_LCD_5V,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_PMOD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_SD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_SPARE,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
@@ -104,7 +106,9 @@ BU_DIP_USER_LED,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails 
 BU_OVR_CAM,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_OVR_HDMI_RX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_OVR_HDMI_TX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_HDMI_TX_5V,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_OVR_LCD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_LCD_5V,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_OVR_LCD_BL,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_OVR_PMOD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_OVR_SD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
@@ -113,7 +117,9 @@ BU_OVR_USER_LED,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails 
 EN_CAM,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_HDMI_RX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_HDMI_TX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_HDMI_TX_5V,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_LCD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_LCD_5V,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_LCD_BL,bringup_en_modules,single,Default,,,,,,,"deferred: lvds_lcd_power (backlight boost EN provision, dossier 3.2)"
 EN_PMOD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_SD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
@@ -122,7 +128,9 @@ EN_USER_LED,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (S
 EN_CAM,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
 EN_HDMI_RX,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
 EN_HDMI_TX,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_HDMI_TX_5V,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
 EN_LCD,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_LCD_5V,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
 EN_PMOD,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
 EN_SD,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
 EN_USB,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
@@ -133,7 +141,9 @@ BU_DIP_5V0,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate
 BU_DIP_CAM,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_DIP_HDMI_RX,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_DIP_HDMI_TX,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_HDMI_TX_5V,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_DIP_LCD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_LCD_5V,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_DIP_PMOD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_DIP_SD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_DIP_SPARE,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
@@ -142,7 +152,9 @@ BU_DIP_USER_LED,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND
 BU_OVR_CAM,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_OVR_HDMI_RX,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_OVR_HDMI_TX,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_HDMI_TX_5V,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_OVR_LCD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_LCD_5V,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_OVR_LCD_BL,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_OVR_PMOD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_OVR_SD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"

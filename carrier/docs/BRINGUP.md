@@ -17,11 +17,10 @@ vetoes that default to "DIP rules" (carrier/research/bringup_power_gating.md, se
 Sources: `carrier/subsystems/pd_input.py`, `carrier/subsystems/bringup_rails.py`,
 `carrier/subsystems/debug_boot.py`, `carrier/research/bringup_power_gating.md`.
 
-1. **All DIPs OPEN.** Rail DIP `bringup_rails.SW1` (4 positions), module DIP
-   `bringup_rails.SW2` (8 positions), boot-request DIP `debug_boot.SW1`
-   (4 positions) — every position open.
+1. **All DIPs OPEN.** Bring-up DIPs `bringup_rails.SW1` (4 wired positions), `bringup_rails.SW2` (8 wired positions), `bringup_rails.SW6` (2 wired positions),
+   boot-request DIP `debug_boot.SW1` (4 positions) — every position open.
 2. **No dead shorts.** With the board unpowered, check continuity to `GND` on:
-   `+VIN`, `+5V`, `+3V3`, `+1V8`, `+3V3_CAM`, `+3V3_HDMI_RX`, `+3V3_HDMI_TX`, `+3V3_LCD`, `+3V3_PMOD`, `+3V3_SD`, `+3V3_USER_LED`, `+5V_USB`, `+3V3_SC`.
+   `+VIN`, `+5V`, `+3V3`, `+1V8`, `+3V3_CAM`, `+3V3_HDMI_RX`, `+3V3_HDMI_TX`, `+3V3_LCD`, `+3V3_PMOD`, `+3V3_SD`, `+3V3_USER_LED`, `+5V_HDMI_TX`, `+5V_LCD`, `+5V_USB`, `+3V3_SC`.
    None may read as a short (the TVS `pd_input.D1` on `+VIN` conducts only
    above its 22 V standoff — a diode-mode reading there is normal, a dead
    short is not).
@@ -50,7 +49,7 @@ With **all DIPs open**, expect:
   | sheet | ICs on `+3V3_SC` |
   |---|---|
   | bringup_en | U1 (SN74LVC1G08), U2 (SN74LVC1G08), U3 (SN74LVC1G08) |
-  | bringup_en_modules | U1 (SN74LVC1G08), U2 (SN74LVC1G08), U3 (SN74LVC1G08), U4 (SN74LVC1G08), U5 (SN74LVC1G08), U6 (SN74LVC1G08), U7 (SN74LVC1G08), U8 (SN74LVC1G08), U9 (SN74LVC1G08) |
+  | bringup_en_modules | U1 (SN74LVC1G08), U2 (SN74LVC1G08), U3 (SN74LVC1G08), U4 (SN74LVC1G08), U5 (SN74LVC1G08), U6 (SN74LVC1G08), U7 (SN74LVC1G08), U8 (SN74LVC1G08), U9 (SN74LVC1G08), U10 (SN74LVC1G08), U11 (SN74LVC1G08) |
   | bringup_rails | U1 (TCA9535PWR) |
   | power_mon | U1 (INA3221AIRGVR), U2 (INA3221AIRGVR) |
   | usb_pd | U1 (FUSB302BMPX) |
@@ -105,7 +104,7 @@ Sources: `carrier/subsystems/bringup_modules.py`, `carrier/subsystems/user_io.py
 
 ## Stage 4 — module load switches, one DIP at a time
 
-Sources: `carrier/subsystems/bringup_rails.py` (SW2 map), `carrier/subsystems/bringup_en_modules.py`,
+Sources: `carrier/subsystems/bringup_rails.py` (SW2/SW6 maps), `carrier/subsystems/bringup_en_modules.py`,
 `carrier/subsystems/bringup_modules.py` (SY6280 cells; ILIM = 6800 / RSET per the Silergy DS).
 
 Each module rail is current-limited and folds back on a fault instead of
@@ -121,12 +120,14 @@ module. Close one position, watch the status LED, check the module's sheet.
 | `SW2` pos 5 | SD | `+3V3` | `+3V3_SD` | 1000 mA | `bringup_modules.D5` | microsd |
 | `SW2` pos 6 | USB | `+5V` | `+5V_USB` | 1000 mA | `bringup_modules.D6` | usbc_otg |
 | `SW2` pos 7 | PMOD | `+3V3` | `+3V3_PMOD` | 523 mA | `bringup_modules.D7` | pmod |
+| `SW6` pos 1 | HDMI_TX_5V | `+5V` | `+5V_HDMI_TX` | 523 mA | `bringup_modules.D9` | hdmi_tx |
+| `SW6` pos 2 | LCD_5V | `+5V` | `+5V_LCD` | 1000 mA | `bringup_modules.D10` | lcd |
 
 `SW2` position 8 is the `EN_LCD_BL` provision: its override rides TCA9535 `P10`
 through a 100k pull-DOWN, so it stays OFF until SC software raises it
 (`carrier/subsystems/bringup_rails.py`).
 
-Software vetoes for the eight module cells live on the TCA9535 expander at I2C `0x20`
+Software vetoes for the module cells live on the TCA9535 expander at I2C `0x20`
 (`bringup_rails.U1`; POR state = all inputs = DIP rules). Port map is generated
 into `carrier/firmware/zynq_carrier_contract.h` (`schgen firmware`).
 

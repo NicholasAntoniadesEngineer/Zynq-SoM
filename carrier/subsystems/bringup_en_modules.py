@@ -1,6 +1,6 @@
-"""bringup_en_modules — the nine MODULE EN cells: "DIP AND STM32-override" for every
-enable in the system (carrier/research/bringup_power_gating.md section 3.1,
-3.2; one uniform cell, dossier section 1):
+"""bringup_en_modules — the eleven MODULE EN cells: "DIP AND STM32-override" for
+every enable in the system (carrier/research/bringup_power_gating.md section
+3.1, 3.2; one uniform cell, dossier section 1):
 
     +3V3_SC                       +3V3_SC
        |                             |
@@ -19,14 +19,22 @@ SN74LVC1G08DBVR (SOT-23-5, pinout 1=A 2=B 3=GND 4=Y 5=VCC, inputs 5.5 V
 tolerant, 32 mA rail-to-rail output — drives any regulator/load-switch EN
 directly), VCC = +3V3_SC (alive from default VBUS before PD), 100 nF each.
 
-Twelve cells: 3 rails (+5V/+3V3/+1V8 — A from SW1, B from STM32_GPIO1..3
-direct so rails stay controllable even if I2C is down), 8 modules (A from
-SW2, B from TCA9535 P00..P07), and the spare cell (A = SW2 position 8,
-B = TCA9535 P10) emitting the EN_LCD_BL provision for the LCD backlight
-boost — B rides P10's 100k pullDOWN (bringup_rails), so the provision is
-OFF until software raises it. Every A-input carries the cell's 100k
-pulldown, every rail/module B-input its 100k pullup to +3V3_SC; both live
-HERE at the gate so each cell is complete on this sheet.
+Fourteen cells board-wide: 3 rails (+5V/+3V3/+1V8 — A from SW1, B from
+STM32_GPIO1..3 direct so rails stay controllable even if I2C is down, on
+bringup_en), 10 modules HERE (A from SW2 for the original eight + SW6 for
+the round-5 5 V gates, B from TCA9535 P00..P07 + P12/P13), and the spare
+cell (A = SW2 position 8, B = TCA9535 P10) emitting the EN_LCD_BL
+provision for the LCD backlight boost — B rides P10's 100k pullDOWN
+(bringup_rails), so the provision is OFF until software raises it. Every
+A-input carries the cell's 100k pulldown, every rail/module B-input its
+100k pullup to +3V3_SC; both live HERE at the gate so each cell is
+complete on this sheet.
+
+PLAN round-5 extension (HDMI_TX_5V / LCD_5V cells): SW1's 4 and SW2's 8
+positions were ALL in use, so the two 5 V module gates ride a third DIP —
+bringup_rails SW6 (DSHP04TSGER, positions 1/2; 3/4 spare) — and the next
+free TCA9535 ports P12/P13 (P10 = LCD_BL provision, P11 stays reserved
+for power_mon's PMON_ALERT_N per its dossier). Same uniform cell.
 
 EN_5V0/EN_3V3/EN_1V8 bind to the power subsystem's regulator EN pins
 (3.3 V CMOS, active-high, push-pull — TPS54302 EN VIH 1.21 V typ and the
@@ -71,12 +79,18 @@ CELLS = (    # modules: B = TCA9535 P00..P07 (bringup_rails)
     # bringup_rails (provision defaults OFF until software raises P10).
     ("LCD_BL", "BU_DIP_SPARE", "BU_OVR_LCD_BL", "EN_LCD_BL", False,
      EXPECT_LCD),
+    # PLAN round-5 5V module gates: A from SW6 pos 1/2, B from TCA9535
+    # P12/P13 (see the docstring's extension note)
+    ("HDMI_TX_5V", "BU_DIP_HDMI_TX_5V", "BU_OVR_HDMI_TX_5V",
+     "EN_HDMI_TX_5V", True, EXPECT_MODULES),
+    ("LCD_5V", "BU_DIP_LCD_5V", "BU_OVR_LCD_5V", "EN_LCD_5V", True,
+     EXPECT_MODULES),
 )
 
 
 def circuit() -> Circuit:
     c = Circuit("bringup_en_modules",
-                "Bring-up EN cells: 9x SN74LVC1G08 module DIP-AND-override")
+                "Bring-up EN cells: 11x SN74LVC1G08 module DIP-AND-override")
     for k, (name, a_net, b_net, y_net, b_pull, y_expect) in enumerate(CELLS):
         u = c.part(f"U{k + 1}", GATE_LIB, "SN74LVC1G08", GATE_FP,
                    LCSC=LCSC_GATE)
@@ -105,7 +119,7 @@ def circuit() -> Circuit:
     for _name, _a, _b, y_net, _p, _e in CELLS:
         c.testpoint(y_net)
 
-    # power-tree budget (round 4): 9 LVC gates (uA static) + A/B 100k pull
+    # power-tree budget (round 4): 11 LVC gates (uA static) + A/B 100k pull
     # networks (33 uA each when driven)
-    c.draws("+3V3_SC", 0.005, "9x SN74LVC1G08 + 100k pull networks")
+    c.draws("+3V3_SC", 0.005, "11x SN74LVC1G08 + 100k pull networks")
     return c

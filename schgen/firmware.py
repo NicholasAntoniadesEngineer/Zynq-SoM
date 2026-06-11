@@ -125,10 +125,9 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     exp = bf.expander(rails_c)
     monitors = bf.ina3221_monitors(pmon_c)
     gates = {g.enable: g for g in bf.module_gates(mods_c)}
-    sw1 = bf.dip_positions(rails_c, "SW1")
-    sw2 = bf.dip_positions(rails_c, "SW2")
-    dip_of = {p.net: f"SW{1 if p.switch == 'SW1' else 2} pos {p.position}"
-              for p in sw1 + sw2}
+    dip_of = {p.net: f"{p.switch} pos {p.position}"
+              for ref in bf.dip_switch_refs(rails_c)
+              for p in bf.dip_positions(rails_c, ref)}
 
     # -- I2C address map: strapped addresses DERIVED from the netlists --------
     if not any("FUSB302" in p.value for p in usbpd_c.parts.values()):

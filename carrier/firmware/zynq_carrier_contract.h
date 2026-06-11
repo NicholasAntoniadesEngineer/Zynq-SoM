@@ -192,8 +192,8 @@
 #define ZC_TCA9535_BIT_EN_USER_LED 7  /* P07: BU_OVR_USER_LED -> EN_USER_LED (+3V3_USER_LED, ILIM 523 mA, DIP SW1 pos 4) */
 #define ZC_TCA9535_BIT_EN_LCD_BL 8  /* P10: BU_OVR_LCD_BL -> EN_LCD_BL (DIP SW2 pos 8) */
 /* P11 (bit 9): BU_P11 -- spare, 100k to GND (power_mon dossier reserves P11 for PMON_ALERT_N) */
-/* P12 (bit 10): BU_P12 -- spare, 100k to GND */
-/* P13 (bit 11): BU_P13 -- spare, 100k to GND */
+#define ZC_TCA9535_BIT_EN_HDMI_TX_5V 10  /* P12: BU_OVR_HDMI_TX_5V -> EN_HDMI_TX_5V (+5V_HDMI_TX, ILIM 523 mA, DIP SW6 pos 1) */
+#define ZC_TCA9535_BIT_EN_LCD_5V 11  /* P13: BU_OVR_LCD_5V -> EN_LCD_5V (+5V_LCD, ILIM 1000 mA, DIP SW6 pos 2) */
 /* P14 (bit 12): BU_P14 -- spare, 100k to GND */
 /* P15 (bit 13): BU_P15 -- spare, 100k to GND */
 /* P16 (bit 14): BU_P16 -- spare, 100k to GND */

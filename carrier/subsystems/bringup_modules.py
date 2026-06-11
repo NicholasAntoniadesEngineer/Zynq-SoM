@@ -9,23 +9,39 @@ blocking): a shorted module folds back at its own limit instead of dragging
 points at the fault. SY6280AAC pinout (SOT-23-5, Silergy DS):
 1=OUT 2=GND 3=ISET 4=EN 5=IN.
 
-Switch table (dossier 3.2 — RSET on verified JLC-Basic E-series values):
+Switch table (dossier 3.2 — RSET on verified JLC-Basic E-series values;
+rows 9-10 are the PLAN round-5 5 V module gates: +5V_HDMI_TX / +5V_LCD
+were UNSOURCED power-tree findings, resolved by gating them from +5V
+exactly like every other module):
 
-  # module    IN    OUT (gated rail)  RSET            limit
-  1 HDMI TX   +3V3  +3V3_HDMI_TX      13k  (C22797)   523 mA
-  2 HDMI RX   +3V3  +3V3_HDMI_RX      13k             523 mA
-  3 LCD       +3V3  +3V3_LCD          6.8k (C23212)   1.0 A
-  4 Camera    +3V3  +3V3_CAM          13k             523 mA
-  5 microSD   +3V3  +3V3_SD           6.8k            1.0 A
-  6 USB VBUS  +5V   +5V_USB           6.8k            1.0 A
-  7 PMOD      +3V3  +3V3_PMOD         13k             523 mA
-  8 User LEDs +3V3  +3V3_USER_LED     13k             523 mA
+  #  module      IN    OUT (gated rail)  RSET            limit
+  1  HDMI TX     +3V3  +3V3_HDMI_TX      13k  (C22797)   523 mA
+  2  HDMI RX     +3V3  +3V3_HDMI_RX      13k             523 mA
+  3  LCD         +3V3  +3V3_LCD          6.8k (C23212)   1.0 A
+  4  Camera      +3V3  +3V3_CAM          13k             523 mA
+  5  microSD     +3V3  +3V3_SD           6.8k            1.0 A
+  6  USB VBUS    +5V   +5V_USB           6.8k            1.0 A
+  7  PMOD        +3V3  +3V3_PMOD        13k             523 mA
+  8  User LEDs   +3V3  +3V3_USER_LED     13k             523 mA
+  9  HDMI TX 5V  +5V   +5V_HDMI_TX       13k             523 mA
+ 10  LCD BL 5V   +5V   +5V_LCD           6.8k            1.0 A
+
+ILIM sizing for the round-5 rows (ILIM = 6800/RSET, Silergy DS):
+  * +5V_LCD: budget 450 mA (SY7201 boost input at the 133 mA LED operating
+    point + margin, lcd_backlight.md) -> 6.8k = 1.0 A, the same
+    budget-to-limit step as the 500 mA +5V_USB row.
+  * +5V_HDMI_TX: budget 55 mA — but that load is already hard-limited
+    INSIDE the TPD12S016 (its 5V_OUT switch limits at 55 mA, DS 7.3.10);
+    the SY6280 limit only backstops a board-level fault on the rail trace.
+    13k = 523 mA is the smallest dossier-verified RSET setting (the
+    dossier deliberately stays on verified Basic E-values rather than
+    introducing new high-RSET points outside the DS application range).
 
 Every EN comes from its bringup_en AND-cell (push-pull 3.3 V — EN never
 floats). 100 nF on each switch input and output (module subsystems own
 their own bulk). Per-module status LED: KT-0603R red + 330R on each gated
-3V3 output, 1k on the 5 V USB output (~3-4 mA). The gated rails are POWER
-nets — module sheets (hdmi_tx, hdmi_rx, ...) consume them by name.
+3V3 output, 1k on the 5 V outputs (~3-4 mA). The gated rails are POWER
+nets — module sheets (hdmi_tx, hdmi_rx, lcd, ...) consume them by name.
 
 Stage-2 user IO: 4x LTST-C190KFKT yellow LEDs (visually distinct from the
 red infrastructure LEDs; do NOT "upgrade" to green InGaN — Vf~3.1 V is
@@ -64,12 +80,15 @@ MODULES = (
     ("USB", "+5V", "+5V_USB", "6.8k", LCSC_6K8, "1k", LCSC_1K),
     ("PMOD", "+3V3", "+3V3_PMOD", "13k", LCSC_13K, "330R", LCSC_330R),
     ("USER_LED", "+3V3", "+3V3_USER_LED", "13k", LCSC_13K, "330R", LCSC_330R),
+    # PLAN round-5 5V module gates (sourcing the former unsourced rails)
+    ("HDMI_TX_5V", "+5V", "+5V_HDMI_TX", "13k", LCSC_13K, "1k", LCSC_1K),
+    ("LCD_5V", "+5V", "+5V_LCD", "6.8k", LCSC_6K8, "1k", LCSC_1K),
 )
 
 
 def circuit() -> Circuit:
     c = Circuit("bringup_modules",
-                "Bring-up module gates: 8x SY6280 + status/user LEDs")
+                "Bring-up module gates: 10x SY6280 + status/user LEDs")
     for k, (mod, in_rail, out_rail, rset, rset_id, led_r, led_r_id) \
             in enumerate(MODULES):
         u = c.use_part("SY6280AAC", ref=f"U{k + 1}")

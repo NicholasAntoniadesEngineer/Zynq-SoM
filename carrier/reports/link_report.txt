@@ -6,7 +6,7 @@ alias map (rails only, exact, enumerated):
   carrier '+VIN' <-> SoM 'VIN'
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (336):
+bound ports (348):
   bringup_en:BU_DIP_5V0 -> sheet bringup_rails:BU_DIP_5V0
   bringup_en:EN_5V0 -> sheet power:EN_5V0
   bringup_en:BU_DIP_3V3 -> sheet bringup_rails:BU_DIP_3V3
@@ -39,6 +39,12 @@ bound ports (336):
   bringup_en_modules:EN_USER_LED -> sheet bringup_modules:EN_USER_LED
   bringup_en_modules:BU_DIP_SPARE -> sheet bringup_rails:BU_DIP_SPARE
   bringup_en_modules:BU_OVR_LCD_BL -> sheet bringup_rails:BU_OVR_LCD_BL
+  bringup_en_modules:BU_DIP_HDMI_TX_5V -> sheet bringup_rails:BU_DIP_HDMI_TX_5V
+  bringup_en_modules:BU_OVR_HDMI_TX_5V -> sheet bringup_rails:BU_OVR_HDMI_TX_5V
+  bringup_en_modules:EN_HDMI_TX_5V -> sheet bringup_modules:EN_HDMI_TX_5V
+  bringup_en_modules:BU_DIP_LCD_5V -> sheet bringup_rails:BU_DIP_LCD_5V
+  bringup_en_modules:BU_OVR_LCD_5V -> sheet bringup_rails:BU_OVR_LCD_5V
+  bringup_en_modules:EN_LCD_5V -> sheet bringup_modules:EN_LCD_5V
   bringup_modules:EN_HDMI_TX -> sheet bringup_en_modules:EN_HDMI_TX
   bringup_modules:EN_HDMI_RX -> sheet bringup_en_modules:EN_HDMI_RX
   bringup_modules:EN_LCD -> sheet bringup_en_modules:EN_LCD
@@ -47,6 +53,8 @@ bound ports (336):
   bringup_modules:EN_USB -> sheet bringup_en_modules:EN_USB
   bringup_modules:EN_PMOD -> sheet bringup_en_modules:EN_PMOD
   bringup_modules:EN_USER_LED -> sheet bringup_en_modules:EN_USER_LED
+  bringup_modules:EN_HDMI_TX_5V -> sheet bringup_en_modules:EN_HDMI_TX_5V
+  bringup_modules:EN_LCD_5V -> sheet bringup_en_modules:EN_LCD_5V
   bringup_rails:BU_DIP_5V0 -> sheet bringup_en:BU_DIP_5V0
   bringup_rails:BU_DIP_3V3 -> sheet bringup_en:BU_DIP_3V3
   bringup_rails:BU_DIP_1V8 -> sheet bringup_en:BU_DIP_1V8
@@ -59,6 +67,8 @@ bound ports (336):
   bringup_rails:BU_DIP_USB -> sheet bringup_en_modules:BU_DIP_USB
   bringup_rails:BU_DIP_PMOD -> sheet bringup_en_modules:BU_DIP_PMOD
   bringup_rails:BU_DIP_SPARE -> sheet bringup_en_modules:BU_DIP_SPARE
+  bringup_rails:BU_DIP_HDMI_TX_5V -> sheet bringup_en_modules:BU_DIP_HDMI_TX_5V
+  bringup_rails:BU_DIP_LCD_5V -> sheet bringup_en_modules:BU_DIP_LCD_5V
   bringup_rails:BU_OVR_HDMI_TX -> sheet bringup_en_modules:BU_OVR_HDMI_TX
   bringup_rails:BU_OVR_HDMI_RX -> sheet bringup_en_modules:BU_OVR_HDMI_RX
   bringup_rails:BU_OVR_LCD -> sheet bringup_en_modules:BU_OVR_LCD
@@ -68,6 +78,8 @@ bound ports (336):
   bringup_rails:BU_OVR_PMOD -> sheet bringup_en_modules:BU_OVR_PMOD
   bringup_rails:BU_OVR_USER_LED -> sheet bringup_en_modules:BU_OVR_USER_LED
   bringup_rails:BU_OVR_LCD_BL -> sheet bringup_en_modules:BU_OVR_LCD_BL
+  bringup_rails:BU_OVR_HDMI_TX_5V -> sheet bringup_en_modules:BU_OVR_HDMI_TX_5V
+  bringup_rails:BU_OVR_LCD_5V -> sheet bringup_en_modules:BU_OVR_LCD_5V
   bringup_rails:STM32_I2C2_SCL [i2c] -> sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   bringup_rails:STM32_I2C2_SDA [i2c] -> sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   bringup_rails:STM32_NRST -> sheet debug_boot:STM32_NRST; sheet som_j1:STM32_NRST; SoM STM32_NRST (J1.47)
@@ -359,8 +371,8 @@ rails (26):
   +3V3_SD — carrier-local rail (sheets: bringup_modules, microsd)
   +3V3_USER_LED — carrier-local rail (sheets: bringup_modules, user_io)
   +5V — carrier-local rail (sheets: bringup_modules, power, power_mon)
-  +5V_HDMI_TX — carrier-local rail (sheets: hdmi_tx)
-  +5V_LCD — carrier-local rail (sheets: lcd)
+  +5V_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
+  +5V_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +5V_REG — carrier-local rail (sheets: power_mon)
   +5V_USB — carrier-local rail (sheets: bringup_modules, usbc_otg)
   +VCCO_13 <- sheets: som_j2 -> SoM 3 pins

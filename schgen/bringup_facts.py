@@ -126,6 +126,13 @@ class DipPosition:
     net: str           # the strap net on the position's even pin
 
 
+def dip_switch_refs(c: Circuit) -> list[str]:
+    """Every DSHP-style DIP switch on the sheet (sorted refs) — so the
+    generated manual/header follow when a new bring-up DIP is added
+    (round-5 SW6) instead of hard-coding SW1/SW2."""
+    return _parts_by_value(c, "DSHP")
+
+
 def dip_positions(c: Circuit, ref: str,
                   common: tuple[str, ...] = ("+3V3_SC", "GND")) \
         -> list[DipPosition]:

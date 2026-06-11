@@ -98,9 +98,10 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     gates = bf.module_gates(circuits["bringup_modules"])
     exp = bf.expander(rails_c)
     monitors = bf.ina3221_monitors(circuits["power_mon"])
-    sw1 = bf.dip_positions(rails_c, "SW1")
-    sw2 = bf.dip_positions(rails_c, "SW2")
-    dip_of = {p.net: (p.switch, p.position) for p in sw1 + sw2}
+    dip_map = {ref: bf.dip_positions(rails_c, ref)
+               for ref in bf.dip_switch_refs(rails_c)}
+    dip_of = {p.net: (p.switch, p.position)
+              for ps in dip_map.values() for p in ps}
     boot_dip = bf.dip_positions(circuits["debug_boot"], "SW1")
     tps = _test_points(circuits)
     stm32 = bf.stm32_pin_map()
@@ -146,11 +147,11 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("`carrier/subsystems/debug_boot.py`, "
              "`carrier/research/bringup_power_gating.md`.")
     L.append("")
-    L.append(f"1. **All DIPs OPEN.** Rail DIP `bringup_rails.SW1` "
-             f"({len(sw1)} positions), module DIP")
-    L.append(f"   `bringup_rails.SW2` ({len(sw2)} positions), boot-request "
-             f"DIP `debug_boot.SW1`")
-    L.append(f"   ({len(boot_dip)} positions) — every position open.")
+    dips_desc = ", ".join(f"`bringup_rails.{ref}` ({len(ps)} wired "
+                          f"positions)" for ref, ps in sorted(dip_map.items()))
+    L.append(f"1. **All DIPs OPEN.** Bring-up DIPs {dips_desc},")
+    L.append(f"   boot-request DIP `debug_boot.SW1` "
+             f"({len(boot_dip)} positions) — every position open.")
     L.append("2. **No dead shorts.** With the board unpowered, check "
              "continuity to `GND` on:")
     rails_to_check = ["+VIN"] + [st.rail_out for st in chain] \
@@ -285,8 +286,8 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     # ---- stage 4: modules --------------------------------------------------------
     L.append("## Stage 4 — module load switches, one DIP at a time")
     L.append("")
-    L.append("Sources: `carrier/subsystems/bringup_rails.py` (SW2 map), "
-             "`carrier/subsystems/bringup_en_modules.py`,")
+    L.append("Sources: `carrier/subsystems/bringup_rails.py` (SW2/SW6 "
+             "maps), `carrier/subsystems/bringup_en_modules.py`,")
     L.append("`carrier/subsystems/bringup_modules.py` (SY6280 cells; "
              "ILIM = 6800 / RSET per the Silergy DS).")
     L.append("")
@@ -327,7 +328,7 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
                  "software raises it")
         L.append("(`carrier/subsystems/bringup_rails.py`).")
     L.append("")
-    L.append("Software vetoes for the eight module cells live on the "
+    L.append("Software vetoes for the module cells live on the "
              f"TCA9535 expander at I2C `0x{exp.addr:02X}`")
     L.append("(`bringup_rails.{}`; POR state = all inputs = DIP rules). "
              "Port map is generated".format(exp.ref))

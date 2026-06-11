@@ -96,8 +96,8 @@ every PNG below passed the netlist, ERC and visual gates.
 | sheet | description |
 |---|---|
 | [bringup_en](carrier/renders/bringup_en.png) | Bring-up EN cells: 3x SN74LVC1G08 rail DIP-AND-override |
-| [bringup_en_modules](carrier/renders/bringup_en_modules.png) | Bring-up EN cells: 9x SN74LVC1G08 module DIP-AND-override |
-| [bringup_modules](carrier/renders/bringup_modules.png) | Bring-up module gates: 8x SY6280 + status/user LEDs |
+| [bringup_en_modules](carrier/renders/bringup_en_modules.png) | Bring-up EN cells: 11x SN74LVC1G08 module DIP-AND-override |
+| [bringup_modules](carrier/renders/bringup_modules.png) | Bring-up module gates: 10x SY6280 + status/user LEDs |
 | [bringup_rails](carrier/renders/bringup_rails.png) | Bring-up controls: rail/module DIPs + TCA9535 + buttons |
 | [camera](carrier/renders/camera.png) | RPi camera port: 2-lane MIPI CSI-2 (15P FFC) |
 | [debug_boot](carrier/renders/debug_boot.png) | JTAG + SWD headers, boot-request DIP, reset |

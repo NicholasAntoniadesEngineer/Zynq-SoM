@@ -19,14 +19,16 @@ SN74LVC1G08DBVR (SOT-23-5, pinout 1=A 2=B 3=GND 4=Y 5=VCC, inputs 5.5 V
 tolerant, 32 mA rail-to-rail output — drives any regulator/load-switch EN
 directly), VCC = +3V3_SC (alive from default VBUS before PD), 100 nF each.
 
-Twelve cells: 3 rails (+5V/+3V3/+1V8 — A from SW1, B from STM32_GPIO1..3
-direct so rails stay controllable even if I2C is down), 8 modules (A from
-SW2, B from TCA9535 P00..P07), and the spare cell (A = SW2 position 8,
-B = TCA9535 P10) emitting the EN_LCD_BL provision for the LCD backlight
-boost — B rides P10's 100k pullDOWN (bringup_rails), so the provision is
-OFF until software raises it. Every A-input carries the cell's 100k
-pulldown, every rail/module B-input its 100k pullup to +3V3_SC; both live
-HERE at the gate so each cell is complete on this sheet.
+Fourteen cells board-wide: 3 rails HERE (+5V/+3V3/+1V8 — A from SW1,
+B from STM32_GPIO1..3 direct so rails stay controllable even if I2C is
+down), 10 modules on bringup_en_modules (A from SW2/SW6, B from TCA9535
+P00..P07 + P12/P13 — the round-5 5 V gates extend the map), and the spare
+cell (A = SW2 position 8, B = TCA9535 P10) emitting the EN_LCD_BL
+provision for the LCD backlight boost — B rides P10's 100k pullDOWN
+(bringup_rails), so the provision is OFF until software raises it. Every
+A-input carries the cell's 100k pulldown, every rail/module B-input its
+100k pullup to +3V3_SC; both live HERE at the gate so each cell is
+complete on this sheet.
 
 EN_5V0/EN_3V3/EN_1V8 bind to the power subsystem's regulator EN pins
 (3.3 V CMOS, active-high, push-pull — TPS54302 EN VIH 1.21 V typ and the
