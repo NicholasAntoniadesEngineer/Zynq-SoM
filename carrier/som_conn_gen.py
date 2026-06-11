@@ -36,11 +36,6 @@ from schgen.model import Circuit, NetClass
 
 CONTRACT = Path(__file__).resolve().parent / "som_interface.json"
 
-LIB_ID = "DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51"
-FOOTPRINT = "DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51"
-VALUE = "DF40C-100DS-0.4V(51)"
-LCSC = "C597931"
-
 # Carrier house spelling for SoM rail names (inverse of link.RAIL_ALIASES —
 # the single enumerated rail alias; signals are NEVER respelled).
 RAIL_SPELLING = {"VIN": "+VIN"}
@@ -66,7 +61,7 @@ def contract_pins(jref: str) -> dict[str, str]:
 
 def connector_circuit(jref: str, name: str, title: str) -> Circuit:
     c = Circuit(name, title)
-    c.part(jref, LIB_ID, VALUE, FOOTPRINT, LCSC=LCSC)
+    c.use_part("DF40C-100DS-0.4V_51", ref=jref)   # 100 bare-number pins
     seen_ports: set[str] = set()
     for pin, som_net in sorted(contract_pins(jref).items(), key=lambda kv: int(kv[0])):
         net = RAIL_SPELLING.get(som_net, som_net)

@@ -36,8 +36,6 @@ from schgen.model import Circuit
 
 PINMAP = Path(__file__).resolve().parents[1] / "research" / "fmc_lpc_pinmap.json"
 
-FMC_LIB = "ASP-134603-01:ASP-134603-01"
-FMC_FP = "ASP-134603-01:ASP-134603-01"
 LDO_LIB = "Regulator_Linear:AP2204K-1.5"   # = TLV75725 DBV map (docstring)
 LDO_FP = "Package_TO_SOT_SMD:SOT-23-5"
 R0603 = "Resistor_SMD:R_0603_1608Metric"
@@ -81,7 +79,7 @@ def circuit() -> Circuit:
     sig = _signal_pins()
     assert len(sig["GND"]) == 61, "VITA LPC map drifted: GND census != 61"
 
-    c.part("J1", FMC_LIB, "ASP-134603-01", FMC_FP, LCSC="C2836665")
+    c.use_part("ASP-134603-01", ref="J1")   # VITA grid pins (c1..h40) numeric
 
     # ---- grounds (61 positions, from the machine-parsed map) ---------------
     c.net("GND", *[f"J1.{p}" for p in sorted(sig["GND"])])
