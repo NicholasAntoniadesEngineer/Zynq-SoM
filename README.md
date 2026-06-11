@@ -35,7 +35,15 @@ PYTHONPATH=. python -m schgen board          # EVERY sheet + link + project
 `carrier/Zynq_Carrier.kicad_pro` (open it in KiCad), `carrier/schematic/`,
 `carrier/renders/` (with golden-snapshot drift detection, `--bless` to
 accept), `carrier/reports/`, `carrier/manufacturing/` (JLC BOM + layout
-constraints).
+constraints), and `carrier/fpga/Zynq_Carrier_pins.xdc` — Vivado
+PACKAGE_PIN + IOSTANDARD constraints for every carrier port on a Zynq PL
+ball (also standalone: `schgen xdc`). The ball map is live-extracted from
+the SoM KiCad project and cross-checked pin-for-pin against
+`carrier/som_interface.json`; IOSTANDARD comes from the PLAN's VCCO rail
+map (banks 13/33/34 = +3V3 → LVCMOS33, bank 35 = +2V5_VADJ → LVCMOS25),
+diff pairs pair via the typed-port registry, MRCC/SRCC-capable pins carry
+commented `create_clock` templates. The PL design starts with zero
+pin-mapping work and cannot drift from the hardware.
 
 Every build fails unless ALL gates pass: **netlist** (KiCad's extracted
 netlist == the declared netlist, pin for pin), **ERC** (zero errors),

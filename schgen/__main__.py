@@ -460,6 +460,18 @@ def cmd_board(args: argparse.Namespace) -> int:
     print(f"BOM: {man_dir / 'bom_jlc.csv'} ({len(rows)} line items"
           f"{f', {len(missing)} missing LCSC' if missing else ''})")
 
+    # Vivado pin constraints (round 4): every carrier PORT bound through
+    # J2/J3 to a Zynq PL ball, ball map live-extracted from the SoM project
+    # and cross-checked against the committed contract.
+    from schgen import xdc
+    try:
+        xres = xdc.generate(sheets, CARRIER / "fpga" / "Zynq_Carrier_pins.xdc")
+        print(f"XDC: {xres.path} ({xres.count} pins; "
+              + "; ".join(xres.checks[-2:]) + ")")
+    except xdc.XdcError as exc:
+        print(f"XDC: FAIL — {exc}")
+        ok_all = False
+
     (rep_dir / "gates.txt").write_text(
         "\n".join(verdicts)
         + f"\nLINK: {'PASS' if res.ok else 'FAIL'}"
@@ -526,6 +538,21 @@ def main(argv: list[str] | None = None) -> int:
                       help="parts library root (default: <repo>/parts)")
     from schgen.part_gen import cmd_part_add
     padd.set_defaults(func=cmd_part_add)
+    xd = sub.add_parser(
+        "xdc", help="generate carrier/fpga/Zynq_Carrier_pins.xdc — Vivado "
+                    "PACKAGE_PIN+IOSTANDARD for every carrier port on a "
+                    "Zynq PL ball (ball map live-extracted from the SoM)")
+    xd.add_argument("subsystems", nargs="*",
+                    help="names in carrier/subsystems/ (default: all)")
+    xd.add_argument("--som", type=Path,
+                    default=REPO_ROOT / "som" / "Zynq_SoM.kicad_sch")
+    xd.add_argument("--refs", default="J2,J3",
+                    help="SoM connectors to trace (default: J2,J3)")
+    xd.add_argument("-o", "--output", type=Path,
+                    default=REPO_ROOT / "carrier" / "fpga"
+                    / "Zynq_Carrier_pins.xdc")
+    from schgen.xdc import cmd_xdc
+    xd.set_defaults(func=cmd_xdc)
     st = sub.add_parser(
         "selftest", help="gate MUTATION testing + build-determinism proof "
                          "(the no-CI answer to 'who watches the watchmen')")

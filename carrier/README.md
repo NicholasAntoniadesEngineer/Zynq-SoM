@@ -14,6 +14,11 @@ regenerate in place with `PYTHONPATH=. python -m schgen board`.
 - `reports/` — per-sheet ERC, gate verdicts, link report, board netlist
   gate: the proof travels with the design.
 - `manufacturing/` — `bom_jlc.csv` + JLC04161H-7628 layout constraints.
+- `fpga/` — `Zynq_Carrier_pins.xdc`, GENERATED Vivado pin constraints
+  (`schgen xdc`): every carrier port on a Zynq PL ball through J2/J3,
+  ball map live-extracted from the SoM project (never hand-typed),
+  cross-checked against `som_interface.json` (stale contract = build
+  FAIL), IOSTANDARD from the PLAN VCCO rail map.
 - `som_interface.json` — the SoM↔carrier J1/J2/J3 contract, extracted
   programmatically (`schgen som-interface`), never hand-edited.
 - `nets.py` — the GENERATED cross-sheet net-name contract

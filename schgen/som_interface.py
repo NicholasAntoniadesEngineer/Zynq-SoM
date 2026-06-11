@@ -61,6 +61,72 @@ def extract(som_sch: Path, refs: list[str]) -> dict:
     }
 
 
+def extract_zynq(som_sch: Path, zynq_ref: str = "U2",
+                 jrefs: tuple[str, ...] = ("J1", "J2", "J3")) -> dict:
+    """Programmatic Zynq ball map from the SoM netlist (NEVER hand-typed).
+
+    Returns, in one ``kicad-cli`` pass over the SoM project:
+    - ``pin_names``: ball -> the Zynq pin NAME (which carries the bank
+      suffix ``..._35`` and the MRCC/SRCC clock capability — the symbol is
+      the vendor pinout, so the bank map rides along for free),
+    - ``ball_net``:  ball -> SoM net name (every netted ``zynq_ref`` pin),
+    - ``jpin_net``:  "J2.20" -> SoM net name (the LIVE J-connector view,
+      cross-checked by the XDC generator against the committed
+      carrier/som_interface.json — a stale contract fails the build).
+    """
+    with tempfile.NamedTemporaryFile(suffix=".net", delete=False) as tf:
+        net = Path(tf.name)
+    proc = subprocess.run(
+        ["kicad-cli", "sch", "export", "netlist", "--format", "kicadxml",
+         "-o", str(net), str(som_sch)],
+        capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(f"kicad-cli failed on {som_sch}: {proc.stderr[-400:]}")
+    root = ET.parse(net).getroot()
+
+    # component ref -> (lib, part) so the right libpart pin table is used
+    libsource: dict[str, tuple[str, str]] = {}
+    value = ""
+    comps = root.find("components")
+    for cmp in comps if comps is not None else []:
+        ref = cmp.get("ref") or ""
+        ls = cmp.find("libsource")
+        if ls is not None:
+            libsource[ref] = (ls.get("lib") or "", ls.get("part") or "")
+        if ref == zynq_ref:
+            v = cmp.find("value")
+            value = v.text if v is not None else ""
+    if zynq_ref not in libsource:
+        raise RuntimeError(f"{zynq_ref} not found in SoM netlist {som_sch}")
+
+    pin_names: dict[str, str] = {}
+    libparts = root.find("libparts")
+    for lp in libparts if libparts is not None else []:
+        if (lp.get("lib") or "", lp.get("part") or "") == libsource[zynq_ref]:
+            pins = lp.find("pins")
+            for p in pins if pins is not None else []:
+                pin_names[p.get("num") or ""] = p.get("name") or ""
+    if not pin_names:
+        raise RuntimeError(
+            f"libpart pin table for {zynq_ref} ({libsource[zynq_ref]}) "
+            f"missing from SoM netlist")
+
+    ball_net: dict[str, str] = {}
+    jpin_net: dict[str, str] = {}
+    nets_el = root.find("nets")
+    for n in nets_el if nets_el is not None else []:
+        name = n.get("name") or ""
+        for nd in n.findall("node"):
+            ref = nd.get("ref") or ""
+            if ref == zynq_ref:
+                ball_net[nd.get("pin") or ""] = name
+            elif ref in jrefs:
+                jpin_net[f"{ref}.{nd.get('pin')}"] = name
+    return {"zynq_ref": zynq_ref, "value": value, "source": str(som_sch),
+            "pin_names": pin_names, "ball_net": ball_net,
+            "jpin_net": jpin_net}
+
+
 def cmd(args) -> int:
     refs = [r.strip() for r in args.refs.split(",") if r.strip()]
     data = extract(Path(args.som_sch), refs)
