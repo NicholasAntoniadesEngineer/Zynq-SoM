@@ -385,4 +385,4 @@ board netlist gate
   ok   rail 'CHASSIS_GND': 1 net, 17 pins across 5 sheet(s) [ethernet, hdmi_rx, hdmi_tx, pd_input, usbc_otg]
   ok   rail 'GND': 1 net, 377 pins across 23 sheet(s) [bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io]
 BOARD GATE: PASS — every linked net merged across sheets
-  (info) root ERC errors: present — see /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/reports/board.erc.rpt
+  (info) root ERC errors: 0

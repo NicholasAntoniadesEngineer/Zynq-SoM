@@ -83,18 +83,46 @@ def _port_nets(c: Circuit) -> list[str]:
 
 
 def strip_duplicate_flags(designs: list[PlacedDesign], lib: Library) -> None:
-    """Keep exactly ONE PWR_FLAG per global rail board-wide.
+    """Board-wide PWR_FLAG policy — the flag exists ONLY for undriven rails.
 
     Standalone sheets each carry their own PWR_FLAG corner (rail power symbol
-    + 2.54 stub + flag); in a hierarchy two flags on one global net are two
-    power_out pins in conflict (ERC pin_to_pin error). Duplicates are removed
-    as the WHOLE isolated cluster — flag, stub wire and the corner's power
-    symbol — and ONLY after proving (net-aware, LAW 0) that nothing else
-    touches either stub endpoint: exactly one wire at the flag, a same-net
-    power symbol at its far end, no junction/label/part-pin on either point.
-    If any check fails the flag stays (ERC noise over netlist risk)."""
-    flagged: set[str] = set()
+    + 2.54 stub + flag) because, alone, no real driver is in sight. In the
+    hierarchy two rules apply, both net-aware:
+
+    1. A rail driven by a REAL power_out pin anywhere board-wide keeps NO
+       flag at all: the flag (itself a power_out pin) conflicts with the
+       real driver exactly like a second flag would (ERC pin_to_pin error —
+       the microsd +1V8 flag vs the power sheet's LDO VOUT).
+    2. Every other globally-merged net keeps exactly ONE flag board-wide
+       (two flags on one global net are two power_out pins in conflict).
+
+    Net identity is scoped the way KiCad merges nets in the hierarchy:
+    POWER/GROUND rails and PORT nets merge by NAME board-wide; a
+    SIGNAL-class net is sheet-local, so its flag is never deduplicated
+    against another sheet's same-named net.
+
+    Removals take the WHOLE isolated cluster — flag, stub wire and the
+    corner's power symbol — and ONLY after proving (net-aware, LAW 0) that
+    nothing else touches either stub endpoint: exactly one wire at the flag,
+    a same-net power symbol at its far end, no junction/label/part-pin on
+    either point. If any check fails the flag stays (ERC noise over netlist
+    risk)."""
+    # rails/ports driven by a real power_out part pin, anywhere board-wide
+    driven: set[str] = set()
     for d in designs:
+        etype_of = {}
+        for p in d.parts:
+            for pin in lib.get(p.lib_id).pins:
+                etype_of[(p.ref, pin.number)] = pin.etype
+        for net in d.circuit.nets.values():
+            if net.net_class == NetClass.SIGNAL:
+                continue       # sheet-local: cannot drive another sheet's net
+            if any(etype_of.get((pr.ref, pr.pin)) == "power_out"
+                   for pr in net.pins):
+                driven.add(net.name)
+
+    flagged: set[tuple[int | None, str]] = set()
+    for sheet_i, d in enumerate(designs):
         pin_points = set()
         for p in d.parts:
             for pin in lib.get(p.lib_id).pins:
@@ -104,8 +132,13 @@ def strip_duplicate_flags(designs: list[PlacedDesign], lib: Library) -> None:
         junction_points = {(j.x, j.y) for j in d.junctions}
         for flag in [pw for pw in d.powers if pw.lib_id == "power:PWR_FLAG"]:
             net = flag.net_name
-            if net not in flagged:
-                flagged.add(net)
+            n = d.circuit.nets.get(net)
+            local = n is not None and n.net_class == NetClass.SIGNAL
+            scope = (sheet_i if local else None, net)
+            if not local and net in driven:
+                pass                      # rule 1: real driver — remove flag
+            elif scope not in flagged:
+                flagged.add(scope)        # rule 2: first flag on the net stays
                 continue
             fpos = (flag.x, flag.y)
             touching = [w for w in d.wires
