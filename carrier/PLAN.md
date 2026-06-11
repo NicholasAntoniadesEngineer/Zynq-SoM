@@ -109,3 +109,14 @@ time — from nothing but its netlist.
 - **Rule engine pulled FORWARD (P4 now)**: rules live in each parts/<MPN>/<MPN>.py;
   retrofit existing sheets; remaining subsystems authored under it.
 - **Declined**: parts.lock snapshot (preflight on demand only).
+
+## Documentation spec (user, 2026-06-11) — three-level READMEs
+1. **parts/README.md** — compact framework: how to add a component from LCSC
+   (find C-number → `schgen part add C…` → what gets generated → verify → commit).
+2. **carrier/subsystems/README.md** — the equivalent for subsystems: how to compose
+   a subsystem FROM parts (use_part + named pins + ports/nets contract + hints),
+   build it, read the gates, review the render. Written by the authoring-v2 agent
+   AGAINST the new API (not the current one).
+3. **Root README.md** — high level only: what the repo is, the three layers
+   (parts → subsystems → board), and how to generate the schematics/projects
+   (`schgen build <name>`, `schgen board`). Compact; defers detail to the layer READMEs.
