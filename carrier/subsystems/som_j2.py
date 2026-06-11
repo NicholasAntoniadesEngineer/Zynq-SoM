@@ -19,6 +19,3 @@ def circuit():
     return _gen.connector_circuit(
         "J2", "som_j2", "SoM J2: FPGA bank 13/33 IO + VCCO rails")
 
-
-def placer(c, lib, sp):
-    return _gen.connector_placer(c, lib, sp)

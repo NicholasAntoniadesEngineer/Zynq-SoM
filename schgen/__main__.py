@@ -14,6 +14,7 @@ the declared circuits — manufacture-ready part selection lives in the model.
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
 import importlib.util
 import json
@@ -33,17 +34,74 @@ SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
 DEFAULT_OUT = REPO_ROOT / "carrier" / "out"
 
 
-def _load_subsystem(name_or_path: str):
-    """Import a subsystem .py by name (carrier/subsystems/<name>.py) or path."""
+def _subsystem_path(name_or_path: str) -> Path:
     path = Path(name_or_path)
     if not path.suffix == ".py":
         path = SUBSYSTEMS_DIR / f"{Path(name_or_path).stem}.py"
     if not path.exists():
         raise SystemExit(f"subsystem not found: {path}")
+    return path
+
+
+def _load_subsystem(name_or_path: str):
+    """Import a subsystem .py by name (carrier/subsystems/<name>.py) or path."""
+    path = _subsystem_path(name_or_path)
     spec = importlib.util.spec_from_file_location(f"carrier_subsys_{path.stem}", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+# ---- PURITY GATE: subsystem modules are netlist-only --------------------------
+# A subsystem .py may import schgen.model (and stdlib) — NOTHING geometric.
+# Manual placement is banned structurally: defining `placer` or importing any
+# placement/emit/route/text-metrics API fails the build BEFORE the module is
+# even executed (the scan is on the source, so a broken geometry import still
+# yields the clear gate message, not a stack trace).
+
+_BANNED_MODULES = ("schgen.place", "schgen.emit", "schgen.route",
+                   "schgen.textmetrics", "schgen.symbols", "schgen.render",
+                   "schgen.verify", "schgen.sexpr")
+_BANNED_NAMES = {"Placement", "Spacing", "_Builder", "_Engine", "PlacedPart",
+                 "PlacedPower", "PlacedDesign", "Wire", "Junction",
+                 "HierLabel", "LocalLabel", "NoConnect", "Box", "Seg",
+                 "SheetGeometry", "body_box_page", "pin_page_position",
+                 "place", "route", "emit", "textmetrics", "symbols"}
+
+
+def _purity_violations(path: Path) -> list[str]:
+    out: list[str] = []
+    tree = ast.parse(path.read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) \
+                and node.name == "placer":
+            out.append("module defines `placer` — manual placement is "
+                       "BANNED; the engine derives all geometry from the "
+                       "netlist topology")
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = (node.targets if isinstance(node, ast.Assign)
+                       else [node.target])
+            for t in targets:
+                if isinstance(t, ast.Name) and t.id == "placer":
+                    out.append("module binds `placer` — manual placement "
+                               "is BANNED")
+        elif isinstance(node, ast.Import):
+            for a in node.names:
+                if a.name == "schgen" or a.name.startswith(_BANNED_MODULES):
+                    out.append(f"import {a.name} — geometry APIs are "
+                               f"off-limits to subsystems (netlist only)")
+        elif isinstance(node, ast.ImportFrom):
+            m = node.module or ""
+            if m.startswith(_BANNED_MODULES):
+                out.append(f"from {m} import ... — geometry APIs are "
+                           f"off-limits to subsystems (netlist only)")
+            elif m.startswith("schgen"):
+                names = {a.name for a in node.names}
+                bad = sorted(names & _BANNED_NAMES)
+                if bad:
+                    out.append(f"from {m} import {', '.join(bad)} — "
+                               f"geometry APIs are off-limits to subsystems")
+    return out
 
 # Pin types KiCad's ERC accepts as net drivers (pin_not_driven test).
 _DRIVER_ETYPES = {"output", "bidirectional", "tri_state", "passive",
@@ -107,7 +165,22 @@ def _render(sch: Path, png: Path, dpi: int = 300) -> bool:
 
 
 def cmd_build(args: argparse.Namespace) -> int:
+    path = _subsystem_path(args.subsystem)
+    purity = _purity_violations(path)
+    if purity:
+        print("PURITY GATE: FAIL — a subsystem .py is NETLIST ONLY "
+              "(parts, nets, ports, declarative hints):")
+        for v in purity:
+            print(f"  {v}")
+        print(f"BUILD: FAIL ({args.subsystem})")
+        return 1
     mod = _load_subsystem(args.subsystem)
+    if getattr(mod, "placer", None) is not None:
+        print("PURITY GATE: FAIL — module exposes `placer` at runtime; "
+              "manual placement is BANNED")
+        print(f"BUILD: FAIL ({args.subsystem})")
+        return 1
+    print("PURITY GATE: PASS (netlist-only subsystem)")
     c = mod.circuit()
     lib = Library()
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
@@ -120,8 +193,7 @@ def cmd_build(args: argparse.Namespace) -> int:
     print(f"model: {len(c.parts)} parts, {len(c.nets)} nets, "
           f"{len(c.nc_pins)} author NCs — complete (inputs driven)")
 
-    placement, routed, geo = place.place_and_route(
-        c, lib, builder=getattr(mod, "placer", None))
+    placement, routed, geo = place.place_and_route(c, lib)
     design = PlacedDesign(
         circuit=c,
         parts=placement.parts,

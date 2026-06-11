@@ -11,6 +11,8 @@ size; we claim 1.6 * size.
 
 from __future__ import annotations
 
+import re
+
 SIZE = 1.27            # default KiCad schematic text size (mm)
 CHAR_W = 0.95          # claimed advance per character, fraction of size
 LINE_H = 1.6           # claimed glyph height, fraction of size
@@ -22,9 +24,18 @@ GLABEL_INSET = 0.254   # mm between the anchor (wire attachment) and the box —
                        # the chevron tip itself is the electrical contact point
 
 
+_MARKUP = re.compile(r"~\{([^}]*)\}")
+
+
 def text_wh(text: str, size: float = SIZE) -> tuple[float, float]:
-    """(width, height) of a horizontal run of ``text``."""
-    return (max(len(text), 1) * CHAR_W * size, LINE_H * size)
+    """(width, height) of a horizontal run of ``text``.
+
+    KiCad overbar markup ``~{ABC}`` renders as the bare glyphs with a bar —
+    measure the VISIBLE glyphs (the bar adds height we already over-claim),
+    not the markup characters.
+    """
+    visible = _MARKUP.sub(r"\1", text)
+    return (max(len(visible), 1) * CHAR_W * size, LINE_H * size)
 
 
 def centered_box(text: str, cx: float, cy: float, size: float = SIZE,

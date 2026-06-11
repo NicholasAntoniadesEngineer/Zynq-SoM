@@ -27,13 +27,7 @@ parts (IEC 60950 hi-pot), value drawn "1n" for schematic economy.
 
 from __future__ import annotations
 
-from schgen import place
-from schgen import textmetrics as tm
-from schgen.emit import PlacedPart
 from schgen.model import Circuit
-from schgen.place import Placement, Spacing, _Builder, _pin, body_box_page
-from schgen.symbols import Library, pin_page_position
-from schgen.verify.visual_gate import Box
 
 LIB_ID = "schgen:HX5008NLT"
 FOOTPRINT = "Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm"
@@ -90,104 +84,3 @@ def circuit() -> Circuit:
     c.net("CHASSIS_GND", "C5.2")
     c.net("GND", "T1.14")
     return c
-
-
-# ---- datasheet template: magjack + Bob-Smith ladder ---------------------------
-#
-#   PHY ports --- [        T1        ] --- line ports
-#                  CT0  CT1  CT2  CT3        |GND stub
-#                   |R||C |...               '--GND
-#   BS pin13 --.    |  |
-#              '----+--+--o--o--o--o---trunk---[C5]--CHASSIS_GND
-#
-# All geometry in symbol-anchored page coords (T1 at 0,0), 1.27 grid.
-
-RUN = 10.16          # pin tip -> port label anchor
-BAR = 7.62           # R column -> C column inside one tap
-Y_BAR = 33.02        # CT drop landing / top bar of each R||C pair
-Y_R = 36.83          # 75R body center (text LEFT)
-Y_RB = 40.64         # 75R bottom pin = top of its trunk drop
-Y_C = 44.45          # 1n body center (text RIGHT, offset down: text never piles)
-Y_TRUNK = 48.26      # the BS_COMMON trunk
-X_RISER = -35.56     # pin-13 stub riser down the left flank
-X_C5 = 38.1          # shared chassis cap at the trunk's right end
-X_FLAGS = (-44.45, -24.13)   # PWR_FLAG corner row (GND, CHASSIS_GND)
-Y_FLAGS = 60.96
-
-
-def placer(c: Circuit, lib: Library, sp: Spacing) -> Placement:
-    b = _Builder(c, lib, sp)
-    pl = b.pl
-    sdef = lib.get(LIB_ID)
-    ax, ay = 0.0, 0.0
-
-    # ---- the magjack -----------------------------------------------------------
-    body = body_box_page(sdef, ax, ay, 0, "body", "T1")
-    ref_pos = (body.x0 + 2.54, body.y0 - 1.27, 0)
-    val_pos = (ax, body.y0 - 1.27, 0)
-    part = PlacedPart("T1", LIB_ID, "HX5008NLT", ax, ay, 0, FOOTPRINT,
-                      ref_pos=ref_pos, val_pos=val_pos)
-    pl.parts.append(part)
-    pl.boxes.append(body)
-    pl.boxes.append(Box(*tm.centered_box("T1", ref_pos[0], ref_pos[1]),
-                        "reference", "T1"))
-    pl.boxes.append(Box(*tm.centered_box("HX5008NLT", val_pos[0], val_pos[1]),
-                        "value", "T1"))
-    pl.boxes.extend(place._pin_text_boxes(sdef, part))
-
-    pins = {p.number: pin_page_position(p, ax, ay, 0) for p in sdef.pins}
-
-    # ---- port fans: tidy aligned ranks, straight runs --------------------------
-    for num, net in PHY_PORTS.items():
-        px, py = pins[str(num)]
-        pl.plan(net, (px, py), (px - RUN, py))
-        b.label(net, px - RUN, py, 180)
-    for num, net in LINE_PORTS.items():
-        px, py = pins[str(num)]
-        pl.plan(net, (px, py), (px + RUN, py))
-        b.label(net, px + RUN, py, 0)
-
-    # ---- Bob-Smith ladder: drop, bar, R||C, trunk taps --------------------------
-    rrot = 0 if _pin(lib.get("Device:R"), "1").y > 0 else 180
-    crot = 0 if _pin(lib.get("Device:C"), "1").y > 0 else 180
-    trunk_nodes: list[float] = [X_RISER]
-    for n in range(4):
-        ct = f"CT{n}"
-        x, ytip = pins[str(9 + n)]
-        xc = x + BAR
-        pl.plan(ct, (x, ytip), (x, Y_BAR))            # straight drop
-        pl.plan(ct, (x, Y_BAR), (xc, Y_BAR))          # bar to the cap column
-        pl.plan(ct, (xc, Y_BAR), (xc, Y_RB))          # cap column
-        b.llabel(ct, x + 1.27, Y_BAR)                 # net name ON the bar
-        b.passive(f"R{n + 1}", x, Y_R, rrot, text_side="left")
-        b.passive(f"C{n + 1}", xc, Y_C, crot, text_side="right")
-        pl.plan("BS_COMMON", (x, Y_RB), (x, Y_TRUNK))  # 75R tap onto the trunk
-        trunk_nodes += [x, xc]
-    trunk_nodes.append(X_C5)
-
-    # the trunk: one horizontal run, split into legs at every tap (junction
-    # dots appear exactly at the same-net degree>=3 taps — never elsewhere)
-    for xa, xb in zip(trunk_nodes, trunk_nodes[1:]):
-        pl.plan("BS_COMMON", (xa, Y_TRUNK), (xb, Y_TRUNK))
-    b.llabel("BS_COMMON", X_C5, Y_TRUNK)              # name at the trunk's end
-
-    # magjack's own BS tap (pin 13): stub out, riser down the left flank
-    x13, y13 = pins["13"]
-    pl.plan("BS_COMMON", (x13, y13), (X_RISER, y13), (X_RISER, Y_TRUNK))
-
-    # shared chassis cap closes the trunk's right end
-    b.passive("C5", X_C5, Y_TRUNK + 3.81, crot, text_side="right")
-    b.power("CHASSIS_GND", X_C5, Y_TRUNK + 7.62)
-
-    # shield GND stub (pin 14): out, down, GND symbol — clear of the ladder
-    x14, y14 = pins["14"]
-    pl.plan("GND", (x14, y14), (x14 + 3.81, y14), (x14 + 3.81, y14 + 5.08))
-    b.power("GND", x14 + 3.81, y14 + 5.08)
-
-    # ---- PWR_FLAG corner (ERC: ground nets must be driven) ----------------------
-    for fx, net in zip(X_FLAGS, ("GND", "CHASSIS_GND")):
-        b.power(net, fx, Y_FLAGS)
-        pl.plan(net, (fx, Y_FLAGS), (fx, Y_FLAGS - 2.54))
-        b.flag(net, fx, Y_FLAGS - 2.54, 0)
-
-    return place.center_on_sheet(pl)

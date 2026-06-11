@@ -123,6 +123,7 @@ class Circuit:
         self.nets: dict[str, Net] = {}
         self.nc_pins: set[PinRef] = set()      # author-declared no-connects
         self.port_types: dict[str, PortType] = {}   # PORT net -> PortType
+        self.hints: dict[str, str] = {}        # net -> declarative style hint
         self._ref_counters: dict[str, int] = {}
 
     # ---- parts -------------------------------------------------------------
@@ -259,6 +260,20 @@ class Circuit:
     def port_type_of(self, net: str) -> PortType:
         """The PortType for a PORT net; untyped ports read as 'single'."""
         return self.port_types.get(net, PortType())
+
+    HINT_STYLES = frozenset({"trunk"})
+
+    def hint(self, net: str, style: str) -> None:
+        """Declarative layout hint: a net NAME and a STYLE keyword, nothing
+        else — never coordinates, never wire plans, never text positions.
+        The placement engine derives all geometry; a hint may only select
+        among the engine's own topology patterns (e.g. force ``trunk``)."""
+        if style not in self.HINT_STYLES:
+            raise CircuitError(f"hint({net!r}): unknown style {style!r} "
+                               f"(known: {sorted(self.HINT_STYLES)})")
+        if net not in self.nets:
+            raise CircuitError(f"hint({net!r}): not a declared net")
+        self.hints[net] = style
 
     def nc(self, *pins: PinRef | str) -> None:
         """Author-declared no-connect — pin is INTENTIONALLY unused."""

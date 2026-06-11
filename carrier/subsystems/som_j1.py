@@ -21,6 +21,3 @@ def circuit():
     return _gen.connector_circuit(
         "J1", "som_j1", "SoM J1: power / USB / STM32 / JTAG / SDIO / ETH MDI")
 
-
-def placer(c, lib, sp):
-    return _gen.connector_placer(c, lib, sp)

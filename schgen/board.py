@@ -139,8 +139,7 @@ def build_board(sheets, lib: Library, outdir: Path) -> bool:
 
     placed: list[tuple[str, PlacedDesign, str]] = []   # (name, design, sym_uuid)
     for i, sc in enumerate(sheets, start=1):
-        placement, routed, _geo = place.place_and_route(
-            sc.circuit, lib, builder=getattr(sc.module, "placer", None))
+        placement, routed, _geo = place.place_and_route(sc.circuit, lib)
         design = PlacedDesign(
             circuit=sc.circuit,
             parts=placement.parts,

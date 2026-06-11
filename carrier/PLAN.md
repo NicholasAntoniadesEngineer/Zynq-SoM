@@ -77,3 +77,13 @@ ENFORCEMENT (after migration): the build FAILS if a subsystem module defines `pl
 or touches geometry APIs — purity is a gate, not a convention.
 MIGRATION: engine v2 in schgen/place.py; ALL subsystem placer()s deleted; som_conn_gen
 geometry folded into the engine; every sheet re-verified (all gates + render eyeball).
+STATUS (2026-06-11): DONE. Engine v2 templates: signal-flow chain (multi-IC channel
+runs — hdmi_tx, hdmi_rx), trunk-bus/ladder detection (ethernet Bob-Smith, hdmi_rx
+cable-5V trunk), regulator stage rows (power), connector fan (som_j1/j2/j3, folded
+from som_conn_gen), divider stacks (m1_rc), plus the shared fan/attachment/cluster/
+flag machinery. Subsystems import schgen.model ONLY; `c.hint(net, style)` is the sole
+declarative extra. The PURITY GATE in `schgen build` AST-scans the subsystem source
+BEFORE executing it and fails on `placer` (def/assign/runtime) or any geometry import.
+All 10 sheets (m1_rc usb_pd uart_bridge ethernet power hdmi_tx hdmi_rx som_j1 som_j2
+som_j3) all-gates PASS; `schgen link` BOARD GATE PASS; hdmi_rx builds for the first
+time — from nothing but its netlist.
