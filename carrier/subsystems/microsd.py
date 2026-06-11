@@ -69,11 +69,12 @@ def circuit() -> Circuit:
     # ---- power -------------------------------------------------------------
     c.net("+1V8", "U1.5")                       # VCCA, SoM-side level
     c.decouple("U1.5", "100n")
-    # gated card rail: slot VDD + both VCCB + every pull-up + bulk
+    # gated card rail (+3V3_SD is the bring-up-gated module rail — SY6280 on
+    # the bringup sheet — a POWER net with its own symbol, like +5V_USB):
+    # slot VDD + both VCCB + every pull-up + bulk
     c.part("C2", "Device:C", "100n", C0603, LCSC="C1591")
     c.part("C3", "Device:C", "22u", C0805, LCSC="C45783")
-    c.port("+3V3_SD", "J1.4", "U1.21", "U1.17", "C2.1", "C3.1",
-           *pull_pins, expect=BRINGUP)
+    c.net("+3V3_SD", "J1.4", "U1.21", "U1.17", "C2.1", "C3.1", *pull_pins)
     c.net("GND", "C2.2", "C3.2")
 
     # SEL low selects port B0; EP + grounds

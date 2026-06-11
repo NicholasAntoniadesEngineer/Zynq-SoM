@@ -124,7 +124,13 @@ def check(geo: SheetGeometry, clearance_mm: float = 0.2) -> VisualResult:
         for b in geo.boxes:
             if b.kind == "body" and f"net:" in b.owner:
                 continue
-            if b.kind in _TEXT and wb.intersects(b, pad=0.0):
+            # a net's OWN label is ATTACHED to the wire: zero-distance
+            # contact at the anchor is the attachment itself (modelled at
+            # exactly the wire half-width), never a visual defect. Real
+            # text-through-wire still flags; foreign labels stay strict.
+            pad = -0.14 if (b.kind == "label"
+                            and b.owner == f"label:{s.net}") else 0.0
+            if b.kind in _TEXT and wb.intersects(b, pad=pad):
                 res.ok = False
                 res.findings.append(f"wire({s.net}) over {b.kind}({b.owner})")
 

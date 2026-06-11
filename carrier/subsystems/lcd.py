@@ -50,13 +50,14 @@ def circuit() -> Circuit:
     c.port("LCD_CTP_RST", "J1.39", expect=J2_MAP)
     c.port("LCD_CTP_INT", "J1.40", expect=J2_MAP)
 
-    # ---- panel power -------------------------------------------------------
-    c.port("+3V3_LCD", "J1.4", "C3.1", expect=BRINGUP)
+    # ---- panel power (gated module rails = POWER nets with their own
+    # symbols, sourced by the bringup sheet's SY6280s — like +5V_USB) -------
+    c.net("+3V3_LCD", "J1.4", "C3.1")
     c.net("GND", "J1.3", "J1.29", "J1.36", "C3.2")
     c.nc("J1.35", "J1.41", "J1.42")        # NC + shell tabs unused
 
     # ---- backlight boost: +5V_LCD -> L1 -> LX, D1 -> VLED+, ISET return ----
-    c.port("+5V_LCD", "U1.6", "L1.1", "C1.1", expect=BRINGUP)
+    c.net("+5V_LCD", "U1.6", "L1.1", "C1.1")
     c.net("GND", "U1.2", "C1.2", "C2.2", "R1.2")
     c.net("LCD_BL_SW", "L1.2", "U1.1")                       # LX node
     c.net("LCD_VLED_P", "D1.2", "C2.1", "U1.5", "J1.2")      # boost out + OVP

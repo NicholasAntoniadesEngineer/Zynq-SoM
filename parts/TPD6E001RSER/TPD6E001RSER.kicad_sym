@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"D"
-			(at 0 10.16 0)
+			(at 0 16.51 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23,7 +23,7 @@
 		(property
 			"Value"
 			"TPD6E001RSER"
-			(at 0 -10.16 0)
+			(at 0 -16.51 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -77,8 +77,8 @@
 		(symbol
 			"TPD6E001RSER_0_1"
 			(rectangle
-				(start -6.35 6.35)
-				(end 6.35 -6.35)
+				(start -6.35 12.7)
+				(end 6.35 -12.7)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -93,7 +93,7 @@
 			(pin
 				passive
 				line
-				(at -8.89 3.81 0)
+				(at -8.89 2.54 0)
 				(length 2.54)
 				(name
 					"IO1"
@@ -115,7 +115,7 @@
 			(pin
 				passive
 				line
-				(at -8.89 1.27 0)
+				(at -8.89 0 0)
 				(length 2.54)
 				(name
 					"IO2"
@@ -137,7 +137,7 @@
 			(pin
 				passive
 				line
-				(at -8.89 -1.27 0)
+				(at -8.89 -2.54 0)
 				(length 2.54)
 				(name
 					"IO3"
@@ -159,7 +159,7 @@
 			(pin
 				passive
 				line
-				(at 8.89 3.81 180)
+				(at 8.89 2.54 180)
 				(length 2.54)
 				(name
 					"IO4"
@@ -181,7 +181,7 @@
 			(pin
 				passive
 				line
-				(at 8.89 1.27 180)
+				(at 8.89 0 180)
 				(length 2.54)
 				(name
 					"IO5"
@@ -203,7 +203,7 @@
 			(pin
 				passive
 				line
-				(at 8.89 -1.27 180)
+				(at 8.89 -2.54 180)
 				(length 2.54)
 				(name
 					"IO6"
@@ -225,7 +225,7 @@
 			(pin
 				passive
 				line
-				(at 0 8.89 270)
+				(at 0 15.24 270)
 				(length 2.54)
 				(name
 					"VCC"
@@ -247,7 +247,7 @@
 			(pin
 				passive
 				line
-				(at -2.54 -8.89 90)
+				(at -2.54 -15.24 90)
 				(length 2.54)
 				(name
 					"NC"
@@ -269,7 +269,7 @@
 			(pin
 				passive
 				line
-				(at 0 -8.89 90)
+				(at 0 -15.24 90)
 				(length 2.54)
 				(name
 					"GND"
@@ -291,7 +291,7 @@
 			(pin
 				passive
 				line
-				(at 2.54 -8.89 90)
+				(at 2.54 -15.24 90)
 				(length 2.54)
 				(name
 					"NC"

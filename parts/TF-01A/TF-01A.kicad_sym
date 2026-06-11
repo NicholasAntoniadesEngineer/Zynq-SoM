@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"Card"
-			(at 0 10.16 0)
+			(at 0 17.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23,7 +23,7 @@
 		(property
 			"Value"
 			"TF-01A"
-			(at 0 -10.16 0)
+			(at 0 -17.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -77,8 +77,8 @@
 		(symbol
 			"TF-01A_0_1"
 			(rectangle
-				(start -13.97 6.35)
-				(end 13.97 -6.35)
+				(start -13.97 13.97)
+				(end 13.97 -13.97)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -247,7 +247,7 @@
 			(pin
 				input
 				line
-				(at 0 8.89 270)
+				(at 0 16.51 270)
 				(length 2.54)
 				(name
 					"VDD"
@@ -269,7 +269,7 @@
 			(pin
 				input
 				line
-				(at -5.08 -8.89 90)
+				(at -5.08 -16.51 90)
 				(length 2.54)
 				(name
 					"VSS"
@@ -291,7 +291,7 @@
 			(pin
 				input
 				line
-				(at -2.54 -8.89 90)
+				(at -2.54 -16.51 90)
 				(length 2.54)
 				(name
 					"GND"
@@ -313,7 +313,7 @@
 			(pin
 				input
 				line
-				(at 0 -8.89 90)
+				(at 0 -16.51 90)
 				(length 2.54)
 				(name
 					"GND"
@@ -335,7 +335,7 @@
 			(pin
 				input
 				line
-				(at 2.54 -8.89 90)
+				(at 2.54 -16.51 90)
 				(length 2.54)
 				(name
 					"GND"
@@ -357,7 +357,7 @@
 			(pin
 				input
 				line
-				(at 5.08 -8.89 90)
+				(at 5.08 -16.51 90)
 				(length 2.54)
 				(name
 					"GND"

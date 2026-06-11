@@ -20,10 +20,10 @@ MODELS_3D = ['USBLC6-2SC6.wrl', 'USBLC6-2SC6.step']
 
 # (number, name, electrical type) — KiCad etypes, from the EasyEDA pin table.
 PINS = [
-    ('1', '1', 'input'),
-    ('2', '2', 'input'),
-    ('3', '3', 'input'),
-    ('4', '4', 'input'),
-    ('5', '5', 'input'),
-    ('6', '6', 'input'),
+    ('1', '1', 'passive'),
+    ('2', '2', 'passive'),
+    ('3', '3', 'passive'),
+    ('4', '4', 'passive'),
+    ('5', '5', 'passive'),
+    ('6', '6', 'passive'),
 ]

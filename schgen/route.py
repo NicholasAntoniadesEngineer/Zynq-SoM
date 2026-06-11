@@ -168,13 +168,20 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
         grid.claim(net, [cell_of(pt)], f"power {pw.ref}")
         geoms[net].power_pts.add(pt)
 
-    # ---- 3. label anchors ----------------------------------------------------
+    # ---- 3. label anchors (hierarchical AND local: both are KiCad
+    #         connectivity anchors that merge a net by name) ------------------
     for h in placement.hlabels:
         if h.name not in geoms:
             raise RouteError(f"label {h.name!r} is not a declared net")
         pt = (round(h.x, 3), round(h.y, 3))
         grid.claim(h.name, [cell_of(pt)], f"label {h.name}")
         geoms[h.name].label_pts.add(pt)
+    for ll in getattr(placement, "llabels", []):
+        if ll.name not in geoms:
+            raise RouteError(f"local label {ll.name!r} is not a declared net")
+        pt = (round(ll.x, 3), round(ll.y, 3))
+        grid.claim(ll.name, [cell_of(pt)], f"llabel {ll.name}")
+        geoms[ll.name].label_pts.add(pt)
 
     # ---- 4. block all body/text geometry (never over an owned cell) ---------
     for box in placement.boxes:
@@ -192,6 +199,19 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                     continue
                 grid.claim(net, _leg_cells(a, b), f"wire {net}")
                 geoms[net].legs.append((a, b))
+
+    # a label anchored mid-wire is electrically ON the wire: split the leg
+    # at the anchor so the connectivity graph sees it
+    for net, g in geoms.items():
+        for lp in g.label_pts:
+            out_legs: list[tuple[Point, Point]] = []
+            for a, b in g.legs:
+                if lp != a and lp != b and cell_of(lp) in _leg_cells(a, b):
+                    out_legs.append((a, lp))
+                    out_legs.append((lp, b))
+                else:
+                    out_legs.append((a, b))
+            g.legs = out_legs
 
     # same-net discipline: leg interiors must be virgin (no double-draw,
     # no unsplit T — a tap point must be a shared LEG ENDPOINT)
@@ -221,17 +241,31 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                         f"power net {net}: drawn islet {sorted(comp)[:3]}… has "
                         f"no {net} power symbol — opens forbidden")
         else:
-            while len(comps) > 1:
-                # wire-heavy mandate: BFS-join the two nearest components
-                comps.sort(key=len, reverse=True)
-                path = _bfs_join(grid, net, comps[0], comps[1])
-                for a, b in zip(path, path[1:]):
-                    grid.claim(net, _leg_cells(a, b), f"bfs {net}")
-                    g.legs.append((a, b))
-                comps = _components(g)
+            bridged = net in getattr(placement, "label_bridged", set())
+            if bridged:
+                # placement chose the datasheet label idiom for this net
+                # (shunt/ESD banks, pull-up ranks, demoted channels): every
+                # drawn islet must carry a label anchor — KiCad merges the
+                # islets by NAME, and the netlist gate proves the merge.
+                for comp in comps:
+                    if not comp & g.label_pts:
+                        raise RouteError(
+                            f"label-bridged net {net}: islet "
+                            f"{sorted(comp)[:3]}… has no {net} label — "
+                            f"opens forbidden")
+            else:
+                while len(comps) > 1:
+                    # wire-heavy mandate: BFS-join the two nearest components
+                    comps.sort(key=len, reverse=True)
+                    path = _bfs_join(grid, net, comps[0], comps[1])
+                    for a, b in zip(path, path[1:]):
+                        grid.claim(net, _leg_cells(a, b), f"bfs {net}")
+                        g.legs.append((a, b))
+                    comps = _components(g)
             if net_obj.net_class == NetClass.PORT and not g.label_pts:
                 raise RouteError(f"PORT net {net}: no label placed")
-            if comps and g.label_pts and not (comps[0] & g.label_pts):
+            if not bridged and comps and g.label_pts \
+                    and not (comps[0] & g.label_pts):
                 raise RouteError(f"PORT net {net}: label not on the drawn net")
 
     # ---- 7. junctions: same-net degree >= 3 ----------------------------------
@@ -289,9 +323,20 @@ def _components(g: _NetGeom) -> list[set[Point]]:
 def _bfs_join(grid: Grid, net: str, comp_a: set[Point],
               comp_b: set[Point]) -> list[Point]:
     """Shortest orthogonal path over free/own cells from comp_a to comp_b,
-    returned as corner waypoints. RouteError if no path exists."""
+    returned as corner waypoints. RouteError if no path exists.
+
+    The search is BOUNDED to the sheet's occupied extent plus a margin:
+    the grid is an infinite free plane, so an enclosed component would
+    otherwise flood outward forever instead of failing fast back to the
+    placement feasibility loop."""
     starts = {cell_of(p) for p in comp_a}
     goals = {cell_of(p) for p in comp_b}
+    occ = list(grid.owner) + list(starts) + list(goals)
+    margin = 12
+    i0 = min(c[0] for c in occ) - margin
+    i1 = max(c[0] for c in occ) + margin
+    j0 = min(c[1] for c in occ) - margin
+    j1 = max(c[1] for c in occ) + margin
     prev: dict[Cell, Cell | None] = {c: None for c in starts}
     q: deque[Cell] = deque(starts)
     hit: Cell | None = None
@@ -302,6 +347,8 @@ def _bfs_join(grid: Grid, net: str, comp_a: set[Point],
             break
         for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             n = (c[0] + d[0], c[1] + d[1])
+            if not (i0 <= n[0] <= i1 and j0 <= n[1] <= j1):
+                continue
             if n in prev or not grid.free_or(net, n):
                 continue
             prev[n] = c

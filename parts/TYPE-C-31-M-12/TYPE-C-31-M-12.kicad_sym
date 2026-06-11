@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"USBC"
-			(at 0 16.256 0)
+			(at 0 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23,7 +23,7 @@
 		(property
 			"Value"
 			"TYPE-C-31-M-12"
-			(at 0 -17.4625 0)
+			(at 0 -26.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -77,8 +77,8 @@
 		(symbol
 			"TYPE-C-31-M-12_0_1"
 			(rectangle
-				(start -7.62 10.16)
-				(end 7.62 -10.16)
+				(start -7.62 17.78)
+				(end 7.62 -17.78)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -93,8 +93,8 @@
 			(pin
 				passive
 				line
-				(at -10.16 7.62 0)
-				(length 2.54)
+				(at -11.43 7.62 0)
+				(length 3.81)
 				(name
 					"SBU2"
 					(effects
@@ -115,8 +115,8 @@
 			(pin
 				passive
 				line
-				(at -10.16 5.08 0)
-				(length 2.54)
+				(at -11.43 5.08 0)
+				(length 3.81)
 				(name
 					"CC1"
 					(effects
@@ -137,8 +137,8 @@
 			(pin
 				passive
 				line
-				(at -10.16 2.54 0)
-				(length 2.54)
+				(at -11.43 2.54 0)
+				(length 3.81)
 				(name
 					"DN2"
 					(effects
@@ -159,8 +159,8 @@
 			(pin
 				passive
 				line
-				(at -10.16 0 0)
-				(length 2.54)
+				(at -11.43 0 0)
+				(length 3.81)
 				(name
 					"DP1"
 					(effects
@@ -181,8 +181,8 @@
 			(pin
 				passive
 				line
-				(at -10.16 -2.54 0)
-				(length 2.54)
+				(at -11.43 -2.54 0)
+				(length 3.81)
 				(name
 					"DN1"
 					(effects
@@ -203,8 +203,8 @@
 			(pin
 				passive
 				line
-				(at 10.16 7.62 180)
-				(length 2.54)
+				(at 11.43 7.62 180)
+				(length 3.81)
 				(name
 					"DP2"
 					(effects
@@ -225,8 +225,8 @@
 			(pin
 				passive
 				line
-				(at 10.16 5.08 180)
-				(length 2.54)
+				(at 11.43 5.08 180)
+				(length 3.81)
 				(name
 					"SBU1"
 					(effects
@@ -247,8 +247,8 @@
 			(pin
 				passive
 				line
-				(at 10.16 2.54 180)
-				(length 2.54)
+				(at 11.43 2.54 180)
+				(length 3.81)
 				(name
 					"CC2"
 					(effects
@@ -269,8 +269,8 @@
 			(pin
 				passive
 				line
-				(at 10.16 0 180)
-				(length 2.54)
+				(at 11.43 0 180)
+				(length 3.81)
 				(name
 					"EH"
 					(effects
@@ -291,8 +291,8 @@
 			(pin
 				passive
 				line
-				(at 10.16 -2.54 180)
-				(length 2.54)
+				(at 11.43 -2.54 180)
+				(length 3.81)
 				(name
 					"EH"
 					(effects
@@ -313,8 +313,8 @@
 			(pin
 				passive
 				line
-				(at 10.16 -5.08 180)
-				(length 2.54)
+				(at 11.43 -5.08 180)
+				(length 3.81)
 				(name
 					"EH"
 					(effects
@@ -335,8 +335,8 @@
 			(pin
 				passive
 				line
-				(at 10.16 -7.62 180)
-				(length 2.54)
+				(at 11.43 -7.62 180)
+				(length 3.81)
 				(name
 					"EH"
 					(effects
@@ -357,8 +357,8 @@
 			(pin
 				passive
 				line
-				(at -1.27 12.7 270)
-				(length 2.54)
+				(at -1.27 24.13 270)
+				(length 6.35)
 				(name
 					"VBUS"
 					(effects
@@ -379,8 +379,8 @@
 			(pin
 				passive
 				line
-				(at 1.27 12.7 270)
-				(length 2.54)
+				(at 1.27 24.13 270)
+				(length 6.35)
 				(name
 					"VBUS"
 					(effects
@@ -401,8 +401,8 @@
 			(pin
 				passive
 				line
-				(at -1.27 -12.7 90)
-				(length 2.54)
+				(at -1.27 -25.4 90)
+				(length 7.62)
 				(name
 					"GND"
 					(effects
@@ -423,8 +423,8 @@
 			(pin
 				passive
 				line
-				(at 1.27 -12.7 90)
-				(length 2.54)
+				(at 1.27 -25.4 90)
+				(length 7.62)
 				(name
 					"GND"
 					(effects

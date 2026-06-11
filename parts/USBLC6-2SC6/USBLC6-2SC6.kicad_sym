@@ -14,7 +14,7 @@
 		(property
 			"Reference"
 			"D"
-			(at 0 12.7 0)
+			(at 0 8.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -24,7 +24,7 @@
 		(property
 			"Value"
 			"USBLC6-2SC6"
-			(at 0 -12.7 0)
+			(at 0 -8.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -78,8 +78,8 @@
 		(symbol
 			"USBLC6-2SC6_0_1"
 			(rectangle
-				(start -2.54 8.89)
-				(end 2.54 -8.89)
+				(start -2.54 5.08)
+				(end 2.54 -5.08)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -92,9 +92,9 @@
 		(symbol
 			"USBLC6-2SC6_1_1"
 			(pin
-				input
+				passive
 				line
-				(at -5.08 6.35 0)
+				(at -5.08 2.54 0)
 				(length 2.54)
 				(name
 					"1"
@@ -114,9 +114,9 @@
 				)
 			)
 			(pin
-				input
+				passive
 				line
-				(at -5.08 3.81 0)
+				(at -5.08 0 0)
 				(length 2.54)
 				(name
 					"2"
@@ -136,9 +136,9 @@
 				)
 			)
 			(pin
-				input
+				passive
 				line
-				(at -5.08 1.27 0)
+				(at -5.08 -2.54 0)
 				(length 2.54)
 				(name
 					"3"
@@ -158,9 +158,9 @@
 				)
 			)
 			(pin
-				input
+				passive
 				line
-				(at -5.08 -1.27 0)
+				(at 5.08 2.54 180)
 				(length 2.54)
 				(name
 					"4"
@@ -180,9 +180,9 @@
 				)
 			)
 			(pin
-				input
+				passive
 				line
-				(at -5.08 -3.81 0)
+				(at 5.08 0 180)
 				(length 2.54)
 				(name
 					"5"
@@ -202,9 +202,9 @@
 				)
 			)
 			(pin
-				input
+				passive
 				line
-				(at -5.08 -6.35 0)
+				(at 5.08 -2.54 180)
 				(length 2.54)
 				(name
 					"6"

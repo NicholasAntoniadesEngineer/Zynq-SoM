@@ -157,8 +157,16 @@ def normalize_etypes(pins: list[PinInfo], prefix: str) -> list[PinInfo]:
     """EasyEDA electric types are unreliable on passives (LCSC's 0603
     resistor marks BOTH pins 'input', which would fail ERC and schgen's
     inputs-driven check). Two-pin parts and R/C/L/FB prefixes are passive
-    by physics — override."""
+    by physics — override.
+
+    Same story on protection/ESD/diode-array parts: EasyEDA marks EVERY pin
+    'input' (e.g. USBLC6-2SC6), which is electrically impossible — nothing
+    would drive or power the device. An all-input pin table is therefore
+    garbage data, and these parts are passive-through devices: normalize to
+    'passive'. Pin tables with a sane mix of etypes are kept verbatim."""
     if len(pins) <= 2 or prefix in ("R", "C", "L", "FB", "F"):
+        return [PinInfo(p.number, p.name, "passive") for p in pins]
+    if all(p.etype == "input" for p in pins):
         return [PinInfo(p.number, p.name, "passive") for p in pins]
     return pins
 
@@ -281,12 +289,22 @@ def _hidden_effects() -> list:
             [Sym("hide"), Sym("yes")]]
 
 
-def _pin_sx(p: PinInfo, x: float, y: float, rot: int) -> list:
+def _pin_sx(p: PinInfo, x: float, y: float, rot: int,
+            length: float = PIN_LEN) -> list:
     return [Sym("pin"), Sym(p.etype), Sym("line"),
             [Sym("at"), x, y, rot],
-            [Sym("length"), PIN_LEN],
+            [Sym("length"), length],
             [Sym("name"), p.name, _effects()],
             [Sym("number"), p.number, _effects()]]
+
+
+def _edge_pin_len(pins_on_edge: list[PinInfo]) -> float:
+    """Pin length long enough that the NUMBER text (drawn along the stem)
+    never dips past the body edge into the pin-name zone — wide pad numbers
+    like 'A4B9'/'B1A12' get longer stems."""
+    w = max((textmetrics.text_wh(p.number)[0] for p in pins_on_edge),
+            default=0.0)
+    return max(PIN_LEN, _ceil_grid(w + 0.6, step=GRID))
 
 
 def gen_symbol(name: str, pins: list[PinInfo], info: dict) -> list:
@@ -313,25 +331,32 @@ def gen_symbol(name: str, pins: list[PinInfo], info: dict) -> list:
     w_names = max_l + max_r + 2 * name_off + PITCH
     w_row = (max(len(g.top), len(g.bottom)) + 1) * PITCH
     width = max(_ceil_grid(w_names), _ceil_grid(w_row), 2 * PITCH)
-    # height: side-pin rows + vertical top/bottom name runs.
+    # height: side-pin rows + vertical top/bottom name runs. The runs CLIMB
+    # INTO the body from the top/bottom edges — the side rows must start
+    # below/above them, never under them (self-overlapping pin names).
+    pad_t = _ceil_grid(max_t + name_off + 1.27) if (g.top and max_t) else 0.0
+    pad_b = _ceil_grid(max_b + name_off + 1.27) if (g.bottom and max_b) else 0.0
     h_rows = (max(len(g.left), len(g.right)) + 1) * PITCH
     h_names = max_t + max_b + 2 * name_off + PITCH
-    height = max(_ceil_grid(h_rows), _ceil_grid(h_names), 2 * PITCH)
+    height = max(_ceil_grid(h_rows) + pad_t + pad_b, _ceil_grid(h_names),
+                 2 * PITCH)
 
     hw, hh = width / 2, height / 2
+    len_l, len_r = _edge_pin_len(g.left), _edge_pin_len(g.right)
+    len_t, len_b = _edge_pin_len(g.top), _edge_pin_len(g.bottom)
     pin_nodes: list[list] = []
     for i, p in enumerate(g.left):
-        y = hh - PITCH * (i + 1)
-        pin_nodes.append(_pin_sx(p, -hw - PIN_LEN, y, 0))
+        y = hh - pad_t - PITCH * (i + 1)
+        pin_nodes.append(_pin_sx(p, -hw - len_l, y, 0, len_l))
     for i, p in enumerate(g.right):
-        y = hh - PITCH * (i + 1)
-        pin_nodes.append(_pin_sx(p, hw + PIN_LEN, y, 180))
+        y = hh - pad_t - PITCH * (i + 1)
+        pin_nodes.append(_pin_sx(p, hw + len_r, y, 180, len_r))
     for j, p in enumerate(g.top):
         x = -PITCH * (len(g.top) - 1) / 2 + PITCH * j
-        pin_nodes.append(_pin_sx(p, x, hh + PIN_LEN, 270))
+        pin_nodes.append(_pin_sx(p, x, hh + len_t, 270, len_t))
     for j, p in enumerate(g.bottom):
         x = -PITCH * (len(g.bottom) - 1) / 2 + PITCH * j
-        pin_nodes.append(_pin_sx(p, x, -hh - PIN_LEN, 90))
+        pin_nodes.append(_pin_sx(p, x, -hh - len_b, 90, len_b))
 
     body = [Sym("rectangle"),
             [Sym("start"), -hw, hh], [Sym("end"), hw, -hh],
@@ -352,9 +377,9 @@ def gen_symbol(name: str, pins: list[PinInfo], info: dict) -> list:
            [Sym("in_bom"), Sym("yes")],
            [Sym("on_board"), Sym("yes")],
            prop("Reference", info.get("prefix", "U"), 0,
-                hh + PIN_LEN + 1.27 + _num_overhang(g.top), False),
+                hh + len_t + 1.27, False),
            prop("Value", info.get("mpn", name), 0,
-                -hh - PIN_LEN - 1.27 - _num_overhang(g.bottom), False),
+                -hh - len_b - 1.27, False),
            prop("Footprint", f"{name}:{name}", 0, 0, True),
            prop("Datasheet", info.get("datasheet", ""), 0, 0, True),
            prop("Description", info.get("description", ""), 0, 0, True),

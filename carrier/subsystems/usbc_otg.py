@@ -36,7 +36,9 @@ def circuit() -> Circuit:
     c.part("U2", ESD_LIB, "USBLC6-2SC6", ESD_FP, LCSC="C7519")
 
     # ---- VBUS: +5V_USB -> TPS2051 -> connector VBUS (= SoM sense USB_VBUS)
-    c.port("+5V_USB", "U1.5", expect=BRINGUP)               # IN (gated rail)
+    # +5V_USB is the bring-up-gated module rail (SY6280 on the bringup
+    # sheet): a POWER net with its own power symbol, like +3V3_HDMI_TX.
+    c.net("+5V_USB", "U1.5")                                # IN (gated rail)
     vbus = c.port("USB_VBUS", "U1.1", "J2.A4B9", "J2.B4A9") # OUT + sense
     c.port("VBUS_OUT_EN", "U1.4", expect=J1_MAP)            # EN from SoM
     c.net("GND", "U1.2")
@@ -65,8 +67,11 @@ def circuit() -> Circuit:
         c.net("USB_VBUS", f"{ref}.1")
         c.net(f"USBC_{ref}_CC", f"{ref}.2", cc)
 
-    # OTG ID strap (host role) lives SoM-side / on the J1 sheet; the contract
-    # net USB_ID binds there. (Engine TODO queued: generic port-strap chain.)
+    # ---- OTG ID strap: USB_ID (contract J1.20) through 1k to GND = HOST
+    # role for this port (the FS+PD Type-C is the device/dual-role port).
+    c.part("R4", "Device:R", "1k", R0603, LCSC="C21190")
+    c.port("USB_ID", "R4.1", expect=J1_MAP)
+    c.net("GND", "R4.2")
 
     # ---- shield / unused
     c.net("CHASSIS_GND", "J2.1", "J2.2", "J2.3", "J2.4")

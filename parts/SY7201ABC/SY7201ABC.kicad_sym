@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"U"
-			(at 0 8.89 0)
+			(at 0 12.7 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23,7 +23,7 @@
 		(property
 			"Value"
 			"SY7201ABC"
-			(at 0 -8.89 0)
+			(at 0 -12.7 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -77,8 +77,8 @@
 		(symbol
 			"SY7201ABC_0_1"
 			(rectangle
-				(start -7.62 5.08)
-				(end 7.62 -5.08)
+				(start -7.62 8.89)
+				(end 7.62 -8.89)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -93,7 +93,7 @@
 			(pin
 				passive
 				line
-				(at -10.16 2.54 0)
+				(at -10.16 6.35 0)
 				(length 2.54)
 				(name
 					"LX"
@@ -115,7 +115,7 @@
 			(pin
 				passive
 				line
-				(at -10.16 0 0)
+				(at -10.16 3.81 0)
 				(length 2.54)
 				(name
 					"FB"
@@ -137,7 +137,7 @@
 			(pin
 				passive
 				line
-				(at -10.16 -2.54 0)
+				(at -10.16 1.27 0)
 				(length 2.54)
 				(name
 					"EN/PWM"
@@ -159,7 +159,7 @@
 			(pin
 				passive
 				line
-				(at 10.16 2.54 180)
+				(at 10.16 6.35 180)
 				(length 2.54)
 				(name
 					"OVP"
@@ -181,7 +181,7 @@
 			(pin
 				passive
 				line
-				(at 10.16 0 180)
+				(at 10.16 3.81 180)
 				(length 2.54)
 				(name
 					"IN"
@@ -203,7 +203,7 @@
 			(pin
 				passive
 				line
-				(at 0 -7.62 90)
+				(at 0 -11.43 90)
 				(length 2.54)
 				(name
 					"GND"

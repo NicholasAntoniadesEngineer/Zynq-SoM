@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"U"
-			(at 0 17.78 0)
+			(at 0 26.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23,7 +23,7 @@
 		(property
 			"Value"
 			"TXS02612RTWR"
-			(at 0 -17.78 0)
+			(at 0 -26.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -77,8 +77,8 @@
 		(symbol
 			"TXS02612RTWR_0_1"
 			(rectangle
-				(start -10.16 13.97)
-				(end 10.16 -13.97)
+				(start -10.16 22.86)
+				(end 10.16 -22.86)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -93,7 +93,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 11.43 0)
+				(at -12.7 10.16 0)
 				(length 2.54)
 				(name
 					"DAT2A"
@@ -115,7 +115,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 8.89 0)
+				(at -12.7 7.62 0)
 				(length 2.54)
 				(name
 					"DAT3A"
@@ -137,7 +137,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 6.35 0)
+				(at -12.7 5.08 0)
 				(length 2.54)
 				(name
 					"CMDA"
@@ -159,7 +159,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 3.81 0)
+				(at -12.7 2.54 0)
 				(length 2.54)
 				(name
 					"DAT0A"
@@ -181,7 +181,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 1.27 0)
+				(at -12.7 0 0)
 				(length 2.54)
 				(name
 					"DAT1A"
@@ -203,7 +203,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -1.27 0)
+				(at -12.7 -2.54 0)
 				(length 2.54)
 				(name
 					"DAT2B1"
@@ -225,7 +225,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -3.81 0)
+				(at -12.7 -5.08 0)
 				(length 2.54)
 				(name
 					"CLKA"
@@ -247,7 +247,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -6.35 0)
+				(at -12.7 -7.62 0)
 				(length 2.54)
 				(name
 					"DAT3B1"
@@ -269,7 +269,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -8.89 0)
+				(at -12.7 -10.16 0)
 				(length 2.54)
 				(name
 					"CMDB1"
@@ -291,7 +291,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -11.43 0)
+				(at -12.7 -12.7 0)
 				(length 2.54)
 				(name
 					"CLKB1"
@@ -313,7 +313,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 11.43 180)
+				(at 12.7 10.16 180)
 				(length 2.54)
 				(name
 					"DAT0B1"
@@ -335,7 +335,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 8.89 180)
+				(at 12.7 7.62 180)
 				(length 2.54)
 				(name
 					"DAT1B1"
@@ -357,7 +357,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 6.35 180)
+				(at 12.7 5.08 180)
 				(length 2.54)
 				(name
 					"DAT1B0"
@@ -379,7 +379,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 3.81 180)
+				(at 12.7 2.54 180)
 				(length 2.54)
 				(name
 					"DAT0B0"
@@ -401,7 +401,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 1.27 180)
+				(at 12.7 0 180)
 				(length 2.54)
 				(name
 					"CLKB0"
@@ -423,7 +423,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 -1.27 180)
+				(at 12.7 -2.54 180)
 				(length 2.54)
 				(name
 					"CMDB0"
@@ -445,7 +445,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 -3.81 180)
+				(at 12.7 -5.08 180)
 				(length 2.54)
 				(name
 					"DAT3B0"
@@ -467,7 +467,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 -6.35 180)
+				(at 12.7 -7.62 180)
 				(length 2.54)
 				(name
 					"DAT2B0"
@@ -489,7 +489,7 @@
 			(pin
 				passive
 				line
-				(at 12.7 -8.89 180)
+				(at 12.7 -10.16 180)
 				(length 2.54)
 				(name
 					"SEL"
@@ -511,7 +511,7 @@
 			(pin
 				passive
 				line
-				(at -2.54 16.51 270)
+				(at -2.54 25.4 270)
 				(length 2.54)
 				(name
 					"VCCA"
@@ -533,7 +533,7 @@
 			(pin
 				passive
 				line
-				(at 0 16.51 270)
+				(at 0 25.4 270)
 				(length 2.54)
 				(name
 					"VCCB1"
@@ -555,7 +555,7 @@
 			(pin
 				passive
 				line
-				(at 2.54 16.51 270)
+				(at 2.54 25.4 270)
 				(length 2.54)
 				(name
 					"VCCB0"
@@ -577,7 +577,7 @@
 			(pin
 				passive
 				line
-				(at -2.54 -16.51 90)
+				(at -2.54 -25.4 90)
 				(length 2.54)
 				(name
 					"GND"
@@ -599,7 +599,7 @@
 			(pin
 				passive
 				line
-				(at 0 -16.51 90)
+				(at 0 -25.4 90)
 				(length 2.54)
 				(name
 					"GND"
@@ -621,7 +621,7 @@
 			(pin
 				passive
 				line
-				(at 2.54 -16.51 90)
+				(at 2.54 -25.4 90)
 				(length 2.54)
 				(name
 					"EP"
