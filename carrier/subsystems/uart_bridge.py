@@ -28,25 +28,35 @@ FOOTPRINT = "Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm"
 
 def circuit() -> Circuit:
     c = Circuit("uart_bridge", "UART bridge: CP2102N USB-UART")
-    c.part("U1", LIB_ID, "CP2102N-A02", FOOTPRINT)
+    # CP2102N-A02-GQFN24R — LCSC C969151, live-verified 2026-06-11:
+    # Extended, stock 24,473 (the non-reel -GQFN24 C1550551 is at 0)
+    c.part("U1", LIB_ID, "CP2102N-A02", FOOTPRINT, LCSC="C969151")
 
     # power: VIO(5) + VDD(6) + VREGIN(7) tied directly to +3V3 (self-powered);
     # GND pin 2 + stacked hidden twin 25
     c.net("+3V3", "U1.5", "U1.6", "U1.7")
     c.net("GND", "U1.2", "U1.25")
-    c.decouple("U1.7", "100n", "10u")        # C1, C2 on VREGIN
-    c.decouple("U1.6", "100n")               # C3 on VDD
-    c.decouple("U1.5", "100n")               # C4 on VIO
+    for cap, lcsc in zip(c.decouple("U1.7", "100n", "10u"),     # C1, C2
+                         ("C14663", "C15850")):                 # both Basic
+        cap.fields["LCSC"] = lcsc
+    for cap in c.decouple("U1.6", "100n"):   # C3 on VDD
+        cap.fields["LCSC"] = "C14663"
+    for cap in c.decouple("U1.5", "100n"):   # C4 on VIO
+        cap.fields["LCSC"] = "C14663"
 
     # reset pull-up (RST is open-drain, needs the external pull to VDD33)
     c.net("CP2102N_RST_N", "U1.9")
-    c.pullup("U1.9", "1k", "+3V3")           # R1
+    c.pullup("U1.9", "1k", "+3V3").fields["LCSC"] = "C21190"    # R1, Basic
 
     # VBUS sense divider, datasheet self-powered config:
     # +VIN -[22k1]- CP2102N_VBUS_SNS -[47k5]- GND, mid-point to the VBUS pin
+    # (22.1k = C25961, 47.5k = C23061 — both UNI-ROYAL 1% 0603, Extended,
+    # stock 87k/91k live-verified 2026-06-11)
     c.net("CP2102N_VBUS_SNS", "U1.8")
-    c.series("+VIN", "CP2102N_VBUS_SNS", "22k1")    # R2
-    c.series("CP2102N_VBUS_SNS", "GND", "47k5")     # R3
+    c.series("+VIN", "CP2102N_VBUS_SNS", "22k1") \
+        .fields["LCSC"] = "C25961"                  # R2
+    c.series("CP2102N_VBUS_SNS", "GND", "47k5") \
+        .fields["LCSC"] = "C23061"                  # R3
 
     # USB data to the connector — a 90R differential pair (USB 2.0 HS);
     # the USB receptacle subsystem lands in wave 2.

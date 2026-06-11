@@ -54,8 +54,9 @@ def circuit() -> Circuit:
     c.net("GND", "U1.GND", "U1.PAD", "U2.GND", "U2.PAD")
     c.net("GND", "U1.A0")                                # A0 #1 -> 0x40
     c.net("+3V3_SC", "U2.A0")                            # A0 #2 -> 0x41
-    c.decouple("U1.VS", "100n", footprint=C0603)         # C1
-    c.decouple("U2.VS", "100n", footprint=C0603)         # C2
+    for u in ("U1", "U2"):                               # C1, C2
+        for cap in c.decouple(f"{u}.VS", "100n", footprint=C0603):
+            cap.fields["LCSC"] = "C14663"   # Basic, 20.6M stock (2026-06-11)
     c.part("C3", "Device:C", "10u", C0805, LCSC="C15850")
     c.net("+3V3_SC", "C3.1")
     c.net("GND", "C3.2")

@@ -54,7 +54,10 @@ LINE_PORTS = {
 
 def circuit() -> Circuit:
     c = Circuit("ethernet", "Ethernet: HX5008NLT magnetics + Bob-Smith")
-    c.part("T1", LIB_ID, "HX5008NLT", FOOTPRINT)
+    # LCSC C962544 = genuine Pulse HX5008NLT (live-verified 2026-06-11:
+    # Extended, stock 10 — LOW; clone fallback HX5008NLTP-CND C47575004,
+    # stock 419, same 1:1 350uH single-port footprint class)
+    c.part("T1", LIB_ID, "HX5008NLT", FOOTPRINT, LCSC="C962544")
 
     for pin, net in PHY_PORTS.items():
         c.port(net, f"T1.{pin}")
@@ -71,15 +74,19 @@ def circuit() -> Circuit:
                     expect="rj45_connector (wave 2)")
 
     # Bob-Smith: per line-side centre tap, 75R || 1n(2kV) into BS_COMMON
+    # (75R = C4275 Basic stock 833k; 1n = C1588 Basic stock 3.2M — both
+    # live-verified 2026-06-11. NOTE: C1588 is a 50V part on the declared
+    # 0603 pad; the docstring's 2kV hi-pot rating needs a bigger package —
+    # pre-existing footprint decision, flagged, not silently changed here.)
     for n in range(4):
-        c.part(f"R{n + 1}", "Device:R", "75R", R_FP)
-        c.part(f"C{n + 1}", "Device:C", "1n", C_FP)
+        c.part(f"R{n + 1}", "Device:R", "75R", R_FP, LCSC="C4275")
+        c.part(f"C{n + 1}", "Device:C", "1n", C_FP, LCSC="C1588")
         c.net(f"CT{n}", f"T1.{9 + n}", f"R{n + 1}.1", f"C{n + 1}.1")
         c.net("BS_COMMON", f"R{n + 1}.2", f"C{n + 1}.2")
 
     # single shared 1n/2kV from the BS trunk to the chassis island;
     # the magjack's own BS tap (pin 13) rides the same trunk
-    c.part("C5", "Device:C", "1n", C_FP)
+    c.part("C5", "Device:C", "1n", C_FP, LCSC="C1588")
     c.net("BS_COMMON", "T1.13", "C5.1")
     c.net("CHASSIS_GND", "C5.2")
     c.net("GND", "T1.14")

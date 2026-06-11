@@ -62,7 +62,8 @@ def circuit() -> Circuit:
 
     # ---- power -------------------------------------------------------------
     c.net("+1V8", "U1.VCCA")                    # VCCA, SoM-side level
-    c.decouple("U1.VCCA", "100n")
+    for cap in c.decouple("U1.VCCA", "100n"):   # C14663 Basic, 20.6M stock
+        cap.fields["LCSC"] = "C14663"
     # gated card rail (+3V3_SD is the bring-up-gated module rail — SY6280 on
     # the bringup sheet — a POWER net with its own symbol, like +5V_USB):
     # slot VDD + both VCCB + every pull-up + bulk

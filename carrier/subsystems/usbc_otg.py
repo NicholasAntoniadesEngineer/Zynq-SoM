@@ -42,7 +42,8 @@ def circuit() -> Circuit:
     c.port("USBOTG_FLT_N", "U1.FLT#", "R3.2", expect=J1_MAP)
     c.net("+5V_USB", "R3.1")
     # input bypass + VBUS bulk per TPS2051 datasheet
-    c.decouple("U1.IN", "100n")
+    for cap in c.decouple("U1.IN", "100n"):     # C14663 Basic, 20.6M stock
+        cap.fields["LCSC"] = "C14663"
     c.part("C2", "Device:C", "22u", C0805, LCSC="C45783")
     c.net("USB_VBUS", "C2.1")
     c.net("GND", "C2.2")
@@ -58,7 +59,9 @@ def circuit() -> Circuit:
 
     # ---- CC host advertising: 56k Rp to VBUS (default USB power)
     for ref, cc in (("R1", "J2.CC1"), ("R2", "J2.CC2")):
-        c.part(ref, "Device:R", "56k", R0603)   # TODO LCSC: verify 56k 0603
+        # 56k 1% 0603 = 0603WAF5602T5E, C23206 — live-verified 2026-06-11:
+        # Basic, stock 289,495
+        c.part(ref, "Device:R", "56k", R0603, LCSC="C23206")
         c.net("USB_VBUS", f"{ref}.1")
         c.net(f"USBC_{ref}_CC", f"{ref}.2", cc)
 
