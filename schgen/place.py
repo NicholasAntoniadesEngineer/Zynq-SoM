@@ -41,6 +41,12 @@ POWER_LIBS = {
     "+3V3_HDMI_TX": "schgen:+3V3_HDMI_TX",
     "+5V_HDMI_TX": "schgen:+5V_HDMI_TX",
     "+3V3_HDMI_RX": "schgen:+3V3_HDMI_RX",
+    # SoM-provided rails (J-sheets / system controller)
+    "+3V3_SC": "schgen:+3V3_SC",
+    "+VCCO_13": "schgen:+VCCO_13",
+    "+VCCO_33": "schgen:+VCCO_33",
+    "+VCCO_34": "schgen:+VCCO_34",
+    "+VCCO_35": "schgen:+VCCO_35",
 }
 
 
