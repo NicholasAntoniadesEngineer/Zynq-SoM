@@ -208,11 +208,13 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
   alternate is ghost-risk (16 units). 31 BOM lines still missing LCSC ids.
 
 ## Flags from mechanical-debt harvest (2026-06-12)
-- **use_part lib-override needed (schgen owner)**: 8 parts whose sheets deliberately draw
-  a DIFFERENT symbol than their parts/ folder stay inline c.part (power TPS54302 x2 /
-  AP2112K / AO3400A stock drawings; hdmi_tx TPD12S016 + HDMI-019S; hdmi_rx HDMI_A_RX +
-  M24C02; usb_pd FUSB302 stacked-pin stock symbol) — either use_part(lib=...) override
-  or re-point at generated symbols with a deliberate re-bless.
+- **RESOLVED (2026-06-11): use_part lib-override landed** — `use_part(mpn,
+  lib_id=..., footprint=...)` keeps the deliberate drawing while sourcing
+  MPN/LCSC/datasheet from parts/ (hidden MPN+Datasheet fields in the emitted
+  file; pin-by-NAME disabled under override — numeric pins validated against
+  the actual symbol). All 8 migrated (power TPS54302 x2/AP2112K/AO3400A;
+  hdmi_tx TPD12S016+HDMI-019S; hdmi_rx HDMI_A_RX+M24C02; usb_pd FUSB302);
+  renders byte-identical, goldens untouched, graph identity proven.
 - **ethernet Bob-Smith 1n caps**: declared 0603 -> live-matched C1588 is 50V; the 2kV
   hi-pot intent needs a bigger package (1206/1808 2kV) — footprint decision pending.
 - **PROCUREMENT CRITICAL**: HX5008NLT C962544 stock=10 (clone C47575004 @419 noted in
