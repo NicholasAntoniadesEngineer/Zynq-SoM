@@ -2053,7 +2053,13 @@ class _Engine:
             rails: dict[str, list[tuple[float, float]]] = {}
             for (px, py), pin in rows:
                 net = c.net_of(PinRef(jref, pin.number))
-                assert net is not None, f"{jref}.{pin.number} unnetted"
+                if net is None:
+                    # author-declared NC (model.validate has already proven
+                    # every unnetted pin is an explicit c.nc) — same idiom
+                    # as the chain/fan templates: a no-connect cross at the
+                    # pin, no fan row (round-5 isolated SoM rail pins)
+                    pl.no_connects.append(NoConnect(px, py))
+                    continue
                 if net.net_class is NetClass.PORT:
                     ports.append((py, px, net.name))
                 else:

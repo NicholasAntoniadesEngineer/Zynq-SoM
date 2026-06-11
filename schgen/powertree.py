@@ -418,10 +418,17 @@ def _som_parallel_rail_finding(sheets, res: Result) -> None:
     3V3_EN/3V3_PG, 1V8_EN/1V8_PG — som/schematic/Power.kicad_sch), while
     carrier power.py ALSO generates +3V3/+1V8 (TPS54302 U2 / AP2112K U3).
     Same net name across the connector = electrically ONE net = two
-    regulators in parallel. Surfaced for decision; netlist facts only."""
+    regulators in parallel.
+
+    RESOLVED (PLAN round 5, 2026-06-12): carrier bucks win — those J1 pins
+    are explicit author no-connects (som_conn_gen.ISOLATED_SOM_RAILS,
+    policy twin schgen.link.ISOLATED_SOM_RAILS). This detector STAYS as the
+    netlist-driven guard: it reads the connector sheets' actual nets, so it
+    is silent while the isolation holds and the finding returns the moment
+    a J sheet re-binds either rail."""
     j1_rails = set()
     for sc in sheets:
-        if sc.name != "som_j1":
+        if not sc.name.startswith("som_j"):
             continue
         for net in sc.circuit.nets.values():
             if net.net_class is NetClass.POWER and net.name in ("+3V3",

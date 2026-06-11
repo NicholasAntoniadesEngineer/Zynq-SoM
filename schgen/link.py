@@ -56,6 +56,22 @@ RAIL_ALIASES: dict[str, str] = {
     "+VIN": "VIN",
 }
 
+# PLAN round-5 RAIL ISOLATION (user decision 2026-06-12): the SoM exports
+# its own +3V3/+1V8 on J1 (on-module MPM3834 stages) while carrier power.py
+# regulates same-named rails — binding them would parallel two regulators
+# on one net. Carrier bucks WIN: carrier/som_conn_gen.ISOLATED_SOM_RAILS
+# (this map's authoring twin) emits those J1 pins as explicit author
+# no-connects, the per-sheet netlist gate proves every NC, and the rail
+# census below reports the isolation instead of a SoM bind. The linker
+# ERRORS if a connector sheet ever re-binds an isolated rail, so the two
+# maps cannot drift apart silently.
+ISOLATED_SOM_RAILS: dict[str, str] = {
+    "+3V3": "SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 "
+            "(power:U2) is the only +3V3 source",
+    "+1V8": "SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K "
+            "(power:U3) is the only +1V8 source",
+}
+
 
 def canon_to_som(name: str) -> str:
     """Carrier net name -> SoM contract spelling (rails only; else identity)."""
@@ -296,7 +312,26 @@ def link(sheets: list[SheetCircuit],
                 rails.setdefault(net.name, set()).add(sc.name)
     for rail, users in sorted(rails.items()):
         som_name = canon_to_som(rail)
-        if som_name in som_names:
+        if rail in ISOLATED_SOM_RAILS:
+            # round-5 isolation: the contract pins exist but are author-NC
+            # on the connector sheets. VERIFY the isolation actually holds —
+            # a connector sheet still carrying the rail means som_conn_gen
+            # and this map drifted apart.
+            offenders = sorted(u for u in users if u.startswith("som_j"))
+            if offenders:
+                res.errors.append(
+                    f"RAIL ISOLATION VIOLATED: {rail} is declared isolated "
+                    f"from the SoM ({ISOLATED_SOM_RAILS[rail]}) but still "
+                    f"appears on connector sheet(s) "
+                    f"{', '.join(offenders)} — som_conn_gen must author "
+                    f"those pins NC")
+            bound_som_names.add(som_name)   # accounted: isolated by decision
+            res.rail_bindings.append(
+                f"{rail} — ISOLATED from SoM {som_name!r} pins (round-5 "
+                f"decision: {ISOLATED_SOM_RAILS[rail]}; pins author-NC on "
+                f"the J1 sheet); carrier-local rail (sheets: "
+                f"{', '.join(sorted(users))})")
+        elif som_name in som_names:
             bound_som_names.add(som_name)
             alias = f" (alias of SoM {som_name!r})" if som_name != rail else ""
             res.rail_bindings.append(

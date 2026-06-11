@@ -9,6 +9,8 @@ contract net VERBATIM:
 - power pins  -> POWER nets (carrier spelling: the SoM writes ``VIN``, the
   carrier writes ``+VIN`` — the ONLY rail alias, mirrored from
   schgen.link.RAIL_ALIASES; all other rails are identity spellings),
+  EXCEPT the round-5 ISOLATED SoM rails (below) which are explicit author
+  no-connects,
 - GND pins    -> the GROUND net,
 - signal pins -> PORT nets. No ``expect=`` deferrals here BY DESIGN: these
   sheets ARE the SoM side of the contract, so every port resolves against
@@ -40,6 +42,25 @@ CONTRACT = Path(__file__).resolve().parent / "som_interface.json"
 # the single enumerated rail alias; signals are NEVER respelled).
 RAIL_SPELLING = {"VIN": "+VIN"}
 
+# PLAN round-5 RAIL ISOLATION (user decision 2026-06-12) — carrier bucks WIN.
+# The SoM exports its own +3V3 (J1.24-27) and +1V8 (J1.56/58/60) from its
+# on-module MPM3834 stages, while carrier power.py regulates same-named
+# rails from its own bucks (TPS54302 U2 / AP2112K U3). Binding these pins
+# would put two regulators in parallel on one net (the power-tree gate's
+# PARALLEL-SOURCE finding). Resolution: the pins become EXPLICIT author
+# no-connects on the carrier — never silently dropped. Each isolated pin is
+# emitted as a KiCad no-connect and the per-sheet netlist gate proves every
+# one; schgen.link.ISOLATED_SOM_RAILS (this map's policy twin, next to
+# RAIL_ALIASES) reports the isolation in the rail census and ERRORs if a
+# connector sheet ever re-binds an isolated rail. The nets stay distinct;
+# the SoM-side rails remain on-module only.
+ISOLATED_SOM_RAILS: dict[str, str] = {
+    "+3V3": "SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 "
+            "(power:U2) is the only +3V3 source",
+    "+1V8": "SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K "
+            "(power:U3) is the only +1V8 source",
+}
+
 # Differential pairs on the contract (applied only when both nets are on the
 # connector being generated). Impedances per the JLC04161H-7628 stackup plan.
 PAIR_TYPES = [
@@ -65,6 +86,10 @@ def connector_circuit(jref: str, name: str, title: str) -> Circuit:
     seen_ports: set[str] = set()
     for pin, som_net in sorted(contract_pins(jref).items(), key=lambda kv: int(kv[0])):
         net = RAIL_SPELLING.get(som_net, som_net)
+        if net in ISOLATED_SOM_RAILS:
+            # round-5 isolation: explicit per-pin no-connect (see map above)
+            c.nc(f"{jref}.{pin}")
+            continue
         cls = Circuit.classify(net)
         if cls in (NetClass.POWER, NetClass.GROUND):
             c.net(net, f"{jref}.{pin}")
