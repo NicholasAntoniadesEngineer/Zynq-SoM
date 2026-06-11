@@ -1,0 +1,3574 @@
+(footprint
+	"ASP-134603-01"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"BGA-160_L56.6-W13.2-R4-C40-P1.27-BR — ASP-134603-01 (BGA-160_L56.6-W13.2-R4-C40-P1.27-BR) (EasyEDA/LCSC C2836665, faithful conversion)"
+	)
+	(tags "")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -5.17 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"ASP-134603-01"
+		(at 0 5.17 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C2836665.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"ASP-134603-01 (BGA-160_L56.6-W13.2-R4-C40-P1.27-BR)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C2836665"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center 29.1501 6.615)
+		(end 29.1801 6.615)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center 24.72 3.8401)
+		(end 24.9699 3.8401)
+		(stroke
+			(width 0.5)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_circle
+		(center -27.1899 0)
+		(end -26.9099 0)
+		(stroke
+			(width 0.56)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_circle
+		(center 27.19 3.05)
+		(end 27.47 3.05)
+		(stroke
+			(width 0.56)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_circle
+		(center -24.765 -3.1749)
+		(end -24.605 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -23.495 -3.1749)
+		(end -23.335 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -22.225 -3.1749)
+		(end -22.065 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -20.955 -3.1749)
+		(end -20.795 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -19.685 -3.1749)
+		(end -19.525 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -18.415 -3.1749)
+		(end -18.255 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -17.145 -3.1749)
+		(end -16.985 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -15.875 -3.1749)
+		(end -15.715 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -14.605 -3.1749)
+		(end -14.445 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -13.335 -3.1749)
+		(end -13.175 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -12.065 -3.1749)
+		(end -11.905 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -10.795 -3.1749)
+		(end -10.635 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -9.525 -3.1749)
+		(end -9.365 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -8.255 -3.1749)
+		(end -8.095 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -6.985 -3.1749)
+		(end -6.825 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -5.715 -3.1749)
+		(end -5.555 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -4.445 -3.1749)
+		(end -4.285 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -3.175 -3.1749)
+		(end -3.015 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -1.905 -3.1749)
+		(end -1.745 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -0.635 -3.1749)
+		(end -0.475 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 0.635 -3.1749)
+		(end 0.795 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 1.905 -3.1749)
+		(end 2.065 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 3.175 -3.1749)
+		(end 3.335 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 4.445 -3.1749)
+		(end 4.605 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 5.715 -3.1749)
+		(end 5.875 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 6.985 -3.1749)
+		(end 7.145 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 8.255 -3.1749)
+		(end 8.415 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 9.525 -3.1749)
+		(end 9.685 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 10.795 -3.1749)
+		(end 10.955 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 12.065 -3.1749)
+		(end 12.225 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 13.335 -3.1749)
+		(end 13.495 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 14.605 -3.1749)
+		(end 14.765 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 15.875 -3.1749)
+		(end 16.035 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 17.145 -3.1749)
+		(end 17.305 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 18.415 -3.1749)
+		(end 18.575 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 19.685 -3.1749)
+		(end 19.845 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 20.955 -3.1749)
+		(end 21.115 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 22.225 -3.1749)
+		(end 22.385 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 23.495 -3.1749)
+		(end 23.655 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 24.765 -3.1749)
+		(end 24.925 -3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -24.765 -1.9049)
+		(end -24.605 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -23.495 -1.9049)
+		(end -23.335 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -22.225 -1.9049)
+		(end -22.065 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -20.955 -1.9049)
+		(end -20.795 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -19.685 -1.9049)
+		(end -19.525 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -18.415 -1.9049)
+		(end -18.255 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -17.145 -1.9049)
+		(end -16.985 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -15.875 -1.9049)
+		(end -15.715 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -14.605 -1.9049)
+		(end -14.445 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -13.335 -1.9049)
+		(end -13.175 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -12.065 -1.9049)
+		(end -11.905 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -10.795 -1.9049)
+		(end -10.635 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -9.525 -1.9049)
+		(end -9.365 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -8.255 -1.9049)
+		(end -8.095 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -6.985 -1.9049)
+		(end -6.825 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -5.715 -1.9049)
+		(end -5.555 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -4.445 -1.9049)
+		(end -4.285 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -3.175 -1.9049)
+		(end -3.015 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -1.905 -1.9049)
+		(end -1.745 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -0.635 -1.9049)
+		(end -0.475 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 0.635 -1.9049)
+		(end 0.795 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 1.905 -1.9049)
+		(end 2.065 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 3.175 -1.9049)
+		(end 3.335 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 4.445 -1.9049)
+		(end 4.605 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 5.715 -1.9049)
+		(end 5.875 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 6.985 -1.9049)
+		(end 7.145 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 8.255 -1.9049)
+		(end 8.415 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 9.525 -1.9049)
+		(end 9.685 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 10.795 -1.9049)
+		(end 10.955 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 12.065 -1.9049)
+		(end 12.225 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 13.335 -1.9049)
+		(end 13.495 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 14.605 -1.9049)
+		(end 14.765 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 15.875 -1.9049)
+		(end 16.035 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 17.145 -1.9049)
+		(end 17.305 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 18.415 -1.9049)
+		(end 18.575 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 19.685 -1.9049)
+		(end 19.845 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 20.955 -1.9049)
+		(end 21.115 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 22.225 -1.9049)
+		(end 22.385 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 23.495 -1.9049)
+		(end 23.655 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 24.765 -1.9049)
+		(end 24.925 -1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -24.765 1.9049)
+		(end -24.605 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -23.495 1.9049)
+		(end -23.335 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -22.225 1.9049)
+		(end -22.065 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -20.955 1.9049)
+		(end -20.795 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -19.685 1.9049)
+		(end -19.525 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -18.415 1.9049)
+		(end -18.255 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -17.145 1.9049)
+		(end -16.985 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -15.875 1.9049)
+		(end -15.715 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -14.605 1.9049)
+		(end -14.445 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -13.335 1.9049)
+		(end -13.175 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -12.065 1.9049)
+		(end -11.905 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -10.795 1.9049)
+		(end -10.635 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -9.525 1.9049)
+		(end -9.365 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -8.255 1.9049)
+		(end -8.095 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -6.985 1.9049)
+		(end -6.825 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -5.715 1.9049)
+		(end -5.555 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -4.445 1.9049)
+		(end -4.285 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -3.175 1.9049)
+		(end -3.015 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -1.905 1.9049)
+		(end -1.745 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -0.635 1.9049)
+		(end -0.475 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 0.635 1.9049)
+		(end 0.795 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 1.905 1.9049)
+		(end 2.065 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 3.175 1.9049)
+		(end 3.335 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 4.445 1.9049)
+		(end 4.605 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 5.715 1.9049)
+		(end 5.875 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 6.985 1.9049)
+		(end 7.145 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 8.255 1.9049)
+		(end 8.415 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 9.525 1.9049)
+		(end 9.685 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 10.795 1.9049)
+		(end 10.955 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 12.065 1.9049)
+		(end 12.225 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 13.335 1.9049)
+		(end 13.495 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 14.605 1.9049)
+		(end 14.765 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 15.875 1.9049)
+		(end 16.035 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 17.145 1.9049)
+		(end 17.305 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 18.415 1.9049)
+		(end 18.575 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 19.685 1.9049)
+		(end 19.845 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 20.955 1.9049)
+		(end 21.115 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 22.225 1.9049)
+		(end 22.385 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 23.495 1.9049)
+		(end 23.655 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 24.765 1.9049)
+		(end 24.925 1.9049)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -24.765 3.1749)
+		(end -24.605 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -23.495 3.1749)
+		(end -23.335 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -22.225 3.1749)
+		(end -22.065 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -20.955 3.1749)
+		(end -20.795 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -19.685 3.1749)
+		(end -19.525 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -18.415 3.1749)
+		(end -18.255 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -17.145 3.1749)
+		(end -16.985 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -15.875 3.1749)
+		(end -15.715 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -14.605 3.1749)
+		(end -14.445 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -13.335 3.1749)
+		(end -13.175 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -12.065 3.1749)
+		(end -11.905 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -10.795 3.1749)
+		(end -10.635 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -9.525 3.1749)
+		(end -9.365 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -8.255 3.1749)
+		(end -8.095 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -6.985 3.1749)
+		(end -6.825 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -5.715 3.1749)
+		(end -5.555 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -4.445 3.1749)
+		(end -4.285 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -3.175 3.1749)
+		(end -3.015 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -1.905 3.1749)
+		(end -1.745 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center -0.635 3.1749)
+		(end -0.475 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 0.635 3.1749)
+		(end 0.795 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 1.905 3.1749)
+		(end 2.065 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 3.175 3.1749)
+		(end 3.335 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 4.445 3.1749)
+		(end 4.605 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 5.715 3.1749)
+		(end 5.875 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 6.985 3.1749)
+		(end 7.145 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 8.255 3.1749)
+		(end 8.415 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 9.525 3.1749)
+		(end 9.685 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 10.795 3.1749)
+		(end 10.955 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 12.065 3.1749)
+		(end 12.225 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 13.335 3.1749)
+		(end 13.495 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 14.605 3.1749)
+		(end 14.765 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 15.875 3.1749)
+		(end 16.035 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 17.145 3.1749)
+		(end 17.305 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 18.415 3.1749)
+		(end 18.575 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 19.685 3.1749)
+		(end 19.845 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 20.955 3.1749)
+		(end 21.115 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 22.225 3.1749)
+		(end 22.385 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 23.495 3.1749)
+		(end 23.655 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 24.765 3.1749)
+		(end 24.925 3.1749)
+		(stroke
+			(width 0.32)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_line
+		(start 28.3101 -2.1)
+		(end 28.3101 -6.615)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 28.3101 -6.615)
+		(end -28.3099 -6.615)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -28.3099 -6.615)
+		(end -28.3099 6.615)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -28.3099 6.615)
+		(end 28.3101 6.615)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 28.3101 6.615)
+		(end 28.3101 2.1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 28.3101 2.1)
+		(end 29.1501 2.1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 29.1501 2.1)
+		(end 29.1501 -2.1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 29.1501 -2.1)
+		(end 28.3101 -2.1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 28.305 -2.055)
+		(end 28.305 2.095)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.4298 -6.585)
+		(end 28.305 -6.585)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 28.305 -6.585)
+		(end 28.305 -2.055)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 28.305 -2.055)
+		(end 29.1501 -2.055)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 29.1501 -2.055)
+		(end 29.1501 2.095)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 29.1501 2.095)
+		(end 28.305 2.095)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 28.305 2.095)
+		(end 28.305 4.2628)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.4479 -2.4761)
+		(end -28.4298 -6.585)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.4298 -6.585)
+		(end -28.0669 -5.8551)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 28.2938 4.2628)
+		(end 28.2938 6.6173)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 28.2938 6.6173)
+		(end -28.7266 6.6173)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.7266 6.6173)
+		(end -28.7266 2.1977)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.7266 2.1977)
+		(end -27.8884 2.1977)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -27.8884 2.1977)
+		(end -27.8884 1.2122)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -27.0509 -1.3931)
+		(end -27.0509 -2.8571)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -27.0509 -2.8571)
+		(end -27.3049 -2.4761)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -27.3049 -2.4761)
+		(end -27.3049 -1.3951)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -27.0509 1.393)
+		(end -27.0509 2.8579)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -27.0509 2.8579)
+		(end -27.3049 2.4769)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -27.3049 2.4769)
+		(end -27.3049 1.3951)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -24.994 6.236)
+		(end -28.4479 6.236)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.4479 6.236)
+		(end -28.0669 5.855)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.0669 5.855)
+		(end -28.0669 2.8579)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.0669 2.8579)
+		(end -28.4479 2.4769)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.4479 2.4769)
+		(end -28.4479 6.236)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -27.3049 -2.4761)
+		(end -28.4479 -2.4761)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.4479 -2.4761)
+		(end -28.0669 -2.8571)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.0669 -2.8571)
+		(end -28.0669 -5.8551)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.0669 -5.8551)
+		(end -25.5 -5.8551)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.4479 2.4769)
+		(end -27.3049 2.4769)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.0669 -2.8571)
+		(end -27.0509 -2.8571)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.0669 2.8579)
+		(end -27.0509 2.8579)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -28.0669 5.855)
+		(end -25.5 5.855)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 25.1999 6.109)
+		(end 27.3051 6.109)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 27.3051 6.109)
+		(end 27.3051 4.4448)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 27.0511 4.4431)
+		(end 27.0511 5.855)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 27.0511 5.855)
+		(end 27.3051 6.109)
+		(stroke
+			(width 0.1999)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_text
+		user
+		"e"
+		(at 29.6159 0.103 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"d"
+		(at 29.4889 1.659 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"c"
+		(at 29.639 2.8231 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"b"
+		(at 29.4719 4.0931 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"a"
+		(at 29.639 5.3631 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"f"
+		(at 29.6159 -1.0029 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"h"
+		(at 29.4719 -3.6539 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"g"
+		(at 29.6949 -2.312 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"j"
+		(at 29.656 -4.8129 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"k"
+		(at 29.4889 -6.166 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(fp_text
+		user
+		"40"
+		(at -26.8889 3.501 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1.199896 1.199896)
+				(thickness 0.150114)
+			)
+		)
+	)
+	(fp_text
+		user
+		"1"
+		(at 24.255 4.8112 270)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.999998 0.999998)
+				(thickness 0.119888)
+			)
+		)
+	)
+	(pad
+		"c1"
+		smd
+		circle
+		(at 24.765 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c2"
+		smd
+		circle
+		(at 23.495 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c3"
+		smd
+		circle
+		(at 22.225 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c4"
+		smd
+		circle
+		(at 20.955 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c5"
+		smd
+		circle
+		(at 19.685 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c6"
+		smd
+		circle
+		(at 18.415 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c7"
+		smd
+		circle
+		(at 17.145 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c8"
+		smd
+		circle
+		(at 15.875 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c9"
+		smd
+		circle
+		(at 14.605 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c10"
+		smd
+		circle
+		(at 13.335 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c11"
+		smd
+		circle
+		(at 12.065 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c12"
+		smd
+		circle
+		(at 10.795 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c13"
+		smd
+		circle
+		(at 9.525 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c14"
+		smd
+		circle
+		(at 8.255 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c15"
+		smd
+		circle
+		(at 6.985 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c16"
+		smd
+		circle
+		(at 5.715 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c17"
+		smd
+		circle
+		(at 4.445 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c18"
+		smd
+		circle
+		(at 3.175 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c19"
+		smd
+		circle
+		(at 1.905 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c20"
+		smd
+		circle
+		(at 0.635 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c21"
+		smd
+		circle
+		(at -0.635 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c22"
+		smd
+		circle
+		(at -1.905 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c23"
+		smd
+		circle
+		(at -3.175 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c24"
+		smd
+		circle
+		(at -4.445 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c25"
+		smd
+		circle
+		(at -5.715 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c26"
+		smd
+		circle
+		(at -6.985 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c27"
+		smd
+		circle
+		(at -8.255 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c28"
+		smd
+		circle
+		(at -9.525 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c29"
+		smd
+		circle
+		(at -10.795 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c30"
+		smd
+		circle
+		(at -12.065 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c31"
+		smd
+		circle
+		(at -13.335 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c32"
+		smd
+		circle
+		(at -14.605 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c33"
+		smd
+		circle
+		(at -15.875 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c34"
+		smd
+		circle
+		(at -17.145 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c35"
+		smd
+		circle
+		(at -18.415 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c36"
+		smd
+		circle
+		(at -19.685 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c37"
+		smd
+		circle
+		(at -20.955 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c38"
+		smd
+		circle
+		(at -22.225 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c39"
+		smd
+		circle
+		(at -23.495 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"c40"
+		smd
+		circle
+		(at -24.765 3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d1"
+		smd
+		circle
+		(at 24.765 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d2"
+		smd
+		circle
+		(at 23.495 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d3"
+		smd
+		circle
+		(at 22.225 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d4"
+		smd
+		circle
+		(at 20.955 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d5"
+		smd
+		circle
+		(at 19.685 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d6"
+		smd
+		circle
+		(at 18.415 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d7"
+		smd
+		circle
+		(at 17.145 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d8"
+		smd
+		circle
+		(at 15.875 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d9"
+		smd
+		circle
+		(at 14.605 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d10"
+		smd
+		circle
+		(at 13.335 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d11"
+		smd
+		circle
+		(at 12.065 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d12"
+		smd
+		circle
+		(at 10.795 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d13"
+		smd
+		circle
+		(at 9.525 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d14"
+		smd
+		circle
+		(at 8.255 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d15"
+		smd
+		circle
+		(at 6.985 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d16"
+		smd
+		circle
+		(at 5.715 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d17"
+		smd
+		circle
+		(at 4.445 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d18"
+		smd
+		circle
+		(at 3.175 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d19"
+		smd
+		circle
+		(at 1.905 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d20"
+		smd
+		circle
+		(at 0.635 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d21"
+		smd
+		circle
+		(at -0.635 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d22"
+		smd
+		circle
+		(at -1.905 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d23"
+		smd
+		circle
+		(at -3.175 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d24"
+		smd
+		circle
+		(at -4.445 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d25"
+		smd
+		circle
+		(at -5.715 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d26"
+		smd
+		circle
+		(at -6.985 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d27"
+		smd
+		circle
+		(at -8.255 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d28"
+		smd
+		circle
+		(at -9.525 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d29"
+		smd
+		circle
+		(at -10.795 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d30"
+		smd
+		circle
+		(at -12.065 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d31"
+		smd
+		circle
+		(at -13.335 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d32"
+		smd
+		circle
+		(at -14.605 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d33"
+		smd
+		circle
+		(at -15.875 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d34"
+		smd
+		circle
+		(at -17.145 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d35"
+		smd
+		circle
+		(at -18.415 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d36"
+		smd
+		circle
+		(at -19.685 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d37"
+		smd
+		circle
+		(at -20.955 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d38"
+		smd
+		circle
+		(at -22.225 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d39"
+		smd
+		circle
+		(at -23.495 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"d40"
+		smd
+		circle
+		(at -24.765 1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g1"
+		smd
+		circle
+		(at 24.765 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g2"
+		smd
+		circle
+		(at 23.495 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g3"
+		smd
+		circle
+		(at 22.225 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g4"
+		smd
+		circle
+		(at 20.955 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g5"
+		smd
+		circle
+		(at 19.685 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g6"
+		smd
+		circle
+		(at 18.415 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g7"
+		smd
+		circle
+		(at 17.145 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g8"
+		smd
+		circle
+		(at 15.875 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g9"
+		smd
+		circle
+		(at 14.605 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g10"
+		smd
+		circle
+		(at 13.335 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g11"
+		smd
+		circle
+		(at 12.065 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g12"
+		smd
+		circle
+		(at 10.795 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g13"
+		smd
+		circle
+		(at 9.525 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g14"
+		smd
+		circle
+		(at 8.255 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g15"
+		smd
+		circle
+		(at 6.985 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g16"
+		smd
+		circle
+		(at 5.715 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g17"
+		smd
+		circle
+		(at 4.445 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g18"
+		smd
+		circle
+		(at 3.175 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g19"
+		smd
+		circle
+		(at 1.905 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g20"
+		smd
+		circle
+		(at 0.635 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g21"
+		smd
+		circle
+		(at -0.635 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g22"
+		smd
+		circle
+		(at -1.905 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g23"
+		smd
+		circle
+		(at -3.175 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g24"
+		smd
+		circle
+		(at -4.445 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g25"
+		smd
+		circle
+		(at -5.715 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g26"
+		smd
+		circle
+		(at -6.985 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g27"
+		smd
+		circle
+		(at -8.255 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g28"
+		smd
+		circle
+		(at -9.525 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g29"
+		smd
+		circle
+		(at -10.795 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g30"
+		smd
+		circle
+		(at -12.065 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g31"
+		smd
+		circle
+		(at -13.335 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g32"
+		smd
+		circle
+		(at -14.605 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g33"
+		smd
+		circle
+		(at -15.875 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g34"
+		smd
+		circle
+		(at -17.145 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g35"
+		smd
+		circle
+		(at -18.415 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g36"
+		smd
+		circle
+		(at -19.685 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g37"
+		smd
+		circle
+		(at -20.955 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g38"
+		smd
+		circle
+		(at -22.225 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g39"
+		smd
+		circle
+		(at -23.495 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"g40"
+		smd
+		circle
+		(at -24.765 -1.9049)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h1"
+		smd
+		circle
+		(at 24.765 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h2"
+		smd
+		circle
+		(at 23.495 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h3"
+		smd
+		circle
+		(at 22.225 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h4"
+		smd
+		circle
+		(at 20.955 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h5"
+		smd
+		circle
+		(at 19.685 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h6"
+		smd
+		circle
+		(at 18.415 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h7"
+		smd
+		circle
+		(at 17.145 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h8"
+		smd
+		circle
+		(at 15.875 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h9"
+		smd
+		circle
+		(at 14.605 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h10"
+		smd
+		circle
+		(at 13.335 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h11"
+		smd
+		circle
+		(at 12.065 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h12"
+		smd
+		circle
+		(at 10.795 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h13"
+		smd
+		circle
+		(at 9.525 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h14"
+		smd
+		circle
+		(at 8.255 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h15"
+		smd
+		circle
+		(at 6.985 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h16"
+		smd
+		circle
+		(at 5.715 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h17"
+		smd
+		circle
+		(at 4.445 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h18"
+		smd
+		circle
+		(at 3.175 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h19"
+		smd
+		circle
+		(at 1.905 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h20"
+		smd
+		circle
+		(at 0.635 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h21"
+		smd
+		circle
+		(at -0.635 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h22"
+		smd
+		circle
+		(at -1.905 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h23"
+		smd
+		circle
+		(at -3.175 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h24"
+		smd
+		circle
+		(at -4.445 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h25"
+		smd
+		circle
+		(at -5.715 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h26"
+		smd
+		circle
+		(at -6.985 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h27"
+		smd
+		circle
+		(at -8.255 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h28"
+		smd
+		circle
+		(at -9.525 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h29"
+		smd
+		circle
+		(at -10.795 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h30"
+		smd
+		circle
+		(at -12.065 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h31"
+		smd
+		circle
+		(at -13.335 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h32"
+		smd
+		circle
+		(at -14.605 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h33"
+		smd
+		circle
+		(at -15.875 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h34"
+		smd
+		circle
+		(at -17.145 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h35"
+		smd
+		circle
+		(at -18.415 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h36"
+		smd
+		circle
+		(at -19.685 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h37"
+		smd
+		circle
+		(at -20.955 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h38"
+		smd
+		circle
+		(at -22.225 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h39"
+		smd
+		circle
+		(at -23.495 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"h40"
+		smd
+		circle
+		(at -24.765 -3.1749)
+		(size 0.64008 0.64008)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		""
+		np_thru_hole
+		circle
+		(at 27.1899 3.0499)
+		(size 1.299972 1.299972)
+		(drill 1.299972)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		""
+		np_thru_hole
+		circle
+		(at -27.1899 -0.0001)
+		(size 1.299972 1.299972)
+		(drill 1.299972)
+		(layers "*.Cu" "*.Mask")
+	)
+)
