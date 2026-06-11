@@ -1,4 +1,10 @@
 net,sheet,kind,net_class,impedance_ohm,track_width_mm,pair_gap_mm,pair_with,length_match_group,match_tolerance_mm,notes
+CAM_CLK_N,camera,diff_pair,DP100_DIFF,100,0.2052,0.2032,CAM_CLK_P,PAIR:CAM_CLK_N/CAM_CLK_P,1.27,"deferred: som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V); JLCPCB calculator, JLC04161H-7628 outer/L2"
+CAM_CLK_P,camera,diff_pair,DP100_DIFF,100,0.2052,0.2032,CAM_CLK_N,PAIR:CAM_CLK_N/CAM_CLK_P,1.27,"deferred: som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V); JLCPCB calculator, JLC04161H-7628 outer/L2"
+CAM_D0_N,camera,diff_pair,DP100_DIFF,100,0.2052,0.2032,CAM_D0_P,PAIR:CAM_D0_N/CAM_D0_P,1.27,"deferred: som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V); JLCPCB calculator, JLC04161H-7628 outer/L2"
+CAM_D0_P,camera,diff_pair,DP100_DIFF,100,0.2052,0.2032,CAM_D0_N,PAIR:CAM_D0_N/CAM_D0_P,1.27,"deferred: som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V); JLCPCB calculator, JLC04161H-7628 outer/L2"
+CAM_D1_N,camera,diff_pair,DP100_DIFF,100,0.2052,0.2032,CAM_D1_P,PAIR:CAM_D1_N/CAM_D1_P,1.27,"deferred: som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V); JLCPCB calculator, JLC04161H-7628 outer/L2"
+CAM_D1_P,camera,diff_pair,DP100_DIFF,100,0.2052,0.2032,CAM_D1_N,PAIR:CAM_D1_N/CAM_D1_P,1.27,"deferred: som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V); JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_LINE_MDI_0_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_0_P,PAIR:ETH_LINE_MDI_0_N/ETH_LINE_MDI_0_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_LINE_MDI_0_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_0_N,PAIR:ETH_LINE_MDI_0_N/ETH_LINE_MDI_0_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_LINE_MDI_1_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_1_P,PAIR:ETH_LINE_MDI_1_N/ETH_LINE_MDI_1_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
@@ -118,6 +124,8 @@ PL_BTN0,bringup_rails,single,Default,,,,,,,deferred: som_j1_j2 bank-33 PL pin as
 PL_BTN1,bringup_rails,single,Default,,,,,,,deferred: som_j1_j2 bank-33 PL pin assignment (P3 linker)
 STM32_BRINGUP_INT,bringup_rails,single,Default,,,,,,,deferred: som_j3_connector (wave 3 STM32 GPIO function map)
 STM32_NRST,bringup_rails,single,Default,,,,,,,
+CAM_EN,camera,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
+CAM_LED,camera,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
 STM32_BOOT0,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 STM32_GPIO5,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 STM32_GPIO6,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
@@ -394,6 +402,8 @@ IO_L24_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
 IO_L6_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
 STM32_I2C2_SCL,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)
 STM32_I2C2_SDA,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)
+CAM_SCL,camera,i2c,I2C,,,,,,,"bus=CAM_I2C; speed=400000Hz; deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
+CAM_SDA,camera,i2c,I2C,,,,,,,"bus=CAM_I2C; speed=400000Hz; deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
 ZYNQ_HDMI_TX_SCL,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
 ZYNQ_HDMI_TX_SDA,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
 LCD_CTP_SCL,lcd,i2c,I2C,,,,,,,bus=LCD_CTP; speed=400000Hz; deferred: som_j2_connector (PL bank 13 — touch I2C only)

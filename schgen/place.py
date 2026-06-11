@@ -2474,6 +2474,34 @@ class _Engine:
                 self.pl.plan(rail, (xm, bar_y), (xm, bar_y - 2 * U))
                 self.power(rail, xm, bar_y - 2 * U)
 
+    def _series_port_columns(self) -> None:
+        """Leftover series passives bridging TWO PORT nets (differential
+        terminations): a labeled column below the flow — hier label up top,
+        the element, hier label below. Each net's fan label is the other
+        islet; KiCad merges by name, the netlist gate proves it."""
+        left = [s for s in self.series
+                if self.c.nets[s[1]].net_class is NetClass.PORT
+                and self.c.nets[s[2]].net_class is NetClass.PORT]
+        if not left:
+            return
+        ex0, _, _, ey1 = self._extent()
+        x = gsnap(ex0 + 8 * U)
+        y0 = gceil(ey1 + 12 * U)
+        pitch = gceil(2 * self.sp.cap_pitch)
+        for s in left:
+            ref, a, b = s
+            self.label(a, x, y0, 90)
+            cur = (x, round(y0 + 2 * U, 3))
+            self.pl.plan(a, (x, y0), cur)
+            far_pt, far = self._vertical_2pin(ref, x, cur[1], a,
+                                              downward=True)
+            assert far == b
+            end = (x, round(far_pt[1] + 2 * U, 3))
+            self.pl.plan(b, far_pt, end)
+            self.label(b, *end, 270)
+            self.series.remove(s)
+            x = round(x + pitch, 3)
+
     # ---- template: signal-flow chain ----------------------------------------------------
     def _chain_order(self) -> list[str]:
         """Multi-pin parts in left->right flow order, shunt banks excluded.
@@ -2985,6 +3013,7 @@ class _Engine:
         self._decoupling_cluster(pp0.x, pp0.y, body0)
         self._shunt_cells(handled)
         self._pull_rank_columns()
+        self._series_port_columns()
         for ch in [ch for ch in self.float_chains if ch.kind == "rail"]:
             self._leftover_chains_columns()
             break

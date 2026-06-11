@@ -1,4 +1,4 @@
-ERC report (2026-06-11T16:41:10, Encoding UTF8)
+ERC report (2026-06-11T16:45:08, Encoding UTF8)
 Report includes: Errors
 
 ***** Sheet /
@@ -10,6 +10,8 @@ Report includes: Errors
 ***** Sheet /bringup_modules/
 
 ***** Sheet /bringup_rails/
+
+***** Sheet /camera/
 
 ***** Sheet /debug_boot/
 
@@ -24,8 +26,8 @@ Report includes: Errors
 ***** Sheet /microsd/
 [pin_to_pin]: Pins of type Power output and Power output are connected
     ; error
-    @(43.18 mm, 180.34 mm): Symbol #FLG1001 Pin 1 [Power output, Line]
-    @(148.59 mm, 106.68 mm): Symbol U1303 Pin 5 [VOUT, Power output, Line]
+    @(43.18 mm, 180.34 mm): Symbol #FLG1101 Pin 1 [Power output, Line]
+    @(148.59 mm, 106.68 mm): Symbol U1403 Pin 5 [VOUT, Power output, Line]
 
 ***** Sheet /pd_input/
 
