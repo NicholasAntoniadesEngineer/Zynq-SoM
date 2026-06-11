@@ -148,3 +148,30 @@ agent implements this (CLI output paths + .gitignore + README references).
    (rules in parts/<MPN>/<MPN>.py + retrofit) — not silently dropped.
 4. **SC firmware contract**: BOOTSEL decode + BMODE drive + PA13/14 reserved (debug
    dossier "firmware contract") — needs a tracked note in som/ before rev-A bring-up.
+
+## Decisions round 4 (user, 2026-06-11) — SYSTEM GENERATOR: ALL APPROVED
+The netlist becomes the single source of truth for the whole SYSTEM, not just the sheets.
+All emitted by `schgen board`; none add authoring burden.
+- **Generated .xdc**: Vivado constraints for every carrier net through J2/J3 -> Zynq ball
+  (LOC from som_interface.json, IOSTANDARD from the VCCO rail map, diff-pair constraints
+  from typed ports). The PL design starts with zero pin-mapping work and CANNOT drift.
+- **Generated SC-firmware header**: C header for the SoM STM32 system controller —
+  pin/function map, BOOTSEL decode table, rail-sequencing order, I2C address map
+  (FUSB302 + power monitor + IO expander). debug_boot dossier's "firmware contract"
+  becomes code, not prose.
+- **Generated bring-up manual**: ordered rail-by-rail checklist from the power tree +
+  bringup netlists (close DIP n -> expect rail V at TP x, current limit, PG LED state).
+  Testing doc that cannot drift from the board.
+- **Power-tree budget gate**: subsystems declare draw; build proves regulator headroom
+  through the gate tree; emits numbered power-tree diagram.
+- **Test-point coverage rule**: every rail + key bus owns a TP or the build FAILS.
+- **SPICE spot-checks pulled forward (P5 -> now)**: ngspice on auto-extracted dividers/
+  RC/FB loops (incl. BOOT0 1k5/100R divider) with pass thresholds, gated.
+- **`schgen selftest`**: gate mutation testing — injected pin-swaps/dropped wires/net
+  aliases MUST be caught by the gates (the no-CI answer to "who watches the watchmen")
+  + build-twice byte-compare determinism check.
+- **README gallery**: auto-generated render thumbnails + inline block diagram; the repo
+  demos itself on GitHub.
+SEQUENCE: after M3 harvest + camera/FMC/pd_input sheets; selftest + .xdc first (trust +
+immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up manual
++ gallery.
