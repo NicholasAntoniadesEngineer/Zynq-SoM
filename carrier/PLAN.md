@@ -135,3 +135,54 @@ carrier/
 ```
 No scratch dir; everything regenerated in place, deterministic. The authoring-v2/refactor
 agent implements this (CLI output paths + .gitignore + README references).
+
+## GAP REGISTRY (audit 2026-06-11 — decided but not yet owned)
+1. **pd_input sheet MISSING**: the USB-C PD *receptacle* itself (VBUS -> +VIN path,
+   CC1/CC2 wiring to the FUSB302 sheet's STM32_USB_CC1/2 ports, shield). usb_pd has
+   only the FUSB302. Without it the board has no power inlet. Owner: next free agent.
+2. **Passive part folders (round-1 decision)**: passives still inline c.part(...,
+   LCSC=...) — round 1 says EVERY part incl. passives gets a folder. Authoring v2's
+   missing-passive error implies the folders; VERIFY at M3 harvest that R/C/L folders
+   actually exist and subsystems reference them, else it silently stays inline.
+3. **Rule engine P4**: in M3 scope via round 3, but VERIFY at harvest it landed
+   (rules in parts/<MPN>/<MPN>.py + retrofit) — not silently dropped.
+4. **SC firmware contract**: BOOTSEL decode + BMODE drive + PA13/14 reserved (debug
+   dossier "firmware contract") — needs a tracked note in som/ before rev-A bring-up.
+
+## Decisions round 4 (user, 2026-06-11) — SYSTEM GENERATOR: ALL APPROVED
+The netlist becomes the single source of truth for the whole SYSTEM, not just the sheets.
+All emitted by `schgen board`; none add authoring burden.
+- **Generated .xdc**: Vivado constraints for every carrier net through J2/J3 -> Zynq ball
+  (LOC from som_interface.json, IOSTANDARD from the VCCO rail map, diff-pair constraints
+  from typed ports). The PL design starts with zero pin-mapping work and CANNOT drift.
+- **Generated SC-firmware header**: C header for the SoM STM32 system controller —
+  pin/function map, BOOTSEL decode table, rail-sequencing order, I2C address map
+  (FUSB302 + power monitor + IO expander). debug_boot dossier's "firmware contract"
+  becomes code, not prose.
+- **Generated bring-up manual**: ordered rail-by-rail checklist from the power tree +
+  bringup netlists (close DIP n -> expect rail V at TP x, current limit, PG LED state).
+  Testing doc that cannot drift from the board.
+- **Power-tree budget gate**: subsystems declare draw; build proves regulator headroom
+  through the gate tree; emits numbered power-tree diagram.
+- **Test-point coverage rule**: every rail + key bus owns a TP or the build FAILS.
+- **SPICE spot-checks pulled forward (P5 -> now)**: ngspice on auto-extracted dividers/
+  RC/FB loops (incl. BOOT0 1k5/100R divider) with pass thresholds, gated.
+- **`schgen selftest`**: gate mutation testing — injected pin-swaps/dropped wires/net
+  aliases MUST be caught by the gates (the no-CI answer to "who watches the watchmen")
+  + build-twice byte-compare determinism check.
+- **README gallery**: auto-generated render thumbnails + inline block diagram; the repo
+  demos itself on GitHub.
+SEQUENCE: after M3 harvest + camera/FMC/pd_input sheets; selftest + .xdc first (trust +
+immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up manual
++ gallery.
+
+## Flags from subsystems-research harvest (2026-06-11)
+- **DECISION NEEDED — bank 13 oversubscribed**: lcd(34 IO) + pmod(16) + user_io(8) = 58
+  signals > 43 available bank-13 IOs. Agent proposal: move LCD to J3 bank 34 (untouched).
+- **Camera requires +VCCO_35 = 2.5V** (XAPP894 D-PHY on HR bank) — new rail-map entry +
+  LP-RX pin reservation; carrier dossier carrier/research/camera_csi.md has the lane map.
+- **POWER_LIBS generalization (engine)**: fixed rail->symbol name map must accept arbitrary
+  rails (+VIN_SYS, +5V_REG, gated rails). BLOCKS: power.py shunt rail split (held out of
+  harvest to keep power green — power_mon cannot LINK until the split lands).
+- **Stock risks for preflight**: DS1024-2x6R2 (45 units!), INA3221 C181255 (2.4k),
+  RPi FFC SFW15R-1STE1LF picked over -2STE1LF (111, ghost-risk). Re-verify at BOM time.

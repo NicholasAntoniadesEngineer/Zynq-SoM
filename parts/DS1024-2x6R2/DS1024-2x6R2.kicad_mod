@@ -1,0 +1,298 @@
+(footprint
+	"DS1024-2x6R2"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2 — DS1024-2X6R2 (HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2) (EasyEDA/LCSC C49284652, faithful conversion)"
+	)
+	(tags "")
+	(attr through_hole)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -3.27 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"DS1024-2x6R2"
+		(at 0 3.27 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C49284652.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"DS1024-2X6R2 (HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C49284652"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -7.87 -1.47)
+		(end -7.84 -1.47)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.87 11.57)
+		(end -7.87 3.07)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -7.87 3.07)
+		(end 7.87 3.07)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 7.87 3.07)
+		(end 7.87 11.57)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 7.87 11.57)
+		(end -7.87 11.57)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 7.8741 3.061)
+		(end 7.8741 11.57)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.8741 11.57)
+		(end -7.8739 11.57)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.8739 11.57)
+		(end -7.8739 3.061)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.8739 3.061)
+		(end -7.6199 3.061)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.874 3.061)
+		(end -7.62 3.061)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(pad
+		"1"
+		thru_hole
+		rect
+		(at -6.35 -1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"2"
+		thru_hole
+		circle
+		(at -6.35 1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"3"
+		thru_hole
+		circle
+		(at -3.81 -1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"4"
+		thru_hole
+		circle
+		(at -3.81 1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"5"
+		thru_hole
+		circle
+		(at -1.27 -1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"6"
+		thru_hole
+		circle
+		(at -1.27 1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"7"
+		thru_hole
+		circle
+		(at 1.27 -1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"8"
+		thru_hole
+		circle
+		(at 1.27 1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"9"
+		thru_hole
+		circle
+		(at 3.81 -1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"10"
+		thru_hole
+		circle
+		(at 3.81 1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"11"
+		thru_hole
+		circle
+		(at 6.35 -1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"12"
+		thru_hole
+		circle
+		(at 6.35 1.27)
+		(size 1.778 1.778)
+		(drill 1.27)
+		(layers "*.Cu" "*.Mask")
+	)
+	(model
+		"DS1024-2x6R2.wrl"
+		(offset
+			(xyz 0 -4.85 -3)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

@@ -1,0 +1,469 @@
+(kicad_symbol_lib
+	(version 20241209)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(symbol
+		"INA3221AIRGVR"
+		(pin_names
+			(offset 0.508)
+		)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property
+			"Reference"
+			"U"
+			(at 0 15.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property
+			"Value"
+			"INA3221AIRGVR"
+			(at 0 -15.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property
+			"Footprint"
+			"INA3221AIRGVR:INA3221AIRGVR"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C181255.pdf"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property
+			"Description"
+			"INA3221AIRGVR (QFN-16_L4.0-W4.0-P0.65-TL-EP2.2)"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property
+			"LCSC"
+			"C181255"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(symbol
+			"INA3221AIRGVR_0_1"
+			(rectangle
+				(start -10.16 11.43)
+				(end 10.16 -11.43)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type background)
+				)
+			)
+		)
+		(symbol
+			"INA3221AIRGVR_1_1"
+			(pin
+				passive
+				line
+				(at -12.7 8.89 0)
+				(length 2.54)
+				(name
+					"IN-3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -12.7 6.35 0)
+				(length 2.54)
+				(name
+					"IN+3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -12.7 3.81 0)
+				(length 2.54)
+				(name
+					"VS"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"4"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -12.7 1.27 0)
+				(length 2.54)
+				(name
+					"A0"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"5"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -12.7 -1.27 0)
+				(length 2.54)
+				(name
+					"SCL"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"6"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -12.7 -3.81 0)
+				(length 2.54)
+				(name
+					"SDA"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"7"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -12.7 -6.35 0)
+				(length 2.54)
+				(name
+					"WARNING"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"8"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -12.7 -8.89 0)
+				(length 2.54)
+				(name
+					"CRITICAL"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"9"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 12.7 8.89 180)
+				(length 2.54)
+				(name
+					"PV"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"10"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 12.7 6.35 180)
+				(length 2.54)
+				(name
+					"IN-1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"11"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 12.7 3.81 180)
+				(length 2.54)
+				(name
+					"IN+1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"12"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 12.7 1.27 180)
+				(length 2.54)
+				(name
+					"TC"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"13"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 12.7 -1.27 180)
+				(length 2.54)
+				(name
+					"IN-2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"14"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 12.7 -3.81 180)
+				(length 2.54)
+				(name
+					"IN+2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"15"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 12.7 -6.35 180)
+				(length 2.54)
+				(name
+					"VPU"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"16"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -1.27 -13.97 90)
+				(length 2.54)
+				(name
+					"GND"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 1.27 -13.97 90)
+				(length 2.54)
+				(name
+					"PAD"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"17"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+	)
+)

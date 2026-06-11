@@ -1,0 +1,213 @@
+(footprint
+	"RLM12FTCMR020"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr "R1206 — RLM12FTCMR020 (R1206) (EasyEDA/LCSC C393094, faithful conversion)")
+	(tags "Current Sense Resistors/Shunt Resistors")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -2 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"RLM12FTCMR020"
+		(at 0 2 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C393094.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"RLM12FTCMR020 (R1206)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C393094"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -1.5499 0.7874)
+		(end -1.5199 0.7874)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.55 0.7875)
+		(end -1.55 -0.7875)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -1.55 -0.7875)
+		(end 1.55 -0.7875)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.55 -0.7875)
+		(end 1.55 0.7875)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.55 0.7875)
+		(end -1.55 0.7875)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 0.9512 1.0791)
+		(end 2.3111 1.0791)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 2.3111 1.0791)
+		(end 2.3111 -1.0791)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 2.3111 -1.0791)
+		(end 0.9512 -1.0791)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -0.9512 1.0791)
+		(end -2.3111 1.0791)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.3111 1.0791)
+		(end -2.3111 -1.0791)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.3111 -1.0791)
+		(end -0.9512 -1.0791)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 1.4788 0)
+		(size 1.207516 1.701013)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -1.4788 0)
+		(size 1.207516 1.701013)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(model
+		"RLM12FTCMR020.wrl"
+		(offset
+			(xyz -2.3879 0.889 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
