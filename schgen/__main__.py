@@ -487,6 +487,15 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"XDC: FAIL — {exc}")
         ok_all = False
 
+    # round-4 system artifacts, derived from the same netlists.
+    from schgen import firmware
+    try:
+        fw_out = firmware.generate()
+        print(f"FIRMWARE CONTRACT: {fw_out}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"FIRMWARE CONTRACT: FAIL — {exc}")
+        ok_all = False
+
     (rep_dir / "gates.txt").write_text(
         "\n".join(verdicts)
         + f"\nLINK: {'PASS' if res.ok else 'FAIL'}"
@@ -568,6 +577,14 @@ def main(argv: list[str] | None = None) -> int:
                     / "Zynq_Carrier_pins.xdc")
     from schgen.xdc import cmd_xdc
     xd.set_defaults(func=cmd_xdc)
+    fw = sub.add_parser(
+        "firmware", help="generate carrier/firmware/zynq_carrier_contract.h "
+                         "— the SC-firmware hardware contract (J1 pins + "
+                         "STM32 GPIOs + BOOTSEL decode + I2C map + rail/"
+                         "module EN map, all netlist-derived)")
+    fw.add_argument("-o", "--output", type=Path, default=None)
+    from schgen.firmware import cmd_firmware
+    fw.set_defaults(func=cmd_firmware)
     st = sub.add_parser(
         "selftest", help="gate MUTATION testing + build-determinism proof "
                          "(the no-CI answer to 'who watches the watchmen')")
