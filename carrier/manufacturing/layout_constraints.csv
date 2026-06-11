@@ -21,6 +21,34 @@ ETH_PHY_MDI2_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI2_P,PA
 ETH_PHY_MDI2_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI2_N,PAIR:ETH_PHY_MDI2_N/ETH_PHY_MDI2_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_PHY_MDI3_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI3_P,PAIR:ETH_PHY_MDI3_N/ETH_PHY_MDI3_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_PHY_MDI3_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI3_N,PAIR:ETH_PHY_MDI3_N/ETH_PHY_MDI3_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_CLK0_M2C_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_CLK0_M2C_P,PAIR:FMC_CLK0_M2C_N/FMC_CLK0_M2C_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_CLK0_M2C_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_CLK0_M2C_N,PAIR:FMC_CLK0_M2C_N/FMC_CLK0_M2C_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_CLK1_M2C_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_CLK1_M2C_P,PAIR:FMC_CLK1_M2C_N/FMC_CLK1_M2C_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_CLK1_M2C_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_CLK1_M2C_N,PAIR:FMC_CLK1_M2C_N/FMC_CLK1_M2C_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA00_CC_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA00_CC_P,PAIR:FMC_LA00_CC_N/FMC_LA00_CC_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA00_CC_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA00_CC_N,PAIR:FMC_LA00_CC_N/FMC_LA00_CC_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA01_CC_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA01_CC_P,PAIR:FMC_LA01_CC_N/FMC_LA01_CC_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA01_CC_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA01_CC_N,PAIR:FMC_LA01_CC_N/FMC_LA01_CC_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA02_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA02_P,PAIR:FMC_LA02_N/FMC_LA02_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA02_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA02_N,PAIR:FMC_LA02_N/FMC_LA02_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA03_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA03_P,PAIR:FMC_LA03_N/FMC_LA03_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA03_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA03_N,PAIR:FMC_LA03_N/FMC_LA03_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA04_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA04_P,PAIR:FMC_LA04_N/FMC_LA04_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA04_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA04_N,PAIR:FMC_LA04_N/FMC_LA04_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA05_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA05_P,PAIR:FMC_LA05_N/FMC_LA05_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA05_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA05_N,PAIR:FMC_LA05_N/FMC_LA05_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA06_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA06_P,PAIR:FMC_LA06_N/FMC_LA06_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA06_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA06_N,PAIR:FMC_LA06_N/FMC_LA06_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA07_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA07_P,PAIR:FMC_LA07_N/FMC_LA07_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA07_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA07_N,PAIR:FMC_LA07_N/FMC_LA07_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA08_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA08_P,PAIR:FMC_LA08_N/FMC_LA08_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA08_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA08_N,PAIR:FMC_LA08_N/FMC_LA08_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA09_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA09_P,PAIR:FMC_LA09_N/FMC_LA09_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA09_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA09_N,PAIR:FMC_LA09_N/FMC_LA09_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA10_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA10_P,PAIR:FMC_LA10_N/FMC_LA10_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA10_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA10_N,PAIR:FMC_LA10_N/FMC_LA10_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA11_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA11_P,PAIR:FMC_LA11_N/FMC_LA11_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+FMC_LA11_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA11_N,PAIR:FMC_LA11_N/FMC_LA11_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_PHY_MDI0_N,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI0_P,PAIR:ETH_PHY_MDI0_N/ETH_PHY_MDI0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_PHY_MDI0_P,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI0_N,PAIR:ETH_PHY_MDI0_N/ETH_PHY_MDI0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_PHY_MDI1_N,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI1_P,PAIR:ETH_PHY_MDI1_N/ETH_PHY_MDI1_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
@@ -136,6 +164,7 @@ ZYNQ_TCK,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TDI,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TDO,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TMS,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+FMC_PRSNT_N,fmc,single,Default,,,,,,,deferred: som_j2/j3 bank-33 spare (P3 linker)
 HDMI_RX_5V_DET,hdmi_rx,single,Default,,,,,,,deferred: som_j2_j3_connector (wave 3 FPGA bank function map)
 HDMI_RX_CEC,hdmi_rx,single,Default,,,,,,,deferred: som_j2_j3_connector (wave 3 FPGA bank function map)
 ZYNQ_HDMI_TX_CEC,hdmi_tx,single,Default,,,,,,,deferred: som_j2_connector (wave 3 PL function map)
@@ -404,6 +433,8 @@ STM32_I2C2_SCL,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; defer
 STM32_I2C2_SDA,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)
 CAM_SCL,camera,i2c,I2C,,,,,,,"bus=CAM_I2C; speed=400000Hz; deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
 CAM_SDA,camera,i2c,I2C,,,,,,,"bus=CAM_I2C; speed=400000Hz; deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
+STM32_I2C2_SCL,fmc,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (STM32 GPIO function map)
+STM32_I2C2_SDA,fmc,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (STM32 GPIO function map)
 ZYNQ_HDMI_TX_SCL,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
 ZYNQ_HDMI_TX_SDA,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
 LCD_CTP_SCL,lcd,i2c,I2C,,,,,,,bus=LCD_CTP; speed=400000Hz; deferred: som_j2_connector (PL bank 13 — touch I2C only)

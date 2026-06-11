@@ -5,6 +5,7 @@ bringup_rails: netlist=PASS erc=PASS visual=PASS paper=A4
 camera: netlist=PASS erc=PASS visual=PASS paper=A4
 debug_boot: netlist=PASS erc=PASS visual=PASS paper=A4
 ethernet: netlist=PASS erc=PASS visual=PASS paper=A4
+fmc: netlist=PASS erc=PASS visual=PASS paper=A3
 hdmi_rx: netlist=PASS erc=PASS visual=PASS paper=A4
 hdmi_tx: netlist=PASS erc=PASS visual=PASS paper=A4
 lcd: netlist=PASS erc=PASS visual=PASS paper=A4
@@ -12,7 +13,7 @@ microsd: netlist=PASS erc=PASS visual=PASS paper=A4
 pd_input: netlist=PASS erc=PASS visual=PASS paper=A4
 pmod: netlist=PASS erc=PASS visual=PASS paper=A4
 power: netlist=PASS erc=PASS visual=PASS paper=A4
-power_mon: netlist=PASS erc=PASS visual=PASS paper=A3
+power_mon: netlist=PASS erc=PASS visual=PASS paper=A4
 som_j1: netlist=PASS erc=PASS visual=PASS paper=A4
 som_j2: netlist=PASS erc=PASS visual=PASS paper=A4
 som_j3: netlist=PASS erc=PASS visual=PASS paper=A4
