@@ -2,10 +2,10 @@ schgen power-tree budget gate
 ================================================================
 
 sources:
-  +VIN        20.0 V  limit 3.00 A  load 1.256 A  (42%)  — USB-C PD sink contract 20 V / 3 A (pd_input J1)
+  +VBUS_IN    20.0 V  limit 3.00 A  load 1.256 A  (42%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
   +3V3_SC      3.3 V  limit 2.00 A  load 0.023 A  (1%)  — SoM MPM3822 always-on SC rail (J1.37); limit is the SoM regulator's 2 A — SoM-side SC loads (STM32 etc.) not included in the carrier tally
 
-regulators (14) — numbered as in carrier/docs/power_tree.svg:
+regulators (15) — numbered as in carrier/docs/power_tree.svg:
   ( 1) bringup_modules:U1   SY6280AAC           +3V3 -> +3V3_HDMI_TX   load 0.006 A / limit 0.523 A (1%)  in 0.006 A [load_switch] ILIM = 6800/13000R = 523 mA
   ( 2) bringup_modules:U10  SY6280AAC            +5V -> +5V_LCD        load 0.453 A / limit 1.000 A (45%)  in 0.453 A [load_switch] ILIM = 6800/6800R = 1000 mA
   ( 3) bringup_modules:U2   SY6280AAC           +3V3 -> +3V3_HDMI_RX   load 0.005 A / limit 0.523 A (1%)  in 0.005 A [load_switch] ILIM = 6800/13000R = 523 mA
@@ -17,9 +17,10 @@ regulators (14) — numbered as in carrier/docs/power_tree.svg:
   ( 9) bringup_modules:U8   SY6280AAC           +3V3 -> +3V3_USER_LED  load 0.010 A / limit 0.523 A (2%)  in 0.010 A [load_switch] ILIM = 6800/13000R = 523 mA
   (10) bringup_modules:U9   SY6280AAC            +5V -> +5V_HDMI_TX    load 0.058 A / limit 0.523 A (11%)  in 0.058 A [load_switch] ILIM = 6800/13000R = 523 mA
   (11) fmc:U1   TLV75725PDBVR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO derated to 0.4 A continuous (DBV RthJA 231 C/W, fmc.md section 3)
-  (12) power:U1   TPS54302DDCR        +VIN -> +5V            load 2.721 A / limit 3.000 A (91%)  in 0.756 A [buck] TI 3 A synchronous buck (SW->L->rail)
-  (13) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.322 A / limit 3.000 A (77%)  in 1.703 A [buck] TI 3 A synchronous buck (SW->L->rail)
-  (14) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
+  (12) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.256 A / limit 3.529 A (36%)  in 1.256 A [efuse] ILIM = 18000/5100R = 3529 mA
+  (13) power:U1   TPS54302DDCR        +VIN -> +5V            load 2.721 A / limit 3.000 A (91%)  in 0.756 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (14) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.322 A / limit 3.000 A (77%)  in 1.703 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (15) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
 
 shunt bridges (series R rail->rail, power_mon):
   power_mon:RS1 +VIN -> +VIN_SYS
@@ -85,6 +86,7 @@ rail totals (declared + child regulator inputs):
   +5V_LCD            0.453 A  @ 5.0 V
   +5V_REG            0.000 A  @ 5.0 V
   +5V_USB            0.503 A  @ 5.0 V
+  +VBUS_IN           1.256 A  @ 20.0 V
   +VCCO_13           0.000 A  @ 3.3 V
   +VCCO_33           0.000 A  @ 3.3 V
   +VCCO_34           0.000 A  @ 3.3 V
@@ -92,8 +94,8 @@ rail totals (declared + child regulator inputs):
   +VIN               1.256 A  @ 20.0 V
   +VIN_SYS           0.000 A  @ 20.0 V
 
-FINDINGS — decisions needed (1):
-  * VBUS PRE-CONTRACT CAPACITANCE (decision needed, PLAN round-4 flag): +VIN carries 30.3 uF NOMINAL un-switched (pd_input:C1=100n + pd_input:C2=10u + power:C1=100n + power:C2=10u + power:C3=10u + usb_pd:C3=100n). At the 5 V default-VBUS bias the X7R/X5R parts derate to roughly 15-24 uF effective — ABOVE the ~10 uF cSnkBulk guidance a PD sink should present before an explicit contract (USB PD r3 / Type-C tSrcInrush margins usually absorb this, but it is out of spec). REMEDY A (preferred): an inrush-limited +VIN path ahead of the bucks — a 24 V-capable eFuse/hot-swap switch with dV/dt control (TI TPS25982 24 V eFuse class, or a discrete P-FET soft-start: AO3401A-class + 100k/100n gate RC giving a ~1 ms ramp -> inrush ~= C*dV/dt = 20u * 20 V / 1 ms = 0.4 A); isolates ALL downstream bulk from the source's inrush window and keeps the bucks' input bulk intact. REMEDY B: trim power.py's un-switched input bulk (2x 10u C13585 -> 1x 4u7): pre-contract drops to ~15 uF nominal (~10-12 uF effective at 5 V) — meets the guidance, BUT at 20 V the remaining 25 V X5R bulk derates to ~35% (~1.6-3.5 uF effective), thin against the TPS54302's recommended >=10 uF effective input capacitance; remedy B trades a compliance margin for a stability margin. Numbers above are computed from the committed netlists; decision owner: power.py.
+notes — resolved audits, recomputed every run (1):
+  + VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.20 uF at the receptacle (+VBUS_IN) — within the ~10 uF cSnkBulk guidance; 30.1 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~31 mA.
 
 warnings (5):
   WARNING: unsourced rail +VCCO_13 (load 0.000 A) — KNOWN deferral: wave-3 J-sheet regen rail map (+VCCO_13 = +3V3)
@@ -104,4 +106,4 @@ warnings (5):
 
 errors: none
 
-POWER TREE: PASS (0 errors, 1 findings, 5 warnings)
+POWER TREE: PASS (0 errors, 0 findings, 5 warnings)

@@ -69,7 +69,8 @@ def parse_si(text: str) -> float | None:
 # ---- rail voltages (by name pattern) -------------------------------------------
 
 _VOLT_PATTERNS: tuple[tuple[str, float], ...] = (
-    (r"^\+VIN", 20.0),          # USB-C PD contract rail
+    (r"^\+VBUS_IN$", 20.0),     # raw receptacle VBUS (contract rail)
+    (r"^\+VIN", 20.0),          # fused board input (behind the TPS26631)
     (r"^\+5V", 5.0),
     (r"^\+3V3", 3.3),
     (r"^\+1V8", 1.8),
@@ -91,12 +92,14 @@ def rail_volts(name: str) -> float | None:
 
 @dataclass(frozen=True)
 class RegSpec:
-    kind: str                  # "buck" | "ldo" | "load_switch"
+    kind: str                  # "buck" | "ldo" | "load_switch" | "efuse"
     limit_a: float | None      # None => limit computed from ISET resistor
     eff: float = 1.0           # input-power transfer (bucks only)
     in_pin: str = ""           # pin number or NAME (resolved via pin_names)
     out_pin: str = ""          # ldo/switch: OUT pin; buck: SW pin (-> L -> rail)
-    iset_pin: str = ""         # load switch: ILIM = 6800 / R(ISET->GND)
+    iset_pin: str = ""         # switch/efuse: ILIM = ilim_num / R(ISET->GND)
+    ilim_num: float = 6800.0   # ILIM numerator [A*ohm] (SY6280 DS: 6800;
+                               # TPS2663 DS Eq 5: 18/R_kohm = 18000/R_ohm)
     note: str = ""
 
 
@@ -111,11 +114,17 @@ REG_SPECS: dict[str, RegSpec] = {
                              "(DBV RthJA 231 C/W, fmc.md section 3)"),
     "SY6280": RegSpec("load_switch", None, in_pin="IN", out_pin="OUT",
                       iset_pin="ISET", note="ILIM = 6800/RSET from netlist"),
+    # PLAN round-5 inlet eFuse: dVdT-soft-started, OVP-cutoff, auto-retry
+    "TPS26631": RegSpec("efuse", None, in_pin="IN", out_pin="OUT",
+                        iset_pin="ILIM", ilim_num=18000.0,
+                        note="ILIM = 18/R_kohm from netlist (TPS2663 Eq 5)"),
 }
 
 # Board power sources: the electrical contract (rail -> (volts, amps, who)).
 SOURCES: dict[str, tuple[float, float, str]] = {
-    "+VIN": (20.0, 3.0, "USB-C PD sink contract 20 V / 3 A (pd_input J1)"),
+    "+VBUS_IN": (20.0, 3.0, "USB-C PD sink contract 20 V / 3 A at the "
+                            "receptacle (pd_input J1; +VIN sits behind "
+                            "the TPS26631 eFuse, round 5)"),
     "+3V3_SC": (3.3, 2.0, "SoM MPM3822 always-on SC rail (J1.37); limit is "
                           "the SoM regulator's 2 A — SoM-side SC loads "
                           "(STM32 etc.) not included in the carrier tally"),
@@ -162,6 +171,7 @@ class Result:
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     findings: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)      # resolved audits
     source_load: dict[str, float] = field(default_factory=dict)
 
     @property
@@ -222,7 +232,7 @@ def _detect_regs(sheets) -> tuple[list[Reg], list[str]]:
                     continue
             limit = spec.limit_a
             note = spec.note
-            if spec.kind == "load_switch":
+            if spec.kind in ("load_switch", "efuse"):
                 iset_net = _net_on(c, ref, _pin_no(part, spec.iset_pin))
                 rset = None
                 if iset_net is not None:
@@ -231,8 +241,9 @@ def _detect_regs(sheets) -> tuple[list[Reg], list[str]]:
                         if rp is not None and rp.lib_id.endswith(":R"):
                             rset = parse_si(rp.value)
                 if rset:
-                    limit = round(6800.0 / rset, 3)
-                    note = f"ILIM = 6800/{rset:.0f}R = {limit*1000:.0f} mA"
+                    limit = round(spec.ilim_num / rset, 3)
+                    note = (f"ILIM = {spec.ilim_num:.0f}/{rset:.0f}R = "
+                            f"{limit*1000:.0f} mA")
                 else:
                     errors.append(f"{sc.name}:{ref} ({part.value}): ISET "
                                   f"resistor not found — cannot prove ILIM")
@@ -382,34 +393,74 @@ def _cap_farads_on(sheets, rail: str) -> list[tuple[str, str, str, float]]:
 
 
 def _vbus_precontract_finding(sheets, res: Result) -> None:
-    """The PLAN board-completion flag, DECIDED here with numbers from the
-    netlists: pre-contract capacitance on VBUS(+VIN) vs the ~10 uF cSnkBulk
-    guidance, with BOTH remedies quantified. Surfaced as a finding for the
-    power owner — this gate does not change power.py."""
-    caps = _cap_farads_on(sheets, "+VIN")
-    total_uf = sum(f for *_x, f in caps) * 1e6
-    detail = " + ".join(f"{s}:{r}={v}" for s, r, v, _f in caps)
-    res.findings.append(
-        f"VBUS PRE-CONTRACT CAPACITANCE (decision needed, PLAN round-4 "
-        f"flag): +VIN carries {total_uf:.1f} uF NOMINAL un-switched "
-        f"({detail}). At the 5 V default-VBUS bias the X7R/X5R parts derate "
-        f"to roughly 15-24 uF effective — ABOVE the ~10 uF cSnkBulk "
-        f"guidance a PD sink should present before an explicit contract "
-        f"(USB PD r3 / Type-C tSrcInrush margins usually absorb this, but "
-        f"it is out of spec). REMEDY A (preferred): an inrush-limited +VIN "
-        f"path ahead of the bucks — a 24 V-capable eFuse/hot-swap switch "
-        f"with dV/dt control (TI TPS25982 24 V eFuse class, or a discrete "
-        f"P-FET soft-start: AO3401A-class + 100k/100n gate RC giving a "
-        f"~1 ms ramp -> inrush ~= C*dV/dt = 20u * 20 V / 1 ms = 0.4 A); "
-        f"isolates ALL downstream bulk from the source's inrush window and "
-        f"keeps the bucks' input bulk intact. REMEDY B: trim power.py's "
-        f"un-switched input bulk (2x 10u C13585 -> 1x 4u7): pre-contract "
-        f"drops to ~15 uF nominal (~10-12 uF effective at 5 V) — meets the "
-        f"guidance, BUT at 20 V the remaining 25 V X5R bulk derates to "
-        f"~35% (~1.6-3.5 uF effective), thin against the TPS54302's "
-        f"recommended >=10 uF effective input capacitance; remedy B trades "
-        f"a compliance margin for a stability margin. Numbers above are "
-        f"computed from the committed netlists; decision owner: power.py.")
+    """The PLAN round-4 flag, RESOLVED round 5 by the pd_input TPS26631
+    eFuse — and kept armed, computed from the netlists on every run:
+
+    - the PD source sees ONLY the capacitance on the receptacle rail
+      (+VBUS_IN) pre-contract; it must stay under the ~10 uF cSnkBulk
+      guidance or the finding re-fires;
+    - the dVdT-soft-started eFuse must actually bridge the inlet rail to
+      the board bulk (+VIN); if it ever disappears from the netlist while
+      un-switched bulk remains, the original decision-needed finding
+      re-fires with the measured numbers;
+    - when compliant, the computed audit (inlet uF, behind-eFuse uF,
+      slew from the netlist dVdT cap via TPS2663 DS Eq 2, the resulting
+      inrush) is reported as a NOTE in the warnings-free report body.
+    """
+    inlet = "+VBUS_IN"
+    inlet_caps = _cap_farads_on(sheets, inlet)
+    inlet_uf = sum(f for *_x, f in inlet_caps) * 1e6
+    bulk_caps = _cap_farads_on(sheets, "+VIN")
+    bulk_uf = sum(f for *_x, f in bulk_caps) * 1e6
+    efuses = [r for r in res.regs if r.kind == "efuse" and r.vin == inlet]
+    if not efuses:
+        detail = " + ".join(f"{s}:{r}={v}" for s, r, v, _f in
+                            inlet_caps + bulk_caps)
+        res.findings.append(
+            f"VBUS PRE-CONTRACT CAPACITANCE (decision needed — the round-5 "
+            f"inlet eFuse is GONE from the netlist): the PD source sees "
+            f"{inlet_uf + bulk_uf:.1f} uF un-switched ({detail}) vs the "
+            f"~10 uF cSnkBulk guidance; restore an inrush-limited path "
+            f"(TPS2663-class eFuse with dVdT control) between the "
+            f"receptacle and the board bulk.")
+        return
+    if inlet_uf > 10.0:
+        detail = " + ".join(f"{s}:{r}={v}" for s, r, v, _f in inlet_caps)
+        res.findings.append(
+            f"VBUS PRE-CONTRACT CAPACITANCE: {inlet} (ahead of the eFuse) "
+            f"carries {inlet_uf:.1f} uF nominal ({detail}) — above the "
+            f"~10 uF cSnkBulk guidance; keep the receptacle side lean and "
+            f"let the dVdT eFuse charge the bulk.")
+        return
+    # compliant: compute the audit numbers from the netlist for the note
+    slew_note = ""
+    for sc in sheets:
+        c = sc.circuit
+        for r in efuses:
+            if r.sheet != sc.name:
+                continue
+            part = c.parts[r.ref]
+            dvdt_net = _net_on(c, r.ref, _pin_no(part, "dVdT"))
+            if dvdt_net is None:
+                continue
+            for pr in dvdt_net.pins:
+                cp = c.parts.get(pr.ref)
+                if cp is not None and cp.lib_id.endswith(":C"):
+                    cdvdt = parse_si(cp.value)
+                    if cdvdt:
+                        # TPS2663 DS Eq 2: t = 20.8e3 * V * C -> slew is
+                        # V/t = 1/(20.8e3 * C) [V/s], independent of V
+                        slew = 1.0 / (20.8e3 * cdvdt)
+                        inrush_ma = bulk_uf * 1e-6 * slew * 1e3
+                        slew_note = (f"; dVdT {cp.value} -> slew "
+                                     f"{slew / 1e3:.2f} V/ms, inrush into "
+                                     f"the bulk ~{inrush_ma:.0f} mA")
+    res.notes.append(
+        f"VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source "
+        f"sees {inlet_uf:.2f} uF at the receptacle ({inlet}) — within the "
+        f"~10 uF cSnkBulk guidance; {bulk_uf:.1f} uF board bulk sits "
+        f"behind the {', '.join(f'{r.sheet}:{r.ref} {r.value}' for r in efuses)} "
+        f"eFuse{slew_note}.")
 
 
 def _som_parallel_rail_finding(sheets, res: Result) -> None:
@@ -487,6 +538,11 @@ def report(res: Result) -> str:
         v = rail_volts(rail)
         lines.append(f"  {rail:<16} {res.rails[rail]:>7.3f} A"
                      + (f"  @ {v:.1f} V" if v else ""))
+    if res.notes:
+        lines += ["", f"notes — resolved audits, recomputed every run "
+                      f"({len(res.notes)}):"]
+        for n_ in res.notes:
+            lines.append(f"  + {n_}")
     if res.findings:
         lines += ["", f"FINDINGS — decisions needed ({len(res.findings)}):"]
         for f_ in res.findings:

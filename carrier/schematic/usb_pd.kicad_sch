@@ -1080,7 +1080,7 @@
 			)
 		)
 		(symbol
-			"schgen:+VIN"
+			"schgen:+VBUS_IN"
 			(power)
 			(pin_numbers
 				(hide yes)
@@ -1106,7 +1106,7 @@
 			)
 			(property
 				"Value"
-				"+VIN"
+				"+VBUS_IN"
 				(at 0 3.556 0)
 				(effects
 					(font
@@ -1138,7 +1138,7 @@
 			)
 			(property
 				"Description"
-				"Power symbol: +VIN rail"
+				"Power symbol: gated +VBUS_IN module rail (SY6280, bring-up dossier)"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1148,7 +1148,7 @@
 				)
 			)
 			(symbol
-				"+VIN_0_1"
+				"+VBUS_IN_0_1"
 				(polyline
 					(pts
 						(xy -0.762 1.27)
@@ -1190,14 +1190,14 @@
 				)
 			)
 			(symbol
-				"+VIN_1_1"
+				"+VBUS_IN_1_1"
 				(pin
 					power_in
 					line
 					(at 0 0 90)
 					(length 0)
 					(name
-						"+VIN"
+						"+VBUS_IN"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2057,7 +2057,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 142.24 111.76 0)
+		(at 143.51 111.76 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2067,7 +2067,7 @@
 		(property
 			"Reference"
 			"C2103"
-			(at 145.899 110.49 0)
+			(at 147.168 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2077,7 +2077,7 @@
 		(property
 			"Value"
 			"100n"
-			(at 147.105 113.03 0)
+			(at 148.375 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2087,7 +2087,7 @@
 		(property
 			"Footprint"
 			""
-			(at 142.24 111.76 0)
+			(at 143.51 111.76 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2098,7 +2098,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 142.24 111.76 0)
+			(at 143.51 111.76 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2109,7 +2109,7 @@
 		(property
 			"LCSC"
 			"C14663"
-			(at 142.24 111.76 0)
+			(at 143.51 111.76 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2204,7 +2204,7 @@
 		)
 	)
 	(symbol
-		(lib_id "schgen:+VIN")
+		(lib_id "schgen:+VBUS_IN")
 		(at 179.07 76.2 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2225,7 +2225,7 @@
 		)
 		(property
 			"Value"
-			"+VIN"
+			"+VBUS_IN"
 			(at 179.07 72.644 0)
 			(effects
 				(font
@@ -2741,7 +2741,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 142.24 115.57 0)
+		(at 143.51 115.57 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2751,7 +2751,7 @@
 		(property
 			"Reference"
 			"#PWR2110"
-			(at 142.24 113.03 0)
+			(at 143.51 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2762,7 +2762,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 142.24 119.38 0)
+			(at 143.51 119.38 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2772,7 +2772,7 @@
 		(property
 			"Footprint"
 			""
-			(at 142.24 115.57 0)
+			(at 143.51 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2783,7 +2783,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 142.24 115.57 0)
+			(at 143.51 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2807,8 +2807,8 @@
 		)
 	)
 	(symbol
-		(lib_id "schgen:+VIN")
-		(at 142.24 107.95 0)
+		(lib_id "schgen:+VBUS_IN")
+		(at 143.51 107.95 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2818,7 +2818,7 @@
 		(property
 			"Reference"
 			"#PWR2111"
-			(at 142.24 105.41 0)
+			(at 143.51 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2828,8 +2828,8 @@
 		)
 		(property
 			"Value"
-			"+VIN"
-			(at 142.24 104.394 0)
+			"+VBUS_IN"
+			(at 143.51 104.394 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2839,7 +2839,7 @@
 		(property
 			"Footprint"
 			""
-			(at 142.24 107.95 0)
+			(at 143.51 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2850,7 +2850,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 142.24 107.95 0)
+			(at 143.51 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)

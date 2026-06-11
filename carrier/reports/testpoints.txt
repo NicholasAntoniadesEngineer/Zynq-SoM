@@ -3,7 +3,7 @@ schgen test-point coverage gate
 
 rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) owns a probe point or an explicit waiver.
 
-required nets (54):
+required nets (55):
   +1V8                   [rail     ] TP @ power:TP3
   +1V8_REG               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +2V5_VADJ              [rail     ] TP @ fmc:TP1
@@ -22,11 +22,12 @@ required nets (54):
   +5V_LCD                [rail     ] TP @ bringup_modules:TP10, lcd:TP1
   +5V_REG                [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +5V_USB                [rail     ] TP @ bringup_modules:TP6
+  +VBUS_IN               [rail     ] TP @ pd_input:TP1
   +VCCO_13               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
   +VCCO_33               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
   +VCCO_34               [rail     ] WAIVED (som_j3): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
   +VCCO_35               [rail     ] WAIVED (som_j3): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
-  +VIN                   [rail     ] TP @ pd_input:TP1
+  +VIN                   [rail     ] TP @ pd_input:TP2
   +VIN_SYS               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   CAM_EN                 [enable   ] TP @ camera:TP3
   CAM_SCL                [i2c      ] TP @ camera:TP1
@@ -72,4 +73,4 @@ waivers — author-declared, verbatim (9):
 
 errors: none
 
-TESTPOINTS: PASS (45/54 required nets covered, 9 waived)
+TESTPOINTS: PASS (46/55 required nets covered, 9 waived)

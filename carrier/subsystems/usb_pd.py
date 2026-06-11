@@ -1,9 +1,14 @@
 """usb_pd — FUSB302B USB Type-C / Power-Delivery PHY subsystem.
 
 Reference circuit per the onsemi FUSB302B datasheet (and the carrier's
-hand-audited usb_pd sheet): VDD bypassed 100n + 10u, VBUS (fed from +VIN)
-bypassed 100n, 200p filter caps on each CC line. VCONN sourcing is unused
-by design -> both VCONN pins are explicit author no-connects.
+hand-audited usb_pd sheet): VDD bypassed 100n + 10u, VBUS sense bypassed
+100n, 200p filter caps on each CC line. VCONN sourcing is unused by design
+-> both VCONN pins are explicit author no-connects.
+
+VBUS sense rides +VBUS_IN — the RAW receptacle VBUS, AHEAD of the round-5
+TPS26631 inlet eFuse (pd_input): the PD PHY must observe vSafe5V/vbus at
+the connector itself for attach detection, not the dVdT-ramped board rail
+behind the eFuse.
 
 Bring-up dossier risk R1 (carrier/research/bringup_power_gating.md): PD
 negotiation must happen BEFORE any DIP-gated carrier rail exists — the
@@ -37,12 +42,12 @@ def circuit() -> Circuit:
     # power — +3V3_SC (always-on SC rail), NEVER a DIP-gated carrier rail:
     # PD brings the 20 V in, so it cannot depend on rails it creates (R1)
     c.net("+3V3_SC", "U1.3", "U1.4")              # VDD (+ stacked pin 4)
-    c.net("+VIN", "U1.2")                         # VBUS sense, fed from +VIN
-    c.net("GND", "U1.8", "U1.9", "U1.15")         # GND + stacked + EP
+    c.net("+VBUS_IN", "U1.2")          # VBUS sense: RAW receptacle VBUS,
+    c.net("GND", "U1.8", "U1.9", "U1.15")  # ahead of the pd_input eFuse
     for cap, lcsc in zip(c.decouple("U1.3", "100n", "10u"),  # C1, C2
                          ("C14663", "C15850")):              # both Basic
         cap.fields["LCSC"] = lcsc
-    for cap in c.decouple("U1.2", "100n"):        # C3 on +VIN
+    for cap in c.decouple("U1.2", "100n"):        # C3 on +VBUS_IN
         cap.fields["LCSC"] = "C14663"
 
     # Type-C CC lines to the connector (external interface) + 200p filters

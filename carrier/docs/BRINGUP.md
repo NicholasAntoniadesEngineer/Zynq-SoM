@@ -42,7 +42,7 @@ With **all DIPs open**, expect:
 
 - `+VIN` rises to the negotiated 20 V once the SC (or the FUSB302B's
   default sink behaviour) completes the contract; before that it sits at 5 V.
-- Probe: pd_input.TP1.
+- Probe: pd_input.TP2.
 - Every rail PG LED **off** (`power.D1`, `power.D2`, `power.D3`), every module status LED off.
 - The always-on `+3V3_SC` domain is alive (probe: bringup_rails.TP1):
 

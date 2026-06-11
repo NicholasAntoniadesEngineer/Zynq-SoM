@@ -59,7 +59,7 @@ every PNG below passed the netlist, ERC and visual gates.
 | [hdmi_tx](renders/hdmi_tx.png) | HDMI TX: TPD12S016 + HDMI-A receptacle (source) |
 | [lcd](renders/lcd.png) | 40-pin TTL RGB LCD + SY7201 backlight boost |
 | [microsd](renders/microsd.png) | microSD slot (1.8V SoM <-> 3.3V card, TXS02612) |
-| [pd_input](renders/pd_input.png) | Power inlet: USB-C PD 20V/3A receptacle |
+| [pd_input](renders/pd_input.png) | Power inlet: USB-C PD 20V/3A + TPS26631 eFuse |
 | [pmod](renders/pmod.png) | 2x Pmod host ports (bank 13, 200R series, gated 3V3) |
 | [power](renders/power.png) | Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs |
 | [power_mon](renders/power_mon.png) | Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41) |

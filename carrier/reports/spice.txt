@@ -1,9 +1,9 @@
 schgen spice / analytic spot-check gate
 ================================================================
 
-engine: analytic (gate) + ngspice .op cross-check on 7 divider(s), 1% agreement enforced
+engine: analytic (gate) + ngspice .op cross-check on 9 divider(s), 1% agreement enforced
 
-checks (14):
+checks (16):
   [PASS] bringup_rails: RC PL_BTN0 = 1 ms (limits 0.2 .. 20 ms; analytic)
          debounce/reset ramp: R10=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
   [PASS] bringup_rails: RC PL_BTN1 = 1 ms (limits 0.2 .. 20 ms; analytic)
@@ -18,6 +18,10 @@ checks (14):
          HDMI_RX_5V -[R3=10000R]- HDMI_RX_5V_DET -[R4=15000R]- GND @ 4.75 V: cable-5V presence divider into an LVCMOS33 bank
   [PASS] lcd: SY7201 ISET (R1) = 133.3 mA (limits 125 .. 150 mA; analytic)
          I_LED = 0.2 V / 1.5R; panel-class window 125-150 mA (lcd_backlight.md)
+  [PASS] pd_input: divider PD_OVP_SET [no false trip at 21 V (contract max)] = 1.1136 V (limits  .. 1.176 V; analytic+ngspice)  ngspice=1.1136
+         +VBUS_IN -[R3=100000R]- PD_OVP_SET -[R4=5600R]- GND @ 21 V: TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)
+  [PASS] pd_input: divider PD_OVP_SET [guaranteed cutoff below the TVS VBR min] = 1.2939 V (limits 1.224 ..  V; analytic+ngspice)  ngspice=1.2939
+         +VBUS_IN -[R3=100000R]- PD_OVP_SET -[R4=5600R]- GND @ 24.4 V: TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)
   [PASS] power: divider FB_5V0 = 0.601 V (limits  ..  V; analytic+ngspice)  ngspice=0.601
          +5V -[R1=73200R]- FB_5V0 -[R2=10000R]- GND @ 5 V (informational, no named threshold)
   [PASS] power: divider FB_3V3 = 0.5951 V (limits  ..  V; analytic+ngspice)  ngspice=0.5951
@@ -35,4 +39,4 @@ checks (14):
 
 errors: none
 
-SPICE GATE: PASS (14 checks)
+SPICE GATE: PASS (16 checks)

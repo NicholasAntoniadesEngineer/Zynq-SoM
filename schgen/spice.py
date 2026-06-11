@@ -42,6 +42,10 @@ CP2102N_VBUS_MAX = 5.8          # V, abs-max on the VBUS sense pin
 CP2102N_VBUS_DETECT = 3.0       # V, treat >= as "VBUS present" (DS divider)
 LVCMOS33_VMAX = 3.465           # 3.3 V + 5% bank abs input
 LVCMOS33_VIH = 2.0
+TPS2663_OVPR_MIN = 1.176        # V, OVP rising threshold -2% (SLVSE94G 6.5)
+TPS2663_OVPR_MAX = 1.224        # V, OVP rising threshold +2%
+PD_CONTRACT_VMAX = 21.0         # V, 20 V contract + 5% source tolerance
+SMBJ22A_VBR_MIN = 24.4          # V, inlet TVS min breakdown (pd_input D1)
 
 
 @dataclass
@@ -169,6 +173,15 @@ NAMED_DIVIDERS: dict[str, tuple[str, list, str]] = {
         [(5.25, None, LVCMOS33_VMAX, "bank abs-max at 5.25 V cable"),
          (4.75, LVCMOS33_VIH, None, "VIH at 4.75 V cable")],
         "cable-5V presence divider into an LVCMOS33 bank"),
+    "PD_OVP_SET": (
+        "+VBUS_IN",
+        [(PD_CONTRACT_VMAX, None, TPS2663_OVPR_MIN,
+          "no false trip at 21 V (contract max)"),
+         (SMBJ22A_VBR_MIN, TPS2663_OVPR_MAX, None,
+          "guaranteed cutoff below the TVS VBR min")],
+        "TPS26631 OVP set divider (pd_input): must NOT trip inside the "
+        "valid 20 V +5% contract window yet MUST cut off before the "
+        "SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)"),
 }
 
 
