@@ -393,7 +393,16 @@ def cmd_board(args: argparse.Namespace) -> int:
                 print(f"{name}: INPUT-DRIVEN: {pr}")
             ok_all = False
             continue
-        placement, routed, geo = place.place_and_route(c, lib)
+        try:
+            placement, routed, geo = place.place_and_route(c, lib)
+        except Exception as exc:  # noqa: BLE001 — one blocked sheet must not
+            # kill the whole board run: record the FAIL verdict (board exits
+            # non-zero) and keep gating/linking every other sheet.
+            msg = str(exc).splitlines()[-1][:140]
+            verdicts.append(f"{name}: place/route=FAIL ({msg})")
+            print(verdicts[-1])
+            ok_all = False
+            continue
         placements[name] = (placement, routed)
         design = PlacedDesign(
             circuit=c, parts=placement.parts, powers=placement.powers,
@@ -517,6 +526,16 @@ def main(argv: list[str] | None = None) -> int:
                       help="parts library root (default: <repo>/parts)")
     from schgen.part_gen import cmd_part_add
     padd.set_defaults(func=cmd_part_add)
+    st = sub.add_parser(
+        "selftest", help="gate MUTATION testing + build-determinism proof "
+                         "(the no-CI answer to 'who watches the watchmen')")
+    st.add_argument("sheets", nargs="*",
+                    help="sheet names/paths (default: schgen/tests/"
+                         "m1_rc_sheet.py + carrier/subsystems/uart_bridge.py)")
+    st.add_argument("--keep", action="store_true",
+                    help="keep the scratch dir with all mutants")
+    from schgen.selftest import cmd_selftest
+    st.set_defaults(func=cmd_selftest)
     pf = sub.add_parser(
         "preflight", help="live JLC/LCSC stock + Basic/Extended + cost check")
     pf.add_argument("subsystems", nargs="+")

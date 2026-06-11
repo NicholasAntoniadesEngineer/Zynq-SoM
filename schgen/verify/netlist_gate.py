@@ -22,7 +22,9 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen import sexpr
 from schgen.model import Circuit, NetClass, PinRef
+from schgen.symbols import Pin, pin_page_position
 
 
 @dataclass
@@ -124,16 +126,17 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
 
     # ---- NC-CHEAT: no_connect in the emitted file on a declared-net pin -----
     # KiCad reports an NC'd pin as connected; detect via the source s-expr.
+    # POSITIONAL check (the original count-based check had slack whenever
+    # placement legally emits fewer NC markers than declared NC pins, e.g.
+    # stacked pads — `schgen selftest` proved a stray-NC mutant survived it):
+    # every (no_connect) must land EXACTLY on a pin, and that pin must be
+    # net-free. An NC on a netted pin, or floating in space, FAILS.
     text = Path(sch_path).read_text(errors="ignore")
     if "(no_connect" in text:
-        # cheap but reliable: NC count must equal the author's nc() count.
-        emitted_nc = text.count("(no_connect")
-        declared_nc = len(circuit.nc_pins)
-        if emitted_nc > declared_nc:
+        cheats = _emitted_nc_cheats(circuit, text)
+        if cheats:
             res.ok = False
-            res.nc_cheats.append(
-                f"{emitted_nc} no_connects emitted but only {declared_nc} declared "
-                f"— a layout fallback NC'd a real pin (forbidden)")
+            res.nc_cheats += cheats
 
     # ---- NAME discipline: POWER/GROUND/PORT nets must keep their names ------
     for net in circuit.nets.values():
@@ -159,3 +162,79 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
                 res.ok = False
                 res.part_mismatches.append(f"{ref}: missing from extracted netlist")
     return res
+
+
+def _emitted_nc_cheats(circuit: Circuit, sch_text: str) -> list[str]:
+    """Positional no_connect audit, self-contained from the emitted file.
+
+    Pin positions are recomputed from the file's own embedded ``lib_symbols``
+    + each instance's ``(at x y rot)`` through :func:`pin_page_position` — the
+    ONE coordinate transform in the program — so the check needs no library
+    search path and cannot drift from what KiCad sees. Flags:
+    - an NC marker sitting on a pin that carries a DECLARED net (the cheat:
+      NC is an authoring decision, never a layout fallback), and
+    - an NC marker that lands on no pin at all (a stray marker is emit junk).
+    An NC on an author-declared nc() pin is the only legal case.
+    """
+    doc = sexpr.loads(sch_text)
+    nc_pts = []
+    for n in sexpr.find_all(doc, "no_connect"):
+        at = sexpr.find(n, "at")
+        nc_pts.append((round(float(at[1]), 2), round(float(at[2]), 2)))
+    if not nc_pts:
+        return []
+
+    # pin offsets per embedded lib_id (units are nested (symbol ...) blocks)
+    lib_pins: dict[str, list[Pin]] = {}
+    for block in sexpr.find_all(sexpr.find(doc, "lib_symbols") or [], "symbol"):
+        pins: list[Pin] = []
+
+        def walk(node: list) -> None:
+            for sub in sexpr.find_all(node, "symbol"):
+                walk(sub)
+            for p in sexpr.find_all(node, "pin"):
+                at = sexpr.find(p, "at") or [None, 0, 0, 0]
+                num = sexpr.find(p, "number")
+                pins.append(Pin(
+                    number=str(num[1]) if num and len(num) > 1 else "",
+                    name="", etype="passive",
+                    x=float(at[1]), y=float(at[2]),
+                    rotation=int(float(at[3])) % 360 if len(at) > 3 else 0,
+                    length=0.0))
+
+        walk(block)
+        lib_pins[str(block[1])] = pins
+
+    # page position of every emitted instance pin
+    pin_at: dict[tuple[float, float], list[PinRef]] = {}
+    for inst in sexpr.find_all(doc, "symbol"):
+        lid = sexpr.find(inst, "lib_id")
+        at = sexpr.find(inst, "at")
+        if lid is None or at is None:
+            continue
+        ax, ay = float(at[1]), float(at[2])
+        rot = int(float(at[3])) % 360 if len(at) > 3 else 0
+        ref = ""
+        for prop in sexpr.find_all(inst, "property"):
+            if len(prop) > 2 and prop[1] == "Reference":
+                ref = str(prop[2])
+                break
+        for pin in lib_pins.get(str(lid[1]), []):
+            px, py = pin_page_position(pin, ax, ay, rot)
+            pin_at.setdefault((round(px, 2), round(py, 2)),
+                              []).append(PinRef(ref, pin.number))
+
+    declared_of = {pr: net.name for net in circuit.nets.values()
+                   for pr in net.pins}
+    out: list[str] = []
+    for pos in nc_pts:
+        prs = pin_at.get(pos, [])
+        netted = [(pr, declared_of[pr]) for pr in prs if pr in declared_of]
+        if netted:
+            pr, nname = netted[0]
+            out.append(f"no_connect at {pos} sits on {pr} which carries "
+                       f"declared net {nname!r} — NC is never a layout "
+                       f"fallback (forbidden)")
+        elif not prs:
+            out.append(f"no_connect at {pos} lands on no pin — stray marker")
+    return out

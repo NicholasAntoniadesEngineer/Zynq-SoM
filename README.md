@@ -41,3 +41,26 @@ Every build fails unless ALL gates pass: **netlist** (KiCad's extracted
 netlist == the declared netlist, pin for pin), **ERC** (zero errors),
 **visual** (zero overlap, zero crossings, fits the page). The generator's
 architecture and gate definitions: `schgen/DESIGN.md`.
+
+## Who watches the watchmen: `schgen selftest`
+
+There is no CI — the gate stack is the only guarantee, so `schgen selftest`
+mutation-tests the gates themselves. It builds known-green sheets
+(`schgen/tests/m1_rc_sheet.py` + a real carrier sheet), injects one defect
+per mutation class — a pin swapped between two nets, EVERY wire segment
+deleted in turn, a net label rewritten to another net's name (silent
+merge/short), a stray no-connect on a netted pin, a junctioned bridge
+between two foreign nets (the LAW-0 short) — and proves at least one gate
+kills every mutant. It then builds each sheet twice from scratch and
+byte-compares the `.kicad_sch` (uuid identities mapped to ordinals; all
+geometry, order and text must match exactly) to prove determinism.
+Any surviving mutant or build drift = non-zero exit. Run it after touching
+`schgen/` internals:
+
+```bash
+PYTHONPATH=. python -m schgen selftest
+```
+
+Its first run already paid for itself: a stray-NC mutant survived the old
+count-based no-connect check, which is why `schgen/verify/netlist_gate.py`
+now audits every `no_connect` POSITIONALLY against the emitted pin map.
