@@ -202,3 +202,15 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
   generated via verbatim flatten + --from-json; regen online for 3D once fixed).
 - **Procurement**: ASP-134603-01 stock 282/Extended/$17.75 — order early; TLV75725PDRVR
   alternate is ghost-risk (16 units). 31 BOM lines still missing LCSC ids.
+
+## Flags from mechanical-debt harvest (2026-06-12)
+- **use_part lib-override needed (schgen owner)**: 8 parts whose sheets deliberately draw
+  a DIFFERENT symbol than their parts/ folder stay inline c.part (power TPS54302 x2 /
+  AP2112K / AO3400A stock drawings; hdmi_tx TPD12S016 + HDMI-019S; hdmi_rx HDMI_A_RX +
+  M24C02; usb_pd FUSB302 stacked-pin stock symbol) — either use_part(lib=...) override
+  or re-point at generated symbols with a deliberate re-bless.
+- **ethernet Bob-Smith 1n caps**: declared 0603 -> live-matched C1588 is 50V; the 2kV
+  hi-pot intent needs a bigger package (1206/1808 2kV) — footprint decision pending.
+- **PROCUREMENT CRITICAL**: HX5008NLT C962544 stock=10 (clone C47575004 @419 noted in
+  ethernet.py); DS1024-2x6R2 @45; TPD6E001RSER @216; ASP-134603-01 @282. 43 Extended
+  reels, $43.30/board @qty1 (preflight_report.txt in manufacturing/).
