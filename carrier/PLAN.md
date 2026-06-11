@@ -215,8 +215,9 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
   the actual symbol). All 8 migrated (power TPS54302 x2/AP2112K/AO3400A;
   hdmi_tx TPD12S016+HDMI-019S; hdmi_rx HDMI_A_RX+M24C02; usb_pd FUSB302);
   renders byte-identical, goldens untouched, graph identity proven.
-- **ethernet Bob-Smith 1n caps**: declared 0603 -> live-matched C1588 is 50V; the 2kV
-  hi-pot intent needs a bigger package (1206/1808 2kV) — footprint decision pending.
+- **RESOLVED (2026-06-12, round-5 decision): ethernet Bob-Smith 1n caps** — all 5
+  (4 ladder + the C5 chassis barrier) now 1nF/2kV X7R 1206, live-verified C9196
+  (FH 1206B102K202NT, JLC Basic, stock 1.37M); alternates in ethernet.py docstring.
 - **PROCUREMENT CRITICAL**: HX5008NLT C962544 stock=10 (clone C47575004 @419 noted in
   ethernet.py); DS1024-2x6R2 @45; TPD6E001RSER @216; ASP-134603-01 @282. 43 Extended
   reels, $43.30/board @qty1 (preflight_report.txt in manufacturing/).
@@ -247,3 +248,13 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
   (FMC mezzanine share 0.40->0.35A); EN_HDMI_TX drives both HDMI switches (no free DIP);
   PUDC_34 strap added carrier-side; powertree +3V3_SC source model corrected to TPS7A20
   300mA (gate must re-verify the always-on budget).
+- **RECONCILIATION with the round-5 5V-gate landing (2026-06-12)**: the adoption above
+  was written concurrently with the round-5 bringup commits and two of its assumptions
+  are now stale against the committed netlists: (a) TCA9535 P12/P13 are TAKEN by
+  BU_OVR_HDMI_TX_5V / BU_OVR_LCD_5V (bringup_rails round-5 extension; P11 stays
+  reserved for PMON_ALERT_N) — USBOTG_FLT_N must land on the next free port (P14;
+  P14..P17 currently 100k-to-GND spares). (b) "EN_HDMI_TX drives both HDMI switches
+  (no free DIP)" is superseded: SW6 (DSHP04, round-5 extension DIP) provides a
+  dedicated HDMI_TX_5V position, so +5V_HDMI_TX has its OWN EN_HDMI_TX_5V cell.
+  The generated firmware header / BRINGUP.md are netlist-derived — the wave-3
+  binding agent must read the current port map from those, not from this prose.

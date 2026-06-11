@@ -17,7 +17,7 @@ Comment,Designator,Footprint,LCSC
 15k,hdmi_rx:R4,Resistor_SMD:R_0603_1608Metric,C22809
 1k,uart_bridge:R1,,C21190
 1k,"bringup_modules:R12,bringup_modules:R18,bringup_modules:R20,hdmi_rx:R1,power:R3,usbc_otg:R4,user_io:R1,user_io:R2,user_io:R3,user_io:R4",Resistor_SMD:R_0603_1608Metric,C21190
-1n,"ethernet:C1,ethernet:C2,ethernet:C3,ethernet:C4,ethernet:C5",Capacitor_SMD:C_0603_1608Metric,C1588
+1n,"ethernet:C1,ethernet:C2,ethernet:C3,ethernet:C4,ethernet:C5",Capacitor_SMD:C_1206_3225Metric,C9196
 1u,"fmc:C3,hdmi_tx:C4,power:C12,power:C13",Capacitor_SMD:C_0603_1608Metric,C15849
 1u,lcd:C2,Capacitor_SMD:C_0603_1608Metric,C28323
 200R,"pmod:R1,pmod:R10,pmod:R11,pmod:R12,pmod:R13,pmod:R14,pmod:R15,pmod:R16,pmod:R2,pmod:R3,pmod:R4,pmod:R5,pmod:R6,pmod:R7,pmod:R8,pmod:R9",Resistor_SMD:R_0603_1608Metric,C8218

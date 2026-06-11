@@ -21,8 +21,21 @@ naming, not label-bussing — connectivity is 100% copper.
 
 PHY-side centre taps are not exposed (RTL8211F drives its own common-mode
 bias — refcircuit.py "no_external_required"), so per the old block there
-are no PHY-side 100n caps on this sheet. C1..C5 are 1 nF 2 kV X7R safety
-parts (IEC 60950 hi-pot), value drawn "1n" for schematic economy.
+are no PHY-side 100n caps on this sheet.
+
+C1..C5 are GENUINE 1 nF / 2 kV X7R parts (IEC 60950/62368 hi-pot), value
+drawn "1n" for schematic economy — PLAN round-5 decision, closing the
+mechanical-debt flag (the first live-match C1588 was a 50 V 0603 part:
+fine electrically at DC, USELESS as a 2 kV barrier). Pick, LIVE-verified
+on the JLC parts API 2026-06-12 (the API's own attribute line reads
+"1nF 2kV X7R +/-10% 1206"): C9196, FH/Fenghua 1206B102K202NT, 1206,
+JLC BASIC, stock 1,369,013, $0.036 @ 1. Alternates (same query): Walsin
+1206B102K202 C77494 (21,004, Ext, $0.015), Walsin 1206B102K202CT C303946
+(2,517, Ext); 1808 land pattern if creepage is later preferred: FH
+1808B102K202NT C81332 (29,722, Ext, $0.113). All five caps carry the
+rating — including C5, the single BS_COMMON -> CHASSIS_GND element that
+IS the isolation barrier (the round-5 note said "x4", but shipping C5 at
+50 V would defeat the other four; flagged honestly here).
 """
 
 from __future__ import annotations
@@ -32,7 +45,8 @@ from schgen.model import Circuit
 LIB_ID = "schgen:HX5008NLT"
 FOOTPRINT = "Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm"
 R_FP = "Resistor_SMD:R_0603_1608Metric"
-C_FP = "Capacitor_SMD:C_0603_1608Metric"
+C_FP = "Capacitor_SMD:C_1206_3225Metric"   # 2 kV rating needs the 1206 body
+LCSC_1N_2KV = "C9196"   # FH 1206B102K202NT (docstring: live-verified 2 kV)
 
 # pin number -> PORT net. PHY side uses the SoM contract spellings VERBATIM
 # (carrier/som_interface.json: ETH_PHY_MDI0_P .. ETH_PHY_MDI3_N) — the linker
@@ -74,19 +88,19 @@ def circuit() -> Circuit:
                     expect="rj45_connector (wave 2)")
 
     # Bob-Smith: per line-side centre tap, 75R || 1n(2kV) into BS_COMMON
-    # (75R = C4275 Basic stock 833k; 1n = C1588 Basic stock 3.2M — both
-    # live-verified 2026-06-11. NOTE: C1588 is a 50V part on the declared
-    # 0603 pad; the docstring's 2kV hi-pot rating needs a bigger package —
-    # pre-existing footprint decision, flagged, not silently changed here.)
+    # (75R = C4275 Basic stock 833k, live-verified 2026-06-11; 1n 2kV 1206
+    # = C9196 Basic stock 1.37M, live-verified 2026-06-12 — round-5 fix,
+    # rating provenance in the docstring)
     for n in range(4):
         c.part(f"R{n + 1}", "Device:R", "75R", R_FP, LCSC="C4275")
-        c.part(f"C{n + 1}", "Device:C", "1n", C_FP, LCSC="C1588")
+        c.part(f"C{n + 1}", "Device:C", "1n", C_FP, LCSC=LCSC_1N_2KV)
         c.net(f"CT{n}", f"T1.{9 + n}", f"R{n + 1}.1", f"C{n + 1}.1")
         c.net("BS_COMMON", f"R{n + 1}.2", f"C{n + 1}.2")
 
-    # single shared 1n/2kV from the BS trunk to the chassis island;
+    # single shared 1n/2kV from the BS trunk to the chassis island —
+    # THE isolation barrier element, same 2 kV part (docstring note);
     # the magjack's own BS tap (pin 13) rides the same trunk
-    c.part("C5", "Device:C", "1n", C_FP, LCSC="C1588")
+    c.part("C5", "Device:C", "1n", C_FP, LCSC=LCSC_1N_2KV)
     c.net("BS_COMMON", "T1.13", "C5.1")
     c.net("CHASSIS_GND", "C5.2")
     c.net("GND", "T1.14")
