@@ -550,6 +550,17 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"GALLERY: FAIL — {exc}")
         ok_all = False
 
+    # floorplan suggestion (SVG + MD), derived from the same sheets/link
+    from schgen import floorplan
+    try:
+        fp_paths = floorplan.generate(sheets, res)
+        print("FLOORPLAN: " + " + ".join(
+            str(p.relative_to(REPO_ROOT)) for p in fp_paths)
+            + " (suggestion, not constraint)")
+    except Exception as exc:  # noqa: BLE001
+        print(f"FLOORPLAN: FAIL — {exc}")
+        ok_all = False
+
     (rep_dir / "gates.txt").write_text(
         "\n".join(verdicts)
         + f"\nLINK: {'PASS' if res.ok else 'FAIL'}"
@@ -650,6 +661,14 @@ def main(argv: list[str] | None = None) -> int:
                         "markers) in README.md + carrier/README.md")
     from schgen.gallery import cmd_gallery
     ga.set_defaults(func=cmd_gallery)
+    fl = sub.add_parser(
+        "floorplan", help="generate carrier/docs/FLOORPLAN.svg + .md — a "
+                          "to-scale 2D placement SUGGESTION derived from "
+                          "the netlists (SoM DF40 positions extracted from "
+                          "the SoM PCB, edge connectors pinned by mating "
+                          "direction, JLC-7628 constraint notes)")
+    from schgen.floorplan import cmd_floorplan
+    fl.set_defaults(func=cmd_floorplan)
     st = sub.add_parser(
         "selftest", help="gate MUTATION testing + build-determinism proof "
                          "(the no-CI answer to 'who watches the watchmen')")
