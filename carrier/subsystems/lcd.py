@@ -3,8 +3,9 @@
 Per carrier/research/lcd_backlight.md: AFC07-S40FCA-00 FFC carries panel +
 capacitive-touch I2C on pins 37-40; SY7201ABC boost drives the LED string at
 133 mA (I = 0.2V / R_ISET, 1.5R), PWM-dimmable on EN, fed from the gated
-+5V_LCD rail; logic on gated +3V3_LCD. RGB/sync ports go to PL bank 13
-(VCCO_13 = +3V3) via the J2 sheet.
++5V_LCD rail; logic on gated +3V3_LCD. RGB/sync ports go to PL bank 34 via the
+J3 sheet (USER DECISION 2026-06-11: bank 13 was oversubscribed by lcd+pmod+
+user_io; +VCCO_34 = 3.3V for the TTL panel). Touch I2C stays on bank 13.
 """
 
 from __future__ import annotations
@@ -19,7 +20,8 @@ C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
 
 BRINGUP = "bringup (gated LCD rails)"
-J2_MAP = "som_j2_connector (PL bank 13)"
+J3_MAP = "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+J2_MAP = "som_j2_connector (PL bank 13 — touch I2C only)"
 
 
 def circuit() -> Circuit:
@@ -38,10 +40,10 @@ def circuit() -> Circuit:
                         (13, [f"LCD_G{i}" for i in range(8)]),
                         (21, [f"LCD_B{i}" for i in range(8)])):
         for off, net in enumerate(names):
-            c.port(net, f"J1.{base + off}", expect=J2_MAP)
+            c.port(net, f"J1.{base + off}", expect=J3_MAP)
     for pin, net in ((30, "LCD_PCLK"), (31, "LCD_DISP"), (32, "LCD_HSYNC"),
                      (33, "LCD_VSYNC"), (34, "LCD_DE")):
-        c.port(net, f"J1.{pin}", expect=J2_MAP)
+        c.port(net, f"J1.{pin}", expect=J3_MAP)
     # capacitive touch on the same FFC tail
     c.port("LCD_CTP_SDA", "J1.37", kind="i2c", role="sda",
            bus="LCD_CTP", speed_hz=400_000, expect=J2_MAP)
@@ -63,5 +65,5 @@ def circuit() -> Circuit:
     c.net("LCD_VLED_P", "D1.2", "C2.1", "U1.5", "J1.2")      # boost out + OVP
     c.net("LCD_BL_SW", "D1.1")
     c.net("LCD_VLED_N", "J1.1", "R1.1", "U1.3")              # current sense
-    c.port("LCD_BL_PWM", "U1.4", expect=J2_MAP)
+    c.port("LCD_BL_PWM", "U1.4", expect=J3_MAP)
     return c

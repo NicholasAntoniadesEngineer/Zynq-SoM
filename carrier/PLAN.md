@@ -186,3 +186,5 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
   harvest to keep power green — power_mon cannot LINK until the split lands).
 - **Stock risks for preflight**: DS1024-2x6R2 (45 units!), INA3221 C181255 (2.4k),
   RPi FFC SFW15R-1STE1LF picked over -2STE1LF (111, ghost-risk). Re-verify at BOM time.
+- **RESOLVED (user, 2026-06-11): LCD -> J3 bank 34** (+VCCO_34 = 3.3V rail-map entry);
+  pmod + user_io + LCD touch I2C keep bank 13. lcd.py expect targets updated.
