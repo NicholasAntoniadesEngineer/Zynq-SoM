@@ -241,7 +241,12 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                         f"power net {net}: drawn islet {sorted(comp)[:3]}… has "
                         f"no {net} power symbol — opens forbidden")
         else:
-            bridged = net in getattr(placement, "label_bridged", set())
+            bridged = net in getattr(placement, "label_bridged", set()) or (
+                # a PORT net whose every islet carries its hier label is
+                # merged by NAME (cable-flip pads labeled on both sides);
+                # the netlist gate proves the merge
+                net_obj.net_class == NetClass.PORT and len(comps) > 1
+                and all(comp & g.label_pts for comp in comps))
             if bridged:
                 # placement chose the datasheet label idiom for this net
                 # (shunt/ESD banks, pull-up ranks, demoted channels): every

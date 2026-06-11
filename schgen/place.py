@@ -1780,18 +1780,17 @@ class _Engine:
 
     def _cluster_cap(self, ref: str, x: float, cy: float) -> None:
         part = self.c.parts[ref]
-        sdef = self.lib.get(part.lib_id)
         pins = sorted(self.lib.pin_numbers(part.lib_id))
         n_by_pin = {p: self.net_of(ref, p) for p in pins}
         rail_pin = [p for p in pins
                     if n_by_pin[p] and n_by_pin[p].net_class == NetClass.POWER][0]
-        gnd_pin = self.other_pin(ref, rail_pin)
-        rot = 0 if _pin(sdef, rail_pin).y > 0 else 180
-        self.passive(ref, x, cy, rot)
-        pin_off = abs(_pin(sdef, rail_pin).y)
-        gnd_net = n_by_pin[gnd_pin]
-        assert gnd_net is not None
-        self.power(gnd_net.name, x, cy + pin_off)
+        rail_net = n_by_pin[rail_pin]
+        assert rail_net is not None
+        # orientation-agnostic (TVS diodes have x-axis pins): rail pin lands
+        # exactly on the bar row, the far pin gets its ground symbol
+        far_pt, far = self._vertical_2pin(ref, x, cy - 3.81, rail_net.name,
+                                          downward=True)
+        self.power(far, *far_pt, self._power_rot(far, True))
 
     def _flags_row(self) -> None:
         etype_of = {}

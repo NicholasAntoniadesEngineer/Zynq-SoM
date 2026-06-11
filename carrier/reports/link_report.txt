@@ -1,12 +1,12 @@
 schgen link report
 ============================================================
-sheets (20): bringup_en, bringup_en_modules, bringup_modules, bringup_rails, debug_boot, ethernet, hdmi_rx, hdmi_tx, lcd, microsd, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io
+sheets (21): bringup_en, bringup_en_modules, bringup_modules, bringup_rails, debug_boot, ethernet, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io
 
 alias map (rails only, exact, enumerated):
   carrier '+VIN' <-> SoM 'VIN'
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (330):
+bound ports (334):
   bringup_en:BU_DIP_5V0 -> sheet bringup_rails:BU_DIP_5V0
   bringup_en:EN_5V0 -> sheet power:EN_5V0
   bringup_en:BU_DIP_3V3 -> sheet bringup_rails:BU_DIP_3V3
@@ -95,6 +95,10 @@ bound ports (330):
   microsd:SDIO_D1 [sd_bus] -> sheet som_j1:SDIO_D1; SoM SDIO_D1 (J1.61)
   microsd:SDIO_D2 [sd_bus] -> sheet som_j1:SDIO_D2; SoM SDIO_D2 (J1.73)
   microsd:SDIO_D3 [sd_bus] -> sheet som_j1:SDIO_D3; SoM SDIO_D3 (J1.71)
+  pd_input:STM32_USB_CC1 -> sheet som_j1:STM32_USB_CC1; sheet usb_pd:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
+  pd_input:STM32_USB_CC2 -> sheet som_j1:STM32_USB_CC2; sheet usb_pd:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
+  pd_input:STM32_USB_D_P [usb_hs_pair] -> sheet som_j1:STM32_USB_D_P; SoM STM32_USB_D_P (J1.19)
+  pd_input:STM32_USB_D_N [usb_hs_pair] -> sheet som_j1:STM32_USB_D_N; SoM STM32_USB_D_N (J1.21)
   pmod:IO_L2_P_13 -> sheet som_j2:IO_L2_P_13; SoM IO_L2_P_13 (J2.20)
   pmod:IO_L2_N_13 -> sheet som_j2:IO_L2_N_13; SoM IO_L2_N_13 (J2.14)
   pmod:IO_L3_P_13 -> sheet som_j2:IO_L3_P_13; SoM IO_L3_P_13 (J2.18)
@@ -116,13 +120,13 @@ bound ports (330):
   power:EN_1V8 -> sheet bringup_en:EN_1V8
   power_mon:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   power_mon:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
-  som_j1:STM32_USB_D_P [usb_hs_pair] -> SoM STM32_USB_D_P (J1.19)
+  som_j1:STM32_USB_D_P [usb_hs_pair] -> sheet pd_input:STM32_USB_D_P; SoM STM32_USB_D_P (J1.19)
   som_j1:USB_ID -> sheet usbc_otg:USB_ID; SoM USB_ID (J1.20)
-  som_j1:STM32_USB_D_N [usb_hs_pair] -> SoM STM32_USB_D_N (J1.21)
+  som_j1:STM32_USB_D_N [usb_hs_pair] -> sheet pd_input:STM32_USB_D_N; SoM STM32_USB_D_N (J1.21)
   som_j1:USB_VBUS -> sheet usbc_otg:USB_VBUS; SoM USB_VBUS (J1.22)
-  som_j1:STM32_USB_CC1 -> sheet usb_pd:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
+  som_j1:STM32_USB_CC1 -> sheet pd_input:STM32_USB_CC1; sheet usb_pd:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
   som_j1:USB_D- [usb_hs_pair] -> sheet usbc_otg:USB_D-; SoM USB_D- (J1.30)
-  som_j1:STM32_USB_CC2 -> sheet usb_pd:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
+  som_j1:STM32_USB_CC2 -> sheet pd_input:STM32_USB_CC2; sheet usb_pd:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
   som_j1:USB_D+ [usb_hs_pair] -> sheet usbc_otg:USB_D+; SoM USB_D+ (J1.32)
   som_j1:STM32_GPIO1 -> SoM STM32_GPIO1 (J1.33)
   som_j1:STM32_GPIO2 -> SoM STM32_GPIO2 (J1.35)
@@ -320,8 +324,8 @@ bound ports (330):
   som_j3:IO_L5_N_33 -> SoM IO_L5_N_33 (J3.94)
   som_j3:IO_L4_N_33 -> SoM IO_L4_N_33 (J3.96)
   som_j3:IO_L4_P_33 -> SoM IO_L4_P_33 (J3.98)
-  usb_pd:STM32_USB_CC1 -> sheet som_j1:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
-  usb_pd:STM32_USB_CC2 -> sheet som_j1:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
+  usb_pd:STM32_USB_CC1 -> sheet pd_input:STM32_USB_CC1; sheet som_j1:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
+  usb_pd:STM32_USB_CC2 -> sheet pd_input:STM32_USB_CC2; sheet som_j1:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
   usb_pd:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA
   usb_pd:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL
   usbc_otg:USB_VBUS -> sheet som_j1:USB_VBUS; SoM USB_VBUS (J1.22)
@@ -360,10 +364,10 @@ rails (25):
   +VCCO_33 <- sheets: som_j2 -> SoM 3 pins
   +VCCO_34 <- sheets: som_j3 -> SoM 2 pins
   +VCCO_35 <- sheets: som_j3 -> SoM 3 pins
-  +VIN (alias of SoM 'VIN') <- sheets: power, power_mon, som_j1, uart_bridge, usb_pd -> SoM 14 pins
+  +VIN (alias of SoM 'VIN') <- sheets: pd_input, power, power_mon, som_j1, uart_bridge, usb_pd -> SoM 14 pins
   +VIN_SYS — carrier-local rail (sheets: power_mon)
-  CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, usbc_otg)
-  GND <- sheets: bringup_en, bringup_en_modules, bringup_modules, bringup_rails, debug_boot, ethernet, hdmi_rx, hdmi_tx, lcd, microsd, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io -> SoM 63 pins
+  CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, usbc_otg)
+  GND <- sheets: bringup_en, bringup_en_modules, bringup_modules, bringup_rails, debug_boot, ethernet, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io -> SoM 63 pins
 
 deferred ports — author-declared, awaiting later waves (81) [WARNING]:
   bringup_en:STM32_RAIL_EN_5V0 — awaiting som_j3_connector (wave 3 STM32 GPIO function map)

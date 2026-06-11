@@ -39,6 +39,8 @@ ZYNQ_HDMI_TX_TMDS_2_N,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_T
 ZYNQ_HDMI_TX_TMDS_2_P,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_2_N,PAIR:ZYNQ_HDMI_TX_TMDS_2_N/ZYNQ_HDMI_TX_TMDS_2_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
 ZYNQ_HDMI_TX_TMDS_CLK_N,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_CLK_P,PAIR:ZYNQ_HDMI_TX_TMDS_CLK_N/ZYNQ_HDMI_TX_TMDS_CLK_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
 ZYNQ_HDMI_TX_TMDS_CLK_P,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_CLK_N,PAIR:ZYNQ_HDMI_TX_TMDS_CLK_N/ZYNQ_HDMI_TX_TMDS_CLK_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+STM32_USB_D_N,pd_input,usb_hs_pair,DP90_USB,90,0.2611,0.2032,STM32_USB_D_P,PAIR:STM32_USB_D_N/STM32_USB_D_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+STM32_USB_D_P,pd_input,usb_hs_pair,DP90_USB,90,0.2611,0.2032,STM32_USB_D_N,PAIR:STM32_USB_D_N/STM32_USB_D_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 STM32_USB_D_N,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,STM32_USB_D_P,PAIR:STM32_USB_D_N/STM32_USB_D_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 STM32_USB_D_P,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,STM32_USB_D_N,PAIR:STM32_USB_D_N/STM32_USB_D_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_D+,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
@@ -163,6 +165,8 @@ LCD_R6,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_3
 LCD_R7,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
 LCD_VSYNC,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
 SD_CARD_DETECT,microsd,single,Default,,,,,,,deferred: som_j1_connector (STM32 GPIO function map)
+STM32_USB_CC1,pd_input,single,Default,,,,,,,
+STM32_USB_CC2,pd_input,single,Default,,,,,,,
 IO_L10_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
 IO_L10_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
 IO_L2_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
