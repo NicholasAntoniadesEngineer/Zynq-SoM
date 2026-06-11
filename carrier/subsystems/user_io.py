@@ -22,7 +22,6 @@ from schgen.model import Circuit
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 LED_FP = "LED_SMD:LED_0603_1608Metric"
-TACT = "TS-1187A-B-A-B:TS-1187A-B-A-B"
 
 BRINGUP = "bringup (gated +3V3_USER_LED rail, stage 2)"
 J2_MAP = "som_j2_connector"
@@ -64,7 +63,7 @@ def circuit() -> Circuit:
     # ---- buttons: pin + 10k pull-up to +3V3, contacts close to GND ---------
     for i, (sref, net) in enumerate(BUTTONS, start=5):
         rref = f"R{i}"
-        c.part(sref, TACT, "USER", TACT, LCSC="C318884")
+        c.use_part("TS-1187A-B-A-B", ref=sref, value="USER")
         c.part(rref, "Device:R", "10k", R0603, LCSC="C25804")
         c.port(net, f"{sref}.1", f"{sref}.2", f"{rref}.2", expect=J2_MAP)
         c.net("+3V3", f"{rref}.1")

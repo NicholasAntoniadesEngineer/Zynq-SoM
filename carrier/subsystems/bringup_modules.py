@@ -39,13 +39,10 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
-SW_LIB = "SY6280AAC:SY6280AAC"
-SW_FP = "SY6280AAC:SY6280AAC"
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 LED_FP = "LED_SMD:LED_0603_1608Metric"
 
-LCSC_SW = "C55136"         # SY6280AAC (Silergy), live-verified 2026-06-10
 LCSC_13K = "C22797"        # 0603 13k -> 523 mA
 LCSC_6K8 = "C23212"        # 0603 6.8k -> 1.0 A
 LCSC_330R = "C23138"
@@ -75,19 +72,19 @@ def circuit() -> Circuit:
                 "Bring-up module gates: 8x SY6280 + status/user LEDs")
     for k, (mod, in_rail, out_rail, rset, rset_id, led_r, led_r_id) \
             in enumerate(MODULES):
-        u = c.part(f"U{k + 1}", SW_LIB, "SY6280AAC", SW_FP, LCSC=LCSC_SW)
-        c.net(in_rail, f"{u.ref}.5")                     # IN
-        c.net(out_rail, f"{u.ref}.1")                    # OUT -> gated rail
-        c.net("GND", f"{u.ref}.2")
-        c.port(f"EN_{mod}", f"{u.ref}.4", expect=EXPECT_EN)
+        u = c.use_part("SY6280AAC", ref=f"U{k + 1}")
+        c.net(in_rail, f"{u.ref}.IN")
+        c.net(out_rail, f"{u.ref}.OUT")                  # -> gated rail
+        c.net("GND", f"{u.ref}.GND")
+        c.port(f"EN_{mod}", f"{u.ref}.EN", expect=EXPECT_EN)
         # ISET -> RSET -> GND: ILIM = 6800 / RSET
         rs = c.part(c.auto_ref("R"), "Device:R", rset, R_FP, LCSC=rset_id)
-        c.net(f"BU_ISET_{mod}", f"{u.ref}.3", f"{rs.ref}.1")
+        c.net(f"BU_ISET_{mod}", f"{u.ref}.ISET", f"{rs.ref}.1")
         c.net("GND", f"{rs.ref}.2")
         # 100n local on IN and OUT (dossier 3.2 wiring note)
-        for cap in c.decouple(f"{u.ref}.5", "100n", footprint=C_FP):
+        for cap in c.decouple(f"{u.ref}.IN", "100n", footprint=C_FP):
             cap.fields["LCSC"] = LCSC_100N
-        for cap in c.decouple(f"{u.ref}.1", "100n", footprint=C_FP):
+        for cap in c.decouple(f"{u.ref}.OUT", "100n", footprint=C_FP):
             cap.fields["LCSC"] = LCSC_100N
         # per-module status LED on the gated output (red, dossier 3.3)
         d = c.part(c.auto_ref("D"), "Device:LED", "red", LED_FP,

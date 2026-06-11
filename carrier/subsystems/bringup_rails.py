@@ -46,10 +46,6 @@ from schgen.model import Circuit
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 
-LCSC_DIP4 = "C3293144"     # DSHP04TSGER, 4-pos 1.27mm SMD DIP
-LCSC_DIP8 = "C3293147"     # DSHP08TSGER, 8-pos
-LCSC_TCA = "C130204"       # TCA9535PWR, TSSOP-24
-LCSC_BTN = "C318884"       # TS-1187A-B-A-B (JLC Basic)
 LCSC_100K = "C25803"       # 0603 100k 1%
 LCSC_10K = "C25804"        # 0603 10k 1%
 LCSC_4K7 = "C23162"        # 0603 4.7k 1%
@@ -77,58 +73,53 @@ def circuit() -> Circuit:
                 "Bring-up controls: rail/module DIPs + TCA9535 + buttons")
 
     # ---- SW1 / SW2: DIP switches, one side bused to +3V3_SC ----------------
-    c.part("SW1", "DSHP04TSGER:DSHP04TSGER", "DSHP04TSGER",
-           "DSHP04TSGER:DSHP04TSGER", LCSC=LCSC_DIP4)
+    c.use_part("DSHP04TSGER", ref="SW1")        # position pins stay numeric
     c.net("+3V3_SC", "SW1.1", "SW1.3", "SW1.5", "SW1.7")
     for pin, net in SW1_MAP:
         c.port(net, f"SW1.{pin}", expect=EXPECT_EN)
-    c.part("SW2", "DSHP08TSGER:DSHP08TSGER", "DSHP08TSGER",
-           "DSHP08TSGER:DSHP08TSGER", LCSC=LCSC_DIP8)
+    c.use_part("DSHP08TSGER", ref="SW2")
     c.net("+3V3_SC", "SW2.1", "SW2.3", "SW2.5", "SW2.7",
           "SW2.9", "SW2.11", "SW2.13", "SW2.15")
     for pin, net in SW2_MAP:
         c.port(net, f"SW2.{pin}", expect=EXPECT_EN)
 
     # ---- U1: TCA9535 override expander @0x20 -------------------------------
-    c.part("U1", "TCA9535PWR:TCA9535PWR", "TCA9535PWR",
-           "TCA9535PWR:TCA9535PWR", LCSC=LCSC_TCA)
-    c.net("+3V3_SC", "U1.24")
-    for cap in c.decouple("U1.24", "100n", footprint=C_FP):           # C1
+    c.use_part("TCA9535PWR", ref="U1")
+    c.net("+3V3_SC", "U1.VCC")
+    for cap in c.decouple("U1.VCC", "100n", footprint=C_FP):          # C1
         cap.fields["LCSC"] = LCSC_100N
-    c.net("GND", "U1.12", "U1.2", "U1.3", "U1.21")    # GND + A1/A2/A0 = 0x20
+    c.net("GND", "U1.GND", "U1.A1", "U1.A2", "U1.A0")        # addr = 0x20
     for k, net in enumerate(P0_MAP):
-        c.port(net, f"U1.{4 + k}", expect=EXPECT_EN)
+        c.port(net, f"U1.P0{k}", expect=EXPECT_EN)
     # P10 = EN_LCD_BL provision driver; P10..P17 100k to GND (no internal
     # pulls in the TCA9535 — unlike PCA9555 — so unused ports must not float)
-    c.port("BU_OVR_LCD_BL", "U1.13", expect=EXPECT_EN)
+    c.port("BU_OVR_LCD_BL", "U1.P10", expect=EXPECT_EN)
     r = c.part(c.auto_ref("R"), "Device:R", "100k", R_FP, LCSC=LCSC_100K)
     c.net("BU_OVR_LCD_BL", f"{r.ref}.1")
     c.net("GND", f"{r.ref}.2")
-    for k in range(7):                                # P11..P17, pins 14..20
+    for k in range(7):                                # P11..P17
         net = f"BU_P1{k + 1}"
         rr = c.part(c.auto_ref("R"), "Device:R", "100k", R_FP, LCSC=LCSC_100K)
-        c.net(net, f"U1.{14 + k}", f"{rr.ref}.1")
+        c.net(net, f"U1.P1{k + 1}", f"{rr.ref}.1")
         c.net("GND", f"{rr.ref}.2")
     # I2C: shared STM32 bus (FUSB302 @0x22 on usb_pd) — pull-ups on +3V3_SC
     # per dossier risk R1 (PD negotiation precedes every carrier rail)
-    c.port("STM32_I2C2_SCL", "U1.22",
+    c.port("STM32_I2C2_SCL", "U1.SCL",
            kind="i2c", role="scl", bus="STM32_I2C2", speed_hz=400_000,
            expect=J3_MAP)
-    c.port("STM32_I2C2_SDA", "U1.23",
+    c.port("STM32_I2C2_SDA", "U1.SDA",
            kind="i2c", role="sda", bus="STM32_I2C2", speed_hz=400_000,
            expect=J3_MAP)
-    c.pullup("U1.22", "4k7", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_4K7
-    c.pullup("U1.23", "4k7", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_4K7
+    c.pullup("U1.SCL", "4k7", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_4K7
+    c.pullup("U1.SDA", "4k7", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_4K7
     # INT#: open-drain, 10k to +3V3_SC, optional STM32 readback interrupt
-    c.port("STM32_BRINGUP_INT", "U1.1", expect=J3_MAP)
-    c.pullup("U1.1", "10k", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_10K
+    c.port("STM32_BRINGUP_INT", "U1.INT#", expect=J3_MAP)
+    c.pullup("U1.INT#", "10k", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_10K
 
     # ---- user buttons: active-LOW, 10k to +3V3 (bank VCCO), 100n debounce --
     J12_MAP = "som_j1_j2 bank-33 PL pin assignment (P3 linker)"
     for k in range(2):
-        sw = c.part(f"SW{3 + k}", "TS-1187A-B-A-B:TS-1187A-B-A-B",
-                    "TS-1187A-B-A-B", "TS-1187A-B-A-B:TS-1187A-B-A-B",
-                    LCSC=LCSC_BTN)
+        sw = c.use_part("TS-1187A-B-A-B", ref=f"SW{3 + k}")
         net = f"PL_BTN{k}"
         cd = c.part(c.auto_ref("C"), "Device:C", "100n", C_FP, LCSC=LCSC_100N)
         c.port(net, f"{sw.ref}.1", f"{sw.ref}.2", f"{cd.ref}.1",
@@ -138,8 +129,7 @@ def circuit() -> Circuit:
                  footprint=R_FP).fields["LCSC"] = LCSC_10K
 
     # ---- reset button: STM32_NRST (J3.47), internal pull-up, 100n ----------
-    c.part("SW5", "TS-1187A-B-A-B:TS-1187A-B-A-B", "TS-1187A-B-A-B",
-           "TS-1187A-B-A-B:TS-1187A-B-A-B", LCSC=LCSC_BTN)
+    c.use_part("TS-1187A-B-A-B", ref="SW5")
     cr = c.part(c.auto_ref("C"), "Device:C", "100n", C_FP, LCSC=LCSC_100N)
     c.port("STM32_NRST", "SW5.1", "SW5.2", f"{cr.ref}.1")
     c.net("GND", "SW5.3", "SW5.4", f"{cr.ref}.2")

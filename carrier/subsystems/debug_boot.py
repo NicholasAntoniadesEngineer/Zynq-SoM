@@ -16,10 +16,6 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
-JTAG = "878311420:878311420"
-SWD = "HX_JN1.27-2x5_TP_H4.9:HX_JN1.27-2x5_TP_H4.9"
-DIP = "DSHP04TSGER:DSHP04TSGER"
-TACT = "TS-1187A-B-A-B:TS-1187A-B-A-B"
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 
 J1_MAP = "som_j1_connector"
@@ -27,10 +23,10 @@ J1_MAP = "som_j1_connector"
 
 def circuit() -> Circuit:
     c = Circuit("debug_boot", "JTAG + SWD headers, boot-request DIP, reset")
-    c.part("J1", JTAG, "878311420", JTAG, LCSC="C240854")
-    c.part("J2", SWD, "HX_JN1.27-2x5", SWD, LCSC="C42372555")
-    c.part("SW1", DIP, "DIP-4", DIP, LCSC="C3293144")
-    c.part("SW2", TACT, "RESET", TACT, LCSC="C318884")
+    c.use_part("878311420", ref="J1")                        # 2x7 JTAG header
+    c.use_part("HX_JN1.27-2x5_TP_H4.9", ref="J2", value="HX_JN1.27-2x5")
+    c.use_part("DSHP04TSGER", ref="SW1", value="DIP-4")
+    c.use_part("TS-1187A-B-A-B", ref="SW2", value="RESET")
 
     # ---- Zynq JTAG (2x7, odd row = GND shield) ----------------------------
     c.net("GND", "J1.1", "J1.3", "J1.5", "J1.7", "J1.9", "J1.11", "J1.13")
