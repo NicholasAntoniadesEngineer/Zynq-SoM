@@ -272,6 +272,9 @@ class _Engine:
         try:
             return POWER_LIBS[net]
         except KeyError:
+            if net.startswith("+"):
+                # gated/cluster rails: schgen synthesizes the symbol
+                return f"schgen:{net}"
             raise PlaceError(f"no power symbol mapped for rail {net!r}") from None
 
     def power(self, net: str, x: float, y: float, rot: int = 0,
@@ -2289,12 +2292,18 @@ class _Engine:
                 far_pt, far = self._vertical_2pin(pref, x, bar_y, rail,
                                                   downward=True)
                 assert far == sig
-                elbow = (round(far_pt[0] + 2 * U, 3),
-                         round(far_pt[1] + 2 * U, 3))
-                self.pl.plan(sig, far_pt, (far_pt[0], elbow[1]))
-                self.pl.plan(sig, (far_pt[0], elbow[1]), elbow)
-                self.llabel(sig, *elbow, 0)
-                self._bridge(sig)
+                if self.c.nets[sig].net_class in (NetClass.POWER,
+                                                  NetClass.GROUND):
+                    # rail-to-rail series element (current shunt): the far
+                    # side ends on its own power symbol
+                    self.power(sig, *far_pt, self._power_rot(sig, True))
+                else:
+                    elbow = (round(far_pt[0] + 2 * U, 3),
+                             round(far_pt[1] + 2 * U, 3))
+                    self.pl.plan(sig, far_pt, (far_pt[0], elbow[1]))
+                    self.pl.plan(sig, (far_pt[0], elbow[1]), elbow)
+                    self.llabel(sig, *elbow, 0)
+                    self._bridge(sig)
                 x = round(x + pitch, 3)
             if len(xs) == 1:
                 self.power(rail, xs[0], bar_y)

@@ -90,6 +90,11 @@ class Library:
             if len(s) > 1 and s[1] == symname:
                 block = s
                 break
+        if block is None and libname == "schgen" and symname.startswith("+"):
+            # gated module rails appear per-dossier (+5V_USB, +3V3_SD,
+            # +5V_REG …): synthesize the power symbol from the canonical
+            # rail template so every '+RAIL' name is first-class
+            block = _synth_power_symbol(root, symname)
         if block is None:
             raise SymbolError(f"symbol {symname!r} not in {libname}")
         d = _parse_symbol(lib_id, block)
@@ -103,6 +108,22 @@ class Library:
 
     def pin_numbers(self, lib_id: str) -> set[str]:
         return {p.number for p in self.get(lib_id).pins}
+
+
+def _clone_replace(node, old: str, new: str):
+    if isinstance(node, list):
+        return [_clone_replace(x, old, new) for x in node]
+    if isinstance(node, str):
+        return node.replace(old, new)
+    return node
+
+
+def _synth_power_symbol(root: list, name: str) -> list:
+    """Clone the canonical '+5V_USB' rail symbol under a new rail name."""
+    for s in sexpr.find_all(root, "symbol"):
+        if len(s) > 1 and s[1] == "+5V_USB":
+            return _clone_replace(s, "+5V_USB", name)
+    raise SymbolError("rail template '+5V_USB' missing from schgen lib")
 
 
 def _parse_symbol(lib_id: str, block: list) -> SymbolDef:
