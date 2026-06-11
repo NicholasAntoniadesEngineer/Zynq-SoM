@@ -22,7 +22,6 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
-SOCKET = "DS1024-2x6R2:DS1024-2x6R2"
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
@@ -55,7 +54,7 @@ def circuit() -> Circuit:
     gnd_pins: list[str] = []
     rnum = 1
     for jref, port in (("J1", "PMOD0"), ("J2", "PMOD1")):
-        c.part(jref, SOCKET, "DS1024-2x6R2", SOCKET, LCSC="C49284652")
+        c.use_part("DS1024-2x6R2", ref=jref)   # zigzag pads stay numeric
 
         # ---- IOs: SoM bank-13 net (port) -> 200R -> socket pin ------------
         for io, som_net in enumerate(PORT_NETS[port], start=1):

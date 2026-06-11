@@ -36,8 +36,6 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
-FFC_LIB = "SFW15R-1STE1LF:SFW15R-1STE1LF"
-FFC_FP = "SFW15R-1STE1LF:SFW15R-1STE1LF"
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
@@ -56,7 +54,7 @@ PAIRS = (
 
 def circuit() -> Circuit:
     c = Circuit("camera", "RPi camera port: 2-lane MIPI CSI-2 (15P FFC)")
-    c.part("J1", FFC_LIB, "SFW15R-1STE1LF", FFC_FP, LCSC="C3168538")
+    c.use_part("SFW15R-1STE1LF", ref="J1")   # bare-number FFC pins stay numeric
 
     # ---- CSI lanes: FFC -> 100R FPGA-side terminations -> J3 bank 35 -------
     for name, p_pin, n_pin, term in PAIRS:

@@ -47,8 +47,6 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
-TYPEC_LIB = "TYPE-C-31-M-12:TYPE-C-31-M-12"
-TYPEC_FP = "TYPE-C-31-M-12:TYPE-C-31-M-12"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C1210 = "Capacitor_SMD:C_1210_3225Metric"
 TVS_FP = "Diode_SMD:D_SMB"
@@ -59,25 +57,25 @@ J1_MAP = "som_j1_connector (STM32 USB FS + CC sense)"
 
 def circuit() -> Circuit:
     c = Circuit("pd_input", "Power inlet: USB-C PD 20V/3A receptacle")
-    c.part("J1", TYPEC_LIB, "TYPE-C-31-M-12", TYPEC_FP, LCSC="C165948")
+    c.use_part("TYPE-C-31-M-12", ref="J1")
 
     # ---- VBUS -> +VIN: raw 20 V input rail + inlet bulk + TVS clamp --------
     c.part("C1", "Device:C", "100n", C0603, LCSC="C1591")
     c.part("C2", "Device:C", "10u", C1210, LCSC="C596319")   # 50V X7R
     c.part("D1", "Device:D_Zener", "SMBJ22A", TVS_FP, LCSC="C10214")
-    c.net("+VIN", "J1.A4B9", "J1.B4A9", "C1.1", "C2.1", "D1.1")
-    c.net("GND", "J1.A1B12", "J1.B1A12", "C1.2", "C2.2", "D1.2")
+    c.net("+VIN", "J1.VBUS", "C1.1", "C2.1", "D1.1")     # both stacked pads
+    c.net("GND", "J1.GND", "C1.2", "C2.2", "D1.2")       # both stacked pads
 
     # ---- CC lines to the FUSB302B (usb_pd sheet) + SoM STM32 ---------------
-    c.port("STM32_USB_CC1", "J1.A5")
-    c.port("STM32_USB_CC2", "J1.B5")
+    c.port("STM32_USB_CC1", "J1.CC1")
+    c.port("STM32_USB_CC2", "J1.CC2")
 
     # ---- FS data to the STM32 (device/dual-role port), cable-flip paired ---
-    c.port("STM32_USB_D_P", "J1.A6", "J1.B6")
-    c.port("STM32_USB_D_N", "J1.A7", "J1.B7")
+    c.port("STM32_USB_D_P", "J1.DP1", "J1.DP2")
+    c.port("STM32_USB_D_N", "J1.DN1", "J1.DN2")
     c.port_type("STM32_USB_D_P", kind="usb_hs_pair", pair_with="STM32_USB_D_N")
 
     # ---- SBU unused; shell to chassis (usbc_otg pattern) -------------------
-    c.nc("J1.A8", "J1.B8")
-    c.net("CHASSIS_GND", "J1.1", "J1.2", "J1.3", "J1.4")
+    c.nc("J1.SBU1", "J1.SBU2")
+    c.net("CHASSIS_GND", "J1.EH")                        # all four shell pads
     return c
