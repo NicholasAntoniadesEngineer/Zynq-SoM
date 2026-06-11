@@ -230,3 +230,20 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
 - **VBUS pre-contract**: eFuse soft-start (TPS25940-class, 24V, live-verified LCSC)
   between PD receptacle and bulk on +VIN — controlled dV/dt + inlet OVP/OCP.
 - **Ethernet Bob-Smith**: 1000pF 2kV 1206/1808 (live-verified) replaces 0603/50V x4.
+
+## P0 + wave-3 decisions (AUTONOMOUS, per full-autonomy directive, 2026-06-12)
+- **P0 — SoM VIN OVERVOLTAGE (netlist-proven, wave3_function_map.md)**: the SoM is a
+  4.2-5V-input module (TPS7A20/MPM3834/MPM3822/TPSM82864 all 6V-class; SoM sheet says
+  "4.2-5V") but the carrier nets J1.1-14 to the 20V PD rail +VIN. FIRST PD CONTRACT
+  DESTROYS THE SoM. DECISION: always-on +5V_SOM buck (TPS54302, third instance) from
+  +VIN -> J1 VIN pins; always-on because PD negotiation is circular (the SoM SC hosts
+  nothing pre-PD here — FUSB302 is carrier-side on +3V3_SC — but the SoM must boot
+  with the 5V default-USB contract too). Power tree re-rooted accordingly.
+- Wave-3 binding plan ADOPTED as specified in carrier/research/wave3_function_map.md:
+  GPIO1/2/3 rail-EN vetoes; GPIO4 = SC_INT_N wire-OR (TCA9535 INT# + FUSB302 INT, usb_pd
+  R1 dropped); STM32_I2C2 bit-banged on DAC1/DAC2 J1.49/55 (hardware I2C proven
+  impossible); USBOTG_FLT_N -> TCA9535 P12 with pull-up re-railed +3V3_SC (abs-max fix);
+  PMON_ALERT_N -> P11; SD_CARD_DETECT -> bank-13 EMIO; VCCO 13/33/34=+3V3, 35=+2V5_VADJ
+  (FMC mezzanine share 0.40->0.35A); EN_HDMI_TX drives both HDMI switches (no free DIP);
+  PUDC_34 strap added carrier-side; powertree +3V3_SC source model corrected to TPS7A20
+  300mA (gate must re-verify the always-on budget).
