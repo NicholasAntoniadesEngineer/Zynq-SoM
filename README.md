@@ -4,39 +4,40 @@ A Zynq-7000 system-on-module + carrier board, with `schgen` — a netlist-first
 KiCad schematic generator that produces electrically-proven, hand-drawn-quality
 schematics from Python subsystem definitions.
 
-## Repo layout
+## The three layers
 
-- `som/` — the hand-authored Zynq SoM KiCad project (open `Zynq_SoM.kicad_pro`,
-  KiCad 9+). 512Mb DDR3L, 8Gb eMMC, 16Mb boot flash, GbE PHY, USB 2.0 HS OTG,
-  STM32 system controller (USB FS + PD), IMU. Exposes J1/J2/J3 mezzanine
-  connectors (PS MIO, 48 PL diff pairs, 56 PL single-ended).
-- `carrier/` — the carrier board design: one Python file per subsystem in
-  `carrier/subsystems/` (the netlist IS the spec, with LCSC part numbers for
-  JLCPCB assembly); generated sheets/renders/BOM in `carrier/out/`.
-- `schgen/` — the generator tool. Netlist-first: the emitted schematic is
-  PROVEN equivalent to the declared netlist via KiCad's own extraction
-  (`kicad-cli`), ERC-clean, and zero-overlap/zero-crossing by construction.
-  See `schgen/DESIGN.md` for the architecture and the three immutable gates.
-- `shared/` — KiCad assets shared between SoM and carrier (symbols,
-  footprints, 3D models).
-- `carrier/som_interface.json` — the SoM↔carrier connector contract (J1/J2/J3
-  pin→net), extracted PROGRAMMATICALLY from the SoM project:
-  `python -m schgen som-interface som/Zynq_SoM.kicad_sch`. Never hand-edited.
-- `tools/`, `docs/`, `scripts/` — utilities, block diagrams, references.
+1. **`parts/`** — one folder per physical part, named by MPN, GENERATED from
+   LCSC/EasyEDA (`schgen part add C…`): pin table, symbol, footprint, 3D.
+   See `parts/README.md`.
+2. **`carrier/subsystems/`** — one Python netlist per subsystem, composed
+   FROM parts (`use_part`, named pins, the `carrier/nets.py` contract).
+   The netlist is the only hand-written layer. See
+   `carrier/subsystems/README.md`.
+3. **The board** — `schgen` derives ALL geometry from netlist topology,
+   proves it (netlist-equivalence + ERC + zero-overlap visual gates) and
+   links the sheets into one KiCad project.
 
-## Building a carrier subsystem
+Plus `som/` — the hand-authored Zynq SoM KiCad project (open
+`som/Zynq_SoM.kicad_pro`, KiCad 9+; its custom libs live in `som/lib/`).
+The SoM↔carrier contract `carrier/som_interface.json` is extracted
+programmatically (`schgen som-interface`), never hand-edited.
+
+## Generate everything
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install pymupdf            # renderer dependency (kicad-cli must be on PATH)
-PYTHONPATH=. python -m schgen build usb_pd        # one subsystem
-PYTHONPATH=. python -m schgen bom usb_pd uart_bridge ethernet   # JLC BOM csv
+pip install pymupdf pillow          # kicad-cli must be on PATH
+PYTHONPATH=. python -m schgen build usb_pd   # one subsystem, all gates
+PYTHONPATH=. python -m schgen board          # EVERY sheet + link + project
 ```
 
-`build` fails (non-zero exit) unless ALL gates pass:
-1. **Netlist gate** — KiCad's extracted netlist == the declared netlist,
-   pin-for-pin (shorts, opens, and No-Connect cheats are structural failures).
-2. **ERC gate** — `kicad-cli sch erc` zero errors.
-3. **Visual gate** — zero overlap of anything, zero wire crossings.
+`schgen board` regenerates the committed outputs in place:
+`carrier/Zynq_Carrier.kicad_pro` (open it in KiCad), `carrier/schematic/`,
+`carrier/renders/` (with golden-snapshot drift detection, `--bless` to
+accept), `carrier/reports/`, `carrier/manufacturing/` (JLC BOM + layout
+constraints).
 
-Every build also renders a PNG (`carrier/out/<name>.png`) for human review.
+Every build fails unless ALL gates pass: **netlist** (KiCad's extracted
+netlist == the declared netlist, pin for pin), **ERC** (zero errors),
+**visual** (zero overlap, zero crossings, fits the page). The generator's
+architecture and gate definitions: `schgen/DESIGN.md`.

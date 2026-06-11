@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"U"
-			(at 0 15.24 0)
+			(at 0 19.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23,7 +23,7 @@
 		(property
 			"Value"
 			"INA3221AIRGVR"
-			(at 0 -15.24 0)
+			(at 0 -20.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -77,8 +77,8 @@
 		(symbol
 			"INA3221AIRGVR_0_1"
 			(rectangle
-				(start -10.16 11.43)
-				(end 10.16 -11.43)
+				(start -10.16 15.24)
+				(end 10.16 -15.24)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -93,7 +93,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 8.89 0)
+				(at -12.7 12.7 0)
 				(length 2.54)
 				(name
 					"IN-3"
@@ -115,7 +115,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 6.35 0)
+				(at -12.7 10.16 0)
 				(length 2.54)
 				(name
 					"IN+3"
@@ -137,7 +137,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 3.81 0)
+				(at -12.7 7.62 0)
 				(length 2.54)
 				(name
 					"VS"
@@ -159,7 +159,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 1.27 0)
+				(at -12.7 5.08 0)
 				(length 2.54)
 				(name
 					"A0"
@@ -181,7 +181,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -1.27 0)
+				(at -12.7 2.54 0)
 				(length 2.54)
 				(name
 					"SCL"
@@ -203,7 +203,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -3.81 0)
+				(at -12.7 0 0)
 				(length 2.54)
 				(name
 					"SDA"
@@ -225,7 +225,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -6.35 0)
+				(at -12.7 -2.54 0)
 				(length 2.54)
 				(name
 					"WARNING"
@@ -247,7 +247,7 @@
 			(pin
 				passive
 				line
-				(at -12.7 -8.89 0)
+				(at -12.7 -5.08 0)
 				(length 2.54)
 				(name
 					"CRITICAL"
@@ -269,8 +269,8 @@
 			(pin
 				passive
 				line
-				(at 12.7 8.89 180)
-				(length 2.54)
+				(at 13.97 12.7 180)
+				(length 3.81)
 				(name
 					"PV"
 					(effects
@@ -291,8 +291,8 @@
 			(pin
 				passive
 				line
-				(at 12.7 6.35 180)
-				(length 2.54)
+				(at 13.97 10.16 180)
+				(length 3.81)
 				(name
 					"IN-1"
 					(effects
@@ -313,8 +313,8 @@
 			(pin
 				passive
 				line
-				(at 12.7 3.81 180)
-				(length 2.54)
+				(at 13.97 7.62 180)
+				(length 3.81)
 				(name
 					"IN+1"
 					(effects
@@ -335,8 +335,8 @@
 			(pin
 				passive
 				line
-				(at 12.7 1.27 180)
-				(length 2.54)
+				(at 13.97 5.08 180)
+				(length 3.81)
 				(name
 					"TC"
 					(effects
@@ -357,8 +357,8 @@
 			(pin
 				passive
 				line
-				(at 12.7 -1.27 180)
-				(length 2.54)
+				(at 13.97 2.54 180)
+				(length 3.81)
 				(name
 					"IN-2"
 					(effects
@@ -379,8 +379,8 @@
 			(pin
 				passive
 				line
-				(at 12.7 -3.81 180)
-				(length 2.54)
+				(at 13.97 0 180)
+				(length 3.81)
 				(name
 					"IN+2"
 					(effects
@@ -401,8 +401,8 @@
 			(pin
 				passive
 				line
-				(at 12.7 -6.35 180)
-				(length 2.54)
+				(at 13.97 -2.54 180)
+				(length 3.81)
 				(name
 					"VPU"
 					(effects
@@ -423,8 +423,8 @@
 			(pin
 				passive
 				line
-				(at -1.27 -13.97 90)
-				(length 2.54)
+				(at -1.27 -19.05 90)
+				(length 3.81)
 				(name
 					"GND"
 					(effects
@@ -445,8 +445,8 @@
 			(pin
 				passive
 				line
-				(at 1.27 -13.97 90)
-				(length 2.54)
+				(at 1.27 -19.05 90)
+				(length 3.81)
 				(name
 					"PAD"
 					(effects

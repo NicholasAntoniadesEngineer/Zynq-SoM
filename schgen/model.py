@@ -100,6 +100,11 @@ class Part:
     value: str                     # "FUSB302BMPX", "100n", "4k7"
     footprint: str = ""
     fields: dict[str, str] = field(default_factory=dict)
+    # authoring v2 (use_part): pin NAME -> [pin numbers] from the part's
+    # generated pin table; "U1.SDA" resolves through this. Empty for parts
+    # declared with inline lib ids.
+    pin_names: dict[str, list[str]] = field(default_factory=dict)
+    pin_numbers: frozenset[str] = frozenset()
 
 
 @dataclass
@@ -136,6 +141,37 @@ class Circuit:
         self.parts[ref] = p
         return p
 
+    def use_part(self, mpn: str, ref: str | None = None, *,
+                 value: str | None = None, lcsc: str | None = None) -> Part:
+        """Library-first part (authoring v2): lib_id, footprint, LCSC,
+        reference prefix and the NAMED pin table all come from
+        ``parts/<MPN>/<MPN>.py`` — inline metadata is illegal for generated
+        parts. A missing folder is a build error carrying the exact fix."""
+        import importlib.util as _ilu
+        from pathlib import Path as _P
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", mpn).strip("_")
+        parts_dir = _P(__file__).resolve().parents[1] / "parts"
+        meta = parts_dir / safe / f"{safe}.py"
+        if not meta.exists():
+            raise CircuitError(
+                f"use_part({mpn!r}): parts/{safe}/ is missing — generate it "
+                f"with:  schgen part add {lcsc or 'C<LCSC-id>'} --name {safe}")
+        spec = _ilu.spec_from_file_location(f"_part_{safe}", meta)
+        mod = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(mod)          # type: ignore[union-attr]
+        if ref is None:
+            ref = self.auto_ref((getattr(mod, "PREFIX", "U") or "U"))
+        p = self.part(ref, mod.LIB_ID, value or mod.MPN, mod.FOOTPRINT,
+                      LCSC=getattr(mod, "LCSC", "") or (lcsc or ""))
+        names: dict[str, list[str]] = {}
+        nums: set[str] = set()
+        for num, name, _et in mod.PINS:
+            nums.add(str(num))
+            names.setdefault(str(name), []).append(str(num))
+        p.pin_names = names
+        p.pin_numbers = frozenset(nums)
+        return p
+
     def auto_ref(self, prefix: str) -> str:
         """Next free reference for ``prefix`` ('C' → 'C1', 'C2', …)."""
         n = self._ref_counters.get(prefix, 0) + 1
@@ -165,15 +201,17 @@ class Circuit:
             raise CircuitError(
                 f"net {name!r} reclassified {n.net_class}->{net_class}")
         for p in pins:
-            pr = self._pinref(p)
-            if pr in self.nc_pins:
-                raise CircuitError(f"{pr} is declared NC but assigned to {name!r}")
-            existing = self.net_of(pr)
-            if existing is not None and existing.name != name:
-                raise CircuitError(
-                    f"{pr} already on net {existing.name!r}, cannot also join {name!r}")
-            if pr not in n.pins:
-                n.pins.append(pr)
+            for pr in self._expand_pin(p):
+                if pr in self.nc_pins:
+                    raise CircuitError(
+                        f"{pr} is declared NC but assigned to {name!r}")
+                existing = self.net_of(pr)
+                if existing is not None and existing.name != name:
+                    raise CircuitError(
+                        f"{pr} already on net {existing.name!r}, "
+                        f"cannot also join {name!r}")
+                if pr not in n.pins:
+                    n.pins.append(pr)
         return n
 
     def port(self, name: str, *pins: PinRef | str,
@@ -278,22 +316,43 @@ class Circuit:
     def nc(self, *pins: PinRef | str) -> None:
         """Author-declared no-connect — pin is INTENTIONALLY unused."""
         for p in pins:
-            pr = self._pinref(p)
-            if self.net_of(pr) is not None:
-                raise CircuitError(f"{pr} carries a net, cannot be NC")
-            self.nc_pins.add(pr)
+            for pr in self._expand_pin(p):
+                if self.net_of(pr) is not None:
+                    raise CircuitError(f"{pr} carries a net, cannot be NC")
+                self.nc_pins.add(pr)
+
+    def _expand_pin(self, p: PinRef | str) -> list[PinRef]:
+        """'U1.SDA' -> every pin NUMBER named SDA (stacked duplicate pads
+        net together, exactly like the KiCad symbol). Bare numbers stay
+        first-class; an unknown name on a use_part part is an error."""
+        if isinstance(p, PinRef):
+            return [self._pinref(p)]
+        ref, _, pin = p.partition(".")
+        if not pin:
+            raise CircuitError(f"bad pin spec {p!r} (want 'REF.PIN')")
+        part = self.parts.get(ref)
+        if part is None:
+            raise CircuitError(f"{p}: unknown part {ref!r}")
+        if part.pin_numbers:
+            if pin in part.pin_numbers:
+                return [PinRef(ref, pin)]
+            if pin in part.pin_names:
+                return [PinRef(ref, n) for n in part.pin_names[pin]]
+            raise CircuitError(
+                f"{p}: {part.value} has no pin number or name {pin!r} "
+                f"(names: {sorted(part.pin_names)[:12]}…)")
+        return [PinRef(ref, pin)]
 
     def _pinref(self, p: PinRef | str) -> PinRef:
         if isinstance(p, PinRef):
-            pr = p
-        else:
-            ref, _, pin = p.partition(".")
-            if not pin:
-                raise CircuitError(f"bad pin spec {p!r} (want 'REF.PIN')")
-            pr = PinRef(ref, pin)
-        if pr.ref not in self.parts:
-            raise CircuitError(f"{pr}: unknown part {pr.ref!r}")
-        return pr
+            if p.ref not in self.parts:
+                raise CircuitError(f"{p}: unknown part {p.ref!r}")
+            return p
+        prs = self._expand_pin(p)
+        if len(prs) != 1:
+            raise CircuitError(f"{p}: names {len(prs)} stacked pins — this "
+                               f"context needs exactly one")
+        return prs[0]
 
     def net_of(self, pr: PinRef) -> Net | None:
         for n in self.nets.values():

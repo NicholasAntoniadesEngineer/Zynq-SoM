@@ -264,6 +264,204 @@ def cmd_bom(args: argparse.Namespace) -> int:
     return 0
 
 
+CARRIER = REPO_ROOT / "carrier"
+
+
+def _ahash(png: Path) -> str:
+    """16x16 average hash — perceptual, robust to PNG byte noise."""
+    from PIL import Image
+    im = Image.open(png).convert("L").resize((16, 16))
+    px = list(im.getdata())
+    avg = sum(px) / len(px)
+    return "".join("1" if v > avg else "0" for v in px)
+
+
+def _golden_check(ren_dir: Path, bless: bool) -> None:
+    """Golden render snapshots: drift WARNS, --bless accepts new goldens."""
+    golden_path = ren_dir / "golden.json"
+    cur = {p.stem: _ahash(p) for p in sorted(ren_dir.glob("*.png"))}
+    if bless or not golden_path.exists():
+        golden_path.write_text(json.dumps(cur, indent=1, sort_keys=True)
+                               + "\n")
+        print(f"golden renders: BLESSED {len(cur)} sheets -> {golden_path}")
+        return
+    golden = json.loads(golden_path.read_text())
+    drifted = []
+    for name, h in sorted(cur.items()):
+        old = golden.get(name)
+        if old is None:
+            drifted.append(f"{name}: NEW sheet (no golden)")
+        else:
+            dist = sum(a != b for a, b in zip(h, old))
+            if dist > 12:
+                drifted.append(f"{name}: drift {dist}/256 bits")
+    for name in sorted(set(golden) - set(cur)):
+        drifted.append(f"{name}: golden exists but no render")
+    if drifted:
+        print("golden renders: DRIFT (rerun with --bless to accept):")
+        for d in drifted:
+            print(f"  {d}")
+    else:
+        print(f"golden renders: {len(cur)} sheets match")
+
+
+def _net_ident(name: str) -> str:
+    ident = name.replace("+", "P").replace("-", "_")
+    ident = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in ident)
+    if ident and ident[0].isdigit():
+        ident = "_" + ident
+    return ident
+
+
+def cmd_nets(args: argparse.Namespace) -> int:
+    """GENERATE carrier/nets.py — the cross-sheet net-name contract as
+    Python attributes (SoM contract nets + the gated/board rails), so port
+    names are attrs, not strings to typo."""
+    from schgen.link import all_subsystem_paths, load_som_contract, \
+        load_subsystem
+    som = load_som_contract()
+    rails: set[str] = set()
+    for p in all_subsystem_paths():
+        sc = load_subsystem(p.stem)
+        for n in sc.circuit.nets.values():
+            if n.net_class in (NetClass.POWER,) and n.name.startswith("+"):
+                rails.add(n.name)
+    lines = [
+        '"""GENERATED net-name contract — regenerate with `schgen nets`.',
+        "",
+        "Cross-sheet PORT names as Python attributes: the SoM connector",
+        "contract (carrier/som_interface.json) plus every board rail.",
+        'Authoring: `from carrier.nets import SOM, RAILS` then',
+        'c.port(SOM.SDIO_CLK, ...) — a typo is an AttributeError at build',
+        'time, not a silent open at layout time."""',
+        "",
+        "",
+        "class SOM:",
+    ]
+    for name in sorted(som):
+        lines.append(f"    {_net_ident(name)} = {name!r}")
+    lines += ["", "", "class RAILS:"]
+    for name in sorted(rails):
+        lines.append(f"    {_net_ident(name)} = {name!r}")
+    out = CARRIER / "nets.py"
+    out.write_text("\n".join(lines) + "\n")
+    print(f"nets contract: {out} ({len(som)} SoM nets, {len(rails)} rails)")
+    return 0
+
+
+def cmd_board(args: argparse.Namespace) -> int:
+    """ONE command: every sheet gated, link + board netlist gate, an
+    openable carrier KiCad project, constraints, block diagram, JLC BOM —
+    all written into the committed carrier/ output taxonomy."""
+    import tempfile
+
+    from schgen import constraints, diagram
+    from schgen import board as board_mod
+    from schgen.link import (all_subsystem_paths, link, load_som_contract,
+                             load_subsystem)
+
+    lib = Library()
+    sch_dir = CARRIER / "schematic"
+    ren_dir = CARRIER / "renders"
+    rep_dir = CARRIER / "reports"
+    man_dir = CARRIER / "manufacturing"
+    for d in (sch_dir, ren_dir, rep_dir, man_dir):
+        d.mkdir(parents=True, exist_ok=True)
+    tmp = Path(tempfile.mkdtemp(prefix="schgen_board_"))
+
+    names = [p.stem for p in all_subsystem_paths()]
+    sheets = []
+    placements: dict[str, tuple] = {}
+    verdicts: list[str] = []
+    ok_all = True
+    for name in names:
+        spath = _subsystem_path(name)
+        purity = _purity_violations(spath)
+        if purity:
+            print(f"{name}: PURITY GATE FAIL")
+            for v in purity:
+                print(f"  {v}")
+            ok_all = False
+            continue
+        sc = load_subsystem(name)
+        c = sc.circuit
+        c.validate({r: lib.pin_numbers(p.lib_id)
+                    for r, p in c.parts.items()})
+        driven = _check_inputs_driven(c, lib)
+        if driven:
+            for pr in driven:
+                print(f"{name}: INPUT-DRIVEN: {pr}")
+            ok_all = False
+            continue
+        placement, routed, geo = place.place_and_route(c, lib)
+        placements[name] = (placement, routed)
+        design = PlacedDesign(
+            circuit=c, parts=placement.parts, powers=placement.powers,
+            wires=[Wire(s.x0, s.y0, s.x1, s.y1) for s in routed.segs],
+            junctions=[EJunction(x, y) for x, y in routed.junctions],
+            hlabels=placement.hlabels, llabels=placement.llabels,
+            no_connects=placement.no_connects, paper=placement.paper)
+        sch = tmp / f"{name}.kicad_sch"
+        emit(design, sch, lib)
+        net_res = netlist_gate.check(c, sch)
+        erc_ok, _txt = _erc(sch, rep_dir / f"{name}.erc.rpt")
+        vis = visual_gate.check(geo)
+        _render(sch, ren_dir / f"{name}.png")
+        ok = net_res.ok and erc_ok and vis.ok
+        ok_all = ok_all and ok
+        verdicts.append(
+            f"{name}: netlist={'PASS' if net_res.ok else 'FAIL'} "
+            f"erc={'PASS' if erc_ok else 'FAIL'} "
+            f"visual={'PASS' if vis.ok else 'FAIL'} paper={placement.paper}")
+        print(verdicts[-1])
+        sheets.append(sc)
+
+    # link + constraints + diagram
+    som_nets = load_som_contract()
+    res = link(sheets, som_nets)
+    (rep_dir / "link_report.txt").write_text(res.report() + "\n")
+    print(f"LINK: {'PASS' if res.ok else 'FAIL'} "
+          f"({len(res.errors)} errors, {len(res.warnings)} warnings)")
+    ok_all = ok_all and res.ok
+    constraints.export(sheets, man_dir)
+    diagram.render(res, som_nets, REPO_ROOT / "docs" / "block_diagram.svg")
+
+    # hierarchy: the openable carrier project + the board netlist gate
+    board_ok = board_mod.build_board(
+        sheets, lib, CARRIER, placements=placements,
+        root_name="Zynq_Carrier", sheet_subdir="schematic",
+        reports_dir=rep_dir)
+    ok_all = ok_all and board_ok
+
+    # JLC BOM across every sheet (missing LCSC = warning at board level)
+    rows: dict[tuple[str, str, str], list[str]] = {}
+    missing: list[str] = []
+    for sc in sheets:
+        for ref, part in sorted(sc.circuit.parts.items()):
+            lcsc = part.fields.get("LCSC", "")
+            if not lcsc:
+                missing.append(f"{sc.name}:{ref} ({part.value})")
+            rows.setdefault((part.value, part.footprint, lcsc),
+                            []).append(f"{sc.name}:{ref}")
+    with open(man_dir / "bom_jlc.csv", "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Comment", "Designator", "Footprint", "LCSC"])
+        for (value, fp, lcsc), refs in sorted(rows.items()):
+            w.writerow([value, ",".join(refs), fp, lcsc])
+    print(f"BOM: {man_dir / 'bom_jlc.csv'} ({len(rows)} line items"
+          f"{f', {len(missing)} missing LCSC' if missing else ''})")
+
+    (rep_dir / "gates.txt").write_text(
+        "\n".join(verdicts)
+        + f"\nLINK: {'PASS' if res.ok else 'FAIL'}"
+        + f"\nBOARD GATE: {'PASS' if board_ok else 'FAIL'}\n")
+
+    _golden_check(ren_dir, bless=args.bless)
+    print(f"BOARD: {'PASS' if ok_all else 'FAIL'} "
+          f"({len(sheets)} sheets -> {CARRIER / 'Zynq_Carrier.kicad_pro'})")
+    return 0 if ok_all else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="schgen", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -290,6 +488,16 @@ def main(argv: list[str] | None = None) -> int:
                     help="skip root-sheet emission + board netlist gate")
     from schgen.link import cmd_link
     lk.set_defaults(func=cmd_link)
+    bd = sub.add_parser(
+        "board", help="ONE command: every sheet gated + link + openable "
+                      "carrier KiCad project + constraints + diagram + BOM "
+                      "into the committed carrier/ taxonomy")
+    bd.add_argument("--bless", action="store_true",
+                    help="accept the current renders as golden snapshots")
+    bd.set_defaults(func=cmd_board)
+    nt = sub.add_parser("nets", help="regenerate carrier/nets.py (the "
+                                     "cross-sheet net-name contract)")
+    nt.set_defaults(func=cmd_nets)
     m = sub.add_parser("bom", help="export JLCPCB assembly BOM from circuits")
     m.add_argument("subsystems", nargs="+")
     m.add_argument("-o", "--output", type=Path, default=None)

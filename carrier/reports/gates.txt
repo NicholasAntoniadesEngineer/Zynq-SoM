@@ -1,0 +1,22 @@
+bringup_en: netlist=PASS erc=PASS visual=PASS paper=A4
+bringup_en_modules: netlist=PASS erc=PASS visual=PASS paper=A3
+bringup_modules: netlist=PASS erc=PASS visual=PASS paper=A4
+bringup_rails: netlist=PASS erc=PASS visual=PASS paper=A4
+debug_boot: netlist=PASS erc=PASS visual=PASS paper=A4
+ethernet: netlist=PASS erc=PASS visual=PASS paper=A4
+hdmi_rx: netlist=PASS erc=PASS visual=PASS paper=A4
+hdmi_tx: netlist=PASS erc=PASS visual=PASS paper=A4
+lcd: netlist=PASS erc=PASS visual=PASS paper=A4
+microsd: netlist=PASS erc=PASS visual=PASS paper=A4
+pmod: netlist=PASS erc=PASS visual=PASS paper=A4
+power: netlist=PASS erc=PASS visual=PASS paper=A4
+power_mon: netlist=PASS erc=PASS visual=PASS paper=A3
+som_j1: netlist=PASS erc=PASS visual=PASS paper=A4
+som_j2: netlist=PASS erc=PASS visual=PASS paper=A4
+som_j3: netlist=PASS erc=PASS visual=PASS paper=A4
+uart_bridge: netlist=PASS erc=PASS visual=PASS paper=A4
+usb_pd: netlist=PASS erc=PASS visual=PASS paper=A4
+usbc_otg: netlist=PASS erc=PASS visual=PASS paper=A3
+user_io: netlist=PASS erc=PASS visual=PASS paper=A4
+LINK: PASS
+BOARD GATE: PASS

@@ -55,8 +55,10 @@ def circuit() -> Circuit:
         c.port(net, f"{rref}.2", expect=J2_MAP)
         led_anodes.append(f"{dref}.2")
 
+    # +3V3_USER_LED is the bring-up-gated module rail (SY6280 #8 on
+    # bringup_modules): a POWER net with its own symbol, like +5V_USB.
     c.part("C1", "Device:C", "100n", C0603, LCSC="C1591")
-    c.port("+3V3_USER_LED", *led_anodes, "C1.1", expect=BRINGUP)
+    c.net("+3V3_USER_LED", *led_anodes, "C1.1")
     c.net("GND", "C1.2")
 
     # ---- buttons: pin + 10k pull-up to +3V3, contacts close to GND ---------

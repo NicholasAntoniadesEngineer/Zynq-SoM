@@ -74,7 +74,8 @@ def circuit() -> Circuit:
     c.part("C2", "Device:C", "10u", C0805, LCSC="C15850")
     c.part("C3", "Device:C", "100n", C0603, LCSC="C1591")
     c.part("C4", "Device:C", "10u", C0805, LCSC="C15850")
-    c.port("+3V3_PMOD", *vcc_pins, "C1.1", "C2.1", "C3.1", "C4.1",
-           expect=BRINGUP)
+    # +3V3_PMOD is the bring-up-gated module rail (SY6280 #7 on
+    # bringup_modules): a POWER net with its own symbol, like +5V_USB.
+    c.net("+3V3_PMOD", *vcc_pins, "C1.1", "C2.1", "C3.1", "C4.1")
     c.net("GND", *gnd_pins, "C1.2", "C2.2", "C3.2", "C4.2")
     return c

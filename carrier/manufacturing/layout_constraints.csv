@@ -1,0 +1,412 @@
+net,sheet,kind,net_class,impedance_ohm,track_width_mm,pair_gap_mm,pair_with,length_match_group,match_tolerance_mm,notes
+ETH_LINE_MDI_0_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_0_P,PAIR:ETH_LINE_MDI_0_N/ETH_LINE_MDI_0_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_0_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_0_N,PAIR:ETH_LINE_MDI_0_N/ETH_LINE_MDI_0_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_1_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_1_P,PAIR:ETH_LINE_MDI_1_N/ETH_LINE_MDI_1_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_1_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_1_N,PAIR:ETH_LINE_MDI_1_N/ETH_LINE_MDI_1_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_2_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_2_P,PAIR:ETH_LINE_MDI_2_N/ETH_LINE_MDI_2_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_2_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_2_N,PAIR:ETH_LINE_MDI_2_N/ETH_LINE_MDI_2_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_3_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_3_P,PAIR:ETH_LINE_MDI_3_N/ETH_LINE_MDI_3_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_3_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_3_N,PAIR:ETH_LINE_MDI_3_N/ETH_LINE_MDI_3_P,1.27,"deferred: rj45_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI0_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI0_P,PAIR:ETH_PHY_MDI0_N/ETH_PHY_MDI0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI0_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI0_N,PAIR:ETH_PHY_MDI0_N/ETH_PHY_MDI0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI1_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI1_P,PAIR:ETH_PHY_MDI1_N/ETH_PHY_MDI1_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI1_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI1_N,PAIR:ETH_PHY_MDI1_N/ETH_PHY_MDI1_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI2_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI2_P,PAIR:ETH_PHY_MDI2_N/ETH_PHY_MDI2_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI2_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI2_N,PAIR:ETH_PHY_MDI2_N/ETH_PHY_MDI2_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI3_N,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI3_P,PAIR:ETH_PHY_MDI3_N/ETH_PHY_MDI3_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI3_P,ethernet,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI3_N,PAIR:ETH_PHY_MDI3_N/ETH_PHY_MDI3_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI0_N,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI0_P,PAIR:ETH_PHY_MDI0_N/ETH_PHY_MDI0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI0_P,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI0_N,PAIR:ETH_PHY_MDI0_N/ETH_PHY_MDI0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI1_N,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI1_P,PAIR:ETH_PHY_MDI1_N/ETH_PHY_MDI1_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI1_P,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI1_N,PAIR:ETH_PHY_MDI1_N/ETH_PHY_MDI1_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI2_N,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI2_P,PAIR:ETH_PHY_MDI2_N/ETH_PHY_MDI2_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI2_P,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI2_N,PAIR:ETH_PHY_MDI2_N/ETH_PHY_MDI2_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI3_N,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI3_P,PAIR:ETH_PHY_MDI3_N/ETH_PHY_MDI3_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_PHY_MDI3_P,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI3_N,PAIR:ETH_PHY_MDI3_N/ETH_PHY_MDI3_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+HDMI_RX_CLK_N,hdmi_rx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,HDMI_RX_CLK_P,PAIR:HDMI_RX_CLK_N/HDMI_RX_CLK_P,0.15,"deferred: som_j2_j3_connector (wave 3 FPGA bank function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+HDMI_RX_CLK_P,hdmi_rx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,HDMI_RX_CLK_N,PAIR:HDMI_RX_CLK_N/HDMI_RX_CLK_P,0.15,"deferred: som_j2_j3_connector (wave 3 FPGA bank function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+HDMI_RX_D0_N,hdmi_rx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,HDMI_RX_D0_P,PAIR:HDMI_RX_D0_N/HDMI_RX_D0_P,0.15,"deferred: som_j2_j3_connector (wave 3 FPGA bank function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+HDMI_RX_D0_P,hdmi_rx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,HDMI_RX_D0_N,PAIR:HDMI_RX_D0_N/HDMI_RX_D0_P,0.15,"deferred: som_j2_j3_connector (wave 3 FPGA bank function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+HDMI_RX_D1_N,hdmi_rx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,HDMI_RX_D1_P,PAIR:HDMI_RX_D1_N/HDMI_RX_D1_P,0.15,"deferred: som_j2_j3_connector (wave 3 FPGA bank function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+HDMI_RX_D1_P,hdmi_rx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,HDMI_RX_D1_N,PAIR:HDMI_RX_D1_N/HDMI_RX_D1_P,0.15,"deferred: som_j2_j3_connector (wave 3 FPGA bank function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+HDMI_RX_D2_N,hdmi_rx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,HDMI_RX_D2_P,PAIR:HDMI_RX_D2_N/HDMI_RX_D2_P,0.15,"deferred: som_j2_j3_connector (wave 3 FPGA bank function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+HDMI_RX_D2_P,hdmi_rx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,HDMI_RX_D2_N,PAIR:HDMI_RX_D2_N/HDMI_RX_D2_P,0.15,"deferred: som_j2_j3_connector (wave 3 FPGA bank function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ZYNQ_HDMI_TX_TMDS_0_N,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_0_P,PAIR:ZYNQ_HDMI_TX_TMDS_0_N/ZYNQ_HDMI_TX_TMDS_0_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ZYNQ_HDMI_TX_TMDS_0_P,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_0_N,PAIR:ZYNQ_HDMI_TX_TMDS_0_N/ZYNQ_HDMI_TX_TMDS_0_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ZYNQ_HDMI_TX_TMDS_1_N,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_1_P,PAIR:ZYNQ_HDMI_TX_TMDS_1_N/ZYNQ_HDMI_TX_TMDS_1_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ZYNQ_HDMI_TX_TMDS_1_P,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_1_N,PAIR:ZYNQ_HDMI_TX_TMDS_1_N/ZYNQ_HDMI_TX_TMDS_1_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ZYNQ_HDMI_TX_TMDS_2_N,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_2_P,PAIR:ZYNQ_HDMI_TX_TMDS_2_N/ZYNQ_HDMI_TX_TMDS_2_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ZYNQ_HDMI_TX_TMDS_2_P,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_2_N,PAIR:ZYNQ_HDMI_TX_TMDS_2_N/ZYNQ_HDMI_TX_TMDS_2_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ZYNQ_HDMI_TX_TMDS_CLK_N,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_CLK_P,PAIR:ZYNQ_HDMI_TX_TMDS_CLK_N/ZYNQ_HDMI_TX_TMDS_CLK_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ZYNQ_HDMI_TX_TMDS_CLK_P,hdmi_tx,tmds_pair,DP100_TMDS,100,0.2052,0.2032,ZYNQ_HDMI_TX_TMDS_CLK_N,PAIR:ZYNQ_HDMI_TX_TMDS_CLK_N/ZYNQ_HDMI_TX_TMDS_CLK_P,0.15,"deferred: som_j2_connector (wave 3 PL function map); JLCPCB calculator, JLC04161H-7628 outer/L2"
+STM32_USB_D_N,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,STM32_USB_D_P,PAIR:STM32_USB_D_N/STM32_USB_D_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+STM32_USB_D_P,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,STM32_USB_D_N,PAIR:STM32_USB_D_N/STM32_USB_D_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+USB_D+,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+USB_D-,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D+,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+USB_UART_DM,uart_bridge,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DP,PAIR:USB_UART_DM/USB_UART_DP,1.27,"deferred: usb_uart_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+USB_UART_DP,uart_bridge,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DM,PAIR:USB_UART_DM/USB_UART_DP,1.27,"deferred: usb_uart_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+USB_D+,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+USB_D-,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D+,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+BU_DIP_1V8,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_3V3,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_5V0,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+EN_1V8,bringup_en,single,Default,,,,,,,"deferred: power (regulator EN pins, dossier section 3.1)"
+EN_3V3,bringup_en,single,Default,,,,,,,"deferred: power (regulator EN pins, dossier section 3.1)"
+EN_5V0,bringup_en,single,Default,,,,,,,"deferred: power (regulator EN pins, dossier section 3.1)"
+STM32_RAIL_EN_1V8,bringup_en,single,Default,,,,,,,deferred: som_j3_connector (wave 3 STM32 GPIO function map)
+STM32_RAIL_EN_3V3,bringup_en,single,Default,,,,,,,deferred: som_j3_connector (wave 3 STM32 GPIO function map)
+STM32_RAIL_EN_5V0,bringup_en,single,Default,,,,,,,deferred: som_j3_connector (wave 3 STM32 GPIO function map)
+BU_DIP_CAM,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_HDMI_RX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_HDMI_TX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_LCD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_PMOD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_SD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_SPARE,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_USB,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_DIP_USER_LED,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_CAM,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_HDMI_RX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_HDMI_TX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_LCD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_LCD_BL,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_PMOD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_SD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_USB,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+BU_OVR_USER_LED,bringup_en_modules,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
+EN_CAM,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_HDMI_RX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_HDMI_TX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_LCD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_LCD_BL,bringup_en_modules,single,Default,,,,,,,"deferred: lvds_lcd_power (backlight boost EN provision, dossier 3.2)"
+EN_PMOD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_SD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_USB,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_USER_LED,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
+EN_CAM,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_HDMI_RX,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_HDMI_TX,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_LCD,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_PMOD,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_SD,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_USB,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+EN_USER_LED,bringup_modules,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.2)"
+BU_DIP_1V8,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_3V3,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_5V0,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_CAM,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_HDMI_RX,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_HDMI_TX,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_LCD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_PMOD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_SD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_SPARE,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_USB,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_DIP_USER_LED,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_CAM,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_HDMI_RX,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_HDMI_TX,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_LCD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_LCD_BL,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_PMOD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_SD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_USB,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+BU_OVR_USER_LED,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+PL_BTN0,bringup_rails,single,Default,,,,,,,deferred: som_j1_j2 bank-33 PL pin assignment (P3 linker)
+PL_BTN1,bringup_rails,single,Default,,,,,,,deferred: som_j1_j2 bank-33 PL pin assignment (P3 linker)
+STM32_BRINGUP_INT,bringup_rails,single,Default,,,,,,,deferred: som_j3_connector (wave 3 STM32 GPIO function map)
+STM32_NRST,bringup_rails,single,Default,,,,,,,
+STM32_BOOT0,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+STM32_GPIO5,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+STM32_GPIO6,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+STM32_GPIO7,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+STM32_GPIO8,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+STM32_NRST,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+ZYNQ_TCK,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+ZYNQ_TDI,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+ZYNQ_TDO,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+ZYNQ_TMS,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+HDMI_RX_5V_DET,hdmi_rx,single,Default,,,,,,,deferred: som_j2_j3_connector (wave 3 FPGA bank function map)
+HDMI_RX_CEC,hdmi_rx,single,Default,,,,,,,deferred: som_j2_j3_connector (wave 3 FPGA bank function map)
+ZYNQ_HDMI_TX_CEC,hdmi_tx,single,Default,,,,,,,deferred: som_j2_connector (wave 3 PL function map)
+ZYNQ_HDMI_TX_HPD,hdmi_tx,single,Default,,,,,,,deferred: som_j2_connector (wave 3 PL function map)
+LCD_B0,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_B1,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_B2,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_B3,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_B4,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_B5,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_B6,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_B7,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_BL_PWM,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_CTP_INT,lcd,single,Default,,,,,,,deferred: som_j2_connector (PL bank 13 — touch I2C only)
+LCD_CTP_RST,lcd,single,Default,,,,,,,deferred: som_j2_connector (PL bank 13 — touch I2C only)
+LCD_DE,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_DISP,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_G0,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_G1,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_G2,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_G3,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_G4,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_G5,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_G6,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_G7,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_HSYNC,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_PCLK,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_R0,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_R1,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_R2,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_R3,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_R4,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_R5,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_R6,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_R7,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+LCD_VSYNC,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+SD_CARD_DETECT,microsd,single,Default,,,,,,,deferred: som_j1_connector (STM32 GPIO function map)
+IO_L10_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L10_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L2_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L2_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L3_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L3_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L4_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L4_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L5P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L5_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L7_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L7_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L8_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L8_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L9_DQS_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+IO_L9_DQS_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+EN_1V8,power,single,Default,,,,,,,"deferred: bringup (wave 2 rail-enable cells, dossier section 3.1)"
+EN_3V3,power,single,Default,,,,,,,"deferred: bringup (wave 2 rail-enable cells, dossier section 3.1)"
+EN_5V0,power,single,Default,,,,,,,"deferred: bringup (wave 2 rail-enable cells, dossier section 3.1)"
+PMON_ALERT_N,power_mon,single,Default,,,,,,,deferred: bringup (TCA9535 spare port P11)
+ETH_LED1,som_j1,single,Default,,,,,,,
+ETH_LED2,som_j1,single,Default,,,,,,,
+IO_0_35,som_j1,single,Default,,,,,,,
+IO_L1_N_35,som_j1,single,Default,,,,,,,
+IO_L1_P_35,som_j1,single,Default,,,,,,,
+IO_L2_N_35,som_j1,single,Default,,,,,,,
+IO_L4_N_35,som_j1,single,Default,,,,,,,
+IO_L4_P_35,som_j1,single,Default,,,,,,,
+IO_L5_N_35,som_j1,single,Default,,,,,,,
+IO_L5_P_35,som_j1,single,Default,,,,,,,
+IO_L6_P_35,som_j1,single,Default,,,,,,,
+IO_L6_VREF_N_35,som_j1,single,Default,,,,,,,
+STM32_BOOT0,som_j1,single,Default,,,,,,,
+STM32_DAC1,som_j1,single,Default,,,,,,,
+STM32_DAC2,som_j1,single,Default,,,,,,,
+STM32_GPIO1,som_j1,single,Default,,,,,,,
+STM32_GPIO2,som_j1,single,Default,,,,,,,
+STM32_GPIO3,som_j1,single,Default,,,,,,,
+STM32_GPIO4,som_j1,single,Default,,,,,,,
+STM32_GPIO5,som_j1,single,Default,,,,,,,
+STM32_GPIO6,som_j1,single,Default,,,,,,,
+STM32_GPIO7,som_j1,single,Default,,,,,,,
+STM32_GPIO8,som_j1,single,Default,,,,,,,
+STM32_NRST,som_j1,single,Default,,,,,,,
+STM32_USB_CC1,som_j1,single,Default,,,,,,,
+STM32_USB_CC2,som_j1,single,Default,,,,,,,
+USB_ID,som_j1,single,Default,,,,,,,
+USB_VBUS,som_j1,single,Default,,,,,,,
+VBUS_OUT_EN,som_j1,single,Default,,,,,,,
+ZYNQ_PS_MIO0,som_j1,single,Default,,,,,,,
+ZYNQ_PS_MIO10,som_j1,single,Default,,,,,,,
+ZYNQ_PS_MIO11,som_j1,single,Default,,,,,,,
+ZYNQ_PS_MIO12,som_j1,single,Default,,,,,,,
+ZYNQ_PS_MIO7/VM0,som_j1,single,Default,,,,,,,
+ZYNQ_PS_MIO8\VM1,som_j1,single,Default,,,,,,,
+ZYNQ_PS_MIO9,som_j1,single,Default,,,,,,,
+ZYNQ_TCK,som_j1,single,Default,,,,,,,
+ZYNQ_TDI,som_j1,single,Default,,,,,,,
+ZYNQ_TDO,som_j1,single,Default,,,,,,,
+ZYNQ_TMS,som_j1,single,Default,,,,,,,
+IO_25_13,som_j2,single,Default,,,,,,,
+IO_25_33,som_j2,single,Default,,,,,,,
+IO_L10_N_13,som_j2,single,Default,,,,,,,
+IO_L10_N_33,som_j2,single,Default,,,,,,,
+IO_L10_P_13,som_j2,single,Default,,,,,,,
+IO_L10_P_33,som_j2,single,Default,,,,,,,
+IO_L11_SRCC_N_13,som_j2,single,Default,,,,,,,
+IO_L11_SRCC_N_33,som_j2,single,Default,,,,,,,
+IO_L11_SRCC_P_13,som_j2,single,Default,,,,,,,
+IO_L11_SRCC_P_33,som_j2,single,Default,,,,,,,
+IO_L12_MRCC_N_13,som_j2,single,Default,,,,,,,
+IO_L12_MRCC_N_33,som_j2,single,Default,,,,,,,
+IO_L12_MRCC_P_13,som_j2,single,Default,,,,,,,
+IO_L12_MRCC_P_33,som_j2,single,Default,,,,,,,
+IO_L13_MRCC_N_13,som_j2,single,Default,,,,,,,
+IO_L13_MRCC_P_13,som_j2,single,Default,,,,,,,
+IO_L14_N_SRCC_13,som_j2,single,Default,,,,,,,
+IO_L14_P_SRCC_13,som_j2,single,Default,,,,,,,
+IO_L14_SRCC_N_33,som_j2,single,Default,,,,,,,
+IO_L14_SRCC_P_33,som_j2,single,Default,,,,,,,
+IO_L15_N_33,som_j2,single,Default,,,,,,,
+IO_L15_P_13,som_j2,single,Default,,,,,,,
+IO_L15_P_33,som_j2,single,Default,,,,,,,
+IO_L16_N_13,som_j2,single,Default,,,,,,,
+IO_L16_N_33,som_j2,single,Default,,,,,,,
+IO_L16_P_13,som_j2,single,Default,,,,,,,
+IO_L17_N_13,som_j2,single,Default,,,,,,,
+IO_L17_N_33,som_j2,single,Default,,,,,,,
+IO_L17_P_13,som_j2,single,Default,,,,,,,
+IO_L17_P_33,som_j2,single,Default,,,,,,,
+IO_L18_N_13,som_j2,single,Default,,,,,,,
+IO_L18_N_33,som_j2,single,Default,,,,,,,
+IO_L18_P_13,som_j2,single,Default,,,,,,,
+IO_L18_P_33,som_j2,single,Default,,,,,,,
+IO_L19_P_13,som_j2,single,Default,,,,,,,
+IO_L19_P_33,som_j2,single,Default,,,,,,,
+IO_L19_VREF_N_33,som_j2,single,Default,,,,,,,
+IO_L1P_13,som_j2,single,Default,,,,,,,
+IO_L1_N_13,som_j2,single,Default,,,,,,,
+IO_L20_N_33,som_j2,single,Default,,,,,,,
+IO_L20_P_33,som_j2,single,Default,,,,,,,
+IO_L21_DQS_N_33,som_j2,single,Default,,,,,,,
+IO_L21_DQS_P_33,som_j2,single,Default,,,,,,,
+IO_L21_P_13,som_j2,single,Default,,,,,,,
+IO_L22_N_33,som_j2,single,Default,,,,,,,
+IO_L22_P_13,som_j2,single,Default,,,,,,,
+IO_L22_P_33,som_j2,single,Default,,,,,,,
+IO_L23_N_13,som_j2,single,Default,,,,,,,
+IO_L23_N_33,som_j2,single,Default,,,,,,,
+IO_L23_P_13,som_j2,single,Default,,,,,,,
+IO_L23_P_33,som_j2,single,Default,,,,,,,
+IO_L24_N_13,som_j2,single,Default,,,,,,,
+IO_L24_N_33,som_j2,single,Default,,,,,,,
+IO_L24_P_13,som_j2,single,Default,,,,,,,
+IO_L24_P_33,som_j2,single,Default,,,,,,,
+IO_L2_N_13,som_j2,single,Default,,,,,,,
+IO_L2_P_13,som_j2,single,Default,,,,,,,
+IO_L3_N_13,som_j2,single,Default,,,,,,,
+IO_L3_P_13,som_j2,single,Default,,,,,,,
+IO_L4_N_13,som_j2,single,Default,,,,,,,
+IO_L4_P_13,som_j2,single,Default,,,,,,,
+IO_L5P_13,som_j2,single,Default,,,,,,,
+IO_L5_N_13,som_j2,single,Default,,,,,,,
+IO_L6_N_VREF_13,som_j2,single,Default,,,,,,,
+IO_L6_P_13,som_j2,single,Default,,,,,,,
+IO_L6_P_33,som_j2,single,Default,,,,,,,
+IO_L7_N_13,som_j2,single,Default,,,,,,,
+IO_L7_P_13,som_j2,single,Default,,,,,,,
+IO_L8_N_13,som_j2,single,Default,,,,,,,
+IO_L8_P_13,som_j2,single,Default,,,,,,,
+IO_L9_DQS_N_13,som_j2,single,Default,,,,,,,
+IO_L9_DQS_P_13,som_j2,single,Default,,,,,,,
+IO_L10_N_34,som_j3,single,Default,,,,,,,
+IO_L10_N_35,som_j3,single,Default,,,,,,,
+IO_L10_P_34,som_j3,single,Default,,,,,,,
+IO_L10_P_35,som_j3,single,Default,,,,,,,
+IO_L11_SRCC_N_34,som_j3,single,Default,,,,,,,
+IO_L11_SRCC_N_35,som_j3,single,Default,,,,,,,
+IO_L11_SRCC_P_34,som_j3,single,Default,,,,,,,
+IO_L11_SRCC_P_35,som_j3,single,Default,,,,,,,
+IO_L12_MRCC_N_34,som_j3,single,Default,,,,,,,
+IO_L12_MRCC_N_35,som_j3,single,Default,,,,,,,
+IO_L12_MRCC_P_34,som_j3,single,Default,,,,,,,
+IO_L12_MRCC_P_35,som_j3,single,Default,,,,,,,
+IO_L13_MRCC_N_34,som_j3,single,Default,,,,,,,
+IO_L13_MRCC_N_35,som_j3,single,Default,,,,,,,
+IO_L13_MRCC_P_34,som_j3,single,Default,,,,,,,
+IO_L13_MRCC_P_35,som_j3,single,Default,,,,,,,
+IO_L14_SRCC_N_34,som_j3,single,Default,,,,,,,
+IO_L14_SRCC_N_35,som_j3,single,Default,,,,,,,
+IO_L14_SRCC_P_34,som_j3,single,Default,,,,,,,
+IO_L14_SRCC_P_35,som_j3,single,Default,,,,,,,
+IO_L15_DQS_N_34,som_j3,single,Default,,,,,,,
+IO_L15_DQS_N_35,som_j3,single,Default,,,,,,,
+IO_L15_DQS_P_34,som_j3,single,Default,,,,,,,
+IO_L15_DQS_P_35,som_j3,single,Default,,,,,,,
+IO_L16_N_34,som_j3,single,Default,,,,,,,
+IO_L16_N_35,som_j3,single,Default,,,,,,,
+IO_L16_P_34,som_j3,single,Default,,,,,,,
+IO_L16_P_35,som_j3,single,Default,,,,,,,
+IO_L17_N_34,som_j3,single,Default,,,,,,,
+IO_L17_N_35,som_j3,single,Default,,,,,,,
+IO_L17_P_34,som_j3,single,Default,,,,,,,
+IO_L17_P_35,som_j3,single,Default,,,,,,,
+IO_L18_N_34,som_j3,single,Default,,,,,,,
+IO_L18_N_35,som_j3,single,Default,,,,,,,
+IO_L18_P_35,som_j3,single,Default,,,,,,,
+IO_L19_N_VREF_35,som_j3,single,Default,,,,,,,
+IO_L19_P_35,som_j3,single,Default,,,,,,,
+IO_L1_N_33,som_j3,single,Default,,,,,,,
+IO_L1_P_33,som_j3,single,Default,,,,,,,
+IO_L20_N_34,som_j3,single,Default,,,,,,,
+IO_L20_N_35,som_j3,single,Default,,,,,,,
+IO_L20_P_34,som_j3,single,Default,,,,,,,
+IO_L20_P_35,som_j3,single,Default,,,,,,,
+IO_L21_DQS_N_35,som_j3,single,Default,,,,,,,
+IO_L21_DQS_P_35,som_j3,single,Default,,,,,,,
+IO_L22_N_34,som_j3,single,Default,,,,,,,
+IO_L22_N_35,som_j3,single,Default,,,,,,,
+IO_L22_P_35,som_j3,single,Default,,,,,,,
+IO_L23_N_35,som_j3,single,Default,,,,,,,
+IO_L23_P_34,som_j3,single,Default,,,,,,,
+IO_L23_P_35,som_j3,single,Default,,,,,,,
+IO_L24_N_34,som_j3,single,Default,,,,,,,
+IO_L24_N_35,som_j3,single,Default,,,,,,,
+IO_L24_P_34,som_j3,single,Default,,,,,,,
+IO_L24_P_35,som_j3,single,Default,,,,,,,
+IO_L2_N_33,som_j3,single,Default,,,,,,,
+IO_L2_P_33,som_j3,single,Default,,,,,,,
+IO_L3P_PUDC_34,som_j3,single,Default,,,,,,,
+IO_L3_DQS_N_33,som_j3,single,Default,,,,,,,
+IO_L3_DQS_P_33,som_j3,single,Default,,,,,,,
+IO_L4_N_33,som_j3,single,Default,,,,,,,
+IO_L4_N_34,som_j3,single,Default,,,,,,,
+IO_L4_P_33,som_j3,single,Default,,,,,,,
+IO_L5_N_33,som_j3,single,Default,,,,,,,
+IO_L5_N_34,som_j3,single,Default,,,,,,,
+IO_L5_P_33,som_j3,single,Default,,,,,,,
+IO_L5_P_34,som_j3,single,Default,,,,,,,
+IO_L6_VREF_N_34,som_j3,single,Default,,,,,,,
+IO_L7_N_34,som_j3,single,Default,,,,,,,
+IO_L7_P_34,som_j3,single,Default,,,,,,,
+IO_L8_N_34,som_j3,single,Default,,,,,,,
+IO_L8_P_34,som_j3,single,Default,,,,,,,
+IO_L9_DQS_N_34,som_j3,single,Default,,,,,,,
+IO_L9_DQS_P_34,som_j3,single,Default,,,,,,,
+ZYNQ_PS_UART0_CTS_N,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
+ZYNQ_PS_UART0_RTS_N,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
+ZYNQ_PS_UART0_RXD,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
+ZYNQ_PS_UART0_TXD,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
+STM32_FUSB302_INT,usb_pd,single,Default,,,,,,,deferred: som_j1_connector (wave 3 STM32 GPIO function map)
+STM32_USB_CC1,usb_pd,single,Default,,,,,,,
+STM32_USB_CC2,usb_pd,single,Default,,,,,,,
+USBOTG_FLT_N,usbc_otg,single,Default,,,,,,,deferred: som_j1_connector (STM32 GPIO function map)
+USB_ID,usbc_otg,single,Default,,,,,,,deferred: som_j1_connector (STM32 GPIO function map)
+USB_VBUS,usbc_otg,single,Default,,,,,,,
+VBUS_OUT_EN,usbc_otg,single,Default,,,,,,,deferred: som_j1_connector (STM32 GPIO function map)
+IO_25_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+IO_L15_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+IO_L19_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+IO_L21_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+IO_L22_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+IO_L24_N_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+IO_L24_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+IO_L6_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+STM32_I2C2_SCL,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)
+STM32_I2C2_SDA,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)
+ZYNQ_HDMI_TX_SCL,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
+ZYNQ_HDMI_TX_SDA,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
+LCD_CTP_SCL,lcd,i2c,I2C,,,,,,,bus=LCD_CTP; speed=400000Hz; deferred: som_j2_connector (PL bank 13 — touch I2C only)
+LCD_CTP_SDA,lcd,i2c,I2C,,,,,,,bus=LCD_CTP; speed=400000Hz; deferred: som_j2_connector (PL bank 13 — touch I2C only)
+STM32_I2C2_SCL,power_mon,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector
+STM32_I2C2_SDA,power_mon,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector
+STM32_I2C2_SCL,usb_pd,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (wave 3 STM32 GPIO function map)
+STM32_I2C2_SDA,usb_pd,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (wave 3 STM32 GPIO function map)
+SDIO_CLK,microsd,sd_bus,SD_1V8,,,,,BUS:SD,2.5,level=1.8V
+SDIO_CMD,microsd,sd_bus,SD_1V8,,,,,BUS:SD,2.5,level=1.8V
+SDIO_D0,microsd,sd_bus,SD_1V8,,,,,BUS:SD,2.5,level=1.8V
+SDIO_D1,microsd,sd_bus,SD_1V8,,,,,BUS:SD,2.5,level=1.8V
+SDIO_D2,microsd,sd_bus,SD_1V8,,,,,BUS:SD,2.5,level=1.8V
+SDIO_D3,microsd,sd_bus,SD_1V8,,,,,BUS:SD,2.5,level=1.8V
+SDIO_CLK,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V
+SDIO_CMD,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V
+SDIO_D0,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V
+SDIO_D1,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V
+SDIO_D2,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V
+SDIO_D3,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V

@@ -131,15 +131,29 @@ def strip_duplicate_flags(designs: list[PlacedDesign], lib: Library) -> None:
             d.wires.remove(stub)
 
 
-def build_board(sheets, lib: Library, outdir: Path) -> bool:
+def build_board(sheets, lib: Library, outdir: Path, *,
+                placements: dict | None = None,
+                root_name: str = "board",
+                sheet_subdir: str = "",
+                reports_dir: Path | None = None) -> bool:
     """Emit the hierarchy into ``outdir`` and run the board netlist gate.
-    ``sheets``: list of schgen.link.SheetCircuit. Returns gate verdict."""
+    ``sheets``: list of schgen.link.SheetCircuit. ``placements`` optionally
+    maps sheet name -> (placement, routed) computed by the caller (one
+    place/route per sheet board-wide). Sub-sheets go to
+    ``outdir/sheet_subdir/<name>.kicad_sch``; the root project is
+    ``outdir/<root_name>.kicad_sch`` + ``.kicad_pro``. Returns the gate
+    verdict."""
     outdir.mkdir(parents=True, exist_ok=True)
+    sheet_dir = outdir / sheet_subdir if sheet_subdir else outdir
+    sheet_dir.mkdir(parents=True, exist_ok=True)
     board_uuid = _u()
 
     placed: list[tuple[str, PlacedDesign, str]] = []   # (name, design, sym_uuid)
     for i, sc in enumerate(sheets, start=1):
-        placement, routed, _geo = place.place_and_route(sc.circuit, lib)
+        if placements and sc.name in placements:
+            placement, routed = placements[sc.name]
+        else:
+            placement, routed, _geo = place.place_and_route(sc.circuit, lib)
         design = PlacedDesign(
             circuit=sc.circuit,
             parts=placement.parts,
@@ -149,6 +163,7 @@ def build_board(sheets, lib: Library, outdir: Path) -> bool:
             hlabels=placement.hlabels,
             llabels=placement.llabels,
             no_connects=placement.no_connects,
+            paper=placement.paper,
         )
         d = uniquify(design, i)
         placed.append((sc.name, d, _u()))
@@ -157,12 +172,12 @@ def build_board(sheets, lib: Library, outdir: Path) -> bool:
     strip_duplicate_flags([d for _, d, _ in placed], lib)
 
     for name, d, sym_uuid in placed:
-        emit(d, outdir / f"{name}.kicad_sch", lib,
+        emit(d, sheet_dir / f"{name}.kicad_sch", lib,
              instance_path=f"/{board_uuid}/{sym_uuid}",
-             project="board", sheet_uuid=_u())
+             project=root_name, sheet_uuid=_u())
 
     # ---- root sheet -----------------------------------------------------------
-    root = PlacedDesign(circuit=Circuit("board", "carrier board root"))
+    root = PlacedDesign(circuit=Circuit(root_name, "carrier board root"))
     entries = []
     for page, (name, d, sym_uuid) in enumerate(placed, start=2):
         ports = sorted(_port_nets(d.circuit))
@@ -210,7 +225,9 @@ def build_board(sheets, lib: Library, outdir: Path) -> bool:
     for x_col, col in col_geo:
         y = TOP_Y
         for name, sym_uuid, ports, shapes, w, h, page in col:
-            sym = SheetSymbol(name=name, file=f"{name}.kicad_sch",
+            fref = f"{sheet_subdir}/{name}.kicad_sch" if sheet_subdir \
+                else f"{name}.kicad_sch"
+            sym = SheetSymbol(name=name, file=fref,
                               x=x_col, y=y, w=w, h=h, uuid=sym_uuid, pins=[],
                               page=str(page))
             for k, port in enumerate(ports):
@@ -229,20 +246,20 @@ def build_board(sheets, lib: Library, outdir: Path) -> bool:
                                               rotation=180))
             root.sheets.append(sym)
             y += h + SHEET_GAP
-    root_path = outdir / "board.kicad_sch"
-    emit(root, root_path, lib, sheet_uuid=board_uuid, project="board")
+    root_path = outdir / f"{root_name}.kicad_sch"
+    emit(root, root_path, lib, sheet_uuid=board_uuid, project=root_name)
     # board ERC policy == the per-sheet fragment policy (schgen/__main__.py):
     # pin_not_driven at WARNING — author-deferred ports' drivers arrive with
     # later-wave subsystems; the per-sheet build already enforces the
     # STRICTER schgen-side _check_inputs_driven.
-    (outdir / "board.kicad_pro").write_text(json.dumps({
-        "meta": {"filename": "board.kicad_pro", "version": 3},
+    (outdir / f"{root_name}.kicad_pro").write_text(json.dumps({
+        "meta": {"filename": f"{root_name}.kicad_pro", "version": 3},
         "erc": {"rule_severities": {"pin_not_driven": "warning"}},
     }, indent=2) + "\n")
     print(f"board: emitted {root_path} (+{len(placed)} sub-sheets, "
           f"root labels bind ports by canonical name)")
 
-    ok = _board_gate(placed, root_path, outdir)
+    ok = _board_gate(placed, root_path, reports_dir or outdir)
     return ok
 
 

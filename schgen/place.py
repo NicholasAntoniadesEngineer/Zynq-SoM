@@ -525,6 +525,13 @@ class _Engine:
                         comp.add(far)
                         todo.append(far)
             seen |= comp
+            if (len(comp) == 1
+                    and self.c.nets[f].net_class is NetClass.PORT
+                    and len(legs[f]) == 1 and legs[f][0][2] == "pin"):
+                # a PORT net reaching the flow through ONE series passive
+                # (Pmod-style series dampers): the part's fan draws it
+                # inline (_series_inline) — not a strap column
+                continue
             self.float_chains.append(self._linearise(comp, legs))
         # chain legs are the CHAIN's to place — purge them from the
         # pull/hang/series registries so no other machinery places them too
@@ -863,13 +870,32 @@ class _Engine:
                     continue
                 else:
                     ys = [pt[1] for _, pt, _ in run]
+                    end_y = (ys[0] if net0.net_class is NetClass.POWER
+                             else ys[-1])
+                    sdef_p = self.lib.get(self._power_lib(net0.name))
+                    px0 = run[0][1][0]
+                    for k in range(40):
+                        jxc = round(jx + sgn * k * 2 * U, 3)
+                        vp = _value_anchor(sdef_p, jxc, end_y, 0)
+                        vbox = tm.centered_box(net0.name, vp[0], vp[1])
+                        sbox = body_box_page(sdef_p, jxc, end_y, 0,
+                                             "body", "?")
+                        ok2 = self._spot_free(vbox) and self._spot_free(
+                            (sbox.x0, sbox.y0, sbox.x1, sbox.y1)) \
+                            and self._spot_free((jxc - 0.1, ys[0] + 0.1,
+                                                 jxc + 0.1, ys[-1] - 0.1),
+                                                pad=0.0) \
+                            and all(self._corridor_free(
+                                yy, px0 + sgn * 0.01, jxc, {net0.name})
+                                for yy in ys)
+                        if ok2:
+                            break
+                    jx = jxc
                     for _, pt, _ in run:
                         self.pl.plan(net0.name, pt, (jx, pt[1]))
                     for y0, y1 in zip(ys, ys[1:]):
                         self.pl.plan(net0.name, (jx, y0), (jx, y1))
-                    end = ((jx, ys[0])
-                           if net0.net_class is NetClass.POWER
-                           else (jx, ys[-1]))
+                    end = (jx, end_y)
                 self.power(net0.name, *end)
                 continue
             # same-net SIGNAL/PORT pin group (stacked duplicate pads, paired
@@ -1029,7 +1055,9 @@ class _Engine:
                 ser = (self._series_of(ln.net)
                        if ln.net_class is NetClass.SIGNAL else None)
                 if ser is not None:
-                    out = self._series_inline(ser, ln.net, tap, sgn)
+                    out, gb2 = self._series_inline(ser, ln.net, tap, sgn,
+                                                   prev_gb)
+                    prev_gb = gb2
                     lane_edge = (out if lane_edge is None else
                                  min(lane_edge, out) if sgn < 0 else
                                  max(lane_edge, out))
@@ -1075,16 +1103,21 @@ class _Engine:
             return None
         s = cand[0]
         far = s[2] if s[1] == net else s[1]
-        if far in self.trunks or far not in self.multi_nets:
+        if far in self.trunks:
+            return None
+        if far not in self.multi_nets and \
+                self.c.nets[far].net_class is not NetClass.PORT:
             return None
         return s
 
     def _series_inline(self, ser: tuple[str, str, str], net: str,
-                       tap: tuple[float, float], sgn: int) -> float:
+                       tap: tuple[float, float], sgn: int,
+                       avoid_gb: tuple | None = None):
         """Place a series passive INLINE on a fan line (the line continues
         through it); the far net ends on a labeled stub — its own geometry
-        (channel run, fan) carries a matching label. Returns the outer
-        text edge."""
+        (channel run, fan) carries a matching label. Returns (outer text
+        edge, the far label's box). ``avoid_gb``: the previous label's box;
+        the inline shifts outward until its far label clears it."""
         sref = ser[0]
         far = ser[2] if ser[1] == net else ser[1]
         part = self.c.parts[sref]
@@ -1092,19 +1125,39 @@ class _Engine:
         near_no = self._pin_of_net(sref, net)
         p_near = _pin(sdef, near_no)
         off = abs(p_near.y) if abs(p_near.y) > 1e-6 else abs(p_near.x)
-        ax = tap[0] + sgn * (2 * U + off)
-        self._horizontal_2pin(sref, ax, tap[1], far if sgn < 0 else net)
+        shift = 0.0
+        if avoid_gb is not None and abs(tap[1] - (avoid_gb[1] + avoid_gb[3])
+                                        / 2) < tm.GLABEL_H * tm.SIZE + 1.0:
+            ll = self._glabel_len(far) \
+                if self.c.nets[far].net_class is NetClass.PORT \
+                else tm.text_wh(far)[0] + 0.7
+            lx0 = tap[0] + sgn * (2 * U + 2 * off + 2 * U)
+            b0, b1 = (lx0 - ll, lx0) if sgn < 0 else (lx0, lx0 + ll)
+            if b0 - 0.5 < avoid_gb[2] and b1 + 0.5 > avoid_gb[0]:
+                want = (avoid_gb[0] if sgn < 0 else avoid_gb[2]) \
+                    + sgn * (self.sp.stagger_extra + self.sp.label_tap_gap)
+                shift = gceil(max(0.0, (want - lx0) * sgn))
+        ax = tap[0] + sgn * (2 * U + shift + off)
+        self._horizontal_2pin(sref, ax, tap[1],
+                              far if sgn < 0 else net,
+                              text_side="right" if sgn < 0 else "left")
         near_tip = (round(tap[0] + sgn * 2 * U, 3), tap[1])
         far_tip = (round(ax + sgn * off, 3), tap[1])
         self.pl.plan(net, tap, near_tip)
         lx = round(far_tip[0] + sgn * 2 * U, 3)
         self.pl.plan(far, far_tip, (lx, tap[1]))
         rot = 180 if sgn < 0 else 0
-        self.llabel(far, lx, tap[1], rot)
-        self._bridge(far)
+        if self.c.nets[far].net_class is NetClass.PORT:
+            # the far side IS the sheet interface (series damper to a
+            # contract net): hier label right on the stub
+            self.label(far, lx, tap[1], rot)
+            lb = tm.glabel_box(far, lx, tap[1], rot)
+        else:
+            self.llabel(far, lx, tap[1], rot)
+            self._bridge(far)
+            lb = tm.llabel_box(far, lx, tap[1], rot)
         self.series.remove(ser)
-        lb = tm.llabel_box(far, lx, tap[1], rot)
-        return lb[0] if sgn < 0 else lb[2]
+        return (lb[0] if sgn < 0 else lb[2]), lb
 
     def _attach_halfw(self, ln: _Line) -> float:
         """Outward half-extent of an attachment column's widest text (the
@@ -2971,6 +3024,15 @@ class _Engine:
             if n.net_class is NetClass.SIGNAL \
                     and self._rung_of(n.name, trunk_jobs) is not None:
                 lanes += 1
+                continue
+            ser = self._series_of(n.name) \
+                if n.net_class is NetClass.SIGNAL else None
+            if ser is not None:
+                far = ser[2] if ser[1] == n.name else ser[1]
+                ll = self._glabel_len(far) \
+                    if self.c.nets[far].net_class is NetClass.PORT \
+                    else tm.text_wh(far)[0] + 0.7
+                rows.append((t[1], 12 * U + ll + sp.label_tap_gap))
                 continue
             if n.net_class in (NetClass.PORT, NetClass.SIGNAL):
                 extra = 0.0

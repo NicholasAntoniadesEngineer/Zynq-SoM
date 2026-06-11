@@ -97,13 +97,6 @@ def circuit() -> Circuit:
         c.net(f"BU_PG_{mod}", f"{d.ref}.1", f"{rl.ref}.1")
         c.net("GND", f"{rl.ref}.2")
 
-    # ---- user LEDs: +3V3_USER_LED -> yellow LED -> 330R -> PL pin (sink) ---
-    for k in range(4):
-        d = c.part(c.auto_ref("D"), "Device:LED", "yellow", LED_FP,
-                   LCSC=LCSC_YEL)
-        r = c.part(c.auto_ref("R"), "Device:R", "330R", R_FP,
-                   LCSC=LCSC_330R)
-        c.net("+3V3_USER_LED", f"{d.ref}.2")
-        c.net(f"BU_LED{k}_K", f"{d.ref}.1", f"{r.ref}.1")
-        c.port(f"PL_LED{k}", f"{r.ref}.2", expect=J12_MAP)
+    # (user LEDs live on the user_io sheet, bound to real bank-13 pins —
+    # this sheet only GATES their +3V3_USER_LED rail via switch #8)
     return c
