@@ -41,6 +41,10 @@ from schgen.verify.visual_gate import Box, SheetGeometry
 U = GRID
 A4_CENTER = (148.59, 100.33)
 A3_CENTER = (210.82, 148.59)
+# Tallest content a sheet may carry: the A3 budget place_and_route enforces
+# (265 mm), less the flags row every sheet appends below the extent.
+# Band stacking that would overrun this opens a NEW COLUMN instead.
+PAPER_H_BUDGET = 240.0
 
 POWER_LIBS = {
     "+3V3": "power:+3V3",
@@ -225,6 +229,10 @@ class _Line:
     attach_div: tuple[str, str] | None = None
     net_class: NetClass = NetClass.PORT
     pin_etype: str = ""
+    # connector-scale fan: the line's attachments were deferred to the
+    # rank rows below the flow — the line itself MUST carry a label so
+    # KiCad merges the islets by name (the netlist gate proves it)
+    force_label: bool = False
 
 
 @dataclass
@@ -763,6 +771,11 @@ class _Engine:
                   handled: set[tuple[str, str, str]]) -> None:
         sp = self.sp
         sgn = -1 if side == "left" else 1
+        # snapshot: the rail comb (if any) hugs THIS fan's own geometry —
+        # measuring the whole sheet would drag its bar across foreign
+        # bands (a stage row beside the connector column)
+        boxes_mark = len(self.pl.boxes)
+        plans_mark = {n: len(ps) for n, ps in self.pl.plans.items()}
         # ALL rows on this side (handled pins carry channel/trunk wires
         # straight out — risers must dodge those rows too)
         rows_all = [pt for _pin, pt in items]
@@ -786,6 +799,28 @@ class _Engine:
                 runs[-1].append((pin, pt, net))
             else:
                 runs.append([(pin, pt, net)])
+        # connector-scale detection: a rail net whose pins pepper this side
+        # in MANY separate runs (the VITA-connector idiom) cannot carry a
+        # power symbol per pin between the fan lines. The dominant such net
+        # becomes a vertical COMB trunk OUTSIDE the label fan (the
+        # som-connector x_g pattern); the OTHER rails place after the
+        # labels so their dodge scans SEE the fan texts; pulls/hangs defer
+        # to the rank rows below the flow (an attach stem would cross the
+        # comb taps).
+        rail_run_count: dict[str, int] = {}
+        for run in runs:
+            n0 = run[0][2]
+            if n0 is not None and n0.net_class in (NetClass.POWER,
+                                                   NetClass.GROUND):
+                rail_run_count[n0.name] = rail_run_count.get(n0.name, 0) + 1
+        comb_net: str | None = None
+        if rail_run_count:
+            best = max(sorted(rail_run_count),
+                       key=lambda n: rail_run_count[n])
+            if rail_run_count[best] >= 6:
+                comb_net = best
+        comb_pts: list[tuple[float, float]] = []
+        rail_jobs: list[list] = []
         for run in runs:
             net0 = run[0][2]
             if net0 is None:
@@ -793,110 +828,12 @@ class _Engine:
                     self.pl.no_connects.append(NoConnect(*pt))
                 continue
             if net0.net_class in (NetClass.POWER, NetClass.GROUND):
-                # the rail symbol's value text must clear the part body
-                w_val = tm.text_wh(net0.name)[0]
-                jx_off = max(3.81, gceil(w_val / 2 + 0.7
-                                         - run[0][0].length))
-                jx = run[0][1][0] + sgn * jx_off
-                if len(run) == 1:
-                    pt = run[0][1]
-                    # the riser must not cross the other fan lines on this
-                    # side: flip away from them when the pin is the outermost
-                    # row in the flipped direction (e.g. a VIN pin at the
-                    # bottom of the side, ports above -> symbol points down)
-                    rows_other = [q[1] for q in rows_all if q != pt]
-                    up = net0.net_class is NetClass.POWER
-                    above = any(y < pt[1] - 1e-6 for y in rows_other)
-                    below = any(y > pt[1] + 1e-6 for y in rows_other)
-                    if above and below:
-                        # a riser would cross a neighbouring line: lay the
-                        # symbol SIDEWAYS on the pin row instead (the
-                        # connector-strip pattern). Pick the rotation whose
-                        # glyph extends OUTWARD (GND glyphs sit on -y in
-                        # symbol coords, power glyphs on +y — they rotate
-                        # opposite ways).
-                        rot = 90 if sgn < 0 else 270
-                        sdef_p = self.lib.get(self._power_lib(net0.name))
-                        bb = body_box_page(sdef_p, jx, pt[1], rot, "body", "?")
-                        if (sgn < 0 and bb.x1 > jx + 0.01) or \
-                                (sgn > 0 and bb.x0 < jx - 0.01):
-                            rot = (rot + 180) % 360
-                        w_v = tm.text_wh(net0.name)[0]
-                        for k in range(40):
-                            jxc = round(jx + sgn * k * 2 * U, 3)
-                            bb = body_box_page(sdef_p, jxc, pt[1], rot,
-                                               "body", "?")
-                            vx = (bb.x0 - 0.42 - w_v / 2 if sgn < 0
-                                  else bb.x1 + 0.42 + w_v / 2)
-                            vbox = tm.centered_box(net0.name, vx, pt[1])
-                            if self._spot_free((bb.x0, bb.y0, bb.x1, bb.y1)) \
-                                    and self._spot_free(vbox) \
-                                    and self._corridor_free(
-                                        pt[1], pt[0] + sgn * 0.01, jxc,
-                                        {net0.name}):
-                                break
-                        self.pl.plan(net0.name, pt, (jxc, pt[1]))
-                        self._power_at(net0.name, jxc, pt[1], rot,
-                                       (vx, pt[1]))
-                        continue
-                    if up and above and not below:
-                        up = False
-                    elif not up and below and not above:
-                        up = True
-                    dy = -5.08 if up else 5.08
-                    is_gnd = net0.net_class is NetClass.GROUND
-                    rot = 0 if (is_gnd != up) else 180
-                    sdef_p = self.lib.get(self._power_lib(net0.name))
-                    for k in range(40):
-                        jxc = round(jx + sgn * k * 2 * U, 3)
-                        end = (jxc, pt[1] + dy)
-                        vp = _value_anchor(sdef_p, end[0], end[1], rot)
-                        vbox = tm.centered_box(net0.name, vp[0], vp[1])
-                        sbox = body_box_page(sdef_p, end[0], end[1], rot,
-                                             "body", "?")
-                        ylo, yhi = sorted((pt[1], end[1]))
-                        if self._spot_free(vbox) \
-                                and self._spot_free((sbox.x0, sbox.y0,
-                                                     sbox.x1, sbox.y1)) \
-                                and self._spot_free((jxc - 0.1, ylo + 0.2,
-                                                     jxc + 0.1, yhi - 0.2),
-                                                    pad=0.0) \
-                                and self._corridor_free(
-                                    pt[1], pt[0] + sgn * 0.01, jxc,
-                                    {net0.name}):
-                            break
-                    self.pl.plan(net0.name, pt, (jxc, pt[1]), end)
-                    self.power(net0.name, *end, rot)
-                    continue
+                if net0.name == comb_net:
+                    comb_pts.extend(pt for _, pt, _ in run)
+                elif comb_net is not None:
+                    rail_jobs.append(run)
                 else:
-                    ys = [pt[1] for _, pt, _ in run]
-                    end_y = (ys[0] if net0.net_class is NetClass.POWER
-                             else ys[-1])
-                    sdef_p = self.lib.get(self._power_lib(net0.name))
-                    px0 = run[0][1][0]
-                    for k in range(40):
-                        jxc = round(jx + sgn * k * 2 * U, 3)
-                        vp = _value_anchor(sdef_p, jxc, end_y, 0)
-                        vbox = tm.centered_box(net0.name, vp[0], vp[1])
-                        sbox = body_box_page(sdef_p, jxc, end_y, 0,
-                                             "body", "?")
-                        ok2 = self._spot_free(vbox) and self._spot_free(
-                            (sbox.x0, sbox.y0, sbox.x1, sbox.y1)) \
-                            and self._spot_free((jxc - 0.1, ys[0] + 0.1,
-                                                 jxc + 0.1, ys[-1] - 0.1),
-                                                pad=0.0) \
-                            and all(self._corridor_free(
-                                yy, px0 + sgn * 0.01, jxc, {net0.name})
-                                for yy in ys)
-                        if ok2:
-                            break
-                    jx = jxc
-                    for _, pt, _ in run:
-                        self.pl.plan(net0.name, pt, (jx, pt[1]))
-                    for y0, y1 in zip(ys, ys[1:]):
-                        self.pl.plan(net0.name, (jx, y0), (jx, y1))
-                    end = (jx, end_y)
-                self.power(net0.name, *end)
+                    self._fan_rail_run(run, sgn, rows_all)
                 continue
             # same-net SIGNAL/PORT pin group (stacked duplicate pads, paired
             # connector pins): bus bar on the tip column, ONE line from the
@@ -904,7 +841,16 @@ class _Engine:
             for (_pa, pa, _na), (_pb, pb, _nb) in zip(run, run[1:]):
                 self.pl.plan(net0.name, pa, pb)
             pin0, pt0, _ = run[0]
+            # a SIGNAL net COMPLETE inside this pin group (a connector
+            # loop-back, e.g. a JTAG TDI->TDO bypass strap) needs no line
+            # out: the bus bar IS the whole net — a line would dangle.
+            # PORT nets always run out to their hier label.
+            if net0.net_class is NetClass.SIGNAL and len(run) > 1 \
+                    and {(pr.ref, pr.pin) for pr in net0.pins} <= {
+                        (ref, p.number) for p, _pt, _n in run}:
+                continue
             attach = attach_div = None
+            force_label = False
             pulls = self.pull.get(net0.name, [])
             hangs = self.hang.get(net0.name, [])
             if (net0.net_class is NetClass.SIGNAL
@@ -915,6 +861,12 @@ class _Engine:
                 # RANK below the flow (attach columns would march the fan
                 # outward); filter caps stay at the pin
                 pulls = []
+            if comb_net is not None and (pulls or hangs):
+                # connector-scale side: attachments go to the rank rows
+                # below the flow (their stems cannot cross the comb taps);
+                # the line itself runs out as a LABELED islet
+                pulls, hangs = [], []
+                force_label = True
             if pulls and hangs:
                 if len(pulls) > 1 or len(hangs) > 1:
                     raise PlaceError(f"net {net0.name}: multi-element "
@@ -935,8 +887,13 @@ class _Engine:
                 attach = hangs[0]
                 del self.hang[net0.name]
             lines.append(_Line(net0.name, pt0, attach, attach_div,
-                               net0.net_class, pin0.etype))
+                               net0.net_class, pin0.etype, force_label))
         if not lines:
+            for run in rail_jobs:
+                self._fan_rail_run(run, sgn, rows_all)
+            if comb_pts:
+                self._fan_rail_comb(comb_net, comb_pts, sgn,
+                                    boxes_mark, plans_mark)
             return
         # attachment columns leave the fan on the side their attach rows
         # are NEARER to; a direction crossing a handled (channel / trunk)
@@ -963,7 +920,7 @@ class _Engine:
             return tm.text_wh(l.net)[0] + 0.7
 
         def is_labeled(l: _Line) -> bool:
-            if l.net_class is NetClass.PORT:
+            if l.force_label or l.net_class is NetClass.PORT:
                 return True
             return (l.net_class is NetClass.SIGNAL
                     and self._net_shared(l.net, ref)
@@ -1019,7 +976,7 @@ class _Engine:
                 # down/up to the rank plus a free horizontal corridor from
                 # the pin — verified, never a blind push
                 depth = 12 * U
-                halfw = self._attach_halfw(ln)
+                band_l, band_r = self._attach_band(ln)
                 if ln.attach_div:
                     b0, b1 = py - depth, py + depth
                 elif hang_sgn < 0:
@@ -1028,7 +985,7 @@ class _Engine:
                     b0, b1 = min(py, rank_pin_y), rank_pin_y + depth
                 tx = lx - sgn * sp.label_tap_gap if labeled else lx
                 for _k in range(60):
-                    if self._spot_free((tx - halfw, b0, tx + halfw, b1),
+                    if self._spot_free((tx - band_l, b0, tx + band_r, b1),
                                        pad=0.0) \
                             and self._vband_stem_free(tx, b0, b1, {ln.net}) \
                             and self._corridor_free(py, px + sgn * 0.01, tx,
@@ -1043,9 +1000,11 @@ class _Engine:
             self.pl.plan(ln.net, (px, py), tap)
             edge = None
             if ln.attach_div:
-                edge = self._divider(ln, tap)
+                self._divider(ln, tap)
+                edge = band_l if sgn < 0 else band_r
             elif ln.attach:
-                edge = self._attach_column(ln, tap, rank_pin_y, hang_sgn > 0)
+                self._attach_column(ln, tap, rank_pin_y, hang_sgn > 0)
+                edge = band_l if sgn < 0 else band_r
             if edge is not None:
                 out = tap[0] + sgn * edge
                 lane_edge = (out if lane_edge is None else
@@ -1084,6 +1043,156 @@ class _Engine:
                          and sgn < 0 else
                          max(lane_edge, edge) if lane_edge is not None
                          else edge)
+        # deferred rails (connector-scale side): placed AFTER the labels so
+        # their dodge scans see the fan's texts, the comb outermost
+        for run in rail_jobs:
+            self._fan_rail_run(run, sgn, rows_all)
+        if comb_pts:
+            self._fan_rail_comb(comb_net, comb_pts, sgn,
+                                boxes_mark, plans_mark)
+
+    def _fan_rail_run(self, run: list, sgn: int,
+                      rows_all: list[tuple[float, float]]) -> None:
+        """One POWER/GROUND pin run on a side fan: an outer-row riser, a
+        sideways strip symbol between fan lines, or a short bus for
+        adjacent pins — every candidate spot is dodge-scanned."""
+        net0 = run[0][2]
+        # the rail symbol's value text must clear the part body
+        w_val = tm.text_wh(net0.name)[0]
+        jx_off = max(3.81, gceil(w_val / 2 + 0.7
+                                 - run[0][0].length))
+        jx = run[0][1][0] + sgn * jx_off
+        if len(run) == 1:
+            pt = run[0][1]
+            # the riser must not cross the other fan lines on this
+            # side: flip away from them when the pin is the outermost
+            # row in the flipped direction (e.g. a VIN pin at the
+            # bottom of the side, ports above -> symbol points down)
+            rows_other = [q[1] for q in rows_all if q != pt]
+            up = net0.net_class is NetClass.POWER
+            above = any(y < pt[1] - 1e-6 for y in rows_other)
+            below = any(y > pt[1] + 1e-6 for y in rows_other)
+            if above and below:
+                # a riser would cross a neighbouring line: lay the
+                # symbol SIDEWAYS on the pin row instead (the
+                # connector-strip pattern). Pick the rotation whose
+                # glyph extends OUTWARD (GND glyphs sit on -y in
+                # symbol coords, power glyphs on +y — they rotate
+                # opposite ways).
+                rot = 90 if sgn < 0 else 270
+                sdef_p = self.lib.get(self._power_lib(net0.name))
+                bb = body_box_page(sdef_p, jx, pt[1], rot, "body", "?")
+                if (sgn < 0 and bb.x1 > jx + 0.01) or \
+                        (sgn > 0 and bb.x0 < jx - 0.01):
+                    rot = (rot + 180) % 360
+                w_v = tm.text_wh(net0.name)[0]
+                for k in range(40):
+                    jxc = round(jx + sgn * k * 2 * U, 3)
+                    bb = body_box_page(sdef_p, jxc, pt[1], rot,
+                                       "body", "?")
+                    vx = (bb.x0 - 0.42 - w_v / 2 if sgn < 0
+                          else bb.x1 + 0.42 + w_v / 2)
+                    vbox = tm.centered_box(net0.name, vx, pt[1])
+                    if self._spot_free((bb.x0, bb.y0, bb.x1, bb.y1)) \
+                            and self._spot_free(vbox) \
+                            and self._corridor_free(
+                                pt[1], pt[0] + sgn * 0.01, jxc,
+                                {net0.name}):
+                        break
+                self.pl.plan(net0.name, pt, (jxc, pt[1]))
+                self._power_at(net0.name, jxc, pt[1], rot,
+                               (vx, pt[1]))
+                return
+            if up and above and not below:
+                up = False
+            elif not up and below and not above:
+                up = True
+            dy = -5.08 if up else 5.08
+            is_gnd = net0.net_class is NetClass.GROUND
+            rot = 0 if (is_gnd != up) else 180
+            sdef_p = self.lib.get(self._power_lib(net0.name))
+            for k in range(40):
+                jxc = round(jx + sgn * k * 2 * U, 3)
+                end = (jxc, pt[1] + dy)
+                vp = _value_anchor(sdef_p, end[0], end[1], rot)
+                vbox = tm.centered_box(net0.name, vp[0], vp[1])
+                sbox = body_box_page(sdef_p, end[0], end[1], rot,
+                                     "body", "?")
+                ylo, yhi = sorted((pt[1], end[1]))
+                if self._spot_free(vbox) \
+                        and self._spot_free((sbox.x0, sbox.y0,
+                                             sbox.x1, sbox.y1)) \
+                        and self._spot_free((jxc - 0.1, ylo + 0.2,
+                                             jxc + 0.1, yhi - 0.2),
+                                            pad=0.0) \
+                        and self._corridor_free(
+                            pt[1], pt[0] + sgn * 0.01, jxc,
+                            {net0.name}):
+                    break
+            self.pl.plan(net0.name, pt, (jxc, pt[1]), end)
+            self.power(net0.name, *end, rot)
+            return
+        ys = [pt[1] for _, pt, _ in run]
+        end_y = (ys[0] if net0.net_class is NetClass.POWER
+                 else ys[-1])
+        sdef_p = self.lib.get(self._power_lib(net0.name))
+        px0 = run[0][1][0]
+        for k in range(40):
+            jxc = round(jx + sgn * k * 2 * U, 3)
+            vp = _value_anchor(sdef_p, jxc, end_y, 0)
+            vbox = tm.centered_box(net0.name, vp[0], vp[1])
+            sbox = body_box_page(sdef_p, jxc, end_y, 0,
+                                 "body", "?")
+            ok2 = self._spot_free(vbox) and self._spot_free(
+                (sbox.x0, sbox.y0, sbox.x1, sbox.y1)) \
+                and self._spot_free((jxc - 0.1, ys[0] + 0.1,
+                                     jxc + 0.1, ys[-1] - 0.1),
+                                    pad=0.0) \
+                and all(self._corridor_free(
+                    yy, px0 + sgn * 0.01, jxc, {net0.name})
+                    for yy in ys)
+            if ok2:
+                break
+        jx = jxc
+        for _, pt, _ in run:
+            self.pl.plan(net0.name, pt, (jx, pt[1]))
+        for y0, y1 in zip(ys, ys[1:]):
+            self.pl.plan(net0.name, (jx, y0), (jx, y1))
+        self.power(net0.name, jx, end_y)
+
+    def _fan_rail_comb(self, net: str, pts: list[tuple[float, float]],
+                       sgn: int, boxes_mark: int,
+                       plans_mark: dict[str, int]) -> None:
+        """Connector-scale rail comb: one tap per pin THROUGH the label fan
+        onto a vertical trunk bar outside it, ONE symbol at the outer end
+        (the som-connector x_g idiom — a 61-pin ground cannot carry a
+        power symbol per pin between the fan lines). The bar hugs the
+        FAN'S OWN extent (geometry since the marks), never the sheet's."""
+        pts = sorted(pts, key=lambda p: p[1])
+        ys = sorted({p[1] for p in pts})
+        y0, y1 = ys[0] - 2 * U, ys[-1] + 2 * U
+        edge = pts[0][0] + sgn * 4 * U
+        for b in self.pl.boxes[boxes_mark:]:
+            if b.y0 < y1 and b.y1 > y0:
+                edge = min(edge, b.x0) if sgn < 0 else max(edge, b.x1)
+        for net2, paths in self.pl.plans.items():
+            for path in paths[plans_mark.get(net2, 0):]:
+                for a, b in zip(path, path[1:]):
+                    if min(a[1], b[1]) < y1 and max(a[1], b[1]) > y0:
+                        edge = (min(edge, a[0], b[0]) if sgn < 0
+                                else max(edge, a[0], b[0]))
+        bar_x = gfloor(edge - 2 * U) if sgn < 0 else gceil(edge + 2 * U)
+        for px, py in pts:
+            self.pl.plan(net, (px, py), (bar_x, py))
+        for ya, yb in zip(ys, ys[1:]):
+            self.pl.plan(net, (bar_x, ya), (bar_x, yb))
+        if self.c.nets[net].net_class is NetClass.GROUND:
+            end = (bar_x, round(ys[-1] + 2 * U, 3))
+            self.pl.plan(net, (bar_x, ys[-1]), end)
+        else:
+            end = (bar_x, round(ys[0] - 2 * U, 3))
+            self.pl.plan(net, (bar_x, ys[0]), end)
+        self.power(net, *end, 0)
 
     def _bridge(self, net: str) -> None:
         self.pl.label_bridged.add(net)
@@ -1172,6 +1281,28 @@ class _Engine:
             if far_net is not None:
                 w = max(w, tm.text_wh(far_net.name)[0])
         return w / 2 + 0.7
+
+    def _attach_band(self, ln: _Line) -> tuple[float, float]:
+        """FULL occupied band of an attachment column around its x: the
+        centered rail-symbol value (left+right) PLUS the passive's own
+        Reference/Value texts, which ``passive()`` hangs off the body's
+        right flank — a clearance probe that ignores them plants the next
+        column's body under this one's texts."""
+        base = self._attach_halfw(ln)
+        refs = [ln.attach] if ln.attach else list(ln.attach_div or ())
+        text_w = 0.0
+        body_half = 0.0
+        for ref in refs:
+            if ref is None:
+                continue
+            part = self.c.parts[ref]
+            sdef = self.lib.get(part.lib_id)
+            x0, y0, x1, y1 = sdef.body
+            body_half = max(body_half, abs(x0), abs(x1), abs(y0), abs(y1))
+            text_w = max(text_w, tm.text_wh(ref)[0],
+                         tm.text_wh(part.value)[0])
+        return (max(base, body_half),
+                max(base, body_half + 0.42 + text_w))
 
     # -- attachment column (pull-up to rail / filter cap to ground) -----------------
     def _attach_column(self, ln: _Line, tap: tuple[float, float],
@@ -2119,10 +2250,34 @@ class _Engine:
                     if ch.kind == "pin" and ch.root == n.name:
                         reach = max(reach, len(ch.legs) * 7.62 + 10 * U
                                     - p.y - sdef.body[3])
-            self._cell(ref, 0.0, gceil(ay + reach), handled, {})
+            # the cell anchor is the SYMBOL ORIGIN and the body extends
+            # ABOVE it (-bb.y0): a connector-scale aux part would otherwise
+            # plow through the stage rows already placed — budget the head
+            # so the body top clears the extent (small parts, whose head
+            # fits inside the standard 10*U band gap, keep their position)
+            rot = self.orient.get(ref, 0)
+            bb = body_box_page(sdef, 0.0, 0.0, rot, "body", ref)
+            ex0, ey0, ex1, ey1 = self._extent()
+            ay_ref = gceil(max(ay + reach, ey1 + 4 * U - bb.y0))
+            # post-passes append MORE rows below the extent: reserve their
+            # height before deciding the stack fits the paper
+            pending = 0.0
+            if self.pull or self.hang:
+                pending += 24 * U               # rank row below the flow
+            if self.float_chains:
+                pending += 24 * U               # leftover chain columns
+            if ay_ref + bb.y1 - ey0 > PAPER_H_BUDGET - pending and ex1 > ex0:
+                # stacking below would overrun the tallest sheet (A3):
+                # open a NEW COLUMN beside the extent, its left fan
+                # (labels, risers, attach columns) budgeted clear
+                ax = gceil(ex1 + self._side_reach(ref, "left") + 4 * U)
+                self._cell(ref, ax, gceil(ey0 - bb.y0), handled, {})
+            else:
+                self._cell(ref, 0.0, ay_ref, handled, {})
             ay = gceil(self._extent()[3] + 10 * U)
         self._leftover_chains_columns()
         self._port_strap_columns()
+        self._pull_rank_columns()
         if self.cluster:
             raise PlaceError(f"regulator template: unassigned decoupling caps "
                              f"{self.cluster}")
@@ -2168,13 +2323,27 @@ class _Engine:
             self.label(en_net, lx, pe[1], 180,
                        shape="input" if etype == "input" else "bidirectional")
         (pv, in_rail) = p_in
+        # EN-strap idiom: any OTHER left-side pin tied to the SAME input
+        # rail (EN strapped to VIN, duplicate VIN pins) joins the rail run
+        # via a short elbow tap — silently skipping it would be an OPEN
+        straps: list[tuple[float, float]] = []
+        for p in sdef.pins:
+            net = self.net_of(ref, p.number)
+            if net is None or net.name != in_rail or p.rotation != 0:
+                continue
+            if pins[p.number] != pv:
+                straps.append(pins[p.number])
+        strap_taps = [(round(pv[0] - 2 * U * (k + 1), 3), spt)
+                      for k, spt in enumerate(straps)]
         cin = in_caps.pop(in_rail, [])
         cols = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
                 for i in range(len(cin))]
-        nodes = [pv[0]] + cols
+        nodes = [pv[0]] + cols + [tx for tx, _ in strap_taps]
         nodes_sorted = sorted(set(nodes))
         for xa, xb in zip(nodes_sorted, nodes_sorted[1:]):
             self.pl.plan(in_rail, (xa, pv[1]), (xb, pv[1]))
+        for tx, spt in strap_taps:
+            self.pl.plan(in_rail, (tx, pv[1]), (tx, spt[1]), spt)
         rail_x = cols[-1] if cols else pv[0]
         self.pl.plan(in_rail, (rail_x, pv[1]), (rail_x, pv[1] - 5.08))
         self.power(in_rail, rail_x, pv[1] - 5.08)
@@ -2285,8 +2454,9 @@ class _Engine:
                 self.power(cur_net, *cur)
             self.float_chains.remove(ch)
             slot = gceil(slot + sp.cap_pitch)
-        # rail symbol riser at the end of the run
-        x_r = round(slot - sp.cap_pitch / 2, 3)
+        # rail symbol riser at the end of the run (half-pitch SNAPPED:
+        # an expanded cap_pitch can be an odd grid multiple)
+        x_r = gsnap(slot - sp.cap_pitch / 2)
         nodes.append(x_r)
         nodes = sorted(set(nodes))
         for xa, xb in zip(nodes, nodes[1:]):
@@ -2312,7 +2482,7 @@ class _Engine:
                                               out_rail, downward=True)
             self.power(far, *far_pt)
             slot = gceil(slot + sp.cap_pitch)
-        x_r = round(slot - sp.cap_pitch / 2, 3)
+        x_r = gsnap(slot - sp.cap_pitch / 2)
         nodes.append(x_r)
         nodes = sorted(set(nodes))
         for xa, xb in zip(nodes, nodes[1:]):
@@ -2430,24 +2600,50 @@ class _Engine:
             self._cell(ref, ax, ay, handled, {})
 
     def _pull_rank_columns(self) -> None:
-        """Leftover pull-ups (their nets run as labeled wires elsewhere):
-        the datasheet pull-up rank — one shared rail bar, one resistor per
-        column, a labeled elbow below each."""
-        if not self.pull:
+        """Leftover pull-ups/downs (their nets run as labeled wires
+        elsewhere): the datasheet rank — pull-ups share a rail bar with a
+        labeled elbow below each column; pull-downs MIRROR it (labeled
+        elbow on top, the ground-class symbol at each column's foot). All
+        rails share ONE row, groups marching right."""
+        if not (self.pull or self.hang):
             return
         by_rail: dict[str, list[tuple[str, str]]] = {}
         for sig in sorted(self.pull):
             for pref, rail in self.pull[sig]:
                 by_rail.setdefault(rail, []).append((pref, sig))
+        for sig in sorted(self.hang):
+            for pref in self.hang[sig]:
+                sig_pin = self._pin_of_net(pref, sig)
+                far = self.net_of(pref, self.other_pin(pref, sig_pin))
+                assert far is not None
+                by_rail.setdefault(far.name, []).append((pref, sig))
         self.pull = {}
+        self.hang = {}
+        ex0, _, _, ey1 = self._extent()
+        x = gsnap(ex0 + 8 * U)
+        bar_y = gceil(ey1 + 10 * U)
         for rail, cols in sorted(by_rail.items()):
-            ex0, _, _, ey1 = self._extent()
             pitch = gceil(max(tm.text_wh(s)[0] for _p, s in cols) + 4 * U)
-            x = gsnap(ex0 + 8 * U)
-            bar_y = gceil(ey1 + 10 * U)
+            is_gnd = self.c.nets[rail].net_class is NetClass.GROUND
             xs: list[float] = []
             for pref, sig in cols:
                 xs.append(x)
+                if is_gnd:
+                    # pull-DOWN (a ground rank only ever comes from hangs,
+                    # per _classify): labeled signal elbow on top, the
+                    # ground symbol under the column
+                    knee = (x, round(bar_y - 2 * U, 3))
+                    elbow = (round(x + 2 * U, 3), knee[1])
+                    self.pl.plan(sig, knee, (x, bar_y))
+                    self.pl.plan(sig, knee, elbow)
+                    self.llabel(sig, *elbow, 0)
+                    self._bridge(sig)
+                    far_pt, far = self._vertical_2pin(pref, x, bar_y, sig,
+                                                      downward=True)
+                    assert far == rail
+                    self.power(rail, *far_pt, self._power_rot(rail, True))
+                    x = round(x + pitch, 3)
+                    continue
                 far_pt, far = self._vertical_2pin(pref, x, bar_y, rail,
                                                   downward=True)
                 assert far == sig
@@ -2464,7 +2660,9 @@ class _Engine:
                     self.llabel(sig, *elbow, 0)
                     self._bridge(sig)
                 x = round(x + pitch, 3)
-            if len(xs) == 1:
+            if is_gnd:
+                pass  # pull-down columns carry their own ground symbols
+            elif len(xs) == 1:
                 self.power(rail, xs[0], bar_y)
             else:
                 xm = gsnap((xs[0] + xs[-1]) / 2)
@@ -2473,6 +2671,7 @@ class _Engine:
                     self.pl.plan(rail, (a, bar_y), (b, bar_y))
                 self.pl.plan(rail, (xm, bar_y), (xm, bar_y - 2 * U))
                 self.power(rail, xm, bar_y - 2 * U)
+            x = round(x + 2 * U, 3)         # inter-group air
 
     def _series_port_columns(self) -> None:
         """Leftover series passives bridging TWO PORT nets (differential
