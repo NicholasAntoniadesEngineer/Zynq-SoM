@@ -190,9 +190,13 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
   pmod + user_io + LCD touch I2C keep bank 13. lcd.py expect targets updated.
 
 ## Flags from board-completion harvest (2026-06-11 evening)
-- **fmc.py = LAST placement-blocked sheet** (engine gap at 160-pin connector scale:
-  route cell contested vs +3V3). Netlist+dossier+pinmap json complete; VITA map is
-  machine-parsed (fmc_lpc_pinmap.json), zero hand-typed pins; render eyeball owed.
+- **RESOLVED (2026-06-11): fmc all-gates GREEN** — engine extended generically for
+  160-pin connector scale (aux body-head budget + new-column overflow, EN-strap onto
+  the stage in-rail, GROUND comb trunk outside connector fans = the som x_g idiom,
+  rails placed after labels on connector-scale sides, pull/hang rank rows, attach-band
+  probes covering passive texts). Board: 23 sheets, BOARD GATE PASS; render eyeballed
+  (A3); goldens blessed. Inspected drift: power_mon shunt rank one row (A3->A4),
+  bringup_rails/bringup_en_modules spacing — all clean.
 - **DECISION at power-tree gate: VBUS pre-contract capacitance** — board total ~30uF
   nominal (pd_input 10u + power.py 2x10u unswitched) vs ~10uF PD sink guidance:
   inrush limiter OR trim buck input bulk.
