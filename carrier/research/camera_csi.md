@@ -95,10 +95,34 @@ logic-level shutdown independent of the rail gate.
 
 No 1.0 mm 15P bottom-contact clone with real stock surfaced on the JLC API
 (the AFC01 family the LCD uses is 0.5 mm pitch — NOT cable-compatible).
-VERIFY before netlist authoring: the -1STE1LF vs -2STE1LF actuator/contact
-difference against the Amphenol SFW drawing AND the RPi cable orientation
-(contacts toward PCB); if -1STE1LF's contact side mismatches, order
-C3167933 early (111 units is ghost-risk territory — preflight re-check).
+
+### Contact-orientation VERIFIED (2026-06-11, netlist authoring pass)
+Checked against the Amphenol drawing 10172241 (LCSC datasheet for C3168538,
+6 sheets) AND the `schgen part add C3168538` footprint:
+
+1. **Suffix decode is now FACT, not inference**: sheet 2 note 1 — "SFW__R-
+   **1ST** is the **BOTTOM CONTACT** type"; sheet 4 note 1 — "SFW__R-**2ST**
+   is the **TOP CONTACT** type". So the committed C3168538 (-1STE1LF) is
+   bottom contact, and the forums-confirmed Pi-era part (-2STE1LF) is TOP
+   contact — the two differ ONLY in which cable face is read.
+2. **Pitch confirmed 1.0 mm**: generated footprint pads 1..15 sit at exactly
+   1.00 mm spacing (X = -7.00 ... +7.00). The EasyEDA package name string
+   "CONN-SMD_15P-P0.50_..." is a TYPO in LCSC's CAD library — the geometry
+   is correct (drawing: "1mm CONTACT SPACING CONNECTOR").
+3. **Pin 1 position**: footprint pad 1 is the LEFT-most signal pad viewed
+   component-side with the cable opening toward the viewer (signal tails at
+   the rear, mounting-plate pads 16/17 flanking toward the front) — matches
+   drawing sheet 5 "BASIC PATTERN No.1 CONTACT POSITION". Netlist maps
+   connector pad n = RPi FFC pin n (table in section 0).
+4. **Mechanical consequence (the honest residual)**: with a bottom-contact
+   part the cable must present its contact face toward the carrier PCB.
+   Whether the standard camera cable arrives contacts-down depends on the
+   enclosure's cable fold, NOT on the netlist. Safety valve: sheets 2/4/5
+   show -1ST and -2ST share the IDENTICAL recommended PCB layout ("Cat. No.
+   SFW__R-1/2ST_E1_LF", one pattern) — a late swap to top-contact
+   C3167933 is a BOM-line change only (zero layout/netlist impact). 111
+   units of C3167933 is ghost-risk territory — preflight re-check if the
+   mechanical pass picks it.
 
 ## 4. Future netlist sketch (for the authoring pass — NOT built yet)
 J1(SFW15R) pins 2/3/5/6/8/9 -> 100R diff terms live FPGA-side per XAPP894
@@ -115,8 +139,11 @@ FFC-facing lines (stuffing option, rev A may omit — short internal cable).
 2. **HR-bank D-PHY is a hack** (XAPP894 passives, ~800 Mb/s/lane): fine for
    the V2 (IMX219) defaults; full 4-lane/high-rate cameras (HQ IMX477 max
    modes) are out of scope for this port.
-3. **Connector contact orientation** (section 3) — verify before authoring;
-   exact-part stock is thin.
+3. **Connector contact orientation** — RESOLVED 2026-06-11 (section 3):
+   -1ST = bottom contact per Amphenol 10172241; -1ST/-2ST share one PCB
+   pattern, so the contact-side choice is a BOM-only mechanical decision.
+   Residual: enclosure pass must confirm the cable fold presents
+   contacts-down, else swap to C3167933 (stock thin — re-verify).
 4. **LP-RX pin spend** (4 more bank-35 pins) — decide DNP-vs-stuffed at
    authoring; dossier reserves L18 + L16 pairs.
 5. 22-pin (Pi Zero/5-style) cameras need a 22->15 adapter cable — by
