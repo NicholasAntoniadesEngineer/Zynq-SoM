@@ -78,4 +78,9 @@ def circuit() -> Circuit:
     # ---- SBU unused; shell to chassis (usbc_otg pattern) -------------------
     c.nc("J1.SBU1", "J1.SBU2")
     c.net("CHASSIS_GND", "J1.EH")                        # all four shell pads
+
+    # round-4 coverage gate: probe the raw input rail at its entry
+    c.testpoint("+VIN")
+    c.waive_tp("CHASSIS_GND", "chassis island is probeable at every "
+               "connector shell tab (USB-C/HDMI/magjack); no pad needed")
     return c

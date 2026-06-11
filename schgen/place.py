@@ -3377,7 +3377,15 @@ def center_on_sheet(pl: Placement) -> Placement:
 
 
 def build(c: Circuit, lib: Library, sp: Spacing) -> Placement:
-    return center_on_sheet(_Engine(c, lib, sp).run())
+    # Test points are stripped BEFORE the topology templates run (a probe
+    # point must never perturb the circuit's own layout), then the engine
+    # appends the dedicated probe row below the sheet extent.
+    from schgen import testpoints
+    core, tp_refs = testpoints.split(c)
+    eng = _Engine(core, lib, sp)
+    pl = eng.run()
+    testpoints.add_probe_row(eng, c, tp_refs)
+    return center_on_sheet(pl)
 
 
 def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):

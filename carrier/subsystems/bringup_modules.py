@@ -97,6 +97,12 @@ def circuit() -> Circuit:
     # (user LEDs live on the user_io sheet, bound to real bank-13 pins —
     # this sheet only GATES their +3V3_USER_LED rail via switch #8)
 
+    # round-4 coverage gate: every gated module rail is probed at its
+    # source (the SY6280 output) — rail-by-rail bring-up needs the meter
+    # on THIS side of the module connector
+    for _mod, _in, out_rail, _rs, _ri, _lr, _li in MODULES:
+        c.testpoint(out_rail)
+
     # power-tree budget (round 4): this sheet's own load on each gated rail
     # is its status LED — (3.3-2.0)/330R ~= 3.9 mA on the 3V3 rails,
     # (5-2)/1k = 3 mA on +5V_USB (dossier 3.3)

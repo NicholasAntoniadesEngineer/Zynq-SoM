@@ -152,6 +152,9 @@ def circuit() -> Circuit:
     c.net("+2V5_VADJ", "U1.5", "C4.1", "C5.1",
           *[f"J1.{p}" for p in sorted(sig["VADJ"])])
 
+    # round-4 coverage gate: the locally-generated VADJ rail
+    c.testpoint("+2V5_VADJ")
+
     # power-tree budget (round 4, fmc.md section 4 — the PLAN flag numbers):
     # 3P3V mezzanine allocation 1.0 A from the +3V3 buck; VADJ budget is the
     # local LDO's honest 0.4 A continuous thermal limit

@@ -76,6 +76,9 @@ def circuit() -> Circuit:
     c.net("GND", "J2.GND")                      # both stacked GND pads
     c.nc("J2.SBU1", "J2.SBU2")                  # SBU unused on USB2 port
 
+    # round-4 coverage gate: the VBUS switch enable (every EN is probeable)
+    c.testpoint("VBUS_OUT_EN")
+
     # power-tree budget (round 4): one downstream USB 2.0 device budget
     # (500 mA) through the TPS2051C (0.5 A-class limited switch); CC Rp +
     # ESD array are noise next to it

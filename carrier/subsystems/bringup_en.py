@@ -88,6 +88,11 @@ def circuit() -> Circuit:
         for cap in c.decouple(f"{u.ref}.5", "100n", footprint=C_FP):
             cap.fields["LCSC"] = LCSC_100N
 
+    # round-4 coverage gate: every EN line is probeable (bring-up
+    # philosophy — stage 1 is debugged with a meter on the EN cells)
+    for _name, _a, _b, y_net, _p, _e in CELLS:
+        c.testpoint(y_net)
+
     # power-tree budget (round 4): 3 LVC gates (uA static) + A/B 100k pull
     # networks (33 uA each when driven)
     c.draws("+3V3_SC", 0.002, "3x SN74LVC1G08 + 100k pull networks")

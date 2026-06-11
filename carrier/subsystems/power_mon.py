@@ -81,4 +81,11 @@ def circuit() -> Circuit:
     # power-tree budget (round 4): 2x INA3221 IQ ~350 uA (dossier section 2)
     # + ALERT 10k pull-up when asserted (~0.3 mA) — rounded up
     c.draws("+3V3_SC", 0.002, "2x INA3221 ~0.7 mA + ALERT pull-up")
+
+    # round-4 coverage waivers: the regulator-side shunt nets are 1206 shunt
+    # pads themselves (probe across RS1..RS4 — that IS the measurement);
+    # they feed nothing until the power.py rail split lands (PLAN flag)
+    for rail in ("+VIN_SYS", "+5V_REG", "+3V3_REG", "+1V8_REG"):
+        c.waive_tp(rail, "regulator-side shunt stub — probe the RS pad "
+                         "itself; power.py rail split pending (PLAN flag)")
     return c

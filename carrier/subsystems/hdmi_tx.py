@@ -117,6 +117,12 @@ def circuit() -> Circuit:
     # pin 14 = HEC/Utility, reserved (N.C. on non-HEAC devices, HDMI 1.4)
     c.nc("J1.14")
 
+    # round-4 coverage gate: the (unsourced — power-tree finding) cable-5V
+    # feed rail + the DDC bus this sheet owns
+    c.testpoint("+5V_HDMI_TX")
+    c.testpoint("ZYNQ_HDMI_TX_SCL")
+    c.testpoint("ZYNQ_HDMI_TX_SDA")
+
     # power-tree budget (round 4): TPD12S016 ICCA < 1 mA + the two 10k
     # straps; the cable's +5V is the TPD's integrated 55 mA-limited switch
     # (DS Sec 7.3.10) fed from +5V_HDMI_TX

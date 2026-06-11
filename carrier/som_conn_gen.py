@@ -88,4 +88,13 @@ def connector_circuit(jref: str, name: str, title: str) -> Circuit:
     if jref == "J1":
         c.draws("+VIN", 0.500, "SoM module (Zynq+DDR3L+PHYs) ~10 W class "
                                "at 20 V — estimate, refine at bring-up")
+    # round-4 coverage waivers: the VCCO bank rails are bare connector pins
+    # until the wave-3 J-sheet regen ties them into the rail map (PLAN
+    # board-completion flag: +VCCO_35 = +2V5_VADJ, others = +3V3); probe at
+    # the DF40 pins themselves meanwhile
+    for rail in sorted(c.nets):
+        if rail.startswith("+VCCO_"):
+            c.waive_tp(rail, "bare SoM bank-rail pins until the wave-3 "
+                             "J-sheet rail-map regen (PLAN flag); probe at "
+                             "the DF40 pin")
     return c

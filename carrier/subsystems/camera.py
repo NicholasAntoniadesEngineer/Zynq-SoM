@@ -82,6 +82,12 @@ def circuit() -> Circuit:
     c.net("GND", "J1.1", "J1.4", "J1.7", "J1.10", "C1.2", "C2.2",
           "J1.16", "J1.17")
 
+    # round-4 coverage gate: the dedicated camera I2C bus + the module
+    # enable line (every EN is probeable, bring-up philosophy)
+    c.testpoint("CAM_SCL")
+    c.testpoint("CAM_SDA")
+    c.testpoint("CAM_EN")
+
     # power-tree budget (round 4): RPi V2 module ~250 mA typ, dossier budget
     # 300 mA (camera_csi.md section 0) incl. the I2C pull-ups
     c.draws("+3V3_CAM", 0.300, "RPi camera module budget "

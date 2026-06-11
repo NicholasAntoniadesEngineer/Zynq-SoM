@@ -64,6 +64,12 @@ def circuit() -> Circuit:
     c.net("LCD_VLED_N", "J1.1", "R1.1", "U1.FB")             # current sense
     c.port("LCD_BL_PWM", "U1.EN/PWM", expect=J3_MAP)
 
+    # round-4 coverage gate: the (unsourced — power-tree finding) boost
+    # feed rail + the touch I2C bus this sheet owns
+    c.testpoint("+5V_LCD")
+    c.testpoint("LCD_CTP_SDA")
+    c.testpoint("LCD_CTP_SCL")
+
     # power-tree budget (round 4, lcd_backlight.md section "budget to
     # declare to bringup"): panel logic + touch <= 100 mA; boost input at
     # 133 mA LED current ~= 0.30 A plus margin -> 0.45 A

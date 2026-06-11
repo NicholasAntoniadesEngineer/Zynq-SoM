@@ -82,6 +82,11 @@ def circuit() -> Circuit:
          "U1.DAT0B1", "U1.DAT1B1")
     c.nc("U2.NC", "U2.VCC")        # NC pads 4/9 + floating VCC (as designed)
 
+    # round-4 coverage gate: SDIO CMD/CLK probed on the 1.8 V SoM side
+    # (where the level translator's timing actually matters)
+    c.testpoint("SDIO_CMD")
+    c.testpoint("SDIO_CLK")
+
     # power-tree budget (round 4): SD card 3.3 V class up to ~200 mA write
     # bursts (SD phys spec) + 6x 10k pulls + TXS VCCB — inside the 1 A
     # SY6280 cell-5 limit; TXS02612 VCCA side is uA-class but budgeted

@@ -156,6 +156,11 @@ def circuit() -> Circuit:
     c.net("PG_1V8_K", "R9.1", "D3.1")
     c.net("+3V3", "D3.2")
 
+    # ---- test points (round 4 coverage gate): the three generated rails +
+    # a ground probe return, at their source sheet ----------------------------
+    for net in ("+5V", "+3V3", "+1V8", "GND"):
+        c.testpoint(net)
+
     # ---- power-tree budget declarations (round 4 gate) ----------------------
     c.draws("+5V", 0.004, "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA")
     c.draws("+3V3", 0.009, "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain "

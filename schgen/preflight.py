@@ -138,6 +138,8 @@ def cmd_preflight(args: argparse.Namespace) -> int:
         mod = _load_subsystem(name)
         c = mod.circuit()
         for ref, part in sorted(c.parts.items()):
+            if (part.fields or {}).get("BOM") == "exclude":
+                continue       # pad-only test points: copper, no BOM line
             lcsc = (part.fields or {}).get("LCSC", "").strip()
             label = f"{c.name}:{ref}"
             if not lcsc:

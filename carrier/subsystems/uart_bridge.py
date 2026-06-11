@@ -79,6 +79,11 @@ def circuit() -> Circuit:
     c.nc("U1.1", "U1.10", "U1.11", "U1.12", "U1.13", "U1.14", "U1.15",
          "U1.16", "U1.17", "U1.22", "U1.23", "U1.24")
 
+    # round-4 coverage gate: the console UART is THE bring-up bus — probe
+    # both directions at the bridge
+    c.testpoint("ZYNQ_PS_UART0_TXD")
+    c.testpoint("ZYNQ_PS_UART0_RXD")
+
     # power-tree budget (round 4): CP2102N active ICC ~14 mA typ (DS table
     # 4.3) + 1k RST pull-up, self-powered from +3V3
     c.draws("+3V3", 0.015, "CP2102N active ~14 mA typ + RST 1k pull-up")

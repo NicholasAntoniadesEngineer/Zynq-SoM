@@ -134,6 +134,12 @@ def circuit() -> Circuit:
     c.port("STM32_NRST", "SW5.1", "SW5.2", f"{cr.ref}.1")
     c.net("GND", "SW5.3", "SW5.4", f"{cr.ref}.2")
 
+    # round-4 coverage gate: the always-on SC rail + the shared SC I2C bus
+    # are probed HERE (the sheet that owns the bus pull-ups)
+    c.testpoint("+3V3_SC")
+    c.testpoint("STM32_I2C2_SDA")
+    c.testpoint("STM32_I2C2_SCL")
+
     # power-tree budget (round 4, dossier R3: subsystem total < 5 mA):
     # TCA9535 uA-class + 12 closed-DIP pull currents (33 uA each) + I2C/INT
     # pull-ups when sinking

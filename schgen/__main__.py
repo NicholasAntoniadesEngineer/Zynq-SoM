@@ -258,6 +258,8 @@ def cmd_bom(args: argparse.Namespace) -> int:
         mod = _load_subsystem(name)
         c = mod.circuit()
         for ref, part in sorted(c.parts.items()):
+            if part.fields.get("BOM") == "exclude":
+                continue       # pad-only test points: copper, no BOM line
             lcsc = part.fields.get("LCSC", "")
             if not lcsc:
                 missing.append(f"{c.name}:{ref} ({part.value})")
@@ -462,6 +464,8 @@ def cmd_board(args: argparse.Namespace) -> int:
     missing: list[str] = []
     for sc in sheets:
         for ref, part in sorted(sc.circuit.parts.items()):
+            if part.fields.get("BOM") == "exclude":
+                continue       # pad-only test points: copper, no BOM line
             lcsc = part.fields.get("LCSC", "")
             if not lcsc:
                 missing.append(f"{sc.name}:{ref} ({part.value})")
@@ -485,6 +489,18 @@ def cmd_board(args: argparse.Namespace) -> int:
     for e in pt_res.errors:
         print(f"  POWER TREE ERROR: {e}")
     ok_all = ok_all and pt_res.ok
+
+    # test-point coverage gate (round 4): every rail + key single-ended bus
+    # owns a probe point or an explicit author waiver.
+    from schgen import testpoints
+    tp_res = testpoints.check_coverage(sheets)
+    (rep_dir / "testpoints.txt").write_text(tp_res.report() + "\n")
+    print(f"TESTPOINTS: {'PASS' if tp_res.ok else 'FAIL'} "
+          f"({tp_res.covered}/{len(tp_res.required)} required covered, "
+          f"{len(tp_res.waived)} waived -> {rep_dir / 'testpoints.txt'})")
+    for e in tp_res.errors:
+        print(f"  TESTPOINT ERROR: {e}")
+    ok_all = ok_all and tp_res.ok
 
     # Vivado pin constraints (round 4): every carrier PORT bound through
     # J2/J3 to a Zynq PL ball, ball map live-extracted from the SoM project
