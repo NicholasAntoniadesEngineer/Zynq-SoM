@@ -104,6 +104,13 @@ class _NetGeom:
     pin_parts: dict[Point, set[str]] = field(default_factory=dict)   # part refs
     power_pts: set[Point] = field(default_factory=set)
     label_pts: set[Point] = field(default_factory=set)
+    # same-pad bonds: a symbol carrying DUPLICATE pin numbers (flow-through
+    # parts, e.g. an inline ESD companion whose TMDS line enters one edge and
+    # leaves the other) exposes ONE physical pad at several geometry points.
+    # KiCad nets them as one pin (duplicate_pin_numbers_are_jumpers — proven
+    # against kicad-cli netlist export); the connectivity proof must use the
+    # same electrical truth. Bonds add adjacency only — no cells, no wires.
+    bonds: list[tuple[Point, Point]] = field(default_factory=list)
 
 
 def _leg_cells(a: Point, b: Point) -> list[Cell]:
@@ -124,6 +131,7 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
     geoms: dict[str, _NetGeom] = {n: _NetGeom() for n in circuit.nets}
 
     # ---- 1. claim every component pin stem for its net (or NC owner) --------
+    pad_tips: dict[tuple[str, str], list[Point]] = {}   # (ref, number) -> tips
     for part in placement.parts:
         sdef = lib.get(part.lib_id)
         for pin in sdef.pins:
@@ -142,6 +150,12 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
             if net is not None:
                 g = geoms[net]
                 g.pin_parts.setdefault(tip, set()).add(part.ref)
+                pad_tips.setdefault((part.ref, pin.number), []).append(tip)
+    # duplicate pin numbers on one part = ONE physical pad (KiCad jumper-pin
+    # semantics): bond their tips so connectivity is judged electrically
+    for (_ref, _num), tips in pad_tips.items():
+        for a, b in zip(tips, tips[1:]):
+            geoms[net_of_pin[f"{_ref}.{_num}"]].bonds.append((a, b))
 
     # ---- 2. power symbol pins -----------------------------------------------
     for pw in placement.powers:
@@ -253,7 +267,7 @@ def _components(g: _NetGeom) -> list[set[Point]]:
     """Connected components over leg endpoints + terminal points."""
     pts: set[Point] = set(g.pin_parts) | g.power_pts | g.label_pts
     adj: dict[Point, set[Point]] = {p: set() for p in pts}
-    for a, b in g.legs:
+    for a, b in list(g.legs) + list(g.bonds):
         adj.setdefault(a, set()); adj.setdefault(b, set())
         adj[a].add(b); adj[b].add(a)
     seen: set[Point] = set()

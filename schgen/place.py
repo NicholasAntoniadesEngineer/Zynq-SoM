@@ -37,6 +37,9 @@ POWER_LIBS = {
     "VBUS": "power:VBUS",
     "+VIN": "schgen:+VIN",
     "CHASSIS_GND": "schgen:CHASSIS_GND",
+    # gated module rails (bringup_power_gating dossier: SY6280 outputs)
+    "+3V3_HDMI_TX": "schgen:+3V3_HDMI_TX",
+    "+5V_HDMI_TX": "schgen:+5V_HDMI_TX",
 }
 
 
