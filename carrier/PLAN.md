@@ -120,3 +120,18 @@ time — from nothing but its netlist.
 3. **Root README.md** — high level only: what the repo is, the three layers
    (parts → subsystems → board), and how to generate the schematics/projects
    (`schgen build <name>`, `schgen board`). Compact; defers detail to the layer READMEs.
+
+## Output taxonomy (user, 2026-06-11) — carrier/out/ DIES, mirror som/
+```
+carrier/
+  Zynq_Carrier.kicad_pro   # generated KiCad project — double-click to open (like som/Zynq_SoM.kicad_pro)
+  Zynq_Carrier.kicad_sch   # generated root sheet
+  schematic/               # generated sub-sheets (*.kicad_sch), committed
+  renders/                 # flat <name>.png per sheet, committed (GitHub-reviewable)
+  reports/                 # ERC / link / gate verdicts, committed (proof travels with design)
+  manufacturing/           # bom_jlc.csv, layout_constraints.*, preflight report
+  subsystems/              # authored netlists (*.py) — the only hand-written layer
+  som_interface.json, nets.py (generated contract), PLAN.md, README.md
+```
+No scratch dir; everything regenerated in place, deterministic. The authoring-v2/refactor
+agent implements this (CLI output paths + .gitignore + README references).
