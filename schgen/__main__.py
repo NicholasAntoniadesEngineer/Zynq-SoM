@@ -488,7 +488,7 @@ def cmd_board(args: argparse.Namespace) -> int:
         ok_all = False
 
     # round-4 system artifacts, derived from the same netlists.
-    from schgen import firmware, manual
+    from schgen import firmware, gallery, manual
     try:
         fw_out = firmware.generate()
         print(f"FIRMWARE CONTRACT: {fw_out}")
@@ -500,6 +500,13 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"BRINGUP MANUAL: {mn_out}")
     except Exception as exc:  # noqa: BLE001
         print(f"BRINGUP MANUAL: FAIL — {exc}")
+        ok_all = False
+    try:
+        changed = gallery.generate()
+        print("GALLERY: README.md + carrier/README.md "
+              + ("updated" if changed else "unchanged"))
+    except Exception as exc:  # noqa: BLE001
+        print(f"GALLERY: FAIL — {exc}")
         ok_all = False
 
     (rep_dir / "gates.txt").write_text(
@@ -597,6 +604,11 @@ def main(argv: list[str] | None = None) -> int:
     mn.add_argument("-o", "--output", type=Path, default=None)
     from schgen.manual import cmd_manual
     mn.set_defaults(func=cmd_manual)
+    ga = sub.add_parser(
+        "gallery", help="regenerate the render-gallery sections (between "
+                        "markers) in README.md + carrier/README.md")
+    from schgen.gallery import cmd_gallery
+    ga.set_defaults(func=cmd_gallery)
     st = sub.add_parser(
         "selftest", help="gate MUTATION testing + build-determinism proof "
                          "(the no-CI answer to 'who watches the watchmen')")
