@@ -203,6 +203,7 @@ def cmd_build(args: argparse.Namespace) -> int:
         hlabels=placement.hlabels,
         llabels=placement.llabels,
         no_connects=placement.no_connects,
+        paper=placement.paper,
     )
     outdir = args.outdir or DEFAULT_OUT
     outdir.mkdir(parents=True, exist_ok=True)

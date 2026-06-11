@@ -113,6 +113,8 @@ class Library:
 def _clone_replace(node, old: str, new: str):
     if isinstance(node, list):
         return [_clone_replace(x, old, new) for x in node]
+    if isinstance(node, sexpr.Sym):      # Sym subclasses str: keep keywords
+        return node
     if isinstance(node, str):
         return node.replace(old, new)
     return node

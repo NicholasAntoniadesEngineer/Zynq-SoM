@@ -2,9 +2,15 @@
 
 Reference circuit per the onsemi FUSB302B datasheet (and the carrier's
 hand-audited usb_pd sheet): VDD bypassed 100n + 10u, VBUS (fed from +VIN)
-bypassed 100n, 200p filter caps on each CC line, 4k7 pull-ups to +3V3 on
-SDA / SCL / INT_N (INT_N is open-drain). VCONN sourcing is unused by design
--> both VCONN pins are explicit author no-connects.
+bypassed 100n, 200p filter caps on each CC line. VCONN sourcing is unused
+by design -> both VCONN pins are explicit author no-connects.
+
+Bring-up dossier risk R1 (carrier/research/bringup_power_gating.md): PD
+negotiation must happen BEFORE any DIP-gated carrier rail exists — the
+board boots on default 5 V VBUS. FUSB302 VDD and the INT_N pull-up
+therefore live on +3V3_SC (the SoM system-controller rail); the SHARED
+STM32_I2C2 bus pull-ups (4k7 to +3V3_SC) live once, on bringup_rails with
+the TCA9535 — not duplicated here.
 
 Stock symbol Interface_USB:FUSB302BMPX (WQFN-14 + EP): stacked duplicate
 pins 4 (VDD), 9/15 (GND/EP), 11 (CC1), 14 (CC2) are declared on the same
@@ -23,11 +29,12 @@ def circuit() -> Circuit:
     c = Circuit("usb_pd", "USB-PD: FUSB302B Type-C controller")
     c.part("U1", LIB_ID, "FUSB302BMPX", FOOTPRINT)
 
-    # power
-    c.net("+3V3", "U1.3", "U1.4")                 # VDD (+ stacked pin 4)
+    # power — +3V3_SC (always-on SC rail), NEVER a DIP-gated carrier rail:
+    # PD brings the 20 V in, so it cannot depend on rails it creates (R1)
+    c.net("+3V3_SC", "U1.3", "U1.4")              # VDD (+ stacked pin 4)
     c.net("+VIN", "U1.2")                         # VBUS sense, fed from +VIN
     c.net("GND", "U1.8", "U1.9", "U1.15")         # GND + stacked + EP
-    c.decouple("U1.3", "100n", "10u")             # C1, C2 on +3V3
+    c.decouple("U1.3", "100n", "10u")             # C1, C2 on +3V3_SC
     c.decouple("U1.2", "100n")                    # C3 on +VIN
 
     # Type-C CC lines to the connector (external interface) + 200p filters
@@ -39,9 +46,11 @@ def circuit() -> Circuit:
         c.net(net.name, f"{ref}.1")
         c.net("GND", f"{ref}.2")
 
-    # I2C + interrupt to the STM32, pulled to +3V3. The SoM contract exposes
-    # raw STM32_GPIO* names; the generated J1 sheet (wave 3) carries the
-    # GPIO->I2C2/INT function map, so these ports are explicitly deferred.
+    # I2C + interrupt to the STM32. The SoM contract exposes raw STM32_GPIO*
+    # names; the generated J1 sheet (wave 3) carries the GPIO->I2C2/INT
+    # function map, so these ports are explicitly deferred. The shared-bus
+    # SDA/SCL pull-ups live on bringup_rails (+3V3_SC, dossier R1); only
+    # the open-drain INT_N pull-up is this sheet's own.
     J1_MAP = "som_j1_connector (wave 3 STM32 GPIO function map)"
     c.port("STM32_I2C2_SDA", "U1.7",
            kind="i2c", role="sda", bus="STM32_I2C2", speed_hz=400_000,
@@ -50,9 +59,7 @@ def circuit() -> Circuit:
            kind="i2c", role="scl", bus="STM32_I2C2", speed_hz=400_000,
            expect=J1_MAP)
     c.port("STM32_FUSB302_INT", "U1.5", expect=J1_MAP)
-    c.pullup("U1.7", "4k7", "+3V3")               # R1
-    c.pullup("U1.6", "4k7", "+3V3")               # R2
-    c.pullup("U1.5", "4k7", "+3V3")               # R3
+    c.pullup("U1.5", "4k7", "+3V3_SC")            # R1 (INT_N, open-drain)
 
     # VCONN sourcing unused by design
     c.nc("U1.12", "U1.13")

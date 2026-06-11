@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"U"
-			(at 0 10.16 0)
+			(at 0 13.97 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23,7 +23,7 @@
 		(property
 			"Value"
 			"SY6280AAC"
-			(at 0 -10.16 0)
+			(at 0 -13.97 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -77,8 +77,8 @@
 		(symbol
 			"SY6280AAC_0_1"
 			(rectangle
-				(start -5.08 6.35)
-				(end 5.08 -6.35)
+				(start -5.08 10.16)
+				(end 5.08 -10.16)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -93,7 +93,7 @@
 			(pin
 				passive
 				line
-				(at 7.62 3.81 180)
+				(at 7.62 7.62 180)
 				(length 2.54)
 				(name
 					"OUT"
@@ -115,7 +115,7 @@
 			(pin
 				passive
 				line
-				(at 7.62 1.27 180)
+				(at 7.62 5.08 180)
 				(length 2.54)
 				(name
 					"ISET"
@@ -137,7 +137,7 @@
 			(pin
 				passive
 				line
-				(at 7.62 -1.27 180)
+				(at 7.62 2.54 180)
 				(length 2.54)
 				(name
 					"EN"
@@ -159,7 +159,7 @@
 			(pin
 				passive
 				line
-				(at 7.62 -3.81 180)
+				(at 7.62 0 180)
 				(length 2.54)
 				(name
 					"IN"
@@ -181,7 +181,7 @@
 			(pin
 				passive
 				line
-				(at 0 -8.89 90)
+				(at 0 -12.7 90)
 				(length 2.54)
 				(name
 					"GND"

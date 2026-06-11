@@ -40,6 +40,7 @@ from schgen.verify.visual_gate import Box, SheetGeometry
 
 U = GRID
 A4_CENTER = (148.59, 100.33)
+A3_CENTER = (210.82, 148.59)
 
 POWER_LIBS = {
     "+3V3": "power:+3V3",
@@ -124,6 +125,7 @@ class Placement:
     # datasheet idiom for ESD/shunt banks, pull-up ranks, demoted channels):
     # the router accepts the split ONLY when every islet carries a label.
     label_bridged: set[str] = field(default_factory=set)
+    paper: str = "A4"
 
     def plan(self, net: str, *pts: tuple[float, float]) -> None:
         self.plans.setdefault(net, []).append(
@@ -511,7 +513,7 @@ class _Engine:
 
         self.float_chains: list[_FloatChain] = []
         seen: set[str] = set()
-        for f in floating:
+        for f in sorted(floating):   # set order is hash-seed noise
             if f in seen or not legs[f]:
                 continue
             comp = {f}
@@ -524,6 +526,21 @@ class _Engine:
                         todo.append(far)
             seen |= comp
             self.float_chains.append(self._linearise(comp, legs))
+        # chain legs are the CHAIN's to place — purge them from the
+        # pull/hang/series registries so no other machinery places them too
+        used_refs = {ref for ch in self.float_chains
+                     for ref, _u, _l in ch.legs} | \
+                    {r for ch in self.float_chains
+                     for refs in ch.hangs.values() for r in refs}
+        for k in list(self.pull):
+            self.pull[k] = [t for t in self.pull[k] if t[0] not in used_refs]
+            if not self.pull[k]:
+                del self.pull[k]
+        for k in list(self.hang):
+            self.hang[k] = [r for r in self.hang[k] if r not in used_refs]
+            if not self.hang[k]:
+                del self.hang[k]
+        self.series = [s for s in self.series if s[0] not in used_refs]
 
     def _linearise(self, comp: set[str],
                    legs: dict[str, list[tuple[str, str, str]]]) -> _FloatChain:
@@ -945,33 +962,56 @@ class _Engine:
         inner_len = max((label_len(l) for i, l in enumerate(lines)
                          if cols.get(i) == "inner"), default=0.0)
 
-        prev_label_edge: float | None = None
-        prev_label_y: float | None = None
+        prev_gb: tuple[float, float, float, float] | None = None
         lane_edge: float | None = None           # outermost text edge so far
+
+        def approx_box(l: _Line, ax: float):
+            ll = label_len(l)
+            x0, x1 = (ax - ll, ax) if sgn < 0 else (ax, ax + ll)
+            return (x0, l.pin_pt[1] - 1.45, x1, l.pin_pt[1] + 1.45)
+
         for idx, ln in enumerate(lines):
             px, py = ln.pin_pt
             lx = px + sgn * sp.port_run
             if cols.get(idx) == "outer":
                 lx += sgn * gceil(inner_len + 1.27)
-            elif (prev_label_edge is not None and prev_label_y is not None
-                    and abs(py - prev_label_y) < label_clash_dy):
-                want = prev_label_edge + sgn * (sp.stagger_extra
-                                                + sp.label_tap_gap)
-                lx = min(lx, gfloor(want)) if sgn < 0 else max(lx, gceil(want))
-            if ln.attach and lane_edge is not None:
-                # the attachment column must clear every row between this
-                # line and the rank row: push past the outermost text edge
-                between = [l for l in lines if l is not ln
-                           and (l.pin_pt[1] - py) * hang_sgn > 0]
-                if between:
-                    want = lane_edge + sgn * (sp.stagger_extra
-                                              + sp.label_tap_gap
-                                              + self._attach_halfw(ln))
-                    lx = min(lx, gfloor(want)) if sgn < 0 else max(lx, gceil(want))
+            if prev_gb is not None:
+                # push past the previous label ONLY when the boxes truly
+                # clash (a column-cleared neighbour never forces a push)
+                bx = approx_box(ln, lx)
+                if (bx[0] - 0.5 < prev_gb[2] and bx[2] + 0.5 > prev_gb[0]
+                        and bx[1] - 0.5 < prev_gb[3]
+                        and bx[3] + 0.5 > prev_gb[1]):
+                    want = (prev_gb[0] if sgn < 0 else prev_gb[2]) \
+                        + sgn * (sp.stagger_extra + sp.label_tap_gap)
+                    lx = min(lx, gfloor(want)) if sgn < 0 \
+                        else max(lx, gceil(want))
             labeled = is_labeled(ln)
             rot = 180 if side == "left" else 0
-            if labeled and (ln.attach or ln.attach_div):
-                tap = (lx - sgn * sp.label_tap_gap, py)
+            if ln.attach or ln.attach_div:
+                # find a CLEAR column for the attachment: free vertical band
+                # down/up to the rank plus a free horizontal corridor from
+                # the pin — verified, never a blind push
+                depth = 12 * U
+                halfw = self._attach_halfw(ln)
+                if ln.attach_div:
+                    b0, b1 = py - depth, py + depth
+                elif hang_sgn < 0:
+                    b0, b1 = rank_pin_y - depth, max(py, rank_pin_y)
+                else:
+                    b0, b1 = min(py, rank_pin_y), rank_pin_y + depth
+                tx = lx - sgn * sp.label_tap_gap if labeled else lx
+                for _k in range(60):
+                    if self._spot_free((tx - halfw, b0, tx + halfw, b1),
+                                       pad=0.0) \
+                            and self._vband_stem_free(tx, b0, b1, {ln.net}) \
+                            and self._corridor_free(py, px + sgn * 0.01, tx,
+                                                    {ln.net}):
+                        break
+                    tx = round(tx + sgn * 2 * U, 3)
+                tap = (tx, py)
+                if labeled:
+                    lx = tx + sgn * sp.label_tap_gap
             else:
                 tap = (lx, py)
             self.pl.plan(ln.net, (px, py), tap)
@@ -1010,8 +1050,7 @@ class _Engine:
                 self.llabel(ln.net, lx, py, rot)
                 self._bridge(ln.net)
                 gb = tm.llabel_box(ln.net, lx, py, rot)
-            prev_label_edge = gb[0] if sgn < 0 else gb[2]
-            prev_label_y = py
+            prev_gb = gb
             edge = gb[0] if sgn < 0 else gb[2]
             lane_edge = (min(lane_edge, edge) if lane_edge is not None
                          and sgn < 0 else
@@ -1120,14 +1159,20 @@ class _Engine:
         dy = -2.54 if up else 2.54
         sdef = self.lib.get(self._power_lib(net))
         rot = self._rail_rot(net, side)
-        for k in (1, 2, 3):
-            for dx in (0.0, 5.08, -5.08, 10.16, -10.16, 15.24, -15.24):
+        for k in (1, 2, 3, 4, 5, 6, 8):
+            for dx in (0.0, 5.08, -5.08, 10.16, -10.16, 15.24, -15.24,
+                       20.32, -20.32, 25.4, -25.4):
                 end = (round(pt[0] + dx, 3), round(pt[1] + dy * k, 3))
                 vp = _value_anchor(sdef, end[0], end[1], rot)
                 vbox = tm.centered_box(net, vp[0], vp[1])
                 sbox = body_box_page(sdef, end[0], end[1], rot, "body", "?")
+                ylo, yhi = sorted((pt[1], end[1]))
                 ok = self._spot_free(vbox) and self._spot_free(
-                    (sbox.x0, sbox.y0, sbox.x1, sbox.y1))
+                    (sbox.x0, sbox.y0, sbox.x1, sbox.y1)) \
+                    and self._vband_stem_free(pt[0], ylo + 0.2, yhi - 0.2,
+                                              {net}) \
+                    and self._spot_free((pt[0] - 0.15, ylo + 0.2,
+                                         pt[0] + 0.15, yhi - 0.2), pad=0.0)
                 if ok and dx:
                     xa, xb = sorted((pt[0], end[0]))
                     ok = self._spot_free((xa, end[1] - 0.5, xb, end[1] + 0.5),
@@ -1139,9 +1184,7 @@ class _Engine:
                         self.pl.plan(net, pt, (pt[0], end[1]), end)
                     self.power(net, end[0], end[1], rot)
                     return
-        end = (pt[0], round(pt[1] + dy * 4, 3))
-        self.pl.plan(net, pt, end)
-        self.power(net, end[0], end[1], rot)
+        raise PlaceError(f"{net}: no clear rail-stub spot off {pt}")
 
     def _rail_bus(self, net: str, pts: list[tuple[float, float]],
                   side: str) -> None:
@@ -1418,7 +1461,9 @@ class _Engine:
                 self._chain_mid_features_left(ch, cur_net, cur)
             if self.c.nets[cur_net].net_class in (NetClass.POWER,
                                                   NetClass.GROUND):
-                self.power(cur_net, *cur)
+                end_c = (cur[0], round(cur[1] + 2 * U, 3))
+                self.pl.plan(cur_net, cur, end_c)
+                self.power(cur_net, *end_c, self._power_rot(cur_net, True))
 
         # terminators (caps to a ground-class net) at whichever outer end
         # grows the sheet LESS — the band is exactly the trunk row plus the
@@ -1585,6 +1630,28 @@ class _Engine:
                     return False
         return True
 
+    def _vband_stem_free(self, x: float, y0: float, y1: float,
+                         skip: set[str]) -> bool:
+        """No foreign pin stem crosses the vertical band at column ``x``."""
+        for part in self.pl.parts:
+            sdef = self.lib.get(part.lib_id)
+            for pin in sdef.pins:
+                if pin.hidden:
+                    continue
+                n = self.net_of(part.ref, pin.number)
+                if n is not None and n.name in skip:
+                    continue
+                tip = pin_page_position(pin, part.x, part.y, part.rotation)
+                dxn, dyn = route._stem_dir(pin.rotation, part.rotation)
+                root = (round(tip[0] + dxn * pin.length, 3),
+                        round(tip[1] + dyn * pin.length, 3))
+                sx0, sx1 = sorted((tip[0], root[0]))
+                sy0, sy1 = sorted((tip[1], root[1]))
+                if sx0 - 0.3 <= x <= sx1 + 0.3 \
+                        and sy0 - 0.3 <= y1 and sy1 + 0.3 >= y0:
+                    return False
+        return True
+
     def _escape_lane(self, sgn: int, pt: tuple[float, float], ty: float,
                      net: str) -> float:
         """Lane column for an L-shaped side escape from pin ``pt`` to the
@@ -1618,8 +1685,20 @@ class _Engine:
         if not n_caps:
             return
         span = (n_caps - 1) * sp.cap_pitch
-        col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
-        cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
+        if n_caps > 4:
+            # a cap FARM: its own row under the whole flow
+            ex0, _, _, ey1 = self._extent()
+            col_x = gsnap(ex0 + 4 * U)
+            cy = gceil(ey1 + 8 * U)
+        else:
+            col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
+            cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
+            # below anything already occupying the cluster's column band
+            # (attach columns, fan labels — the cluster dodges, never
+            # collides)
+            floor = self._cell_floor(col_x - 2 * sp.cap_pitch,
+                                     col_x + span + 2 * sp.cap_pitch)
+            cy = max(cy, gceil(floor + 4 * sp.hang_stub))
         prev_rail_w: float | None = None
         for rail, caps in self.cluster.items():
             if prev_rail_w is not None:
@@ -1718,7 +1797,9 @@ class _Engine:
                 self._chain_mid_features(ch, cur_net, cur)
             if self.c.nets[cur_net].net_class in (NetClass.POWER,
                                                   NetClass.GROUND):
-                self.power(cur_net, *cur)
+                end_c = (cur[0], round(cur[1] + 2 * U, 3))
+                self.pl.plan(cur_net, cur, end_c)
+                self.power(cur_net, *end_c, self._power_rot(cur_net, True))
             _, _, ex1, _ = self._extent()
             x = gceil(ex1 + 2 * self.sp.cap_pitch)
         self._flags_row()
@@ -2188,12 +2269,26 @@ class _Engine:
         self.power(out_rail, x_r, y_r - 5.08)
 
     def _leftover_chains_columns(self) -> None:
-        """Rail-rooted chains not consumed by a stage run: own columns."""
-        for ch in [c for c in self.float_chains if c.kind == "rail"]:
-            _, _, ex1, _ = self._extent()
-            x = gceil(ex1 + 2 * self.sp.cap_pitch)
-            self.power(ch.root, x, 0.0)
-            cur = (x, 0.0)
+        """Rail-rooted chains not consumed by a stage run: a row of columns.
+        One or two ride to the right of the flow; a BANK of them (the
+        per-module status LEDs) gets its own row below."""
+        chains = [c for c in self.float_chains if c.kind == "rail"]
+        if not chains:
+            return
+        below = len(chains) > 2
+        if below:
+            ex0, _, _, ey1 = self._extent()
+            x = gsnap(ex0 + 4 * U)
+            y0 = gceil(ey1 + 8 * U)
+            pitch = gceil(max(tm.text_wh(ch.root)[0] for ch in chains) / 2
+                          + 2 * self.sp.cap_pitch)
+        for ch in chains:
+            if not below:
+                _, _, ex1, _ = self._extent()
+                x = gceil(ex1 + 2 * self.sp.cap_pitch)
+                y0 = 0.0
+            self.power(ch.root, x, y0)
+            cur = (x, y0)
             cur_net = ch.root
             for ref, upper, lower in ch.legs:
                 near = upper if upper == cur_net else lower
@@ -2203,18 +2298,27 @@ class _Engine:
                 self._chain_mid_features(ch, cur_net, cur)
             if self.c.nets[cur_net].net_class in (NetClass.POWER,
                                                   NetClass.GROUND):
-                self.power(cur_net, *cur)
+                end_c = (cur[0], round(cur[1] + 2 * U, 3))
+                self.pl.plan(cur_net, cur, end_c)
+                self.power(cur_net, *end_c, self._power_rot(cur_net, True))
             self.float_chains.remove(ch)
+            if below:
+                x = round(x + pitch, 3)
 
     def _port_strap_columns(self) -> None:
         """PORT-strap chains: a floating PORT net through passives to ONE
         rail/GND end renders as a label-topped column (hier label up top,
-        the strap below it, the rail/GND symbol at the bottom) BELOW the
-        main flow."""
-        for ch in [c for c in self.float_chains if c.kind == "port"]:
-            ex0, _, _, ey1 = self._extent()
-            x = gsnap(ex0 + 8 * U)
-            y0 = gceil(ey1 + 12 * U)
+        the strap below it, the rail/GND symbol at the bottom) — one ROW of
+        columns below the main flow."""
+        straps = [c for c in self.float_chains if c.kind == "port"]
+        if not straps:
+            return
+        ex0, _, _, ey1 = self._extent()
+        pitch = gceil(max(tm.text_wh(ch.root)[1] for ch in straps)
+                      + 2 * self.sp.cap_pitch)
+        x = gsnap(ex0 + 8 * U)
+        y0 = gceil(ey1 + 12 * U)
+        for ch in straps:
             self.label(ch.root, x, y0, 90)
             cur = (x, gceil(y0 + 2 * U))
             self.pl.plan(ch.root, (x, y0), cur)
@@ -2227,8 +2331,11 @@ class _Engine:
                 self._chain_mid_features(ch, cur_net, cur)
             if self.c.nets[cur_net].net_class in (NetClass.POWER,
                                                   NetClass.GROUND):
-                self.power(cur_net, *cur)
+                end_c = (cur[0], round(cur[1] + 2 * U, 3))
+                self.pl.plan(cur_net, cur, end_c)
+                self.power(cur_net, *end_c, self._power_rot(cur_net, True))
             self.float_chains.remove(ch)
+            x = round(x + pitch, 3)
 
     def _collect_trunk_pins(self, ref: str, ax: float, ay: float,
                             trunk_jobs: dict[str, _Trunk],
@@ -2673,12 +2780,21 @@ class _Engine:
         comp_dy = 0.0
         row_y0 = -1e9
         for i, ref in enumerate(order):
+            new_row = False
             if i and ref in self._comp_starts:
-                _, _, _, ey1c = self._extent()
-                comp_dy = gceil(ey1c + 12 * U) - ays[ref]
-                row_y0 = gceil(ey1c + 2 * U)
+                # next component: continue the current row until it nears
+                # the page-width budget, then WRAP to a new row below
+                row_edge = self._band_edge(row_y0, 1e9, +1, default=0.0) \
+                    if row_y0 > -1e8 else self._extent()[2]
+                row_left = self._band_edge(row_y0, 1e9, -1, default=0.0) \
+                    if row_y0 > -1e8 else self._extent()[0]
+                if row_edge - row_left > 170.0:
+                    _, _, _, ey1c = self._extent()
+                    comp_dy = gceil(ey1c + 14 * U) - ays[ref]
+                    row_y0 = gceil(ey1c + 2 * U)
+                    new_row = True
             ay = round(ays[ref] + comp_dy, 3)
-            if i == 0 or ref in self._comp_starts:
+            if i == 0 or new_row:
                 ax = 0.0
                 anchors[ref] = (ax, ay)
                 self._collect_trunk_pins(ref, ax, ay, trunk_jobs, srung_keys)
@@ -2701,7 +2817,8 @@ class _Engine:
                     c.parts[ref].lib_id).body[0])
                 reach_b = self._side_reach(ref, "left", trunk_jobs,
                                            exclude={p[0] for p, _j in pairs})
-                ax = gsnap(gceil(jog_base + n_jogs * 2 * U + reach_b + 4 * U)
+                margin = (4 * U) if pairs else (10 * U)
+                ax = gsnap(gceil(jog_base + n_jogs * 2 * U + reach_b + margin)
                            - b_left)
                 if pairs:
                     # the channel also hosts its hang caps and signal names
@@ -2855,12 +2972,22 @@ class _Engine:
                     and self._rung_of(n.name, trunk_jobs) is not None:
                 lanes += 1
                 continue
+            if n.net_class in (NetClass.PORT, NetClass.SIGNAL):
+                extra = 0.0
+                refs = [r for r, _rl in self.pull.get(n.name, [])] \
+                    + self.hang.get(n.name, [])
+                for r2 in refs:
+                    sig_pin = self._pin_of_net(r2, n.name)
+                    fn = self.net_of(r2, self.other_pin(r2, sig_pin))
+                    if fn is not None:
+                        extra = max(extra, sp.label_tap_gap
+                                    + tm.text_wh(fn.name)[0] / 2 + 0.7)
             if n.net_class is NetClass.PORT:
-                rows.append((t[1], self._glabel_len(n.name)
+                rows.append((t[1], self._glabel_len(n.name) + extra
                              + sp.stagger_extra + sp.label_tap_gap))
             elif n.net_class is NetClass.SIGNAL \
                     and self._net_shared(n.name, ref):
-                rows.append((t[1], tm.text_wh(n.name)[0] + 0.7
+                rows.append((t[1], tm.text_wh(n.name)[0] + 0.7 + extra
                              + sp.stagger_extra + sp.label_tap_gap))
             elif n.net_class in (NetClass.POWER, NetClass.GROUND):
                 out = max(out, 3.81 + tm.text_wh(n.name)[0] + 2 * U)
@@ -2983,8 +3110,10 @@ def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
         geo = SheetGeometry(boxes=list(pl.boxes), wires=list(routed.segs))
         vis = visual_gate.check(geo)
         if vis.ok:
-            # the sheet must FIT the A4 frame — clipped content renders
-            # "clean" to every box check and is still garbage to a human
+            # the sheet must FIT its frame — clipped content renders
+            # "clean" to every box check and is still garbage to a human.
+            # Dense sheets are PROMOTED to A3 (standard practice), never
+            # silently clipped.
             xs = [v for b in pl.boxes for v in (b.x0, b.x1)] + \
                  [v for s in routed.segs for v in (s.x0, s.x1)]
             ys = [v for b in pl.boxes for v in (b.y0, b.y1)] + \
@@ -2992,7 +3121,23 @@ def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
             w, h = max(xs) - min(xs), max(ys) - min(ys)
             if w <= 272.0 and h <= 180.0:
                 return pl, routed, geo
-            last = f"sheet {w:.0f}x{h:.0f} mm exceeds the A4 frame (272x180)"
+            if w <= 390.0 and h <= 265.0:
+                # recenter placement, wires and geometry on the A3 sheet
+                ddx = gsnap(A3_CENTER[0] - A4_CENTER[0])
+                ddy = gsnap(A3_CENTER[1] - A4_CENTER[1])
+                _translate(pl, ddx, ddy)
+                routed.segs = [type(s)(round(s.x0 + ddx, 3),
+                                       round(s.y0 + ddy, 3),
+                                       round(s.x1 + ddx, 3),
+                                       round(s.y1 + ddy, 3), s.net)
+                               for s in routed.segs]
+                routed.junctions = [(round(x + ddx, 3), round(y + ddy, 3))
+                                    for x, y in routed.junctions]
+                geo = SheetGeometry(boxes=list(pl.boxes),
+                                    wires=list(routed.segs))
+                pl.paper = "A3"
+                return pl, routed, geo
+            last = f"sheet {w:.0f}x{h:.0f} mm exceeds even A3 (390x265)"
         else:
             last = vis.summary()
         sp = sp.expanded()
