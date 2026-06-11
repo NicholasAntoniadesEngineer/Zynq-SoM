@@ -175,3 +175,14 @@ All emitted by `schgen board`; none add authoring burden.
 SEQUENCE: after M3 harvest + camera/FMC/pd_input sheets; selftest + .xdc first (trust +
 immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up manual
 + gallery.
+
+## Flags from subsystems-research harvest (2026-06-11)
+- **DECISION NEEDED — bank 13 oversubscribed**: lcd(34 IO) + pmod(16) + user_io(8) = 58
+  signals > 43 available bank-13 IOs. Agent proposal: move LCD to J3 bank 34 (untouched).
+- **Camera requires +VCCO_35 = 2.5V** (XAPP894 D-PHY on HR bank) — new rail-map entry +
+  LP-RX pin reservation; carrier dossier carrier/research/camera_csi.md has the lane map.
+- **POWER_LIBS generalization (engine)**: fixed rail->symbol name map must accept arbitrary
+  rails (+VIN_SYS, +5V_REG, gated rails). BLOCKS: power.py shunt rail split (held out of
+  harvest to keep power green — power_mon cannot LINK until the split lands).
+- **Stock risks for preflight**: DS1024-2x6R2 (45 units!), INA3221 C181255 (2.4k),
+  RPi FFC SFW15R-1STE1LF picked over -2STE1LF (111, ghost-risk). Re-verify at BOM time.
