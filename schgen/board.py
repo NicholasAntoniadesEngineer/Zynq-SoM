@@ -163,8 +163,7 @@ def build_board(sheets, lib: Library, outdir: Path) -> bool:
 
     # ---- root sheet -----------------------------------------------------------
     root = PlacedDesign(circuit=Circuit("board", "carrier board root"))
-    root.paper = "A3"
-    y = TOP_Y
+    entries = []
     for page, (name, d, sym_uuid) in enumerate(placed, start=2):
         ports = sorted(_port_nets(d.circuit))
         # the sheet pin SHAPE must mirror the sub-sheet's hierarchical-label
@@ -174,23 +173,62 @@ def build_board(sheets, lib: Library, outdir: Path) -> bool:
         h = PIN_PITCH * (len(ports) + 1)
         w = place.gceil(max((tm.text_wh(p)[0] for p in ports), default=10)
                         + 12.7)
-        sym = SheetSymbol(name=name, file=f"{name}.kicad_sch",
-                          x=SHEET_X, y=y, w=w, h=h, uuid=sym_uuid, pins=[],
-                          page=str(page))
-        for k, port in enumerate(ports):
-            py = y + PIN_PITCH * (k + 1)
-            sym.pins.append(SheetPin(port, SHEET_X, py, rotation=180,
-                                     shape=shapes.get(port, "bidirectional")))
-            root.wires.append(Wire(SHEET_X, py, SHEET_X - STUB, py))
-            # GLOBAL label at the root (the root design is standalone, so
-            # hlabels emit as global_label): merges same-named ports across
-            # sheet stubs AND sidesteps a kicad-cli ERC quirk where a root
-            # LOCAL label on a multi-pin sub-sheet net reports label_dangling
-            # despite correct geometry + netlist (minimal repro verified).
-            root.hlabels.append(HierLabel(port, SHEET_X - STUB, py,
-                                          rotation=180))
-        root.sheets.append(sym)
-        y += h + SHEET_GAP
+        entries.append((name, sym_uuid, ports, shapes, w, h, page))
+
+    # page-fit: wrap the sheet symbols into columns and grow the paper size
+    # until everything sits inside the frame, clear of the title block. A
+    # single sheet taller than the usable height forces the next size up.
+    PAPERS = (("A3", 420.0, 297.0), ("A2", 594.0, 420.0), ("A1", 841.0, 594.0))
+    TITLE_CLEAR = 25.4       # band reserved at the page bottom
+    MARGIN = 10.16
+    paper, col_geo = PAPERS[-1][0], []
+    for paper, page_w, page_h in PAPERS:
+        usable_h = page_h - TOP_Y - TITLE_CLEAR
+        if max(e[5] for e in entries) > usable_h:
+            continue
+        cols, col, col_h = [], [], 0.0
+        for e in entries:
+            if col and col_h + e[5] > usable_h:
+                cols.append(col)
+                col, col_h = [], 0.0
+            col.append(e)
+            col_h += e[5] + SHEET_GAP
+        if col:
+            cols.append(col)
+        # each column reserves room on its left for the port label stubs
+        x_right, col_geo = MARGIN, []
+        for col in cols:
+            label_w = max((tm.text_wh(p)[0] for e in col for p in e[2]),
+                          default=10.0)
+            x_col = place.gceil(x_right + label_w + STUB)
+            col_geo.append((x_col, col))
+            x_right = x_col + max(e[4] for e in col) + SHEET_GAP
+        if x_right <= page_w - MARGIN:
+            break
+    root.paper = paper
+
+    for x_col, col in col_geo:
+        y = TOP_Y
+        for name, sym_uuid, ports, shapes, w, h, page in col:
+            sym = SheetSymbol(name=name, file=f"{name}.kicad_sch",
+                              x=x_col, y=y, w=w, h=h, uuid=sym_uuid, pins=[],
+                              page=str(page))
+            for k, port in enumerate(ports):
+                py = y + PIN_PITCH * (k + 1)
+                sym.pins.append(SheetPin(port, x_col, py, rotation=180,
+                                         shape=shapes.get(port,
+                                                          "bidirectional")))
+                root.wires.append(Wire(x_col, py, x_col - STUB, py))
+                # GLOBAL label at the root (the root design is standalone, so
+                # hlabels emit as global_label): merges same-named ports
+                # across sheet stubs AND sidesteps a kicad-cli ERC quirk
+                # where a root LOCAL label on a multi-pin sub-sheet net
+                # reports label_dangling despite correct geometry + netlist
+                # (minimal repro verified).
+                root.hlabels.append(HierLabel(port, x_col - STUB, py,
+                                              rotation=180))
+            root.sheets.append(sym)
+            y += h + SHEET_GAP
     root_path = outdir / "board.kicad_sch"
     emit(root, root_path, lib, sheet_uuid=board_uuid, project="board")
     # board ERC policy == the per-sheet fragment policy (schgen/__main__.py):
