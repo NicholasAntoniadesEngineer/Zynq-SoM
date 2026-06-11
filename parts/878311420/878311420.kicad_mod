@@ -1,0 +1,451 @@
+(footprint
+	"878311420"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"CONN-TH_14P-P2.00_87831-1420 — 87831-1420 (CONN-TH_14P-P2.00_87831-1420) (EasyEDA/LCSC C240854, faithful conversion)"
+	)
+	(tags "Wire To Board / Wire To Wire Connector")
+	(attr through_hole)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -3 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"878311420"
+		(at 0 3 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C240854.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"87831-1420 (CONN-TH_14P-P2.00_87831-1420)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C240854"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -8.325 3.15)
+		(end -8.295 3.15)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -8.325 3.15)
+		(end -8.325 -3.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -8.325 -3.15)
+		(end 8.325 -3.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 8.325 -3.15)
+		(end 8.325 3.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 8.325 3.15)
+		(end -8.325 3.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 8.3819 -1.7221)
+		(end 7.56 -1.7221)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.56 -1.7221)
+		(end 7.56 -2.42)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.56 -2.42)
+		(end -7.64 -2.42)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.64 -2.42)
+		(end -7.64 0)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.64 0)
+		(end -8.3821 0)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2705 2.5392)
+		(end 7.5494 2.5392)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.5494 2.5392)
+		(end 7.5494 -0.5088)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.5494 -0.5088)
+		(end 8.3825 -0.5088)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2701 2.54)
+		(end -7.65 2.54)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.65 2.54)
+		(end -7.65 1.12)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -7.65 1.12)
+		(end -8.3821 1.12)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2705 3.1757)
+		(end 1.2699 3.1757)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -8.3821 3.175)
+		(end -8.3821 -3.175)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -8.3821 -3.175)
+		(end 8.3819 -3.175)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 8.3819 -3.175)
+		(end 8.3819 3.175)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 8.3819 3.175)
+		(end 1.2699 3.175)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2699 3.175)
+		(end 8.3819 3.175)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2705 3.1757)
+		(end -8.2555 3.1757)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.2699 2.54)
+		(end 1.2699 3.048)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.2701 2.54)
+		(end -1.2701 3.048)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(pad
+		"13"
+		thru_hole
+		circle
+		(at 6 1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"11"
+		thru_hole
+		circle
+		(at 4 1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"9"
+		thru_hole
+		circle
+		(at 2 1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"7"
+		thru_hole
+		circle
+		(at 0 1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"5"
+		thru_hole
+		circle
+		(at -2 1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"3"
+		thru_hole
+		circle
+		(at -4 1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"1"
+		thru_hole
+		rect
+		(at -6 1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"14"
+		thru_hole
+		circle
+		(at 6 -1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"12"
+		thru_hole
+		circle
+		(at 4 -1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"10"
+		thru_hole
+		circle
+		(at 2 -1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"8"
+		thru_hole
+		circle
+		(at 0 -1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"6"
+		thru_hole
+		circle
+		(at -2 -1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"4"
+		thru_hole
+		circle
+		(at -4 -1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"2"
+		thru_hole
+		circle
+		(at -6 -1)
+		(size 1.499997 1.499997)
+		(drill 0.900024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(model
+		"878311420.wrl"
+		(offset
+			(xyz 0 0 -3)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
