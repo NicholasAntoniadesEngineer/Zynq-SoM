@@ -4,6 +4,13 @@ The emitter is intentionally dumb: placement/routing decide everything; this
 file just serialises. The only logic is symbol-definition embedding (copying
 the library s-expr into ``lib_symbols`` with the full lib_id name) and uuid
 generation. No transforms, no fallbacks, no repairs.
+
+DETERMINISM: every id is CONTENT-DERIVED — uuid5 over a fixed schgen
+namespace + the file's own (content-derived) sheet uuid + element kind +
+emission ordinal. Building the same design twice yields byte-identical
+files (zero diff churn on regeneration), while ids stay KiCad-unique:
+unique within a file because (kind, ordinal) never repeats, unique across
+a project because every file's sheet uuid (the scope) differs.
 """
 
 from __future__ import annotations
@@ -144,8 +151,29 @@ class PlacedDesign:
     standalone: bool = True   # True: PORT labels emit as global_label
 
 
-def _u() -> str:
-    return str(uuid.uuid4())
+# Fixed namespace for every schgen-generated id (uuid5 = SHA-1, stable
+# across runs/machines/Python versions — never random).
+_NS = uuid.uuid5(uuid.NAMESPACE_DNS, "schgen.kicad-id")
+
+
+def stable_uuid(*parts: object) -> str:
+    """Content-derived uuid: identical inputs -> identical id, forever."""
+    return str(uuid.uuid5(_NS, "/".join(str(p) for p in parts)))
+
+
+class _IdFactory:
+    """Per-file id source: uuid5(scope, kind, ordinal). ``scope`` is the
+    file's sheet uuid, itself content-derived — so ids are deterministic
+    AND unique within the file (ordinal) and across the project (scope)."""
+
+    def __init__(self, scope: str) -> None:
+        self._scope = scope
+        self._n: dict[str, int] = {}
+
+    def __call__(self, kind: str) -> str:
+        n = self._n.get(kind, 0)
+        self._n[kind] = n + 1
+        return stable_uuid(self._scope, kind, n)
 
 
 def _effects(size: float = 1.27, hide: bool = False, justify: str | None = None):
@@ -187,9 +215,10 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
     # with a bare "/" KiCad cannot resolve instance references, and every net
     # whose name would be pad-derived (no label, no power symbol) silently
     # drops out of ERC and the exported netlist.
-    root_uuid = sheet_uuid or _u()
-    inst_path = instance_path or f"/{root_uuid}"
     inst_project = project or c.name
+    root_uuid = sheet_uuid or stable_uuid(inst_project, c.name, "sheet")
+    inst_path = instance_path or f"/{root_uuid}"
+    uid = _IdFactory(root_uuid)
     doc: list = [Sym("kicad_sch"),
                  [Sym("version"), 20250114],
                  [Sym("generator"), "schgen"],
@@ -205,13 +234,14 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
         doc.append([Sym("wire"),
                     [Sym("pts"), [Sym("xy"), w.x0, w.y0], [Sym("xy"), w.x1, w.y1]],
                     [Sym("stroke"), [Sym("width"), 0], [Sym("type"), Sym("default")]],
-                    [Sym("uuid"), _u()]])
+                    [Sym("uuid"), uid("wire")]])
     for j in design.junctions:
         doc.append([Sym("junction"), [Sym("at"), j.x, j.y],
                     [Sym("diameter"), 0], [Sym("color"), 0, 0, 0, 0],
-                    [Sym("uuid"), _u()]])
+                    [Sym("uuid"), uid("junction")]])
     for nc in design.no_connects:
-        doc.append([Sym("no_connect"), [Sym("at"), nc.x, nc.y], [Sym("uuid"), _u()]])
+        doc.append([Sym("no_connect"), [Sym("at"), nc.x, nc.y],
+                    [Sym("uuid"), uid("no_connect")]])
     for h in design.hlabels:
         just = "right" if h.rotation in (180, 270) else "left"
         tag = "global_label" if design.standalone else "hierarchical_label"
@@ -219,13 +249,13 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                     [Sym("shape"), Sym(h.shape)],
                     [Sym("at"), h.x, h.y, h.rotation],
                     _effects(justify=just),
-                    [Sym("uuid"), _u()]])
+                    [Sym("uuid"), uid("hlabel")]])
     for ll in design.llabels:
         just = "right bottom" if ll.rotation == 180 else "left bottom"
         doc.append([Sym("label"), ll.name,
                     [Sym("at"), ll.x, ll.y, ll.rotation],
                     _effects(justify=just),
-                    [Sym("uuid"), _u()]])
+                    [Sym("uuid"), uid("llabel")]])
     for sh in design.sheets:
         node: list = [Sym("sheet"),
                       [Sym("at"), sh.x, sh.y],
@@ -250,7 +280,7 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
             node.append([Sym("pin"), sp.name, Sym(sp.shape),
                          [Sym("at"), sp.x, sp.y, sp.rotation],
                          _effects(justify=just),
-                         [Sym("uuid"), _u()]])
+                         [Sym("uuid"), uid("sheet-pin")]])
         node.append([Sym("instances"),
                      [Sym("project"), inst_project,
                       [Sym("path"), f"/{root_uuid}",
@@ -273,7 +303,7 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                       [Sym("in_bom"), Sym("yes")],
                       [Sym("on_board"), Sym("yes")],
                       [Sym("dnp"), Sym("no")],
-                      [Sym("uuid"), _u()]]
+                      [Sym("uuid"), uid("symbol")]]
         rp = ref_pos or (x, y - 2.54, 0)
         vp = val_pos or (x, y + 2.54, 0)
         node.append(_prop("Reference", ref, rp[0], rp[1], rp[2], hide=hide_ref))
@@ -285,7 +315,7 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
         for fname, fval in extra_fields.items():
             node.append(_prop(fname, fval, x, y, 0, hide=True))
         for p in sdef.pins:
-            node.append([Sym("pin"), p.number, [Sym("uuid"), _u()]])
+            node.append([Sym("pin"), p.number, [Sym("uuid"), uid("pin")]])
         node.append([Sym("instances"),
                      [Sym("project"), inst_project,
                       [Sym("path"), inst_path,

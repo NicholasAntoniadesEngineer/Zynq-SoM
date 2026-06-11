@@ -27,10 +27,10 @@ prints it loudly and exits non-zero. The gates are never relaxed here —
 if a mutant survives, the fix is a stronger gate, never a weaker mutant.
 
 DETERMINISM: the same sheet is built twice from scratch (fresh module load,
-fresh library) and the two ``.kicad_sch`` are byte-compared after mapping
-uuid IDENTITIES to first-appearance ordinals (emit draws fresh uuid4 ids by
-design; their count, order and every other byte must match exactly).
-Any geometric or textual drift between two builds is a FAIL.
+fresh library) and the two ``.kicad_sch`` must be BYTE-IDENTICAL — uuids
+included, with zero tolerance (emit derives every id from content via
+uuid5, so even the ids must reproduce exactly). Any drift between two
+builds — geometric, textual, or a single id — is a FAIL.
 
 Run: ``PYTHONPATH=. python -m schgen selftest`` (non-zero exit on any hole).
 """
@@ -41,7 +41,6 @@ import argparse
 import copy
 import difflib
 import importlib.util
-import re
 import shutil
 import tempfile
 import uuid as _uuid
@@ -281,36 +280,18 @@ def mutate_foreign_junction(b: Built) -> tuple[str, None, str] | None:
 
 # ---- determinism ---------------------------------------------------------------
 
-_UUID_RE = re.compile(
-    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
-    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-
-
-def _normalize_uuids(text: str) -> str:
-    """Map each distinct uuid to its first-appearance ordinal. Everything
-    else — every coordinate, every order, every byte — must already match;
-    emit's uuid4 identities are the ONLY tolerated difference."""
-    seen: dict[str, str] = {}
-
-    def repl(m: re.Match) -> str:
-        return seen.setdefault(m.group(0), f"UUID-{len(seen):05d}")
-
-    return _UUID_RE.sub(repl, text)
-
-
 def determinism_check(path: Path, tmp: Path) -> tuple[bool, str]:
+    """FULL byte-equality, no uuid tolerance: emit derives every id from
+    content (uuid5), so two builds must reproduce every byte — ids
+    included. A uuid that differs is drift like any other."""
     texts = []
     for i in (1, 2):
         b = _build(path, tmp / f"det{i}")
         texts.append(b.text)
     if texts[0] == texts[1]:
-        return True, "byte-identical (uuids included)"
-    norm = [_normalize_uuids(t) for t in texts]
-    if norm[0] == norm[1]:
-        return True, ("identical modulo uuid identities (fresh uuid4 ids; "
-                      "count, order and all geometry byte-equal)")
+        return True, "byte-identical (uuids included, zero tolerance)"
     diff = list(difflib.unified_diff(
-        norm[0].splitlines(), norm[1].splitlines(),
+        texts[0].splitlines(), texts[1].splitlines(),
         "build-1", "build-2", lineterm="", n=0))
     return False, "DRIFT between two builds:\n    " + "\n    ".join(diff[:12])
 

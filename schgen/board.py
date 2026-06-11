@@ -23,13 +23,12 @@ import copy
 import json
 import re
 import subprocess
-import uuid
 from pathlib import Path
 
 from schgen import place
 from schgen import textmetrics as tm
 from schgen.emit import (HierLabel, Junction as EJunction, PlacedDesign,
-                         SheetPin, SheetSymbol, Wire, emit)
+                         SheetPin, SheetSymbol, Wire, emit, stable_uuid)
 from schgen.model import Circuit, NetClass, PinRef
 from schgen.symbols import Library, pin_page_position
 from schgen.verify import netlist_gate
@@ -42,10 +41,6 @@ SHEET_GAP = 12.7         # vertical gap between sheet symbols
 PIN_PITCH = 2.54
 STUB = 12.7              # sheet pin -> root label stub length
 TOP_Y = 25.4
-
-
-def _u() -> str:
-    return str(uuid.uuid4())
 
 
 def _renamed_ref(ref: str, index: int) -> str:
@@ -179,7 +174,10 @@ def build_board(sheets, lib: Library, outdir: Path, *,
     outdir.mkdir(parents=True, exist_ok=True)
     sheet_dir = outdir / sheet_subdir if sheet_subdir else outdir
     sheet_dir.mkdir(parents=True, exist_ok=True)
-    board_uuid = _u()
+    # Content-derived hierarchy uuids (emit.stable_uuid): regenerating the
+    # board yields byte-identical files; per-name seeds keep every sheet
+    # uuid and sheet-symbol uuid (instance-path components) unique.
+    board_uuid = stable_uuid(root_name, "root")
 
     placed: list[tuple[str, PlacedDesign, str]] = []   # (name, design, sym_uuid)
     for i, sc in enumerate(sheets, start=1):
@@ -199,7 +197,8 @@ def build_board(sheets, lib: Library, outdir: Path, *,
             paper=placement.paper,
         )
         d = uniquify(design, i)
-        placed.append((sc.name, d, _u()))
+        placed.append((sc.name, d,
+                       stable_uuid(root_name, "sheet-symbol", sc.name)))
 
     # one PWR_FLAG per rail board-wide (duplicates are two power_out pins)
     strip_duplicate_flags([d for _, d, _ in placed], lib)
@@ -207,7 +206,8 @@ def build_board(sheets, lib: Library, outdir: Path, *,
     for name, d, sym_uuid in placed:
         emit(d, sheet_dir / f"{name}.kicad_sch", lib,
              instance_path=f"/{board_uuid}/{sym_uuid}",
-             project=root_name, sheet_uuid=_u())
+             project=root_name,
+             sheet_uuid=stable_uuid(root_name, "sheet", name))
 
     # ---- root sheet -----------------------------------------------------------
     root = PlacedDesign(circuit=Circuit(root_name, "carrier board root"))
@@ -354,11 +354,13 @@ def _board_gate(placed, root_path: Path, outdir: Path) -> bool:
                  f"sheets" if failures == 0 else f"BOARD GATE: {verdict}")
 
     # informational ERC (NOT the gate — the gate is the netlist merge)
+    from schgen.__main__ import strip_report_timestamp
     erc_rpt = outdir / "board.erc.rpt"
     proc = subprocess.run(
         ["kicad-cli", "sch", "erc", "--severity-error",
          "--exit-code-violations", "-o", str(erc_rpt), str(root_path)],
         capture_output=True, text=True)
+    strip_report_timestamp(erc_rpt)
     lines.append(f"  (info) root ERC errors: "
                  f"{'0' if proc.returncode == 0 else 'present — see ' + str(erc_rpt)}")
 

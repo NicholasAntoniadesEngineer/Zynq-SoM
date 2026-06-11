@@ -18,6 +18,7 @@ import ast
 import csv
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -133,6 +134,19 @@ def _check_inputs_driven(c: Circuit, lib: Library) -> list[str]:
     return problems
 
 
+def strip_report_timestamp(report: Path) -> None:
+    """kicad-cli stamps its ERC report with wall-clock time — the one
+    non-content byte in an otherwise fully content-derived regeneration.
+    Elide it from the SAVED artifact (the committed proof) so building the
+    board twice produces zero git diff. The gate itself is the kicad-cli
+    EXIT CODE plus the violation lines, both untouched."""
+    if report.exists():
+        first, _, rest = report.read_text().partition("\n")
+        report.write_text(
+            re.sub(r"\([^)]*?(Encoding [^)]*)\)", r"(\1)", first)
+            + "\n" + rest)
+
+
 def _erc(sch: Path, report: Path) -> tuple[bool, str]:
     # Fragment-sheet ERC policy (matches boards/carrier/carrier.kicad_pro):
     # pin_not_driven is demoted to WARNING because a standalone subsystem
@@ -150,6 +164,7 @@ def _erc(sch: Path, report: Path) -> tuple[bool, str]:
         ["kicad-cli", "sch", "erc", "--severity-error",
          "--exit-code-violations", "-o", str(report), str(sch)],
         capture_output=True, text=True)
+    strip_report_timestamp(report)
     txt = report.read_text() if report.exists() else proc.stderr
     return proc.returncode == 0, txt
 
