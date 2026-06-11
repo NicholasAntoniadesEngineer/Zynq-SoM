@@ -12,9 +12,6 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
-FFC = "AFC07-S40FCA-00:AFC07-S40FCA-00"
-SY = "SY7201ABC:SY7201ABC"
-L10U = "SWPA4030S100MT:SWPA4030S100MT"
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
@@ -26,9 +23,9 @@ J2_MAP = "som_j2_connector (PL bank 13 — touch I2C only)"
 
 def circuit() -> Circuit:
     c = Circuit("lcd", "40-pin TTL RGB LCD + SY7201 backlight boost")
-    c.part("J1", FFC, "AFC07-S40FCA-00", FFC, LCSC="C262572")
-    c.part("U1", SY, "SY7201ABC", SY, LCSC="C82173")
-    c.part("L1", L10U, "10uH", L10U, LCSC="C38117")
+    c.use_part("AFC07-S40FCA-00", ref="J1")    # bare-number FFC pins
+    c.use_part("SY7201ABC", ref="U1")
+    c.use_part("SWPA4030S100MT", ref="L1", value="10uH")
     c.part("D1", "Device:D_Schottky", "SS34", "Diode_SMD:D_SMA", LCSC="C8678")
     c.part("R1", "Device:R", "1.5R", R0603, LCSC="C22769")   # ISET 133mA
     c.part("C1", "Device:C", "10u", C0805, LCSC="C15850")    # boost in
@@ -59,11 +56,11 @@ def circuit() -> Circuit:
     c.nc("J1.35", "J1.41", "J1.42")        # NC + shell tabs unused
 
     # ---- backlight boost: +5V_LCD -> L1 -> LX, D1 -> VLED+, ISET return ----
-    c.net("+5V_LCD", "U1.6", "L1.1", "C1.1")
-    c.net("GND", "U1.2", "C1.2", "C2.2", "R1.2")
-    c.net("LCD_BL_SW", "L1.2", "U1.1")                       # LX node
-    c.net("LCD_VLED_P", "D1.2", "C2.1", "U1.5", "J1.2")      # boost out + OVP
+    c.net("+5V_LCD", "U1.IN", "L1.1", "C1.1")
+    c.net("GND", "U1.GND", "C1.2", "C2.2", "R1.2")
+    c.net("LCD_BL_SW", "L1.2", "U1.LX")                      # LX node
+    c.net("LCD_VLED_P", "D1.2", "C2.1", "U1.OVP", "J1.2")    # boost out + OVP
     c.net("LCD_BL_SW", "D1.1")
-    c.net("LCD_VLED_N", "J1.1", "R1.1", "U1.3")              # current sense
-    c.port("LCD_BL_PWM", "U1.4", expect=J3_MAP)
+    c.net("LCD_VLED_N", "J1.1", "R1.1", "U1.FB")             # current sense
+    c.port("LCD_BL_PWM", "U1.EN/PWM", expect=J3_MAP)
     return c
