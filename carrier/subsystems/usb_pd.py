@@ -21,15 +21,18 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
+# DELIBERATE symbol override (use_part lib_id=): the sheet keeps the stock
+# stacked-pin KiCad drawing + the stock footprint; MPN/LCSC/datasheet are
+# sourced from parts/FUSB302BMPX/ and can never drift from the library.
 LIB_ID = "Interface_USB:FUSB302BMPX"
 FOOTPRINT = "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm"
 
 
 def circuit() -> Circuit:
     c = Circuit("usb_pd", "USB-PD: FUSB302B Type-C controller")
-    # LCSC C132291 (== parts/FUSB302BMPX) — live-verified 2026-06-11:
+    # LCSC C132291 (from parts/FUSB302BMPX) — live-verified 2026-06-11:
     # Extended, stock 7,735
-    c.part("U1", LIB_ID, "FUSB302BMPX", FOOTPRINT, LCSC="C132291")
+    c.use_part("FUSB302BMPX", ref="U1", lib_id=LIB_ID, footprint=FOOTPRINT)
 
     # power — +3V3_SC (always-on SC rail), NEVER a DIP-gated carrier rail:
     # PD brings the 20 V in, so it cannot depend on rails it creates (R1)

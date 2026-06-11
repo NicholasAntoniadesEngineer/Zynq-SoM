@@ -33,10 +33,11 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
+# DELIBERATE symbol overrides (use_part lib_id=): the RX-direction schgen
+# receptacle drawing + the stock EEPROM drawing stay; MPN/LCSC/datasheet +
+# the faithful footprints come from parts/HDMI-019S/ + parts/M24C02-WMN6TP/.
 J_LIB = "schgen:HDMI_A_RX"
-J_FP = "HDMI-019S:HDMI-019S"
 U_LIB = "Memory_EEPROM:M24C02-WMN"
-U_FP = "M24C02-WMN6TP:M24C02-WMN6TP"
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 
@@ -54,8 +55,8 @@ TMDS_PORTS = {
 
 def circuit() -> Circuit:
     c = Circuit("hdmi_rx", "HDMI RX: HDMI-A sink + EDID EEPROM")
-    c.part("J1", J_LIB, "HDMI-019S", J_FP, LCSC="C111617")
-    c.part("U1", U_LIB, "M24C02-WMN6TP", U_FP, LCSC="C7562")
+    c.use_part("HDMI-019S", ref="J1", lib_id=J_LIB)
+    c.use_part("M24C02-WMN6TP", ref="U1", lib_id=U_LIB)
     c.part("R1", "Device:R", "1k", R_FP, LCSC="C21190")     # HPD assert
     c.part("R2", "Device:R", "27k", R_FP, LCSC="C22967")    # CEC pull-up
     c.part("R3", "Device:R", "10k", R_FP, LCSC="C25804")    # 5V-det divider top

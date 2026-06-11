@@ -33,15 +33,14 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
+# DELIBERATE symbol overrides (use_part lib_id=): the proven re-pinned
+# schgen drawings stay; MPN/LCSC/datasheet + the faithful EasyEDA->KiCad
+# footprints come from parts/TPD12S016PWR/ + parts/HDMI-019S/.
 LIB_U = "schgen:TPD12S016"
 LIB_J = "schgen:HDMI_A_019S"
-FP_U = "TPD12S016PWR:TPD12S016PWR"      # faithful EasyEDA->KiCad conversion
-FP_J = "HDMI-019S:HDMI-019S"
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 
-LCSC_U = "C201665"      # TPD12S016PWR, TSSOP-24
-LCSC_J = "C111617"      # SOFNG HDMI-019S receptacle
 LCSC_100N = "C1591"     # CL10B104KB8NNNC 100n 0603 X7R 50V (JLC Basic)
 LCSC_1U = "C15849"      # CL10A105KB8NNNC 1u 0603 X5R 25V (JLC Basic)
 LCSC_10K = "C25804"     # 0603WAF1002T5E 10k 1% (JLC Basic)
@@ -68,8 +67,8 @@ SHIFTED = (
 
 def circuit() -> Circuit:
     c = Circuit("hdmi_tx", "HDMI TX: TPD12S016 + HDMI-A receptacle (source)")
-    c.part("U1", LIB_U, "TPD12S016PWR", FP_U, LCSC=LCSC_U)
-    c.part("J1", LIB_J, "HDMI-019S", FP_J, LCSC=LCSC_J)
+    c.use_part("TPD12S016PWR", ref="U1", lib_id=LIB_U)
+    c.use_part("HDMI-019S", ref="J1", lib_id=LIB_J)
 
     # gated module rails (bringup_power_gating dossier) + DS Fig 15 decoupling
     c.net("+3V3_HDMI_TX", "U1.24")                 # V_CCA, controller side

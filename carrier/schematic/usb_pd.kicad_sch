@@ -1548,7 +1548,7 @@
 		)
 		(property
 			"Datasheet"
-			""
+			"https://www.lcsc.com/datasheet/C132291.pdf"
 			(at 162.56 83.82 0)
 			(effects
 				(font
@@ -1560,6 +1560,17 @@
 		(property
 			"LCSC"
 			"C132291"
+			(at 162.56 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property
+			"MPN"
+			"FUSB302BMPX"
 			(at 162.56 83.82 0)
 			(effects
 				(font

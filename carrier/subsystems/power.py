@@ -44,6 +44,10 @@ from __future__ import annotations
 
 from schgen.model import Circuit
 
+# DELIBERATE symbol+footprint overrides (use_part lib_id=/footprint=): the
+# stock KiCad regulator/FET drawings stay (pin maps cross-checked above);
+# MPN/LCSC/datasheet come from parts/TPS54302DDCR/, parts/AP2112K-1.8TRG1/,
+# parts/AO3400A/ and can never drift from the library folders.
 BUCK_LIB = "Regulator_Switching:TPS54302"
 BUCK_FP = "Package_TO_SOT_SMD:TSOT-23-6"
 LDO_LIB = "Regulator_Linear:AP2204K-1.5"   # = AP2112K drawing (see docstring)
@@ -64,7 +68,7 @@ def circuit() -> Circuit:
     c = Circuit("power", "Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs")
 
     # ---- stage 1: +VIN (20 V) -> +5V buck -----------------------------------
-    c.part("U1", BUCK_LIB, "TPS54302DDCR", BUCK_FP, LCSC="C311983")
+    c.use_part("TPS54302DDCR", ref="U1", lib_id=BUCK_LIB, footprint=BUCK_FP)
     c.net("+VIN", "U1.3")
     c.net("GND", "U1.1")
     c.port("EN_5V0", "U1.5", expect=EXPECT_BRINGUP)
@@ -95,7 +99,7 @@ def circuit() -> Circuit:
     c.net("GND", "R3.2")
 
     # ---- stage 2: +5V -> +3V3 buck ------------------------------------------
-    c.part("U2", BUCK_LIB, "TPS54302DDCR", BUCK_FP, LCSC="C311983")
+    c.use_part("TPS54302DDCR", ref="U2", lib_id=BUCK_LIB, footprint=BUCK_FP)
     c.net("+5V", "U2.3")
     c.net("GND", "U2.1")
     c.port("EN_3V3", "U2.5", expect=EXPECT_BRINGUP)
@@ -125,7 +129,8 @@ def circuit() -> Circuit:
     c.net("GND", "R6.2")
 
     # ---- stage 3: +3V3 -> +1V8 LDO -------------------------------------------
-    c.part("U3", LDO_LIB, "AP2112K-1.8", LDO_FP, LCSC="C176944")
+    c.use_part("AP2112K-1.8TRG1", ref="U3", value="AP2112K-1.8",
+               lib_id=LDO_LIB, footprint=LDO_FP)
     c.net("+3V3", "U3.1")
     c.net("GND", "U3.2")
     c.port("EN_1V8", "U3.3", expect=EXPECT_BRINGUP)
@@ -141,7 +146,7 @@ def circuit() -> Circuit:
     # ---- +1V8 PG sense cell (dossier 3.3: red Vf > 1.8 V -> FET sense) -------
     c.part("R7", "Device:R", "10k", R_FP, LCSC="C25804")           # gate series
     c.part("R8", "Device:R", "100k", R_FP, LCSC="C25803")          # gate pulldown
-    c.part("Q1", FET_LIB, "AO3400A", FET_FP, LCSC="C20917")
+    c.use_part("AO3400A", ref="Q1", lib_id=FET_LIB, footprint=FET_FP)
     c.net("+1V8", "R7.1")
     c.net("PG_1V8_G", "R7.2", "R8.1", "Q1.1")
     c.net("GND", "R8.2", "Q1.2")

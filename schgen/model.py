@@ -142,11 +142,24 @@ class Circuit:
         return p
 
     def use_part(self, mpn: str, ref: str | None = None, *,
-                 value: str | None = None, lcsc: str | None = None) -> Part:
+                 value: str | None = None, lcsc: str | None = None,
+                 lib_id: str | None = None,
+                 footprint: str | None = None) -> Part:
         """Library-first part (authoring v2): lib_id, footprint, LCSC,
         reference prefix and the NAMED pin table all come from
         ``parts/<MPN>/<MPN>.py`` — inline metadata is illegal for generated
-        parts. A missing folder is a build error carrying the exact fix."""
+        parts. A missing folder is a build error carrying the exact fix.
+
+        EXPLICIT OVERRIDE form (``lib_id=`` / ``footprint=``): a sheet that
+        deliberately draws a DIFFERENT symbol than the generated one (a
+        stock KiCad drawing, a re-pinned local copy) keeps that exact
+        drawing while still sourcing its orderable identity from parts/ —
+        the part carries hidden MPN + Datasheet fields (LCSC as always) so
+        MPN/LCSC/datasheet can never drift from the library folder. Because
+        an override symbol's pin numbering owes nothing to the generated
+        pin table, pin-by-NAME is disabled when ``lib_id`` is overridden:
+        pins are authored by NUMBER and validated against the actual symbol
+        by the build's completeness check."""
         import importlib.util as _ilu
         from pathlib import Path as _P
         safe = re.sub(r"[^A-Za-z0-9._-]+", "_", mpn).strip("_")
@@ -161,15 +174,21 @@ class Circuit:
         spec.loader.exec_module(mod)          # type: ignore[union-attr]
         if ref is None:
             ref = self.auto_ref((getattr(mod, "PREFIX", "U") or "U"))
-        p = self.part(ref, mod.LIB_ID, value or mod.MPN, mod.FOOTPRINT,
-                      LCSC=getattr(mod, "LCSC", "") or (lcsc or ""))
-        names: dict[str, list[str]] = {}
-        nums: set[str] = set()
-        for num, name, _et in mod.PINS:
-            nums.add(str(num))
-            names.setdefault(str(name), []).append(str(num))
-        p.pin_names = names
-        p.pin_numbers = frozenset(nums)
+        fields = {"LCSC": getattr(mod, "LCSC", "") or (lcsc or "")}
+        if lib_id is not None:
+            fields["MPN"] = mod.MPN
+            if getattr(mod, "DATASHEET", ""):
+                fields["Datasheet"] = mod.DATASHEET
+        p = self.part(ref, lib_id or mod.LIB_ID, value or mod.MPN,
+                      footprint or mod.FOOTPRINT, **fields)
+        if lib_id is None:
+            names: dict[str, list[str]] = {}
+            nums: set[str] = set()
+            for num, name, _et in mod.PINS:
+                nums.add(str(num))
+                names.setdefault(str(name), []).append(str(num))
+            p.pin_names = names
+            p.pin_numbers = frozenset(nums)
         return p
 
     def auto_ref(self, prefix: str) -> str:

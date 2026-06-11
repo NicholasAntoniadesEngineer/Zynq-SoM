@@ -293,7 +293,7 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                       val_pos: tuple[float, float, int] | None,
                       hide_ref: bool, hide_val: bool,
                       extra_fields: dict[str, str] | None = None) -> list:
-        extra_fields = extra_fields or {}
+        extra_fields = dict(extra_fields or {})   # never mutate the caller's
         sdef = lib.get(lib_id)
         node: list = [Sym("symbol"),
                       [Sym("lib_id"), lib_id],
@@ -309,7 +309,11 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
         node.append(_prop("Reference", ref, rp[0], rp[1], rp[2], hide=hide_ref))
         node.append(_prop("Value", value, vp[0], vp[1], vp[2], hide=hide_val))
         node.append(_prop("Footprint", footprint, x, y, 0, hide=True))
-        node.append(_prop("Datasheet", "", x, y, 0, hide=True))
+        # Datasheet is a KiCad-reserved property: source it from the
+        # authored fields (use_part lib-override) — emitting it again below
+        # as an extra field would be an illegal duplicate property.
+        node.append(_prop("Datasheet", extra_fields.pop("Datasheet", ""),
+                          x, y, 0, hide=True))
         # Extra authored fields (LCSC part number, MPN, ...) — hidden, but in
         # the file so KiCad BOM tools and JLC assembly see them.
         for fname, fval in extra_fields.items():
