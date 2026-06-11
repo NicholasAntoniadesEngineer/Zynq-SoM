@@ -220,3 +220,13 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
 - **PROCUREMENT CRITICAL**: HX5008NLT C962544 stock=10 (clone C47575004 @419 noted in
   ethernet.py); DS1024-2x6R2 @45; TPD6E001RSER @216; ASP-134603-01 @282. 43 Extended
   reels, $43.30/board @qty1 (preflight_report.txt in manufacturing/).
+
+## Decisions round 5 (user, 2026-06-12) — power-tree findings resolved
+- **+5V_HDMI_TX / +5V_LCD**: ADD two SY6280 gate cells to bringup (fed from +5V,
+  per-module switchable like everything else; EN cells + DIP/override + status LEDs
+  per the existing pattern; power tree updated).
+- **Carrier-vs-SoM rails**: ISOLATE — carrier bucks win; SoM's exported +3V3/+1V8 on
+  J1 become explicit no-connects (or TP-only) on the carrier side; nets stay distinct.
+- **VBUS pre-contract**: eFuse soft-start (TPS25940-class, 24V, live-verified LCSC)
+  between PD receptacle and bulk on +VIN — controlled dV/dt + inlet OVP/OCP.
+- **Ethernet Bob-Smith**: 1000pF 2kV 1206/1808 (live-verified) replaces 0603/50V x4.
