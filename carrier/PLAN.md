@@ -87,3 +87,25 @@ BEFORE executing it and fails on `placer` (def/assign/runtime) or any geometry i
 All 10 sheets (m1_rc usb_pd uart_bridge ethernet power hdmi_tx hdmi_rx som_j1 som_j2
 som_j3) all-gates PASS; `schgen link` BOARD GATE PASS; hdmi_rx builds for the first
 time — from nothing but its netlist.
+
+## Decisions round 3 (user, 2026-06-11) — UX, layout, robustness
+- **Authoring v2 (user-friendly subsystems)**: library-first `use_part("FUSB302BMPX",
+  ref="U1")` pulling lib_id/footprint/LCSC/pins from parts/ (inline metadata illegal for
+  generated parts); pin-by-NAME `U1.SDA` validated against the part's pin table (numbers
+  ok for bare-number connector pins); missing passive folder = build error printing the
+  exact `schgen part add C...` fix; GENERATED net-contract module carrier/nets.py (from
+  som_interface.json + gated rails) so cross-sheet port names are Python attrs, not strings.
+- **Repo cleanup**: DELETE tools/ and scripts/ (git history keeps them); docs/ keeps the
+  hand block diagram + the auto-generated block_diagram.svg, stale old-generator renders
+  deleted; shared/ DIES: SoM 3D/footprints -> som/lib/ (lib-tables updated), generator-owned
+  symbols -> schgen/lib/; m1_rc.py moves out of carrier/subsystems into schgen tests.
+- **Outputs COMMITTED**: carrier/sheets/*.kicad_sch + carrier/renders/*.png tracked in git
+  (deterministic regen; renders reviewable on GitHub); out/ scratch stays ignored.
+- **READMEs**: compact root + per-dir (carrier/, schgen/, parts/); quickstart = 2 lines.
+- **`schgen board`**: ONE command = every sheet gated + link + openable carrier.kicad_pro
+  hierarchy + constraints + diagram + preflight + JLC BOM.
+- **Golden render snapshots**: perceptual hash per sheet committed; drift warns,
+  `--bless` accepts intentional changes.
+- **Rule engine pulled FORWARD (P4 now)**: rules live in each parts/<MPN>/<MPN>.py;
+  retrofit existing sheets; remaining subsystems authored under it.
+- **Declined**: parts.lock snapshot (preflight on demand only).
