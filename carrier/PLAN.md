@@ -188,3 +188,17 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
   RPi FFC SFW15R-1STE1LF picked over -2STE1LF (111, ghost-risk). Re-verify at BOM time.
 - **RESOLVED (user, 2026-06-11): LCD -> J3 bank 34** (+VCCO_34 = 3.3V rail-map entry);
   pmod + user_io + LCD touch I2C keep bank 13. lcd.py expect targets updated.
+
+## Flags from board-completion harvest (2026-06-11 evening)
+- **fmc.py = LAST placement-blocked sheet** (engine gap at 160-pin connector scale:
+  route cell contested vs +3V3). Netlist+dossier+pinmap json complete; VITA map is
+  machine-parsed (fmc_lpc_pinmap.json), zero hand-typed pins; render eyeball owed.
+- **DECISION at power-tree gate: VBUS pre-contract capacitance** — board total ~30uF
+  nominal (pd_input 10u + power.py 2x10u unswitched) vs ~10uF PD sink guidance:
+  inrush limiter OR trim buck input bulk.
+- **Rail map for wave-3 J-sheet regen**: +VCCO_35 = +2V5_VADJ (SHARED camera/FMC 2.5V);
+  FMC budgets into power-tree gate: VADJ 0.4A (TLV75725 DBV thermal), 3P3V 1A.
+- **part_gen gap**: cannot traverse EasyEDA multi-unit 'subparts' symbols (ASP-134603-01
+  generated via verbatim flatten + --from-json; regen online for 3D once fixed).
+- **Procurement**: ASP-134603-01 stock 282/Extended/$17.75 — order early; TLV75725PDRVR
+  alternate is ghost-risk (16 units). 31 BOM lines still missing LCSC ids.
