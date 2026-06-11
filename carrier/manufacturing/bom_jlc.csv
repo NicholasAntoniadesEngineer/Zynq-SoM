@@ -4,11 +4,11 @@ Comment,Designator,Footprint,LCSC
 100k,"bringup_en:R1,bringup_en:R2,bringup_en:R3,bringup_en:R4,bringup_en:R5,bringup_en:R6,bringup_en_modules:R1,bringup_en_modules:R10,bringup_en_modules:R11,bringup_en_modules:R12,bringup_en_modules:R13,bringup_en_modules:R14,bringup_en_modules:R15,bringup_en_modules:R16,bringup_en_modules:R17,bringup_en_modules:R2,bringup_en_modules:R3,bringup_en_modules:R4,bringup_en_modules:R5,bringup_en_modules:R6,bringup_en_modules:R7,bringup_en_modules:R8,bringup_en_modules:R9,bringup_rails:R1,bringup_rails:R2,bringup_rails:R3,bringup_rails:R4,bringup_rails:R5,bringup_rails:R6,bringup_rails:R7,bringup_rails:R8,power:R4,power:R8,usbc_otg:R3",Resistor_SMD:R_0603_1608Metric,C25803
 100n,"microsd:C1,uart_bridge:C1,uart_bridge:C3,uart_bridge:C4,usb_pd:C1,usb_pd:C3,usbc_otg:C1",,C14663
 100n,"hdmi_rx:C1,power_mon:C1,power_mon:C2",Capacitor_SMD:C_0603_1608Metric,C14663
-100n,"bringup_en:C1,bringup_en:C2,bringup_en:C3,bringup_en_modules:C1,bringup_en_modules:C2,bringup_en_modules:C3,bringup_en_modules:C4,bringup_en_modules:C5,bringup_en_modules:C6,bringup_en_modules:C7,bringup_en_modules:C8,bringup_en_modules:C9,bringup_modules:C1,bringup_modules:C10,bringup_modules:C11,bringup_modules:C12,bringup_modules:C13,bringup_modules:C14,bringup_modules:C15,bringup_modules:C16,bringup_modules:C2,bringup_modules:C3,bringup_modules:C4,bringup_modules:C5,bringup_modules:C6,bringup_modules:C7,bringup_modules:C8,bringup_modules:C9,bringup_rails:C1,bringup_rails:C2,bringup_rails:C3,bringup_rails:C4,camera:C1,hdmi_tx:C1,hdmi_tx:C2,hdmi_tx:C3,lcd:C3,microsd:C2,pd_input:C1,pmod:C1,pmod:C3,power:C1,power:C4,power:C7,power:C9,user_io:C1",Capacitor_SMD:C_0603_1608Metric,C1591
-10k,"bringup_rails:R11,bringup_rails:R12,bringup_rails:R13,debug_boot:R4,debug_boot:R5,debug_boot:R6,hdmi_rx:R3,hdmi_tx:R1,hdmi_tx:R2,microsd:R1,microsd:R2,microsd:R3,microsd:R4,microsd:R5,microsd:R6,power:R2,power:R7,power_mon:R1,user_io:R5,user_io:R6,user_io:R7,user_io:R8",Resistor_SMD:R_0603_1608Metric,C25804
+100n,"bringup_en:C1,bringup_en:C2,bringup_en:C3,bringup_en_modules:C1,bringup_en_modules:C2,bringup_en_modules:C3,bringup_en_modules:C4,bringup_en_modules:C5,bringup_en_modules:C6,bringup_en_modules:C7,bringup_en_modules:C8,bringup_en_modules:C9,bringup_modules:C1,bringup_modules:C10,bringup_modules:C11,bringup_modules:C12,bringup_modules:C13,bringup_modules:C14,bringup_modules:C15,bringup_modules:C16,bringup_modules:C2,bringup_modules:C3,bringup_modules:C4,bringup_modules:C5,bringup_modules:C6,bringup_modules:C7,bringup_modules:C8,bringup_modules:C9,bringup_rails:C1,bringup_rails:C2,bringup_rails:C3,bringup_rails:C4,camera:C1,fmc:C2,fmc:C5,hdmi_tx:C1,hdmi_tx:C2,hdmi_tx:C3,lcd:C3,microsd:C2,pd_input:C1,pmod:C1,pmod:C3,power:C1,power:C4,power:C7,power:C9,user_io:C1",Capacitor_SMD:C_0603_1608Metric,C1591
+10k,"bringup_rails:R11,bringup_rails:R12,bringup_rails:R13,debug_boot:R4,debug_boot:R5,debug_boot:R6,fmc:R1,fmc:R2,fmc:R3,fmc:R4,fmc:R5,hdmi_rx:R3,hdmi_tx:R1,hdmi_tx:R2,microsd:R1,microsd:R2,microsd:R3,microsd:R4,microsd:R5,microsd:R6,power:R2,power:R7,power_mon:R1,user_io:R5,user_io:R6,user_io:R7,user_io:R8",Resistor_SMD:R_0603_1608Metric,C25804
 10mR,"power_mon:RS1,power_mon:RS2,power_mon:RS3",RLM12FTCMR010:RLM12FTCMR010,C188070
 10u,"uart_bridge:C2,usb_pd:C2",,C15850
-10u,"camera:C2,lcd:C1,pmod:C2,pmod:C4,power_mon:C3",Capacitor_SMD:C_0805_2012Metric,C15850
+10u,"camera:C2,fmc:C1,fmc:C4,lcd:C1,pmod:C2,pmod:C4,power_mon:C3",Capacitor_SMD:C_0805_2012Metric,C15850
 10u,"power:C2,power:C3",Capacitor_SMD:C_1206_3216Metric,C13585
 10u,pd_input:C2,Capacitor_SMD:C_1210_3225Metric,C596319
 10uH,lcd:L1,SWPA4030S100MT:SWPA4030S100MT,C38117
@@ -18,7 +18,7 @@ Comment,Designator,Footprint,LCSC
 1k,uart_bridge:R1,,C21190
 1k,"bringup_modules:R12,hdmi_rx:R1,power:R3,usbc_otg:R4,user_io:R1,user_io:R2,user_io:R3,user_io:R4",Resistor_SMD:R_0603_1608Metric,C21190
 1n,"ethernet:C1,ethernet:C2,ethernet:C3,ethernet:C4,ethernet:C5",Capacitor_SMD:C_0603_1608Metric,C1588
-1u,"hdmi_tx:C4,power:C12,power:C13",Capacitor_SMD:C_0603_1608Metric,C15849
+1u,"fmc:C3,hdmi_tx:C4,power:C12,power:C13",Capacitor_SMD:C_0603_1608Metric,C15849
 1u,lcd:C2,Capacitor_SMD:C_0603_1608Metric,C28323
 200R,"pmod:R1,pmod:R10,pmod:R11,pmod:R12,pmod:R13,pmod:R14,pmod:R15,pmod:R16,pmod:R2,pmod:R3,pmod:R4,pmod:R5,pmod:R6,pmod:R7,pmod:R8,pmod:R9",Resistor_SMD:R_0603_1608Metric,C8218
 200p,"usb_pd:C4,usb_pd:C5",,C113796
@@ -39,6 +39,7 @@ Comment,Designator,Footprint,LCSC
 AFC07-S40FCA-00,lcd:J1,AFC07-S40FCA-00:AFC07-S40FCA-00,C262572
 AO3400A,power:Q1,Package_TO_SOT_SMD:SOT-23,C20917
 AP2112K-1.8,power:U3,Package_TO_SOT_SMD:SOT-23-5,C176944
+ASP-134603-01,fmc:J1,ASP-134603-01:ASP-134603-01,C2836665
 CP2102N-A02,uart_bridge:U1,Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm,C969151
 DF40C-100DS-0.4V(51),"som_j1:J1,som_j2:J2,som_j3:J3",DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51,C597931
 DIP-4,debug_boot:SW1,DSHP04TSGER:DSHP04TSGER,C3293144
@@ -60,6 +61,7 @@ SY6280AAC,"bringup_modules:U1,bringup_modules:U2,bringup_modules:U3,bringup_modu
 SY7201ABC,lcd:U1,SY7201ABC:SY7201ABC,C82173
 TCA9535PWR,bringup_rails:U1,TCA9535PWR:TCA9535PWR,C130204
 TF-01A,microsd:J1,TF-01A:TF-01A,C91145
+TLV75725PDBVR,fmc:U1,Package_TO_SOT_SMD:SOT-23-5,C2872563
 TPD12S016PWR,hdmi_tx:U1,TPD12S016PWR:TPD12S016PWR,C201665
 TPD6E001RSER,microsd:U2,TPD6E001RSER:TPD6E001RSER,C1973318
 TPS2051CDBVR,usbc_otg:U1,TPS2051CDBVR:TPS2051CDBVR,C129581
