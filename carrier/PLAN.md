@@ -61,3 +61,19 @@ after every verified step.
   reports Extended-reel count + total cost.
 - **Debug**: Zynq JTAG on Xilinx 2x7 2mm (14-pin) header; STM32 SWD on ARM 10-pin
   1.27mm. Both probe-standard.
+
+## ARCHITECTURE CORRECTION (user-caught, 2026-06-11) — NO MANUAL PLACEMENT
+VIOLATION FOUND: per-subsystem `placer()` hooks with literal coordinates (power.py 37
+geometry calls, hdmi_tx.py 33, ethernet.py 18). This is manual placement and is BANNED.
+THE RULE: a subsystem .py contains the NETLIST (+ optional DECLARATIVE hints, e.g.
+"net X is a trunk bus" — never coordinates, never wire plans, never text positions).
+ALL geometry comes from schgen/place.py deriving patterns from circuit TOPOLOGY:
+- trunk-bus/ladder (N same-structure taps onto one net — Bob-Smith, rail buses)
+- regulator stage (IN caps + IC + L + FB divider + OUT caps, from part roles)
+- dual-IC passthrough (protection/level-shift IC between port group and connector)
+- connector fan (ports from pin table — som sheets' generator folds INTO the engine)
+- existing: decoupling rows, pull-up ranks, port fans, dividers
+ENFORCEMENT (after migration): the build FAILS if a subsystem module defines `placer`
+or touches geometry APIs — purity is a gate, not a convention.
+MIGRATION: engine v2 in schgen/place.py; ALL subsystem placer()s deleted; som_conn_gen
+geometry folded into the engine; every sheet re-verified (all gates + render eyeball).
