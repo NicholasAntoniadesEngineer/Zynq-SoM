@@ -61,7 +61,8 @@ def _full_section(readme_dir: Path) -> str:
              f"`schgen board` —")
     L.append("every PNG below passed the netlist, ERC and visual gates.")
     L.append("")
-    L.append(f"![Generated block diagram]({rel('docs/block_diagram.svg')})")
+    L.append(f'<img src="{rel("docs/block_diagram.svg")}" '
+             f'alt="Generated block diagram" width="900">')
     L.append("")
     # thumbnail grid: COLS sheets per table row (GFM pipe table + <img>)
     L.append("| " + " | ".join([" "] * COLS) + " |")
@@ -107,7 +108,8 @@ def _compact_section(readme_dir: Path) -> str:
         "sheets,",
         "each passing the netlist, ERC and visual gates.",
         "",
-        f"![Generated block diagram]({rel('docs/block_diagram.svg')})",
+        f'<img src="{rel("docs/block_diagram.svg")}" '
+        f'alt="Generated block diagram" width="900">',
         "",
         f"See **[carrier/README.md]({rel('carrier/README.md')}#generated-"
         f"schematics)** for the full sheet gallery (thumbnails + "

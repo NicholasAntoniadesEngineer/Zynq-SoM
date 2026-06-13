@@ -113,15 +113,15 @@ byte-identical goldens + the determinism check.
       caps on the rail trunk / next to the rail power-symbol) would let DEF-6
       carry its bypass caps AND helps any future rail-bypass-only content.
 
-### TRACK BLOCKDIAG — full rewrite (acute)
-- [ ] BD-1 layered L→R DAG layout + crossing reduction (diagram.py)
-- [ ] BD-2 aggregate 243 peer edges → per-pair count edges
-- [ ] BD-3 distinct per-edge SoM anchors (tall SoM column)
-- [ ] BD-4 orthogonal Manhattan routing + bundling
-- [ ] BD-5 legend + power-vs-signal color from ptype.kind
-- [ ] BD-6 label grammar/typography + net-group labels
-- [ ] BD-7 subsystem clusters
-- [ ] BD-8 landscape canvas sizing + GAL-1 README width cap
+### TRACK BLOCKDIAG — full rewrite (acute)  [DONE — worktree agent, 8 iters]
+- [x] BD-1..8 + GAL-1 ALL landed in one diagram.py rewrite: layered L→R DAG with
+      barycentre crossing reduction, peer-edge aggregation (per-pair count +
+      dominant-kind), tall central SoM spine with distinct per-edge anchors,
+      orthogonal gutter routing with unique per-edge lanes, ptype.kind colour +
+      legend, fixed label grammar ('N nets · group'), subsystem clusters,
+      landscape 2348×716 canvas (was 860×2580 strip), README embeds capped at
+      width=900. Render rasterised + eyeballed — clean, readable, professional;
+      the acute "unreadable" complaint is resolved.
 
 ### TRACK VERIFY — gates + automated testing
 - [ ] VER-1 design-rule completeness gate (decoupling/i2c-pullup/reset-RC/floating-input) + waivers + board hook (verify/design_rules.py)
@@ -130,7 +130,7 @@ byte-identical goldens + the determinism check.
 - [ ] VER-4 [BIG] independent connected-components short/open proof gate + mutants (verify/cc_gate.py)
 
 ### TRACK DEVEX — dev experience + automated testing
-- [ ] DX-1 pytest unit-test layer for engine primitives (tests/) [HIGH — user emphasis]
+- [x] DX-1 pytest unit-test layer (schgen/tests/, 147 cases ~8s, worktree agent) — c92d7c4 [HIGH — user emphasis]
 - [ ] DX-2 authoring UX: P1 clean CLI errors, P2 unassigned-by-name, P4 list/pins, P5 bulk-NC, P6 footprint-validate, P7 build-time link check, P8 scaffolder+DESIGN.md path, P10 unify loaders
 - [ ] DX-3 DEBT-1 PlacedDesign.from_placement factory + DEBT-3 rename _DRIVER_ETYPES
 - [ ] DX-4 [BIG] place.py split into template modules behind registry (AFTER DX-1)

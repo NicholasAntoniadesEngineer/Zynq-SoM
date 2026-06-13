@@ -62,7 +62,7 @@ PYTHONPATH=. python -m schgen selftest
 `schgen board` regenerates the block diagram and all 26 carrier sheets,
 each passing the netlist, ERC and visual gates.
 
-![Generated block diagram](docs/block_diagram.svg)
+<img src="docs/block_diagram.svg" alt="Generated block diagram" width="900">
 
 See **[carrier/README.md](carrier/README.md#generated-schematics)** for the full sheet gallery (thumbnails + descriptions).
 <!-- /schgen:gallery -->
