@@ -6,8 +6,10 @@ port A = 1.8V SoM side (contract nets SDIO_* verbatim, typed sd_bus 1.8V),
 port B0 = 3.3V card side to the TF-01A push-push slot, port B1 unused.
 SEL strapped low selects B0 (verify polarity against the TI datasheet at
 bring-up; one-line fix here if inverted). Card-side CMD/DAT pull-ups 10k to
-the bring-up-gated +3V3_SD rail; TPD6E001 6-ch ESD across the card lines;
-card-detect pulled up and reported.
+the bring-up-gated +3V3_SD rail; TPD6E001 6-ch ESD across the card lines
+with its VCC biased to +3V3_SD (+ local 100n) so the clamp references the
+card rail rather than floating worst-case (SD-1, TI SLLS546); card-detect
+pulled up and reported.
 """
 
 from __future__ import annotations
@@ -66,12 +68,17 @@ def circuit() -> Circuit:
         cap.fields["LCSC"] = "C14663"
     # gated card rail (+3V3_SD is the bring-up-gated module rail — SY6280 on
     # the bringup sheet — a POWER net with its own symbol, like +5V_USB):
-    # slot VDD + both VCCB + every pull-up + bulk
+    # slot VDD + both VCCB + every pull-up + bulk + ESD-array VCC (SD-1)
     c.part("C2", "Device:C", "100n", C0603, LCSC="C1591")
     c.part("C3", "Device:C", "22u", C0805, LCSC="C45783")
     c.net("+3V3_SD", "J1.VDD", "U1.VCCB0", "U1.VCCB1", "C2.1", "C3.1",
-          *pull_pins)
+          "U2.VCC", *pull_pins)
     c.net("GND", "C2.2", "C3.2")
+    # SD-1 (electrical audit): the TPD6E001 VCC sets its clamp reference; a
+    # floating VCC gives the WORST-CASE clamp on the user-facing card lines
+    # (TI SLLS546). Bias it to the card-side rail +3V3_SD and bypass locally.
+    for cap in c.decouple("U2.VCC", "100n"):    # C14663 Basic, 18.1M stock
+        cap.fields["LCSC"] = "C14663"
 
     # SEL low selects port B0; EP + both TXS GND pins + slot VSS/GND pads
     c.net("GND", "U1.SEL", "U1.EP", "U1.GND",
@@ -80,7 +87,7 @@ def circuit() -> Circuit:
     # unused TXS port B1 + ESD spares
     c.nc("U1.DAT2B1", "U1.DAT3B1", "U1.CMDB1", "U1.CLKB1",
          "U1.DAT0B1", "U1.DAT1B1")
-    c.nc("U2.NC", "U2.VCC")        # NC pads 4/9 + floating VCC (as designed)
+    c.nc("U2.NC")                  # NC pads 4/9 only (VCC biased per SD-1)
 
     # round-4 coverage gate: SDIO CMD/CLK probed on the 1.8 V SoM side
     # (where the level translator's timing actually matters)
