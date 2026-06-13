@@ -41,7 +41,7 @@ def circuit() -> Circuit:
                         (21, [f"LCD_B{i}" for i in range(8)])):
         for off, net in enumerate(names):
             c.port(net, f"J1.{base + off}", expect=J3_MAP)
-    for pin, net in ((30, "LCD_PCLK"), (31, "LCD_DISP"), (32, "LCD_HSYNC"),
+    for pin, net in ((31, "LCD_DISP"), (32, "LCD_HSYNC"),
                      (33, "LCD_VSYNC"), (34, "LCD_DE")):
         c.port(net, f"J1.{pin}", expect=J3_MAP)
     # capacitive touch on the same FFC tail
@@ -51,6 +51,29 @@ def circuit() -> Circuit:
            bus="LCD_CTP", speed_hz=400_000, expect=J2_MAP)
     c.port("LCD_CTP_RST", "J1.39", expect=J2_MAP)
     c.port("LCD_CTP_INT", "J1.40", expect=J2_MAP)
+
+    # ---- audit fixes (electrical-recon WAVE-LCD): the dossier-mandated
+    # housekeeping passives lcd_backlight.md 3.1/3.2/4 that the netlist omitted.
+    # Touch I2C is open-drain -> REQUIRES pull-ups (bus is dead without them).
+    c.part("R2", "Device:R", "4k7", R0603, LCSC="C23162")
+    c.net("LCD_CTP_SDA", "R2.1")
+    c.net("+3V3_LCD", "R2.2")
+    c.part("R3", "Device:R", "4k7", R0603, LCSC="C23162")
+    c.net("LCD_CTP_SCL", "R3.1")
+    c.net("+3V3_LCD", "R3.2")
+    # touch controller held in reset until the PL releases it
+    c.part("R5", "Device:R", "100k", R0603, LCSC="C25803")
+    c.net("LCD_CTP_RST", "R5.1")
+    c.net("GND", "R5.2")
+    # panel display-enable defaults ON when the gated rail is up
+    c.part("R6", "Device:R", "10k", R0603, LCSC="C25804")
+    c.net("LCD_DISP", "R6.1")
+    c.net("+3V3_LCD", "R6.2")
+    # pixel-clock source-series damping (~33 MHz, the highest-edge-rate line):
+    # SoM-side port -> 22R -> FFC pin 30 (resistor at the source/SoM end)
+    c.part("R7", "Device:R", "22R", R0603, LCSC="C23345")
+    c.net("LCD_PCLK_PANEL", "J1.30", "R7.1")
+    c.port("LCD_PCLK", "R7.2", expect=J3_MAP)
 
     # ---- panel power (gated module rails = POWER nets with their own
     # symbols, sourced by the bringup sheet's SY6280s — like +5V_USB) -------
@@ -66,6 +89,10 @@ def circuit() -> Circuit:
     c.net("LCD_BL_SW", "D1.1")
     c.net("LCD_VLED_N", "J1.1", "R1.1", "U1.FB")             # current sense
     c.port("LCD_BL_PWM", "U1.EN/PWM", expect=J3_MAP)
+    # backlight EN/PWM defaults OFF (boost off until the PL drives it high)
+    c.part("R4", "Device:R", "100k", R0603, LCSC="C25803")
+    c.net("LCD_BL_PWM", "R4.1")
+    c.net("GND", "R4.2")
 
     # round-4 coverage gate: the gated boost feed rail (sourced by the
     # round-5 bringup_modules SY6280) + the touch I2C bus this sheet owns

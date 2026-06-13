@@ -206,7 +206,6 @@ bound ports (482):
   lcd:LCD_B5 -> sheet som_j3:LCD_B5
   lcd:LCD_B6 -> sheet som_j3:LCD_B6
   lcd:LCD_B7 -> sheet som_j3:LCD_B7
-  lcd:LCD_PCLK -> sheet som_j3:LCD_PCLK
   lcd:LCD_DISP -> sheet som_j3:LCD_DISP
   lcd:LCD_HSYNC -> sheet som_j3:LCD_HSYNC
   lcd:LCD_VSYNC -> sheet som_j3:LCD_VSYNC
@@ -215,6 +214,7 @@ bound ports (482):
   lcd:LCD_CTP_SCL [i2c] -> sheet som_j2:LCD_CTP_SCL
   lcd:LCD_CTP_RST -> sheet som_j2:LCD_CTP_RST
   lcd:LCD_CTP_INT -> sheet som_j2:LCD_CTP_INT
+  lcd:LCD_PCLK -> sheet som_j3:LCD_PCLK
   lcd:LCD_BL_PWM -> sheet som_j3:LCD_BL_PWM
   microsd:SDIO_CLK [sd_bus] -> sheet som_j1:SDIO_CLK; SoM SDIO_CLK (J1.67)
   microsd:SDIO_CMD [sd_bus] -> sheet som_j1:SDIO_CMD; SoM SDIO_CMD (J1.69)
