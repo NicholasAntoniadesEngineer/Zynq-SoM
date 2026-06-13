@@ -144,11 +144,15 @@ byte-identical goldens + the determinism check.
 - [ ] GP-6 [BIG] BUS-1+BUS-2 bus notation (RGB888/FMC/SDIO) — alias-merge, LAW 0
 - [ ] GP-7 MULTIUNIT-1 multi-unit symbols
 
-### TRACK DOWNSTREAM
-- [ ] DS-1 assembly-ready BOM enrich (MPN/datasheet/Basic-Ext) + JLC CPL cpl_jlc.csv
-- [ ] DS-2 Vivado create_project.tcl (device live-sourced — C3)
-- [ ] DS-3 Zynq PS device-tree fragment carrier_pl.dtsi
-- [ ] DS-4 manifest.json integration spine
+### TRACK DOWNSTREAM  [3/4 + TEST_PLAN done via parallel worktree workflow]
+- [ ] DS-1 assembly-ready BOM enrich (MPN/datasheet/Basic-Ext) + JLC CPL cpl_jlc.csv  <-- still TODO
+- [x] DS-2 Vivado create_project.tcl (schgen/vivado.py; device live-extracted via extract_zynq) + CLI + board hook
+- [x] DS-3 Zynq PS device-tree fragment (schgen/devicetree.py -> carrier/firmware/carrier_pl.dtsi) + CLI + hook
+- [x] DS-4 manifest.json integration spine (schgen/manifest.py; 24 rails/i2c/gpio + 43 artifact sha256) + CLI + hook
+- [x] DOC-1 TEST_PLAN.md (schgen/testplan.py; spice limits + TP pads + DIP stages) + CLI + hook  [also a DFMDOCS item]
+      All 4 built by a worktree-isolated parallel workflow, content harvested,
+      hooked into cmd_board + registered as `schgen vivado|devicetree|manifest|
+      testplan` CLI subcommands. board PASS, deterministic, selftest 44/44.
 
 ### TRACK SOURCING
 - [ ] SRC-1 HX5008 second-source committed alternate

@@ -605,8 +605,19 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"XDC: FAIL — {exc}")
         ok_all = False
 
+    # Vivado project-creation TCL (downstream P2): turns the generated XDC into
+    # a sourceable Vivado project — same device + clock-capable port set as the
+    # XDC, derived the same way (live SoM extraction).
+    from schgen import vivado
+    try:
+        vtcl = vivado.generate(sheets, CARRIER / "fpga" / "create_project.tcl")
+        print(f"VIVADO: {vtcl}")
+    except (vivado.VivadoError, xdc.XdcError) as exc:
+        print(f"VIVADO: FAIL — {exc}")
+        ok_all = False
+
     # round-4 system artifacts, derived from the same netlists.
-    from schgen import firmware, gallery, manual
+    from schgen import firmware, gallery, manual, testplan
     try:
         fw_out = firmware.generate()
         print(f"FIRMWARE CONTRACT: {fw_out}")
@@ -620,11 +631,29 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"BRINGUP MANUAL: FAIL — {exc}")
         ok_all = False
     try:
+        # measurable acceptance test plan (downstream P4 + DFM-3): SPICE
+        # expected/limit values joined to test-point probe pads + DIP stages.
+        tp_out = testplan.generate(sheets=sheets)
+        print(f"TEST PLAN: {tp_out}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"TEST PLAN: FAIL — {exc}")
+        ok_all = False
+    try:
         changed = gallery.generate()
         print("GALLERY: README.md + carrier/README.md "
               + ("updated" if changed else "unchanged"))
     except Exception as exc:  # noqa: BLE001
         print(f"GALLERY: FAIL — {exc}")
+        ok_all = False
+
+    # PS-side device-tree fragment (downstream P3): the PS twin of the XDC —
+    # microSD bus + the bare PS MIO pins the XDC drops, into a commented .dtsi.
+    from schgen import devicetree
+    try:
+        dt_out = devicetree.generate(CARRIER / "firmware" / "carrier_pl.dtsi")
+        print(f"DEVICETREE: {dt_out}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"DEVICETREE: FAIL — {exc}")
         ok_all = False
 
     # floorplan suggestion (SVG + MD), derived from the same sheets/link
@@ -642,6 +671,21 @@ def cmd_board(args: argparse.Namespace) -> int:
         "\n".join(verdicts)
         + f"\nLINK: {'PASS' if res.ok else 'FAIL'}"
         + f"\nBOARD GATE: {'PASS' if board_ok else 'FAIL'}\n")
+
+    # design manifest (downstream P5, integration spine): machine-readable
+    # serialization of the state this run already holds (device, rails,
+    # i2c/gpio maps, xdc census, bom census, test-point coverage) + a sha256 of
+    # every generated carrier/ file. Deterministic; the stable contract other
+    # tools consume instead of scraping text.
+    from schgen import manifest
+    try:
+        man_out = manifest.generate(
+            sheets, res, pt_res=pt_res, tp_res=tp_res,
+            xdc_res=locals().get("xres"))
+        print(f"MANIFEST: {man_out}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"MANIFEST: FAIL — {exc}")
+        ok_all = False
 
     _golden_check(ren_dir, bless=args.bless)
     print(f"BOARD: {'PASS' if ok_all else 'FAIL'} "
@@ -747,6 +791,42 @@ def main(argv: list[str] | None = None) -> int:
                           "direction, JLC-7628 constraint notes)")
     from schgen.floorplan import cmd_floorplan
     fl.set_defaults(func=cmd_floorplan)
+    vv = sub.add_parser(
+        "vivado", help="generate carrier/fpga/create_project.tcl — a "
+                       "sourceable Vivado project (create_project + part + "
+                       "read_xdc + commented PS7 stub), device live-extracted")
+    vv.add_argument("subsystems", nargs="*",
+                    help="names in carrier/subsystems/ (default: all)")
+    vv.add_argument("-o", "--output", type=Path, default=None)
+    vv.add_argument("--som", type=Path, default=None)
+    vv.add_argument("--xdc", type=Path, default=None)
+    vv.add_argument("--refs", default="J1,J2,J3")
+    from schgen.vivado import cmd_vivado
+    vv.set_defaults(func=cmd_vivado)
+    dt = sub.add_parser(
+        "devicetree", help="generate carrier/firmware/carrier_pl.dtsi — the "
+                           "Zynq PS device-tree fragment (microSD bus + the "
+                           "PS MIO pinmux the XDC drops)")
+    dt.add_argument("-o", "--output", type=Path, default=None)
+    dt.add_argument("--som", type=Path, default=None)
+    from schgen.devicetree import cmd_devicetree
+    dt.set_defaults(func=cmd_devicetree)
+    mf = sub.add_parser(
+        "manifest", help="generate carrier/manifest.json — the machine-"
+                         "readable design manifest (device, rails, i2c/gpio "
+                         "maps, xdc, bom census, TP coverage, artifact hashes)")
+    mf.add_argument("subsystems", nargs="*",
+                    help="names in carrier/subsystems/ (default: all)")
+    mf.add_argument("-o", "--output", type=Path, default=None)
+    from schgen.manifest import cmd_manifest
+    mf.set_defaults(func=cmd_manifest)
+    tpl = sub.add_parser(
+        "testplan", help="generate carrier/docs/TEST_PLAN.md — a measurable "
+                         "acceptance checklist (spice expected/min/max + "
+                         "test-point pads + bring-up DIP stages)")
+    tpl.add_argument("-o", "--output", type=Path, default=None)
+    from schgen.testplan import cmd_testplan
+    tpl.set_defaults(func=cmd_testplan)
     st = sub.add_parser(
         "selftest", help="gate MUTATION testing + build-determinism proof "
                          "(the no-CI answer to 'who watches the watchmen')")
