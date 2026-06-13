@@ -25,10 +25,13 @@ WARNINGS (reported, exit 0):
   - unbound SoM nets:      contract nets no sheet consumes yet (later waves)
   - i2c bus missing a role on a sheet (scl without sda or vice versa)
 
-The link report is written to ``carrier/out/link_report.txt``. The CLI also
-emits layout constraints (schgen/constraints.py), a block diagram
-(schgen/diagram.py) and — unless ``--no-board`` — the hierarchical board
-root sheet + the board-level netlist gate (schgen/board.py).
+Standalone, ``schgen link`` writes into the SAME committed carrier/ homes
+``schgen board`` uses, so the two agree: the link report ->
+``carrier/reports/``, layout constraints (schgen/constraints.py) ->
+``carrier/manufacturing/``, the block diagram (schgen/diagram.py) ->
+``docs/block_diagram.svg``. Unless ``--no-board`` it then emits the
+hierarchical board root sheet + the board-level netlist gate
+(schgen/board.py) into the normal carrier/ taxonomy.
 """
 
 from __future__ import annotations
@@ -45,7 +48,6 @@ from schgen.model import Circuit, NetClass, PortType, pair_polarity
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
 SOM_INTERFACE = REPO_ROOT / "carrier" / "som_interface.json"
-DEFAULT_OUT = REPO_ROOT / "carrier" / "out"
 
 # ---- the alias map -------------------------------------------------------------
 # Rail spellings differ between the SoM project and the carrier house style.
@@ -587,27 +589,44 @@ def cmd_link(args: argparse.Namespace) -> int:
     som_nets = load_som_contract()
     res = link(sheets, som_nets)
 
-    outdir = args.outdir or DEFAULT_OUT
-    outdir.mkdir(parents=True, exist_ok=True)
-    report_path = outdir / "link_report.txt"
+    # Standalone link writes into the SAME committed carrier/ homes that
+    # `schgen board` uses, so the two agree. `-o OUTDIR` redirects every
+    # artifact there instead (an isolated-output escape hatch); it is never
+    # carrier/out. The board emission goes to the normal carrier/ taxonomy.
+    carrier = REPO_ROOT / "carrier"
+    override = args.outdir
+    rep_dir = override or (carrier / "reports")
+    man_dir = override or (carrier / "manufacturing")
+    diag_path = (override / "block_diagram.svg" if override
+                 else REPO_ROOT / "docs" / "block_diagram.svg")
+    rep_dir.mkdir(parents=True, exist_ok=True)
+    man_dir.mkdir(parents=True, exist_ok=True)
+
+    report_path = rep_dir / "link_report.txt"
     report_path.write_text(res.report() + "\n")
     print(res.report())
     print(f"\nlink report: {report_path}")
 
     # layout constraints from typed ports
     from schgen import constraints
-    dru, csv_path = constraints.export(sheets, outdir)
+    dru, csv_path = constraints.export(sheets, man_dir)
     print(f"constraints: {dru} + {csv_path}")
 
     # block diagram from the port graph
     from schgen import diagram
-    svg = diagram.render(res, som_nets, outdir / "block_diagram.svg")
+    svg = diagram.render(res, som_nets, diag_path)
     print(f"block diagram: {svg}")
 
     board_ok = True
     if not args.no_board:
         from schgen import board
-        board_ok = board.build_board(sheets, lib, outdir / "board")
+        if override:
+            board_ok = board.build_board(sheets, lib, override / "board")
+        else:
+            board_ok = board.build_board(
+                sheets, lib, carrier, placements=None,
+                root_name="Zynq_Carrier", sheet_subdir="schematic",
+                reports_dir=rep_dir)
 
     ok = res.ok and board_ok
     print(f"LINK CMD: {'PASS' if ok else 'FAIL'}")

@@ -112,12 +112,12 @@ Build FAILS (non-zero exit) unless ALL gates pass.
   rail board-wide, then PROVES via `kicad-cli sch export netlist` on the root that
   every port net and rail comes back as ONE net with every expected pin. Root
   ERC = 0 (same `pin_not_driven`-as-warning fragment policy as single sheets).
-- **Constraints** (`constraints.py`): `carrier/out/layout_constraints.kicad_dru` +
-  `.csv` — JLC04161H-7628 geometry (90R diff 0.2611/0.2032 mm, 100R diff
+- **Constraints** (`constraints.py`): `carrier/manufacturing/layout_constraints.kicad_dru`
+  + `.csv` — JLC04161H-7628 geometry (90R diff 0.2611/0.2032 mm, 100R diff
   0.2052/0.2032 mm, JLCPCB calculator values for THIS stackup; the 0.127/0.127
   figures circulating belong to the thinner 3313 prepreg), net classes per typed
   port, length-match groups per pair/bus.
-- **Diagram** (`diagram.py`): `carrier/out/block_diagram.svg` from the port graph.
+- **Diagram** (`diagram.py`): `docs/block_diagram.svg` from the port graph.
 
 ## Milestones
 M1: model + gates + emit a hand-placed trivial RC subsystem end-to-end (proves the

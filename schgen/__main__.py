@@ -7,6 +7,14 @@ Builds carrier/subsystems/<subsystem>.py end-to-end: model -> place
 (feasibility loop) -> route (exclusive grid) -> emit -> THREE gates
 (netlist == declared, ERC errors == 0, visual zero-overlap) -> render PNG.
 Exit is non-zero unless every gate passes. The gates are judges, not knobs.
+
+`build` is a GATING/PREVIEW tool for ONE sheet: it emits the .kicad_sch and
+render into a transient tempdir (auto-removed) and persists NOTHING — the
+authoritative committed per-sheet renders come ONLY from `schgen board`
+(its standalone single-sheet render differs from the hierarchy render, so
+letting it write carrier/renders/ would drift the goldens). Pass `-o OUTDIR`
+to keep the artifacts somewhere of your choosing.
+
 `bom` exports a JLCPCB-assembly CSV (Comment,Designator,Footprint,LCSC) from
 the declared circuits — manufacture-ready part selection lives in the model.
 """
@@ -32,7 +40,6 @@ from schgen.verify import netlist_gate, visual_gate
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
-DEFAULT_OUT = REPO_ROOT / "carrier" / "out"
 
 
 def _subsystem_path(name_or_path: str) -> Path:
@@ -180,6 +187,19 @@ def _render(sch: Path, png: Path, dpi: int = 300) -> bool:
 
 
 def cmd_build(args: argparse.Namespace) -> int:
+    import tempfile
+    # `build` is a GATING/PREVIEW tool: with no -o it writes the emitted
+    # .kicad_sch + render into a transient TemporaryDirectory and persists
+    # NOTHING. The committed per-sheet renders come ONLY from `schgen board`
+    # (the hierarchy render), so a standalone build never overwrites
+    # carrier/renders/<name>.png (which would drift the goldens).
+    if args.outdir is not None:
+        return _build_into(args, args.outdir)
+    with tempfile.TemporaryDirectory(prefix="schgen_build_") as tmp:
+        return _build_into(args, Path(tmp))
+
+
+def _build_into(args: argparse.Namespace, outdir: Path) -> int:
     path = _subsystem_path(args.subsystem)
     purity = _purity_violations(path)
     if purity:
@@ -220,7 +240,6 @@ def cmd_build(args: argparse.Namespace) -> int:
         no_connects=placement.no_connects,
         paper=placement.paper,
     )
-    outdir = args.outdir or DEFAULT_OUT
     outdir.mkdir(parents=True, exist_ok=True)
     sch = outdir / f"{c.name}.kicad_sch"
     emit(design, sch, lib)
@@ -264,7 +283,10 @@ def cmd_bom(args: argparse.Namespace) -> int:
             if not lcsc:
                 missing.append(f"{c.name}:{ref} ({part.value})")
             rows.setdefault((part.value, part.footprint, lcsc), []).append(ref)
-    out = args.output or (DEFAULT_OUT / "bom_jlc.csv")
+    # Standalone preview: default to the CWD (the authoritative per-board
+    # bom_jlc.csv is written into carrier/manufacturing/ by `schgen board`);
+    # pass -o to choose. Never carrier/out.
+    out = args.output or (Path.cwd() / "bom_jlc.csv")
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", newline="") as f:
         w = csv.writer(f)
