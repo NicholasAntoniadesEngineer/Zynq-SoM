@@ -160,6 +160,14 @@ def circuit() -> Circuit:
     # local LDO's honest 0.4 A continuous thermal limit
     c.draws("+3V3", 1.000, "FMC 3P3V+3P3VAUX mezzanine allocation "
                            "(fmc.md section 4)")
-    c.draws("+2V5_VADJ", 0.400, "FMC VADJ mezzanine budget = TLV75725 DBV "
-                                "0.4 A continuous (fmc.md section 3)")
+    # wave-3 VADJ re-budget (wave3_function_map.md sec 3.1): the TLV75725 DBV
+    # thermal envelope is 0.40 A total (231 C/W, Tj<=125, Ta=50 -> Pd<=0.32 W
+    # at 0.8 V drop). The Zynq bank-35 VCCO (LVDS_25 drivers: 12 FMC LA +
+    # 3 camera CSI pairs, ~0.045 A) ALSO rides +2V5_VADJ, so the FMC mezzanine
+    # allocation drops 0.40 -> 0.35 A to hold the envelope. (The bank-35 VCCO
+    # draw itself awaits the rail-tie template — powertree KNOWN-DEFERRED — but
+    # the headroom is reserved here regardless, per the dossier.)
+    c.draws("+2V5_VADJ", 0.350, "FMC VADJ mezzanine budget (TLV75725 DBV 0.40 A "
+                                "envelope less ~0.05 A bank-35 VCCO; "
+                                "wave3_function_map.md sec 3.1)")
     return c

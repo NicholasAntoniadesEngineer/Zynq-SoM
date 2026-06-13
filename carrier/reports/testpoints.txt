@@ -24,10 +24,10 @@ required nets (56):
   +5V_SOM                [rail     ] TP @ power:TP2
   +5V_USB                [rail     ] TP @ bringup_modules:TP6
   +VBUS_IN               [rail     ] TP @ pd_input:TP1
-  +VCCO_13               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
-  +VCCO_33               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
-  +VCCO_34               [rail     ] WAIVED (som_j3): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
-  +VCCO_35               [rail     ] WAIVED (som_j3): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
+  +VCCO_13               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
+  +VCCO_33               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
+  +VCCO_34               [rail     ] WAIVED (som_j3): bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
+  +VCCO_35               [rail     ] WAIVED (som_j3): bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
   +VIN                   [rail     ] TP @ pd_input:TP2
   +VIN_SYS               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   CAM_EN                 [enable   ] TP @ camera:TP3
@@ -65,10 +65,10 @@ waivers — author-declared, verbatim (9):
   +1V8_REG               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +3V3_REG               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +5V_REG                (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
-  +VCCO_13               (som_j2) bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
-  +VCCO_33               (som_j2) bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
-  +VCCO_34               (som_j3) bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
-  +VCCO_35               (som_j3) bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
+  +VCCO_13               (som_j2) bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
+  +VCCO_33               (som_j2) bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
+  +VCCO_34               (som_j3) bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
+  +VCCO_35               (som_j3) bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
   +VIN_SYS               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   CHASSIS_GND            (pd_input) chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed
 

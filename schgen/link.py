@@ -409,9 +409,34 @@ def link(sheets: list[SheetCircuit],
     _check_buses(sheets, res)
     _check_net_type_agreement(sheets, res)
 
+    # -- wave-3 FUNCTION map accounting ----------------------------------------
+    # The connector sheets emit each mapped pin under its carrier FUNCTION name
+    # (som_conn_gen.FUNCTION_MAP), not the raw contract name — so a SoM net like
+    # IO_L16_P_13 is CONSUMED (as LCD_CTP_SDA) yet would read "unbound" if we
+    # only matched raw names. Account a SoM net as bound when its function-map
+    # target is a bound PORT somewhere on the board.
+    bound_ports = {b.net for b in res.bindings if b.status == "bound"}
+    for som_net, func_net in _function_map().items():
+        if som_net in som_names and func_net in bound_ports:
+            bound_som_names.add(som_net)
+
     # -- unbound SoM nets (later waves) ----------------------------------------
     res.unbound_som = sorted(n for n in som_names if n not in bound_som_names)
     return res
+
+
+def _function_map() -> dict[str, str]:
+    """The wave-3 SoM-contract-net -> carrier-function-net renames the J-sheet
+    generator applies (carrier/som_conn_gen.FUNCTION_MAP + PUDC_STRAPS). Loaded
+    from the SAME source the J-sheets use so the linker census cannot drift."""
+    import importlib.util
+    gen_path = REPO_ROOT / "carrier" / "som_conn_gen.py"
+    spec = importlib.util.spec_from_file_location("_link_som_conn_gen", gen_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    m = dict(mod.FUNCTION_MAP)
+    m.update(mod.PUDC_STRAPS)
+    return m
 
 
 def _check_pairs(sheets: list[SheetCircuit], res: LinkResult) -> None:

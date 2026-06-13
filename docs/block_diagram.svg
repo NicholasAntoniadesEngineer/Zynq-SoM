@@ -1,56 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 2388" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12">
 <rect width="860" height="2388" fill="white"/>
 <text x="40" y="24" font-size="15" font-weight="bold">carrier board — linked port graph</text>
-<path d="M260,82 C340,82 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="98" fill="#6b7280">3 nets (deferred)</text>
 <path d="M260,178 C340,178 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
 <text x="270" y="194" fill="#6b7280">1 nets (deferred)</text>
 <path d="M260,362 C340,362 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="356" fill="#2563eb">1 nets</text>
-<path d="M260,370 C340,370 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="386" fill="#6b7280">3 nets (deferred)</text>
-<path d="M260,466 C340,466 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="482" fill="#6b7280">10 nets (deferred)</text>
 <path d="M260,554 C340,554 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="548" fill="#2563eb">10 nets</text>
 <path d="M260,650 C340,650 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="644" fill="#2563eb">8 nets (4 pairs)</text>
 <path d="M260,658 C340,658 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
 <text x="270" y="674" fill="#6b7280">8 nets (4 pairs) (deferred)</text>
-<path d="M260,754 C340,754 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="770" fill="#6b7280">29 nets (deferred)</text>
-<path d="M260,850 C340,850 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="866" fill="#6b7280">10 nets (deferred)</text>
-<path d="M260,946 C340,946 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="962" fill="#6b7280">12 nets (deferred)</text>
-<path d="M260,1042 C340,1042 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="1058" fill="#6b7280">34 nets (deferred)</text>
 <path d="M260,1130 C340,1130 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="1124" fill="#2563eb">6 nets</text>
-<path d="M260,1138 C340,1138 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="1154" fill="#6b7280">1 nets (deferred)</text>
 <path d="M260,1226 C340,1226 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="1220" fill="#2563eb">4 nets</text>
 <path d="M260,1322 C340,1322 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="1316" fill="#2563eb">16 nets</text>
-<path d="M260,1522 C340,1522 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="1538" fill="#6b7280">1 nets (deferred)</text>
 <path d="M260,1610 C340,1610 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
-<text x="270" y="1604" fill="#2563eb">58 nets</text>
+<text x="270" y="1604" fill="#2563eb">42 nets</text>
 <path d="M260,1706 C340,1706 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
-<text x="270" y="1700" fill="#2563eb">72 nets</text>
+<text x="270" y="1700" fill="#2563eb">40 nets</text>
 <path d="M260,1802 C340,1802 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
-<text x="270" y="1796" fill="#2563eb">74 nets</text>
+<text x="270" y="1796" fill="#2563eb">13 nets</text>
 <path d="M260,1906 C340,1906 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="1922" fill="#6b7280">7 nets (deferred)</text>
+<text x="270" y="1922" fill="#6b7280">3 nets (deferred)</text>
 <path d="M260,1994 C340,1994 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="1988" fill="#2563eb">2 nets</text>
-<path d="M260,2002 C340,2002 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="2018" fill="#6b7280">1 nets (deferred)</text>
 <path d="M260,2090 C340,2090 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="2084" fill="#2563eb">5 nets</text>
-<path d="M260,2098 C340,2098 480,1270 560,1270" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,4"/>
-<text x="270" y="2114" fill="#6b7280">1 nets (deferred)</text>
 <path d="M260,2186 C340,2186 480,1110 560,1110" fill="none" stroke="#2563eb" stroke-width="2"/>
 <text x="270" y="2180" fill="#2563eb">8 nets</text>
 <line x1="150" y1="108" x2="150" y2="328" stroke="#16a34a" stroke-width="2"/>
@@ -65,6 +43,12 @@
 <text x="156" y="746" fill="#16a34a">EN_3V3</text>
 <line x1="150" y1="108" x2="150" y2="1384" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="746" fill="#16a34a">EN_5V0</text>
+<line x1="150" y1="108" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="842" fill="#16a34a">STM32_RAIL_EN_1V8</text>
+<line x1="150" y1="108" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="842" fill="#16a34a">STM32_RAIL_EN_3V3</text>
+<line x1="150" y1="108" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="842" fill="#16a34a">STM32_RAIL_EN_5V0</text>
 <line x1="150" y1="204" x2="150" y2="232" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="218" fill="#16a34a">EN_CAM</text>
 <line x1="150" y1="204" x2="150" y2="232" stroke="#16a34a" stroke-width="2"/>
@@ -136,15 +120,53 @@
 <line x1="150" y1="396" x2="150" y2="712" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="554" fill="#16a34a">STM32_I2C2_SDA</text>
 <line x1="150" y1="396" x2="150" y2="1480" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="938" fill="#16a34a">PMON_ALERT_N</text>
+<line x1="150" y1="396" x2="150" y2="1480" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="938" fill="#16a34a">STM32_I2C2_SCL</text>
 <line x1="150" y1="396" x2="150" y2="1480" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="938" fill="#16a34a">STM32_I2C2_SDA</text>
 <line x1="150" y1="396" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="986" fill="#16a34a">SC_INT_N</text>
+<line x1="150" y1="396" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="986" fill="#16a34a">STM32_I2C2_SCL</text>
+<line x1="150" y1="396" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="986" fill="#16a34a">STM32_I2C2_SDA</text>
+<line x1="150" y1="396" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="986" fill="#16a34a">STM32_NRST</text>
+<line x1="150" y1="396" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1034" fill="#16a34a">PL_BTN0</text>
+<line x1="150" y1="396" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1034" fill="#16a34a">PL_BTN1</text>
+<line x1="150" y1="396" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1082" fill="#16a34a">PUDC_34</text>
+<line x1="150" y1="396" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">SC_INT_N</text>
 <line x1="150" y1="396" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1178" fill="#16a34a">STM32_I2C2_SCL</text>
 <line x1="150" y1="396" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1178" fill="#16a34a">STM32_I2C2_SDA</text>
+<line x1="150" y1="396" x2="150" y2="2056" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1226" fill="#16a34a">USBOTG_FLT_N</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_CLK_N</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_CLK_P</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_D0_N</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_D0_P</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_D1_N</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_D1_P</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_EN</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_LED</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_SCL</text>
+<line x1="150" y1="492" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1130" fill="#16a34a">CAM_SDA</text>
 <line x1="150" y1="588" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1082" fill="#16a34a">STM32_BOOT0</text>
 <line x1="150" y1="588" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
@@ -185,10 +207,184 @@
 <text x="156" y="1130" fill="#16a34a">STM32_I2C2_SCL</text>
 <line x1="150" y1="780" x2="150" y2="1480" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1130" fill="#16a34a">STM32_I2C2_SDA</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">FMC_LA08_N</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">FMC_LA08_P</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">FMC_LA09_N</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">FMC_LA09_P</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">FMC_LA10_N</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">FMC_LA10_P</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">FMC_LA11_N</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">FMC_LA11_P</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">STM32_I2C2_SCL</text>
+<line x1="150" y1="780" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1178" fill="#16a34a">STM32_I2C2_SDA</text>
+<line x1="150" y1="780" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1226" fill="#16a34a">FMC_PRSNT_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_CLK0_M2C_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_CLK0_M2C_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_CLK1_M2C_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_CLK1_M2C_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA00_CC_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA00_CC_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA01_CC_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA01_CC_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA02_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA02_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA03_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA03_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA04_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA04_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA05_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA05_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA06_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA06_P</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA07_N</text>
+<line x1="150" y1="780" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">FMC_LA07_P</text>
 <line x1="150" y1="780" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1370" fill="#16a34a">STM32_I2C2_SCL</text>
 <line x1="150" y1="780" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1370" fill="#16a34a">STM32_I2C2_SDA</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_5V_DET</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_CEC</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_CLK_N</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_CLK_P</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_D0_N</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_D0_P</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_D1_N</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_D1_P</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_D2_N</text>
+<line x1="150" y1="876" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1274" fill="#16a34a">HDMI_RX_D2_P</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_CEC</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_HPD</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_SCL</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_SDA</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_TMDS_0_N</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_TMDS_0_P</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_TMDS_1_N</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_TMDS_1_P</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_TMDS_2_N</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_TMDS_2_P</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_TMDS_CLK_N</text>
+<line x1="150" y1="972" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1322" fill="#16a34a">ZYNQ_HDMI_TX_TMDS_CLK_P</text>
+<line x1="150" y1="1068" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1370" fill="#16a34a">LCD_CTP_INT</text>
+<line x1="150" y1="1068" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1370" fill="#16a34a">LCD_CTP_RST</text>
+<line x1="150" y1="1068" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1370" fill="#16a34a">LCD_CTP_SCL</text>
+<line x1="150" y1="1068" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1370" fill="#16a34a">LCD_CTP_SDA</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_B0</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_B1</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_B2</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_B3</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_B4</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_B5</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_B6</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_B7</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_BL_PWM</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_DE</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_DISP</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_G0</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_G1</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_G2</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_G3</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_G4</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_G5</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_G6</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_G7</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_HSYNC</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_PCLK</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_R0</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_R1</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_R2</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_R3</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_R4</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_R5</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_R6</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_R7</text>
+<line x1="150" y1="1068" x2="150" y2="1768" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">LCD_VSYNC</text>
 <line x1="150" y1="1164" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1370" fill="#16a34a">SDIO_CLK</text>
 <line x1="150" y1="1164" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
@@ -201,6 +397,8 @@
 <text x="156" y="1370" fill="#16a34a">SDIO_D2</text>
 <line x1="150" y1="1164" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1370" fill="#16a34a">SDIO_D3</text>
+<line x1="150" y1="1164" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1418" fill="#16a34a">SD_CARD_DETECT</text>
 <line x1="150" y1="1260" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1418" fill="#16a34a">STM32_USB_CC1</text>
 <line x1="150" y1="1260" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
@@ -245,10 +443,24 @@
 <text x="156" y="1514" fill="#16a34a">IO_L9_DQS_N_13</text>
 <line x1="150" y1="1356" x2="150" y2="1672" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1514" fill="#16a34a">IO_L9_DQS_P_13</text>
+<line x1="150" y1="1548" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1562" fill="#16a34a">STM32_I2C2_SCL</text>
+<line x1="150" y1="1548" x2="150" y2="1576" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1562" fill="#16a34a">STM32_I2C2_SDA</text>
 <line x1="150" y1="1548" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1754" fill="#16a34a">STM32_I2C2_SCL</text>
 <line x1="150" y1="1548" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1754" fill="#16a34a">STM32_I2C2_SDA</text>
+<line x1="150" y1="1644" x2="150" y2="1864" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1754" fill="#16a34a">ZYNQ_PS_UART0_RXD</text>
+<line x1="150" y1="1644" x2="150" y2="1864" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1754" fill="#16a34a">ZYNQ_PS_UART0_TXD</text>
+<line x1="150" y1="1644" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1802" fill="#16a34a">SC_INT_N</text>
+<line x1="150" y1="1644" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1802" fill="#16a34a">STM32_I2C2_SCL</text>
+<line x1="150" y1="1644" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1802" fill="#16a34a">STM32_I2C2_SDA</text>
 <line x1="150" y1="1644" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1802" fill="#16a34a">STM32_USB_CC1</text>
 <line x1="150" y1="1644" x2="150" y2="1960" stroke="#16a34a" stroke-width="2"/>
@@ -263,6 +475,10 @@
 <text x="156" y="1850" fill="#16a34a">USB_VBUS</text>
 <line x1="150" y1="1644" x2="150" y2="2056" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1850" fill="#16a34a">VBUS_OUT_EN</text>
+<line x1="150" y1="1740" x2="150" y2="1864" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1802" fill="#16a34a">ZYNQ_PS_UART0_CTS_N</text>
+<line x1="150" y1="1740" x2="150" y2="1864" stroke="#16a34a" stroke-width="2"/>
+<text x="156" y="1802" fill="#16a34a">ZYNQ_PS_UART0_RTS_N</text>
 <line x1="150" y1="1740" x2="150" y2="2152" stroke="#16a34a" stroke-width="2"/>
 <text x="156" y="1946" fill="#16a34a">IO_25_13</text>
 <line x1="150" y1="1740" x2="150" y2="2152" stroke="#16a34a" stroke-width="2"/>
@@ -282,7 +498,7 @@
 <rect x="40" y="40" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="60" font-weight="bold" font-size="14">bringup_en</text>
 <text x="52" y="80" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="96" fill="#6b7280">3 deferred</text>
+<text x="52" y="96" fill="#6b7280">0 deferred</text>
 <rect x="40" y="136" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="156" font-weight="bold" font-size="14">bringup_en_modules</text>
 <text x="52" y="176" fill="#1e40af">0 SoM-bound port(s)</text>
@@ -294,11 +510,11 @@
 <rect x="40" y="328" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="348" font-weight="bold" font-size="14">bringup_rails</text>
 <text x="52" y="368" fill="#1e40af">1 SoM-bound port(s)</text>
-<text x="52" y="384" fill="#6b7280">3 deferred</text>
+<text x="52" y="384" fill="#6b7280">0 deferred</text>
 <rect x="40" y="424" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="444" font-weight="bold" font-size="14">camera</text>
 <text x="52" y="464" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="480" fill="#6b7280">10 deferred</text>
+<text x="52" y="480" fill="#6b7280">0 deferred</text>
 <rect x="40" y="520" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="540" font-weight="bold" font-size="14">debug_boot</text>
 <text x="52" y="560" fill="#1e40af">10 SoM-bound port(s)</text>
@@ -310,23 +526,23 @@
 <rect x="40" y="712" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="732" font-weight="bold" font-size="14">fmc</text>
 <text x="52" y="752" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="768" fill="#6b7280">29 deferred</text>
+<text x="52" y="768" fill="#6b7280">0 deferred</text>
 <rect x="40" y="808" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="828" font-weight="bold" font-size="14">hdmi_rx</text>
 <text x="52" y="848" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="864" fill="#6b7280">10 deferred</text>
+<text x="52" y="864" fill="#6b7280">0 deferred</text>
 <rect x="40" y="904" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="924" font-weight="bold" font-size="14">hdmi_tx</text>
 <text x="52" y="944" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="960" fill="#6b7280">12 deferred</text>
+<text x="52" y="960" fill="#6b7280">0 deferred</text>
 <rect x="40" y="1000" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1020" font-weight="bold" font-size="14">lcd</text>
 <text x="52" y="1040" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="1056" fill="#6b7280">34 deferred</text>
+<text x="52" y="1056" fill="#6b7280">0 deferred</text>
 <rect x="40" y="1096" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1116" font-weight="bold" font-size="14">microsd</text>
 <text x="52" y="1136" fill="#1e40af">6 SoM-bound port(s)</text>
-<text x="52" y="1152" fill="#6b7280">1 deferred</text>
+<text x="52" y="1152" fill="#6b7280">0 deferred</text>
 <rect x="40" y="1192" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1212" font-weight="bold" font-size="14">pd_input</text>
 <text x="52" y="1232" fill="#1e40af">4 SoM-bound port(s)</text>
@@ -342,31 +558,31 @@
 <rect x="40" y="1480" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1500" font-weight="bold" font-size="14">power_mon</text>
 <text x="52" y="1520" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="1536" fill="#6b7280">1 deferred</text>
+<text x="52" y="1536" fill="#6b7280">0 deferred</text>
 <rect x="40" y="1576" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1596" font-weight="bold" font-size="14">som_j1</text>
-<text x="52" y="1616" fill="#1e40af">58 SoM-bound port(s)</text>
+<text x="52" y="1616" fill="#1e40af">42 SoM-bound port(s)</text>
 <text x="52" y="1632" fill="#6b7280">0 deferred</text>
 <rect x="40" y="1672" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1692" font-weight="bold" font-size="14">som_j2</text>
-<text x="52" y="1712" fill="#1e40af">72 SoM-bound port(s)</text>
+<text x="52" y="1712" fill="#1e40af">40 SoM-bound port(s)</text>
 <text x="52" y="1728" fill="#6b7280">0 deferred</text>
 <rect x="40" y="1768" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1788" font-weight="bold" font-size="14">som_j3</text>
-<text x="52" y="1808" fill="#1e40af">74 SoM-bound port(s)</text>
+<text x="52" y="1808" fill="#1e40af">13 SoM-bound port(s)</text>
 <text x="52" y="1824" fill="#6b7280">0 deferred</text>
 <rect x="40" y="1864" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1884" font-weight="bold" font-size="14">uart_bridge</text>
 <text x="52" y="1904" fill="#1e40af">0 SoM-bound port(s)</text>
-<text x="52" y="1920" fill="#6b7280">7 deferred</text>
+<text x="52" y="1920" fill="#6b7280">3 deferred</text>
 <rect x="40" y="1960" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="1980" font-weight="bold" font-size="14">usb_pd</text>
 <text x="52" y="2000" fill="#1e40af">2 SoM-bound port(s)</text>
-<text x="52" y="2016" fill="#6b7280">1 deferred</text>
+<text x="52" y="2016" fill="#6b7280">0 deferred</text>
 <rect x="40" y="2056" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="2076" font-weight="bold" font-size="14">usbc_otg</text>
 <text x="52" y="2096" fill="#1e40af">5 SoM-bound port(s)</text>
-<text x="52" y="2112" fill="#6b7280">1 deferred</text>
+<text x="52" y="2112" fill="#6b7280">0 deferred</text>
 <rect x="40" y="2152" width="220" height="68" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="52" y="2172" font-weight="bold" font-size="14">user_io</text>
 <text x="52" y="2192" fill="#1e40af">8 SoM-bound port(s)</text>
@@ -378,6 +594,6 @@
 <text x="572" y="1136" fill="#374151">rails: +1V8, +3V3, +3V3_SC, +5V_SOM, +VCCO_13, +VCCO_33, +VCCO_34, +VCCO_35, GND</text>
 <rect x="560" y="1230" width="220" height="80" rx="10" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="6,4"/>
 <text x="572" y="1254" fill="#6b7280" font-weight="bold">later waves</text>
-<text x="572" y="1276" fill="#6b7280">121 deferred port(s)</text>
+<text x="572" y="1276" fill="#6b7280">12 deferred port(s)</text>
 <text x="572" y="1294" fill="#6b7280">rj45, usb conn, J1-J3 sheets</text>
 </svg>

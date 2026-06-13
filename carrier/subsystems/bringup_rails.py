@@ -124,7 +124,22 @@ def circuit() -> Circuit:
     # gates on bringup_en_modules, exactly like the P00..P07 cells)
     for pname, net in P1_MAP:
         c.port(net, f"U1.{pname}", expect=EXPECT_EN)
-    for k in (1, 4, 5, 6, 7):              # P11 (PMON_ALERT_N rsv), P14..P17
+    # G4 (wave3_function_map.md sec 1.2 + round-5 reconciliation): the two
+    # SC-side telemetry flags land on the next free expander ports as INPUTS
+    # (the STM32 has zero free direct GPIOs — section 1 census). Their pull-ups
+    # live on the OWNING sheets, so NO 100k-to-GND "don't float" resistor here
+    # (it would fight the real pull / form a sloppy divider):
+    #  * P11 = PMON_ALERT_N — INA3221 CRITICAL wire-OR, 10k PU +3V3_SC on
+    #    power_mon (R1). [reserved here all along per the dossier + fw header]
+    #  * P14 = USBOTG_FLT_N — TPS2051C open-drain fault, 100k PU re-railed to
+    #    +3V3_SC on usbc_otg (R3; +5V on a TCA9535 IO would break its VCC+0.5
+    #    abs-max). P12/P13 are taken by the round-5 5V module gates, so the
+    #    next free port is P14 (NOT the dossier's stale "P12").
+    c.port("PMON_ALERT_N", "U1.P11",
+           expect="power_mon (INA3221 CRITICAL wire-OR, 10k PU +3V3_SC)")
+    c.port("USBOTG_FLT_N", "U1.P14",
+           expect="usbc_otg (TPS2051C FLT#, 100k PU +3V3_SC)")
+    for k in (5, 6, 7):                    # P15..P17 spare — must not float
         net = f"BU_P1{k}"
         rr = c.part(c.auto_ref("R"), "Device:R", "100k", R_FP, LCSC=LCSC_100K)
         c.net(net, f"U1.P1{k}", f"{rr.ref}.1")
@@ -139,8 +154,11 @@ def circuit() -> Circuit:
            expect=J3_MAP)
     c.pullup("U1.SCL", "4k7", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_4K7
     c.pullup("U1.SDA", "4k7", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_4K7
-    # INT#: open-drain, 10k to +3V3_SC, optional STM32 readback interrupt
-    c.port("STM32_BRINGUP_INT", "U1.INT#", expect=J3_MAP)
+    # INT#: open-drain, wired-OR with the FUSB302 INT onto the ONE shared SC
+    # interrupt SC_INT_N (STM32_GPIO4 = PA15, wave3_function_map.md sec 1.1,
+    # G2). This sheet OWNS the single pull-up for the merged net: 10k to
+    # +3V3_SC (usb_pd's redundant 4k7 was deleted — one pull per net).
+    c.port("SC_INT_N", "U1.INT#", expect=J3_MAP)
     c.pullup("U1.INT#", "10k", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_10K
 
     # ---- user buttons: active-LOW, 10k to +3V3 (bank VCCO), 100n debounce --
@@ -160,6 +178,16 @@ def circuit() -> Circuit:
     cr = c.part(c.auto_ref("C"), "Device:C", "100n", C_FP, LCSC=LCSC_100N)
     c.port("STM32_NRST", "SW5.1", "SW5.2", f"{cr.ref}.1")
     c.net("GND", "SW5.3", "SW5.4", f"{cr.ref}.2")
+
+    # ---- bank-34 PUDC config strap (wave3_function_map.md sec 3.3 / UG470) --
+    # IO_L3P_PUDC_34 (J3.39, port PUDC_34 on som_j3) has NO resistor on the SoM.
+    # PUDC LOW during config = internal pull-ups ENABLED — friendly to the LCD
+    # "DISP defaults on" 10k and the active-low PL buttons. 10k to GND. The
+    # strap is a carrier-side part; it lives HERE (the config-strap surface
+    # sheet) rather than on the connector-only J3 sheet, and binds J3<->here.
+    rp = c.part(c.auto_ref("R"), "Device:R", "10k", R_FP, LCSC=LCSC_10K)
+    c.port("PUDC_34", f"{rp.ref}.2", expect=J3_MAP)
+    c.net("GND", f"{rp.ref}.1")
 
     # round-4 coverage gate: the always-on SC rail + the shared SC I2C bus
     # are probed HERE (the sheet that owns the bus pull-ups)

@@ -46,6 +46,23 @@ DEFAULT_OUT = REPO_ROOT / "carrier" / "fpga" / "Zynq_Carrier_pins.xdc"
 # enumerated rail alias; signals are NEVER respelled).
 RAIL_SPELLING = {"VIN": "+VIN"}
 
+
+def _function_map() -> dict[str, str]:
+    """The wave-3 SoM-contract-net -> carrier-function-net renames the J-sheet
+    generator (carrier/som_conn_gen.FUNCTION_MAP) applies. The XDC walks the
+    raw contract to reach each PL ball, then must look up the carrier PORT
+    under its FUNCTION name (e.g. IO_L18_N_13 -> ZYNQ_PS_UART0_RTS_N) — exactly
+    as som_conn_gen renamed it — or every renamed pin would read as an orphan.
+    Loaded from the SAME source the J-sheets use, so the two cannot drift."""
+    import importlib.util
+    gen_path = REPO_ROOT / "carrier" / "som_conn_gen.py"
+    spec = importlib.util.spec_from_file_location("_xdc_som_conn_gen", gen_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    m = dict(mod.FUNCTION_MAP)
+    m.update(mod.PUDC_STRAPS)   # PUDC_34: the strap part lives on bringup_rails
+    return m
+
 # ---- the VCCO rail map (carrier/PLAN.md decisions, rounds 2-4) -----------------
 # bank id -> carrier rail powering +VCCO_<bank> on the SoM. The bank LIST is
 # discovered from the Zynq pin names; only the RAIL per bank is design intent.
@@ -132,6 +149,7 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
     contract = json.loads(contract_path.read_text())["connectors"]
     live = extract_zynq(som_sch, jrefs=tuple(refs))
     consumers, ptypes = _port_registry(sheets)
+    func_map = _function_map()
     checks: list[str] = []
 
     # net -> PL balls (Zynq side, live netlist; IO_* names are PL I/O)
@@ -169,7 +187,11 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
                                    key=lambda kv: int(kv[0])):
             if som_net.startswith("unconnected-"):
                 continue
+            # contract net -> carrier net: rail spelling, then the wave-3
+            # FUNCTION map (the J-sheet generator's same rename) so a renamed
+            # PL pin resolves to its function PORT, not an orphan.
             carrier_net = RAIL_SPELLING.get(som_net, som_net)
+            carrier_net = func_map.get(carrier_net, carrier_net)
             if Circuit.classify(carrier_net) in (NetClass.POWER,
                                                  NetClass.GROUND):
                 continue                       # rails are not get_ports

@@ -147,9 +147,12 @@
 #define ZC_I2C_ADDR_FUSB302B 0x22  /* USB-PD PHY (usb_pd; fixed address, onsemi DS) */
 #define ZC_I2C_ADDR_INA3221_1 0x40  /* rail monitor #1 (power_mon U1; A0 strap read from the netlist) */
 #define ZC_I2C_ADDR_INA3221_2 0x41  /* rail monitor #2 (power_mon U2; A0 strap read from the netlist) */
-/* NOTE: the carrier J-pin binding for STM32_I2C2_SDA/SCL is a wave-3  */
-/* deferral (no dedicated I2C nets on the J contract); bit-bang is the  */
-/* documented fallback (bringup dossier risk R2).                       */
+/* G3: STM32_I2C2 is a firmware BIT-BANG on the DAC pins (PA4/PA5, no   */
+/* I2C AF; real I2C2 PA8/PA9 is the on-module SC<->Zynq link) -- ~100 kHz */
+#define ZC_I2C_BITBANG_SDA_GPIO_PORT 'A'   /* STM32_I2C2_SDA = STM32_DAC1, J1.49 */
+#define ZC_I2C_BITBANG_SDA_GPIO_PIN 4U
+#define ZC_I2C_BITBANG_SCL_GPIO_PORT 'A'   /* STM32_I2C2_SCL = STM32_DAC2, J1.55 */
+#define ZC_I2C_BITBANG_SCL_GPIO_PIN 5U
 
 /* ---- Rail bring-up sequence (derived from the power.py regulator     */
 /*      chain: each stage feeds the next) + EN-cell mapping             */
@@ -175,7 +178,7 @@
 #define ZC_RAIL2_EN_NET "EN_1V8"
 #define ZC_RAIL2_OVERRIDE_GPIO_PORT 'C'   /* STM32_RAIL_EN_1V8 -> STM32_GPIO3 */
 #define ZC_RAIL2_OVERRIDE_GPIO_PIN 10U
-#define ZC_BRINGUP_INT_GPIO_PORT 'A'   /* STM32_BRINGUP_INT -> STM32_GPIO4 */
+#define ZC_BRINGUP_INT_GPIO_PORT 'A'   /* SC_INT_N (TCA9535 INT# wire-OR FUSB302 INT) -> STM32_GPIO4 */
 #define ZC_BRINGUP_INT_GPIO_PIN 15U
 
 /* ---- TCA9535 module-override port map -- READ from the bringup_rails  */
@@ -191,10 +194,10 @@
 #define ZC_TCA9535_BIT_EN_PMOD 6  /* P06: BU_OVR_PMOD -> EN_PMOD (+3V3_PMOD, ILIM 523 mA, DIP SW2 pos 7) */
 #define ZC_TCA9535_BIT_EN_USER_LED 7  /* P07: BU_OVR_USER_LED -> EN_USER_LED (+3V3_USER_LED, ILIM 523 mA, DIP SW1 pos 4) */
 #define ZC_TCA9535_BIT_EN_LCD_BL 8  /* P10: BU_OVR_LCD_BL -> EN_LCD_BL (DIP SW2 pos 8) */
-/* P11 (bit 9): BU_P11 -- spare, 100k to GND (power_mon dossier reserves P11 for PMON_ALERT_N) */
+/* P11 (bit 9): PMON_ALERT_N -- INPUT: INA3221 CRITICAL wire-OR (power_mon, 10k PU +3V3_SC) */
 #define ZC_TCA9535_BIT_EN_HDMI_TX_5V 10  /* P12: BU_OVR_HDMI_TX_5V -> EN_HDMI_TX_5V (+5V_HDMI_TX, ILIM 523 mA, DIP SW6 pos 1) */
 #define ZC_TCA9535_BIT_EN_LCD_5V 11  /* P13: BU_OVR_LCD_5V -> EN_LCD_5V (+5V_LCD, ILIM 1000 mA, DIP SW6 pos 2) */
-/* P14 (bit 12): BU_P14 -- spare, 100k to GND */
+/* P14 (bit 12): USBOTG_FLT_N -- INPUT: TPS2051C fault (usbc_otg, 100k PU re-railed +3V3_SC) */
 /* P15 (bit 13): BU_P15 -- spare, 100k to GND */
 /* P16 (bit 14): BU_P16 -- spare, 100k to GND */
 /* P17 (bit 15): BU_P17 -- spare, 100k to GND */

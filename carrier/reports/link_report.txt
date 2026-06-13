@@ -7,12 +7,15 @@ alias map (rails only, exact, enumerated):
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (348):
+bound ports (460):
   bringup_en:BU_DIP_5V0 -> sheet bringup_rails:BU_DIP_5V0
+  bringup_en:STM32_RAIL_EN_5V0 -> sheet som_j1:STM32_RAIL_EN_5V0
   bringup_en:EN_5V0 -> sheet power:EN_5V0
   bringup_en:BU_DIP_3V3 -> sheet bringup_rails:BU_DIP_3V3
+  bringup_en:STM32_RAIL_EN_3V3 -> sheet som_j1:STM32_RAIL_EN_3V3
   bringup_en:EN_3V3 -> sheet power:EN_3V3
   bringup_en:BU_DIP_1V8 -> sheet bringup_rails:BU_DIP_1V8
+  bringup_en:STM32_RAIL_EN_1V8 -> sheet som_j1:STM32_RAIL_EN_1V8
   bringup_en:EN_1V8 -> sheet power:EN_1V8
   bringup_en_modules:BU_DIP_HDMI_TX -> sheet bringup_rails:BU_DIP_HDMI_TX
   bringup_en_modules:BU_OVR_HDMI_TX -> sheet bringup_rails:BU_OVR_HDMI_TX
@@ -81,9 +84,25 @@ bound ports (348):
   bringup_rails:BU_OVR_LCD_BL -> sheet bringup_en_modules:BU_OVR_LCD_BL
   bringup_rails:BU_OVR_HDMI_TX_5V -> sheet bringup_en_modules:BU_OVR_HDMI_TX_5V
   bringup_rails:BU_OVR_LCD_5V -> sheet bringup_en_modules:BU_OVR_LCD_5V
-  bringup_rails:STM32_I2C2_SCL [i2c] -> sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
-  bringup_rails:STM32_I2C2_SDA [i2c] -> sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+  bringup_rails:PMON_ALERT_N -> sheet power_mon:PMON_ALERT_N
+  bringup_rails:USBOTG_FLT_N -> sheet usbc_otg:USBOTG_FLT_N
+  bringup_rails:STM32_I2C2_SCL [i2c] -> sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
+  bringup_rails:STM32_I2C2_SDA [i2c] -> sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+  bringup_rails:SC_INT_N -> sheet som_j1:SC_INT_N; sheet usb_pd:SC_INT_N
+  bringup_rails:PL_BTN0 -> sheet som_j2:PL_BTN0
+  bringup_rails:PL_BTN1 -> sheet som_j2:PL_BTN1
   bringup_rails:STM32_NRST -> sheet debug_boot:STM32_NRST; sheet som_j1:STM32_NRST; SoM STM32_NRST (J1.47)
+  bringup_rails:PUDC_34 -> sheet som_j3:PUDC_34
+  camera:CAM_D0_P [diff_pair] -> sheet som_j3:CAM_D0_P
+  camera:CAM_D0_N [diff_pair] -> sheet som_j3:CAM_D0_N
+  camera:CAM_D1_P [diff_pair] -> sheet som_j3:CAM_D1_P
+  camera:CAM_D1_N [diff_pair] -> sheet som_j3:CAM_D1_N
+  camera:CAM_CLK_P [diff_pair] -> sheet som_j3:CAM_CLK_P
+  camera:CAM_CLK_N [diff_pair] -> sheet som_j3:CAM_CLK_N
+  camera:CAM_SCL [i2c] -> sheet som_j3:CAM_SCL
+  camera:CAM_SDA [i2c] -> sheet som_j3:CAM_SDA
+  camera:CAM_EN -> sheet som_j3:CAM_EN
+  camera:CAM_LED -> sheet som_j3:CAM_LED
   debug_boot:ZYNQ_TMS -> sheet som_j1:ZYNQ_TMS; SoM ZYNQ_TMS (J1.66)
   debug_boot:ZYNQ_TCK -> sheet som_j1:ZYNQ_TCK; SoM ZYNQ_TCK (J1.64)
   debug_boot:ZYNQ_TDO -> sheet som_j1:ZYNQ_TDO; SoM ZYNQ_TDO (J1.68)
@@ -102,14 +121,100 @@ bound ports (348):
   ethernet:ETH_PHY_MDI2_N [diff_pair] -> sheet som_j1:ETH_PHY_MDI2_N; SoM ETH_PHY_MDI2_N (J1.83)
   ethernet:ETH_PHY_MDI3_P [diff_pair] -> sheet som_j1:ETH_PHY_MDI3_P; SoM ETH_PHY_MDI3_P (J1.79)
   ethernet:ETH_PHY_MDI3_N [diff_pair] -> sheet som_j1:ETH_PHY_MDI3_N; SoM ETH_PHY_MDI3_N (J1.77)
-  fmc:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
-  fmc:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+  fmc:FMC_CLK0_M2C_P [diff_pair] -> sheet som_j3:FMC_CLK0_M2C_P
+  fmc:FMC_CLK0_M2C_N [diff_pair] -> sheet som_j3:FMC_CLK0_M2C_N
+  fmc:FMC_CLK1_M2C_P [diff_pair] -> sheet som_j3:FMC_CLK1_M2C_P
+  fmc:FMC_CLK1_M2C_N [diff_pair] -> sheet som_j3:FMC_CLK1_M2C_N
+  fmc:FMC_LA00_CC_P [diff_pair] -> sheet som_j3:FMC_LA00_CC_P
+  fmc:FMC_LA00_CC_N [diff_pair] -> sheet som_j3:FMC_LA00_CC_N
+  fmc:FMC_LA01_CC_P [diff_pair] -> sheet som_j3:FMC_LA01_CC_P
+  fmc:FMC_LA01_CC_N [diff_pair] -> sheet som_j3:FMC_LA01_CC_N
+  fmc:FMC_LA02_P [diff_pair] -> sheet som_j3:FMC_LA02_P
+  fmc:FMC_LA02_N [diff_pair] -> sheet som_j3:FMC_LA02_N
+  fmc:FMC_LA03_P [diff_pair] -> sheet som_j3:FMC_LA03_P
+  fmc:FMC_LA03_N [diff_pair] -> sheet som_j3:FMC_LA03_N
+  fmc:FMC_LA04_P [diff_pair] -> sheet som_j3:FMC_LA04_P
+  fmc:FMC_LA04_N [diff_pair] -> sheet som_j3:FMC_LA04_N
+  fmc:FMC_LA05_P [diff_pair] -> sheet som_j3:FMC_LA05_P
+  fmc:FMC_LA05_N [diff_pair] -> sheet som_j3:FMC_LA05_N
+  fmc:FMC_LA06_P [diff_pair] -> sheet som_j3:FMC_LA06_P
+  fmc:FMC_LA06_N [diff_pair] -> sheet som_j3:FMC_LA06_N
+  fmc:FMC_LA07_P [diff_pair] -> sheet som_j3:FMC_LA07_P
+  fmc:FMC_LA07_N [diff_pair] -> sheet som_j3:FMC_LA07_N
+  fmc:FMC_LA08_P [diff_pair] -> sheet som_j1:FMC_LA08_P
+  fmc:FMC_LA08_N [diff_pair] -> sheet som_j1:FMC_LA08_N
+  fmc:FMC_LA09_P [diff_pair] -> sheet som_j1:FMC_LA09_P
+  fmc:FMC_LA09_N [diff_pair] -> sheet som_j1:FMC_LA09_N
+  fmc:FMC_LA10_P [diff_pair] -> sheet som_j1:FMC_LA10_P
+  fmc:FMC_LA10_N [diff_pair] -> sheet som_j1:FMC_LA10_N
+  fmc:FMC_LA11_P [diff_pair] -> sheet som_j1:FMC_LA11_P
+  fmc:FMC_LA11_N [diff_pair] -> sheet som_j1:FMC_LA11_N
+  fmc:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
+  fmc:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+  fmc:FMC_PRSNT_N -> sheet som_j2:FMC_PRSNT_N
+  hdmi_rx:HDMI_RX_D2_P [tmds_pair] -> sheet som_j2:HDMI_RX_D2_P
+  hdmi_rx:HDMI_RX_D2_N [tmds_pair] -> sheet som_j2:HDMI_RX_D2_N
+  hdmi_rx:HDMI_RX_D1_P [tmds_pair] -> sheet som_j2:HDMI_RX_D1_P
+  hdmi_rx:HDMI_RX_D1_N [tmds_pair] -> sheet som_j2:HDMI_RX_D1_N
+  hdmi_rx:HDMI_RX_D0_P [tmds_pair] -> sheet som_j2:HDMI_RX_D0_P
+  hdmi_rx:HDMI_RX_D0_N [tmds_pair] -> sheet som_j2:HDMI_RX_D0_N
+  hdmi_rx:HDMI_RX_CLK_P [tmds_pair] -> sheet som_j2:HDMI_RX_CLK_P
+  hdmi_rx:HDMI_RX_CLK_N [tmds_pair] -> sheet som_j2:HDMI_RX_CLK_N
+  hdmi_rx:HDMI_RX_5V_DET -> sheet som_j2:HDMI_RX_5V_DET
+  hdmi_rx:HDMI_RX_CEC -> sheet som_j2:HDMI_RX_CEC
+  hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_P [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_2_P
+  hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_N [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_2_N
+  hdmi_tx:ZYNQ_HDMI_TX_TMDS_1_P [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_1_P
+  hdmi_tx:ZYNQ_HDMI_TX_TMDS_1_N [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_1_N
+  hdmi_tx:ZYNQ_HDMI_TX_TMDS_0_P [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_0_P
+  hdmi_tx:ZYNQ_HDMI_TX_TMDS_0_N [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_0_N
+  hdmi_tx:ZYNQ_HDMI_TX_TMDS_CLK_P [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_CLK_P
+  hdmi_tx:ZYNQ_HDMI_TX_TMDS_CLK_N [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_CLK_N
+  hdmi_tx:ZYNQ_HDMI_TX_CEC -> sheet som_j2:ZYNQ_HDMI_TX_CEC
+  hdmi_tx:ZYNQ_HDMI_TX_SCL [i2c] -> sheet som_j2:ZYNQ_HDMI_TX_SCL
+  hdmi_tx:ZYNQ_HDMI_TX_SDA [i2c] -> sheet som_j2:ZYNQ_HDMI_TX_SDA
+  hdmi_tx:ZYNQ_HDMI_TX_HPD -> sheet som_j2:ZYNQ_HDMI_TX_HPD
+  lcd:LCD_R0 -> sheet som_j3:LCD_R0
+  lcd:LCD_R1 -> sheet som_j3:LCD_R1
+  lcd:LCD_R2 -> sheet som_j3:LCD_R2
+  lcd:LCD_R3 -> sheet som_j3:LCD_R3
+  lcd:LCD_R4 -> sheet som_j3:LCD_R4
+  lcd:LCD_R5 -> sheet som_j3:LCD_R5
+  lcd:LCD_R6 -> sheet som_j3:LCD_R6
+  lcd:LCD_R7 -> sheet som_j3:LCD_R7
+  lcd:LCD_G0 -> sheet som_j3:LCD_G0
+  lcd:LCD_G1 -> sheet som_j3:LCD_G1
+  lcd:LCD_G2 -> sheet som_j3:LCD_G2
+  lcd:LCD_G3 -> sheet som_j3:LCD_G3
+  lcd:LCD_G4 -> sheet som_j3:LCD_G4
+  lcd:LCD_G5 -> sheet som_j3:LCD_G5
+  lcd:LCD_G6 -> sheet som_j3:LCD_G6
+  lcd:LCD_G7 -> sheet som_j3:LCD_G7
+  lcd:LCD_B0 -> sheet som_j3:LCD_B0
+  lcd:LCD_B1 -> sheet som_j3:LCD_B1
+  lcd:LCD_B2 -> sheet som_j3:LCD_B2
+  lcd:LCD_B3 -> sheet som_j3:LCD_B3
+  lcd:LCD_B4 -> sheet som_j3:LCD_B4
+  lcd:LCD_B5 -> sheet som_j3:LCD_B5
+  lcd:LCD_B6 -> sheet som_j3:LCD_B6
+  lcd:LCD_B7 -> sheet som_j3:LCD_B7
+  lcd:LCD_PCLK -> sheet som_j3:LCD_PCLK
+  lcd:LCD_DISP -> sheet som_j3:LCD_DISP
+  lcd:LCD_HSYNC -> sheet som_j3:LCD_HSYNC
+  lcd:LCD_VSYNC -> sheet som_j3:LCD_VSYNC
+  lcd:LCD_DE -> sheet som_j3:LCD_DE
+  lcd:LCD_CTP_SDA [i2c] -> sheet som_j2:LCD_CTP_SDA
+  lcd:LCD_CTP_SCL [i2c] -> sheet som_j2:LCD_CTP_SCL
+  lcd:LCD_CTP_RST -> sheet som_j2:LCD_CTP_RST
+  lcd:LCD_CTP_INT -> sheet som_j2:LCD_CTP_INT
+  lcd:LCD_BL_PWM -> sheet som_j3:LCD_BL_PWM
   microsd:SDIO_CLK [sd_bus] -> sheet som_j1:SDIO_CLK; SoM SDIO_CLK (J1.67)
   microsd:SDIO_CMD [sd_bus] -> sheet som_j1:SDIO_CMD; SoM SDIO_CMD (J1.69)
   microsd:SDIO_D0 [sd_bus] -> sheet som_j1:SDIO_D0; SoM SDIO_D0 (J1.65)
   microsd:SDIO_D1 [sd_bus] -> sheet som_j1:SDIO_D1; SoM SDIO_D1 (J1.61)
   microsd:SDIO_D2 [sd_bus] -> sheet som_j1:SDIO_D2; SoM SDIO_D2 (J1.73)
   microsd:SDIO_D3 [sd_bus] -> sheet som_j1:SDIO_D3; SoM SDIO_D3 (J1.71)
+  microsd:SD_CARD_DETECT -> sheet som_j2:SD_CARD_DETECT
   pd_input:STM32_USB_CC1 -> sheet som_j1:STM32_USB_CC1; sheet usb_pd:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
   pd_input:STM32_USB_CC2 -> sheet som_j1:STM32_USB_CC2; sheet usb_pd:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
   pd_input:STM32_USB_D_P [usb_hs_pair] -> sheet som_j1:STM32_USB_D_P; SoM STM32_USB_D_P (J1.19)
@@ -133,8 +238,9 @@ bound ports (348):
   power:EN_5V0 -> sheet bringup_en:EN_5V0
   power:EN_3V3 -> sheet bringup_en:EN_3V3
   power:EN_1V8 -> sheet bringup_en:EN_1V8
-  power_mon:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
-  power_mon:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
+  power_mon:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+  power_mon:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
+  power_mon:PMON_ALERT_N -> sheet bringup_rails:PMON_ALERT_N
   som_j1:STM32_USB_D_P [usb_hs_pair] -> sheet pd_input:STM32_USB_D_P; SoM STM32_USB_D_P (J1.19)
   som_j1:USB_ID -> sheet usbc_otg:USB_ID; SoM USB_ID (J1.20)
   som_j1:STM32_USB_D_N [usb_hs_pair] -> sheet pd_input:STM32_USB_D_N; SoM STM32_USB_D_N (J1.21)
@@ -143,24 +249,24 @@ bound ports (348):
   som_j1:USB_D- [usb_hs_pair] -> sheet usbc_otg:USB_D-; SoM USB_D- (J1.30)
   som_j1:STM32_USB_CC2 -> sheet pd_input:STM32_USB_CC2; sheet usb_pd:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
   som_j1:USB_D+ [usb_hs_pair] -> sheet usbc_otg:USB_D+; SoM USB_D+ (J1.32)
-  som_j1:STM32_GPIO1 -> SoM STM32_GPIO1 (J1.33)
-  som_j1:STM32_GPIO2 -> SoM STM32_GPIO2 (J1.35)
+  som_j1:STM32_RAIL_EN_5V0 -> sheet bringup_en:STM32_RAIL_EN_5V0
+  som_j1:STM32_RAIL_EN_3V3 -> sheet bringup_en:STM32_RAIL_EN_3V3
   som_j1:ZYNQ_PS_MIO8\VM1 -> SoM ZYNQ_PS_MIO8\VM1 (J1.36)
   som_j1:VBUS_OUT_EN -> sheet usbc_otg:VBUS_OUT_EN; SoM VBUS_OUT_EN (J1.38)
   som_j1:ZYNQ_PS_MIO7/VM0 -> SoM ZYNQ_PS_MIO7/VM0 (J1.40)
-  som_j1:STM32_GPIO4 -> SoM STM32_GPIO4 (J1.41)
-  som_j1:ZYNQ_PS_MIO10 -> SoM ZYNQ_PS_MIO10 (J1.42)
-  som_j1:STM32_GPIO3 -> SoM STM32_GPIO3 (J1.43)
+  som_j1:SC_INT_N -> sheet bringup_rails:SC_INT_N; sheet usb_pd:SC_INT_N
+  som_j1:ZYNQ_PS_UART0_RXD -> sheet uart_bridge:ZYNQ_PS_UART0_RXD
+  som_j1:STM32_RAIL_EN_1V8 -> sheet bringup_en:STM32_RAIL_EN_1V8
   som_j1:STM32_GPIO6 -> sheet debug_boot:STM32_GPIO6; SoM STM32_GPIO6 (J1.45)
   som_j1:ZYNQ_PS_MIO12 -> SoM ZYNQ_PS_MIO12 (J1.46)
   som_j1:STM32_NRST -> sheet bringup_rails:STM32_NRST; sheet debug_boot:STM32_NRST; SoM STM32_NRST (J1.47)
-  som_j1:ZYNQ_PS_MIO11 -> SoM ZYNQ_PS_MIO11 (J1.48)
-  som_j1:STM32_DAC1 -> SoM STM32_DAC1 (J1.49)
+  som_j1:ZYNQ_PS_UART0_TXD -> sheet uart_bridge:ZYNQ_PS_UART0_TXD
+  som_j1:STM32_I2C2_SDA -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   som_j1:ZYNQ_PS_MIO0 -> SoM ZYNQ_PS_MIO0 (J1.50)
   som_j1:ZYNQ_PS_MIO9 -> SoM ZYNQ_PS_MIO9 (J1.52)
   som_j1:STM32_GPIO5 -> sheet debug_boot:STM32_GPIO5; SoM STM32_GPIO5 (J1.53)
   som_j1:STM32_GPIO8 -> sheet debug_boot:STM32_GPIO8; SoM STM32_GPIO8 (J1.54)
-  som_j1:STM32_DAC2 -> SoM STM32_DAC2 (J1.55)
+  som_j1:STM32_I2C2_SCL -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   som_j1:STM32_BOOT0 -> sheet debug_boot:STM32_BOOT0; SoM STM32_BOOT0 (J1.57)
   som_j1:STM32_GPIO7 -> sheet debug_boot:STM32_GPIO7; SoM STM32_GPIO7 (J1.59)
   som_j1:SDIO_D1 [sd_bus] -> sheet microsd:SDIO_D1; SoM SDIO_D1 (J1.61)
@@ -173,50 +279,50 @@ bound ports (348):
   som_j1:ZYNQ_TDI -> sheet debug_boot:ZYNQ_TDI; SoM ZYNQ_TDI (J1.70)
   som_j1:SDIO_D3 [sd_bus] -> sheet microsd:SDIO_D3; SoM SDIO_D3 (J1.71)
   som_j1:SDIO_D2 [sd_bus] -> sheet microsd:SDIO_D2; SoM SDIO_D2 (J1.73)
-  som_j1:IO_L1_P_35 -> SoM IO_L1_P_35 (J1.74)
-  som_j1:IO_L6_VREF_N_35 -> SoM IO_L6_VREF_N_35 (J1.76)
+  som_j1:FMC_LA08_P [diff_pair] -> sheet fmc:FMC_LA08_P
+  som_j1:FMC_LA11_N [diff_pair] -> sheet fmc:FMC_LA11_N
   som_j1:ETH_PHY_MDI3_N [diff_pair] -> sheet ethernet:ETH_PHY_MDI3_N; SoM ETH_PHY_MDI3_N (J1.77)
-  som_j1:IO_L6_P_35 -> SoM IO_L6_P_35 (J1.78)
+  som_j1:FMC_LA11_P [diff_pair] -> sheet fmc:FMC_LA11_P
   som_j1:ETH_PHY_MDI3_P [diff_pair] -> sheet ethernet:ETH_PHY_MDI3_P; SoM ETH_PHY_MDI3_P (J1.79)
-  som_j1:IO_L4_P_35 -> SoM IO_L4_P_35 (J1.80)
+  som_j1:FMC_LA09_P [diff_pair] -> sheet fmc:FMC_LA09_P
   som_j1:ETH_PHY_MDI2_N [diff_pair] -> sheet ethernet:ETH_PHY_MDI2_N; SoM ETH_PHY_MDI2_N (J1.83)
-  som_j1:IO_L4_N_35 -> SoM IO_L4_N_35 (J1.84)
+  som_j1:FMC_LA09_N [diff_pair] -> sheet fmc:FMC_LA09_N
   som_j1:ETH_PHY_MDI2_P [diff_pair] -> sheet ethernet:ETH_PHY_MDI2_P; SoM ETH_PHY_MDI2_P (J1.85)
   som_j1:IO_0_35 -> SoM IO_0_35 (J1.86)
-  som_j1:IO_L5_N_35 -> SoM IO_L5_N_35 (J1.88)
+  som_j1:FMC_LA10_N [diff_pair] -> sheet fmc:FMC_LA10_N
   som_j1:ETH_PHY_MDI1_N [diff_pair] -> sheet ethernet:ETH_PHY_MDI1_N; SoM ETH_PHY_MDI1_N (J1.89)
-  som_j1:IO_L5_P_35 -> SoM IO_L5_P_35 (J1.90)
+  som_j1:FMC_LA10_P [diff_pair] -> sheet fmc:FMC_LA10_P
   som_j1:ETH_PHY_MDI1_P [diff_pair] -> sheet ethernet:ETH_PHY_MDI1_P; SoM ETH_PHY_MDI1_P (J1.91)
-  som_j1:IO_L1_N_35 -> SoM IO_L1_N_35 (J1.92)
+  som_j1:FMC_LA08_N [diff_pair] -> sheet fmc:FMC_LA08_N
   som_j1:ETH_LED2 -> SoM ETH_LED2 (J1.94)
   som_j1:ETH_PHY_MDI0_N [diff_pair] -> sheet ethernet:ETH_PHY_MDI0_N; SoM ETH_PHY_MDI0_N (J1.95)
   som_j1:ETH_PHY_MDI0_P [diff_pair] -> sheet ethernet:ETH_PHY_MDI0_P; SoM ETH_PHY_MDI0_P (J1.97)
   som_j1:ETH_LED1 -> SoM ETH_LED1 (J1.98)
   som_j1:IO_L2_N_35 -> SoM IO_L2_N_35 (J1.100)
   som_j2:IO_L24_N_13 -> sheet user_io:IO_L24_N_13; SoM IO_L24_N_13 (J2.7)
-  som_j2:IO_L18_N_13 -> SoM IO_L18_N_13 (J2.8)
+  som_j2:ZYNQ_PS_UART0_RTS_N -> sheet uart_bridge:ZYNQ_PS_UART0_RTS_N
   som_j2:IO_L15_P_13 -> sheet user_io:IO_L15_P_13; SoM IO_L15_P_13 (J2.9)
   som_j2:IO_L24_P_13 -> sheet user_io:IO_L24_P_13; SoM IO_L24_P_13 (J2.10)
-  som_j2:IO_L18_P_13 -> SoM IO_L18_P_13 (J2.11)
+  som_j2:ZYNQ_PS_UART0_CTS_N -> sheet uart_bridge:ZYNQ_PS_UART0_CTS_N
   som_j2:IO_L19_P_13 -> sheet user_io:IO_L19_P_13; SoM IO_L19_P_13 (J2.12)
   som_j2:IO_L21_P_13 -> sheet user_io:IO_L21_P_13; SoM IO_L21_P_13 (J2.13)
   som_j2:IO_L2_N_13 -> sheet pmod:IO_L2_N_13; SoM IO_L2_N_13 (J2.14)
-  som_j2:IO_L6_N_VREF_13 -> SoM IO_L6_N_VREF_13 (J2.17)
+  som_j2:SD_CARD_DETECT -> sheet microsd:SD_CARD_DETECT
   som_j2:IO_L3_P_13 -> sheet pmod:IO_L3_P_13; SoM IO_L3_P_13 (J2.18)
   som_j2:IO_L22_P_13 -> sheet user_io:IO_L22_P_13; SoM IO_L22_P_13 (J2.19)
   som_j2:IO_L2_P_13 -> sheet pmod:IO_L2_P_13; SoM IO_L2_P_13 (J2.20)
   som_j2:IO_L6_P_13 -> sheet user_io:IO_L6_P_13; SoM IO_L6_P_13 (J2.21)
-  som_j2:IO_L19_P_33 -> SoM IO_L19_P_33 (J2.22)
+  som_j2:ZYNQ_HDMI_TX_SCL -> sheet hdmi_tx:ZYNQ_HDMI_TX_SCL
   som_j2:IO_25_13 -> sheet user_io:IO_25_13; SoM IO_25_13 (J2.23)
   som_j2:IO_L5_N_13 -> sheet pmod:IO_L5_N_13; SoM IO_L5_N_13 (J2.24)
   som_j2:IO_L13_MRCC_N_13 -> SoM IO_L13_MRCC_N_13 (J2.27)
-  som_j2:IO_L16_N_13 -> SoM IO_L16_N_13 (J2.28)
+  som_j2:LCD_CTP_SCL -> sheet lcd:LCD_CTP_SCL
   som_j2:IO_L13_MRCC_P_13 -> SoM IO_L13_MRCC_P_13 (J2.29)
-  som_j2:IO_L16_P_13 -> SoM IO_L16_P_13 (J2.30)
+  som_j2:LCD_CTP_SDA -> sheet lcd:LCD_CTP_SDA
   som_j2:IO_L23_N_13 -> SoM IO_L23_N_13 (J2.31)
-  som_j2:IO_L17_N_13 -> SoM IO_L17_N_13 (J2.32)
+  som_j2:LCD_CTP_INT -> sheet lcd:LCD_CTP_INT
   som_j2:IO_L23_P_13 -> SoM IO_L23_P_13 (J2.33)
-  som_j2:IO_L17_P_13 -> SoM IO_L17_P_13 (J2.34)
+  som_j2:LCD_CTP_RST -> sheet lcd:LCD_CTP_RST
   som_j2:IO_L1_N_13 -> SoM IO_L1_N_13 (J2.37)
   som_j2:IO_L5P_13 -> sheet pmod:IO_L5P_13; SoM IO_L5P_13 (J2.38)
   som_j2:IO_L14_N_SRCC_13 -> SoM IO_L14_N_SRCC_13 (J2.39)
@@ -224,127 +330,133 @@ bound ports (348):
   som_j2:IO_L14_P_SRCC_13 -> SoM IO_L14_P_SRCC_13 (J2.41)
   som_j2:IO_L11_SRCC_P_13 -> SoM IO_L11_SRCC_P_13 (J2.42)
   som_j2:IO_L3_N_13 -> sheet pmod:IO_L3_N_13; SoM IO_L3_N_13 (J2.43)
-  som_j2:IO_L20_N_33 -> SoM IO_L20_N_33 (J2.44)
+  som_j2:HDMI_RX_5V_DET -> sheet hdmi_rx:HDMI_RX_5V_DET
   som_j2:IO_L12_MRCC_N_13 -> SoM IO_L12_MRCC_N_13 (J2.47)
   som_j2:IO_L9_DQS_N_13 -> sheet pmod:IO_L9_DQS_N_13; SoM IO_L9_DQS_N_13 (J2.48)
   som_j2:IO_L12_MRCC_P_13 -> SoM IO_L12_MRCC_P_13 (J2.49)
   som_j2:IO_L9_DQS_P_13 -> sheet pmod:IO_L9_DQS_P_13; SoM IO_L9_DQS_P_13 (J2.50)
   som_j2:IO_L10_N_13 -> sheet pmod:IO_L10_N_13; SoM IO_L10_N_13 (J2.51)
-  som_j2:IO_L19_VREF_N_33 -> SoM IO_L19_VREF_N_33 (J2.52)
+  som_j2:ZYNQ_HDMI_TX_SDA -> sheet hdmi_tx:ZYNQ_HDMI_TX_SDA
   som_j2:IO_L10_P_13 -> sheet pmod:IO_L10_P_13; SoM IO_L10_P_13 (J2.53)
-  som_j2:IO_L15_N_33 -> SoM IO_L15_N_33 (J2.54)
+  som_j2:ZYNQ_HDMI_TX_HPD -> sheet hdmi_tx:ZYNQ_HDMI_TX_HPD
   som_j2:IO_L1P_13 -> SoM IO_L1P_13 (J2.57)
   som_j2:IO_L8_P_13 -> sheet pmod:IO_L8_P_13; SoM IO_L8_P_13 (J2.58)
-  som_j2:IO_L20_P_33 -> SoM IO_L20_P_33 (J2.59)
+  som_j2:HDMI_RX_CEC -> sheet hdmi_rx:HDMI_RX_CEC
   som_j2:IO_L8_N_13 -> sheet pmod:IO_L8_N_13; SoM IO_L8_N_13 (J2.60)
   som_j2:IO_L4_P_13 -> sheet pmod:IO_L4_P_13; SoM IO_L4_P_13 (J2.61)
   som_j2:IO_L7_P_13 -> sheet pmod:IO_L7_P_13; SoM IO_L7_P_13 (J2.62)
   som_j2:IO_L4_N_13 -> sheet pmod:IO_L4_N_13; SoM IO_L4_N_13 (J2.63)
   som_j2:IO_L7_N_13 -> sheet pmod:IO_L7_N_13; SoM IO_L7_N_13 (J2.64)
-  som_j2:IO_L22_P_33 -> SoM IO_L22_P_33 (J2.67)
-  som_j2:IO_L23_N_33 -> SoM IO_L23_N_33 (J2.68)
-  som_j2:IO_L22_N_33 -> SoM IO_L22_N_33 (J2.69)
-  som_j2:IO_L23_P_33 -> SoM IO_L23_P_33 (J2.70)
-  som_j2:IO_L21_DQS_P_33 -> SoM IO_L21_DQS_P_33 (J2.71)
-  som_j2:IO_L24_P_33 -> SoM IO_L24_P_33 (J2.72)
-  som_j2:IO_L21_DQS_N_33 -> SoM IO_L21_DQS_N_33 (J2.73)
-  som_j2:IO_L24_N_33 -> SoM IO_L24_N_33 (J2.74)
-  som_j2:IO_L15_P_33 -> SoM IO_L15_P_33 (J2.77)
-  som_j2:IO_L18_P_33 -> SoM IO_L18_P_33 (J2.78)
-  som_j2:IO_25_33 -> SoM IO_25_33 (J2.79)
-  som_j2:IO_L18_N_33 -> SoM IO_L18_N_33 (J2.80)
+  som_j2:ZYNQ_HDMI_TX_TMDS_0_P [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_0_P
+  som_j2:ZYNQ_HDMI_TX_TMDS_1_N [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_1_N
+  som_j2:ZYNQ_HDMI_TX_TMDS_0_N [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_0_N
+  som_j2:ZYNQ_HDMI_TX_TMDS_1_P [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_1_P
+  som_j2:ZYNQ_HDMI_TX_TMDS_CLK_P [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_CLK_P
+  som_j2:ZYNQ_HDMI_TX_TMDS_2_P [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_P
+  som_j2:ZYNQ_HDMI_TX_TMDS_CLK_N [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_CLK_N
+  som_j2:ZYNQ_HDMI_TX_TMDS_2_N [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_N
+  som_j2:ZYNQ_HDMI_TX_CEC -> sheet hdmi_tx:ZYNQ_HDMI_TX_CEC
+  som_j2:HDMI_RX_D2_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D2_P
+  som_j2:PL_BTN0 -> sheet bringup_rails:PL_BTN0
+  som_j2:HDMI_RX_D2_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D2_N
   som_j2:IO_L14_SRCC_P_33 -> SoM IO_L14_SRCC_P_33 (J2.81)
-  som_j2:IO_L17_P_33 -> SoM IO_L17_P_33 (J2.82)
+  som_j2:HDMI_RX_D1_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D1_P
   som_j2:IO_L14_SRCC_N_33 -> SoM IO_L14_SRCC_N_33 (J2.83)
-  som_j2:IO_L17_N_33 -> SoM IO_L17_N_33 (J2.84)
-  som_j2:IO_L16_N_33 -> SoM IO_L16_N_33 (J2.87)
-  som_j2:IO_L12_MRCC_N_33 -> SoM IO_L12_MRCC_N_33 (J2.88)
-  som_j2:IO_L6_P_33 -> SoM IO_L6_P_33 (J2.89)
-  som_j2:IO_L12_MRCC_P_33 -> SoM IO_L12_MRCC_P_33 (J2.90)
+  som_j2:HDMI_RX_D1_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D1_N
+  som_j2:PL_BTN1 -> sheet bringup_rails:PL_BTN1
+  som_j2:HDMI_RX_CLK_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_CLK_N
+  som_j2:FMC_PRSNT_N -> sheet fmc:FMC_PRSNT_N
+  som_j2:HDMI_RX_CLK_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_CLK_P
   som_j2:IO_L11_SRCC_N_33 -> SoM IO_L11_SRCC_N_33 (J2.91)
-  som_j2:IO_L10_P_33 -> SoM IO_L10_P_33 (J2.92)
+  som_j2:HDMI_RX_D0_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D0_P
   som_j2:IO_L11_SRCC_P_33 -> SoM IO_L11_SRCC_P_33 (J2.93)
-  som_j2:IO_L10_N_33 -> SoM IO_L10_N_33 (J2.94)
-  som_j3:IO_L10_P_35 -> SoM IO_L10_P_35 (J3.5)
-  som_j3:IO_L10_N_35 -> SoM IO_L10_N_35 (J3.7)
-  som_j3:IO_L11_SRCC_P_35 -> SoM IO_L11_SRCC_P_35 (J3.8)
-  som_j3:IO_L13_MRCC_P_35 -> SoM IO_L13_MRCC_P_35 (J3.9)
-  som_j3:IO_L11_SRCC_N_35 -> SoM IO_L11_SRCC_N_35 (J3.10)
-  som_j3:IO_L13_MRCC_N_35 -> SoM IO_L13_MRCC_N_35 (J3.11)
-  som_j3:IO_L12_MRCC_P_35 -> SoM IO_L12_MRCC_P_35 (J3.14)
-  som_j3:IO_L15_DQS_N_35 -> SoM IO_L15_DQS_N_35 (J3.15)
-  som_j3:IO_L12_MRCC_N_35 -> SoM IO_L12_MRCC_N_35 (J3.16)
-  som_j3:IO_L15_DQS_P_35 -> SoM IO_L15_DQS_P_35 (J3.17)
-  som_j3:IO_L7_P_34 -> SoM IO_L7_P_34 (J3.19)
-  som_j3:IO_L14_SRCC_N_35 -> SoM IO_L14_SRCC_N_35 (J3.20)
-  som_j3:IO_L24_N_34 -> SoM IO_L24_N_34 (J3.21)
-  som_j3:IO_L14_SRCC_P_35 -> SoM IO_L14_SRCC_P_35 (J3.22)
-  som_j3:IO_L21_DQS_P_35 -> SoM IO_L21_DQS_P_35 (J3.24)
+  som_j2:HDMI_RX_D0_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D0_N
+  som_j3:CAM_D0_P [diff_pair] -> sheet camera:CAM_D0_P
+  som_j3:CAM_D0_N [diff_pair] -> sheet camera:CAM_D0_N
+  som_j3:FMC_CLK1_M2C_P [diff_pair] -> sheet fmc:FMC_CLK1_M2C_P
+  som_j3:CAM_CLK_P [diff_pair] -> sheet camera:CAM_CLK_P
+  som_j3:FMC_CLK1_M2C_N [diff_pair] -> sheet fmc:FMC_CLK1_M2C_N
+  som_j3:CAM_CLK_N [diff_pair] -> sheet camera:CAM_CLK_N
+  som_j3:FMC_CLK0_M2C_P [diff_pair] -> sheet fmc:FMC_CLK0_M2C_P
+  som_j3:CAM_D1_N [diff_pair] -> sheet camera:CAM_D1_N
+  som_j3:FMC_CLK0_M2C_N [diff_pair] -> sheet fmc:FMC_CLK0_M2C_N
+  som_j3:CAM_D1_P [diff_pair] -> sheet camera:CAM_D1_P
+  som_j3:LCD_R0 -> sheet lcd:LCD_R0
+  som_j3:FMC_LA00_CC_N [diff_pair] -> sheet fmc:FMC_LA00_CC_N
+  som_j3:LCD_R1 -> sheet lcd:LCD_R1
+  som_j3:FMC_LA00_CC_P [diff_pair] -> sheet fmc:FMC_LA00_CC_P
+  som_j3:FMC_LA01_CC_P [diff_pair] -> sheet fmc:FMC_LA01_CC_P
   som_j3:IO_L18_N_35 -> SoM IO_L18_N_35 (J3.25)
-  som_j3:IO_L21_DQS_N_35 -> SoM IO_L21_DQS_N_35 (J3.26)
+  som_j3:FMC_LA01_CC_N [diff_pair] -> sheet fmc:FMC_LA01_CC_N
   som_j3:IO_L18_P_35 -> SoM IO_L18_P_35 (J3.27)
   som_j3:IO_L16_N_35 -> SoM IO_L16_N_35 (J3.29)
-  som_j3:IO_L20_P_34 -> SoM IO_L20_P_34 (J3.30)
+  som_j3:LCD_R2 -> sheet lcd:LCD_R2
   som_j3:IO_L16_P_35 -> SoM IO_L16_P_35 (J3.31)
-  som_j3:IO_L20_N_35 -> SoM IO_L20_N_35 (J3.32)
-  som_j3:IO_L20_P_35 -> SoM IO_L20_P_35 (J3.34)
-  som_j3:IO_L17_N_35 -> SoM IO_L17_N_35 (J3.35)
-  som_j3:IO_L5_N_34 -> SoM IO_L5_N_34 (J3.36)
-  som_j3:IO_L17_P_35 -> SoM IO_L17_P_35 (J3.37)
-  som_j3:IO_L3P_PUDC_34 -> SoM IO_L3P_PUDC_34 (J3.39)
-  som_j3:IO_L7_N_34 -> SoM IO_L7_N_34 (J3.40)
-  som_j3:IO_L4_N_34 -> SoM IO_L4_N_34 (J3.41)
-  som_j3:IO_L22_P_35 -> SoM IO_L22_P_35 (J3.42)
-  som_j3:IO_L22_N_35 -> SoM IO_L22_N_35 (J3.44)
-  som_j3:IO_L23_N_35 -> SoM IO_L23_N_35 (J3.45)
-  som_j3:IO_L12_MRCC_P_34 -> SoM IO_L12_MRCC_P_34 (J3.46)
-  som_j3:IO_L23_P_35 -> SoM IO_L23_P_35 (J3.47)
-  som_j3:IO_L24_N_35 -> SoM IO_L24_N_35 (J3.49)
-  som_j3:IO_L19_P_35 -> SoM IO_L19_P_35 (J3.50)
-  som_j3:IO_L24_P_35 -> SoM IO_L24_P_35 (J3.51)
-  som_j3:IO_L19_N_VREF_35 -> SoM IO_L19_N_VREF_35 (J3.52)
-  som_j3:IO_L11_SRCC_P_34 -> SoM IO_L11_SRCC_P_34 (J3.54)
-  som_j3:IO_L8_P_34 -> SoM IO_L8_P_34 (J3.55)
-  som_j3:IO_L11_SRCC_N_34 -> SoM IO_L11_SRCC_N_34 (J3.56)
-  som_j3:IO_L8_N_34 -> SoM IO_L8_N_34 (J3.57)
-  som_j3:IO_L9_DQS_P_34 -> SoM IO_L9_DQS_P_34 (J3.59)
-  som_j3:IO_L5_P_34 -> SoM IO_L5_P_34 (J3.60)
-  som_j3:IO_L9_DQS_N_34 -> SoM IO_L9_DQS_N_34 (J3.61)
-  som_j3:IO_L12_MRCC_N_34 -> SoM IO_L12_MRCC_N_34 (J3.62)
-  som_j3:IO_L13_MRCC_N_34 -> SoM IO_L13_MRCC_N_34 (J3.64)
-  som_j3:IO_L10_N_34 -> SoM IO_L10_N_34 (J3.65)
-  som_j3:IO_L13_MRCC_P_34 -> SoM IO_L13_MRCC_P_34 (J3.66)
-  som_j3:IO_L10_P_34 -> SoM IO_L10_P_34 (J3.67)
-  som_j3:IO_L15_DQS_N_34 -> SoM IO_L15_DQS_N_34 (J3.69)
-  som_j3:IO_L14_SRCC_N_34 -> SoM IO_L14_SRCC_N_34 (J3.70)
-  som_j3:IO_L15_DQS_P_34 -> SoM IO_L15_DQS_P_34 (J3.71)
-  som_j3:IO_L14_SRCC_P_34 -> SoM IO_L14_SRCC_P_34 (J3.72)
-  som_j3:IO_L18_N_34 -> SoM IO_L18_N_34 (J3.74)
-  som_j3:IO_L16_P_34 -> SoM IO_L16_P_34 (J3.75)
-  som_j3:IO_L20_N_34 -> SoM IO_L20_N_34 (J3.76)
-  som_j3:IO_L16_N_34 -> SoM IO_L16_N_34 (J3.77)
-  som_j3:IO_L6_VREF_N_34 -> SoM IO_L6_VREF_N_34 (J3.78)
-  som_j3:IO_L17_P_34 -> SoM IO_L17_P_34 (J3.79)
-  som_j3:IO_L17_N_34 -> SoM IO_L17_N_34 (J3.81)
+  som_j3:FMC_LA03_N [diff_pair] -> sheet fmc:FMC_LA03_N
+  som_j3:FMC_LA03_P [diff_pair] -> sheet fmc:FMC_LA03_P
+  som_j3:FMC_LA02_N [diff_pair] -> sheet fmc:FMC_LA02_N
+  som_j3:LCD_R3 -> sheet lcd:LCD_R3
+  som_j3:FMC_LA02_P [diff_pair] -> sheet fmc:FMC_LA02_P
+  som_j3:PUDC_34 -> sheet bringup_rails:PUDC_34
+  som_j3:LCD_R4 -> sheet lcd:LCD_R4
+  som_j3:LCD_R5 -> sheet lcd:LCD_R5
+  som_j3:FMC_LA04_P [diff_pair] -> sheet fmc:FMC_LA04_P
+  som_j3:FMC_LA04_N [diff_pair] -> sheet fmc:FMC_LA04_N
+  som_j3:FMC_LA05_N [diff_pair] -> sheet fmc:FMC_LA05_N
+  som_j3:LCD_R6 -> sheet lcd:LCD_R6
+  som_j3:FMC_LA05_P [diff_pair] -> sheet fmc:FMC_LA05_P
+  som_j3:FMC_LA06_N [diff_pair] -> sheet fmc:FMC_LA06_N
+  som_j3:FMC_LA07_P [diff_pair] -> sheet fmc:FMC_LA07_P
+  som_j3:FMC_LA06_P [diff_pair] -> sheet fmc:FMC_LA06_P
+  som_j3:FMC_LA07_N [diff_pair] -> sheet fmc:FMC_LA07_N
+  som_j3:LCD_R7 -> sheet lcd:LCD_R7
+  som_j3:LCD_G0 -> sheet lcd:LCD_G0
+  som_j3:LCD_G1 -> sheet lcd:LCD_G1
+  som_j3:LCD_G2 -> sheet lcd:LCD_G2
+  som_j3:LCD_G3 -> sheet lcd:LCD_G3
+  som_j3:LCD_G4 -> sheet lcd:LCD_G4
+  som_j3:LCD_G5 -> sheet lcd:LCD_G5
+  som_j3:LCD_G6 -> sheet lcd:LCD_G6
+  som_j3:LCD_G7 -> sheet lcd:LCD_G7
+  som_j3:LCD_B0 -> sheet lcd:LCD_B0
+  som_j3:LCD_B1 -> sheet lcd:LCD_B1
+  som_j3:LCD_B2 -> sheet lcd:LCD_B2
+  som_j3:LCD_B3 -> sheet lcd:LCD_B3
+  som_j3:LCD_B4 -> sheet lcd:LCD_B4
+  som_j3:LCD_B5 -> sheet lcd:LCD_B5
+  som_j3:LCD_B6 -> sheet lcd:LCD_B6
+  som_j3:LCD_B7 -> sheet lcd:LCD_B7
+  som_j3:LCD_PCLK -> sheet lcd:LCD_PCLK
+  som_j3:LCD_HSYNC -> sheet lcd:LCD_HSYNC
+  som_j3:LCD_VSYNC -> sheet lcd:LCD_VSYNC
+  som_j3:LCD_DE -> sheet lcd:LCD_DE
+  som_j3:LCD_DISP -> sheet lcd:LCD_DISP
+  som_j3:LCD_BL_PWM -> sheet lcd:LCD_BL_PWM
   som_j3:IO_L24_P_34 -> SoM IO_L24_P_34 (J3.82)
   som_j3:IO_L22_N_34 -> SoM IO_L22_N_34 (J3.84)
-  som_j3:IO_L2_P_33 -> SoM IO_L2_P_33 (J3.85)
-  som_j3:IO_L1_P_33 -> SoM IO_L1_P_33 (J3.86)
-  som_j3:IO_L2_N_33 -> SoM IO_L2_N_33 (J3.87)
+  som_j3:CAM_EN -> sheet camera:CAM_EN
+  som_j3:CAM_SCL -> sheet camera:CAM_SCL
+  som_j3:CAM_LED -> sheet camera:CAM_LED
   som_j3:IO_L23_P_34 -> SoM IO_L23_P_34 (J3.88)
-  som_j3:IO_L1_N_33 -> SoM IO_L1_N_33 (J3.89)
+  som_j3:CAM_SDA -> sheet camera:CAM_SDA
   som_j3:IO_L3_DQS_P_33 -> SoM IO_L3_DQS_P_33 (J3.91)
   som_j3:IO_L5_P_33 -> SoM IO_L5_P_33 (J3.92)
   som_j3:IO_L3_DQS_N_33 -> SoM IO_L3_DQS_N_33 (J3.93)
   som_j3:IO_L5_N_33 -> SoM IO_L5_N_33 (J3.94)
   som_j3:IO_L4_N_33 -> SoM IO_L4_N_33 (J3.96)
   som_j3:IO_L4_P_33 -> SoM IO_L4_P_33 (J3.98)
+  uart_bridge:ZYNQ_PS_UART0_RXD -> sheet som_j1:ZYNQ_PS_UART0_RXD
+  uart_bridge:ZYNQ_PS_UART0_TXD -> sheet som_j1:ZYNQ_PS_UART0_TXD
+  uart_bridge:ZYNQ_PS_UART0_CTS_N -> sheet som_j2:ZYNQ_PS_UART0_CTS_N
+  uart_bridge:ZYNQ_PS_UART0_RTS_N -> sheet som_j2:ZYNQ_PS_UART0_RTS_N
   usb_pd:STM32_USB_CC1 -> sheet pd_input:STM32_USB_CC1; sheet som_j1:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
   usb_pd:STM32_USB_CC2 -> sheet pd_input:STM32_USB_CC2; sheet som_j1:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
-  usb_pd:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA
-  usb_pd:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL
+  usb_pd:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA
+  usb_pd:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL
+  usb_pd:SC_INT_N -> sheet bringup_rails:SC_INT_N; sheet som_j1:SC_INT_N
   usbc_otg:USB_VBUS -> sheet som_j1:USB_VBUS; SoM USB_VBUS (J1.22)
   usbc_otg:VBUS_OUT_EN -> sheet som_j1:VBUS_OUT_EN; SoM VBUS_OUT_EN (J1.38)
+  usbc_otg:USBOTG_FLT_N -> sheet bringup_rails:USBOTG_FLT_N
   usbc_otg:USB_D+ [usb_hs_pair] -> sheet som_j1:USB_D+; SoM USB_D+ (J1.32)
   usbc_otg:USB_D- [usb_hs_pair] -> sheet som_j1:USB_D-; SoM USB_D- (J1.30)
   usbc_otg:USB_ID -> sheet som_j1:USB_ID; SoM USB_ID (J1.20)
@@ -368,7 +480,7 @@ rails (28):
   +3V3_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +3V3_PMOD — carrier-local rail (sheets: bringup_modules, pmod)
   +3V3_REG — carrier-local rail (sheets: power_mon)
-  +3V3_SC <- sheets: bringup_en, bringup_en_modules, bringup_rails, debug_boot, power_mon, som_j1, usb_pd -> SoM 1 pins
+  +3V3_SC <- sheets: bringup_en, bringup_en_modules, bringup_rails, debug_boot, power_mon, som_j1, usb_pd, usbc_otg -> SoM 1 pins
   +3V3_SD — carrier-local rail (sheets: bringup_modules, microsd)
   +3V3_USER_LED — carrier-local rail (sheets: bringup_modules, user_io)
   +5V — carrier-local rail (sheets: bringup_modules, power, power_mon)
@@ -387,24 +499,8 @@ rails (28):
   CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, usbc_otg)
   GND <- sheets: bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io -> SoM 63 pins
 
-deferred ports — author-declared, awaiting later waves (121) [WARNING]:
-  bringup_en:STM32_RAIL_EN_5V0 — awaiting som_j3_connector (wave 3 STM32 GPIO function map)
-  bringup_en:STM32_RAIL_EN_3V3 — awaiting som_j3_connector (wave 3 STM32 GPIO function map)
-  bringup_en:STM32_RAIL_EN_1V8 — awaiting som_j3_connector (wave 3 STM32 GPIO function map)
+deferred ports — author-declared, awaiting later waves (12) [WARNING]:
   bringup_en_modules:EN_LCD_BL — awaiting lvds_lcd_power (backlight boost EN provision, dossier 3.2)
-  bringup_rails:STM32_BRINGUP_INT — awaiting som_j3_connector (wave 3 STM32 GPIO function map)
-  bringup_rails:PL_BTN0 — awaiting som_j1_j2 bank-33 PL pin assignment (P3 linker)
-  bringup_rails:PL_BTN1 — awaiting som_j1_j2 bank-33 PL pin assignment (P3 linker)
-  camera:CAM_D0_P — awaiting som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)
-  camera:CAM_D0_N — awaiting som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)
-  camera:CAM_D1_P — awaiting som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)
-  camera:CAM_D1_N — awaiting som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)
-  camera:CAM_CLK_P — awaiting som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)
-  camera:CAM_CLK_N — awaiting som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)
-  camera:CAM_SCL — awaiting som_j3_connector (PL bank 33, +VCCO_33=3.3V)
-  camera:CAM_SDA — awaiting som_j3_connector (PL bank 33, +VCCO_33=3.3V)
-  camera:CAM_EN — awaiting som_j3_connector (PL bank 33, +VCCO_33=3.3V)
-  camera:CAM_LED — awaiting som_j3_connector (PL bank 33, +VCCO_33=3.3V)
   ethernet:ETH_LINE_MDI_0_P — awaiting rj45_connector (wave 2)
   ethernet:ETH_LINE_MDI_0_N — awaiting rj45_connector (wave 2)
   ethernet:ETH_LINE_MDI_1_P — awaiting rj45_connector (wave 2)
@@ -413,105 +509,12 @@ deferred ports — author-declared, awaiting later waves (121) [WARNING]:
   ethernet:ETH_LINE_MDI_2_N — awaiting rj45_connector (wave 2)
   ethernet:ETH_LINE_MDI_3_P — awaiting rj45_connector (wave 2)
   ethernet:ETH_LINE_MDI_3_N — awaiting rj45_connector (wave 2)
-  fmc:FMC_CLK0_M2C_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_CLK0_M2C_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_CLK1_M2C_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_CLK1_M2C_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA00_CC_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA00_CC_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA01_CC_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA01_CC_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA02_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA02_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA03_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA03_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA04_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA04_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA05_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA05_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA06_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA06_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA07_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA07_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA08_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA08_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA09_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA09_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA10_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA10_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA11_P — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_LA11_N — awaiting som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)
-  fmc:FMC_PRSNT_N — awaiting som_j2/j3 bank-33 spare (P3 linker)
-  hdmi_rx:HDMI_RX_D2_P — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_D2_N — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_D1_P — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_D1_N — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_D0_P — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_D0_N — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_CLK_P — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_CLK_N — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_5V_DET — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_rx:HDMI_RX_CEC — awaiting som_j2_j3_connector (wave 3 FPGA bank function map)
-  hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_P — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_N — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_TMDS_1_P — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_TMDS_1_N — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_TMDS_0_P — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_TMDS_0_N — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_TMDS_CLK_P — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_TMDS_CLK_N — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_CEC — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_SCL — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_SDA — awaiting som_j2_connector (wave 3 PL function map)
-  hdmi_tx:ZYNQ_HDMI_TX_HPD — awaiting som_j2_connector (wave 3 PL function map)
-  lcd:LCD_R0 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_R1 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_R2 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_R3 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_R4 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_R5 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_R6 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_R7 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_G0 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_G1 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_G2 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_G3 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_G4 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_G5 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_G6 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_G7 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_B0 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_B1 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_B2 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_B3 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_B4 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_B5 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_B6 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_B7 — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_PCLK — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_DISP — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_HSYNC — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_VSYNC — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_DE — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  lcd:LCD_CTP_SDA — awaiting som_j2_connector (PL bank 13 — touch I2C only)
-  lcd:LCD_CTP_SCL — awaiting som_j2_connector (PL bank 13 — touch I2C only)
-  lcd:LCD_CTP_RST — awaiting som_j2_connector (PL bank 13 — touch I2C only)
-  lcd:LCD_CTP_INT — awaiting som_j2_connector (PL bank 13 — touch I2C only)
-  lcd:LCD_BL_PWM — awaiting som_j3_connector (PL bank 34, +VCCO_34=3.3V)
-  microsd:SD_CARD_DETECT — awaiting som_j1_connector (STM32 GPIO function map)
-  power_mon:PMON_ALERT_N — awaiting bringup (TCA9535 spare port P11)
   uart_bridge:USB_UART_VBUS — awaiting usb_uart_connector (wave 2)
   uart_bridge:USB_UART_DP — awaiting usb_uart_connector (wave 2)
   uart_bridge:USB_UART_DM — awaiting usb_uart_connector (wave 2)
-  uart_bridge:ZYNQ_PS_UART0_RXD — awaiting som_j1_connector (wave 3 MIO function map)
-  uart_bridge:ZYNQ_PS_UART0_TXD — awaiting som_j1_connector (wave 3 MIO function map)
-  uart_bridge:ZYNQ_PS_UART0_CTS_N — awaiting som_j1_connector (wave 3 MIO function map)
-  uart_bridge:ZYNQ_PS_UART0_RTS_N — awaiting som_j1_connector (wave 3 MIO function map)
-  usb_pd:STM32_FUSB302_INT — awaiting som_j1_connector (wave 3 STM32 GPIO function map)
-  usbc_otg:USBOTG_FLT_N — awaiting som_j1_connector (STM32 GPIO function map)
 
 unbound SoM nets — no consumer yet, later waves (0) [WARNING]:
 
 errors: none
 
-LINK: PASS (0 errors, 121 warnings)
+LINK: PASS (0 errors, 12 warnings)

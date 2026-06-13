@@ -51,7 +51,19 @@ RAIL_OVERRIDE_GPIO = {
     "STM32_RAIL_EN_3V3": "STM32_GPIO2",
     "STM32_RAIL_EN_1V8": "STM32_GPIO3",
 }
-EXPANDER_INT_GPIO = ("STM32_BRINGUP_INT", "STM32_GPIO4")
+# wave-3 G2: STM32_GPIO4 (PA15) is the SHARED open-drain SC interrupt SC_INT_N
+# — the wired-OR of the TCA9535 INT# (bringup_rails) and the FUSB302 INT
+# (usb_pd), single 10k pull-up to +3V3_SC on bringup_rails. SC firmware reads
+# BOTH devices' status registers on the IRQ (wave3_function_map.md sec 1.1).
+EXPANDER_INT_GPIO = ("SC_INT_N (TCA9535 INT# wire-OR FUSB302 INT)",
+                     "STM32_GPIO4")
+
+# wave-3 G4: TCA9535 P1x ports that are bound SC-side telemetry INPUTS (their
+# pull-ups live on the owning sheets — NOT 100k-to-GND spares). pin -> note.
+EXPANDER_INPUT_NOTES = {
+    "P11": "INA3221 CRITICAL wire-OR (power_mon, 10k PU +3V3_SC)",
+    "P14": "TPS2051C fault (usbc_otg, 100k PU re-railed +3V3_SC)",
+}
 
 # BOOTSEL decode (debug_boot dossier section (c)): value = (BOOTSEL1<<1) |
 # BOOTSEL0; DIP closed = LOW (strap to GND), open = HIGH (10k to +3V3_SC).
@@ -260,12 +272,22 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
              "           */")
     for macro, addr, what in addr_rows:
         L.append(f"#define {macro} 0x{addr:02X}  /* {what} */")
-    L.append("/* NOTE: the carrier J-pin binding for STM32_I2C2_SDA/SCL is "
-             "a wave-3  */")
-    L.append("/* deferral (no dedicated I2C nets on the J contract); "
-             "bit-bang is the  */")
-    L.append("/* documented fallback (bringup dossier risk R2).            "
-             "           */")
+    # wave-3 G3: STM32_I2C2_SDA/SCL bind to STM32_DAC1/DAC2 (J1.49/55 = PA4/PA5)
+    # and are BIT-BANGED. PA4/PA5 carry no I2C alternate function; the real
+    # I2C2 (PA8/PA9) is consumed on-module as the SC<->Zynq link, so a firmware
+    # GPIO bit-bang is THE design (wave3_function_map.md sec 2). All slaves
+    # tolerate ~100 kHz. The DAC analog outputs are sacrificed.
+    sda, scl = nets["STM32_DAC1"], nets["STM32_DAC2"]
+    L.append("/* G3: STM32_I2C2 is a firmware BIT-BANG on the DAC pins "
+             "(PA4/PA5, no   */")
+    L.append("/* I2C AF; real I2C2 PA8/PA9 is the on-module SC<->Zynq link) — "
+             "~100 kHz */")
+    L.append(f"#define ZC_I2C_BITBANG_SDA_GPIO_PORT '{sda.port}'   "
+             f"/* STM32_I2C2_SDA = STM32_DAC1, J1.49 */")
+    L.append(f"#define ZC_I2C_BITBANG_SDA_GPIO_PIN {sda.pin}U")
+    L.append(f"#define ZC_I2C_BITBANG_SCL_GPIO_PORT '{scl.port}'   "
+             f"/* STM32_I2C2_SCL = STM32_DAC2, J1.55 */")
+    L.append(f"#define ZC_I2C_BITBANG_SCL_GPIO_PIN {scl.pin}U")
     L.append("")
 
     # -- section 6: rail sequencing + EN cells --------------------------------------
@@ -324,11 +346,13 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
                       f" (DIP {dip_of.get(cell.dip_net, '?')})"))
             L.append(f"#define ZC_TCA9535_BIT_{bf.c_ident(cell.enable)} "
                      f"{bit}  /* {pname}: {ctx} */")
+        elif pname in EXPANDER_INPUT_NOTES:
+            # wave-3 G4: bound SC-side telemetry input (pull on the owning
+            # sheet, no 100k-to-GND here)
+            L.append(f"/* {pname} (bit {bit}): {net} — INPUT: "
+                     f"{EXPANDER_INPUT_NOTES[pname]} */")
         else:
-            note = (" (power_mon dossier reserves P11 for PMON_ALERT_N)"
-                    if pname == "P11" else "")
-            L.append(f"/* {pname} (bit {bit}): {net} — spare, 100k to GND"
-                     f"{note} */")
+            L.append(f"/* {pname} (bit {bit}): {net} — spare, 100k to GND */")
     L.append("")
 
     # -- section 8: INA3221 channel map ------------------------------------------------

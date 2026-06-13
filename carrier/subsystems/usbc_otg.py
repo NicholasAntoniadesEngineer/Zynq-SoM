@@ -37,10 +37,17 @@ def circuit() -> Circuit:
     c.port("USB_VBUS", "U1.OUT", "J2.VBUS")     # OUT + sense (both pads)
     c.port("VBUS_OUT_EN", "U1.EN(EN#)", expect=J1_MAP)
     c.net("GND", "U1.GND")
-    # fault flag: open-drain, pulled to the gated rail, reported to the SoM
+    # fault flag: TPS2051C FLT# is open-drain, reported to the SoM SC via the
+    # TCA9535 expander port P14 (USBOTG_FLT_N — bringup_rails, G4; no free STM32
+    # GPIO). G4 ABS-MAX FIX (wave3_function_map.md sec 1.2): the pull-up is
+    # re-railed +5V_USB -> +3V3_SC. A TCA9535 IO abs-max is VCC+0.5 = 3.8 V (TI
+    # SCPS201E); a 5 V pull on P14 violates it. +3V3_SC keeps FLT# readable
+    # even with the +5V_USB module rail gated OFF (the flag is valid low when
+    # the port is unpowered) — strictly better than the old gated-rail pull.
     c.part("R3", "Device:R", "100k", R0603, LCSC="C25803")
-    c.port("USBOTG_FLT_N", "U1.FLT#", "R3.2", expect=J1_MAP)
-    c.net("+5V_USB", "R3.1")
+    c.port("USBOTG_FLT_N", "U1.FLT#", "R3.2",
+           expect="bringup (TCA9535 expander port P14)")
+    c.net("+3V3_SC", "R3.1")
     # input bypass + VBUS bulk per TPS2051 datasheet
     for cap in c.decouple("U1.IN", "100n"):     # C14663 Basic, 20.6M stock
         cap.fields["LCSC"] = "C14663"
@@ -84,4 +91,6 @@ def circuit() -> Circuit:
     # ESD array are noise next to it
     c.draws("+5V_USB", 0.500, "downstream USB device budget, TPS2051C "
                               "current-limited")
+    # G4: FLT# 100k pull-up re-railed to +3V3_SC (~33 uA when asserted)
+    c.draws("+3V3_SC", 0.0005, "USBOTG_FLT# 100k pull-up (G4 re-rail)")
     return c

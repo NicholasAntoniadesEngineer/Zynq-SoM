@@ -60,11 +60,18 @@ def circuit() -> Circuit:
         c.net(net.name, f"{ref}.1")
         c.net("GND", f"{ref}.2")
 
-    # I2C + interrupt to the STM32. The SoM contract exposes raw STM32_GPIO*
-    # names; the generated J1 sheet (wave 3) carries the GPIO->I2C2/INT
-    # function map, so these ports are explicitly deferred. The shared-bus
-    # SDA/SCL pull-ups live on bringup_rails (+3V3_SC, dossier R1); only
-    # the open-drain INT_N pull-up is this sheet's own.
+    # I2C + interrupt to the STM32. The generated J1 sheet (wave 3) carries the
+    # GPIO->I2C2/INT function map (som_conn_gen FUNCTION_MAP), so these ports
+    # bind there by name. The shared-bus SDA/SCL pull-ups live on bringup_rails
+    # (+3V3_SC, dossier R1).
+    #
+    # G2 (wave3_function_map.md sec 1.1): the FUSB302 open-drain INT and the
+    # TCA9535 open-drain INT# merge onto the SINGLE shared SC interrupt
+    # SC_INT_N (STM32_GPIO4 = PA15) — both devices are on the same bit-banged
+    # I2C bus, so IRQ -> read both status registers is the textbook wired-OR.
+    # ONE pull-up per net (house rule): the bringup_rails 10k stays, this
+    # sheet's redundant 4k7 (old R1) is DELETED — SC_INT_N is no longer pulled
+    # here, only ported.
     J1_MAP = "som_j1_connector (wave 3 STM32 GPIO function map)"
     c.port("STM32_I2C2_SDA", "U1.7",
            kind="i2c", role="sda", bus="STM32_I2C2", speed_hz=400_000,
@@ -72,14 +79,13 @@ def circuit() -> Circuit:
     c.port("STM32_I2C2_SCL", "U1.6",
            kind="i2c", role="scl", bus="STM32_I2C2", speed_hz=400_000,
            expect=J1_MAP)
-    c.port("STM32_FUSB302_INT", "U1.5", expect=J1_MAP)
-    c.pullup("U1.5", "4k7", "+3V3_SC") \
-        .fields["LCSC"] = "C23162"                # R1 (INT_N), Basic 10M
+    c.port("SC_INT_N", "U1.5", expect=J1_MAP)     # wire-OR onto STM32_GPIO4
 
     # VCONN sourcing unused by design
     c.nc("U1.12", "U1.13")
 
-    # power-tree budget (round 4): FUSB302B IDD < 1 mA (DS), INT_N pull-up
-    # 4k7 sinks ~0.7 mA when asserted — rounded up
-    c.draws("+3V3_SC", 0.005, "FUSB302B VDD (<1 mA) + INT_N 4k7 pull-up")
+    # power-tree budget (round 4): FUSB302B IDD < 1 mA (DS). The INT pull-up is
+    # now the single bringup_rails 10k (G2 wire-OR) — no pull here anymore.
+    c.draws("+3V3_SC", 0.002, "FUSB302B VDD (<1 mA); SC_INT_N pulled on "
+                              "bringup_rails (G2 wire-OR, single 10k)")
     return c
