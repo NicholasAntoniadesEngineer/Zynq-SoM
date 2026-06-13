@@ -20,15 +20,19 @@ from pathlib import Path
 
 
 def extract(som_sch: Path, refs: list[str]) -> dict:
-    with tempfile.NamedTemporaryFile(suffix=".net", delete=False) as tf:
-        net = Path(tf.name)
-    proc = subprocess.run(
-        ["kicad-cli", "sch", "export", "netlist", "--format", "kicadxml",
-         "-o", str(net), str(som_sch)],
-        capture_output=True, text=True)
-    if proc.returncode != 0:
-        raise RuntimeError(f"kicad-cli failed on {som_sch}: {proc.stderr[-400:]}")
-    root = ET.parse(net).getroot()
+    # TemporaryDirectory (auto-removed) — the old NamedTemporaryFile(delete=
+    # False) leaked one .net per call, same root cause as F3 in netlist_gate;
+    # this path runs on every board build via the J1/J2/J3 contract.
+    with tempfile.TemporaryDirectory(prefix="schgen_som_") as td:
+        net = Path(td) / "som.net"
+        proc = subprocess.run(
+            ["kicad-cli", "sch", "export", "netlist", "--format", "kicadxml",
+             "-o", str(net), str(som_sch)],
+            capture_output=True, text=True)
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"kicad-cli failed on {som_sch}: {proc.stderr[-400:]}")
+        root = ET.parse(net).getroot()
 
     meta: dict[str, dict] = {}
     comps = root.find("components")
@@ -74,15 +78,16 @@ def extract_zynq(som_sch: Path, zynq_ref: str = "U2",
       cross-checked by the XDC generator against the committed
       carrier/som_interface.json — a stale contract fails the build).
     """
-    with tempfile.NamedTemporaryFile(suffix=".net", delete=False) as tf:
-        net = Path(tf.name)
-    proc = subprocess.run(
-        ["kicad-cli", "sch", "export", "netlist", "--format", "kicadxml",
-         "-o", str(net), str(som_sch)],
-        capture_output=True, text=True)
-    if proc.returncode != 0:
-        raise RuntimeError(f"kicad-cli failed on {som_sch}: {proc.stderr[-400:]}")
-    root = ET.parse(net).getroot()
+    with tempfile.TemporaryDirectory(prefix="schgen_som_") as td:
+        net = Path(td) / "som.net"
+        proc = subprocess.run(
+            ["kicad-cli", "sch", "export", "netlist", "--format", "kicadxml",
+             "-o", str(net), str(som_sch)],
+            capture_output=True, text=True)
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"kicad-cli failed on {som_sch}: {proc.stderr[-400:]}")
+        root = ET.parse(net).getroot()
 
     # component ref -> (lib, part) so the right libpart pin table is used
     libsource: dict[str, tuple[str, str]] = {}
