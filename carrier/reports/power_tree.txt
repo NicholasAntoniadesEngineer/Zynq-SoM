@@ -3,7 +3,7 @@ schgen power-tree budget gate
 
 sources:
   +VBUS_IN    20.0 V  limit 3.00 A  load 1.312 A  (44%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
-  +3V3_SC      3.3 V  limit 2.00 A  load 0.023 A  (1%)  — SoM MPM3822 always-on SC rail (J1.37); limit is the SoM regulator's 2 A — SoM-side SC loads (STM32 etc.) not included in the carrier tally
+  +3V3_SC      3.3 V  limit 0.30 A  load 0.023 A  (8%)  — SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here
 
 regulators (16) — numbered as in carrier/docs/power_tree.svg:
   ( 1) bringup_modules:U1   SY6280AAC           +3V3 -> +3V3_HDMI_TX   load 0.006 A / limit 0.523 A (1%)  in 0.006 A [load_switch] ILIM = 6800/13000R = 523 mA

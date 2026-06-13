@@ -12,7 +12,7 @@ The TREE is extracted from the netlists themselves, never hand-drawn:
 - a series resistor bridging two POWER rails is a shunt bridge (the
   power_mon INA3221 shunts);
 - board power SOURCES are the enumerated electrical contract (USB-C PD
-  20 V/3 A into +VIN; the SoM's always-on MPM3822 behind +3V3_SC).
+  20 V/3 A into +VIN; the SoM's always-on TPS7A20 LDO behind +3V3_SC).
 
 Loads flow bottom-up: a rail's total = its declared draws + every child
 regulator's input current (LDO/switch: I_in = I_out; buck:
@@ -125,9 +125,17 @@ SOURCES: dict[str, tuple[float, float, str]] = {
     "+VBUS_IN": (20.0, 3.0, "USB-C PD sink contract 20 V / 3 A at the "
                             "receptacle (pd_input J1; +VIN sits behind "
                             "the TPS26631 eFuse, round 5)"),
-    "+3V3_SC": (3.3, 2.0, "SoM MPM3822 always-on SC rail (J1.37); limit is "
-                          "the SoM regulator's 2 A — SoM-side SC loads "
-                          "(STM32 etc.) not included in the carrier tally"),
+    # P0 corollary (wave3_function_map.md): +3V3_SC is the SoM TPS7A20 LDO
+    # U13 (300 mA class — the SoM power_architecture sheet annotates "3V3
+    # (300mA)"), NOT the MPM3822 (that is the +1V35 DDR3L rail). The 300 mA
+    # envelope is SHARED with the SoM-side SC loads (the STM32G431 SC ~50 mA
+    # + its on-module peripherals); the carrier tally (~23 mA: FUSB302 +
+    # TCA9535 + 2x INA3221 + 12x SN74LVC1G08 gates + pull-ups) leaves ample
+    # room. The gate now guards the REAL 300 mA envelope, not a 2 A phantom.
+    "+3V3_SC": (3.3, 0.3, "SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA "
+                          "class — the SoM power_architecture sheet says "
+                          "'3V3 (300mA)'. Envelope shared with the SoM-side "
+                          "SC (STM32G431 ~50 mA); carrier tally only here"),
 }
 
 # Rails known to be deferred by PLAN flags (unsourced today, by decision).
