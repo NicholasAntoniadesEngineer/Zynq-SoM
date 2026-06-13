@@ -258,3 +258,21 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
   dedicated HDMI_TX_5V position, so +5V_HDMI_TX has its OWN EN_HDMI_TX_5V cell.
   The generated firmware header / BRINGUP.md are netlist-derived — the wave-3
   binding agent must read the current port map from those, not from this prose.
+
+## Electrical-review findings (deep audit, 2026-06-12, autonomous triage)
+- **PWR-1 [CRITICAL] — power.py +5V_SOM (U4) EN over-stress**: R12/R13=22k/10k from
+  +VIN puts 6.25V on the TPS54302 EN at the 20V PD contract (rec-max 5.5V, abs-max 7V);
+  the "internal EN clamp" the P0 work assumed does NOT exist (live TI SLVSDG6C: EN abs
+  7V, I_hys 1.55uA). FIX (autonomous): EN zener clamp (5.1V) + bypass cap, divider kept
+  for reliable turn-on at the 5V default contract; remove the false docstring claim. A
+  plain re-ratio cannot satisfy both turn-on-at-5V and <=5.5V-at-21V, so the clamp is
+  required. Verify EN voltage in the SPICE gate. -> dedicated fix agent NOW (power.py
+  free; no function-map collision).
+- **PD-1 [low] — pd_input eFuse OVP window tight** (trip min 21.9V vs 21.0V legal max
+  contract): widen R4 ~5.36k -> ~23.4V typ, stay below SMBJ22A VBR-min 24.4V. Bundle
+  with PWR-1 (pd_input free).
+- DEFERRED until after function-map harvest (collision risk on those sheets):
+  SD-1 [med] microsd TPD6E001 U2.VCC floating -> tie +3V3_SD + 100n; HDMIRX-1 [med]
+  hdmi_rx TMDS no ESD on external receptacle -> add low-cap TMDS array (or documented
+  DNP); HDMIRX-2 [low] EDID WC# hard-grounded -> strap/jumper write-protect; LCD-1 [low]
+  SY7201 C2 1u -> 2.2u (DC-bias derating).
