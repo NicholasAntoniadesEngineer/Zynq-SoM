@@ -595,6 +595,18 @@ def cmd_link(args: argparse.Namespace) -> int:
     # carrier/out. The board emission goes to the normal carrier/ taxonomy.
     carrier = REPO_ROOT / "carrier"
     override = args.outdir
+    if override is None and args.subsystems:
+        # Guard (DEF-4): a PARTIAL link — an explicit subset of sheets — must
+        # never overwrite the committed whole-board carrier/ artifacts (reports,
+        # constraints, block diagram, root sheet), which are only valid for the
+        # full board. Only a no-args full-board link writes carrier/ in place;
+        # a subset is redirected to a tempdir unless the user gives an explicit
+        # -o. (Mirrors `schgen build`, which persists nothing without -o.)
+        import tempfile
+        override = Path(tempfile.mkdtemp(prefix="schgen_link_"))
+        print(f"(partial link of {len(args.subsystems)} sheet(s) -> {override}; "
+              f"pass -o to choose an output dir, or run `schgen link` with no "
+              f"sheet args to refresh the committed carrier/ artifacts)")
     rep_dir = override or (carrier / "reports")
     man_dir = override or (carrier / "manufacturing")
     diag_path = (override / "block_diagram.svg" if override
