@@ -269,6 +269,17 @@ class _Engine:
         self.c = c
         self.lib = lib
         self.sp = sp
+        # PinRef -> Net index. net_of() is called ~1M times during a dense
+        # sheet's escape-router BFS; the bare Circuit.net_of is an O(nets x
+        # pins) linear scan. The circuit is immutable throughout placement
+        # (this engine only READS c.nets; board.uniquify deep-copies before a
+        # fresh place), so a once-built index is exactly equivalent. setdefault
+        # preserves net_of's first-match-wins order (a pin in two nets would be
+        # a short the netlist gate rejects, so the case never arises here).
+        self._pin2net: dict = {}
+        for _n in self.c.nets.values():
+            for _p in _n.pins:
+                self._pin2net.setdefault(_p, _n)
         self.pl = Placement()
         self._pwr = 0
         self._flg = 0
@@ -353,7 +364,7 @@ class _Engine:
 
     # -- net query helpers ------------------------------------------------------
     def net_of(self, ref: str, pin: str):
-        return self.c.net_of(PinRef(ref, pin))
+        return self._pin2net.get(PinRef(ref, pin))
 
     def other_pin(self, ref: str, pin: str) -> str:
         pins = sorted(self.lib.pin_numbers(self.c.parts[ref].lib_id))
