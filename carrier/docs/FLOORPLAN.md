@@ -51,7 +51,7 @@ Edge spills (preferred edge full — honest, not hidden):
 | bringup_modules | E | (92, 60, 22 x 14) | 70 | 309.7 | (12) |
 | bringup_rails | E | (90, 42, 26 x 16.5) | 25 | 427 | (13) |
 | debug_boot | N | (20, 20, 13.5 x 21) | 10 | 282.4 | (14) |
-| power | E | (90, 24, 26 x 16) | 50 | 413.5 | (15) |
+| power | E | (90, 24, 26 x 16) | 51 | 415.9 | (15) |
 | power_mon | E | (96, 14, 14 x 8.5) | 10 | 121.1 | (16) |
 | usb_pd | @pd_input | (106, 4, 8 x 8) | 7 | 25.5 | (17) |
 | user_io | S | (18, 68, 12.5 x 19.5) | 17 | 246.6 | (18) |

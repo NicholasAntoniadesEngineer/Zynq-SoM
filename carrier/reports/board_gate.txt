@@ -392,6 +392,6 @@ board netlist gate
   ok   rail '+VIN': 1 net, 16 pins across 3 sheet(s) [pd_input, power, power_mon]
   ok   rail '+VIN_SYS': 1 net, 2 pins across 1 sheet(s) [power_mon]
   ok   rail 'CHASSIS_GND': 1 net, 17 pins across 5 sheet(s) [ethernet, hdmi_rx, hdmi_tx, pd_input, usbc_otg]
-  ok   rail 'GND': 1 net, 408 pins across 23 sheet(s) [bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io]
+  ok   rail 'GND': 1 net, 409 pins across 23 sheet(s) [bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io]
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0
