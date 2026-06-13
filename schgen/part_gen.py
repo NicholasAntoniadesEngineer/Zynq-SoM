@@ -782,6 +782,29 @@ def convert_footprint(result: dict, name: str, info: dict,
     fp.extend(pads)
 
     if model_3d and model_files:
+        # DEF-1: EasyEDA stores the SVGNODE c_origin in INCONSISTENT units, so
+        # the (c_origin - canvas_datum) * MM offset is sometimes garbage — e.g.
+        # FUSB302BMPX/TPS26631PWPR/AO3400A/INA3221 all came out ~800-960 mm off,
+        # planting the 3D body a metre from its pads (KiCad 3D view + any
+        # STEP/MCAD board export silently wrong). These are centred packages, so
+        # the body belongs at the footprint origin: reject an implausible offset
+        # (outside a generous margin around the pad bounding box) back to (0, 0).
+        hx = hy = 0.0
+        for _pad in pads:
+            ax = ay = pw = ph = 0.0
+            for _el in _pad:
+                if isinstance(_el, list) and _el and _el[0] == Sym("at"):
+                    ax, ay = float(_el[1]), float(_el[2])
+                elif isinstance(_el, list) and _el and _el[0] == Sym("size"):
+                    pw, ph = float(_el[1]), float(_el[2])
+            hx, hy = max(hx, abs(ax) + pw / 2), max(hy, abs(ay) + ph / 2)
+        bx, by = hx + 5.0, hy + 5.0          # +5 mm body-overhang allowance
+        if abs(model_3d["tx"]) > bx or abs(model_3d["ty"]) > by:
+            print(f"  3d: implausible model offset "
+                  f"({model_3d['tx']:.1f},{model_3d['ty']:.1f} mm vs bbox "
+                  f"+/-{bx:.1f},{by:.1f}) -> reset to 0 "
+                  f"(EasyEDA c_origin unit mismatch)")
+            model_3d["tx"] = model_3d["ty"] = 0.0
         fp.append([Sym("model"), model_files[0],
                    [Sym("offset"), [Sym("xyz"), model_3d["tx"], model_3d["ty"],
                                     model_3d["tz"]]],
