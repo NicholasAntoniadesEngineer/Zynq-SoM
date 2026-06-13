@@ -3,7 +3,26 @@
 Sink-side reference circuit (mirrors hdmi_tx's connector front end, RX
 orientation). The four TMDS lanes run DC-coupled connector -> Zynq HR-bank
 pins (TMDS_33 inputs, Digilent Zybo/Nexys-proven sink topology — termination
-is the receiver's IBUFDS, no discretes on the lanes). The sink must present
+is the receiver's IBUFDS, no discretes on the lanes).
+
+HDMIRX-1 (electrical audit) — RX TMDS ESD: the RX receptacle is user-facing
+and the four TMDS pairs reach the FPGA with no ESD (the TX side has the
+TPD12S016 clamp). The correct, electrically-verified part is the TI
+TPD4E02B04DQAR (LCSC C106794, LIVE-verified 2026-06-13: 39,617 in stock,
+Extended; 0.2 pF I/O capacitance typ << the 0.5 pF/line TMDS budget, 8 kV
+contact / IEC 61000-4-2): a 4-channel shunt array, so TWO devices cover the
+eight TMDS lines (D2+D1 on one, D0+CLK on the other), placed at the jack
+between the receptacle and the bank. It is carried here as a DOCUMENTED DNP
+STUFFING OPTION (like camera's TPD4E05U06, carrier/subsystems/camera.py
+sec "ESD") rather than a populated part: the populated shunt array cannot be
+auto-placed on this sheet under the immutable zero-crossing visual gate (the
+TMDS sink is off-sheet on the FPGA, so the placer's shunt-cell idiom — which
+needs each protected net to touch >=2 on-sheet multi-pin parts — is not
+triggered, and an in-line populated array crosses other TMDS lanes). Layout
+note for stuffing: place 2x TPD4E02B04DQAR at J1, IO1..IO4 tapping the four
+single-ended lines of two adjacent pairs each, both GND pads to GND; the
+lanes stay DC-coupled jack -> Zynq (shunt taps, not series). Confirm the
+chosen part's IO cap <= 0.5 pF/line before populating. The sink must present
 EDID even when the carrier is off (HDMI 1.4 sec 8.5), so a 2-Kbit I2C EEPROM
 (ST M24C02, LCSC C7562) sits on the DDC bus powered from the CABLE's +5V
 (pin 18): a source can always read — and, with WC# strapped low like common
