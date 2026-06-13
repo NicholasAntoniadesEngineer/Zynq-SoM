@@ -271,8 +271,19 @@ immediate user value), then power-tree/TP/SPICE gates, then SC header + bring-up
 - **PD-1 [low] — pd_input eFuse OVP window tight** (trip min 21.9V vs 21.0V legal max
   contract): widen R4 ~5.36k -> ~23.4V typ, stay below SMBJ22A VBR-min 24.4V. Bundle
   with PWR-1 (pd_input free).
-- DEFERRED until after function-map harvest (collision risk on those sheets):
-  SD-1 [med] microsd TPD6E001 U2.VCC floating -> tie +3V3_SD + 100n; HDMIRX-1 [med]
-  hdmi_rx TMDS no ESD on external receptacle -> add low-cap TMDS array (or documented
-  DNP); HDMIRX-2 [low] EDID WC# hard-grounded -> strap/jumper write-protect; LCD-1 [low]
-  SY7201 C2 1u -> 2.2u (DC-bias derating).
+- RESOLVED (2026-06-13, post function-map harvest — round 6 electrical-audit fixes):
+  - **SD-1 [med] — RESOLVED**: microsd TPD6E001 U2.VCC was floating (worst-case clamp);
+    now biased to the card rail +3V3_SD + local 100n (C14663). U2.NC is the only NC.
+  - **HDMIRX-1 [med] — RESOLVED as documented DNP**: RX TMDS had no ESD. Researched +
+    LIVE-verified a real in-spec part (TI TPD4E02B04DQAR, LCSC C106794, 39,617 stock,
+    0.2 pF/line << 0.5 pF budget, 8 kV). A POPULATED 2x 4-ch shunt array cannot be
+    auto-placed on this dense sheet under the immutable zero-crossing visual gate (the
+    TMDS sink is off-sheet, so the placer's shunt-cell idiom is not triggered and an
+    in-line array crosses other lanes). Per the finding's explicit fallback, carried as
+    a DOCUMENTED DNP STUFFING OPTION (camera FFC ESD precedent) with the verified part id
+    + layout note in the hdmi_rx docstring — NOT a ghost.
+  - **HDMIRX-2 [low] — RESOLVED**: EDID WC# was hard-grounded (write-enabled); now a 10k
+    write-protect strap pulls WC# HIGH to +3V3_HDMI_RX on the labeled jumper net
+    HDMI_RX_EDID_WP (default write-protected; jumper to GND to program). E0/E1/E2 kept.
+  - **LCD-1 [low] — RESOLVED**: SY7201 boost out cap C2 1u -> 2.2u/50V X7R, LIVE-verified
+    CC0805KKX7R9BB225 (LCSC C125847, 72,946 stock); footprint corrected to 0805.
