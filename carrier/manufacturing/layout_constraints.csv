@@ -49,6 +49,14 @@ FMC_LA10_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA10_P,PAIR:FMC_LA10_N
 FMC_LA10_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA10_N,PAIR:FMC_LA10_N/FMC_LA10_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
 FMC_LA11_N,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA11_P,PAIR:FMC_LA11_N/FMC_LA11_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
 FMC_LA11_P,fmc,diff_pair,DP100_DIFF,100,0.2052,0.2032,FMC_LA11_N,PAIR:FMC_LA11_N/FMC_LA11_P,1.27,"deferred: som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker); JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_0_N,rj45_connector,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_0_P,PAIR:ETH_LINE_MDI_0_N/ETH_LINE_MDI_0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_0_P,rj45_connector,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_0_N,PAIR:ETH_LINE_MDI_0_N/ETH_LINE_MDI_0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_1_N,rj45_connector,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_1_P,PAIR:ETH_LINE_MDI_1_N/ETH_LINE_MDI_1_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_1_P,rj45_connector,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_1_N,PAIR:ETH_LINE_MDI_1_N/ETH_LINE_MDI_1_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_2_N,rj45_connector,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_2_P,PAIR:ETH_LINE_MDI_2_N/ETH_LINE_MDI_2_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_2_P,rj45_connector,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_2_N,PAIR:ETH_LINE_MDI_2_N/ETH_LINE_MDI_2_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_3_N,rj45_connector,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_3_P,PAIR:ETH_LINE_MDI_3_N/ETH_LINE_MDI_3_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+ETH_LINE_MDI_3_P,rj45_connector,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_LINE_MDI_3_N,PAIR:ETH_LINE_MDI_3_N/ETH_LINE_MDI_3_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_PHY_MDI0_N,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI0_P,PAIR:ETH_PHY_MDI0_N/ETH_PHY_MDI0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_PHY_MDI0_P,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI0_N,PAIR:ETH_PHY_MDI0_N/ETH_PHY_MDI0_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 ETH_PHY_MDI1_N,som_j1,diff_pair,DP100_DIFF,100,0.2052,0.2032,ETH_PHY_MDI1_P,PAIR:ETH_PHY_MDI1_N/ETH_PHY_MDI1_P,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
@@ -131,6 +139,8 @@ USB_D+,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.
 USB_D-,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D+,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_UART_DM,uart_bridge,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DP,PAIR:USB_UART_DM/USB_UART_DP,1.27,"deferred: usb_uart_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_UART_DP,uart_bridge,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DM,PAIR:USB_UART_DM/USB_UART_DP,1.27,"deferred: usb_uart_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+USB_UART_DM,usb_uart_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DP,PAIR:USB_UART_DM/USB_UART_DP,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+USB_UART_DP,usb_uart_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DM,PAIR:USB_UART_DM/USB_UART_DP,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_D+,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_D-,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D+,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 BU_DIP_1V8,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
@@ -433,6 +443,7 @@ ZYNQ_PS_UART0_TXD,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (w
 SC_INT_N,usb_pd,single,Default,,,,,,,deferred: som_j1_connector (wave 3 STM32 GPIO function map)
 STM32_USB_CC1,usb_pd,single,Default,,,,,,,
 STM32_USB_CC2,usb_pd,single,Default,,,,,,,
+USB_UART_VBUS,usb_uart_connector,single,Default,,,,,,,
 USBOTG_FLT_N,usbc_otg,single,Default,,,,,,,deferred: bringup (TCA9535 expander port P14)
 USB_ID,usbc_otg,single,Default,,,,,,,deferred: som_j1_connector (STM32 GPIO function map)
 USB_VBUS,usbc_otg,single,Default,,,,,,,

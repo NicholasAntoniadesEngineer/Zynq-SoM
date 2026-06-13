@@ -27,17 +27,18 @@ Suggested board: **120 x 100 mm**; SoM origin at **(35, 29)** (centered). All co
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| N | ethernet | (10.5, 0, 12 x 16.5) | RESERVED: rj45_connector (deferred) | (1) |
-| N | microsd | (29, 0, 18.5 x 18) | TF-01A (microSD push-pull) | (2) |
-| N | pd_input | (54, 0, 12 x 17.5) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
-| N | uart_bridge | (73, 0, 12 x 4.5) | RESERVED: usb_uart_connector (deferred) | (4) |
-| N | usbc_otg | (91.5, 0, 12 x 11) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
-| W | fmc | (0, 5.5, 16 x 60.5) | ASP-134603-01 (FMC LPC (VITA 57.1)) | (6) |
-| W | lcd | (0, 67.5, 9.5 x 29) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (7) |
-| S | camera | (6, 90.5, 24 x 9.5) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (8) |
-| S | hdmi_rx | (32.5, 85.5, 18 x 14.5) | HDMI-019S (HDMI receptacle) | (9) |
-| S | hdmi_tx | (52.5, 85.5, 18 x 14.5) | HDMI-019S (HDMI receptacle) | (10) |
-| S | pmod | (73, 84, 36.5 x 16) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (11) |
+| N | ethernet | (7.5, 0, 12 x 16.5) | RESERVED: rj45_connector (deferred) | (1) |
+| N | microsd | (23.5, 0, 18.5 x 18) | TF-01A (microSD push-pull) | (2) |
+| N | pd_input | (45.5, 0, 12 x 17.5) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
+| N | uart_bridge | (61.5, 0, 12 x 4.5) | RESERVED: usb_uart_connector (deferred) | (4) |
+| N | usb_uart_connector | (77, 0, 12 x 11) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
+| N | usbc_otg | (93, 0, 12 x 11) | TYPE-C-31-M-12 (USB-C receptacle) | (6) |
+| W | fmc | (0, 5.5, 16 x 60.5) | ASP-134603-01 (FMC LPC (VITA 57.1)) | (7) |
+| W | lcd | (0, 67.5, 9.5 x 29) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (8) |
+| S | camera | (6, 90.5, 24 x 9.5) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (9) |
+| S | hdmi_rx | (32.5, 85.5, 18 x 14.5) | HDMI-019S (HDMI receptacle) | (10) |
+| S | hdmi_tx | (52.5, 85.5, 18 x 14.5) | HDMI-019S (HDMI receptacle) | (11) |
+| S | pmod | (73, 84, 36.5 x 16) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (12) |
 
 Edge spills (preferred edge full — honest, not hidden):
 - camera: W edge full -> S
@@ -47,14 +48,15 @@ Edge spills (preferred edge full — honest, not hidden):
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
 | bringup_en | E | (80, 74, 9.5 x 8) | 15 | 77.9 |  |
-| bringup_en_modules | E | (74, 6, 13.5 x 21) | 54 | 283.2 |  |
-| bringup_modules | E | (92, 60, 22 x 14) | 70 | 309.7 | (12) |
-| bringup_rails | E | (90, 42, 25.5 x 16.5) | 24 | 424.6 | (13) |
-| debug_boot | N | (20, 20, 13.5 x 21) | 10 | 282.4 | (14) |
-| power | E | (90, 24, 26 x 16) | 51 | 415.9 | (15) |
-| power_mon | E | (96, 14, 14 x 8.5) | 10 | 121.1 | (16) |
-| usb_pd | @pd_input | (106, 4, 8 x 8) | 6 | 23.1 | (17) |
-| user_io | S | (18, 68, 12.5 x 19.5) | 17 | 246.6 | (18) |
+| bringup_en_modules | E | (66, 14, 21 x 13.5) | 54 | 283.2 |  |
+| bringup_modules | E | (92, 60, 22 x 14) | 70 | 309.7 | (13) |
+| bringup_rails | E | (90, 42, 25.5 x 16.5) | 24 | 424.6 | (14) |
+| debug_boot | N | (20, 20, 13.5 x 21) | 10 | 282.4 | (15) |
+| power | E | (90, 24, 26 x 16) | 51 | 415.9 | (16) |
+| power_mon | E | (96, 14, 14 x 8.5) | 10 | 121.1 | (17) |
+| rj45_connector | @ethernet | (18, 44, 13 x 21) | 3 | 273.5 |  |
+| usb_pd | @pd_input | (108, 4, 8 x 8) | 6 | 23.1 | (18) |
+| user_io | S | (18, 68, 12.5 x 19.5) | 17 | 246.6 | (19) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
 
@@ -83,9 +85,9 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.010 | negligible |
 | SY6280AAC (U9) | bringup_modules | +5V -> +5V_HDMI_TX | 0.058 | negligible |
 | TLV75725PDBVR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.350 | ~0.28 W |
-| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.302 | negligible |
-| TPS54302DDCR (U1) | power | +VIN -> +5V | 2.684 | ~1.49 W |
-| TPS54302DDCR (U2) | power | +5V -> +3V3 | 2.272 | ~0.83 W |
+| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.304 | negligible |
+| TPS54302DDCR (U1) | power | +VIN -> +5V | 2.690 | ~1.49 W |
+| TPS54302DDCR (U2) | power | +5V -> +3V3 | 2.280 | ~0.84 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8 | 0.006 | negligible |
 | TPS54302DDCR (U4) | power | +VIN -> +5V_SOM | 2.004 | ~1.11 W |
 
@@ -97,20 +99,21 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(2) microsd**: microSD: SDIO runs at 1.8 V on the SoM side (typed sd_bus level in the netlist) — keep the TXS02612 translator mid-block: 1.8V side faces the SoM, 3.3V card side faces the slot; bus length match <= 2.5 mm to CLK.
 - **(3) pd_input**: PD power inlet: keep the VBUS path (receptacle -> TVS -> bulk -> +VIN) in one corner so the +VIN plane spreads from a single point; CC1/CC2 route to the FUSB302 (usb_pd block, anchored next to this inlet). PLAN.md round 5: a TPS25940-class eFuse lands between receptacle and bulk — reserve space for it here.
 - **(4) uart_bridge**: CP2102N UART bridge: its USB connector is an author-declared deferral (expect usb_uart_connector) — the block reserves edge space for it; TX/RX test points stay probe-able.
-- **(5) usbc_otg**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
-- **(6) fmc**: FMC LPC: a VITA 57.1 mezzanine overhangs the board edge — keep tall parts out of the overhang strip behind the connector. TLV75725PDBVR VADJ LDO dissipates ~0.28 W at the declared 0.35 A — give it copper.
-- **(7) lcd**: 40-pin LCD FFC: cable exits over the board edge; keep the SY7201ABC backlight boost loop (L/D/C) tight and away from the FFC signal rows; RGB888 bus is single-ended bank-34 3V3 — bus-route together.
-- **(8) camera**: RPi camera FFC: 3 MIPI CSI-2 pairs at 100R differential to the J3 side of the SoM (bank 35, 2.5 V VCCO per the expect= notes) — keep the run to the J3 strip short.
-- **(9) hdmi_rx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place M24C02-WMN6TP directly behind the receptacle so all pairs pass straight through.
-- **(10) hdmi_tx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place TPD12S016PWR directly behind the receptacle so all pairs pass straight through.
-- **(11) pmod**: Two PMOD sockets side by side; both fed from the gated +3V3_PMOD rail (SY6280 cell in bringup_modules) — route the gated rail once, star at the sockets.
-- **(12) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
-- **(13) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
-- **(14) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
-- **(15) power**: Buck thermal (worst-case declared draws): TPS54302DDCR +5V ~1.49 W; TPS54302DDCR +3V3 ~0.83 W; TPS54302DDCR +5V_SOM ~1.11 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
-- **(16) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
-- **(17) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
-- **(18) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.
+- **(5) usb_uart_connector**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
+- **(6) usbc_otg**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
+- **(7) fmc**: FMC LPC: a VITA 57.1 mezzanine overhangs the board edge — keep tall parts out of the overhang strip behind the connector. TLV75725PDBVR VADJ LDO dissipates ~0.28 W at the declared 0.35 A — give it copper.
+- **(8) lcd**: 40-pin LCD FFC: cable exits over the board edge; keep the SY7201ABC backlight boost loop (L/D/C) tight and away from the FFC signal rows; RGB888 bus is single-ended bank-34 3V3 — bus-route together.
+- **(9) camera**: RPi camera FFC: 3 MIPI CSI-2 pairs at 100R differential to the J3 side of the SoM (bank 35, 2.5 V VCCO per the expect= notes) — keep the run to the J3 strip short.
+- **(10) hdmi_rx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place M24C02-WMN6TP directly behind the receptacle so all pairs pass straight through.
+- **(11) hdmi_tx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place TPD12S016PWR directly behind the receptacle so all pairs pass straight through.
+- **(12) pmod**: Two PMOD sockets side by side; both fed from the gated +3V3_PMOD rail (SY6280 cell in bringup_modules) — route the gated rail once, star at the sockets.
+- **(13) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
+- **(14) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
+- **(15) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
+- **(16) power**: Buck thermal (worst-case declared draws): TPS54302DDCR +5V ~1.49 W; TPS54302DDCR +3V3 ~0.84 W; TPS54302DDCR +5V_SOM ~1.11 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(17) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
+- **(18) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
+- **(19) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.
 - **(board)**: 49 test points board-wide (test-point gate): spread them with probe clearance as the blocks settle; none may end up under the SoM.
 
 ## Honest limits

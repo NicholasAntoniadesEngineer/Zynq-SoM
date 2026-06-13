@@ -1,0 +1,381 @@
+(footprint
+	"KH-5224-8P8C-D"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"RJ45-TH_KH-5224-8P8C-D — KH-5224-8P8C-D (RJ45-TH_KH-5224-8P8C-D) (EasyEDA/LCSC C2828085, faithful conversion)"
+	)
+	(tags "Ethernet Connectors/Modular Connectors (RJ45 RJ11)")
+	(attr through_hole)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -8.5 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"KH-5224-8P8C-D"
+		(at 0 8.5 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C2828085.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"KH-5224-8P8C-D (RJ45-TH_KH-5224-8P8C-D)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C2828085"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -8.1001 -7.705)
+		(end -8.0701 -7.705)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -8 8.995)
+		(end -8 -7.705)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -8 -7.705)
+		(end 8 -7.705)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 8 -7.705)
+		(end 8 8.995)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 8 8.995)
+		(end -8 8.995)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -8.128 0.1084)
+		(end -8.128 9.144)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -8.128 9.144)
+		(end 8.128 9.144)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.62 -7.874)
+		(end -8.128 -7.874)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -8.128 -7.874)
+		(end -8.128 -2.8186)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 8.128 -7.75)
+		(end 8.128 -7.874)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.62 -7.874)
+		(end 8.128 -7.874)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 8.128 -2.8186)
+		(end 8.128 -7.75)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 8.128 9.144)
+		(end 8.128 0.1083)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center -5.7 2.3949)
+		(end -4.9499 2.3949)
+		(stroke
+			(width 1.5)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_circle
+		(center 5.7001 2.3949)
+		(end 6.4502 2.3949)
+		(stroke
+			(width 1.5)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(pad
+		""
+		np_thru_hole
+		circle
+		(at -5.7 2.3949)
+		(size 3.199994 3.199994)
+		(drill 3.199994)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		""
+		np_thru_hole
+		circle
+		(at 5.7001 2.3949)
+		(size 3.199994 3.199994)
+		(drill 3.199994)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"1"
+		thru_hole
+		circle
+		(at -4.4449 -3.9551)
+		(size 1.524 1.524)
+		(drill 0.9144)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"2"
+		thru_hole
+		circle
+		(at -3.1749 -6.4951)
+		(size 1.524 1.524)
+		(drill 0.9144)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"3"
+		thru_hole
+		circle
+		(at -1.9049 -3.9551)
+		(size 1.524 1.524)
+		(drill 0.9144)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"4"
+		thru_hole
+		circle
+		(at -0.6349 -6.4951)
+		(size 1.524 1.524)
+		(drill 0.9144)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"5"
+		thru_hole
+		circle
+		(at 0.6351 -3.9551)
+		(size 1.524 1.524)
+		(drill 0.9144)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"6"
+		thru_hole
+		circle
+		(at 1.9051 -6.4951)
+		(size 1.524 1.524)
+		(drill 0.9144)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"7"
+		thru_hole
+		circle
+		(at 3.1751 -3.9551)
+		(size 1.524 1.524)
+		(drill 0.9144)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"8"
+		thru_hole
+		circle
+		(at 4.4451 -6.4951)
+		(size 1.524 1.524)
+		(drill 0.9144)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"13"
+		thru_hole
+		circle
+		(at 7.9 -1.3551)
+		(size 2.499995 2.499995)
+		(drill 1.799996)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"13"
+		thru_hole
+		circle
+		(at -7.9001 -1.3551)
+		(size 2.499995 2.499995)
+		(drill 1.799996)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"12"
+		thru_hole
+		circle
+		(at 6.3 6.495)
+		(size 1.799996 1.799996)
+		(drill 1.100024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"11"
+		thru_hole
+		circle
+		(at 3.7999 6.495)
+		(size 1.799996 1.799996)
+		(drill 1.100024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"10"
+		thru_hole
+		circle
+		(at -3.8 6.495)
+		(size 1.799996 1.799996)
+		(drill 1.100024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"9"
+		thru_hole
+		circle
+		(at -6.2999 6.495)
+		(size 1.799996 1.799996)
+		(drill 1.100024)
+		(layers "*.Cu" "*.Mask")
+	)
+	(model
+		"KH-5224-8P8C-D.wrl"
+		(offset
+			(xyz 0 -0.635 -3.5)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

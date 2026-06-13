@@ -1,13 +1,13 @@
 schgen link report
 ============================================================
-sheets (23): bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io
+sheets (25): bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io
 
 alias map (rails only, exact, enumerated):
   (no pure spelling aliases)
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (460):
+bound ports (482):
   bringup_en:BU_DIP_5V0 -> sheet bringup_rails:BU_DIP_5V0
   bringup_en:STM32_RAIL_EN_5V0 -> sheet som_j1:STM32_RAIL_EN_5V0
   bringup_en:EN_5V0 -> sheet power:EN_5V0
@@ -121,6 +121,14 @@ bound ports (460):
   ethernet:ETH_PHY_MDI2_N [diff_pair] -> sheet som_j1:ETH_PHY_MDI2_N; SoM ETH_PHY_MDI2_N (J1.83)
   ethernet:ETH_PHY_MDI3_P [diff_pair] -> sheet som_j1:ETH_PHY_MDI3_P; SoM ETH_PHY_MDI3_P (J1.79)
   ethernet:ETH_PHY_MDI3_N [diff_pair] -> sheet som_j1:ETH_PHY_MDI3_N; SoM ETH_PHY_MDI3_N (J1.77)
+  ethernet:ETH_LINE_MDI_0_P [diff_pair] -> sheet rj45_connector:ETH_LINE_MDI_0_P
+  ethernet:ETH_LINE_MDI_0_N [diff_pair] -> sheet rj45_connector:ETH_LINE_MDI_0_N
+  ethernet:ETH_LINE_MDI_1_P [diff_pair] -> sheet rj45_connector:ETH_LINE_MDI_1_P
+  ethernet:ETH_LINE_MDI_1_N [diff_pair] -> sheet rj45_connector:ETH_LINE_MDI_1_N
+  ethernet:ETH_LINE_MDI_2_P [diff_pair] -> sheet rj45_connector:ETH_LINE_MDI_2_P
+  ethernet:ETH_LINE_MDI_2_N [diff_pair] -> sheet rj45_connector:ETH_LINE_MDI_2_N
+  ethernet:ETH_LINE_MDI_3_P [diff_pair] -> sheet rj45_connector:ETH_LINE_MDI_3_P
+  ethernet:ETH_LINE_MDI_3_N [diff_pair] -> sheet rj45_connector:ETH_LINE_MDI_3_N
   fmc:FMC_CLK0_M2C_P [diff_pair] -> sheet som_j3:FMC_CLK0_M2C_P
   fmc:FMC_CLK0_M2C_N [diff_pair] -> sheet som_j3:FMC_CLK0_M2C_N
   fmc:FMC_CLK1_M2C_P [diff_pair] -> sheet som_j3:FMC_CLK1_M2C_P
@@ -241,6 +249,14 @@ bound ports (460):
   power_mon:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   power_mon:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   power_mon:PMON_ALERT_N -> sheet bringup_rails:PMON_ALERT_N
+  rj45_connector:ETH_LINE_MDI_0_P [diff_pair] -> sheet ethernet:ETH_LINE_MDI_0_P
+  rj45_connector:ETH_LINE_MDI_0_N [diff_pair] -> sheet ethernet:ETH_LINE_MDI_0_N
+  rj45_connector:ETH_LINE_MDI_1_P [diff_pair] -> sheet ethernet:ETH_LINE_MDI_1_P
+  rj45_connector:ETH_LINE_MDI_1_N [diff_pair] -> sheet ethernet:ETH_LINE_MDI_1_N
+  rj45_connector:ETH_LINE_MDI_2_P [diff_pair] -> sheet ethernet:ETH_LINE_MDI_2_P
+  rj45_connector:ETH_LINE_MDI_2_N [diff_pair] -> sheet ethernet:ETH_LINE_MDI_2_N
+  rj45_connector:ETH_LINE_MDI_3_P [diff_pair] -> sheet ethernet:ETH_LINE_MDI_3_P
+  rj45_connector:ETH_LINE_MDI_3_N [diff_pair] -> sheet ethernet:ETH_LINE_MDI_3_N
   som_j1:STM32_USB_D_P [usb_hs_pair] -> sheet pd_input:STM32_USB_D_P; SoM STM32_USB_D_P (J1.19)
   som_j1:USB_ID -> sheet usbc_otg:USB_ID; SoM USB_ID (J1.20)
   som_j1:STM32_USB_D_N [usb_hs_pair] -> sheet pd_input:STM32_USB_D_N; SoM STM32_USB_D_N (J1.21)
@@ -445,6 +461,9 @@ bound ports (460):
   som_j3:IO_L5_N_33 -> SoM IO_L5_N_33 (J3.94)
   som_j3:IO_L4_N_33 -> SoM IO_L4_N_33 (J3.96)
   som_j3:IO_L4_P_33 -> SoM IO_L4_P_33 (J3.98)
+  uart_bridge:USB_UART_VBUS -> sheet usb_uart_connector:USB_UART_VBUS
+  uart_bridge:USB_UART_DP [usb_hs_pair] -> sheet usb_uart_connector:USB_UART_DP
+  uart_bridge:USB_UART_DM [usb_hs_pair] -> sheet usb_uart_connector:USB_UART_DM
   uart_bridge:ZYNQ_PS_UART0_RXD -> sheet som_j1:ZYNQ_PS_UART0_RXD
   uart_bridge:ZYNQ_PS_UART0_TXD -> sheet som_j1:ZYNQ_PS_UART0_TXD
   uart_bridge:ZYNQ_PS_UART0_CTS_N -> sheet som_j2:ZYNQ_PS_UART0_CTS_N
@@ -454,6 +473,9 @@ bound ports (460):
   usb_pd:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA
   usb_pd:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL
   usb_pd:SC_INT_N -> sheet bringup_rails:SC_INT_N; sheet som_j1:SC_INT_N
+  usb_uart_connector:USB_UART_VBUS -> sheet uart_bridge:USB_UART_VBUS
+  usb_uart_connector:USB_UART_DP [usb_hs_pair] -> sheet uart_bridge:USB_UART_DP
+  usb_uart_connector:USB_UART_DM [usb_hs_pair] -> sheet uart_bridge:USB_UART_DM
   usbc_otg:USB_VBUS -> sheet som_j1:USB_VBUS; SoM USB_VBUS (J1.22)
   usbc_otg:VBUS_OUT_EN -> sheet som_j1:VBUS_OUT_EN; SoM VBUS_OUT_EN (J1.38)
   usbc_otg:USBOTG_FLT_N -> sheet bringup_rails:USBOTG_FLT_N
@@ -473,7 +495,7 @@ rails (28):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: microsd, power, power_mon)
   +1V8_REG — carrier-local rail (sheets: power_mon)
   +2V5_VADJ — carrier-local rail (sheets: fmc)
-  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: bringup_modules, bringup_rails, debug_boot, fmc, power, power_mon, uart_bridge, user_io)
+  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: bringup_modules, bringup_rails, debug_boot, fmc, power, power_mon, rj45_connector, uart_bridge, user_io)
   +3V3_CAM — carrier-local rail (sheets: bringup_modules, camera)
   +3V3_HDMI_RX — carrier-local rail (sheets: bringup_modules, hdmi_rx)
   +3V3_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
@@ -496,25 +518,14 @@ rails (28):
   +VCCO_35 <- sheets: som_j3 -> SoM 3 pins
   +VIN — carrier-local rail (sheets: pd_input, power, power_mon)
   +VIN_SYS — carrier-local rail (sheets: power_mon)
-  CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, usbc_otg)
-  GND <- sheets: bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io -> SoM 63 pins
+  CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_uart_connector, usbc_otg)
+  GND <- sheets: bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
 
-deferred ports — author-declared, awaiting later waves (12) [WARNING]:
+deferred ports — author-declared, awaiting later waves (1) [WARNING]:
   bringup_en_modules:EN_LCD_BL — awaiting lvds_lcd_power (backlight boost EN provision, dossier 3.2)
-  ethernet:ETH_LINE_MDI_0_P — awaiting rj45_connector (wave 2)
-  ethernet:ETH_LINE_MDI_0_N — awaiting rj45_connector (wave 2)
-  ethernet:ETH_LINE_MDI_1_P — awaiting rj45_connector (wave 2)
-  ethernet:ETH_LINE_MDI_1_N — awaiting rj45_connector (wave 2)
-  ethernet:ETH_LINE_MDI_2_P — awaiting rj45_connector (wave 2)
-  ethernet:ETH_LINE_MDI_2_N — awaiting rj45_connector (wave 2)
-  ethernet:ETH_LINE_MDI_3_P — awaiting rj45_connector (wave 2)
-  ethernet:ETH_LINE_MDI_3_N — awaiting rj45_connector (wave 2)
-  uart_bridge:USB_UART_VBUS — awaiting usb_uart_connector (wave 2)
-  uart_bridge:USB_UART_DP — awaiting usb_uart_connector (wave 2)
-  uart_bridge:USB_UART_DM — awaiting usb_uart_connector (wave 2)
 
 unbound SoM nets — no consumer yet, later waves (0) [WARNING]:
 
 errors: none
 
-LINK: PASS (0 errors, 12 warnings)
+LINK: PASS (0 errors, 1 warnings)

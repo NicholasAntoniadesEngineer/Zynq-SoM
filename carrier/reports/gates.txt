@@ -14,11 +14,13 @@ pd_input: netlist=PASS erc=PASS visual=PASS paper=A4
 pmod: netlist=PASS erc=PASS visual=PASS paper=A4
 power: netlist=PASS erc=PASS visual=PASS paper=A3
 power_mon: netlist=PASS erc=PASS visual=PASS paper=A4
+rj45_connector: netlist=PASS erc=PASS visual=PASS paper=A4
 som_j1: netlist=PASS erc=PASS visual=PASS paper=A4
 som_j2: netlist=PASS erc=PASS visual=PASS paper=A4
 som_j3: netlist=PASS erc=PASS visual=PASS paper=A4
 uart_bridge: netlist=PASS erc=PASS visual=PASS paper=A4
 usb_pd: netlist=PASS erc=PASS visual=PASS paper=A4
+usb_uart_connector: netlist=PASS erc=PASS visual=PASS paper=A4
 usbc_otg: netlist=PASS erc=PASS visual=PASS paper=A3
 user_io: netlist=PASS erc=PASS visual=PASS paper=A4
 LINK: PASS
