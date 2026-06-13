@@ -33,11 +33,21 @@ eFuse strap design (every number from TI SLVSE94G; section refs cited):
   5 V default VBUS PASSES. CRITICAL: +3V3_SC (FUSB302 + SC supply) is
   generated ON the SoM from VIN — an eFuse that blocked 5 V would
   deadlock PD negotiation forever.
-- OVP (8): R3/R4 = 100k/5.6k from +VBUS_IN (both JLC Basic, C25803/
-  C23189) -> cutoff at V_OVPR x (105.6/5.6) = 1.2 V x 18.857 = 22.6 V
-  (comparator +/-2% + 1% resistors: 21.9-23.4 V) — above the 21 V max
-  contract (20 V + 5%), below the SMBJ22A TVS VBR min (24.4 V) and the
-  TPS54302 buck's input rating. Divider burns 20 V/105.6k = 189 uA.
+- OVP (8): R3/R4 = 100k/5.49k from +VBUS_IN (R3 JLC Basic C25803; R4
+  live-verified on the JLC parts API 2026-06-13: C188263 YAGEO
+  RC0603FR-075K49L, 0603 1%, stock 5,046, Extended, min-qty 1 — alternate
+  C3000723 FOJAN FRC0603F5491TS, 26,183) -> cutoff at V_OVPR x (105.49/
+  5.49) = 1.2 V x 19.215 = 23.06 V typ. PD-1 FIX (deep audit 2026-06-12):
+  the prior 5.6k gave 22.6 V typ with a trip-MIN of ~21.9 V (full
+  comparator +/-2% + 1% resistor stack) — uncomfortably close to the 21.0 V
+  legal contract max. 5.49k lifts trip-typ to 23.06 V (trip-MIN ~22.6 V,
+  clear of 21 V) while the worst-case cutoff stays guaranteed BELOW the
+  SMBJ22A VBR-min: at 24.4 V with R4 -1% / R3 +1% the divided node is
+  1.246 V > V_OVPR-max 1.224 V, so OVP definitely trips before the TVS
+  conducts. (5.36 V was the audit's first cut but it fails this strict
+  worst case at 1.218 V < 1.224 V — 5.49k is the robust refinement.) Well
+  under the TPS54302 30 V VIN abs-max either way. Divider burns 20 V/
+  105.49k = 190 uA.
 - ILIM (11): R5 = 5.1k (Basic C23186) -> I_OL = 18/5.1k = 3.53 A typ
   (DS Eq 5, ~+/-8%: 3.2-3.8 A) — above the 3.0 A contract so the PD
   source's own limit is reached first, far below the 6 A device ceiling.
@@ -108,8 +118,8 @@ def circuit() -> Circuit:
 
     # ---- eFuse straps: OVP divider, ILIM, dVdT, MODE/PGTH ------------------
     c.part("R3", "Device:R", "100k", R0603, LCSC="C25803")
-    c.part("R4", "Device:R", "5.6k", R0603, LCSC="C23189")
-    c.net("PD_OVP_SET", "U1.OVP", "R3.2", "R4.1")      # trip 22.6 V
+    c.part("R4", "Device:R", "5.49k", R0603, LCSC="C188263")   # PD-1: widen OVP
+    c.net("PD_OVP_SET", "U1.OVP", "R3.2", "R4.1")      # trip 23.06 V typ
     c.net("+VBUS_IN", "R3.1")
     c.part("R5", "Device:R", "5.1k", R0603, LCSC="C23186")
     c.net("PD_ILIM_SET", "U1.ILIM", "R5.1")            # I_OL = 18/5.1k = 3.5 A
