@@ -95,6 +95,49 @@ def _collinear_overlap(a: Seg, b: Seg) -> bool:
     return False
 
 
+def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
+    """Does (px, py) lie on orthogonal segment ``s``? With
+    ``interior_only`` the endpoints are excluded (strict interior); otherwise
+    the closed segment (endpoints included) is tested. The same point/segment
+    incidence the router enforces in cell space, in mm space here."""
+    eps = 1e-6
+    if s.horizontal:
+        if abs(py - s.y0) > eps:
+            return False
+        lo, hi = sorted((s.x0, s.x1))
+    elif s.vertical:
+        if abs(px - s.x0) > eps:
+            return False
+        lo, hi = sorted((s.y0, s.y1))
+    else:                                  # router emits only orthogonal segs
+        return False
+    coord = px if s.horizontal else py
+    if interior_only:
+        return lo + eps < coord < hi - eps
+    return lo - eps <= coord <= hi + eps
+
+
+def _foreign_t_touch(a: Seg, b: Seg) -> tuple[float, float] | None:
+    """A different-net T-touch: an ENDPOINT of one wire sits ON the other
+    wire (interior OR endpoint) while the two wires belong to DIFFERENT nets.
+
+    This is the LAW-0 short the perpendicular-crossing test misses: a wire
+    that *stops exactly on* another net's wire (a tee, or an end-to-end butt
+    join) connects them in KiCad with no junction dot and no interior
+    crossing — overlap=0 and ERC=0 both stay silent. Same-net contacts are
+    legal (that is how the router grows one net's tree) and never flagged.
+    Returns the offending contact point, or None."""
+    if a.net == b.net:
+        return None
+    for (ex, ey), other in (((a.x0, a.y0), b), ((a.x1, a.y1), b),
+                            ((b.x0, b.y0), a), ((b.x1, b.y1), a)):
+        # endpoint-on-interior is unambiguous; endpoint-on-endpoint is also a
+        # short between different nets, so include the closed segment.
+        if _point_on_seg(ex, ey, other, interior_only=False):
+            return (ex, ey)
+    return None
+
+
 def _seg_box(s: Seg, half: float = 0.127) -> Box:
     x0, x1 = sorted((s.x0, s.x1))
     y0, y1 = sorted((s.y0, s.y1))
@@ -147,4 +190,14 @@ def check(geo: SheetGeometry, clearance_mm: float = 0.2) -> VisualResult:
             if a.net != b.net and _collinear_overlap(a, b):
                 res.ok = False
                 res.findings.append(f"collinear overlap: {a.net} ~ {b.net}")
+            # different-net T-touch: an endpoint of one wire landing ON the
+            # other net's wire (tee or butt-join) is a short with no
+            # junction dot and no interior crossing — invisible to _cross /
+            # _collinear_overlap, the F2 hole.
+            tt = _foreign_t_touch(a, b)
+            if tt is not None:
+                res.ok = False
+                res.findings.append(
+                    f"different-net T-touch: {a.net} endpoint on {b.net} "
+                    f"@({tt[0]:.2f},{tt[1]:.2f})")
     return res

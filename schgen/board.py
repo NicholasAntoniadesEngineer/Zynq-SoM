@@ -7,8 +7,8 @@ generates a root ``board.kicad_sch`` whose sheet symbols carry one
 hierarchical pin per PORT, and PROVES with ``kicad-cli sch export netlist``
 on the root that every linked PORT net is merged across sheets:
 
-- references are uniquified per sheet (U1 -> U101/U201/...) so the netlist
-  is unambiguous board-wide;
+- references are uniquified per sheet (U1 -> U1001/U2001/... at the default
+  _UNIQ_STRIDE of 1000) so the netlist is unambiguous board-wide;
 - each sheet pin gets a short wire stub + a root-level label carrying the
   port's canonical name — same name = same root net, which is exactly how
   the wave-3 generated J1/J2/J3 connector sheets will bind;
@@ -35,6 +35,19 @@ from schgen.verify import netlist_gate
 
 _REF_RE = re.compile(r"^(#?[A-Za-z_]+?)0*(\d+)$")
 
+# Per-sheet band width for board-unique references. Each sheet `index`
+# owns the band [index*STRIDE, index*STRIDE+STRIDE-1] PER PREFIX, so the
+# renamed number decodes uniquely ONLY while every original number is
+# < STRIDE. The old stride of 100 was BELOW the real maximum: a dense
+# sheet legitimately emits 100+ power symbols (#PWR), and at stride 100
+# sheet i's #PWR(100+k) collided with sheet i+1's #PWR(k) board-wide
+# (electrically harmless — power symbols merge by NET NAME and the
+# netlist gates skip '#'-refs — but a genuine reference-uniqueness break
+# the original stride produced silently). 1000 clears the observed 128
+# with a 7x margin; the guard below still fires loudly if any sheet ever
+# approaches it (F4).
+_UNIQ_STRIDE = 1000
+
 # root-sheet geometry (1.27 grid)
 SHEET_X = 127.0          # left edge of every sheet symbol
 SHEET_GAP = 12.7         # vertical gap between sheet symbols
@@ -43,22 +56,38 @@ STUB = 12.7              # sheet pin -> root label stub length
 TOP_Y = 25.4
 
 
-def _renamed_ref(ref: str, index: int) -> str:
+def _renamed_ref(ref: str, index: int, *, sheet: str = "") -> str:
     m = _REF_RE.match(ref)
     if not m:
         raise ValueError(f"cannot uniquify reference {ref!r}")
     prefix, num = m.group(1), int(m.group(2))
-    return f"{prefix}{index * 100 + num}"
+    # The board-unique number is `index*_UNIQ_STRIDE + num`, so each sheet
+    # owns the band [index*STRIDE, index*STRIDE+STRIDE-1] PER PREFIX. That
+    # decodes uniquely ONLY while every original number is < STRIDE; a sheet
+    # with STRIDE+ same-prefix parts (or an authored number >= STRIDE) would
+    # silently collide into the NEXT sheet's band — for a REAL part that
+    # merges two distinct parts in the board netlist (a LAW-0 short behind a
+    # passing gate). Guard loudly (F4).
+    if not 0 <= num < _UNIQ_STRIDE:
+        where = f" on sheet {sheet!r}" if sheet else ""
+        raise ValueError(
+            f"uniquify: reference {ref!r}{where} has number {num} >= "
+            f"{_UNIQ_STRIDE} (or a sheet has {_UNIQ_STRIDE}+ '{prefix}' "
+            f"parts) — the index*{_UNIQ_STRIDE}+num stride would collide "
+            f"into sheet {index + 1}'s band; widen _UNIQ_STRIDE before this "
+            f"many parts exist")
+    return f"{prefix}{index * _UNIQ_STRIDE + num}"
 
 
 def uniquify(design: PlacedDesign, index: int) -> PlacedDesign:
     """Deep-copy ``design`` with board-unique references (sheet ``index`` is
-    1-based: U1 -> U101 on sheet 1, U201 on sheet 2, ...). The circuit's
-    parts / net pins / NC pins are renamed in lock-step with the placed
-    geometry — the netlist stays graph-identical, only labels change."""
+    1-based: U1 -> U1001 on sheet 1, U2001 on sheet 2, ... at the default
+    _UNIQ_STRIDE of 1000). The circuit's parts / net pins / NC pins are
+    renamed in lock-step with the placed geometry — the netlist stays
+    graph-identical, only labels change."""
     d = copy.deepcopy(design)
     c = d.circuit
-    ref_map = {ref: _renamed_ref(ref, index) for ref in c.parts}
+    ref_map = {ref: _renamed_ref(ref, index, sheet=c.name) for ref in c.parts}
     c.parts = {ref_map[ref]: part for ref, part in c.parts.items()}
     for part in c.parts.values():
         part.ref = ref_map[part.ref]
@@ -68,7 +97,8 @@ def uniquify(design: PlacedDesign, index: int) -> PlacedDesign:
     for p in d.parts:
         p.ref = ref_map[p.ref]
     for pw in d.powers:
-        pw.ref = _renamed_ref(pw.ref, index)   # #PWR01 -> #PWR101 ...
+        # #PWR01 -> #PWR101 ...; power-symbol refs share the same band guard
+        pw.ref = _renamed_ref(pw.ref, index, sheet=c.name)
     d.standalone = False
     return d
 
@@ -203,11 +233,41 @@ def build_board(sheets, lib: Library, outdir: Path, *,
     # one PWR_FLAG per rail board-wide (duplicates are two power_out pins)
     strip_duplicate_flags([d for _, d, _ in placed], lib)
 
+    # Per-sheet netlist gate on the UNIQUIFIED circuit (F5): the standalone
+    # build proves each sheet's ORIGINAL refs, but the board re-emits every
+    # sheet through a DIFFERENT path — uniquify renaming every ref + the
+    # hier-mode label layer. A defect there (a SIGNAL net mis-renamed, a pin
+    # lost in uniquify) would otherwise be caught only by the board MERGE
+    # gate, which checks PORT/rail pins but NOT sheet-local SIGNAL topology.
+    #
+    # The proof must re-emit the uniquified design in STANDALONE mode: a
+    # hierarchy-mode sheet's symbol-instance path is /<board>/<sym>, which
+    # only resolves WITH the board root present, so kicad-cli on the hier
+    # FILE ALONE drops every pad-derived internal net (the DESIGN.md M3 trap)
+    # — a false OPEN on every wired SIGNAL. A standalone re-emit (own root
+    # uuid as the instance path, PORT labels as same-named global labels)
+    # resolves those nets and proves the uniquified netlist is graph-identical
+    # pin-for-pin. This adds a gate, never relaxes one.
+    per_sheet_fail: list[str] = []
     for name, d, sym_uuid in placed:
         emit(d, sheet_dir / f"{name}.kicad_sch", lib,
              instance_path=f"/{board_uuid}/{sym_uuid}",
              project=root_name,
              sheet_uuid=stable_uuid(root_name, "sheet", name))
+        verify = copy.deepcopy(d)
+        verify.standalone = True          # resolve pad-derived internal nets
+        vpath = sheet_dir / f"{name}.uniqcheck.kicad_sch"
+        emit(verify, vpath, lib)
+        res = netlist_gate.check(verify.circuit, vpath)
+        vpath.unlink(missing_ok=True)
+        if not res.ok:
+            lines = res.summary().splitlines()
+            per_sheet_fail.append(
+                f"{name}: {lines[1].strip()}" if len(lines) > 1 else name)
+    if per_sheet_fail:
+        print("BOARD: per-sheet netlist gate FAIL on uniquified circuit:")
+        for f in per_sheet_fail:
+            print(f"  {f}")
 
     # ---- root sheet -----------------------------------------------------------
     root = PlacedDesign(circuit=Circuit(root_name, "carrier board root"))
@@ -293,7 +353,7 @@ def build_board(sheets, lib: Library, outdir: Path, *,
           f"root labels bind ports by canonical name)")
 
     ok = _board_gate(placed, root_path, reports_dir or outdir)
-    return ok
+    return ok and not per_sheet_fail
 
 
 def _board_gate(placed, root_path: Path, outdir: Path) -> bool:

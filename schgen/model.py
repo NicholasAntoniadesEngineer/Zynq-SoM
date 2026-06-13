@@ -134,6 +134,13 @@ class Circuit:
         # test-point coverage waivers: net -> reason (gate lists them)
         self.tp_waivers: dict[str, str] = {}
         self._ref_counters: dict[str, int] = {}
+        # Lazy symbol library + per-lib_id pin-number cache, used ONLY to
+        # validate inline-part (``part()``) pin references eagerly in
+        # _expand_pin (F9), matching use_part's eager check. Import is
+        # deferred so the model module stays pure at import time; symbols
+        # does not import model, so there is no cycle.
+        self._lib = None
+        self._inline_pins: dict[str, frozenset[str]] = {}
 
     # ---- parts -------------------------------------------------------------
     def part(self, ref: str, lib_id: str, value: str, footprint: str = "",
@@ -422,7 +429,33 @@ class Circuit:
             raise CircuitError(
                 f"{p}: {part.value} has no pin number or name {pin!r} "
                 f"(names: {sorted(part.pin_names)[:12]}…)")
+        # inline part(): validate the pin NUMBER eagerly against the symbol
+        # library — same eager discipline use_part gets above (F9). The old
+        # code deferred this to validate(), so a typo'd inline pin survived
+        # until the late completeness check with a terser message.
+        nums = self._inline_pin_numbers(part.lib_id)
+        if nums is not None and pin not in nums:
+            raise CircuitError(
+                f"{p}: {part.value} ({part.lib_id}) has no pin number {pin!r} "
+                f"(valid numbers: {sorted(nums)[:12]}…)")
         return [PinRef(ref, pin)]
+
+    def _inline_pin_numbers(self, lib_id: str) -> frozenset[str] | None:
+        """Pin numbers of an inline part's symbol, cached. ``None`` if the
+        symbol can't be resolved (synthesized rails, missing lib at authoring
+        time) — eager validation is then SKIPPED, never relaxed: the late
+        :meth:`validate` still proves every pin against the real library."""
+        if lib_id in self._inline_pins:
+            return self._inline_pins[lib_id]
+        try:
+            if self._lib is None:
+                from schgen.symbols import Library  # deferred: keeps model pure
+                self._lib = Library()
+            nums = frozenset(self._lib.pin_numbers(lib_id))
+        except Exception:                      # noqa: BLE001 — unresolved sym
+            nums = None
+        self._inline_pins[lib_id] = nums
+        return nums
 
     def _pinref(self, p: PinRef | str) -> PinRef:
         if isinstance(p, PinRef):
@@ -494,7 +527,9 @@ class Circuit:
         errors: list[str] = []
         assigned: dict[PinRef, str] = {}
         for n in self.nets.values():
-            if n.net_class != NetClass.PORT and len(n.pins) < 2 and n.net_class == NetClass.SIGNAL:
+            if n.net_class == NetClass.SIGNAL and len(n.pins) < 2:
+                # SIGNAL implies not PORT/POWER/GROUND, so the old
+                # `net_class != PORT` conjunct was dead (F6).
                 errors.append(f"net {n.name!r}: single-pin internal signal net")
             for pr in n.pins:
                 assigned[pr] = n.name

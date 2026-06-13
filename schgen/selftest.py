@@ -278,6 +278,74 @@ def mutate_foreign_junction(b: Built) -> tuple[str, None, str] | None:
             None, sexpr.dumps(doc) + "\n")
 
 
+# ---- geometry mutants (the VISUAL gate's province) ----------------------------
+# The netlist/ERC/inputs-driven gates read the emitted FILE; the visual gate
+# reads the SheetGeometry (boxes + wires) the placer hands back. So a geometry
+# defect that leaves the file electrically valid — a wire shifted onto a
+# foreign net, a Value box dragged over a wire — is INVISIBLE to every gate
+# except visual_gate. These mutants perturb a fresh SheetGeometry rebuilt from
+# the baseline emission and are run with geo= so visual_gate.check MUST kill
+# them (proving the visual gate, like the others, actually bites — the F1 hole
+# was that mutants never passed geo, so visual_gate.check ran on the baseline
+# only and was never tested against a defect).
+
+def _rebuild_geo(b: "Built") -> "visual_gate.SheetGeometry":
+    """A fresh SheetGeometry equivalent to the baseline emission: the placer's
+    boxes + the routed segments as visual_gate Segs (the same construction
+    place.place_and_route uses)."""
+    return visual_gate.SheetGeometry(
+        boxes=list(b.geo.boxes),
+        wires=[visual_gate.Seg(s.x0, s.y0, s.x1, s.y1, s.net)
+               for s in b.routed.segs])
+
+
+def mutate_geo_wire_crosses_foreign(b: Built):
+    """Shift a wire onto a perpendicular crossing of a FOREIGN net — a wire
+    over a different net's wire (LAW-1 crossing / LAW-0 short risk). Returns
+    (desc, mutated_geo) or None."""
+    geo = _rebuild_geo(b)
+    hs = [s for s in geo.wires if abs(s.y0 - s.y1) < 1e-6]   # horizontal
+    vs = [s for s in geo.wires if abs(s.x0 - s.x1) < 1e-6]   # vertical
+    for v in vs:
+        vy0, vy1 = sorted((v.y0, v.y1))
+        for i, h in enumerate(hs):
+            if h.net == v.net:
+                continue
+            hx0, hx1 = sorted((h.x0, h.x1))
+            ymid = round((vy0 + vy1) / 2, 3)
+            if not (vy0 < ymid < vy1):
+                continue
+            # rebuild h to span ACROSS v.x at y=ymid (strictly interior of v),
+            # guaranteeing a perpendicular foreign crossing.
+            span = max(hx1 - hx0, 2 * GRID)
+            new = visual_gate.Seg(round(v.x0 - span / 2, 3), ymid,
+                                  round(v.x0 + span / 2, 3), ymid, h.net)
+            geo.wires[geo.wires.index(h)] = new
+            return (f"geo: wire {h.net!r} shifted to cross foreign {v.net!r} "
+                    f"@({v.x0},{ymid})", geo)
+    return None
+
+
+def mutate_geo_text_over_wire(b: Built):
+    """Drag a Value text box onto a wire of a DIFFERENT owner — text through a
+    wire (LAW-1 overlap). Returns (desc, mutated_geo) or None."""
+    geo = _rebuild_geo(b)
+    vals = [i for i, bx in enumerate(geo.boxes) if bx.kind == "value"]
+    if not vals or not geo.wires:
+        return None
+    w = max(geo.wires, key=lambda s: abs(s.x1 - s.x0) + abs(s.y1 - s.y0))
+    cx, cy = round((w.x0 + w.x1) / 2, 3), round((w.y0 + w.y1) / 2, 3)
+    bi = vals[0]
+    old = geo.boxes[bi]
+    dx, dy = old.x1 - old.x0, old.y1 - old.y0
+    moved = visual_gate.Box(round(cx - dx / 2, 3), round(cy - dy / 2, 3),
+                            round(cx + dx / 2, 3), round(cy + dy / 2, 3),
+                            old.kind, old.owner)
+    geo.boxes[bi] = moved
+    return (f"geo: value box {old.owner!r} dragged onto wire {w.net!r} "
+            f"@({cx},{cy})", geo)
+
+
 # ---- determinism ---------------------------------------------------------------
 
 def determinism_check(path: Path, tmp: Path) -> tuple[bool, str]:
@@ -337,6 +405,20 @@ def selftest_sheet(path: Path, tmp: Path) -> tuple[int, int, list[str]]:
         if m:
             mutants.append(m)
 
+    # geometry mutants: defects ONLY the visual gate can see (the file stays
+    # electrically valid, so netlist/ERC/inputs-driven all pass — the visual
+    # gate MUST be the killer). Run with the baseline circuit+sch and the
+    # MUTATED geo so visual_gate.check actually runs against a defect.
+    geo_mutants: list[tuple[str, object]] = []
+    for gk in (mutate_geo_wire_crosses_foreign, mutate_geo_text_over_wire):
+        gm = gk(base)
+        if gm is None:
+            problems.append(f"{name}: geometry mutation {gk.__name__} NOT "
+                            f"APPLICABLE — fixture lacks the geometry to "
+                            f"exercise the visual gate")
+            continue
+        geo_mutants.append(gm)
+
     injected = killed = 0
     for k, (desc, mcirc, mtext) in enumerate(mutants):
         injected += 1
@@ -350,6 +432,25 @@ def selftest_sheet(path: Path, tmp: Path) -> tuple[int, int, list[str]]:
         if verdict.green:
             problems.append(f"{name}: MUTANT SURVIVED every gate: {desc}")
             print(f"  SURVIVED  {desc}   <-- HOLE IN THE GATE STACK")
+        else:
+            killed += 1
+            print(f"  killed    {desc}\n"
+                  f"            by {verdict.killed_by()}")
+
+    for desc, mgeo in geo_mutants:
+        injected += 1
+        # baseline electrical truth + MUTATED geometry: only visual can bite
+        verdict = _run_stack(base.circuit, base.sch, base.lib, geo=mgeo)
+        if verdict.green:
+            problems.append(f"{name}: GEOMETRY MUTANT SURVIVED every gate: "
+                            f"{desc}")
+            print(f"  SURVIVED  {desc}   <-- HOLE IN THE VISUAL GATE")
+        elif not any(f.startswith("visual gate") for f in verdict.failures):
+            # killed, but NOT by the visual gate — the geometry defect must be
+            # the visual gate's to catch; anything else is a miscredit.
+            problems.append(f"{name}: geometry mutant killed by a NON-visual "
+                            f"gate ({verdict.killed_by()}): {desc}")
+            print(f"  MISCREDIT {desc}   <-- not the visual gate")
         else:
             killed += 1
             print(f"  killed    {desc}\n"

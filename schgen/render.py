@@ -11,8 +11,8 @@ box is the schematic's paper size at exact scale; PyMuPDF rasterizes page 1
 at a chosen DPI. The PDF page origin is the page's top-left corner with +Y
 downward — identical to KiCad page coordinates — so the mm→pixel mapping is a
 single uniform scale with no offset. :class:`PageRaster` carries that mapping
-so an overlay (see :mod:`zynq_eda.core.render.overlay`) can draw a validator's
-flagged bbox exactly where it sits on the rendered page.
+so a caller can draw a validator's flagged bbox (e.g. a ``visual_gate``
+finding) exactly where it sits on the rendered page.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ class PageRaster:
     """A rendered schematic page plus its mm→pixel transform.
 
     The scale is derived from the *actual* pixmap dimensions and the page's
-    physical size (rather than assuming ``dpi/25.4``), so a drawn overlay
+    physical size (rather than assuming ``dpi/25.4``), so a drawn bbox
     lands exactly on the raster regardless of any rounding inside the
     rasterizer.
     """
@@ -83,7 +83,7 @@ def render_sheet_to_png(
     png_path.parent.mkdir(parents=True, exist_ok=True)
 
     kicad_cli = _require_kicad_cli()
-    with tempfile.TemporaryDirectory(prefix="zynq_eda_render_") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="schgen_render_") as temp_dir:
         pdf_path = Path(temp_dir) / (schematic_path.stem + ".pdf")
         command = [
             kicad_cli,

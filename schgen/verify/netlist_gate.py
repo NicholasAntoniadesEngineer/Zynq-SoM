@@ -50,17 +50,24 @@ class GateResult:
 
 
 def extract_netlist(sch_path: Path) -> dict[str, list[PinRef]]:
-    """KiCad's own view of the emitted sheet: net name -> pins."""
-    with tempfile.NamedTemporaryFile(suffix=".net", delete=False) as tf:
-        out = Path(tf.name)
-    proc = subprocess.run(
-        ["kicad-cli", "sch", "export", "netlist", "--format", "kicadxml",
-         "-o", str(out), str(sch_path)],
-        capture_output=True, text=True,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(f"kicad-cli netlist export failed: {proc.stderr[-500:]}")
-    root = ET.parse(out).getroot()
+    """KiCad's own view of the emitted sheet: net name -> pins.
+
+    The kicad-cli output goes into a :func:`tempfile.TemporaryDirectory` that
+    is removed on exit — the old ``NamedTemporaryFile(delete=False)`` was never
+    unlinked and leaked one stale ``.net`` per build (2600+ observed in the
+    audit), growing without bound.
+    """
+    with tempfile.TemporaryDirectory(prefix="schgen_netlist_") as td:
+        out = Path(td) / "extracted.net"
+        proc = subprocess.run(
+            ["kicad-cli", "sch", "export", "netlist", "--format", "kicadxml",
+             "-o", str(out), str(sch_path)],
+            capture_output=True, text=True,
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"kicad-cli netlist export failed: {proc.stderr[-500:]}")
+        root = ET.parse(out).getroot()
     nets: dict[str, list[PinRef]] = {}
     nets_el = root.find("nets")
     if nets_el is not None:
