@@ -1,13 +1,13 @@
 schgen link report
 ============================================================
-sheets (25): bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io
+sheets (26): bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io
 
 alias map (rails only, exact, enumerated):
   (no pure spelling aliases)
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (482):
+bound ports (490):
   bringup_en:BU_DIP_5V0 -> sheet bringup_rails:BU_DIP_5V0
   bringup_en:STM32_RAIL_EN_5V0 -> sheet som_j1:STM32_RAIL_EN_5V0
   bringup_en:EN_5V0 -> sheet power:EN_5V0
@@ -160,16 +160,24 @@ bound ports (482):
   fmc:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   fmc:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   fmc:FMC_PRSNT_N -> sheet som_j2:FMC_PRSNT_N
-  hdmi_rx:HDMI_RX_D2_P [tmds_pair] -> sheet som_j2:HDMI_RX_D2_P
-  hdmi_rx:HDMI_RX_D2_N [tmds_pair] -> sheet som_j2:HDMI_RX_D2_N
-  hdmi_rx:HDMI_RX_D1_P [tmds_pair] -> sheet som_j2:HDMI_RX_D1_P
-  hdmi_rx:HDMI_RX_D1_N [tmds_pair] -> sheet som_j2:HDMI_RX_D1_N
-  hdmi_rx:HDMI_RX_D0_P [tmds_pair] -> sheet som_j2:HDMI_RX_D0_P
-  hdmi_rx:HDMI_RX_D0_N [tmds_pair] -> sheet som_j2:HDMI_RX_D0_N
-  hdmi_rx:HDMI_RX_CLK_P [tmds_pair] -> sheet som_j2:HDMI_RX_CLK_P
-  hdmi_rx:HDMI_RX_CLK_N [tmds_pair] -> sheet som_j2:HDMI_RX_CLK_N
+  hdmi_rx:HDMI_RX_D2_P [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D2_P; sheet som_j2:HDMI_RX_D2_P
+  hdmi_rx:HDMI_RX_D2_N [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D2_N; sheet som_j2:HDMI_RX_D2_N
+  hdmi_rx:HDMI_RX_D1_P [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D1_P; sheet som_j2:HDMI_RX_D1_P
+  hdmi_rx:HDMI_RX_D1_N [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D1_N; sheet som_j2:HDMI_RX_D1_N
+  hdmi_rx:HDMI_RX_D0_P [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D0_P; sheet som_j2:HDMI_RX_D0_P
+  hdmi_rx:HDMI_RX_D0_N [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D0_N; sheet som_j2:HDMI_RX_D0_N
+  hdmi_rx:HDMI_RX_CLK_P [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_CLK_P; sheet som_j2:HDMI_RX_CLK_P
+  hdmi_rx:HDMI_RX_CLK_N [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_CLK_N; sheet som_j2:HDMI_RX_CLK_N
   hdmi_rx:HDMI_RX_5V_DET -> sheet som_j2:HDMI_RX_5V_DET
   hdmi_rx:HDMI_RX_CEC -> sheet som_j2:HDMI_RX_CEC
+  hdmi_rx_term:HDMI_RX_D2_P -> sheet hdmi_rx:HDMI_RX_D2_P; sheet som_j2:HDMI_RX_D2_P
+  hdmi_rx_term:HDMI_RX_D2_N -> sheet hdmi_rx:HDMI_RX_D2_N; sheet som_j2:HDMI_RX_D2_N
+  hdmi_rx_term:HDMI_RX_D1_P -> sheet hdmi_rx:HDMI_RX_D1_P; sheet som_j2:HDMI_RX_D1_P
+  hdmi_rx_term:HDMI_RX_D1_N -> sheet hdmi_rx:HDMI_RX_D1_N; sheet som_j2:HDMI_RX_D1_N
+  hdmi_rx_term:HDMI_RX_D0_P -> sheet hdmi_rx:HDMI_RX_D0_P; sheet som_j2:HDMI_RX_D0_P
+  hdmi_rx_term:HDMI_RX_D0_N -> sheet hdmi_rx:HDMI_RX_D0_N; sheet som_j2:HDMI_RX_D0_N
+  hdmi_rx_term:HDMI_RX_CLK_P -> sheet hdmi_rx:HDMI_RX_CLK_P; sheet som_j2:HDMI_RX_CLK_P
+  hdmi_rx_term:HDMI_RX_CLK_N -> sheet hdmi_rx:HDMI_RX_CLK_N; sheet som_j2:HDMI_RX_CLK_N
   hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_P [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_2_P
   hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_N [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_2_N
   hdmi_tx:ZYNQ_HDMI_TX_TMDS_1_P [tmds_pair] -> sheet som_j2:ZYNQ_HDMI_TX_TMDS_1_P
@@ -372,21 +380,21 @@ bound ports (482):
   som_j2:ZYNQ_HDMI_TX_TMDS_CLK_N [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_CLK_N
   som_j2:ZYNQ_HDMI_TX_TMDS_2_N [tmds_pair] -> sheet hdmi_tx:ZYNQ_HDMI_TX_TMDS_2_N
   som_j2:ZYNQ_HDMI_TX_CEC -> sheet hdmi_tx:ZYNQ_HDMI_TX_CEC
-  som_j2:HDMI_RX_D2_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D2_P
+  som_j2:HDMI_RX_D2_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D2_P; sheet hdmi_rx_term:HDMI_RX_D2_P
   som_j2:PL_BTN0 -> sheet bringup_rails:PL_BTN0
-  som_j2:HDMI_RX_D2_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D2_N
+  som_j2:HDMI_RX_D2_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D2_N; sheet hdmi_rx_term:HDMI_RX_D2_N
   som_j2:IO_L14_SRCC_P_33 -> SoM IO_L14_SRCC_P_33 (J2.81)
-  som_j2:HDMI_RX_D1_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D1_P
+  som_j2:HDMI_RX_D1_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D1_P; sheet hdmi_rx_term:HDMI_RX_D1_P
   som_j2:IO_L14_SRCC_N_33 -> SoM IO_L14_SRCC_N_33 (J2.83)
-  som_j2:HDMI_RX_D1_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D1_N
+  som_j2:HDMI_RX_D1_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D1_N; sheet hdmi_rx_term:HDMI_RX_D1_N
   som_j2:PL_BTN1 -> sheet bringup_rails:PL_BTN1
-  som_j2:HDMI_RX_CLK_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_CLK_N
+  som_j2:HDMI_RX_CLK_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_CLK_N; sheet hdmi_rx_term:HDMI_RX_CLK_N
   som_j2:FMC_PRSNT_N -> sheet fmc:FMC_PRSNT_N
-  som_j2:HDMI_RX_CLK_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_CLK_P
+  som_j2:HDMI_RX_CLK_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_CLK_P; sheet hdmi_rx_term:HDMI_RX_CLK_P
   som_j2:IO_L11_SRCC_N_33 -> SoM IO_L11_SRCC_N_33 (J2.91)
-  som_j2:HDMI_RX_D0_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D0_P
+  som_j2:HDMI_RX_D0_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D0_P; sheet hdmi_rx_term:HDMI_RX_D0_P
   som_j2:IO_L11_SRCC_P_33 -> SoM IO_L11_SRCC_P_33 (J2.93)
-  som_j2:HDMI_RX_D0_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D0_N
+  som_j2:HDMI_RX_D0_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D0_N; sheet hdmi_rx_term:HDMI_RX_D0_N
   som_j3:CAM_D0_P [diff_pair] -> sheet camera:CAM_D0_P
   som_j3:CAM_D0_N [diff_pair] -> sheet camera:CAM_D0_N
   som_j3:FMC_CLK1_M2C_P [diff_pair] -> sheet fmc:FMC_CLK1_M2C_P
@@ -495,7 +503,7 @@ rails (24):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: microsd, power, power_mon)
   +1V8_REG — carrier-local rail (sheets: power_mon)
   +2V5_VADJ — carrier-local rail (sheets: fmc, som_j3)
-  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: bringup_modules, bringup_rails, debug_boot, fmc, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
+  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
   +3V3_CAM — carrier-local rail (sheets: bringup_modules, camera)
   +3V3_HDMI_RX — carrier-local rail (sheets: bringup_modules, hdmi_rx)
   +3V3_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)

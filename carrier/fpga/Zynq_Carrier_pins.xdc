@@ -70,18 +70,18 @@ set_property -dict {PACKAGE_PIN V18  IOSTANDARD LVCMOS33} [get_ports {FMC_PRSNT_
 set_property -dict {PACKAGE_PIN W13  IOSTANDARD LVCMOS33} [get_ports {HDMI_RX_5V_DET}]  ;# J2.44 IO_L20N_T3_33 <- hdmi_rx
 set_property -dict {PACKAGE_PIN V13  IOSTANDARD LVCMOS33} [get_ports {HDMI_RX_CEC}]  ;# J2.59 IO_L20P_T3_33 <- hdmi_rx
 # tmds_pair (100R): HDMI_RX_CLK_P / HDMI_RX_CLK_N
-set_property -dict {PACKAGE_PIN Y18  IOSTANDARD TMDS_33} [get_ports {HDMI_RX_CLK_P}]  ;# J2.90 IO_L12P_T1_MRCC_33 <- hdmi_rx
+set_property -dict {PACKAGE_PIN Y18  IOSTANDARD TMDS_33} [get_ports {HDMI_RX_CLK_P}]  ;# J2.90 IO_L12P_T1_MRCC_33 <- hdmi_rx, hdmi_rx_term
 #   ^ MRCC-capable: # create_clock -name HDMI_RX_CLK_P -period <ns> [get_ports {HDMI_RX_CLK_P}]
-set_property -dict {PACKAGE_PIN AA18 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_CLK_N}]  ;# J2.88 IO_L12N_T1_MRCC_33 <- hdmi_rx
+set_property -dict {PACKAGE_PIN AA18 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_CLK_N}]  ;# J2.88 IO_L12N_T1_MRCC_33 <- hdmi_rx, hdmi_rx_term
 # tmds_pair (100R): HDMI_RX_D0_P / HDMI_RX_D0_N
-set_property -dict {PACKAGE_PIN AB19 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D0_P}]  ;# J2.92 IO_L10P_T1_33 <- hdmi_rx
-set_property -dict {PACKAGE_PIN AB20 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D0_N}]  ;# J2.94 IO_L10N_T1_33 <- hdmi_rx
+set_property -dict {PACKAGE_PIN AB19 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D0_P}]  ;# J2.92 IO_L10P_T1_33 <- hdmi_rx, hdmi_rx_term
+set_property -dict {PACKAGE_PIN AB20 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D0_N}]  ;# J2.94 IO_L10N_T1_33 <- hdmi_rx, hdmi_rx_term
 # tmds_pair (100R): HDMI_RX_D1_P / HDMI_RX_D1_N
-set_property -dict {PACKAGE_PIN AA17 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D1_P}]  ;# J2.82 IO_L17P_T2_33 <- hdmi_rx
-set_property -dict {PACKAGE_PIN AB17 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D1_N}]  ;# J2.84 IO_L17N_T2_33 <- hdmi_rx
+set_property -dict {PACKAGE_PIN AA17 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D1_P}]  ;# J2.82 IO_L17P_T2_33 <- hdmi_rx, hdmi_rx_term
+set_property -dict {PACKAGE_PIN AB17 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D1_N}]  ;# J2.84 IO_L17N_T2_33 <- hdmi_rx, hdmi_rx_term
 # tmds_pair (100R): HDMI_RX_D2_P / HDMI_RX_D2_N
-set_property -dict {PACKAGE_PIN AA16 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D2_P}]  ;# J2.78 IO_L18P_T2_33 <- hdmi_rx
-set_property -dict {PACKAGE_PIN AB16 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D2_N}]  ;# J2.80 IO_L18N_T2_33 <- hdmi_rx
+set_property -dict {PACKAGE_PIN AA16 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D2_P}]  ;# J2.78 IO_L18P_T2_33 <- hdmi_rx, hdmi_rx_term
+set_property -dict {PACKAGE_PIN AB16 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D2_N}]  ;# J2.80 IO_L18N_T2_33 <- hdmi_rx, hdmi_rx_term
 set_property -dict {PACKAGE_PIN AA19 IOSTANDARD LVCMOS33} [get_ports {IO_L11_SRCC_N_33}]  ;# J2.91 IO_L11N_T1_SRCC_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN Y19  IOSTANDARD LVCMOS33} [get_ports {IO_L11_SRCC_P_33}]  ;# J2.93 IO_L11P_T1_SRCC_33 <- unclaimed (wave-3 function map)
 #   ^ SRCC-capable: # create_clock -name IO_L11_SRCC_P_33 -period <ns> [get_ports {IO_L11_SRCC_P_33}]

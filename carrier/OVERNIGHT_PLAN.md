@@ -79,19 +79,39 @@ byte-identical goldens + the determinism check.
 
 ### TRACK 0 — SETUP
 - [x] Baseline selftest PASS 44/44 + determinism
-- [ ] Baseline board build green + timing (bg) ; write plan + memory ; commit plan
+- [x] Baseline board build green + timing (~172s) ; plan + memory ; commit plan (94a2c4e)
 
-### TRACK PERF — build speed (do first)
-- [ ] PERF-2 parallelize per-sheet kicad-cli (netlist/ERC/render) via ThreadPool, deterministic sorted aggregation (__main__.py, board.py)
-- [ ] PERF-1 memoize foreign-geometry + PinRef→Net index in _bfs_escape/_cell_free (place.py)
+### TRACK PERF — build speed (do first)  [DONE]
+- [x] PERF-2 parallelize per-sheet kicad-cli (ThreadPool, names-order verdicts) — 172s→142s (e7eebbf)
+- [x] PERF-1 PinRef→Net index in _Engine (kills net_of quadratic; modest wall-time, kept) (8ea4542)
 
 ### TRACK DEFECTS — Tier-0 (fix all)
-- [ ] DEF-1 3D model offset unit bug + add_part assertion + regen FUSB302/TPS26631/AO3400A/INA3221 (part_gen.py)
-- [ ] DEF-2 thermal/EP-pad solder-paste relief ~60% windowed (part_gen _pad_sx)
+- [x] DEF-1 3D model offset unit bug — implausible offset reset to 0 + regen 4 parts (d576e26)
+- [x] DEF-2 thermal/EP-pad windowed paste relief ~60% (5 footprints) (2399432)
 - [ ] DEF-3 forbid footprint-less BOM parts (gate) + backfill (model/__main__)
-- [ ] DEF-4 `schgen link` clobber guard — tempdir/refuse unless whole-board or -o (link.py cmd_link) [== DX-2 P3]
-- [ ] DEF-5 power_mon shunt-rail split: power.py emits +VIN_SYS/+5V_REG/+3V3_REG/+1V8_REG; remove 4 TP waivers (power.py, power_mon.py)
-- [ ] DEF-6 HDMI-RX TMDS sink termination 8×49.9R + AVCC island + caps on som_j2 sheet (hdmi_rx.py/som_j2.py + place if needed)
+- [x] DEF-4 `schgen link` clobber guard — partial link -> tempdir (186d87b) [== DX-2 P3]
+- [~] DEF-5 DEFERRED to a big-rock effort. The 12-rename shunt split is
+      electrically correct (net membership verified) but breaks two consumers:
+      (1) the power-sheet ROUTER fails — the 4 new *_REG/+VIN_SYS rail symbols
+      over-densify the most complex sheet (54 parts/29 nets), router exhausts 8
+      expansions on an EN_5V_SOM vs GND contention (NOT a fit/size issue, so
+      SIZE-1/A2 won't help); (2) firmware.py power-tree walk gets stuck — it
+      chains regs directly and does not traverse the INA3221 series shunts.
+      UNBLOCK PLAN: (a) firmware.py walk must hop through RS1-RS4 shunts;
+      (b) decongest power.py by splitting the +5V_SOM/U4 always-on buck into
+      its own sheet (power_som.py) — frees ~12 parts AND removes the contention
+      region; (c) then land the 12 renames + power_mon waiver text. Reverted to
+      green (186d87b).
+- [x] DEF-6 HDMI-RX TMDS sink termination — NEW sheet hdmi_rx_term.py: 8×49.9R
+      (C114625) from HDMI_RX_*_P/N to AVCC=+3V3. LINK PASS (3-way TMDS merge
+      with hdmi_rx + som_j2), powertree +64mA OK, render clean. The 100n/1u
+      AVCC bypass is a documented LAYOUT NOTE (not netlisted): the placer
+      cannot anchor a rail-to-rail cap with no host part on an IC-less sheet
+      ("no topology pattern matched"). >>> PLACER FINDING (-> GENPOLISH/ARCH):
+      the placer has no pattern for standalone rail-decoupling caps (cap whose
+      both pins are power rails, no IC). A small robustness fix (place such
+      caps on the rail trunk / next to the rail power-symbol) would let DEF-6
+      carry its bypass caps AND helps any future rail-bypass-only content.
 
 ### TRACK BLOCKDIAG — full rewrite (acute)
 - [ ] BD-1 layered L→R DAG layout + crossing reduction (diagram.py)

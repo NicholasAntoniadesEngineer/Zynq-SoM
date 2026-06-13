@@ -28,6 +28,7 @@ Comment,Designator,Footprint,LCSC
 330R,"bringup_modules:R10,bringup_modules:R14,bringup_modules:R16,bringup_modules:R2,bringup_modules:R4,bringup_modules:R6,bringup_modules:R8,power:R6,power:R9,rj45_connector:R1,rj45_connector:R2",Resistor_SMD:R_0603_1608Metric,C23138
 47k5,uart_bridge:R3,Resistor_SMD:R_0603_1608Metric,C23061
 47n,pd_input:C3,Capacitor_SMD:C_0603_1608Metric,C1622
+49.9R,"hdmi_rx_term:R1,hdmi_rx_term:R2,hdmi_rx_term:R3,hdmi_rx_term:R4,hdmi_rx_term:R5,hdmi_rx_term:R6,hdmi_rx_term:R7,hdmi_rx_term:R8",Resistor_SMD:R_0603_1608Metric,C114625
 4k7,"bringup_rails:R5,bringup_rails:R6,camera:R4,camera:R5,debug_boot:R1,debug_boot:R2,lcd:R2,lcd:R3",Resistor_SMD:R_0603_1608Metric,C23162
 5.1k,"pd_input:R5,usb_uart_connector:R1,usb_uart_connector:R2",Resistor_SMD:R_0603_1608Metric,C23186
 5.49k,pd_input:R4,Resistor_SMD:R_0603_1608Metric,C188263
