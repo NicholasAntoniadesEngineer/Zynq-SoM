@@ -336,18 +336,27 @@ def link(sheets: list[SheetCircuit],
     for rail, users in sorted(rails.items()):
         som_name = canon_to_som(rail)
         if rail in ISOLATED_SOM_RAILS:
-            # round-5 isolation: the contract pins exist but are author-NC
-            # on the connector sheets. VERIFY the isolation actually holds —
-            # a connector sheet still carrying the rail means som_conn_gen
-            # and this map drifted apart.
-            offenders = sorted(u for u in users if u.startswith("som_j"))
+            # round-5 isolation: the SoM's OWN +3V3/+1V8 OUTPUT pins (the
+            # MPM3834 stages on J1) must be author-NC so the carrier buck does
+            # not fight them. VERIFY the isolation actually holds — but the
+            # offense is specifically the SoM-output net being re-bound, NOT
+            # the carrier rail merely appearing on a connector. Since SYS-1 the
+            # carrier +3V3 LEGITIMATELY feeds the Zynq VCCO banks on J2/J3
+            # (+VCCO_13/33/34 -> +3V3, carrier-sourced INPUTS to the FPGA, a
+            # different SoM contract net than the isolated +3V3 OUTPUT). So an
+            # offender is only a connector that carries the rail AND on which
+            # the ISOLATED SoM contract net itself appears (i.e. the SoM's own
+            # output pins) — that connector would have to author them NC.
+            iso_conns = {loc.split(".")[0] for loc in som_nets.get(som_name, [])}
+            offenders = sorted(u for u in users if u.startswith("som_j")
+                               and u[len("som_"):].upper() in iso_conns)
             if offenders:
                 res.errors.append(
                     f"RAIL ISOLATION VIOLATED: {rail} is declared isolated "
-                    f"from the SoM ({ISOLATED_SOM_RAILS[rail]}) but still "
-                    f"appears on connector sheet(s) "
-                    f"{', '.join(offenders)} — som_conn_gen must author "
-                    f"those pins NC")
+                    f"from the SoM ({ISOLATED_SOM_RAILS[rail]}) but the SoM "
+                    f"{som_name!r} output pins still bind it on connector "
+                    f"sheet(s) {', '.join(offenders)} — som_conn_gen must "
+                    f"author those pins NC")
             bound_som_names.add(som_name)   # accounted: isolated by decision
             res.rail_bindings.append(
                 f"{rail} — ISOLATED from SoM {som_name!r} pins (round-5 "
@@ -420,23 +429,45 @@ def link(sheets: list[SheetCircuit],
         if som_net in som_names and func_net in bound_ports:
             bound_som_names.add(som_net)
 
+    # -- VCCO bank-rail accounting (SYS-1) -------------------------------------
+    # The connector sheets MERGE each +VCCO_* contact pin onto its carrier rail
+    # (som_conn_gen.VCCO_RAIL_MAP -> +3V3 / +2V5_VADJ), so a SoM net like
+    # +VCCO_13 is CONSUMED (it IS that rail's pins) yet would read "unbound" if
+    # we only matched the raw +VCCO_* name. Account each as bound when its
+    # target rail is present on the board.
+    for som_net, target_rail in _vcco_rail_map().items():
+        if som_net in som_names and target_rail in rails:
+            bound_som_names.add(som_net)
+
     # -- unbound SoM nets (later waves) ----------------------------------------
     res.unbound_som = sorted(n for n in som_names if n not in bound_som_names)
     return res
+
+
+def _load_som_conn_gen():
+    import importlib.util
+    gen_path = REPO_ROOT / "carrier" / "som_conn_gen.py"
+    spec = importlib.util.spec_from_file_location("_link_som_conn_gen", gen_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def _function_map() -> dict[str, str]:
     """The wave-3 SoM-contract-net -> carrier-function-net renames the J-sheet
     generator applies (carrier/som_conn_gen.FUNCTION_MAP + PUDC_STRAPS). Loaded
     from the SAME source the J-sheets use so the linker census cannot drift."""
-    import importlib.util
-    gen_path = REPO_ROOT / "carrier" / "som_conn_gen.py"
-    spec = importlib.util.spec_from_file_location("_link_som_conn_gen", gen_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = _load_som_conn_gen()
     m = dict(mod.FUNCTION_MAP)
     m.update(mod.PUDC_STRAPS)
     return m
+
+
+def _vcco_rail_map() -> dict[str, str]:
+    """The SYS-1 VCCO bank-rail source ties (+VCCO_* -> carrier +3V3/+2V5_VADJ)
+    the J-sheet generator merges. Loaded from the SAME source so the linker's
+    bound-net census cannot drift from carrier/som_conn_gen.VCCO_RAIL_MAP."""
+    return dict(_load_som_conn_gen().VCCO_RAIL_MAP)
 
 
 def _check_pairs(sheets: list[SheetCircuit], res: LinkResult) -> None:

@@ -2104,26 +2104,52 @@ class _Engine:
                 for y0, y1 in zip(ys, ys[1:]):
                     pl.plan(net, (x_r, y0), (x_r, y1))
 
-            for net, taps in rails.items():
-                if c.nets[net].net_class is NetClass.GROUND:
-                    gnd_items.append((net, taps))
-                    continue
+            # A POWER rail may tap a DF40 side in SEVERAL non-contiguous
+            # clusters: e.g. the carrier +3V3 sources both Zynq bank 13
+            # (+VCCO_13, J2.1-3, top) AND bank 33 (+VCCO_33, J2.98-100,
+            # bottom) — once those VCCO pins merge onto +3V3 (som_conn_gen
+            # VCCO_RAIL_MAP) one net taps the top AND bottom of the left
+            # column with ports/GND between. A single trunk over that span
+            # is illegal (it would cross foreign rows). So each rail is split
+            # into CONTIGUOUS tap clusters (a break wherever the next tap is
+            # not the adjacent pin row) and EACH cluster gets its own short
+            # local trunk + power symbol — the GND-style local-tap idiom, one
+            # symbol per cluster (KiCad merges them by the rail net name; the
+            # netlist gate proves the single merged net). A rail with one
+            # cluster (the common case) is unchanged.
+            def cluster_taps(taps: list[tuple[float, float]]
+                             ) -> list[list[tuple[float, float]]]:
+                groups: list[list[tuple[float, float]]] = []
+                for t in taps:               # taps are row-sorted (py asc)
+                    if groups and abs(t[0] - groups[-1][-1][0]
+                                      - self.CONN_ROW) < 1e-6:
+                        groups[-1].append(t)
+                    else:
+                        groups.append([t])
+                return groups
+
+            def place_power_cluster(net: str,
+                                    taps: list[tuple[float, float]]) -> None:
                 ys = [y for y, _ in taps]
+                # by construction a contiguous cluster has no foreign row in
+                # its own (ys[0], ys[-1]) span — assert it stays true so the
+                # invariant is checked, never assumed
                 foreign = [y for rn, rt in rails.items() if rn != net
                            for y, _ in rt if ys[0] < y < ys[-1]]
-                assert not foreign, (f"{net}: foreign rail row inside trunk "
+                assert not foreign, (f"{net}: foreign rail row inside cluster "
                                      f"span on side {sgn} — extend the engine")
-                if ys[-1] < y_lo:
+                if ys[-1] < y_lo:                 # cluster above the port fan
                     trunk(net, taps, lx_inner)
                     pl.plan(net, (lx_inner, ys[0]),
                             (lx_inner, ys[0] - self.CONN_EXT))
                     self.power(net, lx_inner, ys[0] - self.CONN_EXT, 0)
-                elif ys[0] > y_hi:
+                elif ys[0] > y_hi:                # cluster below the port fan
                     trunk(net, taps, lx_inner)
                     pl.plan(net, (lx_inner, ys[-1]),
                             (lx_inner, ys[-1] + self.CONN_EXT))
                     self.power(net, lx_inner, ys[-1] + self.CONN_EXT, 180)
-                else:
+                else:                             # cluster amid the ports
+                    nonlocal strip_reach
                     trunk(net, taps, mid_x)
                     y_end = ys[0]
                     anchor = (mid_x + sgn * self.CONN_STRIP_STUB, y_end)
@@ -2135,6 +2161,13 @@ class _Engine:
                     strip_reach = max(strip_reach,
                                       self.CONN_STRIP_STUB
                                       + self.CONN_STRIP_BAR + 0.42 + w + 0.5)
+
+            for net, taps in rails.items():
+                if c.nets[net].net_class is NetClass.GROUND:
+                    gnd_items.append((net, taps))
+                    continue
+                for cl in cluster_taps(taps):
+                    place_power_cluster(net, cl)
 
             inner_limit = max(label_edge, abs(mid_x) + strip_reach)
             x_g = out(sgn, inner_limit + 5.08)
@@ -2498,7 +2531,13 @@ class _Engine:
             nodes.append(x_div)
             slot = gceil(slot + sp.cap_pitch)
             self.pl.plan(out_rail, (x_div, y_sw), (x_div, y_sw + 5.08))
-            (rt, _rail) = self.pull.pop(fb_net)[0]
+            # the FB pull list is the top resistor PLUS any FB feedforward cap
+            # (PWR-4: a C in parallel with the top R, also out_rail -> fb_net).
+            # Place the top R here; the feedforward cap(s) get their own
+            # parallel column straddling out_rail -> fb_net at the same midpoint.
+            fb_pulls = self.pull.pop(fb_net)
+            (rt, _rail) = fb_pulls[0]
+            feedfwd = [r for r, _ra in fb_pulls[1:]]
             far_pt, _ = self._vertical_2pin(rt, x_div, y_sw + 5.08,
                                             out_rail, downward=True)
             y_mid = far_pt[1]
@@ -2509,6 +2548,19 @@ class _Engine:
             xv = round(x0 + 2.54, 3)
             self.pl.plan(fb_net, p_fb, (xv, p_fb[1]), (xv, y_mid),
                          (x_div, y_mid))
+            # FB feedforward cap(s): a parallel out_rail -> fb_net column to
+            # the right of the divider, joined to the divider midpoint on
+            # fb_net. The out_rail top run is extended to the new column.
+            for cff in feedfwd:
+                x_ff = slot
+                nodes.append(x_ff)
+                slot = gceil(slot + sp.cap_pitch)
+                self.pl.plan(out_rail, (x_ff, y_sw), (x_ff, y_sw + 5.08))
+                far_ff, _ = self._vertical_2pin(cff, x_ff, y_sw + 5.08,
+                                                out_rail, downward=True)
+                # tie the cap's fb_net pin to the divider midpoint
+                self.pl.plan(fb_net, (x_div, y_mid), (x_ff, y_mid),
+                             (x_ff, far_ff[1]))
         # rail-rooted chains (PG LED columns)
         for ch in [ch for ch in self.float_chains
                    if ch.kind == "rail" and ch.root == out_rail]:

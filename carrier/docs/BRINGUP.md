@@ -32,16 +32,27 @@ Sources: `carrier/subsystems/pd_input.py`, `carrier/subsystems/bringup_rails.py`
 Sources: `carrier/subsystems/pd_input.py`, `carrier/subsystems/usb_pd.py`,
 `carrier/research/bringup_power_gating.md` (risk R1), `carrier/research/power_mon.md`.
 
-Plug a 20 V / 3 A (60 W) USB-C PD supply into the power USB-C (`pd_input.J1`). The board
-boots on default 5 V VBUS; the SoM generates the always-on `+3V3_SC` rail from
-VIN **before** PD negotiation and before any carrier rail. The FUSB302B
-(`usb_pd.U1`, I2C `0x22`) and the whole bring-up infrastructure run from
-`+3V3_SC` for exactly this reason — PD must negotiate with every DIP open.
+Plug a 20 V / 3 A (60 W) USB-C PD-capable supply into the power USB-C (`pd_input.J1`). The
+board boots on the **default 5 V** USB-C contract; the SoM generates the
+always-on `+3V3_SC` rail from VIN **before** PD negotiation and before any
+carrier rail. The FUSB302B (`usb_pd.U1`, I2C `0x22`) and the whole bring-up
+infrastructure run from `+3V3_SC` for exactly this reason — PD must negotiate
+with every DIP open.
+
+**Source requirement (SEQ-3).** The 5 V default contract must supply at least
+**3 A at 5 V (>= 15 W)** for the board to come up: the SoM's pre-PD draw is
+~2.2 A on 5 V before any higher-voltage contract is negotiated. A weak 5 V
+charger (e.g. a 0.5-1.5 A phone brick) will brown out / fail to boot — use a
+USB-C source that advertises >= 3 A at 5 V (`pd_input.py`).
 
 With **all DIPs open**, expect:
 
-- `+VIN` rises to the negotiated 20 V once the SC (or the FUSB302B's
-  default sink behaviour) completes the contract; before that it sits at 5 V.
+- `+VIN` stays at the **5 V default contract** at first power and the board
+  runs **reduced on 5 V**. The FUSB302B is a PD **PHY only** — it does NOT
+  negotiate by itself; reaching the negotiated 20 V / 3 A (60 W) USB-C PD contract requires
+  the **SoM system-controller PD-policy firmware** to drive the FUSB302B through
+  the higher-voltage Request. Until the SC runs that policy, `+VIN` remains at
+  5 V (a blank SC = 5 V VIN, board reduced-functional).
 - Probe: pd_input.TP2.
 - Every rail PG LED **off** (`power.D1`, `power.D2`, `power.D3`), every module status LED off.
 - The always-on `+3V3_SC` domain is alive (probe: bringup_rails.TP1):

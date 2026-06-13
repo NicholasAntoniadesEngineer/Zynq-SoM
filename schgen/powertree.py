@@ -71,6 +71,13 @@ def parse_si(text: str) -> float | None:
 _VOLT_PATTERNS: tuple[tuple[str, float], ...] = (
     (r"^\+VBUS_IN$", 20.0),     # raw receptacle VBUS (contract rail)
     (r"^\+VIN", 20.0),          # fused board input (behind the TPS26631)
+    # +5V_SOM is DELIBERATELY re-centred BELOW 5 V (PWR-5): the SoM is a
+    # 4.2-5.0 V-input module, so the old 4.96 V nom / 5.17 V worst-case-high
+    # setpoint poked above its 5.0 V rec-max. R14/R15 = 68.1k/10k now target
+    # 4.65 V nom (WC-hi ~4.81 V) so the whole band stays inside 4.2-5.0 V.
+    # MUST precede the generic +5V pattern so the FB +/-3% gate judges this
+    # buck against its real intended 4.65 V, not a stale 5.0 V.
+    (r"^\+5V_SOM$", 4.65),
     (r"^\+5V", 5.0),
     (r"^\+3V3", 3.3),
     (r"^\+1V8", 1.8),
@@ -110,8 +117,9 @@ REG_SPECS: dict[str, RegSpec] = {
     "AP2112K": RegSpec("ldo", 0.6, in_pin="1", out_pin="5",
                        note="600 mA LDO"),
     "TLV75725": RegSpec("ldo", 0.4, in_pin="1", out_pin="5",
-                        note="1 A LDO derated to 0.4 A continuous "
-                             "(DBV RthJA 231 C/W, fmc.md section 3)"),
+                        note="1 A LDO held to 0.4 A continuous (PWR-3: DYD "
+                             "thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C "
+                             "at 0.32 W/Ta=50 C — fmc.md section 3)"),
     "SY6280": RegSpec("load_switch", None, in_pin="IN", out_pin="OUT",
                       iset_pin="ISET", note="ILIM = 6800/RSET from netlist"),
     # PLAN round-5 inlet eFuse: dVdT-soft-started, OVP-cutoff, auto-retry
@@ -139,12 +147,12 @@ SOURCES: dict[str, tuple[float, float, str]] = {
 }
 
 # Rails known to be deferred by PLAN flags (unsourced today, by decision).
+# The four +VCCO_* bank rails are NO LONGER here (SYS-1, 2026-06-13): the
+# J-sheet generator now MERGES each +VCCO_* contact pin onto its carrier rail
+# (som_conn_gen.VCCO_RAIL_MAP -> +3V3 / +2V5_VADJ), so the banks appear as real
+# SOURCED loads on those rails — not unsourced orphans. Re-adding a +VCCO_* key
+# here would be dead (no sheet emits that net anymore).
 KNOWN_DEFERRED: dict[str, str] = {
-    "+VCCO_13": "wave-3 J-sheet regen rail map (+VCCO_13 = +3V3)",
-    "+VCCO_33": "wave-3 J-sheet regen rail map (+VCCO_33 = +3V3)",
-    "+VCCO_34": "wave-3 J-sheet regen rail map (+VCCO_34 = +3V3, LCD)",
-    "+VCCO_35": "wave-3 J-sheet regen rail map (+VCCO_35 = +2V5_VADJ, "
-                "SHARED camera/FMC 2.5 V — PLAN board-completion flag)",
     "+VIN_SYS": "power.py shunt rail split pending (PLAN POWER_LIBS flag — "
                 "power_mon RS1 output feeds nothing yet)",
     "+5V_REG": "power.py shunt rail split pending (power_mon RS2 input "

@@ -10,6 +10,16 @@ the bring-up-gated +3V3_SD rail; TPD6E001 6-ch ESD across the card lines
 with its VCC biased to +3V3_SD (+ local 100n) so the clamp references the
 card rail rather than floating worst-case (SD-1, TI SLLS546); card-detect
 pulled up and reported.
+
+SD-1 (operating-mode note) — the card side is wired at a FIXED 3.3 V
+(+3V3_SD), with no 1.8 V card-rail switch. So this slot supports only the
+DEFAULT-speed and HIGH-SPEED SD modes (3.3 V signalling); UHS-I (SDR50/
+SDR104/DDR50), which mandates a 1.8 V signalling voltage switch (S18), is
+NOT available here. The SoM SDIO controller firmware MUST therefore keep
+voltage-switching disabled — do NOT request S18 (CMD11 / 1.8 V switch) in
+the initialization flow: the TXS02612 B0 rail is permanently 3.3 V, so a
+host that switched to 1.8 V would lose the card. Throughput caps at the
+high-speed tier by design (no extra card-rail LDO/level-shift on rev A).
 """
 
 from __future__ import annotations

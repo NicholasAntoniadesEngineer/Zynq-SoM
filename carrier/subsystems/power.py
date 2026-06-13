@@ -71,10 +71,20 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   AP2112K-* drawings all derive from Regulator_Linear:AP2204K-1.5
   (identical SOT-23-5 pin map 1=VIN 2=GND 3=EN 4=NC 5=VOUT, confirmed
   against the EasyEDA pin table in parts/AP2112K-1.8TRG1/AP2112K-1.8TRG1.py).
-- FB dividers: +5V = 73.2k/10k -> 4.96 V (C14890 Ext 28,920 + C25804 Basic);
+- FB dividers: +5V = 73.2k/10k -> 4.96 V (C14890 Ext + C25804 Basic);
   +3V3 = 100k/22k -> 3.30 V (C25803 + C31850, both Basic);
-  +5V_SOM = 73.2k/10k -> 4.96 V (P0 stage U4, identical to the +5V stage —
-  same verified C14890/C25804, comfortably inside the SoM 4.2-5 V window).
+  +5V_SOM = 68.1k/10k -> 4.65 V nom (PWR-5; C844583 Vishay 0603 1%, LIVE
+  2026-06-13: Ext, stock 10,869, min-qty 1 + C25804). PWR-5 RE-CENTER: the
+  old 73.2k/10k gave 4.96 V nom / ~5.17 V worst-case-high, poking above the
+  SoM's 5.0 V input rec-max; 68.1k/10k re-centers to 4.65 V nom, WC-hi
+  ~4.81 V (1% R + 1% Vref) so the WHOLE band stays inside the SoM 4.2-5.0 V
+  window with the EN zener clamp (PWR-1) untouched.
+- FB feedforward caps (PWR-4, TI all-ceramic-output reference): 75 pF C0G
+  ACROSS each buck's FB TOP resistor — C22 (U1 R1), C23 (U2 R4), C21 (U4
+  R14) — to add phase boost / improve transient response on the internally
+  compensated TPS54302 with low-ESR ceramic output caps. Part: CGA0603-
+  C0G750J500JT, TDK 0603 C0G 50 V (LCSC C22399620, LIVE 2026-06-13: Ext,
+  stock 8,020, min-qty 1).
 - +5V_SOM EN clamp (always-on strap, NO bring-up port; PWR-1 FIX — see the
   header "EN voltage table"): R12 = 10k SERIES from +VIN to EN (C25804,
   reused 10k); D5 = MMSZ5231B 5.1 V / 500 mW zener EN -> GND (LIVE-verified
@@ -89,8 +99,12 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
 - PG LEDs (bringup dossier section 3.3): KT-0603R red (C2286 Basic) + 1k
   (C21190) on +5V, + 330R (C23138) on +3V3. +1V8 cannot light a red LED
   (Vf ~2.0 V > rail), so an AO3400A (C20917 Basic, Vgs(th) <= 1.45 V max)
-  senses the rail (10k gate series + 100k pulldown) and sinks a 330R+LED
-  chain from +3V3 — which is necessarily up before +1V8 exists.
+  senses the rail (1k gate-stop + 100k pulldown) and sinks a 330R+LED chain
+  from +3V3 — which is necessarily up before +1V8 exists. PWR-6: the gate
+  series was 10k, which with the 100k pulldown only presented +1V8 *
+  100/110 = 1.64 V on Vgs — barely above the 1.45 V max Vth, no guaranteed
+  turn-on. Dropping it to 1k (a pure RC gate-stop now, not a divider) lets
+  Vgs see +1V8 * 100/101 = 1.78 V, a solid margin over Vth-max.
 - Input caps: 2x 10u/1206 (C13585) + 100n (C1591) on +VIN; 22u/0805
   (C45783) + 100n on the +5V input of the second buck; outputs 2x 22u each;
   LDO 1u in / 1u out (C15849). All Basic except C1591 (reclassified
@@ -151,8 +165,9 @@ def circuit() -> Circuit:
         c.net("GND", f"{ref}.2")
     c.part("R1", "Device:R", "73.2k", R_FP, LCSC="C14890")         # FB top
     c.part("R2", "Device:R", "10k", R_FP, LCSC="C25804")           # FB bottom
-    c.net("+5V", "R1.1")
-    c.net("FB_5V0", "U1.4", "R1.2", "R2.1")
+    c.part("C22", "Device:C", "75p", C0603, LCSC="C22399620")      # FB feedfwd
+    c.net("+5V", "R1.1", "C22.1")
+    c.net("FB_5V0", "U1.4", "R1.2", "R2.1", "C22.2")
     c.net("GND", "R2.2")
     c.part("D1", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +5V
     c.part("R3", "Device:R", "1k", R_FP, LCSC="C21190")
@@ -181,8 +196,9 @@ def circuit() -> Circuit:
         c.net("GND", f"{ref}.2")
     c.part("R4", "Device:R", "100k", R_FP, LCSC="C25803")          # FB top
     c.part("R5", "Device:R", "22k", R_FP, LCSC="C31850")           # FB bottom
-    c.net("+3V3", "R4.1")
-    c.net("FB_3V3", "U2.4", "R4.2", "R5.1")
+    c.part("C23", "Device:C", "75p", C0603, LCSC="C22399620")      # FB feedfwd
+    c.net("+3V3", "R4.1", "C23.1")
+    c.net("FB_3V3", "U2.4", "R4.2", "R5.1", "C23.2")
     c.net("GND", "R5.2")
     c.part("D2", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +3V3
     c.part("R6", "Device:R", "330R", R_FP, LCSC="C23138")
@@ -206,7 +222,7 @@ def circuit() -> Circuit:
     c.net("GND", "C13.2")
 
     # ---- +1V8 PG sense cell (dossier 3.3: red Vf > 1.8 V -> FET sense) -------
-    c.part("R7", "Device:R", "10k", R_FP, LCSC="C25804")           # gate series
+    c.part("R7", "Device:R", "1k", R_FP, LCSC="C21190")            # gate-stop
     c.part("R8", "Device:R", "100k", R_FP, LCSC="C25803")          # gate pulldown
     c.use_part("AO3400A", ref="Q1", lib_id=FET_LIB, footprint=FET_FP)
     c.net("+1V8", "R7.1")
@@ -254,10 +270,11 @@ def circuit() -> Circuit:
         c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
         c.net("+5V_SOM", f"{ref}.1")
         c.net("GND", f"{ref}.2")
-    c.part("R14", "Device:R", "73.2k", R_FP, LCSC="C14890")        # FB top
+    c.part("R14", "Device:R", "68.1k", R_FP, LCSC="C844583")       # FB top
     c.part("R15", "Device:R", "10k", R_FP, LCSC="C25804")          # FB bottom
-    c.net("+5V_SOM", "R14.1")
-    c.net("FB_5V_SOM", "U4.4", "R14.2", "R15.1")                   # -> 4.96 V
+    c.part("C21", "Device:C", "75p", C0603, LCSC="C22399620")      # FB feedfwd
+    c.net("+5V_SOM", "R14.1", "C21.1")
+    c.net("FB_5V_SOM", "U4.4", "R14.2", "R15.1", "C21.2")          # -> 4.65 V
     c.net("GND", "R15.2")
     c.part("D4", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +5V_SOM
     c.part("R16", "Device:R", "1k", R_FP, LCSC="C21190")

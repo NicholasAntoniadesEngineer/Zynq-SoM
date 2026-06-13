@@ -3,7 +3,7 @@ schgen test-point coverage gate
 
 rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) owns a probe point or an explicit waiver.
 
-required nets (56):
+required nets (52):
   +1V8                   [rail     ] TP @ power:TP4
   +1V8_REG               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +2V5_VADJ              [rail     ] TP @ fmc:TP1
@@ -24,10 +24,6 @@ required nets (56):
   +5V_SOM                [rail     ] TP @ power:TP2
   +5V_USB                [rail     ] TP @ bringup_modules:TP6
   +VBUS_IN               [rail     ] TP @ pd_input:TP1
-  +VCCO_13               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
-  +VCCO_33               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
-  +VCCO_34               [rail     ] WAIVED (som_j3): bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
-  +VCCO_35               [rail     ] WAIVED (som_j3): bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
   +VIN                   [rail     ] TP @ pd_input:TP2
   +VIN_SYS               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   CAM_EN                 [enable   ] TP @ camera:TP3
@@ -61,17 +57,13 @@ required nets (56):
   ZYNQ_PS_UART0_RXD      [uart     ] TP @ uart_bridge:TP2
   ZYNQ_PS_UART0_TXD      [uart     ] TP @ uart_bridge:TP1
 
-waivers — author-declared, verbatim (9):
+waivers — author-declared, verbatim (5):
   +1V8_REG               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +3V3_REG               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +5V_REG                (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
-  +VCCO_13               (som_j2) bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
-  +VCCO_33               (som_j2) bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
-  +VCCO_34               (som_j3) bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
-  +VCCO_35               (som_j3) bare SoM bank-rail pins; rail-map source tie (+3V3 / +2V5_VADJ) awaits a placement-engine rail-tie template (powertree KNOWN-DEFERRED); probe at the DF40 pin
   +VIN_SYS               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   CHASSIS_GND            (pd_input) chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed
 
 errors: none
 
-TESTPOINTS: PASS (47/56 required nets covered, 9 waived)
+TESTPOINTS: PASS (47/52 required nets covered, 5 waived)

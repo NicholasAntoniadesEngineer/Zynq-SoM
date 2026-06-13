@@ -35,8 +35,13 @@ def circuit() -> Circuit:
     # sheet): a POWER net with its own power symbol, like +3V3_HDMI_TX.
     c.net("+5V_USB", "U1.IN")
     c.port("USB_VBUS", "U1.OUT", "J2.VBUS")     # OUT + sense (both pads)
-    c.port("VBUS_OUT_EN", "U1.EN(EN#)", expect=J1_MAP)
-    c.net("GND", "U1.GND")
+    # EN default-OFF: TPS2051C EN is active-high; a 100k pulldown holds the host
+    # VBUS switch OFF until the SoM explicitly drives VBUS_OUT_EN high. Without it
+    # EN floats and the port could source 5 V on the bus at power-on before the
+    # SoM has decided the OTG role (the FS+PD Type-C is the device port).
+    c.part("R5", "Device:R", "100k", R0603, LCSC="C25803")
+    c.port("VBUS_OUT_EN", "U1.EN(EN#)", "R5.1", expect=J1_MAP)
+    c.net("GND", "U1.GND", "R5.2")
     # fault flag: TPS2051C FLT# is open-drain, reported to the SoM SC via the
     # TCA9535 expander port P14 (USBOTG_FLT_N — bringup_rails, G4; no free STM32
     # GPIO). G4 ABS-MAX FIX (wave3_function_map.md sec 1.2): the pull-up is

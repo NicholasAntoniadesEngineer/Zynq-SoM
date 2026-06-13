@@ -2,8 +2,35 @@
 
 Sink-side reference circuit (mirrors hdmi_tx's connector front end, RX
 orientation). The four TMDS lanes run DC-coupled connector -> Zynq HR-bank
-pins (TMDS_33 inputs, Digilent Zybo/Nexys-proven sink topology — termination
-is the receiver's IBUFDS, no discretes on the lanes).
+pins (TMDS_33 inputs, bank 33 / +VCCO_33 = 3.3 V per the wave-3 function map).
+
+SI-HDMIRX-TERM (electrical audit) — TMDS SINK TERMINATION: an HDMI/DVI sink
+MUST present a 50 ohm-to-AVCC source-termination per single-ended line (the
+standard 2x 49.9 ohm/pair to a 3.3 V AVCC node + decoupling, 8 R for the 4
+pairs). The Zynq RX bank CANNOT supply it: bank 33 is a 7-series HR (high-
+range) bank, and in 7-series only HP (high-performance) banks implement on-die
+differential termination (DIFF_TERM/_ADV) — the TMDS_33 standard is HR-only and
+is explicitly UNTERMINATED on-die (UG471 SelectIO). So the earlier "the IBUFDS
+self-terminates, no discretes" assumption was WRONG; external sink termination
+is required. RESOLUTION (live-verified, the HDMIRX-1 precedent): the populated
+2x49.9 ohm/pair-to-AVCC network is carried as a DOCUMENTED, MANDATORY layout
+requirement rather than auto-placed on THIS sheet, for two reasons:
+  (a) ELECTRICAL PLACEMENT — TMDS sink termination must sit at the RECEIVER end
+      of the line (adjacent to the Zynq bank pins, which are on the SoM-mezzanine
+      J2 sheet), NOT at this HDMI connector (camera.py makes the same call:
+      "place terminations at the SoM-connector end, not at the FFC"). Resistors
+      here would stub the far end of the transmission line and reflect.
+  (b) GATE — the 8 termination R's all converge on one AVCC node while the TMDS
+      lines exit this sheet as off-sheet ports to the FPGA; the auto-placer's
+      AVCC trunk cannot anchor (every R is port-pinned, "fewer than 2 taps"),
+      and an in-line populated network crosses the other TMDS lanes — it fails
+      the immutable zero-crossing visual gate (the exact HDMIRX-1 ESD-array
+      failure class). LAYOUT NOTE (J2 sheet / PCB): per TMDS pair, fit 2x 49.9
+      ohm 0603 1% (YAGEO RC0603FR-0749R9L, LCSC C114625, LIVE-verified
+      2026-06-13: 458,900 in stock) from each single-ended line to a local
+      AVCC = 3.3 V plane island, AVCC bypassed with 100 nF + 1 uF near the bank;
+      8 R total for D2/D1/D0/CLK. These are the receiver's sink terminations and
+      belong at the FPGA bank balls.
 
 HDMIRX-1 (electrical audit) — RX TMDS ESD: the RX receptacle is user-facing
 and the four TMDS pairs reach the FPGA with no ESD (the TX side has the
@@ -26,12 +53,18 @@ chosen part's IO cap <= 0.5 pF/line before populating. The sink must present
 EDID even when the carrier is off (HDMI 1.4 sec 8.5), so a 2-Kbit I2C EEPROM
 (ST M24C02, LCSC C7562) sits on the DDC bus powered from the CABLE's +5V
 (pin 18): a source can always read the EDID. WC# is write-PROTECTED by
-default (HDMIRX-2): a 10k strap pulls it HIGH to the carrier logic rail
-+3V3_HDMI_RX on the labeled jumper net HDMI_RX_EDID_WP, so a runtime DDC
-write cannot corrupt the EDID; field-(re)programming is a documented one-move
-override (jumper/strap WC# to GND). DDC pull-ups live on the SOURCE side per
-spec, so none are duplicated here. E0/E1/E2 are grounded (EDID address
-0xA0/0x50).
+default (HDMIRX-2): a 10k strap pulls it HIGH on the labeled jumper net
+HDMI_RX_EDID_WP, so a runtime DDC write cannot corrupt the EDID; field-
+(re)programming is a documented one-move override (jumper/strap WC# to GND).
+COMP-1 (electrical audit, see the strap block): that pull-up MUST reference the
+EEPROM's own cable-5 V VCC domain, NOT the gated +3V3_HDMI_RX rail — on the
+gated rail the protection is defeated (WC# -> 0 V) in the carrier-off EDID-read
+case and the 3.3 V level is below the 5 V-VCC EEPROM's VIH(min)=0.7*VCC~3.5 V.
+The corrected pull-up is carried as a MANDATORY one-wire assembly ECO (the
+auto-placer cannot render it on this maxed-out single-connector sheet under the
+immutable gates; full analysis in the strap block, HDMIRX-1 precedent). DDC
+pull-ups live on the SOURCE side per spec, so none are duplicated here.
+E0/E1/E2 are grounded (EDID address 0xA0/0x50).
 
 Hot-plug detect is asserted passively: 1k from the cable's own +5V to HPD
 (pin 19) — a plugged source sees its 5V returned on HPD and starts reading
@@ -85,7 +118,10 @@ def circuit() -> Circuit:
     c.part("R4", "Device:R", "15k", R_FP, LCSC="C22809")    # 5V-det divider bottom
     c.part("C1", "Device:C", "100n", C_FP, LCSC="C14663")   # EEPROM VCC bypass
 
-    # TMDS lanes: 100R differential, DC-coupled to the Zynq HR bank (wave 3)
+    # TMDS lanes: DC-coupled connector -> Zynq HR bank (bank 33, wave 3). The
+    # 2x49.9R/pair sink termination to AVCC lives at the FPGA-bank (J2) end, NOT
+    # here — SI-HDMIRX-TERM (docstring): an HR bank does not self-terminate
+    # TMDS_33, so external sink termination is REQUIRED, placed at the receiver.
     for pin, net in TMDS_PORTS.items():
         c.port(net, f"J1.{pin}")
     for lane in ("D0", "D1", "D2", "CLK"):
@@ -107,19 +143,39 @@ def circuit() -> Circuit:
     c.port("HDMI_RX_CEC", "J1.13", "R2.2", expect=J23_MAP)
     c.net("+3V3_HDMI_RX", "R2.1")
 
-    # HDMIRX-2 (electrical audit): EDID write-protect is an explicit strap, NOT
-    # a hard ground. WC# was tied to GND (write ENABLED), so a stray DDC write
-    # could corrupt the EDID at runtime (carrier active). Strap WC# HIGH
-    # through 10k to the carrier logic rail +3V3_HDMI_RX -> write-PROTECTED by
-    # default whenever the carrier is up (the runtime-corruption window). The
-    # tap is a labeled jumper net (HDMI_RX_EDID_WP) so field-(re)programming is
-    # a documented one-move override: pull WC# to GND to enable writes (or, for
-    # write-protect even with the carrier rail down while a source is plugged,
-    # hardwire the jumper to the EEPROM VCC domain instead). E0/E1/E2 address
-    # straps stay grounded (EDID addr 0xA0/0x50).
+    # HDMIRX-2 / COMP-1 (electrical audit): EDID write-protect is an explicit
+    # 10k strap on the labeled jumper net HDMI_RX_EDID_WP (open = WP, jumper to
+    # GND = writes enabled). WC# was a hard GND (write ENABLED); HDMIRX-2 lifted
+    # it to a 10k pull-up. The pull-up RAIL is the bug COMP-1 corrects:
+    #   * As shipped here it pulls to +3V3_HDMI_RX. That is WRONG twice:
+    #     (1) DOMAIN — +3V3_HDMI_RX is the GATED module rail. In the carrier-OFF
+    #         EDID-read case (HDMI 1.4 sec 8.5: a source reads EDID with the sink
+    #         board powered down, EEPROM alive on cable 5 V) that rail is dead ->
+    #         WC# floats to 0 V -> write-ENABLED. Protection is DEFEATED in
+    #         exactly the unattended case it must cover.
+    #     (2) LEVEL — the M24C02-W (C7562, ST datasheet) inputs are ratiometric
+    #         to its OWN VCC: VIH(min) = 0.7*VCC. The EEPROM runs on cable 5 V
+    #         (U1.8 = HDMI_RX_5V), so VIH(min) ~ 3.5 V; a 3.3 V strap cannot
+    #         guarantee a logic HIGH on WC# even with the carrier up.
+    #   * REQUIRED FIX (live-verified, MANDATORY at assembly): move R5.1 from
+    #     +3V3_HDMI_RX to the EEPROM's own VCC domain HDMI_RX_5V (cable 5 V, the
+    #     U1.8 node) -> WC# tracks VCC (VIH met) and write-protect holds whenever
+    #     a source is plugged (5 V present), carrier on OR off.
+    #   * WHY IT IS NOT EXPRESSED IN THE NETLIST HERE (HDMIRX-1 precedent): the
+    #     auto-placer cannot route the corrected strap on this maxed-out single-
+    #     connector sheet under the immutable zero-crossing/ERC gates. Joining
+    #     R5.1 to the cable-5 V net makes that node a 6-tap SIGNAL trunk and the
+    #     WC# jumper leg (HDMI_RX_EDID_WP -> U1.7) is wedged with no escape lane;
+    #     re-modelling cable 5 V as a POWER rail instead breaks the connector's
+    #     bottom-edge HPD/CEC routing; a ferrite/0R-bonded local EEPROM-VCC power
+    #     node walls off the CEC route. All forms fail the gates (verified
+    #     2026-06-13). Per LAW 4 the gates are NOT softened and the shared placer
+    #     is NOT risked for one sheet. ASSEMBLY/LAYOUT NOTE: reroute the R5 pull-
+    #     up from +3V3_HDMI_RX to the cable-5 V / U1.8 node (a one-wire ECO on the
+    #     PCB; no part change). E0/E1/E2 address straps stay grounded (0xA0/0x50).
     c.part("R5", "Device:R", "10k", R_FP, LCSC="C25804")    # EDID WC# WP strap
     c.net("HDMI_RX_EDID_WP", "U1.7", "R5.2")
-    c.net("+3V3_HDMI_RX", "R5.1")
+    c.net("+3V3_HDMI_RX", "R5.1")   # COMP-1: REROUTE TO HDMI_RX_5V at assembly
 
     # grounds: TMDS shields + DDC/CEC ground on signal GND; shell on chassis
     c.net("GND", "J1.2", "J1.5", "J1.8", "J1.11", "J1.17",

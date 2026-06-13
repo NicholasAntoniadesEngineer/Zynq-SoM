@@ -143,9 +143,17 @@ def _port_registry(sheets) -> tuple[dict[str, list[str]],
 def generate(sheets, out_path: Path = DEFAULT_OUT, *,
              som_sch: Path = DEFAULT_SOM,
              contract_path: Path = DEFAULT_CONTRACT,
-             refs: tuple[str, ...] = ("J2", "J3")) -> XdcResult:
+             refs: tuple[str, ...] = ("J1", "J2", "J3")) -> XdcResult:
     """Build + verify + write the XDC. Raises :class:`XdcError` on ANY
-    orphan, ambiguity, stale contract or unmapped bank."""
+    orphan, ambiguity, stale contract or unmapped bank.
+
+    ALL THREE connectors are walked (SYS-2): the PL also fans out on J1 —
+    the bank-35 FMC LA08-11 LVDS pairs land on J1 (LA08 J1.74/92, LA09
+    J1.80/84, LA10 J1.90/88, LA11 J1.78/76). Their balls reach no constraint
+    unless J1 is in the walk. Every PACKAGE_PIN is still cross-checked against
+    the live SoM netlist; J1's PS/SC nets (no PL ball) and rails are skipped
+    exactly as on J2/J3, and the bank-35 spare singles (IO_0_35 J1.86,
+    IO_L2_N_35 J1.100) constrain as unclaimed ports the way J2/J3 spares do."""
     contract = json.loads(contract_path.read_text())["connectors"]
     live = extract_zynq(som_sch, jrefs=tuple(refs))
     consumers, ptypes = _port_registry(sheets)

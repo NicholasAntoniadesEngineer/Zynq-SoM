@@ -2,7 +2,7 @@ schgen power-tree budget gate
 ================================================================
 
 sources:
-  +VBUS_IN    20.0 V  limit 3.00 A  load 1.304 A  (43%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
+  +VBUS_IN    20.0 V  limit 3.00 A  load 1.281 A  (43%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
   +3V3_SC      3.3 V  limit 0.30 A  load 0.021 A  (7%)  — SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here
 
 regulators (16) — numbered as in carrier/docs/power_tree.svg:
@@ -16,12 +16,12 @@ regulators (16) — numbered as in carrier/docs/power_tree.svg:
   ( 8) bringup_modules:U7   SY6280AAC           +3V3 -> +3V3_PMOD      load 0.204 A / limit 0.523 A (39%)  in 0.204 A [load_switch] ILIM = 6800/13000R = 523 mA
   ( 9) bringup_modules:U8   SY6280AAC           +3V3 -> +3V3_USER_LED  load 0.010 A / limit 0.523 A (2%)  in 0.010 A [load_switch] ILIM = 6800/13000R = 523 mA
   (10) bringup_modules:U9   SY6280AAC            +5V -> +5V_HDMI_TX    load 0.058 A / limit 0.523 A (11%)  in 0.058 A [load_switch] ILIM = 6800/13000R = 523 mA
-  (11) fmc:U1   TLV75725PDBVR       +3V3 -> +2V5_VADJ      load 0.350 A / limit 0.400 A (88%)  in 0.350 A [ldo] 1 A LDO derated to 0.4 A continuous (DBV RthJA 231 C/W, fmc.md section 3)
-  (12) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.304 A / limit 3.529 A (37%)  in 1.304 A [efuse] ILIM = 18000/5100R = 3529 mA
-  (13) power:U1   TPS54302DDCR        +VIN -> +5V            load 2.690 A / limit 3.000 A (90%)  in 0.747 A [buck] TI 3 A synchronous buck (SW->L->rail)
-  (14) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.280 A / limit 3.000 A (76%)  in 1.672 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (11) fmc:U1   TLV75725PDYDR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)
+  (12) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.281 A / limit 3.529 A (36%)  in 1.281 A [efuse] ILIM = 18000/5100R = 3529 mA
+  (13) power:U1   TPS54302DDCR        +VIN -> +5V            load 2.749 A / limit 3.000 A (92%)  in 0.764 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (14) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.360 A / limit 3.000 A (79%)  in 1.731 A [buck] TI 3 A synchronous buck (SW->L->rail)
   (15) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
-  (16) power:U4   TPS54302DDCR        +VIN -> +5V_SOM        load 2.004 A / limit 3.000 A (67%)  in 0.557 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (16) power:U4   TPS54302DDCR        +VIN -> +5V_SOM        load 2.004 A / limit 3.000 A (67%)  in 0.518 A [buck] TI 3 A synchronous buck (SW->L->rail)
 
 shunt bridges (series R rail->rail, power_mon):
   power_mon:RS1 +VIN -> +VIN_SYS
@@ -32,12 +32,15 @@ shunt bridges (series R rail->rail, power_mon):
 declared draws (c.draws — every number cites its source):
   +1V8                  5.0 mA  microsd            TXS02612 VCCA (SoM-side level)
   +1V8                  1.0 mA  power              PG FET gate divider 10k+100k (16 uA), rounded up
-  +2V5_VADJ           350.0 mA  fmc                FMC VADJ mezzanine budget (TLV75725 DBV 0.40 A envelope less ~0.05 A bank-35 VCCO; wave3_function_map.md sec 3.1)
+  +2V5_VADJ           350.0 mA  fmc                FMC VADJ mezzanine budget (TLV75725 DYD 0.40 A envelope less ~0.05 A bank-35 VCCO; wave3_function_map.md sec 3.1)
+  +2V5_VADJ            50.0 mA  som_j3             Zynq bank 35 VCCO (LVDS_25 drivers, camera/FMC) — sec 3.1 re-budget
   +3V3                  1.0 mA  bringup_rails      2x user-button 10k pull-ups when pressed
   +3V3                  2.0 mA  debug_boot         JTAG TMS/TDI 4k7 insurance pulls when driven
   +3V3               1000.0 mA  fmc                FMC 3P3V+3P3VAUX mezzanine allocation (fmc.md section 4)
   +3V3                  9.0 mA  power              PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA
   +3V3                  8.0 mA  rj45_connector     RJ45 housing LEDs (2x 330R port-present indicator)
+  +3V3                 20.0 mA  som_j2             Zynq banks 13+33 VCCO (LVCMOS33 static + PL output drive) + on-SoM BMI323 VDDIO rider
+  +3V3                 10.0 mA  som_j3             Zynq bank 34 VCCO (LCD LVCMOS33 bus drive)
   +3V3                 15.0 mA  uart_bridge        CP2102N active ~14 mA typ + RST 1k pull-up
   +3V3                  2.0 mA  user_io            4x button 10k pull-ups when pressed
   +3V3_CAM              4.0 mA  bringup_modules    status LED (330R) on the gated output
@@ -74,8 +77,8 @@ declared draws (c.draws — every number cites its source):
 rail totals (declared + child regulator inputs):
   +1V8               0.006 A  @ 1.8 V
   +1V8_REG           0.000 A  @ 1.8 V
-  +2V5_VADJ          0.350 A  @ 2.5 V
-  +3V3               2.280 A  @ 3.3 V
+  +2V5_VADJ          0.400 A  @ 2.5 V
+  +3V3               2.360 A  @ 3.3 V
   +3V3_CAM           0.304 A  @ 3.3 V
   +3V3_HDMI_RX       0.005 A  @ 3.3 V
   +3V3_HDMI_TX       0.006 A  @ 3.3 V
@@ -85,30 +88,25 @@ rail totals (declared + child regulator inputs):
   +3V3_SC            0.021 A  @ 3.3 V
   +3V3_SD            0.254 A  @ 3.3 V
   +3V3_USER_LED      0.010 A  @ 3.3 V
-  +5V                2.690 A  @ 5.0 V
+  +5V                2.749 A  @ 5.0 V
   +5V_HDMI_TX        0.058 A  @ 5.0 V
   +5V_LCD            0.453 A  @ 5.0 V
   +5V_REG            0.000 A  @ 5.0 V
-  +5V_SOM            2.004 A  @ 5.0 V
+  +5V_SOM            2.004 A  @ 4.7 V
   +5V_USB            0.503 A  @ 5.0 V
-  +VBUS_IN           1.304 A  @ 20.0 V
-  +VCCO_13           0.000 A  @ 3.3 V
-  +VCCO_33           0.000 A  @ 3.3 V
-  +VCCO_34           0.000 A  @ 3.3 V
-  +VCCO_35           0.000 A  @ 2.5 V
-  +VIN               1.304 A  @ 20.0 V
+  +VBUS_IN           1.281 A  @ 20.0 V
+  +VIN               1.281 A  @ 20.0 V
   +VIN_SYS           0.000 A  @ 20.0 V
 
 notes — resolved audits, recomputed every run (1):
   + VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.20 uF at the receptacle (+VBUS_IN) — within the ~10 uF cSnkBulk guidance; 50.2 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~51 mA.
 
-warnings (5):
-  WARNING: unsourced rail +VCCO_13 (load 0.000 A) — KNOWN deferral: wave-3 J-sheet regen rail map (+VCCO_13 = +3V3)
-  WARNING: unsourced rail +VCCO_33 (load 0.000 A) — KNOWN deferral: wave-3 J-sheet regen rail map (+VCCO_33 = +3V3)
-  WARNING: unsourced rail +VCCO_34 (load 0.000 A) — KNOWN deferral: wave-3 J-sheet regen rail map (+VCCO_34 = +3V3, LCD)
-  WARNING: unsourced rail +VCCO_35 (load 0.000 A) — KNOWN deferral: wave-3 J-sheet regen rail map (+VCCO_35 = +2V5_VADJ, SHARED camera/FMC 2.5 V — PLAN board-completion flag)
+FINDINGS — decisions needed (1):
+  * PARALLEL-SOURCE QUESTION on +3V3: these rails are OUTPUTS of carrier regulators (power.py TPS54302/AP2112K) AND appear on SoM J1 contract pins (+3V3: J1.24-27, +1V8: J1.56/58/60) while the SoM's own Power sheet regulates same-named rails on-module (MPM3834 stages with 3V3_EN/PG + 1V8_EN/PG). If the SoM exports its rails on those pins, linking them to the carrier's bucks puts two regulators in parallel on one net — needs an explicit decision (rename one side, sense-only pins, or drop one source) before layout. Facts from som_interface.json + som/schematic/Power.kicad_sch; nothing changed here.
+
+warnings (1):
   WARNING: shunt-bridge rail +VIN_SYS feeds nothing — power.py shunt rail split pending (PLAN POWER_LIBS flag — power_mon RS1 output feeds nothing yet)
 
 errors: none
 
-POWER TREE: PASS (0 errors, 0 findings, 5 warnings)
+POWER TREE: PASS (0 errors, 1 findings, 1 warnings)

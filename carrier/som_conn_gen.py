@@ -214,20 +214,20 @@ FUNCTION_PAIR_TYPES = [
     ("FMC_LA11_P", "FMC_LA11_N", "diff_pair", 100),
 ]
 
-# VCCO bank rail map (wave3_function_map.md sec 3): the carrier sources every
-# Zynq bank VCCO. 13/33/34 = +3V3 (LVCMOS33 banks), 35 = +2V5_VADJ (LVDS_25,
-# shared camera/FMC 2.5V). The bank pins KEEP their contract names on the
-# connector sheets — they are NOT merged onto +3V3 here and NO carrier source
-# tie is emitted, for TWO immutable-engine reasons: (1) a single +3V3 net split
-# across the top (+VCCO_13, J2.1-3) AND bottom (+VCCO_33, J2.98-100) of one DF40
-# side cannot be trunk-routed by the connector-fan template (it asserts "foreign
-# rail row inside trunk span"); (2) a per-bank ferrite/0R rail-tie sheet has NO
-# placement-engine topology pattern (power-rail-to-power-rail ties + rail
-# decoupling are unsupported). The power-tree gate already carries +VCCO_* as
-# KNOWN-DEFERRED with this exact rail map (powertree.py KNOWN_DEFERRED), so the
-# source is documented, not silent. This map records the intended source for
-# docs; applying it awaits a placement-engine rail-tie template (sibling-owned).
-# {som_contract_net: source_rail}.
+# VCCO bank rail map (wave3_function_map.md sec 3): the carrier MUST SOURCE
+# every Zynq bank VCCO — these pins float otherwise and ALL PL I/O is dead (plus
+# the on-SoM BMI323 VDDIO, a +VCCO_33 rider, browns out). 13/33/34 = +3V3
+# (LVCMOS33 banks), 35 = +2V5_VADJ (LVDS_25, shared camera/FMC 2.5V). SYS-1
+# (2026-06-13): the bind is now APPLIED — resolve_net() merges each +VCCO_*
+# contact pin onto its carrier rail (an in-fan RAIL TAP), exactly like GND /
+# +5V_SOM pins. The carrier rail's own buck/LDO is the source; the DF40 pin is
+# just one more tap on it. The earlier "keep contract names / defer" stance was
+# retired once the placement engine learned to fan a POWER rail whose taps form
+# SEVERAL non-contiguous clusters on one DF40 side (e.g. +VCCO_13 at J2.1-3 top
+# + +VCCO_33 at J2.98-100 bottom both -> +3V3): place.py's connector template
+# now routes each contiguous tap CLUSTER as its own short trunk + power symbol
+# (the GND-style local-tap idiom), so a split rail no longer trips the
+# "foreign rail row inside trunk span" assertion. {som_contract_net: source_rail}.
 VCCO_RAIL_MAP: dict[str, str] = {
     "+VCCO_13": "+3V3",
     "+VCCO_33": "+3V3",
@@ -275,11 +275,14 @@ def contract_pins(jref: str) -> dict[str, str]:
 
 def resolve_net(som_net: str) -> str:
     """The carrier net a SoM contract pin lands on, after the wave-3 binds:
-    P0 rail rebind > wave-3 FUNCTION map > PUDC strap port > verbatim.
-    (VCCO bank rails KEEP their contract names — see VCCO_RAIL_MAP; the source
-    tie is a ferrite on vcco_rails.py, not a rename here.)"""
+    P0 rail rebind > VCCO bank-rail source tie > wave-3 FUNCTION map >
+    PUDC strap port > verbatim. The VCCO tie (SYS-1) merges each +VCCO_* contact
+    pin onto its carrier rail (+3V3 / +2V5_VADJ) as an in-fan RAIL TAP — the
+    carrier buck/LDO is the source; the DF40 pin is one more tap on the rail."""
     if som_net in RAIL_SPELLING:
         return RAIL_SPELLING[som_net]
+    if som_net in VCCO_RAIL_MAP:
+        return VCCO_RAIL_MAP[som_net]
     if som_net in FUNCTION_MAP:
         return FUNCTION_MAP[som_net]
     if som_net in PUDC_STRAPS:
@@ -328,20 +331,24 @@ def connector_circuit(jref: str, name: str, title: str) -> Circuit:
         c.draws("+5V_SOM", 2.0, "SoM module (Zynq+DDR3L+PHYs) ~10 W class "
                                 "at 5 V (P0 rebind) — estimate, refine at "
                                 "bring-up")
-    # VCCO bank rails (+VCCO_13/33/34/35): the rail map (VCCO_RAIL_MAP, sec 3)
-    # is 13/33/34 = +3V3, 35 = +2V5_VADJ. The carrier source tie is NOT applied
-    # on these connector-only sheets: a per-bank ferrite/0R rail-tie has no
-    # placement-engine topology pattern (power-rail-to-power-rail ties + rail
-    # decoupling are unsupported by the immutable engine), and merging onto
-    # +3V3 splits one rail top+bottom across a DF40 side (connector-fan trunk
-    # assertion). The pins stay bare DF40 contacts; the power-tree gate already
-    # carries +VCCO_* as KNOWN-DEFERRED with this exact rail map (powertree.py
-    # KNOWN_DEFERRED), so the budget is documented, not silent. Probe at the
-    # DF40 pin meanwhile.
+    # VCCO bank-rail LOADS (SYS-1): the +VCCO_* contact pins now MERGE onto the
+    # carrier rails (resolve_net via VCCO_RAIL_MAP) — so each connector draws its
+    # banks' VCCO current from +3V3 / +2V5_VADJ, declared where the bank is the
+    # consumer. The Zynq SelectIO VCCO is mA-class static (bank logic + LVCMOS
+    # output drive); the dominant +2V5_VADJ entry (bank 35) is the 0.050 A the
+    # FMC re-budget reserves (wave3_function_map.md sec 3.1 — fmc.py dropped its
+    # mezzanine allocation 0.400 -> 0.350 A to fit the TLV75725 DBV envelope).
+    # No waive_tp: the rails are sourced (their bucks/LDO), so the power-tree
+    # gate sees a real, sourced load — not a deferred orphan.
+    vcco_draw = {  # carrier rail -> (amps, basis) for THIS connector's banks
+        ("J2", "+3V3"): (0.020, "Zynq banks 13+33 VCCO (LVCMOS33 static + "
+                                "PL output drive) + on-SoM BMI323 VDDIO rider"),
+        ("J3", "+3V3"): (0.010, "Zynq bank 34 VCCO (LCD LVCMOS33 bus drive)"),
+        ("J3", "+2V5_VADJ"): (0.050, "Zynq bank 35 VCCO (LVDS_25 drivers, "
+                                     "camera/FMC) — sec 3.1 re-budget"),
+    }
     for rail in sorted(c.nets):
-        if rail.startswith("+VCCO_"):
-            c.waive_tp(rail, "bare SoM bank-rail pins; rail-map source tie "
-                             "(+3V3 / +2V5_VADJ) awaits a placement-engine "
-                             "rail-tie template (powertree KNOWN-DEFERRED); "
-                             "probe at the DF40 pin")
+        spec = vcco_draw.get((jref, rail))
+        if spec is not None:
+            c.draws(rail, spec[0], spec[1])
     return c

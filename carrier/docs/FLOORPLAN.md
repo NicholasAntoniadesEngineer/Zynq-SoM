@@ -29,7 +29,7 @@ Suggested board: **120 x 100 mm**; SoM origin at **(35, 29)** (centered). All co
 |---|---|---|---|---|
 | N | ethernet | (7.5, 0, 12 x 16.5) | RESERVED: rj45_connector (deferred) | (1) |
 | N | microsd | (23.5, 0, 18.5 x 18) | TF-01A (microSD push-pull) | (2) |
-| N | pd_input | (45.5, 0, 12 x 17.5) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
+| N | pd_input | (45.5, 0, 12 x 18.5) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
 | N | uart_bridge | (61.5, 0, 12 x 4.5) | RESERVED: usb_uart_connector (deferred) | (4) |
 | N | usb_uart_connector | (77, 0, 12 x 11) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
 | N | usbc_otg | (93, 0, 12 x 11) | TYPE-C-31-M-12 (USB-C receptacle) | (6) |
@@ -52,7 +52,7 @@ Edge spills (preferred edge full — honest, not hidden):
 | bringup_modules | E | (92, 60, 22 x 14) | 70 | 309.7 | (13) |
 | bringup_rails | E | (90, 42, 25.5 x 16.5) | 24 | 424.6 | (14) |
 | debug_boot | N | (20, 20, 13.5 x 21) | 10 | 282.4 | (15) |
-| power | E | (90, 24, 26 x 16) | 51 | 415.9 | (16) |
+| power | E | (90, 24, 25.5 x 16.5) | 54 | 422.9 | (16) |
 | power_mon | E | (96, 14, 14 x 8.5) | 10 | 121.1 | (17) |
 | rj45_connector | @ethernet | (18, 44, 13 x 21) | 3 | 273.5 |  |
 | usb_pd | @pd_input | (108, 4, 8 x 8) | 6 | 23.1 | (18) |
@@ -84,12 +84,12 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | SY6280AAC (U7) | bringup_modules | +3V3 -> +3V3_PMOD | 0.204 | negligible |
 | SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.010 | negligible |
 | SY6280AAC (U9) | bringup_modules | +5V -> +5V_HDMI_TX | 0.058 | negligible |
-| TLV75725PDBVR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.350 | ~0.28 W |
-| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.304 | negligible |
-| TPS54302DDCR (U1) | power | +VIN -> +5V | 2.690 | ~1.49 W |
-| TPS54302DDCR (U2) | power | +5V -> +3V3 | 2.280 | ~0.84 W |
+| TLV75725PDYDR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.400 | ~0.32 W |
+| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.281 | negligible |
+| TPS54302DDCR (U1) | power | +VIN -> +5V | 2.749 | ~1.53 W |
+| TPS54302DDCR (U2) | power | +5V -> +3V3 | 2.360 | ~0.87 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8 | 0.006 | negligible |
-| TPS54302DDCR (U4) | power | +VIN -> +5V_SOM | 2.004 | ~1.11 W |
+| TPS54302DDCR (U4) | power | +VIN -> +5V_SOM | 2.004 | ~1.04 W |
 
 Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/power_tree.txt`); regulators above ~0.3 W want copper pours + stitching vias.
 
@@ -101,7 +101,7 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(4) uart_bridge**: CP2102N UART bridge: its USB connector is an author-declared deferral (expect usb_uart_connector) — the block reserves edge space for it; TX/RX test points stay probe-able.
 - **(5) usb_uart_connector**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
 - **(6) usbc_otg**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
-- **(7) fmc**: FMC LPC: a VITA 57.1 mezzanine overhangs the board edge — keep tall parts out of the overhang strip behind the connector. TLV75725PDBVR VADJ LDO dissipates ~0.28 W at the declared 0.35 A — give it copper.
+- **(7) fmc**: FMC LPC: a VITA 57.1 mezzanine overhangs the board edge — keep tall parts out of the overhang strip behind the connector. TLV75725PDYDR VADJ LDO dissipates ~0.32 W at the declared 0.4 A — give it copper.
 - **(8) lcd**: 40-pin LCD FFC: cable exits over the board edge; keep the SY7201ABC backlight boost loop (L/D/C) tight and away from the FFC signal rows; RGB888 bus is single-ended bank-34 3V3 — bus-route together.
 - **(9) camera**: RPi camera FFC: 3 MIPI CSI-2 pairs at 100R differential to the J3 side of the SoM (bank 35, 2.5 V VCCO per the expect= notes) — keep the run to the J3 strip short.
 - **(10) hdmi_rx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place M24C02-WMN6TP directly behind the receptacle so all pairs pass straight through.
@@ -110,7 +110,7 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(13) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
 - **(14) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
 - **(15) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
-- **(16) power**: Buck thermal (worst-case declared draws): TPS54302DDCR +5V ~1.49 W; TPS54302DDCR +3V3 ~0.84 W; TPS54302DDCR +5V_SOM ~1.11 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(16) power**: Buck thermal (worst-case declared draws): TPS54302DDCR +5V ~1.53 W; TPS54302DDCR +3V3 ~0.87 W; TPS54302DDCR +5V_SOM ~1.04 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
 - **(17) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
 - **(18) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
 - **(19) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.

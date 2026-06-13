@@ -107,6 +107,7 @@ def circuit() -> Circuit:
     c = Circuit("pd_input", "Power inlet: USB-C PD 20V/3A + TPS26631 eFuse")
     c.use_part("TYPE-C-31-M-12", ref="J1")
     c.use_part("TPS26631PWPR", ref="U1")
+    c.use_part("USBLC6-2SC6", ref="U2")        # FS data-pair ESD array
 
     # ---- receptacle VBUS -> +VBUS_IN: TVS + the DS-minimum inlet 100n -----
     c.part("C1", "Device:C", "100n", C0603, LCSC="C1591")
@@ -140,9 +141,17 @@ def circuit() -> Circuit:
     c.port("STM32_USB_CC2", "J1.CC2")
 
     # ---- FS data to the STM32 (device/dual-role port), cable-flip paired ---
-    c.port("STM32_USB_D_P", "J1.DP1", "J1.DP2")
-    c.port("STM32_USB_D_N", "J1.DN1", "J1.DN2")
+    # PD-USB-DATA-NO-ESD FIX: the FUSB302B only protects the CC lines; the data
+    # pair reached the SoM FS PHY with no ESD. Insert a USBLC6-2SC6 array at the
+    # receptacle, exactly like usbc_otg: connector pads on one channel I/O (1/3),
+    # PHY-side on that channel's other pin (6/4), VBUS->pin5, GND->pin2.
+    c.net("PD_USB_DP_CONN", "J1.DP1", "J1.DP2", "U2.1")   # both flip pads -> ESD
+    c.net("PD_USB_DN_CONN", "J1.DN1", "J1.DN2", "U2.3")
+    c.port("STM32_USB_D_P", "U2.6")                       # PHY-side, post-ESD
+    c.port("STM32_USB_D_N", "U2.4")
     c.port_type("STM32_USB_D_P", kind="usb_hs_pair", pair_with="STM32_USB_D_N")
+    c.net("+VBUS_IN", "U2.5")                             # ESD clamp rail = inlet VBUS
+    c.net("GND", "U2.2")
 
     # ---- SBU unused; shell to chassis (usbc_otg pattern) -------------------
     c.nc("J1.SBU1", "J1.SBU2")

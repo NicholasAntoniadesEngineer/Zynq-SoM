@@ -635,8 +635,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="names in carrier/subsystems/ (default: all)")
     xd.add_argument("--som", type=Path,
                     default=REPO_ROOT / "som" / "Zynq_SoM.kicad_sch")
-    xd.add_argument("--refs", default="J2,J3",
-                    help="SoM connectors to trace (default: J2,J3)")
+    xd.add_argument("--refs", default="J1,J2,J3",
+                    help="SoM connectors to trace (default: J1,J2,J3 — the "
+                         "PL fans out on J1 too: bank-35 FMC LA08-11)")
     xd.add_argument("-o", "--output", type=Path,
                     default=REPO_ROOT / "carrier" / "fpga"
                     / "Zynq_Carrier_pins.xdc")

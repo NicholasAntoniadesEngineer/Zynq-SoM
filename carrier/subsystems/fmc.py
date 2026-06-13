@@ -14,17 +14,41 @@ WRONG side — see dossier section 2). Pin->signal map loaded from the
 machine-parsed carrier/research/fmc_lpc_pinmap.json (no hand-typed
 pinout); this module asserts its GND census before binding.
 
-VADJ: +2V5_VADJ from TLV75725PDBVR (C2872563, LIVE stock 613) fed by
-+3V3 — fixed 2.5 V per PLAN round 2, the SAME voltage bank 35 runs at
-(+VCCO_35, camera dossier) so LA levels are consistent by construction.
-Honest budget 0.4 A continuous (DBV RthJA 231 C/W — dossier section 3).
-Symbol: KiCad AP2204K-1.5 drawing (identical SOT-23-5 map 1=IN 2=GND
-3=EN 4=NC 5=OUT, verified against the TI TLV757P datasheet — the
-power.py precedent for this family).
+VADJ: +2V5_VADJ from TLV75725PDYDR (C35209004) fed by +3V3 — fixed 2.5 V
+per PLAN round 2, the SAME voltage bank 35 runs at (+VCCO_35, camera
+dossier) so LA levels are consistent by construction.
+
+PWR-3 THERMAL SWAP (SBVS322C, 2026-06-13): the LDO was the TLV75725PDBVR
+(DBV, SOT-23-5, RthJA ~231 C/W) — at the 0.4 A / ~0.8 V-drop budget that
+is Pd ~0.32 W, Tj ~125 C at Ta=50 C, no margin (and 0.4 A only by derating
+the 1 A part HARD on the bare DBV). Swapped to the TLV75725PDYDR (DYD,
+SOT-23-5 thermal-pad / EP variant, RthJA ~92.5 C/W with the EP soldered to
+a ground pour): the SAME 0.32 W now lifts Tj only ~30 C -> Tj ~80 C at
+Ta=50 C, a comfortable margin below the 125 C limit. The EP pad (footprint
+pad 6) is bonded to the GND copper pour in layout — the standard idiom for
+a part whose symbol omits the thermal pad.
+
+Part already in the repo (parts/TLV75725PDYDR, LCSC C35209004, LIVE
+2026-06-13: Extended, stock 133, min-qty 1). Authored via use_part with a
+lib_id OVERRIDE: the orderable identity (MPN/LCSC/datasheet) + the DYD
+thermal-pad FOOTPRINT come from the parts/ folder, but the DRAWING stays
+the well-typed stock KiCad AP2204K-1.5 5-pin symbol (the EasyEDA-generated
+DYD symbol is all-passive and does not fit the regulator template). Pin
+map 1=IN 2=GND 3=EN 4=NC 5=OUT. Honest budget unchanged at 0.4 A
+continuous, now with real thermal headroom.
 
 Ports use FUNCTIONAL pair-suffixed names (hdmi pattern; the linker infers
 pair polarity from suffixes, which raw IO_*_P_35 names defeat); the
 FMC->IO_*_35 binding contract is the dossier section-1 table.
+
+SILKSCREEN INTENT (reduced-LPC note) — although the connector is a full
+LPC-mechanical SEAF socket, this is a REDUCED LPC site (only LA00-LA11 +
+CLK0/CLK1_M2C populated; LA12-LA33/DP0/GBTCLK0/VREF/12P0V are author NCs
+above). The PCB silkscreen at this site MUST be labelled to that effect
+(e.g. "FMC LPC (REDUCED) — LA00-LA11, no 12V") so an integrator does not
+seat a mezzanine that assumes a full LA bus, a 12 V supply, or the GTP
+GBTCLK/DP lanes. This is a fab-art/silkscreen requirement, not a netlist
+change; tracked here so it is not lost at layout.
 """
 
 from __future__ import annotations
@@ -36,8 +60,6 @@ from schgen.model import Circuit
 
 PINMAP = Path(__file__).resolve().parents[1] / "research" / "fmc_lpc_pinmap.json"
 
-LDO_LIB = "Regulator_Linear:AP2204K-1.5"   # = TLV75725 DBV map (docstring)
-LDO_FP = "Package_TO_SOT_SMD:SOT-23-5"
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
@@ -141,8 +163,17 @@ def circuit() -> Circuit:
           f"J1.{sig['3P3VAUX'][0]}", "C1.1", "C2.1")
     c.net("GND", "C1.2", "C2.2")
 
-    # VADJ LDO: +3V3 -> TLV75725 -> +2V5_VADJ (EN strapped on; 0.4 A budget)
-    c.part("U1", LDO_LIB, "TLV75725PDBVR", LDO_FP, LCSC="C2872563")
+    # VADJ LDO: +3V3 -> TLV75725 (DYD thermal-pad) -> +2V5_VADJ (EN strapped
+    # on; 0.4 A budget). PWR-3 thermal swap: source the orderable identity
+    # (MPN/LCSC/datasheet) + the DYD thermal-pad FOOTPRINT from the in-repo
+    # parts/TLV75725PDYDR folder, but KEEP the well-typed stock AP2204K-1.5
+    # 5-pin drawing (lib_id override) — the EasyEDA DYD symbol is all-passive
+    # and does not fit the regulator template, and the EP thermal pad (pad 6)
+    # is bonded to the GND copper pour in layout (the standard idiom for a
+    # symbol that omits EP). Pin-by-number map 1=IN 2=GND 3=EN 4=NC 5=OUT.
+    c.use_part("TLV75725PDYDR", ref="U1",
+               lib_id="Regulator_Linear:AP2204K-1.5",
+               footprint="TLV75725PDYDR:TLV75725PDYDR")
     c.part("C3", "Device:C", "1u", C0603, LCSC="C15849")        # LDO in
     c.part("C4", "Device:C", "10u", C0805, LCSC="C15850")       # LDO out
     c.part("C5", "Device:C", "100n", C0603, LCSC="C1591")       # at connector
@@ -160,14 +191,17 @@ def circuit() -> Circuit:
     # local LDO's honest 0.4 A continuous thermal limit
     c.draws("+3V3", 1.000, "FMC 3P3V+3P3VAUX mezzanine allocation "
                            "(fmc.md section 4)")
-    # wave-3 VADJ re-budget (wave3_function_map.md sec 3.1): the TLV75725 DBV
-    # thermal envelope is 0.40 A total (231 C/W, Tj<=125, Ta=50 -> Pd<=0.32 W
-    # at 0.8 V drop). The Zynq bank-35 VCCO (LVDS_25 drivers: 12 FMC LA +
-    # 3 camera CSI pairs, ~0.045 A) ALSO rides +2V5_VADJ, so the FMC mezzanine
-    # allocation drops 0.40 -> 0.35 A to hold the envelope. (The bank-35 VCCO
-    # draw itself awaits the rail-tie template — powertree KNOWN-DEFERRED — but
-    # the headroom is reserved here regardless, per the dossier.)
-    c.draws("+2V5_VADJ", 0.350, "FMC VADJ mezzanine budget (TLV75725 DBV 0.40 A "
+    # wave-3 VADJ re-budget (wave3_function_map.md sec 3.1): the TLV75725
+    # thermal envelope is 0.40 A total. PWR-3 swapped DBV->DYD (thermal pad,
+    # RthJA ~92.5 C/W EP-to-GND vs 231 C/W bare): the SAME 0.32 W (0.4 A at
+    # ~0.8 V drop) now sits at Tj ~80 C (Ta=50 C), not the old ~125 C — so the
+    # 0.40 A is no longer a hard derate but a comfortable continuous limit.
+    # The Zynq bank-35 VCCO (LVDS_25 drivers: 12 FMC LA + 3 camera CSI pairs,
+    # ~0.045 A) ALSO rides +2V5_VADJ, so the FMC mezzanine allocation drops
+    # 0.40 -> 0.35 A to hold the envelope. (The bank-35 VCCO draw itself awaits
+    # the rail-tie template — powertree KNOWN-DEFERRED — but the headroom is
+    # reserved here regardless, per the dossier.)
+    c.draws("+2V5_VADJ", 0.350, "FMC VADJ mezzanine budget (TLV75725 DYD 0.40 A "
                                 "envelope less ~0.05 A bank-35 VCCO; "
                                 "wave3_function_map.md sec 3.1)")
     return c

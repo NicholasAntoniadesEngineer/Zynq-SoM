@@ -6,7 +6,7 @@
 #   contract : carrier/som_interface.json (cross-checked pin-for-pin, stale = build FAIL)
 #   types    : carrier subsystems' typed-port registry
 # VCCO rail map (carrier/PLAN.md): bank 13 = +3V3, bank 33 = +3V3, bank 34 = +3V3, bank 35 = +2V5_VADJ
-# 146 pins, banks 13/33/34/35, 30 clock-capable (MRCC/SRCC)
+# 156 pins, banks 13/33/34/35, 30 clock-capable (MRCC/SRCC)
 # Ports named IO_* are the bound SoM contract nets not yet claimed
 # by a function sheet; the wave-3 function map renames them here
 # automatically on the next `schgen board`.
@@ -153,7 +153,7 @@ set_property -dict {PACKAGE_PIN K19  IOSTANDARD LVCMOS33} [get_ports {LCD_R7}]  
 set_property -dict {PACKAGE_PIN P22  IOSTANDARD LVCMOS33} [get_ports {LCD_VSYNC}]  ;# J3.77 IO_L16N_T2_34 <- lcd
 set_property -dict {PACKAGE_PIN K16  IOSTANDARD LVCMOS33} [get_ports {PUDC_34}]  ;# J3.39 IO_L3P_T0_DQS_PUDC_B_34 <- bringup_rails
 
-# ---- bank 35 — VCCO = +2V5_VADJ (30 pins) --------------------
+# ---- bank 35 — VCCO = +2V5_VADJ (40 pins) --------------------
 # diff_pair (100R): CAM_CLK_P / CAM_CLK_N
 set_property -dict {PACKAGE_PIN B19  IOSTANDARD LVDS_25} [get_ports {CAM_CLK_P}]  ;# J3.9 IO_L13P_T2_MRCC_35 <- camera
 #   ^ MRCC-capable: # create_clock -name CAM_CLK_P -period <ns> [get_ports {CAM_CLK_P}]
@@ -197,7 +197,21 @@ set_property -dict {PACKAGE_PIN G22  IOSTANDARD LVDS_25} [get_ports {FMC_LA06_N}
 # diff_pair (100R): FMC_LA07_P / FMC_LA07_N
 set_property -dict {PACKAGE_PIN H19  IOSTANDARD LVDS_25} [get_ports {FMC_LA07_P}]  ;# J3.50 IO_L19P_T3_35 <- fmc
 set_property -dict {PACKAGE_PIN H20  IOSTANDARD LVDS_25} [get_ports {FMC_LA07_N}]  ;# J3.52 IO_L19N_T3_VREF_35 <- fmc
+# diff_pair (100R): FMC_LA08_P / FMC_LA08_N
+set_property -dict {PACKAGE_PIN F16  IOSTANDARD LVDS_25} [get_ports {FMC_LA08_P}]  ;# J1.74 IO_L1P_T0_AD0P_35 <- fmc
+set_property -dict {PACKAGE_PIN E16  IOSTANDARD LVDS_25} [get_ports {FMC_LA08_N}]  ;# J1.92 IO_L1N_T0_AD0N_35 <- fmc
+# diff_pair (100R): FMC_LA09_P / FMC_LA09_N
+set_property -dict {PACKAGE_PIN G15  IOSTANDARD LVDS_25} [get_ports {FMC_LA09_P}]  ;# J1.80 IO_L4P_T0_35 <- fmc
+set_property -dict {PACKAGE_PIN G16  IOSTANDARD LVDS_25} [get_ports {FMC_LA09_N}]  ;# J1.84 IO_L4N_T0_35 <- fmc
+# diff_pair (100R): FMC_LA10_P / FMC_LA10_N
+set_property -dict {PACKAGE_PIN F18  IOSTANDARD LVDS_25} [get_ports {FMC_LA10_P}]  ;# J1.90 IO_L5P_T0_AD9P_35 <- fmc
+set_property -dict {PACKAGE_PIN E18  IOSTANDARD LVDS_25} [get_ports {FMC_LA10_N}]  ;# J1.88 IO_L5N_T0_AD9N_35 <- fmc
+# diff_pair (100R): FMC_LA11_P / FMC_LA11_N
+set_property -dict {PACKAGE_PIN G17  IOSTANDARD LVDS_25} [get_ports {FMC_LA11_P}]  ;# J1.78 IO_L6P_T0_35 <- fmc
+set_property -dict {PACKAGE_PIN F17  IOSTANDARD LVDS_25} [get_ports {FMC_LA11_N}]  ;# J1.76 IO_L6N_T0_VREF_35 <- fmc
+set_property -dict {PACKAGE_PIN H17  IOSTANDARD LVCMOS25} [get_ports {IO_0_35}]  ;# J1.86 IO_0_35 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN C22  IOSTANDARD LVCMOS25} [get_ports {IO_L16_N_35}]  ;# J3.29 IO_L16N_T2_35 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN D22  IOSTANDARD LVCMOS25} [get_ports {IO_L16_P_35}]  ;# J3.31 IO_L16P_T2_35 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN B22  IOSTANDARD LVCMOS25} [get_ports {IO_L18_N_35}]  ;# J3.25 IO_L18N_T2_AD13N_35 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN B21  IOSTANDARD LVCMOS25} [get_ports {IO_L18_P_35}]  ;# J3.27 IO_L18P_T2_AD13P_35 <- unclaimed (wave-3 function map)
+set_property -dict {PACKAGE_PIN D17  IOSTANDARD LVCMOS25} [get_ports {IO_L2_N_35}]  ;# J1.100 IO_L2N_T0_AD8N_35 <- unclaimed (wave-3 function map)

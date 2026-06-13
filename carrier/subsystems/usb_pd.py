@@ -17,6 +17,18 @@ therefore live on +3V3_SC (the SoM system-controller rail); the SHARED
 STM32_I2C2 bus pull-ups (4k7 to +3V3_SC) live once, on bringup_rails with
 the TCA9535 — not duplicated here.
 
+PD-CC-1 (firmware contract) — the FUSB302B OWNS CC1/CC2. Its CC pins
+(U1.11/U1.10 = CC1, U1.14/U1.1 = CC2) connect to the receptacle CC lines
+(STM32_USB_CC1/2 from pd_input.J1) and provide Rd/Rp, vRd sensing, BMC PHY
+and VCONN switching for the whole Type-C/PD stack. The SoM/STM32 system-
+controller firmware MUST NOT enable its native UCPD peripheral on these
+lines — UCPD would drive its own Rd/Rp and BMC transceiver onto the same
+CC nets, contending with the FUSB302B (double-termination corrupts the
+advertised current and the PHY garbles BMC framing). The SC talks PD only
+over I2C to the FUSB302B (0x22 on STM32_I2C2) + the INT_N line; the CC
+pins stay UCPD-disabled / GPIO-Hi-Z on the SC. (CC analog filter caps 200p
+live here; the receptacle CC lines themselves are pd_input's.)
+
 Stock symbol Interface_USB:FUSB302BMPX (WQFN-14 + EP): stacked duplicate
 pins 4 (VDD), 9/15 (GND/EP), 11 (CC1), 14 (CC2) are declared on the same
 nets as their visible twins — the netlist gate proves KiCad sees all of them.

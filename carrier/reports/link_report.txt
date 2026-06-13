@@ -491,11 +491,11 @@ bound ports (482):
   user_io:IO_L21_P_13 -> sheet som_j2:IO_L21_P_13; SoM IO_L21_P_13 (J2.13)
   user_io:IO_L22_P_13 -> sheet som_j2:IO_L22_P_13; SoM IO_L22_P_13 (J2.19)
 
-rails (28):
+rails (24):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: microsd, power, power_mon)
   +1V8_REG — carrier-local rail (sheets: power_mon)
-  +2V5_VADJ — carrier-local rail (sheets: fmc)
-  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: bringup_modules, bringup_rails, debug_boot, fmc, power, power_mon, rj45_connector, uart_bridge, user_io)
+  +2V5_VADJ — carrier-local rail (sheets: fmc, som_j3)
+  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: bringup_modules, bringup_rails, debug_boot, fmc, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
   +3V3_CAM — carrier-local rail (sheets: bringup_modules, camera)
   +3V3_HDMI_RX — carrier-local rail (sheets: bringup_modules, hdmi_rx)
   +3V3_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
@@ -512,10 +512,6 @@ rails (28):
   +5V_SOM — P0 REBIND of SoM 'VIN' (the SoM 4.2-5V input; never the 20V +VIN PD rail — wave3_function_map.md P0) <- sheets: power, som_j1 -> SoM 14 pins
   +5V_USB — carrier-local rail (sheets: bringup_modules, usbc_otg)
   +VBUS_IN — carrier-local rail (sheets: pd_input, usb_pd)
-  +VCCO_13 <- sheets: som_j2 -> SoM 3 pins
-  +VCCO_33 <- sheets: som_j2 -> SoM 3 pins
-  +VCCO_34 <- sheets: som_j3 -> SoM 2 pins
-  +VCCO_35 <- sheets: som_j3 -> SoM 3 pins
   +VIN — carrier-local rail (sheets: pd_input, power, power_mon)
   +VIN_SYS — carrier-local rail (sheets: power_mon)
   CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_uart_connector, usbc_otg)

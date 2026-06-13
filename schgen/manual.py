@@ -175,23 +175,41 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("`carrier/research/bringup_power_gating.md` (risk R1), "
              "`carrier/research/power_mon.md`.")
     L.append("")
-    L.append(f"Plug a {PD_CONTRACT} supply into the power USB-C "
-             f"(`pd_input.J1`). The board")
-    L.append("boots on default 5 V VBUS; the SoM generates the always-on "
-             "`+3V3_SC` rail from")
-    L.append("VIN **before** PD negotiation and before any carrier rail. "
-             "The FUSB302B")
-    L.append("(`usb_pd.U1`, I2C `0x22`) and the whole bring-up "
-             "infrastructure run from")
-    L.append("`+3V3_SC` for exactly this reason — PD must negotiate with "
-             "every DIP open.")
+    L.append(f"Plug a {PD_CONTRACT}-capable supply into the power USB-C "
+             f"(`pd_input.J1`). The")
+    L.append("board boots on the **default 5 V** USB-C contract; the SoM "
+             "generates the")
+    L.append("always-on `+3V3_SC` rail from VIN **before** PD negotiation "
+             "and before any")
+    L.append("carrier rail. The FUSB302B (`usb_pd.U1`, I2C `0x22`) and the "
+             "whole bring-up")
+    L.append("infrastructure run from `+3V3_SC` for exactly this reason — "
+             "PD must negotiate")
+    L.append("with every DIP open.")
+    L.append("")
+    L.append("**Source requirement (SEQ-3).** The 5 V default contract must "
+             "supply at least")
+    L.append("**3 A at 5 V (>= 15 W)** for the board to come up: the SoM's "
+             "pre-PD draw is")
+    L.append("~2.2 A on 5 V before any higher-voltage contract is "
+             "negotiated. A weak 5 V")
+    L.append("charger (e.g. a 0.5-1.5 A phone brick) will brown out / fail "
+             "to boot — use a")
+    L.append("USB-C source that advertises >= 3 A at 5 V (`pd_input.py`).")
     L.append("")
     L.append("With **all DIPs open**, expect:")
     L.append("")
-    L.append(f"- `+VIN` rises to the negotiated 20 V once the SC (or the "
-             f"FUSB302B's")
-    L.append("  default sink behaviour) completes the contract; before "
-             "that it sits at 5 V.")
+    L.append(f"- `+VIN` stays at the **5 V default contract** at first power "
+             f"and the board")
+    L.append("  runs **reduced on 5 V**. The FUSB302B is a PD **PHY only** — "
+             "it does NOT")
+    L.append("  negotiate by itself; reaching the negotiated "
+             f"{PD_CONTRACT} contract requires")
+    L.append("  the **SoM system-controller PD-policy firmware** to drive "
+             "the FUSB302B through")
+    L.append("  the higher-voltage Request. Until the SC runs that policy, "
+             "`+VIN` remains at")
+    L.append("  5 V (a blank SC = 5 V VIN, board reduced-functional).")
     L.append(f"- Probe: {_probe('+VIN', tps)}.")
     L.append("- Every rail PG LED **off** ("
              + ", ".join(f"`power.{st.pg_led}`" for st in chain)

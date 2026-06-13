@@ -8043,7 +8043,7 @@
 		)
 		(property
 			"Value"
-			"TLV75725PDBVR"
+			"TLV75725PDYDR"
 			(at 138.43 42.67 0)
 			(effects
 				(font
@@ -8053,7 +8053,7 @@
 		)
 		(property
 			"Footprint"
-			"Package_TO_SOT_SMD:SOT-23-5"
+			"TLV75725PDYDR:TLV75725PDYDR"
 			(at 151.13 35.56 0)
 			(effects
 				(font
@@ -8064,7 +8064,7 @@
 		)
 		(property
 			"Datasheet"
-			""
+			"https://www.lcsc.com/datasheet/C35209004.pdf"
 			(at 151.13 35.56 0)
 			(effects
 				(font
@@ -8075,7 +8075,18 @@
 		)
 		(property
 			"LCSC"
-			"C2872563"
+			"C35209004"
+			(at 151.13 35.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property
+			"MPN"
+			"TLV75725PDYDR"
 			(at 151.13 35.56 0)
 			(effects
 				(font
