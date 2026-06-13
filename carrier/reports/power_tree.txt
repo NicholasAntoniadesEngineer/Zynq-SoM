@@ -46,7 +46,7 @@ declared draws (c.draws — every number cites its source):
   +3V3_CAM              4.0 mA  bringup_modules    status LED (330R) on the gated output
   +3V3_CAM            300.0 mA  camera             RPi camera module budget (camera_csi.md: V2 typ ~250 mA)
   +3V3_HDMI_RX          4.0 mA  bringup_modules    status LED (330R) on the gated output
-  +3V3_HDMI_RX          1.0 mA  hdmi_rx            CEC 27k pull-up + EDID WC# 10k WP strap (EEPROM is cable-fed)
+  +3V3_HDMI_RX          1.0 mA  hdmi_rx            CEC 27k pull-up (EEPROM + EDID WC# are cable-5V-fed)
   +3V3_HDMI_TX          4.0 mA  bringup_modules    status LED (330R) on the gated output
   +3V3_HDMI_TX          2.0 mA  hdmi_tx            TPD12S016 ICCA + LS_OE/CT_HPD straps
   +3V3_LCD              4.0 mA  bringup_modules    status LED (330R) on the gated output

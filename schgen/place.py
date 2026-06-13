@@ -1613,10 +1613,16 @@ class _Engine:
         side_jobs.sort(key=lambda j: abs(j[1][1] - ty))
         for kind, pt, sgn, payload in side_jobs:
             own = t.net if kind == "direct" else payload[0]
-            fx = self._escape_lane(sgn, pt, ty, own)
             if kind == "direct":
-                self.pl.plan(t.net, pt, (fx, pt[1]), (fx, ty))
+                # a direct tap carries only a wire — it can take any orthogonal
+                # detour the free-cell BFS finds when a straight lane is wedged
+                way = self._escape_path(sgn, pt, ty, own)
+                self.pl.plan(t.net, *way)
+                fx = way[-1][0]
             else:
+                # a side rung seats a passive in its lane: a single clean
+                # vertical column is mandatory (bidirectional, no detour)
+                fx = self._escape_lane(sgn, pt, ty, own)
                 far_net, leg = payload
                 toward_top = ty < pt[1]
                 self.pl.plan(far_net, pt, (fx, pt[1]))
@@ -1836,11 +1842,11 @@ class _Engine:
                     return False
         return True
 
-    def _escape_lane(self, sgn: int, pt: tuple[float, float], ty: float,
-                     net: str) -> float:
-        """Lane column for an L-shaped side escape from pin ``pt`` to the
-        trunk row ``ty``: the vertical band must be free AND the horizontal
-        run from the pin tip to the lane must clear everything."""
+    def _lane_in_dir(self, sgn: int, pt: tuple[float, float], ty: float,
+                     net: str) -> float | None:
+        """First L-lane column in ONE direction ``sgn`` whose vertical band
+        [pt.y, ty] is free AND whose horizontal run from the pin tip is clear;
+        None if no such column within the scan window."""
         y0, y1 = sorted((pt[1], ty))
         x = gfloor(pt[0] + sgn * 3 * U) if sgn < 0 \
             else gceil(pt[0] + sgn * 3 * U)
@@ -1850,7 +1856,153 @@ class _Engine:
                     pt[1], pt[0] + sgn * 0.01, x, {net}):
                 return x
             x = round(x + sgn * 2 * U, 3)
+        return None
+
+    def _escape_lane(self, sgn: int, pt: tuple[float, float], ty: float,
+                     net: str) -> float:
+        """Lane column for a straight L-shaped side escape from pin ``pt`` to
+        the trunk row ``ty``: the vertical band must be free AND the
+        horizontal run from the pin tip to the lane must clear everything.
+
+        Used where a single CLEAN vertical column is mandatory (a side rung
+        seats a passive in the lane). The pin's natural side ``sgn`` is tried
+        first; if that direction is wedged, the OTHER direction is tried
+        before failing — a side tap is reachable from either flank, and only
+        a genuinely enclosed pin has no straight lane at all."""
+        for s in (sgn, -sgn):
+            fx = self._lane_in_dir(s, pt, ty, net)
+            if fx is not None:
+                return fx
         raise PlaceError(f"{net}: no free escape lane from {pt}")
+
+    def _cell_free(self, x: float, y: float, net: str) -> bool:
+        """Is the single grid cell at (x, y) free for ``net``'s wire? Clear of
+        every body/text box, of FOREIGN planned wires, and of FOREIGN pin
+        stems (own-net geometry is allowed — taps share the net)."""
+        for b in self.pl.boxes:
+            if b.x0 + 1e-6 < x < b.x1 - 1e-6 and b.y0 + 1e-6 < y < b.y1 - 1e-6:
+                return False
+        for n, paths in self.pl.plans.items():
+            if n == net:
+                continue
+            for path in paths:
+                for a, bb in zip(path, path[1:]):
+                    sx0, sx1 = sorted((a[0], bb[0]))
+                    sy0, sy1 = sorted((a[1], bb[1]))
+                    if sx0 - 0.3 <= x <= sx1 + 0.3 \
+                            and sy0 - 0.3 <= y <= sy1 + 0.3:
+                        return False
+        for part in self.pl.parts:
+            sdef = self.lib.get(part.lib_id)
+            for pin in sdef.pins:
+                if pin.hidden:
+                    continue
+                n = self.net_of(part.ref, pin.number)
+                if n is not None and n.name == net:
+                    continue
+                tip = pin_page_position(pin, part.x, part.y, part.rotation)
+                dxn, dyn = route._stem_dir(pin.rotation, part.rotation)
+                root = (round(tip[0] + dxn * pin.length, 3),
+                        round(tip[1] + dyn * pin.length, 3))
+                sx0, sx1 = sorted((tip[0], root[0]))
+                sy0, sy1 = sorted((tip[1], root[1]))
+                if sx0 - 0.3 <= x <= sx1 + 0.3 \
+                        and sy0 - 0.3 <= y <= sy1 + 0.3:
+                    return False
+        return True
+
+    def _escape_path(self, sgn: int, pt: tuple[float, float], ty: float,
+                     net: str) -> list[tuple[float, float]]:
+        """Orthogonal escape ROUTE from a trunk side pin ``pt`` to the trunk
+        row ``ty``, returned as corner waypoints (pt … (fx, ty)).
+
+        The straight L (out to a lane column, then up/down to the trunk) is
+        the ideal and is tried first in the pin's natural side ``sgn``, then
+        the opposite flank. When BOTH flanks are wedged — a side pin boxed in
+        by foreign channels above/below and a body wall outboard, the dense-
+        connector case — a free-cell BFS finds a detour (a Z/C bend) over the
+        same blocked-geometry model the router enforces. Vertex-disjoint by
+        construction: every cell on the path is proven free for ``net`` (own
+        geometry excepted), so it can never short or cross a foreign net.
+
+        Returning a generic waypoint path (not just a single lane column)
+        keeps the escape exclusive-ownership-correct while removing the
+        single-direction-L limitation that strands an otherwise-routable tap
+        back into the spacing-expansion loop."""
+        for s in (sgn, -sgn):
+            fx = self._lane_in_dir(s, pt, ty, net)
+            if fx is not None:
+                return [pt, (fx, pt[1]), (fx, ty)]
+        return self._bfs_escape(pt, ty, net)
+
+    def _bfs_escape(self, pt: tuple[float, float], ty: float,
+                    net: str) -> list[tuple[float, float]]:
+        """Minimum-bend orthogonal route from pin tip ``pt`` to the trunk row
+        ``y == ty`` over free cells, bounded to the placed extent plus a
+        margin (the page is an infinite plane; an enclosed pin must fail fast
+        to the spacing loop, not flood forever).
+
+        The search minimises CORNERS first, wire length second — a Dijkstra
+        whose state is (cell, heading) and whose dominant edge cost is a turn
+        penalty. That yields the hand-drawn route a human would pick (a clean
+        L or C around the obstruction), never a cell-count-minimal spiral
+        through the fragmented free space. Collinear runs collapse to corner
+        waypoints on the way out."""
+        ex0, ey0, ex1, ey1 = self._extent()
+        margin = 16 * U
+        i0 = int(gfloor(min(ex0, pt[0]) - margin) / U)
+        i1 = int(gceil(max(ex1, pt[0]) + margin) / U)
+        j0 = int(gfloor(min(ey0, pt[1], ty) - margin) / U)
+        j1 = int(gceil(max(ey1, pt[1], ty) + margin) / U)
+        start = (int(round(pt[0] / U)), int(round(pt[1] / U)))
+        jty = int(round(ty / U))
+        DIRS = ((1, 0), (-1, 0), (0, 1), (0, -1))
+        TURN = 1000           # a corner costs far more than a grid step
+
+        import heapq
+        # state = (cell, came_dir); cost dominated by turns, then length.
+        # prev maps a state back to the state it was reached from.
+        dist: dict[tuple[tuple[int, int], int], int] = {(start, -1): 0}
+        prev: dict[tuple[tuple[int, int], int],
+                   tuple[tuple[int, int], int] | None] = {(start, -1): None}
+        pq: list[tuple[int, tuple[int, int], int]] = [(0, start, -1)]
+        hit: tuple[tuple[int, int], int] | None = None
+        while pq:
+            cost, cell, came = heapq.heappop(pq)
+            if dist.get((cell, came), 1 << 60) < cost:
+                continue
+            if cell[1] == jty and cell != start:
+                hit = (cell, came)
+                break
+            for di, d in enumerate(DIRS):
+                n = (cell[0] + d[0], cell[1] + d[1])
+                if not (i0 <= n[0] <= i1 and j0 <= n[1] <= j1):
+                    continue
+                if not self._cell_free(round(n[0] * U, 3), round(n[1] * U, 3),
+                                       net):
+                    continue
+                nc = cost + 1 + (TURN if came != -1 and came != di else 0)
+                st = (n, di)
+                if nc < dist.get(st, 1 << 60):
+                    dist[st] = nc
+                    prev[st] = (cell, came)
+                    heapq.heappush(pq, (nc, n, di))
+        if hit is None:
+            raise PlaceError(f"{net}: no free escape lane from {pt}")
+        chain: list[tuple[int, int]] = []
+        st: tuple[tuple[int, int], int] | None = hit
+        while st is not None:
+            chain.append(st[0])
+            st = prev[st]
+        chain.reverse()
+        pts = [(round(c[0] * U, 3), round(c[1] * U, 3)) for c in chain]
+        way = [pts[0]]
+        for k in range(1, len(pts) - 1):
+            (x0, y0), (x1, y1), (x2, y2) = pts[k - 1], pts[k], pts[k + 1]
+            if not ((x0 == x1 == x2) or (y0 == y1 == y2)):
+                way.append(pts[k])
+        way.append(pts[-1])
+        return way
 
     def _needs_flag(self, net: str) -> bool:
         etype_of = {}

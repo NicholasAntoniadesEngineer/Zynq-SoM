@@ -52,17 +52,16 @@ lanes stay DC-coupled jack -> Zynq (shunt taps, not series). Confirm the
 chosen part's IO cap <= 0.5 pF/line before populating. The sink must present
 EDID even when the carrier is off (HDMI 1.4 sec 8.5), so a 2-Kbit I2C EEPROM
 (ST M24C02, LCSC C7562) sits on the DDC bus powered from the CABLE's +5V
-(pin 18): a source can always read the EDID. WC# is write-PROTECTED by
-default (HDMIRX-2): a 10k strap pulls it HIGH on the labeled jumper net
-HDMI_RX_EDID_WP, so a runtime DDC write cannot corrupt the EDID; field-
-(re)programming is a documented one-move override (jumper/strap WC# to GND).
-COMP-1 (electrical audit, see the strap block): that pull-up MUST reference the
-EEPROM's own cable-5 V VCC domain, NOT the gated +3V3_HDMI_RX rail — on the
-gated rail the protection is defeated (WC# -> 0 V) in the carrier-off EDID-read
-case and the 3.3 V level is below the 5 V-VCC EEPROM's VIH(min)=0.7*VCC~3.5 V.
-The corrected pull-up is carried as a MANDATORY one-wire assembly ECO (the
-auto-placer cannot render it on this maxed-out single-connector sheet under the
-immutable gates; full analysis in the strap block, HDMIRX-1 precedent). DDC
+(pin 18): a source can always read the EDID. WC# is write-PROTECTED: it is
+HARDWIRED to the EEPROM's own cable-5 V VCC node (HDMI_RX_5V = U1.8, the pin
+adjacent to WC#=U1.7), so a runtime DDC write can never corrupt the fixed EDID.
+COMP-1 (electrical audit, see the strap block): WC# MUST reference the EEPROM's
+own cable-5 V VCC domain, NOT the gated +3V3_HDMI_RX rail — on the gated rail
+the protection is defeated (WC# -> 0 V) in the carrier-off EDID-read case and
+the 3.3 V level is below the 5 V-VCC EEPROM's VIH(min)=0.7*VCC~3.5 V. The fix
+is a NETLIST FIX expressed directly here (WC# tied to HDMI_RX_5V); the earlier
+10k strap on the jumper net HDMI_RX_EDID_WP is DELETED — this is a permanently
+write-protected, fixed EDID with no field-(re)program path by design. DDC
 pull-ups live on the SOURCE side per spec, so none are duplicated here.
 E0/E1/E2 are grounded (EDID address 0xA0/0x50).
 
@@ -132,8 +131,11 @@ def circuit() -> Circuit:
     c.net("HDMI_RX_SDA", "J1.16", "U1.5")
     c.net("HDMI_RX_SCL", "J1.15", "U1.6")
 
-    # cable +5V domain: EEPROM supply + bypass, HPD assert, presence divider
-    c.net("HDMI_RX_5V", "J1.18", "U1.8", "C1.1", "R1.1", "R3.1")
+    # cable +5V domain: EEPROM supply + bypass, HPD assert, presence divider,
+    # and the EDID WC# write-protect (COMP-1, see the strap block below) —
+    # WC# (U1.7) is HARDWIRED to the EEPROM's OWN 5 V VCC node (U1.8, the
+    # adjacent pin), so write-protect tracks VCC whenever a source is plugged
+    c.net("HDMI_RX_5V", "J1.18", "U1.8", "U1.7", "C1.1", "R1.1", "R3.1")
     c.net("GND", "C1.2")
     c.net("HDMI_RX_HPD", "J1.19", "R1.2")
     c.port("HDMI_RX_5V_DET", "R3.2", "R4.1", expect=J23_MAP)
@@ -143,11 +145,15 @@ def circuit() -> Circuit:
     c.port("HDMI_RX_CEC", "J1.13", "R2.2", expect=J23_MAP)
     c.net("+3V3_HDMI_RX", "R2.1")
 
-    # HDMIRX-2 / COMP-1 (electrical audit): EDID write-protect is an explicit
-    # 10k strap on the labeled jumper net HDMI_RX_EDID_WP (open = WP, jumper to
-    # GND = writes enabled). WC# was a hard GND (write ENABLED); HDMIRX-2 lifted
-    # it to a 10k pull-up. The pull-up RAIL is the bug COMP-1 corrects:
-    #   * As shipped here it pulls to +3V3_HDMI_RX. That is WRONG twice:
+    # HDMIRX-2 / COMP-1 (electrical audit): EDID write-protect. WC# (U1.7) is
+    # HARDWIRED to the EEPROM's own cable-5 V VCC node HDMI_RX_5V (the adjacent
+    # U1.8 pin) above — a NETLIST FIX, not a strap/jumper. This is the EDID a
+    # fixed, permanently-write-protected sink: a runtime DDC write cannot
+    # corrupt it, and there is no field-(re)program path by design.
+    #   * Earlier revisions were WRONG in two ways. WC# started as a hard GND
+    #     (write ENABLED — any DDC master could clobber the EDID). HDMIRX-2 then
+    #     lifted it to a 10k pull-up on a jumper net HDMI_RX_EDID_WP, but pulled
+    #     to +3V3_HDMI_RX, which is WRONG twice:
     #     (1) DOMAIN — +3V3_HDMI_RX is the GATED module rail. In the carrier-OFF
     #         EDID-read case (HDMI 1.4 sec 8.5: a source reads EDID with the sink
     #         board powered down, EEPROM alive on cable 5 V) that rail is dead ->
@@ -157,25 +163,11 @@ def circuit() -> Circuit:
     #         to its OWN VCC: VIH(min) = 0.7*VCC. The EEPROM runs on cable 5 V
     #         (U1.8 = HDMI_RX_5V), so VIH(min) ~ 3.5 V; a 3.3 V strap cannot
     #         guarantee a logic HIGH on WC# even with the carrier up.
-    #   * REQUIRED FIX (live-verified, MANDATORY at assembly): move R5.1 from
-    #     +3V3_HDMI_RX to the EEPROM's own VCC domain HDMI_RX_5V (cable 5 V, the
-    #     U1.8 node) -> WC# tracks VCC (VIH met) and write-protect holds whenever
-    #     a source is plugged (5 V present), carrier on OR off.
-    #   * WHY IT IS NOT EXPRESSED IN THE NETLIST HERE (HDMIRX-1 precedent): the
-    #     auto-placer cannot route the corrected strap on this maxed-out single-
-    #     connector sheet under the immutable zero-crossing/ERC gates. Joining
-    #     R5.1 to the cable-5 V net makes that node a 6-tap SIGNAL trunk and the
-    #     WC# jumper leg (HDMI_RX_EDID_WP -> U1.7) is wedged with no escape lane;
-    #     re-modelling cable 5 V as a POWER rail instead breaks the connector's
-    #     bottom-edge HPD/CEC routing; a ferrite/0R-bonded local EEPROM-VCC power
-    #     node walls off the CEC route. All forms fail the gates (verified
-    #     2026-06-13). Per LAW 4 the gates are NOT softened and the shared placer
-    #     is NOT risked for one sheet. ASSEMBLY/LAYOUT NOTE: reroute the R5 pull-
-    #     up from +3V3_HDMI_RX to the cable-5 V / U1.8 node (a one-wire ECO on the
-    #     PCB; no part change). E0/E1/E2 address straps stay grounded (0xA0/0x50).
-    c.part("R5", "Device:R", "10k", R_FP, LCSC="C25804")    # EDID WC# WP strap
-    c.net("HDMI_RX_EDID_WP", "U1.7", "R5.2")
-    c.net("+3V3_HDMI_RX", "R5.1")   # COMP-1: REROUTE TO HDMI_RX_5V at assembly
+    #   * COMP-1 FIX (live-verified): tie WC# directly to HDMI_RX_5V (the U1.8
+    #     node, cable 5 V) -> WC# tracks VCC (VIH met) and write-protect holds
+    #     whenever a source is plugged (5 V present), carrier on OR off. No pull-
+    #     up resistor and no jumper net: the strap R5 and HDMI_RX_EDID_WP are
+    #     DELETED. E0/E1/E2 address straps stay grounded (0xA0/0x50).
 
     # grounds: TMDS shields + DDC/CEC ground on signal GND; shell on chassis
     c.net("GND", "J1.2", "J1.5", "J1.8", "J1.11", "J1.17",
@@ -185,9 +177,10 @@ def circuit() -> Circuit:
     # pin 14 UTILITY/HEAC+: reserved, HEAC unused by design
     c.nc("J1.14")
 
-    # power-tree budget (round 4): the CEC 27k pull-up (~0.12 mA when CEC is
-    # driven low) + the EDID WC# 10k write-protect strap (~0.33 mA only if WC#
-    # is jumpered low; ~0 mA in the protected default); EEPROM runs from cable 5V
-    c.draws("+3V3_HDMI_RX", 0.001, "CEC 27k pull-up + EDID WC# 10k WP strap "
-                                   "(EEPROM is cable-fed)")
+    # power-tree budget (round 4): only the CEC 27k pull-up sits on the gated
+    # module rail (~0.12 mA when CEC is driven low). EDID WC# is now hardwired
+    # to cable 5 V (COMP-1) so it draws nothing from +3V3_HDMI_RX; EEPROM runs
+    # from cable 5 V.
+    c.draws("+3V3_HDMI_RX", 0.001, "CEC 27k pull-up (EEPROM + EDID WC# are "
+                                   "cable-5V-fed)")
     return c
