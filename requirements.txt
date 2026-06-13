@@ -3,6 +3,9 @@
 pymupdf        # PDF rasterization for render.py (imported as `fitz`)
 pillow         # PNG handling / golden-render comparison
 
+# Test tooling (dev only — not needed to generate the board):
+pytest>=8      # fast unit suite: `python -m pytest schgen/tests/`
+
 # External tools (not pip-installable):
 #   kicad-cli   KiCad 9+  — netlist/ERC/SVG/PDF export (required)
 #   ngspice               — optional: `schgen spice` analytic-gate cross-check
