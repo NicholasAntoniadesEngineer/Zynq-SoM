@@ -83,11 +83,11 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.010 | negligible |
 | SY6280AAC (U9) | bringup_modules | +5V -> +5V_HDMI_TX | 0.058 | negligible |
 | TLV75725PDBVR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.400 | ~0.32 W |
-| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.257 | negligible |
+| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.312 | negligible |
 | TPS54302DDCR (U1) | power | +VIN -> +5V | 2.721 | ~1.51 W |
 | TPS54302DDCR (U2) | power | +5V -> +3V3 | 2.322 | ~0.85 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8 | 0.006 | negligible |
-| TPS54302DDCR (U4) | power | +VIN -> +5V_SOM | 0.004 | negligible |
+| TPS54302DDCR (U4) | power | +VIN -> +5V_SOM | 2.004 | ~1.11 W |
 
 Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/power_tree.txt`); regulators above ~0.3 W want copper pours + stitching vias.
 
@@ -107,7 +107,7 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(12) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
 - **(13) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
 - **(14) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
-- **(15) power**: Buck thermal (worst-case declared draws): TPS54302DDCR +5V ~1.51 W; TPS54302DDCR +3V3 ~0.85 W; TPS54302DDCR +5V_SOM ~0.00 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(15) power**: Buck thermal (worst-case declared draws): TPS54302DDCR +5V ~1.51 W; TPS54302DDCR +3V3 ~0.85 W; TPS54302DDCR +5V_SOM ~1.11 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
 - **(16) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
 - **(17) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
 - **(18) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.

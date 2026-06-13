@@ -49,11 +49,25 @@ DEFAULT_OUT = REPO_ROOT / "carrier" / "out"
 
 # ---- the alias map -------------------------------------------------------------
 # Rail spellings differ between the SoM project and the carrier house style.
-# This map is the ONLY name translation the linker performs; it is exact and
-# enumerated (carrier spelling -> SoM contract spelling). Anything not listed
-# must match verbatim. Identity rails (+3V3, +1V8, GND) need no entry.
-RAIL_ALIASES: dict[str, str] = {
-    "+VIN": "VIN",
+# This map is the ONLY pure-name translation the linker performs; it is exact
+# and enumerated (carrier spelling -> SoM contract spelling). Anything not
+# listed must match verbatim. Identity rails (+3V3, +1V8, GND) need no entry.
+# (Pre-P0 this carried "+VIN": "VIN"; the SoM VIN is now a deliberate REBIND,
+#  not a spelling alias — see REBOUND_SOM_RAILS below.)
+RAIL_ALIASES: dict[str, str] = {}
+
+# PLAN "P0 + wave-3 decisions" REBIND (user-signed-off 2026-06-12): the SoM
+# net VIN (J1.1-14) is the module's 4.2-5V input; binding it to the carrier
+# 20V PD rail +VIN destroys the SoM at the first PD contract
+# (wave3_function_map.md P0). som_conn_gen REBINDS those pins onto the
+# carrier always-on +5V_SOM buck (power.py U4, UNIT 1). This map is the
+# policy twin of carrier/som_conn_gen.REBOUND_SOM_RAILS (carrier rail -> SoM
+# contract net): it lets the rail census account the 14 SoM VIN pins under
+# +5V_SOM rather than reporting VIN unbound. The linker ERRORs if a connector
+# sheet still carries the OLD pre-rebind rail (+VIN) on those pins, so the two
+# maps cannot drift. Carrier-rail -> SoM-net (inverse of som_conn_gen's map).
+REBOUND_SOM_RAILS: dict[str, str] = {
+    "+5V_SOM": "VIN",   # SoM 4.2-5V input <- carrier always-on +5V_SOM buck
 }
 
 # PLAN round-5 RAIL ISOLATION (user decision 2026-06-12): the SoM exports
@@ -74,7 +88,11 @@ ISOLATED_SOM_RAILS: dict[str, str] = {
 
 
 def canon_to_som(name: str) -> str:
-    """Carrier net name -> SoM contract spelling (rails only; else identity)."""
+    """Carrier net name -> SoM contract spelling (rails only; else identity).
+    Covers both the pure spelling aliases (RAIL_ALIASES) and the P0 rebind
+    (REBOUND_SOM_RAILS — a carrier rail standing in for a SoM contract net)."""
+    if name in REBOUND_SOM_RAILS:
+        return REBOUND_SOM_RAILS[name]
     return RAIL_ALIASES.get(name, name)
 
 
@@ -201,6 +219,11 @@ class LinkResult:
         lines.append("alias map (rails only, exact, enumerated):")
         for a, b in sorted(RAIL_ALIASES.items()):
             lines.append(f"  carrier {a!r} <-> SoM {b!r}")
+        if not RAIL_ALIASES:
+            lines.append("  (no pure spelling aliases)")
+        for a, b in sorted(REBOUND_SOM_RAILS.items()):
+            lines.append(f"  carrier {a!r} == SoM {b!r}  (P0 REBIND, not a "
+                         f"spelling alias — wave3_function_map.md P0)")
         lines.append("  (identity rails +3V3 / +1V8 / GND need no entry; "
                      "signals are never aliased)")
         lines.append("")
@@ -331,6 +354,29 @@ def link(sheets: list[SheetCircuit],
                 f"decision: {ISOLATED_SOM_RAILS[rail]}; pins author-NC on "
                 f"the J1 sheet); carrier-local rail (sheets: "
                 f"{', '.join(sorted(users))})")
+        elif rail in REBOUND_SOM_RAILS:
+            # P0 rebind: this carrier rail stands in for a SoM contract net
+            # on the connector. VERIFY the rebind actually landed — the rail
+            # MUST appear on a connector sheet (else som_conn_gen and this
+            # map drifted and the SoM VIN pins resolve nowhere).
+            if not any(u.startswith("som_j") for u in users):
+                res.errors.append(
+                    f"REBIND BROKEN: {rail} is declared the P0 stand-in for "
+                    f"SoM {som_name!r} pins but appears on NO connector sheet "
+                    f"(sheets: {', '.join(sorted(users))}) — som_conn_gen "
+                    f"REBOUND_SOM_RAILS must map SoM {som_name!r} -> {rail}")
+            elif som_name not in som_names:
+                res.errors.append(
+                    f"REBIND BROKEN: {rail} -> SoM {som_name!r} but "
+                    f"{som_name!r} is not a SoM contract net")
+            else:
+                bound_som_names.add(som_name)
+                res.rail_bindings.append(
+                    f"{rail} — P0 REBIND of SoM {som_name!r} (the SoM 4.2-5V "
+                    f"input; never the 20V +VIN PD rail — "
+                    f"wave3_function_map.md P0) <- sheets: "
+                    f"{', '.join(sorted(users))} -> SoM "
+                    f"{len(som_nets[som_name])} pins")
         elif som_name in som_names:
             bound_som_names.add(som_name)
             alias = f" (alias of SoM {som_name!r})" if som_name != rail else ""
@@ -338,6 +384,22 @@ def link(sheets: list[SheetCircuit],
                 f"{rail}{alias} <- sheets: {', '.join(sorted(users))} "
                 f"-> SoM {len(som_nets[som_name])} pins")
         else:
+            # P0-rebind drift guard: a SoM contract net that is supposed to be
+            # rebound (REBOUND_SOM_RAILS values) must NEVER appear under its
+            # raw contract name on a connector sheet, and the carrier 20V +VIN
+            # must never reach a connector sheet (the SoM is 4.2-5V).
+            on_conn = sorted(u for u in users if u.startswith("som_j"))
+            if on_conn and rail in REBOUND_SOM_RAILS.values():
+                res.errors.append(
+                    f"REBIND DRIFT: SoM net {rail!r} appears RAW on connector "
+                    f"sheet(s) {', '.join(on_conn)} — som_conn_gen must rebind "
+                    f"it (REBOUND_SOM_RAILS) onto its carrier rail")
+            if on_conn and rail == "+VIN":
+                res.errors.append(
+                    f"SoM OVERVOLTAGE: the 20V PD rail +VIN reaches connector "
+                    f"sheet(s) {', '.join(on_conn)} — the SoM is a 4.2-5V "
+                    f"module; J1 VIN must rebind to +5V_SOM "
+                    f"(wave3_function_map.md P0)")
             res.rail_bindings.append(
                 f"{rail} — carrier-local rail (sheets: "
                 f"{', '.join(sorted(users))})")

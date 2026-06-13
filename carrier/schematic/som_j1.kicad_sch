@@ -2572,7 +2572,7 @@
 			)
 		)
 		(symbol
-			"schgen:+VIN"
+			"schgen:+5V_SOM"
 			(power)
 			(pin_numbers
 				(hide yes)
@@ -2598,7 +2598,7 @@
 			)
 			(property
 				"Value"
-				"+VIN"
+				"+5V_SOM"
 				(at 0 3.556 0)
 				(effects
 					(font
@@ -2630,7 +2630,7 @@
 			)
 			(property
 				"Description"
-				"Power symbol: +VIN rail"
+				"Power symbol: gated +5V_SOM module rail (SY6280, bring-up dossier)"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2640,7 +2640,7 @@
 				)
 			)
 			(symbol
-				"+VIN_0_1"
+				"+5V_SOM_0_1"
 				(polyline
 					(pts
 						(xy -0.762 1.27)
@@ -2682,14 +2682,14 @@
 				)
 			)
 			(symbol
-				"+VIN_1_1"
+				"+5V_SOM_1_1"
 				(pin
 					power_in
 					line
 					(at 0 0 90)
 					(length 0)
 					(name
-						"+VIN"
+						"+5V_SOM"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -5494,7 +5494,7 @@
 		)
 	)
 	(symbol
-		(lib_id "schgen:+VIN")
+		(lib_id "schgen:+5V_SOM")
 		(at 139.7 27.94 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -5515,7 +5515,7 @@
 		)
 		(property
 			"Value"
-			"+VIN"
+			"+5V_SOM"
 			(at 139.7 24.384 0)
 			(effects
 				(font
@@ -5695,7 +5695,7 @@
 		)
 	)
 	(symbol
-		(lib_id "schgen:+VIN")
+		(lib_id "schgen:+5V_SOM")
 		(at 170.18 27.94 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -5716,7 +5716,7 @@
 		)
 		(property
 			"Value"
-			"+VIN"
+			"+5V_SOM"
 			(at 170.18 24.384 0)
 			(effects
 				(font

@@ -3,7 +3,8 @@ schgen link report
 sheets (23): bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io
 
 alias map (rails only, exact, enumerated):
-  carrier '+VIN' <-> SoM 'VIN'
+  (no pure spelling aliases)
+  carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
 bound ports (348):
@@ -374,14 +375,14 @@ rails (28):
   +5V_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
   +5V_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +5V_REG — carrier-local rail (sheets: power_mon)
-  +5V_SOM — carrier-local rail (sheets: power)
+  +5V_SOM — P0 REBIND of SoM 'VIN' (the SoM 4.2-5V input; never the 20V +VIN PD rail — wave3_function_map.md P0) <- sheets: power, som_j1 -> SoM 14 pins
   +5V_USB — carrier-local rail (sheets: bringup_modules, usbc_otg)
   +VBUS_IN — carrier-local rail (sheets: pd_input, usb_pd)
   +VCCO_13 <- sheets: som_j2 -> SoM 3 pins
   +VCCO_33 <- sheets: som_j2 -> SoM 3 pins
   +VCCO_34 <- sheets: som_j3 -> SoM 2 pins
   +VCCO_35 <- sheets: som_j3 -> SoM 3 pins
-  +VIN (alias of SoM 'VIN') <- sheets: pd_input, power, power_mon, som_j1 -> SoM 14 pins
+  +VIN — carrier-local rail (sheets: pd_input, power, power_mon)
   +VIN_SYS — carrier-local rail (sheets: power_mon)
   CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, usbc_otg)
   GND <- sheets: bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io -> SoM 63 pins

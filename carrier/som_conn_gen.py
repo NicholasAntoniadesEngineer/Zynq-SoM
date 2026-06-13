@@ -6,9 +6,10 @@ extracted from the SoM KiCad project by ``schgen som-interface``); each
 (parts/DF40C-100DS-0.4V_51/, LCSC C597931) and binds EVERY pin to its
 contract net VERBATIM:
 
-- power pins  -> POWER nets (carrier spelling: the SoM writes ``VIN``, the
-  carrier writes ``+VIN`` — the ONLY rail alias, mirrored from
-  schgen.link.RAIL_ALIASES; all other rails are identity spellings),
+- power pins  -> POWER nets (carrier spelling). The P0 rebind below maps the
+  SoM ``VIN`` (J1.1-14) onto the carrier always-on ``+5V_SOM`` buck — the SoM
+  is a 4.2-5V module, never the 20V PD rail (REBOUND_SOM_RAILS, twin of
+  schgen.link.REBOUND_SOM_RAILS). All other rails are identity spellings,
   EXCEPT the round-5 ISOLATED SoM rails (below) which are explicit author
   no-connects,
 - GND pins    -> the GROUND net,
@@ -38,9 +39,24 @@ from schgen.model import Circuit, NetClass
 
 CONTRACT = Path(__file__).resolve().parent / "som_interface.json"
 
-# Carrier house spelling for SoM rail names (inverse of link.RAIL_ALIASES —
-# the single enumerated rail alias; signals are NEVER respelled).
-RAIL_SPELLING = {"VIN": "+VIN"}
+# PLAN "P0 + wave-3 decisions" REBIND (UNIT 2, user-signed-off 2026-06-12):
+# the SoM net VIN (J1.1-14) is the module's 4.2-5V input. Binding it to the
+# carrier 20V PD rail +VIN destroys the SoM at the first PD contract
+# (wave3_function_map.md P0). It is REBOUND to the carrier +5V_SOM rail —
+# the always-on TPS54302 buck added in UNIT 1 (power.py U4). This is NEVER a
+# silent spelling change: REBOUND_SOM_RAILS documents the SoM-net ->
+# carrier-rail map with its rationale, schgen.link.REBOUND_SOM_RAILS is the
+# policy twin (it accounts the SoM VIN census under +5V_SOM), and the linker
+# ERRORs if the two maps drift. The carrier +VIN rail still exists (pd_input/
+# power/power_mon) but NO LONGER reaches the SoM connector.
+REBOUND_SOM_RAILS: dict[str, str] = {
+    "VIN": "+5V_SOM",   # SoM 4.2-5V input -> carrier always-on +5V_SOM buck
+}
+
+# Carrier house spelling for SoM rail names. Only the P0 rebind above (no
+# plain spelling aliases remain — the former VIN -> +VIN was the rebind's
+# pre-P0 form). Signals are NEVER respelled.
+RAIL_SPELLING = dict(REBOUND_SOM_RAILS)
 
 # PLAN round-5 RAIL ISOLATION (user decision 2026-06-12) — carrier bucks WIN.
 # The SoM exports its own +3V3 (J1.24-27) and +1V8 (J1.56/58/60) from its
@@ -106,13 +122,17 @@ def connector_circuit(jref: str, name: str, title: str) -> Circuit:
     if all(s in c.nets for s in SD_BUS):
         for s in SD_BUS:
             c.port_type(s, kind="sd_bus", bus="SDIO", level_v=1.8)
-    # power-tree budget (round 4): the SoM module itself is a +VIN load
-    # (J1.1-14 -> on-module MPM3834/MPM3822/TPSM82864 regulators feeding
-    # Zynq + DDR3L + PHYs) — 10 W-class worst case at 20 V, ESTIMATE pending
-    # an SoM power-budget measurement
+    # power-tree budget (round 4 + P0 rebind): the SoM module is now a
+    # +5V_SOM load (J1.1-14 -> on-module TPS7A20/2x MPM3834/MPM3822/
+    # TPSM82864 regulators feeding Zynq + DDR3L + PHYs). 10 W class worst
+    # case AT 5 V -> ~2.0 A (wave3_function_map.md P0 point 2); this is the
+    # SoM module draw, declared where the module is the consumer. The
+    # +5V_SOM buck (power.py U4) is a 3 A TPS54302 — 2 A leaves headroom.
+    # ESTIMATE pending an SoM power-budget measurement at bring-up.
     if jref == "J1":
-        c.draws("+VIN", 0.500, "SoM module (Zynq+DDR3L+PHYs) ~10 W class "
-                               "at 20 V — estimate, refine at bring-up")
+        c.draws("+5V_SOM", 2.0, "SoM module (Zynq+DDR3L+PHYs) ~10 W class "
+                                "at 5 V (P0 rebind) — estimate, refine at "
+                                "bring-up")
     # round-4 coverage waivers: the VCCO bank rails are bare connector pins
     # until the wave-3 J-sheet regen ties them into the rail map (PLAN
     # board-completion flag: +VCCO_35 = +2V5_VADJ, others = +3V3); probe at

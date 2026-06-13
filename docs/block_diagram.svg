@@ -375,7 +375,7 @@
 <text x="572" y="1074" font-weight="bold" font-size="14">Zynq SoM (J1/J2/J3)</text>
 <text x="572" y="1096">213 contract nets</text>
 <text x="572" y="1116" fill="#92400e">0 unbound (later waves)</text>
-<text x="572" y="1136" fill="#374151">rails: +1V8, +3V3, +3V3_SC, +VCCO_13, +VCCO_33, +VCCO_34, +VCCO_35, +VIN, GND</text>
+<text x="572" y="1136" fill="#374151">rails: +1V8, +3V3, +3V3_SC, +5V_SOM, +VCCO_13, +VCCO_33, +VCCO_34, +VCCO_35, GND</text>
 <rect x="560" y="1230" width="220" height="80" rx="10" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="6,4"/>
 <text x="572" y="1254" fill="#6b7280" font-weight="bold">later waves</text>
 <text x="572" y="1276" fill="#6b7280">121 deferred port(s)</text>
