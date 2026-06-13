@@ -3,7 +3,10 @@
 Per carrier/research/lcd_backlight.md: AFC07-S40FCA-00 FFC carries panel +
 capacitive-touch I2C on pins 37-40; SY7201ABC boost drives the LED string at
 133 mA (I = 0.2V / R_ISET, 1.5R), PWM-dimmable on EN, fed from the gated
-+5V_LCD rail; logic on gated +3V3_LCD. RGB/sync ports go to PL bank 34 via the
++5V_LCD rail; logic on gated +3V3_LCD. LCD-1 (electrical audit): the boost
+output cap is 2.2uF/50V X7R (C125847), not 1uF — at the 9-25V open-LED OVP
+output the X7R DC-bias derating eats well over half of a 1uF, so 2.2uF keeps
+real capacitance and ripple/loop margin healthy while staying 50V-rated. RGB/sync ports go to PL bank 34 via the
 J3 sheet (USER DECISION 2026-06-11: bank 13 was oversubscribed by lcd+pmod+
 user_io; +VCCO_34 = 3.3V for the TTL panel). Touch I2C stays on bank 13.
 """
@@ -29,7 +32,7 @@ def circuit() -> Circuit:
     c.part("D1", "Device:D_Schottky", "SS34", "Diode_SMD:D_SMA", LCSC="C8678")
     c.part("R1", "Device:R", "1.5R", R0603, LCSC="C22769")   # ISET 133mA
     c.part("C1", "Device:C", "10u", C0805, LCSC="C15850")    # boost in
-    c.part("C2", "Device:C", "1u", C0603, LCSC="C28323")     # boost out 50V
+    c.part("C2", "Device:C", "2.2u", C0805, LCSC="C125847")  # boost out 50V (LCD-1)
     c.part("C3", "Device:C", "100n", C0603, LCSC="C1591")    # panel VDD
 
     # ---- panel data: 24 RGB + syncs, PL bank 13 via J2 ---------------------
