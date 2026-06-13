@@ -118,6 +118,35 @@ class CircuitError(ValueError):
     pass
 
 
+# Standard SMD passive footprints, used to default an inline Device:C /
+# Device:R that omits a footprint (DEF-3). A bare footprint='' is un-orderable
+# — JLC cannot place it — yet several inline decouple()/part() passives relied
+# on that empty default. Bulk caps (>= 1 uF) land on 0805, everything else on
+# 0603; this matches the JLC Basic packages of every inline passive in the
+# board (100n/200p 0603, 10u 0805, 1k/22k1/47k5 0603). Non-passive libs keep ''
+# (use_part always supplies the library footprint).
+_R_FP_0603 = "Resistor_SMD:R_0603_1608Metric"
+_C_FP_0603 = "Capacitor_SMD:C_0603_1608Metric"
+_C_FP_0805 = "Capacitor_SMD:C_0805_2012Metric"
+
+
+def _passive_uF(value: str) -> float | None:
+    """Capacitance in microfarads from a value like '100n', '10u', '200p'."""
+    m = re.fullmatch(r"\s*([0-9.]+)\s*([pnu]?)F?\s*", value or "")
+    if not m:
+        return None
+    return float(m.group(1)) * {"p": 1e-6, "n": 1e-3, "u": 1.0, "": 1.0}[m.group(2)]
+
+
+def _default_footprint(lib_id: str, value: str) -> str:
+    if lib_id == "Device:R":
+        return _R_FP_0603
+    if lib_id == "Device:C":
+        uF = _passive_uF(value)
+        return _C_FP_0805 if (uF is not None and uF >= 1.0) else _C_FP_0603
+    return ""
+
+
 class Circuit:
     """Builder + container for one subsystem's complete netlist."""
 
@@ -147,6 +176,8 @@ class Circuit:
              **fields: str) -> Part:
         if ref in self.parts:
             raise CircuitError(f"duplicate reference {ref!r}")
+        if not footprint:
+            footprint = _default_footprint(lib_id, value)   # DEF-3
         p = Part(ref=ref, lib_id=lib_id, value=value, footprint=footprint,
                  fields=dict(fields))
         self.parts[ref] = p

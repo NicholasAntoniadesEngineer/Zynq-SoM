@@ -55,7 +55,7 @@ Edge spills (preferred edge full — honest, not hidden):
 | power | E | (90, 24, 25.5 x 16.5) | 54 | 422.9 | (16) |
 | power_mon | E | (96, 14, 14 x 8.5) | 10 | 121.1 | (17) |
 | rj45_connector | @ethernet | (18, 44, 13 x 21) | 3 | 273.5 |  |
-| usb_pd | @pd_input | (108, 4, 8 x 8) | 6 | 23.1 | (18) |
+| usb_pd | @pd_input | (108, 4, 8 x 8) | 6 | 25.2 | (18) |
 | user_io | S | (18, 68, 12.5 x 19.5) | 17 | 246.6 | (19) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)

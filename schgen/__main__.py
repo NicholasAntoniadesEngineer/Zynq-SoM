@@ -540,6 +540,22 @@ def cmd_board(args: argparse.Namespace) -> int:
     print(f"BOM: {man_dir / 'bom_jlc.csv'} ({len(rows)} line items"
           f"{f', {len(missing)} missing LCSC' if missing else ''})")
 
+    # BOM footprint gate (DEF-3): a BOM line with no footprint is un-orderable
+    # — JLC (and any assembler) cannot place it. Inline Device:C/Device:R now
+    # default a 0603/0805 footprint (model._default_footprint), so this gate
+    # backstops any remaining footprint-less BOM part (e.g. a use_part whose
+    # library FOOTPRINT is blank).
+    no_fp = [(value, ",".join(refs))
+             for (value, fp, lcsc), refs in rows.items() if not fp]
+    if no_fp:
+        print("BOM FOOTPRINT GATE: FAIL — BOM line(s) with no footprint "
+              "(an assembler cannot place them):")
+        for value, refs in sorted(no_fp):
+            print(f"  {value}: {refs}")
+        ok_all = False
+    else:
+        print(f"BOM FOOTPRINT GATE: PASS — all {len(rows)} BOM lines placeable")
+
     # power-tree budget gate (round 4): regulator tree from the netlists +
     # declared draws -> headroom proof, numbered SVG, verdict report.
     from schgen import powertree
