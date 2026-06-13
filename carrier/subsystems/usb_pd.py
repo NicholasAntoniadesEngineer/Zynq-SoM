@@ -27,7 +27,19 @@ CC nets, contending with the FUSB302B (double-termination corrupts the
 advertised current and the PHY garbles BMC framing). The SC talks PD only
 over I2C to the FUSB302B (0x22 on STM32_I2C2) + the INT_N line; the CC
 pins stay UCPD-disabled / GPIO-Hi-Z on the SC. (CC analog filter caps 200p
-live here; the receptacle CC lines themselves are pd_input's.)
+live here; the receptacle CC lines themselves are pd_input's.) CC-1 (deep
+audit, SoM-netlist-verified): the SoM-side CC pins are STM32 PB6 (CC1) and
+PB4 (CC2) brought bare to J1.29/31 — bare GPIO, nothing else on the SoM
+side; firmware must hold them input-only/Hi-Z (no GPIO drive, no internal
+pull) for the FUSB302B to own CC. If the STM32 is ever intended as the PD
+policy engine instead, the FUSB302B is redundant and one must be DNP'd.
+
+AMX-1 (worst-case corner audit): the VBUS-sense pin (U1.2, on +VBUS_IN
+AHEAD of the eFuse) sits exactly at its 21.0 V recommended-operating max at
+the legal 20 V+5% contract and can ride to ~24.4 V in the pre-TVS/abnormal-
+source window — still well under the FUSB302B 28 V VBUS abs-max. No damage
+corner exists in a normal contract; +VBUS_IN is bounded only by the SMBJ22A
+TVS (eFuse OVP protects the rail BEHIND it, not this sense node).
 
 Stock symbol Interface_USB:FUSB302BMPX (WQFN-14 + EP): stacked duplicate
 pins 4 (VDD), 9/15 (GND/EP), 11 (CC1), 14 (CC2) are declared on the same

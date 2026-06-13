@@ -14,6 +14,13 @@ drain) wire-OR into PMON_ALERT_N (10k to +3V3_SC) for the bringup expander's
 spare port P11; WARNING/PV/TC stay I2C-readable and are author NCs. Unused
 U2 channels have IN+/IN- tied to GND per the datasheet. No I2C pull-ups
 here — usb_pd/bringup own the bus pulls.
+
+AMX-2 (worst-case corner audit): the +VIN channel common-mode sense pins
+(IN+1 on +VIN, IN-1 on +VIN_SYS) keep ~3 V margin to the INA3221 26 V
+common-mode abs-max at the eFuse OVP-trip corner (+VIN can reach ~23.06 V
+typ before cutoff) — positive in every corner, so sound. But that headroom
+is COUPLED to the pd_input eFuse OVP setpoint (PD-1): any future widening of
+the OVP trip must re-check this 26 V common-mode limit.
 """
 
 from __future__ import annotations
