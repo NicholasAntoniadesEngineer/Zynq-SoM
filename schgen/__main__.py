@@ -26,6 +26,7 @@ import ast
 import csv
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -413,6 +414,13 @@ def cmd_board(args: argparse.Namespace) -> int:
     placements: dict[str, tuple] = {}
     verdicts: list[str] = []
     ok_all = True
+
+    # Pass 1 (sequential, CPU-bound): purity / validate / place+route / emit /
+    # visual. Records the per-name outcome so the parallel gate pass and the
+    # verdict pass below preserve EXACT names-order semantics — gates.txt is
+    # written from `verdicts` and is order-sensitive.
+    prepared: list[tuple] = []            # sheets that reached the kicad-cli gates
+    early_fail: dict[str, str | None] = {}  # name -> gates.txt verdict (or None)
     for name in names:
         spath = _subsystem_path(name)
         purity = _purity_violations(spath)
@@ -421,6 +429,7 @@ def cmd_board(args: argparse.Namespace) -> int:
             for v in purity:
                 print(f"  {v}")
             ok_all = False
+            early_fail[name] = None         # no gates.txt verdict (as before)
             continue
         sc = load_subsystem(name)
         c = sc.circuit
@@ -431,6 +440,7 @@ def cmd_board(args: argparse.Namespace) -> int:
             for pr in driven:
                 print(f"{name}: INPUT-DRIVEN: {pr}")
             ok_all = False
+            early_fail[name] = None
             continue
         try:
             placement, routed, geo = place.place_and_route(c, lib)
@@ -438,8 +448,8 @@ def cmd_board(args: argparse.Namespace) -> int:
             # kill the whole board run: record the FAIL verdict (board exits
             # non-zero) and keep gating/linking every other sheet.
             msg = str(exc).splitlines()[-1][:140]
-            verdicts.append(f"{name}: place/route=FAIL ({msg})")
-            print(verdicts[-1])
+            early_fail[name] = f"{name}: place/route=FAIL ({msg})"
+            print(early_fail[name])
             ok_all = False
             continue
         placements[name] = (placement, routed)
@@ -451,16 +461,45 @@ def cmd_board(args: argparse.Namespace) -> int:
             no_connects=placement.no_connects, paper=placement.paper)
         sch = tmp / f"{name}.kicad_sch"
         emit(design, sch, lib)
+        vis = visual_gate.check(geo)
+        prepared.append((name, sc, c, sch, vis, placement.paper))
+
+    # Pass 2 (parallel): the three per-sheet kicad-cli gates are independent
+    # across sheets and dominate wall time. netlist export (unique tempdir),
+    # ERC (per-sheet .kicad_pro + report), render (per-sheet PNG) all write
+    # only per-sheet paths, so running the child processes concurrently is
+    # behaviour-preserving — each gate sees the exact same inputs/outputs as
+    # the serial run; only the dispatch is threaded.
+    def _gate_one(item: tuple):
+        name, _sc, c, sch, _vis, _paper = item
         net_res = netlist_gate.check(c, sch)
         erc_ok, _txt = _erc(sch, rep_dir / f"{name}.erc.rpt")
-        vis = visual_gate.check(geo)
         _render(sch, ren_dir / f"{name}.png")
+        return name, net_res, erc_ok
+
+    gate_out: dict[str, tuple] = {}
+    if prepared:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=min(8, (os.cpu_count() or 4))) as ex:
+            for name, net_res, erc_ok in ex.map(_gate_one, prepared):
+                gate_out[name] = (net_res, erc_ok)
+
+    # Pass 3 (sequential, names order): assemble verdicts (-> gates.txt) and
+    # the ordered `sheets` list exactly as the original serial loop did.
+    prep_by_name = {p[0]: p for p in prepared}
+    for name in names:
+        if name in early_fail:
+            if early_fail[name] is not None:
+                verdicts.append(early_fail[name])
+            continue
+        _n, sc, _c, _sch, vis, paper = prep_by_name[name]
+        net_res, erc_ok = gate_out[name]
         ok = net_res.ok and erc_ok and vis.ok
         ok_all = ok_all and ok
         verdicts.append(
             f"{name}: netlist={'PASS' if net_res.ok else 'FAIL'} "
             f"erc={'PASS' if erc_ok else 'FAIL'} "
-            f"visual={'PASS' if vis.ok else 'FAIL'} paper={placement.paper}")
+            f"visual={'PASS' if vis.ok else 'FAIL'} paper={paper}")
         print(verdicts[-1])
         sheets.append(sc)
 
