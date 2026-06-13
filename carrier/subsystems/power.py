@@ -24,7 +24,35 @@ buck runs near 100% duty and passes ~4.7-4.8 V (inside the SoM 4.2-5 V
 window); after the 20 V contract it regulates 4.96 V. This preserves the
 "switches-only stage 1 with a blank SC" bring-up contract: +5V_SOM behaves
 exactly like +3V3_SC — alive pre-DIP by design. EN is strapped on via a
-UVLO divider (NO EN port); see stage 4 below for the divider math.
+SERIES-R + ZENER CLAMP (NO EN port); see the EN clamp section below.
+
+PWR-1 FIX — U4 EN OVER-STRESS (deep-audit 2026-06-12, LIVE TI SLVSDG6C).
+The earlier always-on strap was a plain R12/R13 = 22k/10k divider from
++VIN; at the 20 V (21 V at +5%) PD contract that presents 21 x 10/32 =
+6.56 V on the TPS54302 EN. The datasheet recommended-max EN is 5.5 V and
+absolute-max 7 V, and — verified against the LIVE SLVSDG6C — there is NO
+internal EN clamp: EN has only a 1.55 uA hysteresis current source, so the
+old "internal EN clamp holds the divider voltage" claim was FALSE and is
+removed. A plain re-ratio cannot fix it: turn-on at the 4.75 V default
+contract wants a HIGH bottom/top ratio, but <= 5.5 V at 21 V wants a LOW
+ratio — mutually exclusive. RESOLUTION (clamp, this file's stage 4):
+  R12 = 10k SERIES from +VIN -> EN ; D5 = MMSZ5231B 5.1 V zener EN -> GND ;
+  C20 = 100 nF EN bypass to GND.
+At low VIN the zener is off and the 1.55 uA I_hys through 10k drops < 16 uV,
+so EN ~= VIN -> sure enable (threshold 1.21 V typ, <= ~1.3 V worst). At
+high VIN the zener clamps EN to ~Vz, R12 absorbing (VIN - Vz). EN stays
+inside [enable-threshold + margin, 5.5 V] across the whole 4.75-21 V range.
+
+EN voltage table (worst case over Vz = 4.845/5.1/5.355 V at Izt=20 mA,
+Zzt 17 ohm, I_hys 1.55 uA, R12 10k 1%; SLVSDG6C + MMSZ5231B datasheet):
+  VIN = 4.75 V (5V contract low) : EN ~= 4.50 .. 4.73 V  (>> 1.3 V -> ON)
+  VIN = 5.00 V (5V contract nom) : EN ~= 4.51 .. 4.98 V
+  VIN = 21.0 V (20V + 5%)        : EN ~= 4.53 .. 5.04 V  (<= 5.5 V, margin
+                                    ~0.46 V; zener I 1.6 mA -> 8 mW << the
+                                    MMSZ5231B 500 mW rating).
+The schgen spice/analytic gate (schgen/spice.py, "EN clamp") re-derives
+this table from the netlist and FAILS if EN ever leaves [1.5 V, 5.5 V]
+across VIN 4.75-21 V — so PWR-1 can never silently regress.
 
 Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
 - 2x TPS54302DDCR (LCSC C311983, stock 33,368, Extended): TI 4.5-28 V, 3 A
@@ -47,16 +75,17 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   +3V3 = 100k/22k -> 3.30 V (C25803 + C31850, both Basic);
   +5V_SOM = 73.2k/10k -> 4.96 V (P0 stage U4, identical to the +5V stage —
   same verified C14890/C25804, comfortably inside the SoM 4.2-5 V window).
-- +5V_SOM EN UVLO divider (always-on strap, NO bring-up port): R12/R13 =
-  22k/10k from +VIN -> EN -> GND. TPS54302 V_EN(rising) = 1.21 V typ ->
-  UVLO start = 1.21 x (1 + 22k/10k) = 1.21 x 3.2 = 3.87 V; the buck is thus
-  enabled the moment +VIN clears ~3.9 V (i.e. at the 5 V default-USB
-  contract, before any PD negotiation) and stays on. At the 20 V contract
-  the divider would present 20 x 10/32 = 6.25 V at EN — held by the
-  TPS54302's INTERNAL EN clamp (the datasheet UVLO-divider method, SLVSCP3
-  Fig "Adjustable UVLO", is specified across the full 4.5-28 V input with
-  this clamp; the hysteresis current source sinks the divider). Same
-  verified parts as elsewhere (22k = C31850 Basic, 10k = C25804 Basic).
+- +5V_SOM EN clamp (always-on strap, NO bring-up port; PWR-1 FIX — see the
+  header "EN voltage table"): R12 = 10k SERIES from +VIN to EN (C25804,
+  reused 10k); D5 = MMSZ5231B 5.1 V / 500 mW zener EN -> GND (LIVE-verified
+  on the JLC parts API 2026-06-13: C85181, Diodes Inc, SOD-123, stock
+  180,887, Extended, min-qty 1, $0.0162 @ qty 1 — the canonical 5.1 V
+  zener; alternates same query: C2117 BZT52C5V1 Jiangsu Changjin 92,425,
+  C66198 MMSZ5231BT1G onsemi 81,989); C20 = 100 nF EN bypass to GND (C1591,
+  reused). No JLC Basic 5.1 V zener exists (all 5.1 V zeners are Extended);
+  C85181's 180 k stock + min-qty 1 makes it the lowest-risk pick. Replaces
+  the old over-stressing 22k/10k divider (the FALSE "internal EN clamp"
+  claim is gone). EN clamped to ~5.0 V worst-case at 21 V (<= 5.5 V).
 - PG LEDs (bringup dossier section 3.3): KT-0603R red (C2286 Basic) + 1k
   (C21190) on +5V, + 330R (C23138) on +3V3. +1V8 cannot light a red LED
   (Vf ~2.0 V > rail), so an AO3400A (C20917 Basic, Vgs(th) <= 1.45 V max)
@@ -91,6 +120,7 @@ C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
 C1206 = "Capacitor_SMD:C_1206_3216Metric"
 LED_FP = "LED_SMD:LED_0603_1608Metric"
+DZ_FP = "Diode_SMD:D_SOD-123"              # MMSZ5231B 5.1 V EN-clamp zener
 L_FP = "SWPA8040S100MT:SWPA8040S100MT"     # faithful EasyEDA footprint (parts/)
 
 EXPECT_BRINGUP = "bringup (wave 2 rail-enable cells, dossier section 3.1)"
@@ -190,19 +220,25 @@ def circuit() -> Circuit:
 
     # ---- stage 4: +VIN (20 V) -> +5V_SOM buck (P0 fix, ALWAYS-ON) -----------
     # Third TPS54302 (U4). Identical cell to U1's +5V stage (same L, in/out
-    # caps, FB divider) EXCEPT the EN is strapped on by a UVLO divider rather
-    # than a bring-up port: this rail must be alive pre-DIP / pre-PD so the
-    # SoM SC can boot and master the FUSB302 PD negotiation (docstring P0).
+    # caps, FB divider) EXCEPT the EN is strapped on by a SERIES-R + ZENER
+    # CLAMP rather than a bring-up port: this rail must be alive pre-DIP /
+    # pre-PD so the SoM SC can boot and master the FUSB302 PD negotiation
+    # (docstring P0). PWR-1 FIX (SLVSDG6C, see docstring "EN clamp"): a plain
+    # divider cannot satisfy both turn-on-at-4.75 V AND <= 5.5 V-at-21 V — so
+    # R12 (series) + D5 (5.1 V zener EN->GND) + C20 (EN bypass) instead.
     c.use_part("TPS54302DDCR", ref="U4", lib_id=BUCK_LIB, footprint=BUCK_FP)
     c.net("+VIN", "U4.3")
     c.net("GND", "U4.1")
-    # EN UVLO divider (always-on): start = 1.21 V * (1 + 22k/10k) = 3.87 V
-    # (docstring); EN clamp holds the 20 V-contract divider voltage.
-    c.part("R12", "Device:R", "22k", R_FP, LCSC="C31850")          # UVLO top
-    c.part("R13", "Device:R", "10k", R_FP, LCSC="C25804")          # UVLO bottom
+    # EN clamp (always-on strap, NO bring-up port). Series R from +VIN pulls
+    # EN to ~VIN at the 5 V contract (>> the 1.21 V enable threshold -> sure
+    # turn-on); the zener clamps EN to ~5.0 V at the 20 V (21 V) contract,
+    # well under the TPS54302 EN rec-max 5.5 V. EN voltage table in docstring.
+    c.part("R12", "Device:R", "10k", R_FP, LCSC="C25804")          # EN series
+    c.part("D5", "Device:D_Zener", "MMSZ5231B", DZ_FP, LCSC="C85181")  # 5.1V clamp
+    c.part("C20", "Device:C", "100n", C0603, LCSC="C1591")         # EN bypass
     c.net("+VIN", "R12.1")
-    c.net("EN_5V_SOM", "U4.5", "R12.2", "R13.1")
-    c.net("GND", "R13.2")
+    c.net("EN_5V_SOM", "U4.5", "R12.2", "D5.1", "C20.1")           # D5.1 = K
+    c.net("GND", "D5.2", "C20.2")                                  # D5.2 = A
     for ref, val, fp, lcsc in (("C14", "100n", C0603, "C1591"),
                                ("C15", "10u", C1206, "C13585"),
                                ("C16", "10u", C1206, "C13585")):

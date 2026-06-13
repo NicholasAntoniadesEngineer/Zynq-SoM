@@ -47,6 +47,25 @@ TPS2663_OVPR_MAX = 1.224        # V, OVP rising threshold +2%
 PD_CONTRACT_VMAX = 21.0         # V, 20 V contract + 5% source tolerance
 SMBJ22A_VBR_MIN = 24.4          # V, inlet TVS min breakdown (pd_input D1)
 
+# TPS54302 EN pin (SLVSDG6C): enable threshold 1.21 V typ (~1.3 V worst
+# high), recommended-max 5.5 V, absolute-max 7 V, NO internal clamp, only a
+# 1.55 uA hysteresis current source. PWR-1: the +5V_SOM always-on EN strap
+# is a series R + 5.1 V zener clamp; EN must stay inside this window across
+# the FULL VIN range the inlet eFuse passes (4.75 V default-contract low ..
+# 21 V = 20 V + 5%).
+TPS54302_EN_RISING = 1.21       # V, EN enable threshold typ
+TPS54302_EN_ENABLE_FLOOR = 1.5  # V, enable + margin (worst threshold ~1.3 V)
+TPS54302_EN_RECMAX = 5.5        # V, EN recommended-max (SLVSDG6C)
+TPS54302_EN_IHYS = 1.55e-6      # A, EN hysteresis current source
+PD_VIN_CONTRACT_LO = 4.75       # V, 5 V default-USB contract low
+# 5.1 V zener (MMSZ5231B-class) datasheet model: Vz at Izt=20 mA is the MPN
+# nominal +/-5%, dynamic impedance Zzt <= 17 ohm. The EN ceiling is judged
+# at the +5% bound (highest clamp); turn-on at the -5% bound (lowest EN).
+ZENER_5V1_IZT = 20e-3
+ZENER_5V1_ZZT = 17.0
+ZENER_5V1_VZ = {"MMSZ5231B": (4.845, 5.1, 5.355),   # +/-5% (Diodes Inc)
+                "BZT52C5V1": (4.845, 5.1, 5.355)}
+
 
 @dataclass
 class Check:
@@ -193,6 +212,7 @@ def extract_checks(sheets) -> Result:
         _rc_networks(sc.name, c, res)
         _sy7201_iset(sc.name, c, res)
         _buck_fb(sc.name, c, res)
+        _en_clamp(sc.name, c, res)
         _boot0(sc.name, c, res)
     # named dividers that the auto pass must have found
     found = {ch.name for ch in res.checks}
@@ -349,6 +369,121 @@ def _buck_fb(sheet: str, c, res: Result) -> None:
                    f"{ot:g}/{ob:g}) vs nominal {nominal:g} V +/-3%",
             value=round(vout, 4), unit="V",
             lo=nominal * 0.97, hi=nominal * 1.03))
+
+
+def _en_clamp(sheet: str, c, res: Result) -> None:
+    """TPS54302 EN series-R + zener clamp (PWR-1, power.py +5V_SOM stage).
+
+    Topology: R_series from the input rail -> EN ; 5.1 V zener (cathode on
+    EN, anode on GND) ; optional EN bypass cap. ASSERTS EN stays inside
+    [enable + margin, recommended-max] across VIN = 4.75 V .. 21 V — the
+    full range the inlet eFuse passes pre/post PD contract. The buck must
+    turn on at the 5 V default contract yet never exceed the EN rec-max at
+    the 20 V (21 V) contract; a plain divider cannot do both, so the clamp
+    is the fix and this check is its regression lock.
+    """
+    from schgen.powertree import _detect_regs
+
+    class _One:
+        def __init__(self, name, circuit):
+            self.name, self.circuit = name, circuit
+
+    regs, _errs = _detect_regs([_One(sheet, c)])
+    for reg in regs:
+        if reg.kind != "buck":
+            continue
+        en_net = _net_of(c, reg.ref, "5")          # TPS54302 EN = pin 5
+        if en_net is None or en_net.net_class is not NetClass.SIGNAL:
+            continue                               # bring-up-port EN: skip
+        # series R from a POWER rail (the input rail) onto EN
+        series = [(r, o, other) for r, o, other in _resistors_on(c, en_net.name)
+                  if other.net_class is NetClass.POWER]
+        # clamp zener: a :D_Zener with one pin on EN, the other on GND
+        zeners = []
+        for ref, part in sorted(c.parts.items()):
+            if not part.lib_id.endswith(":D_Zener"):
+                continue
+            n1, n2 = _net_of(c, ref, "1"), _net_of(c, ref, "2")
+            if n1 is None or n2 is None:
+                continue
+            nm = {n1.name, n2.name}
+            if en_net.name in nm and any(
+                    n.net_class is NetClass.GROUND for n in (n1, n2)):
+                zeners.append((ref, part.value))
+        if not series:
+            continue                               # no rail strap on EN
+        if not zeners:
+            # UNCLAMPED EN strap (series R, maybe a bottom divider R, but NO
+            # zener): the PWR-1 failure mode. Judge the bare resistor network
+            # at the 21 V contract — a plain divider that lands EN > rec-max
+            # MUST fail here (this is the regression lock that the old 22k/10k
+            # strap would now trip).
+            r_ref, r_ohm, rail = series[0]
+            v_rail = rail_volts(rail.name) or 0.0
+            bots = [(r, o) for r, o, other in _resistors_on(c, en_net.name)
+                    if other.net_class is NetClass.GROUND]
+            if bots:
+                _rb, ob = bots[0]
+                en_hi = PD_CONTRACT_VMAX * ob / (r_ohm + ob)
+                topo = f"divider {r_ref}={r_ohm:g}R/{_rb}={ob:g}R"
+            else:
+                en_hi = PD_CONTRACT_VMAX - TPS54302_EN_IHYS * r_ohm
+                topo = f"series {r_ref}={r_ohm:g}R only (no shunt)"
+            res.checks.append(Check(
+                name=f"EN clamp ceiling ({reg.ref})", sheet=sheet,
+                kind="en_clamp",
+                detail=f"{rail.name}={v_rail:g}V EN strap {topo}, NO clamp "
+                       f"zener: EN at VIN={PD_CONTRACT_VMAX}V must stay <= the"
+                       f" EN recommended-max {TPS54302_EN_RECMAX}V (TPS54302 "
+                       f"has NO internal EN clamp — SLVSDG6C; PWR-1)",
+                value=round(en_hi, 3), unit="V",
+                lo=None, hi=TPS54302_EN_RECMAX))
+            continue
+        r_ref, r_ohm, rail = series[0]
+        v_rail = rail_volts(rail.name) or 0.0
+        z_ref, z_val = zeners[0]
+        mpn = next((k for k in ZENER_5V1_VZ if z_val.startswith(k)), None)
+        if mpn is None:
+            res.notes.append(f"NOTE: {sheet}:{z_ref} zener {z_val} has no "
+                             f"modelled Vz — EN clamp not checked")
+            continue
+        vz_lo, _vz_nom, vz_hi = ZENER_5V1_VZ[mpn]
+
+        def en_at(vin: float, vz_test: float) -> float:
+            # zener off below its near-zero-current knee: EN = vin - I_hys*R
+            vz_knee = vz_test - ZENER_5V1_IZT * ZENER_5V1_ZZT
+            en_open = vin - TPS54302_EN_IHYS * r_ohm
+            if en_open <= vz_knee:
+                return en_open
+            iz = (vin - vz_test + ZENER_5V1_IZT * ZENER_5V1_ZZT
+                  - r_ohm * TPS54302_EN_IHYS) / (r_ohm + ZENER_5V1_ZZT)
+            return vz_test + (iz - ZENER_5V1_IZT) * ZENER_5V1_ZZT
+
+        # turn-on floor: lowest EN over the corner = high VIN is clamped but
+        # the binding turn-on case is the LOWEST contract VIN with the
+        # LOWEST-Vz part (most current shunted). Ceiling: highest VIN with
+        # the highest-Vz part. Check BOTH contract endpoints for the floor.
+        en_turnon = min(en_at(PD_VIN_CONTRACT_LO, vz_lo),
+                        en_at(PD_VIN_CONTRACT_LO, vz_hi))
+        en_ceiling = en_at(PD_CONTRACT_VMAX, vz_hi)
+        res.checks.append(Check(
+            name=f"EN clamp turn-on ({reg.ref})", sheet=sheet, kind="en_clamp",
+            detail=f"{rail.name}={v_rail:g}V -[{r_ref}={r_ohm:g}R]- EN, "
+                   f"{z_ref}={z_val} zener->GND: EN at VIN={PD_VIN_CONTRACT_LO}"
+                   f"V (5V contract low) must exceed enable+margin "
+                   f"{TPS54302_EN_ENABLE_FLOOR}V (threshold 1.21V typ, "
+                   f"SLVSDG6C) so the always-on buck is sure to start",
+            value=round(en_turnon, 3), unit="V",
+            lo=TPS54302_EN_ENABLE_FLOOR, hi=None))
+        res.checks.append(Check(
+            name=f"EN clamp ceiling ({reg.ref})", sheet=sheet, kind="en_clamp",
+            detail=f"{rail.name}={v_rail:g}V -[{r_ref}={r_ohm:g}R]- EN, "
+                   f"{z_ref}={z_val} zener->GND: EN at VIN={PD_CONTRACT_VMAX}"
+                   f"V (20V+5%) worst-case (Vz {vz_hi}V) must stay <= the EN "
+                   f"recommended-max {TPS54302_EN_RECMAX}V (no internal clamp,"
+                   f" I_hys 1.55uA only — SLVSDG6C)",
+            value=round(en_ceiling, 3), unit="V",
+            lo=None, hi=TPS54302_EN_RECMAX))
 
 
 def _boot0(sheet: str, c, res: Result) -> None:

@@ -2354,20 +2354,29 @@ class _Engine:
         cin = in_caps.pop(in_rail, [])
         cols = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
                 for i in range(len(cin))]
-        # EN-UVLO divider rides the input rail run as its own column, one cap
-        # pitch left of the last cap column (mirrors the FB divider on the
-        # output run). Validate the top resistor really sits on THIS rail.
+        # EN-UVLO / EN-CLAMP strap rides the input rail run as its own
+        # column block, left of the last cap column (mirrors the FB divider
+        # on the output run). The TOP element is a SERIES resistor from THIS
+        # rail to the EN midpoint; the GROUND side is one OR MORE shunt
+        # elements (clamp zener, EN bypass cap, optional bottom divider R) —
+        # each gets its own sub-column sharing the midpoint, so the generic
+        # series-R + zener + cap clamp (PWR-1) renders without a sheet hack.
         uvlo_col = None
+        uvlo_gnd = []
         if p_en_uvlo is not None:
             (_pe_u, uvlo_net) = p_en_uvlo
             (uvlo_rt, uvlo_top_rail) = self.pull[uvlo_net][0]
             if uvlo_top_rail != in_rail:
                 raise PlaceError(
-                    f"{ref}: EN-UVLO divider top {uvlo_rt} sits on "
+                    f"{ref}: EN-UVLO top {uvlo_rt} sits on "
                     f"{uvlo_top_rail!r}, not the input rail {in_rail!r} — "
                     f"unhandled topology, extend the engine")
+            # deterministic order (set/dict order is hash-seed noise)
+            uvlo_gnd = sorted(self.hang[uvlo_net])
             base = gfloor(pv[0] - sp.cluster_dx + len(cin) * -sp.cap_pitch)
             uvlo_col = base
+            # only the SERIES-R column rides the input-rail run; the extra
+            # ground-side columns branch off the midpoint, not the rail.
             cols = cols + [uvlo_col]
         nodes = [pv[0]] + cols + [tx for tx, _ in strap_taps]
         nodes_sorted = sorted(set(nodes))
@@ -2385,16 +2394,30 @@ class _Engine:
             self.power(far, *far_pt)
         if p_en_uvlo is not None and uvlo_col is not None:
             (pe_u, uvlo_net) = p_en_uvlo
-            # top R: in_rail -> midpoint; bottom R: midpoint -> GND
+            # SERIES element: in_rail -> midpoint (rides the rail column)
             (uvlo_rt, _rail) = self.pull.pop(uvlo_net)[0]
             mid_pt, _ = self._vertical_2pin(uvlo_rt, uvlo_col, pv[1],
                                             in_rail, downward=True)
             y_mid = mid_pt[1]
-            uvlo_rb = self.hang.pop(uvlo_net)[0]
-            far_pt2, far2 = self._vertical_2pin(uvlo_rb, uvlo_col, y_mid,
-                                                uvlo_net, downward=True)
-            self.power(far2, *far_pt2)
-            # EN pin elbows down/left into the divider midpoint
+            # GROUND-side shunt elements: bottom divider R, clamp zener, EN
+            # bypass cap. The first rides the series column straight to GND;
+            # any extras get their own column one cap-pitch further left and
+            # tie back to the midpoint with a short horizontal run.
+            self.hang.pop(uvlo_net)
+            mid_xs = [uvlo_col]
+            for k, gref in enumerate(uvlo_gnd):
+                gcol = uvlo_col if k == 0 else gfloor(
+                    uvlo_col - (k * sp.cap_pitch))
+                if k > 0:
+                    mid_xs.append(gcol)
+                far_pt2, far2 = self._vertical_2pin(gref, gcol, y_mid,
+                                                    uvlo_net, downward=True)
+                self.power(far2, *far_pt2)
+            # midpoint rail tying the shunt columns together at y_mid
+            mid_xs_sorted = sorted(set(mid_xs))
+            for xa, xb in zip(mid_xs_sorted, mid_xs_sorted[1:]):
+                self.pl.plan(uvlo_net, (xa, y_mid), (xb, y_mid))
+            # EN pin elbows down/left into the midpoint
             xv = round(pe_u[0] - 2.54, 3)
             self.pl.plan(uvlo_net, pe_u, (xv, pe_u[1]), (xv, y_mid),
                          (uvlo_col, y_mid))
