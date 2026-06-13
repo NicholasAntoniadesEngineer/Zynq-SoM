@@ -25,10 +25,13 @@ lanes stay DC-coupled jack -> Zynq (shunt taps, not series). Confirm the
 chosen part's IO cap <= 0.5 pF/line before populating. The sink must present
 EDID even when the carrier is off (HDMI 1.4 sec 8.5), so a 2-Kbit I2C EEPROM
 (ST M24C02, LCSC C7562) sits on the DDC bus powered from the CABLE's +5V
-(pin 18): a source can always read — and, with WC# strapped low like common
-dev boards, field-(re)program — the EDID. DDC pull-ups live on the SOURCE
-side per spec, so none are duplicated here. E0/E1/E2 are grounded (EDID
-address 0xA0/0x50).
+(pin 18): a source can always read the EDID. WC# is write-PROTECTED by
+default (HDMIRX-2): a 10k strap pulls it HIGH to the carrier logic rail
++3V3_HDMI_RX on the labeled jumper net HDMI_RX_EDID_WP, so a runtime DDC
+write cannot corrupt the EDID; field-(re)programming is a documented one-move
+override (jumper/strap WC# to GND). DDC pull-ups live on the SOURCE side per
+spec, so none are duplicated here. E0/E1/E2 are grounded (EDID address
+0xA0/0x50).
 
 Hot-plug detect is asserted passively: 1k from the cable's own +5V to HPD
 (pin 19) — a plugged source sees its 5V returned on HPD and starts reading
@@ -104,15 +107,31 @@ def circuit() -> Circuit:
     c.port("HDMI_RX_CEC", "J1.13", "R2.2", expect=J23_MAP)
     c.net("+3V3_HDMI_RX", "R2.1")
 
+    # HDMIRX-2 (electrical audit): EDID write-protect is an explicit strap, NOT
+    # a hard ground. WC# was tied to GND (write ENABLED), so a stray DDC write
+    # could corrupt the EDID at runtime (carrier active). Strap WC# HIGH
+    # through 10k to the carrier logic rail +3V3_HDMI_RX -> write-PROTECTED by
+    # default whenever the carrier is up (the runtime-corruption window). The
+    # tap is a labeled jumper net (HDMI_RX_EDID_WP) so field-(re)programming is
+    # a documented one-move override: pull WC# to GND to enable writes (or, for
+    # write-protect even with the carrier rail down while a source is plugged,
+    # hardwire the jumper to the EEPROM VCC domain instead). E0/E1/E2 address
+    # straps stay grounded (EDID addr 0xA0/0x50).
+    c.part("R5", "Device:R", "10k", R_FP, LCSC="C25804")    # EDID WC# WP strap
+    c.net("HDMI_RX_EDID_WP", "U1.7", "R5.2")
+    c.net("+3V3_HDMI_RX", "R5.1")
+
     # grounds: TMDS shields + DDC/CEC ground on signal GND; shell on chassis
     c.net("GND", "J1.2", "J1.5", "J1.8", "J1.11", "J1.17",
-          "U1.1", "U1.2", "U1.3", "U1.4", "U1.7")
+          "U1.1", "U1.2", "U1.3", "U1.4")
     c.net("CHASSIS_GND", "J1.20", "J1.21", "J1.22", "J1.23")
 
     # pin 14 UTILITY/HEAC+: reserved, HEAC unused by design
     c.nc("J1.14")
 
-    # power-tree budget (round 4): only the CEC 27k pull-up loads the gated
-    # rail (~0.12 mA when CEC is driven low); EEPROM runs from the cable 5V
-    c.draws("+3V3_HDMI_RX", 0.001, "CEC 27k pull-up (EEPROM is cable-fed)")
+    # power-tree budget (round 4): the CEC 27k pull-up (~0.12 mA when CEC is
+    # driven low) + the EDID WC# 10k write-protect strap (~0.33 mA only if WC#
+    # is jumpered low; ~0 mA in the protected default); EEPROM runs from cable 5V
+    c.draws("+3V3_HDMI_RX", 0.001, "CEC 27k pull-up + EDID WC# 10k WP strap "
+                                   "(EEPROM is cable-fed)")
     return c
