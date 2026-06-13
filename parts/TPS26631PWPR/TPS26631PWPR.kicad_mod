@@ -362,7 +362,55 @@
 		rect
 		(at 0 0)
 		(size 4.199992 2.999994)
-		(layers "F.Cu" "F.Paste" "F.Mask")
+		(layers "F.Cu" "F.Mask")
+	)
+	(pad
+		"21"
+		smd
+		rect
+		(at -1.4 -0.75)
+		(size 1.0844 1.1619)
+		(layers "F.Paste")
+	)
+	(pad
+		"21"
+		smd
+		rect
+		(at -1.4 0.75)
+		(size 1.0844 1.1619)
+		(layers "F.Paste")
+	)
+	(pad
+		"21"
+		smd
+		rect
+		(at 0 -0.75)
+		(size 1.0844 1.1619)
+		(layers "F.Paste")
+	)
+	(pad
+		"21"
+		smd
+		rect
+		(at 0 0.75)
+		(size 1.0844 1.1619)
+		(layers "F.Paste")
+	)
+	(pad
+		"21"
+		smd
+		rect
+		(at 1.4 -0.75)
+		(size 1.0844 1.1619)
+		(layers "F.Paste")
+	)
+	(pad
+		"21"
+		smd
+		rect
+		(at 1.4 0.75)
+		(size 1.0844 1.1619)
+		(layers "F.Paste")
 	)
 	(pad
 		""

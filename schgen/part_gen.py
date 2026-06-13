@@ -533,9 +533,49 @@ def _arc_three_points(path: str, ctx: _FpCtx
     return arcs
 
 
+PASTE_RELIEF_MIN = 2.0   # mm — SMD pads at/above this on BOTH sides get a
+                         # windowed paste grid instead of one full aperture
+PASTE_COVER = 0.6        # target paste-area fraction of the windowed grid
+PASTE_PITCH_MAX = 1.5    # mm — maximum aperture pitch
+
+
+def _paste_grid(number: str, cx: float, cy: float, w: float, h: float,
+                rot: float) -> list:
+    """DEF-2: windowed F.Paste apertures for a large pad — an nx*ny grid sized
+    to ~PASTE_COVER coverage, replacing the single full-coverage aperture that
+    floats/bridges the part under reflow (IPC-7525 paste-volume control). The
+    apertures share the pad number so KiCad keeps them on the same pad stack
+    (copper + mask come from the main pad); offsets are rotated by the pad's
+    rotation so the grid lands inside a rotated pad."""
+    import math
+    nx = max(2, math.ceil(w / PASTE_PITCH_MAX))
+    ny = max(2, math.ceil(h / PASTE_PITCH_MAX))
+    px, py = w / nx, h / ny
+    aw = round(px * math.sqrt(PASTE_COVER), 4)
+    ah = round(py * math.sqrt(PASTE_COVER), 4)
+    th = math.radians(rot)
+    cos, sin = math.cos(th), math.sin(th)
+    out: list = []
+    for i in range(nx):
+        for j in range(ny):
+            ox = -w / 2 + px * (i + 0.5)
+            oy = -h / 2 + py * (j + 0.5)
+            ax = round(cx + ox * cos - oy * sin, 4)
+            ay = round(cy + ox * sin + oy * cos, 4)
+            at = [Sym("at"), ax, ay]
+            if rot:
+                at.append(round(rot, 2))
+            out.append([Sym("pad"), str(number), Sym("smd"), Sym("rect"),
+                        at, [Sym("size"), aw, ah],
+                        [Sym("layers"), "F.Paste"]])
+    return out
+
+
 def _pad_sx(fields: list[str], ctx: _FpCtx) -> list | None:
     """PAD~shape~cx~cy~w~h~layer~net~number~hole_r~points~rot~id~hole_len~
-    slot~plated~locked — faithful pad conversion."""
+    slot~plated~locked — faithful pad conversion. Returns a LIST of pad nodes
+    (one for an ordinary pad; a main copper/mask pad + windowed paste apertures
+    for a large exposed/thermal pad, DEF-2), or None for a degenerate pad."""
     (shape, cx, cy, w, h, layer, _net, number, hole_r, points, rot
      ) = fields[:11]
     if "(" in number and ")" in number:   # EasyEDA "name(number)" encoding
@@ -594,8 +634,18 @@ def _pad_sx(fields: list[str], ctx: _FpCtx) -> list | None:
                     pad.append([Sym("drill"), Sym("oval"), hole_len, hole_d])
             else:
                 pad.append([Sym("drill"), hole_d])
+        # DEF-2: a large SMD pad (>=PASTE_RELIEF_MIN on BOTH sides — exposed/
+        # thermal pads, connector tabs, big inductor terminals) emitted with
+        # 100% F.Paste floats / squeezes out under reflow. Give it copper+mask
+        # only and lay the paste as a windowed grid. Small signal pins are
+        # untouched, so ordinary footprints are byte-identical.
+        if (not through and ki_shape in ("rect", "roundrect")
+                and "F.Paste" in layers
+                and min(w_mm, h_mm) >= PASTE_RELIEF_MIN):
+            pad.append([Sym("layers"), *[ly for ly in layers if ly != "F.Paste"]])
+            return [pad, *_paste_grid(number, x, y, w_mm, h_mm, rot_deg)]
         pad.append([Sym("layers"), *layers])
-    return pad
+    return [pad]
 
 
 def convert_footprint(result: dict, name: str, info: dict,
@@ -637,7 +687,7 @@ def convert_footprint(result: dict, name: str, info: dict,
         if kind == "PAD":
             p = _pad_sx(fields, ctx)
             if p is not None:
-                pads.append(p)
+                pads.extend(p)   # _pad_sx returns a list (main pad [+ paste grid])
         elif kind == "TRACK":
             # stroke_width~layer~net~points~id~locked
             width = _mm(fields[0])

@@ -24,7 +24,7 @@
 	(property
 		"Value"
 		"AFC07-S40FCA-00"
-		(at 0 3.44 0)
+		(at 0 4.54 0)
 		(layer "F.Fab")
 		(effects
 			(font
@@ -529,7 +529,55 @@
 		rect
 		(at -11.35 1.4428)
 		(size 2.199996 3.299993)
-		(layers "F.Cu" "F.Paste" "F.Mask")
+		(layers "F.Cu" "F.Mask")
+	)
+	(pad
+		"41"
+		smd
+		rect
+		(at -11.9 0.3428)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"41"
+		smd
+		rect
+		(at -11.9 1.4428)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"41"
+		smd
+		rect
+		(at -11.9 2.5428)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"41"
+		smd
+		rect
+		(at -10.8 0.3428)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"41"
+		smd
+		rect
+		(at -10.8 1.4428)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"41"
+		smd
+		rect
+		(at -10.8 2.5428)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
 	)
 	(pad
 		"42"
@@ -537,7 +585,55 @@
 		rect
 		(at 11.35 1.4428 180)
 		(size 2.199996 3.299993)
-		(layers "F.Cu" "F.Paste" "F.Mask")
+		(layers "F.Cu" "F.Mask")
+	)
+	(pad
+		"42"
+		smd
+		rect
+		(at 11.9 2.5428 180)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"42"
+		smd
+		rect
+		(at 11.9 1.4428 180)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"42"
+		smd
+		rect
+		(at 11.9 0.3428 180)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"42"
+		smd
+		rect
+		(at 10.8 2.5428 180)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"42"
+		smd
+		rect
+		(at 10.8 1.4428 180)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
+	)
+	(pad
+		"42"
+		smd
+		rect
+		(at 10.8 0.3428 180)
+		(size 0.8521 0.8521)
+		(layers "F.Paste")
 	)
 	(model
 		"AFC07-S40FCA-00.wrl"
