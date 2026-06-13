@@ -1,0 +1,8 @@
+# schgen runtime dependencies (Python 3.11+; 3.14 verified)
+# Install:  pip install -r requirements.txt
+pymupdf        # PDF rasterization for render.py (imported as `fitz`)
+pillow         # PNG handling / golden-render comparison
+
+# External tools (not pip-installable):
+#   kicad-cli   KiCad 9+  — netlist/ERC/SVG/PDF export (required)
+#   ngspice               — optional: `schgen spice` analytic-gate cross-check

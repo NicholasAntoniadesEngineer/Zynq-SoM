@@ -63,3 +63,34 @@ NETLIST (KiCad's own extraction == your declaration, pin for pin), ERC
 (zero errors), VISUAL (zero overlap / zero crossings / fits the page).
 Then OPEN the PNG under `carrier/renders/` and read it like a reviewer:
 the render is the deliverable.
+
+## Add a new subsystem from scratch
+
+There is **no registration list** — a subsystem is discovered purely by
+its file:
+
+1. Create `carrier/subsystems/<name>.py`.
+2. Expose a top-level `def circuit() -> Circuit:` (that exact callable name)
+   and name the circuit to match the file: `Circuit("<name>", "…")`. The
+   circuit name becomes the sheet and render name.
+3. That's it. `schgen build <name>` builds just yours (all gates); every
+   `*.py` here is auto-discovered, so `schgen board` includes it with no
+   other edit.
+
+Minimal skeleton:
+
+```python
+from schgen.model import Circuit
+
+def circuit() -> Circuit:
+    c = Circuit("my_sheet", "what it is")
+    c.use_part("MPN_IN_PARTS_DIR", ref="U1")       # active from parts/<MPN>/
+    c.net("+3V3", "U1.VDD")
+    c.decouple("U1.VDD", "100n")
+    c.net("GND", "U1.GND")
+    c.port("MY_SIGNAL", "U1.OUT", expect="som_j2_connector")  # cross-sheet
+    return c
+```
+
+Missing a passive's part folder, an undriven input, or an unrouted pin
+fails the build with the exact fix to apply — the error is the guide.
