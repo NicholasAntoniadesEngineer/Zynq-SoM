@@ -356,7 +356,7 @@ bound ports (348):
   user_io:IO_L21_P_13 -> sheet som_j2:IO_L21_P_13; SoM IO_L21_P_13 (J2.13)
   user_io:IO_L22_P_13 -> sheet som_j2:IO_L22_P_13; SoM IO_L22_P_13 (J2.19)
 
-rails (27):
+rails (28):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: microsd, power, power_mon)
   +1V8_REG — carrier-local rail (sheets: power_mon)
   +2V5_VADJ — carrier-local rail (sheets: fmc)
@@ -374,6 +374,7 @@ rails (27):
   +5V_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
   +5V_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +5V_REG — carrier-local rail (sheets: power_mon)
+  +5V_SOM — carrier-local rail (sheets: power)
   +5V_USB — carrier-local rail (sheets: bringup_modules, usbc_otg)
   +VBUS_IN — carrier-local rail (sheets: pd_input, usb_pd)
   +VCCO_13 <- sheets: som_j2 -> SoM 3 pins

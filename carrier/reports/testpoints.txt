@@ -3,11 +3,11 @@ schgen test-point coverage gate
 
 rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) owns a probe point or an explicit waiver.
 
-required nets (55):
-  +1V8                   [rail     ] TP @ power:TP3
+required nets (56):
+  +1V8                   [rail     ] TP @ power:TP4
   +1V8_REG               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +2V5_VADJ              [rail     ] TP @ fmc:TP1
-  +3V3                   [rail     ] TP @ power:TP2
+  +3V3                   [rail     ] TP @ power:TP3
   +3V3_CAM               [rail     ] TP @ bringup_modules:TP4
   +3V3_HDMI_RX           [rail     ] TP @ bringup_modules:TP2
   +3V3_HDMI_TX           [rail     ] TP @ bringup_modules:TP1
@@ -21,6 +21,7 @@ required nets (55):
   +5V_HDMI_TX            [rail     ] TP @ bringup_modules:TP9, hdmi_tx:TP1
   +5V_LCD                [rail     ] TP @ bringup_modules:TP10, lcd:TP1
   +5V_REG                [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
+  +5V_SOM                [rail     ] TP @ power:TP2
   +5V_USB                [rail     ] TP @ bringup_modules:TP6
   +VBUS_IN               [rail     ] TP @ pd_input:TP1
   +VCCO_13               [rail     ] WAIVED (som_j2): bare SoM bank-rail pins until the wave-3 J-sheet rail-map regen (PLAN flag); probe at the DF40 pin
@@ -47,7 +48,7 @@ required nets (55):
   EN_SD                  [enable   ] TP @ bringup_en_modules:TP5
   EN_USB                 [enable   ] TP @ bringup_en_modules:TP6
   EN_USER_LED            [enable   ] TP @ bringup_en_modules:TP8
-  GND                    [rail     ] TP @ power:TP4
+  GND                    [rail     ] TP @ power:TP5
   LCD_CTP_SCL            [i2c      ] TP @ lcd:TP3
   LCD_CTP_SDA            [i2c      ] TP @ lcd:TP2
   SDIO_CLK               [sd_bus   ] TP @ microsd:TP2
@@ -73,4 +74,4 @@ waivers — author-declared, verbatim (9):
 
 errors: none
 
-TESTPOINTS: PASS (46/55 required nets covered, 9 waived)
+TESTPOINTS: PASS (47/56 required nets covered, 9 waived)

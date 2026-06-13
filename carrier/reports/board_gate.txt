@@ -382,15 +382,16 @@ board netlist gate
   ok   rail '+5V_HDMI_TX': 1 net, 7 pins across 2 sheet(s) [bringup_modules, hdmi_tx]
   ok   rail '+5V_LCD': 1 net, 8 pins across 2 sheet(s) [bringup_modules, lcd]
   ok   rail '+5V_REG': 1 net, 2 pins across 1 sheet(s) [power_mon]
+  ok   rail '+5V_SOM': 1 net, 6 pins across 1 sheet(s) [power]
   ok   rail '+5V_USB': 1 net, 7 pins across 2 sheet(s) [bringup_modules, usbc_otg]
   ok   rail '+VBUS_IN': 1 net, 13 pins across 2 sheet(s) [pd_input, usb_pd]
   ok   rail '+VCCO_13': 1 net, 3 pins across 1 sheet(s) [som_j2]
   ok   rail '+VCCO_33': 1 net, 3 pins across 1 sheet(s) [som_j2]
   ok   rail '+VCCO_34': 1 net, 2 pins across 1 sheet(s) [som_j3]
   ok   rail '+VCCO_35': 1 net, 3 pins across 1 sheet(s) [som_j3]
-  ok   rail '+VIN': 1 net, 25 pins across 4 sheet(s) [pd_input, power, power_mon, som_j1]
+  ok   rail '+VIN': 1 net, 30 pins across 4 sheet(s) [pd_input, power, power_mon, som_j1]
   ok   rail '+VIN_SYS': 1 net, 2 pins across 1 sheet(s) [power_mon]
   ok   rail 'CHASSIS_GND': 1 net, 17 pins across 5 sheet(s) [ethernet, hdmi_rx, hdmi_tx, pd_input, usbc_otg]
-  ok   rail 'GND': 1 net, 399 pins across 23 sheet(s) [bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io]
+  ok   rail 'GND': 1 net, 408 pins across 23 sheet(s) [bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usbc_otg, user_io]
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0

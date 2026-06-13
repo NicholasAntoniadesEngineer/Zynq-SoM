@@ -2,10 +2,10 @@ schgen power-tree budget gate
 ================================================================
 
 sources:
-  +VBUS_IN    20.0 V  limit 3.00 A  load 1.256 A  (42%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
+  +VBUS_IN    20.0 V  limit 3.00 A  load 1.257 A  (42%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
   +3V3_SC      3.3 V  limit 2.00 A  load 0.023 A  (1%)  — SoM MPM3822 always-on SC rail (J1.37); limit is the SoM regulator's 2 A — SoM-side SC loads (STM32 etc.) not included in the carrier tally
 
-regulators (15) — numbered as in carrier/docs/power_tree.svg:
+regulators (16) — numbered as in carrier/docs/power_tree.svg:
   ( 1) bringup_modules:U1   SY6280AAC           +3V3 -> +3V3_HDMI_TX   load 0.006 A / limit 0.523 A (1%)  in 0.006 A [load_switch] ILIM = 6800/13000R = 523 mA
   ( 2) bringup_modules:U10  SY6280AAC            +5V -> +5V_LCD        load 0.453 A / limit 1.000 A (45%)  in 0.453 A [load_switch] ILIM = 6800/6800R = 1000 mA
   ( 3) bringup_modules:U2   SY6280AAC           +3V3 -> +3V3_HDMI_RX   load 0.005 A / limit 0.523 A (1%)  in 0.005 A [load_switch] ILIM = 6800/13000R = 523 mA
@@ -17,10 +17,11 @@ regulators (15) — numbered as in carrier/docs/power_tree.svg:
   ( 9) bringup_modules:U8   SY6280AAC           +3V3 -> +3V3_USER_LED  load 0.010 A / limit 0.523 A (2%)  in 0.010 A [load_switch] ILIM = 6800/13000R = 523 mA
   (10) bringup_modules:U9   SY6280AAC            +5V -> +5V_HDMI_TX    load 0.058 A / limit 0.523 A (11%)  in 0.058 A [load_switch] ILIM = 6800/13000R = 523 mA
   (11) fmc:U1   TLV75725PDBVR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO derated to 0.4 A continuous (DBV RthJA 231 C/W, fmc.md section 3)
-  (12) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.256 A / limit 3.529 A (36%)  in 1.256 A [efuse] ILIM = 18000/5100R = 3529 mA
+  (12) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.257 A / limit 3.529 A (36%)  in 1.257 A [efuse] ILIM = 18000/5100R = 3529 mA
   (13) power:U1   TPS54302DDCR        +VIN -> +5V            load 2.721 A / limit 3.000 A (91%)  in 0.756 A [buck] TI 3 A synchronous buck (SW->L->rail)
   (14) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.322 A / limit 3.000 A (77%)  in 1.703 A [buck] TI 3 A synchronous buck (SW->L->rail)
   (15) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
+  (16) power:U4   TPS54302DDCR        +VIN -> +5V_SOM        load 0.004 A / limit 3.000 A (0%)  in 0.001 A [buck] TI 3 A synchronous buck (SW->L->rail)
 
 shunt bridges (series R rail->rail, power_mon):
   power_mon:RS1 +VIN -> +VIN_SYS
@@ -63,6 +64,7 @@ declared draws (c.draws — every number cites its source):
   +5V_HDMI_TX          55.0 mA  hdmi_tx            HDMI source +5V to cable — TPD12S016 switch limit 55 mA (DS 7.3.10)
   +5V_LCD               3.0 mA  bringup_modules    status LED (1k) on the gated output
   +5V_LCD             450.0 mA  lcd                SY7201 boost input @133 mA LED string (lcd_backlight.md operating point + margin)
+  +5V_SOM               4.0 mA  power              PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)
   +5V_USB               3.0 mA  bringup_modules    status LED (1k) on the gated output
   +5V_USB             500.0 mA  usbc_otg           downstream USB device budget, TPS2051C current-limited
   +VIN                500.0 mA  som_j1             SoM module (Zynq+DDR3L+PHYs) ~10 W class at 20 V — estimate, refine at bring-up
@@ -85,17 +87,18 @@ rail totals (declared + child regulator inputs):
   +5V_HDMI_TX        0.058 A  @ 5.0 V
   +5V_LCD            0.453 A  @ 5.0 V
   +5V_REG            0.000 A  @ 5.0 V
+  +5V_SOM            0.004 A  @ 5.0 V
   +5V_USB            0.503 A  @ 5.0 V
-  +VBUS_IN           1.256 A  @ 20.0 V
+  +VBUS_IN           1.257 A  @ 20.0 V
   +VCCO_13           0.000 A  @ 3.3 V
   +VCCO_33           0.000 A  @ 3.3 V
   +VCCO_34           0.000 A  @ 3.3 V
   +VCCO_35           0.000 A  @ 2.5 V
-  +VIN               1.256 A  @ 20.0 V
+  +VIN               1.257 A  @ 20.0 V
   +VIN_SYS           0.000 A  @ 20.0 V
 
 notes — resolved audits, recomputed every run (1):
-  + VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.20 uF at the receptacle (+VBUS_IN) — within the ~10 uF cSnkBulk guidance; 30.1 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~31 mA.
+  + VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.20 uF at the receptacle (+VBUS_IN) — within the ~10 uF cSnkBulk guidance; 50.2 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~51 mA.
 
 warnings (5):
   WARNING: unsourced rail +VCCO_13 (load 0.000 A) — KNOWN deferral: wave-3 J-sheet regen rail map (+VCCO_13 = +3V3)

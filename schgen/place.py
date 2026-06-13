@@ -2306,7 +2306,7 @@ class _Engine:
         pp, sdef, body, sides = self._place_body(ref, 0.0, ay)
         pins = {p.number: pin_page_position(p, 0.0, ay, 0)
                 for p in sdef.pins}
-        p_in = p_en = p_gnd = None
+        p_in = p_en = p_gnd = p_en_uvlo = None
         for p in sdef.pins:
             net = self.net_of(ref, p.number)
             if net is None:
@@ -2316,6 +2316,16 @@ class _Engine:
                 p_in = (pins[p.number], net.name)
             elif p.rotation == 0 and net.net_class is NetClass.PORT:
                 p_en = (pins[p.number], net.name, p.etype)
+            elif p.rotation == 0 and net.net_class is NetClass.SIGNAL \
+                    and net.name in self.pull and net.name in self.hang:
+                # EN-UVLO-divider idiom (always-on regulators, e.g. power.py's
+                # +5V_SOM stage): a left-side IC pin whose SIGNAL net is a
+                # resistor divider — top R to a POWER rail, bottom R to GND.
+                # Drawn as a left-side divider column off the input rail run,
+                # mirroring the right-side FB divider. No port/label: it is an
+                # internal strap. Only the divider whose top sits on the
+                # input rail rides the in-rail run (the general case here).
+                p_en_uvlo = (pins[p.number], net.name)
             elif p.rotation == 90 and net.net_class is NetClass.GROUND:
                 p_gnd = (pins[p.number], net.name)
         if p_in is None or p_gnd is None:
@@ -2344,6 +2354,21 @@ class _Engine:
         cin = in_caps.pop(in_rail, [])
         cols = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
                 for i in range(len(cin))]
+        # EN-UVLO divider rides the input rail run as its own column, one cap
+        # pitch left of the last cap column (mirrors the FB divider on the
+        # output run). Validate the top resistor really sits on THIS rail.
+        uvlo_col = None
+        if p_en_uvlo is not None:
+            (_pe_u, uvlo_net) = p_en_uvlo
+            (uvlo_rt, uvlo_top_rail) = self.pull[uvlo_net][0]
+            if uvlo_top_rail != in_rail:
+                raise PlaceError(
+                    f"{ref}: EN-UVLO divider top {uvlo_rt} sits on "
+                    f"{uvlo_top_rail!r}, not the input rail {in_rail!r} — "
+                    f"unhandled topology, extend the engine")
+            base = gfloor(pv[0] - sp.cluster_dx + len(cin) * -sp.cap_pitch)
+            uvlo_col = base
+            cols = cols + [uvlo_col]
         nodes = [pv[0]] + cols + [tx for tx, _ in strap_taps]
         nodes_sorted = sorted(set(nodes))
         for xa, xb in zip(nodes_sorted, nodes_sorted[1:]):
@@ -2353,10 +2378,26 @@ class _Engine:
         rail_x = cols[-1] if cols else pv[0]
         self.pl.plan(in_rail, (rail_x, pv[1]), (rail_x, pv[1] - 5.08))
         self.power(in_rail, rail_x, pv[1] - 5.08)
-        for refc, x in zip(cin, cols):
+        cap_cols = cols[:len(cin)]
+        for refc, x in zip(cin, cap_cols):
             far_pt, far = self._vertical_2pin(refc, x, pv[1],
                                               in_rail, downward=True)
             self.power(far, *far_pt)
+        if p_en_uvlo is not None and uvlo_col is not None:
+            (pe_u, uvlo_net) = p_en_uvlo
+            # top R: in_rail -> midpoint; bottom R: midpoint -> GND
+            (uvlo_rt, _rail) = self.pull.pop(uvlo_net)[0]
+            mid_pt, _ = self._vertical_2pin(uvlo_rt, uvlo_col, pv[1],
+                                            in_rail, downward=True)
+            y_mid = mid_pt[1]
+            uvlo_rb = self.hang.pop(uvlo_net)[0]
+            far_pt2, far2 = self._vertical_2pin(uvlo_rb, uvlo_col, y_mid,
+                                                uvlo_net, downward=True)
+            self.power(far2, *far_pt2)
+            # EN pin elbows down/left into the divider midpoint
+            xv = round(pe_u[0] - 2.54, 3)
+            self.pl.plan(uvlo_net, pe_u, (xv, pe_u[1]), (xv, y_mid),
+                         (uvlo_col, y_mid))
         (pg, gnd_net) = p_gnd
         self.power(gnd_net, *pg)
 

@@ -1,10 +1,30 @@
-"""power — carrier rail tree: +VIN(20V) -> +5V buck -> +3V3 buck -> +1V8 LDO.
+"""power — carrier rail tree: +VIN(20V) -> +5V buck -> +3V3 buck -> +1V8 LDO,
+plus the always-on +5V_SOM buck (P0 fix) that feeds the SoM module's VIN.
 
 PLAN round-2 locked: USB-C PD supplies +VIN (20 V); the carrier generates
 +5V (buck from VIN), +3V3 (buck from +5V) and +1V8 (LDO from +3V3). Every
 rail has an EN port (driven by the bringup subsystem's DIP-AND-STM32 enable
 cells, ports EN_5V0 / EN_3V3 / EN_1V8 per the bringup dossier contract) and
 a power-good LED.
+
+P0 — SoM VIN OVERVOLTAGE FIX (wave3_function_map.md, PLAN "P0 + wave-3
+decisions", user-signed-off 2026-06-12). The SoM is a 4.2-5 V-input module:
+its on-module regulators (TPS7A20 -> +3V3_SC, 2x MPM3834 -> +3V3/+1V8,
+MPM3822 -> +1V35, TPSM82864 -> +1V0) are ALL 6 V-class, and the SoM's own
+power_architecture sheet annotates the input "4.2-5V". The carrier binds
+J1.1-14 (SoM net VIN) to a power rail; binding that to the 20 V PD rail
++VIN destroys the SoM at the first PD contract. RESOLUTION: a THIRD
+TPS54302 buck (U4) drops +VIN -> +5V_SOM (5.0 V class), and som_conn_gen
+rebinds J1 VIN -> +5V_SOM (UNIT 2). +5V_SOM is ALWAYS-ON (no bring-up
+gate cell): the PD negotiation chain is FUSB302 (carrier, on +3V3_SC) +
+the SoM SC (U9), and +3V3_SC is generated ON the SoM from its VIN — so if
+SoM VIN waited for a DIP the SC would be dead, nobody would negotiate PD,
+and 20 V would never arrive (circular). At the 5 V default-USB contract the
+buck runs near 100% duty and passes ~4.7-4.8 V (inside the SoM 4.2-5 V
+window); after the 20 V contract it regulates 4.96 V. This preserves the
+"switches-only stage 1 with a blank SC" bring-up contract: +5V_SOM behaves
+exactly like +3V3_SC — alive pre-DIP by design. EN is strapped on via a
+UVLO divider (NO EN port); see stage 4 below for the divider math.
 
 Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
 - 2x TPS54302DDCR (LCSC C311983, stock 33,368, Extended): TI 4.5-28 V, 3 A
@@ -24,7 +44,19 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   (identical SOT-23-5 pin map 1=VIN 2=GND 3=EN 4=NC 5=VOUT, confirmed
   against the EasyEDA pin table in parts/AP2112K-1.8TRG1/AP2112K-1.8TRG1.py).
 - FB dividers: +5V = 73.2k/10k -> 4.96 V (C14890 Ext 28,920 + C25804 Basic);
-  +3V3 = 100k/22k -> 3.30 V (C25803 + C31850, both Basic).
+  +3V3 = 100k/22k -> 3.30 V (C25803 + C31850, both Basic);
+  +5V_SOM = 73.2k/10k -> 4.96 V (P0 stage U4, identical to the +5V stage —
+  same verified C14890/C25804, comfortably inside the SoM 4.2-5 V window).
+- +5V_SOM EN UVLO divider (always-on strap, NO bring-up port): R12/R13 =
+  22k/10k from +VIN -> EN -> GND. TPS54302 V_EN(rising) = 1.21 V typ ->
+  UVLO start = 1.21 x (1 + 22k/10k) = 1.21 x 3.2 = 3.87 V; the buck is thus
+  enabled the moment +VIN clears ~3.9 V (i.e. at the 5 V default-USB
+  contract, before any PD negotiation) and stays on. At the 20 V contract
+  the divider would present 20 x 10/32 = 6.25 V at EN — held by the
+  TPS54302's INTERNAL EN clamp (the datasheet UVLO-divider method, SLVSCP3
+  Fig "Adjustable UVLO", is specified across the full 4.5-28 V input with
+  this clamp; the hysteresis current source sinks the divider). Same
+  verified parts as elsewhere (22k = C31850 Basic, 10k = C25804 Basic).
 - PG LEDs (bringup dossier section 3.3): KT-0603R red (C2286 Basic) + 1k
   (C21190) on +5V, + 330R (C23138) on +3V3. +1V8 cannot light a red LED
   (Vf ~2.0 V > rail), so an AO3400A (C20917 Basic, Vgs(th) <= 1.45 V max)
@@ -156,13 +188,61 @@ def circuit() -> Circuit:
     c.net("PG_1V8_K", "R9.1", "D3.1")
     c.net("+3V3", "D3.2")
 
-    # ---- test points (round 4 coverage gate): the three generated rails +
+    # ---- stage 4: +VIN (20 V) -> +5V_SOM buck (P0 fix, ALWAYS-ON) -----------
+    # Third TPS54302 (U4). Identical cell to U1's +5V stage (same L, in/out
+    # caps, FB divider) EXCEPT the EN is strapped on by a UVLO divider rather
+    # than a bring-up port: this rail must be alive pre-DIP / pre-PD so the
+    # SoM SC can boot and master the FUSB302 PD negotiation (docstring P0).
+    c.use_part("TPS54302DDCR", ref="U4", lib_id=BUCK_LIB, footprint=BUCK_FP)
+    c.net("+VIN", "U4.3")
+    c.net("GND", "U4.1")
+    # EN UVLO divider (always-on): start = 1.21 V * (1 + 22k/10k) = 3.87 V
+    # (docstring); EN clamp holds the 20 V-contract divider voltage.
+    c.part("R12", "Device:R", "22k", R_FP, LCSC="C31850")          # UVLO top
+    c.part("R13", "Device:R", "10k", R_FP, LCSC="C25804")          # UVLO bottom
+    c.net("+VIN", "R12.1")
+    c.net("EN_5V_SOM", "U4.5", "R12.2", "R13.1")
+    c.net("GND", "R13.2")
+    for ref, val, fp, lcsc in (("C14", "100n", C0603, "C1591"),
+                               ("C15", "10u", C1206, "C13585"),
+                               ("C16", "10u", C1206, "C13585")):
+        c.part(ref, "Device:C", val, fp, LCSC=lcsc)
+        c.net("+VIN", f"{ref}.1")
+        c.net("GND", f"{ref}.2")
+    c.part("C17", "Device:C", "100n", C0603, LCSC="C1591")         # BOOT
+    c.net("BOOT_5V_SOM", "U4.6", "C17.1")
+    c.part("L3", "Device:L", "10uH", L_FP, LCSC="C37429")
+    c.net("SW_5V_SOM", "U4.2", "C17.2", "L3.1")
+    c.net("+5V_SOM", "L3.2")
+    for ref in ("C18", "C19"):
+        c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
+        c.net("+5V_SOM", f"{ref}.1")
+        c.net("GND", f"{ref}.2")
+    c.part("R14", "Device:R", "73.2k", R_FP, LCSC="C14890")        # FB top
+    c.part("R15", "Device:R", "10k", R_FP, LCSC="C25804")          # FB bottom
+    c.net("+5V_SOM", "R14.1")
+    c.net("FB_5V_SOM", "U4.4", "R14.2", "R15.1")                   # -> 4.96 V
+    c.net("GND", "R15.2")
+    c.part("D4", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +5V_SOM
+    c.part("R16", "Device:R", "1k", R_FP, LCSC="C21190")
+    c.net("+5V_SOM", "D4.2")
+    c.net("PG_5V_SOM", "D4.1", "R16.1")
+    c.net("GND", "R16.2")
+
+    # ---- test points (round 4 coverage gate): the generated rails +
     # a ground probe return, at their source sheet ----------------------------
-    for net in ("+5V", "+3V3", "+1V8", "GND"):
+    for net in ("+5V", "+5V_SOM", "+3V3", "+1V8", "GND"):
         c.testpoint(net)
 
     # ---- power-tree budget declarations (round 4 gate) ----------------------
     c.draws("+5V", 0.004, "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA")
+    # +5V_SOM: power.py owns only this stage's OWN local load (PG LED + FB
+    # divider). The SoM MODULE draw (~2 A, 10 W class at 5 V) is declared by
+    # som_conn_gen on J1 where the module is the consumer (wave3_function_map
+    # P0 point 2) — the power-tree gate sums draws across all sheets on the
+    # rail, so the buck sees both.
+    c.draws("+5V_SOM", 0.004, "PG LED (KT-0603R + 1k, ~3 mA) + FB divider "
+                              "60 uA (SoM module load declared on som_j1)")
     c.draws("+3V3", 0.009, "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain "
                            "(330R ~3.9 mA) + FB divider 27 uA")
     c.draws("+1V8", 0.001, "PG FET gate divider 10k+100k (16 uA), rounded up")
