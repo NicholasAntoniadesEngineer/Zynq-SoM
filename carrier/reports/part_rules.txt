@@ -2,9 +2,9 @@ schgen per-part rule engine (ratings vs netlist usage)
 ==============================================================================
 
 enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
-113 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+118 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
 
-UNSPEC — reported, NOT failing (57):
+UNSPEC — reported, NOT failing (53):
   ? board_aux:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
   ? board_qwiic:J1 (ZX-SH1.0-4PWT, LCSC C7430446) — no ratings row
   ? board_services:BT1 (KH-CR1220-2, LCSC C5365933) — no ratings row
@@ -29,10 +29,7 @@ UNSPEC — reported, NOT failing (57):
   ? ethernet:C5 (1n) — cap rail unresolved
   ? ethernet:T1 (HX5008NLT, LCSC C962544) — no ratings row
   ? fmc:J1 (ASP-134603-01, LCSC C2836665) — no ratings row
-  ? hdmi_rx:C1 (100n) — cap rail unresolved
   ? hdmi_rx:J1 (HDMI-019S, LCSC C111617) — no ratings row
-  ? hdmi_tx:C3 (100n) — cap rail unresolved
-  ? hdmi_tx:C4 (1u) — cap rail unresolved
   ? hdmi_tx:J1 (HDMI-019S, LCSC C111617) — no ratings row
   ? lcd:C2 (2.2u) — cap rail unresolved
   ? lcd:J1 (AFC07-S40FCA-00, LCSC C262572) — no ratings row
@@ -45,6 +42,7 @@ UNSPEC — reported, NOT failing (57):
   ? power:C4 (100n) — cap rail unresolved
   ? power:C9 (100n) — cap rail unresolved
   ? power:R1 (40.2k, LCSC C25750) — no ratings row
+  ? power:U1 (LMR33630ADDAR) — no vin_max rating
   ? power:U1 (LMR33630ADDAR, LCSC C841384) — no ratings row
   ? power_som:C17 (100n) — cap rail unresolved
   ? power_som:C20 (100n) — cap rail unresolved
@@ -54,9 +52,7 @@ UNSPEC — reported, NOT failing (57):
   ? som_j3:J3 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
   ? usb_pd:C4 (200p) — cap rail unresolved
   ? usb_pd:C5 (200p) — cap rail unresolved
-  ? usb_uart_connector:C1 (10u) — cap rail unresolved
   ? usb_uart_connector:J1 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
-  ? usbc_otg:C2 (22u) — cap rail unresolved
   ? usbc_otg:J2 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
   ? user_io:SW1 (USER, LCSC C318884) — no ratings row
   ? user_io:SW2 (USER, LCSC C318884) — no ratings row
@@ -65,4 +61,4 @@ UNSPEC — reported, NOT failing (57):
 
 errors: none
 
-PART RULES: PASS (113 checks, 0 findings, 57 unspeced, 0 waived)
+PART RULES: PASS (118 checks, 0 findings, 53 unspeced, 0 waived)

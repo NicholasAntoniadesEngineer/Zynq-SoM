@@ -32,7 +32,7 @@ SOM_SCH = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 # datasheet constants (sources in the module docstring)
 GATE_PIN_A, GATE_PIN_B, GATE_PIN_Y = "1", "2", "4"   # SN74LVC1G08
 SY6280_ILIM_NUMERATOR = 6800.0                       # ILIM(A) = 6800/RSET
-FB_VREF = {"TPS54302": 0.596}                        # buck FB reference [V]
+FB_VREF = {"TPS54302": 0.596, "LMR33630": 1.0}       # buck FB reference [V]
 TCA9535_BASE_ADDR = 0x20                             # 0b0100_A2A1A0
 INA3221_BASE_ADDR = 0x40                             # + A0 strap decode
 FUSB302B_ADDR = 0x22                                 # fixed (onsemi DS)

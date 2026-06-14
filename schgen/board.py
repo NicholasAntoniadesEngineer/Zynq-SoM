@@ -352,11 +352,11 @@ def build_board(sheets, lib: Library, outdir: Path, *,
     print(f"board: emitted {root_path} (+{len(placed)} sub-sheets, "
           f"root labels bind ports by canonical name)")
 
-    ok = _board_gate(placed, root_path, reports_dir or outdir)
+    ok = _board_gate(placed, root_path, reports_dir or outdir, lib)
     return ok and not per_sheet_fail
 
 
-def _board_gate(placed, root_path: Path, outdir: Path) -> bool:
+def _board_gate(placed, root_path: Path, outdir: Path, lib: Library) -> bool:
     """kicad-cli netlist on the ROOT: every linked PORT net and every rail
     must come back as ONE net carrying every expected pin, rightly named."""
     extracted = netlist_gate.extract_netlist(root_path)
@@ -375,11 +375,28 @@ def _board_gate(placed, root_path: Path, outdir: Path) -> bool:
     # expected pin sets: ports per (canonical name), rails per name
     port_pins: dict[str, list[tuple[str, PinRef]]] = {}
     rail_pins: dict[str, list[tuple[str, PinRef]]] = {}
+    port_has_input: set[str] = set()       # PORT net carrying an input-etype pin
+    port_deferred: set[str] = set()        # PORT net the author expect=-deferred
     for name, d, _sym in placed:
+        pts = getattr(d.circuit, "port_types", {})
         for net in d.circuit.nets.values():
             tgt = None
             if net.net_class == NetClass.PORT:
                 tgt = port_pins
+                pt = pts.get(net.name)
+                if pt is not None and getattr(pt, "expect", None):
+                    port_deferred.add(net.name)
+                for pr in net.pins:
+                    op = d.circuit.parts.get(pr.ref)
+                    if op is None:
+                        continue
+                    try:
+                        pins = lib.get(op.lib_id).pins
+                    except Exception:        # noqa: BLE001 — unresolved: skip
+                        continue
+                    if any(q.number == pr.pin and q.etype == "input"
+                           for q in pins):
+                        port_has_input.add(net.name)
             elif net.net_class in (NetClass.POWER, NetClass.GROUND):
                 tgt = rail_pins
             if tgt is not None:
@@ -408,6 +425,27 @@ def _board_gate(placed, root_path: Path, outdir: Path) -> bool:
                     f"  ok   {kind} {net_name!r}: 1 net, "
                     f"{len(members)} pins across {len(sheets_in)} sheet(s) "
                     f"[{', '.join(sheets_in)}]")
+
+    # DEF-I: undriven-input PORT detector (LAW-0 silent OPEN). A PORT carrying
+    # an input-etype pin that merges to only ONE sheet — no cross-sheet driver —
+    # and is NOT expect=-deferred is a stranded input. The linker's name
+    # resolution catches a port that resolves NOWHERE, but not one that resolves
+    # to a peer-less single sheet; expect= ports are author-deferred (a later
+    # wave drives them).
+    for net_name in sorted(port_pins):
+        if net_name not in port_has_input or net_name in port_deferred:
+            continue
+        sheets_in = sorted({s for s, _ in port_pins[net_name]})
+        if len(sheets_in) < 2:
+            failures += 1
+            lines.append(
+                f"  FAIL port {net_name!r}: undriven input — carries an input "
+                f"pin but resolves to a single sheet {sheets_in} with no cross-"
+                f"sheet driver (silent OPEN); drive it, add its peer sheet, or "
+                f"declare expect= on the port")
+    lines.append(f"  (info) undriven-input PORT check: {len(port_has_input)} "
+                 f"input-bearing PORT nets examined "
+                 f"({len(port_deferred)} expect-deferred)")
 
     verdict = "PASS" if failures == 0 else f"FAIL ({failures})"
     lines.append(f"BOARD GATE: {verdict} — every linked net merged across "

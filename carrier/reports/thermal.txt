@@ -13,10 +13,10 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
   bringup_modules:U10    SOT-23-5                 load_switch +5V->+5V_LCD           0.453      19   250.0    54.9   140.0    85.1  ok
   power:U3               SOT-23-5                 ldo         +3V3->+1V8_REG         0.006       9   250.0    52.2   115.0    62.8  ok
   bringup_modules:U4     SOT-23-5                 load_switch +3V3->+3V3_CAM         0.304       9   250.0    52.2   140.0    87.8  ok
+  pd_input:U1            HTSSOP-20 (PWP)          efuse       +VBUS_IN->+VIN         1.337      55    33.6    51.9   115.0    63.1  ok
   bringup_modules:U5     SOT-23-5                 load_switch +3V3->+3V3_SD          0.254       6   250.0    51.5   140.0    88.5  ok
   board_aux:U1           SOT-23-5                 load_switch +3V3->+3V3_AUX         0.211       4   250.0    51.1   140.0    88.9  ok
   bringup_modules:U7     SOT-23-5                 load_switch +3V3->+3V3_PMOD        0.204       4   250.0    51.0   140.0    89.0  ok
-  pd_input:U1            HTSSOP-20 (PWP)          efuse       +VBUS_IN->+VIN         0.518       8    33.6    50.3   115.0    64.7  ok
   bringup_modules:U3     SOT-23-5                 load_switch +3V3->+3V3_LCD         0.104       1   250.0    50.3   140.0    89.7  ok
   bringup_modules:U9     SOT-23-5                 load_switch +5V->+5V_HDMI_TX       0.058       0   250.0    50.1   140.0    89.9  ok
   bringup_modules:U8     SOT-23-5                 load_switch +3V3->+3V3_USER_LED    0.010       0   250.0    50.0   140.0    90.0  ok
@@ -38,6 +38,9 @@ notes (2):
   + WAIVED over-limit: power:U2 (TPS54302DDCR) Tj 158.3 C > limit 140.0 C (Tj_max 150 - margin 10) — author waiver: TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
   + WAIVED over-limit: power_som:U4 (TPS54302DDCR) Tj 166.1 C > limit 140.0 C (Tj_max 150 - margin 10) — author waiver: TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
 
+FINDINGS — unspeced devices (1):
+  * UNSPECED: power:U1 (LMR33630ADDAR, fp LMR33630ADDAR:LMR33630ADDAR) has no thermal spec — add a THERMAL_SPECS/FOOTPRINT_SPECS row with its datasheet RthJA + Tj_max before its Tj can be proven
+
 errors: none
 
-THERMAL: PASS (16 devices speced, 0 over-limit, 0 unspeced, 2 waived); hottest power_som:U4 (TPS54302DDCR) Tj 166.1 C
+THERMAL: PASS (16 devices speced, 0 over-limit, 1 unspeced, 2 waived); hottest power_som:U4 (TPS54302DDCR) Tj 166.1 C

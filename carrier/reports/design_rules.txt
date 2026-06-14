@@ -6,8 +6,9 @@ rules (model-only, pin FUNCTION inferred by NAME):
   I2C   every i2c-typed bus net has a pull-up to a rail (board-wide)
   RESET every reset net carries an RC (cap-to-GND + pull resistor)
   STRAP no config-input pin floats on a passive-only undriven net
+  EP    every exposed/thermal pad is netted to a GROUND net (never nc/floating, never a non-GND net)
 
-checked: 40 IC supply pins, 10 i2c nets, 3 reset nets, 0 config pins
+checked: 40 IC supply pins, 10 i2c nets, 3 reset nets, 0 config pins, 5 exposed pads
 
 DECAP — missing decoupling (0):
   (none)
@@ -19,6 +20,9 @@ RESET — reset without a full RC (0):
   (none)
 
 STRAP — floating control input (0):
+  (none)
+
+EP — exposed pad not on GND (0):
   (none)
 
 waivers — author-declared, verbatim (7):

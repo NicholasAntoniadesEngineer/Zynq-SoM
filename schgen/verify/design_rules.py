@@ -128,6 +128,16 @@ _RESET_INTERNAL_PULL = (
     re.compile(r"STM32.*NRST", re.IGNORECASE),    # STM32 NRST: internal ~40k pull-up
 )
 
+# Exposed/thermal-pad pin NAMES (the part's heat-spreader pad). An EP must be a
+# real netted pad on a GROUND net — never floating (nc) and never on a non-GND
+# net — or explicitly waived. validate() already forbids a floating pin; this
+# rule additionally forbids an EP that is nc'd or netted to a non-GND net (the
+# silent LAW-0 holes neither validate() nor KiCad ERC can see). Anchored to the
+# whole pin name so a signal like 'PADDR'/'EPHY' never trips it.
+_EP_PIN_RE = re.compile(
+    r"^(EP\d*|E?PAD\d*|PPAD|THERMAL.*|GND_?PAD|DAP)$",
+    re.IGNORECASE)
+
 # KiCad etypes that DRIVE a net (so a config input on such a net is not floating).
 _DRIVER_ETYPES = frozenset({
     "output", "bidirectional", "tri_state",
@@ -148,16 +158,18 @@ class DesignRuleResult:
     i2c: list[str] = field(default_factory=list)          # I2C-no-pullup findings
     reset: list[str] = field(default_factory=list)        # reset-RC findings
     strap: list[str] = field(default_factory=list)        # floating-strap findings
+    ep: list[str] = field(default_factory=list)           # exposed-pad-not-GND findings
     waived: list[str] = field(default_factory=list)       # verbatim waivers honoured
     checked: dict[str, int] = field(default_factory=dict)  # rule -> # of subjects
 
     @property
     def ok(self) -> bool:
-        return not (self.decap or self.i2c or self.reset or self.strap)
+        return not (self.decap or self.i2c or self.reset or self.strap
+                    or self.ep)
 
     @property
     def findings(self) -> list[str]:
-        return self.decap + self.i2c + self.reset + self.strap
+        return self.decap + self.i2c + self.reset + self.strap + self.ep
 
     def summary(self) -> str:
         if self.ok:
@@ -165,11 +177,13 @@ class DesignRuleResult:
                     f"{self.checked.get('decap', 0)} IC supply pins, "
                     f"{self.checked.get('i2c', 0)} I2C nets, "
                     f"{self.checked.get('reset', 0)} reset nets, "
-                    f"{self.checked.get('strap', 0)} strap pins checked; "
+                    f"{self.checked.get('strap', 0)} strap pins, "
+                    f"{self.checked.get('ep', 0)} exposed pads checked; "
                     f"{len(self.waived)} waived)")
         lines = ["DESIGN RULES: FAIL"]
         for tag, items in (("DECAP", self.decap), ("I2C", self.i2c),
-                           ("RESET", self.reset), ("STRAP", self.strap)):
+                           ("RESET", self.reset), ("STRAP", self.strap),
+                           ("EP", self.ep)):
             for it in items:
                 lines.append(f"  {tag}: {it}")
         return "\n".join(lines)
@@ -185,17 +199,21 @@ class DesignRuleResult:
                      "resistor)")
         lines.append("  STRAP no config-input pin floats on a passive-only "
                      "undriven net")
+        lines.append("  EP    every exposed/thermal pad is netted to a GROUND "
+                     "net (never nc/floating, never a non-GND net)")
         lines.append("")
         lines.append(f"checked: {self.checked.get('decap', 0)} IC supply pins, "
                      f"{self.checked.get('i2c', 0)} i2c nets, "
                      f"{self.checked.get('reset', 0)} reset nets, "
-                     f"{self.checked.get('strap', 0)} config pins")
+                     f"{self.checked.get('strap', 0)} config pins, "
+                     f"{self.checked.get('ep', 0)} exposed pads")
         lines.append("")
         for tag, label, items in (
                 ("DECAP", "missing decoupling", self.decap),
                 ("I2C", "i2c bus with no pull-up", self.i2c),
                 ("RESET", "reset without a full RC", self.reset),
-                ("STRAP", "floating control input", self.strap)):
+                ("STRAP", "floating control input", self.strap),
+                ("EP", "exposed pad not on GND", self.ep)):
             lines.append(f"{tag} — {label} ({len(items)}):")
             for it in items:
                 lines.append(f"  * {it}")
@@ -242,6 +260,17 @@ def _strap_waived(c, ref: str, pin_num: str, pin_name: str, net: str) -> str | N
     return None
 
 
+def _ep_waived(c, ref: str, pin_num: str, pin_name: str,
+               net: str | None) -> str | None:
+    """An EP waiver may key on 'ref.pin', 'ref.NAME', the part ref, or the net
+    the pad sits on. Returns the reason if any match."""
+    w = _waivers(c, "ep_waivers")
+    for key in (f"{ref}.{pin_num}", f"{ref}.{pin_name}", ref, net):
+        if key and key in w:
+            return w[key]
+    return None
+
+
 # ---- library helpers ----------------------------------------------------------
 
 def _pins(lib, part):
@@ -281,6 +310,7 @@ def check(sheets, lib) -> DesignRuleResult:
     _check_i2c(sheets, lib, nets_by_name, res)
     _check_reset(sheets, lib, nets_by_name, res)
     _check_strap(sheets, lib, res)
+    _check_ep(sheets, lib, res)
     return res
 
 
@@ -530,6 +560,46 @@ def _check_strap(sheets, lib, res: DesignRuleResult) -> None:
                     f"(other pins: {others or 'none'}) — strap it to a rail/GND "
                     f"or drive it, or c.waive_strap({ref!r}, reason)")
     res.checked["strap"] = n_checked
+
+
+def _check_ep(sheets, lib, res: DesignRuleResult) -> None:
+    """Every exposed/thermal pad (EP/PAD/...) must be a real netted pad on a
+    GROUND net — the LAW-0 'an EP is a pad+pin+GND net, never a prose layout
+    note' rule. validate() already forbids a floating pin; this additionally
+    forbids an EP that is nc'd (net is None here) or netted to a NON-GROUND net.
+    A pad deliberately on a non-GND heat-spreader island, or left unconnected,
+    is waived (waive_ep), never relaxed (LAW 4)."""
+    n_checked = 0
+    for sc in sheets:
+        c = sc.circuit
+        for ref in sorted(c.parts):
+            part = c.parts[ref]
+            for p in _pins(lib, part):
+                if not _EP_PIN_RE.match(p.name):
+                    continue
+                n_checked += 1
+                n = c.net_of(PinRef(ref, p.number))
+                if n is not None and _is_ground_name(n.name):
+                    continue                          # netted to GND — correct
+                wv = _ep_waived(c, ref, p.number, p.name,
+                                n.name if n is not None else None)
+                if wv is not None:
+                    where = n.name if n is not None else "unconnected"
+                    res.waived.append(
+                        f"EP {sc.name}:{ref}.{p.name} ({where}): {wv}")
+                    continue
+                if n is None:
+                    res.ep.append(
+                        f"{sc.name}:{ref}.{p.name} (pin {p.number}, "
+                        f"{part.value}) exposed pad is UNCONNECTED (nc/floating) "
+                        f"— net it to GND, or c.waive_ep({ref!r}, reason)")
+                else:
+                    res.ep.append(
+                        f"{sc.name}:{ref}.{p.name} (pin {p.number}, "
+                        f"{part.value}) exposed pad is on non-GROUND net "
+                        f"{n.name!r} — net it to GND, or "
+                        f"c.waive_ep({ref!r}, reason)")
+    res.checked["ep"] = n_checked
 
 
 # ---- entry points -------------------------------------------------------------

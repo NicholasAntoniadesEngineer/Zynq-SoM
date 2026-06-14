@@ -176,6 +176,7 @@ class Circuit:
         self.pull_waivers: dict[str, str] = {}    # i2c net -> reason
         self.reset_waivers: dict[str, str] = {}   # reset net -> reason
         self.strap_waivers: dict[str, str] = {}   # ref | "ref.pin" | net -> reason
+        self.ep_waivers: dict[str, str] = {}      # ref | "ref.pin" | net -> reason
         # per-device thermal (Tj) gate waivers (schgen/thermal.py): ref -> reason
         self.thermal_waivers: dict[str, str] = {}
         # per-part rule-engine waivers (schgen/verify/part_rules.py): ref -> reason
@@ -524,6 +525,20 @@ class Circuit:
                                f"'ref.pin', 'ref.NAME', or declared net")
         self.strap_waivers[ref_or_pin] = reason.strip()
 
+    def waive_ep(self, ref_or_pin: str, reason: str) -> None:
+        """EXPLICIT exposed-pad waiver: this thermal/exposed pad is intentionally
+        NOT on a GROUND net (a documented non-GND heat-spreader island) or
+        intentionally left unconnected. The EP gate lists every waiver verbatim
+        and demotes the finding to a note — documentation, never silence
+        (LAW 4: an EP is a real pad+pin+net, never a prose layout note)."""
+        if not reason.strip():
+            raise CircuitError(f"waive_ep({ref_or_pin!r}): a reason is required")
+        ref = ref_or_pin.split(".")[0]
+        if ref not in self.parts and ref_or_pin not in self.nets:
+            raise CircuitError(f"waive_ep({ref_or_pin!r}): not a part ref, "
+                               f"'ref.pin', or declared net")
+        self.ep_waivers[ref_or_pin] = reason.strip()
+
     def waive_thermal(self, ref: str, reason: str) -> None:
         """EXPLICIT thermal waiver: this device may run past the Tj guard band
         on purpose (e.g. a copper-pour / thermal-via layout the single-number
@@ -709,8 +724,8 @@ class Circuit:
         def _kept_key(key: str) -> bool:             # ref | "ref.pin" | net
             return key.split(".")[0] in refs or key in sub.nets
         for attr in ("tp_waivers", "decap_waivers", "pull_waivers",
-                     "reset_waivers", "strap_waivers", "thermal_waivers",
-                     "part_rule_waivers"):
+                     "reset_waivers", "strap_waivers", "ep_waivers",
+                     "thermal_waivers", "part_rule_waivers"):
             dst = getattr(sub, attr)
             for k, v in getattr(self, attr).items():
                 if _kept_key(k):

@@ -15,7 +15,7 @@ the reading sits inside `[min .. max]`. A blank (unprogrammed) system
 controller is fine for every electrical step; the I2C scan and functional
 checks below need SC firmware running.
 
-Source spice gate: 20 checks, analytic (closed-form linear solutions).
+Source spice gate: 21 checks, analytic (closed-form linear solutions).
 
 ## Electrical acceptance — by bring-up stage
 
@@ -42,32 +42,34 @@ Source spice gate: 20 checks, analytic (closed-form linear solutions).
 | step | net | probe pad | expected | min | max | measured | pass? |
 |---|---|---|---|---|---|---|---|
 | 2.1 TPS54302DDCR FB (+3V3_REG) | `+3V3_REG` | — | 3.3051 V | 3.201 V | 3.399 V | `______` | [ ] |
-| 2.2 TPS54302DDCR FB (+5V_SOM) | `+5V_SOM` | power_som:TP1 | 4.6548 V | 4.5105 V | 4.7895 V | `______` | [ ] |
-| 2.3 EN clamp ceiling (U4) | `+VIN_SYS` | — | 5.042 V | — | 5.5 V | `______` | [ ] |
-| 2.4 EN clamp turn-on (U4) | `+VIN_SYS` | — | 4.505 V | 1.5 V | — | `______` | [ ] |
-| 2.5 RC EN_5V_SOM | `EN_5V_SOM` | — | 1 ms | 0.2 ms | 20 ms | `______` | [ ] |
-| 2.6 divider FB_3V3 | `FB_3V3` | — | 0.5951 V | — | — | `______` | [ ] |
-| 2.7 divider FB_5V0 | `FB_5V0` | — | 0.996 V | — | — | `______` | [ ] |
-| 2.8 divider FB_5V_SOM | `FB_5V_SOM` | — | 0.5954 V | — | — | `______` | [ ] |
-| 2.9 divider PG_1V8_G [FET on at nominal rail] | `PG_1V8_G` | — | 1.7822 V | 1.45 V | 1.8 V | `______` | [ ] |
-| 2.10 RC PL_BTN0 | `PL_BTN0` | — | 1 ms | 0.2 ms | 20 ms | `______` | [ ] |
-| 2.11 RC PL_BTN1 | `PL_BTN1` | — | 1 ms | 0.2 ms | 20 ms | `______` | [ ] |
-| 2.12 SY7201 ISET (R1) | — | — | 133.3 mA | 125 mA | 150 mA | `______` | [ ] |
+| 2.2 EN clamp ceiling (U1) | `+5V_REG` | — | 4.183 V | — | 5.5 V | `______` | [ ] |
+| 2.3 TPS54302DDCR FB (+5V_SOM) | `+5V_SOM` | power_som:TP1 | 4.6548 V | 4.5105 V | 4.7895 V | `______` | [ ] |
+| 2.4 EN clamp ceiling (U4) | `+VIN_SYS` | — | 5.042 V | — | 5.5 V | `______` | [ ] |
+| 2.5 EN clamp turn-on (U4) | `+VIN_SYS` | — | 4.505 V | 1.5 V | — | `______` | [ ] |
+| 2.6 RC EN_5V_SOM | `EN_5V_SOM` | — | 1 ms | 0.2 ms | 20 ms | `______` | [ ] |
+| 2.7 divider FB_3V3 | `FB_3V3` | — | 0.5951 V | — | — | `______` | [ ] |
+| 2.8 divider FB_5V0 | `FB_5V0` | — | 0.996 V | — | — | `______` | [ ] |
+| 2.9 divider FB_5V_SOM | `FB_5V_SOM` | — | 0.5954 V | — | — | `______` | [ ] |
+| 2.10 divider PG_1V8_G [FET on at nominal rail] | `PG_1V8_G` | — | 1.7822 V | 1.45 V | 1.8 V | `______` | [ ] |
+| 2.11 RC PL_BTN0 | `PL_BTN0` | — | 1 ms | 0.2 ms | 20 ms | `______` | [ ] |
+| 2.12 RC PL_BTN1 | `PL_BTN1` | — | 1 ms | 0.2 ms | 20 ms | `______` | [ ] |
+| 2.13 SY7201 ISET (R1) | — | — | 133.3 mA | 125 mA | 150 mA | `______` | [ ] |
 
 <details><summary>step rationale (from the spice gate detail)</summary>
 
 - **2.1 TPS54302DDCR FB (+3V3_REG)** (power): Vout = 0.596 * (1 + R4/R5 = 100000/22000) vs nominal 3.3 V +/-3%
-- **2.2 TPS54302DDCR FB (+5V_SOM)** (power_som): Vout = 0.596 * (1 + R14/R15 = 68100/10000) vs nominal 4.65 V +/-3%
-- **2.3 EN clamp ceiling (U4)** (power_som): +VIN_SYS=20V -[R12=10000R]- EN, D5=MMSZ5231B zener->GND: EN at VIN=21.0V (20V+5%) worst-case (Vz 5.355V) must stay <= the EN recommended-max 5.5V (no internal clamp, I_hys 1.55uA only — SLVSDG6C)
-- **2.4 EN clamp turn-on (U4)** (power_som): +VIN_SYS=20V -[R12=10000R]- EN, D5=MMSZ5231B zener->GND: EN at VIN=4.75V (5V contract low) must exceed enable+margin 1.5V (threshold 1.21V typ, SLVSDG6C) so the always-on buck is sure to start
-- **2.5 RC EN_5V_SOM** (power_som): debounce/reset ramp: R12=10000R with C20=100n -> tau must mask >=0.2 ms bounce, release <20 ms
-- **2.6 divider FB_3V3** (power): +3V3_REG -[R4=100000R]- FB_3V3 -[R5=22000R]- GND @ 3.3 V (informational, no named threshold)
-- **2.7 divider FB_5V0** (power): +5V_REG -[R1=40200R]- FB_5V0 -[R2=10000R]- GND @ 5 V (informational, no named threshold)
-- **2.8 divider FB_5V_SOM** (power_som): +5V_SOM -[R14=68100R]- FB_5V_SOM -[R15=10000R]- GND @ 4.65 V (informational, no named threshold)
-- **2.9 divider PG_1V8_G [FET on at nominal rail]** (power): +1V8 -[R7=1000R]- PG_1V8_G -[R8=100000R]- GND @ 1.8 V: +1V8 PG sense: gate divider must exceed the AO3400A max Vgs(th)=1.45 V so the PG LED is guaranteed on
-- **2.10 RC PL_BTN0** (bringup_rails): debounce/reset ramp: R7=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
-- **2.11 RC PL_BTN1** (bringup_rails): debounce/reset ramp: R8=10000R with C3=100n -> tau must mask >=0.2 ms bounce, release <20 ms
-- **2.12 SY7201 ISET (R1)** (lcd): I_LED = 0.2 V / 1.5R; panel-class window 125-150 mA (lcd_backlight.md)
+- **2.2 EN clamp ceiling (U1)** (power): +5V_REG=5V EN strap divider R1=40200R/R2=10000R, NO clamp zener: EN at VIN=21.0V must stay <= the EN recommended-max 5.5V (TPS54302 has NO internal EN clamp — SLVSDG6C; PWR-1)
+- **2.3 TPS54302DDCR FB (+5V_SOM)** (power_som): Vout = 0.596 * (1 + R14/R15 = 68100/10000) vs nominal 4.65 V +/-3%
+- **2.4 EN clamp ceiling (U4)** (power_som): +VIN_SYS=20V -[R12=10000R]- EN, D5=MMSZ5231B zener->GND: EN at VIN=21.0V (20V+5%) worst-case (Vz 5.355V) must stay <= the EN recommended-max 5.5V (no internal clamp, I_hys 1.55uA only — SLVSDG6C)
+- **2.5 EN clamp turn-on (U4)** (power_som): +VIN_SYS=20V -[R12=10000R]- EN, D5=MMSZ5231B zener->GND: EN at VIN=4.75V (5V contract low) must exceed enable+margin 1.5V (threshold 1.21V typ, SLVSDG6C) so the always-on buck is sure to start
+- **2.6 RC EN_5V_SOM** (power_som): debounce/reset ramp: R12=10000R with C20=100n -> tau must mask >=0.2 ms bounce, release <20 ms
+- **2.7 divider FB_3V3** (power): +3V3_REG -[R4=100000R]- FB_3V3 -[R5=22000R]- GND @ 3.3 V (informational, no named threshold)
+- **2.8 divider FB_5V0** (power): +5V_REG -[R1=40200R]- FB_5V0 -[R2=10000R]- GND @ 5 V (informational, no named threshold)
+- **2.9 divider FB_5V_SOM** (power_som): +5V_SOM -[R14=68100R]- FB_5V_SOM -[R15=10000R]- GND @ 4.65 V (informational, no named threshold)
+- **2.10 divider PG_1V8_G [FET on at nominal rail]** (power): +1V8 -[R7=1000R]- PG_1V8_G -[R8=100000R]- GND @ 1.8 V: +1V8 PG sense: gate divider must exceed the AO3400A max Vgs(th)=1.45 V so the PG LED is guaranteed on
+- **2.11 RC PL_BTN0** (bringup_rails): debounce/reset ramp: R7=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
+- **2.12 RC PL_BTN1** (bringup_rails): debounce/reset ramp: R8=10000R with C3=100n -> tau must mask >=0.2 ms bounce, release <20 ms
+- **2.13 SY7201 ISET (R1)** (lcd): I_LED = 0.2 V / 1.5R; panel-class window 125-150 mA (lcd_backlight.md)
 
 </details>
 

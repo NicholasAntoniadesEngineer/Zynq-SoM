@@ -86,6 +86,14 @@ _VOLT_PATTERNS: tuple[tuple[str, float], ...] = (
     (r"^\+5V_SOM$", 4.65),
     (r"^\+5V_REG$", 5.0),       # DEF-D: buck-1 output, pre-RS2
     (r"^\+5V", 5.0),
+    # DEF-I: ~5 V rails that are NOT +5V-prefixed (so the generic +5V pattern
+    # misses them) — EXACT-anchored so they resolve for the CAP_VOLTAGE derate
+    # without shadowing any FB/SW/BOOT/CC trap node. Each carries a bypass cap
+    # that was previously voltage-unchecked (CAP_VOLTAGE-blind).
+    (r"^USB_VBUS$", 5.0),          # usbc_otg downstream VBUS (5 V)
+    (r"^USB_UART_VBUS$", 5.0),     # usb_uart_connector host VBUS (5 V)
+    (r"^HDMI_RX_5V$", 5.0),        # HDMI-RX cable +5 V (HDMI 1.4 pin 18)
+    (r"^HDMI_TX_CON_5V0$", 5.0),   # HDMI-TX connector +5 V
     (r"^\+3V3_REG$", 3.3),      # DEF-D: buck-2 output, pre-RS3
     (r"^\+3V3", 3.3),
     (r"^\+1V8_REG$", 1.8),      # DEF-D: LDO output, pre-RS4
@@ -123,6 +131,10 @@ class RegSpec:
 REG_SPECS: dict[str, RegSpec] = {
     "TPS54302": RegSpec("buck", 3.0, eff=0.90, in_pin="3", out_pin="2",
                         note="TI 3 A synchronous buck (SW->L->rail)"),
+    # DEF-I: U1 (power.py) +5V buck — was unmodelled since the LMR33630 swap, so
+    # its +5V-chain input current was absent from the +VIN_SYS/+VIN budget.
+    "LMR33630": RegSpec("buck", 3.0, eff=0.90, in_pin="2", out_pin="8",
+                        note="TI 3 A 36V synchronous buck (VIN=2, SW=8 ->L->rail)"),
     "AP2112K": RegSpec("ldo", 0.6, in_pin="1", out_pin="5",
                        note="600 mA LDO"),
     "TLV75725": RegSpec("ldo", 0.4, in_pin="1", out_pin="5",

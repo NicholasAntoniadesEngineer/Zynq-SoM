@@ -33,6 +33,8 @@ were never exercised against a defect by the file-based mutators:
 - ``remove_pullup``  delete an i2c pull-up resistor
                      -> design_rules I2C fires
 - ``break_reset``    strip a reset net's cap (the RC half)
+- ``float_ep``       nc a part's exposed pad (EP) -> EP-must-net-to-GND fires
+- ``ep_to_power``    net an exposed pad (EP) onto a non-GND rail -> EP fires
                      -> design_rules RESET fires
 - ``thermal_overrun``bump a regulator's declared draw so Tj passes its limit
                      -> thermal fires; a companion ``thermal_waiver`` mutant
@@ -458,6 +460,24 @@ def _fixture_design_rules() -> list[_Sheet]:
     return [_Sheet("selftest_dr", c)]
 
 
+def _fixture_ep(ep_net: str | None = "GND") -> list[_Sheet]:
+    """A part with a real exposed pad (TLV75725PDYDR pin 6 = EP) for the DEF-I
+    EP-must-net-to-GND rule. ep_net='GND' → the gate PASSES; '+3V3' →
+    ep_to_power (EP on a non-GND rail); None → float_ep (EP nc'd / floating)."""
+    c = Circuit("selftest_ep", "selftest exposed-pad fixture")
+    c.use_part("TLV75725PDYDR", ref="U1",
+               footprint="TLV75725PDYDR:TLV75725PDYDR")
+    c.net("+3V3", "U1.1", "U1.3")           # IN + EN
+    c.net("+2V5", "U1.5")                    # OUT
+    c.nc("U1.4")                             # NC pin
+    c.net("GND", "U1.2")                     # GND pin (always GND)
+    if ep_net is None:
+        c.nc("U1.6")                         # float_ep: EP left unconnected
+    else:
+        c.net(ep_net, "U1.6")                # GND (ok) or +3V3 (ep_to_power)
+    return [_Sheet("selftest_ep", c)]
+
+
 # Fixture B — a TPS54302 buck with an FB divider, for powertree / thermal /
 # spice. SW -> L -> +3V3 (the rail behind the inductor); FB divider 45k3/10k
 # gives Vout = 0.596*(1+45.3/10) = 3.30 V (in the +/-3% window); EN parked on a
@@ -587,6 +607,22 @@ def _mg_design_rules(which: str, lib: Library):
     killed = bool(fired) and not mut_res.ok
     by = (fired[0] if fired else "(no finding)")
     return base_ok, killed, f"{desc}\n            by design_rules {rule.upper()}: {by}"
+
+
+def _mg_ep(which: str, lib: Library):
+    """float_ep (EP nc'd → floating) and ep_to_power (EP on a non-GND rail):
+    the DEF-I EP-must-net-to-GND rule fires on each; baseline (EP→GND) passes.
+    An exposed pad is a real pad+pin+GND net, never a prose layout note."""
+    from schgen.verify import design_rules
+    base = design_rules.check(_fixture_ep("GND"), lib)
+    base_ok = base.ok and not base.ep
+    mut_net = None if which == "float_ep" else "+3V3"
+    mut = design_rules.check(_fixture_ep(mut_net), lib)
+    killed = bool(mut.ep) and not mut.ok
+    by = mut.ep[0] if mut.ep else "(no finding)"
+    desc = ("float_ep: nc the TLV75725 EP (pin 6)" if which == "float_ep"
+            else "ep_to_power: net the TLV75725 EP onto +3V3 (non-GND)")
+    return base_ok, killed, f"{desc}\n            by design_rules EP: {by}"
 
 
 def _mg_power_overrun(lib: Library):
@@ -740,7 +776,7 @@ def _mg_port_rename(lib: Library, tmp: Path):
                                 "root label to rename")
     root.write_text(new)
     placed = _placed(_board_fixture_sheets())
-    killed = not board._board_gate(placed, root, mut_out)
+    killed = not board._board_gate(placed, root, mut_out, lib)
     return base_ok, killed, ("port_rename: one SELFTEST_LINK root label -> "
                              "SELFTEST_LINK_BROKEN (its sheet pin keeps the "
                              "old name)\n            by board merge gate: PORT "
@@ -839,6 +875,8 @@ def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
         ("drop_decap",      lambda: _mg_design_rules("drop_decap", lib)),
         ("remove_pullup",   lambda: _mg_design_rules("remove_pullup", lib)),
         ("break_reset",     lambda: _mg_design_rules("break_reset", lib)),
+        ("float_ep",        lambda: _mg_ep("float_ep", lib)),
+        ("ep_to_power",     lambda: _mg_ep("ep_to_power", lib)),
         ("thermal_overrun", lambda: _mg_thermal("thermal_overrun", lib)),
         ("thermal_waiver",  lambda: _mg_thermal("thermal_waiver", lib)),
         ("power_overrun",   lambda: _mg_power_overrun(lib)),

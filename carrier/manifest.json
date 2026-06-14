@@ -10,11 +10,11 @@
     },
     {
       "path": "docs/BRINGUP.md",
-      "sha256": "df75836f08e03dbec65872bd92b61c06d8b44dd1bb3ec631aa73d2655524428a"
+      "sha256": "3487468478bd6aa3759811cec08df6cd7171089d33841c8aa4a96351790306c5"
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "df7c2e13d5221345ea271caf3d9299dbf80eac97e05483b4491abcdd08b612f3"
+      "sha256": "aace4a93c1fd5014f347f6a9dfc01023ddaddf52d85914e3be9720a224b7bb64"
     },
     {
       "path": "docs/FLOORPLAN.svg",
@@ -22,11 +22,11 @@
     },
     {
       "path": "docs/power_tree.svg",
-      "sha256": "e85f1ce2270e5d67a96a807e6c19ed17af94a6f660321294e952ddfacd62a55b"
+      "sha256": "95f3570560301684d4aa85c965fac246a732ac4fc8cd69c1140f5b13d25b3264"
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "6f7c95612253603d6f899698845489f59f32cb8a271cf33fa063209138f8919f"
+      "sha256": "1eb04c6ce2ff33fcdd6755a0a7801fff8478cd67090e405e4d91a74b6b243386"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -46,7 +46,7 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "1d037d291bf1405ee4ced308183e843e06fc94de6b17f52929b0fe4260f442b4"
+      "sha256": "cd576796f73a3846e8f02783607f6feeca69bcd58d384a0250f70208ca4392e4"
     },
     {
       "path": "reports/cc_gate.txt",
@@ -54,7 +54,7 @@
     },
     {
       "path": "reports/design_rules.txt",
-      "sha256": "ea85f5cf92b57fbc8acdeb75b0b448e90a71c63f88cbe180d176d755f1d478de"
+      "sha256": "615d5b2734c74ee54375ad75c6b809391075e055113cdc5e0645eafa6a4dcc3c"
     },
     {
       "path": "reports/gates.txt",
@@ -66,15 +66,15 @@
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "b4304986eb790694c82328d3457a06c549a7ef19e9e339d2f2043d2189ca08c0"
+      "sha256": "b9c4dc45642397b4f8ee8789af0f71f572b8cf104008accaa4371e466b57daeb"
     },
     {
       "path": "reports/power_tree.txt",
-      "sha256": "88473078837e1106016ac31c95e8742fe816870408a18e89738525d9dcba3998"
+      "sha256": "38fffcdb87d1f46927343099f4525f5734d1f9f7a9abe260c2ec48b53ed2245d"
     },
     {
       "path": "reports/spice.txt",
-      "sha256": "960ea8e5fa9d48b51e1bec1ad54b3ee9659bd81ce474a7962e50100bf2c2f352"
+      "sha256": "af1cbad8fd35705711809352859f6dd6e8df9d9476d05275cc16fd1b45c17ba1"
     },
     {
       "path": "reports/testpoints.txt",
@@ -82,7 +82,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "7e51e9b3ca7d2ca167af4c03374aad64368c8997533d5626dca6b9e7d68f0a9d"
+      "sha256": "ffbef676ce73e8e2aec7f709a53ddec216de44a973d60c2bd7906e1b02bd6392"
     },
     {
       "path": "schematic/board_aux.kicad_sch",
@@ -762,10 +762,10 @@
     },
     {
       "draws": [],
-      "limit_a": null,
+      "limit_a": 3.0,
       "load_a": 2.9503,
       "name": "+5V_REG",
-      "source": null,
+      "source": "power:U1 LMR33630ADDAR [buck]",
       "volts": 5.0
     },
     {
@@ -809,7 +809,7 @@
     {
       "draws": [],
       "limit_a": 3.0,
-      "load_a": 0.5177,
+      "load_a": 1.3372,
       "name": "+VBUS_IN",
       "source": "source: USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)",
       "volts": 20.0
@@ -817,7 +817,7 @@
     {
       "draws": [],
       "limit_a": 3.529,
-      "load_a": 0.5177,
+      "load_a": 1.3372,
       "name": "+VIN",
       "source": "pd_input:U1 TPS26631PWPR [efuse]",
       "volts": 20.0
@@ -825,7 +825,7 @@
     {
       "draws": [],
       "limit_a": null,
-      "load_a": 0.5177,
+      "load_a": 1.3372,
       "name": "+VIN_SYS",
       "source": null,
       "volts": 20.0
