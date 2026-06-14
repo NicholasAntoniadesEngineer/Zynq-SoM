@@ -729,6 +729,36 @@ def determinism_check(path: Path, tmp: Path) -> tuple[bool, str]:
     return False, "DRIFT between two builds:\n    " + "\n    ".join(diff[:12])
 
 
+def determinism_hashseed_check(path: Path, tmp: Path) -> tuple[bool, str]:
+    """CROSS-SEED byte-equality. The same-process double-build above shares one
+    PYTHONHASHSEED, so it cannot catch non-determinism from set/dict ITERATION
+    ORDER (e.g. an unsorted set feeding emitted geometry). Build the sheet in
+    two SUBPROCESSES with different hash seeds and require byte-identical output
+    — this is the gate that proves the emit path is hash-seed-robust."""
+    import os
+    import subprocess
+    import sys
+    code = ("import sys; from pathlib import Path; "
+            "from schgen.selftest import _build; "
+            "sys.stdout.write(_build(Path(sys.argv[1]), Path(sys.argv[2])).text)")
+    texts = []
+    for seed in ("0", "987654321"):
+        env = dict(os.environ, PYTHONHASHSEED=seed)
+        r = subprocess.run(
+            [sys.executable, "-c", code, str(path), str(tmp / f"hs{seed}")],
+            cwd=str(REPO_ROOT), env=env, capture_output=True, text=True)
+        if r.returncode != 0:
+            return False, f"subprocess build failed (seed {seed}): {r.stderr[-300:]}"
+        texts.append(r.stdout)
+    if texts[0] == texts[1]:
+        return True, "byte-identical across PYTHONHASHSEED {0, 987654321}"
+    diff = list(difflib.unified_diff(
+        texts[0].splitlines(), texts[1].splitlines(),
+        "seed-0", "seed-987654321", lineterm="", n=0))
+    return False, "HASH-SEED DRIFT (set/dict iteration leaks into output):\n    " \
+        + "\n    ".join(diff[:12])
+
+
 # ---- driver ----------------------------------------------------------------------
 
 def _resolve_sheet(spec: str) -> Path:
@@ -841,6 +871,10 @@ def run(sheet_specs: list[str], keep: bool = False) -> int:
             print(f"  determinism: {'PASS' if det_ok else 'FAIL'} — {det_msg}")
             if not det_ok:
                 problems.append(f"{path.stem}: determinism FAIL")
+            hs_ok, hs_msg = determinism_hashseed_check(path, tmp / path.stem)
+            print(f"  hash-seed:   {'PASS' if hs_ok else 'FAIL'} — {hs_msg}")
+            if not hs_ok:
+                problems.append(f"{path.stem}: hash-seed determinism FAIL")
         # model-gate mutants are board-wide (their own minimal fixtures), so
         # they run ONCE — not per input sheet — and fold into the same tally.
         mg_inj, mg_kill, mg_probs = selftest_model_gates(tmp / "model_gates")

@@ -203,7 +203,7 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
     # a label anchored mid-wire is electrically ON the wire: split the leg
     # at the anchor so the connectivity graph sees it
     for net, g in geoms.items():
-        for lp in g.label_pts:
+        for lp in sorted(g.label_pts):          # sorted: deterministic split order
             out_legs: list[tuple[Point, Point]] = []
             for a, b in g.legs:
                 if lp != a and lp != b and cell_of(lp) in _leg_cells(a, b):
@@ -286,7 +286,11 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
             deg[pt] = deg.get(pt, 0) + len(parts)
         for pt in g.power_pts:
             deg[pt] = deg.get(pt, 0) + 1
-        for pt, d in deg.items():
+        # sorted: junction EMIT order seeds the uuid ordinals (emit.py), so it
+        # must not depend on dict/set iteration order — sort by coordinate so
+        # output is byte-identical regardless of PYTHONHASHSEED (selftest gates
+        # this with a cross-seed build).
+        for pt, d in sorted(deg.items()):
             if d >= 3:
                 out.junctions.append(pt)
     return out
