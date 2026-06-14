@@ -12,7 +12,12 @@ cross-PYTHONHASHSEED) + pytest **181** — before it landed. Working tree clean.
    kicad-cli (net-blind union-find over the emitted geometry); agrees pin-for-
    pin on all sheets. The board is now electrically proven by two code paths.
 2. **Board HW — ALL FOUR blocks** (see the dedicated section below).
-3. **Three adversarial re-investigation audits** (15 dimensions, ~63 agents).
+3. **Four adversarial re-investigation audits** (19 dimensions, ~77 agents) —
+   electrical defects ×2, engine/gate-soundness + determinism, and a
+   completeness critic (what's *missing*). The last found two real
+   dossier-mandated **bulk caps** absent on gated rails (+3V3_HDMI_TX,
+   +3V3_LCD) — now added; LCD-FFC + FMC ESD were re-verified as a documented
+   deferral / a board-to-board-mezzanine design choice and left as review items.
    Every finding independently re-verified — several confident "HIGH/CRITICAL"
    findings were FALSE POSITIVES whose fixes would have *introduced* bugs, and
    are documented-rejected (a DSHP04 mis-wire that never enables the rail; a
