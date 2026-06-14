@@ -536,7 +536,7 @@ rails (25):
   +VIN — carrier-local rail (sheets: pd_input, power_mon)
   +VIN_SYS — carrier-local rail (sheets: power, power_mon, power_som)
   CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_uart_connector, usbc_otg)
-  GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
+  GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
 
 deferred ports — author-declared, awaiting later waves (1) [WARNING]:
   bringup_en_modules:EN_LCD_BL — awaiting lvds_lcd_power (backlight boost EN provision, dossier 3.2)

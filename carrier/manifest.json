@@ -14,11 +14,11 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "33a6fc73d3c90d03302970436372d076f466b7e1e41e61f0130be239fdbcca43"
+      "sha256": "df7c2e13d5221345ea271caf3d9299dbf80eac97e05483b4491abcdd08b612f3"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "76c439f0078b18dab6184a9545ef640ed5c537569693c8e8c7eed70ced9274f5"
+      "sha256": "ba90dd74c34140f29cdecd7aea6b0784b8d7f33954f4588d4f31fa685d8ad78a"
     },
     {
       "path": "docs/power_tree.svg",
@@ -34,7 +34,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "336134b5173020471516fe439b67d31a4c891595e18885a1656981f77274a9e7"
+      "sha256": "d6ae4d49bcf552a5f8353ea1c751c48feeb99e706da1aa22774726ed9b0106b2"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -46,11 +46,11 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "d7064e0ab93fc1a8e8dd9aac99e11e0be8309c9616f34cb3dc710166c82d87d5"
+      "sha256": "1d037d291bf1405ee4ced308183e843e06fc94de6b17f52929b0fe4260f442b4"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "48b0cc8760871dab401e49fb8b1bd3837fca4513c8f6d433bb7f0f3bcf5a4633"
+      "sha256": "e54f444c2c13dbf2a1ced2ff9e03fc2c55a858a3414ed38ed9e774b6f8c4e8da"
     },
     {
       "path": "reports/design_rules.txt",
@@ -58,15 +58,15 @@
     },
     {
       "path": "reports/gates.txt",
-      "sha256": "5e997d2b608dde45c84b78a950f0afb0c9888bb9a2d8bd0cee0e4cdf3fc1ee09"
+      "sha256": "7a09585fe68d06b882cf5879bf91d73e4ece59fe1ec774d3adcecc00e359da17"
     },
     {
       "path": "reports/link_report.txt",
-      "sha256": "4163ad55664b1cf796a32cc790230e725db9a447312748fb596e0e5426671d01"
+      "sha256": "51796d8b541bf338237256c3d83498724fd4f32a1650569e5ccfe388d8948667"
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "26cd46626052efdea15c3f10e09934a49ae23d528c822fc119de5b0f2f382e61"
+      "sha256": "b4304986eb790694c82328d3457a06c549a7ef19e9e339d2f2043d2189ca08c0"
     },
     {
       "path": "reports/power_tree.txt",
@@ -118,7 +118,7 @@
     },
     {
       "path": "schematic/debug_boot.kicad_sch",
-      "sha256": "88b4b0aa8d7e48c0066b1e97fb7e4decabf3caa0f58d10b512806946c3b7f8a9"
+      "sha256": "7b3910f57154e3b09b3786e1b3264e237bf61adb1a61546404666b062ca69edc"
     },
     {
       "path": "schematic/ethernet.kicad_sch",
@@ -130,11 +130,11 @@
     },
     {
       "path": "schematic/hdmi_rx.kicad_sch",
-      "sha256": "a445a12ca348b258b6e124d060948915196ef0335098410816e3cf7799360aef"
+      "sha256": "a36cb51d4869206c99dd06004806c72a280d41340a26dee15af1fe6cc24108bc"
     },
     {
       "path": "schematic/hdmi_rx_term.kicad_sch",
-      "sha256": "c4c33a9eb9183ea2153cc9d48d705f275c75fdaf9f6d3b0a482a080a6ec7bce4"
+      "sha256": "af4d2b000affe28fc7786caea0006097f7b2fa1405784cbf21d9f6098597e0e2"
     },
     {
       "path": "schematic/hdmi_tx.kicad_sch",
@@ -208,9 +208,9 @@
   "bom": {
     "cost": null,
     "extended": null,
-    "lines": 89,
+    "lines": 90,
     "missing": [],
-    "parts": 397
+    "parts": 401
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [

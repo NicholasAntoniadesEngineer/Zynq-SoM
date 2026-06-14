@@ -55,7 +55,7 @@ Edge spills (preferred edge full — honest, not hidden):
 | bringup_modules | E | (22, 24, 11 x 17.5) | 70 | 190.2 | (13) |
 | bringup_rails | E | (90, 42, 23.5 x 14.5) | 23 | 343.2 | (14) |
 | debug_boot | N | (60, 6, 12.5 x 20.5) | 10 | 256.2 | (15) |
-| hdmi_rx_term | @hdmi_rx | (38, 76, 8 x 8) | 8 | 11.5 |  |
+| hdmi_rx_term | @hdmi_rx | (38, 76, 8 x 8) | 10 | 14.4 |  |
 | power | E | (92, 58, 20 x 12.5) | 37 | 247.6 | (16) |
 | power_mon | E | (78, 18, 8 x 9.5) | 10 | 74.4 | (17) |
 | power_som | E | (96, 32, 13.5 x 8) | 17 | 106.9 |  |
