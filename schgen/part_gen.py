@@ -571,6 +571,66 @@ def _paste_grid(number: str, cx: float, cy: float, w: float, h: float,
     return out
 
 
+# ---------------------------------------------------------------------------
+# DEF-A: synthesized exposed pads (pipeline-generated, datasheet-cited)
+# ---------------------------------------------------------------------------
+# Some EasyEDA lands OMIT the center exposed/thermal pad that the part's
+# datasheet DOES dimension (a known EasyEDA data gap on certain QFN/DFN/SON
+# parts). Per the user's "pipeline-generated only" rule (memory:
+# never-redraw-parts) the generator synthesizes the EP from a DATASHEET-CITED,
+# LCSC-keyed ALLOWLIST so the EP lands in the footprint + symbol + netlist
+# (ERC- and netlist-gate-checkable, nettable to GND), never a prose layout
+# note. Allowlist-keyed by design: a part NOT listed regenerates byte-identical
+# (the EP-must-net gate, DEF-I, is the forward guard against a missed EP).
+@dataclass(frozen=True)
+class _EpSpec:
+    w: float            # EP land width  (mm, x)
+    h: float            # EP land height (mm, y)
+    cite: str           # datasheet provenance — LAW 0: every dimension cited
+
+
+PACKAGE_EP: dict[str, _EpSpec] = {
+    # MPQ4423HGQ-Z, QFN-8 3x3 (U1 buck). The EasyEDA land ships pads 1-8 only;
+    # the datasheet dimensions the EP, so we add the centre thermal/GND land.
+    # ~1.0x1.1 sits in the 2.0 mm gap between the two pad columns (~0.5 mm
+    # clearance/side). Nettable as <ref>.EP -> GND (idiom: pad/pin number 9).
+    "C3192119": _EpSpec(1.0, 1.1, "MPS MPQ4423H Rev1.11 QFN-8 BOTTOM VIEW "
+                        "D2xE2 = 0.95-1.05 x 1.05-1.15 mm -> 1.0x1.1 nominal"),
+}
+
+
+def _ep_number(pins: list[PinInfo]) -> str:
+    """EP pad/pin number = one past the highest numeric signal pin (the in-repo
+    EP idiom: TPS26631 8->? no; max signal + 1, e.g. QFN-8 -> '9')."""
+    nums = [int(p.number) for p in pins if p.number.isdigit()]
+    return str(max(nums) + 1) if nums else "EP"
+
+
+def synth_ep_pin(info: dict, pins: list[PinInfo]) -> PinInfo | None:
+    """The EP symbol/.py pin for an allowlisted part, else None. Name 'EP' so
+    group_pins (via _GND_RE) places it on the bottom edge with GND; passive."""
+    if PACKAGE_EP.get(info.get("lcsc", "")) is None:
+        return None
+    if any((p.name or "").upper() in ("EP", "PAD", "EPAD") for p in pins):
+        return None                               # land already carries it
+    return PinInfo(_ep_number(pins), "EP", "passive")
+
+
+def synth_ep_pad_nodes(number: str, lcsc: str) -> list:
+    """The EP footprint pad node(s) for an allowlisted part: a centred rect on
+    the full SMD stack, windowed-paste (DEF-2) if it is large enough to float."""
+    spec = PACKAGE_EP[lcsc]
+    w, h = spec.w, spec.h
+    if min(w, h) >= PASTE_RELIEF_MIN:
+        main = [Sym("pad"), number, Sym("smd"), Sym("rect"),
+                [Sym("at"), 0.0, 0.0], [Sym("size"), w, h],
+                [Sym("layers"), "F.Cu", "F.Mask"]]
+        return [main, *_paste_grid(number, 0.0, 0.0, w, h, 0.0)]
+    return [[Sym("pad"), number, Sym("smd"), Sym("rect"),
+             [Sym("at"), 0.0, 0.0], [Sym("size"), w, h],
+             [Sym("layers"), "F.Cu", "F.Paste", "F.Mask"]]]
+
+
 def _pad_sx(fields: list[str], ctx: _FpCtx) -> list | None:
     """PAD~shape~cx~cy~w~h~layer~net~number~hole_r~points~rot~id~hole_len~
     slot~plated~locked — faithful pad conversion. Returns a LIST of pad nodes
@@ -649,7 +709,8 @@ def _pad_sx(fields: list[str], ctx: _FpCtx) -> list | None:
 
 
 def convert_footprint(result: dict, name: str, info: dict,
-                      model_files: list[str]) -> tuple[list, dict | None]:
+                      model_files: list[str],
+                      ep_pin: PinInfo | None = None) -> tuple[list, dict | None]:
     """EasyEDA packageDetail -> modern (footprint ...) s-expr.
 
     Returns (footprint sexpr, model_3d info dict or None). Pad geometry is
@@ -801,6 +862,13 @@ def convert_footprint(result: dict, name: str, info: dict,
                 "ry": (360 - _f(rot[1] if len(rot) > 1 else 0)) % 360,
                 "rz": (360 - _f(rot[2] if len(rot) > 2 else 0)) % 360,
             }
+
+    # DEF-A: append the synthesized exposed pad (allowlisted parts whose EasyEDA
+    # land omits a datasheet-dimensioned EP). Centred at (0,0) -> within the
+    # existing pad y-extent, so the silk Reference/Value placement (ys below) is
+    # unchanged and non-allowlisted parts stay byte-identical.
+    if ep_pin is not None:
+        pads.extend(synth_ep_pad_nodes(ep_pin.number, info.get("lcsc", "")))
 
     fp.append([Sym("attr"), Sym("smd") if smd else Sym("through_hole")])
 
@@ -1003,6 +1071,13 @@ def add_part(lcsc_id: str, name: str | None = None,
     if lcsc_id and not info["lcsc"]:
         info["lcsc"] = lcsc_id
     pins = normalize_etypes(parse_pins(result), info["prefix"])
+    # DEF-A: synthesize the exposed pad for allowlisted parts whose EasyEDA land
+    # omits a datasheet-dimensioned EP (pipeline-generated, never a hand-edit).
+    # One PinInfo flows to BOTH gen_symbol/gen_part_py (here) and the footprint
+    # (passed to convert_footprint) so the symbol pin and pad share one number.
+    ep_pin = synth_ep_pin(info, pins)
+    if ep_pin is not None:
+        pins = [*pins, ep_pin]
     base = safe_name(name or info["mpn"])
     if not base:
         raise PartGenError(f"cannot derive a folder name for {lcsc_id}")
@@ -1029,7 +1104,7 @@ def add_part(lcsc_id: str, name: str | None = None,
     sym = gen_symbol(base, pins, info)
     (outdir / f"{base}.kicad_sym").write_text(sexpr.dumps(sym) + "\n")
 
-    fp, _ = convert_footprint(result, base, info, model_files)
+    fp, _ = convert_footprint(result, base, info, model_files, ep_pin=ep_pin)
     (outdir / f"{base}.kicad_mod").write_text(sexpr.dumps(fp) + "\n")
 
     # Every file in a part folder carries the part's name (user rule) —
