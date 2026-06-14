@@ -159,7 +159,15 @@ def circuit() -> Circuit:
     c.port("STM32_USB_D_P", "U2.6")                       # PHY-side, post-ESD
     c.port("STM32_USB_D_N", "U2.4")
     c.port_type("STM32_USB_D_P", kind="usb_hs_pair", pair_with="STM32_USB_D_N")
-    c.net("+VBUS_IN", "U2.5")                             # ESD clamp rail = inlet VBUS
+    # ESD clamp rail = +3V3_SC, NOT the 20 V inlet VBUS. The USBLC6-2SC6 pin 5
+    # is the VBUS-referenced rail clamp: an internal TVS pin5->GND with ~5.25 V
+    # standoff / ~6 V breakdown. The protected pair is the STM32 USB FS data
+    # (3.3 V domain), so the clamp must reference a <=5.25 V rail that is alive
+    # whenever the SC's USB is active — +3V3_SC (always-on SC rail, present on
+    # this sheet), matching the lcd/board_qwiic USBLC6 precedent. Tying pin 5 to
+    # +VBUS_IN (20 V PD contract) would hold that internal TVS in continuous
+    # avalanche — destructive AND it defeats the data ESD function (audit CRIT).
+    c.net("+3V3_SC", "U2.5")
     c.net("GND", "U2.2")
 
     # ---- SBU unused; shell to chassis (usbc_otg pattern) -------------------
