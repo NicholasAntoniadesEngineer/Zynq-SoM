@@ -6,7 +6,7 @@
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
-      "sha256": "34b8991c499b5aa91befdd4364c3fdea9de8b80970de512d161d5139a67bff79"
+      "sha256": "023e06ca10dafc686b358bf402ba088a19df0204fea370dfb838ef389267561d"
     },
     {
       "path": "docs/BRINGUP.md",
@@ -14,11 +14,11 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "0d92cd3dae115c98080d1122f2628632ff94e01d48a6e8291f75fd15285c0570"
+      "sha256": "a567246a1dea7ea9b81c4c265b943040d648307543ba9461fb26e9254362ccfa"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "d8b33ca09fa88d153046615c5099fbc3537ae879901ffa603a293d81616211b9"
+      "sha256": "b379db7356699e5c7308361027cb126c4a4e8dee7b720c61a946e6656aaf5446"
     },
     {
       "path": "docs/power_tree.svg",
@@ -26,7 +26,7 @@
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "2d5f1f461bc425380238845f76bb04bd1cd237043901923663809939e7016304"
+      "sha256": "aa96bce9d917602d2aca57717d79372e3b81cfed02c3d65bd4fd0887563b9953"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -34,11 +34,11 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "99e9d23319baa01ff6b9c69d952bec687ed226b075480b333b87e10ce809aea8"
+      "sha256": "e34cff1b0a4576d87ae15309ec7938c1cc2763e2bfadd8e9100e053afd4fe701"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
-      "sha256": "f4858a3719cd4ed57cb5d832400e3f8bbd87e7eaf300b9e02a7acff6acd13fee"
+      "sha256": "f87bb53299f8ea22b062cfa9930eab548d1562375bd04db889423112a30dddb8"
     },
     {
       "path": "manufacturing/preflight_report.txt",
@@ -46,11 +46,11 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "51f791dea9a928a05f750e7bae2526a74116bc461cb66f00ea63687b94169a02"
+      "sha256": "f93d52051c9f2e7f42c1c3f549f0c6e8ed8939148ce45d6f35a484a6ea65098e"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "6c70e0afdf7c65b3d80a43a9eb91de817785d19bb37211019d2c8c9bae5289b9"
+      "sha256": "0e3582c3c0151a391c28de04a345d119bd73b8cb2557c5f980c36ad626738085"
     },
     {
       "path": "reports/design_rules.txt",
@@ -62,7 +62,7 @@
     },
     {
       "path": "reports/link_report.txt",
-      "sha256": "35590091c8f326b020c0924c477a40582eb00ce8bfb4cb82fc4bce535d6f135d"
+      "sha256": "9b3fbd5cb4c89c5df16326a8f880045d055ca27ba8dbcfc8520dec15a7c2c386"
     },
     {
       "path": "reports/part_rules.txt",
@@ -74,7 +74,7 @@
     },
     {
       "path": "reports/spice.txt",
-      "sha256": "eb94ff886951326e5008186c8dff1e6577bc2c63523f8791fa33666f64908137"
+      "sha256": "4e77d5babeeb1f39ca2a9863705e7c3957bdc0fd02f346e1953a466276a19d7a"
     },
     {
       "path": "reports/testpoints.txt",
@@ -110,7 +110,7 @@
     },
     {
       "path": "schematic/bringup_rails.kicad_sch",
-      "sha256": "cf08cdc8206a64c182741d289b8aab752a9cac9718e3a8395f7cfc28f4d16f05"
+      "sha256": "51c60e07a87dcad7c73d40afd0eb747f2c76ac6113959220f1d0c7604c0a20b4"
     },
     {
       "path": "schematic/camera.kicad_sch",
@@ -150,7 +150,7 @@
     },
     {
       "path": "schematic/pd_input.kicad_sch",
-      "sha256": "306a03a2346e3e87de912b1bdd1197bd8d1569b517b3a8f7cd552ee643e38426"
+      "sha256": "08f0cbbddaaaa3567e7e77771f8c7ff169d08443145d111c3b06736764961953"
     },
     {
       "path": "schematic/pmod.kicad_sch",
@@ -208,7 +208,7 @@
     "missing": [],
     "parts": 397
   },
-  "device": "XC7Z020-CLG484 (U2 on the SoM)",
+  "device": null,
   "gpio_map": [
     {
       "j_pins": [
@@ -849,12 +849,7 @@
     "waived": 5
   },
   "xdc": {
-    "banks": [
-      "13",
-      "33",
-      "34",
-      "35"
-    ],
-    "pins": 156
+    "banks": [],
+    "pins": null
   }
 }

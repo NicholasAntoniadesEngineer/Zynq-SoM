@@ -222,6 +222,7 @@ BU_OVR_PMOD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gat
 BU_OVR_SD,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_OVR_USB,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 BU_OVR_USER_LED,bringup_rails,single,Default,,,,,,,"deferred: bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+PD_FLT_N,bringup_rails,single,Default,,,,,,,"deferred: pd_input (TPS26631 eFuse FLT#, 100k PU +3V3_SC)"
 PL_BTN0,bringup_rails,single,Default,,,,,,,deferred: som_j1_j2 bank-33 PL pin assignment (P3 linker)
 PL_BTN1,bringup_rails,single,Default,,,,,,,deferred: som_j1_j2 bank-33 PL pin assignment (P3 linker)
 PMON_ALERT_N,bringup_rails,single,Default,,,,,,,"deferred: power_mon (INA3221 CRITICAL wire-OR, 10k PU +3V3_SC)"
@@ -287,6 +288,7 @@ LCD_R6,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_3
 LCD_R7,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
 LCD_VSYNC,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
 SD_CARD_DETECT,microsd,single,Default,,,,,,,deferred: som_j1_connector (STM32 GPIO function map)
+PD_FLT_N,pd_input,single,Default,,,,,,,deferred: bringup (TCA9535 expander port P15)
 STM32_USB_CC1,pd_input,single,Default,,,,,,,
 STM32_USB_CC2,pd_input,single,Default,,,,,,,
 IO_L10_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector

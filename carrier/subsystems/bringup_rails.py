@@ -135,11 +135,16 @@ def circuit() -> Circuit:
     #    +3V3_SC on usbc_otg (R3; +5V on a TCA9535 IO would break its VCC+0.5
     #    abs-max). P12/P13 are taken by the round-5 5V module gates, so the
     #    next free port is P14 (NOT the dossier's stale "P12").
+    #  * P15 = PD_FLT_N — TPS26631 +VIN eFuse open-drain fault (the board's ONLY
+    #    +VIN protection device), 100k PU +3V3_SC on pd_input (R6). DEF-F: was a
+    #    spare 100k-to-GND port; now the SC sees the inlet eFuse trip.
     c.port("PMON_ALERT_N", "U1.P11",
            expect="power_mon (INA3221 CRITICAL wire-OR, 10k PU +3V3_SC)")
     c.port("USBOTG_FLT_N", "U1.P14",
            expect="usbc_otg (TPS2051C FLT#, 100k PU +3V3_SC)")
-    for k in (5, 6, 7):                    # P15..P17 spare — must not float
+    c.port("PD_FLT_N", "U1.P15",
+           expect="pd_input (TPS26631 eFuse FLT#, 100k PU +3V3_SC)")
+    for k in (6, 7):                       # P16/P17 spare — must not float
         net = f"BU_P1{k}"
         rr = c.part(c.auto_ref("R"), "Device:R", "100k", R_FP, LCSC=LCSC_100K)
         c.net(net, f"U1.P1{k}", f"{rr.ref}.1")

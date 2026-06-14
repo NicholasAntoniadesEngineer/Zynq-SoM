@@ -7,7 +7,7 @@ alias map (rails only, exact, enumerated):
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (500):
+bound ports (502):
   board_aux:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   board_aux:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   board_aux:AUX_I2C_SCL [i2c] -> sheet board_qwiic:AUX_I2C_SCL; sheet board_services:AUX_I2C_SCL
@@ -96,6 +96,7 @@ bound ports (500):
   bringup_rails:BU_OVR_LCD_5V -> sheet bringup_en_modules:BU_OVR_LCD_5V
   bringup_rails:PMON_ALERT_N -> sheet power_mon:PMON_ALERT_N
   bringup_rails:USBOTG_FLT_N -> sheet usbc_otg:USBOTG_FLT_N
+  bringup_rails:PD_FLT_N -> sheet pd_input:PD_FLT_N
   bringup_rails:STM32_I2C2_SCL [i2c] -> sheet board_aux:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   bringup_rails:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   bringup_rails:SC_INT_N -> sheet som_j1:SC_INT_N; sheet usb_pd:SC_INT_N
@@ -241,6 +242,7 @@ bound ports (500):
   microsd:SDIO_D2 [sd_bus] -> sheet som_j1:SDIO_D2; SoM SDIO_D2 (J1.73)
   microsd:SDIO_D3 [sd_bus] -> sheet som_j1:SDIO_D3; SoM SDIO_D3 (J1.71)
   microsd:SD_CARD_DETECT -> sheet som_j2:SD_CARD_DETECT
+  pd_input:PD_FLT_N -> sheet bringup_rails:PD_FLT_N
   pd_input:STM32_USB_CC1 -> sheet som_j1:STM32_USB_CC1; sheet usb_pd:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
   pd_input:STM32_USB_CC2 -> sheet som_j1:STM32_USB_CC2; sheet usb_pd:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
   pd_input:STM32_USB_D_P [usb_hs_pair] -> sheet som_j1:STM32_USB_D_P; SoM STM32_USB_D_P (J1.19)
@@ -521,7 +523,7 @@ rails (25):
   +3V3_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +3V3_PMOD — carrier-local rail (sheets: bringup_modules, pmod)
   +3V3_REG — carrier-local rail (sheets: power_mon)
-  +3V3_SC <- sheets: board_aux, bringup_en, bringup_en_modules, bringup_rails, debug_boot, power_mon, som_j1, usb_pd, usbc_otg -> SoM 1 pins
+  +3V3_SC <- sheets: board_aux, bringup_en, bringup_en_modules, bringup_rails, debug_boot, pd_input, power_mon, som_j1, usb_pd, usbc_otg -> SoM 1 pins
   +3V3_SD — carrier-local rail (sheets: bringup_modules, microsd)
   +3V3_USER_LED — carrier-local rail (sheets: bringup_modules, user_io)
   +5V — carrier-local rail (sheets: bringup_modules, power, power_mon)

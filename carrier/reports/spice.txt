@@ -5,9 +5,9 @@ engine: analytic (gate) + ngspice .op cross-check on 10 divider(s), 1% agreement
 
 checks (21):
   [PASS] bringup_rails: RC PL_BTN0 = 1 ms (limits 0.2 .. 20 ms; analytic)
-         debounce/reset ramp: R8=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
+         debounce/reset ramp: R7=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
   [PASS] bringup_rails: RC PL_BTN1 = 1 ms (limits 0.2 .. 20 ms; analytic)
-         debounce/reset ramp: R9=10000R with C3=100n -> tau must mask >=0.2 ms bounce, release <20 ms
+         debounce/reset ramp: R8=10000R with C3=100n -> tau must mask >=0.2 ms bounce, release <20 ms
   [PASS] bringup_rails: RC STM32_NRST = 4 ms (limits 0.2 .. 20 ms; analytic)
          debounce/reset ramp: STM32 internal ~40k NRST pull-up (contract) with C4=100n -> tau must mask >=0.2 ms bounce, release <20 ms
   [PASS] debug_boot: BOOT0 strap VIH = 3.094 V (limits 2.31 .. 3.3 V; analytic)

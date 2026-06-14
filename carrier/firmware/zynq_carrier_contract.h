@@ -203,7 +203,7 @@
 #define ZC_TCA9535_BIT_EN_HDMI_TX_5V 10  /* P12: BU_OVR_HDMI_TX_5V -> EN_HDMI_TX_5V (+5V_HDMI_TX, ILIM 523 mA, DIP SW6 pos 1) */
 #define ZC_TCA9535_BIT_EN_LCD_5V 11  /* P13: BU_OVR_LCD_5V -> EN_LCD_5V (+5V_LCD, ILIM 1000 mA, DIP SW6 pos 2) */
 /* P14 (bit 12): USBOTG_FLT_N -- INPUT: TPS2051C fault (usbc_otg, 100k PU re-railed +3V3_SC) */
-/* P15 (bit 13): BU_P15 -- spare, 100k to GND */
+/* P15 (bit 13): PD_FLT_N -- INPUT: TPS26631 +VIN eFuse fault (pd_input, 100k PU +3V3_SC) */
 /* P16 (bit 14): BU_P16 -- spare, 100k to GND */
 /* P17 (bit 15): BU_P17 -- spare, 100k to GND */
 

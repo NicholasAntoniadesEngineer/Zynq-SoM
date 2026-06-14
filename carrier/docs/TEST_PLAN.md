@@ -67,8 +67,8 @@ Source spice gate: 21 checks, analytic (closed-form linear solutions).
 - **2.6 divider FB_5V0** (power): +5V -[R1=73200R]- FB_5V0 -[R2=10000R]- GND @ 5 V (informational, no named threshold)
 - **2.7 divider FB_5V_SOM** (power): +5V_SOM -[R14=68100R]- FB_5V_SOM -[R15=10000R]- GND @ 4.65 V (informational, no named threshold)
 - **2.8 divider PG_1V8_G [FET on at nominal rail]** (power): +1V8 -[R7=1000R]- PG_1V8_G -[R8=100000R]- GND @ 1.8 V: +1V8 PG sense: gate divider must exceed the AO3400A max Vgs(th)=1.45 V so the PG LED is guaranteed on
-- **2.9 RC PL_BTN0** (bringup_rails): debounce/reset ramp: R8=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
-- **2.10 RC PL_BTN1** (bringup_rails): debounce/reset ramp: R9=10000R with C3=100n -> tau must mask >=0.2 ms bounce, release <20 ms
+- **2.9 RC PL_BTN0** (bringup_rails): debounce/reset ramp: R7=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
+- **2.10 RC PL_BTN1** (bringup_rails): debounce/reset ramp: R8=10000R with C3=100n -> tau must mask >=0.2 ms bounce, release <20 ms
 - **2.11 SY7201 ISET (R1)** (lcd): I_LED = 0.2 V / 1.5R; panel-class window 125-150 mA (lcd_backlight.md)
 
 </details>

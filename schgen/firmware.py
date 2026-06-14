@@ -71,6 +71,7 @@ EXPANDER_INT_GPIO = ("SC_INT_N (TCA9535 INT# wire-OR FUSB302 INT)",
 EXPANDER_INPUT_NOTES = {
     "P11": "INA3221 CRITICAL wire-OR (power_mon, 10k PU +3V3_SC)",
     "P14": "TPS2051C fault (usbc_otg, 100k PU re-railed +3V3_SC)",
+    "P15": "TPS26631 +VIN eFuse fault (pd_input, 100k PU +3V3_SC)",
 }
 
 # BOOTSEL decode (debug_boot dossier section (c)): value = (BOOTSEL1<<1) |

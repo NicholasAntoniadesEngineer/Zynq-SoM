@@ -129,7 +129,16 @@ def circuit() -> Circuit:
     c.net("GND", "U1.GND", "U1.EP", "U1.MODE",         # MODE=GND: auto-retry
           "U1.PGTH",                                   # PGTH=GND: dVdT-only
           "R4.2", "R5.2", "C3.2")
-    c.nc("U1.SHDN#", "U1.IMON", "U1.FLT#", "U1.PGOOD")  # unused per DS
+    c.nc("U1.SHDN#", "U1.IMON", "U1.PGOOD")            # unused per DS
+    # FLT# (open-drain fault) -> SoM SC via TCA9535 P15 (PD_FLT_N — bringup_rails,
+    # DEF-F). The TPS26631 is the board's ONLY +VIN protection device; its fault
+    # flag was author-NC (blind). Pull-up to +3V3_SC, NOT +VBUS_IN: a TCA9535 IO
+    # abs-max is VCC+0.5 = 3.8 V, and +3V3_SC is alive whenever the SC can read
+    # the flag (mirrors the usbc_otg R3 re-rail; wave3_function_map G4).
+    c.part("R6", "Device:R", "100k", R0603, LCSC="C25803")
+    c.port("PD_FLT_N", "U1.FLT#", "R6.2",
+           expect="bringup (TCA9535 expander port P15)")
+    c.net("+3V3_SC", "R6.1")
 
     # ---- eFuse OUT -> +VIN: the dVdT-charged board bulk starts here --------
     c.part("C2", "Device:C", "10u", C1210, LCSC="C596319")   # 50V X7R
