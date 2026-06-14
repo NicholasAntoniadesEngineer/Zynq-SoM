@@ -488,6 +488,15 @@ def _fixture_testpoints() -> list[_Sheet]:
     return [_Sheet("selftest_tp", c)]
 
 
+def _fixture_mounting_hole() -> Circuit:
+    """A sheet with CHASSIS_GND and +3V3 declared, ready for mounting_hole()."""
+    c = Circuit("selftest_mh", "selftest mounting-hole fixture")
+    c.part("R1", "Device:R", "10k")
+    c.net("CHASSIS_GND", "R1.1")
+    c.net("+3V3", "R1.2")
+    return c
+
+
 # Fixture D — two sheets sharing PORT 'SELFTEST_LINK', for the board merge gate.
 
 def _board_fixture_sheets() -> list[_Sheet]:
@@ -622,6 +631,31 @@ def _mg_tp_uncovered(lib: Library):
                              f"\n            by testpoints: {by}")
 
 
+def _mg_mh_short(lib: Library):
+    """mh_short: prove mounting_hole()'s LAW-0 guard rejects a non-GROUND net.
+    BASELINE — a CHASSIS_GND hole succeeds, is BOM-excluded, and lands its pin
+    on CHASSIS_GND (the chassis bond is real netlisted copper). MUTANT — the
+    SAME call on +3V3 (a POWER rail) MUST raise CircuitError: a mounting hole
+    is a chassis/earth bond, never a rail, so bonding it to +3V3 would be a
+    short. The guard IS the gate here (no emit needed)."""
+    from schgen.model import CircuitError, PinRef
+    base = _fixture_mounting_hole()
+    p = base.mounting_hole("CHASSIS_GND")
+    base_ok = (p.fields.get("BOM") == "exclude"
+               and PinRef(p.ref, "1") in base.nets["CHASSIS_GND"].pins
+               and base.nets["CHASSIS_GND"].net_class is NetClass.GROUND)
+    mut = _fixture_mounting_hole()
+    try:
+        mut.mounting_hole("+3V3")
+        killed = False
+        by = "(no raise — +3V3 mounting hole was ACCEPTED)"
+    except CircuitError as e:
+        killed = "GROUND" in str(e)
+        by = str(e)
+    return base_ok, killed, ("mh_short: c.mounting_hole('+3V3') on a POWER rail"
+                             f"\n            by mounting_hole guard: {by}")
+
+
 def _mg_port_rename(lib: Library, tmp: Path):
     """port_rename: build the two-sheet board (baseline merge gate PASSES),
     then rewrite ONE 'SELFTEST_LINK' PORT label on the emitted ROOT so its
@@ -688,6 +722,7 @@ def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
         ("power_overrun",   lambda: _mg_power_overrun(lib)),
         ("divider_drift",   lambda: _mg_divider_drift(lib)),
         ("tp_uncovered",    lambda: _mg_tp_uncovered(lib)),
+        ("mh_short",        lambda: _mg_mh_short(lib)),
         ("port_rename",     lambda: _mg_port_rename(lib, tmp / "board")),
     ]
     injected = killed = 0

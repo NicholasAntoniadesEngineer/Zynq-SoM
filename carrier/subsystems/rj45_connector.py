@@ -39,6 +39,10 @@ honestly: this is a power-on indicator, NOT a PHY-driven link/act blink.
 Shield/shell (pin 13) -> CHASSIS_GND, the chassis island the ethernet sheet's
 C5 isolation barrier bonds to (kept separate from signal GND, star-bonded
 elsewhere — same idiom as usbc_otg.py's J2.EH).
+
+This sheet also hosts the board's four M3 corner mounting holes (H1..H4), each
+a plated, BOM-excluded hole bonded to CHASSIS_GND — co-located with the shield
+entry so every CHASSIS_GND fab-art item lives on one sheet (see below).
 """
 
 from __future__ import annotations
@@ -87,6 +91,14 @@ def circuit() -> Circuit:
 
     # shield/shell -> chassis island (same separate-net idiom as usbc_otg J2.EH)
     c.net("CHASSIS_GND", "J1.13")
+
+    # 4x M3 corner mounting holes -> CHASSIS_GND (ASSEMBLY_NOTES: plated, double
+    # as assembly tooling holes). Real netlisted copper (H1..H4, BOM-excluded);
+    # placed here, the shield-entry sheet, so all CHASSIS_GND fab-art lives in
+    # one place and the chassis bond stays netlist-verifiable. mounting_hole()
+    # rejects any non-GROUND net (LAW 0: a hole is a chassis bond, never a rail).
+    for _ in range(4):
+        c.mounting_hole("CHASSIS_GND")
 
     # power-tree budget: two 330R/3V3 indicator LEDs (~8 mA total) off +3V3
     c.draws("+3V3", 0.008, "RJ45 housing LEDs (2x 330R port-present indicator)")

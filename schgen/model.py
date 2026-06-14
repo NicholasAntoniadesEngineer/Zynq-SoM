@@ -440,6 +440,37 @@ class Circuit:
         self.net(net, f"{ref}.1")
         return p
 
+    # ---- mounting / tooling holes (chassis-bond fab-art, netlist-verifiable) --
+    MH_LIB_ID = "Mechanical:MountingHole_Pad"
+    MH_FOOTPRINT = "MountingHole:MountingHole_3.2mm_M3_Pad"
+
+    def mounting_hole(self, net: str = "CHASSIS_GND",
+                      ref: str | None = None) -> Part:
+        """A plated M3 tooling/mounting hole bonded to ``net`` (default
+        CHASSIS_GND): KiCad Mechanical:MountingHole_Pad on the 3.2 mm-M3
+        plated footprint — real copper + a netlisted pin so the chassis bond
+        is ERC/netlist-gate verifiable and the placement ENGINE can place it
+        (a one-pin GROUND part, drawn natively like the testpoint() GROUND
+        branch). NO BOM line (BOM=exclude, like testpoint()).
+
+        Only GROUND nets are valid: a mounting hole is a chassis/earth bond,
+        NEVER a signal or rail — bonding it to anything else would be a
+        LAW-0 short (e.g. tying chassis to +3V3)."""
+        n = self.nets.get(net)
+        if n is None:
+            raise CircuitError(f"mounting_hole({net!r}): not a declared net")
+        if n.net_class is not NetClass.GROUND:
+            raise CircuitError(
+                f"mounting_hole({net!r}): only GROUND nets — a mounting hole "
+                f"is a chassis/earth bond, never a signal/rail "
+                f"({n.net_class.value})")
+        if ref is None:
+            ref = self.auto_ref("H")
+        p = self.part(ref, self.MH_LIB_ID, "MountingHole_M3",
+                      self.MH_FOOTPRINT, BOM="exclude")
+        self.net(net, f"{ref}.1")
+        return p
+
     def waive_tp(self, net: str, reason: str) -> None:
         """EXPLICIT test-point waiver: this net deliberately has no probe
         point. The coverage gate lists every waiver verbatim in its report —

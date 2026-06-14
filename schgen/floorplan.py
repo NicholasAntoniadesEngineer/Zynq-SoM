@@ -187,6 +187,7 @@ _FIXED_DIMS = {
     "D_SMA": (4.3, 2.6),
     "D_SMB": (5.4, 3.6),
     "TestPoint_Pad_D1.5mm": (1.5, 1.5),
+    "MountingHole_3.2mm_M3_Pad": (6.4, 6.4),   # M3 plated pad OD (lib has no parts/ folder)
 }
 _DEFAULT_DIMS = (1.6, 0.8)      # unspecified passive
 

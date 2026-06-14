@@ -599,6 +599,31 @@ PACKAGE_EP: dict[str, _EpSpec] = {
 }
 
 
+@dataclass(frozen=True)
+class _PolaritySpec:
+    x: float            # silk '+' center, mm (footprint frame, +x = right)
+    y: float
+    size: float         # arm half-length, mm
+    cite: str           # provenance — LAW 0: every dimension/placement cited
+
+
+# Polarity '+' glyphs the EasyEDA->KiCad import drops (they arrive as Cmts.User
+# SOLIDREGION crosses, layer 12, which is not in _REGION_LAYERS). Re-synthesized
+# on F.SilkS, LCSC-keyed so ONLY listed parts gain the mark and every other part
+# regenerates byte-identical (the DEF-A keyed-allowlist discipline, like
+# PACKAGE_EP above).
+PACKAGE_SILK_PLUS: dict[str, _PolaritySpec] = {
+    # KH-CR1220-2 coin holder (BT1). Pad 1 is the '+' terminal (V_RTC_BAT) at
+    # x=-8.6 mm; the import kept only the two pad-center Cmts.User circles, never
+    # the polarity cross. Place a '+' just inside the pad-1 land (copper edge at
+    # ~-6.35 mm, the surviving Cmts.User circle at -3.75 mm) so the cell cannot
+    # be inserted reversed.
+    "C5365933": _PolaritySpec(-5.6, 0.0, 0.6,
+        "EasyEDA dataStr layer-12 SOLIDREGION '+' cross at pad-1 (V_RTC_BAT) "
+        "side; board_services BT1.1=V_RTC_BAT, BT1.2=GND -> pad 1 is '+'"),
+}
+
+
 def _ep_number(pins: list[PinInfo]) -> str:
     """EP pad/pin number = one past the highest numeric signal pin (the in-repo
     EP idiom: TPS26631 8->? no; max signal + 1, e.g. QFN-8 -> '9')."""
@@ -629,6 +654,24 @@ def synth_ep_pad_nodes(number: str, lcsc: str) -> list:
     return [[Sym("pad"), number, Sym("smd"), Sym("rect"),
              [Sym("at"), 0.0, 0.0], [Sym("size"), w, h],
              [Sym("layers"), "F.Cu", "F.Paste", "F.Mask"]]]
+
+
+def synth_silk_plus_nodes(lcsc: str) -> list:
+    """The F.SilkS polarity '+' (two crossed fp_lines) for an allowlisted part
+    whose EasyEDA polarity glyph the importer dropped (layer-12 SOLIDREGION),
+    else []. LCSC-keyed exactly like the EP path, so non-listed parts are
+    untouched (byte-identical regen)."""
+    s = PACKAGE_SILK_PLUS.get(lcsc)
+    if s is None:
+        return []
+    return [
+        [Sym("fp_line"), [Sym("start"), round(s.x - s.size, 4), s.y],
+         [Sym("end"), round(s.x + s.size, 4), s.y],
+         _stroke(0.15), [Sym("layer"), "F.SilkS"]],
+        [Sym("fp_line"), [Sym("start"), s.x, round(s.y - s.size, 4)],
+         [Sym("end"), s.x, round(s.y + s.size, 4)],
+         _stroke(0.15), [Sym("layer"), "F.SilkS"]],
+    ]
 
 
 def _pad_sx(fields: list[str], ctx: _FpCtx) -> list | None:
@@ -869,6 +912,11 @@ def convert_footprint(result: dict, name: str, info: dict,
     # unchanged and non-allowlisted parts stay byte-identical.
     if ep_pin is not None:
         pads.extend(synth_ep_pad_nodes(ep_pin.number, info.get("lcsc", "")))
+
+    # DEF-H: re-synthesize the polarity '+' silk the EasyEDA import dropped
+    # (allowlisted parts only). F.SilkS art -> appended to graphics, keyed on
+    # info["lcsc"] exactly like the EP path, so non-listed parts stay identical.
+    graphics.extend(synth_silk_plus_nodes(info.get("lcsc", "")))
 
     fp.append([Sym("attr"), Sym("smd") if smd else Sym("through_hole")])
 

@@ -33,6 +33,7 @@ from schgen.emit import PlacedPart
 from schgen.verify.visual_gate import Box
 
 TP_LIB_ID = Circuit.TP_LIB_ID
+MH_LIB_ID = Circuit.MH_LIB_ID
 
 U = 1.27
 
@@ -41,11 +42,20 @@ def is_testpoint(part) -> bool:
     return part.lib_id == TP_LIB_ID
 
 
+def is_aux_pin(part) -> bool:
+    """One-pin parts the engine places in the auxiliary row instead of the
+    topology templates (the placer's _classify only takes multi-pin/2-pin
+    parts): probe points AND M3 mounting holes (Circuit.mounting_hole(), a
+    plated CHASSIS_GND bond — always a GROUND cell, drawn like a GROUND TP)."""
+    return part.lib_id in (TP_LIB_ID, MH_LIB_ID)
+
+
 def split(c: Circuit) -> tuple[Circuit, list[str]]:
-    """A shallow working copy of ``c`` without the TP parts/pins (the
-    engine's templates see the UNCHANGED circuit topology), plus the TP refs.
-    The original circuit is never mutated."""
-    tp_refs = sorted((r for r, p in c.parts.items() if is_testpoint(p)),
+    """A shallow working copy of ``c`` without the auxiliary 1-pin parts/pins
+    (the engine's templates see the UNCHANGED circuit topology), plus their
+    refs. Covers probe points AND mounting holes (is_aux_pin). The original
+    circuit is never mutated."""
+    tp_refs = sorted((r for r, p in c.parts.items() if is_aux_pin(p)),
                      key=lambda r: (len(r), r))
     if not tp_refs:
         return c, []
@@ -73,7 +83,6 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
     lib = eng.lib
     sp = eng.sp
     pl = eng.pl
-    sdef = lib.get(TP_LIB_ID)
     ex0, ey0, ex1, ey1 = eng._extent()
     # tall sheets (the FMC connector fan rides the A3 height budget): the
     # probe row would push past the frame — stack a probe COLUMN to the
@@ -132,6 +141,7 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
             pl.plan(net.name, (fx, row_y), (fx, row_y + 2 * U))
             tp_xy, rot = (fx, row_y + 2 * U), 180
 
+        sdef = lib.get(part.lib_id)   # TP or mounting-hole symbol (per cell)
         body = body_box_page(sdef, tp_xy[0], tp_xy[1], rot, "body", ref)
         w_ref, _ = tm.text_wh(ref)
         w_val, _ = tm.text_wh(part.value)
