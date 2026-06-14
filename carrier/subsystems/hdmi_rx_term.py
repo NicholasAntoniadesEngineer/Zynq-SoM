@@ -54,13 +54,17 @@ def circuit() -> Circuit:
         c.port(net, f"R{i}.1", expect=J23_MAP)   # merges with the bank-33 pin
         c.net("+3V3", f"R{i}.2")                  # AVCC = VCCO_33 = +3V3
 
-    # AVCC bypass: 100 nF + 1 uF from +3V3 to GND placed NEXT TO THE BANK at
-    # layout (LAYOUT NOTE, not netlisted here). AVCC == the +3V3 / VCCO_33 rail
-    # that already carries board-wide 100 nF/bulk bypass, so this is a layout-
-    # placement requirement (put a 0603 100 nF + a 1 uF inside the termination
-    # island near bank 33), not a distinct schematic node — and a rail-to-rail
-    # cap has no placement anchor on this IC-less sheet. Fit C14663 (100 nF) +
-    # C15849 (1 uF), both 0603, when the AVCC island is poured.
+    # AVCC (= +3V3 = VCCO_33) local bypass placed in the termination island
+    # next to bank 33 (DEF-G): 100 nF HF + 1 uF charge reservoir, +3V3 -> GND.
+    # AVCC == the +3V3 / VCCO_33 rail; this is the bank-local bypass the TMDS
+    # sink termination needs (its 64 mA load swings against AVCC). On this IC-
+    # less sheet there is no IC body to hang a decoupling cluster off, so these
+    # anchor as rail-decoupling columns (place.py _rail_decoupling_columns) —
+    # the rail symbol on top, the cap stacked down to a GND foot.
+    c.part("C1", "Device:C", "100n", C_FP, LCSC="C14663")   # 100n 50V X7R
+    c.part("C2", "Device:C", "1u",   C_FP, LCSC="C15849")   # 1u  50V X5R
+    c.net("+3V3", "C1.1", "C2.1")
+    c.net("GND",  "C1.2", "C2.2")
 
     # power-tree budget: TMDS sink termination current is sourced from AVCC
     # (+3V3) — each driven-low line sinks ~8 mA through its 49.9R to the

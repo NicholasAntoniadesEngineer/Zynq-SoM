@@ -478,14 +478,42 @@ class _Engine:
         # part is carried by >= 2 OTHER multi-pin parts — the part shunts
         # lines it does not source or sink. Datasheet idiom: a detached cell
         # with a labeled stub per line (labels merge the net by name).
+        #
+        # A "pure protector" (a GND-referenced ESD/TVS clamp) is admitted with
+        # just ONE other multi-pin part: the canonical connector-edge ESD
+        # topology is one connector + one clamp (e.g. the HDMI-RX jack + a
+        # TPD4E02B04 array), so the protected line touches only the connector
+        # besides the clamp. We gate the relaxed threshold on a clamp
+        # SIGNATURE — every one of the part's signal/port pins is `passive`
+        # etype, it has a GROUND-class pin, and it has NO power-supply
+        # (POWER-class) pin — so a real series/inline or powered IC (a
+        # non-passive signal pin, no ground reference, OR a supply rail — e.g.
+        # an INA3221 current monitor with a VS rail + POWER-net sense pins, or a
+        # regulator) keeps the strict >= 2 rule and is never mis-routed through
+        # the shunt idiom (LAW 4). A pure protector touches only signals + GND.
         self.shunts: list[str] = []
         for ref in self.multi:
+            sdef = lib.get(c.parts[ref].lib_id)
+            pin_nets = [self.net_of(ref, p.number) for p in sdef.pins]
+            sig_pins = [p for p, n in zip(sdef.pins, pin_nets)
+                        if n is not None
+                        and n.net_class in (NetClass.SIGNAL, NetClass.PORT)]
+            has_gnd = any(n is not None and n.net_class is NetClass.GROUND
+                          for n in pin_nets)
+            has_power = any(n is not None and n.net_class is NetClass.POWER
+                            for n in pin_nets)
+            is_clamp = (ref[0] != "J"               # a connector is no clamp
+                        and bool(sig_pins)
+                        and all(p.etype == "passive" for p in sig_pins)
+                        and has_gnd                  # GND-referenced ...
+                        and not has_power)           # ... and not a powered IC
+            thresh = 1 if is_clamp else 2     # connector+clamp: one peer is ok
             sig = [n for n in c.nets.values()
                    if n.net_class in (NetClass.SIGNAL, NetClass.PORT)
                    and any(pr.ref == ref for pr in n.pins)]
             if sig and all(
                     len({pr.ref for pr in n.pins
-                         if pr.ref in mset and pr.ref != ref}) >= 2
+                         if pr.ref in mset and pr.ref != ref}) >= thresh
                     for n in sig):
                 self.shunts.append(ref)
         self._extract_float_chains()
@@ -2186,8 +2214,37 @@ class _Engine:
                 self.power(cur_net, *end_c, self._power_rot(cur_net, True))
             _, _, ex1, _ = self._extent()
             x = gceil(ex1 + 2 * self.sp.cap_pitch)
+        self._rail_decoupling_columns()   # both-pins-rail caps (no IC anchor)
         self._flags_row()
         return self.pl
+
+    def _rail_decoupling_columns(self) -> None:
+        """Drain self.cluster on an IC-less (stack) sheet: each POWER/GROUND
+        decoupling cap is a SELF-ANCHORED column — a rail power-symbol on top,
+        the cap stacked downward, a GROUND symbol at the foot. The 'both-pins-
+        rail' idiom: the cap's anchoring rail IS the rail it bypasses, so there
+        is no IC body to hang a _decoupling_cluster off (the sheet has no multi-
+        pin part). _stack_columns_template's chain loop also skips it (it has no
+        SIGNAL/PORT float net), so it would otherwise survive to the `missing`
+        gate. One column per cap, marching right below the termination flow —
+        same spacing discipline as _leftover_chains_columns/_port_strap_columns,
+        so the columns cannot collide with the R columns or each other."""
+        if not self.cluster:
+            return
+        ex0, _, _, ey1 = self._extent()
+        x = gsnap(ex0 + 8 * U)
+        y0 = gceil(ey1 + 8 * U)             # a clear row below the flow
+        for rail in sorted(self.cluster):           # determinism: sorted rails
+            for ref in self.cluster[rail]:
+                self.power(rail, x, y0)             # rail symbol points up
+                far_pt, far = self._vertical_2pin(ref, x, y0, rail,
+                                                  downward=True)
+                assert self.c.nets[far].net_class is NetClass.GROUND, (
+                    f"{ref}: rail-decoupling cap far pin on {far!r} is not "
+                    f"GROUND (a true rail-to-rail cap has no GND foot)")
+                self.power(far, *far_pt, self._power_rot(far, True))  # GND foot
+                x = gceil(x + 2 * self.sp.cap_pitch)
+        self.cluster = {}
 
     # ---- template: connector fan (SoM mezzanine sheets) -------------------------------
     CONN_RUN = 10.16

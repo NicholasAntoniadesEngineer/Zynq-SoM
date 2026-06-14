@@ -34,22 +34,20 @@ requirement rather than auto-placed on THIS sheet, for two reasons:
 
 HDMIRX-1 (electrical audit) — RX TMDS ESD: the RX receptacle is user-facing
 and the four TMDS pairs reach the FPGA with no ESD (the TX side has the
-TPD12S016 clamp). The correct, electrically-verified part is the TI
-TPD4E02B04DQAR (LCSC C106794, LIVE-verified 2026-06-13: 39,617 in stock,
-Extended; 0.2 pF I/O capacitance typ << the 0.5 pF/line TMDS budget, 8 kV
-contact / IEC 61000-4-2): a 4-channel shunt array, so TWO devices cover the
-eight TMDS lines (D2+D1 on one, D0+CLK on the other), placed at the jack
-between the receptacle and the bank. It is carried here as a DOCUMENTED DNP
-STUFFING OPTION (like camera's TPD4E05U06, carrier/subsystems/camera.py
-sec "ESD") rather than a populated part: the populated shunt array cannot be
-auto-placed on this sheet under the immutable zero-crossing visual gate (the
-TMDS sink is off-sheet on the FPGA, so the placer's shunt-cell idiom — which
-needs each protected net to touch >=2 on-sheet multi-pin parts — is not
-triggered, and an in-line populated array crosses other TMDS lanes). Layout
-note for stuffing: place 2x TPD4E02B04DQAR at J1, IO1..IO4 tapping the four
-single-ended lines of two adjacent pairs each, both GND pads to GND; the
-lanes stay DC-coupled jack -> Zynq (shunt taps, not series). Confirm the
-chosen part's IO cap <= 0.5 pF/line before populating. The sink must present
+TPD12S016 clamp). The electrically-verified part is the TI TPD4E02B04DQAR
+(LCSC C106794, LIVE-verified 2026-06-13: 39,617 in stock, Extended; 0.2 pF I/O
+capacitance typ << the 0.5 pF/line TMDS budget, 8 kV contact / IEC 61000-4-2):
+a 4-channel GND-referenced shunt array, so TWO devices cover the eight TMDS
+lines (D2+D1 on U2, D0+CLK on U3), placed at the jack between the receptacle
+and the bank. DEF-G promotes it from the earlier DNP-stuffing prose to a real,
+netlisted, gate-checked, BOM-counted part: IO1..IO4 tap the four single-ended
+lines of two adjacent pairs each, both GND pads to GND, the lanes staying DC-
+coupled jack -> Zynq (shunt TAPS, not series — the netlist gate proves each
+TMDS net is {J1.pin, U2/U3.IOn}). The placer now recognizes a pure GND-
+referenced clamp (all-passive signal pins + a ground pin) as a shunt even with
+a single connector peer, and draws each array as a detached shunt cell with a
+labeled stub per line (place.py shunt detector + _shunt_cells) — no in-line
+array, no crossed TMDS lanes, so the zero-crossing visual gate holds. The sink must present
 EDID even when the carrier is off (HDMI 1.4 sec 8.5), so a 2-Kbit I2C EEPROM
 (ST M24C02, LCSC C7562) sits on the DDC bus powered from the CABLE's +5V
 (pin 18): a source can always read the EDID. WC# is write-PROTECTED: it is
@@ -121,8 +119,28 @@ def circuit() -> Circuit:
     # 2x49.9R/pair sink termination to AVCC lives at the FPGA-bank (J2) end, NOT
     # here — SI-HDMIRX-TERM (docstring): an HR bank does not self-terminate
     # TMDS_33, so external sink termination is REQUIRED, placed at the receiver.
+    #
+    # HDMIRX-1 (DEF-G): real low-cap TMDS RX ESD. Two TI TPD4E02B04DQAR 4-ch
+    # arrays (LCSC C106794, 0.2 pF/line typ << the 0.5 pF/line TMDS budget,
+    # 8 kV contact / IEC 61000-4-2) shunt the 8 single-ended lines jack -> bank:
+    # D2+D1 on U2, D0+CLK on U3. The lines stay DC-coupled (shunt TAPS, not
+    # series) — each ESD IOn pin is just added to the existing connector port
+    # net, so the netlist proves {J1.pin, U.IOn} per line. Both arrays' GND ->
+    # GND. The placer sees these as pure GND-referenced clamps and draws each as
+    # a detached shunt cell (place.py shunt detector + _shunt_cells).
+    c.use_part("TPD4E02B04DQAR", ref="U2")
+    c.use_part("TPD4E02B04DQAR", ref="U3")
+    ESD = {  # TMDS port net -> (array ref, IO pin name)
+        "HDMI_RX_D2_P": ("U2", "IO1"), "HDMI_RX_D2_N": ("U2", "IO2"),
+        "HDMI_RX_D1_P": ("U2", "IO3"), "HDMI_RX_D1_N": ("U2", "IO4"),
+        "HDMI_RX_D0_P": ("U3", "IO1"), "HDMI_RX_D0_N": ("U3", "IO2"),
+        "HDMI_RX_CLK_P": ("U3", "IO3"), "HDMI_RX_CLK_N": ("U3", "IO4"),
+    }
     for pin, net in TMDS_PORTS.items():
-        c.port(net, f"J1.{pin}")
+        esd_ref, esd_io = ESD[net]
+        c.port(net, f"J1.{pin}", f"{esd_ref}.{esd_io}")
+    c.net("GND", "U2.GND", "U3.GND")
+    c.nc("U2.NC", "U3.NC")               # spare USON-10 pads (6/7/9/10)
     for lane in ("D0", "D1", "D2", "CLK"):
         c.port_type(f"HDMI_RX_{lane}_P", kind="tmds_pair",
                     pair_with=f"HDMI_RX_{lane}_N", expect=J23_MAP)

@@ -46,6 +46,12 @@ were never exercised against a defect by the file-based mutators:
                      -> testpoints fires
 - ``port_rename``    rename one PORT label on one sheet's emitted root so it
                      no longer merges -> the board cross-sheet merge gate fails
+- ``rail_decoup_dropped`` stub the stack template's rail-decoupling drain so a
+                     both-pins-rail (+3V3->GND) cap on an IC-less sheet is
+                     never placed -> the engine's `missing` gate fires (DEF-G)
+- ``clamp_thresh_strict`` revert the shunt detector to the strict >=2 rule so a
+                     GND-referenced ESD clamp at a connector loses its shunt
+                     idiom and crosses lanes -> route/visual infeasible (DEF-G)
 
 Each model-gate mutant ALSO asserts the gate PASSES on the unmutated fixture
 (a gate that always fires proves nothing), exactly like the baseline check
@@ -497,6 +503,43 @@ def _fixture_mounting_hole() -> Circuit:
     return c
 
 
+# Fixture E — an IC-less sheet carrying a both-pins-rail (+3V3 -> GND)
+# decoupling cap alongside a port-rooted R, for the placer's stack-template
+# rail-decoupling drain (DEF-G). The R chain gives the stack template an
+# anchor; the cap classifies into self.cluster and ONLY _rail_decoupling_columns
+# drains it — drop the drain and the cap survives to the `missing` gate.
+
+def _fixture_rail_cap() -> Circuit:
+    c = Circuit("selftest_railcap", "selftest rail-decoupling-cap fixture")
+    c.part("R1", "Device:R", "49.9R", "Resistor_SMD:R_0603_1608Metric",
+           LCSC="C114625")
+    c.port("SIG_A", "R1.1")
+    c.net("+3V3", "R1.2")
+    c.part("C1", "Device:C", "100n", "Capacitor_SMD:C_0603_1608Metric",
+           LCSC="C14663")
+    c.net("+3V3", "C1.1")           # both-pins-rail: rail pin ...
+    c.net("GND", "C1.2")            # ... GND foot (no IC anchor on this sheet)
+    return c
+
+
+# Fixture F — a 4-channel GND-referenced ESD clamp (TPD4E02B04DQAR) tapping a
+# 4-pin connector, for the placer's shunt-detector clamp relaxation (DEF-G).
+# Each line touches exactly ONE other multi-pin part (the connector), so the
+# clamp is placeable ONLY under the relaxed thresh=1 (the pure-clamp signature).
+# Also proves the connector itself is NOT mis-classed as a clamp (ref "J").
+
+def _fixture_esd_clamp() -> Circuit:
+    c = Circuit("selftest_clamp", "selftest connector+ESD-clamp fixture")
+    c.use_part("TPD4E02B04DQAR", ref="U1")     # 4-ch clamp: all-passive IO + GND
+    c.part("J1", "Connector_Generic:Conn_01x04", "J",
+           "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical")
+    for i, io in enumerate(("IO1", "IO2", "IO3", "IO4"), start=1):
+        c.port(f"SIG_{i}", f"J1.{i}", f"U1.{io}")  # one connector peer per line
+    c.net("GND", "U1.GND")
+    c.nc("U1.NC")
+    return c
+
+
 # Fixture D — two sheets sharing PORT 'SELFTEST_LINK', for the board merge gate.
 
 def _board_fixture_sheets() -> list[_Sheet]:
@@ -704,6 +747,85 @@ def _mg_port_rename(lib: Library, tmp: Path):
                              "no longer merges across the two sheets")
 
 
+def _validated(c: Circuit, lib: Library) -> Circuit:
+    """Run the same completeness check the build does, so a placer mutant
+    proves the engine — not validate — is what catches the defect."""
+    c.validate({ref: set(lib.pin_numbers(p.lib_id))
+                for ref, p in c.parts.items()})
+    return c
+
+
+def _mg_rail_decoup_dropped(lib: Library):
+    """rail_decoup_dropped (DEF-G): the both-pins-rail (+3V3 -> GND) cap on an
+    IC-less sheet is placeable ONLY because _stack_columns_template drains
+    self.cluster via _rail_decoupling_columns. Stub the drain to a no-op and the
+    cap survives unplaced -> the engine's `missing` gate fires (PlaceError)."""
+    base_ok = True
+    try:
+        place.build(_validated(_fixture_rail_cap(), lib), lib, place.Spacing())
+    except place.PlaceError:
+        base_ok = False
+    orig = place._Engine._rail_decoupling_columns
+    place._Engine._rail_decoupling_columns = lambda self: None  # drop the drain
+    killed = False
+    by = "(no error)"
+    try:
+        place.build(_validated(_fixture_rail_cap(), lib), lib, place.Spacing())
+    except place.PlaceError as e:
+        killed = "unplaced" in str(e)
+        by = str(e).splitlines()[0]
+    finally:
+        place._Engine._rail_decoupling_columns = orig
+    return base_ok, killed, ("rail_decoup_dropped: stub _rail_decoupling_columns "
+                             "-> the +3V3->GND cap is never drained"
+                             f"\n            by placer missing-gate: {by[:90]}")
+
+
+def _mg_clamp_thresh_strict(lib: Library):
+    """clamp_thresh_strict (DEF-G): a 4-ch GND-referenced ESD clamp tapping a
+    connector reaches each line via ONE peer, so it is a shunt ONLY under the
+    relaxed thresh=1 clamp signature. Re-impose the pre-DEF-G strict >=2 rule
+    (the clamp drops out of self.shunts) and it falls into the chain template,
+    crossing lanes -> route/visual infeasible (PlaceError)."""
+    base_ok = True
+    try:
+        place.place_and_route(_validated(_fixture_esd_clamp(), lib), lib)
+    except place.PlaceError:
+        base_ok = False
+    orig_run = place._Engine.run
+
+    def strict_run(self):
+        # emulate the pre-DEF-G detector: a shunt needs >= 2 OTHER multi-pin
+        # parts on EVERY signal/port net (no clamp-signature relaxation).
+        mset = set(self.multi)
+        strict = []
+        for ref in self.multi:
+            sig = [n for n in self.c.nets.values()
+                   if n.net_class in (NetClass.SIGNAL, NetClass.PORT)
+                   and any(pr.ref == ref for pr in n.pins)]
+            if sig and all(
+                    len({pr.ref for pr in n.pins
+                         if pr.ref in mset and pr.ref != ref}) >= 2
+                    for n in sig):
+                strict.append(ref)
+        self.shunts = strict
+        return orig_run(self)
+
+    place._Engine.run = strict_run
+    killed = False
+    by = "(no error)"
+    try:
+        place.place_and_route(_validated(_fixture_esd_clamp(), lib), lib)
+    except place.PlaceError as e:
+        killed = True
+        by = str(e).splitlines()[-1]
+    finally:
+        place._Engine.run = orig_run
+    return base_ok, killed, ("clamp_thresh_strict: revert the clamp shunt rule "
+                             "to >=2 -> the ESD array crosses lanes"
+                             f"\n            by placer route/visual: {by[:90]}")
+
+
 def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
     """Run every model-gate mutant. Returns (injected, killed, problems),
     feeding the SAME tally + exit code as the file/geometry mutants. Each
@@ -712,7 +834,7 @@ def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
     lib = Library()
     problems: list[str] = []
     print("--- model-gate mutants (design_rules / thermal / powertree / "
-          "spice / testpoints / board) ---")
+          "spice / testpoints / board / placer) ---")
     runners = [
         ("drop_decap",      lambda: _mg_design_rules("drop_decap", lib)),
         ("remove_pullup",   lambda: _mg_design_rules("remove_pullup", lib)),
@@ -724,6 +846,8 @@ def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
         ("tp_uncovered",    lambda: _mg_tp_uncovered(lib)),
         ("mh_short",        lambda: _mg_mh_short(lib)),
         ("port_rename",     lambda: _mg_port_rename(lib, tmp / "board")),
+        ("rail_decoup_dropped", lambda: _mg_rail_decoup_dropped(lib)),
+        ("clamp_thresh_strict", lambda: _mg_clamp_thresh_strict(lib)),
     ]
     injected = killed = 0
     for name, fn in runners:
