@@ -567,6 +567,19 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  POWER TREE ERROR: {e}")
     ok_all = ok_all and pt_res.ok
 
+    # per-device thermal (Tj) gate (verification P2): turns the PWR-2/PWR-3
+    # thermal decisions (prose-only) into a regression lock. Reuses pt_res'
+    # regulator tree + I_out; FAILS on any device whose Tj = Ta + Pd*RthJA
+    # exceeds Tj_max - margin (real exceptions author-waived: c.waive_thermal).
+    from schgen import thermal
+    th_res = thermal.run(sheets, rep_dir, pt_res=pt_res)
+    print(f"THERMAL: {'PASS' if th_res.ok else 'FAIL'} "
+          f"({len(th_res.devices)} devices, {len(th_res.errors)} over-limit, "
+          f"{len(th_res.findings)} unspeced -> {rep_dir / 'thermal.txt'})")
+    for e in th_res.errors:
+        print(f"  THERMAL ERROR: {e}")
+    ok_all = ok_all and th_res.ok
+
     # test-point coverage gate (round 4): every rail + key single-ended bus
     # owns a probe point or an explicit author waiver.
     from schgen import testpoints
@@ -578,6 +591,20 @@ def cmd_board(args: argparse.Namespace) -> int:
     for e in tp_res.errors:
         print(f"  TESTPOINT ERROR: {e}")
     ok_all = ok_all and tp_res.ok
+
+    # design-rule completeness gate (verification P1): infers pin FUNCTION by
+    # NAME (etypes are flat 'passive') and proves the netlist is electrically
+    # COMPLETE — every IC supply pin decoupled, every i2c bus pulled, every
+    # reset has an RC, no config strap floats. Strict (LAW 4): real exceptions
+    # are author-waived (c.waive_decap/_pull/_reset/_strap), never relaxed.
+    from schgen.verify import design_rules
+    dr_res = design_rules.run(sheets, rep_dir, lib=lib)
+    print(f"DESIGN RULES: {'PASS' if dr_res.ok else 'FAIL'} "
+          f"({len(dr_res.findings)} findings, {len(dr_res.waived)} waived "
+          f"-> {rep_dir / 'design_rules.txt'})")
+    for f in dr_res.findings:
+        print(f"  DESIGN RULE: {f}")
+    ok_all = ok_all and dr_res.ok
 
     # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
     # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds
@@ -827,6 +854,22 @@ def main(argv: list[str] | None = None) -> int:
     tpl.add_argument("-o", "--output", type=Path, default=None)
     from schgen.testplan import cmd_testplan
     tpl.set_defaults(func=cmd_testplan)
+    dr = sub.add_parser(
+        "design-rules", help="design-rule completeness gate: decoupling, i2c "
+                             "pull-ups, reset RC, floating straps — pin "
+                             "function inferred by NAME, model-only, waivable")
+    dr.add_argument("subsystems", nargs="*",
+                    help="names in carrier/subsystems/ (default: all)")
+    from schgen.verify.design_rules import cmd_design_rules
+    dr.set_defaults(func=cmd_design_rules)
+    th = sub.add_parser(
+        "thermal", help="per-device thermal Tj gate: Tj = Ta + Pd*RthJA vs "
+                        "Tj_max per regulator/load device (reuses the power "
+                        "tree); waivable per part")
+    th.add_argument("subsystems", nargs="*",
+                    help="names in carrier/subsystems/ (default: all)")
+    from schgen.thermal import cmd_thermal
+    th.set_defaults(func=cmd_thermal)
     st = sub.add_parser(
         "selftest", help="gate MUTATION testing + build-determinism proof "
                          "(the no-CI answer to 'who watches the watchmen')")

@@ -107,4 +107,9 @@ def circuit() -> Circuit:
                                "(lcd_backlight.md)")
     c.draws("+5V_LCD", 0.450, "SY7201 boost input @133 mA LED string "
                               "(lcd_backlight.md operating point + margin)")
+    # design-rule waiver (verification P1): LCD_CTP_RST is GPIO-driven by the PL
+    # and held in reset by R5 (100k pull-down) until released — a driven reset,
+    # not an RC reset, so no cap-to-GND by design.
+    c.waive_reset("LCD_CTP_RST",
+                  "GPIO-driven reset, held by 100k pull-down until PL releases")
     return c

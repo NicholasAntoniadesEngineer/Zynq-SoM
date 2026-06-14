@@ -6,6 +6,38 @@ via 12 decision questions, then went to bed with: *"work aggressively through
 the night."* This file is the source of truth across context compactions —
 update the checkboxes as units land.
 
+## STATUS @ overnight (newest commits on master, fast-forwarded)
+
+LANDED ON MASTER (each: full regression — board PASS 26 sheets + selftest
+44/44 + m1 + determinism — before commit):
+- PERF-2 parallel kicad-cli (172s→142s) · PERF-1 PinRef→Net index
+- DEF-1 3D-model-offset bug (4 parts) · DEF-2 thermal-pad paste relief (5) ·
+  DEF-3 default footprints + BOM footprint gate · DEF-4 link clobber guard ·
+  DEF-6 HDMI-RX TMDS termination (new hdmi_rx_term sheet)
+- BLOCK DIAGRAM full rewrite (the acute item) — layered DAG, clusters, legend,
+  landscape; the unreadable strip is gone
+- DOWNSTREAM: 4 new generators (Vivado TCL, PS device-tree, manifest.json,
+  TEST_PLAN.md) + CLI subcommands
+- DEVEX: pytest unit-test layer (147 cases) · DEBT-3 constant rename
+
+ALSO LANDED: verification gates — design-rule completeness + per-device
+thermal Tj (both hooked into `schgen board`, waivable, with CLI).
+
+⚠ REVIEW ITEMS FOR YOU (surfaced by the new gates / deferred work):
+1. THERMAL — the 3 TPS54302 bucks (U1/U2/U4, SOT-23-6 no exposed pad) are
+   thermally layout-critical: Tj over the guard under the conservative model;
+   waived + documented in carrier/research/thermal_bucks.md. Confirm RθJA by
+   thermal sim / bench at bring-up, or move U1 (the hottest, 20 V→5 V @ 2.8 A)
+   to an exposed-pad buck. This is a genuine margin call worth your eyes.
+2. DEF-5 power_mon shunt split still deferred (telemetry reads across an open
+   until the firmware shunt-walk + power-sheet decongest land).
+
+DEFERRED / BIG-ROCKS still to do: DEF-5 power_mon shunt split (needs firmware
+shunt-walk + power-sheet decongest), DS-1 BOM+CPL, bus notation, place.py
+split, per-part rule engine, board HW (EEPROM/RTC/QWIIC/supervisor — all C1
+gated), sourcing (HX5008 2nd-src/ALT_LCSC), GENPOLISH (title block/net-class
+cues/sizing), remaining DFM docs, mutation classes + cc-gate.
+
 ## MANDATE (12 answers, 2026-06-13)
 
 1. **Block diagram** → FULL professional rewrite (BD-1..8 + GAL-1).
@@ -123,9 +155,18 @@ byte-identical goldens + the determinism check.
       width=900. Render rasterised + eyeballed — clean, readable, professional;
       the acute "unreadable" complaint is resolved.
 
-### TRACK VERIFY — gates + automated testing
-- [ ] VER-1 design-rule completeness gate (decoupling/i2c-pullup/reset-RC/floating-input) + waivers + board hook (verify/design_rules.py)
-- [ ] VER-2 per-device thermal Tj gate (powertree RegSpec rth_ja+Ta+Tj_max + table)
+### TRACK VERIFY — gates + automated testing  [VER-1/2 done, worktree agents]
+- [x] VER-1 design-rule completeness gate (verify/design_rules.py): decoupling
+      per IC supply pin / i2c pull-up / reset-RC / floating-strap, pin function
+      inferred by NAME, model-only, waivable + board hook + `schgen design-rules`
+      CLI. Findings on the current board: 0 missing decap, 2 hdmi_tx DDC pulls
+      (waived: TPD12S016-integrated), 2 GPIO/internal-pull resets (waived).
+- [x] VER-2 per-device thermal Tj gate (schgen/thermal.py): Tj=Ta+Pd*RthJA per
+      device + waivable + board hook + `schgen thermal` CLI. >>> SURFACED A REAL
+      ITEM: the 3 TPS54302 bucks (U1/U2/U4, SOT-23-6 no-EP) exceed the Tj guard
+      under the conservative bare-package model — WAIVED as layout-critical +
+      REVIEW-FLAGGED in carrier/research/thermal_bucks.md (confirm RthJA by
+      thermal sim/bench at bring-up, else switch U1 to an exposed-pad buck).
 - [ ] VER-3 mutation classes for new + untested gates (selftest.py)
 - [ ] VER-4 [BIG] independent connected-components short/open proof gate + mutants (verify/cc_gate.py)
 

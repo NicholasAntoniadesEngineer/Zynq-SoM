@@ -299,4 +299,20 @@ def circuit() -> Circuit:
     c.draws("+3V3", 0.009, "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain "
                            "(330R ~3.9 mA) + FB divider 27 uA")
     c.draws("+1V8", 0.001, "PG FET gate divider 10k+100k (16 uA), rounded up")
+    # THERMAL WAIVERS (verification P2) — see carrier/research/thermal_bucks.md.
+    # The TPS54302 is SOT-23-6 (DDC) with NO exposed pad; the thermal gate's
+    # bare-package 2s2p RthJA (70.6 C/W) + 0.85 eff floor put Tj over the 140 C
+    # guard at the worst-case rail loads (U1 +5V hottest). These three bucks are
+    # LAYOUT-CRITICAL: a power-optimised 4-layer layout (large SW/VIN/PGND copper
+    # pours + a thermal-via field) plus the part's real ~88-91% efficiency at
+    # these points brings the effective RthJA to ~45-55 C/W and Tj under limit.
+    # REVIEW-FLAGGED: confirm by thermal sim / bench Tj at bring-up; if the
+    # layout cannot hit the target RthJA, switch to an exposed-pad buck.
+    _TH = ("TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; "
+           "layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — "
+           "VERIFY by thermal sim/bench at bring-up else move to an EP buck "
+           "(see carrier/research/thermal_bucks.md)")
+    c.waive_thermal("U1", _TH)
+    c.waive_thermal("U2", _TH)
+    c.waive_thermal("U4", _TH)
     return c

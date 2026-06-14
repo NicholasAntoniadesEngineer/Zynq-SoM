@@ -162,6 +162,13 @@ class Circuit:
         self.loads: dict[str, list[tuple[float, str]]] = {}
         # test-point coverage waivers: net -> reason (gate lists them)
         self.tp_waivers: dict[str, str] = {}
+        # design-rule completeness waivers (schgen/verify/design_rules.py)
+        self.decap_waivers: dict[str, str] = {}   # ref | "ref.pin" | rail -> reason
+        self.pull_waivers: dict[str, str] = {}    # i2c net -> reason
+        self.reset_waivers: dict[str, str] = {}   # reset net -> reason
+        self.strap_waivers: dict[str, str] = {}   # ref | "ref.pin" | net -> reason
+        # per-device thermal (Tj) gate waivers (schgen/thermal.py): ref -> reason
+        self.thermal_waivers: dict[str, str] = {}
         self._ref_counters: dict[str, int] = {}
         # Lazy symbol library + per-lib_id pin-number cache, used ONLY to
         # validate inline-part (``part()``) pin references eagerly in
@@ -431,6 +438,61 @@ class Circuit:
         if not reason.strip():
             raise CircuitError(f"waive_tp({net!r}): a reason is required")
         self.tp_waivers[net] = reason.strip()
+
+    # ---- design-rule completeness waivers (schgen/verify/design_rules.py) ----
+    def waive_decap(self, ref_or_pin: str, reason: str) -> None:
+        """EXPLICIT decoupling waiver: this IC supply pin/rail deliberately has
+        no local cap-to-GND on its sheet. Key on a part ref ('U1'), a pin
+        ('U1.3'), or the rail net ('+3V3'). The gate lists it verbatim."""
+        if not reason.strip():
+            raise CircuitError(f"waive_decap({ref_or_pin!r}): a reason is required")
+        ref = ref_or_pin.split(".")[0]
+        if ref not in self.parts and ref_or_pin not in self.nets:
+            raise CircuitError(f"waive_decap({ref_or_pin!r}): not a part ref, "
+                               f"'ref.pin', or declared net")
+        self.decap_waivers[ref_or_pin] = reason.strip()
+
+    def waive_pull(self, net: str, reason: str) -> None:
+        """EXPLICIT i2c pull-up waiver: this bus's pull-ups live off-board /
+        integrated in a transceiver (e.g. TPD12S016 DDC)."""
+        if net not in self.nets:
+            raise CircuitError(f"waive_pull({net!r}): not a declared net")
+        if not reason.strip():
+            raise CircuitError(f"waive_pull({net!r}): a reason is required")
+        self.pull_waivers[net] = reason.strip()
+
+    def waive_reset(self, net: str, reason: str) -> None:
+        """EXPLICIT reset-RC waiver: this reset net deliberately omits the
+        cap-to-GND and/or the pull (open-drain pull-only, held pull-down,
+        internal POR, GPIO-driven, ...)."""
+        if net not in self.nets:
+            raise CircuitError(f"waive_reset({net!r}): not a declared net")
+        if not reason.strip():
+            raise CircuitError(f"waive_reset({net!r}): a reason is required")
+        self.reset_waivers[net] = reason.strip()
+
+    def waive_strap(self, ref_or_pin: str, reason: str) -> None:
+        """EXPLICIT floating-strap waiver: this config input is intentionally
+        on a passive-only net (documented float / external strap)."""
+        if not reason.strip():
+            raise CircuitError(f"waive_strap({ref_or_pin!r}): a reason is required")
+        ref = ref_or_pin.split(".")[0]
+        if ref not in self.parts and ref_or_pin not in self.nets:
+            raise CircuitError(f"waive_strap({ref_or_pin!r}): not a part ref, "
+                               f"'ref.pin', 'ref.NAME', or declared net")
+        self.strap_waivers[ref_or_pin] = reason.strip()
+
+    def waive_thermal(self, ref: str, reason: str) -> None:
+        """EXPLICIT thermal waiver: this device may run past the Tj guard band
+        on purpose (e.g. a copper-pour / thermal-via layout the single-number
+        RthJA does not capture). The thermal gate lists every waiver verbatim
+        and demotes the over-Tj ERROR to a note — documentation, never silence.
+        ``ref`` is the part reference on this sheet (e.g. 'U1')."""
+        if ref not in self.parts:
+            raise CircuitError(f"waive_thermal({ref!r}): not a declared part")
+        if not reason.strip():
+            raise CircuitError(f"waive_thermal({ref!r}): a reason is required")
+        self.thermal_waivers[ref] = reason.strip()
 
     def nc(self, *pins: PinRef | str) -> None:
         """Author-declared no-connect — pin is INTENTIONALLY unused."""

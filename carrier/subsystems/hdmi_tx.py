@@ -129,4 +129,11 @@ def circuit() -> Circuit:
     c.draws("+3V3_HDMI_TX", 0.002, "TPD12S016 ICCA + LS_OE/CT_HPD straps")
     c.draws("+5V_HDMI_TX", 0.055, "HDMI source +5V to cable — TPD12S016 "
                                   "switch limit 55 mA (DS 7.3.10)")
+    # design-rule waiver (verification P1): the DDC I2C pull-ups are INTEGRATED
+    # in the TPD12S016 (DS 7.3.9/7.3.15 — "no external pull-ups"), so the
+    # ZYNQ_HDMI_TX SCL/SDA nets carry none on-board by design.
+    c.waive_pull("ZYNQ_HDMI_TX_SCL",
+                 "DDC pull-ups integrated in TPD12S016 (DS 7.3.9/7.3.15)")
+    c.waive_pull("ZYNQ_HDMI_TX_SDA",
+                 "DDC pull-ups integrated in TPD12S016 (DS 7.3.9/7.3.15)")
     return c

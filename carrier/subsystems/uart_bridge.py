@@ -94,4 +94,9 @@ def circuit() -> Circuit:
     # power-tree budget (round 4): CP2102N active ICC ~14 mA typ (DS table
     # 4.3) + 1k RST pull-up, self-powered from +3V3
     c.draws("+3V3", 0.015, "CP2102N active ~14 mA typ + RST 1k pull-up")
+    # design-rule waiver (verification P1): CP2102N_RST_N is a defined-high
+    # open-drain RST with the 1k external pull-up only — no RC cap by design
+    # (the CP2102N has its own internal POR; a runtime reset is host-driven).
+    c.waive_reset("CP2102N_RST_N",
+                  "open-drain RST: 1k pull-up only, internal POR; no RC cap")
     return c
