@@ -513,7 +513,7 @@ rails (25):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: microsd, power, power_mon)
   +1V8_REG — carrier-local rail (sheets: power_mon)
   +2V5_VADJ — carrier-local rail (sheets: fmc, som_j3)
-  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
+  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, lcd, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
   +3V3_AUX — carrier-local rail (sheets: board_aux, board_qwiic, board_services)
   +3V3_CAM — carrier-local rail (sheets: bringup_modules, camera)
   +3V3_HDMI_RX — carrier-local rail (sheets: bringup_modules, hdmi_rx)

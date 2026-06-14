@@ -80,7 +80,7 @@ TPS54302DDCR,"power:U1,power:U2,power:U4",Package_TO_SOT_SMD:TSOT-23-6,C311983
 TS-1187A-B-A-B,"bringup_rails:SW3,bringup_rails:SW4,bringup_rails:SW5",TS-1187A-B-A-B:TS-1187A-B-A-B,C318884
 TXS02612RTWR,microsd:U1,TXS02612RTWR:TXS02612RTWR,C140276
 TYPE-C-31-M-12,"pd_input:J1,usb_uart_connector:J1,usbc_otg:J2",TYPE-C-31-M-12:TYPE-C-31-M-12,C165948
-USBLC6-2SC6,"board_qwiic:U1,pd_input:U2,usb_uart_connector:U1,usbc_otg:U2",USBLC6-2SC6:USBLC6-2SC6,C7519
+USBLC6-2SC6,"board_qwiic:U1,lcd:U2,pd_input:U2,usb_uart_connector:U1,usbc_otg:U2",USBLC6-2SC6:USBLC6-2SC6,C7519
 USER,"user_io:SW1,user_io:SW2,user_io:SW3,user_io:SW4",TS-1187A-B-A-B:TS-1187A-B-A-B,C318884
 ZX-SH1.0-4PWT,board_qwiic:J1,ZX-SH1.0-4PWT:ZX-SH1.0-4PWT,C7430446
 blue,user_io:D3,LED_SMD:LED_0603_1608Metric,C2288

@@ -18,7 +18,7 @@
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "266eb9b98c3a2f278c1ae89862de298bc8bdbc683c806286f5cd1f9fdf6df5aa"
+      "sha256": "d8b33ca09fa88d153046615c5099fbc3537ae879901ffa603a293d81616211b9"
     },
     {
       "path": "docs/power_tree.svg",
@@ -26,7 +26,7 @@
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "f1a6f9b436221c0008b10a96bc9a3b0c3350f13eced2877c098dbf7f3f543455"
+      "sha256": "2d5f1f461bc425380238845f76bb04bd1cd237043901923663809939e7016304"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -34,7 +34,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "c3cc058a53c062c5c429c705c63b44c71f34b3852ebb7027e0c9a0aabe73c75b"
+      "sha256": "99e9d23319baa01ff6b9c69d952bec687ed226b075480b333b87e10ce809aea8"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -46,15 +46,15 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "dfbfaeaf62b7aa3d69e95989507af07a484d36d41e611e2011623ded4d01489a"
+      "sha256": "51f791dea9a928a05f750e7bae2526a74116bc461cb66f00ea63687b94169a02"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "f670c8371cf45b0bee0bf50274f81234fe2fb5acd744950b4bcaf92f5e3c7235"
+      "sha256": "6c70e0afdf7c65b3d80a43a9eb91de817785d19bb37211019d2c8c9bae5289b9"
     },
     {
       "path": "reports/design_rules.txt",
-      "sha256": "352f254d6de866993613b53fb24348a7d3350a3156bc60baa5e62c7f818eec59"
+      "sha256": "ea85f5cf92b57fbc8acdeb75b0b448e90a71c63f88cbe180d176d755f1d478de"
     },
     {
       "path": "reports/gates.txt",
@@ -62,7 +62,7 @@
     },
     {
       "path": "reports/link_report.txt",
-      "sha256": "b254e33b30718134fad86db1bfbcec294a4fa29138cecd497bf34c93154e46cf"
+      "sha256": "35590091c8f326b020c0924c477a40582eb00ce8bfb4cb82fc4bce535d6f135d"
     },
     {
       "path": "reports/power_tree.txt",
@@ -138,7 +138,7 @@
     },
     {
       "path": "schematic/lcd.kicad_sch",
-      "sha256": "001986a1f9eabf82e3e139b7f7c77df427ec06e48aa8677f250bbec9ba8d45b3"
+      "sha256": "a9ba2a54323316bde6a382ad8657b74ba25403e04384cc7874fadde40ba89c16"
     },
     {
       "path": "schematic/microsd.kicad_sch",
@@ -202,7 +202,7 @@
     "extended": null,
     "lines": 88,
     "missing": [],
-    "parts": 396
+    "parts": 397
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [

@@ -44,11 +44,21 @@ def circuit() -> Circuit:
     for pin, net in ((31, "LCD_DISP"), (32, "LCD_HSYNC"),
                      (33, "LCD_VSYNC"), (34, "LCD_DE")):
         c.port(net, f"J1.{pin}", expect=J3_MAP)
-    # capacitive touch on the same FFC tail
-    c.port("LCD_CTP_SDA", "J1.37", kind="i2c", role="sda",
+    # capacitive touch on the same FFC tail. The FFC is user-touchable, so the
+    # touch-I2C pair is clamped at the connector by a USBLC6-2SC6 (the board's
+    # standard low-cap ESD array; 1<->6 / 3<->4 passthrough). The external FFC
+    # pins land on U2.1/U2.3; the protected pair (-> the pull-ups + the PL) on
+    # U2.6/U2.4; clamp ref the ALWAYS-ON +3V3 (= the bank-13 VCCO, so protection
+    # is valid even when the gated +3V3_LCD panel rail is off).
+    c.use_part("USBLC6-2SC6", ref="U2")
+    c.net("CTP_SDA_FFC", "J1.37", "U2.1")
+    c.net("CTP_SCL_FFC", "J1.38", "U2.3")
+    c.port("LCD_CTP_SDA", "U2.6", kind="i2c", role="sda",
            bus="LCD_CTP", speed_hz=400_000, expect=J2_MAP)
-    c.port("LCD_CTP_SCL", "J1.38", kind="i2c", role="scl",
+    c.port("LCD_CTP_SCL", "U2.4", kind="i2c", role="scl",
            bus="LCD_CTP", speed_hz=400_000, expect=J2_MAP)
+    c.net("+3V3", "U2.5")
+    c.net("GND", "U2.2")
     c.port("LCD_CTP_RST", "J1.39", expect=J2_MAP)
     c.port("LCD_CTP_INT", "J1.40", expect=J2_MAP)
 
