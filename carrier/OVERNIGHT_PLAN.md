@@ -215,10 +215,13 @@ byte-identical goldens + the determinism check.
 - [ ] RE-4 seed MLCC derating ≥50% + pull-up window + buck FB; + mutants
 
 ### TRACK DFMDOCS
-- [ ] DOC-1 TEST_PLAN.md (SPICE limits + TP pads + DIP seq)
-- [ ] DOC-2 fiducials + tooling holes + ASSEMBLY_NOTES.md (from floorplan outline)
-- [ ] DOC-3 chassis-GND star-bond explicit, gate-checked requirement
-- [ ] DOC-4 rev-A ICT / flying-probe plan
+- [x] DOC-1 TEST_PLAN.md (done in DOWNSTREAM via schgen/testplan.py)
+- [x] DOC-2 fiducials + tooling + carrier/manufacturing/ASSEMBLY_NOTES.md
+      (static requirements doc; a floorplan-driven coord generator is a noted
+      follow-on)
+- [x] DOC-3 chassis-GND star-bond explicit requirement (in ASSEMBLY_NOTES.md:
+      single-point GND<->CHASSIS_GND stitch at the RJ45/HDMI shield entry)
+- [ ] DOC-4 rev-A ICT / flying-probe plan (TEST_PLAN.md covers most of this)
 
 ### TRACK TIER3 — polish then re-investigate (keep going)
 - [ ] symbol quality P5 deepening, datasheet bundle PARTS.md, PCB stub, boot/heartbeat LEDs, FILL-1, FP-1/2, RND-1, GAL-2, REUSE-1
