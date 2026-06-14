@@ -22,6 +22,35 @@ declared circuit — and PROVES at least one gate fails ("kills") each mutant:
                       net (the LAW-0 short: junction at a crossing of two
                       different nets — ERC=0 and overlap=0 do not see it)
 
+The file/geometry mutants above prove the netlist / ERC / inputs-driven /
+visual gates. The MODEL-GATE mutants below close the F1 hole for the
+*model-only* gates — the ones that read the declared :class:`Circuit`
+(parts/nets/draws/port-types/waivers) rather than the emitted file, and so
+were never exercised against a defect by the file-based mutators:
+
+- ``drop_decap``     delete a decoupling cap from an IC supply pin
+                     -> design_rules DECAP fires
+- ``remove_pullup``  delete an i2c pull-up resistor
+                     -> design_rules I2C fires
+- ``break_reset``    strip a reset net's cap (the RC half)
+                     -> design_rules RESET fires
+- ``thermal_overrun``bump a regulator's declared draw so Tj passes its limit
+                     -> thermal fires; a companion ``thermal_waiver`` mutant
+                     proves ``c.waive_thermal`` DEMOTES the same over-Tj to a
+                     note (the waiver path is proven too)
+- ``power_overrun``  push a regulator past its datasheet current limit
+                     -> powertree fires
+- ``divider_drift``  perturb one FB resistor so a named SPICE divider leaves
+                     its window -> spice fires
+- ``tp_uncovered``   drop a required rail's test point
+                     -> testpoints fires
+- ``port_rename``    rename one PORT label on one sheet's emitted root so it
+                     no longer merges -> the board cross-sheet merge gate fails
+
+Each model-gate mutant ALSO asserts the gate PASSES on the unmutated fixture
+(a gate that always fires proves nothing), exactly like the baseline check
+the file mutants run first.
+
 A mutant that survives every gate is a hole in the gate stack: selftest
 prints it loudly and exits non-zero. The gates are never relaxed here —
 if a mutant survives, the fix is a stronger gate, never a weaker mutant.
@@ -41,6 +70,7 @@ import argparse
 import copy
 import difflib
 import importlib.util
+import re as _re
 import shutil
 import tempfile
 import uuid as _uuid
@@ -50,6 +80,7 @@ from pathlib import Path
 from schgen import place, sexpr
 from schgen.emit import Junction as EJunction
 from schgen.emit import PlacedDesign, Wire, emit
+from schgen.emit import stable_uuid as _stable_uuid
 from schgen.model import Circuit, NetClass, PinRef
 from schgen.sexpr import Sym
 from schgen.symbols import GRID, Library, pin_page_position
@@ -346,6 +377,340 @@ def mutate_geo_text_over_wire(b: Built):
             f"@({cx},{cy})", geo)
 
 
+# ---- model-gate mutants (the F1 hole for the model-only gates) -----------------
+# The gates above read the emitted FILE or the placer's geometry. A second
+# family of gates reads ONLY the declared Circuit — its parts, nets, draws,
+# port-types and waivers — never the file: design_rules (decap / i2c-pullup /
+# reset-RC / strap), thermal (Tj = Ta + Pd*RthJA), powertree (regulator current
+# limits), spice (divider / FB setpoint windows), testpoints (rail probe
+# coverage) and board (the per-PORT cross-sheet merge gate). The file/geometry
+# mutators never touch any of them, so — exactly the F1 lesson — each was an
+# UNPROVEN gate: green on every input it was ever handed. These mutants build a
+# minimal valid fixture, prove the gate PASSES it, inject ONE targeted defect,
+# and prove the SAME gate FAILS (or, for a waiver, DEMOTES the failure).
+#
+# A tiny SheetCircuit-shaped shim is all the model gates need from a sheet
+# (they read sc.name + sc.circuit only); building real geometry is unnecessary
+# and would only add noise, so the fixtures stay pure netlist.
+
+
+@dataclass
+class _Sheet:
+    """The duck-typed shape every model gate consumes (schgen.link.SheetCircuit
+    has more, but the gates touch only ``.name`` and ``.circuit``)."""
+    name: str
+    circuit: Circuit
+
+
+def _net_names_of(c: Circuit, ref: str) -> list[str]:
+    return [n.name for n in c.nets.values()
+            if any(pr.ref == ref for pr in n.pins)]
+
+
+def _delete_part(c: Circuit, ref: str) -> None:
+    """Remove a part and every reference to it from the nets (an honest
+    deletion — what an author dropping a component would leave behind)."""
+    c.parts.pop(ref, None)
+    for n in c.nets.values():
+        n.pins = [pr for pr in n.pins if pr.ref != ref]
+
+
+def _find_part(c: Circuit, suffix: str, must_have: tuple[str, ...],
+               must_ground: bool = False) -> str | None:
+    for ref in sorted(c.parts):
+        part = c.parts[ref]
+        if not part.lib_id.endswith(suffix):
+            continue
+        names = _net_names_of(c, ref)
+        if all(m in names for m in must_have) and (
+                not must_ground or any(_n.startswith("GND") for _n in names)):
+            return ref
+    return None
+
+
+# Fixture A — an IC with named supply pins + i2c + reset, for design_rules.
+# The CP2102N symbol carries real power-named pins (VIO/VDD/VREGIN), an i2c
+# port and a reset net; VDD is parked on its OWN rail with a SINGLE decap so a
+# dropped cap leaves that rail bare (the +3V3 rail keeps two, so a defect there
+# would be masked). Every rule passes at baseline — including STRAP (no config
+# pin floats).
+
+def _fixture_design_rules() -> list[_Sheet]:
+    c = Circuit("selftest_dr", "selftest design-rule fixture")
+    c.part("U1", "schgen:CP2102N_UART", "CP2102N")
+    c.net("+3V3", "U1.5", "U1.7")          # VIO + VREGIN share +3V3
+    c.net("+VDD_CORE", "U1.6")             # VDD on its own rail
+    c.net("GND", "U1.2", "U1.25")
+    c.decouple("U1.7", "100n")             # +3V3 decaps (two)
+    c.decouple("U1.5", "100n")
+    c.decouple("U1.6", "100n")             # the ONLY +VDD_CORE decap
+    c.port("SC_I2C_SCL", "U1.20", kind="i2c", role="scl")
+    c.pullup("U1.20", "4k7", "+3V3")       # i2c pull-up to a rail
+    c.net("SYS_RST_N", "U1.9")             # reset net: cap-to-GND + pull
+    c.decouple("U1.9", "100n")
+    c.pullup("U1.9", "10k", "+3V3")
+    return [_Sheet("selftest_dr", c)]
+
+
+# Fixture B — a TPS54302 buck with an FB divider, for powertree / thermal /
+# spice. SW -> L -> +3V3 (the rail behind the inductor); FB divider 45k3/10k
+# gives Vout = 0.596*(1+45.3/10) = 3.30 V (in the +/-3% window); EN parked on a
+# POWER rail so the spice EN-clamp check stays out of the SIGNAL path. The
+# declared draw (0.5 A) is well under the 3 A limit and cool (Tj << limit).
+
+def _fixture_buck(draw_a: float = 0.5, rtop: str = "45k3") -> list[_Sheet]:
+    c = Circuit("selftest_buck", "selftest power/thermal/spice fixture")
+    # TPS54302: 1 GND 2 SW 3 VIN 4 FB 5 EN 6 BOOT
+    c.part("U1", "Regulator_Switching:TPS54302", "TPS54302DDCR",
+           "Package_TO_SOT_SMD:SOT-23-6")
+    c.part("L1", "Device:L", "2.2uH")
+    c.net("+VIN", "U1.3")
+    c.net("SW", "U1.2", "L1.1")
+    c.net("+3V3", "L1.2")                   # rail behind the inductor
+    c.net("GND", "U1.1")
+    c.net("+5V_EN", "U1.5", net_class=NetClass.POWER)  # EN on a rail: skip clamp
+    c.net("FB", "U1.4")
+    c.series("+3V3", "FB", rtop)            # R1: FB top
+    c.series("FB", "GND", "10k")            # R2: FB bottom
+    c.draws("+3V3", draw_a, "selftest declared load")
+    return [_Sheet("selftest_buck", c)]
+
+
+# Fixture C — a rail + ground, each with a probe point, for testpoints.
+
+def _fixture_testpoints() -> list[_Sheet]:
+    c = Circuit("selftest_tp", "selftest test-point fixture")
+    c.part("R1", "Device:R", "10k")
+    c.net("+3V3", "R1.1")
+    c.net("GND", "R1.2")
+    c.testpoint("+3V3")
+    c.testpoint("GND")
+    return [_Sheet("selftest_tp", c)]
+
+
+# Fixture D — two sheets sharing PORT 'SELFTEST_LINK', for the board merge gate.
+
+def _board_fixture_sheets() -> list[_Sheet]:
+    a = Circuit("selftest_brd_a", "selftest board fixture A")
+    a.part("R1", "Device:R", "10k")
+    a.net("+3V3", "R1.1")
+    a.port("SELFTEST_LINK", "R1.2")
+    b = Circuit("selftest_brd_b", "selftest board fixture B")
+    b.part("R2", "Device:R", "10k")
+    b.port("SELFTEST_LINK", "R2.1")
+    b.net("GND", "R2.2")
+    return [_Sheet("selftest_brd_a", a), _Sheet("selftest_brd_b", b)]
+
+
+# ---- the model-gate runners (each returns (passed_baseline, killed, detail)) ----
+# Signature is uniform so the driver treats them exactly like the file mutants:
+# it credits a kill only when baseline is green AND the mutant is red.
+
+def _mg_design_rules(which: str, lib: Library):
+    """drop_decap / remove_pullup / break_reset against design_rules.check."""
+    from schgen.verify import design_rules
+
+    def fires(res, rule: str) -> list[str]:
+        return getattr(res, rule)
+
+    base = _fixture_design_rules()
+    base_res = design_rules.check(base, lib)
+    if which == "drop_decap":
+        rule, suffix, have, gnd = "decap", ":C", ("+VDD_CORE",), True
+    elif which == "remove_pullup":
+        rule, suffix, have, gnd = "i2c", ":R", ("SC_I2C_SCL", "+3V3"), False
+    else:                                          # break_reset
+        rule, suffix, have, gnd = "reset", ":C", ("SYS_RST_N",), False
+    base_ok = base_res.ok and not fires(base_res, rule)
+
+    mut = _fixture_design_rules()
+    c = mut[0].circuit
+    ref = _find_part(c, suffix, have, must_ground=gnd)
+    desc = f"{which}: delete {ref} ({'/'.join(have)})"
+    if ref is None:
+        return base_ok, False, f"{which}: target part not found in fixture"
+    _delete_part(c, ref)
+    mut_res = design_rules.check(mut, lib)
+    fired = fires(mut_res, rule)
+    killed = bool(fired) and not mut_res.ok
+    by = (fired[0] if fired else "(no finding)")
+    return base_ok, killed, f"{desc}\n            by design_rules {rule.upper()}: {by}"
+
+
+def _mg_power_overrun(lib: Library):
+    """power_overrun: load the buck past its 3 A limit -> powertree fires."""
+    from schgen import powertree
+    base_ok = powertree.analyze(_fixture_buck()).ok
+    mut = _fixture_buck()
+    mut[0].circuit.loads["+3V3"] = [(4.0, "selftest overrun")]
+    res = powertree.analyze(mut)
+    killed = (not res.ok) and any("OVERRUN" in e for e in res.errors)
+    by = res.errors[0] if res.errors else "(no error)"
+    return base_ok, killed, ("power_overrun: +3V3 load 0.5A -> 4.0A (> 3 A "
+                             f"limit)\n            by powertree: {by}")
+
+
+def _mg_thermal(which: str, lib: Library):
+    """thermal_overrun (Tj over limit -> thermal fires) and thermal_waiver
+    (the SAME over-Tj demoted to a note by c.waive_thermal)."""
+    from schgen import powertree, thermal
+
+    def run(sheets):
+        pt = powertree.analyze(sheets)
+        return pt, thermal.analyze(sheets, pt_res=pt)
+
+    _pt0, base = run(_fixture_buck())
+    base_ok = base.ok and not base.errors and not base.notes
+    # 2.5 A is UNDER the 3 A powertree limit but the buck's Pd*RthJA pushes Tj
+    # over the guard band — so the kill is unambiguously the thermal gate's,
+    # never powertree's.
+    mut = _fixture_buck(draw_a=2.5)
+    c = mut[0].circuit
+    if which == "thermal_overrun":
+        pt, res = run(mut)
+        killed = (not pt.ok) is False and (not res.ok) and \
+            any("OVER Tj" in e for e in res.errors)
+        by = res.errors[0].split(" [")[0] if res.errors else "(no error)"
+        return base_ok, killed, ("thermal_overrun: +3V3 draw 0.5A -> 2.5A "
+                                 "(Tj over limit, under 3 A current limit)"
+                                 f"\n            by thermal: {by}")
+    # thermal_waiver: same over-Tj, but waived -> demoted to a note, gate OK
+    c.waive_thermal("U1", "selftest: copper-pour derate not in single RthJA")
+    pt, res = run(mut)
+    demoted = res.ok and any("WAIVED over-limit" in n for n in res.notes)
+    by = next((n for n in res.notes if "WAIVED over-limit" in n),
+              "(not demoted)")
+    return base_ok, demoted, ("thermal_waiver: same over-Tj + c.waive_thermal "
+                              "-> demoted to a note, gate stays green"
+                              f"\n            by thermal waiver path: {by[:90]}")
+
+
+def _mg_divider_drift(lib: Library):
+    """divider_drift: perturb the FB top resistor so Vout leaves +/-3% -> spice
+    fires on the named FB-divider window."""
+    from schgen import spice
+    base_ok = spice.extract_checks(_fixture_buck()).ok
+    # 45k3 -> 33k drops Vout from 3.30 V to 0.596*(1+3.3) = 2.56 V, far below
+    # the 3.20..3.40 V window.
+    mut = _fixture_buck(rtop="33k")
+    res = spice.extract_checks(mut)
+    killed = (not res.ok) and any("FB" in e for e in res.errors)
+    by = res.errors[0] if res.errors else "(no error)"
+    return base_ok, killed, ("divider_drift: FB top 45k3 -> 33k (Vout leaves "
+                             f"+/-3%)\n            by spice: {by}")
+
+
+def _mg_tp_uncovered(lib: Library):
+    """tp_uncovered: drop the +3V3 rail's test point -> testpoints fires."""
+    from schgen import testpoints
+    base_ok = testpoints.check_coverage(_fixture_testpoints()).ok
+    mut = _fixture_testpoints()
+    c = mut[0].circuit
+    drop = None
+    for ref in list(c.parts):
+        if testpoints.is_testpoint(c.parts[ref]) and \
+                "+3V3" in _net_names_of(c, ref):
+            drop = ref
+            break
+    if drop is None:
+        return base_ok, False, "tp_uncovered: +3V3 test point not found"
+    _delete_part(c, drop)
+    cov = testpoints.check_coverage(mut)
+    killed = (not cov.ok) and any("+3V3" in e for e in cov.errors)
+    by = next((e for e in cov.errors if "+3V3" in e), "(no error)")
+    return base_ok, killed, ("tp_uncovered: drop the +3V3 probe point"
+                             f"\n            by testpoints: {by}")
+
+
+def _mg_port_rename(lib: Library, tmp: Path):
+    """port_rename: build the two-sheet board (baseline merge gate PASSES),
+    then rewrite ONE 'SELFTEST_LINK' PORT label on the emitted ROOT so its
+    sheet pin no longer merges with the other sheet's -> the board cross-sheet
+    merge gate FAILS. The mutated emitted file disagrees with the declared
+    circuits (which still demand the merge), which is precisely what the board
+    gate exists to catch."""
+    from schgen import board
+
+    def _placed(sheets, root="board"):
+        # mirror build_board's place->uniquify (the only model state the merge
+        # gate reads); the public place/uniquify functions, no gate logic.
+        out = []
+        for i, sc in enumerate(sheets, start=1):
+            placement, routed, _geo = place.place_and_route(sc.circuit, lib)
+            d = PlacedDesign(
+                circuit=sc.circuit, parts=placement.parts,
+                powers=placement.powers,
+                wires=[Wire(s.x0, s.y0, s.x1, s.y1) for s in routed.segs],
+                junctions=[EJunction(x, y) for x, y in routed.junctions],
+                hlabels=placement.hlabels, llabels=placement.llabels,
+                no_connects=placement.no_connects, paper=placement.paper)
+            d = board.uniquify(d, i)
+            out.append((sc.name, d, _stable_uuid(root, "sheet-symbol", sc.name)))
+        return out
+
+    base_out = tmp / "board_base"
+    base_ok = board.build_board(_board_fixture_sheets(), lib, base_out,
+                                root_name="board")
+    # mutant: re-emit (fresh dir), then tamper the root label
+    mut_out = tmp / "board_mut"
+    board.build_board(_board_fixture_sheets(), lib, mut_out, root_name="board")
+    root = mut_out / "board.kicad_sch"
+    txt = root.read_text()
+    new = _re.sub(r'(\(global_label\s+)"SELFTEST_LINK"',
+                  r'\1"SELFTEST_LINK_BROKEN"', txt, count=1)
+    if new == txt:
+        return base_ok, False, ("port_rename: could not find a SELFTEST_LINK "
+                                "root label to rename")
+    root.write_text(new)
+    placed = _placed(_board_fixture_sheets())
+    killed = not board._board_gate(placed, root, mut_out)
+    return base_ok, killed, ("port_rename: one SELFTEST_LINK root label -> "
+                             "SELFTEST_LINK_BROKEN (its sheet pin keeps the "
+                             "old name)\n            by board merge gate: PORT "
+                             "no longer merges across the two sheets")
+
+
+def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
+    """Run every model-gate mutant. Returns (injected, killed, problems),
+    feeding the SAME tally + exit code as the file/geometry mutants. Each
+    mutant proves its gate PASSES the clean fixture AND FAILS the defect (a
+    waiver mutant instead proves the failure is DEMOTED)."""
+    lib = Library()
+    problems: list[str] = []
+    print("--- model-gate mutants (design_rules / thermal / powertree / "
+          "spice / testpoints / board) ---")
+    runners = [
+        ("drop_decap",      lambda: _mg_design_rules("drop_decap", lib)),
+        ("remove_pullup",   lambda: _mg_design_rules("remove_pullup", lib)),
+        ("break_reset",     lambda: _mg_design_rules("break_reset", lib)),
+        ("thermal_overrun", lambda: _mg_thermal("thermal_overrun", lib)),
+        ("thermal_waiver",  lambda: _mg_thermal("thermal_waiver", lib)),
+        ("power_overrun",   lambda: _mg_power_overrun(lib)),
+        ("divider_drift",   lambda: _mg_divider_drift(lib)),
+        ("tp_uncovered",    lambda: _mg_tp_uncovered(lib)),
+        ("port_rename",     lambda: _mg_port_rename(lib, tmp / "board")),
+    ]
+    injected = killed = 0
+    for name, fn in runners:
+        injected += 1
+        base_ok, did_kill, detail = fn()
+        if not base_ok:
+            problems.append(f"model-gate {name}: BASELINE not green — the "
+                            f"clean fixture already trips (or pre-fires) the "
+                            f"gate; a gate that always fires proves nothing")
+            print(f"  BASELINE-FAIL {name}   <-- fixture not clean")
+            continue
+        if did_kill:
+            killed += 1
+            print(f"  killed    {detail}")
+        else:
+            problems.append(f"model-gate {name}: MUTANT SURVIVED its gate: "
+                            f"{detail.splitlines()[0]}")
+            print(f"  SURVIVED  {detail.splitlines()[0]}   <-- HOLE IN THE "
+                  f"MODEL GATE")
+    return injected, killed, problems
+
+
 # ---- determinism ---------------------------------------------------------------
 
 def determinism_check(path: Path, tmp: Path) -> tuple[bool, str]:
@@ -476,6 +841,12 @@ def run(sheet_specs: list[str], keep: bool = False) -> int:
             print(f"  determinism: {'PASS' if det_ok else 'FAIL'} — {det_msg}")
             if not det_ok:
                 problems.append(f"{path.stem}: determinism FAIL")
+        # model-gate mutants are board-wide (their own minimal fixtures), so
+        # they run ONCE — not per input sheet — and fold into the same tally.
+        mg_inj, mg_kill, mg_probs = selftest_model_gates(tmp / "model_gates")
+        total_inj += mg_inj
+        total_kill += mg_kill
+        problems += mg_probs
     finally:
         if keep:
             print(f"scratch kept: {tmp}")
