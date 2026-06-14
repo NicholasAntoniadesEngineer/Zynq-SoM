@@ -59,6 +59,7 @@ With **all DIPs open**, expect:
 
   | sheet | ICs on `+3V3_SC` |
   |---|---|
+  | board_aux | U2 (PCA9306DCUR) |
   | bringup_en | U1 (SN74LVC1G08), U2 (SN74LVC1G08), U3 (SN74LVC1G08) |
   | bringup_en_modules | U1 (SN74LVC1G08), U2 (SN74LVC1G08), U3 (SN74LVC1G08), U4 (SN74LVC1G08), U5 (SN74LVC1G08), U6 (SN74LVC1G08), U7 (SN74LVC1G08), U8 (SN74LVC1G08), U9 (SN74LVC1G08), U10 (SN74LVC1G08), U11 (SN74LVC1G08) |
   | bringup_rails | U1 (TCA9535PWR) |

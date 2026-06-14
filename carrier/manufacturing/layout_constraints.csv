@@ -143,6 +143,8 @@ USB_UART_DM,usb_uart_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DP
 USB_UART_DP,usb_uart_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DM,PAIR:USB_UART_DM/USB_UART_DP,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_D+,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_D-,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D+,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
+IO_L16_N_35,board_services,single,Default,,,,,,,"deferred: som_j3_connector (PL bank-35 — watchdog kick/event, xdc.py live)"
+IO_L16_P_35,board_services,single,Default,,,,,,,"deferred: som_j3_connector (PL bank-35 — watchdog kick/event, xdc.py live)"
 BU_DIP_1V8,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_3V3,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_5V0,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
@@ -464,6 +466,12 @@ IO_L22_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
 IO_L24_N_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
 IO_L24_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
 IO_L6_P_13,user_io,single,Default,,,,,,,deferred: som_j2_connector
+AUX_I2C_SCL,board_aux,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_services (the gated peripherals on the isolated AUX bus)
+AUX_I2C_SDA,board_aux,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_services (the gated peripherals on the isolated AUX bus)
+STM32_I2C2_SCL,board_aux,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)
+STM32_I2C2_SDA,board_aux,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)
+AUX_I2C_SCL,board_services,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_aux (PCA9306 isolated side of STM32_I2C2)
+AUX_I2C_SDA,board_services,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_aux (PCA9306 isolated side of STM32_I2C2)
 STM32_I2C2_SCL,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)
 STM32_I2C2_SDA,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)
 CAM_SCL,camera,i2c,I2C,,,,,,,"bus=CAM_I2C; speed=400000Hz; deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"

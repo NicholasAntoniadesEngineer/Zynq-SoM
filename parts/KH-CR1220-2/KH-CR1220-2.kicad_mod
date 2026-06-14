@@ -1,0 +1,531 @@
+(footprint
+	"KH-CR1220-2"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"BAT-SMD_CR1220-2 — KH-CR1220-2 (BAT-SMD_CR1220-2) (EasyEDA/LCSC C5365933, faithful conversion)"
+	)
+	(tags "Battery Connectors")
+	(attr through_hole)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -2.58 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"KH-CR1220-2"
+		(at 0 2.58 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C5365933.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"KH-CR1220-2 (BAT-SMD_CR1220-2)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C5365933"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -10.07 7.1923)
+		(end -10.04 7.1923)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center 3.7501 0)
+		(end 3.9401 0)
+		(stroke
+			(width 0.38)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_circle
+		(center -3.7501 0)
+		(end -3.5002 0)
+		(stroke
+			(width 0.5)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_line
+		(start -8.382 1.016)
+		(end -8.382 -1.016)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -8.382 -1.016)
+		(end -7.89 -3.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -7.89 -3.3)
+		(end -7.89 -7.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -7.89 -7.15)
+		(end -5.47 -7.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -5.47 -7.15)
+		(end -5.2 -6.88)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -5.2 -6.88)
+		(end -4.47 -5.92)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -4.47 -5.92)
+		(end -4.43 -5.92)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -4.43 -5.92)
+		(end -1.2315 -7.2448)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -1.2315 -7.2448)
+		(end 0.0806 -7.2448)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 0.0806 -7.2448)
+		(end 7.2452 -0.0802)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 7.2452 -0.0802)
+		(end 7.2452 0)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 7.2452 0)
+		(end 0.0529 7.1923)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 0.0529 7.1923)
+		(end 0 7.1923)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 0 7.1923)
+		(end -0.8426 7.1923)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -0.8426 7.1923)
+		(end -4.3154 5.7538)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -4.3154 5.7538)
+		(end -5.26 6.93)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -5.26 6.93)
+		(end -5.48 7.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -5.48 7.15)
+		(end -7.239 7.112)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -7.239 7.112)
+		(end -7.874 6.477)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -7.874 6.477)
+		(end -7.89 3.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -7.89 3.3)
+		(end -8.38 1.07)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -8.38 1.07)
+		(end -8.382 1.016)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -8.255 2.286)
+		(end -8.255 7.239)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -8.255 7.239)
+		(end -4.445 7.239)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -4.445 7.239)
+		(end -4.445 5.842)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -4.445 -5.969)
+		(end -4.445 -7.239)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -4.445 -7.239)
+		(end -8.255 -7.239)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -8.255 -7.239)
+		(end -8.255 -2.286)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_arc
+		(start -6.8154 2.2975)
+		(mid 0.4551 7.1778)
+		(end 7.051 1.4183)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_arc
+		(start 7.1088 -1.3995)
+		(mid 0.4002 -7.2342)
+		(end -6.911 -2.1751)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 8.5999 0 180)
+		(size 4.499991 2.299995)
+		(layers "F.Cu" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 10.0999 0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 10.0999 -0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 8.5999 0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 8.5999 -0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 7.0999 0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 7.0999 -0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -8.5999 0 180)
+		(size 4.499991 2.299995)
+		(layers "F.Cu" "F.Mask")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -7.0999 0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -7.0999 -0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -8.5999 0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -8.5999 -0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -10.0999 0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -10.0999 -0.575 180)
+		(size 1.1619 0.8908)
+		(layers "F.Paste")
+	)
+	(pad
+		""
+		np_thru_hole
+		circle
+		(at -3.7501 0)
+		(size 1.199998 1.199998)
+		(drill 1.199998)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		""
+		np_thru_hole
+		circle
+		(at 3.7501 0)
+		(size 0.999998 0.999998)
+		(drill 0.999998)
+		(layers "*.Cu" "*.Mask")
+	)
+	(model
+		"KH-CR1220-2.wrl"
+		(offset
+			(xyz -0.5599 0 -0.8)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 180)
+		)
+	)
+)

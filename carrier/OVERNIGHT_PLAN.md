@@ -212,12 +212,30 @@ byte-identical goldens + the determinism check.
 - [ ] SRC-3 lifecycle/EOL + stock/price snapshot capture (part_gen)
 - [ ] SRC-4 inline 5 schgen: parts → parts/ folders + symbol-name preservation (P5) + part_gen regression tier (P6)
 
-### TRACK BOARDHW — new hardware (C1 gated; C2 watchdog post-stable)
-- [ ] HW-1 board-ID EEPROM 24AA025E48 EUI-48 @0x50 (gated rail)
-- [ ] HW-2 RTC RV-3028-C7 + CR2032 (gated rail)
-- [ ] HW-3 QWIIC on dedicated gated PL-fabric I2C
-- [ ] HW-4 supervisor + watchdog (gated; armed only after rails stable)
-- [ ] HW-* parts/ folders for new parts + downstream regen (firmware I2C map)
+### TRACK BOARDHW — new hardware (C1 gated; C2 watchdog post-stable) >>> DONE
+All four blocks landed on TWO new sheets — board_aux (the gate + PCA9306 I2C
+isolator) and board_services (the peripherals) — split so neither defeats the
+placer's rail-stub router. board PASS @ 28 sheets, all gates green, preflight
+PASS (+$4.56/board), determinism PASS.
+- [x] HW-1 board-ID EEPROM 24AA025E48 (SOT-23-6, C129895) — EUI-48 MAC for the
+      RJ45/LAN8720, strapped **0x51** (A0=1; 0x50 is the FMC EEPROM). On the
+      gated +3V3_AUX rail behind the PCA9306 isolator.
+- [x] HW-2 RTC RV-3028-C7 (C3019759) — integrated DTCXO (no crystal), CR1220
+      coin cell (KH-CR1220-2) auto-switchover, **0x52**, gated rail.
+- [x] HW-3 QWIIC / STEMMA-QT (ZX-SH1.0-4PWT, C7430446) on the isolated AUX I2C
+      + gated 3V3 — external modules never touch the always-on management bus.
+- [x] HW-4 supervisor + watchdog TPS3823-33 (C7719). **C1**: on default-OFF
+      +3V3_AUX (DSHP04 SW1). **C2** (no power-up reset) THREE ways: rail OFF at
+      power-up (unpowered), WDI-float-disables-watchdog until firmware drives
+      WATCHDOG_KICK, and RESET# is a firmware-mediated PL event (J3.31), never a
+      hard POR. **C3**: watchdog signals ride PL bank-35 (IO_L16_N/P_35), xdc-
+      sourced — no Zynq hard-coupling.
+- [x] HW-* 6 parts/ folders (part add) + downstream regen (xdc picks up the 2
+      watchdog PL pins, firmware/nets/manifest/BOM all updated).
+- LAW 0: PCA9306 EN tied to +3V3_AUX auto-isolates the gated peripherals from
+      the always-on STM32_I2C2 bus (no back-powering through ESD diodes).
+  REVIEW NOTE (low): QWIIC J10 pad-1 location must be verified against the
+  footprint silk before fab (power/I2C order); flagged in the sheet docstring.
 
 ### TRACK RULE-ENGINE — [BIG] large capability
 - [ ] RE-1 part_gen captures RATINGS (V/I/P/tol/dielectric/temp)

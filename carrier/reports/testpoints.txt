@@ -3,11 +3,12 @@ schgen test-point coverage gate
 
 rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) owns a probe point or an explicit waiver.
 
-required nets (52):
+required nets (55):
   +1V8                   [rail     ] TP @ power:TP4
   +1V8_REG               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +2V5_VADJ              [rail     ] TP @ fmc:TP1
   +3V3                   [rail     ] TP @ power:TP3
+  +3V3_AUX               [rail     ] TP @ board_aux:TP1
   +3V3_CAM               [rail     ] TP @ bringup_modules:TP4
   +3V3_HDMI_RX           [rail     ] TP @ bringup_modules:TP2
   +3V3_HDMI_TX           [rail     ] TP @ bringup_modules:TP1
@@ -26,6 +27,8 @@ required nets (52):
   +VBUS_IN               [rail     ] TP @ pd_input:TP1
   +VIN                   [rail     ] TP @ pd_input:TP2
   +VIN_SYS               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
+  AUX_I2C_SCL            [i2c      ] TP @ board_aux:TP2
+  AUX_I2C_SDA            [i2c      ] TP @ board_aux:TP3
   CAM_EN                 [enable   ] TP @ camera:TP3
   CAM_SCL                [i2c      ] TP @ camera:TP1
   CAM_SDA                [i2c      ] TP @ camera:TP2
@@ -66,4 +69,4 @@ waivers — author-declared, verbatim (5):
 
 errors: none
 
-TESTPOINTS: PASS (47/52 required nets covered, 5 waived)
+TESTPOINTS: PASS (50/55 required nets covered, 5 waived)

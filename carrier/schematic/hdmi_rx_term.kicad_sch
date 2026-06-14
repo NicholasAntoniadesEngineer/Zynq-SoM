@@ -620,7 +620,7 @@
 		(uuid "664a31a1-1ae4-54f6-b054-3563e22e4474")
 		(property
 			"Reference"
-			"R10008"
+			"R12008"
 			(at 50.902 99.06 0)
 			(effects
 				(font
@@ -684,7 +684,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "R10008")
+					(reference "R12008")
 					(unit 1)
 				)
 			)
@@ -701,7 +701,7 @@
 		(uuid "4498a072-bb34-50a9-8bda-6bbe1b08f10c")
 		(property
 			"Reference"
-			"R10007"
+			"R12007"
 			(at 78.843 99.06 0)
 			(effects
 				(font
@@ -765,7 +765,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "R10007")
+					(reference "R12007")
 					(unit 1)
 				)
 			)
@@ -782,7 +782,7 @@
 		(uuid "e12a88f4-37c1-5d66-8941-a96b0d0bd6e9")
 		(property
 			"Reference"
-			"R10006"
+			"R12006"
 			(at 106.782 99.06 0)
 			(effects
 				(font
@@ -846,7 +846,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "R10006")
+					(reference "R12006")
 					(unit 1)
 				)
 			)
@@ -863,7 +863,7 @@
 		(uuid "759bb41d-41d8-5bcd-9aa5-8a74181f742d")
 		(property
 			"Reference"
-			"R10005"
+			"R12005"
 			(at 134.722 99.06 0)
 			(effects
 				(font
@@ -927,7 +927,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "R10005")
+					(reference "R12005")
 					(unit 1)
 				)
 			)
@@ -944,7 +944,7 @@
 		(uuid "8055ed4a-8c3a-5672-b026-5249c3c41da2")
 		(property
 			"Reference"
-			"R10004"
+			"R12004"
 			(at 162.662 99.06 0)
 			(effects
 				(font
@@ -1008,7 +1008,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "R10004")
+					(reference "R12004")
 					(unit 1)
 				)
 			)
@@ -1025,7 +1025,7 @@
 		(uuid "7a38a092-198f-5258-9ccb-e612f34428b2")
 		(property
 			"Reference"
-			"R10003"
+			"R12003"
 			(at 190.602 99.06 0)
 			(effects
 				(font
@@ -1089,7 +1089,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "R10003")
+					(reference "R12003")
 					(unit 1)
 				)
 			)
@@ -1106,7 +1106,7 @@
 		(uuid "22d7b5b9-e86f-5e7e-991e-e161da4d66d0")
 		(property
 			"Reference"
-			"R10002"
+			"R12002"
 			(at 218.542 99.06 0)
 			(effects
 				(font
@@ -1170,7 +1170,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "R10002")
+					(reference "R12002")
 					(unit 1)
 				)
 			)
@@ -1187,7 +1187,7 @@
 		(uuid "205ba17e-db27-54ec-9a49-a8db38ea71fa")
 		(property
 			"Reference"
-			"R10001"
+			"R12001"
 			(at 246.482 99.06 0)
 			(effects
 				(font
@@ -1251,7 +1251,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "R10001")
+					(reference "R12001")
 					(unit 1)
 				)
 			)
@@ -1268,7 +1268,7 @@
 		(uuid "4934be7b-b7a6-5230-9b41-a4b3056edd01")
 		(property
 			"Reference"
-			"#PWR10001"
+			"#PWR12001"
 			(at 48.26 104.14 0)
 			(effects
 				(font
@@ -1318,7 +1318,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "#PWR10001")
+					(reference "#PWR12001")
 					(unit 1)
 				)
 			)
@@ -1335,7 +1335,7 @@
 		(uuid "9c6c45fb-0239-5967-be3a-d5cd8dad116a")
 		(property
 			"Reference"
-			"#PWR10002"
+			"#PWR12002"
 			(at 76.2 104.14 0)
 			(effects
 				(font
@@ -1385,7 +1385,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "#PWR10002")
+					(reference "#PWR12002")
 					(unit 1)
 				)
 			)
@@ -1402,7 +1402,7 @@
 		(uuid "d9b0277c-8cdb-5898-8429-e7dcac415a12")
 		(property
 			"Reference"
-			"#PWR10003"
+			"#PWR12003"
 			(at 104.14 104.14 0)
 			(effects
 				(font
@@ -1452,7 +1452,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "#PWR10003")
+					(reference "#PWR12003")
 					(unit 1)
 				)
 			)
@@ -1469,7 +1469,7 @@
 		(uuid "35bf5105-6d4f-5b44-971f-2df0eeb2db39")
 		(property
 			"Reference"
-			"#PWR10004"
+			"#PWR12004"
 			(at 132.08 104.14 0)
 			(effects
 				(font
@@ -1519,7 +1519,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "#PWR10004")
+					(reference "#PWR12004")
 					(unit 1)
 				)
 			)
@@ -1536,7 +1536,7 @@
 		(uuid "bb6951b1-fa7a-5de0-b93a-78ee22a8a22c")
 		(property
 			"Reference"
-			"#PWR10005"
+			"#PWR12005"
 			(at 160.02 104.14 0)
 			(effects
 				(font
@@ -1586,7 +1586,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "#PWR10005")
+					(reference "#PWR12005")
 					(unit 1)
 				)
 			)
@@ -1603,7 +1603,7 @@
 		(uuid "cba70706-872d-531a-a5c7-de399755e55f")
 		(property
 			"Reference"
-			"#PWR10006"
+			"#PWR12006"
 			(at 187.96 104.14 0)
 			(effects
 				(font
@@ -1653,7 +1653,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "#PWR10006")
+					(reference "#PWR12006")
 					(unit 1)
 				)
 			)
@@ -1670,7 +1670,7 @@
 		(uuid "1d6b3520-6678-5b13-ac81-a400734c3f6a")
 		(property
 			"Reference"
-			"#PWR10007"
+			"#PWR12007"
 			(at 215.9 104.14 0)
 			(effects
 				(font
@@ -1720,7 +1720,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "#PWR10007")
+					(reference "#PWR12007")
 					(unit 1)
 				)
 			)
@@ -1737,7 +1737,7 @@
 		(uuid "76b3559d-6beb-5059-be31-8694878bbfc8")
 		(property
 			"Reference"
-			"#PWR10008"
+			"#PWR12008"
 			(at 243.84 104.14 0)
 			(effects
 				(font
@@ -1787,7 +1787,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8a423326-7c89-5fe5-8f98-7d26b0d81668"
-					(reference "#PWR10008")
+					(reference "#PWR12008")
 					(unit 1)
 				)
 			)
