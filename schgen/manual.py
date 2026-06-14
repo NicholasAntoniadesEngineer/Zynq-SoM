@@ -420,6 +420,49 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("After JTAG enumerates: request boot modes via the BOOTSEL "
              "DIP + SC reset and")
     L.append("verify QSPI/SD boots per the decode table above.")
+    L.append("")
+
+    # ---- stage 6: board services (+3V3_AUX manual expansion) ---------------
+    L.append("## Stage 6 — board services (+3V3_AUX expansion, optional)")
+    L.append("")
+    L.append("Sources: `carrier/subsystems/board_aux.py`, "
+             "`carrier/subsystems/board_services.py`,")
+    L.append("`carrier/subsystems/board_qwiic.py`.")
+    L.append("")
+    L.append("A SELF-CONTAINED manually-gated rail, separate from the central "
+             "DIP fabric:")
+    L.append("`board_aux.U1` (SY6280, 523 mA limit) gates `+3V3` -> "
+             "`+3V3_AUX`, enabled by")
+    L.append("`board_aux.SW1` position 1 (DSHP04 DIP) — it **defaults OFF** "
+             "(100k pulldown).")
+    L.append("Leave it OFF unless you need the board services below.")
+    L.append("")
+    L.append(f"1. **Enable.** Close `board_aux.SW1` pos 1; probe "
+             f"{_probe('+3V3_AUX', tps)} = 3.3 V "
+             f"(the rail status LED also lights).")
+    L.append("2. **I2C** reaches the SC bus through the `board_aux.U2` "
+             "PCA9306 isolator — the")
+    L.append("   AUX devices are cut off from `STM32_I2C2` until this rail is "
+             "up (no")
+    L.append("   back-powering). On the AUX segment: `0x51` **ID-EEPROM** "
+             "(`board_services.U1`")
+    L.append("   24AA025E48, A0 strapped high) with a factory **EUI-48 MAC** "
+             "for the RJ45;")
+    L.append("   `0x52` **RTC** (`board_services.U2` RV-3028-C7), `BT1` CR1220 "
+             "backup. **Keep")
+    L.append("   the trickle charger OFF** — `BT1` is a PRIMARY cell (see the "
+             "firmware contract).")
+    L.append("3. **Watchdog** (`board_services.U3` TPS3823): unpowered until "
+             "this rail is on,")
+    L.append("   and WDI floats (watchdog disabled) until the PL drives "
+             "`WATCHDOG_KICK` (J3.29).")
+    L.append("   Its reset is a PL EVENT on `WATCHDOG_RST_N` (J3.31) — never a "
+             "hard board")
+    L.append("   reset. Arm it only after the fabric is configured.")
+    L.append("4. **QWIIC** (`board_qwiic.J1`): the gated 3.3 V + isolated AUX "
+             "I2C, ESD-clamped")
+    L.append("   at the connector. Hot-plug external modules only with this "
+             "rail enabled.")
 
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(L) + "\n")

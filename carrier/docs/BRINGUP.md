@@ -184,3 +184,27 @@ export PS_SRST_B; debugger-initiated PS resets go through the SC (dossier (a)).
 
 After JTAG enumerates: request boot modes via the BOOTSEL DIP + SC reset and
 verify QSPI/SD boots per the decode table above.
+
+## Stage 6 — board services (+3V3_AUX expansion, optional)
+
+Sources: `carrier/subsystems/board_aux.py`, `carrier/subsystems/board_services.py`,
+`carrier/subsystems/board_qwiic.py`.
+
+A SELF-CONTAINED manually-gated rail, separate from the central DIP fabric:
+`board_aux.U1` (SY6280, 523 mA limit) gates `+3V3` -> `+3V3_AUX`, enabled by
+`board_aux.SW1` position 1 (DSHP04 DIP) — it **defaults OFF** (100k pulldown).
+Leave it OFF unless you need the board services below.
+
+1. **Enable.** Close `board_aux.SW1` pos 1; probe board_aux.TP1 = 3.3 V (the rail status LED also lights).
+2. **I2C** reaches the SC bus through the `board_aux.U2` PCA9306 isolator — the
+   AUX devices are cut off from `STM32_I2C2` until this rail is up (no
+   back-powering). On the AUX segment: `0x51` **ID-EEPROM** (`board_services.U1`
+   24AA025E48, A0 strapped high) with a factory **EUI-48 MAC** for the RJ45;
+   `0x52` **RTC** (`board_services.U2` RV-3028-C7), `BT1` CR1220 backup. **Keep
+   the trickle charger OFF** — `BT1` is a PRIMARY cell (see the firmware contract).
+3. **Watchdog** (`board_services.U3` TPS3823): unpowered until this rail is on,
+   and WDI floats (watchdog disabled) until the PL drives `WATCHDOG_KICK` (J3.29).
+   Its reset is a PL EVENT on `WATCHDOG_RST_N` (J3.31) — never a hard board
+   reset. Arm it only after the fabric is configured.
+4. **QWIIC** (`board_qwiic.J1`): the gated 3.3 V + isolated AUX I2C, ESD-clamped
+   at the connector. Hot-plug external modules only with this rail enabled.
