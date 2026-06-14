@@ -19,9 +19,9 @@ regulators (16) — numbered as in carrier/docs/power_tree.svg:
   (11) bringup_modules:U9   SY6280AAC            +5V -> +5V_HDMI_TX    load 0.058 A / limit 0.523 A (11%)  in 0.058 A [load_switch] ILIM = 6800/13000R = 523 mA
   (12) fmc:U1   TLV75725PDYDR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)
   (13) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 0.518 A / limit 3.529 A (15%)  in 0.518 A [efuse] ILIM = 18000/5100R = 3529 mA
-  (14) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.635 A / limit 3.000 A (88%)  in 1.932 A [buck] TI 3 A synchronous buck (SW->L->rail)
-  (15) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
-  (16) power_som:U4   TPS54302DDCR        +VIN -> +5V_SOM        load 2.004 A / limit 3.000 A (67%)  in 0.518 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (14) power:U2   TPS54302DDCR         +5V -> +3V3_REG       load 2.635 A / limit 3.000 A (88%)  in 1.932 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (15) power:U3   AP2112K-1.8         +3V3 -> +1V8_REG       load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
+  (16) power_som:U4   TPS54302DDCR    +VIN_SYS -> +5V_SOM        load 2.004 A / limit 3.000 A (67%)  in 0.518 A [buck] TI 3 A synchronous buck (SW->L->rail)
 
 shunt bridges (series R rail->rail, power_mon):
   power_mon:RS1 +VIN -> +VIN_SYS
@@ -80,7 +80,7 @@ declared draws (c.draws — every number cites its source):
 
 rail totals (declared + child regulator inputs):
   +1V8               0.006 A  @ 1.8 V
-  +1V8_REG           0.000 A  @ 1.8 V
+  +1V8_REG           0.006 A  @ 1.8 V
   +2V5_VADJ          0.400 A  @ 2.5 V
   +3V3               2.635 A  @ 3.3 V
   +3V3_AUX           0.211 A  @ 3.3 V
@@ -89,29 +89,23 @@ rail totals (declared + child regulator inputs):
   +3V3_HDMI_TX       0.006 A  @ 3.3 V
   +3V3_LCD           0.104 A  @ 3.3 V
   +3V3_PMOD          0.204 A  @ 3.3 V
-  +3V3_REG           0.000 A  @ 3.3 V
+  +3V3_REG           2.635 A  @ 3.3 V
   +3V3_SC            0.021 A  @ 3.3 V
   +3V3_SD            0.254 A  @ 3.3 V
   +3V3_USER_LED      0.010 A  @ 3.3 V
   +5V                2.950 A  @ 5.0 V
   +5V_HDMI_TX        0.058 A  @ 5.0 V
   +5V_LCD            0.453 A  @ 5.0 V
-  +5V_REG            0.000 A  @ 5.0 V
+  +5V_REG            2.950 A  @ 5.0 V
   +5V_SOM            2.004 A  @ 4.7 V
   +5V_USB            0.503 A  @ 5.0 V
   +VBUS_IN           0.518 A  @ 20.0 V
   +VIN               0.518 A  @ 20.0 V
-  +VIN_SYS           0.000 A  @ 20.0 V
+  +VIN_SYS           0.518 A  @ 20.0 V
 
 notes — resolved audits, recomputed every run (1):
-  + VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.20 uF at the receptacle (+VBUS_IN) — within the ~10 uF cSnkBulk guidance; 50.2 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~51 mA.
-
-FINDINGS — decisions needed (1):
-  * PARALLEL-SOURCE QUESTION on +3V3: these rails are OUTPUTS of carrier regulators (power.py TPS54302/AP2112K) AND appear on SoM J1 contract pins (+3V3: J1.24-27, +1V8: J1.56/58/60) while the SoM's own Power sheet regulates same-named rails on-module (MPM3834 stages with 3V3_EN/PG + 1V8_EN/PG). If the SoM exports its rails on those pins, linking them to the carrier's bucks puts two regulators in parallel on one net — needs an explicit decision (rename one side, sense-only pins, or drop one source) before layout. Facts from som_interface.json + som/schematic/Power.kicad_sch; nothing changed here.
-
-warnings (1):
-  WARNING: shunt-bridge rail +VIN_SYS feeds nothing — power.py shunt rail split pending (PLAN POWER_LIBS flag — power_mon RS1 output feeds nothing yet)
+  + VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.20 uF at the receptacle (+VBUS_IN) — within the ~10 uF cSnkBulk guidance; 10.0 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~10 mA.
 
 errors: none
 
-POWER TREE: PASS (0 errors, 1 findings, 1 warnings)
+POWER TREE: PASS (0 errors, 0 findings, 0 warnings)

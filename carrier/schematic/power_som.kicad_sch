@@ -1807,7 +1807,7 @@
 			)
 		)
 		(symbol
-			"schgen:+VIN"
+			"schgen:+VIN_SYS"
 			(power)
 			(pin_numbers
 				(hide yes)
@@ -1833,7 +1833,7 @@
 			)
 			(property
 				"Value"
-				"+VIN"
+				"+VIN_SYS"
 				(at 0 3.556 0)
 				(effects
 					(font
@@ -1865,7 +1865,7 @@
 			)
 			(property
 				"Description"
-				"Power symbol: +VIN rail"
+				"Power symbol: gated +VIN_SYS module rail (SY6280, bring-up dossier)"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1875,7 +1875,7 @@
 				)
 			)
 			(symbol
-				"+VIN_0_1"
+				"+VIN_SYS_0_1"
 				(polyline
 					(pts
 						(xy -0.762 1.27)
@@ -1917,14 +1917,14 @@
 				)
 			)
 			(symbol
-				"+VIN_1_1"
+				"+VIN_SYS_1_1"
 				(pin
 					power_in
 					line
 					(at 0 0 90)
 					(length 0)
 					(name
-						"+VIN"
+						"+VIN_SYS"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -3768,7 +3768,7 @@
 		)
 	)
 	(symbol
-		(lib_id "schgen:+VIN")
+		(lib_id "schgen:+VIN_SYS")
 		(at 34.29 72.39 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3789,7 +3789,7 @@
 		)
 		(property
 			"Value"
-			"+VIN"
+			"+VIN_SYS"
 			(at 34.29 68.834 0)
 			(effects
 				(font

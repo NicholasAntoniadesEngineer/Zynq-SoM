@@ -5,7 +5,7 @@ rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK,
 
 required nets (55):
   +1V8                   [rail     ] TP @ power:TP3
-  +1V8_REG               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
+  +1V8_REG               [rail     ] WAIVED (power_mon): reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)
   +2V5_VADJ              [rail     ] TP @ fmc:TP1
   +3V3                   [rail     ] TP @ power:TP2
   +3V3_AUX               [rail     ] TP @ board_aux:TP1
@@ -14,19 +14,19 @@ required nets (55):
   +3V3_HDMI_TX           [rail     ] TP @ bringup_modules:TP1
   +3V3_LCD               [rail     ] TP @ bringup_modules:TP3
   +3V3_PMOD              [rail     ] TP @ bringup_modules:TP7
-  +3V3_REG               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
+  +3V3_REG               [rail     ] WAIVED (power_mon): reg-side of RS3 — probe across the shunt (the +3V3 TP is the post-shunt/load side)
   +3V3_SC                [rail     ] TP @ bringup_rails:TP1
   +3V3_SD                [rail     ] TP @ bringup_modules:TP5
   +3V3_USER_LED          [rail     ] TP @ bringup_modules:TP8
   +5V                    [rail     ] TP @ power:TP1
   +5V_HDMI_TX            [rail     ] TP @ bringup_modules:TP9, hdmi_tx:TP1
   +5V_LCD                [rail     ] TP @ bringup_modules:TP10, lcd:TP1
-  +5V_REG                [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
+  +5V_REG                [rail     ] WAIVED (power_mon): reg-side of RS2 — probe across the shunt (the +5V TP is the post-shunt/load side)
   +5V_SOM                [rail     ] TP @ power_som:TP1
   +5V_USB                [rail     ] TP @ bringup_modules:TP6
   +VBUS_IN               [rail     ] TP @ pd_input:TP1
   +VIN                   [rail     ] TP @ pd_input:TP2
-  +VIN_SYS               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
+  +VIN_SYS               [rail     ] WAIVED (power_mon): reg-side of RS1 — probe across the shunt (the +VIN @ pd_input TP is the post-shunt/load side)
   AUX_I2C_SCL            [i2c      ] TP @ board_aux:TP2
   AUX_I2C_SDA            [i2c      ] TP @ board_aux:TP3
   CAM_EN                 [enable   ] TP @ camera:TP3
@@ -61,10 +61,10 @@ required nets (55):
   ZYNQ_PS_UART0_TXD      [uart     ] TP @ uart_bridge:TP1
 
 waivers — author-declared, verbatim (5):
-  +1V8_REG               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
-  +3V3_REG               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
-  +5V_REG                (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
-  +VIN_SYS               (power_mon) regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
+  +1V8_REG               (power_mon) reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)
+  +3V3_REG               (power_mon) reg-side of RS3 — probe across the shunt (the +3V3 TP is the post-shunt/load side)
+  +5V_REG                (power_mon) reg-side of RS2 — probe across the shunt (the +5V TP is the post-shunt/load side)
+  +VIN_SYS               (power_mon) reg-side of RS1 — probe across the shunt (the +VIN @ pd_input TP is the post-shunt/load side)
   CHASSIS_GND            (pd_input) chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed
 
 errors: none

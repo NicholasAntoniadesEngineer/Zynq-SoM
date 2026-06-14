@@ -513,7 +513,7 @@ bound ports (502):
 
 rails (25):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: microsd, power, power_mon)
-  +1V8_REG — carrier-local rail (sheets: power_mon)
+  +1V8_REG — carrier-local rail (sheets: power, power_mon)
   +2V5_VADJ — carrier-local rail (sheets: fmc, som_j3)
   +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, lcd, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
   +3V3_AUX — carrier-local rail (sheets: board_aux, board_qwiic, board_services)
@@ -522,19 +522,19 @@ rails (25):
   +3V3_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
   +3V3_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +3V3_PMOD — carrier-local rail (sheets: bringup_modules, pmod)
-  +3V3_REG — carrier-local rail (sheets: power_mon)
+  +3V3_REG — carrier-local rail (sheets: power, power_mon)
   +3V3_SC <- sheets: board_aux, bringup_en, bringup_en_modules, bringup_rails, debug_boot, pd_input, power_mon, som_j1, usb_pd, usbc_otg -> SoM 1 pins
   +3V3_SD — carrier-local rail (sheets: bringup_modules, microsd)
   +3V3_USER_LED — carrier-local rail (sheets: bringup_modules, user_io)
   +5V — carrier-local rail (sheets: bringup_modules, power, power_mon)
   +5V_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
   +5V_LCD — carrier-local rail (sheets: bringup_modules, lcd)
-  +5V_REG — carrier-local rail (sheets: power_mon)
+  +5V_REG — carrier-local rail (sheets: power, power_mon)
   +5V_SOM — P0 REBIND of SoM 'VIN' (the SoM 4.2-5V input; never the 20V +VIN PD rail — wave3_function_map.md P0) <- sheets: power_som, som_j1 -> SoM 14 pins
   +5V_USB — carrier-local rail (sheets: bringup_modules, usbc_otg)
   +VBUS_IN — carrier-local rail (sheets: pd_input, usb_pd)
-  +VIN — carrier-local rail (sheets: pd_input, power, power_mon, power_som)
-  +VIN_SYS — carrier-local rail (sheets: power_mon)
+  +VIN — carrier-local rail (sheets: pd_input, power_mon)
+  +VIN_SYS — carrier-local rail (sheets: power, power_mon, power_som)
   CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_uart_connector, usbc_otg)
   GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
 

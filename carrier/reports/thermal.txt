@@ -6,12 +6,12 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
 
   device                 package                  kind        in->out               Iout/A   Pd/mW   RthJA    Tj/C   limit   mgn/C  verdict
   -----------------------------------------------------------------------------------------------------------------------------------------
-  power_som:U4           TSOT-23-6 (DDC)          buck        +VIN->+5V_SOM          2.004    1644    70.6   166.1   140.0   -26.1  OVER
-  power:U2               TSOT-23-6 (DDC)          buck        +5V->+3V3              2.635    1535    70.6   158.3   140.0   -18.3  OVER
+  power_som:U4           TSOT-23-6 (DDC)          buck        +VIN_SYS->+5V_SOM      2.004    1644    70.6   166.1   140.0   -26.1  OVER
+  power:U2               TSOT-23-6 (DDC)          buck        +5V->+3V3_REG          2.635    1535    70.6   158.3   140.0   -18.3  OVER
   fmc:U1                 SOT-23-5 (DYD, EP->GND pour) ldo         +3V3->+2V5_VADJ        0.400     320    92.5    79.6   115.0    35.4  ok
   bringup_modules:U6     SOT-23-5                 load_switch +5V->+5V_USB           0.503      24   250.0    56.0   140.0    84.0  ok
   bringup_modules:U10    SOT-23-5                 load_switch +5V->+5V_LCD           0.453      19   250.0    54.9   140.0    85.1  ok
-  power:U3               SOT-23-5                 ldo         +3V3->+1V8             0.006       9   250.0    52.2   115.0    62.8  ok
+  power:U3               SOT-23-5                 ldo         +3V3->+1V8_REG         0.006       9   250.0    52.2   115.0    62.8  ok
   bringup_modules:U4     SOT-23-5                 load_switch +3V3->+3V3_CAM         0.304       9   250.0    52.2   140.0    87.8  ok
   bringup_modules:U5     SOT-23-5                 load_switch +3V3->+3V3_SD          0.254       6   250.0    51.5   140.0    88.5  ok
   board_aux:U1           SOT-23-5                 load_switch +3V3->+3V3_AUX         0.211       4   250.0    51.1   140.0    88.9  ok

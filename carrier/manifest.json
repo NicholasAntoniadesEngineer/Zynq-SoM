@@ -14,7 +14,7 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "0a88a193ad5dc41589ca067b76b053a6d652b57907ac0ca0e0ec56184f1634df"
+      "sha256": "33a6fc73d3c90d03302970436372d076f466b7e1e41e61f0130be239fdbcca43"
     },
     {
       "path": "docs/FLOORPLAN.svg",
@@ -22,7 +22,7 @@
     },
     {
       "path": "docs/power_tree.svg",
-      "sha256": "fbdcf854be2bc3b75f8b26a9fbe1f81af31ca9d64b4113f4ea63a7d4dda8677d"
+      "sha256": "e85f1ce2270e5d67a96a807e6c19ed17af94a6f660321294e952ddfacd62a55b"
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
@@ -46,11 +46,11 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "e62a8314efe3fdb1eca3e60aebb1760d03389aa7171c7c7813250f42465c066c"
+      "sha256": "571f4ce0faa677c01081cec72e8601667b485a8e51493e26cb0d11dafb9425ba"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "82804157fa396919f9a8427a6371622bc2ee191e2e606089c72fb18f4e3d9aaa"
+      "sha256": "48b0cc8760871dab401e49fb8b1bd3837fca4513c8f6d433bb7f0f3bcf5a4633"
     },
     {
       "path": "reports/design_rules.txt",
@@ -62,7 +62,7 @@
     },
     {
       "path": "reports/link_report.txt",
-      "sha256": "86d01d2e27bd0870900bcde31bccfb1e78daae4727b07bf1fb523f769ed08582"
+      "sha256": "4163ad55664b1cf796a32cc790230e725db9a447312748fb596e0e5426671d01"
     },
     {
       "path": "reports/part_rules.txt",
@@ -70,19 +70,19 @@
     },
     {
       "path": "reports/power_tree.txt",
-      "sha256": "b0367b1d93da78f22fb19e7eccaf593984f156826605dab7ca070cbdcfbe4ce4"
+      "sha256": "88473078837e1106016ac31c95e8742fe816870408a18e89738525d9dcba3998"
     },
     {
       "path": "reports/spice.txt",
-      "sha256": "6dcbdf2b3b2c47859123902ed9f21d236ad9c9e6fda0ff21c04d7d3b1080161a"
+      "sha256": "960ea8e5fa9d48b51e1bec1ad54b3ee9659bd81ce474a7962e50100bf2c2f352"
     },
     {
       "path": "reports/testpoints.txt",
-      "sha256": "9e87857406e24c35f5050ad25cbc2dbfc1c28043e415ece2151408343a3443ed"
+      "sha256": "5fbfe8d811af70c5426ce37db46502ac8876dd2a7b9aefdd0093b924632b00ed"
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "35f55507f54522c39cd896e7e22d5cc635f054b44d1794a1112a8c64c025bca6"
+      "sha256": "7e51e9b3ca7d2ca167af4c03374aad64368c8997533d5626dca6b9e7d68f0a9d"
     },
     {
       "path": "schematic/board_aux.kicad_sch",
@@ -146,7 +146,7 @@
     },
     {
       "path": "schematic/microsd.kicad_sch",
-      "sha256": "0352e36df34aeb2386d173b999b2dbeba6fa3ad217b5253a9f9e0587094a3648"
+      "sha256": "1ff0c6f813ade085c37f8dacab8d5d75ff9d889afbfc1ec6a1f5ebed989e1672"
     },
     {
       "path": "schematic/pd_input.kicad_sch",
@@ -158,15 +158,15 @@
     },
     {
       "path": "schematic/power.kicad_sch",
-      "sha256": "67ca10ee7b931a33625783e6aa92121fea36388e010b6a5360158408d516c697"
+      "sha256": "4112aebee24bca037ed1c8aefac5e32dbeef1b0be6a3ce0eda1fb9a544e0d835"
     },
     {
       "path": "schematic/power_mon.kicad_sch",
-      "sha256": "5361f5853d6e374eeeac1c072085ceb9c6d9255cd823393f8f7afd4d553121bb"
+      "sha256": "147e2c2d44d8538795f68c6cd44075e0ab01fe3fe989eb5ff28db4e2327af9a8"
     },
     {
       "path": "schematic/power_som.kicad_sch",
-      "sha256": "8a1eba27ecac2a2e504f2db2b123592f453f1741c669dd26594f3e88571c66dc"
+      "sha256": "e2f45420f56599ce5e6a840ba90ef3db55edfb23f796e35786f8545389468a1a"
     },
     {
       "path": "schematic/rj45_connector.kicad_sch",
@@ -407,18 +407,18 @@
           "sheet": "power"
         }
       ],
-      "limit_a": 0.6,
+      "limit_a": null,
       "load_a": 0.006,
       "name": "+1V8",
-      "source": "power:U3 AP2112K-1.8 [ldo]",
+      "source": null,
       "volts": 1.8
     },
     {
       "draws": [],
-      "limit_a": null,
-      "load_a": 0,
+      "limit_a": 0.6,
+      "load_a": 0.006,
       "name": "+1V8_REG",
-      "source": null,
+      "source": "power:U3 AP2112K-1.8 [ldo]",
       "volts": 1.8
     },
     {
@@ -493,10 +493,10 @@
           "sheet": "user_io"
         }
       ],
-      "limit_a": 3.0,
+      "limit_a": null,
       "load_a": 2.635,
       "name": "+3V3",
-      "source": "power:U2 TPS54302DDCR [buck]",
+      "source": null,
       "volts": 3.3
     },
     {
@@ -620,10 +620,10 @@
     },
     {
       "draws": [],
-      "limit_a": null,
-      "load_a": 0,
+      "limit_a": 3.0,
+      "load_a": 2.635,
       "name": "+3V3_REG",
-      "source": null,
+      "source": "power:U2 TPS54302DDCR [buck]",
       "volts": 3.3
     },
     {
@@ -763,7 +763,7 @@
     {
       "draws": [],
       "limit_a": null,
-      "load_a": 0,
+      "load_a": 2.9503,
       "name": "+5V_REG",
       "source": null,
       "volts": 5.0
@@ -825,7 +825,7 @@
     {
       "draws": [],
       "limit_a": null,
-      "load_a": 0,
+      "load_a": 0.5177,
       "name": "+VIN_SYS",
       "source": null,
       "volts": 20.0

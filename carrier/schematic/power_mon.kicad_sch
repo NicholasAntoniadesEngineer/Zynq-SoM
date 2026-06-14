@@ -1714,145 +1714,6 @@
 			(embedded_fonts no)
 		)
 		(symbol
-			"power:PWR_FLAG"
-			(power global)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property
-				"Reference"
-				"#FLG"
-				(at 0 1.905 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"Value"
-				"PWR_FLAG"
-				(at 0 3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"Footprint"
-				""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"Datasheet"
-				""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"Description"
-				"Special symbol for telling ERC where power comes from"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"ki_keywords"
-				"flag power"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol
-				"PWR_FLAG_0_0"
-				(pin
-					power_out
-					line
-					(at 0 0 90)
-					(length 0)
-					(name
-						""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number
-						"1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(symbol
-				"PWR_FLAG_0_1"
-				(polyline
-					(pts
-						(xy 0 0)
-						(xy 0 1.27)
-						(xy -1.016 1.905)
-						(xy 0 2.54)
-						(xy 1.016 1.905)
-						(xy 0 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol
 			"schgen:+1V8_REG"
 			(power)
 			(pin_numbers
@@ -2693,17 +2554,6 @@
 	)
 	(wire
 		(pts
-			(xy 72.39 147.32)
-			(xy 72.39 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "78c4bf75-e862-5f17-8811-f1e68c2905dc")
-	)
-	(wire
-		(pts
 			(xy 91.44 73.66)
 			(xy 87.63 73.66)
 		)
@@ -2711,18 +2561,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "dcd518f7-5e88-56ba-b017-38794c336436")
-	)
-	(wire
-		(pts
-			(xy 85.09 147.32)
-			(xy 85.09 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b5ee42fa-55dc-55fb-90e8-09f6620645db")
+		(uuid "78c4bf75-e862-5f17-8811-f1e68c2905dc")
 	)
 	(wire
 		(pts
@@ -2733,7 +2572,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "edd0b1a9-c895-5f60-9074-890acc0784e7")
+		(uuid "dcd518f7-5e88-56ba-b017-38794c336436")
 	)
 	(wire
 		(pts
@@ -2744,18 +2583,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9b94515e-afad-59d5-972c-aa256d46e630")
-	)
-	(wire
-		(pts
-			(xy 110.49 147.32)
-			(xy 110.49 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3b9b3042-9936-5062-87f1-5fc655cf6e4d")
+		(uuid "b5ee42fa-55dc-55fb-90e8-09f6620645db")
 	)
 	(wire
 		(pts
@@ -2766,7 +2594,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b57eebb3-b216-509e-b9da-6eab0fef6309")
+		(uuid "edd0b1a9-c895-5f60-9074-890acc0784e7")
 	)
 	(wire
 		(pts
@@ -2777,7 +2605,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "63b78619-d26e-541b-8453-30dbcc347aed")
+		(uuid "9b94515e-afad-59d5-972c-aa256d46e630")
 	)
 	(wire
 		(pts
@@ -2788,18 +2616,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c3f954d2-0556-5a5f-badc-036580789d98")
-	)
-	(wire
-		(pts
-			(xy 135.89 147.32)
-			(xy 135.89 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8609b510-aa2c-52f6-a2cf-fcdd275d01d8")
+		(uuid "3b9b3042-9936-5062-87f1-5fc655cf6e4d")
 	)
 	(wire
 		(pts
@@ -2810,7 +2627,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "27a27c0f-d18d-5ceb-81c8-aa38ec6d02bd")
+		(uuid "b57eebb3-b216-509e-b9da-6eab0fef6309")
 	)
 	(wire
 		(pts
@@ -2821,7 +2638,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "65fa2ac4-93d4-588a-8e28-78259b51b213")
+		(uuid "63b78619-d26e-541b-8453-30dbcc347aed")
 	)
 	(wire
 		(pts
@@ -2832,7 +2649,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e640f436-abd5-570a-8231-6d900d6f4ab7")
+		(uuid "c3f954d2-0556-5a5f-badc-036580789d98")
 	)
 	(wire
 		(pts
@@ -2843,7 +2660,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "321453ec-a7cd-502d-bbc5-8f8d30a9da7a")
+		(uuid "8609b510-aa2c-52f6-a2cf-fcdd275d01d8")
 	)
 	(wire
 		(pts
@@ -2854,7 +2671,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c1d4a543-015e-5598-9ae0-6e6db1786d77")
+		(uuid "27a27c0f-d18d-5ceb-81c8-aa38ec6d02bd")
 	)
 	(wire
 		(pts
@@ -2865,7 +2682,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "5e1645db-f28d-5867-af6c-37c729d80e50")
+		(uuid "65fa2ac4-93d4-588a-8e28-78259b51b213")
 	)
 	(wire
 		(pts
@@ -2876,7 +2693,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "8ffd9203-7b2d-5366-ba21-e22ee7b619b1")
+		(uuid "e640f436-abd5-570a-8231-6d900d6f4ab7")
 	)
 	(wire
 		(pts
@@ -2887,7 +2704,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9bbdb5dd-996f-54ef-b06f-b5c06b00eb76")
+		(uuid "321453ec-a7cd-502d-bbc5-8f8d30a9da7a")
 	)
 	(wire
 		(pts
@@ -2898,7 +2715,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "14c099dd-5f97-51b7-a895-52a7577f5122")
+		(uuid "c1d4a543-015e-5598-9ae0-6e6db1786d77")
 	)
 	(wire
 		(pts
@@ -2909,7 +2726,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a0747489-8a19-5a1d-8ee4-78c25e11504b")
+		(uuid "5e1645db-f28d-5867-af6c-37c729d80e50")
 	)
 	(wire
 		(pts
@@ -2920,7 +2737,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "1930dbf2-231d-5644-afcf-017701a34f1a")
+		(uuid "8ffd9203-7b2d-5366-ba21-e22ee7b619b1")
 	)
 	(wire
 		(pts
@@ -2931,7 +2748,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "f250868e-b83c-50b2-b4b9-6763dfb75a2f")
+		(uuid "9bbdb5dd-996f-54ef-b06f-b5c06b00eb76")
 	)
 	(wire
 		(pts
@@ -2942,7 +2759,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "7d51b8a4-e1a3-5e91-a89b-ddc1407a7003")
+		(uuid "14c099dd-5f97-51b7-a895-52a7577f5122")
 	)
 	(wire
 		(pts
@@ -2953,7 +2770,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "153b0b45-bf81-5398-9fbe-0220546f8b95")
+		(uuid "a0747489-8a19-5a1d-8ee4-78c25e11504b")
 	)
 	(wire
 		(pts
@@ -2964,7 +2781,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "44deb226-8768-5520-9673-4c54f17da9ac")
+		(uuid "1930dbf2-231d-5644-afcf-017701a34f1a")
 	)
 	(wire
 		(pts
@@ -2975,7 +2792,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "bfc31933-c359-5e5d-89ae-c205534f7707")
+		(uuid "f250868e-b83c-50b2-b4b9-6763dfb75a2f")
 	)
 	(wire
 		(pts
@@ -2986,7 +2803,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "0cb97fd8-0920-5d9e-8125-32ba9b906cc8")
+		(uuid "7d51b8a4-e1a3-5e91-a89b-ddc1407a7003")
 	)
 	(wire
 		(pts
@@ -2997,7 +2814,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e31b0baa-f89d-5fb7-9274-5d9ba362b67a")
+		(uuid "153b0b45-bf81-5398-9fbe-0220546f8b95")
 	)
 	(wire
 		(pts
@@ -3008,7 +2825,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9b445a7f-8bf6-55db-a00d-92dc874fa7f7")
+		(uuid "44deb226-8768-5520-9673-4c54f17da9ac")
 	)
 	(wire
 		(pts
@@ -3019,7 +2836,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "25ade59b-76fc-504f-b203-be5298369c80")
+		(uuid "bfc31933-c359-5e5d-89ae-c205534f7707")
 	)
 	(wire
 		(pts
@@ -3030,7 +2847,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "995da9a5-357a-5f9b-b066-3c2bfbf12235")
+		(uuid "0cb97fd8-0920-5d9e-8125-32ba9b906cc8")
 	)
 	(wire
 		(pts
@@ -3041,7 +2858,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "58c8c2c9-a151-5811-a84c-6e5c57d2b19d")
+		(uuid "e31b0baa-f89d-5fb7-9274-5d9ba362b67a")
 	)
 	(wire
 		(pts
@@ -3052,7 +2869,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "915044ad-8ea8-5935-b756-a92c1cb9c680")
+		(uuid "9b445a7f-8bf6-55db-a00d-92dc874fa7f7")
 	)
 	(wire
 		(pts
@@ -3063,7 +2880,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "22bc06ae-1074-54ce-8210-9610522fd22f")
+		(uuid "25ade59b-76fc-504f-b203-be5298369c80")
 	)
 	(wire
 		(pts
@@ -3074,7 +2891,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c83be91d-c8b4-5a68-aea9-79adc8dfe982")
+		(uuid "995da9a5-357a-5f9b-b066-3c2bfbf12235")
 	)
 	(wire
 		(pts
@@ -3085,7 +2902,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "a6a9042d-ce18-5166-b512-e4739e81aabc")
+		(uuid "58c8c2c9-a151-5811-a84c-6e5c57d2b19d")
 	)
 	(wire
 		(pts
@@ -3096,7 +2913,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c2db6806-de1a-50b9-bc10-5d4569558816")
+		(uuid "915044ad-8ea8-5935-b756-a92c1cb9c680")
 	)
 	(wire
 		(pts
@@ -3107,7 +2924,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "70639931-47b0-5e32-bce9-c3492418479c")
+		(uuid "22bc06ae-1074-54ce-8210-9610522fd22f")
 	)
 	(wire
 		(pts
@@ -3118,7 +2935,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6213969a-22ce-53b3-abb0-e82e9bb52eaf")
+		(uuid "c83be91d-c8b4-5a68-aea9-79adc8dfe982")
 	)
 	(wire
 		(pts
@@ -3129,7 +2946,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "cf31d7f1-0373-5e05-b442-3cb0b3b11fd6")
+		(uuid "a6a9042d-ce18-5166-b512-e4739e81aabc")
 	)
 	(wire
 		(pts
@@ -3140,7 +2957,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "8a4173ae-ab90-5754-8322-536603c69028")
+		(uuid "c2db6806-de1a-50b9-bc10-5d4569558816")
 	)
 	(wire
 		(pts
@@ -3151,7 +2968,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "e5c42846-d145-5026-9f5c-398635f5a530")
+		(uuid "70639931-47b0-5e32-bce9-c3492418479c")
 	)
 	(wire
 		(pts
@@ -3162,7 +2979,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9699ba2a-1bbc-58f2-9ad2-7a9808b1f64e")
+		(uuid "6213969a-22ce-53b3-abb0-e82e9bb52eaf")
 	)
 	(wire
 		(pts
@@ -3173,7 +2990,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9edf2bc8-7baa-5daf-a24d-91bd22bc84be")
+		(uuid "cf31d7f1-0373-5e05-b442-3cb0b3b11fd6")
 	)
 	(junction
 		(at 106.68 52.07)
@@ -6242,546 +6059,6 @@
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
 					(reference "#PWR20030")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "schgen:+VIN_SYS")
-		(at 72.39 147.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "7658bb89-8875-5f7f-bf70-8c952c4b9255")
-		(property
-			"Reference"
-			"#PWR20032"
-			(at 72.39 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"+VIN_SYS"
-			(at 72.39 143.764 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 72.39 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 72.39 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "62d3458b-91c0-5f8b-bd07-4f407117a95b")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
-					(reference "#PWR20032")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:PWR_FLAG")
-		(at 72.39 149.86 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "10008aab-4725-528b-8d68-cfa141b25a55")
-		(property
-			"Reference"
-			"#FLG20002"
-			(at 72.39 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"PWR_FLAG"
-			(at 72.39 152.4 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 72.39 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 72.39 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "766c59a9-223d-5de3-998c-a83d64fa9d46")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
-					(reference "#FLG20002")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "schgen:+5V_REG")
-		(at 85.09 147.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "43b4480b-05c8-5b6b-9751-08695ec1ec31")
-		(property
-			"Reference"
-			"#PWR20033"
-			(at 85.09 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"+5V_REG"
-			(at 85.09 143.764 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 85.09 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 85.09 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "1c066f01-a85d-5684-b9be-1d6fbe8acdfe")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
-					(reference "#PWR20033")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:PWR_FLAG")
-		(at 85.09 149.86 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "3ba55a90-c017-502a-af34-6450c9e336cc")
-		(property
-			"Reference"
-			"#FLG20003"
-			(at 85.09 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"PWR_FLAG"
-			(at 85.09 152.4 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 85.09 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 85.09 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "7a3a5f94-6a97-5a73-8a15-fccee900de33")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
-					(reference "#FLG20003")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "schgen:+3V3_REG")
-		(at 110.49 147.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "74bda730-f643-5be1-b010-6b7f41143780")
-		(property
-			"Reference"
-			"#PWR20035"
-			(at 110.49 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"+3V3_REG"
-			(at 110.49 143.764 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 110.49 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 110.49 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "d36848ff-a847-5971-8b8e-c28f6f39057b")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
-					(reference "#PWR20035")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:PWR_FLAG")
-		(at 110.49 149.86 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "56f13b59-1ba8-526a-afdb-e8a49c8a0f12")
-		(property
-			"Reference"
-			"#FLG20005"
-			(at 110.49 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"PWR_FLAG"
-			(at 110.49 152.4 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 110.49 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 110.49 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "18581a01-aa14-5339-8414-a6869addeadd")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
-					(reference "#FLG20005")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "schgen:+1V8_REG")
-		(at 135.89 147.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "a56a01d9-d377-573e-ac0f-92a4ccda3f26")
-		(property
-			"Reference"
-			"#PWR20037"
-			(at 135.89 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"+1V8_REG"
-			(at 135.89 143.764 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 135.89 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 135.89 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "0f6fe3e8-5308-538a-8958-a692de90168d")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
-					(reference "#PWR20037")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:PWR_FLAG")
-		(at 135.89 149.86 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "8d4a8558-2edf-58fb-90ca-dc064c36fb62")
-		(property
-			"Reference"
-			"#FLG20007"
-			(at 135.89 147.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"PWR_FLAG"
-			(at 135.89 152.4 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 135.89 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 135.89 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "18c0784b-1561-50b2-86ca-02f80ffeaddd")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/8fc9d49e-9711-5c21-ae8a-322adb5f58f3"
-					(reference "#FLG20007")
 					(unit 1)
 				)
 			)
