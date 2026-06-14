@@ -14,6 +14,8 @@
  *   carrier/subsystems/bringup_en_modules.py
  *   carrier/subsystems/bringup_modules.py
  *   carrier/subsystems/debug_boot.py
+ *   carrier/subsystems/board_aux.py
+ *   carrier/subsystems/board_services.py
  *   carrier/research/debug_boot_pmod.md (BOOTSEL decode, SWD reservation)
  *   carrier/research/power_mon.md (I2C address map)
  *   carrier/research/bringup_power_gating.md (EN-cell semantics, GPIO plan)
@@ -147,6 +149,9 @@
 #define ZC_I2C_ADDR_FUSB302B 0x22  /* USB-PD PHY (usb_pd; fixed address, onsemi DS) */
 #define ZC_I2C_ADDR_INA3221_1 0x40  /* rail monitor #1 (power_mon U1; A0 strap read from the netlist) */
 #define ZC_I2C_ADDR_INA3221_2 0x41  /* rail monitor #2 (power_mon U2; A0 strap read from the netlist) */
+#define ZC_I2C_ADDR_FMC_EEPROM 0x50  /* FMC mezzanine ID EEPROM (fmc; GA0/GA1 grounded, VITA 57.1) */
+#define ZC_I2C_ADDR_ID_EEPROM 0x51  /* board-ID EEPROM w/ EUI-48 MAC (board_services 24AA025E48; A1/A0 straps read from the netlist; on the board_aux-isolated AUX I2C) */
+#define ZC_I2C_ADDR_RTC 0x52  /* RTC (board_services RV-3028; fixed address, Micro Crystal DS; on the board_aux-isolated AUX I2C) */
 /* G3: STM32_I2C2 is a firmware BIT-BANG on the DAC pins (PA4/PA5, no   */
 /* I2C AF; real I2C2 PA8/PA9 is the on-module SC<->Zynq link) -- ~100 kHz */
 #define ZC_I2C_BITBANG_SDA_GPIO_PORT 'A'   /* STM32_I2C2_SDA = STM32_DAC1, J1.49 */

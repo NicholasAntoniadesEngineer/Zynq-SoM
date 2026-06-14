@@ -46,7 +46,8 @@ declared draws (c.draws — every number cites its source):
   +3V3                 15.0 mA  uart_bridge        CP2102N active ~14 mA typ + RST 1k pull-up
   +3V3                  2.0 mA  user_io            4x button 10k pull-ups when pressed
   +3V3_AUX              6.0 mA  board_aux          status LED 3.9mA + 2x4k7 AUX-bus pull-ups
-  +3V3_AUX            205.0 mA  board_services     ID-EEPROM ~1mA + RV-3028 <0.1mA + TPS3823 15uA + INT# 10k pull + QWIIC external 200mA budget
+  +3V3_AUX            200.0 mA  board_qwiic        QWIIC external module budget (200 mA)
+  +3V3_AUX              5.0 mA  board_services     ID-EEPROM ~1mA + RV-3028 <0.1mA + TPS3823 15uA + INT# 10k pull
   +3V3_CAM              4.0 mA  bringup_modules    status LED (330R) on the gated output
   +3V3_CAM            300.0 mA  camera             RPi camera module budget (camera_csi.md: V2 typ ~250 mA)
   +3V3_HDMI_RX          4.0 mA  bringup_modules    status LED (330R) on the gated output

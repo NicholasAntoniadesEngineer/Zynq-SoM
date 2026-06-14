@@ -38,10 +38,18 @@ SOURCES = (
     "carrier/subsystems/bringup_en_modules.py",
     "carrier/subsystems/bringup_modules.py",
     "carrier/subsystems/debug_boot.py",
+    "carrier/subsystems/board_aux.py",
+    "carrier/subsystems/board_services.py",
     "carrier/research/debug_boot_pmod.md (BOOTSEL decode, SWD reservation)",
     "carrier/research/power_mon.md (I2C address map)",
     "carrier/research/bringup_power_gating.md (EN-cell semantics, GPIO plan)",
 )
+
+# board-services I2C devices on the (PCA9306-isolated) AUX segment of
+# STM32_I2C2 — fixed addresses per datasheet; the ID-EEPROM is strap-derived.
+RV3028_ADDR = 0x52             # Micro Crystal RV-3028-C7, fixed 7-bit address
+FMC_EEPROM_ADDR = 0x50         # VITA 57.1 IPMI EEPROM, GA0/GA1 grounded (fmc.py)
+ID_EEPROM_BASE = 0x50          # 24AA025E48: A2 internal=0, A1/A0 strapped
 
 # Rail-override GPIO plan (bringup dossier section 1: "Rails (3) = direct
 # GPIOs"; the carrier->J1 binding itself is a wave-3 deferral — the GPIO
@@ -109,6 +117,36 @@ def _shunt_mohm(c, in_p: str, in_n: str) -> int | None:
     return None
 
 
+def _pin_net(c, ref: str, pin: int):
+    """The net carrying ``ref.pin`` (pins resolve to numbers in the model)."""
+    tag = f"{ref}.{pin}"
+    for n in c.nets.values():
+        if any(f"{p.ref}.{p.pin}" == tag for p in n.pins):
+            return n
+    return None
+
+
+def _id_eeprom_addr(c) -> int:
+    """7-bit address of the board-ID EEPROM, DERIVED from its A1/A0 straps
+    (24AA025E48 pins 4/5): a strap pin on a power rail = 1, on GND = 0. So a
+    mis-strap to 0x50 would be caught by the address-collision check below
+    (it would clash with the FMC EEPROM)."""
+    from schgen.model import NetClass
+    ref = next((r for r, p in c.parts.items()
+                if "24AA025E48" in p.lib_id), None)
+    if ref is None:
+        raise FirmwareError("board_services no longer carries a 24AA025E48 "
+                            "ID-EEPROM — I2C address map stale")
+    addr = ID_EEPROM_BASE
+    for bit, pin in ((0, 5), (1, 4)):            # A0 = pin 5, A1 = pin 4
+        net = _pin_net(c, ref, pin)
+        if net is None:
+            raise FirmwareError(f"ID-EEPROM A{bit} strap (pin {pin}) floats")
+        if net.net_class is NetClass.POWER:
+            addr |= (1 << bit)
+    return addr
+
+
 def generate(out: Path = DEFAULT_OUT) -> Path:
     stm32 = bf.stm32_pin_map()
     rails_c = load_subsystem("bringup_rails").circuit
@@ -118,6 +156,7 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     mods_c = load_subsystem("bringup_modules").circuit
     pmon_c = load_subsystem("power_mon").circuit
     usbpd_c = load_subsystem("usb_pd").circuit
+    services_c = load_subsystem("board_services").circuit
 
     nets: dict[str, bf.Stm32Net] = stm32["nets"]
     internal: dict[str, bf.Stm32Net] = stm32["internal"]
@@ -156,10 +195,21 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
          f"rail monitor #{k} (power_mon {m.ref}; A0 strap read from the "
          f"netlist)")
         for k, m in enumerate(monitors, 1)
+    ] + [
+        ("ZC_I2C_ADDR_FMC_EEPROM", FMC_EEPROM_ADDR,
+         "FMC mezzanine ID EEPROM (fmc; GA0/GA1 grounded, VITA 57.1)"),
+        ("ZC_I2C_ADDR_ID_EEPROM", _id_eeprom_addr(services_c),
+         "board-ID EEPROM w/ EUI-48 MAC (board_services 24AA025E48; A1/A0 "
+         "straps read from the netlist; on the board_aux-isolated AUX I2C)"),
+        ("ZC_I2C_ADDR_RTC", RV3028_ADDR,
+         "RTC (board_services RV-3028; fixed address, Micro Crystal DS; on "
+         "the board_aux-isolated AUX I2C)"),
     ]
     addrs = [a for _, a, _ in addr_rows]
     if len(set(addrs)) != len(addrs):
-        raise FirmwareError(f"I2C address collision: {[hex(a) for a in addrs]}")
+        raise FirmwareError(
+            "I2C address collision: "
+            + ", ".join(f"{n}={hex(a)}" for n, a, _ in addr_rows))
 
     L: list[str] = []
     L.append("/*")

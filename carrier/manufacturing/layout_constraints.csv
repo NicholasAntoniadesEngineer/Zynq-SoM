@@ -470,6 +470,8 @@ AUX_I2C_SCL,board_aux,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board
 AUX_I2C_SDA,board_aux,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_services (the gated peripherals on the isolated AUX bus)
 STM32_I2C2_SCL,board_aux,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)
 STM32_I2C2_SDA,board_aux,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)
+AUX_I2C_SCL,board_qwiic,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_aux / board_services (the isolated AUX I2C bus)
+AUX_I2C_SDA,board_qwiic,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_aux / board_services (the isolated AUX I2C bus)
 AUX_I2C_SCL,board_services,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_aux (PCA9306 isolated side of STM32_I2C2)
 AUX_I2C_SDA,board_services,i2c,I2C,,,,,,,bus=AUX_I2C; speed=400000Hz; deferred: board_aux (PCA9306 isolated side of STM32_I2C2)
 STM32_I2C2_SCL,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)

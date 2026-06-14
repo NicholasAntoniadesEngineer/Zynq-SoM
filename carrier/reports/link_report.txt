@@ -1,19 +1,21 @@
 schgen link report
 ============================================================
-sheets (28): board_aux, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io
+sheets (29): board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io
 
 alias map (rails only, exact, enumerated):
   (no pure spelling aliases)
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (498):
+bound ports (500):
   board_aux:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   board_aux:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
-  board_aux:AUX_I2C_SCL [i2c] -> sheet board_services:AUX_I2C_SCL
-  board_aux:AUX_I2C_SDA [i2c] -> sheet board_services:AUX_I2C_SDA
-  board_services:AUX_I2C_SCL [i2c] -> sheet board_aux:AUX_I2C_SCL
-  board_services:AUX_I2C_SDA [i2c] -> sheet board_aux:AUX_I2C_SDA
+  board_aux:AUX_I2C_SCL [i2c] -> sheet board_qwiic:AUX_I2C_SCL; sheet board_services:AUX_I2C_SCL
+  board_aux:AUX_I2C_SDA [i2c] -> sheet board_qwiic:AUX_I2C_SDA; sheet board_services:AUX_I2C_SDA
+  board_qwiic:AUX_I2C_SDA [i2c] -> sheet board_aux:AUX_I2C_SDA; sheet board_services:AUX_I2C_SDA
+  board_qwiic:AUX_I2C_SCL [i2c] -> sheet board_aux:AUX_I2C_SCL; sheet board_services:AUX_I2C_SCL
+  board_services:AUX_I2C_SCL [i2c] -> sheet board_aux:AUX_I2C_SCL; sheet board_qwiic:AUX_I2C_SCL
+  board_services:AUX_I2C_SDA [i2c] -> sheet board_aux:AUX_I2C_SDA; sheet board_qwiic:AUX_I2C_SDA
   board_services:IO_L16_N_35 -> sheet som_j3:IO_L16_N_35; SoM IO_L16_N_35 (J3.29)
   board_services:IO_L16_P_35 -> sheet som_j3:IO_L16_P_35; SoM IO_L16_P_35 (J3.31)
   bringup_en:BU_DIP_5V0 -> sheet bringup_rails:BU_DIP_5V0
@@ -512,7 +514,7 @@ rails (25):
   +1V8_REG — carrier-local rail (sheets: power_mon)
   +2V5_VADJ — carrier-local rail (sheets: fmc, som_j3)
   +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: board_aux, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
-  +3V3_AUX — carrier-local rail (sheets: board_aux, board_services)
+  +3V3_AUX — carrier-local rail (sheets: board_aux, board_qwiic, board_services)
   +3V3_CAM — carrier-local rail (sheets: bringup_modules, camera)
   +3V3_HDMI_RX — carrier-local rail (sheets: bringup_modules, hdmi_rx)
   +3V3_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
@@ -532,7 +534,7 @@ rails (25):
   +VIN — carrier-local rail (sheets: pd_input, power, power_mon)
   +VIN_SYS — carrier-local rail (sheets: power_mon)
   CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_uart_connector, usbc_otg)
-  GND <- sheets: board_aux, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
+  GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
 
 deferred ports — author-declared, awaiting later waves (1) [WARNING]:
   bringup_en_modules:EN_LCD_BL — awaiting lvds_lcd_power (backlight boost EN provision, dossier 3.2)

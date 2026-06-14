@@ -54,6 +54,11 @@ def aux():
     return _load("board_aux")
 
 
+@pytest.fixture(scope="module")
+def qwiic():
+    return _load("board_qwiic")
+
+
 # --------------------------------------------------------------------------- #
 # both sheets build cleanly (smoke)
 # --------------------------------------------------------------------------- #
@@ -76,7 +81,6 @@ def test_c1_gated_rail_is_the_supply(services):
     assert "U1.6" in p          # EEPROM VCC (pin 6)
     assert "U2.7" in p          # RTC VDD (pin 7)
     assert "U3.5" in p          # watchdog VDD (pin 5)
-    assert "J10.2" in p         # QWIIC 3V3
 
 
 # --------------------------------------------------------------------------- #
@@ -157,3 +161,23 @@ def test_aux_isolator_en_follows_gated_rail(aux):
     pulled_to_aux = any(
         any(p.ref == r for p in aux.nets["+3V3_AUX"].pins) for r in rrefs)
     assert pulled_to_aux, "PCA9306 EN is not pulled to +3V3_AUX"
+
+
+# --------------------------------------------------------------------------- #
+# board_qwiic — external connector with ESD at the connector
+# --------------------------------------------------------------------------- #
+def test_qwiic_esd_clamps_the_external_lines(qwiic):
+    # USBLC6 (U1) 1<->6 / 3<->4 passthrough: connector side on U1.1/U1.3, the
+    # protected pair (-> the bus) on U1.6/U1.4, clamp ref on U1.5 (+3V3_AUX)
+    assert "U1.1" in _pins(qwiic, "QWIIC_SDA")     # external SDA at the array
+    assert "U1.3" in _pins(qwiic, "QWIIC_SCL")
+    assert "U1.6" in _pins(qwiic, "AUX_I2C_SDA")   # protected -> isolated bus
+    assert "U1.4" in _pins(qwiic, "AUX_I2C_SCL")
+    assert "U1.5" in _pins(qwiic, "+3V3_AUX")      # clamp reference rail
+
+
+def test_qwiic_external_pins_never_reach_the_bus_directly(qwiic):
+    # the connector's SDA/SCL must go THROUGH the ESD array, not straight to the
+    # bus (no J1 SDA/SCL pin on AUX_I2C_*)
+    assert not ({"J1.3", "J1.4"} & _pins(qwiic, "AUX_I2C_SDA"))
+    assert not ({"J1.3", "J1.4"} & _pins(qwiic, "AUX_I2C_SCL"))

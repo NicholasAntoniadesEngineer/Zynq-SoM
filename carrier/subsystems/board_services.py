@@ -12,9 +12,9 @@ board_aux), so they obey the same bring-up discipline as every other module
                       DTCXO (no external crystal), VBACKUP coin cell (CR1220,
                       BT1) with automatic switchover, address **0x52**.
   * U3  TPS3823-33  — supervisor + windowed watchdog (see the C2 note below).
-  * J10 SH1.0-4P    — a **QWIIC / STEMMA-QT** expansion port (gated 3V3 + the
-                      isolated AUX I2C), so daughter sensors hang off the
-                      board without touching the always-on management bus.
+  (the QWIIC / STEMMA-QT expansion connector that exposes this same gated 3V3 +
+  isolated AUX I2C lives on its own sheet, board_qwiic, with ESD protection —
+  the carrier's connectors-get-their-own-sheet idiom.)
 
 The bus they share, AUX_I2C, is the isolated side of the board_aux PCA9306, so
 when +3V3_AUX is OFF these chips are powered down AND cut off from the always-on
@@ -32,9 +32,12 @@ THREE independent guards, any one of which alone prevents a power-up reset:
      (WATCHDOG_RST_N -> J3.31) as a firmware-mediated EVENT: software decides
      what a watchdog bite means. A bite can never hard-reset the board.
 
-I2C ADDRESS MAP (7-bit) on STM32_I2C2: 0x20 TCA9535 / 0x22 FUSB302B /
-0x40-0x41 INA3221 / 0x50 FMC-EEPROM / **0x51 ID-EEPROM (A0=1,A1=0)** /
-**0x52 RV-3028 RTC**. No collisions.
+I2C ADDRESS MAP (7-bit). The EEPROM/RTC live on AUX_I2C — the PCA9306-isolated
+segment of STM32_I2C2 — so they SHARE that bus's address space (the isolator is
+transparent when the rail is on). Full map: 0x20 TCA9535 / 0x22 FUSB302B /
+0x40-0x41 INA3221 / 0x50 FMC-EEPROM (all on the always-on trunk) / **0x51
+ID-EEPROM (A0=1,A1=0)** / **0x52 RV-3028 RTC** (both on the gated AUX segment).
+No collisions.
 
 ZYNQ-AGNOSTIC (C3).  The only SoM-side signals are the two watchdog lines,
 homed to spare PL bank-35 IO by their verbatim som_interface.json net names
@@ -124,19 +127,10 @@ def circuit() -> Circuit:
     # (C2 g3). Push-pull -> no pull-up; PL internal pull holds it when AUX off.
     c.port("IO_L16_P_35", "U3.RESET#", expect=J3_MAP)    # WATCHDOG_RST_N
 
-    # ===== 4. QWIIC / STEMMA-QT expansion (gated 3V3 + isolated AUX I2C) ====
-    # pads 1..4 = QWIIC GND / +3V3 / SDA / SCL (VERIFY pad-1 vs silk at layout)
-    c.use_part("ZX-SH1.0-4PWT", ref="J10")
-    c.net("GND", "J10.1")
-    c.net("+3V3_AUX", "J10.2")
-    c.port("AUX_I2C_SDA", "J10.3", kind="i2c", role="sda", bus="AUX_I2C",
-           speed_hz=400_000, expect=AUX_BUS)
-    c.port("AUX_I2C_SCL", "J10.4", kind="i2c", role="scl", bus="AUX_I2C",
-           speed_hz=400_000, expect=AUX_BUS)
-    c.net("GND", "J10.5", "J10.6")                        # shell/mounting tabs
+    # (the QWIIC connector + its ESD array live on board_qwiic; AUX_I2C reaches
+    #  it as a port, +3V3_AUX as the gated power net)
 
     # ---- power-tree budget (round 4): everything rides the gated rail ------
-    c.draws("+3V3_AUX", 0.205,
-            "ID-EEPROM ~1mA + RV-3028 <0.1mA + TPS3823 15uA + INT# 10k pull "
-            "+ QWIIC external 200mA budget")
+    c.draws("+3V3_AUX", 0.005,
+            "ID-EEPROM ~1mA + RV-3028 <0.1mA + TPS3823 15uA + INT# 10k pull")
     return c
