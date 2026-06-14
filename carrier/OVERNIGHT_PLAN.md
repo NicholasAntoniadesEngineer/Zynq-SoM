@@ -177,7 +177,9 @@ byte-identical goldens + the determinism check.
 - [ ] DX-4 [BIG] place.py split into template modules behind registry (AFTER DX-1)
 
 ### TRACK GENPOLISH — visual fidelity
-- [ ] GP-1 TITLE-1 populated title block (emit.py)
+- [x] GP-1 TITLE-1 populated title block (emit.py) — title=circuit title, company
+      "Zynq SoM Carrier", generated-by comment, NO date (determinism); all 26
+      sheets, render-verified (A4 + A3), goldens re-blessed
 - [ ] GP-2 CUE-1 net-class stroke cues
 - [ ] GP-3 SIZE-1 A2/A1 sheet-size ladder
 - [ ] GP-4 LABEL-1 directional label shapes
