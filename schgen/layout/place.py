@@ -2611,7 +2611,11 @@ class _Engine:
                 for p in sdef.pins}
         p_in = p_en = p_gnd = p_en_uvlo = None
         p_aux: list = []      # left-edge aux power_out (e.g. LMR33630 VCC bias)
+        p_biased: list = []   # left-edge pin: series-R UP to a NON-input rail +
+        #                       bypass-C DOWN to GND (e.g. LM61460 BIAS->VOUT,
+        #                       DS SNVSBD5D 9.2.2.9) — labeled, R/C in rank cols
         gnd_pts: list = []    # ALL distinct bottom GND/EP points (incl. the EP)
+        in_rail_name = self._stage_in_rail(ref)   # the buck's VIN rail (or None)
         for p in sdef.pins:
             net = self.net_of(ref, p.number)
             if net is None:
@@ -2629,6 +2633,20 @@ class _Engine:
                 # (Edit 3 below). Without this it matches no role and falls to
                 # the raise — the "U1_VCC islet, opens forbidden" failure.
                 p_aux.append((pins[p.number], net.name))
+            elif p.rotation == 0 and net.net_class is NetClass.SIGNAL \
+                    and len(self.pull.get(net.name, [])) == 1 \
+                    and len(self.hang.get(net.name, [])) == 1 \
+                    and self.pull[net.name][0][1] != in_rail_name:
+                # BIASED-AUX idiom (NOT an EN-UVLO strap): a left-side pin whose
+                # SIGNAL net has exactly ONE series R UP to a power rail that is
+                # NOT the input rail (the OUTPUT rail) plus ONE bypass C DOWN to
+                # GND. This is the LM61460 BIAS->VOUT tie (DS SNVSBD5D 9.2.2.9):
+                # R = 1-10 ohm series VOUT->BIAS, C = 1 uF BIAS bypass. It cannot
+                # ride the input-rail run (its R taps the OUTPUT), so it is drawn
+                # as a labeled pin with its R/C in the generic rank columns (see
+                # the render block below). Kept ABOVE the EN-UVLO branch so a real
+                # EN strap (whose top IS the input rail) still falls through.
+                p_biased.append((pins[p.number], net.name))
             elif p.rotation == 0 and net.net_class is NetClass.SIGNAL \
                     and net.name in self.pull and net.name in self.hang:
                 # EN-UVLO-divider idiom (always-on regulators, e.g. power.py's
@@ -2784,6 +2802,27 @@ class _Engine:
             self.hang.pop(aux_net, None)
             self.pull.pop(aux_net, None)
             self.pl.plan(aux_net, pa, (xcol, pa[1]))
+        # BIASED-AUX pins (LM61460 BIAS->VOUT, DS 9.2.2.9): the BIAS net taps the
+        # OUTPUT rail through a series R and bypasses to GND — it can NOT ride the
+        # input-rail run, and a self-contained left column would cross the input
+        # rail in this congested left edge. Render it the datasheet way the engine
+        # already uses for leftover straps: a LOCAL LABEL off the pin (extending
+        # left), leaving the series R + bypass C in self.pull/self.hang so the
+        # generic _pull_rank_columns draws them as labeled rank columns (R in its
+        # rail group, C in the GND group) that merge back by the net label. No
+        # column collisions, no wire over the input rail.
+        for (pb, bias_net) in sorted(p_biased, key=lambda pn: pn[0][1]):
+            # extend the stub LEFT past any EN port label at an adjacent pin so
+            # the two labels never overlap (BIAS sits one pin above EN here): the
+            # stub clears the leftmost edge of every already-placed left label
+            # whose y-band overlaps this one.
+            lx = round(pb[0] - sp.port_run, 3)
+            for b in self.pl.boxes:
+                if b.kind == "label" and b.x1 <= pb[0] \
+                        and b.y0 - 2 * U <= pb[1] <= b.y1 + 2 * U:
+                    lx = min(lx, gfloor(b.x0 - 2 * U))
+            self.pl.plan(bias_net, pb, (lx, pb[1]))
+            self.llabel(bias_net, lx, pb[1], 180)
         for p in sdef.pins:                       # explicit NC for authored NCs
             if self.net_of(ref, p.number) is None and p.etype != "no_connect":
                 self.pl.no_connects.append(NoConnect(*pins[p.number]))
@@ -2892,6 +2931,48 @@ class _Engine:
                 # tie the cap's fb_net pin to the divider midpoint
                 self.pl.plan(fb_net, (x_div, y_mid), (x_ff, y_mid),
                              (x_ff, far_ff[1]))
+            # CFF + RFF feedforward chain (DS SNVSBD5D 9.2.2.10, LM61460 U1): a
+            # CFF across the FB-top R with a 1-k RFF IN SERIES into the FB node to
+            # damp the noise path. Topology = out_rail -[CFF]- mid -[RFF]- fb_net,
+            # extracted as a trunk float-chain rooted on fb_net (NOT a bare cap in
+            # self.pull, so the loop above does not see it). Render it as a
+            # parallel column to the right of the divider: CFF drops VERTICALLY
+            # from the out_rail run to the CFF_mid node (same as a plain feedfwd
+            # cap), and RFF runs HORIZONTALLY back along that node's level into the
+            # divider midpoint (fb_net) — so the two-element series never stacks
+            # into a wire-over-part overlap.
+            ff_chains = [ch for ch in self.float_chains
+                         if ch.kind == "trunk" and ch.root == fb_net
+                         and len(ch.legs) == 2
+                         and ch.legs[-1][2] == out_rail]
+            for ch in ff_chains:
+                (rff_ref, _a0, mid_net) = ch.legs[0]    # fb_net <-> CFF_mid
+                (cff_ref, _a1, _rail) = ch.legs[1]      # CFF_mid <-> out_rail
+                rhl = 3.81                               # Device:R half-length
+                # RFF runs HORIZONTALLY at the divider-midpoint level y_mid, so
+                # the fb_net tie is a single CLEAR horizontal run from the divider
+                # (exactly mirroring how a plain feedforward cap ties at y_mid).
+                # Its left pin = fb_net, right pin = CFF_mid.
+                x_rff = slot
+                nodes.append(x_rff)
+                self._horizontal_2pin(rff_ref, x_rff, y_mid, fb_net)
+                self.pl.plan(fb_net, (x_div, y_mid), (x_rff - rhl, y_mid))
+                # CFF drops VERTICALLY from the out_rail run one column further
+                # right; its CFF_mid far pin ties back to the RFF right pin at
+                # y_mid via a short L (down its own column, across at y_mid).
+                x_ff = gceil(x_rff + sp.cap_pitch)
+                nodes.append(x_ff)
+                slot = gceil(x_ff + sp.cap_pitch)
+                self.pl.plan(out_rail, (x_ff, y_sw), (x_ff, y_sw + 5.08))
+                cff_far, _ = self._vertical_2pin(cff_ref, x_ff, y_sw + 5.08,
+                                                 out_rail, downward=True)
+                # CFF_mid: RFF right pin (y_mid) -> jog down at a CLEAR x between
+                # the two columns -> across to the CFF far pin (below y_mid), so
+                # no vertical run sits over the CFF body at x_ff.
+                x_jog = gsnap((x_rff + rhl + x_ff) / 2)
+                self.pl.plan(mid_net, (x_rff + rhl, y_mid), (x_jog, y_mid),
+                             (x_jog, cff_far[1]), (x_ff, cff_far[1]))
+                self.float_chains.remove(ch)
         # rail-rooted chains (PG LED columns)
         for ch in [ch for ch in self.float_chains
                    if ch.kind == "rail" and ch.root == out_rail]:

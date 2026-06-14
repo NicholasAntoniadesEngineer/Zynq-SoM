@@ -389,23 +389,31 @@ def _stage_vout(power: Circuit, ref: str, value: str) -> float | None:
     vref = next((v for k, v in FB_VREF.items() if k in value), None)
     if vref is None:
         return None
-    # FB net = SIGNAL net shared by the regulator and exactly 2 resistors
+    # FB net = a SIGNAL net on the regulator carrying the divider: a TOP R whose
+    # far end is a POWER rail (the output sense) and a BOTTOM R returning to GND.
+    # Classify by each resistor's far net, NOT by counting — a feedforward CFF+RFF
+    # chain (DS SNVSBD5D 9.2.2.10, LM61460 U1) adds a 3rd resistor (RFF) on the FB
+    # net whose far end is the CFF mid node (neither the rail nor GND); it is
+    # IGNORED, exactly as the spice gate's _buck_fb does, so the setpoint stays
+    # correct. (Mirrors _stage_vout's intent: the top arm is the R that does NOT
+    # return to GND AND lands on the output rail.)
     for net in power.nets.values():
         if net.net_class != NetClass.SIGNAL \
                 or not any(pr.ref == ref for pr in net.pins):
             continue
         rs = [pr.ref for pr in net.pins if pr.ref.startswith("R")]
-        if len(rs) != 2:
+        if len(rs) < 2:
             continue
         top = bot = None
         for r in rs:
-            other = {n.name for n in power.nets.values()
+            other = {n.name: n.net_class for n in power.nets.values()
                      if n.name != net.name
                      and any(pr.ref == r for pr in n.pins)}
             if "GND" in other:
                 bot = parse_value_ohms(power.parts[r].value)
-            else:
+            elif any(cls is NetClass.POWER for cls in other.values()):
                 top = parse_value_ohms(power.parts[r].value)
+            # else: RFF (far end is the CFF mid SIGNAL node) — ignore
         if top and bot:
             return round(vref * (1 + top / bot), 2)
     return None

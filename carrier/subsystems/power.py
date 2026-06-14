@@ -96,8 +96,10 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   to add phase boost / improve transient response on the internally
   compensated TPS54302 with low-ESR ceramic output caps. Part: CGA0603-
   C0G750J500JT, TDK 0603 C0G 50 V (LCSC C22399620, LIVE 2026-06-13: Ext,
-  stock 8,020, min-qty 1). (U1 LM61460 keeps a clean 2-element FB divider; its
-  CFF is optional per SNVSBD5D and omitted — see the stage-1 block.)
+  stock 8,020, min-qty 1). U1 (LM61460) follows the SAME idiom per its OWN
+  datasheet (SNVSBD5D 9.2.2.10 + Table 9-2/9-5): a 22 pF C0G CFF (C27, C1653)
+  ACROSS the FB-top R1, with a 1-k RFF (R12, C21190) in series into FB to damp
+  the noise path — see the stage-1 FB feedforward block.
 - +5V_SOM EN clamp (always-on strap, NO bring-up port; PWR-1 FIX — see the
   header "EN voltage table"): R12 = 10k SERIES from +VIN to EN (C25804,
   reused 10k); D5 = MMSZ5231B 5.1 V / 500 mW zener EN -> GND (LIVE-verified
@@ -118,10 +120,13 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   100/110 = 1.64 V on Vgs — barely above the 1.45 V max Vth, no guaranteed
   turn-on. Dropping it to 1k (a pure RC gate-stop now, not a divider) lets
   Vgs see +1V8 * 100/101 = 1.78 V, a solid margin over Vth-max.
-- Input caps: 2x 10u/1206 (C13585) + 100n (C1591) on +VIN; 22u/0805
-  (C45783) + 100n on the +5V input of the second buck; outputs 2x 22u each;
-  LDO 1u in / 1u out (C15849). All Basic except C1591 (reclassified
-  Extended per today's API — kept: 50 V rating covers the 20 V input).
+- Input caps: U1 (LM61460, DS 9.2.2.5) = 2x 10u/1206 bulk (C13585) + 2x 100n
+  50 V X7R HF (C1/C25, C1591), ONE 100 nF per VIN/PGND pin pair as the DS
+  mandates; the second buck (TPS54302) keeps 22u/0805 (C45783) + 100n on its
+  +5V input. Outputs: U1 = 3x 22u (DS 9.2.2.4 Table 9-5 5 V); the +3V3 buck
+  keeps 2x 22u. LDO 1u in / 1u out (C15849). U1 BIAS bypass 1u (C28, C15849).
+  All Basic except C1591 (reclassified Extended per the API — kept: its 50 V
+  X7R rating is exactly the 9.2.2.5 requirement and covers the 21 V input).
 
 Pin maps cross-checked: parts/<MPN>/<MPN>.py (EasyEDA) == KiCad stock
 symbols used here (TPS54302: 1 GND 2 SW 3 VIN 4 FB 5 EN 6 BOOT;
@@ -178,12 +183,22 @@ def circuit() -> Circuit:
     #     this sheet's BOM). 600 kHz keeps the existing 10 uH SWPA8040S: ripple
     #     dIL = Vout*(Vin-Vout)/(Vin*L*fSW) = 5*16/(21*10u*600k) = 0.63 A p-p,
     #     Ipk = 2.95 + 0.32 = 3.27 A < the 4 A Isat.
-    #   CBOOT = 100 nF SW->CBOOT (DS pin 14); RBOOT short to CBOOT (DS EC table
-    #     "RBOOT short to CBOOT" -> fastest SW edge, lowest HS loss): RBOOT(13)
-    #     and CBOOT(14) are the SAME node (BOOT_5V0), a 0R wire, NO component.
-    #   BIAS (pin 1): NC — the BIAS->VOUT tie is an OPTIONAL efficiency knob
-    #     (DS 8.3.6); BIAS<3.1 V self-supplies the LDO from VIN (small Iq cost).
-    #   VCC (pin 2): 1 uF to AGND (DS pin 2 internal-LDO bypass).
+    #   L = 10 uH (DS 9.2.2.3): the Eq-11 (D<50%) MINIMUM is L >= 0.2*Vout/fSW =
+    #     0.2*5/600k = 1.67 uH; 10 uH is well above min, so the part runs stable
+    #     with no subharmonic oscillation (inductance must not be LESS than the
+    #     minimum). 9.2.2.3 note: a larger-than-min inductor "results in less
+    #     output cap being needed to limit ripple but more output cap to manage
+    #     large load transients" -> the 3x22 uF COUT (above the 2x22 uF min)
+    #     covers that. KEEP the existing 10 uH SWPA8040S (no churn).
+    #   CBOOT = 100 nF SW->CBOOT (DS 9.2.2.6, X7R >=10 V); RBOOT short to CBOOT
+    #     (DS 9.2.2.7 "RBOOT can be shorted") -> fastest SW edge, lowest HS loss:
+    #     RBOOT(13) and CBOOT(14) are the SAME node (BOOT_5V0), a 0R wire, NO
+    #     component.
+    #   BIAS (pin 1): TIED to +5V_REG via R11 (10 ohm series) + C28 (1 uF bypass)
+    #     per DS 9.2.2.9 — the BIAS->VOUT tie reduces internal-LDO power loss
+    #     I_LDO*(VIN-VOUT) at VOUT = 5 V (efficiency improvement; see the BIAS
+    #     block below). BIAS max voltage 16 V >> 5 V.
+    #   VCC (pin 2): 1 uF to AGND (DS 9.2.2.8 internal-LDO bypass, 16 V ceramic).
     #   RT (pin 6): 22k to GND (fSW set). PGOOD (pin 5): NC (unused open-drain;
     #     D1 rail-up LED is the PG indicator).
     #   AGND (3) ties to PGND1/PGND2 (DS pin 3 layout note).
@@ -214,8 +229,22 @@ def circuit() -> Circuit:
     c.net("+VIN_SYS", "U1.8", "U1.12")                            # VIN1(8)+VIN2(12), post-RS1
     c.net("GND", "U1.9", "U1.11", "U1.3")                         # PGND1(9)+PGND2(11)+AGND(3): heat path
     c.port("EN_5V0", "U1.7", expect=EXPECT_BRINGUP)              # EN/SYNC (pin 7)
-    for ref, val, fp, lcsc in (("C1", "100n", C0603, "C1591"),
-                               ("C2", "10u", C1206, "C13585"),
+    # INPUT CAPS (DS SNVSBD5D 9.2.2.5): bulk + the MANDATORY per-VIN-pin HF caps.
+    #   - 2x 10 uF bulk (C2/C3, 1206): satisfies the ">=10 uF ceramic at the input"
+    #     minimum (9.2.2.5); 50 V-class 1206 covers the 21 V +VIN_SYS rail.
+    #   - 2x 100 nF HF (C1/C25, 50 V X7R): 9.2.2.5 REQUIRES a "small case size
+    #     100-nF ceramic ... at EACH input/ground pin pair, VIN1/PGND1 and
+    #     VIN2/PGND2, immediately adjacent to the device ... The two 100 nF must
+    #     also be rated at 50 V with an X7R or better dielectric." The VQFN-HR
+    #     (RJR) splits VIN/PGND across opposite package sides, so ONE 100 nF goes
+    #     at each VIN/PGND location (DS example: "two 4.7-uF and two 100-nF, one
+    #     at each VIN/PGND"). C1591 = Samsung CL10B104KB8NNNC, 100 nF 50 V X7R
+    #     0603 (live JLC 2026-06-15: Extended, stock 2,081,102) — meets the
+    #     50 V/X7R rule. The netlist puts both on +VIN_SYS->GND (the placer/PCB
+    #     fans one to each VIN pad); the split is a layout/footprint property.
+    for ref, val, fp, lcsc in (("C1", "100n", C0603, "C1591"),  # HF, VIN1/PGND1
+                               ("C25", "100n", C0603, "C1591"), # HF, VIN2/PGND2
+                               ("C2", "10u", C1206, "C13585"),  # bulk (>=10 uF)
                                ("C3", "10u", C1206, "C13585")):
         c.part(ref, "Device:C", val, fp, LCSC=lcsc)
         c.net("+VIN_SYS", f"{ref}.1")                              # buck-input filter, post-RS1
@@ -223,11 +252,25 @@ def circuit() -> Circuit:
     c.part("C24", "Device:C", "1u", C0603, LCSC="C15849")          # VCC int-LDO bypass
     c.net("U1_VCC", "U1.2", "C24.1")                              # VCC (pin 2), local bias
     c.net("GND", "C24.2")
-    # BIAS (pin 1) author NC: the BIAS->VOUT tie is an OPTIONAL efficiency knob
-    # (DS 8.3.6 / 9.2.2.9 — "reduce LDO power loss"); with BIAS < 3.1 V the part
-    # self-supplies the internal LDO from VIN1/VIN2 (DS 8.3.6), valid at a small
-    # Iq cost. Left NC to keep U1's aux-pin count low for the placer.
-    c.nc("U1.1")                                                  # BIAS (pin 1) — optional, NC
+    # BIAS (pin 1) TIED TO VOUT (DS SNVSBD5D 9.2.2.9): "Because VOUT = 5 V in
+    # this design, the BIAS pin is tied to VOUT to reduce LDO power loss. The
+    # output voltage is supplying the LDO current instead of the input voltage.
+    # The power saving is I_LDO*(VIN - VOUT)." With VIN ~21 V this is the larger
+    # saving (9.2.2.9 / 8.3.14). 9.2.2.9 adds: "a series resistor, 1 ohm to
+    # 10 ohm, can be added between VOUT and BIAS" to keep VOUT noise/transients
+    # off BIAS, and "a bypass capacitor of 1 uF or higher can be added close to
+    # the BIAS pin." Max allowed BIAS voltage is 16 V (>> 5 V) — safe.
+    #   R11 = 10 ohm series +5V_REG -> BIAS (top of the 1-10 ohm band: max noise
+    #     filtering; the BIAS LDO sink current is tiny so the IR drop is
+    #     negligible). C22859 = UNI-ROYAL 0603WAF100JT5E 10R 0603 (live JLC
+    #     2026-06-15: Basic, stock 3,513,381).
+    #   C28 = 1 uF BIAS bypass -> GND, close to pin 1. C15849 = Samsung
+    #     CL10A105KB8NNNC 1 uF 50 V X5R 0603 (Basic, stock 6,321,848).
+    c.part("R11", "Device:R", "10R", R_FP, LCSC="C22859")          # BIAS series (1-10 ohm)
+    c.net("+5V_REG", "R11.1")                                      # tie BIAS to VOUT
+    c.part("C28", "Device:C", "1u", C0603, LCSC="C15849")          # BIAS bypass
+    c.net("BIAS_5V0", "U1.1", "R11.2", "C28.1")                   # BIAS (pin 1)
+    c.net("GND", "C28.2")
     c.part("R10", "Device:R", "22k", R_FP, LCSC="C31850")          # RT: fSW=600kHz (DS Eq 2)
     c.net("RT_5V0", "U1.6", "R10.1")                             # RT (pin 6)
     c.net("GND", "R10.2")
@@ -241,7 +284,21 @@ def circuit() -> Circuit:
     # side; the board +5V rail (post-RS2) carries the measured consumers (U2
     # input, C7/C8). RS2 bridges +5V_REG -> +5V so consumer draw is measured.
     c.net("+5V_REG", "L1.2")
-    for ref in ("C5", "C6"):
+    # OUTPUT CAPS (DS SNVSBD5D 9.2.2.4 + Table 9-3/9-5): 3x 22 uF ceramic for the
+    # 5 V output. Table 9-5 (the 5 V application BOM) lists 3x22 uF COUT at 400 k,
+    # 1000 k and 2100 kHz; Table 9-3 5 V "better transient" at 2.1 MHz is also
+    # 3x22 uF. This RAISES the previous 2x22 uF (the Table 9-3 5 V *minimum* at
+    # 2.1 MHz) by one cap. Justification at this design's L/fSW: 9.2.2.3 notes a
+    # larger-than-minimum inductor (here 10 uH >> the ~1.67 uH Eq-11 minimum at
+    # 600 kHz) "results in less output capacitance being needed to limit output
+    # ripple but more output capacitance being needed to manage large load
+    # transients" — so with the big 10 uH the transient term dominates and 3x22 uF
+    # gives the datasheet-coherent transient margin at 5 V / 6 A. (A 47 uF/1210 was
+    # considered per Table 9-3 400 kHz; the well-stocked Basic 47 uF 1210 parts on
+    # JLC are 6.3 V-rated — too low for a 5 V rail with margin — and the 25 V
+    # 47 uF/1210 is Extended/low-stock, so 3x22 uF reuses the proven 25 V Basic
+    # C45783 and lands on the Table 9-5 5 V value.)
+    for ref in ("C5", "C6", "C26"):
         c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
         c.net("+5V_REG", f"{ref}.1")                              # output bulk, reg-side
         c.net("GND", f"{ref}.2")
@@ -250,8 +307,26 @@ def circuit() -> Circuit:
     c.net("+5V_REG", "R1.1")                                       # FB senses the regulated node
     c.net("FB_5V0", "U1.4", "R1.2", "R2.1")                       # FB (pin 4)
     c.net("GND", "R2.2")
-    # (no FB feedforward cap on U1: keep FB a clean 2-element divider the router
-    #  handles; the LM61460 is internally compensated, so CFF is optional.)
+    # FB FEEDFORWARD (DS SNVSBD5D 9.2.2.10 + Tables 9-2/9-3/9-5): a CFF across the
+    # FB-top resistor "is used to improve phase margin and transient response of
+    # circuits which have output capacitors with low ESR" (the all-ceramic COUT
+    # here). The ESR-zero rule passes: ceramic COUT has its ESR zero well above
+    # 200 kHz, so 9.2.2.10's "if the ESR zero ... is below 200 kHz, no CFF" does
+    # NOT exclude us; and VOUT = 5 V < 14 V, so the "no CFF above 14 V" rule does
+    # not apply either. Value = 22 pF C0G: Table 9-2 (5 V rows) and Table 9-5 (5 V
+    # BOM) both list CFF = 22 pF. 9.2.2.10 also says: "Since this capacitor can
+    # conduct noise from the output of the circuit directly to the FB node of the
+    # IC, a 1-kohm resistor, RFF, can be placed in series with CFF" (Table 9-2 5 V
+    # RFF = 1 kohm) — so the network is +5V_REG -> C27(CFF) -> RFF(R12) -> FB_5V0,
+    # i.e. CFF bridges the FB-top R1 with RFF damping the noise path into FB.
+    # (The 3 TPS54302 bucks use the same all-ceramic feedforward idiom, PWR-4.)
+    #   C27 = 22 pF 50 V C0G 0603 (CL10C220JB8NNNC, live JLC 2026-06-15: Basic,
+    #     stock 1,017,863). R12 = 1 k 0603 (C21190, the sheet's existing 1k).
+    c.part("C27", "Device:C", "22p", C0603, LCSC="C1653")          # CFF (DS 9.2.2.10)
+    c.part("R12", "Device:R", "1k", R_FP, LCSC="C21190")           # RFF series (DS 9.2.2.10)
+    c.net("+5V_REG", "C27.1")                                      # CFF top = VOUT (across R1)
+    c.net("CFF_5V0", "C27.2", "R12.1")                            # CFF -> RFF noise damp
+    c.net("FB_5V0", "R12.2")                                       # RFF -> FB node
     c.part("D1", "Device:LED", "red", LED_FP, LCSC="C2286")        # +5V present indicator
     c.part("R3", "Device:R", "1k", R_FP, LCSC="C21190")
     c.net("+5V_REG", "D1.2")                                       # LED reg-side (regulator up)
