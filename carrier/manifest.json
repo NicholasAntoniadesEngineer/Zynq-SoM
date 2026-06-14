@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "20c9dd4af2b03f3c2747a0554b077a2ef937b4d9df97e73f120063b89206cadc"
+      "sha256": "4e8d70518f79fc72aec7be0169d73d08a360678ee0d3f950160fa91b702e1ccf"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -22,7 +22,7 @@
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "e609fef727aefd782d6e1b32400e42a41fea17a37166b093b3f53b411e1ca3cb"
+      "sha256": "33ce182024cd876000f111c98e010599cab8eb00f093f1764e3ee8d07d9cf003"
     },
     {
       "path": "docs/power_tree.svg",
@@ -42,7 +42,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "179b727f70985c024eb5ac431a296b0bcc0f1931050e746249fa516bb25c8bcc"
+      "sha256": "c7a0af9f091b5c27b0cf4d1761bdc5dcf1cf969e26eb4af7a9969d23c261c734"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -58,11 +58,11 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "a0f7c0bfc0a20ec9af5212fb18d6e9a8554aa914de376283936a24786b9bd11c"
+      "sha256": "e2da273f59f6256f238e20b70a453a0ce7febbd94fecbb3980818c9b20bbdebc"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "998c35ff37d72e0dfeed396038aa10269dd83b93809d4506dab5eeaaa50e91f4"
+      "sha256": "1f81d33f8ed1bb91038b539a2bece0a8bc3e226f1927ded859b09dc4ff2553b4"
     },
     {
       "path": "reports/design_rules.txt",
@@ -142,7 +142,7 @@
     },
     {
       "path": "schematic/hdmi_rx.kicad_sch",
-      "sha256": "a36cb51d4869206c99dd06004806c72a280d41340a26dee15af1fe6cc24108bc"
+      "sha256": "f9d829ba57e1c122657f2f5f79a27c90a0ac66ecbfbf90bd28e3111a20fdc3de"
     },
     {
       "path": "schematic/hdmi_rx_term.kicad_sch",
@@ -158,7 +158,7 @@
     },
     {
       "path": "schematic/microsd.kicad_sch",
-      "sha256": "1ff0c6f813ade085c37f8dacab8d5d75ff9d889afbfc1ec6a1f5ebed989e1672"
+      "sha256": "59ba157f769ff6938e5a1f540c8e598a3d79e8d50419cb4d5cfed9e1a3e8294c"
     },
     {
       "path": "schematic/pd_input.kicad_sch",
@@ -220,9 +220,9 @@
   "bom": {
     "cost": null,
     "extended": null,
-    "lines": 90,
+    "lines": 91,
     "missing": [],
-    "parts": 402
+    "parts": 403
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [
