@@ -2,10 +2,28 @@
 
 Autonomous overnight session summary. Detailed tracker:
 [carrier/OVERNIGHT_PLAN.md](carrier/OVERNIGHT_PLAN.md). **Everything below is on
-`master`** (fast-forwarded, ~20 commits), each gated by a full regression —
-board PASS **28 sheets** + selftest **53/53** + m1 + byte-determinism + pytest
-**154** — before it landed. Working tree clean. (Two completed tracks since the
-first draft: the independent CC short/open gate, and all four board-HW blocks.)
+`master`** (fast-forwarded, ~28 commits), each gated by a full regression —
+board PASS **29 sheets** + selftest **53/53** + m1 + byte-determinism + pytest
+**178** — before it landed. Working tree clean.
+
+## Continuation tracks (after the first draft)
+
+1. **VERIFY — independent CC short/open gate.** A 2nd oracle, disjoint from
+   kicad-cli (net-blind union-find over the emitted geometry); agrees pin-for-
+   pin on all sheets. The board is now electrically proven by two code paths.
+2. **Board HW — ALL FOUR blocks** (see the dedicated section below).
+3. **Two adversarial re-investigation audits** (11 dimensions, ~30 agents).
+   Every finding independently re-verified — several confident "HIGH/CRITICAL"
+   findings were FALSE POSITIVES whose fixes would have *introduced* bugs, and
+   are documented-rejected (a DSHP04 mis-wire that never enables the rail; a
+   non-existent PCA9306 EN float; an ~11 µA EN back-feed; an over-stated USBLC6
+   "ineffective" claim). REAL fixes landed: firmware I2C-map completeness
+   (ID-EEPROM/RTC/FMC addresses, EEPROM strap-derived so a mis-strap trips the
+   collision check); a **VCCO bank-rail drift gate** (xdc IOSTANDARD map vs
+   som_conn_gen — a C3 safety net); QWIIC ESD on its own sheet with the clamp
+   referenced to always-on +3V3; the RTC primary-cell/trickle-charger safeguard
+   elevated into the firmware contract; DFM/assembly notes; a derived bring-up
+   "Stage 6 — board services". ~30 new pytest cases lock it all.
 
 ## What landed (by track)
 
