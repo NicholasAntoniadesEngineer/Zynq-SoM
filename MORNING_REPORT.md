@@ -2,9 +2,10 @@
 
 Autonomous overnight session summary. Detailed tracker:
 [carrier/OVERNIGHT_PLAN.md](carrier/OVERNIGHT_PLAN.md). **Everything below is on
-`master`** (fast-forwarded, ~18 commits), each gated by a full regression —
-board PASS 26 sheets + selftest **53/53** + m1 + byte-determinism + pytest
-**154** — before it landed. Working tree clean.
+`master`** (fast-forwarded, ~20 commits), each gated by a full regression —
+board PASS **28 sheets** + selftest **53/53** + m1 + byte-determinism + pytest
+**154** — before it landed. Working tree clean. (Two completed tracks since the
+first draft: the independent CC short/open gate, and all four board-HW blocks.)
 
 ## What landed (by track)
 
@@ -35,18 +36,28 @@ a verified artifact.
    the INA3221 shunts; the power sheet must be decongested, cleanest by splitting
    the +5V_SOM/U4 buck to its own sheet). A 3-part big-rock, not a quick fix.
 
-## Constraints honoured
+## Board HW — ALL FOUR landed (was deferred; now done)
 
-- New HW (EEPROM/RTC/QWIIC/supervisor) **not yet added** (deferred); when added
-  it will be **manual-power-enable gated (C1)** and the watchdog **armed only
-  after rails are stable (C2)**.
+Two new sheets, **board_aux** (gate + PCA9306 I2C isolator) and **board_services**
+(EEPROM + RTC + watchdog + QWIIC), split so neither defeats the placer. board
+PASS @ **28 sheets**, every gate green, determinism + preflight PASS (+$4.56/bd).
+
+- **ID-EEPROM** 24AA025E48 — factory **EUI-48 MAC** for the RJ45 (0x51).
+- **RTC** RV-3028-C7 — integrated DTCXO (no crystal) + CR1220 backup (0x52).
+- **Watchdog** TPS3823-33 + **QWIIC** expansion.
+- **C1**: all on the default-OFF, DIP-gated +3V3_AUX (SY6280). **C2**: watchdog
+  unpowered at power-up + WDI-float-disable + RESET# as a firmware-mediated PL
+  event — *three* guards, never a hard POR. **C3**: watchdog rides PL bank-35,
+  xdc-sourced. **LAW 0**: PCA9306 isolates the gated bus from always-on I2C.
+- ⚠ low review: verify QWIIC J10 pad-1 vs silk before fab (noted in docstring).
+
 - Device id stays **live-sourced** from the SoM project (C3).
 
 ## Deferred (big-rocks / risk — better with your review, not done overnight)
 
-Bus notation, per-part rule engine, `place.py` split, board HW additions,
-BOM+CPL (DS-1), part lifecycle/EOL snapshot, inline-parts→folders. All tracked
-with rationale in the plan.
+Bus notation, per-part rule engine, `place.py` split, BOM+CPL (DS-1), part
+lifecycle/EOL snapshot, inline-parts→folders. All tracked with rationale in the
+plan.
 
 ## How to verify
 
