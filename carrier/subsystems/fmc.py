@@ -25,16 +25,16 @@ the 1 A part HARD on the bare DBV). Swapped to the TLV75725PDYDR (DYD,
 SOT-23-5 thermal-pad / EP variant, RthJA ~92.5 C/W with the EP soldered to
 a ground pour): the SAME 0.32 W now lifts Tj only ~30 C -> Tj ~80 C at
 Ta=50 C, a comfortable margin below the 125 C limit. The EP pad (footprint
-pad 6) is bonded to the GND copper pour in layout — the standard idiom for
-a part whose symbol omits the thermal pad.
+pad 6) is netted to GND in the schematic (DEF-E) — a real, gate-checkable
+ground connection, not merely a layout pour bond.
 
 Part already in the repo (parts/TLV75725PDYDR, LCSC C35209004, LIVE
-2026-06-13: Extended, stock 133, min-qty 1). Authored via use_part with a
-lib_id OVERRIDE: the orderable identity (MPN/LCSC/datasheet) + the DYD
-thermal-pad FOOTPRINT come from the parts/ folder, but the DRAWING stays
-the well-typed stock KiCad AP2204K-1.5 5-pin symbol (the EasyEDA-generated
-DYD symbol is all-passive and does not fit the regulator template). Pin
-map 1=IN 2=GND 3=EN 4=NC 5=OUT. Honest budget unchanged at 0.4 A
+2026-06-13: Extended, stock 133, min-qty 1). Authored via use_part with the
+in-repo 6-pin TLV75725PDYDR symbol (DEF-E): the orderable identity
+(MPN/LCSC/datasheet), the DYD thermal-pad FOOTPRINT and the DRAWING all come
+from the parts/ folder, so pin 6 = EP exists in the model and is netted to
+GND (vs the former AP2204K-1.5 5-pin override, whose symbol omitted the EP).
+Pin map 1=IN 2=GND 3=EN 4=NC 5=OUT 6=EP. Honest budget unchanged at 0.4 A
 continuous, now with real thermal headroom.
 
 Ports use FUNCTIONAL pair-suffixed names (hdmi pattern; the linker infers
@@ -166,19 +166,18 @@ def circuit() -> Circuit:
     # VADJ LDO: +3V3 -> TLV75725 (DYD thermal-pad) -> +2V5_VADJ (EN strapped
     # on; 0.4 A budget). PWR-3 thermal swap: source the orderable identity
     # (MPN/LCSC/datasheet) + the DYD thermal-pad FOOTPRINT from the in-repo
-    # parts/TLV75725PDYDR folder, but KEEP the well-typed stock AP2204K-1.5
-    # 5-pin drawing (lib_id override) — the EasyEDA DYD symbol is all-passive
-    # and does not fit the regulator template, and the EP thermal pad (pad 6)
-    # is bonded to the GND copper pour in layout (the standard idiom for a
-    # symbol that omits EP). Pin-by-number map 1=IN 2=GND 3=EN 4=NC 5=OUT.
+    # parts/TLV75725PDYDR folder. DEF-E: use that folder's 6-pin symbol (no
+    # lib_id override) so pin 6 = EP exists in the model and is netted to GND
+    # in the schematic below — a real, gate-checkable ground connection, not
+    # just a layout pour bond. Pin-by-number map 1=IN 2=GND 3=EN 4=NC 5=OUT
+    # 6=EP.
     c.use_part("TLV75725PDYDR", ref="U1",
-               lib_id="Regulator_Linear:AP2204K-1.5",
                footprint="TLV75725PDYDR:TLV75725PDYDR")
     c.part("C3", "Device:C", "1u", C0603, LCSC="C15849")        # LDO in
     c.part("C4", "Device:C", "10u", C0805, LCSC="C15850")       # LDO out
     c.part("C5", "Device:C", "100n", C0603, LCSC="C1591")       # at connector
     c.net("+3V3", "U1.1", "U1.3", "C3.1")
-    c.net("GND", "U1.2", "C3.2", "C4.2", "C5.2")
+    c.net("GND", "U1.2", "U1.6", "C3.2", "C4.2", "C5.2")
     c.nc("U1.4")
     c.net("+2V5_VADJ", "U1.5", "C4.1", "C5.1",
           *[f"J1.{p}" for p in sorted(sig["VADJ"])])

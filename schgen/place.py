@@ -2064,8 +2064,14 @@ class _Engine:
         if not n_caps:
             return
         span = (n_caps - 1) * sp.cap_pitch
-        if n_caps > 4:
-            # a cap FARM: its own row under the whole flow
+        if n_caps > 5:
+            # a cap FARM: its own row under the whole flow. Up to 5 caps still
+            # cluster compactly inline beside/under the cell (a 5-wide cluster
+            # spans 4*cap_pitch ~= 40.6 mm — still tidy); only genuinely large
+            # banks need the full-width farm row. Demoting the farm to inline
+            # for the 5-cap case keeps a regulator + its in/out decoupling
+            # (e.g. the fmc VADJ LDO: in/out caps + the connector bypass) off
+            # an extra bottom row, which the A3 height budget cannot spare.
             ex0, _, _, ey1 = self._extent()
             col_x = gsnap(ex0 + 4 * U)
             cy = gceil(ey1 + 8 * U)
