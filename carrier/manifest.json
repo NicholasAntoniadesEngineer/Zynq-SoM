@@ -1,8 +1,12 @@
 {
   "artifacts": [
     {
+      "path": "Zynq_Carrier.kicad_pcb",
+      "sha256": "c791cfaa2e01330ff352b21d7b51e9e2bfc9f4d873457996bc748199a61fca1c"
+    },
+    {
       "path": "Zynq_Carrier.kicad_pro",
-      "sha256": "dac745c114d398195f2a9dfe4b2900ad7098c175cbfce25eab58a5aedc32f3a9"
+      "sha256": "9ea48afa6a4b60cbe6f34b1aa81e37b492743859b6c96456493519900c4c9e36"
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
@@ -33,12 +37,20 @@
       "sha256": "8402e75257a9c18eb73046a4e58217091b98776ee0818ce189e81d09076752eb"
     },
     {
+      "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
+      "sha256": "9adac96d47b7e8bca538c9296bb186307311be0a42cc8a066d6a7b04a28bd8d8"
+    },
+    {
       "path": "manufacturing/bom_jlc.csv",
       "sha256": "d6ae4d49bcf552a5f8353ea1c751c48feeb99e706da1aa22774726ed9b0106b2"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
       "sha256": "f87bb53299f8ea22b062cfa9930eab548d1562375bd04db889423112a30dddb8"
+    },
+    {
+      "path": "manufacturing/layout_constraints.kicad_dru",
+      "sha256": "7176e4f947307b215b2ab56e706420686d750dedc9a647f6859916c327a262f0"
     },
     {
       "path": "manufacturing/preflight_report.txt",

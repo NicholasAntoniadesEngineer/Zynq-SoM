@@ -202,11 +202,13 @@ def _bom(sheets, preflight: dict | None) -> dict:
 _ARTIFACT_GLOBS = (
     "Zynq_Carrier.kicad_sch",
     "Zynq_Carrier.kicad_pro",
+    "Zynq_Carrier.kicad_pcb",          # PCB foundation (Stream D)
     "schematic/*.kicad_sch",
     "fpga/*.xdc",
     "firmware/*.h",
     "manufacturing/*.csv",
     "manufacturing/*.txt",
+    "manufacturing/*.kicad_dru",       # layout + PCB-foundation design rules
     "reports/*.txt",
     "docs/*.svg",
     "docs/BRINGUP.md",

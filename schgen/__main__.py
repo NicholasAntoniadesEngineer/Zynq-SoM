@@ -308,6 +308,26 @@ def cmd_bom(args: argparse.Namespace) -> int:
 CARRIER = REPO_ROOT / "carrier"
 
 
+def _pcb_error_count(pcb_path: Path) -> int:
+    """kicad-cli pcb drc at ERROR severity → number of real (non-unrouted)
+    violations. Unrouted-net items are reported separately by kicad-cli and do
+    NOT count as DRC violations, so a clean foundation returns 0."""
+    import tempfile as _tf
+    with _tf.TemporaryDirectory(prefix="schgen_pcbdrc_") as td:
+        rpt = Path(td) / "drc.json"
+        subprocess.run(
+            ["kicad-cli", "pcb", "drc", "--format", "json",
+             "--severity-error", "-o", str(rpt), str(pcb_path)],
+            capture_output=True, text=True)
+        if not rpt.exists():
+            return -1
+        try:
+            data = json.loads(rpt.read_text())
+        except Exception:  # noqa: BLE001
+            return -1
+    return len(data.get("violations", []))
+
+
 def _ahash(png: Path) -> str:
     """16x16 average hash — perceptual, robust to PNG byte noise."""
     from PIL import Image
@@ -741,6 +761,36 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"FLOORPLAN: FAIL — {exc}")
         ok_all = False
 
+    # PCB FOUNDATION (Stream D): an openable .kicad_pcb seeded from the merged
+    # board netlist just emitted — outline + forced 4-layer Sig/GND/PWR/Sig
+    # stackup + net classes + .kicad_dru + every BOM footprint placed net-
+    # accurately (NOT routed). Additive: a DRC ERROR (beyond the expected
+    # unrouted-net items) fails the board; warnings (silk, lib-not-in-config)
+    # do not. Runs AFTER build_board so it merges into the same .kicad_pro.
+    from schgen.generate import pcb as pcb_mod
+    try:
+        pcb_res = pcb_mod.generate(run_drc=True)
+        drc = pcb_res["drc"]
+        derr = (drc or {}).get("n_violations", 0)
+        # n_violations counts errors+warnings; the gate is the error count via
+        # a second strict pass (severity-error only) inside run_pcb_drc's rc.
+        pcb_errs = _pcb_error_count(pcb_res["pcb"])
+        print(f"PCB: {pcb_res['pcb'].relative_to(REPO_ROOT)} "
+              f"({pcb_res['board_w']:g} x {pcb_res['board_h']:g} mm, 4L "
+              f"Sig/GND/PWR/Sig, {pcb_res['placed']}/{pcb_res['total']} "
+              f"footprints, {len(pcb_res['classes'])} net classes, "
+              f"{pcb_res['nets']} nets) — DRC {pcb_errs} errors, "
+              f"{(drc or {}).get('n_unconnected', 0)} unrouted (expected)")
+        if pcb_res["deferred"]:
+            for d in pcb_res["deferred"]:
+                print(f"  PCB DEFERRED: {d}")
+        if pcb_errs:
+            print(f"  PCB DRC: FAIL — {pcb_errs} non-unrouted error(s)")
+            ok_all = False
+    except Exception as exc:  # noqa: BLE001
+        print(f"PCB: FAIL — {exc}")
+        ok_all = False
+
     (rep_dir / "gates.txt").write_text(
         "\n".join(verdicts)
         + f"\nLINK: {'PASS' if res.ok else 'FAIL'}"
@@ -963,6 +1013,16 @@ def main(argv: list[str] | None = None) -> int:
                     help="closed-form only (skip the ngspice layer)")
     from schgen.verify.spice import cmd_spice
     sx.set_defaults(func=cmd_spice)
+    pc = sub.add_parser(
+        "pcb", help="emit carrier/Zynq_Carrier.kicad_pcb — an openable PCB "
+                    "FOUNDATION (board outline + forced 4-layer Sig/GND/PWR/"
+                    "Sig stackup + net classes + .kicad_dru + every BOM "
+                    "footprint placed net-accurately; NOT routed). Requires "
+                    "`schgen board` to have emitted the root schematic first.")
+    pc.add_argument("--no-drc", action="store_true",
+                    help="skip the kicad-cli pcb drc verification pass")
+    from schgen.generate.pcb import cmd_pcb
+    pc.set_defaults(func=cmd_pcb)
     pf = sub.add_parser(
         "preflight", help="live JLC/LCSC stock + Basic/Extended + cost check")
     pf.add_argument("subsystems", nargs="+")
