@@ -262,11 +262,12 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
                  f"`{cell.dip_net}` AND `{cell.override_net}` -> "
                  f"`{st.enable}`. A blank SC leaves the override pulled "
                  f"high (veto inactive).")
+        vref = next((v for kk, v in bf.FB_VREF.items() if kk in st.value), None)
+        setpoint_src = ("fixed-output LDO" if vref is None else
+                        f"FB divider vs the {st.value} {vref:g} V reference")
         L.append(f"- Expect **{vout}** on `{st.rail_out}` "
-                 f"(setpoint derived from the netlist: "
-                 + ("fixed-output LDO" if "AP2112" in st.value else
-                    "FB divider vs the TPS54302 0.596 V reference")
-                 + f"). Probe: {_probe(st.rail_out, tps)}.")
+                 f"(setpoint derived from the netlist: {setpoint_src}). "
+                 f"Probe: {_probe(st.rail_out, tps)}.")
         L.append(f"- PG LED `power.{st.pg_led}` lights"
                  + (" (FET-sensed: a red LED cannot run from 1.8 V, so "
                     "Q1 senses the rail — power.py)" if

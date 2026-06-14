@@ -35,6 +35,8 @@ were never exercised against a defect by the file-based mutators:
 - ``break_reset``    strip a reset net's cap (the RC half)
 - ``float_ep``       nc a part's exposed pad (EP) -> EP-must-net-to-GND fires
 - ``ep_to_power``    net an exposed pad (EP) onto a non-GND rail -> EP fires
+- ``cap_voltage``    move a 25V MLCC onto the 20V +VIN rail -> part_rules
+                     CAP_VOLTAGE derate fires (25 < 2x20)
                      -> design_rules RESET fires
 - ``thermal_overrun``bump a regulator's declared draw so Tj passes its limit
                      -> thermal fires; a companion ``thermal_waiver`` mutant
@@ -625,6 +627,30 @@ def _mg_ep(which: str, lib: Library):
     return base_ok, killed, f"{desc}\n            by design_rules EP: {by}"
 
 
+def _mg_cap_voltage(lib: Library):
+    """cap_voltage: a 25 V MLCC is fine on a 5 V rail (HDMI_RX_5V, resolved by
+    the DEF-I _VOLT_PATTERNS: 25 >= 2x5) but UNDER-derated on the 20 V +VIN rail
+    (25 < 2x20=40) -> part_rules CAP_VOLTAGE fires. Also proves the new 5V
+    pattern feeds part_rules (the baseline cap is voltage-checked, not skipped)."""
+    from schgen.verify import part_rules
+
+    def fix(rail: str):
+        c = Circuit("selftest_capv", "selftest cap-voltage fixture")
+        c.part("C1", "Device:C", "10u",
+               "Capacitor_SMD:C_0805_2012Metric", LCSC="C15850")    # 25 V MLCC
+        c.net(rail, "C1.1", net_class=NetClass.POWER)
+        c.net("GND", "C1.2")
+        return [_Sheet("selftest_capv", c)]
+
+    base = part_rules.analyze(fix("HDMI_RX_5V"))     # 25 V on a 5 V rail -> ok
+    base_ok = base.ok
+    mut = part_rules.analyze(fix("+VIN"))            # 25 V on the 20 V rail
+    killed = (not mut.ok) and bool(mut.findings)
+    by = mut.findings[0] if mut.findings else "(no finding)"
+    return base_ok, killed, ("cap_voltage: 25 V MLCC HDMI_RX_5V (ok) -> +VIN "
+                             f"20 V (25 < 2x20)\n            by part_rules: {by}")
+
+
 def _mg_power_overrun(lib: Library):
     """power_overrun: load the buck past its 3 A limit -> powertree fires."""
     from schgen import powertree
@@ -877,6 +903,7 @@ def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
         ("break_reset",     lambda: _mg_design_rules("break_reset", lib)),
         ("float_ep",        lambda: _mg_ep("float_ep", lib)),
         ("ep_to_power",     lambda: _mg_ep("ep_to_power", lib)),
+        ("cap_voltage",     lambda: _mg_cap_voltage(lib)),
         ("thermal_overrun", lambda: _mg_thermal("thermal_overrun", lib)),
         ("thermal_waiver",  lambda: _mg_thermal("thermal_waiver", lib)),
         ("power_overrun",   lambda: _mg_power_overrun(lib)),
