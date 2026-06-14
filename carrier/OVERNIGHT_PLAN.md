@@ -259,4 +259,18 @@ PASS (+$4.56/board), determinism PASS.
 ---
 
 ## PROGRESS LOG (newest first)
+- 2026-06-14: RE-INVESTIGATION (mandate "polish then re-investigate"). Ran a
+  7-dimension / 14-agent adversarial audit of the 28-sheet board + the new
+  board-HW. Every finding independently re-verified before action. 2 confident
+  "HIGH" FALSE POSITIVES rejected with proof (their fixes would have introduced
+  bugs: a DSHP04 mis-wire that never enables the rail; a non-existent PCA9306 EN
+  float). 3 REAL findings fixed: (a) QWIIC ESD — moved to its own sheet
+  board_qwiic + USBLC6 array (29 sheets); (b) firmware I2C-map completeness —
+  board_aux/services added to SOURCES, ID-EEPROM 0x51 strap-DERIVED so a
+  mis-strap trips the collision check, +RTC 0x52 +FMC 0x50 (117 #defines);
+  (c) docstring clarity. board PASS @29, determinism PASS, pytest 168->170.
+  Commits 72b87ce (audit fixes), ed92cb5 (board-HW invariant tests).
+- 2026-06-14: BOARDHW done — all 4 blocks (EEPROM/RTC/QWIIC/watchdog) on the
+  gated +3V3_AUX across board_aux/board_services, C1/C2/C3 honoured. cfabd8a.
+- 2026-06-14: VERIFY done — independent CC short/open gate (2nd oracle). d846368.
 - 2026-06-13: investigation complete (8 threads); 12 decisions captured; baseline green; plan written. Starting TRACK PERF.
