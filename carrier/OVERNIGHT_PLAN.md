@@ -266,6 +266,28 @@ PASS (+$4.56/board), determinism PASS.
 ---
 
 ## PROGRESS LOG (newest first)
+- 2026-06-14: AUDIT-3 (engine / gate-soundness / generators / determinism — the
+  surfaces audits 1-2 did not touch). 19 confirmed of 26; re-verified each.
+  The headline "CRITICAL determinism bug" (unsorted set iteration) was proven a
+  FALSE ALARM by a definitive test: two full builds with PYTHONHASHSEED 0 vs
+  12345 -> byte-identical. Still hardened the latent fragility: route.py emits
+  junctions + splits legs in sorted order (canonical; renders unchanged, 14
+  .kicad_sch reordered) AND a NEW cross-seed determinism gate in the selftest
+  builds each sheet in two subprocesses with different hash seeds — this
+  PERMANENTLY guards ALL the determinism findings (emit/place/manifest unsorted
+  iterations) at once. Downstream completeness: the board-HW I2C devices
+  (0x51/0x52) now appear in testplan (Stage 6 + the isolator ACK-proof) and
+  manifest (bus AUX_I2C), single-sourced from firmware._id_eeprom_addr.
+  Commits 2151a9c (determinism), 6057e3c (testplan), 3fc5973 (manifest).
+  DOCUMENTED-SKIP (re-verified as non-issues / caught elsewhere): visual_gate
+  junction-degree validation — the proposed fix is naive (would false-flag
+  valid junctions at pins; degree needs wire+pin geometry the visual gate
+  lacks), and missing/spurious junctions are already caught electrically by the
+  CC + netlist gates; design_rules STRAP-on-undriven-rail — caught by ERC +
+  powertree; manifest missing-subsystem guard — firmware already fails loudly
+  on a missing ID-EEPROM. Several "confirmed" findings were over-confirmations
+  whose fixes would not have improved correctness (see memory note).
+
 - 2026-06-14: RE-INVESTIGATION (mandate "polish then re-investigate"). Ran a
   7-dimension / 14-agent adversarial audit of the 28-sheet board + the new
   board-HW. Every finding independently re-verified before action. 2 confident
