@@ -31,11 +31,11 @@ thermal Tj (both hooked into `schgen board`, waivable, with CLI).
    to an exposed-pad buck. This is a genuine margin call worth your eyes.
 2. DEF-5 power_mon shunt split still deferred (telemetry reads across an open
    until the firmware shunt-walk + power-sheet decongest land).
-3. RTC backup cell — PRIMARY vs RECHARGEABLE choice (audit-2). The board fits a
-   PRIMARY CR1220 (BT1); the RV-3028 trickle charger is OFF by default and the
-   firmware contract now mandates it stays off. If you prefer a maintenance-free
-   RTC, swap to a RECHARGEABLE ML1220/LIR1220 + enable the trickle charger — a
-   genuine product decision, left to you.
+3. RTC backup cell — DECIDED (your call): RECHARGEABLE ML1220 (Mn-Li). BT1 is
+   now an ML1220 (charges to ~3.1 V from 3.3 V); firmware ENABLES the RV-3028
+   trickle charger (TCE + ~3k series) for a maintenance-free RTC. Holder
+   unchanged (KH-CR1220-2 fits 12.5 mm). Do NOT fit a primary CR1220 or a LIR
+   Li-ion (4.2 V target > 3.3 V). Firmware contract + ASSEMBLY_NOTES updated.
 4. Coin-cell silk polarity (audit-2). KH-CR1220-2 marks polarity on Cmts.User,
    not F.SilkS — add a silk `+` by pad 1 at layout (noted in ASSEMBLY_NOTES).
 5. LCD-FFC ESD (audit-4). The 40-pin LCD FFC is user-touchable; lcd_backlight.md

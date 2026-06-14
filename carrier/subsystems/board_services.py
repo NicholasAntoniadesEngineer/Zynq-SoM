@@ -9,8 +9,9 @@ board_aux), so they obey the same bring-up discipline as every other module
                       (gives the LAN8720/RJ45 a globally-unique address
                       instead of a soft/random one), strapped to **0x51**.
   * U2  RV-3028-C7  — ultra-low-power I2C RTC with an INTEGRATED 32.768 kHz
-                      DTCXO (no external crystal), VBACKUP coin cell (CR1220,
-                      BT1) with automatic switchover, address **0x52**.
+                      DTCXO (no external crystal), VBACKUP coin cell (RECHARGE-
+                      ABLE ML1220, BT1) with automatic switchover, address
+                      **0x52**.
   * U3  TPS3823-33  — supervisor + windowed watchdog (see the C2 note below).
   (the QWIIC / STEMMA-QT expansion connector that exposes this same gated 3V3 +
   isolated AUX I2C lives on its own sheet, board_qwiic, with ESD protection —
@@ -43,11 +44,13 @@ ZYNQ-AGNOSTIC (C3).  The only SoM-side signals are the two watchdog lines,
 homed to spare PL bank-35 IO by their verbatim som_interface.json net names
 (xdc.py emits the constraints live) — nothing here hard-codes the Zynq part.
 
-RTC BACKUP CELL — SAFETY: BT1 is a PRIMARY (non-rechargeable) CR1220. The
-RV-3028 has an internal trickle charger that is OFF by factory default and MUST
-stay off — the SC firmware must never enable it (see the firmware contract).
-Charging a primary lithium cell can rupture/vent it. (The QWIIC connector that
-exposes this bus lives on board_qwiic, with its own ESD + pad-order note.)
+RTC BACKUP CELL: BT1 is a RECHARGEABLE ML1220 (Mn-Li) for a maintenance-free
+RTC — the SC firmware ENABLES the RV-3028 trickle charger (TCE + ~3k series in
+the EEPROM Backup register) so the cell tops up whenever the board is powered.
+Do NOT fit a primary CR1220 (it would be charged) or a LIR Li-ion (its 4.2 V
+charge target exceeds the 3.3 V supply). The KH-CR1220-2 holder fits both 12.5 mm
+chemistries. (The QWIIC connector that exposes this bus lives on board_qwiic,
+with its own ESD + pad-order note.)
 """
 
 from __future__ import annotations
@@ -101,15 +104,15 @@ def circuit() -> Circuit:
         LCSC_10K
     for cap in c.decouple("U2.VDD", "100n", footprint=C_FP):
         cap.fields["LCSC"] = LCSC_100N
-    # VBACKUP: CR1220 with the RV-3028's automatic switchover. Do NOT enable
-    # the trickle charger in firmware — BT1 is a PRIMARY cell.
+    # VBACKUP: RECHARGEABLE ML1220 with the RV-3028's automatic switchover +
+    # internal trickle charger (enabled in firmware). KH-CR1220-2 holder fits.
     c.use_part("KH-CR1220-2", ref="BT1")
     c.net("V_RTC_BAT", "U2.VBACKUP", "BT1.1")
     c.net("GND", "BT1.2")
     c.waive_decap("U2", "VBACKUP is the RV-3028 coin-cell backup input (a "
-                  "primary CR1220, not a switching rail); the RTC regulates "
-                  "internally and a cap on the battery net is optional — no "
-                  "bypass fitted by design")
+                  "rechargeable ML1220, not a switching rail); the RTC "
+                  "regulates internally and a cap on the cell net is optional "
+                  "— no bypass fitted by design")
 
     # ===== 3. supervisor + watchdog TPS3823-33 (C2: see header) =============
     c.use_part("TPS3823-33DBVR", ref="U3")

@@ -79,17 +79,17 @@ chassis/shield return current cannot flow through signal ground:
 
 The manually-gated +3V3_AUX block adds parts that need explicit assembly care:
 
-- **BT1 — CR1220 coin cell (KH-CR1220-2 holder).** The SMD *holder* is
-  reflow-placeable (manual feeder load); the **cell is a hand-insert consumable**
-  fitted AFTER reflow. **Polarity: the cell `+` face goes toward pad 1**
-  (`V_RTC_BAT`); pad 2 is GND. The footprint marks polarity on `Cmts.User`
-  only — **add a silk `+` next to pad 1 at layout** (or mark it on the assembly
-  drawing) so the cell is not inserted reversed (reverse voltage damages the
-  RV-3028 / can vent the cell).
-- **RTC primary-cell SAFETY.** The cell is a PRIMARY (non-rechargeable) CR1220.
-  The RV-3028 trickle charger is OFF by factory default and the SC firmware must
-  never enable it (documented in the firmware contract). Do not substitute a
-  rechargeable cell unless the firmware/charger config is changed to match.
+- **BT1 — ML1220 RECHARGEABLE coin cell (KH-CR1220-2 holder).** The SMD *holder*
+  is reflow-placeable (manual feeder load); the **cell is a hand-insert
+  consumable** fitted AFTER reflow. **Polarity: the cell `+` face goes toward
+  pad 1** (`V_RTC_BAT`); pad 2 is GND. The footprint marks polarity on
+  `Cmts.User` only — **add a silk `+` next to pad 1 at layout** (or mark it on
+  the assembly drawing) so the cell is not inserted reversed.
+- **RTC cell is RECHARGEABLE (ML1220, Mn-Li).** Fit an **ML1220** (charges to
+  ~3.1 V from the 3.3 V supply); the SC firmware ENABLES the RV-3028 trickle
+  charger so it stays topped up. Do **NOT** fit a primary CR1220 (it would be
+  charged → vent risk) or a LIR1220 Li-ion (its 4.2 V charge target exceeds the
+  3.3 V supply). See the firmware contract for the charger config.
 - **SW1 — board_aux DSHP04 DIP (AUX power enable).** Only **position 1** is
   used (`+3V3_AUX` enable); it defaults **OFF** (open). Mark the silk so pos-1 =
   "AUX EN" is unambiguous; positions 2-4 are spare/no-connect.

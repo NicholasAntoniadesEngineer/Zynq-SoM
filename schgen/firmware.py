@@ -203,10 +203,12 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
          "straps read from the netlist; on the board_aux-isolated AUX I2C)"),
         ("ZC_I2C_ADDR_RTC", RV3028_ADDR,
          "RTC (board_services RV-3028; fixed address, Micro Crystal DS; on "
-         "the board_aux-isolated AUX I2C). SAFETY: VBACKUP is a PRIMARY "
-         "(non-rechargeable) CR1220 — firmware MUST keep the RV-3028 trickle "
-         "charger DISABLED (off by factory default; never set TCE in the "
-         "EEPROM Backup register). Charging a primary cell can rupture/vent it."),
+         "the board_aux-isolated AUX I2C). VBACKUP is a RECHARGEABLE ML1220 "
+         "(Mn-Li) for a maintenance-free RTC: firmware SHOULD ENABLE the "
+         "RV-3028 trickle charger (set TCE + a series resistance, e.g. 3k, in "
+         "the EEPROM Backup register) so it tops up whenever the board is "
+         "powered. Do NOT fit a primary CR1220 (it would be charged) or a LIR "
+         "Li-ion (its 4.2 V target exceeds the 3.3 V supply)."),
     ]
     addrs = [a for _, a, _ in addr_rows]
     if len(set(addrs)) != len(addrs):

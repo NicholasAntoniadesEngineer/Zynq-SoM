@@ -151,7 +151,7 @@
 #define ZC_I2C_ADDR_INA3221_2 0x41  /* rail monitor #2 (power_mon U2; A0 strap read from the netlist) */
 #define ZC_I2C_ADDR_FMC_EEPROM 0x50  /* FMC mezzanine ID EEPROM (fmc; GA0/GA1 grounded, VITA 57.1) */
 #define ZC_I2C_ADDR_ID_EEPROM 0x51  /* board-ID EEPROM w/ EUI-48 MAC (board_services 24AA025E48; A1/A0 straps read from the netlist; on the board_aux-isolated AUX I2C) */
-#define ZC_I2C_ADDR_RTC 0x52  /* RTC (board_services RV-3028; fixed address, Micro Crystal DS; on the board_aux-isolated AUX I2C). SAFETY: VBACKUP is a PRIMARY (non-rechargeable) CR1220 -- firmware MUST keep the RV-3028 trickle charger DISABLED (off by factory default; never set TCE in the EEPROM Backup register). Charging a primary cell can rupture/vent it. */
+#define ZC_I2C_ADDR_RTC 0x52  /* RTC (board_services RV-3028; fixed address, Micro Crystal DS; on the board_aux-isolated AUX I2C). VBACKUP is a RECHARGEABLE ML1220 (Mn-Li) for a maintenance-free RTC: firmware SHOULD ENABLE the RV-3028 trickle charger (set TCE + a series resistance, e.g. 3k, in the EEPROM Backup register) so it tops up whenever the board is powered. Do NOT fit a primary CR1220 (it would be charged) or a LIR Li-ion (its 4.2 V target exceeds the 3.3 V supply). */
 /* G3: STM32_I2C2 is a firmware BIT-BANG on the DAC pins (PA4/PA5, no   */
 /* I2C AF; real I2C2 PA8/PA9 is the on-module SC<->Zynq link) -- ~100 kHz */
 #define ZC_I2C_BITBANG_SDA_GPIO_PORT 'A'   /* STM32_I2C2_SDA = STM32_DAC1, J1.49 */
