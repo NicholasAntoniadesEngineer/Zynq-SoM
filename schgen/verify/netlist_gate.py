@@ -146,15 +146,24 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
             res.nc_cheats += cheats
 
     # ---- NAME discipline: POWER/GROUND/PORT nets must keep their names ------
+    # A declared rail/port that extracts as KiCad's auto-name 'Net-(Ref-Pin)'
+    # is a LOST-NAME rail: the power symbol / hier label did not attach, so the
+    # net survives unnamed. The old check exempted 'Net-(' (and `not in e`),
+    # which masked exactly that failure — a POWER/GROUND/PORT net ALWAYS carries
+    # an explicit name/symbol, so an auto-name extraction is never legitimate
+    # here (DEF-I gate hardening; LAW 4 — never exempt, flag it).
     for net in circuit.nets.values():
         if net.net_class in (NetClass.POWER, NetClass.GROUND, NetClass.PORT):
             for pr in net.pins:
                 e = extracted_of.get(pr)
                 if e is not None and not e.startswith("unconnected-") \
-                        and _norm(e) != net.name and "Net-(" not in e:
+                        and _norm(e) != net.name:
+                    lost = "Net-(" in e
                     res.ok = False
                     res.name_mismatches.append(
-                        f"{pr}: declared {net.name!r} but extracted {e!r}")
+                        f"{pr}: declared {net.name!r} but extracted {e!r}"
+                        + (" [LOST-NAME rail: power symbol/label did not attach]"
+                           if lost else ""))
 
     # ---- parts present ------------------------------------------------------
     extracted_refs = {pr.ref for pins in extracted.values() for pr in pins
