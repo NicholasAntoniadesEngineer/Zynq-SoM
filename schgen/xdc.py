@@ -34,6 +34,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.link import _vcco_rail_map
 from schgen.model import Circuit, NetClass, PortType
 from schgen.som_interface import extract_zynq
 
@@ -158,6 +159,22 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
     live = extract_zynq(som_sch, jrefs=tuple(refs))
     consumers, ptypes = _port_registry(sheets)
     func_map = _function_map()
+
+    # SYS-1 consistency gate: xdc's BANK_RAIL (which picks each pin's
+    # IOSTANDARD) MUST agree with the rail som_conn_gen actually drives onto
+    # +VCCO_<bank> (the real hardware). They are two independent copies; if a
+    # future SoM / bank re-rail (C3) edits one and not the other, the XDC would
+    # emit the wrong IOSTANDARD on the re-railed bank — a board-bring-up fault
+    # no other gate catches. Assert they agree.
+    _vcco = {k.removeprefix("+VCCO_"): v for k, v in _vcco_rail_map().items()}
+    _drift = {b: {"BANK_RAIL": BANK_RAIL.get(b), "VCCO_RAIL_MAP": _vcco.get(b)}
+              for b in set(BANK_RAIL) | set(_vcco)
+              if BANK_RAIL.get(b) != _vcco.get(b)}
+    if _drift:
+        raise XdcError(
+            "VCCO bank-rail drift: schgen/xdc.BANK_RAIL and "
+            "carrier/som_conn_gen.VCCO_RAIL_MAP disagree — the XDC would emit "
+            f"the wrong IOSTANDARD on a re-railed bank: {_drift}")
     checks: list[str] = []
 
     # net -> PL balls (Zynq side, live netlist; IO_* names are PL I/O)
