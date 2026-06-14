@@ -717,6 +717,19 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"DEVICETREE: FAIL — {exc}")
         ok_all = False
 
+    # SC bring-up firmware SCAFFOLD (Stream E): the IMPLEMENTATION twin of the
+    # firmware CONTRACT — portable C behind a sc_hal abstraction a Zephyr port
+    # backs (rail-sequencing state machine + I2C/EN/monitor tables + WDT/PD
+    # hooks), all netlist-derived. Additive; deterministic.
+    from schgen.generate import scfw
+    try:
+        scfw_out = scfw.generate(CARRIER / "firmware" / "sc")
+        print(f"SCFW SCAFFOLD: {CARRIER / 'firmware' / 'sc'} "
+              f"({len(scfw_out)} files)")
+    except Exception as exc:  # noqa: BLE001
+        print(f"SCFW SCAFFOLD: FAIL — {exc}")
+        ok_all = False
+
     # floorplan suggestion (SVG + MD), derived from the same sheets/link
     from schgen.generate import floorplan
     try:
@@ -833,6 +846,16 @@ def main(argv: list[str] | None = None) -> int:
     fw.add_argument("-o", "--output", type=Path, default=None)
     from schgen.generate.firmware import cmd_firmware
     fw.set_defaults(func=cmd_firmware)
+    sf = sub.add_parser(
+        "scfw", help="generate carrier/firmware/sc/ — the SC bring-up "
+                     "firmware SCAFFOLD (portable C behind a sc_hal "
+                     "abstraction a Zephyr port backs): rail-sequencing "
+                     "state machine + I2C/EN/monitor tables + WDT/PD hooks, "
+                     "all netlist-derived")
+    sf.add_argument("-o", "--output", type=Path, default=None,
+                    help="output directory (default: carrier/firmware/sc)")
+    from schgen.generate.scfw import cmd_scfw
+    sf.set_defaults(func=cmd_scfw)
     mn = sub.add_parser(
         "manual", help="generate carrier/docs/BRINGUP.md — the ordered "
                        "bring-up procedure derived from the netlists")
