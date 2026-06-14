@@ -109,8 +109,10 @@ def _rails(sheets, pt_res: powertree.Result) -> list[dict]:
 def _i2c_map(sheets) -> list[dict]:
     """The strapped I2C address map, addresses DERIVED from the netlists exactly
     as the firmware contract derives them: TCA9535 (A2/A1/A0 straps), INA3221
-    (A0 strap), FUSB302B (fixed). Silent on any device class absent from this
-    board so the manifest stays a pure function of the sheets present."""
+    (A0 strap), FUSB302B (fixed) on the always-on STM32_I2C2 trunk; the
+    ID-EEPROM (A1/A0 straps) + RTC on the gated, PCA9306-isolated AUX_I2C
+    segment. Silent on any device class absent from this board so the manifest
+    stays a pure function of the sheets present."""
     by_name = {sc.name: sc.circuit for sc in sheets}
     rows: list[dict] = []
     for name, c in sorted(by_name.items()):
@@ -125,10 +127,16 @@ def _i2c_map(sheets) -> list[dict]:
                           if "FUSB302" in p.value):
             rows.append({"device": "FUSB302B", "addr": bf.FUSB302B_ADDR,
                          "sheet": name, "ref": ref})
+        if name == "board_services":
+            from schgen.firmware import RV3028_ADDR, _id_eeprom_addr
+            rows.append({"device": "24AA025E48", "addr": _id_eeprom_addr(c),
+                         "sheet": name, "ref": "U1", "bus": "AUX_I2C"})
+            rows.append({"device": "RV-3028", "addr": RV3028_ADDR,
+                         "sheet": name, "ref": "U2", "bus": "AUX_I2C"})
     rows.sort(key=lambda r: (r["addr"], r["device"], r["sheet"], r["ref"]))
     for r in rows:
         r["addr_hex"] = f"0x{r['addr']:02X}"
-        r["bus"] = I2C_BUS
+        r.setdefault("bus", I2C_BUS)   # AUX rows carry their own bus
     return [{"device": r["device"], "addr": r["addr"], "addr_hex": r["addr_hex"],
              "bus": r["bus"], "sheet": r["sheet"], "ref": r["ref"]}
             for r in rows]

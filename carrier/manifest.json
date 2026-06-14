@@ -367,6 +367,22 @@
       "device": "INA3221",
       "ref": "U2",
       "sheet": "power_mon"
+    },
+    {
+      "addr": 81,
+      "addr_hex": "0x51",
+      "bus": "AUX_I2C",
+      "device": "24AA025E48",
+      "ref": "U1",
+      "sheet": "board_services"
+    },
+    {
+      "addr": 82,
+      "addr_hex": "0x52",
+      "bus": "AUX_I2C",
+      "device": "RV-3028",
+      "ref": "U2",
+      "sheet": "board_services"
     }
   ],
   "rails": [
