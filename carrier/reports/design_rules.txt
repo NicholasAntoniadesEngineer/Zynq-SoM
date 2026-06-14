@@ -7,7 +7,7 @@ rules (model-only, pin FUNCTION inferred by NAME):
   RESET every reset net carries an RC (cap-to-GND + pull resistor)
   STRAP no config-input pin floats on a passive-only undriven net
 
-checked: 40 IC supply pins, 10 i2c nets, 3 reset nets, 0 config pins
+checked: 41 IC supply pins, 10 i2c nets, 3 reset nets, 0 config pins
 
 DECAP — missing decoupling (0):
   (none)

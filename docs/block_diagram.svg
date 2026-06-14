@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2348 716" width="2348" height="716" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
-<rect width="2348" height="716" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2348 790" width="2348" height="790" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
+<rect width="2348" height="790" fill="#ffffff"/>
 <text x="28" y="34" font-size="22" font-weight="700" fill="#0f172a">Zynq carrier — linked port graph</text>
-<text x="28" y="56" font-size="13" fill="#64748b">29 sheets · 213 SoM contract nets · left-to-right by role; edges aggregated per sheet-pair</text>
+<text x="28" y="56" font-size="13" fill="#64748b">30 sheets · 213 SoM contract nets · left-to-right by role; edges aggregated per sheet-pair</text>
 <rect x="1858" y="18" width="466" height="71" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
 <text x="1868" y="33" font-size="11" font-weight="700" fill="#334155">legend</text>
 <line x1="1868" y1="45" x2="1892" y2="45" stroke="#b45309" stroke-width="2.6"/>
@@ -28,96 +28,96 @@
 <text x="464" y="107" font-size="12" font-weight="700" fill="#fcd34d">SoM connectors</text>
 <rect x="1062" y="92" width="196" height="306" rx="12" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1.3"/>
 <text x="1072" y="107" font-size="12" font-weight="700" fill="#d8b4fe">Video / display</text>
-<rect x="1380" y="92" width="196" height="306" rx="12" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.3"/>
-<text x="1390" y="107" font-size="12" font-weight="700" fill="#67e8f9">Storage &amp; USB</text>
-<rect x="1380" y="414" width="196" height="84" rx="12" fill="#f0fdf4" stroke="#86efac" stroke-width="1.3"/>
-<text x="1390" y="429" font-size="12" font-weight="700" fill="#86efac">Networking</text>
-<rect x="1698" y="92" width="196" height="528" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.3"/>
+<rect x="1380" y="92" width="196" height="84" rx="12" fill="#f0fdf4" stroke="#86efac" stroke-width="1.3"/>
+<text x="1390" y="107" font-size="12" font-weight="700" fill="#86efac">Networking</text>
+<rect x="1380" y="192" width="196" height="306" rx="12" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.3"/>
+<text x="1390" y="207" font-size="12" font-weight="700" fill="#67e8f9">Storage &amp; USB</text>
+<rect x="1698" y="92" width="196" height="602" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.3"/>
 <text x="1708" y="107" font-size="12" font-weight="700" fill="#93c5fd">FMC / user IO</text>
-<rect x="2016" y="92" width="196" height="84" rx="12" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1.3"/>
-<text x="2026" y="107" font-size="12" font-weight="700" fill="#d8b4fe">Video / display</text>
+<rect x="2016" y="92" width="196" height="84" rx="12" fill="#f0fdf4" stroke="#86efac" stroke-width="1.3"/>
+<text x="2026" y="107" font-size="12" font-weight="700" fill="#86efac">Networking</text>
 <rect x="2016" y="192" width="196" height="84" rx="12" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.3"/>
 <text x="2026" y="207" font-size="12" font-weight="700" fill="#67e8f9">Storage &amp; USB</text>
-<rect x="2016" y="292" width="196" height="84" rx="12" fill="#f0fdf4" stroke="#86efac" stroke-width="1.3"/>
-<text x="2026" y="307" font-size="12" font-weight="700" fill="#86efac">Networking</text>
-<path d="M318.0,589.0 H456.5 V666.0 H856.0" fill="none" stroke="#9ca3af" stroke-width="1.4" stroke-linejoin="round" stroke-dasharray="5,4"><title>bringup_en_modules ↔ later: EN_LCD_BL</title></path>
+<rect x="2016" y="292" width="196" height="84" rx="12" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1.3"/>
+<text x="2026" y="307" font-size="12" font-weight="700" fill="#d8b4fe">Video / display</text>
+<path d="M318.0,589.0 H456.5 V740.0 H856.0" fill="none" stroke="#9ca3af" stroke-width="1.4" stroke-linejoin="round" stroke-dasharray="5,4"><title>bringup_en_modules ↔ later: EN_LCD_BL</title></path>
 <path d="M1880.0,582.0 H1894.0 V434.0 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>board_aux ↔ board_qwiic: AUX_I2C_SCL, AUX_I2C_SDA</title></path>
 <path d="M1880.0,589.0 H1908.0 V516.4 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>board_aux ↔ board_services: AUX_I2C_SCL, AUX_I2C_SDA</title></path>
 <path d="M1880.0,575.0 H1922.0 V370.5 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>board_aux ↔ fmc: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
 <path d="M1880.0,434.0 H1922.0 V510.8 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>board_qwiic ↔ board_services: AUX_I2C_SCL, AUX_I2C_SDA</title></path>
 <path d="M318.0,508.0 H353.0 V281.3 H150.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_en ↔ bringup_rails: BU_DIP_1V8, BU_DIP_3V3, BU_DIP_5V0</title></path>
 <path d="M318.0,501.0 H346.0 V138.0 H150.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_en ↔ power: EN_1V8, EN_3V3, EN_5V0</title></path>
-<path d="M318.0,515.0 H434.4 V294.4 H468.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_en ↔ som_j1: STM32_RAIL_EN_1V8, STM32_RAIL_EN_3V3, STM32_RAIL_EN_5V0</title></path>
+<path d="M318.0,515.0 H423.4 V294.4 H468.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_en ↔ som_j1: STM32_RAIL_EN_1V8, STM32_RAIL_EN_3V3, STM32_RAIL_EN_5V0</title></path>
 <path d="M318.0,575.0 H339.0 V212.0 H150.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_en_modules ↔ bringup_modules: EN_CAM, EN_HDMI_RX, EN_HDMI_TX, EN_HDMI_TX_5V, EN_LCD, EN_LCD_5V, EN_PMOD, EN_SD, EN_USB, EN_USER_LED</title></path>
 <path d="M318.0,582.0 H360.0 V290.7 H150.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_en_modules ↔ bringup_rails: BU_DIP_CAM, BU_DIP_HDMI_RX, BU_DIP_HDMI_TX, BU_DIP_HDMI_TX_5V, BU_DIP_LCD, BU_DIP_LCD_5V, BU_DIP_PMOD, BU_DIP_SD, BU_DIP_SPARE, BU_DIP_USB, BU_DIP_USER_LED, BU_OVR_CAM, BU_OVR_HDMI_RX, BU_OVR_HDMI_TX, BU_OVR_HDMI_TX_5V, BU_OVR_LCD, BU_OVR_LCD_5V, BU_OVR_LCD_BL, BU_OVR_PMOD, BU_OVR_SD, BU_OVR_USB, BU_OVR_USER_LED</title></path>
-<path d="M318.0,297.7 H439.9 V573.6 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ board_aux: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M318.0,297.7 H434.4 V573.6 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ board_aux: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
 <path d="M318.0,279.0 H346.1 V279.0 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_rails ↔ debug_boot: STM32_NRST</title></path>
-<path d="M318.0,286.0 H379.2 V356.5 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ fmc: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
-<path d="M318.0,288.3 H332.0 V360.0 H150.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_rails ↔ pd_input: PD_FLT_N</title></path>
-<path d="M318.0,295.3 H332.0 V434.0 H150.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ power_mon: PMON_ALERT_N, STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M318.0,283.7 H368.2 V356.5 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ fmc: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M318.0,286.0 H332.0 V360.0 H150.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_rails ↔ pd_input: PD_FLT_N</title></path>
+<path d="M318.0,293.0 H332.0 V434.0 H150.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ power_mon: PMON_ALERT_N, STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
 <path d="M318.0,281.3 H351.6 V277.6 H468.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ som_j1: SC_INT_N, STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA, STM32_NRST</title></path>
 <path d="M318.0,274.3 H329.5 V138.0 H468.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_rails ↔ som_j2: PL_BTN0, PL_BTN1</title></path>
-<path d="M318.0,276.7 H340.6 V212.0 H468.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_rails ↔ som_j3: PUDC_34</title></path>
-<path d="M318.0,290.7 H373.7 V350.7 H1394.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ usb_pd: SC_INT_N, STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
-<path d="M318.0,283.7 H357.1 V279.0 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_rails ↔ usbc_otg: USBOTG_FLT_N</title></path>
-<path d="M1562.0,460.0 H1650.8 V338.0 H2030.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>ethernet ↔ rj45_connector: ETH_LINE_MDI_0_N, ETH_LINE_MDI_0_P, ETH_LINE_MDI_1_N, ETH_LINE_MDI_1_P, ETH_LINE_MDI_2_N, ETH_LINE_MDI_2_P, ETH_LINE_MDI_3_N, ETH_LINE_MDI_3_P</title></path>
-<path d="M1244.0,138.0 H1319.0 V133.3 H2030.0" fill="none" stroke="#db2777" stroke-width="2.0" stroke-linejoin="round"><title>hdmi_rx ↔ hdmi_rx_term: HDMI_RX_CLK_N, HDMI_RX_CLK_N, HDMI_RX_CLK_P, HDMI_RX_CLK_P, HDMI_RX_D0_N, HDMI_RX_D0_N, HDMI_RX_D0_P, HDMI_RX_D0_P, HDMI_RX_D1_N, HDMI_RX_D1_N, HDMI_RX_D1_P, HDMI_RX_D1_P, HDMI_RX_D2_N, HDMI_RX_D2_N, HDMI_RX_D2_P, HDMI_RX_D2_P</title></path>
-<path d="M318.0,353.0 H362.6 V283.2 H468.0" fill="none" stroke="#0891b2" stroke-width="2.0" stroke-linejoin="round"><title>pd_input ↔ som_j1: STM32_USB_CC1, STM32_USB_CC2, STM32_USB_D_N, STM32_USB_D_P</title></path>
-<path d="M318.0,360.0 H401.3 V360.0 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>pd_input ↔ usb_pd: STM32_USB_CC1, STM32_USB_CC2</title></path>
-<path d="M318.0,442.4 H451.0 V590.4 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>power_mon ↔ board_aux: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
-<path d="M318.0,431.2 H423.4 V367.0 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>power_mon ↔ fmc: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
-<path d="M318.0,425.6 H395.8 V288.8 H468.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>power_mon ↔ som_j1: STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA</title></path>
-<path d="M318.0,436.8 H428.9 V369.3 H1394.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>power_mon ↔ usb_pd: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M318.0,276.7 H335.0 V212.0 H468.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_rails ↔ som_j3: PUDC_34</title></path>
+<path d="M318.0,295.3 H401.3 V450.7 H1394.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>bringup_rails ↔ usb_pd: SC_INT_N, STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M318.0,288.3 H379.2 V379.0 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>bringup_rails ↔ usbc_otg: USBOTG_FLT_N</title></path>
+<path d="M1562.0,138.0 H1595.6 V138.0 H2030.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>ethernet ↔ rj45_connector: ETH_LINE_MDI_0_N, ETH_LINE_MDI_0_P, ETH_LINE_MDI_1_N, ETH_LINE_MDI_1_P, ETH_LINE_MDI_2_N, ETH_LINE_MDI_2_P, ETH_LINE_MDI_3_N, ETH_LINE_MDI_3_P</title></path>
+<path d="M1244.0,360.0 H1319.0 V342.7 H2030.0" fill="none" stroke="#db2777" stroke-width="2.0" stroke-linejoin="round"><title>hdmi_rx ↔ hdmi_rx_term: HDMI_RX_CLK_N, HDMI_RX_CLK_N, HDMI_RX_CLK_P, HDMI_RX_CLK_P, HDMI_RX_D0_N, HDMI_RX_D0_N, HDMI_RX_D0_P, HDMI_RX_D0_P, HDMI_RX_D1_N, HDMI_RX_D1_N, HDMI_RX_D1_P, HDMI_RX_D1_P, HDMI_RX_D2_N, HDMI_RX_D2_N, HDMI_RX_D2_P, HDMI_RX_D2_P</title></path>
+<path d="M318.0,353.0 H357.1 V283.2 H468.0" fill="none" stroke="#0891b2" stroke-width="2.0" stroke-linejoin="round"><title>pd_input ↔ som_j1: STM32_USB_CC1, STM32_USB_CC2, STM32_USB_D_N, STM32_USB_D_P</title></path>
+<path d="M318.0,367.0 H428.9 V460.0 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>pd_input ↔ usb_pd: STM32_USB_CC1, STM32_USB_CC2</title></path>
+<path d="M318.0,442.4 H451.0 V584.8 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>power_mon ↔ board_aux: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M318.0,431.2 H417.8 V363.5 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>power_mon ↔ fmc: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M318.0,425.6 H384.7 V288.8 H468.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>power_mon ↔ som_j1: STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA</title></path>
+<path d="M318.0,436.8 H445.4 V469.3 H1394.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>power_mon ↔ usb_pd: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
 <path d="M636.0,297.2 H774.5 V579.2 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>som_j1 ↔ board_aux: STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA</title></path>
-<path d="M636.0,280.4 H719.3 V286.0 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j1 ↔ debug_boot: STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
-<path d="M636.0,294.4 H769.0 V455.3 H1394.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>som_j1 ↔ ethernet: ETH_PHY_MDI0_N, ETH_PHY_MDI0_P, ETH_PHY_MDI1_N, ETH_PHY_MDI1_P, ETH_PHY_MDI2_N, ETH_PHY_MDI2_P, ETH_PHY_MDI3_N, ETH_PHY_MDI3_P</title></path>
-<path d="M636.0,286.0 H746.9 V360.0 H1712.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>som_j1 ↔ fmc: FMC_LA08_N, FMC_LA08_P, FMC_LA09_N, FMC_LA09_P, FMC_LA10_N, FMC_LA10_P, FMC_LA11_N, FMC_LA11_P, STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA</title></path>
-<path d="M636.0,277.6 H697.2 V212.0 H1394.0" fill="none" stroke="#ca8a04" stroke-width="1.9" stroke-linejoin="round"><title>som_j1 ↔ microsd: SDIO_CLK, SDIO_CMD, SDIO_D0, SDIO_D1, SDIO_D2, SDIO_D3</title></path>
-<path d="M636.0,274.8 H686.2 V142.7 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j1 ↔ uart_bridge: ZYNQ_PS_UART0_RXD, ZYNQ_PS_UART0_TXD</title></path>
-<path d="M636.0,288.8 H741.4 V355.3 H1394.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>som_j1 ↔ usb_pd: SC_INT_N, STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA, STM32_USB_CC1, STM32_USB_CC2</title></path>
-<path d="M636.0,283.2 H730.3 V286.0 H1394.0" fill="none" stroke="#0891b2" stroke-width="2.0" stroke-linejoin="round"><title>som_j1 ↔ usbc_otg: USB_D+, USB_D-, USB_ID, USB_VBUS, VBUS_OUT_EN</title></path>
-<path d="M636.0,146.9 H708.2 V349.5 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ fmc: FMC_PRSNT_N</title></path>
-<path d="M636.0,126.5 H647.5 V138.0 H1076.0" fill="none" stroke="#db2777" stroke-width="2.0" stroke-linejoin="round"><title>som_j2 ↔ hdmi_rx: HDMI_RX_5V_DET, HDMI_RX_CEC, HDMI_RX_CLK_N, HDMI_RX_CLK_P, HDMI_RX_D0_N, HDMI_RX_D0_P, HDMI_RX_D1_N, HDMI_RX_D1_P, HDMI_RX_D2_N, HDMI_RX_D2_P</title></path>
-<path d="M636.0,129.1 H664.1 V142.7 H2030.0" fill="none" stroke="#db2777" stroke-width="2.0" stroke-linejoin="round"><title>som_j2 ↔ hdmi_rx_term: HDMI_RX_CLK_N, HDMI_RX_CLK_N, HDMI_RX_CLK_P, HDMI_RX_CLK_P, HDMI_RX_D0_N, HDMI_RX_D0_N, HDMI_RX_D0_P, HDMI_RX_D0_P, HDMI_RX_D1_N, HDMI_RX_D1_N, HDMI_RX_D1_P, HDMI_RX_D1_P, HDMI_RX_D2_N, HDMI_RX_D2_N, HDMI_RX_D2_P, HDMI_RX_D2_P</title></path>
-<path d="M636.0,136.7 H675.1 V212.0 H1076.0" fill="none" stroke="#db2777" stroke-width="2.0" stroke-linejoin="round"><title>som_j2 ↔ hdmi_tx: ZYNQ_HDMI_TX_CEC, ZYNQ_HDMI_TX_HPD, ZYNQ_HDMI_TX_SCL, ZYNQ_HDMI_TX_SCL, ZYNQ_HDMI_TX_SDA, ZYNQ_HDMI_TX_SDA, ZYNQ_HDMI_TX_TMDS_0_N, ZYNQ_HDMI_TX_TMDS_0_P, ZYNQ_HDMI_TX_TMDS_1_N, ZYNQ_HDMI_TX_TMDS_1_P, ZYNQ_HDMI_TX_TMDS_2_N, ZYNQ_HDMI_TX_TMDS_2_P, ZYNQ_HDMI_TX_TMDS_CLK_N, ZYNQ_HDMI_TX_TMDS_CLK_P</title></path>
-<path d="M636.0,144.4 H691.7 V281.3 H1076.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>som_j2 ↔ lcd: LCD_CTP_INT, LCD_CTP_RST, LCD_CTP_SCL, LCD_CTP_SCL, LCD_CTP_SDA, LCD_CTP_SDA</title></path>
-<path d="M636.0,139.3 H669.6 V205.0 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ microsd: SD_CARD_DETECT</title></path>
-<path d="M636.0,131.6 H653.0 V133.3 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ pmod: IO_L10_N_13, IO_L10_P_13, IO_L2_N_13, IO_L2_P_13, IO_L3_N_13, IO_L3_P_13, IO_L4_N_13, IO_L4_P_13, IO_L5P_13, IO_L5_N_13, IO_L7_N_13, IO_L7_P_13, IO_L8_N_13, IO_L8_P_13, IO_L9_DQS_N_13, IO_L9_DQS_P_13</title></path>
-<path d="M636.0,134.2 H658.6 V133.3 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ uart_bridge: ZYNQ_PS_UART0_CTS_N, ZYNQ_PS_UART0_RTS_N</title></path>
-<path d="M636.0,141.8 H680.6 V207.3 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ user_io: IO_25_13, IO_L15_P_13, IO_L19_P_13, IO_L21_P_13, IO_L22_P_13, IO_L24_N_13, IO_L24_P_13, IO_L6_P_13</title></path>
-<path d="M636.0,221.3 H763.4 V499.6 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j3 ↔ board_services: IO_L16_N_35, IO_L16_P_35</title></path>
-<path d="M636.0,207.3 H724.8 V360.0 H1076.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>som_j3 ↔ camera: CAM_CLK_N, CAM_CLK_P, CAM_D0_N, CAM_D0_P, CAM_D1_N, CAM_D1_P, CAM_EN, CAM_LED, CAM_SCL, CAM_SCL, CAM_SDA, CAM_SDA</title></path>
-<path d="M636.0,212.0 H713.8 V353.0 H1712.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>som_j3 ↔ fmc: FMC_CLK0_M2C_N, FMC_CLK0_M2C_P, FMC_CLK1_M2C_N, FMC_CLK1_M2C_P, FMC_LA00_CC_N, FMC_LA00_CC_P, FMC_LA01_CC_N, FMC_LA01_CC_P, FMC_LA02_N, FMC_LA02_P, FMC_LA03_N, FMC_LA03_P, FMC_LA04_N, FMC_LA04_P, FMC_LA05_N, FMC_LA05_P, FMC_LA06_N, FMC_LA06_P, FMC_LA07_N, FMC_LA07_P</title></path>
-<path d="M636.0,202.7 H702.7 V290.7 H1076.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j3 ↔ lcd: LCD_B0, LCD_B1, LCD_B2, LCD_B3, LCD_B4, LCD_B5, LCD_B6, LCD_B7, LCD_BL_PWM, LCD_DE, LCD_DISP, LCD_G0, LCD_G1, LCD_G2, LCD_G3, LCD_G4, LCD_G5, LCD_G6, LCD_G7, LCD_HSYNC, LCD_PCLK, LCD_R0, LCD_R1, LCD_R2, LCD_R3, LCD_R4, LCD_R5, LCD_R6, LCD_R7, LCD_VSYNC</title></path>
-<path d="M1562.0,138.0 H1595.6 V238.0 H2030.0" fill="none" stroke="#0891b2" stroke-width="2.0" stroke-linejoin="round"><title>uart_bridge ↔ usb_uart_connector: USB_UART_DM, USB_UART_DP, USB_UART_VBUS</title></path>
-<path d="M1562.0,364.7 H1678.4 V584.8 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>usb_pd ↔ board_aux: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
-<path d="M1562.0,355.3 H1623.2 V363.5 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>usb_pd ↔ fmc: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
-<path d="M926.0,151.3 H993.3 V505.2 H1712.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ board_services: IO_L16_N_35, IO_L16_P_35</title></path>
-<circle cx="926.0" cy="151.3" r="2.6" fill="#1d4ed8"/>
-<path d="M926.0,225.9 H962.7 V293.0 H1712.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ debug_boot: STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
-<circle cx="926.0" cy="225.9" r="2.6" fill="#1d4ed8"/>
-<path d="M926.0,263.1 H1008.7 V464.7 H1394.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ ethernet: ETH_PHY_MDI0_N, ETH_PHY_MDI0_P, ETH_PHY_MDI1_N, ETH_PHY_MDI1_P, ETH_PHY_MDI2_N, ETH_PHY_MDI2_P, ETH_PHY_MDI3_N, ETH_PHY_MDI3_P</title></path>
-<circle cx="926.0" cy="263.1" r="2.6" fill="#1d4ed8"/>
-<path d="M926.0,300.4 H978.0 V219.0 H1394.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ microsd: SDIO_CLK, SDIO_CMD, SDIO_D0, SDIO_D1, SDIO_D2, SDIO_D3</title></path>
-<circle cx="926.0" cy="300.4" r="2.6" fill="#1d4ed8"/>
-<path d="M926.0,375.0 H947.3 V142.7 H1712.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ pmod: IO_L10_N_13, IO_L10_P_13, IO_L2_N_13, IO_L2_P_13, IO_L3_N_13, IO_L3_P_13, IO_L4_N_13, IO_L4_P_13, IO_L5P_13, IO_L5_N_13, IO_L7_N_13, IO_L7_P_13, IO_L8_N_13, IO_L8_P_13, IO_L9_DQS_N_13, IO_L9_DQS_P_13</title></path>
-<circle cx="926.0" cy="375.0" r="2.6" fill="#1d4ed8"/>
-<path d="M926.0,524.1 H1054.7 V364.7 H1394.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ usb_pd: STM32_USB_CC1, STM32_USB_CC2</title></path>
-<circle cx="926.0" cy="524.1" r="2.6" fill="#1d4ed8"/>
-<path d="M926.0,561.4 H1039.3 V293.0 H1394.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ usbc_otg: USB_D+, USB_D-, USB_ID, USB_VBUS, VBUS_OUT_EN</title></path>
-<circle cx="926.0" cy="561.4" r="2.6" fill="#1d4ed8"/>
-<path d="M926.0,598.7 H1024.0 V216.7 H1712.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ user_io: IO_25_13, IO_L15_P_13, IO_L19_P_13, IO_L21_P_13, IO_L22_P_13, IO_L24_N_13, IO_L24_P_13, IO_L6_P_13</title></path>
-<circle cx="926.0" cy="598.7" r="2.6" fill="#1d4ed8"/>
-<path d="M318.0,293.0 H335.0 V188.6 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>bringup_rails ↔ SoM: STM32_NRST</title></path>
-<circle cx="786.0" cy="188.6" r="2.6" fill="#1d4ed8"/>
-<path d="M318.0,367.0 H390.2 V337.7 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>pd_input ↔ SoM: STM32_USB_CC1, STM32_USB_CC2, STM32_USB_D_N, STM32_USB_D_P</title></path>
-<circle cx="786.0" cy="337.7" r="2.6" fill="#1d4ed8"/>
-<path d="M636.0,291.6 H757.9 V412.3 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>som_j1 ↔ SoM: ETH_LED1, ETH_LED2, ETH_PHY_MDI0_N, ETH_PHY_MDI0_P, ETH_PHY_MDI1_N, ETH_PHY_MDI1_P, ETH_PHY_MDI2_N, ETH_PHY_MDI2_P, ETH_PHY_MDI3_N, ETH_PHY_MDI3_P, IO_0_35, IO_L2_N_35, SDIO_CLK, SDIO_CMD, SDIO_D0, SDIO_D1, SDIO_D2, SDIO_D3, STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, STM32_USB_CC1, STM32_USB_CC2, STM32_USB_D_N, STM32_USB_D_P, USB_D+, USB_D-, USB_ID, USB_VBUS, VBUS_OUT_EN, ZYNQ_PS_MIO0, ZYNQ_PS_MIO12, ZYNQ_PS_MIO7/VM0, ZYNQ_PS_MIO8\VM1, ZYNQ_PS_MIO9, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
-<circle cx="786.0" cy="412.3" r="2.6" fill="#1d4ed8"/>
-<path d="M636.0,149.5 H735.8 V449.6 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>som_j2 ↔ SoM: IO_25_13, IO_L10_N_13, IO_L10_P_13, IO_L11_SRCC_N_13, IO_L11_SRCC_N_33, IO_L11_SRCC_P_13, IO_L11_SRCC_P_33, IO_L12_MRCC_N_13, IO_L12_MRCC_P_13, IO_L13_MRCC_N_13, IO_L13_MRCC_P_13, IO_L14_N_SRCC_13, IO_L14_P_SRCC_13, IO_L14_SRCC_N_33, IO_L14_SRCC_P_33, IO_L15_P_13, IO_L19_P_13, IO_L1P_13, IO_L1_N_13, IO_L21_P_13, IO_L22_P_13, IO_L23_N_13, IO_L23_P_13, IO_L24_N_13, IO_L24_P_13, IO_L2_N_13, IO_L2_P_13, IO_L3_N_13, IO_L3_P_13, IO_L4_N_13, IO_L4_P_13, IO_L5P_13, IO_L5_N_13, IO_L6_P_13, IO_L7_N_13, IO_L7_P_13, IO_L8_N_13, IO_L8_P_13, IO_L9_DQS_N_13, IO_L9_DQS_P_13</title></path>
-<circle cx="786.0" cy="449.6" r="2.6" fill="#1d4ed8"/>
-<path d="M636.0,216.7 H752.4 V486.9 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>som_j3 ↔ SoM: IO_L16_N_35, IO_L16_P_35, IO_L18_N_35, IO_L18_P_35, IO_L22_N_34, IO_L23_P_34, IO_L24_P_34, IO_L3_DQS_N_33, IO_L3_DQS_P_33, IO_L4_N_33, IO_L4_P_33, IO_L5_N_33, IO_L5_P_33</title></path>
-<circle cx="786.0" cy="486.9" r="2.6" fill="#1d4ed8"/>
+<path d="M636.0,280.4 H724.8 V286.0 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j1 ↔ debug_boot: STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
+<path d="M636.0,274.8 H675.1 V133.3 H1394.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>som_j1 ↔ ethernet: ETH_PHY_MDI0_N, ETH_PHY_MDI0_P, ETH_PHY_MDI1_N, ETH_PHY_MDI1_P, ETH_PHY_MDI2_N, ETH_PHY_MDI2_P, ETH_PHY_MDI3_N, ETH_PHY_MDI3_P</title></path>
+<path d="M636.0,286.0 H735.8 V360.0 H1712.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>som_j1 ↔ fmc: FMC_LA08_N, FMC_LA08_P, FMC_LA09_N, FMC_LA09_P, FMC_LA10_N, FMC_LA10_P, FMC_LA11_N, FMC_LA11_P, STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA</title></path>
+<path d="M636.0,283.2 H730.3 V312.0 H1394.0" fill="none" stroke="#ca8a04" stroke-width="1.9" stroke-linejoin="round"><title>som_j1 ↔ microsd: SDIO_CLK, SDIO_CMD, SDIO_D0, SDIO_D1, SDIO_D2, SDIO_D3</title></path>
+<path d="M636.0,277.6 H713.8 V242.7 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j1 ↔ uart_bridge: ZYNQ_PS_UART0_RXD, ZYNQ_PS_UART0_TXD</title></path>
+<path d="M636.0,294.4 H763.4 V455.3 H1394.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>som_j1 ↔ usb_pd: SC_INT_N, STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA, STM32_USB_CC1, STM32_USB_CC2</title></path>
+<path d="M636.0,288.8 H746.9 V386.0 H1394.0" fill="none" stroke="#0891b2" stroke-width="2.0" stroke-linejoin="round"><title>som_j1 ↔ usbc_otg: USB_D+, USB_D-, USB_ID, USB_VBUS, VBUS_OUT_EN</title></path>
+<path d="M636.0,144.4 H702.7 V349.5 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ fmc: FMC_PRSNT_N</title></path>
+<path d="M636.0,146.9 H708.2 V360.0 H1076.0" fill="none" stroke="#db2777" stroke-width="2.0" stroke-linejoin="round"><title>som_j2 ↔ hdmi_rx: HDMI_RX_5V_DET, HDMI_RX_CEC, HDMI_RX_CLK_N, HDMI_RX_CLK_P, HDMI_RX_D0_N, HDMI_RX_D0_P, HDMI_RX_D1_N, HDMI_RX_D1_P, HDMI_RX_D2_N, HDMI_RX_D2_P</title></path>
+<path d="M636.0,141.8 H691.7 V333.3 H2030.0" fill="none" stroke="#db2777" stroke-width="2.0" stroke-linejoin="round"><title>som_j2 ↔ hdmi_rx_term: HDMI_RX_CLK_N, HDMI_RX_CLK_N, HDMI_RX_CLK_P, HDMI_RX_CLK_P, HDMI_RX_D0_N, HDMI_RX_D0_N, HDMI_RX_D0_P, HDMI_RX_D0_P, HDMI_RX_D1_N, HDMI_RX_D1_N, HDMI_RX_D1_P, HDMI_RX_D1_P, HDMI_RX_D2_N, HDMI_RX_D2_N, HDMI_RX_D2_P, HDMI_RX_D2_P</title></path>
+<path d="M636.0,126.5 H653.0 V138.0 H1076.0" fill="none" stroke="#db2777" stroke-width="2.0" stroke-linejoin="round"><title>som_j2 ↔ hdmi_tx: ZYNQ_HDMI_TX_CEC, ZYNQ_HDMI_TX_HPD, ZYNQ_HDMI_TX_SCL, ZYNQ_HDMI_TX_SCL, ZYNQ_HDMI_TX_SDA, ZYNQ_HDMI_TX_SDA, ZYNQ_HDMI_TX_TMDS_0_N, ZYNQ_HDMI_TX_TMDS_0_P, ZYNQ_HDMI_TX_TMDS_1_N, ZYNQ_HDMI_TX_TMDS_1_P, ZYNQ_HDMI_TX_TMDS_2_N, ZYNQ_HDMI_TX_TMDS_2_P, ZYNQ_HDMI_TX_TMDS_CLK_N, ZYNQ_HDMI_TX_TMDS_CLK_P</title></path>
+<path d="M636.0,131.6 H658.6 V207.3 H1076.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>som_j2 ↔ lcd: LCD_CTP_INT, LCD_CTP_RST, LCD_CTP_SCL, LCD_CTP_SCL, LCD_CTP_SDA, LCD_CTP_SDA</title></path>
+<path d="M636.0,139.3 H686.2 V305.0 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ microsd: SD_CARD_DETECT</title></path>
+<path d="M636.0,129.1 H647.5 V133.3 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ pmod: IO_L10_N_13, IO_L10_P_13, IO_L2_N_13, IO_L2_P_13, IO_L3_N_13, IO_L3_P_13, IO_L4_N_13, IO_L4_P_13, IO_L5P_13, IO_L5_N_13, IO_L7_N_13, IO_L7_P_13, IO_L8_N_13, IO_L8_P_13, IO_L9_DQS_N_13, IO_L9_DQS_P_13</title></path>
+<path d="M636.0,136.7 H669.6 V233.3 H1394.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ uart_bridge: ZYNQ_PS_UART0_CTS_N, ZYNQ_PS_UART0_RTS_N</title></path>
+<path d="M636.0,134.2 H664.1 V207.3 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j2 ↔ user_io: IO_25_13, IO_L15_P_13, IO_L19_P_13, IO_L21_P_13, IO_L22_P_13, IO_L24_N_13, IO_L24_P_13, IO_L6_P_13</title></path>
+<path d="M636.0,221.3 H752.4 V499.6 H1712.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j3 ↔ board_services: IO_L16_N_35, IO_L16_P_35</title></path>
+<path d="M636.0,207.3 H697.2 V286.0 H1076.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>som_j3 ↔ camera: CAM_CLK_N, CAM_CLK_P, CAM_D0_N, CAM_D0_P, CAM_D1_N, CAM_D1_P, CAM_EN, CAM_LED, CAM_SCL, CAM_SCL, CAM_SDA, CAM_SDA</title></path>
+<path d="M636.0,212.0 H719.3 V353.0 H1712.0" fill="none" stroke="#7c3aed" stroke-width="2.0" stroke-linejoin="round"><title>som_j3 ↔ fmc: FMC_CLK0_M2C_N, FMC_CLK0_M2C_P, FMC_CLK1_M2C_N, FMC_CLK1_M2C_P, FMC_LA00_CC_N, FMC_LA00_CC_P, FMC_LA01_CC_N, FMC_LA01_CC_P, FMC_LA02_N, FMC_LA02_P, FMC_LA03_N, FMC_LA03_P, FMC_LA04_N, FMC_LA04_P, FMC_LA05_N, FMC_LA05_P, FMC_LA06_N, FMC_LA06_P, FMC_LA07_N, FMC_LA07_P</title></path>
+<path d="M636.0,202.7 H680.6 V216.7 H1076.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"><title>som_j3 ↔ lcd: LCD_B0, LCD_B1, LCD_B2, LCD_B3, LCD_B4, LCD_B5, LCD_B6, LCD_B7, LCD_BL_PWM, LCD_DE, LCD_DISP, LCD_G0, LCD_G1, LCD_G2, LCD_G3, LCD_G4, LCD_G5, LCD_G6, LCD_G7, LCD_HSYNC, LCD_PCLK, LCD_R0, LCD_R1, LCD_R2, LCD_R3, LCD_R4, LCD_R5, LCD_R6, LCD_R7, LCD_VSYNC</title></path>
+<path d="M1562.0,238.0 H1623.2 V238.0 H2030.0" fill="none" stroke="#0891b2" stroke-width="2.0" stroke-linejoin="round"><title>uart_bridge ↔ usb_uart_connector: USB_UART_DM, USB_UART_DP, USB_UART_VBUS</title></path>
+<path d="M1562.0,464.7 H1678.4 V590.4 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>usb_pd ↔ board_aux: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M1562.0,455.3 H1650.8 V367.0 H1712.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round"><title>usb_pd ↔ fmc: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M926.0,156.6 H1008.7 V505.2 H1712.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ board_services: IO_L16_N_35, IO_L16_P_35</title></path>
+<circle cx="926.0" cy="156.6" r="2.6" fill="#1d4ed8"/>
+<path d="M926.0,241.7 H962.7 V293.0 H1712.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ debug_boot: STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
+<circle cx="926.0" cy="241.7" r="2.6" fill="#1d4ed8"/>
+<path d="M926.0,284.3 H947.3 V142.7 H1394.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ ethernet: ETH_PHY_MDI0_N, ETH_PHY_MDI0_P, ETH_PHY_MDI1_N, ETH_PHY_MDI1_P, ETH_PHY_MDI2_N, ETH_PHY_MDI2_P, ETH_PHY_MDI3_N, ETH_PHY_MDI3_P</title></path>
+<circle cx="926.0" cy="284.3" r="2.6" fill="#1d4ed8"/>
+<path d="M926.0,326.9 H993.3 V319.0 H1394.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ microsd: SDIO_CLK, SDIO_CMD, SDIO_D0, SDIO_D1, SDIO_D2, SDIO_D3</title></path>
+<circle cx="926.0" cy="326.9" r="2.6" fill="#1d4ed8"/>
+<path d="M926.0,412.0 H978.0 V142.7 H1712.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ pmod: IO_L10_N_13, IO_L10_P_13, IO_L2_N_13, IO_L2_P_13, IO_L3_N_13, IO_L3_P_13, IO_L4_N_13, IO_L4_P_13, IO_L5P_13, IO_L5_N_13, IO_L7_N_13, IO_L7_P_13, IO_L8_N_13, IO_L8_P_13, IO_L9_DQS_N_13, IO_L9_DQS_P_13</title></path>
+<circle cx="926.0" cy="412.0" r="2.6" fill="#1d4ed8"/>
+<path d="M926.0,582.3 H1054.7 V464.7 H1394.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ usb_pd: STM32_USB_CC1, STM32_USB_CC2</title></path>
+<circle cx="926.0" cy="582.3" r="2.6" fill="#1d4ed8"/>
+<path d="M926.0,624.9 H1039.3 V393.0 H1394.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ usbc_otg: USB_D+, USB_D-, USB_ID, USB_VBUS, VBUS_OUT_EN</title></path>
+<circle cx="926.0" cy="624.9" r="2.6" fill="#1d4ed8"/>
+<path d="M926.0,667.4 H1024.0 V216.7 H1712.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>SoM ↔ user_io: IO_25_13, IO_L15_P_13, IO_L19_P_13, IO_L21_P_13, IO_L22_P_13, IO_L24_N_13, IO_L24_P_13, IO_L6_P_13</title></path>
+<circle cx="926.0" cy="667.4" r="2.6" fill="#1d4ed8"/>
+<path d="M318.0,290.7 H340.6 V199.1 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>bringup_rails ↔ SoM: STM32_NRST</title></path>
+<circle cx="786.0" cy="199.1" r="2.6" fill="#1d4ed8"/>
+<path d="M318.0,360.0 H395.8 V369.4 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>pd_input ↔ SoM: STM32_USB_CC1, STM32_USB_CC2, STM32_USB_D_N, STM32_USB_D_P</title></path>
+<circle cx="786.0" cy="369.4" r="2.6" fill="#1d4ed8"/>
+<path d="M636.0,291.6 H757.9 V454.6 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>som_j1 ↔ SoM: ETH_LED1, ETH_LED2, ETH_PHY_MDI0_N, ETH_PHY_MDI0_P, ETH_PHY_MDI1_N, ETH_PHY_MDI1_P, ETH_PHY_MDI2_N, ETH_PHY_MDI2_P, ETH_PHY_MDI3_N, ETH_PHY_MDI3_P, IO_0_35, IO_L2_N_35, SDIO_CLK, SDIO_CMD, SDIO_D0, SDIO_D1, SDIO_D2, SDIO_D3, STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, STM32_USB_CC1, STM32_USB_CC2, STM32_USB_D_N, STM32_USB_D_P, USB_D+, USB_D-, USB_ID, USB_VBUS, VBUS_OUT_EN, ZYNQ_PS_MIO0, ZYNQ_PS_MIO12, ZYNQ_PS_MIO7/VM0, ZYNQ_PS_MIO8\VM1, ZYNQ_PS_MIO9, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
+<circle cx="786.0" cy="454.6" r="2.6" fill="#1d4ed8"/>
+<path d="M636.0,149.5 H741.4 V497.1 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>som_j2 ↔ SoM: IO_25_13, IO_L10_N_13, IO_L10_P_13, IO_L11_SRCC_N_13, IO_L11_SRCC_N_33, IO_L11_SRCC_P_13, IO_L11_SRCC_P_33, IO_L12_MRCC_N_13, IO_L12_MRCC_P_13, IO_L13_MRCC_N_13, IO_L13_MRCC_P_13, IO_L14_N_SRCC_13, IO_L14_P_SRCC_13, IO_L14_SRCC_N_33, IO_L14_SRCC_P_33, IO_L15_P_13, IO_L19_P_13, IO_L1P_13, IO_L1_N_13, IO_L21_P_13, IO_L22_P_13, IO_L23_N_13, IO_L23_P_13, IO_L24_N_13, IO_L24_P_13, IO_L2_N_13, IO_L2_P_13, IO_L3_N_13, IO_L3_P_13, IO_L4_N_13, IO_L4_P_13, IO_L5P_13, IO_L5_N_13, IO_L6_P_13, IO_L7_N_13, IO_L7_P_13, IO_L8_N_13, IO_L8_P_13, IO_L9_DQS_N_13, IO_L9_DQS_P_13</title></path>
+<circle cx="786.0" cy="497.1" r="2.6" fill="#1d4ed8"/>
+<path d="M636.0,216.7 H769.0 V539.7 H786.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round"><title>som_j3 ↔ SoM: IO_L16_N_35, IO_L16_P_35, IO_L18_N_35, IO_L18_P_35, IO_L22_N_34, IO_L23_P_34, IO_L24_P_34, IO_L3_DQS_N_33, IO_L3_DQS_P_33, IO_L4_N_33, IO_L4_P_33, IO_L5_N_33, IO_L5_P_33</title></path>
+<circle cx="786.0" cy="539.7" r="2.6" fill="#1d4ed8"/>
 <rect x="46.0" y="129.5" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
 <text x="144.0" y="141.0" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">3 nets · signal</text>
 <rect x="40.0" y="203.5" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
@@ -144,64 +144,64 @@
 <text x="462.0" y="265.8" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">4 nets · I2C bus</text>
 <rect x="364.0" y="311.9" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
 <text x="462.0" y="323.4" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">3 nets · signal</text>
-<rect x="688.0" y="180.1" width="92.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="780.0" y="191.6" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">1 net · signal</text>
-<rect x="652.0" y="329.2" width="128.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="780.0" y="340.7" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">4 nets · USB HS pair</text>
-<rect x="658.0" y="403.8" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="780.0" y="415.3" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">42 nets · diff pair</text>
-<rect x="676.0" y="441.1" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="780.0" y="452.6" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">40 nets · signal</text>
-<rect x="676.0" y="478.4" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="780.0" y="489.9" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">13 nets · signal</text>
-<rect x="932.0" y="142.8" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="932.0" y="154.3" font-size="11" font-weight="600" fill="#1d4ed8">2 nets · signal</text>
-<rect x="932.0" y="217.4" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="932.0" y="228.9" font-size="11" font-weight="600" fill="#1d4ed8">10 nets · signal</text>
-<rect x="932.0" y="254.6" width="116.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="932.0" y="266.1" font-size="11" font-weight="600" fill="#1d4ed8">8 nets · diff pair</text>
-<rect x="932.0" y="291.9" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="932.0" y="303.4" font-size="11" font-weight="600" fill="#1d4ed8">6 nets · SD bus</text>
-<rect x="932.0" y="366.5" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="932.0" y="378.0" font-size="11" font-weight="600" fill="#1d4ed8">16 nets · signal</text>
-<rect x="932.0" y="515.6" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="932.0" y="527.1" font-size="11" font-weight="600" fill="#1d4ed8">2 nets · signal</text>
-<rect x="932.0" y="552.9" width="128.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="932.0" y="564.4" font-size="11" font-weight="600" fill="#1d4ed8">5 nets · USB HS pair</text>
-<rect x="932.0" y="590.2" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="932.0" y="601.7" font-size="11" font-weight="600" fill="#1d4ed8">8 nets · signal</text>
+<rect x="688.0" y="190.6" width="92.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="780.0" y="202.1" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">1 net · signal</text>
+<rect x="652.0" y="360.9" width="128.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="780.0" y="372.4" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">4 nets · USB HS pair</text>
+<rect x="658.0" y="446.1" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="780.0" y="457.6" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">42 nets · diff pair</text>
+<rect x="676.0" y="488.6" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="780.0" y="500.1" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">40 nets · signal</text>
+<rect x="676.0" y="531.2" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="780.0" y="542.7" text-anchor="end" font-size="11" font-weight="600" fill="#1d4ed8">13 nets · signal</text>
+<rect x="932.0" y="148.1" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="932.0" y="159.6" font-size="11" font-weight="600" fill="#1d4ed8">2 nets · signal</text>
+<rect x="932.0" y="233.2" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="932.0" y="244.7" font-size="11" font-weight="600" fill="#1d4ed8">10 nets · signal</text>
+<rect x="932.0" y="275.8" width="116.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="932.0" y="287.3" font-size="11" font-weight="600" fill="#1d4ed8">8 nets · diff pair</text>
+<rect x="932.0" y="318.4" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="932.0" y="329.9" font-size="11" font-weight="600" fill="#1d4ed8">6 nets · SD bus</text>
+<rect x="932.0" y="403.5" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="932.0" y="415.0" font-size="11" font-weight="600" fill="#1d4ed8">16 nets · signal</text>
+<rect x="932.0" y="573.8" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="932.0" y="585.3" font-size="11" font-weight="600" fill="#1d4ed8">2 nets · signal</text>
+<rect x="932.0" y="616.4" width="128.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="932.0" y="627.9" font-size="11" font-weight="600" fill="#1d4ed8">5 nets · USB HS pair</text>
+<rect x="932.0" y="658.9" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#1d4ed8" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="932.0" y="670.4" font-size="11" font-weight="600" fill="#1d4ed8">8 nets · signal</text>
 <rect x="948.0" y="129.5" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#db2777" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1070.0" y="141.0" text-anchor="end" font-size="11" font-weight="600" fill="#db2777">10 nets · TMDS pair</text>
-<rect x="948.0" y="203.5" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#db2777" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1070.0" y="215.0" text-anchor="end" font-size="11" font-weight="600" fill="#db2777">14 nets · TMDS pair</text>
-<rect x="966.0" y="272.8" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1070.0" y="284.3" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">6 nets · I2C bus</text>
-<rect x="966.0" y="308.2" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1070.0" y="319.7" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">30 nets · signal</text>
-<rect x="948.0" y="351.5" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#7c3aed" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1070.0" y="363.0" text-anchor="end" font-size="11" font-weight="600" fill="#7c3aed">12 nets · diff pair</text>
-<rect x="1290.0" y="124.8" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="136.3" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">2 nets · signal</text>
-<rect x="1290.0" y="147.2" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="158.7" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">2 nets · signal</text>
-<rect x="1296.0" y="196.5" width="92.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="208.0" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">1 net · signal</text>
-<rect x="1290.0" y="216.5" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#ca8a04" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="228.0" text-anchor="end" font-size="11" font-weight="600" fill="#ca8a04">6 nets · SD bus</text>
-<rect x="1296.0" y="270.5" width="92.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="282.0" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">1 net · signal</text>
-<rect x="1260.0" y="290.5" width="128.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#0891b2" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="302.0" text-anchor="end" font-size="11" font-weight="600" fill="#0891b2">5 nets · USB HS pair</text>
-<rect x="1284.0" y="342.2" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="353.7" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">3 nets · I2C bus</text>
-<rect x="1284.0" y="359.8" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="371.3" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">7 nets · I2C bus</text>
-<rect x="1290.0" y="325.5" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="337.0" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">2 nets · signal</text>
-<rect x="1284.0" y="373.8" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="385.3" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">2 nets · I2C bus</text>
-<rect x="1272.0" y="446.8" width="116.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#7c3aed" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="1388.0" y="458.3" text-anchor="end" font-size="11" font-weight="600" fill="#7c3aed">8 nets · diff pair</text>
+<text x="1070.0" y="141.0" text-anchor="end" font-size="11" font-weight="600" fill="#db2777">14 nets · TMDS pair</text>
+<rect x="966.0" y="198.8" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1070.0" y="210.3" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">6 nets · I2C bus</text>
+<rect x="966.0" y="182.2" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1070.0" y="193.7" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">30 nets · signal</text>
+<rect x="948.0" y="290.5" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#7c3aed" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1070.0" y="302.0" text-anchor="end" font-size="11" font-weight="600" fill="#7c3aed">12 nets · diff pair</text>
+<rect x="948.0" y="351.5" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#db2777" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1070.0" y="363.0" text-anchor="end" font-size="11" font-weight="600" fill="#db2777">10 nets · TMDS pair</text>
+<rect x="1272.0" y="124.8" width="116.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#7c3aed" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="136.3" text-anchor="end" font-size="11" font-weight="600" fill="#7c3aed">8 nets · diff pair</text>
+<rect x="1290.0" y="224.8" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="236.3" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">2 nets · signal</text>
+<rect x="1290.0" y="247.2" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="258.7" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">2 nets · signal</text>
+<rect x="1296.0" y="296.5" width="92.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="308.0" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">1 net · signal</text>
+<rect x="1290.0" y="316.5" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#ca8a04" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="328.0" text-anchor="end" font-size="11" font-weight="600" fill="#ca8a04">6 nets · SD bus</text>
+<rect x="1296.0" y="370.5" width="92.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="382.0" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">1 net · signal</text>
+<rect x="1260.0" y="390.5" width="128.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#0891b2" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="402.0" text-anchor="end" font-size="11" font-weight="600" fill="#0891b2">5 nets · USB HS pair</text>
+<rect x="1284.0" y="442.2" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="453.7" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">3 nets · I2C bus</text>
+<rect x="1284.0" y="459.8" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="471.3" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">7 nets · I2C bus</text>
+<rect x="1290.0" y="425.5" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="437.0" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">2 nets · signal</text>
+<rect x="1284.0" y="473.8" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="1388.0" y="485.3" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">2 nets · I2C bus</text>
 <rect x="1602.0" y="124.8" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
 <text x="1706.0" y="136.3" text-anchor="end" font-size="11" font-weight="600" fill="#2563eb">16 nets · signal</text>
 <rect x="1608.0" y="198.8" width="98.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#2563eb" stroke-opacity="0.25" stroke-width="0.7"/>
@@ -236,15 +236,15 @@
 <text x="1706.0" y="561.8" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">2 nets · I2C bus</text>
 <rect x="1602.0" y="607.9" width="104.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#16a34a" stroke-opacity="0.25" stroke-width="0.7"/>
 <text x="1706.0" y="619.4" text-anchor="end" font-size="11" font-weight="600" fill="#16a34a">2 nets · I2C bus</text>
-<rect x="1902.0" y="124.8" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#db2777" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="2024.0" y="136.3" text-anchor="end" font-size="11" font-weight="600" fill="#db2777">16 nets · TMDS pair</text>
-<rect x="1902.0" y="147.2" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#db2777" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="2024.0" y="158.7" text-anchor="end" font-size="11" font-weight="600" fill="#db2777">16 nets · TMDS pair</text>
+<rect x="1908.0" y="129.5" width="116.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#7c3aed" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="2024.0" y="141.0" text-anchor="end" font-size="11" font-weight="600" fill="#7c3aed">8 nets · diff pair</text>
 <rect x="1896.0" y="229.5" width="128.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#0891b2" stroke-opacity="0.25" stroke-width="0.7"/>
 <text x="2024.0" y="241.0" text-anchor="end" font-size="11" font-weight="600" fill="#0891b2">3 nets · USB HS pair</text>
-<rect x="1908.0" y="329.5" width="116.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#7c3aed" stroke-opacity="0.25" stroke-width="0.7"/>
-<text x="2024.0" y="341.0" text-anchor="end" font-size="11" font-weight="600" fill="#7c3aed">8 nets · diff pair</text>
-<rect x="786" y="114" width="140" height="522" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2.4"/>
+<rect x="1902.0" y="324.8" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#db2777" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="2024.0" y="336.3" text-anchor="end" font-size="11" font-weight="600" fill="#db2777">16 nets · TMDS pair</text>
+<rect x="1902.0" y="347.2" width="122.0" height="15" rx="4" fill="#ffffff" fill-opacity="0.92" stroke="#db2777" stroke-opacity="0.25" stroke-width="0.7"/>
+<text x="2024.0" y="358.7" text-anchor="end" font-size="11" font-weight="600" fill="#db2777">16 nets · TMDS pair</text>
+<rect x="786" y="114" width="140" height="596" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2.4"/>
 <text x="856" y="140" text-anchor="middle" font-size="15" font-weight="700" fill="#78350f">Zynq SoM</text>
 <text x="856" y="158" text-anchor="middle" font-size="11" fill="#92400e">J1 / J2 / J3 contract</text>
 <text x="856" y="176" text-anchor="middle" font-size="11" fill="#92400e">213 nets</text>
@@ -254,9 +254,9 @@
 <text x="856" y="245" text-anchor="middle" font-size="10.5" fill="#92400e">+3V3_SC</text>
 <text x="856" y="260" text-anchor="middle" font-size="10.5" fill="#92400e">+5V_SOM</text>
 <text x="856" y="275" text-anchor="middle" font-size="10.5" fill="#92400e">GND</text>
-<text x="856" y="626" text-anchor="middle" font-size="10" fill="#a16207">0 unbound (later)</text>
-<rect x="798" y="653" width="116" height="26" rx="8" fill="#ffffff" stroke="#9ca3af" stroke-width="1.3" stroke-dasharray="5,4"/>
-<text x="856" y="670" text-anchor="middle" font-size="11" fill="#6b7280">later waves · 1</text>
+<text x="856" y="700" text-anchor="middle" font-size="10" fill="#a16207">0 unbound (later)</text>
+<rect x="798" y="727" width="116" height="26" rx="8" fill="#ffffff" stroke="#9ca3af" stroke-width="1.3" stroke-dasharray="5,4"/>
+<text x="856" y="744" text-anchor="middle" font-size="11" fill="#6b7280">later waves · 1</text>
 <rect x="1712" y="558" width="168" height="48" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.6"/>
 <text x="1722" y="577" font-size="13.5" font-weight="700" fill="#0f172a">board_aux</text>
 <text x="1722" y="594" font-size="10.5" fill="#64748b">16 peer</text>
@@ -278,33 +278,33 @@
 <rect x="150" y="262" width="168" height="48" rx="8" fill="#ffffff" stroke="#fdba74" stroke-width="1.6"/>
 <text x="160" y="281" font-size="13.5" font-weight="700" fill="#0f172a">bringup_rails</text>
 <text x="160" y="298" font-size="10.5" fill="#64748b">1 SoM · 47 peer</text>
-<rect x="1076" y="336" width="168" height="48" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1.6"/>
-<text x="1086" y="355" font-size="13.5" font-weight="700" fill="#0f172a">camera</text>
-<text x="1086" y="372" font-size="10.5" fill="#64748b">12 peer</text>
+<rect x="1076" y="262" width="168" height="48" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1.6"/>
+<text x="1086" y="281" font-size="13.5" font-weight="700" fill="#0f172a">camera</text>
+<text x="1086" y="298" font-size="10.5" fill="#64748b">12 peer</text>
 <rect x="1712" y="262" width="168" height="48" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.6"/>
 <text x="1722" y="281" font-size="13.5" font-weight="700" fill="#0f172a">debug_boot</text>
 <text x="1722" y="298" font-size="10.5" fill="#64748b">10 SoM · 11 peer</text>
-<rect x="1394" y="436" width="168" height="48" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.6"/>
-<text x="1404" y="455" font-size="13.5" font-weight="700" fill="#0f172a">ethernet</text>
-<text x="1404" y="472" font-size="10.5" fill="#64748b">8 SoM · 16 peer</text>
+<rect x="1394" y="114" width="168" height="48" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.6"/>
+<text x="1404" y="133" font-size="13.5" font-weight="700" fill="#0f172a">ethernet</text>
+<text x="1404" y="150" font-size="10.5" fill="#64748b">8 SoM · 16 peer</text>
 <rect x="1712" y="336" width="168" height="48" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.6"/>
 <text x="1722" y="355" font-size="13.5" font-weight="700" fill="#0f172a">fmc</text>
 <text x="1722" y="372" font-size="10.5" fill="#64748b">41 peer</text>
+<rect x="1076" y="336" width="168" height="48" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1.6"/>
+<text x="1086" y="355" font-size="13.5" font-weight="700" fill="#0f172a">hdmi_rx</text>
+<text x="1086" y="372" font-size="10.5" fill="#64748b">26 peer</text>
+<rect x="2030" y="314" width="168" height="48" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1.6"/>
+<text x="2040" y="333" font-size="13.5" font-weight="700" fill="#0f172a">hdmi_rx_term</text>
+<text x="2040" y="350" font-size="10.5" fill="#64748b">32 peer</text>
 <rect x="1076" y="114" width="168" height="48" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1.6"/>
-<text x="1086" y="133" font-size="13.5" font-weight="700" fill="#0f172a">hdmi_rx</text>
-<text x="1086" y="150" font-size="10.5" fill="#64748b">26 peer</text>
-<rect x="2030" y="114" width="168" height="48" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1.6"/>
-<text x="2040" y="133" font-size="13.5" font-weight="700" fill="#0f172a">hdmi_rx_term</text>
-<text x="2040" y="150" font-size="10.5" fill="#64748b">32 peer</text>
+<text x="1086" y="133" font-size="13.5" font-weight="700" fill="#0f172a">hdmi_tx</text>
+<text x="1086" y="150" font-size="10.5" fill="#64748b">14 peer</text>
 <rect x="1076" y="188" width="168" height="48" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1.6"/>
-<text x="1086" y="207" font-size="13.5" font-weight="700" fill="#0f172a">hdmi_tx</text>
-<text x="1086" y="224" font-size="10.5" fill="#64748b">14 peer</text>
-<rect x="1076" y="262" width="168" height="48" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1.6"/>
-<text x="1086" y="281" font-size="13.5" font-weight="700" fill="#0f172a">lcd</text>
-<text x="1086" y="298" font-size="10.5" fill="#64748b">36 peer</text>
-<rect x="1394" y="188" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
-<text x="1404" y="207" font-size="13.5" font-weight="700" fill="#0f172a">microsd</text>
-<text x="1404" y="224" font-size="10.5" fill="#64748b">6 SoM · 7 peer</text>
+<text x="1086" y="207" font-size="13.5" font-weight="700" fill="#0f172a">lcd</text>
+<text x="1086" y="224" font-size="10.5" fill="#64748b">36 peer</text>
+<rect x="1394" y="288" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
+<text x="1404" y="307" font-size="13.5" font-weight="700" fill="#0f172a">microsd</text>
+<text x="1404" y="324" font-size="10.5" fill="#64748b">6 SoM · 7 peer</text>
 <rect x="150" y="336" width="168" height="48" rx="8" fill="#ffffff" stroke="#fdba74" stroke-width="1.6"/>
 <text x="160" y="355" font-size="13.5" font-weight="700" fill="#0f172a">pd_input</text>
 <text x="160" y="372" font-size="10.5" fill="#64748b">4 SoM · 7 peer</text>
@@ -317,9 +317,12 @@
 <rect x="150" y="410" width="168" height="48" rx="8" fill="#ffffff" stroke="#fdba74" stroke-width="1.6"/>
 <text x="160" y="429" font-size="13.5" font-weight="700" fill="#0f172a">power_mon</text>
 <text x="160" y="446" font-size="10.5" fill="#64748b">13 peer</text>
-<rect x="2030" y="314" width="168" height="48" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.6"/>
-<text x="2040" y="333" font-size="13.5" font-weight="700" fill="#0f172a">rj45_connector</text>
-<text x="2040" y="350" font-size="10.5" fill="#64748b">8 peer</text>
+<rect x="1712" y="632" width="168" height="48" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.6"/>
+<text x="1722" y="651" font-size="13.5" font-weight="700" fill="#0f172a">power_som</text>
+<text x="1722" y="668" font-size="10.5" fill="#64748b">—</text>
+<rect x="2030" y="114" width="168" height="48" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.6"/>
+<text x="2040" y="133" font-size="13.5" font-weight="700" fill="#0f172a">rj45_connector</text>
+<text x="2040" y="150" font-size="10.5" fill="#64748b">8 peer</text>
 <rect x="468" y="262" width="168" height="48" rx="8" fill="#ffffff" stroke="#fcd34d" stroke-width="1.6"/>
 <text x="478" y="281" font-size="13.5" font-weight="700" fill="#0f172a">som_j1</text>
 <text x="478" y="298" font-size="10.5" fill="#64748b">42 SoM · 71 peer</text>
@@ -329,18 +332,18 @@
 <rect x="468" y="188" width="168" height="48" rx="8" fill="#ffffff" stroke="#fcd34d" stroke-width="1.6"/>
 <text x="478" y="207" font-size="13.5" font-weight="700" fill="#0f172a">som_j3</text>
 <text x="478" y="224" font-size="10.5" fill="#64748b">13 SoM · 65 peer</text>
-<rect x="1394" y="114" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
-<text x="1404" y="133" font-size="13.5" font-weight="700" fill="#0f172a">uart_bridge</text>
-<text x="1404" y="150" font-size="10.5" fill="#64748b">7 peer</text>
-<rect x="1394" y="336" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
-<text x="1404" y="355" font-size="13.5" font-weight="700" fill="#0f172a">usb_pd</text>
-<text x="1404" y="372" font-size="10.5" fill="#64748b">2 SoM · 18 peer</text>
+<rect x="1394" y="214" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
+<text x="1404" y="233" font-size="13.5" font-weight="700" fill="#0f172a">uart_bridge</text>
+<text x="1404" y="250" font-size="10.5" fill="#64748b">7 peer</text>
+<rect x="1394" y="436" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
+<text x="1404" y="455" font-size="13.5" font-weight="700" fill="#0f172a">usb_pd</text>
+<text x="1404" y="472" font-size="10.5" fill="#64748b">2 SoM · 18 peer</text>
 <rect x="2030" y="214" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
 <text x="2040" y="233" font-size="13.5" font-weight="700" fill="#0f172a">usb_uart_connector</text>
 <text x="2040" y="250" font-size="10.5" fill="#64748b">3 peer</text>
-<rect x="1394" y="262" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
-<text x="1404" y="281" font-size="13.5" font-weight="700" fill="#0f172a">usbc_otg</text>
-<text x="1404" y="298" font-size="10.5" fill="#64748b">5 SoM · 6 peer</text>
+<rect x="1394" y="362" width="168" height="48" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6"/>
+<text x="1404" y="381" font-size="13.5" font-weight="700" fill="#0f172a">usbc_otg</text>
+<text x="1404" y="398" font-size="10.5" fill="#64748b">5 SoM · 6 peer</text>
 <rect x="1712" y="188" width="168" height="48" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.6"/>
 <text x="1722" y="207" font-size="13.5" font-weight="700" fill="#0f172a">user_io</text>
 <text x="1722" y="224" font-size="10.5" fill="#64748b">8 SoM · 8 peer</text>

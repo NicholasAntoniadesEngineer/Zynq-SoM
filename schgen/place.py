@@ -33,7 +33,7 @@ from schgen import route, sexpr
 from schgen import textmetrics as tm
 from schgen.emit import (HierLabel, LocalLabel, NoConnect, PlacedPart,
                          PlacedPower)
-from schgen.model import Circuit, NetClass, PinRef
+from schgen.model import Circuit, NetClass, PartitionError, PinRef
 from schgen.symbols import GRID, Library, Pin, SymbolDef, pin_page_position
 from schgen.verify import visual_gate
 from schgen.verify.visual_gate import Box, SheetGeometry
@@ -1396,6 +1396,34 @@ class _Engine:
         mid = xs[len(xs) // 2]
         self.power(net, mid, bar_y, rot)
 
+    def _local_drop_chain(self, net_name: str, this_ref: str):
+        """A synthetic pin-rooted _FloatChain for a top/bottom SIGNAL pin whose
+        net is otherwise ONLY one local 2-pin passive hung to GND or a rail — a
+        buck VCC bias-bypass cap, an RC bias node. The float-chain extractor
+        skips such a net (it touches a multi-pin part, so it is a 'multi_net'),
+        leaving the top/bottom dispatch with no branch; this lets it route via
+        the SAME side-parameterized _stack_from_pin used for pin stacks (NEVER
+        by moving a symbol pin — the part is faithful, the engine extends).
+
+        Returns None when the net has any OTHER multi-pin tap (a real
+        inter-part net -> trunk/label) or anything but exactly one local
+        passive (ambiguous: let the raise stand — LAW 4, never mis-route)."""
+        n = self.c.nets[net_name]
+        mset = set(self.multi)
+        multi_pins = [pr for pr in n.pins if pr.ref in mset]
+        if len(multi_pins) != 1 or multi_pins[0].ref != this_ref:
+            return None
+        locals_ = list(self.hang.get(net_name, [])) + \
+            [r for r, _rail in self.pull.get(net_name, [])]
+        passive_refs = {pr.ref for pr in n.pins if pr.ref not in mset}
+        if len(locals_) != 1 or passive_refs != set(locals_):
+            return None
+        ref = locals_[0]
+        far = self.net_of(ref, self.other_pin(ref, self._pin_of_net(ref, net_name)))
+        assert far is not None
+        return _FloatChain(kind="pin", root=net_name,
+                           legs=[(ref, net_name, far.name)], hangs={})
+
     def _stack_from_pin(self, chain: _FloatChain, pt: tuple[float, float],
                         side: str) -> None:
         """Pin-rooted series chain stacked straight off a top/bottom pin."""
@@ -1477,6 +1505,10 @@ class _Engine:
                     continue
                 if net.net_class is NetClass.PORT:
                     port_drops.append((pin, pt))
+                    continue
+                local = self._local_drop_chain(net.name, ref)
+                if local is not None:
+                    self._stack_from_pin(local, pt, side)
                     continue
                 raise PlaceError(f"{ref}.{pin.number} ({net.name}) on the "
                                  f"{side} edge: no engine pattern applies")
@@ -2363,12 +2395,17 @@ class _Engine:
             part = self.c.parts[ref]
             sdef = self.lib.get(part.lib_id)
             for p in sdef.pins:
-                if p.etype != "power_out":
+                # a regulator's switch/output pin: 'power_out' (TPS54302 SW,
+                # AP2112K VOUT) OR 'output' — some stock symbols type the SW
+                # node 'output' (e.g. Regulator_Switching:LMR33640ADDA pin 8
+                # SW). LDO detection (POWER-net branch) stays strict to
+                # power_out so a stray 'output' pin can't fake a regulator.
+                if p.etype not in ("power_out", "output"):
                     continue
                 net = self.net_of(ref, p.number)
                 if net is None:
                     continue
-                if net.net_class is NetClass.POWER:
+                if net.net_class is NetClass.POWER and p.etype == "power_out":
                     stages[ref] = {"kind": "ldo", "out": net.name}
                     break
                 if net.net_class is NetClass.SIGNAL:
@@ -2503,6 +2540,8 @@ class _Engine:
         pins = {p.number: pin_page_position(p, 0.0, ay, 0)
                 for p in sdef.pins}
         p_in = p_en = p_gnd = p_en_uvlo = None
+        p_aux: list = []      # left-edge aux power_out (e.g. LMR33630 VCC bias)
+        gnd_pts: list = []    # ALL distinct bottom GND/EP points (incl. the EP)
         for p in sdef.pins:
             net = self.net_of(ref, p.number)
             if net is None:
@@ -2512,6 +2551,14 @@ class _Engine:
                 p_in = (pins[p.number], net.name)
             elif p.rotation == 0 and net.net_class is NetClass.PORT:
                 p_en = (pins[p.number], net.name, p.etype)
+            elif p.rotation == 0 and p.etype == "power_out" \
+                    and net.net_class is NetClass.SIGNAL \
+                    and self._local_drop_chain(net.name, ref) is not None:
+                # an internal-LDO BIAS output (e.g. the LMR33630 VCC pin) with a
+                # single local bypass cap to GND: dropped in its own left column
+                # (Edit 3 below). Without this it matches no role and falls to
+                # the raise — the "U1_VCC islet, opens forbidden" failure.
+                p_aux.append((pins[p.number], net.name))
             elif p.rotation == 0 and net.net_class is NetClass.SIGNAL \
                     and net.name in self.pull and net.name in self.hang:
                 # EN-UVLO-divider idiom (always-on regulators, e.g. power.py's
@@ -2524,6 +2571,7 @@ class _Engine:
                 p_en_uvlo = (pins[p.number], net.name)
             elif p.rotation == 90 and net.net_class is NetClass.GROUND:
                 p_gnd = (pins[p.number], net.name)
+                gnd_pts.append(pins[p.number])
         if p_in is None or p_gnd is None:
             raise PlaceError(f"{ref}: regulator stage without VIN/GND pins")
 
@@ -2600,25 +2648,51 @@ class _Engine:
             # any extras get their own column one cap-pitch further left and
             # tie back to the midpoint with a short horizontal run.
             self.hang.pop(uvlo_net)
+            # The EN elbow + clamp midpoint run left at a single CLEAR track. On
+            # a stage that OWNS its input cap bank (e.g. the isolated +5V_SOM
+            # sheet) the input-cap GND power symbols sit between uvlo_col and the
+            # EN column at ~y_mid; route the midpoint + EN BELOW them (y_tie) so
+            # the EN wire never collides with a GND symbol. When the stage rides
+            # a producer's input run there are no such caps -> cap_floor<=y_mid
+            # -> y_tie==y_mid -> geometry identical to before.
+            xv = round(pe_u[0] - 2.54, 3)
+            cap_floor = max([y_mid] + [b.y1 for b in self.pl.boxes
+                                       if b.kind == "body" and b.owner
+                                       and b.owner.startswith("#PWR")
+                                       and uvlo_col < b.x0 and b.x1 < xv
+                                       and b.y0 > pv[1]])
+            y_tie = y_mid if cap_floor <= y_mid else gceil(cap_floor + 2 * U)
+            if y_tie > y_mid:           # sink the series column to the clear track
+                self.pl.plan(uvlo_net, (uvlo_col, y_mid), (uvlo_col, y_tie))
             mid_xs = [uvlo_col]
             for k, gref in enumerate(uvlo_gnd):
                 gcol = uvlo_col if k == 0 else gfloor(
                     uvlo_col - (k * sp.cap_pitch))
                 if k > 0:
                     mid_xs.append(gcol)
-                far_pt2, far2 = self._vertical_2pin(gref, gcol, y_mid,
+                far_pt2, far2 = self._vertical_2pin(gref, gcol, y_tie,
                                                     uvlo_net, downward=True)
                 self.power(far2, *far_pt2)
-            # midpoint rail tying the shunt columns together at y_mid
-            mid_xs_sorted = sorted(set(mid_xs))
+            # midpoint rail tying the shunt columns + the EN drop together
+            mid_xs_sorted = sorted(set(mid_xs + [xv]))
             for xa, xb in zip(mid_xs_sorted, mid_xs_sorted[1:]):
-                self.pl.plan(uvlo_net, (xa, y_mid), (xb, y_mid))
-            # EN pin elbows down/left into the midpoint
-            xv = round(pe_u[0] - 2.54, 3)
-            self.pl.plan(uvlo_net, pe_u, (xv, pe_u[1]), (xv, y_mid),
-                         (uvlo_col, y_mid))
-        (pg, gnd_net) = p_gnd
-        self.power(gnd_net, *pg)
+                self.pl.plan(uvlo_net, (xa, y_tie), (xb, y_tie))
+            # EN pin elbows down its own column into the clear track
+            self.pl.plan(uvlo_net, pe_u, (xv, pe_u[1]), (xv, y_tie))
+        (_pg, gnd_net) = p_gnd
+        for gpt in sorted(set(gnd_pts)):          # ALL distinct bottom GND/EP pts
+            self.power(gnd_net, *gpt)
+        for (pa, aux_net) in p_aux:               # aux bias output (VCC) bypass cap
+            (rcref,) = [self.hang[aux_net][0]]    # its single local cap (drop chain)
+            xcol = gfloor(pa[0] - sp.cluster_dx)  # own left column (clear of body)
+            far_pt, far = self._vertical_2pin(rcref, xcol, pa[1], aux_net,
+                                              downward=True)
+            self.power(far, *far_pt)
+            self.hang.pop(aux_net, None)
+            self.pl.plan(aux_net, pa, (xcol, pa[1]))
+        for p in sdef.pins:                       # explicit NC for authored NCs
+            if self.net_of(ref, p.number) is None and p.etype != "no_connect":
+                self.pl.no_connects.append(NoConnect(*pins[p.number]))
 
         if st["kind"] == "buck":
             self._buck_right(ref, st, ay, pins, sdef, out_caps)
@@ -3725,3 +3799,153 @@ def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
         sp = sp.expanded()
     raise PlaceError(f"placement infeasible after {max_attempts} expansions; "
                      f"last failure:\n{last}")
+
+
+# ---- DEF-J: congestion-triggered auto-pagination --------------------------------
+# A subsystem that overflows A3 is SPLIT across pages instead of failing the
+# build (user directive: sheet density must never be a blocker). The cut is
+# along POWER/GROUND/PORT nets ONLY (they merge by name across sheets); SIGNAL-
+# connected parts are kept whole. Circuit.subset() is the LAW-0 chokepoint — a
+# cut SIGNAL net raises PartitionError before any emit. Each page goes back
+# through the UNMODIFIED place_and_route, so every page independently passes the
+# visual gate + A3 fit; a non-congested subsystem takes the single-page path and
+# is byte-identical to before.
+
+# Structural engine gaps (a pin/topology the engine genuinely cannot route).
+# Pagination must NOT paper over these — they need an engine fix and would fail
+# identically on a page. Everything else that exhausts the feasibility loop
+# (size over A3, persistent route contention, visual overlap) IS congestion.
+_STRUCTURAL_MARKERS = (
+    "no engine pattern applies", "no power symbol mapped",
+    "regulator stage without", "multi-element divider",
+    "neither a multi-pin part nor", "unsupported extra leg",
+    "single-ended chain tops out", "bottom-drop attachments beyond",
+)
+
+
+def _is_congestion(err: PlaceError) -> bool:
+    msg = str(err)
+    if "placement infeasible after" not in msg:
+        return False
+    return not any(m in msg for m in _STRUCTURAL_MARKERS)
+
+
+def _signal_blobs(c: Circuit, lib: Library) -> list[set[str]]:
+    """Indivisible part groups for pagination. A blob is a multi-pin part (IC)
+    plus everything SIGNAL-connected to it (FB divider, boot, inductor, EN
+    clamp, ...) PLUS its rail-only satellite passives (decoupling/bulk caps).
+
+    Two passes:
+      1. union parts joined by a SIGNAL net (both pins of any SIGNAL net thus
+         land in ONE blob, so a page of whole blobs can NEVER cut a SIGNAL net);
+      2. fold each leftover rail-only satellite (a 2-pin cap whose pins are just
+         POWER/GROUND) into the blob of a multi-pin part sharing its power rail
+         (non-GND preferred) — a lone cap on its own page has no anchor and the
+         engine can't place it. A satellite joins ONE stage; it never merges two.
+
+    Order: (-size, min-ref) -> stable/deterministic."""
+    parent = {r: r for r in c.parts}
+
+    def find(x: str) -> str:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a: str, b: str) -> None:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[max(ra, rb)] = min(ra, rb)
+
+    for net in c.nets.values():                       # pass 1: SIGNAL connectivity
+        if net.net_class is NetClass.SIGNAL:
+            refs = [pr.ref for pr in net.pins if pr.ref in c.parts]
+            for r in refs[1:]:
+                union(refs[0], r)
+
+    groups: dict[str, set[str]] = {}                   # SIGNAL components (pass 1)
+    for r in c.parts:
+        groups.setdefault(find(r), set()).add(r)
+
+    # pass 2: fold each lone satellite (a size-1 passive blob) into the stage
+    # blob sharing its power rail. SET-level merge (NOT union-find) so it can
+    # never chain two ICs together through a shared rail — a satellite joins
+    # exactly ONE stage. POWER (non-GND) preferred; GND is the last resort.
+    multi = {r for r in c.parts
+             if len(lib.pin_numbers(c.parts[r].lib_id)) > 2}
+    group_of = {r: find(r) for r in c.parts}           # ref -> its pass-1 root
+    rail_groups: dict[str, list[str]] = {}             # rail -> stage roots on it
+    for net in c.nets.values():
+        if net.net_class in (NetClass.POWER, NetClass.GROUND):
+            roots = sorted({group_of[pr.ref] for pr in net.pins
+                            if pr.ref in multi})
+            if roots:
+                rail_groups[net.name] = roots
+    for root in list(groups):                          # iterate a snapshot
+        refs = groups.get(root)
+        if refs is None or len(refs) != 1:
+            continue
+        (ref,) = refs
+        if ref in multi:
+            continue                                   # a lone IC -> own page
+        rails = sorted(
+            (n for n in c.nets.values()
+             if n.net_class in (NetClass.POWER, NetClass.GROUND)
+             and any(p.ref == ref for p in n.pins)),
+            key=lambda n: (n.net_class is NetClass.GROUND, n.name))  # POWER first
+        for rail in rails:
+            cands = [g for g in rail_groups.get(rail.name, []) if g != root]
+            if cands:
+                groups[min(cands)] |= groups.pop(root)
+                break
+
+    return sorted(groups.values(), key=lambda s: (-len(s), min(s)))
+
+
+def _fits_a3(c: Circuit, lib: Library) -> bool:
+    """Fit/no-fit oracle for bin-packing: does this (sub)circuit place within A3?
+    A bounded probe (2 attempts) — any failure means 'no' (conservative). The
+    authoritative full-attempt placement happens later in paginate_and_route."""
+    try:
+        place_and_route(c, lib, max_attempts=2)
+        return True
+    except PlaceError:
+        return False
+
+
+def partition_pages(c: Circuit, lib: Library) -> list[Circuit]:
+    """Split a congested subsystem into pages. SIGNAL-connected parts stay
+    together (blobs); blobs are bin-packed first-fit-decreasing into pages each
+    PROVEN to fit A3. Returns >=2 child Circuits, or [c] when it cannot split (a
+    single indivisible blob that overflows — surfaced as an honest failure)."""
+    blobs = _signal_blobs(c, lib)
+    if len(blobs) < 2:
+        return [c]
+    bins: list[set[str]] = []
+    for blob in blobs:                              # sorted -size, min-ref
+        for b in bins:
+            if _fits_a3(c.subset(b | blob, page=0), lib):
+                b |= blob
+                break
+        else:
+            bins.append(set(blob))
+    if len(bins) < 2:
+        return [c]
+    return [c.subset(refs, page=k) for k, refs in enumerate(bins, start=1)]
+
+
+def paginate_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
+    """place_and_route, but split a sheet across pages on A3-overflow congestion
+    instead of failing. Returns a list of (circuit, placement, routed, geo):
+    ONE entry for a sheet that fits (identical to place_and_route), N for a split
+    one. A structural engine failure still raises (pagination can't fix a pin the
+    engine cannot route)."""
+    try:
+        return [(c, *place_and_route(c, lib, max_attempts))]
+    except PlaceError as e:
+        if not _is_congestion(e):
+            raise
+        pages = partition_pages(c, lib)
+        if len(pages) < 2:
+            raise
+        return [(pg, *place_and_route(pg, lib, max_attempts)) for pg in pages]

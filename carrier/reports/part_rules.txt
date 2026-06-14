@@ -2,9 +2,9 @@ schgen per-part rule engine (ratings vs netlist usage)
 ==============================================================================
 
 enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
-113 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+111 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
 
-UNSPEC — reported, NOT failing (54):
+UNSPEC — reported, NOT failing (57):
   ? board_aux:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
   ? board_qwiic:J1 (ZX-SH1.0-4PWT, LCSC C7430446) — no ratings row
   ? board_services:BT1 (KH-CR1220-2, LCSC C5365933) — no ratings row
@@ -41,10 +41,13 @@ UNSPEC — reported, NOT failing (54):
   ? pd_input:J1 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
   ? pmod:J1 (DS1024-2x6R2, LCSC C49284652) — no ratings row
   ? pmod:J2 (DS1024-2x6R2, LCSC C49284652) — no ratings row
-  ? power:C17 (100n) — cap rail unresolved
-  ? power:C20 (100n) — cap rail unresolved
+  ? power:C24 (1u) — cap rail unresolved
   ? power:C4 (100n) — cap rail unresolved
   ? power:C9 (100n) — cap rail unresolved
+  ? power:R1 (40.2k, LCSC C25750) — no ratings row
+  ? power:U1 (LMR33630ADDAR, LCSC C841384) — no ratings row
+  ? power_som:C17 (100n) — cap rail unresolved
+  ? power_som:C20 (100n) — cap rail unresolved
   ? rj45_connector:J1 (KH-5224-8P8C-D, LCSC C2828085) — no ratings row
   ? som_j1:J1 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
   ? som_j2:J2 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
@@ -62,4 +65,4 @@ UNSPEC — reported, NOT failing (54):
 
 errors: none
 
-PART RULES: PASS (113 checks, 0 findings, 54 unspeced, 0 waived)
+PART RULES: PASS (111 checks, 0 findings, 57 unspeced, 0 waived)

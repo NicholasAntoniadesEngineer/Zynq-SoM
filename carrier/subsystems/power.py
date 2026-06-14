@@ -143,33 +143,50 @@ EXPECT_BRINGUP = "bringup (wave 2 rail-enable cells, dossier section 3.1)"
 def circuit() -> Circuit:
     c = Circuit("power", "Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs")
 
-    # ---- stage 1: +VIN (20 V) -> +5V buck -----------------------------------
-    c.use_part("TPS54302DDCR", ref="U1", lib_id=BUCK_LIB, footprint=BUCK_FP)
-    c.net("+VIN", "U1.3")
-    c.net("GND", "U1.1")
-    c.port("EN_5V0", "U1.5", expect=EXPECT_BRINGUP)
+    # ---- stage 1: +VIN (20 V) -> +5V buck (LMR33630, HSOIC-8 PowerPAD, SYNC) -
+    # U1 was the bare TSOT-23-6 TPS54302 (no thermal pad) — the board's hottest
+    # converter. RESELECTED to the LMR33630ADDAR (LCSC C841384): a TI SIMPLE
+    # SWITCHER, SYNCHRONOUS + internally compensated, 3.8-36 V / 3 A, in the DDA
+    # HSOIC-8 PowerPAD package — a REAL datasheet-dimensioned exposed pad (pad 9)
+    # for the heat path. Uses the KiCad STOCK symbol Regulator_Switching:
+    # LMR33640ADDA (same DDA pinout — the 4 A sibling drawing — with proper
+    # power_in VIN so the placer's regulator template fits) + the faithful
+    # EP-bearing footprint: exactly the TPS54302/AP2112K stock-symbol idiom.
+    # Pins: 1 GND  2 VIN  3 EN  4 PG  5 FB  6 VCC  7 BOOT  8 SW  9 EP(GND).
+    # VFB 1.0 V -> 40.2k/10k FB divider = 5.02 V. EP (pad 9) bonds to GND.
+    c.use_part("LMR33630ADDAR", ref="U1",
+               lib_id="Regulator_Switching:LMR33640ADDA",
+               footprint="LMR33630ADDAR:LMR33630ADDAR")
+    c.net("+VIN", "U1.2")                                          # VIN (pin 2)
+    c.net("GND", "U1.1", "U1.9")                                   # GND (1) + EP PowerPAD (9)
+    c.port("EN_5V0", "U1.3", expect=EXPECT_BRINGUP)                # EN (pin 3)
+    c.nc("U1.4")                                                   # PG open-collector unused
     for ref, val, fp, lcsc in (("C1", "100n", C0603, "C1591"),
                                ("C2", "10u", C1206, "C13585"),
                                ("C3", "10u", C1206, "C13585")):
         c.part(ref, "Device:C", val, fp, LCSC=lcsc)
         c.net("+VIN", f"{ref}.1")
         c.net("GND", f"{ref}.2")
-    c.part("C4", "Device:C", "100n", C0603, LCSC="C1591")          # BOOT
-    c.net("BOOT_5V0", "U1.6", "C4.1")
+    c.part("C24", "Device:C", "1u", C0603, LCSC="C15849")          # VCC int-LDO bypass
+    c.net("U1_VCC", "U1.6", "C24.1")                               # VCC (pin 6), local bias
+    c.net("GND", "C24.2")
+    c.part("C4", "Device:C", "100n", C0603, LCSC="C1591")          # BOOT cap
+    c.net("BOOT_5V0", "U1.7", "C4.1")                              # BOOT (pin 7)
     c.part("L1", "Device:L", "10uH", L_FP, LCSC="C37429")
-    c.net("SW_5V0", "U1.2", "C4.2", "L1.1")
+    c.net("SW_5V0", "U1.8", "C4.2", "L1.1")                        # SW (pin 8)
     c.net("+5V", "L1.2")
     for ref in ("C5", "C6"):
         c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
         c.net("+5V", f"{ref}.1")
         c.net("GND", f"{ref}.2")
-    c.part("R1", "Device:R", "73.2k", R_FP, LCSC="C14890")         # FB top
+    c.part("R1", "Device:R", "40.2k", R_FP, LCSC="C25750")         # FB top (VFB 1.0 -> 5.02 V)
     c.part("R2", "Device:R", "10k", R_FP, LCSC="C25804")           # FB bottom
-    c.part("C22", "Device:C", "75p", C0603, LCSC="C22399620")      # FB feedfwd
-    c.net("+5V", "R1.1", "C22.1")
-    c.net("FB_5V0", "U1.4", "R1.2", "R2.1", "C22.2")
+    c.net("+5V", "R1.1")
+    c.net("FB_5V0", "U1.5", "R1.2", "R2.1")                        # FB (pin 5)
     c.net("GND", "R2.2")
-    c.part("D1", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +5V
+    # (no FB feedforward cap on U1: keep FB a clean 2-element divider the router
+    #  handles; the LMR33630 is internally compensated, so it is optional.)
+    c.part("D1", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +5V indicator
     c.part("R3", "Device:R", "1k", R_FP, LCSC="C21190")
     c.net("+5V", "D1.2")
     c.net("PG_5V0", "D1.1", "R3.1")
@@ -234,68 +251,20 @@ def circuit() -> Circuit:
     c.net("PG_1V8_K", "R9.1", "D3.1")
     c.net("+3V3", "D3.2")
 
-    # ---- stage 4: +VIN (20 V) -> +5V_SOM buck (P0 fix, ALWAYS-ON) -----------
-    # Third TPS54302 (U4). Identical cell to U1's +5V stage (same L, in/out
-    # caps, FB divider) EXCEPT the EN is strapped on by a SERIES-R + ZENER
-    # CLAMP rather than a bring-up port: this rail must be alive pre-DIP /
-    # pre-PD so the SoM SC can boot and master the FUSB302 PD negotiation
-    # (docstring P0). PWR-1 FIX (SLVSDG6C, see docstring "EN clamp"): a plain
-    # divider cannot satisfy both turn-on-at-4.75 V AND <= 5.5 V-at-21 V — so
-    # R12 (series) + D5 (5.1 V zener EN->GND) + C20 (EN bypass) instead.
-    c.use_part("TPS54302DDCR", ref="U4", lib_id=BUCK_LIB, footprint=BUCK_FP)
-    c.net("+VIN", "U4.3")
-    c.net("GND", "U4.1")
-    # EN clamp (always-on strap, NO bring-up port). Series R from +VIN pulls
-    # EN to ~VIN at the 5 V contract (>> the 1.21 V enable threshold -> sure
-    # turn-on); the zener clamps EN to ~5.0 V at the 20 V (21 V) contract,
-    # well under the TPS54302 EN rec-max 5.5 V. EN voltage table in docstring.
-    c.part("R12", "Device:R", "10k", R_FP, LCSC="C25804")          # EN series
-    c.part("D5", "Device:D_Zener", "MMSZ5231B", DZ_FP, LCSC="C85181")  # 5.1V clamp
-    c.part("C20", "Device:C", "100n", C0603, LCSC="C1591")         # EN bypass
-    c.net("+VIN", "R12.1")
-    c.net("EN_5V_SOM", "U4.5", "R12.2", "D5.1", "C20.1")           # D5.1 = K
-    c.net("GND", "D5.2", "C20.2")                                  # D5.2 = A
-    for ref, val, fp, lcsc in (("C14", "100n", C0603, "C1591"),
-                               ("C15", "10u", C1206, "C13585"),
-                               ("C16", "10u", C1206, "C13585")):
-        c.part(ref, "Device:C", val, fp, LCSC=lcsc)
-        c.net("+VIN", f"{ref}.1")
-        c.net("GND", f"{ref}.2")
-    c.part("C17", "Device:C", "100n", C0603, LCSC="C1591")         # BOOT
-    c.net("BOOT_5V_SOM", "U4.6", "C17.1")
-    c.part("L3", "Device:L", "10uH", L_FP, LCSC="C37429")
-    c.net("SW_5V_SOM", "U4.2", "C17.2", "L3.1")
-    c.net("+5V_SOM", "L3.2")
-    for ref in ("C18", "C19"):
-        c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
-        c.net("+5V_SOM", f"{ref}.1")
-        c.net("GND", f"{ref}.2")
-    c.part("R14", "Device:R", "68.1k", R_FP, LCSC="C844583")       # FB top
-    c.part("R15", "Device:R", "10k", R_FP, LCSC="C25804")          # FB bottom
-    c.part("C21", "Device:C", "75p", C0603, LCSC="C22399620")      # FB feedfwd
-    c.net("+5V_SOM", "R14.1", "C21.1")
-    c.net("FB_5V_SOM", "U4.4", "R14.2", "R15.1", "C21.2")          # -> 4.65 V
-    c.net("GND", "R15.2")
-    c.part("D4", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +5V_SOM
-    c.part("R16", "Device:R", "1k", R_FP, LCSC="C21190")
-    c.net("+5V_SOM", "D4.2")
-    c.net("PG_5V_SOM", "D4.1", "R16.1")
-    c.net("GND", "R16.2")
+    # ---- stage 4: +VIN -> +5V_SOM always-on buck -> SPLIT to power_som.py ----
+    # The +5V_SOM buck (U4) + its EN zener clamp moved to its own sheet
+    # (power_som.py, 2026-06-14): U1's reselect to the larger LMR33630 pushed the
+    # 4-converter sheet past A3, and the +5V_SOM stage is the cleanly-separable
+    # unit (only +VIN / +5V_SOM / GND rails cross). See power_som.py.
 
     # ---- test points (round 4 coverage gate): the generated rails +
     # a ground probe return, at their source sheet ----------------------------
-    for net in ("+5V", "+5V_SOM", "+3V3", "+1V8", "GND"):
+    for net in ("+5V", "+3V3", "+1V8", "GND"):    # +5V_SOM TP on power_som.py
         c.testpoint(net)
 
     # ---- power-tree budget declarations (round 4 gate) ----------------------
     c.draws("+5V", 0.004, "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA")
-    # +5V_SOM: power.py owns only this stage's OWN local load (PG LED + FB
-    # divider). The SoM MODULE draw (~2 A, 10 W class at 5 V) is declared by
-    # som_conn_gen on J1 where the module is the consumer (wave3_function_map
-    # P0 point 2) — the power-tree gate sums draws across all sheets on the
-    # rail, so the buck sees both.
-    c.draws("+5V_SOM", 0.004, "PG LED (KT-0603R + 1k, ~3 mA) + FB divider "
-                              "60 uA (SoM module load declared on som_j1)")
+    # (+5V_SOM draw is declared on power_som.py — its source sheet now.)
     c.draws("+3V3", 0.009, "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain "
                            "(330R ~3.9 mA) + FB divider 27 uA")
     c.draws("+1V8", 0.001, "PG FET gate divider 10k+100k (16 uA), rounded up")
@@ -312,7 +281,5 @@ def circuit() -> Circuit:
            "layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — "
            "VERIFY by thermal sim/bench at bring-up else move to an EP buck "
            "(see carrier/research/thermal_bucks.md)")
-    c.waive_thermal("U1", _TH)
-    c.waive_thermal("U2", _TH)
-    c.waive_thermal("U4", _TH)
-    return c
+    c.waive_thermal("U2", _TH)   # U1 is now the LMR33630 (real EP — no waiver);
+    return c                     # U4 +5V_SOM waiver lives on power_som.py

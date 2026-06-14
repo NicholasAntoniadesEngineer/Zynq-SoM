@@ -3,7 +3,7 @@ schgen spice / analytic spot-check gate
 
 engine: analytic (gate) + ngspice .op cross-check on 10 divider(s), 1% agreement enforced
 
-checks (21):
+checks (20):
   [PASS] bringup_rails: RC PL_BTN0 = 1 ms (limits 0.2 .. 20 ms; analytic)
          debounce/reset ramp: R7=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
   [PASS] bringup_rails: RC PL_BTN1 = 1 ms (limits 0.2 .. 20 ms; analytic)
@@ -22,25 +22,23 @@ checks (21):
          +VBUS_IN -[R3=100000R]- PD_OVP_SET -[R4=5490R]- GND @ 21 V: TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)
   [PASS] pd_input: divider PD_OVP_SET [guaranteed cutoff below the TVS VBR min] = 1.2698 V (limits 1.224 ..  V; analytic+ngspice)  ngspice=1.2698
          +VBUS_IN -[R3=100000R]- PD_OVP_SET -[R4=5490R]- GND @ 24.4 V: TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)
-  [PASS] power: divider FB_5V0 = 0.601 V (limits  ..  V; analytic+ngspice)  ngspice=0.601
-         +5V -[R1=73200R]- FB_5V0 -[R2=10000R]- GND @ 5 V (informational, no named threshold)
+  [PASS] power: divider FB_5V0 = 0.996 V (limits  ..  V; analytic+ngspice)  ngspice=0.996
+         +5V -[R1=40200R]- FB_5V0 -[R2=10000R]- GND @ 5 V (informational, no named threshold)
   [PASS] power: divider FB_3V3 = 0.5951 V (limits  ..  V; analytic+ngspice)  ngspice=0.5951
          +3V3 -[R4=100000R]- FB_3V3 -[R5=22000R]- GND @ 3.3 V (informational, no named threshold)
   [PASS] power: divider PG_1V8_G [FET on at nominal rail] = 1.7822 V (limits 1.45 .. 1.8 V; analytic+ngspice)  ngspice=1.7822
          +1V8 -[R7=1000R]- PG_1V8_G -[R8=100000R]- GND @ 1.8 V: +1V8 PG sense: gate divider must exceed the AO3400A max Vgs(th)=1.45 V so the PG LED is guaranteed on
-  [PASS] power: divider FB_5V_SOM = 0.5954 V (limits  ..  V; analytic+ngspice)  ngspice=0.5954
-         +5V_SOM -[R14=68100R]- FB_5V_SOM -[R15=10000R]- GND @ 4.65 V (informational, no named threshold)
-  [PASS] power: RC EN_5V_SOM = 1 ms (limits 0.2 .. 20 ms; analytic)
-         debounce/reset ramp: R12=10000R with C20=100n -> tau must mask >=0.2 ms bounce, release <20 ms
-  [PASS] power: TPS54302DDCR FB (+5V) = 4.9587 V (limits 4.85 .. 5.15 V; analytic)
-         Vout = 0.596 * (1 + R1/R2 = 73200/10000) vs nominal 5 V +/-3%
   [PASS] power: TPS54302DDCR FB (+3V3) = 3.3051 V (limits 3.201 .. 3.399 V; analytic)
          Vout = 0.596 * (1 + R4/R5 = 100000/22000) vs nominal 3.3 V +/-3%
-  [PASS] power: TPS54302DDCR FB (+5V_SOM) = 4.6548 V (limits 4.5105 .. 4.7895 V; analytic)
+  [PASS] power_som: divider FB_5V_SOM = 0.5954 V (limits  ..  V; analytic+ngspice)  ngspice=0.5954
+         +5V_SOM -[R14=68100R]- FB_5V_SOM -[R15=10000R]- GND @ 4.65 V (informational, no named threshold)
+  [PASS] power_som: RC EN_5V_SOM = 1 ms (limits 0.2 .. 20 ms; analytic)
+         debounce/reset ramp: R12=10000R with C20=100n -> tau must mask >=0.2 ms bounce, release <20 ms
+  [PASS] power_som: TPS54302DDCR FB (+5V_SOM) = 4.6548 V (limits 4.5105 .. 4.7895 V; analytic)
          Vout = 0.596 * (1 + R14/R15 = 68100/10000) vs nominal 4.65 V +/-3%
-  [PASS] power: EN clamp turn-on (U4) = 4.505 V (limits 1.5 ..  V; analytic)
+  [PASS] power_som: EN clamp turn-on (U4) = 4.505 V (limits 1.5 ..  V; analytic)
          +VIN=20V -[R12=10000R]- EN, D5=MMSZ5231B zener->GND: EN at VIN=4.75V (5V contract low) must exceed enable+margin 1.5V (threshold 1.21V typ, SLVSDG6C) so the always-on buck is sure to start
-  [PASS] power: EN clamp ceiling (U4) = 5.042 V (limits  .. 5.5 V; analytic)
+  [PASS] power_som: EN clamp ceiling (U4) = 5.042 V (limits  .. 5.5 V; analytic)
          +VIN=20V -[R12=10000R]- EN, D5=MMSZ5231B zener->GND: EN at VIN=21.0V (20V+5%) worst-case (Vz 5.355V) must stay <= the EN recommended-max 5.5V (no internal clamp, I_hys 1.55uA only — SLVSDG6C)
   [PASS] uart_bridge: divider CP2102N_VBUS_SNS [abs-max at 5.25 V VBUS] = 3.583 V (limits  .. 5.8 V; analytic+ngspice)  ngspice=3.583
          USB_UART_VBUS -[R2=22100R]- CP2102N_VBUS_SNS -[R3=47500R]- GND @ 5.25 V: CP2102N self-powered VBUS sense (DS 22k1/47k5 reference): must read VBUS-present yet never exceed the pin abs-max 5.8 V
@@ -49,4 +47,4 @@ checks (21):
 
 errors: none
 
-SPICE GATE: PASS (21 checks)
+SPICE GATE: PASS (20 checks)

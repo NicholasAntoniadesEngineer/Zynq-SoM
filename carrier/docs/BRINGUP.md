@@ -82,9 +82,9 @@ early is benign: its regulator simply has no input yet.)
 
 ### 2.1 `+5V` — close `bringup_rails.SW1` position 1
 
-- Path: `+VIN` -> `power.U1` (TPS54302DDCR) -> `+5V`.
+- Path: `+VIN` -> `power.U1` (LMR33630ADDAR) -> `+5V`.
 - EN cell: `bringup_en.U1` — `BU_DIP_5V0` AND `STM32_RAIL_EN_5V0` -> `EN_5V0`. A blank SC leaves the override pulled high (veto inactive).
-- Expect **4.96 V** on `+5V` (setpoint derived from the netlist: FB divider vs the TPS54302 0.596 V reference). Probe: power.TP1.
+- Expect **?** on `+5V` (setpoint derived from the netlist: FB divider vs the TPS54302 0.596 V reference). Probe: power.TP1.
 - PG LED `power.D1` lights.
 - Current-limit context: rail budget 3 A (power_mon dossier table 1; the regulator is the limit — no rail fuse).
 - Telemetry: INA3221 #1 (0x40) ch2 [+5V_REG -> +5V].
@@ -93,7 +93,7 @@ early is benign: its regulator simply has no input yet.)
 
 - Path: `+5V` -> `power.U2` (TPS54302DDCR) -> `+3V3`.
 - EN cell: `bringup_en.U2` — `BU_DIP_3V3` AND `STM32_RAIL_EN_3V3` -> `EN_3V3`. A blank SC leaves the override pulled high (veto inactive).
-- Expect **3.31 V** on `+3V3` (setpoint derived from the netlist: FB divider vs the TPS54302 0.596 V reference). Probe: power.TP3.
+- Expect **3.31 V** on `+3V3` (setpoint derived from the netlist: FB divider vs the TPS54302 0.596 V reference). Probe: power.TP2.
 - PG LED `power.D2` lights.
 - Current-limit context: rail budget 3 A (power_mon dossier table 1; the regulator is the limit — no rail fuse).
 - Telemetry: INA3221 #1 (0x40) ch3 [+3V3_REG -> +3V3].
@@ -102,7 +102,7 @@ early is benign: its regulator simply has no input yet.)
 
 - Path: `+3V3` -> `power.U3` (AP2112K-1.8) -> `+1V8`.
 - EN cell: `bringup_en.U3` — `BU_DIP_1V8` AND `STM32_RAIL_EN_1V8` -> `EN_1V8`. A blank SC leaves the override pulled high (veto inactive).
-- Expect **1.80 V** on `+1V8` (setpoint derived from the netlist: fixed-output LDO). Probe: power.TP4.
+- Expect **1.80 V** on `+1V8` (setpoint derived from the netlist: fixed-output LDO). Probe: power.TP3.
 - PG LED `power.D3` lights (FET-sensed: a red LED cannot run from 1.8 V, so Q1 senses the rail — power.py).
 - Current-limit context: rail budget 0.6 A (power_mon dossier table 1; the regulator is the limit — no rail fuse).
 - Telemetry: INA3221 #2 (0x41) ch1 [+1V8_REG -> +1V8].

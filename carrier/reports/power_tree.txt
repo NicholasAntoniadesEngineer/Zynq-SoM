@@ -2,10 +2,10 @@ schgen power-tree budget gate
 ================================================================
 
 sources:
-  +VBUS_IN    20.0 V  limit 3.00 A  load 1.337 A  (45%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
+  +VBUS_IN    20.0 V  limit 3.00 A  load 0.518 A  (17%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
   +3V3_SC      3.3 V  limit 0.30 A  load 0.021 A  (7%)  — SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here
 
-regulators (17) — numbered as in carrier/docs/power_tree.svg:
+regulators (16) — numbered as in carrier/docs/power_tree.svg:
   ( 1) board_aux:U1   SY6280AAC           +3V3 -> +3V3_AUX       load 0.211 A / limit 0.523 A (40%)  in 0.211 A [load_switch] ILIM = 6800/13000R = 523 mA
   ( 2) bringup_modules:U1   SY6280AAC           +3V3 -> +3V3_HDMI_TX   load 0.006 A / limit 0.523 A (1%)  in 0.006 A [load_switch] ILIM = 6800/13000R = 523 mA
   ( 3) bringup_modules:U10  SY6280AAC            +5V -> +5V_LCD        load 0.453 A / limit 1.000 A (45%)  in 0.453 A [load_switch] ILIM = 6800/6800R = 1000 mA
@@ -18,11 +18,10 @@ regulators (17) — numbered as in carrier/docs/power_tree.svg:
   (10) bringup_modules:U8   SY6280AAC           +3V3 -> +3V3_USER_LED  load 0.010 A / limit 0.523 A (2%)  in 0.010 A [load_switch] ILIM = 6800/13000R = 523 mA
   (11) bringup_modules:U9   SY6280AAC            +5V -> +5V_HDMI_TX    load 0.058 A / limit 0.523 A (11%)  in 0.058 A [load_switch] ILIM = 6800/13000R = 523 mA
   (12) fmc:U1   TLV75725PDYDR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)
-  (13) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.337 A / limit 3.529 A (38%)  in 1.337 A [efuse] ILIM = 18000/5100R = 3529 mA
-  (14) power:U1   TPS54302DDCR        +VIN -> +5V            load 2.950 A / limit 3.000 A (98%)  in 0.820 A [buck] TI 3 A synchronous buck (SW->L->rail)
-  (15) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.635 A / limit 3.000 A (88%)  in 1.932 A [buck] TI 3 A synchronous buck (SW->L->rail)
-  (16) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
-  (17) power:U4   TPS54302DDCR        +VIN -> +5V_SOM        load 2.004 A / limit 3.000 A (67%)  in 0.518 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (13) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 0.518 A / limit 3.529 A (15%)  in 0.518 A [efuse] ILIM = 18000/5100R = 3529 mA
+  (14) power:U2   TPS54302DDCR         +5V -> +3V3           load 2.635 A / limit 3.000 A (88%)  in 1.932 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (15) power:U3   AP2112K-1.8         +3V3 -> +1V8           load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
+  (16) power_som:U4   TPS54302DDCR        +VIN -> +5V_SOM        load 2.004 A / limit 3.000 A (67%)  in 0.518 A [buck] TI 3 A synchronous buck (SW->L->rail)
 
 shunt bridges (series R rail->rail, power_mon):
   power_mon:RS1 +VIN -> +VIN_SYS
@@ -74,7 +73,7 @@ declared draws (c.draws — every number cites its source):
   +5V_HDMI_TX          55.0 mA  hdmi_tx            HDMI source +5V to cable — TPD12S016 switch limit 55 mA (DS 7.3.10)
   +5V_LCD               3.0 mA  bringup_modules    status LED (1k) on the gated output
   +5V_LCD             450.0 mA  lcd                SY7201 boost input @133 mA LED string (lcd_backlight.md operating point + margin)
-  +5V_SOM               4.0 mA  power              PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)
+  +5V_SOM               4.0 mA  power_som          PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)
   +5V_SOM            2000.0 mA  som_j1             SoM module (Zynq+DDR3L+PHYs) ~10 W class at 5 V (P0 rebind) — estimate, refine at bring-up
   +5V_USB               3.0 mA  bringup_modules    status LED (1k) on the gated output
   +5V_USB             500.0 mA  usbc_otg           downstream USB device budget, TPS2051C current-limited
@@ -100,8 +99,8 @@ rail totals (declared + child regulator inputs):
   +5V_REG            0.000 A  @ 5.0 V
   +5V_SOM            2.004 A  @ 4.7 V
   +5V_USB            0.503 A  @ 5.0 V
-  +VBUS_IN           1.337 A  @ 20.0 V
-  +VIN               1.337 A  @ 20.0 V
+  +VBUS_IN           0.518 A  @ 20.0 V
+  +VIN               0.518 A  @ 20.0 V
   +VIN_SYS           0.000 A  @ 20.0 V
 
 notes — resolved audits, recomputed every run (1):

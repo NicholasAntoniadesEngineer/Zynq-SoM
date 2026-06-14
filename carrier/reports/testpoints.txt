@@ -4,10 +4,10 @@ schgen test-point coverage gate
 rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) owns a probe point or an explicit waiver.
 
 required nets (55):
-  +1V8                   [rail     ] TP @ power:TP4
+  +1V8                   [rail     ] TP @ power:TP3
   +1V8_REG               [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
   +2V5_VADJ              [rail     ] TP @ fmc:TP1
-  +3V3                   [rail     ] TP @ power:TP3
+  +3V3                   [rail     ] TP @ power:TP2
   +3V3_AUX               [rail     ] TP @ board_aux:TP1
   +3V3_CAM               [rail     ] TP @ bringup_modules:TP4
   +3V3_HDMI_RX           [rail     ] TP @ bringup_modules:TP2
@@ -22,7 +22,7 @@ required nets (55):
   +5V_HDMI_TX            [rail     ] TP @ bringup_modules:TP9, hdmi_tx:TP1
   +5V_LCD                [rail     ] TP @ bringup_modules:TP10, lcd:TP1
   +5V_REG                [rail     ] WAIVED (power_mon): regulator-side shunt stub — probe the RS pad itself; power.py rail split pending (PLAN flag)
-  +5V_SOM                [rail     ] TP @ power:TP2
+  +5V_SOM                [rail     ] TP @ power_som:TP1
   +5V_USB                [rail     ] TP @ bringup_modules:TP6
   +VBUS_IN               [rail     ] TP @ pd_input:TP1
   +VIN                   [rail     ] TP @ pd_input:TP2
@@ -47,7 +47,7 @@ required nets (55):
   EN_SD                  [enable   ] TP @ bringup_en_modules:TP5
   EN_USB                 [enable   ] TP @ bringup_en_modules:TP6
   EN_USER_LED            [enable   ] TP @ bringup_en_modules:TP8
-  GND                    [rail     ] TP @ power:TP5
+  GND                    [rail     ] TP @ power:TP4
   LCD_CTP_SCL            [i2c      ] TP @ lcd:TP3
   LCD_CTP_SDA            [i2c      ] TP @ lcd:TP2
   SDIO_CLK               [sd_bus   ] TP @ microsd:TP2

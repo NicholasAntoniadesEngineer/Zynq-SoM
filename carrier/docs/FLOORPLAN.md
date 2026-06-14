@@ -47,8 +47,8 @@ Edge spills (preferred edge full — honest, not hidden):
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (84, 16, 8 x 11.5) | 17 | 91.6 |  |
-| board_qwiic | E | (66, 74, 8 x 8) | 2 | 45.7 |  |
+| board_aux | E | (78, 74, 11.5 x 8) | 17 | 91.6 |  |
+| board_qwiic | E | (54, 74, 8 x 8) | 2 | 45.7 |  |
 | board_services | W | (18, 44, 13.5 x 21) | 9 | 284.6 |  |
 | bringup_en | E | (108, 4, 8 x 8) | 15 | 56.3 |  |
 | bringup_en_modules | E | (94, 14, 18 x 11.5) | 54 | 204.6 |  |
@@ -56,8 +56,9 @@ Edge spills (preferred edge full — honest, not hidden):
 | bringup_rails | E | (90, 42, 24.5 x 15) | 23 | 365.4 | (14) |
 | debug_boot | N | (60, 6, 13 x 20.5) | 10 | 263.5 | (15) |
 | hdmi_rx_term | @hdmi_rx | (38, 76, 8 x 8) | 8 | 13.5 |  |
-| power | E | (90, 60, 24 x 15) | 54 | 358.8 | (16) |
-| power_mon | E | (76, 74, 11 x 8) | 10 | 87.5 | (17) |
+| power | E | (92, 60, 20.5 x 13) | 37 | 268.6 | (16) |
+| power_mon | E | (64, 74, 11 x 8) | 10 | 87.5 | (17) |
+| power_som | E | (84, 14, 8.5 x 13.5) | 17 | 114.4 |  |
 | rj45_connector | @ethernet | (18, 20, 13 x 21) | 3 | 272.2 |  |
 | usb_pd | @pd_input | (48, 18, 8 x 8) | 6 | 18.2 | (18) |
 | user_io | S | (14, 78, 17 x 10.5) | 17 | 178.2 | (19) |
@@ -90,11 +91,10 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.010 | negligible |
 | SY6280AAC (U9) | bringup_modules | +5V -> +5V_HDMI_TX | 0.058 | negligible |
 | TLV75725PDYDR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.400 | ~0.32 W |
-| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.337 | negligible |
-| TPS54302DDCR (U1) | power | +VIN -> +5V | 2.950 | ~1.64 W |
+| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 0.518 | negligible |
 | TPS54302DDCR (U2) | power | +5V -> +3V3 | 2.635 | ~0.97 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8 | 0.006 | negligible |
-| TPS54302DDCR (U4) | power | +VIN -> +5V_SOM | 2.004 | ~1.04 W |
+| TPS54302DDCR (U4) | power_som | +VIN -> +5V_SOM | 2.004 | ~1.04 W |
 
 Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/power_tree.txt`); regulators above ~0.3 W want copper pours + stitching vias.
 
@@ -115,7 +115,7 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(13) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
 - **(14) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
 - **(15) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
-- **(16) power**: Buck thermal (worst-case declared draws): TPS54302DDCR +5V ~1.64 W; TPS54302DDCR +3V3 ~0.97 W; TPS54302DDCR +5V_SOM ~1.04 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(16) power**: Buck thermal (worst-case declared draws): TPS54302DDCR +3V3 ~0.97 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
 - **(17) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
 - **(18) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
 - **(19) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.

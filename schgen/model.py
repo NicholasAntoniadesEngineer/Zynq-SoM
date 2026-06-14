@@ -118,6 +118,15 @@ class CircuitError(ValueError):
     pass
 
 
+class PartitionError(CircuitError):
+    """A page partition would CUT a SIGNAL net across pages (a LAW-0 OPEN).
+
+    Raised by Circuit.subset() — the single, non-suppressible chokepoint that
+    proves the auto-paginator (place.partition_pages) only ever cuts merging
+    nets (POWER/GROUND/PORT). Distinct from a routine 'won't fit' so the board
+    flow can tell an internal partitioner bug from an honest infeasible page."""
+
+
 # Standard SMD passive footprints, used to default an inline Device:C /
 # Device:R that omits a footprint (DEF-3). A bare footprint='' is un-orderable
 # — JLC cannot place it — yet several inline decouple()/part() passives relied
@@ -621,6 +630,61 @@ class Circuit:
         self.net(net_in, f"{ref}.1")
         self.net(net_out, f"{ref}.2")
         return r
+
+    # ---- pagination support (DEF-J: auto-split a congested sheet) -----------
+    def subset(self, refs: set[str], *, page: int) -> "Circuit":
+        """A child Circuit holding exactly ``refs`` plus every net among them.
+
+        The placer's auto-paginator (place.partition_pages) calls this to split
+        a sheet that overflows A3 across pages. A net touching parts on OTHER
+        pages is copied with only its LOCAL pins; the same-named POWER/GROUND
+        net reappears on every page as a power symbol and a PORT net as a label,
+        so the board merges them back BY NAME — the merged kicad netlist equals
+        the un-paginated one.
+
+        LAW 0 (hard, non-suppressible): a SIGNAL net may NOT be cut across pages
+        (both pins on this page, or neither). partition_pages groups SIGNAL-
+        connected parts onto one page precisely so this never trips; if a bug
+        ever splits a SIGNAL net this raises PartitionError BEFORE any emit — a
+        cut SIGNAL net would otherwise be a silent OPEN. This is the ONLY place
+        the cut is validated, so it is airtight: no flag, no waiver, no try."""
+        import copy
+        sub = Circuit(name=f"{self.name}.{page}", title=self.title)
+        for r in sorted(refs):
+            sub.parts[r] = copy.deepcopy(self.parts[r])
+        for pr in self.nc_pins:                 # author NCs first (net() rejects
+            if pr.ref in refs:                  # a netted NC pin)
+                sub.nc_pins.add(pr)
+        sub._inline_pins.update(self._inline_pins)   # lib_id->pins cache (shared)
+        for nm, net in self.nets.items():
+            kept = [pr for pr in net.pins if pr.ref in refs]
+            if not kept:
+                continue
+            if len(kept) != len(net.pins) and net.net_class is NetClass.SIGNAL:
+                raise PartitionError(
+                    f"SIGNAL net {nm!r} would be CUT across pages — OPEN. "
+                    f"pins {sorted(str(p) for p in net.pins)} split by page "
+                    f"refs {sorted(refs)}; partition_pages must keep SIGNAL-"
+                    f"connected parts on one page.")
+            sub.net(nm, *kept, net_class=net.net_class)
+            if net.net_class is NetClass.PORT and nm in self.port_types:
+                sub.port_types[nm] = self.port_types[nm]
+            if nm in self.hints:
+                sub.hints[nm] = self.hints[nm]
+        for rail, budget in self.loads.items():      # rail budgets present here
+            if rail in sub.nets:
+                sub.loads[rail] = list(budget)
+
+        def _kept_key(key: str) -> bool:             # ref | "ref.pin" | net
+            return key.split(".")[0] in refs or key in sub.nets
+        for attr in ("tp_waivers", "decap_waivers", "pull_waivers",
+                     "reset_waivers", "strap_waivers", "thermal_waivers",
+                     "part_rule_waivers"):
+            dst = getattr(sub, attr)
+            for k, v in getattr(self, attr).items():
+                if _kept_key(k):
+                    dst[k] = v
+        return sub
 
     # ---- completeness check (build-time, hard) ------------------------------
     def validate(self, pin_numbers_by_ref: dict[str, set[str]]) -> None:
