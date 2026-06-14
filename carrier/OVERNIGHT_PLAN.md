@@ -198,8 +198,12 @@ byte-identical goldens + the determinism check.
       testplan` CLI subcommands. board PASS, deterministic, selftest 44/44.
 
 ### TRACK SOURCING
-- [ ] SRC-1 HX5008 second-source committed alternate
-- [ ] SRC-2 ALT_LCSC field + stock-floor preflight gate
+- [x] SRC-1 HX5008 second-source committed (ethernet T1 ALT_LCSC=C47575004)
+- [x] SRC-2 ALT_LCSC + stock-floor in preflight (assess_stock pure fn +
+      STOCK_FLOOR + --min-stock + alternate fallback) + pytest test_preflight.
+      NOTE: the live JLC-query fallback path needs network to fully exercise;
+      the pure stock-verdict logic is unit-tested offline (incl the HX5008
+      stock-10 landmine -> LOW warning).
 - [ ] SRC-3 lifecycle/EOL + stock/price snapshot capture (part_gen)
 - [ ] SRC-4 inline 5 schgen: parts → parts/ folders + symbol-name preservation (P5) + part_gen regression tier (P6)
 

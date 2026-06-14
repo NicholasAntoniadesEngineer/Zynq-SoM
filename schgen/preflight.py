@@ -119,6 +119,29 @@ def unit_price(prices: list[tuple[int, float]], qty: int) -> float:
 
 
 # ---------------------------------------------------------------------------
+# stock policy (SRC-2): a procurement floor + a pure, testable verdict
+# ---------------------------------------------------------------------------
+
+STOCK_FLOOR = 50   # below this, even stock >= need is a procurement risk (WARN)
+
+
+def assess_stock(stock: int, need: int, floor: int = STOCK_FLOOR) -> tuple[str, str]:
+    """Pure stock verdict (no network). status in {ok, low, insufficient, out}.
+
+    A part with 10 units in stock is a landmine even when need <= 10 — one
+    other order exhausts it — so stock below the floor is flagged 'low' (a
+    WARNING, not a hard fail), so a single-feeder part can never pass clean.
+    """
+    if stock <= 0:
+        return "out", "** OUT OF STOCK **"
+    if stock < need:
+        return "insufficient", f"** INSUFFICIENT (stock {stock} < need {need}) **"
+    if stock < max(need, floor):
+        return "low", f"** LOW STOCK ({stock} < floor {floor}) **"
+    return "ok", ""
+
+
+# ---------------------------------------------------------------------------
 # report
 # ---------------------------------------------------------------------------
 
@@ -127,6 +150,7 @@ class LineItem:
     lcsc: str
     value: str
     refs: list[str] = field(default_factory=list)
+    alt_lcsc: list[str] = field(default_factory=list)   # SRC-1 second sources
 
 
 def cmd_preflight(args: argparse.Namespace) -> int:
@@ -147,13 +171,19 @@ def cmd_preflight(args: argparse.Namespace) -> int:
                 continue
             it = items.setdefault(lcsc, LineItem(lcsc=lcsc, value=part.value))
             it.refs.append(label)
+            for a in (part.fields or {}).get("ALT_LCSC", "").split(","):
+                a = a.strip()
+                if a and a not in it.alt_lcsc:
+                    it.alt_lcsc.append(a)             # SRC-1 second source(s)
 
     print(f"preflight: {len(items)} LCSC line item(s), {len(missing)} part(s) "
           f"without an LCSC id, {qty_boards} board(s)")
 
     failures: list[str] = []
+    warnings: list[str] = []
     total_cost = 0.0
     extended_reels = 0
+    floor = getattr(args, "min_stock", STOCK_FLOOR)
     if items:
         hdr = (f"{'LCSC':<12} {'MPN':<24} {'lib':<9} {'stock':>9} "
                f"{'need':>5} {'unit $':>8} {'ext $':>8}  refs")
@@ -175,14 +205,30 @@ def cmd_preflight(args: argparse.Namespace) -> int:
         total_cost += ext
         if info["library"] == "Extended":
             extended_reels += 1
-        flag = ""
-        if info["stock"] <= 0:
-            failures.append(f"{lcsc} ({info['mpn']}): OUT OF STOCK")
-            flag = "  ** OUT OF STOCK **"
-        elif info["stock"] < need:
-            failures.append(
-                f"{lcsc} ({info['mpn']}): stock {info['stock']} < need {need}")
-            flag = "  ** INSUFFICIENT **"
+        status, flag = assess_stock(info["stock"], need, floor)
+        flag = f"  {flag}" if flag else ""
+        if status != "ok":
+            chosen = None
+            for alt in it.alt_lcsc:                  # try the committed 2nd sources
+                ainfo = query_jlc(alt)
+                if ainfo and assess_stock(ainfo["stock"], need, floor)[0] == "ok":
+                    chosen = (alt, ainfo)
+                    break
+            if chosen:
+                flag += (f"  -> 2nd source {chosen[0]} OK "
+                         f"(stock {chosen[1]['stock']})")
+                warnings.append(
+                    f"{lcsc} ({info['mpn']}): {status} but covered by alternate "
+                    f"{chosen[0]} (stock {chosen[1]['stock']})")
+            elif status in ("out", "insufficient"):
+                tried = (f"; no alternate clears it (tried {','.join(it.alt_lcsc)})"
+                         if it.alt_lcsc else "")
+                failures.append(f"{lcsc} ({info['mpn']}): {status.upper()}{tried}")
+            else:  # low stock, no healthy alternate -> procurement WARNING
+                warnings.append(
+                    f"{lcsc} ({info['mpn']}): LOW STOCK {info['stock']} < floor "
+                    f"{floor}" + ("; no healthier alternate" if it.alt_lcsc
+                                  else "; no ALT_LCSC second source committed"))
         print(f"{lcsc:<12} {info['mpn'][:24]:<24} {info['library']:<9} "
               f"{info['stock']:>9} {need:>5} {up:>8.4f} {ext:>8.4f}  "
               f"{','.join(it.refs)}{flag}")
@@ -194,6 +240,11 @@ def cmd_preflight(args: argparse.Namespace) -> int:
         print(f"MISSING LCSC id ({len(missing)}):")
         for m in missing:
             print(f"  {m}")
+    if warnings:
+        print(f"PROCUREMENT WARNINGS ({len(warnings)} — not fatal, "
+              f"review before a build):")
+        for w in warnings:
+            print(f"  {w}")
     if failures:
         print(f"PREFLIGHT: FAIL ({len(failures)} availability problem(s))")
         for f_ in failures:

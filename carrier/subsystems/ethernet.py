@@ -71,7 +71,13 @@ def circuit() -> Circuit:
     # LCSC C962544 = genuine Pulse HX5008NLT (live-verified 2026-06-11:
     # Extended, stock 10 — LOW; clone fallback HX5008NLTP-CND C47575004,
     # stock 419, same 1:1 350uH single-port footprint class)
-    c.part("T1", LIB_ID, "HX5008NLT", FOOTPRINT, LCSC="C962544")
+    # SRC-1: C962544 is single-source @ stock ~10 (a procurement landmine);
+    # the HX5008NLTP-CND clone C47575004 (stock ~419, same 1:1 350uH single-
+    # port SOIC-24W class) is now a FIRST-CLASS second source the preflight
+    # stock-floor gate falls back to, not just a comment. ALT_LCSC is a hidden
+    # field (not a BOM column), so this is board-neutral.
+    c.part("T1", LIB_ID, "HX5008NLT", FOOTPRINT,
+           LCSC="C962544", ALT_LCSC="C47575004")
 
     for pin, net in PHY_PORTS.items():
         c.port(net, f"T1.{pin}")

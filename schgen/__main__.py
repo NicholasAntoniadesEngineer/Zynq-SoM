@@ -905,6 +905,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="number of boards (default 1)")
     pf.add_argument("--allow-missing", action="store_true",
                     help="parts without LCSC ids are reported but not fatal")
+    from schgen.preflight import STOCK_FLOOR as _SF
+    pf.add_argument("--min-stock", type=int, default=_SF,
+                    help=f"procurement stock floor; below it a part WARNs even "
+                         f"when stock>=need (default {_SF})")
     from schgen.preflight import cmd_preflight
     pf.set_defaults(func=cmd_preflight)
     args = p.parse_args(argv)
