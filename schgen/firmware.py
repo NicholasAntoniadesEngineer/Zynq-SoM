@@ -203,7 +203,10 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
          "straps read from the netlist; on the board_aux-isolated AUX I2C)"),
         ("ZC_I2C_ADDR_RTC", RV3028_ADDR,
          "RTC (board_services RV-3028; fixed address, Micro Crystal DS; on "
-         "the board_aux-isolated AUX I2C)"),
+         "the board_aux-isolated AUX I2C). SAFETY: VBACKUP is a PRIMARY "
+         "(non-rechargeable) CR1220 — firmware MUST keep the RV-3028 trickle "
+         "charger DISABLED (off by factory default; never set TCE in the "
+         "EEPROM Backup register). Charging a primary cell can rupture/vent it."),
     ]
     addrs = [a for _, a, _ in addr_rows]
     if len(set(addrs)) != len(addrs):

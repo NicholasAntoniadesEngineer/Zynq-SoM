@@ -31,6 +31,13 @@ thermal Tj (both hooked into `schgen board`, waivable, with CLI).
    to an exposed-pad buck. This is a genuine margin call worth your eyes.
 2. DEF-5 power_mon shunt split still deferred (telemetry reads across an open
    until the firmware shunt-walk + power-sheet decongest land).
+3. RTC backup cell — PRIMARY vs RECHARGEABLE choice (audit-2). The board fits a
+   PRIMARY CR1220 (BT1); the RV-3028 trickle charger is OFF by default and the
+   firmware contract now mandates it stays off. If you prefer a maintenance-free
+   RTC, swap to a RECHARGEABLE ML1220/LIR1220 + enable the trickle charger — a
+   genuine product decision, left to you.
+4. Coin-cell silk polarity (audit-2). KH-CR1220-2 marks polarity on Cmts.User,
+   not F.SilkS — add a silk `+` by pad 1 at layout (noted in ASSEMBLY_NOTES).
 
 DEFERRED / BIG-ROCKS still to do: DEF-5 power_mon shunt split (needs firmware
 shunt-walk + power-sheet decongest), DS-1 BOM+CPL, bus notation, place.py

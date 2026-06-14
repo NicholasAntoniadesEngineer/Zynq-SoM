@@ -43,10 +43,11 @@ ZYNQ-AGNOSTIC (C3).  The only SoM-side signals are the two watchdog lines,
 homed to spare PL bank-35 IO by their verbatim som_interface.json net names
 (xdc.py emits the constraints live) — nothing here hard-codes the Zynq part.
 
-QWIIC PAD ORDER — VERIFY AT LAYOUT: pads 1..4 are wired to the QWIIC standard
-GND / +3V3 / SDA / SCL (looking into the receptacle); confirm pad 1's location
-against the J10 footprint silk before fab, since a swapped power pad would
-damage external modules. Pads 5/6 are the shell/mounting tabs -> GND.
+RTC BACKUP CELL — SAFETY: BT1 is a PRIMARY (non-rechargeable) CR1220. The
+RV-3028 has an internal trickle charger that is OFF by factory default and MUST
+stay off — the SC firmware must never enable it (see the firmware contract).
+Charging a primary lithium cell can rupture/vent it. (The QWIIC connector that
+exposes this bus lives on board_qwiic, with its own ESD + pad-order note.)
 """
 
 from __future__ import annotations

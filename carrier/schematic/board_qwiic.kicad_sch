@@ -457,6 +457,167 @@
 			)
 		)
 		(symbol
+			"power:+3V3"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property
+				"Reference"
+				"#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property
+				"Value"
+				"+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property
+				"Footprint"
+				""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property
+				"Datasheet"
+				""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property
+				"Description"
+				"Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property
+				"ki_keywords"
+				"global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol
+				"+3V3_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27)
+						(xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54)
+						(xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0)
+						(xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol
+				"+3V3_1_1"
+				(pin
+					power_in
+					line
+					(at 0 0 90)
+					(length 0)
+					(name
+						""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number
+						"1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol
 			"power:GND"
 			(power global)
 			(pin_numbers
@@ -734,8 +895,8 @@
 	)
 	(wire
 		(pts
-			(xy 127 96.52)
-			(xy 130.81 96.52)
+			(xy 129.54 96.52)
+			(xy 133.35 96.52)
 		)
 		(stroke
 			(width 0)
@@ -745,8 +906,8 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 88.9)
-			(xy 170.18 88.9)
+			(xy 172.72 88.9)
+			(xy 168.91 88.9)
 		)
 		(stroke
 			(width 0)
@@ -756,8 +917,8 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 91.44)
-			(xy 170.18 91.44)
+			(xy 172.72 91.44)
+			(xy 168.91 91.44)
 		)
 		(stroke
 			(width 0)
@@ -767,8 +928,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 88.9)
-			(xy 170.18 91.44)
+			(xy 168.91 88.9)
+			(xy 168.91 91.44)
 		)
 		(stroke
 			(width 0)
@@ -778,8 +939,8 @@
 	)
 	(wire
 		(pts
-			(xy 184.15 93.98)
-			(xy 187.96 93.98)
+			(xy 182.88 93.98)
+			(xy 186.69 93.98)
 		)
 		(stroke
 			(width 0)
@@ -789,8 +950,8 @@
 	)
 	(wire
 		(pts
-			(xy 187.96 93.98)
-			(xy 187.96 99.06)
+			(xy 186.69 93.98)
+			(xy 186.69 99.06)
 		)
 		(stroke
 			(width 0)
@@ -800,8 +961,8 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 96.52)
-			(xy 113.03 96.52)
+			(xy 182.88 91.44)
+			(xy 186.69 91.44)
 		)
 		(stroke
 			(width 0)
@@ -811,8 +972,8 @@
 	)
 	(wire
 		(pts
-			(xy 184.15 91.44)
-			(xy 187.96 91.44)
+			(xy 129.54 99.06)
+			(xy 142.24 99.06)
 		)
 		(stroke
 			(width 0)
@@ -822,8 +983,8 @@
 	)
 	(wire
 		(pts
-			(xy 127 99.06)
-			(xy 143.51 99.06)
+			(xy 182.88 88.9)
+			(xy 195.58 88.9)
 		)
 		(stroke
 			(width 0)
@@ -833,8 +994,8 @@
 	)
 	(wire
 		(pts
-			(xy 184.15 88.9)
-			(xy 200.66 88.9)
+			(xy 129.54 93.98)
+			(xy 151.13 93.98)
 		)
 		(stroke
 			(width 0)
@@ -844,8 +1005,8 @@
 	)
 	(wire
 		(pts
-			(xy 127 93.98)
-			(xy 149.86 93.98)
+			(xy 151.13 93.98)
+			(xy 172.72 93.98)
 		)
 		(stroke
 			(width 0)
@@ -855,8 +1016,8 @@
 	)
 	(wire
 		(pts
-			(xy 149.86 93.98)
-			(xy 173.99 93.98)
+			(xy 119.38 93.98)
+			(xy 106.68 93.98)
 		)
 		(stroke
 			(width 0)
@@ -866,8 +1027,8 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 93.98)
-			(xy 100.33 93.98)
+			(xy 119.38 99.06)
+			(xy 106.68 99.06)
 		)
 		(stroke
 			(width 0)
@@ -877,8 +1038,8 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 99.06)
-			(xy 100.33 99.06)
+			(xy 119.38 96.52)
+			(xy 115.57 96.52)
 		)
 		(stroke
 			(width 0)
@@ -887,7 +1048,7 @@
 		(uuid "58c0dc4b-1296-5e89-9f12-16de75e1d567")
 	)
 	(junction
-		(at 170.18 91.44)
+		(at 168.91 91.44)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "31233daf-9a4c-5db8-9f78-c4d99ab8e539")
@@ -895,7 +1056,7 @@
 	(hierarchical_label
 		"AUX_I2C_SDA"
 		(shape bidirectional)
-		(at 100.33 93.98 180)
+		(at 106.68 93.98 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -907,7 +1068,7 @@
 	(hierarchical_label
 		"AUX_I2C_SCL"
 		(shape bidirectional)
-		(at 100.33 99.06 180)
+		(at 106.68 99.06 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -918,7 +1079,7 @@
 	)
 	(label
 		"QWIIC_SDA"
-		(at 143.51 99.06 0)
+		(at 142.24 99.06 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -929,7 +1090,7 @@
 	)
 	(label
 		"QWIIC_SDA"
-		(at 200.66 88.9 0)
+		(at 195.58 88.9 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -940,7 +1101,7 @@
 	)
 	(label
 		"QWIIC_SCL"
-		(at 149.86 93.98 0)
+		(at 151.13 93.98 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -951,7 +1112,7 @@
 	)
 	(symbol
 		(lib_id "USBLC6-2SC6:USBLC6-2SC6")
-		(at 121.92 96.52 180)
+		(at 124.46 96.52 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -961,7 +1122,7 @@
 		(property
 			"Reference"
 			"U2001"
-			(at 121.92 89.535 0)
+			(at 124.46 89.535 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -971,7 +1132,7 @@
 		(property
 			"Value"
 			"USBLC6-2SC6"
-			(at 121.92 103.63 0)
+			(at 124.46 103.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -981,7 +1142,7 @@
 		(property
 			"Footprint"
 			"USBLC6-2SC6:USBLC6-2SC6"
-			(at 121.92 96.52 0)
+			(at 124.46 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -992,7 +1153,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 121.92 96.52 0)
+			(at 124.46 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1003,7 +1164,7 @@
 		(property
 			"LCSC"
 			"C7519"
-			(at 121.92 96.52 0)
+			(at 124.46 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1048,7 +1209,7 @@
 	)
 	(symbol
 		(lib_id "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT")
-		(at 179.07 91.44 0)
+		(at 177.8 91.44 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1058,7 +1219,7 @@
 		(property
 			"Reference"
 			"J2001"
-			(at 179.07 84.455 0)
+			(at 177.8 84.455 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1068,7 +1229,7 @@
 		(property
 			"Value"
 			"ZX-SH1.0-4PWT"
-			(at 171.45 98.55 0)
+			(at 170.18 98.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1078,7 +1239,7 @@
 		(property
 			"Footprint"
 			"ZX-SH1.0-4PWT:ZX-SH1.0-4PWT"
-			(at 179.07 91.44 0)
+			(at 177.8 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1089,7 +1250,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 179.07 91.44 0)
+			(at 177.8 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1100,7 +1261,7 @@
 		(property
 			"LCSC"
 			"C7430446"
-			(at 179.07 91.44 0)
+			(at 177.8 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1144,8 +1305,8 @@
 		)
 	)
 	(symbol
-		(lib_id "schgen:+3V3_AUX")
-		(at 113.03 96.52 90)
+		(lib_id "power:+3V3")
+		(at 115.57 96.52 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1155,7 +1316,7 @@
 		(property
 			"Reference"
 			"#PWR2001"
-			(at 113.03 93.98 0)
+			(at 115.57 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1165,8 +1326,8 @@
 		)
 		(property
 			"Value"
-			"+3V3_AUX"
-			(at 105.244 96.52 90)
+			"+3V3"
+			(at 110.197 96.52 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1176,7 +1337,7 @@
 		(property
 			"Footprint"
 			""
-			(at 113.03 96.52 0)
+			(at 115.57 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1187,7 +1348,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 113.03 96.52 0)
+			(at 115.57 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1212,7 +1373,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 130.81 96.52 90)
+		(at 133.35 96.52 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1222,7 +1383,7 @@
 		(property
 			"Reference"
 			"#PWR2002"
-			(at 130.81 93.98 0)
+			(at 133.35 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1233,7 +1394,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 135.58 96.52 90)
+			(at 138.12 96.52 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1243,7 +1404,7 @@
 		(property
 			"Footprint"
 			""
-			(at 130.81 96.52 0)
+			(at 133.35 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1254,7 +1415,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 130.81 96.52 0)
+			(at 133.35 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1279,7 +1440,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 170.18 91.44 0)
+		(at 168.91 91.44 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1289,7 +1450,7 @@
 		(property
 			"Reference"
 			"#PWR2003"
-			(at 170.18 88.9 0)
+			(at 168.91 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1300,7 +1461,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 170.18 95.25 0)
+			(at 168.91 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1310,7 +1471,7 @@
 		(property
 			"Footprint"
 			""
-			(at 170.18 91.44 0)
+			(at 168.91 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1321,7 +1482,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 170.18 91.44 0)
+			(at 168.91 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1346,7 +1507,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+3V3_AUX")
-		(at 187.96 91.44 270)
+		(at 186.69 91.44 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1356,7 +1517,7 @@
 		(property
 			"Reference"
 			"#PWR2004"
-			(at 187.96 88.9 0)
+			(at 186.69 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1367,7 +1528,7 @@
 		(property
 			"Value"
 			"+3V3_AUX"
-			(at 195.746 91.44 90)
+			(at 194.476 91.44 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1377,7 +1538,7 @@
 		(property
 			"Footprint"
 			""
-			(at 187.96 91.44 0)
+			(at 186.69 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1388,7 +1549,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 187.96 91.44 0)
+			(at 186.69 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1413,7 +1574,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 187.96 99.06 0)
+		(at 186.69 99.06 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1423,7 +1584,7 @@
 		(property
 			"Reference"
 			"#PWR2005"
-			(at 187.96 96.52 0)
+			(at 186.69 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1434,7 +1595,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 187.96 102.87 0)
+			(at 186.69 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1444,7 +1605,7 @@
 		(property
 			"Footprint"
 			""
-			(at 187.96 99.06 0)
+			(at 186.69 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1455,7 +1616,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 187.96 99.06 0)
+			(at 186.69 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)

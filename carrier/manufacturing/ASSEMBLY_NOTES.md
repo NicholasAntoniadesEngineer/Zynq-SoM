@@ -74,3 +74,25 @@ chassis/shield return current cannot flow through signal ground:
 > (`schgen` floorplan extension) can emit the actual fiducial / tooling-hole
 > coordinates once the board outline is frozen — the floorplan already derives
 > the outline + per-block courtyards.
+
+## Board-services block (board_aux / board_services / board_qwiic)
+
+The manually-gated +3V3_AUX block adds parts that need explicit assembly care:
+
+- **BT1 — CR1220 coin cell (KH-CR1220-2 holder).** The SMD *holder* is
+  reflow-placeable (manual feeder load); the **cell is a hand-insert consumable**
+  fitted AFTER reflow. **Polarity: the cell `+` face goes toward pad 1**
+  (`V_RTC_BAT`); pad 2 is GND. The footprint marks polarity on `Cmts.User`
+  only — **add a silk `+` next to pad 1 at layout** (or mark it on the assembly
+  drawing) so the cell is not inserted reversed (reverse voltage damages the
+  RV-3028 / can vent the cell).
+- **RTC primary-cell SAFETY.** The cell is a PRIMARY (non-rechargeable) CR1220.
+  The RV-3028 trickle charger is OFF by factory default and the SC firmware must
+  never enable it (documented in the firmware contract). Do not substitute a
+  rechargeable cell unless the firmware/charger config is changed to match.
+- **SW1 — board_aux DSHP04 DIP (AUX power enable).** Only **position 1** is
+  used (`+3V3_AUX` enable); it defaults **OFF** (open). Mark the silk so pos-1 =
+  "AUX EN" is unambiguous; positions 2-4 are spare/no-connect.
+- **J1 (QWIIC, board_qwiic) pad order.** Pads 1..4 = GND / +3V3 / SDA / SCL
+  (looking into the receptacle). **Verify pad-1 location against the footprint
+  silk before fab** — a swapped power pad damages external QWIIC modules.

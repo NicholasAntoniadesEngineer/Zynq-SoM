@@ -12,9 +12,14 @@ hand, so its SDA/SCL are clamped at the connector by a USBLC6-2SC6 — the
 carrier's standard low-capacitance ESD array (~3.5 pF/line, fine for 400 kHz
 I2C), using the same 1<->6 / 3<->4 passthrough idiom as usbc_otg / usb_uart:
 the external connector lines sit on U1.1/U1.3, the protected pair that reaches
-the isolated bus on U1.6/U1.4, the clamp reference on U1.5 (+3V3_AUX), GND on
-U1.2. Because the bus is already behind the board_aux PCA9306 isolator, an ESD
-strike here is both clamped AND cut off from the always-on management bus.
+the isolated bus on U1.6/U1.4, GND on U1.2. The clamp reference (U1.5) is the
+ALWAYS-ON +3V3 (not the gated +3V3_AUX): the USBLC6 is passive (its I/O diodes
+are reverse-biased in normal operation, so referencing +3V3 draws ~0 and never
+back-feeds the gated rail), and an always-on reference keeps the ESD clamp valid
+in EVERY power state — including the most ESD-exposed one, a module hot-plugged
+while the connector rail is OFF. The connector POWER (J1.2) stays gated +3V3_AUX
+(constraint C1). Because the bus is also behind the board_aux PCA9306 isolator,
+a strike here is both clamped AND cut off from the always-on management bus.
 
 QWIIC PAD ORDER — VERIFY AT LAYOUT: pads 1..4 are wired to the QWIIC standard
 GND / +3V3 / SDA / SCL (looking into the receptacle); confirm pad 1's location
@@ -45,7 +50,7 @@ def circuit() -> Circuit:
            speed_hz=400_000, expect=AUX_BUS)              # protected -> bus
     c.port("AUX_I2C_SCL", "U1.4", kind="i2c", role="scl", bus="AUX_I2C",
            speed_hz=400_000, expect=AUX_BUS)
-    c.net("+3V3_AUX", "U1.5")                             # clamp reference rail
+    c.net("+3V3", "U1.5")                                # ALWAYS-ON clamp ref
     c.net("GND", "U1.2")
 
     # power-tree budget: external module headroom on the gated rail

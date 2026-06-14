@@ -168,12 +168,20 @@ def test_aux_isolator_en_follows_gated_rail(aux):
 # --------------------------------------------------------------------------- #
 def test_qwiic_esd_clamps_the_external_lines(qwiic):
     # USBLC6 (U1) 1<->6 / 3<->4 passthrough: connector side on U1.1/U1.3, the
-    # protected pair (-> the bus) on U1.6/U1.4, clamp ref on U1.5 (+3V3_AUX)
+    # protected pair (-> the bus) on U1.6/U1.4
     assert "U1.1" in _pins(qwiic, "QWIIC_SDA")     # external SDA at the array
     assert "U1.3" in _pins(qwiic, "QWIIC_SCL")
     assert "U1.6" in _pins(qwiic, "AUX_I2C_SDA")   # protected -> isolated bus
     assert "U1.4" in _pins(qwiic, "AUX_I2C_SCL")
-    assert "U1.5" in _pins(qwiic, "+3V3_AUX")      # clamp reference rail
+
+
+def test_qwiic_esd_clamp_ref_is_always_on(qwiic):
+    # the ESD clamp reference (U1.5) must be the ALWAYS-ON +3V3, not the gated
+    # +3V3_AUX, so protection is valid even when the connector rail is OFF;
+    # the connector POWER (J1.2) stays gated (+3V3_AUX) per C1.
+    assert "U1.5" in _pins(qwiic, "+3V3")
+    assert "U1.5" not in _pins(qwiic, "+3V3_AUX")
+    assert "J1.2" in _pins(qwiic, "+3V3_AUX")
 
 
 def test_qwiic_external_pins_never_reach_the_bus_directly(qwiic):
