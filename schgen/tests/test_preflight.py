@@ -6,7 +6,7 @@ here locks the procurement-floor + sufficiency logic without hitting JLC.
 
 from __future__ import annotations
 
-from schgen.preflight import STOCK_FLOOR, assess_stock
+from schgen.verify.preflight import STOCK_FLOOR, assess_stock
 
 
 def test_ok_high_stock():

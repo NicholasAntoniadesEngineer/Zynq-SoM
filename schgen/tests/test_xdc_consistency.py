@@ -9,8 +9,8 @@ that under C3 a SoM / bank re-rail MUST touch both).
 
 from __future__ import annotations
 
-from schgen.link import _vcco_rail_map
-from schgen.xdc import BANK_RAIL
+from schgen.core.link import _vcco_rail_map
+from schgen.generate.xdc import BANK_RAIL
 
 
 def test_bank_rail_matches_vcco_rail_map():
@@ -23,7 +23,7 @@ def test_bank_rail_matches_vcco_rail_map():
 def test_every_bank_has_a_known_iostandard_voltage():
     # each mapped rail must resolve to a voltage xdc can turn into a LVCMOS std,
     # so no bank is left without an IOSTANDARD
-    from schgen.xdc import _IOSTD_SINGLE, _rail_volts
+    from schgen.generate.xdc import _IOSTD_SINGLE, _rail_volts
     for bank, rail in BANK_RAIL.items():
         assert _rail_volts(rail) in _IOSTD_SINGLE, (
             f"bank {bank} rail {rail} has no single-ended LVCMOS standard")

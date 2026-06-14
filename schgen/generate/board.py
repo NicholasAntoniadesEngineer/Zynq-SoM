@@ -25,12 +25,11 @@ import re
 import subprocess
 from pathlib import Path
 
-from schgen import place
-from schgen import textmetrics as tm
-from schgen.emit import (HierLabel, Junction as EJunction, PlacedDesign,
-                         SheetPin, SheetSymbol, Wire, emit, stable_uuid)
-from schgen.model import Circuit, NetClass, PinRef
-from schgen.symbols import Library, pin_page_position
+from schgen.layout import place
+from schgen.layout import textmetrics as tm
+from schgen.output.emit import HierLabel, Junction as EJunction, PlacedDesign, SheetPin, SheetSymbol, Wire, emit, stable_uuid
+from schgen.core.model import Circuit, NetClass, PinRef
+from schgen.core.symbols import Library, pin_page_position
 from schgen.verify import netlist_gate
 
 _REF_RE = re.compile(r"^(#?[A-Za-z_]+?)0*(\d+)$")

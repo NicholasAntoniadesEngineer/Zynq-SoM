@@ -29,7 +29,7 @@ damage external modules. Pads 5/6 are the shell/mounting tabs -> GND.
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 AUX_BUS = "board_aux / board_services (the isolated AUX I2C bus)"
 

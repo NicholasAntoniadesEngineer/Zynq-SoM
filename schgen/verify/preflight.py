@@ -32,7 +32,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
 
 JLC_SEARCH_URL = ("https://jlcpcb.com/api/overseas-pcb-order/v1/"

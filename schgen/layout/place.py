@@ -29,12 +29,12 @@ import itertools
 import math
 from dataclasses import dataclass, field
 
-from schgen import route, sexpr
-from schgen import textmetrics as tm
-from schgen.emit import (HierLabel, LocalLabel, NoConnect, PlacedPart,
-                         PlacedPower)
-from schgen.model import Circuit, NetClass, PartitionError, PinRef
-from schgen.symbols import GRID, Library, Pin, SymbolDef, pin_page_position
+from schgen.layout import route
+from schgen.core import sexpr
+from schgen.layout import textmetrics as tm
+from schgen.output.emit import HierLabel, LocalLabel, NoConnect, PlacedPart, PlacedPower
+from schgen.core.model import Circuit, NetClass, PartitionError, PinRef
+from schgen.core.symbols import GRID, Library, Pin, SymbolDef, pin_page_position
 from schgen.verify import visual_gate
 from schgen.verify.visual_gate import Box, SheetGeometry
 
@@ -3802,7 +3802,7 @@ def build(c: Circuit, lib: Library, sp: Spacing) -> Placement:
     # Test points are stripped BEFORE the topology templates run (a probe
     # point must never perturb the circuit's own layout), then the engine
     # appends the dedicated probe row below the sheet extent.
-    from schgen import testpoints
+    from schgen.verify import testpoints
     core, tp_refs = testpoints.split(c)
     eng = _Engine(core, lib, sp)
     pl = eng.run()

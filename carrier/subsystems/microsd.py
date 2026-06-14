@@ -24,7 +24,7 @@ high-speed tier by design (no extra card-rail LDO/level-shift on rev A).
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"

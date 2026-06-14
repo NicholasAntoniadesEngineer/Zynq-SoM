@@ -4,10 +4,10 @@ design_rules.py checks that a decap/pull/strap EXISTS; thermal.py checks Tj.
 Neither checks whether a part is RATED for the stress the netlist puts on it: a
 ceramic cap below (or insufficiently derated above) its rail voltage, a resistor
 past its package power, a regulator driven beyond its input abs-max. This gate
-adds that layer. Ratings come from schgen/ratings.py (LCSC-keyed; EasyEDA gives
+adds that layer. Ratings come from schgen/verify/ratings.py (LCSC-keyed; EasyEDA gives
 no structured ratings and the load-bearing passives are inline c.part(...,
 LCSC=...) with no parts/ folder, so LCSC is the primary key); the regulator tree
-+ rail voltages are reused from schgen.powertree (never recomputed).
++ rail voltages are reused from schgen.verify.powertree (never recomputed).
 
 ENFORCED rules (hard FAIL), chosen so the CURRENT board passes (it already
 self-derates: the +VIN 20 V bulk is a 50 V part, the LCD boost-out is 50 V):
@@ -34,8 +34,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen import powertree
-from schgen.ratings import RATINGS_BY_LCSC, Ratings
+from schgen.verify import powertree
+from schgen.verify.ratings import RATINGS_BY_LCSC, Ratings
 
 # ---- derating policy (LAW 4: a tight exception is WAIVED, never relaxed) --------
 DERATE_MLCC = 2.0     # X7R/X5R ceramic: DC-bias capacitance loss -> 2x the rail
@@ -233,7 +233,7 @@ def run(sheets, reports_dir: Path,
 
 
 def cmd_part_rules(args) -> int:
-    from schgen.link import all_subsystem_paths, load_subsystem
+    from schgen.core.link import all_subsystem_paths, load_subsystem
     names = getattr(args, "subsystems", None) or \
         [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]

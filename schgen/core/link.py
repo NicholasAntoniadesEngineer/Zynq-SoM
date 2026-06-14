@@ -43,9 +43,9 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen.model import Circuit, NetClass, PortType, pair_polarity
+from schgen.core.model import Circuit, NetClass, PortType, pair_polarity
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
 SOM_INTERFACE = REPO_ROOT / "carrier" / "som_interface.json"
 
@@ -580,7 +580,7 @@ def cmd_link(args: argparse.Namespace) -> int:
     sheets = [load_subsystem(n) for n in names]
 
     # model-completeness first (same hard check as `schgen build`)
-    from schgen.symbols import Library
+    from schgen.core.symbols import Library
     lib = Library()
     for sc in sheets:
         sc.circuit.validate({r: lib.pin_numbers(p.lib_id)
@@ -620,18 +620,18 @@ def cmd_link(args: argparse.Namespace) -> int:
     print(f"\nlink report: {report_path}")
 
     # layout constraints from typed ports
-    from schgen import constraints
+    from schgen.generate import constraints
     dru, csv_path = constraints.export(sheets, man_dir)
     print(f"constraints: {dru} + {csv_path}")
 
     # block diagram from the port graph
-    from schgen import diagram
+    from schgen.output import diagram
     svg = diagram.render(res, som_nets, diag_path)
     print(f"block diagram: {svg}")
 
     board_ok = True
     if not args.no_board:
-        from schgen import board
+        from schgen.generate import board
         if override:
             board_ok = board.build_board(sheets, lib, override / "board")
         else:

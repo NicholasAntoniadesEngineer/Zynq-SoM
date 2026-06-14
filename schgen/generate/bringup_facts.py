@@ -23,10 +23,10 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen.link import load_som_contract, load_subsystem
-from schgen.model import Circuit, NetClass, PinRef
+from schgen.core.link import load_som_contract, load_subsystem
+from schgen.core.model import Circuit, NetClass, PinRef
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SOM_SCH = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 
 # datasheet constants (sources in the module docstring)
@@ -97,7 +97,7 @@ def stm32_pin_map(som_sch: Path = SOM_SCH, ref: str = "U9") -> dict:
     "internal": {net: Stm32Net}} where "nets" are J-contract nets and
     "internal" are STM32-driven SoM-internal nets (BMODE, PS_POR, ...).
     """
-    from schgen.som_interface import extract_zynq
+    from schgen.core.som_interface import extract_zynq
     data = extract_zynq(som_sch, zynq_ref=ref)
     contract = load_som_contract()
     on_j: dict[str, Stm32Net] = {}

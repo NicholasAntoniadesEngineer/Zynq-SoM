@@ -38,10 +38,10 @@ import argparse
 import tempfile
 from pathlib import Path
 
-from schgen import xdc
-from schgen.som_interface import extract_zynq
+from schgen.generate import xdc
+from schgen.core.som_interface import extract_zynq
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOM = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 DEFAULT_CONTRACT = REPO_ROOT / "carrier" / "som_interface.json"
 DEFAULT_OUT = REPO_ROOT / "carrier" / "fpga" / "create_project.tcl"
@@ -247,7 +247,7 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
 # ---- CLI ----------------------------------------------------------------------
 
 def cmd_vivado(args: argparse.Namespace) -> int:
-    from schgen.link import all_subsystem_paths, load_subsystem
+    from schgen.core.link import all_subsystem_paths, load_subsystem
     names = args.subsystems or [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
     refs = tuple(r.strip() for r in args.refs.split(",") if r.strip())

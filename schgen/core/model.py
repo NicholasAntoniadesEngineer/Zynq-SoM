@@ -224,7 +224,7 @@ class Circuit:
         import importlib.util as _ilu
         from pathlib import Path as _P
         safe = re.sub(r"[^A-Za-z0-9._-]+", "_", mpn).strip("_")
-        parts_dir = _P(__file__).resolve().parents[1] / "parts"
+        parts_dir = _P(__file__).resolve().parents[2] / "parts"
         meta = parts_dir / safe / f"{safe}.py"
         if not meta.exists():
             raise CircuitError(
@@ -610,7 +610,7 @@ class Circuit:
             return self._inline_pins[lib_id]
         try:
             if self._lib is None:
-                from schgen.symbols import Library  # deferred: keeps model pure
+                from schgen.core.symbols import Library  # deferred: keeps model pure
                 self._lib = Library()
             nums = frozenset(self._lib.pin_numbers(lib_id))
         except Exception:                      # noqa: BLE001 — unresolved sym

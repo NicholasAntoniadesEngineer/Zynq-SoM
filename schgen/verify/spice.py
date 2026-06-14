@@ -25,8 +25,8 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen.model import NetClass, PinRef
-from schgen.powertree import parse_si, rail_volts
+from schgen.core.model import NetClass, PinRef
+from schgen.verify.powertree import parse_si, rail_volts
 
 # ---- electrical contract constants (documented, not guessed) --------------------
 
@@ -340,7 +340,7 @@ def _sy7201_iset(sheet: str, c, res: Result) -> None:
 
 def _buck_fb(sheet: str, c, res: Result) -> None:
     """TPS54302 FB divider vs VREF: Vout = VREF * (1 + Rtop/Rbot)."""
-    from schgen.powertree import _detect_regs
+    from schgen.verify.powertree import _detect_regs
 
     class _One:
         def __init__(self, name, circuit):
@@ -382,7 +382,7 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
     the 20 V (21 V) contract; a plain divider cannot do both, so the clamp
     is the fix and this check is its regression lock.
     """
-    from schgen.powertree import _detect_regs
+    from schgen.verify.powertree import _detect_regs
 
     class _One:
         def __init__(self, name, circuit):
@@ -602,10 +602,10 @@ def run(sheets, reports_dir: Path, allow_ngspice: bool = True) -> Result:
 
 
 def cmd_spice(args) -> int:
-    from schgen.link import all_subsystem_paths, load_subsystem
+    from schgen.core.link import all_subsystem_paths, load_subsystem
     names = args.subsystems or [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
-    repo = Path(__file__).resolve().parents[1]
+    repo = Path(__file__).resolve().parents[2]
     res = run(sheets, repo / "carrier" / "reports",
               allow_ngspice=not args.no_ngspice)
     print(report(res))

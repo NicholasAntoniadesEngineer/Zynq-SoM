@@ -40,7 +40,7 @@ IS the isolation barrier (the round-5 note said "x4", but shipping C5 at
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 LIB_ID = "schgen:HX5008NLT"
 FOOTPRINT = "Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm"

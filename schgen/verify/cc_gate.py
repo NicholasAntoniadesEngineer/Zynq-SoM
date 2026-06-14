@@ -37,8 +37,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from schgen.model import Circuit, PinRef
-from schgen.symbols import Library, pin_page_position
+from schgen.core.model import Circuit, PinRef
+from schgen.core.symbols import Library, pin_page_position
 from schgen.verify.visual_gate import Seg, _point_on_seg
 
 # Coincidence tolerance. The router lands every endpoint EXACTLY on a 1.27 mm

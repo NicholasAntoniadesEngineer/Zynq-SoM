@@ -38,7 +38,7 @@ Parts — all live-verified on the JLC parts API 2026-06-13:
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"

@@ -22,9 +22,9 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen import sexpr
-from schgen.model import Circuit, NetClass, PinRef
-from schgen.symbols import Pin, pin_page_position
+from schgen.core import sexpr
+from schgen.core.model import Circuit, NetClass, PinRef
+from schgen.core.symbols import Pin, pin_page_position
 
 
 @dataclass

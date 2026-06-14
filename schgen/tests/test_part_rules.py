@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import types
 
-from schgen import powertree
-from schgen.model import Circuit
+from schgen.verify import powertree
+from schgen.core.model import Circuit
 from schgen.verify import part_rules
 
 
@@ -26,7 +26,7 @@ def test_value_parser():
 
 
 def test_current_board_passes_part_rules():
-    from schgen.link import all_subsystem_paths, load_subsystem
+    from schgen.core.link import all_subsystem_paths, load_subsystem
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     r = part_rules.analyze(sheets)
     assert r.ok, f"unexpected findings: {r.findings}"

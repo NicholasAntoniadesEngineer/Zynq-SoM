@@ -45,7 +45,7 @@ SoM 4.2-5.0 V window) + 75 pF C0G feedforward (C22399620); KT-0603R PG LED
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 BUCK_LIB = "Regulator_Switching:TPS54302"
 BUCK_FP = "Package_TO_SOT_SMD:TSOT-23-6"

@@ -87,16 +87,17 @@ import uuid as _uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen import place, sexpr
-from schgen.emit import Junction as EJunction
-from schgen.emit import PlacedDesign, Wire, emit
-from schgen.emit import stable_uuid as _stable_uuid
-from schgen.model import Circuit, NetClass, PinRef
-from schgen.sexpr import Sym
-from schgen.symbols import GRID, Library, pin_page_position
+from schgen.layout import place
+from schgen.core import sexpr
+from schgen.output.emit import Junction as EJunction
+from schgen.output.emit import PlacedDesign, Wire, emit
+from schgen.output.emit import stable_uuid as _stable_uuid
+from schgen.core.model import Circuit, NetClass, PinRef
+from schgen.core.sexpr import Sym
+from schgen.core.symbols import GRID, Library, pin_page_position
 from schgen.verify import netlist_gate, visual_gate
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Known-green fixtures: the engine-placed M1 smoke sheet + one real carrier
 # sheet (small enough that mutating EVERY wire stays fast).
@@ -653,7 +654,7 @@ def _mg_cap_voltage(lib: Library):
 
 def _mg_power_overrun(lib: Library):
     """power_overrun: load the buck past its 3 A limit -> powertree fires."""
-    from schgen import powertree
+    from schgen.verify import powertree
     base_ok = powertree.analyze(_fixture_buck()).ok
     mut = _fixture_buck()
     mut[0].circuit.loads["+3V3"] = [(4.0, "selftest overrun")]
@@ -667,7 +668,7 @@ def _mg_power_overrun(lib: Library):
 def _mg_thermal(which: str, lib: Library):
     """thermal_overrun (Tj over limit -> thermal fires) and thermal_waiver
     (the SAME over-Tj demoted to a note by c.waive_thermal)."""
-    from schgen import powertree, thermal
+    from schgen.verify import powertree, thermal
 
     def run(sheets):
         pt = powertree.analyze(sheets)
@@ -702,7 +703,7 @@ def _mg_thermal(which: str, lib: Library):
 def _mg_divider_drift(lib: Library):
     """divider_drift: perturb the FB top resistor so Vout leaves +/-3% -> spice
     fires on the named FB-divider window."""
-    from schgen import spice
+    from schgen.verify import spice
     base_ok = spice.extract_checks(_fixture_buck()).ok
     # 45k3 -> 33k drops Vout from 3.30 V to 0.596*(1+3.3) = 2.56 V, far below
     # the 3.20..3.40 V window.
@@ -716,7 +717,7 @@ def _mg_divider_drift(lib: Library):
 
 def _mg_tp_uncovered(lib: Library):
     """tp_uncovered: drop the +3V3 rail's test point -> testpoints fires."""
-    from schgen import testpoints
+    from schgen.verify import testpoints
     base_ok = testpoints.check_coverage(_fixture_testpoints()).ok
     mut = _fixture_testpoints()
     c = mut[0].circuit
@@ -743,7 +744,7 @@ def _mg_mh_short(lib: Library):
     SAME call on +3V3 (a POWER rail) MUST raise CircuitError: a mounting hole
     is a chassis/earth bond, never a rail, so bonding it to +3V3 would be a
     short. The guard IS the gate here (no emit needed)."""
-    from schgen.model import CircuitError, PinRef
+    from schgen.core.model import CircuitError, PinRef
     base = _fixture_mounting_hole()
     p = base.mounting_hole("CHASSIS_GND")
     base_ok = (p.fields.get("BOM") == "exclude"
@@ -768,7 +769,7 @@ def _mg_port_rename(lib: Library, tmp: Path):
     merge gate FAILS. The mutated emitted file disagrees with the declared
     circuits (which still demand the merge), which is precisely what the board
     gate exists to catch."""
-    from schgen import board
+    from schgen.generate import board
 
     def _placed(sheets, root="board"):
         # mirror build_board's place->uniquify (the only model state the merge
@@ -963,7 +964,7 @@ def determinism_hashseed_check(path: Path, tmp: Path) -> tuple[bool, str]:
     import subprocess
     import sys
     code = ("import sys; from pathlib import Path; "
-            "from schgen.selftest import _build; "
+            "from schgen.verify.selftest import _build; "
             "sys.stdout.write(_build(Path(sys.argv[1]), Path(sys.argv[2])).text)")
     texts = []
     for seed in ("0", "987654321"):

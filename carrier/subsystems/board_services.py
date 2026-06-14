@@ -55,7 +55,7 @@ with its own ESD + pad-order note.)
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"

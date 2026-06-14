@@ -21,7 +21,7 @@ overlap there that the visual gate rightly rejects). Stacked hidden GND pin
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 LIB_ID = "schgen:CP2102N_UART"
 FOOTPRINT = "Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm"

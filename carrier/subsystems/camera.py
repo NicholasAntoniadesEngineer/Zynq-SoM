@@ -77,7 +77,7 @@ Terminations 100R = 0603WAF1000T5E (C22775, Basic, LIVE-verified 8.7M).
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"

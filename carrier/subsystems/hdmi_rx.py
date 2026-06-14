@@ -83,7 +83,7 @@ is plain HPD).
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 # DELIBERATE symbol overrides (use_part lib_id=): the RX-direction schgen
 # receptacle drawing + the stock EEPROM drawing stay; MPN/LCSC/datasheet +

@@ -31,7 +31,7 @@ gate re-check every pin on every build.
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 # DELIBERATE symbol overrides (use_part lib_id=): the proven re-pinned
 # schgen drawings stay; MPN/LCSC/datasheet + the faithful EasyEDA->KiCad

@@ -51,7 +51,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen.model import NetClass, PinRef
+from schgen.core.model import NetClass, PinRef
 
 # ---- pin-function inference (by NAME — etype on this board is flat 'passive') --
 
@@ -614,7 +614,7 @@ def run(sheets, reports_dir: Path | None = None,
     """Gate entry point: run the four rules, optionally write the verdict
     report to ``reports_dir/design_rules.txt`` (deterministic, no timestamp)."""
     if lib is None:
-        from schgen.symbols import Library
+        from schgen.core.symbols import Library
         lib = Library()
     res = check(sheets, lib)
     if reports_dir is not None:
@@ -625,8 +625,8 @@ def run(sheets, reports_dir: Path | None = None,
 
 def cmd_design_rules(args) -> int:
     """Standalone CLI: ``python -m schgen design-rules [subsystems...]``."""
-    from schgen.link import all_subsystem_paths, load_subsystem
-    from schgen.symbols import Library
+    from schgen.core.link import all_subsystem_paths, load_subsystem
+    from schgen.core.symbols import Library
     names = args.subsystems or [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
     lib = Library()

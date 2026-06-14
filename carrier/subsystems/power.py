@@ -117,7 +117,7 @@ Q_NMOS_GSD == AO3400A SOT-23 1 G 2 S 3 D).
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 # DELIBERATE symbol+footprint overrides (use_part lib_id=/footprint=): the
 # stock KiCad regulator/FET drawings stay (pin maps cross-checked above);

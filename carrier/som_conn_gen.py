@@ -50,7 +50,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from schgen.model import Circuit, NetClass
+from schgen.core.model import Circuit, NetClass
 
 CONTRACT = Path(__file__).resolve().parent / "som_interface.json"
 

@@ -28,8 +28,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from schgen.model import Circuit, Net, NetClass
-from schgen.emit import PlacedPart
+from schgen.core.model import Circuit, Net, NetClass
+from schgen.output.emit import PlacedPart
 from schgen.verify.visual_gate import Box
 
 TP_LIB_ID = Circuit.TP_LIB_ID
@@ -77,8 +77,8 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
     carry the sheet's geometry); ``c`` is the FULL circuit (with TPs)."""
     if not tp_refs:
         return
-    from schgen import textmetrics as tm
-    from schgen.place import body_box_page, gceil, gsnap
+    from schgen.layout import textmetrics as tm
+    from schgen.layout.place import body_box_page, gceil, gsnap
 
     lib = eng.lib
     sp = eng.sp

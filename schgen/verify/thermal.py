@@ -57,7 +57,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen import powertree
+from schgen.verify import powertree
 
 # ---- board thermal assumptions -------------------------------------------------
 
@@ -379,11 +379,11 @@ def run(sheets, reports_dir: Path,
 
 
 def cmd_thermal(args) -> int:
-    from schgen.link import all_subsystem_paths, load_subsystem
+    from schgen.core.link import all_subsystem_paths, load_subsystem
     names = getattr(args, "subsystems", None) or \
         [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
-    repo = Path(__file__).resolve().parents[1]
+    repo = Path(__file__).resolve().parents[2]
     res = run(sheets, repo / "carrier" / "reports")
     print(report(res))
     print(f"\nreport: {repo / 'carrier' / 'reports' / 'thermal.txt'}")

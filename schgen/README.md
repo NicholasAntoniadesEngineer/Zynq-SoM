@@ -145,25 +145,26 @@ Run `python3 -m schgen <cmd> --help` for any command.
 
 ## Package layout (by concern)
 
-The modules are physically flat in `schgen/` today; grouped by role:
+The modules live in role-named subpackages under `schgen/`:
 
-- **Core model** — `model.py` (`Circuit`, parts, nets, macros, waivers, `subset`),
+- **`core/`** — `model.py` (`Circuit`, parts, nets, macros, waivers, `subset`),
   `symbols.py` (KiCad symbol library + pin tables), `link.py` (board port graph),
   `sexpr.py` (S-expression read/write), `som_interface.py` (SoM J-connector contract).
-- **Placement & routing** — `place.py` (`_Engine`, per-topology templates:
+- **`layout/`** — `place.py` (`_Engine`, per-topology templates:
   regulator / stack-columns / chain / connector-fan / shunt cells; congestion
   auto-pagination), `route.py` (exclusive-grid router), `textmetrics.py`.
-- **Emission & render** — `emit.py` (deterministic content-derived uuid5),
+- **`output/`** — `emit.py` (deterministic content-derived uuid5),
   `render.py` (kicad-cli PNG), `diagram.py` (block diagram).
-- **Verification** — `verify/{netlist_gate,design_rules,part_rules}.py`,
-  `powertree.py`, `thermal.py`, `spice.py`, `ratings.py` (LCSC-keyed datasheet
-  limits), `selftest.py` (mutation + determinism), `preflight.py`.
-- **Generators** — `board.py` (whole-board orchestrator), `firmware.py`,
+- **`verify/`** — `netlist_gate.py`, `design_rules.py`, `part_rules.py`,
+  `visual_gate.py`, `cc_gate.py`, `powertree.py`, `thermal.py`, `spice.py`,
+  `ratings.py` (LCSC-keyed datasheet limits), `testpoints.py` (probe coverage
+  gate), `selftest.py` (mutation + determinism), `preflight.py`.
+- **`generate/`** — `board.py` (whole-board orchestrator), `firmware.py`,
   `manual.py`, `testplan.py`, `floorplan.py`, `gallery.py`, `devicetree.py`,
   `manifest.py`, `xdc.py`, `vivado.py`, `constraints.py`, `bringup_facts.py`
   (shared netlist-derived facts the firmware/manual/testplan generators consume).
-- **Parts** — `part_gen.py` (LCSC/EasyEDA → `parts/<MPN>/` conversion).
-- **CLI** — `__main__.py`.
+- **`partlib/`** — `part_gen.py` (LCSC/EasyEDA → `parts/<MPN>/` conversion).
+- **CLI (package root)** — `__main__.py`.
 
 ---
 

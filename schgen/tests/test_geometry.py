@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from schgen.place import Spacing, gceil, gfloor, gsnap
-from schgen.symbols import GRID
+from schgen.layout.place import Spacing, gceil, gfloor, gsnap
+from schgen.core.symbols import GRID
 
 U = GRID  # 1.27 mm
 

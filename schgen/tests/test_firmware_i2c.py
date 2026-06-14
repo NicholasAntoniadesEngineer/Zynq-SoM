@@ -10,10 +10,9 @@ from __future__ import annotations
 
 import pytest
 
-from schgen.firmware import (FMC_EEPROM_ADDR, ID_EEPROM_BASE, RV3028_ADDR,
-                             _id_eeprom_addr)
-from schgen.link import load_subsystem
-from schgen.model import Circuit
+from schgen.generate.firmware import FMC_EEPROM_ADDR, ID_EEPROM_BASE, RV3028_ADDR, _id_eeprom_addr
+from schgen.core.link import load_subsystem
+from schgen.core.model import Circuit
 
 
 @pytest.fixture(scope="module")
@@ -53,7 +52,7 @@ def test_misstrap_to_0x50_is_derivable_and_would_collide():
 
 def test_missing_eeprom_raises():
     # if the ID-EEPROM is ever removed, the contract generator must fail loudly
-    from schgen.firmware import FirmwareError
+    from schgen.generate.firmware import FirmwareError
     c = Circuit("t", "t")
     c.part("R1", "Device:R", "10k", "Resistor_SMD:R_0603_1608Metric")
     c.net("GND", "R1.2")

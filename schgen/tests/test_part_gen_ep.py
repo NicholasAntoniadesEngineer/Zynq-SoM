@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from schgen import part_gen
-from schgen.part_gen import PinInfo, synth_ep_pin, synth_ep_pad_nodes, _ep_number
+from schgen.partlib import part_gen
+from schgen.partlib.part_gen import PinInfo, synth_ep_pin, synth_ep_pad_nodes, _ep_number
 
 _REPO = Path(__file__).resolve().parents[2]
 _EIGHT = [PinInfo(str(n), f"P{n}", "passive") for n in range(1, 9)]

@@ -92,7 +92,7 @@ Inlet protection + bulk (LIVE-verified on the JLC parts API 2026-06-11):
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C1210 = "Capacitor_SMD:C_1210_3225Metric"

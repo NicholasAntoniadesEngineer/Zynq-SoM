@@ -32,7 +32,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SOM_PCB = REPO_ROOT / "som" / "Zynq_SoM.kicad_pcb"
 PARTS_DIR = REPO_ROOT / "parts"
 OUT_SVG = REPO_ROOT / "carrier" / "docs" / "FLOORPLAN.svg"
@@ -522,7 +522,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # port-sharing pull toward an edge sheet (usb_pd follows the pd_input
     # inlet via the CC nets — nets shared by exactly those two sheets).
     port_sheets: dict[str, set[str]] = {}
-    from schgen.model import NetClass
+    from schgen.core.model import NetClass
     for sc in sheets:
         if sc.name.startswith("som_j"):
             continue        # the mezzanine carries almost every port
@@ -610,7 +610,7 @@ def _pair_count(c, kind: str) -> int:
 
 
 def build_notes(plan: Plan, sheets, regs) -> list[Note]:
-    from schgen.powertree import rail_volts
+    from schgen.verify.powertree import rail_volts
     by_name = {sc.name: sc.circuit for sc in sheets}
     notes: list[Note] = []
 
@@ -974,8 +974,8 @@ def render_svg(plan: Plan, notes: list[Note], out: Path) -> Path:
 
 def render_md(plan: Plan, notes: list[Note], sheets, regs,
               out: Path) -> Path:
-    from schgen import constraints as cst
-    from schgen.powertree import rail_volts
+    from schgen.generate import constraints as cst
+    from schgen.verify.powertree import rail_volts
 
     note_of: dict[str, list[int]] = {}
     for nt in notes:
@@ -1146,9 +1146,8 @@ def render_md(plan: Plan, notes: list[Note], sheets, regs,
 # ---- entry points -----------------------------------------------------------------
 
 def generate(sheets=None, link_result=None) -> list[Path]:
-    from schgen import powertree
-    from schgen.link import (all_subsystem_paths, link, load_som_contract,
-                             load_subsystem)
+    from schgen.verify import powertree
+    from schgen.core.link import all_subsystem_paths, link, load_som_contract, load_subsystem
     if sheets is None:
         sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     if link_result is None:

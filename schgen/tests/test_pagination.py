@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from schgen import place
-from schgen.model import Circuit, PartitionError
-from schgen.symbols import Library
+from schgen.layout import place
+from schgen.core.model import Circuit, PartitionError
+from schgen.core.symbols import Library
 
 
 def _two_R_on_signal():

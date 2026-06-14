@@ -17,7 +17,7 @@ bank-13 IOs — the LCD bus must move (proposal: J3 bank 34) before wave-3.
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"

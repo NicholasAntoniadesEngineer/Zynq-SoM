@@ -15,7 +15,7 @@ NAME — "J2.VBUS" nets BOTH stacked VBUS pads, exactly like the symbol.
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"

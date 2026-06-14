@@ -22,9 +22,9 @@ import argparse
 import os
 from pathlib import Path
 
-from schgen.link import all_subsystem_paths, load_subsystem
+from schgen.core.link import all_subsystem_paths, load_subsystem
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 RENDERS = REPO_ROOT / "carrier" / "renders"
 DIAGRAM = REPO_ROOT / "docs" / "block_diagram.svg"
 

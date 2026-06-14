@@ -50,11 +50,11 @@ import hashlib
 import json
 from pathlib import Path
 
-from schgen import bringup_facts as bf
-from schgen import powertree, testpoints
-from schgen.model import NetClass
+from schgen.generate import bringup_facts as bf
+from schgen.verify import powertree, testpoints
+from schgen.core.model import NetClass
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 CARRIER = REPO_ROOT / "carrier"
 DEFAULT_OUT = CARRIER / "manifest.json"
 
@@ -128,7 +128,7 @@ def _i2c_map(sheets) -> list[dict]:
             rows.append({"device": "FUSB302B", "addr": bf.FUSB302B_ADDR,
                          "sheet": name, "ref": ref})
         if name == "board_services":
-            from schgen.firmware import RV3028_ADDR, _id_eeprom_addr
+            from schgen.generate.firmware import RV3028_ADDR, _id_eeprom_addr
             rows.append({"device": "24AA025E48", "addr": _id_eeprom_addr(c),
                          "sheet": name, "ref": "U1", "bus": "AUX_I2C"})
             rows.append({"device": "RV-3028", "addr": RV3028_ADDR,
@@ -316,8 +316,7 @@ def generate(sheets, link_result, *,
 # ---- CLI -----------------------------------------------------------------------
 
 def cmd_manifest(args: argparse.Namespace) -> int:
-    from schgen.link import all_subsystem_paths, link, load_som_contract, \
-        load_subsystem
+    from schgen.core.link import all_subsystem_paths, link, load_som_contract, load_subsystem
     names = args.subsystems or [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
     res = link(sheets, load_som_contract())

@@ -32,11 +32,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from schgen import place
-from schgen.emit import PlacedDesign, Wire, emit
-from schgen.emit import Junction as EJunction
-from schgen.model import Circuit, NetClass
-from schgen.symbols import Library
+from schgen.layout import place
+from schgen.output.emit import PlacedDesign, Wire, emit
+from schgen.output.emit import Junction as EJunction
+from schgen.core.model import Circuit, NetClass
+from schgen.core.symbols import Library
 from schgen.verify import netlist_gate, visual_gate
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -62,15 +62,16 @@ def _load_subsystem(name_or_path: str):
 
 
 # ---- PURITY GATE: subsystem modules are netlist-only --------------------------
-# A subsystem .py may import schgen.model (and stdlib) — NOTHING geometric.
+# A subsystem .py may import schgen.core.model (and stdlib) — NOTHING geometric.
 # Manual placement is banned structurally: defining `placer` or importing any
 # placement/emit/route/text-metrics API fails the build BEFORE the module is
 # even executed (the scan is on the source, so a broken geometry import still
 # yields the clear gate message, not a stack trace).
 
-_BANNED_MODULES = ("schgen.place", "schgen.emit", "schgen.route",
-                   "schgen.textmetrics", "schgen.symbols", "schgen.render",
-                   "schgen.verify", "schgen.sexpr")
+_BANNED_MODULES = ("schgen.layout.place", "schgen.output.emit",
+                   "schgen.layout.route", "schgen.layout.textmetrics",
+                   "schgen.core.symbols", "schgen.output.render",
+                   "schgen.verify", "schgen.core.sexpr")
 _BANNED_NAMES = {"Placement", "Spacing", "_Builder", "_Engine", "PlacedPart",
                  "PlacedPower", "PlacedDesign", "Wire", "Junction",
                  "HierLabel", "LocalLabel", "NoConnect", "Box", "Seg",
@@ -178,7 +179,7 @@ def _erc(sch: Path, report: Path) -> tuple[bool, str]:
 
 
 def _render(sch: Path, png: Path, dpi: int = 300) -> bool:
-    from schgen.render import render_sheet_to_png
+    from schgen.output.render import render_sheet_to_png
     try:
         render_sheet_to_png(sch, png, dpi=dpi)
         return True
@@ -357,8 +358,7 @@ def cmd_nets(args: argparse.Namespace) -> int:
     """GENERATE carrier/nets.py — the cross-sheet net-name contract as
     Python attributes (SoM contract nets + the gated/board rails), so port
     names are attrs, not strings to typo."""
-    from schgen.link import all_subsystem_paths, load_som_contract, \
-        load_subsystem
+    from schgen.core.link import all_subsystem_paths, load_som_contract, load_subsystem
     som = load_som_contract()
     rails: set[str] = set()
     for p in all_subsystem_paths():
@@ -395,10 +395,10 @@ def cmd_board(args: argparse.Namespace) -> int:
     all written into the committed carrier/ output taxonomy."""
     import tempfile
 
-    from schgen import constraints, diagram
-    from schgen import board as board_mod
-    from schgen.link import (all_subsystem_paths, link, load_som_contract,
-                             load_subsystem)
+    from schgen.generate import constraints
+    from schgen.output import diagram
+    from schgen.generate import board as board_mod
+    from schgen.core.link import all_subsystem_paths, link, load_som_contract, load_subsystem
 
     lib = Library()
     sch_dir = CARRIER / "schematic"
@@ -578,7 +578,7 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     # power-tree budget gate (round 4): regulator tree from the netlists +
     # declared draws -> headroom proof, numbered SVG, verdict report.
-    from schgen import powertree
+    from schgen.verify import powertree
     pt_res = powertree.run(sheets, rep_dir, CARRIER / "docs")
     print(f"POWER TREE: {'PASS' if pt_res.ok else 'FAIL'} "
           f"({len(pt_res.regs)} regulators, {len(pt_res.findings)} findings"
@@ -591,7 +591,7 @@ def cmd_board(args: argparse.Namespace) -> int:
     # thermal decisions (prose-only) into a regression lock. Reuses pt_res'
     # regulator tree + I_out; FAILS on any device whose Tj = Ta + Pd*RthJA
     # exceeds Tj_max - margin (real exceptions author-waived: c.waive_thermal).
-    from schgen import thermal
+    from schgen.verify import thermal
     th_res = thermal.run(sheets, rep_dir, pt_res=pt_res)
     print(f"THERMAL: {'PASS' if th_res.ok else 'FAIL'} "
           f"({len(th_res.devices)} devices, {len(th_res.errors)} over-limit, "
@@ -602,7 +602,7 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     # test-point coverage gate (round 4): every rail + key single-ended bus
     # owns a probe point or an explicit author waiver.
-    from schgen import testpoints
+    from schgen.verify import testpoints
     tp_res = testpoints.check_coverage(sheets)
     (rep_dir / "testpoints.txt").write_text(tp_res.report() + "\n")
     print(f"TESTPOINTS: {'PASS' if tp_res.ok else 'FAIL'} "
@@ -645,7 +645,7 @@ def cmd_board(args: argparse.Namespace) -> int:
     # hard. The closed-form analytics ARE the gate; the ngspice .op
     # cross-check layer runs whenever ngspice is installed (1% agreement
     # enforced) and degrades honestly to analytic-only when it is not.
-    from schgen import spice
+    from schgen.verify import spice
     sp_res = spice.run(sheets, rep_dir, allow_ngspice=True)
     print(f"SPICE: {'PASS' if sp_res.ok else 'FAIL'} "
           f"({sp_res.n_checks} checks, {sp_res.engine} "
@@ -657,7 +657,7 @@ def cmd_board(args: argparse.Namespace) -> int:
     # Vivado pin constraints (round 4): every carrier PORT bound through
     # J2/J3 to a Zynq PL ball, ball map live-extracted from the SoM project
     # and cross-checked against the committed contract.
-    from schgen import xdc
+    from schgen.generate import xdc
     try:
         xres = xdc.generate(sheets, CARRIER / "fpga" / "Zynq_Carrier_pins.xdc")
         print(f"XDC: {xres.path} ({xres.count} pins; "
@@ -669,7 +669,7 @@ def cmd_board(args: argparse.Namespace) -> int:
     # Vivado project-creation TCL (downstream P2): turns the generated XDC into
     # a sourceable Vivado project — same device + clock-capable port set as the
     # XDC, derived the same way (live SoM extraction).
-    from schgen import vivado
+    from schgen.generate import vivado
     try:
         vtcl = vivado.generate(sheets, CARRIER / "fpga" / "create_project.tcl")
         print(f"VIVADO: {vtcl}")
@@ -678,7 +678,7 @@ def cmd_board(args: argparse.Namespace) -> int:
         ok_all = False
 
     # round-4 system artifacts, derived from the same netlists.
-    from schgen import firmware, gallery, manual, testplan
+    from schgen.generate import firmware, gallery, manual, testplan
     try:
         fw_out = firmware.generate()
         print(f"FIRMWARE CONTRACT: {fw_out}")
@@ -709,7 +709,7 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     # PS-side device-tree fragment (downstream P3): the PS twin of the XDC —
     # microSD bus + the bare PS MIO pins the XDC drops, into a commented .dtsi.
-    from schgen import devicetree
+    from schgen.generate import devicetree
     try:
         dt_out = devicetree.generate(CARRIER / "firmware" / "carrier_pl.dtsi")
         print(f"DEVICETREE: {dt_out}")
@@ -718,7 +718,7 @@ def cmd_board(args: argparse.Namespace) -> int:
         ok_all = False
 
     # floorplan suggestion (SVG + MD), derived from the same sheets/link
-    from schgen import floorplan
+    from schgen.generate import floorplan
     try:
         fp_paths = floorplan.generate(sheets, res)
         print("FLOORPLAN: " + " + ".join(
@@ -738,7 +738,7 @@ def cmd_board(args: argparse.Namespace) -> int:
     # i2c/gpio maps, xdc census, bom census, test-point coverage) + a sha256 of
     # every generated carrier/ file. Deterministic; the stable contract other
     # tools consume instead of scraping text.
-    from schgen import manifest
+    from schgen.generate import manifest
     try:
         man_out = manifest.generate(
             sheets, res, pt_res=pt_res, tp_res=tp_res,
@@ -768,7 +768,7 @@ def main(argv: list[str] | None = None) -> int:
     si.add_argument("som_sch")
     si.add_argument("--refs", default="J1,J2,J3")
     si.add_argument("-o", "--output", default="carrier/som_interface.json")
-    from schgen.som_interface import cmd as _si_cmd
+    from schgen.core.som_interface import cmd as _si_cmd
     si.set_defaults(func=lambda a: _si_cmd(a))
     lk = sub.add_parser(
         "link", help="board-level link: port graph + constraints + block "
@@ -778,7 +778,7 @@ def main(argv: list[str] | None = None) -> int:
     lk.add_argument("-o", "--outdir", type=Path, default=None)
     lk.add_argument("--no-board", action="store_true",
                     help="skip root-sheet emission + board netlist gate")
-    from schgen.link import cmd_link
+    from schgen.core.link import cmd_link
     lk.set_defaults(func=cmd_link)
     bd = sub.add_parser(
         "board", help="ONE command: every sheet gated + link + openable "
@@ -807,7 +807,7 @@ def main(argv: list[str] | None = None) -> int:
                       help="offline mode: use a saved EasyEDA API response")
     padd.add_argument("-o", "--parts-dir", type=Path, default=None,
                       help="parts library root (default: <repo>/parts)")
-    from schgen.part_gen import cmd_part_add
+    from schgen.partlib.part_gen import cmd_part_add
     padd.set_defaults(func=cmd_part_add)
     xd = sub.add_parser(
         "xdc", help="generate carrier/fpga/Zynq_Carrier_pins.xdc — Vivado "
@@ -823,7 +823,7 @@ def main(argv: list[str] | None = None) -> int:
     xd.add_argument("-o", "--output", type=Path,
                     default=REPO_ROOT / "carrier" / "fpga"
                     / "Zynq_Carrier_pins.xdc")
-    from schgen.xdc import cmd_xdc
+    from schgen.generate.xdc import cmd_xdc
     xd.set_defaults(func=cmd_xdc)
     fw = sub.add_parser(
         "firmware", help="generate carrier/firmware/zynq_carrier_contract.h "
@@ -831,18 +831,18 @@ def main(argv: list[str] | None = None) -> int:
                          "STM32 GPIOs + BOOTSEL decode + I2C map + rail/"
                          "module EN map, all netlist-derived)")
     fw.add_argument("-o", "--output", type=Path, default=None)
-    from schgen.firmware import cmd_firmware
+    from schgen.generate.firmware import cmd_firmware
     fw.set_defaults(func=cmd_firmware)
     mn = sub.add_parser(
         "manual", help="generate carrier/docs/BRINGUP.md — the ordered "
                        "bring-up procedure derived from the netlists")
     mn.add_argument("-o", "--output", type=Path, default=None)
-    from schgen.manual import cmd_manual
+    from schgen.generate.manual import cmd_manual
     mn.set_defaults(func=cmd_manual)
     ga = sub.add_parser(
         "gallery", help="regenerate the render-gallery sections (between "
                         "markers) in README.md + carrier/README.md")
-    from schgen.gallery import cmd_gallery
+    from schgen.generate.gallery import cmd_gallery
     ga.set_defaults(func=cmd_gallery)
     fl = sub.add_parser(
         "floorplan", help="generate carrier/docs/FLOORPLAN.svg + .md — a "
@@ -850,7 +850,7 @@ def main(argv: list[str] | None = None) -> int:
                           "the netlists (SoM DF40 positions extracted from "
                           "the SoM PCB, edge connectors pinned by mating "
                           "direction, JLC-7628 constraint notes)")
-    from schgen.floorplan import cmd_floorplan
+    from schgen.generate.floorplan import cmd_floorplan
     fl.set_defaults(func=cmd_floorplan)
     vv = sub.add_parser(
         "vivado", help="generate carrier/fpga/create_project.tcl — a "
@@ -862,7 +862,7 @@ def main(argv: list[str] | None = None) -> int:
     vv.add_argument("--som", type=Path, default=None)
     vv.add_argument("--xdc", type=Path, default=None)
     vv.add_argument("--refs", default="J1,J2,J3")
-    from schgen.vivado import cmd_vivado
+    from schgen.generate.vivado import cmd_vivado
     vv.set_defaults(func=cmd_vivado)
     dt = sub.add_parser(
         "devicetree", help="generate carrier/firmware/carrier_pl.dtsi — the "
@@ -870,7 +870,7 @@ def main(argv: list[str] | None = None) -> int:
                            "PS MIO pinmux the XDC drops)")
     dt.add_argument("-o", "--output", type=Path, default=None)
     dt.add_argument("--som", type=Path, default=None)
-    from schgen.devicetree import cmd_devicetree
+    from schgen.generate.devicetree import cmd_devicetree
     dt.set_defaults(func=cmd_devicetree)
     mf = sub.add_parser(
         "manifest", help="generate carrier/manifest.json — the machine-"
@@ -879,14 +879,14 @@ def main(argv: list[str] | None = None) -> int:
     mf.add_argument("subsystems", nargs="*",
                     help="names in carrier/subsystems/ (default: all)")
     mf.add_argument("-o", "--output", type=Path, default=None)
-    from schgen.manifest import cmd_manifest
+    from schgen.generate.manifest import cmd_manifest
     mf.set_defaults(func=cmd_manifest)
     tpl = sub.add_parser(
         "testplan", help="generate carrier/docs/TEST_PLAN.md — a measurable "
                          "acceptance checklist (spice expected/min/max + "
                          "test-point pads + bring-up DIP stages)")
     tpl.add_argument("-o", "--output", type=Path, default=None)
-    from schgen.testplan import cmd_testplan
+    from schgen.generate.testplan import cmd_testplan
     tpl.set_defaults(func=cmd_testplan)
     dr = sub.add_parser(
         "design-rules", help="design-rule completeness gate: decoupling, i2c "
@@ -902,7 +902,7 @@ def main(argv: list[str] | None = None) -> int:
                         "tree); waivable per part")
     th.add_argument("subsystems", nargs="*",
                     help="names in carrier/subsystems/ (default: all)")
-    from schgen.thermal import cmd_thermal
+    from schgen.verify.thermal import cmd_thermal
     th.set_defaults(func=cmd_thermal)
     prr = sub.add_parser(
         "part-rules", help="per-part rating gate: cap voltage derating + "
@@ -920,7 +920,7 @@ def main(argv: list[str] | None = None) -> int:
                          "m1_rc_sheet.py + carrier/subsystems/uart_bridge.py)")
     st.add_argument("--keep", action="store_true",
                     help="keep the scratch dir with all mutants")
-    from schgen.selftest import cmd_selftest
+    from schgen.verify.selftest import cmd_selftest
     st.set_defaults(func=cmd_selftest)
     pt = sub.add_parser(
         "powertree", help="power-tree budget gate: regulator tree from the "
@@ -928,7 +928,7 @@ def main(argv: list[str] | None = None) -> int:
                           "numbered SVG diagram, verdict report")
     pt.add_argument("subsystems", nargs="*",
                     help="names in carrier/subsystems/ (default: all)")
-    from schgen.powertree import cmd_powertree
+    from schgen.verify.powertree import cmd_powertree
     pt.set_defaults(func=cmd_powertree)
     sx = sub.add_parser(
         "spice", help="auto-extracted divider/RC/ISET/FB spot-checks with "
@@ -938,7 +938,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="names in carrier/subsystems/ (default: all)")
     sx.add_argument("--no-ngspice", action="store_true",
                     help="closed-form only (skip the ngspice layer)")
-    from schgen.spice import cmd_spice
+    from schgen.verify.spice import cmd_spice
     sx.set_defaults(func=cmd_spice)
     pf = sub.add_parser(
         "preflight", help="live JLC/LCSC stock + Basic/Extended + cost check")
@@ -947,11 +947,11 @@ def main(argv: list[str] | None = None) -> int:
                     help="number of boards (default 1)")
     pf.add_argument("--allow-missing", action="store_true",
                     help="parts without LCSC ids are reported but not fatal")
-    from schgen.preflight import STOCK_FLOOR as _SF
+    from schgen.verify.preflight import STOCK_FLOOR as _SF
     pf.add_argument("--min-stock", type=int, default=_SF,
                     help=f"procurement stock floor; below it a part WARNs even "
                          f"when stock>=need (default {_SF})")
-    from schgen.preflight import cmd_preflight
+    from schgen.verify.preflight import cmd_preflight
     pf.set_defaults(func=cmd_preflight)
     args = p.parse_args(argv)
     return args.func(args)

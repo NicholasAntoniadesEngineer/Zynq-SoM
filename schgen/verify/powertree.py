@@ -34,7 +34,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen.model import NetClass
+from schgen.core.model import NetClass
 
 # ---- SI value parsing (shared with schgen/spice.py) ----------------------------
 
@@ -230,7 +230,7 @@ def _pin_no(part, pin_spec: str) -> str | None:
 
 
 def _net_on(c, ref: str, pin_no: str | None):
-    from schgen.model import PinRef
+    from schgen.core.model import PinRef
     if pin_no is None:
         return None
     return c.net_of(PinRef(ref, pin_no))
@@ -774,10 +774,10 @@ def run(sheets, reports_dir: Path, docs_dir: Path) -> Result:
 
 
 def cmd_powertree(args) -> int:
-    from schgen.link import all_subsystem_paths, load_subsystem
+    from schgen.core.link import all_subsystem_paths, load_subsystem
     names = args.subsystems or [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
-    repo = Path(__file__).resolve().parents[1]
+    repo = Path(__file__).resolve().parents[2]
     res = run(sheets, repo / "carrier" / "reports", repo / "carrier" / "docs")
     print(report(res))
     print(f"\nreport: {repo / 'carrier' / 'reports' / 'power_tree.txt'}")

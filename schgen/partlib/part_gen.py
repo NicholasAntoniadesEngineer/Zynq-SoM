@@ -41,10 +41,11 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen import sexpr, textmetrics
-from schgen.sexpr import Sym
+from schgen.core import sexpr
+from schgen.layout import textmetrics
+from schgen.core.sexpr import Sym
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PARTS_DIR = REPO_ROOT / "parts"
 
 EASYEDA_API = "https://easyeda.com/api/products/{lcsc}/components?version=6.4.19.5"
@@ -1163,7 +1164,7 @@ def add_part(lcsc_id: str, name: str | None = None,
 
     # The Library grid invariant is part of generation, not a separate QA
     # step: refuse to ship a symbol our own loader would reject.
-    from schgen.symbols import Library
+    from schgen.core.symbols import Library
     d = Library(extra_paths=[outdir]).get(f"{base}:{base}")
     sexpr.loads((outdir / f"{base}.kicad_mod").read_text())   # round-trip
 

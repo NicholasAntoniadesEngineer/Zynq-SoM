@@ -48,7 +48,7 @@ nets as their visible twins — the netlist gate proves KiCad sees all of them.
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 # DELIBERATE symbol override (use_part lib_id=): the sheet keeps the stock
 # stacked-pin KiCad drawing + the stock footprint; MPN/LCSC/datasheet are

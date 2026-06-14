@@ -22,10 +22,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from schgen import bringup_facts as bf
-from schgen.link import load_subsystem
+from schgen.generate import bringup_facts as bf
+from schgen.core.link import load_subsystem
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "carrier" / "firmware" / "zynq_carrier_contract.h"
 
 SOURCES = (
@@ -132,7 +132,7 @@ def _id_eeprom_addr(c) -> int:
     (24AA025E48 pins 4/5): a strap pin on a power rail = 1, on GND = 0. So a
     mis-strap to 0x50 would be caught by the address-collision check below
     (it would clash with the FMC EEPROM)."""
-    from schgen.model import NetClass
+    from schgen.core.model import NetClass
     ref = next((r for r, p in c.parts.items()
                 if "24AA025E48" in p.lib_id), None)
     if ref is None:

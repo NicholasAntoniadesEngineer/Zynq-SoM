@@ -20,10 +20,10 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen import sexpr
-from schgen.model import Circuit
-from schgen.sexpr import Sym
-from schgen.symbols import Library
+from schgen.core import sexpr
+from schgen.core.model import Circuit
+from schgen.core.sexpr import Sym
+from schgen.core.symbols import Library
 
 PAPER_DEFAULT = "A4"
 

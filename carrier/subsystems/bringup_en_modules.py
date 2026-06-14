@@ -44,7 +44,7 @@ gates on bringup_modules.
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 GATE_LIB = "74xGxx:74LVC1G08"
 GATE_FP = "Package_TO_SOT_SMD:SOT-23-5"

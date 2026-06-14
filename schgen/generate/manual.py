@@ -17,11 +17,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from schgen import bringup_facts as bf
-from schgen.link import all_subsystem_paths, load_subsystem
-from schgen.model import Circuit
+from schgen.generate import bringup_facts as bf
+from schgen.core.link import all_subsystem_paths, load_subsystem
+from schgen.core.model import Circuit
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "carrier" / "docs" / "BRINGUP.md"
 
 # PLAN.md round-2 locked input contract (cited, not derived):

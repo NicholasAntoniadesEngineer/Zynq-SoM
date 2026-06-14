@@ -35,12 +35,12 @@ import argparse
 import re
 from pathlib import Path
 
-from schgen import bringup_facts as bf
-from schgen import spice, testpoints
-from schgen.link import all_subsystem_paths, load_subsystem
-from schgen.model import NetClass
+from schgen.generate import bringup_facts as bf
+from schgen.verify import spice, testpoints
+from schgen.core.link import all_subsystem_paths, load_subsystem
+from schgen.core.model import NetClass
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "carrier" / "docs" / "TEST_PLAN.md"
 
 # The six bring-up stages, in the order schgen.manual stages them. Each
@@ -186,7 +186,7 @@ def _i2c_devices(sheets) -> list[tuple[int, str, str, bool]]:
         out.append((bf.FUSB302B_ADDR, "U1", "FUSB302B PD PHY (fixed addr)", False))
     if "board_services" in circuits:
         try:
-            from schgen.firmware import RV3028_ADDR, _id_eeprom_addr
+            from schgen.generate.firmware import RV3028_ADDR, _id_eeprom_addr
             bsc = circuits["board_services"]
             out.append((_id_eeprom_addr(bsc), "U1",
                         "24AA025E48 ID-EEPROM (EUI-48 MAC)", True))

@@ -35,7 +35,7 @@ import csv
 from dataclasses import dataclass
 from pathlib import Path
 
-from schgen.model import NetClass
+from schgen.core.model import NetClass
 
 MM_PER_MIL = 0.0254
 

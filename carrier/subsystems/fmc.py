@@ -56,7 +56,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 PINMAP = Path(__file__).resolve().parents[1] / "research" / "fmc_lpc_pinmap.json"
 

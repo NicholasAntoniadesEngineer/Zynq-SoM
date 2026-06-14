@@ -8,7 +8,7 @@ divider stack, the hanging cap and the MID port label from topology alone.
 
 from __future__ import annotations
 
-from schgen.model import Circuit
+from schgen.core.model import Circuit
 
 
 def circuit() -> Circuit:
