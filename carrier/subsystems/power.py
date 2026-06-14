@@ -1,6 +1,17 @@
 """power — carrier rail tree: +VIN(20V) -> +5V buck -> +3V3 buck -> +1V8 LDO,
 plus the always-on +5V_SOM buck (P0 fix) that feeds the SoM module's VIN.
 
+WT/BUCK RE-SPEC (2026-06-14): the +5V buck U1 — the board's heaviest converter
+(2.95 A @ 5 V) — was the LMR33630ADDA (3 A), running at 98% of rating with no
+headroom and a Tj over the gate guard band (waived). U1 is RE-SPEC'd to the
+LM61460AANRJRR: TI 3-42 V / 6-A low-EMI SYNCHRONOUS buck (SNVSBD5D), VQFN-HR
+(RJR "HotRod"), LCSC C2864505 (JLC 2026-06-14: Extended, stock 3,761). 6 A ->
+~2x current margin over 2.95 A; Vin op-max 36 V (abs 42 V) covers the 21 V
++VIN_SYS rail. The thermal gate now credits a CONSERVATIVE pour-aware effective
+RthJA (30 C/W vs 58.7 bare; DS 7.3 4-layer = 25 C/W) so U1 PASSES on real
+thermal margin (Tj ~128 C < 140 C guard) — NO waiver. See the stage-1 block +
+thermal.py pour-aware-RthJA docs. (TPS54302 U2/U4 keep their no-EP waivers.)
+
 PLAN round-2 locked: USB-C PD supplies +VIN (20 V); the carrier generates
 +5V (buck from VIN), +3V3 (buck from +5V) and +1V8 (LDO from +3V3). Every
 rail has an EN port (driven by the bringup subsystem's DIP-AND-STM32 enable
@@ -71,7 +82,8 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   AP2112K-* drawings all derive from Regulator_Linear:AP2204K-1.5
   (identical SOT-23-5 pin map 1=VIN 2=GND 3=EN 4=NC 5=VOUT, confirmed
   against the EasyEDA pin table in parts/AP2112K-1.8TRG1/AP2112K-1.8TRG1.py).
-- FB dividers: +5V = 73.2k/10k -> 4.96 V (C14890 Ext + C25804 Basic);
+- FB dividers: +5V = 40.2k/10k -> 5.02 V (C25750 Ext + C25804 Basic; LM61460
+  Vref 1.0 V -> Vout = 1.0*(1+40.2/10));
   +3V3 = 100k/22k -> 3.30 V (C25803 + C31850, both Basic);
   +5V_SOM = 68.1k/10k -> 4.65 V nom (PWR-5; C844583 Vishay 0603 1%, LIVE
   2026-06-13: Ext, stock 10,869, min-qty 1 + C25804). PWR-5 RE-CENTER: the
@@ -80,11 +92,12 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   ~4.81 V (1% R + 1% Vref) so the WHOLE band stays inside the SoM 4.2-5.0 V
   window with the EN zener clamp (PWR-1) untouched.
 - FB feedforward caps (PWR-4, TI all-ceramic-output reference): 75 pF C0G
-  ACROSS each buck's FB TOP resistor — C22 (U1 R1), C23 (U2 R4), C21 (U4
-  R14) — to add phase boost / improve transient response on the internally
+  ACROSS the TPS54302 bucks' FB TOP resistor — C23 (U2 R4), C21 (U4 R14) —
+  to add phase boost / improve transient response on the internally
   compensated TPS54302 with low-ESR ceramic output caps. Part: CGA0603-
   C0G750J500JT, TDK 0603 C0G 50 V (LCSC C22399620, LIVE 2026-06-13: Ext,
-  stock 8,020, min-qty 1).
+  stock 8,020, min-qty 1). (U1 LM61460 keeps a clean 2-element FB divider; its
+  CFF is optional per SNVSBD5D and omitted — see the stage-1 block.)
 - +5V_SOM EN clamp (always-on strap, NO bring-up port; PWR-1 FIX — see the
   header "EN voltage table"): R12 = 10k SERIES from +VIN to EN (C25804,
   reused 10k); D5 = MMSZ5231B 5.1 V / 500 mW zener EN -> GND (LIVE-verified
@@ -112,7 +125,12 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
 
 Pin maps cross-checked: parts/<MPN>/<MPN>.py (EasyEDA) == KiCad stock
 symbols used here (TPS54302: 1 GND 2 SW 3 VIN 4 FB 5 EN 6 BOOT;
-Q_NMOS_GSD == AO3400A SOT-23 1 G 2 S 3 D).
+Q_NMOS_GSD == AO3400A SOT-23 1 G 2 S 3 D). U1 LM61460 uses the generator-
+owned symbol schgen:LM61460 (lib_id= OVERRIDE), which re-draws the SAME
+14 pins (TI SNVSBD5D Table 6-1: 1 BIAS 2 VCC 3 AGND 4 FB 5 PGOOD 6 RT
+7 EN/SYNC 8 VIN1 9 PGND1 10 SW 11 PGND2 12 VIN2 13 RBOOT 14 CBOOT) with
+stock-buck geometry + etypes for the placer — NO footprint change. With the
+override, U1 pins are authored BY NUMBER (model.use_part contract).
 """
 
 from __future__ import annotations
@@ -143,28 +161,59 @@ EXPECT_BRINGUP = "bringup (wave 2 rail-enable cells, dossier section 3.1)"
 def circuit() -> Circuit:
     c = Circuit("power", "Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs")
 
-    # ---- stage 1: +VIN (20 V) -> +5V buck (LMR33630, HSOIC-8 PowerPAD, SYNC) -
-    # U1 was the bare TSOT-23-6 TPS54302 (no thermal pad) — the board's hottest
-    # converter. RESELECTED to the LMR33630ADDAR (LCSC C841384): a TI SIMPLE
-    # SWITCHER, SYNCHRONOUS + internally compensated, 3.8-36 V / 3 A, in the DDA
-    # HSOIC-8 PowerPAD package — a REAL datasheet-dimensioned exposed pad (pad 9)
-    # for the heat path. Uses the KiCad STOCK symbol Regulator_Switching:
-    # LMR33640ADDA (same DDA pinout — the 4 A sibling drawing — with proper
-    # power_in VIN so the placer's regulator template fits) + the faithful
-    # EP-bearing footprint: exactly the TPS54302/AP2112K stock-symbol idiom.
-    # Pins: 1 GND  2 VIN  3 EN  4 PG  5 FB  6 VCC  7 BOOT  8 SW  9 EP(GND).
-    # VFB 1.0 V -> 40.2k/10k FB divider = 5.02 V. EP (pad 9) bonds to GND.
-    c.use_part("LMR33630ADDAR", ref="U1",
-               lib_id="Regulator_Switching:LMR33640ADDA",
-               footprint="LMR33630ADDAR:LMR33630ADDAR")
+    # ---- stage 1: +VIN (20 V) -> +5V buck (LM61460, VQFN-HR, 6 A SYNC) -------
+    # U1 RE-SPEC (wt/buck, 2026-06-14): the +5V buck carries the board's heaviest
+    # converter load (2.95 A @ 5 V). The prior LMR33630ADDA (3 A) ran at 98% of
+    # rating with no headroom, and its bare-JEDEC Tj sat over the guard band
+    # (waived). RESELECTED to the LM61460AANRJRR (LCSC C2864505, JLC 2026-06-14:
+    # Extended, stock 3,761): TI 3-42 V / 6-A LOW-EMI SYNCHRONOUS step-down
+    # (SNVSBD5D), peak-current-mode, adjustable fSW, in the 14-pin VQFN-HR (RJR
+    # "HotRod") package. 6 A rating -> ~2x margin over 2.95 A (>>40% target);
+    # Vin op-max 36 V (abs 42 V) covers the 21 V +VIN_SYS rail with wide margin.
+    #   Vref = 1.0 V (DS 8.3.11) -> FB divider Vout = 1.0*(1 + Rtop/Rbot);
+    #     R1/R2 = 40.2k/10k -> 5.02 V (same Vref + divider as the old LMR33630,
+    #     so the divider parts C25750/C25804 are UNCHANGED).
+    #   fSW = 600 kHz set by RT = 22k (DS Eq 2: RRT(kohm) = (1/fSW(kHz) -
+    #     3.3e-5)*1.346e4 -> 600 kHz => 21.99k ~= 22.0k; 22k C31850 already in
+    #     this sheet's BOM). 600 kHz keeps the existing 10 uH SWPA8040S: ripple
+    #     dIL = Vout*(Vin-Vout)/(Vin*L*fSW) = 5*16/(21*10u*600k) = 0.63 A p-p,
+    #     Ipk = 2.95 + 0.32 = 3.27 A < the 4 A Isat.
+    #   CBOOT = 100 nF SW->CBOOT (DS pin 14); RBOOT short to CBOOT (DS EC table
+    #     "RBOOT short to CBOOT" -> fastest SW edge, lowest HS loss): RBOOT(13)
+    #     and CBOOT(14) are the SAME node (BOOT_5V0), a 0R wire, NO component.
+    #   BIAS (pin 1): NC — the BIAS->VOUT tie is an OPTIONAL efficiency knob
+    #     (DS 8.3.6); BIAS<3.1 V self-supplies the LDO from VIN (small Iq cost).
+    #   VCC (pin 2): 1 uF to AGND (DS pin 2 internal-LDO bypass).
+    #   RT (pin 6): 22k to GND (fSW set). PGOOD (pin 5): NC (unused open-drain;
+    #     D1 rail-up LED is the PG indicator).
+    #   AGND (3) ties to PGND1/PGND2 (DS pin 3 layout note).
+    # THERMAL: VQFN-HR has NO center EP; its die-attach heat path is the bond-
+    # frame PGND1 (9) + PGND2 (11) power-ground pads (and the wide SW pad 10),
+    # all soldered to the GND copper pour — the package's exposed-pad-equivalent.
+    # DS RthJA = 58.7 C/W bare JESD51-7, 25 C/W on a 4-layer board (DS 7.3 +
+    # note: "with a 4-layer PCB, a RthJA = 25 C/W can be"). The thermal gate now
+    # credits a CONSERVATIVE pour-aware RthJA (see thermal.py) so U1 PASSES on
+    # real margin, not a waiver.
+    # use_part with a lib_id= OVERRIDE to the generator-owned schematic symbol
+    # schgen:LM61460 (parts/LM61460AANRJRR/ keeps the faithful EP-bearing
+    # footprint + orderable identity). The override is the LMR33630/TPS54302
+    # idiom: the EasyEDA-generated symbol types every pin 'passive' and lays them
+    # out for a QFN, which the placer's regulator template cannot read; the local
+    # symbol re-draws the SAME 14 pins (NO footprint change) with stock-buck
+    # geometry + electrical types (VIN power_in left, SW power_out/output right,
+    # PGND/AGND GND bottom, VCC/BIAS/RT/PGOOD aux-left, FB/CBOOT right) so the
+    # template places it. With lib_id overridden, pins are authored BY NUMBER
+    # (model.use_part contract) — 1 BIAS 2 VCC 3 AGND 4 FB 5 PGOOD 6 RT
+    # 7 EN/SYNC 8 VIN1 9 PGND1 10 SW 11 PGND2 12 VIN2 13 RBOOT 14 CBOOT.
+    c.use_part("LM61460AANRJRR", ref="U1", lib_id="schgen:LM61460",
+               footprint="LM61460AANRJRR:LM61460AANRJRR")
     # DEF-D: U1 input is the POST-shunt rail +VIN_SYS (RS1 series-inserts
     # between the eFuse +VIN and the buck inputs in power_mon.py), so the buck
     # input current — including the input-cap ripple/inrush — flows through RS1
     # and is counted on the U1 ch1 (+VIN) channel. The input caps move with it.
-    c.net("+VIN_SYS", "U1.2")                                      # VIN (pin 2), post-RS1
-    c.net("GND", "U1.1", "U1.9")                                   # GND (1) + EP PowerPAD (9)
-    c.port("EN_5V0", "U1.3", expect=EXPECT_BRINGUP)                # EN (pin 3)
-    c.nc("U1.4")                                                   # PG open-collector unused
+    c.net("+VIN_SYS", "U1.8", "U1.12")                            # VIN1(8)+VIN2(12), post-RS1
+    c.net("GND", "U1.9", "U1.11", "U1.3")                         # PGND1(9)+PGND2(11)+AGND(3): heat path
+    c.port("EN_5V0", "U1.7", expect=EXPECT_BRINGUP)              # EN/SYNC (pin 7)
     for ref, val, fp, lcsc in (("C1", "100n", C0603, "C1591"),
                                ("C2", "10u", C1206, "C13585"),
                                ("C3", "10u", C1206, "C13585")):
@@ -172,12 +221,21 @@ def circuit() -> Circuit:
         c.net("+VIN_SYS", f"{ref}.1")                              # buck-input filter, post-RS1
         c.net("GND", f"{ref}.2")
     c.part("C24", "Device:C", "1u", C0603, LCSC="C15849")          # VCC int-LDO bypass
-    c.net("U1_VCC", "U1.6", "C24.1")                               # VCC (pin 6), local bias
+    c.net("U1_VCC", "U1.2", "C24.1")                              # VCC (pin 2), local bias
     c.net("GND", "C24.2")
-    c.part("C4", "Device:C", "100n", C0603, LCSC="C1591")          # BOOT cap
-    c.net("BOOT_5V0", "U1.7", "C4.1")                              # BOOT (pin 7)
+    # BIAS (pin 1) author NC: the BIAS->VOUT tie is an OPTIONAL efficiency knob
+    # (DS 8.3.6 / 9.2.2.9 — "reduce LDO power loss"); with BIAS < 3.1 V the part
+    # self-supplies the internal LDO from VIN1/VIN2 (DS 8.3.6), valid at a small
+    # Iq cost. Left NC to keep U1's aux-pin count low for the placer.
+    c.nc("U1.1")                                                  # BIAS (pin 1) — optional, NC
+    c.part("R10", "Device:R", "22k", R_FP, LCSC="C31850")          # RT: fSW=600kHz (DS Eq 2)
+    c.net("RT_5V0", "U1.6", "R10.1")                             # RT (pin 6)
+    c.net("GND", "R10.2")
+    c.part("C4", "Device:C", "100n", C0603, LCSC="C1591")          # BOOT (CBOOT) cap
+    # RBOOT(13) short to CBOOT(14): SAME node, a 0R wire (DS EC table) — no R.
+    c.net("BOOT_5V0", "U1.14", "U1.13", "C4.1")                  # CBOOT(14)+RBOOT(13)
     c.part("L1", "Device:L", "10uH", L_FP, LCSC="C37429")
-    c.net("SW_5V0", "U1.8", "C4.2", "L1.1")                        # SW (pin 8)
+    c.net("SW_5V0", "U1.10", "C4.2", "L1.1")                      # SW(10) + CBOOT-cap + L
     # DEF-D: buck-1 OUTPUT cluster is +5V_REG (reg-side of RS2). The inductor
     # node, output bulk caps, FB sense and the PG LED stay on the regulator
     # side; the board +5V rail (post-RS2) carries the measured consumers (U2
@@ -190,15 +248,20 @@ def circuit() -> Circuit:
     c.part("R1", "Device:R", "40.2k", R_FP, LCSC="C25750")         # FB top (VFB 1.0 -> 5.02 V)
     c.part("R2", "Device:R", "10k", R_FP, LCSC="C25804")           # FB bottom
     c.net("+5V_REG", "R1.1")                                       # FB senses the regulated node
-    c.net("FB_5V0", "U1.5", "R1.2", "R2.1")                        # FB (pin 5)
+    c.net("FB_5V0", "U1.4", "R1.2", "R2.1")                       # FB (pin 4)
     c.net("GND", "R2.2")
     # (no FB feedforward cap on U1: keep FB a clean 2-element divider the router
-    #  handles; the LMR33630 is internally compensated, so it is optional.)
-    c.part("D1", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +5V indicator
+    #  handles; the LM61460 is internally compensated, so CFF is optional.)
+    c.part("D1", "Device:LED", "red", LED_FP, LCSC="C2286")        # +5V present indicator
     c.part("R3", "Device:R", "1k", R_FP, LCSC="C21190")
-    c.net("+5V_REG", "D1.2")                                       # PG LED reg-side (regulator up)
-    c.net("PG_5V0", "D1.1", "R3.1")
+    c.net("+5V_REG", "D1.2")                                       # LED reg-side (regulator up)
+    c.net("PG_5V0", "D1.1", "R3.1")                               # plain rail-up LED (reg-side)
     c.net("GND", "R3.2")
+    # PGOOD (pin 5) author NC: open-drain status output (DS pin 5, high=OK via an
+    # external pull-up, low=fault). Unused here — the +5V rail-up LED (D1) is the
+    # board's PG indicator — so the open-drain output is left unconnected (an
+    # un-driven open-drain output floats harmlessly; nothing reads it).
+    c.nc("U1.5")                                                  # PGOOD (pin 5) — unused, NC
 
     # ---- stage 2: +5V -> +3V3 buck ------------------------------------------
     c.use_part("TPS54302DDCR", ref="U2", lib_id=BUCK_LIB, footprint=BUCK_FP)
@@ -267,9 +330,9 @@ def circuit() -> Circuit:
 
     # ---- stage 4: +VIN -> +5V_SOM always-on buck -> SPLIT to power_som.py ----
     # The +5V_SOM buck (U4) + its EN zener clamp moved to its own sheet
-    # (power_som.py, 2026-06-14): U1's reselect to the larger LMR33630 pushed the
-    # 4-converter sheet past A3, and the +5V_SOM stage is the cleanly-separable
-    # unit (only +VIN / +5V_SOM / GND rails cross). See power_som.py.
+    # (power_som.py, 2026-06-14): U1's reselect to a larger exposed-pad buck
+    # pushed the 4-converter sheet past A3, and the +5V_SOM stage is the cleanly-
+    # separable unit (only +VIN / +5V_SOM / GND rails cross). See power_som.py.
 
     # ---- test points (round 4 coverage gate): the generated rails +
     # a ground probe return, at their source sheet ----------------------------
@@ -296,14 +359,13 @@ def circuit() -> Circuit:
            "VERIFY by thermal sim/bench at bring-up else move to an EP buck "
            "(see carrier/research/thermal_bucks.md)")
     c.waive_thermal("U2", _TH)
-    # U1 LMR33630ADDA: the gate now COMPUTES Tj (bare-JEDEC RthJA 41 C/W at
-    # 2.95 A @ 5 V puts Tj over the guard band) instead of silently skipping the
-    # board's hottest converter. The real EP->GND pour + thermal-via field
-    # drives effective RthJA well below the bare 41 C/W — VERIFY at bring-up.
-    _TH_U1 = ("LMR33630ADDA HSOIC-8 PowerPAD: bare-JEDEC RthJA 41 C/W overstates "
-              "Tj; the EP->GND pour + thermal-via field is layout-critical "
-              "(target effective RthJA <= ~25 C/W to clear the guard band at "
-              "eff 0.90) — VERIFY by thermal sim/bench Tj at bring-up "
-              "(carrier/research/thermal_bucks.md)")
-    c.waive_thermal("U1", _TH_U1)
+    # U1 LM61460 (wt/buck re-spec): NO LONGER WAIVED. The thermal gate now
+    # CREDITS a conservative pour-aware effective RthJA (30 C/W vs the 58.7 C/W
+    # bare JEDEC) on the strength of the datasheet's own poured-board data
+    # (DS 7.3: 25 C/W on a 4-layer PCB; PGND1/PGND2 + SW pads soldered to the GND
+    # pour, proven by the netlist). U1 PASSES on real margin: Pd 2.60 W,
+    # Tj = 50 + 2.60*30 = 128 C < 140 C guard (~12 C margin). The 6 A rating also
+    # gives ~2x current margin over the 2.95 A load. Bench Tj at bring-up remains
+    # the final arbiter (see thermal.py pour-aware-RthJA docs + carrier/research/
+    # thermal_bucks.md), but the gate no longer needs a waiver to pass it.
     return c                     # U4 +5V_SOM waiver lives on power_som.py

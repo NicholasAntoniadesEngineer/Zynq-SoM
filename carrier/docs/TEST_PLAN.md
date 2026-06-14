@@ -42,7 +42,7 @@ Source spice gate: 21 checks, analytic (closed-form linear solutions).
 | step | net | probe pad | expected | min | max | measured | pass? |
 |---|---|---|---|---|---|---|---|
 | 2.1 TPS54302DDCR FB (+3V3_REG) | `+3V3_REG` | — | 3.3051 V | 3.201 V | 3.399 V | `______` | [ ] |
-| 2.2 EN clamp ceiling (U1) | `+5V_REG` | — | 4.183 V | — | 5.5 V | `______` | [ ] |
+| 2.2 LM61460AANRJRR FB (+5V_REG) | `+5V_REG` | — | 5.02 V | 4.85 V | 5.15 V | `______` | [ ] |
 | 2.3 TPS54302DDCR FB (+5V_SOM) | `+5V_SOM` | power_som:TP1 | 4.6548 V | 4.5105 V | 4.7895 V | `______` | [ ] |
 | 2.4 EN clamp ceiling (U4) | `+VIN_SYS` | — | 5.042 V | — | 5.5 V | `______` | [ ] |
 | 2.5 EN clamp turn-on (U4) | `+VIN_SYS` | — | 4.505 V | 1.5 V | — | `______` | [ ] |
@@ -58,7 +58,7 @@ Source spice gate: 21 checks, analytic (closed-form linear solutions).
 <details><summary>step rationale (from the spice gate detail)</summary>
 
 - **2.1 TPS54302DDCR FB (+3V3_REG)** (power): Vout = 0.596 * (1 + R4/R5 = 100000/22000) vs nominal 3.3 V +/-3%
-- **2.2 EN clamp ceiling (U1)** (power): +5V_REG=5V EN strap divider R1=40200R/R2=10000R, NO clamp zener: EN at VIN=21.0V must stay <= the EN recommended-max 5.5V (TPS54302 has NO internal EN clamp — SLVSDG6C; PWR-1)
+- **2.2 LM61460AANRJRR FB (+5V_REG)** (power): Vout = 1.0 * (1 + R1/R2 = 40200/10000) vs nominal 5 V +/-3%
 - **2.3 TPS54302DDCR FB (+5V_SOM)** (power_som): Vout = 0.596 * (1 + R14/R15 = 68100/10000) vs nominal 4.65 V +/-3%
 - **2.4 EN clamp ceiling (U4)** (power_som): +VIN_SYS=20V -[R12=10000R]- EN, D5=MMSZ5231B zener->GND: EN at VIN=21.0V (20V+5%) worst-case (Vz 5.355V) must stay <= the EN recommended-max 5.5V (no internal clamp, I_hys 1.55uA only — SLVSDG6C)
 - **2.5 EN clamp turn-on (U4)** (power_som): +VIN_SYS=20V -[R12=10000R]- EN, D5=MMSZ5231B zener->GND: EN at VIN=4.75V (5V contract low) must exceed enable+margin 1.5V (threshold 1.21V typ, SLVSDG6C) so the always-on buck is sure to start

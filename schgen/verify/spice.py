@@ -339,8 +339,16 @@ def _sy7201_iset(sheet: str, c, res: Result) -> None:
 
 
 def _buck_fb(sheet: str, c, res: Result) -> None:
-    """TPS54302 FB divider vs VREF: Vout = VREF * (1 + Rtop/Rbot)."""
+    """Buck FB divider vs its part's VREF: Vout = VREF * (1 + Rtop/Rbot).
+
+    VREF is read PER PART from bringup_facts.FB_VREF (the single source of
+    truth: TPS54302 0.596 V, LMR33630/LM61460 1.0 V), never a hardcoded
+    constant — so a re-spec to a different-Vref buck (wt/buck: LMR33630 ->
+    LM61460) checks against the RIGHT reference. The FB net is found by
+    topology (the regulator's SIGNAL net carrying the 2-R divider), not a
+    fixed pin number, since each part numbers FB differently."""
     from schgen.verify.powertree import _detect_regs
+    from schgen.generate.bringup_facts import FB_VREF
 
     class _One:
         def __init__(self, name, circuit):
@@ -349,23 +357,37 @@ def _buck_fb(sheet: str, c, res: Result) -> None:
     for reg in regs:
         if reg.kind != "buck":
             continue
-        fb_net = _net_of(c, reg.ref, "4")          # TPS54302 FB = pin 4
-        if fb_net is None:
+        vref = next((v for k, v in FB_VREF.items() if reg.value.startswith(k)),
+                    None)
+        if vref is None:                           # unmodelled buck Vref: skip
+            res.notes.append(f"NOTE: {sheet}:{reg.ref} ({reg.value}) has no "
+                             f"FB_VREF entry — FB divider unchecked")
             continue
-        tops = [(r, o) for r, o, other in _resistors_on(c, fb_net.name)
-                if other.name == reg.vout]
-        bots = [(r, o) for r, o, other in _resistors_on(c, fb_net.name)
-                if other.net_class is NetClass.GROUND]
-        if not tops or not bots:
+        # FB net = a SIGNAL net on the regulator carrying exactly a top R (to the
+        # output rail) + a bottom R (to GND). Topology-driven, pin-number-free.
+        fb_net = None
+        tops = bots = []
+        for net in c.nets.values():
+            if net.net_class is not NetClass.SIGNAL \
+                    or not any(pr.ref == reg.ref for pr in net.pins):
+                continue
+            t = [(r, o) for r, o, other in _resistors_on(c, net.name)
+                 if other.name == reg.vout]
+            b = [(r, o) for r, o, other in _resistors_on(c, net.name)
+                 if other.net_class is NetClass.GROUND]
+            if t and b:
+                fb_net, tops, bots = net, t, b
+                break
+        if fb_net is None:
             res.notes.append(f"NOTE: {sheet}:{reg.ref} FB divider not found")
             continue
         (rt, ot), (rb, ob) = tops[0], bots[0]
-        vout = VREF_TPS54302 * (1 + ot / ob)
+        vout = vref * (1 + ot / ob)
         nominal = rail_volts(reg.vout) or 0.0
         res.checks.append(Check(
             name=f"{reg.value} FB ({reg.vout})", sheet=sheet,
             kind="fb_divider",
-            detail=f"Vout = {VREF_TPS54302} * (1 + {rt}/{rb} = "
+            detail=f"Vout = {vref} * (1 + {rt}/{rb} = "
                    f"{ot:g}/{ob:g}) vs nominal {nominal:g} V +/-3%",
             value=round(vout, 4), unit="V",
             lo=nominal * 0.97, hi=nominal * 1.03))

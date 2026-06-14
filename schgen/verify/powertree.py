@@ -136,8 +136,15 @@ class RegSpec:
 REG_SPECS: dict[str, RegSpec] = {
     "TPS54302": RegSpec("buck", 3.0, eff=0.90, in_pin="3", out_pin="2",
                         note="TI 3 A synchronous buck (SW->L->rail)"),
-    # DEF-I: U1 (power.py) +5V buck — was unmodelled since the LMR33630 swap, so
-    # its +5V-chain input current was absent from the +VIN_SYS/+VIN budget.
+    # power.py +5V buck U1 — RE-SPEC'd (wt/buck) from the LMR33630 (3 A) to the
+    # LM61460 (6 A): the +5V chain is the board's heaviest converter (2.95 A),
+    # which ran the old 3 A part at 98% with no headroom. 6 A -> ~2x margin.
+    # U1 uses the schgen:LM61460 lib_id OVERRIDE, so its pin_names table is
+    # disabled -> address pins BY NUMBER: VIN1=8 (in), SW=10 (out, ->L->rail).
+    "LM61460": RegSpec("buck", 6.0, eff=0.90, in_pin="8", out_pin="10",
+                       note="TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)"),
+    # DEF-I: U1 (power.py) +5V buck — was the LMR33630 (3 A) before the wt/buck
+    # re-spec above; row kept for provenance (no part matches it now).
     "LMR33630": RegSpec("buck", 3.0, eff=0.90, in_pin="2", out_pin="8",
                         note="TI 3 A 36V synchronous buck (VIN=2, SW=8 ->L->rail)"),
     "AP2112K": RegSpec("ldo", 0.6, in_pin="1", out_pin="5",

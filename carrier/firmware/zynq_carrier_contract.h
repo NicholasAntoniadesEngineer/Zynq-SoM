@@ -165,7 +165,7 @@
 /* -- drive LOW to force a rail OFF; Hi-Z/HIGH leaves the DIP in charge. */
 /* Software can NEVER force a rail ON with its DIP open.                */
 #define ZC_RAIL_COUNT 3
-/* stage 0: +VIN -> +5V (LMR33630ADDAR U1, power sheet; DIP SW1 pos 1; PG LED D1) */
+/* stage 0: +VIN -> +5V (LM61460AANRJRR U1, power sheet; DIP SW1 pos 1; PG LED D1) */
 #define ZC_RAIL0_NAME "+5V"
 #define ZC_RAIL0_VOUT_MV 5020
 #define ZC_RAIL0_EN_NET "EN_5V0"

@@ -12,6 +12,7 @@ source:
 - SN74LVC1G08 gate pinout 1=A 2=B 3=GND 4=Y 5=VCC (TI DS; bringup dossier 1)
 - SY6280AAC  ILIM(A) = 6800 / RSET(ohm)           (Silergy DS; dossier 2)
 - TPS54302   VREF = 0.596 V (FB setpoint math)    (TI DS; power.py)
+- LM61460    VREF = 1.0 V   (FB setpoint math)    (TI SNVSBD5D; power.py U1)
 - TCA9535 7-bit base address 0b0100_A2A1A0 = 0x20 + straps  (TI SCPS201E)
 - INA3221 A0 strap decode GND/VS/SDA/SCL -> 0x40..0x43      (TI SBOS576)
 - FUSB302B fixed 7-bit address 0x22                          (onsemi DS)
@@ -32,7 +33,8 @@ SOM_SCH = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 # datasheet constants (sources in the module docstring)
 GATE_PIN_A, GATE_PIN_B, GATE_PIN_Y = "1", "2", "4"   # SN74LVC1G08
 SY6280_ILIM_NUMERATOR = 6800.0                       # ILIM(A) = 6800/RSET
-FB_VREF = {"TPS54302": 0.596, "LMR33630": 1.0}       # buck FB reference [V]
+FB_VREF = {"TPS54302": 0.596, "LMR33630": 1.0,       # buck FB reference [V]
+           "LM61460": 1.0}                           # LM61460 Vref 1.0 V (TI SNVSBD5D 8.3.11)
 TCA9535_BASE_ADDR = 0x20                             # 0b0100_A2A1A0
 INA3221_BASE_ADDR = 0x40                             # + A0 strap decode
 FUSB302B_ADDR = 0x22                                 # fixed (onsemi DS)

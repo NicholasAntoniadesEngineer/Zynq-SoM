@@ -19,7 +19,7 @@ regulators (17) — numbered as in carrier/docs/power_tree.svg:
   (11) bringup_modules:U9   SY6280AAC            +5V -> +5V_HDMI_TX    load 0.058 A / limit 0.523 A (11%)  in 0.058 A [load_switch] ILIM = 6800/13000R = 523 mA
   (12) fmc:U1   TLV75725PDYDR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)
   (13) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.337 A / limit 3.529 A (38%)  in 1.337 A [efuse] ILIM = 18000/5100R = 3529 mA
-  (14) power:U1   LMR33630ADDAR   +VIN_SYS -> +5V_REG        load 2.950 A / limit 3.000 A (98%)  in 0.820 A [buck] TI 3 A 36V synchronous buck (VIN=2, SW=8 ->L->rail)
+  (14) power:U1   LM61460AANRJRR  +VIN_SYS -> +5V_REG        load 2.950 A / limit 6.000 A (49%)  in 0.820 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
   (15) power:U2   TPS54302DDCR         +5V -> +3V3_REG       load 2.635 A / limit 3.000 A (88%)  in 1.932 A [buck] TI 3 A synchronous buck (SW->L->rail)
   (16) power:U3   AP2112K-1.8         +3V3 -> +1V8_REG       load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
   (17) power_som:U4   TPS54302DDCR    +VIN_SYS -> +5V_SOM        load 2.004 A / limit 3.000 A (67%)  in 0.518 A [buck] TI 3 A synchronous buck (SW->L->rail)

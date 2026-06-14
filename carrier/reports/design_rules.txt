@@ -8,7 +8,7 @@ rules (model-only, pin FUNCTION inferred by NAME):
   STRAP no config-input pin floats on a passive-only undriven net
   EP    every exposed/thermal pad is netted to a GROUND net (never nc/floating, never a non-GND net)
 
-checked: 42 IC supply pins, 10 i2c nets, 3 reset nets, 0 config pins, 5 exposed pads
+checked: 43 IC supply pins, 10 i2c nets, 3 reset nets, 0 config pins, 5 exposed pads
 
 DECAP — missing decoupling (0):
   (none)

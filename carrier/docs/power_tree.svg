@@ -51,7 +51,7 @@
 <text x="30" y="540" fill="#374151">(11) bringup_modules:U9 SY6280AAC +5V -&gt; +5V_HDMI_TX — load 0.058 A / limit 0.523 A [load_switch]</text>
 <text x="30" y="556" fill="#374151">(12) fmc:U1 TLV75725PDYDR +3V3 -&gt; +2V5_VADJ — load 0.400 A / limit 0.400 A [ldo]</text>
 <text x="30" y="572" fill="#374151">(13) pd_input:U1 TPS26631PWPR +VBUS_IN -&gt; +VIN — load 1.337 A / limit 3.529 A [efuse]</text>
-<text x="30" y="588" fill="#374151">(14) power:U1 LMR33630ADDAR +VIN_SYS -&gt; +5V_REG — load 2.950 A / limit 3.000 A [buck]</text>
+<text x="30" y="588" fill="#374151">(14) power:U1 LM61460AANRJRR +VIN_SYS -&gt; +5V_REG — load 2.950 A / limit 6.000 A [buck]</text>
 <text x="30" y="604" fill="#374151">(15) power:U2 TPS54302DDCR +5V -&gt; +3V3_REG — load 2.635 A / limit 3.000 A [buck]</text>
 <text x="30" y="620" fill="#374151">(16) power:U3 AP2112K-1.8 +3V3 -&gt; +1V8_REG — load 0.006 A / limit 0.600 A [ldo]</text>
 <text x="30" y="636" fill="#374151">(17) power_som:U4 TPS54302DDCR +VIN_SYS -&gt; +5V_SOM — load 2.004 A / limit 3.000 A [buck]</text>

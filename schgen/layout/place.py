@@ -2745,13 +2745,37 @@ class _Engine:
         (_pg, gnd_net) = p_gnd
         for gpt in sorted(set(gnd_pts)):          # ALL distinct bottom GND/EP pts
             self.power(gnd_net, *gpt)
-        for (pa, aux_net) in p_aux:               # aux bias output (VCC) bypass cap
-            (rcref,) = [self.hang[aux_net][0]]    # its single local cap (drop chain)
-            xcol = gfloor(pa[0] - sp.cluster_dx)  # own left column (clear of body)
+        # aux left pins (VCC/RT/...): each drops its ONE local element in a left
+        # column clear of the body, STAGGERED one cap-pitch each so multiple aux
+        # pins (e.g. the LM61460 VCC + RT) never share an x. The symbol places
+        # aux pins OUT of the input-rail's vertical band (VIN at one page edge,
+        # aux at the other) so these short left columns never cross an input-cap
+        # drop — the column is local to the aux pin, not pushed past the cap bank.
+        # Route TOP aux pins (smallest page-y) into the FURTHEST-left columns so
+        # the L-shaped runs NEST monotonically: the higher pin's longer run sits
+        # above, drops at the leftmost column; each lower pin takes a column one
+        # pitch closer to the body, its shorter run staying RIGHT of every higher
+        # pin's vertical drop. Without this nesting two adjacent aux drops (the
+        # LM61460 VCC + RT) cross. (n-1-rank gives the topmost pin the max offset.)
+        _aux_sorted = sorted(p_aux, key=lambda pn: pn[0][1])
+        _naux = len(_aux_sorted)
+        for _rank, (pa, aux_net) in enumerate(_aux_sorted):  # aux: ONE local 2-pin
+            ia = _naux - 1 - _rank
+            # the single local element drops to GND (self.hang — VCC/BIAS bypass
+            # cap, RT freq resistor) OR up to a rail (self.pull — a PGOOD pull-up
+            # resistor to the output rail). _local_drop_chain already proved
+            # exactly one local passive exists; route it to whichever net its far
+            # pin lands on (self.power handles GND or a POWER rail).
+            if aux_net in self.hang:
+                rcref = self.hang[aux_net][0]
+            else:
+                rcref = self.pull[aux_net][0][0]
+            xcol = gfloor(pa[0] - sp.cluster_dx - ia * sp.cap_pitch)
             far_pt, far = self._vertical_2pin(rcref, xcol, pa[1], aux_net,
                                               downward=True)
             self.power(far, *far_pt)
             self.hang.pop(aux_net, None)
+            self.pull.pop(aux_net, None)
             self.pl.plan(aux_net, pa, (xcol, pa[1]))
         for p in sdef.pins:                       # explicit NC for authored NCs
             if self.net_of(ref, p.number) is None and p.etype != "no_connect":

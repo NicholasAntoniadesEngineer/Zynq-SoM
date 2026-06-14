@@ -83,9 +83,9 @@ early is benign: its regulator simply has no input yet.)
 
 ### 2.1 `+5V` — close `bringup_rails.SW1` position 1
 
-- Path: `+VIN` -> `power.U1` (LMR33630ADDAR) -> `+5V`.
+- Path: `+VIN` -> `power.U1` (LM61460AANRJRR) -> `+5V`.
 - EN cell: `bringup_en.U1` — `BU_DIP_5V0` AND `STM32_RAIL_EN_5V0` -> `EN_5V0`. A blank SC leaves the override pulled high (veto inactive).
-- Expect **5.02 V** on `+5V` (setpoint derived from the netlist: FB divider vs the LMR33630ADDAR 1 V reference). Probe: power.TP1.
+- Expect **5.02 V** on `+5V` (setpoint derived from the netlist: FB divider vs the LM61460AANRJRR 1 V reference). Probe: power.TP1.
 - PG LED `power.D1` lights.
 - Current-limit context: rail budget 3 A (power_mon dossier table 1; the regulator is the limit — no rail fuse).
 - Telemetry: INA3221 #1 (0x40) ch2 [+5V_REG -> +5V].
