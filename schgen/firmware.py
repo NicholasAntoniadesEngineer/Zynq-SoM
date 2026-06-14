@@ -171,7 +171,7 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
                 f"({role}), live SoM netlist says "
                 f"{'absent' if live is None else f'P{live.port}{live.pin}'}")
 
-    chain = bf.regulator_chain(power_c)
+    chain = bf.regulator_chain(power_c, monitor=pmon_c)
     rail_cells = {c.enable: c for c in bf.en_cells(en_c)}
     mod_cells = bf.en_cells(enm_c)
     exp = bf.expander(rails_c)

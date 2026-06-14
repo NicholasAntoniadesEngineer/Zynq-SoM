@@ -70,6 +70,12 @@ def parse_si(text: str) -> float | None:
 
 _VOLT_PATTERNS: tuple[tuple[str, float], ...] = (
     (r"^\+VBUS_IN$", 20.0),     # raw receptacle VBUS (contract rail)
+    # DEF-D shunt-split rails: the reg-side _REG/_SYS clusters are the SAME
+    # voltage as the post-shunt board rail (the 10/20 mR shunt drop is mV).
+    # The generic prefixes below already resolve these, but the explicit
+    # anchored entries (placed BEFORE their generic counterparts) harden
+    # against any future narrower-value anchored pattern shadowing them.
+    (r"^\+VIN_SYS$", 20.0),     # DEF-D: post-RS1 buck-input rail (= +VIN - IR)
     (r"^\+VIN", 20.0),          # fused board input (behind the TPS26631)
     # +5V_SOM is DELIBERATELY re-centred BELOW 5 V (PWR-5): the SoM is a
     # 4.2-5.0 V-input module, so the old 4.96 V nom / 5.17 V worst-case-high
@@ -78,8 +84,11 @@ _VOLT_PATTERNS: tuple[tuple[str, float], ...] = (
     # MUST precede the generic +5V pattern so the FB +/-3% gate judges this
     # buck against its real intended 4.65 V, not a stale 5.0 V.
     (r"^\+5V_SOM$", 4.65),
+    (r"^\+5V_REG$", 5.0),       # DEF-D: buck-1 output, pre-RS2
     (r"^\+5V", 5.0),
+    (r"^\+3V3_REG$", 3.3),      # DEF-D: buck-2 output, pre-RS3
     (r"^\+3V3", 3.3),
+    (r"^\+1V8_REG$", 1.8),      # DEF-D: LDO output, pre-RS4
     (r"^\+1V8", 1.8),
     (r"^\+2V5", 2.5),
     (r"^\+VCCO_35$", 2.5),      # bank 35 = 2.5 V (camera/FMC dossiers)
@@ -152,14 +161,14 @@ SOURCES: dict[str, tuple[float, float, str]] = {
 # (som_conn_gen.VCCO_RAIL_MAP -> +3V3 / +2V5_VADJ), so the banks appear as real
 # SOURCED loads on those rails — not unsourced orphans. Re-adding a +VCCO_* key
 # here would be dead (no sheet emits that net anymore).
-KNOWN_DEFERRED: dict[str, str] = {
-    "+VIN_SYS": "power.py shunt rail split pending (PLAN POWER_LIBS flag — "
-                "power_mon RS1 output feeds nothing yet)",
-    "+5V_REG": "power.py shunt rail split pending (power_mon RS2 input "
-               "cluster — today's +5V comes straight from the buck)",
-    "+3V3_REG": "power.py shunt rail split pending (power_mon RS3)",
-    "+1V8_REG": "power.py shunt rail split pending (power_mon RS4)",
-}
+# DEF-D (2026-06-14): the four +VIN_SYS / +5V_REG / +3V3_REG / +1V8_REG shunt
+# rails left this table — power.py/power_som.py now put each regulator's OUTPUT
+# (or buck INPUT, for +VIN_SYS) on the _REG/_SYS net, so the RS1..RS4 shunts sit
+# IN SERIES. The shunt-bridge endpoints land in `sourced` automatically (see the
+# `sourced` union in analyze()), so the plain board rails are sourced and the
+# _REG/_SYS rails carry real load. The dict + machinery stay wired for any future
+# deferral; it is empty today.
+KNOWN_DEFERRED: dict[str, str] = {}
 
 
 @dataclass
@@ -314,6 +323,31 @@ def analyze(sheets) -> Result:
         regs_by_vin.setdefault(r.vin, []).append(r)
         regs_by_vout.setdefault(r.vout, []).append(r)
 
+    # DEF-D: a series shunt passes current 1:1, so the UPSTREAM (reg/source)
+    # side of each bridge must inherit the DOWNSTREAM (board/load) side's total
+    # — otherwise the regulator feeding the upstream rail sees zero load and the
+    # overrun gate goes blind. Orient each bridge by where the load sits: an
+    # endpoint is downstream if it actually bears load (declared draws or a
+    # child regulator), and the bare reg/source endpoint is upstream. (power_mon
+    # authors RSn.1 = reg-side, RSn.2 = board-side, but _detect_bridges is
+    # net-iteration-ordered, so we infer direction from the load topology, not
+    # pin order.) bridge_down maps upstream -> [downstream].
+    has_load = set(res.draws) | set(regs_by_vin)
+
+    bridge_down: dict[str, list[str]] = {}
+    for _s, _r, a, b in res.bridges:
+        a_down, b_down = a in has_load, b in has_load
+        # the load-bearing endpoint is downstream; the bare one is upstream.
+        if b_down and not a_down:
+            up, down = a, b
+        elif a_down and not b_down:
+            up, down = b, a
+        else:
+            # ambiguous (both or neither bear load) — do not fold into the
+            # budget; the `sourced` set still keeps both endpoints sourced.
+            continue
+        bridge_down.setdefault(up, []).append(down)
+
     # bottom-up totals (cycle-guarded; the tree is a DAG by construction)
     visiting: set[str] = set()
 
@@ -335,6 +369,9 @@ def analyze(sheets) -> Result:
             else:
                 reg.i_in = i_out
             total += reg.i_in
+        # fold each downstream shunt rail's total through the series shunt (1:1)
+        for down in bridge_down.get(rail, []):
+            total += rail_total(down)
         visiting.discard(rail)
         res.rails[rail] = round(total, 4)
         return res.rails[rail]
@@ -360,6 +397,9 @@ def analyze(sheets) -> Result:
                 f"{amps:.3f} A")
 
     # ---- findings: unsourced rails ------------------------------------------
+    # BOTH endpoints of every shunt bridge are sourced: the shunt passes the
+    # rail through (DEF-D — the RS1..RS4 INA3221 shunts now sit IN SERIES, so a
+    # reg-side _REG/_SYS net and its post-shunt board rail are each sourced).
     sourced = set(SOURCES) | {r.vout for r in res.regs} \
         | {b for _s, _r, _a, b in res.bridges} \
         | {a for _s, _r, a, _b in res.bridges}

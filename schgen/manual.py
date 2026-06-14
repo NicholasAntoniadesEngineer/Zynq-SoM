@@ -91,7 +91,7 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     circuits = _load_all()
     rails_c = circuits["bringup_rails"]
     power_c = circuits["power"]
-    chain = bf.regulator_chain(power_c)
+    chain = bf.regulator_chain(power_c, monitor=circuits["power_mon"])
     rail_cells = {c.enable: c for c in bf.en_cells(circuits["bringup_en"])}
     mod_cells = {c.enable: c
                  for c in bf.en_cells(circuits["bringup_en_modules"])}

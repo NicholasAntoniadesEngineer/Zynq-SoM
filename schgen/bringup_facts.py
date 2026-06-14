@@ -267,14 +267,63 @@ def _rails_of(c: Circuit, ref: str) -> set[str]:
     return rails
 
 
-def regulator_chain(power: Circuit, root: str = "+VIN") \
-        -> list[RegulatorStage]:
+def _canonical_rail(a: str, b: str) -> tuple[str, str]:
+    """(board_rail, measurement_rail) for a shunt-bridged pair: the measurement
+    rail is the one whose name is the board rail plus a _REG/_SYS suffix
+    (+VIN_SYS -> +VIN, +5V_REG -> +5V); fall back to the longer name as the
+    measurement side."""
+    for suf in ("_REG", "_SYS"):
+        if a.endswith(suf) and a[:-len(suf)] == b:
+            return b, a
+        if b.endswith(suf) and b[:-len(suf)] == a:
+            return a, b
+    return (a, b) if len(a) <= len(b) else (b, a)
+
+
+def _shunt_aliases(monitor: Circuit | None) -> dict[str, str]:
+    """Rail aliases from the series sense shunts (e.g. power_mon RS1..RS4): a
+    2-pin passive bridging two POWER rails is a dead short for bring-up
+    sequencing, so its reg-side measurement rail aliases to its board rail.
+    Netlist-driven (same idiom as powertree._detect_bridges)."""
+    if monitor is None:
+        return {}
+    netted: dict[str, list] = {}
+    for net in monitor.nets.values():
+        for pr in net.pins:
+            netted.setdefault(pr.ref, []).append(net)
+    alias: dict[str, str] = {}
+    for ref in sorted(netted):
+        nets = netted[ref]
+        if len(nets) != 2 \
+                or not all(n.net_class is NetClass.POWER for n in nets) \
+                or nets[0].name == nets[1].name:
+            continue
+        canonical, other = _canonical_rail(nets[0].name, nets[1].name)
+        alias[other] = canonical
+    return alias
+
+
+def _resolve_alias(rail: str, alias: dict[str, str]) -> str:
+    """Follow the alias map to the canonical board rail (cycle-guarded)."""
+    seen: set[str] = set()
+    while rail in alias and rail not in seen:
+        seen.add(rail)
+        rail = alias[rail]
+    return rail
+
+
+def regulator_chain(power: Circuit, root: str = "+VIN",
+                    monitor: Circuit | None = None) -> list[RegulatorStage]:
     """The rail-sequencing order, derived from the power netlist topology:
     each regulator = the part carrying an EN_* PORT pin; its candidate rails
     are the POWER nets on its own pins plus those one inductor hop away
     (buck SW node -> L -> output). Starting from the inlet rail, every stage
     must consume exactly one already-known rail and produce exactly one new
-    one — anything else is a build error, never a guess."""
+    one — anything else is a build error, never a guess.
+
+    ``monitor`` (power_mon) supplies the series sense-shunt bridges: each
+    shunt is a wire for sequencing, so its reg-side rail (+5V_REG) collapses
+    to its board rail (+5V) and the walk crosses the shunt transparently."""
     # regulator refs = parts carrying an EN_* PORT pin
     regs: dict[str, str] = {}
     for net in power.nets.values():
@@ -295,8 +344,14 @@ def regulator_chain(power: Circuit, root: str = "+VIN") \
             if shared:
                 rails |= _rails_of(power, lref)
         cands[ref] = rails
+    # series shunts are wires for sequencing: collapse each reg-side rail to
+    # its board rail so the walk crosses +VIN ->(RS1) +VIN_SYS, +5V_REG ->(RS2)
+    # +5V, ... transparently (else the rail split opens the chain).
+    alias = _shunt_aliases(monitor)
+    cands = {ref: {_resolve_alias(r, alias) for r in rails}
+             for ref, rails in cands.items()}
     # walk the chain from the inlet rail
-    known = {root}
+    known = {_resolve_alias(root, alias)}
     stages: list[RegulatorStage] = []
     pending = dict(cands)
     while pending:
@@ -313,17 +368,19 @@ def regulator_chain(power: Circuit, root: str = "+VIN") \
         stages.append(RegulatorStage(
             ref=ref, value=part.value, enable=regs[ref],
             rail_in=rail_in, rail_out=rail_out,
-            vout=_stage_vout(power, ref, part.value, rail_out)))
+            vout=_stage_vout(power, ref, part.value)))
         known.add(rail_out)
         del pending[ref]
     _attach_pg_leds(power, stages)
     return stages
 
 
-def _stage_vout(power: Circuit, ref: str, value: str, rail_out: str) \
-        -> float | None:
+def _stage_vout(power: Circuit, ref: str, value: str) -> float | None:
     """Setpoint: fixed-LDO suffix ('AP2112K-1.8' -> 1.8 V) or the buck FB
-    divider Vout = VREF * (1 + Rtop/Rbot) computed from the netlist."""
+    divider Vout = VREF * (1 + Rtop/Rbot) computed from the netlist. The top
+    (output-sense) arm is the divider resistor that does NOT return to GND, so
+    the setpoint is correct regardless of the output rail's name (a series-
+    shunt split renames it, e.g. +5V -> +5V_REG)."""
     m = re.search(r"-(\d+(?:\.\d+)?)$", value)
     if m:
         return float(m.group(1))
@@ -343,10 +400,10 @@ def _stage_vout(power: Circuit, ref: str, value: str, rail_out: str) \
             other = {n.name for n in power.nets.values()
                      if n.name != net.name
                      and any(pr.ref == r for pr in n.pins)}
-            if rail_out in other:
-                top = parse_value_ohms(power.parts[r].value)
-            elif "GND" in other:
+            if "GND" in other:
                 bot = parse_value_ohms(power.parts[r].value)
+            else:
+                top = parse_value_ohms(power.parts[r].value)
         if top and bot:
             return round(vref * (1 + top / bot), 2)
     return None

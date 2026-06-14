@@ -5,13 +5,15 @@ number, C181255 — the task's C190480 is a live-verified ghost) on the shared
 STM32_I2C2 bus at 0x40 (A0=GND) and 0x41 (A0=VS); board address map is
 0x20 TCA9535 / 0x22 FUSB302B / 0x40-0x41 here. Series shunts sized from the
 PLAN rail budgets: 10 mR 1206 on the 3 A nets (30 mV @ 3 A, 4 mA LSB), 20 mR
-on the 600 mA +1V8 (12 mV, 2 mA LSB). The rail nets SPLIT at the shunts —
-power.py keeps regulator-side clusters on +VIN_SYS / +5V_REG / +3V3_REG /
-+1V8_REG and the board-facing rails live on the load side, so each channel
-reads its own rail's loads only. Supplies run from the always-on +3V3_SC so
-telemetry works with every monitored rail down. Both CRITICAL pins (open
-drain) wire-OR into PMON_ALERT_N (10k to +3V3_SC) for the bringup expander's
-spare port P11; WARNING/PV/TC stay I2C-readable and are author NCs. Unused
+on the 600 mA +1V8 (12 mV, 2 mA LSB). The rail nets SPLIT at the shunts (DEF-D
+landed 2026-06-14): power.py / power_som.py put each regulator's OUTPUT cluster
+on +5V_REG / +3V3_REG / +1V8_REG and the buck INPUTS on +VIN_SYS, while the
+board-facing rails live on the load side, so the RS1..RS4 shunts sit IN SERIES
+and each channel reads its own rail's loads only. Supplies run from the
+always-on +3V3_SC so telemetry works with every monitored rail down. Both
+CRITICAL pins (open drain) wire-OR into PMON_ALERT_N (10k to +3V3_SC) for the
+bringup expander's spare port P11; WARNING/PV/TC stay I2C-readable and are
+author NCs. Unused
 U2 channels have IN+/IN- tied to GND per the datasheet. No I2C pull-ups
 here — usb_pd/bringup own the bus pulls.
 
@@ -89,10 +91,16 @@ def circuit() -> Circuit:
     # + ALERT 10k pull-up when asserted (~0.3 mA) — rounded up
     c.draws("+3V3_SC", 0.002, "2x INA3221 ~0.7 mA + ALERT pull-up")
 
-    # round-4 coverage waivers: the regulator-side shunt nets are 1206 shunt
-    # pads themselves (probe across RS1..RS4 — that IS the measurement);
-    # they feed nothing until the power.py rail split lands (PLAN flag)
-    for rail in ("+VIN_SYS", "+5V_REG", "+3V3_REG", "+1V8_REG"):
-        c.waive_tp(rail, "regulator-side shunt stub — probe the RS pad "
-                         "itself; power.py rail split pending (PLAN flag)")
+    # coverage waivers (DEF-D landed): the _REG/_SYS nets are now real
+    # series-shunt rails carrying load — the regulator-OUTPUT copper (or, for
+    # +VIN_SYS, the buck-INPUT copper) spanning the RS pad. Each is the same
+    # node as the shunt's reg-side pad; the post-shunt board rail (the load
+    # side) already carries the testpoint, so probe ACROSS the shunt to reach
+    # this side. This is a coverage statement, not an open: the rail is sourced.
+    for rail, shunt, board_tp in (("+VIN_SYS", "RS1", "+VIN @ pd_input"),
+                                  ("+5V_REG", "RS2", "+5V"),
+                                  ("+3V3_REG", "RS3", "+3V3"),
+                                  ("+1V8_REG", "RS4", "+1V8")):
+        c.waive_tp(rail, f"reg-side of {shunt} — probe across the shunt "
+                         f"(the {board_tp} TP is the post-shunt/load side)")
     return c

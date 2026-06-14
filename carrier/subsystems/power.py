@@ -157,7 +157,11 @@ def circuit() -> Circuit:
     c.use_part("LMR33630ADDAR", ref="U1",
                lib_id="Regulator_Switching:LMR33640ADDA",
                footprint="LMR33630ADDAR:LMR33630ADDAR")
-    c.net("+VIN", "U1.2")                                          # VIN (pin 2)
+    # DEF-D: U1 input is the POST-shunt rail +VIN_SYS (RS1 series-inserts
+    # between the eFuse +VIN and the buck inputs in power_mon.py), so the buck
+    # input current — including the input-cap ripple/inrush — flows through RS1
+    # and is counted on the U1 ch1 (+VIN) channel. The input caps move with it.
+    c.net("+VIN_SYS", "U1.2")                                      # VIN (pin 2), post-RS1
     c.net("GND", "U1.1", "U1.9")                                   # GND (1) + EP PowerPAD (9)
     c.port("EN_5V0", "U1.3", expect=EXPECT_BRINGUP)                # EN (pin 3)
     c.nc("U1.4")                                                   # PG open-collector unused
@@ -165,7 +169,7 @@ def circuit() -> Circuit:
                                ("C2", "10u", C1206, "C13585"),
                                ("C3", "10u", C1206, "C13585")):
         c.part(ref, "Device:C", val, fp, LCSC=lcsc)
-        c.net("+VIN", f"{ref}.1")
+        c.net("+VIN_SYS", f"{ref}.1")                              # buck-input filter, post-RS1
         c.net("GND", f"{ref}.2")
     c.part("C24", "Device:C", "1u", C0603, LCSC="C15849")          # VCC int-LDO bypass
     c.net("U1_VCC", "U1.6", "C24.1")                               # VCC (pin 6), local bias
@@ -174,21 +178,25 @@ def circuit() -> Circuit:
     c.net("BOOT_5V0", "U1.7", "C4.1")                              # BOOT (pin 7)
     c.part("L1", "Device:L", "10uH", L_FP, LCSC="C37429")
     c.net("SW_5V0", "U1.8", "C4.2", "L1.1")                        # SW (pin 8)
-    c.net("+5V", "L1.2")
+    # DEF-D: buck-1 OUTPUT cluster is +5V_REG (reg-side of RS2). The inductor
+    # node, output bulk caps, FB sense and the PG LED stay on the regulator
+    # side; the board +5V rail (post-RS2) carries the measured consumers (U2
+    # input, C7/C8). RS2 bridges +5V_REG -> +5V so consumer draw is measured.
+    c.net("+5V_REG", "L1.2")
     for ref in ("C5", "C6"):
         c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
-        c.net("+5V", f"{ref}.1")
+        c.net("+5V_REG", f"{ref}.1")                              # output bulk, reg-side
         c.net("GND", f"{ref}.2")
     c.part("R1", "Device:R", "40.2k", R_FP, LCSC="C25750")         # FB top (VFB 1.0 -> 5.02 V)
     c.part("R2", "Device:R", "10k", R_FP, LCSC="C25804")           # FB bottom
-    c.net("+5V", "R1.1")
+    c.net("+5V_REG", "R1.1")                                       # FB senses the regulated node
     c.net("FB_5V0", "U1.5", "R1.2", "R2.1")                        # FB (pin 5)
     c.net("GND", "R2.2")
     # (no FB feedforward cap on U1: keep FB a clean 2-element divider the router
     #  handles; the LMR33630 is internally compensated, so it is optional.)
     c.part("D1", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +5V indicator
     c.part("R3", "Device:R", "1k", R_FP, LCSC="C21190")
-    c.net("+5V", "D1.2")
+    c.net("+5V_REG", "D1.2")                                       # PG LED reg-side (regulator up)
     c.net("PG_5V0", "D1.1", "R3.1")
     c.net("GND", "R3.2")
 
@@ -206,36 +214,42 @@ def circuit() -> Circuit:
     c.net("BOOT_3V3", "U2.6", "C9.1")
     c.part("L2", "Device:L", "10uH", L_FP, LCSC="C37429")
     c.net("SW_3V3", "U2.2", "C9.2", "L2.1")
-    c.net("+3V3", "L2.2")
+    # DEF-D: buck-2 OUTPUT cluster is +3V3_REG (reg-side of RS3). U2's INPUT
+    # stays the board +5V (above) — it is a +5V consumer, measured by RS2.
+    c.net("+3V3_REG", "L2.2")
     for ref in ("C10", "C11"):
         c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
-        c.net("+3V3", f"{ref}.1")
+        c.net("+3V3_REG", f"{ref}.1")                            # output bulk, reg-side
         c.net("GND", f"{ref}.2")
     c.part("R4", "Device:R", "100k", R_FP, LCSC="C25803")          # FB top
     c.part("R5", "Device:R", "22k", R_FP, LCSC="C31850")           # FB bottom
     c.part("C23", "Device:C", "75p", C0603, LCSC="C22399620")      # FB feedfwd
-    c.net("+3V3", "R4.1", "C23.1")
+    c.net("+3V3_REG", "R4.1", "C23.1")                            # FB + feedfwd reg-side
     c.net("FB_3V3", "U2.4", "R4.2", "R5.1", "C23.2")
     c.net("GND", "R5.2")
     c.part("D2", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +3V3
     c.part("R6", "Device:R", "330R", R_FP, LCSC="C23138")
-    c.net("+3V3", "D2.2")
+    c.net("+3V3_REG", "D2.2")                                     # PG LED reg-side
     c.net("PG_3V3", "D2.1", "R6.1")
     c.net("GND", "R6.2")
 
     # ---- stage 3: +3V3 -> +1V8 LDO -------------------------------------------
     c.use_part("AP2112K-1.8TRG1", ref="U3", value="AP2112K-1.8",
                lib_id=LDO_LIB, footprint=LDO_FP)
-    c.net("+3V3", "U3.1")
+    c.net("+3V3", "U3.1")                                          # LDO input: board +3V3 (RS3)
     c.net("GND", "U3.2")
     c.port("EN_1V8", "U3.3", expect=EXPECT_BRINGUP)
     c.nc("U3.4")                                                   # NC pin
-    c.net("+1V8", "U3.5")
+    # DEF-D: LDO OUTPUT is +1V8_REG (reg-side of RS4). The LDO INPUT cap C12
+    # stays on the board +3V3 (it is a +3V3 consumer, measured by RS3); only
+    # the output node + output cap move to +1V8_REG. RS4 bridges +1V8_REG ->
+    # the board +1V8 the loads see.
+    c.net("+1V8_REG", "U3.5")
     c.part("C12", "Device:C", "1u", C0603, LCSC="C15849")          # LDO in
     c.net("+3V3", "C12.1")
     c.net("GND", "C12.2")
     c.part("C13", "Device:C", "1u", C0603, LCSC="C15849")          # LDO out
-    c.net("+1V8", "C13.1")
+    c.net("+1V8_REG", "C13.1")                                     # output cap reg-side
     c.net("GND", "C13.2")
 
     # ---- +1V8 PG sense cell (dossier 3.3: red Vf > 1.8 V -> FET sense) -------

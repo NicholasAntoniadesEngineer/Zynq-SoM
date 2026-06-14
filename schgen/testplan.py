@@ -115,7 +115,7 @@ def _rail_stage(sheets) -> dict[str, int]:
     # Stage 2: every regulator output rail (the power-tree chain).
     if "power" in circuits:
         try:
-            chain = bf.regulator_chain(circuits["power"])
+            chain = bf.regulator_chain(circuits["power"], monitor=circuits.get("power_mon"))
             for st in chain:
                 stage.setdefault(st.rail_out, 2)
                 # the buck's PG / FB sense nets ride the same stage

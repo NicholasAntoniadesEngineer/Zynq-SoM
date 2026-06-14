@@ -67,19 +67,28 @@ def circuit() -> Circuit:
     # ZENER CLAMP (PWR-1), not a bring-up port: this rail must be alive pre-DIP/
     # pre-PD so the SoM SC can boot and master the FUSB302 PD negotiation.
     c.use_part("TPS54302DDCR", ref="U4", lib_id=BUCK_LIB, footprint=BUCK_FP)
-    c.net("+VIN", "U4.3")
+    # DEF-D: U4's VIN is the POST-shunt rail +VIN_SYS (RS1 in power_mon.py sits
+    # between the eFuse +VIN and ALL buck inputs), so U4's draw flows through
+    # RS1 and is counted on the +VIN_SYS telemetry channel alongside U1. The
+    # input bulk caps move with the pin. The EN-clamp series R12 ALSO references
+    # +VIN_SYS (the buck's own input rail): the ~tens-of-uA bias then flows
+    # through RS1 too, and EN tracks the actual buck input. RS1 is a 10 mR short
+    # (+VIN ~= +VIN_SYS) so the PWR-1 EN-clamp voltage table is unchanged. This
+    # also keeps the always-on EN-UVLO strap on the input rail, which the
+    # placer's regulator template requires (UVLO-top must sit on the VIN rail).
+    c.net("+VIN_SYS", "U4.3")                                      # VIN, post-RS1
     c.net("GND", "U4.1")
     c.part("R12", "Device:R", "10k", R_FP, LCSC="C25804")          # EN series
     c.part("D5", "Device:D_Zener", "MMSZ5231B", DZ_FP, LCSC="C85181")  # 5.1V clamp
     c.part("C20", "Device:C", "100n", C0603, LCSC="C1591")         # EN bypass
-    c.net("+VIN", "R12.1")
+    c.net("+VIN_SYS", "R12.1")                                     # EN-clamp ref: buck input rail
     c.net("EN_5V_SOM", "U4.5", "R12.2", "D5.1", "C20.1")           # D5.1 = K
     c.net("GND", "D5.2", "C20.2")                                  # D5.2 = A
     for ref, val, fp, lcsc in (("C14", "100n", C0603, "C1591"),
                                ("C15", "10u", C1206, "C13585"),
                                ("C16", "10u", C1206, "C13585")):
         c.part(ref, "Device:C", val, fp, LCSC=lcsc)
-        c.net("+VIN", f"{ref}.1")
+        c.net("+VIN_SYS", f"{ref}.1")                             # buck-input filter, post-RS1
         c.net("GND", f"{ref}.2")
     c.part("C17", "Device:C", "100n", C0603, LCSC="C1591")         # BOOT
     c.net("BOOT_5V_SOM", "U4.6", "C17.1")
