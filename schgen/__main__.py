@@ -113,7 +113,7 @@ def _purity_violations(path: Path) -> list[str]:
     return out
 
 # Pin types KiCad's ERC accepts as net drivers (pin_not_driven test).
-_DRIVER_ETYPES = {"output", "bidirectional", "tri_state", "passive",
+_ERC_DRIVER_ETYPES = {"output", "bidirectional", "tri_state", "passive",
                   "power_out", "open_collector", "open_emitter"}
 
 
@@ -135,7 +135,7 @@ def _check_inputs_driven(c: Circuit, lib: Library) -> list[str]:
         if net.net_class in (NetClass.POWER, NetClass.GROUND, NetClass.PORT):
             continue
         etypes = {etype_of.get((pr.ref, pr.pin), "?") for pr in net.pins}
-        if "input" in etypes and not (etypes & _DRIVER_ETYPES):
+        if "input" in etypes and not (etypes & _ERC_DRIVER_ETYPES):
             problems.append(
                 f"net {net.name!r}: input pin(s) with no same-sheet driver "
                 f"and not a PORT — undriven input")

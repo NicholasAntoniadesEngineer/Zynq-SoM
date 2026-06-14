@@ -71,7 +71,7 @@ POWER_LIBS = {
 }
 
 # KiCad ERC: a power_in pin needs a power_out / PWR_FLAG driver on its net.
-_DRIVER_ETYPES = {"power_out", "output"}
+_FLAG_DRIVER_ETYPES = {"power_out", "output"}
 
 
 class PlaceError(ValueError):
@@ -2022,7 +2022,7 @@ class _Engine:
                 etype_of[(ref, p.number)] = p.etype
         pins = self.c.nets[net].pins
         ets = {etype_of.get((pr.ref, pr.pin), "?") for pr in pins}
-        return "power_in" in ets and not (ets & _DRIVER_ETYPES)
+        return "power_in" in ets and not (ets & _FLAG_DRIVER_ETYPES)
 
     # ---- cluster + flags ------------------------------------------------------------
     def _decoupling_cluster(self, ax: float, ay: float, body: Box) -> None:
@@ -2096,7 +2096,7 @@ class _Engine:
             if n.net_class not in (NetClass.POWER, NetClass.GROUND):
                 continue
             ets = {etype_of.get((pr.ref, pr.pin), "?") for pr in n.pins}
-            if ets & _DRIVER_ETYPES:
+            if ets & _FLAG_DRIVER_ETYPES:
                 continue                  # a real driver powers this rail
             rails.append(n)
         if not rails:
