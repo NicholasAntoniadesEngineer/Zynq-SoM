@@ -168,7 +168,12 @@ byte-identical goldens + the determinism check.
       REVIEW-FLAGGED in carrier/research/thermal_bucks.md (confirm RthJA by
       thermal sim/bench at bring-up, else switch U1 to an exposed-pad buck).
 - [ ] VER-3 mutation classes for new + untested gates (selftest.py)
-- [ ] VER-4 [BIG] independent connected-components short/open proof gate + mutants (verify/cc_gate.py)
+- [x] VER-4 independent connected-components short/open gate (verify/cc_gate.py)
+      — a SECOND oracle disjoint from kicad-cli: net-blind union-find over the
+      emitted geometry vs the declared nets. Board: 0 shorts/0 opens on all 26
+      sheets AND agrees with kicad-cli PIN-FOR-PIN 26/26 (full equivalence-
+      relation cross-check). Net-blindness + synthetic short/open proven by the
+      builder. Hooked into board. >>> VERIFY TRACK COMPLETE.
 
 ### TRACK DEVEX — dev experience + automated testing
 - [x] DX-1 pytest unit-test layer (schgen/tests/, 147 cases ~8s, worktree agent) — c92d7c4 [HIGH — user emphasis]

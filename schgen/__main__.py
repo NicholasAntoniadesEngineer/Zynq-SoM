@@ -503,6 +503,26 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(verdicts[-1])
         sheets.append(sc)
 
+    # INDEPENDENT connected-components gate (verification P4, no kicad-cli):
+    # rebuilds connectivity from the emitted GEOMETRY (net-blind union-find over
+    # wires/junctions/pins, legal same-name label/power merges) and compares to
+    # the declared nets — a SHORT = two declared nets in one component, an OPEN
+    # = one net split. A second oracle disjoint from kicad-cli, so the board
+    # never rests on a single netlist witness (LAW 0). Reuses the in-memory
+    # placements/prepared already built — no extra place/route.
+    from schgen.verify import cc_gate
+    cc_prepared = [(name, c, placements[name][0], placements[name][1])
+                   for (name, sc, c, _sch, _vis, _paper) in prepared
+                   if name in placements]
+    cc_res = cc_gate.check_board(cc_prepared, lib)
+    (rep_dir / "cc_gate.txt").write_text(cc_res.summary() + "\n")
+    print(f"CC GATE: {'PASS' if cc_res.ok else 'FAIL'} "
+          f"(geometry-only, independent of kicad-cli -> {rep_dir / 'cc_gate.txt'})")
+    for _r in cc_res.per_sheet:
+        if not _r.ok:
+            print("  " + _r.summary().replace("\n", "\n  "))
+    ok_all = ok_all and cc_res.ok
+
     # link + constraints + diagram
     som_nets = load_som_contract()
     res = link(sheets, som_nets)
