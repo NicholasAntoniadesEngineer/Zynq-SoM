@@ -14,11 +14,11 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "44668f2d336dc23d7daa0794b8ff9f0e593b6bfceeac09e498af5aad24ed3d25"
+      "sha256": "0a88a193ad5dc41589ca067b76b053a6d652b57907ac0ca0e0ec56184f1634df"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "0f96808503e6365d172baa6b72b06417a454216d58de5effcd00410d5a215755"
+      "sha256": "76c439f0078b18dab6184a9545ef640ed5c537569693c8e8c7eed70ced9274f5"
     },
     {
       "path": "docs/power_tree.svg",
@@ -46,7 +46,7 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "27b5f23298658cc7d7ebe9ee3c382f21f1cfb282959d4fc776074f6677053498"
+      "sha256": "e62a8314efe3fdb1eca3e60aebb1760d03389aa7171c7c7813250f42465c066c"
     },
     {
       "path": "reports/cc_gate.txt",
@@ -170,7 +170,7 @@
     },
     {
       "path": "schematic/rj45_connector.kicad_sch",
-      "sha256": "048ba64988588196ce1794b0da2a05bffa9cfb1a977c1b6bd953838b1ca2c01d"
+      "sha256": "0eddee3687ffea680f1cdf7912d54720950c5d5fcdd809f8edea209680ff066f"
     },
     {
       "path": "schematic/som_j1.kicad_sch",
@@ -212,7 +212,7 @@
     "missing": [],
     "parts": 397
   },
-  "device": null,
+  "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [
     {
       "j_pins": [
@@ -853,7 +853,12 @@
     "waived": 5
   },
   "xdc": {
-    "banks": [],
-    "pins": null
+    "banks": [
+      "13",
+      "33",
+      "34",
+      "35"
+    ],
+    "pins": 156
   }
 }
