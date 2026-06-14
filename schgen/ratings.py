@@ -1,0 +1,134 @@
+"""schgen/ratings.py — per-part electrical RATINGS, keyed by LCSC.
+
+The rule-engine gate (schgen/verify/part_rules.py) checks capacitor voltage
+derating, resistor power, and regulator input-voltage abs-max against how the
+netlist uses each part. It needs each part's ratings, but EasyEDA gives NO
+structured rating data (only a free-text description, rich for passives and
+empty for most ICs), and the load-bearing passives are declared INLINE in the
+subsystems (`c.part(..., LCSC="C…")`) with no parts/<MPN>/ folder. So the
+authoritative ratings source is this LCSC-keyed table.
+
+Provenance: passive ratings (v_max/tol/dielectric) are the JLCPCB parts-API
+description token (e.g. "100nF ±10% 50V X7R"); resistor p_max is derived from
+the footprint package (R0603 = 0.10 W); cap temp_max is derived from dielectric
+(C0G/X7R = 125, X5R = 85); IC vin_max (abs-max input) is datasheet-sourced.
+Fields that could not be determined are OMITTED — the gate then reports the part
+as UNSPEC (fail-soft), never a false PASS. A part NOT in this table is also
+UNSPEC. Curated 2026-06-14 (a research sweep of the live JLC API + datasheets).
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Ratings:
+    kind: str                      # mlcc|elec|tant|film|res|ind|ic|diode|other
+    v_max: float | None = None     # rated DC voltage (V) — caps / TVS standoff
+    i_max: float | None = None     # continuous current (A) — L / ic / LED abs
+    p_max: float | None = None     # rated power (W) — resistors
+    tol: str | None = None         # "±10%"
+    dielectric: str | None = None  # X7R | X5R | C0G | ...
+    temp_max: float | None = None  # max op temp (°C)
+    vin_max: float | None = None   # IC abs-max input (V)
+    source: str = ""               # provenance
+
+
+def from_part_module(mod) -> Ratings | None:
+    """Tier-2: build Ratings from a parts/<MPN>/<MPN>.py module's RATINGS dict
+    (for use_part parts that part_gen may later annotate). None if absent."""
+    r = getattr(mod, "RATINGS", None)
+    if not isinstance(r, dict) or not r.get("kind"):
+        return None
+    fields = {k: r.get(k) for k in
+              ("kind", "v_max", "i_max", "p_max", "tol", "dielectric",
+               "temp_max", "vin_max", "source")}
+    return Ratings(**{k: v for k, v in fields.items() if v is not None})
+
+
+# Keyed by LCSC. The PRIMARY rating source (inline passives have no parts/ dir).
+RATINGS_BY_LCSC: dict[str, Ratings] = {
+    # ---- MLCC ceramic caps (v_max=rated DC; temp_max from dielectric) -------
+    "C14663": Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125, source="JLC desc CC0603KRX7R9BB104 100nF 50V X7R"),
+    "C1591":  Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125, source="JLC desc CL10B104KB8NNNC 100nF 50V X7R"),
+    "C100042":Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125, source="JLC desc CC0603KRX7R9BB103 10nF 50V X7R"),
+    "C1622":  Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125, source="JLC desc CL10B473KB8NNNC 47nF 50V X7R"),
+    "C1631":  Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125, source="JLC desc 0603B682K500NT 6.8nF 50V X7R"),
+    "C15849": Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X5R", temp_max=85,  source="JLC desc CL10A105KB8NNNC 1uF 50V X5R"),
+    "C125847":Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125, source="JLC desc CC0805KKX7R9BB225 2.2uF 50V X7R"),
+    "C15850": Ratings("mlcc", v_max=25.0, tol="±10%", dielectric="X5R", temp_max=85,  source="JLC desc CL21A106KAYNNNE 10uF 25V X5R"),
+    "C13585": Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X5R", temp_max=85,  source="JLC desc CL31A106KBHNNNE 10uF 50V X5R"),
+    "C596319":Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125, source="JLC desc CC1210KKX7R9BB106 10uF 50V X7R"),
+    "C45783": Ratings("mlcc", v_max=25.0, tol="±20%", dielectric="X5R", temp_max=85,  source="JLC desc CL21A226MAQNNNE 22uF 25V X5R"),
+    "C9196":  Ratings("mlcc", v_max=2000.0,tol="±10%",dielectric="X7R", temp_max=125, source="JLC desc 1206B102K202NT 1nF 2kV X7R (ethernet Bob-Smith)"),
+    "C113796":Ratings("mlcc", v_max=50.0, tol="±5%",  dielectric="C0G", temp_max=125, source="JLC desc CC0603JRNPO9BN201 200pF 50V C0G"),
+    "C22399620":Ratings("mlcc",v_max=50.0,tol="±5%",  dielectric="C0G", temp_max=125, source="JLC desc CGA0603C0G750J 75pF 50V C0G"),
+    "C49326329":Ratings("mlcc",v_max=100.0,tol="±5%", dielectric="C0G", temp_max=125, source="JLC desc 0603C0G470J101NT 47pF 100V C0G"),
+    # ---- resistors (p_max from footprint; v_max = working voltage) ----------
+    "C22769": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF150KT5E 1.5R 100mW 75V"),
+    "C22775": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1000T5E 100R 100mW 75V"),
+    "C25803": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1003T5E 100k 100mW 75V"),
+    "C25804": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1002T5E 10k 100mW 75V"),
+    "C22797": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1302T5E 13k 100mW 75V"),
+    "C22809": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1502T5E 15k 100mW 75V"),
+    "C21190": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1001T5E 1k 100mW 75V"),
+    "C8218":  Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF2000T5E 200R 100mW 75V"),
+    "C23345": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF220JT5E 22R 100mW 75V"),
+    "C31850": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF2202T5E 22k 100mW 75V"),
+    "C25961": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF2212T5E 22.1k 100mW 75V"),
+    "C22967": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF2702T5E 27k 100mW 75V"),
+    "C23138": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF3300T5E 330R 100mW 75V"),
+    "C23061": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF4752T5E 47.5k 100mW 75V"),
+    "C114625":Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc RC0603FR-0749R9L 49.9R 100mW 75V"),
+    "C23162": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF4701T5E 4.7k 100mW 75V"),
+    "C23186": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF5101T5E 5.1k 100mW 75V"),
+    "C188263":Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc RC0603FR-075K49L 5.49k 100mW 75V"),
+    "C23206": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF5602T5E 56k 100mW 75V"),
+    "C23212": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF6801T5E 6.8k 100mW 75V"),
+    "C844583":Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc CRCW060368K1FKEA 68.1k 100mW 75V"),
+    "C14890": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF7322T5E 73.2k 100mW 75V"),
+    "C4275":  Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF750JT5E 75R 100mW 75V"),
+    "C23107": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF7682T5E 76.8k 100mW 75V"),
+    "C23198": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF5232T5E 52.3k 100mW 75V"),
+    "C188070":Ratings("res", p_max=1.0, tol="±1%", temp_max=155, source="JLC desc RLM12FTCMR010 10mR 1W 1206 shunt"),
+    "C393094":Ratings("res", p_max=1.0, tol="±1%", temp_max=155, source="JLC desc RLM12FTCMR020 20mR 1W 1206 shunt"),
+    # ---- inductors ----------------------------------------------------------
+    "C38117": Ratings("ind", i_max=2.4, tol="±20%", source="JLC desc SWPA4030S100MT 10uH Isat 2.4A"),
+    "C37429": Ratings("ind", i_max=4.1, tol="±20%", source="JLC desc SWPA8040S100MT 10uH Isat 4.1A"),
+    # ---- diodes / TVS / Zener / Schottky / LED ------------------------------
+    "C8678":  Ratings("diode", v_max=40.0, i_max=3.0, temp_max=125, source="JLC desc SS34 Schottky 40V 3A"),
+    "C22452": Ratings("diode", v_max=40.0, i_max=5.0, temp_max=125, source="JLC desc SS54 Schottky 40V 5A"),
+    "C85181": Ratings("diode", v_max=5.1, p_max=0.37, temp_max=150, source="JLC desc MMSZ5231B 5.1V Zener 370mW"),
+    "C10214": Ratings("diode", v_max=22.0, temp_max=150, source="JLC desc SMBJ22A 22V standoff TVS 600W"),
+    "C2288":  Ratings("diode", i_max=0.020, temp_max=85, source="JLC desc KT-0603B blue LED 20mA"),
+    "C12624": Ratings("diode", i_max=0.020, temp_max=85, source="JLC desc KT-0603G green LED 20mA"),
+    "C2286":  Ratings("diode", i_max=0.020, temp_max=85, source="JLC desc KT-0603R red LED 20mA"),
+    "C2290":  Ratings("diode", i_max=0.020, temp_max=85, source="JLC desc KT-0603W white LED 20mA"),
+    "C7519":  Ratings("diode", v_max=5.25, temp_max=125, source="JLC USBLC6-2SC6 ESD standoff 5.25V"),
+    "C1973318":Ratings("diode", v_max=11.0, temp_max=85, source="TPD6E001 ESD working ~11V"),
+    # ---- MOSFET (Vds in vin_max for awareness; no derate rule fires) --------
+    "C20917": Ratings("other", v_max=30.0, i_max=5.7, p_max=1.4, temp_max=150, source="AO3400A N-ch 30V Vds 5.7A SOT-23"),
+    # ---- regulators / DC-DC / eFuse / load-switch / LDO (vin_max=abs-max) ---
+    "C90761": Ratings("ic", vin_max=28.0, i_max=3.0, temp_max=150, source="TPS54331DDAR buck recommended 3.5-28V 3A"),
+    "C311983":Ratings("ic", vin_max=28.0, i_max=3.0, temp_max=125, source="TPS54302DDCR buck recommended 4.5-28V 3A"),
+    "C2866319":Ratings("ic", vin_max=60.0, temp_max=125, source="TPS26631 eFuse recommended 4.5-60V"),
+    "C176944":Ratings("ic", vin_max=6.0, i_max=0.6, temp_max=85, source="AP2112K-1.8 LDO abs-max 6V 600mA"),
+    "C35209004":Ratings("ic", vin_max=6.0, i_max=1.0, temp_max=125, source="TLV75725 LDO abs-max 6V 1A"),
+    "C55136": Ratings("ic", vin_max=6.0, temp_max=125, source="SY6280AAC load switch abs-max 6V"),
+    "C82173": Ratings("ic", vin_max=32.0, temp_max=125, source="SY7201ABC boost abs-max 32V"),
+    "C129581":Ratings("ic", vin_max=7.0, i_max=0.5, temp_max=125, source="TPS2051C USB switch abs-max 7V"),
+    # ---- other ICs (digital/interface) — vin_max for awareness --------------
+    "C132291":Ratings("ic", vin_max=6.0, temp_max=125, source="FUSB302B PD PHY abs-max VDD 6V"),
+    "C181255":Ratings("ic", vin_max=6.0, temp_max=125, source="INA3221 monitor abs-max 6V"),
+    "C7666":  Ratings("ic", vin_max=6.5, temp_max=125, source="SN74LVC1G08 abs-max Vcc 6.5V"),
+    "C969151":Ratings("ic", vin_max=4.3, temp_max=85, source="CP2102N abs-max VDD 4.3V"),
+    "C140276":Ratings("ic", vin_max=3.6, temp_max=85, source="TXS02612 level-shifter 1.1-3.6V"),
+    "C130204":Ratings("ic", vin_max=6.0, temp_max=85, source="TCA9535 expander abs-max Vcc 6V"),
+    "C33196": Ratings("ic", vin_max=7.0, temp_max=85, source="PCA9306 level translator abs-max 7V"),
+    "C7719":  Ratings("ic", vin_max=6.0, temp_max=85, source="TPS3823-33 supervisor abs-max Vdd 6V"),
+    "C7562":  Ratings("ic", vin_max=6.5, temp_max=85, source="M24C02 EEPROM abs-max Vcc 6.5V"),
+    "C129895":Ratings("ic", vin_max=6.5, temp_max=85, source="24AA025E48 EEPROM+MAC abs-max Vcc 6.5V"),
+    "C3019759":Ratings("ic", vin_max=5.5, temp_max=85, source="RV-3028-C7 RTC 1.1-5.5V"),
+    "C201665":Ratings("ic", vin_max=5.5, temp_max=85, source="TPD12S016 HDMI ESD/level-shift 4.5-5.5V"),
+}

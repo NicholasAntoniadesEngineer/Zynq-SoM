@@ -169,6 +169,8 @@ class Circuit:
         self.strap_waivers: dict[str, str] = {}   # ref | "ref.pin" | net -> reason
         # per-device thermal (Tj) gate waivers (schgen/thermal.py): ref -> reason
         self.thermal_waivers: dict[str, str] = {}
+        # per-part rule-engine waivers (schgen/verify/part_rules.py): ref -> reason
+        self.part_rule_waivers: dict[str, str] = {}
         self._ref_counters: dict[str, int] = {}
         # Lazy symbol library + per-lib_id pin-number cache, used ONLY to
         # validate inline-part (``part()``) pin references eagerly in
@@ -493,6 +495,17 @@ class Circuit:
         if not reason.strip():
             raise CircuitError(f"waive_thermal({ref!r}): a reason is required")
         self.thermal_waivers[ref] = reason.strip()
+
+    def waive_part_rule(self, ref: str, reason: str) -> None:
+        """EXPLICIT per-part rule-engine waiver (schgen/verify/part_rules.py):
+        this part runs a rating margin tighter than the gate's derate on
+        purpose (documented layout/lifetime justification). The gate lists every
+        waiver verbatim and demotes the finding to a note — never silence."""
+        if ref not in self.parts:
+            raise CircuitError(f"waive_part_rule({ref!r}): not a declared part")
+        if not reason.strip():
+            raise CircuitError(f"waive_part_rule({ref!r}): a reason is required")
+        self.part_rule_waivers[ref] = reason.strip()
 
     def nc(self, *pins: PinRef | str) -> None:
         """Author-declared no-connect — pin is INTENTIONALLY unused."""

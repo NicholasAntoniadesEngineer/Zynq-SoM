@@ -626,6 +626,20 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  DESIGN RULE: {f}")
     ok_all = ok_all and dr_res.ok
 
+    # per-part RULE engine (verification): cap voltage derating + regulator
+    # input abs-max vs the rail the netlist puts each part on (ratings from
+    # schgen/ratings.py; rail tree reused from pt_res). Fail-soft on unspeced;
+    # tight margins are author-waived (c.waive_part_rule). LAW 4.
+    from schgen.verify import part_rules
+    pr_res = part_rules.run(sheets, rep_dir, pt_res=pt_res)
+    print(f"PART RULES: {'PASS' if pr_res.ok else 'FAIL'} "
+          f"({pr_res.checked} checks, {len(pr_res.findings)} findings, "
+          f"{len(pr_res.unspecced)} unspeced, {len(pr_res.waived)} waived "
+          f"-> {rep_dir / 'part_rules.txt'})")
+    for f in pr_res.findings:
+        print(f"  PART RULE: {f}")
+    ok_all = ok_all and pr_res.ok
+
     # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
     # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds
     # hard. The closed-form analytics ARE the gate; the ngspice .op
@@ -890,6 +904,14 @@ def main(argv: list[str] | None = None) -> int:
                     help="names in carrier/subsystems/ (default: all)")
     from schgen.thermal import cmd_thermal
     th.set_defaults(func=cmd_thermal)
+    prr = sub.add_parser(
+        "part-rules", help="per-part rating gate: cap voltage derating + "
+                           "regulator input abs-max vs the netlist rail "
+                           "(ratings from schgen/ratings.py); waivable per part")
+    prr.add_argument("subsystems", nargs="*",
+                     help="names in carrier/subsystems/ (default: all)")
+    from schgen.verify.part_rules import cmd_part_rules
+    prr.set_defaults(func=cmd_part_rules)
     st = sub.add_parser(
         "selftest", help="gate MUTATION testing + build-determinism proof "
                          "(the no-CI answer to 'who watches the watchmen')")
