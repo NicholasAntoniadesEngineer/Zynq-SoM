@@ -80,6 +80,11 @@ def circuit() -> Circuit:
     c.net("+3V3_LCD", "J1.4", "C3.1")
     c.net("GND", "J1.3", "J1.29", "J1.36", "C3.2")
     c.nc("J1.35", "J1.41", "J1.42")        # NC + shell tabs unused
+    # bulk on the gated +3V3_LCD logic rail (lcd_backlight.md 3.1: "10uF + 100n"
+    # on panel VDD; only the 100n was present — peers camera/microsd carry 10u)
+    bulk = c.part(c.auto_ref("C"), "Device:C", "10u", C0805, LCSC="C15850")
+    c.net("+3V3_LCD", f"{bulk.ref}.1")
+    c.net("GND", f"{bulk.ref}.2")
 
     # ---- backlight boost: +5V_LCD -> L1 -> LX, D1 -> VLED+, ISET return ----
     c.net("+5V_LCD", "U1.IN", "L1.1", "C1.1")

@@ -77,6 +77,13 @@ def circuit() -> Circuit:
         cap.fields["LCSC"] = LCSC_100N
     for cap in c.decouple("U1.11", "100n", footprint=C_FP):       # C2
         cap.fields["LCSC"] = LCSC_100N
+    # bulk on the gated +3V3_HDMI_TX rail (bringup_power_gating.md 3.2: each
+    # module owns its bulk; matches camera/microsd 10u peers). C5: C3/C4 are
+    # hardcoded further down, so an explicit free ref avoids a collision.
+    c.part("C5", "Device:C", "10u",
+           "Capacitor_SMD:C_0805_2012Metric", LCSC="C15850")
+    c.net("+3V3_HDMI_TX", "C5.1")
+    c.net("GND", "C5.2")
 
     # TMDS: Zynq port -> TPD clamp pad (flow-through) -> receptacle
     for lane, upin, jpin in TMDS_LANES:

@@ -18,7 +18,7 @@
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "4249777f7ee5cf02fbb5e886d42f9fbd3bf221dec2beb2dabcc695ad0444be6e"
+      "sha256": "266eb9b98c3a2f278c1ae89862de298bc8bdbc683c806286f5cd1f9fdf6df5aa"
     },
     {
       "path": "docs/power_tree.svg",
@@ -34,7 +34,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "0fa4b4f350e78e5d2da14f6a155a61d64d32566c3de7b3d524094a952bfaf4ab"
+      "sha256": "c3cc058a53c062c5c429c705c63b44c71f34b3852ebb7027e0c9a0aabe73c75b"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -46,7 +46,7 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "f4408cc936f90f24f82bb1a3a1e672a83f6b54c9816b2cde6776578274181a41"
+      "sha256": "dfbfaeaf62b7aa3d69e95989507af07a484d36d41e611e2011623ded4d01489a"
     },
     {
       "path": "reports/cc_gate.txt",
@@ -134,11 +134,11 @@
     },
     {
       "path": "schematic/hdmi_tx.kicad_sch",
-      "sha256": "484ef68c3c5682c13cb4124c67c5b2500b41f9f3919746883952963cff19f2b3"
+      "sha256": "5996017e647ce5ad50a82decbb6c9ab5fbc1da4903cde81c018f8cfcd67ebbe0"
     },
     {
       "path": "schematic/lcd.kicad_sch",
-      "sha256": "8436ad6d0e0f35c8ab74e6c90dc173aba3eb778289d96153effb6cbd0406b916"
+      "sha256": "001986a1f9eabf82e3e139b7f7c77df427ec06e48aa8677f250bbec9ba8d45b3"
     },
     {
       "path": "schematic/microsd.kicad_sch",
@@ -202,7 +202,7 @@
     "extended": null,
     "lines": 88,
     "missing": [],
-    "parts": 394
+    "parts": 396
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [

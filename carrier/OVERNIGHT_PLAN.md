@@ -38,6 +38,15 @@ thermal Tj (both hooked into `schgen board`, waivable, with CLI).
    genuine product decision, left to you.
 4. Coin-cell silk polarity (audit-2). KH-CR1220-2 marks polarity on Cmts.User,
    not F.SilkS — add a silk `+` by pad 1 at layout (noted in ASSEMBLY_NOTES).
+5. LCD-FFC ESD (audit-4). The 40-pin LCD FFC is user-touchable; lcd_backlight.md
+   section 7 DEFERS ESD as "optional later hardening" — a documented choice, not
+   a bug. If you want it consistent with the protect-every-connector philosophy,
+   add a low-cap ESD array on the touch-I2C pair (CTP_SDA/SCL) at least; left to
+   you (the LCD sheet is dense, so weigh the layout cost). NOT auto-applied.
+6. FMC ESD (audit-4). An auditor flagged no ESD on the FMC LVDS lines — but FMC
+   is a board-to-board MEZZANINE (not a cabled/user connector) and ESD arrays
+   add capacitance that degrades LVDS SI, so omitting them is STANDARD FMC
+   practice. Treated as a design choice (no change); flagged only for awareness.
 
 DEFERRED / BIG-ROCKS still to do: DEF-5 power_mon shunt split (needs firmware
 shunt-walk + power-sheet decongest), DS-1 BOM+CPL, bus notation, place.py
