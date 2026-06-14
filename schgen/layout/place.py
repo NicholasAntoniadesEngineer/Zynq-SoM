@@ -1674,6 +1674,13 @@ class _Engine:
                 if len(legs) != 1:
                     raise PlaceError(f"{t.net}: flank rung with {len(legs)} "
                                      f"legs — extend the engine")
+                # if the rung's far net is a label-islet (it ALSO appears as a
+                # named stub elsewhere — e.g. HPD pulled to the cable-5 V trunk
+                # via R1 AND tapped by the slow-line ESD array), this rung islet
+                # must carry the name too, or KiCad sees an unlabeled island
+                # (route.py opens-forbidden). Drop a local label on the run.
+                if far_net in self.pl.label_bridged:
+                    self.llabel(far_net, round(pt[0] - 2 * U, 3), row, 180)
                 far_pt, far = self._vertical_2pin(legs[0], fx, row,
                                                   far_net, downward=False,
                                                   text_side="left")

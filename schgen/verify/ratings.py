@@ -106,8 +106,9 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     "C2286":  Ratings("diode", i_max=0.020, temp_max=85, source="JLC desc KT-0603R red LED 20mA"),
     "C2290":  Ratings("diode", i_max=0.020, temp_max=85, source="JLC desc KT-0603W white LED 20mA"),
     "C7519":  Ratings("diode", v_max=5.25, temp_max=125, source="JLC USBLC6-2SC6 ESD standoff 5.25V"),
-    "C1973318":Ratings("diode", v_max=11.0, temp_max=85, source="TPD6E001 ESD working ~11V"),
+    "C1973318":Ratings("diode", v_max=5.5, temp_max=85, source="TPD6E001 6-ch ESD: SLLS685D VCC/standoff 0.9-5.5V, IOx 0..VCC, 1.5pF, abs-max VCC 7V"),
     "C106794": Ratings("diode", v_max=5.5, temp_max=125, source="TPD4E02B04 TMDS RX ESD VRWM 5.5V"),
+    "C138714": Ratings("diode", v_max=5.5, temp_max=125, source="TPD4E05U06 4-ch GND-ref TVS: SLVSBO7O VRWM 5.5V, VBR(min) 6V, CL 0.5pF, +-12kV contact (HDMI-RX slow-line ESD)"),
     # ---- MOSFET (Vds in vin_max for awareness; no derate rule fires) --------
     "C20917": Ratings("other", v_max=30.0, i_max=5.7, p_max=1.4, temp_max=150, source="AO3400A N-ch 30V Vds 5.7A SOT-23"),
     # ---- regulators / DC-DC / eFuse / load-switch / LDO (vin_max=abs-max) ---

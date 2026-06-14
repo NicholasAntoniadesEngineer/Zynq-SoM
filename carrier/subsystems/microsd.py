@@ -5,11 +5,23 @@ standard SD cards initialize at 3.3V, so a TXS02612 sits between them:
 port A = 1.8V SoM side (contract nets SDIO_* verbatim, typed sd_bus 1.8V),
 port B0 = 3.3V card side to the TF-01A push-push slot, port B1 unused.
 SEL strapped low selects B0 (verify polarity against the TI datasheet at
-bring-up; one-line fix here if inverted). Card-side CMD/DAT pull-ups 10k to
-the bring-up-gated +3V3_SD rail; TPD6E001 6-ch ESD across the card lines
-with its VCC biased to +3V3_SD (+ local 100n) so the clamp references the
-card rail rather than floating worst-case (SD-1, TI SLLS546); card-detect
-pulled up and reported.
+bring-up; one-line fix here if inverted). Card-side CMD/DAT anti-float
+pull-ups 100k to the bring-up-gated +3V3_SD rail (SD-2, below); TPD6E001
+6-ch ESD across the card lines with its VCC biased to +3V3_SD (+ local
+100n) so the clamp references the card rail rather than floating worst-case
+(SD-1, TI SLLS546); card-detect pulled up and reported.
+
+SD-2 (electrical audit) — CARD-SIDE PULL VALUE: R1..R5 sit on the TXS02612's
+ACTIVE B0 ONE-SHOT outputs, which already hold an internal pull-up (4 kohm
+high / 40 kohm low; TI SCEA054A fig.1). A 10k external pull parallels the
+internal 40k while the output drives low, lifting VOL and softening edges —
+SCEA054A Table 1 (same one-shot architecture) measures VOL 29 mV (no pull)
+-> 169 mV (~10k) -> 38 mV (100k), and the note's guidance is ">50 kohm
+beneficial". So R1..R5 are 100k (LCSC C25803), the zero-regret choice: a
+visible SD-spec anti-float pull kept inside TI's >50k band (VOL within
+~9 mV of the no-pull baseline). The TXS internal pulls already cover
+anti-float, so 100k is conservative; R6 (card-detect, NOT a TXS output)
+stays 10k.
 
 SD-1 (operating-mode note) — the card side is wired at a FIXED 3.3 V
 (+3V3_SD), with no 1.8 V card-rail switch. So this slot supports only the
@@ -58,11 +70,22 @@ def circuit() -> Circuit:
         c.net(card, f"U1.{b0}", f"J1.{slot}", f"U2.{esd}")
         c.port_type(net, kind="sd_bus", level_v=1.8)
 
-    # card-side pull-ups to the gated rail
+    # card-side anti-float pull-ups. SD-2 (electrical audit): these sit on the
+    # TXS02612's ACTIVE B0 ONE-SHOT outputs, which already carry an internal
+    # pull-up (4 kohm driving high / 40 kohm driving low; TI SCEA054A fig.1).
+    # An external pull PARALLELS that internal 40 kohm while driving low, lifting
+    # VOL and degrading edges. SCEA054A Table 1 (same TXS one-shot architecture)
+    # measures this directly: VOL = 29 mV (no external R) -> 169 mV at ~10 kohm
+    # -> 38 mV at 100 kohm; the note's rule is ">50 kohm beneficial". So a 10k
+    # pull here was the wrong value. RAISE to 100k (LCSC C25803): keeps a visible
+    # SD-spec anti-float pull while staying in TI's >50 kohm band (VOL ~38 mV,
+    # within ~9 mV of the no-pull baseline) — the zero-regret fix vs deleting the
+    # pulls (the TXS internal pulls already cover anti-float). R6 card-detect is
+    # NOT on a TXS output and stays 10k.
     pull_pins = []
     for i, net in enumerate(PULLED, start=1):
         ref = f"R{i}"
-        c.part(ref, "Device:R", "10k", R0603, LCSC="C25804")
+        c.part(ref, "Device:R", "100k", R0603, LCSC="C25803")
         card = f"SD_CARD_{net.split('_', 1)[1]}"
         c.net(card, f"{ref}.2")
         pull_pins.append(f"{ref}.1")
@@ -105,8 +128,9 @@ def circuit() -> Circuit:
     c.testpoint("SDIO_CLK")
 
     # power-tree budget (round 4): SD card 3.3 V class up to ~200 mA write
-    # bursts (SD phys spec) + 6x 10k pulls + TXS VCCB — inside the 1 A
-    # SY6280 cell-5 limit; TXS02612 VCCA side is uA-class but budgeted
+    # bursts (SD phys spec) + 5x 100k card pulls (SD-2) + 1x 10k card-detect +
+    # TXS VCCB — inside the 1 A SY6280 cell-5 limit; TXS02612 VCCA side is
+    # uA-class but budgeted
     c.draws("+3V3_SD", 0.250, "SD card write burst ~200 mA + pull-ups + "
                               "TXS02612 VCCB")
     c.draws("+1V8", 0.005, "TXS02612 VCCA (SoM-side level)")

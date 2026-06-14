@@ -149,18 +149,50 @@ def circuit() -> Circuit:
     c.net("HDMI_RX_SDA", "J1.16", "U1.5")
     c.net("HDMI_RX_SCL", "J1.15", "U1.6")
 
+    # HDMIRX-3 (electrical audit) — SLOW-LINE CONNECTOR ESD. The TMDS pairs got
+    # connector ESD (U2/U3 TPD4E02B04), but the four SLOW cable lines reached the
+    # FPGA/EEPROM with NONE — asymmetric vs the TX side (TPD12S016 clamps every
+    # cable line) and vs HDMI-sink ESD intent (ST AN5121: protect DDC/CEC/HPD at
+    # the jack). Fix = one GND-referenced low-cap ESD array as DETACHED SHUNT
+    # TAPS (not series — each protected line stays {J1.pin, ...existing..., U.IOn}),
+    # drawn as a shunt cell exactly like U2/U3.
+    #
+    # PART: TPD4E05U06DQAR (LCSC C138714, USON-10, Extended, LIVE-verified
+    # 2026-06-14: 26,155 in stock on JLCPCB). SLVSBO7O: 4-channel, GND-referenced
+    # (two GND pads, NO VCC/supply pin -> a pure passive+GND clamp signature),
+    # VRWM = 5.5 V, CL = 0.5 pF/line typ, ±12 kV IEC 61000-4-2 contact. The
+    # uniform 5.5 V standoff is ABOVE the 5.25 V max cable rail, so the SAME part
+    # safely serves BOTH voltage domains on this jack: the 3.3 V DDC pair (idle
+    # << 5.5 V, no false clamp) AND the +5 V-domain CEC/HPD lines (idle 5 V <
+    # 5.5 V VRWM -> no conduction; a 3.6 V-standoff part like TPD4E02B04 would
+    # CONDUCT at 5 V, which is why the TMDS array is NOT reused for these). One
+    # 4-ch part covers all four slow lines in a single clean shunt cell, keeping
+    # sheet density and the BOM down vs two 2-ch arrays.
+    #   D1+ = SCL, D1- = SDA (DDC, 3.3 V) ; D2+ = CEC (3.3 V), D2- = HPD (5 V).
+    # DEVIATION FROM THE AUDIT NOTE (which suggested a TPD6E001 for DDC + a
+    # separate 5 V array for CEC/HPD): the TPD6E001 carries a VCC bias pin whose
+    # node SETS its clamp reference; biasing it to the cable-5 V HDMI_RX_5V (a
+    # SIGNAL net, not a POWER rail) makes that already-busy trunk un-routable for
+    # the shunt VCC stub (LAW-1). A single supply-less 5.5 V array sidesteps that
+    # entirely and is electrically cleaner for both domains.
+    c.use_part("TPD4E05U06DQAR", ref="U4")
+    c.net("HDMI_RX_SCL", "U4.D1+")
+    c.net("HDMI_RX_SDA", "U4.D1-")
+    c.net("GND", "U4.GND")
+    c.nc("U4.NC")                              # USON-10 pads 6/7/9/10 (datasheet: float/GND OK)
+
     # cable +5V domain: EEPROM supply + bypass, HPD assert, presence divider,
     # and the EDID WC# write-protect (COMP-1, see the strap block below) —
     # WC# (U1.7) is HARDWIRED to the EEPROM's OWN 5 V VCC node (U1.8, the
     # adjacent pin), so write-protect tracks VCC whenever a source is plugged
     c.net("HDMI_RX_5V", "J1.18", "U1.8", "U1.7", "C1.1", "R1.1", "R3.1")
     c.net("GND", "C1.2")
-    c.net("HDMI_RX_HPD", "J1.19", "R1.2")
+    c.net("HDMI_RX_HPD", "J1.19", "R1.2", "U4.D2-")   # HDMIRX-3: HPD ESD tap (5 V)
     c.port("HDMI_RX_5V_DET", "R3.2", "R4.1", expect=J23_MAP)
     c.net("GND", "R4.2")
 
     # CEC to the FPGA, spec 27k pull-up to the gated module rail
-    c.port("HDMI_RX_CEC", "J1.13", "R2.2", expect=J23_MAP)
+    c.port("HDMI_RX_CEC", "J1.13", "R2.2", "U4.D2+", expect=J23_MAP)  # HDMIRX-3: CEC ESD tap
     c.net("+3V3_HDMI_RX", "R2.1")
 
     # HDMIRX-2 / COMP-1 (electrical audit): EDID write-protect. WC# (U1.7) is

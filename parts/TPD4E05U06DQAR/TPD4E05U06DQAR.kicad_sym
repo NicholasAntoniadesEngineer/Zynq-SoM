@@ -1,0 +1,315 @@
+(kicad_symbol_lib
+	(version 20241209)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(symbol
+		"TPD4E05U06DQAR"
+		(pin_names
+			(offset 0.508)
+		)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property
+			"Reference"
+			"D"
+			(at 0 13.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property
+			"Value"
+			"TPD4E05U06DQAR"
+			(at 0 -15.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property
+			"Footprint"
+			"TPD4E05U06DQAR:TPD4E05U06DQAR"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C138714.pdf"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property
+			"Description"
+			"TPD4E05U06DQAR_C138714 (USON-10_L2.5-W1.0-P0.50-BL)"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property
+			"LCSC"
+			"C138714"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(symbol
+			"TPD4E05U06DQAR_0_1"
+			(rectangle
+				(start -8.89 10.16)
+				(end 8.89 -10.16)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type background)
+				)
+			)
+		)
+		(symbol
+			"TPD4E05U06DQAR_1_1"
+			(pin
+				passive
+				line
+				(at 11.43 7.62 180)
+				(length 2.54)
+				(name
+					"D1+"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 11.43 5.08 180)
+				(length 2.54)
+				(name
+					"D1-"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 11.43 2.54 180)
+				(length 2.54)
+				(name
+					"D2+"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"4"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 11.43 0 180)
+				(length 2.54)
+				(name
+					"D2-"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"5"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -6.35 -13.97 90)
+				(length 3.81)
+				(name
+					"GND"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -3.81 -13.97 90)
+				(length 3.81)
+				(name
+					"NC"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"6"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -1.27 -13.97 90)
+				(length 3.81)
+				(name
+					"NC"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"7"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 1.27 -13.97 90)
+				(length 3.81)
+				(name
+					"GND"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"8"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 3.81 -13.97 90)
+				(length 3.81)
+				(name
+					"NC"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"9"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 6.35 -13.97 90)
+				(length 3.81)
+				(name
+					"NC"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"10"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+	)
+)

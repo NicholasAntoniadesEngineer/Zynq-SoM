@@ -200,21 +200,80 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                 grid.claim(net, _leg_cells(a, b), f"wire {net}")
                 geoms[net].legs.append((a, b))
 
-    # a label anchored mid-wire is electrically ON the wire: split the leg
-    # at the anchor so the connectivity graph sees it
+    # SAME-NET planarization: a net's own legs may meet — a label anchored
+    # mid-wire, a tap branching off a bus run (T), or two runs crossing (X).
+    # Every such meeting is electrically a single node of ONE net (never a
+    # short — cross-net cells stay grid-exclusive), but it must be DRAWN as a
+    # shared leg ENDPOINT, not an unsplit T / X / collinear double-draw, so the
+    # connectivity graph and the junction-degree count see it. Split every leg
+    # at every same-net node lying on its interior — label anchors, OTHER legs'
+    # endpoints, and interior crossings with a perpendicular leg — then drop
+    # exact-duplicate sub-legs (a collinear over-draw collapses to one wire).
+    # A net whose legs do not meet mid-span is untouched (byte-identical), so
+    # only the geometry that previously ERRORED changes.
     for net, g in geoms.items():
-        for lp in sorted(g.label_pts):          # sorted: deterministic split order
+        # candidate split cells per net: all label anchors + all leg endpoints
+        anchors: set[Cell] = {cell_of(p) for p in g.label_pts}
+        for a, b in g.legs:
+            anchors.add(cell_of(a)); anchors.add(cell_of(b))
+        # iterate to a fixed point: splitting can expose a new endpoint that
+        # taps a third leg; bounded by total grid cells, terminates.
+        for _ in range(64):
+            changed = False
+            # recompute endpoints each round (new splits add endpoints)
+            endpts: set[Cell] = set(anchors)
+            for a, b in g.legs:
+                endpts.add(cell_of(a)); endpts.add(cell_of(b))
             out_legs: list[tuple[Point, Point]] = []
             for a, b in g.legs:
-                if lp != a and lp != b and cell_of(lp) in _leg_cells(a, b):
-                    out_legs.append((a, lp))
-                    out_legs.append((lp, b))
+                cells = _leg_cells(a, b)
+                ca, cb = cells[0], cells[-1]
+                # the first interior cell that is a same-net node OR a crossing
+                cut: Cell | None = None
+                interior = cells[1:-1]
+                interior_set = set(interior)
+                for c in interior:
+                    if c in endpts:
+                        cut = c
+                        break
+                if cut is None:
+                    # interior crossing with a PERPENDICULAR same-net leg
+                    for a2, b2 in g.legs:
+                        if (a2, b2) == (a, b):
+                            continue
+                        for c2 in _leg_cells(a2, b2):
+                            if c2 in interior_set:
+                                cut = c2
+                                break
+                        if cut is not None:
+                            break
+                if cut is not None and cut != ca and cut != cb:
+                    mp = point_of(cut)
+                    out_legs.append((a, mp))
+                    out_legs.append((mp, b))
+                    changed = True
                 else:
                     out_legs.append((a, b))
             g.legs = out_legs
+            if not changed:
+                break
+        # drop exact-duplicate / zero-length sub-legs (collinear over-draw)
+        uniq: list[tuple[Point, Point]] = []
+        seen_seg: set[tuple[Point, Point]] = set()
+        for a, b in g.legs:
+            if a == b:
+                continue
+            key = (a, b) if a <= b else (b, a)
+            if key in seen_seg:
+                continue
+            seen_seg.add(key)
+            uniq.append((a, b))
+        g.legs = uniq
 
-    # same-net discipline: leg interiors must be virgin (no double-draw,
-    # no unsplit T — a tap point must be a shared LEG ENDPOINT)
+    # same-net discipline: after planarization no leg interior may carry a
+    # same-net node or another leg's cell — a tap MUST be a shared endpoint
+    # (the residual check; anything planarization could not resolve still
+    # raises so PLACEMENT expands — rules never relax).
     for net, g in geoms.items():
         seen_interior: set[Cell] = set()
         endpoints: set[Cell] = set()
