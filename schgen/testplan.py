@@ -52,6 +52,7 @@ STAGE_TITLES = {
     3: "Stage 3 — user IO",
     4: "Stage 4 — module load switches",
     5: "Stage 5 — boot modes, JTAG, SWD",
+    6: "Stage 6 — board services (+3V3_AUX): ID-EEPROM, RTC, watchdog, QWIIC",
 }
 
 
@@ -137,6 +138,10 @@ def _rail_stage(sheets) -> dict[str, int]:
     stage.setdefault("BOOT0_SET", 5)
     stage.setdefault("STM32_NRST", 5)
 
+    # Stage 6: the manually-gated board-services rail (board_aux SW1, default
+    # OFF) — self-contained, so it is not in the central regulator/module walk.
+    stage["+3V3_AUX"] = 6
+
     # Cable-presence detects on module sheets become live with their module.
     stage.setdefault("HDMI_RX_5V", 4)
     stage.setdefault("HDMI_RX_5V_DET", 4)
@@ -158,25 +163,36 @@ def _fmt(v: float | None, unit: str) -> str:
     return f"{v:g} {unit}".strip()
 
 
-def _i2c_devices(sheets) -> list[tuple[int, str, str]]:
-    """(addr, ref, kind) for every strapped I2C device, addresses DERIVED
-    from the netlists by bringup_facts. Sorted by address."""
+def _i2c_devices(sheets) -> list[tuple[int, str, str, bool]]:
+    """(addr, ref, kind, aux) for every strapped I2C device, addresses DERIVED
+    from the netlists. ``aux`` = it sits on the gated +3V3_AUX segment behind
+    the board_aux PCA9306 isolator, so it ACKs only with board_aux SW1 on
+    (Stage 6) — not in the always-on scan. Sorted by address."""
     circuits = {sc.name: sc.circuit for sc in sheets}
-    out: list[tuple[int, str, str]] = []
+    out: list[tuple[int, str, str, bool]] = []
     if "bringup_rails" in circuits:
         try:
             exp = bf.expander(circuits["bringup_rails"])
-            out.append((exp.addr, exp.ref, "TCA9535 I/O expander"))
+            out.append((exp.addr, exp.ref, "TCA9535 I/O expander", False))
         except Exception:  # noqa: BLE001
             pass
     if "power_mon" in circuits:
         try:
             for m in bf.ina3221_monitors(circuits["power_mon"]):
-                out.append((m.addr, m.ref, "INA3221 rail monitor"))
+                out.append((m.addr, m.ref, "INA3221 rail monitor", False))
         except Exception:  # noqa: BLE001
             pass
     if "usb_pd" in circuits:
-        out.append((bf.FUSB302B_ADDR, "U1", "FUSB302B PD PHY (fixed addr)"))
+        out.append((bf.FUSB302B_ADDR, "U1", "FUSB302B PD PHY (fixed addr)", False))
+    if "board_services" in circuits:
+        try:
+            from schgen.firmware import RV3028_ADDR, _id_eeprom_addr
+            bsc = circuits["board_services"]
+            out.append((_id_eeprom_addr(bsc), "U1",
+                        "24AA025E48 ID-EEPROM (EUI-48 MAC)", True))
+            out.append((RV3028_ADDR, "U2", "RV-3028 RTC", True))
+        except Exception:  # noqa: BLE001
+            pass
     return sorted(out)
 
 
@@ -274,16 +290,23 @@ def generate(out: Path = DEFAULT_OUT, sheets=None) -> Path:
     L.append("from the netlist straps (`schgen/bringup_facts.py`), not "
              "hand-typed.")
     L.append("")
-    L.append("| address | device | ref | ACK? |")
-    L.append("|---|---|---|---|")
-    for addr, ref, kind in devs:
-        L.append(f"| `0x{addr:02X}` | {kind} | `{ref}` | [ ] |")
+    L.append("| address | device | ref | when | ACK? |")
+    L.append("|---|---|---|---|---|")
+    for addr, ref, kind, aux in devs:
+        when = "Stage 6 (+3V3_AUX on)" if aux else "always-on"
+        L.append(f"| `0x{addr:02X}` | {kind} | `{ref}` | {when} | [ ] |")
     L.append("")
-    expected = "/".join(f"0x{a:02X}" for a, _r, _k in devs)
-    L.append(f"Expected set: {expected}. Any EXTRA address, or any of the "
-             "above missing,")
-    L.append("means a strap or bus fault — cross-check against "
-             "`carrier/docs/BRINGUP.md`.")
+    on = "/".join(f"0x{a:02X}" for a, _r, _k, aux in devs if not aux)
+    auxset = "/".join(f"0x{a:02X}" for a, _r, _k, aux in devs if aux)
+    L.append(f"Always-on set (with `+3V3_SC`): {on}. Any EXTRA address, or any "
+             "of these missing, means a strap or bus fault.")
+    if auxset:
+        L.append("")
+        L.append(f"With `+3V3_AUX` enabled (Stage 6), the board_aux PCA9306 "
+                 f"isolator joins the AUX segment and additionally {auxset} "
+                 "must ACK (ID-EEPROM, RTC). They must NOT ACK while +3V3_AUX "
+                 "is OFF (proves the isolator). Cross-check "
+                 "`carrier/docs/BRINGUP.md`.")
     L.append("")
 
     # ---- per-module functional checklist --------------------------------------

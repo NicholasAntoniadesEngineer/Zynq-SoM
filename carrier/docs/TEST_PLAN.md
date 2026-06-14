@@ -107,15 +107,18 @@ With the always-on `+3V3_SC` domain up and SC firmware scanning the bring-up
 buses, exactly these 7-bit addresses must ACK. The addresses are derived
 from the netlist straps (`schgen/bringup_facts.py`), not hand-typed.
 
-| address | device | ref | ACK? |
-|---|---|---|---|
-| `0x20` | TCA9535 I/O expander | `U1` | [ ] |
-| `0x22` | FUSB302B PD PHY (fixed addr) | `U1` | [ ] |
-| `0x40` | INA3221 rail monitor | `U1` | [ ] |
-| `0x41` | INA3221 rail monitor | `U2` | [ ] |
+| address | device | ref | when | ACK? |
+|---|---|---|---|---|
+| `0x20` | TCA9535 I/O expander | `U1` | always-on | [ ] |
+| `0x22` | FUSB302B PD PHY (fixed addr) | `U1` | always-on | [ ] |
+| `0x40` | INA3221 rail monitor | `U1` | always-on | [ ] |
+| `0x41` | INA3221 rail monitor | `U2` | always-on | [ ] |
+| `0x51` | 24AA025E48 ID-EEPROM (EUI-48 MAC) | `U1` | Stage 6 (+3V3_AUX on) | [ ] |
+| `0x52` | RV-3028 RTC | `U2` | Stage 6 (+3V3_AUX on) | [ ] |
 
-Expected set: 0x20/0x22/0x40/0x41. Any EXTRA address, or any of the above missing,
-means a strap or bus fault — cross-check against `carrier/docs/BRINGUP.md`.
+Always-on set (with `+3V3_SC`): 0x20/0x22/0x40/0x41. Any EXTRA address, or any of these missing, means a strap or bus fault.
+
+With `+3V3_AUX` enabled (Stage 6), the board_aux PCA9306 isolator joins the AUX segment and additionally 0x51/0x52 must ACK (ID-EEPROM, RTC). They must NOT ACK while +3V3_AUX is OFF (proves the isolator). Cross-check `carrier/docs/BRINGUP.md`.
 
 ## Per-module functional checklist
 
