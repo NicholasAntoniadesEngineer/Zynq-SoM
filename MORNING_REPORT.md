@@ -2,9 +2,9 @@
 
 Autonomous overnight session summary. Detailed tracker:
 [carrier/OVERNIGHT_PLAN.md](carrier/OVERNIGHT_PLAN.md). **Everything below is on
-`master`** (fast-forwarded, ~28 commits), each gated by a full regression —
-board PASS **29 sheets** + selftest **53/53** + m1 + byte-determinism + pytest
-**178** — before it landed. Working tree clean.
+`master`** (fast-forwarded, ~33 commits), each gated by a full regression —
+board PASS **29 sheets** + selftest **53/53** + m1 + byte-determinism (now also
+cross-PYTHONHASHSEED) + pytest **181** — before it landed. Working tree clean.
 
 ## Continuation tracks (after the first draft)
 
@@ -12,18 +12,25 @@ board PASS **29 sheets** + selftest **53/53** + m1 + byte-determinism + pytest
    kicad-cli (net-blind union-find over the emitted geometry); agrees pin-for-
    pin on all sheets. The board is now electrically proven by two code paths.
 2. **Board HW — ALL FOUR blocks** (see the dedicated section below).
-3. **Two adversarial re-investigation audits** (11 dimensions, ~30 agents).
+3. **Three adversarial re-investigation audits** (15 dimensions, ~63 agents).
    Every finding independently re-verified — several confident "HIGH/CRITICAL"
    findings were FALSE POSITIVES whose fixes would have *introduced* bugs, and
    are documented-rejected (a DSHP04 mis-wire that never enables the rail; a
    non-existent PCA9306 EN float; an ~11 µA EN back-feed; an over-stated USBLC6
-   "ineffective" claim). REAL fixes landed: firmware I2C-map completeness
-   (ID-EEPROM/RTC/FMC addresses, EEPROM strap-derived so a mis-strap trips the
-   collision check); a **VCCO bank-rail drift gate** (xdc IOSTANDARD map vs
-   som_conn_gen — a C3 safety net); QWIIC ESD on its own sheet with the clamp
-   referenced to always-on +3V3; the RTC primary-cell/trickle-charger safeguard
-   elevated into the firmware contract; DFM/assembly notes; a derived bring-up
-   "Stage 6 — board services". ~30 new pytest cases lock it all.
+   "ineffective" claim; a "CRITICAL determinism bug" disproved by a definitive
+   cross-PYTHONHASHSEED build test). REAL fixes landed:
+   - **firmware I2C-map completeness** — ID-EEPROM (strap-derived so a mis-strap
+     trips the collision check) / RTC / FMC, now also in the **testplan** (Stage
+     6 + an isolator ACK-proof) and **manifest** (bus AUX_I2C), single-sourced.
+   - a **VCCO bank-rail drift gate** (xdc IOSTANDARD map vs som_conn_gen — a C3
+     safety net) and a **cross-PYTHONHASHSEED determinism gate** in the selftest
+     (plus canonical sorted junction emission) — the determinism invariant is
+     now bulletproof and permanently gated.
+   - QWIIC ESD on its own sheet, clamp referenced to always-on +3V3; the RTC
+     primary-cell/trickle-charger safeguard elevated into the firmware contract;
+     DFM/assembly notes; a derived bring-up "Stage 6 — board services".
+   ~40 new pytest cases lock it all. The board-HW now appears in EVERY
+   downstream artifact (firmware / manual / testplan / manifest / xdc).
 
 ## What landed (by track)
 
