@@ -8,6 +8,7 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
   -----------------------------------------------------------------------------------------------------------------------------------------
   power_som:U4           TSOT-23-6 (DDC)          buck        +VIN_SYS->+5V_SOM      2.004    1644    70.6   166.1   140.0   -26.1  OVER
   power:U2               TSOT-23-6 (DDC)          buck        +5V->+3V3_REG          2.635    1535    70.6   158.3   140.0   -18.3  OVER
+  power:U1               HSOIC-8 (DDA, EP->GND pour) buck        +VIN_SYS->+5V_REG      2.950    2603    41.0   156.7   115.0   -41.7  OVER
   fmc:U1                 SOT-23-5 (DYD, EP->GND pour) ldo         +3V3->+2V5_VADJ        0.400     320    92.5    79.6   115.0    35.4  ok
   bringup_modules:U6     SOT-23-5                 load_switch +5V->+5V_USB           0.503      24   250.0    56.0   140.0    84.0  ok
   bringup_modules:U10    SOT-23-5                 load_switch +5V->+5V_LCD           0.453      19   250.0    54.9   140.0    85.1  ok
@@ -25,22 +26,22 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
 
 datasheet provenance (every RthJA / Tj_max / Rds_on cited):
   AP2112K-1.8      SOT-23-5                   Diodes AP2112 DS (SOT-23-5 RthJA ~250 C/W; Tj_max 125 C)
+  LMR33630ADDAR    HSOIC-8 (DDA, EP->GND pour) TI SNVSAQ4 LMR33630 (DDA HSOIC-8 PowerPAD RthJA ~41 C/W JEDEC 2s2p; Tj op-max 125 C); EP->GND pour layout-critical; eff floor 0.85
   SY6280AAC        SOT-23-5                   Silergy SY6280 DS (SOT-23-5 RthJA ~250 C/W; Rds_on ~95 mohm; Tj_max 150 C)
   TLV75725PDYDR    SOT-23-5 (DYD, EP->GND pour) TI TLV757P DS / fmc.md section 3 + PWR-3 (DYD thermal-pad RthJA ~92.5 C/W with EP soldered to GND copper; Tj_max 125 C)
   TPS26631PWPR     HTSSOP-20 (PWP)            TI SLVSE94 (HTSSOP-20 PowerPAD RthJA ~33.6 C/W 2s2p; FET Rds_on 31 mohm; Tj op-max 125 C)
   TPS54302DDCR     TSOT-23-6 (DDC)            TI SLVSDG6 Thermal Information (RthJA 70.6 C/W 2s2p; Tj op-max 150 C); eff floor 0.85 (DS plots 88-92%)
 
-author thermal waivers, verbatim (2):
+author thermal waivers, verbatim (3):
+  power:U1               LMR33630ADDA HSOIC-8 PowerPAD: bare-JEDEC RthJA 41 C/W overstates Tj; the EP->GND pour + thermal-via field is layout-critical (target effective RthJA <= ~25 C/W to clear the guard band at eff 0.90) — VERIFY by thermal sim/bench Tj at bring-up (carrier/research/thermal_bucks.md)
   power:U2               TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
   power_som:U4           TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
 
-notes (2):
+notes (3):
+  + WAIVED over-limit: power:U1 (LMR33630ADDAR) Tj 156.7 C > limit 115.0 C (Tj_max 125 - margin 10) — author waiver: LMR33630ADDA HSOIC-8 PowerPAD: bare-JEDEC RthJA 41 C/W overstates Tj; the EP->GND pour + thermal-via field is layout-critical (target effective RthJA <= ~25 C/W to clear the guard band at eff 0.90) — VERIFY by thermal sim/bench Tj at bring-up (carrier/research/thermal_bucks.md)
   + WAIVED over-limit: power:U2 (TPS54302DDCR) Tj 158.3 C > limit 140.0 C (Tj_max 150 - margin 10) — author waiver: TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
   + WAIVED over-limit: power_som:U4 (TPS54302DDCR) Tj 166.1 C > limit 140.0 C (Tj_max 150 - margin 10) — author waiver: TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
 
-FINDINGS — unspeced devices (1):
-  * UNSPECED: power:U1 (LMR33630ADDAR, fp LMR33630ADDAR:LMR33630ADDAR) has no thermal spec — add a THERMAL_SPECS/FOOTPRINT_SPECS row with its datasheet RthJA + Tj_max before its Tj can be proven
-
 errors: none
 
-THERMAL: PASS (16 devices speced, 0 over-limit, 1 unspeced, 2 waived); hottest power_som:U4 (TPS54302DDCR) Tj 166.1 C
+THERMAL: PASS (17 devices speced, 0 over-limit, 0 unspeced, 3 waived); hottest power_som:U4 (TPS54302DDCR) Tj 166.1 C

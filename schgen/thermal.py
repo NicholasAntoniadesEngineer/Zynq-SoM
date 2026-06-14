@@ -103,6 +103,16 @@ THERMAL_SPECS: dict[str, ThermalSpec] = {
         rth_ja=70.6, tj_max=150.0, eff=BUCK_EFF, package="TSOT-23-6 (DDC)",
         cite="TI SLVSDG6 Thermal Information (RthJA 70.6 C/W 2s2p; "
              "Tj op-max 150 C); eff floor 0.85 (DS plots 88-92%)"),
+    # power.py +5V buck U1 — RESELECTED from the TPS54302 to the LMR33630ADDA
+    # (HSOIC-8 PowerPAD, EP->GND). The board's highest-dissipation converter
+    # (2.95 A @ 5 V); its Tj is COMPUTED here (was silently unspeced -> the gate
+    # PASSed blind) so it is proven, then explicitly waived in power.py with the
+    # EP-pour bench-verify justification (mirrors the TPS54302 U2/U4 waivers).
+    "LMR33630": ThermalSpec(
+        rth_ja=41.0, tj_max=125.0, eff=BUCK_EFF,
+        package="HSOIC-8 (DDA, EP->GND pour)",
+        cite="TI SNVSAQ4 LMR33630 (DDA HSOIC-8 PowerPAD RthJA ~41 C/W JEDEC "
+             "2s2p; Tj op-max 125 C); EP->GND pour layout-critical; eff floor 0.85"),
     # power.py +1V8 LDO. Diodes AP2112K-1.8, SOT-23-5: RthJA ~250 C/W,
     # Tj_max 125 C (Diodes AP2112 DS). Load is tiny (~6 mA) so Tj ~= Ta.
     "AP2112K": ThermalSpec(

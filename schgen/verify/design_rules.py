@@ -347,10 +347,15 @@ def _check_decap(sheets, lib, res: DesignRuleResult) -> None:
             part = c.parts[ref]
             if not _is_multipin_ic(lib, part):
                 continue
-            # group supply pins by NAME so stacked VDD pads report once
+            # group supply pins by NAME so stacked VDD pads report once. A pin
+            # is a supply if its NAME is a power-rail name OR the symbol itself
+            # types it power_in (the name table misses families like CP2102N
+            # VIO/VREGIN — the etype on this board is NOT uniformly 'passive').
+            # GROUND-named power_in pins (VSS family) are excluded below.
             supply: dict[str, list[str]] = {}
             for p in _pins(lib, part):
-                if is_power_pin_name(p.name):
+                if is_power_pin_name(p.name) or (
+                        p.etype == "power_in" and not _is_ground_name(p.name)):
                     supply.setdefault(p.name, []).append(p.number)
             for pin_name in sorted(supply):
                 pnums = sorted(supply[pin_name])

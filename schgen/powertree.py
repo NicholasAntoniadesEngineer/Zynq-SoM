@@ -94,6 +94,11 @@ _VOLT_PATTERNS: tuple[tuple[str, float], ...] = (
     (r"^USB_UART_VBUS$", 5.0),     # usb_uart_connector host VBUS (5 V)
     (r"^HDMI_RX_5V$", 5.0),        # HDMI-RX cable +5 V (HDMI 1.4 pin 18)
     (r"^HDMI_TX_CON_5V0$", 5.0),   # HDMI-TX connector +5 V
+    # AUD: the SY7201 LCD-backlight boost OUTPUT node (open-LED OVP clamp ~30 V,
+    # the single highest-voltage node on the board). SIGNAL-class + SY7201 not
+    # in REG_SPECS, so it was CAP_VOLTAGE-blind — resolve it so the boost output
+    # cap (lcd C2) is derated against the 30 V clamp, not silently UNSPEC.
+    (r"^LCD_VLED_P$", 30.0),       # lcd SY7201 boost out @ open-LED OVP clamp
     (r"^\+3V3_REG$", 3.3),      # DEF-D: buck-2 output, pre-RS3
     (r"^\+3V3", 3.3),
     (r"^\+1V8_REG$", 1.8),      # DEF-D: LDO output, pre-RS4

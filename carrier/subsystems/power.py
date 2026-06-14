@@ -295,5 +295,15 @@ def circuit() -> Circuit:
            "layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — "
            "VERIFY by thermal sim/bench at bring-up else move to an EP buck "
            "(see carrier/research/thermal_bucks.md)")
-    c.waive_thermal("U2", _TH)   # U1 is now the LMR33630 (real EP — no waiver);
+    c.waive_thermal("U2", _TH)
+    # U1 LMR33630ADDA: the gate now COMPUTES Tj (bare-JEDEC RthJA 41 C/W at
+    # 2.95 A @ 5 V puts Tj over the guard band) instead of silently skipping the
+    # board's hottest converter. The real EP->GND pour + thermal-via field
+    # drives effective RthJA well below the bare 41 C/W — VERIFY at bring-up.
+    _TH_U1 = ("LMR33630ADDA HSOIC-8 PowerPAD: bare-JEDEC RthJA 41 C/W overstates "
+              "Tj; the EP->GND pour + thermal-via field is layout-critical "
+              "(target effective RthJA <= ~25 C/W to clear the guard band at "
+              "eff 0.90) — VERIFY by thermal sim/bench Tj at bring-up "
+              "(carrier/research/thermal_bucks.md)")
+    c.waive_thermal("U1", _TH_U1)
     return c                     # U4 +5V_SOM waiver lives on power_som.py

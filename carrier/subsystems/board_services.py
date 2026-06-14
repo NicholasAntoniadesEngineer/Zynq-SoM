@@ -109,8 +109,12 @@ def circuit() -> Circuit:
     c.use_part("KH-CR1220-2", ref="BT1")
     c.net("V_RTC_BAT", "U2.VBACKUP", "BT1.1")
     c.net("GND", "BT1.2")
-    c.waive_decap("U2", "VBACKUP is the RV-3028 coin-cell backup input (a "
-                  "rechargeable ML1220, not a switching rail); the RTC "
+    # Key on the V_RTC_BAT rail (the coin-cell net), NOT the bare ref "U2": a
+    # ref-level waiver also silently waives U2.VDD (+3V3_AUX, the real switching
+    # supply, which IS bypassed at line 105) and mis-attributes the report. The
+    # net key waives ONLY the VBACKUP pin on V_RTC_BAT, leaving VDD under the rule.
+    c.waive_decap("V_RTC_BAT", "VBACKUP is the RV-3028 coin-cell backup input "
+                  "(a rechargeable ML1220, not a switching rail); the RTC "
                   "regulates internally and a cap on the cell net is optional "
                   "— no bypass fitted by design")
 

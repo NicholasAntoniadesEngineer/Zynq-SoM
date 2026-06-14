@@ -45,8 +45,11 @@ Start-of-Transmission detection.
   input — divide the 1.2 V LP-high down to a clean bank-safe level (e.g.
   series 100k / shunt 100k, 0402; XAPP894 uses ~100k-class taps so the HS
   path is not loaded). Lines to tap: CAM_D0_P/N, CAM_D1_P/N, CAM_CLK_P
-  (LP-CLK_N optional) onto the reserved pairs IO_L18_P/N_35 (J3.27/25) +
-  IO_L16_P/N_35 (J3.31/29) (dossier risk 4, camera_csi.md sec "D-PHY on a
+  (LP-CLK_N optional) onto a reserved bank-35 pair. IO_L18_P/N_35 (J3.27/25) is
+  free; IO_L16_P/N_35 (J3.31/29) is NO LONGER available — the board_services
+  watchdog now owns it (WATCHDOG_KICK / WATCHDOG_RST_N), so a full LP populate
+  must repick a second genuinely-free bank-35 pair (verify vs som_conn_gen
+  FUNCTION_MAP first) (dossier risk 4, camera_csi.md sec "D-PHY on a
   7-series HR bank"). For VIDEO-ONLY continuous capture with fixed timing the
   dividers may stay DNP and LP events are inferred (fragile across sensor
   resets) — rev A reserves the footprints so a populate is a BOM-line change
@@ -63,8 +66,9 @@ Start-of-Transmission detection.
 - ESD: omitted on rev A per dossier section 4 (short internal cable;
   TPD4E05U06 across the FFC-facing lines remains a stuffing option).
 - LP-RX (dossier risk 4): see the CAM-1 note above — the XAPP894 LP
-  resistor-divider taps are a DOCUMENTED DNP stuffing option on the reserved
-  bank-35 pairs (L18 + L16, J3.27/25/31/29), NOT spent on this FFC sheet;
+  resistor-divider taps are a DOCUMENTED DNP stuffing option on a reserved
+  bank-35 pair (L18_35, J3.27/25 — L16_35 J3.31/29 is now the watchdog; repick
+  the 2nd pair vs FUNCTION_MAP before stuffing), NOT spent on this FFC sheet;
   they restore LP observability alongside the populated HS 100R. Video-only
   capture works without them.
 

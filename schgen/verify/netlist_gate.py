@@ -123,13 +123,19 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
             res.opens.append(
                 f"declared {net.name!r}: extracted as {sorted(ext_names)}"
                 + (f", stranded: {[str(p) for p in stranded]}" if stranded else ""))
-        # single-pin PORT nets: the hier label must still hold the pin
-        if net.net_class == NetClass.PORT:
+        # single-pin PORT/rail nets: the OPEN branch above needs >=2 pins, so a
+        # LONE POWER/GROUND/PORT pin that extracts bare (unconnected-* / absent)
+        # slips it. A real rail pin always carries its power symbol or hier
+        # label, so 'bare' here is a genuine open (e.g. a stranded mounting-hole
+        # CHASSIS_GND pad, or a single-pin rail whose symbol never emitted).
+        if net.net_class in (NetClass.PORT, NetClass.POWER, NetClass.GROUND):
             for pr in net.pins:
                 e = extracted_of.get(pr) or ""
                 if e.startswith("unconnected-") or not e:
                     res.ok = False
-                    res.opens.append(f"PORT {net.name!r}: {pr} emitted bare ({e!r})")
+                    res.opens.append(
+                        f"{net.net_class.name} {net.name!r}: {pr} emitted bare "
+                        f"({e!r})")
 
     # ---- NC-CHEAT: no_connect in the emitted file on a declared-net pin -----
     # KiCad reports an NC'd pin as connected; detect via the source s-expr.

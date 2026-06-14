@@ -127,4 +127,13 @@ def circuit() -> Circuit:
     # not an RC reset, so no cap-to-GND by design.
     c.waive_reset("LCD_CTP_RST",
                   "GPIO-driven reset, held by 100k pull-down until PL releases")
+    # part-rule waiver (CAP_VOLTAGE): C2 (2.2uF/50V X7R) on LCD_VLED_P now that
+    # the boost output node resolves to its 30 V open-LED OVP clamp. The 2x MLCC
+    # derate wants 60 V, but 30 V is a RARE open-LED fault TRANSIENT, not a
+    # continuous bias — the continuous string voltage is ~9.6 V (50 V/2 = 25 V
+    # derated >> 9.6 V). The 50 V/X7R part is dossier-sized for the transient.
+    c.waive_part_rule("C2", "MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED "
+                      "OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R "
+                      "dossier-sized for it (lcd_backlight.md). 2x derate targets "
+                      "continuous DC bias, not a fault clamp")
     return c
