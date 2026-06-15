@@ -674,6 +674,42 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  BOM VALUE: {m}")
     ok_all = ok_all and bv_res.ok
 
+    # footprint pad-coverage gate (LAW 0): every symbol pin NUMBER must exist as
+    # a PAD in the part's assigned footprint — a pin with no pad is a guaranteed
+    # OPEN that ERC/netlist/cc gates are all blind to (they reason about the
+    # SYMBOL, never the footprint). This is the exact hole that let ethernet:T1
+    # (HX5008NLT) use pins 25/26 on a 24-pad SOIC-24W — the 4th gigabit pair was
+    # dead copper. That T1 defect is now fixed (faithful 24-pad HX5008NL
+    # dossier), so the board has zero pin-without-pad and this gate is HARD-FAIL.
+    from schgen.verify import footprint_pads
+    fpp_res = footprint_pads.run(sheets, rep_dir, lib=lib)
+    print(f"FOOTPRINT PADS: {'PASS' if fpp_res.ok else 'FAIL'} "
+          f"({fpp_res.checked} parts, {len(fpp_res.violations)} pin(s) with "
+          f"no pad, {len(set(fpp_res.unresolved))} unresolved fp "
+          f"-> {rep_dir / 'footprint_pads.txt'})")
+    for v in fpp_res.violations:
+        print(f"  FOOTPRINT PAD: {v}")
+    ok_all = ok_all and fpp_res.ok
+
+    # pin-completeness gate (LAW 0): every multi-pin IC pin is netted or an
+    # explicit NC — a pin in neither is a silent float (probable missing
+    # connection). Circuit.validate() already enforces this at build time, so
+    # this is the standalone regression witness + the curated NC ALLOWLIST
+    # emitter (the artifact that lets the gate promote to hard-fail once every
+    # NC is blessed). REPORT-FIRST: reports the float count + NC allowlist and
+    # writes pin_completeness.txt but does NOT fail the board. PROMOTE TO
+    # HARD-FAIL once the NC allowlist is fully blessed (uncomment below).
+    from schgen.verify import pin_completeness
+    pc_res = pin_completeness.run(sheets, rep_dir, lib=lib)
+    print(f"PIN COMPLETENESS: {'PASS' if pc_res.ok else 'REPORT'} "
+          f"({pc_res.parts_checked} parts, {len(pc_res.floats)} silent float(s), "
+          f"{pc_res.nc_total} NC pins: {len(pc_res.nc_seeded)} blessed/"
+          f"{len(pc_res.nc_new)} to-bless -> {rep_dir / 'pin_completeness.txt'})")
+    for f in pc_res.floats:
+        print(f"  PIN COMPLETENESS: {f}")
+    # REPORT-FIRST: ok_all unchanged until the NC allowlist is fully blessed.
+    # ok_all = ok_all and pc_res.ok
+
     # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
     # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds
     # hard. The closed-form analytics ARE the gate; the ngspice .op

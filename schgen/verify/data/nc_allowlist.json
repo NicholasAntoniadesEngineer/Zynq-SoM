@@ -1,0 +1,70 @@
+{
+ "_comment": "Curated NC allowlist for schgen/verify/pin_completeness.py — the BLESSED set of author-declared no-connects. Seeded datasheet-grounded from the overnight audit (/tmp/morning_stageA.json): usb_jtag.U1 (CH347T) mode-3 optional pins 2/9/11/12/15 per finding usb_jtag-3 (DS sec 4.6/5.6); board_services.U2 (RV-3028) CLKOUT pin 1 per finding io_misc-4 (push-pull output, safe open). Plus every pin whose symbol NAME is literally 'NC' — a dedicated no-connect pad is unconditionally a legitimate NC. NCs present in the design but NOT here show as [new] in the report (the backlog to bless before the gate promotes to HARD-FAIL). Schema: { sheet: { ref: [pin-number, ...] } }.",
+ "board_services": {
+  "U2": [
+   "1"
+  ]
+ },
+ "fmc": {
+  "U1": [
+   "4"
+  ]
+ },
+ "hdmi_rx": {
+  "U2": [
+   "6",
+   "7",
+   "9",
+   "10"
+  ],
+  "U3": [
+   "6",
+   "7",
+   "9",
+   "10"
+  ],
+  "U4": [
+   "6",
+   "7",
+   "9",
+   "10"
+  ]
+ },
+ "microsd": {
+  "U2": [
+   "4",
+   "9"
+  ]
+ },
+ "pmod_expansion": {
+  "U2": [
+   "5"
+  ],
+  "U3": [
+   "5"
+  ]
+ },
+ "power": {
+  "U3": [
+   "4"
+  ]
+ },
+ "uart_bridge": {
+  "U1": [
+   "10",
+   "16"
+  ]
+ },
+ "usb_jtag": {
+  "U1": [
+   "2",
+   "9",
+   "11",
+   "12",
+   "15"
+  ],
+  "U4": [
+   "4"
+  ]
+ }
+}

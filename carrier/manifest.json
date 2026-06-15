@@ -77,6 +77,10 @@
       "sha256": "3ed67d23020713a8500502fd3f85fde585acebfe7bca6c218e8fd466ce069988"
     },
     {
+      "path": "reports/footprint_pads.txt",
+      "sha256": "63b07f1434f00c29b61e117d354d9c4ed948403c2263f1e61e54c95751be1072"
+    },
+    {
       "path": "reports/gates.txt",
       "sha256": "c27174fd9ab07238e521af0225365a990aac950e79ebab424f0d97a5116785b2"
     },
@@ -87,6 +91,10 @@
     {
       "path": "reports/part_rules.txt",
       "sha256": "6c575327cd63f2a04aa7c932d8e848b5713a82c1373f4b05d8917bb1185c5ef3"
+    },
+    {
+      "path": "reports/pin_completeness.txt",
+      "sha256": "7dceb72b9d63efe8e374e7e5d1197554c0c338228686c7024a58ed954e7bc40d"
     },
     {
       "path": "reports/power_tree.txt",
