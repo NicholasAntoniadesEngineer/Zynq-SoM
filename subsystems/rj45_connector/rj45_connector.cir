@@ -1,0 +1,60 @@
+* rj45_connector.cir — SPICE subckt for the plain 8P8C RJ45 jack subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/rj45_connector/rj45_connector.py INTERFACE), NOT any board net. A
+* consuming project wires these pins to its real nets — exactly as the netlist
+* bind map does.
+*
+* The KH-5224-8P8C-D is a PLAIN (transformerless) 8P8C jack: the eight T568
+* contacts pass the four line-side differential MDI pairs straight through to the
+* magnetics secondary (no winding, no centre tap — modelled as ideal pass-through
+* wires here), the shell/shield bonds to the chassis island, and the only board-
+* added PASSIVES are the two 330R series resistors that drive the jack's two
+* INTEGRATED housing LEDs as a steady port-present indicator. The LED diodes live
+* INSIDE the connector body (symbol pins LED-x+/LED-x-) and are not external parts
+* — modelled here as an LED forward drop to GND so the .op sets the ~4 mA current.
+*
+* Resistor values mirror subsystems/rj45_connector/rj45_connector.py one-for-one
+* (parse_si compatible):
+*   R1 330R  +VLED -> LED-L+ anode (RJ45_LED_L)   [housing LED L]
+*   R2 330R  +VLED -> LED-R+ anode (RJ45_LED_R)   [housing LED R]
+*
+* Port order: the four line-side MDI pairs, then VLED, GND, CHASSIS_GND (the two
+* grounds last by convention). RJ45_LED_L / RJ45_LED_R are PRIVATE internal nodes.
+
+.subckt rj45_connector MDI0_P MDI0_N MDI1_P MDI1_N MDI2_P MDI2_N MDI3_P MDI3_N
++ VLED GND CHASSIS_GND
+
+* --- the eight T568 contacts: ideal pass-through to the magnetics secondary ---
+* (a plain jack has no winding; the contacts are the line-side MDI pair nodes.
+*  Modelled as 0 V sources so a board-level netlist sees a through connection.)
+V0P MDI0_P MDI0_P_INT 0
+V0N MDI0_N MDI0_N_INT 0
+V1P MDI1_P MDI1_P_INT 0
+V1N MDI1_N MDI1_N_INT 0
+V2P MDI2_P MDI2_P_INT 0
+V2N MDI2_N MDI2_N_INT 0
+V3P MDI3_P MDI3_P_INT 0
+V3N MDI3_N MDI3_N_INT 0
+
+* --- housing-LED port-present indicators: 330R series + the internal LED drop ---
+R1 VLED RJ45_LED_L 330
+DLED_L RJ45_LED_L GND DLED
+R2 VLED RJ45_LED_R 330
+DLED_R RJ45_LED_R GND DLED
+.model DLED D(IS=1e-15 N=2 RS=1)
+
+* --- shell/shield + the four M3 mounting holes bond to the chassis island ---
+* (CHASSIS_GND is a separate net from signal GND; the consuming board star-bonds
+*  it. Modelled here as a high-Z star bond so the node is not left floating —
+*  there is no subsystem-local passive between chassis and GND on this jack.)
+RSTAR CHASSIS_GND GND 1G
+
+.ends rj45_connector
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 3.3 V source onto VLED settles ~4 mA through each 330R + LED drop.
+.subckt _src P
+V1 P 0 3.3
+.ends _src
+.end

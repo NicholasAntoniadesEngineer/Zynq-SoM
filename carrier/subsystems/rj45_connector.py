@@ -1,105 +1,72 @@
-"""rj45_connector — plain 8P8C RJ45 jack (NO integrated magnetics).
+"""rj45_connector — carrier ADAPTER for the reusable 8P8C RJ45 jack subsystem.
 
-Wave-2 line-side connector for the ethernet sheet. The carrier already
-carries the DISCRETE 1000BASE-T magnetics on the ethernet sheet (Pulse
-HX5008NLT) plus the Bob-Smith termination, so THIS jack is a PLAIN
-transformerless 8P8C — the line-side MDI pairs come straight off the
-magjack's secondary and land on the eight contacts.
+THIN ADAPTER. The portable circuit lives in the project-agnostic library
+``subsystems/rj45_connector/`` (netlist + README + SPICE + local test). This file
+is the carrier-specific GLUE: it imports the library subsystem and BINDS its
+abstract ports/rails to the carrier's real net names, returning the bound
+Circuit. The board build discovers it exactly as before (``circuit()`` exposed
+here), and the binding reproduces the EXACT same net names the hand-written sheet
+used, so the emitted carrier/schematic/rj45_connector.kicad_sch + its golden
+render are byte-identical.
 
-Part — KH-5224-8P8C-D (Shenzhen Kinghelm), LCSC C2828085, live-verified on
-the JLC parts API 2026-06-13:
-  - JLC class Extended (RJ45 jacks have no Basic stock on JLC — every 8P8C
-    in the catalogue is Extended; this is the highest-stock plain shielded
-    LED jack), stock 239, ~$0.34 @ 1.
-  - Confirmed PLAIN (no transformer): the EasyEDA CAD pin table is 13 pins —
-    1..8 = the eight T568 contacts, 9/10 = left LED (LED-L+/LED-L-),
-    11/12 = right LED (LED-R+/LED-R-), 13 = SHELL. A magjack would expose
-    16+ transformer/centre-tap pins; this has none. Through-hole, shielded.
+CARRIER BINDING RATIONALE (the carrier net names + why):
 
-Contact -> MDI mapping is the IEEE 802.3 / TIA-568 1000BASE-T order:
-  BI_DA = contacts 1,2  -> ETH_LINE_MDI_0_P/N
-  BI_DB = contacts 3,6  -> ETH_LINE_MDI_1_P/N
-  BI_DC = contacts 4,5  -> ETH_LINE_MDI_2_P/N
-  BI_DD = contacts 7,8  -> ETH_LINE_MDI_3_P/N
-These eight nets are the ethernet sheet's deferred LINE_PORTS (verbatim
-spellings, read from ethernet.py); declaring them here as PORTs gives the
-ethernet side its peer, so its `expect="rj45_connector (wave 2)"` deferrals
-resolve to BOUND on both sheets.
+  +VLED       -> +3V3        the jack's two housing LEDs are a steady port-present
+                             indicator off the always-on +3V3 rail (330R each,
+                             ~4 mA). NOT a DIP-gated rail — the LEDs light at
+                             power-on regardless of any module enable.
+  GND         -> GND         (identity). The LED cathodes return to signal GND.
+  CHASSIS_GND -> CHASSIS_GND (identity). The shield/shell (J1.13) + the four M3
+                             corner mounting holes bond to the chassis island —
+                             the same separate net the ethernet sheet's C5
+                             isolation barrier bonds to (kept separate from signal
+                             GND, star-bonded elsewhere on the carrier).
 
-LEDs — the two LEDs are INTEGRATED in the jack housing (the symbol pins
-LED-L+/LED-L-/LED-R+/LED-R- are the internal LED anodes/cathodes, so NO
-external discrete LED part is added — that would be two LEDs in series). The
-magnetics block exposes no PHY link/activity logic on this sheet (HX5008NLT
-is passive magnetics; the RTL8211F PHY's LED pins live on the SoM side and
-the SoM contract does not export them), so each jack LED is driven as a
-steady PORT-PRESENT indication off the always-on +3V3 rail through one 330R
-(~(3.3-2.0)/330 ~= 4 mA): LED-L+/- and LED-R+/- both lit. Documented
-honestly: this is a power-on indicator, NOT a PHY-driven link/act blink.
+  Line-side MDI pairs (face the ethernet magnetics' MEDIA side, ETH_LINE_MDI_x):
+    RJ45_MDI0_P/N -> ETH_LINE_MDI_0_P/N   (BI_DA, contacts 1,2)
+    RJ45_MDI1_P/N -> ETH_LINE_MDI_1_P/N   (BI_DB, contacts 3,6)
+    RJ45_MDI2_P/N -> ETH_LINE_MDI_2_P/N   (BI_DC, contacts 4,5)
+    RJ45_MDI3_P/N -> ETH_LINE_MDI_3_P/N   (BI_DD, contacts 7,8)
+                             The four 1000BASE-T differential pairs. The ethernet
+                             magnetics subsystem exposes these media-side (its MXn
+                             ports) and declares an ``expects`` deferral on them
+                             that names THIS sheet ("rj45_connector (wave 2)"); by
+                             binding both subsystems to the same ETH_LINE_MDI_x
+                             nets, that deferral resolves to BOUND on both sheets.
+                             So this adapter does NOT itself defer them — it is the
+                             peer that binds them.
 
-Shield/shell (pin 13) -> CHASSIS_GND, the chassis island the ethernet sheet's
-C5 isolation barrier bonds to (kept separate from signal GND, star-bonded
-elsewhere — same idiom as usbc_otg.py's J2.EH).
-
-This sheet also hosts the board's four M3 corner mounting holes (H1..H4), each
-a plated, BOM-excluded hole bonded to CHASSIS_GND — co-located with the shield
-entry so every CHASSIS_GND fab-art item lives on one sheet (see below).
+The two housing-LED anode nodes (RJ45_LED_L / RJ45_LED_R) stay INTERNAL to the
+library sheet — they are private SIGNAL wiring, never bound here.
 """
 
 from __future__ import annotations
 
+from subsystems.rj45_connector import rj45_connector as _lib
 from schgen.core.model import Circuit
 
-R_FP = "Resistor_SMD:R_0603_1608Metric"
-
-LCSC_330R = "C23138"   # 0603WAF3300T5E, JLC Basic, stock 1.36M (live 2026-06-13)
-
-# contact pin number -> line-side MDI PORT net. Spellings copied VERBATIM from
-# ethernet.py LINE_PORTS — the linker binds by exact name (a typo would be an
-# unbound-port ERROR, not a silent open).
-MDI_CONTACTS = {
-    1: "ETH_LINE_MDI_0_P", 2: "ETH_LINE_MDI_0_N",   # BI_DA
-    3: "ETH_LINE_MDI_1_P", 6: "ETH_LINE_MDI_1_N",   # BI_DB
-    4: "ETH_LINE_MDI_2_P", 5: "ETH_LINE_MDI_2_N",   # BI_DC
-    7: "ETH_LINE_MDI_3_P", 8: "ETH_LINE_MDI_3_N",   # BI_DD
+# The ONE standard adapter contract (schgen.core.subsystem.Meta) — the entire
+# carrier-specific surface of this subsystem. Per-net rationale is in the module
+# docstring above.
+#   bind    abstract subsystem net -> carrier real net
+#   notes   power-tree draw note (carrier house-style prose)
+# (the line-side MDI pairs are BOUND here — this is the peer sheet for the
+#  ethernet subsystem's media-side deferral — so no expects; no named bus.)
+META = {
+    "bind": {
+        "+VLED": "+3V3",
+        "GND": "GND",
+        "CHASSIS_GND": "CHASSIS_GND",
+        # line-side MDI pairs -> the carrier's line MDI nets (the ethernet
+        # magnetics' media side binds these same nets)
+        "RJ45_MDI0_P": "ETH_LINE_MDI_0_P", "RJ45_MDI0_N": "ETH_LINE_MDI_0_N",
+        "RJ45_MDI1_P": "ETH_LINE_MDI_1_P", "RJ45_MDI1_N": "ETH_LINE_MDI_1_N",
+        "RJ45_MDI2_P": "ETH_LINE_MDI_2_P", "RJ45_MDI2_N": "ETH_LINE_MDI_2_N",
+        "RJ45_MDI3_P": "ETH_LINE_MDI_3_P", "RJ45_MDI3_N": "ETH_LINE_MDI_3_N",
+    },
+    "notes": {"draws": "RJ45 housing LEDs (2x 330R port-present indicator)"},
 }
 
 
 def circuit() -> Circuit:
-    c = Circuit("rj45_connector", "RJ45 8P8C jack (plain, ext. magnetics)")
-    j1 = c.use_part("KH-5224-8P8C-D", ref="J1")
-
-    # eight T568 contacts -> ethernet line-side MDI pairs (the ethernet sheet's
-    # deferred LINE_PORTS; same-named PORT here binds them on both sides)
-    for pin, net in MDI_CONTACTS.items():
-        c.port(net, f"J1.{pin}")
-    for n in range(4):
-        c.port_type(f"ETH_LINE_MDI_{n}_P", kind="diff_pair",
-                    pair_with=f"ETH_LINE_MDI_{n}_N", impedance=100)
-
-    # the jack's two INTEGRATED LEDs as a steady port-present indicator off the
-    # always-on +3V3 rail, 330R each (~(3.3-2.0)/330 ~= 4 mA). Drive the
-    # housing LED anode (LED-x+) from +3V3 via the series R; cathode (LED-x-)
-    # to GND. NO discrete Device:LED — the diode lives inside J1 (see docstring).
-    rl = c.part("R1", "Device:R", "330R", R_FP, LCSC=LCSC_330R)
-    c.net("+3V3", f"{rl.ref}.1")
-    c.net("RJ45_LED_L", f"{rl.ref}.2", "J1.9")          # 330R -> LED-L+ (anode)
-    c.net("GND", "J1.10")                               # LED-L- (cathode)
-    rr = c.part("R2", "Device:R", "330R", R_FP, LCSC=LCSC_330R)
-    c.net("+3V3", f"{rr.ref}.1")
-    c.net("RJ45_LED_R", f"{rr.ref}.2", "J1.11")         # 330R -> LED-R+ (anode)
-    c.net("GND", "J1.12")                               # LED-R- (cathode)
-
-    # shield/shell -> chassis island (same separate-net idiom as usbc_otg J2.EH)
-    c.net("CHASSIS_GND", "J1.13")
-
-    # 4x M3 corner mounting holes -> CHASSIS_GND (ASSEMBLY_NOTES: plated, double
-    # as assembly tooling holes). Real netlisted copper (H1..H4, BOM-excluded);
-    # placed here, the shield-entry sheet, so all CHASSIS_GND fab-art lives in
-    # one place and the chassis bond stays netlist-verifiable. mounting_hole()
-    # rejects any non-GROUND net (LAW 0: a hole is a chassis bond, never a rail).
-    for _ in range(4):
-        c.mounting_hole("CHASSIS_GND")
-
-    # power-tree budget: two 330R/3V3 indicator LEDs (~8 mA total) off +3V3
-    c.draws("+3V3", 0.008, "RJ45 housing LEDs (2x 330R port-present indicator)")
-    return c
+    return _lib.circuit(META)
