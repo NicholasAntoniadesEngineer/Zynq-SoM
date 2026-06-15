@@ -52,37 +52,41 @@ from __future__ import annotations
 from subsystems.usb_pd import usb_pd as _lib
 from schgen.core.model import Circuit
 
-# Abstract subsystem net -> carrier real net (the carrier binding map).
-BIND = {
-    "+VDD_LOGIC": "+3V3_SC",
-    "+VBUS_SENSE": "+VBUS_IN",
-    "GND": "GND",
-    "CC1": "STM32_USB_CC1",
-    "CC2": "STM32_USB_CC2",
-    "I2C_SDA": "STM32_I2C2_SDA",
-    "I2C_SCL": "STM32_I2C2_SCL",
-    "INT_N": "SC_INT_N",
-}
-
 # The generated J1 sheet (som_conn_gen FUNCTION_MAP) carries the GPIO->I2C2/INT
 # function map, so these ports bind there by name. EXPLICIT linker deferral so a
 # standalone link reports them as awaiting-J1, never a silent open.
 _J1_MAP = "som_j1_connector (wave 3 STM32 GPIO function map)"
-EXPECTS = {
-    "I2C_SDA": _J1_MAP,
-    "I2C_SCL": _J1_MAP,
-    "INT_N": _J1_MAP,
-}
 
-# Carrier house-style metadata the adapter restores so the carrier's derived
-# artifacts (layout_constraints.csv bus grouping, power_tree.txt note) are
-# byte-identical: the FUSB302 I2C lives on the carrier's STM32_I2C2 bus, and the
-# draw note cites the G2 wire-OR / bringup_rails dossier wording.
-I2C_BUS = "STM32_I2C2"
-DRAWS_NOTE = ("FUSB302B VDD (<1 mA); SC_INT_N pulled on bringup_rails "
-              "(G2 wire-OR, single 10k)")
+# The ONE standard adapter contract (schgen.core.subsystem.Meta) — the entire
+# carrier-specific surface of this subsystem. Per-net rationale is in the module
+# docstring above.
+#   bind    abstract subsystem net -> carrier real net
+#   expects ports that bind on the generated J1 sheet -> explicit linker deferral
+#   buses   the FUSB302 I2C sits on the carrier STM32_I2C2 bus
+#   notes   power-tree draw note cites the G2 wire-OR / bringup_rails wording
+# (buses/notes keep the carrier's derived artifacts — layout_constraints.csv bus
+#  grouping, power_tree.txt note — byte-identical to the hand-written sheet.)
+META = {
+    "bind": {
+        "+VDD_LOGIC": "+3V3_SC",
+        "+VBUS_SENSE": "+VBUS_IN",
+        "GND": "GND",
+        "CC1": "STM32_USB_CC1",
+        "CC2": "STM32_USB_CC2",
+        "I2C_SDA": "STM32_I2C2_SDA",
+        "I2C_SCL": "STM32_I2C2_SCL",
+        "INT_N": "SC_INT_N",
+    },
+    "expects": {
+        "I2C_SDA": _J1_MAP,
+        "I2C_SCL": _J1_MAP,
+        "INT_N": _J1_MAP,
+    },
+    "buses": {"i2c": "STM32_I2C2"},
+    "notes": {"draws": "FUSB302B VDD (<1 mA); SC_INT_N pulled on bringup_rails "
+                       "(G2 wire-OR, single 10k)"},
+}
 
 
 def circuit() -> Circuit:
-    return _lib.circuit(bind=BIND, expects=EXPECTS,
-                        i2c_bus=I2C_BUS, draws_note=DRAWS_NOTE)
+    return _lib.circuit(META)

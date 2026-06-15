@@ -11,7 +11,7 @@ the `subsystems/<name>/` library layout.
 
 | file | role |
 |------|------|
-| `usb_pd.py`      | the NETLIST — `circuit(bind=None, expects=None)`, abstract ports/rails |
+| `usb_pd.py`      | the NETLIST — `circuit(meta=None)`, abstract ports/rails |
 | `usb_pd.cir`     | SPICE subckt — the passive network with the abstract ports as subckt pins |
 | `test_usb_pd.py` | LOCAL electrical-correctness test (offline, runs the board gate slices on just this subsystem) |
 | `README.md`      | this file |
@@ -60,28 +60,40 @@ author no-connects.
 
 ## Consuming it from a project
 
+A project supplies a thin adapter declaring ONE standard `META` dict (the
+adapter contract, `schgen.core.subsystem.Meta`) and forwards it:
+
 ```python
 from subsystems.usb_pd import usb_pd
 
+META = {
+    # abstract subsystem net -> your real board net
+    "bind": {
+        "+VDD_LOGIC": "+3V3_SC", "+VBUS_SENSE": "+VBUS_IN", "GND": "GND",
+        "CC1": "MY_CC1", "CC2": "MY_CC2",
+        "I2C_SDA": "MY_SDA", "I2C_SCL": "MY_SCL", "INT_N": "MY_INT_N",
+    },
+    # optional: tell the linker which of your sheets will bind a deferred port
+    "expects": {"I2C_SDA": "my_connector", "I2C_SCL": "my_connector",
+                "INT_N": "my_connector"},
+    # optional house-style overrides (keep your derived artifacts byte-stable)
+    "buses": {"i2c": "MY_I2C_BUS"},        # the I2C bus-group name for SDA/SCL
+    "notes": {"draws": "FUSB302B VDD (<1 mA); ..."},  # power-tree draw note
+}
+
 def circuit():
-    return usb_pd.circuit(
-        bind={
-            "+VDD_LOGIC": "+3V3_SC", "+VBUS_SENSE": "+VBUS_IN", "GND": "GND",
-            "CC1": "MY_CC1", "CC2": "MY_CC2",
-            "I2C_SDA": "MY_SDA", "I2C_SCL": "MY_SCL", "INT_N": "MY_INT_N",
-        },
-        # optional: tell the linker which of your sheets will bind a deferred port
-        expects={"I2C_SDA": "my_connector", "I2C_SCL": "my_connector",
-                 "INT_N": "my_connector"},
-    )
+    return usb_pd.circuit(META)
 ```
 
-`bind` renames every external **in place, order-preserving** (POWER/GROUND/PORT
-only — a SIGNAL net is private wiring and is never rebound; a typo, a SIGNAL key
-or a collision is a hard `CircuitError`). Because the rename preserves net
-insertion order, parts, refs, NCs and port-type payloads, **binding to the exact
-names a hand-written sheet used yields a byte-identical emitted sheet.** The
-carrier adapter is `carrier/subsystems/usb_pd.py`.
+The four standard `META` keys (`bind` / `expects` / `buses` / `notes`) are
+universal across every reusable subsystem — a typo'd top-level key is a hard
+`CircuitError`, never silently dropped. `bind` renames every external **in
+place, order-preserving** (POWER/GROUND/PORT only — a SIGNAL net is private
+wiring and is never rebound; a SIGNAL key or a collision is a hard
+`CircuitError`). Because the rename preserves net insertion order, parts, refs,
+NCs and port-type payloads, **binding to the exact names a hand-written sheet
+used yields a byte-identical emitted sheet.** The carrier adapter is
+`carrier/subsystems/usb_pd.py`.
 
 ## Design notes (datasheet + bring-up contract)
 

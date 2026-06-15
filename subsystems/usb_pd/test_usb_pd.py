@@ -249,7 +249,7 @@ def test_bind_renames_only_externals_byte_stable():
     nothing else: part set, refs, NCs, port-type payloads and draw budgets are
     preserved, and the nets dict keeps insertion order (byte-identical emit)."""
     base = usb_pd.circuit()
-    bound = usb_pd.circuit(bind=_CARRIER_BIND)
+    bound = usb_pd.circuit({"bind": _CARRIER_BIND})
     # same parts/refs/NCs
     assert set(bound.parts) == set(base.parts)
     assert {str(p) for p in bound.nc_pins} == {str(p) for p in base.nc_pins}
@@ -264,8 +264,30 @@ def test_bind_renames_only_externals_byte_stable():
 
 def test_bind_identity_is_noop():
     base = usb_pd.circuit()
-    ident = usb_pd.circuit(bind={n: n for n in usb_pd.INTERFACE})
+    ident = usb_pd.circuit({"bind": {n: n for n in usb_pd.INTERFACE}})
     assert list(ident.nets) == list(base.nets)
+
+
+def test_meta_buses_and_notes_override_house_style():
+    """The standard meta contract: buses["i2c"] renames the bus group and
+    notes["draws"] overrides the power-tree note — without changing the netlist
+    topology (a project restores its own house-style metadata)."""
+    base = usb_pd.circuit()
+    m = usb_pd.circuit({"buses": {"i2c": "MY_I2C"},
+                        "notes": {"draws": "custom note"}})
+    # same parts + same externals (metadata-only override)
+    assert set(m.parts) == set(base.parts)
+    assert list(m.nets) == list(base.nets)
+    # the i2c bus group + draw note followed the override
+    assert m.port_type_of("I2C_SDA").bus == "MY_I2C"
+    assert m.port_type_of("I2C_SCL").bus == "MY_I2C"
+    assert m.loads["+VDD_LOGIC"][0][1] == "custom note"   # (amps, note)
+
+
+def test_meta_rejects_unknown_key():
+    """A typo'd top-level meta key is a hard error (never silently dropped)."""
+    with pytest.raises(CircuitError, match="unknown subsystem meta key"):
+        usb_pd.circuit({"bus": {"i2c": "X"}})        # 'bus' != 'buses'
 
 
 def test_bind_rejects_unknown_name():
@@ -295,6 +317,6 @@ def test_bind_rejects_collision():
 def test_bound_circuit_passes_local_decap(lib: Library):
     """Sanity: the carrier-bound circuit still passes the local decoupling slice
     (binding is a pure rename; electrical completeness is unchanged)."""
-    bound = usb_pd.circuit(bind=_CARRIER_BIND)
+    bound = usb_pd.circuit({"bind": _CARRIER_BIND})
     r = design_rules.check([_sheet(bound)], lib)
     assert not (r.decap or r.ep or r.strap), r.findings

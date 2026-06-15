@@ -10,12 +10,13 @@ This gate proves each such package is COMPLETE and well-formed:
                    notes), ``test_<name>.py`` (the local correctness test), and
                    ``<name>.cir`` (the SPICE subckt).
 
-  ABSTRACT IFACE   ``<name>.py`` exposes a top-level ``circuit()`` that accepts a
-                   ``bind=`` map AND a declared abstract ``INTERFACE`` (the
-                   externally-visible port + rail names a project binds). The
-                   circuit built standalone must contain exactly those nets as
-                   its externals — so the declared interface cannot drift from
-                   the netlist.
+  ABSTRACT IFACE   ``<name>.py`` exposes a top-level ``circuit(meta=None)`` that
+                   accepts the standard ``meta`` adapter dict (see
+                   :mod:`schgen.core.subsystem`) AND a declared abstract
+                   ``INTERFACE`` (the externally-visible port + rail names a
+                   project binds). The circuit built standalone must contain
+                   exactly those nets as its externals — so the declared
+                   interface cannot drift from the netlist.
 
 REPORT-FIRST (LAW: prove exemplars before the gate hard-fails). The migration is
 incremental: most subsystems still live only as carrier adapters. So this gate
@@ -49,7 +50,7 @@ class PackageReport:
     path: Path
     missing: list[str] = field(default_factory=list)      # required files absent
     has_circuit: bool = False
-    accepts_bind: bool = False
+    accepts_meta: bool = False
     declared_interface: tuple[str, ...] = ()
     interface_drift: list[str] = field(default_factory=list)  # declared vs built
     errors: list[str] = field(default_factory=list)       # import / build errors
@@ -57,7 +58,7 @@ class PackageReport:
     @property
     def ok(self) -> bool:
         return not (self.missing or self.interface_drift or self.errors) \
-            and self.has_circuit and self.accepts_bind \
+            and self.has_circuit and self.accepts_meta \
             and bool(self.declared_interface)
 
 
@@ -77,7 +78,7 @@ class Result:
         lines = ["schgen subsystem-structure gate (REPORT-FIRST)", "=" * 60, ""]
         lines.append("contract: each subsystems/<name>/ is a self-contained, "
                      "project-agnostic package with")
-        lines.append("  <name>.py (abstract-port netlist + circuit(bind=)) + "
+        lines.append("  <name>.py (abstract-port netlist + circuit(meta=)) + "
                      "README.md + test_<name>.py + <name>.cir,")
         lines.append("  and a declared abstract INTERFACE that matches the "
                      "netlist's externals.")
@@ -90,8 +91,8 @@ class Result:
                 lines.append(f"  missing files: {', '.join(p.missing)}")
             if not p.has_circuit:
                 lines.append("  no top-level circuit()")
-            elif not p.accepts_bind:
-                lines.append("  circuit() does not accept a bind= argument")
+            elif not p.accepts_meta:
+                lines.append("  circuit() does not accept a meta= argument")
             if not p.declared_interface and p.has_circuit:
                 lines.append("  no declared INTERFACE (abstract port/rail names)")
             for d in p.interface_drift:
@@ -146,9 +147,9 @@ def check_package(name: str) -> PackageReport:
     if not rep.has_circuit:
         return rep
     try:
-        rep.accepts_bind = "bind" in inspect.signature(fn).parameters
+        rep.accepts_meta = "meta" in inspect.signature(fn).parameters
     except (TypeError, ValueError):
-        rep.accepts_bind = False
+        rep.accepts_meta = False
 
     iface = getattr(mod, "INTERFACE", None)
     if isinstance(iface, (list, tuple)) and iface:

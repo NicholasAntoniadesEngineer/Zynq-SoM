@@ -5,10 +5,12 @@ PROJECT-AGNOSTIC, REUSABLE subsystem. This is the first exemplar of the
 SPICE subckt + local test) that declares its interface as ABSTRACT port + rail
 names and knows NOTHING about any consuming board — no carrier net names, no
 ``carrier/nets.py`` / ``som_interface.json`` reads. A project consumes it by
-calling :func:`circuit` with a ``bind`` map ``{abstract_name: project_net}``
-that rebinds every externally-visible net to its real board name; standalone
-(no bind) it keeps the abstract names so this package's ``test_usb_pd.py`` runs
-offline.
+calling :func:`circuit` with the STANDARD ``meta`` dict (see
+:mod:`schgen.core.subsystem`): ``bind`` rebinds every externally-visible net to
+its real board name, ``expects`` adds per-port linker deferrals, ``buses``
+renames the named bus group, ``notes`` restores house-style prose. Standalone
+(``meta=None``) it keeps the abstract names so this package's ``test_usb_pd.py``
+runs offline.
 
 Reference circuit per the onsemi FUSB302B datasheet: VDD bypassed 100n + 10u,
 VBUS sense bypassed 100n, 200p filter caps on each CC line. VCONN sourcing is
@@ -44,6 +46,7 @@ their visible twins — the netlist gate proves KiCad sees all of them.
 from __future__ import annotations
 
 from schgen.core.model import Circuit
+from schgen.core.subsystem import Meta
 
 # DELIBERATE symbol override (use_part lib_id=): keep the stock stacked-pin
 # KiCad drawing + the stock footprint; MPN/LCSC/datasheet come from
@@ -61,13 +64,13 @@ INTERFACE = RAILS + PORTS
 
 # The control bus this PHY sits on (datasheet I2C, 400 kHz, slave 0x22). The bus
 # NAME is a project-level grouping (the linker groups SDA/SCL by it) and may be
-# overridden via circuit(i2c_bus=...) so a consuming board can place this PHY on
+# overridden via meta["buses"]["i2c"] so a consuming board can place this PHY on
 # one of its named buses; the default is the abstract name for standalone use.
 I2C_BUS = "USB_PD_I2C"
 I2C_SPEED_HZ = 400_000
 
 # Default power-tree draw note (FUSB302B IDD < 1 mA). A project may override the
-# prose via circuit(draws_note=...) to cite its own dossier wording.
+# prose via meta["notes"]["draws"] to cite its own dossier wording.
 DRAWS_NOTE = ("FUSB302B VDD (<1 mA); INT_N/I2C pull-ups are shared and live "
               "off-subsystem")
 DRAWS_A = 0.002
@@ -83,30 +86,33 @@ RAIL_WORST_V = {"+VDD_LOGIC": 3.3, "+VBUS_SENSE": 21.0, "GND": 0.0}
 VBUS_SENSE_PIN_ABSMAX_V = 28.0   # FUSB302B U1.2 abs-max (datasheet)
 
 
-def circuit(bind: dict[str, str] | None = None,
-            expects: dict[str, str] | None = None,
-            i2c_bus: str = I2C_BUS,
-            draws_note: str = DRAWS_NOTE) -> Circuit:
+def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     """Build the usb_pd subsystem netlist with ABSTRACT port/rail names.
 
-    ``bind``       ``{abstract_name: project_net}`` rebinds the externally-
-                   visible nets (the :data:`INTERFACE` names) to a consuming
-                   project's real board names. Omitted -> the abstract names
-                   stand (standalone / local test). See :meth:`Circuit.bind`.
-    ``expects``    ``{abstract_port: deferral_string}`` attaches an EXPLICIT
-                   linker deferral (``PortType.expect``) to a port — a project
-                   declares which of its sheets will bind a deferred port.
-    ``i2c_bus``    the I2C bus-group NAME for SDA/SCL (a project-level grouping;
-                   defaults to the abstract :data:`I2C_BUS`).
-    ``draws_note`` the power-tree draw-note prose (a project may cite its own
-                   dossier wording; defaults to :data:`DRAWS_NOTE`).
+    ``meta`` is the STANDARD subsystem adapter contract (see
+    :mod:`schgen.core.subsystem`) — a single dict a consuming project's adapter
+    declares. Keys this subsystem reads (all optional; ``meta=None`` ->
+    standalone abstract names for the local test):
 
-    ``i2c_bus`` / ``draws_note`` exist so a project can reproduce its own
-    house-style metadata (bus name, dossier prose) WITHOUT the library knowing
-    any board specifics — keeping the library project-agnostic while letting a
-    consumer's derived artifacts (constraints CSV, power-tree note) stay stable.
+      ``bind``    ``{abstract_name: project_net}`` rebinds the externally-visible
+                  nets (the :data:`INTERFACE` names) to a project's real board
+                  names. Applied last (order-preserving => byte-identical sheet).
+      ``expects`` ``{abstract_port: deferral}`` attaches an EXPLICIT linker
+                  deferral to a port — a project declares which of its sheets
+                  will bind a deferred port.
+      ``buses``   ``{"i2c": name}`` the I2C bus-group NAME for SDA/SCL (a
+                  project-level grouping; defaults to the abstract :data:`I2C_BUS`).
+      ``notes``   ``{"draws": prose}`` the power-tree draw-note prose (a project
+                  may cite its own dossier wording; defaults to :data:`DRAWS_NOTE`).
+
+    ``buses`` / ``notes`` let a project reproduce its own house-style metadata
+    (bus name, dossier prose) WITHOUT the library knowing any board specifics —
+    keeping the library project-agnostic while a consumer's derived artifacts
+    (constraints CSV, power-tree note) stay byte-stable.
     """
-    expects = expects or {}
+    meta = Meta(meta)
+    i2c_bus = meta.bus("i2c", I2C_BUS)
+    draws_note = meta.note("draws", DRAWS_NOTE)
     c = Circuit("usb_pd", "USB-PD: FUSB302B Type-C controller")
     # LCSC C132291 (from parts/FUSB302BMPX) — live-verified: Extended, stocked.
     c.use_part("FUSB302BMPX", ref="U1", lib_id=LIB_ID, footprint=FOOTPRINT)
@@ -126,8 +132,8 @@ def circuit(bind: dict[str, str] | None = None,
 
     # Type-C CC lines to the connector (external interface) + 200p filters.
     # (200p = C113796, YAGEO NP0 0603, Extended.)
-    cc1 = c.port("CC1", "U1.10", "U1.11", **_expect("CC1", expects))
-    cc2 = c.port("CC2", "U1.1", "U1.14", **_expect("CC2", expects))
+    cc1 = c.port("CC1", "U1.10", "U1.11", **meta.expect_kw("CC1"))
+    cc2 = c.port("CC2", "U1.1", "U1.14", **meta.expect_kw("CC2"))
     for net in (cc1, cc2):
         ref = c.auto_ref("C")
         c.part(ref, "Device:C", "200p", LCSC="C113796")
@@ -140,11 +146,11 @@ def circuit(bind: dict[str, str] | None = None,
     # placed here (one pull-up per net, house rule).
     c.port("I2C_SDA", "U1.7",
            kind="i2c", role="sda", bus=i2c_bus, speed_hz=I2C_SPEED_HZ,
-           **_expect("I2C_SDA", expects))
+           **meta.expect_kw("I2C_SDA"))
     c.port("I2C_SCL", "U1.6",
            kind="i2c", role="scl", bus=i2c_bus, speed_hz=I2C_SPEED_HZ,
-           **_expect("I2C_SCL", expects))
-    c.port("INT_N", "U1.5", **_expect("INT_N", expects))
+           **meta.expect_kw("I2C_SCL"))
+    c.port("INT_N", "U1.5", **meta.expect_kw("INT_N"))
 
     # VCONN sourcing unused by design.
     c.nc("U1.12", "U1.13")
@@ -153,12 +159,4 @@ def circuit(bind: dict[str, str] | None = None,
     # extra draw on +VDD_LOGIC.
     c.draws("+VDD_LOGIC", DRAWS_A, draws_note)
 
-    if bind:
-        c.bind(bind)
-    return c
-
-
-def _expect(port: str, expects: dict[str, str]) -> dict[str, str]:
-    """Forward an optional per-port linker deferral into the port() kwargs."""
-    e = expects.get(port)
-    return {"expect": e} if e else {}
+    return meta.finish(c)            # applies meta["bind"] (if any), returns c

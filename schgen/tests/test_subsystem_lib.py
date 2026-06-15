@@ -7,7 +7,59 @@ no kicad-cli render here — the byte-identical sheet emit is proven separately 
 from __future__ import annotations
 
 from schgen.core.model import Circuit, CircuitError, NetClass
+from schgen.core.subsystem import Meta
 from schgen.verify import subsystem_structure
+
+
+# ---- the standard meta contract (schgen.core.subsystem.Meta) --------------------
+
+def test_meta_none_is_all_defaults():
+    m = Meta(None)
+    assert m.bind_map is None
+    assert m.expects == {}
+    assert m.bus("i2c", "DEFAULT") == "DEFAULT"
+    assert m.note("draws", "DEFAULT") == "DEFAULT"
+    assert m.expect_kw("ANY") == {}
+
+
+def test_meta_reads_standard_keys():
+    m = Meta({"bind": {"A": "B"}, "expects": {"P": "deferred"},
+              "buses": {"i2c": "MY_BUS"}, "notes": {"draws": "n"}})
+    assert m.bind_map == {"A": "B"}
+    assert m.bus("i2c", "x") == "MY_BUS"
+    assert m.bus("spi", "x") == "x"          # unset role falls back to default
+    assert m.note("draws", "x") == "n"
+    assert m.expect_kw("P") == {"expect": "deferred"}
+    assert m.expect_kw("Q") == {}
+
+
+def test_meta_rejects_unknown_key_and_nondict():
+    try:
+        Meta({"bus": {"i2c": "X"}})          # typo: 'bus' not 'buses'
+    except CircuitError as e:
+        assert "unknown subsystem meta key" in str(e)
+    else:
+        raise AssertionError("a typo'd meta key must raise")
+    try:
+        Meta({"bind": ["not", "a", "dict"]})
+    except CircuitError as e:
+        assert "must be a dict" in str(e)
+    else:
+        raise AssertionError("a non-dict meta value must raise")
+
+
+def test_meta_is_idempotent():
+    inner = Meta({"buses": {"i2c": "B"}})
+    assert Meta(inner).bus("i2c", "x") == "B"
+
+
+def test_meta_finish_applies_bind():
+    c = Circuit("t", "t")
+    c.part("R1", "Device:R", "1k", "")
+    c.net("+VDD", "R1.1")
+    c.net("GND", "R1.2")
+    out = Meta({"bind": {"+VDD": "+3V3", "GND": "GND"}}).finish(c)
+    assert "+3V3" in out.nets and "+VDD" not in out.nets
 
 
 # ---- Circuit.bind() -------------------------------------------------------------
@@ -75,12 +127,12 @@ def test_bind_carries_port_type_and_load():
 # ---- usb_pd exemplar ------------------------------------------------------------
 
 def test_usb_pd_adapter_matches_library_bound():
-    """The carrier adapter is exactly the library bound to the carrier map."""
+    """The carrier adapter is exactly the library bound to the carrier META."""
     from schgen.core.link import load_subsystem
     adapter = load_subsystem("usb_pd").circuit
     import subsystems.usb_pd.usb_pd as lib
-    from carrier.subsystems.usb_pd import BIND, EXPECTS  # type: ignore
-    direct = lib.circuit(bind=BIND, expects=EXPECTS)
+    from carrier.subsystems.usb_pd import META  # type: ignore
+    direct = lib.circuit(META)
     assert list(adapter.nets) == list(direct.nets)
     assert set(adapter.parts) == set(direct.parts)
     # the carrier net names the binding must reproduce
@@ -108,7 +160,7 @@ def test_structure_gate_usb_pd_ok():
     assert "usb_pd" in by_name, [p.name for p in res.packages]
     up = by_name["usb_pd"]
     assert up.ok, (up.missing, up.interface_drift, up.errors)
-    assert up.accepts_bind and up.has_circuit
+    assert up.accepts_meta and up.has_circuit
     assert set(up.declared_interface) == {
         "+VDD_LOGIC", "+VBUS_SENSE", "GND", "CC1", "CC2",
         "I2C_SDA", "I2C_SCL", "INT_N"}
