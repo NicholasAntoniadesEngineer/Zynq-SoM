@@ -35,3 +35,330 @@
   (constraint track_width (min 0.2611mm) (opt 0.2611mm) (max 0.2611mm))
   (constraint diff_pair_gap (min 0.2032mm) (opt 0.2032mm))
 )
+
+# ==== SI CONSTRAINTS (schgen/generate/si_constraints.py) ====
+# Differential-pair + matched-length rules harvested from the schematic's
+# typed ports and joined to carrier/research/si_spec.json (researched
+# targets, standard-cited). Intra-pair skew = P/N length match within a
+# pair; group length = inter-pair match across a port/bus. Enforced by
+# KiCad DRC once the pairs are routed. NOT routing — constraints only.
+
+(rule "intra_skew_FMC_CLK0_M2C_P"
+  # FMC LPC (VITA 57.1) — CLK0_M2C (MRCC clock); Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 FMC (LA/CLK differential pairs 100Ω); Samtec/TE FMC layout guideline: 100Ω diff, intra-pair ±5 mil, tight inter-pair within LA bus
+  (condition "(A.NetName == 'FMC_CLK0_M2C_P' && B.NetName == 'FMC_CLK0_M2C_N') || (A.NetName == 'FMC_CLK0_M2C_N' && B.NetName == 'FMC_CLK0_M2C_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_CLK1_M2C_P"
+  # FMC LPC (VITA 57.1) — CLK1_M2C (SRCC clock); Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 FMC (100Ω diff); Samtec/TE layout: intra-pair ±5 mil
+  (condition "(A.NetName == 'FMC_CLK1_M2C_P' && B.NetName == 'FMC_CLK1_M2C_N') || (A.NetName == 'FMC_CLK1_M2C_N' && B.NetName == 'FMC_CLK1_M2C_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA00_CC_P"
+  # FMC LPC (VITA 57.1) — LA00 (clock-capable); Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (LA pairs 100Ω diff); Samtec/TE FMC layout: 100Ω, intra-pair ±5 mil, match LA bus to CLK
+  (condition "(A.NetName == 'FMC_LA00_CC_P' && B.NetName == 'FMC_LA00_CC_N') || (A.NetName == 'FMC_LA00_CC_N' && B.NetName == 'FMC_LA00_CC_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA01_CC_P"
+  # FMC LPC (VITA 57.1) — LA01 (clock-capable, not CC-routed); Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA01_CC_P' && B.NetName == 'FMC_LA01_CC_N') || (A.NetName == 'FMC_LA01_CC_N' && B.NetName == 'FMC_LA01_CC_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA02_P"
+  # FMC LPC (VITA 57.1) — LA02; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA02_P' && B.NetName == 'FMC_LA02_N') || (A.NetName == 'FMC_LA02_N' && B.NetName == 'FMC_LA02_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA03_P"
+  # FMC LPC (VITA 57.1) — LA03; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA03_P' && B.NetName == 'FMC_LA03_N') || (A.NetName == 'FMC_LA03_N' && B.NetName == 'FMC_LA03_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA04_P"
+  # FMC LPC (VITA 57.1) — LA04; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA04_P' && B.NetName == 'FMC_LA04_N') || (A.NetName == 'FMC_LA04_N' && B.NetName == 'FMC_LA04_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA05_P"
+  # FMC LPC (VITA 57.1) — LA05; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA05_P' && B.NetName == 'FMC_LA05_N') || (A.NetName == 'FMC_LA05_N' && B.NetName == 'FMC_LA05_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA06_P"
+  # FMC LPC (VITA 57.1) — LA06; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA06_P' && B.NetName == 'FMC_LA06_N') || (A.NetName == 'FMC_LA06_N' && B.NetName == 'FMC_LA06_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA07_P"
+  # FMC LPC (VITA 57.1) — LA07; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA07_P' && B.NetName == 'FMC_LA07_N') || (A.NetName == 'FMC_LA07_N' && B.NetName == 'FMC_LA07_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA08_P"
+  # FMC LPC (VITA 57.1) — LA08; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA08_P' && B.NetName == 'FMC_LA08_N') || (A.NetName == 'FMC_LA08_N' && B.NetName == 'FMC_LA08_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA09_P"
+  # FMC LPC (VITA 57.1) — LA09; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA09_P' && B.NetName == 'FMC_LA09_N') || (A.NetName == 'FMC_LA09_N' && B.NetName == 'FMC_LA09_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA10_P"
+  # FMC LPC (VITA 57.1) — LA10; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA10_P' && B.NetName == 'FMC_LA10_N') || (A.NetName == 'FMC_LA10_N' && B.NetName == 'FMC_LA10_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_FMC_LA11_P"
+  # FMC LPC (VITA 57.1) — LA11; Zdiff 100ohm; DC-coupled
+  # spec: ANSI/VITA 57.1 (100Ω diff); Samtec/TE FMC layout ±5 mil
+  (condition "(A.NetName == 'FMC_LA11_P' && B.NetName == 'FMC_LA11_N') || (A.NetName == 'FMC_LA11_N' && B.NetName == 'FMC_LA11_P')")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "intra_skew_ETH_PHY_MDI0_P"
+  # Gigabit Ethernet (MDI, PHY-side) — MDI pair 0 (PHY→magnetics); Zdiff 100ohm; DC-coupled
+  # spec: IEEE 802.3 Clause 40 (1000BASE-T, 100Ω±15% MDI); ANSI/TIA-568 link; PHY-vendor (RTL8211F / TI SNLA387) layout: intra-pair ≤ 50 mil, inter-pair ≤ 50 mm (~330 ps)
+  (condition "(A.NetName == 'ETH_PHY_MDI0_P' && B.NetName == 'ETH_PHY_MDI0_N') || (A.NetName == 'ETH_PHY_MDI0_N' && B.NetName == 'ETH_PHY_MDI0_P')")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "intra_skew_ETH_PHY_MDI1_P"
+  # Gigabit Ethernet (MDI, PHY-side) — MDI pair 1 (PHY→magnetics); Zdiff 100ohm; DC-coupled
+  # spec: IEEE 802.3 Clause 40 (100Ω±15%); RTL8211F/TI SNLA387 layout: intra-pair ≤50 mil, inter-pair ≤50 mm
+  (condition "(A.NetName == 'ETH_PHY_MDI1_P' && B.NetName == 'ETH_PHY_MDI1_N') || (A.NetName == 'ETH_PHY_MDI1_N' && B.NetName == 'ETH_PHY_MDI1_P')")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "intra_skew_ETH_PHY_MDI2_P"
+  # Gigabit Ethernet (MDI, PHY-side) — MDI pair 2 (PHY→magnetics); Zdiff 100ohm; DC-coupled
+  # spec: IEEE 802.3 Clause 40 (100Ω±15%); RTL8211F/TI SNLA387 layout: intra-pair ≤50 mil, inter-pair ≤50 mm
+  (condition "(A.NetName == 'ETH_PHY_MDI2_P' && B.NetName == 'ETH_PHY_MDI2_N') || (A.NetName == 'ETH_PHY_MDI2_N' && B.NetName == 'ETH_PHY_MDI2_P')")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "intra_skew_ETH_PHY_MDI3_P"
+  # Gigabit Ethernet (MDI, PHY-side) — MDI pair 3 (PHY→magnetics); Zdiff 100ohm; DC-coupled
+  # spec: IEEE 802.3 Clause 40 (100Ω±15%); RTL8211F/TI SNLA387 layout: intra-pair ≤50 mil, inter-pair ≤50 mm
+  (condition "(A.NetName == 'ETH_PHY_MDI3_P' && B.NetName == 'ETH_PHY_MDI3_N') || (A.NetName == 'ETH_PHY_MDI3_N' && B.NetName == 'ETH_PHY_MDI3_P')")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "intra_skew_ETH_LINE_MDI_0_P"
+  # Gigabit Ethernet (MDI, line-side) — MDI pair 0 (BI_DA, magnetics→RJ45); Zdiff 100ohm; DC-coupled
+  # spec: IEEE 802.3 Clause 40 (100Ω±15% MDI); TIA-568 1000BASE-T pair order; Bob-Smith term IEEE 802.3 Sec 40.7.1
+  (condition "(A.NetName == 'ETH_LINE_MDI_0_P' && B.NetName == 'ETH_LINE_MDI_0_N') || (A.NetName == 'ETH_LINE_MDI_0_N' && B.NetName == 'ETH_LINE_MDI_0_P')")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "intra_skew_ETH_LINE_MDI_1_P"
+  # Gigabit Ethernet (MDI, line-side) — MDI pair 1 (BI_DB, magnetics→RJ45); Zdiff 100ohm; DC-coupled
+  # spec: IEEE 802.3 Clause 40 (100Ω±15%); TIA-568; 802.3 Sec 40.7.1
+  (condition "(A.NetName == 'ETH_LINE_MDI_1_P' && B.NetName == 'ETH_LINE_MDI_1_N') || (A.NetName == 'ETH_LINE_MDI_1_N' && B.NetName == 'ETH_LINE_MDI_1_P')")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "intra_skew_ETH_LINE_MDI_2_P"
+  # Gigabit Ethernet (MDI, line-side) — MDI pair 2 (BI_DC, magnetics→RJ45); Zdiff 100ohm; DC-coupled
+  # spec: IEEE 802.3 Clause 40 (100Ω±15%); TIA-568; 802.3 Sec 40.7.1
+  (condition "(A.NetName == 'ETH_LINE_MDI_2_P' && B.NetName == 'ETH_LINE_MDI_2_N') || (A.NetName == 'ETH_LINE_MDI_2_N' && B.NetName == 'ETH_LINE_MDI_2_P')")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "intra_skew_ETH_LINE_MDI_3_P"
+  # Gigabit Ethernet (MDI, line-side) — MDI pair 3 (BI_DD, magnetics→RJ45); Zdiff 100ohm; DC-coupled
+  # spec: IEEE 802.3 Clause 40 (100Ω±15%); TIA-568; 802.3 Sec 40.7.1
+  (condition "(A.NetName == 'ETH_LINE_MDI_3_P' && B.NetName == 'ETH_LINE_MDI_3_N') || (A.NetName == 'ETH_LINE_MDI_3_N' && B.NetName == 'ETH_LINE_MDI_3_P')")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "intra_skew_HDMI_RX_CLK_P"
+  # HDMI RX (TMDS, sink) — TMDS Clock; Zdiff 100ohm; DC-coupled
+  # spec: HDMI 1.4b Sec 4.2.4 (Zdiff 100Ω±15%, DC-coupled); inter-pair data-to-clock match ≤ ±10 mm recommended
+  (condition "(A.NetName == 'HDMI_RX_CLK_P' && B.NetName == 'HDMI_RX_CLK_N') || (A.NetName == 'HDMI_RX_CLK_N' && B.NetName == 'HDMI_RX_CLK_P')")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "intra_skew_HDMI_RX_D0_P"
+  # HDMI RX (TMDS, sink) — TMDS Data0; Zdiff 100ohm; DC-coupled
+  # spec: HDMI 1.4b Sec 4.2.4; CTS skew 0.15·Tbit ≈ ±3 mm
+  (condition "(A.NetName == 'HDMI_RX_D0_P' && B.NetName == 'HDMI_RX_D0_N') || (A.NetName == 'HDMI_RX_D0_N' && B.NetName == 'HDMI_RX_D0_P')")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "intra_skew_HDMI_RX_D1_P"
+  # HDMI RX (TMDS, sink) — TMDS Data1; Zdiff 100ohm; DC-coupled
+  # spec: HDMI 1.4b Sec 4.2.4; CTS skew 0.15·Tbit ≈ ±3 mm
+  (condition "(A.NetName == 'HDMI_RX_D1_P' && B.NetName == 'HDMI_RX_D1_N') || (A.NetName == 'HDMI_RX_D1_N' && B.NetName == 'HDMI_RX_D1_P')")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "intra_skew_HDMI_RX_D2_P"
+  # HDMI RX (TMDS, sink) — TMDS Data2; Zdiff 100ohm; DC-coupled
+  # spec: HDMI 1.4b Sec 4.2.4 (Zdiff=100Ω±15%, DC-coupled, far-end term to AVCC 3.3V±5%); CTS intra-pair skew 0.15·Tbit ≈ ±3 mm (~118 mil)
+  (condition "(A.NetName == 'HDMI_RX_D2_P' && B.NetName == 'HDMI_RX_D2_N') || (A.NetName == 'HDMI_RX_D2_N' && B.NetName == 'HDMI_RX_D2_P')")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "intra_skew_ZYNQ_HDMI_TX_TMDS_0_P"
+  # HDMI TX (TMDS, source) — TMDS Data0; Zdiff 100ohm; DC-coupled
+  # spec: HDMI 1.4b Sec 4.2.4; CTS skew 0.15·Tbit ≈ ±3 mm
+  (condition "(A.NetName == 'ZYNQ_HDMI_TX_TMDS_0_P' && B.NetName == 'ZYNQ_HDMI_TX_TMDS_0_N') || (A.NetName == 'ZYNQ_HDMI_TX_TMDS_0_N' && B.NetName == 'ZYNQ_HDMI_TX_TMDS_0_P')")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "intra_skew_ZYNQ_HDMI_TX_TMDS_1_P"
+  # HDMI TX (TMDS, source) — TMDS Data1; Zdiff 100ohm; DC-coupled
+  # spec: HDMI 1.4b Sec 4.2.4 (Zdiff 100Ω±15%, DC-coupled, 3.3V±5% term); CTS skew 0.15·Tbit ≈ ±3 mm
+  (condition "(A.NetName == 'ZYNQ_HDMI_TX_TMDS_1_P' && B.NetName == 'ZYNQ_HDMI_TX_TMDS_1_N') || (A.NetName == 'ZYNQ_HDMI_TX_TMDS_1_N' && B.NetName == 'ZYNQ_HDMI_TX_TMDS_1_P')")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "intra_skew_ZYNQ_HDMI_TX_TMDS_2_P"
+  # HDMI TX (TMDS, source) — TMDS Data2; Zdiff 100ohm; DC-coupled
+  # spec: HDMI 1.4b Sec 4.2.4 (TMDS Zdiff=100Ω±15% per-pair; sink far-end termination to AVCC=3.3V±5%, DC-coupled); CTS intra-pair skew limit 0.15·Tbit → ±3 mm (~118 mil) per-pair length match
+  (condition "(A.NetName == 'ZYNQ_HDMI_TX_TMDS_2_P' && B.NetName == 'ZYNQ_HDMI_TX_TMDS_2_N') || (A.NetName == 'ZYNQ_HDMI_TX_TMDS_2_N' && B.NetName == 'ZYNQ_HDMI_TX_TMDS_2_P')")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "intra_skew_ZYNQ_HDMI_TX_TMDS_CLK_P"
+  # HDMI TX (TMDS, source) — TMDS Clock; Zdiff 100ohm; DC-coupled
+  # spec: HDMI 1.4b Sec 4.2.4 (Zdiff 100Ω±15%, DC-coupled); inter-pair (clock-to-data) skew budget large but match data pairs to clock ≤ ±10 mm (recommended)
+  (condition "(A.NetName == 'ZYNQ_HDMI_TX_TMDS_CLK_P' && B.NetName == 'ZYNQ_HDMI_TX_TMDS_CLK_N') || (A.NetName == 'ZYNQ_HDMI_TX_TMDS_CLK_N' && B.NetName == 'ZYNQ_HDMI_TX_TMDS_CLK_P')")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "intra_skew_CAM_CLK_P"
+  # MIPI CSI-2 D-PHY (camera) — D-PHY Clock lane; Zdiff 100ohm; DC-coupled
+  # spec: MIPI D-PHY (CSI-2): Zdiff=100Ω±20%; HS-RX 100Ω diff termination at receiver; clock-to-data lane skew is the timing reference, intra-pair tight (~±0.5 mm / 20 mil)
+  (condition "(A.NetName == 'CAM_CLK_P' && B.NetName == 'CAM_CLK_N') || (A.NetName == 'CAM_CLK_N' && B.NetName == 'CAM_CLK_P')")
+  (constraint skew (max 0.508mm))
+)
+
+(rule "intra_skew_CAM_D0_P"
+  # MIPI CSI-2 D-PHY (camera) — D-PHY Data lane 0; Zdiff 100ohm; DC-coupled
+  # spec: MIPI D-PHY (CSI-2): Zdiff=100Ω±20%; lane-to-clock skew budget governs inter-lane match; intra-pair ~±0.5 mm
+  (condition "(A.NetName == 'CAM_D0_P' && B.NetName == 'CAM_D0_N') || (A.NetName == 'CAM_D0_N' && B.NetName == 'CAM_D0_P')")
+  (constraint skew (max 0.508mm))
+)
+
+(rule "intra_skew_CAM_D1_P"
+  # MIPI CSI-2 D-PHY (camera) — D-PHY Data lane 1; Zdiff 100ohm; DC-coupled
+  # spec: MIPI D-PHY (CSI-2): Zdiff=100Ω±20%; intra-pair ~±0.5 mm; inter-lane match to clock
+  (condition "(A.NetName == 'CAM_D1_P' && B.NetName == 'CAM_D1_N') || (A.NetName == 'CAM_D1_N' && B.NetName == 'CAM_D1_P')")
+  (constraint skew (max 0.508mm))
+)
+
+(rule "intra_skew_USB_UART_DP"
+  # USB 2.0 FS (UART console, USB-C UFP) — USB2 D+/D- (CP2102N); Zdiff 90ohm; DC-coupled
+  # spec: USB 2.0 Spec Sec 7.1.1.3 (90Ω±15% diff); USB-IF FS/HS layout intra-pair ≤150 mil
+  (condition "(A.NetName == 'USB_UART_DP' && B.NetName == 'USB_UART_DM') || (A.NetName == 'USB_UART_DM' && B.NetName == 'USB_UART_DP')")
+  (constraint skew (max 3.81mm))
+)
+
+(rule "intra_skew_DBG_USB_DP"
+  # USB 2.0 HS (JTAG debug, USB-C UFP) — USB2 D+/D- (CH347T); Zdiff 90ohm; DC-coupled
+  # spec: USB 2.0 Spec Sec 7.1.1.3 / 7.1.6 (90Ω±15%); USB-IF HS layout intra-pair ≤150 mil
+  (condition "(A.NetName == 'DBG_USB_DP' && B.NetName == 'DBG_USB_DM') || (A.NetName == 'DBG_USB_DM' && B.NetName == 'DBG_USB_DP')")
+  (constraint skew (max 3.81mm))
+)
+
+(rule "intra_skew_USB_D"
+  # USB 2.0 HS (OTG, Type-C host port) — USB2 D+/D- (OTG); Zdiff 90ohm; DC-coupled
+  # spec: USB 2.0 Spec Sec 7.1.1.3 / 7.1.6 (90Ω±15% differential HS); USB-IF/HS layout: intra-pair ≤150 mil (~1.6 mm), target ≤5 mm
+  (condition "(A.NetName == 'USB_D+' && B.NetName == 'USB_D-') || (A.NetName == 'USB_D-' && B.NetName == 'USB_D+')")
+  (constraint skew (max 3.81mm))
+)
+
+(rule "intra_skew_STM32_USB_D_P"
+  # USB 2.0 HS (USB-C PD/device port) — USB2 D+/D- (PD/STM32); Zdiff 90ohm; DC-coupled
+  # spec: USB 2.0 Spec Sec 7.1.1.3 / 7.1.6 (90Ω±15%); USB-IF HS layout intra-pair ≤150 mil
+  (condition "(A.NetName == 'STM32_USB_D_P' && B.NetName == 'STM32_USB_D_N') || (A.NetName == 'STM32_USB_D_N' && B.NetName == 'STM32_USB_D_P')")
+  (constraint skew (max 3.81mm))
+)
+
+(rule "lenmatch_LM_FMC_LPC_VITA_57_1"
+  # FMC LPC (VITA 57.1): 14 pair(s) length-matched as a group (inter-pair), tol +/-5 mil
+  (condition "A.NetName == 'FMC_CLK0_M2C_P' || A.NetName == 'FMC_CLK0_M2C_N' || A.NetName == 'FMC_CLK1_M2C_P' || A.NetName == 'FMC_CLK1_M2C_N' || A.NetName == 'FMC_LA00_CC_P' || A.NetName == 'FMC_LA00_CC_N' || A.NetName == 'FMC_LA01_CC_P' || A.NetName == 'FMC_LA01_CC_N' || A.NetName == 'FMC_LA02_P' || A.NetName == 'FMC_LA02_N' || A.NetName == 'FMC_LA03_P' || A.NetName == 'FMC_LA03_N' || A.NetName == 'FMC_LA04_P' || A.NetName == 'FMC_LA04_N' || A.NetName == 'FMC_LA05_P' || A.NetName == 'FMC_LA05_N' || A.NetName == 'FMC_LA06_P' || A.NetName == 'FMC_LA06_N' || A.NetName == 'FMC_LA07_P' || A.NetName == 'FMC_LA07_N' || A.NetName == 'FMC_LA08_P' || A.NetName == 'FMC_LA08_N' || A.NetName == 'FMC_LA09_P' || A.NetName == 'FMC_LA09_N' || A.NetName == 'FMC_LA10_P' || A.NetName == 'FMC_LA10_N' || A.NetName == 'FMC_LA11_P' || A.NetName == 'FMC_LA11_N'")
+  (constraint skew (max 0.127mm))
+)
+
+(rule "lenmatch_LM_GIGABIT_ETHERNET_MDI_PHY_SIDE"
+  # Gigabit Ethernet (MDI, PHY-side): 4 pair(s) length-matched as a group (inter-pair), tol +/-50 mil
+  (condition "A.NetName == 'ETH_PHY_MDI0_P' || A.NetName == 'ETH_PHY_MDI0_N' || A.NetName == 'ETH_PHY_MDI1_P' || A.NetName == 'ETH_PHY_MDI1_N' || A.NetName == 'ETH_PHY_MDI2_P' || A.NetName == 'ETH_PHY_MDI2_N' || A.NetName == 'ETH_PHY_MDI3_P' || A.NetName == 'ETH_PHY_MDI3_N'")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "lenmatch_LM_GIGABIT_ETHERNET_MDI_LINE_SIDE"
+  # Gigabit Ethernet (MDI, line-side): 4 pair(s) length-matched as a group (inter-pair), tol +/-50 mil
+  (condition "A.NetName == 'ETH_LINE_MDI_0_P' || A.NetName == 'ETH_LINE_MDI_0_N' || A.NetName == 'ETH_LINE_MDI_1_P' || A.NetName == 'ETH_LINE_MDI_1_N' || A.NetName == 'ETH_LINE_MDI_2_P' || A.NetName == 'ETH_LINE_MDI_2_N' || A.NetName == 'ETH_LINE_MDI_3_P' || A.NetName == 'ETH_LINE_MDI_3_N'")
+  (constraint skew (max 1.27mm))
+)
+
+(rule "lenmatch_LM_HDMI_RX_TMDS_SINK"
+  # HDMI RX (TMDS, sink): 4 pair(s) length-matched as a group (inter-pair), tol +/-118 mil
+  (condition "A.NetName == 'HDMI_RX_CLK_P' || A.NetName == 'HDMI_RX_CLK_N' || A.NetName == 'HDMI_RX_D0_P' || A.NetName == 'HDMI_RX_D0_N' || A.NetName == 'HDMI_RX_D1_P' || A.NetName == 'HDMI_RX_D1_N' || A.NetName == 'HDMI_RX_D2_P' || A.NetName == 'HDMI_RX_D2_N'")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "lenmatch_LM_HDMI_TX_TMDS_SOURCE"
+  # HDMI TX (TMDS, source): 4 pair(s) length-matched as a group (inter-pair), tol +/-118 mil
+  (condition "A.NetName == 'ZYNQ_HDMI_TX_TMDS_0_P' || A.NetName == 'ZYNQ_HDMI_TX_TMDS_0_N' || A.NetName == 'ZYNQ_HDMI_TX_TMDS_1_P' || A.NetName == 'ZYNQ_HDMI_TX_TMDS_1_N' || A.NetName == 'ZYNQ_HDMI_TX_TMDS_2_P' || A.NetName == 'ZYNQ_HDMI_TX_TMDS_2_N' || A.NetName == 'ZYNQ_HDMI_TX_TMDS_CLK_P' || A.NetName == 'ZYNQ_HDMI_TX_TMDS_CLK_N'")
+  (constraint skew (max 2.9972mm))
+)
+
+(rule "lenmatch_LM_MIPI_CSI_2_D_PHY_CAMERA"
+  # MIPI CSI-2 D-PHY (camera): 3 pair(s) length-matched as a group (inter-pair), tol +/-20 mil
+  (condition "A.NetName == 'CAM_CLK_P' || A.NetName == 'CAM_CLK_N' || A.NetName == 'CAM_D0_P' || A.NetName == 'CAM_D0_N' || A.NetName == 'CAM_D1_P' || A.NetName == 'CAM_D1_N'")
+  (constraint skew (max 0.508mm))
+)
+
+(rule "lenmatch_LM_USB_2_0_FS_UART_CONSOLE_USB_C_UFP"
+  # USB 2.0 FS (UART console, USB-C UFP): 1 pair(s) length-matched as a group (inter-pair), tol +/-150 mil
+  (condition "A.NetName == 'USB_UART_DP' || A.NetName == 'USB_UART_DM'")
+  (constraint skew (max 3.81mm))
+)
+
+(rule "lenmatch_LM_USB_2_0_HS_JTAG_DEBUG_USB_C_UFP"
+  # USB 2.0 HS (JTAG debug, USB-C UFP): 1 pair(s) length-matched as a group (inter-pair), tol +/-150 mil
+  (condition "A.NetName == 'DBG_USB_DP' || A.NetName == 'DBG_USB_DM'")
+  (constraint skew (max 3.81mm))
+)
+
+(rule "lenmatch_LM_USB_2_0_HS_OTG_TYPE_C_HOST_PORT"
+  # USB 2.0 HS (OTG, Type-C host port): 1 pair(s) length-matched as a group (inter-pair), tol +/-150 mil
+  (condition "A.NetName == 'USB_D+' || A.NetName == 'USB_D-'")
+  (constraint skew (max 3.81mm))
+)
+
+(rule "lenmatch_LM_USB_2_0_HS_USB_C_PD_DEVICE_PORT"
+  # USB 2.0 HS (USB-C PD/device port): 1 pair(s) length-matched as a group (inter-pair), tol +/-150 mil
+  (condition "A.NetName == 'STM32_USB_D_P' || A.NetName == 'STM32_USB_D_N'")
+  (constraint skew (max 3.81mm))
+)
+

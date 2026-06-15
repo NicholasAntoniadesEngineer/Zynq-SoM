@@ -209,6 +209,7 @@ _ARTIFACT_GLOBS = (
     "manufacturing/*.csv",
     "manufacturing/*.txt",
     "manufacturing/*.kicad_dru",       # layout + PCB-foundation design rules
+    "manufacturing/SI_CONSTRAINTS.md",  # signal-integrity diff-pair/skew table
     "reports/*.txt",
     "docs/*.svg",
     "docs/BRINGUP.md",

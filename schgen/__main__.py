@@ -805,6 +805,30 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"PCB: FAIL — {exc}")
         ok_all = False
 
+    # SIGNAL-INTEGRITY CONSTRAINTS (not routing): harvest every diff pair the
+    # schematic declares, join to the researched si_spec targets, and APPEND
+    # diff-pair + matched-length design rules to the board .kicad_dru just
+    # written by the PCB step, plus a human-readable SI_CONSTRAINTS.md. Runs
+    # AFTER the PCB foundation (it extends that .dru) and after every existing
+    # gate. The assertion (every declared pair has an emitted constraint) flips
+    # the board verdict ONLY if a declared pair is uncovered — additive, like
+    # the PCB hook above; it never relaxes an existing gate (LAW 4).
+    from schgen.generate import si_constraints
+    try:
+        si_res = si_constraints.generate(sheets=sheets)
+        si_v = si_res["verdict"]
+        print(f"SI: {si_res['n_pairs']} diff pairs, {si_res['n_groups']} "
+              f"length-match groups -> "
+              f"{si_res['dru'].relative_to(REPO_ROOT)} + "
+              f"{si_res['md'].relative_to(REPO_ROOT)} — "
+              f"{'PASS' if si_v.ok else 'FAIL'}")
+        if not si_v.ok:
+            print(f"  SI: FAIL — {si_v.summary()}")
+            ok_all = False
+    except Exception as exc:  # noqa: BLE001
+        print(f"SI: FAIL — {exc}")
+        ok_all = False
+
     (rep_dir / "gates.txt").write_text(
         "\n".join(verdicts)
         + f"\nLINK: {'PASS' if res.ok else 'FAIL'}"
