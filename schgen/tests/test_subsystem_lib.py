@@ -6,7 +6,7 @@ no kicad-cli render here — the byte-identical sheet emit is proven separately 
 
 from __future__ import annotations
 
-from schgen.core.model import Circuit, CircuitError, NetClass
+from schgen.core.model import Circuit, CircuitError, NetClass, PinRef
 from schgen.core.subsystem import Meta
 from schgen.verify import subsystem_structure
 
@@ -122,6 +122,20 @@ def test_bind_carries_port_type_and_load():
     c.bind({"+VDD": "+3V3", "SDA": "MY_SDA"})
     assert c.port_type_of("MY_SDA").role == "sda"
     assert "+3V3" in c.loads and "+VDD" not in c.loads
+
+
+def test_bind_renames_testpoint_value():
+    """A TestPoint carries the probed net NAME as its value; bind must rebind
+    that too (else the abstract name stays in the render — byte-identicality)."""
+    c = Circuit("t", "t")
+    c.part("U1", "Device:R", "1k", "")
+    c.port("PROBE", "U1.1")
+    c.net("GND", "U1.2")
+    tp = c.testpoint("PROBE")
+    assert tp.value == "PROBE"
+    c.bind({"PROBE": "BOARD_PROBE", "GND": "GND"})
+    assert tp.value == "BOARD_PROBE"               # value followed the net
+    assert c.net_of(PinRef(tp.ref, "1")).name == "BOARD_PROBE"
 
 
 # ---- usb_pd exemplar ------------------------------------------------------------

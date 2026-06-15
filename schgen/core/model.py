@@ -457,6 +457,14 @@ class Circuit:
                      "reset_waivers", "strap_waivers", "ep_waivers"):
             d = getattr(self, attr)
             setattr(self, attr, {rename.get(k, k): v for k, v in d.items()})
+        # TestPoint / MountingHole parts carry the probed net NAME as their
+        # value (a display convention) — rebind it too, else a probe/hole on a
+        # renamed external would keep the abstract name in the render and break
+        # byte-identicality (LAW 0: the value text is on the sheet).
+        for p in self.parts.values():
+            if p.lib_id in (self.TP_LIB_ID, self.MH_LIB_ID) \
+                    and p.value in rename:
+                p.value = rename[p.value]
         return self
 
     def _bindable_names(self) -> list[str]:
