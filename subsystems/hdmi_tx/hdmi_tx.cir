@@ -1,0 +1,52 @@
+* hdmi_tx.cir — SPICE subckt for the TPD12S016 HDMI-source subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/hdmi_tx/hdmi_tx.py INTERFACE), NOT any board net. A consuming
+* project wires these pins to its real nets — exactly as the netlist bind map
+* does. The TPD12S016 itself is an active ESD-clamp / level-shift / load-switch
+* device (no useful analog small-signal behaviour to model here); this subckt
+* captures the PASSIVE network the subsystem adds around it (rail decoupling,
+* the connector +5V bypass, and the LS_OE/CT_HPD always-on straps), which is
+* what the local test and any board-level .op/.tran reason about.
+*
+* Values mirror subsystems/hdmi_tx/hdmi_tx.py one-for-one (parse_si compatible):
+*   C1 100n  V_CCA decoupling     (+VDD_IO -> GND, DS Fig 15)
+*   C2 100n  V_CC5V decoupling    (+5V -> GND, DS Fig 15)
+*   C5 10u   V_CCA bulk           (+VDD_IO -> GND, module bulk)
+*   C3 100n  cable +5V HF bypass  (CON_5V0 -> GND, HDMI 1.4 4.2.7)
+*   C4 1u    cable +5V bulk       (CON_5V0 -> GND, HDMI 1.4 4.2.7)
+*   R1 10k   LS_OE  strap         (LS_OE  -> +VDD_IO, always-on)
+*   R2 10k   CT_HPD strap         (CT_HPD -> +VDD_IO, always-on)
+*
+* Port order: VDD_IO 5V GND   (GND last by convention). The TMDS/CEC/DDC/HPD
+* ports flow THROUGH the active TPD and carry no subsystem-local passive, so
+* they are not subckt pins; CON_5V0 / LS_OE / CT_HPD are PRIVATE internal nodes.
+
+.subckt hdmi_tx VDD_IO 5V GND
+
+* V_CCA controller-side rail decoupling (datasheet Fig 15: 100n + 10u bulk)
+C1 VDD_IO GND 100n
+C5 VDD_IO GND 10u
+
+* V_CC5V cable-side load-switch input decoupling (datasheet Fig 15: 100n)
+C2 5V GND 100n
+
+* switched cable +5V at the receptacle (internal node CON_5V0): 100n HF + 1u
+* bulk per HDMI 1.4 Sec 4.2.7 (fed by the TPD's integrated current-limited
+* switch from 5V — modelled here as an open internal node)
+C3 CON_5V0 GND 100n
+C4 CON_5V0 GND 1u
+
+* always-on straps: LS_OE + CT_HPD pulled to V_CCA (datasheet Fig 15 / 8.2.1)
+R1 LS_OE  VDD_IO 10k
+R2 CT_HPD VDD_IO 10k
+
+.ends hdmi_tx
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VDD_IO settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
