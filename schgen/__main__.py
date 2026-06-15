@@ -435,6 +435,19 @@ def cmd_board(args: argparse.Namespace) -> int:
     verdicts: list[str] = []
     ok_all = True
 
+    # Per-phase wall-time breakdown (printed only with --timing; stdout-only, so
+    # it changes no committed artifact). Build observability: the board build is
+    # dominated by the kicad-cli passes + PCB DRC + downstream generators, NOT by
+    # place/route — `--timing` makes that visible so speed work stays targeted.
+    import time as _time
+    _laps: list[tuple[str, float]] = []
+    _t_mark = [_time.perf_counter()]
+
+    def _lap(label: str) -> None:
+        now = _time.perf_counter()
+        _laps.append((label, now - _t_mark[0]))
+        _t_mark[0] = now
+
     # Pass 1 (sequential, CPU-bound): purity / validate / place+route / emit /
     # visual. Records the per-name outcome so the parallel gate pass and the
     # verdict pass below preserve EXACT names-order semantics — gates.txt is
@@ -500,9 +513,13 @@ def cmd_board(args: argparse.Namespace) -> int:
     gate_out: dict[str, tuple] = {}
     if prepared:
         from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=min(8, (os.cpu_count() or 4))) as ex:
+        # kicad-cli ops are I/O-bound subprocess waits, so use all cores (not the
+        # old min(8,...) cap) — more concurrent launches, same per-sheet inputs.
+        with ThreadPoolExecutor(max_workers=(os.cpu_count() or 8)) as ex:
             for name, net_res, erc_ok in ex.map(_gate_one, prepared):
                 gate_out[name] = (net_res, erc_ok)
+
+    _lap("pass1+2: place/route + per-sheet kicad-cli (netlist/erc/render)")
 
     # Pass 3 (sequential, names order): assemble verdicts (-> gates.txt) and
     # the ordered `sheets` list exactly as the original serial loop did.
@@ -559,6 +576,26 @@ def cmd_board(args: argparse.Namespace) -> int:
         root_name="Zynq_Carrier", sheet_subdir="schematic",
         reports_dir=rep_dir)
     ok_all = ok_all and board_ok
+
+    _lap("pass3 + cc_gate + link + build_board (hierarchy + board ERC)")
+
+    # SPEED: the PCB foundation + its kicad-cli DRC (~70 s, the 2nd-biggest
+    # phase) is independent of every verify gate + downstream doc generator that
+    # follows — nothing before the SI step (which extends the .dru it writes)
+    # reads the .kicad_pcb/.dru. Run it on a worker thread NOW so its ~70 s
+    # overlaps the ~90 s verify+downstream phase, and JOIN it just before SI.
+    # Outputs are content-derived, so concurrency changes not one emitted byte.
+    import threading as _threading
+    from schgen.generate import pcb as pcb_mod
+    _pcb_holder: dict[str, object] = {}
+
+    def _run_pcb() -> None:
+        try:
+            _pcb_holder["res"] = pcb_mod.generate(run_drc=True)
+        except Exception as exc:  # noqa: BLE001 — re-raised at the join site
+            _pcb_holder["exc"] = exc
+    _pcb_thread = _threading.Thread(target=_run_pcb, name="pcb+drc", daemon=True)
+    _pcb_thread.start()
 
     # JLC BOM across every sheet (missing LCSC = warning at board level)
     rows: dict[tuple[str, str, str], list[str]] = {}
@@ -824,15 +861,22 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"POWER SEQUENCE: FAIL — {exc}")
         ok_all = False
 
+    _lap("verify gates (powertree..spice) + xdc/vivado + downstream doc generators")
+
     # PCB FOUNDATION (Stream D): an openable .kicad_pcb seeded from the merged
     # board netlist just emitted — outline + forced 4-layer Sig/GND/PWR/Sig
     # stackup + net classes + .kicad_dru + every BOM footprint placed net-
     # accurately (NOT routed). Additive: a DRC ERROR (beyond the expected
     # unrouted-net items) fails the board; warnings (silk, lib-not-in-config)
-    # do not. Runs AFTER build_board so it merges into the same .kicad_pro.
-    from schgen.generate import pcb as pcb_mod
+    # do not. Started on a worker thread right after build_board (above) so its
+    # ~70 s DRC overlaps the verify+downstream phase; JOINED here, before SI
+    # extends the .dru it wrote. It merged into the same .kicad_pro build_board
+    # opened (build_board finished before the thread started).
     try:
-        pcb_res = pcb_mod.generate(run_drc=True)
+        _pcb_thread.join()
+        if "exc" in _pcb_holder:
+            raise _pcb_holder["exc"]      # type: ignore[misc]
+        pcb_res = _pcb_holder["res"]
         drc = pcb_res["drc"]
         derr = (drc or {}).get("n_violations", 0)
         # n_violations counts errors+warnings; the gate is the error count via
@@ -853,6 +897,8 @@ def cmd_board(args: argparse.Namespace) -> int:
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
         ok_all = False
+
+    _lap("pcb gen + DRC")
 
     # SIGNAL-INTEGRITY CONSTRAINTS (not routing): harvest every diff pair the
     # schematic declares, join to the researched si_spec targets, and APPEND
@@ -899,6 +945,13 @@ def cmd_board(args: argparse.Namespace) -> int:
         ok_all = False
 
     _golden_check(ren_dir, bless=args.bless)
+    _lap("si_constraints + manifest + golden check")
+    if getattr(args, "timing", False):
+        total = sum(d for _, d in _laps)
+        print("\n=== board phase timing (wall s) ===")
+        for label, dt in sorted(_laps, key=lambda x: -x[1]):
+            print(f"  {dt:7.2f}  ({100 * dt / total:4.1f}%)  {label}")
+        print(f"  {total:7.2f}  TOTAL")
     print(f"BOARD: {'PASS' if ok_all else 'FAIL'} "
           f"({len(sheets)} sheets -> {CARRIER / 'Zynq_Carrier.kicad_pro'})")
     return 0 if ok_all else 1
@@ -936,6 +989,9 @@ def main(argv: list[str] | None = None) -> int:
                       "into the committed carrier/ taxonomy")
     bd.add_argument("--bless", action="store_true",
                     help="accept the current renders as golden snapshots")
+    bd.add_argument("--timing", action="store_true",
+                    help="print a per-phase wall-time breakdown at the end "
+                         "(build observability; does not change any artifact)")
     bd.set_defaults(func=cmd_board)
     nt = sub.add_parser("nets", help="regenerate carrier/nets.py (the "
                                      "cross-sheet net-name contract)")
