@@ -1,0 +1,67 @@
+* pmod.cir — SPICE subckt for the 2x Digilent-Pmod host-port subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/pmod/pmod.py INTERFACE), NOT any board net. A consuming project
+* wires these pins to its real nets — exactly as the netlist bind map does. The
+* Pmod sockets (J1/J2) are pure connectors (no active device on this sheet);
+* this subckt captures the PASSIVE network the subsystem adds around them: the
+* 16 Digilent-standard 200R series IO-protection resistors and the per-port VCC
+* bypass (100n + 10u x2). That is what the local test and any board-level
+* .op/.tran reason about.
+*
+* Each PMOD{p}_SIG{io} host signal enters through its 200R series resistor onto
+* the socket IO pin. The resistor->pin node is a PRIVATE internal SIGNAL net
+* (pmod{p}_io{io} here) and so is an INTERNAL subckt node, not a pin — exactly
+* as PMOD{p}_IO{io} is a private SIGNAL net in the netlist (never bound).
+*
+* Values mirror subsystems/pmod/pmod.py one-for-one (parse_si compatible):
+*   R1..R8   200R   PMOD0 IO1..8 series protection (PMOD0_SIG{io} -> pmod0_io{io})
+*   R9..R16  200R   PMOD1 IO1..8 series protection (PMOD1_SIG{io} -> pmod1_io{io})
+*   C1 100n + C2 10u   PMOD0 (J1) VCC bypass  (+VCC_PMOD -> GND)
+*   C3 100n + C4 10u   PMOD1 (J2) VCC bypass  (+VCC_PMOD -> GND)
+*
+* Port order: VCC_PMOD PMOD0_SIG1..8 PMOD1_SIG1..8 GND
+* (GND last, by convention.)
+
+.subckt pmod VCC_PMOD
++ PMOD0_SIG1 PMOD0_SIG2 PMOD0_SIG3 PMOD0_SIG4
++ PMOD0_SIG5 PMOD0_SIG6 PMOD0_SIG7 PMOD0_SIG8
++ PMOD1_SIG1 PMOD1_SIG2 PMOD1_SIG3 PMOD1_SIG4
++ PMOD1_SIG5 PMOD1_SIG6 PMOD1_SIG7 PMOD1_SIG8
++ GND
+
+* PMOD0 (J1) IO series protection — Digilent-standard 200R per IO
+R1 PMOD0_SIG1 pmod0_io1 200R
+R2 PMOD0_SIG2 pmod0_io2 200R
+R3 PMOD0_SIG3 pmod0_io3 200R
+R4 PMOD0_SIG4 pmod0_io4 200R
+R5 PMOD0_SIG5 pmod0_io5 200R
+R6 PMOD0_SIG6 pmod0_io6 200R
+R7 PMOD0_SIG7 pmod0_io7 200R
+R8 PMOD0_SIG8 pmod0_io8 200R
+
+* PMOD1 (J2) IO series protection — Digilent-standard 200R per IO
+R9  PMOD1_SIG1 pmod1_io1 200R
+R10 PMOD1_SIG2 pmod1_io2 200R
+R11 PMOD1_SIG3 pmod1_io3 200R
+R12 PMOD1_SIG4 pmod1_io4 200R
+R13 PMOD1_SIG5 pmod1_io5 200R
+R14 PMOD1_SIG6 pmod1_io6 200R
+R15 PMOD1_SIG7 pmod1_io7 200R
+R16 PMOD1_SIG8 pmod1_io8 200R
+
+* per-port VCC bypass at the socket (100n + 10u per port, Pmod spec)
+C1 VCC_PMOD GND 100n
+C2 VCC_PMOD GND 10u
+C3 VCC_PMOD GND 100n
+C4 VCC_PMOD GND 10u
+
+.ends pmod
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VCC_PMOD settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
