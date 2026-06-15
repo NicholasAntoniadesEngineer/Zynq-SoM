@@ -46,9 +46,10 @@ hand-written layer**. There are two flavours:
   byte-identical to a hand-written one); `expects` / `buses` / `notes` carry
   the project-specific linker deferrals, bus names and house-style prose. The
   contract is `schgen/core/subsystem.py` (`Meta`); a typo'd top-level key is a
-  hard `CircuitError`. 12 subsystems are migrated this way (usb_pd, usbc_otg,
-  uart_bridge, usb_jtag, ethernet, hdmi_tx, lcd, microsd, camera, pmod,
-  pmod_expansion, pd_input) — see [`subsystems/README.md`](../subsystems/README.md).
+  hard `CircuitError`. 17 subsystems are migrated this way (usb_pd, usbc_otg,
+  uart_bridge, usb_jtag, ethernet, hdmi_tx, hdmi_rx, lcd, microsd, camera, pmod,
+  pmod_expansion, pd_input, power, rj45_connector, usb_uart_connector,
+  usb_jtag_connector) — see [`subsystems/README.md`](../subsystems/README.md).
 - **Carrier-specific glue stays local.** Sheets that only make sense for this
   board — the J1/J2/J3 connector sheets, the bring-up + power + power-monitor
   sheets, the board-services HW, the carrier connectors — are authored directly

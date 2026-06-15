@@ -72,19 +72,25 @@ PYTHONPATH=. python3 -m schgen subsystem-check     # the structure gate
 |---------|---------|
 | [`camera`](camera/README.md)               | RPi 15-pin FFC, 2-lane MIPI CSI-2 camera port |
 | [`ethernet`](ethernet/README.md)           | HX5008NL 1000BASE-T magnetics + Bob-Smith termination |
+| [`hdmi_rx`](hdmi_rx/README.md)             | HDMI sink port (low-cap TMDS RX ESD + EDID EEPROM) |
 | [`hdmi_tx`](hdmi_tx/README.md)             | TPD12S016 HDMI source port |
 | [`lcd`](lcd/README.md)                     | 40-pin TTL RGB888 panel + SY7201 backlight boost + touch I2C |
 | [`microsd`](microsd/README.md)             | TXS02612 microSD slot (1.8 V SoM ↔ 3.3 V card translator) |
-| [`pd_input`](pd_input/README.md)           | USB-C PD power inlet (receptacle + TVS + bulk → +VIN) |
+| [`pd_input`](pd_input/README.md)           | USB-C PD power inlet (receptacle + TPS26631 eFuse → +VIN) |
 | [`pmod`](pmod/README.md)                   | 2× Digilent-standard Pmod host ports |
 | [`pmod_expansion`](pmod_expansion/README.md) | manual-gated Digilent Pmod expansion port |
+| [`power`](power/README.md)                 | regulator chain — LM61460 buck + 5V/3V3/1V8 cells (reg-side/rail-side split) |
+| [`rj45_connector`](rj45_connector/README.md) | RJ45 jack (line-side MDI pairs + housing LEDs) |
 | [`uart_bridge`](uart_bridge/README.md)     | CP2102N USB-to-UART bridge |
 | [`usb_jtag`](usb_jtag/README.md)           | CH347T USB-JTAG/UART debug bridge |
+| [`usb_jtag_connector`](usb_jtag_connector/README.md) | USB-C UFP debug receptacle + ESD (for usb_jtag) |
 | [`usb_pd`](usb_pd/README.md)               | FUSB302B USB Type-C / Power-Delivery sink PHY (the first exemplar) |
+| [`usb_uart_connector`](usb_uart_connector/README.md) | USB-C receptacle + ESD (for uart_bridge) |
 | [`usbc_otg`](usbc_otg/README.md)           | USB 2.0 HS OTG port (USB-C receptacle, host-capable) |
 
-Carrier-specific sheets that only make sense for this board (the J1/J2/J3
-connectors, power / bring-up / power-monitor, board-services HW, the carrier
-connectors) are NOT in this library — they live directly under
-`carrier/subsystems/`. See [`carrier/subsystems/README.md`](../carrier/subsystems/README.md).
+17 reusable packages. Carrier-SPECIFIC sheets that only make sense for this
+board (the J1/J2/J3 SoM-mezzanine connectors, bring-up sequencing, the
+power-monitor / always-on SoM buck, board-services HW, FMC, user IO) are NOT in
+this library — they live directly under `carrier/subsystems/` as hand-written
+local glue. See [`carrier/subsystems/README.md`](../carrier/subsystems/README.md).
 </content>
