@@ -1,0 +1,52 @@
+* uart_bridge.cir — SPICE subckt for the CP2102N USB-UART bridge subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/uart_bridge/uart_bridge.py INTERFACE), NOT any board net. A
+* consuming project wires these pins to its real nets — exactly as the netlist
+* bind map does. The CP2102N itself is an active USB-UART PHY (no useful analog
+* small-signal behaviour to model here); this subckt captures the PASSIVE
+* network the subsystem adds around it (self-powered decoupling, the ~RST
+* pull-up, and the VBUS-sense divider), which is what the local test and any
+* board-level .op/.tran reason about.
+*
+* Values mirror subsystems/uart_bridge/uart_bridge.py one-for-one (parse_si
+* compatible):
+*   C1 100n + C2 10u   VREGIN bypass     (+VDD_IO -> GND)
+*   C3 100n            VDD bypass        (+VDD_IO -> GND)
+*   C4 100n            VIO bypass        (+VDD_IO -> GND)
+*   R1 1k              ~RST pull-up      (+VDD_IO -> CP2102N_RST_N, open-drain)
+*   R2 22k1            VBUS sense top    (USB_VBUS -> mid)
+*   R3 47k5            VBUS sense bottom (mid -> GND)
+* The RST pull-up node (CP2102N_RST_N) and the VBUS divider mid node are the
+* subsystem's PRIVATE internal SIGNAL nets — they are NOT subckt pins.
+*
+* Port order: VDD_IO USB_VBUS GND
+* (GND last, by convention; USB_DP/DM and the four UART signals carry no
+*  subsystem-local passive and so are not subckt pins.)
+
+.subckt uart_bridge VDD_IO USB_VBUS GND
+
+* self-powered logic-supply decoupling (datasheet: VREGIN 100n+10u, VDD/VIO 100n)
+C1 VDD_IO GND 100n
+C2 VDD_IO GND 10u
+C3 VDD_IO GND 100n
+C4 VDD_IO GND 100n
+
+* ~RST open-drain pull-up to the logic rail (internal POR; no RC cap by design)
+R1 VDD_IO RST_N 1k
+
+* VBUS-sense divider, self-powered config: senses the USB connector's OWN 5 V
+* VBUS (22k1 / 47k5 -> the VBUS pin sits at ~5V * 47.5/(22.1+47.5) ~= 3.41 V,
+* well under the CP2102N VBUS-pin abs-max).
+R2 USB_VBUS VBUS_SNS 22k1
+R3 VBUS_SNS GND 47k5
+
+.ends uart_bridge
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VDD_IO settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
