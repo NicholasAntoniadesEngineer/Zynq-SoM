@@ -1,0 +1,49 @@
+* pd_input.cir — SPICE subckt for the USB-C PD power-inlet subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/pd_input/pd_input.py INTERFACE), NOT any board net. A consuming
+* project wires these pins to its real nets — exactly as the netlist bind map
+* does. The active devices (TYPE-C receptacle, TPS26631 eFuse, USBLC6 ESD
+* array) are not modelled as small-signal here; this subckt captures the
+* PASSIVE network the subsystem adds around them (inlet bypass + the eFuse
+* strap divider + the dVdT cap), which is what the local test and any
+* board-level .op/.tran reason about.
+*
+* Values mirror subsystems/pd_input/pd_input.py one-for-one (parse_si compatible):
+*   C1 100n   inlet bypass            (+VBUS_CONN -> GND, DS-minimum on IN)
+*   C2 10u    eFuse-output bulk       (+VBUS_OUT -> GND, dVdT-charged board bulk)
+*   C3 47n    eFuse dVdT slew cap     (PD_DVDT internal node -> GND)
+*   R3 100k   OVP divider top         (+VBUS_CONN -> PD_OVP_SET)
+*   R4 5.49k  OVP divider bottom      (PD_OVP_SET -> GND)
+*   R5 5.1k   ILIM strap              (PD_ILIM_SET -> GND)
+*   R6 100k   FLT# pull-up            (+VDD_LOGIC -> FLT_N)
+*
+* Port order: VBUS_CONN VBUS_OUT VDD_LOGIC CC1 CC2 USB_D_P USB_D_N FLT_N GND
+* (GND last, by convention. The eFuse strap internal nodes PD_OVP_SET /
+*  PD_ILIM_SET / PD_DVDT are the subsystem's PRIVATE SIGNAL wiring and stay
+*  local to the subckt, not pins.)
+
+.subckt pd_input VBUS_CONN VBUS_OUT VDD_LOGIC CC1 CC2 USB_D_P USB_D_N FLT_N GND
+
+* inlet bypass (DS-minimum >=0.1u on IN) + eFuse-output board bulk
+C1 VBUS_CONN GND 100n
+C2 VBUS_OUT GND 10u
+
+* eFuse straps: OVP divider (cutoff 23.06 V typ), ILIM (I_OL 3.5 A), dVdT slew
+R3 VBUS_CONN PD_OVP_SET 100k
+R4 PD_OVP_SET GND 5.49k
+R5 PD_ILIM_SET GND 5.1k
+C3 PD_DVDT GND 47n
+
+* FLT# open-drain fault pull-up to the always-on logic rail
+R6 VDD_LOGIC FLT_N 100k
+
+.ends pd_input
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 5 V source through 1k onto VBUS_CONN settles to 5 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 5
+R1 vin P 1k
+.ends _src
+.end

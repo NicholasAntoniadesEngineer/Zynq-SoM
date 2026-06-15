@@ -13,6 +13,8 @@ hdmi_tx: OK
   interface (16): +VDD_IO, +5V, GND, CHASSIS_GND, TMDS_D2_P, TMDS_D2_N, TMDS_D1_P, TMDS_D1_N, TMDS_D0_P, TMDS_D0_N, TMDS_CLK_P, TMDS_CLK_N, CEC, DDC_SCL, DDC_SDA, HPD
 microsd: OK
   interface (10): +VDD_HOST, +VDD_CARD, GND, SD_CLK, SD_CMD, SD_D0, SD_D1, SD_D2, SD_D3, CD_N
+pd_input: OK
+  interface (10): +VBUS_CONN, +VBUS_OUT, +VDD_LOGIC, GND, CHASSIS_GND, CC1, CC2, USB_D_P, USB_D_N, FLT_N
 pmod_expansion: OK
   interface (11): +VDD_PMOD, +VSW_PMOD, GND, PMOD_IO1, PMOD_IO2, PMOD_IO3, PMOD_IO4, PMOD_IO5, PMOD_IO6, PMOD_IO7, PMOD_IO8
 uart_bridge: OK
@@ -24,4 +26,4 @@ usb_pd: OK
 usbc_otg: OK
   interface (10): +VBUS_SUPPLY, +VDD_LOGIC, GND, CHASSIS_GND, USB_DP, USB_DM, VBUS, VBUS_EN, FLT_N, USB_ID
 
-SUBSYSTEM STRUCTURE: 9/9 package(s) complete (PASS)
+SUBSYSTEM STRUCTURE: 10/10 package(s) complete (PASS)
