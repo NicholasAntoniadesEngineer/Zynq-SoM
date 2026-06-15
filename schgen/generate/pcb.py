@@ -6,10 +6,12 @@ Zynq_Carrier_pcb.kicad_dru``: a real, openable, DRC-clean (unrouted-net
 violations only) PCB seeded from the SAME netlists/floorplan the schematic
 flow uses. It does FOUR things, every number DERIVED:
 
-1. **Board OUTLINE** on Edge.Cuts — a rectangle sized from the floorplan
-   suggestion (SoM mezzanine footprint + the edge connectors), with the 4 M3
-   mounting holes (already netted to CHASSIS_GND in the model) forced to the
-   board corners.
+1. **Board OUTLINE** on Edge.Cuts — a rectangle whose W x H is DERIVED by
+   ``floorplan.derive_outline`` (SoM body + escape halo + a connector band on
+   each edge + the total component area at a generous fill + a perimeter
+   keep-out), sized for routing headroom; the 4 M3 mounting holes (already
+   netted to CHASSIS_GND in the model) are forced to the board corners, and a
+   SoM-body keep-out zone keeps routing/copper out from under the mezzanine.
 2. **A FORCED 4-LAYER controlled-impedance stackup** (Sig / GND / PWR / Sig),
    the JLC04161H-7628 1.6 mm build the constraints already target — written
    into both the ``(layers)`` table and the ``(setup (stackup ...))`` block.
@@ -18,10 +20,17 @@ flow uses. It does FOUR things, every number DERIVED:
    class diff pairs) and a POWER class for the rails, with per-net
    ``netclass_patterns`` so KiCad assigns every high-speed/rail net to its
    class on open. Reuses ``schgen/generate/constraints.py`` geometry.
-4. **FOOTPRINT PLACEMENT** — every BOM footprint embedded into the .kicad_pcb
-   at a floorplan-derived position, with its pads bound to the schematic nets
-   (the merged board netlist KiCad itself extracts from the root sheet) so the
-   ratsnest is correct. NO routing.
+4. **FOOTPRINT PLACEMENT** — every BOM footprint embedded into the .kicad_pcb,
+   its pads bound to the schematic nets (the merged board netlist KiCad itself
+   extracts from the root sheet). Placement is THREE policies layered:
+   (A1) the SoM DF40 mezzanine J1/J2/J3 placed at the centered, MIRRORED SoM
+   positions (board-to-board mate) with each connector's SoM rotation; (A3)
+   every other sheet's footprints packed INTO that sheet's floorplan block, so
+   each subsystem clusters contiguously and its ratsnest is a local bundle, not
+   a board-wide hairball; and (4) 2-SIDE assembly (default ON, the JLCPCB
+   both-sides build) — SoM/edge connectors + large/active ICs on TOP (F.Cu),
+   decoupling caps + small passives on BOTTOM (B.Cu) under their cluster, which
+   roughly halves top-side area pressure. NO routing.
 
 The merged board netlist is the authoritative source: it is extracted from the
 already-emitted ``carrier/Zynq_Carrier.kicad_sch`` with the SAME
@@ -100,6 +109,7 @@ class FootprintInst:
     pad_nets: dict[str, tuple[int, str]]   # pad name -> (net number, net name)
     mod_path: Path
     sheet: str
+    side: str = "top"     # "top" (F.Cu) | "bottom" (B.Cu) — 2-side assembly
 
 
 @dataclass
@@ -112,11 +122,20 @@ class PcbModel:
     classes: dict[str, cst.DiffGeometry | None]
     placed: int
     deferred: list[str]
+    som_keepout: tuple[float, float, float, float] | None = None  # x0,y0,x1,y1
+    n_top: int = 0
+    n_bottom: int = 0
+    two_side: bool = True
 
 
 # ---- footprint resolution + parsing ----------------------------------------------
 
 _PAD_RE = re.compile(r'\(pad\s+"([^"]+)"')
+# a pad that occupies EVERY copper layer (through-hole / NPTH) — its copper is
+# on both F.Cu and B.Cu, so a bottom-side SMD part placed at the same XY would
+# short to it. The 2-side packer reserves such top-side footprints on the
+# bottom too.
+_THRU_PAD_RE = re.compile(r'\(pad\s+"[^"]*"\s+(?:thru_hole|np_thru_hole)\b')
 
 
 def resolve_mod(footprint: str) -> Path | None:
@@ -138,6 +157,18 @@ def pad_names(mod_path: Path) -> list[str]:
     """Ordered list of pad NAMES (KiCad pad number strings) in the footprint.
     A name repeats for multi-pad nets (e.g. two GND pads named 'GND')."""
     return _PAD_RE.findall(mod_path.read_text())
+
+
+_thru_cache: dict[str, bool] = {}
+
+
+def has_thru_pads(mod_path: Path) -> bool:
+    """True if the footprint has any thru_hole/np_thru_hole pad (copper on all
+    layers). Cached by path."""
+    key = str(mod_path)
+    if key not in _thru_cache:
+        _thru_cache[key] = bool(_THRU_PAD_RE.search(mod_path.read_text()))
+    return _thru_cache[key]
 
 
 # ---- the merged board netlist ---------------------------------------------------
@@ -371,6 +402,38 @@ class _Occ:
         slot = self._scan_row(bbox)
         return slot if slot is not None else self._stage(bbox)
 
+    def place_in_zone(self, bbox, zone) -> tuple[float, float]:
+        """A3 — pack ``bbox`` INSIDE the floorplan block ``zone`` (zx0,zy0,
+        zx1,zy1) so the subsystem clusters contiguously, but check against the
+        SHARED occupancy (self.rects) so a zone part can never collide with a
+        fixed part, another zone's parts, or the SoM keep-out. A part that does
+        not fit its zone spills to the board-wide ``place`` (still non-
+        overlapping). Both the zone scan and the board fall back through the
+        same self.rects, so the per-side board is globally collision-free."""
+        zx0, zy0, zx1, zy1 = zone
+        # keep the haloed footprint a touch inside the block so adjacent zones'
+        # parts cannot abut across the block boundary.
+        zx0 += EDGE_CLEAR / 2
+        zy0 += EDGE_CLEAR / 2
+        zx1 -= EDGE_CLEAR / 2
+        zy1 -= EDGE_CLEAR / 2
+        hw, hh = self._wh(bbox)
+        cx, cy, row_h = zx0, zy0, 0.0
+        guard = 0
+        while cy + hh <= zy1 and guard < 200000:
+            guard += 1
+            if cx + hw > zx1:
+                cx = zx0
+                cy += row_h
+                row_h = 0.0
+                continue
+            if self._free(cx, cy, cx + hw, cy + hh):
+                row_h = max(row_h, hh)
+                self.rects.append((cx, cy, cx + hw, cy + hh))
+                return self._origin(cx, cy, bbox)
+            cx += GRID
+        return self.place(bbox)        # zone full -> board-wide shelf
+
     def reserve_origin(self, ox, oy, bbox) -> None:
         """Mark a fixed-origin footprint's haloed bbox as occupied."""
         bx0, by0, bx1, by1 = bbox
@@ -379,9 +442,75 @@ class _Occ:
                            ox + bx1 + h, oy + by1 + h))
 
 
+# ---- 2-side assembly: layer-assignment policy ------------------------------------
+# JLCPCB assembles BOTH sides. The policy keeps the mechanically-/cable-/heat-
+# critical parts on TOP and pushes the small decoupling/bypass passives to the
+# BOTTOM (placed directly under their cluster), which roughly halves the
+# top-side area pressure. Default ON; a forced single-side build keeps all on
+# top (every classification then returns "top").
+
+# Footprint families that MUST stay on the top (component) side regardless of
+# size: the SoM mezzanine, every off-board edge connector, the mounting holes,
+# test points (probe from the top), and through-hole headers.
+_TOP_ALWAYS_LIBS = (
+    "DF40C", "MountingHole", "Mechanical:", "TestPoint",
+    "PinHeader", "PinSocket", "Connector", "Conn_",
+)
+# Active/large IC area floor (mm^2 of the footprint bbox): a part this big or
+# bigger is an IC/connector/magnetic and stays on top.
+TOP_AREA_MM2 = 12.0
+
+
+def _is_passive_ref(ref: str) -> bool:
+    """A discrete passive whose reference designator starts R/C/L (the parts a
+    2-side build may relocate to the bottom). FB (ferrite), D (diode) stay on
+    top — they are often in the signal path or LED-visible."""
+    return ref[:1] in ("R", "C", "L") and not ref.startswith(("RJ", "LED"))
+
+
+def _decoupling_caps(nets: dict[str, list]) -> set[str]:
+    """Refs of decoupling/bypass caps: a 2-pin cap across GROUND and exactly
+    one other (rail) net. These are the bottom-side candidates placed directly
+    under their IC's supply pins — derived from the netlist, never guessed."""
+    cap_nets: dict[str, set[str]] = {}
+    for name, pins in nets.items():
+        if name.startswith("unconnected-"):
+            continue
+        for pr in pins:
+            if pr.ref.startswith("C") and not pr.ref.startswith("#"):
+                cap_nets.setdefault(pr.ref, set()).add(name)
+    out: set[str] = set()
+    for ref, ns in cap_nets.items():
+        has_gnd = "GND" in ns
+        rails = {n for n in ns if n != "GND"}
+        if has_gnd and len(rails) == 1 and len(ns) == 2:
+            out.add(ref)
+    return out
+
+
+def _classify_side(ref: str, lib: str, bbox: tuple,
+                   decoupling: set[str], two_side: bool) -> str:
+    """top|bottom for a footprint. Single-side -> always top. The SoM,
+    connectors, mounting holes, test points and large/active ICs are top;
+    decoupling caps and other small passives go to the bottom."""
+    if not two_side:
+        return "top"
+    if any(tok in lib for tok in _TOP_ALWAYS_LIBS):
+        return "top"
+    bx0, by0, bx1, by1 = bbox
+    area = (bx1 - bx0) * (by1 - by0)
+    if area >= TOP_AREA_MM2:
+        return "top"               # an IC / large part: top
+    if ref in decoupling:
+        return "bottom"            # bypass cap under its IC's supply pins
+    if _is_passive_ref(ref):
+        return "bottom"            # other small passive: relieve top pressure
+    return "top"
+
+
 # ---- the model build -------------------------------------------------------------
 
-def build_model() -> PcbModel:
+def build_model(two_side: bool = True) -> PcbModel:
     from schgen.core.link import all_subsystem_paths, load_subsystem, link, \
         load_som_contract
     from schgen.generate import floorplan as fp
@@ -431,6 +560,14 @@ def build_model() -> PcbModel:
         bx0, by0, bx1, by1 = bbox_of[ref]
         return (bx1 - bx0) * (by1 - by0)
 
+    # 2-side classification: decoupling caps + small passives -> bottom.
+    decoupling = _decoupling_caps(nets)
+    side_of: dict[str, str] = {}
+    for ref in resolvable:
+        _sheet, _ftp, _val, lib = parts[ref]
+        side_of[ref] = _classify_side(ref, lib, bbox_of[ref],
+                                      decoupling, two_side)
+
     # ---- fixed positions: corner mounting holes + SoM DF40 mezzanine --------
     # mounting holes -> board corners (CHASSIS_GND, model H1..H4)
     mh_refs = sorted(r for r, (_s, _fp, _v, lib) in parts.items()
@@ -440,52 +577,104 @@ def build_model() -> PcbModel:
                (fp.BOARD_W - MH_INSET, fp.BOARD_H - MH_INSET),
                (MH_INSET, fp.BOARD_H - MH_INSET)]
     fixed: dict[str, tuple[float, float]] = {}
+    fixed_rot: dict[str, float] = {}
     for i, ref in enumerate(mh_refs):
         fixed[ref] = corners[i % 4]
 
-    # SoM DF40 connectors at the extracted SoM footprint positions (centered).
+    # A1 — SoM DF40 mezzanine: place J1/J2/J3 at the SAME centered, mirrored
+    # positions the floorplan derived (plan.som_x/som_y + the per-connector
+    # SoM-relative x/y), so the three receptacles form one contiguous,
+    # correctly-pitched mezzanine region that mates the SoM board-to-board.
+    # The mirror (bottom view) is already baked into som.js[].x by
+    # floorplan.extract_som; here we add the per-connector ROTATION (J3 sits
+    # vertical on the SoM, the others horizontal) so the footprint orientation
+    # matches the SoM's, not a flat default.
     som = plan.som
-    bx_off = (fp.BOARD_W - som.w) / 2
-    by_off = (fp.BOARD_H - som.h) / 2
-    som_view = {j.ref: (bx_off + j.x, by_off + j.y) for j in som.js}
-    som_ref_of: dict[str, str] = {}     # board-ref -> J1/J2/J3
+    sx_off, sy_off = plan.som_x, plan.som_y    # derived centered SoM origin
+    som_view = {j.ref: (sx_off + j.x, sy_off + j.y) for j in som.js}
+    som_rot = {j.ref: (90.0 if j.w < j.h else 0.0) for j in som.js}
     for ref, (sheet, _fp, _v, _lib) in parts.items():
         if ref not in resolvable or not sheet.startswith("som_j"):
             continue
         m = re.match(r"som_j(\d)", sheet)
         if m and ref.startswith("J") and f"J{m.group(1)}" in som_view:
             jname = f"J{m.group(1)}"
-            som_ref_of[ref] = jname
             fixed[ref] = som_view[jname]
+            fixed_rot[ref] = som_rot[jname]
 
-    # ---- non-overlapping shelf pack of everything else ----------------------
-    # reserve the SoM keep-out (its full footprint area) + every fixed part.
-    reserved: list[tuple[float, float, float, float]] = []
-    sx0, sy0 = bx_off - 1.0, by_off - 1.0
-    reserved.append((sx0, sy0, sx0 + som.w + 2.0, sy0 + som.h + 2.0))
-    occ = _Occ(fp.BOARD_W, fp.BOARD_H, reserved)
+    # SoM body keep-out: the full SoM outline + a halo, centered. Nothing — top
+    # OR bottom — places under the SoM (the mezzanine stack sits there). Also
+    # emitted as a keepout zone on the PCB (emit_pcb).
+    halo = 1.0
+    keepout = (sx_off - halo, sy_off - halo,
+               sx_off + som.w + halo, sy_off + som.h + halo)
+
+    # ---- per-subsystem ratsnest bundles (A3) + 2-side packing --------------
+    # Each non-SoM sheet owns a floorplan block rectangle; pack that sheet's
+    # footprints INTO its block so the subsystem clusters contiguously (the
+    # ratsnest becomes a per-block bundle instead of a board-wide hairball).
+    # TOP and BOTTOM are packed in SEPARATE occupancies (a top part and the
+    # bottom cap beneath it legitimately share the same XY footprint), and a
+    # block that overflows spills to a board-level fallback packer of the same
+    # side — never dropped, never overlapping.
+    block_of = {b.name: (b.x, b.y, b.x + b.w, b.y + b.h)
+                for b in plan.blocks}
+    occ_top = _Occ(fp.BOARD_W, fp.BOARD_H, [keepout])
+    occ_bot = _Occ(fp.BOARD_W, fp.BOARD_H, [keepout])
+    # fixed parts (mounting holes + SoM connectors) reserve on BOTH sides: the
+    # mounting holes are NPTH/PTH (copper on every layer) and the SoM stack
+    # occupies the volume, so the bottom must avoid them too.
     for ref, (ox, oy) in fixed.items():
-        occ.reserve_origin(ox, oy, bbox_of[ref])
+        occ_top.reserve_origin(ox, oy, bbox_of[ref])
+        occ_bot.reserve_origin(ox, oy, bbox_of[ref])
 
     pos: dict[str, tuple[float, float]] = dict(fixed)
-    # pack sheet-by-sheet (locality), largest-first within a sheet; sheets in a
-    # stable order — the floorplan's edge sheets first, then interior, both
-    # alphabetical, so output is deterministic.
-    def _sheet_key(name: str) -> tuple[int, str]:
-        return (0 if name.startswith("som_j") else 1, name)
-    for sheet in sorted(refs_by_sheet, key=_sheet_key):
-        refs = sorted(refs_by_sheet[sheet], key=lambda r: (-_area(r), r))
-        for ref in refs:
-            if ref in fixed:
-                continue
-            pos[ref] = occ.place(bbox_of[ref])
+
+    def _pack(refs: list[str], zone, occ: _Occ) -> None:
+        for ref in sorted(refs, key=lambda r: (-_area(r), r)):
+            pos[ref] = (occ.place_in_zone(bbox_of[ref], zone)
+                        if zone is not None else occ.place(bbox_of[ref]))
+
+    # TOP side first (sheet-by-sheet into each subsystem's zone), so every
+    # top part — including the through-hole connectors — has a final XY before
+    # any bottom part is placed.
+    for sheet in sorted(refs_by_sheet):
+        if sheet.startswith("som_j"):
+            continue            # the SoM receptacles are fixed above
+        zone = block_of.get(sheet)
+        top = [r for r in refs_by_sheet[sheet]
+               if r not in fixed and side_of[r] == "top"]
+        _pack(top, zone, occ_top)
+
+    # A through-hole pad on a TOP part occupies every copper layer, so a bottom
+    # SMD pad at the same XY would short to it. Reserve every top part that has
+    # thru-hole/NPTH pads (connectors, headers) in the BOTTOM occupancy before
+    # placing any bottom part.
+    for ref in resolvable:
+        if pos.get(ref) is not None and (ref in fixed or side_of[ref] == "top"):
+            if has_thru_pads(resolvable[ref]):
+                ox, oy = pos[ref]
+                occ_bot.reserve_origin(ox, oy, bbox_of[ref])
+
+    # BOTTOM side: decoupling caps + small passives, into the SAME per-subsystem
+    # zone so each block's bypass bank clusters under its block (the ratsnest
+    # bundle stays local), collision-checked against the bottom occupancy.
+    for sheet in sorted(refs_by_sheet):
+        if sheet.startswith("som_j"):
+            continue
+        zone = block_of.get(sheet)
+        bot = [r for r in refs_by_sheet[sheet]
+               if r not in fixed and side_of[r] == "bottom"]
+        _pack(bot, zone, occ_bot)
 
     insts: list[FootprintInst] = []
     placed = 0
+    n_top = n_bottom = 0
     for ref in sorted(resolvable):
         sheet, footprint, value, lib = parts[ref]
         mod = resolvable[ref]
         bx, by = pos[ref]
+        side = "top" if ref in fixed else side_of[ref]
         # pad -> net
         pad_nets: dict[str, tuple[int, str]] = {}
         for pad in pad_names(mod):
@@ -493,16 +682,61 @@ def build_model() -> PcbModel:
         insts.append(FootprintInst(
             ref=ref, value=value, footprint=footprint,
             x=_gridify(ORIGIN_X + bx), y=_gridify(ORIGIN_Y + by),
-            rotation=0.0, pad_nets=pad_nets, mod_path=mod, sheet=sheet))
+            rotation=fixed_rot.get(ref, 0.0), pad_nets=pad_nets,
+            mod_path=mod, sheet=sheet, side=side))
         placed += 1
+        if side == "bottom":
+            n_bottom += 1
+        else:
+            n_top += 1
 
+    kx0, ky0, kx1, ky1 = keepout
     return PcbModel(
         board_w=fp.BOARD_W, board_h=fp.BOARD_H, insts=insts,
         net_numbers=net_numbers, netclass_of=netclass_of, classes=classes,
-        placed=placed, deferred=deferred)
+        placed=placed, deferred=deferred,
+        som_keepout=(ORIGIN_X + kx0, ORIGIN_Y + ky0,
+                     ORIGIN_X + kx1, ORIGIN_Y + ky1),
+        n_top=n_top, n_bottom=n_bottom, two_side=two_side)
 
 
 # ---- emission --------------------------------------------------------------------
+
+def _flip_layer_token(name: str) -> str:
+    """F.<x> -> B.<x> (and vice-versa, idempotent for non-F/B layers)."""
+    if name.startswith("F."):
+        return "B." + name[2:]
+    if name.startswith("B."):
+        return name
+    return name
+
+
+def _flip_to_bottom(node: list) -> None:
+    """Recursively flip a footprint subtree from the top (F.Cu) to the bottom
+    (B.Cu) side, the KiCad way: swap every (layer ...)/(layers ...) F.* token to
+    its B.* twin, and add (justify mirror) to text effects. Local coordinates
+    are NOT touched — KiCad mirrors at render time from the layer. Deterministic
+    and reversible (re-running on a B.* tree is a no-op for the layers)."""
+    for sub in node:
+        if not isinstance(sub, list) or not sub:
+            continue
+        head = sub[0]
+        if head in (Sym("layer"), Sym("layers")):
+            for i in range(1, len(sub)):
+                if isinstance(sub[i], str):
+                    sub[i] = _flip_layer_token(sub[i])
+        elif head == Sym("effects"):
+            # add (justify mirror) if no justify present; else ensure mirror
+            just = next((x for x in sub if isinstance(x, list) and x
+                         and x[0] == Sym("justify")), None)
+            if just is None:
+                sub.append([Sym("justify"), Sym("mirror")])
+            elif Sym("mirror") not in just:
+                just.append(Sym("mirror"))
+            _flip_to_bottom(sub)
+        else:
+            _flip_to_bottom(sub)
+
 
 def _embed_footprint(inst: FootprintInst, uid) -> list:
     """Parse the .kicad_mod, set its placement + pad nets, return the
@@ -532,6 +766,14 @@ def _embed_footprint(inst: FootprintInst, uid) -> list:
             inserted = True
     if not inserted:
         out.insert(1, at_node)
+
+    # 2-side assembly: a bottom-side footprint flips to B.Cu. KiCad's on-disk
+    # convention keeps the local pad/graphic COORDINATES unchanged and only
+    # swaps every F.* layer token to its B.* twin (the renderer mirrors based on
+    # the layer), plus a (justify mirror) on text. Done before the uuid/net pass
+    # so the flipped tree is what gets stamped.
+    if inst.side == "bottom":
+        _flip_to_bottom(out)
 
     # stamp a stable top-level uuid, replace placement+pad uuids deterministically
     _set_or_add(out, [Sym("uuid"), uid(f"fp:{inst.ref}")])
@@ -564,12 +806,38 @@ def _embed_footprint(inst: FootprintInst, uid) -> list:
             if (num, nname) == (0, "") and pad_seq in inherit:
                 num, nname = inherit[pad_seq]
             _set_pad_net(node, num, nname)
+            # propagate the footprint rotation into each pad's LOCAL orientation
+            # — KiCad's native representation of a rotated footprint (its own
+            # SoM J1/J2/J3 store (at x y <fp-rot>) on every pad). Without this a
+            # non-square rect pad authored for the 0-deg frame keeps its 0-deg
+            # orientation and KiCad's pad-clearance check sees the rect's long
+            # side fall along the pitch axis -> false intra-footprint shorts.
+            if inst.rotation:
+                _rotate_pad(node, inst.rotation)
             _restamp_uuid(node, uid(f"fp:{inst.ref}:pad:{pad_seq}"))
             pad_seq += 1
         elif head in (Sym("fp_text"), Sym("fp_line"), Sym("fp_rect"),
                       Sym("fp_circle"), Sym("fp_arc"), Sym("fp_poly")):
             _restamp_uuid(node, uid(f"fp:{inst.ref}:gfx:{pad_seq}:{prop_seq}"))
     return out
+
+
+def _rotate_pad(pad: list, fp_rot: float) -> None:
+    """Add ``fp_rot`` to a pad's LOCAL (at x y [rot]) orientation, matching how
+    KiCad stores a rotated footprint (every pad carries the footprint rotation
+    in its own (at)). The pad's local x/y are NOT changed — KiCad rotates the
+    positions by the footprint (at) at load; only the pad's own rect must turn
+    so a non-square pad keeps its correct orientation relative to the row."""
+    at = next((x for x in pad
+               if isinstance(x, list) and x and x[0] == Sym("at")), None)
+    if at is None:
+        return
+    cur = float(at[3]) if len(at) > 3 else 0.0
+    new = round((cur + fp_rot) % 360.0, 4)
+    if len(at) > 3:
+        at[3] = new
+    else:
+        at.append(new)
 
 
 def _pad_geom(node: list) -> tuple[float, float, float, float] | None:
@@ -737,6 +1005,40 @@ def _edge_rect(x0, y0, x1, y1, uid) -> list:
     return out
 
 
+def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
+    """A rule-area (keep-out) zone over the SoM body on both copper layers, so
+    the layout tool keeps tracks/vias/copper out from under the mezzanine stack
+    (the receptacles + SoM board occupy that volume). It is a planning aid, not
+    a DRC error source — KiCad keep-outs only constrain routing/copper, which
+    this unrouted foundation has none of. Drawn as the rectangle's 4 corners."""
+    x0, y0, x1, y1 = box
+    corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+    pts = [Sym("pts")] + [[Sym("xy"), round(px, 3), round(py, 3)]
+                          for px, py in corners]
+    return [Sym("zone"),
+            [Sym("net"), 0], [Sym("net_name"), ""],
+            [Sym("layers"), "F.Cu", "B.Cu"],
+            [Sym("uuid"), uid("som-keepout")],
+            [Sym("name"), "SoM_body_keepout"],
+            [Sym("hatch"), Sym("edge"), 0.5],
+            [Sym("connect_pads"), [Sym("clearance"), 0]],
+            [Sym("min_thickness"), 0.25],
+            # disallow ROUTING copper only (tracks/vias/pour). Pads and
+            # footprints are ALLOWED: the SoM mezzanine receptacles (J1/J2/J3)
+            # legitimately sit inside this area — the keep-out keeps the layout
+            # tool from routing carrier signals THROUGH the SoM shadow, it does
+            # not forbid the receptacle pads themselves.
+            [Sym("keepout"),
+             [Sym("tracks"), Sym("not_allowed")],
+             [Sym("vias"), Sym("not_allowed")],
+             [Sym("pads"), Sym("allowed")],
+             [Sym("copperpour"), Sym("not_allowed")],
+             [Sym("footprints"), Sym("allowed")]],
+            [Sym("fill"), [Sym("thermal_gap"), 0.5],
+             [Sym("thermal_bridge_width"), 0.5]],
+            [Sym("polygon"), pts]]
+
+
 def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     """Serialise the .kicad_pcb."""
     board_uuid = stable_uuid("Zynq_Carrier", "pcb")
@@ -759,8 +1061,9 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
          [Sym("title"), "Zynq Carrier — PCB foundation (schgen)"],
          [Sym("company"), "Zynq SoM Carrier"],
          [Sym("comment"), 1,
-          "FOUNDATION: outline + 4L stackup + net classes + placed "
-          "footprints. NOT routed — generated by schgen (do not hand-edit)."]],
+          "FOUNDATION: derived outline + SoM-body keep-out + 4L stackup + net "
+          "classes + 2-side placement (SoM-mirror mezzanine, per-subsystem "
+          "ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."]],
         _layers_node(),
     ]
 
@@ -783,6 +1086,10 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     x0, y0 = ORIGIN_X, ORIGIN_Y
     x1, y1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
     doc.extend(_edge_rect(x0, y0, x1, y1, uid))
+
+    # SoM body keep-out (A1) — nothing routes/places under the mezzanine.
+    if model.som_keepout is not None:
+        doc.append(_som_keepout_zone(model.som_keepout, uid))
 
     # footprints (fixed ref order — determinism)
     for inst in model.insts:
@@ -945,10 +1252,12 @@ def write_dru(model: PcbModel, dru_path: Path) -> None:
 
 # ---- entry point -----------------------------------------------------------------
 
-def generate(*, run_drc: bool = True) -> dict:
+def generate(*, run_drc: bool = True, two_side: bool = True) -> dict:
     """Build + write the PCB foundation. Returns a result dict (paths, counts,
-    drc verdict)."""
-    model = build_model()
+    drc verdict). ``two_side`` (default ON, the JLCPCB both-sides assembly
+    policy) pushes decoupling/small passives to the bottom; set False for a
+    forced single-side build (everything on top)."""
+    model = build_model(two_side=two_side)
 
     pcb_path = CARRIER / "Zynq_Carrier.kicad_pcb"
     emit_pcb(model, pcb_path)
@@ -965,6 +1274,8 @@ def generate(*, run_drc: bool = True) -> dict:
         "placed": model.placed, "total": len(board_parts()),
         "nets": len([n for n in model.net_numbers if n]),
         "classes": sorted(model.classes), "deferred": model.deferred,
+        "n_top": model.n_top, "n_bottom": model.n_bottom,
+        "two_side": model.two_side, "som_keepout": model.som_keepout,
         "drc": None,
     }
     if run_drc:
@@ -1013,13 +1324,17 @@ def run_pcb_drc(pcb_path: Path) -> dict:
 
 
 def cmd_pcb(args: argparse.Namespace) -> int:
-    res = generate(run_drc=not args.no_drc)
+    res = generate(run_drc=not args.no_drc,
+                   two_side=not getattr(args, "single_side", False))
     print(f"PCB: {res['pcb'].relative_to(REPO_ROOT)} "
           f"({res['board_w']:g} x {res['board_h']:g} mm outline, "
           f"4-layer Sig/GND/PWR/Sig stackup)")
+    side = (f"2-side (top {res['n_top']} / bottom {res['n_bottom']})"
+            if res["two_side"] else "single-side (all top)")
     print(f"  footprints placed: {res['placed']}/{res['total']}  "
           f"nets: {res['nets']}  net classes: {len(res['classes'])} "
           f"({', '.join(res['classes'])})")
+    print(f"  assembly: {side}")
     print(f"  net classes + patterns -> {res['pro'].relative_to(REPO_ROOT)}")
     print(f"  design rules -> {res['dru'].relative_to(REPO_ROOT)}")
     if res["deferred"]:
@@ -1039,4 +1354,7 @@ if __name__ == "__main__":
     import sys
     p = argparse.ArgumentParser(prog="schgen pcb")
     p.add_argument("--no-drc", action="store_true")
+    p.add_argument("--single-side", action="store_true",
+                   help="force all footprints on top (default: 2-side, "
+                        "decoupling/small passives on the bottom)")
     sys.exit(cmd_pcb(p.parse_args()))

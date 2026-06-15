@@ -38,10 +38,16 @@ PARTS_DIR = REPO_ROOT / "parts"
 OUT_SVG = REPO_ROOT / "carrier" / "docs" / "FLOORPLAN.svg"
 OUT_MD = REPO_ROOT / "carrier" / "docs" / "FLOORPLAN.md"
 
-# Suggested outline class — PLAN.md round 2 (user): "Form factor: free,
-# connector-driven (~120x100 class expected; user owns outline)".
+# Board outline — DERIVED, not hardcoded. ``derive_outline`` (below) computes
+# BOARD_W/BOARD_H from the SoM footprint + the edge-connector depths + the
+# total component area + a perimeter keepout; ``build_plan`` calls it FIRST and
+# rebinds these module globals before any packing reads them, so every
+# downstream consumer (the packer, the SVG/MD, the PCB) sees the derived
+# dimensions. The seed values here are only a fallback for a direct import that
+# never calls ``derive_outline`` (and match the historical ~120x100 class).
 BOARD_W = 120.0
 BOARD_H = 100.0
+OUTLINE_NOTE = ""        # human-readable derivation, set by derive_outline
 
 EDGE_MARGIN = 4.0        # board corners kept clear of edge connectors
 CONN_SIDE_MARGIN = 1.5   # block width = connector span + this each side
@@ -49,6 +55,18 @@ EDGE_DEPTH_CAP = 22.0    # edge block max depth into the board
 CLEAR = 1.5              # block-to-block clearance
 BIG_PART_MM2 = 40.0      # parts at/above this use raw courtyard area
 ROUTE_FACTOR = 3.5       # small-part area multiplier (escape + routing)
+
+# --- outline-derivation parameters (all generous, for routing headroom) ----
+PERIM_KEEPOUT = 3.0      # board-edge keepout ring kept free of components
+SOM_HALO = 6.0           # routing/escape halo reserved around the SoM body
+EDGE_BAND = EDGE_DEPTH_CAP + 4.0   # depth of the connector band on each edge
+# component-area packing efficiency: top-side usable area must exceed the total
+# component area divided by this (a generous fill, leaving the rest for routing
+# and the per-subsystem ratsnest channels). 2-side assembly (pcb.py) roughly
+# halves the TOP pressure, but the outline is sized for the single-side worst
+# case so a forced single-side build still fits.
+PACK_EFFICIENCY = 0.30
+OUTLINE_SNAP = 5.0       # round the derived W/H UP to this grid (mm)
 
 FONT = "ui-monospace, SFMono-Regular, Menlo, monospace"
 SCALE = 6.0              # SVG px per mm
@@ -251,6 +269,77 @@ def sheet_area(c, factor: float) -> float:
         a = w * h
         total += a if a >= BIG_PART_MM2 else a * factor
     return total
+
+
+def _raw_component_area(sheets) -> float:
+    """Sum of every part's raw courtyard area (mm^2), SoM mezzanine receptacles
+    excluded (they live in the SoM region, not the free area). Used for the
+    OUTLINE derivation — distinct from sheet_area's block-sizing estimate which
+    inflates small parts by the routing factor."""
+    total = 0.0
+    for sc in sheets:
+        if sc.name.startswith("som_j"):
+            continue
+        for part in sc.circuit.parts.values():
+            w, h = part_dims(part.footprint)
+            total += w * h
+    return total
+
+
+@dataclass(frozen=True)
+class Outline:
+    w: float
+    h: float
+    note: str
+
+
+def derive_outline(sheets, som: SomGeom) -> Outline:
+    """Board W x H DERIVED from the design, generously sized for routing
+    headroom — replaces the old hardcoded 120x100. Every term is from data:
+
+      - the SoM body + a routing halo, centered, sets the core;
+      - a connector BAND on each of the four edges (deep enough for the
+        deepest edge connector: HDMIx2 / RJ45 / USB-Cx4 / FMC overhang / FFCs)
+        wraps the SoM core on all sides;
+      - the TOTAL raw component area / PACK_EFFICIENCY sets a floor on the
+        usable interior so every block fits with routing channels;
+      - a PERIM_KEEPOUT ring is added on every side.
+
+    The result is rounded UP to OUTLINE_SNAP. Deterministic: same inputs ->
+    same dimensions (no randomness, no timestamp)."""
+    # core = SoM body + escape halo on all sides + a connector band on each
+    # edge. The band depth is the same on every edge so the SoM stays centered
+    # and any edge can host its connector family (the packer chooses which).
+    core_w = som.w + 2 * SOM_HALO
+    core_h = som.h + 2 * SOM_HALO
+    banded_w = core_w + 2 * EDGE_BAND
+    banded_h = core_h + 2 * EDGE_BAND
+
+    # area floor: the usable interior (inside the perimeter keepout) must hold
+    # the whole component set at PACK_EFFICIENCY fill. Keep the SoM aspect so
+    # the area term grows the board proportionally rather than stretching it.
+    comp_area = _raw_component_area(sheets)
+    som_keepout = (som.w + 2 * SOM_HALO) * (som.h + 2 * SOM_HALO)
+    need_area = comp_area / PACK_EFFICIENCY + som_keepout
+    aspect = banded_w / banded_h
+    area_w = (need_area * aspect) ** 0.5
+    area_h = (need_area / aspect) ** 0.5
+
+    w = max(banded_w, area_w) + 2 * PERIM_KEEPOUT
+    h = max(banded_h, area_h) + 2 * PERIM_KEEPOUT
+
+    def snap_up(v: float) -> float:
+        return round(float(int((v + OUTLINE_SNAP - 1e-6) / OUTLINE_SNAP))
+                     * OUTLINE_SNAP, 1)
+
+    w, h = snap_up(w), snap_up(h)
+    note = (f"SoM {som.w:g}x{som.h:g} + {SOM_HALO:g}mm halo + {EDGE_BAND:g}mm "
+            f"connector band/edge -> core {banded_w:g}x{banded_h:g}; "
+            f"component area {comp_area:.0f}mm2 / {PACK_EFFICIENCY:g} fill "
+            f"-> area floor {area_w:.0f}x{area_h:.0f}; + {PERIM_KEEPOUT:g}mm "
+            f"perimeter keepout -> {w:g}x{h:g} mm (rounded up to "
+            f"{OUTLINE_SNAP:g}mm grid)")
+    return Outline(w=w, h=h, note=note)
 
 
 # ---- edge-connector classification ------------------------------------------------
@@ -483,6 +572,12 @@ def _zone_anchor(plan: Plan, zone: str) -> tuple[float, float]:
 
 def build_plan(sheets, link_result, regs) -> Plan:
     som = extract_som()
+    # DERIVE the outline FIRST, then rebind the module globals so every
+    # consumer downstream (Plan.__init__, the packer, the SVG/MD, the PCB
+    # foundation) reads the derived dimensions instead of a hardcoded box.
+    global BOARD_W, BOARD_H, OUTLINE_NOTE
+    outline = derive_outline(sheets, som)
+    BOARD_W, BOARD_H, OUTLINE_NOTE = outline.w, outline.h, outline.note
     plan = Plan(som)
     aff = _j_affinity(sheets, link_result)
     j_edge = _j_edge_map(som)
@@ -840,8 +935,9 @@ def render_svg(plan: Plan, notes: list[Note], out: Path) -> Path:
         e.append(f'<text x="{bx - 6}" y="{_py(gy) + 3}" fill="#9ca3af" '
                  f'font-size="8" text-anchor="end">{gy}</text>')
     e.append(f'<text x="{bx}" y="{_py(BOARD_H) + 16}" fill="#6b7280">'
-             f'suggested outline {BOARD_W:g} x {BOARD_H:g} mm '
-             f'(PLAN: connector-driven ~120x100 class)</text>')
+             f'derived outline {BOARD_W:g} x {BOARD_H:g} mm '
+             f'(SoM + connector bands + component area + perimeter keepout)'
+             f'</text>')
 
     # blocks under the SoM so the SoM reads on top
     for b in sorted(plan.blocks, key=lambda b: b.name):
@@ -1026,10 +1122,12 @@ def render_md(plan: Plan, notes: list[Note], sheets, regs,
         L.append(f"| {j.ref} | ({j.pcb_x:g}, {j.pcb_y:g}) rot {j.rot:g} | "
                  f"({j.x:g}, {j.y:g}) | {j.w:g} x {j.h:g} mm |")
     L.append("")
-    L.append(f"Suggested board: **{BOARD_W:g} x {BOARD_H:g} mm**; SoM "
+    L.append(f"Derived board: **{BOARD_W:g} x {BOARD_H:g} mm**; SoM "
              f"origin at **({plan.som_x:g}, {plan.som_y:g})** "
              "(centered). All coordinates below are board-frame mm, "
              "origin top-left, +y down (KiCad convention).")
+    L.append("")
+    L.append(f"Outline derivation: {OUTLINE_NOTE}.")
     L.append("")
     L.append("## Edge connectors (pinned to edges by their mating "
              "direction)")
@@ -1131,8 +1229,9 @@ def render_md(plan: Plan, notes: list[Note], sheets, regs,
     L.append("- Block rectangles are AREA estimates (courtyards + "
              "routing factor), not layouts; their order along an edge "
              "is alphabetical, not optimized — shuffle freely.")
-    L.append("- The outline is the PLAN's ~120x100 class, drawn dashed "
-             "in the SVG because the user owns it.")
+    L.append("- The outline is DERIVED (SoM body + connector bands + total "
+             "component area + perimeter keepout), sized generously for "
+             "routing headroom; the user still owns it (drawn dashed).")
     L.append("- The mirror convention (bottom view) must be checked "
              "against the DF40 mating datasheet before any footprint is "
              "placed.")
