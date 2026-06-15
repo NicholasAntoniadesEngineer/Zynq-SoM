@@ -1,0 +1,64 @@
+* usb_jtag.cir — SPICE subckt for the CH347T USB-JTAG/UART bridge subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/usb_jtag/usb_jtag.py INTERFACE), NOT any board net. A consuming
+* project wires these pins to its real nets — exactly as the netlist bind map
+* does. The CH347T / SN74LVC125 / AP2112K are active parts (no useful analog
+* small-signal behaviour to model here); this subckt captures the PASSIVE
+* network the subsystem adds around them (the LDO decoupling, the CH347/buffer
+* VCC bypass, the crystal load caps, the RST# / MODE-strap / OE pulls), which is
+* what the local test and any board-level .op/.tran reason about.
+*
+* Values mirror subsystems/usb_jtag/usb_jtag.py one-for-one (parse_si
+* compatible):
+*   C1 1u              LDO Cin            (+VBUS_USB -> GND)
+*   C2 10u + C3 100n   LDO Cout / island  (+3V3_ISLAND -> GND)
+*   C4 100n            CH347 VCC bypass   (+3V3_ISLAND -> GND)
+*   C5 100n            SN74LVC125 VCC     (+3V3_ISLAND -> GND)
+*   C6 16p + C7 16p    8 MHz crystal load (DBG_XI/DBG_XO -> GND)
+*   R1 10k             CH347 RST# pull-up (+3V3_ISLAND -> DBG_RST_N)
+*   R2 100k            OE# default pull-up(+3V3_ISLAND -> DBG_JTAG_OE_N)
+*   R3 10k             MODE DTR1 pulldown (DBG_MODE_DTR1 -> GND)
+*   R4 10k             MODE RTS1 pulldown (DBG_MODE_RTS1 -> GND)
+* The crystal nodes (DBG_XI/DBG_XO), the RST# node, the two MODE-strap nodes
+* and the OE# node are the subsystem's PRIVATE internal SIGNAL nets — they are
+* NOT subckt pins.
+*
+* Port order: VBUS_USB 3V3_ISLAND GND
+* (GND last, by convention; the USB pair, the four JTAG lines and the two UART
+*  lines carry no subsystem-local passive and so are not subckt pins.)
+
+.subckt usb_jtag VBUS_USB 3V3_ISLAND GND
+
+* self-powered island LDO: Cin on the 5 V VBUS, Cout + bypass on the 3.3 V rail
+C1 VBUS_USB GND 1u
+C2 3V3_ISLAND GND 10u
+C3 3V3_ISLAND GND 100n
+
+* CH347 VCC bypass + SN74LVC125 VCC bypass (both on the island rail)
+C4 3V3_ISLAND GND 100n
+C5 3V3_ISLAND GND 100n
+
+* 8 MHz crystal load caps (CL=12p part -> 16p C0G per leg), to GND
+C6 DBG_XI GND 16p
+C7 DBG_XO GND 16p
+
+* CH347 RST# pull-up (10k; internal POR, no RC cap by design)
+R1 3V3_ISLAND DBG_RST_N 10k
+
+* SN74LVC125 OE# default-HIGH pull-up (100k -> outputs Hi-Z until SW1 closes)
+R2 3V3_ISLAND DBG_JTAG_OE_N 100k
+
+* CH347 MODE-3 strap pulldowns (DTR1 low + RTS1 low -> JTAG + UART)
+R3 DBG_MODE_DTR1 GND 10k
+R4 DBG_MODE_RTS1 GND 10k
+
+.ends usb_jtag
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto 3V3_ISLAND settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
