@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import enum
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 
 class NetClass(enum.Enum):
@@ -448,8 +448,15 @@ class Circuit:
             net.name = nn
             new_nets[nn] = net
         self.nets = new_nets
-        self.port_types = {rename.get(k, k): v
-                           for k, v in self.port_types.items()}
+        # port_types: rename the keys AND the pair_with PAYLOAD — a diff/usb_hs/
+        # tmds pair stores its complement as a net NAME, so binding one half of a
+        # pair must follow the complement too, else the pair's two ends disagree
+        # (the sheet stays byte-identical but the SI/XDC/constraints artifacts
+        # key pairs on pair_with and would drift / report a half-bound pair).
+        self.port_types = {
+            rename.get(k, k): (replace(v, pair_with=rename[v.pair_with])
+                               if v.pair_with in rename else v)
+            for k, v in self.port_types.items()}
         self.loads = {rename.get(k, k): v for k, v in self.loads.items()}
         self.hints = {rename.get(k, k): v for k, v in self.hints.items()}
         # waiver dicts may key on a net name (decap/pull/reset/strap/ep/tp)

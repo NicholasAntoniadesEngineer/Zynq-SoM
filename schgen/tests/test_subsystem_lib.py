@@ -124,6 +124,21 @@ def test_bind_carries_port_type_and_load():
     assert "+3V3" in c.loads and "+VDD" not in c.loads
 
 
+def test_bind_renames_diff_pair_complement():
+    """A diff/tmds/usb_hs pair stores its complement as a net NAME (pair_with);
+    bind must follow it on BOTH halves, else the bound pair's two ends disagree
+    and the SI/XDC artifacts (keyed on pair_with) drift / report a half-pair."""
+    c = Circuit("t", "t")
+    c.part("U1", "Device:R", "1k", "")
+    c.port("LANE_P", "U1.1")
+    c.port("LANE_N", "U1.2")
+    c.port_type("LANE_P", kind="diff_pair", pair_with="LANE_N", impedance=100)
+    c.bind({"LANE_P": "BRD_P", "LANE_N": "BRD_N"})
+    assert c.port_type_of("BRD_P").pair_with == "BRD_N"   # payload followed
+    assert c.port_type_of("BRD_N").pair_with == "BRD_P"   # reciprocal too
+    assert c.port_type_of("BRD_P").impedance == 100        # other fields intact
+
+
 def test_bind_renames_testpoint_value():
     """A TestPoint carries the probed net NAME as its value; bind must rebind
     that too (else the abstract name stays in the render — byte-identicality)."""
