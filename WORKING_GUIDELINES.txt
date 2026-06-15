@@ -9,7 +9,7 @@ This document exists so that anyone (human or AI) picking up this project knows
 EXACTLY the rules the work has been done under. It is verbose on purpose. If any
 instruction here ever conflicts with a newer explicit instruction from the repo
 owner, the newer explicit instruction wins — but it should then be recorded here
-and in carrier/PLAN.md.
+and in the archived decision log (carrier/HISTORY.md, formerly carrier/PLAN.md).
 
 
 --------------------------------------------------------------------------------
@@ -94,8 +94,9 @@ LAW 4 — NEVER SOFTEN A VALIDATOR.
   independently based on the deep context already established. When choosing
   between options, take the best one (historically the assistant's recommended
   option has matched the owner's choice every time). Record each non-trivial
-  decision in carrier/PLAN.md tagged "(autonomous, per full-autonomy directive)"
-  with its rationale, so it can be audited after the fact.
+  decision in the decision log (carrier/HISTORY.md, the archived carrier/PLAN.md)
+  tagged "(autonomous, per full-autonomy directive)" with its rationale, so it
+  can be audited after the fact.
 
 - COMMIT AND PUSH AFTER EVERY VERIFIED STEP. After each unit of work whose gates
   are green and whose render has been eyeballed: commit and push to origin
@@ -194,7 +195,7 @@ Run on every build; non-zero exit on any failure:
 
 
 --------------------------------------------------------------------------------
-5. DESIGN DECISIONS LOCKED (summary; full detail in carrier/PLAN.md)
+5. DESIGN DECISIONS LOCKED (summary; full detail in carrier/HISTORY.md)
 --------------------------------------------------------------------------------
 - Power input: USB-C PD only, 20 V / 3 A, via FUSB302, behind a TPS26631 eFuse
   with soft-start (controlled inrush, OVP/OCP at the inlet). No barrel jack.
@@ -246,9 +247,9 @@ Run on every build; non-zero exit on any failure:
   applied by separate agents, each finding re-verified, every fix behind the full
   gate stack.
 
-- DECISIONS ARE RECORDED. Every meaningful decision goes into carrier/PLAN.md
-  (the decision record) with rationale; cross-session state and the rules go into
-  the assistant's persistent memory.
+- DECISIONS ARE RECORDED. Every meaningful decision goes into the decision log
+  (carrier/HISTORY.md, the archived carrier/PLAN.md) with rationale; cross-session
+  state and the rules go into the assistant's persistent memory.
 
 
 --------------------------------------------------------------------------------
@@ -282,11 +283,16 @@ Run on every build; non-zero exit on any failure:
 --------------------------------------------------------------------------------
 8. QUICK REFERENCE — KEY FILES
 --------------------------------------------------------------------------------
-  carrier/PLAN.md ................. the living decision record (read it first)
+  carrier/HISTORY.md .............. the archived decision log (was carrier/PLAN.md
+                                    + OVERNIGHT_PLAN.md + MORNING_REPORT.md) —
+                                    read it for the WHY behind the design
   schgen/DESIGN.md ................ the engine architecture contract
-  README.md / carrier/README.md ... how to generate; the three-level READMEs
+  README.md / carrier/README.md ... how to generate; the layer READMEs
   parts/README.md ................. how to add a part from LCSC
-  carrier/subsystems/README.md .... how to author a subsystem from scratch
+  subsystems/README.md ............ the reusable subsystem-library index
+  subsystems/<name>/README.md ..... a reusable subsystem's abstract interface
+  carrier/subsystems/README.md .... how to author/adapt a subsystem (the META
+                                    adapter -> reusable library contract)
   carrier/research/*.md ........... per-subsystem engineering dossiers
   WORKING_GUIDELINES.txt .......... this file
 

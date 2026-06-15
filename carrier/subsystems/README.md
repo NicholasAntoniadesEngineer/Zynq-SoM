@@ -5,6 +5,41 @@ no wire plans, no text positions — the placement engine derives every piece
 of geometry from the netlist's topology, and the build FAILS if a subsystem
 defines `placer` or imports geometry APIs (the purity gate).
 
+## Two flavours: thin adapter vs local glue
+
+A file here is either of:
+
+- **A thin adapter over the reusable [`subsystems/`](../../subsystems/README.md)
+  library** — for a portable subsystem (usb_pd, ethernet, hdmi_tx, lcd,
+  microsd, camera, pmod, pmod_expansion, pd_input, uart_bridge, usb_jtag,
+  usbc_otg). The portable netlist lives in `subsystems/<name>/` with ABSTRACT
+  net names; this file is the carrier-specific GLUE: it declares ONE
+  module-level `META` dict and forwards it, `return _lib.circuit(META)`.
+  `META["bind"]` maps each abstract net to the carrier's real net name (so the
+  emitted sheet is byte-identical to a hand-written one); `expects` / `buses` /
+  `notes` carry the carrier's linker deferrals, bus names and house-style prose.
+  The contract is `schgen/core/subsystem.py` (`Meta`) — a typo'd top-level key
+  is a hard `CircuitError`. To migrate a new subsystem into the library, scaffold
+  it with `schgen subsystem <name>` and write the carrier adapter.
+
+  ```python
+  from subsystems.usb_pd import usb_pd
+  from schgen.core.model import Circuit
+
+  META = {"bind": {"+VDD_LOGIC": "+3V3_SC", "GND": "GND", ...},
+          "expects": {"I2C_SDA": "usb_uart_connector"}}
+
+  def circuit() -> Circuit:
+      return usb_pd.circuit(META)
+  ```
+
+- **Carrier-specific local glue** — a full netlist authored directly here, for
+  sheets that only make sense for this board (the J1/J2/J3 connector sheets,
+  power / power_som / power_mon, the bring-up sheets, board-services HW, the
+  carrier connectors). These are composed from `parts/` exactly as below.
+
+The rest of this guide covers authoring a local netlist from scratch.
+
 ## Compose from parts
 
 ```python

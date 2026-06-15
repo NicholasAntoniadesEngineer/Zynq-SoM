@@ -1,11 +1,67 @@
 # carrier — the generated carrier board
 
 Open `Zynq_Carrier.kicad_pro` in KiCad (9+). EVERYTHING here except
-`subsystems/*.py`, `PLAN.md` and the research dossiers is generated —
+`subsystems/*.py`, the research dossiers and `HISTORY.md` is generated —
 regenerate in place with `PYTHONPATH=. python -m schgen board`.
 
-- `subsystems/` — the authored netlists (the only hand-written layer);
-  see `subsystems/README.md` for the authoring guide.
+## Architecture (the locked decisions)
+
+The carrier hosts a Zynq-7000 SoM over the J1/J2/J3 mezzanine. The full
+decision log with rationale is archived in [`HISTORY.md`](HISTORY.md); the
+still-true essentials:
+
+- **Power input is USB-C PD only**, 20 V / 3 A via the FUSB302B, behind a
+  TPS26631 eFuse with soft-start (controlled inrush + inlet OVP/OCP). No
+  barrel jack.
+- **The SoM is a 4.2–5 V module — it must NEVER see the 20 V rail** (P0, the
+  most important electrical decision). An **always-on `+5V_SOM` buck**
+  (its own `power_som` sheet) feeds the SoM's J1 VIN pins; always-on because
+  PD negotiation is circular (the system controller must boot first).
+- **Carrier bucks win over the SoM's exported rails** — the SoM's +3V3/+1V8
+  on J1 are isolated (NC / TP-only); carrier rails are +5V, +3V3, +1V8, plus
+  per-module **gated rails** (+5V_USB, +3V3_SD, the HDMI/LCD/CAM/PMOD/AUX
+  rails) sourced by bring-up load switches.
+- **Bring-up is staged with switches**: a DIP switch AND a system-controller
+  GPIO override drive every regulator/module enable; per-rail power-good LEDs;
+  rails come up one at a time. New board-services HW (ID-EEPROM, RTC, QWIIC,
+  watchdog) sits behind the same gated `+3V3_AUX` rail and a PCA9306 I2C
+  isolator (so the gated bus can never back-power the always-on management I2C).
+- **microSD carries a mandatory 1.8 V ↔ 3.3 V level translator** (TXS02612):
+  the SoM exposes SDIO at 1.8 V, but SD cards init at 3.3 V.
+- **Stackup is JLCPCB 4-layer JLC04161H-7628**; its impedance geometry drives
+  the exported layout constraints (90 Ω USB, 100 Ω TMDS/LVDS/MIPI). The user
+  owns the PCB outline + placement — the floorplan kit is a suggestion.
+
+## The subsystem / adapter pattern
+
+A board sheet is one Python netlist under `subsystems/` — **the only
+hand-written layer**. There are two flavours:
+
+- **Thin adapters over the reusable library.** A portable subsystem lives in
+  the project-agnostic top-level [`subsystems/`](../subsystems/README.md)
+  library with ABSTRACT port/rail names; the carrier consumes it with a tiny
+  adapter that declares ONE module-level `META` dict and forwards it —
+  `return _lib.circuit(META)`. `META["bind"]` renames the abstract nets to the
+  carrier's real net names (order-preserving, so the emitted sheet is
+  byte-identical to a hand-written one); `expects` / `buses` / `notes` carry
+  the project-specific linker deferrals, bus names and house-style prose. The
+  contract is `schgen/core/subsystem.py` (`Meta`); a typo'd top-level key is a
+  hard `CircuitError`. 12 subsystems are migrated this way (usb_pd, usbc_otg,
+  uart_bridge, usb_jtag, ethernet, hdmi_tx, lcd, microsd, camera, pmod,
+  pmod_expansion, pd_input) — see [`subsystems/README.md`](../subsystems/README.md).
+- **Carrier-specific glue stays local.** Sheets that only make sense for this
+  board — the J1/J2/J3 connector sheets, the bring-up + power + power-monitor
+  sheets, the board-services HW, the carrier connectors — are authored directly
+  under `subsystems/` as full netlists. See
+  [`subsystems/README.md`](subsystems/README.md) for the authoring guide.
+
+Either way the rule is the same: **the .py is the NETLIST, never geometry.**
+No coordinates, no wire plans, no text positions; a purity gate AST-scans every
+subsystem and fails the build if it defines `placer` or imports a geometry API.
+All placement is derived from circuit topology by `schgen/place.py`.
+
+- `subsystems/` — the authored netlists (adapters + local glue), the only
+  hand-written layer; see `subsystems/README.md`.
 - `Zynq_Carrier.kicad_sch` + `schematic/` — the root sheet + sub-sheets
   (hierarchy mode, board-unique references), committed.
 - `renders/` — one PNG per sheet, committed and reviewable on GitHub;
@@ -23,7 +79,17 @@ regenerate in place with `PYTHONPATH=. python -m schgen board`.
   programmatically (`schgen som-interface`), never hand-edited.
 - `nets.py` — the GENERATED cross-sheet net-name contract
   (`schgen nets`).
-- `PLAN.md` — the locked decisions; `research/` — per-subsystem dossiers.
+- `HISTORY.md` — the **archived** decision log (the former `PLAN.md` +
+  `OVERNIGHT_PLAN.md` + `MORNING_REPORT.md`): every locked decision and
+  autonomous-run record, kept for the WHY.
+- `research/` — the per-subsystem engineering dossiers (datasheet-grounded,
+  hand-written): [`bringup_power_gating.md`](research/bringup_power_gating.md),
+  [`camera_csi.md`](research/camera_csi.md),
+  [`debug_boot_pmod.md`](research/debug_boot_pmod.md), [`fmc.md`](research/fmc.md),
+  [`lcd_backlight.md`](research/lcd_backlight.md), [`power_mon.md`](research/power_mon.md),
+  [`thermal_bucks.md`](research/thermal_bucks.md) (the TPS54302 buck Tj review
+  item), [`usb_jtag_pmod_expansion.md`](research/usb_jtag_pmod_expansion.md),
+  [`user_io.md`](research/user_io.md), [`wave3_function_map.md`](research/wave3_function_map.md).
 - `docs/` — the design-documentation packet:
   [`DESIGN_SPEC.md`](docs/DESIGN_SPEC.md) (theory of operation: mezzanine
   interface, power architecture + sequencing, every subsystem),
@@ -32,6 +98,45 @@ regenerate in place with `PYTHONPATH=. python -m schgen board`.
   [`BRINGUP.md`](docs/BRINGUP.md), [`TEST_PLAN.md`](docs/TEST_PLAN.md),
   [`FLOORPLAN.md`](docs/FLOORPLAN.md), and the generated diagrams
   `block_diagram.svg` / `power_tree.svg` / `power_sequence.svg`.
+
+## Build + gate discipline
+
+There is **no CI** — instead every local `schgen build <sheet>` /
+`schgen board` runs the full gate stack and exits non-zero on any failure, so
+nothing un-gated ever gets committed. The committed `reports/` are the proof.
+The gates (never edited to pass — LAW 4; strengthening one is the work,
+loosening it is forbidden):
+
+- **PURITY** — the subsystem source is netlist-only (no `placer`, no geometry
+  import); AST-scanned before execution.
+- **MODEL COMPLETENESS** — every pin is netted or explicitly `c.nc()`'d; every
+  input is driven.
+- **NETLIST** — KiCad's own extracted netlist == the declared netlist, pin for
+  pin (the unfakeable electrical proof — catches shorts, opens, single-pin
+  nets, NC-cheats, name drift).
+- **ERC** — kicad-cli ERC, zero errors.
+- **VISUAL** — zero overlap, zero crossings, fits the page (no exemptions).
+- **CC short/open** — an independent net-blind union-find over the emitted
+  geometry, a 2nd oracle that agrees with the netlist gate pin-for-pin.
+- **BOARD GATE + LINK** — every linked net merges correctly across sheets;
+  typed-port contract resolved (diff pairs, I2C, sd_bus levels, `expect=`
+  deferrals).
+- **POWER-TREE / TEST-POINT / THERMAL / DESIGN-RULE / SPICE** — per-regulator
+  headroom, a probe per rail/bus, per-device Tj, decoupling/pull-up/strap
+  completeness, and divider/feedback/ramp setpoints.
+
+`schgen selftest` mutation-tests the gates themselves (it injects one defect
+per class — pin swap, deleted wire, relabel, stray NC, foreign-net junction
+short — and proves a gate kills each) and builds twice for byte-determinism
+(across PYTHONHASHSEED). Reusable subsystem packages also carry an offline
+local `test_<name>.py`; cross-board gates stay aggregated at board level.
+
+The working rhythm: build → read the four verdicts → **open the render PNG and
+inspect it like a PCB reviewer** (the render is the deliverable) → commit per
+verified unit. Heavy/parallel work runs in isolated git worktrees harvested
+sequentially; deterministic output means a regen on the merged state produces
+zero artifact diff. The full process contract is
+[`../WORKING_GUIDELINES.txt`](../WORKING_GUIDELINES.txt).
 
 <!-- schgen:gallery -->
 <!-- GENERATED by `schgen gallery` — edits between these markers are overwritten -->
