@@ -760,6 +760,25 @@ def cmd_board(args: argparse.Namespace) -> int:
     # REPORT-FIRST: ok_all unchanged until the NC allowlist is fully blessed.
     # ok_all = ok_all and pc_res.ok
 
+    # reusable-subsystem PACKAGE-STRUCTURE gate (REPORT-FIRST): every migrated
+    # subsystems/<name>/ library package has its four contract artifacts +
+    # a declared abstract INTERFACE that matches its netlist's externals. The
+    # migration is incremental (most subsystems still live only as carrier
+    # adapters), so this REPORTS the state of subsystems/ and does NOT fail the
+    # board yet. Promote to hard-fail (run(..., strict=True)) once every intended
+    # subsystem is packaged.
+    from schgen.verify import subsystem_structure
+    ssr = subsystem_structure.run(rep_dir)
+    print(f"SUBSYSTEM STRUCTURE: {'PASS' if ssr.ok else 'REPORT'} "
+          f"({ssr.n_ok}/{len(ssr.packages)} package(s) complete "
+          f"-> {rep_dir / 'subsystem_structure.txt'})")
+    for _p in ssr.packages:
+        if not _p.ok:
+            for _m in (_p.missing or _p.interface_drift or _p.errors):
+                print(f"  SUBSYSTEM {_p.name}: {_m}")
+    # REPORT-FIRST: ok_all unchanged until every intended subsystem is packaged.
+    # ok_all = ok_all and ssr.ok
+
     # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
     # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds
     # hard. The closed-form analytics ARE the gate; the ngspice .op
@@ -1200,6 +1219,25 @@ def main(argv: list[str] | None = None) -> int:
                          f"when stock>=need (default {_SF})")
     from schgen.verify.preflight import cmd_preflight
     pf.set_defaults(func=cmd_preflight)
+    ss = sub.add_parser(
+        "subsystem", help="scaffold a new reusable subsystems/<name>/ package "
+                          "skeleton (abstract-port netlist + README + local "
+                          "test + SPICE subckt stub)")
+    ss.add_argument("name", help="package name (a Python identifier, e.g. usb_pd)")
+    ss.add_argument("--force", action="store_true",
+                    help="overwrite an existing package skeleton")
+    from schgen.generate.subsystem_scaffold import cmd as _ss_cmd
+    ss.set_defaults(func=_ss_cmd)
+    sc = sub.add_parser(
+        "subsystem-check", help="REPORT-FIRST structure gate: every "
+                                "subsystems/<name>/ has {<name>.py, README.md, "
+                                "test_<name>.py, <name>.cir} + a declared "
+                                "abstract INTERFACE matching the netlist")
+    sc.add_argument("--strict", action="store_true",
+                    help="exit non-zero if any package is incomplete "
+                         "(default: report-only)")
+    from schgen.verify.subsystem_structure import cmd as _sc_cmd
+    sc.set_defaults(func=_sc_cmd)
     args = p.parse_args(argv)
     return args.func(args)
 

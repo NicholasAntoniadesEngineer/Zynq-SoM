@@ -1,0 +1,42 @@
+* usb_pd.cir — SPICE subckt for the FUSB302B USB-PD sink subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/usb_pd/usb_pd.py INTERFACE), NOT any board net. A consuming
+* project wires these pins to its real nets — exactly as the netlist bind map
+* does. The FUSB302B itself is an active mixed-signal PHY (no useful analog
+* small-signal behaviour to model here); this subckt captures the PASSIVE
+* network the subsystem adds around it (decoupling + CC analog filters), which
+* is what the local test and any board-level .op/.tran reason about.
+*
+* Values mirror subsystems/usb_pd/usb_pd.py one-for-one (parse_si compatible):
+*   C1 100n + C2 10u   VDD bypass        (+VDD_LOGIC -> GND)
+*   C3 100n            VBUS-sense bypass  (+VBUS_SENSE -> GND)
+*   C4 200p            CC1 analog filter  (CC1 -> GND)
+*   C5 200p            CC2 analog filter  (CC2 -> GND)
+*
+* Port order: VDD_LOGIC VBUS_SENSE CC1 CC2 GND
+* (GND last, by convention; I2C_SDA/SCL and INT_N carry no subsystem-local
+*  passive and so are not subckt pins — their pull-ups are shared off-subsystem.)
+
+.subckt usb_pd VDD_LOGIC VBUS_SENSE CC1 CC2 GND
+
+* VDD logic-supply decoupling (datasheet: 100n + 10u bulk)
+C1 VDD_LOGIC GND 100n
+C2 VDD_LOGIC GND 10u
+
+* VBUS-sense bypass (raw receptacle VBUS, ahead of any inlet eFuse)
+C3 VBUS_SENSE GND 100n
+
+* Type-C CC analog filter caps (200p NP0, one per CC line)
+C4 CC1 GND 200p
+C5 CC2 GND 200p
+
+.ends usb_pd
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VDD_LOGIC settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

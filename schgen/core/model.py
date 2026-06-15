@@ -379,6 +379,92 @@ class Circuit:
         """The PortType for a PORT net; untyped ports read as 'single'."""
         return self.port_types.get(net, PortType())
 
+    # ---- abstract-port binding (reusable-subsystem contract) ----------------
+    def bind(self, mapping: dict[str, str]) -> "Circuit":
+        """Rename this circuit's externally-visible net names IN PLACE.
+
+        This is the binding half of the reusable-subsystem contract: a
+        project-agnostic ``subsystems/<name>/`` library declares its interface
+        with ABSTRACT net names (no carrier net names, no nets.py reads), and a
+        consuming project supplies ``{abstract_name: project_net}`` to rebind
+        every externally-visible net (POWER / GROUND / PORT — rails + ports) to
+        its real board names. Standalone (no bind) the circuit keeps its
+        abstract names, so the package's own ``test_<name>.py`` runs offline.
+
+        ONLY externally-visible nets are bindable: POWER, GROUND and PORT nets
+        are the subsystem's edge (rails it consumes + ports it exposes). A
+        SIGNAL net is the subsystem's PRIVATE wiring and is NEVER renamed —
+        binding one would be a meaningless (and dangerous) reach into internals,
+        so a SIGNAL key in ``mapping`` is a hard error. An abstract name not
+        present on this circuit is also a hard error (a typo'd binding must not
+        pass silently). A binding is allowed to be the identity (abstract ==
+        real) and a project may bind a subset (unbound externals keep their
+        abstract name).
+
+        BYTE-IDENTICAL guarantee: the rename is in place and order-preserving —
+        the ``nets`` dict is rebuilt with the new keys in the SAME insertion
+        order, and ``port_types`` / ``loads`` keys follow. Parts, refs, NCs,
+        pins, port-type payloads and draw budgets are untouched. So if a
+        project binds the abstract names to the exact net names the old hand-
+        written subsystem used, the emitted sheet is byte-for-byte the same.
+
+        Renames must not COLLIDE: two abstract names may not bind to one real
+        name unless they were already the same net (that would silently merge
+        two distinct nets — a LAW-0 short). Returns ``self`` for chaining.
+        """
+        for abstract, real in mapping.items():
+            net = self.nets.get(abstract)
+            if net is None:
+                raise CircuitError(
+                    f"bind: {abstract!r} is not a net on circuit "
+                    f"{self.name!r} (externals: "
+                    f"{sorted(self._bindable_names())})")
+            if net.net_class is NetClass.SIGNAL:
+                raise CircuitError(
+                    f"bind: {abstract!r} is a private SIGNAL net — only "
+                    f"POWER/GROUND/PORT (rail/port) externals are bindable; a "
+                    f"subsystem's internal wiring is never rebound")
+        # collision check: distinct source nets must not land on one target.
+        for target in set(mapping.values()):
+            srcs = [a for a, r in mapping.items() if r == target]
+            if len(srcs) > 1:
+                raise CircuitError(
+                    f"bind: {sorted(srcs)} all bind to {target!r} — distinct "
+                    f"externals cannot merge onto one net (LAW-0 short)")
+            # also reject binding ONTO an existing un-renamed net of a
+            # different name (would merge with that net at link time)
+            if target in self.nets and target not in mapping and \
+                    target != srcs[0]:
+                raise CircuitError(
+                    f"bind: {srcs[0]!r} -> {target!r} collides with the "
+                    f"existing net {target!r} on this circuit")
+        rename = {a: r for a, r in mapping.items() if a != r}
+        if not rename:
+            return self
+        # rebuild nets in the SAME order with renamed keys (byte-identical emit)
+        new_nets: dict[str, Net] = {}
+        for name, net in self.nets.items():
+            nn = rename.get(name, name)
+            net.name = nn
+            new_nets[nn] = net
+        self.nets = new_nets
+        self.port_types = {rename.get(k, k): v
+                           for k, v in self.port_types.items()}
+        self.loads = {rename.get(k, k): v for k, v in self.loads.items()}
+        self.hints = {rename.get(k, k): v for k, v in self.hints.items()}
+        # waiver dicts may key on a net name (decap/pull/reset/strap/ep/tp)
+        for attr in ("tp_waivers", "decap_waivers", "pull_waivers",
+                     "reset_waivers", "strap_waivers", "ep_waivers"):
+            d = getattr(self, attr)
+            setattr(self, attr, {rename.get(k, k): v for k, v in d.items()})
+        return self
+
+    def _bindable_names(self) -> list[str]:
+        """The externally-visible net names a project may bind (POWER/GROUND/
+        PORT) — the subsystem's declared abstract interface."""
+        return [n.name for n in self.nets.values()
+                if n.net_class is not NetClass.SIGNAL]
+
     HINT_STYLES = frozenset({"trunk"})
 
     def hint(self, net: str, style: str) -> None:

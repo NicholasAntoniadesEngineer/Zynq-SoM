@@ -1,0 +1,11 @@
+schgen subsystem-structure gate (REPORT-FIRST)
+============================================================
+
+contract: each subsystems/<name>/ is a self-contained, project-agnostic package with
+  <name>.py (abstract-port netlist + circuit(bind=)) + README.md + test_<name>.py + <name>.cir,
+  and a declared abstract INTERFACE that matches the netlist's externals.
+
+usb_pd: OK
+  interface (8): +VDD_LOGIC, +VBUS_SENSE, GND, CC1, CC2, I2C_SDA, I2C_SCL, INT_N
+
+SUBSYSTEM STRUCTURE: 1/1 package(s) complete (PASS)
