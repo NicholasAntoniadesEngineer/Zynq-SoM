@@ -763,21 +763,21 @@ def cmd_board(args: argparse.Namespace) -> int:
     # reusable-subsystem PACKAGE-STRUCTURE gate (REPORT-FIRST): every migrated
     # subsystems/<name>/ library package has its four contract artifacts +
     # a declared abstract INTERFACE that matches its netlist's externals. The
-    # migration is incremental (most subsystems still live only as carrier
-    # adapters), so this REPORTS the state of subsystems/ and does NOT fail the
-    # board yet. Promote to hard-fail (run(..., strict=True)) once every intended
-    # subsystem is packaged.
+    # HARD-FAIL (promoted 2026-06-15 once every portable subsystem was packaged):
+    # every subsystems/<name>/ package must be COMPLETE + well-formed (the four
+    # contract artifacts + a circuit(meta=) exposing a declared abstract
+    # INTERFACE that matches the built externals). An incomplete/ drifted package
+    # now FAILS the board — the reusable-subsystem library cannot silently rot.
     from schgen.verify import subsystem_structure
     ssr = subsystem_structure.run(rep_dir)
-    print(f"SUBSYSTEM STRUCTURE: {'PASS' if ssr.ok else 'REPORT'} "
+    print(f"SUBSYSTEM STRUCTURE: {'PASS' if ssr.ok else 'FAIL'} "
           f"({ssr.n_ok}/{len(ssr.packages)} package(s) complete "
           f"-> {rep_dir / 'subsystem_structure.txt'})")
     for _p in ssr.packages:
         if not _p.ok:
             for _m in (_p.missing or _p.interface_drift or _p.errors):
                 print(f"  SUBSYSTEM {_p.name}: {_m}")
-    # REPORT-FIRST: ok_all unchanged until every intended subsystem is packaged.
-    # ok_all = ok_all and ssr.ok
+    ok_all = ok_all and ssr.ok
 
     # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
     # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds

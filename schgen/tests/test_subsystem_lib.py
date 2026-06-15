@@ -195,6 +195,30 @@ def test_structure_gate_usb_pd_ok():
         "I2C_SDA", "I2C_SCL", "INT_N"}
 
 
+def test_structure_gate_all_packages_complete():
+    """The board promotes this gate to HARD-FAIL: every subsystems/<name>/ on the
+    repo must be a complete package. (If this trips, a package lost an artifact /
+    its circuit() stopped accepting meta / its INTERFACE drifted from the build.)"""
+    res = subsystem_structure.check()
+    assert res.packages, "no subsystems/ packages found"
+    assert res.ok, [(p.name, p.missing, p.interface_drift, p.errors)
+                    for p in res.packages if not p.ok]
+
+
+def test_structure_gate_kills_incomplete_package(tmp_path, monkeypatch):
+    """Prove the hard-fail bites: a package missing contract artifacts is NOT ok
+    (the mutant the board gate must catch)."""
+    monkeypatch.setattr(subsystem_structure, "SUBSYSTEMS_DIR", tmp_path)
+    pkg = tmp_path / "widget"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("")
+    (pkg / "README.md").write_text("# widget\n")     # only 2 of 4 artifacts
+    res = subsystem_structure.check()
+    rep = {p.name: p for p in res.packages}["widget"]
+    assert not rep.ok and not res.ok                 # gate fails the board
+    assert set(rep.missing) == {"widget.py", "test_widget.py", "widget.cir"}
+
+
 # ---- scaffolder -----------------------------------------------------------------
 
 def test_scaffolder_writes_contract_files(tmp_path, monkeypatch):
