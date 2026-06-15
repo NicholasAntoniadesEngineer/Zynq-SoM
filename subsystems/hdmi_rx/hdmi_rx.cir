@@ -1,0 +1,49 @@
+* hdmi_rx.cir — SPICE subckt for the HDMI-A sink (EDID + RX-ESD) subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/hdmi_rx/hdmi_rx.py INTERFACE), NOT any board net. A consuming
+* project wires these pins to its real nets — exactly as the netlist bind map
+* does. The HDMI receptacle, the EDID EEPROM and the two TI ESD arrays are
+* active/structural parts with no useful analog small-signal behaviour to model
+* here; this subckt captures the PASSIVE network the subsystem adds around them
+* (the EEPROM cable-5V bypass, the HPD-assert resistor, the CEC pull-up and the
+* cable-5V presence divider), which is what the local test and any board-level
+* .op/.tran reason about.
+*
+* Values mirror subsystems/hdmi_rx/hdmi_rx.py one-for-one (parse_si compatible):
+*   C1 100n  EEPROM cable-5V VCC bypass   (RX_5V -> GND)
+*   R1 1k    HPD passive assert           (RX_5V -> RX_HPD)
+*   R2 27k   CEC pull-up                   (CEC   -> +VDD_LOGIC, gated rail)
+*   R3 10k   cable-5V presence divider top (RX_5V -> HDMI_5V_DET)
+*   R4 15k   cable-5V presence divider bot (HDMI_5V_DET -> GND)
+*
+* Port order: VDD_LOGIC HDMI_5V_DET CEC GND   (GND last by convention). The TMDS
+* RX pairs flow connector -> ESD shunt -> receiver and carry no subsystem-local
+* passive, so they are not subckt pins; RX_5V (cable +5V quasi-rail) and RX_HPD
+* are PRIVATE internal nodes (the cable 5 V is an external SOURCE that drives
+* RX_5V — modelled here as an open internal node).
+
+.subckt hdmi_rx VDD_LOGIC HDMI_5V_DET CEC GND
+
+* EEPROM cable-5V VCC bypass (internal node RX_5V, fed by the cable's +5V)
+C1 RX_5V GND 100n
+
+* HPD passive assert: 1k from the cable 5V to HPD (internal node RX_HPD)
+R1 RX_5V RX_HPD 1k
+
+* CEC 27k pull-up to the gated module rail (the only load on +VDD_LOGIC)
+R2 CEC VDD_LOGIC 27k
+
+* cable-5V presence divider: 10k/15k -> HDMI_5V_DET (3.15 V max at 5.25 V)
+R3 RX_5V HDMI_5V_DET 10k
+R4 HDMI_5V_DET GND 15k
+
+.ends hdmi_rx
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VDD_LOGIC settles to 1 V at DC across the network.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

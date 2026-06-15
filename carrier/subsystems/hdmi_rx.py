@@ -1,236 +1,93 @@
-"""hdmi_rx — HDMI-A sink: connector + 24C02-class EDID EEPROM + HPD/CEC/5V.
+"""hdmi_rx — carrier ADAPTER for the reusable HDMI-A sink subsystem.
 
-Sink-side reference circuit (mirrors hdmi_tx's connector front end, RX
-orientation). The four TMDS lanes run DC-coupled connector -> Zynq HR-bank
-pins (TMDS_33 inputs, bank 33 / +VCCO_33 = 3.3 V per the wave-3 function map).
+THIN ADAPTER. The portable circuit lives in the project-agnostic library
+``subsystems/hdmi_rx/`` (netlist + README + SPICE + local test). This file is the
+carrier-specific GLUE: it imports the library subsystem and BINDS its abstract
+ports/rails to the carrier's real net names, returning the bound Circuit. The
+board build discovers it exactly as before (``circuit()`` exposed here), and the
+binding reproduces the EXACT net names the hand-written sheet used, so the
+emitted carrier/schematic/hdmi_rx.kicad_sch + its golden render are unchanged.
 
-SI-HDMIRX-TERM (electrical audit) — TMDS SINK TERMINATION: an HDMI/DVI sink
-MUST present a 50 ohm-to-AVCC source-termination per single-ended line (the
-standard 2x 49.9 ohm/pair to a 3.3 V AVCC node + decoupling, 8 R for the 4
-pairs). The Zynq RX bank CANNOT supply it: bank 33 is a 7-series HR (high-
-range) bank, and in 7-series only HP (high-performance) banks implement on-die
-differential termination (DIFF_TERM/_ADV) — the TMDS_33 standard is HR-only and
-is explicitly UNTERMINATED on-die (UG471 SelectIO). So the earlier "the IBUFDS
-self-terminates, no discretes" assumption was WRONG; external sink termination
-is required. RESOLUTION (live-verified, the HDMIRX-1 precedent): the populated
-2x49.9 ohm/pair-to-AVCC network is carried as a DOCUMENTED, MANDATORY layout
-requirement rather than auto-placed on THIS sheet, for two reasons:
-  (a) ELECTRICAL PLACEMENT — TMDS sink termination must sit at the RECEIVER end
-      of the line (adjacent to the Zynq bank pins, which are on the SoM-mezzanine
-      J2 sheet), NOT at this HDMI connector (camera.py makes the same call:
-      "place terminations at the SoM-connector end, not at the FFC"). Resistors
-      here would stub the far end of the transmission line and reflect.
-  (b) GATE — the 8 termination R's all converge on one AVCC node while the TMDS
-      lines exit this sheet as off-sheet ports to the FPGA; the auto-placer's
-      AVCC trunk cannot anchor (every R is port-pinned, "fewer than 2 taps"),
-      and an in-line populated network crosses the other TMDS lanes — it fails
-      the immutable zero-crossing visual gate (the exact HDMIRX-1 ESD-array
-      failure class). LAYOUT NOTE (J2 sheet / PCB): per TMDS pair, fit 2x 49.9
-      ohm 0603 1% (YAGEO RC0603FR-0749R9L, LCSC C114625, LIVE-verified
-      2026-06-13: 458,900 in stock) from each single-ended line to a local
-      AVCC = 3.3 V plane island, AVCC bypassed with 100 nF + 1 uF near the bank;
-      8 R total for D2/D1/D0/CLK. These are the receiver's sink terminations and
-      belong at the FPGA bank balls.
+PENDING_MIGRATION: the library keeps J1's ``lib_id="schgen:HDMI_A_RX"`` override
+VERBATIM — a tracked, allowlisted hand-built symbol (symbol_law) whose deep-
+engine migration is handled separately. Binding does not touch lib_id.
 
-HDMIRX-1 (electrical audit) — RX TMDS ESD: the RX receptacle is user-facing
-and the four TMDS pairs reach the FPGA with no ESD (the TX side has the
-TPD12S016 clamp). The electrically-verified part is the TI TPD4E02B04DQAR
-(LCSC C106794, LIVE-verified 2026-06-13: 39,617 in stock, Extended; 0.2 pF I/O
-capacitance typ << the 0.5 pF/line TMDS budget, 8 kV contact / IEC 61000-4-2):
-a 4-channel GND-referenced shunt array, so TWO devices cover the eight TMDS
-lines (D2+D1 on U2, D0+CLK on U3), placed at the jack between the receptacle
-and the bank. DEF-G promotes it from the earlier DNP-stuffing prose to a real,
-netlisted, gate-checked, BOM-counted part: IO1..IO4 tap the four single-ended
-lines of two adjacent pairs each, both GND pads to GND, the lanes staying DC-
-coupled jack -> Zynq (shunt TAPS, not series — the netlist gate proves each
-TMDS net is {J1.pin, U2/U3.IOn}). The placer now recognizes a pure GND-
-referenced clamp (all-passive signal pins + a ground pin) as a shunt even with
-a single connector peer, and draws each array as a detached shunt cell with a
-labeled stub per line (place.py shunt detector + _shunt_cells) — no in-line
-array, no crossed TMDS lanes, so the zero-crossing visual gate holds. The sink must present
-EDID even when the carrier is off (HDMI 1.4 sec 8.5), so a 2-Kbit I2C EEPROM
-(ST M24C02, LCSC C7562) sits on the DDC bus powered from the CABLE's +5V
-(pin 18): a source can always read the EDID. WC# is write-PROTECTED: it is
-HARDWIRED to the EEPROM's own cable-5 V VCC node (HDMI_RX_5V = U1.8, the pin
-adjacent to WC#=U1.7), so a runtime DDC write can never corrupt the fixed EDID.
-COMP-1 (electrical audit, see the strap block): WC# MUST reference the EEPROM's
-own cable-5 V VCC domain, NOT the gated +3V3_HDMI_RX rail — on the gated rail
-the protection is defeated (WC# -> 0 V) in the carrier-off EDID-read case and
-the 3.3 V level is below the 5 V-VCC EEPROM's VIH(min)=0.7*VCC~3.5 V. The fix
-is a NETLIST FIX expressed directly here (WC# tied to HDMI_RX_5V); the earlier
-10k strap on the jumper net HDMI_RX_EDID_WP is DELETED — this is a permanently
-write-protected, fixed EDID with no field-(re)program path by design. DDC
-pull-ups live on the SOURCE side per spec, so none are duplicated here.
-E0/E1/E2 are grounded (EDID address 0xA0/0x50).
+CARRIER BINDING RATIONALE (the carrier net names + why):
 
-Hot-plug detect is asserted passively: 1k from the cable's own +5V to HPD
-(pin 19) — a plugged source sees its 5V returned on HPD and starts reading
-EDID with zero carrier involvement (HPD is 5-V-domain, so it is NOT routed
-to a 3V3 FPGA bank). Source presence IS observable: a 10k/15k divider on the
-cable 5V gives HDMI_RX_5V_DET (3.15 V max at 5.25 V — LVCMOS33-safe). CEC is
-3V3-domain signalling, routed to the FPGA with the spec 27k pull-up to the
-gated module rail +3V3_HDMI_RX (carrier/research/bringup_power_gating.md).
+  +VDD_LOGIC  -> +3V3_HDMI_RX   the GATED module rail. Only the CEC 27k pull-up
+                           sits here (~0.12 mA when CEC is driven low). The EEPROM
+                           + EDID WC# write-protect are cable-5V-fed (COMP-1), so
+                           nothing else draws from this rail.
+  GND         -> GND       (identity). TMDS shields + DDC/CEC ground + EEPROM
+                           ground + both ESD arrays' GND pads.
+  CHASSIS_GND -> CHASSIS_GND   (identity). The four HDMI shell legs; star-bonded
+                           to GND elsewhere (like the ethernet magjack shield).
 
-Connector: SOFNG HDMI-019S (LCSC C111617). Symbol schgen:HDMI_A_RX is the
-local re-pin (DDC rows match the EEPROM's SDA-over-SCL order for straight
-runs; TMDS rows at 5.08 mm label pitch; HPD/CEC/shields on the bottom edge);
-its pads 20-23 are the shell tabs of the faithful generated footprint
-(parts/HDMI-019S/), stacked on pin 20 and tied to CHASSIS_GND like the
-ethernet magjack shield (chassis star-bonds to GND elsewhere). Pin 14
-(UTILITY/HEAC+) is reserved -> author no-connect (HEAC unused, so pin 19
-is plain HPD).
+  TMDS_RX_D2/D1/D0/CLK_P/N -> HDMI_RX_D2/D1/D0/CLK_P/N   the four RX TMDS pairs,
+                           DC-coupled connector -> Zynq HR bank (bank 33, wave 3
+                           FPGA bank function map). Each lane stays one net
+                           {J1.pin, U2/U3.IOn} through the low-cap ESD shunt
+                           (HDMIRX-1). The 2x49.9R/pair sink termination to AVCC
+                           lives at the FPGA-bank (J2) end, NOT this sheet
+                           (SI-HDMIRX-TERM): an HR bank does not self-terminate
+                           TMDS_33, so external sink termination is placed at the
+                           receiver bank balls.
+  HDMI_5V_DET -> HDMI_RX_5V_DET   the cable-5V presence detect (10k/15k divider,
+                           3.15 V max at 5.25 V — LVCMOS33-safe) to a 3V3 FPGA
+                           bank input.
+  CEC         -> HDMI_RX_CEC   3V3-domain CEC to the FPGA, with the spec 27k
+                           pull-up to the gated module rail +3V3_HDMI_RX.
+
+  The DDC I2C (HDMI_RX_SDA/SCL), HPD assert (HDMI_RX_HPD) and the cable-5V quasi-
+  rail (HDMI_RX_5V) stay PRIVATE SIGNAL wiring inside the library — they run
+  entirely connector<->EEPROM<->ESD on this sheet (DDC is source-mastered over
+  the cable; HPD is 5-V-domain and not routed to a 3V3 bank), so they are NOT in
+  the bind contract and keep their library names (identical to the carrier).
+
+These ports bind on the generated J2/J3 sheets (som_conn_gen FUNCTION_MAP), so
+the adapter declares that linker deferral via the library's ``expects`` hook.
 """
 
 from __future__ import annotations
 
+from subsystems.hdmi_rx import hdmi_rx as _lib
 from schgen.core.model import Circuit
 
-# DELIBERATE symbol overrides (use_part lib_id=): the RX-direction schgen
-# receptacle drawing + the stock EEPROM drawing stay; MPN/LCSC/datasheet +
-# the faithful footprints come from parts/HDMI-019S/ + parts/M24C02-WMN6TP/.
-J_LIB = "schgen:HDMI_A_RX"
-U_LIB = "Memory_EEPROM:M24C02-WMN"
-R_FP = "Resistor_SMD:R_0603_1608Metric"
-C_FP = "Capacitor_SMD:C_0603_1608Metric"
+# The generated J2/J3 sheets (wave 3 FPGA bank function map) carry the TMDS/5V-
+# det/CEC bank assignments, so these ports bind there by name. EXPLICIT linker
+# deferral so a standalone link reports them as awaiting-J2/J3, never a silent open.
+_J23_MAP = "som_j2_j3_connector (wave 3 FPGA bank function map)"
 
-# connector pin -> TMDS port net (RX direction: lanes IN from the source).
-# The SoM contract (carrier/som_interface.json) exposes raw FPGA bank IO_*
-# names; the generated J2/J3 sheets (wave 3) carry the bank function map.
-J23_MAP = "som_j2_j3_connector (wave 3 FPGA bank function map)"
-TMDS_PORTS = {
-    1: "HDMI_RX_D2_P", 3: "HDMI_RX_D2_N",
-    4: "HDMI_RX_D1_P", 6: "HDMI_RX_D1_N",
-    7: "HDMI_RX_D0_P", 9: "HDMI_RX_D0_N",
-    10: "HDMI_RX_CLK_P", 12: "HDMI_RX_CLK_N",
+# The ONE standard adapter contract (schgen.core.subsystem.Meta) — the entire
+# carrier-specific surface of this subsystem. Per-net rationale is in the module
+# docstring above.
+#   bind    abstract subsystem net -> carrier real net
+#   expects ports that bind on the generated J2/J3 sheets -> explicit linker deferral
+#           (for a TMDS pair, the P line carries the pair's deferral)
+#   notes   power-tree draw note cites the carrier's house-style wording
+META = {
+    "bind": {
+        "+VDD_LOGIC": "+3V3_HDMI_RX",
+        "GND": "GND",
+        "CHASSIS_GND": "CHASSIS_GND",
+        "TMDS_RX_D2_P": "HDMI_RX_D2_P", "TMDS_RX_D2_N": "HDMI_RX_D2_N",
+        "TMDS_RX_D1_P": "HDMI_RX_D1_P", "TMDS_RX_D1_N": "HDMI_RX_D1_N",
+        "TMDS_RX_D0_P": "HDMI_RX_D0_P", "TMDS_RX_D0_N": "HDMI_RX_D0_N",
+        "TMDS_RX_CLK_P": "HDMI_RX_CLK_P", "TMDS_RX_CLK_N": "HDMI_RX_CLK_N",
+        "HDMI_5V_DET": "HDMI_RX_5V_DET",
+        "CEC": "HDMI_RX_CEC",
+    },
+    "expects": {
+        "TMDS_RX_D2_P": _J23_MAP,
+        "TMDS_RX_D1_P": _J23_MAP,
+        "TMDS_RX_D0_P": _J23_MAP,
+        "TMDS_RX_CLK_P": _J23_MAP,
+        "HDMI_5V_DET": _J23_MAP,
+        "CEC": _J23_MAP,
+    },
+    "notes": {"draws": "CEC 27k pull-up (EEPROM + EDID WC# are cable-5V-fed)"},
 }
 
 
 def circuit() -> Circuit:
-    c = Circuit("hdmi_rx", "HDMI RX: HDMI-A sink + EDID EEPROM")
-    c.use_part("HDMI-019S", ref="J1", lib_id=J_LIB)
-    c.use_part("M24C02-WMN6TP", ref="U1", lib_id=U_LIB)
-    c.part("R1", "Device:R", "1k", R_FP, LCSC="C21190")     # HPD assert
-    c.part("R2", "Device:R", "27k", R_FP, LCSC="C22967")    # CEC pull-up
-    c.part("R3", "Device:R", "10k", R_FP, LCSC="C25804")    # 5V-det divider top
-    c.part("R4", "Device:R", "15k", R_FP, LCSC="C22809")    # 5V-det divider bottom
-    c.part("C1", "Device:C", "100n", C_FP, LCSC="C14663")   # EEPROM VCC bypass
-
-    # TMDS lanes: DC-coupled connector -> Zynq HR bank (bank 33, wave 3). The
-    # 2x49.9R/pair sink termination to AVCC lives at the FPGA-bank (J2) end, NOT
-    # here — SI-HDMIRX-TERM (docstring): an HR bank does not self-terminate
-    # TMDS_33, so external sink termination is REQUIRED, placed at the receiver.
-    #
-    # HDMIRX-1 (DEF-G): real low-cap TMDS RX ESD. Two TI TPD4E02B04DQAR 4-ch
-    # arrays (LCSC C106794, 0.2 pF/line typ << the 0.5 pF/line TMDS budget,
-    # 8 kV contact / IEC 61000-4-2) shunt the 8 single-ended lines jack -> bank:
-    # D2+D1 on U2, D0+CLK on U3. The lines stay DC-coupled (shunt TAPS, not
-    # series) — each ESD IOn pin is just added to the existing connector port
-    # net, so the netlist proves {J1.pin, U.IOn} per line. Both arrays' GND ->
-    # GND. The placer sees these as pure GND-referenced clamps and draws each as
-    # a detached shunt cell (place.py shunt detector + _shunt_cells).
-    c.use_part("TPD4E02B04DQAR", ref="U2")
-    c.use_part("TPD4E02B04DQAR", ref="U3")
-    ESD = {  # TMDS port net -> (array ref, IO pin name)
-        "HDMI_RX_D2_P": ("U2", "IO1"), "HDMI_RX_D2_N": ("U2", "IO2"),
-        "HDMI_RX_D1_P": ("U2", "IO3"), "HDMI_RX_D1_N": ("U2", "IO4"),
-        "HDMI_RX_D0_P": ("U3", "IO1"), "HDMI_RX_D0_N": ("U3", "IO2"),
-        "HDMI_RX_CLK_P": ("U3", "IO3"), "HDMI_RX_CLK_N": ("U3", "IO4"),
-    }
-    for pin, net in TMDS_PORTS.items():
-        esd_ref, esd_io = ESD[net]
-        c.port(net, f"J1.{pin}", f"{esd_ref}.{esd_io}")
-    c.net("GND", "U2.GND", "U3.GND")
-    c.nc("U2.NC", "U3.NC")               # spare USON-10 pads (6/7/9/10)
-    for lane in ("D0", "D1", "D2", "CLK"):
-        c.port_type(f"HDMI_RX_{lane}_P", kind="tmds_pair",
-                    pair_with=f"HDMI_RX_{lane}_N", expect=J23_MAP)
-
-    # DDC: source-mastered I2C, EEPROM is the only sink-side device
-    c.net("HDMI_RX_SDA", "J1.16", "U1.5")
-    c.net("HDMI_RX_SCL", "J1.15", "U1.6")
-
-    # HDMIRX-3 (electrical audit) — SLOW-LINE CONNECTOR ESD. The TMDS pairs got
-    # connector ESD (U2/U3 TPD4E02B04), but the four SLOW cable lines reached the
-    # FPGA/EEPROM with NONE — asymmetric vs the TX side (TPD12S016 clamps every
-    # cable line) and vs HDMI-sink ESD intent (ST AN5121: protect DDC/CEC/HPD at
-    # the jack). Fix = one GND-referenced low-cap ESD array as DETACHED SHUNT
-    # TAPS (not series — each protected line stays {J1.pin, ...existing..., U.IOn}),
-    # drawn as a shunt cell exactly like U2/U3.
-    #
-    # PART: TPD4E05U06DQAR (LCSC C138714, USON-10, Extended, LIVE-verified
-    # 2026-06-14: 26,155 in stock on JLCPCB). SLVSBO7O: 4-channel, GND-referenced
-    # (two GND pads, NO VCC/supply pin -> a pure passive+GND clamp signature),
-    # VRWM = 5.5 V, CL = 0.5 pF/line typ, ±12 kV IEC 61000-4-2 contact. The
-    # uniform 5.5 V standoff is ABOVE the 5.25 V max cable rail, so the SAME part
-    # safely serves BOTH voltage domains on this jack: the 3.3 V DDC pair (idle
-    # << 5.5 V, no false clamp) AND the +5 V-domain CEC/HPD lines (idle 5 V <
-    # 5.5 V VRWM -> no conduction; a 3.6 V-standoff part like TPD4E02B04 would
-    # CONDUCT at 5 V, which is why the TMDS array is NOT reused for these). One
-    # 4-ch part covers all four slow lines in a single clean shunt cell, keeping
-    # sheet density and the BOM down vs two 2-ch arrays.
-    #   D1+ = SCL, D1- = SDA (DDC, 3.3 V) ; D2+ = CEC (3.3 V), D2- = HPD (5 V).
-    # DEVIATION FROM THE AUDIT NOTE (which suggested a TPD6E001 for DDC + a
-    # separate 5 V array for CEC/HPD): the TPD6E001 carries a VCC bias pin whose
-    # node SETS its clamp reference; biasing it to the cable-5 V HDMI_RX_5V (a
-    # SIGNAL net, not a POWER rail) makes that already-busy trunk un-routable for
-    # the shunt VCC stub (LAW-1). A single supply-less 5.5 V array sidesteps that
-    # entirely and is electrically cleaner for both domains.
-    c.use_part("TPD4E05U06DQAR", ref="U4")
-    c.net("HDMI_RX_SCL", "U4.D1+")
-    c.net("HDMI_RX_SDA", "U4.D1-")
-    c.net("GND", "U4.GND")
-    c.nc("U4.NC")                              # USON-10 pads 6/7/9/10 (datasheet: float/GND OK)
-
-    # cable +5V domain: EEPROM supply + bypass, HPD assert, presence divider,
-    # and the EDID WC# write-protect (COMP-1, see the strap block below) —
-    # WC# (U1.7) is HARDWIRED to the EEPROM's OWN 5 V VCC node (U1.8, the
-    # adjacent pin), so write-protect tracks VCC whenever a source is plugged
-    c.net("HDMI_RX_5V", "J1.18", "U1.8", "U1.7", "C1.1", "R1.1", "R3.1")
-    c.net("GND", "C1.2")
-    c.net("HDMI_RX_HPD", "J1.19", "R1.2", "U4.D2-")   # HDMIRX-3: HPD ESD tap (5 V)
-    c.port("HDMI_RX_5V_DET", "R3.2", "R4.1", expect=J23_MAP)
-    c.net("GND", "R4.2")
-
-    # CEC to the FPGA, spec 27k pull-up to the gated module rail
-    c.port("HDMI_RX_CEC", "J1.13", "R2.2", "U4.D2+", expect=J23_MAP)  # HDMIRX-3: CEC ESD tap
-    c.net("+3V3_HDMI_RX", "R2.1")
-
-    # HDMIRX-2 / COMP-1 (electrical audit): EDID write-protect. WC# (U1.7) is
-    # HARDWIRED to the EEPROM's own cable-5 V VCC node HDMI_RX_5V (the adjacent
-    # U1.8 pin) above — a NETLIST FIX, not a strap/jumper. This is the EDID a
-    # fixed, permanently-write-protected sink: a runtime DDC write cannot
-    # corrupt it, and there is no field-(re)program path by design.
-    #   * Earlier revisions were WRONG in two ways. WC# started as a hard GND
-    #     (write ENABLED — any DDC master could clobber the EDID). HDMIRX-2 then
-    #     lifted it to a 10k pull-up on a jumper net HDMI_RX_EDID_WP, but pulled
-    #     to +3V3_HDMI_RX, which is WRONG twice:
-    #     (1) DOMAIN — +3V3_HDMI_RX is the GATED module rail. In the carrier-OFF
-    #         EDID-read case (HDMI 1.4 sec 8.5: a source reads EDID with the sink
-    #         board powered down, EEPROM alive on cable 5 V) that rail is dead ->
-    #         WC# floats to 0 V -> write-ENABLED. Protection is DEFEATED in
-    #         exactly the unattended case it must cover.
-    #     (2) LEVEL — the M24C02-W (C7562, ST datasheet) inputs are ratiometric
-    #         to its OWN VCC: VIH(min) = 0.7*VCC. The EEPROM runs on cable 5 V
-    #         (U1.8 = HDMI_RX_5V), so VIH(min) ~ 3.5 V; a 3.3 V strap cannot
-    #         guarantee a logic HIGH on WC# even with the carrier up.
-    #   * COMP-1 FIX (live-verified): tie WC# directly to HDMI_RX_5V (the U1.8
-    #     node, cable 5 V) -> WC# tracks VCC (VIH met) and write-protect holds
-    #     whenever a source is plugged (5 V present), carrier on OR off. No pull-
-    #     up resistor and no jumper net: the strap R5 and HDMI_RX_EDID_WP are
-    #     DELETED. E0/E1/E2 address straps stay grounded (0xA0/0x50).
-
-    # grounds: TMDS shields + DDC/CEC ground on signal GND; shell on chassis
-    c.net("GND", "J1.2", "J1.5", "J1.8", "J1.11", "J1.17",
-          "U1.1", "U1.2", "U1.3", "U1.4")
-    c.net("CHASSIS_GND", "J1.20", "J1.21", "J1.22", "J1.23")
-
-    # pin 14 UTILITY/HEAC+: reserved, HEAC unused by design
-    c.nc("J1.14")
-
-    # power-tree budget (round 4): only the CEC 27k pull-up sits on the gated
-    # module rail (~0.12 mA when CEC is driven low). EDID WC# is now hardwired
-    # to cable 5 V (COMP-1) so it draws nothing from +3V3_HDMI_RX; EEPROM runs
-    # from cable 5 V.
-    c.draws("+3V3_HDMI_RX", 0.001, "CEC 27k pull-up (EEPROM + EDID WC# are "
-                                   "cable-5V-fed)")
-    return c
+    return _lib.circuit(META)
