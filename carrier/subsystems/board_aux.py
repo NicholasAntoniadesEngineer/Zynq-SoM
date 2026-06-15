@@ -30,7 +30,7 @@ R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 LED_FP = "LED_SMD:LED_0603_1608Metric"
 
-LCSC_100N = "C1591"        # 100n X7R 0603
+LCSC_100N = "C14663"        # 100n X7R 0603
 LCSC_4K7 = "C23162"        # 4.7k 1% 0603 (AUX-bus pull-ups)
 LCSC_100K = "C25803"       # 100k 1% 0603
 LCSC_13K = "C22797"        # 13k 1% 0603 -> SY6280 ILIM 523 mA

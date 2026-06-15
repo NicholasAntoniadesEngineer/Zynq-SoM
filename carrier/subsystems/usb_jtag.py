@@ -100,7 +100,7 @@ R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
 
-LCSC_100N = "C1591"     # 100n X7R 0603
+LCSC_100N = "C14663"     # 100n X7R 0603
 LCSC_1U = "C15849"      # 1u 0603 X7R (LDO Cin)
 LCSC_10U = "C15850"     # 10u 0805 bulk
 LCSC_22P = "C1653"      # 22p C0G 0603 (crystal load), JLC Basic

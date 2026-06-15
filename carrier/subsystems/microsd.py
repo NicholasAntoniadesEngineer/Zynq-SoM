@@ -102,7 +102,7 @@ def circuit() -> Circuit:
     # gated card rail (+3V3_SD is the bring-up-gated module rail — SY6280 on
     # the bringup sheet — a POWER net with its own symbol, like +5V_USB):
     # slot VDD + both VCCB + every pull-up + bulk + ESD-array VCC (SD-1)
-    c.part("C2", "Device:C", "100n", C0603, LCSC="C1591")
+    c.part("C2", "Device:C", "100n", C0603, LCSC="C14663")
     c.part("C3", "Device:C", "22u", C0805, LCSC="C45783")
     c.net("+3V3_SD", "J1.VDD", "U1.VCCB0", "U1.VCCB1", "C2.1", "C3.1",
           "U2.VCC", *pull_pins)

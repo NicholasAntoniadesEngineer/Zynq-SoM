@@ -84,7 +84,7 @@ Inlet protection + bulk (LIVE-verified on the JLC parts API 2026-06-11):
   filters; a TPD2EUSB30-class array remains a stuffing option if EMC
   testing demands.
 - C2 10u 50 V X7R 1210 (C596319, YAGEO CC1210KKX7R9BB106, stock 13,618,
-  Ext) + C1 100n 50 V (C1591): C1 stays at the inlet (the DS-recommended
+  Ext) + C1 100n 50 V (C14663): C1 stays at the inlet (the DS-recommended
   >= 0.1 uF on IN); C2 moves BEHIND the eFuse onto +VIN as the first
   slice of the dVdT-charged board bulk. X7R @ 50 V rating chosen for
   DC-bias honesty on a 20 V rail.
@@ -110,7 +110,7 @@ def circuit() -> Circuit:
     c.use_part("USBLC6-2SC6", ref="U2")        # FS data-pair ESD array
 
     # ---- receptacle VBUS -> +VBUS_IN: TVS + the DS-minimum inlet 100n -----
-    c.part("C1", "Device:C", "100n", C0603, LCSC="C1591")
+    c.part("C1", "Device:C", "100n", C0603, LCSC="C14663")
     c.part("D1", "Device:D_Zener", "SMBJ22A", TVS_FP, LCSC="C10214")
     c.net("+VBUS_IN", "J1.VBUS", "C1.1", "D1.1",       # both stacked pads
           "U1.IN", "U1.IN_SYS", "U1.UVLO")             # UVLO unused -> IN_SYS

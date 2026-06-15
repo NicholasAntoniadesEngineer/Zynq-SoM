@@ -53,7 +53,7 @@ C_FP = "Capacitor_SMD:C_0603_1608Metric"
 
 LCSC_GATE = "C7666"        # SN74LVC1G08DBVR (TI) — live-verified 2026-06-10
 LCSC_100K = "C25803"
-LCSC_100N = "C1591"
+LCSC_100N = "C14663"
 
 J3_MAP = "som_j3_connector (wave 3 STM32 GPIO function map)"
 EXPECT_RAILS = "bringup_rails (DIP / TCA9535 control surfaces)"

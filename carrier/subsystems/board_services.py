@@ -60,7 +60,7 @@ from schgen.core.model import Circuit
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 
-LCSC_100N = "C1591"        # 100n X7R 0603
+LCSC_100N = "C14663"        # 100n X7R 0603
 LCSC_10K = "C25804"        # 10k 1% 0603
 LCSC_1K = "C21190"         # 1k 0603 (WDI series)
 

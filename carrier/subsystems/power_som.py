@@ -36,7 +36,7 @@ ever leaves [1.5, 5.5] V — PWR-1 can never silently regress.
 
 Parts (live-verified on JLCPCB 2026-06-10): TPS54302DDCR (C311983, 4.5-28 V 3 A
 sync buck, TSOT-23-6); SWPA8040S100MT (C37429, 10 uH/~4 A); R12 10k (C25804) +
-D5 MMSZ5231B (C85181, 5.1 V/500 mW SOD-123) + C20 100n (C1591) EN clamp; FB
+D5 MMSZ5231B (C85181, 5.1 V/500 mW SOD-123) + C20 100n (C14663) EN clamp; FB
 68.1k/10k (C844583 + C25804) -> 4.65 V nom (PWR-5: WC-hi ~4.81 V, inside the
 SoM 4.2-5.0 V window) + 75 pF C0G feedforward (C22399620); KT-0603R PG LED
 (C2286) + 1k (C21190). Symbol/footprint stay the KiCad stock TPS54302 drawing
@@ -80,17 +80,17 @@ def circuit() -> Circuit:
     c.net("GND", "U4.1")
     c.part("R12", "Device:R", "10k", R_FP, LCSC="C25804")          # EN series
     c.part("D5", "Device:D_Zener", "MMSZ5231B", DZ_FP, LCSC="C85181")  # 5.1V clamp
-    c.part("C20", "Device:C", "100n", C0603, LCSC="C1591")         # EN bypass
+    c.part("C20", "Device:C", "100n", C0603, LCSC="C14663")         # EN bypass
     c.net("+VIN_SYS", "R12.1")                                     # EN-clamp ref: buck input rail
     c.net("EN_5V_SOM", "U4.5", "R12.2", "D5.1", "C20.1")           # D5.1 = K
     c.net("GND", "D5.2", "C20.2")                                  # D5.2 = A
-    for ref, val, fp, lcsc in (("C14", "100n", C0603, "C1591"),
+    for ref, val, fp, lcsc in (("C14", "100n", C0603, "C14663"),
                                ("C15", "10u", C1206, "C13585"),
                                ("C16", "10u", C1206, "C13585")):
         c.part(ref, "Device:C", val, fp, LCSC=lcsc)
         c.net("+VIN_SYS", f"{ref}.1")                             # buck-input filter, post-RS1
         c.net("GND", f"{ref}.2")
-    c.part("C17", "Device:C", "100n", C0603, LCSC="C1591")         # BOOT
+    c.part("C17", "Device:C", "100n", C0603, LCSC="C14663")         # BOOT
     c.net("BOOT_5V_SOM", "U4.6", "C17.1")
     c.part("L3", "Device:L", "10uH", L_FP, LCSC="C37429")
     c.net("SW_5V_SOM", "U4.2", "C17.2", "L3.1")

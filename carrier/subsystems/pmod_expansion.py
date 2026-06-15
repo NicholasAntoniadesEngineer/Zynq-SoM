@@ -63,7 +63,7 @@ C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
 LED_FP = "LED_SMD:LED_0603_1608Metric"
 
-LCSC_100N = "C1591"     # 100n X7R 0603
+LCSC_100N = "C14663"     # 100n X7R 0603
 LCSC_10U = "C15850"     # 10u 0805 bulk
 LCSC_13K = "C22797"     # 13k 1% 0603 -> SY6280 ILIM 523 mA
 LCSC_100K = "C25803"    # 100k 1% 0603 (EN pulldown + LED net is separate)

@@ -158,7 +158,7 @@ def circuit() -> Circuit:
 
     # ---- power: 3P3V + 3P3VAUX from +3V3; VADJ from the local LDO ----------
     c.part("C1", "Device:C", "10u", C0805, LCSC="C15850")
-    c.part("C2", "Device:C", "100n", C0603, LCSC="C1591")
+    c.part("C2", "Device:C", "100n", C0603, LCSC="C14663")
     c.net("+3V3", *[f"J1.{p}" for p in sorted(sig["3P3V"])],
           f"J1.{sig['3P3VAUX'][0]}", "C1.1", "C2.1")
     c.net("GND", "C1.2", "C2.2")
@@ -175,7 +175,7 @@ def circuit() -> Circuit:
                footprint="TLV75725PDYDR:TLV75725PDYDR")
     c.part("C3", "Device:C", "1u", C0603, LCSC="C15849")        # LDO in
     c.part("C4", "Device:C", "10u", C0805, LCSC="C15850")       # LDO out
-    c.part("C5", "Device:C", "100n", C0603, LCSC="C1591")       # at connector
+    c.part("C5", "Device:C", "100n", C0603, LCSC="C14663")       # at connector
     c.net("+3V3", "U1.1", "U1.3", "C3.1")
     c.net("GND", "U1.2", "U1.6", "C3.2", "C4.2", "C5.2")
     c.nc("U1.4")

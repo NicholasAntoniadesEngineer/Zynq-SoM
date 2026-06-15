@@ -106,7 +106,7 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   on the JLC parts API 2026-06-13: C85181, Diodes Inc, SOD-123, stock
   180,887, Extended, min-qty 1, $0.0162 @ qty 1 — the canonical 5.1 V
   zener; alternates same query: C2117 BZT52C5V1 Jiangsu Changjin 92,425,
-  C66198 MMSZ5231BT1G onsemi 81,989); C20 = 100 nF EN bypass to GND (C1591,
+  C66198 MMSZ5231BT1G onsemi 81,989); C20 = 100 nF EN bypass to GND (C14663,
   reused). No JLC Basic 5.1 V zener exists (all 5.1 V zeners are Extended);
   C85181's 180 k stock + min-qty 1 makes it the lowest-risk pick. Replaces
   the old over-stressing 22k/10k divider (the FALSE "internal EN clamp"
@@ -121,12 +121,12 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   turn-on. Dropping it to 1k (a pure RC gate-stop now, not a divider) lets
   Vgs see +1V8 * 100/101 = 1.78 V, a solid margin over Vth-max.
 - Input caps: U1 (LM61460, DS 9.2.2.5) = 2x 10u/1206 bulk (C13585) + 2x 100n
-  50 V X7R HF (C1/C25, C1591), ONE 100 nF per VIN/PGND pin pair as the DS
+  50 V X7R HF (C1/C25, C14663), ONE 100 nF per VIN/PGND pin pair as the DS
   mandates; the second buck (TPS54302) keeps 22u/0805 (C45783) + 100n on its
   +5V input. Outputs: U1 = 3x 22u (DS 9.2.2.4 Table 9-5 5 V); the +3V3 buck
   keeps 2x 22u. LDO 1u in / 1u out (C15849). U1 BIAS bypass 1u (C28, C15849).
-  All Basic except C1591 (reclassified Extended per the API — kept: its 50 V
-  X7R rating is exactly the 9.2.2.5 requirement and covers the 21 V input).
+  All Basic, incl. the 100 nF (C14663, YAGEO CC0603KRX7R9BB104, JLC Basic):
+  its 50 V X7R rating is exactly the 9.2.2.5 requirement and covers 21 V input).
 
 Pin maps cross-checked: parts/<MPN>/<MPN>.py (EasyEDA) == KiCad stock
 symbols used here (TPS54302: 1 GND 2 SW 3 VIN 4 FB 5 EN 6 BOOT;
@@ -238,12 +238,12 @@ def circuit() -> Circuit:
     #     also be rated at 50 V with an X7R or better dielectric." The VQFN-HR
     #     (RJR) splits VIN/PGND across opposite package sides, so ONE 100 nF goes
     #     at each VIN/PGND location (DS example: "two 4.7-uF and two 100-nF, one
-    #     at each VIN/PGND"). C1591 = Samsung CL10B104KB8NNNC, 100 nF 50 V X7R
-    #     0603 (live JLC 2026-06-15: Extended, stock 2,081,102) — meets the
+    #     at each VIN/PGND"). C14663 = YAGEO CC0603KRX7R9BB104, 100 nF 50 V X7R
+    #     0603 (live JLC 2026-06-15: Basic, stock 17,789,417) — meets the
     #     50 V/X7R rule. The netlist puts both on +VIN_SYS->GND (the placer/PCB
     #     fans one to each VIN pad); the split is a layout/footprint property.
-    for ref, val, fp, lcsc in (("C1", "100n", C0603, "C1591"),  # HF, VIN1/PGND1
-                               ("C25", "100n", C0603, "C1591"), # HF, VIN2/PGND2
+    for ref, val, fp, lcsc in (("C1", "100n", C0603, "C14663"),  # HF, VIN1/PGND1
+                               ("C25", "100n", C0603, "C14663"), # HF, VIN2/PGND2
                                ("C2", "10u", C1206, "C13585"),  # bulk (>=10 uF)
                                ("C3", "10u", C1206, "C13585")):
         c.part(ref, "Device:C", val, fp, LCSC=lcsc)
@@ -274,7 +274,7 @@ def circuit() -> Circuit:
     c.part("R10", "Device:R", "22k", R_FP, LCSC="C31850")          # RT: fSW=600kHz (DS Eq 2)
     c.net("RT_5V0", "U1.6", "R10.1")                             # RT (pin 6)
     c.net("GND", "R10.2")
-    c.part("C4", "Device:C", "100n", C0603, LCSC="C1591")          # BOOT (CBOOT) cap
+    c.part("C4", "Device:C", "100n", C0603, LCSC="C14663")          # BOOT (CBOOT) cap
     # RBOOT(13) short to CBOOT(14): SAME node, a 0R wire (DS EC table) — no R.
     c.net("BOOT_5V0", "U1.14", "U1.13", "C4.1")                  # CBOOT(14)+RBOOT(13)
     c.part("L1", "Device:L", "10uH", L_FP, LCSC="C37429")
@@ -343,12 +343,12 @@ def circuit() -> Circuit:
     c.net("+5V", "U2.3")
     c.net("GND", "U2.1")
     c.port("EN_3V3", "U2.5", expect=EXPECT_BRINGUP)
-    for ref, val, fp, lcsc in (("C7", "100n", C0603, "C1591"),
+    for ref, val, fp, lcsc in (("C7", "100n", C0603, "C14663"),
                                ("C8", "22u", C0805, "C45783")):
         c.part(ref, "Device:C", val, fp, LCSC=lcsc)
         c.net("+5V", f"{ref}.1")
         c.net("GND", f"{ref}.2")
-    c.part("C9", "Device:C", "100n", C0603, LCSC="C1591")          # BOOT
+    c.part("C9", "Device:C", "100n", C0603, LCSC="C14663")          # BOOT
     c.net("BOOT_3V3", "U2.6", "C9.1")
     c.part("L2", "Device:L", "10uH", L_FP, LCSC="C37429")
     c.net("SW_3V3", "U2.2", "C9.2", "L2.1")

@@ -61,7 +61,7 @@ Start-of-Transmission detection.
   module shutdown) + CAM_LED (FFC 12, v1-only indicator) plain ports.
 - Power: FFC 15 -> +3V3_CAM (bring-up-gated module rail, SY6280 cell #4 on
   bringup_modules, 523 mA limit vs 300 mA budget) with 100n + 10u at the
-  connector (C1591 + C15850, the wave-1 pair). FFC 1/4/7/10 -> GND;
+  connector (C14663 + C15850, the wave-1 pair). FFC 1/4/7/10 -> GND;
   mounting-plate tabs 16/17 -> GND.
 - ESD: omitted on rev A per dossier section 4 (short internal cable;
   TPD4E05U06 across the FFC-facing lines remains a stuffing option).
@@ -122,7 +122,7 @@ def circuit() -> Circuit:
     c.port("CAM_LED", "J1.12", expect=J3_33)
 
     # ---- power: gated +3V3_CAM at the connector + grounds ------------------
-    c.part("C1", "Device:C", "100n", C0603, LCSC="C1591")
+    c.part("C1", "Device:C", "100n", C0603, LCSC="C14663")
     c.part("C2", "Device:C", "10u", C0805, LCSC="C15850")
     c.net("+3V3_CAM", "J1.15", "C1.1", "C2.1")
     c.net("GND", "J1.1", "J1.4", "J1.7", "J1.10", "C1.2", "C2.2",

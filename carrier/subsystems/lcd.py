@@ -33,7 +33,7 @@ def circuit() -> Circuit:
     c.part("R1", "Device:R", "1.5R", R0603, LCSC="C22769")   # ISET 133mA
     c.part("C1", "Device:C", "10u", C0805, LCSC="C15850")    # boost in
     c.part("C2", "Device:C", "2.2u", C0805, LCSC="C125847")  # boost out 50V (LCD-1)
-    c.part("C3", "Device:C", "100n", C0603, LCSC="C1591")    # panel VDD
+    c.part("C3", "Device:C", "100n", C0603, LCSC="C14663")    # panel VDD
 
     # ---- panel data: 24 RGB + syncs, PL bank 13 via J2 ---------------------
     for base, names in ((5, [f"LCD_R{i}" for i in range(8)]),

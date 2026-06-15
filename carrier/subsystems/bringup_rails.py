@@ -60,7 +60,7 @@ C_FP = "Capacitor_SMD:C_0603_1608Metric"
 LCSC_100K = "C25803"       # 0603 100k 1%
 LCSC_10K = "C25804"        # 0603 10k 1%
 LCSC_4K7 = "C23162"        # 0603 4.7k 1%
-LCSC_100N = "C1591"        # CL10B104KB8NNNC 100n X7R
+LCSC_100N = "C14663"        # CC0603KRX7R9BB104 100n 50V X7R 0603 (JLC Basic)
 
 J3_MAP = "som_j3_connector (wave 3 STM32 GPIO function map)"
 

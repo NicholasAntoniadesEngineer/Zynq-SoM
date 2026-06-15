@@ -69,9 +69,9 @@ def circuit() -> Circuit:
         vcc_pins += [f"{jref}.{PAD[6]}", f"{jref}.{PAD[12]}"]
 
     # gated module rail: both ports' VCC + 100n/10u per port
-    c.part("C1", "Device:C", "100n", C0603, LCSC="C1591")
+    c.part("C1", "Device:C", "100n", C0603, LCSC="C14663")
     c.part("C2", "Device:C", "10u", C0805, LCSC="C15850")
-    c.part("C3", "Device:C", "100n", C0603, LCSC="C1591")
+    c.part("C3", "Device:C", "100n", C0603, LCSC="C14663")
     c.part("C4", "Device:C", "10u", C0805, LCSC="C15850")
     # +3V3_PMOD is the bring-up-gated module rail (SY6280 #7 on
     # bringup_modules): a POWER net with its own symbol, like +5V_USB.
