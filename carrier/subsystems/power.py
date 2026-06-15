@@ -82,7 +82,7 @@ Parts (ALL live-verified on JLCPCB 2026-06-10, stock figures that day):
   AP2112K-* drawings all derive from Regulator_Linear:AP2204K-1.5
   (identical SOT-23-5 pin map 1=VIN 2=GND 3=EN 4=NC 5=VOUT, confirmed
   against the EasyEDA pin table in parts/AP2112K-1.8TRG1/AP2112K-1.8TRG1.py).
-- FB dividers: +5V = 40.2k/10k -> 5.02 V (C25750 Ext + C25804 Basic; LM61460
+- FB dividers: +5V = 40.2k/10k -> 5.02 V (C12447 40.2k 0603 1% + C25804 Basic; LM61460
   Vref 1.0 V -> Vout = 1.0*(1+40.2/10));
   +3V3 = 100k/22k -> 3.30 V (C25803 + C31850, both Basic);
   +5V_SOM = 68.1k/10k -> 4.65 V nom (PWR-5; C844583 Vishay 0603 1%, LIVE
@@ -176,8 +176,10 @@ def circuit() -> Circuit:
     # "HotRod") package. 6 A rating -> ~2x margin over 2.95 A (>>40% target);
     # Vin op-max 36 V (abs 42 V) covers the 21 V +VIN_SYS rail with wide margin.
     #   Vref = 1.0 V (DS 8.3.11) -> FB divider Vout = 1.0*(1 + Rtop/Rbot);
-    #     R1/R2 = 40.2k/10k -> 5.02 V (same Vref + divider as the old LMR33630,
-    #     so the divider parts C25750/C25804 are UNCHANGED).
+    #     R1/R2 = 40.2k/10k -> 5.02 V (same Vref + divider RATIO as the old
+    #     LMR33630). FB-top LCSC is C12447 (UNI-ROYAL 0603WAF4022T5E, 40.2k 0603
+    #     1%); C25804 (10k) bottom unchanged. (The old C25750 LCSC was a mis-key
+    #     -> 120k 0402; corrected here, see R1 below.)
     #   fSW = 600 kHz set by RT = 22k (DS Eq 2: RRT(kohm) = (1/fSW(kHz) -
     #     3.3e-5)*1.346e4 -> 600 kHz => 21.99k ~= 22.0k; 22k C31850 already in
     #     this sheet's BOM). 600 kHz keeps the existing 10 uH SWPA8040S: ripple
@@ -302,7 +304,7 @@ def circuit() -> Circuit:
         c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
         c.net("+5V_REG", f"{ref}.1")                              # output bulk, reg-side
         c.net("GND", f"{ref}.2")
-    c.part("R1", "Device:R", "40.2k", R_FP, LCSC="C25750")         # FB top (VFB 1.0 -> 5.02 V)
+    c.part("R1", "Device:R", "40.2k", R_FP, LCSC="C12447")         # FB top (VFB 1.0 -> 5.02 V); C12447 = UNI-ROYAL 0603WAF4022T5E 40.2k 0603 1%. (Prior LCSC C25750 was a mis-key: it resolves to a 120k 0402 -> the assembled FB divider would set ~13.1 V on the +5V rail and destroy the SoM. BOM-CRITICAL.)
     c.part("R2", "Device:R", "10k", R_FP, LCSC="C25804")           # FB bottom
     c.net("+5V_REG", "R1.1")                                       # FB senses the regulated node
     c.net("FB_5V0", "U1.4", "R1.2", "R2.1")                       # FB (pin 4)

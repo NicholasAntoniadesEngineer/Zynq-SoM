@@ -75,18 +75,22 @@ are flagged for the owner to evaluate against the real footprint/datasheet.
 | SFW15R-1STE1LF (camera FFC) | C3168538 | 274 | The "-2STE" variant is top-contact vs this part's bottom-contact — not interchangeable. Exact part is the best available. |
 | ASP-134603-01 (Samtec FMC) | C2836665 | 282 | $14.85 ea, single-source, no equivalent. Cost + stock concentration risk; primary mitigation is buy-ahead. |
 
-### B. Data-integrity finding (NOT a cost swap — fix recommended)
+### B. Data-integrity finding — RESOLVED 2026-06-15
 
-**C25750 (power:R1, "40.2k" FB-top resistor) currently resolves on LCSC to a
-120 kohm 0402 part** (`0402WGF1203TCE`, Uni-Royal), not a 40.2 kohm 0603. The
-project's own comment/ratings call it "40.2k 0603" — the LCSC code is
-stale/reassigned. This is a live mismatch: the BOM ships R1 as a 0402 120 k in
-a 0603 land if ordered as-is, which breaks the +5 V feedback divider
-(40.2k/10k -> 5.02 V). Recommend reassigning to a correct **40.2 kohm 0603 1%**
-part, e.g. **C12447** (UniOhm 0603WAF4022T5E, 40.2 kohm 75 V 0603, Extended,
-42,541 stock). NOT applied here: power:R1 is a value-bearing FB resistor, so the
-owner should confirm the value/footprint intent before the change (it is a
-judgement call, not a like-for-like sourcing swap).
+**RESOLVED:** power:R1 has been re-keyed `C25750 -> C12447` in
+`carrier/subsystems/power.py`. The intended value/footprint (40.2 kohm 0603 1%,
+for the 40.2k/10k -> 5.02 V FB divider) was confirmed against the design, and
+**C12447** (UNI-ROYAL / UniOhm `0603WAF4022T5E`, 40.2 kohm 75 V 0603 1%, verified
+via LCSC) is the correct part. The 120 kohm 0402 `C25750` is no longer in the
+BOM. (Cost tables above/below are the pre-fix snapshot; the only line item that
+changed is R1: C25750 -> C12447, same 40.2k value, no cost-class delta of note.)
+
+Original finding (for the record): **C25750 resolved on LCSC to a 120 kohm 0402
+part** (`0402WGF1203TCE`, Uni-Royal), not the 40.2 kohm 0603 the project comments
+called for — a live triple mismatch (value 40.2k vs 120k, package 0603 vs 0402)
+that, if ordered as-is, would have set ~13.1 V on the +5 V rail and destroyed the
+SoM. This was a CRITICAL data-integrity defect that ERC / netlist / overlap gates
+do not catch (they trust the declared value string, not the LCSC's actual value).
 
 ### C. Higher-stock same-chip alternates (optional, all still Extended)
 
@@ -185,7 +189,7 @@ searching the JLC Basic library for the same value/function:
 | C23212 | 6.8k | 4 | Basic | 547,133 | 0.0018 | - |
 | C23345 | 22R | 1 | Basic | 3,004,295 | 0.0017 | - |
 | C240854 | 878311420 | 1 | Extended | 5,986 | 0.9860 | Ext-fee |
-| C25750 | 40.2k | 1 | Extended (Pref) | 5,361 | 0.0008 | - |
+| C12447 | 40.2k | 1 | Extended | 42,541 | 0.0008 | R1 FB-top; corrected from C25750 (was 120k 0402) — see §B |
 | C25803 | 100k | 47 | Basic | 9,126,040 | 0.0016 | - |
 | C25804 | 10k | 29 | Basic | 1,474,892 | 0.0014 | - |
 | C25961 | 22k1 | 1 | Extended | 47,588 | 0.0018 | Ext-fee |
