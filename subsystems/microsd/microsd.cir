@@ -1,0 +1,43 @@
+* microsd.cir — SPICE subckt for the TXS02612 microSD-slot subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/microsd/microsd.py INTERFACE rails), NOT any board net. A
+* consuming project wires these pins to its real nets — exactly as the netlist
+* bind map does. The TXS02612 is an active auto-direction level translator (no
+* useful analog small-signal behaviour to model here); this subckt captures the
+* PASSIVE network the subsystem adds around it — the per-rail bypass/bulk caps,
+* which is what the local test and any board-level .op/.tran reason about.
+*
+* Values mirror subsystems/microsd/microsd.py one-for-one (parse_si compatible):
+*   C1 100n            VCCA host-side bypass       (+VDD_HOST -> GND)  [decouple]
+*   C2 100n            VCCB card-rail bypass       (+VDD_CARD -> GND)
+*   C3 22u             VCCB card-rail bulk         (+VDD_CARD -> GND)
+*   C4 100n            TPD6E001 VCC bypass (SD-1)  (+VDD_CARD -> GND)  [decouple]
+*
+* (The card-line anti-float pull-ups R1..R5 100k + R6 10k card-detect tie to
+*  the CARD-SIDE internal SIGNAL nets, which are library-private and so are NOT
+*  subckt pins; the local test matches CAPS one-for-one against the netlist.)
+*
+* Port order: VDD_HOST VDD_CARD GND   (GND last, by convention.)
+
+.subckt microsd VDD_HOST VDD_CARD GND
+
+* VCCA host-side bypass (TXS02612 A-side reference)
+C1 VDD_HOST GND 100n
+
+* VCCB card-side rail: bypass + bulk (slot VDD + both VCCB + ESD VCC ride here)
+C2 VDD_CARD GND 100n
+C3 VDD_CARD GND 22u
+
+* TPD6E001 ESD-array VCC bypass — clamp referenced to the card rail (SD-1)
+C4 VDD_CARD GND 100n
+
+.ends microsd
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VDD_CARD settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

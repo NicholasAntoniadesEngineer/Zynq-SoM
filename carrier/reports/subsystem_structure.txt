@@ -5,7 +5,9 @@ contract: each subsystems/<name>/ is a self-contained, project-agnostic package 
   <name>.py (abstract-port netlist + circuit(meta=)) + README.md + test_<name>.py + <name>.cir,
   and a declared abstract INTERFACE that matches the netlist's externals.
 
+microsd: OK
+  interface (10): +VDD_HOST, +VDD_CARD, GND, SD_CLK, SD_CMD, SD_D0, SD_D1, SD_D2, SD_D3, CD_N
 usb_pd: OK
   interface (8): +VDD_LOGIC, +VBUS_SENSE, GND, CC1, CC2, I2C_SDA, I2C_SCL, INT_N
 
-SUBSYSTEM STRUCTURE: 1/1 package(s) complete (PASS)
+SUBSYSTEM STRUCTURE: 2/2 package(s) complete (PASS)
