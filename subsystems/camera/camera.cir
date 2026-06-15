@@ -1,0 +1,48 @@
+* camera.cir — SPICE subckt for the RPi 15-pin FFC, 2-lane MIPI CSI-2 port.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/camera/camera.py INTERFACE), NOT any board net. A consuming
+* project wires these pins to its real nets — exactly as the netlist bind map
+* does. The camera module + the FFC are pure connectors (no active device on
+* this sheet); this subckt captures the PASSIVE network the subsystem adds:
+* the three D-PHY 100R differential terminations, the gated-rail bypass, and
+* the two camera-control I2C pull-ups. That is what the local test and any
+* board-level .op/.tran reason about.
+*
+* Values mirror subsystems/camera/camera.py one-for-one (parse_si compatible):
+*   R1 100R   D0  diff termination  (CSI_D0_P  -> CSI_D0_N)
+*   R2 100R   D1  diff termination  (CSI_D1_P  -> CSI_D1_N)
+*   R3 100R   CLK diff termination  (CSI_CLK_P -> CSI_CLK_N)
+*   R4 4k7    SCL pull-up           (+VDD_CAM  -> CAM_SCL)
+*   R5 4k7    SDA pull-up           (+VDD_CAM  -> CAM_SDA)
+*   C1 100n + C2 10u   gated-rail bypass at the FFC  (+VDD_CAM -> GND)
+*
+* Port order: VDD_CAM CSI_D0_P CSI_D0_N CSI_D1_P CSI_D1_N CSI_CLK_P CSI_CLK_N
+*             CAM_SCL CAM_SDA GND
+* (GND last, by convention; CAM_EN / CAM_LED carry no subsystem-local passive
+*  and so are not subckt pins.)
+
+.subckt camera VDD_CAM CSI_D0_P CSI_D0_N CSI_D1_P CSI_D1_N CSI_CLK_P CSI_CLK_N CAM_SCL CAM_SDA GND
+
+* D-PHY differential terminations (XAPP894 fixed external 100R, host end)
+R1 CSI_D0_P  CSI_D0_N  100R
+R2 CSI_D1_P  CSI_D1_N  100R
+R3 CSI_CLK_P CSI_CLK_N 100R
+
+* camera-control I2C pull-ups to the GATED rail (no back-feed when powered down)
+R4 VDD_CAM CAM_SCL 4k7
+R5 VDD_CAM CAM_SDA 4k7
+
+* gated-rail bypass at the FFC connector (datasheet wave-1 pair: 100n + 10u)
+C1 VDD_CAM GND 100n
+C2 VDD_CAM GND 10u
+
+.ends camera
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VDD_CAM settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

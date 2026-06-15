@@ -5,6 +5,8 @@ contract: each subsystems/<name>/ is a self-contained, project-agnostic package 
   <name>.py (abstract-port netlist + circuit(meta=)) + README.md + test_<name>.py + <name>.cir,
   and a declared abstract INTERFACE that matches the netlist's externals.
 
+camera: OK
+  interface (12): +VDD_CAM, GND, CSI_D0_P, CSI_D0_N, CSI_D1_P, CSI_D1_N, CSI_CLK_P, CSI_CLK_N, CAM_SCL, CAM_SDA, CAM_EN, CAM_LED
 hdmi_tx: OK
   interface (16): +VDD_IO, +5V, GND, CHASSIS_GND, TMDS_D2_P, TMDS_D2_N, TMDS_D1_P, TMDS_D1_N, TMDS_D0_P, TMDS_D0_N, TMDS_CLK_P, TMDS_CLK_N, CEC, DDC_SCL, DDC_SDA, HPD
 microsd: OK
@@ -12,4 +14,4 @@ microsd: OK
 usb_pd: OK
   interface (8): +VDD_LOGIC, +VBUS_SENSE, GND, CC1, CC2, I2C_SDA, I2C_SCL, INT_N
 
-SUBSYSTEM STRUCTURE: 3/3 package(s) complete (PASS)
+SUBSYSTEM STRUCTURE: 4/4 package(s) complete (PASS)
