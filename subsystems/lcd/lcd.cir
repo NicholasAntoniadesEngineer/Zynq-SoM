@@ -1,0 +1,71 @@
+* lcd.cir — SPICE subckt for the 40-pin TTL RGB LCD + SY7201 backlight subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/lcd/lcd.py INTERFACE), NOT any board net. A consuming project
+* wires these pins to its real nets — exactly as the netlist bind map does.
+* The SY7201 boost is an active switching regulator (no useful analytic
+* small-signal model on this sheet); this subckt captures the PASSIVE network
+* the subsystem adds: the boost input/output bulk + catch diode + inductor +
+* ISET sense, the panel-VDD bypass, the touch-I2C pull-ups + clamp, the DISP /
+* BL_PWM / TP_RST default pulls, and the PCLK source-series damping. That is
+* what the local test and any board-level .op reason about.
+*
+* Internal SIGNAL nodes (kept VERBATIM from the netlist, not subckt pins):
+*   LCD_BL_SW       boost switch node (L1.2 / U1.LX / D1 anode)
+*   LCD_VLED_P      boost output / OVP sense (D1 cathode / C2 / FFC pin 2)
+*   LCD_VLED_N      LED-string return / FB current sense (FFC pin 1 / R1 / FB)
+*   LCD_PCLK_PANEL  PCLK after the 22R damping resistor (R7 / FFC pin 30)
+*
+* Values mirror subsystems/lcd/lcd.py one-for-one (parse_si compatible):
+*   L1 10uH                              boost inductor   (+VBOOST_IN -> LCD_BL_SW)
+*   D1 SS34                              catch diode      (LCD_BL_SW  -> LCD_VLED_P)
+*   C1 10u                               boost input bulk (+VBOOST_IN -> GND)
+*   C2 2.2u                              boost output 50V (LCD_VLED_P -> GND)
+*   R1 1.5R                              ISET sense       (LCD_VLED_N -> GND)
+*   C3 100n + C4 10u                     panel VDD bypass (+VDD_LCD   -> GND)
+*   R2 4k7 + R3 4k7                      touch I2C pull-ups (+VDD_LCD -> TP_SDA/SCL)
+*   R6 10k                               DISP pull-up     (+VDD_LCD   -> LCD_DISP)
+*   R5 100k                              TP_RST pull-down (TP_RST     -> GND)
+*   R4 100k                              BL_PWM pull-down (BL_PWM     -> GND)
+*   R7 22R                               PCLK damping     (LCD_PCLK   -> LCD_PCLK_PANEL)
+*
+* Port order (GND last, by convention; the bare RGB/sync data lines + TP_INT
+* carry no subsystem-local passive and so are not subckt pins):
+*   VBOOST_IN VDD_LCD VDD_TP_CLAMP LCD_DISP TP_SDA TP_SCL TP_RST LCD_PCLK BL_PWM GND
+
+.subckt lcd VBOOST_IN VDD_LCD VDD_TP_CLAMP LCD_DISP TP_SDA TP_SCL TP_RST LCD_PCLK BL_PWM GND
+
+* backlight boost passive network (active SY7201 modelled as the catch diode +
+* a 9.6 V LED string clamp into the ISET sense, for a DC .op smoke test only)
+L1 VBOOST_IN LCD_BL_SW 10uH
+D1 LCD_BL_SW LCD_VLED_P DMOD
+C1 VBOOST_IN GND 10u
+C2 LCD_VLED_P GND 2.2u
+R1 LCD_VLED_N GND 1.5R
+
+* panel VDD bypass (lcd_backlight.md 3.1: 10u + 100n at the FFC)
+C3 VDD_LCD GND 100n
+C4 VDD_LCD GND 10u
+
+* touch I2C pull-ups + DISP pull-up to the gated panel rail
+R2 VDD_LCD TP_SDA 4k7
+R3 VDD_LCD TP_SCL 4k7
+R6 VDD_LCD LCD_DISP 10k
+
+* default pulls: touch reset held low, backlight enable off
+R5 TP_RST GND 100k
+R4 BL_PWM GND 100k
+
+* pixel-clock source-series damping (~33 MHz, highest edge-rate line)
+R7 LCD_PCLK LCD_PCLK_PANEL 22R
+
+.model DMOD D
+.ends lcd
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VDD_LCD settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
