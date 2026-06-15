@@ -1,0 +1,50 @@
+* pmod_expansion.cir — SPICE subckt for the manual-gated Pmod expansion port.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/pmod_expansion/pmod_expansion.py INTERFACE), NOT any board net. A
+* consuming project wires these pins to its real nets — exactly as the netlist
+* bind map does. The active parts (SY6280AAC load switch, DS1024-2x6R2 Pmod
+* socket, two TPD4E1U06 ESD arrays) are mixed-signal / protection and not
+* modelled here; this subckt captures the PASSIVE network the subsystem adds
+* whose elements span two interface nets (the load-switch IN bypass + bulk and
+* the switched-rail OUT bypass + bulk) — which is what the local test and any
+* board-level .op/.tran reason about.
+*
+* Values mirror subsystems/pmod_expansion/pmod_expansion.py one-for-one (parse_si
+* compatible); test_cir_passives_match_netlist enforces equality:
+*   C1 100n  SY6280 IN bypass    (+VDD_PMOD -> GND)
+*   C2 10u   SY6280 IN bulk      (+VDD_PMOD -> GND)
+*   C3 100n  switched-rail OUT bypass (+VSW_PMOD -> GND)
+*   C4 100n  Pmod power-pin bypass    (+VSW_PMOD -> GND)
+*   C5 10u   Pmod power-pin bulk      (+VSW_PMOD -> GND)
+*
+* The remaining passives terminate on a NON-interface (private EN / ISET / LED)
+* node and so are NOT subckt elements — documented here for completeness:
+*   R1 13k   SY6280 ILIM set      (BS_ISET_PMODX -> GND, ILIM = 6800/13k)
+*   R2 100k  manual-enable pulldown (EN_PMODX -> GND, default OFF)
+*   R3 330R  status-LED current set (BS_PG_PMODX -> GND, via the LED to +VSW_PMOD)
+*
+* Port order: VDD_PMOD VSW_PMOD GND
+* (GND last, by convention; the eight PMOD_IO* ports carry only a pure
+*  GND-referenced ESD-array shunt and so are not two-interface-net subckt pins.)
+
+.subckt pmod_expansion VDD_PMOD VSW_PMOD GND
+
+* SY6280 input bypass + bulk (datasheet: 100n HF + 10u from VIN to GND)
+C1 VDD_PMOD GND 100n
+C2 VDD_PMOD GND 10u
+
+* switched-rail output bypass + the Pmod power-pin bypass/bulk (all = U1.OUT)
+C3 VSW_PMOD GND 100n
+C4 VSW_PMOD GND 100n
+C5 VSW_PMOD GND 10u
+
+.ends pmod_expansion
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VDD_PMOD settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
