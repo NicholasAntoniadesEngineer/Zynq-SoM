@@ -1,0 +1,44 @@
+* usbc_otg.cir — SPICE subckt for the USB 2.0 HS OTG port subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/usbc_otg/usbc_otg.py INTERFACE), NOT any board net. A consuming
+* project wires these pins to its real nets — exactly as the netlist bind map
+* does. The active parts (TYPE-C-31-M-12 receptacle, TPS2051C current-limited
+* power switch, USBLC6-2SC6 ESD array) are mixed-signal and not modelled here;
+* this subckt captures the PASSIVE network the subsystem adds whose elements
+* span two interface nets (the switch input bypass + the VBUS bulk) — which is
+* what the local test and any board-level .op/.tran reason about.
+*
+* Values mirror subsystems/usbc_otg/usbc_otg.py one-for-one (parse_si
+* compatible); test_cir_passives_match_netlist enforces equality:
+*   C1 100n   TPS2051C IN bypass   (+VBUS_SUPPLY -> GND)
+*   C2 22u    VBUS bulk            (VBUS -> GND)
+*
+* The remaining passives terminate on a NON-interface (private CC / EN / ID)
+* node and so are NOT subckt elements — documented here for completeness:
+*   R1/R2 56k  CC host-advertising Rp  (VBUS -> CCx, private CC nets)
+*   R5   100k  TPS2051C EN default-OFF pulldown  (VBUS_EN -> GND)
+*   R3   100k  open-drain FLT# pull-up           (+VDD_LOGIC -> FLT_N)
+*   R4   1k    OTG-ID host-role strap            (USB_ID -> GND)
+*
+* Port order: VBUS_SUPPLY VBUS VDD_LOGIC GND
+* (GND last, by convention; the data-pair ports USB_DP/USB_DM, the digital
+*  control ports VBUS_EN/FLT_N/USB_ID and CHASSIS_GND carry no two-interface-net
+*  passive and so are not subckt pins.)
+
+.subckt usbc_otg VBUS_SUPPLY VBUS VDD_LOGIC GND
+
+* TPS2051C input bypass + VBUS bulk (TPS2051 datasheet)
+C1 VBUS_SUPPLY GND 100n
+C2 VBUS GND 22u
+
+.ends usbc_otg
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VBUS_SUPPLY settles to 1 V at DC across the
+* bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

@@ -1,101 +1,91 @@
-"""usbc_otg — USB 2.0 High-Speed OTG port (USB-C receptacle, host-capable).
+"""usbc_otg — carrier ADAPTER for the reusable USB 2.0 HS OTG port subsystem.
 
-Reference circuit: TYPE-C-31-M-12 receptacle -> USBLC6-2SC6 ESD array on the
-data pair -> SoM USB HS PHY (contract nets USB_D+ / USB_D-). VBUS is sourced
-by a TPS2051C power switch from the bring-up-gated +5V_USB rail, enabled by
-the SoM's VBUS_OUT_EN (contract J1.38) with the fault flag pulled up and
-ported. CC1/CC2 carry 56k Rp pull-ups to VBUS advertising default-USB host
-power; USB_ID (contract J1.20) is strapped low through 1k = host role for
-this port (the FS+PD Type-C is the device/dual-role port).
+THIN ADAPTER. The portable circuit lives in the project-agnostic library
+``subsystems/usbc_otg/`` (netlist + README + SPICE + local test). This file is
+the carrier-specific GLUE: it imports the library subsystem and BINDS its
+abstract ports/rails to the carrier's real net names, returning the bound
+Circuit. The board build discovers it exactly as before (``circuit()`` exposed
+here), and the binding reproduces the EXACT same net names the hand-written
+sheet used, so the emitted carrier/schematic/usbc_otg.kicad_sch + its golden
+render are unchanged.
 
-AUTHORING V2 reference sheet: actives come from parts/ via use_part() (no
-inline lib ids / footprints / LCSC for generated parts) and connect by pin
-NAME — "J2.VBUS" nets BOTH stacked VBUS pads, exactly like the symbol.
+CARRIER BINDING RATIONALE (the carrier net names + why):
+
+  +VBUS_SUPPLY -> +5V_USB   the bring-up-gated module rail (SY6280 on the bringup
+                            sheet): a POWER net with its own power symbol, like
+                            +3V3_HDMI_TX. The port SOURCES this onto the cable
+                            VBUS via the TPS2051C current-limited switch.
+  +VDD_LOGIC   -> +3V3_SC   the SoM system-controller rail. G4 ABS-MAX FIX
+                            (wave3_function_map.md sec 1.2): the FLT# pull-up is
+                            re-railed +5V_USB -> +3V3_SC. A TCA9535 IO abs-max is
+                            VCC+0.5 = 3.8 V (TI SCPS201E); a 5 V pull on P14
+                            violates it. +3V3_SC keeps FLT# readable even with
+                            the +5V_USB module rail gated OFF (the flag is valid
+                            low when the port is unpowered).
+  GND          -> GND       (identity).
+  CHASSIS_GND  -> CHASSIS_GND   (identity) — the receptacle shell/shield bond.
+
+  VBUS    -> USB_VBUS       the connector VBUS the SoM senses (TPS2051 OUT + the
+                            receptacle VBUS pads; also CC Rp ref + ESD VBUS pin).
+  VBUS_EN -> VBUS_OUT_EN    the SoM VBUS-source enable (contract J1.38). Binds on
+                            the generated J1 sheet (som_conn_gen FUNCTION_MAP).
+  FLT_N   -> USBOTG_FLT_N   the open-drain fault flag, reported to the SoM SC via
+                            the TCA9535 expander port P14 (bringup_rails, G4; no
+                            free STM32 GPIO). Binds on the bringup sheet.
+  USB_ID  -> USB_ID         (identity) the OTG ID (contract J1.20), strapped low
+                            through 1k = HOST role for this port (the FS+PD
+                            Type-C is the device/dual-role port). Binds on J1.
+  USB_DP/USB_DM -> USB_D+/USB_D-   the SoM USB HS PHY data pair (90 ohm diff).
+
+VBUS_EN / USB_ID bind on the generated J1 sheet (som_conn_gen FUNCTION_MAP) and
+FLT_N binds on the bringup sheet, so the adapter declares those linker deferrals
+via the library's ``expects`` hook.
 """
 
 from __future__ import annotations
 
+from subsystems.usbc_otg import usbc_otg as _lib
 from schgen.core.model import Circuit
 
-R0603 = "Resistor_SMD:R_0603_1608Metric"
-C0603 = "Capacitor_SMD:C_0603_1608Metric"
-C0805 = "Capacitor_SMD:C_0805_2012Metric"
+# The generated J1 sheet (som_conn_gen FUNCTION_MAP) carries the SoM GPIO
+# function map, so VBUS_OUT_EN / USB_ID bind there by name. EXPLICIT linker
+# deferral so a standalone link reports them as awaiting-J1, never a silent open.
+_J1_MAP = "som_j1_connector (STM32 GPIO function map)"
+# FLT# is reported to the SC via the TCA9535 expander (bringup_rails P14).
+_FLT_BRINGUP = "bringup (TCA9535 expander port P14)"
 
-J1_MAP = "som_j1_connector (STM32 GPIO function map)"
+# The ONE standard adapter contract (schgen.core.subsystem.Meta) — the entire
+# carrier-specific surface of this subsystem. Per-net rationale is in the module
+# docstring above.
+#   bind    abstract subsystem net -> carrier real net
+#   expects ports that bind off-sheet (J1 function map / bringup expander)
+#   notes   power-tree draw notes cite the carrier dossier wording (G4 re-rail)
+# (notes keep the carrier's derived power_tree.txt note byte-identical to the
+#  hand-written sheet.)
+META = {
+    "bind": {
+        "+VBUS_SUPPLY": "+5V_USB",
+        "+VDD_LOGIC": "+3V3_SC",
+        "GND": "GND",
+        "CHASSIS_GND": "CHASSIS_GND",
+        "USB_DP": "USB_D+",
+        "USB_DM": "USB_D-",
+        "VBUS": "USB_VBUS",
+        "VBUS_EN": "VBUS_OUT_EN",
+        "FLT_N": "USBOTG_FLT_N",
+        "USB_ID": "USB_ID",
+    },
+    "expects": {
+        "VBUS_EN": _J1_MAP,
+        "USB_ID": _J1_MAP,
+        "FLT_N": _FLT_BRINGUP,
+    },
+    "notes": {
+        "draws_vbus": "downstream USB device budget, TPS2051C current-limited",
+        "draws_flt": "USBOTG_FLT# 100k pull-up (G4 re-rail)",
+    },
+}
 
 
 def circuit() -> Circuit:
-    c = Circuit("usbc_otg", "USB 2.0 HS OTG port (Type-C, host)")
-    j2 = c.use_part("TYPE-C-31-M-12", ref="J2")
-    u1 = c.use_part("TPS2051CDBVR", ref="U1")
-    u2 = c.use_part("USBLC6-2SC6", ref="U2")
-
-    # ---- VBUS: +5V_USB -> TPS2051 -> connector VBUS (= SoM sense USB_VBUS)
-    # +5V_USB is the bring-up-gated module rail (SY6280 on the bringup
-    # sheet): a POWER net with its own power symbol, like +3V3_HDMI_TX.
-    c.net("+5V_USB", "U1.IN")
-    c.port("USB_VBUS", "U1.OUT", "J2.VBUS")     # OUT + sense (both pads)
-    # EN default-OFF: TPS2051C EN is active-high; a 100k pulldown holds the host
-    # VBUS switch OFF until the SoM explicitly drives VBUS_OUT_EN high. Without it
-    # EN floats and the port could source 5 V on the bus at power-on before the
-    # SoM has decided the OTG role (the FS+PD Type-C is the device port).
-    c.part("R5", "Device:R", "100k", R0603, LCSC="C25803")
-    c.port("VBUS_OUT_EN", "U1.EN(EN#)", "R5.1", expect=J1_MAP)
-    c.net("GND", "U1.GND", "R5.2")
-    # fault flag: TPS2051C FLT# is open-drain, reported to the SoM SC via the
-    # TCA9535 expander port P14 (USBOTG_FLT_N — bringup_rails, G4; no free STM32
-    # GPIO). G4 ABS-MAX FIX (wave3_function_map.md sec 1.2): the pull-up is
-    # re-railed +5V_USB -> +3V3_SC. A TCA9535 IO abs-max is VCC+0.5 = 3.8 V (TI
-    # SCPS201E); a 5 V pull on P14 violates it. +3V3_SC keeps FLT# readable
-    # even with the +5V_USB module rail gated OFF (the flag is valid low when
-    # the port is unpowered) — strictly better than the old gated-rail pull.
-    c.part("R3", "Device:R", "100k", R0603, LCSC="C25803")
-    c.port("USBOTG_FLT_N", "U1.FLT#", "R3.2",
-           expect="bringup (TCA9535 expander port P14)")
-    c.net("+3V3_SC", "R3.1")
-    # input bypass + VBUS bulk per TPS2051 datasheet
-    for cap in c.decouple("U1.IN", "100n"):     # C14663 Basic, 20.6M stock
-        cap.fields["LCSC"] = "C14663"
-    c.part("C2", "Device:C", "22u", C0805, LCSC="C45783")
-    c.net("USB_VBUS", "C2.1")
-    c.net("GND", "C2.2")
-
-    # ---- data pair through the ESD array (pass-through 1<->6, 3<->4)
-    c.net("USBC_DP_CONN", "J2.DP1", "J2.DP2", "U2.1")
-    c.net("USBC_DM_CONN", "J2.DN1", "J2.DN2", "U2.3")
-    c.port("USB_D+", "U2.6")
-    c.port("USB_D-", "U2.4")
-    c.port_type("USB_D+", kind="usb_hs_pair", pair_with="USB_D-")
-    c.net("USB_VBUS", "U2.5")
-    c.net("GND", "U2.2")
-
-    # ---- CC host advertising: 56k Rp to VBUS (default USB power)
-    for ref, cc in (("R1", "J2.CC1"), ("R2", "J2.CC2")):
-        # 56k 1% 0603 = 0603WAF5602T5E, C23206 — live-verified 2026-06-11:
-        # Basic, stock 289,495
-        c.part(ref, "Device:R", "56k", R0603, LCSC="C23206")
-        c.net("USB_VBUS", f"{ref}.1")
-        c.net(f"USBC_{ref}_CC", f"{ref}.2", cc)
-
-    # ---- OTG ID strap: USB_ID (contract J1.20) through 1k to GND = HOST
-    # role for this port (the FS+PD Type-C is the device/dual-role port).
-    c.part("R4", "Device:R", "1k", R0603, LCSC="C21190")
-    c.port("USB_ID", "R4.1", expect=J1_MAP)
-    c.net("GND", "R4.2")
-
-    # ---- shield / unused
-    c.net("CHASSIS_GND", "J2.EH")               # all four shell pads by NAME
-    c.net("GND", "J2.GND")                      # both stacked GND pads
-    c.nc("J2.SBU1", "J2.SBU2")                  # SBU unused on USB2 port
-
-    # round-4 coverage gate: the VBUS switch enable (every EN is probeable)
-    c.testpoint("VBUS_OUT_EN")
-
-    # power-tree budget (round 4): one downstream USB 2.0 device budget
-    # (500 mA) through the TPS2051C (0.5 A-class limited switch); CC Rp +
-    # ESD array are noise next to it
-    c.draws("+5V_USB", 0.500, "downstream USB device budget, TPS2051C "
-                              "current-limited")
-    # G4: FLT# 100k pull-up re-railed to +3V3_SC (~33 uA when asserted)
-    c.draws("+3V3_SC", 0.0005, "USBOTG_FLT# 100k pull-up (G4 re-rail)")
-    return c
+    return _lib.circuit(META)

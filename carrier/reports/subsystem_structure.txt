@@ -13,5 +13,7 @@ microsd: OK
   interface (10): +VDD_HOST, +VDD_CARD, GND, SD_CLK, SD_CMD, SD_D0, SD_D1, SD_D2, SD_D3, CD_N
 usb_pd: OK
   interface (8): +VDD_LOGIC, +VBUS_SENSE, GND, CC1, CC2, I2C_SDA, I2C_SCL, INT_N
+usbc_otg: OK
+  interface (10): +VBUS_SUPPLY, +VDD_LOGIC, GND, CHASSIS_GND, USB_DP, USB_DM, VBUS, VBUS_EN, FLT_N, USB_ID
 
-SUBSYSTEM STRUCTURE: 4/4 package(s) complete (PASS)
+SUBSYSTEM STRUCTURE: 5/5 package(s) complete (PASS)
