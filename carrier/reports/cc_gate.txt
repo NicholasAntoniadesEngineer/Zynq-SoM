@@ -7,7 +7,7 @@ CC GATE [bringup_modules]: PASS (43 declared nets, 43 geometry components — ag
 CC GATE [bringup_rails]: PASS (40 declared nets, 42 geometry components — agree)
 CC GATE [camera]: PASS (12 declared nets, 12 geometry components — agree)
 CC GATE [debug_boot]: PASS (15 declared nets, 20 geometry components — agree)
-CC GATE [ethernet]: PASS (23 declared nets, 23 geometry components — agree)
+CC GATE [ethernet]: PASS (22 declared nets, 26 geometry components — agree)
 CC GATE [fmc]: PASS (39 declared nets, 93 geometry components — agree)
 CC GATE [hdmi_rx]: PASS (17 declared nets, 30 geometry components — agree)
 CC GATE [hdmi_rx_term]: PASS (10 declared nets, 10 geometry components — agree)

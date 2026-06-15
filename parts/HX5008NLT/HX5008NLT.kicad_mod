@@ -1,0 +1,421 @@
+(footprint
+	"HX5008NLT"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"SOP-24_L13.2-W15.1-P0.99-LS18.7-BL — HX5008NLT (SOP-24_L13.2-W15.1-P0.99-LS18.7-BL) (EasyEDA/LCSC C962544, faithful conversion)"
+	)
+	(tags "RJ45 Transformer")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -10.83 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"HX5008NLT"
+		(at 0 10.83 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C962544.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"HX5008NLT (SOP-24_L13.2-W15.1-P0.99-LS18.7-BL)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C962544"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -6.6 9.35)
+		(end -6.57 9.35)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -6.6 7.55)
+		(end -6.6 -7.55)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -6.6 -7.55)
+		(end 6.6 -7.55)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 6.6 -7.55)
+		(end 6.6 7.55)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 6.6 7.55)
+		(end -6.6 7.55)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -6.6 7.55)
+		(end -6.6 0.99)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -6.6 -7.55)
+		(end -6.6 -0.99)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 6.6 7.55)
+		(end -6.6 7.55)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 6.5989 -7.551)
+		(end 6.5989 7.2522)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 6.5989 7.2522)
+		(end 6.5989 7.55)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -6.6 -7.55)
+		(end 6.6 -7.55)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_arc
+		(start -6.6 0.99)
+		(mid -5.6094 0.0005)
+		(end -6.5989 -0.9901)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center -6.4 8.8)
+		(end -6.1765 8.8)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center -5.8 9.7)
+		(end -5.7 9.7)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -5.445 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at -4.4549 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"3"
+		smd
+		rect
+		(at -3.4651 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"4"
+		smd
+		rect
+		(at -2.475 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"5"
+		smd
+		rect
+		(at -1.4849 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"6"
+		smd
+		rect
+		(at -0.495 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"7"
+		smd
+		rect
+		(at 0.495 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"8"
+		smd
+		rect
+		(at 1.4849 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"9"
+		smd
+		rect
+		(at 2.475 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"10"
+		smd
+		rect
+		(at 3.4651 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"11"
+		smd
+		rect
+		(at 4.4549 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"12"
+		smd
+		rect
+		(at 5.445 8.8275)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"13"
+		smd
+		rect
+		(at 5.445 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"14"
+		smd
+		rect
+		(at 4.4549 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"15"
+		smd
+		rect
+		(at 3.4651 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"16"
+		smd
+		rect
+		(at 2.475 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"17"
+		smd
+		rect
+		(at 1.4849 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"18"
+		smd
+		rect
+		(at 0.495 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"19"
+		smd
+		rect
+		(at -0.495 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"20"
+		smd
+		rect
+		(at -1.4849 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"21"
+		smd
+		rect
+		(at -2.475 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"22"
+		smd
+		rect
+		(at -3.4651 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"23"
+		smd
+		rect
+		(at -4.4549 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"24"
+		smd
+		rect
+		(at -5.445 -8.8276)
+		(size 0.640004 1.905)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(model
+		"HX5008NLT.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "0bd9a7e85db908eba1bd81de342762b6fa4c0933cba3e42e729aa064a627b65e"
+      "sha256": "e3a46561d9c98d101d2e0760731d275254a1b8596f1f7cec952ee5a29a8815ef"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -18,11 +18,11 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "056f52868cb59bb976d9b5564445a38a0ac741d51f64cbed173376a06979af36"
+      "sha256": "a74a9b64239f65f5a44591dac042022129832740dc1ff1798cea21b07fd573f5"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "589db82f38c0656c51b8b939af67b1f0fca36a8d5b23619f9253dde82c23acec"
+      "sha256": "ab661681e881145e296f84c1326400840ac78b849ac4e8054f7108ff9d9649aa"
     },
     {
       "path": "docs/power_tree.svg",
@@ -42,7 +42,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "f577f8c8a4719334fb02d2c0443fff47447aef6a68ef5cf831ad8158f493efd3"
+      "sha256": "0d6498d42f987b4b6cad8f57f3ebf7cd24d38578ee229d29a41c569f740824df"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -58,7 +58,7 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "52096e6843042e8ce9502763defdb22364f1c2ae016b20117c7d190a70910c9f"
+      "sha256": "0971add4b2a405a9aba1c499bf3ba0010ef0cc8162c2f066b835ff8ed97e720f"
     },
     {
       "path": "reports/bom_values.txt",
@@ -66,7 +66,7 @@
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "b774374c018d7f457e1d4ada98549b8b1f7e60bb41251854057a063a0422e754"
+      "sha256": "e881ed462406d09ac6a87a9dff8aaf050b1ec9a3476978899e493668088e3e95"
     },
     {
       "path": "reports/design_rules.txt",
@@ -78,7 +78,7 @@
     },
     {
       "path": "reports/link_report.txt",
-      "sha256": "80c0f62245745026a0a674a18929f0c01a8956fa24212526064c48d0e5ebdf33"
+      "sha256": "0416a580d4de8585109ae2d9ee2db72c30a976cce4e9bb649ef9503d69c8688b"
     },
     {
       "path": "reports/part_rules.txt",
@@ -138,7 +138,7 @@
     },
     {
       "path": "schematic/ethernet.kicad_sch",
-      "sha256": "36a3dc61bbf5a3df6f5e400ae68a1d4a8880d04f42b06823fd0f98fec766cfec"
+      "sha256": "b4b3b41c5eae6869bc67ff74bcbb4c6bd58859009ac83dd14e976bc50458905d"
     },
     {
       "path": "schematic/fmc.kicad_sch",

@@ -149,10 +149,10 @@
 	(net 28 "/board_qwiic/QWIIC_SCL")
 	(net 29 "/board_qwiic/QWIIC_SDA")
 	(net 30 "/ethernet/BS_COMMON")
-	(net 31 "/ethernet/CT0")
-	(net 32 "/ethernet/CT1")
-	(net 33 "/ethernet/CT2")
-	(net 34 "/ethernet/CT3")
+	(net 31 "/ethernet/MCT1")
+	(net 32 "/ethernet/MCT2")
+	(net 33 "/ethernet/MCT3")
+	(net 34 "/ethernet/MCT4")
 	(net 35 "/fmc/FMC_PG_C2M")
 	(net 36 "/fmc/FMC_TCK")
 	(net 37 "/fmc/FMC_TMS")
@@ -1325,7 +1325,7 @@
 			(size 1.15 1.8)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.217391)
-			(net 31 "/ethernet/CT0")
+			(net 31 "/ethernet/MCT1")
 			(uuid "c9092c67-c42b-5230-bf2e-6e38670cc84b")
 		)
 		(pad
@@ -1469,7 +1469,7 @@
 			(size 1.15 1.8)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.217391)
-			(net 32 "/ethernet/CT1")
+			(net 32 "/ethernet/MCT2")
 			(uuid "7953144d-0b4b-5b16-808d-0c9090449b31")
 		)
 		(pad
@@ -1503,7 +1503,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 109.22 139.7)
+		(at 110.49 139.7)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -1613,7 +1613,7 @@
 			(size 1.15 1.8)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.217391)
-			(net 33 "/ethernet/CT2")
+			(net 33 "/ethernet/MCT3")
 			(uuid "8ced72e4-540f-51c9-92f9-fef42c0c9293")
 		)
 		(pad
@@ -1647,7 +1647,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 115.57 139.7)
+		(at 116.84 139.7)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -1757,7 +1757,7 @@
 			(size 1.15 1.8)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.217391)
-			(net 34 "/ethernet/CT3")
+			(net 34 "/ethernet/MCT4")
 			(uuid "63a34f2a-3834-55e7-880e-3a8897e06377")
 		)
 		(pad
@@ -1791,7 +1791,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 121.92 139.7)
+		(at 123.19 139.7)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -2511,7 +2511,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 212.09 138.43)
+		(at 213.36 138.43)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -2655,7 +2655,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 223.52 138.43)
+		(at 224.79 138.43)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -2799,7 +2799,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 29.21 156.21)
+		(at 29.21 160.02)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -2943,7 +2943,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 217.17 138.43)
+		(at 219.71 138.43)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -3087,7 +3087,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 34.29 156.21)
+		(at 34.29 160.02)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3231,7 +3231,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 92.71 156.21)
+		(at 92.71 160.02)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3375,7 +3375,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 130.81 156.21)
+		(at 130.81 160.02)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3519,7 +3519,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 135.89 156.21)
+		(at 135.89 160.02)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3663,7 +3663,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 214.63 156.21)
+		(at 214.63 160.02)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3807,7 +3807,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 219.71 156.21)
+		(at 219.71 160.02)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3951,7 +3951,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 223.52 156.21)
+		(at 223.52 160.02)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -4095,7 +4095,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 29.21 171.45)
+		(at 29.21 173.99)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -4239,7 +4239,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 209.55 157.48)
+		(at 209.55 160.02)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -4383,7 +4383,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 110.49 171.45)
+		(at 110.49 175.26)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -4527,7 +4527,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 115.57 171.45)
+		(at 115.57 175.26)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -4671,7 +4671,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 127 171.45)
+		(at 127 173.99)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -4815,7 +4815,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 121.92 171.45)
+		(at 121.92 175.26)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -4959,7 +4959,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 209.55 171.45)
+		(at 209.55 173.99)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5103,7 +5103,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 214.63 171.45)
+		(at 214.63 173.99)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5247,7 +5247,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 204.47 171.45)
+		(at 204.47 175.26)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -5391,7 +5391,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 219.71 171.45)
+		(at 219.71 173.99)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5535,7 +5535,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 107.95 187.96)
+		(at 107.95 191.77)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5679,7 +5679,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 96.52 189.23)
+		(at 96.52 193.04)
 		(descr
 			"Capacitor SMD 1210 (3225 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5823,7 +5823,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 113.03 187.96)
+		(at 113.03 191.77)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5967,7 +5967,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 191.77 187.96)
+		(at 191.77 191.77)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6111,7 +6111,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 181.61 189.23)
+		(at 181.61 191.77)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -6255,7 +6255,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 196.85 187.96)
+		(at 196.85 191.77)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6399,7 +6399,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 186.69 189.23)
+		(at 186.69 191.77)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -6543,7 +6543,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 127 204.47)
+		(at 127 208.28)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6687,7 +6687,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 132.08 204.47)
+		(at 132.08 208.28)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6831,7 +6831,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 137.16 204.47)
+		(at 137.16 208.28)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6975,7 +6975,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 121.92 204.47)
+		(at 121.92 208.28)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -7119,7 +7119,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 62.23 219.71)
+		(at 62.23 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -7263,7 +7263,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 214.63 204.47)
+		(at 214.63 208.28)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -7407,7 +7407,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 220.98 204.47)
+		(at 220.98 208.28)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -7551,7 +7551,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 67.31 219.71)
+		(at 67.31 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -7695,7 +7695,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 29.21 219.71)
+		(at 29.21 223.52)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -7839,7 +7839,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 35.56 219.71)
+		(at 35.56 223.52)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -7983,7 +7983,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 72.39 219.71)
+		(at 72.39 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8127,7 +8127,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 40.64 219.71)
+		(at 40.64 223.52)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -8271,7 +8271,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 76.2 219.71)
+		(at 76.2 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8415,7 +8415,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 45.72 219.71)
+		(at 45.72 223.52)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -8559,7 +8559,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 50.8 219.71)
+		(at 50.8 223.52)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -8703,7 +8703,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 81.28 219.71)
+		(at 81.28 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8847,7 +8847,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 86.36 219.71)
+		(at 86.36 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8991,7 +8991,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 91.44 219.71)
+		(at 91.44 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9135,7 +9135,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 96.52 219.71)
+		(at 96.52 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9279,7 +9279,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 101.6 219.71)
+		(at 101.6 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9423,7 +9423,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 57.15 219.71)
+		(at 57.15 223.52)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -9567,7 +9567,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 106.68 219.71)
+		(at 106.68 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9711,7 +9711,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 111.76 219.71)
+		(at 111.76 223.52)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9855,7 +9855,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 53.34 227.33)
+		(at 53.34 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9999,7 +9999,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 58.42 227.33)
+		(at 58.42 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -10143,7 +10143,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 48.26 227.33)
+		(at 48.26 231.14)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -10287,7 +10287,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 116.84 227.33)
+		(at 116.84 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -10431,7 +10431,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 93.98 227.33)
+		(at 93.98 231.14)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -10575,7 +10575,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 100.33 227.33)
+		(at 100.33 231.14)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -10719,7 +10719,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 121.92 227.33)
+		(at 121.92 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -10863,7 +10863,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 106.68 227.33)
+		(at 106.68 231.14)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -11007,7 +11007,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 111.76 227.33)
+		(at 111.76 231.14)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -11151,7 +11151,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 127 227.33)
+		(at 127 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -11295,7 +11295,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 132.08 227.33)
+		(at 132.08 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -11439,7 +11439,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 208.28 227.33)
+		(at 208.28 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -11583,7 +11583,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 203.2 227.33)
+		(at 203.2 231.14)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -11727,7 +11727,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 213.36 227.33)
+		(at 213.36 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -11871,7 +11871,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 218.44 227.33)
+		(at 218.44 231.14)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -12015,7 +12015,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 91.44 245.11)
+		(at 91.44 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -12159,7 +12159,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 86.36 246.38)
+		(at 86.36 248.92)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -12303,7 +12303,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 96.52 245.11)
+		(at 96.52 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -12447,7 +12447,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 101.6 245.11)
+		(at 101.6 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -12591,7 +12591,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 105.41 245.11)
+		(at 105.41 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -12735,7 +12735,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 110.49 245.11)
+		(at 110.49 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -12879,7 +12879,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 115.57 245.11)
+		(at 115.57 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -13023,7 +13023,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 170.18 246.38)
+		(at 170.18 248.92)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -13167,7 +13167,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 199.39 245.11)
+		(at 199.39 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -13311,7 +13311,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 194.31 246.38)
+		(at 194.31 248.92)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -13455,7 +13455,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 204.47 245.11)
+		(at 204.47 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -13599,7 +13599,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 209.55 245.11)
+		(at 209.55 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -13743,7 +13743,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 214.63 245.11)
+		(at 214.63 248.92)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -14319,7 +14319,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 46.99 256.54)
+		(at 46.99 260.35)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -14463,7 +14463,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 88.9 256.54)
+		(at 88.9 260.35)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -14607,7 +14607,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 83.82 256.54)
+		(at 83.82 260.35)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -14751,7 +14751,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 158.75 256.54)
+		(at 158.75 260.35)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -20849,7 +20849,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 86.36 171.45)
+		(at 86.36 175.26)
 		(descr "Diode SMA (DO-214AC)")
 		(tags "Diode SMA (DO-214AC)")
 		(property
@@ -21136,7 +21136,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 88.9 190.5)
+		(at 88.9 193.04)
 		(descr "Diode SMB (DO-214AA)")
 		(tags "Diode SMB (DO-214AA)")
 		(property
@@ -21422,7 +21422,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 142.24 204.47)
+		(at 142.24 208.28)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -21615,7 +21615,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 116.84 219.71)
+		(at 116.84 223.52)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -21808,7 +21808,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 121.92 219.71)
+		(at 121.92 223.52)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -22001,7 +22001,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 125.73 219.71)
+		(at 125.73 223.52)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -22194,7 +22194,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 135.89 227.33)
+		(at 135.89 231.14)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -22388,7 +22388,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 86.36 227.33)
+		(at 86.36 231.14)
 		(descr "SOD-123")
 		(tags "SOD-123")
 		(property
@@ -22684,7 +22684,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 163.83 256.54)
+		(at 163.83 260.35)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -22877,7 +22877,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 168.91 256.54)
+		(at 168.91 260.35)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -23070,7 +23070,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 173.99 256.54)
+		(at 173.99 260.35)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -23263,7 +23263,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 179.07 256.54)
+		(at 179.07 260.35)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -25791,7 +25791,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 175.26 144.78)
+		(at 176.53 144.78)
 		(descr
 			"BGA-160_L56.6-W13.2-R4-C40-P1.27-BR — ASP-134603-01 (BGA-160_L56.6-W13.2-R4-C40-P1.27-BR) (EasyEDA/LCSC C2836665, faithful conversion)"
 		)
@@ -29863,7 +29863,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 74.93 160.02)
+		(at 74.93 163.83)
 		(descr
 			"HDMI-SMD_HDMI-019S — HDMI-019S (HDMI-SMD_HDMI-019S) (EasyEDA/LCSC C111617, faithful conversion)"
 		)
@@ -30574,7 +30574,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 187.96 160.02)
+		(at 187.96 163.83)
 		(descr
 			"HDMI-SMD_HDMI-019S — HDMI-019S (HDMI-SMD_HDMI-019S) (EasyEDA/LCSC C111617, faithful conversion)"
 		)
@@ -31285,7 +31285,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 67.31 172.72)
+		(at 67.31 175.26)
 		(descr
 			"FPC-SMD_AFC07-S40FCA-00 — AFC07-S40FCA-00 (FPC-SMD_AFC07-S40FCA-00) (EasyEDA/LCSC C262572, faithful conversion)"
 		)
@@ -32049,7 +32049,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 185.42 176.53)
+		(at 185.42 180.34)
 		(descr "TF-SMD_TF-01A — TF-01A (TF-SMD_TF-01A) (EasyEDA/LCSC C91145, faithful conversion)")
 		(tags "SIM Card Connectors")
 		(attr smd)
@@ -32457,7 +32457,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 69.85 190.5)
+		(at 69.85 194.31)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -32981,7 +32981,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 152.4 189.23)
+		(at 152.4 193.04)
 		(descr
 			"HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2 — DS1024-2X6R2 (HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2) (EasyEDA/LCSC C49284652, faithful conversion)"
 		)
@@ -33321,7 +33321,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 170.18 189.23)
+		(at 170.18 193.04)
 		(descr
 			"HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2 — DS1024-2X6R2 (HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2) (EasyEDA/LCSC C49284652, faithful conversion)"
 		)
@@ -33661,7 +33661,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 85.09 205.74)
+		(at 85.09 209.55)
 		(descr
 			"HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2 — DS1024-2X6R2 (HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2) (EasyEDA/LCSC C49284652, faithful conversion)"
 		)
@@ -34315,7 +34315,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 172.72 233.68)
+		(at 172.72 237.49)
 		(descr
 			"RJ45-TH_KH-5224-8P8C-D — KH-5224-8P8C-D (RJ45-TH_KH-5224-8P8C-D) (EasyEDA/LCSC C2828085, faithful conversion)"
 		)
@@ -38429,7 +38429,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 156.21 247.65)
+		(at 156.21 251.46)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -38953,7 +38953,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 33.02 259.08)
+		(at 33.02 262.89)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -39477,7 +39477,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 64.77 259.08)
+		(at 64.77 262.89)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -41466,7 +41466,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 93.98 172.72)
+		(at 93.98 175.26)
 		(descr "IND-SMD_L4.0-W4.0 — 10uH ±20% (EasyEDA/LCSC C38117, faithful conversion)")
 		(tags "Power Inductors")
 		(attr smd)
@@ -41702,7 +41702,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 168.91 207.01)
+		(at 168.91 210.82)
 		(descr
 			"IND-SMD_L8.0-W8.0_SMNR8040 — SWPA8040S100MT (EasyEDA/LCSC C37429, faithful conversion)"
 		)
@@ -42140,7 +42140,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 181.61 207.01)
+		(at 181.61 210.82)
 		(descr
 			"IND-SMD_L8.0-W8.0_SMNR8040 — SWPA8040S100MT (EasyEDA/LCSC C37429, faithful conversion)"
 		)
@@ -42578,7 +42578,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 71.12 229.87)
+		(at 71.12 233.68)
 		(descr
 			"IND-SMD_L8.0-W8.0_SMNR8040 — SWPA8040S100MT (EasyEDA/LCSC C37429, faithful conversion)"
 		)
@@ -43015,7 +43015,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 208.28 204.47)
+		(at 208.28 208.28)
 		(descr
 			"SOT, 3 Pin (JEDEC TO-236 Var AB https://www.jedec.org/document_search?search_api_views_fulltext=TO-236)"
 		)
@@ -43388,7 +43388,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 128.27 138.43)
+		(at 129.54 138.43)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -43498,7 +43498,7 @@
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
-			(net 31 "/ethernet/CT0")
+			(net 31 "/ethernet/MCT1")
 			(uuid "cc68062c-6d48-5edc-b6ad-69be1eb2f410")
 		)
 		(pad
@@ -43532,7 +43532,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 133.35 138.43)
+		(at 134.62 138.43)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -43642,7 +43642,7 @@
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
-			(net 32 "/ethernet/CT1")
+			(net 32 "/ethernet/MCT2")
 			(uuid "ae12a79a-af09-5e6b-9bb3-44057dd708f8")
 		)
 		(pad
@@ -43676,7 +43676,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 138.43 138.43)
+		(at 139.7 138.43)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -43786,7 +43786,7 @@
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
-			(net 33 "/ethernet/CT2")
+			(net 33 "/ethernet/MCT3")
 			(uuid "4f8a029c-1439-54b6-8d45-f142e803938b")
 		)
 		(pad
@@ -43820,7 +43820,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 142.24 138.43)
+		(at 144.78 138.43)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -43930,7 +43930,7 @@
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
-			(net 34 "/ethernet/CT3")
+			(net 34 "/ethernet/MCT4")
 			(uuid "1e7ef9bd-8ec3-5ad7-99f7-dd92bb03f7b4")
 		)
 		(pad
@@ -44828,7 +44828,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 39.37 156.21)
+		(at 39.37 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -44972,7 +44972,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 44.45 156.21)
+		(at 44.45 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -45116,7 +45116,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 49.53 156.21)
+		(at 49.53 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -45260,7 +45260,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 54.61 156.21)
+		(at 54.61 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -45404,7 +45404,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 59.69 156.21)
+		(at 59.69 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -45548,7 +45548,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 97.79 156.21)
+		(at 97.79 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -45692,7 +45692,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 102.87 156.21)
+		(at 102.87 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -45836,7 +45836,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 107.95 156.21)
+		(at 107.95 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -45980,7 +45980,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 113.03 156.21)
+		(at 113.03 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -46124,7 +46124,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 140.97 156.21)
+		(at 140.97 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -46268,7 +46268,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 146.05 156.21)
+		(at 146.05 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -46412,7 +46412,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 151.13 156.21)
+		(at 151.13 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -46556,7 +46556,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 156.21 156.21)
+		(at 156.21 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -46700,7 +46700,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 161.29 156.21)
+		(at 161.29 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -46844,7 +46844,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 166.37 156.21)
+		(at 166.37 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -46988,7 +46988,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 171.45 156.21)
+		(at 171.45 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -47132,7 +47132,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 176.53 156.21)
+		(at 176.53 160.02)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -47276,7 +47276,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 34.29 171.45)
+		(at 34.29 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -47420,7 +47420,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 39.37 171.45)
+		(at 39.37 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -47564,7 +47564,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 132.08 171.45)
+		(at 132.08 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -47708,7 +47708,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 137.16 171.45)
+		(at 137.16 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -47852,7 +47852,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 140.97 171.45)
+		(at 140.97 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -47996,7 +47996,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 146.05 171.45)
+		(at 146.05 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -48140,7 +48140,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 151.13 171.45)
+		(at 151.13 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -48284,7 +48284,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 156.21 171.45)
+		(at 156.21 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -48428,7 +48428,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 161.29 171.45)
+		(at 161.29 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -48572,7 +48572,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 224.79 171.45)
+		(at 224.79 173.99)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -48716,7 +48716,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 29.21 187.96)
+		(at 29.21 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -48860,7 +48860,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 34.29 187.96)
+		(at 34.29 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -49004,7 +49004,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 39.37 187.96)
+		(at 39.37 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -49148,7 +49148,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 44.45 187.96)
+		(at 44.45 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -49292,7 +49292,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 49.53 187.96)
+		(at 49.53 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -49436,7 +49436,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 118.11 187.96)
+		(at 118.11 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -49580,7 +49580,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 123.19 187.96)
+		(at 123.19 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -49724,7 +49724,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 127 187.96)
+		(at 127 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -49868,7 +49868,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 132.08 187.96)
+		(at 132.08 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -50012,7 +50012,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 201.93 187.96)
+		(at 201.93 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -50156,7 +50156,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 207.01 187.96)
+		(at 207.01 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -50300,7 +50300,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 212.09 187.96)
+		(at 212.09 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -50444,7 +50444,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 217.17 187.96)
+		(at 217.17 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -50588,7 +50588,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 220.98 187.96)
+		(at 220.98 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -50732,7 +50732,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 226.06 187.96)
+		(at 226.06 191.77)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -50876,7 +50876,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 29.21 204.47)
+		(at 29.21 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -51020,7 +51020,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 34.29 204.47)
+		(at 34.29 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -51164,7 +51164,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 39.37 204.47)
+		(at 39.37 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -51308,7 +51308,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 44.45 204.47)
+		(at 44.45 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -51452,7 +51452,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 49.53 204.47)
+		(at 49.53 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -51596,7 +51596,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 54.61 204.47)
+		(at 54.61 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -51740,7 +51740,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 59.69 204.47)
+		(at 59.69 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -51884,7 +51884,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 64.77 204.47)
+		(at 64.77 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -52028,7 +52028,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 68.58 204.47)
+		(at 68.58 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -52172,7 +52172,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 73.66 204.47)
+		(at 73.66 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -52316,7 +52316,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 147.32 204.47)
+		(at 147.32 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -52460,7 +52460,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 152.4 204.47)
+		(at 152.4 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -52604,7 +52604,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 157.48 204.47)
+		(at 157.48 208.28)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -52748,7 +52748,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 130.81 219.71)
+		(at 130.81 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -52892,7 +52892,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 135.89 219.71)
+		(at 135.89 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -53036,7 +53036,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 140.97 219.71)
+		(at 140.97 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -53180,7 +53180,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 146.05 219.71)
+		(at 146.05 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -53324,7 +53324,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 151.13 219.71)
+		(at 151.13 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -53468,7 +53468,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 156.21 219.71)
+		(at 156.21 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -53612,7 +53612,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 161.29 219.71)
+		(at 161.29 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -53756,7 +53756,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 166.37 219.71)
+		(at 166.37 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -53900,7 +53900,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 171.45 219.71)
+		(at 171.45 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -54044,7 +54044,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 176.53 219.71)
+		(at 176.53 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -54188,7 +54188,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 180.34 219.71)
+		(at 180.34 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -54332,7 +54332,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 185.42 219.71)
+		(at 185.42 223.52)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -54476,7 +54476,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 63.5 227.33)
+		(at 63.5 231.14)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -54620,7 +54620,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 140.97 227.33)
+		(at 140.97 231.14)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -54764,7 +54764,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 146.05 227.33)
+		(at 146.05 231.14)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -54908,7 +54908,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 151.13 227.33)
+		(at 151.13 231.14)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -55052,7 +55052,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 156.21 227.33)
+		(at 156.21 231.14)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -55196,7 +55196,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 185.42 227.33)
+		(at 185.42 231.14)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -55340,7 +55340,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 190.5 227.33)
+		(at 190.5 231.14)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -55484,7 +55484,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 223.52 227.33)
+		(at 223.52 231.14)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -55628,7 +55628,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 29.21 245.11)
+		(at 29.21 248.92)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -55772,7 +55772,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 34.29 245.11)
+		(at 34.29 248.92)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -55916,7 +55916,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 120.65 245.11)
+		(at 120.65 248.92)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -56060,7 +56060,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 125.73 245.11)
+		(at 125.73 248.92)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -56204,7 +56204,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 130.81 245.11)
+		(at 130.81 248.92)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -56348,7 +56348,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 135.89 245.11)
+		(at 135.89 248.92)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -56492,7 +56492,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 175.26 245.11)
+		(at 175.26 248.92)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -56636,7 +56636,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 180.34 245.11)
+		(at 180.34 248.92)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -57068,7 +57068,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 52.07 256.54)
+		(at 52.07 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -57212,7 +57212,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 57.15 256.54)
+		(at 57.15 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -57356,7 +57356,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 93.98 256.54)
+		(at 93.98 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -57500,7 +57500,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 99.06 256.54)
+		(at 99.06 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -57644,7 +57644,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 104.14 256.54)
+		(at 104.14 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -57788,7 +57788,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 109.22 256.54)
+		(at 109.22 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -57932,7 +57932,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 114.3 256.54)
+		(at 114.3 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -58076,7 +58076,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 184.15 256.54)
+		(at 184.15 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -58220,7 +58220,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 189.23 256.54)
+		(at 189.23 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -58364,7 +58364,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 194.31 256.54)
+		(at 194.31 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -58508,7 +58508,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 199.39 256.54)
+		(at 199.39 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -58652,7 +58652,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 204.47 256.54)
+		(at 204.47 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -58796,7 +58796,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 208.28 256.54)
+		(at 208.28 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -58940,7 +58940,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 213.36 256.54)
+		(at 213.36 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -59084,7 +59084,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 218.44 256.54)
+		(at 218.44 260.35)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -68877,7 +68877,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 220.98 219.71)
+		(at 220.98 223.52)
 		(descr "R1206 — RLM12FTCMR010 (R1206) (EasyEDA/LCSC C188070, faithful conversion)")
 		(tags "Current Sense Resistors/Shunt Resistors")
 		(attr smd)
@@ -69113,7 +69113,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 30.48 227.33)
+		(at 30.48 231.14)
 		(descr "R1206 — RLM12FTCMR010 (R1206) (EasyEDA/LCSC C188070, faithful conversion)")
 		(tags "Current Sense Resistors/Shunt Resistors")
 		(attr smd)
@@ -69349,7 +69349,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 36.83 227.33)
+		(at 36.83 231.14)
 		(descr "R1206 — RLM12FTCMR010 (R1206) (EasyEDA/LCSC C188070, faithful conversion)")
 		(tags "Current Sense Resistors/Shunt Resistors")
 		(attr smd)
@@ -69585,7 +69585,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 41.91 227.33)
+		(at 41.91 231.14)
 		(descr "R1206 — RLM12FTCMR020 (R1206) (EasyEDA/LCSC C393094, faithful conversion)")
 		(tags "Current Sense Resistors/Shunt Resistors")
 		(attr smd)
@@ -70458,7 +70458,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 99.06 208.28)
+		(at 99.06 212.09)
 		(descr
 			"SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4 — DSHP04TSGER_C3293144 (SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4) (EasyEDA/LCSC C3293144, faithful conversion)"
 		)
@@ -71095,7 +71095,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 59.69 248.92)
+		(at 59.69 252.73)
 		(descr
 			"SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4 — DSHP04TSGER_C3293144 (SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4) (EasyEDA/LCSC C3293144, faithful conversion)"
 		)
@@ -71729,7 +71729,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 125.73 259.08)
+		(at 125.73 261.62)
 		(descr
 			"SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5 — TS-1187A-B-A-B (SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5) (EasyEDA/LCSC C318884, faithful conversion)"
 		)
@@ -72138,7 +72138,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 134.62 259.08)
+		(at 134.62 261.62)
 		(descr
 			"SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5 — TS-1187A-B-A-B (SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5) (EasyEDA/LCSC C318884, faithful conversion)"
 		)
@@ -72547,7 +72547,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 143.51 259.08)
+		(at 143.51 261.62)
 		(descr
 			"SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5 — TS-1187A-B-A-B (SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5) (EasyEDA/LCSC C318884, faithful conversion)"
 		)
@@ -72956,7 +72956,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 152.4 259.08)
+		(at 152.4 261.62)
 		(descr
 			"SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5 — TS-1187A-B-A-B (SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5) (EasyEDA/LCSC C318884, faithful conversion)"
 		)
@@ -77477,19 +77477,21 @@
 		(uuid "4757a766-beaa-591d-bf36-0dddd9507dea")
 	)
 	(footprint
-		"Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm"
-		(version 20260206)
-		(generator "kicad-footprint-generator")
+		"HX5008NLT:HX5008NLT"
+		(version 20240108)
+		(generator "schgen_part_gen")
+		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 99.06 146.05)
+		(at 99.06 147.32)
 		(descr
-			"SOIC, 24 Pin (JEDEC MS-013AD, https://www.analog.com/media/en/package-pcb-resources/package/pkg_pdf/soic_wide-rw/RW_24.pdf)"
+			"SOP-24_L13.2-W15.1-P0.99-LS18.7-BL — HX5008NLT (SOP-24_L13.2-W15.1-P0.99-LS18.7-BL) (EasyEDA/LCSC C962544, faithful conversion)"
 		)
-		(tags "SOIC SO")
+		(tags "RJ45 Transformer")
+		(attr smd)
 		(property
 			"Reference"
 			"T10001"
-			(at 0 -8.65 0)
+			(at 0 -10.83 0)
 			(layer "F.SilkS")
 			(effects
 				(font
@@ -77502,7 +77504,7 @@
 		(property
 			"Value"
 			"HX5008NLT"
-			(at 0 8.65 0)
+			(at 0 10.83 0)
 			(layer "F.Fab")
 			(effects
 				(font
@@ -77513,10 +77515,10 @@
 			(uuid "ab0ea699-0139-5e3a-ab9e-070dd84f887a")
 		)
 		(property
-			"KiLib_Generator"
-			"package/gullwing"
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C962544.pdf"
 			(at 0 0 0)
-			(layer "F.SilkS")
+			(layer "F.Fab")
 			(hide yes)
 			(effects
 				(font
@@ -77526,217 +77528,33 @@
 			)
 			(uuid "f04370cb-7a7b-53e4-bf78-2bb922d2813a")
 		)
-		(attr smd)
-		(duplicate_pad_numbers_are_jumpers no)
-		(fp_line
-			(start -3.86 -7.81)
-			(end 3.86 -7.81)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "ca5d48d7-b06a-5251-9778-36df6110f351")
-		)
-		(fp_line
-			(start -3.86 -7.545)
-			(end -3.86 -7.81)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "925ca360-42cf-51aa-8260-f17531a172e7")
-		)
-		(fp_line
-			(start -3.86 7.81)
-			(end -3.86 7.545)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "072961de-b40c-51ea-85f6-f3b5707b1b89")
-		)
-		(fp_line
-			(start 3.86 -7.81)
-			(end 3.86 -7.545)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "d1cca6b0-3c7f-5f59-81cb-22be105ecff8")
-		)
-		(fp_line
-			(start 3.86 7.545)
-			(end 3.86 7.81)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "c674530f-976b-5dfd-8d89-b607edb61b09")
-		)
-		(fp_line
-			(start 3.86 7.81)
-			(end -3.86 7.81)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "dd5adf52-75e5-5576-ab0a-411a328439ad")
-		)
-		(fp_poly
-			(pts
-				(xy -4.65 -7.55)
-				(xy -4.99 -8.02)
-				(xy -4.31 -8.02)
-			)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(fill yes)
-			(layer "F.SilkS")
-			(uuid "3650a27c-6001-5e84-9799-077157e54f1a")
-		)
-		(fp_line
-			(start -5.93 -7.54)
-			(end -4 -7.54)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "d5b28a4e-d37a-5dbc-8223-24f711182dff")
-		)
-		(fp_line
-			(start -5.93 7.54)
-			(end -5.93 -7.54)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "6551c4f2-698e-5dac-ac88-879c13d46d55")
-		)
-		(fp_line
-			(start -4 -7.95)
-			(end 4 -7.95)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "d8aa8bc5-4176-55db-bfa9-858c4e066ea1")
-		)
-		(fp_line
-			(start -4 -7.54)
-			(end -4 -7.95)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "f6da1098-6a95-5666-b7df-26ae187dd3aa")
-		)
-		(fp_line
-			(start -4 7.54)
-			(end -5.93 7.54)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "f1d328d6-438d-546d-92a5-b8f1bcf5597a")
-		)
-		(fp_line
-			(start -4 7.95)
-			(end -4 7.54)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "2ee8a93b-4098-5c53-bb51-fdc5ac0528d0")
-		)
-		(fp_line
-			(start 4 -7.95)
-			(end 4 -7.54)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "e68a5acc-771e-56d5-9106-a614d22f3661")
-		)
-		(fp_line
-			(start 4 -7.54)
-			(end 5.93 -7.54)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "a6a63918-c5fe-544a-8e95-aa63ca2f51e3")
-		)
-		(fp_line
-			(start 4 7.54)
-			(end 4 7.95)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "df22de6f-0f1f-5838-8e33-cf5469b9fab0")
-		)
-		(fp_line
-			(start 4 7.95)
-			(end -4 7.95)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "f6116c25-3605-5bc4-ad02-398a041bb438")
-		)
-		(fp_line
-			(start 5.93 -7.54)
-			(end 5.93 7.54)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "99940575-5276-5062-8019-c0ad16ba1b15")
-		)
-		(fp_line
-			(start 5.93 7.54)
-			(end 4 7.54)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "d99ec185-e890-55aa-8f43-8dcc1dadd889")
-		)
-		(fp_poly
-			(pts
-				(xy -2.75 -7.7)
-				(xy 3.75 -7.7)
-				(xy 3.75 7.7)
-				(xy -3.75 7.7)
-				(xy -3.75 -6.7)
-			)
-			(stroke
-				(width 0.1)
-				(type solid)
-			)
-			(fill no)
+		(property
+			"Description"
+			"HX5008NLT (SOP-24_L13.2-W15.1-P0.99-LS18.7-BL)"
+			(at 0 0 0)
 			(layer "F.Fab")
-			(uuid "4a3a0a29-bde4-5520-8a35-215f2e9d0414")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "e012421b-4567-5b7e-916f-18e19f5a2a2b")
+		)
+		(property
+			"LCSC"
+			"C962544"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "9a0ea346-a690-5d1c-b9aa-58bed466507a")
 		)
 		(fp_text
 			user
@@ -77749,271 +77567,390 @@
 					(thickness 0.15)
 				)
 			)
-			(uuid "b45c567e-46ef-533b-b92e-f87b55e3f53e")
+			(uuid "0030b4cf-cbbf-5b24-a588-d15779869e1d")
+		)
+		(fp_circle
+			(center -6.6 9.35)
+			(end -6.57 9.35)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "f16daf5e-d7c3-55d3-8c3c-1a5f61a6641e")
+		)
+		(fp_line
+			(start -6.6 7.55)
+			(end -6.6 -7.55)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "cca30a5e-15b1-5288-b52d-2124152f5af3")
+		)
+		(fp_line
+			(start -6.6 -7.55)
+			(end 6.6 -7.55)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "0facc0a6-4643-52b9-ad3c-e90eb35c4418")
+		)
+		(fp_line
+			(start 6.6 -7.55)
+			(end 6.6 7.55)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "8af22fc2-b8ed-524f-bcca-95d72aa04828")
+		)
+		(fp_line
+			(start 6.6 7.55)
+			(end -6.6 7.55)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "f546ad4a-57c9-5a86-a708-83373566b481")
+		)
+		(fp_line
+			(start -6.6 7.55)
+			(end -6.6 0.99)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "44bfd1d0-702d-5c81-b62d-472cf44032a7")
+		)
+		(fp_line
+			(start -6.6 -7.55)
+			(end -6.6 -0.99)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "7296d12d-4228-54b7-8057-f88654b5bb8f")
+		)
+		(fp_line
+			(start 6.6 7.55)
+			(end -6.6 7.55)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "8e06ad25-1cfe-5f86-86d3-0bd8b45bd8ae")
+		)
+		(fp_line
+			(start 6.5989 -7.551)
+			(end 6.5989 7.2522)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "f95ca2ee-cacb-5f2a-8ba3-f949a61e488b")
+		)
+		(fp_line
+			(start 6.5989 7.2522)
+			(end 6.5989 7.55)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "a6810d99-04a9-57ed-8588-1c8d583c344b")
+		)
+		(fp_line
+			(start -6.6 -7.55)
+			(end 6.6 -7.55)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "5a260f38-8fa9-5bb6-8546-cfd9ac318cb6")
+		)
+		(fp_arc
+			(start -6.6 0.99)
+			(mid -5.6094 0.0005)
+			(end -6.5989 -0.9901)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "1e98eff6-37fc-569c-8f2f-1c4746d0fe0c")
+		)
+		(fp_circle
+			(center -6.4 8.8)
+			(end -6.1765 8.8)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "62cae4e9-a977-5ec5-a412-08dc1ad4eb42")
+		)
+		(fp_circle
+			(center -5.8 9.7)
+			(end -5.7 9.7)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "Cmts.User")
+			(uuid "856fe048-8155-58d1-9393-f06efc7e4cb5")
 		)
 		(pad
 			"1"
 			smd
-			roundrect
-			(at -4.65 -6.985)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 142 "ETH_PHY_MDI0_P")
+			rect
+			(at -5.445 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "6857779e-a50b-5ea6-98de-e9039ec8d268")
 		)
 		(pad
 			"2"
 			smd
-			roundrect
-			(at -4.65 -5.715)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 141 "ETH_PHY_MDI0_N")
+			rect
+			(at -4.4549 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 142 "ETH_PHY_MDI0_P")
 			(uuid "4c3098ef-c8d7-5c12-be2c-bc47c481d060")
 		)
 		(pad
 			"3"
 			smd
-			roundrect
-			(at -4.65 -4.445)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 144 "ETH_PHY_MDI1_P")
+			rect
+			(at -3.4651 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 141 "ETH_PHY_MDI0_N")
 			(uuid "0d51aab0-19ba-5ad5-84cb-9bda5c9bff49")
 		)
 		(pad
 			"4"
 			smd
-			roundrect
-			(at -4.65 -3.175)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 143 "ETH_PHY_MDI1_N")
+			rect
+			(at -2.475 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "d64fce29-b2fa-53e7-920b-150b190c1fc9")
 		)
 		(pad
 			"5"
 			smd
-			roundrect
-			(at -4.65 -1.905)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 146 "ETH_PHY_MDI2_P")
+			rect
+			(at -1.4849 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 144 "ETH_PHY_MDI1_P")
 			(uuid "5502d501-5259-5442-9d4f-403037035be8")
 		)
 		(pad
 			"6"
 			smd
-			roundrect
-			(at -4.65 -0.635)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 145 "ETH_PHY_MDI2_N")
+			rect
+			(at -0.495 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 143 "ETH_PHY_MDI1_N")
 			(uuid "cb1c5398-8386-582c-a985-6dcd171777f6")
 		)
 		(pad
 			"7"
 			smd
-			roundrect
-			(at -4.65 0.635)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 148 "ETH_PHY_MDI3_P")
+			rect
+			(at 0.495 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "629892b7-72e4-52ad-a004-cb51cc7a2e2c")
 		)
 		(pad
 			"8"
 			smd
-			roundrect
-			(at -4.65 1.905)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 147 "ETH_PHY_MDI3_N")
+			rect
+			(at 1.4849 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 146 "ETH_PHY_MDI2_P")
 			(uuid "41c9c935-21a6-501b-8c63-29fe50133a90")
 		)
 		(pad
 			"9"
 			smd
-			roundrect
-			(at -4.65 3.175)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 31 "/ethernet/CT0")
+			rect
+			(at 2.475 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 145 "ETH_PHY_MDI2_N")
 			(uuid "5ece80d9-a369-5c7b-8baf-f3c51d5a477c")
 		)
 		(pad
 			"10"
 			smd
-			roundrect
-			(at -4.65 4.445)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 32 "/ethernet/CT1")
+			rect
+			(at 3.4651 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "e77f8358-b12d-584a-9a00-b5617c263c33")
 		)
 		(pad
 			"11"
 			smd
-			roundrect
-			(at -4.65 5.715)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 33 "/ethernet/CT2")
+			rect
+			(at 4.4549 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 148 "ETH_PHY_MDI3_P")
 			(uuid "783dfa02-9b88-57e3-a6b8-31ceccb82edd")
 		)
 		(pad
 			"12"
 			smd
-			roundrect
-			(at -4.65 6.985)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 34 "/ethernet/CT3")
+			rect
+			(at 5.445 8.8275)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 147 "ETH_PHY_MDI3_N")
 			(uuid "38df2045-55eb-5d9c-b893-c888a8eb739a")
 		)
 		(pad
 			"13"
 			smd
-			roundrect
-			(at 4.65 6.985)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 30 "/ethernet/BS_COMMON")
+			rect
+			(at 5.445 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 139 "ETH_LINE_MDI_3_N")
 			(uuid "d2ea57cf-d483-5e4f-826b-4e5fdc03f260")
 		)
 		(pad
 			"14"
 			smd
-			roundrect
-			(at 4.65 5.715)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 178 "GND")
+			rect
+			(at 4.4549 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 140 "ETH_LINE_MDI_3_P")
 			(uuid "99c9eee0-8cb1-56f0-8866-88ac9df33bd3")
 		)
 		(pad
 			"15"
 			smd
-			roundrect
-			(at 4.65 4.445)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
+			rect
+			(at 3.4651 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 34 "/ethernet/MCT4")
 			(uuid "18fe3f3a-50db-5f54-8cdf-1e7b65c613b4")
 		)
 		(pad
 			"16"
 			smd
-			roundrect
-			(at 4.65 3.175)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
+			rect
+			(at 2.475 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 137 "ETH_LINE_MDI_2_N")
 			(uuid "e131aa43-a9cc-542e-a232-fa0838be0b61")
 		)
 		(pad
 			"17"
 			smd
-			roundrect
-			(at 4.65 1.905)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
+			rect
+			(at 1.4849 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 138 "ETH_LINE_MDI_2_P")
 			(uuid "923ceacc-f616-5e26-ab75-148ba27f1979")
 		)
 		(pad
 			"18"
 			smd
-			roundrect
-			(at 4.65 0.635)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
+			rect
+			(at 0.495 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 33 "/ethernet/MCT3")
 			(uuid "bc2d1875-4e87-51f6-a23f-419c961ec83e")
 		)
 		(pad
 			"19"
 			smd
-			roundrect
-			(at 4.65 -0.635)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 134 "ETH_LINE_MDI_0_P")
+			rect
+			(at -0.495 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 135 "ETH_LINE_MDI_1_N")
 			(uuid "9c90aae4-771f-5024-8598-382ac7bb534c")
 		)
 		(pad
 			"20"
 			smd
-			roundrect
-			(at 4.65 -1.905)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 133 "ETH_LINE_MDI_0_N")
+			rect
+			(at -1.4849 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 136 "ETH_LINE_MDI_1_P")
 			(uuid "ddc5401c-823b-509d-8561-ca79c4b61773")
 		)
 		(pad
 			"21"
 			smd
-			roundrect
-			(at 4.65 -3.175)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 136 "ETH_LINE_MDI_1_P")
+			rect
+			(at -2.475 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 32 "/ethernet/MCT2")
 			(uuid "fd84a124-ed99-528b-b5a2-19b65cdea453")
 		)
 		(pad
 			"22"
 			smd
-			roundrect
-			(at 4.65 -4.445)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 135 "ETH_LINE_MDI_1_N")
+			rect
+			(at -3.4651 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 133 "ETH_LINE_MDI_0_N")
 			(uuid "afe8f4c2-8be2-529f-9559-718a66a41849")
 		)
 		(pad
 			"23"
 			smd
-			roundrect
-			(at 4.65 -5.715)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 138 "ETH_LINE_MDI_2_P")
+			rect
+			(at -4.4549 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 134 "ETH_LINE_MDI_0_P")
 			(uuid "bb3006fa-bc30-5d7d-883e-4d279f5aa98b")
 		)
 		(pad
 			"24"
 			smd
-			roundrect
-			(at 4.65 -6.985)
-			(size 2.05 0.6)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
-			(net 137 "ETH_LINE_MDI_2_N")
+			rect
+			(at -5.445 -8.8276)
+			(size 0.640004 1.905)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 31 "/ethernet/MCT1")
 			(uuid "176e2b78-707d-577a-b45c-7ea128624689")
 		)
-		(embedded_fonts no)
 		(model
-			"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/SOIC-24W_7.5x15.4mm_P1.27mm.step"
+			"HX5008NLT.wrl"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -78377,7 +78314,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 63.5 156.21)
+		(at 63.5 160.02)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -78492,7 +78429,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 43.18 171.45)
+		(at 43.18 173.99)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -78607,7 +78544,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 48.26 171.45)
+		(at 48.26 173.99)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -78722,7 +78659,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 52.07 171.45)
+		(at 52.07 173.99)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -78837,7 +78774,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 165.1 171.45)
+		(at 165.1 173.99)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -78952,7 +78889,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 170.18 171.45)
+		(at 170.18 173.99)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79067,7 +79004,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 173.99 171.45)
+		(at 173.99 173.99)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79182,7 +79119,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 58.42 187.96)
+		(at 58.42 191.77)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79297,7 +79234,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 62.23 187.96)
+		(at 62.23 191.77)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79412,7 +79349,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 137.16 187.96)
+		(at 137.16 191.77)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79527,7 +79464,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 140.97 187.96)
+		(at 140.97 191.77)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79642,7 +79579,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 161.29 204.47)
+		(at 161.29 208.28)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79757,7 +79694,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 190.5 219.71)
+		(at 190.5 223.52)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79872,7 +79809,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 194.31 219.71)
+		(at 194.31 223.52)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -79987,7 +79924,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 198.12 219.71)
+		(at 198.12 223.52)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -80102,7 +80039,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 201.93 219.71)
+		(at 201.93 223.52)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -80217,7 +80154,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 160.02 227.33)
+		(at 160.02 231.14)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -80332,7 +80269,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 38.1 245.11)
+		(at 38.1 248.92)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -80447,7 +80384,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 43.18 245.11)
+		(at 43.18 248.92)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -80562,7 +80499,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 139.7 245.11)
+		(at 139.7 248.92)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -80677,7 +80614,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 143.51 245.11)
+		(at 143.51 248.92)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -80792,7 +80729,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 148.59 245.11)
+		(at 148.59 248.92)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -80907,7 +80844,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 184.15 245.11)
+		(at 184.15 248.92)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -81022,7 +80959,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 118.11 256.54)
+		(at 118.11 260.35)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -85148,7 +85085,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 207.01 139.7)
+		(at 208.28 139.7)
 		(descr
 			"SOT-23-5_L2.8-W1.7-P0.95-BL-EP_TI_DYD — TLV75725PDYDR (SOT-23-5_L2.8-W1.7-P0.95-BL-EP_TI_DYD) (EasyEDA/LCSC C35209004, faithful conversion)"
 		)
@@ -85417,7 +85354,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 87.63 160.02)
+		(at 87.63 162.56)
 		(descr "SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL — EEPROM (EasyEDA/LCSC C7562, faithful conversion)")
 		(tags "EEPROM")
 		(attr smd)
@@ -85726,7 +85663,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 118.11 156.21)
+		(at 118.11 160.02)
 		(descr
 			"USON-10_L2.5-W1.0-P0.50-BL — 4-Channel ESD Protection Diode for USB Type-C and HDMI 2.0 10-USON -40 to 125 (EasyEDA/LCSC C106794, faithful conversion)"
 		)
@@ -86022,7 +85959,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 121.92 156.21)
+		(at 121.92 160.02)
 		(descr
 			"USON-10_L2.5-W1.0-P0.50-BL — 4-Channel ESD Protection Diode for USB Type-C and HDMI 2.0 10-USON -40 to 125 (EasyEDA/LCSC C106794, faithful conversion)"
 		)
@@ -86318,7 +86255,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 127 156.21)
+		(at 127 160.02)
 		(descr
 			"USON-10_L2.5-W1.0-P0.50-BL — TPD4E05U06DQAR_C138714 (USON-10_L2.5-W1.0-P0.50-BL) (EasyEDA/LCSC C138714, faithful conversion)"
 		)
@@ -86614,7 +86551,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 201.93 160.02)
+		(at 201.93 163.83)
 		(descr
 			"TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL — TPD12S016PWR (TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL) (EasyEDA/LCSC C201665, faithful conversion)"
 		)
@@ -87118,7 +87055,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 100.33 171.45)
+		(at 100.33 175.26)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR — SY7201ABC (EasyEDA/LCSC C82173, faithful conversion)"
 		)
@@ -87378,7 +87315,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 105.41 171.45)
+		(at 105.41 175.26)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL — USBLC6-2SC6 (EasyEDA/LCSC C7519, faithful conversion)"
 		)
@@ -87638,7 +87575,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 198.12 172.72)
+		(at 198.12 176.53)
 		(descr
 			"WQFN-24_L4.0-W4.0-P0.50-TL-EP2.5 — TXS02612RTWR (WQFN-24_L4.0-W4.0-P0.50-TL-EP2.5) (EasyEDA/LCSC C140276, faithful conversion)"
 		)
@@ -88192,7 +88129,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 53.34 187.96)
+		(at 53.34 191.77)
 		(descr
 			"UQFN-10_L2.0-W1.5-P0.50-BL — TPD6E001RSER (UQFN-10_L2.0-W1.5-P0.50-BL) (EasyEDA/LCSC C1973318, faithful conversion)"
 		)
@@ -88550,7 +88487,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 80.01 191.77)
+		(at 80.01 195.58)
 		(descr
 			"HTSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL-EP — TPS26631PWPR (HTSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL-EP) (EasyEDA/LCSC C2866319, faithful conversion)"
 		)
@@ -89090,7 +89027,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 102.87 189.23)
+		(at 102.87 193.04)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL — USBLC6-2SC6 (EasyEDA/LCSC C7519, faithful conversion)"
 		)
@@ -89350,7 +89287,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 116.84 205.74)
+		(at 116.84 208.28)
 		(descr
 			"SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BL — SY6280AAC (SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BL) (EasyEDA/LCSC C55136, faithful conversion)"
 		)
@@ -89610,7 +89547,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 105.41 204.47)
+		(at 105.41 208.28)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR — 4 通道高速 ESD 保护器件 SOT-23-6 (EasyEDA/LCSC C124691, faithful conversion)"
 		)
@@ -89869,7 +89806,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 111.76 204.47)
+		(at 111.76 208.28)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR — 4 通道高速 ESD 保护器件 SOT-23-6 (EasyEDA/LCSC C124691, faithful conversion)"
 		)
@@ -90128,7 +90065,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 190.5 205.74)
+		(at 190.5 209.55)
 		(descr
 			"VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1 — LM61460AANRJRR (VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1) (EasyEDA/LCSC C2864505, faithful conversion)"
 		)
@@ -90516,7 +90453,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 196.85 204.47)
+		(at 196.85 208.28)
 		(descr
 			"TSOT, 6 Pin (https://www.jedec.org/sites/default/files/docs/MO-193D.pdf variant AA)"
 		)
@@ -90872,7 +90809,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 201.93 204.47)
+		(at 201.93 208.28)
 		(descr
 			"SOT, 5 Pin (JEDEC MO-178 Var AA https://www.jedec.org/document_search?search_api_views_fulltext=MO-178)"
 		)
@@ -91527,7 +91464,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 208.28 222.25)
+		(at 208.28 224.79)
 		(descr
 			"QFN-16_L4.0-W4.0-P0.65-TL-EP2.2 — INA3221AIRGVR (QFN-16_L4.0-W4.0-P0.65-TL-EP2.2) (EasyEDA/LCSC C181255, faithful conversion)"
 		)
@@ -91994,7 +91931,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 214.63 222.25)
+		(at 214.63 224.79)
 		(descr
 			"QFN-16_L4.0-W4.0-P0.65-TL-EP2.2 — INA3221AIRGVR (QFN-16_L4.0-W4.0-P0.65-TL-EP2.2) (EasyEDA/LCSC C181255, faithful conversion)"
 		)
@@ -92460,7 +92397,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 80.01 227.33)
+		(at 80.01 231.14)
 		(descr
 			"TSOT, 6 Pin (https://www.jedec.org/sites/default/files/docs/MO-193D.pdf variant AA)"
 		)
@@ -92816,7 +92753,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 196.85 228.6)
+		(at 196.85 232.41)
 		(descr
 			"QFN, 24 Pin (http://ww1.microchip.com/downloads/en/PackagingSpec/00000049BQ.pdf#page=278)"
 		)
@@ -93515,7 +93452,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 68.58 248.92)
+		(at 68.58 252.73)
 		(descr
 			"TSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL — CH347T (TSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL) (EasyEDA/LCSC C5122332, faithful conversion)"
 		)
@@ -93941,7 +93878,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 50.8 248.92)
+		(at 50.8 252.73)
 		(descr
 			"SOIC-14_L8.7-W3.9-P1.27-LS6.0-BL — SN74LVC125ADR (SOIC-14_L8.7-W3.9-P1.27-LS6.0-BL) (EasyEDA/LCSC C7661, faithful conversion)"
 		)
@@ -94327,7 +94264,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 74.93 246.38)
+		(at 74.93 250.19)
 		(descr
 			"SOT-25-5_L2.9-W1.6-P0.95-LS2.8-BL — AP2112K-3.3TRG1 (SOT-25-5_L2.9-W1.6-P0.95-LS2.8-BL) (EasyEDA/LCSC C51118, faithful conversion)"
 		)
@@ -94596,7 +94533,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 165.1 246.38)
+		(at 165.1 250.19)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL — USBLC6-2SC6 (EasyEDA/LCSC C7519, faithful conversion)"
 		)
@@ -94855,7 +94792,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 189.23 246.38)
+		(at 189.23 250.19)
 		(descr "WQFN, 14 Pin (https://www.onsemi.com/pub/Collateral/FUSB302B-D.PDF#page=32)")
 		(tags "WQFN NoLead")
 		(property
@@ -96280,7 +96217,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 41.91 257.81)
+		(at 41.91 261.62)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL — USBLC6-2SC6 (EasyEDA/LCSC C7519, faithful conversion)"
 		)
@@ -96540,7 +96477,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 73.66 257.81)
+		(at 73.66 261.62)
 		(descr
 			"SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR — TPS2051CDBVR (SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR) (EasyEDA/LCSC C129581, faithful conversion)"
 		)
@@ -96863,7 +96800,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 78.74 257.81)
+		(at 78.74 261.62)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL — USBLC6-2SC6 (EasyEDA/LCSC C7519, faithful conversion)"
 		)
@@ -105757,7 +105694,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 80.01 246.38)
+		(at 80.01 250.19)
 		(descr
 			"CRYSTAL-SMD_4P-L3.2-W2.5-BL-1 — DSX321G 8MHz (CRYSTAL-SMD_4P-L3.2-W2.5-BL-1) (EasyEDA/LCSC C57131, faithful conversion)"
 		)

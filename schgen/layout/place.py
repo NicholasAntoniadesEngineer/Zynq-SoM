@@ -1659,11 +1659,16 @@ class _Engine:
                                   None))
         for far_net, pt, kind, legs, row in t.rungs:
             if kind in ("left", "right"):
-                if len(legs) != 1:
-                    raise PlaceError(f"{t.net}: side rung with {len(legs)} "
-                                     f"legs — extend the engine")
-                side_jobs.append(("rung", pt, -1 if kind == "left" else 1,
-                                  (far_net, legs[0])))
+                sgn = -1 if kind == "left" else 1
+                if len(legs) == 1:
+                    side_jobs.append(("rung", pt, sgn, (far_net, legs[0])))
+                else:
+                    # a side rung with N PARALLEL passives (e.g. the four
+                    # Ethernet Bob-Smith media centre taps: 75R || 1n each):
+                    # a horizontal escape onto a side ladder whose N legs drop
+                    # to the trunk. Deferred so its lane search nests with the
+                    # single-passive side jobs (innermost-tap-first ordering).
+                    side_jobs.append(("ladder", pt, sgn, (far_net, legs)))
             elif t.zone == "below":
                 bar = gceil(self._rung_bar_y(t))
                 nodes += self._ladder_rung(t, far_net, pt, legs, bar)
@@ -1696,7 +1701,11 @@ class _Engine:
                 # detour the free-cell BFS finds when a straight lane is wedged
                 way = self._escape_path(sgn, pt, ty, own)
                 self.pl.plan(t.net, *way)
-                fx = way[-1][0]
+                nodes.append(way[-1][0])
+            elif kind == "ladder":
+                # side multi-leg Bob-Smith rung: spread N parallel legs
+                far_net, legs = payload
+                nodes += self._side_ladder_rung(t, far_net, pt, sgn, legs, ty)
             else:
                 # a side rung seats a passive in its lane: a single clean
                 # vertical column is mandatory (bidirectional, no detour)
@@ -1709,7 +1718,7 @@ class _Engine:
                     text_side="left" if sgn < 0 else "right")
                 assert far == t.net
                 self.pl.plan(t.net, far_pt, (fx, ty))
-            nodes.append(fx)
+                nodes.append(fx)
 
         # rooted chains hang below the trunk on free columns
         for ch in t.chains:
@@ -1849,6 +1858,86 @@ class _Engine:
             assert far == t.net
             self.pl.plan(t.net, far_pt, (xc, t.y))
         return cols
+
+    def _side_ladder_rung(self, t: _Trunk, far_net: str,
+                          pt: tuple[float, float], sgn: int,
+                          legs: list[str], ty: float) -> list[float]:
+        """A side rung carrying N PARALLEL passives (a Bob-Smith media-tap:
+        75R || 1n). The side pin escapes horizontally onto a bar at its own
+        row, OUTBOARD of the side label fan; N legs hang from the bar — one
+        free column each, marching outward in ``sgn`` — and drop to the trunk
+        row ``ty`` below. Legs STAGGER down by one ladder pitch (the proven
+        _ladder_rung idiom): a resistor and a cap thus never share a row, so
+        their value texts cannot collide; the trunk depth set by _build_trunk
+        (bar + 7.62*max_legs) already reserves the staggered drop. Resistive
+        legs first (datasheet order), matching _ladder_rung.
+
+        Every column is chosen by a full-box free search (body + texts), so
+        the ladder nests cleanly outboard of the fan labels and of any inner
+        rung already placed — the single-passive side rung's exclusive-lane
+        discipline, generalised to N legs and validated against text boxes."""
+        legs = sorted(legs,
+                      key=lambda r: self.c.parts[r].lib_id.endswith(":C"))
+        bar_y = pt[1]
+        pitch = gceil(self.sp.cap_pitch)
+        text_side = "right" if sgn > 0 else "left"
+        cols: list[float] = []
+        bar_from = pt
+        for i, ref in enumerate(legs):
+            att_y = round(bar_y + i * pitch, 3)
+            # first column outboard of bar_from whose body+texts are clear for
+            # the whole drop att_y -> ty (search marches in ``sgn``)
+            start = bar_from[0] + sgn * (pitch if cols else 3 * U)
+            fx = self._free_drop_col(sgn, start, att_y, ty, ref, far_net,
+                                     text_side)
+            # bar: extend the far-net rail out to this column, then down to the
+            # leg's attach row (the stagger step)
+            self.pl.plan(far_net, bar_from, (fx, bar_y))
+            if att_y != bar_y:
+                self.pl.plan(far_net, (fx, bar_y), (fx, att_y))
+            far_pt, far = self._vertical_2pin(
+                ref, fx, att_y, far_net, downward=True, text_side=text_side)
+            assert far == t.net
+            self.pl.plan(t.net, far_pt, (fx, ty))
+            cols.append(fx)
+            bar_from = (fx, bar_y)
+        # one local net-name on the bar (kicad-cli omits unnamed nets)
+        self.llabel(far_net, round(pt[0] + sgn * 2 * U, 3), bar_y,
+                    0 if sgn > 0 else 180)
+        return cols
+
+    def _free_drop_col(self, sgn: int, start: float, att_y: float, ty: float,
+                       ref: str, attach_net: str, text_side: str) -> float:
+        """First grid column at/outside ``start`` (marching in ``sgn``) where
+        the vertical passive ``ref`` — its body AND its value/reference texts —
+        fits for the drop att_y->ty without touching any placed box or foreign
+        wire. The trial box is the passive's own footprint extent at that
+        column; the drop wire below is corridor-checked the same way."""
+        sdef = self.lib.get(self.c.parts[ref].lib_id)
+        att_no = self._pin_of_net(ref, attach_net)
+        off = abs(_pin(sdef, att_no).y) or abs(_pin(sdef, att_no).x)
+        anchor_y = att_y + off
+        x = gceil(start) if sgn > 0 else gfloor(start)
+        for _ in range(160):
+            pp = PlacedPart(ref, self.c.parts[ref].lib_id,
+                            self.c.parts[ref].value, x, anchor_y, 0,
+                            self.c.parts[ref].footprint)
+            body = body_box_page(sdef, x, anchor_y, 0, "body", ref)
+            boxes = [body, *_pin_text_boxes(sdef, pp)]
+            tw, th = tm.text_wh(self.c.parts[ref].value)
+            vx = (x + 0.7, anchor_y - th / 2, x + 0.7 + tw, anchor_y + th / 2) \
+                if text_side == "right" else \
+                (x - 0.7 - tw, anchor_y - th / 2, x - 0.7, anchor_y + th / 2)
+            boxes.append(Box(*vx, "value", ref))
+            drop = (x - 0.4, att_y, x + 0.4, ty)
+            if all(self._spot_free((b.x0, b.y0, b.x1, b.y1), pad=0.3)
+                   for b in boxes) \
+                    and self._spot_free(drop, pad=0.0) \
+                    and self._corridor_free(att_y, x + sgn * 0.01,
+                                            x - sgn * 0.4, {attach_net}):
+                return x
+            x = round(x + sgn * 2 * U, 3)
+        raise PlaceError(f"{attach_net}: no free ladder column from {start}")
 
     def _lane_x(self, sgn: int, y0: float, y1: float, start: float) -> float:
         """First grid column at/outside ``start`` whose vertical band

@@ -27,7 +27,7 @@ Suggested board: **120 x 100 mm**; SoM origin at **(35, 29)** (centered). All co
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| N | ethernet | (5.5, 0, 12 x 12.5) | RESERVED: rj45_connector (deferred) | (1) |
+| N | ethernet | (5.5, 0, 12 x 21.5) | RESERVED: rj45_connector (deferred) | (1) |
 | N | hdmi_tx | (19, 0, 18 x 14.5) | HDMI-019S (HDMI receptacle) | (2) |
 | N | microsd | (38.5, 0, 18.5 x 18) | TF-01A (microSD push-pull) | (3) |
 | N | pd_input | (58.5, 0, 12 x 11.5) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |

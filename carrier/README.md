@@ -59,7 +59,7 @@ every PNG below passed the netlist, ERC and visual gates.
 | [bringup_rails](renders/bringup_rails.png) | Bring-up controls: rail/module DIPs + TCA9535 + buttons |
 | [camera](renders/camera.png) | RPi camera port: 2-lane MIPI CSI-2 (15P FFC) |
 | [debug_boot](renders/debug_boot.png) | JTAG + SWD headers, boot-request DIP, reset |
-| [ethernet](renders/ethernet.png) | Ethernet: HX5008NLT magnetics + Bob-Smith |
+| [ethernet](renders/ethernet.png) | Ethernet: HX5008NL magnetics + Bob-Smith |
 | [fmc](renders/fmc.png) | FMC LPC site (reduced: LA00-11 + CLK0/1, VADJ 2.5V) |
 | [hdmi_rx](renders/hdmi_rx.png) | HDMI RX: HDMI-A sink + EDID EEPROM |
 | [hdmi_rx_term](renders/hdmi_rx_term.png) | HDMI-RX TMDS sink termination (8x49.9R to AVCC=+3V3) |
