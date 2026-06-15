@@ -1,0 +1,7 @@
+bom value gate (LCSC actual value == declared value)
+============================================================
+catalog: 94 LCSC codes; 315 inline-passive checks
+mismatches: none
+
+UNVERIFIED — reported, NOT failing (1):
+  user_io:D4 'white' LCSC C2290 (not in catalog)

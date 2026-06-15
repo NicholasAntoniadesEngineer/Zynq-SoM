@@ -660,6 +660,20 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  PART RULE: {f}")
     ok_all = ok_all and pr_res.ok
 
+    # BOM value gate (data-integrity, LAW 0): the LCSC code behind every inline
+    # passive must resolve to the DECLARED value/package (live-verified catalog
+    # in schgen/verify/data/lcsc_values.json). Closes the C25750-class hole — a
+    # mis-keyed 40.2k FB resistor that was really a 120k part (~13 V on the 5 V
+    # rail). HARD-FAIL on a value mismatch; uncatalogued codes are reported.
+    from schgen.verify import bom_values
+    bv_res = bom_values.run(sheets, rep_dir)
+    print(f"BOM VALUES: {'PASS' if bv_res.ok else 'FAIL'} "
+          f"({bv_res.checked} checks, {len(bv_res.mismatches)} mismatch, "
+          f"{len(bv_res.unverified)} unverified -> {rep_dir / 'bom_values.txt'})")
+    for m in bv_res.mismatches:
+        print(f"  BOM VALUE: {m}")
+    ok_all = ok_all and bv_res.ok
+
     # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
     # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds
     # hard. The closed-form analytics ARE the gate; the ngspice .op
