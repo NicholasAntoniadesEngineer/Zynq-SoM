@@ -3,7 +3,7 @@
 	(generator "schgen_part_gen")
 	(generator_version "1.0")
 	(symbol
-		"TPD12S016PWR"
+		"CP2102N-A02-GQFN24R"
 		(pin_names
 			(offset 0.508)
 		)
@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"U"
-			(at 0 27.94 0)
+			(at 0 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22,8 +22,8 @@
 		)
 		(property
 			"Value"
-			"TPD12S016PWR"
-			(at 0 -27.94 0)
+			"CP2102N-A02-GQFN24R"
+			(at 0 -26.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32,7 +32,7 @@
 		)
 		(property
 			"Footprint"
-			"TPD12S016PWR:TPD12S016PWR"
+			"CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R"
 			(at 0 0 0)
 			(effects
 				(font
@@ -43,7 +43,7 @@
 		)
 		(property
 			"Datasheet"
-			"https://www.lcsc.com/datasheet/C201665.pdf"
+			"https://www.lcsc.com/datasheet/C969151.pdf"
 			(at 0 0 0)
 			(effects
 				(font
@@ -54,7 +54,7 @@
 		)
 		(property
 			"Description"
-			"TPD12S016PWR (TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL)"
+			"CP2102N-A02-GQFN24R (QFN-24_L4.0-W4.0-P0.50-TL-EP2.6)"
 			(at 0 0 0)
 			(effects
 				(font
@@ -65,7 +65,7 @@
 		)
 		(property
 			"LCSC"
-			"C201665"
+			"C969151"
 			(at 0 0 0)
 			(effects
 				(font
@@ -75,10 +75,10 @@
 			)
 		)
 		(symbol
-			"TPD12S016PWR_0_1"
+			"CP2102N-A02-GQFN24R_0_1"
 			(rectangle
-				(start -10.16 22.86)
-				(end 10.16 -22.86)
+				(start -15.24 21.59)
+				(end 15.24 -21.59)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -89,14 +89,14 @@
 			)
 		)
 		(symbol
-			"TPD12S016PWR_1_1"
+			"CP2102N-A02-GQFN24R_1_1"
 			(pin
 				passive
 				line
-				(at -13.97 10.16 0)
+				(at -19.05 11.43 0)
 				(length 3.81)
 				(name
-					"CEC_A"
+					"RI/CLK"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -115,32 +115,10 @@
 			(pin
 				passive
 				line
-				(at -13.97 7.62 0)
+				(at -19.05 8.89 0)
 				(length 3.81)
 				(name
-					"SCL_A"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"2"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at -13.97 5.08 0)
-				(length 3.81)
-				(name
-					"SDA_A"
+					"D+"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -159,10 +137,10 @@
 			(pin
 				passive
 				line
-				(at -13.97 2.54 0)
+				(at -19.05 6.35 0)
 				(length 3.81)
 				(name
-					"HPD_A-"
+					"D-"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -181,10 +159,10 @@
 			(pin
 				passive
 				line
-				(at -13.97 0 0)
+				(at -19.05 3.81 0)
 				(length 3.81)
 				(name
-					"LS_OE"
+					"VIO"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -203,10 +181,10 @@
 			(pin
 				passive
 				line
-				(at -13.97 -2.54 0)
+				(at -19.05 1.27 0)
 				(length 3.81)
 				(name
-					"CEC_B"
+					"VREGIN"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -225,32 +203,10 @@
 			(pin
 				passive
 				line
-				(at -13.97 -5.08 0)
+				(at -19.05 -1.27 0)
 				(length 3.81)
 				(name
-					"SCL_B"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"8"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at -13.97 -7.62 0)
-				(length 3.81)
-				(name
-					"SDA_B"
+					"RSTb"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -269,252 +225,10 @@
 			(pin
 				passive
 				line
-				(at -13.97 -10.16 0)
+				(at -19.05 -3.81 0)
 				(length 3.81)
 				(name
-					"HPD_B-"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"10"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at -13.97 -12.7 0)
-				(length 3.81)
-				(name
-					"CT_HPD"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"12"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 10.16 180)
-				(length 3.81)
-				(name
-					"5V_OUT"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"13"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 7.62 180)
-				(length 3.81)
-				(name
-					"CLK-"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"15"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 5.08 180)
-				(length 3.81)
-				(name
-					"CLK+"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"16"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 2.54 180)
-				(length 3.81)
-				(name
-					"D0-"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"17"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 0 180)
-				(length 3.81)
-				(name
-					"D0+"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"18"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 -2.54 180)
-				(length 3.81)
-				(name
-					"D1-"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"20"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 -5.08 180)
-				(length 3.81)
-				(name
-					"D1+"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"21"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 -7.62 180)
-				(length 3.81)
-				(name
-					"D2-"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"22"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at 13.97 -10.16 180)
-				(length 3.81)
-				(name
-					"D2+"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number
-					"23"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin
-				passive
-				line
-				(at -1.27 26.67 270)
-				(length 3.81)
-				(name
-					"VCC5V"
+					"GPIO.3/WAKEUP"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -533,10 +247,10 @@
 			(pin
 				passive
 				line
-				(at 1.27 26.67 270)
+				(at -19.05 -6.35 0)
 				(length 3.81)
 				(name
-					"VCCA"
+					"GPIO.2/RS485"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -544,7 +258,7 @@
 					)
 				)
 				(number
-					"24"
+					"12"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -555,10 +269,10 @@
 			(pin
 				passive
 				line
-				(at -2.54 -26.67 90)
+				(at -19.05 -8.89 0)
 				(length 3.81)
 				(name
-					"GND"
+					"GPIO.1/RXT"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -566,7 +280,7 @@
 					)
 				)
 				(number
-					"6"
+					"13"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -577,10 +291,10 @@
 			(pin
 				passive
 				line
-				(at 0 -26.67 90)
+				(at -19.05 -11.43 0)
 				(length 3.81)
 				(name
-					"GND"
+					"GPIO.0/TXT"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -599,7 +313,249 @@
 			(pin
 				passive
 				line
-				(at 2.54 -26.67 90)
+				(at 19.05 11.43 180)
+				(length 3.81)
+				(name
+					"SUSPENDb"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"15"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 19.05 8.89 180)
+				(length 3.81)
+				(name
+					"SUSPEND"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"17"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 19.05 6.35 180)
+				(length 3.81)
+				(name
+					"CTS"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"18"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 19.05 3.81 180)
+				(length 3.81)
+				(name
+					"RTS"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"19"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 19.05 1.27 180)
+				(length 3.81)
+				(name
+					"RXD"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"20"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 19.05 -1.27 180)
+				(length 3.81)
+				(name
+					"TXD"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"21"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 19.05 -3.81 180)
+				(length 3.81)
+				(name
+					"DSR"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"22"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 19.05 -6.35 180)
+				(length 3.81)
+				(name
+					"DTR"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"23"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 19.05 -8.89 180)
+				(length 3.81)
+				(name
+					"DCD"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"24"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -1.27 24.13 270)
+				(length 2.54)
+				(name
+					"VDD"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"6"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 1.27 24.13 270)
+				(length 2.54)
+				(name
+					"VBUS"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"8"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -3.81 -25.4 90)
 				(length 3.81)
 				(name
 					"GND"
@@ -610,7 +566,73 @@
 					)
 				)
 				(number
-					"19"
+					"2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at -1.27 -25.4 90)
+				(length 3.81)
+				(name
+					"NC"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"10"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 1.27 -25.4 90)
+				(length 3.81)
+				(name
+					"NC"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"16"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin
+				passive
+				line
+				(at 3.81 -25.4 90)
+				(length 3.81)
+				(name
+					"GND"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number
+					"25"
 					(effects
 						(font
 							(size 1.27 1.27)

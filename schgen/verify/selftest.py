@@ -440,15 +440,17 @@ def _find_part(c: Circuit, suffix: str, must_have: tuple[str, ...],
 
 
 # Fixture A — an IC with named supply pins + i2c + reset, for design_rules.
-# The CP2102N symbol carries real power-named pins (VIO/VDD/VREGIN), an i2c
-# port and a reset net; VDD is parked on its OWN rail with a SINGLE decap so a
-# dropped cap leaves that rail bare (the +3V3 rail keeps two, so a defect there
-# would be masked). Every rule passes at baseline — including STRAP (no config
-# pin floats).
+# The CP2102N FAITHFUL dossier symbol (parts/CP2102N-A02-GQFN24R/) carries real
+# power-named pins (VIO/VDD/VREGIN), an i2c port and a reset net; VDD is parked
+# on its OWN rail with a SINGLE decap so a dropped cap leaves that rail bare
+# (the +3V3 rail keeps two, so a defect there would be masked). Every rule
+# passes at baseline — including STRAP (no config pin floats). Uses the dossier
+# (NOT the deleted hand-built schgen:CP2102N_UART symbol — the "0 hand-built
+# symbols" law); the dossier pin numbers match the SiLabs datasheet 1:1.
 
 def _fixture_design_rules() -> list[_Sheet]:
     c = Circuit("selftest_dr", "selftest design-rule fixture")
-    c.part("U1", "schgen:CP2102N_UART", "CP2102N")
+    c.use_part("CP2102N-A02-GQFN24R", ref="U1", value="CP2102N")
     c.net("+3V3", "U1.5", "U1.7")          # VIO + VREGIN share +3V3
     c.net("+VDD_CORE", "U1.6")             # VDD on its own rail
     c.net("GND", "U1.2", "U1.25")
@@ -762,6 +764,50 @@ def _mg_mh_short(lib: Library):
                              f"\n            by mounting_hole guard: {by}")
 
 
+def _mg_symbol_law(lib: Library):
+    """symbol_law: prove the HARD "0 hand-built symbols" gate kills a board that
+    re-introduces a schgen-LOCAL real-part symbol.
+
+    BASELINE — a sheet whose only schgen-local symbols are (power) RAIL FLAGS
+    (here +3V3) plus a stock-KiCad part: the gate PASSES (rail flags are the one
+    allowed schgen-local kind). MUTANT — a sheet that draws a real part on a
+    hand-built schgen-local symbol (schgen:LM61460, a non-(power) drawing): with
+    the documented PENDING_MIGRATION exception list EMPTIED, the gate FAILS,
+    proving the rule itself kills any hand-built real-part symbol. The mutant is
+    EXACTLY the regression a future author would introduce by adding a new
+    re-pinned local copy instead of using a parts/<MPN>/ dossier."""
+    from schgen.verify import symbol_law
+
+    def fix(real_part: bool):
+        c = Circuit("selftest_symlaw", "selftest symbol-law fixture")
+        # a stock-KiCad part + a (power) rail flag (always allowed)
+        c.part("R1", "Device:R", "10k", "Resistor_SMD:R_0603_1608Metric")
+        c.net("+3V3", "R1.1", net_class=NetClass.POWER)   # schgen:+3V3 rail flag
+        c.net("GND", "R1.2")
+        if real_part:
+            # re-introduce a hand-built schgen-local real-part symbol
+            c.part("U1", "schgen:LM61460", "LM61460",
+                   "LM61460AANRJRR:LM61460AANRJRR")
+            c.net("+VIN_SYS", "U1.8")
+            c.net("GND", "U1.9")
+        return c
+
+    base = symbol_law.check([fix(real_part=False)], lib)
+    base_ok = base.ok and not base.violations
+    # empty the documented-pending allowlist so the RULE itself is exercised
+    saved = dict(symbol_law.PENDING_MIGRATION)
+    symbol_law.PENDING_MIGRATION.clear()
+    try:
+        mut = symbol_law.check([fix(real_part=True)], lib)
+    finally:
+        symbol_law.PENDING_MIGRATION.update(saved)
+    killed = (not mut.ok) and any("schgen:LM61460" in v for v in mut.violations)
+    by = mut.violations[0] if mut.violations else "(no violation)"
+    return base_ok, killed, ("symbol_law: re-add hand-built schgen:LM61460 "
+                             "real-part symbol (PENDING emptied)"
+                             f"\n            by symbol_law: {by[:110]}")
+
+
 def _mg_port_rename(lib: Library, tmp: Path):
     """port_rename: build the two-sheet board (baseline merge gate PASSES),
     then rewrite ONE 'SELFTEST_LINK' PORT label on the emitted ROOT so its
@@ -911,6 +957,7 @@ def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
         ("divider_drift",   lambda: _mg_divider_drift(lib)),
         ("tp_uncovered",    lambda: _mg_tp_uncovered(lib)),
         ("mh_short",        lambda: _mg_mh_short(lib)),
+        ("symbol_law",      lambda: _mg_symbol_law(lib)),
         ("port_rename",     lambda: _mg_port_rename(lib, tmp / "board")),
         ("rail_decoup_dropped", lambda: _mg_rail_decoup_dropped(lib)),
         ("clamp_thresh_strict", lambda: _mg_clamp_thresh_strict(lib)),

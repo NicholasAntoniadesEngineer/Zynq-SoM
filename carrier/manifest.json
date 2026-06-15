@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "6909fde5ecf6e46a5fd3de9b48dbb55c3d9815d4c3cb2e2ae2ad3c1efaea3cf8"
+      "sha256": "61eff2e619439b4e99dd12387565240e0f9ef512f8d726e23050aa7e3f18bbb2"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -10,7 +10,7 @@
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
-      "sha256": "dba03be2eb82ecb5811cb4e0d9126e959e42427849b09d5107f2fda20de143a4"
+      "sha256": "dbb16563840d38c5fb32bbfe0d214743a9de2d92f4c3d6c127f4cbd849f87830"
     },
     {
       "path": "docs/BRINGUP.md",
@@ -58,7 +58,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "8e238e3d7d99ae50b6a08084c4e35e146138557c94f719de37e2c8729c8b6db1"
+      "sha256": "4cb34792d06d8c3966d0eda7dd70089f859c5479dd9a9e686e33073b5d457f54"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -74,7 +74,7 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "dae6dc2384b08b18489598a7140db0ca4075a58aab084ae0095039033310773d"
+      "sha256": "a4fb435cb44adf256d875c69cb18390e9c284055a3c9b3b384863fefb2c9f988"
     },
     {
       "path": "reports/bom_values.txt",
@@ -86,7 +86,7 @@
     },
     {
       "path": "reports/design_rules.txt",
-      "sha256": "3ed67d23020713a8500502fd3f85fde585acebfe7bca6c218e8fd466ce069988"
+      "sha256": "d31a4cb66d1a8d6cd6f4fc2d37a9e55cbcedbcab217938b0b22ec546f9fb8838"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -94,7 +94,7 @@
     },
     {
       "path": "reports/gates.txt",
-      "sha256": "c27174fd9ab07238e521af0225365a990aac950e79ebab424f0d97a5116785b2"
+      "sha256": "14295e3238e2be24c1c53b4291d1df878e75c920d462a7d224ebe14aea9e0203"
     },
     {
       "path": "reports/link_report.txt",
@@ -106,7 +106,7 @@
     },
     {
       "path": "reports/pin_completeness.txt",
-      "sha256": "ea1a5eb3d2bad84d23e36b2e2533cf35993b259850656857e1e462b7a22ef3e0"
+      "sha256": "3d7275563658c8edfdb1da12ec5f10bb43037e536fce07988d6881dd7d1e9507"
     },
     {
       "path": "reports/power_tree.txt",
@@ -115,6 +115,10 @@
     {
       "path": "reports/spice.txt",
       "sha256": "78926a2ea59f66cc44d8d55398a23198ebbf617dc057f3f2cf78fb19b8765256"
+    },
+    {
+      "path": "reports/symbol_law.txt",
+      "sha256": "f55d63709b37e9dced63cc51b88629d27721af87042678ef7231667db5320b44"
     },
     {
       "path": "reports/testpoints.txt",
@@ -178,7 +182,7 @@
     },
     {
       "path": "schematic/hdmi_tx.kicad_sch",
-      "sha256": "58bb1837c1787c24029193c9cc193b104b5b80779f77d07d6fe7ad5835a60d89"
+      "sha256": "0c179b829b9910222f4ace28e284a924e6e422451a982c5da33378f021fc4140"
     },
     {
       "path": "schematic/lcd.kicad_sch",
@@ -230,7 +234,7 @@
     },
     {
       "path": "schematic/uart_bridge.kicad_sch",
-      "sha256": "a888df1faf5dfb7088f289f9862beb22d75178dc4ede079cafaadd8fdebeeb21"
+      "sha256": "702ff2ca2089c0238f9cd319bbb59177d8f606adabfc6a9cad4cb0638a1b161e"
     },
     {
       "path": "schematic/usb_jtag.kicad_sch",

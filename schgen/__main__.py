@@ -560,6 +560,19 @@ def cmd_board(args: argparse.Namespace) -> int:
             print("  " + _r.summary().replace("\n", "\n  "))
     ok_all = ok_all and cc_res.ok
 
+    # SYMBOL-LAW gate (user decree "0 hand-built symbols"): every board part on
+    # a schgen-local lib_id must be a (power) rail flag, never a hand-drawn
+    # real-part symbol. HARD-FAIL the board on any violation (a tracked-pending
+    # exception list keeps a documented in-progress migration from blocking).
+    from schgen.verify import symbol_law
+    sl_res = symbol_law.check([sc.circuit for sc in sheets], lib)
+    (rep_dir / "symbol_law.txt").write_text(sl_res.summary() + "\n")
+    print(sl_res.summary().splitlines()[0]
+          + f" -> {rep_dir / 'symbol_law.txt'}")
+    for _v in sl_res.violations:
+        print(f"  {_v}")
+    ok_all = ok_all and sl_res.ok
+
     # link + constraints + diagram
     som_nets = load_som_contract()
     res = link(sheets, som_nets)

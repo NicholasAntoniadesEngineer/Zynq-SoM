@@ -10,28 +10,28 @@ with the mid-point on the VBUS pin. D+/D- go to the USB connector
 (bridge TXD -> ZYNQ_PS_UART0_RXD etc.). All GPIO / modem-control / suspend
 pins are unused by design -> explicit author no-connects.
 
-Symbol: schgen:CP2102N_UART — corrected copy of the carrier's re-pinned
-zynq_eda:CP2102N_UART (power/reset LEFT, the six signals RIGHT at 5.08 mm
-pitch, unused pins below, GND on the bottom edge). The schgen copy moves GND
-(pins 2/25) to the bottom-LEFT so its vertical pin-name text clears the long
-GPIO names on the lower right rows (the zynq_eda copy has an intrinsic text
-overlap there that the visual gate rightly rejects). Stacked hidden GND pin
-25 is declared on GND with its visible twin pin 2.
+Symbol: the FAITHFUL generated dossier symbol parts/CP2102N-A02-GQFN24R/
+(`schgen part add C969151`) — the "0 hand-built symbols" law. part_gen's box
+rules lay the 25 pins out for the placer (power VDD/VBUS on the top edge,
+GND/NC on the bottom, the addressable signals split left/right); the QFN
+exposed pad lands as pin 25 = the second GND pad of the faithful footprint,
+netted to GND below alongside its twin pin 2.
 """
 
 from __future__ import annotations
 
 from schgen.core.model import Circuit
 
-LIB_ID = "schgen:CP2102N_UART"
-FOOTPRINT = "Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm"
-
-
 def circuit() -> Circuit:
     c = Circuit("uart_bridge", "UART bridge: CP2102N USB-UART")
     # CP2102N-A02-GQFN24R — LCSC C969151, live-verified 2026-06-11:
-    # Extended, stock 24,473 (the non-reel -GQFN24 C1550551 is at 0)
-    c.part("U1", LIB_ID, "CP2102N-A02", FOOTPRINT, LCSC="C969151")
+    # Extended, stock 24,473 (the non-reel -GQFN24 C1550551 is at 0). The
+    # FAITHFUL dossier symbol/footprint (parts/CP2102N-A02-GQFN24R/, 25 pins
+    # incl the QFN exposed pad as pin 25 = the second GND, 29-pad footprint)
+    # is used directly — NO lib_id override (the "0 hand-built symbols" law).
+    # The dossier's EasyEDA pin NUMBERS match the SiLabs datasheet 1:1, so the
+    # by-number netting below is unchanged (pin 2 + EP pin 25 = GND).
+    c.use_part("CP2102N-A02-GQFN24R", ref="U1", value="CP2102N-A02")
 
     # power: VIO(5) + VDD(6) + VREGIN(7) tied directly to +3V3 (self-powered);
     # GND pin 2 + stacked hidden twin 25

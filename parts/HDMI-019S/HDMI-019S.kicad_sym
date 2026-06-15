@@ -13,7 +13,7 @@
 		(property
 			"Reference"
 			"HDMI"
-			(at 0 20.32 0)
+			(at 0 29.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23,7 +23,7 @@
 		(property
 			"Value"
 			"HDMI-019S"
-			(at 0 -20.32 0)
+			(at 0 -29.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -77,8 +77,8 @@
 		(symbol
 			"HDMI-019S_0_1"
 			(rectangle
-				(start -15.24 16.51)
-				(end 15.24 -16.51)
+				(start -15.24 24.13)
+				(end 15.24 -24.13)
 				(stroke
 					(width 0.254)
 					(type default)
@@ -291,8 +291,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 13.97 180)
-				(length 2.54)
+				(at 19.05 13.97 180)
+				(length 3.81)
 				(name
 					"CK+"
 					(effects
@@ -313,8 +313,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 11.43 180)
-				(length 2.54)
+				(at 19.05 11.43 180)
+				(length 3.81)
 				(name
 					"CK_SHIELD"
 					(effects
@@ -335,8 +335,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 8.89 180)
-				(length 2.54)
+				(at 19.05 8.89 180)
+				(length 3.81)
 				(name
 					"CK-"
 					(effects
@@ -357,8 +357,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 6.35 180)
-				(length 2.54)
+				(at 19.05 6.35 180)
+				(length 3.81)
 				(name
 					"CEC"
 					(effects
@@ -379,8 +379,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 3.81 180)
-				(length 2.54)
+				(at 19.05 3.81 180)
+				(length 3.81)
 				(name
 					"HEC"
 					(effects
@@ -401,8 +401,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 1.27 180)
-				(length 2.54)
+				(at 19.05 1.27 180)
+				(length 3.81)
 				(name
 					"I2C-CLK"
 					(effects
@@ -423,8 +423,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 -1.27 180)
-				(length 2.54)
+				(at 19.05 -1.27 180)
+				(length 3.81)
 				(name
 					"I2C_DATA"
 					(effects
@@ -445,8 +445,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 -3.81 180)
-				(length 2.54)
+				(at 19.05 -3.81 180)
+				(length 3.81)
 				(name
 					"HOT_PLUG_DET"
 					(effects
@@ -467,8 +467,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 -6.35 180)
-				(length 2.54)
+				(at 19.05 -6.35 180)
+				(length 3.81)
 				(name
 					"SHD"
 					(effects
@@ -489,8 +489,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 -8.89 180)
-				(length 2.54)
+				(at 19.05 -8.89 180)
+				(length 3.81)
 				(name
 					"SHD"
 					(effects
@@ -511,8 +511,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 -11.43 180)
-				(length 2.54)
+				(at 19.05 -11.43 180)
+				(length 3.81)
 				(name
 					"SHD"
 					(effects
@@ -533,8 +533,8 @@
 			(pin
 				passive
 				line
-				(at 17.78 -13.97 180)
-				(length 2.54)
+				(at 19.05 -13.97 180)
+				(length 3.81)
 				(name
 					"SHD"
 					(effects
@@ -555,8 +555,8 @@
 			(pin
 				passive
 				line
-				(at 0 19.05 270)
-				(length 2.54)
+				(at 0 27.94 270)
+				(length 3.81)
 				(name
 					"+5V"
 					(effects
@@ -577,8 +577,8 @@
 			(pin
 				passive
 				line
-				(at 0 -19.05 90)
-				(length 2.54)
+				(at 0 -27.94 90)
+				(length 3.81)
 				(name
 					"GND"
 					(effects

@@ -1,0 +1,472 @@
+(footprint
+	"CP2102N-A02-GQFN24R"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"QFN-24_L4.0-W4.0-P0.50-TL-EP2.6 — CP2102N-A02-GQFN24R (QFN-24_L4.0-W4.0-P0.50-TL-EP2.6) (EasyEDA/LCSC C969151, faithful conversion)"
+	)
+	(tags "USB ICs")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -4 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"CP2102N-A02-GQFN24R"
+		(at 0 4 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C969151.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"CP2102N-A02-GQFN24R (QFN-24_L4.0-W4.0-P0.50-TL-EP2.6)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C969151"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -1.9999 -1.9999)
+		(end -1.9699 -1.9999)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center -2.2734 -1.2628)
+		(end -2.1464 -1.2628)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_line
+		(start -2 -2)
+		(end 2 -2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 2 -2)
+		(end 2 2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 2 2)
+		(end -2 2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -2 2)
+		(end -2 -2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.75 2.1628)
+		(end 2.1501 2.1628)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 2.1501 2.1628)
+		(end 2.1501 1.7628)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.75 -2.1374)
+		(end 2.1501 -2.1374)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 2.1501 -2.1374)
+		(end 2.1501 -1.7374)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.1501 -1.7374)
+		(end -2.1501 -2.1374)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.1501 -2.1374)
+		(end -1.7501 -2.1374)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.7501 2.1628)
+		(end -2.1501 2.1628)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -2.1501 2.1628)
+		(end -2.1501 1.7628)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_poly
+		(pts
+			(xy -2.7923 -1.3974)
+			(xy -2.7948 -1.3974)
+			(xy -2.7923 -1.3974)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.SilkS")
+	)
+	(pad
+		"1"
+		smd
+		oval
+		(at -1.9999 -1.2498 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		oval
+		(at -1.9999 -0.7499 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"3"
+		smd
+		oval
+		(at -1.9999 -0.2498 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"4"
+		smd
+		oval
+		(at -1.9999 0.2501 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"5"
+		smd
+		oval
+		(at -1.9999 0.7502 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"6"
+		smd
+		oval
+		(at -1.9999 1.2501 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"7"
+		smd
+		oval
+		(at -1.2498 2.0001)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"8"
+		smd
+		oval
+		(at -0.7499 2.0001)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"9"
+		smd
+		oval
+		(at -0.2498 2.0001)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"10"
+		smd
+		oval
+		(at 0.2501 2.0001)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"11"
+		smd
+		oval
+		(at 0.7502 2.0001)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"12"
+		smd
+		oval
+		(at 1.2501 2.0001)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"13"
+		smd
+		oval
+		(at 2.0001 1.2501 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"14"
+		smd
+		oval
+		(at 2.0001 0.7502 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"15"
+		smd
+		oval
+		(at 2.0001 0.2501 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"16"
+		smd
+		oval
+		(at 2.0001 -0.2498 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"17"
+		smd
+		oval
+		(at 2.0001 -0.7499 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"18"
+		smd
+		oval
+		(at 2.0001 -1.2419 90)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"19"
+		smd
+		oval
+		(at 1.2501 -1.9999)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"20"
+		smd
+		oval
+		(at 0.7502 -1.9999)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"21"
+		smd
+		oval
+		(at 0.2501 -1.9999)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"22"
+		smd
+		oval
+		(at -0.2498 -1.9999)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"23"
+		smd
+		oval
+		(at -0.7499 -1.9999)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"24"
+		smd
+		oval
+		(at -1.2498 -1.9999)
+		(size 0.28001 0.799998)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"25"
+		smd
+		rect
+		(at -0.0001 0.0126)
+		(size 2.699995 2.699995)
+		(layers "F.Cu" "F.Mask")
+	)
+	(pad
+		"25"
+		smd
+		rect
+		(at -0.6751 -0.6624)
+		(size 1.0457 1.0457)
+		(layers "F.Paste")
+	)
+	(pad
+		"25"
+		smd
+		rect
+		(at -0.6751 0.6876)
+		(size 1.0457 1.0457)
+		(layers "F.Paste")
+	)
+	(pad
+		"25"
+		smd
+		rect
+		(at 0.6749 -0.6624)
+		(size 1.0457 1.0457)
+		(layers "F.Paste")
+	)
+	(pad
+		"25"
+		smd
+		rect
+		(at 0.6749 0.6876)
+		(size 1.0457 1.0457)
+		(layers "F.Paste")
+	)
+	(model
+		"CP2102N-A02-GQFN24R.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

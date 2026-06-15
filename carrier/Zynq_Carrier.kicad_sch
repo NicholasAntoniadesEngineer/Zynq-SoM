@@ -14853,7 +14853,7 @@
 		)
 		(pin
 			"ZYNQ_HDMI_TX_HPD"
-			output
+			bidirectional
 			(at 132.08 337.82 180)
 			(effects
 				(font
@@ -19101,7 +19101,7 @@
 		)
 		(pin
 			"ZYNQ_PS_UART0_CTS_N"
-			output
+			bidirectional
 			(at 394.97 238.76 180)
 			(effects
 				(font
@@ -19113,7 +19113,7 @@
 		)
 		(pin
 			"ZYNQ_PS_UART0_RTS_N"
-			input
+			bidirectional
 			(at 394.97 241.3 180)
 			(effects
 				(font
@@ -19125,7 +19125,7 @@
 		)
 		(pin
 			"ZYNQ_PS_UART0_RXD"
-			output
+			bidirectional
 			(at 394.97 243.84 180)
 			(effects
 				(font
@@ -19137,7 +19137,7 @@
 		)
 		(pin
 			"ZYNQ_PS_UART0_TXD"
-			input
+			bidirectional
 			(at 394.97 246.38 180)
 			(effects
 				(font

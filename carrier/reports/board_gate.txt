@@ -289,6 +289,6 @@ board netlist gate
   ok   rail '+VIN_SYS': 1 net, 13 pins across 3 sheet(s) [power, power_mon, power_som]
   ok   rail 'CHASSIS_GND': 1 net, 30 pins across 8 sheet(s) [ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_jtag_connector, usb_uart_connector, usbc_otg]
   ok   rail 'GND': 1 net, 493 pins across 32 sheet(s) [board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io]
-  (info) undriven-input PORT check: 35 input-bearing PORT nets examined (214 expect-deferred)
+  (info) undriven-input PORT check: 33 input-bearing PORT nets examined (214 expect-deferred)
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0

@@ -284,6 +284,12 @@ class _Engine:
         self._pwr = 0
         self._flg = 0
         self._done: set[str] = set()             # placed part refs
+        self._pin_islets: set[str] = set()       # divider midpoints drawn as
+        #     top/bottom labeled islets, reassembled by _pin_divider_columns
+        self._rung_islets: list[tuple[str, str, str]] = []   # (trunk, far_net,
+        #     leg) trunk rungs whose escape lane wedged -> a rank column
+        self._sig_rows: list[float] = []         # SIGNAL/PORT side-pin rows on
+        #     the fan currently being placed (rail value text must dodge them)
         self._deferred_texts: list[tuple[PlacedPart, Box]] = []
         self.orient: dict[str, int] = {}         # per-part rotation (0/180)
         self._classify()
@@ -858,6 +864,20 @@ class _Engine:
                        key=lambda n: rail_run_count[n])
             if rail_run_count[best] >= 6:
                 comb_net = best
+        # The y-rows of SIGNAL/PORT side pins: their escape lines run out
+        # HORIZONTALLY here LATER (in the lines loop below), so a rail symbol's
+        # VALUE TEXT must not sit on one of those rows — the line is not planned
+        # yet, so the rail dodge cannot see it, and the box-symbol pathology
+        # (CP2102N VIO/VREGIN bus directly below the D- port) drops the rail
+        # value onto the port wire. _fan_rail_run's multi-pin-bus dodge rejects
+        # a value box overlapping one of these rows. An EMPTY set (rail-only
+        # side) makes that an exact no-op, so every existing sheet stays
+        # byte-identical; a non-empty set only ADDS a constraint the original
+        # dodge already satisfied on the clean sheets (verified).
+        self._sig_rows = sorted({round(pt[1], 3) for run in runs
+                                 for _p, pt, n in run if n is not None
+                                 and n.net_class in (NetClass.SIGNAL,
+                                                     NetClass.PORT)})
         comb_pts: list[tuple[float, float]] = []
         rail_jobs: list[list] = []
         for run in runs:
@@ -1172,32 +1192,58 @@ class _Engine:
             self.power(net0.name, *end, rot)
             return
         ys = [pt[1] for _, pt, _ in run]
-        end_y = (ys[0] if net0.net_class is NetClass.POWER
-                 else ys[-1])
         sdef_p = self.lib.get(self._power_lib(net0.name))
         px0 = run[0][1][0]
-        for k in range(40):
-            jxc = round(jx + sgn * k * 2 * U, 3)
-            vp = _value_anchor(sdef_p, jxc, end_y, 0)
-            vbox = tm.centered_box(net0.name, vp[0], vp[1])
-            sbox = body_box_page(sdef_p, jxc, end_y, 0,
-                                 "body", "?")
-            ok2 = self._spot_free(vbox) and self._spot_free(
-                (sbox.x0, sbox.y0, sbox.x1, sbox.y1)) \
-                and self._spot_free((jxc - 0.1, ys[0] + 0.1,
-                                     jxc + 0.1, ys[-1] - 0.1),
-                                    pad=0.0) \
-                and all(self._corridor_free(
-                    yy, px0 + sgn * 0.01, jxc, {net0.name})
-                    for yy in ys)
-            if ok2:
+        # The bus symbol sits at one END (POWER off the top, GND off the
+        # bottom) and its body+value extends past it. The DEFAULT end is tried
+        # first (the original placement, byte-identical for every existing
+        # sheet); only if its outward dodge cannot seat the symbol+value clear
+        # do we FALL BACK to the other end — the case a faithful box symbol
+        # creates by sandwiching a power-name bus between signal/port pins
+        # (CP2102N VIO/VREGIN between D-/RSTb), where the default end's value
+        # would land on a not-yet-placed neighbour. (rot default 0 matches the
+        # original unset rot; the flipped end points the glyph outward.)
+        is_gnd = net0.net_class is NetClass.GROUND
+        own_ys = {round(y, 3) for y in ys}
+        placed = False
+        for want_top in (not is_gnd, is_gnd):          # default end first
+            end_y = ys[0] if want_top else ys[-1]
+            rot = 0 if (is_gnd != want_top) else 180
+            for k in range(40):
+                jxc = round(jx + sgn * k * 2 * U, 3)
+                vp = _value_anchor(sdef_p, jxc, end_y, rot)
+                vbox = tm.centered_box(net0.name, vp[0], vp[1])
+                sbox = body_box_page(sdef_p, jxc, end_y, rot, "body", "?")
+                # the rail VALUE TEXT must not straddle a FOREIGN signal/port
+                # pin row: that pin's horizontal escape line is planned later
+                # and would run through the (not-yet-visible) value. Checked
+                # against the value box ALONE (the symbol glyph is a thin stem
+                # the line clears) so the constraint is no-op for clean sheets
+                # whose value already sits BETWEEN rows, and only pushes the
+                # box-symbol pathology where the value lands ON a pin row.
+                rows_clear = not any(r not in own_ys
+                                     and vbox[1] - 1e-6 < r < vbox[3] + 1e-6
+                                     for r in self._sig_rows)
+                ok2 = self._spot_free(vbox) and self._spot_free(
+                    (sbox.x0, sbox.y0, sbox.x1, sbox.y1)) \
+                    and rows_clear \
+                    and self._spot_free((jxc - 0.1, ys[0] + 0.1,
+                                         jxc + 0.1, ys[-1] - 0.1),
+                                        pad=0.0) \
+                    and all(self._corridor_free(
+                        yy, px0 + sgn * 0.01, jxc, {net0.name})
+                        for yy in ys)
+                if ok2:
+                    placed = True
+                    break
+            if placed:
                 break
         jx = jxc
         for _, pt, _ in run:
             self.pl.plan(net0.name, pt, (jx, pt[1]))
         for y0, y1 in zip(ys, ys[1:]):
             self.pl.plan(net0.name, (jx, y0), (jx, y1))
-        self.power(net0.name, jx, end_y)
+        self.power(net0.name, jx, end_y, rot)
 
     def _fan_rail_comb(self, net: str, pts: list[tuple[float, float]],
                        sgn: int, boxes_mark: int,
@@ -1452,16 +1498,44 @@ class _Engine:
         return _FloatChain(kind="pin", root=net_name,
                            legs=[(ref, net_name, far.name)], hangs={})
 
+    def _signal_islet_drop(self, net: str, pt: tuple[float, float],
+                           side: str) -> None:
+        """A SIGNAL net on a TOP/BOTTOM edge pin, rendered as a LABELED ISLET:
+        a short stem straight out of the edge (away from the body) to a local
+        label, the net then BRIDGED so its passives place in the leftover
+        column drainers and merge back by name. The vertical twin of the
+        LEFT/RIGHT fan's labeled-islet branch — no symbol pin is moved."""
+        sgn = -1 if side == "top" else 1          # outward: top=up(-y), bot=+y
+        end = (pt[0], round(pt[1] + sgn * self.sp.port_run, 3))
+        self.pl.plan(net, pt, end)
+        # horizontal local label (rot 0) reading rightward off the stem end;
+        # the box dodge in label()/the visual gate keeps it clear of texts.
+        self.llabel(net, *end, 0)
+        self._bridge(net)
+        # A divider whose midpoint is THIS net (one series arm to an external
+        # port/rail + one hang/pull arm to GND/rail) is reassembled as a single
+        # self-contained column by _pin_divider_columns — registering it here
+        # keeps both passives out of the two independent leftover placers (which
+        # would otherwise march to colliding x). A plain inter-part islet (no
+        # local passives) needs no column: the label merge is the whole job.
+        ser = [s for s in self.series if net in (s[1], s[2])]
+        n_arms = len(self.hang.get(net, [])) + len(self.pull.get(net, []))
+        if len(ser) == 1 and n_arms == 1:
+            self._pin_islets.add(net)
+
     def _stack_from_pin(self, chain: _FloatChain, pt: tuple[float, float],
-                        side: str) -> None:
-        """Pin-rooted series chain stacked straight off a top/bottom pin."""
+                        side: str, text_side: str = "right") -> None:
+        """Pin-rooted series chain stacked straight off a top/bottom pin.
+        ``text_side`` reads the stacked passive's ref/value away from a busy
+        neighbour (e.g. a VCC-bypass cap whose default right-side text would
+        land on the adjacent VIN bus of a box-symbol buck)."""
         downward = side == "bottom"
         cur_net = chain.root
         cur = pt
         for ref, upper, lower in chain.legs:
             near = upper if upper == cur_net else lower
             far_pt, far = self._vertical_2pin(ref, pt[0], cur[1], near,
-                                              downward)
+                                              downward, text_side=text_side)
             cur = far_pt
             cur_net = far
             self._chain_mid_features(chain, cur_net, cur)
@@ -1537,6 +1611,24 @@ class _Engine:
                 local = self._local_drop_chain(net.name, ref)
                 if local is not None:
                     self._stack_from_pin(local, pt, side)
+                    continue
+                if net.net_class is NetClass.SIGNAL:
+                    # A SIGNAL net on a TOP/BOTTOM edge pin that fits none of
+                    # the structured patterns above (trunk / rail / pin-stack /
+                    # local-drop). This is the same situation the LEFT/RIGHT fan
+                    # resolves with a LABELED ISLET (a local label merged by
+                    # name, the netlist gate proving the merge): a generated box
+                    # symbol may place a pin on the top/bottom edge by NAME
+                    # (group_pins) when its net is actually a sensed signal
+                    # (e.g. a CP2102N VBUS-sense divider tap on the VBUS pin) or
+                    # any inter-part / divider node. Route a short stem straight
+                    # OUT of the edge to a local label and BRIDGE the net; its
+                    # series / pull / hang passives then place in the leftover
+                    # column drainers (_pull_rank_columns / _series_port_columns),
+                    # each re-labeling the same net so KiCad merges them. No
+                    # symbol pin is moved — the part stays faithful, the engine
+                    # extends (the never-redraw-parts law).
+                    self._signal_islet_drop(net.name, pt, side)
                     continue
                 raise PlaceError(f"{ref}.{pin.number} ({net.name}) on the "
                                  f"{side} edge: no engine pattern applies")
@@ -1709,8 +1801,22 @@ class _Engine:
             else:
                 # a side rung seats a passive in its lane: a single clean
                 # vertical column is mandatory (bidirectional, no detour)
-                fx = self._escape_lane(sgn, pt, ty, own)
                 far_net, leg = payload
+                try:
+                    fx = self._escape_lane(sgn, pt, ty, own)
+                except PlaceError:
+                    # No clean lane: the rung pin is boxed in (a dense
+                    # connector edge where the trunk spans the full sheet, e.g.
+                    # the HDMI-RX cable-5V trunk reaching the EEPROM with the
+                    # HPD pull-up wedged between connector and EEPROM bodies).
+                    # Re-home the rung as a LABELED ISLET pair: the far-net pin
+                    # gets a short labeled stub here; its series leg + the trunk
+                    # link are drawn in a rank column below the flow, both ends
+                    # re-labeled so KiCad merges by name (the datasheet idiom,
+                    # never a forced crossing — LAW 4). Defer to _rung_islets.
+                    self._rung_islet_drop(far_net, pt, sgn)
+                    self._rung_islets.append((t.net, far_net, leg))
+                    continue
                 toward_top = ty < pt[1]
                 self.pl.plan(far_net, pt, (fx, pt[1]))
                 far_pt, far = self._vertical_2pin(
@@ -2579,7 +2685,52 @@ class _Engine:
                         stages[ref] = {"kind": "buck", "sw": net.name,
                                        "l": r, "out": out_rail}
                         break
+            if ref not in stages:
+                # ETYPE-INDEPENDENT buck detection (faithful dossier symbols):
+                # a `schgen part add` box symbol types EVERY pin 'passive'
+                # (EasyEDA gives no usable etypes), so the SW node above is
+                # never 'power_out'/'output'. Fall back to pure NETLIST
+                # TOPOLOGY, which no etype can fake: the buck SW node is the
+                # unique SIGNAL net that (a) taps THIS multi-pin part and (b)
+                # feeds an inductor (Device:L) whose OTHER end is a POWER rail
+                # (the output). A part that also sits on a POWER input rail is
+                # then a buck producing that output rail. This is exactly the
+                # LM61460 case the lib_id override used to paper over.
+                st = self._detect_buck_topology(ref, sdef)
+                if st is not None:
+                    stages[ref] = st
         return stages
+
+    def _detect_buck_topology(self, ref: str, sdef: SymbolDef) -> dict | None:
+        """Buck stage from netlist topology alone (no reliance on pin etype):
+        a SIGNAL pin of ``ref`` whose net runs through a Device:L inductor to a
+        POWER rail is the SW node; that rail is the output. Returns the stage
+        dict or None. Grounded in the inductor link the netlist gate proves, so
+        it cannot false-positive on a non-switching part.
+
+        The inductor lands in EITHER ``self.series`` (SW node to another SIGNAL)
+        OR ``self.pull`` (SW SIGNAL node straight to the POWER output rail — the
+        usual case, where _classify files a SIGNAL<->POWER 2-pin as a 'pull').
+        Both are checked, exactly like the etype-keyed path above."""
+        for p in sdef.pins:
+            net = self.net_of(ref, p.number)
+            if net is None or net.net_class is not NetClass.SIGNAL:
+                continue
+            # inductor to a POWER rail recorded as a SIGNAL->POWER 'pull'
+            for r, out_rail in self.pull.get(net.name, []):
+                if self.c.parts[r].lib_id == "Device:L":
+                    return {"kind": "buck", "sw": net.name,
+                            "l": r, "out": out_rail}
+            # or as a SIGNAL<->SIGNAL/other series whose far end is POWER
+            for r, a, b in self.series:
+                if net.name not in (a, b) \
+                        or self.c.parts[r].lib_id != "Device:L":
+                    continue
+                far = b if a == net.name else a
+                if self.c.nets[far].net_class is NetClass.POWER:
+                    return {"kind": "buck", "sw": net.name,
+                            "l": r, "out": far}
+        return None
 
     def _regulator_template(self, stages: dict[str, dict]) -> Placement:
         c = self.c
@@ -2591,12 +2742,19 @@ class _Engine:
             if ref not in stages:
                 continue
             sdef = self.lib.get(c.parts[ref].lib_id)
+            out_rail = stages[ref]["out"]
             for p in sdef.pins:
-                if p.etype == "power_in":
-                    n = self.net_of(ref, p.number)
-                    if n is not None and n.net_class is NetClass.POWER \
-                            and not n.name.startswith("GND"):
-                        consumed.setdefault(n.name, ref)
+                n = self.net_of(ref, p.number)
+                # input rail = a POWER net the stage taps that is NOT GND and
+                # NOT its own output. ETYPE-INDEPENDENT: a faithful dossier
+                # symbol types VIN 'passive' (no 'power_in'), so keying on the
+                # pin etype would miss it (the LM61460 case). The net's
+                # POWER-class membership is the ground truth, and excluding the
+                # stage's own output rail keeps the producer/consumer split
+                # correct — no etype can fake either.
+                if n is not None and n.net_class is NetClass.POWER \
+                        and not n.name.startswith("GND") and n.name != out_rail:
+                    consumed.setdefault(n.name, ref)
         out_caps: dict[str, list[str]] = {}
         in_caps: dict[str, list[str]] = {}
         for rail, caps in list(self.cluster.items()):
@@ -2677,6 +2835,19 @@ class _Engine:
         self._port_strap_columns()
         self._pull_rank_columns()
         if self.cluster:
+            # a BOX-symbol stage (VIN on the top edge) hands its input
+            # decoupling back to self.cluster rather than cramming it above the
+            # VIN bus; lay it out as the shared decoupling ROW below the flow
+            # (a no-op when no cluster survives, so stock-symbol regulator
+            # sheets stay byte-identical). Anchor off the first stage's body.
+            first = next((r for r in self.multi if r in stages), None)
+            if first is not None:
+                pp0 = next(p for p in self.pl.parts if p.ref == first)
+                sdef0 = self.lib.get(pp0.lib_id)
+                body0 = body_box_page(sdef0, pp0.x, pp0.y, pp0.rotation,
+                                      "body", first)
+                self._decoupling_cluster(pp0.x, pp0.y, body0)
+        if self.cluster:
             raise PlaceError(f"regulator template: unassigned decoupling caps "
                              f"{self.cluster}")
         self._flags_row()
@@ -2691,9 +2862,220 @@ class _Engine:
                     return n.name
         return None
 
+    def _is_fb_pin(self, pin: Pin, net: str, out_rail: str) -> bool:
+        """Is ``pin`` the regulator FB sense pin (vs a sibling biased-aux pin
+        such as the LM61460 BIAS->VOUT tie, which is ALSO a pull+hang on a left
+        pin)? FB has the datasheet pin name 'FB'/'FEEDBACK' AND a top resistor
+        to the OUTPUT rail. A stock symbol whose FB pin carries no usable name
+        still passes via the rail+resistor-divider test."""
+        nm = (pin.name or "").upper().replace("/", "").replace("_", "")
+        named_fb = nm in ("FB", "FEEDBACK", "VFB", "VSENSE", "FBVSENSE")
+        named_other = nm in ("BIAS", "VCC", "RT", "PGOOD", "SS", "COMP",
+                             "ENSYNC", "EN")
+        if named_other:
+            return False
+        pulls = self.pull.get(net, [])
+        top_to_out = any(rl == out_rail
+                         and self.c.parts[r].lib_id == "Device:R"
+                         for r, rl in pulls)
+        return named_fb or top_to_out
+
+    def _stage_fb_net(self, ref: str, st: dict) -> str | None:
+        """The FB net of a box buck (the net on the pin named 'FB'), so
+        _buck_box_stage's left-edge pass can skip the pin _buck_right drew."""
+        out_rail = st.get("out")
+        for p in self.lib.get(self.c.parts[ref].lib_id).pins:
+            n = self.net_of(ref, p.number)
+            if n is None or n.net_class is not NetClass.SIGNAL:
+                continue
+            if (n.name in self.pull or n.name in self.hang) \
+                    and self._is_fb_pin(p, n.name, out_rail):
+                return n.name
+        return None
+
+    def _stage_has_left_input(self, ref: str) -> bool:
+        """True when the stage's INPUT rail has a pin on the LEFT edge (the
+        stock-buck convention _stage_row's layout assumes). False for a faithful
+        box symbol that group_pins put the VIN pins on the TOP edge."""
+        in_rail = self._stage_in_rail(ref)
+        if in_rail is None:
+            # _stage_in_rail keys on power_in+left; a box symbol's passive VIN
+            # is invisible to it -> treat as no-left-input (box path).
+            return False
+        sdef = self.lib.get(self.c.parts[ref].lib_id)
+        for p in sdef.pins:
+            if p.rotation != 0:
+                continue
+            n = self.net_of(ref, p.number)
+            if n is not None and n.name == in_rail:
+                return True
+        return False
+
+    def _buck_box_stage(self, ref: str, st: dict, ay: float,
+                        in_caps: dict[str, list[str]],
+                        out_caps: dict[str, list[str]]) -> None:
+        """Faithful layout for a BOX-symbol buck (e.g. the LM61460 dossier):
+        VIN on the TOP edge, GND on the bottom, FB/BIAS/RT on the LEFT, SW/BOOT/
+        EN on the RIGHT. The stock-buck _stage_row assumes VIN on the LEFT, so
+        this is a separate ADDITIVE path (the stock stages stay byte-identical).
+
+        Topology, not pin etype, drives every role (a `schgen part add` symbol
+        types all pins 'passive'):
+          * TOP    — the input rail (POWER) + its decoupling bank fan UP to rail
+                     symbols; any TOP SIGNAL pin (VCC bias) drops its bypass cap.
+          * BOTTOM — every GND pin gets a ground symbol.
+          * RIGHT  — SW -> inductor -> output rail run (output caps + FB feed-
+                     forward + BOOT loop), reusing _buck_right; the EN port and
+                     any other RIGHT signal fan out to labels.
+          * LEFT   — FB divider (R top to out rail, R/C bottom to GND) + BIAS
+                     biased-aux + RT/aux locals as labeled left columns.
+        """
+        sp = self.sp
+        c = self.c
+        out_rail = st["out"]
+        in_rail = self._stage_in_rail_box(ref)
+        pp, sdef, body, sides = self._place_body(ref, 0.0, ay)
+        pins = {p.number: pin_page_position(p, 0.0, ay, 0) for p in sdef.pins}
+
+        # ---- TOP edge: input rail bus + decoupling, VCC bias bypass ----------
+        # Reuse the proven rail-bus / rail-stub / local-drop machinery so the
+        # spacing + dodge discipline matches every other sheet.
+        top_pins = sorted(((pins[p.number], p) for p in sdef.pins
+                           if p.rotation == 270), key=lambda t: t[0][0])
+        in_pts = [pt for pt, p in top_pins
+                  if (n := self.net_of(ref, p.number)) is not None
+                  and n.name == in_rail]
+        if len(in_pts) > 1:
+            self._rail_bus(in_rail, in_pts, "top")
+        elif in_pts:
+            self._rail_stub(in_rail, in_pts[0], "top")
+        # TOP signal pins (VCC bias): a local bypass cap stacked UP off the pin.
+        # Its ref/value text reads AWAY from the VIN bus (which sits to VCC's
+        # right on the LM61460), so the cap value never lands on the bus bar.
+        in_xs = [pt[0] for pt in in_pts]
+        for pt, p in top_pins:
+            n = self.net_of(ref, p.number)
+            if n is None:
+                self.pl.no_connects.append(NoConnect(*pt))
+                continue
+            if n.name == in_rail or n.net_class in (NetClass.POWER,
+                                                    NetClass.GROUND):
+                continue
+            chain = self._local_drop_chain(n.name, ref)
+            if chain is not None:
+                tside = "left" if (in_xs and pt[0] < min(in_xs)) else "right"
+                self._stack_from_pin(chain, pt, "top", text_side=tside)
+            else:
+                self._signal_islet_drop(n.name, pt, "top")
+        # input decoupling: returned to self.cluster so the shared decoupling-
+        # ROW placer lays it out below the flow (a clean, well-spaced bank of
+        # rail->cap->GND columns that merges to the input rail by symbol name)
+        # rather than cramming caps into the narrow top edge above the VIN bus.
+        for refc in in_caps.pop(in_rail, []):
+            self.cluster.setdefault(in_rail, []).append(refc)
+
+        # ---- BOTTOM edge: GND pins on a shared bus (one symbol) --------------
+        gnd_groups: dict[str, list] = {}
+        for p in sdef.pins:
+            if p.rotation != 90:
+                continue
+            n = self.net_of(ref, p.number)
+            if n is None:
+                self.pl.no_connects.append(NoConnect(*pins[p.number]))
+            elif n.net_class is NetClass.GROUND:
+                gnd_groups.setdefault(n.name, []).append(pins[p.number])
+        for gnet, gpts in gnd_groups.items():
+            gpts = sorted(gpts, key=lambda t: t[0])
+            if len(gpts) > 1:
+                self._rail_bus(gnet, gpts, "bottom")
+            else:
+                self._rail_stub(gnet, gpts[0], "bottom")
+
+        # ---- RIGHT edge: SW->L->out run (+ caps, BOOT, FB feedfwd), EN port ---
+        # _buck_right draws SW/BOOT/output caps AND (for a LEFT-edge FB box
+        # symbol) the FB divider+feedforward via _fb_left_network — which pops
+        # FB's pull/hang. Cache the FB net NOW so the LEFT-edge pass below can
+        # still recognize and skip it after the pop.
+        fb_net_name = self._stage_fb_net(ref, st)
+        self._buck_right(ref, st, ay, pins, sdef, out_caps)
+        for p in sdef.pins:
+            if p.rotation != 180:
+                continue
+            n = self.net_of(ref, p.number)
+            if n is None:
+                continue
+            if n.net_class is NetClass.PORT:
+                pe = pins[p.number]
+                lx = round(pe[0] + sp.port_run, 3)
+                self.pl.plan(n.name, pe, (lx, pe[1]))
+                shape = {"input": "input", "output": "output"}.get(
+                    p.etype, "bidirectional")
+                self.label(n.name, lx, pe[1], 0, shape=shape)
+
+        # ---- LEFT edge: every non-FB left pin is drawn as a LABELED ISLET (a
+        # short stub to a local label), its local R/C left in self.pull/hang so
+        # the generic _pull_rank_columns lays them out as labeled rank columns
+        # below the flow that merge back by name. This is the proven idiom the
+        # stock path uses for the LM61460 BIAS->VOUT tie; using it for ALL left
+        # pins keeps the dense left edge (FB network + BIAS + RT) collision-free
+        # — no long left run, no clash with the FB column _buck_right placed.
+        left_pins = sorted(((pins[p.number], p) for p in sdef.pins
+                            if p.rotation == 0), key=lambda t: -t[0][1])
+        for pt, p in left_pins:
+            n = self.net_of(ref, p.number)
+            if n is None:
+                self.pl.no_connects.append(NoConnect(*pt))
+                continue
+            name = n.name
+            # FB sense net is drawn by _buck_right (its divider + feedforward
+            # column already ran, with fb_left=True routing the sense wire) —
+            # skip it here so it is not double-drawn.
+            if name == fb_net_name:
+                continue
+            # labeled islet; any local R/C deferred to the rank columns
+            # (_pull_rank_columns), which merge back by the net name. The stub
+            # extends LEFT until its label box clears the FB network (and any
+            # earlier islet) that _fb_left_network placed on this left edge — a
+            # short dodge, never a blind push (LAW 1).
+            lx = round(pt[0] - sp.port_run, 3)
+            for _k in range(60):
+                lb = tm.llabel_box(name, lx, pt[1], 180)
+                if self._spot_free(lb) and self._corridor_free(
+                        pt[1], pt[0] - 0.01, lx, {name}):
+                    break
+                lx = gfloor(lx - 2 * U)
+            self.pl.plan(name, pt, (lx, pt[1]))
+            self.llabel(name, lx, pt[1], 180)
+            self._bridge(name)
+        self._part_texts(pp, body)
+
+    def _stage_in_rail_box(self, ref: str) -> str:
+        """The input rail of a box-symbol stage, found by NET ROLE: the POWER
+        net (not GND, not the output) the part taps. Etype-independent."""
+        out_rail = self._stages_out(ref)
+        for p in self.lib.get(self.c.parts[ref].lib_id).pins:
+            n = self.net_of(ref, p.number)
+            if n is not None and n.net_class is NetClass.POWER \
+                    and not n.name.startswith("GND") and n.name != out_rail:
+                return n.name
+        raise PlaceError(f"{ref}: box buck stage with no input rail")
+
+    def _stages_out(self, ref: str) -> str | None:
+        st = self._detect_buck_topology(ref, self.lib.get(
+            self.c.parts[ref].lib_id))
+        return st["out"] if st else None
+
     def _stage_row(self, ref: str, st: dict, ay: float,
                    in_caps: dict[str, list[str]],
                    out_caps: dict[str, list[str]]) -> None:
+        # BOX-SYMBOL stage (faithful `schgen part add` symbol): group_pins puts
+        # the power-named VIN pins on the TOP edge (rot 270), not the LEFT edge
+        # the stock-buck _stage_row layout assumes. Detected by NET ROLE (the
+        # input rail has no LEFT pin) and routed by a dedicated faithful path,
+        # leaving the stock-symbol stages (VIN on the left) byte-identical.
+        if st["kind"] == "buck" and not self._stage_has_left_input(ref):
+            self._buck_box_stage(ref, st, ay, in_caps, out_caps)
+            return
         sp = self.sp
         pp, sdef, body, sides = self._place_body(ref, 0.0, ay)
         pins = {p.number: pin_page_position(p, 0.0, ay, 0)
@@ -2922,6 +3304,69 @@ class _Engine:
             self._ldo_right(ref, st, ay, pins, sdef, out_caps)
         self._part_texts(pp, body)
 
+    def _fb_left_network(self, ref: str, st: dict, p_fb: tuple[float, float],
+                         fb_net: str, out_rail: str) -> None:
+        """The FB feedback divider + feedforward of a LEFT-edge box buck, drawn
+        as a SELF-CONTAINED column just left of the FB pin. The top resistor and
+        any feedforward reference the output rail through a LOCAL out_rail power
+        symbol (merged by name with the right-side output rail), so the network
+        never reaches across the body. Topology, not geometry, drives roles:
+          out_rail symbol -> Rtop -> [FB midpoint] -> Rbot -> GND,
+          with the FB pin tapping the midpoint and the CFF/RFF feedforward
+          (a fb_net-rooted trunk float-chain) on a parallel column."""
+        sp = self.sp
+        x = gfloor(p_fb[0] - sp.port_run - 4 * U)
+        y_top = round(p_fb[1] - 4 * U, 3)
+        # local output-rail symbol at the column top (merges by name)
+        self.power(out_rail, x, y_top, self._power_rot(out_rail, False))
+        fb_pulls = self.pull.pop(fb_net)
+        (rt, _rail) = fb_pulls[0]
+        plain_ff = [r for r, _ra in fb_pulls[1:]]
+        far_pt, _ = self._vertical_2pin(rt, x, y_top, out_rail, downward=True)
+        y_mid = far_pt[1]
+        rb = self.hang.pop(fb_net)[0]
+        far_pt2, far2 = self._vertical_2pin(rb, x, y_mid, fb_net, downward=True)
+        self.power(far2, *far_pt2, self._power_rot(far2, True))
+        # FB sense: pin -> short stub left -> down to y_mid -> into the column
+        xv = round(p_fb[0] - 2 * U, 3)
+        self.pl.plan(fb_net, p_fb, (xv, p_fb[1]), (xv, y_mid), (x, y_mid))
+        # plain feedforward cap(s) across Rtop: a parallel column one pitch left
+        xcol = gfloor(x - sp.cap_pitch)
+        for cff in plain_ff:
+            self.power(out_rail, xcol, y_top, self._power_rot(out_rail, False))
+            ff_far, _ = self._vertical_2pin(cff, xcol, y_top, out_rail,
+                                            downward=True)
+            self.pl.plan(fb_net, (x, y_mid), (xcol, y_mid), (xcol, ff_far[1]))
+            xcol = gfloor(xcol - sp.cap_pitch)
+        # CFF + RFF feedforward chain (out_rail -[CFF]- mid -[RFF]- fb_net):
+        # CFF drops from a local out_rail symbol, RFF runs horizontally into the
+        # FB midpoint — mirror of the right-side idiom, marching LEFT.
+        ff_chains = [ch for ch in self.float_chains
+                     if ch.kind == "trunk" and ch.root == fb_net
+                     and len(ch.legs) == 2 and ch.legs[-1][2] == out_rail]
+        for ch in ff_chains:
+            (rff_ref, _a0, mid_net) = ch.legs[0]
+            (cff_ref, _a1, _rail) = ch.legs[1]
+            rhl = 3.81
+            # leftward mirror: the divider midpoint is to the RIGHT of this
+            # column, so RFF's fb_net pin must be its RIGHT pin and its CFF-mid
+            # pin the LEFT. _horizontal_2pin lands left_net on the LEFT pin, so
+            # pass mid_net as left_net (left pin) -> fb_net falls on the right.
+            x_rff = xcol
+            self._horizontal_2pin(rff_ref, x_rff, y_mid, mid_net)
+            self.pl.plan(fb_net, (x, y_mid), (x_rff + rhl, y_mid))
+            x_ff = gfloor(x_rff - sp.cap_pitch)
+            self.power(out_rail, x_ff, y_top, self._power_rot(out_rail, False))
+            cff_far, _ = self._vertical_2pin(cff_ref, x_ff, y_top, out_rail,
+                                             downward=True)
+            # CFF-mid: RFF left pin (x_rff - rhl) -> jog at a clear x between the
+            # RFF and the CFF column -> down to the CFF far pin.
+            x_jog = gsnap((x_rff - rhl + x_ff) / 2)
+            self.pl.plan(mid_net, (x_rff - rhl, y_mid), (x_jog, y_mid),
+                         (x_jog, cff_far[1]), (x_ff, cff_far[1]))
+            self.float_chains.remove(ch)
+            xcol = gfloor(x_ff - sp.cap_pitch)
+
     def _buck_right(self, ref: str, st: dict, ay: float, pins, sdef,
                     out_caps: dict[str, list[str]]) -> None:
         sp = self.sp
@@ -2931,37 +3376,75 @@ class _Engine:
         p_sw = p_boot = p_fb = None
         boot_net = fb_net = None
         boot_cap = None
+        fb_left = False           # box-symbol bucks place FB on the LEFT edge
         for p in sdef.pins:
-            if p.rotation != 180:
+            if p.rotation not in (0, 180):
                 continue
             net = self.net_of(ref, p.number)
             if net is None:
                 continue
-            if net.name == sw_net:
+            if net.name == sw_net and p.rotation == 180:
                 p_sw = pin_page_position(p, 0.0, ay, 0)
             elif net.net_class is NetClass.SIGNAL:
                 caps = [(r, a, b) for r, a, b in self.series
                         if net.name in (a, b) and sw_net in (a, b)]
-                if caps:
+                if caps and p.rotation == 180:
                     p_boot = pin_page_position(p, 0.0, ay, 0)
                     boot_net = net.name
                     boot_cap = caps[0][0]
-                elif net.name in self.pull or net.name in self.hang:
+                elif (net.name in self.pull or net.name in self.hang) \
+                        and net.name != boot_net \
+                        and self._is_fb_pin(p, net.name, out_rail) \
+                        and p_fb is None:
+                    # FB sense pin (top R to out rail + bottom R/C to GND). The
+                    # stock buck symbol places it on the RIGHT (rot 180); a
+                    # faithful box symbol (LM61460 dossier) places it on the
+                    # LEFT (rot 0). Either edge is accepted; the divider column
+                    # still sits to the right of the SW run, the FB sense wire
+                    # routed from whichever edge the pin is on. _is_fb_pin keeps
+                    # a sibling biased-aux net (e.g. LM61460 BIAS->VOUT, also a
+                    # pull+hang on a left pin) from being mistaken for FB.
                     p_fb = pin_page_position(p, 0.0, ay, 0)
                     fb_net = net.name
+                    fb_left = p.rotation == 0
         if p_sw is None:
             raise PlaceError(f"{ref}: buck stage without SW pin")
         x0 = p_sw[0]
         y_sw = p_sw[1]
         x_l = round(x0 + 26.67, 3)
         slot = gceil(x_l + 9 * U)                      # first out-run column
+        # extra BOOT pins on the same net (e.g. the LM61460 RBOOT+CBOOT = one
+        # BOOT_5V0 node, the "RBOOT shorted to CBOOT" 0R): bond every right-edge
+        # boot pin to the chosen p_boot with a short outboard rail so none is
+        # left an unrouted island.
+        boot_extra = [pin_page_position(p, 0.0, ay, 0) for p in sdef.pins
+                      if p.rotation == 180 and p_boot is not None
+                      and (n2 := self.net_of(ref, p.number)) is not None
+                      and n2.name == boot_net
+                      and pin_page_position(p, 0.0, ay, 0) != p_boot]
         # BOOT loop over the SW run
         if p_boot is not None and boot_cap is not None:
-            yb = round(min(p_boot[1], y_sw) - 5.08, 3)
             xv = round(x0 + 2.54, 3)
             xc = round(x0 + 10.16, 3)
             xj = round(x0 + 20.32, 3)
-            self.pl.plan(boot_net, p_boot, (xv, p_boot[1]), (xv, yb),
+            boot_ys = [p_boot[1], *(pt[1] for pt in boot_extra)]
+            # Place the boot-cap track on the side of the SW pin the boot pins
+            # are on, so the riser tying the boot pins to the cap NEVER crosses
+            # the SW horizontal run. Stock symbol: BOOT above SW -> the original
+            # `min(...) - 5.08` (above). LM61460 box symbol: BOOT pins (RBOOT=13,
+            # CBOOT=14) sit BELOW SW=10 in PAGE coords... but ABOVE in symbol-y;
+            # the decisive test is the actual page y of the pins vs SW.
+            boot_above = min(boot_ys) > y_sw + 1e-6   # boot pins above SW (page)
+            if boot_above:
+                yb = round(max(boot_ys) + 5.08, 3)
+                riser_from = min(boot_ys)
+            else:
+                yb = round(min(boot_ys) - 5.08, 3)
+                riser_from = max(boot_ys)
+            # tie all boot pins onto the xv riser, then out to the boot cap
+            for pt in [p_boot, *boot_extra]:
+                self.pl.plan(boot_net, pt, (xv, pt[1]))
+            self.pl.plan(boot_net, (xv, riser_from), (xv, yb),
                          (xc - 3.81, yb))
             self._horizontal_2pin(boot_cap, xc, yb, boot_net)
             self.pl.plan(sw_net, (xc + 3.81, yb), (xj, yb), (xj, y_sw))
@@ -2984,11 +3467,19 @@ class _Engine:
                                               out_rail, downward=True)
             self.power(far, *far_pt)
             slot = gceil(slot + sp.cap_pitch)
-        # FB divider column
+        # FB divider — LEFT-edge box symbol: a SELF-CONTAINED column near the
+        # FB pin. Its top resistor (and feedforward) reference the output rail
+        # through a LOCAL out_rail power symbol (KiCad merges by name with the
+        # right-side output rail), so nothing crosses the body. Stock symbols
+        # (FB on the right) keep the right-side run unchanged.
+        if p_fb is not None and fb_net is not None and fb_left:
+            self._fb_left_network(ref, st, p_fb, fb_net, out_rail)
+            p_fb = None         # done; skip the right-side block below
+        # FB divider column (stock right-edge symbols)
         if p_fb is not None and fb_net is not None:
             x_div = slot
-            nodes.append(x_div)
             slot = gceil(slot + sp.cap_pitch)
+            nodes.append(x_div)
             self.pl.plan(out_rail, (x_div, y_sw), (x_div, y_sw + 5.08))
             # the FB pull list is the top resistor PLUS any FB feedforward cap
             # (PWR-4: a C in parallel with the top R, also out_rail -> fb_net).
@@ -3323,6 +3814,105 @@ class _Engine:
             self.label(b, *end, 270)
             self.series.remove(s)
             x = round(x + pitch, 3)
+
+    def _rung_islet_drop(self, far_net: str, pt: tuple[float, float],
+                         sgn: int) -> None:
+        """The wedged rung pin's labeled stub: a short horizontal run out of
+        the pin to a local label (merged by name with the rank column the leg
+        passive lands in). Bridges the far net so the route open-check accepts
+        the islet."""
+        lx = round(pt[0] + sgn * self.sp.port_run, 3)
+        self.pl.plan(far_net, pt, (lx, pt[1]))
+        self.llabel(far_net, lx, pt[1], 0 if sgn > 0 else 180)
+        self._bridge(far_net)
+
+    def _rung_islet_columns(self) -> None:
+        """Leg passives of trunk rungs whose escape lane wedged: each is drawn
+        as a self-contained column below the flow — the TRUNK net (a local
+        label, since the trunk is itself a labeled net) on top, the leg
+        passive, the FAR net (local label) below. Both ends merge by name with
+        their islets at the pins (the netlist gate proves the merge). The
+        general fallback for a rung the straight-lane escape could not seat."""
+        if not self._rung_islets:
+            return
+        ex0, _, _, ey1 = self._extent()
+        x = gsnap(ex0 + 8 * U)
+        y0 = gceil(ey1 + 12 * U)
+        pitch = gceil(3 * self.sp.cap_pitch)
+        for trunk_net, far_net, leg in self._rung_islets:
+            # top end = trunk net (label it so the islet carries a name)
+            self.llabel(trunk_net, round(x - 2 * U, 3), y0, 180)
+            self._bridge(trunk_net)
+            cur = (x, round(y0 + 2 * U, 3))
+            self.pl.plan(trunk_net, (round(x - 2 * U, 3), y0), (x, y0))
+            self.pl.plan(trunk_net, (x, y0), cur)
+            far_pt, far = self._vertical_2pin(leg, x, cur[1], trunk_net,
+                                              downward=True)
+            assert far == far_net
+            end = (round(x - 2 * U, 3), far_pt[1])
+            self.pl.plan(far_net, far_pt, end)
+            self.llabel(far_net, *end, 180)
+            self._bridge(far_net)
+            x = round(x + pitch, 3)
+        self._rung_islets = []
+
+    def _pin_divider_columns(self) -> None:
+        """Resolve a DIVIDER whose midpoint is a SIGNAL net already drawn as a
+        labeled islet off a top/bottom IC pin (``self._pin_islets``). The full
+        divider — top end (PORT hier label or POWER rail symbol) -> series R ->
+        the islet midpoint -> hang R -> GND/rail — is rendered as ONE
+        self-contained column below the flow, so its two passives never land in
+        two different leftover placers at colliding x. The midpoint carries a
+        local label that merges by name with the islet at the IC pin (the
+        netlist gate proves the merge). A generic top/bottom divider tap — the
+        common case being a sensed-rail divider on a pin the symbol placed on
+        the power edge by NAME (e.g. CP2102N VBUS sense)."""
+        if not self._pin_islets:
+            return
+        ex0, _, _, ey1 = self._extent()
+        x = gsnap(ex0 + 8 * U)
+        y0 = gceil(ey1 + 12 * U)
+        pitch = gceil(3 * self.sp.cap_pitch)
+        for mid in sorted(self._pin_islets):
+            ser = [s for s in self.series if mid in (s[1], s[2])]
+            hangs = list(self.hang.get(mid, []))
+            pulls = list(self.pull.get(mid, []))
+            if len(ser) != 1 or (len(hangs) + len(pulls)) != 1:
+                continue                       # not a clean 2-arm divider
+            top_ref, na, nb = ser[0]
+            top_net = nb if na == mid else na
+            # TOP arm: the series element from the external (port/rail) end
+            # down to the midpoint label.
+            if self.c.nets[top_net].net_class is NetClass.PORT:
+                self.label(top_net, x, y0, 90)
+            else:
+                self.power(top_net, x, y0)
+            cur = (x, round(y0 + 2 * U, 3))
+            self.pl.plan(top_net, (x, y0), cur)
+            far_pt, far = self._vertical_2pin(top_ref, x, cur[1], top_net,
+                                              downward=True)
+            assert far == mid
+            self.series.remove(ser[0])
+            # MIDPOINT label (merges with the islet at the IC pin): a short
+            # horizontal stub LEFT off the column so the label anchor sits ON a
+            # wire of THIS islet (the route open-check requires every islet to
+            # carry its label anchor — LAW 0). Left-pointing (rot 180) keeps it
+            # clear of the passive value text, which sits on the column's right.
+            lx = round(far_pt[0] - 2 * U, 3)
+            self.pl.plan(mid, far_pt, (lx, far_pt[1]))
+            self.llabel(mid, lx, far_pt[1], 180)
+            self._bridge(mid)
+            # BOTTOM arm: the hang/pull element down to its GND/rail symbol.
+            bot_ref = hangs[0] if hangs else pulls[0][0]
+            fp2, far2 = self._vertical_2pin(bot_ref, x, far_pt[1], mid,
+                                            downward=True)
+            end = (x, round(fp2[1] + 2 * U, 3))
+            self.pl.plan(far2, fp2, end)
+            self.power(far2, *end, self._power_rot(far2, True))
+            self.hang.pop(mid, None)
+            self.pull.pop(mid, None)
+            x = round(x + pitch, 3)
+        self._pin_islets = set()
 
     # ---- template: signal-flow chain ----------------------------------------------------
     def _chain_order(self) -> list[str]:
@@ -3834,6 +4424,10 @@ class _Engine:
                               "body", first)
         self._decoupling_cluster(pp0.x, pp0.y, body0)
         self._shunt_cells(handled)
+        self._rung_islet_columns()       # rungs whose escape lane wedged: a
+        #     self-contained labeled column (set during _build_trunk above)
+        self._pin_divider_columns()      # before the rank/series placers so a
+        #     top/bottom divider tap is drawn as ONE column, not split in two
         self._pull_rank_columns()
         self._series_port_columns()
         for ch in [ch for ch in self.float_chains if ch.kind == "rail"]:
