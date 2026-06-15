@@ -264,7 +264,7 @@ board netlist gate
   ok   rail '+1V8': 1 net, 6 pins across 3 sheet(s) [microsd, power, power_mon]
   ok   rail '+1V8_REG': 1 net, 4 pins across 2 sheet(s) [power, power_mon]
   ok   rail '+2V5_VADJ': 1 net, 10 pins across 2 sheet(s) [fmc, som_j3]
-  ok   rail '+3V3': 1 net, 83 pins across 16 sheet(s) [board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, lcd, pmod_expansion, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io]
+  ok   rail '+3V3': 1 net, 84 pins across 16 sheet(s) [board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, lcd, pmod_expansion, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io]
   ok   rail '+3V3_AUX': 1 net, 18 pins across 3 sheet(s) [board_aux, board_qwiic, board_services]
   ok   rail '+3V3_CAM': 1 net, 9 pins across 2 sheet(s) [bringup_modules, camera]
   ok   rail '+3V3_DBG': 1 net, 10 pins across 1 sheet(s) [usb_jtag]
@@ -288,7 +288,7 @@ board netlist gate
   ok   rail '+VIN': 1 net, 7 pins across 2 sheet(s) [pd_input, power_mon]
   ok   rail '+VIN_SYS': 1 net, 13 pins across 3 sheet(s) [power, power_mon, power_som]
   ok   rail 'CHASSIS_GND': 1 net, 30 pins across 8 sheet(s) [ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_jtag_connector, usb_uart_connector, usbc_otg]
-  ok   rail 'GND': 1 net, 492 pins across 32 sheet(s) [board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io]
+  ok   rail 'GND': 1 net, 493 pins across 32 sheet(s) [board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io]
   (info) undriven-input PORT check: 35 input-bearing PORT nets examined (214 expect-deferred)
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0

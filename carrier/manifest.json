@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "e3a46561d9c98d101d2e0760731d275254a1b8596f1f7cec952ee5a29a8815ef"
+      "sha256": "6909fde5ecf6e46a5fd3de9b48dbb55c3d9815d4c3cb2e2ae2ad3c1efaea3cf8"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -18,15 +18,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "a74a9b64239f65f5a44591dac042022129832740dc1ff1798cea21b07fd573f5"
+      "sha256": "5fab744c8018ce8175b6c075a1241a06ad7a86a870741182bd0bb6d392b60cc0"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "ab661681e881145e296f84c1326400840ac78b849ac4e8054f7108ff9d9649aa"
+      "sha256": "8cda06a7c7013147de93d5c07120a96cfc29df5231e0a393323674a53dc5c893"
     },
     {
       "path": "docs/power_tree.svg",
-      "sha256": "6fdb39c8a55198c45d85eaec3714de777d14634b68704e9a6dc531553bbc7593"
+      "sha256": "38dcf30c77295fdcae97bd30ffe6f1724fd89d09acb38d0d2e76c66888e2737a"
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
@@ -46,7 +46,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "0d6498d42f987b4b6cad8f57f3ebf7cd24d38578ee229d29a41c569f740824df"
+      "sha256": "8e238e3d7d99ae50b6a08084c4e35e146138557c94f719de37e2c8729c8b6db1"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -62,11 +62,11 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "0971add4b2a405a9aba1c499bf3ba0010ef0cc8162c2f066b835ff8ed97e720f"
+      "sha256": "dae6dc2384b08b18489598a7140db0ca4075a58aab084ae0095039033310773d"
     },
     {
       "path": "reports/bom_values.txt",
-      "sha256": "3d8a90083eba3d9e401a1abb9b2a647f0ddd15fcc4539b453319cdb54b93ffad"
+      "sha256": "4d554fd96fc56466882e8990384d449ef71d5d0bfd27677b8b2d7920b29db1b6"
     },
     {
       "path": "reports/cc_gate.txt",
@@ -78,7 +78,7 @@
     },
     {
       "path": "reports/footprint_pads.txt",
-      "sha256": "63b07f1434f00c29b61e117d354d9c4ed948403c2263f1e61e54c95751be1072"
+      "sha256": "b5480d599abbe4212329195682def33b1ebec7a6cf06adabf78251a0727552f8"
     },
     {
       "path": "reports/gates.txt",
@@ -90,15 +90,15 @@
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "6c575327cd63f2a04aa7c932d8e848b5713a82c1373f4b05d8917bb1185c5ef3"
+      "sha256": "d242eb34e1b1675ca141528802c8036aa3368ed77580e616d4d54b443b13922c"
     },
     {
       "path": "reports/pin_completeness.txt",
-      "sha256": "7dceb72b9d63efe8e374e7e5d1197554c0c338228686c7024a58ed954e7bc40d"
+      "sha256": "ea1a5eb3d2bad84d23e36b2e2533cf35993b259850656857e1e462b7a22ef3e0"
     },
     {
       "path": "reports/power_tree.txt",
-      "sha256": "17e1a22747784d0da12b5da44d0a03c974fbc3de2394c6ab04028ad6412a9df3"
+      "sha256": "eb8552f2bf6d6d3ef4569382ee5f3551f72db77eea48cffb20af59483905e63e"
     },
     {
       "path": "reports/spice.txt",
@@ -110,7 +110,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "4a6c4a9ba0ccdd4ad5a0877be61fe363852236d22e61fff36a206a36b950f43b"
+      "sha256": "a665285002df1bab7eb66a41cb0f82e699121407c9a403e1f16c8ea96fcf4d83"
     },
     {
       "path": "schematic/board_aux.kicad_sch",
@@ -186,7 +186,7 @@
     },
     {
       "path": "schematic/pmod_expansion.kicad_sch",
-      "sha256": "f8cc9bb9c6d2bbb977da8a1fddd62e93a66656d0fb2d01c170918cffaf01c1a3"
+      "sha256": "aaf1ca67977fed56f03984c5d3492822b5feb2c7ade45cc5fe4f3cea89064f65"
     },
     {
       "path": "schematic/power.kicad_sch",
@@ -222,7 +222,7 @@
     },
     {
       "path": "schematic/usb_jtag.kicad_sch",
-      "sha256": "1e01e26fdaaedbbf2608e2e8039efe2f308cac07e010001aa8d23e7b89efd608"
+      "sha256": "d6a48c33b5bdbe7fb6321113b3df23cc8e61978ea22d9982d9da569e33f78568"
     },
     {
       "path": "schematic/usb_jtag_connector.kicad_sch",
@@ -242,15 +242,15 @@
     },
     {
       "path": "schematic/user_io.kicad_sch",
-      "sha256": "5094c95e6b7f3f2446acf14f866bf08044de7e20555fb251b9c1fb63d1d3dd4b"
+      "sha256": "6edf1166fafd20e08523d7594e1489f9c9478dcfb56439ec7833ca32ff543af8"
     }
   ],
   "bom": {
     "cost": null,
     "extended": null,
-    "lines": 97,
+    "lines": 98,
     "missing": [],
-    "parts": 443
+    "parts": 444
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [
@@ -534,7 +534,7 @@
         }
       ],
       "limit_a": null,
-      "load_a": 2.739,
+      "load_a": 2.745,
       "name": "+3V3",
       "source": null,
       "volts": 3.3
@@ -689,7 +689,7 @@
     {
       "draws": [],
       "limit_a": 3.0,
-      "load_a": 2.739,
+      "load_a": 2.745,
       "name": "+3V3_REG",
       "source": "power:U2 TPS54302DDCR [buck]",
       "volts": 3.3
@@ -765,13 +765,13 @@
           "sheet": "bringup_modules"
         },
         {
-          "amps": 0.006,
-          "note": "4 user LEDs @ ~1.3 mA (1k series)",
+          "amps": 0.012,
+          "note": "red ~1.3 mA (1k) + green/blue/white up to ~3.5 mA each (200R)",
           "sheet": "user_io"
         }
       ],
       "limit_a": 0.523,
-      "load_a": 0.01,
+      "load_a": 0.016,
       "name": "+3V3_USER_LED",
       "source": "bringup_modules:U8 SY6280AAC [load_switch]",
       "volts": 3.3
@@ -785,7 +785,7 @@
         }
       ],
       "limit_a": null,
-      "load_a": 3.0266,
+      "load_a": 3.031,
       "name": "+5V",
       "source": null,
       "volts": 5.0
@@ -839,7 +839,7 @@
     {
       "draws": [],
       "limit_a": 6.0,
-      "load_a": 3.0266,
+      "load_a": 3.031,
       "name": "+5V_REG",
       "source": "power:U1 LM61460AANRJRR [buck]",
       "volts": 5.0
@@ -885,7 +885,7 @@
     {
       "draws": [],
       "limit_a": 3.0,
-      "load_a": 1.3584,
+      "load_a": 1.3596,
       "name": "+VBUS_IN",
       "source": "source: USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)",
       "volts": 20.0
@@ -893,7 +893,7 @@
     {
       "draws": [],
       "limit_a": 3.529,
-      "load_a": 1.3584,
+      "load_a": 1.3596,
       "name": "+VIN",
       "source": "pd_input:U1 TPS26631PWPR [efuse]",
       "volts": 20.0
@@ -901,7 +901,7 @@
     {
       "draws": [],
       "limit_a": null,
-      "load_a": 1.3584,
+      "load_a": 1.3596,
       "name": "+VIN_SYS",
       "source": null,
       "volts": 20.0

@@ -1,7 +1,7 @@
 pin completeness gate (every multi-pin IC pin is NETTED or explicit NC)
 ================================================================
 STATUS: REPORT-FIRST (does NOT fail the board yet; promotes to HARD-FAIL once the NC allowlist is fully blessed)
-443 multi-pin parts checked; 154 author-declared NC pins
+444 multi-pin parts checked; 154 author-declared NC pins
 silent floats: none
 
 NC ALLOWLIST — 27 blessed [seed], 127 to bless [new]:

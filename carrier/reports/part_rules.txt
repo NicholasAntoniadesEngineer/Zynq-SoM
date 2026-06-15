@@ -2,7 +2,7 @@ schgen per-part rule engine (ratings vs netlist usage)
 ==============================================================================
 
 enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
-132 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+133 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
 
 author waivers, verbatim (1):
   lcd:C2                 MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp
@@ -62,8 +62,8 @@ UNSPEC — reported, NOT failing (68):
   ? som_j1:J1 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
   ? som_j2:J2 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
   ? som_j3:J3 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
-  ? usb_jtag:C5 (22p, LCSC C1653) — no ratings row
-  ? usb_jtag:C6 (22p, LCSC C1653) — no ratings row
+  ? usb_jtag:C5 (16p, LCSC C162205) — no ratings row
+  ? usb_jtag:C6 (16p, LCSC C162205) — no ratings row
   ? usb_jtag:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
   ? usb_jtag:U1 (CH347T, LCSC C5122332) — no ratings row
   ? usb_jtag:U2 (SN74LVC125ADR, LCSC C7661) — no ratings row
@@ -82,4 +82,4 @@ UNSPEC — reported, NOT failing (68):
 
 errors: none
 
-PART RULES: PASS (132 checks, 0 findings, 68 unspeced, 1 waived)
+PART RULES: PASS (133 checks, 0 findings, 68 unspeced, 1 waived)

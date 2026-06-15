@@ -93,13 +93,13 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | SY6280AAC (U5) | bringup_modules | +3V3 -> +3V3_SD | 0.254 | negligible |
 | SY6280AAC (U6) | bringup_modules | +5V -> +5V_USB | 0.503 | negligible |
 | SY6280AAC (U7) | bringup_modules | +3V3 -> +3V3_PMOD | 0.204 | negligible |
-| SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.010 | negligible |
+| SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.016 | negligible |
 | SY6280AAC (U9) | bringup_modules | +5V -> +5V_HDMI_TX | 0.058 | negligible |
 | TLV75725PDYDR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.400 | ~0.32 W |
-| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.358 | negligible |
+| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.360 | negligible |
 | SY6280AAC (U1) | pmod_expansion | +3V3 -> +3V3_PMODX | 0.104 | negligible |
-| LM61460AANRJRR (U1) | power | +VIN_SYS -> +5V_REG | 3.027 | ~1.68 W |
-| TPS54302DDCR (U2) | power | +5V -> +3V3_REG | 2.739 | ~1.00 W |
+| LM61460AANRJRR (U1) | power | +VIN_SYS -> +5V_REG | 3.031 | ~1.68 W |
+| TPS54302DDCR (U2) | power | +5V -> +3V3_REG | 2.745 | ~1.01 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8_REG | 0.006 | negligible |
 | TPS54302DDCR (U4) | power_som | +VIN_SYS -> +5V_SOM | 2.004 | ~1.04 W |
 | AP2112K-3.3TRG1 (U4) | usb_jtag | +5V_DBG -> +3V3_DBG | 0.045 | ~0.08 W |
@@ -125,7 +125,7 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(15) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
 - **(16) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
 - **(17) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
-- **(18) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.68 W; TPS54302DDCR +3V3_REG ~1.00 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(18) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.68 W; TPS54302DDCR +3V3_REG ~1.01 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
 - **(19) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
 - **(20) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
 - **(21) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.

@@ -25,8 +25,9 @@ PARTS (live JLC stock 2026-06-15, JLCPCB parts API):
         reset, built-in config EEPROM (NO external 93C56 needed). `part add
         C5122332` (parts/CH347T/).
   * Y1  1C208000BC0R      C57131   (32,856, SMD3225-4P) — 8 MHz crystal on XI/XO
-        (DS section 5.1: "connect an 8 MHz crystal between XI and XO with ~22 pF
-        oscillation caps"). `part add C57131`.
+        (DS section 5.1 quotes ~22 pF load caps, but this crystal is CL=12 pF,
+        so 16 pF C0G matched caps are fitted — see the crystal block below).
+        `part add C57131`.
   * U4  AP2112K-3.3TRG1   C51118   (87,465) — the self-powered-island LDO: debug
         USB VBUS (5 V) -> +3V3_DBG. AP2112K is the carrier's standard LDO family
         (power.py uses the 1.8 V sibling). `part add C51118`.
@@ -69,13 +70,25 @@ the carrier is OFF. U2 (SN74LVC125, quad 3-state buffer) breaks both:
       - power-up / cable-just-plugged: OE# high -> buffer Hi-Z -> the header pod
         (or the Zynq) owns JTAG, ZERO contention by default;
       - carrier OFF, debug USB plugged, SW1 OPEN: +3V3_DBG alive but OE# high ->
-        outputs Hi-Z -> NO drive onto the (unpowered) Zynq JTAG inputs -> no
-        back-feed (the LVC125 Ioff partial-power-down spec keeps the disabled
-        output Hi-Z even with the downstream rail at 0 V);
+        outputs Hi-Z (the ordinary 3-state OE mechanism; VCC is alive here so no
+        special spec is needed) -> NO drive onto the (unpowered) Zynq JTAG inputs;
       - user closes SW1 only when they intend to program from the bridge AND no
         pod is on the header -> exactly one JTAG master at a time.
   * U2 itself is powered from +3V3_DBG (the USB island), so when the debug cable
-    is UNPLUGGED the buffer is unpowered -> outputs Hi-Z regardless of SW1.
+    is UNPLUGGED the buffer is unpowered. CAVEAT (audit usb_jtag-2): the
+    SN74LVC125A has NO Ioff / partial-power-down spec (TI SCAS290T — its only
+    power-up/down guidance is "tie OE to VCC through a pull-up", which presumes
+    VCC alive). So with +3V3_DBG at 0 V, a JTAG pod plugged into the debug_boot
+    header and driving 3.3 V onto ZYNQ_TCK/TDI/TMS would forward-bias U2's output
+    clamp diodes into the dead rail (a bounded leak/over-stress, NOT a hard
+    short — the pod is current-limited and Vo abs-max is only VCC+0.5 = 0.5 V at
+    VCC=0). This is the cable-out + pod-on-header corner case only; it does not
+    affect normal operation. The clean mitigation is 100R series Rs on the three
+    Y outputs, but adding them overflows this already-A3 sheet (the bridge is one
+    indivisible signal blob; the placer cannot fit 22 parts and pagination cannot
+    split a single SIGNAL blob) — deferred as a DNP/layout reservation rather than
+    silently breaking the build. ZYNQ_TDO is a buffer INPUT (5 V-tolerant,
+    independent of VCC per SCAS290T sec 5.3) so it has no such exposure.
 This is the "buffer / bus-switch with OE" the brief asks for: a tap, never a
 hard short; the OE default + the USB-island power make contention structurally
 impossible without a deliberate human action. (CH347 TRST is left NC — the Zynq
@@ -103,7 +116,7 @@ C0805 = "Capacitor_SMD:C_0805_2012Metric"
 LCSC_100N = "C14663"     # 100n X7R 0603
 LCSC_1U = "C15849"      # 1u 0603 X7R (LDO Cin)
 LCSC_10U = "C15850"     # 10u 0805 bulk
-LCSC_22P = "C1653"      # 22p C0G 0603 (crystal load), JLC Basic
+LCSC_16P = "C162205"    # 16p C0G/NP0 0603 50V (Murata GRM1885C1H160JA01D)
 LCSC_10K = "C25804"     # 10k 1% 0603
 LCSC_100K = "C25803"    # 100k 1% 0603 (OE default pull-up)
 
@@ -150,13 +163,18 @@ def circuit() -> Circuit:
     c.port_type("DBG_USB_DP", kind="usb_hs_pair", pair_with="DBG_USB_DM",
                 expect=USB_MAP)
 
-    # 8 MHz crystal on XI(19)/XO(20) with 22p load caps (DS section 5.1)
+    # 8 MHz crystal on XI(19)/XO(20). The CH347 DS section 5.1 quotes "~22pF"
+    # load caps, but that is GENERIC boilerplate assuming a ~CL=20pF crystal.
+    # The crystal actually fitted (Y1 = KDS 1C208000BC0R, C57131) is cut for
+    # CL=12pF, so the matched external cap per leg is Cext = 2*(CL - Cstray) =
+    # 2*(12 - ~4) = 16pF C0G (22pF would over-load it and pull 8MHz slow ~-50
+    # to -90ppm, outside the crystal's +/-20ppm window — audit usb_jtag-1).
     c.use_part("1C208000BC0R", ref="Y1", value="8MHz")
     c.net("DBG_XI", "U1.19", "Y1.1")                  # OSC1
     c.net("DBG_XO", "U1.20", "Y1.3")                  # OSC2
     c.net("GND", "Y1.2", "Y1.4")                      # crystal shield/NC pads
     for sig in ("DBG_XI", "DBG_XO"):
-        cap = c.part(c.auto_ref("C"), "Device:C", "22p", C0603, LCSC=LCSC_22P)
+        cap = c.part(c.auto_ref("C"), "Device:C", "16p", C0603, LCSC=LCSC_16P)
         c.net(sig, f"{cap.ref}.1")
         c.net("GND", f"{cap.ref}.2")
 

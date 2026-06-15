@@ -104,8 +104,19 @@ def circuit() -> Circuit:
     rset = c.part(c.auto_ref("R"), "Device:R", "13k", R0603, LCSC=LCSC_13K)
     c.net("BS_ISET_PMODX", "U1.ISET", f"{rset.ref}.1")   # ILIM = 6800/13k
     c.net("GND", f"{rset.ref}.2")
+    # IN decoupling: 100n HF + a local 10u bulk. The SY6280 datasheet (Pin
+    # Description: "IN ... decoupled with a 10uF capacitor to GND"; App Info: "a
+    # 10uF ceramic capacitor from VIN to GND is strongly recommended" — without
+    # it an output short rings the input, and there is no local input bulk here
+    # since the buck's +3V3 bulk sits upstream of the INA shunt) — audit
+    # expansion-1.
     for cap in c.decouple("U1.IN", "100n", footprint=C0603):
         cap.fields["LCSC"] = LCSC_100N
+    cin = c.part(c.auto_ref("C"), "Device:C", "10u", C0805, LCSC=LCSC_10U)
+    c.net("+3V3", f"{cin.ref}.1")
+    c.net("GND", f"{cin.ref}.2")
+    # OUT: local 100n HF. The datasheet-recommended 10u OUT bulk is already met
+    # by cblk on +3V3_PMODX (= U1.OUT, same net) at the Pmod power pins below.
     for cap in c.decouple("U1.OUT", "100n", footprint=C0603):
         cap.fields["LCSC"] = LCSC_100N
 

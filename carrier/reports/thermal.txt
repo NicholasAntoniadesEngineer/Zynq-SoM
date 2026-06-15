@@ -8,22 +8,22 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
   device                 package                  kind        in->out               Iout/A   Pd/mW   RthJA    Tj/C   limit   mgn/C  verdict
   -----------------------------------------------------------------------------------------------------------------------------------------
   power_som:U4           TSOT-23-6 (DDC)          buck        +VIN_SYS->+5V_SOM      2.004    1644   70.6    166.1   140.0   -26.1  OVER
-  power:U2               TSOT-23-6 (DDC)          buck        +5V->+3V3_REG          2.739    1595   70.6    162.6   140.0   -22.6  OVER
-  power:U1               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_REG      3.027    2671   30.0*   130.1   140.0     9.9  ok
+  power:U2               TSOT-23-6 (DDC)          buck        +5V->+3V3_REG          2.745    1599   70.6    162.9   140.0   -22.9  OVER
+  power:U1               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_REG      3.031    2674   30.0*   130.2   140.0     9.8  ok
   fmc:U1                 SOT-23-5 (DYD, EP->GND pour) ldo         +3V3->+2V5_VADJ        0.400     320   92.5     79.6   115.0    35.4  ok
   usb_jtag:U4            SOT-23-5                 ldo         +5V_DBG->+3V3_DBG      0.045      76  250.0     69.1   115.0    45.9  ok
   bringup_modules:U6     SOT-23-5                 load_switch +5V->+5V_USB           0.503      24  250.0     56.0   140.0    84.0  ok
   bringup_modules:U10    SOT-23-5                 load_switch +5V->+5V_LCD           0.453      19  250.0     54.9   140.0    85.1  ok
   power:U3               SOT-23-5                 ldo         +3V3->+1V8_REG         0.006       9  250.0     52.2   115.0    62.8  ok
   bringup_modules:U4     SOT-23-5                 load_switch +3V3->+3V3_CAM         0.304       9  250.0     52.2   140.0    87.8  ok
-  pd_input:U1            HTSSOP-20 (PWP)          efuse       +VBUS_IN->+VIN         1.358      57   33.6     51.9   115.0    63.1  ok
+  pd_input:U1            HTSSOP-20 (PWP)          efuse       +VBUS_IN->+VIN         1.360      57   33.6     51.9   115.0    63.1  ok
   bringup_modules:U5     SOT-23-5                 load_switch +3V3->+3V3_SD          0.254       6  250.0     51.5   140.0    88.5  ok
   board_aux:U1           SOT-23-5                 load_switch +3V3->+3V3_AUX         0.211       4  250.0     51.1   140.0    88.9  ok
   bringup_modules:U7     SOT-23-5                 load_switch +3V3->+3V3_PMOD        0.204       4  250.0     51.0   140.0    89.0  ok
   bringup_modules:U3     SOT-23-5                 load_switch +3V3->+3V3_LCD         0.104       1  250.0     50.3   140.0    89.7  ok
   pmod_expansion:U1      SOT-23-5                 load_switch +3V3->+3V3_PMODX       0.104       1  250.0     50.3   140.0    89.7  ok
   bringup_modules:U9     SOT-23-5                 load_switch +5V->+5V_HDMI_TX       0.058       0  250.0     50.1   140.0    89.9  ok
-  bringup_modules:U8     SOT-23-5                 load_switch +3V3->+3V3_USER_LED    0.010       0  250.0     50.0   140.0    90.0  ok
+  bringup_modules:U8     SOT-23-5                 load_switch +3V3->+3V3_USER_LED    0.016       0  250.0     50.0   140.0    90.0  ok
   bringup_modules:U1     SOT-23-5                 load_switch +3V3->+3V3_HDMI_TX     0.006       0  250.0     50.0   140.0    90.0  ok
   bringup_modules:U2     SOT-23-5                 load_switch +3V3->+3V3_HDMI_RX     0.005       0  250.0     50.0   140.0    90.0  ok
 
@@ -44,7 +44,7 @@ author thermal waivers, verbatim (2):
   power_som:U4           TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
 
 notes (2):
-  + WAIVED over-limit: power:U2 (TPS54302DDCR) Tj 162.6 C > limit 140.0 C (Tj_max 150 - margin 10) — author waiver: TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
+  + WAIVED over-limit: power:U2 (TPS54302DDCR) Tj 162.9 C > limit 140.0 C (Tj_max 150 - margin 10) — author waiver: TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
   + WAIVED over-limit: power_som:U4 (TPS54302DDCR) Tj 166.1 C > limit 140.0 C (Tj_max 150 - margin 10) — author waiver: TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — VERIFY by thermal sim/bench at bring-up else move to an EP buck (see carrier/research/thermal_bucks.md)
 
 errors: none
