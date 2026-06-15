@@ -2,15 +2,15 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "580b1e1e7c2a60622b7291be5cd16d3f5ce9107f14957429994a2a55092dd085"
+      "sha256": "0bd9a7e85db908eba1bd81de342762b6fa4c0933cba3e42e729aa064a627b65e"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
-      "sha256": "9ea48afa6a4b60cbe6f34b1aa81e37b492743859b6c96456493519900c4c9e36"
+      "sha256": "b916a0a558577f2caf99ba96c709cea6d796d699b0a1cbf936f0bf86094a2a87"
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
-      "sha256": "d5db1c31f9473c462003490e5d51b994e27a88948ed152655eced493666d67d5"
+      "sha256": "dba03be2eb82ecb5811cb4e0d9126e959e42427849b09d5107f2fda20de143a4"
     },
     {
       "path": "docs/BRINGUP.md",
@@ -18,15 +18,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "dfec1c9c992838f280e85322157dae8423f4a3b65343d81fdb367e26849bb32f"
+      "sha256": "056f52868cb59bb976d9b5564445a38a0ac741d51f64cbed173376a06979af36"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "43d16eae91a11f505167abca565be00fc422811b0fe1635650dee0a77167db19"
+      "sha256": "589db82f38c0656c51b8b939af67b1f0fca36a8d5b23619f9253dde82c23acec"
     },
     {
       "path": "docs/power_tree.svg",
-      "sha256": "1b7e4c616aeb31344a9f287d6dc6389dad9a9644ab7b3d423dfb7dfc672cb81e"
+      "sha256": "6fdb39c8a55198c45d85eaec3714de777d14634b68704e9a6dc531553bbc7593"
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
@@ -34,7 +34,7 @@
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
-      "sha256": "8402e75257a9c18eb73046a4e58217091b98776ee0818ce189e81d09076752eb"
+      "sha256": "f74ff37db0efec2c06d5c94ff0e555afd864f389daaee4c219431f9ef573302c"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -42,11 +42,11 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "35cf0fc1d272b212d7a342764a8c976c327307eedbcd482f69029a66b273a149"
+      "sha256": "cc7372169c5399775a3037795024cefb43d4384782da7dd93739739cee28e9f9"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
-      "sha256": "f87bb53299f8ea22b062cfa9930eab548d1562375bd04db889423112a30dddb8"
+      "sha256": "12b2f56cc02fe0aa112100972bbcd7579041acf5fae26f103302d851c5f3b061"
     },
     {
       "path": "manufacturing/layout_constraints.kicad_dru",
@@ -58,31 +58,31 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "661d230998f0ea6c2eaac5c0417c8497984fb548122b4245f979f70fe47e3822"
+      "sha256": "52096e6843042e8ce9502763defdb22364f1c2ae016b20117c7d190a70910c9f"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "bd942384a933d0d11b97a6ff0bb69275dd77b39fa3a9ee5fef6f9518314ecf64"
+      "sha256": "b774374c018d7f457e1d4ada98549b8b1f7e60bb41251854057a063a0422e754"
     },
     {
       "path": "reports/design_rules.txt",
-      "sha256": "f23103f7fe22492bbffc846f0bf37497d2684d7c2f2e2c8c6a5269c528d8d274"
+      "sha256": "3ed67d23020713a8500502fd3f85fde585acebfe7bca6c218e8fd466ce069988"
     },
     {
       "path": "reports/gates.txt",
-      "sha256": "fefb1809e26bf2adbfb9fdbc5ed3910e204445f1a35902f7f8309cf45b26c632"
+      "sha256": "c27174fd9ab07238e521af0225365a990aac950e79ebab424f0d97a5116785b2"
     },
     {
       "path": "reports/link_report.txt",
-      "sha256": "51796d8b541bf338237256c3d83498724fd4f32a1650569e5ccfe388d8948667"
+      "sha256": "80c0f62245745026a0a674a18929f0c01a8956fa24212526064c48d0e5ebdf33"
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "b7bc9cd2aed3569ac9af98f417ab23294f6db297d1c3dafc7d62ee9cc7138319"
+      "sha256": "036139451c9daedbb1c8f3b0e791dc28231d3e9ff10498af698a606091c7d560"
     },
     {
       "path": "reports/power_tree.txt",
-      "sha256": "bf4474d97a2862557e5778c089fa297c4ad255fd0dca7ec6810502289da8c7a3"
+      "sha256": "17e1a22747784d0da12b5da44d0a03c974fbc3de2394c6ab04028ad6412a9df3"
     },
     {
       "path": "reports/spice.txt",
@@ -90,11 +90,11 @@
     },
     {
       "path": "reports/testpoints.txt",
-      "sha256": "5fbfe8d811af70c5426ce37db46502ac8876dd2a7b9aefdd0093b924632b00ed"
+      "sha256": "6bf40e90d0eb34b987cddb07c246107d7c7e2cd812e380446bd563a847e11d85"
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "3b45bb9bb11672d6d7c1903dd9a6d44a9ccbe34859d231f137a0df98231d68d5"
+      "sha256": "4a6c4a9ba0ccdd4ad5a0877be61fe363852236d22e61fff36a206a36b950f43b"
     },
     {
       "path": "schematic/board_aux.kicad_sch",
@@ -169,60 +169,72 @@
       "sha256": "5ddc448dfaf840b55839da96a1d4275bf689c3c62cb0eebdc908145b632beadb"
     },
     {
+      "path": "schematic/pmod_expansion.kicad_sch",
+      "sha256": "79557e78fe1f489b6cf712aeada827eb381802d3fa8b4dd34b91890d25dc2462"
+    },
+    {
       "path": "schematic/power.kicad_sch",
-      "sha256": "6b4ea157b515531179bf627cc57d8aa835722fb900471ce99a2157efed4f19d7"
+      "sha256": "a4973b92716834f00b1c8a489b7fb36ada38eb246971b6c5b37bdbcff6355b9c"
     },
     {
       "path": "schematic/power_mon.kicad_sch",
-      "sha256": "147e2c2d44d8538795f68c6cd44075e0ab01fe3fe989eb5ff28db4e2327af9a8"
+      "sha256": "0c7be2f816370bf88d72ea589206d5f14d2b833d68fab25f6fb74e5cdab21297"
     },
     {
       "path": "schematic/power_som.kicad_sch",
-      "sha256": "e2f45420f56599ce5e6a840ba90ef3db55edfb23f796e35786f8545389468a1a"
+      "sha256": "0268ca2136e29e8269e64dacb580ba07298f29eeb4e305c1842c79db0eab0466"
     },
     {
       "path": "schematic/rj45_connector.kicad_sch",
-      "sha256": "0eddee3687ffea680f1cdf7912d54720950c5d5fcdd809f8edea209680ff066f"
+      "sha256": "596232137dd69746e1136dcf9e51c0d8f484a273e21fddfb77b0052953aa1620"
     },
     {
       "path": "schematic/som_j1.kicad_sch",
-      "sha256": "ce84974afa3133c85e55c1d349713ea449fc49bf8f030a690050803d12517c82"
+      "sha256": "e1bc25f200bd31d2b812e43398d31d9ae2fc14dec9f651b0d320ea654a862806"
     },
     {
       "path": "schematic/som_j2.kicad_sch",
-      "sha256": "e58684105ccb1b1097ac89244919b8b6cbcf41a03ad819ee1b70375df0b07590"
+      "sha256": "5251e2f5c73663cbd200189338c493aec200ef96d90bda7f1e61f764b3fe82b3"
     },
     {
       "path": "schematic/som_j3.kicad_sch",
-      "sha256": "6c2f739aa307fc2ee7a44773774094ebb65ed36cd03001618f946765fc6ae64e"
+      "sha256": "f81ef34fc5da013e6aea00d96e7994420c786809da9476428db0be96c5c42e92"
     },
     {
       "path": "schematic/uart_bridge.kicad_sch",
-      "sha256": "7eacb7b3752ee5a01e75fd0d5c94b838cbd9eff13c98aad822f83a488f35cca5"
+      "sha256": "a888df1faf5dfb7088f289f9862beb22d75178dc4ede079cafaadd8fdebeeb21"
+    },
+    {
+      "path": "schematic/usb_jtag.kicad_sch",
+      "sha256": "66ad4aa5616d36c52e6a8ea14b1b59bf3c85ad742c2c0f1102811b5483dfdec5"
+    },
+    {
+      "path": "schematic/usb_jtag_connector.kicad_sch",
+      "sha256": "231fab032b0063aebb0c3cbaf58fbf566dff06dba6c9ea2f30d37c3c948eafd1"
     },
     {
       "path": "schematic/usb_pd.kicad_sch",
-      "sha256": "ed51523de24f96551bc6c17b861347434205e6d6952e9afc92e4045d08c2b0d2"
+      "sha256": "d994874ef08949860229dcc2c5395e2e04c4256a62d5b7f237d0168469adf84d"
     },
     {
       "path": "schematic/usb_uart_connector.kicad_sch",
-      "sha256": "d2507af4944fce477adf1bf0e24f009833058b6aef8a167a502eb3d239cac967"
+      "sha256": "1ca5920fb6e146db5ea1e6ec95905b03a95d0fb4113e28bb24654f0acda16b6e"
     },
     {
       "path": "schematic/usbc_otg.kicad_sch",
-      "sha256": "12a90de596a31950631963af6802764b894606261ac90cac3d5450b63e2eb75e"
+      "sha256": "db3117ae473bb3f7e2cf52d431972012364b55ab5cf496c60ae7d9bb629c97ff"
     },
     {
       "path": "schematic/user_io.kicad_sch",
-      "sha256": "d786877c597ede1e7f7b5da059714c3568ff421b37b5d72abbc077377dcbb062"
+      "sha256": "bd9c454b04866c17408623e0530972aebe1ed4a86e119ec5ae0ae1bd00022d90"
     }
   ],
   "bom": {
     "cost": null,
     "extended": null,
-    "lines": 93,
+    "lines": 98,
     "missing": [],
-    "parts": 409
+    "parts": 443
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [
@@ -506,7 +518,7 @@
         }
       ],
       "limit_a": null,
-      "load_a": 2.635,
+      "load_a": 2.739,
       "name": "+3V3",
       "source": null,
       "volts": 3.3
@@ -552,6 +564,20 @@
       "load_a": 0.304,
       "name": "+3V3_CAM",
       "source": "bringup_modules:U4 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.045,
+          "note": "CH347 ~38 mA typ (DS) + SN74LVC125 + RST/mode/OE pull network",
+          "sheet": "usb_jtag"
+        }
+      ],
+      "limit_a": 0.6,
+      "load_a": 0.045,
+      "name": "+3V3_DBG",
+      "source": "usb_jtag:U4 AP2112K-3.3TRG1 [ldo]",
       "volts": 3.3
     },
     {
@@ -631,9 +657,23 @@
       "volts": 3.3
     },
     {
+      "draws": [
+        {
+          "amps": 0.104,
+          "note": "1x Pmod module budget ~100 mA (Digilent spec) + status LED",
+          "sheet": "pmod_expansion"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.104,
+      "name": "+3V3_PMODX",
+      "source": "pmod_expansion:U1 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
       "draws": [],
       "limit_a": 3.0,
-      "load_a": 2.635,
+      "load_a": 2.739,
       "name": "+3V3_REG",
       "source": "power:U2 TPS54302DDCR [buck]",
       "volts": 3.3
@@ -729,8 +769,16 @@
         }
       ],
       "limit_a": null,
-      "load_a": 2.9503,
+      "load_a": 3.0266,
       "name": "+5V",
+      "source": null,
+      "volts": 5.0
+    },
+    {
+      "draws": [],
+      "limit_a": null,
+      "load_a": 0.045,
+      "name": "+5V_DBG",
       "source": null,
       "volts": 5.0
     },
@@ -775,7 +823,7 @@
     {
       "draws": [],
       "limit_a": 6.0,
-      "load_a": 2.9503,
+      "load_a": 3.0266,
       "name": "+5V_REG",
       "source": "power:U1 LM61460AANRJRR [buck]",
       "volts": 5.0
@@ -821,7 +869,7 @@
     {
       "draws": [],
       "limit_a": 3.0,
-      "load_a": 1.3372,
+      "load_a": 1.3584,
       "name": "+VBUS_IN",
       "source": "source: USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)",
       "volts": 20.0
@@ -829,7 +877,7 @@
     {
       "draws": [],
       "limit_a": 3.529,
-      "load_a": 1.3372,
+      "load_a": 1.3584,
       "name": "+VIN",
       "source": "pd_input:U1 TPS26631PWPR [efuse]",
       "volts": 20.0
@@ -837,7 +885,7 @@
     {
       "draws": [],
       "limit_a": null,
-      "load_a": 1.3372,
+      "load_a": 1.3584,
       "name": "+VIN_SYS",
       "source": null,
       "volts": 20.0
@@ -860,8 +908,8 @@
     }
   ],
   "testpoints": {
-    "covered": 50,
-    "required": 55,
+    "covered": 55,
+    "required": 60,
     "waived": 5
   },
   "xdc": {

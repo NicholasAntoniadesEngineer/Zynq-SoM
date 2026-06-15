@@ -36,20 +36,20 @@ read_xdc $xdc_file
 # FPGA-driven). Left as TEMPLATES — uncomment and set <ns> for the real
 # source frequency before timing closure (matches the XDC templates).
 # create_clock -name CAM_CLK_P -period <ns> [get_ports {CAM_CLK_P}]  ;# J3.9 IO_L13P_T2_MRCC_35 (MRCC)
+# create_clock -name DBG_UART_RXD -period <ns> [get_ports {DBG_UART_RXD}]  ;# J2.42 IO_L11P_T1_SRCC_13 (SRCC)
 # create_clock -name FMC_CLK0_M2C_P -period <ns> [get_ports {FMC_CLK0_M2C_P}]  ;# J3.14 IO_L12P_T1_MRCC_35 (MRCC)
 # create_clock -name FMC_CLK1_M2C_P -period <ns> [get_ports {FMC_CLK1_M2C_P}]  ;# J3.8 IO_L11P_T1_SRCC_35 (SRCC)
 # create_clock -name FMC_LA00_CC_P -period <ns> [get_ports {FMC_LA00_CC_P}]  ;# J3.22 IO_L14P_T2_AD4P_SRCC_35 (SRCC)
 # create_clock -name HDMI_RX_CLK_P -period <ns> [get_ports {HDMI_RX_CLK_P}]  ;# J2.90 IO_L12P_T1_MRCC_33 (MRCC)
-# create_clock -name IO_L11_SRCC_P_13 -period <ns> [get_ports {IO_L11_SRCC_P_13}]  ;# J2.42 IO_L11P_T1_SRCC_13 (SRCC)
 # create_clock -name IO_L11_SRCC_P_33 -period <ns> [get_ports {IO_L11_SRCC_P_33}]  ;# J2.93 IO_L11P_T1_SRCC_33 (SRCC)
-# create_clock -name IO_L12_MRCC_P_13 -period <ns> [get_ports {IO_L12_MRCC_P_13}]  ;# J2.49 IO_L12P_T1_MRCC_13 (MRCC)
-# create_clock -name IO_L13_MRCC_P_13 -period <ns> [get_ports {IO_L13_MRCC_P_13}]  ;# J2.29 IO_L13P_T2_MRCC_13 (MRCC)
-# create_clock -name IO_L14_P_SRCC_13 -period <ns> [get_ports {IO_L14_P_SRCC_13}]  ;# J2.41 IO_L14P_T2_SRCC_13 (SRCC)
 # create_clock -name IO_L14_SRCC_P_33 -period <ns> [get_ports {IO_L14_SRCC_P_33}]  ;# J2.81 IO_L14P_T2_SRCC_33 (SRCC)
 # create_clock -name LCD_B1 -period <ns> [get_ports {LCD_B1}]  ;# J3.66 IO_L13P_T2_MRCC_34 (MRCC)
 # create_clock -name LCD_B6 -period <ns> [get_ports {LCD_B6}]  ;# J3.72 IO_L14P_T2_SRCC_34 (SRCC)
 # create_clock -name LCD_R6 -period <ns> [get_ports {LCD_R6}]  ;# J3.46 IO_L12P_T1_MRCC_34 (MRCC)
 # create_clock -name LCD_R7 -period <ns> [get_ports {LCD_R7}]  ;# J3.54 IO_L11P_T1_SRCC_34 (SRCC)
+# create_clock -name PMODX_IO1 -period <ns> [get_ports {PMODX_IO1}]  ;# J2.29 IO_L13P_T2_MRCC_13 (MRCC)
+# create_clock -name PMODX_IO5 -period <ns> [get_ports {PMODX_IO5}]  ;# J2.41 IO_L14P_T2_SRCC_13 (SRCC)
+# create_clock -name PMODX_IO7 -period <ns> [get_ports {PMODX_IO7}]  ;# J2.49 IO_L12P_T1_MRCC_13 (MRCC)
 
 # ---- Zynq7 Processing System (PS) — COMMENTED STUB ---------------
 # The PS DDR/MIO preset is SoM-revision intent and does NOT live in

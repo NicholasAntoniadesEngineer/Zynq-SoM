@@ -13,29 +13,18 @@
 ##############################################################################
 
 # ---- bank 13 — VCCO = +3V3 (43 pins) --------------------
+set_property -dict {PACKAGE_PIN AA9  IOSTANDARD LVCMOS33} [get_ports {DBG_UART_RXD}]  ;# J2.42 IO_L11P_T1_SRCC_13 <- usb_jtag
+#   ^ SRCC-capable: # create_clock -name DBG_UART_RXD -period <ns> [get_ports {DBG_UART_RXD}]
+set_property -dict {PACKAGE_PIN AA8  IOSTANDARD LVCMOS33} [get_ports {DBG_UART_TXD}]  ;# J2.40 IO_L11N_T1_SRCC_13 <- usb_jtag
 set_property -dict {PACKAGE_PIN U7   IOSTANDARD LVCMOS33} [get_ports {IO_25_13}]  ;# J2.23 IO_25_13 <- user_io
 set_property -dict {PACKAGE_PIN Y10  IOSTANDARD LVCMOS33} [get_ports {IO_L10_N_13}]  ;# J2.51 IO_L10N_T1_13 <- pmod
 set_property -dict {PACKAGE_PIN Y11  IOSTANDARD LVCMOS33} [get_ports {IO_L10_P_13}]  ;# J2.53 IO_L10P_T1_13 <- pmod
-set_property -dict {PACKAGE_PIN AA8  IOSTANDARD LVCMOS33} [get_ports {IO_L11_SRCC_N_13}]  ;# J2.40 IO_L11N_T1_SRCC_13 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN AA9  IOSTANDARD LVCMOS33} [get_ports {IO_L11_SRCC_P_13}]  ;# J2.42 IO_L11P_T1_SRCC_13 <- unclaimed (wave-3 function map)
-#   ^ SRCC-capable: # create_clock -name IO_L11_SRCC_P_13 -period <ns> [get_ports {IO_L11_SRCC_P_13}]
-set_property -dict {PACKAGE_PIN Y8   IOSTANDARD LVCMOS33} [get_ports {IO_L12_MRCC_N_13}]  ;# J2.47 IO_L12N_T1_MRCC_13 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN Y9   IOSTANDARD LVCMOS33} [get_ports {IO_L12_MRCC_P_13}]  ;# J2.49 IO_L12P_T1_MRCC_13 <- unclaimed (wave-3 function map)
-#   ^ MRCC-capable: # create_clock -name IO_L12_MRCC_P_13 -period <ns> [get_ports {IO_L12_MRCC_P_13}]
-set_property -dict {PACKAGE_PIN Y5   IOSTANDARD LVCMOS33} [get_ports {IO_L13_MRCC_N_13}]  ;# J2.27 IO_L13N_T2_MRCC_13 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN Y6   IOSTANDARD LVCMOS33} [get_ports {IO_L13_MRCC_P_13}]  ;# J2.29 IO_L13P_T2_MRCC_13 <- unclaimed (wave-3 function map)
-#   ^ MRCC-capable: # create_clock -name IO_L13_MRCC_P_13 -period <ns> [get_ports {IO_L13_MRCC_P_13}]
-set_property -dict {PACKAGE_PIN AA6  IOSTANDARD LVCMOS33} [get_ports {IO_L14_N_SRCC_13}]  ;# J2.39 IO_L14N_T2_SRCC_13 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN AA7  IOSTANDARD LVCMOS33} [get_ports {IO_L14_P_SRCC_13}]  ;# J2.41 IO_L14P_T2_SRCC_13 <- unclaimed (wave-3 function map)
-#   ^ SRCC-capable: # create_clock -name IO_L14_P_SRCC_13 -period <ns> [get_ports {IO_L14_P_SRCC_13}]
 set_property -dict {PACKAGE_PIN AB2  IOSTANDARD LVCMOS33} [get_ports {IO_L15_P_13}]  ;# J2.9 IO_L15P_T2_DQS_13 <- user_io
 set_property -dict {PACKAGE_PIN R6   IOSTANDARD LVCMOS33} [get_ports {IO_L19_P_13}]  ;# J2.12 IO_L19P_T3_13 <- user_io
 set_property -dict {PACKAGE_PIN V10  IOSTANDARD LVCMOS33} [get_ports {IO_L1P_13}]  ;# J2.57 IO_L1P_T0_13 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN V9   IOSTANDARD LVCMOS33} [get_ports {IO_L1_N_13}]  ;# J2.37 IO_L1N_T0_13 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN V5   IOSTANDARD LVCMOS33} [get_ports {IO_L21_P_13}]  ;# J2.13 IO_L21P_T3_DQS_13 <- user_io
 set_property -dict {PACKAGE_PIN U6   IOSTANDARD LVCMOS33} [get_ports {IO_L22_P_13}]  ;# J2.19 IO_L22P_T3_13 <- user_io
-set_property -dict {PACKAGE_PIN W7   IOSTANDARD LVCMOS33} [get_ports {IO_L23_N_13}]  ;# J2.31 IO_L23N_T3_13 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN V7   IOSTANDARD LVCMOS33} [get_ports {IO_L23_P_13}]  ;# J2.33 IO_L23P_T3_13 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN W5   IOSTANDARD LVCMOS33} [get_ports {IO_L24_N_13}]  ;# J2.7 IO_L24N_T3_13 <- user_io
 set_property -dict {PACKAGE_PIN W6   IOSTANDARD LVCMOS33} [get_ports {IO_L24_P_13}]  ;# J2.10 IO_L24P_T3_13 <- user_io
 set_property -dict {PACKAGE_PIN W8   IOSTANDARD LVCMOS33} [get_ports {IO_L2_N_13}]  ;# J2.14 IO_L2N_T0_13 <- pmod
@@ -57,6 +46,17 @@ set_property -dict {PACKAGE_PIN AB6  IOSTANDARD LVCMOS33} [get_ports {LCD_CTP_IN
 set_property -dict {PACKAGE_PIN AB7  IOSTANDARD LVCMOS33} [get_ports {LCD_CTP_RST}]  ;# J2.34 IO_L17P_T2_13 <- lcd
 set_property -dict {PACKAGE_PIN AB4  IOSTANDARD LVCMOS33} [get_ports {LCD_CTP_SCL}]  ;# J2.28 IO_L16N_T2_13 <- lcd
 set_property -dict {PACKAGE_PIN AB5  IOSTANDARD LVCMOS33} [get_ports {LCD_CTP_SDA}]  ;# J2.30 IO_L16P_T2_13 <- lcd
+set_property -dict {PACKAGE_PIN Y6   IOSTANDARD LVCMOS33} [get_ports {PMODX_IO1}]  ;# J2.29 IO_L13P_T2_MRCC_13 <- pmod_expansion
+#   ^ MRCC-capable: # create_clock -name PMODX_IO1 -period <ns> [get_ports {PMODX_IO1}]
+set_property -dict {PACKAGE_PIN Y5   IOSTANDARD LVCMOS33} [get_ports {PMODX_IO2}]  ;# J2.27 IO_L13N_T2_MRCC_13 <- pmod_expansion
+set_property -dict {PACKAGE_PIN V7   IOSTANDARD LVCMOS33} [get_ports {PMODX_IO3}]  ;# J2.33 IO_L23P_T3_13 <- pmod_expansion
+set_property -dict {PACKAGE_PIN W7   IOSTANDARD LVCMOS33} [get_ports {PMODX_IO4}]  ;# J2.31 IO_L23N_T3_13 <- pmod_expansion
+set_property -dict {PACKAGE_PIN AA7  IOSTANDARD LVCMOS33} [get_ports {PMODX_IO5}]  ;# J2.41 IO_L14P_T2_SRCC_13 <- pmod_expansion
+#   ^ SRCC-capable: # create_clock -name PMODX_IO5 -period <ns> [get_ports {PMODX_IO5}]
+set_property -dict {PACKAGE_PIN AA6  IOSTANDARD LVCMOS33} [get_ports {PMODX_IO6}]  ;# J2.39 IO_L14N_T2_SRCC_13 <- pmod_expansion
+set_property -dict {PACKAGE_PIN Y9   IOSTANDARD LVCMOS33} [get_ports {PMODX_IO7}]  ;# J2.49 IO_L12P_T1_MRCC_13 <- pmod_expansion
+#   ^ MRCC-capable: # create_clock -name PMODX_IO7 -period <ns> [get_ports {PMODX_IO7}]
+set_property -dict {PACKAGE_PIN Y8   IOSTANDARD LVCMOS33} [get_ports {PMODX_IO8}]  ;# J2.47 IO_L12N_T1_MRCC_13 <- pmod_expansion
 set_property -dict {PACKAGE_PIN U9   IOSTANDARD LVCMOS33} [get_ports {SD_CARD_DETECT}]  ;# J2.17 IO_L6N_T0_VREF_13 <- microsd
 set_property -dict {PACKAGE_PIN Y4   IOSTANDARD LVCMOS33} [get_ports {ZYNQ_PS_UART0_CTS_N}]  ;# J2.11 IO_L18P_T2_13 <- uart_bridge
 set_property -dict {PACKAGE_PIN AA4  IOSTANDARD LVCMOS33} [get_ports {ZYNQ_PS_UART0_RTS_N}]  ;# J2.8 IO_L18N_T2_13 <- uart_bridge

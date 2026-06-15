@@ -2,7 +2,7 @@ schgen per-part rule engine (ratings vs netlist usage)
 ==============================================================================
 
 enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
-121 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+132 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
 
 author waivers, verbatim (1):
   lcd:C2                 MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp
@@ -10,7 +10,7 @@ author waivers, verbatim (1):
 notes / advisory (1):
   + WAIVED CAP_V lcd:C2 (2.2u, LCSC C125847): 50V X7R on a 30V rail — needs >= 2x = 60V (margin 1.7x). Pick a higher-V part or c.waive_part_rule('C2', reason) [MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp]
 
-UNSPEC — reported, NOT failing (55):
+UNSPEC — reported, NOT failing (68):
   ? board_aux:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
   ? board_qwiic:J1 (ZX-SH1.0-4PWT, LCSC C7430446) — no ratings row
   ? board_services:BT1 (KH-CR1220-2, LCSC C5365933) — no ratings row
@@ -43,6 +43,10 @@ UNSPEC — reported, NOT failing (55):
   ? pd_input:J1 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
   ? pmod:J1 (DS1024-2x6R2, LCSC C49284652) — no ratings row
   ? pmod:J2 (DS1024-2x6R2, LCSC C49284652) — no ratings row
+  ? pmod_expansion:J1 (DS1024-2x6R2, LCSC C49284652) — no ratings row
+  ? pmod_expansion:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
+  ? pmod_expansion:U2 (TPD4E1U06, LCSC C124691) — no ratings row
+  ? pmod_expansion:U3 (TPD4E1U06, LCSC C124691) — no ratings row
   ? power:C24 (1u) — cap rail unresolved
   ? power:C27 (22p, LCSC C1653) — no ratings row
   ? power:C28 (1u) — cap rail unresolved
@@ -58,6 +62,15 @@ UNSPEC — reported, NOT failing (55):
   ? som_j1:J1 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
   ? som_j2:J2 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
   ? som_j3:J3 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
+  ? usb_jtag:C5 (22p, LCSC C1653) — no ratings row
+  ? usb_jtag:C6 (22p, LCSC C1653) — no ratings row
+  ? usb_jtag:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
+  ? usb_jtag:U1 (CH347T, LCSC C5122332) — no ratings row
+  ? usb_jtag:U2 (SN74LVC125ADR, LCSC C7661) — no ratings row
+  ? usb_jtag:U4 (AP2112K-3.3TRG1) — no vin_max rating
+  ? usb_jtag:U4 (AP2112K-3.3TRG1, LCSC C51118) — no ratings row
+  ? usb_jtag:Y1 (8MHz, LCSC C57131) — no ratings row
+  ? usb_jtag_connector:J1 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
   ? usb_pd:C4 (200p) — cap rail unresolved
   ? usb_pd:C5 (200p) — cap rail unresolved
   ? usb_uart_connector:J1 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
@@ -69,4 +82,4 @@ UNSPEC — reported, NOT failing (55):
 
 errors: none
 
-PART RULES: PASS (121 checks, 0 findings, 55 unspeced, 1 waived)
+PART RULES: PASS (132 checks, 0 findings, 68 unspeced, 1 waived)

@@ -1,13 +1,13 @@
 schgen link report
 ============================================================
-sheets (30): board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io
+sheets (33): board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io
 
 alias map (rails only, exact, enumerated):
   (no pure spelling aliases)
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (502):
+bound ports (520):
   board_aux:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   board_aux:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   board_aux:AUX_I2C_SCL [i2c] -> sheet board_qwiic:AUX_I2C_SCL; sheet board_services:AUX_I2C_SCL
@@ -114,10 +114,10 @@ bound ports (502):
   camera:CAM_SDA [i2c] -> sheet som_j3:CAM_SDA
   camera:CAM_EN -> sheet som_j3:CAM_EN
   camera:CAM_LED -> sheet som_j3:CAM_LED
-  debug_boot:ZYNQ_TMS -> sheet som_j1:ZYNQ_TMS; SoM ZYNQ_TMS (J1.66)
-  debug_boot:ZYNQ_TCK -> sheet som_j1:ZYNQ_TCK; SoM ZYNQ_TCK (J1.64)
-  debug_boot:ZYNQ_TDO -> sheet som_j1:ZYNQ_TDO; SoM ZYNQ_TDO (J1.68)
-  debug_boot:ZYNQ_TDI -> sheet som_j1:ZYNQ_TDI; SoM ZYNQ_TDI (J1.70)
+  debug_boot:ZYNQ_TMS -> sheet som_j1:ZYNQ_TMS; sheet usb_jtag:ZYNQ_TMS; SoM ZYNQ_TMS (J1.66)
+  debug_boot:ZYNQ_TCK -> sheet som_j1:ZYNQ_TCK; sheet usb_jtag:ZYNQ_TCK; SoM ZYNQ_TCK (J1.64)
+  debug_boot:ZYNQ_TDO -> sheet som_j1:ZYNQ_TDO; sheet usb_jtag:ZYNQ_TDO; SoM ZYNQ_TDO (J1.68)
+  debug_boot:ZYNQ_TDI -> sheet som_j1:ZYNQ_TDI; sheet usb_jtag:ZYNQ_TDI; SoM ZYNQ_TDI (J1.70)
   debug_boot:STM32_GPIO6 -> sheet som_j1:STM32_GPIO6; SoM STM32_GPIO6 (J1.45)
   debug_boot:STM32_GPIO5 -> sheet som_j1:STM32_GPIO5; SoM STM32_GPIO5 (J1.53)
   debug_boot:STM32_NRST -> sheet bringup_rails:STM32_NRST; sheet som_j1:STM32_NRST; SoM STM32_NRST (J1.47)
@@ -263,6 +263,14 @@ bound ports (502):
   pmod:IO_L9_DQS_N_13 -> sheet som_j2:IO_L9_DQS_N_13; SoM IO_L9_DQS_N_13 (J2.48)
   pmod:IO_L10_P_13 -> sheet som_j2:IO_L10_P_13; SoM IO_L10_P_13 (J2.53)
   pmod:IO_L10_N_13 -> sheet som_j2:IO_L10_N_13; SoM IO_L10_N_13 (J2.51)
+  pmod_expansion:PMODX_IO1 -> sheet som_j2:PMODX_IO1
+  pmod_expansion:PMODX_IO2 -> sheet som_j2:PMODX_IO2
+  pmod_expansion:PMODX_IO3 -> sheet som_j2:PMODX_IO3
+  pmod_expansion:PMODX_IO4 -> sheet som_j2:PMODX_IO4
+  pmod_expansion:PMODX_IO5 -> sheet som_j2:PMODX_IO5
+  pmod_expansion:PMODX_IO6 -> sheet som_j2:PMODX_IO6
+  pmod_expansion:PMODX_IO7 -> sheet som_j2:PMODX_IO7
+  pmod_expansion:PMODX_IO8 -> sheet som_j2:PMODX_IO8
   power:EN_5V0 -> sheet bringup_en:EN_5V0
   power:EN_3V3 -> sheet bringup_en:EN_3V3
   power:EN_1V8 -> sheet bringup_en:EN_1V8
@@ -306,13 +314,13 @@ bound ports (502):
   som_j1:STM32_BOOT0 -> sheet debug_boot:STM32_BOOT0; SoM STM32_BOOT0 (J1.57)
   som_j1:STM32_GPIO7 -> sheet debug_boot:STM32_GPIO7; SoM STM32_GPIO7 (J1.59)
   som_j1:SDIO_D1 [sd_bus] -> sheet microsd:SDIO_D1; SoM SDIO_D1 (J1.61)
-  som_j1:ZYNQ_TCK -> sheet debug_boot:ZYNQ_TCK; SoM ZYNQ_TCK (J1.64)
+  som_j1:ZYNQ_TCK -> sheet debug_boot:ZYNQ_TCK; sheet usb_jtag:ZYNQ_TCK; SoM ZYNQ_TCK (J1.64)
   som_j1:SDIO_D0 [sd_bus] -> sheet microsd:SDIO_D0; SoM SDIO_D0 (J1.65)
-  som_j1:ZYNQ_TMS -> sheet debug_boot:ZYNQ_TMS; SoM ZYNQ_TMS (J1.66)
+  som_j1:ZYNQ_TMS -> sheet debug_boot:ZYNQ_TMS; sheet usb_jtag:ZYNQ_TMS; SoM ZYNQ_TMS (J1.66)
   som_j1:SDIO_CLK [sd_bus] -> sheet microsd:SDIO_CLK; SoM SDIO_CLK (J1.67)
-  som_j1:ZYNQ_TDO -> sheet debug_boot:ZYNQ_TDO; SoM ZYNQ_TDO (J1.68)
+  som_j1:ZYNQ_TDO -> sheet debug_boot:ZYNQ_TDO; sheet usb_jtag:ZYNQ_TDO; SoM ZYNQ_TDO (J1.68)
   som_j1:SDIO_CMD [sd_bus] -> sheet microsd:SDIO_CMD; SoM SDIO_CMD (J1.69)
-  som_j1:ZYNQ_TDI -> sheet debug_boot:ZYNQ_TDI; SoM ZYNQ_TDI (J1.70)
+  som_j1:ZYNQ_TDI -> sheet debug_boot:ZYNQ_TDI; sheet usb_jtag:ZYNQ_TDI; SoM ZYNQ_TDI (J1.70)
   som_j1:SDIO_D3 [sd_bus] -> sheet microsd:SDIO_D3; SoM SDIO_D3 (J1.71)
   som_j1:SDIO_D2 [sd_bus] -> sheet microsd:SDIO_D2; SoM SDIO_D2 (J1.73)
   som_j1:FMC_LA08_P [diff_pair] -> sheet fmc:FMC_LA08_P
@@ -351,25 +359,25 @@ bound ports (502):
   som_j2:ZYNQ_HDMI_TX_SCL -> sheet hdmi_tx:ZYNQ_HDMI_TX_SCL
   som_j2:IO_25_13 -> sheet user_io:IO_25_13; SoM IO_25_13 (J2.23)
   som_j2:IO_L5_N_13 -> sheet pmod:IO_L5_N_13; SoM IO_L5_N_13 (J2.24)
-  som_j2:IO_L13_MRCC_N_13 -> SoM IO_L13_MRCC_N_13 (J2.27)
+  som_j2:PMODX_IO2 -> sheet pmod_expansion:PMODX_IO2
   som_j2:LCD_CTP_SCL -> sheet lcd:LCD_CTP_SCL
-  som_j2:IO_L13_MRCC_P_13 -> SoM IO_L13_MRCC_P_13 (J2.29)
+  som_j2:PMODX_IO1 -> sheet pmod_expansion:PMODX_IO1
   som_j2:LCD_CTP_SDA -> sheet lcd:LCD_CTP_SDA
-  som_j2:IO_L23_N_13 -> SoM IO_L23_N_13 (J2.31)
+  som_j2:PMODX_IO4 -> sheet pmod_expansion:PMODX_IO4
   som_j2:LCD_CTP_INT -> sheet lcd:LCD_CTP_INT
-  som_j2:IO_L23_P_13 -> SoM IO_L23_P_13 (J2.33)
+  som_j2:PMODX_IO3 -> sheet pmod_expansion:PMODX_IO3
   som_j2:LCD_CTP_RST -> sheet lcd:LCD_CTP_RST
   som_j2:IO_L1_N_13 -> SoM IO_L1_N_13 (J2.37)
   som_j2:IO_L5P_13 -> sheet pmod:IO_L5P_13; SoM IO_L5P_13 (J2.38)
-  som_j2:IO_L14_N_SRCC_13 -> SoM IO_L14_N_SRCC_13 (J2.39)
-  som_j2:IO_L11_SRCC_N_13 -> SoM IO_L11_SRCC_N_13 (J2.40)
-  som_j2:IO_L14_P_SRCC_13 -> SoM IO_L14_P_SRCC_13 (J2.41)
-  som_j2:IO_L11_SRCC_P_13 -> SoM IO_L11_SRCC_P_13 (J2.42)
+  som_j2:PMODX_IO6 -> sheet pmod_expansion:PMODX_IO6
+  som_j2:DBG_UART_TXD -> sheet usb_jtag:DBG_UART_TXD
+  som_j2:PMODX_IO5 -> sheet pmod_expansion:PMODX_IO5
+  som_j2:DBG_UART_RXD -> sheet usb_jtag:DBG_UART_RXD
   som_j2:IO_L3_N_13 -> sheet pmod:IO_L3_N_13; SoM IO_L3_N_13 (J2.43)
   som_j2:HDMI_RX_5V_DET -> sheet hdmi_rx:HDMI_RX_5V_DET
-  som_j2:IO_L12_MRCC_N_13 -> SoM IO_L12_MRCC_N_13 (J2.47)
+  som_j2:PMODX_IO8 -> sheet pmod_expansion:PMODX_IO8
   som_j2:IO_L9_DQS_N_13 -> sheet pmod:IO_L9_DQS_N_13; SoM IO_L9_DQS_N_13 (J2.48)
-  som_j2:IO_L12_MRCC_P_13 -> SoM IO_L12_MRCC_P_13 (J2.49)
+  som_j2:PMODX_IO7 -> sheet pmod_expansion:PMODX_IO7
   som_j2:IO_L9_DQS_P_13 -> sheet pmod:IO_L9_DQS_P_13; SoM IO_L9_DQS_P_13 (J2.50)
   som_j2:IO_L10_N_13 -> sheet pmod:IO_L10_N_13; SoM IO_L10_N_13 (J2.51)
   som_j2:ZYNQ_HDMI_TX_SDA -> sheet hdmi_tx:ZYNQ_HDMI_TX_SDA
@@ -488,6 +496,16 @@ bound ports (502):
   uart_bridge:ZYNQ_PS_UART0_TXD -> sheet som_j1:ZYNQ_PS_UART0_TXD
   uart_bridge:ZYNQ_PS_UART0_CTS_N -> sheet som_j2:ZYNQ_PS_UART0_CTS_N
   uart_bridge:ZYNQ_PS_UART0_RTS_N -> sheet som_j2:ZYNQ_PS_UART0_RTS_N
+  usb_jtag:DBG_USB_DP [usb_hs_pair] -> sheet usb_jtag_connector:DBG_USB_DP
+  usb_jtag:DBG_USB_DM [usb_hs_pair] -> sheet usb_jtag_connector:DBG_USB_DM
+  usb_jtag:ZYNQ_TCK -> sheet debug_boot:ZYNQ_TCK; sheet som_j1:ZYNQ_TCK; SoM ZYNQ_TCK (J1.64)
+  usb_jtag:ZYNQ_TDI -> sheet debug_boot:ZYNQ_TDI; sheet som_j1:ZYNQ_TDI; SoM ZYNQ_TDI (J1.70)
+  usb_jtag:ZYNQ_TMS -> sheet debug_boot:ZYNQ_TMS; sheet som_j1:ZYNQ_TMS; SoM ZYNQ_TMS (J1.66)
+  usb_jtag:ZYNQ_TDO -> sheet debug_boot:ZYNQ_TDO; sheet som_j1:ZYNQ_TDO; SoM ZYNQ_TDO (J1.68)
+  usb_jtag:DBG_UART_RXD -> sheet som_j2:DBG_UART_RXD
+  usb_jtag:DBG_UART_TXD -> sheet som_j2:DBG_UART_TXD
+  usb_jtag_connector:DBG_USB_DP [usb_hs_pair] -> sheet usb_jtag:DBG_USB_DP
+  usb_jtag_connector:DBG_USB_DM [usb_hs_pair] -> sheet usb_jtag:DBG_USB_DM
   usb_pd:STM32_USB_CC1 -> sheet pd_input:STM32_USB_CC1; sheet som_j1:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
   usb_pd:STM32_USB_CC2 -> sheet pd_input:STM32_USB_CC2; sheet som_j1:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
   usb_pd:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA
@@ -511,22 +529,25 @@ bound ports (502):
   user_io:IO_L21_P_13 -> sheet som_j2:IO_L21_P_13; SoM IO_L21_P_13 (J2.13)
   user_io:IO_L22_P_13 -> sheet som_j2:IO_L22_P_13; SoM IO_L22_P_13 (J2.19)
 
-rails (25):
+rails (28):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: microsd, power, power_mon)
   +1V8_REG — carrier-local rail (sheets: power, power_mon)
   +2V5_VADJ — carrier-local rail (sheets: fmc, som_j3)
-  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, lcd, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
+  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, lcd, pmod_expansion, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
   +3V3_AUX — carrier-local rail (sheets: board_aux, board_qwiic, board_services)
   +3V3_CAM — carrier-local rail (sheets: bringup_modules, camera)
+  +3V3_DBG — carrier-local rail (sheets: usb_jtag)
   +3V3_HDMI_RX — carrier-local rail (sheets: bringup_modules, hdmi_rx)
   +3V3_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
   +3V3_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +3V3_PMOD — carrier-local rail (sheets: bringup_modules, pmod)
+  +3V3_PMODX — carrier-local rail (sheets: pmod_expansion)
   +3V3_REG — carrier-local rail (sheets: power, power_mon)
   +3V3_SC <- sheets: board_aux, bringup_en, bringup_en_modules, bringup_rails, debug_boot, pd_input, power_mon, som_j1, usb_pd, usbc_otg -> SoM 1 pins
   +3V3_SD — carrier-local rail (sheets: bringup_modules, microsd)
   +3V3_USER_LED — carrier-local rail (sheets: bringup_modules, user_io)
   +5V — carrier-local rail (sheets: bringup_modules, power, power_mon)
+  +5V_DBG — carrier-local rail (sheets: usb_jtag, usb_jtag_connector)
   +5V_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
   +5V_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +5V_REG — carrier-local rail (sheets: power, power_mon)
@@ -535,8 +556,8 @@ rails (25):
   +VBUS_IN — carrier-local rail (sheets: pd_input, usb_pd)
   +VIN — carrier-local rail (sheets: pd_input, power_mon)
   +VIN_SYS — carrier-local rail (sheets: power, power_mon, power_som)
-  CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_uart_connector, usbc_otg)
-  GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
+  CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, pd_input, rj45_connector, usb_jtag_connector, usb_uart_connector, usbc_otg)
+  GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
 
 deferred ports — author-declared, awaiting later waves (1) [WARNING]:
   bringup_en_modules:EN_LCD_BL — awaiting lvds_lcd_power (backlight boost EN provision, dossier 3.2)

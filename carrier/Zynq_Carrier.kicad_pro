@@ -209,6 +209,10 @@
       },
       {
         "netclass": "POWER",
+        "pattern": "+3V3_DBG"
+      },
+      {
+        "netclass": "POWER",
         "pattern": "+3V3_HDMI_RX"
       },
       {
@@ -222,6 +226,10 @@
       {
         "netclass": "POWER",
         "pattern": "+3V3_PMOD"
+      },
+      {
+        "netclass": "POWER",
+        "pattern": "+3V3_PMODX"
       },
       {
         "netclass": "POWER",
@@ -242,6 +250,10 @@
       {
         "netclass": "POWER",
         "pattern": "+5V"
+      },
+      {
+        "netclass": "POWER",
+        "pattern": "+5V_DBG"
       },
       {
         "netclass": "POWER",
@@ -314,6 +326,14 @@
       {
         "netclass": "I2C",
         "pattern": "CAM_SDA"
+      },
+      {
+        "netclass": "DP90_USB",
+        "pattern": "DBG_USB_DM"
+      },
+      {
+        "netclass": "DP90_USB",
+        "pattern": "DBG_USB_DP"
       },
       {
         "netclass": "DP100_DIFF",

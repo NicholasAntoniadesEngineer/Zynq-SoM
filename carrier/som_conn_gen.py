@@ -118,6 +118,24 @@ FUNCTION_MAP: dict[str, str] = {
     "IO_L18_P_13": "ZYNQ_PS_UART0_CTS_N",  # J2.11 (EMIO — no MIO route)
     "IO_L18_N_13": "ZYNQ_PS_UART0_RTS_N",  # J2.8  (EMIO)
     "IO_L6_N_VREF_13": "SD_CARD_DETECT",   # J2.17 (PS SDIO0 CD via EMIO)
+    # -- Stream-C: bank 13 (J2) — Pmod expansion 8 IO + USB-JTAG console UART.
+    # Eight genuinely-FREE bank-13 PL pairs (verified vs every existing
+    # subsystem + this map before claiming: none were consumed; they read
+    # "unclaimed (wave-3 function map)" in the prior XDC). Bank 13 is +VCCO_13
+    # = +3V3 -> LVCMOS33, so the Pmod's 3.3 V level-safety is structural. The
+    # MRCC/SRCC clock capability of L12/L13/L14 is preserved (Pmod IO is plain
+    # GPIO; the XDC keeps the create_clock template) — only L1 (J2.37/57) and
+    # the two L11 halves below are spent elsewhere, leaving the ledger honest.
+    "IO_L13_MRCC_P_13": "PMODX_IO1",  "IO_L13_MRCC_N_13": "PMODX_IO2",  # J2.29/27
+    "IO_L23_P_13": "PMODX_IO3",       "IO_L23_N_13": "PMODX_IO4",       # J2.33/31
+    "IO_L14_P_SRCC_13": "PMODX_IO5",  "IO_L14_N_SRCC_13": "PMODX_IO6",  # J2.41/39
+    "IO_L12_MRCC_P_13": "PMODX_IO7",  "IO_L12_MRCC_N_13": "PMODX_IO8",  # J2.49/47
+    # console UART channel B of the FT2232H USB-JTAG/UART bridge (usb_jtag):
+    # a free PL-bank UART RX/TX pair. PL EMIO UART (bank 13, LVCMOS33) — the
+    # PS UART0 console is already spent (uart_bridge, MIO10/11), so the second
+    # bridge channel lands on a fabric UART instantiated on these two pins.
+    "IO_L11_SRCC_P_13": "DBG_UART_RXD",  # J2.42 (bridge Ch-B TXD -> Zynq RXD)
+    "IO_L11_SRCC_N_13": "DBG_UART_TXD",  # J2.40 (Zynq TXD -> bridge Ch-B RXD)
     # -- G5/4.2: bank 33 (J2) — HDMI RX + TX, PL buttons, FMC present ---
     "IO_L12_MRCC_P_33": "HDMI_RX_CLK_P",  "IO_L12_MRCC_N_33": "HDMI_RX_CLK_N",
     "IO_L10_P_33": "HDMI_RX_D0_P",        "IO_L10_N_33": "HDMI_RX_D0_N",

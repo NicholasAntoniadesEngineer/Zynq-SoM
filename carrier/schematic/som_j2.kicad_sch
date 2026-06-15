@@ -4239,7 +4239,7 @@
 		(uuid "674e9906-8632-5a87-9a90-571f1d659fef")
 	)
 	(hierarchical_label
-		"IO_L13_MRCC_N_13"
+		"PMODX_IO2"
 		(shape bidirectional)
 		(at 135.89 63.5 180)
 		(effects
@@ -4251,7 +4251,7 @@
 		(uuid "daa8788f-3029-57c1-9288-7f15eccf8f36")
 	)
 	(hierarchical_label
-		"IO_L13_MRCC_P_13"
+		"PMODX_IO1"
 		(shape bidirectional)
 		(at 104.14 66.04 180)
 		(effects
@@ -4263,7 +4263,7 @@
 		(uuid "03e55adb-84d4-5242-ab3b-e05fa80124a1")
 	)
 	(hierarchical_label
-		"IO_L23_N_13"
+		"PMODX_IO4"
 		(shape bidirectional)
 		(at 135.89 68.58 180)
 		(effects
@@ -4275,7 +4275,7 @@
 		(uuid "55fbec2a-a838-553c-a5a0-57af67b7975b")
 	)
 	(hierarchical_label
-		"IO_L23_P_13"
+		"PMODX_IO3"
 		(shape bidirectional)
 		(at 104.14 71.12 180)
 		(effects
@@ -4299,7 +4299,7 @@
 		(uuid "a96b5cbc-d415-57a9-84f0-b6c10ce9bfa8")
 	)
 	(hierarchical_label
-		"IO_L14_N_SRCC_13"
+		"PMODX_IO6"
 		(shape bidirectional)
 		(at 104.14 78.74 180)
 		(effects
@@ -4311,7 +4311,7 @@
 		(uuid "d218e59a-b90c-563d-8dd0-ff38ece8a77d")
 	)
 	(hierarchical_label
-		"IO_L14_P_SRCC_13"
+		"PMODX_IO5"
 		(shape bidirectional)
 		(at 135.89 81.28 180)
 		(effects
@@ -4335,7 +4335,7 @@
 		(uuid "d76deeda-6b59-5a2b-b5f8-e18a15b8c8c5")
 	)
 	(hierarchical_label
-		"IO_L12_MRCC_N_13"
+		"PMODX_IO8"
 		(shape bidirectional)
 		(at 135.89 88.9 180)
 		(effects
@@ -4347,7 +4347,7 @@
 		(uuid "a51d6feb-1dce-5a16-b441-6e3a179ee90f")
 	)
 	(hierarchical_label
-		"IO_L12_MRCC_P_13"
+		"PMODX_IO7"
 		(shape bidirectional)
 		(at 104.14 91.44 180)
 		(effects
@@ -4731,7 +4731,7 @@
 		(uuid "aaa187c4-4c7b-51d8-b054-49cad90e0df7")
 	)
 	(hierarchical_label
-		"IO_L11_SRCC_N_13"
+		"DBG_UART_TXD"
 		(shape bidirectional)
 		(at 195.58 78.74 0)
 		(effects
@@ -4743,7 +4743,7 @@
 		(uuid "afb6e59d-d11c-59b9-b6ed-807b71c81922")
 	)
 	(hierarchical_label
-		"IO_L11_SRCC_P_13"
+		"DBG_UART_RXD"
 		(shape bidirectional)
 		(at 166.37 81.28 0)
 		(effects
@@ -5017,7 +5017,7 @@
 		(uuid "668def3c-a94e-5f4e-b663-31ad1aad9a43")
 		(property
 			"Reference"
-			"J24002"
+			"J25002"
 			(at 151.13 26.67 0)
 			(effects
 				(font
@@ -5473,7 +5473,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/7962b9ed-0ab0-5062-b34f-2269ee185de7"
-					(reference "J24002")
+					(reference "J25002")
 					(unit 1)
 				)
 			)
@@ -5490,7 +5490,7 @@
 		(uuid "084b115e-f40e-56ab-a000-b13c8a6a441a")
 		(property
 			"Reference"
-			"#PWR24001"
+			"#PWR25001"
 			(at 135.89 25.4 0)
 			(effects
 				(font
@@ -5540,7 +5540,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/7962b9ed-0ab0-5062-b34f-2269ee185de7"
-					(reference "#PWR24001")
+					(reference "#PWR25001")
 					(unit 1)
 				)
 			)
@@ -5557,7 +5557,7 @@
 		(uuid "b4835900-e5ea-5783-abaf-43d02e4d7bd6")
 		(property
 			"Reference"
-			"#PWR24002"
+			"#PWR25002"
 			(at 135.89 154.94 0)
 			(effects
 				(font
@@ -5607,7 +5607,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/7962b9ed-0ab0-5062-b34f-2269ee185de7"
-					(reference "#PWR24002")
+					(reference "#PWR25002")
 					(unit 1)
 				)
 			)
@@ -5624,7 +5624,7 @@
 		(uuid "319656ce-7e06-5edd-81cf-6d7b036e19dd")
 		(property
 			"Reference"
-			"#PWR24003"
+			"#PWR25003"
 			(at 66.04 152.4 0)
 			(effects
 				(font
@@ -5674,7 +5674,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/7962b9ed-0ab0-5062-b34f-2269ee185de7"
-					(reference "#PWR24003")
+					(reference "#PWR25003")
 					(unit 1)
 				)
 			)
@@ -5691,7 +5691,7 @@
 		(uuid "d4081fc5-c17b-571b-bf4d-72de91452368")
 		(property
 			"Reference"
-			"#PWR24004"
+			"#PWR25004"
 			(at 166.37 25.4 0)
 			(effects
 				(font
@@ -5741,7 +5741,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/7962b9ed-0ab0-5062-b34f-2269ee185de7"
-					(reference "#PWR24004")
+					(reference "#PWR25004")
 					(unit 1)
 				)
 			)
@@ -5758,7 +5758,7 @@
 		(uuid "319b22d8-811d-504a-be62-1dc79c23d454")
 		(property
 			"Reference"
-			"#PWR24005"
+			"#PWR25005"
 			(at 166.37 154.94 0)
 			(effects
 				(font
@@ -5808,7 +5808,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/7962b9ed-0ab0-5062-b34f-2269ee185de7"
-					(reference "#PWR24005")
+					(reference "#PWR25005")
 					(unit 1)
 				)
 			)
@@ -5825,7 +5825,7 @@
 		(uuid "bbf7c305-8ec5-54f3-9510-5207158fc7f7")
 		(property
 			"Reference"
-			"#PWR24006"
+			"#PWR25006"
 			(at 231.14 149.86 0)
 			(effects
 				(font
@@ -5875,7 +5875,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/7962b9ed-0ab0-5062-b34f-2269ee185de7"
-					(reference "#PWR24006")
+					(reference "#PWR25006")
 					(unit 1)
 				)
 			)

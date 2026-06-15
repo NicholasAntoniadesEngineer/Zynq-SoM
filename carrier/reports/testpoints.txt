@@ -3,22 +3,25 @@ schgen test-point coverage gate
 
 rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) owns a probe point or an explicit waiver.
 
-required nets (55):
+required nets (60):
   +1V8                   [rail     ] TP @ power:TP3
   +1V8_REG               [rail     ] WAIVED (power_mon): reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)
   +2V5_VADJ              [rail     ] TP @ fmc:TP1
   +3V3                   [rail     ] TP @ power:TP2
   +3V3_AUX               [rail     ] TP @ board_aux:TP1
   +3V3_CAM               [rail     ] TP @ bringup_modules:TP4
+  +3V3_DBG               [rail     ] TP @ usb_jtag:TP1
   +3V3_HDMI_RX           [rail     ] TP @ bringup_modules:TP2
   +3V3_HDMI_TX           [rail     ] TP @ bringup_modules:TP1
   +3V3_LCD               [rail     ] TP @ bringup_modules:TP3
   +3V3_PMOD              [rail     ] TP @ bringup_modules:TP7
+  +3V3_PMODX             [rail     ] TP @ pmod_expansion:TP1
   +3V3_REG               [rail     ] WAIVED (power_mon): reg-side of RS3 — probe across the shunt (the +3V3 TP is the post-shunt/load side)
   +3V3_SC                [rail     ] TP @ bringup_rails:TP1
   +3V3_SD                [rail     ] TP @ bringup_modules:TP5
   +3V3_USER_LED          [rail     ] TP @ bringup_modules:TP8
   +5V                    [rail     ] TP @ power:TP1
+  +5V_DBG                [rail     ] TP @ usb_jtag_connector:TP1
   +5V_HDMI_TX            [rail     ] TP @ bringup_modules:TP9, hdmi_tx:TP1
   +5V_LCD                [rail     ] TP @ bringup_modules:TP10, lcd:TP1
   +5V_REG                [rail     ] WAIVED (power_mon): reg-side of RS2 — probe across the shunt (the +5V TP is the post-shunt/load side)
@@ -33,6 +36,8 @@ required nets (55):
   CAM_SCL                [i2c      ] TP @ camera:TP1
   CAM_SDA                [i2c      ] TP @ camera:TP2
   CHASSIS_GND            [rail     ] WAIVED (pd_input): chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed
+  DBG_UART_RXD           [uart     ] TP @ usb_jtag:TP3
+  DBG_UART_TXD           [uart     ] TP @ usb_jtag:TP2
   EN_1V8                 [enable   ] TP @ bringup_en:TP3
   EN_3V3                 [enable   ] TP @ bringup_en:TP2
   EN_5V0                 [enable   ] TP @ bringup_en:TP1
@@ -69,4 +74,4 @@ waivers — author-declared, verbatim (5):
 
 errors: none
 
-TESTPOINTS: PASS (50/55 required nets covered, 5 waived)
+TESTPOINTS: PASS (55/60 required nets covered, 5 waived)

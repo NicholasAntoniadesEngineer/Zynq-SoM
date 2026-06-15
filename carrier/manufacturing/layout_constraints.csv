@@ -139,6 +139,10 @@ USB_D+,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.
 USB_D-,som_j1,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D+,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_UART_DM,uart_bridge,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DP,PAIR:USB_UART_DM/USB_UART_DP,1.27,"deferred: usb_uart_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_UART_DP,uart_bridge,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DM,PAIR:USB_UART_DM/USB_UART_DP,1.27,"deferred: usb_uart_connector (wave 2); JLCPCB calculator, JLC04161H-7628 outer/L2"
+DBG_USB_DM,usb_jtag,usb_hs_pair,DP90_USB,90,0.2611,0.2032,DBG_USB_DP,PAIR:DBG_USB_DM/DBG_USB_DP,1.27,"deferred: usb_jtag_connector (USB-C UFP receptacle + USBLC6 ESD); JLCPCB calculator, JLC04161H-7628 outer/L2"
+DBG_USB_DP,usb_jtag,usb_hs_pair,DP90_USB,90,0.2611,0.2032,DBG_USB_DM,PAIR:DBG_USB_DM/DBG_USB_DP,1.27,"deferred: usb_jtag_connector (USB-C UFP receptacle + USBLC6 ESD); JLCPCB calculator, JLC04161H-7628 outer/L2"
+DBG_USB_DM,usb_jtag_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,DBG_USB_DP,PAIR:DBG_USB_DM/DBG_USB_DP,1.27,"deferred: usb_jtag (CH347T bridge); JLCPCB calculator, JLC04161H-7628 outer/L2"
+DBG_USB_DP,usb_jtag_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,DBG_USB_DM,PAIR:DBG_USB_DM/DBG_USB_DP,1.27,"deferred: usb_jtag (CH347T bridge); JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_UART_DM,usb_uart_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DP,PAIR:USB_UART_DM/USB_UART_DP,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_UART_DP,usb_uart_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DM,PAIR:USB_UART_DM/USB_UART_DP,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_D+,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
@@ -307,6 +311,14 @@ IO_L8_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
 IO_L8_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
 IO_L9_DQS_N_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
 IO_L9_DQS_P_13,pmod,single,Default,,,,,,,deferred: som_j2_connector
+PMODX_IO1,pmod_expansion,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+PMODX_IO2,pmod_expansion,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+PMODX_IO3,pmod_expansion,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+PMODX_IO4,pmod_expansion,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+PMODX_IO5,pmod_expansion,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+PMODX_IO6,pmod_expansion,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+PMODX_IO7,pmod_expansion,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+PMODX_IO8,pmod_expansion,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
 EN_1V8,power,single,Default,,,,,,,"deferred: bringup (wave 2 rail-enable cells, dossier section 3.1)"
 EN_3V3,power,single,Default,,,,,,,"deferred: bringup (wave 2 rail-enable cells, dossier section 3.1)"
 EN_5V0,power,single,Default,,,,,,,"deferred: bringup (wave 2 rail-enable cells, dossier section 3.1)"
@@ -343,22 +355,16 @@ ZYNQ_TCK,som_j1,single,Default,,,,,,,
 ZYNQ_TDI,som_j1,single,Default,,,,,,,
 ZYNQ_TDO,som_j1,single,Default,,,,,,,
 ZYNQ_TMS,som_j1,single,Default,,,,,,,
+DBG_UART_RXD,som_j2,single,Default,,,,,,,
+DBG_UART_TXD,som_j2,single,Default,,,,,,,
 FMC_PRSNT_N,som_j2,single,Default,,,,,,,
 HDMI_RX_5V_DET,som_j2,single,Default,,,,,,,
 HDMI_RX_CEC,som_j2,single,Default,,,,,,,
 IO_25_13,som_j2,single,Default,,,,,,,
 IO_L10_N_13,som_j2,single,Default,,,,,,,
 IO_L10_P_13,som_j2,single,Default,,,,,,,
-IO_L11_SRCC_N_13,som_j2,single,Default,,,,,,,
 IO_L11_SRCC_N_33,som_j2,single,Default,,,,,,,
-IO_L11_SRCC_P_13,som_j2,single,Default,,,,,,,
 IO_L11_SRCC_P_33,som_j2,single,Default,,,,,,,
-IO_L12_MRCC_N_13,som_j2,single,Default,,,,,,,
-IO_L12_MRCC_P_13,som_j2,single,Default,,,,,,,
-IO_L13_MRCC_N_13,som_j2,single,Default,,,,,,,
-IO_L13_MRCC_P_13,som_j2,single,Default,,,,,,,
-IO_L14_N_SRCC_13,som_j2,single,Default,,,,,,,
-IO_L14_P_SRCC_13,som_j2,single,Default,,,,,,,
 IO_L14_SRCC_N_33,som_j2,single,Default,,,,,,,
 IO_L14_SRCC_P_33,som_j2,single,Default,,,,,,,
 IO_L15_P_13,som_j2,single,Default,,,,,,,
@@ -367,8 +373,6 @@ IO_L1P_13,som_j2,single,Default,,,,,,,
 IO_L1_N_13,som_j2,single,Default,,,,,,,
 IO_L21_P_13,som_j2,single,Default,,,,,,,
 IO_L22_P_13,som_j2,single,Default,,,,,,,
-IO_L23_N_13,som_j2,single,Default,,,,,,,
-IO_L23_P_13,som_j2,single,Default,,,,,,,
 IO_L24_N_13,som_j2,single,Default,,,,,,,
 IO_L24_P_13,som_j2,single,Default,,,,,,,
 IO_L2_N_13,som_j2,single,Default,,,,,,,
@@ -392,6 +396,14 @@ LCD_CTP_SCL,som_j2,single,Default,,,,,,,
 LCD_CTP_SDA,som_j2,single,Default,,,,,,,
 PL_BTN0,som_j2,single,Default,,,,,,,
 PL_BTN1,som_j2,single,Default,,,,,,,
+PMODX_IO1,som_j2,single,Default,,,,,,,
+PMODX_IO2,som_j2,single,Default,,,,,,,
+PMODX_IO3,som_j2,single,Default,,,,,,,
+PMODX_IO4,som_j2,single,Default,,,,,,,
+PMODX_IO5,som_j2,single,Default,,,,,,,
+PMODX_IO6,som_j2,single,Default,,,,,,,
+PMODX_IO7,som_j2,single,Default,,,,,,,
+PMODX_IO8,som_j2,single,Default,,,,,,,
 SD_CARD_DETECT,som_j2,single,Default,,,,,,,
 ZYNQ_HDMI_TX_CEC,som_j2,single,Default,,,,,,,
 ZYNQ_HDMI_TX_HPD,som_j2,single,Default,,,,,,,
@@ -452,6 +464,12 @@ ZYNQ_PS_UART0_CTS_N,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector 
 ZYNQ_PS_UART0_RTS_N,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
 ZYNQ_PS_UART0_RXD,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
 ZYNQ_PS_UART0_TXD,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
+DBG_UART_RXD,usb_jtag,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13 EMIO UART, LVCMOS33 — FUNCTION_MAP)"
+DBG_UART_TXD,usb_jtag,single,Default,,,,,,,"deferred: som_j2_connector (PL bank 13 EMIO UART, LVCMOS33 — FUNCTION_MAP)"
+ZYNQ_TCK,usb_jtag,single,Default,,,,,,,deferred: debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)
+ZYNQ_TDI,usb_jtag,single,Default,,,,,,,deferred: debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)
+ZYNQ_TDO,usb_jtag,single,Default,,,,,,,deferred: debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)
+ZYNQ_TMS,usb_jtag,single,Default,,,,,,,deferred: debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)
 SC_INT_N,usb_pd,single,Default,,,,,,,deferred: som_j1_connector (wave 3 STM32 GPIO function map)
 STM32_USB_CC1,usb_pd,single,Default,,,,,,,
 STM32_USB_CC2,usb_pd,single,Default,,,,,,,
