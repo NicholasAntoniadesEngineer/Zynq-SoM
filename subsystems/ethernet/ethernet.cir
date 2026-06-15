@@ -1,0 +1,82 @@
+* ethernet.cir — SPICE subckt for the HX5008NL magnetics + Bob-Smith subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/ethernet/ethernet.py INTERFACE), NOT any board net. A consuming
+* project wires these pins to its real nets — exactly as the netlist bind map
+* does. The HX5008NL is a 1:1 gigabit magnetics module (four isolated
+* transformers + the media-side Bob-Smith termination); this subckt captures
+* BOTH the four 1:1 coupled-inductor channels (so a board-level .ac/.tran sees
+* the chip<->media isolation + in-phase coupling) AND the PASSIVE Bob-Smith
+* network the subsystem adds (75R || 1n per centre tap into a shared trunk, then
+* one 1n/2kV trunk->chassis isolation cap), which is what the local test and any
+* board-level .op/.tran reason about.
+*
+* Capacitor values mirror subsystems/ethernet/ethernet.py one-for-one
+* (parse_si compatible):
+*   C1..C4  1n  Bob-Smith HF cap, one per media centre tap (MCTn -> BS_COMMON)
+*   C5      1n  isolation barrier  (BS_COMMON -> CHASSIS_GND, 2 kV)
+* with the matching 75R Bob-Smith resistors R1..R4 (MCTn -> BS_COMMON).
+*
+* Magnetics model: each channel is a 1:1 transformer (L=100uH, k=0.999) with the
+* CHIP pair (MDIn_P/N) on the primary and the MEDIA pair (MXn_P/N) on the
+* secondary, IN PHASE (+ couples to +) per the datasheet. The media-side centre
+* tap MCTn is the secondary winding mid-point. CHIP-side centre taps are left
+* floating (the PHY self-biases) and so are not modelled.
+*
+* Port order: the eight CHIP-side MDI pins, the eight MEDIA-side MX pins, then
+* CHASSIS_GND last (ground last, by convention). MCT1..MCT4 and BS_COMMON are
+* PRIVATE internal nodes.
+
+.subckt ethernet MDI0_P MDI0_N MDI1_P MDI1_N MDI2_P MDI2_N MDI3_P MDI3_N
++ MX0_P MX0_N MX1_P MX1_N MX2_P MX2_N MX3_P MX3_N CHASSIS_GND
+
+* --- channel 0: 1:1 magnetics, MEDIA secondary centre-tapped at MCT1 ---
+LP0 MDI0_P MDI0_N 100u
+LS0a MX0_P MCT1 50u
+LS0b MCT1 MX0_N 50u
+K0a LP0 LS0a 0.999
+K0b LP0 LS0b 0.999
+
+* --- channel 1 ---
+LP1 MDI1_P MDI1_N 100u
+LS1a MX1_P MCT2 50u
+LS1b MCT2 MX1_N 50u
+K1a LP1 LS1a 0.999
+K1b LP1 LS1b 0.999
+
+* --- channel 2 ---
+LP2 MDI2_P MDI2_N 100u
+LS2a MX2_P MCT3 50u
+LS2b MCT3 MX2_N 50u
+K2a LP2 LS2a 0.999
+K2b LP2 LS2b 0.999
+
+* --- channel 3 ---
+LP3 MDI3_P MDI3_N 100u
+LS3a MX3_P MCT4 50u
+LS3b MCT4 MX3_N 50u
+K3a LP3 LS3a 0.999
+K3b LP3 LS3b 0.999
+
+* --- Bob-Smith: each media centre tap -> 75R || 1n into the shared trunk ---
+R1 MCT1 BS_COMMON 75
+C1 MCT1 BS_COMMON 1n
+R2 MCT2 BS_COMMON 75
+C2 MCT2 BS_COMMON 1n
+R3 MCT3 BS_COMMON 75
+C3 MCT3 BS_COMMON 1n
+R4 MCT4 BS_COMMON 75
+C4 MCT4 BS_COMMON 1n
+
+* --- isolation barrier: the shared trunk bypasses to the chassis island ---
+C5 BS_COMMON CHASSIS_GND 1n
+
+.ends ethernet
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto a chip-side pin settles across the magnetics.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
