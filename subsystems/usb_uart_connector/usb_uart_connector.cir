@@ -1,0 +1,37 @@
+* usb_uart_connector.cir — SPICE subckt for the USB-C UFP receptacle subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
+* (subsystems/usb_uart_connector/usb_uart_connector.py INTERFACE), NOT any board
+* net. A consuming project wires these pins to its real nets — exactly as the
+* netlist bind map does. The active parts (TYPE-C-31-M-12 receptacle, USBLC6-2SC6
+* ESD array) are mixed-signal and not modelled here; this subckt captures the
+* PASSIVE network the subsystem adds whose elements span two interface nets (the
+* receptacle VBUS bulk) — which is what the local test and any board-level
+* .op/.tran reason about.
+*
+* Values mirror subsystems/usb_uart_connector/usb_uart_connector.py one-for-one
+* (parse_si compatible); test_cir_passives_match_netlist enforces equality:
+*   C1 10u   receptacle VBUS bulk/bypass   (VBUS -> GND)
+*
+* The remaining passives terminate on a NON-interface (private CC) node and so
+* are NOT subckt elements — documented here for completeness:
+*   R1/R2 5.1k  CC device-role Rd pulldowns  (CCx -> GND, private CC nets)
+*
+* Port order: VBUS GND
+* (GND last, by convention; the data-pair ports USB_DP/USB_DM and CHASSIS_GND
+*  carry no two-interface-net passive and so are not subckt pins.)
+
+.subckt usb_uart_connector VBUS GND
+
+* receptacle VBUS bulk/bypass (USB-C UFP Cbus)
+C1 VBUS GND 10u
+
+.ends usb_uart_connector
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto VBUS settles to 1 V at DC across the bulk cap.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

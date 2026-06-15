@@ -29,7 +29,9 @@ usb_jtag: OK
   interface (11): +VBUS_USB, +3V3_ISLAND, GND, USB_DP, USB_DM, JTAG_TCK, JTAG_TDI, JTAG_TMS, JTAG_TDO, UART_RXD, UART_TXD
 usb_pd: OK
   interface (8): +VDD_LOGIC, +VBUS_SENSE, GND, CC1, CC2, I2C_SDA, I2C_SCL, INT_N
+usb_uart_connector: OK
+  interface (5): GND, CHASSIS_GND, VBUS, USB_DP, USB_DM
 usbc_otg: OK
   interface (10): +VBUS_SUPPLY, +VDD_LOGIC, GND, CHASSIS_GND, USB_DP, USB_DM, VBUS, VBUS_EN, FLT_N, USB_ID
 
-SUBSYSTEM STRUCTURE: 13/13 package(s) complete (PASS)
+SUBSYSTEM STRUCTURE: 14/14 package(s) complete (PASS)
