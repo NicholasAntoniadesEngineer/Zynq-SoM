@@ -811,6 +811,19 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"FLOORPLAN: FAIL — {exc}")
         ok_all = False
 
+    # power-up SEQUENCE diagram (SVG), derived from the SAME pt_res power-tree
+    # analysis the budget gate above ran — the staged bring-up drawn (stage-0
+    # always-on rails -> the DIP-gated rail chain -> the gated module rails), so
+    # the diagram can never drift from the netlist. Deterministic; additive.
+    from schgen.generate import power_sequence
+    try:
+        ps_out = power_sequence.generate(sheets, pt_res)
+        print(f"POWER SEQUENCE: {ps_out.relative_to(REPO_ROOT)} "
+              f"(staged bring-up diagram)")
+    except Exception as exc:  # noqa: BLE001
+        print(f"POWER SEQUENCE: FAIL — {exc}")
+        ok_all = False
+
     # PCB FOUNDATION (Stream D): an openable .kicad_pcb seeded from the merged
     # board netlist just emitted — outline + forced 4-layer Sig/GND/PWR/Sig
     # stackup + net classes + .kicad_dru + every BOM footprint placed net-
@@ -999,6 +1012,14 @@ def main(argv: list[str] | None = None) -> int:
                           "direction, JLC-7628 constraint notes)")
     from schgen.generate.floorplan import cmd_floorplan
     fl.set_defaults(func=cmd_floorplan)
+    pq = sub.add_parser(
+        "power-sequence", help="generate carrier/docs/power_sequence.svg — the "
+                               "staged power-up bring-up diagram derived from "
+                               "the power-tree netlist (always-on rails -> DIP-"
+                               "gated rail chain -> gated module rails)")
+    pq.add_argument("-o", "--output", type=Path, default=None)
+    from schgen.generate.power_sequence import cmd_power_sequence
+    pq.set_defaults(func=cmd_power_sequence)
     vv = sub.add_parser(
         "vivado", help="generate carrier/fpga/create_project.tcl — a "
                        "sourceable Vivado project (create_project + part + "

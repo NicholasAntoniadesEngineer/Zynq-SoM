@@ -214,6 +214,8 @@ _ARTIFACT_GLOBS = (
     "docs/*.svg",
     "docs/BRINGUP.md",
     "docs/FLOORPLAN.md",
+    "docs/DESIGN_SPEC.md",      # authored design spec / theory-of-operation
+    "docs/COMPLIANCE.md",       # per-interface compliance checklists
 )
 
 
