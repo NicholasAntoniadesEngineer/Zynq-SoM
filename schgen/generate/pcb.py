@@ -365,6 +365,14 @@ PLACE_CLEAR = 2.0
 EDGE_CLEAR = 2.0
 ZONE_GAP = 2.5             # gap between two adjacent subsystem zones
 ZONE_PAD = 1.0            # padding inside a subsystem zone around its parts
+# N/S EDGE-connector subsystems pack WIDE + SHALLOW (their shelf target width is
+# multiplied by this) so the zone spreads ALONG the horizontal top/bottom edge
+# instead of eating deep into the interior behind the connector (a deep edge
+# block forces the board to grow). ~halves the depth of the deepest connector
+# blocks (microSD 30->20, pd_input 33->17, hdmi 29->20). W/E edges are left
+# squarish (a wide pack there would be DEEP into the board) — the floorplan
+# spreads them down the vertical edge as-is.
+EDGE_ZONE_ASPECT = 2.2
 
 
 def _rot_bbox(bbox: tuple[float, float, float, float],
@@ -528,6 +536,159 @@ def _classify_side(ref: str, lib: str, bbox: tuple,
     return "top"
 
 
+# ---- SHARED subsystem zone packing (ONE source of truth) -------------------------
+# Both the floorplan (block SIZING) and the PCB (block PLACEMENT) must agree on how
+# big each subsystem's 2-sided packed cluster is, or the FLOORPLAN.svg and the PCB
+# ratsnest diverge (the historical 235x215-vs-165x155 split). This function is the
+# single sizing oracle: it shelf-packs every subsystem's TOP + BOTTOM footprints
+# (the exact STEP-1 geometry the PCB places with) and returns the per-sheet packed
+# (w, h) + per-part offsets. It runs from the subsystem circuits + the stable
+# board-unique ref namespace (carrier/sheet_index.json), so it is identical whether
+# called standalone (`schgen floorplan`, no emitted root sch) or inside the board
+# flow — proven: per-sheet decoupling classification == merged classification, and
+# board-unique-ref packing is byte-identical to build_model's old inline packing.
+
+@dataclass
+class ZoneGeom:
+    zone_box: dict[str, tuple[float, float]]                # sheet -> (w, h)
+    top_off: dict[str, dict[str, tuple[float, float]]]      # sheet -> {bref:(x,y)}
+    bot_off: dict[str, dict[str, tuple[float, float]]]
+    side_of: dict[str, str]                                 # bref -> top|bottom
+    bbox_of: dict[str, tuple[float, float, float, float]]   # bref -> local bbox
+    resolvable: dict[str, Path]                             # bref -> .kicad_mod
+    refs_by_sheet: dict[str, list[str]]                     # sheet -> [bref,...]
+    mh_refs: list[str]                                      # mounting-hole brefs
+    deferred: list[str]
+
+
+def _eff_bbox_for(bbox: tuple[float, float, float, float],
+                  side: str) -> tuple[float, float, float, float]:
+    """The footprint's on-board local bbox. A BOTTOM part is flipped to B.Cu,
+    which mirrors its geometry about the origin's X axis (KiCad's F->B
+    convention), so its courtyard occupies the X-mirror of the top bbox."""
+    bx0, by0, bx1, by1 = bbox
+    if side == "bottom":
+        return (-bx1, by0, -bx0, by1)
+    return (bx0, by0, bx1, by1)
+
+
+def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
+                   bbox_of: dict, resolvable: dict, aspect: float = 1.0
+                   ) -> tuple[dict[str, tuple[float, float]],
+                              dict[str, tuple[float, float]],
+                              float, float]:
+    """Shelf-pack ONE subsystem's footprints 2-sided (TOP + BOTTOM overlay on
+    the same XY area; the zone holds the LARGER of the two). Returns
+    (top_off, bot_off, packed_w, packed_h). The BOTTOM pack avoids the TOP
+    through-hole pads (copper on all layers) so no bottom SMD shorts to a THT
+    pad. ``aspect`` widens the shelf target (>1 => wider + SHALLOWER zone): an
+    EDGE-connector subsystem packs WIDE-and-SHALLOW so its block does not eat
+    deep into the board behind its edge, which keeps the interior — and the whole
+    board — tight. Deterministic in the given ref order."""
+    sr = {"top": [], "bottom": []}
+    for r in sheet_refs:
+        sr[side_of[r]].append(r)
+
+    def items(refs, side):
+        return [(r, _eff_bbox_for(bbox_of[r], side), 0.0) for r in refs]
+
+    tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
+                   (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
+                   for r in sheet_refs)
+    target_w = max(8.0, (tot_area * 0.62) ** 0.5) * aspect
+    t_off, tw, th = _shelf_pack(items(sr["top"], "top"), target_w)
+    blockers: list[tuple[float, float, float, float]] = []
+    for r in sr["top"]:
+        if not has_thru_pads(resolvable[r]):
+            continue
+        ox, oy = t_off[r]
+        bx0, by0, bx1, by1 = bbox_of[r]
+        blockers.append((ox + bx0 - PLACE_CLEAR / 2,
+                         oy + by0 - PLACE_CLEAR / 2,
+                         ox + bx1 + PLACE_CLEAR / 2,
+                         oy + by1 + PLACE_CLEAR / 2))
+    b_off, bw, bh = _shelf_pack(items(sr["bottom"], "bottom"),
+                                target_w, blockers)
+    return t_off, b_off, round(max(tw, bw), 4), round(max(th, bh), 4)
+
+
+def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
+    """The SHARED packer: for every non-SoM subsystem, its REAL 2-sided packed
+    zone (w, h) + per-part offsets, keyed on the STABLE board-unique refs. Built
+    from the subsystem circuits (no dependence on the emitted root schematic), so
+    `schgen floorplan` and `schgen board` get byte-identical geometry."""
+    import json as _json
+    from schgen.core.link import all_subsystem_paths, load_subsystem
+    from schgen.generate.board import _renamed_ref
+    from schgen.core.model import PinRef
+
+    idx_path = CARRIER / "sheet_index.json"
+    sheet_index = (_json.loads(idx_path.read_text())
+                   if idx_path.exists() else {})
+    sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
+
+    from schgen.generate.floorplan import _EDGE_FAMILIES
+
+    refs_by_sheet: dict[str, list[str]] = {}
+    bbox_of: dict[str, tuple[float, float, float, float]] = {}
+    resolvable: dict[str, Path] = {}
+    side_of: dict[str, str] = {}
+    mh_refs: list[str] = []
+    deferred: list[str] = []
+    edge_sheets: set[str] = set()       # sheets with an off-board edge connector
+
+    for i, sc in enumerate(sheets, start=1):
+        if sc.name.startswith("som_j"):
+            continue
+        band = sheet_index.get(sc.name, i)
+        c = sc.circuit
+        # per-sheet decoupling on the board-unique ref namespace (equivalent to
+        # the merged-netlist classification — proven — and side-stable).
+        snets: dict[str, list[PinRef]] = {}
+        for nname, net in c.nets.items():
+            snets[nname] = [
+                PinRef(_renamed_ref(p.ref, band, sheet=sc.name)
+                       if not p.ref.startswith("#") else p.ref, p.pin)
+                for p in net.pins]
+        sdec = _decoupling_caps(snets)
+        for ref, part in c.parts.items():
+            bref = _renamed_ref(ref, band, sheet=sc.name)
+            if part.value in _EDGE_FAMILIES:
+                edge_sheets.add(sc.name)
+            if part.lib_id.startswith("Mechanical:MountingHole"):
+                mh_refs.append(bref)
+                continue
+            mod = resolve_mod(part.footprint)
+            if mod is None:
+                deferred.append(f"{bref} ({sc.name}): footprint "
+                                f"{part.footprint!r} not found")
+                continue
+            resolvable[bref] = mod
+            bbox_of[bref] = _footprint_bbox(mod)
+            side_of[bref] = _classify_side(bref, part.lib_id, bbox_of[bref],
+                                           sdec, two_side)
+            refs_by_sheet.setdefault(sc.name, []).append(bref)
+
+    zone_box: dict[str, tuple[float, float]] = {}
+    top_off: dict[str, dict[str, tuple[float, float]]] = {}
+    bot_off: dict[str, dict[str, tuple[float, float]]] = {}
+    for sheet in sorted(refs_by_sheet):
+        # EDGE-connector subsystems pack WIDE + SHALLOW (aspect > 1) so their
+        # block sits behind the edge without eating deep into the board; INTERIOR
+        # subsystems stay squarish.
+        aspect = EDGE_ZONE_ASPECT if sheet in edge_sheets else 1.0
+        t_off, b_off, zw, zh = _pack_one_zone(
+            refs_by_sheet[sheet], side_of, bbox_of, resolvable, aspect)
+        top_off[sheet] = t_off
+        bot_off[sheet] = b_off
+        zone_box[sheet] = (zw, zh)
+
+    return ZoneGeom(zone_box=zone_box, top_off=top_off, bot_off=bot_off,
+                    side_of=side_of, bbox_of=bbox_of, resolvable=resolvable,
+                    refs_by_sheet=refs_by_sheet, mh_refs=sorted(mh_refs),
+                    deferred=deferred)
+
+
 # ---- the model build -------------------------------------------------------------
 
 def build_model(two_side: bool = True) -> PcbModel:
@@ -554,19 +715,32 @@ def build_model(two_side: bool = True) -> PcbModel:
             if not pr.ref.startswith("#"):
                 pin_net[(pr.ref, pr.pin)] = (num, name)
 
-    # floorplan plan (block positions) + net classes
-    sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
-    link_result = link(sheets, load_som_contract())
-    regs = powertree.analyze(sheets).regs
-    plan = fp.build_plan(sheets, link_result, regs)
-    classes, netclass_of = _net_classes(sheets)
+    # SHARED zone geometry: the REAL 2-sided packed (w, h) + per-part offsets for
+    # every subsystem, keyed on the stable board-unique refs. This is the SAME
+    # function the FLOORPLAN sizes its blocks from, so the floorplan block (w, h)
+    # and the PCB zone (w, h) are byte-identical -> the placement lands inside the
+    # floorplan block and FLOORPLAN.svg agrees with the PCB ratsnest by
+    # construction (no more 235x215-vs-165x155 divergence).
+    zg = subsystem_zone_geometry(two_side=two_side)
+    zone_box = zg.zone_box
+    top_off = zg.top_off
+    bot_off = zg.bot_off
+    side_of = dict(zg.side_of)
+    bbox_of = dict(zg.bbox_of)
+    resolvable = dict(zg.resolvable)
+    deferred = list(zg.deferred)
+    mh_refs = list(zg.mh_refs)
+    mh_set = set(mh_refs)
 
-    # footprint bboxes + per-sheet ref grouping
-    refs_by_sheet: dict[str, list[str]] = {}
-    bbox_of: dict[str, tuple[float, float, float, float]] = {}
-    deferred: list[str] = []
-    resolvable: dict[str, Path] = {}
+    # The shared packer omits the FIXED-position parts (mounting holes + the SoM
+    # DF40 receptacles) — they are not zone-packed. Resolve their footprints from
+    # the board parts so the emission loop still places them (positions set in
+    # STEP 3: corner-forced holes + centered/mirrored mezzanine).
     for ref, (sheet, footprint, _value, _lib) in parts.items():
+        if ref in resolvable:
+            continue
+        if not (ref in mh_set or sheet.startswith("som_j")):
+            continue
         mod = resolve_mod(footprint)
         if mod is None:
             deferred.append(f"{ref} ({sheet}): footprint {footprint!r} "
@@ -574,15 +748,18 @@ def build_model(two_side: bool = True) -> PcbModel:
             continue
         resolvable[ref] = mod
         bbox_of[ref] = _footprint_bbox(mod)
-        refs_by_sheet.setdefault(sheet, []).append(ref)
+        side_of[ref] = "top"
 
-    # 2-side classification: decoupling caps + small passives -> bottom.
-    decoupling = _decoupling_caps(nets)
-    side_of: dict[str, str] = {}
-    for ref in resolvable:
-        _sheet, _ftp, _val, lib = parts[ref]
-        side_of[ref] = _classify_side(ref, lib, bbox_of[ref],
-                                      decoupling, two_side)
+    # floorplan plan (block POSITIONS + the derived outline) + net classes. The
+    # floorplan calls the SAME subsystem_zone_geometry above for its block sizes,
+    # so plan.blocks[*].w/h == zone_box[*] and the floorplan outline (fp.BOARD_W/H)
+    # holds every packed block. The PCB honours both as the source of truth.
+    sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
+    link_result = link(sheets, load_som_contract())
+    regs = powertree.analyze(sheets).regs
+    plan = fp.build_plan(sheets, link_result, regs)
+    classes, netclass_of = _net_classes(sheets)
+    board_w, board_h = fp.BOARD_W, fp.BOARD_H
 
     # The SoM mezzanine receptacles (sheets som_j1/2/3) are FIXED at the
     # centered, SoM-mirrored DF40 positions and form the SoM region; every
@@ -603,231 +780,41 @@ def build_model(two_side: bool = True) -> PcbModel:
                 som_j_refs[ref] = jname
                 fixed_rot[ref] = som_rot[jname]
 
-    mh_refs = sorted(r for r, (_s, _fp, _v, lib) in parts.items()
-                     if lib.startswith("Mechanical:MountingHole"))
-    mh_set = set(mh_refs)
+    # ---- STEP 1: zone geometry comes from the SHARED packer (above) ----------
+    # zone_box / top_off / bot_off already hold every subsystem's REAL 2-sided
+    # packed (w, h) + per-part offsets (zg). The floorplan sized its blocks from
+    # the SAME zg, so each block's (w, h) == zone_box[sheet] exactly.
 
-    # ---- STEP 1: size every subsystem ZONE from its REAL packed footprints ---
-    # For each non-SoM sheet, shelf-pack its TOP parts and (separately) its
-    # BOTTOM parts; the zone must hold the LARGER of the two (top and bottom
-    # overlay on the same XY area). The packers return part offsets relative to
-    # the zone origin AND the exact box, so the zone is sized to FIT — there is
-    # no overflow, no off-board shelf. Aspect: a target width ~ sqrt of the
-    # per-side area scaled by the SoM aspect keeps zones squarish.
-    #
-    # MOUNTING HOLES are NOT zone-packed: like the SoM receptacles they are
-    # FIXED-position parts (corner-forced to the four board corners in STEP 3).
-    # Packing a hole into its sheet's zone would give it a zone-relative offset
-    # that STEP 3's subsystem loop then writes over the corner position with —
-    # so the holes must be excluded from the zone entirely. A sheet that holds
-    # ONLY holes (the carrier 'mechanical' fab-art sheet) thus contributes no
-    # zone at all; its holes become their own corner-forced cluster.
-    side_refs: dict[str, dict[str, list[str]]] = {}
-    for sheet in refs_by_sheet:
-        if sheet.startswith("som_j"):
+    # ---- STEP 2: HONOUR the floorplan — positions + outline are the truth ----
+    # The board outline is the floorplan's derived+grown outline (fp.BOARD_W/H),
+    # and every subsystem zone is anchored at its FLOORPLAN block top-left
+    # (plan.blocks). The SoM is at the floorplan's centered origin. No re-sizing,
+    # no re-layout, no independent board grow: the FLOORPLAN.svg and this PCB are
+    # the same picture. (The floorplan layout proved every block fits inside the
+    # outline with the SoM region clear, so nothing lands off-board.)
+    block_of = {b.name: b for b in plan.blocks}
+    zorigin: dict[str, tuple[float, float]] = {}
+    for sheet in zone_box:
+        b = block_of.get(sheet)
+        if b is None:
             continue
-        zoned = [r for r in refs_by_sheet[sheet] if r not in mh_set]
-        if not zoned:
-            continue          # sheet is mounting-holes-only -> no zone
-        side_refs[sheet] = {"top": [], "bottom": []}
-        for r in zoned:
-            side_refs[sheet][side_of[r]].append(r)
+        zorigin[sheet] = (b.x, b.y)
 
-    zone_box: dict[str, tuple[float, float]] = {}            # sheet -> (w,h)
-    top_off: dict[str, dict[str, tuple[float, float]]] = {}  # sheet -> {ref:(x,y)}
-    bot_off: dict[str, dict[str, tuple[float, float]]] = {}
-
-    def _eff_bbox(ref: str, side: str) -> tuple[float, float, float, float]:
-        """The footprint's on-board local bbox. A BOTTOM part is flipped to
-        B.Cu, which mirrors its geometry about the origin's X axis (KiCad's
-        F->B convention), so its courtyard occupies the X-mirror of the top
-        bbox — pack/derive/gate must all use this mirrored box for a bottom
-        part or its left edge could land off-zone/off-board."""
-        bx0, by0, bx1, by1 = bbox_of[ref]
-        if side == "bottom":
-            return (-bx1, by0, -bx0, by1)
-        return (bx0, by0, bx1, by1)
-
-    def _items(refs, side):
-        return [(r, _eff_bbox(r, side), 0.0) for r in refs]
-
-    for sheet in sorted(side_refs):
-        tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
-                       (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
-                       for r in refs_by_sheet[sheet] if r not in mh_set)
-        target_w = max(8.0, (tot_area * 0.62) ** 0.5)   # squarish per-side fill
-        t_off, tw, th = _shelf_pack(_items(side_refs[sheet]["top"], "top"),
-                                    target_w)
-        # blockers: every TOP through-hole part's top-frame haloed box (copper
-        # on all layers) — the bottom pack must keep its SMD parts out from
-        # under them (a bottom pad there shorts to the THT pad).
-        blockers: list[tuple[float, float, float, float]] = []
-        for r in side_refs[sheet]["top"]:
-            if not has_thru_pads(resolvable[r]):
-                continue
-            ox, oy = t_off[r]
-            bx0, by0, bx1, by1 = bbox_of[r]
-            blockers.append((ox + bx0 - PLACE_CLEAR / 2,
-                             oy + by0 - PLACE_CLEAR / 2,
-                             ox + bx1 + PLACE_CLEAR / 2,
-                             oy + by1 + PLACE_CLEAR / 2))
-        b_off, bw, bh = _shelf_pack(_items(side_refs[sheet]["bottom"],
-                                           "bottom"), target_w, blockers)
-        top_off[sheet] = t_off
-        bot_off[sheet] = b_off
-        zone_box[sheet] = (round(max(tw, bw), 4), round(max(th, bh), 4))
-
-    # ---- STEP 2: lay the zones out around a centered SoM keep-out ------------
-    # The SoM region (J1/J2/J3 extent + a routing halo) is reserved in the
-    # board center; subsystem zones tile the free area in a deterministic
-    # row-major shelf, and the BOARD GROWS until every zone + the SoM region +
-    # the 4 corner mounting holes + a perimeter keepout fit. No part is ever
-    # placed off-board: the outline is DERIVED from the packed extents.
+    sx_off, sy_off = plan.som_x - SOM_HALO_PCB, plan.som_y - SOM_HALO_PCB
     som_w = som.w + 2 * SOM_HALO_PCB
     som_h = som.h + 2 * SOM_HALO_PCB
 
-    # ---- subsystem AFFINITY: which sheets share nets (placement attraction) ---
-    # For every real net, the sheets it touches form a clique; accumulate a
-    # pairwise weight inversely proportional to the net's fan-out (a 2-sheet
-    # SIGNAL net pulls hard; a board-wide rail/GND across 30 sheets barely pulls
-    # — it is unavoidably long no matter where blocks sit, so it must not drive
-    # placement). The SoM (som_j*) is the central anchor: a sheet's pull toward
-    # the SoM is folded into the centroid via the fixed SoM center.
-    sheets_of_net: dict[str, set[str]] = {}
-    for nname, pins in nets.items():
-        if not nname or nname.startswith("unconnected-"):
-            continue
-        ss = {parts[pr.ref][0] for pr in pins
-              if pr.ref in parts and not pr.ref.startswith("#")}
-        if len(ss) >= 2:
-            sheets_of_net[nname] = ss
-    affinity: dict[str, dict[str, float]] = {}
-    som_pull: dict[str, float] = {}
-    for nname, ss in sheets_of_net.items():
-        k = len(ss)
-        w = 1.0 / (k * (k - 1) / 2)        # split a unit of pull over the clique
-        non_som = sorted(s for s in ss if not s.startswith("som_j"))
-        has_som = any(s.startswith("som_j") for s in ss)
-        for i, a in enumerate(non_som):
-            if has_som:
-                som_pull[a] = som_pull.get(a, 0.0) + w
-            for b in non_som[i + 1:]:
-                affinity.setdefault(a, {})[b] = \
-                    affinity.get(a, {}).get(b, 0.0) + w
-                affinity.setdefault(b, {})[a] = \
-                    affinity.get(b, {}).get(a, 0.0) + w
-
-    # placement order: most-connected first (largest total affinity), then area,
-    # then name — so the hub subsystems anchor near the SoM and pull the rest in.
-    def _conn(s: str) -> float:
-        return sum(affinity.get(s, {}).values()) + 3.0 * som_pull.get(s, 0.0)
-    zone_order = sorted(zone_box, key=lambda s: (-_conn(s),
-                                                 -(zone_box[s][0] *
-                                                   zone_box[s][1]), s))
-
-    def _layout(board_w: float, board_h: float):
-        """Place the SoM region (centered) + every subsystem zone so that
-        net-sharing subsystems sit NEAR each other (short cross-block airwires)
-        AND every zone fits inside the interior (perimeter keepout + corner-hole
-        insets). Greedy + deterministic: zones in affinity order, each dropped at
-        the free slot whose center is NEAREST the weighted centroid of its
-        already-placed neighbors (the SoM center is the seed pull). No part is
-        ever placed off-board. Returns (zone_origin, som_origin) or None."""
-        x_lo = PERIM + MH_KEEPOUT
-        x_hi = board_w - PERIM - MH_KEEPOUT
-        y_lo = PERIM + MH_KEEPOUT
-        y_hi = board_h - PERIM - MH_KEEPOUT
-        sx = round((board_w - som_w) / 2, 4)
-        sy = round((board_h - som_h) / 2, 4)
-        som_cx, som_cy = sx + som_w / 2, sy + som_h / 2
-        som_rect = (sx, sy, sx + som_w, sy + som_h)
-        placed_rects: list[tuple[float, float, float, float]] = [som_rect]
-        centers: dict[str, tuple[float, float]] = {}
-
-        def collide(x0, y0, x1, y1):
-            if x0 < x_lo or y0 < y_lo or x1 > x_hi or y1 > y_hi:
-                return True
-            for rx0, ry0, rx1, ry1 in placed_rects:
-                if not (x1 + ZONE_GAP <= rx0 or rx1 + ZONE_GAP <= x0 or
-                        y1 + ZONE_GAP <= ry0 or ry1 + ZONE_GAP <= y0):
-                    return True
-            return False
-
-        zorigin: dict[str, tuple[float, float]] = {}
-        for sheet in zone_order:
-            zw, zh = zone_box[sheet]
-            # weighted anchor = SoM-pull + placed-neighbour-pull centroid
-            wsum = max(som_pull.get(sheet, 0.0), 0.1)
-            ax = som_pull.get(sheet, 0.1) * som_cx
-            ay = som_pull.get(sheet, 0.1) * som_cy
-            for nb, w in affinity.get(sheet, {}).items():
-                if nb in centers:
-                    cxn, cyn = centers[nb]
-                    ax += w * cxn
-                    ay += w * cyn
-                    wsum += w
-            ax /= wsum
-            ay /= wsum
-            # deterministic raster of candidate slots; pick the one whose center
-            # is nearest the anchor (ties -> top-left for stability).
-            best = None
-            best_key = None
-            y = y_lo
-            while y + zh <= y_hi + 1e-6:
-                x = x_lo
-                while x + zw <= x_hi + 1e-6:
-                    if not collide(x, y, x + zw, y + zh):
-                        ccx, ccy = x + zw / 2, y + zh / 2
-                        d = abs(ccx - ax) + abs(ccy - ay)
-                        key = (round(d, 3), round(y, 3), round(x, 3))
-                        if best_key is None or key < best_key:
-                            best_key = key
-                            best = (round(x, 4), round(y, 4))
-                    x += ZONE_STEP
-                y += ZONE_STEP
-            if best is None:
-                return None
-            zorigin[sheet] = best
-            placed_rects.append((best[0], best[1], best[0] + zw, best[1] + zh))
-            centers[sheet] = (best[0] + zw / 2, best[1] + zh / 2)
-        return zorigin, (sx, sy)
-
-    # grow the board (keep the SoM aspect) until _layout succeeds
-    total_zone_area = sum(w * h for (w, h) in zone_box.values()) + som_w * som_h
-    aspect = (som_w + 2 * EDGE_BAND_PCB) / (som_h + 2 * EDGE_BAND_PCB)
-    base = (total_zone_area / ZONE_FILL) ** 0.5
-    bw0 = max(som_w + 2 * (PERIM + MH_KEEPOUT + EDGE_BAND_PCB),
-              base * aspect ** 0.5)
-    bh0 = max(som_h + 2 * (PERIM + MH_KEEPOUT + EDGE_BAND_PCB),
-              base / aspect ** 0.5)
-    board_w = board_h = None
-    layout = None
-    grow = 0
-    while layout is None and grow < 400:
-        cand_w = _snap_up(bw0 + grow * OUTLINE_GROW)
-        cand_h = _snap_up(bh0 + grow * OUTLINE_GROW * (bh0 / bw0))
-        layout = _layout(cand_w, cand_h)
-        if layout is not None:
-            board_w, board_h = cand_w, cand_h
-            break
-        grow += 1
-    if layout is None:
-        raise RuntimeError("pcb: could not fit every subsystem zone on a "
-                           "grown board — packing is broken")
-    zorigin, (sx_off, sy_off) = layout
-
-    # SoM keep-out (centered) + SoM mezzanine J positions, in the grown board
+    # SoM keep-out (centered on the floorplan SoM body) + SoM mezzanine J
+    # positions (the floorplan-centered, SoM-mirrored DF40 centers).
     halo = 1.0
-    j_halo = SOM_HALO_PCB
-    keepout = (sx_off + SOM_HALO_PCB - halo, sy_off + SOM_HALO_PCB - halo,
-               sx_off + SOM_HALO_PCB + som.w + halo,
-               sy_off + SOM_HALO_PCB + som.h + halo)
-    som_view = {jn: (sx_off + j_halo + sx, sy_off + j_halo + sy)
+    keepout = (plan.som_x - halo, plan.som_y - halo,
+               plan.som_x + som.w + halo, plan.som_y + som.h + halo)
+    som_view = {jn: (plan.som_x + sx, plan.som_y + sy)
                 for jn, (sx, sy) in som_rel.items()}
 
     # ---- STEP 3: final origins (board frame) for every footprint ------------
     pos: dict[str, tuple[float, float]] = {}
-    # mounting holes -> the 4 corners of the GROWN board
+    # mounting holes -> the 4 corners of the FLOORPLAN-sized board
     corners = [(MH_INSET, MH_INSET),
                (board_w - MH_INSET, MH_INSET),
                (board_w - MH_INSET, board_h - MH_INSET),

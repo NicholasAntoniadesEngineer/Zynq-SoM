@@ -49,7 +49,11 @@ BOARD_W = 120.0
 BOARD_H = 100.0
 OUTLINE_NOTE = ""        # human-readable derivation, set by derive_outline
 
-EDGE_MARGIN = 4.0        # board corners kept clear of edge connectors
+EDGE_MARGIN = 10.0       # board corners kept clear of edge connectors AND the
+                         # corner-forced M3 mounting holes (MH_INSET 5 + pad ~3)
+MH_CORNER_KO = 10.0      # corner square reserved for each corner-forced M3 hole
+                         # (the PCB corner-forces a hole into each corner) so no
+                         # edge/interior block overlaps it (was a DRC short)
 CONN_SIDE_MARGIN = 1.5   # block width = connector span + this each side
 EDGE_DEPTH_CAP = 22.0    # edge block max depth into the board
 CLEAR = 1.5              # block-to-block clearance
@@ -452,20 +456,22 @@ class Plan:
         return self.edge_blocks + self.interior_blocks
 
 
-def _edge_block_dims(b: Block) -> tuple[float, float]:
-    conn_w = sum(c[2] for c in b.conns) + 2.0 * max(0, len(b.conns) - 1)
-    conn_d = max((c[3] for c in b.conns), default=0.0)
-    if b.conns:
-        w = _r5(conn_w + 2 * CONN_SIDE_MARGIN)
-    else:                          # reservation-only block (deferred conn)
-        w = _r5(max(12.0, b.area / EDGE_DEPTH_CAP))
-    d = _r5(min(EDGE_DEPTH_CAP, max(conn_d + 3.0, b.area / w)))
-    return w, d
-
-
 def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
     """Place edge blocks flush on their edge; overflow spills to the next
-    edge in a fixed cycle (recorded honestly in plan.spilled)."""
+    edge in a fixed cycle (recorded honestly in plan.spilled).
+
+    Block (w, h) are the REAL 2-sided packed zone dimensions (the SAME box the
+    PCB places), so along a N/S edge the block spans ``b.w`` and is ``b.h`` deep,
+    and along a W/E edge it spans ``b.h`` and is ``b.w`` deep. The zone is NOT
+    rotated (the PCB places it axis-aligned at this very (x, y)), so the span
+    along the edge is the relevant dimension per edge — chosen here, never a
+    width/height swap that would diverge from the PCB."""
+    def span_of(b: Block, edge: str) -> float:
+        return b.w if edge in ("N", "S") else b.h
+
+    def depth_of(b: Block, edge: str) -> float:
+        return b.h if edge in ("N", "S") else b.w
+
     spill_next = {"W": "S", "S": "N", "N": "E", "E": "W"}
     pending: dict[str, list[Block]] = {"N": [], "E": [], "S": [], "W": []}
     for b in plan.edge_blocks:
@@ -475,13 +481,14 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
     for _round in range(4):
         for edge in ("W", "S", "N", "E"):
             cap = (BOARD_H if edge in "WE" else BOARD_W) - 2 * EDGE_MARGIN
-            used = sum(bb.w + CLEAR for bb in placed[edge])
-            queue = sorted(pending[edge], key=lambda bb: (-bb.w, bb.name))
+            used = sum(span_of(bb, edge) + CLEAR for bb in placed[edge])
+            queue = sorted(pending[edge],
+                           key=lambda bb: (-span_of(bb, edge), bb.name))
             pending[edge] = []
             for b in queue:
-                if used + b.w <= cap:
+                if used + span_of(b, edge) <= cap:
                     placed[edge].append(b)
-                    used += b.w + CLEAR
+                    used += span_of(b, edge) + CLEAR
                 else:
                     nxt = spill_next[edge]
                     pending[nxt].append(b)
@@ -489,25 +496,24 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
                         f"{b.name}: {edge} edge full -> {nxt}")
     for edge in ("N", "E", "S", "W"):
         blocks = sorted(placed[edge], key=lambda bb: bb.name)
-        total = sum(bb.w for bb in blocks) + CLEAR * (len(blocks) - 1)
+        total = (sum(span_of(bb, edge) for bb in blocks)
+                 + CLEAR * (len(blocks) - 1))
         span = (BOARD_H if edge in "WE" else BOARD_W)
         gap = max(CLEAR, (span - 2 * EDGE_MARGIN - total)
                   / (len(blocks) + 1) if blocks else 0)
         pos = EDGE_MARGIN + gap
         for b in blocks:
             b.edge = edge
-            w, d = b.w, b.h
+            sp, dp = span_of(b, edge), depth_of(b, edge)
             if edge == "N":
                 b.x, b.y = _r5(pos), 0.0
             elif edge == "S":
-                b.x, b.y = _r5(pos), _r5(BOARD_H - d)
+                b.x, b.y = _r5(pos), _r5(BOARD_H - dp)
             elif edge == "W":
                 b.x, b.y = 0.0, _r5(pos)
-                b.w, b.h = d, w            # rotate: depth into board is x
             else:
-                b.x, b.y = _r5(BOARD_W - d), _r5(pos)
-                b.w, b.h = d, w
-            pos += w + gap
+                b.x, b.y = _r5(BOARD_W - dp), _r5(pos)
+            pos += sp + gap
 
 
 class _Occupancy:
@@ -532,9 +538,10 @@ class _Occupancy:
 
     def place_near(self, ax: float, ay: float, w: float,
                    h: float) -> tuple[float, float, float, float] | None:
-        """Deterministic: scan lattice positions sorted by city-block
-        distance of the block CENTER from the anchor; first fit wins
-        (either orientation)."""
+        """Deterministic: scan lattice positions sorted by city-block distance
+        of the block CENTER from the anchor; first fit wins. The block is placed
+        AXIS-ALIGNED (no width/height swap) — the PCB places this same zone box
+        un-rotated at this very (x, y), so a rotation here would diverge."""
         s = self.STEP
         cands = []
         nx = int(BOARD_W / s) + 1
@@ -548,8 +555,6 @@ class _Occupancy:
         for _d, x, y in cands:
             if self.fits(x, y, w, h):
                 return x, y, w, h
-            if h != w and self.fits(x, y, h, w):
-                return x, y, h, w
         return None
 
 
@@ -639,50 +644,162 @@ def build_plan(sheets, link_result, regs) -> Plan:
         if best_n >= 2 and best is not None:
             b.zone = f"@{best.name}"     # anchor at that edge block
 
-    # size + pack, shrinking the small-part routing factor until it fits
-    factor = ROUTE_FACTOR
-    for _try in range(12):
-        ok = _attempt_pack(plan, sheets, interior, edge_of, factor)
-        if ok:
-            plan.factor = round(factor, 2)
+    # subsystem AFFINITY (placement attraction): for every multi-sheet net, the
+    # sheets it touches form a clique; accumulate a pairwise weight inversely
+    # proportional to the net's fan-out (a 2-sheet SIGNAL net pulls hard; a
+    # board-wide rail/GND barely pulls — it is long no matter where blocks sit).
+    # A sheet's pull toward the centered SoM is tracked separately. Interior
+    # blocks are then dropped near the weighted centroid of their already-placed
+    # net neighbours + the SoM, so cross-subsystem airwires stay short (LAW 5).
+    sheets_of_net: dict[str, set[str]] = {}
+    for sc in sheets:
+        if sc.name.startswith("som_j"):
+            continue
+        for net in sc.circuit.nets.values():
+            sheets_of_net.setdefault(net.name, set()).add(sc.name)
+    # SoM membership: a net also touching a som_j sheet pulls toward the SoM.
+    som_nets: set[str] = set()
+    for sc in sheets:
+        if sc.name.startswith("som_j"):
+            for net in sc.circuit.nets.values():
+                som_nets.add(net.name)
+    affinity: dict[str, dict[str, float]] = {}
+    som_pull: dict[str, float] = {}
+    for nname, ss in sheets_of_net.items():
+        k = len(ss)
+        if k < 2 and nname not in som_nets:
+            continue
+        denom = max(1, (k + (1 if nname in som_nets else 0)))
+        w = 1.0 / denom
+        members = sorted(ss)
+        for i, a in enumerate(members):
+            if nname in som_nets:
+                som_pull[a] = som_pull.get(a, 0.0) + w
+            for b in members[i + 1:]:
+                affinity.setdefault(a, {})[b] = \
+                    affinity.get(a, {}).get(b, 0.0) + w
+                affinity.setdefault(b, {})[a] = \
+                    affinity.get(b, {}).get(a, 0.0) + w
+
+    # SHARED SIZING: every block's (w, h) is the REAL 2-sided packed zone of its
+    # subsystem — the SAME box the PCB places. Importing here (not at module top)
+    # keeps the floorplan importable without the PCB module's heavier deps and
+    # avoids a circular import (pcb imports floorplan for build_plan).
+    from schgen.generate import pcb as _pcb
+    zg = _pcb.subsystem_zone_geometry(two_side=True)
+    zbox = dict(zg.zone_box)
+    # a block with no packed zone (a reservation-only deferred-connector block,
+    # or the mounting-holes-only `mechanical` sheet whose holes are corner-forced
+    # and never zone-packed) still needs a landing rectangle — size it to its
+    # courtyard reservation via the small area estimate; the rest use the packer.
+    for b in plan.edge_blocks + interior:
+        if b.name not in zbox:
+            a = sheet_area(by_name[b.name].circuit, ROUTE_FACTOR)
+            zbox[b.name] = (_r5(max(12.0, a ** 0.5)), _r5(max(8.0, a ** 0.5)))
+
+    # GROW the derived outline (keeping the SoM centered + the seed aspect) until
+    # the edge-pinned + interior-anchored layout fits every REAL packed block.
+    # The SAME shared sizing drives both this floorplan and the PCB placement, so
+    # FLOORPLAN.svg and the PCB ratsnest cannot diverge.
+    seed_aspect = round(outline.w / outline.h, 4)
+    grow = 0.0
+    for _try in range(200):
+        BOARD_W = _snap_up_fp(outline.w + grow * seed_aspect)
+        BOARD_H = _snap_up_fp(outline.h + grow)
+        plan.som_x = _r5((BOARD_W - som.w) / 2)
+        plan.som_y = _r5((BOARD_H - som.h) / 2)
+        if _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull):
             plan.interior_blocks = interior
+            OUTLINE_NOTE = _outline_note(som, outline, BOARD_W, BOARD_H, grow)
             return plan
-        factor *= 0.85
-    raise RuntimeError("floorplan: could not fit all blocks on the "
-                       f"{BOARD_W:g}x{BOARD_H:g} suggestion outline")
+        grow += OUTLINE_SNAP
+    raise RuntimeError("floorplan: could not fit all REAL packed blocks on a "
+                       f"grown outline (last try {BOARD_W:g}x{BOARD_H:g})")
 
 
-def _attempt_pack(plan: Plan, sheets, interior: list[Block],
-                  edge_of: dict[str, str], factor: float) -> bool:
-    by_name = {sc.name: sc for sc in sheets}
+def _outline_note(som: SomGeom, seed: "Outline", w: float, h: float,
+                  grow: float) -> str:
+    return (f"{seed.note}; then GROWN +{grow:g}mm to {w:g}x{h:g} mm to fit the "
+            f"REAL 2-sided packed subsystem blocks (the same packed geometry the "
+            f"PCB places), SoM {som.w:g}x{som.h:g} centered")
+
+
+def _snap_up_fp(v: float) -> float:
+    n = int((v + OUTLINE_SNAP - 1e-6) / OUTLINE_SNAP)
+    return round(n * OUTLINE_SNAP, 1)
+
+
+def _attempt_pack(plan: Plan, interior: list[Block],
+                  edge_of: dict[str, str],
+                  zbox: dict[str, tuple[float, float]],
+                  affinity: dict[str, dict[str, float]],
+                  som_pull: dict[str, float]) -> bool:
     plan.spilled = []
     for b in plan.edge_blocks:
-        b.area = round(sheet_area(by_name[b.name].circuit, factor), 1)
-        b.w, b.h = _edge_block_dims(b)
+        b.w, b.h = zbox[b.name]
+        b.area = round(b.w * b.h, 1)
     _pack_edges(plan, edge_of)
 
     occ = _Occupancy()
     occ.add(plan.som_x, plan.som_y, plan.som.w, plan.som.h)
-    for b in plan.edge_blocks:
+    # reserve the 4 corner mounting-hole keepouts: the PCB corner-forces an M3
+    # hole into each corner, so no interior block may occupy a corner square (an
+    # overlap was a real CHASSIS_GND/signal DRC short). Edge blocks clear the
+    # corners via EDGE_MARGIN; this protects the interior packer.
+    for cx, cy in ((0.0, 0.0), (BOARD_W - MH_CORNER_KO, 0.0),
+                   (BOARD_W - MH_CORNER_KO, BOARD_H - MH_CORNER_KO),
+                   (0.0, BOARD_H - MH_CORNER_KO)):
+        occ.add(cx, cy, MH_CORNER_KO, MH_CORNER_KO)
+    centers: dict[str, tuple[float, float]] = {}
+    for b in plan.edge_blocks:        # edge blocks are pinned anchors already
         occ.add(b.x, b.y, b.w, b.h)
+        centers[b.name] = (b.cx, b.cy)
 
     edge_pos = {b.name: b for b in plan.edge_blocks}
-    order = sorted(interior, key=lambda b: (-sheet_area(
-        by_name[b.name].circuit, factor), b.name))
+    som_cx = plan.som_x + plan.som.w / 2
+    som_cy = plan.som_y + plan.som.h / 2
+
+    def _conn(b: Block) -> float:
+        return (sum(affinity.get(b.name, {}).values())
+                + 3.0 * som_pull.get(b.name, 0.0))
+
+    # place the most-connected (and, as a tiebreak, the largest) interior block
+    # first, so the hub subsystems anchor near the SoM and pull the rest in —
+    # this is what keeps the cross-subsystem airwire under the LAW-5 budget.
+    order = sorted(interior, key=lambda b: (-_conn(b),
+                                            -(zbox[b.name][0] *
+                                              zbox[b.name][1]), b.name))
     for b in order:
-        b.area = round(sheet_area(by_name[b.name].circuit, factor), 1)
-        b.w, b.h = _interior_dims(b.area)
+        b.w, b.h = zbox[b.name]
+        b.area = round(b.w * b.h, 1)
+        # base anchor: the EXCLUSIVE edge-block pull (e.g. usb_pd -> pd_input) or
+        # the SoM-side zone bias — keeps the interior's E/N/S/W intent.
         if b.zone.startswith("@") and b.zone[1:] in edge_pos:
             eb = edge_pos[b.zone[1:]]
-            ax, ay = eb.cx, eb.cy
+            zax, zay = eb.cx, eb.cy
         else:
-            ax, ay = _zone_anchor(
+            zax, zay = _zone_anchor(
                 plan, b.zone if b.zone in ("N", "E", "S", "W") else "E")
+        # AFFINITY anchor: weighted centroid of already-placed net neighbours +
+        # the SoM. Blend the zone bias in at a small fixed weight so the cluster
+        # intent survives while net-sharing blocks still draw together.
+        wsum = 0.5 + max(som_pull.get(b.name, 0.0), 0.0)
+        ax = 0.5 * zax + max(som_pull.get(b.name, 0.0), 0.0) * som_cx
+        ay = 0.5 * zay + max(som_pull.get(b.name, 0.0), 0.0) * som_cy
+        for nb, w in affinity.get(b.name, {}).items():
+            if nb in centers:
+                ncx, ncy = centers[nb]
+                ax += w * ncx
+                ay += w * ncy
+                wsum += w
+        ax /= wsum
+        ay /= wsum
         pos = occ.place_near(ax, ay, b.w, b.h)
         if pos is None:
             return False
         b.x, b.y, b.w, b.h = pos
         occ.add(b.x, b.y, b.w, b.h)
+        centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
     return True
 
 
