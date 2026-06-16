@@ -43,7 +43,11 @@ LCSC_DETAIL_URL = "https://wmsc.lcsc.com/ftps/wm/product/detail?productCode={cod
 def _load_subsystem(name_or_path: str):
     path = Path(name_or_path)
     if path.suffix != ".py":
-        path = SUBSYSTEMS_DIR / f"{Path(name_or_path).stem}.py"
+        stem = Path(name_or_path).stem
+        # folder-aware: prefer carrier/subsystems/<name>/<name>.py, else the
+        # flat carrier/subsystems/<name>.py (same resolution as link.py).
+        foldered = SUBSYSTEMS_DIR / stem / f"{stem}.py"
+        path = foldered if foldered.exists() else SUBSYSTEMS_DIR / f"{stem}.py"
     if not path.exists():
         raise SystemExit(f"subsystem not found: {path}")
     spec = importlib.util.spec_from_file_location(

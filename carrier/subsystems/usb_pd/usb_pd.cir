@@ -1,0 +1,39 @@
+* usb_pd.cir — CARRIER-BOUND SPICE subckt for the FUSB302B USB-PD sink.
+*
+* THIN ADAPTER. This is the CARRIER-BOUND instance of the project-agnostic
+* generic subsystem subsystems/usb_pd/. The authoritative passive small-signal
+* MODEL (the FUSB302B VDD bypass + the Type-C CC analog filters, with values)
+* lives ONCE in subsystems/usb_pd/usb_pd.cir, where the subckt pins are the
+* subsystem's ABSTRACT interface. This file re-declares the SAME subckt with the
+* CARRIER real net names — the META bind map of
+* carrier/subsystems/usb_pd/usb_pd.py — as its external pins, so a board-level
+* deck references usb_pd by the carrier nets it is wired to. The passive values
+* are NOT re-authored here; see the generic .cir for the model + rationale.
+*
+* Bind map (generic abstract pin -> carrier real net), from META["bind"]:
+*   VDD_LOGIC  -> +3V3_SC          (FUSB302B VDD; always-on SC rail)
+*   VBUS_SENSE -> +VBUS_IN         (raw receptacle VBUS, ahead of inlet eFuse)
+*   CC1        -> STM32_USB_CC1    (receptacle CC1)
+*   CC2        -> STM32_USB_CC2    (receptacle CC2)
+*   GND        -> GND             (identity)
+* (I2C_SDA/SCL + INT_N carry no subsystem-local passive, so — as in the generic
+*  model — they are not subckt pins; their pull-ups live on the shared bus.)
+*
+* Port order mirrors the generic model: VDD_LOGIC VBUS_SENSE CC1 CC2 GND.
+
+.subckt usb_pd +3V3_SC +VBUS_IN STM32_USB_CC1 STM32_USB_CC2 GND
+* Passive network — values authored in subsystems/usb_pd/usb_pd.cir:
+C1 +3V3_SC GND 100n
+C2 +3V3_SC GND 10u
+C3 +VBUS_IN GND 100n
+C4 STM32_USB_CC1 GND 200p
+C5 STM32_USB_CC2 GND 200p
+.ends usb_pd
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto +3V3_SC settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

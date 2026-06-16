@@ -58,7 +58,8 @@ from pathlib import Path
 
 from schgen.core.model import Circuit
 
-PINMAP = Path(__file__).resolve().parents[1] / "research" / "fmc_lpc_pinmap.json"
+# foldered package layout (carrier/subsystems/fmc/fmc.py): parents[2] == carrier
+PINMAP = Path(__file__).resolve().parents[2] / "research" / "fmc_lpc_pinmap.json"
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"

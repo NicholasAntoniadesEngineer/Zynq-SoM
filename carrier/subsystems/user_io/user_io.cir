@@ -1,0 +1,53 @@
+* user_io.cir — SPICE subckt for the carrier user_io subsystem.
+*
+* CARRIER-LOCAL: the subckt pins are the subsystem's real carrier nets (rails +
+* the 8 PL bank-13 IO pins), NOT abstract names. This subckt captures the
+* PASSIVE network the subsystem adds — the 4 LED series resistors (per-color,
+* audit io_misc-1), the 4 button 10k pull-ups, and the gated-rail bypass cap.
+* The LEDs (active diodes) are modelled with the KiCd-faithful 4-pin path
+* anode(+3V3_USER_LED) -> Dn -> cathode node -> series R -> PL pin; the buttons
+* are modelled as their pull-up + a switch contact to GND (open at DC).
+*
+* Values mirror carrier/subsystems/user_io/user_io.py one-for-one (parse_si):
+*   R1 1k    red    series   (USER_LED1_K -> IO_25_13)
+*   R2 200R  green  series   (USER_LED2_K -> IO_L6_P_13)
+*   R3 200R  blue   series   (USER_LED3_K -> IO_L24_P_13)
+*   R4 200R  white  series   (USER_LED4_K -> IO_L24_N_13)
+*   R5..R8 10k button pull-ups (+3V3 -> IO_L15/19/21/22_P_13)
+*   C1 100n  +3V3_USER_LED bypass
+*
+* Port order: the two rails, GND, then the 8 PL pins (LED pins, then buttons).
+
+.subckt user_io VLED V3V3 GND IO25 IOL6P IOL24P IOL24N IOL15P IOL19P IOL21P IOL22P
+
+* LED branches: anode on the gated rail -> diode -> cathode node -> series R ->
+* PL pin (active-low: the PL pin sinks to turn the LED on).
+D1 VLED N_LED1 DLED
+R1 N_LED1 IO25   1k
+D2 VLED N_LED2 DLED
+R2 N_LED2 IOL6P  200
+D3 VLED N_LED3 DLED
+R3 N_LED3 IOL24P 200
+D4 VLED N_LED4 DLED
+R4 N_LED4 IOL24N 200
+
+* gated-rail bypass
+C1 VLED GND 100n
+
+* button pull-ups: 10k from the UNGATED +3V3 to each PL pin (contact to GND is
+* open at DC -> the pin reads high until the button is pressed).
+R5 V3V3 IOL15P 10k
+R6 V3V3 IOL19P 10k
+R7 V3V3 IOL21P 10k
+R8 V3V3 IOL22P 10k
+
+.model DLED D (IS=1e-15 N=2 RS=10)
+.ends user_io
+
+* Standalone smoke harness (ngspice -b; harmless under any board use): the LED
+* rail at 3.3 V into a grounded PL pin lights LED1 through its 1k series R.
+.subckt _src P
+V1 vin 0 3.3
+R1 vin P 1k
+.ends _src
+.end

@@ -1,0 +1,33 @@
+* usb_uart_connector.cir — CARRIER-BOUND SPICE subckt for the USB-C UFP
+* receptacle (console-port connector half).
+*
+* THIN ADAPTER. This is the CARRIER-BOUND instance of the project-agnostic
+* generic subsystem subsystems/usb_uart_connector/. The authoritative passive
+* model (the receptacle VBUS bulk, with values) lives ONCE in
+* subsystems/usb_uart_connector/usb_uart_connector.cir, where the subckt pins
+* are the subsystem's ABSTRACT interface. This file re-declares the SAME subckt
+* with the CARRIER real net names — the META bind map of
+* carrier/subsystems/usb_uart_connector/usb_uart_connector.py — as its external
+* pins. The passive values are NOT re-authored here; see the generic .cir for
+* the model + the non-interface CC Rd pulldowns documented there.
+*
+* Bind map (generic abstract pin -> carrier real net), from META["bind"]:
+*   VBUS -> USB_UART_VBUS    (receptacle 5 V VBUS; sensed by the bridge)
+*   GND  -> GND             (identity)
+* (the USB data pair USB_DP/USB_DM + CHASSIS_GND carry no two-interface-net
+*  passive, so — as in the generic model — they are not subckt pins.)
+*
+* Port order mirrors the generic model: VBUS GND.
+
+.subckt usb_uart_connector USB_UART_VBUS GND
+* Passive network — values authored in subsystems/usb_uart_connector/usb_uart_connector.cir:
+C1 USB_UART_VBUS GND 10u
+.ends usb_uart_connector
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto USB_UART_VBUS settles to 1 V at DC across the bulk.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

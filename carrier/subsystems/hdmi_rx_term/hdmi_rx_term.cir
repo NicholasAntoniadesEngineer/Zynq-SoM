@@ -1,0 +1,43 @@
+* hdmi_rx_term.cir — SPICE subckt for the carrier hdmi_rx_term subsystem.
+*
+* CARRIER-LOCAL: the subckt pins are the subsystem's real carrier nets (the 8
+* single-ended TMDS-RX lines + the AVCC rail + GND), NOT abstract names. This
+* subckt captures the FULL passive network — the 8x 49.9 ohm TMDS sink source-
+* terminations to AVCC and the bank-local AVCC bypass. There is no active part
+* on this IC-less sheet, so the resistor network IS the subsystem.
+*
+* SI-HDMIRX-TERM / DEF-6: a Zynq-7000 HR-bank HDMI sink has no on-die TMDS
+* termination, so each single-ended line needs the standard 50 ohm-to-AVCC
+* source termination (49.9 ohm 1%). AVCC == +3V3 == VCCO_33.
+*
+* Values mirror carrier/subsystems/hdmi_rx_term/hdmi_rx_term.py one-for-one:
+*   R1..R8 49.9R  one per TMDS line, to AVCC
+*   C1 100n + C2 1u  AVCC bank-local bypass to GND
+*
+* Port order: AVCC, GND, then the 8 TMDS-RX lines (D2 P/N, D1 P/N, D0 P/N, CLK P/N).
+
+.subckt hdmi_rx_term AVCC GND D2P D2N D1P D1N D0P D0N CLKP CLKN
+
+* 8x 49.9 ohm sink terminations: each single-ended line to AVCC
+R1 D2P  AVCC 49.9
+R2 D2N  AVCC 49.9
+R3 D1P  AVCC 49.9
+R4 D1N  AVCC 49.9
+R5 D0P  AVCC 49.9
+R6 D0N  AVCC 49.9
+R7 CLKP AVCC 49.9
+R8 CLKN AVCC 49.9
+
+* AVCC bank-local bypass (the 64 mA termination load swings against AVCC)
+C1 AVCC GND 100n
+C2 AVCC GND 1u
+
+.ends hdmi_rx_term
+
+* Standalone smoke harness (ngspice -b; harmless under any board use): a TMDS
+* line driven low against AVCC=3.3 V sinks ~8 mA through its 49.9 ohm term R.
+.subckt _src P
+V1 vin 0 3.3
+R1 vin P 49.9
+.ends _src
+.end

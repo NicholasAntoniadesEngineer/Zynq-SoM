@@ -1,0 +1,33 @@
+* usbc_otg.cir — CARRIER-BOUND SPICE subckt for the USB 2.0 HS OTG port.
+*
+* THIN ADAPTER. This is the CARRIER-BOUND instance of the project-agnostic
+* generic subsystem subsystems/usbc_otg/. The authoritative passive model (the
+* TPS2051C input bypass + the VBUS bulk, with values) lives ONCE in
+* subsystems/usbc_otg/usbc_otg.cir, where the subckt pins are the subsystem's
+* ABSTRACT interface. This file re-declares the SAME subckt with the CARRIER
+* real net names — the META bind map of
+* carrier/subsystems/usbc_otg/usbc_otg.py — as its external pins. The passive
+* values are NOT re-authored here; see the generic .cir for the model + the
+* non-interface passives (CC Rp, EN/FLT/ID) documented there.
+*
+* Bind map (generic abstract pin -> carrier real net), from META["bind"]:
+*   VBUS_SUPPLY -> +5V_USB     (bring-up-gated module rail; SY6280)
+*   VBUS        -> USB_VBUS    (connector VBUS; TPS2051 OUT)
+*   VDD_LOGIC   -> +3V3_SC     (SC rail; FLT# pull-up ref, G4 re-rail)
+*   GND         -> GND        (identity)
+*
+* Port order mirrors the generic model: VBUS_SUPPLY VBUS VDD_LOGIC GND.
+
+.subckt usbc_otg +5V_USB USB_VBUS +3V3_SC GND
+* Passive network — values authored in subsystems/usbc_otg/usbc_otg.cir:
+C1 +5V_USB GND 100n
+C2 USB_VBUS GND 22u
+.ends usbc_otg
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto +5V_USB settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
