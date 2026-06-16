@@ -1,0 +1,37 @@
+* pmod_expansion.cir — THIN carrier subckt for the pmod_expansion ADAPTER (the
+* carrier-bound view of the reusable manual-gated Pmod expansion port).
+*
+* The carrier pmod_expansion subsystem is a THIN ADAPTER: it imports the project-
+* agnostic library subsystem subsystems/pmod_expansion/ and BINDS its abstract
+* interface to the carrier's REAL net names (see carrier/subsystems/
+* pmod_expansion/pmod_expansion.py META). The full passive network (the SY6280
+* load-switch IN bypass + bulk and the switched-rail OUT bypass + bulk, plus the
+* ILIM/enable/LED straps) lives ONCE in the LIBRARY subckt:
+*
+*     ==> subsystems/pmod_expansion/pmod_expansion.cir   (authoritative model)
+*
+* This carrier subckt is a thin re-export: it declares the carrier external nets
+* as its pins (the bound rails) and instantiates the library subckt, so a board-
+* level .op sees the carrier net names while the model stays single-source.
+*
+* CARRIER BIND (abstract library pin -> carrier external net, per the META):
+*   VDD_PMOD -> +3V3        (carrier-sourced +VCCO_13 = +3V3; SY6280 input)
+*   VSW_PMOD -> +3V3_PMODX  (the MANUALLY-GATED switched output rail, default OFF)
+*   GND      -> GND
+*
+* (The eight PMOD_IO1..8 ports bind to PMODX_IO1..8 but, like the library, carry
+*  only a GND-referenced ESD-array shunt on this sheet and so are not two-
+*  interface-net subckt pins. Pin order matches the library subckt, GND last.)
+
+.subckt pmod_expansion 3V3 3V3_PMODX GND
+
+* instantiate the library passive model with the carrier nets bound in pin order
+* (subsystems/pmod_expansion/pmod_expansion.cir: VDD_PMOD VSW_PMOD GND)
+XPMODX 3V3 3V3_PMODX GND pmod_expansion
+
+.ends pmod_expansion
+
+* The library subckt definition (the authoritative passive network) lives in
+* subsystems/pmod_expansion/pmod_expansion.cir and is .include'd by a board-level
+* deck; this thin file is parsed standalone for the local bind-parity test.
+.end

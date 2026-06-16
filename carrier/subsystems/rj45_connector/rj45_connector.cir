@@ -1,0 +1,54 @@
+* rj45_connector.cir — THIN carrier subckt for the 8P8C RJ45 jack subsystem.
+*
+* CARRIER ADAPTER: this is a thin wrapper whose subckt PINS are the carrier's
+* REAL external nets (the bound LED rail/ground/chassis + the line-side MDI
+* pairs), in contrast to the project-agnostic library subckt
+* subsystems/rj45_connector/rj45_connector.cir, whose pins are the ABSTRACT
+* interface. The real passive network (the two housing-LED 330R series resistors)
+* is modelled ONCE in that library .cir; see it for the device-level analysis:
+*
+*     subsystems/rj45_connector/rj45_connector.cir
+*
+* The carrier bind (carrier/subsystems/rj45_connector/rj45_connector.py
+* META["bind"]) maps the library interface onto these carrier pins:
+*     VLED        -> +3V3            (always-on rail; two 330R housing LEDs)
+*     GND         -> GND
+*     CHASSIS_GND -> CHASSIS_GND     (shield/shell + four M3 corner mounts)
+*     RJ45_MDIn_P/N -> ETH_LINE_MDI_n_P/N  (line-side pairs; this is the peer
+*                                           that BINDS the ethernet media side)
+* SPICE node names cannot begin with '+', so the '+3V3' rail appears here as the
+* safe token V3V3 (same net, '+' dropped for the parser).
+*
+* This subckt itself carries no passives (they live in the library .cir); each
+* pin is tied to ground through a 1G keep-resistor purely so ngspice sees every
+* external node and nothing dangles. It is an INTERFACE stub, deliberately R-only
+* so a board-level netlist can reference the carrier external nets by name.
+
+.subckt rj45_connector V3V3 GND CHASSIS_GND
++ ETH_LINE_MDI_0_P ETH_LINE_MDI_0_N
++ ETH_LINE_MDI_1_P ETH_LINE_MDI_1_N
++ ETH_LINE_MDI_2_P ETH_LINE_MDI_2_N
++ ETH_LINE_MDI_3_P ETH_LINE_MDI_3_N
+
+* interface keep-resistors (no dangling external node; the real passive network
+* is in subsystems/rj45_connector/rj45_connector.cir)
+Rk1  V3V3 GND 1G
+Rk2  CHASSIS_GND GND 1G
+Rk3  ETH_LINE_MDI_0_P GND 1G
+Rk4  ETH_LINE_MDI_0_N GND 1G
+Rk5  ETH_LINE_MDI_1_P GND 1G
+Rk6  ETH_LINE_MDI_1_N GND 1G
+Rk7  ETH_LINE_MDI_2_P GND 1G
+Rk8  ETH_LINE_MDI_2_N GND 1G
+Rk9  ETH_LINE_MDI_3_P GND 1G
+Rk10 ETH_LINE_MDI_3_N GND 1G
+
+.ends rj45_connector
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto V3V3 settles to ~1 V at DC.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

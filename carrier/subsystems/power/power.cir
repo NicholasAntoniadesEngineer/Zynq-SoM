@@ -1,0 +1,37 @@
+* power.cir — THIN carrier-bound wrapper for the regulator-tree subsystem.
+*
+* This package is a carrier ADAPTER (see power.py / README.md): it owns no
+* netlist of its own — the portable regulator passive network is modelled ONCE
+* in the project-agnostic library subckt ../../../subsystems/power/power.cir,
+* whose pins are the subsystem's ABSTRACT interface. This wrapper simply
+* instantiates that library subckt with the CARRIER real net names in the bind
+* order, so a board-level .op/.tran sees the same passive network on the carrier
+* rails the schematic emits — exactly mirroring power.py's META["bind"].
+*
+* The carrier bind (power.py META["bind"], external rails only):
+*   VIN          -> +VIN_SYS       (buck-1 input, post-RS1)
+*   VOUT_5V_REG  -> +5V_REG        (buck-1 output cluster, reg-side of RS2)
+*   VOUT_5V      -> +5V            (board +5V rail, post-RS2)
+*   VOUT_3V3_REG -> +3V3_REG       (buck-2 output cluster, reg-side of RS3)
+*   VOUT_3V3     -> +3V3           (board +3V3 rail, post-RS3)
+*   VOUT_1V8_REG -> +1V8_REG       (LDO output cluster, reg-side of RS4)
+*   VOUT_1V8     -> +1V8           (board +1V8 rail, post-RS4)
+*   GND          -> GND            (identity)
+* (the EN ports carry no two-interface-net passive and are not subckt pins, so
+*  they do not appear here — they bind on the bringup sheets.)
+
+* pull in the project-agnostic library subckt (defines .subckt power ...)
+.include ../../../subsystems/power/power.cir
+
+* carrier instance: library subckt pins bound to the carrier real rails, in the
+* library's port order VIN VOUT_5V_REG VOUT_5V VOUT_3V3_REG VOUT_3V3
+* VOUT_1V8_REG VOUT_1V8 GND
+.subckt power_carrier +VIN_SYS +5V_REG +5V +3V3_REG +3V3 +1V8_REG +1V8 GND
+Xpower +VIN_SYS +5V_REG +5V +3V3_REG +3V3 +1V8_REG +1V8 GND power
+.ends power_carrier
+
+* Like the library subckt this wraps, this is a pure subckt definition (no
+* top-level analysis) — a consuming board-level deck instantiates power_carrier
+* and drives it. ngspice -b reports "incomplete netlist / no simulations run"
+* harmlessly, exactly as ../../../subsystems/power/power.cir does standalone.
+.end

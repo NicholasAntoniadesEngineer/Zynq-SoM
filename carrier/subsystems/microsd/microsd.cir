@@ -1,0 +1,44 @@
+* microsd.cir — CARRIER-BOUND instance of the microsd subsystem (thin subckt).
+*
+* The PASSIVE small-signal model (the TXS02612 per-rail bypass/bulk caps + the
+* TPD6E001 ESD VCC bypass) lives ONCE in the project-agnostic library at
+* subsystems/microsd/microsd.cir, whose subckt pins are the ABSTRACT interface
+* rails (VDD_HOST VDD_CARD GND). THIS file is the CARRIER-BOUND view: a thin
+* subckt whose pins are the carrier's REAL nets (the bind map in
+* carrier/subsystems/microsd/microsd.py), instantiating that library passive
+* model so a board-level .op/.tran can drop in the carrier-bound slot by carrier
+* net name.
+*
+* Carrier bind (abstract -> real, from META["bind"]):
+*   VDD_HOST -> +1V8       TXS02612 VCCA host-side reference (SoM SDIO @ 1.8 V)
+*   VDD_CARD -> +3V3_SD    bring-up-gated card rail (SY6280 cell 5)
+*   GND      -> GND        (identity)
+* (SD_CLK/CMD/D0..D3 and CD_N carry no subsystem-local passive, so — as in the
+*  library subckt — they are not subckt pins.)
+*
+* Pin order: V1V8 V3V3_SD GND  (carrier spelling, '+' stripped for SPICE node
+* syntax; mirrors the library VDD_HOST VDD_CARD GND.)
+
+.subckt microsd V1V8 V3V3_SD GND
+
+* Carrier-bound instance of the library passive network (decoupling/bulk/ESD).
+* Values mirror subsystems/microsd/microsd.cir one-for-one:
+*   C1 100n  VCCA host bypass (+1V8)
+*   C2 100n  VCCB card bypass (+3V3_SD)
+*   C3 22u   VCCB card bulk   (+3V3_SD)
+*   C4 100n  TPD6E001 ESD VCC bypass (+3V3_SD, SD-1)
+C1 V1V8 GND 100n
+C2 V3V3_SD GND 100n
+C3 V3V3_SD GND 22u
+C4 V3V3_SD GND 100n
+
+.ends microsd
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto the carrier card rail settles to 1 V across the
+* bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

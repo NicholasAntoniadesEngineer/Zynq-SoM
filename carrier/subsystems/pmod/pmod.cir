@@ -1,0 +1,50 @@
+* pmod.cir — THIN carrier subckt for the pmod ADAPTER (the carrier-bound view of
+* the reusable 2x Digilent-Pmod host-port subsystem).
+*
+* The carrier pmod subsystem is a THIN ADAPTER: it imports the project-agnostic
+* library subsystem subsystems/pmod/ and BINDS its abstract interface to the
+* carrier's REAL net names (see carrier/subsystems/pmod/pmod.py META). The full
+* passive network (the 16 Digilent-standard 200R series IO-protection resistors +
+* the per-port VCC bypass 100n + 10u x2) lives ONCE in the LIBRARY subckt:
+*
+*     ==> subsystems/pmod/pmod.cir   (the authoritative passive model)
+*
+* This carrier subckt is a thin re-export: it declares the carrier external nets
+* as its pins (the bound rail + the 16 J2 bank-13 host signals) and instantiates
+* the library subckt, so a board-level .op sees the carrier net names while the
+* model stays single-source.
+*
+* CARRIER BIND (abstract library pin -> carrier external net, per the META):
+*   VCC_PMOD     -> +3V3_PMOD          (bring-up-gated module rail, SY6280 #7)
+*   PMOD0_SIG1..8-> IO_L2_P_13/IO_L2_N_13/IO_L3_P_13/IO_L3_N_13/
+*                   IO_L4_P_13/IO_L4_N_13/IO_L5P_13/IO_L5_N_13   (J2 bank 13)
+*   PMOD1_SIG1..8-> IO_L7_P_13/IO_L7_N_13/IO_L8_P_13/IO_L8_N_13/
+*                   IO_L9_DQS_P_13/IO_L9_DQS_N_13/IO_L10_P_13/IO_L10_N_13
+*   GND          -> GND
+*
+* (NOTE the SoM-symbol quirk: IO_L5P_13 has no underscore before P. Pin order
+*  matches the library subckt's pin order, GND last by convention; the per-IO
+*  resistor->socket nodes stay PRIVATE to the library subckt, never pins.)
+
+.subckt pmod 3V3_PMOD
++ IO_L2_P_13 IO_L2_N_13 IO_L3_P_13 IO_L3_N_13
++ IO_L4_P_13 IO_L4_N_13 IO_L5P_13 IO_L5_N_13
++ IO_L7_P_13 IO_L7_N_13 IO_L8_P_13 IO_L8_N_13
++ IO_L9_DQS_P_13 IO_L9_DQS_N_13 IO_L10_P_13 IO_L10_N_13
++ GND
+
+* instantiate the library passive model with the carrier nets bound in pin order
+* (subsystems/pmod/pmod.cir: VCC_PMOD PMOD0_SIG1..8 PMOD1_SIG1..8 GND)
+XPMOD 3V3_PMOD
++ IO_L2_P_13 IO_L2_N_13 IO_L3_P_13 IO_L3_N_13
++ IO_L4_P_13 IO_L4_N_13 IO_L5P_13 IO_L5_N_13
++ IO_L7_P_13 IO_L7_N_13 IO_L8_P_13 IO_L8_N_13
++ IO_L9_DQS_P_13 IO_L9_DQS_N_13 IO_L10_P_13 IO_L10_N_13
++ GND pmod
+
+.ends pmod
+
+* The library subckt definition (the authoritative passive network) lives in
+* subsystems/pmod/pmod.cir and is .include'd by a board-level deck; this thin
+* file is parsed standalone for the local bind-parity test.
+.end

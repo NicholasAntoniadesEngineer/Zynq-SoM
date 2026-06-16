@@ -1,0 +1,51 @@
+* uart_bridge.cir — CARRIER-BOUND instance of the uart_bridge subsystem (thin
+* subckt).
+*
+* The PASSIVE small-signal model (the CP2102N self-powered decoupling, the ~RST
+* pull-up and the VBUS-sense divider) lives ONCE in the project-agnostic library
+* at subsystems/uart_bridge/uart_bridge.cir, whose subckt pins are the ABSTRACT
+* interface (VDD_IO USB_VBUS GND). THIS file is the CARRIER-BOUND view: a thin
+* subckt whose pins are the carrier's REAL nets (the bind map in
+* carrier/subsystems/uart_bridge/uart_bridge.py), instantiating that library
+* passive model so a board-level .op/.tran can drop in the carrier-bound bridge
+* by carrier net name.
+*
+* Carrier bind (abstract -> real, from META["bind"]):
+*   VDD_IO   -> +3V3            CP2102N self-powered: VREGIN/VDD/VIO/~RST pull-up
+*   USB_VBUS -> USB_UART_VBUS   the USB-UART receptacle's OWN 5 V VBUS (sense)
+*   GND      -> GND             (identity)
+* (USB_DP/DM and the four UART signals carry no subsystem-local passive, so — as
+*  in the library subckt — they are not subckt pins. The ~RST pull-up node and
+*  the VBUS divider mid node stay library-private internal SIGNAL nets.)
+*
+* Pin order: V3V3 USB_UART_VBUS GND  (carrier spelling, '+' stripped for SPICE
+* node syntax; mirrors the library VDD_IO USB_VBUS GND.)
+
+.subckt uart_bridge V3V3 USB_UART_VBUS GND
+
+* Carrier-bound instance of the library passive network. Values mirror
+* subsystems/uart_bridge/uart_bridge.cir one-for-one:
+*   C1 100n + C2 10u   VREGIN bypass     (+3V3 -> GND)
+*   C3 100n            VDD bypass        (+3V3 -> GND)
+*   C4 100n            VIO bypass        (+3V3 -> GND)
+*   R1 1k              ~RST pull-up      (+3V3 -> CP2102N_RST_N, open-drain)
+*   R2 22k1            VBUS sense top    (USB_UART_VBUS -> mid)
+*   R3 47k5            VBUS sense bottom (mid -> GND)
+C1 V3V3 GND 100n
+C2 V3V3 GND 10u
+C3 V3V3 GND 100n
+C4 V3V3 GND 100n
+R1 V3V3 CP2102N_RST_N 1k
+R2 USB_UART_VBUS vbus_mid 22k1
+R3 vbus_mid GND 47k5
+
+.ends uart_bridge
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto the carrier +3V3 rail settles to 1 V across the
+* bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
