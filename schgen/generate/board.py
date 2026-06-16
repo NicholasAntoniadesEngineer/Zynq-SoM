@@ -192,6 +192,7 @@ def build_board(sheets, lib: Library, outdir: Path, *,
                 placements: dict | None = None,
                 root_name: str = "board",
                 sheet_subdir: str = "",
+                sheet_index: dict | None = None,
                 reports_dir: Path | None = None) -> bool:
     """Emit the hierarchy into ``outdir`` and run the board netlist gate.
     ``sheets``: list of schgen.link.SheetCircuit. ``placements`` optionally
@@ -210,6 +211,12 @@ def build_board(sheets, lib: Library, outdir: Path, *,
 
     placed: list[tuple[str, PlacedDesign, str]] = []   # (name, design, sym_uuid)
     for i, sc in enumerate(sheets, start=1):
+        # Board-unique refdes band index. Default = the 1-based enumerate
+        # position (legacy / selftest). A project may pass a STABLE name->index
+        # registry (sheet_index) so a part's refdes is a permanent identity that
+        # does NOT re-stride when an alphabetically-earlier sheet is added or
+        # removed (carrier/sheet_index.json — frozen + append-only).
+        idx = sheet_index.get(sc.name, i) if sheet_index else i
         if placements and sc.name in placements:
             placement, routed = placements[sc.name]
         else:
@@ -225,7 +232,7 @@ def build_board(sheets, lib: Library, outdir: Path, *,
             no_connects=placement.no_connects,
             paper=placement.paper,
         )
-        d = uniquify(design, i)
+        d = uniquify(design, idx)
         placed.append((sc.name, d,
                        stable_uuid(root_name, "sheet-symbol", sc.name)))
 

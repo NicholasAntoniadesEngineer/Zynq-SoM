@@ -596,11 +596,29 @@ def cmd_board(args: argparse.Namespace) -> int:
     constraints.export(sheets, man_dir)
     diagram.render(res, som_nets, REPO_ROOT / "docs" / "block_diagram.svg")
 
+    # STABLE refdes: a part's board-unique reference is a permanent identity.
+    # carrier/sheet_index.json is a FROZEN, APPEND-ONLY name->band-index map, so
+    # adding/removing/reordering a sheet never re-strides another sheet's refdes
+    # (the old scheme keyed the band on alphabetical position -> inserting a
+    # mid-alphabet sheet renumbered every later sheet). New sheets append at the
+    # next free index; the registry is committed so the assignment is permanent.
+    _idx_path = CARRIER / "sheet_index.json"
+    _sheet_index = json.loads(_idx_path.read_text()) if _idx_path.exists() else {}
+    _new = sorted(sc.name for sc in sheets if sc.name not in _sheet_index)
+    if _new:
+        _nxt = max(_sheet_index.values(), default=0) + 1
+        for _n in _new:
+            _sheet_index[_n] = _nxt
+            _nxt += 1
+        _idx_path.write_text(json.dumps(_sheet_index, indent=2) + "\n")
+        print(f"sheet-index: assigned {len(_new)} new sheet(s) a stable refdes "
+              f"band -> {', '.join(f'{n}={_sheet_index[n]}' for n in _new)}")
+
     # hierarchy: the openable carrier project + the board netlist gate
     board_ok = board_mod.build_board(
         sheets, lib, CARRIER, placements=placements,
         root_name="Zynq_Carrier", sheet_subdir="schematic",
-        reports_dir=rep_dir)
+        sheet_index=_sheet_index, reports_dir=rep_dir)
     ok_all = ok_all and board_ok
 
     _lap("pass3 + cc_gate + link + build_board (hierarchy + board ERC)")
