@@ -1,3 +1,1 @@
-SYMBOL-LAW GATE: PASS (0 hand-built real-part symbols on the board; 2 tracked-pending)
-  pending (tracked exception): schgen:HDMI_A_RX (hdmi_rx.J1) — hdmi_rx.py HDMI receptacle — the cable-5V quasi-rail trunk spans the connector<->EEPROM width; engine WIP.
-  pending (tracked exception): schgen:LM61460 (power.U1) — power.py LM61460 buck — dossier box (VIN-top / FB-left / dual-BOOT) over-packs the regulator-template left edge; engine WIP.
+SYMBOL-LAW GATE: PASS (0 hand-built real-part symbols on the board)

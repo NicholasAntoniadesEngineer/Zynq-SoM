@@ -20,13 +20,14 @@ This is the largest, most complex carrier subsystem.
 
 Active parts are **referenced, never vendored**: the LM61460/TPS54302/AP2112K/
 AO3400A symbols/footprints/LCSC come from the global `parts/` lib via
-`use_part()`. **U1 (LM61460) carries a `lib_id="schgen:LM61460"` symbol
-override** — a *pending hand-built-symbol migration* tracked in
-`schgen.verify.symbol_law.PENDING_MIGRATION`. It is **preserved verbatim** (a
-separate deep placement-engine task owns that symbol); the stock footprint is
-unchanged and the 14 pins are authored **by number** (1 BIAS, 2 VCC, 3 AGND,
-4 FB, 5 PGOOD, 6 RT, 7 EN/SYNC, 8 VIN1, 9 PGND1, 10 SW, 11 PGND2, 12 VIN2,
-13 RBOOT, 14 CBOOT).
+`use_part()`. **U1 (LM61460) draws its FAITHFUL `parts/LM61460AANRJRR/`
+dossier symbol** — no `lib_id=` override (the **"0 hand-built symbols"**
+migration; the old hand-built `schgen:LM61460` is gone, and
+`schgen.verify.symbol_law.PENDING_MIGRATION` is now empty). The placer's
+box-buck stage handler lays the faithful all-passive QFN box out cleanly. The
+14 pins are authored **by number** (1 BIAS, 2 VCC, 3 AGND, 4 FB, 5 PGOOD, 6 RT,
+7 EN/SYNC, 8 VIN1, 9 PGND1, 10 SW, 11 PGND2, 12 VIN2, 13 RBOOT, 14 CBOOT); the
+swap was NETLIST-NEUTRAL (same pin numbers + footprint).
 
 ## The abstract interface (the reuse contract)
 
@@ -100,7 +101,7 @@ the monitor measures the wrong current.
 
 | ref | value | lib / part | LCSC |
 |-----|-------|-----------|------|
-| U1 | LM61460AANRJRR | `parts/LM61460AANRJRR/` — **`schgen:LM61460` symbol override (pending migration)** | C2864505 |
+| U1 | LM61460AANRJRR | `parts/LM61460AANRJRR/` — **faithful dossier symbol (0 hand-built symbols)** | C2864505 |
 | U2 | TPS54302DDCR | `Regulator_Switching:TPS54302` (3 A sync buck) | C311983 |
 | U3 | AP2112K-1.8 | `Regulator_Linear:AP2204K-1.5` drawing (= AP2112K SOT-23-5) | C176944 |
 | Q1 | AO3400A | `Transistor_FET:Q_NMOS_GSD` (+1V8 PG sense FET) | C20917 |
@@ -195,7 +196,8 @@ the migration.
 ## Local test vs board gates
 
 `test_power.py` runs the **subsystem-local** slices offline: declared abstract
-interface, the preserved `schgen:LM61460` override, model completeness (every pin
+interface, the faithful `LM61460AANRJRR:LM61460AANRJRR` dossier symbol (0
+hand-built symbols), model completeness (every pin
 netted-or-NC), the LM61460 GND heat path, decoupling completeness (design_rules
 DECAP/EP/STRAP), the **FB-divider ratios** (the BOM-critical regulator output
 set), the **reg-side vs rail-side split**, internal-SIGNAL preservation,

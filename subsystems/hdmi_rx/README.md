@@ -22,16 +22,17 @@ Active parts are **referenced, never vendored**: the HDMI-019S, M24C02-WMN6TP,
 TPD4E02B04DQAR and TPD4E05U06DQAR symbol/footprint/LCSC come from the global
 `parts/<MPN>/` dossiers.
 
-### Pending-migration symbol (do not change)
+### Faithful receptacle symbol (0 hand-built symbols)
 
-J1 carries a **deliberate** `lib_id="schgen:HDMI_A_RX"` override — a hand-built
-schgen-local re-pin of the receptacle (DDC rows in the EEPROM's SDA-over-SCL
-order, TMDS rows at 5.08 mm label pitch, HPD/CEC/shields on the bottom edge). It
-is on the `symbol_law.PENDING_MIGRATION` allowlist (a tracked, visible exception)
-because the placement engine cannot yet lay the faithful box symbol out cleanly
-on this dense sheet. **This override is preserved VERBATIM**; a separate
-deep-engine task migrates it to the faithful dossier symbol later. The EEPROM
-uses the stock KiCad `Memory_EEPROM:M24C02-WMN` drawing (not a `schgen:` symbol).
+J1 draws its **FAITHFUL `parts/HDMI-019S/` dossier symbol** — no `lib_id=`
+override (the **"0 hand-built symbols"** migration; the old hand-built
+`schgen:HDMI_A_RX` is gone and `symbol_law.PENDING_MIGRATION` is now empty). The
+dossier box lays its 23 pins out by package edge (pins 1-9 left, 10-23 right,
++5V top, GND bottom), each shield pad distinct; the placer's connector
+box-handler escapes the dense right edge + the cable-5V trunk cleanly (a
+top-edge tap whose trunk faces away routes around the body, never through it).
+The swap was NETLIST-NEUTRAL (same pin numbers + footprint). The EEPROM uses the
+stock KiCad `Memory_EEPROM:M24C02-WMN` drawing (not a `schgen:` symbol).
 
 ## The abstract interface (the reuse contract)
 
@@ -65,7 +66,7 @@ bank), so they are **never** part of the contract and are never bound. HDMI pin
 
 | ref | value | lib / part | LCSC | note |
 |-----|-------|-----------|------|------|
-| J1 | HDMI-019S | `schgen:HDMI_A_RX` (override) | C111617 | **PENDING_MIGRATION** — preserved verbatim |
+| J1 | HDMI-019S | `parts/HDMI-019S/` (faithful dossier) | C111617 | **0 hand-built symbols** — migrated, netlist-neutral |
 | U1 | M24C02-WMN6TP | `Memory_EEPROM:M24C02-WMN` | C7562 | EDID EEPROM (cable-5V fed) |
 | U2 | TPD4E02B04DQAR | `parts/TPD4E02B04DQAR/` | C106794 | TMDS RX ESD (D2+D1) |
 | U3 | TPD4E02B04DQAR | `parts/TPD4E02B04DQAR/` | C106794 | TMDS RX ESD (D0+CLK) |
@@ -109,7 +110,7 @@ universal across every reusable subsystem — a typo'd top-level key is a hard
 place, order-preserving** (POWER/GROUND/PORT only — a SIGNAL net is private
 wiring and is never rebound; a SIGNAL key or a collision is a hard
 `CircuitError`). Because the rename preserves net insertion order, parts, refs,
-NCs, lib_ids (incl. the `schgen:HDMI_A_RX` override) and port-type payloads,
+NCs, lib_ids (J1 = the faithful `HDMI-019S:HDMI-019S` dossier symbol) and port-type payloads,
 **binding to the exact names a hand-written sheet used yields a byte-identical
 emitted sheet.** The carrier adapter is `carrier/subsystems/hdmi_rx.py`.
 
@@ -147,7 +148,8 @@ emitted sheet.** The carrier adapter is `carrier/subsystems/hdmi_rx.py`.
 interface + TMDS-pair types, model completeness (every pin netted-or-NC, ESD pads
 NC), the EDID WC#-to-cable-5V hardwire (COMP-1), decoupling completeness
 (design_rules DECAP/EP/STRAP), part-rating coverage + derate, the SPICE-subckt ↔
-netlist passive match, the `schgen:HDMI_A_RX` override preservation, and the bind
+netlist passive match, the faithful `HDMI-019S:HDMI-019S` dossier symbol (0
+hand-built symbols), and the bind
 contract. **Cross-board** gates stay aggregated at board level and are *not*
 duplicated here: the DDC source-side pull-ups, the receiver-side TMDS sink
 termination, the link/port-driver graph, the full power-tree headroom, board ERC,

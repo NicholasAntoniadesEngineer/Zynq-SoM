@@ -12,8 +12,8 @@ electrical invariants:
 
   * declared abstract interface  — RAILS/PORTS present with the right net class,
     every IC pin netted-or-NC (model completeness), the EN ports are PORTs.
-  * the schgen:LM61460 override   — U1 keeps its lib_id="schgen:LM61460" (a
-    PENDING hand-built-symbol migration); preserved verbatim, never altered.
+  * the faithful U1 dossier symbol — U1 draws parts/LM61460AANRJRR/ (no
+    lib_id= override; the "0 hand-built symbols" migration), netlist-neutral.
   * decoupling completeness       — design_rules DECAP/EP/STRAP slice: every IC
     supply pin has a local cap-to-GND, exposed pad on GND, no floating strap.
   * the LM61460 heat path         — PGND1/PGND2/AGND all on GND (the VQFN-HR has
@@ -126,12 +126,15 @@ def test_rail_and_port_classes(c: Circuit):
         assert cls[port] is NetClass.PORT, (port, cls[port])
 
 
-def test_lm61460_override_preserved_verbatim(c: Circuit):
-    """U1 keeps its lib_id="schgen:LM61460" override (a PENDING hand-built-symbol
-    migration in symbol_law.PENDING_MIGRATION) — preserved verbatim, never
-    altered by this subsystem migration. A separate deep-engine task owns it."""
+def test_lm61460_faithful_dossier_symbol(c: Circuit):
+    """U1 now draws its FAITHFUL parts/LM61460AANRJRR/ dossier symbol (the
+    "0 hand-built symbols" migration — schgen:LM61460 is gone from
+    symbol_law.PENDING_MIGRATION and from schgen.kicad_sym). The swap is
+    NETLIST-NEUTRAL: same lib_id namespace as the dossier + the SAME footprint,
+    so connectivity is unchanged — only the schematic drawing changed."""
     u1 = c.parts["U1"]
-    assert u1.lib_id == "schgen:LM61460", u1.lib_id
+    assert u1.lib_id == "LM61460AANRJRR:LM61460AANRJRR", u1.lib_id
+    assert not u1.lib_id.startswith("schgen:"), u1.lib_id
     assert u1.footprint == "LM61460AANRJRR:LM61460AANRJRR", u1.footprint
 
 
@@ -386,8 +389,8 @@ def test_bind_renames_only_externals_byte_stable():
     assert list(bound.nets) == [_CARRIER_BIND.get(n, n) for n in base.nets]
     # the internal regulator SIGNAL nets are untouched by the bind
     assert "SW_5V0" in bound.nets and "FB_5V0" in bound.nets
-    # the U1 override survives the bind
-    assert bound.parts["U1"].lib_id == "schgen:LM61460"
+    # U1 draws the faithful dossier symbol (the bind never touches lib_id)
+    assert bound.parts["U1"].lib_id == "LM61460AANRJRR:LM61460AANRJRR"
     # the draw budgets followed the renamed rails
     assert "+5V" in bound.loads and "+VOUT_5V" not in bound.loads
     assert "+3V3" in bound.loads and "+1V8" in bound.loads

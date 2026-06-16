@@ -139,8 +139,10 @@ REG_SPECS: dict[str, RegSpec] = {
     # power.py +5V buck U1 — RE-SPEC'd (wt/buck) from the LMR33630 (3 A) to the
     # LM61460 (6 A): the +5V chain is the board's heaviest converter (2.95 A),
     # which ran the old 3 A part at 98% with no headroom. 6 A -> ~2x margin.
-    # U1 uses the schgen:LM61460 lib_id OVERRIDE, so its pin_names table is
-    # disabled -> address pins BY NUMBER: VIN1=8 (in), SW=10 (out, ->L->rail).
+    # U1 draws the faithful parts/LM61460AANRJRR/ dossier symbol (the
+    # "0 hand-built symbols" migration); EasyEDA types every dossier pin
+    # 'passive' so a name-keyed lookup is unreliable -> address pins BY NUMBER:
+    # VIN1=8 (in), SW=10 (out, ->L->rail).
     "LM61460": RegSpec("buck", 6.0, eff=0.90, in_pin="8", out_pin="10",
                        note="TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)"),
     # DEF-I: U1 (power.py) +5V buck — was the LMR33630 (3 A) before the wt/buck

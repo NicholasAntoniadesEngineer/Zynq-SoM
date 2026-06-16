@@ -50,10 +50,13 @@ binds:
 
 DESIGN NOTES (datasheet + bring-up contract): see README.md "Design notes".
 
-CRITICAL — the U1 symbol override is a PENDING hand-built-symbol migration:
-U1 (LM61460) carries ``lib_id="schgen:LM61460"`` (allowlisted in
-``schgen.verify.symbol_law.PENDING_MIGRATION``). It is PRESERVED VERBATIM here; a
-separate deep placement-engine task owns that symbol. Do NOT migrate/alter it.
+U1 SYMBOL — FAITHFUL DOSSIER (0 hand-built symbols): U1 (LM61460) draws its
+faithful ``parts/LM61460AANRJRR/`` dossier symbol — no ``lib_id=`` override
+(the old hand-built ``schgen:LM61460`` is migrated away and gone from
+``schgen.verify.symbol_law.PENDING_MIGRATION``). The dossier box lays its 14
+pins out by package quadrant (VIN/VCC top, GND bottom, BIAS/FB/PGOOD/RT left,
+EN/SW/BOOT right); the placer's box-buck stage handler routes it cleanly. The
+swap was NETLIST-NEUTRAL (same pin numbers + footprint).
 """
 
 from __future__ import annotations
@@ -186,21 +189,19 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     # note: "with a 4-layer PCB, a RthJA = 25 C/W can be"). The thermal gate now
     # credits a CONSERVATIVE pour-aware RthJA (see thermal.py) so U1 PASSES on
     # real margin, not a waiver.
-    # use_part with a lib_id= OVERRIDE to the generator-owned schematic symbol
-    # schgen:LM61460 (parts/LM61460AANRJRR/ keeps the faithful EP-bearing
-    # footprint + orderable identity). The override is the LMR33630/TPS54302
-    # idiom: the EasyEDA-generated symbol types every pin 'passive' and lays them
-    # out for a QFN, which the placer's regulator template cannot read; the local
-    # symbol re-draws the SAME 14 pins (NO footprint change) with stock-buck
-    # geometry + electrical types (VIN power_in left, SW power_out/output right,
-    # PGND/AGND GND bottom, VCC/BIAS/RT/PGOOD aux-left, FB/CBOOT right) so the
-    # template places it. With lib_id overridden, pins are authored BY NUMBER
-    # (model.use_part contract) — 1 BIAS 2 VCC 3 AGND 4 FB 5 PGOOD 6 RT
-    # 7 EN/SYNC 8 VIN1 9 PGND1 10 SW 11 PGND2 12 VIN2 13 RBOOT 14 CBOOT.
-    # PENDING_MIGRATION (symbol_law): the schgen:LM61460 override is PRESERVED
-    # VERBATIM — a separate deep placement-engine task owns this symbol.
-    c.use_part("LM61460AANRJRR", ref="U1", lib_id="schgen:LM61460",
-               footprint="LM61460AANRJRR:LM61460AANRJRR")
+    # use_part WITHOUT a lib_id= override: U1 now draws its FAITHFUL parts/
+    # dossier symbol (LM61460AANRJRR:LM61460AANRJRR), the "0 hand-built symbols"
+    # migration (symbol_law). The dossier box lays its 14 pins out by package
+    # quadrant — VIN1/VIN2/VCC on TOP, AGND/PGND1/PGND2 on BOTTOM, BIAS/FB/PGOOD/
+    # RT on the LEFT, EN/SYNC/SW/RBOOT/CBOOT on the RIGHT — every pin distinct
+    # (no stacked-duplicate / hidden-pin tricks). The regulator template's
+    # box-stage handler reads input/output/ground off ANY edge (place.py
+    # _buck_box_stage) so this faithful all-passive QFN box places + routes
+    # cleanly. Pins are authored BY NUMBER (netlist-neutral vs the old hand
+    # symbol; identical pin NUMBERS + footprint) — 1 BIAS 2 VCC 3 AGND 4 FB
+    # 5 PGOOD 6 RT 7 EN/SYNC 8 VIN1 9 PGND1 10 SW 11 PGND2 12 VIN2 13 RBOOT
+    # 14 CBOOT.
+    c.use_part("LM61460AANRJRR", ref="U1")
     # U1 input is the regulator-tree input rail +VIN. On a board with a series
     # current-monitor it is the POST-shunt rail (the project series-inserts a
     # shunt between any inlet eFuse and the buck inputs), so the buck input

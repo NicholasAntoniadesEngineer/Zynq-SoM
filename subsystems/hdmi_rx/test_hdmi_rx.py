@@ -20,8 +20,8 @@ LOCAL checks (what a subsystem can prove about ITSELF):
     netlist one-for-one (parse_si), and the analytic spice slice runs clean.
   * the bind contract             — abstract -> real renames only externals,
     rejects SIGNAL/typo/collision, and a carrier-style bind is order-preserving.
-  * the schgen:HDMI_A_RX override — J1's hand-built symbol override is preserved
-    VERBATIM (a tracked PENDING_MIGRATION; the deep-engine task migrates it).
+  * the faithful J1 dossier symbol — J1 draws parts/HDMI-019S/ (no lib_id=
+    override; the "0 hand-built symbols" migration), netlist-neutral.
 
 CROSS-BOARD checks deliberately stay at board level (not duplicated here): the
 DDC pull-up completeness (DDC is SOURCE-mastered, off-board), the TMDS sink
@@ -324,14 +324,17 @@ def test_spice_analytic_slice_runs_clean(c: Circuit):
     assert res.ok, res.errors
 
 
-# ---- the schgen:HDMI_A_RX symbol override (PENDING_MIGRATION) --------------------
+# ---- J1 faithful dossier symbol (0 hand-built symbols) --------------------------
 
-def test_hdmi_a_rx_lib_id_override_preserved(c: Circuit):
-    """The HDMI receptacle J1 keeps its hand-built schgen:HDMI_A_RX symbol
-    override VERBATIM — a tracked PENDING_MIGRATION (symbol_law). The deep-engine
-    task migrates it later; this package must NOT change it."""
-    assert c.parts["J1"].lib_id == "schgen:HDMI_A_RX"
-    assert hdmi_rx.J_LIB == "schgen:HDMI_A_RX"
+def test_hdmi_a_rx_faithful_dossier_symbol(c: Circuit):
+    """J1 now draws its FAITHFUL parts/HDMI-019S/ dossier symbol (the
+    "0 hand-built symbols" migration — schgen:HDMI_A_RX is gone from
+    symbol_law.PENDING_MIGRATION and from schgen.kicad_sym). The swap is
+    NETLIST-NEUTRAL: same pin numbers + the SAME footprint, so connectivity is
+    unchanged — only the schematic drawing changed."""
+    assert c.parts["J1"].lib_id == "HDMI-019S:HDMI-019S", c.parts["J1"].lib_id
+    assert not c.parts["J1"].lib_id.startswith("schgen:")
+    assert c.parts["J1"].footprint == "HDMI-019S:HDMI-019S"
 
 
 # ---- the bind contract (the reuse API) ------------------------------------------
@@ -343,11 +346,11 @@ def test_bind_renames_only_externals_byte_stable():
     emit). The PRIVATE SIGNAL nets keep their library names."""
     base = hdmi_rx.circuit()
     bound = hdmi_rx.circuit({"bind": _CARRIER_BIND})
-    # same parts/refs/NCs/lib_ids (incl. the schgen:HDMI_A_RX override)
+    # same parts/refs/NCs/lib_ids (J1 = the faithful HDMI-019S dossier symbol)
     assert set(bound.parts) == set(base.parts)
     assert {r: p.lib_id for r, p in bound.parts.items()} == \
            {r: p.lib_id for r, p in base.parts.items()}
-    assert bound.parts["J1"].lib_id == "schgen:HDMI_A_RX"
+    assert bound.parts["J1"].lib_id == "HDMI-019S:HDMI-019S"
     assert {str(p) for p in bound.nc_pins} == {str(p) for p in base.nc_pins}
     # externals renamed exactly per the map; order preserved (SIGNAL nets are
     # private and keep their name — only the externals in the bind map move)

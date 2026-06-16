@@ -77,16 +77,14 @@ CEC/HPD lines (idle 5 V < 5.5 V VRWM -> no false clamp; a 3.6 V-standoff part
 would CONDUCT at 5 V, which is why the TMDS array is NOT reused here):
   D1+ = SCL, D1- = SDA (DDC, 3.3 V) ; D2+ = CEC (3.3 V), D2- = HPD (5 V).
 
-Connector: SOFNG HDMI-019S (LCSC C111617). Symbol schgen:HDMI_A_RX is a LOCAL
-re-pin (DDC rows match the EEPROM's SDA-over-SCL order for straight runs; TMDS
-rows at 5.08 mm label pitch; HPD/CEC/shields on the bottom edge); its pads 20-23
-are the shell tabs of the faithful generated footprint (parts/HDMI-019S/),
-stacked on pin 20 and tied to CHASSIS_GND like a magjack shield (chassis star-
-bonds to GND elsewhere). Pin 14 (UTILITY/HEAC+) is reserved -> author no-connect.
-
-PENDING_MIGRATION (symbol_law allowlist): the ``lib_id="schgen:HDMI_A_RX"``
-override on J1 is a hand-built symbol whose deep-engine migration is tracked and
-DELIBERATELY PRESERVED here verbatim — a separate engine task replaces it later.
+Connector: SOFNG HDMI-019S (LCSC C111617). J1 draws its FAITHFUL
+parts/HDMI-019S/ dossier symbol (the "0 hand-built symbols" migration —
+schgen:HDMI_A_RX is gone): the dossier box lays its 23 pins out by package edge
+(pins 1-9 left, 10-23 right, +5V top, GND bottom), each shield pad (2/5/8/11
+TMDS shields -> GND; 20-23 shell tabs -> CHASSIS_GND, chassis star-bonds to GND
+elsewhere) drawn distinct. Pin 14 (HEC / UTILITY-HEAC+) is reserved -> author
+no-connect. The placer's connector box-handler escapes the dense right edge +
+the cable-5V trunk cleanly.
 """
 
 from __future__ import annotations
@@ -94,11 +92,15 @@ from __future__ import annotations
 from schgen.core.model import Circuit
 from schgen.core.subsystem import Meta
 
-# DELIBERATE symbol overrides (use_part lib_id=): the RX-direction schgen
-# receptacle drawing + the stock EEPROM drawing stay; MPN/LCSC/datasheet + the
-# faithful footprints come from parts/HDMI-019S/ + parts/M24C02-WMN6TP/. The
-# J_LIB override is a TRACKED PENDING_MIGRATION (symbol_law) and is kept VERBATIM.
-J_LIB = "schgen:HDMI_A_RX"
+# DELIBERATE symbol override (use_part lib_id=) on the EEPROM only: the stock
+# KiCad M24C02 drawing stays. J1 now draws its FAITHFUL parts/HDMI-019S/ dossier
+# symbol (the "0 hand-built symbols" migration, symbol_law) — no lib_id override,
+# so use_part falls back to LIB_ID="HDMI-019S:HDMI-019S". The dossier box lays
+# its 23 pins out by package edge (pins 1-9 left, 10-23 right, +5V top, GND
+# bottom), each shield pad distinct (no stacked-duplicate / hidden-pin tricks);
+# the connector-template box-handler escapes the dense right edge cleanly. Pins
+# are authored BY NUMBER (netlist-neutral vs the old hand symbol — identical pin
+# NUMBERS + footprint). MPN/LCSC/datasheet come from the dossier folder.
 U_LIB = "Memory_EEPROM:M24C02-WMN"
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
@@ -127,8 +129,8 @@ INTERFACE = RAILS + PORTS
 
 # connector pin -> abstract TMDS RX port (RX direction: lanes IN from the source)
 # -> (ESD array ref, ESD IO pin). The receptacle pin numbers are the HDMI 1.4
-# Sec 4.2.2 pinout (re-checked against parts/HDMI-019S/ + the schgen:HDMI_A_RX
-# re-pin); the ESD IO mapping is the TI TPD4E02B04 4-ch layout (two arrays).
+# Sec 4.2.2 pinout (re-checked against the faithful parts/HDMI-019S/ dossier);
+# the ESD IO mapping is the TI TPD4E02B04 4-ch layout (two arrays).
 TMDS_LANES = (
     ("TMDS_RX_D2_P", 1, "U2", "IO1"), ("TMDS_RX_D2_N", 3, "U2", "IO2"),
     ("TMDS_RX_D1_P", 4, "U2", "IO3"), ("TMDS_RX_D1_N", 6, "U2", "IO4"),
@@ -173,7 +175,7 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     draws_note = meta.note("draws", DRAWS_NOTE)
 
     c = Circuit("hdmi_rx", "HDMI RX: HDMI-A sink + EDID EEPROM")
-    c.use_part("HDMI-019S", ref="J1", lib_id=J_LIB)
+    c.use_part("HDMI-019S", ref="J1")
     c.use_part("M24C02-WMN6TP", ref="U1", lib_id=U_LIB)
     c.part("R1", "Device:R", "1k", R_FP, LCSC="C21190")     # HPD assert
     c.part("R2", "Device:R", "27k", R_FP, LCSC="C22967")    # CEC pull-up

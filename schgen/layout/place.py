@@ -1744,8 +1744,23 @@ class _Engine:
         side_jobs: list[tuple[str, tuple[float, float], int, object]] = []
         for pt, side in t.direct:
             if side in ("top", "bottom"):
-                self.pl.plan(t.net, pt, (pt[0], ty))
-                nodes.append(pt[0])
+                # straight vertical drop to the trunk row — BUT only when that
+                # column is clear. A top-edge tap whose trunk sits BELOW it (or a
+                # bottom tap with an above trunk) would otherwise plow straight
+                # DOWN through its own part body: the HDMI-RX cable-5V trunk has
+                # a top-edge EEPROM VCC pin pulling 'above' and a flipped-
+                # connector +5V pin pulling 'below', so one side always faces
+                # away from the chosen zone. When the vertical column is blocked,
+                # route the tap as an orthogonal escape (out the pin, around the
+                # body, into the trunk row) — the same proven escape the side
+                # taps use, never a body-crossing wire (LAW 1).
+                if self._corridor_clear_vert(pt[0], pt[1], ty, t.net):
+                    self.pl.plan(t.net, pt, (pt[0], ty))
+                    nodes.append(pt[0])
+                else:
+                    way = self._escape_path(1, pt, ty, t.net)
+                    self.pl.plan(t.net, *way)
+                    nodes.append(way[-1][0])
             else:
                 side_jobs.append(("direct", pt, -1 if side == "left" else 1,
                                   None))
@@ -2130,6 +2145,34 @@ class _Engine:
                 return x
             x = round(x + sgn * 2 * U, 3)
         return None
+
+    def _corridor_clear_vert(self, x: float, y_pin: float, ty: float,
+                             net: str) -> bool:
+        """Is the vertical column at ``x`` from the pin tip ``y_pin`` to the
+        trunk row ``ty`` clear of bodies/texts and foreign wires? The pin's own
+        stem cell at y_pin is excluded (a tap always starts on its own pin)."""
+        y0, y1 = sorted((y_pin, ty))
+        # body / text boxes strictly inside the span (a box whose edge merely
+        # touches y_pin is the pin's own — exclude the pin endpoint)
+        for b in self.pl.boxes:
+            if b.x0 - 0.2 < x < b.x1 + 0.2 \
+                    and b.y0 < y1 - 1e-6 and b.y1 > y0 + 1e-6 \
+                    and not (abs(b.y0 - y_pin) < 1e-6 or abs(b.y1 - y_pin)
+                             < 1e-6):
+                return False
+        # foreign planned wires crossing the column
+        for n2, paths in self.pl.plans.items():
+            if n2 == net:
+                continue
+            for path in paths:
+                for a, bb in zip(path, path[1:]):
+                    sx0, sx1 = sorted((a[0], bb[0]))
+                    sy0, sy1 = sorted((a[1], bb[1]))
+                    if sx0 - 0.2 <= x <= sx1 + 0.2 \
+                            and sy0 - 0.2 <= y1 and sy1 + 0.2 >= y0 \
+                            and not (sy0 == sy1 and abs(sy0 - y_pin) < 1e-6):
+                        return False
+        return True
 
     def _escape_lane(self, sgn: int, pt: tuple[float, float], ty: float,
                      net: str) -> float:
@@ -2965,6 +3008,14 @@ class _Engine:
             if chain is not None:
                 tside = "left" if (in_xs and pt[0] < min(in_xs)) else "right"
                 self._stack_from_pin(chain, pt, "top", text_side=tside)
+                # the synthetic local-drop chain is NOT in self.float_chains, so
+                # its bypass cap is still registered in self.hang/self.pull —
+                # purge it so the leftover rank placer does not place the SAME
+                # cap a second time (a double-draw + a stray duplicate-name
+                # label islet; the VCC-on-top LM61460 box exposed this).
+                for cref, _u, _l in chain.legs:
+                    self.hang.pop(n.name, None)
+                    self.pull.pop(n.name, None)
             else:
                 self._signal_islet_drop(n.name, pt, "top")
         # input decoupling: returned to self.cluster so the shared decoupling-
@@ -3012,13 +3063,13 @@ class _Engine:
                     p.etype, "bidirectional")
                 self.label(n.name, lx, pe[1], 0, shape=shape)
 
-        # ---- LEFT edge: every non-FB left pin is drawn as a LABELED ISLET (a
-        # short stub to a local label), its local R/C left in self.pull/hang so
-        # the generic _pull_rank_columns lays them out as labeled rank columns
-        # below the flow that merge back by name. This is the proven idiom the
-        # stock path uses for the LM61460 BIAS->VOUT tie; using it for ALL left
-        # pins keeps the dense left edge (FB network + BIAS + RT) collision-free
-        # — no long left run, no clash with the FB column _buck_right placed.
+        # ---- LEFT edge: every non-FB left pin is drawn as a LABELED ISLET, its
+        # local R/C left in self.pull/hang so the generic _pull_rank_columns
+        # lays them out as labeled rank columns below the flow that merge back
+        # by name. _box_left_pin_islet escapes each pin cleanly (short
+        # horizontal stub into the gap when it fits, else a vertical drop into
+        # the clear band below the body) — never a runaway left run across the
+        # FB network the right-edge pass placed (LAW 1).
         left_pins = sorted(((pins[p.number], p) for p in sdef.pins
                             if p.rotation == 0), key=lambda t: -t[0][1])
         for pt, p in left_pins:
@@ -3032,22 +3083,72 @@ class _Engine:
             # skip it here so it is not double-drawn.
             if name == fb_net_name:
                 continue
-            # labeled islet; any local R/C deferred to the rank columns
-            # (_pull_rank_columns), which merge back by the net name. The stub
-            # extends LEFT until its label box clears the FB network (and any
-            # earlier islet) that _fb_left_network placed on this left edge — a
-            # short dodge, never a blind push (LAW 1).
-            lx = round(pt[0] - sp.port_run, 3)
-            for _k in range(60):
-                lb = tm.llabel_box(name, lx, pt[1], 180)
-                if self._spot_free(lb) and self._corridor_free(
-                        pt[1], pt[0] - 0.01, lx, {name}):
-                    break
-                lx = gfloor(lx - 2 * U)
-            self.pl.plan(name, pt, (lx, pt[1]))
-            self.llabel(name, lx, pt[1], 180)
-            self._bridge(name)
+            self._box_left_pin_islet(name, pt, body)
         self._part_texts(pp, body)
+
+    def _box_left_pin_islet(self, name: str, pt: tuple[float, float],
+                            body: Box) -> None:
+        """Escape a box-buck LEFT-edge signal pin to a labeled islet (its local
+        R/C are deferred to the rank columns and merge back by name).
+
+        Two clean escapes, in order — never a blind/runaway push (LAW 1):
+          1. SHORT HORIZONTAL stub left to a rot-180 label, dodging left a
+             BOUNDED few steps. Used when there is clear room left of the pin
+             (the common case on a sparse left edge) — this is the exact short
+             islet the original code drew, so a buck whose left edge has room
+             stays byte-identical.
+          2. VERTICAL DROP: when the FB column (placed left of the body by
+             _buck_right) blocks every short left label, run a short stub left
+             into the body<->FB gap, then drop straight DOWN past the body into
+             the open band below the stage and label there (rot 0). Guaranteed
+             clear space, so a dense left edge (FB network + BIAS + RT, the
+             LM61460 dossier) routes with zero crossings."""
+        sp = self.sp
+        # 1) short horizontal-left islet (BOUNDED dodge — 6 steps max)
+        lx = round(pt[0] - sp.port_run, 3)
+        for _k in range(6):
+            lb = tm.llabel_box(name, lx, pt[1], 180)
+            if self._spot_free(lb) and self._corridor_free(
+                    pt[1], pt[0] - 0.01, lx, {name}):
+                self.pl.plan(name, pt, (lx, pt[1]))
+                self.llabel(name, lx, pt[1], 180)
+                self._bridge(name)
+                return
+            lx = gfloor(lx - 2 * U)
+        # 2) VERTICAL ESCAPE: the FB column (placed left of the body by the
+        # right-edge pass) blocks every short left label. Run a short stub left
+        # into the body<->FB gap, then a clean vertical riser to a free row
+        # BEYOND the body's near edge — UP for a pin in the body's top half,
+        # DOWN for the bottom half — so a pin above FB clears into the top-left
+        # corner and one below FB into the open band below the stage, and the
+        # two never compete for the same gap. The riser x is nudged left to a
+        # clear lane; the label reads rightward (rot 0) off the riser.
+        body_mid = (body.y0 + body.y1) / 2
+        up = pt[1] < body_mid                 # page-y: smaller = higher = top
+        xv = gfloor(pt[0] - 2 * U)            # just left of the pin tip
+        edge = body.y0 if up else body.y1
+        b0 = (edge - 24 * U, edge - U) if up else (edge + U, edge + 24 * U)
+        for _kx in range(8):                  # nudge the riser left to a clear x
+            if self._vband_stem_free(xv, b0[0], b0[1], {name}) \
+                    and self._corridor_free(pt[1], pt[0] - 0.01, xv, {name}):
+                break
+            xv = gfloor(xv - 2 * U)
+        step = -2 * U if up else 2 * U
+        dy = gfloor(edge - 4 * U) if up else gceil(edge + 4 * U)
+        for _ky in range(24):
+            lbl = (round(xv + sp.port_run, 3), dy)   # label right of the riser
+            lb = tm.llabel_box(name, lbl[0], lbl[1], 0)
+            ylo, yhi = sorted((pt[1], dy))
+            if self._spot_free(lb) \
+                    and self._spot_free((xv - 0.15, ylo + 0.2,
+                                         xv + 0.15, yhi - 0.2), pad=0.0) \
+                    and self._corridor_free(dy, xv - 0.01, lbl[0], {name}):
+                self.pl.plan(name, pt, (xv, pt[1]), (xv, dy), lbl)
+                self.llabel(name, *lbl, 0)
+                self._bridge(name)
+                return
+            dy = round(dy + step, 3)
+        raise PlaceError(f"box-buck left pin {name}: no clear islet escape")
 
     def _stage_in_rail_box(self, ref: str) -> str:
         """The input rail of a box-symbol stage, found by NET ROLE: the POWER

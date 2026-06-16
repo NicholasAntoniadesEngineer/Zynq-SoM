@@ -35,14 +35,23 @@ from schgen.core.symbols import Library, SymbolError
 # faithful box symbol out cleanly on these dense sheets — see the build report).
 # Tracked, visible exceptions; everything else is killed. Drive this list to
 # EMPTY as the engine learns each box topology.
-PENDING_MIGRATION: dict[str, str] = {
-    "schgen:LM61460":
-        "power.py LM61460 buck — dossier box (VIN-top / FB-left / dual-BOOT) "
-        "over-packs the regulator-template left edge; engine WIP.",
-    "schgen:HDMI_A_RX":
-        "hdmi_rx.py HDMI receptacle — the cable-5V quasi-rail trunk spans the "
-        "connector<->EEPROM width; engine WIP.",
-}
+#
+# EMPTY (2026-06-15): the board carries 0 hand-built real-part symbols. The last
+# two — schgen:LM61460 (power.py U1 buck) and schgen:HDMI_A_RX (hdmi_rx.py J1
+# receptacle) — were migrated to their faithful parts/<MPN>/ dossier box symbols
+# once the placement engine learned to lay a faithful box out cleanly:
+#   * _buck_box_stage left-edge pins now escape with an UP/DOWN adaptive islet
+#     (short left stub, else a vertical drop beyond the body's near edge), so the
+#     FB column never blocks BIAS/RT; the VCC-on-top local-drop cap is purged
+#     from self.hang so it is not double-placed.
+#   * trunk top/bottom DIRECT taps whose chosen zone faces away from the pin now
+#     route via the orthogonal escape (around the body) instead of a straight
+#     drop through the part body — the HDMI-RX cable-5V trunk (top-edge EEPROM
+#     VCC vs flipped-connector +5V) routes clean.
+# Both swaps are NETLIST-NEUTRAL (same pin numbers + footprint); only the drawing
+# changed. A new hand-built symbol still fails the board (the selftest mutant
+# proves it) — this allowlist is the documented escape hatch, now unused.
+PENDING_MIGRATION: dict[str, str] = {}
 
 
 @dataclass
