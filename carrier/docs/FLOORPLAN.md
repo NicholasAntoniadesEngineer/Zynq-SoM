@@ -57,10 +57,11 @@ Outline derivation: SoM 50x42 + 6mm halo + 26mm connector band/edge -> core 114x
 | bringup_rails | E | (120, 68, 31.5 x 19.5) | 23 | 609.9 | (16) |
 | debug_boot | N | (70, 24, 24 x 14.5) | 10 | 344.8 | (17) |
 | hdmi_rx_term | @hdmi_rx | (36, 142, 8 x 8) | 10 | 44.8 |  |
+| mechanical | E | (128, 16, 16.5 x 10) | 4 | 163.8 |  |
 | power | E | (122, 90, 30 x 18.5) | 51 | 556.1 | (18) |
 | power_mon | E | (98, 42, 19.5 x 12) | 10 | 232 | (19) |
 | power_som | E | (108, 100, 12.5 x 20) | 23 | 249.1 |  |
-| rj45_connector | @ethernet | (12, 24, 27 x 16.5) | 7 | 441.7 |  |
+| rj45_connector | @ethernet | (12, 24, 21.5 x 13) | 3 | 277.8 |  |
 | usb_jtag | E | (124, 28, 24 x 15) | 19 | 359.3 |  |
 | usb_pd | @pd_input | (74, 12, 8 x 8) | 6 | 48.2 | (20) |
 | user_io | S | (68, 118, 28 x 17) | 17 | 472.4 | (21) |

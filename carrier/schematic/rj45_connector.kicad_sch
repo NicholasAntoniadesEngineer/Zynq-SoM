@@ -552,150 +552,6 @@
 			)
 		)
 		(symbol
-			"Mechanical:MountingHole_Pad"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom no)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property
-				"Reference"
-				"H"
-				(at 0 6.35 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"Value"
-				"MountingHole_Pad"
-				(at 0 4.445 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"Footprint"
-				""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"Datasheet"
-				""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"Description"
-				"Mounting Hole with connection"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"ki_keywords"
-				"mounting hole"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property
-				"ki_fp_filters"
-				"MountingHole*Pad*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol
-				"MountingHole_Pad_0_1"
-				(circle
-					(center 0 1.27)
-					(radius 1.27)
-					(stroke
-						(width 1.27)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol
-				"MountingHole_Pad_1_1"
-				(pin
-					input
-					line
-					(at 0 -2.54 90)
-					(length 2.54)
-					(name
-						"1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number
-						"1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol
 			"power:+3V3"
 			(power global)
 			(pin_numbers
@@ -1159,8 +1015,8 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 77.47)
-			(xy 107.95 77.47)
+			(xy 140.97 93.98)
+			(xy 106.68 93.98)
 		)
 		(stroke
 			(width 0)
@@ -1170,8 +1026,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 77.47)
-			(xy 180.34 77.47)
+			(xy 168.91 93.98)
+			(xy 179.07 93.98)
 		)
 		(stroke
 			(width 0)
@@ -1181,8 +1037,8 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 80.01)
-			(xy 132.08 80.01)
+			(xy 140.97 96.52)
+			(xy 130.81 96.52)
 		)
 		(stroke
 			(width 0)
@@ -1192,8 +1048,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 82.55)
-			(xy 180.34 82.55)
+			(xy 168.91 99.06)
+			(xy 179.07 99.06)
 		)
 		(stroke
 			(width 0)
@@ -1203,8 +1059,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 80.01)
-			(xy 204.47 80.01)
+			(xy 168.91 96.52)
+			(xy 203.2 96.52)
 		)
 		(stroke
 			(width 0)
@@ -1214,8 +1070,8 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 82.55)
-			(xy 107.95 82.55)
+			(xy 140.97 99.06)
+			(xy 106.68 99.06)
 		)
 		(stroke
 			(width 0)
@@ -1225,8 +1081,8 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 74.93)
-			(xy 132.08 74.93)
+			(xy 140.97 91.44)
+			(xy 130.81 91.44)
 		)
 		(stroke
 			(width 0)
@@ -1236,8 +1092,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 74.93)
-			(xy 204.47 74.93)
+			(xy 168.91 91.44)
+			(xy 203.2 91.44)
 		)
 		(stroke
 			(width 0)
@@ -1247,8 +1103,8 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 72.39)
-			(xy 132.08 72.39)
+			(xy 140.97 88.9)
+			(xy 130.81 88.9)
 		)
 		(stroke
 			(width 0)
@@ -1258,8 +1114,8 @@
 	)
 	(wire
 		(pts
-			(xy 132.08 72.39)
-			(xy 132.08 69.85)
+			(xy 130.81 88.9)
+			(xy 130.81 86.36)
 		)
 		(stroke
 			(width 0)
@@ -1269,8 +1125,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 72.39)
-			(xy 173.99 72.39)
+			(xy 168.91 88.9)
+			(xy 172.72 88.9)
 		)
 		(stroke
 			(width 0)
@@ -1280,8 +1136,8 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 72.39)
-			(xy 173.99 67.31)
+			(xy 172.72 88.9)
+			(xy 172.72 83.82)
 		)
 		(stroke
 			(width 0)
@@ -1291,8 +1147,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 85.09)
-			(xy 173.99 85.09)
+			(xy 168.91 101.6)
+			(xy 172.72 101.6)
 		)
 		(stroke
 			(width 0)
@@ -1302,8 +1158,8 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 85.09)
-			(xy 173.99 90.17)
+			(xy 172.72 101.6)
+			(xy 172.72 106.68)
 		)
 		(stroke
 			(width 0)
@@ -1313,8 +1169,8 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 85.09)
-			(xy 76.2 85.09)
+			(xy 140.97 101.6)
+			(xy 74.93 101.6)
 		)
 		(stroke
 			(width 0)
@@ -1324,8 +1180,8 @@
 	)
 	(wire
 		(pts
-			(xy 76.2 85.09)
-			(xy 76.2 69.85)
+			(xy 74.93 101.6)
+			(xy 74.93 86.36)
 		)
 		(stroke
 			(width 0)
@@ -1335,8 +1191,8 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 87.63)
-			(xy 138.43 87.63)
+			(xy 140.97 104.14)
+			(xy 137.16 104.14)
 		)
 		(stroke
 			(width 0)
@@ -1346,8 +1202,8 @@
 	)
 	(wire
 		(pts
-			(xy 138.43 87.63)
-			(xy 138.43 92.71)
+			(xy 137.16 104.14)
+			(xy 137.16 109.22)
 		)
 		(stroke
 			(width 0)
@@ -1355,78 +1211,10 @@
 		)
 		(uuid "cb613607-32e2-5a3c-8766-e57c41d4f3b2")
 	)
-	(wire
-		(pts
-			(xy 78.74 118.11)
-			(xy 78.74 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "372f4173-b5f0-5cc6-af72-eba886019f43")
-	)
-	(wire
-		(pts
-			(xy 104.14 118.11)
-			(xy 104.14 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "84f5e638-cdff-5262-a08c-86693fe65875")
-	)
-	(wire
-		(pts
-			(xy 129.54 118.11)
-			(xy 129.54 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6c8439fa-0bc1-5763-aafa-1e68470aad0e")
-	)
-	(wire
-		(pts
-			(xy 78.74 134.62)
-			(xy 78.74 137.16)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "04a37db2-1772-5828-83a2-ece3d791cff0")
-	)
-	(junction
-		(at 78.74 120.65)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "cd4c0220-d470-58b3-a29b-4c4ee89fde67")
-	)
-	(junction
-		(at 78.74 137.16)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "259f1b1c-d2c8-5dd5-bd8b-d0d15bda087b")
-	)
-	(junction
-		(at 104.14 120.65)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "73591680-6cc2-517e-a165-17224eee9cc4")
-	)
-	(junction
-		(at 129.54 120.65)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "5a0da785-4886-596a-bd40-8021b67a55c6")
-	)
 	(hierarchical_label
 		"ETH_LINE_MDI_3_P"
 		(shape bidirectional)
-		(at 132.08 74.93 180)
+		(at 130.81 91.44 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1438,7 +1226,7 @@
 	(hierarchical_label
 		"ETH_LINE_MDI_0_P"
 		(shape bidirectional)
-		(at 107.95 77.47 180)
+		(at 106.68 93.98 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1450,7 +1238,7 @@
 	(hierarchical_label
 		"ETH_LINE_MDI_1_P"
 		(shape bidirectional)
-		(at 132.08 80.01 180)
+		(at 130.81 96.52 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1462,7 +1250,7 @@
 	(hierarchical_label
 		"ETH_LINE_MDI_2_N"
 		(shape bidirectional)
-		(at 107.95 82.55 180)
+		(at 106.68 99.06 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1474,7 +1262,7 @@
 	(hierarchical_label
 		"ETH_LINE_MDI_1_N"
 		(shape bidirectional)
-		(at 180.34 82.55 0)
+		(at 179.07 99.06 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1486,7 +1274,7 @@
 	(hierarchical_label
 		"ETH_LINE_MDI_2_P"
 		(shape bidirectional)
-		(at 204.47 80.01 0)
+		(at 203.2 96.52 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1498,7 +1286,7 @@
 	(hierarchical_label
 		"ETH_LINE_MDI_0_N"
 		(shape bidirectional)
-		(at 180.34 77.47 0)
+		(at 179.07 93.98 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1510,7 +1298,7 @@
 	(hierarchical_label
 		"ETH_LINE_MDI_3_N"
 		(shape bidirectional)
-		(at 204.47 74.93 0)
+		(at 203.2 91.44 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1521,7 +1309,7 @@
 	)
 	(symbol
 		(lib_id "KH-5224-8P8C-D:KH-5224-8P8C-D")
-		(at 156.21 80.01 0)
+		(at 154.94 96.52 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1531,7 +1319,7 @@
 		(property
 			"Reference"
 			"J23001"
-			(at 163.83 67.945 0)
+			(at 162.56 84.455 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1541,7 +1329,7 @@
 		(property
 			"Value"
 			"KH-5224-8P8C-D"
-			(at 156.21 92.2 0)
+			(at 154.94 108.71 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1551,7 +1339,7 @@
 		(property
 			"Footprint"
 			"KH-5224-8P8C-D:KH-5224-8P8C-D"
-			(at 156.21 80.01 0)
+			(at 154.94 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1562,7 +1350,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 156.21 80.01 0)
+			(at 154.94 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1573,7 +1361,7 @@
 		(property
 			"LCSC"
 			"C2828085"
-			(at 156.21 80.01 0)
+			(at 154.94 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1646,7 +1434,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 132.08 66.04 0)
+		(at 130.81 82.55 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1656,7 +1444,7 @@
 		(property
 			"Reference"
 			"R23001"
-			(at 134.722 64.77 0)
+			(at 133.452 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1666,7 +1454,7 @@
 		(property
 			"Value"
 			"330R"
-			(at 135.929 67.31 0)
+			(at 134.659 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1676,7 +1464,7 @@
 		(property
 			"Footprint"
 			"Resistor_SMD:R_0603_1608Metric"
-			(at 132.08 66.04 0)
+			(at 130.81 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1687,7 +1475,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 132.08 66.04 0)
+			(at 130.81 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1698,7 +1486,7 @@
 		(property
 			"LCSC"
 			"C23138"
-			(at 132.08 66.04 0)
+			(at 130.81 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1727,7 +1515,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 76.2 66.04 0)
+		(at 74.93 82.55 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1737,7 +1525,7 @@
 		(property
 			"Reference"
 			"R23002"
-			(at 78.843 64.77 0)
+			(at 77.573 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1747,7 +1535,7 @@
 		(property
 			"Value"
 			"330R"
-			(at 80.049 67.31 0)
+			(at 78.779 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1757,7 +1545,7 @@
 		(property
 			"Footprint"
 			"Resistor_SMD:R_0603_1608Metric"
-			(at 76.2 66.04 0)
+			(at 74.93 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1768,7 +1556,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 76.2 66.04 0)
+			(at 74.93 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1779,7 +1567,7 @@
 		(property
 			"LCSC"
 			"C23138"
-			(at 76.2 66.04 0)
+			(at 74.93 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1807,8 +1595,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole_Pad")
-		(at 78.74 118.11 0)
+		(lib_id "schgen:CHASSIS_GND")
+		(at 137.16 109.22 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1817,18 +1605,19 @@
 		(uuid "ab75c5b9-3364-5ed0-bf10-8d2e6dc9c9c4")
 		(property
 			"Reference"
-			"H23001"
-			(at 81.637 115.57 0)
+			"#PWR23001"
+			(at 137.16 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property
 			"Value"
-			"MountingHole_M3"
-			(at 89.479 118.11 0)
+			"CHASSIS_GND"
+			(at 137.16 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1837,8 +1626,8 @@
 		)
 		(property
 			"Footprint"
-			"MountingHole:MountingHole_3.2mm_M3_Pad"
-			(at 78.74 118.11 0)
+			""
+			(at 137.16 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1849,18 +1638,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 78.74 118.11 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"BOM"
-			"exclude"
-			(at 78.74 118.11 0)
+			(at 137.16 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1877,15 +1655,15 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "H23001")
+					(reference "#PWR23001")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole_Pad")
-		(at 104.14 118.11 0)
+		(lib_id "power:+3V3")
+		(at 130.81 78.74 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1894,18 +1672,19 @@
 		(uuid "d5ddb4eb-b0e1-5650-987d-57c6014264b4")
 		(property
 			"Reference"
-			"H23002"
-			(at 107.037 115.57 0)
+			"#PWR23002"
+			(at 130.81 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property
 			"Value"
-			"MountingHole_M3"
-			(at 114.879 118.11 0)
+			"+3V3"
+			(at 130.81 75.184 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1914,8 +1693,8 @@
 		)
 		(property
 			"Footprint"
-			"MountingHole:MountingHole_3.2mm_M3_Pad"
-			(at 104.14 118.11 0)
+			""
+			(at 130.81 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1926,18 +1705,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 104.14 118.11 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"BOM"
-			"exclude"
-			(at 104.14 118.11 0)
+			(at 130.81 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1954,15 +1722,15 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "H23002")
+					(reference "#PWR23002")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole_Pad")
-		(at 129.54 118.11 0)
+		(lib_id "power:+3V3")
+		(at 74.93 78.74 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1971,18 +1739,19 @@
 		(uuid "887b14ef-f11c-59e1-85ae-b38a176abf60")
 		(property
 			"Reference"
-			"H23003"
-			(at 132.437 115.57 0)
+			"#PWR23003"
+			(at 74.93 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property
 			"Value"
-			"MountingHole_M3"
-			(at 140.279 118.11 0)
+			"+3V3"
+			(at 74.93 75.184 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1991,8 +1760,8 @@
 		)
 		(property
 			"Footprint"
-			"MountingHole:MountingHole_3.2mm_M3_Pad"
-			(at 129.54 118.11 0)
+			""
+			(at 74.93 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2003,18 +1772,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 129.54 118.11 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"BOM"
-			"exclude"
-			(at 129.54 118.11 0)
+			(at 74.93 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2031,15 +1789,15 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "H23003")
+					(reference "#PWR23003")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole_Pad")
-		(at 78.74 134.62 0)
+		(lib_id "power:GND")
+		(at 172.72 83.82 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2048,18 +1806,19 @@
 		(uuid "8538be98-932f-5b83-9a3a-56f608eb132e")
 		(property
 			"Reference"
-			"H23004"
-			(at 81.637 132.08 0)
+			"#PWR23004"
+			(at 172.72 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property
 			"Value"
-			"MountingHole_M3"
-			(at 89.479 134.62 0)
+			"GND"
+			(at 172.72 80.01 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2068,8 +1827,8 @@
 		)
 		(property
 			"Footprint"
-			"MountingHole:MountingHole_3.2mm_M3_Pad"
-			(at 78.74 134.62 0)
+			""
+			(at 172.72 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2080,18 +1839,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 78.74 134.62 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"BOM"
-			"exclude"
-			(at 78.74 134.62 0)
+			(at 172.72 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2108,15 +1856,15 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "H23004")
+					(reference "#PWR23004")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "schgen:CHASSIS_GND")
-		(at 138.43 92.71 0)
+		(lib_id "power:GND")
+		(at 172.72 106.68 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2125,8 +1873,8 @@
 		(uuid "c9a6b99e-9b1a-558e-acbb-cecf1126ef67")
 		(property
 			"Reference"
-			"#PWR23001"
-			(at 138.43 90.17 0)
+			"#PWR23005"
+			(at 172.72 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2136,8 +1884,8 @@
 		)
 		(property
 			"Value"
-			"CHASSIS_GND"
-			(at 138.43 96.52 0)
+			"GND"
+			(at 172.72 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2147,7 +1895,7 @@
 		(property
 			"Footprint"
 			""
-			(at 138.43 92.71 0)
+			(at 172.72 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2158,7 +1906,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 138.43 92.71 0)
+			(at 172.72 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2175,543 +1923,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "#PWR23001")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3V3")
-		(at 132.08 62.23 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "d59cc596-97d1-5e18-b689-7bdbbe07bdb4")
-		(property
-			"Reference"
-			"#PWR23002"
-			(at 132.08 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"+3V3"
-			(at 132.08 58.674 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 132.08 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 132.08 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "c08a8971-68a9-54c6-8ba3-7e5dff390651")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "#PWR23002")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3V3")
-		(at 76.2 62.23 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "98c0bed7-9a26-5ee0-8274-4a92fa890980")
-		(property
-			"Reference"
-			"#PWR23003"
-			(at 76.2 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"+3V3"
-			(at 76.2 58.674 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 76.2 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 76.2 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "bcb146a5-1910-5171-b9c0-b8e0a2f66e49")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "#PWR23003")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 173.99 67.31 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "9a688885-56c8-529c-bde7-72dff4af8425")
-		(property
-			"Reference"
-			"#PWR23004"
-			(at 173.99 64.77 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"GND"
-			(at 173.99 63.5 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 173.99 67.31 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 173.99 67.31 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "c722bd1d-7333-5954-aa03-f2d69b90fde9")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "#PWR23004")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 173.99 90.17 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "fc7a6785-a369-55d6-aa1d-04aa202784ec")
-		(property
-			"Reference"
-			"#PWR23005"
-			(at 173.99 87.63 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"GND"
-			(at 173.99 93.98 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 173.99 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 173.99 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "9fc285dc-b4d8-5421-bfdd-9fd41d737278")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
 					(reference "#PWR23005")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "schgen:CHASSIS_GND")
-		(at 78.74 120.65 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "37bba483-bf4e-5da0-9898-e4afb6dea27d")
-		(property
-			"Reference"
-			"#PWR23009"
-			(at 78.74 118.11 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"CHASSIS_GND"
-			(at 78.74 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 78.74 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 78.74 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "da050755-4c40-56e3-906b-e0ce1ca6c301")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "#PWR23009")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "schgen:CHASSIS_GND")
-		(at 104.14 120.65 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "0447cf0d-9012-5aeb-a24e-5cd3cdf43c9b")
-		(property
-			"Reference"
-			"#PWR23010"
-			(at 104.14 118.11 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"CHASSIS_GND"
-			(at 104.14 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 104.14 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 104.14 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "e96a7289-6636-58a7-8d0b-787b642d9e37")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "#PWR23010")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "schgen:CHASSIS_GND")
-		(at 129.54 120.65 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "6f6f406a-746e-54a4-a568-e7757b8ed4af")
-		(property
-			"Reference"
-			"#PWR23011"
-			(at 129.54 118.11 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"CHASSIS_GND"
-			(at 129.54 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 129.54 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 129.54 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "6a40204d-742e-56e6-a4f1-b516b9b970a5")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "#PWR23011")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "schgen:CHASSIS_GND")
-		(at 78.74 137.16 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "bc4f4162-d8af-5a1d-8888-c4f3ab4ab53c")
-		(property
-			"Reference"
-			"#PWR23012"
-			(at 78.74 134.62 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Value"
-			"CHASSIS_GND"
-			(at 78.74 140.97 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property
-			"Footprint"
-			""
-			(at 78.74 137.16 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property
-			"Datasheet"
-			""
-			(at 78.74 137.16 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin
-			"1"
-			(uuid "d6517cf4-9754-56dc-9eb8-275f04820f64")
-		)
-		(instances
-			(project
-				"Zynq_Carrier"
-				(path
-					"/c2797150-7a6e-556a-82f5-fdda13c31368/ae92c55a-3f4a-550a-b45e-435ced9eac9f"
-					(reference "#PWR23012")
 					(unit 1)
 				)
 			)

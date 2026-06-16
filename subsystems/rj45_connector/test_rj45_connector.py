@@ -14,7 +14,8 @@ LOCAL checks (what a subsystem can prove about ITSELF):
     declared, the two housing-LED anode nodes kept PRIVATE SIGNAL.
   * LED port-present indicator     — each housing LED is a 330R from +VLED to its
     anode node and the cathode returns to GND (no discrete diode — it lives
-    inside J1), and the four M3 mounting holes + the shell bond to CHASSIS_GND.
+    inside J1), and the shell (J1.13) is the ONLY CHASSIS_GND tie on this jack
+    sheet (the four M3 mounting holes moved to the carrier ``mechanical`` sheet).
   * design-rule slice              — DECAP/EP/STRAP raise nothing (a passive
     connector + series resistors has no IC supply pin / exposed pad / config
     strap), and part_rules raises no hard finding.
@@ -171,17 +172,17 @@ def test_housing_leds_are_330r_indicators(c: Circuit):
     assert not any(p.lib_id.endswith(":LED") for p in c.parts.values())
 
 
-def test_shield_and_mounting_holes_on_chassis(c: Circuit):
-    """The shell/shield (J1.13) and the four M3 corner mounting holes bond to
-    the chassis island (CHASSIS_GND), kept separate from signal GND."""
+def test_shield_on_chassis_no_mounting_holes_here(c: Circuit):
+    """The shell/shield (J1.13) bonds to the chassis island (CHASSIS_GND), kept
+    separate from signal GND — and it is the ONLY CHASSIS_GND pin on this jack
+    sheet. The four M3 corner mounting holes are NOT on this sheet anymore (they
+    moved to the carrier-LOCAL ``mechanical`` package so the PCB placer corner-
+    forces them as their own cluster), so this jack has NO mounting-hole parts."""
     ch = c.nets["CHASSIS_GND"].pins
     assert PinRef("J1", "13") in ch, ch
+    assert ch == [PinRef("J1", "13")], ch        # ONLY the shell tie
     holes = sorted(ref for ref in c.parts if ref.startswith("H"))
-    assert holes == ["H1", "H2", "H3", "H4"], holes
-    for h in holes:
-        assert PinRef(h, "1") in ch, h
-        # mounting holes are BOM-excluded chassis-bond fab-art
-        assert c.parts[h].fields.get("BOM") == "exclude", h
+    assert holes == [], holes
 
 
 # ---- design-rule + part-rating slices -------------------------------------------

@@ -105,6 +105,13 @@ def check(model: PcbModel) -> RatsnestResult:
     bx1, by1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
 
     # (a) off-board: any courtyard corner outside the Edge.Cuts rectangle.
+    # MOUNTING HOLES are FIXED-position fab-art: the placer corner-FORCES them to
+    # the four board corners (so a board-mechanical sheet of 4 holes spans the
+    # whole board by design). They must still be ON-BOARD (checked here), but
+    # they are excluded from the per-subsystem DISPERSION metric below — measuring
+    # the spread of deliberately corner-spread holes as "dispersion" is a category
+    # error (the metric exists to catch a FREE-placed subsystem that got
+    # scattered, exactly why the equally-fixed SoM receptacle sheets are skipped).
     by_sheet: dict[str, list[tuple[float, float, float, float, float]]] = {}
     for inst in model.insts:
         cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
@@ -114,6 +121,8 @@ def check(model: PcbModel) -> RatsnestResult:
                 f"{inst.ref} ({inst.sheet}): courtyard "
                 f"({cx0:.1f},{cy0:.1f})..({cx1:.1f},{cy1:.1f}) outside "
                 f"Edge.Cuts ({bx0:.0f},{by0:.0f})..({bx1:.0f},{by1:.0f})")
+        if inst.mod_path.name.startswith("MountingHole"):
+            continue          # corner-forced fixed-position fab-art (see above)
         area = (cx1 - cx0) * (cy1 - cy0)
         by_sheet.setdefault(inst.sheet, []).append((cx0, cy0, cx1, cy1, area))
 

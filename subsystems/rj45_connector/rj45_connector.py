@@ -50,11 +50,11 @@ anode node) — never part of the abstract interface.
 
 Shield/shell (pin 13) -> CHASSIS_GND, the chassis island a board's isolation
 barrier bonds to (kept separate from signal GND, star-bonded by the consuming
-board).
-
-This sheet also hosts four M3 corner mounting holes (H1..H4), each a plated,
-BOM-excluded hole bonded to CHASSIS_GND — co-located with the shield entry so
-every CHASSIS_GND fab-art item lives on one sheet.
+board). J1's shell tie is the ONLY CHASSIS_GND item on this jack sheet — the
+board's M3 corner mounting holes are NOT placed here (the consuming project owns
+its own board-mechanical sheet for those; on the Zynq carrier they live on the
+carrier-LOCAL ``mechanical`` sheet, given their own corner-forced PCB cluster so
+the per-subsystem ratsnest does not drag them into this jack's zone).
 """
 
 from __future__ import annotations
@@ -148,16 +148,13 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     c.net("RJ45_LED_R", f"{rr.ref}.2", "J1.11")         # 330R -> LED-R+ (anode)
     c.net("GND", "J1.12")                               # LED-R- (cathode)
 
-    # shield/shell -> chassis island (a separate net from any signal GND)
+    # shield/shell -> chassis island (a separate net from any signal GND). J1's
+    # own shell tie is the ONLY CHASSIS_GND item on this jack sheet: the four M3
+    # corner mounting holes moved to the carrier-LOCAL ``mechanical`` sheet
+    # (carrier/subsystems/mechanical/) so the PCB placer no longer bundles them
+    # into the jack's per-subsystem ratsnest cluster — they belong at the four
+    # board corners, in their own corner-forced mechanical cluster.
     c.net("CHASSIS_GND", "J1.13")
-
-    # 4x M3 corner mounting holes -> CHASSIS_GND (plated, double as assembly
-    # tooling holes). Real netlisted copper (H1..H4, BOM-excluded); placed here,
-    # the shield-entry sheet, so all CHASSIS_GND fab-art lives in one place and
-    # the chassis bond stays netlist-verifiable. mounting_hole() rejects any
-    # non-GROUND net (LAW 0: a hole is a chassis bond, never a rail).
-    for _ in range(4):
-        c.mounting_hole("CHASSIS_GND")
 
     # power-tree budget: two 330R/+VLED indicator LEDs (~8 mA total) off +VLED
     c.draws("+VLED", DRAWS_A, draws_note)

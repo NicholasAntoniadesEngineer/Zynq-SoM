@@ -210,14 +210,35 @@ def board_parts() -> dict[str, tuple[str, str, str, str]]:
 
     Rebuilt from the subsystem models through the SAME uniquify renaming the
     board flow applies (schgen/generate/board._renamed_ref), so the ref keys
-    match the merged netlist's refs exactly."""
+    match the merged netlist's refs exactly.
+
+    CRITICAL — must use the SAME band index ``build_board`` used to emit the root
+    schematic: the STABLE, frozen registry ``carrier/sheet_index.json`` (band =
+    ``sheet_index[name]``), NOT the 1-based enumerate position. The two coincide
+    only while every sheet's alphabetical order equals its band; the instant a
+    sheet is inserted alphabetically before others (e.g. ``mechanical`` lands
+    between ``lcd`` and ``microsd`` but its band is appended at 34), the enumerate
+    position of every later sheet shifts by one while its registry band stays put.
+    Keying ``board_parts`` off the enumerate position then yields refs (U18001…)
+    that DISAGREE with the schematic-derived ``board_netlist`` refs (U17001…), so
+    ``build_model``'s pad<->net join silently misses — every pad of the affected
+    parts lands no-net. For a plain pad that is only an extra unrouted item, but
+    for a thermal-pad part the EP itself goes no-net, so its blank thermal vias
+    (which inherit the EP's net) can no longer inherit a net and clash with the
+    no-net EP copper -> intra-footprint clearance DRC errors. Reading the same
+    registry keeps every ref permanent and the pad-net join exact."""
+    import json as _json
     from schgen.core.link import all_subsystem_paths, load_subsystem
     from schgen.generate.board import _renamed_ref
+    _idx_path = CARRIER / "sheet_index.json"
+    sheet_index = (_json.loads(_idx_path.read_text())
+                   if _idx_path.exists() else {})
     out: dict[str, tuple[str, str, str, str]] = {}
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     for i, sc in enumerate(sheets, start=1):
+        idx = sheet_index.get(sc.name, i)     # stable band (matches build_board)
         for ref, part in sc.circuit.parts.items():
-            bref = _renamed_ref(ref, i, sheet=sc.name)
+            bref = _renamed_ref(ref, idx, sheet=sc.name)
             out[bref] = (sc.name, part.footprint, part.value, part.lib_id)
     return out
 
@@ -584,6 +605,7 @@ def build_model(two_side: bool = True) -> PcbModel:
 
     mh_refs = sorted(r for r, (_s, _fp, _v, lib) in parts.items()
                      if lib.startswith("Mechanical:MountingHole"))
+    mh_set = set(mh_refs)
 
     # ---- STEP 1: size every subsystem ZONE from its REAL packed footprints ---
     # For each non-SoM sheet, shelf-pack its TOP parts and (separately) its
@@ -592,12 +614,23 @@ def build_model(two_side: bool = True) -> PcbModel:
     # the zone origin AND the exact box, so the zone is sized to FIT — there is
     # no overflow, no off-board shelf. Aspect: a target width ~ sqrt of the
     # per-side area scaled by the SoM aspect keeps zones squarish.
+    #
+    # MOUNTING HOLES are NOT zone-packed: like the SoM receptacles they are
+    # FIXED-position parts (corner-forced to the four board corners in STEP 3).
+    # Packing a hole into its sheet's zone would give it a zone-relative offset
+    # that STEP 3's subsystem loop then writes over the corner position with —
+    # so the holes must be excluded from the zone entirely. A sheet that holds
+    # ONLY holes (the carrier 'mechanical' fab-art sheet) thus contributes no
+    # zone at all; its holes become their own corner-forced cluster.
     side_refs: dict[str, dict[str, list[str]]] = {}
     for sheet in refs_by_sheet:
         if sheet.startswith("som_j"):
             continue
+        zoned = [r for r in refs_by_sheet[sheet] if r not in mh_set]
+        if not zoned:
+            continue          # sheet is mounting-holes-only -> no zone
         side_refs[sheet] = {"top": [], "bottom": []}
-        for r in refs_by_sheet[sheet]:
+        for r in zoned:
             side_refs[sheet][side_of[r]].append(r)
 
     zone_box: dict[str, tuple[float, float]] = {}            # sheet -> (w,h)
@@ -621,7 +654,7 @@ def build_model(two_side: bool = True) -> PcbModel:
     for sheet in sorted(side_refs):
         tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
                        (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
-                       for r in refs_by_sheet[sheet])
+                       for r in refs_by_sheet[sheet] if r not in mh_set)
         target_w = max(8.0, (tot_area * 0.62) ** 0.5)   # squarish per-side fill
         t_off, tw, th = _shelf_pack(_items(side_refs[sheet]["top"], "top"),
                                     target_w)

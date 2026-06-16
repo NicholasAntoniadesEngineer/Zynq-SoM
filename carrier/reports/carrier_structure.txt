@@ -4,4 +4,4 @@ schgen carrier-structure gate (HARD)
 contract: every carrier/subsystems/<name>/ is a complete package —
   <name>.py + __init__.py + README.md + test_<name>.py + <name>.cir, with a callable circuit().
 
-CARRIER STRUCTURE: 33/33 package(s) complete (PASS)
+CARRIER STRUCTURE: 34/34 package(s) complete (PASS)

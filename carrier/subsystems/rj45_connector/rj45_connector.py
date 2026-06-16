@@ -16,11 +16,15 @@ CARRIER BINDING RATIONALE (the carrier net names + why):
                              ~4 mA). NOT a DIP-gated rail — the LEDs light at
                              power-on regardless of any module enable.
   GND         -> GND         (identity). The LED cathodes return to signal GND.
-  CHASSIS_GND -> CHASSIS_GND (identity). The shield/shell (J1.13) + the four M3
-                             corner mounting holes bond to the chassis island —
-                             the same separate net the ethernet sheet's C5
-                             isolation barrier bonds to (kept separate from signal
-                             GND, star-bonded elsewhere on the carrier).
+  CHASSIS_GND -> CHASSIS_GND (identity). The shield/shell (J1.13) bonds to the
+                             chassis island — the same separate net the ethernet
+                             sheet's C5 isolation barrier bonds to (kept separate
+                             from signal GND, star-bonded elsewhere on the
+                             carrier). The four M3 corner mounting holes are NOT
+                             on this jack sheet: they moved to the carrier-LOCAL
+                             ``mechanical`` sheet so the PCB placer corner-forces
+                             them as their own cluster instead of bundling them
+                             into this jack's per-subsystem ratsnest.
 
   Line-side MDI pairs (face the ethernet magnetics' MEDIA side, ETH_LINE_MDI_x):
     RJ45_MDI0_P/N -> ETH_LINE_MDI_0_P/N   (BI_DA, contacts 1,2)

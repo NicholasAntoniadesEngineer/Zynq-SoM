@@ -2520,8 +2520,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 129.54)
-			(xy 205.74 129.54)
+			(xy 218.44 144.78)
+			(xy 205.74 144.78)
 		)
 		(stroke
 			(width 0)
@@ -2531,8 +2531,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 132.08)
-			(xy 205.74 132.08)
+			(xy 218.44 147.32)
+			(xy 205.74 147.32)
 		)
 		(stroke
 			(width 0)
@@ -2542,8 +2542,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 134.62)
-			(xy 205.74 134.62)
+			(xy 218.44 149.86)
+			(xy 205.74 149.86)
 		)
 		(stroke
 			(width 0)
@@ -2553,8 +2553,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 137.16)
-			(xy 205.74 137.16)
+			(xy 218.44 152.4)
+			(xy 205.74 152.4)
 		)
 		(stroke
 			(width 0)
@@ -2564,8 +2564,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 139.7)
-			(xy 205.74 139.7)
+			(xy 218.44 154.94)
+			(xy 205.74 154.94)
 		)
 		(stroke
 			(width 0)
@@ -2575,8 +2575,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 142.24)
-			(xy 205.74 142.24)
+			(xy 218.44 157.48)
+			(xy 205.74 157.48)
 		)
 		(stroke
 			(width 0)
@@ -2586,8 +2586,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 144.78)
-			(xy 205.74 144.78)
+			(xy 218.44 160.02)
+			(xy 205.74 160.02)
 		)
 		(stroke
 			(width 0)
@@ -2597,8 +2597,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 162.56)
-			(xy 205.74 162.56)
+			(xy 218.44 177.8)
+			(xy 205.74 177.8)
 		)
 		(stroke
 			(width 0)
@@ -2608,8 +2608,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 165.1)
-			(xy 205.74 165.1)
+			(xy 218.44 180.34)
+			(xy 205.74 180.34)
 		)
 		(stroke
 			(width 0)
@@ -2619,8 +2619,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 167.64)
-			(xy 205.74 167.64)
+			(xy 218.44 182.88)
+			(xy 205.74 182.88)
 		)
 		(stroke
 			(width 0)
@@ -2630,8 +2630,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 170.18)
-			(xy 205.74 170.18)
+			(xy 218.44 185.42)
+			(xy 205.74 185.42)
 		)
 		(stroke
 			(width 0)
@@ -2641,80 +2641,14 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 172.72)
-			(xy 205.74 172.72)
+			(xy 218.44 187.96)
+			(xy 205.74 187.96)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "3b893b3b-cae8-5217-82aa-8b04f1882fae")
-	)
-	(wire
-		(pts
-			(xy 218.44 190.5)
-			(xy 205.74 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "dd2c0fec-14d7-5df0-bf58-336b1d169d80")
-	)
-	(wire
-		(pts
-			(xy 218.44 193.04)
-			(xy 205.74 193.04)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "156c6558-95b9-5f08-b8aa-448acddebecc")
-	)
-	(wire
-		(pts
-			(xy 218.44 195.58)
-			(xy 205.74 195.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ccf02725-ee21-5cfb-95b2-be267104ace9")
-	)
-	(wire
-		(pts
-			(xy 218.44 198.12)
-			(xy 205.74 198.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ae3a9fff-59c2-5843-abfb-68e1d2d9dbe0")
-	)
-	(wire
-		(pts
-			(xy 218.44 200.66)
-			(xy 205.74 200.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e80944e4-78a8-5cc1-886a-9ed2bf5aefbe")
-	)
-	(wire
-		(pts
-			(xy 218.44 203.2)
-			(xy 205.74 203.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "696b1e0c-b3c9-5192-af6a-a836afc9ffd5")
 	)
 	(wire
 		(pts
@@ -2725,7 +2659,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "baea217d-0209-5816-9764-873bd8bf760e")
+		(uuid "dd2c0fec-14d7-5df0-bf58-336b1d169d80")
 	)
 	(wire
 		(pts
@@ -2736,7 +2670,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "18b94257-0806-5c76-bde0-3d5c551dcf6d")
+		(uuid "156c6558-95b9-5f08-b8aa-448acddebecc")
 	)
 	(wire
 		(pts
@@ -2747,7 +2681,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ea7af4fa-5dfd-533a-ba0f-069f3180731f")
+		(uuid "ccf02725-ee21-5cfb-95b2-be267104ace9")
 	)
 	(wire
 		(pts
@@ -2758,7 +2692,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "8920cdf8-4822-5cb0-863f-03f0286363c0")
+		(uuid "ae3a9fff-59c2-5843-abfb-68e1d2d9dbe0")
 	)
 	(wire
 		(pts
@@ -2769,7 +2703,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "6001cd22-c023-59f5-9666-41b7b03033c1")
+		(uuid "e80944e4-78a8-5cc1-886a-9ed2bf5aefbe")
 	)
 	(wire
 		(pts
@@ -2780,7 +2714,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b410e2c9-843a-5f99-84e6-6190c5ce1d2b")
+		(uuid "696b1e0c-b3c9-5192-af6a-a836afc9ffd5")
 	)
 	(wire
 		(pts
@@ -2791,7 +2725,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "bc70b0e0-b975-55e2-8c6e-57d2c778b44f")
+		(uuid "baea217d-0209-5816-9764-873bd8bf760e")
 	)
 	(wire
 		(pts
@@ -2802,7 +2736,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c616995d-ee6a-5231-82a6-c1b59b80d1da")
+		(uuid "18b94257-0806-5c76-bde0-3d5c551dcf6d")
 	)
 	(wire
 		(pts
@@ -2813,7 +2747,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "d356640a-ef66-5187-aa7d-db2466bda2ca")
+		(uuid "ea7af4fa-5dfd-533a-ba0f-069f3180731f")
 	)
 	(wire
 		(pts
@@ -2824,73 +2758,73 @@
 			(width 0)
 			(type default)
 		)
+		(uuid "8920cdf8-4822-5cb0-863f-03f0286363c0")
+	)
+	(wire
+		(pts
+			(xy 218.44 231.14)
+			(xy 205.74 231.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6001cd22-c023-59f5-9666-41b7b03033c1")
+	)
+	(wire
+		(pts
+			(xy 218.44 233.68)
+			(xy 205.74 233.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b410e2c9-843a-5f99-84e6-6190c5ce1d2b")
+	)
+	(wire
+		(pts
+			(xy 218.44 236.22)
+			(xy 205.74 236.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bc70b0e0-b975-55e2-8c6e-57d2c778b44f")
+	)
+	(wire
+		(pts
+			(xy 218.44 238.76)
+			(xy 205.74 238.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c616995d-ee6a-5231-82a6-c1b59b80d1da")
+	)
+	(wire
+		(pts
+			(xy 218.44 241.3)
+			(xy 205.74 241.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d356640a-ef66-5187-aa7d-db2466bda2ca")
+	)
+	(wire
+		(pts
+			(xy 218.44 243.84)
+			(xy 205.74 243.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
 		(uuid "b4b7e974-fa5b-58c6-8da6-0a6158e1608a")
-	)
-	(wire
-		(pts
-			(xy 218.44 246.38)
-			(xy 205.74 246.38)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6ee1c476-eab3-581e-8925-294911dc0ef6")
-	)
-	(wire
-		(pts
-			(xy 218.44 248.92)
-			(xy 205.74 248.92)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "61fc7365-a626-5057-9b49-dddeda34ffb0")
-	)
-	(wire
-		(pts
-			(xy 218.44 251.46)
-			(xy 205.74 251.46)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6b0a9ea9-3f9f-50f8-a1c4-e9ec87a2c3f0")
-	)
-	(wire
-		(pts
-			(xy 218.44 254)
-			(xy 205.74 254)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "dfcbb374-67b5-50ea-9b6d-9f3907cd9f3d")
-	)
-	(wire
-		(pts
-			(xy 218.44 256.54)
-			(xy 205.74 256.54)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "722e703b-90e8-588c-bf10-c1ddad24a867")
-	)
-	(wire
-		(pts
-			(xy 218.44 259.08)
-			(xy 205.74 259.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "eb3e9427-e7b1-5891-8077-793568434943")
 	)
 	(wire
 		(pts
@@ -2901,7 +2835,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "8442c9fe-d395-5418-a625-fdf31b651046")
+		(uuid "6ee1c476-eab3-581e-8925-294911dc0ef6")
 	)
 	(wire
 		(pts
@@ -2912,12 +2846,78 @@
 			(width 0)
 			(type default)
 		)
+		(uuid "61fc7365-a626-5057-9b49-dddeda34ffb0")
+	)
+	(wire
+		(pts
+			(xy 218.44 266.7)
+			(xy 205.74 266.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6b0a9ea9-3f9f-50f8-a1c4-e9ec87a2c3f0")
+	)
+	(wire
+		(pts
+			(xy 218.44 269.24)
+			(xy 205.74 269.24)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dfcbb374-67b5-50ea-9b6d-9f3907cd9f3d")
+	)
+	(wire
+		(pts
+			(xy 218.44 271.78)
+			(xy 205.74 271.78)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "722e703b-90e8-588c-bf10-c1ddad24a867")
+	)
+	(wire
+		(pts
+			(xy 218.44 274.32)
+			(xy 205.74 274.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eb3e9427-e7b1-5891-8077-793568434943")
+	)
+	(wire
+		(pts
+			(xy 218.44 276.86)
+			(xy 205.74 276.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8442c9fe-d395-5418-a625-fdf31b651046")
+	)
+	(wire
+		(pts
+			(xy 218.44 279.4)
+			(xy 205.74 279.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
 		(uuid "d0a12d69-cd63-5891-9eda-23360f0df9d0")
 	)
 	(wire
 		(pts
-			(xy 218.44 281.94)
-			(xy 205.74 281.94)
+			(xy 218.44 297.18)
+			(xy 205.74 297.18)
 		)
 		(stroke
 			(width 0)
@@ -2927,8 +2927,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 284.48)
-			(xy 205.74 284.48)
+			(xy 218.44 299.72)
+			(xy 205.74 299.72)
 		)
 		(stroke
 			(width 0)
@@ -2938,8 +2938,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 287.02)
-			(xy 205.74 287.02)
+			(xy 218.44 302.26)
+			(xy 205.74 302.26)
 		)
 		(stroke
 			(width 0)
@@ -2949,8 +2949,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 304.8)
-			(xy 205.74 304.8)
+			(xy 218.44 320.04)
+			(xy 205.74 320.04)
 		)
 		(stroke
 			(width 0)
@@ -2960,8 +2960,8 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 307.34)
-			(xy 205.74 307.34)
+			(xy 218.44 322.58)
+			(xy 205.74 322.58)
 		)
 		(stroke
 			(width 0)
@@ -2971,80 +2971,14 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 309.88)
-			(xy 205.74 309.88)
+			(xy 218.44 325.12)
+			(xy 205.74 325.12)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "bbc84e0f-1d0b-5d73-b772-2d86184d116c")
-	)
-	(wire
-		(pts
-			(xy 218.44 342.9)
-			(xy 205.74 342.9)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "06a32eb2-1917-5ee9-83a6-d69dfe2b4203")
-	)
-	(wire
-		(pts
-			(xy 218.44 345.44)
-			(xy 205.74 345.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6340dd93-b4ac-5972-bff8-d2e03bc7f722")
-	)
-	(wire
-		(pts
-			(xy 218.44 347.98)
-			(xy 205.74 347.98)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e9c3a39e-bf9a-51e3-91f8-352540b7c716")
-	)
-	(wire
-		(pts
-			(xy 218.44 350.52)
-			(xy 205.74 350.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "96bf5165-62fb-5fd1-9b67-5bd23a71f55e")
-	)
-	(wire
-		(pts
-			(xy 218.44 353.06)
-			(xy 205.74 353.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a9f82451-48a2-56b2-af5d-8b3c5e378258")
-	)
-	(wire
-		(pts
-			(xy 218.44 355.6)
-			(xy 205.74 355.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "06867136-d4b4-5d27-a6ef-798ad504c956")
 	)
 	(wire
 		(pts
@@ -3055,12 +2989,78 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "729ebade-49de-567b-b632-6b7b3ce5baad")
+		(uuid "06a32eb2-1917-5ee9-83a6-d69dfe2b4203")
 	)
 	(wire
 		(pts
 			(xy 218.44 360.68)
 			(xy 205.74 360.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6340dd93-b4ac-5972-bff8-d2e03bc7f722")
+	)
+	(wire
+		(pts
+			(xy 218.44 363.22)
+			(xy 205.74 363.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e9c3a39e-bf9a-51e3-91f8-352540b7c716")
+	)
+	(wire
+		(pts
+			(xy 218.44 365.76)
+			(xy 205.74 365.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "96bf5165-62fb-5fd1-9b67-5bd23a71f55e")
+	)
+	(wire
+		(pts
+			(xy 218.44 368.3)
+			(xy 205.74 368.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a9f82451-48a2-56b2-af5d-8b3c5e378258")
+	)
+	(wire
+		(pts
+			(xy 218.44 370.84)
+			(xy 205.74 370.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "06867136-d4b4-5d27-a6ef-798ad504c956")
+	)
+	(wire
+		(pts
+			(xy 218.44 373.38)
+			(xy 205.74 373.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "729ebade-49de-567b-b632-6b7b3ce5baad")
+	)
+	(wire
+		(pts
+			(xy 218.44 375.92)
+			(xy 205.74 375.92)
 		)
 		(stroke
 			(width 0)
@@ -8480,7 +8480,7 @@
 	(global_label
 		"SDIO_CLK"
 		(shape bidirectional)
-		(at 205.74 129.54 180)
+		(at 205.74 144.78 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8492,7 +8492,7 @@
 	(global_label
 		"SDIO_CMD"
 		(shape bidirectional)
-		(at 205.74 132.08 180)
+		(at 205.74 147.32 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8504,7 +8504,7 @@
 	(global_label
 		"SDIO_D0"
 		(shape bidirectional)
-		(at 205.74 134.62 180)
+		(at 205.74 149.86 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8516,7 +8516,7 @@
 	(global_label
 		"SDIO_D1"
 		(shape bidirectional)
-		(at 205.74 137.16 180)
+		(at 205.74 152.4 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8528,7 +8528,7 @@
 	(global_label
 		"SDIO_D2"
 		(shape bidirectional)
-		(at 205.74 139.7 180)
+		(at 205.74 154.94 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8540,7 +8540,7 @@
 	(global_label
 		"SDIO_D3"
 		(shape bidirectional)
-		(at 205.74 142.24 180)
+		(at 205.74 157.48 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8552,7 +8552,7 @@
 	(global_label
 		"SD_CARD_DETECT"
 		(shape bidirectional)
-		(at 205.74 144.78 180)
+		(at 205.74 160.02 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8564,7 +8564,7 @@
 	(global_label
 		"PD_FLT_N"
 		(shape bidirectional)
-		(at 205.74 162.56 180)
+		(at 205.74 177.8 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8576,7 +8576,7 @@
 	(global_label
 		"STM32_USB_CC1"
 		(shape bidirectional)
-		(at 205.74 165.1 180)
+		(at 205.74 180.34 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8588,7 +8588,7 @@
 	(global_label
 		"STM32_USB_CC2"
 		(shape bidirectional)
-		(at 205.74 167.64 180)
+		(at 205.74 182.88 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8600,7 +8600,7 @@
 	(global_label
 		"STM32_USB_D_N"
 		(shape bidirectional)
-		(at 205.74 170.18 180)
+		(at 205.74 185.42 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8612,7 +8612,7 @@
 	(global_label
 		"STM32_USB_D_P"
 		(shape bidirectional)
-		(at 205.74 172.72 180)
+		(at 205.74 187.96 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8624,7 +8624,7 @@
 	(global_label
 		"IO_L10_N_13"
 		(shape bidirectional)
-		(at 205.74 190.5 180)
+		(at 205.74 205.74 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8636,7 +8636,7 @@
 	(global_label
 		"IO_L10_P_13"
 		(shape bidirectional)
-		(at 205.74 193.04 180)
+		(at 205.74 208.28 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8648,7 +8648,7 @@
 	(global_label
 		"IO_L2_N_13"
 		(shape bidirectional)
-		(at 205.74 195.58 180)
+		(at 205.74 210.82 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8660,7 +8660,7 @@
 	(global_label
 		"IO_L2_P_13"
 		(shape bidirectional)
-		(at 205.74 198.12 180)
+		(at 205.74 213.36 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8672,7 +8672,7 @@
 	(global_label
 		"IO_L3_N_13"
 		(shape bidirectional)
-		(at 205.74 200.66 180)
+		(at 205.74 215.9 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8684,7 +8684,7 @@
 	(global_label
 		"IO_L3_P_13"
 		(shape bidirectional)
-		(at 205.74 203.2 180)
+		(at 205.74 218.44 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8696,7 +8696,7 @@
 	(global_label
 		"IO_L4_N_13"
 		(shape bidirectional)
-		(at 205.74 205.74 180)
+		(at 205.74 220.98 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8708,7 +8708,7 @@
 	(global_label
 		"IO_L4_P_13"
 		(shape bidirectional)
-		(at 205.74 208.28 180)
+		(at 205.74 223.52 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8720,7 +8720,7 @@
 	(global_label
 		"IO_L5P_13"
 		(shape bidirectional)
-		(at 205.74 210.82 180)
+		(at 205.74 226.06 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8732,7 +8732,7 @@
 	(global_label
 		"IO_L5_N_13"
 		(shape bidirectional)
-		(at 205.74 213.36 180)
+		(at 205.74 228.6 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8744,7 +8744,7 @@
 	(global_label
 		"IO_L7_N_13"
 		(shape bidirectional)
-		(at 205.74 215.9 180)
+		(at 205.74 231.14 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8756,7 +8756,7 @@
 	(global_label
 		"IO_L7_P_13"
 		(shape bidirectional)
-		(at 205.74 218.44 180)
+		(at 205.74 233.68 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8768,7 +8768,7 @@
 	(global_label
 		"IO_L8_N_13"
 		(shape bidirectional)
-		(at 205.74 220.98 180)
+		(at 205.74 236.22 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8780,7 +8780,7 @@
 	(global_label
 		"IO_L8_P_13"
 		(shape bidirectional)
-		(at 205.74 223.52 180)
+		(at 205.74 238.76 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8792,7 +8792,7 @@
 	(global_label
 		"IO_L9_DQS_N_13"
 		(shape bidirectional)
-		(at 205.74 226.06 180)
+		(at 205.74 241.3 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8804,7 +8804,7 @@
 	(global_label
 		"IO_L9_DQS_P_13"
 		(shape bidirectional)
-		(at 205.74 228.6 180)
+		(at 205.74 243.84 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8816,7 +8816,7 @@
 	(global_label
 		"PMODX_IO1"
 		(shape bidirectional)
-		(at 205.74 246.38 180)
+		(at 205.74 261.62 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8828,7 +8828,7 @@
 	(global_label
 		"PMODX_IO2"
 		(shape bidirectional)
-		(at 205.74 248.92 180)
+		(at 205.74 264.16 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8840,7 +8840,7 @@
 	(global_label
 		"PMODX_IO3"
 		(shape bidirectional)
-		(at 205.74 251.46 180)
+		(at 205.74 266.7 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8852,7 +8852,7 @@
 	(global_label
 		"PMODX_IO4"
 		(shape bidirectional)
-		(at 205.74 254 180)
+		(at 205.74 269.24 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8864,7 +8864,7 @@
 	(global_label
 		"PMODX_IO5"
 		(shape bidirectional)
-		(at 205.74 256.54 180)
+		(at 205.74 271.78 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8876,7 +8876,7 @@
 	(global_label
 		"PMODX_IO6"
 		(shape bidirectional)
-		(at 205.74 259.08 180)
+		(at 205.74 274.32 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8888,7 +8888,7 @@
 	(global_label
 		"PMODX_IO7"
 		(shape bidirectional)
-		(at 205.74 261.62 180)
+		(at 205.74 276.86 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8900,7 +8900,7 @@
 	(global_label
 		"PMODX_IO8"
 		(shape bidirectional)
-		(at 205.74 264.16 180)
+		(at 205.74 279.4 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8912,7 +8912,7 @@
 	(global_label
 		"EN_1V8"
 		(shape bidirectional)
-		(at 205.74 281.94 180)
+		(at 205.74 297.18 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8924,7 +8924,7 @@
 	(global_label
 		"EN_3V3"
 		(shape bidirectional)
-		(at 205.74 284.48 180)
+		(at 205.74 299.72 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8936,7 +8936,7 @@
 	(global_label
 		"EN_5V0"
 		(shape bidirectional)
-		(at 205.74 287.02 180)
+		(at 205.74 302.26 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8948,7 +8948,7 @@
 	(global_label
 		"PMON_ALERT_N"
 		(shape bidirectional)
-		(at 205.74 304.8 180)
+		(at 205.74 320.04 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8960,7 +8960,7 @@
 	(global_label
 		"STM32_I2C2_SCL"
 		(shape bidirectional)
-		(at 205.74 307.34 180)
+		(at 205.74 322.58 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8972,7 +8972,7 @@
 	(global_label
 		"STM32_I2C2_SDA"
 		(shape bidirectional)
-		(at 205.74 309.88 180)
+		(at 205.74 325.12 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8984,7 +8984,7 @@
 	(global_label
 		"ETH_LINE_MDI_0_N"
 		(shape bidirectional)
-		(at 205.74 342.9 180)
+		(at 205.74 358.14 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8996,7 +8996,7 @@
 	(global_label
 		"ETH_LINE_MDI_0_P"
 		(shape bidirectional)
-		(at 205.74 345.44 180)
+		(at 205.74 360.68 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9008,7 +9008,7 @@
 	(global_label
 		"ETH_LINE_MDI_1_N"
 		(shape bidirectional)
-		(at 205.74 347.98 180)
+		(at 205.74 363.22 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9020,7 +9020,7 @@
 	(global_label
 		"ETH_LINE_MDI_1_P"
 		(shape bidirectional)
-		(at 205.74 350.52 180)
+		(at 205.74 365.76 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9032,7 +9032,7 @@
 	(global_label
 		"ETH_LINE_MDI_2_N"
 		(shape bidirectional)
-		(at 205.74 353.06 180)
+		(at 205.74 368.3 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9044,7 +9044,7 @@
 	(global_label
 		"ETH_LINE_MDI_2_P"
 		(shape bidirectional)
-		(at 205.74 355.6 180)
+		(at 205.74 370.84 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9056,7 +9056,7 @@
 	(global_label
 		"ETH_LINE_MDI_3_N"
 		(shape bidirectional)
-		(at 205.74 358.14 180)
+		(at 205.74 373.38 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9068,7 +9068,7 @@
 	(global_label
 		"ETH_LINE_MDI_3_P"
 		(shape bidirectional)
-		(at 205.74 360.68 180)
+		(at 205.74 375.92 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15451,6 +15451,54 @@
 	)
 	(sheet
 		(at 218.44 127)
+		(size 22.86 2.54)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "249f8bfb-89b2-54ed-a375-a0f7ca158d24")
+		(property
+			"Sheetname"
+			"mechanical"
+			(at 218.44 126.2884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property
+			"Sheetfile"
+			"schematic/mechanical.kicad_sch"
+			(at 218.44 130.1246 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project
+				"Zynq_Carrier"
+				(path
+					"/c2797150-7a6e-556a-82f5-fdda13c31368"
+					(page "17")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 218.44 142.24)
 		(size 30.48 20.32)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -15468,7 +15516,7 @@
 		(property
 			"Sheetname"
 			"microsd"
-			(at 218.44 126.2884 0)
+			(at 218.44 141.5284 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15479,7 +15527,7 @@
 		(property
 			"Sheetfile"
 			"schematic/microsd.kicad_sch"
-			(at 218.44 147.9046 0)
+			(at 218.44 163.1446 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15490,7 +15538,7 @@
 		(pin
 			"SDIO_CLK"
 			bidirectional
-			(at 218.44 129.54 180)
+			(at 218.44 144.78 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15502,7 +15550,7 @@
 		(pin
 			"SDIO_CMD"
 			bidirectional
-			(at 218.44 132.08 180)
+			(at 218.44 147.32 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15514,7 +15562,7 @@
 		(pin
 			"SDIO_D0"
 			bidirectional
-			(at 218.44 134.62 180)
+			(at 218.44 149.86 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15526,7 +15574,7 @@
 		(pin
 			"SDIO_D1"
 			bidirectional
-			(at 218.44 137.16 180)
+			(at 218.44 152.4 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15538,7 +15586,7 @@
 		(pin
 			"SDIO_D2"
 			bidirectional
-			(at 218.44 139.7 180)
+			(at 218.44 154.94 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15550,7 +15598,7 @@
 		(pin
 			"SDIO_D3"
 			bidirectional
-			(at 218.44 142.24 180)
+			(at 218.44 157.48 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15562,7 +15610,7 @@
 		(pin
 			"SD_CARD_DETECT"
 			input
-			(at 218.44 144.78 180)
+			(at 218.44 160.02 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15576,13 +15624,13 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "17")
+					(page "18")
 				)
 			)
 		)
 	)
 	(sheet
-		(at 218.44 160.02)
+		(at 218.44 175.26)
 		(size 29.21 15.24)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -15600,7 +15648,7 @@
 		(property
 			"Sheetname"
 			"pd_input"
-			(at 218.44 159.3084 0)
+			(at 218.44 174.5484 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15611,7 +15659,7 @@
 		(property
 			"Sheetfile"
 			"schematic/pd_input.kicad_sch"
-			(at 218.44 175.8446 0)
+			(at 218.44 191.0846 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15622,7 +15670,7 @@
 		(pin
 			"PD_FLT_N"
 			bidirectional
-			(at 218.44 162.56 180)
+			(at 218.44 177.8 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15634,7 +15682,7 @@
 		(pin
 			"STM32_USB_CC1"
 			bidirectional
-			(at 218.44 165.1 180)
+			(at 218.44 180.34 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15646,7 +15694,7 @@
 		(pin
 			"STM32_USB_CC2"
 			bidirectional
-			(at 218.44 167.64 180)
+			(at 218.44 182.88 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15658,7 +15706,7 @@
 		(pin
 			"STM32_USB_D_N"
 			bidirectional
-			(at 218.44 170.18 180)
+			(at 218.44 185.42 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15670,7 +15718,7 @@
 		(pin
 			"STM32_USB_D_P"
 			bidirectional
-			(at 218.44 172.72 180)
+			(at 218.44 187.96 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15684,13 +15732,13 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "18")
+					(page "19")
 				)
 			)
 		)
 	)
 	(sheet
-		(at 218.44 187.96)
+		(at 218.44 203.2)
 		(size 30.48 43.18)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -15708,7 +15756,7 @@
 		(property
 			"Sheetname"
 			"pmod"
-			(at 218.44 187.2484 0)
+			(at 218.44 202.4884 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15719,7 +15767,7 @@
 		(property
 			"Sheetfile"
 			"schematic/pmod.kicad_sch"
-			(at 218.44 231.7246 0)
+			(at 218.44 246.9646 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15730,7 +15778,7 @@
 		(pin
 			"IO_L10_N_13"
 			bidirectional
-			(at 218.44 190.5 180)
+			(at 218.44 205.74 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15742,7 +15790,7 @@
 		(pin
 			"IO_L10_P_13"
 			bidirectional
-			(at 218.44 193.04 180)
+			(at 218.44 208.28 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15754,7 +15802,7 @@
 		(pin
 			"IO_L2_N_13"
 			bidirectional
-			(at 218.44 195.58 180)
+			(at 218.44 210.82 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15766,7 +15814,7 @@
 		(pin
 			"IO_L2_P_13"
 			bidirectional
-			(at 218.44 198.12 180)
+			(at 218.44 213.36 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15778,7 +15826,7 @@
 		(pin
 			"IO_L3_N_13"
 			bidirectional
-			(at 218.44 200.66 180)
+			(at 218.44 215.9 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15790,7 +15838,7 @@
 		(pin
 			"IO_L3_P_13"
 			bidirectional
-			(at 218.44 203.2 180)
+			(at 218.44 218.44 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15802,7 +15850,7 @@
 		(pin
 			"IO_L4_N_13"
 			bidirectional
-			(at 218.44 205.74 180)
+			(at 218.44 220.98 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15814,7 +15862,7 @@
 		(pin
 			"IO_L4_P_13"
 			bidirectional
-			(at 218.44 208.28 180)
+			(at 218.44 223.52 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15826,7 +15874,7 @@
 		(pin
 			"IO_L5P_13"
 			bidirectional
-			(at 218.44 210.82 180)
+			(at 218.44 226.06 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15838,7 +15886,7 @@
 		(pin
 			"IO_L5_N_13"
 			bidirectional
-			(at 218.44 213.36 180)
+			(at 218.44 228.6 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15850,7 +15898,7 @@
 		(pin
 			"IO_L7_N_13"
 			bidirectional
-			(at 218.44 215.9 180)
+			(at 218.44 231.14 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15862,7 +15910,7 @@
 		(pin
 			"IO_L7_P_13"
 			bidirectional
-			(at 218.44 218.44 180)
+			(at 218.44 233.68 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15874,7 +15922,7 @@
 		(pin
 			"IO_L8_N_13"
 			bidirectional
-			(at 218.44 220.98 180)
+			(at 218.44 236.22 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15886,7 +15934,7 @@
 		(pin
 			"IO_L8_P_13"
 			bidirectional
-			(at 218.44 223.52 180)
+			(at 218.44 238.76 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15898,7 +15946,7 @@
 		(pin
 			"IO_L9_DQS_N_13"
 			bidirectional
-			(at 218.44 226.06 180)
+			(at 218.44 241.3 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15910,7 +15958,7 @@
 		(pin
 			"IO_L9_DQS_P_13"
 			bidirectional
-			(at 218.44 228.6 180)
+			(at 218.44 243.84 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15924,13 +15972,13 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "19")
+					(page "20")
 				)
 			)
 		)
 	)
 	(sheet
-		(at 218.44 243.84)
+		(at 218.44 259.08)
 		(size 24.13 22.86)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -15948,7 +15996,7 @@
 		(property
 			"Sheetname"
 			"pmod_expansion"
-			(at 218.44 243.1284 0)
+			(at 218.44 258.3684 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15959,7 +16007,7 @@
 		(property
 			"Sheetfile"
 			"schematic/pmod_expansion.kicad_sch"
-			(at 218.44 267.2846 0)
+			(at 218.44 282.5246 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15970,7 +16018,7 @@
 		(pin
 			"PMODX_IO1"
 			bidirectional
-			(at 218.44 246.38 180)
+			(at 218.44 261.62 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15982,7 +16030,7 @@
 		(pin
 			"PMODX_IO2"
 			bidirectional
-			(at 218.44 248.92 180)
+			(at 218.44 264.16 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15994,7 +16042,7 @@
 		(pin
 			"PMODX_IO3"
 			bidirectional
-			(at 218.44 251.46 180)
+			(at 218.44 266.7 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16006,7 +16054,7 @@
 		(pin
 			"PMODX_IO4"
 			bidirectional
-			(at 218.44 254 180)
+			(at 218.44 269.24 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16018,7 +16066,7 @@
 		(pin
 			"PMODX_IO5"
 			bidirectional
-			(at 218.44 256.54 180)
+			(at 218.44 271.78 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16030,7 +16078,7 @@
 		(pin
 			"PMODX_IO6"
 			bidirectional
-			(at 218.44 259.08 180)
+			(at 218.44 274.32 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16042,7 +16090,7 @@
 		(pin
 			"PMODX_IO7"
 			bidirectional
-			(at 218.44 261.62 180)
+			(at 218.44 276.86 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16054,7 +16102,7 @@
 		(pin
 			"PMODX_IO8"
 			bidirectional
-			(at 218.44 264.16 180)
+			(at 218.44 279.4 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16068,13 +16116,13 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "20")
+					(page "21")
 				)
 			)
 		)
 	)
 	(sheet
-		(at 218.44 279.4)
+		(at 218.44 294.64)
 		(size 20.32 10.16)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -16092,7 +16140,7 @@
 		(property
 			"Sheetname"
 			"power"
-			(at 218.44 278.6884 0)
+			(at 218.44 293.9284 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16103,7 +16151,7 @@
 		(property
 			"Sheetfile"
 			"schematic/power.kicad_sch"
-			(at 218.44 290.1446 0)
+			(at 218.44 305.3846 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16114,7 +16162,7 @@
 		(pin
 			"EN_1V8"
 			input
-			(at 218.44 281.94 180)
+			(at 218.44 297.18 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16126,7 +16174,7 @@
 		(pin
 			"EN_3V3"
 			bidirectional
-			(at 218.44 284.48 180)
+			(at 218.44 299.72 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16138,7 +16186,7 @@
 		(pin
 			"EN_5V0"
 			bidirectional
-			(at 218.44 287.02 180)
+			(at 218.44 302.26 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16152,13 +16200,13 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "21")
+					(page "22")
 				)
 			)
 		)
 	)
 	(sheet
-		(at 218.44 302.26)
+		(at 218.44 317.5)
 		(size 30.48 10.16)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -16176,7 +16224,7 @@
 		(property
 			"Sheetname"
 			"power_mon"
-			(at 218.44 301.5484 0)
+			(at 218.44 316.7884 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16187,7 +16235,7 @@
 		(property
 			"Sheetfile"
 			"schematic/power_mon.kicad_sch"
-			(at 218.44 313.0046 0)
+			(at 218.44 328.2446 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16198,7 +16246,7 @@
 		(pin
 			"PMON_ALERT_N"
 			bidirectional
-			(at 218.44 304.8 180)
+			(at 218.44 320.04 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16210,7 +16258,7 @@
 		(pin
 			"STM32_I2C2_SCL"
 			bidirectional
-			(at 218.44 307.34 180)
+			(at 218.44 322.58 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16222,7 +16270,7 @@
 		(pin
 			"STM32_I2C2_SDA"
 			bidirectional
-			(at 218.44 309.88 180)
+			(at 218.44 325.12 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16236,13 +16284,13 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "22")
+					(page "23")
 				)
 			)
 		)
 	)
 	(sheet
-		(at 218.44 325.12)
+		(at 218.44 340.36)
 		(size 22.86 2.54)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -16260,7 +16308,7 @@
 		(property
 			"Sheetname"
 			"power_som"
-			(at 218.44 324.4084 0)
+			(at 218.44 339.6484 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16271,7 +16319,7 @@
 		(property
 			"Sheetfile"
 			"schematic/power_som.kicad_sch"
-			(at 218.44 328.2446 0)
+			(at 218.44 343.4846 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16284,13 +16332,13 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "23")
+					(page "24")
 				)
 			)
 		)
 	)
 	(sheet
-		(at 218.44 340.36)
+		(at 218.44 355.6)
 		(size 33.02 22.86)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -16308,7 +16356,7 @@
 		(property
 			"Sheetname"
 			"rj45_connector"
-			(at 218.44 339.6484 0)
+			(at 218.44 354.8884 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16319,7 +16367,7 @@
 		(property
 			"Sheetfile"
 			"schematic/rj45_connector.kicad_sch"
-			(at 218.44 363.8046 0)
+			(at 218.44 379.0446 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16330,7 +16378,7 @@
 		(pin
 			"ETH_LINE_MDI_0_N"
 			bidirectional
-			(at 218.44 342.9 180)
+			(at 218.44 358.14 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16342,7 +16390,7 @@
 		(pin
 			"ETH_LINE_MDI_0_P"
 			bidirectional
-			(at 218.44 345.44 180)
+			(at 218.44 360.68 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16354,7 +16402,7 @@
 		(pin
 			"ETH_LINE_MDI_1_N"
 			bidirectional
-			(at 218.44 347.98 180)
+			(at 218.44 363.22 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16366,7 +16414,7 @@
 		(pin
 			"ETH_LINE_MDI_1_P"
 			bidirectional
-			(at 218.44 350.52 180)
+			(at 218.44 365.76 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16378,7 +16426,7 @@
 		(pin
 			"ETH_LINE_MDI_2_N"
 			bidirectional
-			(at 218.44 353.06 180)
+			(at 218.44 368.3 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16390,7 +16438,7 @@
 		(pin
 			"ETH_LINE_MDI_2_P"
 			bidirectional
-			(at 218.44 355.6 180)
+			(at 218.44 370.84 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16402,7 +16450,7 @@
 		(pin
 			"ETH_LINE_MDI_3_N"
 			bidirectional
-			(at 218.44 358.14 180)
+			(at 218.44 373.38 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16414,7 +16462,7 @@
 		(pin
 			"ETH_LINE_MDI_3_P"
 			bidirectional
-			(at 218.44 360.68 180)
+			(at 218.44 375.92 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16428,7 +16476,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "24")
+					(page "25")
 				)
 			)
 		)
@@ -17172,7 +17220,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "25")
+					(page "26")
 				)
 			)
 		)
@@ -18084,7 +18132,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "26")
+					(page "27")
 				)
 			)
 		)
@@ -19020,7 +19068,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "27")
+					(page "28")
 				)
 			)
 		)
@@ -19152,7 +19200,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "28")
+					(page "29")
 				)
 			)
 		)
@@ -19296,7 +19344,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "29")
+					(page "30")
 				)
 			)
 		)
@@ -19368,7 +19416,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "30")
+					(page "31")
 				)
 			)
 		)
@@ -19476,7 +19524,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "31")
+					(page "32")
 				)
 			)
 		)
@@ -19560,7 +19608,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "32")
+					(page "33")
 				)
 			)
 		)
@@ -19680,7 +19728,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "33")
+					(page "34")
 				)
 			)
 		)
@@ -19824,7 +19872,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "34")
+					(page "35")
 				)
 			)
 		)
