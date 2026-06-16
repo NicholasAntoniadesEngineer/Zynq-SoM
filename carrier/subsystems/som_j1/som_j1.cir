@@ -1,0 +1,41 @@
+* som_j1.cir — SPICE subckt for the SoM mezzanine connector J1 subsystem.
+*
+* CARRIER-LOCAL: the J connectors are the SoM side of the carrier<->SoM
+* contract; their nets are real carrier nets (carrier/som_conn_gen.py +
+* carrier/som_interface.json), not abstract library names. A board-level .op/
+* .tran wires these subckt pins straight onto the same carrier nets.
+*
+* J1 is a PURE pass-through receptacle (Hirose DF40C-100DS-0.4V(51), 100 pins):
+* it adds NO on-sheet passive network — no decoupling, no straps, no series/
+* termination parts. The placement engine's connector-fan template fires only
+* for a lone >=40-pin part, so every carrier-side discrete (e.g. the PUDC strap)
+* lives on another sheet. There is therefore nothing to model as a small-signal
+* element; this subckt declares J1's externally-visible POWER/GROUND rails as its
+* pins so a board sim can tie the module rails, and leaves the body empty.
+*
+* The 58 signal PORT pass-throughs (Ethernet MDI, USB, STM32-SC, JTAG, SDIO,
+* PS UART/MIO, FMC LA08-11) and the seven isolated-rail no-connects (J1.24-27
+* +3V3, J1.56/58/60 +1V8) carry no two-rail passive and so are not subckt pins.
+*
+* Rails (carrier spelling, '+' stripped for SPICE node syntax):
+*   V5V_SOM   = +5V_SOM   SoM module input (P0 rebind, 4.2-5 V; J1.1-14)
+*   V3V3_SC   = +3V3_SC   SoM system-controller 3.3 V domain
+*
+* Port order: V5V_SOM V3V3_SC GND   (GND last, by convention)
+
+.subckt som_j1 V5V_SOM V3V3_SC GND
+
+* Pure pass-through receptacle: no on-sheet passive network.
+* (rails modelled as a tiny resistive tie so the node is not floating in .op)
+R5V_SOM V5V_SOM GND 1G
+R3V3_SC V3V3_SC GND 1G
+
+.ends som_j1
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto V5V_SOM settles to ~1 V at DC (1G tie is open).
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

@@ -1,0 +1,66 @@
+* bringup_rails.cir — SPICE subckt for the bring-up control surfaces.
+*
+* CARRIER-LOCAL. The DIP switches (DSHP04/08), the TCA9535 expander and the
+* push-buttons are mechanical / active digital parts (no useful small-signal
+* model); this subckt captures the PASSIVE network this sheet OWNS — the
+* I2C/INT pull-ups, the "don't-float" pulldowns on the spare expander ports,
+* the user-button pull-ups + debounce caps, and the PUDC config strap. Values
+* mirror bringup_rails.py one-for-one (parse_si).
+*
+* Pull-ups / straps (matching the netlist exactly):
+*   R1 BU_OVR_LCD_BL -> GND      100k   (P10 provision pulldown, OFF default)
+*   R2 BU_P16        -> GND      100k   (P16 spare don't-float)
+*   R3 BU_P17        -> GND      100k   (P17 spare don't-float)
+*   R4 STM32_I2C2_SCL -> +3V3_SC 4k7    (shared SC I2C pull-up, dossier R1)
+*   R5 STM32_I2C2_SDA -> +3V3_SC 4k7
+*   R6 SC_INT_N      -> +3V3_SC  10k    (the ONE pull-up for the wire-OR INT)
+*   R7 PL_BTN0       -> +3V3     10k    (active-low button, bank VCCO)
+*   R8 PL_BTN1       -> +3V3     10k
+*   R9 PUDC_34       -> GND      10k    (bank-34 PUDC config strap, LOW = PU on)
+*   C1 +3V3_SC       -> GND      100n   (TCA9535 VCC decoupling)
+*   C2 PL_BTN0       -> GND      100n   (RC debounce)
+*   C3 PL_BTN1       -> GND      100n   (RC debounce)
+*   C4 STM32_NRST    -> GND      100n   (reset RC; STM32 internal pull-up)
+*
+* Pins: VDD_SC(=+3V3_SC) VDD(=+3V3) GND  + the signal nets the passives touch.
+
+.subckt bringup_rails VDD_SC VDD GND
++  BU_OVR_LCD_BL BU_P16 BU_P17
++  STM32_I2C2_SCL STM32_I2C2_SDA SC_INT_N
++  PL_BTN0 PL_BTN1 STM32_NRST PUDC_34
+
+* TCA9535 expander spare-port "don't float" pulldowns (no internal pulls)
+R1 BU_OVR_LCD_BL GND 100k
+R2 BU_P16 GND 100k
+R3 BU_P17 GND 100k
+
+* shared SC I2C bus pull-ups (dossier R1: bus lives before any carrier rail)
+R4 STM32_I2C2_SCL VDD_SC 4k7
+R5 STM32_I2C2_SDA VDD_SC 4k7
+
+* the single pull-up for the wire-OR SC interrupt
+R6 SC_INT_N VDD_SC 10k
+
+* user-button pull-ups (bank VCCO) + RC debounce
+R7 PL_BTN0 VDD 10k
+R8 PL_BTN1 VDD 10k
+C2 PL_BTN0 GND 100n
+C3 PL_BTN1 GND 100n
+
+* reset RC (STM32_NRST has the STM32 internal ~40k pull-up, no external R)
+C4 STM32_NRST GND 100n
+
+* bank-34 PUDC config strap (LOW during config = internal pull-ups enabled)
+R9 PUDC_34 GND 10k
+
+* TCA9535 VCC decoupling
+C1 VDD_SC GND 100n
+
+.ends bringup_rails
+
+* Standalone smoke harness (ngspice -b; harmless under any project use):
+* the I2C lines settle to +3V3_SC at DC across the 4k7 pull-ups.
+V1 VDD_SC 0 3.3
+V2 VDD 0 3.3
+.op
+.end

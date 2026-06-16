@@ -1,0 +1,67 @@
+* board_aux.cir — SPICE subckt for the carrier gated-+3V3_AUX rail + PCA9306
+* I2C isolator: the passive network around the SY6280 load switch and the
+* PCA9306 (supply bypass, ILIM-set, EN pulldown, status-LED divider, the
+* isolator VREF bypass + EN/bus pull-ups).
+*
+* CARRIER-LOCAL: the subckt pins are the carrier's REAL rail/ground/port nets
+* (not an abstract interface). The SY6280 (load switch) and PCA9306 (passive
+* FET bus switch) have no useful analog small-signal model here; this subckt
+* captures the PASSIVE network the sheet adds, which is what the local test and
+* a board-level .op reason about. Internal SIGNAL nodes (EN_AUX, BS_ISET_AUX,
+* BS_PG_AUX, AUX_ISO_EN) are local subckt nodes, not pins.
+*
+* Values mirror carrier/subsystems/board_aux/board_aux.py one-for-one
+* (parse_si compatible):
+*   C1 100n  SY6280 IN bypass        (V3V3    -> GND)
+*   C2 100n  SY6280 OUT bypass       (V3V3_AUX-> GND)
+*   C3 100n  PCA9306 VREF1 bypass    (V3V3_SC -> GND)
+*   C4 100n  PCA9306 VREF2 bypass    (V3V3_AUX-> GND)
+*   R1 13k   SY6280 ILIM set (~523mA)(BS_ISET_AUX -> GND, internal)
+*   R2 100k  EN_AUX pulldown (def OFF)(EN_AUX -> GND, internal)
+*   R3 330R  status-LED series        (BS_PG_AUX -> GND, internal)
+*   R4 100k  PCA9306 EN pull-up       (V3V3_AUX -> AUX_ISO_EN, internal)
+*   R5 4k7   AUX SCL pull-up          (V3V3_AUX -> AUX_I2C_SCL)
+*   R6 4k7   AUX SDA pull-up          (V3V3_AUX -> AUX_I2C_SDA)
+*   D1 red   status LED               (BS_PG_AUX -> V3V3_AUX)
+*
+* Pin order: V3V3 V3V3_AUX GND V3V3_SC STM32_I2C2_SCL STM32_I2C2_SDA
+*            AUX_I2C_SCL AUX_I2C_SDA
+* (rails first, then the always-on + isolated I2C port pairs; '+' rail marks are
+*  stripped to make legal SPICE node names.)
+
+.subckt board_aux V3V3 V3V3_AUX GND V3V3_SC STM32_I2C2_SCL STM32_I2C2_SDA AUX_I2C_SCL AUX_I2C_SDA
+
+* supply bypass: SY6280 IN/OUT + PCA9306 VREF1/VREF2 (one 100n each)
+C1 V3V3 GND 100n
+C2 V3V3_AUX GND 100n
+C3 V3V3_SC GND 100n
+C4 V3V3_AUX GND 100n
+
+* SY6280 current-limit set: ILIM = 6800 / 13k ~ 523 mA
+R1 BS_ISET_AUX GND 13k
+
+* manual-enable pulldown: EN_AUX held low (rail OFF) until SW1 closes +3V3 onto
+* it; the DIP switch is an external mechanical contact, not modeled here
+R2 EN_AUX GND 100k
+
+* status LED (lit = AUX enabled): D1 from the gated rail through R3 to GND
+D1 V3V3_AUX BS_PG_AUX DLED
+R3 BS_PG_AUX GND 330R
+
+* PCA9306 EN pulled to the gated rail: switch OPENS (isolated) when AUX is down
+R4 V3V3_AUX AUX_ISO_EN 100k
+
+* AUX-side I2C bus pull-ups to the gated rail (PCA9306 needs pulls both sides)
+R5 V3V3_AUX AUX_I2C_SCL 4k7
+R6 V3V3_AUX AUX_I2C_SDA 4k7
+
+.model DLED D(Is=1e-18 N=2 Rs=2)
+.ends board_aux
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto V3V3_AUX settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

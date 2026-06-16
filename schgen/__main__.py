@@ -46,7 +46,14 @@ SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
 def _subsystem_path(name_or_path: str) -> Path:
     path = Path(name_or_path)
     if not path.suffix == ".py":
-        path = SUBSYSTEMS_DIR / f"{Path(name_or_path).stem}.py"
+        stem = Path(name_or_path).stem
+        # Support BOTH the flat carrier/subsystems/<name>.py layout AND the
+        # foldered carrier/subsystems/<name>/<name>.py package layout (the
+        # foldered form wins if both somehow exist) — same resolution as
+        # schgen.core.link._carrier_subsystem_file, so `schgen build`/`board`
+        # discover a folded carrier subsystem exactly as the linker does.
+        foldered = SUBSYSTEMS_DIR / stem / f"{stem}.py"
+        path = foldered if foldered.exists() else SUBSYSTEMS_DIR / f"{stem}.py"
     if not path.exists():
         raise SystemExit(f"subsystem not found: {path}")
     return path

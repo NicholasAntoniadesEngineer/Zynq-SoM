@@ -1,0 +1,39 @@
+* som_j2.cir — SPICE subckt for the SoM mezzanine connector J2 subsystem.
+*
+* CARRIER-LOCAL: the J connectors are the SoM side of the carrier<->SoM
+* contract; their nets are real carrier nets (carrier/som_conn_gen.py +
+* carrier/som_interface.json), not abstract library names. A board-level .op/
+* .tran wires these subckt pins straight onto the same carrier nets.
+*
+* J2 is a PURE pass-through receptacle (Hirose DF40C-100DS-0.4V(51), 100 pins):
+* it adds NO on-sheet passive network — no decoupling, no straps, no series/
+* termination parts. The placement engine's connector-fan template fires only
+* for a lone >=40-pin part, so any carrier-side discrete lives on another sheet.
+* This subckt declares J2's externally-visible POWER/GROUND rail as its pins so a
+* board sim can tie the VCCO supply, and leaves the body empty.
+*
+* The 72 signal PORT pass-throughs (HDMI RX/TX TMDS, LCD touch, Pmod expansion,
+* PS UART0 modem + debug UART, PL buttons, FMC-present, SD card-detect, bank-13
+* spares) carry no two-rail passive and so are not subckt pins.
+*
+* Rail (carrier spelling, '+' stripped for SPICE node syntax):
+*   V3V3 = +3V3   VCCO source for Zynq banks 13+33 (the +VCCO_13/33 contacts
+*                 merge onto the carrier +3V3 rail — the buck is the source)
+*
+* Port order: V3V3 GND   (GND last, by convention)
+
+.subckt som_j2 V3V3 GND
+
+* Pure pass-through receptacle: no on-sheet passive network.
+* (rail modelled as a tiny resistive tie so the node is not floating in .op)
+R3V3 V3V3 GND 1G
+
+.ends som_j2
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any project use):
+* a 1 V source through 1k onto V3V3 settles to ~1 V at DC (1G tie is open).
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

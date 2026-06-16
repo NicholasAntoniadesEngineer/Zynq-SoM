@@ -41,8 +41,17 @@ _SUBS = _ROOT / "carrier" / "subsystems"
 ALWAYS_ON = {"+3V3", "+3V3_SC", "+5V", "+5V_SOM", "+1V8", "+VIN", "VBUS"}
 
 
+def _subsystem_file(stem):
+    """Resolve a carrier subsystem to its netlist file, supporting BOTH the flat
+    ``<stem>.py`` and the foldered ``<stem>/<stem>.py`` package layout (mirrors
+    schgen.core.link._carrier_subsystem_file — board_services/board_aux/
+    board_qwiic were folded into per-name packages, byte-identical)."""
+    foldered = _SUBS / stem / f"{stem}.py"
+    return foldered if foldered.exists() else _SUBS / f"{stem}.py"
+
+
 def _load(stem):
-    spec = importlib.util.spec_from_file_location(f"_sub_{stem}", _SUBS / f"{stem}.py")
+    spec = importlib.util.spec_from_file_location(f"_sub_{stem}", _subsystem_file(stem))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.circuit()

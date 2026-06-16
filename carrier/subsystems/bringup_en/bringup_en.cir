@@ -1,0 +1,40 @@
+* bringup_en.cir — SPICE subckt for the 3 rail EN AND-cells (carrier-local).
+*
+* The SN74LVC1G08 gates are active logic (no useful small-signal model here);
+* this subckt captures the PASSIVE network each cell adds around the gate — the
+* A-input 100k pulldown, the B-input 100k pull-up to +3V3_SC, and the gate VCC
+* 100 nF decoupling. Values mirror bringup_en.py one-for-one (parse_si).
+*
+* Per cell (n = 5V0 / 3V3 / 1V8):
+*   Rd_n   A_n -> GND        100k   (DIP pulldown; closed DIP = logic 1)
+*   Ru_n   B_n -> +3V3_SC    100k   (override pull-up; Hi-Z source => B = 1)
+*   Cd_n   +3V3_SC -> GND    100n   (gate VCC decoupling)
+*
+* Pins: VDD(=+3V3_SC) GND  A_5V0 B_5V0  A_3V3 B_3V3  A_1V8 B_1V8
+* (the Y enables are gate OUTPUTS — no subsystem-local passive, so not pins).
+
+.subckt bringup_en VDD GND A_5V0 B_5V0 A_3V3 B_3V3 A_1V8 B_1V8
+
+* cell 5V0
+Rd_5V0 A_5V0 GND 100k
+Ru_5V0 B_5V0 VDD 100k
+Cd_5V0 VDD GND 100n
+
+* cell 3V3
+Rd_3V3 A_3V3 GND 100k
+Ru_3V3 B_3V3 VDD 100k
+Cd_3V3 VDD GND 100n
+
+* cell 1V8
+Rd_1V8 A_1V8 GND 100k
+Ru_1V8 B_1V8 VDD 100k
+Cd_1V8 VDD GND 100n
+
+.ends bringup_en
+
+* Standalone smoke harness (ngspice -b; harmless under any project use):
+* drive the rail to 3.3 V, the B pull-up settles its node to ~VDD at DC.
+V1 VDD 0 3.3
+Xen VDD 0 0 nb5 0 nb3 0 nb1 bringup_en
+.op
+.end

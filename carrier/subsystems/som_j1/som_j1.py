@@ -11,7 +11,9 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-_GEN_PATH = Path(__file__).resolve().parents[1] / "som_conn_gen.py"
+# foldered package layout: this file is carrier/subsystems/som_j1/som_j1.py,
+# so the shared generator is two levels up at carrier/som_conn_gen.py.
+_GEN_PATH = Path(__file__).resolve().parents[2] / "som_conn_gen.py"
 _spec = importlib.util.spec_from_file_location("som_conn_gen", _GEN_PATH)
 _gen = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_gen)

@@ -1,0 +1,48 @@
+* board_qwiic.cir — SPICE subckt for the carrier QWIIC / STEMMA-QT expansion
+* connector + its USBLC6-2SC6 ESD array.
+*
+* MINIMAL by nature: this sheet is a pure connector + a passive ESD clamp array
+* — it adds NO R/C filter network of its own (no decoupling, no pull-ups; the
+* AUX-bus pull-ups live once on board_aux). So the subckt has no netlist
+* passives; it captures only the topology that matters electrically: the USBLC6
+* low-capacitance clamp on the two I2C lines and the always-on clamp reference.
+*
+* CARRIER-LOCAL: the subckt pins are the carrier's REAL rail/ground/port nets.
+* The USBLC6 I/O TVS diodes are reverse-biased in normal operation (they draw
+* ~0 and never back-feed the gated rail), so they are modeled as the clamp pairs
+* each line has: line -> +3V3 (always-on ref, U1.5) and GND -> line. The
+* external connector lines (QWIIC_SDA/SCL) reach the protected bus pair through
+* the array's low-resistance pass (idealized as a tiny series R, ~the bond/lead
+* path) so a board-level .op sees them connected.
+*
+* Pin order: GND V3V3_AUX AUX_I2C_SDA AUX_I2C_SCL V3V3
+* (GND first; the connector POWER is the GATED +3V3_AUX (J1.2); the clamp
+*  reference is the ALWAYS-ON +3V3 (U1.5) — '+' marks stripped for legal nodes.)
+
+.subckt board_qwiic GND V3V3_AUX AUX_I2C_SDA AUX_I2C_SCL V3V3
+
+* USBLC6-2SC6 low-cap ESD array: per-line clamp to the always-on +3V3 (U1.5)
+* and to GND. Reverse-biased in normal operation -> ~0 leakage, no back-feed.
+* SDA line (external QWIIC_SDA -> protected AUX_I2C_SDA):
+Rsda QWIIC_SDA AUX_I2C_SDA 1m
+Dsda_h QWIIC_SDA V3V3 DESD
+Dsda_l GND QWIIC_SDA DESD
+* SCL line (external QWIIC_SCL -> protected AUX_I2C_SCL):
+Rscl QWIIC_SCL AUX_I2C_SCL 1m
+Dscl_h QWIIC_SCL V3V3 DESD
+Dscl_l GND QWIIC_SCL DESD
+
+* connector power pin (J1.2) is the GATED rail; modeled as a near-open keep-node
+* so V3V3_AUX is not dangling when this subckt is exercised standalone.
+Raux V3V3_AUX GND 1G
+
+.model DESD D(Is=1e-15 N=1 Rs=1 Cjo=3.5p)
+.ends board_qwiic
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto an external line settles across the clamp.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

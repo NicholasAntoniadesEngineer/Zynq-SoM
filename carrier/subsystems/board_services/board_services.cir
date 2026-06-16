@@ -1,0 +1,58 @@
+* board_services.cir — SPICE subckt for the carrier ID-EEPROM + RTC + watchdog
+* services block (decoupling + INT# pull-up + the RTC coin-cell node).
+*
+* CARRIER-LOCAL: unlike the project-agnostic subsystems/<name>/ library, this
+* subsystem wires the carrier's REAL net names, so the subckt pins are those
+* carrier nets (rail/ground/port externals), not an abstract interface. The
+* active parts (EEPROM/RTC/supervisor) are digital I2C / supervisor ICs with no
+* useful analog small-signal behaviour to model; this subckt captures the
+* PASSIVE network the sheet adds around them — the per-IC supply bypass, the RTC
+* INT# pull-up, and the coin-cell backup node — which is what the local test and
+* any board-level .op reason about.
+*
+* Values mirror carrier/subsystems/board_services/board_services.py one-for-one
+* (parse_si compatible):
+*   C1 100n   U1 VCC (EEPROM) bypass     (VDD_AUX -> GND)
+*   C2 100n   U2 VDD  (RTC)   bypass     (VDD_AUX -> GND)
+*   C3 100n   U3 VDD  (TPS3823) bypass   (VDD_AUX -> GND)
+*   R1 10k    RTC INT# pull-up           (VDD_AUX -> RTC_INT_N, internal)
+*   R2 1k     WDI series back-feed limit (WATCHDOG_KICK -> WDI_AUX, internal)
+*   V_RTC_BAT  coin-cell backup node     (rechargeable ML1220 via BT1, no cap)
+*
+* Pin order: VDD_AUX GND AUX_I2C_SCL AUX_I2C_SDA WATCHDOG_KICK WATCHDOG_RST_N
+* (GND second, the rail first by convention; the I2C/watchdog ports carry no
+*  subsystem-local passive other than the WDI series R, and WATCHDOG_RST_N is a
+*  bare push-pull event line with no passive at all.)
+
+.subckt board_services VDD_AUX GND AUX_I2C_SCL AUX_I2C_SDA WATCHDOG_KICK WATCHDOG_RST_N
+
+* per-IC supply decoupling (one 100n local bypass per service IC)
+C1 VDD_AUX GND 100n
+C2 VDD_AUX GND 100n
+C3 VDD_AUX GND 100n
+
+* RV-3028 INT# (alarm) pull-up to the gated rail
+R1 VDD_AUX RTC_INT_N 10k
+
+* TPS3823 WDI series resistor (ESD back-feed limiter); WDI floats -> watchdog
+* disabled, so the internal WDI_AUX node is otherwise high-Z by design
+R2 WATCHDOG_KICK WDI_AUX 1k
+
+* RTC coin-cell backup node (rechargeable ML1220 via BT1). The RV-3028
+* regulates VBACKUP internally; NO bypass cap is fitted by design (the local
+* test waives decap on V_RTC_BAT). The cell is a high-impedance backup input, so
+* the node is modeled here as a near-open to ground (1G keep-resistor) purely so
+* ngspice sees a DC path and the node is not dangling — it is NOT a netlist
+* passive and is deliberately an R, never a C, so it is excluded from the
+* C-line netlist-equivalence comparison the local test performs.
+Rbat V_RTC_BAT GND 1G
+
+.ends board_services
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto VDD_AUX settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

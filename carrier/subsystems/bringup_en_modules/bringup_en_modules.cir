@@ -1,0 +1,75 @@
+* bringup_en_modules.cir — SPICE subckt for the 11 module EN AND-cells.
+*
+* CARRIER-LOCAL. The SN74LVC1G08 gates are active logic (no useful small-signal
+* model); this subckt captures the PASSIVE network each cell adds — the A-input
+* 100k pulldown, the B-input 100k pull-up to +3V3_SC, and the gate VCC 100 nF
+* decoupling. Values mirror bringup_en_modules.py one-for-one (parse_si).
+*
+* Per cell:
+*   Rd_n   A_n -> GND        100k   (DIP pulldown; closed DIP = logic 1)
+*   Ru_n   B_n -> +3V3_SC    100k   (override pull-up; Hi-Z => B = 1)
+*   Cd_n   +3V3_SC -> GND    100n   (gate VCC decoupling)
+*
+* The spare LCD_BL cell has NO B pull-up here (its B = TCA9535 P10 carries a
+* 100k pulldown on bringup_rails, so the provision defaults OFF) — modelled as
+* only the A pulldown + the VCC cap, matching the netlist exactly.
+*
+* Pins: VDD(=+3V3_SC) GND  then A_n, B_n per cell.
+
+.subckt bringup_en_modules VDD GND
++  A_HDMI_TX B_HDMI_TX  A_HDMI_RX B_HDMI_RX  A_LCD B_LCD  A_CAM B_CAM
++  A_SD B_SD  A_USB B_USB  A_PMOD B_PMOD  A_USER_LED B_USER_LED
++  A_LCD_BL B_LCD_BL  A_HDMI_TX_5V B_HDMI_TX_5V  A_LCD_5V B_LCD_5V
+
+* --- the 8 original module cells (A pulldown + B pull-up + VCC cap) ---
+Rd_HDMI_TX A_HDMI_TX GND 100k
+Ru_HDMI_TX B_HDMI_TX VDD 100k
+Cd_HDMI_TX VDD GND 100n
+
+Rd_HDMI_RX A_HDMI_RX GND 100k
+Ru_HDMI_RX B_HDMI_RX VDD 100k
+Cd_HDMI_RX VDD GND 100n
+
+Rd_LCD A_LCD GND 100k
+Ru_LCD B_LCD VDD 100k
+Cd_LCD VDD GND 100n
+
+Rd_CAM A_CAM GND 100k
+Ru_CAM B_CAM VDD 100k
+Cd_CAM VDD GND 100n
+
+Rd_SD A_SD GND 100k
+Ru_SD B_SD VDD 100k
+Cd_SD VDD GND 100n
+
+Rd_USB A_USB GND 100k
+Ru_USB B_USB VDD 100k
+Cd_USB VDD GND 100n
+
+Rd_PMOD A_PMOD GND 100k
+Ru_PMOD B_PMOD VDD 100k
+Cd_PMOD VDD GND 100n
+
+Rd_USER_LED A_USER_LED GND 100k
+Ru_USER_LED B_USER_LED VDD 100k
+Cd_USER_LED VDD GND 100n
+
+* --- spare LCD_BL cell: A pulldown + VCC cap, NO B pull-up here ---
+Rd_LCD_BL A_LCD_BL GND 100k
+Cd_LCD_BL VDD GND 100n
+
+* --- the 2 round-5 5V module cells ---
+Rd_HDMI_TX_5V A_HDMI_TX_5V GND 100k
+Ru_HDMI_TX_5V B_HDMI_TX_5V VDD 100k
+Cd_HDMI_TX_5V VDD GND 100n
+
+Rd_LCD_5V A_LCD_5V GND 100k
+Ru_LCD_5V B_LCD_5V VDD 100k
+Cd_LCD_5V VDD GND 100n
+
+.ends bringup_en_modules
+
+* Standalone smoke harness (ngspice -b; harmless under any project use).
+V1 VDD 0 3.3
+.op
+.end

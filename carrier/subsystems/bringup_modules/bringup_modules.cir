@@ -1,0 +1,100 @@
+* bringup_modules.cir — SPICE subckt for the 10 per-module power gates.
+*
+* CARRIER-LOCAL. The SY6280AAC is an active load switch (constant-current
+* foldback, OTP, reverse blocking — no useful small-signal model); this subckt
+* captures the PASSIVE network each gate adds: the ISET RSET to GND (which sets
+* ILIM = 6800/RSET), the 100 nF on the switch IN and OUT, and the status-LED +
+* series-R from the gated OUT to GND. Values mirror bringup_modules.py
+* one-for-one (parse_si); the LED is a diode.
+*
+* Per module the gate passes IN -> OUT when enabled; here we model the static
+* OUT-side network (the source rail is a subckt pin and IN feeds OUT through the
+* closed switch, so the OUT node is the gated rail).
+*
+* Pins, per module: <IN_rail> <OUT_rail>, plus the shared GND.
+*   IN/OUT rails are real carrier POWER nets (a project's source + gated rail).
+
+.model DLED D (IS=1e-14 N=2)
+
+.subckt bringup_modules GND
++  P3V3 P5V
++  OUT_HDMI_TX OUT_HDMI_RX OUT_LCD OUT_CAM OUT_SD OUT_USB OUT_PMOD
++  OUT_USER_LED OUT_5V_HDMI_TX OUT_5V_LCD
+
+* --- # 1 HDMI TX  +3V3 -> +3V3_HDMI_TX  RSET 13k  LED 330R ---
+Rset_1 ISET_1 GND 13k
+Cin_1  P3V3 GND 100n
+Cout_1 OUT_HDMI_TX GND 100n
+Dled_1 OUT_HDMI_TX PG_1 DLED
+Rled_1 PG_1 GND 330R
+
+* --- # 2 HDMI RX  +3V3 -> +3V3_HDMI_RX  RSET 13k  LED 330R ---
+Rset_2 ISET_2 GND 13k
+Cin_2  P3V3 GND 100n
+Cout_2 OUT_HDMI_RX GND 100n
+Dled_2 OUT_HDMI_RX PG_2 DLED
+Rled_2 PG_2 GND 330R
+
+* --- # 3 LCD  +3V3 -> +3V3_LCD  RSET 6.8k  LED 330R ---
+Rset_3 ISET_3 GND 6.8k
+Cin_3  P3V3 GND 100n
+Cout_3 OUT_LCD GND 100n
+Dled_3 OUT_LCD PG_3 DLED
+Rled_3 PG_3 GND 330R
+
+* --- # 4 Camera  +3V3 -> +3V3_CAM  RSET 13k  LED 330R ---
+Rset_4 ISET_4 GND 13k
+Cin_4  P3V3 GND 100n
+Cout_4 OUT_CAM GND 100n
+Dled_4 OUT_CAM PG_4 DLED
+Rled_4 PG_4 GND 330R
+
+* --- # 5 microSD  +3V3 -> +3V3_SD  RSET 6.8k  LED 330R ---
+Rset_5 ISET_5 GND 6.8k
+Cin_5  P3V3 GND 100n
+Cout_5 OUT_SD GND 100n
+Dled_5 OUT_SD PG_5 DLED
+Rled_5 PG_5 GND 330R
+
+* --- # 6 USB VBUS  +5V -> +5V_USB  RSET 6.8k  LED 1k ---
+Rset_6 ISET_6 GND 6.8k
+Cin_6  P5V GND 100n
+Cout_6 OUT_USB GND 100n
+Dled_6 OUT_USB PG_6 DLED
+Rled_6 PG_6 GND 1k
+
+* --- # 7 PMOD  +3V3 -> +3V3_PMOD  RSET 13k  LED 330R ---
+Rset_7 ISET_7 GND 13k
+Cin_7  P3V3 GND 100n
+Cout_7 OUT_PMOD GND 100n
+Dled_7 OUT_PMOD PG_7 DLED
+Rled_7 PG_7 GND 330R
+
+* --- # 8 User LEDs  +3V3 -> +3V3_USER_LED  RSET 13k  LED 330R ---
+Rset_8 ISET_8 GND 13k
+Cin_8  P3V3 GND 100n
+Cout_8 OUT_USER_LED GND 100n
+Dled_8 OUT_USER_LED PG_8 DLED
+Rled_8 PG_8 GND 330R
+
+* --- # 9 HDMI TX 5V  +5V -> +5V_HDMI_TX  RSET 13k  LED 1k ---
+Rset_9 ISET_9 GND 13k
+Cin_9  P5V GND 100n
+Cout_9 OUT_5V_HDMI_TX GND 100n
+Dled_9 OUT_5V_HDMI_TX PG_9 DLED
+Rled_9 PG_9 GND 1k
+
+* --- # 10 LCD BL 5V  +5V -> +5V_LCD  RSET 6.8k  LED 1k ---
+Rset_10 ISET_10 GND 6.8k
+Cin_10  P5V GND 100n
+Cout_10 OUT_5V_LCD GND 100n
+Dled_10 OUT_5V_LCD PG_10 DLED
+Rled_10 PG_10 GND 1k
+
+.ends bringup_modules
+
+* Standalone smoke harness (ngspice -b; harmless under any project use).
+V3 P3V3 0 3.3
+V5 P5V 0 5.0
+.op
+.end
