@@ -125,14 +125,12 @@ def _airwires(model: PcbModel, side: str | None):
     return out
 
 
-def cross_airwire_length(model: PcbModel) -> tuple[float, float, int, float]:
-    """(cross-subsystem airwire mm, total airwire mm, cross count, SoM-star mm)
-    over the MST ratsnest — the LAW-5 budget metric. ``som`` is the subset of the
-    cross airwire that touches the SoM mezzanine (som_j*): the central DF40 strips
-    every subsystem must reach, so that star airwire is INHERENT to a
-    central-SoM/edge-peripheral board (not avoidable scatter). The gate adds it to
-    the budget and bounds only the avoidable peripheral<->peripheral remainder."""
-    cross = total = som = 0.0
+def cross_airwire_length(model: PcbModel) -> tuple[float, float, int]:
+    """(cross-subsystem airwire mm, total airwire mm, cross count) over the MST
+    ratsnest — the LAW-5 budget metric. A small cross/total ratio means the
+    subsystems cluster (few long inter-block wires)."""
+    side_of_ref = {inst.ref: inst.side for inst in model.insts}  # noqa: F841
+    cross = total = 0.0
     n_cross = 0
     for net, pts in sorted(net_pad_positions(model).items()):
         for a, b in _mst_edges(pts):
@@ -143,9 +141,7 @@ def cross_airwire_length(model: PcbModel) -> tuple[float, float, int, float]:
             if sa != sb:
                 cross += d
                 n_cross += 1
-                if sa.startswith("som_j") or sb.startswith("som_j"):
-                    som += d
-    return round(cross, 1), round(total, 1), n_cross, round(som, 1)
+    return round(cross, 1), round(total, 1), n_cross
 
 
 # ---- SVG ------------------------------------------------------------------------
@@ -277,7 +273,7 @@ def generate(model: PcbModel | None = None) -> dict:
     _png(model, palette, "bottom", PNG_BOTTOM)
     SVG_COMBINED.parent.mkdir(parents=True, exist_ok=True)
     SVG_COMBINED.write_text(_svg(model, palette))
-    cross, total, n_cross, _som = cross_airwire_length(model)
+    cross, total, n_cross = cross_airwire_length(model)
     return {
         "png_top": PNG_TOP, "png_bottom": PNG_BOTTOM, "svg": SVG_COMBINED,
         "cross_mm": cross, "total_mm": total, "n_cross": n_cross,

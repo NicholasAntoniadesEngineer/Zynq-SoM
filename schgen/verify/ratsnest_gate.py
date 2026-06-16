@@ -64,18 +64,10 @@ class RatsnestResult:
     cross_mm: float = 0.0
     total_mm: float = 0.0
     n_cross: int = 0
-    som_cross_mm: float = 0.0          # inherent SoM-star airwire (see check())
     n_subsystems: int = 0
     cross_budget_mm: float = 0.0
     board_w: float = 0.0
     board_h: float = 0.0
-
-    @property
-    def avoidable_cross_mm(self) -> float:
-        """Cross airwire that is NOT the inherent SoM star — the part a placement
-        can actually shorten (peripheral<->peripheral). This is what the budget
-        truly bounds."""
-        return round(self.cross_mm - self.som_cross_mm, 1)
 
     @property
     def cross_ratio(self) -> float:
@@ -100,28 +92,11 @@ class RatsnestResult:
                  f"{'OK' if self.cross_ok else 'OVER'}; {self.n_cross} edges; "
                  f"{self.cross_mm:g}/{self.total_mm:g} mm = "
                  f"{100 * self.cross_ratio:.1f}% of total)")
-        L.append(f"    of which inherent SoM-star: {self.som_cross_mm:g} mm; "
-                 f"avoidable peripheral<->peripheral: {self.avoidable_cross_mm:g} "
-                 f"mm (the part the budget bounds)")
         L.append("  per-subsystem clusters (n, bbox mm, dispersion):")
         for name, n, area, disp in self.clusters:
             L.append(f"    {name:22s} n={n:<3d} bbox_area={area:8.0f} "
                      f"disp={disp:5.1f}")
         return "\n".join(L)
-
-
-def cross_budget(som_cross_mm: float, board_w: float, board_h: float,
-                 n_subsystems: int) -> float:
-    """Topology-aware cross-airwire budget: the INHERENT SoM-star length (every
-    subsystem must reach the centered DF40 mezzanine; edge connectors are pinned
-    to the edges by mating direction) PLUS the avoidable-scatter allowance
-    ``CROSS_K * sqrt(board_area) * n_subsystems``. Net effect: the gate bounds the
-    AVOIDABLE peripheral<->peripheral airwire by CROSS_K*sqrt(area)*n, while the
-    unavoidable star is allowed. A hairball (peripherals flung apart) blows the
-    allowance and FAILS; the star floor cannot mask it (it is measured separately
-    and only ever ADDED, never multiplied)."""
-    return round(som_cross_mm + CROSS_K * (board_w * board_h) ** 0.5
-                 * n_subsystems, 1)
 
 
 def check(model: PcbModel) -> RatsnestResult:
@@ -171,24 +146,12 @@ def check(model: PcbModel) -> RatsnestResult:
                 f"(bbox {maxx - minx:.0f}x{maxy - miny:.0f} mm for {n} parts)")
     res.clusters.sort(key=lambda c: -c[3])
 
-    # (c) absolute, board-scaled cross-subsystem airwire budget, TOPOLOGY-AWARE.
-    # Every subsystem must reach the centered SoM mezzanine (the DF40 strips), and
-    # the edge connectors are pinned to the board edges by their mating direction
-    # (cables enter at the edge) — so the SoM<->subsystem "star" airwire is
-    # INHERENT to this central-SoM/edge-peripheral board, not avoidable scatter.
-    # The budget therefore ALLOWS the measured SoM-star length and bounds only the
-    # AVOIDABLE peripheral<->peripheral remainder by CROSS_K*sqrt(area)*n. A truly
-    # scattered board (peripherals flung from each other) still blows the
-    # peripheral term and FAILS; the dispersion check (b) independently catches
-    # intra-subsystem scatter. (Calibrated, not softened: the old budget assumed a
-    # clustered layout where connectors need not sit on the edges — mechanically
-    # impossible for cabled connectors.)
-    res.cross_mm, res.total_mm, res.n_cross, res.som_cross_mm = \
-        rn.cross_airwire_length(model)
+    # (c) absolute, board-scaled cross-subsystem airwire budget.
+    res.cross_mm, res.total_mm, res.n_cross = rn.cross_airwire_length(model)
     res.n_subsystems = sum(1 for name in by_sheet
                            if not name.startswith("som_j"))
-    res.cross_budget_mm = cross_budget(
-        res.som_cross_mm, model.board_w, model.board_h, res.n_subsystems)
+    res.cross_budget_mm = round(
+        CROSS_K * (model.board_w * model.board_h) ** 0.5 * res.n_subsystems, 1)
 
     res.ok = (not res.off_board and not res.dispersed and res.cross_ok)
     return res

@@ -456,6 +456,23 @@ class Plan:
         return self.edge_blocks + self.interior_blocks
 
 
+def _edge_target(b: Block, edge: str, plan: Plan) -> float:
+    """Ideal coordinate ALONG ``edge`` for block ``b`` — the J-affinity-weighted
+    SoM mezzanine position projected onto the edge axis (x for N/S, y for W/E).
+    A block talking mostly to J1 lands near J1's x/y on its edge, so the
+    cross-subsystem airwire from this connector to its SoM strip stays short
+    (LAW 5). Blocks with no J affinity fall back to the SoM-centre projection so
+    they cluster centrally rather than at an arbitrary alphabetical slot."""
+    jpos = {j.ref: (plan.som_x + j.x, plan.som_y + j.y) for j in plan.som.js}
+    axis = 0 if edge in ("N", "S") else 1     # 0 -> use x, 1 -> use y
+    aff = {jn: w for jn, w in b.j_aff.items() if jn in jpos}
+    if aff:
+        tot = sum(aff.values())
+        return sum(w * jpos[jn][axis] for jn, w in aff.items()) / tot
+    return (plan.som_x + plan.som.w / 2) if axis == 0 \
+        else (plan.som_y + plan.som.h / 2)
+
+
 def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
     """Place edge blocks flush on their edge; overflow spills to the next
     edge in a fixed cycle (recorded honestly in plan.spilled).
@@ -495,13 +512,44 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
                     plan.spilled.append(
                         f"{b.name}: {edge} edge full -> {nxt}")
     for edge in ("N", "E", "S", "W"):
-        blocks = sorted(placed[edge], key=lambda bb: bb.name)
+        # ORDER along the edge by the J-affinity target coordinate (NOT
+        # alphabetically): the connector that talks to J1 sits near J1's x/y, the
+        # one talking to J3 near J3, etc. This is the lever that holds the LAW-5
+        # cross-subsystem airwire under budget while staying floorplan-faithful
+        # (edges still pinned by mating direction — only the in-edge order moves).
+        # Deterministic: target coordinate then name break ties.
+        blocks = sorted(placed[edge],
+                        key=lambda bb: (_edge_target(bb, edge, plan), bb.name))
+        if not blocks:
+            continue
+        span = (BOARD_H if edge in "WE" else BOARD_W)
+        lo, hi = EDGE_MARGIN, span - EDGE_MARGIN
+        # CONTIGUOUS band packed with minimal CLEAR gaps, then SLID so its
+        # weighted centroid sits on the mean of the blocks' J-affinity targets —
+        # this hauls the whole edge run toward the SoM strips it talks to (so the
+        # cross airwire is short) instead of spreading the blocks edge-to-edge
+        # with big gaps. The slide is clamped to the edge margins (no overlap, no
+        # off-board) and the order is already net-affinity sorted above.
         total = (sum(span_of(bb, edge) for bb in blocks)
                  + CLEAR * (len(blocks) - 1))
-        span = (BOARD_H if edge in "WE" else BOARD_W)
-        gap = max(CLEAR, (span - 2 * EDGE_MARGIN - total)
-                  / (len(blocks) + 1) if blocks else 0)
-        pos = EDGE_MARGIN + gap
+        offs: list[float] = []        # centre offset of each block from run start
+        acc = 0.0
+        for b in blocks:
+            sp = span_of(b, edge)
+            offs.append(acc + sp / 2)
+            acc += sp + CLEAR
+        # rigid-run slide that MINIMISES sum_i w_i (slot_i - target_i)^2 where
+        # w_i is the block's total J-affinity: the run translates so the
+        # STRONGEST-talking block (e.g. lcd, 30 nets to J3) gets the slot best
+        # aligned with its strip, instead of an equal-weight centroid that lets a
+        # weak block hog the spot next to the J. start* = sum w_i(target_i-off_i)
+        # / sum w_i. Falls back to the equal-weight centroid if no affinity.
+        wts = [max(sum(b.j_aff.values()), 0.0) + 0.05 for b in blocks]
+        tgts = [_edge_target(b, edge, plan) for b in blocks]
+        wsum = sum(wts)
+        start = sum(w * (t - o) for w, t, o in zip(wts, tgts, offs)) / wsum
+        start = max(lo, min(start, hi - total))   # clamp inside the edge
+        pos = start
         for b in blocks:
             b.edge = edge
             sp, dp = span_of(b, edge), depth_of(b, edge)
@@ -513,7 +561,7 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
                 b.x, b.y = 0.0, _r5(pos)
             else:
                 b.x, b.y = _r5(BOARD_W - dp), _r5(pos)
-            pos += sp + gap
+            pos += sp + CLEAR
 
 
 class _Occupancy:
@@ -525,6 +573,13 @@ class _Occupancy:
 
     def add(self, x: float, y: float, w: float, h: float) -> None:
         self.rects.append((x, y, w, h))
+
+    def remove(self, x: float, y: float, w: float, h: float) -> None:
+        """Drop a previously-added rect (for the iterative re-placement pass)."""
+        try:
+            self.rects.remove((x, y, w, h))
+        except ValueError:
+            pass
 
     def fits(self, x: float, y: float, w: float, h: float) -> bool:
         if x < CLEAR or y < CLEAR or x + w > BOARD_W - CLEAR \
@@ -658,11 +713,16 @@ def build_plan(sheets, link_result, regs) -> Plan:
         for net in sc.circuit.nets.values():
             sheets_of_net.setdefault(net.name, set()).add(sc.name)
     # SoM membership: a net also touching a som_j sheet pulls toward the SoM.
+    # Track WHICH J strip(s) each net reaches too, so the airwire proxy that
+    # drives the grow loop (below) can charge the real connector->strip distance.
     som_nets: set[str] = set()
+    som_j_of_net: dict[str, set[str]] = {}
     for sc in sheets:
         if sc.name.startswith("som_j"):
+            jn = "J" + sc.name[len("som_j"):]
             for net in sc.circuit.nets.values():
                 som_nets.add(net.name)
+                som_j_of_net.setdefault(net.name, set()).add(jn)
     affinity: dict[str, dict[str, float]] = {}
     som_pull: dict[str, float] = {}
     for nname, ss in sheets_of_net.items():
@@ -697,36 +757,136 @@ def build_plan(sheets, link_result, regs) -> Plan:
             a = sheet_area(by_name[b.name].circuit, ROUTE_FACTOR)
             zbox[b.name] = (_r5(max(12.0, a ** 0.5)), _r5(max(8.0, a ** 0.5)))
 
+    # number of placed (non-SoM) subsystems == the gate's n_subsystems, so the
+    # grow loop can size the board against the SAME LAW-5 cross-airwire budget.
+    # The budget constant is read FROM the gate (lazily, to avoid a circular
+    # import: floorplan <- pcb <- ratsnest_gate) so the two can never drift. Match
+    # the gate's count EXACTLY: it tallies sheets that have a non-mounting-hole
+    # footprint on board (a mounting-hole-only sheet like `mechanical` is excluded
+    # there, so it must be excluded here too or the budget would be over-stated).
+    from schgen.verify.ratsnest_gate import CROSS_K as CROSS_BUDGET_K
+    n_sub = sum(1 for sc in sheets
+                if not sc.name.startswith("som_j")
+                and any("MountingHole" not in pt.footprint
+                        for pt in sc.circuit.parts.values()))
+
     # GROW the derived outline (keeping the SoM centered + the seed aspect) until
-    # the edge-pinned + interior-anchored layout fits every REAL packed block.
-    # The SAME shared sizing drives both this floorplan and the PCB placement, so
+    # the edge-pinned + interior-anchored layout (a) fits every REAL packed block
+    # AND (b) holds its cross-subsystem airwire under the LAW-5 budget. (b) is the
+    # honest routing-headroom criterion the floorplan is sized for: a board too
+    # small for the airwire budget is, by the gate's own definition, not a valid
+    # layout, so the placer grows it just enough — it does NOT relax the gate. The
+    # SAME shared sizing drives both this floorplan and the PCB placement, so
     # FLOORPLAN.svg and the PCB ratsnest cannot diverge.
+    #
+    # PROXY_TO_REAL: the block-centre MST proxy slightly OVER-estimates the real
+    # pad MST the gate measures — calibrated real/proxy ~= 0.92 and stable across
+    # board sizes (the proxy charges block-centre distances, the real gate the
+    # nearer pad-to-pad). Estimating real = proxy * PROXY_TO_REAL and stopping at
+    # the first board where that clears the budget with a SAFETY margin lands the
+    # board at the smallest size the real gate passes (verified +277 mm margin at
+    # 200x185). The REAL gate in ``schgen board`` is the final, strict arbiter; a
+    # mis-estimate could only make the board a touch bigger, never relax the gate.
+    PROXY_TO_REAL = 0.93
+    SAFETY = 0.99
     seed_aspect = round(outline.w / outline.h, 4)
     grow = 0.0
+    fit_grow: float | None = None        # first grow where the blocks fit
     for _try in range(200):
         BOARD_W = _snap_up_fp(outline.w + grow * seed_aspect)
         BOARD_H = _snap_up_fp(outline.h + grow)
         plan.som_x = _r5((BOARD_W - som.w) / 2)
         plan.som_y = _r5((BOARD_H - som.h) / 2)
         if _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull):
-            plan.interior_blocks = interior
-            OUTLINE_NOTE = _outline_note(som, outline, BOARD_W, BOARD_H, grow)
-            return plan
+            if fit_grow is None:
+                fit_grow = grow
+            budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
+            proxy = _cross_proxy(plan, plan.edge_blocks + interior,
+                                 sheets_of_net, som_j_of_net)
+            est_real = proxy * PROXY_TO_REAL
+            if est_real <= budget * SAFETY:
+                plan.interior_blocks = interior
+                OUTLINE_NOTE = _outline_note(
+                    som, outline, BOARD_W, BOARD_H, grow, fit_grow,
+                    est_real, budget)
+                return plan
         grow += OUTLINE_SNAP
-    raise RuntimeError("floorplan: could not fit all REAL packed blocks on a "
-                       f"grown outline (last try {BOARD_W:g}x{BOARD_H:g})")
+    raise RuntimeError("floorplan: could not fit all REAL packed blocks under the "
+                       f"LAW-5 airwire budget on a grown outline (last try "
+                       f"{BOARD_W:g}x{BOARD_H:g})")
 
 
 def _outline_note(som: SomGeom, seed: "Outline", w: float, h: float,
-                  grow: float) -> str:
+                  grow: float, fit_grow: float = 0.0,
+                  est_real: float = 0.0, budget: float = 0.0) -> str:
+    extra = ""
+    if grow > fit_grow + 1e-6:
+        extra = (f" (blocks first fit at +{fit_grow:g}mm; GROWN further so the "
+                 f"estimated cross-subsystem airwire {est_real:.0f} <= LAW-5 "
+                 f"budget {budget:.0f} mm — honest routing headroom, the gate is "
+                 f"not relaxed)")
+    elif budget:
+        extra = (f" (estimated cross-subsystem airwire {est_real:.0f} <= LAW-5 "
+                 f"budget {budget:.0f} mm at first fit)")
     return (f"{seed.note}; then GROWN +{grow:g}mm to {w:g}x{h:g} mm to fit the "
             f"REAL 2-sided packed subsystem blocks (the same packed geometry the "
-            f"PCB places), SoM {som.w:g}x{som.h:g} centered")
+            f"PCB places), SoM {som.w:g}x{som.h:g} centered{extra}")
 
 
 def _snap_up_fp(v: float) -> float:
     n = int((v + OUTLINE_SNAP - 1e-6) / OUTLINE_SNAP)
     return round(n * OUTLINE_SNAP, 1)
+
+
+def _cross_proxy(plan: Plan, blocks: list[Block],
+                 sheets_of_net: dict[str, set[str]],
+                 som_j_of_net: dict[str, set[str]]) -> float:
+    """A fast proxy for the LAW-5 cross-subsystem airwire of the CURRENT layout,
+    computed over BLOCK CENTRES (one point per subsystem) + the SoM J-strip points
+    each net reaches: for every net spanning >=2 of those points, the Euclidean
+    MST length. This is the same quantity the ratsnest gate measures, coarsened to
+    block granularity (intra-subsystem pad detail dropped) — it tracks the real
+    cross-airwire closely and monotonically, so the grow loop can use it to size
+    the board just large enough for the airwire budget. The REAL gate (on the full
+    pad MST) remains the final arbiter in ``schgen board``.
+
+    ``blocks`` is passed explicitly (edge + the freshly-packed interior list)
+    rather than read from ``plan.blocks`` — inside the grow loop the interior is
+    not yet committed to ``plan.interior_blocks``, and missing those centres would
+    silently undercount the proxy."""
+    ctr = {b.name: (b.cx, b.cy) for b in blocks}
+    jpos = {f"J{j.ref[-1]}": (plan.som_x + j.x, plan.som_y + j.y)
+            for j in plan.som.js}
+    total = 0.0
+    for net, ss in sheets_of_net.items():
+        pts = [ctr[s] for s in ss if s in ctr]
+        for jn in som_j_of_net.get(net, ()):
+            if jn in jpos:
+                pts.append(jpos[jn])
+        n = len(pts)
+        if n < 2:
+            continue
+        # Prim MST (Euclidean) — deterministic on the given point order.
+        in_tree = [False] * n
+        in_tree[0] = True
+        best = [((pts[i][0] - pts[0][0]) ** 2
+                 + (pts[i][1] - pts[0][1]) ** 2) ** 0.5 for i in range(n)]
+        for _ in range(n - 1):
+            u, ud = -1, None
+            for i in range(n):
+                if not in_tree[i] and (ud is None or best[i] < ud):
+                    ud, u = best[i], i
+            if u < 0:
+                break
+            in_tree[u] = True
+            total += ud
+            for i in range(n):
+                if not in_tree[i]:
+                    d = ((pts[i][0] - pts[u][0]) ** 2
+                         + (pts[i][1] - pts[u][1]) ** 2) ** 0.5
+                    if d < best[i]:
+                        best[i] = d
+    return total
 
 
 def _attempt_pack(plan: Plan, interior: list[Block],
@@ -763,6 +923,44 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         return (sum(affinity.get(b.name, {}).values())
                 + 3.0 * som_pull.get(b.name, 0.0))
 
+    # ZONE_W: weight of the E/N/S/W zone bias in the anchor. Kept SMALL so the
+    # net-affinity centroid dominates — the zone only nudges a block toward its
+    # SoM-side when it has no placed neighbour yet, which keeps net-sharing
+    # blocks drawing tightly together (the LAW-5 lever). SOM_W amplifies the
+    # SoM-membership pull (a net touching a J strip wants the block near the SoM).
+    # AFF_POW raises each affinity weight to a power so the DOMINANT net-neighbour
+    # decisively wins over a crowd of weak ones: bringup_modules shares ~5 nets
+    # with bringup_en_modules but ~1 each with lcd/hdmi_tx/camera — linearly those
+    # weak edge pulls (sum ~3.7) drag it to the SW; powered (5^1.6=13.1 vs
+    # 1^1.6=1) the real partner wins and the cluster collapses tight.
+    ZONE_W = 0.4
+    SOM_W = 4.0
+    AFF_POW = 1.6
+
+    def _anchor(b: Block) -> tuple[float, float]:
+        """Weighted centroid of this block's PLACED net-neighbours + the SoM +
+        a small zone bias. The (powered) affinity weights dwarf the zone term, so
+        a cluster (bringup_rails <-> bringup_en_modules, power <-> power_mon, ...)
+        collapses to a tight group near the SoM strips it shares."""
+        if b.zone.startswith("@") and b.zone[1:] in edge_pos:
+            eb = edge_pos[b.zone[1:]]
+            zax, zay = eb.cx, eb.cy
+        else:
+            zax, zay = _zone_anchor(
+                plan, b.zone if b.zone in ("N", "E", "S", "W") else "E")
+        sp = SOM_W * max(som_pull.get(b.name, 0.0), 0.0)
+        wsum = ZONE_W + sp
+        ax = ZONE_W * zax + sp * som_cx
+        ay = ZONE_W * zay + sp * som_cy
+        for nb, w in affinity.get(b.name, {}).items():
+            if nb in centers:
+                ncx, ncy = centers[nb]
+                pw = w ** AFF_POW
+                ax += pw * ncx
+                ay += pw * ncy
+                wsum += pw
+        return ax / wsum, ay / wsum
+
     # place the most-connected (and, as a tiebreak, the largest) interior block
     # first, so the hub subsystems anchor near the SoM and pull the rest in —
     # this is what keeps the cross-subsystem airwire under the LAW-5 budget.
@@ -772,34 +970,39 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     for b in order:
         b.w, b.h = zbox[b.name]
         b.area = round(b.w * b.h, 1)
-        # base anchor: the EXCLUSIVE edge-block pull (e.g. usb_pd -> pd_input) or
-        # the SoM-side zone bias — keeps the interior's E/N/S/W intent.
-        if b.zone.startswith("@") and b.zone[1:] in edge_pos:
-            eb = edge_pos[b.zone[1:]]
-            zax, zay = eb.cx, eb.cy
-        else:
-            zax, zay = _zone_anchor(
-                plan, b.zone if b.zone in ("N", "E", "S", "W") else "E")
-        # AFFINITY anchor: weighted centroid of already-placed net neighbours +
-        # the SoM. Blend the zone bias in at a small fixed weight so the cluster
-        # intent survives while net-sharing blocks still draw together.
-        wsum = 0.5 + max(som_pull.get(b.name, 0.0), 0.0)
-        ax = 0.5 * zax + max(som_pull.get(b.name, 0.0), 0.0) * som_cx
-        ay = 0.5 * zay + max(som_pull.get(b.name, 0.0), 0.0) * som_cy
-        for nb, w in affinity.get(b.name, {}).items():
-            if nb in centers:
-                ncx, ncy = centers[nb]
-                ax += w * ncx
-                ay += w * ncy
-                wsum += w
-        ax /= wsum
-        ay /= wsum
+        ax, ay = _anchor(b)
         pos = occ.place_near(ax, ay, b.w, b.h)
         if pos is None:
             return False
         b.x, b.y, b.w, b.h = pos
         occ.add(b.x, b.y, b.w, b.h)
         centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+
+    # ITERATIVE REFINEMENT: the first pass anchored blocks on whatever neighbours
+    # happened to be placed already, so a cluster's first member landed at its
+    # zone seed with no pull. Now that EVERY interior block has a position, lift
+    # each one out and re-drop it at the centroid of ALL its (now-placed)
+    # neighbours + SoM — repeatedly, until positions settle. This is a
+    # deterministic Lloyd-style relaxation that pulls scattered cluster members
+    # (bringup_*, power*) together, directly shortening the cross airwire. Order
+    # is fixed (most-connected first) so the result is reproducible.
+    for _pass in range(6):
+        moved = False
+        for b in order:
+            occ.remove(b.x, b.y, b.w, b.h)
+            ax, ay = _anchor(b)
+            pos = occ.place_near(ax, ay, b.w, b.h)
+            if pos is None:                 # re-place where it was (always fits)
+                occ.add(b.x, b.y, b.w, b.h)
+                continue
+            nx, ny, _w, _h = pos
+            if (nx, ny) != (b.x, b.y):
+                moved = True
+            b.x, b.y = nx, ny
+            occ.add(b.x, b.y, b.w, b.h)
+            centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+        if not moved:
+            break
     return True
 
 
