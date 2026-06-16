@@ -141,13 +141,30 @@ class ThermalSpec:
 # packages with different RthJA (the VADJ LDO DBV vs DYD), a second key on the
 # FOOTPRINT substring disambiguates — see FOOTPRINT_SPECS below.
 THERMAL_SPECS: dict[str, ThermalSpec] = {
-    # power.py: 2x +5V/+3V3 step-down + the always-on +5V_SOM buck.
-    # TPS54302DDCR is the TSOT-23-6 (DDC) synchronous buck. TI SLVSDG6:
-    # RthJA = 70.6 C/W (JESD51-7 high-K 2s2p), Tj operating max 150 C.
+    # TPS54302DDCR — the SOT-23-THIN (DDC) 6-pin synchronous buck, NO exposed
+    # pad. HONEST RE-BASE (thermal finding, 2026-06-16): the prior 70.6 C/W was
+    # a FABRICATED figure with no datasheet line and the 150 C Tj_max used the
+    # ABSOLUTE max, not the recommended-operating max — together they masked a
+    # real over-Tj on the >2 A bucks. The TI SLVSDG6C datasheet (Rev C, Mar
+    # 2026) §5.4 Thermal Information lists, for the DDC (SOT-23) 6-PIN package:
+    #   RthJA = 118.9 C/W (JESD51-7, 4-layer JEDEC sim) ; RthJA_EVM = 57.2 C/W
+    #   (official EVM board) — there is NO 70.6 figure anywhere in the DS.
+    # §5.3 Recommended Operating Conditions: Tj = -40..125 C (the orderable
+    # table likewise rates -40..125). §5.1 Abs-Max Tj = 150 C (NOT a design
+    # target). The package is a 2.9x2.8 mm 6-pin SOT-23-THIN with NO RthJC(bot)
+    # / no thermal pad in the DS — there is no pad to pour, so NO pour credit
+    # (rth_ja_pour stays None; LAW-4 rule 3). We carry the JEDEC 118.9 as the
+    # bare comparison figure; the gate Tj is judged against the 125 C rec-max.
+    # Even at the best-case EVM 57.2 C/W a >2 A load lands Tj > 125 C, which is
+    # exactly why power.py U2 (+3V3, 2.745 A) and power_som.py U4 (+5V_SOM,
+    # 2.004 A) were RESELECTED to the EP-equivalent LM61460 (below) — at the
+    # datasheet RthJA this part cannot carry those rails inside its rec-max.
     "TPS54302": ThermalSpec(
-        rth_ja=70.6, tj_max=150.0, eff=BUCK_EFF, package="TSOT-23-6 (DDC)",
-        cite="TI SLVSDG6 Thermal Information (RthJA 70.6 C/W 2s2p; "
-             "Tj op-max 150 C); eff floor 0.85 (DS plots 88-92%)"),
+        rth_ja=118.9, tj_max=125.0, eff=BUCK_EFF,
+        package="SOT-23-THIN-6 (DDC, no EP)",
+        cite="TI SLVSDG6C 5.4 Thermal Information (RthJA 118.9 C/W JESD51-7; "
+             "EVM 57.2 C/W) + 5.3 Rec-Op Tj-max 125 C (abs-max 150 C); no EP; "
+             "eff floor 0.85 (DS plots 88-92%)"),
     # power.py +5V buck U1 — RE-SPEC'd (wt/buck) from the LMR33630 (3 A) to the
     # LM61460AANRJRR: TI 3-36 V / 6-A low-EMI synchronous buck, VQFN-HR (RJR
     # "HotRod"). The board's heaviest converter (2.95 A @ 5 V). The VQFN-HR has

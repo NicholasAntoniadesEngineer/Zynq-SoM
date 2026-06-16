@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "0ea01397671c64327559e9e08a2d64961992e4ae9e24db4ba780a9fbd77b044e"
+      "sha256": "3bba1b8a83a7a4164a367e06c99af944a032c0cb1afe509f1d821e8fa4cd2818"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -10,11 +10,11 @@
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
-      "sha256": "b410982dd465008a634f067db3c7380d737bda26f488b660a7cc0a7ef1174022"
+      "sha256": "ebf4949c6984e4196265d6a18651e38baf01561894824a5e711c356c3b4746a1"
     },
     {
       "path": "docs/BRINGUP.md",
-      "sha256": "b1ad5033c9430c89d8f744a5339f8f1bf1589a511156aca10f13a051753d5a81"
+      "sha256": "689f7cca8c78c8cbdf063e865373345fbf7075753db0e347b201a44f954a4248"
     },
     {
       "path": "docs/COMPLIANCE.md",
@@ -26,27 +26,27 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "1ee3983834acab249f98c22ce7f3a2971393dc8b8810996444f52d38555b4557"
+      "sha256": "4ced63c347cc81394653403d56ea5b6e163d19b0cf6207cd2d8d250776d29f4c"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "e9e223fac12bbbd6a6024554a98a8d2658c618675d1b2c09960a8b8b8d5f5c94"
+      "sha256": "c495a37228002814677bef5b75bd9e13253dec2f7618e71da54976440b4751d5"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "986a02ae6cd808cc300d3857644e84872f2a456971cb5111a5af045dd8614758"
+      "sha256": "4be19f5197f695f049245595f99ef2dc84550b0ed8d453b1b2f2358b6490673b"
     },
     {
       "path": "docs/power_sequence.svg",
-      "sha256": "3b031821dc5c348ae0931815d10a40c2b743228bcb7fe0baa69233532cc0b1b4"
+      "sha256": "652772373d95c59569b59720dd74fd2060bef05ef0e4a9fc93c549f1afeeaadf"
     },
     {
       "path": "docs/power_tree.svg",
-      "sha256": "38dcf30c77295fdcae97bd30ffe6f1724fd89d09acb38d0d2e76c66888e2737a"
+      "sha256": "4ade946f1632e619fd01a676ef955a7b2709a2efe395fc7eb1f7ef48d6975d60"
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "8f15ed906268a6402174deea76d1efad9021f74264f3005cc9f348a7edfe6299"
+      "sha256": "31029e7c1f99511a5afc87a5ec1a27230de3a8f0803bc6e4c65ae2d6f89f842c"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -62,7 +62,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "4cb34792d06d8c3966d0eda7dd70089f859c5479dd9a9e686e33073b5d457f54"
+      "sha256": "8fb7b8c9ceb73b4f6b34b4b99185ef27f5c10c85ea908c78356791e2dbfb5e65"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -78,23 +78,23 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "ecda52deb1da5529c48a97793c5dbf33a7f7d1413321863f28f98cd07ea1839d"
+      "sha256": "e6211ae3585e2b2c46ea154cf1a8572c6685c56aab10b1487f5dccdfc316e6b9"
     },
     {
       "path": "reports/bom_values.txt",
-      "sha256": "4d554fd96fc56466882e8990384d449ef71d5d0bfd27677b8b2d7920b29db1b6"
+      "sha256": "d951cc436ca9fe3cf3414dc6be01615780112d0146d6f80376b7b728e6b1aea4"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "e881ed462406d09ac6a87a9dff8aaf050b1ec9a3476978899e493668088e3e95"
+      "sha256": "a37a0a4858b02221c9ee79c6f0bc4418c35ad07963eee2ca2db7b2acf71d2977"
     },
     {
       "path": "reports/design_rules.txt",
-      "sha256": "e3c5c147fcaef5d12a95a4dbbf41ad6ac43ba824c9b5a2b313df5186fcf34e9b"
+      "sha256": "712e6640a2fdbb643582c359b4826f2c39fa170450b5b1be0f0afd556d23322a"
     },
     {
       "path": "reports/footprint_pads.txt",
-      "sha256": "b5480d599abbe4212329195682def33b1ebec7a6cf06adabf78251a0727552f8"
+      "sha256": "1c2b73485c9bf930760fbae896ab3cd8fad4044f6fc426ec756502d692a3f2ad"
     },
     {
       "path": "reports/gates.txt",
@@ -106,23 +106,23 @@
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "d242eb34e1b1675ca141528802c8036aa3368ed77580e616d4d54b443b13922c"
+      "sha256": "189ff0413c9e010e4288747e3c885a15036b13da584bbd96842cd199d5cbd087"
     },
     {
       "path": "reports/pin_completeness.txt",
-      "sha256": "6d512b2095cc8113b91a59d8a7cd8ff0b20e82edd48368c9af8214b2d9275f4a"
+      "sha256": "5eafc4c6d7e577344166ca3681e0c7730558af4a0514ab209e7aa36f9951cf3a"
     },
     {
       "path": "reports/power_tree.txt",
-      "sha256": "eb8552f2bf6d6d3ef4569382ee5f3551f72db77eea48cffb20af59483905e63e"
+      "sha256": "7bbf99ea488e7be0be56cb42f90cebed3d2089c71c25262f2244b28eb33d9bcd"
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "d437b8333ba2079bd6a6c9860362259788f362e6ccf4f606e816a04e499e14f0"
+      "sha256": "40aa4db03dca6a2c4c43e888df4ad4b4492b5d8a940a8e67a42c15b87f9d7655"
     },
     {
       "path": "reports/spice.txt",
-      "sha256": "78926a2ea59f66cc44d8d55398a23198ebbf617dc057f3f2cf78fb19b8765256"
+      "sha256": "c3181141c6a0a920453507dc9d19c64a1a25c2aca7d0b3b16719668e7e3bd8b0"
     },
     {
       "path": "reports/subsystem_structure.txt",
@@ -138,7 +138,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "a665285002df1bab7eb66a41cb0f82e699121407c9a403e1f16c8ea96fcf4d83"
+      "sha256": "40bbf0aa1bdc88dc9b8e6f432b7eeb61cfe4611e39f1e6b38895ece714e98de2"
     },
     {
       "path": "schematic/board_aux.kicad_sch",
@@ -218,7 +218,7 @@
     },
     {
       "path": "schematic/power.kicad_sch",
-      "sha256": "064edd31352b0e6c71d4afceca0b21ed00db9ecb65895de5b96c8b3df75b9408"
+      "sha256": "a17300de9d58c5e6946ee8000ee91c9a98c745fff819d924357270e0e761ba07"
     },
     {
       "path": "schematic/power_mon.kicad_sch",
@@ -226,7 +226,7 @@
     },
     {
       "path": "schematic/power_som.kicad_sch",
-      "sha256": "abe646332fdc1e840736a21c90ce2cb1a9ba7dd12f7244a81327e4cbd2dd6a20"
+      "sha256": "5b45e866840a6a8977da0b6b60a58fd56e30d4b5e99fd6267a7d498e2245e4b5"
     },
     {
       "path": "schematic/rj45_connector.kicad_sch",
@@ -276,9 +276,9 @@
   "bom": {
     "cost": null,
     "extended": null,
-    "lines": 98,
+    "lines": 97,
     "missing": [],
-    "parts": 444
+    "parts": 457
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [
@@ -716,10 +716,10 @@
     },
     {
       "draws": [],
-      "limit_a": 3.0,
+      "limit_a": 6.0,
       "load_a": 2.745,
       "name": "+3V3_REG",
-      "source": "power:U2 TPS54302DDCR [buck]",
+      "source": "power:U2 LM61460AANRJRR [buck]",
       "volts": 3.3
     },
     {
@@ -885,10 +885,10 @@
           "sheet": "som_j1"
         }
       ],
-      "limit_a": 3.0,
+      "limit_a": 6.0,
       "load_a": 2.004,
       "name": "+5V_SOM",
-      "source": "power_som:U4 TPS54302DDCR [buck]",
+      "source": "power_som:U4 LM61460AANRJRR [buck]",
       "volts": 4.65
     },
     {

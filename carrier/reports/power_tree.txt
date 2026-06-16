@@ -21,9 +21,9 @@ regulators (19) — numbered as in carrier/docs/power_tree.svg:
   (13) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.360 A / limit 3.529 A (39%)  in 1.360 A [efuse] ILIM = 18000/5100R = 3529 mA
   (14) pmod_expansion:U1   SY6280AAC           +3V3 -> +3V3_PMODX     load 0.104 A / limit 0.523 A (20%)  in 0.104 A [load_switch] ILIM = 6800/13000R = 523 mA
   (15) power:U1   LM61460AANRJRR  +VIN_SYS -> +5V_REG        load 3.031 A / limit 6.000 A (51%)  in 0.842 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
-  (16) power:U2   TPS54302DDCR         +5V -> +3V3_REG       load 2.745 A / limit 3.000 A (92%)  in 2.013 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (16) power:U2   LM61460AANRJRR       +5V -> +3V3_REG       load 2.745 A / limit 6.000 A (46%)  in 2.013 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
   (17) power:U3   AP2112K-1.8         +3V3 -> +1V8_REG       load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
-  (18) power_som:U4   TPS54302DDCR    +VIN_SYS -> +5V_SOM        load 2.004 A / limit 3.000 A (67%)  in 0.518 A [buck] TI 3 A synchronous buck (SW->L->rail)
+  (18) power_som:U4   LM61460AANRJRR  +VIN_SYS -> +5V_SOM        load 2.004 A / limit 6.000 A (33%)  in 0.518 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
   (19) usb_jtag:U4   AP2112K-3.3TRG1   +5V_DBG -> +3V3_DBG       load 0.045 A / limit 0.600 A (8%)  in 0.045 A [ldo] 600 mA LDO
 
 shunt bridges (series R rail->rail, power_mon):

@@ -2,7 +2,7 @@ schgen per-part rule engine (ratings vs netlist usage)
 ==============================================================================
 
 enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
-133 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+138 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
 
 author waivers, verbatim (1):
   lcd:C2                 MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp
@@ -48,16 +48,16 @@ UNSPEC — reported, NOT failing (68):
   ? pmod_expansion:U2 (TPD4E1U06, LCSC C124691) — no ratings row
   ? pmod_expansion:U3 (TPD4E1U06, LCSC C124691) — no ratings row
   ? power:C24 (1u) — cap rail unresolved
-  ? power:C27 (22p, LCSC C1653) — no ratings row
   ? power:C28 (1u) — cap rail unresolved
+  ? power:C31 (1u) — cap rail unresolved
+  ? power:C32 (1u) — cap rail unresolved
   ? power:C4 (100n) — cap rail unresolved
   ? power:C9 (100n) — cap rail unresolved
   ? power:R1 (40.2k, LCSC C12447) — no ratings row
-  ? power:R11 (10R, LCSC C22859) — no ratings row
-  ? power:U1 (LM61460AANRJRR) — no vin_max rating
-  ? power:U1 (LM61460AANRJRR, LCSC C2864505) — no ratings row
   ? power_som:C17 (100n) — cap rail unresolved
   ? power_som:C20 (100n) — cap rail unresolved
+  ? power_som:C22 (1u) — cap rail unresolved
+  ? power_som:C23 (1u) — cap rail unresolved
   ? rj45_connector:J1 (KH-5224-8P8C-D, LCSC C2828085) — no ratings row
   ? som_j1:J1 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
   ? som_j2:J2 (DF40C-100DS-0.4V(51), LCSC C597931) — no ratings row
@@ -82,4 +82,4 @@ UNSPEC — reported, NOT failing (68):
 
 errors: none
 
-PART RULES: PASS (133 checks, 0 findings, 68 unspeced, 1 waived)
+PART RULES: PASS (138 checks, 0 findings, 68 unspeced, 1 waived)

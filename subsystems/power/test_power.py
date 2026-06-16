@@ -7,8 +7,8 @@ test_usb_pd.py + subsystems/usbc_otg/test_usbc_otg.py so every migrated subsyste
 follows the same shape.
 
 This subsystem is the carrier's largest — a +VIN -> +5V buck (LM61460) -> +3V3
-buck (TPS54302) -> +1V8 LDO chain — so the local checks add the power-specific
-electrical invariants:
+buck (LM61460, re-spec'd from a no-EP TPS54302 by a thermal finding) -> +1V8 LDO
+chain — so the local checks add the power-specific electrical invariants:
 
   * declared abstract interface  — RAILS/PORTS present with the right net class,
     every IC pin netted-or-NC (model completeness), the EN ports are PORTs.
@@ -20,7 +20,7 @@ electrical invariants:
     no center EP; its EP-equivalent is those power-ground pads on the GND pour).
   * FB-divider ratios             — each adjustable regulator's FB divider sets
     the documented output (Vout = Vref*(1+Rtop/Rbot)): +5V 40.2k/10k @ Vref 1.0,
-    +3V3 100k/22k @ Vref 0.596 — proving the BOM-critical FB resistors.
+    +3V3 22.1k/10k @ Vref 1.0 — proving the BOM-critical FB resistors.
   * reg-side vs rail-side split   — the FB sense + output bulk sit on the REG-
     side rail; the board RAIL the loads see is a SEPARATE external net (a
     project's series shunt bridges them) — the topology that lets a current
@@ -80,7 +80,7 @@ _CARRIER_BIND = {
 # Caps that touch an internal SIGNAL node (BOOT/VCC/BIAS/FB feedforward) are
 # private regulator wiring and are NOT subckt elements.
 _CIR_REFS = {"C1", "C25", "C2", "C3", "C5", "C6", "C26",
-             "C7", "C8", "C10", "C11", "C12", "C13"}
+             "C7", "C29", "C8", "C30", "C10", "C11", "C12", "C13"}
 
 
 @pytest.fixture
@@ -142,8 +142,8 @@ def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
     """Model completeness: every physical pin of every part is netted or NC —
     the same hard check the board build runs (LAW 0: no silent floats)."""
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
-    # the only intentional no-connects: U1 PGOOD (unused open-drain) + U3 NC pin
-    assert {str(p) for p in c.nc_pins} == {"U1.5", "U3.4"}
+    # the only intentional no-connects: U1/U2 PGOOD (unused open-drain) + U3 NC
+    assert {str(p) for p in c.nc_pins} == {"U1.5", "U2.5", "U3.4"}
 
 
 def test_lm61460_heat_path_on_gnd(c: Circuit):
@@ -170,8 +170,8 @@ def test_decoupling_complete(c: Circuit, lib: Library):
 
 def test_each_stage_input_and_output_has_caps(c: Circuit):
     """The datasheet bypass/bulk network is present on each stage, all to GND:
-    +5V buck VIN 2x100n + 2x10u and output 3x22u; +3V3 buck input 100n+22u and
-    output 2x22u; LDO input 1u and output 1u."""
+    +5V buck VIN 2x100n + 2x10u and output 3x22u; +3V3 buck (LM61460) VIN
+    2x100n + 2x22u bulk and output 2x22u; LDO input 1u and output 1u."""
     def caps_to_gnd(rail: str) -> list[str]:
         out = []
         for ref, p in c.parts.items():
@@ -183,7 +183,8 @@ def test_each_stage_input_and_output_has_caps(c: Circuit):
         return sorted(out)
     assert caps_to_gnd("+VIN") == ["100n", "100n", "10u", "10u"]
     assert caps_to_gnd("+VOUT_5V_REG") == ["22u", "22u", "22u"]
-    assert caps_to_gnd("+VOUT_5V") == ["100n", "22u"]
+    # +3V3 buck (LM61460) input on the board +5V rail: 2x100n HF + 2x22u bulk
+    assert caps_to_gnd("+VOUT_5V") == ["100n", "100n", "22u", "22u"]
     assert caps_to_gnd("+VOUT_3V3_REG") == ["22u", "22u"]
     assert caps_to_gnd("+VOUT_3V3") == ["1u"]            # LDO input cap
     assert caps_to_gnd("+VOUT_1V8_REG") == ["1u"]        # LDO output cap
@@ -204,9 +205,11 @@ def test_fb_divider_ratios_set_documented_outputs(c: Circuit):
     assert abs(vout_5v - 5.02) < 0.05, vout_5v
     # the FB-top resistor really is 40.2k (NOT a 120k mis-key -> ~13 V, fatal)
     assert _r_value(c, "R1") == 40.2e3
-    # +3V3 buck (TPS54302): Vref 0.596 V, R4/R5 = 100k/22k -> ~3.31 V
-    vout_3v3 = 0.596 * (1 + _r_value(c, "R4") / _r_value(c, "R5"))
-    assert abs(vout_3v3 - 3.3) < 0.05, vout_3v3
+    # +3V3 buck (LM61460): Vref 1.0 V, R4/R5 = 22.1k/10k -> 3.21 V (inside the
+    # +3V3 +/-3% window [3.201, 3.399]); re-spec'd off the no-EP TPS54302.
+    vout_3v3 = 1.0 * (1 + _r_value(c, "R4") / _r_value(c, "R5"))
+    assert 3.201 <= vout_3v3 <= 3.399, vout_3v3
+    assert _r_value(c, "R4") == 22.1e3 and _r_value(c, "R5") == 10e3
 
 
 def test_reg_side_vs_rail_side_split(c: Circuit):
@@ -240,7 +243,9 @@ def test_internal_signal_nets_kept_verbatim(c: Circuit):
               if n.net_class is NetClass.SIGNAL}
     assert signal == {
         "U1_VCC", "BIAS_5V0", "RT_5V0", "BOOT_5V0", "SW_5V0", "FB_5V0",
-        "CFF_5V0", "PG_5V0", "BOOT_3V3", "SW_3V3", "FB_3V3", "PG_3V3",
+        "CFF_5V0", "PG_5V0",
+        "U2_VCC", "BIAS_3V3", "RT_3V3", "BOOT_3V3", "SW_3V3", "FB_3V3",
+        "CFF_3V3", "PG_3V3",
         "PG_1V8_G", "PG_1V8_D", "PG_1V8_K"}, signal
 
 

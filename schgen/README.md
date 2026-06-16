@@ -63,13 +63,11 @@ stays concise but the result is always a fully-explicit netlist:
 ```python
 def circuit() -> Circuit:
     c = Circuit("power", "+VIN -> +5V buck")
-    c.use_part("LMR33630ADDAR", ref="U1",            # stock symbol + faithful footprint
-               lib_id="Regulator_Switching:LMR33640ADDA",
-               footprint="LMR33630ADDAR:LMR33630ADDAR")
-    c.net("+VIN_SYS", "U1.2")                         # VIN pin -> rail
-    c.net("GND", "U1.1", "U1.9")                      # GND + EP pad -> GND (LAW 0)
-    c.port("EN_5V0", "U1.3", expect=EXPECT_BRINGUP)   # external interface -> hier label
-    c.decouple("U1.2", "10u")                         # macro: cap pin->GND
+    c.use_part("LM61460AANRJRR", ref="U1")           # FAITHFUL dossier symbol (no override)
+    c.net("+VIN_SYS", "U1.8", "U1.12")               # VIN1/VIN2 -> rail
+    c.net("GND", "U1.9", "U1.11", "U1.3")            # PGND1/PGND2/AGND -> GND (LAW 0 heat path)
+    c.port("EN_5V0", "U1.7", expect=EXPECT_BRINGUP)  # EN/SYNC -> external interface (hier label)
+    c.decouple("U1.8", "10u")                        # macro: cap pin->GND
     return c
 ```
 

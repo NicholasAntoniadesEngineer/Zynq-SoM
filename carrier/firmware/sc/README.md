@@ -35,7 +35,7 @@ the devicetree-overlay / Kconfig notes in `sc_hal.h`.
 Read from the `power.py` regulator chain (each stage feeds the next):
 
 1. `+VIN` -> `+5V` (5020 mV, EN `EN_5V0`)
-2. `+5V` -> `+3V3` (3310 mV, EN `EN_3V3`)
+2. `+5V` -> `+3V3` (3210 mV, EN `EN_3V3`)
 3. `+3V3` -> `+1V8` (1800 mV, EN `EN_1V8`)
 
 Always-on (pre-PD, up before sequencing): `+3V3_SC`, `+VIN`.

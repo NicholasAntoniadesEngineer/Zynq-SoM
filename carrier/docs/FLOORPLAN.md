@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **165 x 155 mm**; SoM origin at **(57.5, 56.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 6mm halo + 26mm connector band/edge -> core 114x106; component area 5847mm2 / 0.3 fill -> area floor 157x146; + 3mm perimeter keepout -> 165x155 mm (rounded up to 5mm grid).
+Outline derivation: SoM 50x42 + 6mm halo + 26mm connector band/edge -> core 114x106; component area 5879mm2 / 0.3 fill -> area floor 157x146; + 3mm perimeter keepout -> 165x155 mm (rounded up to 5mm grid).
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -48,18 +48,18 @@ Outline derivation: SoM 50x42 + 6mm halo + 26mm connector band/edge -> core 114x
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (102, 44, 16.5 x 10) | 17 | 167 |  |
+| board_aux | E | (152, 50, 10 x 16.5) | 17 | 167 |  |
 | board_qwiic | E | (110, 74, 8.5 x 14) | 2 | 121.1 |  |
 | board_services | W | (18, 70, 23.5 x 14.5) | 9 | 341.7 |  |
 | bringup_en | E | (154, 72, 9.5 x 15.5) | 15 | 149.2 |  |
-| bringup_en_modules | E | (122, 90, 29.5 x 18.5) | 54 | 542.6 |  |
+| bringup_en_modules | E | (122, 110, 29.5 x 18.5) | 54 | 542.6 |  |
 | bringup_modules | E | (120, 46, 30.5 x 19.5) | 70 | 593.2 | (15) |
 | bringup_rails | E | (120, 68, 31.5 x 19.5) | 23 | 609.9 | (16) |
 | debug_boot | N | (70, 24, 24 x 14.5) | 10 | 344.8 | (17) |
 | hdmi_rx_term | @hdmi_rx | (36, 142, 8 x 8) | 10 | 44.8 |  |
-| power | E | (122, 110, 28.5 x 17.5) | 44 | 496.3 | (18) |
-| power_mon | E | (108, 100, 12 x 19.5) | 10 | 232 | (19) |
-| power_som | E | (152, 48, 11 x 18) | 17 | 197.7 |  |
+| power | E | (122, 90, 30 x 18.5) | 51 | 556.1 | (18) |
+| power_mon | E | (98, 42, 19.5 x 12) | 10 | 232 | (19) |
+| power_som | E | (108, 100, 12.5 x 20) | 23 | 249.1 |  |
 | rj45_connector | @ethernet | (12, 24, 27 x 16.5) | 7 | 441.7 |  |
 | usb_jtag | E | (124, 28, 24 x 15) | 19 | 359.3 |  |
 | usb_pd | @pd_input | (74, 12, 8 x 8) | 6 | 48.2 | (20) |
@@ -96,9 +96,9 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.360 | negligible |
 | SY6280AAC (U1) | pmod_expansion | +3V3 -> +3V3_PMODX | 0.104 | negligible |
 | LM61460AANRJRR (U1) | power | +VIN_SYS -> +5V_REG | 3.031 | ~1.68 W |
-| TPS54302DDCR (U2) | power | +5V -> +3V3_REG | 2.745 | ~1.01 W |
+| LM61460AANRJRR (U2) | power | +5V -> +3V3_REG | 2.745 | ~1.01 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8_REG | 0.006 | negligible |
-| TPS54302DDCR (U4) | power_som | +VIN_SYS -> +5V_SOM | 2.004 | ~1.04 W |
+| LM61460AANRJRR (U4) | power_som | +VIN_SYS -> +5V_SOM | 2.004 | ~1.04 W |
 | AP2112K-3.3TRG1 (U4) | usb_jtag | +5V_DBG -> +3V3_DBG | 0.045 | ~0.08 W |
 
 Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/power_tree.txt`); regulators above ~0.3 W want copper pours + stitching vias.
@@ -122,7 +122,7 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(15) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
 - **(16) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
 - **(17) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
-- **(18) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.68 W; TPS54302DDCR +3V3_REG ~1.01 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(18) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.68 W; LM61460AANRJRR +3V3_REG ~1.01 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
 - **(19) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
 - **(20) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
 - **(21) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.

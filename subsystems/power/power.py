@@ -11,11 +11,13 @@ restores house-style prose. Standalone (``meta=None``) it keeps the abstract
 names so this package's ``test_power.py`` runs offline.
 
 This is the carrier's largest subsystem: a +VIN -> +5V buck (LM61460, 6 A SYNC)
--> +3V3 buck (TPS54302) -> +1V8 LDO (AP2112K) chain, each rail with an enable
-PORT and a power-good LED. Reference circuit + every design number (FB dividers,
-feedforward caps, EN clamp, BIAS tie, input/output caps) per the TI datasheets
-(SNVSBD5D LM61460, SLVSDG6C TPS54302, AP2112K) — captured verbatim from the
-proven carrier sheet; see README.md "Design notes".
+-> +3V3 buck (LM61460, 6 A SYNC) -> +1V8 LDO (AP2112K) chain, each rail with an
+enable PORT and a power-good LED. BOTH bucks are the LM61460 EP-equivalent part
+(U2 was a no-EP TPS54302DDCR until the 2026-06-16 thermal finding proved it ran
+over its 125 C rec-max at the +3V3 2.745 A load — see stage 2). Reference
+circuit + every design number (FB dividers, feedforward caps, EN clamp, BIAS
+tie, input/output caps) per the TI datasheets (SNVSBD5D LM61460, AP2112K) —
+captured verbatim from the proven carrier sheet; see README.md "Design notes".
 
 REG-SIDE vs RAIL-SIDE (the external-net split a consuming current-monitor binds):
 each regulator's OUTPUT cluster (inductor node, output bulk caps, FB sense, the
@@ -66,10 +68,10 @@ from schgen.core.subsystem import Meta
 
 # DELIBERATE symbol+footprint overrides (use_part lib_id=/footprint=): the
 # stock KiCad regulator/FET drawings stay (pin maps cross-checked above);
-# MPN/LCSC/datasheet come from parts/TPS54302DDCR/, parts/AP2112K-1.8TRG1/,
-# parts/AO3400A/ and can never drift from the library folders.
-BUCK_LIB = "Regulator_Switching:TPS54302"
-BUCK_FP = "Package_TO_SOT_SMD:TSOT-23-6"
+# MPN/LCSC/datasheet come from parts/AP2112K-1.8TRG1/, parts/AO3400A/ and can
+# never drift from the library folders. (Both bucks U1/U2 now draw their
+# FAITHFUL LM61460 dossier symbol — no lib_id override — so there is no buck
+# stock-symbol override constant any more.)
 LDO_LIB = "Regulator_Linear:AP2204K-1.5"   # = AP2112K drawing (see docstring)
 LDO_FP = "Package_TO_SOT_SMD:SOT-23-5"
 FET_LIB = "Transistor_FET:Q_NMOS_GSD"
@@ -301,7 +303,7 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     # IC, a 1-kohm resistor, RFF, can be placed in series with CFF" (Table 9-2 5 V
     # RFF = 1 kohm) — so the network is +VOUT_5V_REG -> C27(CFF) -> RFF(R12) ->
     # FB_5V0, i.e. CFF bridges the FB-top R1 with RFF damping the noise path into
-    # FB. (The 3 TPS54302 bucks use the same all-ceramic feedforward idiom, PWR-4.)
+    # FB. (Both LM61460 bucks + the power_som buck use this feedforward idiom.)
     #   C27 = 22 pF 50 V C0G 0603 (CL10C220JB8NNNC, live JLC 2026-06-15: Basic,
     #     stock 1,017,863). R12 = 1 k 0603 (C21190, the sheet's existing 1k).
     c.part("C27", "Device:C", "22p", C0603, LCSC="C1653")          # CFF (DS 9.2.2.10)
@@ -320,20 +322,76 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     # un-driven open-drain output floats harmlessly; nothing reads it).
     c.nc("U1.5")                                                  # PGOOD (pin 5) — unused, NC
 
-    # ---- stage 2: +5V -> +3V3 buck ------------------------------------------
-    c.use_part("TPS54302DDCR", ref="U2", lib_id=BUCK_LIB, footprint=BUCK_FP)
-    c.net("+VOUT_5V", "U2.3")
-    c.net("GND", "U2.1")
-    c.port("EN_VOUT_3V3", "U2.5", **meta.expect_kw("EN_VOUT_3V3"))
-    for ref, val, fp, lcsc in (("C7", "100n", C0603, "C14663"),
-                               ("C8", "22u", C0805, "C45783")):
+    # ---- stage 2: +5V -> +3V3 buck (U2, LM61460, VQFN-HR, 6 A SYNC) ----------
+    # U2 RE-SPEC (thermal finding, 2026-06-16): the +3V3 buck carries the
+    # board's SECOND-heaviest converter load (2.745 A @ 3.3 V — FMC 1 A + the
+    # gated peripheral budgets + the VADJ LDO). It WAS a TPS54302DDCR (SOT-23-6,
+    # NO exposed pad, 3 A): at that load it ran at 92% of rating (vs the >40%
+    # headroom rule) AND — at the HONEST datasheet RthJA (TI SLVSDG6C 5.4: 118.9
+    # C/W JESD51-7, 57.2 C/W EVM best-case) and the 125 C rec-op Tj-max (5.3) —
+    # its Tj was 240 C (JEDEC) / 141 C (even on the EVM board) at eff 0.85,
+    # WELL over the 125 C rec-max. The thermal gate had MASKED this with a
+    # fabricated 70.6 C/W and a 140 C guard + an author waiver; thermal.py is
+    # now re-based to the datasheet figures (no pad to pour -> no credit), so
+    # this part can no longer pass these rails. RESELECTED to the LM61460AANRJRR
+    # — the SAME EP-equivalent 6 A buck already proven on U1 (LCSC C2864505): TI
+    # 3-42 V / 6-A low-EMI SYNCHRONOUS step-down (SNVSBD5D), VQFN-HR (RJR
+    # "HotRod"), whose PGND1/PGND2 + SW pads soldered to the GND pour are the
+    # exposed-pad-equivalent heat path. 6 A -> 44% headroom over 2.745 A; at the
+    # gate's pour-aware 30 C/W (DS 7.3: 25 C/W 4-layer / 58.7 bare) Tj = 50 +
+    # (1/0.85-1)*3.3*2.745*30 = 98 C << the 140 C guard (Tj_max 150 - 10).
+    #   Vref = 1.0 V (DS 8.3.11; FB_VREF['LM61460']) -> FB divider Vout =
+    #     1.0*(1 + Rtop/Rbot). R4/R5 = 22.1k/10k -> 3.21 V (= +3V3 nominal,
+    #     inside the spice gate's 3.3 V +/-3% window [3.201, 3.399]). 22.1k =
+    #     C25961, 10k = C25804 — both already in schgen.verify.ratings.
+    #   fSW = 600 kHz set by RT = 22k (DS Eq 2), same as U1; keeps the existing
+    #     10 uH SWPA8040S (C37429, Isat 4.1 A): ripple dIL = 3.3*(5-3.3)/
+    #     (5*10u*600k) = 0.187 A p-p, Ipk = 2.745 + 0.094 = 2.84 A < 4.1 A.
+    #   CBOOT = 100 nF SW->CBOOT (DS 9.2.2.6); RBOOT short to CBOOT (DS 9.2.2.7)
+    #     -> RBOOT(13)+CBOOT(14) are the SAME node (BOOT_3V3), a 0R wire, no R.
+    #   BIAS (pin 1): TIED to +VOUT_3V3_REG via R-series + bypass (DS 9.2.2.9):
+    #     VOUT = 3.3 V (> the 3.1 V BIAS-active threshold, DS 8.3.14) so the
+    #     internal LDO draws from VOUT not VIN, saving I_LDO*(Vin-Vout). 10 ohm
+    #     series + 1 uF bypass, identical idiom to U1. BIAS max 16 V >> 3.3 V.
+    #   VCC (pin 2): 1 uF to AGND (DS 9.2.2.8). RT (pin 6): 22k to GND.
+    #   PGOOD (pin 5): NC (D2 rail-up LED is the PG indicator).
+    #   AGND (3) ties to PGND1/PGND2 (DS layout note); the heat path.
+    # use_part WITHOUT a lib_id= override: U2 draws its FAITHFUL parts/ dossier
+    # symbol (LM61460AANRJRR), the "0 hand-built symbols" idiom — pins authored
+    # BY NUMBER: 1 BIAS 2 VCC 3 AGND 4 FB 5 PGOOD 6 RT 7 EN/SYNC 8 VIN1 9 PGND1
+    # 10 SW 11 PGND2 12 VIN2 13 RBOOT 14 CBOOT.
+    c.use_part("LM61460AANRJRR", ref="U2")
+    c.net("+VOUT_5V", "U2.8", "U2.12")                            # VIN1(8)+VIN2(12)
+    c.net("GND", "U2.9", "U2.11", "U2.3")                         # PGND1/PGND2/AGND: heat path
+    c.port("EN_VOUT_3V3", "U2.7", **meta.expect_kw("EN_VOUT_3V3"))  # EN/SYNC (pin 7)
+    # INPUT CAPS (DS 9.2.2.5): bulk + the MANDATORY per-VIN-pin HF caps. The
+    # input rail is the board +VOUT_5V (a +5V consumer, measured by the +5V
+    # output shunt). 50 V-class covers the 5 V rail with wide margin.
+    for ref, val, fp, lcsc in (("C7", "100n", C0603, "C14663"),  # HF, VIN1/PGND1
+                               ("C29", "100n", C0603, "C14663"), # HF, VIN2/PGND2
+                               ("C8", "22u", C0805, "C45783"),   # bulk
+                               ("C30", "22u", C0805, "C45783")): # bulk
         c.part(ref, "Device:C", val, fp, LCSC=lcsc)
         c.net("+VOUT_5V", f"{ref}.1")
         c.net("GND", f"{ref}.2")
-    c.part("C9", "Device:C", "100n", C0603, LCSC="C14663")          # BOOT
-    c.net("BOOT_3V3", "U2.6", "C9.1")
+    c.part("C31", "Device:C", "1u", C0603, LCSC="C15849")          # VCC int-LDO bypass
+    c.net("U2_VCC", "U2.2", "C31.1")                             # VCC (pin 2)
+    c.net("GND", "C31.2")
+    # BIAS (pin 1) TIED TO VOUT (DS 9.2.2.9): VOUT 3.3 V supplies the internal
+    # LDO; 10 ohm series + 1 uF bypass, identical to U1.
+    c.part("R13", "Device:R", "10R", R_FP, LCSC="C22859")          # BIAS series (1-10 ohm)
+    c.net("+VOUT_3V3_REG", "R13.1")                                # tie BIAS to VOUT
+    c.part("C32", "Device:C", "1u", C0603, LCSC="C15849")          # BIAS bypass
+    c.net("BIAS_3V3", "U2.1", "R13.2", "C32.1")                  # BIAS (pin 1)
+    c.net("GND", "C32.2")
+    c.part("R14", "Device:R", "22k", R_FP, LCSC="C31850")          # RT: fSW=600kHz
+    c.net("RT_3V3", "U2.6", "R14.1")                             # RT (pin 6)
+    c.net("GND", "R14.2")
+    c.part("C9", "Device:C", "100n", C0603, LCSC="C14663")          # BOOT (CBOOT) cap
+    # RBOOT(13) short to CBOOT(14): SAME node, a 0R wire (DS EC) — no R.
+    c.net("BOOT_3V3", "U2.14", "U2.13", "C9.1")                  # CBOOT(14)+RBOOT(13)
     c.part("L2", "Device:L", "10uH", L_FP, LCSC="C37429")
-    c.net("SW_3V3", "U2.2", "C9.2", "L2.1")
+    c.net("SW_3V3", "U2.10", "C9.2", "L2.1")                      # SW(10) + CBOOT-cap + L
     # buck-2 OUTPUT cluster is +VOUT_3V3_REG (reg-side of the output shunt). U2's
     # INPUT stays the board +VOUT_5V (above) — it is a +5V consumer, measured by
     # the +5V output shunt.
@@ -342,17 +400,28 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
         c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
         c.net("+VOUT_3V3_REG", f"{ref}.1")                       # output bulk, reg-side
         c.net("GND", f"{ref}.2")
-    c.part("R4", "Device:R", "100k", R_FP, LCSC="C25803")          # FB top
-    c.part("R5", "Device:R", "22k", R_FP, LCSC="C31850")           # FB bottom
-    c.part("C23", "Device:C", "75p", C0603, LCSC="C22399620")      # FB feedfwd
-    c.net("+VOUT_3V3_REG", "R4.1", "C23.1")                       # FB + feedfwd reg-side
-    c.net("FB_3V3", "U2.4", "R4.2", "R5.1", "C23.2")
+    c.part("R4", "Device:R", "22.1k", R_FP, LCSC="C25961")         # FB top (VFB 1.0 -> 3.21 V)
+    c.part("R5", "Device:R", "10k", R_FP, LCSC="C25804")           # FB bottom
+    c.net("+VOUT_3V3_REG", "R4.1")                                # FB senses the regulated node
+    c.net("FB_3V3", "U2.4", "R4.2", "R5.1")                       # FB (pin 4)
     c.net("GND", "R5.2")
+    # FB FEEDFORWARD (DS 9.2.2.10): CFF across the FB-top R improves phase margin
+    # / transient with low-ESR ceramic COUT. VOUT 3.3 V < 14 V (the no-CFF-above-
+    # 14 V rule does not apply). 22 pF C0G + 1 k RFF series damp (Table 9-2),
+    # identical idiom to U1: +VOUT_3V3_REG -> CFF -> RFF -> FB_3V3.
+    c.part("C23", "Device:C", "22p", C0603, LCSC="C1653")          # CFF (DS 9.2.2.10)
+    c.part("R15", "Device:R", "1k", R_FP, LCSC="C21190")           # RFF series (DS 9.2.2.10)
+    c.net("+VOUT_3V3_REG", "C23.1")                               # CFF top = VOUT (across R4)
+    c.net("CFF_3V3", "C23.2", "R15.1")                           # CFF -> RFF noise damp
+    c.net("FB_3V3", "R15.2")                                       # RFF -> FB node
     c.part("D2", "Device:LED", "red", LED_FP, LCSC="C2286")        # PG +3V3
     c.part("R6", "Device:R", "330R", R_FP, LCSC="C23138")
     c.net("+VOUT_3V3_REG", "D2.2")                                # PG LED reg-side
     c.net("PG_3V3", "D2.1", "R6.1")
     c.net("GND", "R6.2")
+    # PGOOD (pin 5) author NC: unused open-drain status (DS pin 5) — D2 is the
+    # board PG indicator. An un-driven open-drain output floats harmlessly.
+    c.nc("U2.5")                                                  # PGOOD (pin 5) — unused, NC
 
     # ---- stage 3: +3V3 -> +1V8 LDO -------------------------------------------
     c.use_part("AP2112K-1.8TRG1", ref="U3", value="AP2112K-1.8",
@@ -403,20 +472,11 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     c.draws("+VOUT_5V", DRAWS_5V_A, meta.note("draws_5v", DRAWS_5V_NOTE))
     c.draws("+VOUT_3V3", DRAWS_3V3_A, meta.note("draws_3v3", DRAWS_3V3_NOTE))
     c.draws("+VOUT_1V8", DRAWS_1V8_A, meta.note("draws_1v8", DRAWS_1V8_NOTE))
-    # THERMAL WAIVERS (verification P2) — see carrier/research/thermal_bucks.md.
-    # The TPS54302 is SOT-23-6 (DDC) with NO exposed pad; the thermal gate's
-    # bare-package 2s2p RthJA (70.6 C/W) + 0.85 eff floor put Tj over the 140 C
-    # guard at the worst-case rail loads. This buck is LAYOUT-CRITICAL: a power-
-    # optimised 4-layer layout (large SW/VIN/PGND copper pours + a thermal-via
-    # field) plus the part's real ~88-91% efficiency brings the effective RthJA
-    # to ~45-55 C/W and Tj under limit.
-    # REVIEW-FLAGGED: confirm by thermal sim / bench Tj at bring-up; if the
-    # layout cannot hit the target RthJA, switch to an exposed-pad buck.
-    _TH = ("TPS54302 SOT-23-6, no EP: bare 2s2p RthJA 70.6 C/W overstates Tj; "
-           "layout-critical (power copper pour + thermal vias -> ~45-55 C/W) — "
-           "VERIFY by thermal sim/bench at bring-up else move to an EP buck "
-           "(see carrier/research/thermal_bucks.md)")
-    c.waive_thermal("U2", _TH)
+    # THERMAL (verification P2): NO WAIVERS. The 2026-06-16 finding re-based the
+    # thermal gate to the HONEST datasheet RthJA (thermal.py) and proved the old
+    # TPS54302 U2 ran over its 125 C rec-max at >2 A; U2 is now the LM61460 EP
+    # buck (stage 2 above), which the gate PASSES on real margin without a waiver
+    # — the same pour-aware RthJA credit U1 earns (PGND/SW pads -> GND pour).
     # U1 LM61460 (wt/buck re-spec): NO LONGER WAIVED. The thermal gate now
     # CREDITS a conservative pour-aware effective RthJA (30 C/W vs the 58.7 C/W
     # bare JEDEC) on the strength of the datasheet's own poured-board data

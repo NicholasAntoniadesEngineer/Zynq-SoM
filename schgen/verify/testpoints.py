@@ -111,9 +111,16 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
                 return n
         raise ValueError(f"{ref}: test point carries no net")
 
-    for ref in tp_refs:
+    for i, ref in enumerate(tp_refs):
         net = net_of_tp(ref)
         part = c.parts[ref]
+        # lookahead for the vertical-column pitch: a GROUND cell seats 2*U higher
+        # than a POWER/PORT cell, so the gap to a GROUND cell that FOLLOWS a
+        # non-GROUND one needs an extra 2*U (see the advance block below).
+        next_is_ground_after_high = (
+            net.net_class is not NetClass.GROUND
+            and i + 1 < len(tp_refs)
+            and net_of_tp(tp_refs[i + 1]).net_class is NetClass.GROUND)
         if not vertical:
             # cell-width-aware wrap BEFORE placing: the ref/value texts and
             # the label all extend right of the stub
@@ -159,8 +166,18 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
         eng._done.add(ref)
 
         if vertical:
-            # advance DOWN one cell (stub + body + breathing room)
-            row_y = gceil(row_y + 2 * U + 4.064 + 4 * U)
+            # advance DOWN one cell (stub + body + breathing room). A GROUND
+            # cell seats its TP body AT row_y (symbol BELOW) while a POWER/PORT
+            # cell seats it 2*U LOWER (symbol ABOVE) — so a GROUND cell following
+            # a POWER/PORT cell sits 2*U HIGHER than the nominal pitch allows,
+            # colliding the two cells' right-side ref/value texts (the tall A3
+            # power probe COLUMN exposed this: TP3 +5V over TP4 GND). Add the 2*U
+            # differential ONLY across that POWER/PORT -> GROUND transition; a
+            # uniform-class column (every existing vertical probe sheet —
+            # bringup_modules all-POWER, bringup_en_modules all-PORT) keeps the
+            # nominal pitch and stays byte-identical.
+            row_y = gceil(row_y + 2 * U + 4.064 + 4 * U
+                          + (2 * U if next_is_ground_after_high else 0.0))
         else:
             # advance RIGHT past this cell's widest feature
             right = max(body.x1 + 0.42 + w_ref, body.x1 + 0.42 + w_val,

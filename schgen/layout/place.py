@@ -283,6 +283,7 @@ class _Engine:
         self.pl = Placement()
         self._pwr = 0
         self._flg = 0
+        self._n_box_bucks = 0                     # stacked box-buck stages (LM61460)
         self._done: set[str] = set()             # placed part refs
         self._pin_islets: set[str] = set()       # divider midpoints drawn as
         #     top/bottom labeled islets, reassembled by _pin_divider_columns
@@ -2347,7 +2348,17 @@ class _Engine:
             # an extra bottom row, which the A3 height budget cannot spare.
             ex0, _, _, ey1 = self._extent()
             col_x = gsnap(ex0 + 4 * U)
-            cy = gceil(ey1 + 8 * U)
+            # STACKED box-bucks (2+ LM61460 on one sheet) defer their BIAS-bypass
+            # caps to the rank columns, which land in the farm's left x-band right
+            # above it; the farm's rail-bar symbols ride ~6.35 mm ABOVE the cap
+            # row, so the standard 8*U gap let a rail bar's upward value text meet
+            # a rank BIAS-GND symbol's downward value (the two-LM61460 power
+            # sheet's +5V farm bar vs U1's BIAS-bypass GND). Add 4*U ONLY for that
+            # stacked-box-buck case; every other farm — a single box-buck does not
+            # take this path (its 4-cap cluster is the inline form) and the stock
+            # multi-rail farms (bringup_modules / _en_modules, _n_box_bucks == 0)
+            # — keeps the 8*U gap and stays byte-identical.
+            cy = gceil(ey1 + (12 if self._n_box_bucks >= 2 else 8) * U)
         else:
             col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
             cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
@@ -2829,11 +2840,27 @@ class _Engine:
             else:
                 order.append(pool.pop(0))
         aux = [r for r in self.multi if r not in stages]
+        # A box-symbol buck (LM61460 dossier) carries dense LEFT-edge columns (FB
+        # divider + CFF feedforward) plus labeled-islet escapes for its BIAS/RT/
+        # VCC straps; when a SECOND such buck STACKS below the first (the power
+        # sheet now carries U1 +5V over U2 +3V3, both LM61460 since the no-EP
+        # TPS54302 thermal re-spec), the standard 10*U inter-stage gap leaves no
+        # clear band for the lower buck's top-edge left pins / VCC cap to escape
+        # into. Widen the gap to 28*U after a box-buck that is followed by another
+        # stage so the escapes clear; the sheet rides the A3 height budget. Single-
+        # stage sheets, the last stage, and stock-symbol stages keep the 10*U gap
+        # -> byte-identical.
+        box_buck = {r for r, s in stages.items()
+                    if s.get("kind") == "buck"
+                    and not self._stage_has_left_input(r)}
+        self._n_box_bucks = len(box_buck)
         ay = 0.0
-        for ref in order:
+        for i, ref in enumerate(order):
             st = stages[ref]
             self._stage_row(ref, st, ay, in_caps, out_caps)
-            ay = gceil(self._extent()[3] + 10 * U)
+            has_next = i + 1 < len(order)
+            gap = 28 * U if (ref in box_buck and has_next) else 10 * U
+            ay = gceil(self._extent()[3] + gap)
         handled: set = set()
         for ref in aux:
             # an upward pin-stack off this part's top edge needs headroom
@@ -3055,6 +3082,8 @@ class _Engine:
             n = self.net_of(ref, p.number)
             if n is None:
                 continue
+            if n.name == fb_net_name:
+                continue                          # FB drawn by _buck_right
             if n.net_class is NetClass.PORT:
                 pe = pins[p.number]
                 lx = round(pe[0] + sp.port_run, 3)
@@ -3062,6 +3091,21 @@ class _Engine:
                 shape = {"input": "input", "output": "output"}.get(
                     p.etype, "bidirectional")
                 self.label(n.name, lx, pe[1], 0, shape=shape)
+            elif n.net_class is NetClass.SIGNAL and (
+                    n.name in self.pull or n.name in self.hang):
+                # RIGHT-edge SIGNAL strap (always-on EN-UVLO/EN-clamp): the
+                # LM61460 dossier places EN/SYNC on the RIGHT edge (pin 7),
+                # unlike the stock TPS54302 whose EN sat on the LEFT (handled by
+                # _stage_row's p_en_uvlo branch). The always-on +5V_SOM buck
+                # strap (series-R to the input rail + 5.1 V zener + bypass cap to
+                # GND, PWR-1) is a SIGNAL net with entries in self.pull/self.hang
+                # -> draw it as a labeled islet escaping RIGHT and bridge it, so
+                # the strap R/zener/cap lay out in the generic rank columns and
+                # merge back by name (the labeled-islet idiom, no symbol pin
+                # moved). A plain bring-up-port EN is PORT-class (handled above);
+                # a strapless EN with no local passives falls through to the NC/
+                # float handling like any other unused right pin.
+                self._box_right_pin_islet(n.name, pins[p.number])
 
         # ---- LEFT edge: every non-FB left pin is drawn as a LABELED ISLET, its
         # local R/C left in self.pull/hang so the generic _pull_rank_columns
@@ -3085,6 +3129,28 @@ class _Engine:
                 continue
             self._box_left_pin_islet(name, pt, body)
         self._part_texts(pp, body)
+
+    def _box_right_pin_islet(self, name: str, pt: tuple[float, float]) -> None:
+        """Escape a box-buck RIGHT-edge SIGNAL pin (the LM61460 EN/SYNC always-on
+        strap) to a labeled islet reading rightward; its local strap elements
+        (series-R + clamp zener + bypass cap) are deferred to the generic rank
+        columns and merge back by name (the same labeled-islet idiom as the
+        left-edge non-FB pins, mirrored to the right). A short horizontal stub
+        right to a rot-0 label, dodging right a BOUNDED few steps to the first
+        clear spot — never a runaway run across the SW/output network the
+        right-edge pass placed (LAW 1)."""
+        sp = self.sp
+        rx = round(pt[0] + sp.port_run, 3)
+        for _k in range(8):
+            lb = tm.llabel_box(name, rx, pt[1], 0)
+            if self._spot_free(lb) and self._corridor_free(
+                    pt[1], pt[0] + 0.01, rx, {name}):
+                self.pl.plan(name, pt, (rx, pt[1]))
+                self.llabel(name, rx, pt[1], 0)
+                self._bridge(name)
+                return
+            rx = gceil(rx + 2 * U)
+        raise PlaceError(f"box-buck right pin {name}: no clear islet escape")
 
     def _box_left_pin_islet(self, name: str, pt: tuple[float, float],
                             body: Box) -> None:
@@ -3115,39 +3181,72 @@ class _Engine:
                 self._bridge(name)
                 return
             lx = gfloor(lx - 2 * U)
+        # 1b) STRAIGHT VERTICAL DROP from the pin tip (no horizontal move): when
+        # the pin's own y-row is blocked left (an adjacent FB/rank column sits at
+        # exactly this row so no horizontal corridor opens), a riser at the pin
+        # tip x — if its vertical band is clear — reaches the open band above or
+        # below the stage directly. Try DOWN first (the open band below the whole
+        # stage, the most reliable on a stacked sheet), then UP. This is what
+        # rescues a top-half left pin (e.g. U2 BIAS_3V3 on the two-buck power
+        # sheet) whose every left-corridor riser is walled off by U1's columns.
+        xv = pt[0]
+        for down in (True, False):
+            edge = body.y1 if down else body.y0
+            far = gceil(edge + 28 * U) if down else gfloor(edge - 28 * U)
+            step = 2 * U if down else -2 * U
+            if not self._vband_stem_free(xv, *sorted((pt[1], far)), {name}):
+                continue
+            dy = gceil(edge + 4 * U) if down else gfloor(edge - 4 * U)
+            for _kd in range(28):
+                lbl = (round(xv + sp.port_run, 3), dy)
+                lb = tm.llabel_box(name, lbl[0], lbl[1], 0)
+                ylo, yhi = sorted((pt[1], dy))
+                if self._spot_free(lb) \
+                        and self._spot_free((xv - 0.15, ylo + 0.2,
+                                             xv + 0.15, yhi - 0.2), pad=0.0) \
+                        and self._corridor_free(dy, xv - 0.01, lbl[0], {name}):
+                    self.pl.plan(name, pt, (xv, dy), lbl)
+                    self.llabel(name, *lbl, 0)
+                    self._bridge(name)
+                    return
+                dy = round(dy + step, 3)
         # 2) VERTICAL ESCAPE: the FB column (placed left of the body by the
         # right-edge pass) blocks every short left label. Run a short stub left
         # into the body<->FB gap, then a clean vertical riser to a free row
-        # BEYOND the body's near edge — UP for a pin in the body's top half,
-        # DOWN for the bottom half — so a pin above FB clears into the top-left
-        # corner and one below FB into the open band below the stage, and the
-        # two never compete for the same gap. The riser x is nudged left to a
-        # clear lane; the label reads rightward (rot 0) off the riser.
+        # BEYOND the body's near edge. Try the PREFERRED direction first — UP for
+        # a pin in the body's top half (clears into the top-left corner), DOWN
+        # for the bottom half (the open band below the stage) — then FALL BACK to
+        # the opposite direction. The preferred-only rule is correct for a single
+        # stage, but when bucks STACK (the power sheet now carries TWO LM61460
+        # box-bucks, U1 above U2) a top-half pin's UP escape collides with the
+        # stage above; the down fallback then finds the open inter-stage band.
+        # The riser x is nudged left to a clear lane; the label reads rightward.
         body_mid = (body.y0 + body.y1) / 2
-        up = pt[1] < body_mid                 # page-y: smaller = higher = top
-        xv = gfloor(pt[0] - 2 * U)            # just left of the pin tip
-        edge = body.y0 if up else body.y1
-        b0 = (edge - 24 * U, edge - U) if up else (edge + U, edge + 24 * U)
-        for _kx in range(8):                  # nudge the riser left to a clear x
-            if self._vband_stem_free(xv, b0[0], b0[1], {name}) \
-                    and self._corridor_free(pt[1], pt[0] - 0.01, xv, {name}):
-                break
-            xv = gfloor(xv - 2 * U)
-        step = -2 * U if up else 2 * U
-        dy = gfloor(edge - 4 * U) if up else gceil(edge + 4 * U)
-        for _ky in range(24):
-            lbl = (round(xv + sp.port_run, 3), dy)   # label right of the riser
-            lb = tm.llabel_box(name, lbl[0], lbl[1], 0)
-            ylo, yhi = sorted((pt[1], dy))
-            if self._spot_free(lb) \
-                    and self._spot_free((xv - 0.15, ylo + 0.2,
-                                         xv + 0.15, yhi - 0.2), pad=0.0) \
-                    and self._corridor_free(dy, xv - 0.01, lbl[0], {name}):
-                self.pl.plan(name, pt, (xv, pt[1]), (xv, dy), lbl)
-                self.llabel(name, *lbl, 0)
-                self._bridge(name)
-                return
-            dy = round(dy + step, 3)
+        prefer_up = pt[1] < body_mid          # page-y: smaller = higher = top
+        for up in (prefer_up, not prefer_up):
+            xv = gfloor(pt[0] - 2 * U)        # just left of the pin tip
+            edge = body.y0 if up else body.y1
+            b0 = (edge - 24 * U, edge - U) if up else (edge + U, edge + 24 * U)
+            for _kx in range(8):              # nudge the riser left to a clear x
+                if self._vband_stem_free(xv, b0[0], b0[1], {name}) \
+                        and self._corridor_free(pt[1], pt[0] - 0.01, xv, {name}):
+                    break
+                xv = gfloor(xv - 2 * U)
+            step = -2 * U if up else 2 * U
+            dy = gfloor(edge - 4 * U) if up else gceil(edge + 4 * U)
+            for _ky in range(24):
+                lbl = (round(xv + sp.port_run, 3), dy)  # label right of riser
+                lb = tm.llabel_box(name, lbl[0], lbl[1], 0)
+                ylo, yhi = sorted((pt[1], dy))
+                if self._spot_free(lb) \
+                        and self._spot_free((xv - 0.15, ylo + 0.2,
+                                             xv + 0.15, yhi - 0.2), pad=0.0) \
+                        and self._corridor_free(dy, xv - 0.01, lbl[0], {name}):
+                    self.pl.plan(name, pt, (xv, pt[1]), (xv, dy), lbl)
+                    self.llabel(name, *lbl, 0)
+                    self._bridge(name)
+                    return
+                dy = round(dy + step, 3)
         raise PlaceError(f"box-buck left pin {name}: no clear islet escape")
 
     def _stage_in_rail_box(self, ref: str) -> str:

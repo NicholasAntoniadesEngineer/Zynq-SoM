@@ -1,10 +1,10 @@
 pin completeness gate (every multi-pin IC pin is NETTED or explicit NC)
 ================================================================
 STATUS: REPORT-FIRST (does NOT fail the board yet; promotes to HARD-FAIL once the NC allowlist is fully blessed)
-444 multi-pin parts checked; 154 author-declared NC pins
+457 multi-pin parts checked; 156 author-declared NC pins
 silent floats: none
 
-NC ALLOWLIST — 27 blessed [seed], 127 to bless [new]:
+NC ALLOWLIST — 27 blessed [seed], 129 to bless [new]:
   [seed] board_services:U2.1 (RV-3028-C7-32.768kHz-1ppm-TA-QC CLKOUT)
   [seed] fmc:U1.4 (TLV75725PDYDR NC)
   [seed] hdmi_rx:U2.6 (TPD4E02B04DQAR NC)
@@ -122,12 +122,14 @@ NC ALLOWLIST — 27 blessed [seed], 127 to bless [new]:
   [new]  pmod_expansion:SW1.4 (DSHP04TSGER 4)
   [new]  pmod_expansion:SW1.6 (DSHP04TSGER 6)
   [new]  power:U1.5 (LM61460AANRJRR PGOOD)
+  [new]  power:U2.5 (LM61460AANRJRR PGOOD)
   [new]  power_mon:U1.8 (INA3221AIRGVR WARNING)
   [new]  power_mon:U1.10 (INA3221AIRGVR PV)
   [new]  power_mon:U1.13 (INA3221AIRGVR TC)
   [new]  power_mon:U2.8 (INA3221AIRGVR WARNING)
   [new]  power_mon:U2.10 (INA3221AIRGVR PV)
   [new]  power_mon:U2.13 (INA3221AIRGVR TC)
+  [new]  power_som:U4.5 (LM61460AANRJRR PGOOD)
   [new]  som_j1:J1.24 (DF40C-100DS-0.4V(51) 24)
   [new]  som_j1:J1.25 (DF40C-100DS-0.4V(51) 25)
   [new]  som_j1:J1.26 (DF40C-100DS-0.4V(51) 26)

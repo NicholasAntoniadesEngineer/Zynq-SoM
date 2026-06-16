@@ -64,6 +64,7 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     "C9196":  Ratings("mlcc", v_max=2000.0,tol="±10%",dielectric="X7R", temp_max=125, source="JLC desc 1206B102K202NT 1nF 2kV X7R (ethernet Bob-Smith)"),
     "C113796":Ratings("mlcc", v_max=50.0, tol="±5%",  dielectric="C0G", temp_max=125, source="JLC desc CC0603JRNPO9BN201 200pF 50V C0G"),
     "C22399620":Ratings("mlcc",v_max=50.0,tol="±5%",  dielectric="C0G", temp_max=125, source="JLC desc CGA0603C0G750J 75pF 50V C0G"),
+    "C1653":  Ratings("mlcc", v_max=50.0, tol="±5%",  dielectric="C0G", temp_max=125, source="JLC desc CL10C220JB8NNNC 22pF 50V C0G (buck FB feedforward)"),
     "C49326329":Ratings("mlcc",v_max=100.0,tol="±5%", dielectric="C0G", temp_max=125, source="JLC desc 0603C0G470J101NT 47pF 100V C0G"),
     # ---- resistors (p_max from footprint; v_max = working voltage) ----------
     "C22769": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF150KT5E 1.5R 100mW 75V"),
@@ -73,6 +74,7 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     "C22797": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1302T5E 13k 100mW 75V"),
     "C22809": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1502T5E 15k 100mW 75V"),
     "C21190": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF1001T5E 1k 100mW 75V"),
+    "C22859": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF100JT5E 10R 100mW 75V (LM61460 BIAS series)"),
     "C8218":  Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF2000T5E 200R 100mW 75V"),
     "C23345": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF220JT5E 22R 100mW 75V"),
     "C31850": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF2202T5E 22k 100mW 75V"),
@@ -114,6 +116,7 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     # ---- regulators / DC-DC / eFuse / load-switch / LDO (vin_max=abs-max) ---
     "C90761": Ratings("ic", vin_max=28.0, i_max=3.0, temp_max=150, source="TPS54331DDAR buck recommended 3.5-28V 3A"),
     "C311983":Ratings("ic", vin_max=28.0, i_max=3.0, temp_max=125, source="TPS54302DDCR buck recommended 4.5-28V 3A"),
+    "C2864505":Ratings("ic", vin_max=42.0, i_max=6.0, temp_max=150, source="LM61460AANRJRR buck (TI SNVSBD5D) abs-max VIN 42V, 6A, Tj op-max 150C; VQFN-HR EP-equiv heat path"),
     "C2866319":Ratings("ic", vin_max=60.0, temp_max=125, source="TPS26631 eFuse recommended 4.5-60V"),
     "C176944":Ratings("ic", vin_max=6.0, i_max=0.6, temp_max=85, source="AP2112K-1.8 LDO abs-max 6V 600mA"),
     "C35209004":Ratings("ic", vin_max=6.0, i_max=1.0, temp_max=125, source="TLV75725 LDO abs-max 6V 1A"),

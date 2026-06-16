@@ -3,7 +3,7 @@
 * PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface
 * (subsystems/power/power.py INTERFACE), NOT any board net. A consuming project
 * wires these pins to its real nets — exactly as the netlist bind map does. The
-* active parts (LM61460 + TPS54302 SYNCHRONOUS bucks, AP2112K LDO, AO3400A PG-
+* active parts (TWO LM61460 SYNCHRONOUS bucks, AP2112K LDO, AO3400A PG-
 * sense FET) are mixed-signal switchers/regulators and are NOT modelled as small-
 * signal here; this subckt captures the PASSIVE network whose elements span TWO
 * interface nets — the per-stage input bypass/bulk + output bulk caps — which is
@@ -20,8 +20,10 @@
 *   C5  22u   +5V buck output bulk            (+VOUT_5V_REG -> GND)
 *   C6  22u   +5V buck output bulk            (+VOUT_5V_REG -> GND)
 *   C26 22u   +5V buck output bulk            (+VOUT_5V_REG -> GND)
-*   C7  100n  +3V3 buck input bypass          (+VOUT_5V -> GND)
+*   C7  100n  +3V3 buck VIN1/PGND1 HF bypass   (+VOUT_5V -> GND)
+*   C29 100n  +3V3 buck VIN2/PGND2 HF bypass   (+VOUT_5V -> GND)
 *   C8  22u   +3V3 buck input bulk            (+VOUT_5V -> GND)
+*   C30 22u   +3V3 buck input bulk            (+VOUT_5V -> GND)
 *   C10 22u   +3V3 buck output bulk           (+VOUT_3V3_REG -> GND)
 *   C11 22u   +3V3 buck output bulk           (+VOUT_3V3_REG -> GND)
 *   C12 1u    +1V8 LDO input cap              (+VOUT_3V3 -> GND)
@@ -30,10 +32,11 @@
 * The remaining passives terminate on a NON-interface (private buck control)
 * node and so are NOT subckt elements — documented here for completeness:
 *   C4   100n BOOT cap (SW_5V0 <-> BOOT_5V0)        C9  100n BOOT (SW_3V3<->BOOT_3V3)
-*   C24  1u   VCC int-LDO bypass (U1_VCC -> GND)    C28 1u   BIAS bypass (BIAS_5V0 -> GND)
-*   C23  75p  +3V3 FB feedforward (-> FB_3V3)       C27 22p  +5V FB feedforward (-> CFF_5V0)
-*   R1/R2  40.2k/10k  +5V FB divider (-> FB_5V0)    R4/R5  100k/22k  +3V3 FB divider
-*   R10 22k RT (fSW)   R11 10R BIAS series   R12 1k RFF   R3 1k / R6,R9 330R PG LEDs
+*   C24  1u   VCC bypass U1 (U1_VCC -> GND)         C31 1u  VCC bypass U2 (U2_VCC -> GND)
+*   C28  1u   BIAS bypass U1 (BIAS_5V0 -> GND)      C32 1u  BIAS bypass U2 (BIAS_3V3 -> GND)
+*   C27  22p  +5V FB feedforward (-> CFF_5V0)       C23 22p +3V3 FB feedforward (-> CFF_3V3)
+*   R1/R2  40.2k/10k  +5V FB divider (-> FB_5V0)    R4/R5  22.1k/10k  +3V3 FB divider
+*   R10/R14 22k RT (fSW)  R11/R13 10R BIAS series   R12/R15 1k RFF   R3 1k / R6,R9 330R PG
 *   R7 1k / R8 100k  +1V8 PG-sense FET gate stop + pulldown
 *
 * Port order: VIN VOUT_5V_REG VOUT_5V VOUT_3V3_REG VOUT_3V3 VOUT_1V8_REG VOUT_1V8 GND
@@ -53,9 +56,12 @@ C5  VOUT_5V_REG GND 22u
 C6  VOUT_5V_REG GND 22u
 C26 VOUT_5V_REG GND 22u
 
-* +3V3 buck (TPS54302) input bypass + bulk on the board +5V rail it consumes
+* +3V3 buck (LM61460) input bypass + bulk on the board +5V rail it consumes
+* (DS SNVSBD5D 9.2.2.5: 2x100n HF + 2x22u bulk, one HF at each VIN/PGND pair)
 C7  VOUT_5V GND 100n
+C29 VOUT_5V GND 100n
 C8  VOUT_5V GND 22u
+C30 VOUT_5V GND 22u
 
 * +3V3 buck output bulk (regulator-side node)
 C10 VOUT_3V3_REG GND 22u

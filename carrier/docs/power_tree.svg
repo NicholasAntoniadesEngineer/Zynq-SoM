@@ -56,8 +56,8 @@
 <text x="30" y="590" fill="#374151">(13) pd_input:U1 TPS26631PWPR +VBUS_IN -&gt; +VIN — load 1.360 A / limit 3.529 A [efuse]</text>
 <text x="30" y="606" fill="#374151">(14) pmod_expansion:U1 SY6280AAC +3V3 -&gt; +3V3_PMODX — load 0.104 A / limit 0.523 A [load_switch]</text>
 <text x="30" y="622" fill="#374151">(15) power:U1 LM61460AANRJRR +VIN_SYS -&gt; +5V_REG — load 3.031 A / limit 6.000 A [buck]</text>
-<text x="30" y="638" fill="#374151">(16) power:U2 TPS54302DDCR +5V -&gt; +3V3_REG — load 2.745 A / limit 3.000 A [buck]</text>
+<text x="30" y="638" fill="#374151">(16) power:U2 LM61460AANRJRR +5V -&gt; +3V3_REG — load 2.745 A / limit 6.000 A [buck]</text>
 <text x="30" y="654" fill="#374151">(17) power:U3 AP2112K-1.8 +3V3 -&gt; +1V8_REG — load 0.006 A / limit 0.600 A [ldo]</text>
-<text x="30" y="670" fill="#374151">(18) power_som:U4 TPS54302DDCR +VIN_SYS -&gt; +5V_SOM — load 2.004 A / limit 3.000 A [buck]</text>
+<text x="30" y="670" fill="#374151">(18) power_som:U4 LM61460AANRJRR +VIN_SYS -&gt; +5V_SOM — load 2.004 A / limit 6.000 A [buck]</text>
 <text x="30" y="686" fill="#374151">(19) usb_jtag:U4 AP2112K-3.3TRG1 +5V_DBG -&gt; +3V3_DBG — load 0.045 A / limit 0.600 A [ldo]</text>
 </svg>

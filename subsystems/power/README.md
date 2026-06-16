@@ -1,8 +1,9 @@
 # power — multi-rail regulator tree (buck → buck → LDO, PG LEDs) reusable subsystem
 
 A project-agnostic, self-contained schgen subsystem: a **3-stage regulator
-chain** — an **LM61460** 6 A synchronous buck (`+VIN → +5V`), a **TPS54302** 3 A
-synchronous buck (`+5V → +3V3`) and an **AP2112K** 600 mA LDO (`+3V3 → +1V8`) —
+chain** — an **LM61460** 6 A synchronous buck (`+VIN → +5V`), a **second LM61460**
+6 A synchronous buck (`+5V → +3V3`, re-spec'd from a no-EP TPS54302 after a
+thermal finding) and an **AP2112K** 600 mA LDO (`+3V3 → +1V8`) —
 each rail with an **enable port** and a **power-good LED** (the +1V8 PG uses an
 AO3400A FET sense because a red LED's Vf exceeds 1.8 V). It declares its interface
 as **abstract** port + rail names and knows nothing about any board; a consuming
@@ -18,7 +19,7 @@ This is the largest, most complex carrier subsystem.
 | `test_power.py` | LOCAL electrical-correctness test (offline, runs the board gate slices on just this subsystem) |
 | `README.md`     | this file |
 
-Active parts are **referenced, never vendored**: the LM61460/TPS54302/AP2112K/
+Active parts are **referenced, never vendored**: the LM61460 (×2)/AP2112K/
 AO3400A symbols/footprints/LCSC come from the global `parts/` lib via
 `use_part()`. **U1 (LM61460) draws its FAITHFUL `parts/LM61460AANRJRR/`
 dossier symbol** — no `lib_id=` override (the **"0 hand-built symbols"**
@@ -102,28 +103,28 @@ the monitor measures the wrong current.
 | ref | value | lib / part | LCSC |
 |-----|-------|-----------|------|
 | U1 | LM61460AANRJRR | `parts/LM61460AANRJRR/` — **faithful dossier symbol (0 hand-built symbols)** | C2864505 |
-| U2 | TPS54302DDCR | `Regulator_Switching:TPS54302` (3 A sync buck) | C311983 |
+| U2 | LM61460AANRJRR | `parts/LM61460AANRJRR/` — faithful dossier symbol (re-spec'd from a no-EP TPS54302, thermal finding) | C2864505 |
 | U3 | AP2112K-1.8 | `Regulator_Linear:AP2204K-1.5` drawing (= AP2112K SOT-23-5) | C176944 |
 | Q1 | AO3400A | `Transistor_FET:Q_NMOS_GSD` (+1V8 PG sense FET) | C20917 |
 | L1, L2 | 10 µH | `SWPA8040S100MT` (Sunlord shielded power inductor) | C37429 |
 | C1, C25 | 100n | +5V buck VIN HF bypass (50 V X7R, one per VIN/PGND pair) | C14663 |
+| C7, C29 | 100n | +3V3 buck VIN HF bypass (50 V X7R, one per VIN/PGND pair) | C14663 |
 | C2, C3 | 10u | +5V buck input bulk (1206, ≥10 µF) | C13585 |
 | C5, C6, C26 | 22u | +5V buck output bulk (0805 25 V) | C45783 |
+| C8, C30 | 22u | +3V3 buck input bulk (0805 25 V) | C45783 |
+| C10, C11 | 22u | +3V3 buck output bulk (0805 25 V) | C45783 |
 | C4, C9 | 100n | BOOT (CBOOT) caps | C14663 |
-| C24 | 1u | LM61460 VCC int-LDO bypass | C15849 |
-| C28 | 1u | LM61460 BIAS bypass | C15849 |
-| C27 | 22p | +5V FB feedforward (C0G) | C1653 |
-| C23 | 75p | +3V3 FB feedforward (C0G) | C22399620 |
-| C7 | 100n | +3V3 buck input bypass | C14663 |
-| C8, C10, C11 | 22u | +3V3 buck input/output bulk | C45783 |
+| C24, C31 | 1u | LM61460 U1/U2 VCC int-LDO bypass | C15849 |
+| C28, C32 | 1u | LM61460 U1/U2 BIAS bypass | C15849 |
+| C27, C23 | 22p | +5V / +3V3 FB feedforward (C0G) | C1653 |
 | C12, C13 | 1u | LDO input / output caps | C15849 |
 | R1 | 40.2k | +5V FB top (**BOM-critical**: a 120k mis-key → ~13 V, fatal) | C12447 |
 | R2 | 10k | +5V FB bottom | C25804 |
-| R4 | 100k | +3V3 FB top | C25803 |
-| R5 | 22k | +3V3 FB bottom | C31850 |
-| R10 | 22k | LM61460 RT (fSW = 600 kHz) | C31850 |
-| R11 | 10R | LM61460 BIAS series | C22859 |
-| R12 | 1k | +5V FB feedforward RFF | C21190 |
+| R4 | 22.1k | +3V3 FB top (Vref 1.0 V → 3.21 V) | C25961 |
+| R5 | 10k | +3V3 FB bottom | C25804 |
+| R10, R14 | 22k | LM61460 U1/U2 RT (fSW = 600 kHz) | C31850 |
+| R11, R13 | 10R | LM61460 U1/U2 BIAS series | C22859 |
+| R12, R15 | 1k | +5V / +3V3 FB feedforward RFF | C21190 |
 | R3 | 1k | +5V PG LED resistor | C21190 |
 | R6, R9 | 330R | +3V3 / +1V8 PG LED resistors | C23138 |
 | R7 | 1k | +1V8 PG-sense FET gate-stop | C21190 |
@@ -181,12 +182,19 @@ the migration.
 - **The LM61460 heat path is GND.** The VQFN-HR has **no center EP**; its
   die-attach heat path is the PGND1/PGND2 power-ground pads (+ AGND), all on the
   GND pour. They are netted to GND (a real net, not a prose layout note), so the
-  EP-equivalent is netlist-verifiable.
-- **+3V3 buck = TPS54302, 3 A.** FB divider 100k/22k @ Vref 0.596 V → 3.31 V;
-  100 nF BOOT; 10 µH; 75 pF FB feedforward (all-ceramic output idiom).
-  *Thermal:* SOT-23-6 with no EP — the gate's bare 2s2p RthJA overstates Tj, so
-  U2 carries a **layout-critical thermal waiver** (power-pour + thermal-via
-  layout → ~45–55 °C/W; verify by sim/bench, else move to an EP buck).
+  EP-equivalent is netlist-verifiable. **Both bucks** earn the gate's pour-aware
+  effective RthJA on this basis — no thermal waiver on either.
+- **+3V3 buck = LM61460, 6 A** (re-spec'd from a no-EP **TPS54302** by the
+  2026-06-16 thermal finding). The +3V3 rail carries the board's second-heaviest
+  converter load (2.745 A — FMC 1 A + gated peripheral budgets + the VADJ LDO).
+  At the **honest** TPS54302 datasheet RthJA (TI SLVSDG6C: 118.9 °C/W JEDEC /
+  57.2 °C/W EVM) and its **125 °C** rec-op Tj-max, the old no-EP part ran 240 °C
+  (JEDEC) / 141 °C (EVM) — over its rec-max; it also sat at 92 % of its 3 A
+  rating. The LM61460 (6 A, EP-equivalent PGND/SW-pad heat path) carries it at
+  Tj ≈ 98 °C with 44 % current headroom. FB divider 22.1k/10k @ Vref 1.0 V →
+  3.21 V; fSW 600 kHz (RT = 22k); 10 µH; 100 nF CBOOT (RBOOT shorted); BIAS tied
+  to VOUT via 10 Ω + 1 µF; 22 pF CFF + 1k RFF FB feedforward — the same idiom as
+  the +5V buck.
 - **+1V8 LDO = AP2112K, 600 mA.** 1 µF in / 1 µF out.
 - **Power-good LEDs.** +5V and +3V3 light a red LED directly off the reg-side
   rail. +1V8 can't (red Vf ≈ 2.0 V > 1.8 V), so an AO3400A senses +1V8 (1k

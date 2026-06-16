@@ -393,8 +393,25 @@ def _buck_fb(sheet: str, c, res: Result) -> None:
             lo=nominal * 0.97, hi=nominal * 1.03))
 
 
+def _en_pin(c, ref: str) -> str | None:
+    """The buck's enable pin NUMBER, resolved across parts. A use_part dossier
+    part carries a named pin table (pin_names) — the LM61460 names its enable
+    'EN/SYNC' (pin 7); accept any pin whose NAME starts 'EN'. A stock-symbol
+    override (lib_id=) has no name table -> fall back to the TPS54302 EN = pin
+    5. This keeps the PWR-1 EN-clamp regression lock firing after the U4
+    TPS54302 -> LM61460 swap (the enable moved from pin 5 to pin 7); WITHOUT
+    this, the hardcoded pin 5 hit the LM61460 PGOOD pin (NC) and the gate would
+    silently stop checking the always-on EN clamp — a LAW-4 softening."""
+    part = c.parts.get(ref)
+    if part is not None and part.pin_names:
+        for name, nums in part.pin_names.items():
+            if name.upper().startswith("EN") and nums:
+                return nums[0]
+    return "5"                                     # TPS54302 EN (no name table)
+
+
 def _en_clamp(sheet: str, c, res: Result) -> None:
-    """TPS54302 EN series-R + zener clamp (PWR-1, power.py +5V_SOM stage).
+    """Buck EN series-R + zener clamp (PWR-1, power_som +5V_SOM stage).
 
     Topology: R_series from the input rail -> EN ; 5.1 V zener (cathode on
     EN, anode on GND) ; optional EN bypass cap. ASSERTS EN stays inside
@@ -402,7 +419,12 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
     full range the inlet eFuse passes pre/post PD contract. The buck must
     turn on at the 5 V default contract yet never exceed the EN rec-max at
     the 20 V (21 V) contract; a plain divider cannot do both, so the clamp
-    is the fix and this check is its regression lock.
+    is the fix and this check is its regression lock. The EN pin is resolved
+    by NAME (_en_pin), so the check follows the part (TPS54302 EN=5,
+    LM61460 EN/SYNC=7) — it cannot silently lapse on a re-spec. The
+    TPS54302_EN_* window (rec-max 5.5 V) is the conservative envelope kept as
+    the assertion bound; the LM61460 EN abs-max is 42 V, so a clamp that holds
+    EN under 5.5 V is more than safe for it too.
     """
     from schgen.verify.powertree import _detect_regs
 
@@ -414,7 +436,7 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
     for reg in regs:
         if reg.kind != "buck":
             continue
-        en_net = _net_of(c, reg.ref, "5")          # TPS54302 EN = pin 5
+        en_net = _net_of(c, reg.ref, _en_pin(c, reg.ref))   # EN pin by NAME
         if en_net is None or en_net.net_class is not NetClass.SIGNAL:
             continue                               # bring-up-port EN: skip
         # series R from a POWER rail (the input rail) onto EN
