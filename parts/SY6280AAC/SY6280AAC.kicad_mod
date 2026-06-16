@@ -218,15 +218,15 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"SY6280AAC.wrl"
+		"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 		(offset
-			(xyz -5.4102 1.4732 0)
+			(xyz 0 0 0)
 		)
 		(scale
 			(xyz 1 1 1)
 		)
 		(rotate
-			(xyz 0 0 270)
+			(xyz 0 0 0)
 		)
 	)
 )

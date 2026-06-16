@@ -303,7 +303,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"TPD6E001RSER.wrl"
+		"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/Texas_RUN0010A_WQFN-10_2x2mm_P0.5mm.step"
 		(offset
 			(xyz 0 0 0)
 		)

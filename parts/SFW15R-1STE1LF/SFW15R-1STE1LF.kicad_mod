@@ -440,9 +440,9 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"SFW15R-1STE1LF.wrl"
+		"${KICAD10_3DMODEL_DIR}/Connector_FFC-FPC.3dshapes/Hirose_FH12-15S-0.5SH_1x15-1MP_P0.50mm_Horizontal.step"
 		(offset
-			(xyz 0 -1.592 0)
+			(xyz 0 0 0)
 		)
 		(scale
 			(xyz 1 1 1)

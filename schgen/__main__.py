@@ -1009,6 +1009,23 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     _lap("pcb gen + DRC + ratsnest images + LAW-5 gate")
 
+    # 3D-MODEL COVERAGE (SOFT): every custom footprint at parts/<MPN>/ should
+    # reference a stock KiCad 3D model that EXISTS on disk so the carrier 3D
+    # viewer populates. A missing model is neither an ERC nor a DRC nor a
+    # netlist defect — no other gate sees it — so this reports coverage + the
+    # exact gaps so the number can only move DOWN visibly, never silently. SOFT
+    # by design: some bespoke parts (mezzanines, magnetics module, an exotic RTC
+    # package) have no faithful stock body, and a WRONG 3D body is worse than
+    # none. Does NOT touch ok_all (only an UNEXPECTED broken/missing ref, not a
+    # documented unmatched part, makes the gate verdict False).
+    from schgen.verify import model3d_gate
+    m3d = model3d_gate.run(rep_dir)
+    print(f"{m3d.line()} -> {rep_dir / 'model3d.txt'}")
+    for _mpn in sorted(m3d.broken):
+        print(f"  3D MODEL BROKEN: {_mpn}: {m3d.broken[_mpn]}")
+    for _mpn in sorted(m3d.missing):
+        print(f"  3D MODEL MISSING (model ...) clause: {_mpn}")
+
     # SIGNAL-INTEGRITY CONSTRAINTS (not routing): harvest every diff pair the
     # schematic declares, join to the researched si_spec targets, and APPEND
     # diff-pair + matched-length design rules to the board .kicad_dru just
@@ -1064,6 +1081,20 @@ def cmd_board(args: argparse.Namespace) -> int:
     print(f"BOARD: {'PASS' if ok_all else 'FAIL'} "
           f"({len(sheets)} sheets -> {CARRIER / 'Zynq_Carrier.kicad_pro'})")
     return 0 if ok_all else 1
+
+
+def cmd_model3d(args: argparse.Namespace) -> int:
+    """3D-MODEL COVERAGE check (SOFT): how many custom footprints reference a
+    stock KiCad 3D model that EXISTS on disk, and which are unmatched + why.
+    Prints the same one-line summary cmd_board emits plus the full report;
+    exit 0 always (SOFT) unless an UNEXPECTED broken/missing ref appears."""
+    from schgen.verify import model3d_gate
+    rep_dir = CARRIER / "reports"
+    res = model3d_gate.run(rep_dir)
+    print(res.report())
+    print()
+    print(res.line() + f" -> {rep_dir / 'model3d.txt'}")
+    return 0 if res.ok else 1
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -1365,6 +1396,11 @@ def main(argv: list[str] | None = None) -> int:
                       "(stops at first failure; local-only, replaces "
                       "scripts/check.sh)")
     ck.set_defaults(func=cmd_check)
+    m3 = sub.add_parser(
+        "model3d-check",
+        help="3D-model coverage of custom footprints (SOFT): n/m covered + "
+             "which are unmatched and why")
+    m3.set_defaults(func=cmd_model3d)
     args = p.parse_args(argv)
     return args.func(args)
 

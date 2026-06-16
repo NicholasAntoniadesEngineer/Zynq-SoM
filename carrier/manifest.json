@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "ee92ebfe7bca7107ebb447445b8e1f9512dd0f1de84b65d6e32b6e30fe111360"
+      "sha256": "93c0c255ca214f861730e289d0a6fa68b8befd9aa191f3bee8ad9fb54f37c36b"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -107,6 +107,10 @@
     {
       "path": "reports/link_report.txt",
       "sha256": "e634c749bbda82ea3543d33cb5209b378fc5107575a236c467a4410bd2ea7e2d"
+    },
+    {
+      "path": "reports/model3d.txt",
+      "sha256": "161da6d2b6247a40a8662d2210e33f490b6324b12b750bc13e816dbb84ada774"
     },
     {
       "path": "reports/part_rules.txt",

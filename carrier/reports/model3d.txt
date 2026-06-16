@@ -1,0 +1,10 @@
+3D model coverage gate (custom footprints reference a stock KiCad 3D model that EXISTS on disk)
+========================================================================
+STATUS: SOFT — gaps are reported, never fail the board (some bespoke parts have no faithful stock body)
+52/56 custom footprints have a resolving 3D model
+
+UNMATCHED (4) — no model (a wrong body is worse than none):
+  DF40C-100DS-0.4V_51: Hirose DF40 0.4mm board-to-board mezzanine — no DF40 stock model
+  FUSB302BMPX: MLP-14 2.5x2.5 P0.5 — stock DFN-14 bodies are 3x3/3x4, none matches
+  HX5008NLT: Ethernet magnetics module (SOP-24 13.2x15.1) — no discrete-magnetics stock body
+  RV-3028-C7-32.768kHz-1ppm-TA-QC: RTC OSC-SMD 8P 3.2x1.5 — no matching stock RTC/oscillator body

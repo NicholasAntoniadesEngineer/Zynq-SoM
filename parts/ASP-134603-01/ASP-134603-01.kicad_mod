@@ -3571,4 +3571,16 @@
 		(drill 1.299972)
 		(layers "*.Cu" "*.Mask")
 	)
+	(model
+		"${KICAD10_3DMODEL_DIR}/Connector_Samtec.3dshapes/Samtec_FMC_ASP-134602-01_10x40_P1.27mm_Vertical.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
 )

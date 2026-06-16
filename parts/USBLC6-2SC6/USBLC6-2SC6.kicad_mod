@@ -217,15 +217,15 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"USBLC6-2SC6.wrl"
+		"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 		(offset
-			(xyz 0.8382 -0.9652 0)
+			(xyz 0 0 0)
 		)
 		(scale
 			(xyz 1 1 1)
 		)
 		(rotate
-			(xyz 0 0 270)
+			(xyz 0 0 0)
 		)
 	)
 )

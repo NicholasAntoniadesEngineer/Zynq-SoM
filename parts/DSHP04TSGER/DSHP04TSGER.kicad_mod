@@ -558,15 +558,15 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"DSHP04TSGER.wrl"
+		"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx04_Slide_KingTek_DSHP04TS_W7.62mm_P1.27mm.step"
 		(offset
-			(xyz 0.0001 0 0)
+			(xyz 0 0 0)
 		)
 		(scale
 			(xyz 1 1 1)
 		)
 		(rotate
-			(xyz 0 0 180)
+			(xyz 0 0 0)
 		)
 	)
 )

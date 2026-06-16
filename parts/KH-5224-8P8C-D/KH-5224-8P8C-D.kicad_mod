@@ -367,9 +367,9 @@
 		(layers "*.Cu" "*.Mask")
 	)
 	(model
-		"KH-5224-8P8C-D.wrl"
+		"${KICAD10_3DMODEL_DIR}/Connector_RJ.3dshapes/RJ45_Molex_9346520x_Horizontal.step"
 		(offset
-			(xyz 0 -0.635 -3.5)
+			(xyz 0 0 0)
 		)
 		(scale
 			(xyz 1 1 1)

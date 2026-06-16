@@ -239,9 +239,9 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"CC0603KRX7R9BB104.wrl"
+		"${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0603_1608Metric.step"
 		(offset
-			(xyz -0.497 -0.127 0)
+			(xyz 0 0 0)
 		)
 		(scale
 			(xyz 1 1 1)

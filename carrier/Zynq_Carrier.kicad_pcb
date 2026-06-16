@@ -1236,15 +1236,15 @@
 			(uuid "28538c85-8cde-5e47-90ed-fe5426f4fcbb")
 		)
 		(model
-			"KH-CR1220-2.wrl"
+			"${KICAD10_3DMODEL_DIR}/Battery.3dshapes/Battery_CR1225.step"
 			(offset
-				(xyz -0.5599 0 -0.8)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "e18f4500-3d64-58ba-a7b1-7eea74afd307")
@@ -31614,6 +31614,18 @@
 			(layers "*.Cu" "*.Mask")
 			(uuid "8b2186cd-11c0-5257-8d9f-296c9fdf7fa8")
 		)
+		(model
+			"${KICAD10_3DMODEL_DIR}/Connector_Samtec.3dshapes/Samtec_FMC_ASP-134602-01_10x40_P1.27mm_Vertical.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 		(uuid "b25075d1-5e9a-5045-a32c-62129db4ada4")
 	)
 	(footprint
@@ -32314,9 +32326,9 @@
 			(uuid "1a92bc79-1f6a-53a6-8857-5bca9eaa427a")
 		)
 		(model
-			"HDMI-019S.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_Video.3dshapes/HDMI_A_Amphenol_10029449-x01xLF_Horizontal.step"
 			(offset
-				(xyz 0 -2.0409 -2.3)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -33025,9 +33037,9 @@
 			(uuid "75c050d4-682f-514c-ab61-534e0246b2f8")
 		)
 		(model
-			"HDMI-019S.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_Video.3dshapes/HDMI_A_Amphenol_10029449-x01xLF_Horizontal.step"
 			(offset
-				(xyz 0 -2.0409 -2.3)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -33789,9 +33801,9 @@
 			(uuid "23ea193a-e5b6-5855-8e11-ec8456d92ceb")
 		)
 		(model
-			"AFC07-S40FCA-00.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_FFC-FPC.3dshapes/Hirose_FH12-40S-0.5SH_1x40-1MP_P0.50mm_Horizontal.step"
 			(offset
-				(xyz -0.0001 -1.2999 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -34197,9 +34209,9 @@
 			(uuid "4e7a0539-cf0f-5b05-8d1d-24fd7c994b13")
 		)
 		(model
-			"TF-01A.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_Card.3dshapes/microSD_HC_Hirose_DM3D-SF.step"
 			(offset
-				(xyz 0 -2.175 -0.6)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -34721,15 +34733,15 @@
 			(uuid "bf401e9c-8cf8-5de2-b182-5dea17194f28")
 		)
 		(model
-			"TYPE-C-31-M-12.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal.step"
 			(offset
-				(xyz 0 -1.1 -0.85)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "5aaef244-4f28-5f79-a838-7bc8e3bfa961")
@@ -35061,9 +35073,9 @@
 			(uuid "b1855f4d-7976-5cea-8f1d-b4dc96bfb93a")
 		)
 		(model
-			"DS1024-2x6R2.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x06_P2.54mm_Vertical.step"
 			(offset
-				(xyz 0 -4.85 -3)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -35401,9 +35413,9 @@
 			(uuid "9c88442e-2701-5f69-bc02-79b635935cab")
 		)
 		(model
-			"DS1024-2x6R2.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x06_P2.54mm_Vertical.step"
 			(offset
-				(xyz 0 -4.85 -3)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -35741,9 +35753,9 @@
 			(uuid "bb8c3b8a-d7ac-583f-904f-0e8b0ca109bb")
 		)
 		(model
-			"DS1024-2x6R2.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x06_P2.54mm_Vertical.step"
 			(offset
-				(xyz 0 -4.85 -3)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -36055,9 +36067,9 @@
 			(uuid "86920b4d-5b7a-5ac7-8ec5-552f2757e5a3")
 		)
 		(model
-			"ZX-SH1.0-4PWT.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_1.00mm.3dshapes/PinHeader_1x04_P1.00mm_Vertical.step"
 			(offset
-				(xyz 0.0051 -0.2001 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -36489,9 +36501,9 @@
 			(uuid "8e37c877-f2c4-5734-99c3-2bc0e12f8eba")
 		)
 		(model
-			"KH-5224-8P8C-D.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_RJ.3dshapes/RJ45_Molex_9346520x_Horizontal.step"
 			(offset
-				(xyz 0 -0.635 -3.5)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -37710,18 +37722,6 @@
 			(net 220 "IO_L2_N_35")
 			(uuid "eeca8bc0-5065-57c5-acae-4a970c2d0651")
 		)
-		(model
-			"DF40C-100DS-0.4V_51.wrl"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
-		)
 		(uuid "2c924c99-8530-5aa2-bd5b-309939240cc7")
 	)
 	(footprint
@@ -38938,18 +38938,6 @@
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 4 "+3V3")
 			(uuid "77454021-850f-5a81-900d-39377b9b5836")
-		)
-		(model
-			"DF40C-100DS-0.4V_51.wrl"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
 		)
 		(uuid "8085ac5a-4a53-5676-af7a-d7bb164f91b0")
 	)
@@ -40168,18 +40156,6 @@
 			(net 185 "GND")
 			(uuid "297c46c7-2b46-5177-8708-f2e1c783d224")
 		)
-		(model
-			"DF40C-100DS-0.4V_51.wrl"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
-		)
 		(uuid "0215f35b-44a4-5d0e-901a-868e69e86a4a")
 	)
 	(footprint
@@ -40693,15 +40669,15 @@
 			(uuid "036f01f6-ceef-5d8c-bb72-63f2d8d85ef3")
 		)
 		(model
-			"TYPE-C-31-M-12.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal.step"
 			(offset
-				(xyz 0 -1.1 -0.85)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "e0b24389-3aba-5eed-a7e6-94191b0c8a80")
@@ -41217,15 +41193,15 @@
 			(uuid "aa8970a4-19fc-538d-9bd7-7d6e431a866f")
 		)
 		(model
-			"TYPE-C-31-M-12.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal.step"
 			(offset
-				(xyz 0 -1.1 -0.85)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "9d354c51-0caf-5f10-bc2d-9cd0a978fc0a")
@@ -41741,15 +41717,15 @@
 			(uuid "8e0ce613-a0c9-5325-8107-db4491432101")
 		)
 		(model
-			"TYPE-C-31-M-12.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal.step"
 			(offset
-				(xyz 0 -1.1 -0.85)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "06d5e701-e17f-5b8e-9ae7-c541ffcc522d")
@@ -42261,9 +42237,9 @@
 			(uuid "edd3894e-e080-5f62-a8b7-54132b49d63d")
 		)
 		(model
-			"SFW15R-1STE1LF.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_FFC-FPC.3dshapes/Hirose_FH12-15S-0.5SH_1x15-1MP_P0.50mm_Horizontal.step"
 			(offset
-				(xyz 0 -1.592 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -42771,9 +42747,9 @@
 			(uuid "ba6b5d79-0392-5597-9b11-c72ab35ca7ab")
 		)
 		(model
-			"878311420.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.00mm.3dshapes/PinHeader_2x07_P2.00mm_Vertical.step"
 			(offset
-				(xyz 0 0 -3)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -43206,7 +43182,7 @@
 			(uuid "b33d72d5-085e-5ef9-b5fb-4ff2b923fd88")
 		)
 		(model
-			"HX_JN1.27-2x5_TP_H4.9.wrl"
+			"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_1.27mm.3dshapes/PinHeader_2x05_P1.27mm_Vertical_SMD.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -43442,7 +43418,7 @@
 			(uuid "d661564c-f56b-534e-b536-f4ea1f6fb2d7")
 		)
 		(model
-			"SWPA4030S100MT.wrl"
+			"${KICAD10_3DMODEL_DIR}/Inductor_SMD.3dshapes/L_Sunlord_SWPA4030S.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -43880,7 +43856,7 @@
 			(uuid "dea5dec8-f6e3-508c-a3e4-ff97800b969c")
 		)
 		(model
-			"SWPA8040S100MT.wrl"
+			"${KICAD10_3DMODEL_DIR}/Inductor_SMD.3dshapes/L_Sunlord_SWPA8040S.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -44318,7 +44294,7 @@
 			(uuid "3d0e81d9-c306-5032-ab3a-b69793b77d25")
 		)
 		(model
-			"SWPA8040S100MT.wrl"
+			"${KICAD10_3DMODEL_DIR}/Inductor_SMD.3dshapes/L_Sunlord_SWPA8040S.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -44756,7 +44732,7 @@
 			(uuid "f0417cd2-c1ba-5018-aaa5-52df9ac96492")
 		)
 		(model
-			"SWPA8040S100MT.wrl"
+			"${KICAD10_3DMODEL_DIR}/Inductor_SMD.3dshapes/L_Sunlord_SWPA8040S.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -72455,9 +72431,9 @@
 			(uuid "c402f7b3-11b7-5bd2-815c-0b5afbdb8ea4")
 		)
 		(model
-			"RLM12FTCMR010.wrl"
+			"${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_1206_3216Metric.step"
 			(offset
-				(xyz -2.3879 0.889 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -72697,9 +72673,9 @@
 			(uuid "5407bfbe-b288-52c9-a247-6eb1cae2e17f")
 		)
 		(model
-			"RLM12FTCMR010.wrl"
+			"${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_1206_3216Metric.step"
 			(offset
-				(xyz -2.3879 0.889 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -72939,9 +72915,9 @@
 			(uuid "03c13566-c3bb-5d79-b121-8ff41c444455")
 		)
 		(model
-			"RLM12FTCMR010.wrl"
+			"${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_1206_3216Metric.step"
 			(offset
-				(xyz -2.3879 0.889 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -73181,9 +73157,9 @@
 			(uuid "4f692844-a6f5-543b-9ce5-21342f128cc8")
 		)
 		(model
-			"RLM12FTCMR020.wrl"
+			"${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_1206_3216Metric.step"
 			(offset
-				(xyz -2.3879 0.889 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -73818,15 +73794,15 @@
 			(uuid "3dc31e80-806f-569a-acbc-ad7cb2becde6")
 		)
 		(model
-			"DSHP04TSGER.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx04_Slide_KingTek_DSHP04TS_W7.62mm_P1.27mm.step"
 			(offset
-				(xyz 0.0001 0 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "05207d13-24c8-5625-bd3b-bdafd535ff5a")
@@ -74455,15 +74431,15 @@
 			(uuid "395e28bb-2939-52b0-be9a-e406d89d1872")
 		)
 		(model
-			"DSHP04TSGER.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx04_Slide_KingTek_DSHP04TS_W7.62mm_P1.27mm.step"
 			(offset
-				(xyz 0.0001 0 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "943004ef-75dc-5931-b390-36780f8f0ad6")
@@ -75089,15 +75065,15 @@
 			(uuid "54874282-b9e8-55dd-86ab-96ac736f1f38")
 		)
 		(model
-			"DSHP04TSGER.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx04_Slide_KingTek_DSHP04TS_W7.62mm_P1.27mm.step"
 			(offset
-				(xyz 0.0001 0 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "1954ce4e-96ad-5842-905a-2115ec72c2db")
@@ -75498,7 +75474,7 @@
 			(uuid "82e68721-31e0-58bb-9878-821e8960f201")
 		)
 		(model
-			"TS-1187A-B-A-B.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/Panasonic_EVQPUJ_EVQPUA.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -75907,7 +75883,7 @@
 			(uuid "9b54127c-538a-5b66-a9e6-97c59de54f46")
 		)
 		(model
-			"TS-1187A-B-A-B.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/Panasonic_EVQPUJ_EVQPUA.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -76316,7 +76292,7 @@
 			(uuid "cab96769-9cc4-5aa4-8526-e9f4801c614c")
 		)
 		(model
-			"TS-1187A-B-A-B.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/Panasonic_EVQPUJ_EVQPUA.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -76725,7 +76701,7 @@
 			(uuid "86be328f-b0aa-5028-b8bf-eecbb6b8498c")
 		)
 		(model
-			"TS-1187A-B-A-B.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/Panasonic_EVQPUJ_EVQPUA.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -77365,15 +77341,15 @@
 			(uuid "c4871ff2-c2b9-597a-992f-112fa9366a4d")
 		)
 		(model
-			"DSHP04TSGER.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx04_Slide_KingTek_DSHP04TS_W7.62mm_P1.27mm.step"
 			(offset
-				(xyz 0.0001 0 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "e1484029-77c5-596a-a24f-21b70c08e603")
@@ -77928,9 +77904,9 @@
 			(uuid "4cd74922-9830-5bf0-b53e-78215838f3eb")
 		)
 		(model
-			"DSHP08TSGER.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx08_Slide_KingTek_DSHP08TS_W7.62mm_P1.27mm.step"
 			(offset
-				(xyz 0 -0.0001 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -78337,7 +78313,7 @@
 			(uuid "fc6d7721-f864-51d1-9bb3-2180d5ee2a8d")
 		)
 		(model
-			"TS-1187A-B-A-B.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/Panasonic_EVQPUJ_EVQPUA.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -78746,7 +78722,7 @@
 			(uuid "cb4a1bc4-40cb-5d45-87ab-28dd1d214906")
 		)
 		(model
-			"TS-1187A-B-A-B.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/Panasonic_EVQPUJ_EVQPUA.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -79155,7 +79131,7 @@
 			(uuid "1ce35be9-79c7-5f2c-9127-cff9d68a9169")
 		)
 		(model
-			"TS-1187A-B-A-B.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/Panasonic_EVQPUJ_EVQPUA.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -79793,15 +79769,15 @@
 			(uuid "f30d84a8-20c4-5e24-af6e-76494dc681cf")
 		)
 		(model
-			"DSHP04TSGER.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx04_Slide_KingTek_DSHP04TS_W7.62mm_P1.27mm.step"
 			(offset
-				(xyz 0.0001 0 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "143b644c-cecb-5912-8a30-045e38d1b505")
@@ -80433,15 +80409,15 @@
 			(uuid "48545d2a-5b35-5f42-b0a6-7676b20ffcfb")
 		)
 		(model
-			"DSHP04TSGER.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx04_Slide_KingTek_DSHP04TS_W7.62mm_P1.27mm.step"
 			(offset
-				(xyz 0.0001 0 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "448f8c0f-2f2d-5e62-86d6-83c96db2125c")
@@ -80842,7 +80818,7 @@
 			(uuid "15804882-5a4c-5dab-b56d-fb2ab012cbdf")
 		)
 		(model
-			"TS-1187A-B-A-B.wrl"
+			"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/Panasonic_EVQPUJ_EVQPUA.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -81327,18 +81303,6 @@
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 31 "/ethernet/MCT1")
 			(uuid "176e2b78-707d-577a-b45c-7ea128624689")
-		)
-		(model
-			"HX5008NLT.wrl"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
 		)
 		(uuid "77c2adaa-6dc7-5320-88a1-ed3b1a965e87")
 	)
@@ -88144,15 +88108,15 @@
 			(uuid "abfeadd9-3a8e-57a0-8219-6f9154200e55")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "e6b28c1e-dc04-5e0f-89df-08bfacd41964")
@@ -88445,7 +88409,7 @@
 			(uuid "df56fc82-d735-50f9-83f0-984a84e02ed6")
 		)
 		(model
-			"PCA9306DCUR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/VSSOP-8_2.3x2mm_P0.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -88714,7 +88678,7 @@
 			(uuid "86d3274d-3f07-58ac-9f42-5a58492840fc")
 		)
 		(model
-			"TLV75725PDYDR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -89023,7 +88987,7 @@
 			(uuid "a180fa26-ca90-58ea-b81e-77a94cb5765f")
 		)
 		(model
-			"M24C02-WMN6TP.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/SOIC-8_3.9x4.9mm_P1.27mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -89319,7 +89283,7 @@
 			(uuid "81eb7a56-375e-5ef5-91a7-09d20c852619")
 		)
 		(model
-			"TPD4E02B04DQAR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SON.3dshapes/USON-10_2.5x1.0mm_P0.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -89327,7 +89291,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "0497d540-2e34-532d-ad93-8f5a265d5c01")
@@ -89615,7 +89579,7 @@
 			(uuid "374fb1d8-c460-57a6-8bd7-d997e451b051")
 		)
 		(model
-			"TPD4E02B04DQAR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SON.3dshapes/USON-10_2.5x1.0mm_P0.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -89623,7 +89587,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "59eca5a4-1a3b-521d-87e5-412b077360df")
@@ -89911,7 +89875,7 @@
 			(uuid "38a74858-fee3-5a87-aa38-b62210aaf6ec")
 		)
 		(model
-			"TPD4E05U06DQAR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SON.3dshapes/USON-10_2.5x1.0mm_P0.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -89919,7 +89883,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "454c57d4-8cb7-5f1f-be2c-2752980d9fbe")
@@ -90415,7 +90379,7 @@
 			(uuid "78b3b77f-9044-54fa-9f2a-5a7450ebde4b")
 		)
 		(model
-			"TPD12S016PWR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/TSSOP-24_4.4x7.8mm_P0.65mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -90423,7 +90387,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "f6cabde2-37a1-58ee-bf56-5882bc84016b")
@@ -90675,15 +90639,15 @@
 			(uuid "e489c62d-db2b-569d-89af-fc253a25c41e")
 		)
 		(model
-			"SY7201ABC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0 -0.0001 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "e63a97fc-254c-5d0e-90dc-f26985ff3d04")
@@ -90935,15 +90899,15 @@
 			(uuid "cd7e5ca9-306c-520c-9bcd-a1ead4b780e4")
 		)
 		(model
-			"USBLC6-2SC6.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0.8382 -0.9652 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "134df3e7-aa0a-5779-a6f7-f2253ee7be08")
@@ -91489,15 +91453,15 @@
 			(uuid "19eceb91-d829-5cb2-8009-f71e0cf9367a")
 		)
 		(model
-			"TXS02612RTWR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/Texas_RTW_WQFN-24-1EP_4x4mm_P0.5mm_EP2.7x2.7mm.step"
 			(offset
-				(xyz -0.006 -0.005 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 90)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "aed01aa1-1e0c-5eba-8501-49d95fd0f395")
@@ -91847,7 +91811,7 @@
 			(uuid "d9fa3772-0f9f-5ca3-91b5-d2ce8a7fac4d")
 		)
 		(model
-			"TPD6E001RSER.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/Texas_RUN0010A_WQFN-10_2x2mm_P0.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -92387,7 +92351,7 @@
 			(uuid "016e58e3-683c-5cbe-922e-41220265054b")
 		)
 		(model
-			"TPS26631PWPR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/HTSSOP-20-1EP_4.4x6.5mm_P0.65mm_EP3.4x6.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -92395,7 +92359,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "268d2766-6d9d-5956-91d0-032b559478b7")
@@ -92647,15 +92611,15 @@
 			(uuid "1f909695-cb13-57cf-a9e6-51aae339fc8d")
 		)
 		(model
-			"USBLC6-2SC6.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0.8382 -0.9652 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "66adf053-2d83-5125-b819-4966886cafd4")
@@ -92907,15 +92871,15 @@
 			(uuid "f296c574-75d2-5c51-a7cf-042fb5dfe8fc")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "66d5bbe1-fb40-5b12-9b49-034a30029d49")
@@ -93166,15 +93130,15 @@
 			(uuid "a14a5090-2a61-5abb-9b80-fec12a350c18")
 		)
 		(model
-			"TPD4E1U06DBVR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0 -0.0001 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "3755575b-13a3-536c-835b-b3c332bb2fb2")
@@ -93425,15 +93389,15 @@
 			(uuid "9df2ce5a-583a-5c22-8baa-bd78713f7cf5")
 		)
 		(model
-			"TPD4E1U06DBVR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0 -0.0001 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "46c2a689-eb18-5220-864d-e562e443d5c4")
@@ -93814,7 +93778,7 @@
 			(uuid "14b045de-8dd9-50e7-a4aa-eb6dfc28343e")
 		)
 		(model
-			"LM61460AANRJRR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/Texas_S-PVQFN-N14.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -94203,7 +94167,7 @@
 			(uuid "43028698-0a6a-5f0e-b614-fee5d6b38be0")
 		)
 		(model
-			"LM61460AANRJRR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/Texas_S-PVQFN-N14.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -94857,15 +94821,15 @@
 			(uuid "8c6b3532-a1ca-513b-82c5-8f265d1689b6")
 		)
 		(model
-			"USBLC6-2SC6.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0.8382 -0.9652 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "93e56e79-6774-59e4-8f73-5818e3d5cb1c")
@@ -95324,7 +95288,7 @@
 			(uuid "1b2f585c-3f7e-5211-828d-396a238fe6bb")
 		)
 		(model
-			"INA3221AIRGVR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/QFN-16-1EP_4x4mm_P0.65mm_EP2.5x2.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -95791,7 +95755,7 @@
 			(uuid "c7a5b9c8-4b5b-52cb-bc94-46a9fcf77465")
 		)
 		(model
-			"INA3221AIRGVR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/QFN-16-1EP_4x4mm_P0.65mm_EP2.5x2.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -96180,7 +96144,7 @@
 			(uuid "91f71fd1-0b6e-5540-83a1-1fb14cacfbdd")
 		)
 		(model
-			"LM61460AANRJRR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/Texas_S-PVQFN-N14.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -96721,7 +96685,7 @@
 			(uuid "1dbb288e-5a21-56db-af07-9a5a5f929b07")
 		)
 		(model
-			"CP2102N-A02-GQFN24R.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -97147,7 +97111,7 @@
 			(uuid "d3fb96a1-06c2-5b1b-b22c-bc1fa29a4e77")
 		)
 		(model
-			"CH347T.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/TSSOP-20_4.4x6.5mm_P0.65mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -97155,7 +97119,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "f8350545-64d6-59ee-8d1a-0cf1333fc97a")
@@ -97533,7 +97497,7 @@
 			(uuid "b1792bcf-422c-5eee-89a6-bfc56ca76aed")
 		)
 		(model
-			"SN74LVC125ADR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/SOIC-14_3.9x8.7mm_P1.27mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -97802,7 +97766,7 @@
 			(uuid "898e9fe6-fcc9-5437-a7f0-de352f686adc")
 		)
 		(model
-			"AP2112K-3.3TRG1.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -98062,15 +98026,15 @@
 			(uuid "17c052a9-4d33-57ff-a2be-09b06a71e9dc")
 		)
 		(model
-			"USBLC6-2SC6.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0.8382 -0.9652 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "b592932e-96d0-50d4-bf48-7e23bddf7646")
@@ -98918,15 +98882,15 @@
 			(uuid "0ebb6913-5799-59ef-b508-9167eda07506")
 		)
 		(model
-			"24AA025E48T-I_OT.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0 -0.0001 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "fc97937f-17e7-516f-b8ad-ec63b24ada94")
@@ -99226,18 +99190,6 @@
 			(net 185 "GND")
 			(uuid "126ebf29-0a1d-5ab8-8dcf-8cfc67376542")
 		)
-		(model
-			"RV-3028-C7-32.768kHz-1ppm-TA-QC.wrl"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
-		)
 		(uuid "f38b30ee-d1ac-535d-acff-7b2692d99b35")
 	)
 	(footprint
@@ -99486,15 +99438,15 @@
 			(uuid "0ef5115e-3ee4-56c5-8696-54abccf4d3d7")
 		)
 		(model
-			"TPS3823-33DBVR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "b59fc8fb-5ff4-504e-8280-601c2f0378dd")
@@ -99746,15 +99698,15 @@
 			(uuid "7352e4bc-2738-5c98-b7d2-4dd85dd8ef77")
 		)
 		(model
-			"USBLC6-2SC6.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0.8382 -0.9652 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "f3ca3093-5d28-53f3-87cd-c2d3352dd794")
@@ -100069,7 +100021,7 @@
 			(uuid "c79474ee-e679-5479-b16d-991664006a3a")
 		)
 		(model
-			"TPS2051CDBVR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -100077,7 +100029,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 180)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "0411bede-0ad2-5992-b6d1-c8e8a8ba842b")
@@ -100329,15 +100281,15 @@
 			(uuid "dcf3b676-926e-5cde-bc6b-86a4ddf15706")
 		)
 		(model
-			"USBLC6-2SC6.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step"
 			(offset
-				(xyz 0.8382 -0.9652 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "7d05ae57-4ace-5bcb-ad38-ec851d69b8b9")
@@ -106119,15 +106071,15 @@
 			(uuid "48214b45-f4f1-5c33-97d1-ed42c72f72d0")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "1b09561a-d40d-5784-bf14-78ae916f9d59")
@@ -106379,15 +106331,15 @@
 			(uuid "aaafee82-f216-5be4-8bdd-768f8d3eb9b1")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "c27037b3-b5e7-5412-89f8-c4d06c380a91")
@@ -106639,15 +106591,15 @@
 			(uuid "8780d920-4525-51df-9152-a7a7573a84fd")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "648c1857-633a-5cc3-9566-e9e9494015c4")
@@ -106899,15 +106851,15 @@
 			(uuid "9aeb9fc7-97af-579d-b73f-a9ef2c22dda7")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "7114e245-b8ca-52c5-a6b3-e4826001e083")
@@ -107159,15 +107111,15 @@
 			(uuid "4bb940bd-77d2-506c-acd9-d0e4fc0120ff")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "da4204ba-48cf-5236-b0bd-f17444c2ed41")
@@ -107419,15 +107371,15 @@
 			(uuid "b417537a-94f8-5b2f-b5a5-f2e2c3868d1f")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "61feb8af-6939-5ad3-95fa-6698bd68323b")
@@ -107679,15 +107631,15 @@
 			(uuid "912a0acb-e9c7-58d5-a591-76d8a15267be")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "8cd9d938-299a-5514-b460-983c9c2ec1e0")
@@ -107939,15 +107891,15 @@
 			(uuid "dff0a6bf-d1f9-532f-bebc-27907bf926c3")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "b37a9fbd-cda5-58d2-83a2-ed61588853eb")
@@ -108199,15 +108151,15 @@
 			(uuid "4272ca29-a5d3-5b66-be04-15509ea6435e")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "a2329599-a515-5d9a-81ed-76833e623de8")
@@ -108459,15 +108411,15 @@
 			(uuid "0d5466b9-a24e-55e0-a601-021aff10433a")
 		)
 		(model
-			"SY6280AAC.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
 			(offset
-				(xyz -5.4102 1.4732 0)
+				(xyz 0 0 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "b7aa0f42-c003-5395-b915-8a4fc884d351")
@@ -108963,7 +108915,7 @@
 			(uuid "cdce0f75-dd72-5ff6-9d07-78c00c90f728")
 		)
 		(model
-			"TCA9535PWR.wrl"
+			"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/TSSOP-24_4.4x7.8mm_P0.65mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -108971,7 +108923,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 270)
+				(xyz 0 0 0)
 			)
 		)
 		(uuid "49082894-5f92-586e-b561-33fd0fed1ca0")
@@ -109262,7 +109214,7 @@
 			(uuid "26e5cf1b-0ed0-57fd-b49f-a7faa11dbac1")
 		)
 		(model
-			"1C208000BC0R.wrl"
+			"${KICAD10_3DMODEL_DIR}/Crystal.3dshapes/Crystal_SMD_3225-4Pin_3.2x2.5mm.step"
 			(offset
 				(xyz 0 0 0)
 			)

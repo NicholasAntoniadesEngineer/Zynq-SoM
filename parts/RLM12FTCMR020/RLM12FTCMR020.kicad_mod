@@ -199,9 +199,9 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"RLM12FTCMR020.wrl"
+		"${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_1206_3216Metric.step"
 		(offset
-			(xyz -2.3879 0.889 0)
+			(xyz 0 0 0)
 		)
 		(scale
 			(xyz 1 1 1)

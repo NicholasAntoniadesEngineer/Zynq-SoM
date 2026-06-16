@@ -284,9 +284,9 @@
 		(layers "*.Cu" "*.Mask")
 	)
 	(model
-		"DS1024-2x6R2.wrl"
+		"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x06_P2.54mm_Vertical.step"
 		(offset
-			(xyz 0 -4.85 -3)
+			(xyz 0 0 0)
 		)
 		(scale
 			(xyz 1 1 1)
