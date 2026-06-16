@@ -9,7 +9,7 @@ This document exists so that anyone (human or AI) picking up this project knows
 EXACTLY the rules the work has been done under. It is verbose on purpose. If any
 instruction here ever conflicts with a newer explicit instruction from the repo
 owner, the newer explicit instruction wins — but it should then be recorded here
-and in the archived decision log (carrier/HISTORY.md, formerly carrier/PLAN.md).
+and in the archived decision log (HISTORY.md, formerly carrier/PLAN.md).
 
 
 --------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ LAW 4 — NEVER SOFTEN A VALIDATOR.
   independently based on the deep context already established. When choosing
   between options, take the best one (historically the assistant's recommended
   option has matched the owner's choice every time). Record each non-trivial
-  decision in the decision log (carrier/HISTORY.md, the archived carrier/PLAN.md)
+  decision in the decision log (HISTORY.md, the archived carrier/PLAN.md)
   tagged "(autonomous, per full-autonomy directive)" with its rationale, so it
   can be audited after the fact.
 
@@ -195,7 +195,7 @@ Run on every build; non-zero exit on any failure:
 
 
 --------------------------------------------------------------------------------
-5. DESIGN DECISIONS LOCKED (summary; full detail in carrier/HISTORY.md)
+5. DESIGN DECISIONS LOCKED (summary; full detail in HISTORY.md)
 --------------------------------------------------------------------------------
 - Power input: USB-C PD only, 20 V / 3 A, via FUSB302, behind a TPS26631 eFuse
   with soft-start (controlled inrush, OVP/OCP at the inlet). No barrel jack.
@@ -248,7 +248,7 @@ Run on every build; non-zero exit on any failure:
   gate stack.
 
 - DECISIONS ARE RECORDED. Every meaningful decision goes into the decision log
-  (carrier/HISTORY.md, the archived carrier/PLAN.md) with rationale; cross-session
+  (HISTORY.md, the archived carrier/PLAN.md) with rationale; cross-session
   state and the rules go into the assistant's persistent memory.
 
 
@@ -283,7 +283,7 @@ Run on every build; non-zero exit on any failure:
 --------------------------------------------------------------------------------
 8. QUICK REFERENCE — KEY FILES
 --------------------------------------------------------------------------------
-  carrier/HISTORY.md .............. the archived decision log (was carrier/PLAN.md
+  HISTORY.md .............. the archived decision log (was carrier/PLAN.md
                                     + OVERNIGHT_PLAN.md + MORNING_REPORT.md) —
                                     read it for the WHY behind the design
   schgen/DESIGN.md ................ the engine architecture contract

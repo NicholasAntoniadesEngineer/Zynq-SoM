@@ -68,9 +68,9 @@ PYTHONPATH=. python -m schgen selftest
 
 - The working rules and process contract (the immutable LAWs, the gate stack,
   the worktree/commit discipline) live in
-  [`WORKING_GUIDELINES.txt`](WORKING_GUIDELINES.txt).
+  [`WORKING_GUIDELINES.txt`](docs/WORKING_GUIDELINES.txt).
 - The carrier's locked design decisions and autonomous-run logs are archived in
-  [`carrier/HISTORY.md`](carrier/HISTORY.md) (the former `carrier/PLAN.md` +
+  [`carrier/HISTORY.md`](docs/HISTORY.md) (the former `carrier/PLAN.md` +
   `OVERNIGHT_PLAN.md` + `MORNING_REPORT.md`).
 - Layer guides: [`parts/README.md`](parts/README.md),
   [`subsystems/README.md`](subsystems/README.md) (the reusable library),
