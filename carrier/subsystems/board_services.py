@@ -29,9 +29,23 @@ THREE independent guards, any one of which alone prevents a power-up reset:
      driven only by the PL (WATCHDOG_KICK), which is Hi-Z until the fabric is
      configured — so even once the AUX rail is enabled, the watchdog stays
      disarmed until firmware deliberately starts toggling it.
-  3. RESET# does NOT gate any rail or POR line. It rides a PL bank-35 IO
-     (WATCHDOG_RST_N -> J3.31) as a firmware-mediated EVENT: software decides
+  3. RESET# does NOT gate any rail or POR line. It rides a PL bank-33 IO
+     (WATCHDOG_RST_N -> J3.98) as a firmware-mediated EVENT: software decides
      what a watchdog bite means. A bite can never hard-reset the board.
+
+WATCHDOG VOLTAGE DOMAIN (re-verified audit fix 2026-06-16). U3 monitors a
+3.3 V rail (it is the TPS3823-**33**: reset threshold VIT- = 2.93 V), so it
+MUST stay on +3V3_AUX — re-railing VDD to 2.5 V would assert RESET forever
+(2.5 V < 2.93 V). To stop the supervisor's 3.3 V push-pull I/O from crossing
+into a 2.5 V Zynq VCCO bank, BOTH watchdog nets were relocated off bank 35
+(+2V5_VADJ / LVCMOS25) onto SPARE bank-33 +3V3 (LVCMOS33) PL pins:
+  * RESET#: a 3.3 V push-pull driver into a 2.5 V-VCCO bank-35 input was
+    continuously forward-biasing the Zynq input clamp diode to VCCO (chronic
+    Iin / reliability stressor, HIGH). On bank 33 (+3V3 VCCO) the clamp is
+    gone — 3.3 V into a 3.3 V VCCO — and no series resistor is needed.
+  * WDI: the kick is now driven by LVCMOS33 (VOH ~3.0 V), clearing the
+    TPS3823 WDI threshold VIH = 0.7*VDD = 2.31 V; the old LVCMOS25 driver
+    (VOH ~2.1 V) sat below it and the kick could fail to register (MED).
 
 I2C ADDRESS MAP (7-bit). The EEPROM/RTC live on AUX_I2C — the PCA9306-isolated
 segment of STM32_I2C2 — so they SHARE that bus's address space (the isolator is
@@ -41,8 +55,9 @@ ID-EEPROM (A0=1,A1=0)** / **0x52 RV-3028 RTC** (both on the gated AUX segment).
 No collisions.
 
 ZYNQ-AGNOSTIC (C3).  The only SoM-side signals are the two watchdog lines,
-homed to spare PL bank-35 IO by their verbatim som_interface.json net names
-(xdc.py emits the constraints live) — nothing here hard-codes the Zynq part.
+homed to spare PL bank-33 (+3V3) IO via the som_conn_gen FUNCTION_MAP
+(IO_L4_P/N_33 -> WATCHDOG_RST_N / WATCHDOG_KICK; xdc.py emits the constraints
+live) — nothing here hard-codes the Zynq part.
 
 RTC BACKUP CELL: BT1 is a RECHARGEABLE ML1220 (Mn-Li) for a maintenance-free
 RTC — the SC firmware ENABLES the RV-3028 trickle charger (TCE + ~3k series in
@@ -64,10 +79,16 @@ LCSC_100N = "C14663"        # 100n X7R 0603
 LCSC_10K = "C25804"        # 10k 1% 0603
 LCSC_1K = "C21190"         # 1k 0603 (WDI series)
 
-# PL bank-35 IO carrying the two watchdog signals (verbatim contract nets):
-#   WATCHDOG_KICK  -> IO_L16_N_35 (J3.29)   PL -> U3.WDI
-#   WATCHDOG_RST_N -> IO_L16_P_35 (J3.31)   U3.RESET# -> PL (event, C2)
-J3_MAP = "som_j3_connector (PL bank-35 — watchdog kick/event, xdc.py live)"
+# PL bank-33 IO carrying the two watchdog signals. RELOCATED off bank 35
+# (+2V5_VADJ / LVCMOS25) onto two SPARE bank-33 +3V3 (LVCMOS33) pins so both
+# nets share U3's 3.3 V domain — see the WATCHDOG DOMAIN note below. The
+# carrier FUNCTION names are emitted by the J-sheet generator's FUNCTION_MAP
+# (som_conn_gen.py: IO_L4_P_33 -> WATCHDOG_RST_N, IO_L4_N_33 -> WATCHDOG_KICK),
+# so board_services binds these ports by their FUNCTION names; xdc.py constrains
+# them as bank-33 LVCMOS33 live.
+#   WATCHDOG_KICK  -> IO_L4_N_33 (J3.96, ball W21)  PL -> U3.WDI
+#   WATCHDOG_RST_N -> IO_L4_P_33 (J3.98, ball W20)  U3.RESET# -> PL (event, C2)
+J3_MAP = "som_j3_connector (PL bank-33 +3V3/LVCMOS33 — watchdog kick/event, xdc.py live)"
 AUX_BUS = "board_aux (PCA9306 isolated side of STM32_I2C2)"
 
 
@@ -126,14 +147,33 @@ def circuit() -> Circuit:
         cap.fields["LCSC"] = LCSC_100N
     # MR# (manual reset): left to the TPS3823's internal pull-up (de-asserted)
     c.nc("U3.MR#")
-    # WDI <- WATCHDOG_KICK (PL bank-35) via 1k: limits ESD back-feed when the
-    # rail is off but PL still drives; WDI floats -> watchdog disabled (C2 g2).
+    # WDI <- WATCHDOG_KICK (PL bank-33, +3V3 LVCMOS33) via 1k: limits ESD
+    # back-feed when the rail is off but PL still drives; WDI floats -> watchdog
+    # disabled (C2 g2). DOMAIN FIX: driven by LVCMOS33 (VOH ~3.0 V), so the kick
+    # clears the TPS3823 WDI threshold VIH = 0.7*VDD = 0.7*3.3 = 2.31 V — which
+    # the previous LVCMOS25 driver (VOH ~2.1 V) could not reliably meet (MED).
     rk = c.part(c.auto_ref("R"), "Device:R", "1k", R_FP, LCSC=LCSC_1K)
     c.net("WDI_AUX", "U3.WDI", f"{rk.ref}.2")
-    c.port("IO_L16_N_35", f"{rk.ref}.1", expect=J3_MAP)  # WATCHDOG_KICK
-    # RESET# (push-pull, active-low) -> PL bank-35 event line, firmware-mediated
+    c.port("WATCHDOG_KICK", f"{rk.ref}.1", expect=J3_MAP)  # IO_L4_N_33 (J3.96)
+    # RESET# (push-pull, active-low) -> PL bank-33 event line, firmware-mediated
     # (C2 g3). Push-pull -> no pull-up; PL internal pull holds it when AUX off.
-    c.port("IO_L16_P_35", "U3.RESET#", expect=J3_MAP)    # WATCHDOG_RST_N
+    # DOMAIN FIX: RESET# now drives a +3V3-VCCO (bank 33) input, so its 3.3 V
+    # push-pull high no longer forward-biases the Zynq input clamp diode into a
+    # 2.5 V VCCO (the chronic Iin / reliability stressor on bank 35, HIGH) — the
+    # clamp is gone (3.3 V into 3.3 V VCCO). No series R needed.
+    c.port("WATCHDOG_RST_N", "U3.RESET#", expect=J3_MAP)   # IO_L4_P_33 (J3.98)
+    # The reset-RC design rule keys on the net NAME (now contains "RST" after
+    # the bank-33 relocation). WATCHDOG_RST_N is NOT a classic RC power-on-reset
+    # line: it is the TPS3823 RESET# PUSH-PULL OUTPUT driving a PL bank-33 input
+    # as a firmware-mediated EVENT (C2 g3). A push-pull source needs no pull, and
+    # an RC cap on a logic-event line would slew the edge for no benefit; the PL
+    # internal pull holds the line defined while +3V3_AUX is OFF. Deliberate
+    # omission -> explicit waiver (LAW 4: documented, never a softened rule).
+    c.waive_reset("WATCHDOG_RST_N",
+                  "TPS3823 RESET# is a push-pull supervisor OUTPUT driving a PL "
+                  "bank-33 input as a firmware-mediated event (not a POR line): "
+                  "no pull needed (push-pull; PL internal pull holds it when "
+                  "+3V3_AUX is OFF), no cap by design (logic-event edge)")
 
     # (the QWIIC connector + its ESD array live on board_qwiic; AUX_I2C reaches
     #  it as a port, +3V3_AUX as the gated power net)

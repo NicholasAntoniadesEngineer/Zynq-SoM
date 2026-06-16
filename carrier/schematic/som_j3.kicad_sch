@@ -5115,7 +5115,7 @@
 		(uuid "6472241c-cf6e-5b77-9fb8-80a40336662f")
 	)
 	(hierarchical_label
-		"IO_L4_N_33"
+		"WATCHDOG_KICK"
 		(shape bidirectional)
 		(at 163.83 149.86 0)
 		(effects
@@ -5127,7 +5127,7 @@
 		(uuid "035eea47-e6a6-5472-bf5d-b28ff5430077")
 	)
 	(hierarchical_label
-		"IO_L4_P_33"
+		"WATCHDOG_RST_N"
 		(shape bidirectional)
 		(at 185.42 152.4 0)
 		(effects

@@ -9,8 +9,17 @@ as PURE, millisecond model assertions (no kicad-cli, no board build):
       the gated and always-on domains meet (the gate + the isolator).
   C2  the watchdog cannot reset the system at power-up — its VDD is +3V3_AUX
       (which defaults OFF), its MR# is an intentional no-connect, and its event
-      RESET# rides a PL bank-35 IO (not a rail/POR line).
-  C3  the only SoM-side signals are the two watchdog lines on PL bank-35.
+      RESET# rides a PL bank-33 IO (not a rail/POR line).
+  C3  the only SoM-side signals are the two watchdog lines, on PL bank-33.
+
+  DOMAIN-FIX (2026-06-16): the two watchdog nets were relocated off bank 35
+  (+2V5_VADJ / LVCMOS25) onto spare bank-33 +3V3 (LVCMOS33) pins so they share
+  U3's 3.3 V domain — RESET#'s 3.3 V push-pull no longer forward-biases the
+  Zynq clamp into a 2.5 V VCCO, and WDI is driven above the TPS3823 VIH
+  (0.7*3.3 = 2.31 V). U3 stays on +3V3_AUX (TPS3823-**33** monitors 3.3 V;
+  VIT- = 2.93 V — a 2.5 V supply would wedge it). board_services now binds the
+  carrier FUNCTION nets WATCHDOG_RST_N / WATCHDOG_KICK (som_conn_gen
+  FUNCTION_MAP: IO_L4_P_33 / IO_L4_N_33).
 
 Plus the netlist facts that the gates do not check by themselves: the EEPROM
 0x51 address strap, the RTC unused-pin handling, and the PCA9306 isolation
@@ -98,17 +107,24 @@ def test_c2_watchdog_mr_is_noconnect(services):
 
 
 def test_c2_watchdog_reset_is_a_pl_event_not_a_rail(services):
-    # RESET# (pin 1) rides the PL bank-35 event net, not a power/POR rail
-    assert "U3.1" in _pins(services, "IO_L16_P_35")
-    assert services.nets["IO_L16_P_35"].name == "IO_L16_P_35"
+    # RESET# (pin 1) rides the PL bank-33 event net, not a power/POR rail.
+    # DOMAIN-FIX: WATCHDOG_RST_N now lands on a +3V3 (LVCMOS33) bank-33 pin
+    # (IO_L4_P_33, J3.98) so the supervisor's 3.3 V push-pull no longer drives
+    # into a 2.5 V VCCO bank (the old IO_L16_P_35 clamp stressor).
+    assert "U3.1" in _pins(services, "WATCHDOG_RST_N")
+    assert services.nets["WATCHDOG_RST_N"].name == "WATCHDOG_RST_N"
+    assert "IO_L16_P_35" not in services.nets  # no longer on the 2.5 V bank
 
 
 # --------------------------------------------------------------------------- #
-# C3 — only SoM-side signals are the two bank-35 watchdog lines
+# C3 — only SoM-side signals are the two bank-33 watchdog lines
 # --------------------------------------------------------------------------- #
 def test_c3_watchdog_pl_pins_present(services):
-    assert "IO_L16_N_35" in services.nets   # WATCHDOG_KICK -> WDI
-    assert "IO_L16_P_35" in services.nets    # WATCHDOG_RST_N <- RESET#
+    assert "WATCHDOG_KICK" in services.nets   # WDI side (-> IO_L4_N_33, J3.96)
+    assert "WATCHDOG_RST_N" in services.nets   # RESET# (-> IO_L4_P_33, J3.98)
+    # the watchdog must no longer touch the 2.5 V bank-35 pins (domain fix)
+    assert "IO_L16_N_35" not in services.nets
+    assert "IO_L16_P_35" not in services.nets
 
 
 # --------------------------------------------------------------------------- #

@@ -456,9 +456,9 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("3. **Watchdog** (`board_services.U3` TPS3823): unpowered until "
              "this rail is on,")
     L.append("   and WDI floats (watchdog disabled) until the PL drives "
-             "`WATCHDOG_KICK` (J3.29).")
-    L.append("   Its reset is a PL EVENT on `WATCHDOG_RST_N` (J3.31) — never a "
-             "hard board")
+             "`WATCHDOG_KICK` (J3.96, bank 33).")
+    L.append("   Its reset is a PL EVENT on `WATCHDOG_RST_N` (J3.98, bank 33) "
+             "— never a hard board")
     L.append("   reset. Arm it only after the fabric is configured.")
     L.append("4. **QWIIC** (`board_qwiic.J1`): the gated 3.3 V + isolated AUX "
              "I2C, ESD-clamped")

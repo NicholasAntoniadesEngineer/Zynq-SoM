@@ -90,12 +90,12 @@ set_property -dict {PACKAGE_PIN W16  IOSTANDARD LVCMOS33} [get_ports {IO_L14_SRC
 #   ^ SRCC-capable: # create_clock -name IO_L14_SRCC_P_33 -period <ns> [get_ports {IO_L14_SRCC_P_33}]
 set_property -dict {PACKAGE_PIN W22  IOSTANDARD LVCMOS33} [get_ports {IO_L3_DQS_N_33}]  ;# J3.93 IO_L3N_T0_DQS_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN V22  IOSTANDARD LVCMOS33} [get_ports {IO_L3_DQS_P_33}]  ;# J3.91 IO_L3P_T0_DQS_33 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN W21  IOSTANDARD LVCMOS33} [get_ports {IO_L4_N_33}]  ;# J3.96 IO_L4N_T0_33 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN W20  IOSTANDARD LVCMOS33} [get_ports {IO_L4_P_33}]  ;# J3.98 IO_L4P_T0_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN V20  IOSTANDARD LVCMOS33} [get_ports {IO_L5_N_33}]  ;# J3.94 IO_L5N_T0_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN U20  IOSTANDARD LVCMOS33} [get_ports {IO_L5_P_33}]  ;# J3.92 IO_L5P_T0_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN U14  IOSTANDARD LVCMOS33} [get_ports {PL_BTN0}]  ;# J2.79 IO_25_33 <- bringup_rails
 set_property -dict {PACKAGE_PIN V17  IOSTANDARD LVCMOS33} [get_ports {PL_BTN1}]  ;# J2.87 IO_L16N_T2_33 <- bringup_rails
+set_property -dict {PACKAGE_PIN W21  IOSTANDARD LVCMOS33} [get_ports {WATCHDOG_KICK}]  ;# J3.96 IO_L4N_T0_33 <- board_services
+set_property -dict {PACKAGE_PIN W20  IOSTANDARD LVCMOS33} [get_ports {WATCHDOG_RST_N}]  ;# J3.98 IO_L4P_T0_33 <- board_services
 set_property -dict {PACKAGE_PIN V15  IOSTANDARD LVCMOS33} [get_ports {ZYNQ_HDMI_TX_CEC}]  ;# J2.77 IO_L19N_T3_VREF_33 <- hdmi_tx
 set_property -dict {PACKAGE_PIN U16  IOSTANDARD LVCMOS33} [get_ports {ZYNQ_HDMI_TX_HPD}]  ;# J2.54 IO_L15N_T2_DQS_33 <- hdmi_tx
 set_property -dict {PACKAGE_PIN V14  IOSTANDARD LVCMOS33} [get_ports {ZYNQ_HDMI_TX_SCL}]  ;# J2.22 IO_L19P_T3_33 <- hdmi_tx
@@ -210,8 +210,8 @@ set_property -dict {PACKAGE_PIN E18  IOSTANDARD LVDS_25} [get_ports {FMC_LA10_N}
 set_property -dict {PACKAGE_PIN G17  IOSTANDARD LVDS_25} [get_ports {FMC_LA11_P}]  ;# J1.78 IO_L6P_T0_35 <- fmc
 set_property -dict {PACKAGE_PIN F17  IOSTANDARD LVDS_25} [get_ports {FMC_LA11_N}]  ;# J1.76 IO_L6N_T0_VREF_35 <- fmc
 set_property -dict {PACKAGE_PIN H17  IOSTANDARD LVCMOS25} [get_ports {IO_0_35}]  ;# J1.86 IO_0_35 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN C22  IOSTANDARD LVCMOS25} [get_ports {IO_L16_N_35}]  ;# J3.29 IO_L16N_T2_35 <- board_services
-set_property -dict {PACKAGE_PIN D22  IOSTANDARD LVCMOS25} [get_ports {IO_L16_P_35}]  ;# J3.31 IO_L16P_T2_35 <- board_services
+set_property -dict {PACKAGE_PIN C22  IOSTANDARD LVCMOS25} [get_ports {IO_L16_N_35}]  ;# J3.29 IO_L16N_T2_35 <- unclaimed (wave-3 function map)
+set_property -dict {PACKAGE_PIN D22  IOSTANDARD LVCMOS25} [get_ports {IO_L16_P_35}]  ;# J3.31 IO_L16P_T2_35 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN B22  IOSTANDARD LVCMOS25} [get_ports {IO_L18_N_35}]  ;# J3.25 IO_L18N_T2_AD13N_35 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN B21  IOSTANDARD LVCMOS25} [get_ports {IO_L18_P_35}]  ;# J3.27 IO_L18P_T2_AD13P_35 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN D17  IOSTANDARD LVCMOS25} [get_ports {IO_L2_N_35}]  ;# J1.100 IO_L2N_T0_AD8N_35 <- unclaimed (wave-3 function map)

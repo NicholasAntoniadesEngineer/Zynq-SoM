@@ -16,8 +16,8 @@ bound ports (520):
   board_qwiic:AUX_I2C_SCL [i2c] -> sheet board_aux:AUX_I2C_SCL; sheet board_services:AUX_I2C_SCL
   board_services:AUX_I2C_SCL [i2c] -> sheet board_aux:AUX_I2C_SCL; sheet board_qwiic:AUX_I2C_SCL
   board_services:AUX_I2C_SDA [i2c] -> sheet board_aux:AUX_I2C_SDA; sheet board_qwiic:AUX_I2C_SDA
-  board_services:IO_L16_N_35 -> sheet som_j3:IO_L16_N_35; SoM IO_L16_N_35 (J3.29)
-  board_services:IO_L16_P_35 -> sheet som_j3:IO_L16_P_35; SoM IO_L16_P_35 (J3.31)
+  board_services:WATCHDOG_KICK -> sheet som_j3:WATCHDOG_KICK
+  board_services:WATCHDOG_RST_N -> sheet som_j3:WATCHDOG_RST_N
   bringup_en:BU_DIP_5V0 -> sheet bringup_rails:BU_DIP_5V0
   bringup_en:STM32_RAIL_EN_5V0 -> sheet som_j1:STM32_RAIL_EN_5V0
   bringup_en:EN_5V0 -> sheet power:EN_5V0
@@ -433,9 +433,9 @@ bound ports (520):
   som_j3:IO_L18_N_35 -> SoM IO_L18_N_35 (J3.25)
   som_j3:FMC_LA01_CC_N [diff_pair] -> sheet fmc:FMC_LA01_CC_N
   som_j3:IO_L18_P_35 -> SoM IO_L18_P_35 (J3.27)
-  som_j3:IO_L16_N_35 -> sheet board_services:IO_L16_N_35; SoM IO_L16_N_35 (J3.29)
+  som_j3:IO_L16_N_35 -> SoM IO_L16_N_35 (J3.29)
   som_j3:LCD_R2 -> sheet lcd:LCD_R2
-  som_j3:IO_L16_P_35 -> sheet board_services:IO_L16_P_35; SoM IO_L16_P_35 (J3.31)
+  som_j3:IO_L16_P_35 -> SoM IO_L16_P_35 (J3.31)
   som_j3:FMC_LA03_N [diff_pair] -> sheet fmc:FMC_LA03_N
   som_j3:FMC_LA03_P [diff_pair] -> sheet fmc:FMC_LA03_P
   som_j3:FMC_LA02_N [diff_pair] -> sheet fmc:FMC_LA02_N
@@ -487,8 +487,8 @@ bound ports (520):
   som_j3:IO_L5_P_33 -> SoM IO_L5_P_33 (J3.92)
   som_j3:IO_L3_DQS_N_33 -> SoM IO_L3_DQS_N_33 (J3.93)
   som_j3:IO_L5_N_33 -> SoM IO_L5_N_33 (J3.94)
-  som_j3:IO_L4_N_33 -> SoM IO_L4_N_33 (J3.96)
-  som_j3:IO_L4_P_33 -> SoM IO_L4_P_33 (J3.98)
+  som_j3:WATCHDOG_KICK -> sheet board_services:WATCHDOG_KICK
+  som_j3:WATCHDOG_RST_N -> sheet board_services:WATCHDOG_RST_N
   uart_bridge:USB_UART_VBUS -> sheet usb_uart_connector:USB_UART_VBUS
   uart_bridge:USB_UART_DP [usb_hs_pair] -> sheet usb_uart_connector:USB_UART_DP
   uart_bridge:USB_UART_DM [usb_hs_pair] -> sheet usb_uart_connector:USB_UART_DM

@@ -5838,7 +5838,7 @@
 		(uuid "e7803a2b-78d7-5254-bbd9-62ad74253b10")
 	)
 	(global_label
-		"IO_L16_N_35"
+		"WATCHDOG_KICK"
 		(shape bidirectional)
 		(at 31.75 78.74 180)
 		(effects
@@ -5850,7 +5850,7 @@
 		(uuid "88351c79-53ed-5881-be0e-58930a44524c")
 	)
 	(global_label
-		"IO_L16_P_35"
+		"WATCHDOG_RST_N"
 		(shape bidirectional)
 		(at 31.75 81.28 180)
 		(effects
@@ -11106,7 +11106,7 @@
 		(uuid "d5486e53-7ea7-546d-a75c-ebb9b732ae5b")
 	)
 	(global_label
-		"IO_L4_N_33"
+		"IO_L5_N_33"
 		(shape bidirectional)
 		(at 382.27 127 180)
 		(effects
@@ -11118,7 +11118,7 @@
 		(uuid "ea10f506-12cd-5e45-a579-9af0648af41d")
 	)
 	(global_label
-		"IO_L4_P_33"
+		"IO_L5_P_33"
 		(shape bidirectional)
 		(at 382.27 129.54 180)
 		(effects
@@ -11130,7 +11130,7 @@
 		(uuid "abbe9664-bd60-57b1-9adf-28ee1777a9d9")
 	)
 	(global_label
-		"IO_L5_N_33"
+		"LCD_B0"
 		(shape bidirectional)
 		(at 382.27 132.08 180)
 		(effects
@@ -11142,7 +11142,7 @@
 		(uuid "0a1afe7b-97c2-5f96-9d57-1f0a506622c4")
 	)
 	(global_label
-		"IO_L5_P_33"
+		"LCD_B1"
 		(shape bidirectional)
 		(at 382.27 134.62 180)
 		(effects
@@ -11154,7 +11154,7 @@
 		(uuid "dd2d0c4d-bc85-5391-a530-9d7ed2b10749")
 	)
 	(global_label
-		"LCD_B0"
+		"LCD_B2"
 		(shape bidirectional)
 		(at 382.27 137.16 180)
 		(effects
@@ -11166,7 +11166,7 @@
 		(uuid "de07200d-4ba9-53fb-955d-c159aff09576")
 	)
 	(global_label
-		"LCD_B1"
+		"LCD_B3"
 		(shape bidirectional)
 		(at 382.27 139.7 180)
 		(effects
@@ -11178,7 +11178,7 @@
 		(uuid "3b3df638-d5b3-55aa-a23e-11a9499f4c0c")
 	)
 	(global_label
-		"LCD_B2"
+		"LCD_B4"
 		(shape bidirectional)
 		(at 382.27 142.24 180)
 		(effects
@@ -11190,7 +11190,7 @@
 		(uuid "d1af0132-cc9e-54ed-a556-3c5d70225df8")
 	)
 	(global_label
-		"LCD_B3"
+		"LCD_B5"
 		(shape bidirectional)
 		(at 382.27 144.78 180)
 		(effects
@@ -11202,7 +11202,7 @@
 		(uuid "29bf430f-15bb-5350-8947-e593b0094422")
 	)
 	(global_label
-		"LCD_B4"
+		"LCD_B6"
 		(shape bidirectional)
 		(at 382.27 147.32 180)
 		(effects
@@ -11214,7 +11214,7 @@
 		(uuid "cce65b04-7976-5ccf-9032-c192a768567d")
 	)
 	(global_label
-		"LCD_B5"
+		"LCD_B7"
 		(shape bidirectional)
 		(at 382.27 149.86 180)
 		(effects
@@ -11226,7 +11226,7 @@
 		(uuid "e01cbabf-38ad-5257-8834-096c50f7c2dc")
 	)
 	(global_label
-		"LCD_B6"
+		"LCD_BL_PWM"
 		(shape bidirectional)
 		(at 382.27 152.4 180)
 		(effects
@@ -11238,7 +11238,7 @@
 		(uuid "ce6f1083-bec8-5437-b4a5-3fb1ba33827f")
 	)
 	(global_label
-		"LCD_B7"
+		"LCD_DE"
 		(shape bidirectional)
 		(at 382.27 154.94 180)
 		(effects
@@ -11250,7 +11250,7 @@
 		(uuid "38a2d0ed-9911-5bf0-b719-a7964af58b3e")
 	)
 	(global_label
-		"LCD_BL_PWM"
+		"LCD_DISP"
 		(shape bidirectional)
 		(at 382.27 157.48 180)
 		(effects
@@ -11262,7 +11262,7 @@
 		(uuid "34243161-e042-5be4-b0a9-c67402304b73")
 	)
 	(global_label
-		"LCD_DE"
+		"LCD_G0"
 		(shape bidirectional)
 		(at 382.27 160.02 180)
 		(effects
@@ -11274,7 +11274,7 @@
 		(uuid "b5b77159-f754-5c81-b2e0-0970ef840de0")
 	)
 	(global_label
-		"LCD_DISP"
+		"LCD_G1"
 		(shape bidirectional)
 		(at 382.27 162.56 180)
 		(effects
@@ -11286,7 +11286,7 @@
 		(uuid "7f03cc42-451a-5453-8fa0-bb4423c17333")
 	)
 	(global_label
-		"LCD_G0"
+		"LCD_G2"
 		(shape bidirectional)
 		(at 382.27 165.1 180)
 		(effects
@@ -11298,7 +11298,7 @@
 		(uuid "c9da88ed-5bdb-588c-bea9-92706ec75047")
 	)
 	(global_label
-		"LCD_G1"
+		"LCD_G3"
 		(shape bidirectional)
 		(at 382.27 167.64 180)
 		(effects
@@ -11310,7 +11310,7 @@
 		(uuid "d8ce1a7d-7b60-586f-862e-52783bda3a37")
 	)
 	(global_label
-		"LCD_G2"
+		"LCD_G4"
 		(shape bidirectional)
 		(at 382.27 170.18 180)
 		(effects
@@ -11322,7 +11322,7 @@
 		(uuid "25d8b5db-dfda-5512-b137-db80e1c10752")
 	)
 	(global_label
-		"LCD_G3"
+		"LCD_G5"
 		(shape bidirectional)
 		(at 382.27 172.72 180)
 		(effects
@@ -11334,7 +11334,7 @@
 		(uuid "bc7f7c49-3304-5e6e-89da-0433ce37dbad")
 	)
 	(global_label
-		"LCD_G4"
+		"LCD_G6"
 		(shape bidirectional)
 		(at 382.27 175.26 180)
 		(effects
@@ -11346,7 +11346,7 @@
 		(uuid "cefcb969-85e1-5ec4-b534-c71434ff57ec")
 	)
 	(global_label
-		"LCD_G5"
+		"LCD_G7"
 		(shape bidirectional)
 		(at 382.27 177.8 180)
 		(effects
@@ -11358,7 +11358,7 @@
 		(uuid "fe736148-96b3-5a6a-89cc-665e3e106ab5")
 	)
 	(global_label
-		"LCD_G6"
+		"LCD_HSYNC"
 		(shape bidirectional)
 		(at 382.27 180.34 180)
 		(effects
@@ -11370,7 +11370,7 @@
 		(uuid "76ebb6f6-f4df-5a2b-84f5-29e7c0528027")
 	)
 	(global_label
-		"LCD_G7"
+		"LCD_PCLK"
 		(shape bidirectional)
 		(at 382.27 182.88 180)
 		(effects
@@ -11382,7 +11382,7 @@
 		(uuid "dece857d-9079-5916-a22c-ffc8aa2d7723")
 	)
 	(global_label
-		"LCD_HSYNC"
+		"LCD_R0"
 		(shape bidirectional)
 		(at 382.27 185.42 180)
 		(effects
@@ -11394,7 +11394,7 @@
 		(uuid "6bb100e2-4930-575e-85a0-b4e170dc4401")
 	)
 	(global_label
-		"LCD_PCLK"
+		"LCD_R1"
 		(shape bidirectional)
 		(at 382.27 187.96 180)
 		(effects
@@ -11406,7 +11406,7 @@
 		(uuid "852aa71c-ff89-575a-bd48-5d7cc0c8e28a")
 	)
 	(global_label
-		"LCD_R0"
+		"LCD_R2"
 		(shape bidirectional)
 		(at 382.27 190.5 180)
 		(effects
@@ -11418,7 +11418,7 @@
 		(uuid "b4bd1bf4-ce48-59aa-bdf2-d139a5b26cba")
 	)
 	(global_label
-		"LCD_R1"
+		"LCD_R3"
 		(shape bidirectional)
 		(at 382.27 193.04 180)
 		(effects
@@ -11430,7 +11430,7 @@
 		(uuid "0ba9dd92-7117-5fbf-8637-56214a2db4c1")
 	)
 	(global_label
-		"LCD_R2"
+		"LCD_R4"
 		(shape bidirectional)
 		(at 382.27 195.58 180)
 		(effects
@@ -11442,7 +11442,7 @@
 		(uuid "cbd0af7c-bf23-50ab-b9d3-89d723e0057d")
 	)
 	(global_label
-		"LCD_R3"
+		"LCD_R5"
 		(shape bidirectional)
 		(at 382.27 198.12 180)
 		(effects
@@ -11454,7 +11454,7 @@
 		(uuid "7e553cf8-8da2-541e-b56d-ab4e3974e597")
 	)
 	(global_label
-		"LCD_R4"
+		"LCD_R6"
 		(shape bidirectional)
 		(at 382.27 200.66 180)
 		(effects
@@ -11466,7 +11466,7 @@
 		(uuid "15b436b2-a154-56cd-ac1c-c9f22361eceb")
 	)
 	(global_label
-		"LCD_R5"
+		"LCD_R7"
 		(shape bidirectional)
 		(at 382.27 203.2 180)
 		(effects
@@ -11478,7 +11478,7 @@
 		(uuid "232eb806-ec6e-5eb2-a7c5-381bef0e9e57")
 	)
 	(global_label
-		"LCD_R6"
+		"LCD_VSYNC"
 		(shape bidirectional)
 		(at 382.27 205.74 180)
 		(effects
@@ -11490,7 +11490,7 @@
 		(uuid "f513c2c7-f7ce-5d70-adbe-b5aef57e90e2")
 	)
 	(global_label
-		"LCD_R7"
+		"PUDC_34"
 		(shape bidirectional)
 		(at 382.27 208.28 180)
 		(effects
@@ -11502,7 +11502,7 @@
 		(uuid "5af09610-c7ee-5fac-9de6-bd866df8ef06")
 	)
 	(global_label
-		"LCD_VSYNC"
+		"WATCHDOG_KICK"
 		(shape bidirectional)
 		(at 382.27 210.82 180)
 		(effects
@@ -11514,7 +11514,7 @@
 		(uuid "ba4d0744-0ecc-5447-a5cc-8e5274b54224")
 	)
 	(global_label
-		"PUDC_34"
+		"WATCHDOG_RST_N"
 		(shape bidirectional)
 		(at 382.27 213.36 180)
 		(effects
@@ -12163,7 +12163,7 @@
 	)
 	(sheet
 		(at 44.45 71.12)
-		(size 26.67 12.7)
+		(size 30.48 12.7)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -12224,7 +12224,7 @@
 			(uuid "735cfde2-20ee-5bd1-a7b6-83b836e84e5e")
 		)
 		(pin
-			"IO_L16_N_35"
+			"WATCHDOG_KICK"
 			bidirectional
 			(at 44.45 78.74 180)
 			(effects
@@ -12236,7 +12236,7 @@
 			(uuid "b3a1aaa8-aa20-5c5c-b900-de8323bbbfdb")
 		)
 		(pin
-			"IO_L16_P_35"
+			"WATCHDOG_RST_N"
 			bidirectional
 			(at 44.45 81.28 180)
 			(effects
@@ -18596,7 +18596,7 @@
 			(uuid "dc43d5ca-a07e-5c4c-975d-c46a47ab2afc")
 		)
 		(pin
-			"IO_L4_N_33"
+			"IO_L5_N_33"
 			bidirectional
 			(at 394.97 127 180)
 			(effects
@@ -18608,7 +18608,7 @@
 			(uuid "d9a38ac0-fefb-518c-b9ba-4f0576fb1b51")
 		)
 		(pin
-			"IO_L4_P_33"
+			"IO_L5_P_33"
 			bidirectional
 			(at 394.97 129.54 180)
 			(effects
@@ -18620,7 +18620,7 @@
 			(uuid "832cd56c-689c-534e-8b0a-720a970da3cf")
 		)
 		(pin
-			"IO_L5_N_33"
+			"LCD_B0"
 			bidirectional
 			(at 394.97 132.08 180)
 			(effects
@@ -18632,7 +18632,7 @@
 			(uuid "af6717e7-5f3f-5398-a753-ca4546d7fc54")
 		)
 		(pin
-			"IO_L5_P_33"
+			"LCD_B1"
 			bidirectional
 			(at 394.97 134.62 180)
 			(effects
@@ -18644,7 +18644,7 @@
 			(uuid "2f83a88d-1795-534f-8839-bfb076d8f776")
 		)
 		(pin
-			"LCD_B0"
+			"LCD_B2"
 			bidirectional
 			(at 394.97 137.16 180)
 			(effects
@@ -18656,7 +18656,7 @@
 			(uuid "c671cd6e-05b5-5e76-a219-9d830f03787d")
 		)
 		(pin
-			"LCD_B1"
+			"LCD_B3"
 			bidirectional
 			(at 394.97 139.7 180)
 			(effects
@@ -18668,7 +18668,7 @@
 			(uuid "5ed6cc55-f395-5011-9f16-f853e833abf6")
 		)
 		(pin
-			"LCD_B2"
+			"LCD_B4"
 			bidirectional
 			(at 394.97 142.24 180)
 			(effects
@@ -18680,7 +18680,7 @@
 			(uuid "a9b22beb-2f91-5b7a-9cc2-44b60c71eb19")
 		)
 		(pin
-			"LCD_B3"
+			"LCD_B5"
 			bidirectional
 			(at 394.97 144.78 180)
 			(effects
@@ -18692,7 +18692,7 @@
 			(uuid "1b647397-60fa-571b-b323-315930c453af")
 		)
 		(pin
-			"LCD_B4"
+			"LCD_B6"
 			bidirectional
 			(at 394.97 147.32 180)
 			(effects
@@ -18704,7 +18704,7 @@
 			(uuid "7a144dfc-de13-51a7-aa02-c3be8472f563")
 		)
 		(pin
-			"LCD_B5"
+			"LCD_B7"
 			bidirectional
 			(at 394.97 149.86 180)
 			(effects
@@ -18716,7 +18716,7 @@
 			(uuid "06fa1638-9da4-5989-86c6-55891dc56f0a")
 		)
 		(pin
-			"LCD_B6"
+			"LCD_BL_PWM"
 			bidirectional
 			(at 394.97 152.4 180)
 			(effects
@@ -18728,7 +18728,7 @@
 			(uuid "8c3aebc5-defa-5f16-8f65-a8011b15bb87")
 		)
 		(pin
-			"LCD_B7"
+			"LCD_DE"
 			bidirectional
 			(at 394.97 154.94 180)
 			(effects
@@ -18740,7 +18740,7 @@
 			(uuid "9d6e6e44-a414-586d-8773-f9333e3e4e43")
 		)
 		(pin
-			"LCD_BL_PWM"
+			"LCD_DISP"
 			bidirectional
 			(at 394.97 157.48 180)
 			(effects
@@ -18752,7 +18752,7 @@
 			(uuid "4d6431a6-0ed7-53c4-899c-de30b782f855")
 		)
 		(pin
-			"LCD_DE"
+			"LCD_G0"
 			bidirectional
 			(at 394.97 160.02 180)
 			(effects
@@ -18764,7 +18764,7 @@
 			(uuid "ee67be12-e736-5c6e-815b-cf06547eecfc")
 		)
 		(pin
-			"LCD_DISP"
+			"LCD_G1"
 			bidirectional
 			(at 394.97 162.56 180)
 			(effects
@@ -18776,7 +18776,7 @@
 			(uuid "a63e62e4-5856-575d-a7eb-546d896c754e")
 		)
 		(pin
-			"LCD_G0"
+			"LCD_G2"
 			bidirectional
 			(at 394.97 165.1 180)
 			(effects
@@ -18788,7 +18788,7 @@
 			(uuid "6b45aaff-64fa-5b7e-b758-fa4ed0b61bcc")
 		)
 		(pin
-			"LCD_G1"
+			"LCD_G3"
 			bidirectional
 			(at 394.97 167.64 180)
 			(effects
@@ -18800,7 +18800,7 @@
 			(uuid "5d3023ea-cf98-5676-bafc-abe6895c6cbd")
 		)
 		(pin
-			"LCD_G2"
+			"LCD_G4"
 			bidirectional
 			(at 394.97 170.18 180)
 			(effects
@@ -18812,7 +18812,7 @@
 			(uuid "847a3a9a-7a2b-5b6f-ac79-a8b8f5e81764")
 		)
 		(pin
-			"LCD_G3"
+			"LCD_G5"
 			bidirectional
 			(at 394.97 172.72 180)
 			(effects
@@ -18824,7 +18824,7 @@
 			(uuid "35539b63-d3f9-5d34-b327-8cf8cd975c53")
 		)
 		(pin
-			"LCD_G4"
+			"LCD_G6"
 			bidirectional
 			(at 394.97 175.26 180)
 			(effects
@@ -18836,7 +18836,7 @@
 			(uuid "5ea20666-5744-5c85-b9dd-d7880e760ec8")
 		)
 		(pin
-			"LCD_G5"
+			"LCD_G7"
 			bidirectional
 			(at 394.97 177.8 180)
 			(effects
@@ -18848,7 +18848,7 @@
 			(uuid "53c62ed8-6f80-515d-a883-28f432287093")
 		)
 		(pin
-			"LCD_G6"
+			"LCD_HSYNC"
 			bidirectional
 			(at 394.97 180.34 180)
 			(effects
@@ -18860,7 +18860,7 @@
 			(uuid "cd3a17be-15d3-513c-8b06-82a9f47bf02f")
 		)
 		(pin
-			"LCD_G7"
+			"LCD_PCLK"
 			bidirectional
 			(at 394.97 182.88 180)
 			(effects
@@ -18872,7 +18872,7 @@
 			(uuid "3b2210ff-d37c-5f5c-98a0-8d9c3827d61c")
 		)
 		(pin
-			"LCD_HSYNC"
+			"LCD_R0"
 			bidirectional
 			(at 394.97 185.42 180)
 			(effects
@@ -18884,7 +18884,7 @@
 			(uuid "acf5aca0-d6a5-5a40-9df5-6f63f61d575d")
 		)
 		(pin
-			"LCD_PCLK"
+			"LCD_R1"
 			bidirectional
 			(at 394.97 187.96 180)
 			(effects
@@ -18896,7 +18896,7 @@
 			(uuid "02c34862-a523-5cc7-9216-fdf6b159d7e3")
 		)
 		(pin
-			"LCD_R0"
+			"LCD_R2"
 			bidirectional
 			(at 394.97 190.5 180)
 			(effects
@@ -18908,7 +18908,7 @@
 			(uuid "9ba523b2-41ec-5cec-a8e8-bc8fc68f4116")
 		)
 		(pin
-			"LCD_R1"
+			"LCD_R3"
 			bidirectional
 			(at 394.97 193.04 180)
 			(effects
@@ -18920,7 +18920,7 @@
 			(uuid "55fcd309-519f-561c-aa19-26985c0c1256")
 		)
 		(pin
-			"LCD_R2"
+			"LCD_R4"
 			bidirectional
 			(at 394.97 195.58 180)
 			(effects
@@ -18932,7 +18932,7 @@
 			(uuid "63ce338b-5164-53a8-8ee7-84e1feeca879")
 		)
 		(pin
-			"LCD_R3"
+			"LCD_R5"
 			bidirectional
 			(at 394.97 198.12 180)
 			(effects
@@ -18944,7 +18944,7 @@
 			(uuid "26237922-6590-5901-b817-0e4543245b99")
 		)
 		(pin
-			"LCD_R4"
+			"LCD_R6"
 			bidirectional
 			(at 394.97 200.66 180)
 			(effects
@@ -18956,7 +18956,7 @@
 			(uuid "3d44ad62-3edf-5824-9635-2ad8281323bb")
 		)
 		(pin
-			"LCD_R5"
+			"LCD_R7"
 			bidirectional
 			(at 394.97 203.2 180)
 			(effects
@@ -18968,7 +18968,7 @@
 			(uuid "a93d30b5-170b-5e4d-9d12-89f51ba4a050")
 		)
 		(pin
-			"LCD_R6"
+			"LCD_VSYNC"
 			bidirectional
 			(at 394.97 205.74 180)
 			(effects
@@ -18980,7 +18980,7 @@
 			(uuid "44458f4c-556a-501a-a40a-4debad13e657")
 		)
 		(pin
-			"LCD_R7"
+			"PUDC_34"
 			bidirectional
 			(at 394.97 208.28 180)
 			(effects
@@ -18992,7 +18992,7 @@
 			(uuid "e9d83776-5cc1-53c8-9e4b-40dfce8541c2")
 		)
 		(pin
-			"LCD_VSYNC"
+			"WATCHDOG_KICK"
 			bidirectional
 			(at 394.97 210.82 180)
 			(effects
@@ -19004,7 +19004,7 @@
 			(uuid "d5d819bc-2be5-526d-91e2-325b24f7ea4b")
 		)
 		(pin
-			"PUDC_34"
+			"WATCHDOG_RST_N"
 			bidirectional
 			(at 394.97 213.36 180)
 			(effects

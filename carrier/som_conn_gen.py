@@ -84,8 +84,19 @@ RAIL_SPELLING = dict(REBOUND_SOM_RAILS)
 # port; the matching consumer sheet binds to it (its expect= deferral retires).
 # Spare/plain/already-bound contract nets are NOT listed (they keep verbatim
 # names): ETH_*, USB_*, SDIO_*, ZYNQ_T*, STM32_USB_*, ZYNQ_PS_MIO0/9/12 spares,
-# ZYNQ_PS_MIO7/VM0 + MIO8\VM1 straps (on-SoM, carrier NC — see ISOLATED below),
+# ZYNQ_PS_MIO7/VM0 + MIO8\VM1 straps (see the DO-NOT-LOAD guard below),
 # and the pmod/user_io bank-13 pairs (those consumers use the raw bank names).
+#
+# ===== DO NOT LOAD — MIO voltage-mode (VM0/VM1) STRAP GUARD =====
+# ZYNQ_PS_MIO7/VM0 (J1.40) and ZYNQ_PS_MIO8\VM1 (J1.36) are the Zynq PS-bank
+# MIO **voltage-mode select straps**: they are sampled at POR to set the MIO
+# bank I/O voltage and are strapped ON THE SoM. The carrier exposes them on
+# the J1 connector as plain verbatim ports (they are NOT in FUNCTION_MAP and
+# NOT loaded by any carrier subsystem) ONLY for probe/visibility. Treat them
+# as DO-NOT-LOAD on the carrier: do NOT add a pull, a driver, or a consumer
+# subsystem to either net — a carrier-side pull would fight the SoM strap and
+# could mis-set the MIO bank voltage at boot. If a future feature ever needs a
+# carrier MIO function here, change the SoM strap, not just the carrier side.
 FUNCTION_MAP: dict[str, str] = {
     # -- G1: rail-EN override vetoes (sec 1, bringup_en) -----------------
     "STM32_GPIO1": "STM32_RAIL_EN_5V0",   # PC11, J1.33
@@ -154,6 +165,18 @@ FUNCTION_MAP: dict[str, str] = {
     # -- G5/4.2: bank 33 (J3) — camera control --------------------------
     "IO_L1_P_33": "CAM_SCL",  "IO_L1_N_33": "CAM_SDA",   # J3.86/89
     "IO_L2_P_33": "CAM_EN",   "IO_L2_N_33": "CAM_LED",   # J3.85/87
+    # -- domain-fix: board supervisor watchdog on bank 33 (+3V3, LVCMOS33) --
+    # The TPS3823-33 (board_services U3) is a 3.3 V-monitor part and MUST stay
+    # on +3V3_AUX (its reset threshold VIT- = 2.93 V; on a 2.5 V rail it would
+    # assert RESET forever). RELOCATED off bank 35 (+2V5_VADJ, the old IO_L16_*
+    # _35 pins J3.29/31) onto two SPARE bank-33 +3V3 PL pins so BOTH watchdog
+    # nets share U3's 3.3 V domain: (1) RESET# (3.3 V push-pull) no longer
+    # forward-biases the Zynq input clamp into a 2.5 V VCCO, (2) WDI is now
+    # driven by LVCMOS33 VOH ~3.0 V, clearing the WDI VIH = 0.7*VDD = 2.31 V the
+    # old LVCMOS25 VOH ~2.1 V could not. The old bank-35 pins revert to plain
+    # unclaimed spare ports. (audit re-verify: do NOT re-rail U3 to 2.5 V.)
+    "IO_L4_P_33": "WATCHDOG_RST_N",  # J3.98, ball W20 — U3.RESET# -> PL (event)
+    "IO_L4_N_33": "WATCHDOG_KICK",   # J3.96, ball W21 — PL -> U3.WDI (kick)
     # -- G5/4.4: bank 35 (J3) — camera CSI + FMC CLK/LA -----------------
     "IO_L13_MRCC_P_35": "CAM_CLK_P", "IO_L13_MRCC_N_35": "CAM_CLK_N",  # J3.9/11
     "IO_L10_P_35": "CAM_D0_P",       "IO_L10_N_35": "CAM_D0_N",        # J3.5/7

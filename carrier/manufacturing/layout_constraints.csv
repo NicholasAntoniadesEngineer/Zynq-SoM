@@ -147,8 +147,8 @@ USB_UART_DM,usb_uart_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DP
 USB_UART_DP,usb_uart_connector,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_UART_DM,PAIR:USB_UART_DM/USB_UART_DP,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_D+,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D-,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
 USB_D-,usbc_otg,usb_hs_pair,DP90_USB,90,0.2611,0.2032,USB_D+,PAIR:USB_D+/USB_D-,1.27,"JLCPCB calculator, JLC04161H-7628 outer/L2"
-IO_L16_N_35,board_services,single,Default,,,,,,,"deferred: som_j3_connector (PL bank-35 — watchdog kick/event, xdc.py live)"
-IO_L16_P_35,board_services,single,Default,,,,,,,"deferred: som_j3_connector (PL bank-35 — watchdog kick/event, xdc.py live)"
+WATCHDOG_KICK,board_services,single,Default,,,,,,,"deferred: som_j3_connector (PL bank-33 +3V3/LVCMOS33 — watchdog kick/event, xdc.py live)"
+WATCHDOG_RST_N,board_services,single,Default,,,,,,,"deferred: som_j3_connector (PL bank-33 +3V3/LVCMOS33 — watchdog kick/event, xdc.py live)"
 BU_DIP_1V8,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_3V3,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
 BU_DIP_5V0,bringup_en,single,Default,,,,,,,deferred: bringup_rails (DIP / TCA9535 control surfaces)
@@ -424,8 +424,6 @@ IO_L23_P_34,som_j3,single,Default,,,,,,,
 IO_L24_P_34,som_j3,single,Default,,,,,,,
 IO_L3_DQS_N_33,som_j3,single,Default,,,,,,,
 IO_L3_DQS_P_33,som_j3,single,Default,,,,,,,
-IO_L4_N_33,som_j3,single,Default,,,,,,,
-IO_L4_P_33,som_j3,single,Default,,,,,,,
 IO_L5_N_33,som_j3,single,Default,,,,,,,
 IO_L5_P_33,som_j3,single,Default,,,,,,,
 LCD_B0,som_j3,single,Default,,,,,,,
@@ -459,6 +457,8 @@ LCD_R6,som_j3,single,Default,,,,,,,
 LCD_R7,som_j3,single,Default,,,,,,,
 LCD_VSYNC,som_j3,single,Default,,,,,,,
 PUDC_34,som_j3,single,Default,,,,,,,
+WATCHDOG_KICK,som_j3,single,Default,,,,,,,
+WATCHDOG_RST_N,som_j3,single,Default,,,,,,,
 USB_UART_VBUS,uart_bridge,single,Default,,,,,,,deferred: usb_uart_connector (wave 2)
 ZYNQ_PS_UART0_CTS_N,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
 ZYNQ_PS_UART0_RTS_N,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)

@@ -8,7 +8,7 @@ rules (model-only, pin FUNCTION inferred by NAME):
   STRAP no config-input pin floats on a passive-only undriven net
   EP    every exposed/thermal pad is netted to a GROUND net (never nc/floating, never a non-GND net)
 
-checked: 44 IC supply pins, 10 i2c nets, 4 reset nets, 0 config pins, 5 exposed pads
+checked: 44 IC supply pins, 10 i2c nets, 5 reset nets, 0 config pins, 5 exposed pads
 
 DECAP — missing decoupling (0):
   (none)
@@ -25,7 +25,7 @@ STRAP — floating control input (0):
 EP — exposed pad not on GND (0):
   (none)
 
-waivers — author-declared, verbatim (7):
+waivers — author-declared, verbatim (8):
   DECAP board_services:U2.VBACKUP (V_RTC_BAT): VBACKUP is the RV-3028 coin-cell backup input (a rechargeable ML1220, not a switching rail); the RTC regulates internally and a cap on the cell net is optional — no bypass fitted by design
   I2C ZYNQ_HDMI_TX_SCL (typed on hdmi_tx): DDC pull-ups integrated in TPD12S016 (DS 7.3.9/7.3.15)
   I2C ZYNQ_HDMI_TX_SDA (typed on hdmi_tx): DDC pull-ups integrated in TPD12S016 (DS 7.3.9/7.3.15)
@@ -33,5 +33,6 @@ waivers — author-declared, verbatim (7):
   RESET DBG_RST_N (on usb_jtag): CH347 RST#: 10k pull-up + the chip's built-in power-on reset (DS 5.1); no external RC cap fitted by design
   RESET LCD_CTP_RST (on lcd): GPIO-driven reset, held by 100k pull-down until PL releases
   RESET STM32_NRST (on bringup_rails): internal-pull whitelist (part provides its own pull; external RC optional)
+  RESET WATCHDOG_RST_N (on board_services): TPS3823 RESET# is a push-pull supervisor OUTPUT driving a PL bank-33 input as a firmware-mediated event (not a POR line): no pull needed (push-pull; PL internal pull holds it when +3V3_AUX is OFF), no cap by design (logic-event edge)
 
-DESIGN RULES: PASS (0 findings, 7 waived)
+DESIGN RULES: PASS (0 findings, 8 waived)
