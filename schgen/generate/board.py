@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -254,8 +255,17 @@ def build_board(sheets, lib: Library, outdir: Path, *,
     # uuid as the instance path, PORT labels as same-named global labels)
     # resolves those nets and proves the uniquified netlist is graph-identical
     # pin-for-pin. This adds a gate, never relaxes one.
-    per_sheet_fail: list[str] = []
-    for name, d, sym_uuid in placed:
+    # Each sheet's work is independent: the real-sheet emit writes a distinct
+    # carrier/schematic/<name>.kicad_sch (path-keyed, order-free → byte-
+    # identical regardless of dispatch order), and the uniqcheck flow emits a
+    # distinct <name>.uniqcheck.kicad_sch, runs the kicad-cli netlist gate (its
+    # own per-call TemporaryDirectory — no shared state), then unlinks it. The
+    # kicad-cli netlist export dominates this loop and is an I/O-bound
+    # subprocess wait, so run the per-sheet work on a thread pool; collect the
+    # per-name verdicts and aggregate per_sheet_fail in the original `placed`
+    # order so the printed report (and the build outcome) is deterministic.
+    def _emit_and_check(item: tuple) -> tuple[str, str | None]:
+        name, d, sym_uuid = item
         emit(d, sheet_dir / f"{name}.kicad_sch", lib,
              instance_path=f"/{board_uuid}/{sym_uuid}",
              project=root_name,
@@ -266,10 +276,23 @@ def build_board(sheets, lib: Library, outdir: Path, *,
         emit(verify, vpath, lib)
         res = netlist_gate.check(verify.circuit, vpath)
         vpath.unlink(missing_ok=True)
-        if not res.ok:
-            lines = res.summary().splitlines()
-            per_sheet_fail.append(
-                f"{name}: {lines[1].strip()}" if len(lines) > 1 else name)
+        if res.ok:
+            return name, None
+        lines = res.summary().splitlines()
+        return name, (f"{name}: {lines[1].strip()}"
+                      if len(lines) > 1 else name)
+
+    per_sheet_fail: list[str] = []
+    if placed:
+        from concurrent.futures import ThreadPoolExecutor
+        # ex.map preserves submission order, so iterating it walks `placed` in
+        # order — per_sheet_fail stays deterministic, and any worker exception
+        # (e.g. a kicad-cli netlist export failure) is re-raised at the same
+        # point the serial loop would have propagated it.
+        with ThreadPoolExecutor(max_workers=(os.cpu_count() or 8)) as ex:
+            for _name, fail in ex.map(_emit_and_check, placed):
+                if fail is not None:
+                    per_sheet_fail.append(fail)
     if per_sheet_fail:
         print("BOARD: per-sheet netlist gate FAIL on uniquified circuit:")
         for f in per_sheet_fail:

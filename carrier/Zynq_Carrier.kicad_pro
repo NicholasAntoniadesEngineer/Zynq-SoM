@@ -1,6 +1,14 @@
 {
+  "meta": {
+    "filename": "Zynq_Carrier.kicad_pro",
+    "version": 3
+  },
+  "erc": {
+    "rule_severities": {
+      "pin_not_driven": "warning"
+    }
+  },
   "board": {
-    "3dviewports": [],
     "design_settings": {
       "defaults": {
         "apply_defaults_to_fp_barcodes": false,
@@ -305,45 +313,7 @@
         }
       ],
       "zones_allow_external_fillets": true
-    },
-    "ipc2581": {
-      "bom_rev": "",
-      "dist": "",
-      "distpn": "",
-      "internal_id": "",
-      "mfg": "",
-      "mpn": "",
-      "sch_revision": ""
-    },
-    "layer_pairs": [],
-    "layer_presets": [],
-    "viewports": []
-  },
-  "boards": [],
-  "component_class_settings": {
-    "assignments": [],
-    "meta": {
-      "version": 0
-    },
-    "sheet_component_classes": {
-      "enabled": false
     }
-  },
-  "cvpcb": {
-    "equivalence_files": []
-  },
-  "erc": {
-    "rule_severities": {
-      "pin_not_driven": "warning"
-    }
-  },
-  "libraries": {
-    "pinned_footprint_libs": [],
-    "pinned_symbol_libs": []
-  },
-  "meta": {
-    "filename": "Zynq_Carrier.kicad_pro",
-    "version": 3
   },
   "net_settings": {
     "classes": [
@@ -954,33 +924,7 @@
     ]
   },
   "pcbnew": {
-    "last_paths": {
-      "idf": "",
-      "netlist": "",
-      "plot": "",
-      "specctra_dsn": "",
-      "vrml": ""
-    },
+    "last_paths": {},
     "page_layout_descr_file": ""
-  },
-  "schematic": {
-    "bus_aliases": {},
-    "legacy_lib_dir": "",
-    "legacy_lib_list": [],
-    "top_level_sheets": [
-      {
-        "filename": "Zynq_Carrier.kicad_sch",
-        "name": "Zynq_Carrier",
-        "uuid": "00000000-0000-0000-0000-000000000000"
-      }
-    ]
-  },
-  "sheets": [],
-  "text_variables": {},
-  "tuning_profiles": {
-    "meta": {
-      "version": 0
-    },
-    "tuning_profiles_impedance_geometric": []
   }
 }
