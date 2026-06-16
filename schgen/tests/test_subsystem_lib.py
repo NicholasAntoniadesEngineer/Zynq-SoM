@@ -205,6 +205,32 @@ def test_structure_gate_all_packages_complete():
                     for p in res.packages if not p.ok]
 
 
+def test_carrier_structure_all_complete():
+    """The board promotes the carrier structure gate to HARD-FAIL: every
+    carrier/subsystems/<name>/ must be a complete package with a callable
+    circuit()."""
+    from schgen.verify import carrier_structure
+    res = carrier_structure.check()
+    assert res.packages, "no carrier/subsystems/ packages found"
+    assert res.ok, [(p.name, p.missing, p.errors) for p in res.packages
+                    if not p.ok]
+
+
+def test_carrier_structure_kills_incomplete(tmp_path):
+    """Prove the carrier gate bites: a package missing artifacts / with no
+    circuit() is not ok."""
+    from schgen.verify import carrier_structure
+    pkg = tmp_path / "widget"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("")
+    (pkg / "widget.py").write_text("x = 1\n")     # no circuit(); missing 3 files
+    res = carrier_structure.check(base=tmp_path)
+    rep = {p.name: p for p in res.packages}["widget"]
+    assert not rep.ok and not res.ok
+    assert not rep.has_circuit
+    assert set(rep.missing) == {"README.md", "test_widget.py", "widget.cir"}
+
+
 def test_structure_gate_kills_incomplete_package(tmp_path, monkeypatch):
     """Prove the hard-fail bites: a package missing contract artifacts is NOT ok
     (the mutant the board gate must catch)."""

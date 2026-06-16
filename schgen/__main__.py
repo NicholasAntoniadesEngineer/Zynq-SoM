@@ -792,6 +792,20 @@ def cmd_board(args: argparse.Namespace) -> int:
                 print(f"  SUBSYSTEM {_p.name}: {_m}")
     ok_all = ok_all and ssr.ok
 
+    # carrier PACKAGE-STRUCTURE gate (HARD): every carrier/subsystems/<name>/ is
+    # a complete package (the four artifacts + __init__ + a callable circuit()),
+    # uniform with the generic library — adapters AND carrier-local sheets alike.
+    from schgen.verify import carrier_structure
+    csr = carrier_structure.run(rep_dir)
+    print(f"CARRIER STRUCTURE: {'PASS' if csr.ok else 'FAIL'} "
+          f"({csr.n_ok}/{len(csr.packages)} package(s) complete "
+          f"-> {rep_dir / 'carrier_structure.txt'})")
+    for _p in csr.packages:
+        if not _p.ok:
+            for _m in (_p.missing or _p.errors or ["no callable circuit()"]):
+                print(f"  CARRIER {_p.name}: {_m}")
+    ok_all = ok_all and csr.ok
+
     # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
     # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds
     # hard. The closed-form analytics ARE the gate; the ngspice .op
@@ -1291,6 +1305,13 @@ def main(argv: list[str] | None = None) -> int:
                          "(default: report-only)")
     from schgen.verify.subsystem_structure import cmd as _sc_cmd
     sc.set_defaults(func=_sc_cmd)
+    cc = sub.add_parser(
+        "carrier-check", help="HARD structure gate: every "
+                              "carrier/subsystems/<name>/ has {<name>.py, "
+                              "__init__.py, README.md, test_<name>.py, "
+                              "<name>.cir} + a callable circuit()")
+    from schgen.verify.carrier_structure import cmd as _cc_cmd
+    cc.set_defaults(func=_cc_cmd)
     args = p.parse_args(argv)
     return args.func(args)
 
