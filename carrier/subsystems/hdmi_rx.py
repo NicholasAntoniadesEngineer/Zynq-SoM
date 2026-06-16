@@ -8,9 +8,9 @@ board build discovers it exactly as before (``circuit()`` exposed here), and the
 binding reproduces the EXACT net names the hand-written sheet used, so the
 emitted carrier/schematic/hdmi_rx.kicad_sch + its golden render are unchanged.
 
-PENDING_MIGRATION: the library keeps J1's ``lib_id="schgen:HDMI_A_RX"`` override
-VERBATIM — a tracked, allowlisted hand-built symbol (symbol_law) whose deep-
-engine migration is handled separately. Binding does not touch lib_id.
+J1 draws the FAITHFUL ``parts/HDMI-019S/`` dossier symbol (the "0 hand-built
+symbols" migration is COMPLETE — the old ``schgen:HDMI_A_RX`` hand symbol is gone
+and symbol_law.PENDING_MIGRATION is empty). Binding does not touch lib_id.
 
 CARRIER BINDING RATIONALE (the carrier net names + why):
 

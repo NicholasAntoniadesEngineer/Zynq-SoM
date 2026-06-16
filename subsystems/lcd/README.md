@@ -67,7 +67,7 @@ no-connects.
 |-----|-------|-----------|------|
 | J1 | AFC07-S40FCA-00 | 40P 0.5 mm bottom-contact FFC | C262572 |
 | U1 | SY7201ABC | boost WLED driver, 30 V/2 A/1 MHz, SOT-23-6 | C82173 |
-| L1 | 10uH | SWPA4030S100MT power inductor (Isat ≈ 1.1 A) | C38117 |
+| L1 | 10uH | SWPA4030S100MT power inductor (Isat ≈ 1.95 A, Irms 1.5 A) | C38117 |
 | D1 | SS34 | Schottky 40 V/3 A SMA catch diode | C8678 |
 | U2 | USBLC6-2SC6 | low-cap ESD array on the touch I2C | C7519 |
 | C1 | 10u | boost input bulk | C15850 |
@@ -138,7 +138,7 @@ sheet.** The carrier adapter is `carrier/subsystems/lcd.py`.
   **I_LED = 0.2 V / R_ISET = 0.2 / 1.5R = 133 mA** — inside the 125–150 mA
   window for the 7" 800×480 class (~9.6 V string). Operating point (5 V in →
   9.6 V/133 mA out): D ≈ 0.52, Iin ≈ 0.30 A, inductor ripple ~0.26 A p-p, peak
-  ~0.43 A — 4.6× margin to the 2 A switch limit, 2.5× to the 1.1 A Isat.
+  ~0.43 A — 4.6× margin to the 2 A switch limit, ~4.5× to the 1.95 A Isat.
 - **LCD-1 (output cap).** The boost output cap is **2.2 µF / 50 V X7R**
   (C125847), not the datasheet 1 µF. At the 9–25 V output the X7R DC-bias
   derating eats well over half of a 1 µF; 2.2 µF keeps real capacitance and

@@ -66,7 +66,7 @@ panels are NOT supported natively (no ADC on those nets) — see risks.
 | J_LCD alt | FFC/FPC 40P 0.5mm, **top contact** (same family) | JUSHUO AFC07-S40ECA-00 | **C262648** | 46,835 | Extended | $0.215 |
 | J_TP (optional) | FFC/FPC 6P 0.5mm, bottom contact (separate CTP tails) | JUSHUO AFC07-S06FCA-00 | **C262553** | 19,276 | Extended | ~$0.096 |
 | U_BL | Boost WLED driver, 30V/2A/1MHz, SOT-23-6 | Silergy SY7201ABC | **C82173** | 15,175 | Extended | $0.309 |
-| L_BL | 10µH power inductor 4x4mm (Isat ≈ 1.1A) | Sunlord SWPA4030S100MT | **C38117** | 34,446 | Extended | $0.062 |
+| L_BL | 10µH power inductor 4x4mm (Isat ≈ 1.95A, Irms 1.5A) | Sunlord SWPA4030S100MT | **C38117** | 34,446 | Extended | $0.062 |
 | D_BL | Schottky 40V/3A SMA | MDD SS34 | **C8678** | 3,282,802 | **Basic** | $0.026 |
 | C_BL_OUT | 1µF 50V X7R 0805 (rated above 30V OVP clamp) | Samsung CL21B105KBFNNNE | **C28323** | 5,331,021 | **Basic** | $0.008 |
 | C_BL_IN | 10µF 25V X5R 0805 | Samsung CL21A106KAYNNNE | **C15850** | 12,668,317 | **Basic** | $0.009 |
@@ -147,7 +147,7 @@ Wiring:
 
 Operating point check (5V in → 9.6V/133mA out): D ≈ 0.52, Iin ≈ 0.30A,
 inductor ripple at 1MHz/10µH ≈ 0.26A p-p → peak ≈ 0.43A. Margins: 2A switch
-limit (4.6×), 1.1A Isat (2.5×). Headroom exists for panels up to ~27V strings
+limit (4.6×), 1.95A Isat (~4.5×). Headroom exists for panels up to ~27V strings
 by changing R_ISET only (I = 0.2V/R).
 
 ### 3.3 Optional separate touch tail — J_TP 6P 0.5mm (C262553)
