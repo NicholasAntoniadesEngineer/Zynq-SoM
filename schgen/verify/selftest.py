@@ -935,6 +935,82 @@ def _mg_clamp_thresh_strict(lib: Library):
                              f"\n            by placer route/visual: {by[:90]}")
 
 
+def _ratsnest_fixture():
+    """A tiny synthetic PcbModel: two subsystems, each a tight 3-part cluster,
+    fully inside a small Edge.Cuts rectangle — the LAW-5 ratsnest gate PASSES
+    it. Used to prove the gate (off-board / dispersion) actually bites a defect
+    without rebuilding the whole 505-footprint carrier board."""
+    from schgen.generate.pcb import (PcbModel, FootprintInst, resolve_mod,
+                                     ORIGIN_X, ORIGIN_Y)
+    fp = "Resistor_SMD:R_0603_1608Metric"
+    mod = resolve_mod(fp)
+    bw, bh = 60.0, 40.0
+
+    def inst(ref, sheet, x, y, net):
+        return FootprintInst(
+            ref=ref, value="10k", footprint=fp,
+            x=ORIGIN_X + x, y=ORIGIN_Y + y, rotation=0.0,
+            pad_nets={"1": (1, net), "2": (2, "GND")}, mod_path=mod,
+            sheet=sheet, side="top")
+
+    insts = [
+        # subsystem A — tight cluster near the left (4 parts, > SMALL_N so the
+        # dispersion rule applies to it)
+        inst("R1", "subsys_a", 8, 8, "A_SIG"),
+        inst("R2", "subsys_a", 12, 8, "A_SIG"),
+        inst("R3", "subsys_a", 10, 12, "A_SIG"),
+        inst("R7", "subsys_a", 8, 12, "A_SIG"),
+        # subsystem B — tight cluster near the right, one shared net A_SIG<->B
+        inst("R4", "subsys_b", 48, 8, "A_SIG"),
+        inst("R5", "subsys_b", 52, 8, "B_SIG"),
+        inst("R6", "subsys_b", 50, 12, "B_SIG"),
+    ]
+    return PcbModel(
+        board_w=bw, board_h=bh, insts=insts,
+        net_numbers={"": 0, "A_SIG": 1, "B_SIG": 2, "GND": 3},
+        netclass_of={}, classes={}, placed=len(insts), deferred=[],
+        som_keepout=None, n_top=len(insts), n_bottom=0, two_side=True)
+
+
+def _mg_ratsnest(which: str, lib: Library):
+    """ratsnest_offboard / ratsnest_dispersed (LAW 5): the placement gate MUST
+    fail a board with an off-board footprint OR a scattered (non-grouped)
+    subsystem. BASELINE — the tight two-cluster fixture PASSES. MUTANT — move
+    one part far outside Edge.Cuts (off-board) or scatter subsys_a across the
+    whole board (dispersion blows past the threshold)."""
+    import copy as _copy
+    from schgen.verify import ratsnest_gate
+    base = ratsnest_gate.check(_ratsnest_fixture())
+    base_ok = base.ok
+    mut = _ratsnest_fixture()
+    if which == "ratsnest_offboard":
+        # shove R6 well past the right Edge.Cuts edge
+        for i in mut.insts:
+            if i.ref == "R6":
+                i.x = i.x + 200.0
+        res = ratsnest_gate.check(mut)
+        killed = (not res.ok) and bool(res.off_board)
+        by = res.off_board[0] if res.off_board else "(no off-board finding)"
+        return base_ok, killed, ("ratsnest_offboard: shove R6 200 mm past "
+                                 "Edge.Cuts\n            by LAW-5 gate: "
+                                 f"{by[:90]}")
+    # ratsnest_dispersed: scatter subsys_a's parts to the four board corners
+    spread = [(2, 2), (55, 2), (55, 36), (2, 36)]
+    k = 0
+    for i in mut.insts:
+        if i.sheet == "subsys_a":
+            from schgen.generate.pcb import ORIGIN_X, ORIGIN_Y
+            i.x = ORIGIN_X + spread[k][0]
+            i.y = ORIGIN_Y + spread[k][1]
+            k += 1
+    res = ratsnest_gate.check(mut)
+    killed = (not res.ok) and bool(res.dispersed)
+    by = res.dispersed[0] if res.dispersed else "(no dispersion finding)"
+    return base_ok, killed, ("ratsnest_dispersed: scatter subsys_a across the "
+                             "board\n            by LAW-5 gate: "
+                             f"{by[:90]}")
+
+
 def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
     """Run every model-gate mutant. Returns (injected, killed, problems),
     feeding the SAME tally + exit code as the file/geometry mutants. Each
@@ -961,6 +1037,8 @@ def selftest_model_gates(tmp: Path) -> tuple[int, int, list[str]]:
         ("port_rename",     lambda: _mg_port_rename(lib, tmp / "board")),
         ("rail_decoup_dropped", lambda: _mg_rail_decoup_dropped(lib)),
         ("clamp_thresh_strict", lambda: _mg_clamp_thresh_strict(lib)),
+        ("ratsnest_offboard", lambda: _mg_ratsnest("ratsnest_offboard", lib)),
+        ("ratsnest_dispersed", lambda: _mg_ratsnest("ratsnest_dispersed", lib)),
     ]
     injected = killed = 0
     for name, fn in runners:

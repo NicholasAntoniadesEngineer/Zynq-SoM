@@ -47,8 +47,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from schgen.core import sexpr
@@ -86,16 +87,31 @@ def _kicad_fp_root() -> Path | None:
 
 
 # ---- board geometry --------------------------------------------------------------
-# The outline is DERIVED from the floorplan suggestion (itself derived from the
-# SoM mezzanine + the edge connectors). The floorplan owns BOARD_W/BOARD_H and
-# the to-scale block plan; the PCB places parts inside those blocks. The
-# coordinate frame is shifted by ORIGIN_OFF so the board sits in positive KiCad
-# page space (KiCad's drawing sheet origin is top-left, +y down — same as the
-# floorplan's board frame).
+# The outline is DERIVED from the ACTUAL packed-zone extents (build_model): the
+# board grows until the centered SoM region + every per-subsystem zone + the 4
+# corner mounting holes + a perimeter keepout all fit, so EVERY footprint sits
+# inside Edge.Cuts (LAW 5 — no off-board parts). The coordinate frame is shifted
+# by ORIGIN_X/Y so the board sits in positive KiCad page space (KiCad's drawing
+# sheet origin is top-left, +y down).
 ORIGIN_X = 25.0          # board top-left in KiCad page mm
 ORIGIN_Y = 25.0
 MH_INSET = 5.0          # M3 hole center inset from each board corner
 GRID = 1.27             # placement snap grid (mm)
+
+# --- subsystem-zone outline derivation (LAW 5) -------------------------------
+PERIM = 3.0              # perimeter keepout ring (no zone touches the edge)
+MH_KEEPOUT = 5.0         # extra inset reserving the corner mounting-hole pads
+SOM_HALO_PCB = 6.0       # routing/escape halo reserved around the SoM body
+EDGE_BAND_PCB = 18.0     # nominal connector band each side (board-aspect seed)
+ZONE_FILL = 0.42         # zone-area packing efficiency for the seed board size
+ZONE_STEP = 2.54         # zone-placement raster scan step (mm)
+OUTLINE_GROW = 5.0       # board grow increment per fit attempt (mm)
+OUTLINE_SNAP_PCB = 5.0   # round the final W/H UP to this grid (mm)
+
+
+def _snap_up(v: float) -> float:
+    n = int((v + OUTLINE_SNAP_PCB - 1e-6) / OUTLINE_SNAP_PCB)
+    return round(n * OUTLINE_SNAP_PCB, 1)
 
 
 @dataclass
@@ -326,120 +342,103 @@ def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
 # pad-clearance / copper-edge DRC errors (only the expected unrouted-net items).
 PLACE_CLEAR = 2.0
 EDGE_CLEAR = 2.0
+ZONE_GAP = 2.5             # gap between two adjacent subsystem zones
+ZONE_PAD = 1.0            # padding inside a subsystem zone around its parts
 
 
-class _Occ:
-    """Non-overlapping shelf packer with a fixed clearance halo around every
-    footprint's true bbox. Deterministic: a left-to-right, top-to-bottom shelf
-    fill inside the board, reserving the SoM keep-out and the corner mounting
-    holes. Parts that do not fit the board spill into a staging strip below it.
+def _rot_bbox(bbox: tuple[float, float, float, float],
+              rot: float) -> tuple[float, float, float, float]:
+    """The footprint's local bbox after a 0/90/180/270 placement rotation —
+    the box KiCad's courtyard occupies once the footprint is turned. KiCad
+    rotates COUNTER-clockwise about the origin; for an axis-aligned box the
+    90/270 cases swap width/height."""
+    bx0, by0, bx1, by1 = bbox
+    r = int(round(rot)) % 360
+    if r == 90:
+        return (-by1, bx0, -by0, bx1)
+    if r == 180:
+        return (-bx1, -by1, -bx0, -by0)
+    if r == 270:
+        return (by0, -bx1, by1, -bx0)
+    return bbox
 
-    Footprints carry an asymmetric bbox (bx0,by0,bx1,by1) RELATIVE to their
-    origin; the packer returns the ORIGIN position that lands the haloed bbox
-    in the next free slot, so the emitted (at ...) is correct and the
-    courtyards never collide."""
 
-    def __init__(self, board_w: float, board_h: float,
-                 reserved: list[tuple[float, float, float, float]]):
-        self.bw = board_w
-        self.bh = board_h
-        self.rects: list[tuple[float, float, float, float]] = list(reserved)
-        self.cx = EDGE_CLEAR
-        self.cy = EDGE_CLEAR
-        self.row_h = 0.0
-        self.staging_y = board_h + 12.0     # below-board staging origin
-        self.staging_cx = EDGE_CLEAR
-        self.staging_row_h = 0.0
+def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
+                blockers: list[tuple[float, float, float, float]] | None = None
+                ) -> tuple[dict[str, tuple[float, float]], float, float]:
+    """Deterministic shelf packer for ONE subsystem's footprints.
 
-    def _free(self, x0, y0, x1, y1) -> bool:
-        for rx0, ry0, rx1, ry1 in self.rects:
+    ``items`` is [(ref, bbox, rotation), ...]; ``target_w`` is the width to
+    fill before wrapping to a new shelf row. ``blockers`` are zone-relative
+    rectangles (x0,y0,x1,y1) the placed boxes must AVOID — used to keep a
+    bottom-side SMD out from under a top-side through-hole pad (whose copper is
+    on every layer): a bottom part there would short to the THT pad. Returns
+    ``(origin_of_ref, packed_w, packed_h)`` where ``origin_of_ref[ref]`` is the
+    (x, y) to put at the footprint ORIGIN so its haloed rotated bbox sits inside
+    the [0, packed_w] x [0, packed_h] zone with a ZONE_PAD margin. Parts are
+    laid LARGEST-first (by haloed height, then width, then ref) so tall parts
+    anchor each row. There is NO overflow path: the returned box is exactly
+    large enough to hold every part, so the caller sizes the zone to fit and
+    never spills a part off-board."""
+    blk = list(blockers or [])
+    placed: dict[str, tuple[float, float]] = {}
+    occ: list[tuple[float, float, float, float]] = list(blk)
+    # haloed rotated bbox per ref
+    halo: dict[str, tuple[float, float, float, float]] = {}
+    for ref, bbox, rot in items:
+        rb = _rot_bbox(bbox, rot)
+        halo[ref] = (rb[0] - PLACE_CLEAR / 2, rb[1] - PLACE_CLEAR / 2,
+                     rb[2] + PLACE_CLEAR / 2, rb[3] + PLACE_CLEAR / 2)
+    order = sorted(items, key=lambda it: (
+        -(halo[it[0]][3] - halo[it[0]][1]),
+        -(halo[it[0]][2] - halo[it[0]][0]), it[0]))
+
+    def _free(x0, y0, x1, y1, w_lim) -> bool:
+        if x1 > ZONE_PAD + w_lim + 1e-6:
+            return False
+        for rx0, ry0, rx1, ry1 in occ:
             if not (x1 <= rx0 or rx1 <= x0 or y1 <= ry0 or ry1 <= y0):
                 return False
         return True
 
-    @staticmethod
-    def _wh(bbox) -> tuple[float, float]:
-        bx0, by0, bx1, by1 = bbox
-        return (bx1 - bx0) + PLACE_CLEAR, (by1 - by0) + PLACE_CLEAR
-
-    def _origin(self, slot_x, slot_y, bbox) -> tuple[float, float]:
-        """Origin position so the haloed bbox top-left sits at (slot_x,slot_y)."""
-        bx0, by0, _bx1, _by1 = bbox
-        return (slot_x + PLACE_CLEAR / 2 - bx0, slot_y + PLACE_CLEAR / 2 - by0)
-
-    def _scan_row(self, bbox) -> tuple[float, float] | None:
-        hw, hh = self._wh(bbox)
+    used_w = ZONE_PAD
+    used_h = ZONE_PAD
+    cy = ZONE_PAD
+    row_h = 0.0
+    for ref, _bbox, _rot in order:
+        hx0, hy0, hx1, hy1 = halo[ref]
+        hw, hh = hx1 - hx0, hy1 - hy0
+        w_lim = max(target_w, hw)
+        # raster scan within the growing shelf area; blockers force a slide.
+        cx = ZONE_PAD
+        slot = None
         guard = 0
-        while self.cy + hh <= self.bh - EDGE_CLEAR and guard < 200000:
+        scan_cy = cy
+        scan_row_h = row_h
+        while slot is None and guard < 100000:
             guard += 1
-            if self.cx + hw > self.bw - EDGE_CLEAR:
-                self.cx = EDGE_CLEAR
-                self.cy += self.row_h
-                self.row_h = 0.0
+            if cx + hw > ZONE_PAD + w_lim + 1e-6:
+                cx = ZONE_PAD
+                scan_cy += scan_row_h if scan_row_h else hh
+                scan_row_h = 0.0
                 continue
-            x0, y0 = self.cx, self.cy
-            if self._free(x0, y0, x0 + hw, y0 + hh):
-                self.cx = x0 + hw
-                self.row_h = max(self.row_h, hh)
-                self.rects.append((x0, y0, x0 + hw, y0 + hh))
-                return self._origin(x0, y0, bbox)
-            self.cx += GRID
-        return None
-
-    def _stage(self, bbox) -> tuple[float, float]:
-        hw, hh = self._wh(bbox)
-        max_w = self.bw * 1.7
-        if self.staging_cx + hw > max_w:
-            self.staging_cx = EDGE_CLEAR
-            self.staging_y += self.staging_row_h
-            self.staging_row_h = 0.0
-        x0, y0 = self.staging_cx, self.staging_y
-        self.staging_cx = x0 + hw
-        self.staging_row_h = max(self.staging_row_h, hh)
-        return self._origin(x0, y0, bbox)
-
-    def place(self, bbox) -> tuple[float, float]:
-        slot = self._scan_row(bbox)
-        return slot if slot is not None else self._stage(bbox)
-
-    def place_in_zone(self, bbox, zone) -> tuple[float, float]:
-        """A3 — pack ``bbox`` INSIDE the floorplan block ``zone`` (zx0,zy0,
-        zx1,zy1) so the subsystem clusters contiguously, but check against the
-        SHARED occupancy (self.rects) so a zone part can never collide with a
-        fixed part, another zone's parts, or the SoM keep-out. A part that does
-        not fit its zone spills to the board-wide ``place`` (still non-
-        overlapping). Both the zone scan and the board fall back through the
-        same self.rects, so the per-side board is globally collision-free."""
-        zx0, zy0, zx1, zy1 = zone
-        # keep the haloed footprint a touch inside the block so adjacent zones'
-        # parts cannot abut across the block boundary.
-        zx0 += EDGE_CLEAR / 2
-        zy0 += EDGE_CLEAR / 2
-        zx1 -= EDGE_CLEAR / 2
-        zy1 -= EDGE_CLEAR / 2
-        hw, hh = self._wh(bbox)
-        cx, cy, row_h = zx0, zy0, 0.0
-        guard = 0
-        while cy + hh <= zy1 and guard < 200000:
-            guard += 1
-            if cx + hw > zx1:
-                cx = zx0
-                cy += row_h
-                row_h = 0.0
-                continue
-            if self._free(cx, cy, cx + hw, cy + hh):
-                row_h = max(row_h, hh)
-                self.rects.append((cx, cy, cx + hw, cy + hh))
-                return self._origin(cx, cy, bbox)
+            if _free(cx, scan_cy, cx + hw, scan_cy + hh, w_lim):
+                slot = (cx, scan_cy)
+                break
             cx += GRID
-        return self.place(bbox)        # zone full -> board-wide shelf
-
-    def reserve_origin(self, ox, oy, bbox) -> None:
-        """Mark a fixed-origin footprint's haloed bbox as occupied."""
-        bx0, by0, bx1, by1 = bbox
-        h = PLACE_CLEAR / 2
-        self.rects.append((ox + bx0 - h, oy + by0 - h,
-                           ox + bx1 + h, oy + by1 + h))
+        sx, sy = slot
+        occ.append((sx, sy, sx + hw, sy + hh))
+        placed[ref] = (round(sx - hx0, 4), round(sy - hy0, 4))
+        used_w = max(used_w, sx + hw)
+        used_h = max(used_h, sy + hh)
+        # advance the primary shelf cursor in row order
+        if sy == cy:
+            row_h = max(row_h, hh)
+        else:
+            cy, row_h = sy, hh
+    packed_w = round(max(used_w, ZONE_PAD) + ZONE_PAD, 4)
+    packed_h = round(max(used_h, ZONE_PAD) + ZONE_PAD, 4)
+    return placed, packed_w, packed_h
 
 
 # ---- 2-side assembly: layer-assignment policy ------------------------------------
@@ -556,10 +555,6 @@ def build_model(two_side: bool = True) -> PcbModel:
         bbox_of[ref] = _footprint_bbox(mod)
         refs_by_sheet.setdefault(sheet, []).append(ref)
 
-    def _area(ref: str) -> float:
-        bx0, by0, bx1, by1 = bbox_of[ref]
-        return (bx1 - bx0) * (by1 - by0)
-
     # 2-side classification: decoupling caps + small passives -> bottom.
     decoupling = _decoupling_caps(nets)
     side_of: dict[str, str] = {}
@@ -568,104 +563,256 @@ def build_model(two_side: bool = True) -> PcbModel:
         side_of[ref] = _classify_side(ref, lib, bbox_of[ref],
                                       decoupling, two_side)
 
-    # ---- fixed positions: corner mounting holes + SoM DF40 mezzanine --------
-    # mounting holes -> board corners (CHASSIS_GND, model H1..H4)
-    mh_refs = sorted(r for r, (_s, _fp, _v, lib) in parts.items()
-                     if lib.startswith("Mechanical:MountingHole"))
-    corners = [(MH_INSET, MH_INSET),
-               (fp.BOARD_W - MH_INSET, MH_INSET),
-               (fp.BOARD_W - MH_INSET, fp.BOARD_H - MH_INSET),
-               (MH_INSET, fp.BOARD_H - MH_INSET)]
-    fixed: dict[str, tuple[float, float]] = {}
-    fixed_rot: dict[str, float] = {}
-    for i, ref in enumerate(mh_refs):
-        fixed[ref] = corners[i % 4]
-
-    # A1 — SoM DF40 mezzanine: place J1/J2/J3 at the SAME centered, mirrored
-    # positions the floorplan derived (plan.som_x/som_y + the per-connector
-    # SoM-relative x/y), so the three receptacles form one contiguous,
-    # correctly-pitched mezzanine region that mates the SoM board-to-board.
-    # The mirror (bottom view) is already baked into som.js[].x by
-    # floorplan.extract_som; here we add the per-connector ROTATION (J3 sits
-    # vertical on the SoM, the others horizontal) so the footprint orientation
-    # matches the SoM's, not a flat default.
+    # The SoM mezzanine receptacles (sheets som_j1/2/3) are FIXED at the
+    # centered, SoM-mirrored DF40 positions and form the SoM region; every
+    # other sheet is a SUBSYSTEM whose footprints cluster into one contiguous
+    # zone. Per-connector ROTATION matches the SoM (J3 vertical, others flat).
     som = plan.som
-    sx_off, sy_off = plan.som_x, plan.som_y    # derived centered SoM origin
-    som_view = {j.ref: (sx_off + j.x, sy_off + j.y) for j in som.js}
     som_rot = {j.ref: (90.0 if j.w < j.h else 0.0) for j in som.js}
+    som_rel = {j.ref: (j.x, j.y) for j in som.js}     # SoM-relative centers
+    som_j_refs: dict[str, str] = {}                    # board ref -> J1/J2/J3
+    fixed_rot: dict[str, float] = {}
     for ref, (sheet, _fp, _v, _lib) in parts.items():
         if ref not in resolvable or not sheet.startswith("som_j"):
             continue
         m = re.match(r"som_j(\d)", sheet)
-        if m and ref.startswith("J") and f"J{m.group(1)}" in som_view:
+        if m and ref.startswith("J"):
             jname = f"J{m.group(1)}"
-            fixed[ref] = som_view[jname]
-            fixed_rot[ref] = som_rot[jname]
+            if jname in som_rel:
+                som_j_refs[ref] = jname
+                fixed_rot[ref] = som_rot[jname]
 
-    # SoM body keep-out: the full SoM outline + a halo, centered. Nothing — top
-    # OR bottom — places under the SoM (the mezzanine stack sits there). Also
-    # emitted as a keepout zone on the PCB (emit_pcb).
-    halo = 1.0
-    keepout = (sx_off - halo, sy_off - halo,
-               sx_off + som.w + halo, sy_off + som.h + halo)
+    mh_refs = sorted(r for r, (_s, _fp, _v, lib) in parts.items()
+                     if lib.startswith("Mechanical:MountingHole"))
 
-    # ---- per-subsystem ratsnest bundles (A3) + 2-side packing --------------
-    # Each non-SoM sheet owns a floorplan block rectangle; pack that sheet's
-    # footprints INTO its block so the subsystem clusters contiguously (the
-    # ratsnest becomes a per-block bundle instead of a board-wide hairball).
-    # TOP and BOTTOM are packed in SEPARATE occupancies (a top part and the
-    # bottom cap beneath it legitimately share the same XY footprint), and a
-    # block that overflows spills to a board-level fallback packer of the same
-    # side — never dropped, never overlapping.
-    block_of = {b.name: (b.x, b.y, b.x + b.w, b.y + b.h)
-                for b in plan.blocks}
-    occ_top = _Occ(fp.BOARD_W, fp.BOARD_H, [keepout])
-    occ_bot = _Occ(fp.BOARD_W, fp.BOARD_H, [keepout])
-    # fixed parts (mounting holes + SoM connectors) reserve on BOTH sides: the
-    # mounting holes are NPTH/PTH (copper on every layer) and the SoM stack
-    # occupies the volume, so the bottom must avoid them too.
-    for ref, (ox, oy) in fixed.items():
-        occ_top.reserve_origin(ox, oy, bbox_of[ref])
-        occ_bot.reserve_origin(ox, oy, bbox_of[ref])
-
-    pos: dict[str, tuple[float, float]] = dict(fixed)
-
-    def _pack(refs: list[str], zone, occ: _Occ) -> None:
-        for ref in sorted(refs, key=lambda r: (-_area(r), r)):
-            pos[ref] = (occ.place_in_zone(bbox_of[ref], zone)
-                        if zone is not None else occ.place(bbox_of[ref]))
-
-    # TOP side first (sheet-by-sheet into each subsystem's zone), so every
-    # top part — including the through-hole connectors — has a final XY before
-    # any bottom part is placed.
-    for sheet in sorted(refs_by_sheet):
-        if sheet.startswith("som_j"):
-            continue            # the SoM receptacles are fixed above
-        zone = block_of.get(sheet)
-        top = [r for r in refs_by_sheet[sheet]
-               if r not in fixed and side_of[r] == "top"]
-        _pack(top, zone, occ_top)
-
-    # A through-hole pad on a TOP part occupies every copper layer, so a bottom
-    # SMD pad at the same XY would short to it. Reserve every top part that has
-    # thru-hole/NPTH pads (connectors, headers) in the BOTTOM occupancy before
-    # placing any bottom part.
-    for ref in resolvable:
-        if pos.get(ref) is not None and (ref in fixed or side_of[ref] == "top"):
-            if has_thru_pads(resolvable[ref]):
-                ox, oy = pos[ref]
-                occ_bot.reserve_origin(ox, oy, bbox_of[ref])
-
-    # BOTTOM side: decoupling caps + small passives, into the SAME per-subsystem
-    # zone so each block's bypass bank clusters under its block (the ratsnest
-    # bundle stays local), collision-checked against the bottom occupancy.
-    for sheet in sorted(refs_by_sheet):
+    # ---- STEP 1: size every subsystem ZONE from its REAL packed footprints ---
+    # For each non-SoM sheet, shelf-pack its TOP parts and (separately) its
+    # BOTTOM parts; the zone must hold the LARGER of the two (top and bottom
+    # overlay on the same XY area). The packers return part offsets relative to
+    # the zone origin AND the exact box, so the zone is sized to FIT — there is
+    # no overflow, no off-board shelf. Aspect: a target width ~ sqrt of the
+    # per-side area scaled by the SoM aspect keeps zones squarish.
+    side_refs: dict[str, dict[str, list[str]]] = {}
+    for sheet in refs_by_sheet:
         if sheet.startswith("som_j"):
             continue
-        zone = block_of.get(sheet)
-        bot = [r for r in refs_by_sheet[sheet]
-               if r not in fixed and side_of[r] == "bottom"]
-        _pack(bot, zone, occ_bot)
+        side_refs[sheet] = {"top": [], "bottom": []}
+        for r in refs_by_sheet[sheet]:
+            side_refs[sheet][side_of[r]].append(r)
+
+    zone_box: dict[str, tuple[float, float]] = {}            # sheet -> (w,h)
+    top_off: dict[str, dict[str, tuple[float, float]]] = {}  # sheet -> {ref:(x,y)}
+    bot_off: dict[str, dict[str, tuple[float, float]]] = {}
+
+    def _eff_bbox(ref: str, side: str) -> tuple[float, float, float, float]:
+        """The footprint's on-board local bbox. A BOTTOM part is flipped to
+        B.Cu, which mirrors its geometry about the origin's X axis (KiCad's
+        F->B convention), so its courtyard occupies the X-mirror of the top
+        bbox — pack/derive/gate must all use this mirrored box for a bottom
+        part or its left edge could land off-zone/off-board."""
+        bx0, by0, bx1, by1 = bbox_of[ref]
+        if side == "bottom":
+            return (-bx1, by0, -bx0, by1)
+        return (bx0, by0, bx1, by1)
+
+    def _items(refs, side):
+        return [(r, _eff_bbox(r, side), 0.0) for r in refs]
+
+    for sheet in sorted(side_refs):
+        tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
+                       (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
+                       for r in refs_by_sheet[sheet])
+        target_w = max(8.0, (tot_area * 0.62) ** 0.5)   # squarish per-side fill
+        t_off, tw, th = _shelf_pack(_items(side_refs[sheet]["top"], "top"),
+                                    target_w)
+        # blockers: every TOP through-hole part's top-frame haloed box (copper
+        # on all layers) — the bottom pack must keep its SMD parts out from
+        # under them (a bottom pad there shorts to the THT pad).
+        blockers: list[tuple[float, float, float, float]] = []
+        for r in side_refs[sheet]["top"]:
+            if not has_thru_pads(resolvable[r]):
+                continue
+            ox, oy = t_off[r]
+            bx0, by0, bx1, by1 = bbox_of[r]
+            blockers.append((ox + bx0 - PLACE_CLEAR / 2,
+                             oy + by0 - PLACE_CLEAR / 2,
+                             ox + bx1 + PLACE_CLEAR / 2,
+                             oy + by1 + PLACE_CLEAR / 2))
+        b_off, bw, bh = _shelf_pack(_items(side_refs[sheet]["bottom"],
+                                           "bottom"), target_w, blockers)
+        top_off[sheet] = t_off
+        bot_off[sheet] = b_off
+        zone_box[sheet] = (round(max(tw, bw), 4), round(max(th, bh), 4))
+
+    # ---- STEP 2: lay the zones out around a centered SoM keep-out ------------
+    # The SoM region (J1/J2/J3 extent + a routing halo) is reserved in the
+    # board center; subsystem zones tile the free area in a deterministic
+    # row-major shelf, and the BOARD GROWS until every zone + the SoM region +
+    # the 4 corner mounting holes + a perimeter keepout fit. No part is ever
+    # placed off-board: the outline is DERIVED from the packed extents.
+    som_w = som.w + 2 * SOM_HALO_PCB
+    som_h = som.h + 2 * SOM_HALO_PCB
+
+    # ---- subsystem AFFINITY: which sheets share nets (placement attraction) ---
+    # For every real net, the sheets it touches form a clique; accumulate a
+    # pairwise weight inversely proportional to the net's fan-out (a 2-sheet
+    # SIGNAL net pulls hard; a board-wide rail/GND across 30 sheets barely pulls
+    # — it is unavoidably long no matter where blocks sit, so it must not drive
+    # placement). The SoM (som_j*) is the central anchor: a sheet's pull toward
+    # the SoM is folded into the centroid via the fixed SoM center.
+    sheets_of_net: dict[str, set[str]] = {}
+    for nname, pins in nets.items():
+        if not nname or nname.startswith("unconnected-"):
+            continue
+        ss = {parts[pr.ref][0] for pr in pins
+              if pr.ref in parts and not pr.ref.startswith("#")}
+        if len(ss) >= 2:
+            sheets_of_net[nname] = ss
+    affinity: dict[str, dict[str, float]] = {}
+    som_pull: dict[str, float] = {}
+    for nname, ss in sheets_of_net.items():
+        k = len(ss)
+        w = 1.0 / (k * (k - 1) / 2)        # split a unit of pull over the clique
+        non_som = sorted(s for s in ss if not s.startswith("som_j"))
+        has_som = any(s.startswith("som_j") for s in ss)
+        for i, a in enumerate(non_som):
+            if has_som:
+                som_pull[a] = som_pull.get(a, 0.0) + w
+            for b in non_som[i + 1:]:
+                affinity.setdefault(a, {})[b] = \
+                    affinity.get(a, {}).get(b, 0.0) + w
+                affinity.setdefault(b, {})[a] = \
+                    affinity.get(b, {}).get(a, 0.0) + w
+
+    # placement order: most-connected first (largest total affinity), then area,
+    # then name — so the hub subsystems anchor near the SoM and pull the rest in.
+    def _conn(s: str) -> float:
+        return sum(affinity.get(s, {}).values()) + 3.0 * som_pull.get(s, 0.0)
+    zone_order = sorted(zone_box, key=lambda s: (-_conn(s),
+                                                 -(zone_box[s][0] *
+                                                   zone_box[s][1]), s))
+
+    def _layout(board_w: float, board_h: float):
+        """Place the SoM region (centered) + every subsystem zone so that
+        net-sharing subsystems sit NEAR each other (short cross-block airwires)
+        AND every zone fits inside the interior (perimeter keepout + corner-hole
+        insets). Greedy + deterministic: zones in affinity order, each dropped at
+        the free slot whose center is NEAREST the weighted centroid of its
+        already-placed neighbors (the SoM center is the seed pull). No part is
+        ever placed off-board. Returns (zone_origin, som_origin) or None."""
+        x_lo = PERIM + MH_KEEPOUT
+        x_hi = board_w - PERIM - MH_KEEPOUT
+        y_lo = PERIM + MH_KEEPOUT
+        y_hi = board_h - PERIM - MH_KEEPOUT
+        sx = round((board_w - som_w) / 2, 4)
+        sy = round((board_h - som_h) / 2, 4)
+        som_cx, som_cy = sx + som_w / 2, sy + som_h / 2
+        som_rect = (sx, sy, sx + som_w, sy + som_h)
+        placed_rects: list[tuple[float, float, float, float]] = [som_rect]
+        centers: dict[str, tuple[float, float]] = {}
+
+        def collide(x0, y0, x1, y1):
+            if x0 < x_lo or y0 < y_lo or x1 > x_hi or y1 > y_hi:
+                return True
+            for rx0, ry0, rx1, ry1 in placed_rects:
+                if not (x1 + ZONE_GAP <= rx0 or rx1 + ZONE_GAP <= x0 or
+                        y1 + ZONE_GAP <= ry0 or ry1 + ZONE_GAP <= y0):
+                    return True
+            return False
+
+        zorigin: dict[str, tuple[float, float]] = {}
+        for sheet in zone_order:
+            zw, zh = zone_box[sheet]
+            # weighted anchor = SoM-pull + placed-neighbour-pull centroid
+            wsum = max(som_pull.get(sheet, 0.0), 0.1)
+            ax = som_pull.get(sheet, 0.1) * som_cx
+            ay = som_pull.get(sheet, 0.1) * som_cy
+            for nb, w in affinity.get(sheet, {}).items():
+                if nb in centers:
+                    cxn, cyn = centers[nb]
+                    ax += w * cxn
+                    ay += w * cyn
+                    wsum += w
+            ax /= wsum
+            ay /= wsum
+            # deterministic raster of candidate slots; pick the one whose center
+            # is nearest the anchor (ties -> top-left for stability).
+            best = None
+            best_key = None
+            y = y_lo
+            while y + zh <= y_hi + 1e-6:
+                x = x_lo
+                while x + zw <= x_hi + 1e-6:
+                    if not collide(x, y, x + zw, y + zh):
+                        ccx, ccy = x + zw / 2, y + zh / 2
+                        d = abs(ccx - ax) + abs(ccy - ay)
+                        key = (round(d, 3), round(y, 3), round(x, 3))
+                        if best_key is None or key < best_key:
+                            best_key = key
+                            best = (round(x, 4), round(y, 4))
+                    x += ZONE_STEP
+                y += ZONE_STEP
+            if best is None:
+                return None
+            zorigin[sheet] = best
+            placed_rects.append((best[0], best[1], best[0] + zw, best[1] + zh))
+            centers[sheet] = (best[0] + zw / 2, best[1] + zh / 2)
+        return zorigin, (sx, sy)
+
+    # grow the board (keep the SoM aspect) until _layout succeeds
+    total_zone_area = sum(w * h for (w, h) in zone_box.values()) + som_w * som_h
+    aspect = (som_w + 2 * EDGE_BAND_PCB) / (som_h + 2 * EDGE_BAND_PCB)
+    base = (total_zone_area / ZONE_FILL) ** 0.5
+    bw0 = max(som_w + 2 * (PERIM + MH_KEEPOUT + EDGE_BAND_PCB),
+              base * aspect ** 0.5)
+    bh0 = max(som_h + 2 * (PERIM + MH_KEEPOUT + EDGE_BAND_PCB),
+              base / aspect ** 0.5)
+    board_w = board_h = None
+    layout = None
+    grow = 0
+    while layout is None and grow < 400:
+        cand_w = _snap_up(bw0 + grow * OUTLINE_GROW)
+        cand_h = _snap_up(bh0 + grow * OUTLINE_GROW * (bh0 / bw0))
+        layout = _layout(cand_w, cand_h)
+        if layout is not None:
+            board_w, board_h = cand_w, cand_h
+            break
+        grow += 1
+    if layout is None:
+        raise RuntimeError("pcb: could not fit every subsystem zone on a "
+                           "grown board — packing is broken")
+    zorigin, (sx_off, sy_off) = layout
+
+    # SoM keep-out (centered) + SoM mezzanine J positions, in the grown board
+    halo = 1.0
+    j_halo = SOM_HALO_PCB
+    keepout = (sx_off + SOM_HALO_PCB - halo, sy_off + SOM_HALO_PCB - halo,
+               sx_off + SOM_HALO_PCB + som.w + halo,
+               sy_off + SOM_HALO_PCB + som.h + halo)
+    som_view = {jn: (sx_off + j_halo + sx, sy_off + j_halo + sy)
+                for jn, (sx, sy) in som_rel.items()}
+
+    # ---- STEP 3: final origins (board frame) for every footprint ------------
+    pos: dict[str, tuple[float, float]] = {}
+    # mounting holes -> the 4 corners of the GROWN board
+    corners = [(MH_INSET, MH_INSET),
+               (board_w - MH_INSET, MH_INSET),
+               (board_w - MH_INSET, board_h - MH_INSET),
+               (MH_INSET, board_h - MH_INSET)]
+    for i, ref in enumerate(mh_refs):
+        pos[ref] = corners[i % 4]
+    # SoM receptacles
+    for ref, jname in som_j_refs.items():
+        pos[ref] = som_view[jname]
+    # subsystem footprints: zone origin + per-part packed offset
+    for sheet in zorigin:
+        zx, zy = zorigin[sheet]
+        for r, (dx, dy) in top_off[sheet].items():
+            pos[r] = (zx + dx, zy + dy)
+        for r, (dx, dy) in bot_off[sheet].items():
+            pos[r] = (zx + dx, zy + dy)
+
+    fixed = set(mh_refs) | set(som_j_refs)
 
     insts: list[FootprintInst] = []
     placed = 0
@@ -692,12 +839,68 @@ def build_model(two_side: bool = True) -> PcbModel:
 
     kx0, ky0, kx1, ky1 = keepout
     return PcbModel(
-        board_w=fp.BOARD_W, board_h=fp.BOARD_H, insts=insts,
+        board_w=board_w, board_h=board_h, insts=insts,
         net_numbers=net_numbers, netclass_of=netclass_of, classes=classes,
         placed=placed, deferred=deferred,
         som_keepout=(ORIGIN_X + kx0, ORIGIN_Y + ky0,
                      ORIGIN_X + kx1, ORIGIN_Y + ky1),
         n_top=n_top, n_bottom=n_bottom, two_side=two_side)
+
+
+# ---- placed-geometry queries (for the ratsnest renderer + LAW-5 gate) ------------
+
+def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
+    """Every pad of a placed footprint as (pad_name, x, y, net_name) in the
+    BOARD page frame. Applies the footprint rotation and, for a bottom-side
+    part, the F->B X-mirror about the origin (KiCad's flip convention) — so the
+    pad centers match where the copper actually lands."""
+    out: list[tuple[str, float, float, str]] = []
+    doc = sexpr.loads(inst.mod_path.read_text())
+    rot = math.radians(inst.rotation or 0.0)
+    cs, sn = math.cos(rot), math.sin(rot)
+    for node in doc:
+        if not (isinstance(node, list) and node and node[0] == Sym("pad")):
+            continue
+        name = str(node[1]) if len(node) > 1 else ""
+        at = sexpr.find(node, "at")
+        if not (at and len(at) >= 3):
+            continue
+        px, py = float(at[1]), float(at[2])
+        if inst.side == "bottom":
+            px = -px                       # F->B mirror about the origin X axis
+        # rotate about origin (KiCad +rot is counter-clockwise on screen,
+        # but for a symmetric airwire endpoint the sign is immaterial; use the
+        # standard math rotation for determinism)
+        rx = px * cs - py * sn
+        ry = px * sn + py * cs
+        _num, nname = inst.pad_nets.get(name, (0, ""))
+        out.append((name, round(inst.x + rx, 3), round(inst.y + ry, 3), nname))
+    return out
+
+
+def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
+    """The placed footprint's courtyard bbox in the BOARD page frame, with the
+    placement rotation and (for a bottom part) the F->B X-mirror applied. This
+    is the box the LAW-5 off-board + grouping gate reasons about."""
+    bx0, by0, bx1, by1 = _footprint_bbox(inst.mod_path)
+    if inst.side == "bottom":
+        bx0, bx1 = -bx1, -bx0
+    rb = _rot_bbox((bx0, by0, bx1, by1), inst.rotation or 0.0)
+    return (round(inst.x + rb[0], 3), round(inst.y + rb[1], 3),
+            round(inst.x + rb[2], 3), round(inst.y + rb[3], 3))
+
+
+def net_pad_positions(model: PcbModel) -> dict[str, list[tuple[float, float, str, str]]]:
+    """net name -> [(x, y, ref, sheet), ...] pad centers in the board page
+    frame, for every REAL net (skips no-net + the unconnected- placeholders).
+    Used to draw the unrouted airwires and to budget cross-subsystem nets."""
+    out: dict[str, list[tuple[float, float, str, str]]] = {}
+    for inst in model.insts:
+        for _pad, x, y, nname in _inst_pad_geom(inst):
+            if not nname or nname.startswith("unconnected-"):
+                continue
+            out.setdefault(nname, []).append((x, y, inst.ref, inst.sheet))
+    return out
 
 
 # ---- emission --------------------------------------------------------------------
@@ -1102,6 +1305,226 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
 
 # ---- .kicad_pro net classes + .kicad_dru ----------------------------------------
 
+def _design_settings() -> dict:
+    """The COMPLETE KiCad-10 board.design_settings block. KiCad's GUI writes
+    every one of these keys on save; emitting them all here means opening the
+    project in KiCad changes nothing (build twice -> clean .kicad_pro). Carrier-
+    specific rule minimums are kept; all other values are the KiCad 10 defaults
+    so the block round-trips byte-stable."""
+    return {
+        "defaults": {
+            "apply_defaults_to_fp_barcodes": False,
+            "apply_defaults_to_fp_dimensions": False,
+            "apply_defaults_to_fp_fields": False,
+            "apply_defaults_to_fp_shapes": False,
+            "apply_defaults_to_fp_text": False,
+            "board_outline_line_width": 0.1,
+            "copper_line_width": 0.2,
+            "copper_text_italic": False,
+            "copper_text_size_h": 1.5,
+            "copper_text_size_v": 1.5,
+            "copper_text_thickness": 0.3,
+            "copper_text_upright": False,
+            "courtyard_line_width": 0.05,
+            "dimension_precision": 4,
+            "dimension_units": 3,
+            "dimensions": {
+                "arrow_length": 1270000,
+                "extension_offset": 500000,
+                "keep_text_aligned": True,
+                "suppress_zeroes": False,
+                "text_position": 0,
+                "units_format": 1,
+            },
+            "fab_line_width": 0.1,
+            "fab_text_italic": False,
+            "fab_text_size_h": 1.0,
+            "fab_text_size_v": 1.0,
+            "fab_text_thickness": 0.15,
+            "fab_text_upright": False,
+            "other_line_width": 0.15,
+            "other_text_italic": False,
+            "other_text_size_h": 1.0,
+            "other_text_size_v": 1.0,
+            "other_text_thickness": 0.15,
+            "other_text_upright": False,
+            "pads": {"drill": 0.0, "height": 1.8, "width": 1.0},
+            "silk_line_width": 0.15,
+            "silk_text_italic": False,
+            "silk_text_size_h": 1.0,
+            "silk_text_size_v": 1.0,
+            "silk_text_thickness": 0.15,
+            "silk_text_upright": False,
+            "zones": {
+                "border_display_style": 2,
+                "border_hatch_pitch": 0.5,
+                "corner_radius": 0.0,
+                "corner_smoothing": 0,
+                "fill_mode": 0,
+                "hatch_gap": 1.5,
+                "hatch_orientation": 0.0,
+                "hatch_smoothing_level": 0,
+                "hatch_smoothing_value": 0.1,
+                "hatch_thickness": 1.0,
+                "min_clearance": 0.127,
+                "min_island_area": 10.0,
+                "min_thickness": 0.25,
+                "pad_connection": 1,
+                "remove_islands": 0,
+                "thermal_relief_gap": 0.5,
+                "thermal_relief_spoke_width": 0.5,
+            },
+        },
+        "diff_pair_dimensions": [
+            {"gap": 0.0, "via_gap": 0.0, "width": 0.0},
+            {"gap": 0.2, "via_gap": 0.5, "width": 0.1},
+            {"gap": 0.25, "via_gap": 0.5, "width": 0.1},
+            {"gap": 0.25, "via_gap": 0.5, "width": 0.104},
+            {"gap": 0.3, "via_gap": 0.5, "width": 0.11},
+            {"gap": 0.2, "via_gap": 0.5, "width": 0.12},
+        ],
+        "drc_exclusions": [],
+        "meta": {"version": 2},
+        "rule_severities": {
+            "annular_width": "error",
+            "clearance": "error",
+            "connection_width": "warning",
+            "copper_edge_clearance": "error",
+            "copper_sliver": "warning",
+            "courtyards_overlap": "error",
+            "creepage": "error",
+            "diff_pair_gap_out_of_range": "error",
+            "diff_pair_uncoupled_length_too_long": "error",
+            "drill_out_of_range": "error",
+            "duplicate_footprints": "warning",
+            "extra_footprint": "warning",
+            "footprint": "error",
+            "footprint_filters_mismatch": "ignore",
+            "footprint_symbol_field_mismatch": "warning",
+            "footprint_symbol_mismatch": "warning",
+            "footprint_type_mismatch": "ignore",
+            "hole_clearance": "error",
+            "hole_near_hole": "error",
+            "hole_to_hole": "error",
+            "holes_co_located": "warning",
+            "invalid_outline": "error",
+            "isolated_copper": "warning",
+            "item_on_disabled_layer": "error",
+            "items_not_allowed": "error",
+            "length_out_of_range": "error",
+            "lib_footprint_issues": "warning",
+            "lib_footprint_mismatch": "warning",
+            "malformed_courtyard": "error",
+            "microvia_drill_out_of_range": "error",
+            "mirrored_text_on_front_layer": "warning",
+            "missing_courtyard": "ignore",
+            "missing_footprint": "warning",
+            "missing_tuning_profile": "warning",
+            "net_conflict": "warning",
+            "nonmirrored_text_on_back_layer": "warning",
+            "npth_inside_courtyard": "ignore",
+            "padstack": "warning",
+            "pth_inside_courtyard": "ignore",
+            "shorting_items": "error",
+            "silk_edge_clearance": "warning",
+            "silk_over_copper": "warning",
+            "silk_overlap": "warning",
+            "skew_out_of_range": "error",
+            "solder_mask_bridge": "error",
+            "starved_thermal": "error",
+            "text_height": "warning",
+            "text_on_edge_cuts": "error",
+            "text_thickness": "warning",
+            "through_hole_pad_without_hole": "error",
+            "too_many_vias": "error",
+            "track_angle": "error",
+            "track_dangling": "warning",
+            "track_not_centered_on_via": "ignore",
+            "track_on_post_machined_layer": "error",
+            "track_segment_length": "error",
+            "track_width": "error",
+            "tracks_crossing": "error",
+            "tuning_profile_track_geometries": "ignore",
+            "unconnected_items": "error",
+            "unresolved_variable": "error",
+            "via_dangling": "warning",
+            "zones_intersect": "error",
+        },
+        "rules": {
+            "max_error": 0.005,
+            "min_clearance": 0.09,
+            "min_connection": 0.0,
+            "min_copper_edge_clearance": 0.3,
+            "min_groove_width": 0.0,
+            "min_hole_clearance": 0.2,
+            "min_hole_to_hole": 0.25,
+            "min_microvia_diameter": 0.2,
+            "min_microvia_drill": 0.1,
+            "min_resolved_spokes": 2,
+            "min_silk_clearance": 0.0,
+            "min_text_height": 0.8,
+            "min_text_thickness": 0.08,
+            "min_through_hole_diameter": 0.2,
+            "min_track_width": 0.09,
+            "min_via_annular_width": 0.05,
+            "min_via_diameter": 0.3,
+            "solder_mask_clearance": 0.0,
+            "solder_mask_min_width": 0.0,
+            "solder_mask_to_copper_clearance": 0.0,
+            "use_height_for_length_calcs": True,
+        },
+        "teardrop_options": [{
+            "td_onpthpad": True,
+            "td_onroundshapesonly": False,
+            "td_onsmdpad": True,
+            "td_ontrackend": False,
+            "td_onvia": True,
+        }],
+        "teardrop_parameters": [
+            {"td_allow_use_two_tracks": True, "td_curve_segcount": 0,
+             "td_height_ratio": 1.0, "td_length_ratio": 0.5,
+             "td_maxheight": 2.0, "td_maxlen": 1.0, "td_on_pad_in_zone": False,
+             "td_target_name": "td_round_shape",
+             "td_width_to_size_filter_ratio": 0.9},
+            {"td_allow_use_two_tracks": True, "td_curve_segcount": 0,
+             "td_height_ratio": 1.0, "td_length_ratio": 0.5,
+             "td_maxheight": 2.0, "td_maxlen": 1.0, "td_on_pad_in_zone": False,
+             "td_target_name": "td_rect_shape",
+             "td_width_to_size_filter_ratio": 0.9},
+            {"td_allow_use_two_tracks": True, "td_curve_segcount": 0,
+             "td_height_ratio": 1.0, "td_length_ratio": 0.5,
+             "td_maxheight": 2.0, "td_maxlen": 1.0, "td_on_pad_in_zone": False,
+             "td_target_name": "td_track_end",
+             "td_width_to_size_filter_ratio": 0.9},
+        ],
+        "track_widths": [0.0, 0.1, 0.11, 0.135, 0.15, 0.2, 0.25, 0.3, 0.5],
+        "tuning_pattern_settings": {
+            "diff_pair_defaults": {
+                "corner_radius_percentage": 50, "corner_style": 0,
+                "max_amplitude": 1.2, "min_amplitude": 0.1,
+                "single_sided": True, "spacing": 0.6},
+            "diff_pair_skew_defaults": {
+                "corner_radius_percentage": 100, "corner_style": 1,
+                "max_amplitude": 1.0, "min_amplitude": 0.05,
+                "single_sided": False, "spacing": 0.3},
+            "single_track_defaults": {
+                "corner_radius_percentage": 50, "corner_style": 0,
+                "max_amplitude": 1.0, "min_amplitude": 0.1,
+                "single_sided": True, "spacing": 0.4},
+        },
+        "via_dimensions": [
+            {"diameter": 0.0, "drill": 0.0},
+            {"diameter": 0.3, "drill": 0.2},
+            {"diameter": 0.35, "drill": 0.2},
+            {"diameter": 0.4, "drill": 0.25},
+            {"diameter": 0.4, "drill": 0.3},
+            {"diameter": 0.45, "drill": 0.3},
+            {"diameter": 0.55, "drill": 0.4},
+        ],
+        "zones_allow_external_fillets": True,
+    }
+
+
 def _class_dict(name: str, geo, *, is_power: bool, is_default: bool) -> dict:
     """A KiCad net_settings class dict. Diff classes carry the impedance
     geometry; POWER widens the track; Default is the JLC minimum."""
@@ -1147,44 +1570,16 @@ def write_project(model: PcbModel, pro_path: Path) -> None:
     data.setdefault("meta", {"filename": pro_path.name, "version": 3})
     data.setdefault("erc", {"rule_severities": {"pin_not_driven": "warning"}})
 
-    # board.design_settings.rules — the manufacturable JLC constraint set (the
-    # SAME values the SoM project uses). These are the board-wide minimums
-    # KiCad's DRC enforces; the per-class geometry lives in net_settings +
-    # the .kicad_dru. min_hole_clearance 0.2 mm accepts a faithful connector's
-    # NPTH alignment posts (USB-C: 0.2436 mm to the shield pad), an intrinsic
-    # footprint property, not a placement defect.
+    # board.design_settings — the COMPLETE KiCad-10 design-settings block, not a
+    # minimal subset. KiCad's GUI rewrites the WHOLE block (defaults / severities
+    # / rules / teardrops / track+via+diff-pair tables / tuning / zones) on the
+    # first save, so a partial emit shows the project DIRTY after every build/
+    # open. Emitting the full block (the values KiCad would write) makes a GUI
+    # open a no-op: build twice -> git diff empty on the .kicad_pro. The carrier
+    # rules (min_hole_clearance 0.2 for USB-C NPTH posts, min_hole_to_hole 0.25)
+    # are kept; every other key matches the KiCad 10 default so it round-trips.
     data["board"] = data.get("board", {})
-    data["board"]["design_settings"] = {
-        "rule_severities": {
-            "copper_edge_clearance": "error",
-            "hole_clearance": "error",
-            "hole_to_hole": "error",
-            "silk_edge_clearance": "warning",
-            "silk_overlap": "warning",
-            "text_height": "warning",
-        },
-        "rules": {
-            "max_error": 0.005,
-            "min_clearance": 0.09,
-            "min_connection": 0.0,
-            "min_copper_edge_clearance": 0.3,
-            "min_hole_clearance": 0.2,
-            "min_hole_to_hole": 0.25,
-            "min_microvia_diameter": 0.2,
-            "min_microvia_drill": 0.1,
-            "min_resolved_spokes": 2,
-            "min_silk_clearance": 0.0,
-            "min_text_height": 0.8,
-            "min_text_thickness": 0.08,
-            "min_through_hole_diameter": 0.2,
-            "min_track_width": 0.09,
-            "min_via_annular_width": 0.05,
-            "min_via_diameter": 0.3,
-            "solder_mask_clearance": 0.0,
-            "solder_mask_min_width": 0.0,
-            "use_height_for_length_calcs": True,
-        },
-    }
+    data["board"]["design_settings"] = _design_settings()
 
     classes = [_class_dict("Default", None, is_power=False, is_default=True)]
     for name in sorted(model.classes):
@@ -1252,11 +1647,14 @@ def write_dru(model: PcbModel, dru_path: Path) -> None:
 
 # ---- entry point -----------------------------------------------------------------
 
-def generate(*, run_drc: bool = True, two_side: bool = True) -> dict:
+def generate(*, run_drc: bool = True, two_side: bool = True,
+             ratsnest: bool = True) -> dict:
     """Build + write the PCB foundation. Returns a result dict (paths, counts,
-    drc verdict). ``two_side`` (default ON, the JLCPCB both-sides assembly
-    policy) pushes decoupling/small passives to the bottom; set False for a
-    forced single-side build (everything on top)."""
+    drc verdict, LAW-5 ratsnest gate + images). ``two_side`` (default ON, the
+    JLCPCB both-sides assembly policy) pushes decoupling/small passives to the
+    bottom; set False for a forced single-side build (everything on top).
+    ``ratsnest`` (default ON) emits the per-side ratsnest images + runs the
+    LAW-5 placement gate on the SAME model (no rebuild)."""
     model = build_model(two_side=two_side)
 
     pcb_path = CARRIER / "Zynq_Carrier.kicad_pcb"
@@ -1276,8 +1674,13 @@ def generate(*, run_drc: bool = True, two_side: bool = True) -> dict:
         "classes": sorted(model.classes), "deferred": model.deferred,
         "n_top": model.n_top, "n_bottom": model.n_bottom,
         "two_side": model.two_side, "som_keepout": model.som_keepout,
-        "drc": None,
+        "drc": None, "ratsnest": None, "ratsnest_gate": None,
     }
+    if ratsnest:
+        from schgen.generate import ratsnest as rn_mod
+        from schgen.verify import ratsnest_gate
+        result["ratsnest"] = rn_mod.generate(model)
+        result["ratsnest_gate"] = ratsnest_gate.check(model)
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result

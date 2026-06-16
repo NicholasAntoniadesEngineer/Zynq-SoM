@@ -338,9 +338,15 @@ def _ahash(png: Path) -> str:
 
 
 def _golden_check(ren_dir: Path, bless: bool) -> None:
-    """Golden render snapshots: drift WARNS, --bless accepts new goldens."""
+    """Golden render snapshots: drift WARNS, --bless accepts new goldens.
+
+    Only the per-sheet SCHEMATIC renders are golden-tracked. The PCB ratsnest
+    images (ratsnest_top/bottom.png) are PLACEMENT renders that legitimately
+    change whenever the placer moves a part, and are gated separately by the
+    LAW-5 ratsnest gate — so they are excluded from the schematic golden set."""
     golden_path = ren_dir / "golden.json"
-    cur = {p.stem: _ahash(p) for p in sorted(ren_dir.glob("*.png"))}
+    cur = {p.stem: _ahash(p) for p in sorted(ren_dir.glob("*.png"))
+           if not p.stem.startswith("ratsnest")}
     if bless or not golden_path.exists():
         golden_path.write_text(json.dumps(cur, indent=1, sort_keys=True)
                                + "\n")
@@ -926,11 +932,43 @@ def cmd_board(args: argparse.Namespace) -> int:
         if pcb_errs:
             print(f"  PCB DRC: FAIL — {pcb_errs} non-unrouted error(s)")
             ok_all = False
+
+        # LAW-5 RATSNEST/PLACEMENT gate (HARD): the visual oracle DRC=0 can't be.
+        # The PCB step already drew the per-side ratsnest images + ran the gate
+        # on the SAME model (no rebuild). FAIL the board on any off-board part, a
+        # dispersed (non-grouped) subsystem, or a cross-subsystem airwire budget
+        # overrun. The IMAGES (carrier/renders/ratsnest_{top,bottom}.png +
+        # carrier/docs/RATSNEST.svg) are the human check this gate backstops.
+        rg = pcb_res.get("ratsnest_gate")
+        rimg = pcb_res.get("ratsnest") or {}
+        if rg is not None:
+            (rep_dir / "ratsnest.txt").write_text(rg.summary() + "\n")
+            print(f"RATSNEST (LAW 5): {'PASS' if rg.ok else 'FAIL'} "
+                  f"({len(rg.off_board)} off-board, {len(rg.dispersed)} "
+                  f"dispersed, cross-airwire {rg.cross_mm:g}/"
+                  f"{rg.cross_budget_mm:.0f} mm budget "
+                  f"-> {rep_dir / 'ratsnest.txt'})")
+            if rimg.get("png_top"):
+                print(f"  ratsnest images: "
+                      f"{rimg['png_top'].relative_to(REPO_ROOT)} + "
+                      f"{rimg['png_bottom'].relative_to(REPO_ROOT)} + "
+                      f"{rimg['svg'].relative_to(REPO_ROOT)}")
+            for _o in rg.off_board:
+                print(f"  RATSNEST OFF-BOARD: {_o}")
+            for _d in rg.dispersed:
+                print(f"  RATSNEST DISPERSED: {_d}")
+            if not rg.cross_ok:
+                print(f"  RATSNEST CROSS-AIRWIRE OVER BUDGET: "
+                      f"{rg.cross_mm:g} > {rg.cross_budget_mm:.0f} mm")
+            ok_all = ok_all and rg.ok
+        else:
+            print("RATSNEST (LAW 5): FAIL — gate did not run")
+            ok_all = False
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
         ok_all = False
 
-    _lap("pcb gen + DRC")
+    _lap("pcb gen + DRC + ratsnest images + LAW-5 gate")
 
     # SIGNAL-INTEGRITY CONSTRAINTS (not routing): harvest every diff pair the
     # schematic declares, join to the researched si_spec targets, and APPEND
@@ -1206,6 +1244,14 @@ def main(argv: list[str] | None = None) -> int:
                     help="skip the kicad-cli pcb drc verification pass")
     from schgen.generate.pcb import cmd_pcb
     pc.set_defaults(func=cmd_pcb)
+    rn_p = sub.add_parser(
+        "ratsnest", help="draw the PLACED board (LAW 5): per-side PNGs + a "
+                         "combined SVG showing every footprint as a box colored "
+                         "by subsystem + the unrouted airwires + Edge.Cuts + the "
+                         "SoM keep-out — the human check that the layout groups "
+                         "by subsystem and has zero off-board parts")
+    from schgen.generate.ratsnest import cmd_ratsnest
+    rn_p.set_defaults(func=cmd_ratsnest)
     pf = sub.add_parser(
         "preflight", help="live JLC/LCSC stock + Basic/Extended + cost check")
     pf.add_argument("subsystems", nargs="+")

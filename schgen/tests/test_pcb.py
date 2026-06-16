@@ -56,7 +56,7 @@ def test_footprint_bbox_cached():
     assert a == b
 
 
-# ---- the non-overlapping shelf packer --------------------------------------------
+# ---- the per-subsystem shelf packer (LAW 5: cluster, never spill off-board) ------
 
 def _overlap(a, b, clear):
     ax0, ay0, ax1, ay1 = a
@@ -65,48 +65,61 @@ def _overlap(a, b, clear):
                 or ay1 + clear <= by0 or by1 + clear <= ay0)
 
 
-def test_packer_no_overlap_and_deterministic():
-    """Every placed footprint's bbox keeps PLACE_CLEAR from every other and
-    from the reserved keep-out; two identical packs give identical positions."""
-    bboxes = []
-    # a deterministic mix of small + large parts
-    for i in range(60):
+def test_shelf_pack_no_overlap_and_deterministic():
+    """_shelf_pack packs ONE subsystem's footprints into a contiguous zone with
+    no two haloed bboxes overlapping, returns the exact zone box, and is
+    byte-deterministic (same input -> same offsets)."""
+    items = []
+    for i in range(40):
         w = 1.0 + (i % 5)
         h = 1.0 + (i % 3)
-        bboxes.append((-w / 2, -h / 2, w / 2, h / 2))
+        items.append((f"R{i}", (-w / 2, -h / 2, w / 2, h / 2), 0.0))
 
     def run():
-        occ = pcb._Occ(120.0, 100.0, [(40.0, 30.0, 90.0, 72.0)])  # keep-out
-        placed = []
-        for bb in bboxes:
-            ox, oy = occ.place(bb)
+        off, w, h = pcb._shelf_pack(items, target_w=20.0)
+        boxes = []
+        for ref, bb, _rot in items:
+            ox, oy = off[ref]
             bx0, by0, bx1, by1 = bb
-            placed.append((ox + bx0, oy + by0, ox + bx1, oy + by1))
-        return placed
+            boxes.append((ox + bx0, oy + by0, ox + bx1, oy + by1))
+        return off, w, h, boxes
 
-    r1 = run()
-    r2 = run()
-    assert r1 == r2, "packer must be deterministic"
-    # pairwise no-overlap with a margin a touch under PLACE_CLEAR (rounding)
-    margin = pcb.PLACE_CLEAR - 0.01
-    for a, b in itertools.combinations(r1, 2):
+    off1, w1, h1, boxes1 = run()
+    off2, w2, h2, boxes2 = run()
+    assert (off1, w1, h1) == (off2, w2, h2), "packer must be deterministic"
+    margin = pcb.PLACE_CLEAR - 0.05
+    for a, b in itertools.combinations(boxes1, 2):
         assert not _overlap(a, b, margin), f"{a} overlaps {b}"
-    # none collide with the reserved keep-out
-    keep = (40.0, 30.0, 90.0, 72.0)
-    for a in r1:
-        assert not _overlap(a, keep, 0.0), f"{a} overlaps keep-out"
+    # the returned box must ENCLOSE every part (it is sized to fit — no spill).
+    for bx0, by0, bx1, by1 in boxes1:
+        assert bx1 <= w1 + 1e-6 and by1 <= h1 + 1e-6, "part outside its zone box"
 
 
-def test_packer_spills_below_board_when_full():
-    """Parts that exhaust the board land in the staging strip below it
-    (y beyond the board height), never silently dropped or overlapping."""
-    occ = pcb._Occ(20.0, 20.0, [])     # tiny board -> forces spill
-    big = (-5.0, -5.0, 5.0, 5.0)
-    ys = []
-    for _ in range(12):
-        _ox, oy = occ.place(big)
-        ys.append(oy)
-    assert max(ys) > 20.0, "some parts must spill into the staging strip"
+def test_shelf_pack_avoids_blockers():
+    """A bottom-side pack must keep its parts out of the top through-hole
+    blocker rectangles (the F->B short avoidance)."""
+    items = [(f"C{i}", (-0.5, -0.5, 0.5, 0.5), 0.0) for i in range(6)]
+    blocker = (0.0, 0.0, 6.0, 6.0)
+    off, w, h = pcb._shelf_pack(items, target_w=10.0, blockers=[blocker])
+    for ref, bb, _rot in items:
+        ox, oy = off[ref]
+        bx0, by0, bx1, by1 = bb
+        box = (ox + bx0, oy + by0, ox + bx1, oy + by1)
+        assert not _overlap(box, blocker, 0.0), f"{ref} sits in the blocker"
+
+
+def test_build_model_no_off_board_parts():
+    """LAW 5: EVERY placed footprint's courtyard sits inside Edge.Cuts — the
+    derived outline is grown to enclose every part, never spilled off-board."""
+    model = pcb.build_model()
+    x0, y0 = pcb.ORIGIN_X, pcb.ORIGIN_Y
+    x1, y1 = pcb.ORIGIN_X + model.board_w, pcb.ORIGIN_Y + model.board_h
+    for inst in model.insts:
+        cx0, cy0, cx1, cy1 = pcb._inst_courtyard(inst)
+        assert (cx0 >= x0 - 1e-6 and cy0 >= y0 - 1e-6
+                and cx1 <= x1 + 1e-6 and cy1 <= y1 + 1e-6), \
+            f"{inst.ref} ({inst.sheet}) is off-board: " \
+            f"({cx0:.1f},{cy0:.1f})..({cx1:.1f},{cy1:.1f})"
 
 
 # ---- layer table + stackup -------------------------------------------------------
