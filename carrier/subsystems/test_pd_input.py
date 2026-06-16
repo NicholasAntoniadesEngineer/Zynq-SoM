@@ -1,24 +1,24 @@
-"""BIND-PARITY guard for the carrier pmod_expansion ADAPTER.
+"""BIND-PARITY guard for the carrier pd_input ADAPTER.
 
-The carrier pmod_expansion subsystem is a THIN ADAPTER: it imports the project-
-agnostic library subsystem ``subsystems/pmod_expansion/`` and BINDS its abstract
-ports/rails to the carrier's real net names via the standard ``META`` contract.
-The library's own electrical correctness is proven by
-``subsystems/pmod_expansion/test_pmod_expansion.py``; this co-located test proves
-the ONE thing the adapter is responsible for — that the bind is a faithful,
-byte-stable rename and nothing else:
+The carrier pd_input subsystem is a THIN ADAPTER: it imports the project-agnostic
+library subsystem ``subsystems/pd_input/`` and BINDS its abstract ports/rails to
+the carrier's real net names via the standard ``META`` contract. The library's own
+electrical correctness is proven by ``subsystems/pd_input/test_pd_input.py``; this
+co-located test proves the ONE thing the adapter is responsible for — that the
+bind is a faithful, byte-stable rename and nothing else:
 
   * the adapter's circuit() is EXACTLY ``_lib.circuit(META)`` — same parts, same
     nets in the same insertion order (byte-identical emit), same NCs.
   * every carrier real net the META binds actually appears in the built circuit.
   * NO abstract library interface name leaks through the bind (the contract is
     fully applied — no half-bound externals).
-  * the thin carrier ``.cir`` parses, its pins are the carrier externals, and it
-    points at the authoritative library ``.cir``.
 
-It does NOT re-test the library electricals (SY6280 load-switch / ESD / ratings /
-SPICE), which stay in the library package's own test and are aggregated by
-``schgen board``.
+It does NOT re-test the library electricals (eFuse straps / OVP divider / ESD /
+ratings / SPICE), which stay in the library package's own test and are aggregated
+by ``schgen board``. The SPICE subckt now lives ONLY in the library
+(``subsystems/pd_input/pd_input.cir``): the carrier ``.cir`` was de-bloated away
+together with the adapter folder (the library owns it), so the old carrier-.cir
+parse check is gone with the file it tested.
 """
 
 from __future__ import annotations
@@ -31,11 +31,10 @@ import pytest
 
 from schgen.core.model import NetClass
 
-NAME = "pmod_expansion"
-HERE = Path(__file__).resolve().parent          # carrier/subsystems/<name>/
-REPO = HERE.parents[2]                            # repo root
-CARRIER = HERE.parents[1]                         # carrier/
-CIR = HERE / f"{NAME}.cir"
+NAME = "pd_input"
+HERE = Path(__file__).resolve().parent          # carrier/subsystems/ (flat adapter)
+REPO = HERE.parents[1]                            # repo root
+CARRIER = HERE.parents[0]                         # carrier/
 
 
 def _resolve_library_imports() -> None:
@@ -96,18 +95,19 @@ def test_adapter_is_thin_bind_of_library(adapter, lib):
 
 def test_carrier_real_names_present(adapter):
     """Every carrier real net the META binds to appears in the built circuit
-    (the bind landed), including the source + manually-gated rails + Pmod IOs."""
+    (the bind landed), including the carrier-specific inlet/fused rails."""
     a = adapter.circuit()
     for real in set(adapter.META["bind"].values()):
         assert real in a.nets, real
-    for real in ("+3V3", "+3V3_PMODX", "PMODX_IO1", "PMODX_IO8"):
+    for real in ("+VBUS_IN", "+VIN", "+3V3_SC", "STM32_USB_CC1", "STM32_USB_CC2",
+                 "PD_FLT_N", "CHASSIS_GND"):
         assert real in a.nets, real
 
 
 def test_no_abstract_interface_leak(adapter):
     """No abstract library interface name survives the bind: every externally-
     visible (non-SIGNAL) net is a carrier real net the META produced, never a
-    library abstract one the META was supposed to rebind (no PMOD_IO* leaks)."""
+    library abstract one the META was supposed to rebind."""
     a = adapter.circuit()
     bind = adapter.META["bind"]
     externals = {n.name for n in a.nets.values()
@@ -115,18 +115,3 @@ def test_no_abstract_interface_leak(adapter):
     leaked = {abs_ for abs_ in bind if bind[abs_] != abs_ and abs_ in externals}
     assert not leaked, f"abstract interface leaked through bind: {leaked}"
     assert externals <= set(bind.values()), externals - set(bind.values())
-
-
-def test_cir_parses_and_pins_are_carrier_externals(adapter):
-    """The thin carrier .cir parses, its subckt pins are the carrier external
-    nets (the bound rails), and it points at the library .cir."""
-    text = CIR.read_text()
-    header = next(l for l in text.splitlines()
-                  if l.strip().lower().startswith(f".subckt {NAME}"))
-    pins = header.split()[2:]
-    a = adapter.circuit()
-    for p in pins:
-        assert ("+" + p) in a.nets or p in a.nets, p
-    assert pins[-1] == "GND"
-    assert f".ends {NAME}" in text
-    assert f"subsystems/{NAME}/{NAME}.cir" in text     # pointer to the library

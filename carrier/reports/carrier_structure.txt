@@ -1,7 +1,10 @@
 schgen carrier-structure gate (HARD)
 ============================================================
 
-contract: every carrier/subsystems/<name>/ is a complete package —
-  <name>.py + __init__.py + README.md + test_<name>.py + <name>.cir, with a callable circuit().
+contract: each carrier subsystem matches the SHAPE its kind requires —
+  ADAPTER (has a generic subsystems/<name>/ library): FLAT <name>.py + test_<name>.py
+           (NOT foldered) with a callable circuit() + a META dict.
+  LOCAL  (no generic library): foldered <name>/ with <name>.py + __init__.py +
+           README.md + test_<name>.py + <name>.cir and a callable circuit().
 
-CARRIER STRUCTURE: 34/34 package(s) complete (PASS)
+CARRIER STRUCTURE: 34/34 subsystem(s) complete (17 flat adapter(s) + 17 foldered local(s)) (PASS)

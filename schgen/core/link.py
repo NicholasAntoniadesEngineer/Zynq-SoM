@@ -138,9 +138,11 @@ def all_subsystem_paths() -> list[Path]:
     whether a subsystem is the flat ``<name>.py`` or the foldered
     ``<name>/<name>.py`` package form — the foldering migration is byte-neutral)."""
     by_name: dict[str, Path] = {}
-    # flat: carrier/subsystems/<name>.py
+    # flat: carrier/subsystems/<name>.py — the flat adapters now sit beside their
+    # flat test_<name>.py guards (the folder->flat de-bloat), so skip test_* and
+    # dunder files: a subsystem netlist is never a test module.
     for p in SUBSYSTEMS_DIR.glob("*.py"):
-        if p.stem != "__init__":
+        if p.stem != "__init__" and not p.name.startswith("test_"):
             by_name[p.stem] = p
     # foldered: carrier/subsystems/<name>/<name>.py (wins over a stale flat)
     for d in SUBSYSTEMS_DIR.iterdir():

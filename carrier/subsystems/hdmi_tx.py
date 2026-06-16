@@ -57,6 +57,8 @@ _J2_MAP = "som_j2_connector (wave 3 PL function map)"
 # (buses/notes are left at the library defaults, which already equal the
 #  carrier's house-style HDMI_TX_DDC bus name + power-tree draw notes, so the
 #  carrier's derived artifacts stay byte-identical without an override.)
+__all__ = ["circuit", "META"]
+
 META = {
     "bind": {
         "+VDD_IO": "+3V3_HDMI_TX",

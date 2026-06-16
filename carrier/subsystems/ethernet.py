@@ -61,6 +61,8 @@ _RJ45 = "rj45_connector (wave 2)"
 #   bind    abstract subsystem net -> carrier real net
 #   expects media-side pairs that bind on the rj45_connector sheet -> deferral
 # (no power rail to budget, no named bus -> no buses/notes here.)
+__all__ = ["circuit", "META"]
+
 META = {
     "bind": {
         "CHASSIS_GND": "CHASSIS_GND",

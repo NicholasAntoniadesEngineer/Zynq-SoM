@@ -206,29 +206,135 @@ def test_structure_gate_all_packages_complete():
 
 
 def test_carrier_structure_all_complete():
-    """The board promotes the carrier structure gate to HARD-FAIL: every
-    carrier/subsystems/<name>/ must be a complete package with a callable
-    circuit()."""
+    """The board promotes the carrier structure gate to HARD-FAIL. After the
+    adapter de-bloat each carrier subsystem matches the SHAPE its kind needs:
+    an ADAPTER (has a generic subsystems/<name>/ library) is a FLAT <name>.py +
+    test_<name>.py pair (NOT foldered); a LOCAL is a foldered 4-artifact package.
+    All complete, and the split is the documented 17 flat adapters + 17 foldered
+    locals = 34 (the 17th local is the `mechanical` board-fab-art sheet)."""
     from schgen.verify import carrier_structure
     res = carrier_structure.check()
     assert res.packages, "no carrier/subsystems/ packages found"
-    assert res.ok, [(p.name, p.missing, p.errors) for p in res.packages
+    assert res.ok, [(p.name, p.kind, p.missing, p.errors) for p in res.packages
                     if not p.ok]
+    assert res.n_adapters == 17, [p.name for p in res.packages if p.adapter]
+    assert res.n_locals == 17, [p.name for p in res.packages if not p.adapter]
+    assert len(res.packages) == 34
+    # every adapter is flat (no leftover folder) + carries a META dict; every
+    # local is foldered.
+    for p in res.packages:
+        if p.adapter:
+            assert p.has_meta, p.name
+            assert not (carrier_structure.CARRIER_SUBSYSTEMS_DIR / p.name).is_dir(), \
+                f"adapter {p.name} re-bloated into a folder"
 
 
-def test_carrier_structure_kills_incomplete(tmp_path):
-    """Prove the carrier gate bites: a package missing artifacts / with no
-    circuit() is not ok."""
+def _local_libdir(tmp_path):
+    """A library dir with NO matching subsystem, so a 'widget' is classified
+    LOCAL (must be foldered) by the gate."""
+    libs = tmp_path / "_libs_empty"
+    libs.mkdir()
+    return libs
+
+
+def _adapter_libdir(tmp_path, name="widget"):
+    """A library dir that DOES own subsystems/<name>/, so the gate classifies
+    that carrier name as an ADAPTER (must be flat)."""
+    libs = tmp_path / "_libs"
+    (libs / name).mkdir(parents=True)
+    return libs
+
+
+def test_carrier_structure_kills_incomplete_local(tmp_path):
+    """Prove the carrier gate bites a LOCAL: a foldered package missing artifacts
+    / with no circuit() is not ok (missing-set is the foldered 4-artifact set)."""
     from schgen.verify import carrier_structure
-    pkg = tmp_path / "widget"
+    base = tmp_path / "carrier_subsystems"
+    base.mkdir()
+    pkg = base / "widget"
     pkg.mkdir()
     (pkg / "__init__.py").write_text("")
     (pkg / "widget.py").write_text("x = 1\n")     # no circuit(); missing 3 files
-    res = carrier_structure.check(base=tmp_path)
+    res = carrier_structure.check(base=base, lib_dir=_local_libdir(tmp_path))
     rep = {p.name: p for p in res.packages}["widget"]
     assert not rep.ok and not res.ok
+    assert not rep.adapter                         # classified LOCAL (no library)
     assert not rep.has_circuit
     assert set(rep.missing) == {"README.md", "test_widget.py", "widget.cir"}
+
+
+def test_carrier_structure_passes_a_well_formed_adapter(tmp_path):
+    """Sanity baseline for the adapter mutants: a FLAT widget.py (with circuit()
+    + META) plus a flat test_widget.py, classified ADAPTER, is OK."""
+    from schgen.verify import carrier_structure
+    base = tmp_path / "carrier_subsystems"
+    base.mkdir()
+    (base / "widget.py").write_text(
+        "def circuit():\n    return 1\nMETA = {'bind': {}}\n")
+    (base / "test_widget.py").write_text("def test_x():\n    assert True\n")
+    res = carrier_structure.check(base=base,
+                                  lib_dir=_adapter_libdir(tmp_path))
+    rep = {p.name: p for p in res.packages}["widget"]
+    assert rep.adapter and rep.ok and res.ok
+    assert rep.has_circuit and rep.has_meta and not rep.missing
+
+
+def test_carrier_structure_kills_adapter_left_foldered(tmp_path):
+    """MUTANT (a): an ADAPTER that stayed FOLDERED must FAIL — the de-bloat is
+    enforced, an adapter cannot re-grow its README/.cir/__init__ folder."""
+    from schgen.verify import carrier_structure
+    base = tmp_path / "carrier_subsystems"
+    base.mkdir()
+    pkg = base / "widget"            # foldered (the forbidden adapter shape)
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("")
+    (pkg / "widget.py").write_text(
+        "def circuit():\n    return 1\nMETA = {'bind': {}}\n")
+    (pkg / "test_widget.py").write_text("def test_x():\n    assert True\n")
+    res = carrier_structure.check(base=base,
+                                  lib_dir=_adapter_libdir(tmp_path))
+    rep = {p.name: p for p in res.packages}["widget"]
+    assert rep.adapter
+    assert not rep.ok and not res.ok
+    # the folder itself + the absent flat files are the violation
+    assert any("foldered" in m for m in rep.missing), rep.missing
+    assert "widget.py" in rep.missing and "test_widget.py" in rep.missing
+
+
+def test_carrier_structure_kills_adapter_missing_flat_test(tmp_path):
+    """MUTANT (b): a FLAT adapter widget.py with NO flat test_widget.py must
+    FAIL — the bind guard is mandatory."""
+    from schgen.verify import carrier_structure
+    base = tmp_path / "carrier_subsystems"
+    base.mkdir()
+    (base / "widget.py").write_text(
+        "def circuit():\n    return 1\nMETA = {'bind': {}}\n")
+    # NB: no test_widget.py
+    res = carrier_structure.check(base=base,
+                                  lib_dir=_adapter_libdir(tmp_path))
+    rep = {p.name: p for p in res.packages}["widget"]
+    assert rep.adapter and rep.has_circuit
+    assert not rep.ok and not res.ok
+    assert rep.missing == ["test_widget.py"]
+
+
+def test_carrier_structure_kills_local_that_got_flattened(tmp_path):
+    """MUTANT (c): a LOCAL that lost its folder (flattened to a bare
+    <name>.py) must FAIL — a carrier-local with no generic library to point at
+    MUST keep its self-contained 4-artifact folder."""
+    from schgen.verify import carrier_structure
+    base = tmp_path / "carrier_subsystems"
+    base.mkdir()
+    (base / "widget.py").write_text(
+        "def circuit():\n    return 1\n")          # flat, but it's a LOCAL
+    res = carrier_structure.check(base=base, lib_dir=_local_libdir(tmp_path))
+    rep = {p.name: p for p in res.packages}["widget"]
+    assert not rep.adapter                          # LOCAL (no library)
+    assert not rep.ok and not res.ok
+    # the missing FOLDER + the foldered artifacts are the violation
+    assert any("foldered package" in m for m in rep.missing), rep.missing
+    assert {"__init__.py", "README.md", "test_widget.py",
+            "widget.cir"} <= set(rep.missing)
 
 
 def test_structure_gate_kills_incomplete_package(tmp_path, monkeypatch):

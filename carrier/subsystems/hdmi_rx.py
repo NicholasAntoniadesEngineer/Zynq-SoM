@@ -65,6 +65,8 @@ _J23_MAP = "som_j2_j3_connector (wave 3 FPGA bank function map)"
 #   expects ports that bind on the generated J2/J3 sheets -> explicit linker deferral
 #           (for a TMDS pair, the P line carries the pair's deferral)
 #   notes   power-tree draw note cites the carrier's house-style wording
+__all__ = ["circuit", "META"]
+
 META = {
     "bind": {
         "+VDD_LOGIC": "+3V3_HDMI_RX",

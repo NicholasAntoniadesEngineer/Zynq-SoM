@@ -49,6 +49,8 @@ from __future__ import annotations
 from subsystems.rj45_connector import rj45_connector as _lib
 from schgen.core.model import Circuit
 
+__all__ = ["circuit", "META"]
+
 # The ONE standard adapter contract (schgen.core.subsystem.Meta) — the entire
 # carrier-specific surface of this subsystem. Per-net rationale is in the module
 # docstring above.

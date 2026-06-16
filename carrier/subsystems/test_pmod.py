@@ -12,12 +12,13 @@ bind is a faithful, byte-stable rename and nothing else:
   * every carrier real net the META binds actually appears in the built circuit.
   * NO abstract library interface name leaks through the bind (the contract is
     fully applied — no half-bound externals).
-  * the thin carrier ``.cir`` parses, its pins are the carrier externals, and it
-    points at the authoritative library ``.cir``.
 
 It does NOT re-test the library electricals (200R IO protection / VCC bypass /
 ratings / SPICE), which stay in the library package's own test and are aggregated
-by ``schgen board``.
+by ``schgen board``. The SPICE subckt now lives ONLY in the library
+(``subsystems/pmod/pmod.cir``): the carrier ``.cir`` was de-bloated away together
+with the adapter folder (the library owns it), so the old carrier-.cir parse
+check is gone with the file it tested.
 """
 
 from __future__ import annotations
@@ -31,10 +32,9 @@ import pytest
 from schgen.core.model import NetClass
 
 NAME = "pmod"
-HERE = Path(__file__).resolve().parent          # carrier/subsystems/<name>/
-REPO = HERE.parents[2]                            # repo root
-CARRIER = HERE.parents[1]                         # carrier/
-CIR = HERE / f"{NAME}.cir"
+HERE = Path(__file__).resolve().parent          # carrier/subsystems/ (flat adapter)
+REPO = HERE.parents[1]                            # repo root
+CARRIER = HERE.parents[0]                         # carrier/
 
 
 def _resolve_library_imports() -> None:
@@ -115,25 +115,3 @@ def test_no_abstract_interface_leak(adapter):
     leaked = {abs_ for abs_ in bind if bind[abs_] != abs_ and abs_ in externals}
     assert not leaked, f"abstract interface leaked through bind: {leaked}"
     assert externals <= set(bind.values()), externals - set(bind.values())
-
-
-def test_cir_parses_and_pins_are_carrier_externals(adapter):
-    """The thin carrier .cir parses, its subckt pins are the carrier external
-    nets (the bound rails/ports), and it points at the library .cir."""
-    text = CIR.read_text()
-    header = next(l for l in text.splitlines()
-                  if l.strip().lower().startswith(f".subckt {NAME}"))
-    # subckt header may continue onto '+' continuation lines
-    lines = text.splitlines()
-    hi = lines.index(header)
-    tokens = header.split()[2:]
-    j = hi + 1
-    while j < len(lines) and lines[j].lstrip().startswith("+"):
-        tokens += lines[j].lstrip()[1:].split()
-        j += 1
-    a = adapter.circuit()
-    for p in tokens:
-        assert ("+" + p) in a.nets or p in a.nets, p
-    assert tokens[-1] == "GND"
-    assert f".ends {NAME}" in text
-    assert f"subsystems/{NAME}/{NAME}.cir" in text     # pointer to the library
