@@ -108,12 +108,24 @@ class SheetCircuit:
     module: object
 
 
+def _carrier_subsystem_file(name: str) -> Path | None:
+    """Resolve a carrier subsystem NAME to its netlist file, supporting BOTH the
+    flat ``carrier/subsystems/<name>.py`` layout AND the foldered
+    ``carrier/subsystems/<name>/<name>.py`` package layout (the foldered form
+    wins if both somehow exist). Returns None if neither is present."""
+    foldered = SUBSYSTEMS_DIR / name / f"{name}.py"
+    if foldered.exists():
+        return foldered
+    flat = SUBSYSTEMS_DIR / f"{name}.py"
+    return flat if flat.exists() else None
+
+
 def load_subsystem(name_or_path: str) -> SheetCircuit:
     path = Path(name_or_path)
     if path.suffix != ".py":
-        path = SUBSYSTEMS_DIR / f"{Path(name_or_path).stem}.py"
-    if not path.exists():
-        raise SystemExit(f"subsystem not found: {path}")
+        path = _carrier_subsystem_file(Path(name_or_path).stem)
+    if path is None or not path.exists():
+        raise SystemExit(f"subsystem not found: {name_or_path}")
     spec = importlib.util.spec_from_file_location(f"carrier_subsys_{path.stem}", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -122,8 +134,21 @@ def load_subsystem(name_or_path: str) -> SheetCircuit:
 
 
 def all_subsystem_paths() -> list[Path]:
-    return sorted(p for p in SUBSYSTEMS_DIR.glob("*.py")
-                  if p.stem != "__init__")
+    """Every carrier subsystem netlist, sorted by NAME (so sheet order is stable
+    whether a subsystem is the flat ``<name>.py`` or the foldered
+    ``<name>/<name>.py`` package form — the foldering migration is byte-neutral)."""
+    by_name: dict[str, Path] = {}
+    # flat: carrier/subsystems/<name>.py
+    for p in SUBSYSTEMS_DIR.glob("*.py"):
+        if p.stem != "__init__":
+            by_name[p.stem] = p
+    # foldered: carrier/subsystems/<name>/<name>.py (wins over a stale flat)
+    for d in SUBSYSTEMS_DIR.iterdir():
+        if d.is_dir() and not d.name.startswith((".", "_")):
+            f = d / f"{d.name}.py"
+            if f.exists():
+                by_name[d.name] = f
+    return [by_name[name] for name in sorted(by_name)]
 
 
 def load_som_contract(path: Path = SOM_INTERFACE) -> dict[str, list[str]]:
