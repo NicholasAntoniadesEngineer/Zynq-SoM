@@ -14,8 +14,8 @@ vetoes that default to "DIP rules" (carrier/research/bringup_power_gating.md, se
 
 ## Stage 0 — power-off checks
 
-Sources: `carrier/subsystems/pd_input.py`, `carrier/subsystems/bringup_rails.py`,
-`carrier/subsystems/debug_boot.py`, `carrier/research/bringup_power_gating.md`.
+Sources: `carrier/subsystems/pd_input/pd_input.py`, `carrier/subsystems/bringup_rails/bringup_rails.py`,
+`carrier/subsystems/debug_boot/debug_boot.py`, `carrier/research/bringup_power_gating.md`.
 
 1. **All DIPs OPEN.** Bring-up DIPs `bringup_rails.SW1` (4 wired positions), `bringup_rails.SW2` (8 wired positions), `bringup_rails.SW6` (2 wired positions),
    boot-request DIP `debug_boot.SW1` (4 positions) — every position open.
@@ -29,7 +29,7 @@ Sources: `carrier/subsystems/pd_input.py`, `carrier/subsystems/bringup_rails.py`
 
 ## Stage 1 — first power: PD negotiation, always-on domain
 
-Sources: `carrier/subsystems/pd_input.py`, `carrier/subsystems/usb_pd.py`,
+Sources: `carrier/subsystems/pd_input/pd_input.py`, `carrier/subsystems/usb_pd/usb_pd.py`,
 `carrier/research/bringup_power_gating.md` (risk R1), `carrier/research/power_mon.md`.
 
 Plug a 20 V / 3 A (60 W) USB-C PD-capable supply into the power USB-C (`pd_input.J1`). The
@@ -72,8 +72,8 @@ monitored rail still down (`carrier/research/power_mon.md` section 2).
 
 ## Stage 2 — rails, one DIP at a time
 
-Sources: `carrier/subsystems/bringup_rails.py` (SW1 map), `carrier/subsystems/bringup_en.py`
-(EN cells), `carrier/subsystems/power.py` (regulator chain), `carrier/subsystems/power_mon.py`
+Sources: `carrier/subsystems/bringup_rails/bringup_rails.py` (SW1 map), `carrier/subsystems/bringup_en/bringup_en.py`
+(EN cells), `carrier/subsystems/power/power.py` (regulator chain), `carrier/subsystems/power_mon/power_mon.py`
 (shunts/monitors), `carrier/research/power_mon.md` (budgets).
 
 The sequence below is the regulator chain read from the power netlist —
@@ -110,15 +110,15 @@ early is benign: its regulator simply has no input yet.)
 
 ## Stage 3 — user LEDs: close `bringup_rails.SW1` position 4
 
-Sources: `carrier/subsystems/bringup_modules.py`, `carrier/subsystems/user_io.py`.
+Sources: `carrier/subsystems/bringup_modules/bringup_modules.py`, `carrier/subsystems/user_io/user_io.py`.
 
 - The rail DIP's spare position gates `+3V3_USER_LED` through `bringup_modules.U8` (SY6280, ILIM 523 mA).
 - Status LED `bringup_modules.D8` lights; the user LEDs themselves are PL-driven (active-LOW) and stay dark until gateware drives them.
 
 ## Stage 4 — module load switches, one DIP at a time
 
-Sources: `carrier/subsystems/bringup_rails.py` (SW2/SW6 maps), `carrier/subsystems/bringup_en_modules.py`,
-`carrier/subsystems/bringup_modules.py` (SY6280 cells; ILIM = 6800 / RSET per the Silergy DS).
+Sources: `carrier/subsystems/bringup_rails/bringup_rails.py` (SW2/SW6 maps), `carrier/subsystems/bringup_en_modules/bringup_en_modules.py`,
+`carrier/subsystems/bringup_modules/bringup_modules.py` (SY6280 cells; ILIM = 6800 / RSET per the Silergy DS).
 
 Each module rail is current-limited and folds back on a fault instead of
 dragging the source rail down — a sagging status LED points at the faulty
@@ -138,7 +138,7 @@ module. Close one position, watch the status LED, check the module's sheet.
 
 `SW2` position 8 is the `EN_LCD_BL` provision: its override rides TCA9535 `P10`
 through a 100k pull-DOWN, so it stays OFF until SC software raises it
-(`carrier/subsystems/bringup_rails.py`).
+(`carrier/subsystems/bringup_rails/bringup_rails.py`).
 
 Software vetoes for the module cells live on the TCA9535 expander at I2C `0x20`
 (`bringup_rails.U1`; POR state = all inputs = DIP rules). Port map is generated
@@ -146,7 +146,7 @@ into `carrier/firmware/zynq_carrier_contract.h` (`schgen firmware`).
 
 ## Stage 5 — boot modes, JTAG, SWD
 
-Sources: `carrier/subsystems/debug_boot.py`, `carrier/research/debug_boot_pmod.md`
+Sources: `carrier/subsystems/debug_boot/debug_boot.py`, `carrier/research/debug_boot_pmod.md`
 (all J1 nets verified against the SoM netlist), live U9 pin extraction (`schgen/bringup_facts.py`).
 
 ### Boot-request DIP (`debug_boot.SW1`)
@@ -188,8 +188,8 @@ verify QSPI/SD boots per the decode table above.
 
 ## Stage 6 — board services (+3V3_AUX expansion, optional)
 
-Sources: `carrier/subsystems/board_aux.py`, `carrier/subsystems/board_services.py`,
-`carrier/subsystems/board_qwiic.py`.
+Sources: `carrier/subsystems/board_aux/board_aux.py`, `carrier/subsystems/board_services/board_services.py`,
+`carrier/subsystems/board_qwiic/board_qwiic.py`.
 
 A SELF-CONTAINED manually-gated rail, separate from the central DIP fabric:
 `board_aux.U1` (SY6280, 523 mA limit) gates `+3V3` -> `+3V3_AUX`, enabled by

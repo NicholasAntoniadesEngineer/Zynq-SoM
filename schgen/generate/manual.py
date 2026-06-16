@@ -142,9 +142,9 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     # ---- stage 0 ---------------------------------------------------------------
     L.append("## Stage 0 — power-off checks")
     L.append("")
-    L.append("Sources: `carrier/subsystems/pd_input.py`, "
-             "`carrier/subsystems/bringup_rails.py`,")
-    L.append("`carrier/subsystems/debug_boot.py`, "
+    L.append("Sources: `carrier/subsystems/pd_input/pd_input.py`, "
+             "`carrier/subsystems/bringup_rails/bringup_rails.py`,")
+    L.append("`carrier/subsystems/debug_boot/debug_boot.py`, "
              "`carrier/research/bringup_power_gating.md`.")
     L.append("")
     dips_desc = ", ".join(f"`bringup_rails.{ref}` ({len(ps)} wired "
@@ -170,8 +170,8 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     # ---- stage 1: first power -------------------------------------------------
     L.append("## Stage 1 — first power: PD negotiation, always-on domain")
     L.append("")
-    L.append("Sources: `carrier/subsystems/pd_input.py`, "
-             "`carrier/subsystems/usb_pd.py`,")
+    L.append("Sources: `carrier/subsystems/pd_input/pd_input.py`, "
+             "`carrier/subsystems/usb_pd/usb_pd.py`,")
     L.append("`carrier/research/bringup_power_gating.md` (risk R1), "
              "`carrier/research/power_mon.md`.")
     L.append("")
@@ -234,10 +234,10 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     # ---- stage 2: rails ---------------------------------------------------------
     L.append("## Stage 2 — rails, one DIP at a time")
     L.append("")
-    L.append("Sources: `carrier/subsystems/bringup_rails.py` (SW1 map), "
-             "`carrier/subsystems/bringup_en.py`")
-    L.append("(EN cells), `carrier/subsystems/power.py` (regulator chain), "
-             "`carrier/subsystems/power_mon.py`")
+    L.append("Sources: `carrier/subsystems/bringup_rails/bringup_rails.py` (SW1 map), "
+             "`carrier/subsystems/bringup_en/bringup_en.py`")
+    L.append("(EN cells), `carrier/subsystems/power/power.py` (regulator chain), "
+             "`carrier/subsystems/power_mon/power_mon.py`")
     L.append("(shunts/monitors), `carrier/research/power_mon.md` (budgets).")
     L.append("")
     L.append("The sequence below is the regulator chain read from the "
@@ -290,8 +290,8 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
         L.append(f"## Stage 3 — user LEDs: close `bringup_rails.{sw}` "
                  f"position {pos}")
         L.append("")
-        L.append("Sources: `carrier/subsystems/bringup_modules.py`, "
-                 "`carrier/subsystems/user_io.py`.")
+        L.append("Sources: `carrier/subsystems/bringup_modules/bringup_modules.py`, "
+                 "`carrier/subsystems/user_io/user_io.py`.")
         L.append("")
         L.append(f"- The rail DIP's spare position gates "
                  f"`{user_gate.rail_out}` through "
@@ -305,9 +305,9 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     # ---- stage 4: modules --------------------------------------------------------
     L.append("## Stage 4 — module load switches, one DIP at a time")
     L.append("")
-    L.append("Sources: `carrier/subsystems/bringup_rails.py` (SW2/SW6 "
-             "maps), `carrier/subsystems/bringup_en_modules.py`,")
-    L.append("`carrier/subsystems/bringup_modules.py` (SY6280 cells; "
+    L.append("Sources: `carrier/subsystems/bringup_rails/bringup_rails.py` (SW2/SW6 "
+             "maps), `carrier/subsystems/bringup_en_modules/bringup_en_modules.py`,")
+    L.append("`carrier/subsystems/bringup_modules/bringup_modules.py` (SY6280 cells; "
              "ILIM = 6800 / RSET per the Silergy DS).")
     L.append("")
     L.append("Each module rail is current-limited and folds back on a "
@@ -345,7 +345,7 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
                  f"override rides TCA9535 `{bit}`")
         L.append("through a 100k pull-DOWN, so it stays OFF until SC "
                  "software raises it")
-        L.append("(`carrier/subsystems/bringup_rails.py`).")
+        L.append("(`carrier/subsystems/bringup_rails/bringup_rails.py`).")
     L.append("")
     L.append("Software vetoes for the module cells live on the "
              f"TCA9535 expander at I2C `0x{exp.addr:02X}`")
@@ -358,7 +358,7 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     # ---- stage 5: boot + debug -----------------------------------------------------
     L.append("## Stage 5 — boot modes, JTAG, SWD")
     L.append("")
-    L.append("Sources: `carrier/subsystems/debug_boot.py`, "
+    L.append("Sources: `carrier/subsystems/debug_boot/debug_boot.py`, "
              "`carrier/research/debug_boot_pmod.md`")
     L.append("(all J1 nets verified against the SoM netlist), live U9 pin "
              "extraction (`schgen/bringup_facts.py`).")
@@ -426,9 +426,9 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     # ---- stage 6: board services (+3V3_AUX manual expansion) ---------------
     L.append("## Stage 6 — board services (+3V3_AUX expansion, optional)")
     L.append("")
-    L.append("Sources: `carrier/subsystems/board_aux.py`, "
-             "`carrier/subsystems/board_services.py`,")
-    L.append("`carrier/subsystems/board_qwiic.py`.")
+    L.append("Sources: `carrier/subsystems/board_aux/board_aux.py`, "
+             "`carrier/subsystems/board_services/board_services.py`,")
+    L.append("`carrier/subsystems/board_qwiic/board_qwiic.py`.")
     L.append("")
     L.append("A SELF-CONTAINED manually-gated rail, separate from the central "
              "DIP fabric:")

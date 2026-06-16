@@ -7,15 +7,15 @@
  * sources:
  *   carrier/som_interface.json
  *   som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)
- *   carrier/subsystems/power.py
- *   carrier/subsystems/power_mon.py
- *   carrier/subsystems/bringup_rails.py
- *   carrier/subsystems/bringup_en.py
- *   carrier/subsystems/bringup_en_modules.py
- *   carrier/subsystems/bringup_modules.py
- *   carrier/subsystems/debug_boot.py
- *   carrier/subsystems/board_aux.py
- *   carrier/subsystems/board_services.py
+ *   carrier/subsystems/power/power.py
+ *   carrier/subsystems/power_mon/power_mon.py
+ *   carrier/subsystems/bringup_rails/bringup_rails.py
+ *   carrier/subsystems/bringup_en/bringup_en.py
+ *   carrier/subsystems/bringup_en_modules/bringup_en_modules.py
+ *   carrier/subsystems/bringup_modules/bringup_modules.py
+ *   carrier/subsystems/debug_boot/debug_boot.py
+ *   carrier/subsystems/board_aux/board_aux.py
+ *   carrier/subsystems/board_services/board_services.py
  *   carrier/research/debug_boot_pmod.md (BOOTSEL decode, SWD reservation)
  *   carrier/research/power_mon.md (I2C address map)
  *   carrier/research/bringup_power_gating.md (EN-cell semantics, GPIO plan)

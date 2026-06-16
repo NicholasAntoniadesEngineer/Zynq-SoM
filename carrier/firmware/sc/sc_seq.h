@@ -10,13 +10,13 @@
  * platform/Zephyr headers; a HAL port (e.g. sc_hal_zephyr.c) backs it.
  * sources:
  *   carrier/firmware/zynq_carrier_contract.h (the SC hardware contract)
- *   carrier/subsystems/power.py (regulator chain)
- *   carrier/subsystems/power_mon.py (INA3221 monitors + shunts)
- *   carrier/subsystems/bringup_en.py (rail EN cells)
- *   carrier/subsystems/bringup_modules.py (SY6280 module gates)
- *   carrier/subsystems/bringup_rails.py (TCA9535 override expander)
- *   carrier/subsystems/usb_pd.py (FUSB302B PD PHY)
- *   carrier/subsystems/board_services.py (TPS3823 watchdog)
+ *   carrier/subsystems/power/power.py (regulator chain)
+ *   carrier/subsystems/power_mon/power_mon.py (INA3221 monitors + shunts)
+ *   carrier/subsystems/bringup_en/bringup_en.py (rail EN cells)
+ *   carrier/subsystems/bringup_modules/bringup_modules.py (SY6280 module gates)
+ *   carrier/subsystems/bringup_rails/bringup_rails.py (TCA9535 override expander)
+ *   carrier/subsystems/usb_pd/usb_pd.py (FUSB302B PD PHY)
+ *   carrier/subsystems/board_services/board_services.py (TPS3823 watchdog)
  *   carrier/docs/BRINGUP.md (the staged procedure this automates)
  */
 #ifndef SC_SEQ_H

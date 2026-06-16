@@ -1232,7 +1232,7 @@ def main(argv: list[str] | None = None) -> int:
                          "(the no-CI answer to 'who watches the watchmen')")
     st.add_argument("sheets", nargs="*",
                     help="sheet names/paths (default: schgen/tests/"
-                         "m1_rc_sheet.py + carrier/subsystems/uart_bridge.py)")
+                         "m1_rc_sheet.py + carrier/subsystems/uart_bridge/uart_bridge.py)")
     st.add_argument("--keep", action="store_true",
                     help="keep the scratch dir with all mutants")
     from schgen.verify.selftest import cmd_selftest
