@@ -1048,6 +1048,36 @@ def cmd_board(args: argparse.Namespace) -> int:
     return 0 if ok_all else 1
 
 
+def cmd_check(args: argparse.Namespace) -> int:
+    """The schgen regression bar (formerly scripts/check.sh): run the four gates
+    that must ALL pass before a commit, stopping at the first failure —
+      1. board    every sheet gated + board link/merge + cc/short detector
+      2. selftest gate MUTATION kills + cross-PYTHONHASHSEED determinism
+      3. m1_rc    the M1 RC-spine engine smoke sheet
+      4. pytest   the unit suite (model, gates, part-gen, foldering, ...)
+    Local only (no online CI by project policy)."""
+    import subprocess
+    stages = [
+        ("1/4  board — all sheets + link + cc/short gate",
+         [sys.executable, "-m", "schgen", "board"]),
+        ("2/4  selftest — mutation kills + determinism",
+         [sys.executable, "-m", "schgen", "selftest"]),
+        ("3/4  m1_rc — engine smoke",
+         [sys.executable, "-m", "schgen.tests.m1_rc"]),
+        ("4/4  pytest — unit tests",
+         [sys.executable, "-m", "pytest", "schgen/tests", "-q"]),
+    ]
+    for label, cmd in stages:
+        print(f"\n\033[1m==== {label} ====\033[0m")
+        rc = subprocess.run(cmd, cwd=str(REPO_ROOT)).returncode
+        if rc != 0:
+            print(f"\n\033[1;31mREGRESSION FAIL at: {label}\033[0m")
+            return rc
+    print("\n\033[1;32mREGRESSION PASS — board + selftest + m1_rc + pytest "
+          "all green.\033[0m")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="schgen", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -1312,6 +1342,11 @@ def main(argv: list[str] | None = None) -> int:
                               "<name>.cir} + a callable circuit()")
     from schgen.verify.carrier_structure import cmd as _cc_cmd
     cc.set_defaults(func=_cc_cmd)
+    ck = sub.add_parser(
+        "check", help="the regression bar: board + selftest + m1_rc + pytest "
+                      "(stops at first failure; local-only, replaces "
+                      "scripts/check.sh)")
+    ck.set_defaults(func=cmd_check)
     args = p.parse_args(argv)
     return args.func(args)
 
