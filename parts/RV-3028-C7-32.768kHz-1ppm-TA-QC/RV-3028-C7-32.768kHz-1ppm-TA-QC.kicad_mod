@@ -259,4 +259,16 @@
 		(size 0.504012 0.799998)
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
+	(model
+		"${KICAD10_3DMODEL_DIR}/Crystal.3dshapes/Crystal_SMD_3215-2Pin_3.2x1.5mm.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
 )

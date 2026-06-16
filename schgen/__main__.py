@@ -1097,6 +1097,14 @@ def cmd_model3d(args: argparse.Namespace) -> int:
     return 0 if res.ok else 1
 
 
+def cmd_render3d(args: argparse.Namespace) -> int:
+    """3D board renders (top + perspective) for VISUAL verification (LAW 1,
+    extended to 3D): every part's 3D body eyeballed. Best-effort — skips with a
+    warning if kicad-cli / the KiCad 3D-model library is absent."""
+    from schgen.output import render3d
+    return render3d.cmd(args)
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     """The schgen regression bar (formerly scripts/check.sh): run the four gates
     that must ALL pass before a commit, stopping at the first failure —
@@ -1401,6 +1409,11 @@ def main(argv: list[str] | None = None) -> int:
         help="3D-model coverage of custom footprints (SOFT): n/m covered + "
              "which are unmatched and why")
     m3.set_defaults(func=cmd_model3d)
+    r3 = sub.add_parser(
+        "render3d",
+        help="3D board renders (top + perspective) for VISUAL verification "
+             "(LAW 1) -> carrier/renders/3d_*.png")
+    r3.set_defaults(func=cmd_render3d)
     args = p.parse_args(argv)
     return args.func(args)
 

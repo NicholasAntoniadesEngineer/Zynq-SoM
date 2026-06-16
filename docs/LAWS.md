@@ -51,6 +51,14 @@ sufficient: airwires, subsystem grouping, and off-board placement are not DRC
 errors, so a ratsnest image + a hard gate (off-board / dispersion / cross-airwire
 budget) are mandatory.
 
+**3D is also the judge.** Every PCB change MUST also be inspected in 3D
+(`schgen render3d` → `carrier/renders/3d_{top,persp}.png`, via `kicad-cli pcb
+render`): every component must show a faithful 3D body (or be a DOCUMENTED
+unmatched part in the `model3d` coverage gate — never a wrong-size body, which is
+worse than none), with nothing floating, mis-oriented, or colliding. The
+raytraced PNG is not byte-deterministic, so it is inspected, not golden-checked —
+but it is not optional. Open it and look, like a human.
+
 ---
 
 ## Standing principles (corollaries of the LAWS)

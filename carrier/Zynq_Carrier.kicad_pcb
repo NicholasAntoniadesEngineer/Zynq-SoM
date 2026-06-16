@@ -99190,6 +99190,18 @@
 			(net 185 "GND")
 			(uuid "126ebf29-0a1d-5ab8-8dcf-8cfc67376542")
 		)
+		(model
+			"${KICAD10_3DMODEL_DIR}/Crystal.3dshapes/Crystal_SMD_3215-2Pin_3.2x1.5mm.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 		(uuid "f38b30ee-d1ac-535d-acff-7b2692d99b35")
 	)
 	(footprint

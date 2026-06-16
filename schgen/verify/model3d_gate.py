@@ -54,13 +54,9 @@ _DEFAULT_3DMODEL_DIR = Path(
 _KNOWN_UNMATCHED: dict[str, str] = {
     "DF40C-100DS-0.4V_51":
         "Hirose DF40 0.4mm board-to-board mezzanine — no DF40 stock model",
-    "FUSB302BMPX":
-        "MLP-14 2.5x2.5 P0.5 — stock DFN-14 bodies are 3x3/3x4, none matches",
     "HX5008NLT":
         "Ethernet magnetics module (SOP-24 13.2x15.1) — no discrete-magnetics "
         "stock body",
-    "RV-3028-C7-32.768kHz-1ppm-TA-QC":
-        "RTC OSC-SMD 8P 3.2x1.5 — no matching stock RTC/oscillator body",
 }
 
 # ``(model`` then (across optional whitespace/newlines) a quoted path.
