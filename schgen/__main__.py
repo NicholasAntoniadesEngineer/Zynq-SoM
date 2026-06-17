@@ -1247,6 +1247,10 @@ def main(argv: list[str] | None = None) -> int:
                           "the netlists (SoM DF40 positions extracted from "
                           "the SoM PCB, edge connectors pinned by mating "
                           "direction, JLC-7628 constraint notes)")
+    fl.add_argument("--export", action="store_true",
+                    help="write the CURRENT derived plan to carrier/"
+                         "floorplan.json (an editable round-trip seed) "
+                         "instead of the SVG/MD — edit it to drive placement")
     from schgen.generate.floorplan import cmd_floorplan
     fl.set_defaults(func=cmd_floorplan)
     pq = sub.add_parser(

@@ -1,0 +1,84 @@
+{
+  "outline": {
+    "w": 200,
+    "h": 165
+  },
+  "_comment": "DECLARATIVE carrier floorplan - edit this to drive the PCB placement. Order in each edge list = order ALONG that edge (N/S left->right, W/E top->bottom). interior: {\"side\":N/E/S/W} or {\"near\":<subsystem>}. Any subsystem omitted falls back to auto-derivation. Regenerate this seed with `schgen floorplan --export`.",
+  "edges": {
+    "N": [
+      "microsd",
+      "pd_input",
+      "usbc_otg",
+      "usb_jtag_connector",
+      "usb_uart_connector"
+    ],
+    "E": [
+      "ethernet",
+      "uart_bridge"
+    ],
+    "S": [
+      "hdmi_rx",
+      "hdmi_tx",
+      "pmod",
+      "pmod_expansion"
+    ],
+    "W": [
+      "fmc",
+      "camera",
+      "lcd"
+    ]
+  },
+  "interior": {
+    "board_aux": {
+      "side": "E"
+    },
+    "board_qwiic": {
+      "side": "E"
+    },
+    "board_services": {
+      "side": "W"
+    },
+    "bringup_en": {
+      "side": "E"
+    },
+    "bringup_en_modules": {
+      "side": "E"
+    },
+    "bringup_modules": {
+      "side": "E"
+    },
+    "bringup_rails": {
+      "side": "E"
+    },
+    "debug_boot": {
+      "side": "N"
+    },
+    "hdmi_rx_term": {
+      "near": "hdmi_rx"
+    },
+    "mechanical": {
+      "side": "E"
+    },
+    "power": {
+      "side": "E"
+    },
+    "power_mon": {
+      "side": "E"
+    },
+    "power_som": {
+      "side": "E"
+    },
+    "rj45_connector": {
+      "near": "ethernet"
+    },
+    "usb_jtag": {
+      "side": "E"
+    },
+    "usb_pd": {
+      "near": "pd_input"
+    },
+    "user_io": {
+      "side": "S"
+    }
+  }
+}
