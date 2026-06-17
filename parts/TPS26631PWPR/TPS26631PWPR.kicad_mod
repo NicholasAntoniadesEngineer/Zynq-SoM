@@ -449,7 +449,7 @@
 		(layers "*.Cu" "*.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/HTSSOP-20-1EP_4.4x6.5mm_P0.65mm_EP3.4x6.5mm.step"
+		"${KIPRJMOD}/../parts/TPS26631PWPR/TPS26631PWPR.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

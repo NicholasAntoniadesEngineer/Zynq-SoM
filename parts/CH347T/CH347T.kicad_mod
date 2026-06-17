@@ -357,7 +357,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/TSSOP-20_4.4x6.5mm_P0.65mm.step"
+		"${KIPRJMOD}/../parts/CH347T/CH347T.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

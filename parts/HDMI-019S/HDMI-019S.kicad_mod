@@ -607,9 +607,9 @@
 		(layers "*.Cu" "*.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Connector_Video.3dshapes/HDMI_A_Amphenol_10029449-x01xLF_Horizontal.step"
+		"${KIPRJMOD}/../parts/HDMI-019S/HDMI-019S.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz 0 -2.0409 -2.3)
 		)
 		(scale
 			(xyz 1 1 1)

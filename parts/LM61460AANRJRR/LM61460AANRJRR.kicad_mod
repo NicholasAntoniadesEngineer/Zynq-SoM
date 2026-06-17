@@ -326,7 +326,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/Texas_S-PVQFN-N14.step"
+		"${KIPRJMOD}/../parts/LM61460AANRJRR/LM61460AANRJRR.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

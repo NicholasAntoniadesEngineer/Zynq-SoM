@@ -62,6 +62,10 @@ def render(pcb: Path, out_dir: Path, quality: str = "high",
         print("render3d: KiCad 3D-model library not found — skipping 3D render")
         return []
     var = f"KICAD{_kicad_major()}_3DMODEL_DIR"
+    # our part .wrl models reference ${KIPRJMOD}/../parts/<MPN>/<MPN>.wrl;
+    # KIPRJMOD is the .kicad_pcb's project dir (carrier/) — pass it so kicad-cli
+    # resolves them (the GUI sets KIPRJMOD itself).
+    kiprjmod = str(pcb.resolve().parent)
     out_dir.mkdir(parents=True, exist_ok=True)
     views = (("top", ["--side", "top"]),
              ("persp", ["--perspective"]))
@@ -69,6 +73,7 @@ def render(pcb: Path, out_dir: Path, quality: str = "high",
     for name, view_args in views:
         png = out_dir / f"3d_{name}.png"
         cmd = ["kicad-cli", "pcb", "render", "-D", f"{var}={model_dir}",
+               "-D", f"KIPRJMOD={kiprjmod}",
                "--quality", quality, "--background", "opaque",
                "-w", str(width), "-h", str(height),
                *view_args, "-o", str(png), str(pcb)]

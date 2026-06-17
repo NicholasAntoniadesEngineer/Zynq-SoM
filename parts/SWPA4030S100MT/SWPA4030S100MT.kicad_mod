@@ -199,7 +199,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Inductor_SMD.3dshapes/L_Sunlord_SWPA4030S.step"
+		"${KIPRJMOD}/../parts/SWPA4030S100MT/SWPA4030S100MT.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

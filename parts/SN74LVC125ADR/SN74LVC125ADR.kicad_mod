@@ -323,7 +323,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/SOIC-14_3.9x8.7mm_P1.27mm.step"
+		"${KIPRJMOD}/../parts/SN74LVC125ADR/SN74LVC125ADR.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

@@ -218,9 +218,9 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
+		"${KIPRJMOD}/../parts/TPS3823-33DBVR/TPS3823-33DBVR.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz -5.4102 1.4732 0)
 		)
 		(scale
 			(xyz 1 1 1)

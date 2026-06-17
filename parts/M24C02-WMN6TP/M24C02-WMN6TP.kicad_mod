@@ -259,7 +259,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/SOIC-8_3.9x4.9mm_P1.27mm.step"
+		"${KIPRJMOD}/../parts/M24C02-WMN6TP/M24C02-WMN6TP.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

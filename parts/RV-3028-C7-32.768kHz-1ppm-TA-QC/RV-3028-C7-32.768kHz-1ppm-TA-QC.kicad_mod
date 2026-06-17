@@ -260,7 +260,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Crystal.3dshapes/Crystal_SMD_3215-2Pin_3.2x1.5mm.step"
+		"${KIPRJMOD}/../parts/RV-3028-C7-32.768kHz-1ppm-TA-QC/RV-3028-C7-32.768kHz-1ppm-TA-QC.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

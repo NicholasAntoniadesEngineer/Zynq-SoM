@@ -535,9 +535,9 @@
 		(layers "*.Cu" "*.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Battery.3dshapes/Battery_CR1225.step"
+		"${KIPRJMOD}/../parts/KH-CR1220-2/KH-CR1220-2.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz -0.5599 0 -0.8)
 		)
 		(scale
 			(xyz 1 1 1)

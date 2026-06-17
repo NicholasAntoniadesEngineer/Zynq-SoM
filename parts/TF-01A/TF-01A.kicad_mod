@@ -343,9 +343,9 @@
 		(layers "*.Cu" "*.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Connector_Card.3dshapes/microSD_HC_Hirose_DM3D-SF.step"
+		"${KIPRJMOD}/../parts/TF-01A/TF-01A.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz 0 -2.175 -0.6)
 		)
 		(scale
 			(xyz 1 1 1)

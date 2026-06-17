@@ -227,7 +227,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step"
+		"${KIPRJMOD}/../parts/AP2112K-3.3TRG1/AP2112K-3.3TRG1.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

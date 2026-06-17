@@ -210,7 +210,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23.step"
+		"${KIPRJMOD}/../parts/AO3400A/AO3400A.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

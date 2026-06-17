@@ -391,7 +391,7 @@
 		(layers "F.Paste")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/QFN-16-1EP_4x4mm_P0.65mm_EP2.5x2.5mm.step"
+		"${KIPRJMOD}/../parts/INA3221AIRGVR/INA3221AIRGVR.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

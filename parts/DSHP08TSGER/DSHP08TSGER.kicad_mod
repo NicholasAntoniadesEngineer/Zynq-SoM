@@ -483,9 +483,9 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Button_Switch_SMD.3dshapes/SW_DIP_SPSTx08_Slide_KingTek_DSHP08TS_W7.62mm_P1.27mm.step"
+		"${KIPRJMOD}/../parts/DSHP08TSGER/DSHP08TSGER.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz 0 -0.0001 0)
 		)
 		(scale
 			(xyz 1 1 1)

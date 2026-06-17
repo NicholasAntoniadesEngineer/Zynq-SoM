@@ -266,9 +266,9 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_1.00mm.3dshapes/PinHeader_1x04_P1.00mm_Vertical.step"
+		"${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz 0.0051 -0.2001 0)
 		)
 		(scale
 			(xyz 1 1 1)

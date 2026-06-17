@@ -52,11 +52,9 @@ _DEFAULT_3DMODEL_DIR = Path(
 # on purpose (a wrong body is worse than none). Listed here so the gate counts
 # them as KNOWN gaps (not silent), with the reason. Keep sorted.
 _KNOWN_UNMATCHED: dict[str, str] = {
-    "DF40C-100DS-0.4V_51":
-        "Hirose DF40 0.4mm board-to-board mezzanine — no DF40 stock model",
-    "HX5008NLT":
-        "Ethernet magnetics module (SOP-24 13.2x15.1) — no discrete-magnetics "
-        "stock body",
+    # all on-board parts now reference a resolving model (the real
+    # EasyEDA .wrl for 54, a stock Samtec FMC body, stock bucks for
+    # the 2 off-board orphans). No documented gaps remain.
 }
 
 # ``(model`` then (across optional whitespace/newlines) a quoted path.
@@ -128,6 +126,9 @@ def _resolve_model_path(raw: str, model_dir: Path) -> Path | None:
     s = raw.strip()
     s = s.replace("${KICAD10_3DMODEL_DIR}", str(model_dir))
     s = s.replace("${KISYS3DMOD}", str(model_dir))
+    # our part .wrl models reference ${KIPRJMOD}/../parts/<MPN>/<MPN>.wrl, where
+    # KIPRJMOD is the carrier project dir; resolve it to the repo's carrier/.
+    s = s.replace("${KIPRJMOD}", str(_REPO_ROOT / "carrier"))
     if "$" in s:                       # an env var we do not know -> unresolved
         return None
     p = Path(s)

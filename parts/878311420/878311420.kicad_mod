@@ -437,9 +437,9 @@
 		(layers "*.Cu" "*.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.00mm.3dshapes/PinHeader_2x07_P2.00mm_Vertical.step"
+		"${KIPRJMOD}/../parts/878311420/878311420.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz 0 0 -3)
 		)
 		(scale
 			(xyz 1 1 1)

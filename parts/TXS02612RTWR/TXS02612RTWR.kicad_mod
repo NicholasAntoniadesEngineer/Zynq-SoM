@@ -464,9 +464,9 @@
 		(layers "F.Paste")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/Texas_RTW_WQFN-24-1EP_4x4mm_P0.5mm_EP2.7x2.7mm.step"
+		"${KIPRJMOD}/../parts/TXS02612RTWR/TXS02612RTWR.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz -0.006 -0.005 0)
 		)
 		(scale
 			(xyz 1 1 1)

@@ -252,7 +252,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Package_SO.3dshapes/VSSOP-8_2.3x2mm_P0.5mm.step"
+		"${KIPRJMOD}/../parts/PCA9306DCUR/PCA9306DCUR.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

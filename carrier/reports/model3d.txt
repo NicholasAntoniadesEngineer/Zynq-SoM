@@ -1,8 +1,5 @@
 3D model coverage gate (custom footprints reference a stock KiCad 3D model that EXISTS on disk)
 ========================================================================
 STATUS: SOFT — gaps are reported, never fail the board (some bespoke parts have no faithful stock body)
-54/56 custom footprints have a resolving 3D model
-
-UNMATCHED (2) — no model (a wrong body is worse than none):
-  DF40C-100DS-0.4V_51: Hirose DF40 0.4mm board-to-board mezzanine — no DF40 stock model
-  HX5008NLT: Ethernet magnetics module (SOP-24 13.2x15.1) — no discrete-magnetics stock body
+56/56 custom footprints have a resolving 3D model
+unmatched: none — every custom footprint has a model

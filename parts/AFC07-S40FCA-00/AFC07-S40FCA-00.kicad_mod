@@ -636,9 +636,9 @@
 		(layers "F.Paste")
 	)
 	(model
-		"${KICAD10_3DMODEL_DIR}/Connector_FFC-FPC.3dshapes/Hirose_FH12-40S-0.5SH_1x40-1MP_P0.50mm_Horizontal.step"
+		"${KIPRJMOD}/../parts/AFC07-S40FCA-00/AFC07-S40FCA-00.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz -0.0001 -1.2999 0)
 		)
 		(scale
 			(xyz 1 1 1)
