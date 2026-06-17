@@ -59,6 +59,17 @@ worse than none), with nothing floating, mis-oriented, or colliding. The
 raytraced PNG is not byte-deterministic, so it is inspected, not golden-checked —
 but it is not optional. Open it and look, like a human.
 
+**The 3D model must FIT the footprint — per part, HARD.** "Has a model" is not
+enough; the body must MATCH the footprint (this is exactly what swapping the real
+EasyEDA `.wrl` for generic stock bodies violated — off-center / wrong-size /
+90°-rotated). The `model3d` gate is HARD (fails the board): for every custom
+footprint the model must RESOLVE on disk AND its placed XY bounding box must fit
+the footprint's `F.Fab` body within a per-axis size band (a 90°-rotated or
+wrong-size body flips the aspect/scale outside it). Prefer the part's own real
+`.wrl` (model + footprint co-generated → matches by construction) over a generic
+stock body. Only a part with no faithful body at all may be a documented
+exception.
+
 ---
 
 ## Standing principles (corollaries of the LAWS)

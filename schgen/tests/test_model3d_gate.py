@@ -132,3 +132,42 @@ def test_real_parts_tree_is_covered_or_documented():
     # every gap is an explicitly documented unmatched part
     for mpn in res.unmatched:
         assert mpn in g._KNOWN_UNMATCHED
+
+
+# ---- the per-part FIT law (a model must MATCH the footprint, not just exist) ----
+
+def _fitwrl(w_in, h_in):
+    """A minimal VRML box w_in x h_in (in 0.1-inch VRML units -> x2.54 mm)."""
+    return ("#VRML V2.0 utf8\nShape{geometry IndexedFaceSet{coord Coordinate{"
+            f"point [{-w_in/2} {-h_in/2} 0, {w_in/2} {-h_in/2} 0, "
+            f"{w_in/2} {h_in/2} 0, {-w_in/2} {h_in/2} 0] }}}}\n")
+
+
+def _fitfp(w_mm, h_mm):
+    return ('(footprint "X"\n'
+            f'  (fp_line (start {-w_mm/2} {-h_mm/2}) (end {w_mm/2} {-h_mm/2}) '
+            '(layer "F.Fab"))\n'
+            f'  (fp_line (start {w_mm/2} {h_mm/2}) (end {-w_mm/2} {h_mm/2}) '
+            '(layer "F.Fab"))\n)\n')
+
+
+def test_fit_law_passes_a_matching_model_and_fails_a_misfit(tmp_path):
+    from schgen.verify import model3d_gate as g
+    mod = tmp_path / "X.kicad_mod"
+    # footprint body ~5.08 x 5.08 mm; a VRML box of 2.0 x 2.0 (0.1in) = 5.08 mm
+    mod.write_text(_fitfp(5.08, 5.08))
+    good = tmp_path / "good.wrl"; good.write_text(_fitwrl(2.0, 2.0))
+    body = "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 0))"
+    assert g._fit_ok(mod, body, good) is None              # matches -> OK
+
+    # a 4x-oversized body must FAIL (the wrong-size-stock-model class of bug)
+    big = tmp_path / "big.wrl"; big.write_text(_fitwrl(8.0, 8.0))
+    assert g._fit_ok(mod, body, big) is not None
+
+    # a 90deg-rotated NON-square model flips the aspect outside the band
+    mod.write_text(_fitfp(10.16, 2.54))                       # 10.16 x 2.54 mm body
+    rot = tmp_path / "rot.wrl"; rot.write_text(_fitwrl(4.0, 1.0))   # 10.16 x 2.54
+    assert g._fit_ok(mod, "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 0))",
+                     rot) is None                          # aligned -> OK
+    assert g._fit_ok(mod, "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 90))",
+                     rot) is not None                      # 90deg -> MISFIT

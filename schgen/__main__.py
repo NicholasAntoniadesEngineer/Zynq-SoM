@@ -1012,19 +1012,22 @@ def cmd_board(args: argparse.Namespace) -> int:
     # 3D-MODEL COVERAGE (SOFT): every custom footprint at parts/<MPN>/ should
     # reference a stock KiCad 3D model that EXISTS on disk so the carrier 3D
     # viewer populates. A missing model is neither an ERC nor a DRC nor a
-    # netlist defect — no other gate sees it — so this reports coverage + the
-    # exact gaps so the number can only move DOWN visibly, never silently. SOFT
-    # by design: some bespoke parts (mezzanines, magnetics module, an exotic RTC
-    # package) have no faithful stock body, and a WRONG 3D body is worse than
-    # none. Does NOT touch ok_all (only an UNEXPECTED broken/missing ref, not a
-    # documented unmatched part, makes the gate verdict False).
+    # netlist defect — no other gate sees it. HARD (LAW): every part's 3D model
+    # must RESOLVE on disk AND its XY body must FIT the footprint (within the
+    # size band) — "has a model" is not enough, it must MATCH the footprint (the
+    # exact thing the generic-stock-model swap violated: off-center / wrong-size /
+    # 90deg-rotated bodies). A documented-unmatched part (no faithful body) keeps
+    # the gate green; a broken/missing ref or a MISFIT fails the board.
     from schgen.verify import model3d_gate
     m3d = model3d_gate.run(rep_dir)
     print(f"{m3d.line()} -> {rep_dir / 'model3d.txt'}")
+    for _mpn in sorted(m3d.misfit):
+        print(f"  3D MODEL MISFIT: {_mpn}: {m3d.misfit[_mpn]}")
     for _mpn in sorted(m3d.broken):
         print(f"  3D MODEL BROKEN: {_mpn}: {m3d.broken[_mpn]}")
     for _mpn in sorted(m3d.missing):
         print(f"  3D MODEL MISSING (model ...) clause: {_mpn}")
+    ok_all = ok_all and m3d.ok       # HARD: every part's 3D body must FIT (LAW)
 
     # SIGNAL-INTEGRITY CONSTRAINTS (not routing): harvest every diff pair the
     # schematic declares, join to the researched si_spec targets, and APPEND

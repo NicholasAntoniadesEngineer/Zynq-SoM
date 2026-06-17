@@ -72,16 +72,20 @@ class Model3dResult:
     broken: dict[str, str] = field(default_factory=dict)
     # MPN with no (model ...) clause at all
     missing: list[str] = field(default_factory=list)
+    # MPN -> reason, for a model that resolves but does NOT fit the footprint
+    misfit: dict[str, str] = field(default_factory=dict)
 
     @property
     def n_unmatched(self) -> int:
         return len(self.unmatched)
 
     def line(self) -> str:
-        """The one-line SOFT report for cmd_board. Deterministic."""
+        """The one-line report for cmd_board. Deterministic."""
         gaps = sorted(self.unmatched)
         tail = f"; {len(gaps)} unmatched: [{', '.join(gaps)}]" if gaps else ""
-        return f"3D MODELS: {self.covered}/{self.total} footprints{tail}"
+        mis = (f"; {len(self.misfit)} MISFIT: [{', '.join(sorted(self.misfit))}]"
+               if self.misfit else "")
+        return f"3D MODELS: {self.covered}/{self.total} footprints{tail}{mis}"
 
     def report(self) -> str:
         lines = [
@@ -101,6 +105,12 @@ class Model3dResult:
                 lines.append(f"  {mpn}: {self.unmatched[mpn]}")
         else:
             lines.append("unmatched: none — every custom footprint has a model")
+        if self.misfit:
+            lines.append("")
+            lines.append(f"MISFIT ({len(self.misfit)}) — model resolves but does "
+                         f"NOT match the footprint body (LAW):")
+            for mpn in sorted(self.misfit):
+                lines.append(f"  {mpn}: {self.misfit[mpn]}")
         if self.broken:
             lines.append("")
             lines.append(f"BROKEN ({len(self.broken)}) — (model ...) path does "
@@ -146,6 +156,87 @@ def _custom_footprints() -> list[Path]:
     return sorted(_PARTS_DIR.glob("*/*.kicad_mod"))
 
 
+# per-axis size-fit band: the placed model's XY bounding box must be within
+# [_FIT_LO, _FIT_HI] x the footprint's F.Fab body box on BOTH axes. A real part
+# body matches ~1x; the generic-stock-model disaster (a 90deg-rotated FFC, a
+# wrong-size connector) flips the aspect ratio or scale clean outside this band.
+_FIT_LO, _FIT_HI = 0.5, 2.0
+_CART_RE = re.compile(
+    r"CARTESIAN_POINT\('[^']*',\(([-\d.E+]+),([-\d.E+]+),([-\d.E+]+)\)\)")
+
+
+def _clause_xfrm(body: str) -> tuple[tuple[float, float], float]:
+    """(scale_xy, rotate_z_deg) from a (model ...) clause body."""
+    def xyz(tag, dflt):
+        m = re.search(rf"\({tag}\s*\(xyz\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\)",
+                      body)
+        return (float(m.group(1)), float(m.group(2)), float(m.group(3))) \
+            if m else dflt
+    sx, sy, _ = xyz("scale", (1.0, 1.0, 1.0))
+    _, _, rz = xyz("rotate", (0.0, 0.0, 0.0))
+    return (sx or 1.0, sy or 1.0), rz % 360
+
+
+def _model_xy(path: Path, scale: tuple[float, float], rot_z: float
+              ) -> tuple[float, float] | None:
+    """Placed model XY extent (mm): parse the file bbox, apply the VRML x2.54
+    (.wrl) or mm (.step) unit, the footprint scale, and the 90/270 axis swap."""
+    t = path.read_text(errors="replace")
+    if path.suffix.lower() == ".wrl":
+        pts = []
+        for blk in re.findall(r"point\s*\[(.*?)\]", t, re.S):
+            c = [float(x) for x in re.findall(r"-?\d+\.?\d*(?:e-?\d+)?", blk)]
+            pts += [(c[i], c[i + 1]) for i in range(0, len(c) - 2, 3)]
+        unit = 2.54
+    else:
+        pts = [(float(a), float(b)) for a, b, _ in _CART_RE.findall(t)]
+        unit = 1.0
+    if not pts:
+        return None
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    w = (max(xs) - min(xs)) * unit * abs(scale[0])
+    h = (max(ys) - min(ys)) * unit * abs(scale[1])
+    if rot_z % 180 == 90:
+        w, h = h, w
+    return w, h
+
+
+def _fab_xy(text: str) -> tuple[float, float] | None:
+    """Footprint body (F.Fab) XY extent (mm)."""
+    xs: list[float] = []
+    ys: list[float] = []
+    for m in re.finditer(r"\(fp_(?:line|rect|poly)\b(.*?)\)\s*"
+                         r"(?=\(fp_|\(pad|\(model|\Z)", text, re.S):
+        if '"F.Fab"' not in m.group(0):
+            continue
+        for a, b in re.findall(
+                r"\((?:start|end|xy)\s+(-?[\d.]+)\s+(-?[\d.]+)\)", m.group(0)):
+            xs.append(float(a))
+            ys.append(float(b))
+    if not xs:
+        return None
+    return max(xs) - min(xs), max(ys) - min(ys)
+
+
+def _fit_ok(mod_path: Path, clause_body: str, model_file: Path
+            ) -> str | None:
+    """None if the model's XY size fits the footprint body within the band; else
+    a human reason. Returns None (can't-check, not a failure) if either box is
+    unparseable."""
+    scale, rz = _clause_xfrm(clause_body)
+    mxy = _model_xy(model_file, scale, rz)
+    fxy = _fab_xy(mod_path.read_text(errors="replace"))
+    if not mxy or not fxy or fxy[0] <= 0 or fxy[1] <= 0:
+        return None
+    rw, rh = mxy[0] / fxy[0], mxy[1] / fxy[1]
+    if _FIT_LO < rw < _FIT_HI and _FIT_LO < rh < _FIT_HI:
+        return None
+    return (f"model {mxy[0]:.1f}x{mxy[1]:.1f} mm vs footprint body "
+            f"{fxy[0]:.1f}x{fxy[1]:.1f} mm (ratio {rw:.2f},{rh:.2f} outside "
+            f"[{_FIT_LO},{_FIT_HI}])")
+
+
 def check(model_dir: Path | None = None) -> Model3dResult:
     """Scan every custom footprint; classify its 3D-model coverage. Pure and
     deterministic (sorted by MPN)."""
@@ -155,7 +246,7 @@ def check(model_dir: Path | None = None) -> Model3dResult:
         mpn = mod.parent.name
         res.total += 1
         text = mod.read_text(errors="replace")
-        m = _MODEL_RE.search(text)
+        m = _MODEL_RE.search(text)          # path-only: robust to 1-line/multiline
         if m is None:
             # no (model ...): either a known-unmatched part or a true gap
             if mpn in _KNOWN_UNMATCHED:
@@ -166,19 +257,25 @@ def check(model_dir: Path | None = None) -> Model3dResult:
             continue
         raw = m.group(1)
         p = _resolve_model_path(raw, md)
-        if p is not None and p.is_file():
-            res.covered += 1
-        else:
+        if p is None or not p.is_file():
             # a (model ...) is present but does not resolve to a file
             if mpn in _KNOWN_UNMATCHED:
                 res.unmatched[mpn] = _KNOWN_UNMATCHED[mpn]
             else:
                 res.broken[mpn] = raw
                 res.unmatched[mpn] = f"model path does not resolve: {raw}"
-    # SOFT: the verdict is OK as long as there is no UNEXPECTED gap — a footprint
-    # that is missing a clause or has a broken ref AND is not on the documented
-    # unmatched list. Documented-unmatched parts keep the gate green.
-    res.ok = not res.broken and not res.missing
+            continue
+        res.covered += 1
+        # the model resolves — now it must FIT the footprint (LAW: a 3D body must
+        # match its footprint, not merely exist; this is what the stock-model
+        # swap violated). The (scale)/(rotate) follow the path; a can't-measure
+        # (no F.Fab / unparseable model) is NOT a failure.
+        reason = _fit_ok(mod, text[m.end():m.end() + 500], p)
+        if reason is not None:
+            res.misfit[mpn] = reason
+    # HARD: a footprint with a missing/broken model (and not documented), OR a
+    # model that does NOT fit its footprint, fails the gate.
+    res.ok = not res.broken and not res.missing and not res.misfit
     return res
 
 
