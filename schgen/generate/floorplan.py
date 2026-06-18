@@ -63,9 +63,9 @@ EDGE_MARGIN = 10.0       # board corners kept clear of edge connectors AND the
 MH_CORNER_KO = 10.0      # corner square reserved for each corner-forced M3 hole
                          # (the PCB corner-forces a hole into each corner) so no
                          # edge/interior block overlaps it (was a DRC short)
-CONN_SIDE_MARGIN = 1.5   # block width = connector span + this each side
-EDGE_DEPTH_CAP = 22.0    # edge block max depth into the board
-CLEAR = 0.8              # block-to-block clearance — TIGHTENED (was 1.5). The
+CONN_SIDE_MARGIN = 0.6   # block width = connector span + this each side
+EDGE_DEPTH_CAP = 15.0    # edge block max depth into the board
+CLEAR = 0.4              # block-to-block clearance — TIGHTENED (was 1.5). The
                          # interior occupancy lattice + the edge run both pack to
                          # this gap, so a smaller value pulls every subsystem
                          # closer, directly SHORTENING the cross-subsystem airwire
@@ -93,7 +93,7 @@ EDGE_BAND = EDGE_DEPTH_CAP - 4.0   # depth of the connector band on each edge �
 # the outline seed is sized for the real 2-sided fill instead of a single-side
 # worst case that left the board ~70% empty. The grow loop + the STRICT LAW-5
 # ratsnest gate remain the final arbiters of routing headroom.
-PACK_EFFICIENCY = 0.50
+PACK_EFFICIENCY = 0.60
 OUTLINE_SNAP = 5.0       # round the derived W/H UP to this grid (mm)
 
 FONT = "ui-monospace, SFMono-Regular, Menlo, monospace"
@@ -1049,14 +1049,19 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # board at the smallest size the real gate passes (verified +277 mm margin at
     # 200x185). The REAL gate in ``schgen board`` is the final, strict arbiter; a
     # mis-estimate could only make the board a touch bigger, never relax the gate.
-    PROXY_TO_REAL = 0.93
-    # SAFETY: the proxy<->real calibration (0.93) is the headroom; the smallest
-    # board the search accepts (200x165) was VERIFIED against the REAL pad-MST
-    # gate at cross-airwire 15900/16349 mm (margin +449), so 0.98 here lands the
-    # auto-search on that same board with the STRICT gate comfortably satisfied.
-    # The REAL gate in `schgen board` remains the final arbiter (a proxy
-    # under-estimate could only grow the board, never relax the gate).
-    SAFETY = 0.98
+    PROXY_TO_REAL = 0.97
+    # SAFETY: PROXY_TO_REAL re-calibrated 0.93 -> 0.97 against the REAL pad-MST
+    # gate across the TIGHT-board regime (CLEAR 0.6): the measured real/proxy ratio
+    # is 0.94-0.97 (it RISES as the board shrinks because the per-pad MST the gate
+    # measures stops being shorter than the block-centre proxy once the blocks pack
+    # close), so the old 0.93 UNDER-estimated the real airwire and the smallest-
+    # area search would pick a board the strict gate then rejected (165x145 est
+    # passed but real 14017 > 13921 budget). 0.97 makes the floorplan's airwire
+    # estimate track the real gate, so the search stops at the smallest board the
+    # REAL gate actually passes; SAFETY 1.0 (no extra fudge — the calibration is
+    # the headroom). The REAL gate in `schgen board` remains the final, strict
+    # arbiter; this only makes the SIZING estimate accurate, never relaxes a gate.
+    SAFETY = 1.0
 
     # DECLARATIVE fixed outline: carrier/floorplan.json {"outline":{"w","h"}}
     # PINS the board dimensions. The placer still packs the same blocks into that
@@ -1129,6 +1134,56 @@ def build_plan(sheets, link_result, regs) -> Plan:
             "floorplan: could not fit all REAL packed blocks under the LAW-5 "
             f"airwire budget on any searched outline (blocks "
             f"{'did' if fit_seen else 'never'} fit)")
+
+    # INDEPENDENT-AXIS REFINEMENT: the aspect grow above moves W and H TOGETHER
+    # along a fixed aspect, so it cannot find a board whose W and H sit at
+    # different fractions of the seed (e.g. 165x140, aspect 1.18, off the coarse
+    # aspect grid). Starting from the best aspect-grown board, greedily shrink one
+    # axis at a time by OUTLINE_SNAP while the blocks still pack AND the estimated
+    # cross-airwire still clears the budget — the SAME est_real <= budget*SAFETY
+    # criterion the aspect search used (the strict REAL gate in `schgen board`
+    # remains the final arbiter; this only lets the SIZING reach the true minimum-
+    # area board on the snap grid, never relaxing a gate). Deterministic: a fixed
+    # axis order (H then W), fixed snap step, stop at the first non-improving pass.
+
+    def _passes(w: float, h: float) -> tuple[bool, float, float]:
+        global BOARD_W, BOARD_H
+        BOARD_W, BOARD_H = w, h
+        plan.som_x = _r5((BOARD_W - som.w) / 2)
+        plan.som_y = _r5((BOARD_H - som.h) / 2)
+        if not _attempt_pack(plan, interior, edge_of, zbox,
+                             affinity, som_pull):
+            return False, 0.0, 0.0
+        bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
+        px = _cross_proxy(plan, plan.edge_blocks + interior,
+                          sheets_of_net, som_j_of_net)
+        er = px * PROXY_TO_REAL
+        return (er <= bud * SAFETY), er, bud
+
+    _area, bw, bh, best_er, best_bud = best
+    # The cross-airwire is NON-MONOTONIC in board size: shrinking by one snap step
+    # can momentarily LENGTHEN the airwire (blocks squeezed into worse slots) and
+    # then improve again a step later (165x150 -> 145 worsens, -> 140 passes). A
+    # greedy single-step descent stalls in that valley, so scan a bounded snap-grid
+    # WINDOW at/under the aspect-best (each axis down to REFINE_SPAN below, but not
+    # below where blocks can pack) and keep the smallest-area board that packs AND
+    # clears the est-airwire budget. The window is small enough to stay fast yet
+    # wide enough to step over the non-monotonic valley. Deterministic: fixed grid.
+    REFINE_SPAN = 40.0                     # mm each axis explored below the best
+    a0, bw0, bh0 = _area, bw, bh
+    ws = [round(bw0 - k * OUTLINE_SNAP, 1)
+          for k in range(0, int(REFINE_SPAN / OUTLINE_SNAP) + 1)]
+    hs = [round(bh0 - k * OUTLINE_SNAP, 1)
+          for k in range(0, int(REFINE_SPAN / OUTLINE_SNAP) + 1)]
+    for w in ws:
+        for h in hs:
+            if w <= 0 or h <= 0 or w < h or w * h >= bw * bh - 1e-6:
+                continue                  # only strictly-smaller, landscape boards
+            ok, er, bud = _passes(w, h)
+            if ok:
+                bw, bh, best_er, best_bud = w, h, er, bud
+    best = (round(bw * bh, 1), bw, bh, best_er, best_bud)
+
     _area, BOARD_W, BOARD_H, est_real, budget = best
     plan.som_x = _r5((BOARD_W - som.w) / 2)
     plan.som_y = _r5((BOARD_H - som.h) / 2)

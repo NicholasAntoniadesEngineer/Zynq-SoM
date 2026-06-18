@@ -102,8 +102,8 @@ GRID = 1.27             # placement snap grid (mm)
 PERIM = 3.0              # perimeter keepout ring (no zone touches the edge)
 MH_KEEPOUT = 5.0         # extra inset reserving the corner mounting-hole pads
 SOM_HALO_PCB = 6.0       # routing/escape halo reserved around the SoM body
-EDGE_BAND_PCB = 18.0     # nominal connector band each side (board-aspect seed)
-ZONE_FILL = 0.42         # zone-area packing efficiency for the seed board size
+EDGE_BAND_PCB = 10.0     # nominal connector band each side (board-aspect seed)
+ZONE_FILL = 0.58         # zone-area packing efficiency for the seed board size
 ZONE_STEP = 2.54         # zone-placement raster scan step (mm)
 OUTLINE_GROW = 5.0       # board grow increment per fit attempt (mm)
 OUTLINE_SNAP_PCB = 5.0   # round the final W/H UP to this grid (mm)
@@ -325,6 +325,24 @@ def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
                         Sym("fp_circle"), Sym("fp_arc")):
                 lyr = sexpr.find(sub, "layer")
                 if lyr and len(lyr) > 1 and "CrtYd" in str(lyr[1]):
+                    # an fp_circle's (center .) + (end .) are the CENTRE and a
+                    # point ON the circumference: the courtyard extends a full
+                    # RADIUS on every side, not just to the (end) point. Adding
+                    # only center+end (as the generic point loop below does) under-
+                    # measures the bbox to one quadrant — e.g. the D1.5mm TestPoint
+                    # courtyard circle (center 0,0 / end 1.25,0) read as a
+                    # (-0.75..1.25) box instead of the true (-1.25..1.25), so the
+                    # packer placed test points a radius too close and KiCad's real
+                    # circular courtyard then overlapped. Expand by the radius.
+                    if head == Sym("fp_circle"):
+                        ctr = sexpr.find(sub, "center")
+                        end = sexpr.find(sub, "end")
+                        if (ctr and len(ctr) >= 3 and end and len(end) >= 3):
+                            cxf, cyf = float(ctr[1]), float(ctr[2])
+                            r = ((float(end[1]) - cxf) ** 2
+                                 + (float(end[2]) - cyf) ** 2) ** 0.5
+                            add(cxf - r, cyf - r)
+                            add(cxf + r, cyf + r)
                     for tag in ("start", "end", "mid", "center"):
                         p = sexpr.find(sub, tag)
                         if p and len(p) >= 3:
@@ -361,10 +379,10 @@ def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
 # Mandatory clearance between any two footprint courtyards AND between a
 # footprint and the board edge — so the emitted PCB has NO courtyard-overlap /
 # pad-clearance / copper-edge DRC errors (only the expected unrouted-net items).
-PLACE_CLEAR = 2.0
+PLACE_CLEAR = 0.7
 EDGE_CLEAR = 2.0
-ZONE_GAP = 2.5             # gap between two adjacent subsystem zones
-ZONE_PAD = 1.0            # padding inside a subsystem zone around its parts
+ZONE_GAP = 0.8             # gap between two adjacent subsystem zones
+ZONE_PAD = 0.4            # padding inside a subsystem zone around its parts
 # N/S EDGE-connector subsystems pack WIDE + SHALLOW (their shelf target width is
 # multiplied by this) so the zone spreads ALONG the horizontal top/bottom edge
 # instead of eating deep into the interior behind the connector (a deep edge
@@ -824,13 +842,26 @@ def build_model(two_side: bool = True) -> PcbModel:
     # SoM receptacles
     for ref, jname in som_j_refs.items():
         pos[ref] = som_view[jname]
-    # subsystem footprints: zone origin + per-part packed offset
+    # subsystem footprints: GRID-SNAPPED zone origin + per-part packed offset.
+    # The shelf packer (above) reserved EXACT PLACE_CLEAR gaps between the parts
+    # in each zone's local frame; snapping each part's ABSOLUTE board position to
+    # the coarse GRID afterwards would round two neighbours across a half-grid
+    # boundary in OPPOSITE directions and collapse a 2.46 mm row pitch to 1.27 mm
+    # — a 0.19 mm courtyard overlap (the intra-zone courtyards_overlap DRC errors
+    # this caused). Instead snap the zone ORIGIN once and add the raw packed
+    # offsets, so the packer's exact intra-zone clearance is preserved verbatim
+    # while the zone as a whole still lands on the placement grid.
+    grid_placed: set[str] = set()
     for sheet in zorigin:
         zx, zy = zorigin[sheet]
+        gzx = _gridify(ORIGIN_X + zx) - ORIGIN_X
+        gzy = _gridify(ORIGIN_Y + zy) - ORIGIN_Y
         for r, (dx, dy) in top_off[sheet].items():
-            pos[r] = (zx + dx, zy + dy)
+            pos[r] = (gzx + dx, gzy + dy)
+            grid_placed.add(r)
         for r, (dx, dy) in bot_off[sheet].items():
-            pos[r] = (zx + dx, zy + dy)
+            pos[r] = (gzx + dx, gzy + dy)
+            grid_placed.add(r)
 
     fixed = set(mh_refs) | set(som_j_refs)
 
@@ -846,9 +877,17 @@ def build_model(two_side: bool = True) -> PcbModel:
         pad_nets: dict[str, tuple[int, str]] = {}
         for pad in pad_names(mod):
             pad_nets[pad] = pin_net.get((ref, pad), (0, ""))
+        # subsystem parts carry a grid-snapped zone origin + the packer's RAW
+        # offset (intra-zone clearance preserved — see STEP 3 above), so they are
+        # NOT re-gridified here; only the fixed-position parts (mounting holes,
+        # SoM receptacles) snap their absolute board position to the grid.
+        if ref in grid_placed:
+            fx, fy = round(ORIGIN_X + bx, 4), round(ORIGIN_Y + by, 4)
+        else:
+            fx, fy = _gridify(ORIGIN_X + bx), _gridify(ORIGIN_Y + by)
         insts.append(FootprintInst(
             ref=ref, value=value, footprint=footprint,
-            x=_gridify(ORIGIN_X + bx), y=_gridify(ORIGIN_Y + by),
+            x=fx, y=fy,
             rotation=fixed_rot.get(ref, 0.0), pad_nets=pad_nets,
             mod_path=mod, sheet=sheet, side=side))
         placed += 1

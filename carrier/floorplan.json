@@ -1,7 +1,7 @@
 {
   "outline": {
-    "w": 200,
-    "h": 165
+    "w": 149,
+    "h": 141
   },
   "_comment": "DECLARATIVE carrier floorplan - edit this to drive the PCB placement. Order in each edge list = order ALONG that edge (N/S left->right, W/E top->bottom). interior: {\"side\":N/E/S/W} or {\"near\":<subsystem>}. Any subsystem omitted falls back to auto-derivation. Regenerate this seed with `schgen floorplan --export`.",
   "edges": {

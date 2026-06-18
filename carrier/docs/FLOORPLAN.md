@@ -21,50 +21,55 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 | J2 | (136.5, 129.5) rot 180 | (21, 38.5) | 19.8 x 3.78 mm |
 | J3 | (154.5, 112) rot 90 | (3, 21) | 3.78 x 19.8 mm |
 
-Derived board: **200 x 165 mm**; SoM origin at **(75, 61.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
+Derived board: **149 x 141 mm**; SoM origin at **(49.5, 49.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: FIXED outline 200x165 mm declared in carrier/floorplan.json; estimated cross-subsystem airwire 15730 mm (LAW-5 budget 16349 mm — the REAL gate in `schgen board` is the arbiter).
+Outline derivation: FIXED outline 149x141 mm declared in carrier/floorplan.json; estimated cross-subsystem airwire 13243 mm (LAW-5 budget 13045 mm — the REAL gate in `schgen board` is the arbiter).
 
 ## Edge connectors (pinned to edges by their mating direction)
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| N | microsd | (22, 0, 42.83 x 19.501) | TF-01A (microSD push-pull) | (1) |
-| N | pd_input | (66, 0, 38.71 x 17.418) | TYPE-C-31-M-12 (USB-C receptacle) | (2) |
-| N | usbc_otg | (105.5, 0, 31.09 x 12.88) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
-| N | usb_jtag_connector | (137, 0, 26.01 x 12.218) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
-| N | usb_uart_connector | (164, 0, 26.01 x 12.218) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
-| W | camera | (0, 64.5, 33.94 x 14.4) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (6) |
-| W | lcd | (0, 80, 41.25 x 15.743) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (7) |
-| E | ethernet | (180.5, 52.5, 19.66 x 23.56) | RESERVED: rj45_connector (deferred) | (8) |
-| E | uart_bridge | (188, 77, 12.04 x 16.34) | RESERVED: usb_uart_connector (deferred) | (9) |
-| S | hdmi_rx | (10, 145.5, 38.25 x 19.614) | HDMI-019S (HDMI receptacle) | (10) |
-| S | hdmi_tx | (49, 145, 41.25 x 19.75) | HDMI-019S (HDMI receptacle) | (11) |
-| S | pmod | (91, 141.5, 52.68 x 23.26) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (12) |
-| S | pmod_expansion | (144.5, 142.5, 42.52 x 22.629) | DS1024-2x6R2 (PMOD 2x6 socket) | (13) |
+| N | hdmi_rx | (10, 0, 29.86 x 15.814) | HDMI-019S (HDMI receptacle) | (1) |
+| N | microsd | (40.5, 0, 35.55 x 17.001) | TF-01A (microSD push-pull) | (2) |
+| N | pd_input | (76, 0, 27.85 x 13.788) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
+| N | usbc_otg | (104.5, 0, 24.78 x 9.718) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
+| W | camera | (0, 57, 28.59 x 11.6) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (5) |
+| W | lcd | (0, 69, 34.94 x 11.943) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (6) |
+| E | usb_jtag_connector | (128, 74.5, 20.97 x 9.718) | TYPE-C-31-M-12 (USB-C receptacle) | (7) |
+| E | usb_uart_connector | (129.5, 84.5, 19.7 x 9.718) | TYPE-C-31-M-12 (USB-C receptacle) | (8) |
+| E | ethernet | (134.5, 42.5, 14.7 x 21.06) | RESERVED: rj45_connector (deferred) | (9) |
+| E | uart_bridge | (140.5, 64, 8.27 x 9.94) | RESERVED: usb_uart_connector (deferred) | (10) |
+| S | hdmi_tx | (18, 124, 33.67 x 16.95) | HDMI-019S (HDMI receptacle) | (11) |
+| S | pmod | (52, 122.5, 43 x 18.58) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (12) |
+| S | pmod_expansion | (95.5, 122, 34.94 x 18.829) | DS1024-2x6R2 (PMOD 2x6 socket) | (13) |
+
+Edge spills (preferred edge full — honest, not hidden):
+- hdmi_rx: S edge full -> N
+- usb_jtag_connector: N edge full -> E
+- usb_uart_connector: N edge full -> E
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (147, 71, 17.12 x 20.644) | 17 | 353.4 |  |
-| board_qwiic | E | (147, 93, 10.4 x 14.87) | 2 | 154.6 |  |
-| board_services | W | (125, 112, 25.7 x 26.22) | 9 | 673.9 |  |
-| bringup_en | E | (109, 105, 14.45 x 19.3) | 15 | 278.9 |  |
-| bringup_en_modules | E | (49, 30, 27.28 x 26.22) | 54 | 715.3 |  |
-| bringup_modules | E | (20, 34, 27.28 x 29.68) | 70 | 809.7 | (14) |
-| bringup_rails | E | (49, 58, 24.65 x 42.074) | 23 | 1037.1 | (15) |
-| debug_boot | N | (89, 23, 20.65 x 37.344) | 10 | 771.2 | (16) |
-| fmc | S | (126, 55, 19.97 x 55.81) | 8 | 1114.5 | (17) |
-| hdmi_rx_term | @hdmi_rx | (78, 105, 12.04 x 19.3) | 10 | 232.4 |  |
-| mechanical | E | (137, 41, 13 x 13) | 4 | 169 |  |
-| power | E | (29, 101, 28.99 x 31.52) | 51 | 913.8 | (18) |
-| power_mon | E | (59, 101, 14.516 x 16.824) | 10 | 244.2 | (19) |
-| power_som | E | (165, 77, 19.66 x 27.56) | 23 | 541.8 |  |
-| rj45_connector | @ethernet | (157, 43, 22.3 x 26.22) | 3 | 584.7 |  |
-| usb_jtag | E | (111, 23, 19.39 x 30.87) | 19 | 598.6 |  |
-| usb_pd | @pd_input | (80, 40, 7.7 x 19.8) | 6 | 152.5 | (20) |
-| user_io | S | (91, 105, 17.12 x 33.86) | 17 | 579.7 | (21) |
+| board_aux | E | (117, 55, 12.08 x 16.544) | 17 | 199.9 |  |
+| board_qwiic | E | (117, 72, 7.9 x 11.07) | 2 | 87.5 |  |
+| board_services | W | (44, 92, 23.2 x 22.4) | 9 | 519.7 |  |
+| bringup_en | E | (38, 69, 10.68 x 12.2) | 15 | 130.3 |  |
+| bringup_en_modules | E | (8, 33, 19.7 x 23.6) | 54 | 464.9 |  |
+| bringup_modules | E | (21, 82, 19.7 x 19.866) | 70 | 391.4 | (14) |
+| bringup_rails | E | (29, 30, 19.7 x 37.97) | 23 | 748 | (15) |
+| debug_boot | N | (65, 18, 18.15 x 30.944) | 10 | 561.6 | (16) |
+| fmc | S | (100, 44, 15.89 x 53.31) | 8 | 847.1 | (17) |
+| hdmi_rx_term | @hdmi_rx | (56, 37, 8.27 x 11.6) | 10 | 95.9 |  |
+| mechanical | E | (117, 95, 13 x 13) | 4 | 169 |  |
+| power | E | (94, 15, 20.51 x 28.16) | 51 | 577.6 | (18) |
+| power_mon | E | (84, 33, 9.54 x 15.228) | 10 | 145.3 | (19) |
+| power_som | E | (99, 98, 14.62 x 17.26) | 23 | 252.3 |  |
+| rj45_connector | @ethernet | (124, 19, 19.8 x 22.4) | 3 | 443.5 |  |
+| usb_jtag | E | (82, 92, 15.62 x 25.47) | 19 | 397.8 |  |
+| usb_pd | @pd_input | (56, 28, 8.27 x 7.78) | 6 | 64.3 | (20) |
+| user_io | S | (68, 92, 13.35 x 26.16) | 17 | 349.2 | (21) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
 
@@ -106,16 +111,16 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 
 ## Placement notes (the WHYs)
 
-- **(1) microsd**: microSD: SDIO runs at 1.8 V on the SoM side (typed sd_bus level in the netlist) — keep the TXS02612 translator mid-block: 1.8V side faces the SoM, 3.3V card side faces the slot; bus length match <= 2.5 mm to CLK.
-- **(2) pd_input**: PD power inlet: keep the VBUS path (receptacle -> TVS -> bulk -> +VIN) in one corner so the +VIN plane spreads from a single point; CC1/CC2 route to the FUSB302 (usb_pd block, anchored next to this inlet). PLAN.md round 5: a TPS25940-class eFuse lands between receptacle and bulk — reserve space for it here.
-- **(3) usbc_otg**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
-- **(4) usb_jtag_connector**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
-- **(5) usb_uart_connector**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
-- **(6) camera**: RPi camera FFC: 3 MIPI CSI-2 pairs at 100R differential to the J3 side of the SoM (bank 35, 2.5 V VCCO per the expect= notes) — keep the run to the J3 strip short.
-- **(7) lcd**: 40-pin LCD FFC: cable exits over the board edge; keep the SY7201ABC backlight boost loop (L/D/C) tight and away from the FFC signal rows; RGB888 bus is single-ended bank-34 3V3 — bus-route together.
-- **(8) ethernet**: Magnetics isolation: void ALL planes under the HX5008 line side + Bob-Smith network (CHASSIS_GND moat to the RJ45); MDI pairs are 100R differential. RJ45 itself is an author-declared deferral (expect rj45_connector) — the dashed reservation is its landing zone.
-- **(9) uart_bridge**: CP2102N UART bridge: its USB connector is an author-declared deferral (expect usb_uart_connector) — the block reserves edge space for it; TX/RX test points stay probe-able.
-- **(10) hdmi_rx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place M24C02-WMN6TP directly behind the receptacle so all pairs pass straight through.
+- **(1) hdmi_rx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place M24C02-WMN6TP directly behind the receptacle so all pairs pass straight through.
+- **(2) microsd**: microSD: SDIO runs at 1.8 V on the SoM side (typed sd_bus level in the netlist) — keep the TXS02612 translator mid-block: 1.8V side faces the SoM, 3.3V card side faces the slot; bus length match <= 2.5 mm to CLK.
+- **(3) pd_input**: PD power inlet: keep the VBUS path (receptacle -> TVS -> bulk -> +VIN) in one corner so the +VIN plane spreads from a single point; CC1/CC2 route to the FUSB302 (usb_pd block, anchored next to this inlet). PLAN.md round 5: a TPS25940-class eFuse lands between receptacle and bulk — reserve space for it here.
+- **(4) usbc_otg**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
+- **(5) camera**: RPi camera FFC: 3 MIPI CSI-2 pairs at 100R differential to the J3 side of the SoM (bank 35, 2.5 V VCCO per the expect= notes) — keep the run to the J3 strip short.
+- **(6) lcd**: 40-pin LCD FFC: cable exits over the board edge; keep the SY7201ABC backlight boost loop (L/D/C) tight and away from the FFC signal rows; RGB888 bus is single-ended bank-34 3V3 — bus-route together.
+- **(7) usb_jtag_connector**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
+- **(8) usb_uart_connector**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
+- **(9) ethernet**: Magnetics isolation: void ALL planes under the HX5008 line side + Bob-Smith network (CHASSIS_GND moat to the RJ45); MDI pairs are 100R differential. RJ45 itself is an author-declared deferral (expect rj45_connector) — the dashed reservation is its landing zone.
+- **(10) uart_bridge**: CP2102N UART bridge: its USB connector is an author-declared deferral (expect usb_uart_connector) — the block reserves edge space for it; TX/RX test points stay probe-able.
 - **(11) hdmi_tx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place TPD12S016PWR directly behind the receptacle so all pairs pass straight through.
 - **(12) pmod**: Two PMOD sockets side by side; both fed from the gated +3V3_PMOD rail (SY6280 cell in bringup_modules) — route the gated rail once, star at the sockets.
 - **(13) pmod_expansion**: Two PMOD sockets side by side; both fed from the gated +3V3_PMOD rail (SY6280 cell in bringup_modules) — route the gated rail once, star at the sockets.
