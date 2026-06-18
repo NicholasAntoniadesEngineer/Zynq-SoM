@@ -415,7 +415,9 @@ CONN_MATING_FACE: dict[str, str] = {
     "AFC07-S40FCA-00": "-Y",   # LCD FPC slot
     "KH-5224-8P8C-D":  "+Y",   # RJ45 jack mouth
     "TF-01A":          "+Y",   # microSD card slot
-    "SFW15R-1STE1LF":  "+Y",   # camera FFC slot
+    "SFW15R-1STE1LF":  "-Y",   # camera FFC slot opens away from the solder tabs
+                               # (posts at +Y -> cable entry at -Y), same as the
+                               # geometrically-identical AFC07 LCD FPC
     "ZX-SH1.0-4PWT":   "+Y",   # QWIIC shrouded header
     "DS1024-2x6R2":    "+Y",   # PMOD 2x6 socket
 }

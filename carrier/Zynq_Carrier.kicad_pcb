@@ -38382,7 +38382,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 32.27 74.65 90)
+		(at 29.47 74.65 270)
 		(descr
 			"CONN-SMD_15P-P0.50_SFW15R-1STE1LF — SFW15R-1STE1LF (CONN-SMD_15P-P0.50_SFW15R-1STE1LF) (EasyEDA/LCSC C3168538, faithful conversion)"
 		)
@@ -38716,7 +38716,7 @@
 			"1"
 			smd
 			rect
-			(at -7.0002 -1.05 90)
+			(at -7.0002 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")
@@ -38726,7 +38726,7 @@
 			"2"
 			smd
 			rect
-			(at -6.0002 -1.05 90)
+			(at -6.0002 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 107 "CAM_D0_N")
@@ -38736,7 +38736,7 @@
 			"3"
 			smd
 			rect
-			(at -5.0002 -1.05 90)
+			(at -5.0002 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 108 "CAM_D0_P")
@@ -38746,7 +38746,7 @@
 			"4"
 			smd
 			rect
-			(at -4.0002 -1.05 90)
+			(at -4.0002 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")
@@ -38756,7 +38756,7 @@
 			"5"
 			smd
 			rect
-			(at -3.0002 -1.05 90)
+			(at -3.0002 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 109 "CAM_D1_N")
@@ -38766,7 +38766,7 @@
 			"6"
 			smd
 			rect
-			(at -2.0002 -1.05 90)
+			(at -2.0002 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 110 "CAM_D1_P")
@@ -38776,7 +38776,7 @@
 			"7"
 			smd
 			rect
-			(at -1.0003 -1.05 90)
+			(at -1.0003 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")
@@ -38786,7 +38786,7 @@
 			"8"
 			smd
 			rect
-			(at -0.0003 -1.05 90)
+			(at -0.0003 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 105 "CAM_CLK_N")
@@ -38796,7 +38796,7 @@
 			"9"
 			smd
 			rect
-			(at 0.9997 -1.05 90)
+			(at 0.9997 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 106 "CAM_CLK_P")
@@ -38806,7 +38806,7 @@
 			"10"
 			smd
 			rect
-			(at 1.9997 -1.05 90)
+			(at 1.9997 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")
@@ -38816,7 +38816,7 @@
 			"11"
 			smd
 			rect
-			(at 2.9997 -1.05 90)
+			(at 2.9997 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 111 "CAM_EN")
@@ -38826,7 +38826,7 @@
 			"12"
 			smd
 			rect
-			(at 3.9997 -1.05 90)
+			(at 3.9997 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 112 "CAM_LED")
@@ -38836,7 +38836,7 @@
 			"13"
 			smd
 			rect
-			(at 4.9997 -1.05 90)
+			(at 4.9997 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 113 "CAM_SCL")
@@ -38846,7 +38846,7 @@
 			"14"
 			smd
 			rect
-			(at 5.9997 -1.05 90)
+			(at 5.9997 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 114 "CAM_SDA")
@@ -38856,7 +38856,7 @@
 			"15"
 			smd
 			rect
-			(at 6.9997 -1.05 90)
+			(at 6.9997 -1.05 270)
 			(size 0.599999 1.999996)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 6 "+3V3_CAM")
@@ -38866,7 +38866,7 @@
 			"16"
 			smd
 			rect
-			(at -8.0002 1.0501 90)
+			(at -8.0002 1.0501 270)
 			(size 0.699999 4.199992)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")
@@ -38876,7 +38876,7 @@
 			"17"
 			smd
 			rect
-			(at 8 1.0501 90)
+			(at 8 1.0501 270)
 			(size 0.699999 4.199992)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")
