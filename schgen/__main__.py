@@ -1100,6 +1100,16 @@ def cmd_model3d(args: argparse.Namespace) -> int:
     return 0 if res.ok else 1
 
 
+def cmd_devkit(args: argparse.Namespace) -> int:
+    """Build examples/devkit_mini — the SECOND board that consumes the reusable
+    subsystems/<name>/ library via thin META adapters — into real KiCad output
+    (schematics + hierarchy + renders), proving the library ports to a new
+    project with zero library changes. Reuses the generic build machinery; does
+    not touch the carrier."""
+    from schgen.generate import devkit
+    return devkit.cmd(args)
+
+
 def cmd_render3d(args: argparse.Namespace) -> int:
     """3D board renders (top + perspective) for VISUAL verification (LAW 1,
     extended to 3D): every part's 3D body eyeballed. Best-effort — skips with a
@@ -1421,6 +1431,13 @@ def main(argv: list[str] | None = None) -> int:
         help="3D board renders (top + perspective) for VISUAL verification "
              "(LAW 1) -> carrier/renders/3d_*.png")
     r3.set_defaults(func=cmd_render3d)
+    dk = sub.add_parser(
+        "devkit", help="build examples/devkit_mini (the 2nd board that reuses "
+                       "the subsystems/ library) -> real KiCad schematics + "
+                       "hierarchy + renders; proves library reuse")
+    dk.add_argument("--no-render", action="store_true",
+                    help="skip the per-sheet PNG renders")
+    dk.set_defaults(func=cmd_devkit)
     args = p.parse_args(argv)
     return args.func(args)
 

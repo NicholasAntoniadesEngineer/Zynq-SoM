@@ -109,3 +109,17 @@ Run it:
 ```sh
 PYTHONPATH=. python3 -m pytest examples/devkit_mini/test_devkit_mini.py -q
 ```
+
+## Build it
+
+```
+python -m schgen devkit          # -> examples/devkit_mini/{schematic,renders,reports}/ + devkit_mini.kicad_pro
+```
+
+This builds the four bound library subsystems into real KiCad output the same way
+the carrier is built (reusing `schgen.generate.board.build_board` + the place /
+emit / netlist / cc machinery — no carrier code copied, the carrier is untouched).
+The board netlist gate proves every net merges across sheets and the geometry-only
+`cc_gate` proves 0 shorts / 0 opens (LAW 0). The shared rails confirm the
+composition — e.g. `+3V3_MINI` and `GND` span all four subsystem sheets, the same
+library packages re-bound to THIS board's net names.

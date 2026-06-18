@@ -340,3 +340,25 @@ def test_devkit_uart_crossover_lives_in_the_bind_not_the_library():
     ext = _externals(dk.uart_bridge_circuit())
     assert {"FPGA_UART0_RXD", "FPGA_UART0_TXD",
             "FPGA_UART0_CTS_N", "FPGA_UART0_RTS_N"} <= ext
+
+
+def test_devkit_subsystems_compose_no_shorts_or_opens():
+    """The four library subsystems, bound to the devkit's net names, place+route
+    and COMPOSE into one board with 0 shorts / 0 opens (LAW 0) — the end-to-end
+    proof that subsystems/<name>/ reuse on a SECOND board, with zero library
+    changes. (Fast: geometry CC check, no kicad-cli.)"""
+    from schgen.core.symbols import Library
+    from schgen.layout import place
+    from schgen.verify import cc_gate
+    from examples.devkit_mini import devkit_mini
+
+    lib = Library()
+    prepared = []
+    for name, c in devkit_mini.subsystem_circuits():
+        c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
+        placement, routed, _geo = place.place_and_route(c, lib)
+        prepared.append((name, c, placement, routed))
+    assert [n for n, *_ in prepared] == ["usb_pd", "usbc_otg", "microsd",
+                                         "uart_bridge"]
+    res = cc_gate.check_board(prepared, lib)
+    assert res.ok, res.summary()        # 0 shorts / 0 opens across the board
