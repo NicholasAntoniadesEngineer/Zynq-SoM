@@ -67,7 +67,10 @@ def render(pcb: Path, out_dir: Path, quality: str = "high",
     # resolves them (the GUI sets KIPRJMOD itself).
     kiprjmod = str(pcb.resolve().parent)
     out_dir.mkdir(parents=True, exist_ok=True)
+    # top + bottom (so the BOTTOM-side passives — incl. the under-SoM rail
+    # decoupling — are actually inspectable, LAW 5/6) + a perspective hero view.
     views = (("top", ["--side", "top"]),
+             ("bottom", ["--side", "bottom"]),
              ("persp", ["--perspective"]))
     written: list[Path] = []
     for name, view_args in views:

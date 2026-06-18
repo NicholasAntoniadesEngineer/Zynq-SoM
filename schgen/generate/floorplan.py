@@ -309,8 +309,9 @@ def _raw_component_area(sheets) -> float:
     inflates small parts by the routing factor."""
     total = 0.0
     for sc in sheets:
-        if sc.name.startswith("som_j"):
-            continue
+        if sc.name.startswith("som_j") or sc.name == "som_decoupling":
+            continue        # the receptacles ARE the SoM; som_decoupling lives
+            #                 UNDER the SoM shadow, not in the free area (LAW 6)
         for part in sc.circuit.parts.values():
             w, h = part_dims(part.footprint)
             total += w * h
@@ -895,8 +896,9 @@ def build_plan(sheets, link_result, regs) -> Plan:
     edge_of: dict[str, str] = {}
     interior: list[Block] = []
     for sc in sorted(sheets, key=lambda s: s.name):
-        if sc.name.startswith("som_j"):
-            continue            # the mezzanine receptacles ARE the SoM block
+        if sc.name.startswith("som_j") or sc.name == "som_decoupling":
+            continue            # receptacles ARE the SoM block; som_decoupling is
+            #                     placed BOTTOM-side under the SoM core, no block
         c = sc.circuit
         conns = []
         for ref, part in sorted(c.parts.items()):

@@ -16377,6 +16377,54 @@
 		)
 	)
 	(sheet
+		(at 218.44 391.16)
+		(size 22.86 2.54)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "0a16ed85-a113-5079-b177-cd1fad4e4315")
+		(property
+			"Sheetname"
+			"som_decoupling"
+			(at 218.44 390.4484 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property
+			"Sheetfile"
+			"schematic/som_decoupling.kicad_sch"
+			(at 218.44 394.2846 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project
+				"Zynq_Carrier"
+				(path
+					"/c2797150-7a6e-556a-82f5-fdda13c31368"
+					(page "26")
+				)
+			)
+		)
+	)
+	(sheet
 		(at 304.8 25.4)
 		(size 34.29 149.86)
 		(exclude_from_sim no)
@@ -17115,7 +17163,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "26")
+					(page "27")
 				)
 			)
 		)
@@ -18027,7 +18075,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "27")
+					(page "28")
 				)
 			)
 		)
@@ -18963,7 +19011,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "28")
+					(page "29")
 				)
 			)
 		)
@@ -19095,7 +19143,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "29")
+					(page "30")
 				)
 			)
 		)
@@ -19239,7 +19287,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "30")
+					(page "31")
 				)
 			)
 		)
@@ -19311,7 +19359,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "31")
+					(page "32")
 				)
 			)
 		)
@@ -19419,7 +19467,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "32")
+					(page "33")
 				)
 			)
 		)
@@ -19503,7 +19551,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "33")
+					(page "34")
 				)
 			)
 		)
@@ -19623,7 +19671,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "34")
+					(page "35")
 				)
 			)
 		)
@@ -19767,7 +19815,7 @@
 				"Zynq_Carrier"
 				(path
 					"/c2797150-7a6e-556a-82f5-fdda13c31368"
-					(page "35")
+					(page "36")
 				)
 			)
 		)

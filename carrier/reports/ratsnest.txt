@@ -1,8 +1,9 @@
-LAW-5 RATSNEST GATE: PASS (board 165 x 145 mm)
+LAW-5 RATSNEST GATE: PASS (board 160 x 145 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 13705.8 mm (budget 13921 mm, OK; 359 edges; 13705.8/19993.7 mm = 68.6% of total)
+  cross-subsystem airwire: 13721.2 mm (budget 14165 mm, OK; 369 edges; 13721.2/20198.4 mm = 67.9% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
+    som_decoupling         n=18  bbox_area=     813 disp=  8.8
     camera                 n=13  bbox_area=     613 disp=  3.0
     lcd                    n=19  bbox_area=     900 disp=  3.0
     pd_input               n=13  bbox_area=     500 disp=  2.2

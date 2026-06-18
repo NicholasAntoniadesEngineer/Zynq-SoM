@@ -210,16 +210,17 @@ def test_carrier_structure_all_complete():
     adapter de-bloat each carrier subsystem matches the SHAPE its kind needs:
     an ADAPTER (has a generic subsystems/<name>/ library) is a FLAT <name>.py +
     test_<name>.py pair (NOT foldered); a LOCAL is a foldered 4-artifact package.
-    All complete, and the split is the documented 17 flat adapters + 17 foldered
-    locals = 34 (the 17th local is the `mechanical` board-fab-art sheet)."""
+    All complete, and the split is the documented 17 flat adapters + 18 foldered
+    locals = 35 (the `mechanical` board-fab-art sheet + `som_decoupling`, the
+    bottom-side SoM-rail decoupling placed under the mezzanine — LAW 6)."""
     from schgen.verify import carrier_structure
     res = carrier_structure.check()
     assert res.packages, "no carrier/subsystems/ packages found"
     assert res.ok, [(p.name, p.kind, p.missing, p.errors) for p in res.packages
                     if not p.ok]
     assert res.n_adapters == 17, [p.name for p in res.packages if p.adapter]
-    assert res.n_locals == 17, [p.name for p in res.packages if not p.adapter]
-    assert len(res.packages) == 34
+    assert res.n_locals == 18, [p.name for p in res.packages if not p.adapter]
+    assert len(res.packages) == 35
     # every adapter is flat (no leftover folder) + carries a META dict; every
     # local is foldered.
     for p in res.packages:

@@ -965,8 +965,9 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
     sheet_edge = _connector_sheet_edges()    # sheet -> board edge (from the spec)
 
     for i, sc in enumerate(sheets, start=1):
-        if sc.name.startswith("som_j"):
-            continue
+        if sc.name.startswith("som_j") or sc.name == "som_decoupling":
+            continue        # receptacles ARE the SoM; som_decoupling is placed
+            #                 BOTTOM-side under the SoM core, not in a zone (LAW 6)
         band = sheet_index.get(sc.name, i)
         c = sc.circuit
         # per-sheet decoupling on the board-unique ref namespace (equivalent to
@@ -1087,13 +1088,15 @@ def build_model(two_side: bool = True) -> PcbModel:
     mh_set = set(mh_refs)
 
     # The shared packer omits the FIXED-position parts (mounting holes + the SoM
-    # DF40 receptacles) — they are not zone-packed. Resolve their footprints from
-    # the board parts so the emission loop still places them (positions set in
-    # STEP 3: corner-forced holes + centered/mirrored mezzanine).
+    # DF40 receptacles) + the under-SoM decoupling — they are not zone-packed.
+    # Resolve their footprints from the board parts so the emission loop still
+    # places them (positions set in STEP 3: corner-forced holes, centered/mirrored
+    # mezzanine, and the bottom-side SoM-shadow decoupling grid).
     for ref, (sheet, footprint, _value, _lib) in parts.items():
         if ref in resolvable:
             continue
-        if not (ref in mh_set or sheet.startswith("som_j")):
+        if not (ref in mh_set or sheet.startswith("som_j")
+                or sheet == "som_decoupling"):
             continue
         mod = resolve_mod(footprint)
         if mod is None:
@@ -1207,6 +1210,29 @@ def build_model(two_side: bool = True) -> PcbModel:
         for r, (dx, dy) in bot_off[sheet].items():
             pos[r] = (gzx + dx, gzy + dy)
             grid_placed.add(r)
+
+    # LAW 6: SoM power-entry decoupling — grid the som_decoupling caps on the
+    # BOTTOM side, spread across the SoM shadow (the dead area under the
+    # mezzanine). They bypass the rails the carrier delivers to the DF40 right at
+    # the power entry. Bottom side clears the top-side DF40 receptacles (different
+    # copper layer); the shadow is otherwise empty so the grid never collides.
+    udec = sorted(r for r, (sh, _f, _v, _l) in parts.items()
+                  if sh == "som_decoupling" and r in resolvable)
+    if udec:
+        M = 6.0                                    # inset from the SoM core edge
+        rx0, ry0 = plan.som_x + M, plan.som_y + M
+        rw = max(1.0, som.w - 2 * M)
+        rh = max(1.0, som.h - 2 * M)
+        n = len(udec)
+        cols = max(1, min(n, round((n * rw / rh) ** 0.5)))
+        rows = max(1, (n + cols - 1) // cols)
+        for i, ref in enumerate(udec):
+            cxi, cyi = i % cols, i // cols
+            px = rx0 + rw * (cxi + 0.5) / cols
+            py = ry0 + rh * (cyi + 0.5) / rows
+            pos[ref] = (round(px, 4), round(py, 4))
+            side_of[ref] = "bottom"
+            grid_placed.add(ref)
 
     fixed = set(mh_refs) | set(som_j_refs)
 
@@ -1660,11 +1686,14 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
 
 
 def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
-    """A rule-area (keep-out) zone over the SoM body on both copper layers, so
-    the layout tool keeps tracks/vias/copper out from under the mezzanine stack
-    (the receptacles + SoM board occupy that volume). It is a planning aid, not
-    a DRC error source — KiCad keep-outs only constrain routing/copper, which
-    this unrouted foundation has none of. Drawn as the rectangle's 4 corners."""
+    """A rule-area MARKER over the SoM body on both copper layers (drawn in the
+    ratsnest view + KiCad as a hatched region). It is PERMISSIVE: under an SMD
+    DF40 mezzanine the shadow is the most power-critical region — it must carry
+    full GND/PWR planes, the bottom-side rail-entry decoupling (som_decoupling)
+    and its fanout vias right beneath the connector. An old restrictive keepout
+    (no tracks/vias/pour) would have starved the SoM of power planes and left the
+    under-SoM decoupling unroutable (a LAW-0 open). So everything is allowed; the
+    zone only LABELS the mezzanine shadow. Drawn as the rectangle's 4 corners."""
     x0, y0, x1, y1 = box
     corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
     pts = [Sym("pts")] + [[Sym("xy"), round(px, 3), round(py, 3)]
@@ -1677,16 +1706,15 @@ def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
             [Sym("hatch"), Sym("edge"), 0.5],
             [Sym("connect_pads"), [Sym("clearance"), 0]],
             [Sym("min_thickness"), 0.25],
-            # disallow ROUTING copper only (tracks/vias/pour). Pads and
-            # footprints are ALLOWED: the SoM mezzanine receptacles (J1/J2/J3)
-            # legitimately sit inside this area — the keep-out keeps the layout
-            # tool from routing carrier signals THROUGH the SoM shadow, it does
-            # not forbid the receptacle pads themselves.
+            # PERMISSIVE marker: the SoM shadow is the power-entry region — it
+            # carries the GND/PWR planes, the bottom-side rail decoupling and its
+            # vias beneath the SMD mezzanine. Everything is allowed; the zone
+            # only labels the region (see docstring).
             [Sym("keepout"),
-             [Sym("tracks"), Sym("not_allowed")],
-             [Sym("vias"), Sym("not_allowed")],
+             [Sym("tracks"), Sym("allowed")],
+             [Sym("vias"), Sym("allowed")],
              [Sym("pads"), Sym("allowed")],
-             [Sym("copperpour"), Sym("not_allowed")],
+             [Sym("copperpour"), Sym("allowed")],
              [Sym("footprints"), Sym("allowed")]],
             [Sym("fill"), [Sym("thermal_gap"), 0.5],
              [Sym("thermal_bridge_width"), 0.5]],

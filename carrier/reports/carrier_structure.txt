@@ -7,4 +7,4 @@ contract: each carrier subsystem matches the SHAPE its kind requires —
   LOCAL  (no generic library): foldered <name>/ with <name>.py + __init__.py +
            README.md + test_<name>.py + <name>.cir and a callable circuit().
 
-CARRIER STRUCTURE: 34/34 subsystem(s) complete (17 flat adapter(s) + 17 foldered local(s)) (PASS)
+CARRIER STRUCTURE: 35/35 subsystem(s) complete (17 flat adapter(s) + 18 foldered local(s)) (PASS)

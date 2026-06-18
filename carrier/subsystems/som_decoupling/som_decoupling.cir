@@ -1,0 +1,42 @@
+* som_decoupling.cir — SPICE subckt for the carrier som_decoupling subsystem.
+*
+* CARRIER-LOCAL: the subckt pins are the subsystem's real carrier nets — the
+* three SoM-delivered rails (+5V_SOM, +3V3, +3V3_SC) and GND. This captures the
+* FULL passive network: bulk + HF bypass on each rail at the DF40 power entry,
+* placed bottom-side under the SoM shadow (LAW 6). There is no active part on
+* this sheet — the decoupling network IS the subsystem.
+*
+* Values mirror carrier/subsystems/som_decoupling/som_decoupling.py one-for-one:
+*   per rail: 2x 22u (C45783) bulk + 4x 100n (C14663) HF, rail -> GND
+*   three rails -> 18 caps total (6x 22u + 12x 100n).
+*
+* Port order: V5 (=+5V_SOM), V3 (=+3V3), VSC (=+3V3_SC), GND.
+
+.subckt som_decoupling V5 V3 VSC GND
+
+* +5V_SOM entry decoupling
+C1  V5  GND 22u
+C2  V5  GND 22u
+C3  V5  GND 100n
+C4  V5  GND 100n
+C5  V5  GND 100n
+C6  V5  GND 100n
+
+* +3V3 entry decoupling
+C7  V3  GND 22u
+C8  V3  GND 22u
+C9  V3  GND 100n
+C10 V3  GND 100n
+C11 V3  GND 100n
+C12 V3  GND 100n
+
+* +3V3_SC entry decoupling
+C13 VSC GND 22u
+C14 VSC GND 22u
+C15 VSC GND 100n
+C16 VSC GND 100n
+C17 VSC GND 100n
+C18 VSC GND 100n
+
+.ends som_decoupling
+.end

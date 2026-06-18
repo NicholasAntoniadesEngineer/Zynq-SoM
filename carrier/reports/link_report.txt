@@ -1,6 +1,6 @@
 schgen link report
 ============================================================
-sheets (34): board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, mechanical, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io
+sheets (35): board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, ethernet, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, mechanical, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io
 
 alias map (rails only, exact, enumerated):
   (no pure spelling aliases)
@@ -530,7 +530,7 @@ rails (28):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: microsd, power, power_mon)
   +1V8_REG — carrier-local rail (sheets: power, power_mon)
   +2V5_VADJ — carrier-local rail (sheets: fmc, som_j3)
-  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, lcd, pmod_expansion, power, power_mon, rj45_connector, som_j2, som_j3, uart_bridge, user_io)
+  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: board_aux, board_qwiic, bringup_modules, bringup_rails, debug_boot, fmc, hdmi_rx_term, lcd, pmod_expansion, power, power_mon, rj45_connector, som_decoupling, som_j2, som_j3, uart_bridge, user_io)
   +3V3_AUX — carrier-local rail (sheets: board_aux, board_qwiic, board_services)
   +3V3_CAM — carrier-local rail (sheets: bringup_modules, camera)
   +3V3_DBG — carrier-local rail (sheets: usb_jtag)
@@ -540,7 +540,7 @@ rails (28):
   +3V3_PMOD — carrier-local rail (sheets: bringup_modules, pmod)
   +3V3_PMODX — carrier-local rail (sheets: pmod_expansion)
   +3V3_REG — carrier-local rail (sheets: power, power_mon)
-  +3V3_SC <- sheets: board_aux, bringup_en, bringup_en_modules, bringup_rails, debug_boot, pd_input, power_mon, som_j1, usb_pd, usbc_otg -> SoM 1 pins
+  +3V3_SC <- sheets: board_aux, bringup_en, bringup_en_modules, bringup_rails, debug_boot, pd_input, power_mon, som_decoupling, som_j1, usb_pd, usbc_otg -> SoM 1 pins
   +3V3_SD — carrier-local rail (sheets: bringup_modules, microsd)
   +3V3_USER_LED — carrier-local rail (sheets: bringup_modules, user_io)
   +5V — carrier-local rail (sheets: bringup_modules, power, power_mon)
@@ -548,13 +548,13 @@ rails (28):
   +5V_HDMI_TX — carrier-local rail (sheets: bringup_modules, hdmi_tx)
   +5V_LCD — carrier-local rail (sheets: bringup_modules, lcd)
   +5V_REG — carrier-local rail (sheets: power, power_mon)
-  +5V_SOM — P0 REBIND of SoM 'VIN' (the SoM 4.2-5V input; never the 20V +VIN PD rail — wave3_function_map.md P0) <- sheets: power_som, som_j1 -> SoM 14 pins
+  +5V_SOM — P0 REBIND of SoM 'VIN' (the SoM 4.2-5V input; never the 20V +VIN PD rail — wave3_function_map.md P0) <- sheets: power_som, som_decoupling, som_j1 -> SoM 14 pins
   +5V_USB — carrier-local rail (sheets: bringup_modules, usbc_otg)
   +VBUS_IN — carrier-local rail (sheets: pd_input, usb_pd)
   +VIN — carrier-local rail (sheets: pd_input, power_mon)
   +VIN_SYS — carrier-local rail (sheets: power, power_mon, power_som)
   CHASSIS_GND — carrier-local rail (sheets: ethernet, hdmi_rx, hdmi_tx, mechanical, pd_input, rj45_connector, usb_jtag_connector, usb_uart_connector, usbc_otg)
-  GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
+  GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
 
 deferred ports — author-declared, awaiting later waves (1) [WARNING]:
   bringup_en_modules:EN_LCD_BL — awaiting lvds_lcd_power (backlight boost EN provision, dossier 3.2)
