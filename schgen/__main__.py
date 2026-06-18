@@ -449,9 +449,11 @@ def cmd_board(args: argparse.Namespace) -> int:
     ok_all = True
 
     # Per-phase wall-time breakdown (printed only with --timing; stdout-only, so
-    # it changes no committed artifact). Build observability: the board build is
-    # dominated by the kicad-cli passes + PCB DRC + downstream generators, NOT by
-    # place/route — `--timing` makes that visible so speed work stays targeted.
+    # it changes no committed artifact). Build observability: once the symbol-lib
+    # parse was cached process-globally (symbols._FILE_PARSE_CACHE — the verify +
+    # downstream phase fell 243 s -> 14 s), the build is dominated by the
+    # kicad-cli passes (per-sheet ERC/render + the root hierarchy ERC), NOT by
+    # Python place/route or the gates — `--timing` keeps speed work targeted.
     import time as _time
     _laps: list[tuple[str, float]] = []
     _t_mark = [_time.perf_counter()]
@@ -623,12 +625,13 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     _lap("pass3 + cc_gate + link + build_board (hierarchy + board ERC)")
 
-    # SPEED: the PCB foundation + its kicad-cli DRC (~70 s, the 2nd-biggest
-    # phase) is independent of every verify gate + downstream doc generator that
-    # follows — nothing before the SI step (which extends the .dru it writes)
-    # reads the .kicad_pcb/.dru. Run it on a worker thread NOW so its ~70 s
-    # overlaps the ~90 s verify+downstream phase, and JOIN it just before SI.
-    # Outputs are content-derived, so concurrency changes not one emitted byte.
+    # SPEED: the PCB foundation + its kicad-cli DRC is independent of every
+    # verify gate + downstream doc generator that follows — nothing before the SI
+    # step (which extends the .dru it writes) reads the .kicad_pcb/.dru. Run it on
+    # a worker thread NOW so its kicad-cli wait overlaps the verify+downstream
+    # phase, and JOIN it just before SI. Outputs are content-derived, so
+    # concurrency changes not one emitted byte. (kicad-cli releases the GIL, so
+    # this overlap is real even though the Python gates do not.)
     import threading as _threading
     from schgen.generate import pcb as pcb_mod
     _pcb_holder: dict[str, object] = {}

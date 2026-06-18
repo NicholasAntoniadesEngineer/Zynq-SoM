@@ -17,6 +17,17 @@ from schgen.core import sexpr
 
 GRID = 1.27
 
+# Process-global cache of PARSED symbol-library files, shared across every
+# Library instance. Each gate / circuit-build constructs its own Library, and
+# the big stock KiCad libs (Device, Connector — megabytes each) were re-parsed
+# once per instance (~85x in a full board build): sexpr.parse is O(chars) and
+# dominated the build (74 s / 64.8M calls in a profile). The parsed s-expr is
+# only ever READ (get()/_synth clone, never mutate in place), so sharing one
+# parse across instances changes no emitted byte. Keyed by (resolved path,
+# mtime_ns, size) so a file edited mid-process (tests that regenerate a part)
+# is correctly re-parsed — a stat() is microseconds vs a 0.3 s parse.
+_FILE_PARSE_CACHE: dict[tuple[str, int, int], list] = {}
+
 _SEARCH_PATHS = [
     Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols"),
     # generator-owned symbols (power/rail symbols, re-pinned local copies)
@@ -59,6 +70,22 @@ def _on_grid(v: float) -> bool:
     return abs(v / GRID - round(v / GRID)) < 1e-4
 
 
+def _parse_lib_file(f: Path) -> list:
+    """Parse a .kicad_sym file, memoized process-globally by (path, mtime, size).
+
+    The expensive part of the whole build is sexpr.parse over the large stock
+    symbol libs; without this every Library instance re-parsed them. The result
+    is treated as read-only by all callers, so the shared parse is safe.
+    """
+    st = f.stat()
+    key = (str(f.resolve()), st.st_mtime_ns, st.st_size)
+    cached = _FILE_PARSE_CACHE.get(key)
+    if cached is None:
+        cached = sexpr.loads(f.read_text())
+        _FILE_PARSE_CACHE[key] = cached
+    return cached
+
+
 class Library:
     def __init__(self, extra_paths: list[Path] | None = None) -> None:
         self.paths = list(extra_paths or []) + _SEARCH_PATHS
@@ -73,7 +100,7 @@ class Library:
                 for f in (base / f"{libname}.kicad_sym",
                           base / libname / f"{libname}.kicad_sym"):
                     if f.exists():
-                        self._files[libname] = sexpr.loads(f.read_text())
+                        self._files[libname] = _parse_lib_file(f)
                         break
                 if libname in self._files:
                     break
