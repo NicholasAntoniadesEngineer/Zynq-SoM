@@ -1,27 +1,27 @@
-LAW-5 RATSNEST GATE: PASS (board 160 x 145 mm)
+LAW-5 RATSNEST GATE: PASS (board 170 x 150 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 13721.2 mm (budget 14165 mm, OK; 369 edges; 13721.2/20198.4 mm = 67.9% of total)
+  cross-subsystem airwire: 14362.4 mm (budget 14851 mm, OK; 373 edges; 14362.4/21443.9 mm = 67.0% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
-    camera                 n=13  bbox_area=     613 disp=  3.0
-    lcd                    n=19  bbox_area=     900 disp=  3.0
-    pd_input               n=13  bbox_area=     500 disp=  2.2
+    camera                 n=13  bbox_area=     632 disp=  3.1
+    lcd                    n=19  bbox_area=     925 disp=  3.1
+    bringup_rails          n=23  bbox_area=    1281 disp=  2.7
+    pmod_expansion         n=15  bbox_area=     958 disp=  2.7
+    pd_input               n=13  bbox_area=     544 disp=  2.4
+    user_io                n=17  bbox_area=     472 disp=  2.4
+    pmod                   n=22  bbox_area=    1159 disp=  2.2
     fmc                    n=8   bbox_area=     746 disp=  2.1
-    bringup_rails          n=23  bbox_area=     920 disp=  1.9
-    pmod_expansion         n=15  bbox_area=     678 disp=  1.9
-    user_io                n=17  bbox_area=     345 disp=  1.7
-    usbc_otg               n=11  bbox_area=     242 disp=  1.7
-    board_qwiic            n=2   bbox_area=      74 disp=  1.6
+    board_qwiic            n=2   bbox_area=      89 disp=  2.0
+    usbc_otg               n=11  bbox_area=     273 disp=  1.9
+    rj45_connector         n=3   bbox_area=     558 disp=  1.8
+    microsd                n=15  bbox_area=     561 disp=  1.6
+    usb_uart_connector     n=5   bbox_area=     172 disp=  1.6
+    hdmi_tx                n=12  bbox_area=     492 disp=  1.6
     hdmi_rx_term           n=10  bbox_area=      68 disp=  1.6
     debug_boot             n=10  bbox_area=     490 disp=  1.6
-    rj45_connector         n=3   bbox_area=     486 disp=  1.6
-    pmod                   n=22  bbox_area=     773 disp=  1.5
-    hdmi_tx                n=12  bbox_area=     449 disp=  1.5
-    usb_uart_connector     n=5   bbox_area=     152 disp=  1.4
-    hdmi_rx                n=10  bbox_area=     371 disp=  1.4
-    usb_jtag_connector     n=6   bbox_area=     152 disp=  1.4
-    microsd                n=15  bbox_area=     458 disp=  1.3
+    usb_jtag_connector     n=6   bbox_area=     172 disp=  1.5
+    hdmi_rx                n=10  bbox_area=     395 disp=  1.5
     usb_jtag               n=19  bbox_area=     338 disp=  1.3
     board_services         n=9   bbox_area=     454 disp=  1.2
     power                  n=51  bbox_area=     507 disp=  1.1

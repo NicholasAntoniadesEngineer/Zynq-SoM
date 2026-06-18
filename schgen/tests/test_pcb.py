@@ -109,16 +109,19 @@ def test_shelf_pack_avoids_blockers():
 
 
 def test_build_model_no_off_board_parts():
-    """LAW 5: EVERY placed footprint's courtyard sits inside Edge.Cuts — the
-    derived outline is grown to enclose every part, never spilled off-board."""
+    """LAW 5/6: EVERY placed footprint's COPPER (pads) sits inside Edge.Cuts.
+    An off-board edge connector's mating courtyard (USB-C shell / SD-card slot /
+    PMOD module outline / RJ45 jack) legitimately OVERHANGS the edge so a cable
+    can mate, but its copper stays on the board — so the off-board test uses the
+    pad bbox, not the courtyard (mirrors verify.ratsnest_gate)."""
     model = pcb.build_model()
     x0, y0 = pcb.ORIGIN_X, pcb.ORIGIN_Y
     x1, y1 = pcb.ORIGIN_X + model.board_w, pcb.ORIGIN_Y + model.board_h
     for inst in model.insts:
-        cx0, cy0, cx1, cy1 = pcb._inst_courtyard(inst)
+        cx0, cy0, cx1, cy1 = pcb._inst_pad_bbox(inst)
         assert (cx0 >= x0 - 1e-6 and cy0 >= y0 - 1e-6
                 and cx1 <= x1 + 1e-6 and cy1 <= y1 + 1e-6), \
-            f"{inst.ref} ({inst.sheet}) is off-board: " \
+            f"{inst.ref} ({inst.sheet}) copper off-board: " \
             f"({cx0:.1f},{cy0:.1f})..({cx1:.1f},{cy1:.1f})"
 
 

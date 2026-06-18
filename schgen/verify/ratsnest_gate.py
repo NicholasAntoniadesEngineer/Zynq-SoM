@@ -33,7 +33,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from schgen.generate.pcb import (PcbModel, ORIGIN_X, ORIGIN_Y,
-                                 _inst_courtyard)
+                                 _inst_courtyard, _inst_pad_bbox)
 from schgen.generate import ratsnest as rn
 
 
@@ -114,13 +114,20 @@ def check(model: PcbModel) -> RatsnestResult:
     # scattered, exactly why the equally-fixed SoM receptacle sheets are skipped).
     by_sheet: dict[str, list[tuple[float, float, float, float, float]]] = {}
     for inst in model.insts:
-        cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
-        if (cx0 < bx0 - 1e-6 or cy0 < by0 - 1e-6
-                or cx1 > bx1 + 1e-6 or cy1 > by1 + 1e-6):
+        # off-board test uses the COPPER (pad) bbox, not the courtyard: an edge
+        # connector's mating area (USB-C shell / SD slot / PMOD module / RJ45
+        # jack) legitimately overhangs the board edge so a cable can mate (LAW 6),
+        # while its pads stay on-board. A genuinely off-board part has copper
+        # outside Edge.Cuts and still fails. Dispersion below still uses the
+        # courtyard (clustering is about the physical footprint extent).
+        px0, py0, px1, py1 = _inst_pad_bbox(inst)
+        if (px0 < bx0 - 1e-6 or py0 < by0 - 1e-6
+                or px1 > bx1 + 1e-6 or py1 > by1 + 1e-6):
             res.off_board.append(
-                f"{inst.ref} ({inst.sheet}): courtyard "
-                f"({cx0:.1f},{cy0:.1f})..({cx1:.1f},{cy1:.1f}) outside "
+                f"{inst.ref} ({inst.sheet}): copper "
+                f"({px0:.1f},{py0:.1f})..({px1:.1f},{py1:.1f}) outside "
                 f"Edge.Cuts ({bx0:.0f},{by0:.0f})..({bx1:.0f},{by1:.0f})")
+        cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
         if inst.mod_path.name.startswith("MountingHole"):
             continue          # corner-forced fixed-position fab-art (see above)
         area = (cx1 - cx0) * (cy1 - cy0)

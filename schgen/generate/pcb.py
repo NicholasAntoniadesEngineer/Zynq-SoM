@@ -475,6 +475,61 @@ def _rot_bbox(bbox: tuple[float, float, float, float],
     return bbox
 
 
+def _rot_pad_bbox(mod_path: Path, rotation: float,
+                  side: str = "top") -> tuple[float, float, float, float] | None:
+    """The COPPER (pad) bounding box of a footprint after its placement rotation
+    + (for a bottom part) the F->B X-mirror, in the footprint-local frame —
+    includes each pad's real size (and the 90/270 size swap of a rotated pad).
+    Used to seat an off-board connector so its OUTERMOST pad sits exactly at the
+    board-edge copper clearance (the mouth/shell then reaches/overhangs the edge,
+    as a real hand-laid connector does). Returns None for a pad-less footprint."""
+    doc = sexpr.loads(mod_path.read_text())
+    R = math.radians(rotation or 0.0)
+    cs, sn = math.cos(R), math.sin(R)
+    xs: list[float] = []
+    ys: list[float] = []
+    for node in doc:
+        if not (isinstance(node, list) and node and node[0] == Sym("pad")):
+            continue
+        at = sexpr.find(node, "at")
+        sz = sexpr.find(node, "size")
+        if not (at and len(at) >= 3):
+            continue
+        px, py = float(at[1]), float(at[2])
+        prot = math.radians(float(at[3])
+                            if len(at) > 3 and isinstance(at[3], (int, float))
+                            else 0.0)
+        sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 else (0.0, 0.0)
+        if side == "bottom":
+            px = -px                            # F->B mirror about origin X
+            prot = -prot
+        # pad CENTER under KiCad's CLOCKWISE footprint rotation (y-axis points
+        # down): cx = px·cos + py·sin, cy = -px·sin + py·cos. This matches where
+        # KiCad/DRC actually place an asymmetric pad (a CCW transform mirrors the
+        # off-axis pads ~1.2mm — the bug that seated the FPC mechanical pads on
+        # the edge). The outer courtyard bbox is ~symmetric so it was unaffected.
+        cx = px * cs + py * sn
+        cy = -px * sn + py * cs
+        # axis-aligned half-extent of the (sw x sh) pad rotated by the footprint
+        # rotation + the pad's own rotation — robust for any angle (not just 90s).
+        tot = R + prot
+        ct, st = abs(math.cos(tot)), abs(math.sin(tot))
+        hx = ct * sw / 2 + st * sh / 2
+        hy = st * sw / 2 + ct * sh / 2
+        xs += [cx - hx, cx + hx]
+        ys += [cy - hy, cy + hy]
+    if not xs:
+        return None
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+# off-board connector seating: the outermost PAD sits this far (mm) from the
+# board edge — just clears the 0.3 mm copper_edge_clearance with grid-snap margin;
+# the connector's mouth/shell (ahead of the pads) then reaches/overhangs the edge
+# so a cable actually mates (LAW 6 — user: "connectors at the absolute edge").
+EDGE_PAD_CLEAR = 0.4
+
+
 def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
                 blockers: list[tuple[float, float, float, float]] | None = None
                 ) -> tuple[dict[str, tuple[float, float]], float, float]:
@@ -553,6 +608,11 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     return placed, packed_w, packed_h
 
 
+# inter-button air gap (mm) inside the tactile-button grid — wider than the
+# generic PLACE_CLEAR so the buttons read as a spaced, finger-friendly array.
+BUTTON_GAP = 3.0
+
+
 def _is_button(mod_path: Path) -> bool:
     """A user-facing tactile PUSHBUTTON (the round 6 mm TS-1187A). DIP/SLIDE
     config switches (DSHP*) are NOT included — they are set-once configuration,
@@ -577,7 +637,10 @@ def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
     for r in refs:
         bx0, by0, bx1, by1 = bbox_of[r]
         bb[r] = (bx0, by0, bx1, by1)
-        cell = max(cell, (bx1 - bx0) + PLACE_CLEAR, (by1 - by0) + PLACE_CLEAR)
+        # BUTTON_GAP (not just PLACE_CLEAR) gives a finger-friendly air gap
+        # between adjacent buttons so the array reads cleanly + presses easily
+        # (user: "switches need slightly more spacing between them").
+        cell = max(cell, (bx1 - bx0) + BUTTON_GAP, (by1 - by0) + BUTTON_GAP)
     cols = max(1, min(len(refs), int((target_w) // cell) or 1))
     off: dict[str, tuple[float, float]] = {}
     occ: list[tuple[float, float, float, float]] = []
@@ -768,12 +831,14 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     return t_off, b_off, round(max(tw, bw), 4), round(max(th, bh), 4)
 
 
-# how close (mm) a connector courtyard must sit to the board edge to count as
-# "flush" (LAW 6 / placement_mech gate). The connector mouth bbox edge is seated
-# at the zone's outer boundary; the zone's outer boundary lands at PERIM (3 mm)
-# off the true edge plus the placement grid snap, so the gate tolerance is
-# generous enough for the snap while still catching an interior connector.
-EDGE_FLUSH_MM = 9.0
+# how close (mm) a connector courtyard outer face must sit to the board edge to
+# count as "flush" (LAW 6 / placement_mech gate). The post-placement edge-snap
+# seats every off-board connector with its outer PAD at EDGE_PAD_CLEAR and its
+# mouth/shell reaching or overhanging the edge, so the courtyard outer face lands
+# at ~0.4 mm or NEGATIVE (overhang). TIGHTENED 9.0 -> 1.5: a connector left
+# recessed (the old ~2.4 mm inset that wouldn't mate — user complaint) now FAILS
+# the gate. Overhang (negative flush) passes; only an INBOARD recess fails.
+EDGE_FLUSH_MM = 1.5
 
 
 def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
@@ -1234,6 +1299,32 @@ def build_model(two_side: bool = True) -> PcbModel:
             side_of[ref] = "bottom"
             grid_placed.add(ref)
 
+    # LAW 6: seat every off-board connector AT the board edge — push it outward
+    # (perpendicular to its edge) until its outermost PAD clears EDGE_PAD_CLEAR,
+    # so the mouth/shell reaches/overhangs the edge and a cable actually mates
+    # (user: "connectors at the absolute edge or they won't mate"). Only the
+    # perpendicular axis moves; the along-edge position from the zone pack stays.
+    # Connectors keep their exact (non-gridified) seat so the pad clearance holds.
+    for ref, edge in zg.conn_edge.items():
+        if ref not in resolvable or ref not in pos:
+            continue
+        pb = _rot_pad_bbox(resolvable[ref], fixed_rot.get(ref, 0.0),
+                           side_of.get(ref, "top"))
+        if pb is None:
+            continue
+        px0, py0, px1, py1 = pb
+        x, y = pos[ref]
+        if edge == "N":
+            y = EDGE_PAD_CLEAR - py0
+        elif edge == "S":
+            y = board_h - EDGE_PAD_CLEAR - py1
+        elif edge == "W":
+            x = EDGE_PAD_CLEAR - px0
+        elif edge == "E":
+            x = board_w - EDGE_PAD_CLEAR - px1
+        pos[ref] = (round(x, 4), round(y, 4))
+        grid_placed.add(ref)
+
     fixed = set(mh_refs) | set(som_j_refs)
 
     insts: list[FootprintInst] = []
@@ -1324,6 +1415,21 @@ def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
     rb = _rot_bbox((bx0, by0, bx1, by1), inst.rotation or 0.0)
     return (round(inst.x + rb[0], 3), round(inst.y + rb[1], 3),
             round(inst.x + rb[2], 3), round(inst.y + rb[3], 3))
+
+
+def _inst_pad_bbox(inst: FootprintInst) -> tuple[float, float, float, float]:
+    """The placed footprint's COPPER (pad) bbox in the board page frame. Unlike
+    _inst_courtyard (which includes an off-board mating area — a USB-C shell, an
+    SD-card slot, a PMOD module outline — that legitimately overhangs the edge on
+    an edge connector), this is the copper that MUST sit on the board. The LAW-5
+    off-board check uses THIS so a correctly-seated edge connector (pads on-board,
+    mouth overhanging) is not false-flagged, while a genuinely off-board part
+    (copper outside Edge.Cuts) still fails."""
+    pb = _rot_pad_bbox(inst.mod_path, inst.rotation or 0.0, inst.side)
+    if pb is None:
+        return _inst_courtyard(inst)        # pad-less fab-art: fall back
+    return (round(inst.x + pb[0], 3), round(inst.y + pb[1], 3),
+            round(inst.x + pb[2], 3), round(inst.y + pb[3], 3))
 
 
 def net_pad_positions(model: PcbModel) -> dict[str, list[tuple[float, float, str, str]]]:
