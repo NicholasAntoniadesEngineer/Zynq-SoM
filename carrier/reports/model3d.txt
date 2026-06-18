@@ -3,3 +3,6 @@
 STATUS: SOFT — gaps are reported, never fail the board (some bespoke parts have no faithful stock body)
 56/56 custom footprints have a resolving 3D model
 unmatched: none — every custom footprint has a model
+
+MISFIT (1) — model resolves but does NOT match the footprint body (LAW):
+  ASP-134603-01: model 56.7x14.7 mm vs footprint body 49.7x6.3 mm (ratio 1.14,2.31 outside [0.5,2.0])

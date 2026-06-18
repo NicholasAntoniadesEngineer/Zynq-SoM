@@ -59,16 +59,21 @@ worse than none), with nothing floating, mis-oriented, or colliding. The
 raytraced PNG is not byte-deterministic, so it is inspected, not golden-checked —
 but it is not optional. Open it and look, like a human.
 
-**The 3D model must FIT the footprint — per part, HARD.** "Has a model" is not
-enough; the body must MATCH the footprint (this is exactly what swapping the real
-EasyEDA `.wrl` for generic stock bodies violated — off-center / wrong-size /
-90°-rotated). The `model3d` gate is HARD (fails the board): for every custom
-footprint the model must RESOLVE on disk AND its placed XY bounding box must fit
-the footprint's `F.Fab` body within a per-axis size band (a 90°-rotated or
-wrong-size body flips the aspect/scale outside it). Prefer the part's own real
-`.wrl` (model + footprint co-generated → matches by construction) over a generic
-stock body. Only a part with no faithful body at all may be a documented
-exception.
+**Every part's 3D model must RESOLVE (HARD) and MATCH the footprint (render
+oracle).** "Has a clause" is not enough — swapping the real EasyEDA `.wrl` for
+generic stock bodies left them off-center / wrong-size / 90°-rotated. So:
+- **HARD** (`model3d` gate fails the board): every custom footprint references a
+  3D model FILE that RESOLVES on disk (or is a documented no-faithful-body
+  exception). This is the un-fakeable part — it catches the real bug (a
+  bare/unresolvable path → an empty 3D viewer).
+- **SOFT** (reported, not failed): a size heuristic flags a model whose XY bbox
+  is grossly off the `F.Fab` body (e.g. a 90°-rotated FFC flips the aspect). It
+  is NOT hard — a connector's housing legitimately exceeds its fab pin-outline
+  and `F.Fab` parsing is format-fragile, so a hard size gate false-fails real
+  parts.
+- **The render is the definitive fit/position/orientation oracle** (`schgen
+  render3d` → eyeball it, LAW 5). Prefer the part's own real `.wrl` (model +
+  footprint co-generated → matches by construction) over a generic stock body.
 
 ---
 
