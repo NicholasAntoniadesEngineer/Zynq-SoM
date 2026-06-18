@@ -140,7 +140,7 @@ def test_key_function_ports_present(c: Circuit):
                  "PMODX_IO1", "PMODX_IO8",
                  "ZYNQ_PS_UART0_CTS_N", "ZYNQ_PS_UART0_RTS_N",
                  "DBG_UART_RXD", "DBG_UART_TXD",
-                 "PL_BTN0", "PL_BTN1", "FMC_PRSNT_N", "SD_CARD_DETECT",
+                 "PL_BTN0", "PL_BTN1", "IO_L6_P_33", "SD_CARD_DETECT",
                  "ZYNQ_HDMI_TX_SCL", "ZYNQ_HDMI_TX_SDA", "ZYNQ_HDMI_TX_HPD",
                  "HDMI_RX_CEC", "HDMI_RX_5V_DET"):
         assert port in c.nets, port

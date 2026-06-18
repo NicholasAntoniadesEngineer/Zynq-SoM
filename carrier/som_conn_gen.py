@@ -161,7 +161,10 @@ FUNCTION_MAP: dict[str, str] = {
     "IO_L19_P_33": "ZYNQ_HDMI_TX_SCL",      "IO_L19_VREF_N_33": "ZYNQ_HDMI_TX_SDA",
     "IO_L15_P_33": "ZYNQ_HDMI_TX_CEC",      "IO_L15_N_33": "ZYNQ_HDMI_TX_HPD",
     "IO_25_33": "PL_BTN0",                  "IO_L16_N_33": "PL_BTN1",
-    "IO_L6_P_33": "FMC_PRSNT_N",            # J2.89
+    # IO_L6_P_33 (J2.89): WAS FMC_PRSNT_N. The FMC LPC connector was replaced by
+    # a generic 2.54 mm IO-breakout header (no mezzanine presence-detect), so
+    # this pin is no longer mapped — resolve_net() falls through to verbatim and
+    # it is exposed as a spare bank-33 PL IO (IO_L6_P_33), like the other spares.
     # -- G5/4.2: bank 33 (J3) — camera control --------------------------
     "IO_L1_P_33": "CAM_SCL",  "IO_L1_N_33": "CAM_SDA",   # J3.86/89
     "IO_L2_P_33": "CAM_EN",   "IO_L2_N_33": "CAM_LED",   # J3.85/87

@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **200 x 165 mm**; SoM origin at **(75, 61.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: FIXED outline 200x165 mm declared in carrier/floorplan.json; estimated cross-subsystem airwire 16116 mm (LAW-5 budget 16349 mm — the REAL gate in `schgen board` is the arbiter).
+Outline derivation: FIXED outline 200x165 mm declared in carrier/floorplan.json; estimated cross-subsystem airwire 15730 mm (LAW-5 budget 16349 mm — the REAL gate in `schgen board` is the arbiter).
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -34,37 +34,37 @@ Outline derivation: FIXED outline 200x165 mm declared in carrier/floorplan.json;
 | N | usbc_otg | (105.5, 0, 31.09 x 12.88) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
 | N | usb_jtag_connector | (137, 0, 26.01 x 12.218) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
 | N | usb_uart_connector | (164, 0, 26.01 x 12.218) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
-| W | fmc | (0, 51.5, 61.46 x 22.93) | ASP-134603-01 (FMC LPC (VITA 57.1)) | (6) |
-| W | camera | (0, 75, 33.94 x 14.4) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (7) |
-| W | lcd | (0, 90, 41.25 x 15.743) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (8) |
-| E | ethernet | (180.5, 52.5, 19.66 x 23.56) | RESERVED: rj45_connector (deferred) | (9) |
-| E | uart_bridge | (188, 77, 12.04 x 16.34) | RESERVED: usb_uart_connector (deferred) | (10) |
-| S | hdmi_rx | (10, 145.5, 38.25 x 19.614) | HDMI-019S (HDMI receptacle) | (11) |
-| S | hdmi_tx | (49, 145, 41.25 x 19.75) | HDMI-019S (HDMI receptacle) | (12) |
-| S | pmod | (91, 141.5, 52.68 x 23.26) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (13) |
-| S | pmod_expansion | (144.5, 142.5, 42.52 x 22.629) | DS1024-2x6R2 (PMOD 2x6 socket) | (14) |
+| W | camera | (0, 64.5, 33.94 x 14.4) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (6) |
+| W | lcd | (0, 80, 41.25 x 15.743) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (7) |
+| E | ethernet | (180.5, 52.5, 19.66 x 23.56) | RESERVED: rj45_connector (deferred) | (8) |
+| E | uart_bridge | (188, 77, 12.04 x 16.34) | RESERVED: usb_uart_connector (deferred) | (9) |
+| S | hdmi_rx | (10, 145.5, 38.25 x 19.614) | HDMI-019S (HDMI receptacle) | (10) |
+| S | hdmi_tx | (49, 145, 41.25 x 19.75) | HDMI-019S (HDMI receptacle) | (11) |
+| S | pmod | (91, 141.5, 52.68 x 23.26) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (12) |
+| S | pmod_expansion | (144.5, 142.5, 42.52 x 22.629) | DS1024-2x6R2 (PMOD 2x6 socket) | (13) |
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (44, 76, 17.12 x 20.644) | 17 | 353.4 |  |
-| board_qwiic | E | (74, 27, 10.4 x 14.87) | 2 | 154.6 |  |
-| board_services | W | (47, 24, 25.7 x 26.22) | 9 | 673.9 |  |
+| board_aux | E | (147, 71, 17.12 x 20.644) | 17 | 353.4 |  |
+| board_qwiic | E | (147, 93, 10.4 x 14.87) | 2 | 154.6 |  |
+| board_services | W | (125, 112, 25.7 x 26.22) | 9 | 673.9 |  |
 | bringup_en | E | (109, 105, 14.45 x 19.3) | 15 | 278.9 |  |
-| bringup_en_modules | E | (152, 73, 27.28 x 26.22) | 54 | 715.3 |  |
-| bringup_modules | E | (126, 101, 27.28 x 29.68) | 70 | 809.7 | (15) |
-| bringup_rails | E | (126, 58, 24.65 x 42.074) | 23 | 1037.1 | (16) |
-| debug_boot | N | (90, 23, 20.65 x 37.344) | 10 | 771.2 | (17) |
-| hdmi_rx_term | @hdmi_rx | (62, 88, 12.04 x 19.3) | 10 | 232.4 |  |
-| mechanical | E | (137, 15, 13 x 13) | 4 | 169 |  |
-| power | E | (61, 109, 28.99 x 31.52) | 51 | 913.8 | (18) |
-| power_mon | E | (74, 43, 14.516 x 16.824) | 10 | 244.2 | (19) |
-| power_som | E | (133, 29, 19.66 x 27.56) | 23 | 541.8 |  |
-| rj45_connector | @ethernet | (157, 45, 22.3 x 26.22) | 3 | 584.7 |  |
-| usb_jtag | E | (112, 26, 19.39 x 30.87) | 19 | 598.6 |  |
-| usb_pd | @pd_input | (66, 62, 7.7 x 19.8) | 6 | 152.5 | (20) |
-| user_io | S | (91, 105, 17.12 x 33.86) | 17 | 579.7 | (21) |
+| bringup_en_modules | E | (49, 30, 27.28 x 26.22) | 54 | 715.3 |  |
+| bringup_modules | E | (20, 34, 27.28 x 29.68) | 70 | 809.7 | (14) |
+| bringup_rails | E | (49, 58, 24.65 x 42.074) | 23 | 1037.1 | (15) |
+| debug_boot | N | (89, 23, 20.65 x 37.344) | 10 | 771.2 | (16) |
+| fmc | S | (126, 55, 19.97 x 55.81) | 8 | 1114.5 |  |
+| hdmi_rx_term | @hdmi_rx | (78, 105, 12.04 x 19.3) | 10 | 232.4 |  |
+| mechanical | E | (137, 41, 13 x 13) | 4 | 169 |  |
+| power | E | (29, 101, 28.99 x 31.52) | 51 | 913.8 | (17) |
+| power_mon | E | (59, 101, 14.516 x 16.824) | 10 | 244.2 | (18) |
+| power_som | E | (165, 77, 19.66 x 27.56) | 23 | 541.8 |  |
+| rj45_connector | @ethernet | (157, 43, 22.3 x 26.22) | 3 | 584.7 |  |
+| usb_jtag | E | (111, 23, 19.39 x 30.87) | 19 | 598.6 |  |
+| usb_pd | @pd_input | (80, 40, 7.7 x 19.8) | 6 | 152.5 | (19) |
+| user_io | S | (91, 105, 17.12 x 33.86) | 17 | 579.7 | (20) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
 
@@ -94,10 +94,10 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.016 | negligible |
 | SY6280AAC (U9) | bringup_modules | +5V -> +5V_HDMI_TX | 0.058 | negligible |
 | TLV75725PDYDR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.400 | ~0.32 W |
-| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.360 | negligible |
+| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.258 | negligible |
 | SY6280AAC (U1) | pmod_expansion | +3V3 -> +3V3_PMODX | 0.104 | negligible |
-| LM61460AANRJRR (U1) | power | +VIN_SYS -> +5V_REG | 3.031 | ~1.68 W |
-| LM61460AANRJRR (U2) | power | +5V -> +3V3_REG | 2.745 | ~1.01 W |
+| LM61460AANRJRR (U1) | power | +VIN_SYS -> +5V_REG | 2.664 | ~1.48 W |
+| LM61460AANRJRR (U2) | power | +5V -> +3V3_REG | 2.245 | ~0.82 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8_REG | 0.006 | negligible |
 | LM61460AANRJRR (U4) | power_som | +VIN_SYS -> +5V_SOM | 2.004 | ~1.04 W |
 | AP2112K-3.3TRG1 (U4) | usb_jtag | +5V_DBG -> +3V3_DBG | 0.045 | ~0.08 W |
@@ -111,22 +111,21 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(3) usbc_otg**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
 - **(4) usb_jtag_connector**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
 - **(5) usb_uart_connector**: USB-C OTG: the 90R D+/D- pair wants the shortest matched run to its SoM pins; USBLC6-2SC6 ESD array within ~10 mm of the receptacle; VBUS source switch beside the connector.
-- **(6) fmc**: FMC LPC: a VITA 57.1 mezzanine overhangs the board edge — keep tall parts out of the overhang strip behind the connector. TLV75725PDYDR VADJ LDO dissipates ~0.32 W at the declared 0.4 A — give it copper.
-- **(7) camera**: RPi camera FFC: 3 MIPI CSI-2 pairs at 100R differential to the J3 side of the SoM (bank 35, 2.5 V VCCO per the expect= notes) — keep the run to the J3 strip short.
-- **(8) lcd**: 40-pin LCD FFC: cable exits over the board edge; keep the SY7201ABC backlight boost loop (L/D/C) tight and away from the FFC signal rows; RGB888 bus is single-ended bank-34 3V3 — bus-route together.
-- **(9) ethernet**: Magnetics isolation: void ALL planes under the HX5008 line side + Bob-Smith network (CHASSIS_GND moat to the RJ45); MDI pairs are 100R differential. RJ45 itself is an author-declared deferral (expect rj45_connector) — the dashed reservation is its landing zone.
-- **(10) uart_bridge**: CP2102N UART bridge: its USB connector is an author-declared deferral (expect usb_uart_connector) — the block reserves edge space for it; TX/RX test points stay probe-able.
-- **(11) hdmi_rx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place M24C02-WMN6TP directly behind the receptacle so all pairs pass straight through.
-- **(12) hdmi_tx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place TPD12S016PWR directly behind the receptacle so all pairs pass straight through.
-- **(13) pmod**: Two PMOD sockets side by side; both fed from the gated +3V3_PMOD rail (SY6280 cell in bringup_modules) — route the gated rail once, star at the sockets.
-- **(14) pmod_expansion**: Two PMOD sockets side by side; both fed from the gated +3V3_PMOD rail (SY6280 cell in bringup_modules) — route the gated rail once, star at the sockets.
-- **(15) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
-- **(16) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
-- **(17) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
-- **(18) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.68 W; LM61460AANRJRR +3V3_REG ~1.01 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
-- **(19) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
-- **(20) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
-- **(21) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.
+- **(6) camera**: RPi camera FFC: 3 MIPI CSI-2 pairs at 100R differential to the J3 side of the SoM (bank 35, 2.5 V VCCO per the expect= notes) — keep the run to the J3 strip short.
+- **(7) lcd**: 40-pin LCD FFC: cable exits over the board edge; keep the SY7201ABC backlight boost loop (L/D/C) tight and away from the FFC signal rows; RGB888 bus is single-ended bank-34 3V3 — bus-route together.
+- **(8) ethernet**: Magnetics isolation: void ALL planes under the HX5008 line side + Bob-Smith network (CHASSIS_GND moat to the RJ45); MDI pairs are 100R differential. RJ45 itself is an author-declared deferral (expect rj45_connector) — the dashed reservation is its landing zone.
+- **(9) uart_bridge**: CP2102N UART bridge: its USB connector is an author-declared deferral (expect usb_uart_connector) — the block reserves edge space for it; TX/RX test points stay probe-able.
+- **(10) hdmi_rx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place M24C02-WMN6TP directly behind the receptacle so all pairs pass straight through.
+- **(11) hdmi_tx**: 4 TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place TPD12S016PWR directly behind the receptacle so all pairs pass straight through.
+- **(12) pmod**: Two PMOD sockets side by side; both fed from the gated +3V3_PMOD rail (SY6280 cell in bringup_modules) — route the gated rail once, star at the sockets.
+- **(13) pmod_expansion**: Two PMOD sockets side by side; both fed from the gated +3V3_PMOD rail (SY6280 cell in bringup_modules) — route the gated rail once, star at the sockets.
+- **(14) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
+- **(15) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
+- **(16) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
+- **(17) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.48 W; LM61460AANRJRR +3V3_REG ~0.82 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(18) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
+- **(19) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
+- **(20) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.
 - **(board)**: 57 test points board-wide (test-point gate): spread them with probe clearance as the blocks settle; none may end up under the SoM.
 
 ## Honest limits

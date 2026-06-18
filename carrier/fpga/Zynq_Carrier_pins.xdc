@@ -66,7 +66,6 @@ set_property -dict {PACKAGE_PIN T22  IOSTANDARD LVCMOS33} [get_ports {CAM_EN}]  
 set_property -dict {PACKAGE_PIN U22  IOSTANDARD LVCMOS33} [get_ports {CAM_LED}]  ;# J3.87 IO_L2N_T0_33 <- camera
 set_property -dict {PACKAGE_PIN T21  IOSTANDARD LVCMOS33} [get_ports {CAM_SCL}]  ;# J3.86 IO_L1P_T0_33 <- camera
 set_property -dict {PACKAGE_PIN U21  IOSTANDARD LVCMOS33} [get_ports {CAM_SDA}]  ;# J3.89 IO_L1N_T0_33 <- camera
-set_property -dict {PACKAGE_PIN V18  IOSTANDARD LVCMOS33} [get_ports {FMC_PRSNT_N}]  ;# J2.89 IO_L6P_T0_33 <- fmc
 set_property -dict {PACKAGE_PIN W13  IOSTANDARD LVCMOS33} [get_ports {HDMI_RX_5V_DET}]  ;# J2.44 IO_L20N_T3_33 <- hdmi_rx
 set_property -dict {PACKAGE_PIN V13  IOSTANDARD LVCMOS33} [get_ports {HDMI_RX_CEC}]  ;# J2.59 IO_L20P_T3_33 <- hdmi_rx
 # tmds_pair (100R): HDMI_RX_CLK_P / HDMI_RX_CLK_N
@@ -92,6 +91,7 @@ set_property -dict {PACKAGE_PIN W22  IOSTANDARD LVCMOS33} [get_ports {IO_L3_DQS_
 set_property -dict {PACKAGE_PIN V22  IOSTANDARD LVCMOS33} [get_ports {IO_L3_DQS_P_33}]  ;# J3.91 IO_L3P_T0_DQS_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN V20  IOSTANDARD LVCMOS33} [get_ports {IO_L5_N_33}]  ;# J3.94 IO_L5N_T0_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN U20  IOSTANDARD LVCMOS33} [get_ports {IO_L5_P_33}]  ;# J3.92 IO_L5P_T0_33 <- unclaimed (wave-3 function map)
+set_property -dict {PACKAGE_PIN V18  IOSTANDARD LVCMOS33} [get_ports {IO_L6_P_33}]  ;# J2.89 IO_L6P_T0_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN U14  IOSTANDARD LVCMOS33} [get_ports {PL_BTN0}]  ;# J2.79 IO_25_33 <- bringup_rails
 set_property -dict {PACKAGE_PIN V17  IOSTANDARD LVCMOS33} [get_ports {PL_BTN1}]  ;# J2.87 IO_L16N_T2_33 <- bringup_rails
 set_property -dict {PACKAGE_PIN W21  IOSTANDARD LVCMOS33} [get_ports {WATCHDOG_KICK}]  ;# J3.96 IO_L4N_T0_33 <- board_services

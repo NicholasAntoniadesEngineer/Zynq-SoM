@@ -1,42 +1,32 @@
-* fmc.cir — SPICE subckt for the carrier fmc (FMC LPC, reduced) subsystem.
+* fmc.cir — SPICE subckt for the carrier fmc subsystem (SoM bank-35 IO breakout
+* on a generic 2x20 2.54 mm header; was the Samtec FMC LPC connector — see
+* fmc.py history).
 *
-* CARRIER-LOCAL: the subckt pins are the subsystem's real carrier nets (the two
-* rails + the locally-made VADJ rail + the service straps), NOT abstract names.
-* The TLV75725 VADJ LDO is an active part with no useful small-signal model
-* here, so this subckt captures the PASSIVE network the subsystem adds: the LDO
-* input/output + connector bypass caps, and the service-strap pull-ups (PRSNT,
-* PG_C2M, the FMC-JTAG TCK/TRST_L/TMS holds). The 14 LA/CLK diff pairs are bare
-* connector pins (no subsystem-local passive) and so are not subckt pins.
+* CARRIER-LOCAL: the subckt pins are the subsystem's real carrier rails. The
+* TLV75725 VADJ LDO is an active part with no useful small-signal model here, so
+* this subckt captures the PASSIVE network the subsystem adds: the +3V3
+* bypass/LDO-input caps and the +2V5_VADJ LDO-output / at-header bypass caps.
+* The 14 LA/CLK diff pairs are bare header pins (no subsystem-local passive) and
+* so are not subckt pins. (The FMC-mezzanine service straps — PRSNT/PG/JTAG —
+* were removed with the connector, so their pull-ups are gone too.)
 *
-* The VADJ LDO is modelled as an ideal 2.5 V rail (VVADJ) for the standalone
-* smoke harness; the carrier feeds +2V5_VADJ from U1 in the real netlist.
+* The VADJ LDO is modelled as an ideal 2.5 V rail for the standalone smoke
+* harness; the carrier feeds +2V5_VADJ from U1 in the real netlist.
 *
 * Values mirror carrier/subsystems/fmc/fmc.py one-for-one (parse_si):
-*   R1 10k  PRSNT_M2C_L pull-up   (+3V3 -> FMC_PRSNT_N)
-*   R2 10k  PG_C2M      pull-up   (+2V5_VADJ -> FMC_PG_C2M)
-*   R3 10k  FMC TCK     hold-low  (GND -> FMC_TCK)
-*   R4 10k  FMC TRST_L  hold-low  (GND -> FMC_TRST_L)
-*   R5 10k  FMC TMS     hold-high (+3V3 -> FMC_TMS)
-*   C1 10u + C2 100n    3P3V connector bypass (+3V3 -> GND)
-*   C3 1u               VADJ LDO input        (+3V3 -> GND)
-*   C4 10u + C5 100n    VADJ LDO output / at connector (+2V5_VADJ -> GND)
+*   C1 10u + C2 100n   +3V3 bypass          (+3V3 -> GND)
+*   C3 1u              VADJ LDO input        (+3V3 -> GND)
+*   C4 10u + C5 100n   VADJ LDO output / at-header (+2V5_VADJ -> GND)
 *
-* Port order: the rails, GND, then the strapped service signals.
+* Port order: the two rails + GND.
 
-.subckt fmc V3V3 VVADJ GND PRSNT PG_C2M TCK TRST_L TMS
+.subckt fmc V3V3 VVADJ GND
 
-* service-strap pull-ups
-R1 V3V3  PRSNT  10k
-R2 VVADJ PG_C2M 10k
-R3 GND   TCK    10k
-R4 GND   TRST_L 10k
-R5 V3V3  TMS    10k
-
-* 3P3V connector bypass
+* +3V3 bypass
 C1 V3V3 GND 10u
 C2 V3V3 GND 100n
 
-* VADJ LDO input + output / at-connector bypass
+* VADJ LDO input + output / at-header bypass
 C3 V3V3  GND 1u
 C4 VVADJ GND 10u
 C5 VVADJ GND 100n
@@ -44,7 +34,7 @@ C5 VVADJ GND 100n
 .ends fmc
 
 * Standalone smoke harness (ngspice -b; harmless under any board use): the
-* 2.5 V VADJ rail holds an open PG_C2M strap high through its 10k.
+* 2.5 V VADJ rail holds a 10k load through to ground.
 .subckt _src P
 V1 vvadj 0 2.5
 R1 vvadj P 10k

@@ -1,126 +1,102 @@
-# fmc — VITA 57.1 FMC LPC mezzanine site, REDUCED subset (carrier-local)
+# fmc — SoM bank-35 IO breakout on a generic 2.54 mm header (carrier-local)
 
-A **carrier-local** schgen subsystem: a reduced VITA 57.1 **FMC LPC** mezzanine
-site with a local 2.5 V **VADJ** LDO. It loads its connector pinout from the
-machine-parsed `carrier/research/fmc_lpc_pinmap.json`, exports functional
-pair-suffixed ports bound to the SoM bank-35 IOs, and rides the carrier rails
-directly — board-specific, so no abstract-interface / bind contract.
+A **carrier-local** schgen subsystem: it breaks out the SoM **bank-35** LVDS IO
+(14 differential pairs) plus a local 2.5 V **VADJ** rail onto a generic **2×20
+0.1″ / 2.54 mm pin header**, and rides the carrier rails directly.
+
+> **History (2026-06-18, user request).** This site WAS a VITA 57.1 **FMC LPC**
+> mezzanine connector (Samtec ASP-134603-01). The proprietary FMC connector was
+> replaced with a generic 2×20 2.54 mm header so the same SoM bank-35 IO is
+> broken out to a cheap, universally-wireable header — **no specific FMC
+> mezzanine card required**. The 14 pairs keep their functional names, so the SoM
+> binding (FUNCTION_MAP), XDC and SI constraints — which reference the SoM side,
+> not this connector — are unchanged. The FMC-mezzanine management (GA straps,
+> PRSNT/PG presence, JTAG bypass, mezzanine EEPROM, the 400-pin VITA grid) is
+> gone with the connector.
 
 ## Package contents
 
 | file | role |
 |------|------|
-| `fmc.py`       | the NETLIST — `circuit()`, carrier nets; loads `../../research/fmc_lpc_pinmap.json` (note: `parents[2]` = carrier in the folded package layout) |
-| `fmc.cir`      | SPICE subckt — the VADJ LDO output network + service-strap pull-ups + connector bypass, rails/VADJ/3P3V as subckt pins |
-| `test_fmc.py`  | LOCAL electrical-correctness test (offline; model completeness + VADJ LDO + LA/CLK diff pairs + GND census + service straps + EP-to-GND) |
+| `fmc.py`       | the NETLIST — `circuit()`, carrier nets; the 2×20 header pinout + the VADJ LDO |
+| `fmc.cir`      | SPICE subckt — the +3V3 bypass + VADJ LDO in/out caps (rails as subckt pins) |
+| `test_fmc.py`  | LOCAL electrical-correctness test (offline; model completeness + header pinout + VADJ LDO + 14 LA/CLK diff pairs + EP-to-GND) |
 | `README.md`    | this file |
 
-## Purpose / honest scope
+## Header pinout (Conn_02x20, 2.54 mm)
 
-A FULL remaining-PL-pin audit (dossier `carrier/research/fmc.md`) settles the
-LPC-vs-HPC decision: **HPC is out** (400-pin, 80 LA pairs — nowhere near
-available), and **VADJ = 2.5 V (PLAN round 2 locked) makes bank 35 the ONLY legal
-LA bank** (13/33/34 are 3.3 V). Honest scope: **REDUCED FMC-LPC — LA00-LA11
-(12 pairs) + both M2C clocks populated**; LA12-LA33, DP0, GBTCLK0, VREF_A_M2C,
-12P0V are **author NCs** (documented deviations: LA01_CC is not clock-capable, no
-MGT on the Zynq-7020 HR carrier, and the carrier has **no 12 V rail**).
+P on the odd pin / N on the even pin of each physical row (pair sits side-by-side);
+a GND row every ~3 pairs for return-current locality; power on row 1.
 
-## Banks / pins (the populated map)
+| pin | net | pin | net |
+|----:|-----|----:|-----|
+| 1 | `+3V3` | 2 | `+2V5_VADJ` |
+| 3 | `FMC_CLK0_M2C_P` | 4 | `FMC_CLK0_M2C_N` |
+| 5 | `FMC_CLK1_M2C_P` | 6 | `FMC_CLK1_M2C_N` |
+| 7 | `GND` | 8 | `GND` |
+| 9 | `FMC_LA00_CC_P` | 10 | `FMC_LA00_CC_N` |
+| 11 | `FMC_LA01_CC_P` | 12 | `FMC_LA01_CC_N` |
+| 13 | `FMC_LA02_P` | 14 | `FMC_LA02_N` |
+| 15 | `GND` | 16 | `GND` |
+| 17 | `FMC_LA03_P` | 18 | `FMC_LA03_N` |
+| 19 | `FMC_LA04_P` | 20 | `FMC_LA04_N` |
+| 21 | `FMC_LA05_P` | 22 | `FMC_LA05_N` |
+| 23 | `GND` | 24 | `GND` |
+| 25 | `FMC_LA06_P` | 26 | `FMC_LA06_N` |
+| 27 | `FMC_LA07_P` | 28 | `FMC_LA07_N` |
+| 29 | `FMC_LA08_P` | 30 | `FMC_LA08_N` |
+| 31 | `GND` | 32 | `GND` |
+| 33 | `FMC_LA09_P` | 34 | `FMC_LA09_N` |
+| 35 | `FMC_LA10_P` | 36 | `FMC_LA10_N` |
+| 37 | `FMC_LA11_P` | 38 | `FMC_LA11_N` |
+| 39 | `GND` | 40 | `GND` |
 
-12 LA pairs + 2 M2C clocks, on true MRCC/SRCC pairs where required. Pairs are
-typed `diff_pair` 100 Ω. The IO binding is the dossier section-1 contract.
-
-| FMC signal | carrier port | SoM net (verbatim) | J pins |
-|------------|--------------|--------------------|--------|
-| CLK0_M2C | `FMC_CLK0_M2C_P/N` | IO_L12_MRCC_P/N_35 | J3.14/16 |
-| CLK1_M2C | `FMC_CLK1_M2C_P/N` | IO_L11_SRCC_P/N_35 | J3.8/10 |
-| LA00_CC  | `FMC_LA00_CC_P/N`  | IO_L14_SRCC_P/N_35 | J3.22/20 |
-| LA01_CC  | `FMC_LA01_CC_P/N`  | IO_L21_DQS_P/N_35  | J3.24/26 |
-| LA02     | `FMC_LA02_P/N`     | IO_L17_P/N_35      | J3.37/35 |
-| LA03     | `FMC_LA03_P/N`     | IO_L20_P/N_35      | J3.34/32 |
-| LA04     | `FMC_LA04_P/N`     | IO_L22_P/N_35      | J3.42/44 |
-| LA05     | `FMC_LA05_P/N`     | IO_L23_P/N_35      | J3.47/45 |
-| LA06     | `FMC_LA06_P/N`     | IO_L24_P/N_35      | J3.51/49 |
-| LA07     | `FMC_LA07_P/N`     | IO_L19_P_35 / IO_L19_N_VREF_35 | J3.50/52 |
-| LA08     | `FMC_LA08_P/N`     | IO_L1_P/N_35       | J1.74/92 |
-| LA09     | `FMC_LA09_P/N`     | IO_L4_P/N_35       | J1.80/84 |
-| LA10     | `FMC_LA10_P/N`     | IO_L5_P/N_35       | J1.90/88 |
-| LA11     | `FMC_LA11_P/N`     | IO_L6_P_35 / IO_L6_VREF_N_35 | J1.78/76 |
-
-The pin → signal map is machine-parsed from
-`carrier/research/fmc_lpc_pinmap.json` (160 LPC positions, **61 GND** — asserted
-before binding; VADJ = G39/H40; 3P3V = C39/D36/D38/D40). Port names are
-FUNCTIONAL (hdmi pattern) so the linker infers pair polarity from suffixes.
+Pairs are typed `diff_pair` 100 Ω (the SoM→header PCB trace is still
+impedance-controlled; the 0.1″ header pads themselves are not — the nature of a
+generic breakout). The SoM binding for each pair is the dossier section-1
+contract (bank-35 IO_*).
 
 ## Parts
 
 | ref | value | part / footprint | LCSC | role |
 |-----|-------|------------------|------|------|
-| J1 | (FMC) | `ASP-134603-01` (use_part) | C2836665 | Samtec SEAF-based LPC **socket** (carrier side; the ZedBoard's part) |
+| J1 | 2×20 header | `Connector_Generic:Conn_02x20_Odd_Even` / `PinHeader_2x20_P2.54mm_Vertical` | *(open)* | generic 2.54 mm IO-breakout header (stock KiCad part + 3D; integrator picks the exact orderable header) |
 | U1 | (VADJ LDO) | `TLV75725PDYDR` (use_part, DYD thermal-pad) | C35209004 | fixed 2.5 V LDO, EP=pin 6 netted to GND |
-| R1 | 10k | `Device:R` / R_0603 | C25804 | PRSNT_M2C_L pull-up (→ +3V3) |
-| R2 | 10k | `Device:R` / R_0603 | C25804 | PG_C2M pull-up (→ +2V5_VADJ) |
-| R3 | 10k | `Device:R` / R_0603 | C25804 | FMC TCK held low (→ GND) |
-| R4 | 10k | `Device:R` / R_0603 | C25804 | FMC TRST_L held low (→ GND) |
-| R5 | 10k | `Device:R` / R_0603 | C25804 | FMC TMS held high (→ +3V3) |
-| C1 | 10u  | `Device:C` / C0805 | C15850 | 3P3V connector bulk |
-| C2 | 100n | `Device:C` / C0603 | C14663 | 3P3V connector HF |
+| C1 | 10u  | `Device:C` / C0805 | C15850 | +3V3 bulk |
+| C2 | 100n | `Device:C` / C0603 | C14663 | +3V3 HF bypass |
 | C3 | 1u   | `Device:C` / C0603 | C15849 | VADJ LDO input |
 | C4 | 10u  | `Device:C` / C0805 | C15850 | VADJ LDO output |
-| C5 | 100n | `Device:C` / C0603 | C14663 | VADJ at connector |
+| C5 | 100n | `Device:C` / C0603 | C14663 | VADJ at-header bypass |
 
-## VADJ rail
+## VADJ rail (retained)
 
-`+2V5_VADJ` from the **TLV75725PDYDR** (fixed 2.5 V LDO) fed by `+3V3` — the SAME
-voltage bank 35 runs at (`+VCCO_35`), so LA levels are consistent by
-construction (one rail name serves FMC VADJ and the bank-35 VCCO feed). EN is
-strapped on (always-on with the +3V3 stage). The EP pad (footprint pad 6) is
-netted to GND in the schematic (DEF-E) — a real, gate-checkable ground bond.
-Pin map 1=IN 2=GND 3=EN 4=NC 5=OUT 6=EP. The rail carries a `testpoint()`.
+`+2V5_VADJ` from the **TLV75725PDYDR** (fixed 2.5 V LDO) fed by `+3V3`. It is the
+bank-35 VCCO reference for BOTH these LA pairs AND the camera CSI pairs, and is
+offered on the header (pin 2) so the broken-out IO sits at the correct 2.5 V
+level. EN strapped on; EP pad (footprint pad 6) netted to GND (DEF-E) — a real,
+gate-checkable ground. Pin map 1=IN 2=GND 3=EN 4=NC 5=OUT 6=EP. The rail carries
+a `testpoint()`.
 
-**PWR-3 thermal swap (SBVS322C):** the former DBV (SOT-23-5, RthJA ~231 °C/W) had
-no margin at the 0.4 A / ~0.8 V-drop budget (Pd ~0.32 W → Tj ~125 °C @ Ta=50 °C).
-The DYD thermal-pad variant (RthJA ~92.5 °C/W EP-to-GND) lifts the same 0.32 W
-only ~30 °C → Tj ~80 °C — a comfortable continuous limit.
-
-## Service signals
-
-- **I2C**: `STM32_I2C2_SCL/SDA` on the shared SC bus (pull-ups live ONCE on
-  `bringup_rails`). GA0/GA1 tied to GND → mezzanine EEPROM at 0x50.
-- **PRSNT_M2C_L** → `FMC_PRSNT_N`, 10k pull-up to +3V3 (bank-33 spare, deferral).
-- **PG_C2M** → `FMC_PG_C2M`, 10k pull-up to +2V5_VADJ (asserts when VADJ is live).
-- **JTAG**: bypass TDI→TDO (`FMC_JTAG_BYPASS`); TCK/TRST_L held low, TMS held
-  high (TAP in reset) — `FMC_TCK`/`FMC_TRST_L`/`FMC_TMS`, all 10k.
+**PWR-3 thermal (SBVS322C):** the DYD thermal-pad variant (RthJA ~92.5 °C/W
+EP-to-GND) keeps Tj ~80 °C @ Ta=50 °C at the budget — a comfortable margin.
 
 ## Power-tree budget
 
-- `+3V3` 1.000 A: FMC 3P3V + 3P3VAUX mezzanine allocation (from the +3V3 buck).
+- `+3V3` 0.500 A: a generic-breakout add-on allowance (was a 1.0 A FMC mezzanine).
 - `+2V5_VADJ` 0.350 A: TLV75725 DYD 0.40 A thermal envelope less ~0.05 A bank-35
-  VCCO (LVDS_25 drivers: 12 FMC LA + 3 camera CSI pairs).
+  VCCO (LVDS_25 drivers: 12 bank-35 LA pairs + 3 camera CSI pairs).
 
 ## Notes
 
-- **SILKSCREEN INTENT (reduced-LPC)**: although the connector is a full
-  LPC-mechanical SEAF socket, this is a REDUCED LPC site (only LA00-LA11 +
-  CLK0/CLK1_M2C populated). The PCB silkscreen MUST be labelled to that effect
-  (e.g. "FMC LPC (REDUCED) — LA00-LA11, no 12V") so an integrator does not seat a
-  mezzanine assuming a full LA bus, a 12 V supply, or the GTP GBTCLK/DP lanes. A
-  fab-art/silkscreen requirement, not a netlist change.
-- **Connector side**: `ASP-134603-01` is the carrier-side **socket** (the
-  mezzanine-side `ASP-134604-01` is the wrong side). Long-lead Extended line item
-  — preflight re-check before any board run.
-- **Folded-package path note**: `fmc.py` reads the pinmap via
-  `Path(__file__).resolve().parents[2] / "research" / ...` — in the foldered
-  `carrier/subsystems/fmc/fmc.py` layout, `parents[2]` is `carrier/` (the flat
-  layout used `parents[1]`). The emitted netlist is byte-identical.
+- **Generic header**: the header is a stock KiCad part (symbol + footprint + 3D),
+  faithful and not hand-built. The exact orderable 2×20 0.1″ header (and its LCSC)
+  is the integrator's choice — left open in the BOM.
+- **Freed SoM pin**: the former FMC presence-detect pin (IO_L6_P_33, J2.89) is no
+  longer mapped (`som_conn_gen.py`) and is now a verbatim spare bank-33 PL IO.
+- **Silkscreen**: label the site as a SoM bank-35 IO breakout (LA00-11 + CLK0/1 +
+  2.5 V VADJ) so it is clear it is not a seatable FMC mezzanine.
 
 ## Local test
-
-`test_fmc.py` runs the subsystem-LOCAL slices offline (model completeness, the
-VADJ LDO presence + EP-to-GND, the 14 LA/CLK diff pairs, the GND census, the
-service-strap pulls, the `design_rules` DECAP/EP/STRAP slice, the `.cir` ↔
-netlist passive match). Cross-board gates (full link / power-tree headroom / board
-ERC) stay aggregated by `schgen board`.
 
 ```bash
 PYTHONPATH=. python3 -m pytest carrier/subsystems/fmc/test_fmc.py -q

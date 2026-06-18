@@ -7,9 +7,9 @@ alias map (rails only, exact, enumerated):
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (520):
-  board_aux:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
-  board_aux:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+bound ports (517):
+  board_aux:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
+  board_aux:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   board_aux:AUX_I2C_SCL [i2c] -> sheet board_qwiic:AUX_I2C_SCL; sheet board_services:AUX_I2C_SCL
   board_aux:AUX_I2C_SDA [i2c] -> sheet board_qwiic:AUX_I2C_SDA; sheet board_services:AUX_I2C_SDA
   board_qwiic:AUX_I2C_SDA [i2c] -> sheet board_aux:AUX_I2C_SDA; sheet board_services:AUX_I2C_SDA
@@ -97,8 +97,8 @@ bound ports (520):
   bringup_rails:PMON_ALERT_N -> sheet power_mon:PMON_ALERT_N
   bringup_rails:USBOTG_FLT_N -> sheet usbc_otg:USBOTG_FLT_N
   bringup_rails:PD_FLT_N -> sheet pd_input:PD_FLT_N
-  bringup_rails:STM32_I2C2_SCL [i2c] -> sheet board_aux:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
-  bringup_rails:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+  bringup_rails:STM32_I2C2_SCL [i2c] -> sheet board_aux:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
+  bringup_rails:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   bringup_rails:SC_INT_N -> sheet som_j1:SC_INT_N; sheet usb_pd:SC_INT_N
   bringup_rails:PL_BTN0 -> sheet som_j2:PL_BTN0
   bringup_rails:PL_BTN1 -> sheet som_j2:PL_BTN1
@@ -168,9 +168,6 @@ bound ports (520):
   fmc:FMC_LA10_N [diff_pair] -> sheet som_j1:FMC_LA10_N
   fmc:FMC_LA11_P [diff_pair] -> sheet som_j1:FMC_LA11_P
   fmc:FMC_LA11_N [diff_pair] -> sheet som_j1:FMC_LA11_N
-  fmc:STM32_I2C2_SCL [i2c] -> sheet board_aux:STM32_I2C2_SCL; sheet bringup_rails:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
-  fmc:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
-  fmc:FMC_PRSNT_N -> sheet som_j2:FMC_PRSNT_N
   hdmi_rx:HDMI_RX_D2_P [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D2_P; sheet som_j2:HDMI_RX_D2_P
   hdmi_rx:HDMI_RX_D2_N [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D2_N; sheet som_j2:HDMI_RX_D2_N
   hdmi_rx:HDMI_RX_D1_P [tmds_pair] -> sheet hdmi_rx_term:HDMI_RX_D1_P; sheet som_j2:HDMI_RX_D1_P
@@ -274,8 +271,8 @@ bound ports (520):
   power:EN_5V0 -> sheet bringup_en:EN_5V0
   power:EN_3V3 -> sheet bringup_en:EN_3V3
   power:EN_1V8 -> sheet bringup_en:EN_1V8
-  power_mon:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
-  power_mon:STM32_I2C2_SCL [i2c] -> sheet board_aux:STM32_I2C2_SCL; sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
+  power_mon:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+  power_mon:STM32_I2C2_SCL [i2c] -> sheet board_aux:STM32_I2C2_SCL; sheet bringup_rails:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   power_mon:PMON_ALERT_N -> sheet bringup_rails:PMON_ALERT_N
   rj45_connector:ETH_LINE_MDI_0_P [diff_pair] -> sheet ethernet:ETH_LINE_MDI_0_P
   rj45_connector:ETH_LINE_MDI_0_N [diff_pair] -> sheet ethernet:ETH_LINE_MDI_0_N
@@ -305,12 +302,12 @@ bound ports (520):
   som_j1:ZYNQ_PS_MIO12 -> SoM ZYNQ_PS_MIO12 (J1.46)
   som_j1:STM32_NRST -> sheet bringup_rails:STM32_NRST; sheet debug_boot:STM32_NRST; SoM STM32_NRST (J1.47)
   som_j1:ZYNQ_PS_UART0_TXD -> sheet uart_bridge:ZYNQ_PS_UART0_TXD
-  som_j1:STM32_I2C2_SDA -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
+  som_j1:STM32_I2C2_SDA -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   som_j1:ZYNQ_PS_MIO0 -> SoM ZYNQ_PS_MIO0 (J1.50)
   som_j1:ZYNQ_PS_MIO9 -> SoM ZYNQ_PS_MIO9 (J1.52)
   som_j1:STM32_GPIO5 -> sheet debug_boot:STM32_GPIO5; SoM STM32_GPIO5 (J1.53)
   som_j1:STM32_GPIO8 -> sheet debug_boot:STM32_GPIO8; SoM STM32_GPIO8 (J1.54)
-  som_j1:STM32_I2C2_SCL -> sheet board_aux:STM32_I2C2_SCL; sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
+  som_j1:STM32_I2C2_SCL -> sheet board_aux:STM32_I2C2_SCL; sheet bringup_rails:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   som_j1:STM32_BOOT0 -> sheet debug_boot:STM32_BOOT0; SoM STM32_BOOT0 (J1.57)
   som_j1:STM32_GPIO7 -> sheet debug_boot:STM32_GPIO7; SoM STM32_GPIO7 (J1.59)
   som_j1:SDIO_D1 [sd_bus] -> sheet microsd:SDIO_D1; SoM SDIO_D1 (J1.61)
@@ -409,7 +406,7 @@ bound ports (520):
   som_j2:HDMI_RX_D1_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D1_N; sheet hdmi_rx_term:HDMI_RX_D1_N
   som_j2:PL_BTN1 -> sheet bringup_rails:PL_BTN1
   som_j2:HDMI_RX_CLK_N [tmds_pair] -> sheet hdmi_rx:HDMI_RX_CLK_N; sheet hdmi_rx_term:HDMI_RX_CLK_N
-  som_j2:FMC_PRSNT_N -> sheet fmc:FMC_PRSNT_N
+  som_j2:IO_L6_P_33 -> SoM IO_L6_P_33 (J2.89)
   som_j2:HDMI_RX_CLK_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_CLK_P; sheet hdmi_rx_term:HDMI_RX_CLK_P
   som_j2:IO_L11_SRCC_N_33 -> SoM IO_L11_SRCC_N_33 (J2.91)
   som_j2:HDMI_RX_D0_P [tmds_pair] -> sheet hdmi_rx:HDMI_RX_D0_P; sheet hdmi_rx_term:HDMI_RX_D0_P
@@ -508,8 +505,8 @@ bound ports (520):
   usb_jtag_connector:DBG_USB_DM [usb_hs_pair] -> sheet usb_jtag:DBG_USB_DM
   usb_pd:STM32_USB_CC1 -> sheet pd_input:STM32_USB_CC1; sheet som_j1:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
   usb_pd:STM32_USB_CC2 -> sheet pd_input:STM32_USB_CC2; sheet som_j1:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
-  usb_pd:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet fmc:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA
-  usb_pd:STM32_I2C2_SCL [i2c] -> sheet board_aux:STM32_I2C2_SCL; sheet bringup_rails:STM32_I2C2_SCL; sheet fmc:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL
+  usb_pd:STM32_I2C2_SDA [i2c] -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA
+  usb_pd:STM32_I2C2_SCL [i2c] -> sheet board_aux:STM32_I2C2_SCL; sheet bringup_rails:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL
   usb_pd:SC_INT_N -> sheet bringup_rails:SC_INT_N; sheet som_j1:SC_INT_N
   usb_uart_connector:USB_UART_VBUS -> sheet uart_bridge:USB_UART_VBUS
   usb_uart_connector:USB_UART_DP [usb_hs_pair] -> sheet uart_bridge:USB_UART_DP

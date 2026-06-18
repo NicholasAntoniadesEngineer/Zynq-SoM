@@ -23,12 +23,14 @@
       "pmod_expansion"
     ],
     "W": [
-      "fmc",
       "camera",
       "lcd"
     ]
   },
   "interior": {
+    "fmc": {
+      "side": "S"
+    },
     "board_aux": {
       "side": "E"
     },

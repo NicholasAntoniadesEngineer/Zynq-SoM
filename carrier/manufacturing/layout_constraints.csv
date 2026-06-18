@@ -246,7 +246,6 @@ ZYNQ_TCK,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TDI,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TDO,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TMS,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
-FMC_PRSNT_N,fmc,single,Default,,,,,,,deferred: som_j2/j3 bank-33 spare (P3 linker)
 HDMI_RX_5V_DET,hdmi_rx,single,Default,,,,,,,deferred: som_j2_j3_connector (wave 3 FPGA bank function map)
 HDMI_RX_CEC,hdmi_rx,single,Default,,,,,,,deferred: som_j2_j3_connector (wave 3 FPGA bank function map)
 HDMI_RX_CLK_N,hdmi_rx_term,single,Default,,,,,,,deferred: som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)
@@ -357,7 +356,6 @@ ZYNQ_TDO,som_j1,single,Default,,,,,,,
 ZYNQ_TMS,som_j1,single,Default,,,,,,,
 DBG_UART_RXD,som_j2,single,Default,,,,,,,
 DBG_UART_TXD,som_j2,single,Default,,,,,,,
-FMC_PRSNT_N,som_j2,single,Default,,,,,,,
 HDMI_RX_5V_DET,som_j2,single,Default,,,,,,,
 HDMI_RX_CEC,som_j2,single,Default,,,,,,,
 IO_25_13,som_j2,single,Default,,,,,,,
@@ -384,6 +382,7 @@ IO_L4_P_13,som_j2,single,Default,,,,,,,
 IO_L5P_13,som_j2,single,Default,,,,,,,
 IO_L5_N_13,som_j2,single,Default,,,,,,,
 IO_L6_P_13,som_j2,single,Default,,,,,,,
+IO_L6_P_33,som_j2,single,Default,,,,,,,
 IO_L7_N_13,som_j2,single,Default,,,,,,,
 IO_L7_P_13,som_j2,single,Default,,,,,,,
 IO_L8_N_13,som_j2,single,Default,,,,,,,
@@ -498,8 +497,6 @@ STM32_I2C2_SCL,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; defer
 STM32_I2C2_SDA,bringup_rails,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j3_connector (wave 3 STM32 GPIO function map)
 CAM_SCL,camera,i2c,I2C,,,,,,,"bus=CAM_I2C; speed=400000Hz; deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
 CAM_SDA,camera,i2c,I2C,,,,,,,"bus=CAM_I2C; speed=400000Hz; deferred: som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
-STM32_I2C2_SCL,fmc,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (STM32 GPIO function map)
-STM32_I2C2_SDA,fmc,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (STM32 GPIO function map)
 ZYNQ_HDMI_TX_SCL,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
 ZYNQ_HDMI_TX_SDA,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
 LCD_CTP_SCL,lcd,i2c,I2C,,,,,,,bus=LCD_CTP; speed=400000Hz; deferred: som_j2_connector (PL bank 13 — touch I2C only)

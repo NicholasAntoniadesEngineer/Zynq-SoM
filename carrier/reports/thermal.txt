@@ -7,16 +7,16 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
 
   device                 package                  kind        in->out               Iout/A   Pd/mW   RthJA    Tj/C   limit   mgn/C  verdict
   -----------------------------------------------------------------------------------------------------------------------------------------
-  power:U1               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_REG      3.031    2674   30.0*   130.2   140.0     9.8  ok
+  power:U1               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_REG      2.664    2351   30.0*   120.5   140.0    19.5  ok
   power_som:U4           VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_SOM      2.004    1644   30.0*    99.3   140.0    40.7  ok
-  power:U2               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +5V->+3V3_REG          2.745    1599   30.0*    98.0   140.0    42.0  ok
+  power:U2               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +5V->+3V3_REG          2.245    1307   30.0*    89.2   140.0    50.8  ok
   fmc:U1                 SOT-23-5 (DYD, EP->GND pour) ldo         +3V3->+2V5_VADJ        0.400     320   92.5     79.6   115.0    35.4  ok
   usb_jtag:U4            SOT-23-5                 ldo         +5V_DBG->+3V3_DBG      0.045      76  250.0     69.1   115.0    45.9  ok
   bringup_modules:U6     SOT-23-5                 load_switch +5V->+5V_USB           0.503      24  250.0     56.0   140.0    84.0  ok
   bringup_modules:U10    SOT-23-5                 load_switch +5V->+5V_LCD           0.453      19  250.0     54.9   140.0    85.1  ok
   power:U3               SOT-23-5                 ldo         +3V3->+1V8_REG         0.006       9  250.0     52.2   115.0    62.8  ok
   bringup_modules:U4     SOT-23-5                 load_switch +3V3->+3V3_CAM         0.304       9  250.0     52.2   140.0    87.8  ok
-  pd_input:U1            HTSSOP-20 (PWP)          efuse       +VBUS_IN->+VIN         1.360      57   33.6     51.9   115.0    63.1  ok
+  pd_input:U1            HTSSOP-20 (PWP)          efuse       +VBUS_IN->+VIN         1.258      49   33.6     51.6   115.0    63.4  ok
   bringup_modules:U5     SOT-23-5                 load_switch +3V3->+3V3_SD          0.254       6  250.0     51.5   140.0    88.5  ok
   board_aux:U1           SOT-23-5                 load_switch +3V3->+3V3_AUX         0.211       4  250.0     51.1   140.0    88.9  ok
   bringup_modules:U7     SOT-23-5                 load_switch +3V3->+3V3_PMOD        0.204       4  250.0     51.0   140.0    89.0  ok
@@ -40,4 +40,4 @@ pour-aware effective RthJA (* rows) — basis, per part (bare->credited, cited; 
 
 errors: none
 
-THERMAL: PASS (19 devices speced, 0 over-limit, 0 unspeced, 0 waived); hottest power:U1 (LM61460AANRJRR) Tj 130.2 C
+THERMAL: PASS (19 devices speced, 0 over-limit, 0 unspeced, 0 waived); hottest power:U1 (LM61460AANRJRR) Tj 120.5 C
