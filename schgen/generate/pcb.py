@@ -553,6 +553,50 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     return placed, packed_w, packed_h
 
 
+def _is_button(mod_path: Path) -> bool:
+    """A user-facing tactile PUSHBUTTON (the round 6 mm TS-1187A). DIP/SLIDE
+    config switches (DSHP*) are NOT included — they are set-once configuration,
+    not pressable controls, and pack with the passives. LAW 6: pressable controls
+    read as an organised array, never scattered among the passives."""
+    return "TS-1187A" in mod_path.stem
+
+
+def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
+                   target_w: float
+                   ) -> tuple[dict[str, tuple[float, float]],
+                              list[tuple[float, float, float, float]],
+                              float, float]:
+    """Lay tactile buttons in a CLEAN uniform grid in a reserved band at the top
+    of the zone (LAW 6 — controls organised, not ugly). All buttons share one
+    square cell = the largest button halo, so identical buttons align perfectly.
+    Returns (origin_of_ref, occupied_cells, band_w, band_h); the occupied cells
+    are handed to the rest-of-zone shelf pack as blockers so no passive intrudes
+    into the button array."""
+    cell = 0.0
+    bb: dict[str, tuple[float, float, float, float]] = {}
+    for r in refs:
+        bx0, by0, bx1, by1 = bbox_of[r]
+        bb[r] = (bx0, by0, bx1, by1)
+        cell = max(cell, (bx1 - bx0) + PLACE_CLEAR, (by1 - by0) + PLACE_CLEAR)
+    cols = max(1, min(len(refs), int((target_w) // cell) or 1))
+    off: dict[str, tuple[float, float]] = {}
+    occ: list[tuple[float, float, float, float]] = []
+    order = sorted(refs)
+    for i, r in enumerate(order):
+        cx, cy = i % cols, i // cols
+        x0 = ZONE_PAD + cx * cell
+        y0 = ZONE_PAD + cy * cell
+        bx0, by0, bx1, by1 = bb[r]
+        # seat the footprint's halo box centred in its square cell
+        fw, fh = (bx1 - bx0) + PLACE_CLEAR, (by1 - by0) + PLACE_CLEAR
+        ox = x0 + (cell - fw) / 2 - bx0 + PLACE_CLEAR / 2
+        oy = y0 + (cell - fh) / 2 - by0 + PLACE_CLEAR / 2
+        off[r] = (round(ox, 4), round(oy, 4))
+        occ.append((x0, y0, x0 + cell, y0 + cell))
+    rows = (len(refs) + cols - 1) // cols
+    return off, occ, ZONE_PAD + cols * cell, ZONE_PAD + rows * cell
+
+
 # ---- 2-side assembly: layer-assignment policy ------------------------------------
 # JLCPCB assembles BOTH sides. The policy keeps the mechanically-/cable-/heat-
 # critical parts on TOP and pushes the small decoupling/bypass passives to the
@@ -696,7 +740,19 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
                    for r in sheet_refs)
     target_w = max(8.0, (tot_area * 0.62) ** 0.5) * aspect
-    t_off, tw, th = _shelf_pack(items(sr["top"], "top"), target_w)
+    # LAW 6: pull the tactile buttons into a clean uniform grid at the top of the
+    # zone, then shelf-pack the remaining parts around that array (its cells are
+    # blockers). >=2 buttons trigger the grid; otherwise the plain shelf pack.
+    top_btns = [r for r in sr["top"] if _is_button(resolvable[r])]
+    if len(top_btns) >= 2:
+        g_off, g_occ, g_w, g_h = _grid_controls(top_btns, bbox_of, resolvable,
+                                                target_w)
+        rest_top = [r for r in sr["top"] if r not in set(top_btns)]
+        r_off, rw, rh = _shelf_pack(items(rest_top, "top"), target_w, g_occ)
+        t_off = {**g_off, **r_off}
+        tw, th = max(g_w, rw), max(g_h, rh)
+    else:
+        t_off, tw, th = _shelf_pack(items(sr["top"], "top"), target_w)
     blockers: list[tuple[float, float, float, float]] = []
     for r in sr["top"]:
         if not has_thru_pads(resolvable[r]):
@@ -1562,6 +1618,47 @@ def _edge_rect(x0, y0, x1, y1, uid) -> list:
     return out
 
 
+def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
+    """Top-silk outline of the SoM module body (the DF40 mezzanine footprint) on
+    the carrier, so an assembler sees exactly where the module lands and that its
+    shadow is a passives-only keepout (LAW 6). Drawn at the module-body edge — the
+    carrier DF40 receptacles + any under-SoM passives sit inboard of it, so the
+    line never crosses a pad. A pin-1 corner chamfer + a small corner label give
+    orientation. The user explicitly called out that this outline was missing."""
+    x0, y0, x1, y1 = box
+    out: list = []
+    # body rectangle
+    pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
+    for i in range(4):
+        ax, ay = pts[i]
+        bx, by = pts[i + 1]
+        out.append([Sym("gr_line"),
+                    [Sym("start"), round(ax, 3), round(ay, 3)],
+                    [Sym("end"), round(bx, 3), round(by, 3)],
+                    [Sym("stroke"), [Sym("width"), 0.15],
+                     [Sym("type"), Sym("default")]],
+                    [Sym("layer"), "F.SilkS"],
+                    [Sym("uuid"), uid(f"som-silk:{i}")]])
+    # pin-1 / orientation chamfer across the top-left corner
+    ch = 3.0
+    out.append([Sym("gr_line"),
+                [Sym("start"), round(x0, 3), round(y0 + ch, 3)],
+                [Sym("end"), round(x0 + ch, 3), round(y0, 3)],
+                [Sym("stroke"), [Sym("width"), 0.15],
+                 [Sym("type"), Sym("default")]],
+                [Sym("layer"), "F.SilkS"],
+                [Sym("uuid"), uid("som-silk:ch")]])
+    # corner label just OUTSIDE the top-left corner (clear of the module shadow)
+    out.append([Sym("gr_text"), "Zynq SoM",
+                [Sym("at"), round(x0 + 1.0, 3), round(y0 - 1.2, 3), 0],
+                [Sym("layer"), "F.SilkS"],
+                [Sym("uuid"), uid("som-silk:label")],
+                [Sym("effects"),
+                 [Sym("font"), [Sym("size"), 1.4, 1.4], [Sym("thickness"), 0.25]],
+                 [Sym("justify"), Sym("left"), Sym("bottom")]]])
+    return out
+
+
 def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
     """A rule-area (keep-out) zone over the SoM body on both copper layers, so
     the layout tool keeps tracks/vias/copper out from under the mezzanine stack
@@ -1647,6 +1744,11 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     # SoM body keep-out (A1) — nothing routes/places under the mezzanine.
     if model.som_keepout is not None:
         doc.append(_som_keepout_zone(model.som_keepout, uid))
+
+    # SoM module-body OUTLINE on the top silk (LAW 6 documentation) — the
+    # rectangle around the DF40 receptacles the user expected to see.
+    if model.som_core is not None:
+        doc.extend(_som_body_silk(model.som_core, uid))
 
     # footprints (fixed ref order — determinism)
     for inst in model.insts:
