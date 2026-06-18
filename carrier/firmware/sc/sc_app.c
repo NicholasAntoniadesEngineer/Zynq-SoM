@@ -22,6 +22,7 @@
 #include "sc_hal.h"
 #include "sc_seq.h"
 #include "sc_pd.h"
+#include "sc_rtc.h"
 #include "sc_wdt.h"
 
 /* A reference bring-up flow that ties the scaffold together.  A real  */
@@ -41,6 +42,12 @@ int sc_bringup_main(void) {
 
     /* Bring-up complete: NOW it is safe to arm the watchdog (C2). */
     sc_wdt_arm();
+
+    /* RTC: enable the RV-3028 trickle charger so the rechargeable ML1220 */
+    /* backup cell tops up.  Best-effort -- the RTC is on the gated AUX   */
+    /* rail, so this only takes once that rail + its I2C isolator are up. */
+    (void)sc_rtc_init();
+
     sc_log("SC bring-up complete; watchdog armed");
     return 0;
 }

@@ -772,6 +772,106 @@ def gen_sc_pd_c(m: Model) -> str:
 
 
 # ==================================================================================
+#  sc_rtc.h / sc_rtc.c  -- RV-3028 trickle charger (rechargeable ML1220 backup)
+# ==================================================================================
+
+def gen_sc_rtc_h(m: Model) -> str:
+    L = _file_header("sc_rtc.h", "RV-3028 RTC trickle charger (ML1220 backup)",
+                     m.device)
+    L += [
+        "#ifndef SC_RTC_H", "#define SC_RTC_H", "",
+        "#include \"sc_hal.h\"", "",
+        "/* board_services fits a RECHARGEABLE ML1220 (Mn-Li) on the RV-3028's    */",
+        "/* VBACKUP for a maintenance-free RTC.  A rechargeable cell only stays    */",
+        "/* charged if firmware ENABLES the RV-3028's internal trickle charger     */",
+        "/* (TCE + a series resistance in the EEPROM Backup register) -- so the    */",
+        "/* cell tops up whenever the board is powered (contract ZC_I2C_ADDR_RTC). */",
+        "/* This is the netlist-anchored entry point that makes the ML1220 choice  */",
+        "/* real; without it the cell would slowly deplete.                        */",
+        "",
+        "/* Probe the RV-3028 on the AUX I2C and enable the trickle charger.       */",
+        "/* Returns 0 on success.  Best-effort: the RTC is on the gated +3V3_AUX   */",
+        "/* rail, so call it once that rail + its I2C isolator are up.             */",
+        "int sc_rtc_init(void);",
+        "",
+        "/* Enable the trickle charger only (TCE + ~3k + backup switchover),       */",
+        "/* committing it to the config EEPROM.  Returns 0 on success.            */",
+        "int sc_rtc_trickle_enable(void);",
+        "",
+        "#endif /* SC_RTC_H */"]
+    return "\n".join(L) + "\n"
+
+
+def gen_sc_rtc_c(m: Model) -> str:
+    L = _file_header("sc_rtc.c", "RV-3028 RTC trickle charger (impl)", m.device)
+    L += [
+        f"#include \"{CONTRACT_HEADER}\"",
+        "#include \"sc_hal.h\"",
+        "#include \"sc_rtc.h\"",
+        "",
+        "#define SC_RTC_ADDR         ZC_I2C_ADDR_RTC   /* RV-3028, 7-bit 0x52 */",
+        "",
+        "/* RV-3028-C7 registers (Micro Crystal Application Manual). */",
+        "#define SC_RTC_REG_CTRL1    0x0Fu   /* EERD = bit 3 (auto-refresh dis.) */",
+        "#define SC_RTC_REG_EECMD    0x27u   /* EEPROM command */",
+        "#define SC_RTC_REG_ID       0x28u   /* device ID (presence probe) */",
+        "#define SC_RTC_REG_EEBACKUP 0x37u   /* EEPROM Backup (RAM mirror) */",
+        "",
+        "/* EEPROM Backup register bit fields -- RV-3028-C7 Application Manual,",
+        " * 'EEPROM Backup Register'.  VERIFY against your datasheet revision",
+        " * before relying on the exact positions. */",
+        "#define SC_RTC_TCR_MASK     (0x3u << 0)  /* trickle R: 00=3k 01=5k 10=9k 11=15k */",
+        "#define SC_RTC_TCR_3K       (0x0u << 0)  /* ~3k -> gentle ML1220 trickle @3.3V */",
+        "#define SC_RTC_BSM_LSM      (0x3u << 2)  /* Backup Switchover: Level Switching */",
+        "#define SC_RTC_FEDE         (0x1u << 4)  /* Fast Edge Detect (DS default 1) */",
+        "#define SC_RTC_TCE          (0x1u << 5)  /* Trickle Charge Enable */",
+        "",
+        "#define SC_RTC_CTRL1_EERD   (0x1u << 3)  /* 1 = disable auto EEPROM refresh */",
+        "#define SC_RTC_EECMD_UPDATE 0x11u        /* 'update all configuration EEPROM' */",
+        "",
+        "static int rtc_w(uint8_t reg, uint8_t val) {",
+        "    uint8_t b[2] = { reg, val };",
+        "    return sc_i2c_write(SC_RTC_ADDR, b, 2);",
+        "}",
+        "static int rtc_r(uint8_t reg, uint8_t *val) {",
+        "    if (sc_i2c_write(SC_RTC_ADDR, &reg, 1) != 0) return -1;",
+        "    return sc_i2c_read(SC_RTC_ADDR, val, 1);",
+        "}",
+        "",
+        "int sc_rtc_trickle_enable(void) {",
+        "    uint8_t bk = 0, c1 = 0;",
+        "    /* 1. read the current Backup register (its RAM mirror). */",
+        "    if (rtc_r(SC_RTC_REG_EEBACKUP, &bk) != 0) return -1;",
+        "    /* 2. set TCE + 3k series + fast-edge + level switchover, preserving",
+        "     *    every other bit (read-modify-write, not a raw value). */",
+        "    bk &= (uint8_t)~SC_RTC_TCR_MASK;",
+        "    bk |= (uint8_t)(SC_RTC_TCE | SC_RTC_FEDE | SC_RTC_BSM_LSM | SC_RTC_TCR_3K);",
+        "    /* 3. disable auto config-EEPROM refresh (EERD=1) before the update. */",
+        "    if (rtc_r(SC_RTC_REG_CTRL1, &c1) != 0) return -1;",
+        "    if (rtc_w(SC_RTC_REG_CTRL1, (uint8_t)(c1 | SC_RTC_CTRL1_EERD)) != 0) return -1;",
+        "    /* 4. write the new value into the RAM mirror. */",
+        "    if (rtc_w(SC_RTC_REG_EEBACKUP, bk) != 0) return -1;",
+        "    /* 5. commit RAM -> EEPROM: EECMD 0x00 then 0x11 (update all config). */",
+        "    if (rtc_w(SC_RTC_REG_EECMD, 0x00u) != 0) return -1;",
+        "    if (rtc_w(SC_RTC_REG_EECMD, SC_RTC_EECMD_UPDATE) != 0) return -1;",
+        "    sc_delay_ms(20);   /* config-EEPROM write latency (~16 ms typ). */",
+        "    /* 6. re-enable auto refresh (EERD=0). */",
+        "    if (rtc_w(SC_RTC_REG_CTRL1, (uint8_t)(c1 & ~SC_RTC_CTRL1_EERD)) != 0) return -1;",
+        "    sc_log(\"RV-3028 trickle charger enabled (ML1220, ~3k)\");",
+        "    return 0;",
+        "}",
+        "",
+        "int sc_rtc_init(void) {",
+        "    uint8_t id = 0;",
+        "    if (rtc_r(SC_RTC_REG_ID, &id) != 0) return -1;   /* presence probe */",
+        "    sc_log(\"RV-3028 present\");",
+        "    return sc_rtc_trickle_enable();",
+        "}",
+    ]
+    return "\n".join(L) + "\n"
+
+
+# ==================================================================================
 #  sc_app.c  -- a tiny example main wiring it together (portable, HAL-backed)
 # ==================================================================================
 
@@ -782,6 +882,7 @@ def gen_sc_app_c(m: Model) -> str:
         "#include \"sc_hal.h\"",
         "#include \"sc_seq.h\"",
         "#include \"sc_pd.h\"",
+        "#include \"sc_rtc.h\"",
         "#include \"sc_wdt.h\"",
         "",
         "/* A reference bring-up flow that ties the scaffold together.  A real  */",
@@ -801,6 +902,12 @@ def gen_sc_app_c(m: Model) -> str:
         "",
         "    /* Bring-up complete: NOW it is safe to arm the watchdog (C2). */",
         "    sc_wdt_arm();",
+        "",
+        "    /* RTC: enable the RV-3028 trickle charger so the rechargeable ML1220 */",
+        "    /* backup cell tops up.  Best-effort -- the RTC is on the gated AUX   */",
+        "    /* rail, so this only takes once that rail + its I2C isolator are up. */",
+        "    (void)sc_rtc_init();",
+        "",
         "    sc_log(\"SC bring-up complete; watchdog armed\");",
         "    return 0;",
         "}",
@@ -987,6 +1094,8 @@ _FILES = [
     ("sc_wdt.c", gen_sc_wdt_c),
     ("sc_pd.h", gen_sc_pd_h),
     ("sc_pd.c", gen_sc_pd_c),
+    ("sc_rtc.h", gen_sc_rtc_h),
+    ("sc_rtc.c", gen_sc_rtc_c),
     ("sc_app.c", gen_sc_app_c),
     ("sc_hal_zephyr.c.txt", gen_zephyr_port_ref),
 ]
