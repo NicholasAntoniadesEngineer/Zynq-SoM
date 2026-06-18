@@ -1006,6 +1006,30 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("RATSNEST (LAW 5): FAIL — gate did not run")
             ok_all = False
+
+        # LAW-6 MECHANICAL / USE-CASE PLACEMENT gate (HARD): the buildability
+        # oracle DRC=0 + ratsnest-pass are blind to. The PCB step ran it on the
+        # SAME placed model (no rebuild). FAIL the board on any off-board
+        # connector that is interior or inward-facing, any non-passive/test-
+        # point/control under the SoM module body. This is the gate LAW 6 exists
+        # to add — a densifier can never silently trade away connectability.
+        mg = pcb_res.get("placement_mech")
+        if mg is not None:
+            (rep_dir / "placement_mech.txt").write_text(mg.summary() + "\n")
+            print(f"PLACEMENT (LAW 6): {'PASS' if mg.ok else 'FAIL'} "
+                  f"({mg.n_connectors} off-board connectors, "
+                  f"{len(mg.bad_connectors)} mis-placed; "
+                  f"{len(mg.under_som)} non-passive under SoM; "
+                  f"{len(mg.controls_under_som)} controls under SoM "
+                  f"-> {rep_dir / 'placement_mech.txt'})")
+            for _b in mg.bad_connectors:
+                print(f"  PLACEMENT CONNECTOR: {_b}")
+            for _u in mg.under_som:
+                print(f"  PLACEMENT UNDER-SoM: {_u}")
+            ok_all = ok_all and mg.ok
+        else:
+            print("PLACEMENT (LAW 6): FAIL — gate did not run")
+            ok_all = False
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
         ok_all = False

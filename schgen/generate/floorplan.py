@@ -65,6 +65,9 @@ MH_CORNER_KO = 10.0      # corner square reserved for each corner-forced M3 hole
                          # edge/interior block overlaps it (was a DRC short)
 CONN_SIDE_MARGIN = 0.6   # block width = connector span + this each side
 EDGE_DEPTH_CAP = 15.0    # edge block max depth into the board
+EDGE_INSET = 1.5         # depth-wise gap an edge block is held off the board edge
+                         # (LAW 6: a flush off-board connector's pads must still
+                         # clear the 0.3mm copper_edge_clearance after grid snap)
 CLEAR = 0.4              # block-to-block clearance — TIGHTENED (was 1.5). The
                          # interior occupancy lattice + the edge run both pack to
                          # this gap, so a smaller value pulls every subsystem
@@ -778,14 +781,19 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
         for b in blocks:
             b.edge = edge
             sp, dp = span_of(b, edge), depth_of(b, edge)
+            # EDGE_INSET: every edge block is held this far OFF the board edge so
+            # a flush off-board connector's PAD copper clears the board edge by
+            # >= the copper_edge_clearance rule (0.3 mm) even after the placer's
+            # grid snap. The connector mouth still sits at the perimeter (LAW 6 —
+            # the cable/plug overhangs the inset), but no pad is at the edge.
             if edge == "N":
-                b.x, b.y = _r5(pos), 0.0
+                b.x, b.y = _r5(pos), EDGE_INSET
             elif edge == "S":
-                b.x, b.y = _r5(pos), _r5(BOARD_H - dp)
+                b.x, b.y = _r5(pos), _r5(BOARD_H - dp - EDGE_INSET)
             elif edge == "W":
-                b.x, b.y = 0.0, _r5(pos)
+                b.x, b.y = EDGE_INSET, _r5(pos)
             else:
-                b.x, b.y = _r5(BOARD_W - dp), _r5(pos)
+                b.x, b.y = _r5(BOARD_W - dp - EDGE_INSET), _r5(pos)
             pos += sp + CLEAR
 
 

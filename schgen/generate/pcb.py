@@ -49,7 +49,7 @@ import argparse
 import json
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core import sexpr
@@ -142,6 +142,10 @@ class PcbModel:
     n_top: int = 0
     n_bottom: int = 0
     two_side: bool = True
+    # SoM module-body CORE rectangle in the board page frame (NO halo) — the
+    # footprint of the plugged-in SoM. Under it ONLY low-profile passives may
+    # sit (LAW 6); the placement_mech gate enforces it.
+    som_core: tuple[float, float, float, float] | None = None  # x0,y0,x1,y1
 
 
 # ---- footprint resolution + parsing ----------------------------------------------
@@ -392,6 +396,65 @@ ZONE_PAD = 0.4            # padding inside a subsystem zone around its parts
 # spreads them down the vertical edge as-is.
 EDGE_ZONE_ASPECT = 2.2
 
+# ---- LAW 6: off-board connector ORIENTATION ---------------------------------------
+# Every connector that mates with an external cable/plug/card MUST sit on a board
+# EDGE with its mating face (the slot/mouth/cable-exit) pointing OFF-BOARD, so the
+# mate physically inserts. The placer ROTATES each such connector to its assigned
+# edge — never axis-aligned — and seats it flush at the edge; the rest of its
+# subsystem packs behind it, inward. DRC=0 + the ratsnest gate are blind to this
+# (an interior or inward-facing connector is not a DRC/airwire error), so this is
+# encoded here AND enforced by the placement_mech gate.
+#
+# MATING_FACE: the direction the connector's mouth points in its footprint LOCAL
+# frame at rotation 0 (researched from the parts/<MPN>/<MPN>.kicad_mod pad/post
+# asymmetry + datasheet). KiCad's page frame is +y DOWN, so -Y is toward the
+# board top (N edge) and +Y toward the bottom (S edge).
+CONN_MATING_FACE: dict[str, str] = {
+    "TYPE-C-31-M-12":  "-Y",   # USB-C receptacle mouth
+    "HDMI-019S":       "-Y",   # HDMI receptacle mouth
+    "AFC07-S40FCA-00": "-Y",   # LCD FPC slot
+    "KH-5224-8P8C-D":  "+Y",   # RJ45 jack mouth
+    "TF-01A":          "+Y",   # microSD card slot
+    "SFW15R-1STE1LF":  "+Y",   # camera FFC slot
+    "ZX-SH1.0-4PWT":   "+Y",   # QWIIC shrouded header
+    "DS1024-2x6R2":    "+Y",   # PMOD 2x6 socket
+}
+# EDGE -> placement rotation (deg, KiCad CCW) that turns the mating face OFF-BOARD.
+# Derived in the CODE's actual page frame (+y DOWN: N/top edge = MIN y, off-board
+# from N is toward -Y; S/bottom = MAX y, off-board +Y; E/right off-board +X;
+# W/left off-board -X) using the SAME rotation matrix _inst_pad_geom applies:
+# (x,y) -> (x cos r - y sin r, x sin r + y cos r). NOTE this differs from the
+# research spec's table by swapping N<->S: the research derived in a +y-UP frame
+# (it called +Y "North/away"), but this codebase places on a +y-DOWN page, so the
+# off-board direction of the top/bottom edges is the opposite sign. The
+# _mating_face_out_dir oracle (and the placement_mech gate that uses it) is the
+# ground truth that proves each mouth points off-board after rotation.
+_ROT_FACE_NEG_Y = {"N": 0.0, "S": 180.0, "E": 90.0, "W": 270.0}
+_ROT_FACE_POS_Y = {"N": 180.0, "S": 0.0, "E": 270.0, "W": 90.0}
+
+
+def connector_edge_rotation(mating_face: str, edge: str) -> float:
+    """Placement rotation (deg) so a connector whose 0-deg mouth points
+    ``mating_face`` (-Y/+Y) faces OFF-BOARD when placed on ``edge`` (N/E/S/W)."""
+    table = _ROT_FACE_NEG_Y if mating_face == "-Y" else _ROT_FACE_POS_Y
+    return table.get(edge, 0.0)
+
+
+def _mating_face_out_dir(mating_face: str, rot: float) -> tuple[int, int]:
+    """The board-frame unit vector the mating mouth points after a placement
+    rotation ``rot`` (deg, KiCad CCW about origin, page +y DOWN). Used by the
+    gate to confirm the mouth faces off-board, and by the placer to seat the
+    connector flush. Returns one of (0,-1)=N, (0,1)=S, (1,0)=E, (-1,0)=W."""
+    fx, fy = (0, -1) if mating_face == "-Y" else (0, 1)
+    r = int(round(rot)) % 360
+    # KiCad rotates a point (x,y) CCW on a +y-DOWN screen as the matrix
+    # (x*cos - y*sin, x*sin + y*cos) with the screen-CCW convention used in
+    # _inst_pad_geom; for 90-deg steps this maps (0,-1)->(rot) deterministically.
+    import math as _m
+    a = _m.radians(r)
+    cs, sn = round(_m.cos(a)), round(_m.sin(a))
+    return (fx * cs - fy * sn, fx * sn + fy * cs)
+
 
 def _rot_bbox(bbox: tuple[float, float, float, float],
               rot: float) -> tuple[float, float, float, float]:
@@ -577,6 +640,8 @@ class ZoneGeom:
     refs_by_sheet: dict[str, list[str]]                     # sheet -> [bref,...]
     mh_refs: list[str]                                      # mounting-hole brefs
     deferred: list[str]
+    conn_rot: dict[str, float] = field(default_factory=dict)  # bref -> LAW-6 rot
+    conn_edge: dict[str, str] = field(default_factory=dict)   # bref -> edge N/E/S/W
 
 
 def _eff_bbox_for(bbox: tuple[float, float, float, float],
@@ -591,7 +656,9 @@ def _eff_bbox_for(bbox: tuple[float, float, float, float],
 
 
 def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
-                   bbox_of: dict, resolvable: dict, aspect: float = 1.0
+                   bbox_of: dict, resolvable: dict, aspect: float = 1.0,
+                   conn_rot: dict[str, float] | None = None,
+                   outer_dir: str | None = None
                    ) -> tuple[dict[str, tuple[float, float]],
                               dict[str, tuple[float, float]],
                               float, float]:
@@ -602,13 +669,26 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     pad. ``aspect`` widens the shelf target (>1 => wider + SHALLOWER zone): an
     EDGE-connector subsystem packs WIDE-and-SHALLOW so its block does not eat
     deep into the board behind its edge, which keeps the interior — and the whole
-    board — tight. Deterministic in the given ref order."""
+    board — tight. Deterministic in the given ref order.
+
+    LAW 6: ``conn_rot`` (bref -> placement rotation) ROTATES each off-board
+    connector so its mating face points off-board; ``outer_dir`` (N/S/E/W, the
+    zone-LOCAL direction the board edge lies in once this zone is placed) makes
+    the connector seat FLUSH at that outer boundary with the rest of the
+    subsystem packed behind it, inward. When both are given the zone uses the
+    dedicated edge-aware packer; otherwise it is the plain shelf pack."""
     sr = {"top": [], "bottom": []}
     for r in sheet_refs:
         sr[side_of[r]].append(r)
+    conn_rot = conn_rot or {}
 
     def items(refs, side):
-        return [(r, _eff_bbox_for(bbox_of[r], side), 0.0) for r in refs]
+        return [(r, _eff_bbox_for(bbox_of[r], side), conn_rot.get(r, 0.0))
+                for r in refs]
+
+    if conn_rot and outer_dir:
+        return _pack_connector_zone(sr, items, bbox_of, resolvable,
+                                    conn_rot, outer_dir, aspect)
 
     tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
@@ -628,6 +708,173 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     b_off, bw, bh = _shelf_pack(items(sr["bottom"], "bottom"),
                                 target_w, blockers)
     return t_off, b_off, round(max(tw, bw), 4), round(max(th, bh), 4)
+
+
+# how close (mm) a connector courtyard must sit to the board edge to count as
+# "flush" (LAW 6 / placement_mech gate). The connector mouth bbox edge is seated
+# at the zone's outer boundary; the zone's outer boundary lands at PERIM (3 mm)
+# off the true edge plus the placement grid snap, so the gate tolerance is
+# generous enough for the snap while still catching an interior connector.
+EDGE_FLUSH_MM = 9.0
+
+
+def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
+                         resolvable: dict, conn_rot: dict[str, float],
+                         outer_dir: str, aspect: float
+                         ) -> tuple[dict[str, tuple[float, float]],
+                                    dict[str, tuple[float, float]],
+                                    float, float]:
+    """Pack an EDGE-connector subsystem so every off-board connector seats FLUSH
+    at the zone's OUTER boundary (the board edge), mouth pointing off-board, with
+    the rest of the subsystem packed BEHIND it, inward (LAW 6).
+
+    ``outer_dir`` is the zone-LOCAL direction (N/S/E/W) of the board edge once
+    the zone is placed: N -> outer is local -y (top), S -> +y (bottom),
+    W -> -x (left), E -> +x (right). The connectors form one row flush along that
+    boundary; the non-connector parts shelf-pack into the remaining inboard area.
+    Offsets are returned for the connector ROTATED in place (so its haloed rotated
+    bbox sits inside the zone) and for every other part at rotation 0.
+    Deterministic in the given ref order."""
+    conn_refs_top = [r for r in sr["top"] if r in conn_rot]
+    conn_refs_bot = [r for r in sr["bottom"] if r in conn_rot]
+    rest_top = [r for r in sr["top"] if r not in conn_rot]
+    rest_bot = [r for r in sr["bottom"] if r not in conn_rot]
+
+    horiz = outer_dir in ("N", "S")     # connectors row spreads along X (N/S) ...
+    #                                     ... or down Y (W/E)
+    # haloed ROTATED bbox of each connector (the box it really occupies)
+    def hbox(r, side):
+        rb = _rot_bbox(_eff_bbox_for(bbox_of[r], side), conn_rot.get(r, 0.0))
+        return (rb[0] - PLACE_CLEAR / 2, rb[1] - PLACE_CLEAR / 2,
+                rb[2] + PLACE_CLEAR / 2, rb[3] + PLACE_CLEAR / 2)
+
+    # 1) lay the connectors in one flush row along the outer boundary. Largest
+    # cross-axis first so the row is tight; deterministic by (-cross, ref).
+    conn_all = [(r, "top") for r in conn_refs_top] + \
+               [(r, "bottom") for r in conn_refs_bot]
+    if horiz:
+        conn_all.sort(key=lambda rs: (-(hbox(*rs)[2] - hbox(*rs)[0]), rs[0]))
+    else:
+        conn_all.sort(key=lambda rs: (-(hbox(*rs)[3] - hbox(*rs)[1]), rs[0]))
+
+    placed: dict[str, dict[str, tuple[float, float]]] = {"top": {}, "bottom": {}}
+    occ: list[tuple[float, float, float, float]] = []
+    conn_depth = 0.0                      # how deep the connector row reaches in
+    cursor = ZONE_PAD                     # position along the boundary axis
+    for r, side in conn_all:
+        hx0, hy0, hx1, hy1 = hbox(r, side)
+        hw, hh = hx1 - hx0, hy1 - hy0
+        if horiz:                          # row along X, flush at top (y=ZONE_PAD)
+            ox = cursor - hx0
+            oy = ZONE_PAD - hy0
+            occ.append((cursor, ZONE_PAD, cursor + hw, ZONE_PAD + hh))
+            cursor += hw + PLACE_CLEAR
+            conn_depth = max(conn_depth, ZONE_PAD + hh)
+        else:                              # column along Y, flush at left (x=PAD)
+            ox = ZONE_PAD - hx0
+            oy = cursor - hy0
+            occ.append((ZONE_PAD, cursor, ZONE_PAD + hw, cursor + hh))
+            cursor += hh + PLACE_CLEAR
+            conn_depth = max(conn_depth, ZONE_PAD + hw)
+        placed[side][r] = (round(ox, 4), round(oy, 4))
+
+    # 2) shelf-pack the remaining parts into the inboard area, OFFSET behind the
+    # connector row (so they never poke past the connector toward the edge). The
+    # inter-band gap is generous (CONN_REST_GAP) — a faithful connector's KiCad
+    # F.CrtYd (arcs / mechanical-post polygons) can exceed the parsed pad+line
+    # bbox the packer reserves, and a thin gap then trips courtyards_overlap with
+    # an inboard part (the camera FFC vs its CAM_SCL test point).
+    CONN_REST_GAP = 2.0
+    behind = conn_depth + CONN_REST_GAP
+    tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
+                   (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
+                   for r in rest_top + rest_bot)
+    # the connector row sets the boundary-axis span; keep the rest at least that
+    # wide so the zone stays wide+shallow.
+    row_span = max(cursor, 8.0)
+    target_w = max(row_span - ZONE_PAD, (tot_area * 0.62) ** 0.5 * aspect)
+
+    rt = [(r, _eff_bbox_for(bbox_of[r], "top"), 0.0) for r in rest_top]
+    t_rest, _tw, _th = _shelf_pack(rt, target_w)
+    blockers: list[tuple[float, float, float, float]] = []
+    for r in rest_top:
+        if not has_thru_pads(resolvable[r]):
+            continue
+        ox, oy = t_rest[r]
+        bx0, by0, bx1, by1 = bbox_of[r]
+        blockers.append((ox + bx0 - PLACE_CLEAR / 2 + (0 if horiz else behind),
+                         oy + by0 - PLACE_CLEAR / 2 + (behind if horiz else 0),
+                         ox + bx1 + PLACE_CLEAR / 2 + (0 if horiz else behind),
+                         oy + by1 + PLACE_CLEAR / 2 + (behind if horiz else 0)))
+    rb = [(r, _eff_bbox_for(bbox_of[r], "bottom"), 0.0) for r in rest_bot]
+    b_rest, _bw, _bh = _shelf_pack(rb, target_w, blockers)
+
+    for r, (dx, dy) in t_rest.items():
+        placed["top"][r] = (round(dx + (0 if horiz else behind), 4),
+                            round(dy + (behind if horiz else 0), 4))
+    for r, (dx, dy) in b_rest.items():
+        placed["bottom"][r] = (round(dx + (0 if horiz else behind), 4),
+                               round(dy + (behind if horiz else 0), 4))
+
+    # 3) zone extent = max over every placed haloed (rotated for conns) bbox.
+    zw = zh = ZONE_PAD
+    for side in ("top", "bottom"):
+        for r, (ox, oy) in placed[side].items():
+            if r in conn_rot:
+                rb2 = _rot_bbox(_eff_bbox_for(bbox_of[r], side),
+                                conn_rot.get(r, 0.0))
+            else:
+                rb2 = _eff_bbox_for(bbox_of[r], side)
+            zw = max(zw, ox + rb2[2] + PLACE_CLEAR / 2)
+            zh = max(zh, oy + rb2[3] + PLACE_CLEAR / 2)
+    zw = round(zw + ZONE_PAD, 4)
+    zh = round(zh + ZONE_PAD, 4)
+
+    # 4) for a BOTTOM (S/+y) or RIGHT (E/+x) outer edge, the connectors were laid
+    # flush at the LOW boundary (top/left); flip the depth axis so they end flush
+    # at the HIGH boundary (the actual board edge) with the rest behind, inward.
+    if outer_dir in ("S", "E"):
+        flip_y = (outer_dir == "S")
+        out: dict[str, dict[str, tuple[float, float]]] = {"top": {}, "bottom": {}}
+        for side in ("top", "bottom"):
+            for r, (ox, oy) in placed[side].items():
+                if r in conn_rot:
+                    rb2 = _rot_bbox(_eff_bbox_for(bbox_of[r], side),
+                                    conn_rot.get(r, 0.0))
+                else:
+                    rb2 = _eff_bbox_for(bbox_of[r], side)
+                bw = rb2[2] - rb2[0]
+                bh = rb2[3] - rb2[1]
+                if flip_y:
+                    noy = zh - (oy + rb2[3]) - rb2[1]
+                    out[side][r] = (round(ox, 4), round(noy, 4))
+                else:
+                    nox = zw - (ox + rb2[2]) - rb2[0]
+                    out[side][r] = (round(nox, 4), round(oy, 4))
+        placed = out
+
+    return placed["top"], placed["bottom"], zw, zh
+
+
+def _connector_sheet_edges() -> dict[str, str]:
+    """sheet -> board EDGE (N/E/S/W) for every subsystem that carries an off-board
+    connector (LAW 6). The edge is read from the DECLARATIVE carrier/floorplan.json
+    (the same spec build_plan pins blocks from); a connector sheet pinned to an
+    INTERIOR slot, or absent from the spec, is reported (the placement_mech gate
+    then HARD-FAILS it — an off-board connector that is not on an edge is
+    unbuildable). Deterministic: the spec is read once and keyed by sheet name."""
+    from schgen.generate.floorplan import (load_floorplan_spec,
+                                           FLOORPLAN_SPEC)
+    out: dict[str, str] = {}
+    if not FLOORPLAN_SPEC.exists():
+        return out
+    try:
+        spec = load_floorplan_spec()
+    except Exception:  # noqa: BLE001 — a malformed spec is reported by build_plan
+        return out
+    if spec is None:
+        return out
+    return dict(spec.edge_of)
 
 
 def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
@@ -654,6 +901,10 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
     mh_refs: list[str] = []
     deferred: list[str] = []
     edge_sheets: set[str] = set()       # sheets with an off-board edge connector
+    # LAW 6: off-board connector refs per sheet + their MPN (for the rotation).
+    conn_mpn_of: dict[str, str] = {}    # bref -> mating-face MPN
+
+    sheet_edge = _connector_sheet_edges()    # sheet -> board edge (from the spec)
 
     for i, sc in enumerate(sheets, start=1):
         if sc.name.startswith("som_j"):
@@ -673,6 +924,8 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
             bref = _renamed_ref(ref, band, sheet=sc.name)
             if part.value in _EDGE_FAMILIES:
                 edge_sheets.add(sc.name)
+            if part.value in CONN_MATING_FACE:
+                conn_mpn_of[bref] = part.value
             if part.lib_id.startswith("Mechanical:MountingHole"):
                 mh_refs.append(bref)
                 continue
@@ -687,6 +940,29 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
                                            sdec, two_side)
             refs_by_sheet.setdefault(sc.name, []).append(bref)
 
+    # LAW 6: per-connector placement rotation (mating face -> off-board) keyed on
+    # the connector's assigned board edge; the local OUTER direction the edge lies
+    # in once the zone is placed (== the edge, since the zone keeps board axes).
+    conn_rot: dict[str, float] = {}
+    conn_edge: dict[str, str] = {}
+    sheet_conn_rot: dict[str, dict[str, float]] = {}
+    sheet_outer: dict[str, str] = {}
+    for sheet, brefs in refs_by_sheet.items():
+        edge = sheet_edge.get(sheet)
+        for bref in brefs:
+            mpn = conn_mpn_of.get(bref)
+            if mpn is None or bref not in bbox_of:
+                continue
+            if edge is None:
+                # connector NOT pinned to an edge — leave un-rotated; the
+                # placement_mech gate HARD-FAILS it (off-board connector off-edge).
+                continue
+            rot = connector_edge_rotation(CONN_MATING_FACE[mpn], edge)
+            conn_rot[bref] = rot
+            conn_edge[bref] = edge
+            sheet_conn_rot.setdefault(sheet, {})[bref] = rot
+            sheet_outer[sheet] = edge
+
     zone_box: dict[str, tuple[float, float]] = {}
     top_off: dict[str, dict[str, tuple[float, float]]] = {}
     bot_off: dict[str, dict[str, tuple[float, float]]] = {}
@@ -696,7 +972,9 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
         # subsystems stay squarish.
         aspect = EDGE_ZONE_ASPECT if sheet in edge_sheets else 1.0
         t_off, b_off, zw, zh = _pack_one_zone(
-            refs_by_sheet[sheet], side_of, bbox_of, resolvable, aspect)
+            refs_by_sheet[sheet], side_of, bbox_of, resolvable, aspect,
+            conn_rot=sheet_conn_rot.get(sheet),
+            outer_dir=sheet_outer.get(sheet))
         top_off[sheet] = t_off
         bot_off[sheet] = b_off
         zone_box[sheet] = (zw, zh)
@@ -704,7 +982,7 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
     return ZoneGeom(zone_box=zone_box, top_off=top_off, bot_off=bot_off,
                     side_of=side_of, bbox_of=bbox_of, resolvable=resolvable,
                     refs_by_sheet=refs_by_sheet, mh_refs=sorted(mh_refs),
-                    deferred=deferred)
+                    deferred=deferred, conn_rot=conn_rot, conn_edge=conn_edge)
 
 
 # ---- the model build -------------------------------------------------------------
@@ -797,6 +1075,15 @@ def build_model(two_side: bool = True) -> PcbModel:
             if jname in som_rel:
                 som_j_refs[ref] = jname
                 fixed_rot[ref] = som_rot[jname]
+
+    # LAW 6: every off-board edge connector carries the placement rotation that
+    # turns its mating face OFF-BOARD (computed in subsystem_zone_geometry from the
+    # connector's assigned board edge). The shared packer already reserved the
+    # ROTATED bbox + seated the connector flush at the zone's outer edge, so this
+    # rotation lands the footprint exactly where the zone expects it.
+    for ref, rot in zg.conn_rot.items():
+        if ref in resolvable:
+            fixed_rot[ref] = rot
 
     # ---- STEP 1: zone geometry comes from the SHARED packer (above) ----------
     # zone_box / top_off / bot_off already hold every subsystem's REAL 2-sided
@@ -897,13 +1184,19 @@ def build_model(two_side: bool = True) -> PcbModel:
             n_top += 1
 
     kx0, ky0, kx1, ky1 = keepout
+    # SoM module-body CORE (board page frame, NO halo) — the rectangle the
+    # plugged-in SoM physically covers. The placement_mech gate forbids any
+    # non-passive/test-point/tall part inside it (LAW 6).
+    som_core = (ORIGIN_X + plan.som_x, ORIGIN_Y + plan.som_y,
+                ORIGIN_X + plan.som_x + som.w, ORIGIN_Y + plan.som_y + som.h)
     return PcbModel(
         board_w=board_w, board_h=board_h, insts=insts,
         net_numbers=net_numbers, netclass_of=netclass_of, classes=classes,
         placed=placed, deferred=deferred,
         som_keepout=(ORIGIN_X + kx0, ORIGIN_Y + ky0,
                      ORIGIN_X + kx1, ORIGIN_Y + ky1),
-        n_top=n_top, n_bottom=n_bottom, two_side=two_side)
+        n_top=n_top, n_bottom=n_bottom, two_side=two_side,
+        som_core=som_core)
 
 
 # ---- placed-geometry queries (for the ratsnest renderer + LAW-5 gate) ------------
@@ -1733,13 +2026,20 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         "classes": sorted(model.classes), "deferred": model.deferred,
         "n_top": model.n_top, "n_bottom": model.n_bottom,
         "two_side": model.two_side, "som_keepout": model.som_keepout,
+        "som_core": model.som_core,
         "drc": None, "ratsnest": None, "ratsnest_gate": None,
+        "placement_mech": None,
     }
     if ratsnest:
         from schgen.generate import ratsnest as rn_mod
         from schgen.verify import ratsnest_gate
+        from schgen.verify import placement_mech
         result["ratsnest"] = rn_mod.generate(model)
         result["ratsnest_gate"] = ratsnest_gate.check(model)
+        # LAW-6 mechanical/use-case gate — runs on the SAME placed model (no
+        # rebuild) so its connector-edge/orientation + SoM-keepout verdict is
+        # exactly the board just emitted.
+        result["placement_mech"] = placement_mech.check(model)
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result

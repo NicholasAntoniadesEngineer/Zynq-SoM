@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "93e61025c63c0122a3905c3b266c53651204551597d932b572140e8fbbca34fa"
+      "sha256": "7d53efd6ded2c397f1a32e88e9985ebb99f6f0b73bc881a1d880b090f9c34318"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -26,15 +26,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "ff0fd046661df968a3c997f83bcc936ffa5ae1d0842b5de8b9815dcb30712bc8"
+      "sha256": "c9bd8df538cb7caff211397da51c8679d7a9a5d54e2b5f752e5f372cc44eeef8"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "dba2d55b6435dc5bd03b3d472025d8fe9ccfd20077e60f8960cde39e6ce54681"
+      "sha256": "6843058bb0e59e835f347cd8be6269a7a7b18b0fc830f39fd270866fa615bc32"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "71fa00b9407c27ae8dbf43a3b17a31bc41eaa59c50c586d2c73e10dc99601e4f"
+      "sha256": "11664728518d7227aebb43d3a27acf7cd952e63e186a9bdaa4b839b6f633f344"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -121,12 +121,16 @@
       "sha256": "0caa3897642ce607b6189b115cefa1eacd53654ea32d4d734912f1b446b7e375"
     },
     {
+      "path": "reports/placement_mech.txt",
+      "sha256": "4335142f8a3d946f76119f181be2b7043bd1267121aac09fbae80bbaa0f97389"
+    },
+    {
       "path": "reports/power_tree.txt",
       "sha256": "084717804c76a1ed72d1f2e4f44534b8da3c365e9488ad7a10af595fad94ddb1"
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "f51906467d6b996d7a69cb59dc36c22f804ec689237179a2396c9142547be5bd"
+      "sha256": "feca9f3911ff6e9487ee8dba460d03ca47f0a7dd24ec8dcefdfa75249dba0622"
     },
     {
       "path": "reports/spice.txt",

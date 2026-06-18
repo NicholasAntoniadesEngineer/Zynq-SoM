@@ -1,8 +1,5 @@
 {
-  "outline": {
-    "w": 149,
-    "h": 141
-  },
+  "outline": "auto",
   "_comment": "DECLARATIVE carrier floorplan - edit this to drive the PCB placement. Order in each edge list = order ALONG that edge (N/S left->right, W/E top->bottom). interior: {\"side\":N/E/S/W} or {\"near\":<subsystem>}. Any subsystem omitted falls back to auto-derivation. Regenerate this seed with `schgen floorplan --export`.",
   "edges": {
     "N": [
@@ -13,8 +10,8 @@
       "usb_uart_connector"
     ],
     "E": [
-      "ethernet",
-      "uart_bridge"
+      "rj45_connector",
+      "board_qwiic"
     ],
     "S": [
       "hdmi_rx",
@@ -32,9 +29,6 @@
       "side": "S"
     },
     "board_aux": {
-      "side": "E"
-    },
-    "board_qwiic": {
       "side": "E"
     },
     "board_services": {
@@ -70,8 +64,11 @@
     "power_som": {
       "side": "E"
     },
-    "rj45_connector": {
-      "near": "ethernet"
+    "ethernet": {
+      "near": "rj45_connector"
+    },
+    "uart_bridge": {
+      "near": "rj45_connector"
     },
     "usb_jtag": {
       "side": "E"
