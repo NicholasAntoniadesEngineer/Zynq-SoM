@@ -75,6 +75,51 @@ generic stock bodies left them off-center / wrong-size / 90°-rotated. So:
   render3d` → eyeball it, LAW 5). Prefer the part's own real `.wrl` (model +
   footprint co-generated → matches by construction) over a generic stock body.
 
+## LAW 6 — MECHANICAL & USE-CASE PLACEMENT: the board must be physically buildable and connectable
+A board that passes every electrical gate can still be unbuildable or unusable.
+`DRC=0` and a passing ratsnest do NOT catch a connector you cannot plug into, a
+button you cannot press, or a part crushed under a module. Placement AND
+ORIENTATION must match each part's real-world use, judged like a professional PCB
+layout engineer:
+
+- **Off-board connectors live on the board EDGE, mating face pointing OFF-BOARD.**
+  Every connector that mates with an external cable / plug / card (USB-C, HDMI,
+  RJ45, microSD, FFC/FPC ribbon, audio, barrel, an external-loom header, ...)
+  MUST sit on a board edge with its opening / slot / cable-exit facing off the
+  board, so the mate physically inserts. An off-board connector in the interior,
+  or rotated so its mouth faces inward, is WRONG even with every gate green. The
+  placer must ROTATE each such connector to its edge (never place it
+  axis-aligned) and seat it flush to the edge; the rest of its subsystem packs
+  behind it, inward.
+
+- **A module / mezzanine / display footprint is a KEEPOUT STENCIL.** The area a
+  plugged-in module overhangs (the SoM on its DF40s; a display over its FFC; any
+  board-to-board mezzanine) is reserved: ONLY low-profile passives shorter than
+  the module's standoff may sit beneath it. NO connector, IC, button, switch,
+  tall part, or test point under a module body -- the module physically covers
+  them. Passives there are GOOD (they use otherwise-dead space); anything else is
+  wrong.
+
+- **Controls and serviceable parts must be reachable.** A button / switch must be
+  pressable (top side, accessible, grouped with its peers); a coin cell / fuse
+  must be replaceable; a test point must be probeable. A control under a module,
+  or buried in a cluster, is wrong.
+
+- **Orientation follows function + assembly.** Each part's rotation and location
+  reflect how it is used and built (polarity marks visible + consistent,
+  heat-sensitive parts away from hot ones, decoupling under its IC's pins, ...).
+
+Judged the LAW-1 way: open the 3D + placement render and inspect EVERY connector,
+control, and part as a human integrator would -- does the cable plug in? can I
+press it? is anything big under the module? is it facing the right way? -- because
+`DRC=0` / ratsnest-pass are necessary but NOT sufficient. The mechanizable rules
+(off-board connector ON an edge + mating-face-OUT + nothing-big-under-a-module +
+controls-accessible) MUST ALSO be a HARD gate (`placement_mech` / equivalent), so
+an area or airwire optimizer can never silently trade away connectability. THIS
+LAW EXISTS because a densifier shrank the board 36% yet left connectors interior
+and inward-facing and parts under the SoM -- every electrical gate passed and the
+board was unbuildable.
+
 ---
 
 ## Standing principles (corollaries of the LAWS)
@@ -95,3 +140,9 @@ generic stock bodies left them off-center / wrong-size / 90°-rotated. So:
 - **Per-unit, byte-identical.** A pure refactor keeps the golden renders
   byte-identical; ship per unit with `schgen check` green; a new gate/law lands
   with a mutant that proves the kill.
+- **Optimizers are re-verified against the mechanical laws.** Any automated
+  placement / densification / routing pass that improves area, airwire, or speed
+  MUST be re-checked against LAW 6 (connector edge + orientation, module keepout,
+  control access) by BOTH the mechanical gate AND a human render inspection. A
+  smaller or faster board you cannot plug into, press, or assemble is a
+  REGRESSION, not a win — gate-green is never sufficient for a placement change.
