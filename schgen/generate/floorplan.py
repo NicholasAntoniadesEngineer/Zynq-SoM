@@ -381,7 +381,6 @@ _EDGE_FAMILIES: dict[str, str] = {
     "SFW15R-1STE1LF": "FFC 15-pin 1mm (camera)",
     "TF-01A": "microSD push-pull",
     "DS1024-2x6R2": "PMOD 2x6 socket",
-    "ASP-134603-01": "FMC LPC (VITA 57.1)",
 }
 # author-declared expect= deferrals that name a future EDGE connector
 _DEFERRED_EDGE = re.compile(r"\b(rj45|usb_uart)_connector\b")
@@ -1447,20 +1446,17 @@ def build_notes(plan: Plan, sheets, regs) -> list[Note]:
                 "Two PMOD sockets side by side; both fed from the gated "
                 "+3V3_PMOD rail (SY6280 cell in bringup_modules) — route "
                 "the gated rail once, star at the sockets.")
-        if "ASP-134603-01" in conn_vals:
+        if "TLV75725PDYDR" in conn_vals or any(
+                r.sheet == b.name and "TLV75725" in r.value for r in regs):
             ldo = next((r for r in regs if r.sheet == b.name), None)
-            extra = ""
             if ldo is not None:
                 vi = rail_volts(ldo.vin) or 0.0
                 vo = rail_volts(ldo.vout) or 0.0
-                extra = (f" {ldo.value} VADJ LDO dissipates ~"
-                         f"{(vi - vo) * ldo.i_out:.2f} W at the declared "
-                         f"{ldo.i_out:g} A — give it copper.")
-            add(b.name,
-                "FMC: VITA 57.1 mezzanine overhang; VADJ LDO copper",
-                "FMC LPC: a VITA 57.1 mezzanine overhangs the board edge "
-                "— keep tall parts out of the overhang strip behind the "
-                "connector." + extra)
+                add(b.name,
+                    "bank-35 IO header: VADJ LDO copper",
+                    f"{ldo.value} VADJ LDO dissipates ~"
+                    f"{(vi - vo) * ldo.i_out:.2f} W at the declared "
+                    f"{ldo.i_out:g} A — give its EP pad a ground pour.")
         if "usb_uart_connector" in b.reserved:
             add(b.name,
                 "USB-UART conn deferred; TPs on TX/RX",

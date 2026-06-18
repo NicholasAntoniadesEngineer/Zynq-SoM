@@ -55,16 +55,16 @@ Outline derivation: FIXED outline 200x165 mm declared in carrier/floorplan.json;
 | bringup_modules | E | (20, 34, 27.28 x 29.68) | 70 | 809.7 | (14) |
 | bringup_rails | E | (49, 58, 24.65 x 42.074) | 23 | 1037.1 | (15) |
 | debug_boot | N | (89, 23, 20.65 x 37.344) | 10 | 771.2 | (16) |
-| fmc | S | (126, 55, 19.97 x 55.81) | 8 | 1114.5 |  |
+| fmc | S | (126, 55, 19.97 x 55.81) | 8 | 1114.5 | (17) |
 | hdmi_rx_term | @hdmi_rx | (78, 105, 12.04 x 19.3) | 10 | 232.4 |  |
 | mechanical | E | (137, 41, 13 x 13) | 4 | 169 |  |
-| power | E | (29, 101, 28.99 x 31.52) | 51 | 913.8 | (17) |
-| power_mon | E | (59, 101, 14.516 x 16.824) | 10 | 244.2 | (18) |
+| power | E | (29, 101, 28.99 x 31.52) | 51 | 913.8 | (18) |
+| power_mon | E | (59, 101, 14.516 x 16.824) | 10 | 244.2 | (19) |
 | power_som | E | (165, 77, 19.66 x 27.56) | 23 | 541.8 |  |
 | rj45_connector | @ethernet | (157, 43, 22.3 x 26.22) | 3 | 584.7 |  |
 | usb_jtag | E | (111, 23, 19.39 x 30.87) | 19 | 598.6 |  |
-| usb_pd | @pd_input | (80, 40, 7.7 x 19.8) | 6 | 152.5 | (19) |
-| user_io | S | (91, 105, 17.12 x 33.86) | 17 | 579.7 | (20) |
+| usb_pd | @pd_input | (80, 40, 7.7 x 19.8) | 6 | 152.5 | (20) |
+| user_io | S | (91, 105, 17.12 x 33.86) | 17 | 579.7 | (21) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
 
@@ -122,10 +122,11 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(14) bringup_modules**: 10 SY6280 load-switch cells; each gated rail (+3V3_CAM, +3V3_HDMI_RX, +3V3_HDMI_TX, +3V3_LCD, +3V3_PMOD, +3V3_SD, +3V3_USER_LED, +5V_HDMI_TX, +5V_LCD, +5V_USB) stars from its switch — place this block centrally so every gated rail leaves toward its module without crossing the others.
 - **(15) bringup_rails**: Rail-enable DIP switches + power-good LEDs: face them where fingers and eyes reach them with the mezzanine mounted — keep clear of the SoM shadow.
 - **(16) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
-- **(17) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.48 W; LM61460AANRJRR +3V3_REG ~0.82 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
-- **(18) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
-- **(19) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
-- **(20) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.
+- **(17) fmc**: TLV75725PDYDR VADJ LDO dissipates ~0.32 W at the declared 0.4 A — give its EP pad a ground pour.
+- **(18) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.48 W; LM61460AANRJRR +3V3_REG ~0.82 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(19) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
+- **(20) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
+- **(21) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.
 - **(board)**: 57 test points board-wide (test-point gate): spread them with probe clearance as the blocks settle; none may end up under the SoM.
 
 ## Honest limits

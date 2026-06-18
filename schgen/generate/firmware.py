@@ -48,8 +48,9 @@ SOURCES = (
 # board-services I2C devices on the (PCA9306-isolated) AUX segment of
 # STM32_I2C2 — fixed addresses per datasheet; the ID-EEPROM is strap-derived.
 RV3028_ADDR = 0x52             # Micro Crystal RV-3028-C7, fixed 7-bit address
-FMC_EEPROM_ADDR = 0x50         # VITA 57.1 IPMI EEPROM, GA0/GA1 grounded (fmc.py)
-ID_EEPROM_BASE = 0x50          # 24AA025E48: A2 internal=0, A1/A0 strapped
+ID_EEPROM_BASE = 0x50          # 24AA025E48 base: A2 internal=0, A1/A0 strapped
+                               # (-> 0x51); 0x50 itself is now free — it was the
+                               # removed FMC mezzanine EEPROM.
 
 # Rail-override GPIO plan (bringup dossier section 1: "Rails (3) = direct
 # GPIOs"; the carrier->J1 binding itself is a wave-3 deferral — the GPIO
@@ -129,9 +130,9 @@ def _pin_net(c, ref: str, pin: int):
 
 def _id_eeprom_addr(c) -> int:
     """7-bit address of the board-ID EEPROM, DERIVED from its A1/A0 straps
-    (24AA025E48 pins 4/5): a strap pin on a power rail = 1, on GND = 0. So a
-    mis-strap to 0x50 would be caught by the address-collision check below
-    (it would clash with the FMC EEPROM)."""
+    (24AA025E48 pins 4/5): a strap pin on a power rail = 1, on GND = 0. The
+    address must come from the netlist straps (-> 0x51), NOT the bare 0x50 base;
+    the generator's address-collision check below backstops any drift."""
     from schgen.core.model import NetClass
     ref = next((r for r, p in c.parts.items()
                 if "24AA025E48" in p.lib_id), None)
@@ -197,8 +198,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
          f"netlist)")
         for k, m in enumerate(monitors, 1)
     ] + [
-        ("ZC_I2C_ADDR_FMC_EEPROM", FMC_EEPROM_ADDR,
-         "FMC mezzanine ID EEPROM (fmc; GA0/GA1 grounded, VITA 57.1)"),
         ("ZC_I2C_ADDR_ID_EEPROM", _id_eeprom_addr(services_c),
          "board-ID EEPROM w/ EUI-48 MAC (board_services 24AA025E48; A1/A0 "
          "straps read from the netlist; on the board_aux-isolated AUX I2C)"),

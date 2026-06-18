@@ -119,7 +119,7 @@ def test_compliance_covers_every_required_interface():
     section so coverage can't silently shrink."""
     text = COMPLIANCE.read_text()
     for interface in ("HDMI", "Ethernet", "USB 2.0", "MIPI CSI-2",
-                      "USB-PD", "FMC LPC"):
+                      "USB-PD", "bank-35 IO"):
         assert interface in text, f"COMPLIANCE missing the {interface} section"
 
 
