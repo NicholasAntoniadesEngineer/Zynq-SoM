@@ -17,9 +17,10 @@ placements.
   machine can resolve rotation. Each = 1.0 mm bare copper dot + 2.0 mm
   solder-mask opening, ≥ 5 mm from any board edge, no copper/silk inside the
   mask ring.
-- **Local (per-part) fiducials**: a pair diagonally across the **FMC connector**
-  (the densest, most rotation-sensitive part) and one at each **QFN/SON** EP
-  part (FUSB302, INA3221, TPS26631, TPD12S016). Same 1 mm/2 mm geometry.
+- **Local (per-part) fiducials**: a pair diagonally across the **SoM DF40
+  connectors** (J1/J2/J3 — the densest, most rotation-sensitive 0.4 mm-pitch
+  parts) and one at each **QFN/SON** EP part (FUSB302, INA3221, TPS26631,
+  TPD12S016). Same 1 mm/2 mm geometry.
 
 ## Tooling / mounting holes
 
@@ -54,9 +55,9 @@ chassis/shield return current cannot flow through signal ground:
 
 ## Silkscreen requirements
 
-- **`FMC: REDUCED LPC`** label next to the FMC connector — the carrier wires
-  only LA00–11 + CLK0/1 of the LPC pinout (deliberate scope, `fmc.py`); the
-  silk warns an integrator not to expect a full LPC.
+- **`SoM bank-35 IO`** label next to the 2×20 breakout header — it carries the
+  SoM bank-35 LA00–11 + CLK0/1 pairs + 2.5 V VADJ (`fmc.py`); the silk makes
+  clear it is a generic IO breakout, not a seatable FMC mezzanine.
 - Pin-1 / polarity marks on every IC, diode (TVS/Schottky/zener), LED, and the
   electrolytic/tantalum bulk caps.
 - Connector keying / orientation arrows on the FFC tails (LCD, camera) and the

@@ -95,7 +95,7 @@ All placement is derived from circuit topology by `schgen/place.py`.
   [`DESIGN_SPEC.md`](docs/DESIGN_SPEC.md) (theory of operation: mezzanine
   interface, power architecture + sequencing, every subsystem),
   [`COMPLIANCE.md`](docs/COMPLIANCE.md) (per-interface checklists: HDMI,
-  Gigabit Ethernet, USB 2.0, MIPI CSI-2, USB-PD, FMC LPC),
+  Gigabit Ethernet, USB 2.0, MIPI CSI-2, USB-PD, SoM bank-35 IO header),
   [`BRINGUP.md`](docs/BRINGUP.md), [`TEST_PLAN.md`](docs/TEST_PLAN.md),
   [`FLOORPLAN.md`](docs/FLOORPLAN.md), and the generated diagrams
   `block_diagram.svg` / `power_tree.svg` / `power_sequence.svg`.

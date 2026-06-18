@@ -50,9 +50,9 @@ into a 2.5 V Zynq VCCO bank, BOTH watchdog nets were relocated off bank 35
 I2C ADDRESS MAP (7-bit). The EEPROM/RTC live on AUX_I2C — the PCA9306-isolated
 segment of STM32_I2C2 — so they SHARE that bus's address space (the isolator is
 transparent when the rail is on). Full map: 0x20 TCA9535 / 0x22 FUSB302B /
-0x40-0x41 INA3221 / 0x50 FMC-EEPROM (all on the always-on trunk) / **0x51
-ID-EEPROM (A0=1,A1=0)** / **0x52 RV-3028 RTC** (both on the gated AUX segment).
-No collisions.
+0x40-0x41 INA3221 (all on the always-on trunk) / **0x51 ID-EEPROM (A0=1,A1=0)**
+/ **0x52 RV-3028 RTC** (both on the gated AUX segment). No collisions. (0x50 is
+now free — it was the FMC mezzanine ID-EEPROM, removed with the FMC connector.)
 
 ZYNQ-AGNOSTIC (C3).  The only SoM-side signals are the two watchdog lines,
 homed to spare PL bank-33 (+3V3) IO via the som_conn_gen FUNCTION_MAP

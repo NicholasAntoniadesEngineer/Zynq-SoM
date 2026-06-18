@@ -28,7 +28,7 @@ cannot silently drift from the sheets.
 | USB 2.0 (HS/FS data) | 6 | 2 | 0 |
 | MIPI CSI-2 D-PHY | 5 | 3 | 1 |
 | USB-PD (FUSB302B / Type-C) | 7 | 1 | 1 |
-| FMC LPC (VITA 57.1) | 7 | 2 | 2 |
+| SoM bank-35 IO header (2×20) | 4 | 2 | 0 |
 
 ---
 
@@ -142,22 +142,19 @@ STM32 FS).
 
 ---
 
-## 7. FMC LPC (VITA 57.1 LPC subset) — sheet `fmc`
+## 7. SoM bank-35 IO breakout (2×20 2.54 mm header) — sheet `fmc`
 
-**Reduced** LPC site: LA00–LA11 + CLK0/CLK1_M2C populated.
+The former FMC LPC connector (Samtec ASP-134603-01) was **replaced by a generic
+2×20 0.1″/2.54 mm pin header** that breaks out the SoM bank-35 IO (LA00–LA11 +
+CLK0/CLK1_M2C) — no proprietary mezzanine required (2026-06-18, user request).
 
 | # | Requirement | How the board meets it | Verdict |
 |---|---|---|---|
-| FMC-1 | LA / CLK pairs 100 Ω differential | 12 LA pairs + CLK0/CLK1_M2C typed `diff_pair` 100 Ω (`fmc.py`); SI_CONSTRAINTS.md LM_FMC_LPC_VITA_57_1 (±5 mil intra-pair) | PASS (netlist); **REVIEW** (layout impedance + tight LA-to-CLK match) |
-| FMC-2 | Correct carrier-side connector | Samtec **ASP-134603-01** (SEAF socket, the carrier-side part — NOT the mezzanine ASP-134604-01; dossier §2) | PASS |
-| FMC-3 | GND census | 61 GND positions asserted from the machine-parsed VITA map (build-time assert in `fmc.py`) | PASS |
-| FMC-4 | VADJ supply | **2.5 V** from a local **TLV75725 (DYD)** LDO, EP netted to GND; 0.40 A continuous thermal envelope (`fmc.py`, `thermal.txt` Tj ~80 °C) | PASS |
-| FMC-5 | I²C (IPMI ID-EEPROM) + GA address straps | `STM32_I2C2` SCL/SDA to the FMC; GA0/GA1 grounded → `0x50` (`fmc.py`) | PASS |
-| FMC-6 | PRSNT_M2C_L + PG_C2M | PRSNT 10k pull to +3V3; PG_C2M asserts when VADJ is live (10k to +2V5_VADJ) (`fmc.py`) | PASS |
-| FMC-7 | JTAG chain | TDI→TDO bypass; TCK/TRST_L held low, TMS held high (dossier §5) | PASS |
-| FMC-8 | 12 V supply (12P0V) | NOT provided — the carrier has no 12 V rail (author-NC, dossier deviation) | N-A |
-| FMC-9 | GTP DP0 / GBTCLK0 lanes + LA12–LA33 | Author-NC (reduced site) — silkscreen MUST be labelled "FMC LPC (REDUCED) — LA00–LA11, no 12 V" so an integrator does not seat a full-LPC mezzanine | N-A (reduced); **REVIEW** (silkscreen at layout) |
-| FMC-10 | 3P3V / 3P3VAUX mezzanine supply | From +3V3 (1.0 A allocation, `power_tree.txt`), 10u + 100n at the connector | PASS |
+| IO-1 | LA / CLK pairs 100 Ω differential | 12 LA pairs + CLK0/CLK1_M2C typed `diff_pair` 100 Ω (`fmc.py`); the SoM→header trace is impedance-controlled (the 0.1″ header pads themselves are not — the nature of a breakout) | PASS (netlist); **REVIEW** (layout impedance) |
+| IO-2 | Breakout connector | Generic 2×20 2.54 mm header (stock `Connector_Generic:Conn_02x20_Odd_Even` + `PinHeader_2x20_P2.54mm_Vertical`, with KiCad's own 3D body); integrator picks the exact orderable header | PASS |
+| IO-3 | VADJ supply | **2.5 V** from a local **TLV75725 (DYD)** LDO, EP netted to GND; offered on header pin 2 and the bank-35 VCCO reference; Tj ~80 °C (`thermal.txt`) | PASS |
+| IO-4 | Header power + ground | +3V3 (pin 1), +2V5_VADJ (pin 2), GND every ~3 pairs (10 GND pins) — `fmc.py` pinout; 10u + 100n bypass | PASS |
+| IO-5 | Pinout silkscreen | Label the site as a SoM bank-35 IO breakout (LA00–11 + CLK0/1 + 2.5 V VADJ) so it is clearly **not** a seatable FMC mezzanine | **REVIEW** (silkscreen at layout) |
 
 ---
 
@@ -178,5 +175,5 @@ schematic carries the *intent*, the PCB carries the *realization*:
    (`power:U2`, `power_som:U4`) at bring-up by thermal sim/bench; the
    bare-package Tj exceeds the guard band and relies on a poured 4-layer
    layout (DESIGN_SPEC §4, `thermal.txt`).
-5. **Silkscreen** — the FMC site must be labelled "REDUCED — LA00–LA11, no
-   12 V".
+5. **Silkscreen** — label the bank-35 IO breakout header "SoM bank-35 IO
+   (LA00–11 + CLK0/1, 2.5 V VADJ)" so it is clearly not a seatable FMC mezzanine.

@@ -32,12 +32,14 @@ per-unit price of the swapped passives is already sub-cent and not the driver.
 
 ### Where the cost actually is
 
-The $51/board parts cost is dominated by a handful of parts, NOT the Extended
-line count: the Samtec FMC connector **C2836665 (ASP-134603-01) at $14.85 ea**
-is ~29% of the board BOM by itself, followed by CH347T ($2.19), TPS26631
-($3.50), RV-3028 RTC ($1.51), CP2102N ($1.37), LM61460 buck ($1.13), the two
-INA3221 ($1.04 ea). These are function-defining single-source ICs/connectors —
-none has a cheaper drop-in.
+The Samtec FMC connector (C2836665, ASP-134603-01) — previously **~29% of the
+board BOM at $14.85 ea**, the single costliest and most stock-concentrated line
+— was **REMOVED** (2026-06-18): the FMC site is now a generic 2×20 2.54 mm pin
+header (a multi-source, sub-$0.50 commodity part). That drops the board parts
+cost from ~$51 to **~$36/board** and eliminates the board's biggest single-source
+risk. The remaining cost is now dominated by TPS26631 ($3.50), CH347T ($2.19),
+RV-3028 RTC ($1.51), CP2102N ($1.37), LM61460 buck ($1.13), the two INA3221
+($1.04 ea) — function-defining single-source ICs, none with a cheaper drop-in.
 
 ## Applied swap (verified clean drop-in)
 
@@ -73,7 +75,6 @@ are flagged for the owner to evaluate against the real footprint/datasheet.
 | TPD6E001RSER (uSD ESD) | C1973318 | 191 | RSFR variant (C1975428, 204) is QFN-12 4x4 — different footprint. No same-footprint alternate with more stock. |
 | KH-5224-8P8C-D (RJ45) | C2828085 | 239 | KH-5224-8P8C (C2683357, 5,365) is the same family but the **non "-D"** variant (harpoon vs plain contact / mount); verify footprint + retention before swapping. |
 | SFW15R-1STE1LF (camera FFC) | C3168538 | 274 | The "-2STE" variant is top-contact vs this part's bottom-contact — not interchangeable. Exact part is the best available. |
-| ASP-134603-01 (Samtec FMC) | C2836665 | 282 | $14.85 ea, single-source, no equivalent. Cost + stock concentration risk; primary mitigation is buy-ahead. |
 
 ### B. Data-integrity finding — RESOLVED 2026-06-15
 
@@ -195,7 +196,6 @@ searching the JLC Basic library for the same value/function:
 | C25961 | 22k1 | 1 | Extended | 47,588 | 0.0018 | Ext-fee |
 | C262572 | AFC07-S40FCA-00 | 1 | Extended | 9,849 | 0.1750 | Ext-fee |
 | C2828085 | KH-5224-8P8C-D | 1 | Extended | 239 | 0.3034 | CRIT-stock,Ext-fee |
-| C2836665 | ASP-134603-01 | 1 | Extended | 282 | 14.8495 | CRIT-stock,Ext-fee |
 | C2864505 | LM61460AANRJRR | 1 | Extended | 3,761 | 1.1313 | low-stock,Ext-fee |
 | C2866319 | TPS26631PWPR | 1 | Extended | 177 | 3.4954 | CRIT-stock,Ext-fee |
 | C3019759 | RV-3028-C7-32.768kHz-1ppm-TA-QC | 1 | Extended | 15,313 | 1.5073 | Ext-fee |

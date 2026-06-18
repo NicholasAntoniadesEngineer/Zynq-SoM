@@ -28,7 +28,7 @@ policy. The carrier provides:
 - the **switches-only bring-up fabric** (DIP-gated, software-veto enables)
   so the board comes up safely with a blank SC;
 - the **physical I/O**: HDMI TX and RX, Gigabit Ethernet, a MIPI CSI-2
-  camera port, microSD, an FMC LPC mezzanine site, USB-JTAG/UART debug,
+  camera port, microSD, a SoM bank-35 IO breakout header, USB-JTAG/UART debug,
   Pmod expansion, user LEDs/buttons, an RTC, a MAC-address EEPROM, and rail
   telemetry.
 
@@ -278,13 +278,17 @@ ESD across the card lines, VCC biased to `+3V3_SD`. **The slot is fixed
 3.3 V — only Default/High-Speed SD modes; UHS-I (1.8 V S18 switch) is NOT
 supported** (SD-1). Card rail is the gated `+3V3_SD`.
 
-### 5.7 FMC LPC mezzanine (`fmc`)
-**Reduced** VITA 57.1 LPC site: LA00–LA11 (12 pairs) + CLK0/CLK1_M2C
-populated; LA12–LA33, DP0, GBTCLK0, VREF, 12P0V are author-NC. Connector
-Samtec **ASP-134603-01** (the carrier-side socket). VADJ = **2.5 V** from a
-local **TLV75725 (DYD thermal-pad)** LDO whose EP is netted to GND. The PCB
-silkscreen at this site must be labelled "FMC LPC (REDUCED) — LA00–LA11, no
-12 V" so an integrator does not seat a full-LPC mezzanine.
+### 5.7 SoM bank-35 IO breakout header (`fmc`)
+The SoM bank-35 LVDS IO — LA00–LA11 (12 pairs) + CLK0/CLK1_M2C — is broken out
+to a **generic 2×20 0.1″/2.54 mm pin header** (stock `Connector_Generic:Conn_02x20`
++ `PinHeader_2x20_P2.54mm`), replacing the former Samtec ASP-134603-01 FMC LPC
+connector (2026-06-18, user request) so the IO is usable without a proprietary
+FMC mezzanine. Each pair stays typed `diff_pair` 100 Ω (the SoM→header trace is
+impedance-controlled; the 0.1″ header pads are not). VADJ = **2.5 V** from a
+local **TLV75725 (DYD thermal-pad)** LDO whose EP is netted to GND — offered on
+header pin 2 and the bank-35 VCCO reference (also feeds the camera CSI pairs).
+The PCB silkscreen at this site should be labelled "SoM bank-35 IO breakout
+(LA00–11 + CLK0/1, 2.5 V VADJ)" so it is clearly not a seatable FMC mezzanine.
 
 ### 5.8 USB-JTAG / UART debug bridge (`usb_jtag`, `uart_bridge`, connectors)
 Self-powered, isolated debug: **CH347T** USB-JTAG/UART bridge (`usb_jtag`,
