@@ -1,10 +1,10 @@
 pin completeness gate (every multi-pin IC pin is NETTED or explicit NC)
 ================================================================
 STATUS: REPORT-FIRST (does NOT fail the board yet; promotes to HARD-FAIL once the NC allowlist is fully blessed)
-452 multi-pin parts checked; 103 author-declared NC pins
+454 multi-pin parts checked; 113 author-declared NC pins
 silent floats: none
 
-NC ALLOWLIST — 27 blessed [seed], 76 to bless [new]:
+NC ALLOWLIST — 27 blessed [seed], 86 to bless [new]:
   [seed] board_services:U2.1 (RV-3028-C7-32.768kHz-1ppm-TA-QC CLKOUT)
   [seed] fmc:U1.4 (TLV75725PDYDR NC)
   [seed] hdmi_rx:U2.6 (TPD4E02B04DQAR NC)
@@ -38,6 +38,16 @@ NC ALLOWLIST — 27 blessed [seed], 76 to bless [new]:
   [new]  board_services:U3.3 (TPS3823-33DBVR MR#)
   [new]  bringup_rails:SW6.4 (DSHP04TSGER 4)
   [new]  bringup_rails:SW6.6 (DSHP04TSGER 6)
+  [new]  camera:U1.6 (TPD4E02B04DQAR NC)
+  [new]  camera:U1.7 (TPD4E02B04DQAR NC)
+  [new]  camera:U1.9 (TPD4E02B04DQAR NC)
+  [new]  camera:U1.10 (TPD4E02B04DQAR NC)
+  [new]  camera:U2.4 (TPD4E02B04DQAR IO3)
+  [new]  camera:U2.5 (TPD4E02B04DQAR IO4)
+  [new]  camera:U2.6 (TPD4E02B04DQAR NC)
+  [new]  camera:U2.7 (TPD4E02B04DQAR NC)
+  [new]  camera:U2.9 (TPD4E02B04DQAR NC)
+  [new]  camera:U2.10 (TPD4E02B04DQAR NC)
   [new]  debug_boot:J1.12 (878311420 12)
   [new]  debug_boot:J1.14 (878311420 14)
   [new]  debug_boot:J2.6 (HX_JN1.27-2x5 6)

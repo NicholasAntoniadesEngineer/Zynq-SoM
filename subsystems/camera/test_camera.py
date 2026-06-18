@@ -125,10 +125,15 @@ def test_control_i2c_typed(c: Circuit):
 
 def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
     """Model completeness: every physical pin of every part is netted or NC —
-    the same hard check the board build runs (LAW 0: no silent floats). The
-    camera has NO intentional no-connects (every FFC pad is wired)."""
+    the same hard check the board build runs (LAW 0: no silent floats). The only
+    intentional no-connects are the spare ESD-array pads: each TPD4E02B04 has
+    four USON-10 NC pads (6/7/9/10), and U2 leaves IO3 (pad 4) + IO4 (pad 5)
+    unused (only the CLK pair lands on U2)."""
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
-    assert c.nc_pins == [] or {str(p) for p in c.nc_pins} == set()
+    nc = {str(p) for p in c.nc_pins}
+    expected = {"U1.6", "U1.7", "U1.9", "U1.10",
+                "U2.4", "U2.5", "U2.6", "U2.7", "U2.9", "U2.10"}
+    assert nc == expected, nc
 
 
 # ---- decoupling / I2C completeness (design_rules LOCAL slice) -------------------

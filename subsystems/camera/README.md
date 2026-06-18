@@ -61,6 +61,7 @@ carried in this subsystem and are **populated** (see CAM-1); place them at the
 | R4, R5 | 4k7 | `Device:R` (CAM_SCL / CAM_SDA pull-ups to `+VDD_CAM`) | C23162 |
 | C1 | 100n | `Device:C` (`+VDD_CAM` bypass) | C14663 |
 | C2 | 10u  | `Device:C` (`+VDD_CAM` bulk)   | C15850 |
+| U1, U2 | TPD4E02B04DQAR | `parts/TPD4E02B04DQAR/` (low-cap 4-ch CSI ESD array, 0.2 pF/line) | C106794 |
 
 ## Consuming it from a project
 
@@ -164,8 +165,13 @@ emitted sheet.** The carrier adapter is `carrier/subsystems/camera.py`.
   toward the PCB — the enclosure's cable fold must confirm contacts-down, else
   swap to the top-contact part.
 
-- **ESD.** Omitted on rev A (short internal cable). A `TPD4E05U06`-class array
-  across the FFC-facing lines remains a stuffing option.
+- **ESD.** The three CSI D-PHY pairs are clamped by two low-cap TI
+  TPD4E02B04DQAR 4-ch arrays (U1 = D0+D1, U2 = CLK), GND-referenced shunt taps
+  on the existing lane nets (0.2 pF/line << the D-PHY budget — the same part
+  hdmi_rx uses on TMDS; valid even when `+VDD_CAM` is gated off, no back-power).
+  Added 2026-06-18 (user request: ESD on the camera FFC). The slow control lines
+  (I2C / EN / LED) stay unclamped — a `TPD4E05U06`-class array there remains a
+  stuffing option (adversarial review: not warranted on the short control tail).
 
 - **22-pin cameras.** Pi Zero / Pi-5-style 22-pin cameras need a 22→15 adapter
   cable — by design, not a subsystem change.

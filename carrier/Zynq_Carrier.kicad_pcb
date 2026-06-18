@@ -104859,6 +104859,596 @@
 		(uuid "49082894-5f92-586e-b561-33fd0fed1ca0")
 	)
 	(footprint
+		"TPD4E02B04DQAR:TPD4E02B04DQAR"
+		(version 20240108)
+		(generator "schgen_part_gen")
+		(generator_version "1.0")
+		(layer "F.Cu")
+		(at 33.02 101.6)
+		(descr
+			"USON-10_L2.5-W1.0-P0.50-BL — 4-Channel ESD Protection Diode for USB Type-C and HDMI 2.0 10-USON -40 to 125 (EasyEDA/LCSC C106794, faithful conversion)"
+		)
+		(tags "ESD Protection Devices")
+		(attr smd)
+		(property
+			"Reference"
+			"U8001"
+			(at 0 -2.4 0)
+			(layer "F.SilkS")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "707dac4b-1286-5941-8314-1d8bcd6cfd3e")
+		)
+		(property
+			"Value"
+			"TPD4E02B04DQAR"
+			(at 0 2.4 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "c244ec09-9182-5e32-bf48-5ae1bcc6eb2e")
+		)
+		(property
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C106794.pdf"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "aedbb028-453f-5706-9d96-ab51173f53a7")
+		)
+		(property
+			"Description"
+			"4-Channel ESD Protection Diode for USB Type-C and HDMI 2.0 10-USON -40 to 125"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "2654231b-7b48-5cd4-b528-e0d3fcccc31e")
+		)
+		(property
+			"LCSC"
+			"C106794"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "600d17be-d7d3-588d-9841-7f5a8c0f2f04")
+		)
+		(fp_text
+			user
+			"${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "e07e6682-f774-53dd-8c78-e791dc303724")
+		)
+		(fp_circle
+			(center -1.2499 0.5001)
+			(end -1.2199 0.5001)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "1ea7dff2-006b-5473-b4a4-2e6e5bd27670")
+		)
+		(fp_circle
+			(center -1 0.8999)
+			(end -0.8999 0.8999)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "Cmts.User")
+			(uuid "423d8fba-b13e-511d-85da-b348b35e8578")
+		)
+		(fp_line
+			(start -1.25 0.5)
+			(end -1.25 -0.5)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "17c6bc6b-a690-58c3-8e9c-baea8b0b12c1")
+		)
+		(fp_line
+			(start -1.25 -0.5)
+			(end 1.25 -0.5)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "1cadd551-d332-5d1e-a140-22a186158cfe")
+		)
+		(fp_line
+			(start 1.25 -0.5)
+			(end 1.25 0.5)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "1b6e2aa5-4029-513d-83dc-f94121318467")
+		)
+		(fp_line
+			(start 1.25 0.5)
+			(end -1.25 0.5)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "1c561578-b767-54e9-80bb-4d1d821de6b0")
+		)
+		(fp_line
+			(start -1.3262 0.5762)
+			(end -1.3262 -0.5762)
+			(stroke
+				(width 0.1524)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "c2cf3399-0e37-5b24-b77d-6d11b682d759")
+		)
+		(fp_line
+			(start 1.3262 -0.5762)
+			(end 1.3262 0.5762)
+			(stroke
+				(width 0.1524)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "704d8e95-6347-55ef-a16e-90717eeae2d5")
+		)
+		(fp_circle
+			(center -1 1.019)
+			(end -0.8999 1.019)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "3f160bb4-7baa-5a2f-9e2a-49aa6b33a76a")
+		)
+		(pad
+			"6"
+			smd
+			rect
+			(at 1 -0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "07bbf322-2214-59fd-a309-5b0531775d77")
+		)
+		(pad
+			"7"
+			smd
+			rect
+			(at 0.5001 -0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "226b7aa9-083c-5daa-9286-eec9b7ed3548")
+		)
+		(pad
+			"8"
+			smd
+			rect
+			(at 0 -0.4)
+			(size 0.399999 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 180 "GND")
+			(uuid "bc9dba7d-f74a-5ee0-abf5-f74d1e89e84a")
+		)
+		(pad
+			"9"
+			smd
+			rect
+			(at -0.4999 -0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "e6e0efdf-8f34-5236-8ab6-5a9546de1b14")
+		)
+		(pad
+			"10"
+			smd
+			rect
+			(at -1 -0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "56fee204-ad02-55d5-a516-f22aa2a021b5")
+		)
+		(pad
+			"5"
+			smd
+			rect
+			(at 1 0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 109 "CAM_D1_N")
+			(uuid "4aaf3cb7-887f-544e-b7f5-c1579d9e5345")
+		)
+		(pad
+			"4"
+			smd
+			rect
+			(at 0.5001 0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 110 "CAM_D1_P")
+			(uuid "d489db1b-781d-5ead-a2cf-839b9f674ac3")
+		)
+		(pad
+			"3"
+			smd
+			rect
+			(at 0 0.4)
+			(size 0.399999 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 180 "GND")
+			(uuid "4b34b653-9542-5e16-9ab9-4690971a0f26")
+		)
+		(pad
+			"2"
+			smd
+			rect
+			(at -0.4999 0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 107 "CAM_D0_N")
+			(uuid "978ff5c2-1b87-533c-9417-1e729c624598")
+		)
+		(pad
+			"1"
+			smd
+			rect
+			(at -1 0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 108 "CAM_D0_P")
+			(uuid "93ddf732-747c-5226-858d-e8997a63e96e")
+		)
+		(model
+			"${KIPRJMOD}/../parts/TPD4E02B04DQAR/TPD4E02B04DQAR.wrl"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 270)
+			)
+		)
+		(uuid "b7673bb5-ad91-5de0-adcf-512cfba13eba")
+	)
+	(footprint
+		"TPD4E02B04DQAR:TPD4E02B04DQAR"
+		(version 20240108)
+		(generator "schgen_part_gen")
+		(generator_version "1.0")
+		(layer "F.Cu")
+		(at 38.1 101.6)
+		(descr
+			"USON-10_L2.5-W1.0-P0.50-BL — 4-Channel ESD Protection Diode for USB Type-C and HDMI 2.0 10-USON -40 to 125 (EasyEDA/LCSC C106794, faithful conversion)"
+		)
+		(tags "ESD Protection Devices")
+		(attr smd)
+		(property
+			"Reference"
+			"U8002"
+			(at 0 -2.4 0)
+			(layer "F.SilkS")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "bf8e307d-8bc0-5cc2-bdc0-c71be2f8a301")
+		)
+		(property
+			"Value"
+			"TPD4E02B04DQAR"
+			(at 0 2.4 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "2cd5c641-e471-5e78-81d8-eb2e2bc71fa8")
+		)
+		(property
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C106794.pdf"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "ba7ed6d4-285a-5cde-8b6a-53aa19c862c9")
+		)
+		(property
+			"Description"
+			"4-Channel ESD Protection Diode for USB Type-C and HDMI 2.0 10-USON -40 to 125"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "b476fc02-2aac-5b42-a56d-9b98a16eaa71")
+		)
+		(property
+			"LCSC"
+			"C106794"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "6e498d90-8808-5398-9eb4-a48295b38760")
+		)
+		(fp_text
+			user
+			"${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "56a48d2a-af21-59c5-bd33-f4a12003714d")
+		)
+		(fp_circle
+			(center -1.2499 0.5001)
+			(end -1.2199 0.5001)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "d8d42dd8-2a67-5a75-bf5c-a83a890377c4")
+		)
+		(fp_circle
+			(center -1 0.8999)
+			(end -0.8999 0.8999)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "Cmts.User")
+			(uuid "539fca61-120a-5d4e-abde-0ebfa1da8d98")
+		)
+		(fp_line
+			(start -1.25 0.5)
+			(end -1.25 -0.5)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "92109a14-ef19-5014-8654-e328d04af95a")
+		)
+		(fp_line
+			(start -1.25 -0.5)
+			(end 1.25 -0.5)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "713f5ab5-90a2-5415-a57c-e7fe1f91b05c")
+		)
+		(fp_line
+			(start 1.25 -0.5)
+			(end 1.25 0.5)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "1e02cf6d-210d-56f0-ad85-73eec8f2140f")
+		)
+		(fp_line
+			(start 1.25 0.5)
+			(end -1.25 0.5)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "f1e1504c-3fe2-55d0-b075-cbd7e4f11c01")
+		)
+		(fp_line
+			(start -1.3262 0.5762)
+			(end -1.3262 -0.5762)
+			(stroke
+				(width 0.1524)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "2ff20144-016b-50dc-a72c-68ec240ee185")
+		)
+		(fp_line
+			(start 1.3262 -0.5762)
+			(end 1.3262 0.5762)
+			(stroke
+				(width 0.1524)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "bb4b3b0c-a13c-5256-858c-1b7dd468e334")
+		)
+		(fp_circle
+			(center -1 1.019)
+			(end -0.8999 1.019)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "b18e8f66-c66c-551e-a709-906fb456a55c")
+		)
+		(pad
+			"6"
+			smd
+			rect
+			(at 1 -0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "f189316b-b393-5b8a-959d-7e352cef4b7c")
+		)
+		(pad
+			"7"
+			smd
+			rect
+			(at 0.5001 -0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "57da86d5-e8ba-5fc5-bf29-07964ab3a9e8")
+		)
+		(pad
+			"8"
+			smd
+			rect
+			(at 0 -0.4)
+			(size 0.399999 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 180 "GND")
+			(uuid "f092e1f0-e21f-5987-a0b0-0ec8170dd90c")
+		)
+		(pad
+			"9"
+			smd
+			rect
+			(at -0.4999 -0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "8728840f-07ff-5a6a-a81f-853062b36dff")
+		)
+		(pad
+			"10"
+			smd
+			rect
+			(at -1 -0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "296247db-4b23-5dcd-8203-5e6dc164f34d")
+		)
+		(pad
+			"5"
+			smd
+			rect
+			(at 1 0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "5b3f054d-d78c-50c7-aab1-9088ebe6e436")
+		)
+		(pad
+			"4"
+			smd
+			rect
+			(at 0.5001 0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "244dfd72-062e-5a59-b486-7f59e29db33e")
+		)
+		(pad
+			"3"
+			smd
+			rect
+			(at 0 0.4)
+			(size 0.399999 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 180 "GND")
+			(uuid "2e629f34-0577-5821-acbd-d6f971f3687e")
+		)
+		(pad
+			"2"
+			smd
+			rect
+			(at -0.4999 0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 105 "CAM_CLK_N")
+			(uuid "d604df64-4fdf-5c91-878c-62c82a6273b0")
+		)
+		(pad
+			"1"
+			smd
+			rect
+			(at -1 0.4)
+			(size 0.2 0.564998)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 106 "CAM_CLK_P")
+			(uuid "3e4ba82d-0290-5c47-abe0-0cf826b1e816")
+		)
+		(model
+			"${KIPRJMOD}/../parts/TPD4E02B04DQAR/TPD4E02B04DQAR.wrl"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 270)
+			)
+		)
+		(uuid "69729617-b024-5e5d-9a2f-ff1e8ae3ab04")
+	)
+	(footprint
 		"1C208000BC0R:1C208000BC0R"
 		(version 20240108)
 		(generator "schgen_part_gen")

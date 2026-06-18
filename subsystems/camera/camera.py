@@ -90,13 +90,16 @@ EXPECT_CTRL = "host camera-control bank (3.3 V logic)"
 DRAWS_NOTE = "RPi camera module budget (V2/IMX219 typ ~250 mA incl. I2C pull-ups)"
 DRAWS_A = 0.300
 
-# (pair, P-side FFC pin, N-side FFC pin, termination ref) — FFC pin n = RPi pin n
-# (note: N before P on the FFC). Abstract CSI lane names; the termination refs +
-# pin numbers + termination value are the faithful reference design.
+# (pair, P-side FFC pin, N-side FFC pin, termination ref, ESD array ref, P-IO,
+# N-IO) — FFC pin n = RPi pin n (note: N before P on the FFC). The ESD columns
+# map each CSI line to a low-cap TI TPD4E02B04DQAR channel (4-ch arrays): U1
+# covers D0+D1 (4 ch), U2 covers CLK (IO1/IO2; IO3/IO4 spare). Abstract CSI lane
+# names; the termination refs + pin numbers + termination value are the faithful
+# reference design.
 PAIRS = (
-    ("CSI_D0", "3", "2", "R1"),
-    ("CSI_D1", "6", "5", "R2"),
-    ("CSI_CLK", "9", "8", "R3"),
+    ("CSI_D0", "3", "2", "R1", "U1", "IO1", "IO2"),
+    ("CSI_D1", "6", "5", "R2", "U1", "IO3", "IO4"),
+    ("CSI_CLK", "9", "8", "R3", "U2", "IO1", "IO2"),
 )
 
 
@@ -141,13 +144,28 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     # the bare port), so it is sourced from meta["expects"] for the P-side and
     # applied reciprocally to N by port_type(); a project supplies the real
     # destination (else the generic EXPECT_CSI default for standalone use).
-    for name, p_pin, n_pin, term in PAIRS:
+    # low-cap MIPI CSI ESD (user-requested, 2026-06-18): two TI TPD4E02B04DQAR
+    # 4-ch arrays (LCSC C106794, 0.2 pF/line typ << the D-PHY budget, 8 kV
+    # contact / IEC 61000-4-2 — the SAME part hdmi_rx uses on TMDS) shunt-clamp
+    # the 6 CSI D-PHY lines jack -> host. DC-coupled shunt TAPS, not series: each
+    # ESD IOn is just added to the existing CSI port net, so the netlist proves
+    # {J1.pin, term, U.IOn} per line. GND-referenced (no VCC) -> the clamp is
+    # valid even when the gated +VDD_CAM is off and cannot back-power it (LAW 0).
+    c.use_part("TPD4E02B04DQAR", ref="U1")
+    c.use_part("TPD4E02B04DQAR", ref="U2")
+    for name, p_pin, n_pin, term, esd, io_p, io_n in PAIRS:
         c.part(term, "Device:R", "100R", R0603, LCSC="C22775")
-        c.port(f"{name}_P", f"J1.{p_pin}", f"{term}.1")
-        c.port(f"{name}_N", f"J1.{n_pin}", f"{term}.2")
+        c.port(f"{name}_P", f"J1.{p_pin}", f"{term}.1", f"{esd}.{io_p}")
+        c.port(f"{name}_N", f"J1.{n_pin}", f"{term}.2", f"{esd}.{io_n}")
         c.port_type(f"{name}_P", kind="diff_pair", pair_with=f"{name}_N",
                     impedance=100,
                     expect=meta.expects.get(f"{name}_P", EXPECT_CSI))
+    c.net("GND", "U1.GND", "U2.GND")     # both GND pads (3, 8) per array
+    # spare pads by NUMBER (the 'NC' name spans 4 USON-10 pads 6/7/9/10): U1's
+    # four NC pads; U2 also leaves IO3 (pad 4) + IO4 (pad 5) unused (CLK uses
+    # only IO1/IO2) plus its four NC pads.
+    c.nc("U1.6", "U1.7", "U1.9", "U1.10")
+    c.nc("U2.4", "U2.5", "U2.6", "U2.7", "U2.9", "U2.10")
 
     # ---- control: camera I2C + enable/LED (3.3 V logic) --------------------
     c.part("R4", "Device:R", "4k7", R0603, LCSC="C23162")
