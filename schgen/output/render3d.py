@@ -67,6 +67,14 @@ def render(pcb: Path, out_dir: Path, quality: str = "high",
     # resolves them (the GUI sets KIPRJMOD itself).
     kiprjmod = str(pcb.resolve().parent)
     out_dir.mkdir(parents=True, exist_ok=True)
+    # kicad-cli opens the PROJECT to render and rewrites .kicad_pro into KiCad's
+    # full expanded schema (adds 3dviewports/ipc2581/boards, drops schgen's
+    # meta/erc blocks) — silently dirtying the tracked, schgen-emitted project
+    # file. Snapshot it and restore byte-for-byte afterwards so a render never
+    # mutates a source artifact (the .kicad_pro stays exactly what `schgen board`
+    # wrote; only the render PNGs change).
+    pro = pcb.with_suffix(".kicad_pro")
+    pro_snapshot = pro.read_bytes() if pro.exists() else None
     # top + bottom (so the BOTTOM-side passives — incl. the under-SoM rail
     # decoupling — are actually inspectable, LAW 5/6) + a perspective hero view.
     views = (("top", ["--side", "top"]),
@@ -89,6 +97,9 @@ def render(pcb: Path, out_dir: Path, quality: str = "high",
                       f"{(r.stderr or r.stdout)[-200:]}")
         except Exception as exc:  # noqa: BLE001
             print(f"render3d: {name} view error: {exc}")
+    # restore the schgen-emitted project file kicad-cli clobbered (see above)
+    if pro_snapshot is not None and pro.read_bytes() != pro_snapshot:
+        pro.write_bytes(pro_snapshot)
     if written:
         print(f"3D RENDERS: {len(written)} view(s) -> "
               f"{', '.join(str(p) for p in written)} (VISUAL-verify: LAW 1)")
