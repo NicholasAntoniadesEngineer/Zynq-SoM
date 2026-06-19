@@ -623,8 +623,8 @@
 		)
 	)
 	(gr_line
-		(start 85 79)
-		(end 135 79)
+		(start 84.25 78.37)
+		(end 135.75 78.37)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -633,8 +633,8 @@
 		(uuid "f1baa6dc-3505-540a-a9dd-e066193b07ae")
 	)
 	(gr_line
-		(start 135 79)
-		(end 135 121)
+		(start 135.75 78.37)
+		(end 135.75 121.63)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -643,8 +643,8 @@
 		(uuid "fe341f19-f5fd-5653-8ea5-6969d0cf5968")
 	)
 	(gr_line
-		(start 135 121)
-		(end 85 121)
+		(start 135.75 121.63)
+		(end 84.25 121.63)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -653,8 +653,8 @@
 		(uuid "851d0376-7ff5-5988-82e6-8635b7eb13ac")
 	)
 	(gr_line
-		(start 85 121)
-		(end 85 79)
+		(start 84.25 121.63)
+		(end 84.25 78.37)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -663,8 +663,8 @@
 		(uuid "c1ce3fef-7b5b-54fb-9035-18a98778512c")
 	)
 	(gr_line
-		(start 85 82)
-		(end 88 79)
+		(start 84.25 81.37)
+		(end 87.25 78.37)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -674,7 +674,7 @@
 	)
 	(gr_text
 		"Zynq SoM"
-		(at 86 77.8 0)
+		(at 85.25 77.17 0)
 		(layer "F.SilkS")
 		(uuid "510edfe8-8b34-55f1-b44f-61a7a2295ffb")
 		(effects

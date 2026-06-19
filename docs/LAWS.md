@@ -117,13 +117,17 @@ layout engineer:
   packer reserves this gap beside any wide-overmold cable connector — adjacency
   with the default tight clearance is WRONG for these parts.
 
-- **A module / mezzanine / display footprint is a KEEPOUT STENCIL.** The area a
-  plugged-in module overhangs (the SoM on its DF40s; a display over its FFC; any
-  board-to-board mezzanine) is reserved: ONLY low-profile passives shorter than
-  the module's standoff may sit beneath it. NO connector, IC, button, switch,
-  tall part, or test point under a module body -- the module physically covers
-  them. Passives there are GOOD (they use otherwise-dead space); anything else is
-  wrong.
+- **A module / mezzanine / display footprint is a KEEPOUT STENCIL — and the
+  carrier TOP under it is a HARDER keepout than the bottom.** The area a plugged-in
+  module overhangs (the SoM on its DF40s; a display over its FFC; any board-to-board
+  mezzanine) is reserved. NO connector, IC, button, switch, tall part, or test point
+  under the module body, top OR bottom. The carrier BOTTOM under the module MAY carry
+  low-profile passives (opposite face — they use otherwise-dead space; GOOD). The
+  carrier TOP under the module is a keepout for EVERYTHING except the mezzanine
+  receptacles themselves: the module's OWN bottom-side components sit in the standoff
+  gap, so a carrier top-side part there — even a passive — collides with the module
+  and stops it mating. The keepout/outline is drawn a few % LARGER than the bare
+  connector span to reserve a mating-clearance margin around the module.
 
 - **Controls and serviceable parts must be reachable.** A button / switch must be
   pressable (top side, accessible, grouped with its peers); a coin cell / fuse

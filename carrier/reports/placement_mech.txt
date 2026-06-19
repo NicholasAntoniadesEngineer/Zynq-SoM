@@ -1,5 +1,5 @@
 LAW-6 PLACEMENT (mechanical) GATE: PASS (board 170 x 150 mm)
-  SoM module-body core: (85.0,79.0)..(135.0,121.0) mm — passives-only
+  SoM module-body core: (84.2,78.4)..(135.8,121.6) mm — bottom-passives-only, TOP keepout
   off-board connectors: 14 (0 mis-placed)
     OK  J12001    HDMI-019S        edge=S rot=  0 mouth->(0, 1) flush=-2.8mm
     OK  J14001    HDMI-019S        edge=S rot=  0 mouth->(0, 1) flush=-2.8mm
@@ -17,3 +17,4 @@ LAW-6 PLACEMENT (mechanical) GATE: PASS (board 170 x 150 mm)
     OK  J8001     SFW15R-1STE1LF   edge=W rot=270 mouth->(-1, 0) flush=1.5mm
   non-passive parts under SoM core: 0
   controls under SoM core: 0
+  carrier TOP parts under SoM core (keepout): 0

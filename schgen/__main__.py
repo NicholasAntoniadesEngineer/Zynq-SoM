@@ -1020,12 +1020,15 @@ def cmd_board(args: argparse.Namespace) -> int:
                   f"({mg.n_connectors} off-board connectors, "
                   f"{len(mg.bad_connectors)} mis-placed; "
                   f"{len(mg.under_som)} non-passive under SoM; "
-                  f"{len(mg.controls_under_som)} controls under SoM "
+                  f"{len(mg.controls_under_som)} controls under SoM; "
+                  f"{len(mg.top_under_som)} TOP-side under SoM "
                   f"-> {rep_dir / 'placement_mech.txt'})")
             for _b in mg.bad_connectors:
                 print(f"  PLACEMENT CONNECTOR: {_b}")
             for _u in mg.under_som:
                 print(f"  PLACEMENT UNDER-SoM: {_u}")
+            for _t in mg.top_under_som:
+                print(f"  PLACEMENT TOP-UNDER-SoM: {_t}")
             ok_all = ok_all and mg.ok
         else:
             print("PLACEMENT (LAW 6): FAIL — gate did not run")

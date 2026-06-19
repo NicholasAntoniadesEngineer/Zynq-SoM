@@ -102,6 +102,8 @@ GRID = 1.27             # placement snap grid (mm)
 PERIM = 3.0              # perimeter keepout ring (no zone touches the edge)
 MH_KEEPOUT = 5.0         # extra inset reserving the corner mounting-hole pads
 SOM_HALO_PCB = 6.0       # routing/escape halo reserved around the SoM body
+SOM_CORE_CLEARANCE = 0.03  # grow the SoM-body silk outline + keepout 3% (1.5% per
+#                            side) past the bare DF40 span for mating clearance
 EDGE_BAND_PCB = 10.0     # nominal connector band each side (board-aspect seed)
 ZONE_FILL = 0.58         # zone-area packing efficiency for the seed board size
 ZONE_STEP = 2.54         # zone-placement raster scan step (mm)
@@ -1364,10 +1366,17 @@ def build_model(two_side: bool = True) -> PcbModel:
 
     kx0, ky0, kx1, ky1 = keepout
     # SoM module-body CORE (board page frame, NO halo) — the rectangle the
-    # plugged-in SoM physically covers. The placement_mech gate forbids any
-    # non-passive/test-point/tall part inside it (LAW 6).
-    som_core = (ORIGIN_X + plan.som_x, ORIGIN_Y + plan.som_y,
-                ORIGIN_X + plan.som_x + som.w, ORIGIN_Y + plan.som_y + som.h)
+    # plugged-in SoM physically covers. Grown SOM_CORE_CLEARANCE (3%, 1.5% each
+    # side, centred) beyond the bare DF40 body span so the silk outline + the
+    # keepout reserve a mating-clearance margin around the module (user request).
+    # The placement_mech gate forbids any non-passive/test-point/tall part inside
+    # it AND any carrier TOP-side part (the SoM's own bottom components occupy the
+    # standoff gap) — LAW 6.
+    _ccx = som.w * SOM_CORE_CLEARANCE / 2
+    _ccy = som.h * SOM_CORE_CLEARANCE / 2
+    som_core = (ORIGIN_X + plan.som_x - _ccx, ORIGIN_Y + plan.som_y - _ccy,
+                ORIGIN_X + plan.som_x + som.w + _ccx,
+                ORIGIN_Y + plan.som_y + som.h + _ccy)
     return PcbModel(
         board_w=board_w, board_h=board_h, insts=insts,
         net_numbers=net_numbers, netclass_of=netclass_of, classes=classes,

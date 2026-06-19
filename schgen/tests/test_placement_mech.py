@@ -63,16 +63,17 @@ def _passing_model():
     sb = pcb._rot_bbox(pcb._footprint_bbox(
         pcb.resolve_mod("TF-01A:TF-01A")), r_sd)
     j_sd = _inst("J2", "TF-01A", bx0 + 60, by1 - sb[3] - 0.1, r_sd)
-    # a passive UNDER the SoM core (allowed) + the SoM core rectangle.
+    # a BOTTOM-side passive UNDER the SoM core (allowed — opposite face from the
+    # SoM) + the SoM core rectangle. A TOP-side part here is forbidden (the SoM's
+    # own bottom components sit in the standoff gap — see the top-keepout mutant).
     som_core = (bx0 + 40, by0 + 30, bx0 + 60, by0 + 50)
-    # use a real resistor footprint for the passive
     rmod = pcb.resolve_mod("Resistor_SMD:R_0603_1608Metric")
     r_under = FootprintInst(ref="R5", value="10k",
                             footprint="Resistor_SMD:R_0603_1608Metric",
                             x=(som_core[0] + som_core[2]) / 2,
                             y=(som_core[1] + som_core[3]) / 2,
                             rotation=0.0, pad_nets={}, mod_path=rmod,
-                            sheet="t", side="top")
+                            sheet="t", side="bottom")
     insts = [j_usbc, j_sd, r_under]
     return PcbModel(board_w=W, board_h=H, insts=insts, net_numbers={"": 0},
                     netclass_of={}, classes={}, placed=len(insts), deferred=[],
@@ -109,6 +110,19 @@ def test_mutant_connector_inward_facing_fails():
     assert not res.ok, "inward-facing edge connector must FAIL the gate"
     assert any("J1" in b and "inward" in b for b in res.bad_connectors), \
         res.summary()
+
+
+def test_mutant_top_passive_under_som_fails():
+    """A carrier TOP-side passive under the SoM body collides with the SoM's own
+    bottom-side components in the standoff gap and stops it mating. The gate MUST
+    fail it as TOP-under-SoM — even though the SAME passive on the BOTTOM is fine."""
+    model = _passing_model()
+    r = next(i for i in model.insts if i.ref == "R5")
+    assert pm.check(model).ok, "baseline (bottom passive) must pass"
+    r.side = "top"                       # flip the allowed bottom passive to top
+    res = pm.check(model)
+    assert not res.ok, "a TOP-side passive under the SoM must FAIL the gate"
+    assert any("R5" in t for t in res.top_under_som), res.summary()
 
 
 def test_mutant_ic_under_som_fails():

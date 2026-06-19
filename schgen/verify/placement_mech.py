@@ -88,6 +88,7 @@ class MechResult:
     bad_connectors: list[str] = field(default_factory=list)
     under_som: list[str] = field(default_factory=list)
     controls_under_som: list[str] = field(default_factory=list)
+    top_under_som: list[str] = field(default_factory=list)
     som_core: tuple | None = None
 
     def summary(self) -> str:
@@ -96,7 +97,7 @@ class MechResult:
         sc = self.som_core
         if sc:
             L.append(f"  SoM module-body core: ({sc[0]:.1f},{sc[1]:.1f}).."
-                     f"({sc[2]:.1f},{sc[3]:.1f}) mm — passives-only")
+                     f"({sc[2]:.1f},{sc[3]:.1f}) mm — bottom-passives-only, TOP keepout")
         L.append(f"  off-board connectors: {self.n_connectors} "
                  f"({len(self.bad_connectors)} mis-placed)")
         for ref, mpn, edge, rot, face_dir, flush, ok in self.connectors:
@@ -111,6 +112,10 @@ class MechResult:
         L.append(f"  controls under SoM core: {len(self.controls_under_som)}")
         for c in self.controls_under_som:
             L.append(f"    CONTROL-UNDER-SoM {c}")
+        L.append(f"  carrier TOP parts under SoM core (keepout): "
+                 f"{len(self.top_under_som)}")
+        for t in self.top_under_som:
+            L.append(f"    TOP-UNDER-SoM {t}")
         return "\n".join(L)
 
 
@@ -171,7 +176,17 @@ def check(model: PcbModel) -> MechResult:
                 #                   interface — they MUST sit under the module
                 #                   body (the SoM plugs onto them). Not a defect.
             if _is_passive_under_som(inst.ref):
-                continue          # GOOD: a low-profile passive uses dead space
+                # A low-profile passive may sit under the SoM — but only on the
+                # BOTTOM (opposite face). LAW 6: the carrier TOP under the module
+                # is a keepout — the SoM's own bottom-side components occupy the
+                # standoff gap, so a carrier top-side passive there collides with
+                # the module and stops it mating.
+                if inst.side == "top":
+                    res.top_under_som.append(
+                        f"{inst.ref} ({inst.sheet}) {inst.value} [TOP]: courtyard "
+                        f"({ct[0]:.1f},{ct[1]:.1f})..({ct[2]:.1f},{ct[3]:.1f}) "
+                        f"overlaps SoM core — carrier TOP is keepout under the module")
+                continue          # bottom passive = GOOD (uses dead space)
             row = (f"{inst.ref} ({inst.sheet}) {inst.value}: courtyard "
                    f"({ct[0]:.1f},{ct[1]:.1f})..({ct[2]:.1f},{ct[3]:.1f}) "
                    f"overlaps SoM core by {ov:.1f} mm^2")
@@ -180,5 +195,5 @@ def check(model: PcbModel) -> MechResult:
                 res.controls_under_som.append(row)
 
     res.ok = (not res.bad_connectors and not res.under_som
-              and not res.controls_under_som)
+              and not res.controls_under_som and not res.top_under_som)
     return res
