@@ -398,6 +398,26 @@ ZONE_PAD = 0.3            # padding inside a subsystem zone around its parts
 # spreads them down the vertical edge as-is.
 EDGE_ZONE_ASPECT = 2.2
 
+# LEVER L1: INTERIOR subsystems that pack TALLER than the SoM side-band (the
+# interior strip beside the centered SoM keepout, ~39.5 mm deep) force the board
+# WIDE because the interior packer (_Occupancy.place_near) does NOT rotate a
+# zone — each over-tall column eats a full board-height slot and the free area
+# fragments below ~165 mm width (PACK_NOFIT). Two complementary fixes make these
+# zones lie FLAT in the band so the board can narrow:
+#   (1) a wide-shallow aspect (like EDGE_ZONE_ASPECT) for any interior zone whose
+#       SHELF-packable parts are all short enough that re-flowing them wider drops
+#       the zone height under the band — this re-flows bringup_rails (50.6->~28)
+#       and user_io (41.8->~22) without touching any part; and
+#   (2) a 90-deg BLOCK rotation for a zone whose SINGLE TALLEST part is itself
+#       taller than the band (fmc: a rigid 2x40 header J11001 is 51.8 mm, so no
+#       re-flow can shrink the zone height) — rotating the whole packed zone lays
+#       that header flat (zone 15.5x52.9 -> 52.9x15.5). The part is NOT redrawn;
+#       only the BLOCK is turned, exactly as a hand layout would orient the header
+#       along the band (NEVER-redraw-parts memo honoured).
+INTERIOR_ZONE_ASPECT = 2.0       # wide-shallow target for over-tall interior zones
+SOM_SIDE_BAND_MM = 39.5          # depth of the interior strip beside the SoM keepout
+INTERIOR_ZONE_BAND_TARGET = 32.0 # re-flow/rotate an interior zone to <= this height
+
 # ---- LAW 6: off-board connector ORIENTATION ---------------------------------------
 # Every connector that mates with an external cable/plug/card MUST sit on a board
 # EDGE with its mating face (the slot/mouth/cable-exit) pointing OFF-BOARD, so the
@@ -479,6 +499,17 @@ def _rot_bbox(bbox: tuple[float, float, float, float],
     if r == 270:
         return (by0, -bx1, by1, -bx0)
     return bbox
+
+
+def _rot_bbox_cw(bbox: tuple[float, float, float, float],
+                 rot: float) -> tuple[float, float, float, float]:
+    """The footprint's local bbox after a 0/90/180/270 placement rotation in
+    KiCad's TRUE convention (CLOCKWISE on the +y-DOWN page — the same sign
+    _rot_pad_bbox uses, verified against kicad-cli DRC). Equals _rot_bbox of the
+    NEGATED angle, so it agrees with _rot_bbox for the symmetric edge connectors
+    (CW==CCW there) but is correct for an asymmetric rotated part (the LEVER-L1
+    fmc 2x40 header) whose CW and CCW boxes genuinely differ."""
+    return _rot_bbox(bbox, (360.0 - (int(round(rot)) % 360)) % 360)
 
 
 def _rot_pad_bbox(mod_path: Path, rotation: float,
@@ -757,6 +788,8 @@ class ZoneGeom:
     deferred: list[str]
     conn_rot: dict[str, float] = field(default_factory=dict)  # bref -> LAW-6 rot
     conn_edge: dict[str, str] = field(default_factory=dict)   # bref -> edge N/E/S/W
+    zone_extra_rot: dict[str, float] = field(default_factory=dict)  # bref -> +rot
+    #                                          from a LEVER-L1 90-deg zone rotation
 
 
 def _eff_bbox_for(bbox: tuple[float, float, float, float],
@@ -835,6 +868,43 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     b_off, bw, bh = _shelf_pack(items(sr["bottom"], "bottom"),
                                 target_w, blockers)
     return t_off, b_off, round(max(tw, bw), 4), round(max(th, bh), 4)
+
+
+def _rotate_zone_90(t_off: dict[str, tuple[float, float]],
+                    b_off: dict[str, tuple[float, float]],
+                    bbox_of: dict, side_of: dict[str, str],
+                    base_rot: dict[str, float],
+                    zw: float, zh: float
+                    ) -> tuple[dict[str, tuple[float, float]],
+                               dict[str, tuple[float, float]],
+                               dict[str, float], float, float]:
+    """Turn an entire packed zone 90 deg about its local origin so a zone that
+    packed TALL now lies FLAT (its (w, h) -> (h, w)). The part footprints are NOT
+    redrawn: each gains +90 deg of placement rotation and its origin offset is
+    transformed so its rotated courtyard lands in the new [0, zh] x [0, zw] box —
+    i.e. the whole block is turned, exactly as a hand layout orients a rigid 2x40
+    header along the side-band (NEVER-redraw-parts memo). Returns the rotated
+    (t_off, b_off, extra_rot, new_w, new_h) where extra_rot[ref] = +90 must be
+    ADDED to that part's placement rotation in build_model.
+
+    Geometry — KiCad CONVENTION (the same CLOCKWISE sign _rot_pad_bbox already
+    uses, page +y DOWN): a placement rotation A in `(at x y A)` turns the footprint
+    so a local point (x, y) maps under +90 to (y, -x) (verified against kicad-cli
+    DRC: a 2x40 header at +90 extends in +x). The zone box [0, zw] x [0, zh] then
+    lands in x in [0, zh], y in [-zw, 0], so it is shifted +zw in Y to re-anchor to
+    [0, zh] x [0, zw]. Each part's offset is the zone-local position of its
+    footprint ORIGIN, which transforms the SAME way: (dx, dy) -> (dy, zw - dx).
+    Using KiCad's true sign here (NOT the math-CCW _rot_bbox used elsewhere for the
+    symmetric edge connectors, where CW==CCW) is what lands the emitted header
+    inside the reserved block instead of off its +x side."""
+    extra_rot: dict[str, float] = {}
+    new_t: dict[str, tuple[float, float]] = {}
+    new_b: dict[str, tuple[float, float]] = {}
+    for off_in, off_out in ((t_off, new_t), (b_off, new_b)):
+        for ref, (dx, dy) in off_in.items():
+            off_out[ref] = (round(dy, 4), round(zw - dx, 4))
+            extra_rot[ref] = 90.0
+    return new_t, new_b, extra_rot, round(zh, 4), round(zw, 4)
 
 
 # how close (mm) a connector courtyard outer face must sit to the board edge to
@@ -1096,15 +1166,40 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
     zone_box: dict[str, tuple[float, float]] = {}
     top_off: dict[str, dict[str, tuple[float, float]]] = {}
     bot_off: dict[str, dict[str, tuple[float, float]]] = {}
+    zone_extra_rot: dict[str, float] = {}
     for sheet in sorted(refs_by_sheet):
         # EDGE-connector subsystems pack WIDE + SHALLOW (aspect > 1) so their
         # block sits behind the edge without eating deep into the board; INTERIOR
         # subsystems stay squarish.
-        aspect = EDGE_ZONE_ASPECT if sheet in edge_sheets else 1.0
+        is_edge = sheet in edge_sheets
+        aspect = EDGE_ZONE_ASPECT if is_edge else 1.0
         t_off, b_off, zw, zh = _pack_one_zone(
             refs_by_sheet[sheet], side_of, bbox_of, resolvable, aspect,
             conn_rot=sheet_conn_rot.get(sheet),
             outer_dir=sheet_outer.get(sheet))
+
+        # LEVER L1: an INTERIOR zone packed TALLER than the SoM side-band forces the
+        # board wide (the interior packer does not rotate). Lay it flat in the band
+        # WITHOUT redrawing any part: first try re-flowing it wide-and-shallow (an
+        # INTERIOR_ZONE_ASPECT shelf re-pack — fixes zones of small parts); if its
+        # SINGLE tallest part is itself taller than the band so no re-flow can help
+        # (a rigid 2x40 header), turn the whole BLOCK 90 deg instead. Edge zones are
+        # already seated flush on their edge and must not be touched here.
+        if (not is_edge) and zh > INTERIOR_ZONE_BAND_TARGET:
+            # (1) wide-shallow re-flow of the SAME parts (no rotation).
+            rt_off, rb_off, rzw, rzh = _pack_one_zone(
+                refs_by_sheet[sheet], side_of, bbox_of, resolvable,
+                INTERIOR_ZONE_ASPECT)
+            if rzh <= INTERIOR_ZONE_BAND_TARGET and rzh < zh:
+                t_off, b_off, zw, zh = rt_off, rb_off, rzw, rzh
+            elif zw <= INTERIOR_ZONE_BAND_TARGET and zw < zh:
+                # (2) the zone is tall because a RIGID part is tall and re-flow
+                # cannot shrink the height; rotate the whole packed block 90 deg so
+                # it lies flat (its narrow width becomes the depth into the band).
+                t_off, b_off, er, zw, zh = _rotate_zone_90(
+                    t_off, b_off, bbox_of, side_of, {}, zw, zh)
+                zone_extra_rot.update(er)
+
         top_off[sheet] = t_off
         bot_off[sheet] = b_off
         zone_box[sheet] = (zw, zh)
@@ -1112,7 +1207,8 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
     return ZoneGeom(zone_box=zone_box, top_off=top_off, bot_off=bot_off,
                     side_of=side_of, bbox_of=bbox_of, resolvable=resolvable,
                     refs_by_sheet=refs_by_sheet, mh_refs=sorted(mh_refs),
-                    deferred=deferred, conn_rot=conn_rot, conn_edge=conn_edge)
+                    deferred=deferred, conn_rot=conn_rot, conn_edge=conn_edge,
+                    zone_extra_rot=zone_extra_rot)
 
 
 # ---- the model build -------------------------------------------------------------
@@ -1216,6 +1312,15 @@ def build_model(two_side: bool = True) -> PcbModel:
     for ref, rot in zg.conn_rot.items():
         if ref in resolvable:
             fixed_rot[ref] = rot
+
+    # LEVER L1: a 90-deg INTERIOR-zone rotation (subsystem_zone_geometry) turned an
+    # over-tall block flat in the SoM side-band; ADD that +rot to each of its parts'
+    # placement rotation so the footprint lands where the rotated zone offsets
+    # (top_off/bot_off) expect it. These zones carry no off-board connector, so this
+    # never collides with the LAW-6 conn_rot above.
+    for ref, extra in zg.zone_extra_rot.items():
+        if ref in resolvable:
+            fixed_rot[ref] = (fixed_rot.get(ref, 0.0) + extra) % 360.0
 
     # ---- STEP 1: zone geometry comes from the SHARED packer (above) ----------
     # zone_box / top_off / bot_off already hold every subsystem's REAL 2-sided
@@ -1328,8 +1433,15 @@ def build_model(two_side: bool = True) -> PcbModel:
 
         def _eff_box(ref: str, px: float, py: float
                      ) -> tuple[float, float, float, float]:
-            ex0, ey0, ex1, ey1 = _eff_bbox_for(bbox_of[ref],
-                                               side_of.get(ref, "top"))
+            # apply the part's placement ROTATION (a LEVER-L1 zone rotation turns
+            # interior passives 90 deg) BEFORE the F->B side mirror, so the L4
+            # collision/dispersion bound matches the courtyard the part really
+            # occupies — otherwise a rotated zone's bottom passives could be
+            # bound by their un-rotated box and the move clip a neighbour. Uses
+            # KiCad's CLOCKWISE sign (_rot_bbox_cw) so the bound matches where the
+            # emitted footprint really lands (the same sign _rot_pad_bbox uses).
+            rb = _rot_bbox_cw(bbox_of[ref], fixed_rot.get(ref, 0.0))
+            ex0, ey0, ex1, ey1 = _eff_bbox_for(rb, side_of.get(ref, "top"))
             return (px + ex0, py + ey0, px + ex1, py + ey1)
 
         def _halo(b: tuple[float, float, float, float], m: float
@@ -1532,11 +1644,13 @@ def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
         px, py = float(at[1]), float(at[2])
         if inst.side == "bottom":
             px = -px                       # F->B mirror about the origin X axis
-        # rotate about origin (KiCad +rot is counter-clockwise on screen,
-        # but for a symmetric airwire endpoint the sign is immaterial; use the
-        # standard math rotation for determinism)
-        rx = px * cs - py * sn
-        ry = px * sn + py * cs
+        # rotate about origin in KiCad's TRUE (CLOCKWISE, +y-DOWN page) sign — the
+        # SAME matrix _rot_pad_bbox uses (cx = px·cos + py·sin, cy = -px·sin +
+        # py·cos). For the symmetric parts this equals the old math-CCW form, but
+        # for an asymmetric rotated part (the LEVER-L1 fmc header) the CCW form
+        # mirrored the pads ~tens of mm and mis-placed the airwire endpoints.
+        rx = px * cs + py * sn
+        ry = -px * sn + py * cs
         _num, nname = inst.pad_nets.get(name, (0, ""))
         out.append((name, round(inst.x + rx, 3), round(inst.y + ry, 3), nname))
     return out
@@ -1549,7 +1663,7 @@ def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
     bx0, by0, bx1, by1 = _footprint_bbox(inst.mod_path)
     if inst.side == "bottom":
         bx0, bx1 = -bx1, -bx0
-    rb = _rot_bbox((bx0, by0, bx1, by1), inst.rotation or 0.0)
+    rb = _rot_bbox_cw((bx0, by0, bx1, by1), inst.rotation or 0.0)
     return (round(inst.x + rb[0], 3), round(inst.y + rb[1], 3),
             round(inst.x + rb[2], 3), round(inst.y + rb[3], 3))
 
