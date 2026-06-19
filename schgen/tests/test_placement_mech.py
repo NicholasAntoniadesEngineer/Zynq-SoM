@@ -99,6 +99,22 @@ def test_mutant_connector_interior_fails():
     assert any("J1" in b for b in res.bad_connectors), res.summary()
 
 
+def test_mutant_connector_recessed_off_edge_fails():
+    """A connector left RECESSED ~1 mm inboard of the edge (its body no longer
+    reaches the edge, so the cable's overmold hits the board first) MUST FAIL the
+    strict edge gate — even though 1 mm passed the OLD slack 1.5 mm threshold. The
+    law is "at the very edge": only the pad-clearance floor (~0.4 mm) or an overhang
+    is allowed."""
+    model = _passing_model()
+    assert pm.check(model).ok, "baseline (flush) must pass"
+    j = next(i for i in model.insts if i.ref == "J1")
+    j.y += 1.0            # slide the USB-C ~1 mm inboard of the N edge
+    res = pm.check(model)
+    assert not res.ok, "a connector recessed ~1mm off the edge must FAIL"
+    assert any("J1" in b and ("interior" in b or "recess" in b.lower()
+                              or "mm" in b) for b in res.bad_connectors), res.summary()
+
+
 def test_mutant_connector_inward_facing_fails():
     """Keep the USB-C on the N edge but rotate it 180 so its mouth faces INWARD
     (you cannot insert the cable). The gate MUST fail even though it is on-edge."""

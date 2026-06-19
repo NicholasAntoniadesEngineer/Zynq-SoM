@@ -917,10 +917,15 @@ def _rotate_zone_90(t_off: dict[str, tuple[float, float]],
 # count as "flush" (LAW 6 / placement_mech gate). The post-placement edge-snap
 # seats every off-board connector with its outer PAD at EDGE_PAD_CLEAR and its
 # mouth/shell reaching or overhanging the edge, so the courtyard outer face lands
-# at ~0.4 mm or NEGATIVE (overhang). TIGHTENED 9.0 -> 1.5: a connector left
-# recessed (the old ~2.4 mm inset that wouldn't mate — user complaint) now FAILS
-# the gate. Overhang (negative flush) passes; only an INBOARD recess fails.
-EDGE_FLUSH_MM = 1.5
+# at ~EDGE_PAD_CLEAR or NEGATIVE (overhang). The flush gate fails any connector
+# whose body courtyard is recessed more than EDGE_FLUSH_MM inboard of the edge.
+# TIGHTENED 9.0 -> 1.5 -> EDGE_PAD_CLEAR+0.2 (=0.6): a connector MUST reach the
+# very edge (user law). A pad-limited connector (its outer pad IS the mating face,
+# e.g. USB-C/QWIIC) can only reach EDGE_PAD_CLEAR (0.4 mm, the copper-edge-clearance
+# floor) — so the threshold is that floor + a hair, NOT the old slack 1.5/9.0 that
+# let a connector sit ~2.4 mm inboard and not mate. Overhang (negative flush)
+# passes; any recess beyond the pad-clearance floor FAILS the board.
+EDGE_FLUSH_MM = round(EDGE_PAD_CLEAR + 0.2, 3)   # 0.6 mm — "at the very edge" law
 
 
 def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,

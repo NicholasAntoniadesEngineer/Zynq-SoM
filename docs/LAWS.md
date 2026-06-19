@@ -92,14 +92,25 @@ layout engineer:
   axis-aligned) and seat it flush to the edge; the rest of its subsystem packs
   behind it, inward.
 
-- **At the ABSOLUTE edge — the mouth must reach the board edge.** "On the edge"
-  is not enough: the connector's outermost PAD seats at the copper-edge clearance
-  (~0.4 mm) so the shell / slot / mouth physically reaches or slightly OVERHANGS
-  the Edge.Cuts. A connector recessed even ~2 mm inboard cannot mate (the cable's
-  overmold hits the board first). The off-board test for "is this part on the
-  board" is judged on COPPER (pads), not the courtyard — an edge connector's
-  mating area (USB-C shell, SD slot, RJ45 jack, PMOD module outline) legitimately
-  overhangs the edge while its copper stays on-board.
+- **At the ABSOLUTE edge — the mouth must reach the board edge, and a HARD gate
+  enforces it.** "On the edge" is not enough: the post-placement edge-snap pushes
+  the connector's outermost PAD to the copper-edge-clearance floor (`EDGE_PAD_CLEAR`
+  ~0.4 mm, just above the `min_copper_edge_clearance` DRC of 0.3 mm) so the shell /
+  slot / mouth physically reaches or OVERHANGS the Edge.Cuts. A connector recessed
+  inboard cannot mate (the cable's overmold hits the board first). This is not a
+  matter of eyeballing the render: the `placement_mech` gate measures every
+  off-board connector's BODY (courtyard) outer face to its edge and HARD-FAILS the
+  board if it is recessed more than `EDGE_FLUSH_MM` (= `EDGE_PAD_CLEAR` + 0.2 ≈
+  0.6 mm — the pad-clearance floor plus a hair, NOT a slack inset). A pad-limited
+  connector whose outer pad IS its mating face (USB-C shell-ground pads, the QWIIC
+  SH contacts) can only reach the ~0.4 mm floor; a shell connector whose body
+  extends past its pads OVERHANGS (negative flush). Both pass; any genuine inboard
+  recess fails. The off-board "is this part on the board" test is judged on COPPER
+  (pads), not the courtyard — an edge connector's mating area (USB-C shell, SD slot,
+  RJ45 jack, PMOD outline) legitimately overhangs the edge while its copper stays
+  on-board. (Tightened after the user required connectors at the VERY edge to be a
+  programmatic law, not a per-connector eyeball — the old 1.5 mm threshold let a
+  connector sit recessed and still pass.)
 
 - **Mating-face direction is VERIFIED from geometry + the 3D model, never trusted
   from a hand table alone.** Which way a connector's mouth faces in its footprint
