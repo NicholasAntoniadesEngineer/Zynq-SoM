@@ -30980,6 +30980,7 @@
 		(property
 			"Reference"
 			"J12001"
+			(hide yes)
 			(at 0 -5.42 0)
 			(layer "F.SilkS")
 			(effects
@@ -31691,6 +31692,7 @@
 		(property
 			"Reference"
 			"J14001"
+			(hide yes)
 			(at 0 -5.42 0)
 			(layer "F.SilkS")
 			(effects
@@ -32402,6 +32404,7 @@
 		(property
 			"Reference"
 			"J15001"
+			(hide yes)
 			(at 0 -3.44 0)
 			(layer "F.SilkS")
 			(effects
@@ -33164,6 +33167,7 @@
 		(property
 			"Reference"
 			"J16001"
+			(hide yes)
 			(at 0 -7.28 0)
 			(layer "F.SilkS")
 			(effects
@@ -33574,6 +33578,7 @@
 		(property
 			"Reference"
 			"J17001"
+			(hide yes)
 			(at 0 -4.47 0)
 			(layer "F.SilkS")
 			(effects
@@ -34098,6 +34103,7 @@
 		(property
 			"Reference"
 			"J18001"
+			(hide yes)
 			(at 0 -3.27 0)
 			(layer "F.SilkS")
 			(effects
@@ -34438,6 +34444,7 @@
 		(property
 			"Reference"
 			"J18002"
+			(hide yes)
 			(at 0 -3.27 0)
 			(layer "F.SilkS")
 			(effects
@@ -34778,6 +34785,7 @@
 		(property
 			"Reference"
 			"J19001"
+			(hide yes)
 			(at 0 -3.27 0)
 			(layer "F.SilkS")
 			(effects
@@ -35118,6 +35126,7 @@
 		(property
 			"Reference"
 			"J2001"
+			(hide yes)
 			(at 0 -3.7 0)
 			(layer "F.SilkS")
 			(effects
@@ -35432,6 +35441,7 @@
 		(property
 			"Reference"
 			"J23001"
+			(hide yes)
 			(at 0 -8.5 0)
 			(layer "F.SilkS")
 			(effects
@@ -39546,6 +39556,7 @@
 		(property
 			"Reference"
 			"J29001"
+			(hide yes)
 			(at 0 -4.47 0)
 			(layer "F.SilkS")
 			(effects
@@ -40070,6 +40081,7 @@
 		(property
 			"Reference"
 			"J31001"
+			(hide yes)
 			(at 0 -4.47 0)
 			(layer "F.SilkS")
 			(effects
@@ -40594,6 +40606,7 @@
 		(property
 			"Reference"
 			"J32002"
+			(hide yes)
 			(at 0 -4.47 0)
 			(layer "F.SilkS")
 			(effects
@@ -41118,6 +41131,7 @@
 		(property
 			"Reference"
 			"J8001"
+			(hide yes)
 			(at 0 -3.05 0)
 			(layer "F.SilkS")
 			(effects
@@ -108473,5 +108487,173 @@
 			)
 		)
 		(uuid "024b7675-0d84-5cd6-a45d-0ee9e0d3e409")
+	)
+	(gr_text
+		"HDMI RX"
+		(at 44.11 150.8 0)
+		(layer "F.SilkS")
+		(uuid "5e649cb9-2ae8-588b-9461-1764c7ab7857")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"HDMI TX"
+		(at 80.94 150.8 0)
+		(layer "F.SilkS")
+		(uuid "cb8f3058-6136-57ad-b896-e500c082ded8")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"LCD"
+		(at 32.336 100.98 0)
+		(layer "F.SilkS")
+		(uuid "39fa2a44-8ba2-5f7e-b5c6-d88a8a5f635f")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"microSD"
+		(at 74.95 39.402 0)
+		(layer "F.SilkS")
+		(uuid "740f526f-5753-5530-a98b-4fd107d04103")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"PWR"
+		(at 91.835 33.698 0)
+		(layer "F.SilkS")
+		(uuid "55500cb8-7c5a-568a-8a96-44d84fdc1abc")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"PMOD0"
+		(at 121.45 155.482 0)
+		(layer "F.SilkS")
+		(uuid "21d77f18-b194-5fcd-abf3-f7de0a27a668")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"PMOD1"
+		(at 138.19 155.482 0)
+		(layer "F.SilkS")
+		(uuid "0990ad61-dad6-5314-9d17-2852124c0c5f")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"PMOD2"
+		(at 155.74 155.482 0)
+		(layer "F.SilkS")
+		(uuid "a7145e3b-995f-5405-926f-855464722530")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"QWIIC"
+		(at 165.3 100.27 0)
+		(layer "F.SilkS")
+		(uuid "48eb4d96-04a9-5915-b5fe-58de195d02cb")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"ETH"
+		(at 155.7 87.17 0)
+		(layer "F.SilkS")
+		(uuid "7dd29ee2-0a66-5e21-abd0-3b6fed1e00d2")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"JTAG"
+		(at 129.935 33.698 0)
+		(layer "F.SilkS")
+		(uuid "deae8864-5e09-52f0-82a8-0cec9077e468")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"UART"
+		(at 141.365 33.698 0)
+		(layer "F.SilkS")
+		(uuid "3710a257-e4f4-50e3-84e7-5197403d8d2b")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"USB OTG"
+		(at 114.695 33.698 0)
+		(layer "F.SilkS")
+		(uuid "d1431ed1-2f73-5c3c-9ddc-e41a5e217abe")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"CAM"
+		(at 32.4 75.72 0)
+		(layer "F.SilkS")
+		(uuid "3c71d39f-e04d-510e-9154-c28929064557")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
 	)
 )

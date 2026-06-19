@@ -1808,6 +1808,18 @@ def _embed_footprint(inst: FootprintInst, uid) -> list:
         if head == Sym("property") and len(node) > 2:
             if node[1] == "Reference":
                 node[2] = inst.ref
+                # OFF-BOARD CONNECTORS: hide the J-ref on silk — the human
+                # FUNCTION label (_connector_descriptors: PWR/JTAG/HDMI/...) is
+                # what the user reads on the board, and the ref clutters the only
+                # clear spot beside the connector. The ref stays in the footprint
+                # data (netlist/BOM), just not printed.
+                if inst.value in CONN_MATING_FACE:
+                    hb = next((x for x in node if isinstance(x, list) and x
+                               and x[0] == Sym("hide")), None)
+                    if hb is None:
+                        node.insert(3, [Sym("hide"), Sym("yes")])
+                    else:
+                        hb[1] = Sym("yes")
             elif node[1] == "Value":
                 node[2] = inst.value
             _restamp_uuid(node, uid(f"fp:{inst.ref}:prop:{prop_seq}"))
@@ -2058,6 +2070,76 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
     return out
 
 
+# Short, human silk descriptor per off-board connector SHEET — so the bare board
+# is self-documenting ("which connector is which"). Keyed on the subsystem sheet
+# (1:1 with each connector's function); the 3 PMOD ports are numbered below.
+_CONN_DESC: dict[str, str] = {
+    "pd_input":            "PWR",        # USB-C PD power inlet (the only power-in)
+    "usbc_otg":            "USB OTG",    # USB 2.0 OTG data port
+    "usb_jtag_connector":  "JTAG",       # USB->JTAG debug/program bridge (CH347T)
+    "usb_uart_connector":  "UART",       # USB->UART serial console (CP2102N)
+    "microsd":             "microSD",    # microSD card slot
+    "hdmi_tx":             "HDMI TX",    # HDMI source
+    "hdmi_rx":             "HDMI RX",    # HDMI sink
+    "rj45_connector":      "ETH",        # 10/100 Ethernet
+    "board_qwiic":         "QWIIC",      # QWIIC/Stemma I2C
+    "camera":              "CAM",        # CSI camera FFC
+    "lcd":                 "LCD",        # display FFC
+    "pmod":                "PMOD",       # PMOD GPIO (numbered)
+    "pmod_expansion":      "PMOD",       # PMOD GPIO (numbered)
+}
+
+
+def _connector_descriptors(model: "PcbModel", uid) -> list:
+    """A short F.SilkS function label beside every OFF-BOARD connector (PWR / USB
+    OTG / JTAG / UART / HDMI TX-RX / ETH / microSD / QWIIC / CAM / LCD / PMODn),
+    so the bare board tells you which connector is which. Placed just INBOARD of
+    the connector courtyard, centred on its along-edge axis, on the top silk.
+    Programmatic: the label comes from the connector's subsystem sheet, the edge
+    from its courtyard's nearest board edge — never hand-placed."""
+    out: list = []
+    ex0, ey0 = ORIGIN_X, ORIGIN_Y
+    ex1, ey1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
+    # number the PMOD ports PMOD0/1/2 in ref order (they span two sheets)
+    pmods = sorted(i.ref for i in model.insts if i.value == "DS1024-2x6R2")
+    pmod_n = {ref: n for n, ref in enumerate(pmods)}
+    for inst in model.insts:
+        if inst.value not in CONN_MATING_FACE:
+            continue
+        desc = _CONN_DESC.get(inst.sheet)
+        if desc is None:
+            continue
+        if inst.ref in pmod_n:
+            desc = f"PMOD{pmod_n[inst.ref]}"
+        cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
+        # nearest board edge = the connector's mating edge
+        d = {"N": cy0 - ey0, "S": ey1 - cy1, "W": cx0 - ex0, "E": ex1 - cx1}
+        edge = min(d, key=d.get)
+        if d[edge] > 12.0:                 # not actually an edge connector — skip
+            continue
+        midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
+        # place the label just INBOARD of the courtyard — the connector's own
+        # J-ref is hidden (see _embed_footprint), so this clear spot is the
+        # function label's; the subsystem components sit further inboard.
+        g = 1.8
+        if edge == "N":
+            tx, ty = midx, cy1 + g
+        elif edge == "S":
+            tx, ty = midx, cy0 - g
+        elif edge == "W":
+            tx, ty = cx1 + g, midy
+        else:                              # E
+            tx, ty = cx0 - g, midy
+        out.append([Sym("gr_text"), desc,
+                    [Sym("at"), round(tx, 3), round(ty, 3), 0],
+                    [Sym("layer"), "F.SilkS"],
+                    [Sym("uuid"), uid(f"conn-desc:{inst.ref}")],
+                    [Sym("effects"),
+                     [Sym("font"), [Sym("size"), 1.1, 1.1],
+                      [Sym("thickness"), 0.2]]]])
+    return out
+
+
 def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
     """A rule-area MARKER over the SoM body on both copper layers (drawn in the
     ratsnest view + KiCad as a hatched region). It is PERMISSIVE: under an SMD
@@ -2154,6 +2236,9 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     # footprints (fixed ref order — determinism)
     for inst in model.insts:
         doc.append(_embed_footprint(inst, uid))
+
+    # short function label beside each off-board connector (self-documenting board)
+    doc.extend(_connector_descriptors(model, uid))
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(sexpr.dumps(doc) + "\n")
