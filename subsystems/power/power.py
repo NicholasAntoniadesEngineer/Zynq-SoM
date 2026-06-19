@@ -400,6 +400,15 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
         c.part(ref, "Device:C", "22u", C0805, LCSC="C45783")
         c.net("+VOUT_3V3_REG", f"{ref}.1")                       # output bulk, reg-side
         c.net("GND", f"{ref}.2")
+    # AUDIT 2026-06-19 (MEDIUM, deferred to a verified-part add): R4=22.1k sets
+    # Vout=3.21 V nominal — inside 3.3 V +-5% but with a THIN low-side margin
+    # (worst-case ~3.13 V vs the 3.135 V floor). RECOMMENDED FIX: R4 -> 23.2k (E96,
+    # UNI-ROYAL 0603WAF2322T5E) -> Vout=3.32 V, worst-case [3.241, 3.401] centred
+    # in +-3% (R5 stays 10k). NOT applied here on purpose: 23.2k is not yet in the
+    # LCSC value catalog and guessing a C-code would risk a BOM defect (the audit's
+    # own "fixes can introduce bugs" lesson) — add it via `schgen part add` first,
+    # then change the value below. Catalog substitutes (e.g. 13k/5.49k -> 3.37 V)
+    # were rejected: they trade the low-side margin for a tight 3.45 V high-side.
     c.part("R4", "Device:R", "22.1k", R_FP, LCSC="C25961")         # FB top (VFB 1.0 -> 3.21 V)
     c.part("R5", "Device:R", "10k", R_FP, LCSC="C25804")           # FB bottom
     c.net("+VOUT_3V3_REG", "R4.1")                                # FB senses the regulated node

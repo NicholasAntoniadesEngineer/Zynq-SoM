@@ -129,6 +129,15 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     # input bypass + VBUS bulk per TPS2051 datasheet
     for cap in c.decouple("U1.IN", "100n"):     # C14663 Basic, 20.6M stock
         cap.fields["LCSC"] = "C14663"
+    # AUDIT 2026-06-19 (MEDIUM, deferred to a verified-part add): C2=22uF/25V X5R
+    # is below the USB 2.0 host-port VBUS minimum (120uF) and the TPS2051C DS
+    # 150uF reference; at 5 V bias an 0805 X5R derates further to ~15-20uF, so a
+    # device hot-plug can droop VBUS<4.4 V / trip the switch. RECOMMENDED FIX: add
+    # a low-ESR 100-150uF POLYMER/tantalum on VBUS in parallel with C2 (a stable-
+    # capacitance part — more MLCC just re-derates). NOT added here: it needs a
+    # verified LCSC polymer/tant part (new lcsc_values + ratings.py row); guessing
+    # a C-code would risk a BOM defect. The current-limit choice itself is fine
+    # (TPS2051C IOS MIN 0.65 A > 500 mA).
     c.part("C2", "Device:C", "22u", C0805, LCSC="C45783")
     c.net("VBUS", "C2.1")
     c.net("GND", "C2.2")
