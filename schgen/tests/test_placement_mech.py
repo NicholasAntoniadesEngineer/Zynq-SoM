@@ -125,6 +125,24 @@ def test_mutant_top_passive_under_som_fails():
     assert any("R5" in t for t in res.top_under_som), res.summary()
 
 
+def test_bottom_active_under_som_is_ok():
+    """A carrier BOTTOM-side active (IC) under the SoM is FINE — it sits on the
+    OPPOSITE face from the module (full clearance), so it is allowed (user: actives
+    may go on the bottom; only connectors must be top). Only the TOP under the SoM
+    is the keepout. The SAME IC on the TOP must FAIL (see test_mutant_ic_under_som)."""
+    model = _passing_model()
+    sc = model.som_core
+    ic_mod = pcb.resolve_mod("USBLC6-2SC6:USBLC6-2SC6")
+    assert ic_mod is not None
+    model.insts.append(FootprintInst(
+        ref="U9", value="USBLC6-2SC6", footprint="USBLC6-2SC6:USBLC6-2SC6",
+        x=(sc[0] + sc[2]) / 2, y=(sc[1] + sc[3]) / 2, rotation=0.0,
+        pad_nets={}, mod_path=ic_mod, sheet="t", side="bottom"))
+    res = pm.check(model)
+    assert res.ok, ("a BOTTOM active under the SoM must PASS", res.summary())
+    assert not any("U9" in u for u in res.under_som + res.top_under_som)
+
+
 def test_mutant_ic_under_som_fails():
     """Place an IC under the SoM module body — the module physically crushes it.
     The gate MUST fail (non-passive under the core)."""

@@ -175,21 +175,21 @@ def check(model: PcbModel) -> MechResult:
                 continue          # the DF40 mezzanine receptacles ARE the SoM
                 #                   interface — they MUST sit under the module
                 #                   body (the SoM plugs onto them). Not a defect.
-            if _is_passive_under_som(inst.ref):
-                # A low-profile passive may sit under the SoM — but only on the
-                # BOTTOM (opposite face). LAW 6: the carrier TOP under the module
-                # is a keepout — the SoM's own bottom-side components occupy the
-                # standoff gap, so a carrier top-side passive there collides with
-                # the module and stops it mating.
-                if inst.side == "top":
-                    res.top_under_som.append(
-                        f"{inst.ref} ({inst.sheet}) {inst.value} [TOP]: courtyard "
-                        f"({ct[0]:.1f},{ct[1]:.1f})..({ct[2]:.1f},{ct[3]:.1f}) "
-                        f"overlaps SoM core — carrier TOP is keepout under the module")
-                continue          # bottom passive = GOOD (uses dead space)
-            row = (f"{inst.ref} ({inst.sheet}) {inst.value}: courtyard "
+            if inst.side == "bottom":
+                continue          # LAW 6: the carrier BOTTOM under the SoM is the
+                #                   OPPOSITE face from the module — ANY part (active
+                #                   or passive) is fine there (uses dead space). Only
+                #                   the TOP (the standoff gap with the SoM's own
+                #                   bottom components) is the keepout, below.
+            row = (f"{inst.ref} ({inst.sheet}) {inst.value} [TOP]: courtyard "
                    f"({ct[0]:.1f},{ct[1]:.1f})..({ct[2]:.1f},{ct[3]:.1f}) "
-                   f"overlaps SoM core by {ov:.1f} mm^2")
+                   f"overlaps SoM core — carrier TOP under the module is a keepout")
+            # a TOP-side part under the SoM collides with the module's components in
+            # the standoff gap. Classify a passive as top_under_som (the relaxation
+            # that was previously allowed), a non-passive as under_som.
+            if _is_passive_under_som(inst.ref):
+                res.top_under_som.append(row)
+                continue
             res.under_som.append(row)
             if _is_control(inst.ref):
                 res.controls_under_som.append(row)

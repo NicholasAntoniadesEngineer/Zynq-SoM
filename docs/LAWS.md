@@ -117,17 +117,20 @@ layout engineer:
   packer reserves this gap beside any wide-overmold cable connector — adjacency
   with the default tight clearance is WRONG for these parts.
 
-- **A module / mezzanine / display footprint is a KEEPOUT STENCIL — and the
-  carrier TOP under it is a HARDER keepout than the bottom.** The area a plugged-in
-  module overhangs (the SoM on its DF40s; a display over its FFC; any board-to-board
-  mezzanine) is reserved. NO connector, IC, button, switch, tall part, or test point
-  under the module body, top OR bottom. The carrier BOTTOM under the module MAY carry
-  low-profile passives (opposite face — they use otherwise-dead space; GOOD). The
-  carrier TOP under the module is a keepout for EVERYTHING except the mezzanine
-  receptacles themselves: the module's OWN bottom-side components sit in the standoff
-  gap, so a carrier top-side part there — even a passive — collides with the module
-  and stops it mating. The keepout/outline is drawn a few % LARGER than the bare
-  connector span to reserve a mating-clearance margin around the module.
+- **Off-board CONNECTORS are the only parts that must be on the TOP side.** Active
+  components (ICs) and passives may sit on EITHER side — the carrier BOTTOM is fully
+  usable. Only connectors (and their mezzanine receptacles, mounting holes, test
+  points, pressable controls) are top-pinned. Putting actives on the bottom is the
+  lever that balances the two sides and shrinks the board.
+- **A module / mezzanine / display footprint is a KEEPOUT STENCIL — the carrier TOP
+  under it is a keepout, the BOTTOM is the free face.** The area a plugged-in module
+  overhangs (the SoM on its DF40s; a display over its FFC) reserves the carrier TOP
+  for the mezzanine receptacles ONLY: the module's OWN bottom-side components sit in
+  the standoff gap, so any other carrier top-side part there — even a passive —
+  collides with the module and stops it mating. The carrier BOTTOM under the module
+  is the OPPOSITE face (full clearance) and MAY carry ANY low-profile part, active or
+  passive (use the dead space). The keepout/outline is drawn a few % LARGER than the
+  bare connector span to reserve a mating-clearance margin around the module.
 
 - **Controls and serviceable parts must be reachable.** A button / switch must be
   pressable (top side, accessible, grouped with its peers); a coin cell / fuse
