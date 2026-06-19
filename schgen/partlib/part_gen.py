@@ -965,6 +965,11 @@ def convert_footprint(result: dict, name: str, info: dict,
                 elif isinstance(_el, list) and _el and _el[0] == Sym("size"):
                     pw, ph = float(_el[1]), float(_el[2])
             hx, hy = max(hx, abs(ax) + pw / 2), max(hy, abs(ay) + ph / 2)
+        # NOTE: this +5 mm allowance only catches the GROSS unit-mismatch (bodies
+        # ~800-960 mm off). A subtler mismatch (a SOT-23 ~5.4 mm off, still within
+        # +5 mm of small pads) passes here — the AUTHORITATIVE position check is the
+        # model3d gate (verify/model3d_gate._placed_ok), which uses the real .wrl
+        # body bbox vs the pad bbox and HARD-FAILS the board on <20% overlap.
         bx, by = hx + 5.0, hy + 5.0          # +5 mm body-overhang allowance
         if abs(model_3d["tx"]) > bx or abs(model_3d["ty"]) > by:
             print(f"  3d: implausible model offset "

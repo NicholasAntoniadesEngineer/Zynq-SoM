@@ -33,6 +33,7 @@ the cmd_board line are byte-stable across runs.
 
 from __future__ import annotations
 
+import math
 import os
 import re
 from dataclasses import dataclass, field
@@ -74,6 +75,9 @@ class Model3dResult:
     missing: list[str] = field(default_factory=list)
     # MPN -> reason, for a model that resolves but does NOT fit the footprint
     misfit: dict[str, str] = field(default_factory=dict)
+    # MPN -> reason, for a model whose body bbox does NOT overlap its pads (HARD:
+    # the body is planted off the footprint — an EasyEDA c_origin unit mismatch).
+    misplaced: dict[str, str] = field(default_factory=dict)
 
     @property
     def n_unmatched(self) -> int:
@@ -85,7 +89,9 @@ class Model3dResult:
         tail = f"; {len(gaps)} unmatched: [{', '.join(gaps)}]" if gaps else ""
         mis = (f"; {len(self.misfit)} MISFIT: [{', '.join(sorted(self.misfit))}]"
                if self.misfit else "")
-        return f"3D MODELS: {self.covered}/{self.total} footprints{tail}{mis}"
+        mp = (f"; {len(self.misplaced)} MISPLACED: "
+              f"[{', '.join(sorted(self.misplaced))}]" if self.misplaced else "")
+        return f"3D MODELS: {self.covered}/{self.total} footprints{tail}{mis}{mp}"
 
     def report(self) -> str:
         lines = [
@@ -111,6 +117,12 @@ class Model3dResult:
                          f"NOT match the footprint body (LAW):")
             for mpn in sorted(self.misfit):
                 lines.append(f"  {mpn}: {self.misfit[mpn]}")
+        if self.misplaced:
+            lines.append("")
+            lines.append(f"MISPLACED ({len(self.misplaced)}) — HARD: model body "
+                         f"planted off its pads (offset bug, LAW 5/6):")
+            for mpn in sorted(self.misplaced):
+                lines.append(f"  {mpn}: {self.misplaced[mpn]}")
         if self.broken:
             lines.append("")
             lines.append(f"BROKEN ({len(self.broken)}) — (model ...) path does "
@@ -247,6 +259,90 @@ def _fab_xy(text: str) -> tuple[float, float] | None:
     return max(xs) - min(xs), max(ys) - min(ys)
 
 
+# HARD position check: the placed model body bbox must overlap the footprint's
+# pad-copper bbox by at least this fraction. A body planted off its pads (the
+# EasyEDA c_origin unit-mismatch — e.g. a SOT-23 5.4 mm off, 0% overlap) is a real
+# LAW-5/6 defect the SOFT size-fit check misses. 0.20 is a deep margin below every
+# legit part (connectors / caps overlap >=0.5; centered ICs ~1.0), so it bites only
+# the genuine offset bug, never a real housing overhang.
+_MISPLACED_OVERLAP = 0.20
+
+
+def _offset_xy(body: str) -> tuple[float, float]:
+    m = re.search(r"\(offset\s*\(xyz\s+(-?[\d.]+)\s+(-?[\d.]+)", body)
+    return (float(m.group(1)), float(m.group(2))) if m else (0.0, 0.0)
+
+
+def _model_box(path: Path, scale: tuple[float, float], rot_z: float,
+               off: tuple[float, float]) -> tuple[float, float, float, float] | None:
+    """Placed model XY bbox (mm) in the footprint frame: the file bbox * unit
+    (.wrl x2.54 / .step mm) * scale, rotated about Z, translated by (offset)."""
+    t = path.read_text(errors="replace")
+    if path.suffix.lower() == ".wrl":
+        pts: list[tuple[float, float]] = []
+        for blk in re.findall(r"point\s*\[(.*?)\]", t, re.S):
+            c = [float(x) for x in re.findall(r"-?\d+\.?\d*(?:e-?\d+)?", blk)]
+            pts += [(c[i], c[i + 1]) for i in range(0, len(c) - 2, 3)]
+        unit = 2.54
+    else:
+        pts = [(float(a), float(b)) for a, b, _ in _CART_RE.findall(t)]
+        unit = 1.0
+    if not pts:
+        return None
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    cx = (min(xs) + max(xs)) / 2 * unit * abs(scale[0])
+    cy = (min(ys) + max(ys)) / 2 * unit * abs(scale[1])
+    w = (max(xs) - min(xs)) * unit * abs(scale[0])
+    h = (max(ys) - min(ys)) * unit * abs(scale[1])
+    th = math.radians(rot_z)
+    rcx = cx * math.cos(th) - cy * math.sin(th)
+    rcy = cx * math.sin(th) + cy * math.cos(th)
+    if rot_z % 180 == 90:
+        w, h = h, w
+    ox, oy = off
+    return (ox + rcx - w / 2, oy + rcy - h / 2, ox + rcx + w / 2, oy + rcy + h / 2)
+
+
+def _pad_bbox(text: str) -> tuple[float, float, float, float] | None:
+    """Footprint pad-copper XY bbox (mm)."""
+    xs: list[float] = []
+    ys: list[float] = []
+    for m in re.finditer(
+            r"\(pad\s+\"[^\"]*\"\s+\S+\s+\S+\s+\(at\s+(-?[\d.]+)\s+(-?[\d.]+)"
+            r"(?:\s+[-\d.]+)?\)\s+\(size\s+(-?[\d.]+)\s+(-?[\d.]+)\)", text):
+        x, y, w, h = (float(g) for g in m.groups())
+        xs += [x - w / 2, x + w / 2]
+        ys += [y - h / 2, y + h / 2]
+    if not xs:
+        return None
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+def _placed_ok(mod_path: Path, clause_body: str, model_file: Path) -> str | None:
+    """HARD: None if the model body bbox overlaps the pad bbox by
+    >= _MISPLACED_OVERLAP, else a reason. Returns None when uncheckable (no pads /
+    unparseable model) so it never false-fails on a parse gap."""
+    scale, rz = _clause_xfrm(clause_body)
+    body = _model_box(model_file, scale, rz, _offset_xy(clause_body))
+    pad = _pad_bbox(mod_path.read_text(errors="replace"))
+    if not body or not pad:
+        return None
+    ix = max(0.0, min(body[2], pad[2]) - max(body[0], pad[0]))
+    iy = max(0.0, min(body[3], pad[3]) - max(body[1], pad[1]))
+    pa = (pad[2] - pad[0]) * (pad[3] - pad[1])
+    if pa <= 0:
+        return None
+    frac = ix * iy / pa
+    if frac >= _MISPLACED_OVERLAP:
+        return None
+    ox, oy = _offset_xy(clause_body)
+    return (f"body ({body[0]:.1f},{body[1]:.1f})..({body[2]:.1f},{body[3]:.1f}) mm "
+            f"overlaps the pad area only {frac:.0%} (needs >="
+            f"{_MISPLACED_OVERLAP:.0%}); model offset ({ox:.2f},{oy:.2f}) plants the "
+            f"body off its pads")
+
+
 def _fit_ok(mod_path: Path, clause_body: str, model_file: Path
             ) -> str | None:
     """SOFT size heuristic: None if the model's XY bbox is within the band of the
@@ -302,15 +398,26 @@ def check(model_dir: Path | None = None) -> Model3dResult:
         # outline, and F.Fab is format-fragile, so a hard size gate would
         # false-fail real parts. The DEFINITIVE fit/position/orientation oracle
         # is the rendered 3D (LAW 5, `schgen render3d` — open it and look).
-        reason = _fit_ok(mod, text[m.end():m.end() + 500], p)
+        clause = text[m.end():m.end() + 500]
+        reason = _fit_ok(mod, clause, p)
         if reason is not None:
             res.misfit[mpn] = reason
+        # HARD position check: the body must sit ON its pads (catches the EasyEDA
+        # offset bug the SOFT size check is blind to). Documented-unmatched parts
+        # never reach here (they `continue` above).
+        bad = _placed_ok(mod, clause, p)
+        if bad is not None:
+            res.misplaced[mpn] = bad
     # HARD: every custom footprint must reference a model that RESOLVES on disk
     # (or be documented-unmatched). That is the un-fakeable enforcement — it
     # catches the real bug (a bare/unresolvable .wrl path -> an empty 3D viewer).
     # The size MISFIT list is SOFT (reported, not failed): noise from connector
     # housings / fab-parse variance, with the render as the true oracle.
-    res.ok = not res.broken and not res.missing
+    # HARD: a resolving model is required, AND no model may be planted off its
+    # pads. The size MISFIT list stays SOFT (connector-housing / fab-parse noise);
+    # MISPLACED is hard because a 0%-overlap body is an unambiguous defect that
+    # DRC/ratsnest cannot see and the render proved real (the SOT-23 offset bug).
+    res.ok = not res.broken and not res.missing and not res.misplaced
     return res
 
 

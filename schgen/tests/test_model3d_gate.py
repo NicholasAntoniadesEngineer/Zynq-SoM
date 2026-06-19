@@ -171,3 +171,42 @@ def test_fit_law_passes_a_matching_model_and_fails_a_misfit(tmp_path):
                      rot) is None                          # aligned -> OK
     assert g._fit_ok(mod, "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 90))",
                      rot) is not None                      # 90deg -> MISFIT
+
+
+# ---- the per-part POSITION law (a model must sit ON its pads, not beside them) -
+# HARD: catches the EasyEDA c_origin unit-mismatch that planted SOT-23 bodies
+# ~5.4 mm off their pads (0% overlap) while the SOFT size-fit check passed.
+
+def _padfp():
+    """A footprint with two SMD pads spanning ~3 mm (a SOT-23-ish pad field)."""
+    return ('(footprint "X"\n'
+            '  (pad "1" smd roundrect (at -1.0 0) (size 0.8 1.6) (layers "F.Cu"))\n'
+            '  (pad "2" smd roundrect (at 1.0 0) (size 0.8 1.6) (layers "F.Cu"))\n'
+            ')\n')
+
+
+def test_position_law_fails_a_body_planted_off_its_pads(tmp_path):
+    from schgen.verify import model3d_gate as g
+    mod = tmp_path / "X.kicad_mod"
+    mod.write_text(_padfp())
+    wrl = tmp_path / "m.wrl"
+    wrl.write_text(_fitwrl(1.0, 0.8))        # ~2.54 x 2.03 mm body, centred at 0,0
+    scale_rot = "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 0))"
+
+    # centred offset -> body sits over the pads -> OK
+    assert g._placed_ok(mod, "(offset (xyz 0 0 0))" + scale_rot, wrl) is None
+
+    # the real bug: a 5.4 mm offset plants the body clean off the pads -> MISPLACED
+    bad = g._placed_ok(mod, "(offset (xyz -5.4 1.5 0))" + scale_rot, wrl)
+    assert bad is not None and "off its pads" in bad
+
+    # a small (sub-mm) offset stays within the overlap band -> OK (no false-fail)
+    assert g._placed_ok(mod, "(offset (xyz 0.3 0 0))" + scale_rot, wrl) is None
+
+
+def test_position_law_is_hard_in_the_result():
+    """The real parts must all pass the HARD position check (board ships clean)."""
+    from schgen.verify import model3d_gate as g
+    r = g.check()
+    assert not r.misplaced, f"models planted off their pads: {dict(r.misplaced)}"
+    assert r.ok
