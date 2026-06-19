@@ -142,7 +142,16 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
         # MEDIA differential pair -> RJ45 line MDI pair
         c.port(f"MX{ch}_P", f"T1.{mx_p}")
         c.port(f"MX{ch}_N", f"T1.{mx_n}")
-        # CHIP-side centre tap: no external connection (PHY self-biases)
+        # CHIP-side centre tap: no external connection. The RTL8211F is a
+        # voltage-mode PHY that self-biases, so the link functions with these taps
+        # open (COMPLIANCE.md ETH-5, PASS-by-PHY-design). Realtek's RTL8211 Layout
+        # Guide Fig.27 additionally recommends a per-tap CT->GND cap (0.1uF~10pF)
+        # for single-tone radiated-EMI margin. That is a DEFERRED EMC-tuning
+        # provision (audit 2026-06-19), not added here: this REUSABLE magnetics
+        # library exposes only CHASSIS_GND (no signal GND) at its abstract
+        # interface, and CT-cap values are tuned against measured emissions — so
+        # add+value them at the EMC bring-up revision rather than commit a blind
+        # value into the library now.
         c.nc(f"T1.{tct}")
 
     # typed ports: every MDI pair is 100R differential (1000BASE-T). Typed in

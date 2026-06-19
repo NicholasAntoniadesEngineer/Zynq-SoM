@@ -16,6 +16,7 @@
 *   C2 100n  SY6280 OUT bypass       (V3V3_AUX-> GND)
 *   C3 100n  PCA9306 VREF1 bypass    (V3V3_SC -> GND)
 *   C4 100n  PCA9306 VREF2 bypass    (V3V3_AUX-> GND)
+*   C5 10u   SY6280 OUT bulk hold-up (V3V3_AUX-> GND)
 *   R1 13k   SY6280 ILIM set (~523mA)(BS_ISET_AUX -> GND, internal)
 *   R2 100k  EN_AUX pulldown (def OFF)(EN_AUX -> GND, internal)
 *   R3 330R  status-LED series        (BS_PG_AUX -> GND, internal)
@@ -36,6 +37,9 @@ C1 V3V3 GND 100n
 C2 V3V3_AUX GND 100n
 C3 V3V3_SC GND 100n
 C4 V3V3_AUX GND 100n
+
+* bulk hold-up on the gated rail for the QWIIC load (audit 2026-06-19)
+C5 V3V3_AUX GND 10u
 
 * SY6280 current-limit set: ILIM = 6800 / 13k ~ 523 mA
 R1 BS_ISET_AUX GND 13k

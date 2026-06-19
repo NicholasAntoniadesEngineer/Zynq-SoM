@@ -58,6 +58,13 @@ def circuit() -> Circuit:
         cap.fields["LCSC"] = LCSC_100N
     for cap in c.decouple("U1.OUT", "100n", footprint=C_FP):
         cap.fields["LCSC"] = LCSC_100N
+    # bulk hold-up on the gated +3V3_AUX rail for the 200 mA QWIIC load — the
+    # SY6280 datasheet recommends an output cap and only the 100n was present
+    # (audit 2026-06-19). 10u 0805 25V; the SY6280 soft-start tolerates it.
+    cblk = c.part(c.auto_ref("C"), "Device:C", "10u",
+                  "Capacitor_SMD:C_0805_2012Metric", LCSC="C15850")
+    c.net("+3V3_AUX", f"{cblk.ref}.1")
+    c.net("GND", f"{cblk.ref}.2")
 
     # manual enable: DSHP04 pos 1 closes +3V3 -> EN_AUX; 100k pulldown = OFF
     # at power-up. Positions 2-4 spare (commons bused, even pins NC).

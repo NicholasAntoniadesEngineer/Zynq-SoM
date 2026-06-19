@@ -2,7 +2,7 @@ schgen per-part rule engine (ratings vs netlist usage)
 ==============================================================================
 
 enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
-156 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+157 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
 
 author waivers, verbatim (1):
   lcd:C2                 MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp
@@ -85,4 +85,4 @@ UNSPEC — reported, NOT failing (71):
 
 errors: none
 
-PART RULES: PASS (156 checks, 0 findings, 71 unspeced, 1 waived)
+PART RULES: PASS (157 checks, 0 findings, 71 unspeced, 1 waived)
