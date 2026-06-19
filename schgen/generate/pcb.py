@@ -411,9 +411,13 @@ EDGE_ZONE_ASPECT = 2.2
 # board top (N edge) and +Y toward the bottom (S edge).
 CONN_MATING_FACE: dict[str, str] = {
     "TYPE-C-31-M-12":  "-Y",   # USB-C receptacle mouth
-    "HDMI-019S":       "-Y",   # HDMI receptacle mouth
+    "HDMI-019S":       "+Y",   # HDMI receptacle mouth (plug enters OPPOSITE the
+                               # SMT contact row at -Y; verified from footprint
+                               # geometry — was -Y, faced inward in the render)
     "AFC07-S40FCA-00": "-Y",   # LCD FPC slot
-    "KH-5224-8P8C-D":  "+Y",   # RJ45 jack mouth
+    "KH-5224-8P8C-D":  "-Y",   # RJ45 jack mouth (plug enters at the pin-1..8
+                               # CONTACT end at -Y; shield tails/posts at +Y are
+                               # the board-attach back — was +Y, faced inward)
     "TF-01A":          "+Y",   # microSD card slot
     "SFW15R-1STE1LF":  "-Y",   # camera FFC slot opens away from the solder tabs
                                # (posts at +Y -> cable entry at -Y), same as the
@@ -610,7 +614,7 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
 
 # inter-button air gap (mm) inside the tactile-button grid — wider than the
 # generic PLACE_CLEAR so the buttons read as a spaced, finger-friendly array.
-BUTTON_GAP = 3.0
+BUTTON_GAP = 2.0
 
 
 def _is_button(mod_path: Path) -> bool:
@@ -2267,17 +2271,26 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         "som_core": model.som_core,
         "drc": None, "ratsnest": None, "ratsnest_gate": None,
         "placement_mech": None,
+        "connector_model": None, "connector_spacing": None,
     }
     if ratsnest:
         from schgen.generate import ratsnest as rn_mod
         from schgen.verify import ratsnest_gate
         from schgen.verify import placement_mech
+        from schgen.verify import connector_model_gate
+        from schgen.verify import connector_spacing_gate
         result["ratsnest"] = rn_mod.generate(model)
         result["ratsnest_gate"] = ratsnest_gate.check(model)
         # LAW-6 mechanical/use-case gate — runs on the SAME placed model (no
         # rebuild) so its connector-edge/orientation + SoM-keepout verdict is
         # exactly the board just emitted.
         result["placement_mech"] = placement_mech.check(model)
+        # LAW-6 connector hardening (catch the recurring orientation + spacing
+        # bug classes the other gates miss): 3D-model rotate must not flip the
+        # rendered opening vs the pads, and simultaneous-mate cable connectors
+        # (HDMI TX+RX) need an overmold gap.
+        result["connector_model"] = connector_model_gate.check(model)
+        result["connector_spacing"] = connector_spacing_gate.check(model)
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result

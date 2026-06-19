@@ -1030,6 +1030,39 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("PLACEMENT (LAW 6): FAIL — gate did not run")
             ok_all = False
+        # LAW-6 connector 3D-MODEL ORIENTATION gate — a stray model rotate (or a
+        # mating-face typo) flips the rendered opening inward while every other
+        # gate stays green (the USB-C/HDMI/RJ45/FFC bug class).
+        cmr = pcb_res.get("connector_model")
+        if cmr is not None:
+            (rep_dir / "connector_model.txt").write_text(cmr.summary() + "\n")
+            print(f"CONNECTOR MODEL (LAW 6): {'PASS' if cmr.ok else 'FAIL'} "
+                  f"({cmr.n_connectors} connectors, {len(cmr.bad_z)} bad-Z, "
+                  f"{len(cmr.geom_conflicts)} geom-conflict "
+                  f"-> {rep_dir / 'connector_model.txt'})")
+            for _b in cmr.bad_z:
+                print(f"  CONNECTOR-MODEL BAD-Z: {_b}")
+            for _g in cmr.geom_conflicts:
+                print(f"  CONNECTOR-MODEL GEOM: {_g}")
+            ok_all = ok_all and cmr.ok
+        else:
+            print("CONNECTOR MODEL (LAW 6): FAIL — gate did not run")
+            ok_all = False
+        # LAW-6 connector OVERMOLD SPACING gate — two simultaneous-mate cable
+        # connectors (HDMI TX+RX) need a real gap or only one cable fits.
+        cg = pcb_res.get("connector_spacing")
+        if cg is not None:
+            (rep_dir / "connector_spacing.txt").write_text(cg.summary() + "\n")
+            print(f"CONNECTOR SPACING (LAW 6): {'PASS' if cg.ok else 'FAIL'} "
+                  f"({len(cg.pairs)} same-family pairs, "
+                  f"{len(cg.violations)} too-tight "
+                  f"-> {rep_dir / 'connector_spacing.txt'})")
+            for _v in cg.violations:
+                print(f"  CONNECTOR SPACING: {_v}")
+            ok_all = ok_all and cg.ok
+        else:
+            print("CONNECTOR SPACING (LAW 6): FAIL — gate did not run")
+            ok_all = False
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
         ok_all = False

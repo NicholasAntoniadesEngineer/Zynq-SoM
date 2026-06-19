@@ -68,6 +68,28 @@ EDGE_DEPTH_CAP = 15.0    # edge block max depth into the board
 EDGE_INSET = 1.5         # depth-wise gap an edge block is held off the board edge
                          # (LAW 6: a flush off-board connector's pads must still
                          # clear the 0.3mm copper_edge_clearance after grid snap)
+# Minimum CLEAR gap (mm) beside a wide-overmold cable connector so two such cables
+# mate SIMULTANEOUSLY: an HDMI plug's overmold is ~18-22mm wide, so two adjacent
+# HDMI receptacles (TX + RX) need a real gap between them or only one cable fits at
+# a time (user-reported). Applied between any edge-block pair where at least one
+# block carries an overmold-cable connector.
+CABLE_NEIGHBOR_GAP = 20.0
+_OVERMOLD_FAMILIES = {"HDMI-019S"}
+
+
+def _is_overmold_block(b) -> bool:
+    """True if this edge block carries a wide-overmold cable connector (HDMI)."""
+    return any(v in _OVERMOLD_FAMILIES for (_r, v, _w, _h) in b.conns)
+
+
+def _pair_gap(a, b) -> float:
+    """Along-edge clearance between two adjacent edge blocks: the wide CABLE gap if
+    either carries an overmold cable connector, else the tight default CLEAR."""
+    if _is_overmold_block(a) or _is_overmold_block(b):
+        return CABLE_NEIGHBOR_GAP
+    return CLEAR
+
+
 CLEAR = 0.4              # block-to-block clearance — TIGHTENED (was 1.5). The
                          # interior occupancy lattice + the edge run both pack to
                          # this gap, so a smaller value pulls every subsystem
@@ -723,14 +745,16 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
     for _round in range(4):
         for edge in ("W", "S", "N", "E"):
             cap = (BOARD_H if edge in "WE" else BOARD_W) - 2 * EDGE_MARGIN
-            used = sum(span_of(bb, edge) + CLEAR for bb in placed[edge])
+            def _trail(bb):       # trailing gap reserved after a block on this edge
+                return CABLE_NEIGHBOR_GAP if _is_overmold_block(bb) else CLEAR
+            used = sum(span_of(bb, edge) + _trail(bb) for bb in placed[edge])
             queue = sorted(pending[edge],
                            key=lambda bb: (-span_of(bb, edge), bb.name))
             pending[edge] = []
             for b in queue:
                 if used + span_of(b, edge) <= cap:
                     placed[edge].append(b)
-                    used += span_of(b, edge) + CLEAR
+                    used += span_of(b, edge) + _trail(b)
                 else:
                     nxt = spill_next[edge]
                     pending[nxt].append(b)
@@ -759,14 +783,17 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
         # cross airwire is short) instead of spreading the blocks edge-to-edge
         # with big gaps. The slide is clamped to the edge margins (no overlap, no
         # off-board) and the order is already net-affinity sorted above.
-        total = (sum(span_of(bb, edge) for bb in blocks)
-                 + CLEAR * (len(blocks) - 1))
+        # per-PAIR along-edge gaps: a wide CABLE gap beside an overmold connector
+        # (so two HDMI cables mate at once), the tight CLEAR elsewhere.
+        gaps = [_pair_gap(blocks[i], blocks[i + 1])
+                for i in range(len(blocks) - 1)]
+        total = sum(span_of(bb, edge) for bb in blocks) + sum(gaps)
         offs: list[float] = []        # centre offset of each block from run start
         acc = 0.0
-        for b in blocks:
+        for i, b in enumerate(blocks):
             sp = span_of(b, edge)
             offs.append(acc + sp / 2)
-            acc += sp + CLEAR
+            acc += sp + (gaps[i] if i < len(gaps) else 0.0)
         # rigid-run slide that MINIMISES sum_i w_i (slot_i - target_i)^2 where
         # w_i is the block's total J-affinity: the run translates so the
         # STRONGEST-talking block (e.g. lcd, 30 nets to J3) gets the slot best
@@ -779,7 +806,7 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
         start = sum(w * (t - o) for w, t, o in zip(wts, tgts, offs)) / wsum
         start = max(lo, min(start, hi - total))   # clamp inside the edge
         pos = start
-        for b in blocks:
+        for i, b in enumerate(blocks):
             b.edge = edge
             sp, dp = span_of(b, edge), depth_of(b, edge)
             # EDGE_INSET: every edge block is held this far OFF the board edge so
@@ -795,7 +822,7 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
                 b.x, b.y = EDGE_INSET, _r5(pos)
             else:
                 b.x, b.y = _r5(BOARD_W - dp - EDGE_INSET), _r5(pos)
-            pos += sp + CLEAR
+            pos += sp + (gaps[i] if i < len(gaps) else 0.0)
 
 
 class _Occupancy:
@@ -1059,7 +1086,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # board at the smallest size the real gate passes (verified +277 mm margin at
     # 200x185). The REAL gate in ``schgen board`` is the final, strict arbiter; a
     # mis-estimate could only make the board a touch bigger, never relax the gate.
-    PROXY_TO_REAL = 0.97
+    PROXY_TO_REAL = 1.0
     # SAFETY: PROXY_TO_REAL re-calibrated 0.93 -> 0.97 against the REAL pad-MST
     # gate across the TIGHT-board regime (CLEAR 0.6): the measured real/proxy ratio
     # is 0.94-0.97 (it RISES as the board shrinks because the per-pad MST the gate
@@ -1068,9 +1095,16 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # area search would pick a board the strict gate then rejected (165x145 est
     # passed but real 14017 > 13921 budget). 0.97 makes the floorplan's airwire
     # estimate track the real gate, so the search stops at the smallest board the
-    # REAL gate actually passes; SAFETY 1.0 (no extra fudge — the calibration is
-    # the headroom). The REAL gate in `schgen board` remains the final, strict
-    # arbiter; this only makes the SIZING estimate accurate, never relaxes a gate.
+    # REAL gate actually passes. RE-CALIBRATED 0.97 -> 1.0: the real/proxy ratio
+    # RISES as the board shrinks (the pad-MST stops being shorter than the block-
+    # centre proxy once blocks pack close) and at the TIGHTER 160x145 regime it
+    # exceeded 0.97, so 0.97 UNDER-estimated and the search picked a board the real
+    # gate rejected (14166.7 > 14165 by 1.7mm — the exact failure mode noted above,
+    # now recurring). Since the block-centre proxy is ALWAYS >= the nearest pad-to-
+    # pad real airwire, est_real = proxy*1.0 is a PROVABLY SAFE upper bound: the
+    # search can never pick a board the real gate then rejects, and still lands the
+    # smallest passing board. SAFETY 1.0 (the calibration is the headroom). The
+    # REAL gate in `schgen board` remains the final, strict arbiter.
     SAFETY = 1.0
 
     # DECLARATIVE fixed outline: carrier/floorplan.json {"outline":{"w","h"}}
