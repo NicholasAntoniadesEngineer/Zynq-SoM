@@ -91287,6 +91287,1042 @@
 		(uuid "66adf053-2d83-5125-b819-4966886cafd4")
 	)
 	(footprint
+		"TPD4E1U06DBVR:TPD4E1U06DBVR"
+		(version 20240108)
+		(generator "schgen_part_gen")
+		(generator_version "1.0")
+		(layer "F.Cu")
+		(at 115.48 142.14)
+		(descr
+			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR — 4 通道高速 ESD 保护器件 SOT-23-6 (EasyEDA/LCSC C124691, faithful conversion)"
+		)
+		(tags "ESD Protection Devices")
+		(attr smd)
+		(property
+			"Reference"
+			"U18001"
+			(at 0 -2.95 0)
+			(layer "F.SilkS")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "6feb289e-6745-59ff-9691-0cbb33144b79")
+		)
+		(property
+			"Value"
+			"TPD4E1U06"
+			(at 0 2.95 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "ccfcb7fc-fba5-57e8-8c0e-c909d4421ec5")
+		)
+		(property
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C124691.pdf"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "ec9c249b-2421-5ca3-8285-6a3edc3cce9b")
+		)
+		(property
+			"Description"
+			"4 通道高速 ESD 保护器件 SOT-23-6"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "01585e08-0743-57ac-8883-0e444be422df")
+		)
+		(property
+			"LCSC"
+			"C124691"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "16618e6d-dab2-5718-86ee-afa0a520adb8")
+		)
+		(fp_text
+			user
+			"${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "a6f4bb8f-e5c2-58be-9712-259ade9e4b02")
+		)
+		(fp_circle
+			(center 1.4 1.45)
+			(end 1.43 1.45)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "6537adef-bda3-50bc-9b23-1d845e20fdd5")
+		)
+		(fp_circle
+			(center 1.4 0.95)
+			(end 1.5001 0.95)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "Cmts.User")
+			(uuid "c3213bb6-391c-5dbf-9202-dc4223645de2")
+		)
+		(fp_line
+			(start -0.8 1.45)
+			(end -0.8 -1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "672b5189-56fe-5775-9669-4122e937ab64")
+		)
+		(fp_line
+			(start -0.8 -1.45)
+			(end 0.8 -1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "c0ba135a-556c-58b8-b43d-8d1f1f4dbfbe")
+		)
+		(fp_line
+			(start 0.8 -1.45)
+			(end 0.8 1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "f957d358-ac73-5fdb-b34f-656d7a92843b")
+		)
+		(fp_line
+			(start 0.8 1.45)
+			(end -0.8 1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "9c16f2bf-0d76-588e-aae4-faceab389820")
+		)
+		(fp_line
+			(start -0.9 -1.5499)
+			(end 0.9 -1.5499)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "af76726f-be96-5143-a31b-6afa2b5ef06b")
+		)
+		(fp_line
+			(start -0.9 1.5501)
+			(end 0.9 1.5501)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "e97346c7-e63e-54a4-aaf0-7e9559fe1a87")
+		)
+		(fp_circle
+			(center 1.397 1.651)
+			(end 1.524 1.651)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "6956c2c5-b09b-5e85-848f-fbcd149ec4d2")
+		)
+		(pad
+			"3"
+			smd
+			rect
+			(at 1.35 -0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 214 "IO_L2_N_13")
+			(uuid "1200d9fa-3e0c-546f-881d-f7eb1de52714")
+		)
+		(pad
+			"2"
+			smd
+			rect
+			(at 1.35 0)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 180 "GND")
+			(uuid "2713a3bf-ffac-5246-9c2c-4979a359a5b1")
+		)
+		(pad
+			"1"
+			smd
+			rect
+			(at 1.35 0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 216 "IO_L2_P_13")
+			(uuid "4dbf42a6-abdb-5102-88bb-56e0099ae835")
+		)
+		(pad
+			"6"
+			smd
+			rect
+			(at -1.35 0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 220 "IO_L3_P_13")
+			(uuid "2d3ff27d-b3a3-541a-8cf1-73e6f430daeb")
+		)
+		(pad
+			"5"
+			smd
+			rect
+			(at -1.35 0)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "577a9fef-eb7d-5aea-820c-ca845f60b93c")
+		)
+		(pad
+			"4"
+			smd
+			rect
+			(at -1.35 -0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 219 "IO_L3_N_13")
+			(uuid "b47e2b63-0c68-537c-affb-a85dab0817ee")
+		)
+		(model
+			"${KIPRJMOD}/../parts/TPD4E1U06DBVR/TPD4E1U06DBVR.wrl"
+			(offset
+				(xyz 0 -0.0001 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 180)
+			)
+		)
+		(uuid "fff7fc9a-badf-5349-a967-ce6402c766ce")
+	)
+	(footprint
+		"TPD4E1U06DBVR:TPD4E1U06DBVR"
+		(version 20240108)
+		(generator "schgen_part_gen")
+		(generator_version "1.0")
+		(layer "F.Cu")
+		(at 120.56 142.14)
+		(descr
+			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR — 4 通道高速 ESD 保护器件 SOT-23-6 (EasyEDA/LCSC C124691, faithful conversion)"
+		)
+		(tags "ESD Protection Devices")
+		(attr smd)
+		(property
+			"Reference"
+			"U18002"
+			(at 0 -2.95 0)
+			(layer "F.SilkS")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "f803503b-f1a7-5548-8ceb-042733d3aba0")
+		)
+		(property
+			"Value"
+			"TPD4E1U06"
+			(at 0 2.95 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "3dcbd529-19bb-58ba-8123-1253dfe809a2")
+		)
+		(property
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C124691.pdf"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "0f8dc0df-381a-5a79-adfb-af9ebbf02c5b")
+		)
+		(property
+			"Description"
+			"4 通道高速 ESD 保护器件 SOT-23-6"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "800d2169-e75b-5e43-9216-da298a3d29b1")
+		)
+		(property
+			"LCSC"
+			"C124691"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "36c7e86f-763f-5648-a8f0-4d6405ae2632")
+		)
+		(fp_text
+			user
+			"${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "836cb975-5be0-5d39-9a47-e41d92418c79")
+		)
+		(fp_circle
+			(center 1.4 1.45)
+			(end 1.43 1.45)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "383359d9-d996-57c4-a169-39c13446d4dd")
+		)
+		(fp_circle
+			(center 1.4 0.95)
+			(end 1.5001 0.95)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "Cmts.User")
+			(uuid "06ee7621-5897-5439-b4ba-a781d3b334e3")
+		)
+		(fp_line
+			(start -0.8 1.45)
+			(end -0.8 -1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "0d3708cd-4315-5074-9fd3-0c8ff0889fa3")
+		)
+		(fp_line
+			(start -0.8 -1.45)
+			(end 0.8 -1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "5590791b-3c7d-5750-bc67-63989f44e523")
+		)
+		(fp_line
+			(start 0.8 -1.45)
+			(end 0.8 1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "cb840b9f-8866-5474-b3f3-c95bc9318b34")
+		)
+		(fp_line
+			(start 0.8 1.45)
+			(end -0.8 1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "3861700d-5544-519a-a8c2-7dbb4d05bbca")
+		)
+		(fp_line
+			(start -0.9 -1.5499)
+			(end 0.9 -1.5499)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "8c4c64a3-96a4-51c6-bb48-bad304ea5087")
+		)
+		(fp_line
+			(start -0.9 1.5501)
+			(end 0.9 1.5501)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "2c66fa54-6e94-5356-bf16-ef209ac5c7ba")
+		)
+		(fp_circle
+			(center 1.397 1.651)
+			(end 1.524 1.651)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "c7548017-84f6-552f-9a12-0bac527e63cf")
+		)
+		(pad
+			"3"
+			smd
+			rect
+			(at 1.35 -0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 221 "IO_L4_N_13")
+			(uuid "96c3001f-a4e7-52dd-bd50-adb789ffde54")
+		)
+		(pad
+			"2"
+			smd
+			rect
+			(at 1.35 0)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 180 "GND")
+			(uuid "912c64c9-c351-5882-9eb3-45899c8c7d48")
+		)
+		(pad
+			"1"
+			smd
+			rect
+			(at 1.35 0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 222 "IO_L4_P_13")
+			(uuid "32ccfc51-777a-5a54-b98d-6ec79ce8b3e4")
+		)
+		(pad
+			"6"
+			smd
+			rect
+			(at -1.35 0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 223 "IO_L5P_13")
+			(uuid "671df77b-953e-5dc5-a326-9d8e6259eb46")
+		)
+		(pad
+			"5"
+			smd
+			rect
+			(at -1.35 0)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "b915338b-c15c-5b8d-87b4-fb514c8b1bd4")
+		)
+		(pad
+			"4"
+			smd
+			rect
+			(at -1.35 -0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 224 "IO_L5_N_13")
+			(uuid "57af20db-1c04-54c6-ad64-f6203b27cdaa")
+		)
+		(model
+			"${KIPRJMOD}/../parts/TPD4E1U06DBVR/TPD4E1U06DBVR.wrl"
+			(offset
+				(xyz 0 -0.0001 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 180)
+			)
+		)
+		(uuid "3de9bcac-e217-50bf-91d6-d05d335d1297")
+	)
+	(footprint
+		"TPD4E1U06DBVR:TPD4E1U06DBVR"
+		(version 20240108)
+		(generator "schgen_part_gen")
+		(generator_version "1.0")
+		(layer "F.Cu")
+		(at 125.64 142.14)
+		(descr
+			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR — 4 通道高速 ESD 保护器件 SOT-23-6 (EasyEDA/LCSC C124691, faithful conversion)"
+		)
+		(tags "ESD Protection Devices")
+		(attr smd)
+		(property
+			"Reference"
+			"U18003"
+			(at 0 -2.95 0)
+			(layer "F.SilkS")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "3071ed06-5892-5d3b-a4a8-da30cfea5d7a")
+		)
+		(property
+			"Value"
+			"TPD4E1U06"
+			(at 0 2.95 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "309149d3-ac03-540f-ab32-5b376f117b4c")
+		)
+		(property
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C124691.pdf"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "8ba6048d-4eb5-5d63-a5b4-768948f5f200")
+		)
+		(property
+			"Description"
+			"4 通道高速 ESD 保护器件 SOT-23-6"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "6f288907-68dc-5c4f-9d13-4da98fe115f0")
+		)
+		(property
+			"LCSC"
+			"C124691"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "79c60592-3828-5251-b709-f772804f990f")
+		)
+		(fp_text
+			user
+			"${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "41919647-7cef-5212-8fa6-e4328acf023e")
+		)
+		(fp_circle
+			(center 1.4 1.45)
+			(end 1.43 1.45)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "f740fb18-566d-5a92-9852-90293643ccb0")
+		)
+		(fp_circle
+			(center 1.4 0.95)
+			(end 1.5001 0.95)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "Cmts.User")
+			(uuid "494c3f91-ddd3-583c-8530-b525dc1b3967")
+		)
+		(fp_line
+			(start -0.8 1.45)
+			(end -0.8 -1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "dd889ab7-a329-50f7-9521-493a87509d47")
+		)
+		(fp_line
+			(start -0.8 -1.45)
+			(end 0.8 -1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "79edcf2f-4354-5df6-9386-9f5eb069c39b")
+		)
+		(fp_line
+			(start 0.8 -1.45)
+			(end 0.8 1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "21cb13d4-d821-581d-b4b2-1a8c6db20317")
+		)
+		(fp_line
+			(start 0.8 1.45)
+			(end -0.8 1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "d5e0561e-4bec-58ef-9d6f-08596f56fe54")
+		)
+		(fp_line
+			(start -0.9 -1.5499)
+			(end 0.9 -1.5499)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "7bf8ca1b-6f79-5de5-9286-d44762933804")
+		)
+		(fp_line
+			(start -0.9 1.5501)
+			(end 0.9 1.5501)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "487274e4-1fa1-53bc-aaf2-1a6bbef9ac8c")
+		)
+		(fp_circle
+			(center 1.397 1.651)
+			(end 1.524 1.651)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "172eae1e-6658-551d-b481-364f01ec417f")
+		)
+		(pad
+			"3"
+			smd
+			rect
+			(at 1.35 -0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 229 "IO_L7_N_13")
+			(uuid "8d99939a-f916-590d-abc1-ea6ddc46e5d8")
+		)
+		(pad
+			"2"
+			smd
+			rect
+			(at 1.35 0)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 180 "GND")
+			(uuid "3698cd09-f108-50ff-b6f8-e83c10958c90")
+		)
+		(pad
+			"1"
+			smd
+			rect
+			(at 1.35 0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 230 "IO_L7_P_13")
+			(uuid "5127a733-3ae7-5b0b-9769-32068cf66f97")
+		)
+		(pad
+			"6"
+			smd
+			rect
+			(at -1.35 0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 232 "IO_L8_P_13")
+			(uuid "83977c0c-1fb1-5e8c-8ccd-6d1516ea0685")
+		)
+		(pad
+			"5"
+			smd
+			rect
+			(at -1.35 0)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "0d5b0f3e-2869-5911-82a1-4e93be717451")
+		)
+		(pad
+			"4"
+			smd
+			rect
+			(at -1.35 -0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 231 "IO_L8_N_13")
+			(uuid "9e4d1c2d-7742-5c52-939e-4ebfb99928df")
+		)
+		(model
+			"${KIPRJMOD}/../parts/TPD4E1U06DBVR/TPD4E1U06DBVR.wrl"
+			(offset
+				(xyz 0 -0.0001 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 180)
+			)
+		)
+		(uuid "481c01d0-67ef-584e-8adb-d36194bd752c")
+	)
+	(footprint
+		"TPD4E1U06DBVR:TPD4E1U06DBVR"
+		(version 20240108)
+		(generator "schgen_part_gen")
+		(generator_version "1.0")
+		(layer "F.Cu")
+		(at 130.72 142.14)
+		(descr
+			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR — 4 通道高速 ESD 保护器件 SOT-23-6 (EasyEDA/LCSC C124691, faithful conversion)"
+		)
+		(tags "ESD Protection Devices")
+		(attr smd)
+		(property
+			"Reference"
+			"U18004"
+			(at 0 -2.95 0)
+			(layer "F.SilkS")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "260971d4-b237-5c8a-bacf-29e8cdc6f146")
+		)
+		(property
+			"Value"
+			"TPD4E1U06"
+			(at 0 2.95 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "65bf1e26-4898-5a34-a2ab-d19cf1f8db69")
+		)
+		(property
+			"Datasheet"
+			"https://www.lcsc.com/datasheet/C124691.pdf"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "43a2fd9e-18d9-5c31-ae4f-7becb9828361")
+		)
+		(property
+			"Description"
+			"4 通道高速 ESD 保护器件 SOT-23-6"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "de987e78-e4d8-59e5-b854-00112dd12dd3")
+		)
+		(property
+			"LCSC"
+			"C124691"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "b8e96afd-7436-5b93-bd97-c82906c7ab05")
+		)
+		(fp_text
+			user
+			"${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+			(uuid "3c2d9988-37c5-5d22-8412-0a9816bcbdca")
+		)
+		(fp_circle
+			(center 1.4 1.45)
+			(end 1.43 1.45)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "2d2b1b16-edac-5786-8795-10773459636a")
+		)
+		(fp_circle
+			(center 1.4 0.95)
+			(end 1.5001 0.95)
+			(stroke
+				(width 0.2)
+				(type solid)
+			)
+			(fill none)
+			(layer "Cmts.User")
+			(uuid "0388a84a-efa2-5619-9807-d01c669c5d65")
+		)
+		(fp_line
+			(start -0.8 1.45)
+			(end -0.8 -1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "12a83f20-1a5d-5c9a-bf3f-26abc4108332")
+		)
+		(fp_line
+			(start -0.8 -1.45)
+			(end 0.8 -1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "4ff5ca01-567e-52fd-b44c-a0c079eb17f3")
+		)
+		(fp_line
+			(start 0.8 -1.45)
+			(end 0.8 1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "6b757f6d-142e-5f7c-ab36-8fd18e5baa9a")
+		)
+		(fp_line
+			(start 0.8 1.45)
+			(end -0.8 1.45)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "9eaa3d3b-cec1-51d3-8cf0-05e29f65d0e7")
+		)
+		(fp_line
+			(start -0.9 -1.5499)
+			(end 0.9 -1.5499)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "19b20a6d-7ea7-53c2-86c5-8d6a9fb9dd9b")
+		)
+		(fp_line
+			(start -0.9 1.5501)
+			(end 0.9 1.5501)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "16046477-3f83-5f6e-a01c-a5546c2d7854")
+		)
+		(fp_circle
+			(center 1.397 1.651)
+			(end 1.524 1.651)
+			(stroke
+				(width 0.254)
+				(type solid)
+			)
+			(fill none)
+			(layer "F.SilkS")
+			(uuid "bebb4681-9d64-5e86-ac70-d78cc21b508c")
+		)
+		(pad
+			"3"
+			smd
+			rect
+			(at 1.35 -0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 233 "IO_L9_DQS_N_13")
+			(uuid "c3e7a43a-ba81-5668-b6f2-518011b514c8")
+		)
+		(pad
+			"2"
+			smd
+			rect
+			(at 1.35 0)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 180 "GND")
+			(uuid "370f9d56-2af6-5a7f-80ba-a4de5ede9742")
+		)
+		(pad
+			"1"
+			smd
+			rect
+			(at 1.35 0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 234 "IO_L9_DQS_P_13")
+			(uuid "45be6ad0-66fa-5c9a-9e88-49880428d59f")
+		)
+		(pad
+			"6"
+			smd
+			rect
+			(at -1.35 0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 194 "IO_L10_P_13")
+			(uuid "215c6ffa-6406-5585-8d6b-dbc86802ceb7")
+		)
+		(pad
+			"5"
+			smd
+			rect
+			(at -1.35 0)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(uuid "af13983b-9970-5602-9812-b54f19fb9ecb")
+		)
+		(pad
+			"4"
+			smd
+			rect
+			(at -1.35 -0.95)
+			(size 1.099998 0.599999)
+			(layers "F.Cu" "F.Paste" "F.Mask")
+			(net 193 "IO_L10_N_13")
+			(uuid "1bd984ca-007b-551c-bbc9-d227dd128f7b")
+		)
+		(model
+			"${KIPRJMOD}/../parts/TPD4E1U06DBVR/TPD4E1U06DBVR.wrl"
+			(offset
+				(xyz 0 -0.0001 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 180)
+			)
+		)
+		(uuid "c2f9d2d7-5463-5b5e-999c-fadb8e2888bf")
+	)
+	(footprint
 		"SY6280AAC:SY6280AAC"
 		(version 20240108)
 		(generator "schgen_part_gen")

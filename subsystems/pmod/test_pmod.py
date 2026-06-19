@@ -116,10 +116,28 @@ def test_internal_io_nets_stay_private_signal(c: Circuit):
 
 def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
     """Model completeness: every physical pin of every part (both 12-pad sockets,
-    every R and C) is netted or NC — the same hard check the board build runs
-    (LAW 0: no silent floats). A plain connector has NO intentional no-connect."""
+    every R and C, the four TPD4E1U06 ESD arrays) is netted or NC — the same hard
+    check the board build runs (LAW 0: no silent floats). The only intentional NCs
+    are pin 5 of each 4-channel TPD4E1U06 array."""
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
-    assert not c.nc_pins, {str(p) for p in c.nc_pins}
+    assert {str(p) for p in c.nc_pins} == {"U1.5", "U2.5", "U3.5", "U4.5"}, \
+        {str(p) for p in c.nc_pins}
+
+
+def test_four_esd_arrays_clamp_all_sixteen_io(c: Circuit):
+    """Protection regression (audit 2026-06-19 MEDIUM): each of the 16 cable-facing
+    Pmod IO (2 ports x 8) carries a GND-referenced TPD4E1U06 shunt clamp at the
+    socket. Four 4-channel arrays, each grounded on pin 2, and every PMOD{n}_IO{m}
+    socket net must TOUCH an array channel pin (a pure shunt, never in series —
+    LAW-0). Matches the peer pmod_expansion protection policy."""
+    esd_refs = {ref for ref, p in c.parts.items() if p.value == "TPD4E1U06"}
+    assert esd_refs == {"U1", "U2", "U3", "U4"}, esd_refs
+    for ref in esd_refs:                                   # arrays grounded on pin 2
+        assert c.net_of(PinRef(ref, "2")).name == "GND"
+    # every host-signal (SoM-side, FPGA-pin) net reaches an ESD-array channel pin
+    for port_net in pmod.PORTS:
+        net = c.nets[port_net]
+        assert any(p.ref in esd_refs for p in net.pins), (port_net, net.pins)
 
 
 # ---- protection + bypass network ------------------------------------------------

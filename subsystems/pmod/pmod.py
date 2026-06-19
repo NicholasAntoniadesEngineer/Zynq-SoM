@@ -5,7 +5,11 @@ exemplar). Two plain Digilent-standard Pmod HOST ports: each a 2x6 right-angle
 FEMALE 2.54 mm socket at the board edge (CONNFLY DS1024-2x6R2, the spec-exact
 part; BOOMELE C36191 straight female is the committed stock fallback). Every IO
 carries the Digilent-standard 200R series protection resistor between the host
-signal and the socket pin; each port's VCC pins get a 100n + 10u local bypass.
+signal and the socket pin AND a low-capacitance TPD4E1U06 (0.8 pF) GND-referenced
+ESD shunt clamp on the SoM-side (FPGA-pin) net just inboard of that resistor (two
+4-channel arrays per port, shunt to GND -> LAW-0): series-R + shunt-TVS at the
+protected pin holds the bank-13 IO at Vclamp. Each port's VCC pins get a 100n +
+10u local bypass.
 It declares its interface as ABSTRACT port + rail names and knows NOTHING about
 any consuming board — no board net names, no som_interface.json reads. A project
 consumes it by calling :func:`circuit` with the STANDARD ``meta`` dict (see
@@ -61,6 +65,12 @@ PAD.update({p: 2 * (p - 6) for p in range(7, 13)})  # bottom 7-12 -> even pads
 # Pmod IO index (1-8) -> logical position on the socket.
 IO_POS = {1: 1, 2: 2, 3: 3, 4: 4, 5: 7, 6: 8, 7: 9, 8: 10}
 
+# TPD4E1U06 (0.8 pF, C124691) channel pins D1+/D2+/D1-/D2- = 1/3/6/4; GND = pin 2,
+# NC = pin 5. Two 4-channel arrays clamp the 8 IO of each cable-facing port — the
+# same low-cap shunt the peer pmod_expansion port uses (audit 2026-06-19 MEDIUM).
+ESD_CH = ["1", "3", "6", "4"]
+LCSC_TPD = "C124691"
+
 # The two host ports and their abstract host-signal prefix. Each port has 8 IO
 # host signals (PMOD{p}_SIG{io}) that bind to a project's real bank signals.
 PORTS_DEF = (("J1", "PMOD0"), ("J2", "PMOD1"))
@@ -110,21 +120,42 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     c = Circuit("pmod", "2x Pmod host ports (bank 13, 200R series, gated 3V3)")
     vcc_pins: list[str] = []
     gnd_pins: list[str] = []
+    esd_gnd: list[str] = []
+    esd_nc: list[str] = []
     rnum = 1
-    for jref, port in PORTS_DEF:
+    for pidx, (jref, port) in enumerate(PORTS_DEF):
         c.use_part("DS1024-2x6R2", ref=jref)   # zigzag pads stay numeric
+        # low-cap ESD: each cable-facing IO socket net carries a TPD4E1U06 (0.8 pF)
+        # GND-referenced SHUNT clamp at the socket (cable side of the 200R), NEVER
+        # in series with the signal (LAW-0) — two 4-channel arrays per port.
+        esd_lo = f"U{2 * pidx + 1}"            # clamps IO1-4
+        esd_hi = f"U{2 * pidx + 2}"            # clamps IO5-8
+        c.use_part("TPD4E1U06DBVR", ref=esd_lo, value="TPD4E1U06")
+        c.use_part("TPD4E1U06DBVR", ref=esd_hi, value="TPD4E1U06")
 
-        # ---- IOs: host signal (port) -> 200R -> socket pin ----------------
+        # ---- IOs: host signal (port) -> 200R -> socket pin -----------------
+        # The TPD4E1U06 ESD clamp shunts the SoM-side (FPGA-pin) net to GND just
+        # inboard of the 200R series resistor: the resistor limits the strike
+        # current into the clamp+pin and the clamp holds the bank-13 IO at Vclamp,
+        # so the FPGA IO is protected (series-R + shunt-TVS at the protected pin).
+        # The clamp rides the BOUND signal net, NOT the socket leg -> each socket
+        # leg stays the clean 2-pin float chain the placer expects (a 4-channel
+        # array on the socket leg would mesh the float-net lineariser).
         for io in range(1, 9):
             ref = f"R{rnum}"
             rnum += 1
             c.part(ref, "Device:R", "200R", R0603, LCSC="C8218")
-            c.port(f"{port}_SIG{io}", f"{ref}.1", **meta.expect_kw(f"{port}_SIG{io}"))
+            esd_ref = esd_lo if io <= 4 else esd_hi
+            c.port(f"{port}_SIG{io}", f"{ref}.1",
+                   f"{esd_ref}.{ESD_CH[(io - 1) % 4]}",
+                   **meta.expect_kw(f"{port}_SIG{io}"))
             c.net(f"{port}_IO{io}", f"{ref}.2", f"{jref}.{PAD[IO_POS[io]]}")
 
         # ---- power pins (positions 5/11 = GND, 6/12 = VCC) -----------------
         gnd_pins += [f"{jref}.{PAD[5]}", f"{jref}.{PAD[11]}"]
         vcc_pins += [f"{jref}.{PAD[6]}", f"{jref}.{PAD[12]}"]
+        esd_gnd += [f"{esd_lo}.2", f"{esd_hi}.2"]      # array GND (pin 2)
+        esd_nc += [f"{esd_lo}.5", f"{esd_hi}.5"]       # array NC (pin 5)
 
     # module rail: both ports' VCC + 100n/10u per port
     c.part("C1", "Device:C", "100n", C0603, LCSC="C14663")
@@ -133,7 +164,8 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     c.part("C4", "Device:C", "10u", C0805, LCSC="C15850")
     # +VCC_PMOD is the Pmod-module rail (a POWER net with its own symbol).
     c.net("+VCC_PMOD", *vcc_pins, "C1.1", "C2.1", "C3.1", "C4.1")
-    c.net("GND", *gnd_pins, "C1.2", "C2.2", "C3.2", "C4.2")
+    c.net("GND", *gnd_pins, *esd_gnd, "C1.2", "C2.2", "C3.2", "C4.2")
+    c.nc(*esd_nc)
 
     # power-tree budget: 2 host ports x ~100 mA module budget (Digilent Pmod spec)
     c.draws("+VCC_PMOD", DRAWS_A, draws_note)
