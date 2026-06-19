@@ -101,7 +101,7 @@ GRID = 1.27             # placement snap grid (mm)
 # --- subsystem-zone outline derivation (LAW 5) -------------------------------
 PERIM = 3.0              # perimeter keepout ring (no zone touches the edge)
 MH_KEEPOUT = 5.0         # extra inset reserving the corner mounting-hole pads
-SOM_HALO_PCB = 6.0       # routing/escape halo reserved around the SoM body
+SOM_HALO_PCB = 7.0       # routing/escape halo reserved around the SoM body
 SOM_CORE_CLEARANCE = 0.03  # grow the SoM-body silk outline + keepout 3% (1.5% per
 #                            side) past the bare DF40 span for mating clearance
 EDGE_BAND_PCB = 10.0     # nominal connector band each side (board-aspect seed)
@@ -385,10 +385,10 @@ def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
 # Mandatory clearance between any two footprint courtyards AND between a
 # footprint and the board edge — so the emitted PCB has NO courtyard-overlap /
 # pad-clearance / copper-edge DRC errors (only the expected unrouted-net items).
-PLACE_CLEAR = 0.7
+PLACE_CLEAR = 0.5
 EDGE_CLEAR = 2.0
 ZONE_GAP = 0.8             # gap between two adjacent subsystem zones
-ZONE_PAD = 0.4            # padding inside a subsystem zone around its parts
+ZONE_PAD = 0.3            # padding inside a subsystem zone around its parts
 # N/S EDGE-connector subsystems pack WIDE + SHALLOW (their shelf target width is
 # multiplied by this) so the zone spreads ALONG the horizontal top/bottom edge
 # instead of eating deep into the interior behind the connector (a deep edge

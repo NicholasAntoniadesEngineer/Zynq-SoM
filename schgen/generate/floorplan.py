@@ -90,7 +90,7 @@ def _pair_gap(a, b) -> float:
     return CLEAR
 
 
-CLEAR = 0.4              # block-to-block clearance — TIGHTENED (was 1.5). The
+CLEAR = 0.3              # block-to-block clearance — TIGHTENED (was 1.5). The
                          # interior occupancy lattice + the edge run both pack to
                          # this gap, so a smaller value pulls every subsystem
                          # closer, directly SHORTENING the cross-subsystem airwire
@@ -105,7 +105,7 @@ ROUTE_FACTOR = 3.5       # small-part area multiplier (escape + routing)
 # halo) and stay; EDGE_BAND / PACK_EFFICIENCY are the SIZING knobs tightened for
 # 2-sided assembly so the board no longer carries 70% empty area.
 PERIM_KEEPOUT = 3.0      # board-edge keepout ring kept free of components (KEEP)
-SOM_HALO = 6.0           # routing/escape halo reserved around the SoM body (KEEP)
+SOM_HALO = 7.0           # routing/escape halo reserved around the SoM body (KEEP)
 EDGE_BAND = EDGE_DEPTH_CAP - 4.0   # depth of the connector band on each edge —
                          # TIGHTENED (was +4). The deepest edge connectors sit
                          # within EDGE_DEPTH_CAP; the band only seeds the outline
@@ -1330,7 +1330,14 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     _pack_edges(plan, edge_of)
 
     occ = _Occupancy()
-    occ.add(plan.som_x, plan.som_y, plan.som.w, plan.som.h)
+    # reserve the SoM body PLUS a clearance pad: the placement_mech keepout
+    # (som_core) is drawn ~3% larger than the bare body for mating clearance, so a
+    # zone packed flush against the body clips that enlarged core (the ethernet
+    # magnetics clipped it 0.1mm after the tight-pack). Pad the reservation so
+    # packed zones stay clear of the 3% core.
+    _SOM_OCC_PAD = 1.5
+    occ.add(plan.som_x - _SOM_OCC_PAD, plan.som_y - _SOM_OCC_PAD,
+            plan.som.w + 2 * _SOM_OCC_PAD, plan.som.h + 2 * _SOM_OCC_PAD)
     # reserve the 4 corner mounting-hole keepouts: the PCB corner-forces an M3
     # hole into each corner, so no interior block may occupy a corner square (an
     # overlap was a real CHASSIS_GND/signal DRC short). Edge blocks clear the
