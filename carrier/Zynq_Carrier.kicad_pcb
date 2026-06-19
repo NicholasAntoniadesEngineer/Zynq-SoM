@@ -35109,7 +35109,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 170.05 100.27 270)
+		(at 169.65 100.27 90)
 		(descr
 			"CONN-SMD_4P-P1.00_MEGASTAR_ZX-SH1.0-4PWT — ZX-SH1.0-4PWT (CONN-SMD_4P-P1.00_MEGASTAR_ZX-SH1.0-4PWT) (EasyEDA/LCSC C7430446, faithful conversion)"
 		)
@@ -35347,7 +35347,7 @@
 			"4"
 			smd
 			rect
-			(at 1.5001 -1.7 270)
+			(at 1.5001 -1.7 90)
 			(size 0.499999 1.699997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 28 "/board_qwiic/QWIIC_SCL")
@@ -35357,7 +35357,7 @@
 			"1"
 			smd
 			rect
-			(at -1.4999 -1.7 270)
+			(at -1.4999 -1.7 90)
 			(size 0.499999 1.699997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")
@@ -35367,7 +35367,7 @@
 			"2"
 			smd
 			rect
-			(at -0.4999 -1.7 270)
+			(at -0.4999 -1.7 90)
 			(size 0.499999 1.699997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 5 "+3V3_AUX")
@@ -35377,7 +35377,7 @@
 			"3"
 			smd
 			rect
-			(at 0.5001 -1.7 270)
+			(at 0.5001 -1.7 90)
 			(size 0.499999 1.699997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 29 "/board_qwiic/QWIIC_SDA")
@@ -35387,7 +35387,7 @@
 			"5"
 			smd
 			rect
-			(at 2.5999 1.7 270)
+			(at 2.5999 1.7 90)
 			(size 1.199998 2.499995)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")
@@ -35397,7 +35397,7 @@
 			"6"
 			smd
 			rect
-			(at -2.5999 1.7 270)
+			(at -2.5999 1.7 90)
 			(size 1.199998 2.499995)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 180 "GND")

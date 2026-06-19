@@ -444,7 +444,13 @@ CONN_MATING_FACE: dict[str, str] = {
     "SFW15R-1STE1LF":  "-Y",   # camera FFC slot opens away from the solder tabs
                                # (posts at +Y -> cable entry at -Y), same as the
                                # geometrically-identical AFC07 LCD FPC
-    "ZX-SH1.0-4PWT":   "+Y",   # QWIIC shrouded header
+    "ZX-SH1.0-4PWT":   "-Y",   # QWIIC SH connector: mouth at the CONTACT-row side
+                               # (-Y, pads 1-4); the 2 big posts (pads 5,6) at +Y
+                               # are the BACK. Was +Y (faced the mouth INBOARD on
+                               # the E edge — user caught it); -Y seats the legs
+                               # inboard + opening toward the edge like the RJ45.
+                               # Render-verified (the .wrl open-face heuristic is
+                               # unreliable for these housings; the render decides).
     "DS1024-2x6R2":    "+Y",   # PMOD 2x6 socket
 }
 # EDGE -> placement rotation (deg, KiCad CCW) that turns the mating face OFF-BOARD.
