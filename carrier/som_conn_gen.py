@@ -58,7 +58,7 @@ CONTRACT = Path(__file__).resolve().parent / "som_interface.json"
 # the SoM net VIN (J1.1-14) is the module's 4.2-5V input. Binding it to the
 # carrier 20V PD rail +VIN destroys the SoM at the first PD contract
 # (wave3_function_map.md P0). It is REBOUND to the carrier +5V_SOM rail —
-# the always-on TPS54302 buck added in UNIT 1 (power.py U4). This is NEVER a
+# the always-on LM61460 buck (power_som.py U4, 6 A). This is NEVER a
 # silent spelling change: REBOUND_SOM_RAILS documents the SoM-net ->
 # carrier-rail map with its rationale, schgen.link.REBOUND_SOM_RAILS is the
 # policy twin (it accounts the SoM VIN census under +5V_SOM), and the linker
@@ -282,7 +282,7 @@ VCCO_RAIL_MAP: dict[str, str] = {
 # PLAN round-5 RAIL ISOLATION (user decision 2026-06-12) — carrier bucks WIN.
 # The SoM exports its own +3V3 (J1.24-27) and +1V8 (J1.56/58/60) from its
 # on-module MPM3834 stages, while carrier power.py regulates same-named
-# rails from its own bucks (TPS54302 U2 / AP2112K U3). Binding these pins
+# rails from its own bucks (LM61460 U2 / AP2112K U3). Binding these pins
 # would put two regulators in parallel on one net (the power-tree gate's
 # PARALLEL-SOURCE finding). Resolution: the pins become EXPLICIT author
 # no-connects on the carrier — never silently dropped. Each isolated pin is
@@ -292,7 +292,7 @@ VCCO_RAIL_MAP: dict[str, str] = {
 # connector sheet ever re-binds an isolated rail. The nets stay distinct;
 # the SoM-side rails remain on-module only.
 ISOLATED_SOM_RAILS: dict[str, str] = {
-    "+3V3": "SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 "
+    "+3V3": "SoM MPM3834 3V3 output on J1.24-27 — carrier LM61460 "
             "(power:U2) is the only +3V3 source",
     "+1V8": "SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K "
             "(power:U3) is the only +1V8 source",
@@ -367,14 +367,14 @@ def connector_circuit(jref: str, name: str, title: str) -> Circuit:
     # power-tree budget (round 4 + P0 rebind): the SoM module is now a
     # +5V_SOM load (J1.1-14 -> on-module TPS7A20/2x MPM3834/MPM3822/
     # TPSM82864 regulators feeding Zynq + DDR3L + PHYs). 10 W class worst
-    # case AT 5 V -> ~2.0 A (wave3_function_map.md P0 point 2); this is the
-    # SoM module draw, declared where the module is the consumer. The
-    # +5V_SOM buck (power.py U4) is a 3 A TPS54302 — 2 A leaves headroom.
+    # case AT the regulated 4.65 V -> ~2.15 A (10 W / 4.65 V; wave3_function_map
+    # P0 point 2) — booked at the regulated rail, not 5 V. The +5V_SOM buck
+    # (power_som.py U4) is a 6 A LM61460 — 2.15 A is ~36 %, ample headroom.
     # ESTIMATE pending an SoM power-budget measurement at bring-up.
     if jref == "J1":
-        c.draws("+5V_SOM", 2.0, "SoM module (Zynq+DDR3L+PHYs) ~10 W class "
-                                "at 5 V (P0 rebind) — estimate, refine at "
-                                "bring-up")
+        c.draws("+5V_SOM", 2.15, "SoM module (Zynq+DDR3L+PHYs) ~10 W class "
+                                 "at the regulated 4.65 V (P0 rebind) — "
+                                 "estimate, refine at bring-up")
     # VCCO bank-rail LOADS (SYS-1): the +VCCO_* contact pins now MERGE onto the
     # carrier rails (resolve_net via VCCO_RAIL_MAP) — so each connector draws its
     # banks' VCCO current from +3V3 / +2V5_VADJ, declared where the bank is the

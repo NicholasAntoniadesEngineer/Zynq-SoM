@@ -1,11 +1,15 @@
 """som_decoupling — SoM power-entry decoupling under the DF40 mezzanine (LAW 6).
 
-The carrier DELIVERS three rails to the SoM across the DF40 mezzanine connector:
-``+5V_SOM`` (the SoM's main power input), ``+3V3`` and ``+3V3_SC`` (bank / system-
-controller supplies). A power rail should be bypassed AT its distribution node —
-here the DF40 power-pin entry — so the SoM sees a low-impedance source for its
-transient current draw. This sheet is that entry network: bulk charge reservoirs
-+ high-frequency bypass on each delivered rail, GND-referenced.
+This sheet bypasses three SoM-rail nets at the DF40 mezzanine connector. Mind the
+DIRECTION (audit 2026-06-19): ``+5V_SOM`` is carrier-DELIVERED (the carrier U4
+buck -> the SoM's main power input) and ``+3V3`` is carrier-delivered to the SoM
+VCCO bank pins; but ``+3V3_SC`` is SoM-SOURCED — it is generated ON the module by
+the SoM's own TPS7A20 LDO (~300 mA) and only TAPPED by the carrier here (the
+carrier does NOT supply +3V3_SC). A power rail should be bypassed AT its
+distribution node — here the DF40 power-pin entry — so the load sees a
+low-impedance source for its transient draw; that holds whether the rail is
+delivered to or received from the SoM. This sheet is that entry network: bulk
+charge reservoirs + high-frequency bypass on each rail, GND-referenced.
 
 PLACEMENT (LAW 6): every cap is placed on the BOTTOM side directly in the SoM
 shadow — the area under the plugged-in mezzanine that can hold ONLY low-profile

@@ -26,7 +26,7 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "bb5125ee9bbe711b77c94c3805937b1f0c28893c4a56bf018bbb67876686b552"
+      "sha256": "e3cbf55bf8cc949cda4c84ff0e7bc9a53c41c5b7092828dcef33f9535f2bc878"
     },
     {
       "path": "docs/FLOORPLAN.svg",
@@ -38,11 +38,11 @@
     },
     {
       "path": "docs/power_sequence.svg",
-      "sha256": "9130359a4d94474f049d5fc948bd80c7750c7fcc817e1b5b3bf47ef6942ef447"
+      "sha256": "6e6ff19e83ab6cf137896be0a2f5b0484dd32c9ebeb3cfb1489d46ccd460e1ad"
     },
     {
       "path": "docs/power_tree.svg",
-      "sha256": "ccf730a2dd0153623bd8a95ad92455cea5656a451718b844fffb8e43722daff4"
+      "sha256": "e46ec01f7fc1155a58914b9a1fdf64200df9eff5334606592e72673dfa285393"
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
@@ -134,7 +134,7 @@
     },
     {
       "path": "reports/power_tree.txt",
-      "sha256": "084717804c76a1ed72d1f2e4f44534b8da3c365e9488ad7a10af595fad94ddb1"
+      "sha256": "da9657af1e6ced1f8145e2008470fc3b5bcbfbb84068a6b6223479c5e6418e6c"
     },
     {
       "path": "reports/ratsnest.txt",
@@ -158,7 +158,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "3a80fadc47087507bf9582e3fc195f0f2b666057cbc42dba22ccdf396120cda6"
+      "sha256": "3e6145c3f07931692dc71286cd6927e0c0a3c562fe9e46e68f165ca110cd53cd"
     },
     {
       "path": "schematic/board_aux.kicad_sch",
@@ -850,10 +850,10 @@
     },
     {
       "draws": [],
-      "limit_a": null,
+      "limit_a": 0.5,
       "load_a": 0.045,
       "name": "+5V_DBG",
-      "source": null,
+      "source": "source: debug USB-C VBUS (usb_jtag_connector J1) \u2014 host-supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag AP2112K-3.3 debug-island LDO; isolated from carrier +5V",
       "volts": 5.0
     },
     {
@@ -910,13 +910,13 @@
           "sheet": "power_som"
         },
         {
-          "amps": 2.0,
-          "note": "SoM module (Zynq+DDR3L+PHYs) ~10 W class at 5 V (P0 rebind) \u2014 estimate, refine at bring-up",
+          "amps": 2.15,
+          "note": "SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) \u2014 estimate, refine at bring-up",
           "sheet": "som_j1"
         }
       ],
       "limit_a": 6.0,
-      "load_a": 2.004,
+      "load_a": 2.154,
       "name": "+5V_SOM",
       "source": "power_som:U4 LM61460AANRJRR [buck]",
       "volts": 4.65
@@ -943,7 +943,7 @@
     {
       "draws": [],
       "limit_a": 3.0,
-      "load_a": 1.2578,
+      "load_a": 1.2965,
       "name": "+VBUS_IN",
       "source": "source: USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)",
       "volts": 20.0
@@ -951,7 +951,7 @@
     {
       "draws": [],
       "limit_a": 3.529,
-      "load_a": 1.2578,
+      "load_a": 1.2965,
       "name": "+VIN",
       "source": "pd_input:U1 TPS26631PWPR [efuse]",
       "volts": 20.0
@@ -959,7 +959,7 @@
     {
       "draws": [],
       "limit_a": null,
-      "load_a": 1.2578,
+      "load_a": 1.2965,
       "name": "+VIN_SYS",
       "source": null,
       "volts": 20.0

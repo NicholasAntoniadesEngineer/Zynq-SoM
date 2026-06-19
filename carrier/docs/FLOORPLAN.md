@@ -94,12 +94,12 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.016 | negligible |
 | SY6280AAC (U9) | bringup_modules | +5V -> +5V_HDMI_TX | 0.058 | negligible |
 | TLV75725PDYDR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.400 | ~0.32 W |
-| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.258 | negligible |
+| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.296 | negligible |
 | SY6280AAC (U1) | pmod_expansion | +3V3 -> +3V3_PMODX | 0.104 | negligible |
 | LM61460AANRJRR (U1) | power | +VIN_SYS -> +5V_REG | 2.664 | ~1.48 W |
 | LM61460AANRJRR (U2) | power | +5V -> +3V3_REG | 2.245 | ~0.82 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8_REG | 0.006 | negligible |
-| LM61460AANRJRR (U4) | power_som | +VIN_SYS -> +5V_SOM | 2.004 | ~1.04 W |
+| LM61460AANRJRR (U4) | power_som | +VIN_SYS -> +5V_SOM | 2.154 | ~1.11 W |
 | AP2112K-3.3TRG1 (U4) | usb_jtag | +5V_DBG -> +3V3_DBG | 0.045 | ~0.08 W |
 
 Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/power_tree.txt`); regulators above ~0.3 W want copper pours + stitching vias.

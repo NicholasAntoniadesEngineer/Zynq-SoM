@@ -179,6 +179,14 @@ SOURCES: dict[str, tuple[float, float, str]] = {
                           "class — the SoM power_architecture sheet says "
                           "'3V3 (300mA)'. Envelope shared with the SoM-side "
                           "SC (STM32G431 ~50 mA); carrier tally only here"),
+    # debug-USB inlet: the JTAG/UART debug USB-C receptacle's 5 V VBUS
+    # (usb_jtag_connector J1) feeds the self-powered debug island (usb_jtag
+    # AP2112K-3.3 LDO U4). Host-supplied, present only when the debug cable is
+    # connected; modelled like +VBUS_IN so it is not flagged UNSOURCED. It stays
+    # electrically ISOLATED from the carrier +5V (audit 2026-06-19).
+    "+5V_DBG": (5.0, 0.5, "debug USB-C VBUS (usb_jtag_connector J1) — host-"
+                          "supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag "
+                          "AP2112K-3.3 debug-island LDO; isolated from carrier +5V"),
 }
 
 # Rails known to be deferred by PLAN flags (unsourced today, by decision).
