@@ -1107,6 +1107,25 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # REAL gate in `schgen board` remains the final, strict arbiter.
     SAFETY = 1.0
 
+    # L4_PULL_CREDIT: the PCB placer's LEVER-L4 step (pcb.py — "BOTTOM-PULL toward
+    # the SoM") slides every subsystem's BOTTOM-side passive sub-cluster toward the
+    # SoM, collision- and dispersion-bounded, which SHORTENS the real cross-
+    # subsystem airwire the LAW-5 gate measures. The block-centre proxy here does
+    # NOT see that pull (it charges whole-block centres), so without a credit it
+    # over-states the airwire of the board the placer actually emits and the
+    # smallest-area search stops too early (it kept 165x135 even though the
+    # L4-placed board clears the budget at 161x134). MEASURED real(L4)/real(no-L4)
+    # is 0.944–0.958 across the tight regime (165x135: 0.958; 161x134: 0.944);
+    # 0.97 is a CONSERVATIVE credit (LESS reduction than the placer truly achieves)
+    # so proxy*PROXY_TO_REAL*L4_PULL_CREDIT stays a SAFE UPPER BOUND on the
+    # L4-placed real airwire — proven at every probed size (e.g. 161x134: estimate
+    # ~13.2k >= real 12.86k, budget 13.66k). This is NOT softening the gate: the
+    # estimate still over-bounds the REAL airwire of the REAL placement, and the
+    # strict LAW-5 gate in `schgen board` remains the only arbiter — a too-rosy
+    # estimate can only be caught there and leave the board a touch larger, never
+    # ship a board over budget. Grounded in the placer's behaviour, re-measurable.
+    L4_PULL_CREDIT = 0.97
+
     # DECLARATIVE fixed outline: carrier/floorplan.json {"outline":{"w","h"}}
     # PINS the board dimensions. The placer still packs the same blocks into that
     # exact box and the REAL LAW-5 gate in `schgen board` still judges — a fixed
@@ -1125,7 +1144,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
         budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
         proxy = _cross_proxy(plan, plan.edge_blocks + interior,
                              sheets_of_net, som_j_of_net)
-        est_real = proxy * PROXY_TO_REAL
+        est_real = proxy * PROXY_TO_REAL * L4_PULL_CREDIT
         OUTLINE_NOTE = (f"FIXED outline {BOARD_W:g}x{BOARD_H:g} mm declared in "
                         f"carrier/floorplan.json; estimated cross-subsystem "
                         f"airwire {est_real:.0f} mm (LAW-5 budget {budget:.0f} "
@@ -1166,7 +1185,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
             budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
             proxy = _cross_proxy(plan, plan.edge_blocks + interior,
                                  sheets_of_net, som_j_of_net)
-            est_real = proxy * PROXY_TO_REAL
+            est_real = proxy * PROXY_TO_REAL * L4_PULL_CREDIT
             if est_real <= budget * SAFETY:
                 area = round(BOARD_W * BOARD_H, 1)
                 cand = (area, BOARD_W, BOARD_H, est_real, budget)
@@ -1201,7 +1220,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
         bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
         px = _cross_proxy(plan, plan.edge_blocks + interior,
                           sheets_of_net, som_j_of_net)
-        er = px * PROXY_TO_REAL
+        er = px * PROXY_TO_REAL * L4_PULL_CREDIT
         return (er <= bud * SAFETY), er, bud
 
     _area, bw, bh, best_er, best_bud = best
@@ -1214,11 +1233,20 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # clears the est-airwire budget. The window is small enough to stay fast yet
     # wide enough to step over the non-monotonic valley. Deterministic: fixed grid.
     REFINE_SPAN = 40.0                     # mm each axis explored below the best
+    # FINE step (1 mm, not the 5 mm OUTLINE_SNAP): the REAL packer's shelf quantum
+    # makes feasibility JAGGED on the 1 mm scale — at the tight wall 161 and 163
+    # pack but 160/162/164 do NOT, and the L4-credited airwire clears the budget at
+    # 161x134 (a board the 5 mm grid can never name, so the coarse search fell back
+    # to 165x135). Scanning a 1 mm grid lets the search LAND on those narrow packing
+    # islands. Each candidate still calls the REAL _attempt_pack (PACK_FAIL sizes
+    # are rejected) and the L4-credited proxy vs the LAW-5 budget, so this only
+    # finds a smaller board the strict `schgen board` gate then re-proves — it never
+    # relaxes a gate. Deterministic: a fixed 1 mm grid, smallest-area wins.
+    FINE_SNAP = 1.0
     a0, bw0, bh0 = _area, bw, bh
-    ws = [round(bw0 - k * OUTLINE_SNAP, 1)
-          for k in range(0, int(REFINE_SPAN / OUTLINE_SNAP) + 1)]
-    hs = [round(bh0 - k * OUTLINE_SNAP, 1)
-          for k in range(0, int(REFINE_SPAN / OUTLINE_SNAP) + 1)]
+    nsteps = int(REFINE_SPAN / FINE_SNAP) + 1
+    ws = [round(bw0 - k * FINE_SNAP, 1) for k in range(0, nsteps)]
+    hs = [round(bh0 - k * FINE_SNAP, 1) for k in range(0, nsteps)]
     for w in ws:
         for h in hs:
             if w <= 0 or h <= 0 or w < h or w * h >= bw * bh - 1e-6:
@@ -1288,8 +1316,12 @@ def _cross_proxy(plan: Plan, blocks: list[Block],
             for j in plan.som.js}
     total = 0.0
     for net, ss in sheets_of_net.items():
-        pts = [ctr[s] for s in ss if s in ctr]
-        for jn in som_j_of_net.get(net, ()):
+        # iterate a SORTED order (ss is a set): the Euclidean Prim MST below
+        # tie-breaks on point ORDER, so a hash-seeded set iteration would make
+        # _cross_proxy (and thus the chosen board size) vary run-to-run. Sorting
+        # makes the proxy deterministic independent of PYTHONHASHSEED.
+        pts = [ctr[s] for s in sorted(ss) if s in ctr]
+        for jn in sorted(som_j_of_net.get(net, ())):
             if jn in jpos:
                 pts.append(jpos[jn])
         n = len(pts)

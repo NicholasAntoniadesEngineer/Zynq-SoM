@@ -917,16 +917,15 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"SCFW SCAFFOLD: FAIL — {exc}")
         ok_all = False
 
-    # floorplan suggestion (SVG + MD), derived from the same sheets/link
-    from schgen.generate import floorplan
-    try:
-        fp_paths = floorplan.generate(sheets, res)
-        print("FLOORPLAN: " + " + ".join(
-            str(p.relative_to(REPO_ROOT)) for p in fp_paths)
-            + " (suggestion, not constraint)")
-    except Exception as exc:  # noqa: BLE001
-        print(f"FLOORPLAN: FAIL — {exc}")
-        ok_all = False
+    # floorplan suggestion (SVG + MD) is built AFTER the PCB worker thread is
+    # joined (see below), NOT here. floorplan.generate calls fp.build_plan, which
+    # WRITES the module globals fp.BOARD_W/BOARD_H; the PCB worker thread (started
+    # above) is concurrently running build_model -> fp.build_plan, which WRITES
+    # those SAME globals and then READS them to emit Edge.Cuts. Running both
+    # build_plan calls at once raced the outline against the placement and tore
+    # the emitted board (160x150 ratsnest-over, 160x145 DRC-3). Deferring this
+    # call past _pcb_thread.join() removes the concurrent writer (LAW 0/5: the
+    # emitted outline now always matches the placement the gates measured).
 
     # power-up SEQUENCE diagram (SVG), derived from the SAME pt_res power-tree
     # analysis the budget gate above ran — the staged bring-up drawn (stage-0
@@ -1068,6 +1067,20 @@ def cmd_board(args: argparse.Namespace) -> int:
             ok_all = False
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
+        ok_all = False
+
+    # floorplan suggestion (SVG + MD), derived from the same sheets/link. Built
+    # HERE — strictly AFTER _pcb_thread.join() above — so its fp.build_plan call
+    # no longer races the PCB thread's writes to fp.BOARD_W/BOARD_H. With the PCB
+    # thread finished, this build_plan runs serially and deterministically.
+    from schgen.generate import floorplan
+    try:
+        fp_paths = floorplan.generate(sheets, res)
+        print("FLOORPLAN: " + " + ".join(
+            str(p.relative_to(REPO_ROOT)) for p in fp_paths)
+            + " (suggestion, not constraint)")
+    except Exception as exc:  # noqa: BLE001
+        print(f"FLOORPLAN: FAIL — {exc}")
         ok_all = False
 
     _lap("pcb gen + DRC + ratsnest images + LAW-5 gate")

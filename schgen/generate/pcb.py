@@ -1305,6 +1305,130 @@ def build_model(two_side: bool = True) -> PcbModel:
             side_of[ref] = "bottom"
             grid_placed.add(ref)
 
+    # ---- LEVER L4: BOTTOM-PULL toward the SoM (cross-airwire reduction) ------
+    # The board is AIRWIRE-BUDGET bound (LAW 5) and the BOTTOM is ~82% empty. Every
+    # subsystem nets most of its pins to the SoM DF40 J-strips at the board centre,
+    # so its cross-subsystem airwire is dominated by the span from its cluster to
+    # the SoM. The 2-side policy already put its small passives on the BOTTOM layer,
+    # so that bottom sub-cluster can slide toward the SoM to SHORTEN those net spans
+    # and drop the REAL cross-airwire the LAW-5 gate measures. The cluster moves as
+    # a RIGID GROUP (internal packing — every intra-cluster clearance — preserved),
+    # by the LARGEST shift toward the SoM centre that still: (a) keeps every part
+    # on-board; (b) clears — with full courtyard halo — EVERY other part already on
+    # the BOTTOM layer (other subsystems' clusters, the som_decoupling grid, and the
+    # not-yet-moved bottom parts) so no bottom-vs-bottom overlap/short; (c) never
+    # lands a bottom SMD over a TOP through-hole pad (copper on all layers); and
+    # (d) keeps the subsystem's combined top+bottom dispersion under a conservative
+    # cap (below the LAW-5 9x gate) so it still reads as ONE cluster. ADDS no net,
+    # RELOCATES no net (LAW 0): only the physical XY of already-bottom passives
+    # moves. The REAL DRC + ratsnest gates remain the arbiters.
+    if two_side:
+        som_cx = plan.som_x + som.w / 2.0
+        som_cy = plan.som_y + som.h / 2.0
+
+        def _eff_box(ref: str, px: float, py: float
+                     ) -> tuple[float, float, float, float]:
+            ex0, ey0, ex1, ey1 = _eff_bbox_for(bbox_of[ref],
+                                               side_of.get(ref, "top"))
+            return (px + ex0, py + ey0, px + ex1, py + ey1)
+
+        def _halo(b: tuple[float, float, float, float], m: float
+                  ) -> tuple[float, float, float, float]:
+            return (b[0] - m, b[1] - m, b[2] + m, b[3] + m)
+
+        def _hit(b: tuple[float, float, float, float],
+                 boxes: list[tuple[float, float, float, float]]) -> bool:
+            for o in boxes:
+                if (b[0] < o[2] and b[2] > o[0]
+                        and b[1] < o[3] and b[3] > o[1]):
+                    return True
+            return False
+
+        # TOP through-hole pad keepout boxes (haloed) — a bottom SMD over one is a
+        # cross-layer short (copper on all layers).
+        tht_boxes: list[tuple[float, float, float, float]] = [
+            _halo(_eff_box(r, pos[r][0], pos[r][1]), PLACE_CLEAR)
+            for r in pos
+            if side_of.get(r) == "top" and r in resolvable
+            and has_thru_pads(resolvable[r])]
+
+        # occupancy of every BOTTOM-layer part (haloed) — the moving cluster must
+        # not overlap any of these. Built once; each subsystem removes its own
+        # movers before testing and re-adds them (shifted) after committing, so a
+        # later subsystem sees the earlier one's final seat.
+        bot_box: dict[str, tuple[float, float, float, float]] = {
+            r: _halo(_eff_box(r, pos[r][0], pos[r][1]), PLACE_CLEAR / 2)
+            for r in pos
+            if side_of.get(r) == "bottom" and r in bbox_of}
+
+        DISP_CAP_L4 = 5.0          # conservative; LAW-5 gate fails only at 9.0x
+        EDGE_MARGIN = 0.6          # keep shifted copper this far inside Edge.Cuts
+        STEP = 1.0
+        for sheet in sorted(zorigin):
+            movers = [r for r in bot_off.get(sheet, {})
+                      if side_of.get(r) == "bottom" and r in pos
+                      and r[:1] in ("R", "C", "L")
+                      and not r.startswith(("RJ", "LED"))]
+            if len(movers) < 2:
+                continue
+            gcx = sum(pos[r][0] for r in movers) / len(movers)
+            gcy = sum(pos[r][1] for r in movers) / len(movers)
+            vx, vy = som_cx - gcx, som_cy - gcy
+            dist = (vx * vx + vy * vy) ** 0.5
+            if dist < 1.0:
+                continue
+            ux, uy = vx / dist, vy / dist
+            # bottom occupancy EXCLUDING this subsystem's own movers
+            others = [bot_box[r] for r in bot_box if r not in set(movers)]
+            allr = [r for r in (list(top_off.get(sheet, {}))
+                                + list(bot_off.get(sheet, {})))
+                    if r in pos and r in bbox_of]
+            sum_area = sum((_eff_box(r, 0.0, 0.0)[2] - _eff_box(r, 0.0, 0.0)[0])
+                           * (_eff_box(r, 0.0, 0.0)[3] - _eff_box(r, 0.0, 0.0)[1])
+                           for r in allr) or 1.0
+            chosen = 0.0
+            for k in range(int(min(dist, 40.0) / STEP), 0, -1):
+                shift = k * STEP
+                ok = True
+                shifted: dict[str, tuple[float, float]] = {}
+                for r in movers:
+                    nx, ny = pos[r][0] + ux * shift, pos[r][1] + uy * shift
+                    bb = _eff_box(r, nx, ny)
+                    if (bb[0] < EDGE_MARGIN or bb[1] < EDGE_MARGIN
+                            or bb[2] > board_w - EDGE_MARGIN
+                            or bb[3] > board_h - EDGE_MARGIN):
+                        ok = False
+                        break
+                    hb = _halo(bb, PLACE_CLEAR / 2)
+                    if _hit(hb, others) or _hit(hb, tht_boxes):
+                        ok = False
+                        break
+                    shifted[r] = (nx, ny)
+                if not ok:
+                    continue
+                xs0 = []
+                ys0 = []
+                xs1 = []
+                ys1 = []
+                for r in allr:
+                    px, py = shifted.get(r, pos[r])
+                    bb = _eff_box(r, px, py)
+                    xs0.append(bb[0])
+                    ys0.append(bb[1])
+                    xs1.append(bb[2])
+                    ys1.append(bb[3])
+                if ((max(xs1) - min(xs0)) * (max(ys1) - min(ys0))
+                        / sum_area) > DISP_CAP_L4:
+                    continue
+                chosen = shift
+                break
+            if chosen > 0.0:
+                for r in movers:
+                    nx, ny = (round(pos[r][0] + ux * chosen, 4),
+                              round(pos[r][1] + uy * chosen, 4))
+                    pos[r] = (nx, ny)
+                    bot_box[r] = _halo(_eff_box(r, nx, ny), PLACE_CLEAR / 2)
+
     # LAW 6: seat every off-board connector AT the board edge — push it outward
     # (perpendicular to its edge) until its outermost PAD clears EDGE_PAD_CLEAR,
     # so the mouth/shell reaches/overhangs the edge and a cable actually mates
