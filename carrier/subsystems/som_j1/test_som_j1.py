@@ -126,10 +126,12 @@ def test_rails_present_and_classed(c: Circuit):
 
 
 def test_module_power_draw_declared(c: Circuit):
-    """J1 declares the SoM module draw on the +5V_SOM rail (~10 W class)."""
+    """J1 declares the SoM module draw on the +5V_SOM rail (~10 W class). Booked
+    at the regulated 4.65 V => 10 W / 4.65 V = 2.15 A (audit 2026-06-19; was 2.0 A
+    at a 5 V basis)."""
     assert "+5V_SOM" in c.loads
     amps = sum(a for a, _ in c.loads["+5V_SOM"])
-    assert amps == pytest.approx(2.0)
+    assert amps == pytest.approx(2.15)
 
 
 def test_ethernet_mdi_pairs_typed_100r(c: Circuit):
