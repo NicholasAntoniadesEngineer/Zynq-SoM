@@ -82,6 +82,65 @@ def test_three_dip_switches_present(c: Circuit):
                    "SW6": "DSHP04TSGER"}, sws
 
 
+def _dip_column_pairs(mpn: str):
+    """The same-column (top, bottom) pad-number pairs of a DIP-switch footprint —
+    the two terminals each rocker physically bridges. Read from the FAITHFUL
+    EasyEDA footprint so the test tracks the real part, not an assumed numbering
+    convention (DSHP04 numbers its bottom row 8..5, DSHP08 numbers it 9..16)."""
+    import collections
+    root = HERE.parents[2]
+    s = (root / "parts" / mpn / f"{mpn}.kicad_mod").read_text()
+    cols: dict[float, dict] = collections.defaultdict(dict)
+    for blk in re.split(r"\n\s*\(pad\b", s)[1:]:
+        num = re.search(r'^\s*"([^"]+)"', blk)
+        at = re.search(r"\(at\s+([-0-9.]+)\s+([-0-9.]+)", blk)
+        if not (num and at):
+            continue
+        x, y = round(float(at.group(1)), 2), float(at.group(2))
+        cols[x]["top" if y > 0 else "bot"] = num.group(1)
+    return [(d["top"], d["bot"]) for d in cols.values()
+            if "top" in d and "bot" in d]
+
+
+def test_sw2_dip_bridges_3v3_to_one_unique_enable_each(c: Circuit):
+    """CRITICAL regression (audit 2026-06-19). SW2 (DSHP08) must wire each rocker
+    to bridge +3V3_SC -> exactly ONE distinct BU_DIP_* enable. The original map
+    re-used DSHP04's (n,17-n) diagonal, but DSHP08 pairs SAME-COLUMN (n,n+8), so
+    every position shorted +3V3_SC to itself or tied two enable nets — board-dead,
+    yet DRC/ERC/netlist-equivalence all passed (the DIP symbol is a passive
+    rectangle). This asserts the real per-rocker electrical intent from the
+    footprint geometry, so the class of defect cannot recur silently."""
+    seen = set()
+    pairs = _dip_column_pairs("DSHP08TSGER")
+    assert len(pairs) == 8, pairs
+    for top, bot in pairs:
+        nets = {n.name for n in (c.net_of(PinRef("SW2", top)),
+                                 c.net_of(PinRef("SW2", bot))) if n}
+        assert "+3V3_SC" in nets, f"SW2 rocker ({top},{bot}) misses +3V3_SC: {nets}"
+        sig = nets - {"+3V3_SC"}
+        assert len(sig) == 1, f"SW2 rocker ({top},{bot}) must bridge ONE net: {nets}"
+        en = sig.pop()
+        assert en.startswith("BU_DIP_"), f"SW2 ({top},{bot}) signal {en!r} not an enable"
+        assert en not in seen, f"SW2 enable {en!r} wired on two rockers (short)"
+        seen.add(en)
+    assert len(seen) == 8, seen
+
+
+def test_sw1_dip_bridges_3v3_to_one_unique_enable_each(c: Circuit):
+    """The DSHP04 rail DIP (SW1) must likewise bridge +3V3_SC -> one distinct
+    BU_DIP net per rocker — guards the (n,9-n) diagonal convention the same way
+    and proves the test passes on the correctly-wired sibling."""
+    seen = set()
+    for top, bot in _dip_column_pairs("DSHP04TSGER"):
+        nets = {n.name for n in (c.net_of(PinRef("SW1", top)),
+                                 c.net_of(PinRef("SW1", bot))) if n}
+        assert "+3V3_SC" in nets and len(nets - {"+3V3_SC"}) == 1, (top, bot, nets)
+        en = (nets - {"+3V3_SC"}).pop()
+        assert en.startswith("BU_DIP_") and en not in seen, (top, bot, en)
+        seen.add(en)
+    assert len(seen) == 4, seen
+
+
 def test_tca9535_expander_present(c: Circuit):
     assert "U1" in c.parts and "TCA9535" in c.parts["U1"].value
 

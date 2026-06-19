@@ -68,11 +68,18 @@ J3_MAP = "som_j3_connector (wave 3 STM32 GPIO function map)"
 # pairing: pos n = pins (n, 9-n); odd pins 1/3/5/7 carry the +3V3_SC side.
 SW1_MAP = (("8", "BU_DIP_5V0"), ("2", "BU_DIP_3V3"),
            ("6", "BU_DIP_1V8"), ("4", "BU_DIP_USER_LED"))
-# SW2 module DIP: pos n = pins (n, 17-n); odd pins carry +3V3_SC.
-SW2_MAP = (("16", "BU_DIP_HDMI_TX"), ("2", "BU_DIP_HDMI_RX"),
-           ("14", "BU_DIP_LCD"), ("4", "BU_DIP_CAM"),
-           ("12", "BU_DIP_SD"), ("6", "BU_DIP_USB"),
-           ("10", "BU_DIP_PMOD"), ("8", "BU_DIP_SPARE"))
+# SW2 module DIP (DSHP08). Each rocker bridges the two pads in the SAME COLUMN;
+# the DSHP08 footprint numbers its bottom row 9..16 left-to-right (UNLIKE DSHP04,
+# whose bottom row is 8..5), so a position n bridges pins (n, n+8) — a STRAIGHT
+# pairing, NOT the (n, 9-n) diagonal of DSHP04. Top row 1-8 carry +3V3_SC;
+# the bottom-row pin (n+8) carries the BU_DIP net, so flipping position n pulls
+# that module's enable to +3V3_SC. (Audit 2026-06-19 CRITICAL: the old map used
+# DSHP04's (n,17-n) diagonal and shorted enable pairs — fixed here in the ADAPTER,
+# NOT by renumbering the faithful EasyEDA footprint.)
+SW2_MAP = (("9", "BU_DIP_HDMI_TX"), ("10", "BU_DIP_HDMI_RX"),
+           ("11", "BU_DIP_LCD"), ("12", "BU_DIP_CAM"),
+           ("13", "BU_DIP_SD"), ("14", "BU_DIP_USB"),
+           ("15", "BU_DIP_PMOD"), ("16", "BU_DIP_SPARE"))
 # SW6 round-5 extension DIP (DSHP04, same pairing as SW1): positions 1/2
 # carry the 5V module gates, 3/4 spare (even pins 6/4 author-NC below).
 SW6_MAP = (("8", "BU_DIP_HDMI_TX_5V"), ("2", "BU_DIP_LCD_5V"))
@@ -95,8 +102,11 @@ def circuit() -> Circuit:
     for pin, net in SW1_MAP:
         c.port(net, f"SW1.{pin}", expect=EXPECT_EN)
     c.use_part("DSHP08TSGER", ref="SW2")
-    c.net("+3V3_SC", "SW2.1", "SW2.3", "SW2.5", "SW2.7",
-          "SW2.9", "SW2.11", "SW2.13", "SW2.15")
+    # +3V3_SC on the TOP row (pins 1-8); each BU_DIP net lands on the bottom-row
+    # pin (n+8) of the same column (see SW2_MAP) so every rocker bridges
+    # +3V3_SC -> its module-enable net.
+    c.net("+3V3_SC", "SW2.1", "SW2.2", "SW2.3", "SW2.4",
+          "SW2.5", "SW2.6", "SW2.7", "SW2.8")
     for pin, net in SW2_MAP:
         c.port(net, f"SW2.{pin}", expect=EXPECT_EN)
     # SW6: round-5 extension DIP (docstring) — positions 3/4 spare

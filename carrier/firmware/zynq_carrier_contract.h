@@ -189,15 +189,15 @@
 /*      netlist (P0x/P1x pin -> net), joined to its EN cell + load      */
 /*      switch.  Bit index = position in the 16-bit port word           */
 /*      (P00=bit0 ... P17=bit15).  POR state = all inputs => DIP rules. */
-#define ZC_TCA9535_BIT_EN_HDMI_TX 0  /* P00: BU_OVR_HDMI_TX -> EN_HDMI_TX (+3V3_HDMI_TX, ILIM 523 mA, DIP SW2 pos 1) */
-#define ZC_TCA9535_BIT_EN_HDMI_RX 1  /* P01: BU_OVR_HDMI_RX -> EN_HDMI_RX (+3V3_HDMI_RX, ILIM 523 mA, DIP SW2 pos 2) */
-#define ZC_TCA9535_BIT_EN_LCD 2  /* P02: BU_OVR_LCD -> EN_LCD (+3V3_LCD, ILIM 1000 mA, DIP SW2 pos 3) */
-#define ZC_TCA9535_BIT_EN_CAM 3  /* P03: BU_OVR_CAM -> EN_CAM (+3V3_CAM, ILIM 523 mA, DIP SW2 pos 4) */
-#define ZC_TCA9535_BIT_EN_SD 4  /* P04: BU_OVR_SD -> EN_SD (+3V3_SD, ILIM 1000 mA, DIP SW2 pos 5) */
-#define ZC_TCA9535_BIT_EN_USB 5  /* P05: BU_OVR_USB -> EN_USB (+5V_USB, ILIM 1000 mA, DIP SW2 pos 6) */
-#define ZC_TCA9535_BIT_EN_PMOD 6  /* P06: BU_OVR_PMOD -> EN_PMOD (+3V3_PMOD, ILIM 523 mA, DIP SW2 pos 7) */
+#define ZC_TCA9535_BIT_EN_HDMI_TX 0  /* P00: BU_OVR_HDMI_TX -> EN_HDMI_TX (+3V3_HDMI_TX, ILIM 523 mA, DIP SW2 pos 8) */
+#define ZC_TCA9535_BIT_EN_HDMI_RX 1  /* P01: BU_OVR_HDMI_RX -> EN_HDMI_RX (+3V3_HDMI_RX, ILIM 523 mA, DIP SW2 pos 7) */
+#define ZC_TCA9535_BIT_EN_LCD 2  /* P02: BU_OVR_LCD -> EN_LCD (+3V3_LCD, ILIM 1000 mA, DIP SW2 pos 6) */
+#define ZC_TCA9535_BIT_EN_CAM 3  /* P03: BU_OVR_CAM -> EN_CAM (+3V3_CAM, ILIM 523 mA, DIP SW2 pos 5) */
+#define ZC_TCA9535_BIT_EN_SD 4  /* P04: BU_OVR_SD -> EN_SD (+3V3_SD, ILIM 1000 mA, DIP SW2 pos 4) */
+#define ZC_TCA9535_BIT_EN_USB 5  /* P05: BU_OVR_USB -> EN_USB (+5V_USB, ILIM 1000 mA, DIP SW2 pos 3) */
+#define ZC_TCA9535_BIT_EN_PMOD 6  /* P06: BU_OVR_PMOD -> EN_PMOD (+3V3_PMOD, ILIM 523 mA, DIP SW2 pos 2) */
 #define ZC_TCA9535_BIT_EN_USER_LED 7  /* P07: BU_OVR_USER_LED -> EN_USER_LED (+3V3_USER_LED, ILIM 523 mA, DIP SW1 pos 4) */
-#define ZC_TCA9535_BIT_EN_LCD_BL 8  /* P10: BU_OVR_LCD_BL -> EN_LCD_BL (DIP SW2 pos 8) */
+#define ZC_TCA9535_BIT_EN_LCD_BL 8  /* P10: BU_OVR_LCD_BL -> EN_LCD_BL (DIP SW2 pos 1) */
 /* P11 (bit 9): PMON_ALERT_N -- INPUT: INA3221 CRITICAL wire-OR (power_mon, 10k PU +3V3_SC) */
 #define ZC_TCA9535_BIT_EN_HDMI_TX_5V 10  /* P12: BU_OVR_HDMI_TX_5V -> EN_HDMI_TX_5V (+5V_HDMI_TX, ILIM 523 mA, DIP SW6 pos 1) */
 #define ZC_TCA9535_BIT_EN_LCD_5V 11  /* P13: BU_OVR_LCD_5V -> EN_LCD_5V (+5V_LCD, ILIM 1000 mA, DIP SW6 pos 2) */

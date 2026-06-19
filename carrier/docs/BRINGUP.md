@@ -126,17 +126,17 @@ module. Close one position, watch the status LED, check the module's sheet.
 
 | close | module | source | gated rail | ILIM | status LED | consumer sheets |
 |---|---|---|---|---|---|---|
-| `SW2` pos 1 | HDMI_TX | `+3V3` | `+3V3_HDMI_TX` | 523 mA | `bringup_modules.D1` | hdmi_tx |
-| `SW2` pos 2 | HDMI_RX | `+3V3` | `+3V3_HDMI_RX` | 523 mA | `bringup_modules.D2` | hdmi_rx |
-| `SW2` pos 3 | LCD | `+3V3` | `+3V3_LCD` | 1000 mA | `bringup_modules.D3` | lcd |
-| `SW2` pos 4 | CAM | `+3V3` | `+3V3_CAM` | 523 mA | `bringup_modules.D4` | camera |
-| `SW2` pos 5 | SD | `+3V3` | `+3V3_SD` | 1000 mA | `bringup_modules.D5` | microsd |
-| `SW2` pos 6 | USB | `+5V` | `+5V_USB` | 1000 mA | `bringup_modules.D6` | usbc_otg |
-| `SW2` pos 7 | PMOD | `+3V3` | `+3V3_PMOD` | 523 mA | `bringup_modules.D7` | pmod |
+| `SW2` pos 8 | HDMI_TX | `+3V3` | `+3V3_HDMI_TX` | 523 mA | `bringup_modules.D1` | hdmi_tx |
+| `SW2` pos 7 | HDMI_RX | `+3V3` | `+3V3_HDMI_RX` | 523 mA | `bringup_modules.D2` | hdmi_rx |
+| `SW2` pos 6 | LCD | `+3V3` | `+3V3_LCD` | 1000 mA | `bringup_modules.D3` | lcd |
+| `SW2` pos 5 | CAM | `+3V3` | `+3V3_CAM` | 523 mA | `bringup_modules.D4` | camera |
+| `SW2` pos 4 | SD | `+3V3` | `+3V3_SD` | 1000 mA | `bringup_modules.D5` | microsd |
+| `SW2` pos 3 | USB | `+5V` | `+5V_USB` | 1000 mA | `bringup_modules.D6` | usbc_otg |
+| `SW2` pos 2 | PMOD | `+3V3` | `+3V3_PMOD` | 523 mA | `bringup_modules.D7` | pmod |
 | `SW6` pos 1 | HDMI_TX_5V | `+5V` | `+5V_HDMI_TX` | 523 mA | `bringup_modules.D9` | hdmi_tx |
 | `SW6` pos 2 | LCD_5V | `+5V` | `+5V_LCD` | 1000 mA | `bringup_modules.D10` | lcd |
 
-`SW2` position 8 is the `EN_LCD_BL` provision: its override rides TCA9535 `P10`
+`SW2` position 1 is the `EN_LCD_BL` provision: its override rides TCA9535 `P10`
 through a 100k pull-DOWN, so it stays OFF until SC software raises it
 (`carrier/subsystems/bringup_rails/bringup_rails.py`).
 

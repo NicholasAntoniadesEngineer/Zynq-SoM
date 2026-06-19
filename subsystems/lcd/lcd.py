@@ -201,8 +201,12 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     c.net("+VBOOST_IN", "U1.IN", "L1.1", "C1.1")
     c.net("GND", "U1.GND", "C1.2", "C2.2", "R1.2")
     c.net("LCD_BL_SW", "L1.2", "U1.LX")                      # LX node
-    c.net("LCD_VLED_P", "D1.2", "C2.1", "U1.OVP", "J1.2")    # boost out + OVP
-    c.net("LCD_BL_SW", "D1.1")
+    # boost rectifier D1 (SS34): CATHODE (D1.1, K) on the boost OUTPUT, ANODE
+    # (D1.2, A) on the LX switch node, so the inductor pumps charge into VLED+
+    # when the switch opens. (Audit 2026-06-19 CRITICAL: was reversed -> dead
+    # backlight. Device:D_Schottky pin1=K, pin2=A.)
+    c.net("LCD_VLED_P", "D1.1", "C2.1", "U1.OVP", "J1.2")    # boost out + OVP (K)
+    c.net("LCD_BL_SW", "D1.2")                               # LX switch node (A)
     c.net("LCD_VLED_N", "J1.1", "R1.1", "U1.FB")             # current sense
     c.port("BL_PWM", "U1.EN/PWM", **meta.expect_kw("BL_PWM"))
     # backlight EN/PWM defaults OFF (boost off until the host drives it high)

@@ -56,8 +56,8 @@ enumerates as one UART + one JTAG TAP.
 |----------|-----------|-------|
 | TCK | 6 | JTAG clock out -> buffer -> ZYNQ_TCK |
 | TMS | 5 | JTAG mode out  -> buffer -> ZYNQ_TMS |
-| TDI | 7 | JTAG data out  -> buffer -> ZYNQ_TDI |
-| TDO | 8 | JTAG data IN (internal pull-up) <- buffer <- ZYNQ_TDO |
+| TDI | 8 | JTAG data out (pin8 TXD0/MOSI/TDI)  -> buffer -> ZYNQ_TDI |
+| TDO | 7 | JTAG data IN  (pin7 RTS0/MISO/TDO, internal pull-up) <- buffer <- ZYNQ_TDO |
 | TRST| 9 | NC — the Zynq dedicated-JTAG bank has no TRST; OPTIONAL per DS §5.6 |
 | TXD1| 3 | UART1 console TX -> DBG_UART_RXD (Zynq RXD) |
 | RXD1| 4 | UART1 console RX <- DBG_UART_TXD (Zynq TXD) |

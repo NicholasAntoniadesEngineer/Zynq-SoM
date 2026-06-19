@@ -391,7 +391,7 @@
 	(net 270 "Net-(C20027-Pad2)")
 	(net 271 "Net-(C22021-Pad2)")
 	(net 272 "Net-(D1001-K)")
-	(net 273 "Net-(D15001-K)")
+	(net 273 "Net-(D15001-A)")
 	(net 274 "Net-(D19001-K)")
 	(net 275 "Net-(D20001-K)")
 	(net 276 "Net-(D20002-K)")
@@ -25582,7 +25582,7 @@
 			(size 2.5 1.8)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.138889)
-			(net 273 "Net-(D15001-K)")
+			(net 47 "/lcd/LCD_VLED_P")
 			(uuid "7c307bba-9610-520b-a0c6-628b4d38e977")
 		)
 		(pad
@@ -25593,7 +25593,7 @@
 			(size 2.5 1.8)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.138889)
-			(net 47 "/lcd/LCD_VLED_P")
+			(net 273 "Net-(D15001-A)")
 			(uuid "f82cb322-e53f-57b7-93a2-8d415c82ba7d")
 		)
 		(embedded_fonts no)
@@ -42794,7 +42794,7 @@
 			(at 1.5999 0)
 			(size 1.599997 3.499993)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 273 "Net-(D15001-K)")
+			(net 273 "Net-(D15001-A)")
 			(uuid "66c9f8d3-e6a8-5e4e-bb89-76c9705ea515")
 		)
 		(pad
@@ -76410,7 +76410,7 @@
 			(at -3.175 3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 84 "BU_DIP_HDMI_RX")
+			(net 14 "+3V3_SC")
 			(uuid "878a2a15-2c0d-579a-b21b-03404ced136b")
 		)
 		(pad
@@ -76430,7 +76430,7 @@
 			(at -0.635 3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 83 "BU_DIP_CAM")
+			(net 14 "+3V3_SC")
 			(uuid "8630be7c-29a2-5c00-a68c-86210562a5c6")
 		)
 		(pad
@@ -76450,7 +76450,7 @@
 			(at 1.905 3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 92 "BU_DIP_USB")
+			(net 14 "+3V3_SC")
 			(uuid "cbc11938-b64d-59a1-b3b7-e62a2980c3c3")
 		)
 		(pad
@@ -76470,7 +76470,7 @@
 			(at 4.445 3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 91 "BU_DIP_SPARE")
+			(net 14 "+3V3_SC")
 			(uuid "566d0267-19a4-50ac-a7f0-1b79a9df7e8f")
 		)
 		(pad
@@ -76480,7 +76480,7 @@
 			(at -4.445 -3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 14 "+3V3_SC")
+			(net 85 "BU_DIP_HDMI_TX")
 			(uuid "a1236e8e-aca2-599c-b4c5-2c07db4997fa")
 		)
 		(pad
@@ -76490,7 +76490,7 @@
 			(at -3.175 -3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 89 "BU_DIP_PMOD")
+			(net 84 "BU_DIP_HDMI_RX")
 			(uuid "ba01f763-c46c-507d-a8da-e964ca045e58")
 		)
 		(pad
@@ -76500,7 +76500,7 @@
 			(at -1.905 -3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 14 "+3V3_SC")
+			(net 87 "BU_DIP_LCD")
 			(uuid "ec6adc44-690f-58bf-a2bd-592179872320")
 		)
 		(pad
@@ -76510,7 +76510,7 @@
 			(at -0.635 -3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 90 "BU_DIP_SD")
+			(net 83 "BU_DIP_CAM")
 			(uuid "444c1bcd-cd72-5179-b9b8-1b0beda3a8a8")
 		)
 		(pad
@@ -76520,7 +76520,7 @@
 			(at 0.635 -3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 14 "+3V3_SC")
+			(net 90 "BU_DIP_SD")
 			(uuid "2acbdd2f-d0b9-538a-a008-da59c5a58bef")
 		)
 		(pad
@@ -76530,7 +76530,7 @@
 			(at 1.905 -3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 87 "BU_DIP_LCD")
+			(net 92 "BU_DIP_USB")
 			(uuid "74042c2a-d136-5589-9e86-2d350725390a")
 		)
 		(pad
@@ -76540,7 +76540,7 @@
 			(at 3.175 -3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 14 "+3V3_SC")
+			(net 89 "BU_DIP_PMOD")
 			(uuid "36d058a2-8255-5204-a013-f0244a470397")
 		)
 		(pad
@@ -76550,7 +76550,7 @@
 			(at 4.445 -3.815)
 			(size 0.759993 1.599997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 85 "BU_DIP_HDMI_TX")
+			(net 91 "BU_DIP_SPARE")
 			(uuid "4cd74922-9830-5bf0-b53e-78215838f3eb")
 		)
 		(model
@@ -89267,7 +89267,7 @@
 			(at 1.35 0.95)
 			(size 1.099998 0.599999)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 273 "Net-(D15001-K)")
+			(net 273 "Net-(D15001-A)")
 			(uuid "e2d0d3f2-5441-5276-9df0-4aa83b70c50e")
 		)
 		(pad
@@ -95643,7 +95643,7 @@
 			(at 0.9751 2.871)
 			(size 0.364007 1.742008)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 66 "/usb_jtag/DBG_FT_TDI")
+			(net 67 "/usb_jtag/DBG_FT_TDO")
 			(uuid "ddb22fc7-27df-5a5c-b07c-346b89fe69cd")
 		)
 		(pad
@@ -95653,7 +95653,7 @@
 			(at 1.6251 2.871)
 			(size 0.364007 1.742008)
 			(layers "F.Cu" "F.Paste" "F.Mask")
-			(net 67 "/usb_jtag/DBG_FT_TDO")
+			(net 66 "/usb_jtag/DBG_FT_TDI")
 			(uuid "e3d52613-0e57-5d58-a2c5-6aba48b96483")
 		)
 		(pad

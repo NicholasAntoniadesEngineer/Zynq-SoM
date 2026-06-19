@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "76b2379ad2ba2fcf52e41f7b5ad71725318410a9182dae9e1b92dbe876d17d38"
+      "sha256": "8d4367c90d2d19e2a35d3b4f40d89fa24f07ade5590570bcc8ebe0238abb4b52"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -14,7 +14,7 @@
     },
     {
       "path": "docs/BRINGUP.md",
-      "sha256": "81a0a15dba31ce0ba2d25683caac32a6f692d232a9e1692622bd118c8023908d"
+      "sha256": "a3679d972383d7994b18d83d02e3441e2e0e8a0d020bd520ee63de5d046e06e3"
     },
     {
       "path": "docs/COMPLIANCE.md",
@@ -34,7 +34,7 @@
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "029d7bb5c266e69784131ddd023f02818a08ddbf24887b878687fd3b52c0c460"
+      "sha256": "b2971c2231a03fc3549afcf8c1a5ed02f1a124e99096ae76451fc8dbe00ff399"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -46,7 +46,7 @@
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "85951155f2d509f2ea67993dc8483400afe8e5005d52f43b8894b6bafad51eac"
+      "sha256": "d6d056e110e787d9de7b02068f9cddc634b6e905d495ad443941e236766918de"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -138,7 +138,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "60b1e8607749f09d7925168ce03888445a0b9a3bd5d235415a40ae50dd628264"
+      "sha256": "02553fa2c350e1f5b17c4e5122d3db058bbe031629e513cb2a6ae4ebf8e7d561"
     },
     {
       "path": "reports/spice.txt",
@@ -186,7 +186,7 @@
     },
     {
       "path": "schematic/bringup_rails.kicad_sch",
-      "sha256": "256d4b61e24125dda42dc586786ff0daf04c1911e833402e78cc7c7f9415d762"
+      "sha256": "661023cbb7ad8d2372dcdb9d2e36ac699150bb553f494075706ffe7ba8cb2ba3"
     },
     {
       "path": "schematic/camera.kicad_sch",
@@ -218,7 +218,7 @@
     },
     {
       "path": "schematic/lcd.kicad_sch",
-      "sha256": "5342952e24fdc1b51830b30bc91838e9970c773ab227c13b17cc8fa4d7db40bf"
+      "sha256": "8e91d3401df3983109334a3d11151a7abec012415fe552e8dcee1adc749f9644"
     },
     {
       "path": "schematic/mechanical.kicad_sch",
@@ -278,7 +278,7 @@
     },
     {
       "path": "schematic/usb_jtag.kicad_sch",
-      "sha256": "d6a48c33b5bdbe7fb6321113b3df23cc8e61978ea22d9982d9da569e33f78568"
+      "sha256": "7048cb5ac140dbd89778135913a2b0633d5bbaf5fcda01464fdb9d631cd79694"
     },
     {
       "path": "schematic/usb_jtag_connector.kicad_sch",

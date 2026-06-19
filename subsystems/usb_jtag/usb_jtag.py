@@ -240,8 +240,8 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     # CH347 channel-A JTAG pins (the buffer-INPUT side)
     c.net("DBG_FT_TCK", "U1.6")                        # TCK out
     c.net("DBG_FT_TMS", "U1.5")                        # TMS out
-    c.net("DBG_FT_TDI", "U1.7")                        # TDI out
-    c.net("DBG_FT_TDO", "U1.8")                        # TDO in (internal pull-up)
+    c.net("DBG_FT_TDI", "U1.8")                        # TDI out  (pin8 TXD0/MOSI/TDI = bridge output)
+    c.net("DBG_FT_TDO", "U1.7")                        # TDO in   (pin7 RTS0/MISO/TDO = bridge input)
 
     # SN74LVC125 pins by NUMBER: 1OE#=1,1A=2,1Y=3,2OE#=4,2A=5,2Y=6,GND=7,
     # 3Y=8,3A=9,3OE#=10,4Y=11,4A=12,4OE#=13,VCC=14.
