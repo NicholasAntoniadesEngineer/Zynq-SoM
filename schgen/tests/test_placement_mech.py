@@ -120,8 +120,10 @@ def test_mutant_connector_inward_facing_fails():
     (you cannot insert the cable). The gate MUST fail even though it is on-edge."""
     model = _passing_model()
     j = next(i for i in model.insts if i.ref == "J1")
-    # rot 180 turns the -Y mouth to +Y (inward) while it still sits at the top
-    j.rotation = 180.0
+    # flip 180 FROM the correctly-seated rotation so the mouth turns INWARD,
+    # whatever the seated value is (USB-C now seats at 180, so a hard-coded 180
+    # would be a no-op — flip relative to the seat).
+    j.rotation = (j.rotation + 180.0) % 360.0
     res = pm.check(model)
     assert not res.ok, "inward-facing edge connector must FAIL the gate"
     assert any("J1" in b and "inward" in b for b in res.bad_connectors), \

@@ -432,7 +432,12 @@ INTERIOR_ZONE_BAND_TARGET = 32.0 # re-flow/rotate an interior zone to <= this he
 # asymmetry + datasheet). KiCad's page frame is +y DOWN, so -Y is toward the
 # board top (N edge) and +Y toward the bottom (S edge).
 CONN_MATING_FACE: dict[str, str] = {
-    "TYPE-C-31-M-12":  "-Y",   # USB-C receptacle mouth
+    "TYPE-C-31-M-12":  "+Y",   # USB-C receptacle: mouth is OPPOSITE the 12 SMT
+                               # signal-tail row (tails at local -Y; the hollow
+                               # shell mouth +Y) — same rule as HDMI/RJ45. Was "-Y"
+                               # which placed all 4 USB-C at rot 0 with the mouth
+                               # facing INBOARD on the N edge (user caught it; render
+                               # + .wrl end-cavity test (+Y 582 verts vs -Y 48) confirm).
     "HDMI-019S":       "+Y",   # HDMI receptacle mouth (plug enters OPPOSITE the
                                # SMT contact row at -Y; verified from footprint
                                # geometry — was -Y, faced inward in the render)

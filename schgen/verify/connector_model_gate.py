@@ -123,9 +123,16 @@ def _model_z(mod_path: Path) -> float | None:
 
 def _tail_row_mouth(mod_path: Path) -> str | None:
     """For a through-shell connector, the mouth direction implied by geometry:
-    the densest numeric-named pad row is the SMT contact tail row; the cable
-    enters OPPOSITE it. Returns '-Y'/'+Y' (page frame, +y DOWN) or None if the
-    pad layout is too symmetric to call (tail row at the footprint center)."""
+    the densest pad row is the SMT contact tail row; the cable enters OPPOSITE it.
+    Returns '-Y'/'+Y' (page frame, +y DOWN) or None if the pad layout is too
+    symmetric to call (tail row at the footprint center).
+
+    BUGFIX: previously this filtered to _NUMERIC pad names, which on a USB-C
+    (TYPE-C-31-M-12) matched ONLY the 4 shell THT legs ("1".."4") and MISSED the
+    12 signal contacts (named "B8","A5","A1B12",...). It therefore derived the tail
+    row from the legs and spuriously "agreed" with a WRONG CONN_MATING_FACE, so all
+    4 USB-C shipped opening INBOARD. Use EVERY pad: the densest y-row is the real
+    contact tail row regardless of naming, and the mouth is opposite it."""
     doc = sexpr.loads(mod_path.read_text())
     pads: list[tuple[str, float]] = []          # (name, y)
     all_y: list[float] = []
@@ -138,8 +145,7 @@ def _tail_row_mouth(mod_path: Path) -> str | None:
             continue
         y = float(at[2])
         all_y.append(y)
-        if _NUMERIC.fullmatch(name):
-            pads.append((name, y))
+        pads.append((name, y))     # ALL pads — the dense row is the contact tails
     if not pads or not all_y:
         return None
     rows = Counter(round(y, 1) for _, y in pads)
@@ -231,16 +237,26 @@ def check(model: PcbModel | None = None) -> ConnModelResult:
         mod_path = Path(mod_path)
         z = _model_z(mod_path)
 
-        # (1) non-zero model-Z flips the rendered opening vs the pads.
+        # (1) the model must be AXIS-ALIGNED with the footprint: rotate Z in
+        # {0, 180}. 0 = as-authored; 180 = a valid in-plane MOUTH FLIP that
+        # corrects a .wrl whose cavity was authored on the OPPOSITE end from the
+        # footprint's mating side (the EasyEDA TYPE-C-31-M-12 .wrl needed this —
+        # the old "must be 0" rule was a misdiagnosis that forbade the corrective
+        # 180 AND gave false confidence to a .wrl mis-authored at 0). A 90/270
+        # rotate makes the model PERPENDICULAR to the footprint (real error); a
+        # non-orthogonal rotate is conversion garbage. NOTE: the gate cannot render
+        # so it cannot fully confirm the model's opening — that is the render's job
+        # (LAW 5/6); the geometry cross-check (2) below confirms the FOOTPRINT pads.
         z_ok = True
         if z is None:
             res.missing_model.append(f"{ref} {mpn}: no (model ...rotate) node")
-        elif round(z) % 360 != 0:
+        elif round(z) % 180 != 0:
             z_ok = False
             res.bad_z.append(
                 f"{ref} {mpn} (value={value}): model rotate Z={z:g} deg "
-                f"(must be 0 mod 360) — rendered opening is flipped vs the "
-                f"footprint pads; zero the (model ...(rotate (xyz 0 0 Z))) node")
+                f"(must be 0 or 180 — axis-aligned with the footprint; 90/270 is "
+                f"perpendicular, non-orthogonal is garbage) — fix the "
+                f"(model ...(rotate (xyz 0 0 Z))) node")
         res.models.append((ref, mpn, value, z, z_ok))
 
         # (2) geometry cross-check for the through-shell connectors only.

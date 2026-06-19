@@ -4,15 +4,15 @@ LAW-6 CONNECTOR-MODEL ORIENTATION GATE: PASS
     OK  J14001    HDMI-019S        model_z=0
     OK  J15001    AFC07-S40FCA-00  model_z=0
     OK  J16001    TF-01A           model_z=0
-    OK  J17001    TYPE-C-31-M-12   model_z=0
+    OK  J17001    TYPE-C-31-M-12   model_z=180
     OK  J18001    DS1024-2x6R2     model_z=0
     OK  J18002    DS1024-2x6R2     model_z=0
     OK  J19001    DS1024-2x6R2     model_z=0
     OK  J2001     ZX-SH1.0-4PWT    model_z=0
     OK  J23001    KH-5224-8P8C-D   model_z=0
-    OK  J29001    TYPE-C-31-M-12   model_z=0
-    OK  J31001    TYPE-C-31-M-12   model_z=0
-    OK  J32002    TYPE-C-31-M-12   model_z=0
+    OK  J29001    TYPE-C-31-M-12   model_z=180
+    OK  J31001    TYPE-C-31-M-12   model_z=180
+    OK  J32002    TYPE-C-31-M-12   model_z=180
     OK  J8001     SFW15R-1STE1LF   model_z=0
   non-zero model-Z (flipped opening): 0
   geometry-cross-checked (through-shell): 6 -> 0 conflict(s)

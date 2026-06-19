@@ -96,13 +96,22 @@ def test_zero_model_z_passes(tmp_path):
     assert not res.bad_z
 
 
-@pytest.mark.parametrize("z", [180.0, 90.0, -90.0, 270.0])
-def test_mutant_nonzero_model_z_fails(tmp_path, z):
-    """A non-zero model-Z (the USB-C bug, and any other 90-step flip) MUST fail —
-    it spins the rendered opening relative to the pads."""
+@pytest.mark.parametrize("z", [90.0, -90.0, 270.0, 45.0])
+def test_mutant_perpendicular_or_garbage_model_z_fails(tmp_path, z):
+    """A 90/270 model-Z makes the model PERPENDICULAR to its footprint, and a
+    non-orthogonal value is conversion garbage — both MUST fail."""
     res = cmg.check(_model_with(_synth_inst(tmp_path, "TF-01A", z)))
     assert not res.ok, f"model-Z={z} must FAIL the gate"
     assert any("J1" in b and "TF-01A" in b for b in res.bad_z), res.summary()
+
+
+@pytest.mark.parametrize("z", [180.0, -180.0])
+def test_axis_aligned_180_model_z_passes(tmp_path, z):
+    """Model-Z = 180 is AXIS-ALIGNED with the footprint (a valid in-plane MOUTH
+    FLIP that corrects a .wrl authored with its cavity on the opposite end — the
+    real TYPE-C-31-M-12 needs exactly this). It must NOT be flagged as bad-Z."""
+    res = cmg.check(_model_with(_synth_inst(tmp_path, "TF-01A", z)))
+    assert not res.bad_z, res.summary()
 
 
 def test_model_z_360_is_zero_mod_360(tmp_path):
@@ -119,9 +128,11 @@ def test_mutant_flipped_mating_face_geom_conflict(monkeypatch, tmp_path):
     contradicts the real pad geometry. The geometry cross-check MUST fail even
     though model-Z is 0 — this catches a hand-edited CONN_MATING_FACE typo that
     the Z check cannot see."""
-    # USB-C real geometry: tail row at +Y -> mouth -Y. Declare +Y to conflict.
+    # USB-C real geometry: the 12 dense SMD signal contacts are at -Y, so the
+    # mouth is OPPOSITE = +Y (the correct shipped value). Declare -Y to conflict
+    # (that wrong value is exactly what faced the mouth inboard before the fix).
     bad_face = dict(pcb.CONN_MATING_FACE)
-    bad_face["TYPE-C-31-M-12"] = "+Y"
+    bad_face["TYPE-C-31-M-12"] = "-Y"
     monkeypatch.setattr(cmg, "CONN_MATING_FACE", bad_face)
 
     real_mod = pcb.resolve_mod("TYPE-C-31-M-12:TYPE-C-31-M-12")

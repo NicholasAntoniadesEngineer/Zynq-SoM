@@ -33565,7 +33565,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 91.835 28.5241)
+		(at 91.835 28.7741 180)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -33779,7 +33779,7 @@
 			"B8"
 			smd
 			rect
-			(at -1.7501 -2.4741)
+			(at -1.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "5a79d34c-ec36-5e51-a4be-5755bf249f47")
@@ -33788,7 +33788,7 @@
 			"A5"
 			smd
 			rect
-			(at -1.2499 -2.4741)
+			(at -1.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 393 "STM32_USB_CC1")
@@ -33798,7 +33798,7 @@
 			"B7"
 			smd
 			rect
-			(at -0.7501 -2.4741)
+			(at -0.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 54 "/pd_input/PD_USB_DN_CONN")
@@ -33808,7 +33808,7 @@
 			"A6"
 			smd
 			rect
-			(at -0.2499 -2.4741)
+			(at -0.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 55 "/pd_input/PD_USB_DP_CONN")
@@ -33818,7 +33818,7 @@
 			"A7"
 			smd
 			rect
-			(at 0.2499 -2.4741)
+			(at 0.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 54 "/pd_input/PD_USB_DN_CONN")
@@ -33828,7 +33828,7 @@
 			"B6"
 			smd
 			rect
-			(at 0.7501 -2.4741)
+			(at 0.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 55 "/pd_input/PD_USB_DP_CONN")
@@ -33838,7 +33838,7 @@
 			"A8"
 			smd
 			rect
-			(at 1.2497 -2.4741)
+			(at 1.2497 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "9f38de97-bf9c-5966-a79f-d4056b1684b3")
@@ -33847,7 +33847,7 @@
 			"B5"
 			smd
 			rect
-			(at 1.7501 -2.4741)
+			(at 1.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 394 "STM32_USB_CC2")
@@ -33857,7 +33857,7 @@
 			"A1B12"
 			smd
 			custom
-			(at -3.1999 -2.4741)
+			(at -3.1999 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -33895,7 +33895,7 @@
 			"B1A12"
 			smd
 			custom
-			(at 3.2001 -2.4741)
+			(at 3.2001 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -33933,7 +33933,7 @@
 			"B4A9"
 			smd
 			custom
-			(at 2.4003 -2.4741)
+			(at 2.4003 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -33971,7 +33971,7 @@
 			"A4B9"
 			smd
 			custom
-			(at -2.4 -2.4741)
+			(at -2.4 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -34009,7 +34009,7 @@
 			""
 			np_thru_hole
 			circle
-			(at -2.8999 -1.2056)
+			(at -2.8999 -1.2056 180)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -34019,7 +34019,7 @@
 			""
 			np_thru_hole
 			circle
-			(at 2.8999 -1.2056)
+			(at 2.8999 -1.2056 180)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -34029,7 +34029,7 @@
 			"2"
 			thru_hole
 			oval
-			(at 4.3251 2.4741)
+			(at 4.3251 2.4741 180)
 			(size 1.199998 1.799996)
 			(drill oval 0.799998 1.399997)
 			(layers "*.Cu" "*.Mask")
@@ -34040,7 +34040,7 @@
 			"1"
 			thru_hole
 			oval
-			(at 4.3251 -1.7057)
+			(at 4.3251 -1.7057 180)
 			(size 1.199998 1.999996)
 			(drill oval 0.799998 1.599971)
 			(layers "*.Cu" "*.Mask")
@@ -34051,7 +34051,7 @@
 			"4"
 			thru_hole
 			oval
-			(at -4.3251 -1.7057)
+			(at -4.3251 -1.7057 180)
 			(size 1.199998 1.999996)
 			(drill oval 0.799998 1.600022)
 			(layers "*.Cu" "*.Mask")
@@ -34062,7 +34062,7 @@
 			"3"
 			thru_hole
 			oval
-			(at -4.3251 2.4741)
+			(at -4.3251 2.4741 180)
 			(size 1.199998 1.799996)
 			(drill oval 0.799998 1.399997)
 			(layers "*.Cu" "*.Mask")
@@ -34078,7 +34078,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 0 0 180)
 			)
 		)
 		(uuid "5aaef244-4f28-5f79-a838-7bc8e3bfa961")
@@ -39537,7 +39537,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 129.935 28.5241)
+		(at 129.935 28.7741 180)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -39751,7 +39751,7 @@
 			"B8"
 			smd
 			rect
-			(at -1.7501 -2.4741)
+			(at -1.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "870d9517-a11f-5360-a2ba-cfea1535cf29")
@@ -39760,7 +39760,7 @@
 			"A5"
 			smd
 			rect
-			(at -1.2499 -2.4741)
+			(at -1.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 312 "Net-(J29001-CC1)")
@@ -39770,7 +39770,7 @@
 			"B7"
 			smd
 			rect
-			(at -0.7501 -2.4741)
+			(at -0.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 72 "/usb_jtag_connector/DBG_USB_DM_CONN")
@@ -39780,7 +39780,7 @@
 			"A6"
 			smd
 			rect
-			(at -0.2499 -2.4741)
+			(at -0.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 73 "/usb_jtag_connector/DBG_USB_DP_CONN")
@@ -39790,7 +39790,7 @@
 			"A7"
 			smd
 			rect
-			(at 0.2499 -2.4741)
+			(at 0.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 72 "/usb_jtag_connector/DBG_USB_DM_CONN")
@@ -39800,7 +39800,7 @@
 			"B6"
 			smd
 			rect
-			(at 0.7501 -2.4741)
+			(at 0.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 73 "/usb_jtag_connector/DBG_USB_DP_CONN")
@@ -39810,7 +39810,7 @@
 			"A8"
 			smd
 			rect
-			(at 1.2497 -2.4741)
+			(at 1.2497 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "91442c5c-e500-5da8-af61-6f0d3d1038e9")
@@ -39819,7 +39819,7 @@
 			"B5"
 			smd
 			rect
-			(at 1.7501 -2.4741)
+			(at 1.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 313 "Net-(J29001-CC2)")
@@ -39829,7 +39829,7 @@
 			"A1B12"
 			smd
 			custom
-			(at -3.1999 -2.4741)
+			(at -3.1999 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -39867,7 +39867,7 @@
 			"B1A12"
 			smd
 			custom
-			(at 3.2001 -2.4741)
+			(at 3.2001 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -39905,7 +39905,7 @@
 			"B4A9"
 			smd
 			custom
-			(at 2.4003 -2.4741)
+			(at 2.4003 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -39943,7 +39943,7 @@
 			"A4B9"
 			smd
 			custom
-			(at -2.4 -2.4741)
+			(at -2.4 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -39981,7 +39981,7 @@
 			""
 			np_thru_hole
 			circle
-			(at -2.8999 -1.2056)
+			(at -2.8999 -1.2056 180)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -39991,7 +39991,7 @@
 			""
 			np_thru_hole
 			circle
-			(at 2.8999 -1.2056)
+			(at 2.8999 -1.2056 180)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -40001,7 +40001,7 @@
 			"2"
 			thru_hole
 			oval
-			(at 4.3251 2.4741)
+			(at 4.3251 2.4741 180)
 			(size 1.199998 1.799996)
 			(drill oval 0.799998 1.399997)
 			(layers "*.Cu" "*.Mask")
@@ -40012,7 +40012,7 @@
 			"1"
 			thru_hole
 			oval
-			(at 4.3251 -1.7057)
+			(at 4.3251 -1.7057 180)
 			(size 1.199998 1.999996)
 			(drill oval 0.799998 1.599971)
 			(layers "*.Cu" "*.Mask")
@@ -40023,7 +40023,7 @@
 			"4"
 			thru_hole
 			oval
-			(at -4.3251 -1.7057)
+			(at -4.3251 -1.7057 180)
 			(size 1.199998 1.999996)
 			(drill oval 0.799998 1.600022)
 			(layers "*.Cu" "*.Mask")
@@ -40034,7 +40034,7 @@
 			"3"
 			thru_hole
 			oval
-			(at -4.3251 2.4741)
+			(at -4.3251 2.4741 180)
 			(size 1.199998 1.799996)
 			(drill oval 0.799998 1.399997)
 			(layers "*.Cu" "*.Mask")
@@ -40050,7 +40050,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 0 0 180)
 			)
 		)
 		(uuid "e0b24389-3aba-5eed-a7e6-94191b0c8a80")
@@ -40061,7 +40061,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 141.365 28.5241)
+		(at 141.365 28.7741 180)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -40275,7 +40275,7 @@
 			"B8"
 			smd
 			rect
-			(at -1.7501 -2.4741)
+			(at -1.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "1316dfb3-ad7e-59d6-bd70-591a86caf0fe")
@@ -40284,7 +40284,7 @@
 			"A5"
 			smd
 			rect
-			(at -1.2499 -2.4741)
+			(at -1.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 314 "Net-(J31001-CC1)")
@@ -40294,7 +40294,7 @@
 			"B7"
 			smd
 			rect
-			(at -0.7501 -2.4741)
+			(at -0.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 74 "/usb_uart_connector/USB_UART_DM_CONN")
@@ -40304,7 +40304,7 @@
 			"A6"
 			smd
 			rect
-			(at -0.2499 -2.4741)
+			(at -0.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 75 "/usb_uart_connector/USB_UART_DP_CONN")
@@ -40314,7 +40314,7 @@
 			"A7"
 			smd
 			rect
-			(at 0.2499 -2.4741)
+			(at 0.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 74 "/usb_uart_connector/USB_UART_DM_CONN")
@@ -40324,7 +40324,7 @@
 			"B6"
 			smd
 			rect
-			(at 0.7501 -2.4741)
+			(at 0.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 75 "/usb_uart_connector/USB_UART_DP_CONN")
@@ -40334,7 +40334,7 @@
 			"A8"
 			smd
 			rect
-			(at 1.2497 -2.4741)
+			(at 1.2497 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "13297c02-fda5-5f05-a703-c69eb9420f4f")
@@ -40343,7 +40343,7 @@
 			"B5"
 			smd
 			rect
-			(at 1.7501 -2.4741)
+			(at 1.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 315 "Net-(J31001-CC2)")
@@ -40353,7 +40353,7 @@
 			"A1B12"
 			smd
 			custom
-			(at -3.1999 -2.4741)
+			(at -3.1999 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -40391,7 +40391,7 @@
 			"B1A12"
 			smd
 			custom
-			(at 3.2001 -2.4741)
+			(at 3.2001 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -40429,7 +40429,7 @@
 			"B4A9"
 			smd
 			custom
-			(at 2.4003 -2.4741)
+			(at 2.4003 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -40467,7 +40467,7 @@
 			"A4B9"
 			smd
 			custom
-			(at -2.4 -2.4741)
+			(at -2.4 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -40505,7 +40505,7 @@
 			""
 			np_thru_hole
 			circle
-			(at -2.8999 -1.2056)
+			(at -2.8999 -1.2056 180)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -40515,7 +40515,7 @@
 			""
 			np_thru_hole
 			circle
-			(at 2.8999 -1.2056)
+			(at 2.8999 -1.2056 180)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -40525,7 +40525,7 @@
 			"2"
 			thru_hole
 			oval
-			(at 4.3251 2.4741)
+			(at 4.3251 2.4741 180)
 			(size 1.199998 1.799996)
 			(drill oval 0.799998 1.399997)
 			(layers "*.Cu" "*.Mask")
@@ -40536,7 +40536,7 @@
 			"1"
 			thru_hole
 			oval
-			(at 4.3251 -1.7057)
+			(at 4.3251 -1.7057 180)
 			(size 1.199998 1.999996)
 			(drill oval 0.799998 1.599971)
 			(layers "*.Cu" "*.Mask")
@@ -40547,7 +40547,7 @@
 			"4"
 			thru_hole
 			oval
-			(at -4.3251 -1.7057)
+			(at -4.3251 -1.7057 180)
 			(size 1.199998 1.999996)
 			(drill oval 0.799998 1.600022)
 			(layers "*.Cu" "*.Mask")
@@ -40558,7 +40558,7 @@
 			"3"
 			thru_hole
 			oval
-			(at -4.3251 2.4741)
+			(at -4.3251 2.4741 180)
 			(size 1.199998 1.799996)
 			(drill oval 0.799998 1.399997)
 			(layers "*.Cu" "*.Mask")
@@ -40574,7 +40574,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 0 0 180)
 			)
 		)
 		(uuid "9d354c51-0caf-5f10-bc2d-9cd0a978fc0a")
@@ -40585,7 +40585,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 114.695 28.5241)
+		(at 114.695 28.7741 180)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -40799,7 +40799,7 @@
 			"B8"
 			smd
 			rect
-			(at -1.7501 -2.4741)
+			(at -1.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "4c8b0f75-0a90-59f8-915f-a3f25f044fc2")
@@ -40808,7 +40808,7 @@
 			"A5"
 			smd
 			rect
-			(at -1.2499 -2.4741)
+			(at -1.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 316 "Net-(J32002-CC1)")
@@ -40818,7 +40818,7 @@
 			"B7"
 			smd
 			rect
-			(at -0.7501 -2.4741)
+			(at -0.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 76 "/usbc_otg/USBC_DM_CONN")
@@ -40828,7 +40828,7 @@
 			"A6"
 			smd
 			rect
-			(at -0.2499 -2.4741)
+			(at -0.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 77 "/usbc_otg/USBC_DP_CONN")
@@ -40838,7 +40838,7 @@
 			"A7"
 			smd
 			rect
-			(at 0.2499 -2.4741)
+			(at 0.2499 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 76 "/usbc_otg/USBC_DM_CONN")
@@ -40848,7 +40848,7 @@
 			"B6"
 			smd
 			rect
-			(at 0.7501 -2.4741)
+			(at 0.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 77 "/usbc_otg/USBC_DP_CONN")
@@ -40858,7 +40858,7 @@
 			"A8"
 			smd
 			rect
-			(at 1.2497 -2.4741)
+			(at 1.2497 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "8e381980-6c54-5641-a971-9c4a1c3ee853")
@@ -40867,7 +40867,7 @@
 			"B5"
 			smd
 			rect
-			(at 1.7501 -2.4741)
+			(at 1.7501 -2.4741 180)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 317 "Net-(J32002-CC2)")
@@ -40877,7 +40877,7 @@
 			"A1B12"
 			smd
 			custom
-			(at -3.1999 -2.4741)
+			(at -3.1999 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -40915,7 +40915,7 @@
 			"B1A12"
 			smd
 			custom
-			(at 3.2001 -2.4741)
+			(at 3.2001 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -40953,7 +40953,7 @@
 			"B4A9"
 			smd
 			custom
-			(at 2.4003 -2.4741)
+			(at 2.4003 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -40991,7 +40991,7 @@
 			"A4B9"
 			smd
 			custom
-			(at -2.4 -2.4741)
+			(at -2.4 -2.4741 180)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -41029,7 +41029,7 @@
 			""
 			np_thru_hole
 			circle
-			(at -2.8999 -1.2056)
+			(at -2.8999 -1.2056 180)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -41039,7 +41039,7 @@
 			""
 			np_thru_hole
 			circle
-			(at 2.8999 -1.2056)
+			(at 2.8999 -1.2056 180)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -41049,7 +41049,7 @@
 			"2"
 			thru_hole
 			oval
-			(at 4.3251 2.4741)
+			(at 4.3251 2.4741 180)
 			(size 1.199998 1.799996)
 			(drill oval 0.799998 1.399997)
 			(layers "*.Cu" "*.Mask")
@@ -41060,7 +41060,7 @@
 			"1"
 			thru_hole
 			oval
-			(at 4.3251 -1.7057)
+			(at 4.3251 -1.7057 180)
 			(size 1.199998 1.999996)
 			(drill oval 0.799998 1.599971)
 			(layers "*.Cu" "*.Mask")
@@ -41071,7 +41071,7 @@
 			"4"
 			thru_hole
 			oval
-			(at -4.3251 -1.7057)
+			(at -4.3251 -1.7057 180)
 			(size 1.199998 1.999996)
 			(drill oval 0.799998 1.600022)
 			(layers "*.Cu" "*.Mask")
@@ -41082,7 +41082,7 @@
 			"3"
 			thru_hole
 			oval
-			(at -4.3251 2.4741)
+			(at -4.3251 2.4741 180)
 			(size 1.199998 1.799996)
 			(drill oval 0.799998 1.399997)
 			(layers "*.Cu" "*.Mask")
@@ -41098,7 +41098,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 0 0 180)
 			)
 		)
 		(uuid "06d5e701-e17f-5b8e-9ae7-c541ffcc522d")
