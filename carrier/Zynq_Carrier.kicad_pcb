@@ -30277,6 +30277,7 @@
 		(property
 			"Reference"
 			"J11001"
+			(hide yes)
 			(at 1.27 -2.38 0)
 			(layer "F.SilkS")
 			(effects
@@ -41652,6 +41653,7 @@
 		(property
 			"Reference"
 			"J9001"
+			(hide yes)
 			(at 0 -3 0)
 			(layer "F.SilkS")
 			(effects
@@ -42162,6 +42164,7 @@
 		(property
 			"Reference"
 			"J9002"
+			(hide yes)
 			(at 0 -4.02 0)
 			(layer "F.SilkS")
 			(effects
@@ -108649,6 +108652,42 @@
 		(at 32.4 75.72 0)
 		(layer "F.SilkS")
 		(uuid "3c71d39f-e04d-510e-9154-c28929064557")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"GPIO"
+		(at 98.845 71.15 0)
+		(layer "F.SilkS")
+		(uuid "c6bb5c2e-2f20-51fd-a316-707fce2d3bd3")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"JTAG"
+		(at 102.855 142.234 0)
+		(layer "F.SilkS")
+		(uuid "9d2658e0-402e-5c4f-bf60-5b411916feb4")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.2)
+			)
+		)
+	)
+	(gr_text
+		"SWD"
+		(at 100.88 135.434 0)
+		(layer "F.SilkS")
+		(uuid "ad88c940-92c8-5d06-b474-70596e94ee99")
 		(effects
 			(font
 				(size 1.1 1.1)

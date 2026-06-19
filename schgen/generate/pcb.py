@@ -1813,7 +1813,7 @@ def _embed_footprint(inst: FootprintInst, uid) -> list:
                 # what the user reads on the board, and the ref clutters the only
                 # clear spot beside the connector. The ref stays in the footprint
                 # data (netlist/BOM), just not printed.
-                if inst.value in CONN_MATING_FACE:
+                if inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC:
                     hb = next((x for x in node if isinstance(x, list) and x
                                and x[0] == Sym("hide")), None)
                     if hb is None:
@@ -2089,6 +2089,15 @@ _CONN_DESC: dict[str, str] = {
     "pmod_expansion":      "PMOD",       # PMOD GPIO (numbered)
 }
 
+# Interior (non-edge) user/developer headers — labelled by REF (their sheets carry
+# >1 connector). The SoM DF40 mezzanines are intentionally NOT here: the "Zynq SoM"
+# body-silk already labels that region (the SoM mounts on them).
+_INT_DESC: dict[str, str] = {
+    "J11001": "GPIO",   # FMC-site 2x20 2.54mm breakout
+    "J9001":  "JTAG",   # Zynq 2x7 2.00mm JTAG header
+    "J9002":  "SWD",    # system-controller ARM Cortex 10-pin SWD header
+}
+
 
 def _connector_descriptors(model: "PcbModel", uid) -> list:
     """A short F.SilkS function label beside every OFF-BOARD connector (PWR / USB
@@ -2131,6 +2140,21 @@ def _connector_descriptors(model: "PcbModel", uid) -> list:
         else:                              # E
             tx, ty = cx0 - g, midy
         out.append([Sym("gr_text"), desc,
+                    [Sym("at"), round(tx, 3), round(ty, 3), 0],
+                    [Sym("layer"), "F.SilkS"],
+                    [Sym("uuid"), uid(f"conn-desc:{inst.ref}")],
+                    [Sym("effects"),
+                     [Sym("font"), [Sym("size"), 1.1, 1.1],
+                      [Sym("thickness"), 0.2]]]])
+    # interior user/developer headers (no board edge): label just below the
+    # courtyard, centred (their J-refs are hidden too — see _embed_footprint).
+    for inst in model.insts:
+        label = _INT_DESC.get(inst.ref)
+        if label is None:
+            continue
+        cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
+        tx, ty = (cx0 + cx1) / 2.0, cy1 + 1.6
+        out.append([Sym("gr_text"), label,
                     [Sym("at"), round(tx, 3), round(ty, 3), 0],
                     [Sym("layer"), "F.SilkS"],
                     [Sym("uuid"), uid(f"conn-desc:{inst.ref}")],

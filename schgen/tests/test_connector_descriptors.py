@@ -20,15 +20,17 @@ def test_every_offboard_connector_function_label_present():
     m = pcb.build_model(True)
     labels = pcb._connector_descriptors(m, lambda k: "u")
     texts = [str(n[1]) for n in labels]
-    # the full set of function labels the user reads on the board
+    # the full set of function labels the user reads on the board (off-board +
+    # interior GPIO/JTAG/SWD headers)
     for want in ("PWR", "USB OTG", "JTAG", "UART", "HDMI TX", "HDMI RX",
                  "ETH", "microSD", "QWIIC", "CAM", "LCD",
-                 "PMOD0", "PMOD1", "PMOD2"):
+                 "PMOD0", "PMOD1", "PMOD2", "GPIO", "SWD"):
         assert want in texts, f"missing connector descriptor {want!r}: {texts}"
-    # one label per placed off-board connector with a known sheet
+    # one label per placed off-board connector (known sheet) + interior header
     n_off = sum(1 for i in m.insts
                 if i.value in pcb.CONN_MATING_FACE and i.sheet in pcb._CONN_DESC)
-    assert len(labels) == n_off, (len(labels), n_off)
+    n_int = sum(1 for i in m.insts if i.ref in pcb._INT_DESC)
+    assert len(labels) == n_off + n_int, (len(labels), n_off, n_int)
 
 
 def test_descriptors_on_top_silk_and_on_board():
@@ -61,4 +63,5 @@ def test_offboard_connector_ref_hidden_in_emitted_board(tmp_path):
 
     assert ref_hidden("J17001"), "USB-C connector ref must be hidden"
     assert ref_hidden("J23001"), "RJ45 connector ref must be hidden"
+    assert ref_hidden("J11001"), "GPIO header ref must be hidden"
     assert not ref_hidden("U17001"), "a non-connector IC ref must stay visible"
