@@ -186,7 +186,7 @@ EN_HDMI_TX,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY
 EN_HDMI_TX_5V,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_LCD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_LCD_5V,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
-EN_LCD_BL,bringup_en_modules,single,Default,,,,,,,"deferred: lvds_lcd_power (backlight boost EN provision, dossier 3.2)"
+EN_LCD_BL,bringup_en_modules,single,Default,,,,,,,deferred: RESERVED gated-EN hook (EN_LCD_BL -> testpoint; backlight is PWM-direct)
 EN_PMOD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_SD,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)
 EN_USB,bringup_en_modules,single,Default,,,,,,,deferred: bringup_modules (SY6280 load-switch cells)

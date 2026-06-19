@@ -557,7 +557,7 @@ rails (28):
   GND <- sheets: board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io -> SoM 63 pins
 
 deferred ports — author-declared, awaiting later waves (1) [WARNING]:
-  bringup_en_modules:EN_LCD_BL — awaiting lvds_lcd_power (backlight boost EN provision, dossier 3.2)
+  bringup_en_modules:EN_LCD_BL — awaiting RESERVED gated-EN hook (EN_LCD_BL -> testpoint; backlight is PWM-direct)
 
 unbound SoM nets — no consumer yet, later waves (0) [WARNING]:
 

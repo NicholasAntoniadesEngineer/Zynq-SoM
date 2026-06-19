@@ -68,7 +68,7 @@ panels are NOT supported natively (no ADC on those nets) — see risks.
 | U_BL | Boost WLED driver, 30V/2A/1MHz, SOT-23-6 | Silergy SY7201ABC | **C82173** | 15,175 | Extended | $0.309 |
 | L_BL | 10µH power inductor 4x4mm (Isat ≈ 1.95A, Irms 1.5A) | Sunlord SWPA4030S100MT | **C38117** | 34,446 | Extended | $0.062 |
 | D_BL | Schottky 40V/3A SMA | MDD SS34 | **C8678** | 3,282,802 | **Basic** | $0.026 |
-| C_BL_OUT | 1µF 50V X7R 0805 (rated above 30V OVP clamp) | Samsung CL21B105KBFNNNE | **C28323** | 5,331,021 | **Basic** | $0.008 |
+| C_BL_OUT | 2.2µF 50V X7R 0805 (rated above 30V OVP clamp; upsized from 1µF per LCD-1 for boost-output ripple) | **C125847** | — | Extended | — |
 | C_BL_IN | 10µF 25V X5R 0805 | Samsung CL21A106KAYNNNE | **C15850** | 12,668,317 | **Basic** | $0.009 |
 | R_ISET | 1.5Ω 1% 0603 (I_LED = 0.2V/R = 133mA) | UNI-ROYAL 0603WAF150KT5E | **C22769** | 42,227 | Extended | <$0.01 |
 | R_SER ×4(+) | 22Ω 1% 0603 series terminations | UNI-ROYAL 0603WAF220JT5E | **C23345** | 5,310,666 | **Basic** | <$0.01 |
@@ -135,8 +135,9 @@ Wiring:
   datasheet's 1µF (use C28323) at the pin.
 - `L1` 10µH (C38117) from `+5V_LCD` to `LX` (1).
 - `D1` SS34 (C8678): anode → `LX`, cathode → `LCD_VLED_A` (J_LCD pin 2).
-- `C_OUT` 1µF 50V (C28323) from `LCD_VLED_A` to GND — 50V rating survives the
-  30V open-LED clamp.
+- `C_OUT` 2.2µF 50V (C125847) from `LCD_VLED_A` to GND — 50V rating survives the
+  30V open-LED clamp (upsized from the datasheet's 1µF per LCD-1 for boost-output
+  ripple; this is the as-built value in subsystems/lcd/lcd.py, audit 2026-06-19).
 - `OVP` (5) → `LCD_VLED_A` (output-sense per datasheet application circuit).
 - `FB` (3) → `LCD_VLED_K` (J_LCD pin 1) and `R_ISET` 1.5Ω (C22769) from FB to
   GND. **I_LED = 0.2V / R_ISET = 133mA** — inside the 125–150mA window for the

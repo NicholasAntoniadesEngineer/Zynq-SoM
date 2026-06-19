@@ -59,7 +59,14 @@ J3_MAP = "som_j3_connector (wave 3 STM32 GPIO function map)"
 EXPECT_RAILS = "bringup_rails (DIP / TCA9535 control surfaces)"
 EXPECT_MODULES = "bringup_modules (SY6280 load-switch cells)"
 EXPECT_POWER = "power (regulator EN pins, dossier section 3.1)"
-EXPECT_LCD = "lvds_lcd_power (backlight boost EN provision, dossier 3.2)"
+# EN_LCD_BL is a RESERVED gated-backlight-EN provision with NO consumer subsystem:
+# the LCD backlight is enabled/dimmed DIRECTLY by STM32 PWM (lcd BL_PWM -> the
+# SY7201 EN/PWM pin), which must NOT pass through this DIP-AND-override gate (it
+# would chop the PWM). This spare AND cell (SW2 pos 8 + TCA9535 P10) leaves a
+# gated-EN hook available for a future non-PWM backlight; its output lands on a
+# testpoint only. (audit 2026-06-19: was mislabelled with the nonexistent
+# 'lvds_lcd_power' subsystem, which made it read as an orphan/bug.)
+EXPECT_LCD = "RESERVED gated-EN hook (EN_LCD_BL -> testpoint; backlight is PWM-direct)"
 
 # (cell, A net <- DIP, B net <- override, Y net -> enable, B pullup?, Y expect)
 CELLS = (    # modules: B = TCA9535 P00..P07 (bringup_rails)

@@ -129,8 +129,11 @@ def circuit() -> Circuit:
 
     # power-tree budget: a generic breakout (not a 1 A FMC mezzanine) — a modest
     # +3V3 allowance for an add-on; +2V5_VADJ holds the bank-35 VCCO envelope
-    # (the 12 LA pairs + 3 camera CSI pairs ride it; TLV75725 DYD 0.40 A thermal
-    # envelope less ~0.05 A bank-35 VCCO).
+    # (the 12 LA pairs + 3 camera CSI pairs ride it). NB the 0.40 A figure is a
+    # conservative header-ALLOWANCE budget, NOT a part/thermal ceiling: the
+    # TLV75725 is a 1 A LDO and the real bank-35 VCCO load is only ~0.05 A, so the
+    # rail showing "100 % of 0.40 A" is budget bookkeeping, not overstress
+    # (audit 2026-06-19). 0.350 A here + ~0.05 A som_j3 = the 0.40 A allowance.
     c.draws("+3V3", 0.500, "bank-35 IO header +3V3 add-on allowance")
     c.draws("+2V5_VADJ", 0.350, "VADJ bank-35 VCCO budget (TLV75725 DYD 0.40 A "
                                 "envelope less ~0.05 A bank-35 VCCO)")
