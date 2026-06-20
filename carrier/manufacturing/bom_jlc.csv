@@ -21,12 +21,12 @@ Comment,Designator,Footprint,LCSC
 200R,"pmod:R1,pmod:R10,pmod:R11,pmod:R12,pmod:R13,pmod:R14,pmod:R15,pmod:R16,pmod:R2,pmod:R3,pmod:R4,pmod:R5,pmod:R6,pmod:R7,pmod:R8,pmod:R9,user_io:R2,user_io:R3,user_io:R4",Resistor_SMD:R_0603_1608Metric,C8218
 200p,"usb_pd:C4,usb_pd:C5",Capacitor_SMD:C_0603_1608Metric,C113796
 20mR,power_mon:RS4,RLM12FTCMR020:RLM12FTCMR020,C393094
-22.1k,power:R4,Resistor_SMD:R_0603_1608Metric,C25961
 22R,lcd:R7,Resistor_SMD:R_0603_1608Metric,C23345
 22k,"power:R10,power:R14,power_som:R18",Resistor_SMD:R_0603_1608Metric,C31850
 22k1,uart_bridge:R2,Resistor_SMD:R_0603_1608Metric,C25961
 22p,"power:C23,power:C27,power_som:C21",Capacitor_SMD:C_0603_1608Metric,C1653
 22u,"microsd:C3,power:C10,power:C11,power:C26,power:C30,power:C5,power:C6,power:C8,power_som:C18,power_som:C19,som_decoupling:C1,som_decoupling:C13,som_decoupling:C14,som_decoupling:C2,som_decoupling:C7,som_decoupling:C8,usbc_otg:C2",Capacitor_SMD:C_0805_2012Metric,C45783
+23.2k,power:R4,Resistor_SMD:R_0603_1608Metric,C23346
 24AA025E48T-I/OT,board_services:U1,24AA025E48T-I_OT:24AA025E48T-I_OT,C129895
 27k,hdmi_rx:R2,Resistor_SMD:R_0603_1608Metric,C22967
 330R,"board_aux:R3,bringup_modules:R10,bringup_modules:R14,bringup_modules:R16,bringup_modules:R2,bringup_modules:R4,bringup_modules:R6,bringup_modules:R8,pmod_expansion:R3,power:R6,power:R9,rj45_connector:R1,rj45_connector:R2",Resistor_SMD:R_0603_1608Metric,C23138

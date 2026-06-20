@@ -20,7 +20,7 @@ chain — so the local checks add the power-specific electrical invariants:
     no center EP; its EP-equivalent is those power-ground pads on the GND pour).
   * FB-divider ratios             — each adjustable regulator's FB divider sets
     the documented output (Vout = Vref*(1+Rtop/Rbot)): +5V 40.2k/10k @ Vref 1.0,
-    +3V3 22.1k/10k @ Vref 1.0 — proving the BOM-critical FB resistors.
+    +3V3 23.2k/10k @ Vref 1.0 — proving the BOM-critical FB resistors.
   * reg-side vs rail-side split   — the FB sense + output bulk sit on the REG-
     side rail; the board RAIL the loads see is a SEPARATE external net (a
     project's series shunt bridges them) — the topology that lets a current
@@ -205,11 +205,12 @@ def test_fb_divider_ratios_set_documented_outputs(c: Circuit):
     assert abs(vout_5v - 5.02) < 0.05, vout_5v
     # the FB-top resistor really is 40.2k (NOT a 120k mis-key -> ~13 V, fatal)
     assert _r_value(c, "R1") == 40.2e3
-    # +3V3 buck (LM61460): Vref 1.0 V, R4/R5 = 22.1k/10k -> 3.21 V (inside the
-    # +3V3 +/-3% window [3.201, 3.399]); re-spec'd off the no-EP TPS54302.
+    # +3V3 buck (LM61460): Vref 1.0 V, R4/R5 = 23.2k/10k -> 3.32 V, CENTRED in the
+    # +3V3 +/-3% window [3.201, 3.399] (audit 2026-06-20 re-centred from 22.1k/3.21V,
+    # whose worst-case low touched the -5% floor; C23346 0603WAF2322T5E).
     vout_3v3 = 1.0 * (1 + _r_value(c, "R4") / _r_value(c, "R5"))
     assert 3.201 <= vout_3v3 <= 3.399, vout_3v3
-    assert _r_value(c, "R4") == 22.1e3 and _r_value(c, "R5") == 10e3
+    assert _r_value(c, "R4") == 23.2e3 and _r_value(c, "R5") == 10e3
 
 
 def test_reg_side_vs_rail_side_split(c: Circuit):

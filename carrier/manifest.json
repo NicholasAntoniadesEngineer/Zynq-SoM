@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "482ff6c9ee2d757c7132357cf90ae1f6aa3443aa25b034d8f3af768aa8d63ec5"
+      "sha256": "b96710c0494579ab21baa8502ffd5ab4f6556663101e5dfc3eefb35a09306dd9"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -14,7 +14,7 @@
     },
     {
       "path": "docs/BRINGUP.md",
-      "sha256": "a3679d972383d7994b18d83d02e3441e2e0e8a0d020bd520ee63de5d046e06e3"
+      "sha256": "9f3c68006e36f876d9e622fb4da79e828e5753a225bbf94839ff98bb4af90c53"
     },
     {
       "path": "docs/COMPLIANCE.md",
@@ -46,7 +46,7 @@
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "d6d056e110e787d9de7b02068f9cddc634b6e905d495ad443941e236766918de"
+      "sha256": "0b665db4b5310a36a23596a1dea31f9ee72e3ce28933a5001b8971ef4e8ec204"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -62,7 +62,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "84153302155c41b786025ab664caec5c134307bc357c4b588669bb5643f926a4"
+      "sha256": "2c5789e28f7b3b2af9b7bc7b341f2e5d0ff9caf68873846e70cb17fcec74f575"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -82,7 +82,7 @@
     },
     {
       "path": "reports/bom_values.txt",
-      "sha256": "928638daa38342ba49f0599ebfbb2619a3de2c3bd057cda822336fb12a1825b0"
+      "sha256": "5b0eca57f16174b240fd5231c57fc0cf9232389675dd7d4c4adebc42556e8b17"
     },
     {
       "path": "reports/carrier_structure.txt",
@@ -122,7 +122,7 @@
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "437bf1d74dd14926c41d864a81bd4b100d92d2790ed8a8f49a05ff6b743ade12"
+      "sha256": "1eb1d610a1fc39e851619a501543724f79823ac8b83bea3d55bc8bb70c4a91ea"
     },
     {
       "path": "reports/pin_completeness.txt",
@@ -142,7 +142,7 @@
     },
     {
       "path": "reports/spice.txt",
-      "sha256": "c3181141c6a0a920453507dc9d19c64a1a25c2aca7d0b3b16719668e7e3bd8b0"
+      "sha256": "a57e1fbd1eb0ce96e7012183f9df7b86c2e954af7f95d11f9ea660470b608fb6"
     },
     {
       "path": "reports/subsystem_structure.txt",
@@ -242,7 +242,7 @@
     },
     {
       "path": "schematic/power.kicad_sch",
-      "sha256": "a17300de9d58c5e6946ee8000ee91c9a98c745fff819d924357270e0e761ba07"
+      "sha256": "9e4ba97765b4114fd29a27576b4610911406b1a608541169ec84770024149557"
     },
     {
       "path": "schematic/power_mon.kicad_sch",

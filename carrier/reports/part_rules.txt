@@ -10,7 +10,7 @@ author waivers, verbatim (1):
 notes / advisory (1):
   + WAIVED CAP_V lcd:C2 (2.2u, LCSC C125847): 50V X7R on a 30V rail — needs >= 2x = 60V (margin 1.7x). Pick a higher-V part or c.waive_part_rule('C2', reason) [MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp]
 
-UNSPEC — reported, NOT failing (65):
+UNSPEC — reported, NOT failing (66):
   ? board_aux:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
   ? board_qwiic:J1 (ZX-SH1.0-4PWT, LCSC C7430446) — no ratings row
   ? board_services:BT1 (KH-CR1220-2, LCSC C5365933) — no ratings row
@@ -51,6 +51,7 @@ UNSPEC — reported, NOT failing (65):
   ? power:C4 (100n) — cap rail unresolved
   ? power:C9 (100n) — cap rail unresolved
   ? power:R1 (40.2k, LCSC C12447) — no ratings row
+  ? power:R4 (23.2k, LCSC C23346) — no ratings row
   ? power_som:C17 (100n) — cap rail unresolved
   ? power_som:C20 (100n) — cap rail unresolved
   ? power_som:C22 (1u) — cap rail unresolved
@@ -79,4 +80,4 @@ UNSPEC — reported, NOT failing (65):
 
 errors: none
 
-PART RULES: PASS (158 checks, 0 findings, 65 unspeced, 1 waived)
+PART RULES: PASS (158 checks, 0 findings, 66 unspeced, 1 waived)

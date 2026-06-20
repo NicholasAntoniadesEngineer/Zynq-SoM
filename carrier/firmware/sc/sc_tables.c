@@ -37,7 +37,7 @@ const sc_rail_step_t sc_rail_steps[SC_RAIL_COUNT] = {
     {
         .id = SC_RAIL_P3V3,
         .name = "+3V3",
-        .vout_mv = 3210,
+        .vout_mv = 3320,
         .en_net = "EN_3V3",
         .en_override = { .port = ZC_RAIL1_OVERRIDE_GPIO_PORT, .pin = ZC_RAIL1_OVERRIDE_GPIO_PIN },
         .settle_ms = 5,

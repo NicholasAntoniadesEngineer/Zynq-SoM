@@ -94,7 +94,7 @@ early is benign: its regulator simply has no input yet.)
 
 - Path: `+5V` -> `power.U2` (LM61460AANRJRR) -> `+3V3`.
 - EN cell: `bringup_en.U2` — `BU_DIP_3V3` AND `STM32_RAIL_EN_3V3` -> `EN_3V3`. A blank SC leaves the override pulled high (veto inactive).
-- Expect **3.21 V** on `+3V3` (setpoint derived from the netlist: FB divider vs the LM61460AANRJRR 1 V reference). Probe: power.TP2.
+- Expect **3.32 V** on `+3V3` (setpoint derived from the netlist: FB divider vs the LM61460AANRJRR 1 V reference). Probe: power.TP2.
 - PG LED `power.D2` lights.
 - Current-limit context: rail budget 3 A (power_mon dossier table 1; the regulator is the limit — no rail fuse).
 - Telemetry: INA3221 #1 (0x40) ch3 [+3V3_REG -> +3V3].
