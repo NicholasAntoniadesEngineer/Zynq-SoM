@@ -27,12 +27,12 @@ def test_regulator_chain_order(model):
 
 
 def test_setpoints_derived(model):
-    # The SC firmware DERIVES each rail setpoint from the netlist FB divider, so
-    # the +3V3 buck's 2026-06-16 re-spec (no-EP TPS54302 -> LM61460, thermal
-    # finding) moves +3V3 from the old 3.31 V (Vref 0.596 * (1+100k/22k)) to
-    # 3.21 V (Vref 1.0 * (1+22.1k/10k)). +5V (U1, 5.02 V) and +1V8 unchanged.
+    # The SC firmware DERIVES each rail setpoint from the netlist FB divider. +3V3
+    # = Vref 1.0 * (1 + 23.2k/10k) = 3.32 V after the 2026-06-20 audit re-centred
+    # the divider R4 22.1k->23.2k (C23346) — the old 22.1k/10k sat at 3.21 V with
+    # its worst-case low corner on the -5% floor. +5V (U1, 5.02 V) and +1V8 unchanged.
     mv = {st.rail_out: round(st.vout * 1000) for st in model.chain}
-    assert mv == {"+5V": 5020, "+3V3": 3210, "+1V8": 1800}
+    assert mv == {"+5V": 5020, "+3V3": 3320, "+1V8": 1800}
 
 
 def test_always_on_rails_include_sc_and_inlet(model):
