@@ -1813,7 +1813,8 @@ def _embed_footprint(inst: FootprintInst, uid) -> list:
                 # what the user reads on the board, and the ref clutters the only
                 # clear spot beside the connector. The ref stays in the footprint
                 # data (netlist/BOM), just not printed.
-                if inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC:
+                if (inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC
+                        or inst.ref in _SW_DESC):
                     hb = next((x for x in node if isinstance(x, list) and x
                                and x[0] == Sym("hide")), None)
                     if hb is None:
@@ -2098,17 +2099,168 @@ _INT_DESC: dict[str, str] = {
     "J9002":  "SWD",    # system-controller ARM Cortex 10-pin SWD header
 }
 
+# Switches — a short FUNCTION label beside every DIP enable + tactile button, the
+# same way connectors/headers are labelled. Keyed by the board-unique ref (the
+# per-sheet renumbering is deterministic); test_switch_descriptors asserts EVERY
+# switch on the board gets a label so a ref shift can't silently drop one.
+# The multi-position config DIPs carry an INLINE position legend (words in
+# silkscreen-position order 1..N — the DIP footprint already silk-prints the
+# numbers), so the bare board tells you what each rocker does. Every legend is
+# VERIFIED against the owning subsystem's position map (bringup_rails SW1/SW2/SW6
+# docstring + maps; debug_boot boot-DIP) — a wrong legend is worse than none
+# (LAW 0). The single-pole enables + tactile buttons get a plain function label.
+_SW_DESC: dict[str, str] = {
+    "SW1001":  "AUX EN",                         # board_aux:  gates +3V3_AUX (QWIIC/aux)
+    "SW7001":  "RAIL: 5V 3V3 1V8 LED",           # bringup:    rail DIP  (pos 1..4)
+    "SW7002":  "MOD: HTX HRX LCD CAM SD USB PMD", # bringup:   module DIP (pos 1..7, 8=spare)
+    "SW7003":  "BTN0",                           # bringup:    PL_BTN0 user button
+    "SW7004":  "BTN1",                           # bringup:    PL_BTN1 user button
+    "SW7005":  "SC RST",                         # bringup:    system-controller reset (NRST)
+    "SW7006":  "5V: HTX LCD",                    # bringup:    +5V module DIP (pos 1..2)
+    "SW9001":  "BOOT: DFU BSEL BSEL",            # debug_boot: boot DIP (1=USB-DFU 2-3=BOOTSEL)
+    "SW9002":  "RST",                            # debug_boot: reset button
+    "SW19001": "PMOD EN",                        # pmod_expansion: port power enable
+    "SW28001": "JTAG EN",                        # usb_jtag:   USB-JTAG bridge output enable
+    "SW33001": "USR0",                           # user_io:    user button 0
+    "SW33002": "USR1",                           # user_io:    user button 1
+    "SW33003": "USR2",                           # user_io:    user button 2
+    "SW33004": "USR3",                           # user_io:    user button 3
+}
 
-def _connector_descriptors(model: "PcbModel", uid) -> list:
+
+def _rects_overlap(a, b) -> bool:
+    """Axis-aligned rectangle intersection (each rect = x0,y0,x1,y1)."""
+    return not (a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1])
+
+
+def _text_box(txt: str, x: float, y: float, size: float, m: float = 0.35):
+    """Bounding box of a centre-justified silk string (KiCad stroke font ≈0.72
+    aspect), padded by ``m`` mm of clearance."""
+    w = max(len(txt), 1) * size * 0.72
+    h = size * 1.1
+    return (x - w / 2 - m, y - h / 2 - m, x + w / 2 + m, y + h / 2 + m)
+
+
+def _sub(node, name):
+    """First child s-expr of ``node`` whose head symbol is ``name`` (else None)."""
+    for c in node:
+        if isinstance(c, list) and c and isinstance(c[0], Sym) and str(c[0]) == name:
+            return c
+    return None
+
+
+def _font_size(node, default: float = 1.0) -> float:
+    eff = _sub(node, "effects")
+    fnt = _sub(eff, "font") if eff is not None else None
+    szn = _sub(fnt, "size") if fnt is not None else None
+    return float(szn[1]) if szn is not None else default
+
+
+def _emitted_text_boxes(doc: list) -> list:
+    """Bounding boxes of every VISIBLE silk designator already in the board — the
+    footprint reference/value fp_text (transformed local->board by the footprint
+    orientation) plus any top-level gr_text — so interior descriptor labels can be
+    placed to clear them (LAW 1: zero text-over-text)."""
+    import math
+    boxes: list = []
+    for node in doc:
+        if not (isinstance(node, list) and node and isinstance(node[0], Sym)):
+            continue
+        head = str(node[0])
+        if head == "gr_text" and isinstance(node[1], str):
+            at = _sub(node, "at")
+            if at is not None:
+                boxes.append(_text_box(node[1], float(at[1]), float(at[2]),
+                                       _font_size(node)))
+        elif head == "footprint":
+            fat = _sub(node, "at")
+            if fat is None:
+                continue
+            fx, fy = float(fat[1]), float(fat[2])
+            a = math.radians(float(fat[3])) if len(fat) > 3 else 0.0
+            ca, sa = math.cos(a), math.sin(a)
+            for c in node:
+                if not (isinstance(c, list) and c and isinstance(c[0], Sym)
+                        and str(c[0]) == "fp_text"):
+                    continue
+                kind = str(c[1]) if isinstance(c[1], Sym) else ""
+                if kind not in ("reference", "value") or _sub(c, "hide") is not None:
+                    continue
+                lat = _sub(c, "at")
+                if lat is None or not isinstance(c[2], str):
+                    continue
+                lx, ly = float(lat[1]), float(lat[2])
+                boxes.append(_text_box(c[2], fx + lx * ca - ly * sa,
+                                       fy + lx * sa + ly * ca, _font_size(c)))
+    return boxes
+
+
+def _overlap_area(a, b) -> float:
+    """Intersection area of two rects (0 if disjoint)."""
+    dx = min(a[2], b[2]) - max(a[0], b[0])
+    dy = min(a[3], b[3]) - max(a[1], b[1])
+    return dx * dy if (dx > 0.0 and dy > 0.0) else 0.0
+
+
+def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied):
+    """Nearest spot just OUTSIDE the courtyard (8 directions, growing offset)
+    whose label box clears every occupied box. Returns the first fully-clear
+    candidate; in a too-dense corner where none is clear, the LEAST-overlapping
+    one (never a blind drop). Returns (tx, ty, box, offset) where offset is the
+    clearance distance from the courtyard edge the spot was found at (a far offset
+    means the label detached from its switch — the caller can then degrade it)."""
+    midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
+    w = max(len(label), 1) * size * 0.72
+    h = size * 1.1
+    g = 0.9
+    best = None
+    best_pen = None
+    for extra in (0.0, 2.2, 4.4, 6.6, 9.0, 12.0, 15.0, 18.0):
+        dy = g + extra + h / 2
+        dx = g + extra + w / 2
+        for tx, ty in ((midx, cy1 + dy),          # S
+                       (midx, cy0 - dy),          # N
+                       (cx1 + dx, midy),          # E
+                       (cx0 - dx, midy),          # W
+                       (cx1 + dx, cy1 + dy),      # SE
+                       (cx0 - dx, cy1 + dy),      # SW
+                       (cx1 + dx, cy0 - dy),      # NE
+                       (cx0 - dx, cy0 - dy)):     # NW
+            box = _text_box(label, tx, ty, size)
+            pen = sum(_overlap_area(box, o) for o in occupied)
+            if pen == 0.0:
+                return tx, ty, box, extra
+            if best_pen is None or pen < best_pen:
+                best_pen, best = pen, (tx, ty, box, extra)
+    return best
+
+
+def _silk_text(txt: str, x: float, y: float, size: float, uuid) -> list:
+    return [Sym("gr_text"), txt,
+            [Sym("at"), round(x, 3), round(y, 3), 0],
+            [Sym("layer"), "F.SilkS"],
+            [Sym("uuid"), uuid],
+            [Sym("effects"),
+             [Sym("font"), [Sym("size"), size, size],
+              [Sym("thickness"), round(max(0.12, size * 0.16), 3)]]]]
+
+
+def _connector_descriptors(model: "PcbModel", uid, doc: list) -> list:
     """A short F.SilkS function label beside every OFF-BOARD connector (PWR / USB
     OTG / JTAG / UART / HDMI TX-RX / ETH / microSD / QWIIC / CAM / LCD / PMODn),
-    so the bare board tells you which connector is which. Placed just INBOARD of
-    the connector courtyard, centred on its along-edge axis, on the top silk.
-    Programmatic: the label comes from the connector's subsystem sheet, the edge
-    from its courtyard's nearest board edge — never hand-placed."""
+    every interior developer header (_INT_DESC), and every SWITCH (_SW_DESC: DIP
+    enables + tactile buttons), so the bare board tells you what each one is. The
+    connector's own J/SW-ref is hidden (see _embed_footprint), freeing the spot.
+    Off-board labels sit just INBOARD of the mating edge. Interior labels (headers
+    + switches, in a dense region) are placed OVERLAP-AWARE: the nearest clear
+    spot that touches no courtyard and no existing designator (LAW 1). All
+    programmatic — never hand-placed."""
     out: list = []
     ex0, ey0 = ORIGIN_X, ORIGIN_Y
     ex1, ey1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
+    # everything already on the board that a label must not collide with
+    occupied: list = [_inst_courtyard(i) for i in model.insts]
+    occupied += _emitted_text_boxes(doc)
     # number the PMOD ports PMOD0/1/2 in ref order (they span two sheets)
     pmods = sorted(i.ref for i in model.insts if i.value == "DS1024-2x6R2")
     pmod_n = {ref: n for n, ref in enumerate(pmods)}
@@ -2127,9 +2279,6 @@ def _connector_descriptors(model: "PcbModel", uid) -> list:
         if d[edge] > 12.0:                 # not actually an edge connector — skip
             continue
         midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
-        # place the label just INBOARD of the courtyard — the connector's own
-        # J-ref is hidden (see _embed_footprint), so this clear spot is the
-        # function label's; the subsystem components sit further inboard.
         g = 1.8
         if edge == "N":
             tx, ty = midx, cy1 + g
@@ -2139,28 +2288,39 @@ def _connector_descriptors(model: "PcbModel", uid) -> list:
             tx, ty = cx1 + g, midy
         else:                              # E
             tx, ty = cx0 - g, midy
-        out.append([Sym("gr_text"), desc,
-                    [Sym("at"), round(tx, 3), round(ty, 3), 0],
-                    [Sym("layer"), "F.SilkS"],
-                    [Sym("uuid"), uid(f"conn-desc:{inst.ref}")],
-                    [Sym("effects"),
-                     [Sym("font"), [Sym("size"), 1.1, 1.1],
-                      [Sym("thickness"), 0.2]]]])
-    # interior user/developer headers (no board edge): label just below the
-    # courtyard, centred (their J-refs are hidden too — see _embed_footprint).
+        out.append(_silk_text(desc, tx, ty, 1.1, uid(f"conn-desc:{inst.ref}")))
+        occupied.append(_text_box(desc, tx, ty, 1.1))
+    # interior developer headers (_INT_DESC) + switches (_SW_DESC): overlap-aware.
+    # Font shrinks with the label so the inline DIP position legends stay compact.
     for inst in model.insts:
         label = _INT_DESC.get(inst.ref)
+        pfx = "conn-desc"
+        if label is None:
+            label = _SW_DESC.get(inst.ref)
+            pfx = "sw-desc"
         if label is None:
             continue
         cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
-        tx, ty = (cx0 + cx1) / 2.0, cy1 + 1.6
-        out.append([Sym("gr_text"), label,
-                    [Sym("at"), round(tx, 3), round(ty, 3), 0],
-                    [Sym("layer"), "F.SilkS"],
-                    [Sym("uuid"), uid(f"conn-desc:{inst.ref}")],
-                    [Sym("effects"),
-                     [Sym("font"), [Sym("size"), 1.1, 1.1],
-                      [Sym("thickness"), 0.2]]]])
+
+        def _sized(lbl):
+            n = len(lbl)
+            return 1.1 if n <= 8 else 0.95 if n <= 16 else 0.85 if n <= 24 else 0.78
+
+        size = _sized(label)
+        tx, ty, box, off = _place_clear_label(cx0, cy0, cx1, cy1, label, size,
+                                              occupied)
+        # if a multi-position legend got flung > ~8 mm from its switch (a dense
+        # corner like debug_boot), it has visually detached — degrade to the short
+        # function label (text before ':'), which fits clear AND close.
+        if off > 8.0 and ":" in label:
+            short = label.split(":", 1)[0].strip()
+            ssize = _sized(short)
+            stx, sty, sbox, soff = _place_clear_label(cx0, cy0, cx1, cy1, short,
+                                                      ssize, occupied)
+            if soff < off:
+                label, size, tx, ty, box = short, ssize, stx, sty, sbox
+        occupied.append(box)
+        out.append(_silk_text(label, tx, ty, size, uid(f"{pfx}:{inst.ref}")))
     return out
 
 
@@ -2261,8 +2421,9 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     for inst in model.insts:
         doc.append(_embed_footprint(inst, uid))
 
-    # short function label beside each off-board connector (self-documenting board)
-    doc.extend(_connector_descriptors(model, uid))
+    # short function label beside each connector, header + switch (self-documenting
+    # board); interior labels are placed overlap-aware against the emitted designators
+    doc.extend(_connector_descriptors(model, uid, doc))
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(sexpr.dumps(doc) + "\n")
