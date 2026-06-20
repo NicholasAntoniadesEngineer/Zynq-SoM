@@ -1,5 +1,5 @@
 3D model coverage gate (custom footprints reference a stock KiCad 3D model that EXISTS on disk)
 ========================================================================
 STATUS: SOFT — gaps are reported, never fail the board (some bespoke parts have no faithful stock body)
-56/56 custom footprints have a resolving 3D model
+57/57 custom footprints have a resolving 3D model
 unmatched: none — every custom footprint has a model

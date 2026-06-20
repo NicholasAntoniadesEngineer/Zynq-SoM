@@ -1,6 +1,6 @@
 # som_j2 — SoM mezzanine connector J2 (carrier-local subsystem)
 
-The carrier side of the **J2** Hirose **DF40C-100DS-0.4V(51)** mezzanine
+The carrier side of the **J2** Hirose **DF40C-100DP-0.4V(51)** mezzanine
 receptacle. J2 carries the **FPGA bank 13/33 IO + VCCO rails** half of the SoM
 contract (HDMI RX/TX, LCD touch, Pmod expansion, PS UART0 modem lines, PL
 buttons, FMC-present, SD card-detect, and the bank-13/33 VCCO supply).
@@ -32,7 +32,7 @@ onto its carrier rail, and types the HDMI TMDS pairs. No hand-typed pinout.
 
 | ref | value | lib / part | LCSC |
 |-----|-------|-----------|------|
-| J2 | DF40C-100DS-0.4V(51) | `parts/DF40C-100DS-0.4V_51/` (100 bare-number pins) | C597931 |
+| J2 | DF40C-100DP-0.4V(51) | `parts/DF40C-100DP-0.4V_51/` (100 bare-number pins) | C531031 |
 
 ## Interface it carries (the J2 contract)
 

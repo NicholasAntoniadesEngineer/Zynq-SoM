@@ -1,10 +1,10 @@
 pin completeness gate (every multi-pin IC pin is NETTED or explicit NC)
 ================================================================
 STATUS: REPORT-FIRST (does NOT fail the board yet; promotes to HARD-FAIL once the NC allowlist is fully blessed)
-480 multi-pin parts checked; 115 author-declared NC pins
+480 multi-pin parts checked; 127 author-declared NC pins
 silent floats: none
 
-NC ALLOWLIST — 27 blessed [seed], 88 to bless [new]:
+NC ALLOWLIST — 27 blessed [seed], 100 to bless [new]:
   [seed] board_services:U2.1 (RV-3028-C7-32.768kHz-1ppm-TA-QC CLKOUT)
   [seed] fmc:U1.4 (TLV75725PDYDR NC)
   [seed] hdmi_rx:U2.6 (TPD4E02B04DQAR NC)
@@ -89,13 +89,25 @@ NC ALLOWLIST — 27 blessed [seed], 88 to bless [new]:
   [new]  power_mon:U2.10 (INA3221AIRGVR PV)
   [new]  power_mon:U2.13 (INA3221AIRGVR TC)
   [new]  power_som:U4.5 (LM61460AANRJRR PGOOD)
-  [new]  som_j1:J1.24 (DF40C-100DS-0.4V(51) 24)
-  [new]  som_j1:J1.25 (DF40C-100DS-0.4V(51) 25)
-  [new]  som_j1:J1.26 (DF40C-100DS-0.4V(51) 26)
-  [new]  som_j1:J1.27 (DF40C-100DS-0.4V(51) 27)
-  [new]  som_j1:J1.56 (DF40C-100DS-0.4V(51) 56)
-  [new]  som_j1:J1.58 (DF40C-100DS-0.4V(51) 58)
-  [new]  som_j1:J1.60 (DF40C-100DS-0.4V(51) 60)
+  [new]  som_j1:J1.24 (DF40C-100DP-0.4V(51) 24)
+  [new]  som_j1:J1.25 (DF40C-100DP-0.4V(51) 25)
+  [new]  som_j1:J1.26 (DF40C-100DP-0.4V(51) 26)
+  [new]  som_j1:J1.27 (DF40C-100DP-0.4V(51) 27)
+  [new]  som_j1:J1.56 (DF40C-100DP-0.4V(51) 56)
+  [new]  som_j1:J1.58 (DF40C-100DP-0.4V(51) 58)
+  [new]  som_j1:J1.60 (DF40C-100DP-0.4V(51) 60)
+  [new]  som_j1:J1.101 (DF40C-100DP-0.4V(51) 101)
+  [new]  som_j1:J1.102 (DF40C-100DP-0.4V(51) 102)
+  [new]  som_j1:J1.103 (DF40C-100DP-0.4V(51) 103)
+  [new]  som_j1:J1.104 (DF40C-100DP-0.4V(51) 104)
+  [new]  som_j2:J2.101 (DF40C-100DP-0.4V(51) 101)
+  [new]  som_j2:J2.102 (DF40C-100DP-0.4V(51) 102)
+  [new]  som_j2:J2.103 (DF40C-100DP-0.4V(51) 103)
+  [new]  som_j2:J2.104 (DF40C-100DP-0.4V(51) 104)
+  [new]  som_j3:J3.101 (DF40C-100DP-0.4V(51) 101)
+  [new]  som_j3:J3.102 (DF40C-100DP-0.4V(51) 102)
+  [new]  som_j3:J3.103 (DF40C-100DP-0.4V(51) 103)
+  [new]  som_j3:J3.104 (DF40C-100DP-0.4V(51) 104)
   [new]  uart_bridge:U1.1 (CP2102N-A02 RI/CLK)
   [new]  uart_bridge:U1.11 (CP2102N-A02 GPIO.3/WAKEUP)
   [new]  uart_bridge:U1.12 (CP2102N-A02 GPIO.2/RS485)

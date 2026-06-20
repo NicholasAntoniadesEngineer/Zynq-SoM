@@ -54,8 +54,8 @@ def test_is_the_j2_connector(c: Circuit):
     assert c.name == "som_j2"
     assert c.title == "SoM J2: FPGA bank 13/33 IO + VCCO rails"
     assert sorted(c.parts) == ["J2"]
-    assert c.parts["J2"].lib_id.endswith("DF40C-100DS-0.4V_51")
-    assert c.parts["J2"].value == "DF40C-100DS-0.4V(51)"
+    assert c.parts["J2"].lib_id.endswith("DF40C-100DP-0.4V_51")  # PLUG mates SoM DS
+    assert c.parts["J2"].value == "DF40C-100DP-0.4V(51)"
 
 
 def test_connector_has_no_discretes(c: Circuit):
@@ -67,15 +67,15 @@ def test_connector_has_no_discretes(c: Circuit):
 # ---- model completeness (LAW 0) ------------------------------------------------
 
 def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
-    """Every one of the 100 physical pins is netted; J2 has no no-connects."""
+    """All 100 signal pins netted; the only NCs are the 4 DP plug hold-downs."""
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
-    assert c.nc_pins == set()
+    assert {str(p) for p in c.nc_pins} == {"J2.101", "J2.102", "J2.103", "J2.104"}
 
 
 def test_every_part_pin_is_accounted_for(c: Circuit, lib: Library):
     total = len(lib.pin_numbers(c.parts["J2"].lib_id))
     netted = {pr for n in c.nets.values() for pr in n.pins}
-    assert total == 100
+    assert total == 104                                   # 100 signal + 4 hold-down
     assert len(netted) + len(c.nc_pins) == total
 
 

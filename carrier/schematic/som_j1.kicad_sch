@@ -11,7 +11,7 @@
 	)
 	(lib_symbols
 		(symbol
-			"DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51"
+			"DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51"
 			(pin_names
 				(offset 0.508)
 				(hide yes)
@@ -22,7 +22,7 @@
 			(property
 				"Reference"
 				"CN"
-				(at 0 68.58 0)
+				(at 0 71.12 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -31,8 +31,8 @@
 			)
 			(property
 				"Value"
-				"DF40C-100DS-0.4V(51)"
-				(at 0 -68.58 0)
+				"DF40C-100DP-0.4V(51)"
+				(at 0 -71.12 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -41,7 +41,7 @@
 			)
 			(property
 				"Footprint"
-				"DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51"
+				"DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51"
 				(at 0 0 0)
 				(effects
 					(font
@@ -52,7 +52,7 @@
 			)
 			(property
 				"Datasheet"
-				"https://www.lcsc.com/datasheet/C597931.pdf"
+				"https://www.lcsc.com/datasheet/C531031.pdf"
 				(at 0 0 0)
 				(effects
 					(font
@@ -63,7 +63,7 @@
 			)
 			(property
 				"Description"
-				"DF40C-100DS-0.4V(51) (CONN-SMD_DF40C-100DS-0.4V-51)"
+				"DF40C-100DP-0.4V(51) (CONN-SMD_100P-P0.40_DF40C-100DP-0.4V-51)"
 				(at 0 0 0)
 				(effects
 					(font
@@ -74,7 +74,7 @@
 			)
 			(property
 				"LCSC"
-				"C597931"
+				"C531031"
 				(at 0 0 0)
 				(effects
 					(font
@@ -84,10 +84,10 @@
 				)
 			)
 			(symbol
-				"DF40C-100DS-0.4V_51_0_1"
+				"DF40C-100DP-0.4V_51_0_1"
 				(rectangle
-					(start -2.54 64.77)
-					(end 2.54 -64.77)
+					(start -2.54 67.31)
+					(end 2.54 -67.31)
 					(stroke
 						(width 0.254)
 						(type default)
@@ -98,12 +98,12 @@
 				)
 			)
 			(symbol
-				"DF40C-100DS-0.4V_51_1_1"
+				"DF40C-100DP-0.4V_51_1_1"
 				(pin
 					passive
 					line
-					(at -5.08 62.23 0)
-					(length 2.54)
+					(at -7.62 64.77 0)
+					(length 5.08)
 					(name
 						"1"
 						(effects
@@ -124,8 +124,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 59.69 0)
-					(length 2.54)
+					(at -7.62 62.23 0)
+					(length 5.08)
 					(name
 						"3"
 						(effects
@@ -146,8 +146,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 57.15 0)
-					(length 2.54)
+					(at -7.62 59.69 0)
+					(length 5.08)
 					(name
 						"5"
 						(effects
@@ -168,8 +168,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 54.61 0)
-					(length 2.54)
+					(at -7.62 57.15 0)
+					(length 5.08)
 					(name
 						"7"
 						(effects
@@ -190,8 +190,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 52.07 0)
-					(length 2.54)
+					(at -7.62 54.61 0)
+					(length 5.08)
 					(name
 						"9"
 						(effects
@@ -212,8 +212,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 49.53 0)
-					(length 2.54)
+					(at -7.62 52.07 0)
+					(length 5.08)
 					(name
 						"11"
 						(effects
@@ -234,8 +234,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 46.99 0)
-					(length 2.54)
+					(at -7.62 49.53 0)
+					(length 5.08)
 					(name
 						"13"
 						(effects
@@ -256,8 +256,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 44.45 0)
-					(length 2.54)
+					(at -7.62 46.99 0)
+					(length 5.08)
 					(name
 						"15"
 						(effects
@@ -278,8 +278,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 41.91 0)
-					(length 2.54)
+					(at -7.62 44.45 0)
+					(length 5.08)
 					(name
 						"17"
 						(effects
@@ -300,8 +300,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 39.37 0)
-					(length 2.54)
+					(at -7.62 41.91 0)
+					(length 5.08)
 					(name
 						"19"
 						(effects
@@ -322,8 +322,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 36.83 0)
-					(length 2.54)
+					(at -7.62 39.37 0)
+					(length 5.08)
 					(name
 						"21"
 						(effects
@@ -344,8 +344,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 34.29 0)
-					(length 2.54)
+					(at -7.62 36.83 0)
+					(length 5.08)
 					(name
 						"23"
 						(effects
@@ -366,8 +366,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 31.75 0)
-					(length 2.54)
+					(at -7.62 34.29 0)
+					(length 5.08)
 					(name
 						"25"
 						(effects
@@ -388,8 +388,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 29.21 0)
-					(length 2.54)
+					(at -7.62 31.75 0)
+					(length 5.08)
 					(name
 						"27"
 						(effects
@@ -410,8 +410,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 26.67 0)
-					(length 2.54)
+					(at -7.62 29.21 0)
+					(length 5.08)
 					(name
 						"29"
 						(effects
@@ -432,8 +432,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 24.13 0)
-					(length 2.54)
+					(at -7.62 26.67 0)
+					(length 5.08)
 					(name
 						"31"
 						(effects
@@ -454,8 +454,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 21.59 0)
-					(length 2.54)
+					(at -7.62 24.13 0)
+					(length 5.08)
 					(name
 						"33"
 						(effects
@@ -476,8 +476,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 19.05 0)
-					(length 2.54)
+					(at -7.62 21.59 0)
+					(length 5.08)
 					(name
 						"35"
 						(effects
@@ -498,8 +498,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 16.51 0)
-					(length 2.54)
+					(at -7.62 19.05 0)
+					(length 5.08)
 					(name
 						"37"
 						(effects
@@ -520,8 +520,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 13.97 0)
-					(length 2.54)
+					(at -7.62 16.51 0)
+					(length 5.08)
 					(name
 						"39"
 						(effects
@@ -542,8 +542,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 11.43 0)
-					(length 2.54)
+					(at -7.62 13.97 0)
+					(length 5.08)
 					(name
 						"41"
 						(effects
@@ -564,8 +564,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 8.89 0)
-					(length 2.54)
+					(at -7.62 11.43 0)
+					(length 5.08)
 					(name
 						"43"
 						(effects
@@ -586,8 +586,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 6.35 0)
-					(length 2.54)
+					(at -7.62 8.89 0)
+					(length 5.08)
 					(name
 						"45"
 						(effects
@@ -608,8 +608,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 3.81 0)
-					(length 2.54)
+					(at -7.62 6.35 0)
+					(length 5.08)
 					(name
 						"47"
 						(effects
@@ -630,8 +630,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 1.27 0)
-					(length 2.54)
+					(at -7.62 3.81 0)
+					(length 5.08)
 					(name
 						"49"
 						(effects
@@ -652,8 +652,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -1.27 0)
-					(length 2.54)
+					(at -7.62 1.27 0)
+					(length 5.08)
 					(name
 						"51"
 						(effects
@@ -674,8 +674,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -3.81 0)
-					(length 2.54)
+					(at -7.62 -1.27 0)
+					(length 5.08)
 					(name
 						"53"
 						(effects
@@ -696,8 +696,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -6.35 0)
-					(length 2.54)
+					(at -7.62 -3.81 0)
+					(length 5.08)
 					(name
 						"55"
 						(effects
@@ -718,8 +718,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -8.89 0)
-					(length 2.54)
+					(at -7.62 -6.35 0)
+					(length 5.08)
 					(name
 						"57"
 						(effects
@@ -740,8 +740,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -11.43 0)
-					(length 2.54)
+					(at -7.62 -8.89 0)
+					(length 5.08)
 					(name
 						"59"
 						(effects
@@ -762,8 +762,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -13.97 0)
-					(length 2.54)
+					(at -7.62 -11.43 0)
+					(length 5.08)
 					(name
 						"61"
 						(effects
@@ -784,8 +784,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -16.51 0)
-					(length 2.54)
+					(at -7.62 -13.97 0)
+					(length 5.08)
 					(name
 						"63"
 						(effects
@@ -806,8 +806,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -19.05 0)
-					(length 2.54)
+					(at -7.62 -16.51 0)
+					(length 5.08)
 					(name
 						"65"
 						(effects
@@ -828,8 +828,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -21.59 0)
-					(length 2.54)
+					(at -7.62 -19.05 0)
+					(length 5.08)
 					(name
 						"67"
 						(effects
@@ -850,8 +850,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -24.13 0)
-					(length 2.54)
+					(at -7.62 -21.59 0)
+					(length 5.08)
 					(name
 						"69"
 						(effects
@@ -872,8 +872,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -26.67 0)
-					(length 2.54)
+					(at -7.62 -24.13 0)
+					(length 5.08)
 					(name
 						"71"
 						(effects
@@ -894,8 +894,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -29.21 0)
-					(length 2.54)
+					(at -7.62 -26.67 0)
+					(length 5.08)
 					(name
 						"73"
 						(effects
@@ -916,8 +916,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -31.75 0)
-					(length 2.54)
+					(at -7.62 -29.21 0)
+					(length 5.08)
 					(name
 						"75"
 						(effects
@@ -938,8 +938,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -34.29 0)
-					(length 2.54)
+					(at -7.62 -31.75 0)
+					(length 5.08)
 					(name
 						"77"
 						(effects
@@ -960,8 +960,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -36.83 0)
-					(length 2.54)
+					(at -7.62 -34.29 0)
+					(length 5.08)
 					(name
 						"79"
 						(effects
@@ -982,8 +982,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -39.37 0)
-					(length 2.54)
+					(at -7.62 -36.83 0)
+					(length 5.08)
 					(name
 						"81"
 						(effects
@@ -1004,8 +1004,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -41.91 0)
-					(length 2.54)
+					(at -7.62 -39.37 0)
+					(length 5.08)
 					(name
 						"83"
 						(effects
@@ -1026,8 +1026,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -44.45 0)
-					(length 2.54)
+					(at -7.62 -41.91 0)
+					(length 5.08)
 					(name
 						"85"
 						(effects
@@ -1048,8 +1048,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -46.99 0)
-					(length 2.54)
+					(at -7.62 -44.45 0)
+					(length 5.08)
 					(name
 						"87"
 						(effects
@@ -1070,8 +1070,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -49.53 0)
-					(length 2.54)
+					(at -7.62 -46.99 0)
+					(length 5.08)
 					(name
 						"89"
 						(effects
@@ -1092,8 +1092,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -52.07 0)
-					(length 2.54)
+					(at -7.62 -49.53 0)
+					(length 5.08)
 					(name
 						"91"
 						(effects
@@ -1114,8 +1114,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -54.61 0)
-					(length 2.54)
+					(at -7.62 -52.07 0)
+					(length 5.08)
 					(name
 						"93"
 						(effects
@@ -1136,8 +1136,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -57.15 0)
-					(length 2.54)
+					(at -7.62 -54.61 0)
+					(length 5.08)
 					(name
 						"95"
 						(effects
@@ -1158,8 +1158,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -59.69 0)
-					(length 2.54)
+					(at -7.62 -57.15 0)
+					(length 5.08)
 					(name
 						"97"
 						(effects
@@ -1180,8 +1180,8 @@
 				(pin
 					passive
 					line
-					(at -5.08 -62.23 0)
-					(length 2.54)
+					(at -7.62 -59.69 0)
+					(length 5.08)
 					(name
 						"99"
 						(effects
@@ -1202,8 +1202,52 @@
 				(pin
 					passive
 					line
-					(at 5.08 62.23 180)
-					(length 2.54)
+					(at -7.62 -62.23 0)
+					(length 5.08)
+					(name
+						"103"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number
+						"103"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin
+					passive
+					line
+					(at -7.62 -64.77 0)
+					(length 5.08)
+					(name
+						"101"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number
+						"101"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin
+					passive
+					line
+					(at 7.62 64.77 180)
+					(length 5.08)
 					(name
 						"2"
 						(effects
@@ -1224,8 +1268,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 59.69 180)
-					(length 2.54)
+					(at 7.62 62.23 180)
+					(length 5.08)
 					(name
 						"4"
 						(effects
@@ -1246,8 +1290,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 57.15 180)
-					(length 2.54)
+					(at 7.62 59.69 180)
+					(length 5.08)
 					(name
 						"6"
 						(effects
@@ -1268,8 +1312,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 54.61 180)
-					(length 2.54)
+					(at 7.62 57.15 180)
+					(length 5.08)
 					(name
 						"8"
 						(effects
@@ -1290,8 +1334,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 52.07 180)
-					(length 2.54)
+					(at 7.62 54.61 180)
+					(length 5.08)
 					(name
 						"10"
 						(effects
@@ -1312,8 +1356,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 49.53 180)
-					(length 2.54)
+					(at 7.62 52.07 180)
+					(length 5.08)
 					(name
 						"12"
 						(effects
@@ -1334,8 +1378,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 46.99 180)
-					(length 2.54)
+					(at 7.62 49.53 180)
+					(length 5.08)
 					(name
 						"14"
 						(effects
@@ -1356,8 +1400,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 44.45 180)
-					(length 2.54)
+					(at 7.62 46.99 180)
+					(length 5.08)
 					(name
 						"16"
 						(effects
@@ -1378,8 +1422,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 41.91 180)
-					(length 2.54)
+					(at 7.62 44.45 180)
+					(length 5.08)
 					(name
 						"18"
 						(effects
@@ -1400,8 +1444,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 39.37 180)
-					(length 2.54)
+					(at 7.62 41.91 180)
+					(length 5.08)
 					(name
 						"20"
 						(effects
@@ -1422,8 +1466,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 36.83 180)
-					(length 2.54)
+					(at 7.62 39.37 180)
+					(length 5.08)
 					(name
 						"22"
 						(effects
@@ -1444,8 +1488,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 34.29 180)
-					(length 2.54)
+					(at 7.62 36.83 180)
+					(length 5.08)
 					(name
 						"24"
 						(effects
@@ -1466,8 +1510,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 31.75 180)
-					(length 2.54)
+					(at 7.62 34.29 180)
+					(length 5.08)
 					(name
 						"26"
 						(effects
@@ -1488,8 +1532,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 29.21 180)
-					(length 2.54)
+					(at 7.62 31.75 180)
+					(length 5.08)
 					(name
 						"28"
 						(effects
@@ -1510,8 +1554,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 26.67 180)
-					(length 2.54)
+					(at 7.62 29.21 180)
+					(length 5.08)
 					(name
 						"30"
 						(effects
@@ -1532,8 +1576,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 24.13 180)
-					(length 2.54)
+					(at 7.62 26.67 180)
+					(length 5.08)
 					(name
 						"32"
 						(effects
@@ -1554,8 +1598,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 21.59 180)
-					(length 2.54)
+					(at 7.62 24.13 180)
+					(length 5.08)
 					(name
 						"34"
 						(effects
@@ -1576,8 +1620,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 19.05 180)
-					(length 2.54)
+					(at 7.62 21.59 180)
+					(length 5.08)
 					(name
 						"36"
 						(effects
@@ -1598,8 +1642,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 16.51 180)
-					(length 2.54)
+					(at 7.62 19.05 180)
+					(length 5.08)
 					(name
 						"38"
 						(effects
@@ -1620,8 +1664,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 13.97 180)
-					(length 2.54)
+					(at 7.62 16.51 180)
+					(length 5.08)
 					(name
 						"40"
 						(effects
@@ -1642,8 +1686,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 11.43 180)
-					(length 2.54)
+					(at 7.62 13.97 180)
+					(length 5.08)
 					(name
 						"42"
 						(effects
@@ -1664,8 +1708,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 8.89 180)
-					(length 2.54)
+					(at 7.62 11.43 180)
+					(length 5.08)
 					(name
 						"44"
 						(effects
@@ -1686,8 +1730,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 6.35 180)
-					(length 2.54)
+					(at 7.62 8.89 180)
+					(length 5.08)
 					(name
 						"46"
 						(effects
@@ -1708,8 +1752,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 3.81 180)
-					(length 2.54)
+					(at 7.62 6.35 180)
+					(length 5.08)
 					(name
 						"48"
 						(effects
@@ -1730,8 +1774,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 1.27 180)
-					(length 2.54)
+					(at 7.62 3.81 180)
+					(length 5.08)
 					(name
 						"50"
 						(effects
@@ -1752,8 +1796,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -1.27 180)
-					(length 2.54)
+					(at 7.62 1.27 180)
+					(length 5.08)
 					(name
 						"52"
 						(effects
@@ -1774,8 +1818,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -3.81 180)
-					(length 2.54)
+					(at 7.62 -1.27 180)
+					(length 5.08)
 					(name
 						"54"
 						(effects
@@ -1796,8 +1840,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -6.35 180)
-					(length 2.54)
+					(at 7.62 -3.81 180)
+					(length 5.08)
 					(name
 						"56"
 						(effects
@@ -1818,8 +1862,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -8.89 180)
-					(length 2.54)
+					(at 7.62 -6.35 180)
+					(length 5.08)
 					(name
 						"58"
 						(effects
@@ -1840,8 +1884,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -11.43 180)
-					(length 2.54)
+					(at 7.62 -8.89 180)
+					(length 5.08)
 					(name
 						"60"
 						(effects
@@ -1862,8 +1906,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -13.97 180)
-					(length 2.54)
+					(at 7.62 -11.43 180)
+					(length 5.08)
 					(name
 						"62"
 						(effects
@@ -1884,8 +1928,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -16.51 180)
-					(length 2.54)
+					(at 7.62 -13.97 180)
+					(length 5.08)
 					(name
 						"64"
 						(effects
@@ -1906,8 +1950,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -19.05 180)
-					(length 2.54)
+					(at 7.62 -16.51 180)
+					(length 5.08)
 					(name
 						"66"
 						(effects
@@ -1928,8 +1972,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -21.59 180)
-					(length 2.54)
+					(at 7.62 -19.05 180)
+					(length 5.08)
 					(name
 						"68"
 						(effects
@@ -1950,8 +1994,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -24.13 180)
-					(length 2.54)
+					(at 7.62 -21.59 180)
+					(length 5.08)
 					(name
 						"70"
 						(effects
@@ -1972,8 +2016,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -26.67 180)
-					(length 2.54)
+					(at 7.62 -24.13 180)
+					(length 5.08)
 					(name
 						"72"
 						(effects
@@ -1994,8 +2038,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -29.21 180)
-					(length 2.54)
+					(at 7.62 -26.67 180)
+					(length 5.08)
 					(name
 						"74"
 						(effects
@@ -2016,8 +2060,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -31.75 180)
-					(length 2.54)
+					(at 7.62 -29.21 180)
+					(length 5.08)
 					(name
 						"76"
 						(effects
@@ -2038,8 +2082,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -34.29 180)
-					(length 2.54)
+					(at 7.62 -31.75 180)
+					(length 5.08)
 					(name
 						"78"
 						(effects
@@ -2060,8 +2104,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -36.83 180)
-					(length 2.54)
+					(at 7.62 -34.29 180)
+					(length 5.08)
 					(name
 						"80"
 						(effects
@@ -2082,8 +2126,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -39.37 180)
-					(length 2.54)
+					(at 7.62 -36.83 180)
+					(length 5.08)
 					(name
 						"82"
 						(effects
@@ -2104,8 +2148,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -41.91 180)
-					(length 2.54)
+					(at 7.62 -39.37 180)
+					(length 5.08)
 					(name
 						"84"
 						(effects
@@ -2126,8 +2170,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -44.45 180)
-					(length 2.54)
+					(at 7.62 -41.91 180)
+					(length 5.08)
 					(name
 						"86"
 						(effects
@@ -2148,8 +2192,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -46.99 180)
-					(length 2.54)
+					(at 7.62 -44.45 180)
+					(length 5.08)
 					(name
 						"88"
 						(effects
@@ -2170,8 +2214,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -49.53 180)
-					(length 2.54)
+					(at 7.62 -46.99 180)
+					(length 5.08)
 					(name
 						"90"
 						(effects
@@ -2192,8 +2236,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -52.07 180)
-					(length 2.54)
+					(at 7.62 -49.53 180)
+					(length 5.08)
 					(name
 						"92"
 						(effects
@@ -2214,8 +2258,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -54.61 180)
-					(length 2.54)
+					(at 7.62 -52.07 180)
+					(length 5.08)
 					(name
 						"94"
 						(effects
@@ -2236,8 +2280,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -57.15 180)
-					(length 2.54)
+					(at 7.62 -54.61 180)
+					(length 5.08)
 					(name
 						"96"
 						(effects
@@ -2258,8 +2302,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -59.69 180)
-					(length 2.54)
+					(at 7.62 -57.15 180)
+					(length 5.08)
 					(name
 						"98"
 						(effects
@@ -2280,8 +2324,8 @@
 				(pin
 					passive
 					line
-					(at 5.08 -62.23 180)
-					(length 2.54)
+					(at 7.62 -59.69 180)
+					(length 5.08)
 					(name
 						"100"
 						(effects
@@ -2292,6 +2336,50 @@
 					)
 					(number
 						"100"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin
+					passive
+					line
+					(at 7.62 -62.23 180)
+					(length 5.08)
+					(name
+						"104"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number
+						"104"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin
+					passive
+					line
+					(at 7.62 -64.77 180)
+					(length 5.08)
+					(name
+						"102"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number
+						"102"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2715,7 +2803,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 30.48)
+			(xy 149.86 30.48)
 			(xy 142.24 30.48)
 		)
 		(stroke
@@ -2726,7 +2814,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 33.02)
+			(xy 149.86 33.02)
 			(xy 142.24 33.02)
 		)
 		(stroke
@@ -2737,7 +2825,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 35.56)
+			(xy 149.86 35.56)
 			(xy 142.24 35.56)
 		)
 		(stroke
@@ -2748,7 +2836,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 38.1)
+			(xy 149.86 38.1)
 			(xy 142.24 38.1)
 		)
 		(stroke
@@ -2759,7 +2847,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 40.64)
+			(xy 149.86 40.64)
 			(xy 142.24 40.64)
 		)
 		(stroke
@@ -2770,7 +2858,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 43.18)
+			(xy 149.86 43.18)
 			(xy 142.24 43.18)
 		)
 		(stroke
@@ -2781,7 +2869,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 45.72)
+			(xy 149.86 45.72)
 			(xy 142.24 45.72)
 		)
 		(stroke
@@ -2869,7 +2957,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 30.48)
+			(xy 165.1 30.48)
 			(xy 172.72 30.48)
 		)
 		(stroke
@@ -2880,7 +2968,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 33.02)
+			(xy 165.1 33.02)
 			(xy 172.72 33.02)
 		)
 		(stroke
@@ -2891,7 +2979,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 35.56)
+			(xy 165.1 35.56)
 			(xy 172.72 35.56)
 		)
 		(stroke
@@ -2902,7 +2990,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 38.1)
+			(xy 165.1 38.1)
 			(xy 172.72 38.1)
 		)
 		(stroke
@@ -2913,7 +3001,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 40.64)
+			(xy 165.1 40.64)
 			(xy 172.72 40.64)
 		)
 		(stroke
@@ -2924,7 +3012,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 43.18)
+			(xy 165.1 43.18)
 			(xy 172.72 43.18)
 		)
 		(stroke
@@ -2935,7 +3023,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 45.72)
+			(xy 165.1 45.72)
 			(xy 172.72 45.72)
 		)
 		(stroke
@@ -3023,7 +3111,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 48.26)
+			(xy 149.86 48.26)
 			(xy 69.85 48.26)
 		)
 		(stroke
@@ -3034,7 +3122,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 50.8)
+			(xy 149.86 50.8)
 			(xy 69.85 50.8)
 		)
 		(stroke
@@ -3045,7 +3133,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 58.42)
+			(xy 149.86 58.42)
 			(xy 69.85 58.42)
 		)
 		(stroke
@@ -3056,7 +3144,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 78.74)
+			(xy 149.86 78.74)
 			(xy 69.85 78.74)
 		)
 		(stroke
@@ -3067,7 +3155,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 93.98)
+			(xy 149.86 93.98)
 			(xy 69.85 93.98)
 		)
 		(stroke
@@ -3078,7 +3166,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 109.22)
+			(xy 149.86 109.22)
 			(xy 69.85 109.22)
 		)
 		(stroke
@@ -3089,7 +3177,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 124.46)
+			(xy 149.86 124.46)
 			(xy 69.85 124.46)
 		)
 		(stroke
@@ -3100,7 +3188,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 132.08)
+			(xy 149.86 132.08)
 			(xy 69.85 132.08)
 		)
 		(stroke
@@ -3111,7 +3199,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 139.7)
+			(xy 149.86 139.7)
 			(xy 69.85 139.7)
 		)
 		(stroke
@@ -3122,7 +3210,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 147.32)
+			(xy 149.86 147.32)
 			(xy 69.85 147.32)
 		)
 		(stroke
@@ -3133,7 +3221,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 154.94)
+			(xy 149.86 154.94)
 			(xy 69.85 154.94)
 		)
 		(stroke
@@ -3265,7 +3353,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 48.26)
+			(xy 165.1 48.26)
 			(xy 228.6 48.26)
 		)
 		(stroke
@@ -3276,7 +3364,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 50.8)
+			(xy 165.1 50.8)
 			(xy 228.6 50.8)
 		)
 		(stroke
@@ -3287,7 +3375,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 63.5)
+			(xy 165.1 63.5)
 			(xy 228.6 63.5)
 		)
 		(stroke
@@ -3298,7 +3386,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 71.12)
+			(xy 165.1 71.12)
 			(xy 228.6 71.12)
 		)
 		(stroke
@@ -3309,7 +3397,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 83.82)
+			(xy 165.1 83.82)
 			(xy 228.6 83.82)
 		)
 		(stroke
@@ -3320,7 +3408,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 106.68)
+			(xy 165.1 106.68)
 			(xy 228.6 106.68)
 		)
 		(stroke
@@ -3331,7 +3419,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 119.38)
+			(xy 165.1 119.38)
 			(xy 228.6 119.38)
 		)
 		(stroke
@@ -3342,7 +3430,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 132.08)
+			(xy 165.1 132.08)
 			(xy 228.6 132.08)
 		)
 		(stroke
@@ -3353,7 +3441,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 149.86)
+			(xy 165.1 149.86)
 			(xy 228.6 149.86)
 		)
 		(stroke
@@ -3463,7 +3551,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 53.34)
+			(xy 149.86 53.34)
 			(xy 142.24 53.34)
 		)
 		(stroke
@@ -3474,7 +3562,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 53.34)
+			(xy 165.1 53.34)
 			(xy 172.72 53.34)
 		)
 		(stroke
@@ -3485,7 +3573,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 55.88)
+			(xy 149.86 55.88)
 			(xy 116.84 55.88)
 		)
 		(stroke
@@ -3496,7 +3584,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 55.88)
+			(xy 165.1 55.88)
 			(xy 196.85 55.88)
 		)
 		(stroke
@@ -3507,7 +3595,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 66.04)
+			(xy 149.86 66.04)
 			(xy 142.24 66.04)
 		)
 		(stroke
@@ -3518,7 +3606,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 66.04)
+			(xy 165.1 66.04)
 			(xy 172.72 66.04)
 		)
 		(stroke
@@ -3529,7 +3617,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 68.58)
+			(xy 149.86 68.58)
 			(xy 116.84 68.58)
 		)
 		(stroke
@@ -3540,7 +3628,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 68.58)
+			(xy 165.1 68.58)
 			(xy 196.85 68.58)
 		)
 		(stroke
@@ -3551,7 +3639,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 71.12)
+			(xy 149.86 71.12)
 			(xy 142.24 71.12)
 		)
 		(stroke
@@ -3562,7 +3650,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 73.66)
+			(xy 149.86 73.66)
 			(xy 116.84 73.66)
 		)
 		(stroke
@@ -3573,7 +3661,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 73.66)
+			(xy 165.1 73.66)
 			(xy 172.72 73.66)
 		)
 		(stroke
@@ -3584,7 +3672,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 76.2)
+			(xy 149.86 76.2)
 			(xy 90.17 76.2)
 		)
 		(stroke
@@ -3606,7 +3694,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 76.2)
+			(xy 165.1 76.2)
 			(xy 196.85 76.2)
 		)
 		(stroke
@@ -3617,7 +3705,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 78.74)
+			(xy 165.1 78.74)
 			(xy 172.72 78.74)
 		)
 		(stroke
@@ -3628,7 +3716,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 81.28)
+			(xy 149.86 81.28)
 			(xy 142.24 81.28)
 		)
 		(stroke
@@ -3639,7 +3727,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 81.28)
+			(xy 165.1 81.28)
 			(xy 196.85 81.28)
 		)
 		(stroke
@@ -3650,7 +3738,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 83.82)
+			(xy 149.86 83.82)
 			(xy 116.84 83.82)
 		)
 		(stroke
@@ -3661,7 +3749,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 86.36)
+			(xy 149.86 86.36)
 			(xy 142.24 86.36)
 		)
 		(stroke
@@ -3672,7 +3760,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 86.36)
+			(xy 165.1 86.36)
 			(xy 172.72 86.36)
 		)
 		(stroke
@@ -3683,7 +3771,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 88.9)
+			(xy 149.86 88.9)
 			(xy 116.84 88.9)
 		)
 		(stroke
@@ -3694,7 +3782,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 88.9)
+			(xy 165.1 88.9)
 			(xy 196.85 88.9)
 		)
 		(stroke
@@ -3705,7 +3793,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 91.44)
+			(xy 149.86 91.44)
 			(xy 142.24 91.44)
 		)
 		(stroke
@@ -3716,7 +3804,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 91.44)
+			(xy 165.1 91.44)
 			(xy 172.72 91.44)
 		)
 		(stroke
@@ -3727,7 +3815,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 93.98)
+			(xy 165.1 93.98)
 			(xy 196.85 93.98)
 		)
 		(stroke
@@ -3738,7 +3826,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 96.52)
+			(xy 149.86 96.52)
 			(xy 142.24 96.52)
 		)
 		(stroke
@@ -3749,7 +3837,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 96.52)
+			(xy 165.1 96.52)
 			(xy 172.72 96.52)
 		)
 		(stroke
@@ -3760,7 +3848,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 99.06)
+			(xy 149.86 99.06)
 			(xy 116.84 99.06)
 		)
 		(stroke
@@ -3771,7 +3859,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 101.6)
+			(xy 149.86 101.6)
 			(xy 142.24 101.6)
 		)
 		(stroke
@@ -3782,7 +3870,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 104.14)
+			(xy 149.86 104.14)
 			(xy 116.84 104.14)
 		)
 		(stroke
@@ -3793,7 +3881,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 106.68)
+			(xy 149.86 106.68)
 			(xy 142.24 106.68)
 		)
 		(stroke
@@ -3804,7 +3892,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 109.22)
+			(xy 165.1 109.22)
 			(xy 172.72 109.22)
 		)
 		(stroke
@@ -3815,7 +3903,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 111.76)
+			(xy 149.86 111.76)
 			(xy 142.24 111.76)
 		)
 		(stroke
@@ -3826,7 +3914,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 111.76)
+			(xy 165.1 111.76)
 			(xy 196.85 111.76)
 		)
 		(stroke
@@ -3837,7 +3925,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 114.3)
+			(xy 149.86 114.3)
 			(xy 116.84 114.3)
 		)
 		(stroke
@@ -3848,7 +3936,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 114.3)
+			(xy 165.1 114.3)
 			(xy 172.72 114.3)
 		)
 		(stroke
@@ -3859,7 +3947,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 116.84)
+			(xy 149.86 116.84)
 			(xy 142.24 116.84)
 		)
 		(stroke
@@ -3870,7 +3958,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 116.84)
+			(xy 165.1 116.84)
 			(xy 196.85 116.84)
 		)
 		(stroke
@@ -3881,7 +3969,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 119.38)
+			(xy 149.86 119.38)
 			(xy 116.84 119.38)
 		)
 		(stroke
@@ -3892,7 +3980,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 121.92)
+			(xy 149.86 121.92)
 			(xy 142.24 121.92)
 		)
 		(stroke
@@ -3903,7 +3991,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 121.92)
+			(xy 165.1 121.92)
 			(xy 172.72 121.92)
 		)
 		(stroke
@@ -3914,7 +4002,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 124.46)
+			(xy 165.1 124.46)
 			(xy 196.85 124.46)
 		)
 		(stroke
@@ -3925,7 +4013,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 127)
+			(xy 149.86 127)
 			(xy 142.24 127)
 		)
 		(stroke
@@ -3936,7 +4024,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 127)
+			(xy 165.1 127)
 			(xy 172.72 127)
 		)
 		(stroke
@@ -3947,7 +4035,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 129.54)
+			(xy 149.86 129.54)
 			(xy 116.84 129.54)
 		)
 		(stroke
@@ -3958,7 +4046,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 129.54)
+			(xy 165.1 129.54)
 			(xy 196.85 129.54)
 		)
 		(stroke
@@ -3969,7 +4057,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 134.62)
+			(xy 149.86 134.62)
 			(xy 142.24 134.62)
 		)
 		(stroke
@@ -3980,7 +4068,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 134.62)
+			(xy 165.1 134.62)
 			(xy 172.72 134.62)
 		)
 		(stroke
@@ -3991,7 +4079,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 137.16)
+			(xy 149.86 137.16)
 			(xy 116.84 137.16)
 		)
 		(stroke
@@ -4002,7 +4090,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 137.16)
+			(xy 165.1 137.16)
 			(xy 196.85 137.16)
 		)
 		(stroke
@@ -4013,7 +4101,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 139.7)
+			(xy 165.1 139.7)
 			(xy 172.72 139.7)
 		)
 		(stroke
@@ -4024,7 +4112,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 142.24)
+			(xy 149.86 142.24)
 			(xy 142.24 142.24)
 		)
 		(stroke
@@ -4035,7 +4123,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 142.24)
+			(xy 165.1 142.24)
 			(xy 196.85 142.24)
 		)
 		(stroke
@@ -4046,7 +4134,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 144.78)
+			(xy 149.86 144.78)
 			(xy 116.84 144.78)
 		)
 		(stroke
@@ -4057,7 +4145,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 144.78)
+			(xy 165.1 144.78)
 			(xy 172.72 144.78)
 		)
 		(stroke
@@ -4068,7 +4156,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 147.32)
+			(xy 165.1 147.32)
 			(xy 196.85 147.32)
 		)
 		(stroke
@@ -4079,7 +4167,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 149.86)
+			(xy 149.86 149.86)
 			(xy 142.24 149.86)
 		)
 		(stroke
@@ -4090,7 +4178,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 152.4)
+			(xy 149.86 152.4)
 			(xy 116.84 152.4)
 		)
 		(stroke
@@ -4101,7 +4189,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 152.4)
+			(xy 165.1 152.4)
 			(xy 172.72 152.4)
 		)
 		(stroke
@@ -4112,7 +4200,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 154.94)
+			(xy 165.1 154.94)
 			(xy 196.85 154.94)
 		)
 		(stroke
@@ -4302,32 +4390,48 @@
 		(uuid "4683b930-ba79-526c-be62-cffe68ef4ac0")
 	)
 	(no_connect
-		(at 152.4 60.96)
+		(at 149.86 60.96)
 		(uuid "a8ce0722-0900-5b0f-bf71-04c92a6387f7")
 	)
 	(no_connect
-		(at 152.4 63.5)
+		(at 149.86 63.5)
 		(uuid "8e2a8d99-917b-56b8-864e-64c11feab095")
 	)
 	(no_connect
-		(at 162.56 58.42)
+		(at 149.86 157.48)
 		(uuid "fbf2b0e0-296f-5415-8189-ab068592265c")
 	)
 	(no_connect
-		(at 162.56 60.96)
+		(at 149.86 160.02)
 		(uuid "9641c332-4157-578f-baf9-aa62db044f5b")
 	)
 	(no_connect
-		(at 162.56 99.06)
+		(at 165.1 58.42)
 		(uuid "2d0dd358-bc74-54d0-9626-a6f7175d512a")
 	)
 	(no_connect
-		(at 162.56 101.6)
+		(at 165.1 60.96)
 		(uuid "43308411-3a13-5f88-beb6-1e20c0bbd760")
 	)
 	(no_connect
-		(at 162.56 104.14)
+		(at 165.1 99.06)
 		(uuid "640c1aeb-7f6e-5af2-934b-10ed536eb35b")
+	)
+	(no_connect
+		(at 165.1 101.6)
+		(uuid "df369291-34e6-51d3-acec-160483db0535")
+	)
+	(no_connect
+		(at 165.1 104.14)
+		(uuid "18bc4a2a-bed6-5246-abc1-c7de71b38069")
+	)
+	(no_connect
+		(at 165.1 157.48)
+		(uuid "08ff202c-7945-55d8-abe8-e018f90e95c2")
+	)
+	(no_connect
+		(at 165.1 160.02)
+		(uuid "069aacc3-a5c1-5ca0-9844-860b233b1de2")
 	)
 	(hierarchical_label
 		"STM32_USB_D_P"
@@ -5026,8 +5130,8 @@
 		(uuid "ae21fc7a-782a-53d2-8c82-3862f86c1098")
 	)
 	(symbol
-		(lib_id "DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51")
-		(at 157.48 92.71 0)
+		(lib_id "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51")
+		(at 157.48 95.25 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5046,8 +5150,8 @@
 		)
 		(property
 			"Value"
-			"DF40C-100DS-0.4V(51)"
-			(at 157.48 92.71 90)
+			"DF40C-100DP-0.4V(51)"
+			(at 157.48 95.25 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5056,8 +5160,8 @@
 		)
 		(property
 			"Footprint"
-			"DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51"
-			(at 157.48 92.71 0)
+			"DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51"
+			(at 157.48 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5068,7 +5172,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 157.48 92.71 0)
+			(at 157.48 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5078,8 +5182,8 @@
 		)
 		(property
 			"LCSC"
-			"C597931"
-			(at 157.48 92.71 0)
+			"C531031"
+			(at 157.48 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5288,204 +5392,220 @@
 			(uuid "ba490afb-0f95-540e-aa4f-9c8e86d050c4")
 		)
 		(pin
-			"2"
+			"103"
 			(uuid "27fb342d-64e9-579f-9d81-a6fc339e5aa6")
 		)
 		(pin
-			"4"
+			"101"
 			(uuid "53a8c7e3-394d-571b-8208-b1ff6b7fe2a5")
 		)
 		(pin
-			"6"
+			"2"
 			(uuid "7893cdef-5fb3-55cf-bb65-abe86ceb0f93")
 		)
 		(pin
-			"8"
+			"4"
 			(uuid "913b60d5-fc97-5ac3-8f51-2abfaab75ac6")
 		)
 		(pin
-			"10"
+			"6"
 			(uuid "a2f3adc7-5203-5007-8ca9-ce2da8889e97")
 		)
 		(pin
-			"12"
+			"8"
 			(uuid "fb8aca29-0747-5480-b150-c350e0d4015c")
 		)
 		(pin
-			"14"
+			"10"
 			(uuid "6d242576-013e-514a-b1fb-0983cb32cac6")
 		)
 		(pin
-			"16"
+			"12"
 			(uuid "2ea08ad8-efbd-59fd-ad10-f22b1e05e7d8")
 		)
 		(pin
-			"18"
+			"14"
 			(uuid "409f18dd-3778-52f8-a10b-772a54d9f290")
 		)
 		(pin
-			"20"
+			"16"
 			(uuid "9afc40d2-5c59-519e-af36-8cdaeda3ef8f")
 		)
 		(pin
-			"22"
+			"18"
 			(uuid "35d96d25-811c-5d5d-bb80-b9672ed11cc3")
 		)
 		(pin
-			"24"
+			"20"
 			(uuid "78167e09-26d1-5755-87f3-331e18a212ba")
 		)
 		(pin
-			"26"
+			"22"
 			(uuid "97001193-26db-56dc-bf70-44f7c39ae591")
 		)
 		(pin
-			"28"
+			"24"
 			(uuid "1d823cfc-356f-5d07-91ce-5718e9904834")
 		)
 		(pin
-			"30"
+			"26"
 			(uuid "07ff13c4-849b-58e0-95a5-13e2142a4af6")
 		)
 		(pin
-			"32"
+			"28"
 			(uuid "ef690fd7-f6de-536f-8cbf-aba098b5f1ff")
 		)
 		(pin
-			"34"
+			"30"
 			(uuid "a892b4b9-3547-5b1c-9064-dfd9cc7d1dba")
 		)
 		(pin
-			"36"
+			"32"
 			(uuid "36cdbf1b-a9b3-5dfa-a215-26b7b6a12700")
 		)
 		(pin
-			"38"
+			"34"
 			(uuid "0aec1857-883c-5b40-999b-39543ef04d0f")
 		)
 		(pin
-			"40"
+			"36"
 			(uuid "5bf83fa2-abce-58e5-be2a-6186ec9bf824")
 		)
 		(pin
-			"42"
+			"38"
 			(uuid "500daf51-3587-5fa1-8f4f-29bb8e99c73b")
 		)
 		(pin
-			"44"
+			"40"
 			(uuid "36f28a6e-d5ce-5545-9d0f-d8a419e89d60")
 		)
 		(pin
-			"46"
+			"42"
 			(uuid "aff7a737-ce76-5f8e-9b60-231819354c97")
 		)
 		(pin
-			"48"
+			"44"
 			(uuid "a055a772-000b-52ff-bf5e-02208598506e")
 		)
 		(pin
-			"50"
+			"46"
 			(uuid "559e47a2-7fe1-511e-b5e3-6b578fac8b60")
 		)
 		(pin
-			"52"
+			"48"
 			(uuid "53a9e81d-1d82-5264-bc0f-65b44ad5051e")
 		)
 		(pin
-			"54"
+			"50"
 			(uuid "f46e6f91-0a7f-5edd-a825-c5f83a4559b7")
 		)
 		(pin
-			"56"
+			"52"
 			(uuid "a7ba6f04-132a-58dc-abaf-f3e25454293a")
 		)
 		(pin
-			"58"
+			"54"
 			(uuid "c5497115-58f6-533d-bd9b-6a2b75c2d4e6")
 		)
 		(pin
-			"60"
+			"56"
 			(uuid "1fa6c535-1e50-5b3e-b82d-97eeab618376")
 		)
 		(pin
-			"62"
+			"58"
 			(uuid "52a61611-212e-5757-9597-2011f125f210")
 		)
 		(pin
-			"64"
+			"60"
 			(uuid "c818f664-b184-5c58-8272-edf5a6e5c2da")
 		)
 		(pin
-			"66"
+			"62"
 			(uuid "23fe0d90-da54-5906-a14b-30878f5a831f")
 		)
 		(pin
-			"68"
+			"64"
 			(uuid "371e7330-54cb-5481-827f-51deb01155c2")
 		)
 		(pin
-			"70"
+			"66"
 			(uuid "741eb03b-0e6c-51aa-8258-474c1fd1f6ba")
 		)
 		(pin
-			"72"
+			"68"
 			(uuid "8eda6ed4-2c92-5c65-bfb5-a7d550483e57")
 		)
 		(pin
-			"74"
+			"70"
 			(uuid "2a079a76-5fda-5924-bd00-ac16cd58c637")
 		)
 		(pin
-			"76"
+			"72"
 			(uuid "a8c66a93-54cd-5447-aa81-0429677f57eb")
 		)
 		(pin
-			"78"
+			"74"
 			(uuid "57ec0b37-5da9-54f9-b2bd-5656ecd262f7")
 		)
 		(pin
-			"80"
+			"76"
 			(uuid "a9278086-bdc9-5d52-931d-ea576a9edb00")
 		)
 		(pin
-			"82"
+			"78"
 			(uuid "8e994ccd-3218-5fca-95a8-49ea019cccf4")
 		)
 		(pin
-			"84"
+			"80"
 			(uuid "8d324ca1-18d7-5277-9c8e-b4bfffebbb88")
 		)
 		(pin
-			"86"
+			"82"
 			(uuid "cd226bae-0087-5c53-91c5-17a55f621ee4")
 		)
 		(pin
-			"88"
+			"84"
 			(uuid "7dff095c-47d6-560b-a8f1-6f0260d5e2ab")
 		)
 		(pin
-			"90"
+			"86"
 			(uuid "832ed75e-79a8-5730-998c-4767bc02e71f")
 		)
 		(pin
-			"92"
+			"88"
 			(uuid "bb4bd884-c051-5baf-bf54-33d4d80d2c2b")
 		)
 		(pin
-			"94"
+			"90"
 			(uuid "d6ae6fbb-2dbd-52be-88eb-e3ea823b9654")
 		)
 		(pin
-			"96"
+			"92"
 			(uuid "15407d06-c44a-5433-8587-f32868a0103c")
 		)
 		(pin
-			"98"
+			"94"
 			(uuid "7cd0d05e-196e-59e4-ae3e-8a9dc6a22b31")
 		)
 		(pin
-			"100"
+			"96"
 			(uuid "b57ac031-6158-5cd5-afd8-2e0ef159e5f7")
+		)
+		(pin
+			"98"
+			(uuid "3a833e29-e60e-5e2b-8670-0335b74c82aa")
+		)
+		(pin
+			"100"
+			(uuid "c141a00d-593d-5e10-b1b8-b9da1e8ae0e7")
+		)
+		(pin
+			"104"
+			(uuid "07a003c0-0dbe-5286-9bd1-e816d2d9e50b")
+		)
+		(pin
+			"102"
+			(uuid "84e275d6-0e88-56b5-b89f-f13bec58bf21")
 		)
 		(instances
 			(project
@@ -5552,7 +5672,7 @@
 		)
 		(pin
 			"1"
-			(uuid "3a833e29-e60e-5e2b-8670-0335b74c82aa")
+			(uuid "cbaf1ed0-a757-558a-a24e-900d0ae187ac")
 		)
 		(instances
 			(project
@@ -5619,7 +5739,7 @@
 		)
 		(pin
 			"1"
-			(uuid "c141a00d-593d-5e10-b1b8-b9da1e8ae0e7")
+			(uuid "c063cb17-5357-56db-84a5-2f74be7f54b4")
 		)
 		(instances
 			(project
@@ -5686,7 +5806,7 @@
 		)
 		(pin
 			"1"
-			(uuid "07a003c0-0dbe-5286-9bd1-e816d2d9e50b")
+			(uuid "59aa9db3-73dc-5730-884c-db4686192f2f")
 		)
 		(instances
 			(project
@@ -5753,7 +5873,7 @@
 		)
 		(pin
 			"1"
-			(uuid "84e275d6-0e88-56b5-b89f-f13bec58bf21")
+			(uuid "3020d2aa-7446-59fd-a9de-5c87fa51c549")
 		)
 		(instances
 			(project
@@ -5820,7 +5940,7 @@
 		)
 		(pin
 			"1"
-			(uuid "cbaf1ed0-a757-558a-a24e-900d0ae187ac")
+			(uuid "2c364c02-1e6e-585b-a1fc-e00d065d935e")
 		)
 		(instances
 			(project

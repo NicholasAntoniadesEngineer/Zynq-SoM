@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "89215d31ea54c504eeffb28b9ecf9d5d96b6bc80ec47ea7a71b650cae4af6b99"
+      "sha256": "654f233c972d0e84f87ea44e6451628560643e3800e014582bea9c671541b0f6"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -34,7 +34,7 @@
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "7de5c679aae49c2a65a81662e44c0bc64f03ac22fa26ef474bcd6507750dd1f0"
+      "sha256": "61cebbb421a5bf47f6671f3af69326a33a07bd14792585eceb6db62e80f5d6a4"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -62,7 +62,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "b27b2f026c1a90b21d7c12d3e2af0ff7b3835667e5a227fca53b5d1fdb029d8f"
+      "sha256": "d44dd776a33ed6005cb887285305c18dfc13406306e56624f4fc250c871b861a"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -82,7 +82,7 @@
     },
     {
       "path": "reports/bom_values.txt",
-      "sha256": "1f6e533d43df768ca9b8fcee17dd456c58a02d33475fa59ea3e38a5e58ebe592"
+      "sha256": "46310da88f0e6585cdd1846c233ead171956ea5effcbba50392f57dc23387f58"
     },
     {
       "path": "reports/carrier_structure.txt",
@@ -90,7 +90,7 @@
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "bd438101d06173868a711228207ce31ae3fe279dafb907a9d988c911def01868"
+      "sha256": "f3415413478365e3aacc426fdc16d5c771ddef508401576b8fdb61bf7cb181ad"
     },
     {
       "path": "reports/connector_model.txt",
@@ -118,15 +118,15 @@
     },
     {
       "path": "reports/model3d.txt",
-      "sha256": "9c189739fc663b1e98b0519dc91f6d9c294023922914a971f387cf365d207e0c"
+      "sha256": "f6f9605da2fcd718b702033f07ba41f6ab5337ce4a260f6a5f10a6cbc9555317"
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "8330b0bbe966fb73cca96270d53b6737ff4ba35277d7a6c1907b85ce1ef350f6"
+      "sha256": "5eb501068d64a4c4d4f9487a6a6298b2ff6e0ef4a93f3cb2dbb1ce474b2ac082"
     },
     {
       "path": "reports/pin_completeness.txt",
-      "sha256": "cb6cedf0f627044c62acd56e02b516af98c4769f93683dc1122bc1e009c3ea73"
+      "sha256": "ccc128bbaf265576d4295dc913032238899b0264371db512df5dec7cc19d9ba0"
     },
     {
       "path": "reports/placement_mech.txt",
@@ -138,7 +138,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "9d382424cbb3d0e9fb30ecbe6933c9e04cee0f5c680109faad6075a28f1acca5"
+      "sha256": "b16e8b30990b37601b30d5f351161206ef3aac1ac30f469a3436c26ba9f43884"
     },
     {
       "path": "reports/spice.txt",
@@ -262,15 +262,15 @@
     },
     {
       "path": "schematic/som_j1.kicad_sch",
-      "sha256": "e1bc25f200bd31d2b812e43398d31d9ae2fc14dec9f651b0d320ea654a862806"
+      "sha256": "1ecfe0cd6b7b82d2fa2e6ed0ac382ba748ea3e7c3e84171666759916b26e8526"
     },
     {
       "path": "schematic/som_j2.kicad_sch",
-      "sha256": "557a99180c884bc454a5a9effd6ae7e37c46074e2697d29651cbc88b98212408"
+      "sha256": "3de25968804e49cd13fd43b745f58ed8a1fb8ac4dc1f630a887cf0b3f8504e0a"
     },
     {
       "path": "schematic/som_j3.kicad_sch",
-      "sha256": "dcf1b4444e858f3937b5674c81f03b02831efb5b88794883aa6437faacbdfce5"
+      "sha256": "71d3ca5b7bd7e1cc9fb364ec21b673dbedcd63e73581bab0c2612e579dd658ac"
     },
     {
       "path": "schematic/uart_bridge.kicad_sch",

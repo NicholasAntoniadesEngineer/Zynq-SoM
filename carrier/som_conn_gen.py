@@ -2,9 +2,12 @@
 
 The pin→net map is loaded from ``carrier/som_interface.json`` (itself
 extracted from the SoM KiCad project by ``schgen som-interface``); each
-``circuit()`` instantiates the mating DF40C-100DS-0.4V(51) receptacle
-(parts/DF40C-100DS-0.4V_51/, LCSC C597931) and binds EVERY pin to its
-contract net VERBATIM:
+``circuit()`` instantiates the DF40C-100DP-0.4V(51) PLUG
+(parts/DF40C-100DP-0.4V_51/, LCSC C531031) — the carrier carries the plug that
+mates the SoM's DF40C-100DS receptacle (two receptacles cannot interlock; the
+SoM<->carrier audit caught a 300-pin no-mate, 2026-06-20) — and binds EVERY
+signal pin (1-100) to its contract net VERBATIM (the DP's 4 hold-down pads
+101-104 are mechanical, NC'd):
 
 - power pins  -> POWER nets (carrier spelling). The P0 rebind below maps the
   SoM ``VIN`` (J1.1-14) onto the carrier always-on ``+5V_SOM`` buck — the SoM
@@ -336,8 +339,18 @@ def resolve_net(som_net: str) -> str:
 
 def connector_circuit(jref: str, name: str, title: str) -> Circuit:
     c = Circuit(name, title)
-    c.use_part("DF40C-100DS-0.4V_51", ref=jref)   # 100 bare-number pins
+    # DF40 PLUG (DP), not the receptacle (DS). The SOM is fabricated with the DS
+    # receptacle on J1/J2/J3, and DF40 mates ONLY DP-plug <-> DS-receptacle — two
+    # DS would never interlock (a 300-pin system no-mate the SOM<->carrier audit
+    # caught, 2026-06-20). The carrier is the schgen-controlled side, so it carries
+    # the plug. Signal pins 1-100 keep the SAME contract net->pad-number map (the
+    # Hirose DP/DS pair mates pad-N<->pad-N by design — the DP's mirrored pin-1
+    # X=-9.8 vs DS X=+9.8 IS the face-to-face mating geometry); the DP's 4 extra
+    # pads (101-104) are mechanical hold-down nails -> NC below.
+    c.use_part("DF40C-100DP-0.4V_51", ref=jref)   # 100 signal + 4 hold-down pads
     seen_ports: set[str] = set()
+    for pin in ("101", "102", "103", "104"):      # plug mechanical hold-downs
+        c.nc(f"{jref}.{pin}")
     for pin, som_net in sorted(contract_pins(jref).items(), key=lambda kv: int(kv[0])):
         if som_net in ISOLATED_SOM_RAILS:
             # round-5 isolation: explicit per-pin no-connect (see map above).

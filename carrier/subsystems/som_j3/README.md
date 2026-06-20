@@ -1,6 +1,6 @@
 # som_j3 — SoM mezzanine connector J3 (carrier-local subsystem)
 
-The carrier side of the **J3** Hirose **DF40C-100DS-0.4V(51)** mezzanine
+The carrier side of the **J3** Hirose **DF40C-100DP-0.4V(51)** mezzanine
 receptacle. J3 carries the **FPGA bank 33/34/35 IO + VCCO rails** half of the SoM
 contract (LCD RGB888 + sync, camera CSI + control, FMC clocks/LA pairs, the
 board-supervisor watchdog, the PUDC strap, and the bank-34/35 VCCO supply).
@@ -32,7 +32,7 @@ and types the camera/FMC diff pairs. No hand-typed pinout.
 
 | ref | value | lib / part | LCSC |
 |-----|-------|-----------|------|
-| J3 | DF40C-100DS-0.4V(51) | `parts/DF40C-100DS-0.4V_51/` (100 bare-number pins) | C597931 |
+| J3 | DF40C-100DP-0.4V(51) | `parts/DF40C-100DP-0.4V_51/` (100 bare-number pins) | C531031 |
 
 ## Interface it carries (the J3 contract)
 

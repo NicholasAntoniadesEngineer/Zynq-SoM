@@ -59,10 +59,11 @@ def _sheet(c: Circuit):
 def test_is_the_j1_connector(c: Circuit):
     assert c.name == "som_j1"
     assert c.title == "SoM J1: power / USB / STM32 / JTAG / SDIO / ETH MDI"
-    # exactly one part: the DF40 mezzanine receptacle at ref J1
+    # exactly one part: the DF40 mezzanine PLUG at ref J1 — the carrier carries the
+    # DP plug that mates the SoM's DS receptacle (audit 2026-06-20 no-mate fix)
     assert sorted(c.parts) == ["J1"]
-    assert c.parts["J1"].lib_id.endswith("DF40C-100DS-0.4V_51")
-    assert c.parts["J1"].value == "DF40C-100DS-0.4V(51)"
+    assert c.parts["J1"].lib_id.endswith("DF40C-100DP-0.4V_51")
+    assert c.parts["J1"].value == "DF40C-100DP-0.4V(51)"
 
 
 def test_connector_has_no_discretes(c: Circuit):
@@ -76,18 +77,20 @@ def test_connector_has_no_discretes(c: Circuit):
 # ---- model completeness (LAW 0) ------------------------------------------------
 
 def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
-    """Every one of the 100 physical pins is netted or an explicit NC."""
+    """Every one of the 104 physical pins (100 signal + 4 plug hold-downs) is
+    netted or an explicit NC."""
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
-    # the seven round-5 isolated-rail pins are the only no-connects
+    # the seven round-5 isolated-rail pins + the 4 DP plug mechanical hold-downs
     assert {str(p) for p in c.nc_pins} == {
-        "J1.24", "J1.25", "J1.26", "J1.27", "J1.56", "J1.58", "J1.60"}
+        "J1.24", "J1.25", "J1.26", "J1.27", "J1.56", "J1.58", "J1.60",
+        "J1.101", "J1.102", "J1.103", "J1.104"}
 
 
 def test_every_part_pin_is_accounted_for(c: Circuit, lib: Library):
-    """100-pin part = (netted pins) + (NC pins), with no leftovers."""
+    """104-pin part (100 signal + 4 hold-down) = (netted) + (NC), no leftovers."""
     total = len(lib.pin_numbers(c.parts["J1"].lib_id))
     netted = {pr for n in c.nets.values() for pr in n.pins}
-    assert total == 100
+    assert total == 104
     assert len(netted) + len(c.nc_pins) == total
 
 

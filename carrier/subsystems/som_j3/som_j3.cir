@@ -5,7 +5,7 @@
 * carrier/som_interface.json), not abstract library names. A board-level .op/
 * .tran wires these subckt pins straight onto the same carrier nets.
 *
-* J3 is a PURE pass-through receptacle (Hirose DF40C-100DS-0.4V(51), 100 pins):
+* J3 is a PURE pass-through PLUG (mates the SoM DS receptacle) (Hirose DF40C-100DP-0.4V(51), 100 pins):
 * it adds NO on-sheet passive network — no decoupling, no straps, no series/
 * termination parts. The PUDC strap and the watchdog parts live on other sheets;
 * the placement engine's connector-fan template fires only for a lone >=40-pin
@@ -24,7 +24,7 @@
 
 .subckt som_j3 V3V3 V2V5_VADJ GND
 
-* Pure pass-through receptacle: no on-sheet passive network.
+* Pure pass-through PLUG (mates the SoM DS receptacle): no on-sheet passive network.
 * (rails modelled as a tiny resistive tie so the node is not floating in .op)
 R3V3 V3V3 GND 1G
 R2V5_VADJ V2V5_VADJ GND 1G

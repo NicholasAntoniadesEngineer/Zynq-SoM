@@ -1,6 +1,6 @@
 # som_j1 — SoM mezzanine connector J1 (carrier-local subsystem)
 
-The carrier side of the **J1** Hirose **DF40C-100DS-0.4V(51)** mezzanine
+The carrier side of the **J1** Hirose **DF40C-100DP-0.4V(51)** mezzanine
 receptacle that mates the Zynq-7000 SoM to this carrier. J1 carries the
 **power / USB / STM32-SC / JTAG / SDIO / Ethernet-MDI** half of the contract.
 
@@ -35,7 +35,7 @@ SoM change and this sheet follows — there is no hand-typed pinout.
 
 | ref | value | lib / part | LCSC |
 |-----|-------|-----------|------|
-| J1 | DF40C-100DS-0.4V(51) | `parts/DF40C-100DS-0.4V_51/` (100 bare-number pins) | C597931 |
+| J1 | DF40C-100DP-0.4V(51) | `parts/DF40C-100DP-0.4V_51/` (100 bare-number pins) | C531031 |
 
 ## Interface it carries (the J1 contract)
 
