@@ -165,6 +165,33 @@ board was unbuildable.
 
 ---
 
+## LAW 7 — NEVER DEFER: keep digging until you have the RIGHT answer
+
+A fix is never "deferred", "recommended for the next BOM revision", or parked as a
+"needs a verified part / follow-up later" note. When a fix needs something you do
+not immediately have — a verified LCSC part code, a datasheet value, a footprint /
+3D model, a polarity, an API answer — you **DIG until you have the real answer and
+the fix is LANDED**. Stopping short by deferring is forbidden.
+
+- **A guessed value is a defer in disguise.** Do not invent an LCSC code (a wrong
+  code is a BOM defect). Get the REAL one: the repo's own pipeline already speaks
+  to LCSC — `schgen part add C…` + `part_gen.fetch_cad(C…)`, and the EasyEDA search
+  API `easyeda.com/api/eda/product/list?keyword=<MPN-or-value>` returns
+  `mpn`+`number`(C-code)+`package` as JSON (schgen's `USER_AGENT` clears the 403).
+  Then VERIFY the value/package against that source before using it.
+- **Settle physical facts from the artifact, not assumption.** Polarity, pinout,
+  pad numbering — read them off the footprint copper / silk (an electrolytic's "+"
+  silk marker, the pad coordinates), never "by convention".
+- **If landing the right fix exposes a deeper bug, fix THAT too** (LAW 4) — a gate,
+  the placer, the outline sizer — never a work-around. Closing the usbc VBUS bulk
+  forced the root fix of the grow loop sizing a board too narrow for an edge's
+  connector run (a corner mounting-hole short).
+
+This is the partner of LAW 2: LAW 2 = never STOP until done; LAW 7 = and "done" can
+never be reached by deferring — dig for the real answer instead.
+
+---
+
 ## Standing principles (corollaries of the LAWS)
 
 - **EVERYTHING is PROGRAMMATICALLY GENERATED — never hand-edit the output.** The
