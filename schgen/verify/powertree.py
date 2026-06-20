@@ -134,9 +134,14 @@ class RegSpec:
 
 # keyed by part-value PREFIX (power.py writes 'LM61460AANRJRR', fmc 'TLV75725PDBVR')
 REG_SPECS: dict[str, RegSpec] = {
-    # (the old 'TPS54302' buck key was removed 2026-06-20 — the +5V/+3V3 bucks
-    # were re-spec'd to the LM61460 and no emitted part value starts 'TPS54302',
-    # so the key was dead; verified by BOM grep before removal.)
+    # TPS54302: NO emitted part uses it any more (the +5V/+3V3 bucks were re-spec'd
+    # to the LM61460, BOM-verified), but the key is RETAINED as the thermal-gate
+    # mutant-test fixture (test_tps54302_over_2A_fails_at_datasheet_rthja proves the
+    # gate WOULD have caught the original over-2A TPS54302 defect that drove the
+    # LM61460 re-spec). Do NOT remove it without updating that test (audit 2026-06-20
+    # flagged removal as "not proven safe" — and it broke the test).
+    "TPS54302": RegSpec("buck", 3.0, eff=0.90, in_pin="3", out_pin="2",
+                        note="TI 3 A synchronous buck (SW->L->rail); thermal-gate test fixture"),
     # power.py +5V buck U1 — RE-SPEC'd (wt/buck) from the LMR33630 (3 A) to the
     # LM61460 (6 A): the +5V chain is the board's heaviest converter (2.95 A),
     # which ran the old 3 A part at 98% with no headroom. 6 A -> ~2x margin.
