@@ -52,7 +52,7 @@ Highlights (consumer sheet binds the same name):
 - **LCD touch** (bank 13) — `LCD_CTP_{SDA,SCL,RST,INT}`.
 - **Pmod expansion** (bank 13) — `PMODX_IO1..8` (eight free LVCMOS33 PL pairs).
 - **PS UART0 modem / debug** — `ZYNQ_PS_UART0_{CTS_N,RTS_N}` (EMIO), `DBG_UART_{RXD,TXD}` (FT2232H channel B fabric UART).
-- **PL misc** — `PL_BTN0`, `PL_BTN1`, `FMC_PRSNT_N`, `SD_CARD_DETECT` (PS SDIO0 CD via EMIO).
+- **PL misc** — `PL_BTN0`, `PL_BTN1`, `SD_CARD_DETECT` (PS SDIO0 CD via EMIO). (`FMC_PRSNT_N` was retired when the FMC LPC site became a generic 2.54 mm header — `IO_L6_P_33`/J2.89 is now an unclaimed bank-33 spare.)
 - **Bank-13 spares** — verbatim `IO_L*_13` / `IO_25_13` ports kept for probe/expansion.
 
 ## Notes

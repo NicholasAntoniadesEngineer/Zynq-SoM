@@ -113,6 +113,15 @@ def circuit() -> Circuit:
         c.net(f"BU_PG_{mod}", f"{d.ref}.1", f"{rl.ref}.1")
         c.net("GND", f"{rl.ref}.2")
 
+    # microSD power-cycle re-init needs VDD < ~0.5 V, but the SY6280 has no QOD,
+    # so +3V3_SD would only decay through a possibly-high-Z card and could strand
+    # above 0.5 V. Add a 10k bleed on +3V3_SD (research R5; 0.33 mA static <<
+    # the 1 A limit, cannot mis-trip) so the rail discharges for a clean re-seat.
+    # Only the SD rail has this power-cycle-for-re-init requirement (audit 2026-06-20).
+    rbleed = c.part(c.auto_ref("R"), "Device:R", "10k", R_FP, LCSC="C25804")
+    c.net("+3V3_SD", f"{rbleed.ref}.1")
+    c.net("GND", f"{rbleed.ref}.2")
+
     # (user LEDs live on the user_io sheet, bound to real bank-13 pins —
     # this sheet only GATES their +3V3_USER_LED rail via switch #8)
 

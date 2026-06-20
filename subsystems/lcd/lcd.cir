@@ -19,7 +19,7 @@
 * Values mirror subsystems/lcd/lcd.py one-for-one (parse_si compatible):
 *   L1 10uH                              boost inductor   (+VBOOST_IN -> LCD_BL_SW)
 *   D1 SS34                              catch diode      (LCD_BL_SW  -> LCD_VLED_P)
-*   C1 10u                               boost input bulk (+VBOOST_IN -> GND)
+*   C1 10u + C5 1u                       boost input bulk + HF (+VBOOST_IN -> GND)
 *   C2 2.2u                              boost output 50V (LCD_VLED_P -> GND)
 *   R1 1.5R                              ISET sense       (LCD_VLED_N -> GND)
 *   C3 100n + C4 10u                     panel VDD bypass (+VDD_LCD   -> GND)
@@ -40,6 +40,7 @@
 L1 VBOOST_IN LCD_BL_SW 10uH
 D1 LCD_BL_SW LCD_VLED_P DMOD
 C1 VBOOST_IN GND 10u
+C5 VBOOST_IN GND 1u
 C2 LCD_VLED_P GND 2.2u
 R1 LCD_VLED_N GND 1.5R
 

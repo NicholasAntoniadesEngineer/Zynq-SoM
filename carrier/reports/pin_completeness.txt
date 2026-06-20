@@ -1,10 +1,10 @@
 pin completeness gate (every multi-pin IC pin is NETTED or explicit NC)
 ================================================================
 STATUS: REPORT-FIRST (does NOT fail the board yet; promotes to HARD-FAIL once the NC allowlist is fully blessed)
-477 multi-pin parts checked; 117 author-declared NC pins
+479 multi-pin parts checked; 115 author-declared NC pins
 silent floats: none
 
-NC ALLOWLIST — 27 blessed [seed], 90 to bless [new]:
+NC ALLOWLIST — 27 blessed [seed], 88 to bless [new]:
   [seed] board_services:U2.1 (RV-3028-C7-32.768kHz-1ppm-TA-QC CLKOUT)
   [seed] fmc:U1.4 (TLV75725PDYDR NC)
   [seed] hdmi_rx:U2.6 (TPD4E02B04DQAR NC)
@@ -42,8 +42,6 @@ NC ALLOWLIST — 27 blessed [seed], 90 to bless [new]:
   [new]  camera:U1.7 (TPD4E02B04DQAR NC)
   [new]  camera:U1.9 (TPD4E02B04DQAR NC)
   [new]  camera:U1.10 (TPD4E02B04DQAR NC)
-  [new]  camera:U2.4 (TPD4E02B04DQAR IO3)
-  [new]  camera:U2.5 (TPD4E02B04DQAR IO4)
   [new]  camera:U2.6 (TPD4E02B04DQAR NC)
   [new]  camera:U2.7 (TPD4E02B04DQAR NC)
   [new]  camera:U2.9 (TPD4E02B04DQAR NC)

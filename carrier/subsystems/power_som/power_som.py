@@ -127,7 +127,7 @@ def circuit() -> Circuit:
     c.part("C23", "Device:C", "1u", C0603, LCSC="C15849")          # BIAS bypass
     c.net("BIAS_5V_SOM", "U4.1", "R17.2", "C23.1")              # BIAS (pin 1)
     c.net("GND", "C23.2")
-    c.part("R18", "Device:R", "22k", R_FP, LCSC="C31850")          # RT=22k -> fSW ~1.5 MHz (SNVSBD5D; was mis-annotated 600kHz, audit 2026-06-19)
+    c.part("R18", "Device:R", "22k", R_FP, LCSC="C31850")          # RT=22k -> fSW ~600 kHz (SNVSBD5D Eq 2; matches U1/U2 + README:43)
     c.net("RT_5V_SOM", "U4.6", "R18.1")                          # RT (pin 6)
     c.net("GND", "R18.2")
     c.part("C17", "Device:C", "100n", C0603, LCSC="C14663")         # BOOT (CBOOT) cap

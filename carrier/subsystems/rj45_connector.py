@@ -12,12 +12,15 @@ render are byte-identical.
 CARRIER BINDING RATIONALE (the carrier net names + why):
 
   +VLED       -> +3V3        the jack's two housing LEDs (330R each, ~4 mA) ride
-                             the EN-gated carrier +3V3 buck rail, so they light
-                             when +3V3 is up (a "3V3 present" indicator), NOT a
-                             bare always-on port-present LED. (No low-voltage
-                             always-on rail exists to host them; do NOT re-rail to
-                             +VIN_SYS with the 330R — ~55 mA would destroy the LED.
-                             audit 2026-06-19.)
+                             the EN-gated carrier +3V3 buck rail DELIBERATELY, so
+                             they read as a "main +3V3 is up" indicator, NOT a
+                             bare always-on port-present LED. (The +3V3_SC SC-island
+                             rail IS always-on and could host them — option (b) =
+                             re-bind +VLED -> +3V3_SC after confirming its ~300 mA
+                             budget headroom for ~8 mA — but the jack LEDs are
+                             intentionally tied to the main rail. Do NOT re-rail to
+                             +VIN_SYS with the existing 330R — ~55 mA would destroy
+                             the LED. audit 2026-06-19/20.)
   GND         -> GND         (identity). The LED cathodes return to signal GND.
   CHASSIS_GND -> CHASSIS_GND (identity). The shield/shell (J1.13) bonds to the
                              chassis island — the same separate net the ethernet

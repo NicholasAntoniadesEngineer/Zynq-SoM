@@ -37,8 +37,9 @@ free TCA9535 ports P12/P13 (P10 = LCD_BL provision, P11 stays reserved
 for power_mon's PMON_ALERT_N per its dossier). Same uniform cell.
 
 EN_5V0/EN_3V3/EN_1V8 bind to the power subsystem's regulator EN pins
-(3.3 V CMOS, active-high, push-pull — TPS54302 EN VIH 1.21 V typ and the
-AP2112K EN both accept it rail-to-rail). EN_<module> bind to the SY6280
+(3.3 V CMOS, active-high, push-pull — the LM61460 EN/SYNC VIH ~1.2 V typ and the
+AP2112K EN both accept the 3.3 V drive rail-to-rail; the +5V/+3V3 bucks are
+LM61460, re-spec'd from the old TPS54302). EN_<module> bind to the SY6280
 gates on bringup_modules.
 """
 

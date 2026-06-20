@@ -31,9 +31,11 @@ A-input carries the cell's 100k pulldown, every rail/module B-input its
 complete on this sheet.
 
 EN_5V0/EN_3V3/EN_1V8 bind to the power subsystem's regulator EN pins
-(3.3 V CMOS, active-high, push-pull — TPS54302 EN VIH 1.21 V typ and the
-AP2112K EN both accept it rail-to-rail). EN_<module> bind to the SY6280
-gates on bringup_modules.
+(3.3 V CMOS, active-high, push-pull — the LM61460 EN/SYNC VIH ~1.2 V typ,
+abs-max 42 V, and the AP2112K EN both accept the 3.3 V drive rail-to-rail).
+The +5V/+3V3 bucks were re-spec'd TPS54302 -> LM61460AANRJRR; the EN drive is
+even more comfortable for the LM61460. EN_<module> bind to the SY6280 gates on
+bringup_modules.
 """
 
 from __future__ import annotations

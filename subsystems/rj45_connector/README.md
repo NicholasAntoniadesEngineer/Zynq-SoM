@@ -32,7 +32,7 @@ standalone build and a bound build share net classes.
 |----------|-------|----------------------|
 | `+VLED`       | POWER  | LED indicator supply for the two integrated housing LEDs (330R each, ~4 mA). Should be an **always-on** rail so the port-present indicator lights regardless of any module enable. |
 | `GND`         | GROUND | signal ground (the LED cathodes return here). |
-| `CHASSIS_GND` | GROUND | chassis-ground island for the shell/shield (J1.13) + the four M3 corner mounting holes. A **separate** net from signal GND — the consuming board star-bonds it. |
+| `CHASSIS_GND` | GROUND | chassis-ground island for the shell/shield (J1.13). A **separate** net from signal GND — the consuming board star-bonds it. (The M3 mounting holes are NOT on this jack sheet; they live on the consuming board's `mechanical` sheet.) |
 
 ### Ports (PORT)
 
@@ -60,7 +60,8 @@ connector body.
 | J1 | KH-5224-8P8C-D | `parts/KH-5224-8P8C-D/` | C2828085 |
 | R1 | 330R | `Device:R` (LED-L series) | C23138 |
 | R2 | 330R | `Device:R` (LED-R series) | C23138 |
-| H1..H4 | MountingHole_M3 | `Mechanical:MountingHole_Pad` (chassis bond, BOM-excluded) | — |
+
+(No mounting holes on this sheet — the only CHASSIS_GND item is the shell/shield tie `J1.13`; M3 holes live on the consuming board's `mechanical` sheet.)
 
 ## Consuming it from a project
 

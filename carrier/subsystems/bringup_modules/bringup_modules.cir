@@ -55,6 +55,8 @@ Cin_5  P3V3 GND 100n
 Cout_5 OUT_SD GND 100n
 Dled_5 OUT_SD PG_5 DLED
 Rled_5 PG_5 GND 330R
+* SY6280 has no QOD -> 10k bleed discharges +3V3_SD for SD re-init (research R5, audit 2026-06-20)
+Rbleed_sd OUT_SD GND 10k
 
 * --- # 6 USB VBUS  +5V -> +5V_USB  RSET 6.8k  LED 1k ---
 Rset_6 ISET_6 GND 6.8k

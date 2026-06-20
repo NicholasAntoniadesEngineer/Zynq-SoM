@@ -198,8 +198,12 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     c.net("GND", f"{bulk.ref}.2")
 
     # ---- backlight boost: +VBOOST_IN -> L1 -> LX, D1 -> VLED+, ISET return --
-    c.net("+VBOOST_IN", "U1.IN", "L1.1", "C1.1")
-    c.net("GND", "U1.GND", "C1.2", "C2.2", "R1.2")
+    # SY7201 IN decoupling: C1 10u bulk + a dedicated 1u HF ceramic at the pin
+    # (the app circuit / dossier specify 10u + 1u; the 1u was missing — audit
+    # 2026-06-20). C15849 = 1u 50V 0603, placed next to U1.IN.
+    cin_hf = c.part(c.auto_ref("C"), "Device:C", "1u", C0603, LCSC="C15849")
+    c.net("+VBOOST_IN", "U1.IN", "L1.1", "C1.1", f"{cin_hf.ref}.1")
+    c.net("GND", "U1.GND", "C1.2", "C2.2", "R1.2", f"{cin_hf.ref}.2")
     c.net("LCD_BL_SW", "L1.2", "U1.LX")                      # LX node
     # boost rectifier D1 (SS34): CATHODE (D1.1, K) on the boost OUTPUT, ANODE
     # (D1.2, A) on the LX switch node, so the inductor pumps charge into VLED+

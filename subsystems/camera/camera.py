@@ -163,16 +163,22 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     c.net("GND", "U1.GND", "U2.GND")     # both GND pads (3, 8) per array
     # spare pads by NUMBER (the 'NC' name spans 4 USON-10 pads 6/7/9/10): U1's
     # four NC pads; U2 also leaves IO3 (pad 4) + IO4 (pad 5) unused (CLK uses
-    # only IO1/IO2) plus its four NC pads.
+    # only IO1/IO2) plus its four NC pads. The two SPARE U2 channels IO3 (pad 4)
+    # + IO4 (pad 5) are NO LONGER NC: they now clamp the cable-facing I2C control
+    # lines CAM_SCL/CAM_SDA (audit 2026-06-20) — the same user-handled FFC, so the
+    # slow lines get GND-referenced ESD for free (0.2 pF negligible on 400 kHz).
     c.nc("U1.6", "U1.7", "U1.9", "U1.10")
-    c.nc("U2.4", "U2.5", "U2.6", "U2.7", "U2.9", "U2.10")
+    c.nc("U2.6", "U2.7", "U2.9", "U2.10")
 
     # ---- control: camera I2C + enable/LED (3.3 V logic) --------------------
+    # CAM_SCL/SDA carry their 4k7 pull-up + a shunt ESD clamp on the spare U2
+    # channels (U2.4=IO3, U2.5=IO4 -> GND, never in series, LAW 0). CAM_EN/CAM_LED
+    # stay unclamped (static GPIO, no spare channels left) — accepted trade.
     c.part("R4", "Device:R", "4k7", R0603, LCSC="C23162")
     c.part("R5", "Device:R", "4k7", R0603, LCSC="C23162")
-    c.port("CAM_SCL", "J1.13", "R4.2", kind="i2c", role="scl",
+    c.port("CAM_SCL", "J1.13", "R4.2", "U2.4", kind="i2c", role="scl",
            bus=i2c_bus, speed_hz=I2C_SPEED_HZ, **meta.expect_kw("CAM_SCL"))
-    c.port("CAM_SDA", "J1.14", "R5.2", kind="i2c", role="sda",
+    c.port("CAM_SDA", "J1.14", "R5.2", "U2.5", kind="i2c", role="sda",
            bus=i2c_bus, speed_hz=I2C_SPEED_HZ, **meta.expect_kw("CAM_SDA"))
     c.net("+VDD_CAM", "R4.1", "R5.1")
     c.port("CAM_EN", "J1.11", **meta.expect_kw("CAM_EN"))

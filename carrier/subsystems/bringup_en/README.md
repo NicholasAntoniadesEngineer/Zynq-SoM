@@ -47,7 +47,7 @@ the TCA9535.)
 |-----|------|
 | `+3V3_SC` | POWER — gate `VCC`, and the rail that every `B` 100k pull-up ties to. The SoM system-controller rail, **always-on** (alive from default 5 V VBUS before any carrier rail). |
 | `GND` | GROUND — gate GND (pin 3), every `A` 100k pulldown bottom. |
-| `EN_5V0` / `EN_3V3` / `EN_1V8` | PORT — push-pull active-high 3.3 V CMOS enables; bind to the `power` regulator EN pins (TPS54302 / AP2112K). |
+| `EN_5V0` / `EN_3V3` / `EN_1V8` | PORT — push-pull active-high 3.3 V CMOS enables; bind to the `power` regulator EN pins (LM61460 EN/SYNC for the +5V/+3V3 bucks, AP2112K EN for +1V8). |
 
 Per cell: a **100k pulldown** on `A` (closed DIP = logic 1) and a **100k
 pull-up** to `+3V3_SC` on `B` (Hi-Z source ⇒ enabled) — both live **here at

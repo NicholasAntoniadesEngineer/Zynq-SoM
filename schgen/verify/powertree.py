@@ -132,10 +132,11 @@ class RegSpec:
     note: str = ""
 
 
-# keyed by part-value PREFIX (power.py writes 'TPS54302DDCR', fmc 'TLV75725PDBVR')
+# keyed by part-value PREFIX (power.py writes 'LM61460AANRJRR', fmc 'TLV75725PDBVR')
 REG_SPECS: dict[str, RegSpec] = {
-    "TPS54302": RegSpec("buck", 3.0, eff=0.90, in_pin="3", out_pin="2",
-                        note="TI 3 A synchronous buck (SW->L->rail)"),
+    # (the old 'TPS54302' buck key was removed 2026-06-20 — the +5V/+3V3 bucks
+    # were re-spec'd to the LM61460 and no emitted part value starts 'TPS54302',
+    # so the key was dead; verified by BOM grep before removal.)
     # power.py +5V buck U1 — RE-SPEC'd (wt/buck) from the LMR33630 (3 A) to the
     # LM61460 (6 A): the +5V chain is the board's heaviest converter (2.95 A),
     # which ran the old 3 A part at 98% with no headroom. 6 A -> ~2x margin.
@@ -557,7 +558,7 @@ def _som_parallel_rail_finding(sheets, res: Result) -> None:
     """+3V3 / +1V8 appear on SoM J1 (pins 24-27 / 56-60) AND the SoM's own
     Power sheet regulates +3V3/+1V8 on-module (MPM3834 stages with
     3V3_EN/3V3_PG, 1V8_EN/1V8_PG — som/schematic/Power.kicad_sch), while
-    carrier power.py ALSO generates +3V3/+1V8 (TPS54302 U2 / AP2112K U3).
+    carrier power.py ALSO generates +3V3/+1V8 (LM61460 U2 / AP2112K U3).
     Same net name across the connector = electrically ONE net = two
     regulators in parallel.
 
@@ -580,7 +581,7 @@ def _som_parallel_rail_finding(sheets, res: Result) -> None:
     if clash:
         res.findings.append(
             f"PARALLEL-SOURCE QUESTION on {', '.join(clash)}: these rails "
-            f"are OUTPUTS of carrier regulators (power.py TPS54302/AP2112K) "
+            f"are OUTPUTS of carrier regulators (power.py LM61460/AP2112K) "
             f"AND appear on SoM J1 contract pins "
             f"(+3V3: J1.24-27, +1V8: J1.56/58/60) while the SoM's own Power "
             f"sheet regulates same-named rails on-module (MPM3834 stages "
