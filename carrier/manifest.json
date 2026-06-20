@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "b96710c0494579ab21baa8502ffd5ab4f6556663101e5dfc3eefb35a09306dd9"
+      "sha256": "89215d31ea54c504eeffb28b9ecf9d5d96b6bc80ec47ea7a71b650cae4af6b99"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -26,15 +26,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "017a2c959162568a91dcbf1e43d27680e11478de2ce2e156f1022e2eb941fdfd"
+      "sha256": "fd44965f582d2ce3291d15bcaa552c727adf3e0680681e7b5d74d31b52a96958"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "a8d2917a02eac0b1fe1b72ac8a6c57ce2b8d7b2ed27dbdd26eb464edba6cebf7"
+      "sha256": "24f8cb6358d004cf906530a295b3e40345f484ac33e5e3c4ee58fb997e530c55"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "bfa9add1817234a995064e2a04cadb62970b75a7fe486515ce2c8fc355d987dc"
+      "sha256": "7de5c679aae49c2a65a81662e44c0bc64f03ac22fa26ef474bcd6507750dd1f0"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -62,7 +62,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "2c5789e28f7b3b2af9b7bc7b341f2e5d0ff9caf68873846e70cb17fcec74f575"
+      "sha256": "b27b2f026c1a90b21d7c12d3e2af0ff7b3835667e5a227fca53b5d1fdb029d8f"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -78,11 +78,11 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "63f6add1fe26a0190f17d34599bcaf2196ed03f0e69dd3a240cc0203f5ab33b3"
+      "sha256": "e28a1f288967e944981b71a3a3c2d8142bfec5557fe251e01c6f5e21c83a8db9"
     },
     {
       "path": "reports/bom_values.txt",
-      "sha256": "5b0eca57f16174b240fd5231c57fc0cf9232389675dd7d4c4adebc42556e8b17"
+      "sha256": "1f6e533d43df768ca9b8fcee17dd456c58a02d33475fa59ea3e38a5e58ebe592"
     },
     {
       "path": "reports/carrier_structure.txt",
@@ -98,7 +98,7 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "1fe1198db1e7e699bc37cf7de60395acf65c148a4820b3f7355e9c8ff34c8c7d"
+      "sha256": "23b2c8d6abdeaed25044cebe6900ab2e1dc7ea62b30fcb7dd7e9c63969073e84"
     },
     {
       "path": "reports/design_rules.txt",
@@ -106,7 +106,7 @@
     },
     {
       "path": "reports/footprint_pads.txt",
-      "sha256": "82eb33f6570533dfad64c475b6376df21c5281320ae82d76363b8c9e628d83a0"
+      "sha256": "1204a4fecb67156175b28f6b1752851794551e2f19345a3ac48bed7f63054cc9"
     },
     {
       "path": "reports/gates.txt",
@@ -118,19 +118,19 @@
     },
     {
       "path": "reports/model3d.txt",
-      "sha256": "752a31f65d567e08605ae35f3dd1ecd44ddef98c99efeea895393a9310048ece"
+      "sha256": "9c189739fc663b1e98b0519dc91f6d9c294023922914a971f387cf365d207e0c"
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "1eb1d610a1fc39e851619a501543724f79823ac8b83bea3d55bc8bb70c4a91ea"
+      "sha256": "8330b0bbe966fb73cca96270d53b6737ff4ba35277d7a6c1907b85ce1ef350f6"
     },
     {
       "path": "reports/pin_completeness.txt",
-      "sha256": "f4db3558ce5b65a81428ed825694d366c37350be528db3a1baa4b6445e4f362b"
+      "sha256": "cb6cedf0f627044c62acd56e02b516af98c4769f93683dc1122bc1e009c3ea73"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "47d812eff65965a0ef12045d42ae3e72ec1b1ee922c11b14b2fd6fbb5ab79a94"
+      "sha256": "13cd5e3d9455117932bab86b441e010ca56b9c67f9144a5f8a38532c92a682fe"
     },
     {
       "path": "reports/power_tree.txt",
@@ -138,7 +138,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "44c27cbfd4adc8b9e1188187e199e7b9a3e126abcc4e329acad3a54407adc463"
+      "sha256": "9d382424cbb3d0e9fb30ecbe6933c9e04cee0f5c680109faad6075a28f1acca5"
     },
     {
       "path": "reports/spice.txt",
@@ -294,7 +294,7 @@
     },
     {
       "path": "schematic/usbc_otg.kicad_sch",
-      "sha256": "db3117ae473bb3f7e2cf52d431972012364b55ab5cf496c60ae7d9bb629c97ff"
+      "sha256": "4ea7c3b104e8dce988099fddf1e6ef49b130a45aa2f0dbb300c1be14ea747479"
     },
     {
       "path": "schematic/user_io.kicad_sch",
@@ -304,11 +304,11 @@
   "bom": {
     "cost": null,
     "extended": null,
-    "lines": 97,
+    "lines": 98,
     "missing": [
       "fmc:J1"
     ],
-    "parts": 479
+    "parts": 480
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [

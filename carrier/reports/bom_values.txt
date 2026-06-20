@@ -2,3 +2,6 @@ bom value gate (LCSC actual value == declared value)
 ============================================================
 catalog: 97 LCSC codes; 345 inline-passive checks
 mismatches: none
+
+UNVERIFIED — reported, NOT failing (1):
+  usbc_otg:C3 '100u' LCSC C970684 (not in catalog)

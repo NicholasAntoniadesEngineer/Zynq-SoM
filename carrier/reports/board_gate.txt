@@ -232,7 +232,7 @@ board netlist gate
   ok   port 'USB_UART_DM': 1 net, 2 pins across 2 sheet(s) [uart_bridge, usb_uart_connector]
   ok   port 'USB_UART_DP': 1 net, 2 pins across 2 sheet(s) [uart_bridge, usb_uart_connector]
   ok   port 'USB_UART_VBUS': 1 net, 5 pins across 2 sheet(s) [uart_bridge, usb_uart_connector]
-  ok   port 'USB_VBUS': 1 net, 8 pins across 2 sheet(s) [som_j1, usbc_otg]
+  ok   port 'USB_VBUS': 1 net, 9 pins across 2 sheet(s) [som_j1, usbc_otg]
   ok   port 'VBUS_OUT_EN': 1 net, 4 pins across 2 sheet(s) [som_j1, usbc_otg]
   ok   port 'WATCHDOG_KICK': 1 net, 2 pins across 2 sheet(s) [board_services, som_j3]
   ok   port 'WATCHDOG_RST_N': 1 net, 2 pins across 2 sheet(s) [board_services, som_j3]
@@ -288,7 +288,7 @@ board netlist gate
   ok   rail '+VIN': 1 net, 7 pins across 2 sheet(s) [pd_input, power_mon]
   ok   rail '+VIN_SYS': 1 net, 15 pins across 3 sheet(s) [power, power_mon, power_som]
   ok   rail 'CHASSIS_GND': 1 net, 30 pins across 9 sheet(s) [ethernet, hdmi_rx, hdmi_tx, mechanical, pd_input, rj45_connector, usb_jtag_connector, usb_uart_connector, usbc_otg]
-  ok   rail 'GND': 1 net, 480 pins across 33 sheet(s) [board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io]
+  ok   rail 'GND': 1 net, 481 pins across 33 sheet(s) [board_aux, board_qwiic, board_services, bringup_en, bringup_en_modules, bringup_modules, bringup_rails, camera, debug_boot, fmc, hdmi_rx, hdmi_rx_term, hdmi_tx, lcd, microsd, pd_input, pmod, pmod_expansion, power, power_mon, power_som, rj45_connector, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_jtag, usb_jtag_connector, usb_pd, usb_uart_connector, usbc_otg, user_io]
   (info) undriven-input PORT check: 31 input-bearing PORT nets examined (213 expect-deferred)
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0

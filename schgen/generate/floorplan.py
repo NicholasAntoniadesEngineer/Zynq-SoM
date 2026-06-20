@@ -1361,6 +1361,22 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         b.area = round(b.w * b.h, 1)
     _pack_edges(plan, edge_of)
 
+    # EDGE-RUN FIT (LAW 0/6): _pack_edges packs a contiguous run and clamps its
+    # START to [EDGE_MARGIN, span-EDGE_MARGIN], but when the run (blocks + the
+    # REQUIRED cable/overmold gaps) exceeds that band it spills past the FAR end —
+    # the last connector then overhangs into the corner M3 mounting-hole keepout
+    # and its pad SHORTS to the hole (a real CHASSIS_GND/signal DRC short a reflow
+    # can trigger when an added part squares the board). REJECT such a board so the
+    # grow loop sizes it WIDE enough — never trimming the cable gaps, never
+    # softening the gate (LAW 4). Pre-fit boards are unchanged (byte-stable).
+    for b in plan.edge_blocks:
+        if b.edge in ("W", "E"):
+            near, span_b, dim = b.y, b.h, BOARD_H
+        else:
+            near, span_b, dim = b.x, b.w, BOARD_W
+        if near < EDGE_MARGIN - 0.1 or near + span_b > dim - EDGE_MARGIN + 0.1:
+            return False
+
     occ = _Occupancy()
     # reserve the SoM body PLUS a clearance pad: the placement_mech keepout
     # (som_core) is drawn ~3% larger than the bare body for mating clearance, so a
