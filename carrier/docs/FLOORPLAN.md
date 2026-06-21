@@ -21,50 +21,52 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 | J2 | (136.5, 129.5) rot 180 | (21, 38.5) | 19.8 x 3.78 mm |
 | J3 | (154.5, 112) rot 90 | (3, 21) | 3.78 x 19.8 mm |
 
-Derived board: **154 x 137 mm**; SoM origin at **(52, 47.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
+Derived board: **159 x 145 mm**; SoM origin at **(54.5, 51.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 5197mm2 / 0.6 fill -> area floor 116x105; + 3mm perimeter keepout -> 125x115 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.087, 1.1, 1.2, 1.3, 1.4 -> 154x137 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 13460 <= LAW-5 budget 13508 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6037mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 159x145 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 14788 <= LAW-5 budget 15032 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| N | microsd | (43.5, 1.5, 19.3 x 25.281) | TF-01A (microSD push-pull) | (1) |
-| N | pd_input | (63, 1.5, 23.11 x 23.31) | TYPE-C-31-M-12 (USB-C receptacle) | (2) |
-| N | usbc_otg | (86.5, 1.5, 20.57 x 21.718) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
-| N | usb_jtag_connector | (107.5, 1.5, 10.95 x 16.038) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
-| N | usb_uart_connector | (118.5, 1.5, 10.95 x 16.038) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
-| W | camera | (1.5, 40, 30.27 x 21.9) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (6) |
-| W | lcd | (1.5, 62.5, 35.963 x 26.7) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (7) |
-| E | rj45_connector | (125, 52, 27.37 x 19.4) |  |  |
-| E | board_qwiic | (140, 71.5, 12.326 x 7.5) |  |  |
-| S | hdmi_rx | (10, 112, 17.57 x 23.336) | HDMI-019S (HDMI receptacle) | (8) |
-| S | hdmi_tx | (47.5, 111.5, 20.57 x 23.846) | HDMI-019S (HDMI receptacle) | (9) |
-| S | pmod | (88, 112, 33.58 x 23.509) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (10) |
-| S | pmod_expansion | (122, 105.5, 21.84 x 29.773) | DS1024-2x6R2 (PMOD 2x6 socket) | (11) |
+| N | microsd | (46, 1.5, 19.3 x 25.281) | TF-01A (microSD push-pull) | (1) |
+| N | pd_input | (65.5, 1.5, 23.11 x 23.31) | TYPE-C-31-M-12 (USB-C receptacle) | (2) |
+| N | usbc_otg | (89, 1.5, 20.57 x 21.718) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
+| N | usb_jtag_connector | (110, 1.5, 10.95 x 16.038) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
+| N | usb_uart_connector | (121, 1.5, 10.95 x 16.038) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
+| W | camera | (1.5, 40.5, 30.27 x 21.9) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (6) |
+| W | lcd | (1.5, 63, 35.963 x 26.7) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (7) |
+| W | motor_pwm | (1.5, 90, 22.1 x 19.704) |  |  |
+| E | motor_sense | (119, 56.5, 38.268 x 22.118) |  |  |
+| E | rj45_connector | (130, 29, 27.37 x 19.4) |  |  |
+| E | board_qwiic | (145, 48.5, 12.326 x 7.5) |  |  |
+| S | hdmi_rx | (10, 120, 17.57 x 23.336) | HDMI-019S (HDMI receptacle) | (8) |
+| S | hdmi_tx | (47.5, 119.5, 20.57 x 23.846) | HDMI-019S (HDMI receptacle) | (9) |
+| S | pmod | (88, 120, 33.58 x 23.509) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (10) |
+| S | pmod_expansion | (122, 113.5, 21.84 x 29.773) | DS1024-2x6R2 (PMOD 2x6 socket) | (11) |
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (142, 80, 11.68 x 15.744) | 18 | 183.9 |  |
-| board_services | W | (21, 90, 22.8 x 20.2) | 9 | 460.6 |  |
-| bringup_en | E | (41, 59, 8.68 x 15.3) | 15 | 132.8 |  |
-| bringup_en_modules | E | (107, 54, 17.57 x 25.2) | 54 | 442.8 |  |
-| bringup_modules | E | (120, 33, 19.3 x 18.466) | 71 | 356.4 | (12) |
-| bringup_rails | E | (104, 80, 36.84 x 23.06) | 23 | 849.5 | (13) |
-| debug_boot | N | (69, 92, 17.75 x 29.944) | 10 | 531.5 | (14) |
-| ethernet | @rj45_connector | (105, 33, 14.3 x 20.66) | 10 | 295.4 | (15) |
-| fmc | S | (51, 30, 52.91 x 15.49) | 8 | 819.6 | (16) |
-| hdmi_rx_term | @hdmi_rx | (42, 75, 7.87 x 10.4) | 10 | 81.8 |  |
-| mechanical | E | (140, 38, 13 x 13) | 4 | 169 |  |
-| power | E | (23, 12, 19.74 x 26.96) | 51 | 532.2 | (17) |
-| power_mon | E | (13, 25, 9.14 x 13.828) | 10 | 126.4 | (18) |
-| power_som | E | (35, 111, 12.05 x 16.3) | 23 | 196.4 |  |
-| uart_bridge | @rj45_connector | (88, 92, 7.87 x 8.94) | 10 | 70.4 | (19) |
-| usb_jtag | E | (108, 18, 28.19 x 14.448) | 19 | 407.3 |  |
-| usb_pd | @pd_input | (42, 51, 7.87 x 6.98) | 6 | 54.9 | (20) |
-| user_io | S | (45, 92, 23.11 x 18.3) | 17 | 422.9 | (21) |
+| board_aux | E | (91, 96, 11.68 x 15.744) | 18 | 183.9 |  |
+| board_services | W | (1, 20, 22.8 x 20.2) | 9 | 460.6 |  |
+| bringup_en | E | (44, 64, 8.68 x 15.3) | 15 | 132.8 |  |
+| bringup_en_modules | E | (35, 91, 17.57 x 25.2) | 54 | 442.8 |  |
+| bringup_modules | E | (33, 44, 19.3 x 18.466) | 71 | 356.4 | (12) |
+| bringup_rails | E | (53, 96, 36.84 x 23.06) | 23 | 849.5 | (13) |
+| debug_boot | N | (107, 79, 17.75 x 29.944) | 10 | 531.5 | (14) |
+| ethernet | @rj45_connector | (107, 35, 14.3 x 20.66) | 10 | 295.4 | (15) |
+| fmc | S | (53, 34, 52.91 x 15.49) | 8 | 819.6 | (16) |
+| hdmi_rx_term | @hdmi_rx | (44, 80, 7.87 x 10.4) | 10 | 81.8 |  |
+| mechanical | E | (110, 21, 13 x 13) | 4 | 169 |  |
+| power | E | (25, 13, 19.74 x 26.96) | 51 | 532.2 | (17) |
+| power_mon | E | (107, 56, 9.14 x 13.828) | 10 | 126.4 | (18) |
+| power_som | E | (75, 120, 12.05 x 16.3) | 23 | 196.4 |  |
+| uart_bridge | @rj45_connector | (89, 24, 7.87 x 8.94) | 10 | 70.4 | (19) |
+| usb_jtag | E | (126, 98, 28.19 x 14.448) | 19 | 407.3 |  |
+| usb_pd | @pd_input | (77, 26, 7.87 x 6.98) | 6 | 54.9 | (20) |
+| user_io | S | (126, 79, 23.11 x 18.3) | 17 | 422.9 | (21) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
 
@@ -94,9 +96,10 @@ Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kica
 | SY6280AAC (U8) | bringup_modules | +3V3 -> +3V3_USER_LED | 0.016 | negligible |
 | SY6280AAC (U9) | bringup_modules | +5V -> +5V_HDMI_TX | 0.058 | negligible |
 | TLV75725PDYDR (U1) | fmc | +3V3 -> +2V5_VADJ | 0.400 | ~0.32 W |
-| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.296 | negligible |
+| SY6280AAC (U3) | motor_pwm | +5V -> +5V_MOTOR_IO | 0.000 | negligible |
+| TPS26631PWPR (U1) | pd_input | +VBUS_IN -> +VIN | 1.319 | negligible |
 | SY6280AAC (U1) | pmod_expansion | +3V3 -> +3V3_PMODX | 0.104 | negligible |
-| LM61460AANRJRR (U1) | power | +VIN_SYS -> +5V_REG | 2.664 | ~1.48 W |
+| LM61460AANRJRR (U1) | power | +VIN_SYS -> +5V_REG | 2.744 | ~1.52 W |
 | LM61460AANRJRR (U2) | power | +5V -> +3V3_REG | 2.245 | ~0.82 W |
 | AP2112K-1.8 (U3) | power | +3V3 -> +1V8_REG | 0.006 | negligible |
 | LM61460AANRJRR (U4) | power_som | +VIN_SYS -> +5V_SOM | 2.154 | ~1.11 W |
@@ -122,12 +125,12 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(14) debug_boot**: JTAG (2x7 2 mm) + SWD (2x5 1.27 mm) headers mate vertically — any top-side spot works; keep cable/probe clearance and the boot DIP reachable.
 - **(15) ethernet**: Magnetics isolation: void ALL planes under the HX5008 line side + Bob-Smith network (CHASSIS_GND moat to the RJ45); MDI pairs are 100R differential. RJ45 itself is an author-declared deferral (expect rj45_connector) — the dashed reservation is its landing zone.
 - **(16) fmc**: TLV75725PDYDR VADJ LDO dissipates ~0.32 W at the declared 0.4 A — give its EP pad a ground pour.
-- **(17) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.48 W; LM61460AANRJRR +3V3_REG ~0.82 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
+- **(17) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~1.52 W; LM61460AANRJRR +3V3_REG ~0.82 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
 - **(18) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
 - **(19) uart_bridge**: CP2102N UART bridge: its USB connector is an author-declared deferral (expect usb_uart_connector) — the block reserves edge space for it; TX/RX test points stay probe-able.
 - **(20) usb_pd**: FUSB302 PD controller: anchored beside the pd_input receptacle so CC1/CC2 stay short stubs; I2C runs to the SoM J1 side.
 - **(21) user_io**: User LEDs + buttons: human-facing — keep at the accessible S side, clear of the PMOD cable shadow.
-- **(board)**: 57 test points board-wide (test-point gate): spread them with probe clearance as the blocks settle; none may end up under the SoM.
+- **(board)**: 58 test points board-wide (test-point gate): spread them with probe clearance as the blocks settle; none may end up under the SoM.
 
 ## Honest limits
 

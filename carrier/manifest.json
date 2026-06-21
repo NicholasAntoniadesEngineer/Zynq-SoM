@@ -2,19 +2,19 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "793c513d1bf8384dc8931bd2b094c8138bfe8e89d07078162502a5021dd7267f"
+      "sha256": "efcde5a957d7f5a207db846dd52e320190efd783810271ca0a1a20297ef9e00d"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
-      "sha256": "e51e82ada3ad7f846ee74d742b61672192961d5ffe241f9daa39cab880539096"
+      "sha256": "387362979b8b00fabdaded447ff4e9dbfef4b9b67b9490b42c9a72313e843366"
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
-      "sha256": "cd2af8b17504bc883a772dacbb2de342dcccb787c88b9a2ebcf85f2ec59093cf"
+      "sha256": "56bab55ed3049f9635961f26c9c18d482af00101ef382b2b7d56f9e247d3a71d"
     },
     {
       "path": "docs/BRINGUP.md",
-      "sha256": "9f3c68006e36f876d9e622fb4da79e828e5753a225bbf94839ff98bb4af90c53"
+      "sha256": "0c772fae43df04f5d7ef35bc1421180e8a1c4d88923b4627381e2a47816147e9"
     },
     {
       "path": "docs/COMPLIANCE.md",
@@ -26,23 +26,23 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "fd44965f582d2ce3291d15bcaa552c727adf3e0680681e7b5d74d31b52a96958"
+      "sha256": "ab3de6932702ce5302e87c8a3980b82cb10ee4005ffc241923b701a569b9b002"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "24f8cb6358d004cf906530a295b3e40345f484ac33e5e3c4ee58fb997e530c55"
+      "sha256": "e1745cda5324a5b483a1ab6fe2a70c7cb6186f5bd6ccf501f2fdd11f9323ff17"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "61cebbb421a5bf47f6671f3af69326a33a07bd14792585eceb6db62e80f5d6a4"
+      "sha256": "6c3d3911b9a9d5847137718c3e618ab9fd2e380c298d9eb3bf4e31e7c3bb8b61"
     },
     {
       "path": "docs/power_sequence.svg",
-      "sha256": "6e6ff19e83ab6cf137896be0a2f5b0484dd32c9ebeb3cfb1489d46ccd460e1ad"
+      "sha256": "dd02ffe2cbc50281fb3918f2bd5dd56973d69c0705a94b8451114988d7fae345"
     },
     {
       "path": "docs/power_tree.svg",
-      "sha256": "e46ec01f7fc1155a58914b9a1fdf64200df9eff5334606592e72673dfa285393"
+      "sha256": "fac9bef453c09a344d36a77effe71e13593b7e55609b76638ed1d3fa7cb57b38"
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
@@ -50,7 +50,7 @@
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
-      "sha256": "4f46877ef7141b3a4ec700ba72c1e03bc2144a6422497d6b2a955ba11abdc519"
+      "sha256": "f6f7da6f52984cc8ca0e47fa75a92c974a8afbd9c37978a23ec4984cffa65fa8"
     },
     {
       "path": "manufacturing/SI_CONSTRAINTS.md",
@@ -62,11 +62,11 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "d44dd776a33ed6005cb887285305c18dfc13406306e56624f4fc250c871b861a"
+      "sha256": "4e8d40b3947029142f9fb444239bb1da56ce1d2e6b9ab468022354f7504a6ad1"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
-      "sha256": "7f719430491ac2c05617239306c2a0ae205a2770a24d4e4244f62d2a27fae1c8"
+      "sha256": "76d5269ae0e268912d393682aaff2871c18df114126d006d8949aed82edca219"
     },
     {
       "path": "manufacturing/layout_constraints.kicad_dru",
@@ -78,19 +78,19 @@
     },
     {
       "path": "reports/board_gate.txt",
-      "sha256": "e28a1f288967e944981b71a3a3c2d8142bfec5557fe251e01c6f5e21c83a8db9"
+      "sha256": "3c05173d1bd508ffa922a4375d44ce3cbc05c78ba17d03d57f1e94a3ef823a61"
     },
     {
       "path": "reports/bom_values.txt",
-      "sha256": "46310da88f0e6585cdd1846c233ead171956ea5effcbba50392f57dc23387f58"
+      "sha256": "917a83cb55b098ce17af67db8d1658555ca47c12216f7b8c5fc2f14e62f220c1"
     },
     {
       "path": "reports/carrier_structure.txt",
-      "sha256": "d6d63fd7448c7616602dd1b303437d9dd9f76c1b6d298ec8d7a60f04a7adbca1"
+      "sha256": "727b2a6320a1f8e8731f5805ecee24bfbee768c14dfb6e75a0d84a56582eaa03"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "f3415413478365e3aacc426fdc16d5c771ddef508401576b8fdb61bf7cb181ad"
+      "sha256": "b1f276dae4669a8b5e9fadba263a8e6bd8ee1e83c592840525df46c54fed4a6b"
     },
     {
       "path": "reports/connector_model.txt",
@@ -98,47 +98,47 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "23b2c8d6abdeaed25044cebe6900ab2e1dc7ea62b30fcb7dd7e9c63969073e84"
+      "sha256": "049683342da4f3de1e74d227274c7232102ea9c62b25cd50a1077be02c0a8233"
     },
     {
       "path": "reports/design_rules.txt",
-      "sha256": "712e6640a2fdbb643582c359b4826f2c39fa170450b5b1be0f0afd556d23322a"
+      "sha256": "6b5cf9397056f5860b9b2e5139b4b7bd108a24f2081007adff6087ffd2d2c0ae"
     },
     {
       "path": "reports/footprint_pads.txt",
-      "sha256": "1204a4fecb67156175b28f6b1752851794551e2f19345a3ac48bed7f63054cc9"
+      "sha256": "5097883a778dfa15fcd81b9dba2464e50d60c38a2cba9c43482aa64f25b6f1b6"
     },
     {
       "path": "reports/gates.txt",
-      "sha256": "8d42a83b33cad69e3cb14fb61f924bcf7c2aec642544e48dc008f1114f29f05e"
+      "sha256": "a5d93258b6d12cfe0c041a5cb1a3744f8b0dbf714a68b2ad494e1415cf068da7"
     },
     {
       "path": "reports/link_report.txt",
-      "sha256": "c994c88e69ff6d0ffc416be902c31a63d16cb62b14cb05a3130f8952b5c1ae28"
+      "sha256": "041e99db2a206647aa65192cbb839ebc809d44d8c4116c0fff6c827775761445"
     },
     {
       "path": "reports/model3d.txt",
-      "sha256": "f6f9605da2fcd718b702033f07ba41f6ab5337ce4a260f6a5f10a6cbc9555317"
+      "sha256": "171a54aba94536419c08adf74994ff5d1052325a1ba679123572477cda3a0946"
     },
     {
       "path": "reports/part_rules.txt",
-      "sha256": "5eb501068d64a4c4d4f9487a6a6298b2ff6e0ef4a93f3cb2dbb1ce474b2ac082"
+      "sha256": "45ed68e255482f1432ed8224be267293e9e3494265e71be71000e2d604054762"
     },
     {
       "path": "reports/pin_completeness.txt",
-      "sha256": "ccc128bbaf265576d4295dc913032238899b0264371db512df5dec7cc19d9ba0"
+      "sha256": "90c1c4caf521f9b22a64f8a2bd042fa18d84e28dc9be8efa99c5df80e6c62955"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "13cd5e3d9455117932bab86b441e010ca56b9c67f9144a5f8a38532c92a682fe"
+      "sha256": "73cf36352b2a2f3ea3c4834514fd30bbdecf0a54931de877bd0c43c6afec2c10"
     },
     {
       "path": "reports/power_tree.txt",
-      "sha256": "da9657af1e6ced1f8145e2008470fc3b5bcbfbb84068a6b6223479c5e6418e6c"
+      "sha256": "55bf0bf75e4f55aa8c9526ece2c310a6eae5885010666863cba4b6f9f5bf31c6"
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "b16e8b30990b37601b30d5f351161206ef3aac1ac30f469a3436c26ba9f43884"
+      "sha256": "6ca76c23e3860086dc36942cc18de80bde68ce8410326d062e55add13698be27"
     },
     {
       "path": "reports/spice.txt",
@@ -154,11 +154,11 @@
     },
     {
       "path": "reports/testpoints.txt",
-      "sha256": "6bf40e90d0eb34b987cddb07c246107d7c7e2cd812e380446bd563a847e11d85"
+      "sha256": "9a8d24ac0a1e7c9b344e325adfcaf90be5f8e80a1fc7b28ac3412e3235ba3778"
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "3e6145c3f07931692dc71286cd6927e0c0a3c562fe9e46e68f165ca110cd53cd"
+      "sha256": "c21133a0de59530c0a80f11c737a66307a59206e7df1db1e8c7d659651e14ec4"
     },
     {
       "path": "schematic/board_aux.kicad_sch",
@@ -229,6 +229,14 @@
       "sha256": "3dac46775ae95e70d0430b5136810783cd3a323fd1868d7a6e399729e0177acb"
     },
     {
+      "path": "schematic/motor_pwm.kicad_sch",
+      "sha256": "9d514ed91a2c54ce6e7a33605b81c1971196e0df816fcbd10bdabff16ecea927"
+    },
+    {
+      "path": "schematic/motor_sense.kicad_sch",
+      "sha256": "57031e0bbb5901b6ae52e641c4224d88b9c070d15725b73186201bc62e9bb7f2"
+    },
+    {
       "path": "schematic/pd_input.kicad_sch",
       "sha256": "7b368472ba1d1dbb24b7ea9aad70d1d66322531d4285c679ffdafdbda9a14116"
     },
@@ -266,11 +274,11 @@
     },
     {
       "path": "schematic/som_j2.kicad_sch",
-      "sha256": "3de25968804e49cd13fd43b745f58ed8a1fb8ac4dc1f630a887cf0b3f8504e0a"
+      "sha256": "47193c4cbcd48aa3e9e86e3c17ef5efaa742b85e54cd00e634a1d6145a235e65"
     },
     {
       "path": "schematic/som_j3.kicad_sch",
-      "sha256": "71d3ca5b7bd7e1cc9fb364ec21b673dbedcd63e73581bab0c2612e579dd658ac"
+      "sha256": "0f43245d4b72b4ca097e255aaba94d1da442330721bdf3a4e7c3e0ff9fb01fd4"
     },
     {
       "path": "schematic/uart_bridge.kicad_sch",
@@ -304,11 +312,11 @@
   "bom": {
     "cost": null,
     "extended": null,
-    "lines": 98,
+    "lines": 102,
     "missing": [
       "fmc:J1"
     ],
-    "parts": 480
+    "parts": 497
   },
   "device": "XC7Z020-CLG484 (U2 on the SoM)",
   "gpio_map": [
@@ -473,6 +481,14 @@
       "device": "INA3221",
       "ref": "U2",
       "sheet": "power_mon"
+    },
+    {
+      "addr": 66,
+      "addr_hex": "0x42",
+      "bus": "STM32_I2C2",
+      "device": "INA3221",
+      "ref": "U2",
+      "sheet": "motor_sense"
     },
     {
       "addr": 81,
@@ -776,6 +792,11 @@
         },
         {
           "amps": 0.002,
+          "note": "INA3221 ~0.35 mA + CRITICAL pull-up",
+          "sheet": "motor_sense"
+        },
+        {
+          "amps": 0.002,
           "note": "2x INA3221 ~0.7 mA + ALERT pull-up",
           "sheet": "power_mon"
         },
@@ -791,7 +812,7 @@
         }
       ],
       "limit_a": 0.3,
-      "load_a": 0.0205,
+      "load_a": 0.0225,
       "name": "+3V3_SC",
       "source": "source: SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class \u2014 the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here",
       "volts": 3.3
@@ -837,13 +858,18 @@
     {
       "draws": [
         {
+          "amps": 0.08,
+          "note": "HCT245 buffer + light servo allowance (ILIM 523mA)",
+          "sheet": "motor_pwm"
+        },
+        {
           "amps": 0.004,
           "note": "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA",
           "sheet": "power"
         }
       ],
       "limit_a": null,
-      "load_a": 2.6643,
+      "load_a": 2.7443,
       "name": "+5V",
       "source": null,
       "volts": 5.0
@@ -896,8 +922,16 @@
     },
     {
       "draws": [],
+      "limit_a": 0.523,
+      "load_a": 0,
+      "name": "+5V_MOTOR_IO",
+      "source": "motor_pwm:U3 SY6280AAC [load_switch]",
+      "volts": 5.0
+    },
+    {
+      "draws": [],
       "limit_a": 6.0,
-      "load_a": 2.6643,
+      "load_a": 2.7443,
       "name": "+5V_REG",
       "source": "power:U1 LM61460AANRJRR [buck]",
       "volts": 5.0
@@ -943,7 +977,7 @@
     {
       "draws": [],
       "limit_a": 3.0,
-      "load_a": 1.2965,
+      "load_a": 1.3188,
       "name": "+VBUS_IN",
       "source": "source: USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)",
       "volts": 20.0
@@ -951,7 +985,7 @@
     {
       "draws": [],
       "limit_a": 3.529,
-      "load_a": 1.2965,
+      "load_a": 1.3188,
       "name": "+VIN",
       "source": "pd_input:U1 TPS26631PWPR [efuse]",
       "volts": 20.0
@@ -959,7 +993,7 @@
     {
       "draws": [],
       "limit_a": null,
-      "load_a": 1.2965,
+      "load_a": 1.3188,
       "name": "+VIN_SYS",
       "source": null,
       "volts": 20.0
@@ -982,8 +1016,8 @@
     }
   ],
   "testpoints": {
-    "covered": 55,
-    "required": 60,
+    "covered": 56,
+    "required": 61,
     "waived": 5
   },
   "xdc": {

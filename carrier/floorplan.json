@@ -11,7 +11,8 @@
     ],
     "E": [
       "rj45_connector",
-      "board_qwiic"
+      "board_qwiic",
+      "motor_sense"
     ],
     "S": [
       "hdmi_rx",
@@ -21,7 +22,8 @@
     ],
     "W": [
       "camera",
-      "lcd"
+      "lcd",
+      "motor_pwm"
     ]
   },
   "interior": {

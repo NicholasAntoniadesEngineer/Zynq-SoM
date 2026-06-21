@@ -3,7 +3,7 @@ schgen test-point coverage gate
 
 rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) owns a probe point or an explicit waiver.
 
-required nets (60):
+required nets (61):
   +1V8                   [rail     ] TP @ power:TP3
   +1V8_REG               [rail     ] WAIVED (power_mon): reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)
   +2V5_VADJ              [rail     ] TP @ fmc:TP1
@@ -24,6 +24,7 @@ required nets (60):
   +5V_DBG                [rail     ] TP @ usb_jtag_connector:TP1
   +5V_HDMI_TX            [rail     ] TP @ bringup_modules:TP9, hdmi_tx:TP1
   +5V_LCD                [rail     ] TP @ bringup_modules:TP10, lcd:TP1
+  +5V_MOTOR_IO           [rail     ] TP @ motor_pwm:TP1
   +5V_REG                [rail     ] WAIVED (power_mon): reg-side of RS2 — probe across the shunt (the +5V TP is the post-shunt/load side)
   +5V_SOM                [rail     ] TP @ power_som:TP1
   +5V_USB                [rail     ] TP @ bringup_modules:TP6
@@ -74,4 +75,4 @@ waivers — author-declared, verbatim (5):
 
 errors: none
 
-TESTPOINTS: PASS (55/60 required nets covered, 5 waived)
+TESTPOINTS: PASS (56/61 required nets covered, 5 waived)

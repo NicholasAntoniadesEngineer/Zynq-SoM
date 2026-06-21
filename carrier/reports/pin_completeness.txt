@@ -1,10 +1,10 @@
 pin completeness gate (every multi-pin IC pin is NETTED or explicit NC)
 ================================================================
 STATUS: REPORT-FIRST (does NOT fail the board yet; promotes to HARD-FAIL once the NC allowlist is fully blessed)
-480 multi-pin parts checked; 127 author-declared NC pins
+497 multi-pin parts checked; 130 author-declared NC pins
 silent floats: none
 
-NC ALLOWLIST — 27 blessed [seed], 100 to bless [new]:
+NC ALLOWLIST — 27 blessed [seed], 103 to bless [new]:
   [seed] board_services:U2.1 (RV-3028-C7-32.768kHz-1ppm-TA-QC CLKOUT)
   [seed] fmc:U1.4 (TLV75725PDYDR NC)
   [seed] hdmi_rx:U2.6 (TPD4E02B04DQAR NC)
@@ -66,6 +66,9 @@ NC ALLOWLIST — 27 blessed [seed], 100 to bless [new]:
   [new]  microsd:U1.13 (TXS02612RTWR CLKB1)
   [new]  microsd:U1.14 (TXS02612RTWR DAT0B1)
   [new]  microsd:U1.15 (TXS02612RTWR DAT1B1)
+  [new]  motor_sense:U2.8 (INA3221AIRGVR WARNING)
+  [new]  motor_sense:U2.10 (INA3221AIRGVR PV)
+  [new]  motor_sense:U2.13 (INA3221AIRGVR TC)
   [new]  pd_input:J1.A8 (TYPE-C-31-M-12 SBU1)
   [new]  pd_input:J1.B8 (TYPE-C-31-M-12 SBU2)
   [new]  pd_input:U1.4 (TPS26631PWPR B_GATE)

@@ -291,6 +291,16 @@ LCD_R6,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_3
 LCD_R7,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
 LCD_VSYNC,lcd,single,Default,,,,,,,"deferred: som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
 SD_CARD_DETECT,microsd,single,Default,,,,,,,deferred: som_j1_connector (STM32 GPIO function map)
+ESC_BUF_OE_N,motor_pwm,single,Default,,,,,,,deferred: som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)
+ESC_PWM_IN0,motor_pwm,single,Default,,,,,,,deferred: som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)
+ESC_PWM_IN1,motor_pwm,single,Default,,,,,,,deferred: som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)
+ESC_PWM_IN2,motor_pwm,single,Default,,,,,,,deferred: som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)
+ESC_PWM_IN3,motor_pwm,single,Default,,,,,,,deferred: som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)
+ESC_PWM_IN4,motor_pwm,single,Default,,,,,,,deferred: som_j3_connector (bank 33 PL — ESC PWM 4-7)
+ESC_PWM_IN5,motor_pwm,single,Default,,,,,,,deferred: som_j3_connector (bank 33 PL — ESC PWM 4-7)
+ESC_PWM_IN6,motor_pwm,single,Default,,,,,,,deferred: som_j3_connector (bank 33 PL — ESC PWM 4-7)
+ESC_PWM_IN7,motor_pwm,single,Default,,,,,,,deferred: som_j3_connector (bank 33 PL — ESC PWM 4-7)
+ESC_FAULT_N,motor_sense,single,Default,,,,,,,deferred: som_j2_connector (bank 13 PL — ESC_FAULT_N)
 PD_FLT_N,pd_input,single,Default,,,,,,,deferred: bringup (TCA9535 expander port P15)
 STM32_USB_CC1,pd_input,single,Default,,,,,,,
 STM32_USB_CC2,pd_input,single,Default,,,,,,,
@@ -356,19 +366,19 @@ ZYNQ_TDO,som_j1,single,Default,,,,,,,
 ZYNQ_TMS,som_j1,single,Default,,,,,,,
 DBG_UART_RXD,som_j2,single,Default,,,,,,,
 DBG_UART_TXD,som_j2,single,Default,,,,,,,
+ESC_BUF_OE_N,som_j2,single,Default,,,,,,,
+ESC_FAULT_N,som_j2,single,Default,,,,,,,
+ESC_PWM_IN0,som_j2,single,Default,,,,,,,
+ESC_PWM_IN1,som_j2,single,Default,,,,,,,
+ESC_PWM_IN2,som_j2,single,Default,,,,,,,
+ESC_PWM_IN3,som_j2,single,Default,,,,,,,
 HDMI_RX_5V_DET,som_j2,single,Default,,,,,,,
 HDMI_RX_CEC,som_j2,single,Default,,,,,,,
 IO_25_13,som_j2,single,Default,,,,,,,
 IO_L10_N_13,som_j2,single,Default,,,,,,,
 IO_L10_P_13,som_j2,single,Default,,,,,,,
-IO_L11_SRCC_N_33,som_j2,single,Default,,,,,,,
-IO_L11_SRCC_P_33,som_j2,single,Default,,,,,,,
-IO_L14_SRCC_N_33,som_j2,single,Default,,,,,,,
-IO_L14_SRCC_P_33,som_j2,single,Default,,,,,,,
 IO_L15_P_13,som_j2,single,Default,,,,,,,
 IO_L19_P_13,som_j2,single,Default,,,,,,,
-IO_L1P_13,som_j2,single,Default,,,,,,,
-IO_L1_N_13,som_j2,single,Default,,,,,,,
 IO_L21_P_13,som_j2,single,Default,,,,,,,
 IO_L22_P_13,som_j2,single,Default,,,,,,,
 IO_L24_N_13,som_j2,single,Default,,,,,,,
@@ -414,6 +424,10 @@ CAM_EN,som_j3,single,Default,,,,,,,
 CAM_LED,som_j3,single,Default,,,,,,,
 CAM_SCL,som_j3,single,Default,,,,,,,
 CAM_SDA,som_j3,single,Default,,,,,,,
+ESC_PWM_IN4,som_j3,single,Default,,,,,,,
+ESC_PWM_IN5,som_j3,single,Default,,,,,,,
+ESC_PWM_IN6,som_j3,single,Default,,,,,,,
+ESC_PWM_IN7,som_j3,single,Default,,,,,,,
 IO_L16_N_35,som_j3,single,Default,,,,,,,
 IO_L16_P_35,som_j3,single,Default,,,,,,,
 IO_L18_N_35,som_j3,single,Default,,,,,,,
@@ -421,10 +435,6 @@ IO_L18_P_35,som_j3,single,Default,,,,,,,
 IO_L22_N_34,som_j3,single,Default,,,,,,,
 IO_L23_P_34,som_j3,single,Default,,,,,,,
 IO_L24_P_34,som_j3,single,Default,,,,,,,
-IO_L3_DQS_N_33,som_j3,single,Default,,,,,,,
-IO_L3_DQS_P_33,som_j3,single,Default,,,,,,,
-IO_L5_N_33,som_j3,single,Default,,,,,,,
-IO_L5_P_33,som_j3,single,Default,,,,,,,
 LCD_B0,som_j3,single,Default,,,,,,,
 LCD_B1,som_j3,single,Default,,,,,,,
 LCD_B2,som_j3,single,Default,,,,,,,
@@ -501,6 +511,8 @@ ZYNQ_HDMI_TX_SCL,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred
 ZYNQ_HDMI_TX_SDA,hdmi_tx,i2c,I2C,,,,,,,bus=HDMI_TX_DDC; speed=100000Hz; deferred: som_j2_connector (wave 3 PL function map)
 LCD_CTP_SCL,lcd,i2c,I2C,,,,,,,bus=LCD_CTP; speed=400000Hz; deferred: som_j2_connector (PL bank 13 — touch I2C only)
 LCD_CTP_SDA,lcd,i2c,I2C,,,,,,,bus=LCD_CTP; speed=400000Hz; deferred: som_j2_connector (PL bank 13 — touch I2C only)
+STM32_I2C2_SCL,motor_sense,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (STM32_I2C2 SC management bus)
+STM32_I2C2_SDA,motor_sense,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (STM32_I2C2 SC management bus)
 STM32_I2C2_SCL,power_mon,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector
 STM32_I2C2_SDA,power_mon,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector
 STM32_I2C2_SCL,usb_pd,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector (wave 3 STM32 GPIO function map)

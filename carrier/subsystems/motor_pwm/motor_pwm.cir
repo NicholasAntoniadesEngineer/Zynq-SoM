@@ -1,0 +1,22 @@
+* motor_pwm.cir — passive network of the 8-ch PWM/ESC output buffer sheet.
+* Active parts (HCT245 buffer, SY6280 load switch, 3x8 header) are use_part'd
+* faithful parts (not :C/:R), so only the bypass/set network is here. (The 33R
+* output series-damping arrays are tool-blocked, not yet instantiated — README.)
+* Values mirror motor_pwm.py one-for-one (parse_si):
+*   C1 100n  HCT245 VCC bypass        (V5 -> GND)
+*   C2 100n  SY6280 IN bypass         (V5 -> GND)
+*   C3 10u   SY6280 OUT servo hold-up (V5_MOTOR_IO -> GND)
+*   R1 10k   #OE pull-up (HiZ fail-safe) (V5 -> ESC_BUF_OE_N)
+*   R2 13k   SY6280 ILIM set ~523mA      (MIO_ISET -> GND, internal)
+.subckt motor_pwm V5 V5_MOTOR_IO ESC_BUF_OE_N GND
+C1 V5 GND 100n
+C2 V5 GND 100n
+C3 V5_MOTOR_IO GND 10u
+R1 V5 ESC_BUF_OE_N 10k
+R2 MIO_ISET GND 13k
+.ends motor_pwm
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

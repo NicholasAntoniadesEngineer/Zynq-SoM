@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1392" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
-<rect width="720" height="1392" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1452" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
+<rect width="720" height="1452" fill="white"/>
 <text x="40" y="30" font-size="15" font-weight="bold">carrier power-up sequence — staged bring-up (PASS)</text>
 <text x="40" y="52" font-size="11" fill="#6b7280">derived from the power-tree netlist; matches carrier/docs/BRINGUP.md staging. Arrows = rail dependency (parent -&gt; child).</text>
 <text x="40" y="76" font-size="12" font-weight="bold" fill="#92400e">stage 0 — always-on (pre-DIP / pre-PD)</text>
@@ -28,7 +28,7 @@
 <text x="50" y="550" fill="#374151" font-size="10">load 0.000 A / lim 0.00 A</text>
 <rect x="40" y="602" width="250" height="46" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="50" y="619" font-weight="bold" font-size="12">+5V_REG  (5 V)</text>
-<text x="50" y="636" fill="#374151" font-size="10">load 2.664 A / lim 6.00 A  ·  EN_5V0</text>
+<text x="50" y="636" fill="#374151" font-size="10">load 2.744 A / lim 6.00 A  ·  EN_5V0</text>
 <rect x="40" y="674" width="250" height="46" rx="8" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.5"/>
 <text x="50" y="691" font-weight="bold" font-size="12">+3V3_REG  (3.3 V)</text>
 <text x="50" y="708" fill="#374151" font-size="10">load 2.245 A / lim 6.00 A  ·  EN_3V3</text>
@@ -69,6 +69,9 @@
 <text x="420" y="1219" font-weight="bold" font-size="12">+5V_LCD  (5 V)</text>
 <text x="420" y="1236" fill="#374151" font-size="10">load 0.453 A / lim 1.00 A  ·  EN_LCD_5V</text>
 <rect x="410" y="1262" width="250" height="46" rx="8" fill="#ecfdf5" stroke="#065f46" stroke-width="1.5"/>
-<text x="420" y="1279" font-weight="bold" font-size="12">+5V_USB  (5 V)</text>
-<text x="420" y="1296" fill="#374151" font-size="10">load 0.503 A / lim 1.00 A  ·  EN_USB</text>
+<text x="420" y="1279" font-weight="bold" font-size="12">+5V_MOTOR_IO  (5 V)</text>
+<text x="420" y="1296" fill="#374151" font-size="10">load 0.000 A / lim 0.52 A</text>
+<rect x="410" y="1322" width="250" height="46" rx="8" fill="#ecfdf5" stroke="#065f46" stroke-width="1.5"/>
+<text x="420" y="1339" font-weight="bold" font-size="12">+5V_USB  (5 V)</text>
+<text x="420" y="1356" fill="#374151" font-size="10">load 0.503 A / lim 1.00 A  ·  EN_USB</text>
 </svg>

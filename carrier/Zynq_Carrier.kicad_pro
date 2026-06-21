@@ -539,6 +539,10 @@
       },
       {
         "netclass": "POWER",
+        "pattern": "+5V_MOTOR_IO"
+      },
+      {
+        "netclass": "POWER",
         "pattern": "+5V_REG"
       },
       {

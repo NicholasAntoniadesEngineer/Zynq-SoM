@@ -16,13 +16,13 @@
 set_property -dict {PACKAGE_PIN AA9  IOSTANDARD LVCMOS33} [get_ports {DBG_UART_RXD}]  ;# J2.42 IO_L11P_T1_SRCC_13 <- usb_jtag
 #   ^ SRCC-capable: # create_clock -name DBG_UART_RXD -period <ns> [get_ports {DBG_UART_RXD}]
 set_property -dict {PACKAGE_PIN AA8  IOSTANDARD LVCMOS33} [get_ports {DBG_UART_TXD}]  ;# J2.40 IO_L11N_T1_SRCC_13 <- usb_jtag
+set_property -dict {PACKAGE_PIN V10  IOSTANDARD LVCMOS33} [get_ports {ESC_BUF_OE_N}]  ;# J2.57 IO_L1P_T0_13 <- motor_pwm
+set_property -dict {PACKAGE_PIN V9   IOSTANDARD LVCMOS33} [get_ports {ESC_FAULT_N}]  ;# J2.37 IO_L1N_T0_13 <- motor_sense
 set_property -dict {PACKAGE_PIN U7   IOSTANDARD LVCMOS33} [get_ports {IO_25_13}]  ;# J2.23 IO_25_13 <- user_io
 set_property -dict {PACKAGE_PIN Y10  IOSTANDARD LVCMOS33} [get_ports {IO_L10_N_13}]  ;# J2.51 IO_L10N_T1_13 <- pmod
 set_property -dict {PACKAGE_PIN Y11  IOSTANDARD LVCMOS33} [get_ports {IO_L10_P_13}]  ;# J2.53 IO_L10P_T1_13 <- pmod
 set_property -dict {PACKAGE_PIN AB2  IOSTANDARD LVCMOS33} [get_ports {IO_L15_P_13}]  ;# J2.9 IO_L15P_T2_DQS_13 <- user_io
 set_property -dict {PACKAGE_PIN R6   IOSTANDARD LVCMOS33} [get_ports {IO_L19_P_13}]  ;# J2.12 IO_L19P_T3_13 <- user_io
-set_property -dict {PACKAGE_PIN V10  IOSTANDARD LVCMOS33} [get_ports {IO_L1P_13}]  ;# J2.57 IO_L1P_T0_13 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN V9   IOSTANDARD LVCMOS33} [get_ports {IO_L1_N_13}]  ;# J2.37 IO_L1N_T0_13 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN V5   IOSTANDARD LVCMOS33} [get_ports {IO_L21_P_13}]  ;# J2.13 IO_L21P_T3_DQS_13 <- user_io
 set_property -dict {PACKAGE_PIN U6   IOSTANDARD LVCMOS33} [get_ports {IO_L22_P_13}]  ;# J2.19 IO_L22P_T3_13 <- user_io
 set_property -dict {PACKAGE_PIN W5   IOSTANDARD LVCMOS33} [get_ports {IO_L24_N_13}]  ;# J2.7 IO_L24N_T3_13 <- user_io
@@ -66,6 +66,16 @@ set_property -dict {PACKAGE_PIN T22  IOSTANDARD LVCMOS33} [get_ports {CAM_EN}]  
 set_property -dict {PACKAGE_PIN U22  IOSTANDARD LVCMOS33} [get_ports {CAM_LED}]  ;# J3.87 IO_L2N_T0_33 <- camera
 set_property -dict {PACKAGE_PIN T21  IOSTANDARD LVCMOS33} [get_ports {CAM_SCL}]  ;# J3.86 IO_L1P_T0_33 <- camera
 set_property -dict {PACKAGE_PIN U21  IOSTANDARD LVCMOS33} [get_ports {CAM_SDA}]  ;# J3.89 IO_L1N_T0_33 <- camera
+set_property -dict {PACKAGE_PIN W16  IOSTANDARD LVCMOS33} [get_ports {ESC_PWM_IN0}]  ;# J2.81 IO_L14P_T2_SRCC_33 <- motor_pwm
+#   ^ SRCC-capable: # create_clock -name ESC_PWM_IN0 -period <ns> [get_ports {ESC_PWM_IN0}]
+set_property -dict {PACKAGE_PIN Y16  IOSTANDARD LVCMOS33} [get_ports {ESC_PWM_IN1}]  ;# J2.83 IO_L14N_T2_SRCC_33 <- motor_pwm
+set_property -dict {PACKAGE_PIN Y19  IOSTANDARD LVCMOS33} [get_ports {ESC_PWM_IN2}]  ;# J2.93 IO_L11P_T1_SRCC_33 <- motor_pwm
+#   ^ SRCC-capable: # create_clock -name ESC_PWM_IN2 -period <ns> [get_ports {ESC_PWM_IN2}]
+set_property -dict {PACKAGE_PIN AA19 IOSTANDARD LVCMOS33} [get_ports {ESC_PWM_IN3}]  ;# J2.91 IO_L11N_T1_SRCC_33 <- motor_pwm
+set_property -dict {PACKAGE_PIN V22  IOSTANDARD LVCMOS33} [get_ports {ESC_PWM_IN4}]  ;# J3.91 IO_L3P_T0_DQS_33 <- motor_pwm
+set_property -dict {PACKAGE_PIN W22  IOSTANDARD LVCMOS33} [get_ports {ESC_PWM_IN5}]  ;# J3.93 IO_L3N_T0_DQS_33 <- motor_pwm
+set_property -dict {PACKAGE_PIN U20  IOSTANDARD LVCMOS33} [get_ports {ESC_PWM_IN6}]  ;# J3.92 IO_L5P_T0_33 <- motor_pwm
+set_property -dict {PACKAGE_PIN V20  IOSTANDARD LVCMOS33} [get_ports {ESC_PWM_IN7}]  ;# J3.94 IO_L5N_T0_33 <- motor_pwm
 set_property -dict {PACKAGE_PIN W13  IOSTANDARD LVCMOS33} [get_ports {HDMI_RX_5V_DET}]  ;# J2.44 IO_L20N_T3_33 <- hdmi_rx
 set_property -dict {PACKAGE_PIN V13  IOSTANDARD LVCMOS33} [get_ports {HDMI_RX_CEC}]  ;# J2.59 IO_L20P_T3_33 <- hdmi_rx
 # tmds_pair (100R): HDMI_RX_CLK_P / HDMI_RX_CLK_N
@@ -81,16 +91,6 @@ set_property -dict {PACKAGE_PIN AB17 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D1_
 # tmds_pair (100R): HDMI_RX_D2_P / HDMI_RX_D2_N
 set_property -dict {PACKAGE_PIN AA16 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D2_P}]  ;# J2.78 IO_L18P_T2_33 <- hdmi_rx, hdmi_rx_term
 set_property -dict {PACKAGE_PIN AB16 IOSTANDARD TMDS_33} [get_ports {HDMI_RX_D2_N}]  ;# J2.80 IO_L18N_T2_33 <- hdmi_rx, hdmi_rx_term
-set_property -dict {PACKAGE_PIN AA19 IOSTANDARD LVCMOS33} [get_ports {IO_L11_SRCC_N_33}]  ;# J2.91 IO_L11N_T1_SRCC_33 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN Y19  IOSTANDARD LVCMOS33} [get_ports {IO_L11_SRCC_P_33}]  ;# J2.93 IO_L11P_T1_SRCC_33 <- unclaimed (wave-3 function map)
-#   ^ SRCC-capable: # create_clock -name IO_L11_SRCC_P_33 -period <ns> [get_ports {IO_L11_SRCC_P_33}]
-set_property -dict {PACKAGE_PIN Y16  IOSTANDARD LVCMOS33} [get_ports {IO_L14_SRCC_N_33}]  ;# J2.83 IO_L14N_T2_SRCC_33 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN W16  IOSTANDARD LVCMOS33} [get_ports {IO_L14_SRCC_P_33}]  ;# J2.81 IO_L14P_T2_SRCC_33 <- unclaimed (wave-3 function map)
-#   ^ SRCC-capable: # create_clock -name IO_L14_SRCC_P_33 -period <ns> [get_ports {IO_L14_SRCC_P_33}]
-set_property -dict {PACKAGE_PIN W22  IOSTANDARD LVCMOS33} [get_ports {IO_L3_DQS_N_33}]  ;# J3.93 IO_L3N_T0_DQS_33 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN V22  IOSTANDARD LVCMOS33} [get_ports {IO_L3_DQS_P_33}]  ;# J3.91 IO_L3P_T0_DQS_33 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN V20  IOSTANDARD LVCMOS33} [get_ports {IO_L5_N_33}]  ;# J3.94 IO_L5N_T0_33 <- unclaimed (wave-3 function map)
-set_property -dict {PACKAGE_PIN U20  IOSTANDARD LVCMOS33} [get_ports {IO_L5_P_33}]  ;# J3.92 IO_L5P_T0_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN V18  IOSTANDARD LVCMOS33} [get_ports {IO_L6_P_33}]  ;# J2.89 IO_L6P_T0_33 <- unclaimed (wave-3 function map)
 set_property -dict {PACKAGE_PIN U14  IOSTANDARD LVCMOS33} [get_ports {PL_BTN0}]  ;# J2.79 IO_25_33 <- bringup_rails
 set_property -dict {PACKAGE_PIN V17  IOSTANDARD LVCMOS33} [get_ports {PL_BTN1}]  ;# J2.87 IO_L16N_T2_33 <- bringup_rails

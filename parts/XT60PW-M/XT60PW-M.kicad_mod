@@ -1,0 +1,389 @@
+(footprint
+	"XT60PW-M"
+	(version 20240108)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"CONN-TH_XT60PW-M — XT60PW-M (CONN-TH_XT60PW-M) (EasyEDA/LCSC C98732, faithful conversion)"
+	)
+	(tags "Power Connectors")
+	(attr through_hole)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -8.75 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"XT60PW-M"
+		(at 0 8.75 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C98732.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"XT60PW-M (CONN-TH_XT60PW-M)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C98732"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center 4.953 7.747)
+		(end 4.983 7.747)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 4.9016 5.9937)
+		(end 4.6989 6.2231)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 4.6989 6.2231)
+		(end 3.9369 6.8581)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.9369 6.8581)
+		(end 3.1749 7.2391)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.1749 7.2391)
+		(end 2.1589 7.4931)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 2.1589 7.4931)
+		(end 1.1429 7.7471)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.1429 7.7471)
+		(end -13.1655 7.7471)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -13.1655 7.7471)
+		(end -13.1655 -7.7469)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -13.1655 -7.7469)
+		(end 1.0159 -7.7469)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.0159 -7.7469)
+		(end 1.7779 -7.6199)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.7779 -7.6199)
+		(end 2.7939 -7.3659)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 2.7939 -7.3659)
+		(end 3.8099 -6.8579)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.8099 -6.8579)
+		(end 4.8259 -6.0959)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 4.8259 -6.0959)
+		(end 4.9529 -5.9689)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 4.9529 -5.9689)
+		(end 4.9016 5.9937)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -13.1655 7.7501)
+		(end 0.9999 7.7501)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -13.1655 -7.7499)
+		(end 0.9999 -7.7499)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -13.1655 7.7501)
+		(end -13.1655 -7.7499)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 4.9092 4.5437)
+		(end 4.9016 5.9937)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 4.9475 -2.7382)
+		(end 4.919 2.6763)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 4.9649 -6.0619)
+		(end 4.9564 -4.4412)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_arc
+		(start 0.9369 -7.7469)
+		(mid 3.1096 -7.2838)
+		(end 4.9649 -6.0619)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_arc
+		(start 0.8889 7.7471)
+		(mid 3.0616 7.284)
+		(end 4.9169 6.0621)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_text
+		user
+		"-"
+		(at 0.556 6.096 90)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 2.032 2.032)
+				(thickness 0.2032)
+			)
+		)
+	)
+	(fp_text
+		user
+		"+"
+		(at 0.81 -4.953 90)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 2.032 2.032)
+				(thickness 0.2032)
+			)
+		)
+	)
+	(fp_circle
+		(center 3 -3.5999)
+		(end 3.5001 -3.5999)
+		(stroke
+			(width 1)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(fp_circle
+		(center 3 3.5999)
+		(end 3.5001 3.5999)
+		(stroke
+			(width 1)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.Fab")
+	)
+	(pad
+		"4"
+		thru_hole
+		oval
+		(at -3 6.75 90)
+		(size 1.199998 2.199996)
+		(drill oval 0.599998 1.599997)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"3"
+		thru_hole
+		oval
+		(at -3 -6.7501 90)
+		(size 1.199998 2.199996)
+		(drill oval 0.599998 1.599997)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"1"
+		thru_hole
+		circle
+		(at 3 3.5999 90)
+		(size 3.799992 3.799992)
+		(drill 2.90002)
+		(layers "*.Cu" "*.Mask")
+	)
+	(pad
+		"2"
+		thru_hole
+		circle
+		(at 3 -3.5999 90)
+		(size 3.799992 3.799992)
+		(drill 2.90002)
+		(layers "*.Cu" "*.Mask")
+	)
+	(model
+		"${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl"
+		(offset
+			(xyz -4.1 0 -3)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

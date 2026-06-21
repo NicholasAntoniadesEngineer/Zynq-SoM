@@ -96,6 +96,7 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     "C23198": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155, source="JLC desc 0603WAF5232T5E 52.3k 100mW 75V"),
     "C188070":Ratings("res", p_max=1.0, tol="±1%", temp_max=155, source="JLC desc RLM12FTCMR010 10mR 1W 1206 shunt"),
     "C393094":Ratings("res", p_max=1.0, tol="±1%", temp_max=155, source="JLC desc RLM12FTCMR020 20mR 1W 1206 shunt"),
+    "C25508": Ratings("res", p_max=0.0625, tol="±5%", temp_max=155, source="4D03WGJ0330T5E 4x33R 0603x4 isolated array, 1/16W/elem (motor_io ESC-output series-damping)"),
     # ---- inductors ----------------------------------------------------------
     "C38117": Ratings("ind", i_max=2.4, tol="±20%", source="JLC desc SWPA4030S100MT 10uH Isat 2.4A"),
     "C37429": Ratings("ind", i_max=4.1, tol="±20%", source="JLC desc SWPA8040S100MT 10uH Isat 4.1A"),
@@ -113,6 +114,7 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     "C124691": Ratings("diode", v_max=5.5, temp_max=125, source="TPD4E1U06DBVR 4-ch GND-ref ESD: SLLS478 VRWM 5.5V, CL 0.8pF, +-8kV IEC61000-4-2 (pmod/pmod_expansion clamps; audit 2026-06-20)"),
     "C106794": Ratings("diode", v_max=5.5, temp_max=125, source="TPD4E02B04 TMDS RX ESD VRWM 5.5V"),
     "C138714": Ratings("diode", v_max=5.5, temp_max=125, source="TPD4E05U06 4-ch GND-ref TVS: SLVSBO7O VRWM 5.5V, VBR(min) 6V, CL 0.5pF, +-12kV contact (HDMI-RX slow-line ESD)"),
+    "C42440491":Ratings("diode", v_max=28.0, temp_max=150, source="SMBJ28A 28V standoff TVS 600W SMB (motor_io ESC-rail clamp; note its clamp >INA3221 26V CM, so the rail is bounded <=4S, not the TVS)"),
     # ---- MOSFET (Vds in vin_max for awareness; no derate rule fires) --------
     "C20917": Ratings("other", v_max=30.0, i_max=5.7, p_max=1.4, temp_max=150, source="AO3400A N-ch 30V Vds 5.7A SOT-23"),
     # ---- regulators / DC-DC / eFuse / load-switch / LDO (vin_max=abs-max) ---
@@ -128,6 +130,7 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     # ---- other ICs (digital/interface) — vin_max for awareness --------------
     "C132291":Ratings("ic", vin_max=6.0, temp_max=125, source="FUSB302B PD PHY abs-max VDD 6V"),
     "C181255":Ratings("ic", vin_max=6.0, temp_max=125, source="INA3221 monitor abs-max 6V"),
+    "C6779":  Ratings("ic", vin_max=7.0, temp_max=125, source="SN74HCT245PWR octal bus buffer abs-max VCC 7V; HCT TTL thresholds accept 3.3V inputs at 5V VCC (motor_io PL->ESC level buffer)"),
     "C7666":  Ratings("ic", vin_max=6.5, temp_max=125, source="SN74LVC1G08 abs-max Vcc 6.5V"),
     "C969151":Ratings("ic", vin_max=4.3, temp_max=85, source="CP2102N abs-max VDD 4.3V"),
     "C140276":Ratings("ic", vin_max=3.6, temp_max=85, source="TXS02612 level-shifter 1.1-3.6V"),

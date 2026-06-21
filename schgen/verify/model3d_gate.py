@@ -53,9 +53,12 @@ _DEFAULT_3DMODEL_DIR = Path(
 # on purpose (a wrong body is worse than none). Listed here so the gate counts
 # them as KNOWN gaps (not silent), with the reason. Keep sorted.
 _KNOWN_UNMATCHED: dict[str, str] = {
-    # all on-board parts now reference a resolving model (the real
-    # EasyEDA .wrl for 54, a stock Samtec FMC body, stock bucks for
-    # the 2 off-board orphans). No documented gaps remain.
+    # most on-board parts reference a resolving model (the real EasyEDA .wrl,
+    # a stock Samtec FMC body, stock bucks for the 2 off-board orphans).
+    "HX_PZ2.54-3x8P_ZZ": "EasyEDA part-add returned no 3D body for this 3x8 "
+                         "2.54mm header (motor_pwm ESC output); a wrong/approx "
+                         "box is worse than none — reference a generic pin-header "
+                         "body once a faithful one is sourced",
 }
 
 # ``(model`` then (across optional whitespace/newlines) a quoted path.

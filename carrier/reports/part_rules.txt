@@ -2,7 +2,7 @@ schgen per-part rule engine (ratings vs netlist usage)
 ==============================================================================
 
 enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
-159 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+165 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
 
 author waivers, verbatim (1):
   lcd:C2                 MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp
@@ -10,7 +10,7 @@ author waivers, verbatim (1):
 notes / advisory (1):
   + WAIVED CAP_V lcd:C2 (2.2u, LCSC C125847): 50V X7R on a 30V rail — needs >= 2x = 60V (margin 1.7x). Pick a higher-V part or c.waive_part_rule('C2', reason) [MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp]
 
-UNSPEC — reported, NOT failing (66):
+UNSPEC — reported, NOT failing (70):
   ? board_aux:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
   ? board_qwiic:J1 (ZX-SH1.0-4PWT, LCSC C7430446) — no ratings row
   ? board_services:BT1 (KH-CR1220-2, LCSC C5365933) — no ratings row
@@ -38,6 +38,10 @@ UNSPEC — reported, NOT failing (66):
   ? hdmi_tx:J1 (HDMI-019S, LCSC C111617) — no ratings row
   ? lcd:J1 (AFC07-S40FCA-00, LCSC C262572) — no ratings row
   ? microsd:J1 (TF-01A, LCSC C91145) — no ratings row
+  ? motor_pwm:J1 (HX PZ2.54-3x8P ZZ, LCSC C32713295) — no ratings row
+  ? motor_sense:C1 (100n) — cap rail unresolved
+  ? motor_sense:J2 (XT60PW-M, LCSC C98732) — no ratings row
+  ? motor_sense:J3 (XT60PW-M, LCSC C98732) — no ratings row
   ? pd_input:C3 (47n) — cap rail unresolved
   ? pd_input:J1 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
   ? pmod:J1 (DS1024-2x6R2, LCSC C49284652) — no ratings row
@@ -80,4 +84,4 @@ UNSPEC — reported, NOT failing (66):
 
 errors: none
 
-PART RULES: PASS (159 checks, 0 findings, 66 unspeced, 1 waived)
+PART RULES: PASS (165 checks, 0 findings, 70 unspeced, 1 waived)

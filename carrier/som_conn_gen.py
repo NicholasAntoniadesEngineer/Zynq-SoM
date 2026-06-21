@@ -209,6 +209,17 @@ FUNCTION_MAP: dict[str, str] = {
     "IO_L15_DQS_P_34": "LCD_B5", "IO_L14_SRCC_P_34": "LCD_B6", "IO_L18_N_34": "LCD_B7",
     "IO_L16_P_34": "LCD_PCLK",   "IO_L20_N_34": "LCD_HSYNC", "IO_L16_N_34": "LCD_VSYNC",
     "IO_L6_VREF_N_34": "LCD_DE", "IO_L17_P_34": "LCD_DISP",  "IO_L17_N_34": "LCD_BL_PWM",
+    # -- motor_pwm / motor_sense: 8 free bank-33 PL pins -> ESC PWM outputs (J2 +
+    #    J3) + 2 free bank-13 control pins (J2: OE -> motor_pwm, FAULT ->
+    #    motor_sense). ALL verified unclaimed before claiming: no consumer in any
+    #    subsystem, and the XDC reads "unclaimed (wave-3 function map)" for every
+    #    one. Bank 13/33 are +VCCO=+3V3 -> LVCMOS33, so the 3.3 V drive into the
+    #    HCT245 buffer A-side is structural. (benchtop drone-capability demo)
+    "IO_L14_SRCC_P_33": "ESC_PWM_IN0", "IO_L14_SRCC_N_33": "ESC_PWM_IN1",  # J2.81/83
+    "IO_L11_SRCC_P_33": "ESC_PWM_IN2", "IO_L11_SRCC_N_33": "ESC_PWM_IN3",  # J2.93/91
+    "IO_L3_DQS_P_33": "ESC_PWM_IN4",   "IO_L3_DQS_N_33": "ESC_PWM_IN5",    # J3.91/93
+    "IO_L5_P_33": "ESC_PWM_IN6",       "IO_L5_N_33": "ESC_PWM_IN7",        # J3.92/94
+    "IO_L1P_13": "ESC_BUF_OE_N",       "IO_L1_N_13": "ESC_FAULT_N",        # J2.57/37
 }
 
 # Bank-34 PUDC pin -> carrier function port. IO_L3P_PUDC_34 (J3.39) is the

@@ -1377,6 +1377,28 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         if near < EDGE_MARGIN - 0.1 or near + span_b > dim - EDGE_MARGIN + 0.1:
             return False
 
+    # CROSS-EDGE CORNER FIT (LAW 0/6): _pack_edges packs each edge as an INDEPENDENT
+    # 1D run, so a deep block on one edge and a deep block on the ADJACENT edge can
+    # occupy the SAME corner rectangle (a W-edge XT60+TVS block vs an S-edge HDMI
+    # block at the SW corner) — overlapping courtyards AND a real net short (the
+    # motor_sense XT60 GND pad into HDMI_RX_5V) that the per-block, per-edge
+    # corner-overhang check above can NOT see (it is 1D along each block's own
+    # edge). REJECT any board where two DIFFERENT-edge blocks' rects intersect
+    # within the CLEAR gap, so the grow loop sizes the board until the corner
+    # clears (or build_plan raises). Same-edge spacing is owned by the run packer's
+    # per-pair gaps, so only cross-edge pairs are tested. NEVER trims a block, NEVER
+    # softens a gate (LAW 4). Pre-fit boards are unchanged (no clean board trips it).
+    eb = plan.edge_blocks
+    for i in range(len(eb)):
+        a = eb[i]
+        for j in range(i + 1, len(eb)):
+            b = eb[j]
+            if a.edge == b.edge:
+                continue
+            if not (a.x + a.w + CLEAR <= b.x or b.x + b.w + CLEAR <= a.x
+                    or a.y + a.h + CLEAR <= b.y or b.y + b.h + CLEAR <= a.y):
+                return False
+
     occ = _Occupancy()
     # reserve the SoM body PLUS a clearance pad: the placement_mech keepout
     # (som_core) is drawn ~3% larger than the bare body for mating clearance, so a

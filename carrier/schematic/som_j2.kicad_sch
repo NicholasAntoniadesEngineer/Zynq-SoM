@@ -4391,7 +4391,7 @@
 		(uuid "a69dae6d-6c44-566d-be8c-f34d4d776d7f")
 	)
 	(hierarchical_label
-		"IO_L1_N_13"
+		"ESC_FAULT_N"
 		(shape bidirectional)
 		(at 135.89 76.2 180)
 		(effects
@@ -4487,7 +4487,7 @@
 		(uuid "f81022c4-db64-5e1e-9250-f25c3c55adcb")
 	)
 	(hierarchical_label
-		"IO_L1P_13"
+		"ESC_BUF_OE_N"
 		(shape bidirectional)
 		(at 135.89 101.6 180)
 		(effects
@@ -4607,7 +4607,7 @@
 		(uuid "fe934606-9ac4-5947-bf5c-919fed4ef2d3")
 	)
 	(hierarchical_label
-		"IO_L14_SRCC_P_33"
+		"ESC_PWM_IN0"
 		(shape bidirectional)
 		(at 135.89 132.08 180)
 		(effects
@@ -4619,7 +4619,7 @@
 		(uuid "88b5c62c-3b3a-566e-98ed-9d6429462992")
 	)
 	(hierarchical_label
-		"IO_L14_SRCC_N_33"
+		"ESC_PWM_IN1"
 		(shape bidirectional)
 		(at 104.14 134.62 180)
 		(effects
@@ -4655,7 +4655,7 @@
 		(uuid "300bd8ae-2288-5e1a-ae5b-565caccc87c5")
 	)
 	(hierarchical_label
-		"IO_L11_SRCC_N_33"
+		"ESC_PWM_IN3"
 		(shape bidirectional)
 		(at 135.89 144.78 180)
 		(effects
@@ -4667,7 +4667,7 @@
 		(uuid "be2112cb-9528-5c50-b36a-75cd9e9d7944")
 	)
 	(hierarchical_label
-		"IO_L11_SRCC_P_33"
+		"ESC_PWM_IN2"
 		(shape bidirectional)
 		(at 104.14 147.32 180)
 		(effects

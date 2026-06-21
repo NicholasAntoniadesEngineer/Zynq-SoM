@@ -1,0 +1,19 @@
+* motor_sense.cir — passive network of the ESC motor-rail telemetry sheet.
+* Active parts (INA3221 monitor, RS1 10mR shunt, XT60 in/out, SMBJ28A TVS) are
+* use_part'd faithful parts (not :C/:R), so only the bypass network is here.
+* Values mirror motor_sense.py one-for-one (parse_si):
+*   C1 100n  ESC rail HF bypass   (ESC_VRAIL_IN -> GND)
+*   C2 100n  INA3221 VS bypass    (V3V3_SC -> GND)
+*   C3 10u   INA3221 VS bulk      (V3V3_SC -> GND)
+*   R1 10k   INA3221 CRITICAL pull-up (V3V3_SC -> ESC_FAULT_N)
+.subckt motor_sense V3V3_SC ESC_VRAIL_IN ESC_FAULT_N STM32_I2C2_SCL STM32_I2C2_SDA GND
+C1 ESC_VRAIL_IN GND 100n
+C2 V3V3_SC GND 100n
+C3 V3V3_SC GND 10u
+R1 V3V3_SC ESC_FAULT_N 10k
+.ends motor_sense
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

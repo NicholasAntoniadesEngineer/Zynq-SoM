@@ -4015,6 +4015,55 @@ class _Engine:
             self.series.remove(s)
             x = round(x + pitch, 3)
 
+    def _trunk_series_columns(self) -> None:
+        """ABSOLUTE last-resort drain: a 2-pin series element bridging two SIGNAL
+        TRUNK nets that no template placed — e.g. an in-line current-sense shunt
+        across two multi-tap rail/trunk buses (motor_sense's RS1: ESC_VRAIL_IN <->
+        ESC_VRAIL, with the INA3221 + XT60s tapping both sides). Drawn as a
+        labeled column below the flow, both ends a stub-to-local-label that merges
+        by name with the bus's own islet (the idiom of _rung_islet_columns). Fires
+        ONLY for a part still UNPLACED after every other drain (``s[0] not in
+        self._done``) — so every existing sheet, which leaves no such element
+        unplaced, stays byte-identical; lingering already-placed series tuples are
+        skipped, never re-drawn."""
+        c = self.c
+
+        def named_sig(net: str) -> bool:
+            # a SIGNAL net already drawn-and-named elsewhere: a trunk, a bridged
+            # net, or one already locally/hier labelled (by the time this last
+            # drain runs an earlier drain may have bridged/labelled the shunt's
+            # trunk ends, so test all four — not just self.trunks)
+            if c.nets[net].net_class is not NetClass.SIGNAL:
+                return False
+            return (net in self.trunks or net in self.pl.label_bridged
+                    or any(l.name == net for l in self.pl.llabels)
+                    or any(h.name == net for h in self.pl.hlabels))
+
+        left = [s for s in self.series
+                if s[0] not in self._done
+                and named_sig(s[1]) and named_sig(s[2])]
+        if not left:
+            return
+        ex0, _, _, ey1 = self._extent()
+        x = gsnap(ex0 + 8 * U)
+        y0 = gceil(ey1 + 12 * U)
+        pitch = gceil(2 * self.sp.cap_pitch)
+        for s in left:
+            ref, a, b = s
+            self.llabel(a, round(x - 2 * U, 3), y0, 180)       # top trunk islet
+            self._bridge(a)
+            self.pl.plan(a, (round(x - 2 * U, 3), y0), (x, y0))
+            cur = (x, round(y0 + 2 * U, 3))
+            self.pl.plan(a, (x, y0), cur)
+            far_pt, far = self._vertical_2pin(ref, x, cur[1], a, downward=True)
+            assert far == b
+            end = (round(x - 2 * U, 3), far_pt[1])             # bottom trunk islet
+            self.pl.plan(b, far_pt, end)
+            self.llabel(b, *end, 180)
+            self._bridge(b)
+            self.series.remove(s)
+            x = round(x + pitch, 3)
+
     def _rung_islet_drop(self, far_net: str, pt: tuple[float, float],
                          sgn: int) -> None:
         """The wedged rung pin's labeled stub: a short horizontal run out of
@@ -4630,6 +4679,7 @@ class _Engine:
         #     top/bottom divider tap is drawn as ONE column, not split in two
         self._pull_rank_columns()
         self._series_port_columns()
+        self._trunk_series_columns()     # in-line shunt across two SIGNAL trunks
         for ch in [ch for ch in self.float_chains if ch.kind == "rail"]:
             self._leftover_chains_columns()
             break

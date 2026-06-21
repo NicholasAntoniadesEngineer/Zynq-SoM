@@ -2,11 +2,11 @@ schgen power-tree budget gate
 ================================================================
 
 sources:
-  +VBUS_IN    20.0 V  limit 3.00 A  load 1.296 A  (43%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
-  +3V3_SC      3.3 V  limit 0.30 A  load 0.021 A  (7%)  — SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here
+  +VBUS_IN    20.0 V  limit 3.00 A  load 1.319 A  (44%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
+  +3V3_SC      3.3 V  limit 0.30 A  load 0.022 A  (8%)  — SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here
   +5V_DBG      5.0 V  limit 0.50 A  load 0.045 A  (9%)  — debug USB-C VBUS (usb_jtag_connector J1) — host-supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag AP2112K-3.3 debug-island LDO; isolated from carrier +5V
 
-regulators (19) — numbered as in carrier/docs/power_tree.svg:
+regulators (20) — numbered as in carrier/docs/power_tree.svg:
   ( 1) board_aux:U1   SY6280AAC           +3V3 -> +3V3_AUX       load 0.211 A / limit 0.523 A (40%)  in 0.211 A [load_switch] ILIM = 6800/13000R = 523 mA
   ( 2) bringup_modules:U1   SY6280AAC           +3V3 -> +3V3_HDMI_TX   load 0.006 A / limit 0.523 A (1%)  in 0.006 A [load_switch] ILIM = 6800/13000R = 523 mA
   ( 3) bringup_modules:U10  SY6280AAC            +5V -> +5V_LCD        load 0.453 A / limit 1.000 A (45%)  in 0.453 A [load_switch] ILIM = 6800/6800R = 1000 mA
@@ -19,13 +19,14 @@ regulators (19) — numbered as in carrier/docs/power_tree.svg:
   (10) bringup_modules:U8   SY6280AAC           +3V3 -> +3V3_USER_LED  load 0.016 A / limit 0.523 A (3%)  in 0.016 A [load_switch] ILIM = 6800/13000R = 523 mA
   (11) bringup_modules:U9   SY6280AAC            +5V -> +5V_HDMI_TX    load 0.058 A / limit 0.523 A (11%)  in 0.058 A [load_switch] ILIM = 6800/13000R = 523 mA
   (12) fmc:U1   TLV75725PDYDR       +3V3 -> +2V5_VADJ      load 0.400 A / limit 0.400 A (100%)  in 0.400 A [ldo] 1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)
-  (13) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.296 A / limit 3.529 A (37%)  in 1.296 A [efuse] ILIM = 18000/5100R = 3529 mA
-  (14) pmod_expansion:U1   SY6280AAC           +3V3 -> +3V3_PMODX     load 0.104 A / limit 0.523 A (20%)  in 0.104 A [load_switch] ILIM = 6800/13000R = 523 mA
-  (15) power:U1   LM61460AANRJRR  +VIN_SYS -> +5V_REG        load 2.664 A / limit 6.000 A (44%)  in 0.740 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
-  (16) power:U2   LM61460AANRJRR       +5V -> +3V3_REG       load 2.245 A / limit 6.000 A (37%)  in 1.646 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
-  (17) power:U3   AP2112K-1.8         +3V3 -> +1V8_REG       load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
-  (18) power_som:U4   LM61460AANRJRR  +VIN_SYS -> +5V_SOM        load 2.154 A / limit 6.000 A (36%)  in 0.556 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
-  (19) usb_jtag:U4   AP2112K-3.3TRG1   +5V_DBG -> +3V3_DBG       load 0.045 A / limit 0.600 A (8%)  in 0.045 A [ldo] 600 mA LDO
+  (13) motor_pwm:U3   SY6280AAC            +5V -> +5V_MOTOR_IO   load 0.000 A / limit 0.523 A (0%)  in 0.000 A [load_switch] ILIM = 6800/13000R = 523 mA
+  (14) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 1.319 A / limit 3.529 A (37%)  in 1.319 A [efuse] ILIM = 18000/5100R = 3529 mA
+  (15) pmod_expansion:U1   SY6280AAC           +3V3 -> +3V3_PMODX     load 0.104 A / limit 0.523 A (20%)  in 0.104 A [load_switch] ILIM = 6800/13000R = 523 mA
+  (16) power:U1   LM61460AANRJRR  +VIN_SYS -> +5V_REG        load 2.744 A / limit 6.000 A (46%)  in 0.762 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
+  (17) power:U2   LM61460AANRJRR       +5V -> +3V3_REG       load 2.245 A / limit 6.000 A (37%)  in 1.646 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
+  (18) power:U3   AP2112K-1.8         +3V3 -> +1V8_REG       load 0.006 A / limit 0.600 A (1%)  in 0.006 A [ldo] 600 mA LDO
+  (19) power_som:U4   LM61460AANRJRR  +VIN_SYS -> +5V_SOM        load 2.154 A / limit 6.000 A (36%)  in 0.556 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
+  (20) usb_jtag:U4   AP2112K-3.3TRG1   +5V_DBG -> +3V3_DBG       load 0.045 A / limit 0.600 A (8%)  in 0.045 A [ldo] 600 mA LDO
 
 shunt bridges (series R rail->rail, power_mon):
   power_mon:RS1 +VIN -> +VIN_SYS
@@ -67,6 +68,7 @@ declared draws (c.draws — every number cites its source):
   +3V3_SC               5.0 mA  bringup_en_modules 11x SN74LVC1G08 + 100k pull networks
   +3V3_SC               5.0 mA  bringup_rails      TCA9535 + DIP/I2C/INT pull networks (dossier R3 < 5 mA)
   +3V3_SC               4.0 mA  debug_boot         BOOT0 strap ~2 mA closed + BOOTSEL pulls
+  +3V3_SC               2.0 mA  motor_sense        INA3221 ~0.35 mA + CRITICAL pull-up
   +3V3_SC               2.0 mA  power_mon          2x INA3221 ~0.7 mA + ALERT pull-up
   +3V3_SC               2.0 mA  usb_pd             FUSB302B VDD (<1 mA); SC_INT_N pulled on bringup_rails (G2 wire-OR, single 10k)
   +3V3_SC               0.5 mA  usbc_otg           USBOTG_FLT# 100k pull-up (G4 re-rail)
@@ -74,6 +76,7 @@ declared draws (c.draws — every number cites its source):
   +3V3_SD             250.0 mA  microsd            SD card write burst ~200 mA + pull-ups + TXS02612 VCCB
   +3V3_USER_LED         4.0 mA  bringup_modules    status LED (330R) on the gated output
   +3V3_USER_LED        12.0 mA  user_io            red ~1.3 mA (1k) + green/blue/white up to ~3.5 mA each (200R)
+  +5V                  80.0 mA  motor_pwm          HCT245 buffer + light servo allowance (ILIM 523mA)
   +5V                   4.0 mA  power              PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA
   +5V_HDMI_TX           3.0 mA  bringup_modules    status LED (1k) on the gated output
   +5V_HDMI_TX          55.0 mA  hdmi_tx            HDMI source +5V to cable — TPD12S016 switch limit 55 mA (DS 7.3.10)
@@ -98,19 +101,20 @@ rail totals (declared + child regulator inputs):
   +3V3_PMOD          0.204 A  @ 3.3 V
   +3V3_PMODX         0.104 A  @ 3.3 V
   +3V3_REG           2.245 A  @ 3.3 V
-  +3V3_SC            0.021 A  @ 3.3 V
+  +3V3_SC            0.022 A  @ 3.3 V
   +3V3_SD            0.254 A  @ 3.3 V
   +3V3_USER_LED      0.016 A  @ 3.3 V
-  +5V                2.664 A  @ 5.0 V
+  +5V                2.744 A  @ 5.0 V
   +5V_DBG            0.045 A  @ 5.0 V
   +5V_HDMI_TX        0.058 A  @ 5.0 V
   +5V_LCD            0.453 A  @ 5.0 V
-  +5V_REG            2.664 A  @ 5.0 V
+  +5V_MOTOR_IO       0.000 A  @ 5.0 V
+  +5V_REG            2.744 A  @ 5.0 V
   +5V_SOM            2.154 A  @ 4.7 V
   +5V_USB            0.503 A  @ 5.0 V
-  +VBUS_IN           1.296 A  @ 20.0 V
-  +VIN               1.296 A  @ 20.0 V
-  +VIN_SYS           1.296 A  @ 20.0 V
+  +VBUS_IN           1.319 A  @ 20.0 V
+  +VIN               1.319 A  @ 20.0 V
+  +VIN_SYS           1.319 A  @ 20.0 V
 
 notes — resolved audits, recomputed every run (1):
   + VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.20 uF at the receptacle (+VBUS_IN) — within the ~10 uF cSnkBulk guidance; 10.0 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~10 mA.

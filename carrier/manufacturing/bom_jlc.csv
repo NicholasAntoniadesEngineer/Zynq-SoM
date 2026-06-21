@@ -2,17 +2,17 @@ Comment,Designator,Footprint,LCSC
 1.5R,lcd:R1,Resistor_SMD:R_0603_1608Metric,C22769
 100R,"camera:R1,camera:R2,camera:R3,debug_boot:R3",Resistor_SMD:R_0603_1608Metric,C22775
 100k,"board_aux:R2,board_aux:R4,bringup_en:R1,bringup_en:R2,bringup_en:R3,bringup_en:R4,bringup_en:R5,bringup_en:R6,bringup_en_modules:R1,bringup_en_modules:R10,bringup_en_modules:R11,bringup_en_modules:R12,bringup_en_modules:R13,bringup_en_modules:R14,bringup_en_modules:R15,bringup_en_modules:R16,bringup_en_modules:R17,bringup_en_modules:R18,bringup_en_modules:R19,bringup_en_modules:R2,bringup_en_modules:R20,bringup_en_modules:R21,bringup_en_modules:R3,bringup_en_modules:R4,bringup_en_modules:R5,bringup_en_modules:R6,bringup_en_modules:R7,bringup_en_modules:R8,bringup_en_modules:R9,bringup_rails:R1,bringup_rails:R2,bringup_rails:R3,lcd:R4,lcd:R5,microsd:R1,microsd:R2,microsd:R3,microsd:R4,microsd:R5,pd_input:R3,pd_input:R6,pmod_expansion:R2,power:R8,usb_jtag:R4,usbc_otg:R3,usbc_otg:R5",Resistor_SMD:R_0603_1608Metric,C25803
-100n,"board_aux:C1,board_aux:C2,board_aux:C4,board_aux:C5,board_services:C1,board_services:C2,board_services:C3,bringup_en:C1,bringup_en:C2,bringup_en:C3,bringup_en_modules:C1,bringup_en_modules:C10,bringup_en_modules:C11,bringup_en_modules:C2,bringup_en_modules:C3,bringup_en_modules:C4,bringup_en_modules:C5,bringup_en_modules:C6,bringup_en_modules:C7,bringup_en_modules:C8,bringup_en_modules:C9,bringup_modules:C1,bringup_modules:C10,bringup_modules:C11,bringup_modules:C12,bringup_modules:C13,bringup_modules:C14,bringup_modules:C15,bringup_modules:C16,bringup_modules:C17,bringup_modules:C18,bringup_modules:C19,bringup_modules:C2,bringup_modules:C20,bringup_modules:C3,bringup_modules:C4,bringup_modules:C5,bringup_modules:C6,bringup_modules:C7,bringup_modules:C8,bringup_modules:C9,bringup_rails:C1,bringup_rails:C2,bringup_rails:C3,bringup_rails:C4,camera:C1,fmc:C2,fmc:C5,hdmi_rx:C1,hdmi_rx_term:C1,hdmi_tx:C1,hdmi_tx:C2,hdmi_tx:C3,lcd:C3,microsd:C1,microsd:C2,microsd:C4,pd_input:C1,pmod:C1,pmod:C3,pmod_expansion:C1,pmod_expansion:C3,pmod_expansion:C4,power:C1,power:C25,power:C29,power:C4,power:C7,power:C9,power_mon:C1,power_mon:C2,power_som:C14,power_som:C17,power_som:C20,power_som:C25,som_decoupling:C10,som_decoupling:C11,som_decoupling:C12,som_decoupling:C15,som_decoupling:C16,som_decoupling:C17,som_decoupling:C18,som_decoupling:C3,som_decoupling:C4,som_decoupling:C5,som_decoupling:C6,som_decoupling:C9,uart_bridge:C1,uart_bridge:C3,uart_bridge:C4,usb_jtag:C3,usb_jtag:C4,usb_jtag:C7,usb_pd:C1,usb_pd:C3,usbc_otg:C1,user_io:C1",Capacitor_SMD:C_0603_1608Metric,C14663
+100n,"board_aux:C1,board_aux:C2,board_aux:C4,board_aux:C5,board_services:C1,board_services:C2,board_services:C3,bringup_en:C1,bringup_en:C2,bringup_en:C3,bringup_en_modules:C1,bringup_en_modules:C10,bringup_en_modules:C11,bringup_en_modules:C2,bringup_en_modules:C3,bringup_en_modules:C4,bringup_en_modules:C5,bringup_en_modules:C6,bringup_en_modules:C7,bringup_en_modules:C8,bringup_en_modules:C9,bringup_modules:C1,bringup_modules:C10,bringup_modules:C11,bringup_modules:C12,bringup_modules:C13,bringup_modules:C14,bringup_modules:C15,bringup_modules:C16,bringup_modules:C17,bringup_modules:C18,bringup_modules:C19,bringup_modules:C2,bringup_modules:C20,bringup_modules:C3,bringup_modules:C4,bringup_modules:C5,bringup_modules:C6,bringup_modules:C7,bringup_modules:C8,bringup_modules:C9,bringup_rails:C1,bringup_rails:C2,bringup_rails:C3,bringup_rails:C4,camera:C1,fmc:C2,fmc:C5,hdmi_rx:C1,hdmi_rx_term:C1,hdmi_tx:C1,hdmi_tx:C2,hdmi_tx:C3,lcd:C3,microsd:C1,microsd:C2,microsd:C4,motor_pwm:C1,motor_pwm:C2,motor_sense:C1,motor_sense:C2,pd_input:C1,pmod:C1,pmod:C3,pmod_expansion:C1,pmod_expansion:C3,pmod_expansion:C4,power:C1,power:C25,power:C29,power:C4,power:C7,power:C9,power_mon:C1,power_mon:C2,power_som:C14,power_som:C17,power_som:C20,power_som:C25,som_decoupling:C10,som_decoupling:C11,som_decoupling:C12,som_decoupling:C15,som_decoupling:C16,som_decoupling:C17,som_decoupling:C18,som_decoupling:C3,som_decoupling:C4,som_decoupling:C5,som_decoupling:C6,som_decoupling:C9,uart_bridge:C1,uart_bridge:C3,uart_bridge:C4,usb_jtag:C3,usb_jtag:C4,usb_jtag:C7,usb_pd:C1,usb_pd:C3,usbc_otg:C1,user_io:C1",Capacitor_SMD:C_0603_1608Metric,C14663
 100u,usbc_otg:C3,RVT1C101M0605_100UF_16V:RVT1C101M0605_100UF_16V,C970684
 10R,"power:R11,power:R13,power_som:R17",Resistor_SMD:R_0603_1608Metric,C22859
-10k,"board_services:R1,bringup_modules:R21,bringup_rails:R6,bringup_rails:R7,bringup_rails:R8,bringup_rails:R9,debug_boot:R4,debug_boot:R5,debug_boot:R6,hdmi_rx:R3,hdmi_tx:R1,hdmi_tx:R2,lcd:R6,microsd:R6,power:R2,power:R5,power_mon:R1,power_som:R12,usb_jtag:R1,usb_jtag:R2,usb_jtag:R3,user_io:R5,user_io:R6,user_io:R7,user_io:R8",Resistor_SMD:R_0603_1608Metric,C25804
-10mR,"power_mon:RS1,power_mon:RS2,power_mon:RS3",RLM12FTCMR010:RLM12FTCMR010,C188070
-10u,"board_aux:C3,camera:C2,fmc:C1,fmc:C4,hdmi_tx:C5,lcd:C1,lcd:C4,pmod:C2,pmod:C4,pmod_expansion:C2,pmod_expansion:C5,power_mon:C3,uart_bridge:C2,usb_jtag:C2,usb_jtag_connector:C1,usb_pd:C2,usb_uart_connector:C1",Capacitor_SMD:C_0805_2012Metric,C15850
+10k,"board_services:R1,bringup_modules:R21,bringup_rails:R6,bringup_rails:R7,bringup_rails:R8,bringup_rails:R9,debug_boot:R4,debug_boot:R5,debug_boot:R6,hdmi_rx:R3,hdmi_tx:R1,hdmi_tx:R2,lcd:R6,microsd:R6,motor_pwm:R1,motor_sense:R1,power:R2,power:R5,power_mon:R1,power_som:R12,usb_jtag:R1,usb_jtag:R2,usb_jtag:R3,user_io:R5,user_io:R6,user_io:R7,user_io:R8",Resistor_SMD:R_0603_1608Metric,C25804
+10mR,"motor_sense:RS1,power_mon:RS1,power_mon:RS2,power_mon:RS3",RLM12FTCMR010:RLM12FTCMR010,C188070
+10u,"board_aux:C3,camera:C2,fmc:C1,fmc:C4,hdmi_tx:C5,lcd:C1,lcd:C4,motor_pwm:C3,motor_sense:C3,pmod:C2,pmod:C4,pmod_expansion:C2,pmod_expansion:C5,power_mon:C3,uart_bridge:C2,usb_jtag:C2,usb_jtag_connector:C1,usb_pd:C2,usb_uart_connector:C1",Capacitor_SMD:C_0805_2012Metric,C15850
 10u,"power:C2,power:C3,power_som:C15,power_som:C16",Capacitor_SMD:C_1206_3216Metric,C13585
 10u,pd_input:C2,Capacitor_SMD:C_1210_3225Metric,C596319
 10uH,lcd:L1,SWPA4030S100MT:SWPA4030S100MT,C38117
 10uH,"power:L1,power:L2,power_som:L3",SWPA8040S100MT:SWPA8040S100MT,C37429
-13k,"board_aux:R1,bringup_modules:R1,bringup_modules:R13,bringup_modules:R15,bringup_modules:R17,bringup_modules:R3,bringup_modules:R7,pmod_expansion:R1,power_som:R15",Resistor_SMD:R_0603_1608Metric,C22797
+13k,"board_aux:R1,bringup_modules:R1,bringup_modules:R13,bringup_modules:R15,bringup_modules:R17,bringup_modules:R3,bringup_modules:R7,motor_pwm:R2,pmod_expansion:R1,power_som:R15",Resistor_SMD:R_0603_1608Metric,C22797
 15k,hdmi_rx:R4,Resistor_SMD:R_0603_1608Metric,C22809
 16p,"usb_jtag:C5,usb_jtag:C6",Capacitor_SMD:C_0603_1608Metric,C162205
 1k,"board_services:R2,bringup_modules:R12,bringup_modules:R18,bringup_modules:R20,hdmi_rx:R1,power:R12,power:R15,power:R3,power:R7,power_som:R16,power_som:R19,uart_bridge:R1,usbc_otg:R4,user_io:R1",Resistor_SMD:R_0603_1608Metric,C21190
@@ -57,10 +57,11 @@ DSHP04TSGER,"board_aux:SW1,bringup_rails:SW1,bringup_rails:SW6,pmod_expansion:SW
 DSHP08TSGER,bringup_rails:SW2,DSHP08TSGER:DSHP08TSGER,C3293147
 FUSB302BMPX,usb_pd:U1,Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm,C132291
 HDMI-019S,"hdmi_rx:J1,hdmi_tx:J1",HDMI-019S:HDMI-019S,C111617
+HX PZ2.54-3x8P ZZ,motor_pwm:J1,HX_PZ2.54-3x8P_ZZ:HX_PZ2.54-3x8P_ZZ,C32713295
 HX5008NLT,ethernet:T1,HX5008NLT:HX5008NLT,C962544
 HX_JN1.27-2x5,debug_boot:J2,HX_JN1.27-2x5_TP_H4.9:HX_JN1.27-2x5_TP_H4.9,C42372555
 Header_2x20_2.54mm,fmc:J1,Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical,
-INA3221AIRGVR,"power_mon:U1,power_mon:U2",INA3221AIRGVR:INA3221AIRGVR,C181255
+INA3221AIRGVR,"motor_sense:U2,power_mon:U1,power_mon:U2",INA3221AIRGVR:INA3221AIRGVR,C181255
 KH-5224-8P8C-D,rj45_connector:J1,KH-5224-8P8C-D:KH-5224-8P8C-D,C2828085
 KH-CR1220-2,board_services:BT1,KH-CR1220-2:KH-CR1220-2,C5365933
 LM61460AANRJRR,"power:U1,power:U2,power_som:U4",LM61460AANRJRR:LM61460AANRJRR,C2864505
@@ -71,10 +72,12 @@ RESET,debug_boot:SW2,TS-1187A-B-A-B:TS-1187A-B-A-B,C318884
 RV-3028-C7-32.768kHz-1ppm-TA-QC,board_services:U2,RV-3028-C7-32.768kHz-1ppm-TA-QC:RV-3028-C7-32.768kHz-1ppm-TA-QC,C3019759
 SFW15R-1STE1LF,camera:J1,SFW15R-1STE1LF:SFW15R-1STE1LF,C3168538
 SMBJ22A,pd_input:D1,Diode_SMD:D_SMB,C10214
+SMBJ28A,motor_sense:D1,SMBJ28A:SMBJ28A,C42440491
+SN74HCT245PWR,motor_pwm:U1,SN74HCT245PWR:SN74HCT245PWR,C6779
 SN74LVC125ADR,usb_jtag:U2,SN74LVC125ADR:SN74LVC125ADR,C7661
 SN74LVC1G08,"bringup_en:U1,bringup_en:U2,bringup_en:U3,bringup_en_modules:U1,bringup_en_modules:U10,bringup_en_modules:U11,bringup_en_modules:U2,bringup_en_modules:U3,bringup_en_modules:U4,bringup_en_modules:U5,bringup_en_modules:U6,bringup_en_modules:U7,bringup_en_modules:U8,bringup_en_modules:U9",Package_TO_SOT_SMD:SOT-23-5,C7666
 SS34,lcd:D1,Diode_SMD:D_SMA,C8678
-SY6280AAC,"board_aux:U1,bringup_modules:U1,bringup_modules:U10,bringup_modules:U2,bringup_modules:U3,bringup_modules:U4,bringup_modules:U5,bringup_modules:U6,bringup_modules:U7,bringup_modules:U8,bringup_modules:U9,pmod_expansion:U1",SY6280AAC:SY6280AAC,C55136
+SY6280AAC,"board_aux:U1,bringup_modules:U1,bringup_modules:U10,bringup_modules:U2,bringup_modules:U3,bringup_modules:U4,bringup_modules:U5,bringup_modules:U6,bringup_modules:U7,bringup_modules:U8,bringup_modules:U9,motor_pwm:U3,pmod_expansion:U1",SY6280AAC:SY6280AAC,C55136
 SY7201ABC,lcd:U1,SY7201ABC:SY7201ABC,C82173
 TCA9535PWR,bringup_rails:U1,TCA9535PWR:TCA9535PWR,C130204
 TF-01A,microsd:J1,TF-01A:TF-01A,C91145
@@ -92,6 +95,7 @@ TXS02612RTWR,microsd:U1,TXS02612RTWR:TXS02612RTWR,C140276
 TYPE-C-31-M-12,"pd_input:J1,usb_jtag_connector:J1,usb_uart_connector:J1,usbc_otg:J2",TYPE-C-31-M-12:TYPE-C-31-M-12,C165948
 USBLC6-2SC6,"board_qwiic:U1,lcd:U2,pd_input:U2,usb_jtag_connector:U1,usb_uart_connector:U1,usbc_otg:U2",USBLC6-2SC6:USBLC6-2SC6,C7519
 USER,"user_io:SW1,user_io:SW2,user_io:SW3,user_io:SW4",TS-1187A-B-A-B:TS-1187A-B-A-B,C318884
+XT60PW-M,"motor_sense:J2,motor_sense:J3",XT60PW-M:XT60PW-M,C98732
 ZX-SH1.0-4PWT,board_qwiic:J1,ZX-SH1.0-4PWT:ZX-SH1.0-4PWT,C7430446
 blue,user_io:D3,LED_SMD:LED_0603_1608Metric,C2288
 green,user_io:D2,LED_SMD:LED_0603_1608Metric,C12624
