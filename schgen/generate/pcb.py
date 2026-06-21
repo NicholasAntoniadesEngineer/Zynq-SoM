@@ -1825,8 +1825,12 @@ def _embed_footprint(inst: FootprintInst, uid) -> list:
                 # what the user reads on the board, and the ref clutters the only
                 # clear spot beside the connector. The ref stays in the footprint
                 # data (netlist/BOM), just not printed.
+                # TEST POINTS: same treatment — a TP is identified by the NET it
+                # probes (its Value), not its TPxxxx ref; the dense bring-up TP
+                # fields otherwise overprint each other (LAW 1). Keyed on the
+                # TestPoint footprint, not a 'TP' ref prefix (robust).
                 if (inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC
-                        or inst.ref in _SW_DESC):
+                        or inst.ref in _SW_DESC or "TestPoint" in inst.footprint):
                     hb = next((x for x in node if isinstance(x, list) and x
                                and x[0] == Sym("hide")), None)
                     if hb is None:
@@ -2358,6 +2362,88 @@ def _connector_descriptors(model: "PcbModel", uid, doc: list) -> list:
     return out
 
 
+def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
+    """Re-place the VISIBLE F.SilkS component reference designators that overprint
+    each other or another silk object (LAW 1). KiCad stamps each ref at the
+    footprint-author's local (at); in dense clusters (diode/IC strings) those
+    positions collide. We move ONLY a ref that actually overlaps — a non-colliding
+    ref keeps its exact authored position (byte-identical) — to the nearest clear
+    spot just outside its OWN footprint courtyard, reusing _place_clear_label.
+
+    TOP side only (F.SilkS), so the F->B footprint mirror never enters: the ref's
+    local (at) is rewritten by inverse-composing the chosen board point through
+    the footprint's in-plane rotation. Greedy in ref-name order, so the
+    alphabetically-first of a colliding pair keeps its spot and the next moves.
+    Mutates ``doc`` in place; MUST run after the footprint loop AND
+    _connector_descriptors so the occupied set already holds every courtyard and
+    function label. Returns the number of refs relocated."""
+    import math
+    ex0, ey0 = ORIGIN_X, ORIGIN_Y
+    ex1, ey1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
+    # static obstacles every ref must clear: each footprint courtyard + each silk
+    # FUNCTION label (the gr_text from _connector_descriptors). Refs clear each
+    # other separately (greedily, below) so a moved ref is never an obstacle to a
+    # ref that has not been visited yet.
+    occupied = [_inst_courtyard(i) for i in model.insts]
+    for node in doc:
+        if (isinstance(node, list) and node and str(node[0]) == "gr_text"
+                and isinstance(node[1], str)):
+            at = _sub(node, "at")
+            if at is not None:
+                occupied.append(_text_box(node[1], float(at[1]), float(at[2]),
+                                          _font_size(node)))
+    court_by_ref = {i.ref: _inst_courtyard(i) for i in model.insts}
+    refs = []
+    for node in doc:
+        if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
+            continue
+        fat = _sub(node, "at")
+        if fat is None:
+            continue
+        fx, fy = float(fat[1]), float(fat[2])
+        frot = float(fat[3]) if (len(fat) > 3 and isinstance(fat[3], (int, float))) else 0.0
+        a = math.radians(frot)
+        ca, sa = math.cos(a), math.sin(a)
+        for c in node:
+            if not (isinstance(c, list) and len(c) > 2 and str(c[0]) == "property"
+                    and c[1] == "Reference"):
+                continue
+            lay = _sub(c, "layer")
+            if lay is None or str(lay[1]) != "F.SilkS":
+                continue
+            hb = _sub(c, "hide")
+            if hb is not None and (len(hb) < 2 or str(hb[1]) == "yes"):
+                continue
+            lat = _sub(c, "at")
+            if lat is None:
+                continue
+            ref, size = c[2], _font_size(c)
+            lx, ly = float(lat[1]), float(lat[2])
+            bx, by = fx + lx * ca - ly * sa, fy + lx * sa + ly * ca
+            court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
+            refs.append((ref, lat, fx, fy, ca, sa, court, size,
+                         _text_box(ref, bx, by, size)))
+    refs.sort(key=lambda r: r[0])
+    placed: list = []
+    moved = 0
+    for ref, lat, fx, fy, ca, sa, court, size, box in refs:
+        if not (any(_overlap_area(box, o) > 0.0 for o in occupied)
+                or any(_overlap_area(box, p) > 0.0 for p in placed)):
+            placed.append(box)                       # clear -> keep authored spot
+            continue
+        tx, ty, nbox, _off = _place_clear_label(
+            court[0], court[1], court[2], court[3], ref, size,
+            occupied + placed, bounds=(ex0, ey0, ex1, ey1))
+        # rewrite the ref's footprint-local (at) so it composes to (tx, ty):
+        # inverse of bx=fx+lx*ca-ly*sa, by=fy+lx*sa+ly*ca  ->  local = R(-a)·d
+        dx, dy = tx - fx, ty - fy
+        lat[1] = round(dx * ca + dy * sa, 4)
+        lat[2] = round(-dx * sa + dy * ca, 4)
+        placed.append(nbox)
+        moved += 1
+    return moved
+
+
 def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
     """A rule-area MARKER over the SoM body on both copper layers (drawn in the
     ratsnest view + KiCad as a hatched region). It is PERMISSIVE: under an SMD
@@ -2458,6 +2544,10 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     # short function label beside each connector, header + switch (self-documenting
     # board); interior labels are placed overlap-aware against the emitted designators
     doc.extend(_connector_descriptors(model, uid, doc))
+
+    # LAW 1: relocate any interior refdes that overprints another (dense diode/IC
+    # strings). Runs last so it clears every courtyard AND the labels just placed.
+    _declutter_refdes(model, uid, doc)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(sexpr.dumps(doc) + "\n")
