@@ -14,16 +14,18 @@ ISOLATION / SAFETY (bench-only, no flight): the dirty motor rail shares only GND
 with logic; PL pins never see it. SMBJ28A (D1) clamps hot-plug / inductive
 transients on the ESC bus. The INA3221 common-mode abs-max is 26 V and its TVS
 clamps ABOVE that, so the ESC rail is bounded <= 4S (<= ~20 V) for margin (silk +
-README), not by the TVS — use a current-limited bench supply (or add bulk near
-the ESCs/PDB) to avoid hot-plug transients into the monitor.
+README), not by the TVS — the on-board Cb bulk + a current-limited bench supply
+keep hot-plug transients out of the monitor.
 
 PL pin ledger (FREE; XDC "unclaimed"; rename in som_conn_gen.FUNCTION_MAP):
   ESC_FAULT_N = IO_L1_N_13  (J2.37)
 
-DEFERRED (sourced follow-up, NOT guessed; LAW 7): an on-board electrolytic bulk
-cap on the motor rail (the 100 n 50 V HF bypass + the TVS + the <= 4S bound cover
-v1; off-board bulk is recommended). Needs an EasyEDA-API-verified >=35 V part; the
-search endpoint was down at authoring time.
+ON-BOARD BULK (LAW 7, landed): Cb = 470 uF / 35 V electrolytic on the LOAD-side
+rail ESC_VRAIL (post-shunt, by J3 -> ESCs) — local energy store for the ESC
+commutation pulses + it stabilises the bus-V node the INA3221 meters; the input
+TVS (D1) + the 100 n HF bypass + the <= 4S bound cover the hot-plug edge. Stock
+D10 SMD land pattern (no fetched part needed — the EasyEDA CAD API was rate-
+limited); LCSC C976030 (DMBJ RVT1V471M1010) confirmed on the LCSC product page.
 """
 
 from __future__ import annotations
@@ -33,10 +35,14 @@ from schgen.core.model import Circuit
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
+# D10 SMD electrolytic can — stock KiCad land pattern (no fetched part needed);
+# the LCSC C976030 (DMBJ RVT1V471M1010, D10x10.2) seats on the D10x10.5 footprint.
+CP_ELEC_D10 = "Capacitor_SMD:CP_Elec_10x10.5"
 
 LCSC_100N = "C14663"   # 100n X7R 50V 0603
 LCSC_10U = "C15850"    # 10u 0805
 LCSC_10K = "C25804"    # 10k 1% 0603
+LCSC_470U = "C976030"  # 470u 35V SMD electrolytic (DMBJ RVT1V471M1010, D10)
 
 J1_MAP = "som_j1_connector (STM32_I2C2 SC management bus)"
 J2_MAP = "som_j2_connector (bank 13 PL — ESC_FAULT_N)"
@@ -54,7 +60,7 @@ def circuit() -> Circuit:
     c.net("ESC_VRAIL_IN", "D1.K")
     c.net("GND", "D1.A")
     chf = c.part(c.auto_ref("C"), "Device:C", "100n", C_FP, LCSC=LCSC_100N)
-    c.net("ESC_VRAIL_IN", f"{chf.ref}.1")       # HF bypass (bulk is off-board)
+    c.net("ESC_VRAIL_IN", f"{chf.ref}.1")       # HF bypass
     c.net("GND", f"{chf.ref}.2")
     c.use_part("RLM12FTCMR010", ref="RS1", value="10mR")
     c.net("ESC_VRAIL_IN", "RS1.1")
@@ -85,6 +91,17 @@ def circuit() -> Circuit:
     c.pullup("U2.CRITICAL", "10k", "+3V3_SC", footprint=R_FP).fields["LCSC"] = \
         LCSC_10K
     c.nc("U2.WARNING", "U2.PV", "U2.TC")        # I2C-readable, unused
+
+    # ON-BOARD BULK on the LOAD-side rail (ESC_VRAIL, post-shunt, by J3 -> ESCs):
+    # local energy store for the ESC commutation-current pulses AND it stabilises
+    # the bus-V node the INA3221 meters; the input TVS (D1) clamps the hot-plug
+    # edge. 470 uF / 35 V polarised electrolytic (>= 4S rail + >1.5x V margin),
+    # stock D10 SMD can; + to the rail, - to GND. (Sits on the lighter post-shunt
+    # net, not the dense ESC_VRAIL_IN trunk.)
+    cb = c.part(c.auto_ref("C"), "Device:C_Polarized", "470uF/35V", CP_ELEC_D10,
+                LCSC=LCSC_470U)
+    c.net("ESC_VRAIL", f"{cb.ref}.1")
+    c.net("GND", f"{cb.ref}.2")
 
     c.draws("+3V3_SC", 0.002, "INA3221 ~0.35 mA + CRITICAL pull-up")
     # ESC_VRAIL is externally sourced + metered by U2 over I2C; probe it at the

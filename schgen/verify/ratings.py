@@ -62,6 +62,7 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     "C596319":Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125, source="JLC desc CC1210KKX7R9BB106 10uF 50V X7R"),
     "C45783": Ratings("mlcc", v_max=25.0, tol="±20%", dielectric="X5R", temp_max=85,  source="JLC desc CL21A226MAQNNNE 22uF 25V X5R"),
     "C970684":Ratings("elec", v_max=16.0, tol="±20%", temp_max=105, source="DMBJ RVT1C101M0605 100uF 16V SMD aluminium electrolytic — bias-stable VBUS bulk (audit 2026-06-20)"),
+    "C976030":Ratings("elec", v_max=35.0, tol="±20%", temp_max=105, source="DMBJ RVT1V471M1010 470uF 35V SMD aluminium electrolytic — motor-rail bulk on ESC_VRAIL_IN; 35V >= 4S+margin (OPEN-3, LCSC product page)"),
     "C9196":  Ratings("mlcc", v_max=2000.0,tol="±10%",dielectric="X7R", temp_max=125, source="JLC desc 1206B102K202NT 1nF 2kV X7R (ethernet Bob-Smith)"),
     "C113796":Ratings("mlcc", v_max=50.0, tol="±5%",  dielectric="C0G", temp_max=125, source="JLC desc CC0603JRNPO9BN201 200pF 50V C0G"),
     "C22399620":Ratings("mlcc",v_max=50.0,tol="±5%",  dielectric="C0G", temp_max=125, source="JLC desc CGA0603C0G750J 75pF 50V C0G"),
