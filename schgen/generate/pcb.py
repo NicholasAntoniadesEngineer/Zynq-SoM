@@ -2220,19 +2220,28 @@ def _overlap_area(a, b) -> float:
     return dx * dy if (dx > 0.0 and dy > 0.0) else 0.0
 
 
-def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied):
+def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
     """Nearest spot just OUTSIDE the courtyard (8 directions, growing offset)
     whose label box clears every occupied box. Returns the first fully-clear
     candidate; in a too-dense corner where none is clear, the LEAST-overlapping
     one (never a blind drop). Returns (tx, ty, box, offset) where offset is the
     clearance distance from the courtyard edge the spot was found at (a far offset
-    means the label detached from its switch — the caller can then degrade it)."""
+    means the label detached from its switch — the caller can then degrade it).
+
+    When ``bounds`` (ex0, ey0, ex1, ey1) is given, candidates whose box stays
+    fully ON the board are STRICTLY preferred: silk must not spill past an edge
+    (LAW 1). This matters for an edge-flushed connector whose courtyard hugs the
+    edge — the outward direction is empty (pen 0) but off-board, so it would
+    otherwise win. An off-board spot is only ever returned if NO on-board
+    candidate exists at all (cannot happen for a real part)."""
     midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
     w = max(len(label), 1) * size * 0.72
     h = size * 1.1
     g = 0.9
-    best = None
+    best = None            # best ON-BOARD candidate (lowest courtyard overlap)
     best_pen = None
+    best_any = None        # absolute fallback if nothing is on-board
+    best_any_pen = None
     for extra in (0.0, 2.2, 4.4, 6.6, 9.0, 12.0, 15.0, 18.0):
         dy = g + extra + h / 2
         dx = g + extra + w / 2
@@ -2246,11 +2255,17 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied):
                        (cx0 - dx, cy0 - dy)):     # NW
             box = _text_box(label, tx, ty, size)
             pen = sum(_overlap_area(box, o) for o in occupied)
-            if pen == 0.0:
-                return tx, ty, box, extra
-            if best_pen is None or pen < best_pen:
-                best_pen, best = pen, (tx, ty, box, extra)
-    return best
+            onboard = bounds is None or (
+                box[0] >= bounds[0] and box[1] >= bounds[1]
+                and box[2] <= bounds[2] and box[3] <= bounds[3])
+            if onboard:
+                if pen == 0.0:
+                    return tx, ty, box, extra
+                if best_pen is None or pen < best_pen:
+                    best_pen, best = pen, (tx, ty, box, extra)
+            if best_any_pen is None or pen < best_any_pen:
+                best_any_pen, best_any = pen, (tx, ty, box, extra)
+    return best if best is not None else best_any
 
 
 def _silk_text(txt: str, x: float, y: float, size: float, uuid) -> list:
@@ -2326,7 +2341,7 @@ def _connector_descriptors(model: "PcbModel", uid, doc: list) -> list:
 
         size = _sized(label)
         tx, ty, box, off = _place_clear_label(cx0, cy0, cx1, cy1, label, size,
-                                              occupied)
+                                              occupied, bounds=(ex0, ey0, ex1, ey1))
         # if a multi-position legend got flung > ~8 mm from its switch (a dense
         # corner like debug_boot), it has visually detached — degrade to the short
         # function label (text before ':'), which fits clear AND close.
@@ -2334,7 +2349,8 @@ def _connector_descriptors(model: "PcbModel", uid, doc: list) -> list:
             short = label.split(":", 1)[0].strip()
             ssize = _sized(short)
             stx, sty, sbox, soff = _place_clear_label(cx0, cy0, cx1, cy1, short,
-                                                      ssize, occupied)
+                                                      ssize, occupied,
+                                                      bounds=(ex0, ey0, ex1, ey1))
             if soff < off:
                 label, size, tx, ty, box = short, ssize, stx, sty, sbox
         occupied.append(box)
