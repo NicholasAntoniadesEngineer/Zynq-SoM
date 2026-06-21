@@ -1065,6 +1065,19 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("CONNECTOR SPACING (LAW 6): FAIL — gate did not run")
             ok_all = False
+        # LAW-1 SILK gate — no two VISIBLE reference designators overprint (the
+        # _declutter_refdes invariant), proven on the emitted board file.
+        rg = pcb_res.get("refdes_silk")
+        if rg is not None:
+            print(f"REFDES SILK (LAW 1): {'PASS' if rg.ok else 'FAIL'} "
+                  f"({rg.n_top} top refs, {len(rg.top_pairs)} F.SilkS overlaps; "
+                  f"{rg.bottom_pairs} B.SilkS overlaps [OPEN-1b, not enforced])")
+            for _v in rg.top_pairs[:10]:
+                print(f"  REFDES SILK: {_v[0]} <-> {_v[1]} overprint")
+            ok_all = ok_all and rg.ok
+        else:
+            print("REFDES SILK (LAW 1): FAIL — gate did not run")
+            ok_all = False
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
         ok_all = False

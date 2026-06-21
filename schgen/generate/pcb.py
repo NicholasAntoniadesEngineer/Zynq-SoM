@@ -2929,6 +2929,7 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         "drc": None, "ratsnest": None, "ratsnest_gate": None,
         "placement_mech": None,
         "connector_model": None, "connector_spacing": None,
+        "refdes_silk": None,
     }
     if ratsnest:
         from schgen.generate import ratsnest as rn_mod
@@ -2948,6 +2949,10 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         # (HDMI TX+RX) need an overmold gap.
         result["connector_model"] = connector_model_gate.check(model)
         result["connector_spacing"] = connector_spacing_gate.check(model)
+        # LAW-1 silk: no two VISIBLE refdes overprint (the _declutter_refdes
+        # invariant), proven on the just-emitted board file.
+        from schgen.verify import refdes_overlap_gate
+        result["refdes_silk"] = refdes_overlap_gate.check(pcb_path)
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result
