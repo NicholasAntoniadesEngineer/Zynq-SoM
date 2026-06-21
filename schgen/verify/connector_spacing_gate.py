@@ -108,6 +108,27 @@ def check(model: PcbModel) -> SpacingResult:
         bb = _inst_pad_bbox(inst)         # (x0, y0, x1, y1) copper bbox
         by_family.setdefault(fam, []).append((inst.ref, bb))
 
+    # LAW 4 (close the blind spot): two off-board connectors must never be
+    # COINCIDENT — footprints overlapping on BOTH axes (a stacked placement that
+    # shorts pads, as the two motor_sense XT60s did under a placement bug). The
+    # family-gated overmold check below only polices wide-overmold families, so it
+    # SKIPPED that pair (and even for a policed family, a full overlap fell through
+    # the side-by-side `else: continue`). This catches a coincident pair for ANY
+    # connector MPN. (kicad-cli DRC also flags it, but the LAW-6 connector gate
+    # must not have the hole.) A correctly side-by-side pair overlaps on only ONE
+    # axis (gap on the other), so it is not flagged here.
+    conns = [(i.ref, _inst_pad_bbox(i)) for i in model.insts if _conn_mpn(i)]
+    for ci in range(len(conns)):
+        for cj in range(ci + 1, len(conns)):
+            ra, a = conns[ci]
+            rb, b = conns[cj]
+            ox = _overlap_1d(a[0], a[2], b[0], b[2])
+            oy = _overlap_1d(a[1], a[3], b[1], b[3])
+            if ox > 0.05 and oy > 0.05:
+                res.violations.append(
+                    f"{ra} <-> {rb}: connector footprints OVERLAP "
+                    f"(ox={ox:.2f} oy={oy:.2f}mm) — coincident/stacked placement")
+
     for fam, members in by_family.items():
         need = _FAMILY_MIN_GAP_MM[fam]
         members.sort(key=lambda m: m[0])

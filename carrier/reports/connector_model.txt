@@ -1,5 +1,5 @@
 LAW-6 CONNECTOR-MODEL ORIENTATION GATE: PASS
-  off-board connectors inspected: 14
+  off-board connectors inspected: 16
     OK  J12001    HDMI-019S        model_z=0
     OK  J14001    HDMI-019S        model_z=0
     OK  J15001    AFC07-S40FCA-00  model_z=0
@@ -13,7 +13,9 @@ LAW-6 CONNECTOR-MODEL ORIENTATION GATE: PASS
     OK  J29001    TYPE-C-31-M-12   model_z=180
     OK  J31001    TYPE-C-31-M-12   model_z=180
     OK  J32002    TYPE-C-31-M-12   model_z=180
+    OK  J37002    XT60PW-M         model_z=0
+    OK  J37003    XT60PW-M         model_z=0
     OK  J8001     SFW15R-1STE1LF   model_z=0
   non-zero model-Z (flipped opening): 0
   geometry-cross-checked (through-shell): 6 -> 0 conflict(s)
-  reviewed geometry exceptions: 6
+  reviewed geometry exceptions: 7

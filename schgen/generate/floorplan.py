@@ -407,6 +407,11 @@ _EDGE_FAMILIES: dict[str, str] = {
     "SFW15R-1STE1LF": "FFC 15-pin 1mm (camera)",
     "TF-01A": "microSD push-pull",
     "DS1024-2x6R2": "PMOD 2x6 socket",
+    "XT60PW-M": "XT60 ESC power inlet (horizontal)",
+    # ^ MUST mirror pcb.CONN_MATING_FACE: a connector registered there for
+    # rotation/seating but NOT here gets is_edge=False, and a >1-connector zone
+    # then trips the interior re-flow guard (which re-packs WITHOUT connector
+    # spread) -> the two motor_sense XT60s landed coincident (a real pad short).
 }
 # author-declared expect= deferrals that name a future EDGE connector
 _DEFERRED_EDGE = re.compile(r"\b(rj45|usb_uart)_connector\b")

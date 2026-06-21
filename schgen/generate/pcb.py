@@ -457,6 +457,11 @@ CONN_MATING_FACE: dict[str, str] = {
                                # Render-verified (the .wrl open-face heuristic is
                                # unreliable for these housings; the render decides).
     "DS1024-2x6R2":    "+Y",   # PMOD 2x6 socket
+    "XT60PW-M":        "+X",   # ESC power XT60 (motor_sense): side-entry, the
+                               # plug mates onto the bullet contacts at local +X
+                               # (signal pads 1/2 at x=+3; mounting tabs at -3).
+                               # In-plane HORIZONTAL mouth -> the +X table. Render-
+                               # verified the mouth seats toward the board edge.
 }
 # EDGE -> placement rotation (deg, KiCad CCW) that turns the mating face OFF-BOARD.
 # Derived in the CODE's actual page frame (+y DOWN: N/top edge = MIN y, off-board
@@ -470,13 +475,20 @@ CONN_MATING_FACE: dict[str, str] = {
 # ground truth that proves each mouth points off-board after rotation.
 _ROT_FACE_NEG_Y = {"N": 0.0, "S": 180.0, "E": 90.0, "W": 270.0}
 _ROT_FACE_POS_Y = {"N": 180.0, "S": 0.0, "E": 270.0, "W": 90.0}
+# +X/-X: an in-plane HORIZONTAL mouth along the footprint X axis (e.g. a side-
+# entry XT60 whose plug enters along +X). Derived the same way as +Y/-Y from
+# _mating_face_out_dir's rotation matrix (mouth (1,0) -> off-board edge).
+_ROT_FACE_POS_X = {"N": 270.0, "S": 90.0, "E": 0.0, "W": 180.0}
+_ROT_FACE_NEG_X = {"N": 90.0, "S": 270.0, "E": 180.0, "W": 0.0}
+_ROT_TABLES = {"-Y": _ROT_FACE_NEG_Y, "+Y": _ROT_FACE_POS_Y,
+               "+X": _ROT_FACE_POS_X, "-X": _ROT_FACE_NEG_X}
+_FACE_VEC = {"-Y": (0, -1), "+Y": (0, 1), "+X": (1, 0), "-X": (-1, 0)}
 
 
 def connector_edge_rotation(mating_face: str, edge: str) -> float:
     """Placement rotation (deg) so a connector whose 0-deg mouth points
-    ``mating_face`` (-Y/+Y) faces OFF-BOARD when placed on ``edge`` (N/E/S/W)."""
-    table = _ROT_FACE_NEG_Y if mating_face == "-Y" else _ROT_FACE_POS_Y
-    return table.get(edge, 0.0)
+    ``mating_face`` (-Y/+Y/+X/-X) faces OFF-BOARD on ``edge`` (N/E/S/W)."""
+    return _ROT_TABLES.get(mating_face, _ROT_FACE_POS_Y).get(edge, 0.0)
 
 
 def _mating_face_out_dir(mating_face: str, rot: float) -> tuple[int, int]:
@@ -484,7 +496,7 @@ def _mating_face_out_dir(mating_face: str, rot: float) -> tuple[int, int]:
     rotation ``rot`` (deg, KiCad CCW about origin, page +y DOWN). Used by the
     gate to confirm the mouth faces off-board, and by the placer to seat the
     connector flush. Returns one of (0,-1)=N, (0,1)=S, (1,0)=E, (-1,0)=W."""
-    fx, fy = (0, -1) if mating_face == "-Y" else (0, 1)
+    fx, fy = _FACE_VEC.get(mating_face, (0, 1))
     r = int(round(rot)) % 360
     # KiCad rotates a point (x,y) CCW on a +y-DOWN screen as the matrix
     # (x*cos - y*sin, x*sin + y*cos) with the screen-CCW convention used in
