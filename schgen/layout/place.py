@@ -27,6 +27,8 @@ from __future__ import annotations
 
 import itertools
 import math
+import os
+import sys
 from dataclasses import dataclass, field
 
 from schgen.layout import route
@@ -45,6 +47,18 @@ A3_CENTER = (210.82, 148.59)
 # (265 mm), less the flags row every sheet appends below the extent.
 # Band stacking that would overrun this opens a NEW COLUMN instead.
 PAPER_H_BUDGET = 240.0
+# Widest a SINGLE connected component's row may grow before the chain template
+# WRAPS the offending part to a new row below (within-component wrap; demoting
+# the crossed channel to labeled stubs). The metric is ``ax - row_left`` — the
+# part's prospective anchor relative to the current row's left edge, measured at
+# placement time on the FIRST place_and_route spacing pass. PAPER_W_BUDGET is set
+# strictly ABOVE the widest such value any A3-fitting sheet reaches — instrumented
+# via SCHGEN_WRAP_INSTR, the widest is lcd's U1 at 292.7 mm (lcd is a legitimately
+# wide 3-part channel string that fits A3) — and strictly BELOW the overflowing
+# tree — motor_pwm's two reconverging 4-element 33R arrays put RN2 at 370.1 mm.
+# The (292.7, 370.1) gap makes 330 a clean separator: a STRICT NO-OP for every
+# fitting sheet (proven byte-identical), tripping only the genuine A3 overflow.
+PAPER_W_BUDGET = 330.0
 
 POWER_LIBS = {
     "+3V3": "power:+3V3",
@@ -4572,6 +4586,72 @@ class _Engine:
                     ax = max(ax, gsnap(a_right
                                        + gceil(max(2 * sp.port_run, ll + 8 * U))
                                        - min(p[2][0] for p, _j in pairs)))
+                # WITHIN-COMPONENT WRAP: a single connected component whose
+                # parts string left->right can overflow even A3 (the motor_pwm
+                # output: two 4-element 33R arrays reconverging on a 24-pin
+                # header form a TREE the chain strings to >400 mm). Now that the
+                # prospective anchor ``ax`` is known, if placing this part keeps
+                # the CURRENT row growing past the page-width budget, WRAP it to
+                # a fresh row below and DEMOTE this boundary's channel(s) to
+                # labeled fan stubs (the demote idiom already used for misaligned
+                # rows): un-handle both endpoints so each draws a named escape
+                # label, and BRIDGE the net so the downstream drains treat it as
+                # merged-by-name. The netlist is untouched (KiCad merges the
+                # labels by name), and no part or pin is ever moved.
+                #
+                # The metric is ``ax - row_left`` — the anchor relative to the
+                # current row's left edge, measured BEFORE the cell so the wrap
+                # needs no un-placing. PAPER_W_BUDGET is set strictly above the
+                # widest such value any A3-fitting sheet reaches (instrumented:
+                # lcd's U1 at 292.7 mm) and below the overflowing tree
+                # (motor_pwm's RN2 at 370.1 mm), so this is a STRICT NO-OP for
+                # every fitting sheet and trips only the overflow.
+                row_left = self._band_edge(row_y0, 1e9, -1, default=0.0) \
+                    if row_y0 > -1e8 else self._extent()[0]
+                if os.environ.get("SCHGEN_WRAP_INSTR"):
+                    # budget-tuning instrumentation (stdout-only, no artifact):
+                    # dumps the ``ax - row_left`` metric per chain part so the
+                    # PAPER_W_BUDGET separator can be re-derived if topology
+                    # changes. Strictly off unless the env flag is set.
+                    print(f"[wrap-instr] {c.name} step {i} {ref}: "
+                          f"ax-rl={ax - row_left:.1f}", file=sys.stderr)
+                if pairs and (ax - row_left) > PAPER_W_BUDGET:
+                    for p, _j in pairs:
+                        n, ta, tb, ea, eb = p
+                        # the PREDECESSOR (a_ref) is already placed: its tip was
+                        # left handled (a bare channel stub, the wire drawn later
+                        # by the channel loop we now skip). Draw the labeled
+                        # escape here so the demoted net is named on BOTH sides.
+                        for tip in [ta] + ea:
+                            handled.discard(
+                                (a_ref, self._pin_num_at(a_ref, tip, "right"),
+                                 "right"))
+                            tx = round(ax_a + tip[0], 3)
+                            ty = round(ay_a + tip[1], 3)
+                            ex = round(tx + sp.port_run, 3)
+                            self.pl.plan(n, (tx, ty), (ex, ty))
+                            self.llabel(n, ex, ty, 0)
+                        # the SUCCESSOR (ref) is placed below as a fresh-row cell;
+                        # un-handling its tip lets _fan_side draw its own label.
+                        for tip in [tb] + eb:
+                            handled.discard(
+                                (ref, self._pin_num_at(ref, tip, "left"),
+                                 "left"))
+                        self._bridge(n)
+                    binfo[ref] = []        # no channel crosses the wrap now
+                    _, _, _, ey1c = self._extent()
+                    comp_dy = gceil(ey1c + 14 * U) - ays[ref]
+                    row_y0 = gceil(ey1c + 2 * U)
+                    ay = round(ays[ref] + comp_dy, 3)
+                    ax = 0.0
+                    anchors[ref] = (ax, ay)
+                    self._collect_trunk_pins(ref, ax, ay, trunk_jobs,
+                                             srung_keys)
+                    self._cell(ref, ax, ay, handled, trunk_jobs,
+                               defer_texts=True,
+                               drop_dir=+1 if (len(order) > 1
+                                               and ref == order[-1]) else -1)
+                    continue
                 jog_x = jog_base
                 for p, is_jog in pairs:
                     n, ta, tb, ea, eb = p

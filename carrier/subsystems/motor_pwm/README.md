@@ -9,22 +9,28 @@ all **off board**.
 |-------|-------|----------|
 | 8-ch buffer | `U1` SN74HCT245 | PL 3.3 V LVCMOS33 → 5 V buffered PWM/DShot; **isolates the PL** (ESC-side faults hit only the 5 V B-side) |
 | fail-safe arm | `#OE` 10 k pull-up | outputs **HiZ** until the PL drives `ESC_BUF_OE_N` low |
-| output header | `J1` 3×8 2.54 mm | per channel: SIG / +5V / GND (buffered output direct from `U1.B`) |
+| output series-damp | `RN1`/`RN2` 4×33 R arrays | per-channel 33 R between `U1.B` and the header SIG row (EMI / DShot edge integrity into the off-board leads); two isolated `4D03WGJ0330T5E` (C25508) arrays, RN1 ch0-3, RN2 ch4-7 |
+| output header | `J1` 3×8 2.54 mm | per channel: SIG / +5V / GND (SIG = damped output `U1.B → 33 R → J1`) |
 | servo-rail protect | `U3` SY6280 | gates +5V → `+5V_MOTOR_IO` with a 523 mA ILIM (a shorted servo lead can't crash board +5V) |
 
 **ESC leads use SIG + GND only** (leave their BEC red wire off the +5V row). The
 PL drives the 8 PWM (bank-33) + `ESC_BUF_OE_N` (bank-13) on contract pins verified
 free (XDC "unclaimed"); renames in `som_conn_gen.FUNCTION_MAP`.
 
-**Series-damping 33 R — TOOL-BLOCKED, NOT a sourcing defer (LAW 7).** Per-channel
-33 R series damping on the 8 buffered outputs (EMI / DShot edge integrity into the
-off-board leads) is the RIGHT design and the part **is sourced** (4×33R array
-`C25508`, in the catalog). It is NOT in the v1 netlist for one reason: two 4-R
+**Series-damping 33 R — LANDED (LAW 7).** Per-channel 33 R series damping on the
+8 buffered outputs (EMI / DShot edge integrity into the off-board leads) is now in
+the netlist: two isolated 4-element arrays (`4D03WGJ0330T5E`, `C25508`, sourced),
+RN1 = ch0-3, RN2 = ch4-7. Element *j* of a 4D03 spans pin (j+1)↔(8-j) — the
+footprint's vertical pad pairs — so the buffered `ESC_SIG{i}` enters the top pad
+and the damped `ESC_OUT{i}` leaves the facing pad onto the header SIG row. The two
 arrays reconverging on the 24-pin header form a *tree* the per-sheet placer's
-chain template spreads to ~982 mm. The correct landing is a **single 8-element
-33 R array** (one part, a clean fan — no reconverge) OR a placer wrap fix; the
-8-array LCSC needs the EasyEDA search API, which was returning CloudFront errors
-at authoring time. Tracked to instantiate, not abandoned.
+chain template strung to >400 mm (overflowing A3) — the reason this was held back.
+The fix is a **within-component row-wrap** in `schgen/layout/place.py`
+(`PAPER_W_BUDGET`): when a single connected component's row would overflow the
+page, the placer wraps the offending part to a new row and demotes the crossed
+channel to labeled stubs (KiCad merges by name — netlist untouched). The budget
+is instrumented to be a strict no-op for every other sheet, so only this overflow
+trips it.
 
 **Deferred (sourced follow-up, not guessed):** a **5 V-rated** ESD array on the
 outputs — the spec's PESD3V3L4UG is 3.3 V-working and would clamp the 5 V PWM, so

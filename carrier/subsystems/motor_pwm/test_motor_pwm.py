@@ -74,10 +74,22 @@ def test_servo_rail_gated_by_sy6280(c: Circuit):
 
 
 def test_each_buffered_output_lands_on_the_header_sig_row(c: Circuit):
-    # buffer B output (5V) -> header SIG pad 1..8, one net per channel
+    # buffer B output (5V) -> 33R series-damp array -> header SIG pad 1..8.
+    # Two isolated 4-element arrays (RN1 ch0-3, RN2 ch4-7); element j of a
+    # 4D03 spans pin (j+1)<->pin(8-j) — the buffered ESC_SIG{i} enters the top
+    # pad (j+1), the damped ESC_OUT{i} leaves the facing pad (8-j) onto SIG.
     for i in range(8):
+        rn = "RN1" if i < 4 else "RN2"
+        j = i % 4
+        assert c.parts[rn].lib_id.endswith("4D03WGJ0330T5E")
+        # buffer -> array input (top pad j+1)
         assert f"ESC_SIG{i}" in c.nets
-        assert any(str(p) == f"J1.{1 + i}" for p in c.nets[f"ESC_SIG{i}"].pins)
+        assert any(str(p) == f"{rn}.{j + 1}" for p in c.nets[f"ESC_SIG{i}"].pins)
+        # array output (bottom pad 8-j) -> header SIG pad (1+i), one net per ch
+        assert f"ESC_OUT{i}" in c.nets
+        out_pins = {str(p) for p in c.nets[f"ESC_OUT{i}"].pins}
+        assert f"{rn}.{8 - j}" in out_pins
+        assert f"J1.{1 + i}" in out_pins
 
 
 def test_part_and_spice_slices_clean(c: Circuit, lib, tmp_path):

@@ -1,7 +1,9 @@
 * motor_pwm.cir — passive network of the 8-ch PWM/ESC output buffer sheet.
-* Active parts (HCT245 buffer, SY6280 load switch, 3x8 header) are use_part'd
-* faithful parts (not :C/:R), so only the bypass/set network is here. (The 33R
-* output series-damping arrays are tool-blocked, not yet instantiated — README.)
+* Active parts (HCT245 buffer, SY6280 load switch, 3x8 header) AND the two 4x33R
+* output series-damping arrays (RN1/RN2, 4D03WGJ0330T5E) are use_part'd faithful
+* parts (not :C/:R), so only the bypass/set DC network is in this .op fixture.
+* The 33R elements are passive 33R in series on each PWM signal path
+* (U1.B{i} -> RN -> J1.SIG{1+i}); they carry no DC, so they add no .op node.
 * Values mirror motor_pwm.py one-for-one (parse_si):
 *   C1 100n  HCT245 VCC bypass        (V5 -> GND)
 *   C2 100n  SY6280 IN bypass         (V5 -> GND)

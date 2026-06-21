@@ -15,6 +15,17 @@ B-side, never a PL pin. The buffered 5 V outputs go to the 3x8 output header J1
 FAIL-SAFE ARM: the PL drives #OE low to enable; a 10 k pull-up holds the buffer
 outputs HiZ (no spurious ESC pulses) until the PL explicitly arms.
 
+OUTPUT SERIES-DAMPING: each buffered output passes through a 33 R series element
+(RN1/RN2, two isolated 4D03WGJ0330T5E arrays — RN1 ch0-3, RN2 ch4-7) before the
+header SIG row, for EMI / DShot edge integrity into the off-board leads. Element j
+of a 4D03 spans pin (j+1)<->pin(8-j) (footprint-verified vertical pad pairs): the
+buffered ESC_SIG{i} enters the top pad, the damped ESC_OUT{i} leaves the facing
+pad onto J1.SIG{1+i}. ISOLATED elements (no internal common) so a faulted ESC lead
+cannot back-feed a sibling. The two arrays reconverging on the 24-pin header form a
+tree the chain placer strung wide; the within-component row-wrap in place.py
+(PAPER_W_BUDGET) lands it on A3 — demoting the crossed channel to labeled stubs
+(KiCad merges by name, netlist untouched), a strict no-op for every other sheet.
+
 SERVO-RAIL PROTECTION: the header's middle (+5 V) row is gated by a SY6280 load
 switch (U3) whose current-limit (ILIM = 6800/13 k = 523 mA) protects board +5 V
 against a shorted servo lead. The buffer itself runs off RAW +5 V so it is always
@@ -27,14 +38,10 @@ live in som_conn_gen.FUNCTION_MAP):
   ESC_PWM_IN4..7 = IO_L3_DQS_P/N_33,   IO_L5_P/N_33         (J3.91/93/92/94)
   ESC_BUF_OE_N   = IO_L1P_13  (J2.57)
 
-DEFERRED (SI/protection polish — sourced follow-up, NOT guessed; LAW 7): (1) a
-5 V-rated ESD array on the outputs — the spec's PESD3V3L4UG is 3.3 V-working and
-would clamp the 5 V PWM, so it is NOT used; (2) per-channel 33 R series-damping
-into the off-board leads — left out of v1 because two sibling 4-R arrays
-reconverging on the 24-pin header form a tree the per-sheet placer spreads wide;
-a SINGLE 8-R array (one part, a clean fan, no reconverge) is the right form once
-sourced. The buffer's drive + isolation are the essential function; both adds are
-EMI/ESD polish needing an EasyEDA-API-verified part (search endpoint was down).
+DEFERRED (sourced follow-up, NOT guessed; LAW 7): a 5 V-rated ESD array on the
+outputs — the spec's PESD3V3L4UG is 3.3 V-working and would clamp the 5 V PWM, so
+it is NOT used; needs an EasyEDA-API-verified 5 V-rated array. The buffer drive +
+isolation + 33 R damping are the essential function; the ESD add is EMI/ESD polish.
 """
 
 from __future__ import annotations
@@ -49,6 +56,7 @@ LCSC_100N = "C14663"   # 100n X7R 50V 0603
 LCSC_10U = "C15850"    # 10u 0805
 LCSC_10K = "C25804"    # 10k 1% 0603
 LCSC_13K = "C22797"    # 13k 1% 0603 -> SY6280 ILIM 523 mA
+LCSC_33R_ARRAY = "C25508"   # 4x33R 0603x4 isolated array (output series-damping)
 
 J2_MAP = "som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)"
 J3_MAP = "som_j3_connector (bank 33 PL — ESC PWM 4-7)"
@@ -74,11 +82,23 @@ def circuit() -> Circuit:
     c.port("ESC_BUF_OE_N", "U1.#OE", expect=J2_MAP)
     c.pullup("U1.#OE", "10k", "+5V", footprint=R_FP).fields["LCSC"] = LCSC_10K
 
-    # ===== 8 PWM channels: PL -> U1.A; U1.B (5V buffered) -> header SIG =======
+    # ===== 8 PWM channels: PL -> U1.A; U1.B (5V buffered) -> 33R damp -> SIG ===
+    # Per-channel 33 R series-damping into the off-board ESC leads (EMI / DShot
+    # edge integrity). Two 4-element isolated arrays (4D03WGJ0330T5E, C25508):
+    # RN1 = ch0-3, RN2 = ch4-7. Footprint-verified vertical pad pairs — element
+    # j of a 4D03 spans pin (j+1) <-> pin (8-j): the buffered B output enters the
+    # TOP pad (pins 1-4), the damped output leaves the facing BOTTOM pad (8-5)
+    # into the header SIG row. ISOLATED elements: no internal common (each R is
+    # its own 2-pad device), so a faulted ESC lead cannot back-feed a sibling.
+    c.use_part("4D03WGJ0330T5E", ref="RN1")     # ch0-3 series-damping array
+    c.use_part("4D03WGJ0330T5E", ref="RN2")     # ch4-7 series-damping array
     c.use_part("HX_PZ2.54-3x8P_ZZ", ref="J1")
     for i, (apin, bpin, src) in enumerate(_CH):
+        rn = "RN1" if i < 4 else "RN2"          # array; j = element within it
+        j = i % 4                                # 0..3 -> pins (j+1) top, (8-j) bot
         c.port(f"ESC_PWM_IN{i}", f"U1.{apin}", expect=src)      # PL -> buffer A
-        c.net(f"ESC_SIG{i}", f"U1.{bpin}", f"J1.{1 + i}")       # buffered -> SIG row
+        c.net(f"ESC_SIG{i}", f"U1.{bpin}", f"{rn}.{j + 1}")     # buffered -> R in
+        c.net(f"ESC_OUT{i}", f"{rn}.{8 - j}", f"J1.{1 + i}")    # R out -> SIG row
     c.net("+5V_MOTOR_IO", *[f"J1.{p}" for p in range(9, 17)])    # +5V row (9-16)
     c.net("GND", *[f"J1.{p}" for p in range(17, 25)])            # GND row (17-24)
 

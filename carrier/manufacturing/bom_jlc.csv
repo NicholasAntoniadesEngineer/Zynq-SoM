@@ -36,6 +36,7 @@ Comment,Designator,Footprint,LCSC
 47k5,uart_bridge:R3,Resistor_SMD:R_0603_1608Metric,C23061
 47n,pd_input:C3,Capacitor_SMD:C_0603_1608Metric,C1622
 49.9R,"hdmi_rx_term:R1,hdmi_rx_term:R2,hdmi_rx_term:R3,hdmi_rx_term:R4,hdmi_rx_term:R5,hdmi_rx_term:R6,hdmi_rx_term:R7,hdmi_rx_term:R8",Resistor_SMD:R_0603_1608Metric,C114625
+4D03WGJ0330T5E,"motor_pwm:RN1,motor_pwm:RN2",4D03WGJ0330T5E:4D03WGJ0330T5E,C25508
 4k7,"board_aux:R5,board_aux:R6,bringup_rails:R4,bringup_rails:R5,camera:R4,camera:R5,debug_boot:R1,debug_boot:R2,lcd:R2,lcd:R3",Resistor_SMD:R_0603_1608Metric,C23162
 5.1k,"pd_input:R5,usb_jtag_connector:R1,usb_jtag_connector:R2,usb_uart_connector:R1,usb_uart_connector:R2",Resistor_SMD:R_0603_1608Metric,C23186
 5.49k,pd_input:R4,Resistor_SMD:R_0603_1608Metric,C188263
