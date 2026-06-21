@@ -2378,6 +2378,45 @@ def _set_font_size(prop: list, size: float) -> None:
         thk[1] = round(max(0.1, size * 0.15), 3)
 
 
+def _hide_undersom_bottom_refs(model: "PcbModel", doc: list) -> int:
+    """Hide the B.SilkS reference of every BOTTOM-side part under the SoM shadow.
+    Those parts (the som_decoupling bypass bank + co-located passives) sit on a
+    uniform ~2 mm grid with no room for a legible refdes at ANY font (a 6-char ref
+    is wider than the pitch even at the 0.5 mm silk floor), so they get the
+    test-point treatment: the ref stays in the footprint data (netlist/BOM), just
+    not printed. Keyed on a B.Cu footprint whose origin is inside model.som_keepout.
+    Runs BEFORE _declutter_refdes so the hidden refs are skipped there. Returns the
+    count hidden."""
+    kp = model.som_keepout
+    if kp is None:
+        return 0
+    x0, y0, x1, y1 = kp
+    n = 0
+    for node in doc:
+        if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
+            continue
+        flay = _sub(node, "layer")
+        if flay is None or str(flay[1]) != "B.Cu":
+            continue
+        fat = _sub(node, "at")
+        if fat is None:
+            continue
+        fx, fy = float(fat[1]), float(fat[2])
+        if not (x0 <= fx <= x1 and y0 <= fy <= y1):
+            continue
+        for c in node:
+            if (isinstance(c, list) and len(c) > 2 and str(c[0]) == "property"
+                    and c[1] == "Reference"):
+                hb = _sub(c, "hide")
+                if hb is not None and len(hb) >= 2:
+                    hb[1] = Sym("yes")
+                else:
+                    c.insert(3, [Sym("hide"), Sym("yes")])
+                n += 1
+                break
+    return n
+
+
 def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
     """Re-place the VISIBLE F.SilkS component reference designators that overprint
     each other or another silk object (LAW 1). KiCad stamps each ref at the
@@ -2386,13 +2425,16 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
     ref keeps its exact authored position (byte-identical) — to the nearest clear
     spot just outside its OWN footprint courtyard, reusing _place_clear_label.
 
-    TOP side only (F.SilkS), so the F->B footprint mirror never enters: the ref's
-    local (at) is rewritten by inverse-composing the chosen board point through
-    the footprint's in-plane rotation. Greedy in ref-name order, so the
-    alphabetically-first of a colliding pair keeps its spot and the next moves.
-    Mutates ``doc`` in place; MUST run after the footprint loop AND
-    _connector_descriptors so the occupied set already holds every courtyard and
-    function label. Returns the number of refs relocated."""
+    BOTH sides (F.SilkS + B.SilkS): a B.Cu footprint is MIRRORED, so its child
+    board position is fp + R(-frot)·(lx,ly) (verified against the KiCad renderer)
+    and the inverse-(at) rewrite mirrors the top one. The ref's local (at) is
+    rewritten by inverse-composing the chosen board point. Greedy in ref-name
+    order; top refs are visited first (one shared `placed`) so F.SilkS stays
+    byte-identical. Under-SoM bottom refs are hidden upstream
+    (_hide_undersom_bottom_refs) — a ~2 mm cap grid has no room for a legible ref —
+    so they never reach here. Mutates ``doc`` in place; MUST run after the
+    footprint loop AND _connector_descriptors so the occupied set already holds
+    every courtyard and function label. Returns the number of refs relocated."""
     import math
     ex0, ey0 = ORIGIN_X, ORIGIN_Y
     ex1, ey1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
@@ -2408,8 +2450,13 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
             if at is not None:
                 occupied.append(_text_box(node[1], float(at[1]), float(at[2]),
                                           _font_size(node)))
+    # B.SilkS refs need only clear BOTTOM-side silk (top parts are not on the
+    # bottom layer + the F.SilkS function labels are top) — a far less crowded
+    # obstacle set, so dense bottom banks find room the top-side set would deny.
+    occupied_bot = [_inst_courtyard(i) for i in model.insts if i.side == "bottom"]
     court_by_ref = {i.ref: _inst_courtyard(i) for i in model.insts}
-    refs = []
+    top_refs: list = []
+    bot_refs: list = []
     for node in doc:
         if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
             continue
@@ -2420,12 +2467,15 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
         frot = float(fat[3]) if (len(fat) > 3 and isinstance(fat[3], (int, float))) else 0.0
         a = math.radians(frot)
         ca, sa = math.cos(a), math.sin(a)
+        flay = _sub(node, "layer")
+        bottom = flay is not None and str(flay[1]) == "B.Cu"
+        want = "B.SilkS" if bottom else "F.SilkS"
         for c in node:
             if not (isinstance(c, list) and len(c) > 2 and str(c[0]) == "property"
                     and c[1] == "Reference"):
                 continue
             lay = _sub(c, "layer")
-            if lay is None or str(lay[1]) != "F.SilkS":
+            if lay is None or str(lay[1]) != want:
                 continue
             hb = _sub(c, "hide")
             if hb is not None and (len(hb) < 2 or str(hb[1]) == "yes"):
@@ -2435,21 +2485,33 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
                 continue
             ref, size = c[2], _font_size(c)
             lx, ly = float(lat[1]), float(lat[2])
-            bx, by = fx + lx * ca - ly * sa, fy + lx * sa + ly * ca
+            if bottom:                          # B.Cu fp is mirrored: fp+R(-frot)(lx,ly)
+                bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
+            else:
+                bx, by = fx + lx * ca - ly * sa, fy + lx * sa + ly * ca
             court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
-            refs.append((ref, c, lat, fx, fy, ca, sa, court, size,
-                         _text_box(ref, bx, by, size)))
-    refs.sort(key=lambda r: r[0])
-    placed: list = []
+            (bot_refs if bottom else top_refs).append(
+                (ref, c, lat, fx, fy, ca, sa, court, size,
+                 _text_box(ref, bx, by, size), bottom))
+    # TOP refs visited before ANY bottom ref, one greedy `placed` set: a top ref
+    # never sees a bottom box, so the F.SilkS result stays byte-identical; bottom
+    # refs then clear the top boxes too (cross-side overlap is harmless but kept
+    # conservative). Under-SoM bottom refs were hidden upstream and are skipped.
+    refs = (sorted(top_refs, key=lambda r: r[0])
+            + sorted(bot_refs, key=lambda r: r[0]))
+    placed_top: list = []
+    placed_bot: list = []
     moved = 0
-    for ref, c, lat, fx, fy, ca, sa, court, size, box in refs:
-        if not (any(_overlap_area(box, o) > 0.0 for o in occupied)
-                or any(_overlap_area(box, p) > 0.0 for p in placed)):
-            placed.append(box)                       # clear -> keep authored spot
+    for ref, c, lat, fx, fy, ca, sa, court, size, box, bottom in refs:
+        occ = occupied_bot if bottom else occupied   # bottom clears only bottom silk
+        plc = placed_bot if bottom else placed_top
+        if not (any(_overlap_area(box, o) > 0.0 for o in occ)
+                or any(_overlap_area(box, p) > 0.0 for p in plc)):
+            plc.append(box)                          # clear -> keep authored spot
             continue
         tx, ty, nbox, off = _place_clear_label(
             court[0], court[1], court[2], court[3], ref, size,
-            occupied + placed, bounds=(ex0, ey0, ex1, ey1))
+            occ + plc, bounds=(ex0, ey0, ex1, ey1))
         # if the only clear spot is far (a dense IC/diode grid flings the ref out,
         # ambiguous to read), retry at smaller fonts to find a CLOSER clear spot —
         # honours the offset _place_clear_label reports, the way the descriptor
@@ -2462,19 +2524,23 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
                     break
                 tx2, ty2, nbox2, off2 = _place_clear_label(
                     court[0], court[1], court[2], court[3], ref, s2,
-                    occupied + placed, bounds=(ex0, ey0, ex1, ey1))
+                    occ + plc, bounds=(ex0, ey0, ex1, ey1))
                 if off2 < off - 0.5:                 # meaningfully closer
                     tx, ty, nbox, off, new_size = tx2, ty2, nbox2, off2, s2
                     if off <= 8.0:
                         break
-        # rewrite the ref's footprint-local (at) so it composes to (tx, ty):
-        # inverse of bx=fx+lx*ca-ly*sa, by=fy+lx*sa+ly*ca  ->  local = R(-a)·d
+        # rewrite the ref's footprint-local (at) so it composes back to (tx, ty);
+        # the inverse mirrors per side (a B.Cu footprint is mirrored, frot negates).
         dx, dy = tx - fx, ty - fy
-        lat[1] = round(dx * ca + dy * sa, 4)
-        lat[2] = round(-dx * sa + dy * ca, 4)
+        if bottom:                              # inverse of fp + R(-frot)(lx,ly)
+            lat[1] = round(dx * ca - dy * sa, 4)
+            lat[2] = round(dx * sa + dy * ca, 4)
+        else:                                   # inverse of fp + R(+frot)(lx,ly)
+            lat[1] = round(dx * ca + dy * sa, 4)
+            lat[2] = round(-dx * sa + dy * ca, 4)
         if new_size != size:
             _set_font_size(c, new_size)
-        placed.append(nbox)
+        plc.append(nbox)
         moved += 1
     return moved
 
@@ -2575,6 +2641,10 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     # footprints (fixed ref order — determinism)
     for inst in model.insts:
         doc.append(_embed_footprint(inst, uid))
+
+    # LAW 1 (bottom silk): hide the refs of the under-SoM bottom-cap grid (no room
+    # for a legible ref on a ~2mm pitch) BEFORE the declutter pass sees them.
+    _hide_undersom_bottom_refs(model, doc)
 
     # short function label beside each connector, header + switch (self-documenting
     # board); interior labels are placed overlap-aware against the emitted designators
@@ -2984,10 +3054,11 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         # (HDMI TX+RX) need an overmold gap.
         result["connector_model"] = connector_model_gate.check(model)
         result["connector_spacing"] = connector_spacing_gate.check(model)
-        # LAW-1 silk: no two VISIBLE refdes overprint (the _declutter_refdes
-        # invariant), proven on the just-emitted board file.
+        # LAW-1 silk: no two VISIBLE refdes overprint on EITHER side (the
+        # _declutter_refdes invariant), proven on the just-emitted board file.
         from schgen.verify import refdes_overlap_gate
-        result["refdes_silk"] = refdes_overlap_gate.check(pcb_path)
+        result["refdes_silk"] = refdes_overlap_gate.check(
+            pcb_path, enforce_bottom=True)
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result

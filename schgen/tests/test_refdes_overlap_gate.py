@@ -11,8 +11,22 @@ def _board(*footprints) -> str:
 
 def _fp(ref, fx, fy, lx, ly, layer="F.SilkS", frot=0, hide=False):
     h = " (hide yes)" if hide else ""
-    return (f'(footprint "lib:{ref}" (at {fx} {fy} {frot}) '
+    fplayer = "B.Cu" if layer == "B.SilkS" else "F.Cu"   # B.Cu fp is mirrored
+    return (f'(footprint "lib:{ref}" (at {fx} {fy} {frot}) (layer "{fplayer}") '
             f'(property "Reference" "{ref}" (at {lx} {ly}) (layer "{layer}"){h}))')
+
+
+def test_bottom_mirror_compose(tmp_path):
+    """A B.Cu footprint is MIRRORED: a ref's board position is fp + R(-frot)·(lx,ly),
+    not the top formula. fp C1 at (20,20) frot 90 local (4,0): the mirror puts it at
+    (20, 20-4)=(20,16) (the TOP formula would give (20,24)). C2 at (20,16) local (0,0)
+    sits there too — so the CORRECT mirror sees them coincident; the wrong one would
+    not. Locks the bottom transform."""
+    p = tmp_path / "b.kicad_pcb"
+    p.write_text(_board(_fp("C1", 20, 20, 4, 0, layer="B.SilkS", frot=90),
+                        _fp("C2", 20, 16, 0, 0, layer="B.SilkS")))
+    r = g.check(p, enforce_bottom=True)
+    assert not r.ok and r.bottom_pairs == 1
 
 
 def test_separated_refs_pass(tmp_path):

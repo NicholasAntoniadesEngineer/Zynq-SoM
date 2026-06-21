@@ -1071,9 +1071,9 @@ def cmd_board(args: argparse.Namespace) -> int:
         if rg is not None:
             print(f"REFDES SILK (LAW 1): {'PASS' if rg.ok else 'FAIL'} "
                   f"({rg.n_top} top refs, {len(rg.top_pairs)} F.SilkS overlaps; "
-                  f"{rg.bottom_pairs} B.SilkS overlaps [OPEN-1b, not enforced])")
+                  f"{rg.n_bottom} bottom refs, {rg.bottom_pairs} B.SilkS overlaps)")
             for _v in rg.top_pairs[:10]:
-                print(f"  REFDES SILK: {_v[0]} <-> {_v[1]} overprint")
+                print(f"  REFDES SILK (F): {_v[0]} <-> {_v[1]} overprint")
             ok_all = ok_all and rg.ok
         else:
             print("REFDES SILK (LAW 1): FAIL — gate did not run")

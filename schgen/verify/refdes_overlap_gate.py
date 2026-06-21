@@ -92,6 +92,12 @@ def _collect(pcb_path: Path, layer: str):
         frot = (float(fat[3]) if len(fat) > 3 and re.match(r'-?[\d.]+$', str(fat[3]))
                 else 0.0)
         ca, sa = math.cos(math.radians(frot)), math.sin(math.radians(frot))
+        # a B.Cu footprint is MIRRORED — its child board position is the mirror of
+        # the top compose: fp + R(-frot)·(lx,ly), verified vs the KiCad renderer.
+        # (On THIS board every B.SilkS ref has lx=0 so the two only differ in the
+        # frot=90 y-term, but the mirror must be right for any lx!=0 part.)
+        flay = _sub(node, "layer")
+        bottom = flay is not None and flay[1] == "B.Cu"
         for c in node:
             if not (isinstance(c, list) and len(c) > 2 and c[0] == "property"
                     and c[1] == "Reference"):
@@ -103,7 +109,10 @@ def _collect(pcb_path: Path, layer: str):
             if lat is None:
                 continue
             lx, ly = float(lat[1]), float(lat[2])
-            bx, by = fx + lx * ca - ly * sa, fy + lx * sa + ly * ca
+            if bottom:
+                bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
+            else:
+                bx, by = fx + lx * ca - ly * sa, fy + lx * sa + ly * ca
             refs.append((c[2], _text_box(c[2], bx, by, _font_size(c))))
     return refs
 
