@@ -2097,6 +2097,12 @@ _INT_DESC: dict[str, str] = {
     "J11001": "GPIO",   # FMC-site 2x20 2.54mm breakout
     "J9001":  "JTAG",   # Zynq 2x7 2.00mm JTAG header
     "J9002":  "SWD",    # system-controller ARM Cortex 10-pin SWD header
+    # motor interface (drone demo): the 8-ch ESC PWM header + the in-line ESC
+    # power XT60s. Per-ref so IN vs OUT is on the silk (J37002=J2=ESC_VRAIL_IN
+    # in, J37003=J3=ESC_VRAIL out — local-ref order in motor_sense.py).
+    "J36001": "ESC PWM",      # motor_pwm: 3x8 servo/ESC signal header
+    "J37002": "ESC PWR IN",   # motor_sense: XT60 battery/bench-supply input
+    "J37003": "ESC PWR OUT",  # motor_sense: XT60 out to off-board ESCs
 }
 
 # Switches — a short FUNCTION label beside every DIP enable + tactile button, the

@@ -43259,6 +43259,7 @@
 		(property
 			"Reference"
 			"J36001"
+			(hide yes)
 			(at 0 -4.54 0)
 			(layer "F.SilkS")
 			(effects
@@ -43680,6 +43681,7 @@
 		(property
 			"Reference"
 			"J37002"
+			(hide yes)
 			(at 0 -8.75 0)
 			(layer "F.SilkS")
 			(effects
@@ -44112,6 +44114,7 @@
 		(property
 			"Reference"
 			"J37003"
+			(hide yes)
 			(at 0 -8.75 0)
 			(layer "F.SilkS")
 			(effects
@@ -115848,6 +115851,42 @@
 			(font
 				(size 1.1 1.1)
 				(thickness 0.176)
+			)
+		)
+	)
+	(gr_text
+		"ESC PWM"
+		(at 37.72 114.615 0)
+		(layer "F.SilkS")
+		(uuid "a988c3c3-4b12-5efe-95fa-bffba4f416ad")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.176)
+			)
+		)
+	)
+	(gr_text
+		"ESC PWR IN"
+		(at 153.119 80.407 0)
+		(layer "F.SilkS")
+		(uuid "23c43722-e26c-550a-9d1f-880be83a5054")
+		(effects
+			(font
+				(size 0.95 0.95)
+				(thickness 0.152)
+			)
+		)
+	)
+	(gr_text
+		"ESC PWR OUT"
+		(at 172.169 98.746 0)
+		(layer "F.SilkS")
+		(uuid "983f294d-0b20-54e0-b968-778204ea713d")
+		(effects
+			(font
+				(size 0.95 0.95)
+				(thickness 0.152)
 			)
 		)
 	)
