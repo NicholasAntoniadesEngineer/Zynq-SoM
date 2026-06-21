@@ -2362,6 +2362,22 @@ def _connector_descriptors(model: "PcbModel", uid, doc: list) -> list:
     return out
 
 
+def _set_font_size(prop: list, size: float) -> None:
+    """Rewrite a property's silk font size (+ a proportional thickness) in place —
+    used to shrink a refdes the declutter pass would otherwise fling far, so it
+    lands closer at a smaller but still-legible size."""
+    eff = _sub(prop, "effects")
+    fnt = _sub(eff, "font") if eff is not None else None
+    if fnt is None:
+        return
+    szn = _sub(fnt, "size")
+    if szn is not None and len(szn) >= 3:
+        szn[1] = szn[2] = round(size, 3)
+    thk = _sub(fnt, "thickness")
+    if thk is not None and len(thk) >= 2:
+        thk[1] = round(max(0.1, size * 0.15), 3)
+
+
 def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
     """Re-place the VISIBLE F.SilkS component reference designators that overprint
     each other or another silk object (LAW 1). KiCad stamps each ref at the
@@ -2421,24 +2437,43 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
             lx, ly = float(lat[1]), float(lat[2])
             bx, by = fx + lx * ca - ly * sa, fy + lx * sa + ly * ca
             court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
-            refs.append((ref, lat, fx, fy, ca, sa, court, size,
+            refs.append((ref, c, lat, fx, fy, ca, sa, court, size,
                          _text_box(ref, bx, by, size)))
     refs.sort(key=lambda r: r[0])
     placed: list = []
     moved = 0
-    for ref, lat, fx, fy, ca, sa, court, size, box in refs:
+    for ref, c, lat, fx, fy, ca, sa, court, size, box in refs:
         if not (any(_overlap_area(box, o) > 0.0 for o in occupied)
                 or any(_overlap_area(box, p) > 0.0 for p in placed)):
             placed.append(box)                       # clear -> keep authored spot
             continue
-        tx, ty, nbox, _off = _place_clear_label(
+        tx, ty, nbox, off = _place_clear_label(
             court[0], court[1], court[2], court[3], ref, size,
             occupied + placed, bounds=(ex0, ey0, ex1, ey1))
+        # if the only clear spot is far (a dense IC/diode grid flings the ref out,
+        # ambiguous to read), retry at smaller fonts to find a CLOSER clear spot —
+        # honours the offset _place_clear_label reports, the way the descriptor
+        # placer degrades a far label. A smaller refdes fits the in-cluster gaps.
+        new_size = size
+        if off > 8.0:
+            for shrink in (0.78, 0.62):
+                s2 = round(size * shrink, 3)
+                if s2 < 0.6:
+                    break
+                tx2, ty2, nbox2, off2 = _place_clear_label(
+                    court[0], court[1], court[2], court[3], ref, s2,
+                    occupied + placed, bounds=(ex0, ey0, ex1, ey1))
+                if off2 < off - 0.5:                 # meaningfully closer
+                    tx, ty, nbox, off, new_size = tx2, ty2, nbox2, off2, s2
+                    if off <= 8.0:
+                        break
         # rewrite the ref's footprint-local (at) so it composes to (tx, ty):
         # inverse of bx=fx+lx*ca-ly*sa, by=fy+lx*sa+ly*ca  ->  local = R(-a)·d
         dx, dy = tx - fx, ty - fy
         lat[1] = round(dx * ca + dy * sa, 4)
         lat[2] = round(-dx * sa + dy * ca, 4)
+        if new_size != size:
+            _set_font_size(c, new_size)
         placed.append(nbox)
         moved += 1
     return moved
