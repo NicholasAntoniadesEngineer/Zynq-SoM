@@ -1,7 +1,7 @@
 LAW-5 RATSNEST GATE: PASS (board 154 x 152 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 14043.6 mm (budget 15147 mm, OK; 481 edges; 14043.6/24079 mm = 58.3% of total)
+  cross-subsystem airwire: 14038.5 mm (budget 15147 mm, OK; 480 edges; 14038.5/24028.5 mm = 58.4% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
     pmod                   n=26  bbox_area=    3349 disp=  5.9
@@ -19,7 +19,6 @@ LAW-5 RATSNEST GATE: PASS (board 154 x 152 mm)
     fmc                    n=8   bbox_area=    1375 disp=  3.8
     rj45_connector         n=3   bbox_area=    1181 disp=  3.8
     usb_uart_connector     n=5   bbox_area=     391 disp=  3.7
-    motor_sense            n=9   bbox_area=    2351 disp=  3.7
     lcd                    n=20  bbox_area=    1069 disp=  3.5
     debug_boot             n=10  bbox_area=    1046 disp=  3.3
     board_services         n=9   bbox_area=    1191 disp=  3.3
@@ -28,6 +27,7 @@ LAW-5 RATSNEST GATE: PASS (board 154 x 152 mm)
     power_mon              n=10  bbox_area=     277 disp=  2.8
     bringup_en_modules     n=54  bbox_area=     935 disp=  2.6
     ethernet               n=10  bbox_area=     838 disp=  2.5
+    motor_sense            n=10  bbox_area=    1891 disp=  2.4
     usb_jtag               n=19  bbox_area=     496 disp=  1.9
     board_qwiic            n=2   bbox_area=      83 disp=  1.8
     hdmi_rx_term           n=10  bbox_area=      63 disp=  1.5

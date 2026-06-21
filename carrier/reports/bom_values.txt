@@ -3,7 +3,8 @@ bom value gate (LCSC actual value == declared value)
 catalog: 102 LCSC codes; 354 inline-passive checks
 mismatches: none
 
-UNVERIFIED — reported, NOT failing (4):
+UNVERIFIED — reported, NOT failing (5):
+  motor_sense:C4 '470uF/35V' LCSC C976030 (not in catalog)
   som_j1:J1 'DF40C-100DP-0.4V(51)' LCSC C531031 (not in catalog)
   som_j2:J2 'DF40C-100DP-0.4V(51)' LCSC C531031 (not in catalog)
   som_j3:J3 'DF40C-100DP-0.4V(51)' LCSC C531031 (not in catalog)
