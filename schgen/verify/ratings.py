@@ -116,6 +116,7 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     "C106794": Ratings("diode", v_max=5.5, temp_max=125, source="TPD4E02B04 TMDS RX ESD VRWM 5.5V"),
     "C138714": Ratings("diode", v_max=5.5, temp_max=125, source="TPD4E05U06 4-ch GND-ref TVS: SLVSBO7O VRWM 5.5V, VBR(min) 6V, CL 0.5pF, +-12kV contact (HDMI-RX slow-line ESD)"),
     "C42440491":Ratings("diode", v_max=28.0, temp_max=150, source="SMBJ28A 28V standoff TVS 600W SMB (motor_io ESC-rail clamp; note its clamp >INA3221 26V CM, so the rail is bounded <=4S, not the TVS)"),
+    "C2836319":Ratings("diode", v_max=5.0, temp_max=125, source="MSKSEMI SRV05-4 5-line steering-diode + surge-TVS ESD array: VRWM 5V (rated for 5V lines), VBR ~6V, clamp ~12.5-17V, SOT-23-6 (motor_pwm 8-ch ESC-output 5V ESD)"),
     # ---- MOSFET (Vds in vin_max for awareness; no derate rule fires) --------
     "C20917": Ratings("other", v_max=30.0, i_max=5.7, p_max=1.4, temp_max=150, source="AO3400A N-ch 30V Vds 5.7A SOT-23"),
     # ---- regulators / DC-DC / eFuse / load-switch / LDO (vin_max=abs-max) ---

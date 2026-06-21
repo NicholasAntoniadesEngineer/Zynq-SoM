@@ -78,6 +78,7 @@ SMBJ28A,motor_sense:D1,SMBJ28A:SMBJ28A,C42440491
 SN74HCT245PWR,motor_pwm:U1,SN74HCT245PWR:SN74HCT245PWR,C6779
 SN74LVC125ADR,usb_jtag:U2,SN74LVC125ADR:SN74LVC125ADR,C7661
 SN74LVC1G08,"bringup_en:U1,bringup_en:U2,bringup_en:U3,bringup_en_modules:U1,bringup_en_modules:U10,bringup_en_modules:U11,bringup_en_modules:U2,bringup_en_modules:U3,bringup_en_modules:U4,bringup_en_modules:U5,bringup_en_modules:U6,bringup_en_modules:U7,bringup_en_modules:U8,bringup_en_modules:U9",Package_TO_SOT_SMD:SOT-23-5,C7666
+SRV05-4,"motor_pwm:D1,motor_pwm:D2",Package_TO_SOT_SMD:SOT-23-6,C2836319
 SS34,lcd:D1,Diode_SMD:D_SMA,C8678
 SY6280AAC,"board_aux:U1,bringup_modules:U1,bringup_modules:U10,bringup_modules:U2,bringup_modules:U3,bringup_modules:U4,bringup_modules:U5,bringup_modules:U6,bringup_modules:U7,bringup_modules:U8,bringup_modules:U9,motor_pwm:U3,pmod_expansion:U1",SY6280AAC:SY6280AAC,C55136
 SY7201ABC,lcd:U1,SY7201ABC:SY7201ABC,C82173

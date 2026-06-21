@@ -38,10 +38,11 @@ live in som_conn_gen.FUNCTION_MAP):
   ESC_PWM_IN4..7 = IO_L3_DQS_P/N_33,   IO_L5_P/N_33         (J3.91/93/92/94)
   ESC_BUF_OE_N   = IO_L1P_13  (J2.57)
 
-DEFERRED (sourced follow-up, NOT guessed; LAW 7): a 5 V-rated ESD array on the
-outputs — the spec's PESD3V3L4UG is 3.3 V-working and would clamp the 5 V PWM, so
-it is NOT used; needs an EasyEDA-API-verified 5 V-rated array. The buffer drive +
-isolation + 33 R damping are the essential function; the ESD add is EMI/ESD polish.
+OUTPUT ESD (LAW 7, landed): two SRV05-4 5-line arrays (5 V standoff — safe for the
+5 V buffered signals, unlike the spec's 3.3 V PESD3V3L4UG which would clamp them)
+clamp the 8 ESC leads to +5V/GND at the connector, ahead of the 33 R + buffer.
+KiCad symbol (pinout built-in) + stock SOT-23-6 — no fetched part (the EasyEDA CAD
+API was rate-limited); LCSC C2836319 (MSKSEMI SRV05-4, 375 k stock).
 """
 
 from __future__ import annotations
@@ -57,6 +58,8 @@ LCSC_10U = "C15850"    # 10u 0805
 LCSC_10K = "C25804"    # 10k 1% 0603
 LCSC_13K = "C22797"    # 13k 1% 0603 -> SY6280 ILIM 523 mA
 LCSC_33R_ARRAY = "C25508"   # 4x33R 0603x4 isolated array (output series-damping)
+LCSC_SRV05 = "C2836319"     # SRV05-4 5-line ESD array, SOT-23-6 (MSKSEMI, 375k stock)
+SOT23_6 = "Package_TO_SOT_SMD:SOT-23-6"
 
 J2_MAP = "som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)"
 J3_MAP = "som_j3_connector (bank 33 PL — ESC PWM 4-7)"
@@ -101,6 +104,26 @@ def circuit() -> Circuit:
         c.net(f"ESC_OUT{i}", f"{rn}.{8 - j}", f"J1.{1 + i}")    # R out -> SIG row
     c.net("+5V_MOTOR_IO", *[f"J1.{p}" for p in range(9, 17)])    # +5V row (9-16)
     c.net("GND", *[f"J1.{p}" for p in range(17, 25)])            # GND row (17-24)
+
+    # ===== 5V-rated ESD on the 8 off-board PWM output lines =================
+    # SRV05-4: 4 steering diodes per line into a surge-TVS rail, 5 V standoff ->
+    # does NOT clamp the 5 V buffered signals (unlike the 3.3 V part the spec
+    # named). Two arrays (ch0-3, ch4-7) clamp ESD/transients from the ESC leads to
+    # +5V/GND right at the connector, ahead of the 33 R + buffer. KiCad symbol
+    # (pinout built-in: IO1/IO2/IO3/IO4, VP=+5V rail, VN=GND), stock SOT-23-6, no
+    # fetched part. VP -> +5V (the rail the signals swing against), VN -> GND.
+    # SOT-23-6 pin map (KiCad SRV05-4 symbol): 1=IO1 2=VN(GND) 3=IO2 4=IO3 5=VP(+5V)
+    # 6=IO4 — bind by pad NUMBER (schgen resolves pins by number, not name).
+    for arr in range(2):
+        ed = c.part(c.auto_ref("D"), "Power_Protection:SRV05-4", "SRV05-4",
+                    SOT23_6, LCSC=LCSC_SRV05)
+        b = arr * 4
+        c.net(f"ESC_OUT{b + 0}", f"{ed.ref}.1")    # IO1
+        c.net(f"ESC_OUT{b + 1}", f"{ed.ref}.3")    # IO2
+        c.net(f"ESC_OUT{b + 2}", f"{ed.ref}.4")    # IO3
+        c.net(f"ESC_OUT{b + 3}", f"{ed.ref}.6")    # IO4
+        c.net("+5V", f"{ed.ref}.5")                # VP  (clamp rail)
+        c.net("GND", f"{ed.ref}.2")                # VN
 
     # ===== U3: SY6280 gates +5V -> +5V_MOTOR_IO (servo-rail current limit) ====
     # default-ON (EN high): the ILIM (523 mA) protects board +5V from a shorted
