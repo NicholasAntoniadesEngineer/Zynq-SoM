@@ -20,7 +20,10 @@ def test_edge_rotation_points_mouth_off_board():
     """For every connector face direction and every edge, the chosen placement
     rotation turns the mating mouth toward the OFF-BOARD side of that edge."""
     edge_out = {"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0)}
-    for face in ("-Y", "+Y"):
+    # every mating-face the engine supports (-Y/+Y in-plane + the +X/-X mouths
+    # added for horizontal edge connectors like the XT60) must, on every edge,
+    # rotate so the mouth points OFF the board.
+    for face in pcb._ROT_TABLES:
         for edge in ("N", "S", "E", "W"):
             rot = connector_edge_rotation(face, edge)
             assert _mating_face_out_dir(face, rot) == edge_out[edge], \
@@ -31,7 +34,8 @@ def test_every_offboard_mpn_has_a_mating_face():
     """Every off-board connector family the floorplan can pin has a researched
     mating-face direction (so the placer can rotate it)."""
     for mpn, face in pcb.CONN_MATING_FACE.items():
-        assert face in ("-Y", "+Y"), f"{mpn} has an illegal mating face {face!r}"
+        assert face in pcb._ROT_TABLES, \
+            f"{mpn} has an unsupported mating face {face!r} (not in the rotation engine)"
 
 
 # ---- a synthetic placed model: PASS, then per-rule mutants must FAIL ----------
