@@ -1,10 +1,8 @@
 3D model coverage gate (custom footprints reference a stock KiCad 3D model that EXISTS on disk)
 ========================================================================
 STATUS: SOFT — gaps are reported, never fail the board (some bespoke parts have no faithful stock body)
-61/62 custom footprints have a resolving 3D model
-
-UNMATCHED (1) — no model (a wrong body is worse than none):
-  HX_PZ2.54-3x8P_ZZ: EasyEDA part-add returned no 3D body for this 3x8 2.54mm header (motor_pwm ESC output); a wrong/approx box is worse than none — reference a generic pin-header body once a faithful one is sourced
+62/62 custom footprints have a resolving 3D model
+unmatched: none — every custom footprint has a model
 
 MISFIT (1) — model resolves but does NOT match the footprint body (LAW):
   XT60PW-M: model 18.1x15.5 mm vs footprint body 0.5x7.2 mm (ratio 36.19,2.15 outside [0.5,2.0])
