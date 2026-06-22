@@ -1130,7 +1130,17 @@ def cmd_board(args: argparse.Namespace) -> int:
         from schgen.output import render3d
         _pcb_path = pcb_res.get("pcb") if isinstance(pcb_res, dict) else None
         if _pcb_path is not None:
-            render3d.render(Path(_pcb_path), REPO_ROOT / "carrier" / "renders")
+            _r3d = render3d.render(Path(_pcb_path),
+                                   REPO_ROOT / "carrier" / "renders")
+            # If THIS build just CREATED the 3D PNGs (a fresh tree where the
+            # gallery step above saw none on disk), re-splice the READMEs so the
+            # 3D gallery references the renders in this same build, not the next
+            # one. Idempotent + fast: a no-op once they are already embedded.
+            if _r3d:
+                from schgen.generate import gallery as _gal
+                if _gal.generate():
+                    print("GALLERY: README.md + carrier/README.md "
+                          "updated (3D board views)")
     except Exception as exc:  # noqa: BLE001
         print(f"3D RENDERS: skipped — {exc}")
 
