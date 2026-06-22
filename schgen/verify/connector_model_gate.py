@@ -89,10 +89,13 @@ _GEOM_EXCEPTIONS: dict[str, str] = {
         "FFC/FPC flex slot: single contact row + actuator are not a separable "
         "tail-row/mouth pair by pad density.",
     "XT60PW-M":
-        "ESC power XT60: the plug mates onto the bullet contacts (mouth ON the "
-        "contact side, local +X), not opposite a dense SMT tail row — same class "
-        "as RJ45/QWIIC; CONN_MATING_FACE is geometry-derived (bullets at +X) and "
-        "verified by placement_mech + render.",
+        "ESC power XT60: the plug mates onto the bullet contacts (pads 1/2 at "
+        "local +X, the chamfered fp_arc mouth at +X), not opposite a dense SMT "
+        "tail row — same class as RJ45/QWIIC, so the copper tail-row rule (2) does "
+        "not apply. CONN_MATING_FACE=+X matches the footprint. NOTE: the EasyEDA "
+        ".wrl shipped facing -X, so it was re-oriented 180deg about Z in the .wrl "
+        "itself (footprint model-rotate stays 0 so bad-Z stays clean) — 3D-render-"
+        "verified (E-edge view shows the bullet mouths facing off-board).",
 }
 
 # Connectors for which check (2) IS applied: through-shell parts whose cable
