@@ -1120,6 +1120,20 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  3D MODEL MISSING (model ...) clause: {_mpn}")
     ok_all = ok_all and m3d.ok       # HARD: every part has a RESOLVING model
 
+    # MULTI-ANGLE 3D RENDERS — regenerated every build (like the per-sheet
+    # schematic PNGs) so the tracked carrier/renders/3d_*.png always match the
+    # placed board: the definitive orientation/fit oracle (LAW 1/6, the human
+    # check the model3d gate can't be). Best-effort: a missing kicad-cli / 3D
+    # model library WARNS + skips and never fails the build (a raytraced PNG is
+    # not byte-deterministic, so these are not golden-gated).
+    try:
+        from schgen.output import render3d
+        _pcb_path = pcb_res.get("pcb") if isinstance(pcb_res, dict) else None
+        if _pcb_path is not None:
+            render3d.render(Path(_pcb_path), REPO_ROOT / "carrier" / "renders")
+    except Exception as exc:  # noqa: BLE001
+        print(f"3D RENDERS: skipped — {exc}")
+
     # SIGNAL-INTEGRITY CONSTRAINTS (not routing): harvest every diff pair the
     # schematic declares, join to the researched si_spec targets, and APPEND
     # diff-pair + matched-length design rules to the board .kicad_dru just

@@ -1,12 +1,16 @@
 """render3d — 3D board renders for VISUAL verification (LAW 1, extended to 3D).
 
-`schgen render3d` (also run best-effort by `schgen board`) shells out to
-``kicad-cli pcb render`` to write a top and a perspective 3D view of the placed
-board to ``carrier/renders/3d_top.png`` + ``carrier/renders/3d_persp.png``. These
-are NOT golden-checked (a raytraced PNG is not byte-deterministic) — they exist
-so every component's 3D body can be eyeballed (does every part have a model? do
-the connectors / ICs sit right? any part floating or mis-oriented?). The model3d
-gate counts coverage; this render is the human check the gate can't be.
+`schgen render3d` — also run best-effort by `schgen board` on EVERY build (like
+the per-sheet schematic PNGs) — shells out to ``kicad-cli pcb render`` to write a
+MULTI-ANGLE set of 3D views of the placed board to ``carrier/renders/3d_*.png``:
+the top + bottom faces, the four edge profiles (left/right/front/back — where the
+off-board connectors live), and two perspective hero views from opposite corners.
+They are NOT golden-checked (a raytraced PNG is not byte-deterministic) — they
+exist so every component's 3D body + every connector mouth can be eyeballed from
+multiple angles (does every part have a model? do the connectors / ICs sit right?
+any part floating or mis-oriented? does each off-board mouth face OUT?). The
+model3d gate counts coverage; this render is the human check the gate can't be —
+the XT60-facing-inward bug was caught in exactly such a view.
 
 Best-effort + portable: it auto-detects the installed KiCad 3D-model library and
 the ``KICAD<major>_3DMODEL_DIR`` var the footprints reference, and if kicad-cli
@@ -75,11 +79,19 @@ def render(pcb: Path, out_dir: Path, quality: str = "high",
     # wrote; only the render PNGs change).
     pro = pcb.with_suffix(".kicad_pro")
     pro_snapshot = pro.read_bytes() if pro.exists() else None
-    # top + bottom (so the BOTTOM-side passives — incl. the under-SoM rail
-    # decoupling — are actually inspectable, LAW 5/6) + a perspective hero view.
+    # A multi-angle set so every face + every off-board connector mouth is
+    # inspectable each build (LAW 5/6 — the rendered 3D is the definitive
+    # orientation/fit oracle; the XT60-facing-inward bug was caught in exactly
+    # such a view). 6 orthographic faces (top/bottom + the 4 edge profiles where
+    # the connectors live) + 2 perspective hero views from opposite corners.
     views = (("top", ["--side", "top"]),
              ("bottom", ["--side", "bottom"]),
-             ("persp", ["--perspective"]))
+             ("left", ["--side", "left"]),
+             ("right", ["--side", "right"]),
+             ("front", ["--side", "front"]),
+             ("back", ["--side", "back"]),
+             ("persp", ["--perspective"]),
+             ("persp_rear", ["--perspective", "--rotate", "0,0,180"]))
     written: list[Path] = []
     for name, view_args in views:
         png = out_dir / f"3d_{name}.png"
