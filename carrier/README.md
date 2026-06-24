@@ -177,7 +177,7 @@ every PNG below passed the netlist, ERC and visual gates.
 |---|---|
 | [board_aux](renders/board_aux.png) | Board services: gated +3V3_AUX rail + PCA9306 I2C isolator |
 | [board_qwiic](renders/board_qwiic.png) | QWIIC / STEMMA-QT expansion connector + USBLC6 ESD array |
-| [board_services](renders/board_services.png) | Board services: ID-EEPROM(MAC) + RTC + watchdog + QWIIC on gated +3V3_AUX |
+| [board_services](renders/board_services.png) | Board services: ID-EEPROM, RTC, watchdog, QWIIC |
 | [bringup_en](renders/bringup_en.png) | Bring-up EN cells: 3x SN74LVC1G08 rail DIP-AND-override |
 | [bringup_en_modules](renders/bringup_en_modules.png) | Bring-up EN cells: 11x SN74LVC1G08 module DIP-AND-override |
 | [bringup_modules](renders/bringup_modules.png) | Bring-up module gates: 10x SY6280 + status/user LEDs |
@@ -190,24 +190,24 @@ every PNG below passed the netlist, ERC and visual gates.
 | [hdmi_rx_term](renders/hdmi_rx_term.png) | HDMI-RX TMDS sink termination (8x49.9R to AVCC=+3V3) |
 | [hdmi_tx](renders/hdmi_tx.png) | HDMI TX: TPD12S016 + HDMI-A receptacle (source) |
 | [lcd](renders/lcd.png) | 40-pin TTL RGB LCD + SY7201 backlight boost |
-| [mechanical](renders/mechanical.png) | Mechanical: M3 mounting holes + chassis-GND bond + fiducials |
+| [mechanical](renders/mechanical.png) | Mechanical: M3 mounts, chassis-GND bond, fiducials |
 | [microsd](renders/microsd.png) | microSD slot (1.8V SoM <-> 3.3V card, TXS02612) |
 | [motor_pwm](renders/motor_pwm.png) | 8-ch PWM/ESC output buffer (5V, PL-isolating) |
 | [motor_sense](renders/motor_sense.png) | ESC motor-rail telemetry: INA3221 + 10mR shunt (I2C 0x42) |
 | [pd_input](renders/pd_input.png) | Power inlet: USB-C PD 20V/3A + TPS26631 eFuse |
 | [pmod](renders/pmod.png) | 2x Pmod host ports (bank 13, 200R series, gated 3V3) |
-| [pmod_expansion](renders/pmod_expansion.png) | Pmod expansion port (2x6, bank 13, low-cap ESD, manual-gated 3V3) |
+| [pmod_expansion](renders/pmod_expansion.png) | Pmod expansion (2x6, bank 13, ESD, gated 3V3) |
 | [power](renders/power.png) | Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs |
 | [power_mon](renders/power_mon.png) | Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41) |
-| [power_som](renders/power_som.png) | Power: +VIN -> +5V_SOM always-on buck (SoM VIN, P0 fix) |
+| [power_som](renders/power_som.png) | Power: +VIN -> +5V_SOM always-on buck |
 | [rj45_connector](renders/rj45_connector.png) | RJ45 8P8C jack (plain, ext. magnetics) |
 | [som_decoupling](renders/som_decoupling.png) | SoM power-entry decoupling under the DF40 mezzanine |
 | [som_j1](renders/som_j1.png) | SoM J1: power / USB / STM32 / JTAG / SDIO / ETH MDI |
 | [som_j2](renders/som_j2.png) | SoM J2: FPGA bank 13/33 IO + VCCO rails |
 | [som_j3](renders/som_j3.png) | SoM J3: FPGA bank 33/34/35 IO + VCCO rails |
 | [uart_bridge](renders/uart_bridge.png) | UART bridge: CP2102N USB-UART |
-| [usb_jtag](renders/usb_jtag.png) | USB-JTAG/UART debug bridge: CH347T, self-powered + isolated |
-| [usb_jtag_connector](renders/usb_jtag_connector.png) | USB-C UFP debug port -> CH347T (VBUS + protected USB pair) |
+| [usb_jtag](renders/usb_jtag.png) | USB-JTAG/UART bridge: CH347T, isolated |
+| [usb_jtag_connector](renders/usb_jtag_connector.png) | USB-C UFP debug port -> CH347T (protected) |
 | [usb_pd](renders/usb_pd.png) | USB-PD: FUSB302B Type-C controller |
 | [usb_uart_connector](renders/usb_uart_connector.png) | USB-C UFP console port -> CP2102N |
 | [usbc_otg](renders/usbc_otg.png) | USB 2.0 HS OTG port (Type-C, host) |

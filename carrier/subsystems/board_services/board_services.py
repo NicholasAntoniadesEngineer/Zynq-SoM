@@ -94,8 +94,7 @@ AUX_BUS = "board_aux (PCA9306 isolated side of STM32_I2C2)"
 
 def circuit() -> Circuit:
     c = Circuit("board_services",
-                "Board services: ID-EEPROM(MAC) + RTC + watchdog + QWIIC "
-                "on gated +3V3_AUX")
+                "Board services: ID-EEPROM, RTC, watchdog, QWIIC")
 
     # ===== 1. ID-EEPROM 24AA025E48 (EUI-48 MAC) @ 0x51 ======================
     c.use_part("24AA025E48T-I_OT", ref="U1")

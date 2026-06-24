@@ -154,7 +154,7 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     meta = Meta(meta)
     draws_note = meta.note("draws", DRAWS_NOTE)
     c = Circuit("usb_jtag",
-                "USB-JTAG/UART debug bridge: CH347T, self-powered + isolated")
+                "USB-JTAG/UART bridge: CH347T, isolated")
 
     # =====================================================================
     # self-powered island LDO: debug-USB VBUS (+VBUS_USB, from the USB-C

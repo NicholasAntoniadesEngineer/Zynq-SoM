@@ -99,7 +99,7 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     """
     meta = Meta(meta)
     c = Circuit("usb_jtag_connector",
-                "USB-C UFP debug port -> CH347T (VBUS + protected USB pair)")
+                "USB-C UFP debug port -> CH347T (protected)")
     c.use_part("TYPE-C-31-M-12", ref="J1")
     c.use_part("USBLC6-2SC6", ref="U1")
 

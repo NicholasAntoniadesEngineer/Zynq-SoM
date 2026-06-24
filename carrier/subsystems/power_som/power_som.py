@@ -79,7 +79,7 @@ L_FP = "SWPA8040S100MT:SWPA8040S100MT"
 
 def circuit() -> Circuit:
     c = Circuit("power_som",
-                "Power: +VIN -> +5V_SOM always-on buck (SoM VIN, P0 fix)")
+                "Power: +VIN -> +5V_SOM always-on buck")
 
     # +VIN (20 V) -> +5V_SOM buck (U4, LM61460, VQFN-HR, 6 A SYNC, ALWAYS-ON).
     # Identical EP-equivalent cell to power.py's U1/U2 LM61460 stages EXCEPT the

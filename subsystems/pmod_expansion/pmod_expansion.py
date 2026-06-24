@@ -137,8 +137,7 @@ def circuit(meta: "Meta | dict | None" = None) -> Circuit:
     """
     meta = Meta(meta)
     c = Circuit("pmod_expansion",
-                "Pmod expansion port (2x6, bank 13, low-cap ESD, "
-                "manual-gated 3V3)")
+                "Pmod expansion (2x6, bank 13, ESD, gated 3V3)")
 
     # ===== manual power gate: SY6280 +VDD_PMOD -> +VSW_PMOD, default-OFF =====
     c.use_part("SY6280AAC", ref="U1")
