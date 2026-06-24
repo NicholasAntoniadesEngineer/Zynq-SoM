@@ -2532,8 +2532,8 @@
 	)
 	(wire
 		(pts
-			(xy 91.44 81.28)
-			(xy 87.63 81.28)
+			(xy 88.9 81.28)
+			(xy 85.09 81.28)
 		)
 		(stroke
 			(width 0)
@@ -2543,8 +2543,8 @@
 	)
 	(wire
 		(pts
-			(xy 91.44 83.82)
-			(xy 87.63 83.82)
+			(xy 88.9 83.82)
+			(xy 85.09 83.82)
 		)
 		(stroke
 			(width 0)
@@ -2554,8 +2554,8 @@
 	)
 	(wire
 		(pts
-			(xy 91.44 73.66)
-			(xy 87.63 73.66)
+			(xy 88.9 73.66)
+			(xy 85.09 73.66)
 		)
 		(stroke
 			(width 0)
@@ -2565,8 +2565,8 @@
 	)
 	(wire
 		(pts
-			(xy 91.44 76.2)
-			(xy 87.63 76.2)
+			(xy 88.9 76.2)
+			(xy 85.09 76.2)
 		)
 		(stroke
 			(width 0)
@@ -2576,8 +2576,8 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 83.82)
-			(xy 121.92 83.82)
+			(xy 115.57 83.82)
+			(xy 119.38 83.82)
 		)
 		(stroke
 			(width 0)
@@ -2587,8 +2587,8 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 86.36)
-			(xy 121.92 86.36)
+			(xy 115.57 86.36)
+			(xy 119.38 86.36)
 		)
 		(stroke
 			(width 0)
@@ -2598,8 +2598,8 @@
 	)
 	(wire
 		(pts
-			(xy 121.92 86.36)
-			(xy 121.92 91.44)
+			(xy 119.38 86.36)
+			(xy 119.38 91.44)
 		)
 		(stroke
 			(width 0)
@@ -2609,8 +2609,8 @@
 	)
 	(wire
 		(pts
-			(xy 226.06 66.04)
-			(xy 229.87 66.04)
+			(xy 223.52 66.04)
+			(xy 227.33 66.04)
 		)
 		(stroke
 			(width 0)
@@ -2620,8 +2620,8 @@
 	)
 	(wire
 		(pts
-			(xy 226.06 63.5)
-			(xy 229.87 63.5)
+			(xy 223.52 63.5)
+			(xy 227.33 63.5)
 		)
 		(stroke
 			(width 0)
@@ -2631,14 +2631,25 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 78.74)
-			(xy 121.92 78.74)
+			(xy 115.57 78.74)
+			(xy 119.38 78.74)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "63b78619-d26e-541b-8453-30dbcc347aed")
+	)
+	(wire
+		(pts
+			(xy 101.6 54.61)
+			(xy 101.6 52.07)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c3f954d2-0556-5a5f-badc-036580789d98")
 	)
 	(wire
 		(pts
@@ -2649,23 +2660,12 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "c3f954d2-0556-5a5f-badc-036580789d98")
-	)
-	(wire
-		(pts
-			(xy 106.68 54.61)
-			(xy 106.68 52.07)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
 		(uuid "8609b510-aa2c-52f6-a2cf-fcdd275d01d8")
 	)
 	(wire
 		(pts
+			(xy 101.6 52.07)
 			(xy 104.14 52.07)
-			(xy 106.68 52.07)
 		)
 		(stroke
 			(width 0)
@@ -2675,8 +2675,8 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 60.96)
-			(xy 195.58 60.96)
+			(xy 196.85 60.96)
+			(xy 193.04 60.96)
 		)
 		(stroke
 			(width 0)
@@ -2686,8 +2686,8 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 63.5)
-			(xy 195.58 63.5)
+			(xy 196.85 63.5)
+			(xy 193.04 63.5)
 		)
 		(stroke
 			(width 0)
@@ -2697,8 +2697,8 @@
 	)
 	(wire
 		(pts
-			(xy 195.58 60.96)
-			(xy 195.58 63.5)
+			(xy 193.04 60.96)
+			(xy 193.04 63.5)
 		)
 		(stroke
 			(width 0)
@@ -2708,8 +2708,8 @@
 	)
 	(wire
 		(pts
-			(xy 226.06 71.12)
-			(xy 229.87 71.12)
+			(xy 223.52 71.12)
+			(xy 242.57 71.12)
 		)
 		(stroke
 			(width 0)
@@ -2719,8 +2719,8 @@
 	)
 	(wire
 		(pts
-			(xy 226.06 73.66)
-			(xy 229.87 73.66)
+			(xy 223.52 73.66)
+			(xy 242.57 73.66)
 		)
 		(stroke
 			(width 0)
@@ -2730,14 +2730,25 @@
 	)
 	(wire
 		(pts
-			(xy 229.87 71.12)
-			(xy 229.87 73.66)
+			(xy 242.57 71.12)
+			(xy 242.57 73.66)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "8ffd9203-7b2d-5366-ba21-e22ee7b619b1")
+	)
+	(wire
+		(pts
+			(xy 208.28 92.71)
+			(xy 208.28 95.25)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9bbdb5dd-996f-54ef-b06f-b5c06b00eb76")
 	)
 	(wire
 		(pts
@@ -2748,23 +2759,12 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "9bbdb5dd-996f-54ef-b06f-b5c06b00eb76")
-	)
-	(wire
-		(pts
-			(xy 213.36 92.71)
-			(xy 213.36 95.25)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
 		(uuid "14c099dd-5f97-51b7-a895-52a7577f5122")
 	)
 	(wire
 		(pts
+			(xy 208.28 95.25)
 			(xy 210.82 95.25)
-			(xy 213.36 95.25)
 		)
 		(stroke
 			(width 0)
@@ -2774,8 +2774,8 @@
 	)
 	(wire
 		(pts
-			(xy 91.44 71.12)
-			(xy 87.63 71.12)
+			(xy 88.9 71.12)
+			(xy 85.09 71.12)
 		)
 		(stroke
 			(width 0)
@@ -2785,8 +2785,8 @@
 	)
 	(wire
 		(pts
-			(xy 87.63 71.12)
-			(xy 87.63 66.04)
+			(xy 85.09 71.12)
+			(xy 85.09 66.04)
 		)
 		(stroke
 			(width 0)
@@ -2796,8 +2796,8 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 81.28)
-			(xy 121.92 81.28)
+			(xy 115.57 81.28)
+			(xy 119.38 81.28)
 		)
 		(stroke
 			(width 0)
@@ -2807,7 +2807,7 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 66.04)
+			(xy 196.85 66.04)
 			(xy 187.96 66.04)
 		)
 		(stroke
@@ -2818,7 +2818,7 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 68.58)
+			(xy 196.85 68.58)
 			(xy 187.96 68.58)
 		)
 		(stroke
@@ -2840,8 +2840,8 @@
 	)
 	(wire
 		(pts
-			(xy 226.06 76.2)
-			(xy 232.41 76.2)
+			(xy 223.52 76.2)
+			(xy 227.33 76.2)
 		)
 		(stroke
 			(width 0)
@@ -2851,8 +2851,8 @@
 	)
 	(wire
 		(pts
-			(xy 232.41 76.2)
-			(xy 232.41 81.28)
+			(xy 227.33 76.2)
+			(xy 227.33 81.28)
 		)
 		(stroke
 			(width 0)
@@ -2862,8 +2862,8 @@
 	)
 	(wire
 		(pts
-			(xy 57.15 99.06)
-			(xy 69.85 99.06)
+			(xy 54.61 99.06)
+			(xy 67.31 99.06)
 		)
 		(stroke
 			(width 0)
@@ -2873,8 +2873,8 @@
 	)
 	(wire
 		(pts
-			(xy 69.85 99.06)
-			(xy 82.55 99.06)
+			(xy 67.31 99.06)
+			(xy 80.01 99.06)
 		)
 		(stroke
 			(width 0)
@@ -2884,8 +2884,8 @@
 	)
 	(wire
 		(pts
-			(xy 69.85 99.06)
-			(xy 69.85 96.52)
+			(xy 67.31 99.06)
+			(xy 67.31 96.52)
 		)
 		(stroke
 			(width 0)
@@ -2895,8 +2895,8 @@
 	)
 	(wire
 		(pts
-			(xy 158.75 73.66)
-			(xy 158.75 71.12)
+			(xy 156.21 73.66)
+			(xy 156.21 71.12)
 		)
 		(stroke
 			(width 0)
@@ -2906,8 +2906,8 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 73.66)
-			(xy 158.75 73.66)
+			(xy 115.57 73.66)
+			(xy 156.21 73.66)
 		)
 		(stroke
 			(width 0)
@@ -2917,8 +2917,8 @@
 	)
 	(wire
 		(pts
-			(xy 158.75 73.66)
-			(xy 199.39 73.66)
+			(xy 156.21 73.66)
+			(xy 196.85 73.66)
 		)
 		(stroke
 			(width 0)
@@ -2928,8 +2928,8 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 76.2)
-			(xy 130.81 76.2)
+			(xy 115.57 76.2)
+			(xy 128.27 76.2)
 		)
 		(stroke
 			(width 0)
@@ -2939,8 +2939,8 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 71.12)
-			(xy 186.69 71.12)
+			(xy 196.85 71.12)
+			(xy 184.15 71.12)
 		)
 		(stroke
 			(width 0)
@@ -2950,8 +2950,8 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 68.58)
-			(xy 128.27 68.58)
+			(xy 115.57 68.58)
+			(xy 125.73 68.58)
 		)
 		(stroke
 			(width 0)
@@ -2961,8 +2961,8 @@
 	)
 	(wire
 		(pts
-			(xy 128.27 68.58)
-			(xy 128.27 66.04)
+			(xy 125.73 68.58)
+			(xy 125.73 66.04)
 		)
 		(stroke
 			(width 0)
@@ -2972,8 +2972,8 @@
 	)
 	(wire
 		(pts
+			(xy 125.73 68.58)
 			(xy 128.27 68.58)
-			(xy 130.81 68.58)
 		)
 		(stroke
 			(width 0)
@@ -2983,8 +2983,8 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 78.74)
-			(xy 186.69 78.74)
+			(xy 196.85 78.74)
+			(xy 184.15 78.74)
 		)
 		(stroke
 			(width 0)
@@ -2993,31 +2993,31 @@
 		(uuid "cf31d7f1-0373-5e05-b442-3cb0b3b11fd6")
 	)
 	(junction
-		(at 106.68 52.07)
+		(at 104.14 52.07)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "2f1a9bea-a00c-54d6-8968-caf8371d0e3d")
 	)
 	(junction
-		(at 195.58 63.5)
+		(at 193.04 60.96)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "2a6850d9-96d5-50d6-badb-48dfb2589cce")
 	)
 	(junction
-		(at 213.36 95.25)
+		(at 210.82 95.25)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "a0cbf140-02f4-5450-b418-dfed32d7e4a2")
 	)
 	(junction
-		(at 229.87 73.66)
+		(at 242.57 71.12)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "f9ed9723-6060-57be-a8c3-af15c17b1f86")
 	)
 	(junction
-		(at 69.85 99.06)
+		(at 67.31 99.06)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "8ac8fd25-39c0-59fc-9f11-9579f02279d7")
@@ -3029,45 +3029,45 @@
 		(uuid "7e27afb2-cda6-5724-9bb3-5f6ff980b652")
 	)
 	(junction
-		(at 158.75 73.66)
+		(at 156.21 73.66)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "f69d2548-6c96-559f-9584-2ff109671885")
 	)
 	(junction
-		(at 128.27 68.58)
+		(at 125.73 68.58)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "550c4178-ee2f-57e1-a5a3-d61a2e1587cc")
 	)
 	(no_connect
-		(at 91.44 78.74)
+		(at 88.9 78.74)
 		(uuid "44f4fd03-d9d5-500b-b30f-3fb342b78fdf")
 	)
 	(no_connect
-		(at 91.44 86.36)
+		(at 88.9 86.36)
 		(uuid "f63f3ad7-2571-5b3d-9e60-207b87bbc2a8")
 	)
 	(no_connect
-		(at 118.11 71.12)
+		(at 115.57 71.12)
 		(uuid "35c9bfc2-ffd5-50ea-90b7-e24334d56ffe")
 	)
 	(no_connect
-		(at 199.39 76.2)
+		(at 196.85 76.2)
 		(uuid "a19ae1e7-89f9-5eb2-b52d-11185dcf4863")
 	)
 	(no_connect
-		(at 226.06 60.96)
+		(at 223.52 60.96)
 		(uuid "e5247fea-914d-59f2-b29c-5d7d8e9bc3ee")
 	)
 	(no_connect
-		(at 226.06 68.58)
+		(at 223.52 68.58)
 		(uuid "30d26df5-70e2-5ed1-9326-3e272393d2e6")
 	)
 	(hierarchical_label
 		"PMON_ALERT_N"
 		(shape bidirectional)
-		(at 130.81 68.58 0)
+		(at 128.27 68.58 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3079,7 +3079,7 @@
 	(hierarchical_label
 		"STM32_I2C2_SCL"
 		(shape bidirectional)
-		(at 130.81 76.2 0)
+		(at 128.27 76.2 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3091,7 +3091,7 @@
 	(hierarchical_label
 		"STM32_I2C2_SCL"
 		(shape bidirectional)
-		(at 186.69 71.12 180)
+		(at 184.15 71.12 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3103,7 +3103,7 @@
 	(hierarchical_label
 		"PMON_ALERT_N"
 		(shape bidirectional)
-		(at 186.69 78.74 180)
+		(at 184.15 78.74 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3115,7 +3115,7 @@
 	(hierarchical_label
 		"STM32_I2C2_SDA"
 		(shape bidirectional)
-		(at 158.75 71.12 90)
+		(at 156.21 71.12 90)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3126,7 +3126,7 @@
 	)
 	(symbol
 		(lib_id "INA3221AIRGVR:INA3221AIRGVR")
-		(at 105.41 73.66 180)
+		(at 102.87 73.66 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3136,7 +3136,7 @@
 		(property
 			"Reference"
 			"U21001"
-			(at 113.03 56.515 0)
+			(at 110.49 56.515 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3146,7 +3146,7 @@
 		(property
 			"Value"
 			"INA3221AIRGVR"
-			(at 113.03 90.93 0)
+			(at 110.49 90.93 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3156,7 +3156,7 @@
 		(property
 			"Footprint"
 			"INA3221AIRGVR:INA3221AIRGVR"
-			(at 105.41 73.66 0)
+			(at 102.87 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3167,7 +3167,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 105.41 73.66 0)
+			(at 102.87 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3178,7 +3178,7 @@
 		(property
 			"LCSC"
 			"C181255"
-			(at 105.41 73.66 0)
+			(at 102.87 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3267,7 +3267,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 128.27 62.23 0)
+		(at 125.73 62.23 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3277,7 +3277,7 @@
 		(property
 			"Reference"
 			"R21001"
-			(at 130.912 60.96 0)
+			(at 128.373 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3287,7 +3287,7 @@
 		(property
 			"Value"
 			"10k"
-			(at 131.516 63.5 0)
+			(at 128.976 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3297,7 +3297,7 @@
 		(property
 			"Footprint"
 			"Resistor_SMD:R_0603_1608Metric"
-			(at 128.27 62.23 0)
+			(at 125.73 62.23 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3308,7 +3308,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 128.27 62.23 0)
+			(at 125.73 62.23 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3319,7 +3319,7 @@
 		(property
 			"LCSC"
 			"C25804"
-			(at 128.27 62.23 0)
+			(at 125.73 62.23 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3348,7 +3348,7 @@
 	)
 	(symbol
 		(lib_id "INA3221AIRGVR:INA3221AIRGVR")
-		(at 212.09 73.66 0)
+		(at 209.55 73.66 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3358,7 +3358,7 @@
 		(property
 			"Reference"
 			"U21002"
-			(at 219.71 56.515 0)
+			(at 217.17 56.515 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3368,7 +3368,7 @@
 		(property
 			"Value"
 			"INA3221AIRGVR"
-			(at 224.79 90.93 0)
+			(at 222.25 90.93 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3378,7 +3378,7 @@
 		(property
 			"Footprint"
 			"INA3221AIRGVR:INA3221AIRGVR"
-			(at 212.09 73.66 0)
+			(at 209.55 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3389,7 +3389,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 212.09 73.66 0)
+			(at 209.55 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3400,7 +3400,7 @@
 		(property
 			"LCSC"
 			"C181255"
-			(at 212.09 73.66 0)
+			(at 209.55 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3489,7 +3489,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 57.15 102.87 0)
+		(at 54.61 102.87 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3499,7 +3499,7 @@
 		(property
 			"Reference"
 			"C21001"
-			(at 60.808 101.6 0)
+			(at 58.269 101.6 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3509,7 +3509,7 @@
 		(property
 			"Value"
 			"100n"
-			(at 62.015 104.14 0)
+			(at 59.475 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3519,7 +3519,7 @@
 		(property
 			"Footprint"
 			"Capacitor_SMD:C_0603_1608Metric"
-			(at 57.15 102.87 0)
+			(at 54.61 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3530,7 +3530,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 57.15 102.87 0)
+			(at 54.61 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3541,7 +3541,7 @@
 		(property
 			"LCSC"
 			"C14663"
-			(at 57.15 102.87 0)
+			(at 54.61 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3570,7 +3570,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 69.85 102.87 0)
+		(at 67.31 102.87 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3580,7 +3580,7 @@
 		(property
 			"Reference"
 			"C21002"
-			(at 73.508 101.6 0)
+			(at 70.969 101.6 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3590,7 +3590,7 @@
 		(property
 			"Value"
 			"100n"
-			(at 74.715 104.14 0)
+			(at 72.175 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3600,7 +3600,7 @@
 		(property
 			"Footprint"
 			"Capacitor_SMD:C_0603_1608Metric"
-			(at 69.85 102.87 0)
+			(at 67.31 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3611,7 +3611,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 69.85 102.87 0)
+			(at 67.31 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3622,7 +3622,7 @@
 		(property
 			"LCSC"
 			"C14663"
-			(at 69.85 102.87 0)
+			(at 67.31 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3651,7 +3651,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 82.55 102.87 0)
+		(at 80.01 102.87 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3661,7 +3661,7 @@
 		(property
 			"Reference"
 			"C21003"
-			(at 86.209 101.6 0)
+			(at 83.669 101.6 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3671,7 +3671,7 @@
 		(property
 			"Value"
 			"10u"
-			(at 86.812 104.14 0)
+			(at 84.272 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3681,7 +3681,7 @@
 		(property
 			"Footprint"
 			"Capacitor_SMD:C_0805_2012Metric"
-			(at 82.55 102.87 0)
+			(at 80.01 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3692,7 +3692,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 82.55 102.87 0)
+			(at 80.01 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3703,7 +3703,7 @@
 		(property
 			"LCSC"
 			"C15850"
-			(at 82.55 102.87 0)
+			(at 80.01 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3732,7 +3732,7 @@
 	)
 	(symbol
 		(lib_id "RLM12FTCMR020:RLM12FTCMR020")
-		(at 64.77 129.54 90)
+		(at 62.23 129.54 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3742,7 +3742,7 @@
 		(property
 			"Reference"
 			"RS21004"
-			(at 69.54 128.27 90)
+			(at 67 128.27 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3752,7 +3752,7 @@
 		(property
 			"Value"
 			"20mR"
-			(at 70.143 130.81 90)
+			(at 67.603 130.81 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3762,7 +3762,7 @@
 		(property
 			"Footprint"
 			"RLM12FTCMR020:RLM12FTCMR020"
-			(at 64.77 129.54 0)
+			(at 62.23 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3773,7 +3773,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 64.77 129.54 0)
+			(at 62.23 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3784,7 +3784,7 @@
 		(property
 			"LCSC"
 			"C393094"
-			(at 64.77 129.54 0)
+			(at 62.23 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3813,7 +3813,7 @@
 	)
 	(symbol
 		(lib_id "RLM12FTCMR010:RLM12FTCMR010")
-		(at 82.55 129.54 90)
+		(at 80.01 129.54 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3823,7 +3823,7 @@
 		(property
 			"Reference"
 			"RS21003"
-			(at 87.32 128.27 90)
+			(at 84.78 128.27 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3833,7 +3833,7 @@
 		(property
 			"Value"
 			"10mR"
-			(at 87.923 130.81 90)
+			(at 85.383 130.81 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3843,7 +3843,7 @@
 		(property
 			"Footprint"
 			"RLM12FTCMR010:RLM12FTCMR010"
-			(at 82.55 129.54 0)
+			(at 80.01 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3854,7 +3854,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 82.55 129.54 0)
+			(at 80.01 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3865,7 +3865,7 @@
 		(property
 			"LCSC"
 			"C188070"
-			(at 82.55 129.54 0)
+			(at 80.01 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3894,7 +3894,7 @@
 	)
 	(symbol
 		(lib_id "RLM12FTCMR010:RLM12FTCMR010")
-		(at 100.33 129.54 90)
+		(at 97.79 129.54 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3904,7 +3904,7 @@
 		(property
 			"Reference"
 			"RS21002"
-			(at 105.1 128.27 90)
+			(at 102.56 128.27 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3914,7 +3914,7 @@
 		(property
 			"Value"
 			"10mR"
-			(at 105.703 130.81 90)
+			(at 103.163 130.81 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3924,7 +3924,7 @@
 		(property
 			"Footprint"
 			"RLM12FTCMR010:RLM12FTCMR010"
-			(at 100.33 129.54 0)
+			(at 97.79 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3935,7 +3935,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 100.33 129.54 0)
+			(at 97.79 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3946,7 +3946,7 @@
 		(property
 			"LCSC"
 			"C188070"
-			(at 100.33 129.54 0)
+			(at 97.79 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3975,7 +3975,7 @@
 	)
 	(symbol
 		(lib_id "RLM12FTCMR010:RLM12FTCMR010")
-		(at 116.84 129.54 90)
+		(at 114.3 129.54 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3985,7 +3985,7 @@
 		(property
 			"Reference"
 			"RS21001"
-			(at 121.61 128.27 90)
+			(at 119.07 128.27 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3995,7 +3995,7 @@
 		(property
 			"Value"
 			"10mR"
-			(at 122.213 130.81 90)
+			(at 119.673 130.81 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4005,7 +4005,7 @@
 		(property
 			"Footprint"
 			"RLM12FTCMR010:RLM12FTCMR010"
-			(at 116.84 129.54 0)
+			(at 114.3 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4016,7 +4016,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 116.84 129.54 0)
+			(at 114.3 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4027,7 +4027,7 @@
 		(property
 			"LCSC"
 			"C188070"
-			(at 116.84 129.54 0)
+			(at 114.3 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4056,7 +4056,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+3V3_SC")
-		(at 87.63 66.04 0)
+		(at 85.09 66.04 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4066,7 +4066,7 @@
 		(property
 			"Reference"
 			"#PWR21001"
-			(at 87.63 63.5 0)
+			(at 85.09 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4077,7 +4077,7 @@
 		(property
 			"Value"
 			"+3V3_SC"
-			(at 87.63 62.484 0)
+			(at 85.09 62.484 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4087,7 +4087,7 @@
 		(property
 			"Footprint"
 			""
-			(at 87.63 66.04 0)
+			(at 85.09 66.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4098,7 +4098,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 87.63 66.04 0)
+			(at 85.09 66.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4123,7 +4123,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+5V_REG")
-		(at 87.63 73.66 90)
+		(at 85.09 73.66 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4133,7 +4133,7 @@
 		(property
 			"Reference"
 			"#PWR21002"
-			(at 87.63 71.12 0)
+			(at 85.09 71.12 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4144,7 +4144,7 @@
 		(property
 			"Value"
 			"+5V_REG"
-			(at 80.447 73.66 90)
+			(at 77.907 73.66 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4154,7 +4154,7 @@
 		(property
 			"Footprint"
 			""
-			(at 87.63 73.66 0)
+			(at 85.09 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4165,7 +4165,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 87.63 73.66 0)
+			(at 85.09 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4190,7 +4190,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 87.63 76.2 90)
+		(at 85.09 76.2 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4200,7 +4200,7 @@
 		(property
 			"Reference"
 			"#PWR21003"
-			(at 87.63 73.66 0)
+			(at 85.09 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4211,7 +4211,7 @@
 		(property
 			"Value"
 			"+5V"
-			(at 82.86 76.2 90)
+			(at 80.32 76.2 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4221,7 +4221,7 @@
 		(property
 			"Footprint"
 			""
-			(at 87.63 76.2 0)
+			(at 85.09 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4232,7 +4232,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 87.63 76.2 0)
+			(at 85.09 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4257,7 +4257,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+VIN")
-		(at 87.63 81.28 90)
+		(at 85.09 81.28 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4267,7 +4267,7 @@
 		(property
 			"Reference"
 			"#PWR21004"
-			(at 87.63 78.74 0)
+			(at 85.09 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4278,7 +4278,7 @@
 		(property
 			"Value"
 			"+VIN"
-			(at 82.257 81.28 90)
+			(at 79.717 81.28 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4288,7 +4288,7 @@
 		(property
 			"Footprint"
 			""
-			(at 87.63 81.28 0)
+			(at 85.09 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4299,7 +4299,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 87.63 81.28 0)
+			(at 85.09 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4324,7 +4324,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+VIN_SYS")
-		(at 87.63 83.82 90)
+		(at 85.09 83.82 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4334,7 +4334,7 @@
 		(property
 			"Reference"
 			"#PWR21005"
-			(at 87.63 81.28 0)
+			(at 85.09 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4345,7 +4345,7 @@
 		(property
 			"Value"
 			"+VIN_SYS"
-			(at 79.844 83.82 90)
+			(at 77.304 83.82 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4355,7 +4355,7 @@
 		(property
 			"Footprint"
 			""
-			(at 87.63 83.82 0)
+			(at 85.09 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4366,7 +4366,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 87.63 83.82 0)
+			(at 85.09 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4391,7 +4391,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 121.92 78.74 90)
+		(at 119.38 78.74 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4401,7 +4401,7 @@
 		(property
 			"Reference"
 			"#PWR21006"
-			(at 121.92 76.2 0)
+			(at 119.38 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4412,7 +4412,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 126.69 78.74 90)
+			(at 124.15 78.74 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4422,7 +4422,7 @@
 		(property
 			"Footprint"
 			""
-			(at 121.92 78.74 0)
+			(at 119.38 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4433,7 +4433,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 121.92 78.74 0)
+			(at 119.38 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4458,7 +4458,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+3V3_SC")
-		(at 121.92 81.28 270)
+		(at 119.38 81.28 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4468,7 +4468,7 @@
 		(property
 			"Reference"
 			"#PWR21007"
-			(at 121.92 78.74 0)
+			(at 119.38 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4479,7 +4479,7 @@
 		(property
 			"Value"
 			"+3V3_SC"
-			(at 129.103 81.28 90)
+			(at 126.563 81.28 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4489,7 +4489,7 @@
 		(property
 			"Footprint"
 			""
-			(at 121.92 81.28 0)
+			(at 119.38 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4500,7 +4500,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 121.92 81.28 0)
+			(at 119.38 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4525,7 +4525,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+3V3_REG")
-		(at 121.92 83.82 270)
+		(at 119.38 83.82 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4535,7 +4535,7 @@
 		(property
 			"Reference"
 			"#PWR21008"
-			(at 121.92 81.28 0)
+			(at 119.38 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4546,7 +4546,7 @@
 		(property
 			"Value"
 			"+3V3_REG"
-			(at 129.706 83.82 90)
+			(at 127.166 83.82 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4556,7 +4556,7 @@
 		(property
 			"Footprint"
 			""
-			(at 121.92 83.82 0)
+			(at 119.38 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4567,7 +4567,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 121.92 83.82 0)
+			(at 119.38 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4592,7 +4592,7 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 121.92 91.44 180)
+		(at 119.38 91.44 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4602,7 +4602,7 @@
 		(property
 			"Reference"
 			"#PWR21009"
-			(at 121.92 88.9 0)
+			(at 119.38 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4613,7 +4613,7 @@
 		(property
 			"Value"
 			"+3V3"
-			(at 121.92 94.996 0)
+			(at 119.38 94.996 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4623,7 +4623,7 @@
 		(property
 			"Footprint"
 			""
-			(at 121.92 91.44 0)
+			(at 119.38 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4634,7 +4634,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 121.92 91.44 0)
+			(at 119.38 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4659,7 +4659,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+3V3_SC")
-		(at 128.27 58.42 0)
+		(at 125.73 58.42 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4669,7 +4669,7 @@
 		(property
 			"Reference"
 			"#PWR21010"
-			(at 128.27 55.88 0)
+			(at 125.73 55.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4680,7 +4680,7 @@
 		(property
 			"Value"
 			"+3V3_SC"
-			(at 128.27 54.864 0)
+			(at 125.73 54.864 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4690,7 +4690,7 @@
 		(property
 			"Footprint"
 			""
-			(at 128.27 58.42 0)
+			(at 125.73 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4701,7 +4701,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 128.27 58.42 0)
+			(at 125.73 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4726,7 +4726,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 106.68 52.07 180)
+		(at 104.14 52.07 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4736,7 +4736,7 @@
 		(property
 			"Reference"
 			"#PWR21011"
-			(at 106.68 49.53 0)
+			(at 104.14 49.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4747,7 +4747,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 106.68 48.26 0)
+			(at 104.14 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4757,7 +4757,7 @@
 		(property
 			"Footprint"
 			""
-			(at 106.68 52.07 0)
+			(at 104.14 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4768,7 +4768,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 106.68 52.07 0)
+			(at 104.14 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4793,7 +4793,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 195.58 63.5 0)
+		(at 193.04 60.96 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4803,7 +4803,7 @@
 		(property
 			"Reference"
 			"#PWR21012"
-			(at 195.58 60.96 0)
+			(at 193.04 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4814,7 +4814,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 195.58 67.31 0)
+			(at 193.04 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4824,7 +4824,7 @@
 		(property
 			"Footprint"
 			""
-			(at 195.58 63.5 0)
+			(at 193.04 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4835,7 +4835,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 195.58 63.5 0)
+			(at 193.04 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4927,7 +4927,7 @@
 	)
 	(symbol
 		(lib_id "power:+1V8")
-		(at 229.87 63.5 270)
+		(at 227.33 63.5 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4937,7 +4937,7 @@
 		(property
 			"Reference"
 			"#PWR21014"
-			(at 229.87 60.96 0)
+			(at 227.33 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4948,7 +4948,7 @@
 		(property
 			"Value"
 			"+1V8"
-			(at 235.243 63.5 90)
+			(at 232.703 63.5 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4958,7 +4958,7 @@
 		(property
 			"Footprint"
 			""
-			(at 229.87 63.5 0)
+			(at 227.33 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4969,7 +4969,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 229.87 63.5 0)
+			(at 227.33 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4994,7 +4994,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+1V8_REG")
-		(at 229.87 66.04 270)
+		(at 227.33 66.04 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5004,7 +5004,7 @@
 		(property
 			"Reference"
 			"#PWR21015"
-			(at 229.87 63.5 0)
+			(at 227.33 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5015,7 +5015,7 @@
 		(property
 			"Value"
 			"+1V8_REG"
-			(at 237.656 66.04 90)
+			(at 235.116 66.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5025,7 +5025,7 @@
 		(property
 			"Footprint"
 			""
-			(at 229.87 66.04 0)
+			(at 227.33 66.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5036,7 +5036,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 229.87 66.04 0)
+			(at 227.33 66.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5061,7 +5061,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 229.87 73.66 0)
+		(at 242.57 71.12 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5071,7 +5071,7 @@
 		(property
 			"Reference"
 			"#PWR21016"
-			(at 229.87 71.12 0)
+			(at 242.57 68.58 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5082,7 +5082,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 229.87 77.47 0)
+			(at 242.57 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5092,7 +5092,7 @@
 		(property
 			"Footprint"
 			""
-			(at 229.87 73.66 0)
+			(at 242.57 71.12 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5103,7 +5103,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 229.87 73.66 0)
+			(at 242.57 71.12 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5128,7 +5128,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+3V3_SC")
-		(at 232.41 81.28 180)
+		(at 227.33 81.28 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5138,7 +5138,7 @@
 		(property
 			"Reference"
 			"#PWR21017"
-			(at 232.41 78.74 0)
+			(at 227.33 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5149,7 +5149,7 @@
 		(property
 			"Value"
 			"+3V3_SC"
-			(at 232.41 84.836 0)
+			(at 227.33 84.836 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5159,7 +5159,7 @@
 		(property
 			"Footprint"
 			""
-			(at 232.41 81.28 0)
+			(at 227.33 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5170,7 +5170,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 232.41 81.28 0)
+			(at 227.33 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5195,7 +5195,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 213.36 95.25 0)
+		(at 210.82 95.25 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5205,7 +5205,7 @@
 		(property
 			"Reference"
 			"#PWR21018"
-			(at 213.36 92.71 0)
+			(at 210.82 92.71 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5216,7 +5216,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 213.36 99.06 0)
+			(at 210.82 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5226,7 +5226,7 @@
 		(property
 			"Footprint"
 			""
-			(at 213.36 95.25 0)
+			(at 210.82 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5237,7 +5237,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 213.36 95.25 0)
+			(at 210.82 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5262,7 +5262,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 57.15 106.68 0)
+		(at 54.61 106.68 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5272,7 +5272,7 @@
 		(property
 			"Reference"
 			"#PWR21019"
-			(at 57.15 104.14 0)
+			(at 54.61 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5283,7 +5283,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 57.15 110.49 0)
+			(at 54.61 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5293,7 +5293,7 @@
 		(property
 			"Footprint"
 			""
-			(at 57.15 106.68 0)
+			(at 54.61 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5304,7 +5304,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 57.15 106.68 0)
+			(at 54.61 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5329,7 +5329,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 69.85 106.68 0)
+		(at 67.31 106.68 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5339,7 +5339,7 @@
 		(property
 			"Reference"
 			"#PWR21020"
-			(at 69.85 104.14 0)
+			(at 67.31 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5350,7 +5350,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 69.85 110.49 0)
+			(at 67.31 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5360,7 +5360,7 @@
 		(property
 			"Footprint"
 			""
-			(at 69.85 106.68 0)
+			(at 67.31 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5371,7 +5371,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 69.85 106.68 0)
+			(at 67.31 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5396,7 +5396,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 82.55 106.68 0)
+		(at 80.01 106.68 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5406,7 +5406,7 @@
 		(property
 			"Reference"
 			"#PWR21021"
-			(at 82.55 104.14 0)
+			(at 80.01 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5417,7 +5417,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 82.55 110.49 0)
+			(at 80.01 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5427,7 +5427,7 @@
 		(property
 			"Footprint"
 			""
-			(at 82.55 106.68 0)
+			(at 80.01 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5438,7 +5438,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 82.55 106.68 0)
+			(at 80.01 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5463,7 +5463,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+3V3_SC")
-		(at 69.85 96.52 0)
+		(at 67.31 96.52 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5473,7 +5473,7 @@
 		(property
 			"Reference"
 			"#PWR21022"
-			(at 69.85 93.98 0)
+			(at 67.31 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5484,7 +5484,7 @@
 		(property
 			"Value"
 			"+3V3_SC"
-			(at 69.85 92.964 0)
+			(at 67.31 92.964 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5494,7 +5494,7 @@
 		(property
 			"Footprint"
 			""
-			(at 69.85 96.52 0)
+			(at 67.31 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5505,7 +5505,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 69.85 96.52 0)
+			(at 67.31 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5530,7 +5530,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+1V8_REG")
-		(at 64.77 134.62 180)
+		(at 62.23 134.62 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5540,7 +5540,7 @@
 		(property
 			"Reference"
 			"#PWR21023"
-			(at 64.77 132.08 0)
+			(at 62.23 132.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5551,7 +5551,7 @@
 		(property
 			"Value"
 			"+1V8_REG"
-			(at 64.77 138.176 0)
+			(at 62.23 138.176 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5561,7 +5561,7 @@
 		(property
 			"Footprint"
 			""
-			(at 64.77 134.62 0)
+			(at 62.23 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5572,7 +5572,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 64.77 134.62 0)
+			(at 62.23 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5597,7 +5597,7 @@
 	)
 	(symbol
 		(lib_id "power:+1V8")
-		(at 64.77 124.46 0)
+		(at 62.23 124.46 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5607,7 +5607,7 @@
 		(property
 			"Reference"
 			"#PWR21024"
-			(at 64.77 121.92 0)
+			(at 62.23 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5618,7 +5618,7 @@
 		(property
 			"Value"
 			"+1V8"
-			(at 64.77 120.904 0)
+			(at 62.23 120.904 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5628,7 +5628,7 @@
 		(property
 			"Footprint"
 			""
-			(at 64.77 124.46 0)
+			(at 62.23 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5639,7 +5639,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 64.77 124.46 0)
+			(at 62.23 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5664,7 +5664,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+3V3_REG")
-		(at 82.55 134.62 180)
+		(at 80.01 134.62 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5674,7 +5674,7 @@
 		(property
 			"Reference"
 			"#PWR21025"
-			(at 82.55 132.08 0)
+			(at 80.01 132.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5685,7 +5685,7 @@
 		(property
 			"Value"
 			"+3V3_REG"
-			(at 82.55 138.176 0)
+			(at 80.01 138.176 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5695,7 +5695,7 @@
 		(property
 			"Footprint"
 			""
-			(at 82.55 134.62 0)
+			(at 80.01 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5706,7 +5706,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 82.55 134.62 0)
+			(at 80.01 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5731,7 +5731,7 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 82.55 124.46 0)
+		(at 80.01 124.46 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5741,7 +5741,7 @@
 		(property
 			"Reference"
 			"#PWR21026"
-			(at 82.55 121.92 0)
+			(at 80.01 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5752,7 +5752,7 @@
 		(property
 			"Value"
 			"+3V3"
-			(at 82.55 120.904 0)
+			(at 80.01 120.904 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5762,7 +5762,7 @@
 		(property
 			"Footprint"
 			""
-			(at 82.55 124.46 0)
+			(at 80.01 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5773,7 +5773,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 82.55 124.46 0)
+			(at 80.01 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5798,7 +5798,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+5V_REG")
-		(at 100.33 134.62 180)
+		(at 97.79 134.62 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5808,7 +5808,7 @@
 		(property
 			"Reference"
 			"#PWR21027"
-			(at 100.33 132.08 0)
+			(at 97.79 132.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5819,7 +5819,7 @@
 		(property
 			"Value"
 			"+5V_REG"
-			(at 100.33 138.176 0)
+			(at 97.79 138.176 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5829,7 +5829,7 @@
 		(property
 			"Footprint"
 			""
-			(at 100.33 134.62 0)
+			(at 97.79 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5840,7 +5840,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 100.33 134.62 0)
+			(at 97.79 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5865,7 +5865,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 100.33 124.46 0)
+		(at 97.79 124.46 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5875,7 +5875,7 @@
 		(property
 			"Reference"
 			"#PWR21028"
-			(at 100.33 121.92 0)
+			(at 97.79 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5886,7 +5886,7 @@
 		(property
 			"Value"
 			"+5V"
-			(at 100.33 120.904 0)
+			(at 97.79 120.904 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5896,7 +5896,7 @@
 		(property
 			"Footprint"
 			""
-			(at 100.33 124.46 0)
+			(at 97.79 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5907,7 +5907,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 100.33 124.46 0)
+			(at 97.79 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5932,7 +5932,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+VIN")
-		(at 116.84 134.62 180)
+		(at 114.3 134.62 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5942,7 +5942,7 @@
 		(property
 			"Reference"
 			"#PWR21029"
-			(at 116.84 132.08 0)
+			(at 114.3 132.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5953,7 +5953,7 @@
 		(property
 			"Value"
 			"+VIN"
-			(at 116.84 138.176 0)
+			(at 114.3 138.176 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5963,7 +5963,7 @@
 		(property
 			"Footprint"
 			""
-			(at 116.84 134.62 0)
+			(at 114.3 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5974,7 +5974,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 116.84 134.62 0)
+			(at 114.3 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5999,7 +5999,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+VIN_SYS")
-		(at 116.84 124.46 0)
+		(at 114.3 124.46 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6009,7 +6009,7 @@
 		(property
 			"Reference"
 			"#PWR21030"
-			(at 116.84 121.92 0)
+			(at 114.3 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6020,7 +6020,7 @@
 		(property
 			"Value"
 			"+VIN_SYS"
-			(at 116.84 120.904 0)
+			(at 114.3 120.904 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6030,7 +6030,7 @@
 		(property
 			"Footprint"
 			""
-			(at 116.84 124.46 0)
+			(at 114.3 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6041,7 +6041,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 116.84 124.46 0)
+			(at 114.3 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)

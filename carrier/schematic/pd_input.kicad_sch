@@ -2854,7 +2854,7 @@
 	(wire
 		(pts
 			(xy 82.55 100.33)
-			(xy 78.74 100.33)
+			(xy 76.2 100.33)
 		)
 		(stroke
 			(width 0)
@@ -2865,7 +2865,7 @@
 	(wire
 		(pts
 			(xy 82.55 102.87)
-			(xy 78.74 102.87)
+			(xy 76.2 102.87)
 		)
 		(stroke
 			(width 0)
@@ -2875,8 +2875,8 @@
 	)
 	(wire
 		(pts
-			(xy 78.74 100.33)
-			(xy 78.74 102.87)
+			(xy 76.2 100.33)
+			(xy 76.2 102.87)
 		)
 		(stroke
 			(width 0)
@@ -3419,19 +3419,19 @@
 		(uuid "d91ecb0f-ae22-5d19-910a-cd570069c388")
 	)
 	(junction
-		(at 78.74 87.63)
+		(at 76.2 100.33)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "c8ca6628-3759-56a9-bc51-595945f179c5")
 	)
 	(junction
-		(at 78.74 90.17)
+		(at 78.74 87.63)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "cbd70650-657a-584d-b52d-0c7176a0f6f1")
 	)
 	(junction
-		(at 78.74 100.33)
+		(at 78.74 90.17)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "a74740c1-711d-53ff-8ad0-4f6799ff15f6")
@@ -5236,7 +5236,7 @@
 	)
 	(symbol
 		(lib_id "schgen:+VBUS_IN")
-		(at 78.74 100.33 0)
+		(at 76.2 100.33 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5246,7 +5246,7 @@
 		(property
 			"Reference"
 			"#PWR17007"
-			(at 78.74 97.79 0)
+			(at 76.2 97.79 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5257,7 +5257,7 @@
 		(property
 			"Value"
 			"+VBUS_IN"
-			(at 78.74 96.774 0)
+			(at 76.2 96.774 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5267,7 +5267,7 @@
 		(property
 			"Footprint"
 			""
-			(at 78.74 100.33 0)
+			(at 76.2 100.33 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5278,7 +5278,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 78.74 100.33 0)
+			(at 76.2 100.33 0)
 			(effects
 				(font
 					(size 1.27 1.27)

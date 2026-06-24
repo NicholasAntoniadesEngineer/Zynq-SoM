@@ -4526,37 +4526,37 @@
 		(uuid "bc7ce5f2-c1f9-5a52-a79c-0d26aff6d857")
 	)
 	(junction
-		(at 64.77 153.67)
+		(at 64.77 151.13)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "1b4242f9-e383-5025-915c-919e061fbef2")
 	)
 	(junction
-		(at 64.77 156.21)
+		(at 64.77 153.67)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "3b51a98e-820a-5549-9da5-fd9c7d4f5340")
 	)
 	(junction
-		(at 64.77 158.75)
+		(at 64.77 156.21)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "cf41916d-ca12-57c7-b28a-e522477c2172")
 	)
 	(junction
-		(at 85.09 153.67)
+		(at 85.09 151.13)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "166d21a5-3a9b-59bc-87b0-76fe3715fb52")
 	)
 	(junction
-		(at 85.09 156.21)
+		(at 85.09 153.67)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "23301d09-9bd6-5f9e-8e5e-307b2e400dd3")
 	)
 	(junction
-		(at 85.09 158.75)
+		(at 85.09 156.21)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "6708bcaa-b6cf-57c2-ac4b-a6c1b91323db")
@@ -7314,7 +7314,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 64.77 158.75 0)
+		(at 64.77 151.13 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -7324,7 +7324,7 @@
 		(property
 			"Reference"
 			"#PWR36014"
-			(at 64.77 156.21 0)
+			(at 64.77 148.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7335,7 +7335,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 64.77 162.56 0)
+			(at 64.77 147.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7345,7 +7345,7 @@
 		(property
 			"Footprint"
 			""
-			(at 64.77 158.75 0)
+			(at 64.77 151.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7356,7 +7356,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 64.77 158.75 0)
+			(at 64.77 151.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7448,7 +7448,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 85.09 158.75 0)
+		(at 85.09 151.13 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -7458,7 +7458,7 @@
 		(property
 			"Reference"
 			"#PWR36016"
-			(at 85.09 156.21 0)
+			(at 85.09 148.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7469,7 +7469,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 85.09 162.56 0)
+			(at 85.09 147.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7479,7 +7479,7 @@
 		(property
 			"Footprint"
 			""
-			(at 85.09 158.75 0)
+			(at 85.09 151.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7490,7 +7490,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 85.09 158.75 0)
+			(at 85.09 151.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)

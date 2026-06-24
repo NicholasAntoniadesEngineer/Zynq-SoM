@@ -41,6 +41,9 @@ from schgen.verify import visual_gate
 from schgen.verify.visual_gate import Box, Junction, SheetGeometry
 
 U = GRID
+# Full diagonal extent of the no-connect 'X' marker KiCad renders at a pin
+# point (~1.27 mm across). Value/Reference/label text must clear its box.
+NC_MARKER = 1.27
 A4_CENTER = (148.59, 100.33)
 A3_CENTER = (210.82, 148.59)
 # Tallest content a sheet may carry: the A3 budget place_and_route enforces
@@ -305,6 +308,8 @@ class _Engine:
         #     leg) trunk rungs whose escape lane wedged -> a rank column
         self._sig_rows: list[float] = []         # SIGNAL/PORT side-pin rows on
         #     the fan currently being placed (rail value text must dodge them)
+        self._rail_row_net: dict[float, str] = {}  # y-row -> rail net name for
+        #     every POWER/GROUND side pin (a rail symbol must clear FOREIGN rows)
         self._deferred_texts: list[tuple[PlacedPart, Box]] = []
         self.orient: dict[str, int] = {}         # per-part rotation (0/180)
         self._classify()
@@ -326,6 +331,8 @@ class _Engine:
         sdef = self.lib.get(lib_id)
         ref = f"#PWR{self._pwr:02d}"
         vp = _value_anchor(sdef, x, y, rot)
+        if show_value:
+            vp = self._dodge_value_off_nc(net, vp, x, y)
         pw = PlacedPower(lib_id, net, ref, x, y, rot, net=net,
                          val_pos=(vp[0], vp[1], 0), show_value=show_value)
         self.pl.powers.append(pw)
@@ -334,6 +341,39 @@ class _Engine:
             self.pl.boxes.append(Box(*tm.centered_box(net, vp[0], vp[1]),
                                      "value", ref))
         return pw
+
+    def _dodge_value_off_nc(self, text: str, vp: tuple[float, float],
+                            ax: float, ay: float) -> tuple[float, float]:
+        """If a power symbol's default Value-text box lands on a no-connect 'X'
+        marker (a neighbouring part's unused pin), nudge it clear ALONG the
+        symbol's value axis — away from the body — to the first position that
+        clears every NC marker (LAW 1). When the default position is already
+        clear (every existing sheet), this is an exact no-op so the byte output
+        of clean sheets is unchanged. Only NC markers steer the nudge here; the
+        anchor is otherwise authored to dodge the symbol's own geometry."""
+        def hits_nc(px: float, py: float) -> bool:
+            bx = tm.centered_box(text, px, py)
+            for (nx0, ny0, nx1, ny1) in self._nc_boxes():
+                if bx[0] - 0.2 < nx1 and bx[2] + 0.2 > nx0 \
+                        and bx[1] - 0.2 < ny1 and bx[3] + 0.2 > ny0:
+                    return True
+            return False
+        if not hits_nc(vp[0], vp[1]):
+            return vp
+        # The value sits offset from the pin point along the symbol axis; step
+        # it further the SAME way (down for an up-arrow rail, etc.) past the NC
+        # row. The axis sign is (vp - pin) projected onto the dominant offset.
+        dx, dy = vp[0] - ax, vp[1] - ay
+        if abs(dy) >= abs(dx):
+            step = (0.0, U if dy >= 0 else -U)
+        else:
+            step = (U if dx >= 0 else -U, 0.0)
+        px, py = vp
+        for _k in range(8):
+            px, py = round(px + step[0], 3), round(py + step[1], 3)
+            if not hits_nc(px, py):
+                return (px, py)
+        return vp
 
     def flag(self, net: str, x: float, y: float, rot: int) -> PlacedPower:
         self._flg += 1
@@ -410,6 +450,17 @@ class _Engine:
                     y0, y1 = sorted((a[1], b[1]))
                     yield (x0 - 0.127, y0 - 0.127, x1 + 0.127, y1 + 0.127)
 
+    def _nc_boxes(self):
+        """Bounding boxes for every placed no-connect 'X' marker. The marker
+        is an X of full extent NC_MARKER (KiCad draws ~1.27 mm across), so a
+        box of half-extent NC_MARKER/2 about its pin point. Value/Reference
+        text and labels must never overprint these (LAW 1) — they are NOT in
+        ``self.pl.boxes`` (kept out so the router does not block the unused pin
+        tip cell), so the dodge probes consult them separately here."""
+        h = NC_MARKER / 2
+        for nc in self.pl.no_connects:
+            yield (nc.x - h, nc.y - h, nc.x + h, nc.y + h)
+
     def _spot_free(self, bx: tuple[float, float, float, float],
                    pad: float = 0.25) -> bool:
         x0, y0, x1, y1 = bx
@@ -419,6 +470,10 @@ class _Engine:
                 return False
         for (sx0, sy0, sx1, sy1) in self._plan_seg_boxes():
             if x0 < sx1 and x1 > sx0 and y0 < sy1 and y1 > sy0:
+                return False
+        for (nx0, ny0, nx1, ny1) in self._nc_boxes():
+            if x0 - pad < nx1 and x1 + pad > nx0 \
+                    and y0 - pad < ny1 and y1 + pad > ny0:
                 return False
         return True
 
@@ -893,6 +948,20 @@ class _Engine:
                                  for _p, pt, n in run if n is not None
                                  and n.net_class in (NetClass.SIGNAL,
                                                      NetClass.PORT)})
+        # y-row -> rail net name for EVERY POWER/GROUND side pin. A rail
+        # symbol (riser/bus) drawn off one run must not seat its body or
+        # value text on a row that carries a DIFFERENT rail's horizontal
+        # escape wire — those wires are planned later (run order), so the
+        # dodge's _corridor_free cannot yet see them, and a downward GND
+        # bus drops its triangle + "GND" text straight onto an adjacent
+        # foreign-rail feed (INA3221 GND on IN+3 over the +3V3_SC VS/A0
+        # rows — power_mon/board_qwiic). Keyed by net so a run's OWN rows
+        # are excluded; an all-same-rail side is a no-op (byte-identical).
+        self._rail_row_net = {round(pt[1], 3): n.name
+                              for run in runs
+                              for _p, pt, n in run if n is not None
+                              and n.net_class in (NetClass.POWER,
+                                                  NetClass.GROUND)}
         comb_pts: list[tuple[float, float]] = []
         rail_jobs: list[list] = []
         for run in runs:
@@ -1071,7 +1140,19 @@ class _Engine:
                     lx = tx + sgn * sp.label_tap_gap
             else:
                 tap = (lx, py)
-            self.pl.plan(ln.net, (px, py), tap)
+            # the horizontal escape leaves the pin at row ``py`` and runs out to
+            # the attach column / label at ``tap``. When a FOREIGN body straddles
+            # that row mid-span (the LCD touch-RST run grazing the U2 ESD array,
+            # whose body bottom edge lands exactly on the connector pin row), the
+            # straight run would draw ON the body outline — a LAW-1 defect the
+            # strict-interior corridor test missed. Route AROUND the offending
+            # body with a local rectangular dodge (down/up past it on its clear
+            # flank, then back to the run row); the run + tap + attach drop +
+            # label all stay on ``py``. A corridor that is already body-clear
+            # emits the single straight leg unchanged (byte-identical) — only a
+            # blocked corridor detours.
+            for a, b in self._escape_run_legs(ln.net, px, py, tap[0]):
+                self.pl.plan(ln.net, a, b)
             edge = None
             if ln.attach_div:
                 self._divider(ln, tap)
@@ -1124,6 +1205,19 @@ class _Engine:
         if comb_pts:
             self._fan_rail_comb(comb_net, comb_pts, sgn,
                                 boxes_mark, plans_mark)
+
+    def _foreign_rows_clear(self, box: tuple[float, float, float, float],
+                            net: str, own_ys: set[float]) -> bool:
+        """True if the vertical span of `box` does not cross a side pin row
+        that carries a DIFFERENT rail net (whose horizontal escape wire will
+        be planned later in run order). `own_ys` is the rail run's own rows."""
+        y0, y1 = box[1], box[3]
+        for r, rnet in self._rail_row_net.items():
+            if rnet == net or r in own_ys:
+                continue
+            if y0 - 1e-6 < r < y1 + 1e-6:
+                return False
+        return True
 
     def _fan_rail_run(self, run: list, sgn: int,
                       rows_all: list[tuple[float, float]]) -> None:
@@ -1220,10 +1314,21 @@ class _Engine:
         # original unset rot; the flipped end points the glyph outward.)
         is_gnd = net0.net_class is NetClass.GROUND
         own_ys = {round(y, 3) for y in ys}
-        placed = False
+        # Two seating candidates: the DEFAULT end (byte-identical baseline) and
+        # the FLIPPED end. For each we find the first outward dodge that clears
+        # everything the BASELINE required (value/body spot-free, sig-row clear,
+        # corridor clear). Among the candidates that seat at all, we PREFER one
+        # whose glyph+value also clears FOREIGN rail rows (the adjacent +3V3_SC
+        # VS/A0 feed an INA3221 GND bus points into — power_mon/board_qwiic).
+        # The foreign check is only a PREFERENCE, never a hard gate: if neither
+        # end clears the foreign rows we keep the baseline default end, so a
+        # rail-dense side can never march the dodge off-page (motor_pwm).
+        best = None            # (foreign_clear, want_top, end_y, rot, jxc)
+        fallback = None        # last attempted seat if nothing clears (baseline)
         for want_top in (not is_gnd, is_gnd):          # default end first
             end_y = ys[0] if want_top else ys[-1]
             rot = 0 if (is_gnd != want_top) else 180
+            seated = False
             for k in range(40):
                 jxc = round(jx + sgn * k * 2 * U, 3)
                 vp = _value_anchor(sdef_p, jxc, end_y, rot)
@@ -1239,8 +1344,8 @@ class _Engine:
                 rows_clear = not any(r not in own_ys
                                      and vbox[1] - 1e-6 < r < vbox[3] + 1e-6
                                      for r in self._sig_rows)
-                ok2 = self._spot_free(vbox) and self._spot_free(
-                    (sbox.x0, sbox.y0, sbox.x1, sbox.y1)) \
+                sbb = (sbox.x0, sbox.y0, sbox.x1, sbox.y1)
+                ok2 = self._spot_free(vbox) and self._spot_free(sbb) \
                     and rows_clear \
                     and self._spot_free((jxc - 0.1, ys[0] + 0.1,
                                          jxc + 0.1, ys[-1] - 0.1),
@@ -1249,10 +1354,26 @@ class _Engine:
                         yy, px0 + sgn * 0.01, jxc, {net0.name})
                         for yy in ys)
                 if ok2:
-                    placed = True
+                    fclear = self._foreign_rows_clear(
+                        sbb, net0.name, own_ys) and self._foreign_rows_clear(
+                        vbox, net0.name, own_ys)
+                    cand = (fclear, want_top, end_y, rot, jxc)
+                    # keep the DEFAULT end unless the flipped end is the only
+                    # one that clears the foreign rows
+                    if best is None or (fclear and not best[0]):
+                        best = cand
+                    seated = True
                     break
-            if placed:
-                break
+            # if THIS end never seated, remember its last dodge as the baseline
+            # fall-through target (the flipped end, k=39 — matches the original
+            # which proceeded with the last loop variables when nothing seated)
+            if not seated:
+                fallback = (False, want_top, end_y, rot, jxc)
+            if best is not None and best[0]:
+                break                       # default end already foreign-clear
+        if best is None:
+            best = fallback                 # nothing cleared: baseline placement
+        _f, _wt, end_y, rot, jxc = best
         jx = jxc
         for _, pt, _ in run:
             self.pl.plan(net0.name, pt, (jx, pt[1]))
@@ -2085,6 +2206,99 @@ class _Engine:
                 return x
             x = round(x + sgn * 2 * U, 3)
         raise PlaceError("no free lane found")
+
+    def _escape_run_legs(self, net: str, px: float, py: float,
+                         tx: float) -> list[tuple[tuple[float, float],
+                                                  tuple[float, float]]]:
+        """Orthogonal polyline (px, py) -> (tx, py) that DODGES every foreign
+        body grazing row ``py`` along the way. A body whose y-extent straddles
+        ``py`` (within the wire half-width) and whose x-extent lies between the
+        pin and the tap forces a local rectangular detour: drop/rise one grid
+        past the body's nearer flank, traverse its x-span there, return. Picks
+        the flank (below first, then above) whose detour row is itself clear of
+        all geometry over the body's full x-window. When the straight run is
+        already clear, returns the single leg unchanged (byte-identical)."""
+        sgn = 1.0 if tx >= px else -1.0
+        ec = 0.127
+        bx0r, bx1r = min(px, tx), max(px, tx)
+        # foreign body clusters grazing this row, ordered along the run. A
+        # blocker's box is grown to also enclose its part's OWN Reference /
+        # Value texts (same owner) — the detour must clear those too, else the
+        # vertical risers around the body would cross the part's value text.
+        blockers: list[tuple[float, float, float, float]] = []
+        for b in self.pl.boxes:
+            if b.kind != "body" or not (b.y0 - ec < py < b.y1 + ec):
+                continue
+            if not (b.x0 < bx1r and b.x1 > bx0r):
+                continue
+            ox0, oy0, ox1, oy1 = b.x0, b.y0, b.x1, b.y1
+            for t in self.pl.boxes:
+                if t.owner == b.owner and t is not b:
+                    ox0, oy0 = min(ox0, t.x0), min(oy0, t.y0)
+                    ox1, oy1 = max(ox1, t.x1), max(oy1, t.y1)
+            blockers.append((ox0, oy0, ox1, oy1))
+        if not blockers:
+            return [((px, py), (tx, py))]
+        # merge x-overlapping bodies (plus their texts) into clusters; widen by
+        # one grid so the detour clears the outline, not just touches it.
+        spans = sorted(((bx0, bx1, by0, by1) for bx0, by0, bx1, by1 in blockers))
+        clusters: list[tuple[float, float, float, float]] = []
+        for x0, x1, y0, y1 in spans:
+            if clusters and x0 <= clusters[-1][1] + 2 * U:
+                cx0, cx1, cy0, cy1 = clusters[-1]
+                clusters[-1] = (min(cx0, x0), max(cx1, x1),
+                                min(cy0, y0), max(cy1, y1))
+            else:
+                clusters.append((x0, x1, y0, y1))
+        # walk pin -> tap, dodging each cluster in run order
+        ordered = sorted(clusters, key=lambda c: c[0], reverse=(sgn < 0))
+        legs: list[tuple[tuple[float, float], tuple[float, float]]] = []
+        cur_x = px
+        for cx0, cx1, cy0, cy1 in ordered:
+            # detour x-window (a grid clear of the cluster on each side)
+            enter = gfloor(cx0 - U) if sgn > 0 else gceil(cx1 + U)
+            exitx = gceil(cx1 + U) if sgn > 0 else gfloor(cx0 - U)
+            lo, hi = sorted((enter, exitx))
+            # pick a clear detour row, stepping OUTWARD below (then above) the
+            # cluster until the detour row AND the two vertical risers are clear
+            # of all geometry over the detour x-window (the cluster's own
+            # Reference/Value texts push the clear row further out).
+            dy = None
+            for direction in (1, -1):
+                base = (gceil(cy1 + 2 * U) if direction > 0
+                        else gfloor(cy0 - 2 * U))
+                for k in range(0, 14):
+                    cand = round(base + direction * k * U, 3)
+                    ry0, ry1 = sorted((py, cand))
+                    # the detour ROW (at cand, across the window) and the two
+                    # vertical RISERS (thin strips at enter/exitx, from the run
+                    # row to the detour row) must each clear all geometry. The
+                    # risers sit OUTSIDE the cluster x, so they never touch the
+                    # body the run is dodging.
+                    if self._corridor_free(cand, lo, hi, {net}) \
+                            and self._spot_free(
+                                (enter - 0.1, ry0, enter + 0.1, ry1),
+                                pad=0.0) \
+                            and self._spot_free(
+                                (exitx - 0.1, ry0, exitx + 0.1, ry1),
+                                pad=0.0) \
+                            and self._vband_stem_free(enter, ry0, ry1, {net}) \
+                            and self._vband_stem_free(exitx, ry0, ry1, {net}):
+                        dy = cand
+                        break
+                if dy is not None:
+                    break
+            if dy is None:
+                # no clean flank: fall back to a straight leg (the visual gate
+                # still judges it — never silently force a bad route)
+                continue
+            legs.append(((cur_x, py), (enter, py)))
+            legs.append(((enter, py), (enter, dy)))
+            legs.append(((enter, dy), (exitx, dy)))
+            legs.append(((exitx, dy), (exitx, py)))
+            cur_x = exitx
+        legs.append(((cur_x, py), (tx, py)))
+        return legs
 
     def _corridor_free(self, y: float, xa: float, xb: float,
                        skip: set[str]) -> bool:
