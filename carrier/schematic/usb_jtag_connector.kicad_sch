@@ -1815,7 +1815,7 @@
 	(wire
 		(pts
 			(xy 176.53 82.55)
-			(xy 160.02 82.55)
+			(xy 157.48 82.55)
 		)
 		(stroke
 			(width 0)
@@ -1825,8 +1825,8 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 82.55)
-			(xy 160.02 80.01)
+			(xy 157.48 82.55)
+			(xy 157.48 80.01)
 		)
 		(stroke
 			(width 0)
@@ -1837,7 +1837,7 @@
 	(wire
 		(pts
 			(xy 176.53 72.39)
-			(xy 170.18 72.39)
+			(xy 172.72 72.39)
 		)
 		(stroke
 			(width 0)
@@ -1848,7 +1848,7 @@
 	(wire
 		(pts
 			(xy 176.53 74.93)
-			(xy 170.18 74.93)
+			(xy 172.72 74.93)
 		)
 		(stroke
 			(width 0)
@@ -1859,7 +1859,7 @@
 	(wire
 		(pts
 			(xy 176.53 77.47)
-			(xy 170.18 77.47)
+			(xy 172.72 77.47)
 		)
 		(stroke
 			(width 0)
@@ -1870,7 +1870,7 @@
 	(wire
 		(pts
 			(xy 176.53 80.01)
-			(xy 170.18 80.01)
+			(xy 172.72 80.01)
 		)
 		(stroke
 			(width 0)
@@ -1880,8 +1880,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 72.39)
-			(xy 170.18 74.93)
+			(xy 172.72 72.39)
+			(xy 172.72 74.93)
 		)
 		(stroke
 			(width 0)
@@ -1891,8 +1891,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 74.93)
-			(xy 170.18 77.47)
+			(xy 172.72 74.93)
+			(xy 172.72 77.47)
 		)
 		(stroke
 			(width 0)
@@ -1902,8 +1902,8 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 77.47)
-			(xy 170.18 80.01)
+			(xy 172.72 77.47)
+			(xy 172.72 80.01)
 		)
 		(stroke
 			(width 0)
@@ -1924,19 +1924,19 @@
 		(uuid "cea30da0-971d-56d5-afeb-94b59cea4a24")
 	)
 	(junction
-		(at 170.18 74.93)
+		(at 172.72 72.39)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "bc54d2a5-0408-561a-bf22-6246d86fb923")
 	)
 	(junction
-		(at 170.18 77.47)
+		(at 172.72 74.93)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "3fc7808a-3f9f-5bf7-a476-c00d43e338ec")
 	)
 	(junction
-		(at 170.18 80.01)
+		(at 172.72 77.47)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "cb6d4a4c-c240-50c4-b2d3-870235b06a42")
@@ -2264,7 +2264,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 160.02 76.2 180)
+		(at 157.48 76.2 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2274,7 +2274,7 @@
 		(property
 			"Reference"
 			"R29002"
-			(at 162.663 74.93 0)
+			(at 160.123 74.93 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2284,7 +2284,7 @@
 		(property
 			"Value"
 			"5.1k"
-			(at 163.869 77.47 0)
+			(at 161.329 77.47 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2294,7 +2294,7 @@
 		(property
 			"Footprint"
 			"Resistor_SMD:R_0603_1608Metric"
-			(at 160.02 76.2 0)
+			(at 157.48 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2305,7 +2305,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 160.02 76.2 0)
+			(at 157.48 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2316,7 +2316,7 @@
 		(property
 			"LCSC"
 			"C23186"
-			(at 160.02 76.2 0)
+			(at 157.48 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2718,7 +2718,7 @@
 	)
 	(symbol
 		(lib_id "schgen:CHASSIS_GND")
-		(at 170.18 80.01 0)
+		(at 172.72 72.39 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2728,7 +2728,7 @@
 		(property
 			"Reference"
 			"#PWR29003"
-			(at 170.18 77.47 0)
+			(at 172.72 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2739,7 +2739,7 @@
 		(property
 			"Value"
 			"CHASSIS_GND"
-			(at 170.18 83.82 0)
+			(at 172.72 68.58 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2749,7 +2749,7 @@
 		(property
 			"Footprint"
 			""
-			(at 170.18 80.01 0)
+			(at 172.72 72.39 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2760,7 +2760,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 170.18 80.01 0)
+			(at 172.72 72.39 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2785,7 +2785,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 160.02 72.39 180)
+		(at 157.48 72.39 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2795,7 +2795,7 @@
 		(property
 			"Reference"
 			"#PWR29004"
-			(at 160.02 69.85 0)
+			(at 157.48 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2806,7 +2806,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 160.02 68.58 0)
+			(at 157.48 68.58 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2816,7 +2816,7 @@
 		(property
 			"Footprint"
 			""
-			(at 160.02 72.39 0)
+			(at 157.48 72.39 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2827,7 +2827,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 160.02 72.39 0)
+			(at 157.48 72.39 0)
 			(effects
 				(font
 					(size 1.27 1.27)

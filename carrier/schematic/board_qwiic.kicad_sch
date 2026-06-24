@@ -1048,7 +1048,7 @@
 		(uuid "58c0dc4b-1296-5e89-9f12-16de75e1d567")
 	)
 	(junction
-		(at 168.91 91.44)
+		(at 168.91 88.9)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "31233daf-9a4c-5db8-9f78-c4d99ab8e539")
@@ -1440,7 +1440,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 168.91 91.44 0)
+		(at 168.91 88.9 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1450,7 +1450,7 @@
 		(property
 			"Reference"
 			"#PWR2003"
-			(at 168.91 88.9 0)
+			(at 168.91 86.36 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1461,7 +1461,7 @@
 		(property
 			"Value"
 			"GND"
-			(at 168.91 95.25 0)
+			(at 168.91 85.09 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1471,7 +1471,7 @@
 		(property
 			"Footprint"
 			""
-			(at 168.91 91.44 0)
+			(at 168.91 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1482,7 +1482,7 @@
 		(property
 			"Datasheet"
 			""
-			(at 168.91 91.44 0)
+			(at 168.91 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)

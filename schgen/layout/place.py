@@ -46,6 +46,15 @@ U = GRID
 NC_MARKER = 1.27
 A4_CENTER = (148.59, 100.33)
 A3_CENTER = (210.82, 148.59)
+# Standard KiCad worksheet title block sits in the bottom-RIGHT corner of the
+# drawing frame. Measured from the emitted A3 render, its top-left inner corner
+# is at x~300, y~253 mm (frame right border ~408). Page content placed in the
+# bottom y-band must therefore stay LEFT of this x or it overruns the frame —
+# a LAW-1 defect the geometry-only visual gate cannot see. Left edge less a
+# small margin is the keepout the placer (and the gate) hold content out of.
+A3_TITLEBLOCK_LEFT = 300.0
+A3_TITLEBLOCK_TOP = 252.9
+TITLEBLOCK_MARGIN = 4.0
 # Tallest content a sheet may carry: the A3 budget place_and_route enforces
 # (265 mm), less the flags row every sheet appends below the extent.
 # Band stacking that would overrun this opens a NEW COLUMN instead.
@@ -894,6 +903,7 @@ class _Engine:
         # ALL rows on this side (handled pins carry channel/trunk wires
         # straight out — risers must dodge those rows too)
         rows_all = [pt for _pin, pt in items]
+        items_all = list(items)
         handled_rows = [pt[1] for pin, pt in items
                         if (ref, pin.number, side) in handled]
         items = [(pin, pt) for pin, pt in items
@@ -944,10 +954,23 @@ class _Engine:
         # side) makes that an exact no-op, so every existing sheet stays
         # byte-identical; a non-empty set only ADDS a constraint the original
         # dodge already satisfied on the clean sheets (verified).
+        # ALSO every HANDLED signal/port pin row: those pins carry a channel /
+        # chain wire that runs straight out HORIZONTALLY across this side (the
+        # connector->ESD passthrough — board_qwiic J1.4 QWIIC_SCL into U1), so a
+        # rail riser dropped off an ADJACENT pin must dodge that row too. The
+        # handled rows are not in `runs` (they were filtered out at line ~899),
+        # so without this a GND bus off J1.5/6 drops its triangle+"GND" onto the
+        # QWIIC_SCL wire one pin below. Rail handled rows stay out (the rail
+        # comb/own-net handles them); only foreign SIGNAL/PORT channel rows.
+        handled_sig_rows = {round(pt[1], 3) for pin, pt in items_all
+                            if (ref, pin.number, side) in handled
+                            and (n := self.net_of(ref, pin.number)) is not None
+                            and n.net_class in (NetClass.SIGNAL, NetClass.PORT)}
         self._sig_rows = sorted({round(pt[1], 3) for run in runs
                                  for _p, pt, n in run if n is not None
                                  and n.net_class in (NetClass.SIGNAL,
-                                                     NetClass.PORT)})
+                                                     NetClass.PORT)}
+                                | handled_sig_rows)
         # y-row -> rail net name for EVERY POWER/GROUND side pin. A rail
         # symbol (riser/bus) drawn off one run must not seat its body or
         # value text on a row that carries a DIFFERENT rail's horizontal
@@ -1209,11 +1232,20 @@ class _Engine:
     def _foreign_rows_clear(self, box: tuple[float, float, float, float],
                             net: str, own_ys: set[float]) -> bool:
         """True if the vertical span of `box` does not cross a side pin row
-        that carries a DIFFERENT rail net (whose horizontal escape wire will
-        be planned later in run order). `own_ys` is the rail run's own rows."""
+        that carries a DIFFERENT net whose horizontal escape wire will be
+        planned later in run order. Covers both foreign RAIL rows (a GND bus
+        dropped onto an adjacent +3V3_SC feed — power_mon) AND foreign
+        SIGNAL/PORT rows (the GND riser triangle+text dropped onto a connector
+        SCL escape one pin below — board_qwiic J1: pins 5/6 GND, pin 4
+        QWIIC_SCL). `own_ys` is the rail run's own rows."""
         y0, y1 = box[1], box[3]
         for r, rnet in self._rail_row_net.items():
             if rnet == net or r in own_ys:
+                continue
+            if y0 - 1e-6 < r < y1 + 1e-6:
+                return False
+        for r in self._sig_rows:
+            if r in own_ys:
                 continue
             if y0 - 1e-6 < r < y1 + 1e-6:
                 return False
@@ -1334,17 +1366,24 @@ class _Engine:
                 vp = _value_anchor(sdef_p, jxc, end_y, rot)
                 vbox = tm.centered_box(net0.name, vp[0], vp[1])
                 sbox = body_box_page(sdef_p, jxc, end_y, rot, "body", "?")
-                # the rail VALUE TEXT must not straddle a FOREIGN signal/port
-                # pin row: that pin's horizontal escape line is planned later
-                # and would run through the (not-yet-visible) value. Checked
-                # against the value box ALONE (the symbol glyph is a thin stem
-                # the line clears) so the constraint is no-op for clean sheets
-                # whose value already sits BETWEEN rows, and only pushes the
-                # box-symbol pathology where the value lands ON a pin row.
-                rows_clear = not any(r not in own_ys
-                                     and vbox[1] - 1e-6 < r < vbox[3] + 1e-6
-                                     for r in self._sig_rows)
                 sbb = (sbox.x0, sbox.y0, sbox.x1, sbox.y1)
+                # the rail VALUE TEXT *and* the symbol BODY must not straddle a
+                # FOREIGN signal/port pin row: that pin's horizontal escape line
+                # is planned later and would run through the (not-yet-visible)
+                # value OR through the symbol's hatch/bar graphic. The value
+                # was always checked; the BODY box matters when the symbol seats
+                # at the bus end that points TOWARD a neighbouring foreign row
+                # (a GND symbol off the bottom pin whose ~3.8mm hatch reaches
+                # down into the next pin row — usb_jtag_connector's CHASSIS_GND
+                # over the CC2 escape wire). Both are no-ops for clean sheets
+                # whose body+value already sit BETWEEN rows; they only reject
+                # the end that drops glyph/text ON a foreign pin row, steering
+                # the dodge to the clear (flipped) end.
+                rows_clear = not any(
+                    r not in own_ys
+                    and (vbox[1] - 1e-6 < r < vbox[3] + 1e-6
+                         or sbb[1] - 1e-6 < r < sbb[3] + 1e-6)
+                    for r in self._sig_rows)
                 ok2 = self._spot_free(vbox) and self._spot_free(sbb) \
                     and rows_clear \
                     and self._spot_free((jxc - 0.1, ys[0] + 0.1,
@@ -2559,6 +2598,20 @@ class _Engine:
         return "power_in" in ets and not (ets & _FLAG_DRIVER_ETYPES)
 
     # ---- cluster + flags ------------------------------------------------------------
+    def _farm_row_right_bound(self, ex0: float, ex1_flow: float) -> float:
+        """Largest LOCAL x a farm-row cap may occupy and still clear the title
+        block after center_on_sheet. The farm stays within the flow's x-extent
+        (it is laid under it), so the centering that matters is the flow's:
+        center_on_sheet maps the flow centre onto the page centre, then A3
+        promotion shifts by (A3_CENTER - A4_CENTER). final_x ~= local_x +
+        (A3_CENTER.x - flow_centre_x). Invert at the title-block left edge
+        (less a margin) to get the local bound. Half a cap pitch of slack keeps
+        the rightmost cap's value text clear too."""
+        flow_centre = (ex0 + ex1_flow) / 2.0
+        dx = A3_CENTER[0] - flow_centre
+        local_limit = (A3_TITLEBLOCK_LEFT - TITLEBLOCK_MARGIN) - dx
+        return local_limit - self.sp.cap_pitch / 2.0
+
     def _decoupling_cluster(self, ax: float, ay: float, body: Box) -> None:
         sp = self.sp
         col_x = ax - sp.cluster_dx
@@ -2574,8 +2627,27 @@ class _Engine:
             # for the 5-cap case keeps a regulator + its in/out decoupling
             # (e.g. the fmc VADJ LDO: in/out caps + the connector bypass) off
             # an extra bottom row, which the A3 height budget cannot spare.
-            ex0, _, _, ey1 = self._extent()
+            ex0, _, ex1_flow, ey1 = self._extent()
             col_x = gsnap(ex0 + 4 * U)
+            # TITLE-BLOCK KEEPOUT (LAW 1): the farm is the bottom-most row, so
+            # its caps + GND feet sit in the sheet's bottom y-band — exactly the
+            # y-band the standard KiCad title block occupies in the bottom-RIGHT
+            # corner. A wide farm whose tail marches past the title-block left
+            # edge therefore overruns the frame. Bound the row's LOCAL right edge
+            # so that, after center_on_sheet maps the flow centre onto the page
+            # centre, the rightmost cap lands clear of the title block; overflow
+            # caps WRAP onto an additional row stacked just BELOW (still left of
+            # the title block, where the bottom-left of the sheet is empty). A
+            # narrow farm never reaches the bound, so single-row farms
+            # (bringup_modules, the 8-cap power farm) stay byte-identical.
+            farm_left = col_x
+            # wrapped rows stack DOWNWARD (toward the sheet bottom, left of the
+            # title block — that corner is empty). A cap column spans rail
+            # symbol -> cap -> GND symbol + value text (~13 mm); the row pitch
+            # must exceed that PLUS the next row's rail-symbol reach so a row's
+            # GND feet never meet the row below's bar (a route contention).
+            row_step = gceil(8 * U)
+            max_right = self._farm_row_right_bound(ex0, ex1_flow)
             # STACKED box-bucks (2+ LM61460 on one sheet) defer their BIAS-bypass
             # caps to the rank columns, which land in the farm's left x-band right
             # above it; the farm's rail-bar symbols ride ~6.35 mm ABOVE the cap
@@ -2596,6 +2668,9 @@ class _Engine:
             floor = self._cell_floor(col_x - 2 * sp.cap_pitch,
                                      col_x + span + 2 * sp.cap_pitch)
             cy = max(cy, gceil(floor + 4 * sp.hang_stub))
+            farm_left = col_x          # the small-cluster path never wraps
+            row_step = 0.0
+            max_right = float("inf")
         prev_rail_w: float | None = None
         for rail, caps in self.cluster.items():
             if prev_rail_w is not None:
@@ -2604,22 +2679,34 @@ class _Engine:
                               + max(sp.cap_pitch,
                                     prev_rail_w / 2
                                     + tm.text_wh(rail)[0] / 2 + 1.27))
-            tops: list[float] = []
-            for ref in caps:
-                self._cluster_cap(ref, col_x, cy)
-                tops.append(col_x)
-                col_x += sp.cap_pitch
             prev_rail_w = tm.text_wh(rail)[0]
-            ry = cy - 3.81
-            if len(tops) == 1:
-                self.power(rail, tops[0], ry)
-            else:
-                xm = gsnap((tops[0] + tops[-1]) / 2)
-                nodes = sorted(set(tops + [xm]))
-                for a, b in zip(nodes, nodes[1:]):
-                    self.pl.plan(rail, (a, ry), (b, ry))
-                self.pl.plan(rail, (xm, ry), (xm, ry - 2.54))
-                self.power(rail, xm, ry - 2.54)
+            # the caps of THIS rail, split into per-row runs as the farm wraps
+            # at the title-block bound. Each run gets its own bar + rail symbol
+            # (same net, so multiple drivers are electrically identical).
+            runs: list[tuple[float, list[float]]] = []
+            cur: list[float] = []
+            for ref in caps:
+                if col_x > max_right and cur:
+                    runs.append((cy, cur))
+                    cur = []
+                    col_x = farm_left
+                    cy = gceil(cy + row_step)
+                self._cluster_cap(ref, col_x, cy)
+                cur.append(col_x)
+                col_x += sp.cap_pitch
+            if cur:
+                runs.append((cy, cur))
+            for run_cy, tops in runs:
+                ry = run_cy - 3.81
+                if len(tops) == 1:
+                    self.power(rail, tops[0], ry)
+                else:
+                    xm = gsnap((tops[0] + tops[-1]) / 2)
+                    nodes = sorted(set(tops + [xm]))
+                    for a, b in zip(nodes, nodes[1:]):
+                        self.pl.plan(rail, (a, ry), (b, ry))
+                    self.pl.plan(rail, (xm, ry), (xm, ry - 2.54))
+                    self.power(rail, xm, ry - 2.54)
         self.cluster = {}
 
     def _cluster_cap(self, ref: str, x: float, cy: float) -> None:
