@@ -115661,7 +115661,7 @@
 		(property
 			"Reference"
 			"U7001"
-			(at -11 9.698 0)
+			(at 0 -5.02 0)
 			(layer "F.SilkS")
 			(effects
 				(font
@@ -117343,7 +117343,7 @@
 	)
 	(gr_text
 		"USR2"
-		(at 134.34 130.885 0)
+		(at 128.356 126.83 0)
 		(layer "F.SilkS")
 		(uuid "3af86476-fc95-5fbb-bc7a-f4f549864946")
 		(effects
@@ -117426,14 +117426,14 @@
 		)
 	)
 	(gr_text
-		"5V: HTX LCD"
-		(at 117.302 63.468 0)
+		"5V"
+		(at 104.268 75.539 0)
 		(layer "F.SilkS")
 		(uuid "ed7b51c6-3ebb-58bd-bb26-89de50a26d03")
 		(effects
 			(font
-				(size 0.95 0.95)
-				(thickness 0.152)
+				(size 1.1 1.1)
+				(thickness 0.176)
 			)
 		)
 	)

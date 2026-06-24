@@ -83,6 +83,29 @@ def _norm(name: str) -> str:
     return name.lstrip("/")
 
 
+def _dead_two_terminal(circuit: Circuit) -> list[str]:
+    """Device:C/R/L parts with EVERY terminal declared on one net — electrically
+    dead (a bypass cap shorting its own pads, a resistor jumpered to itself).
+    DECLARED-side, needs no extraction: declared-vs-extracted equivalence stays
+    green for this (one net -> no SHORT, no split -> no OPEN, name matches), so
+    the historical 'capshort' class slips every other branch (LAW 0)."""
+    ppins: dict[str, set[str]] = {}
+    pnets: dict[str, set[str]] = {}
+    for net in circuit.nets.values():
+        for pr in net.pins:
+            ppins.setdefault(pr.ref, set()).add(pr.pin)
+            pnets.setdefault(pr.ref, set()).add(net.name)
+    out: list[str] = []
+    for ref, p in circuit.parts.items():
+        if not any(p.lib_id.startswith(k)
+                   for k in ("Device:C", "Device:R", "Device:L")):
+            continue
+        if len(ppins.get(ref, set())) >= 2 and len(pnets.get(ref, set())) == 1:
+            out.append(f"{ref} ({p.lib_id}): both terminals on one net "
+                       f"{next(iter(pnets[ref]))!r} — electrically dead (capshort)")
+    return out
+
+
 def check(circuit: Circuit, sch_path: Path) -> GateResult:
     res = GateResult(ok=True)
     extracted = extract_netlist(sch_path)
@@ -109,6 +132,12 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
             members = ", ".join(f"{pr}={declared_of.get(pr,'?')}"
                                 for pr in pins if pr in declared_of)
             res.shorts.append(f"extracted {name!r} merges {sorted(decl)} [{members}]")
+
+    # ---- DEAD 2-TERMINAL: both pins of a passive on ONE net (capshort) ------
+    dead = _dead_two_terminal(circuit)
+    if dead:
+        res.ok = False
+        res.shorts += dead
 
     # ---- OPENS: declared net split / pin on unconnected-* -------------------
     for net in circuit.nets.values():

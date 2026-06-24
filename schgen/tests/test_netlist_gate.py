@@ -63,6 +63,25 @@ def test_short_two_nets_fails():
     assert any("+3V3" in s and "MID" in s for s in r.shorts), r.shorts
 
 
+def test_dead_two_terminal_flags_capshort():
+    """A 2-pin passive with both terminals on ONE net is electrically dead
+    (capshort) and must be flagged DECLARED-side — needs no kicad-cli, since
+    declared-vs-extracted equivalence stays green for it."""
+    from schgen.core.model import Circuit
+    c = Circuit("t", "capshort test")
+    c.part("C1", "Device:C", "100n", "Capacitor_SMD:C_0603_1608Metric")
+    c.net("+3V3", "C1.1")
+    c.net("GND", "C1.2")                        # healthy decoupling cap
+    c.part("C2", "Device:C", "100n", "Capacitor_SMD:C_0603_1608Metric")
+    c.net("GND", "C2.1", "C2.2")               # both pins on GND -> DEAD
+    c.part("R9", "Device:R", "0", "Resistor_SMD:R_0603_1608Metric")
+    c.net("NETA", "R9.1")
+    c.net("NETB", "R9.2")                       # healthy 0R link across 2 nets
+    dead = netlist_gate._dead_two_terminal(c)
+    assert any("C2" in s for s in dead), dead
+    assert not any("C1" in s or "R9" in s for s in dead), dead
+
+
 @_needs_kicad
 def test_open_strands_pin_fails():
     # drop the tap->R2.1 wire (101.6,91.44)->(101.6,97.79): R2.1 strands off the

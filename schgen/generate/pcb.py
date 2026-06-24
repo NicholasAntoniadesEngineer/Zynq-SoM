@@ -2202,17 +2202,38 @@ def _emitted_text_boxes(doc: list) -> list:
             a = math.radians(float(fat[3])) if len(fat) > 3 else 0.0
             ca, sa = math.cos(a), math.sin(a)
             for c in node:
-                if not (isinstance(c, list) and c and isinstance(c[0], Sym)
-                        and str(c[0]) == "fp_text"):
+                if not (isinstance(c, list) and c and isinstance(c[0], Sym)):
                     continue
-                kind = str(c[1]) if isinstance(c[1], Sym) else ""
-                if kind not in ("reference", "value") or _sub(c, "hide") is not None:
+                tag = str(c[0])
+                if tag == "fp_text":
+                    kind = str(c[1]) if isinstance(c[1], Sym) else ""
+                    if kind not in ("reference", "value"):
+                        continue
+                    txt = c[2] if isinstance(c[2], str) else None
+                elif tag == "property":
+                    # modern KiCad stores the designator/value as a
+                    # (property "Reference"/"Value" ...) node, NOT fp_text — the
+                    # emitted board has 564 of these and 0 fp_text, so scanning
+                    # only fp_text left the descriptor placer blind to every
+                    # visible refdes and it could overprint them (LAW 1). Count
+                    # only printed silk (F.SilkS); value on F.Fab is not printed.
+                    name = c[1] if isinstance(c[1], str) else ""
+                    if name not in ("Reference", "Value"):
+                        continue
+                    lyr = _sub(c, "layer")
+                    if lyr is None or str(lyr[1]) != "F.SilkS":
+                        continue
+                    txt = c[2] if isinstance(c[2], str) else None
+                else:
+                    continue
+                hide = _sub(c, "hide")
+                if hide is not None and (len(hide) < 2 or str(hide[1]) == "yes"):
                     continue
                 lat = _sub(c, "at")
-                if lat is None or not isinstance(c[2], str):
+                if lat is None or txt is None:
                     continue
                 lx, ly = float(lat[1]), float(lat[2])
-                boxes.append(_text_box(c[2], fx + lx * ca - ly * sa,
+                boxes.append(_text_box(txt, fx + lx * ca - ly * sa,
                                        fy + lx * sa + ly * ca, _font_size(c)))
     return boxes
 
