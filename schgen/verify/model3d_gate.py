@@ -297,8 +297,13 @@ def _model_box(path: Path, scale: tuple[float, float], rot_z: float,
     w = (max(xs) - min(xs)) * unit * abs(scale[0])
     h = (max(ys) - min(ys)) * unit * abs(scale[1])
     th = math.radians(rot_z)
-    rcx = cx * math.cos(th) - cy * math.sin(th)
-    rcy = cx * math.sin(th) + cy * math.cos(th)
+    # kicad-cli applies a CW model rotation about Z (the same handedness the
+    # emitted footprint pads use in _inst_pad_geom, "TRUE KiCad convention");
+    # the old CCW form here disagreed at 90/270 and passed an off-board header
+    # body (the 3x8 ESC PWM header, the only 90deg model-rotate on the board).
+    # 0/180 are handedness-invariant, so this only changes 90/270 verdicts.
+    rcx = cx * math.cos(th) + cy * math.sin(th)
+    rcy = -cx * math.sin(th) + cy * math.cos(th)
     if rot_z % 180 == 90:
         w, h = h, w
     ox, oy = off
