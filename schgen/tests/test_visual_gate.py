@@ -10,9 +10,29 @@ T-touch short (_foreign_t_touch), and text/wire box overlap (check()).
 
 from __future__ import annotations
 
-from schgen.verify.visual_gate import (Box, Seg, SheetGeometry, _collinear_overlap,
-                                       _cross, _foreign_t_touch, _point_on_seg,
-                                       check)
+from schgen.verify.visual_gate import (Box, Junction, Seg, SheetGeometry,
+                                       _collinear_overlap, _cross,
+                                       _foreign_t_touch, _point_on_seg, check)
+
+
+def test_same_net_junction_passes():
+    # three same-net wires meeting at (5,5) with a junction dot -> legal
+    geo = SheetGeometry(
+        wires=[Seg(0, 5, 5, 5, "A"), Seg(5, 5, 10, 5, "A"),
+               Seg(5, 5, 5, 10, "A")],
+        junctions=[Junction(5.0, 5.0)])
+    assert check(geo).ok, check(geo).findings
+
+
+def test_cross_net_junction_fails():
+    # a junction dot where a net-A wire and a net-B wire meet -> SHORT
+    # (CRITICAL-1: the gate previously never received junctions at all)
+    geo = SheetGeometry(
+        wires=[Seg(0, 5, 5, 5, "A"), Seg(5, 5, 5, 10, "B")],
+        junctions=[Junction(5.0, 5.0)])
+    r = check(geo)
+    assert not r.ok
+    assert any("cross-net junction" in f for f in r.findings), r.findings
 
 
 # --------------------------------------------------------------------------- #

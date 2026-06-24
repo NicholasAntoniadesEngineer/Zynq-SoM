@@ -38,7 +38,7 @@ from schgen.output.emit import HierLabel, LocalLabel, NoConnect, PlacedPart, Pla
 from schgen.core.model import Circuit, NetClass, PartitionError, PinRef
 from schgen.core.symbols import GRID, Library, Pin, SymbolDef, pin_page_position
 from schgen.verify import visual_gate
-from schgen.verify.visual_gate import Box, SheetGeometry
+from schgen.verify.visual_gate import Box, Junction, SheetGeometry
 
 U = GRID
 A4_CENTER = (148.59, 100.33)
@@ -4951,7 +4951,9 @@ def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
             last = f"route: {e}"
             sp = sp.expanded()
             continue
-        geo = SheetGeometry(boxes=list(pl.boxes), wires=list(routed.segs))
+        geo = SheetGeometry(boxes=list(pl.boxes), wires=list(routed.segs),
+                            junctions=[Junction(x, y)
+                                       for x, y in routed.junctions])
         vis = visual_gate.check(geo)
         if vis.ok:
             # the sheet must FIT its frame — clipped content renders
@@ -4978,7 +4980,9 @@ def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
                 routed.junctions = [(round(x + ddx, 3), round(y + ddy, 3))
                                     for x, y in routed.junctions]
                 geo = SheetGeometry(boxes=list(pl.boxes),
-                                    wires=list(routed.segs))
+                                    wires=list(routed.segs),
+                                    junctions=[Junction(x, y)
+                                               for x, y in routed.junctions])
                 pl.paper = "A3"
                 return pl, routed, geo
             last = f"sheet {w:.0f}x{h:.0f} mm exceeds even A3 (390x265)"

@@ -50,10 +50,17 @@ class Seg:
         return abs(self.x0 - self.x1) < 1e-6
 
 
+@dataclass(frozen=True)
+class Junction:
+    x: float
+    y: float
+
+
 @dataclass
 class SheetGeometry:
     boxes: list[Box] = field(default_factory=list)
     wires: list[Seg] = field(default_factory=list)
+    junctions: list[Junction] = field(default_factory=list)
 
 
 @dataclass
@@ -187,9 +194,15 @@ def check(geo: SheetGeometry, clearance_mm: float = 0.2) -> VisualResult:
                 res.findings.append(
                     f"wires CROSS: {a.net} x {b.net} "
                     f"@({a.x0:.2f},{a.y0:.2f})-({b.x0:.2f},{b.y0:.2f})")
-            if a.net != b.net and _collinear_overlap(a, b):
+            if _collinear_overlap(a, b):
+                # cross-net collinear overlap = SHORT; SAME-net collinear overlap
+                # = a doubled-back / duplicated trace (a wire ON a wire), a LAW-1
+                # defect the router's BFS-completion can produce — previously the
+                # check was cross-net-only (HIGH-8) so same-net pile-ups passed.
                 res.ok = False
-                res.findings.append(f"collinear overlap: {a.net} ~ {b.net}")
+                tag = ("same-net wire-over-wire" if a.net == b.net
+                       else "collinear overlap")
+                res.findings.append(f"{tag}: {a.net} ~ {b.net}")
             # different-net T-touch: an endpoint of one wire landing ON the
             # other net's wire (tee or butt-join) is a short with no
             # junction dot and no interior crossing — invisible to _cross /
@@ -200,4 +213,17 @@ def check(geo: SheetGeometry, clearance_mm: float = 0.2) -> VisualResult:
                 res.findings.append(
                     f"different-net T-touch: {a.net} endpoint on {b.net} "
                     f"@({tt[0]:.2f},{tt[1]:.2f})")
+
+    # junction net-identity: a junction dot connects EVERY wire incident at its
+    # point in KiCad, so if two of those wires are different nets the dot is a
+    # SHORT. The gate previously NEVER received the junctions (trusting an
+    # unverified router invariant — CRITICAL-1); now every incident wire at a
+    # junction must share one net, else FAIL (LAW 0).
+    for jn in geo.junctions:
+        nets = {s.net for s in geo.wires
+                if _point_on_seg(jn.x, jn.y, s, interior_only=False)}
+        if len(nets) > 1:
+            res.ok = False
+            res.findings.append(
+                f"cross-net junction @({jn.x:.2f},{jn.y:.2f}): {sorted(nets)}")
     return res
