@@ -1,44 +1,77 @@
-# motor_sense — ESC motor-rail telemetry + in-line shunt (carrier-local)
+# motor_sense — ESC motor-rail telemetry + in-line current sense
 
-The TELEMETRY half of the carrier's generic motor interface (PWM output is in
-`motor_pwm`). A reusable in-line power-sense pass-through — ESCs/props/battery are
-all **off board**.
+The telemetry half of the carrier's generic motor interface (the 8-channel PWM
+output half is `motor_pwm`). It is a reusable in-line power-sense pass-through:
+the ESC battery / bench supply enters and exits the carrier through XT60
+connectors, passing across an on-board shunt that an INA3221 meters for current
+and bus voltage. All flight hardware — ESCs, props, battery — is off board.
 
-| block | parts | function |
-|-------|-------|----------|
-| in-line power | `J2`/`J3` XT60 + `RS1` 10 mΩ | battery passes J2 (in) → RS1 → J3 (out) → off-board ESCs |
-| telemetry | `U2` INA3221 | current (across RS1) **and** bus voltage (at IN-1) on one channel, `STM32_I2C2` @ **0x42** (0x40/0x41 = power_mon) |
-| over-current event | `CRITICAL` → `ESC_FAULT_N` | fast PL alert (open-drain, 10 k pull-up to +3V3_SC) |
-| transient clamp | `D1` SMBJ28A | hot-plug / inductive clamp on the ESC bus |
-| load-side bulk | `Cb` 470 µF / 35 V (`C976030`) | local ESC commutation bulk **and** stabilises the bus-V node the INA meters, on `ESC_VRAIL` (post-shunt, by J3 → ESCs) |
+## Interface
 
-**Rail bounds — BOTH voltage AND current (Phase-3 review):**
-- **Voltage ≤ 4S (≤ ~20 V).** The INA3221 common-mode abs-max is 26 V; the SMBJ28A
-  (31 V VBR, 45 V clamp) does NOT protect those 26 V pins, so the bound is the
-  battery, not the TVS. **Pre-power / soft-start the rail — do not hot-plug a
-  charged pack** (the sub-µs LC ring overshoots ~2×; a current-limited supply's
-  kHz loop can't damp it). The input TVS (`D1`) + the 100 n + the ≤ 4S bound cover
-  that edge into the INA's IN+1; the bulk `Cb` sits on the load-side `ESC_VRAIL`
-  (post-shunt), so it backs the ESCs + steadies IN-1, not the input node.
-- **Current ≤ ~7 A continuous.** `RS1` is a **1 W** 10 mΩ shunt → thermal limit
-  ≈ √(1/0.01) = 10 A, 50 %-derated ≈ 7 A — well below the XT60's 60 A. **Do not
-  exceed ~7 A through the rail** with this shunt. (The INA3221 ADC saturates at
-  163.8 mV/10 mΩ = 16.4 A, also above the shunt's safe point — the 1 W shunt is
-  the weakest link.)
+Carrier-local subsystem; it drives these nets/rails on the Zynq-7000 SoM carrier.
 
-**Safety:** the dirty motor rail shares only **GND** with logic; PL pins never see
-it (the buffer's 5 V B-side absorbs any ESC-side fault).
+- **`ESC_VRAIL_IN`** — motor-power input node (J2 `+`), shunt high side, TVS-clamped.
+- **`ESC_VRAIL`** — post-shunt load-side rail (J3 `+` → off-board ESCs), bus-V sense node.
+- **`+3V3_SC`** — always-on SC management rail powering U2 and its pull-ups (draws ~2 mA).
+- **`GND`** — shared with logic; the only galvanic tie between the motor rail and logic.
+- **`STM32_I2C2_SDA` / `STM32_I2C2_SCL`** — INA3221 on the always-on STM32_I2C2 SC bus
+  at address **0x42** (0x40/0x41 are `power_mon`). Expects `som_j1_connector`.
+- **`ESC_FAULT_N`** — open-drain INA3221 CRITICAL over-current alert routed to a free
+  PL pin on the SoM connector (bank 13, `IO_L1_N_13`). Expects `som_j2_connector`.
 
-**Implemented (no EasyEDA fetch — stock KiCad footprint, verified LCSC in the BOM):**
-- the **bulk cap** `Cb` = 470 µF / 35 V (`C976030`, `Device:C_Polarized` +
-  `Capacitor_SMD:CP_Elec_10x10.5`) on the **load-side** `ESC_VRAIL`. It went there
-  (not `ESC_VRAIL_IN`) because that is the conventional ESC-bulk node and it
-  steadies the INA's bus-V (IN-1) reading, while the dense `ESC_VRAIL_IN` trunk was
-  at the schematic router's per-net pin budget.
+## Design
 
-**Open (a design decision, NOT just sourcing):**
-- a **higher-current shunt path.** `RS1` carries the **aggregate** ESC current
-  (8 × ~5 A ≈ 40 A). At 40 A a 10 mΩ shunt is 0.4 V (over the INA's ±163 mV range)
-  and 16 W — so lifting the ceiling means a *value* change (≈ 2 mΩ, e.g. 2–3 W 2512
-  `C494555`) **and** an INA-scale/firmware change, plus an optional series fuse.
-  The present 10 mΩ / 1 W is correct for the ≤ ~10 A low-current bench demo.
+**In-line power path.** The ESC battery / bench supply enters at J2 (XT60PW-M, male
+horizontal PCB-mount), passes through RS1 (10 mΩ shunt), and exits at J3 (XT60PW-M)
+to the off-board ESCs. XT60 is the RC-bench convention, rated far above the demo
+current. Both connectors tie `+` to the rail and `-` plus both mounting tabs to GND.
+
+**Telemetry.** U2 (INA3221AIRGVR, 3-channel) reads current across RS1 and bus voltage
+at the load side on a single channel: `IN+1` = shunt high side (`ESC_VRAIL_IN`),
+`IN-1` = shunt low side / bus-V sense (`ESC_VRAIL`). The two unused channels are tied
+to GND. A0 is strapped to SDA, selecting I2C address 0x42 per the datasheet address
+table. The part runs on the always-on `+3V3_SC` rail (VS and VPU), so telemetry is
+available regardless of PS/PL state.
+
+**Over-current alert.** The INA3221 `CRITICAL` open-drain output drives `ESC_FAULT_N`,
+a fast over-current event back to the PL for shutdown. It has a 10 k pull-up to
+`+3V3_SC`. `WARNING`, `PV`, and `TC` are I2C-readable but left as NC.
+
+**Rail bound.** The INA3221 common-mode abs-max is 26 V and D1 (SMBJ28A TVS) clamps
+above that, so the protection bound is the battery, not the TVS: the ESC rail is held
+≤ 4S (≤ ~20 V) for margin. D1 plus the 100 n HF bypass and the ≤ 4S bound cover the
+hot-plug edge into IN+1; a current-limited bench supply, not a hot-plugged charged
+pack, keeps transients out of the monitor.
+
+**Load-side bulk.** Cb (470 µF / 35 V polarised electrolytic) sits on `ESC_VRAIL`
+(post-shunt, by J3 → ESCs): local energy store for the ESC commutation-current pulses
+and it stabilises the bus-V node the INA3221 meters. The 35 V rating gives > 1.5×
+margin over the ≤ 4S rail; it seats on a stock D10 SMD electrolytic land pattern. It
+sits on the lighter post-shunt net rather than the dense input trunk.
+
+**Safety / isolation.** Bench-only, no flight hardware. The dirty motor rail shares
+only GND with logic; PL pins never see it. D1 clamps hot-plug / inductive transients
+on the ESC bus.
+
+## Parts
+
+| ref | value | lib/part | LCSC |
+|-----|-------|----------|------|
+| J2 | XT60PW-M | XT60PW-M (ESC power in) | — |
+| J3 | XT60PW-M | XT60PW-M (ESC rail out) | — |
+| RS1 | 10mR | RLM12FTCMR010 | — |
+| D1 | SMBJ28A | SMBJ28A (TVS) | — |
+| U2 | INA3221AIRGVR | INA3221AIRGVR | — |
+| C (HF bypass) | 100n | Device:C | C14663 |
+| C (decouple ×n) | 100n | Device:C | C14663 |
+| C (bulk decouple) | 10u | Device:C | C15850 |
+| Cb | 470uF/35V | Device:C_Polarized (CP_Elec_10x10.5) | C976030 |
+| R (pull-up) | 10k | Device:R | C25804 |
+
+## Build & test
+
+`test_motor_sense.py` covers the subsystem netlist. Run:
+
+```
+pytest carrier/subsystems/motor_sense/test_motor_sense.py
+```

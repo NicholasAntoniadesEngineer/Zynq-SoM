@@ -1,14 +1,14 @@
 # carrier — the generated carrier board
 
 Open `Zynq_Carrier.kicad_pro` in KiCad (9+). EVERYTHING here except
-`subsystems/*.py`, the research dossiers and `HISTORY.md` is generated —
-regenerate in place with `PYTHONPATH=. python -m schgen board`.
+`subsystems/*.py` and the research dossiers is generated — regenerate in place
+with `PYTHONPATH=. python -m schgen board` (the schematics, the placed
+`Zynq_Carrier.kicad_pcb`, 3D renders, BOM, FPGA constraints, firmware contract,
+and docs).
 
 ## Architecture (the locked decisions)
 
-The carrier hosts a Zynq-7000 SoM over the J1/J2/J3 mezzanine. The full
-decision log with rationale is archived in [`HISTORY.md`](../docs/HISTORY.md); the
-still-true essentials:
+The carrier hosts a Zynq-7000 SoM over the J1/J2/J3 mezzanine:
 
 - **Power input is USB-C PD only**, 20 V / 3 A via the FUSB302B, behind a
   TPS26631 eFuse with soft-start (controlled inrush + inlet OVP/OCP). No
@@ -46,7 +46,7 @@ hand-written layer**. There are two flavours:
   byte-identical to a hand-written one); `expects` / `buses` / `notes` carry
   the project-specific linker deferrals, bus names and house-style prose. The
   contract is `schgen/core/subsystem.py` (`Meta`); a typo'd top-level key is a
-  hard `CircuitError`. 17 subsystems are migrated this way (usb_pd, usbc_otg,
+  hard `CircuitError`. 17 subsystems use the reusable library this way (usb_pd, usbc_otg,
   uart_bridge, usb_jtag, ethernet, hdmi_tx, hdmi_rx, lcd, microsd, camera, pmod,
   pmod_expansion, pd_input, power, rj45_connector, usb_uart_connector,
   usb_jtag_connector) — see [`subsystems/README.md`](../subsystems/README.md).
@@ -59,7 +59,7 @@ hand-written layer**. There are two flavours:
 Either way the rule is the same: **the .py is the NETLIST, never geometry.**
 No coordinates, no wire plans, no text positions; a purity gate AST-scans every
 subsystem and fails the build if it defines `placer` or imports a geometry API.
-All placement is derived from circuit topology by `schgen/place.py`.
+All placement is derived from circuit topology by `schgen/layout/place.py`.
 
 - `subsystems/` — the authored netlists (adapters + local glue), the only
   hand-written layer; see `subsystems/README.md`.
@@ -80,16 +80,13 @@ All placement is derived from circuit topology by `schgen/place.py`.
   programmatically (`schgen som-interface`), never hand-edited.
 - `nets.py` — the GENERATED cross-sheet net-name contract
   (`schgen nets`).
-- `HISTORY.md` — the **archived** decision log (the former `PLAN.md` +
-  `OVERNIGHT_PLAN.md` + `MORNING_REPORT.md`): every locked decision and
-  autonomous-run record, kept for the WHY.
 - `research/` — the per-subsystem engineering dossiers (datasheet-grounded,
   hand-written): [`bringup_power_gating.md`](research/bringup_power_gating.md),
   [`camera_csi.md`](research/camera_csi.md),
   [`debug_boot_pmod.md`](research/debug_boot_pmod.md), [`fmc.md`](research/fmc.md),
   [`lcd_backlight.md`](research/lcd_backlight.md), [`power_mon.md`](research/power_mon.md),
-  [`thermal_bucks.md`](research/thermal_bucks.md) (the TPS54302 buck Tj review
-  item), [`usb_jtag_pmod_expansion.md`](research/usb_jtag_pmod_expansion.md),
+  [`thermal_bucks.md`](research/thermal_bucks.md),
+  [`usb_jtag_pmod_expansion.md`](research/usb_jtag_pmod_expansion.md),
   [`user_io.md`](research/user_io.md), [`wave3_function_map.md`](research/wave3_function_map.md).
 - `docs/` — the design-documentation packet:
   [`DESIGN_SPEC.md`](docs/DESIGN_SPEC.md) (theory of operation: mezzanine
@@ -125,6 +122,10 @@ loosening it is forbidden):
 - **POWER-TREE / TEST-POINT / THERMAL / DESIGN-RULE / SPICE** — per-regulator
   headroom, a probe per rail/bus, per-device Tj, decoupling/pull-up/strap
   completeness, and divider/feedback/ramp setpoints.
+- **PCB** — the placed `Zynq_Carrier.kicad_pcb` passes DRC (zero KiCad errors),
+  3D-model coverage + placement, ratsnest subsystem clustering, connector
+  mating-face (off-board mouths) + spacing, and refdes-overlap; multi-angle 3D
+  board renders are written for visual review.
 
 `schgen selftest` mutation-tests the gates themselves (it injects one defect
 per class — pin swap, deleted wire, relabel, stray NC, foreign-net junction
@@ -132,8 +133,8 @@ short — and proves a gate kills each) and builds twice for byte-determinism
 (across PYTHONHASHSEED). Reusable subsystem packages also carry an offline
 local `test_<name>.py`; cross-board gates stay aggregated at board level.
 
-The working rhythm: build → read the four verdicts → **open the render PNG and
-inspect it like a PCB reviewer** (the render is the deliverable) → commit per
+The working rhythm: build → read the gate verdicts → **open the render PNGs and
+inspect them like a PCB reviewer** (the render is the deliverable) → commit per
 verified unit. Heavy/parallel work runs in isolated git worktrees harvested
 sequentially; deterministic output means a regen on the merged state produces
 zero artifact diff. The full process contract is

@@ -1,80 +1,86 @@
-# board_aux — the manually-gated +3V3_AUX rail + its PCA9306 I2C isolator
+# board_aux — manually-gated +3V3_AUX rail + PCA9306 I2C isolator
 
-The INFRASTRUCTURE half of the board-services block: it makes the gated
-`+3V3_AUX` rail and bridges the always-on management I2C onto the gated segment.
-The peripherals it feeds live on `board_services`; the QWIIC connector that
-re-exports the rail + bus lives on `board_qwiic`. This is a **carrier-LOCAL**
-subsystem (real carrier net names wired directly — no abstract-interface `META`
-bind contract). It is kept on its own sheet so neither sheet is dense enough to
-defeat the placer's rail-stub router.
+board_aux is the infrastructure half of the carrier's board-services block: it
+makes a manually-enabled, default-OFF `+3V3_AUX` rail and bridges the always-on
+STM32 management I2C onto that gated segment. The peripherals it powers live on
+`board_services`; the QWIIC connector that re-exports the rail and bus lives on
+`board_qwiic`. It is a carrier-LOCAL subsystem — real carrier net names are wired
+directly, with no abstract-interface `META` bind contract.
 
-## Package contents
+## Interface
 
-| file | role |
-|------|------|
-| `board_aux.py`      | the NETLIST — `circuit()` returning the carrier `Circuit` |
-| `board_aux.cir`     | SPICE subckt — the passive network (gate IN/OUT bypass, ILIM-set, EN pulldown, status LED divider, PCA9306 VREF bypass + EN/bus pull-ups) with the external nets as subckt pins |
-| `test_board_aux.py` | LOCAL electrical-correctness test (offline: model completeness + decap/strap slice + ratings + SPICE-passive match + the gate/isolation invariants) |
-| `README.md`         | this file |
+Carrier nets driven and ports published:
+
+- **Input rail:** `+3V3` (always-on) into the load switch.
+- **Gated rail:** `+3V3_AUX` — the switched output, default-OFF until SW1 is
+  flipped. Published with `testpoint("+3V3_AUX")` and a 6 mA load declared to the
+  power tree (status LED + the two 4k7 AUX-bus pull-ups).
+- **Management bus ports (always-on side):** `STM32_I2C2_SCL` / `STM32_I2C2_SDA`,
+  typed i2c (scl/sda, 400 kHz, bus `STM32_I2C2`), expecting bringup_rails /
+  usb_pd / power_mon.
+- **Isolated bus ports (gated side):** `AUX_I2C_SCL` / `AUX_I2C_SDA`, typed i2c
+  (scl/sda, 400 kHz, bus `AUX_I2C`), consumed by board_services / board_qwiic.
+  Both have testpoints.
+
+A project consumes board_aux by wiring `board_services` / `board_qwiic` to the
+`AUX_I2C_*` ports and feeding the always-on `STM32_I2C2_*` ports from the
+management bus; the `+3V3` / `+3V3_SC` / `GND` rails are shared carrier nets.
+
+## Design
+
+**Manual power gate (U1, SY6280AAC).** A current-limited load switch gates `+3V3`
+→ `+3V3_AUX`, matching the bring-up module switches. ILIM is set by R1 = 13k on
+ISET: ILIM = 6800/13k ≈ 523 mA, sized above the gated load. The enable is LOCAL
+and defaults OFF: DIP switch SW1 (DSHP04, position 1) closes `+3V3` onto
+`EN_AUX`, and R2 = 100k holds `EN_AUX` low until a human flips the switch, so the
+rail comes up de-energized at power-on. SW1 positions 2–4 are spare (commons
+bused to `+3V3`, even pins NC). Keeping the gate self-contained on this sheet
+makes the whole block a single add/revert that touches none of the dense
+rail-control sheets, and keeps each sheet below the placer's congestion threshold.
+
+**Bypass + bulk.** 100n on U1.IN and U1.OUT. A 10u 0805 bulk cap holds up
+`+3V3_AUX` for the ~200 mA QWIIC load; the SY6280 datasheet recommends an output
+cap and its soft-start tolerates the 10u.
+
+**Status LED.** A red LED on the gated output through R3 = 330R lights when the
+AUX rail is enabled, making the manual gate state visible at a glance.
+
+**I2C isolator (U2, PCA9306DCUR).** The board_services peripherals run off the
+gated rail but their bus is the always-on `STM32_I2C2`. Tying gated SDA/SCL
+straight to that pulled-up bus would back-power the unpowered chips through their
+ESD diodes (LAW 0). The PCA9306 bidirectional level/isolation switch bridges the
+two domains. The reference asymmetry IS the isolation: VREF1 references `+3V3_SC`
+(always-on side — its pull-ups already live on bringup_rails), VREF2 references
+the gated `+3V3_AUX` with its own 4k7 pull-ups (R5/R6, required on both sides of
+the PCA9306). U2.EN is pulled to `+3V3_AUX` through R4 = 100k, so the switch
+OPENS whenever the AUX rail is down — the peripherals are cleanly isolated while
+off. 100n bypass on each VREF.
 
 ## Parts
 
-| ref | part | MPN / lib | LCSC | role |
-|-----|------|-----------|------|------|
-| U1  | load switch | `SY6280AAC` | C (parts lib) | gates `+3V3` → `+3V3_AUX`; ILIM = 6800/13k ≈ 523 mA |
-| U2  | I2C isolator | `PCA9306DCUR` | C (parts lib) | bidirectional level/isolation switch, STM32_I2C2 ↔ AUX_I2C |
-| SW1 | DIP switch | `DSHP04TSGER` | C (parts lib) | manual enable (pos 1 closes +3V3 → EN_AUX); pos 2–4 spare |
-| D1  | LED | `Device:LED` red | C2286 | gated-rail status LED (lit = AUX enabled) |
-| C1–C4 | 100n | `Device:C` | C14663 | U1.IN, U1.OUT, U2.VREF1, U2.VREF2 bypass |
-| R1  | 13k  | `Device:R` | C22797 | SY6280 ISET (ILIM ≈ 523 mA) |
-| R2  | 100k | `Device:R` | C25803 | EN_AUX pulldown (default-OFF at power-up) |
-| R3  | 330R | `Device:R` | C23138 | status LED series resistor |
-| R4  | 100k | `Device:R` | C25803 | PCA9306 EN pull-up to +3V3_AUX |
-| R5,R6 | 4k7 | `Device:R` | C23162 | AUX-bus SDA/SCL pull-ups to +3V3_AUX |
-| TP1–TP3 | testpoint | — | — | probes on +3V3_AUX / AUX_I2C_SCL / AUX_I2C_SDA |
+| ref | value | lib/part | LCSC |
+|-----|-------|----------|------|
+| U1  | SY6280AAC | parts: `SY6280AAC` | — |
+| U2  | PCA9306DCUR | parts: `PCA9306DCUR` | — |
+| SW1 | DSHP04TSGER | parts: `DSHP04TSGER` | — |
+| D   | red | `Device:LED` | C2286 |
+| C (×4) | 100n | `Device:C` | C14663 |
+| C   | 10u | `Device:C` (0805) | C15850 |
+| R (ISET) | 13k | `Device:R` | C22797 |
+| R (EN pulldown) | 100k | `Device:R` | C25803 |
+| R (LED) | 330R | `Device:R` | C23138 |
+| R (PCA9306 EN pull-up) | 100k | `Device:R` | C25803 |
+| R (×2 AUX bus pull-ups) | 4k7 | `Device:R` | C23162 |
 
-(Refs above are illustrative of the auto-assigned order; the netlist is the
-authority — the local test keys on net topology, not refdes.)
+Refdes for the `Device:*` parts are auto-assigned; the netlist topology is the
+authority. Three testpoints sit on `+3V3_AUX`, `AUX_I2C_SCL`, `AUX_I2C_SDA`.
 
-## The I2C bus and isolation
+## Build & test
 
-The board_services peripherals run off the GATED rail but their bus is the
-always-on `STM32_I2C2` management bus. Tying gated SDA/SCL straight to that
-pulled-up bus would back-power the unpowered chips through their ESD diodes
-(LAW 0). U2 (PCA9306) bridges the two domains:
-
-- **side 1** references `+3V3_SC` (the always-on bus; its pull-ups already live
-  on `bringup_rails`) — ports `STM32_I2C2_SCL` / `STM32_I2C2_SDA`.
-- **side 2** references `+3V3_AUX` with its OWN 4k7 pull-ups (R5/R6) — ports
-  `AUX_I2C_SCL` / `AUX_I2C_SDA`, published for `board_services` / `board_qwiic`.
-- **EN** is pulled to `+3V3_AUX`, so the switch OPENS (isolated) whenever the AUX
-  rail is down — the peripherals are cleanly cut off when off.
-
-Both i2c port pairs are typed (scl/sda, 400 kHz): bus `STM32_I2C2` on side 1,
-bus `AUX_I2C` on side 2.
-
-## Notes (the gate + the isolation reference split)
-
-- **Power gate (C1: "a manual power enable like the previous").** U1 gates
-  `+3V3` → `+3V3_AUX` exactly like the ten bring-up module switches, but its
-  enable is LOCAL and defaults OFF: SW1 (pos 1) closes `+3V3` onto `EN_AUX` and
-  the 100k pulldown holds `EN_AUX` low until a human flips the switch. Keeping
-  the gate self-contained here makes the whole block one add / one revert,
-  touching none of the dense rail-control sheets.
-- **Isolation reference split (LAW 0).** The PCA9306's two VREF pins reference
-  the two different rails — that asymmetry IS the isolation; the local test
-  asserts VREF1 = +3V3_SC and VREF2 = +3V3_AUX and that EN is pulled to the
-  gated rail.
-- **Status + probes.** A red LED on the gated output makes the enable state
-  visible at a glance; three testpoints expose the rail and the isolated bus.
-- This sheet's own `+3V3_AUX` load (status LED + the two 4k7 pulls) is declared
-  for the power tree; the peripherals declare theirs on `board_services`.
-
-## Local test
+`test_board_aux.py` checks model completeness, the decap/strap slice, ratings,
+the SPICE-passive match, and the gate/isolation invariants (VREF1 = +3V3_SC,
+VREF2 = +3V3_AUX, EN pulled to the gated rail).
 
 ```bash
 PYTHONPATH=. python3 -m pytest carrier/subsystems/board_aux/test_board_aux.py -q
 ```
-
-Board-level gates (full power-tree headroom, board ERC, the cross-sheet link /
-port-driver graph) stay aggregated by `schgen board`.

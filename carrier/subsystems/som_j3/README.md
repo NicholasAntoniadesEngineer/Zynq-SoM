@@ -1,63 +1,105 @@
-# som_j3 — SoM mezzanine connector J3 (carrier-local subsystem)
+# som_j3 — SoM mezzanine connector J3 (FPGA bank 33/34/35 IO + VCCO rails)
 
-The carrier side of the **J3** Hirose **DF40C-100DP-0.4V(51)** mezzanine
-receptacle. J3 carries the **FPGA bank 33/34/35 IO + VCCO rails** half of the SoM
-contract (LCD RGB888 + sync, camera CSI + control, FMC clocks/LA pairs, the
-board-supervisor watchdog, the PUDC strap, and the bank-34/35 VCCO supply).
+`som_j3` is the carrier-side **J3** DF40 mezzanine connector that mates the SoM.
+It carries the FPGA bank 33/34/35 half of the SoM↔carrier contract: the LCD
+RGB888 + sync bus (bank 34), the camera CSI lanes and control (bank 33/35), the
+FMC clocks and LA pairs (bank 35), the board-supervisor watchdog (bank 33), the
+PUDC config strap (bank 34), and the bank-34/35 VCCO supply rails. It is a
+connector-only sheet: just the receptacle and its net binds, no discretes.
 
-This is a **carrier-LOCAL** subsystem (the SoM side of the contract by
-construction), foldered into a per-name package for 4-artifact parity with the
-generic `subsystems/<name>/` library.
+## Interface
 
-## How it is generated (never hand-typed)
+This is a **carrier-local** subsystem — it is the SoM side of the contract by
+construction, so every port resolves against `carrier/som_interface.json` and is
+consumed by name from the carrier feature sheets (`lcd`, `camera`, `fmc`,
+`board_services`, `bringup_rails`).
 
-`som_j3.py` loads the shared generator `carrier/som_conn_gen.py` and calls
-`connector_circuit("J3", "som_j3", "SoM J3: FPGA bank 33/34/35 IO + VCCO rails")`.
-The pin→net map comes from `carrier/som_interface.json`; the generator binds
-every J3 pin verbatim, applies the wave-3 FUNCTION map (LCD/camera/FMC/watchdog
-renames), the PUDC strap port, ties each `+VCCO_*` contact onto its carrier rail,
-and types the camera/FMC diff pairs. No hand-typed pinout.
+`som_j3.py` calls the shared generator `carrier/som_conn_gen.py`:
 
-## Package contents
+```python
+def circuit():
+    return _gen.connector_circuit(
+        "J3", "som_j3", "SoM J3: FPGA bank 33/34/35 IO + VCCO rails")
+```
 
-| file | role |
-|------|------|
-| `som_j3.py`       | the NETLIST — `circuit()` instantiating the DF40 receptacle bound to the J3 contract |
-| `__init__.py`     | re-exports `circuit` |
-| `som_j3.cir`      | SPICE subckt stub — externally-visible nets as pins; a pure connector carries no on-sheet passive network |
-| `test_som_j3.py`  | LOCAL correctness test (offline: model completeness + design-rule slice + sheet invariants) |
-| `README.md`       | this file |
+The generator loads J3's pin→net map from `som_interface.json` and binds every
+signal pin (1–100) to its contract net, applying the carrier function map, the
+PUDC strap port, the VCCO rail tie, and the camera/FMC differential-pair typing.
+The 4 hold-down pads (101–104) of the DP plug are mechanical and emitted as
+explicit no-connects.
 
-## The connector — part
+Nets J3 drives:
+
+| net | class | role |
+|-----|-------|------|
+| `+3V3` | POWER | VCCO source for Zynq bank 34 (LCD LVCMOS33); the `+VCCO_34` contacts (J3.97/99) merge onto the carrier `+3V3` rail as in-fan rail taps. Declared draw 0.010 A. |
+| `+2V5_VADJ` | POWER | VCCO source for Zynq bank 35 (LVDS_25 camera/FMC); the `+VCCO_35` contacts (J3.1/2/4) merge onto the carrier `+2V5_VADJ` rail. Declared draw 0.050 A. |
+| `GND` | GROUND | ground return (21 contacts). |
+| signal ports | PORT | the bank 33/34/35 function nets below. |
+
+Signal ports (consumer sheet binds the same name):
+
+- **LCD RGB888** (bank 34) — `LCD_R0..7`, `LCD_G0..7`, `LCD_B0..7`, `LCD_PCLK`,
+  `LCD_HSYNC`, `LCD_VSYNC`, `LCD_DE`, `LCD_DISP`, `LCD_BL_PWM`.
+- **Camera** (bank 33/35) — `CAM_CLK_{P,N}` (J3.9/11), `CAM_D0_{P,N}` (J3.5/7),
+  `CAM_D1_{P,N}` (J3.17/15), typed `diff_pair` 100Ω MIPI CSI, plus control
+  `CAM_SCL`, `CAM_SDA`, `CAM_EN`, `CAM_LED` (J3.86/89/85/87).
+- **FMC** (bank 35) — `FMC_CLK0_M2C_{P,N}`, `FMC_CLK1_M2C_{P,N}`,
+  `FMC_LA00_CC_{P,N}`, `FMC_LA01_CC_{P,N}`, `FMC_LA02..07_{P,N}` (typed
+  `diff_pair` 100Ω).
+- **Watchdog** (bank 33, +3V3 domain) — `WATCHDOG_RST_N` (TPS3823-33 RESET# → PL,
+  J3.98) and `WATCHDOG_KICK` (PL → WDI, J3.96).
+- **PUDC** (bank 34) — `PUDC_34` (J3.39): the pull-up-during-config pin, exposed
+  as a function port; its 10k-to-GND strap resistor lives on `bringup_rails`.
+- **ESC PWM** (bank 33) — `ESC_PWM_IN4..7` (J3.91/93/92/94): spare bank-33 PL
+  pins routed to the motor-PWM buffer.
+- **Spares** — verbatim `IO_L*_33/34/35` ports for unmapped bank pins, kept for
+  probe/expansion.
+
+## Design
+
+- **Connector part** — `DF40C-100DP-0.4V(51)`, the Hirose 0.4 mm-pitch 100-pin
+  **plug** (DP). The carrier carries the plug because DF40 mates only
+  plug-to-receptacle; the SoM is fabricated with the DS receptacle, so two
+  receptacles would not interlock. Signal pins keep the same net→pad-number map
+  (the DP/DS pair mates pad-N to pad-N), and the DP's 4 extra hold-down pads
+  (101–104) are mechanical and no-connected.
+
+- **VCCO rails are real sourced loads.** The carrier must source every Zynq bank
+  VCCO or all bank I/O is dead. Bank 34 (LVCMOS33) takes `+3V3`; bank 35
+  (LVDS_25, shared camera/FMC 2.5 V) takes `+2V5_VADJ`. Each `+VCCO_*` contact
+  pin merges onto its carrier rail as one more tap; the rail's own buck/LDO is
+  the source, so these appear as power draws (0.010 A and 0.050 A), not orphan
+  nets.
+
+- **Watchdog on the +3V3 domain.** `WATCHDOG_RST_N` and `WATCHDOG_KICK` are
+  placed on bank-33 (+3V3, LVCMOS33) PL pins so both share the TPS3823-33
+  monitor's 3.3 V domain. The TPS3823-33 has VIT- = 2.93 V and must stay on a
+  3.3 V rail; on a 2.5 V rail it would assert RESET permanently. LVCMOS33 drive
+  also clears the WDI input threshold (VIH = 0.7·VDD = 2.31 V) that a 2.5 V
+  LVCMOS output could not.
+
+- **Differential-pair typing.** The camera CSI and FMC LVDS pairs are typed
+  `diff_pair` at 100Ω on this sheet so the constraints exporter sees both ends
+  of each pair where they enter the connector.
+
+- **Connector-only sheet.** No discretes — only the receptacle and its net
+  binds. The PUDC strap resistor that this pin needs lives on `bringup_rails`,
+  keeping the connector sheet pure so the placement engine's connector-fan
+  template applies.
+
+## Parts
 
 | ref | value | lib / part | LCSC |
 |-----|-------|-----------|------|
-| J3 | DF40C-100DP-0.4V(51) | `parts/DF40C-100DP-0.4V_51/` (100 bare-number pins) | C531031 |
+| J3 | DF40C-100DP-0.4V(51) | `parts/DF40C-100DP-0.4V_51/` (100 signal + 4 hold-down pads) | C531031 |
 
-## Interface it carries (the J3 contract)
+## Build & test
 
-### Rails (POWER / GROUND)
+`test_som_j3.py` runs the subsystem-local slices offline (model completeness,
+design-rule/part/spice slices, and sheet invariants: VCCO rails, camera/FMC
+diff-pair typing, key function ports, the `.cir` subckt stub).
 
-| net | class | source / note |
-|-----|-------|---------------|
-| `+3V3`      | POWER  | VCCO source for Zynq bank **34** (LCD LVCMOS33). `+VCCO_34` merges onto the carrier +3V3 rail (SYS-1 in-fan rail tap). Declared draw 0.010 A. |
-| `+2V5_VADJ` | POWER  | VCCO source for Zynq bank **35** (LVDS_25, camera/FMC). `+VCCO_35` merges onto the carrier +2V5_VADJ rail. Declared draw 0.050 A (sec 3.1 re-budget). |
-| `GND`       | GROUND | ground. |
-
-### Signal ports (PORT, 74 total)
-
-Highlights (consumer sheet binds the same name):
-
-- **LCD RGB888** (bank 34) — `LCD_R0..7`, `LCD_G0..7`, `LCD_B0..7`, `LCD_PCLK`, `LCD_HSYNC`, `LCD_VSYNC`, `LCD_DE`, `LCD_DISP`, `LCD_BL_PWM`.
-- **Camera** (bank 33/35) — `CAM_CLK_{P,N}`, `CAM_D{0,1}_{P,N}` (typed `diff_pair` 100R MIPI CSI), plus control `CAM_SCL`, `CAM_SDA`, `CAM_EN`, `CAM_LED`.
-- **FMC** (bank 35) — `FMC_CLK{0,1}_M2C_{P,N}`, `FMC_LA00_CC_{P,N}`, `FMC_LA01_CC_{P,N}`, `FMC_LA02..07_{P,N}` (typed `diff_pair` 100R).
-- **Watchdog** (bank 33, +3V3 domain) — `WATCHDOG_RST_N` (TPS3823 RESET# → PL), `WATCHDOG_KICK` (PL → WDI). Relocated onto +3V3 PL pins so both share U3's 3.3 V domain.
-- **PUDC** (bank 34) — `PUDC_34`: the pull-up-during-config pin, renamed to a function port here; its 10k-to-GND strap resistor lives on `bringup_rails` (connector sheets carry no discretes).
-- **Bank-33/34/35 spares** — verbatim `IO_L*_33/34/35` ports kept for probe/expansion.
-
-## Notes
-
-- **Connector-only sheet**: no discretes; only the receptacle and its net binds.
-- VCCO rails are real, sourced loads (carrier +3V3 / +2V5_VADJ), so they appear
-  as power draws, not deferred orphans.
-- Byte-identical: foldering this subsystem changed no emitted schematic or render.
+```
+pytest carrier/subsystems/som_j3/test_som_j3.py
+```

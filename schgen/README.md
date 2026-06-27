@@ -1,10 +1,12 @@
-# schgen — netlist-first KiCad schematic generator
+# schgen — netlist-first KiCad schematic + PCB generator
 
 `schgen` turns hand-authored Python **netlists** into electrically-correct,
-visually-clean KiCad schematics for the Zynq-7000 SoM **carrier** board. You
-author one subsystem (an active part + all its passives) as a single `.py` file
-that declares every part and every pin→net assignment; `schgen` places, routes,
-emits the `.kicad_sch`, and **gates** it against three immutable judges.
+visually-clean KiCad schematics **and a placed PCB** for the Zynq-7000 SoM
+**carrier** board. You author one subsystem (an active part + all its passives)
+as a single `.py` file that declares every part and every pin→net assignment;
+`schgen` places and routes the schematic, emits each `.kicad_sch`, places the
+board (footprints + 3D models, edge-flush connectors), and **gates** every
+artifact against immutable judges.
 
 It is the source of truth for the board: the committed `carrier/` schematics,
 BOM, FPGA constraints, firmware contract, bring-up manual, power tree, and
@@ -81,19 +83,25 @@ undriven-input gate honor it.
 
 ## The pipeline (correct by construction)
 
+Per sheet (schematic):
 ```
  model.py        place.py            route.py          emit.py           verify/
  ────────        ────────            ────────          ───────           ───────
- Circuit  ──▶  feasibility-loop ──▶  exclusive-grid ──▶ .kicad_sch  ──▶  3 gates:
- (explicit     placement            wire router        (content-          netlist == declared
-  netlist)     (templates per       (no two nets        derived            ERC errors == 0
-               part topology)        share a track)     uuid5 ids)         visual zero-overlap
+ Circuit  ──▶  feasibility-loop ──▶  exclusive-grid ──▶ .kicad_sch  ──▶  netlist == declared
+ (explicit     placement            wire router        (content-          ERC errors == 0
+  netlist)     (templates per       (no two nets        derived            visual zero-overlap,
+               part topology)        share a track)     uuid5 ids)         junction-aware)
 ```
 
-Geometry is **derived from** the netlist, never the source of electrical truth
-(the failure mode of the old generator — see `DESIGN.md`). Emission is
-deterministic: ids are content-derived `uuid5`, so the same model emits
-byte-identical output across runs and `PYTHONHASHSEED`s.
+Then the board (PCB): `generate/pcb.py` places every footprint (subsystem
+clustering, connectors edge-flush with mating faces off-board), embeds the real
+3D models, emits `Zynq_Carrier.kicad_pcb`, and gates it (DRC, 3D-model coverage +
+placement, ratsnest grouping, connector mating-face / spacing);
+`output/render3d.py` renders the multi-angle 3D views.
+
+Geometry is **derived from** the netlist, never the source of electrical truth.
+Emission is deterministic: ids are content-derived `uuid5`, so the same model
+emits byte-identical output across runs and `PYTHONHASHSEED`s.
 
 ---
 
@@ -134,6 +142,11 @@ Run `python3 -m schgen <cmd> --help` for any command.
 | `selftest` | **gate mutation testing** (every injected fault must be killed) + cross-`PYTHONHASHSEED` build determinism |
 | `preflight` | consolidated readiness report |
 
+`schgen board` additionally enforces the **PCB gates** — DRC (zero KiCad errors),
+3D-model coverage + placement, ratsnest subsystem clustering, connector
+mating-face / spacing, refdes-overlap — and `schgen render3d` writes the
+multi-angle 3D board views.
+
 **Parts pipeline**
 | command | does |
 |---|---|
@@ -152,15 +165,24 @@ The modules live in role-named subpackages under `schgen/`:
   regulator / stack-columns / chain / connector-fan / shunt cells; congestion
   auto-pagination), `route.py` (exclusive-grid router), `textmetrics.py`.
 - **`output/`** — `emit.py` (deterministic content-derived uuid5),
-  `render.py` (kicad-cli PNG), `diagram.py` (block diagram).
-- **`verify/`** — `netlist_gate.py`, `design_rules.py`, `part_rules.py`,
-  `visual_gate.py`, `cc_gate.py`, `powertree.py`, `thermal.py`, `spice.py`,
-  `ratings.py` (LCSC-keyed datasheet limits), `testpoints.py` (probe coverage
-  gate), `selftest.py` (mutation + determinism), `preflight.py`.
-- **`generate/`** — `board.py` (whole-board orchestrator), `firmware.py`,
-  `manual.py`, `testplan.py`, `floorplan.py`, `gallery.py`, `devicetree.py`,
-  `manifest.py`, `xdc.py`, `vivado.py`, `constraints.py`, `bringup_facts.py`
-  (shared netlist-derived facts the firmware/manual/testplan generators consume).
+  `render.py` (kicad-cli schematic PNG), `render3d.py` (multi-angle 3D board
+  renders), `diagram.py` (block diagram).
+- **`verify/`** — schematic gates: `netlist_gate.py`, `visual_gate.py`,
+  `design_rules.py`, `part_rules.py`, `cc_gate.py`, `powertree.py`,
+  `thermal.py`, `spice.py`, `ratings.py` (LCSC-keyed datasheet limits),
+  `testpoints.py`, `pin_completeness.py`, `symbol_law.py`, `bom_values.py`.
+  PCB gates: `model3d_gate.py` (3D coverage + placement), `ratsnest_gate.py`
+  (subsystem clustering), `connector_model_gate.py` / `connector_spacing_gate.py`
+  (mating-face / spacing), `placement_mech.py`, `refdes_overlap_gate.py`,
+  `footprint_pads.py`. Structure: `carrier_structure.py`,
+  `subsystem_structure.py`. Meta: `selftest.py` (mutation + determinism),
+  `preflight.py`.
+- **`generate/`** — `board.py` (whole-board orchestrator), **`pcb.py`** (board
+  footprint placement + 3D-model embed + `.kicad_pcb` emit), `ratsnest.py`,
+  `si_constraints.py`, `power_sequence.py`, `firmware.py`, `manual.py`,
+  `testplan.py`, `floorplan.py`, `gallery.py`, `devicetree.py`, `manifest.py`,
+  `xdc.py`, `vivado.py`, `constraints.py`, `bringup_facts.py` (shared
+  netlist-derived facts the firmware/manual/testplan generators consume).
 - **`partlib/`** — `part_gen.py` (LCSC/EasyEDA → `parts/<MPN>/` conversion).
 - **CLI (package root)** — `__main__.py`.
 

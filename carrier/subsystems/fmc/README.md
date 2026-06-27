@@ -1,32 +1,39 @@
-# fmc — SoM bank-35 IO breakout on a generic 2.54 mm header (carrier-local)
+# fmc — SoM bank-35 IO breakout on a generic 2.54 mm header
 
-A **carrier-local** schgen subsystem: it breaks out the SoM **bank-35** LVDS IO
-(14 differential pairs) plus a local 2.5 V **VADJ** rail onto a generic **2×20
-0.1″ / 2.54 mm pin header**, and rides the carrier rails directly.
+A carrier-local schgen subsystem that breaks out the SoM bank-35 LVDS IO
+(14 differential pairs: CLK0/CLK1_M2C plus LA00–LA11) onto a generic 2×20
+0.1″ / 2.54 mm pin header, together with a local 2.5 V VADJ rail. It is a
+cheap, universally-wireable IO breakout — no specific FMC mezzanine card is
+required.
 
-> **History (2026-06-18, user request).** This site WAS a VITA 57.1 **FMC LPC**
-> mezzanine connector (Samtec ASP-134603-01). The proprietary FMC connector was
-> replaced with a generic 2×20 2.54 mm header so the same SoM bank-35 IO is
-> broken out to a cheap, universally-wireable header — **no specific FMC
-> mezzanine card required**. The 14 pairs keep their functional names, so the SoM
-> binding (FUNCTION_MAP), XDC and SI constraints — which reference the SoM side,
-> not this connector — are unchanged. The FMC-mezzanine management (GA straps,
-> PRSNT/PG presence, JTAG bypass, mezzanine EEPROM, the 400-pin VITA grid) is
-> gone with the connector.
+## Interface
 
-## Package contents
+This is a carrier-LOCAL subsystem: it drives the carrier power/ground nets
+directly, and exposes the 14 IO pairs as typed diff-pair ports for binding.
 
-| file | role |
-|------|------|
-| `fmc.py`       | the NETLIST — `circuit()`, carrier nets; the 2×20 header pinout + the VADJ LDO |
-| `fmc.cir`      | SPICE subckt — the +3V3 bypass + VADJ LDO in/out caps (rails as subckt pins) |
-| `test_fmc.py`  | LOCAL electrical-correctness test (offline; model completeness + header pinout + VADJ LDO + 14 LA/CLK diff pairs + EP-to-GND) |
-| `README.md`    | this file |
+- Header `J1` exposes each of the 14 pairs as typed `diff_pair` ports
+  (`<stem>_P` / `<stem>_N`, 100 Ω, paired). The functional stems
+  (`FMC_CLK0_M2C`, `FMC_CLK1_M2C`, `FMC_LA00_CC`, `FMC_LA01_CC`,
+  `FMC_LA02`…`FMC_LA11`) match the SoM-side names, so the SoM binding
+  (`som_conn_gen` FUNCTION_MAP), the XDC pin constraints and the SI diff-pair
+  constraints — which reference the SoM bank-35 pins, not this connector —
+  merge against these names. Each pair expects the `som_j3/j1` bank-35 pin map.
+- Carrier nets driven: `+3V3` (input rail), `+2V5_VADJ` (generated VADJ rail,
+  also offered on the header), `GND`.
+- `+2V5_VADJ` carries a `testpoint()` so the locally-generated rail is probeable.
 
-## Header pinout (Conn_02x20, 2.54 mm)
+## Design
 
-P on the odd pin / N on the even pin of each physical row (pair sits side-by-side);
-a GND row every ~3 pairs for return-current locality; power on row 1.
+Header. `J1` is a stock KiCad 2×20 0.1″ part
+(`Connector_Generic:Conn_02x20_Odd_Even` +
+`Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical`, with KiCad's own
+3D model). It is intentionally generic; the integrator picks the exact orderable
+header, so its LCSC is left open in the BOM.
+
+Pinout. P sits on the odd pin and N on the even pin of each physical row so a
+pair is side-by-side; a GND row falls every ~3 pairs for return-current
+locality; `+3V3` and `+2V5_VADJ` are on row 1 so an add-on can be powered and
+level-referenced from the header:
 
 | pin | net | pin | net |
 |----:|-----|----:|-----|
@@ -51,52 +58,42 @@ a GND row every ~3 pairs for return-current locality; power on row 1.
 | 37 | `FMC_LA11_P` | 38 | `FMC_LA11_N` |
 | 39 | `GND` | 40 | `GND` |
 
-Pairs are typed `diff_pair` 100 Ω (the SoM→header PCB trace is still
-impedance-controlled; the 0.1″ header pads themselves are not — the nature of a
-generic breakout). The SoM binding for each pair is the dossier section-1
-contract (bank-35 IO_*).
+Diff pairs. Each of the 14 pairs is typed `diff_pair` at 100 Ω: the SoM→header
+PCB trace is impedance-controlled. The 0.1″ header pads themselves are not
+controlled-impedance — that is the nature of a generic breakout.
+
+VADJ rail. `+2V5_VADJ` is generated locally by the TLV75725PDYDR fixed 2.5 V LDO
+fed from `+3V3`. This rail is the bank-35 VCCO reference for both the LA pairs
+broken out here and the camera CSI pairs, so the IO sits at the correct 2.5 V
+LVDS level; it is also offered on the header (pin 2) so an add-on references the
+same level. The TLV75725 is a 1 A LDO and the DYD package carries an exposed
+thermal pad. EN (`U1.3`) is strapped to `+3V3` (enabled on); `U1.4` (NC) is left
+unconnected; the EP pad (`U1.6`) is netted to GND — a real, gate-checkable
+ground, not a layout-only pour bond. Pin map: 1=IN, 2=GND, 3=EN, 4=NC, 5=OUT,
+6=EP. Bypass: `C1` 10 µF bulk + `C2` 100 nF on `+3V3`, `C3` 1 µF at the LDO
+input, `C4` 10 µF at the LDO output, `C5` 100 nF at the header on `+2V5_VADJ`.
+
+Power budget. `+3V3` draws a 0.500 A header allowance for an add-on. `+2V5_VADJ`
+budgets 0.350 A: the TLV75725 DYD 0.40 A envelope less the ~0.05 A real bank-35
+VCCO load (the LVDS_25 drivers across the LA and camera CSI pairs). The figures
+are conservative header-allowance bookkeeping, not a thermal ceiling.
 
 ## Parts
 
-| ref | value | part / footprint | LCSC | role |
-|-----|-------|------------------|------|------|
-| J1 | 2×20 header | `Connector_Generic:Conn_02x20_Odd_Even` / `PinHeader_2x20_P2.54mm_Vertical` | *(open)* | generic 2.54 mm IO-breakout header (stock KiCad part + 3D; integrator picks the exact orderable header) |
-| U1 | (VADJ LDO) | `TLV75725PDYDR` (use_part, DYD thermal-pad) | C35209004 | fixed 2.5 V LDO, EP=pin 6 netted to GND |
-| C1 | 10u  | `Device:C` / C0805 | C15850 | +3V3 bulk |
-| C2 | 100n | `Device:C` / C0603 | C14663 | +3V3 HF bypass |
-| C3 | 1u   | `Device:C` / C0603 | C15849 | VADJ LDO input |
-| C4 | 10u  | `Device:C` / C0805 | C15850 | VADJ LDO output |
-| C5 | 100n | `Device:C` / C0603 | C14663 | VADJ at-header bypass |
+| ref | value | lib / part | LCSC |
+|-----|-------|------------|------|
+| J1 | Header_2x20_2.54mm | `Connector_Generic:Conn_02x20_Odd_Even` / `PinHeader_2x20_P2.54mm_Vertical` | open |
+| U1 | TLV75725PDYDR | `use_part` TLV75725PDYDR (DYD thermal-pad LDO) | via part lib |
+| C1 | 10u | `Device:C` / C_0805 | C15850 |
+| C2 | 100n | `Device:C` / C_0603 | C14663 |
+| C3 | 1u | `Device:C` / C_0603 | C15849 |
+| C4 | 10u | `Device:C` / C_0805 | C15850 |
+| C5 | 100n | `Device:C` / C_0603 | C14663 |
 
-## VADJ rail (retained)
+## Build & test
 
-`+2V5_VADJ` from the **TLV75725PDYDR** (fixed 2.5 V LDO) fed by `+3V3`. It is the
-bank-35 VCCO reference for BOTH these LA pairs AND the camera CSI pairs, and is
-offered on the header (pin 2) so the broken-out IO sits at the correct 2.5 V
-level. EN strapped on; EP pad (footprint pad 6) netted to GND (DEF-E) — a real,
-gate-checkable ground. Pin map 1=IN 2=GND 3=EN 4=NC 5=OUT 6=EP. The rail carries
-a `testpoint()`.
-
-**PWR-3 thermal (SBVS322C):** the DYD thermal-pad variant (RthJA ~92.5 °C/W
-EP-to-GND) keeps Tj ~80 °C @ Ta=50 °C at the budget — a comfortable margin.
-
-## Power-tree budget
-
-- `+3V3` 0.500 A: a generic-breakout add-on allowance (was a 1.0 A FMC mezzanine).
-- `+2V5_VADJ` 0.350 A: TLV75725 DYD 0.40 A thermal envelope less ~0.05 A bank-35
-  VCCO (LVDS_25 drivers: 12 bank-35 LA pairs + 3 camera CSI pairs).
-
-## Notes
-
-- **Generic header**: the header is a stock KiCad part (symbol + footprint + 3D),
-  faithful and not hand-built. The exact orderable 2×20 0.1″ header (and its LCSC)
-  is the integrator's choice — left open in the BOM.
-- **Freed SoM pin**: the former FMC presence-detect pin (IO_L6_P_33, J2.89) is no
-  longer mapped (`som_conn_gen.py`) and is now a verbatim spare bank-33 PL IO.
-- **Silkscreen**: label the site as a SoM bank-35 IO breakout (LA00-11 + CLK0/1 +
-  2.5 V VADJ) so it is clear it is not a seatable FMC mezzanine.
-
-## Local test
+`test_fmc.py` checks model completeness, the header pinout, the VADJ LDO and its
+EP-to-GND tie, and the 14 LA/CLK diff pairs.
 
 ```bash
 PYTHONPATH=. python3 -m pytest carrier/subsystems/fmc/test_fmc.py -q

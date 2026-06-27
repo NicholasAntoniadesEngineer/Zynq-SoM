@@ -1,125 +1,141 @@
-# devkit_mini — a second consumer that proves the subsystems port unchanged
+# devkit_mini — a second consumer of the `subsystems/` library
 
-`devkit_mini` is a small, **hypothetical** baseboard built for one purpose: to be a
-**SECOND, independent consumer** of the project-agnostic `subsystems/` library
-alongside the real `carrier/`, and thereby **prove the reusable-subsystem
-architecture**. It imports the same library packages the carrier does and binds them
-to a **deliberately different** set of project net names — so the only thing that
-changes between the two boards is each subsystem's project-specific `META` dict. **The
-library files (`subsystems/<name>/`) are byte-for-byte unchanged.** If the abstraction
-is real, the same `circuit()` drops onto two different boards with zero library edits.
+`devkit_mini` is a small, hypothetical baseboard whose purpose is to be a second,
+independent consumer of the project-agnostic `subsystems/` library — alongside the
+real `carrier/`. It imports the same library packages the carrier imports and binds
+them to a deliberately different set of project net names. The only project-specific
+code is the per-subsystem `META` dict in `devkit_mini.py`; the library files under
+`subsystems/<name>/` are unchanged. If the subsystem abstraction holds, the same
+`circuit()` builds onto two different boards with no library edits.
 
-> This is not a manufacturable board — there is no carrier glue, no SoM, no power tree.
-> It is a focused proof of *portability*: the subsystems compose into a believable mini
-> devkit under a fresh binding, and the gate slices pass on each bound cell.
+This is not a manufacturable board: it has no SoM, no power tree, and no connector
+glue sheets. It is a portability proof — the four library subsystems compose into a
+believable mini devkit under a fresh net-name binding, and the gates pass on the
+composed result.
 
-## Package contents
+## Structure
 
-| file | role |
+| path | role |
 |------|------|
-| `devkit_mini.py`      | the consumer — one thin adapter per subsystem (import lib + declare `META` + forward), plus `subsystem_circuits()` returning all bound Circuits |
-| `test_devkit_mini.py` | end-to-end REUSE proof, offline (no kicad-cli): build, re-bind, gate slices, composition, carrier-vs-devkit divergence |
-| `README.md`           | this file |
+| `devkit_mini.py` | the consumer: one thin adapter per subsystem (import the library module, declare a `META` dict, forward it to `circuit(META)`), plus `subsystem_circuits()` returning all bound `Circuit`s and `PROJECT` / `SHARED_RAILS` declarations |
+| `__init__.py` | re-exports `PROJECT`, `subsystem_circuits`, and the four `*_circuit()` builders |
+| `test_devkit_mini.py` | offline reuse proof (no kicad-cli, no network) |
+| `schematic/<name>.kicad_sch` | per-subsystem schematics emitted by the build |
+| `renders/<name>.png` | per-sheet PNG renders emitted by the build |
+| `reports/` | gate outputs: `cc_gate.txt`, `board_gate.txt`, `board.erc.rpt` |
+| `devkit_mini.kicad_pro`, `devkit_mini.kicad_prl`, `devkit_mini.kicad_sch` | the openable KiCad hierarchy project (root + per-sheet schematics) |
 
-## Subsystems reused (the bill of subsystems)
+## The four reused subsystems
 
-Four library packages compose into the mini board — a USB-C PD sink, a USB 2.0 host
-port, a level-translated microSD slot, and a USB-UART console:
+`devkit_mini.py` binds four library packages, in this order (`PROJECT`):
 
-| `subsystems/<name>/` | what it is | key parts |
-|----------------------|-----------|-----------|
-| `usb_pd`      | FUSB302B USB Type-C / PD sink PHY        | FUSB302BMPX |
-| `usbc_otg`    | USB 2.0 HS host port (Type-C)            | TYPE-C-31-M-12, TPS2051C, USBLC6-2SC6 |
-| `microsd`     | TXS02612 level-translated microSD slot   | TXS02612, TF-01A, TPD6E001 |
-| `uart_bridge` | CP2102N USB-UART console bridge          | CP2102N-A02-GQFN24R |
+| `subsystems/<name>/` | function | key parts |
+|----------------------|----------|-----------|
+| `usb_pd` | FUSB302B USB Type-C / PD sink PHY | FUSB302BMPX |
+| `usbc_otg` | USB 2.0 HS host port (Type-C) | TYPE-C receptacle, TPS2051C power switch, USBLC6-2SC6 ESD |
+| `microsd` | TXS02612 level-translated microSD slot | TXS02612, microSD socket, TPD6E001 ESD |
+| `uart_bridge` | CP2102N USB-UART console bridge | CP2102N-A02-GQFN24R |
 
-Each is consumed exactly as in `carrier/subsystems/<name>.py`: `import` the library
-module, declare ONE module-level `META` (`bind` / `expects` / `buses` / `notes`, the
+Each adapter is the same shape as `carrier/subsystems/<name>.py`: import the library
+module, declare one module-level `META` (`bind` / `expects` / `buses` / `notes`, the
 `schgen.core.subsystem.Meta` contract), and return `_lib.circuit(META)`.
 
-## The devkit net-naming convention (DIFFERENT from the carrier)
+## Net-naming convention (distinct from the carrier)
 
-This is the heart of the proof — the devkit picks its **own** project net names so the
-re-bind is genuine, not a copy of the carrier's map. The devkit's "host" is a
-hypothetical **FPGA SoC** (hence `+1V8_FPGA` / `FPGA_UART0_*`), distinct from the
-carrier's STM32 system-controller + Zynq PS naming.
+The devkit chooses its own project net names so the re-bind is genuine rather than a
+copy of the carrier's map. The devkit's host is treated as a hypothetical FPGA SoC,
+which is why the host-side names read `+1V8_FPGA` and `FPGA_UART0_*`.
 
 ### Rails
 
-| library abstract | **devkit net** | carrier net | note |
-|------------------|----------------|-------------|------|
-| `+VDD_LOGIC` (usb_pd, usbc_otg) | **`+3V3_MINI`** | `+3V3_SC` | the **shared** 3.3 V logic rail |
-| `+VDD_IO` (uart_bridge)         | **`+3V3_MINI`** | `+3V3`    | same shared rail |
-| `+VDD_CARD` (microsd)           | **`+3V3_MINI`** | `+3V3_SD` | same shared rail (carrier kept a dedicated SD rail) |
-| `+VDD_HOST` (microsd)           | **`+1V8_FPGA`** | `+1V8`    | SDIO host-signalling level |
-| `+VBUS_SUPPLY` (usbc_otg)       | **`+5V_DEV`**   | `+5V_USB` | sourced onto the cable |
-| `+VBUS_SENSE` (usb_pd)          | **`+VBUS_RAW`** | `+VBUS_IN`| raw receptacle VBUS the PHY senses |
-| `GND` / `CHASSIS_GND`           | `GND` / `CHASSIS_GND` | (identity) | the one net all boards agree on |
+| library abstract | devkit net | carrier net | meaning |
+|------------------|-----------|-------------|---------|
+| `+VDD_LOGIC` (usb_pd, usbc_otg) | `+3V3_MINI` | `+3V3_SC` | shared 3.3 V logic rail |
+| `+VDD_IO` (uart_bridge) | `+3V3_MINI` | `+3V3` | same shared rail |
+| `+VDD_CARD` (microsd) | `+3V3_MINI` | `+3V3_SD` | same shared rail (carrier keeps a dedicated SD rail) |
+| `+VDD_HOST` (microsd) | `+1V8_FPGA` | `+1V8` | SDIO host-signalling level |
+| `+VBUS_SUPPLY` (usbc_otg) | `+5V_DEV` | `+5V_USB` | 5 V sourced onto the OTG cable |
+| `+VBUS_SENSE` (usb_pd) | `+VBUS_RAW` | `+VBUS_IN` | raw receptacle VBUS the PD PHY senses |
+| `GND`, `CHASSIS_GND` | `GND`, `CHASSIS_GND` | identity | the nets every board agrees on |
 
-The single biggest difference: the carrier spreads its 3.3 V-class supplies over three
-rails (`+3V3_SC`, `+3V3`, `+3V3_SD`); the devkit deliberately collapses them onto ONE
-**`+3V3_MINI`** rail shared by all four subsystems. That shared rail (plus `GND`) is the
-**cross-subsystem composition** the test asserts.
+The defining choice: the carrier spreads its 3.3 V-class supplies over three rails
+(`+3V3_SC`, `+3V3`, `+3V3_SD`), while the devkit collapses them onto one `+3V3_MINI`
+rail shared by all four subsystems. That shared rail, together with `GND`, is the
+cross-subsystem composition the test and the board netlist gate verify (`+3V3_MINI`
+spans 4 sheets / 26 pins; `GND` spans 4 sheets / 37 pins).
 
-### Buses / signal groups
+### Buses and signal groups
 
-| library abstract | **devkit name** | carrier name |
-|------------------|-----------------|--------------|
-| I2C bus (`buses["i2c"]`)  | **`MINI_I2C0`**   | `STM32_I2C2` |
-| `CC1` / `CC2`             | **`PD_CC1/2`**    | `STM32_USB_CC1/2` |
-| `SD_CLK/CMD/D0..D3`       | **`SD0_CLK/CMD/DAT0..3`** | `SDIO_CLK/CMD/D0..3` |
-| `UART_TXD/RXD/RTS_N/CTS_N`| **`FPGA_UART0_*`** (post-crossover) | `ZYNQ_PS_UART0_*` |
-| USB data / VBUS           | **`USB2_HOST_*` / `USB2_UART_*`** | `USB_D+/-`, `USB_UART_*` |
+| library abstract | devkit name | carrier name |
+|------------------|-------------|--------------|
+| I2C bus (`buses["i2c"]`) | `MINI_I2C0` | `STM32_I2C2` |
+| `CC1` / `CC2` | `PD_CC1` / `PD_CC2` | `STM32_USB_CC1/2` |
+| `SD_CLK/CMD/D0..D3` | `SD0_CLK/CMD/DAT0..3` | `SDIO_*` |
+| `UART_TXD/RXD/RTS_N/CTS_N` | `FPGA_UART0_*` (post-crossover) | `ZYNQ_PS_UART0_*` |
+| USB data / VBUS | `USB2_HOST_*` / `USB2_UART_*` | `USB_D+/-`, `USB_UART_*` |
 
-The bridge↔host UART **null-modem crossover** (bridge TXD → host RXD, etc.) lives in the
-devkit's bind map, exactly as it lives in the carrier's — proving host-side wiring is a
-**consumer** decision, not baked into the library.
+The bridge↔host UART null-modem crossover (bridge `TXD` → host `RXD`, bridge `RTS_N`
+→ host `CTS_N`, and vice versa) lives in the devkit's bind map, exactly as it lives
+in the carrier's. Host-side wiring is a consumer decision, not part of the library.
 
-## What the test proves (`test_devkit_mini.py`, offline)
+## Build it
 
-Per subsystem (parametrized over all four):
+```sh
+python -m schgen devkit          # add --no-render to skip the PNGs
+```
 
-1. **Builds under the devkit bind** — the library `circuit()` builds with only the
-   devkit `META` supplied; no library edit.
-2. **Real names present, no leaks** — every external is a devkit net name; no abstract
-   interface name survives a non-identity bind, and **no carrier net name** appears (a
-   real re-bind, not a copy).
-3. **Net classes preserved** — bound rails still classify POWER/GROUND, bound ports
-   still classify PORT (the chosen names keep the class, e.g. the `+` prefix).
-4. **Bind contract honored** — rejects an unknown name, a private SIGNAL net, and a
-   collision (two externals onto one net = a LAW-0 short); a typo'd top-level `META` key
-   is a hard error.
-5. **Local gate slices pass** — `design_rules` DECAP/EP/STRAP, `part_rules`, and model
-   completeness (every pin netted-or-NC) on each bound circuit.
-6. **Byte-stable rename** — same parts/refs/NCs and net **insertion order** vs the
-   standalone abstract build; every draw budget follows its renamed rail.
+`schgen devkit` (`schgen/generate/devkit.py`) builds the four bound library
+subsystems with the same generic machinery the carrier uses —
+`place.place_and_route`, `output.emit.emit`, `generate.board.build_board`,
+`verify.cc_gate`, and `output.render.render_sheet_to_png` — without copying any
+carrier code. The carrier-specific steps (SoM DF40 contract, `sheet_index.json`,
+carrier-structure gate, SoM-centered floorplan) do not apply because the devkit has
+no SoM.
 
-Across the project:
+It writes:
 
-7. **Cross-subsystem composition** — `+3V3_MINI` and `GND` are the **same net** (same
-   name, same class) across all four bound subsystems; the only externals shared between
-   subsystems are the declared shared rails (no accidental private-signal clash).
-8. **Library unchanged** — binding the **same** `usb_pd.circuit()` to the carrier's names
-   vs the devkit's names yields the carrier vs devkit net sets respectively, from one
-   untouched library file. The two boards' external sets diverge on everything except the
-   universally-shared `GND`, while the topology (parts/refs) is identical.
+- `schematic/<name>.kicad_sch` — one schematic per subsystem,
+- the `devkit_mini.kicad_pro` hierarchy root that opens them together,
+- `renders/<name>.png` — per-sheet renders (best-effort; skipped with `--no-render`),
+- `reports/cc_gate.txt` and `reports/board_gate.txt` — the gate results.
 
-Run it:
+The build passes only if every gate passes:
+
+- the board netlist gate (`build_board`) confirms every linked net merges across
+  sheets — the shared `+3V3_MINI` and `GND` rails span all four sheets, root ERC is
+  clean;
+- the geometry-only connected-components gate (`cc_gate`) confirms 0 shorts and 0
+  opens across the composed board (each sheet's declared nets agree with its emitted
+  geometry components).
+
+## Test it
 
 ```sh
 PYTHONPATH=. python3 -m pytest examples/devkit_mini/test_devkit_mini.py -q
 ```
 
-## Build it
+`test_devkit_mini.py` runs offline and asserts, parametrized over all four
+subsystems unless noted:
 
-```
-python -m schgen devkit          # -> examples/devkit_mini/{schematic,renders,reports}/ + devkit_mini.kicad_pro
-```
-
-This builds the four bound library subsystems into real KiCad output the same way
-the carrier is built (reusing `schgen.generate.board.build_board` + the place /
-emit / netlist / cc machinery — no carrier code copied, the carrier is untouched).
-The board netlist gate proves every net merges across sheets and the geometry-only
-`cc_gate` proves 0 shorts / 0 opens (LAW 0). The shared rails confirm the
-composition — e.g. `+3V3_MINI` and `GND` span all four subsystem sheets, the same
-library packages re-bound to THIS board's net names.
+1. each library subsystem builds under the devkit `META` with no library edit;
+2. every external net is a devkit name — no abstract interface name leaks (except
+   identity-bound `GND`/`CHASSIS_GND`), and no carrier name appears (a real re-bind);
+3. binding is a pure rename: bound rails still classify POWER/GROUND, bound ports
+   still classify PORT;
+4. the bind contract holds — it rejects an unknown name, a private SIGNAL net, a
+   collision of two externals onto one net, and a typo'd top-level `META` key;
+5. local gate slices pass on each bound circuit — `design_rules` DECAP/EP/STRAP,
+   `part_rules`, and model completeness (every pin netted or NC); the DECAP rule is
+   confirmed non-trivial at the project aggregate (`checked["decap"] >= 1`);
+6. the bind is byte-stable — same parts, refs, and no-connects, and the net
+   insertion order is preserved versus the standalone abstract build, so each power
+   draw budget follows its renamed rail;
+7. composition — `+3V3_MINI` and `GND` are the same net (same name, same class)
+   across all four subsystems, and the only externals shared between subsystems are
+   those two declared shared rails (no accidental private-signal clash);
+8. library unchanged — binding the same `usb_pd.circuit()` to the carrier's names
+   versus the devkit's names yields the carrier versus devkit net sets from one
+   untouched source; the two sets overlap only on `GND`, and the part topology is
+   identical;
+9. the four bound subsystems place, route, and compose into one board with 0 shorts
+   / 0 opens (`cc_gate`).

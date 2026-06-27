@@ -1,10 +1,11 @@
 # Zynq-SoM
 
 A Zynq-7000 system-on-module + carrier board, with `schgen` — a netlist-first
-KiCad schematic generator that produces electrically-proven, hand-drawn-quality
-schematics from Python subsystem definitions.
+KiCad schematic **and PCB** generator that turns Python subsystem definitions
+into electrically-proven, hand-drawn-quality schematics and a placed,
+DRC-clean board (component placement, 3D models, multi-angle renders).
 
-## The three layers
+## The layers
 
 1. **`parts/`** — one folder per physical part, named by MPN, GENERATED from
    LCSC/EasyEDA (`schgen part add C…`): pin table, symbol, footprint, 3D.
@@ -49,11 +50,14 @@ cross-checked against `som_interface.json` (also standalone: `schgen xdc`).
 
 ## The gate model
 
-Every build fails unless ALL three gates pass: **netlist** (KiCad's
-extracted netlist == the declared netlist, pin for pin), **ERC** (zero
-errors), **visual** (zero overlap, zero crossings, fits the page). The
-gates are judges, not knobs. Architecture + gate definitions:
-`schgen/DESIGN.md`.
+Every build fails unless every gate passes — the gates are judges, not knobs.
+Schematic gates: **netlist** (KiCad's extracted netlist == the declared netlist,
+pin for pin, so a junction that merges two nets is caught as a short), **ERC**
+(zero errors), **visual** (zero overlap, zero wire crossings, junction-aware
+short detection, fits the page). PCB gates: **DRC** (zero KiCad errors),
+**3D-model** coverage + placement, **ratsnest** subsystem clustering, and
+**connector** mating-face / spacing (off-board mouths, edge-flush). Architecture
++ gate definitions: `schgen/DESIGN.md`.
 
 There is no CI, so `schgen selftest` mutation-tests the gates themselves:
 it injects one defect per class (pin swap, deleted wire, relabel, stray
@@ -69,9 +73,6 @@ PYTHONPATH=. python -m schgen selftest
 - The working rules and process contract (the immutable LAWs, the gate stack,
   the worktree/commit discipline) live in
   [`WORKING_GUIDELINES.txt`](docs/WORKING_GUIDELINES.txt).
-- The carrier's locked design decisions and autonomous-run logs are archived in
-  [`carrier/HISTORY.md`](docs/HISTORY.md) (the former `carrier/PLAN.md` +
-  `OVERNIGHT_PLAN.md` + `MORNING_REPORT.md`).
 - Layer guides: [`parts/README.md`](parts/README.md),
   [`subsystems/README.md`](subsystems/README.md) (the reusable library),
   [`carrier/README.md`](carrier/README.md),

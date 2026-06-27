@@ -1,37 +1,95 @@
 # parts/ — the component library
 
-One folder per physical component, named by **manufacturer part number**. Every
-file in a folder carries the part's name. Everything is **generated** — never
-hand-edited (re-run the generator to update):
+One folder per physical component, named by its **manufacturer part number**
+(MPN). Each folder is self-contained and fully **generated** from the part's
+LCSC/EasyEDA data — nothing here is hand-edited; re-run the generator to update
+a part.
 
 ```
 parts/FUSB302BMPX/
-  FUSB302BMPX.py            # metadata: MPN, LCSC id, datasheet, pin table (+ rules)
-  FUSB302BMPX.kicad_sym     # schematic symbol (schgen's clean on-grid layout)
-  FUSB302BMPX.kicad_mod     # footprint — faithful to the JLC physical part
-  FUSB302BMPX.step / .wrl   # 3D models
-  FUSB302BMPX.easyeda.json  # raw CAD data (provenance + offline regeneration)
+  FUSB302BMPX.py            # metadata + pin table (the electrical contract)
+  FUSB302BMPX.kicad_sym     # schematic symbol
+  FUSB302BMPX.kicad_mod     # footprint (pads exact to the physical part)
+  FUSB302BMPX.step          # 3D model (MCAD)
+  FUSB302BMPX.wrl           # 3D model (KiCad viewer)
+  FUSB302BMPX.easyeda.json  # raw EasyEDA API response (provenance + offline regen)
 ```
 
-## Adding a new part from LCSC
+Every file in a folder carries the part's name. The `.py` module is the source
+of truth the rest of the build reads: `MPN`, `LCSC`, `DESCRIPTION`,
+`MANUFACTURER`, `PACKAGE`, `PREFIX` (reference designator letter), `DATASHEET`
+URL, `LIB_ID`/`FOOTPRINT`, the `MODELS_3D` list, and `PINS` — a
+`(number, name, etype)` table where `etype` is the KiCad pin electrical type.
 
-1. Find the part on lcsc.com / jlcpcb.com/parts and note its **C-number**
-   (prefer JLC *Basic* parts — no assembly setup fee).
-2. Generate the folder:
-   ```bash
-   PYTHONPATH=. python -m schgen part add C132291
-   ```
-3. Check the result: the symbol must load (the generator enforces the 1.27 mm
-   pin grid), the footprint is converted pad-for-pad from the JLC data.
-4. Verify availability/price any time:
-   ```bash
-   PYTHONPATH=. python -m schgen preflight <subsystem>...
-   ```
-5. Commit the folder.
+## Adding a part
 
-Offline regeneration (no network, byte-stable):
+Find the part on lcsc.com / jlcpcb.com/parts, note its `C`-number, and run:
+
 ```bash
-PYTHONPATH=. python -m schgen part add C132291 --from-json parts/FUSB302BMPX/FUSB302BMPX.easyeda.json
+PYTHONPATH=. python -m schgen part add C132291
 ```
 
-Subsystems consume parts by MPN — see `carrier/subsystems/README.md`.
+This is the whole pipeline (`schgen/partlib/part_gen.py`): fetch the CAD
+payload from the public EasyEDA component API, parse it, and write the
+`parts/<MPN>/` folder. It either produces a complete folder or fails — no
+partial output.
+
+For a network-free, byte-stable regeneration, point it at the cached payload:
+
+```bash
+PYTHONPATH=. python -m schgen part add C132291 \
+  --from-json parts/FUSB302BMPX/FUSB302BMPX.easyeda.json
+```
+
+## What the generator produces
+
+- **Symbol (`.kicad_sym`)** — drawn by the generator's own layout rules, not a
+  copy of the EasyEDA drawing. Every pin connection point sits on the 1.27 mm
+  grid; pins are grouped left = inputs, right = outputs/signals, top = power
+  rails, bottom = GND/NC; the body is sized so pin-name text from opposite sides
+  can never collide. Two-pin parts and R/C/L/FB prefixes are forced `passive`,
+  and protection/ESD arrays that EasyEDA mislabels as all-`input` are
+  normalized to `passive` (an all-input table is electrically impossible).
+  Before the folder is accepted the symbol is loaded through
+  `schgen.core.symbols.Library`, so the build never ships a symbol its own
+  loader would reject.
+
+- **Footprint (`.kicad_mod`)** — a faithful conversion of the EasyEDA land:
+  pad positions, shapes, drills, slots, and silk/fab/courtyard graphics are
+  converted exactly; only decorative lead/paste fills are dropped. A large SMD
+  pad (>= 2.0 mm on both sides — exposed/thermal pads, connector tabs) gets
+  copper + mask plus a windowed paste grid instead of one full aperture, so it
+  does not float or squeeze out under reflow (IPC-7525 paste-volume control).
+
+- **3D model (`.step` + `.wrl`)** — downloaded from EasyEDA when hosted. The
+  footprint references the `.wrl` for the KiCad viewer and carries the `.step`
+  for MCAD export. An implausible model offset (an EasyEDA unit mismatch that
+  would plant a centered package a metre off its pads) is reset to the origin.
+
+### Synthesized EP pad and polarity silk
+
+Some EasyEDA lands omit a center exposed/thermal pad that the datasheet does
+dimension, or drop a polarity `+` glyph on the import. The generator
+re-synthesizes these from a **datasheet-cited, LCSC-keyed allowlist**
+(`PACKAGE_EP`, `PACKAGE_SILK_PLUS` in `part_gen.py`), so the EP lands as a real
+pad **and** a real symbol pin nettable to GND — never a prose layout note — and
+the `+` lands on `F.SilkS` so a polarized part cannot be inserted reversed. Any
+part not on the allowlist regenerates byte-identically; this keeps both fixes
+auditable and scoped to the exact parts that need them.
+
+## How parts are used
+
+Subsystems never vendor a symbol into a sheet. They reference a part by MPN:
+
+```python
+self.use_part("FUSB302BMPX", "U1")
+```
+
+`use_part()` (`schgen/core/model.py`) loads `parts/<MPN>/<MPN>.py` and takes the
+`LIB_ID`, `FOOTPRINT`, reference prefix, LCSC code, and the **named** pin table
+from it — inline part metadata is rejected, and a missing folder is a build
+error that names the exact `schgen part add` command to fix it. Because the pin
+table is named, sheets wire pins by name and the build validates them against
+the symbol. The `LCSC` code carried on every part keys the BOM and the
+datasheet ratings checks, so a part's orderable identity can never drift from
+its library folder.
