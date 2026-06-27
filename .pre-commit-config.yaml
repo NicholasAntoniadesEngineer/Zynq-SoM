@@ -1,0 +1,47 @@
+# .pre-commit-config.yaml — local lint/type bar for schgen.
+#
+#   one-time:   pre-commit install        # wires the git hook
+#   manual run: pre-commit run --all-files
+#
+# Config for both tools lives in pyproject.toml ([tool.ruff], [tool.mypy]).
+# Versions are pinned so every contributor sees identical results; bump them
+# deliberately (a newer ruff may surface new violations to triage).
+#
+# ruff is BLOCKING (it is green on the current tree — see scripts/check.sh).
+# ruff-format and mypy are REPORT-ONLY for now: mypy still reports ~229 errors
+# (lenient mode) and the tree is not auto-formatted, so failing the commit on
+# them would block every commit. Flip `verbose`/remove the stages once the
+# debt is burned down.
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      # Lint — BLOCKING. Mirrors `ruff check schgen/` in scripts/check.sh.
+      - id: ruff
+        name: ruff (lint, blocking)
+        args: ["check"]
+        files: ^schgen/
+      # Format — REPORT-ONLY (the tree is not yet ruff-formatted). `--diff`
+      # shows what would change without rewriting files or failing the commit.
+      - id: ruff-format
+        name: ruff-format (report-only)
+        args: ["--diff"]
+        files: ^schgen/
+        verbose: true
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      # Type-check — REPORT-ONLY (~229 errors in lenient mode; do not block
+      # yet). Config in [tool.mypy]. `verbose` surfaces output even on pass.
+      - id: mypy
+        name: mypy (type-check, report-only)
+        files: ^schgen/
+        verbose: true
+        # Never fail the commit while the debt is non-zero.
+        # `pre-commit` treats a hook as failing on non-zero exit; we keep mypy
+        # advisory by swallowing its exit code until the count reaches 0.
+        entry: bash -c 'mypy schgen/ || true'
+        pass_filenames: false
+        additional_dependencies: []

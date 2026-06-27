@@ -1,0 +1,94 @@
+# pyproject.toml — tooling config for the schgen netlist-first KiCad generator.
+#
+# This file intentionally carries ONLY tool config (lint / type-check), not
+# packaging metadata: schgen is run in-tree (`python -m schgen ...`), not pip
+# installed. Runtime deps live in requirements.txt.
+#
+# The lint bar is wired into the regression gate (scripts/check.sh ->
+# `ruff check schgen/`). It is GREEN on the current code by construction: every
+# rule that the pre-existing source already trips is listed in
+# [tool.ruff.lint.ignore] below with a `# TODO tighten` marker and its live
+# violation count, so the gate fails the moment NEW code trips a still-enabled
+# rule, while the existing debt is quantified for incremental cleanup. Do NOT
+# silence a rule by deleting it here to "fix" a new violation — fix the code.
+
+[tool.ruff]
+# requirements.txt advertises "Python 3.11+", but the source actually uses
+# 3.12 f-string grammar (backslash escapes inside f-strings, e.g.
+# schgen/generate/gallery.py), so the lint parser must target 3.12+. 3.14 is
+# the verified runtime. Generated/3rd-party trees are out of scope; we only ever
+# lint schgen/ explicitly, but exclude the usual noise defensively.
+target-version = "py312"
+line-length = 88
+extend-exclude = [
+    "parts",        # vendored EasyEDA part data (.wrl/.kicad_mod/json)
+    "carrier",      # generated board artifacts + research markdown
+    "subsystems",   # generated/bound subsystem artifacts
+    "som",          # the real SoM KiCad project (not schgen source)
+    "docs",
+    "examples",
+]
+
+[tool.ruff.lint]
+# Sensible baseline: pycodestyle (E/W), pyflakes (F), import-sort (I),
+# flake8-bugbear (B), and pyupgrade (UP). F and B are the real-bug rules and
+# stay SELECTED as categories so any new occurrence of a *currently-clean*
+# F-/B-rule is caught — only the specific pre-existing sub-rules are ignored
+# below.
+select = ["E", "W", "F", "I", "B", "UP"]
+
+# --- pre-existing style/debt, ignored to keep the gate GREEN without a mass
+# --- source edit (other agents are editing schgen/*.py in parallel). Each
+# --- carries its live `ruff check schgen/` count at the time of writing so the
+# --- real gap is visible. Burn these down rule-by-rule; remove the line once a
+# --- rule reaches zero (the gate will then guard it for free).
+ignore = [
+    # pure style — cosmetic, no correctness impact:
+    "E501",  # TODO tighten: line-too-long (138) — wrap long lines.
+    "E702",  # TODO tighten: multiple-statements-on-one-line-semicolon (31).
+    "E741",  # TODO tighten: ambiguous-variable-name l/I/O (9).
+    "W292",  # TODO tighten: missing-newline-at-end-of-file (4).
+    # import hygiene — autofixable with `ruff check --fix`:
+    "I001",  # TODO tighten: unsorted-imports (48) — run `ruff check --fix`.
+    # pyupgrade — modernizations, autofixable:
+    "UP037", # TODO tighten: quoted-annotation (12).
+    "UP034", # TODO tighten: extraneous-parentheses (1).
+    "UP032", # TODO tighten: f-string over .format (1).
+    "UP031", # TODO tighten: printf-string-formatting (1).
+    # pyflakes (F) — REAL bugs; kept as ignored only because the fix is a source
+    # edit reserved for the owning agents. Highest-priority debt to close.
+    "F401",  # TODO tighten: unused-import (10) — autofixable.
+    "F541",  # TODO tighten: f-string-missing-placeholders (8) — autofixable.
+    "F841",  # TODO tighten: unused-variable (18) — inspect each (may mask a bug).
+    # flake8-bugbear (B) — REAL latent bugs; same source-edit caveat as F.
+    "B905",  # TODO tighten: zip-without-explicit-strict (41) — add strict=.
+    "B007",  # TODO tighten: unused-loop-control-variable (33) — rename to _.
+    "B023",  # TODO tighten: function-uses-loop-variable (23) — late-binding trap.
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately use bare asserts / fixtures / unused locals; keep F/B but
+# allow test-isms if they surface. (Empty for now — listed for future use.)
+"schgen/tests/*" = []
+
+[tool.mypy]
+# Lenient by design: this is a *new* type bar on a large hint-bearing codebase.
+# It runs in REPORT-ONLY mode (not wired blocking into scripts/check.sh yet) so
+# the team can see the real error count and burn it down before flipping it to
+# blocking. No --strict, and missing 3rd-party stubs (pymupdf/fitz, PIL) are
+# ignored rather than failing the run.
+python_version = "3.12"  # source uses 3.12 f-string grammar (see ruff note).
+ignore_missing_imports = true
+# Keep it quiet but useful — surface real errors, don't demand annotations yet.
+warn_unused_ignores = false
+warn_redundant_casts = true
+no_implicit_optional = true
+# Do NOT enable these until the error count is driven down:
+#   disallow_untyped_defs = true   # TODO tighten
+#   disallow_incomplete_defs = true # TODO tighten
+#   check_untyped_defs = true       # TODO tighten
+
+[[tool.mypy.overrides]]
+# Vendored / generated trees are not type-checked.
+module = ["parts.*", "carrier.*", "subsystems.*", "som.*"]
+ignore_errors = true
