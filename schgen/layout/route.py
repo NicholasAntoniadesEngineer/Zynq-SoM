@@ -23,8 +23,9 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass, field
 
+from schgen.core.config import GRID
 from schgen.core.model import Circuit, NetClass
-from schgen.core.symbols import GRID, Library, pin_page_position
+from schgen.core.symbols import Library, pin_page_position
 from schgen.verify.visual_gate import Seg
 
 Point = tuple[float, float]

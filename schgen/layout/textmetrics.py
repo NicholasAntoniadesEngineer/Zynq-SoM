@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import re
 
+from schgen.core.config import CHAR_W  # claimed advance/char — see config.py
+
 SIZE = 1.27            # default KiCad schematic text size (mm)
-CHAR_W = 0.95          # claimed advance per character, fraction of size
 LINE_H = 1.6           # claimed glyph height, fraction of size
 
 # Global-label outline: text + internal margins + the chevron point.

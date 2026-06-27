@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from schgen.core.config import VISUAL_CLEARANCE_MM
+
 
 @dataclass(frozen=True)
 class Box:
@@ -151,7 +153,7 @@ def _seg_box(s: Seg, half: float = 0.127) -> Box:
     return Box(x0 - half, y0 - half, x1 + half, y1 + half, "wire", f"net:{s.net}")
 
 
-def check(geo: SheetGeometry, clearance_mm: float = 0.2) -> VisualResult:
+def check(geo: SheetGeometry, clearance_mm: float = VISUAL_CLEARANCE_MM) -> VisualResult:
     res = VisualResult(ok=True)
 
     # text/body vs text/body — nothing may touch anything it doesn't own

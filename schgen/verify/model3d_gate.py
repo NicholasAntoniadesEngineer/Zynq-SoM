@@ -39,6 +39,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core.config import MISPLACED_OVERLAP
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PARTS_DIR = _REPO_ROOT / "parts"
 
@@ -261,12 +263,10 @@ def _fab_xy(text: str) -> tuple[float, float] | None:
 
 
 # HARD position check: the placed model body bbox must overlap the footprint's
-# pad-copper bbox by at least this fraction. A body planted off its pads (the
-# EasyEDA c_origin unit-mismatch — e.g. a SOT-23 5.4 mm off, 0% overlap) is a real
-# LAW-5/6 defect the SOFT size-fit check misses. 0.20 is a deep margin below every
-# legit part (connectors / caps overlap >=0.5; centered ICs ~1.0), so it bites only
-# the genuine offset bug, never a real housing overhang.
-_MISPLACED_OVERLAP = 0.20
+# pad-copper bbox by at least this fraction (see config.MISPLACED_OVERLAP for the
+# full rationale). Aliased to the historical local name to keep the call sites
+# stable.
+_MISPLACED_OVERLAP = MISPLACED_OVERLAP
 
 
 def _offset_xy(body: str) -> tuple[float, float]:

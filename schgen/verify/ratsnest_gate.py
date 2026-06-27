@@ -32,6 +32,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from schgen.core.config import CROSS_K
 from schgen.generate.pcb import (PcbModel, ORIGIN_X, ORIGIN_Y,
                                  _inst_courtyard, _inst_pad_bbox)
 from schgen.generate import ratsnest as rn
@@ -43,12 +44,9 @@ from schgen.generate import ratsnest as rn
 # from geometry, so the threshold is generous — the hairball this catches sat at
 # 50-230x.
 DISPERSION_MAX = 9.0
-# absolute cross-subsystem airwire budget: CROSS_K * sqrt(board_area_mm2) *
-# n_subsystems. At the clustered 235x215 / 30-subsystem board the budget is
-# ~20.2 m and the actual cross is ~15.7 m (clears with margin); the old 165x155
-# hairball's budget would be ~14.4 m against its ~26.8 m actual — it FAILS. So
-# the budget bites a board-spanning placement but passes a clustered one.
-CROSS_K = 3.0
+# CROSS_K (absolute cross-subsystem airwire budget coefficient: budget =
+# CROSS_K * sqrt(board_area_mm2) * n_subsystems) lives in config.py — imported
+# above. It bites a board-spanning placement but passes a clustered one.
 # small subsystems (<= this many parts) are exempt from the dispersion metric:
 # 2-3 parts can have a degenerate bbox/area ratio with no real scatter. They
 # still must be ON-BOARD (rule a) and contribute to the airwire budget.

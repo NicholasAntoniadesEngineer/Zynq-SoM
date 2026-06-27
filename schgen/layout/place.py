@@ -35,8 +35,9 @@ from schgen.layout import route
 from schgen.core import sexpr
 from schgen.layout import textmetrics as tm
 from schgen.output.emit import HierLabel, LocalLabel, NoConnect, PlacedPart, PlacedPower
+from schgen.core.config import GRID
 from schgen.core.model import Circuit, NetClass, PartitionError, PinRef
-from schgen.core.symbols import GRID, Library, Pin, SymbolDef, pin_page_position
+from schgen.core.symbols import Library, Pin, SymbolDef, pin_page_position
 from schgen.verify import visual_gate
 from schgen.verify.visual_gate import Box, Junction, SheetGeometry
 
