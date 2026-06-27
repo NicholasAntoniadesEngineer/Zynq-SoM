@@ -46,9 +46,15 @@ def _sub(node, name):
     return None
 
 
-def _text_box(txt, x, y, size, m=0.35):
-    w = max(len(txt), 1) * size * 0.72
-    h = size * 1.1
+def _text_box(txt, x, y, size, m=0.15):
+    # Match KiCad's rendered stroke extent (min_silk_clearance=0): the Newstroke
+    # font advances ~1.0*size per glyph (refdes = caps/digits) and the box grows
+    # by the stroke thickness on every side. The old 0.72 aspect under-measured
+    # width ~28%, so refdes ~5 mm apart read clear here while KiCad's strokes
+    # touched. Kept in sync with pcb.py:_text_box (LAW 4: tighten, never soften).
+    thick = max(0.12, size * 0.15)
+    w = max(len(txt), 1) * size * 1.0 + thick
+    h = size + thick
     return (x - w / 2 - m, y - h / 2 - m, x + w / 2 + m, y + h / 2 + m)
 
 
@@ -109,10 +115,12 @@ def _collect(pcb_path: Path, layer: str):
             if lat is None:
                 continue
             lx, ly = float(lat[1]), float(lat[2])
-            if bottom:
-                bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
-            else:
-                bx, by = fx + lx * ca - ly * sa, fy + lx * sa + ly * ca
+            # KiCad composes a footprint child with a CLOCKWISE rotation in screen
+            # coords (y-down). The top compose was CCW, mis-placing a rotated ref's
+            # box ~14 mm off its render spot (U11001 rot-90), so the gate gave false
+            # confidence for rotated parts. Both sides now use the CW form (kept in
+            # sync with pcb.py:_declutter_refdes — LAW 4: match KiCad, never soften).
+            bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
             refs.append((c[2], _text_box(c[2], bx, by, _font_size(c))))
     return refs
 

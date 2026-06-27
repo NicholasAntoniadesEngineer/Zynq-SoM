@@ -2155,11 +2155,20 @@ def _rects_overlap(a, b) -> bool:
     return not (a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1])
 
 
-def _text_box(txt: str, x: float, y: float, size: float, m: float = 0.35):
-    """Bounding box of a centre-justified silk string (KiCad stroke font ≈0.72
-    aspect), padded by ``m`` mm of clearance."""
-    w = max(len(txt), 1) * size * 0.72
-    h = size * 1.1
+def _text_box(txt: str, x: float, y: float, size: float, m: float = 0.15):
+    """Bounding box of a centre-justified silk string, sized to match KiCad's
+    actual rendered stroke extent (so the placer/gate agree with KiCad's
+    silk_overlap DRC, min_silk_clearance=0).
+
+    KiCad's Newstroke font advances ≈1.0×size per glyph (caps/digits — a refdes
+    is all caps/digits), and the rendered box is grown by the stroke THICKNESS on
+    every side (half-thickness each end). An older 0.72 aspect under-measured the
+    width by ~28%, so refdes pairs ~5 mm apart read as 0.06 mm clear in the gate
+    while KiCad's true strokes touched (the U18001/U18002 class of 20). ``m`` is a
+    tiny extra clearance on top of KiCad's geometry."""
+    thick = max(0.12, size * 0.15)
+    w = max(len(txt), 1) * size * 1.0 + thick
+    h = size + thick
     return (x - w / 2 - m, y - h / 2 - m, x + w / 2 + m, y + h / 2 + m)
 
 
@@ -2178,11 +2187,59 @@ def _font_size(node, default: float = 1.0) -> float:
     return float(szn[1]) if szn is not None else default
 
 
-def _emitted_text_boxes(doc: list) -> list:
+def _silk_gfx_box(c, fx, fy, ca, sa):
+    """Board-space axis-aligned bbox of ONE footprint silk GRAPHIC primitive
+    (fp_line / fp_rect / fp_circle / fp_arc / fp_poly), transformed local->board
+    by the footprint orientation (ca/sa = cos/sin frot, origin fx/fy). The
+    rendered silk is grown by half the stroke width on every side so the box
+    matches what KiCad's silk_overlap DRC reasons about. Returns None for a
+    primitive with no usable geometry."""
+    tag = str(c[0])
+    pts: list = []
+    if tag == "fp_circle":
+        ctr = _sub(c, "center")
+        end = _sub(c, "end")
+        if ctr is not None and end is not None and len(ctr) >= 3 and len(end) >= 3:
+            cxf, cyf = float(ctr[1]), float(ctr[2])
+            r = ((float(end[1]) - cxf) ** 2 + (float(end[2]) - cyf) ** 2) ** 0.5
+            pts = [(cxf - r, cyf - r), (cxf + r, cyf + r)]
+    else:
+        for tagname in ("start", "mid", "end", "center"):
+            p = _sub(c, tagname)
+            if p is not None and len(p) >= 3:
+                pts.append((float(p[1]), float(p[2])))
+        ptsn = _sub(c, "pts")
+        if ptsn is not None:
+            for xy in ptsn:
+                if isinstance(xy, list) and xy and str(xy[0]) == "xy" and len(xy) >= 3:
+                    pts.append((float(xy[1]), float(xy[2])))
+    if not pts:
+        return None
+    # KiCad composes a footprint child to the board with a CLOCKWISE rotation in
+    # screen coords (y-down): bx=fx+lx·ca+ly·sa, by=fy-lx·sa+ly·ca. Verified vs the
+    # DRC-reported render position of a rot-90 part (U11001 ref local (0,-7.11) ->
+    # x=71.49, not the CCW 85.71). Only matters for a rotated footprint with a
+    # non-zero local offset; the prior CCW sign mis-placed those boxes.
+    bxs = [fx + lx * ca + ly * sa for lx, ly in pts]
+    bys = [fy - lx * sa + ly * ca for lx, ly in pts]
+    stroke = _sub(c, "stroke")
+    wn = _sub(stroke, "width") if stroke is not None else None
+    hw = (float(wn[1]) / 2.0) if (wn is not None and len(wn) >= 2) else 0.06
+    return (min(bxs) - hw, min(bys) - hw, max(bxs) + hw, max(bys) + hw)
+
+
+def _emitted_text_boxes(doc: list, include_silk_gfx: bool = False) -> list:
     """Bounding boxes of every VISIBLE silk designator already in the board — the
     footprint reference/value fp_text (transformed local->board by the footprint
     orientation) plus any top-level gr_text — so interior descriptor labels can be
-    placed to clear them (LAW 1: zero text-over-text)."""
+    placed to clear them (LAW 1: zero text-over-text).
+
+    When ``include_silk_gfx`` is set, also returns the board-space bbox of every
+    footprint F.SilkS GRAPHIC primitive (fp_line/fp_rect/fp_circle/fp_arc/fp_poly
+    — the component body/pin-1/courtyard outlines). The descriptor/refdes placer
+    needs these so a function label ('BOOT: DFU BSEL', 'ESC PWR OUT') or a moved
+    refdes does not land on top of a part's silk outline (the GFX-vs-TEXT class of
+    silk_overlap DRC warnings that text-only boxes missed)."""
     import math
     boxes: list = []
     for node in doc:
@@ -2201,6 +2258,19 @@ def _emitted_text_boxes(doc: list) -> list:
             fx, fy = float(fat[1]), float(fat[2])
             a = math.radians(float(fat[3])) if len(fat) > 3 else 0.0
             ca, sa = math.cos(a), math.sin(a)
+            if include_silk_gfx:
+                for c in node:
+                    if not (isinstance(c, list) and c and isinstance(c[0], Sym)):
+                        continue
+                    if str(c[0]) not in ("fp_line", "fp_rect", "fp_circle",
+                                         "fp_arc", "fp_poly"):
+                        continue
+                    lyr = _sub(c, "layer")
+                    if lyr is None or str(lyr[1]) != "F.SilkS":
+                        continue
+                    gb = _silk_gfx_box(c, fx, fy, ca, sa)
+                    if gb is not None:
+                        boxes.append(gb)
             for c in node:
                 if not (isinstance(c, list) and c and isinstance(c[0], Sym)):
                     continue
@@ -2233,8 +2303,10 @@ def _emitted_text_boxes(doc: list) -> list:
                 if lat is None or txt is None:
                     continue
                 lx, ly = float(lat[1]), float(lat[2])
-                boxes.append(_text_box(txt, fx + lx * ca - ly * sa,
-                                       fy + lx * sa + ly * ca, _font_size(c)))
+                # CW screen-space compose (see _silk_gfx_box) so a rotated part's
+                # property text box lands where KiCad renders it.
+                boxes.append(_text_box(txt, fx + lx * ca + ly * sa,
+                                       fy - lx * sa + ly * ca, _font_size(c)))
     return boxes
 
 
@@ -2318,7 +2390,7 @@ def _connector_descriptors(model: "PcbModel", uid, doc: list) -> list:
     ex1, ey1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
     # everything already on the board that a label must not collide with
     occupied: list = [_inst_courtyard(i) for i in model.insts]
-    occupied += _emitted_text_boxes(doc)
+    occupied += _emitted_text_boxes(doc, include_silk_gfx=True)
     # number the PMOD ports PMOD0/1/2 in ref order (they span two sheets)
     pmods = sorted(i.ref for i in model.insts if i.value == "DS1024-2x6R2")
     pmod_n = {ref: n for n, ref in enumerate(pmods)}
@@ -2337,17 +2409,38 @@ def _connector_descriptors(model: "PcbModel", uid, doc: list) -> list:
         if d[edge] > 12.0:                 # not actually an edge connector — skip
             continue
         midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
-        g = 1.8
-        if edge == "N":
-            tx, ty = midx, cy1 + g
-        elif edge == "S":
-            tx, ty = midx, cy0 - g
-        elif edge == "W":
-            tx, ty = cx1 + g, midy
-        else:                              # E
-            tx, ty = cx0 - g, midy
-        out.append(_silk_text(desc, tx, ty, 1.1, uid(f"conn-desc:{inst.ref}")))
-        occupied.append(_text_box(desc, tx, ty, 1.1))
+        # Anchor the label just INBOARD of the mating edge, then step it further
+        # inboard (away from the edge) if its box collides with a courtyard, an
+        # existing designator, or a component SILK GRAPHIC — a fixed 1.8 mm offset
+        # otherwise dropped 'ESC PWR OUT'/'PWR'/etc. straight onto the connector's
+        # own silk outline (the GFX-vs-TEXT silk_overlap class). The label stays on
+        # the SAME inboard axis (never flips to the off-board side, LAW 1).
+        dsize = 1.1
+        tx, ty = midx, midy
+        clear = False
+        for g in (1.8, 3.2, 4.6, 6.0, 7.6, 9.4):
+            if edge == "N":
+                tx, ty = midx, cy1 + g
+            elif edge == "S":
+                tx, ty = midx, cy0 - g
+            elif edge == "W":
+                tx, ty = cx1 + g, midy
+            else:                          # E
+                tx, ty = cx0 - g, midy
+            tbox = _text_box(desc, tx, ty, dsize)
+            if not any(_overlap_area(tbox, o) > 0.0 for o in occupied):
+                clear = True
+                break
+        # If stepping straight inboard never clears (a neighbour part sits on the
+        # inboard axis — e.g. QWIIC's label pinned against U2001's silk outline),
+        # fall back to the general 8-direction nearest-clear placer around the
+        # connector courtyard so the label finds the closest collision-free spot.
+        if not clear:
+            tx, ty, _box, _off = _place_clear_label(
+                cx0, cy0, cx1, cy1, desc, dsize, occupied,
+                bounds=(ex0, ey0, ex1, ey1))
+        out.append(_silk_text(desc, tx, ty, dsize, uid(f"conn-desc:{inst.ref}")))
+        occupied.append(_text_box(desc, tx, ty, dsize))
     # interior developer headers (_INT_DESC) + switches (_SW_DESC): overlap-aware.
     # Font shrinks with the label so the inline DIP position legends stay compact.
     for inst in model.insts:
@@ -2471,10 +2564,43 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
             if at is not None:
                 occupied.append(_text_box(node[1], float(at[1]), float(at[2]),
                                           _font_size(node)))
+    # component SILK GRAPHICS (body/pin-1/outline strokes): a refdes must clear
+    # these too, else a moved-or-authored ref lands on a part's silk outline (the
+    # GFX-vs-refdes silk_overlap class KiCad flags but courtyard+text boxes miss).
+    # Split per side so a bottom ref only sees bottom silk (see occupied_bot).
+    silk_gfx_top: list = []
+    silk_gfx_bot: list = []
+    for node in doc:
+        if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
+            continue
+        fat = _sub(node, "at")
+        if fat is None:
+            continue
+        gfx, gfy = float(fat[1]), float(fat[2])
+        ga = math.radians(float(fat[3])) if (
+            len(fat) > 3 and isinstance(fat[3], (int, float))) else 0.0
+        gca, gsa = math.cos(ga), math.sin(ga)
+        for c in node:
+            if not (isinstance(c, list) and c and isinstance(c[0], Sym)):
+                continue
+            if str(c[0]) not in ("fp_line", "fp_rect", "fp_circle",
+                                 "fp_arc", "fp_poly"):
+                continue
+            lyr = _sub(c, "layer")
+            if lyr is None:
+                continue
+            ln = str(lyr[1])
+            if ln not in ("F.SilkS", "B.SilkS"):
+                continue
+            gb = _silk_gfx_box(c, gfx, gfy, gca, gsa)
+            if gb is not None:
+                (silk_gfx_top if ln == "F.SilkS" else silk_gfx_bot).append(gb)
+    occupied += silk_gfx_top
     # B.SilkS refs need only clear BOTTOM-side silk (top parts are not on the
     # bottom layer + the F.SilkS function labels are top) — a far less crowded
     # obstacle set, so dense bottom banks find room the top-side set would deny.
     occupied_bot = [_inst_courtyard(i) for i in model.insts if i.side == "bottom"]
+    occupied_bot += silk_gfx_bot
     court_by_ref = {i.ref: _inst_courtyard(i) for i in model.insts}
     top_refs: list = []
     bot_refs: list = []
@@ -2506,10 +2632,16 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
                 continue
             ref, size = c[2], _font_size(c)
             lx, ly = float(lat[1]), float(lat[2])
+            # KiCad composes a footprint child with a CLOCKWISE rotation in
+            # screen coords (y-down). The TOP-side compose was previously CCW
+            # (fy + lx·sa) which placed a rotated ref ~14 mm off its true render
+            # spot (U11001 rot-90: CCW x=85.71 vs KiCad x=71.49), so the declutter
+            # never saw its real silk collision. Both sides now use the CW form
+            # (the B.Cu mirror collapses to the same form here since lx=0).
             if bottom:                          # B.Cu fp is mirrored: fp+R(-frot)(lx,ly)
                 bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
             else:
-                bx, by = fx + lx * ca - ly * sa, fy + lx * sa + ly * ca
+                bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
             court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
             (bot_refs if bottom else top_refs).append(
                 (ref, c, lat, fx, fy, ca, sa, court, size,
@@ -2553,12 +2685,10 @@ def _declutter_refdes(model: "PcbModel", uid, doc: list) -> int:
         # rewrite the ref's footprint-local (at) so it composes back to (tx, ty);
         # the inverse mirrors per side (a B.Cu footprint is mirrored, frot negates).
         dx, dy = tx - fx, ty - fy
-        if bottom:                              # inverse of fp + R(-frot)(lx,ly)
-            lat[1] = round(dx * ca - dy * sa, 4)
-            lat[2] = round(dx * sa + dy * ca, 4)
-        else:                                   # inverse of fp + R(+frot)(lx,ly)
-            lat[1] = round(dx * ca + dy * sa, 4)
-            lat[2] = round(-dx * sa + dy * ca, 4)
+        # inverse of the CW forward bx=fx+lx·ca+ly·sa, by=fy-lx·sa+ly·ca:
+        #   lx = dx·ca - dy·sa,  ly = dx·sa + dy·ca   (both sides — top is now CW).
+        lat[1] = round(dx * ca - dy * sa, 4)
+        lat[2] = round(dx * sa + dy * ca, 4)
         if new_size != size:
             _set_font_size(c, new_size)
         plc.append(nbox)

@@ -54,12 +54,20 @@ def test_hidden_ref_not_counted(tmp_path):
 
 def test_rotation_composes_local_at(tmp_path):
     """Two refs whose LOCAL ats differ but compose (via footprint rotation) to the
-    same board point must be caught — the gate composes, it does not read local."""
-    # fp A at origin rot 0: local (5,0) -> board (5,0).
-    # fp B at origin rot 90: local (0,-5) -> board (5,0) too.
+    same board point must be caught — the gate composes, it does not read local.
+
+    KiCad composes a footprint child with a CLOCKWISE rotation in screen coords
+    (y-down): bx=fx+lx·ca+ly·sa, by=fy-lx·sa+ly·ca. Verified vs the real DRC-render
+    position of a rot-90 part on this board (U11001 local (0,-7.11) -> KiCad x=fx-7.11,
+    NOT the CCW fx+7.11). So a rot-90 fp at the origin maps local (0,5) -> board
+    (5,0), coincident with a rot-0 fp's local (5,0). (An earlier revision of this
+    test asserted the CCW (0,-5) mapping — that encoded the very handedness bug the
+    CW fix corrects.)"""
+    # fp A at origin rot 0:  local (5,0) -> board (5,0).
+    # fp B at origin rot 90: local (0,5) -> board (5,0) too (CW compose).
     p = tmp_path / "b.kicad_pcb"
     p.write_text(_board(_fp("U1", 0, 0, 5, 0, frot=0),
-                        _fp("U2", 0, 0, 0, -5, frot=90)))
+                        _fp("U2", 0, 0, 0, 5, frot=90)))
     r = g.check(p)
     assert not r.ok and len(r.top_pairs) == 1
 
