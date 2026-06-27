@@ -32,11 +32,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from schgen.layout import place
-from schgen.output.emit import PlacedDesign, Wire, emit
-from schgen.output.emit import Junction as EJunction
 from schgen.core.model import Circuit, NetClass
 from schgen.core.symbols import Library
+from schgen.layout import place
+from schgen.output.emit import Junction as EJunction
+from schgen.output.emit import PlacedDesign, Wire, emit
 from schgen.verify import netlist_gate, visual_gate
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -366,7 +366,7 @@ def _golden_check(ren_dir: Path, bless: bool) -> None:
         if old is None:
             drifted.append(f"{name}: NEW sheet (no golden)")
         else:
-            dist = sum(a != b for a, b in zip(h, old))
+            dist = sum(a != b for a, b in zip(h, old, strict=False))
             if dist > 12:
                 drifted.append(f"{name}: drift {dist}/256 bits")
     for name in sorted(set(golden) - set(cur)):
@@ -428,10 +428,15 @@ def cmd_board(args: argparse.Namespace) -> int:
     all written into the committed carrier/ output taxonomy."""
     import tempfile
 
+    from schgen.core.link import (
+        all_subsystem_paths,
+        link,
+        load_som_contract,
+        load_subsystem,
+    )
+    from schgen.generate import board as board_mod
     from schgen.generate import constraints
     from schgen.output import diagram
-    from schgen.generate import board as board_mod
-    from schgen.core.link import all_subsystem_paths, link, load_som_contract, load_subsystem
 
     lib = Library()
     sch_dir = CARRIER / "schematic"
@@ -633,6 +638,7 @@ def cmd_board(args: argparse.Namespace) -> int:
     # concurrency changes not one emitted byte. (kicad-cli releases the GIL, so
     # this overlap is real even though the Python gates do not.)
     import threading as _threading
+
     from schgen.generate import pcb as pcb_mod
     _pcb_holder: dict[str, object] = {}
 
@@ -1273,7 +1279,8 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--no-render", action="store_true")
     b.set_defaults(func=cmd_build)
     si = sub.add_parser("som-interface",
-                        help="extract J-connector pin->net contract from the SoM project")
+                        help="extract J-connector pin->net contract from "
+                             "the SoM project")
     si.add_argument("som_sch")
     si.add_argument("--refs", default="J1,J2,J3")
     si.add_argument("-o", "--output", default="carrier/som_interface.json")
@@ -1451,7 +1458,8 @@ def main(argv: list[str] | None = None) -> int:
                          "(the no-CI answer to 'who watches the watchmen')")
     st.add_argument("sheets", nargs="*",
                     help="sheet names/paths (default: schgen/tests/"
-                         "m1_rc_sheet.py + carrier/subsystems/uart_bridge/uart_bridge.py)")
+                         "m1_rc_sheet.py + "
+                         "carrier/subsystems/uart_bridge/uart_bridge.py)")
     st.add_argument("--keep", action="store_true",
                     help="keep the scratch dir with all mutants")
     from schgen.verify.selftest import cmd_selftest

@@ -22,8 +22,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from schgen.generate import bringup_facts as bf
 from schgen.core.link import load_subsystem
+from schgen.generate import bringup_facts as bf
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "carrier" / "firmware" / "zynq_carrier_contract.h"

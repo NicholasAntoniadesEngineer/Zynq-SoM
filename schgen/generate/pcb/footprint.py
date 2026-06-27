@@ -12,8 +12,14 @@ from schgen.core.sexpr import Sym
 from schgen.generate import constraints as cst
 
 from .constants import (
-    PARTS_DIR, CARRIER, _FOOTPRINT_ALIASES, _kicad_fp_root,
-    _PAD_RE, _THRU_PAD_RE, GRID, POWER_CLASS,
+    _FOOTPRINT_ALIASES,
+    _PAD_RE,
+    _THRU_PAD_RE,
+    CARRIER,
+    GRID,
+    PARTS_DIR,
+    POWER_CLASS,
+    _kicad_fp_root,
 )
 
 
@@ -91,6 +97,7 @@ def board_parts() -> dict[str, tuple[str, str, str, str]]:
     no-net EP copper -> intra-footprint clearance DRC errors. Reading the same
     registry keeps every ref permanent and the pad-net join exact."""
     import json as _json
+
     from schgen.core.link import all_subsystem_paths, load_subsystem
     from schgen.generate.board import _renamed_ref
     _idx_path = CARRIER / "sheet_index.json"

@@ -156,17 +156,20 @@ def test_fit_law_passes_a_matching_model_and_fails_a_misfit(tmp_path):
     mod = tmp_path / "X.kicad_mod"
     # footprint body ~5.08 x 5.08 mm; a VRML box of 2.0 x 2.0 (0.1in) = 5.08 mm
     mod.write_text(_fitfp(5.08, 5.08))
-    good = tmp_path / "good.wrl"; good.write_text(_fitwrl(2.0, 2.0))
+    good = tmp_path / "good.wrl"
+    good.write_text(_fitwrl(2.0, 2.0))
     body = "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 0))"
     assert g._fit_ok(mod, body, good) is None              # matches -> OK
 
     # a 4x-oversized body must FAIL (the wrong-size-stock-model class of bug)
-    big = tmp_path / "big.wrl"; big.write_text(_fitwrl(8.0, 8.0))
+    big = tmp_path / "big.wrl"
+    big.write_text(_fitwrl(8.0, 8.0))
     assert g._fit_ok(mod, body, big) is not None
 
     # a 90deg-rotated NON-square model flips the aspect outside the band
     mod.write_text(_fitfp(10.16, 2.54))                       # 10.16 x 2.54 mm body
-    rot = tmp_path / "rot.wrl"; rot.write_text(_fitwrl(4.0, 1.0))   # 10.16 x 2.54
+    rot = tmp_path / "rot.wrl"
+    rot.write_text(_fitwrl(4.0, 1.0))   # 10.16 x 2.54
     assert g._fit_ok(mod, "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 0))",
                      rot) is None                          # aligned -> OK
     assert g._fit_ok(mod, "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 90))",

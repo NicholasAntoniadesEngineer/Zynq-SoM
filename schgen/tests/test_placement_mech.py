@@ -9,10 +9,15 @@ mutation that must FAIL — proving the gate bites.
 from __future__ import annotations
 
 from schgen.generate import pcb
-from schgen.generate.pcb import (FootprintInst, PcbModel, ORIGIN_X, ORIGIN_Y,
-                                 connector_edge_rotation, _mating_face_out_dir)
+from schgen.generate.pcb import (
+    ORIGIN_X,
+    ORIGIN_Y,
+    FootprintInst,
+    PcbModel,
+    _mating_face_out_dir,
+    connector_edge_rotation,
+)
 from schgen.verify import placement_mech as pm
-
 
 # ---- the rotation contract: a connector ON an edge must face OFF-BOARD --------
 
@@ -35,7 +40,8 @@ def test_every_offboard_mpn_has_a_mating_face():
     mating-face direction (so the placer can rotate it)."""
     for mpn, face in pcb.CONN_MATING_FACE.items():
         assert face in pcb._ROT_TABLES, \
-            f"{mpn} has an unsupported mating face {face!r} (not in the rotation engine)"
+            f"{mpn} has an unsupported mating face {face!r} " \
+            "(not in the rotation engine)"
 
 
 # ---- a synthetic placed model: PASS, then per-rule mutants must FAIL ----------
@@ -55,7 +61,7 @@ def _passing_model():
     and a clear SoM core. Should PASS the LAW-6 gate."""
     W, H = 100.0, 80.0
     bx0, by0 = ORIGIN_X, ORIGIN_Y
-    bx1, by1 = ORIGIN_X + W, ORIGIN_Y + H
+    _bx1, by1 = ORIGIN_X + W, ORIGIN_Y + H
     # USB-C (-Y face) on the N edge: the gate-derived rotation faces the mouth
     # off-board (top); seat it flush so its top courtyard face is at the edge.
     r_usbc = connector_edge_rotation(pcb.CONN_MATING_FACE["TYPE-C-31-M-12"], "N")

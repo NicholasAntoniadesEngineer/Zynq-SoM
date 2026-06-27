@@ -9,10 +9,7 @@ from __future__ import annotations
 
 import itertools
 
-import pytest
-
 from schgen.generate import pcb
-
 
 # ---- footprint resolution + alias ------------------------------------------------
 
@@ -91,7 +88,7 @@ def test_shelf_pack_no_overlap_and_deterministic():
     for a, b in itertools.combinations(boxes1, 2):
         assert not _overlap(a, b, margin), f"{a} overlaps {b}"
     # the returned box must ENCLOSE every part (it is sized to fit — no spill).
-    for bx0, by0, bx1, by1 in boxes1:
+    for _bx0, _by0, bx1, by1 in boxes1:
         assert bx1 <= w1 + 1e-6 and by1 <= h1 + 1e-6, "part outside its zone box"
 
 
@@ -138,19 +135,18 @@ def test_four_layer_stackup_is_sig_gnd_pwr_sig():
 
 
 def test_stackup_has_two_inner_copper_layers():
-    from schgen.core.sexpr import find_all, Sym
+    from schgen.core.sexpr import Sym, find_all
     stk = pcb._stackup_node()
-    cu = [l for l in find_all(stk, "layer")
+    cu = [layer for layer in find_all(stk, "layer")
           if any(isinstance(x, list) and x and x[0] == Sym("type")
-                 and len(x) > 1 and str(x[1]) == "copper" for x in l)]
-    names = {str(l[1]) for l in cu}
+                 and len(x) > 1 and str(x[1]) == "copper" for x in layer)]
+    names = {str(layer[1]) for layer in cu}
     assert {"F.Cu", "In1.Cu", "In2.Cu", "B.Cu"} <= names
 
 
 # ---- edge-cuts outline -----------------------------------------------------------
 
 def test_edge_rect_is_closed_rectangle():
-    seen = {}
     segs = pcb._edge_rect(0, 0, 120, 100, lambda k: f"u:{k}")
     assert len(segs) == 4
     from schgen.core.sexpr import find

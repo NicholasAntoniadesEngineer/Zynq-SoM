@@ -40,11 +40,14 @@ def loads(text: str) -> list:
             while i < n:
                 ch = text[i]
                 if ch == "\\" and i + 1 < n:
-                    buf.append(text[i + 1]); i += 2; continue
+                    buf.append(text[i + 1])
+                    i += 2
+                    continue
                 if ch == '"':
                     i += 1
                     return "".join(buf)
-                buf.append(ch); i += 1
+                buf.append(ch)
+                i += 1
             raise ValueError("unterminated string")
         j = i
         while j < n and text[j] not in ' \t\r\n()"':

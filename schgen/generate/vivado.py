@@ -38,8 +38,8 @@ import argparse
 import tempfile
 from pathlib import Path
 
-from schgen.generate import xdc
 from schgen.core.som_interface import extract_zynq
+from schgen.generate import xdc
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOM = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
@@ -227,8 +227,8 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
         "xilinx.com:bd_rule:processing_system7 \\",
         "# #         -config {make_external \"FIXED_IO, DDR\" apply_board_"
         "preset \"1\"} $ps",
-        f"# validate_bd_design",
-        f"# save_bd_design",
+        "# validate_bd_design",
+        "# save_bd_design",
         f"# make_wrapper -files [get_files {BD_NAME}.bd] -top",
         f"# add_files -norecurse "
         "$script_dir/$project_name/$project_name.srcs/sources_1/bd/"

@@ -19,7 +19,8 @@ def _sheet(name, c):
 
 
 def _is(got, cls, mag):
-    return got is not None and got[0] == cls and abs(got[1] - mag) <= 1e-9 * max(1.0, mag)
+    return (got is not None and got[0] == cls
+            and abs(got[1] - mag) <= 1e-9 * max(1.0, mag))
 
 
 def test_value_normaliser():

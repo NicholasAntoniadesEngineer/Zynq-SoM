@@ -155,7 +155,7 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
     # duplicate pin numbers on one part = ONE physical pad (KiCad jumper-pin
     # semantics): bond their tips so connectivity is judged electrically
     for (_ref, _num), tips in pad_tips.items():
-        for a, b in zip(tips, tips[1:]):
+        for a, b in zip(tips, tips[1:], strict=False):
             geoms[net_of_pin[f"{_ref}.{_num}"]].bonds.append((a, b))
 
     # ---- 2. power symbol pins -----------------------------------------------
@@ -193,7 +193,7 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
         if net not in geoms:
             raise RouteError(f"plan for undeclared net {net!r}")
         for path in paths:
-            for a, b in zip(path, path[1:]):
+            for a, b in zip(path, path[1:], strict=False):
                 a = (round(a[0], 3), round(a[1], 3))
                 b = (round(b[0], 3), round(b[1], 3))
                 if a == b:
@@ -212,11 +212,12 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
     # exact-duplicate sub-legs (a collinear over-draw collapses to one wire).
     # A net whose legs do not meet mid-span is untouched (byte-identical), so
     # only the geometry that previously ERRORED changes.
-    for net, g in geoms.items():
+    for _net, g in geoms.items():
         # candidate split cells per net: all label anchors + all leg endpoints
         anchors: set[Cell] = {cell_of(p) for p in g.label_pts}
         for a, b in g.legs:
-            anchors.add(cell_of(a)); anchors.add(cell_of(b))
+            anchors.add(cell_of(a))
+            anchors.add(cell_of(b))
         # iterate to a fixed point: splitting can expose a new endpoint that
         # taps a third leg; bounded by total grid cells, terminates.
         for _ in range(64):
@@ -224,7 +225,8 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
             # recompute endpoints each round (new splits add endpoints)
             endpts: set[Cell] = set(anchors)
             for a, b in g.legs:
-                endpts.add(cell_of(a)); endpts.add(cell_of(b))
+                endpts.add(cell_of(a))
+                endpts.add(cell_of(b))
             out_legs: list[tuple[Point, Point]] = []
             for a, b in g.legs:
                 cells = _leg_cells(a, b)
@@ -279,7 +281,8 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
         seen_interior: set[Cell] = set()
         endpoints: set[Cell] = set()
         for a, b in g.legs:
-            endpoints.add(cell_of(a)); endpoints.add(cell_of(b))
+            endpoints.add(cell_of(a))
+            endpoints.add(cell_of(b))
         for a, b in g.legs:
             interior = _leg_cells(a, b)[1:-1]
             for c in interior:
@@ -323,7 +326,7 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                     # wire-heavy mandate: BFS-join the two nearest components
                     comps.sort(key=len, reverse=True)
                     path = _bfs_join(grid, net, comps[0], comps[1])
-                    for a, b in zip(path, path[1:]):
+                    for a, b in zip(path, path[1:], strict=False):
                         grid.claim(net, _leg_cells(a, b), f"bfs {net}")
                         g.legs.append((a, b))
                     comps = _components(g)
@@ -371,8 +374,10 @@ def _components(g: _NetGeom) -> list[set[Point]]:
     pts: set[Point] = set(g.pin_parts) | g.power_pts | g.label_pts
     adj: dict[Point, set[Point]] = {p: set() for p in pts}
     for a, b in list(g.legs) + list(g.bonds):
-        adj.setdefault(a, set()); adj.setdefault(b, set())
-        adj[a].add(b); adj[b].add(a)
+        adj.setdefault(a, set())
+        adj.setdefault(b, set())
+        adj[a].add(b)
+        adj[b].add(a)
     seen: set[Point] = set()
     comps: list[set[Point]] = []
     for p in adj:
@@ -383,7 +388,8 @@ def _components(g: _NetGeom) -> list[set[Point]]:
             q = todo.pop()
             if q in seen:
                 continue
-            seen.add(q); comp.add(q)
+            seen.add(q)
+            comp.add(q)
             todo.extend(adj[q] - seen)
         comps.append(comp)
     return comps

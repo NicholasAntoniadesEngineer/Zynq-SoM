@@ -26,7 +26,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from schgen.core import sexpr
 from schgen.core.model import Circuit
 from schgen.core.symbols import Library, SymbolError
 
@@ -100,7 +99,6 @@ def check(circuits: list[Circuit], lib: Library) -> SymbolLawResult:
                 continue
             if _is_power_flag(lib, lib_id):
                 continue                       # legitimate rail/power flag
-            key = f"{c.name}:{ref}:{lib_id}"
             if lib_id in PENDING_MIGRATION:
                 tag = f"{lib_id} ({c.name}.{ref}) — {PENDING_MIGRATION[lib_id]}"
                 if lib_id not in seen:

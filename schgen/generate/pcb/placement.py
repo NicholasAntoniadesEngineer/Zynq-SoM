@@ -11,17 +11,37 @@ import re
 from pathlib import Path
 
 from .constants import (
-    CARRIER, ORIGIN_X, ORIGIN_Y, MH_INSET, GRID, SOM_HALO_PCB, SOM_CORE_CLEARANCE,
-    PLACE_CLEAR, ZONE_PAD, EDGE_ZONE_ASPECT, INTERIOR_ZONE_ASPECT,
-    INTERIOR_ZONE_BAND_TARGET, CONN_MATING_FACE, EDGE_PAD_CLEAR, BUTTON_GAP,
-    _TOP_ALWAYS_LIBS, TOP_AREA_MM2, FootprintInst, PcbModel, ZoneGeom,
+    _TOP_ALWAYS_LIBS,
+    BUTTON_GAP,
+    CARRIER,
+    CONN_MATING_FACE,
+    EDGE_PAD_CLEAR,
+    EDGE_ZONE_ASPECT,
+    GRID,
+    INTERIOR_ZONE_ASPECT,
+    INTERIOR_ZONE_BAND_TARGET,
+    MH_INSET,
+    ORIGIN_X,
+    ORIGIN_Y,
+    PLACE_CLEAR,
+    SOM_CORE_CLEARANCE,
+    TOP_AREA_MM2,
+    ZONE_PAD,
+    FootprintInst,
+    PcbModel,
+    ZoneGeom,
 )
 from .footprint import (
-    resolve_mod, pad_names, has_thru_pads, _footprint_bbox, board_netlist,
-    board_parts, _net_classes, _gridify,
+    _footprint_bbox,
+    _gridify,
+    _net_classes,
+    board_netlist,
+    board_parts,
+    has_thru_pads,
+    pad_names,
+    resolve_mod,
 )
-from .mating_face import (connector_edge_rotation, _rot_bbox, _rot_bbox_cw,
-                          _rot_pad_bbox)
+from .mating_face import _rot_bbox, _rot_bbox_cw, _rot_pad_bbox, connector_edge_rotation
 
 
 def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
@@ -436,8 +456,6 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
                                     conn_rot.get(r, 0.0))
                 else:
                     rb2 = _eff_bbox_for(bbox_of[r], side)
-                bw = rb2[2] - rb2[0]
-                bh = rb2[3] - rb2[1]
                 if flip_y:
                     noy = zh - (oy + rb2[3]) - rb2[1]
                     out[side][r] = (round(ox, 4), round(noy, 4))
@@ -456,8 +474,7 @@ def _connector_sheet_edges() -> dict[str, str]:
     INTERIOR slot, or absent from the spec, is reported (the placement_mech gate
     then HARD-FAILS it — an off-board connector that is not on an edge is
     unbuildable). Deterministic: the spec is read once and keyed by sheet name."""
-    from schgen.generate.floorplan import (load_floorplan_spec,
-                                           FLOORPLAN_SPEC)
+    from schgen.generate.floorplan import FLOORPLAN_SPEC, load_floorplan_spec
     out: dict[str, str] = {}
     if not FLOORPLAN_SPEC.exists():
         return out
@@ -476,9 +493,10 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
     from the subsystem circuits (no dependence on the emitted root schematic), so
     `schgen floorplan` and `schgen board` get byte-identical geometry."""
     import json as _json
+
     from schgen.core.link import all_subsystem_paths, load_subsystem
-    from schgen.generate.board import _renamed_ref
     from schgen.core.model import PinRef
+    from schgen.generate.board import _renamed_ref
 
     idx_path = CARRIER / "sheet_index.json"
     sheet_index = (_json.loads(idx_path.read_text())
@@ -608,8 +626,12 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
 # ---- the model build -------------------------------------------------------------
 
 def build_model(two_side: bool = True) -> PcbModel:
-    from schgen.core.link import all_subsystem_paths, load_subsystem, link, \
-        load_som_contract
+    from schgen.core.link import (
+        all_subsystem_paths,
+        link,
+        load_som_contract,
+        load_subsystem,
+    )
     from schgen.generate import floorplan as fp
     from schgen.verify import powertree
 
@@ -735,10 +757,6 @@ def build_model(two_side: bool = True) -> PcbModel:
         if b is None:
             continue
         zorigin[sheet] = (b.x, b.y)
-
-    sx_off, sy_off = plan.som_x - SOM_HALO_PCB, plan.som_y - SOM_HALO_PCB
-    som_w = som.w + 2 * SOM_HALO_PCB
-    som_h = som.h + 2 * SOM_HALO_PCB
 
     # SoM keep-out (centered on the floorplan SoM body) + SoM mezzanine J
     # positions (the floorplan-centered, SoM-mirrored DF40 centers).

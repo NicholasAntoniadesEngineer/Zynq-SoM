@@ -35,10 +35,9 @@ import argparse
 import re
 from pathlib import Path
 
+from schgen.core.link import all_subsystem_paths, load_subsystem
 from schgen.generate import bringup_facts as bf
 from schgen.verify import spice, testpoints
-from schgen.core.link import all_subsystem_paths, load_subsystem
-from schgen.core.model import NetClass
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "carrier" / "docs" / "TEST_PLAN.md"
@@ -115,7 +114,8 @@ def _rail_stage(sheets) -> dict[str, int]:
     # Stage 2: every regulator output rail (the power-tree chain).
     if "power" in circuits:
         try:
-            chain = bf.regulator_chain(circuits["power"], monitor=circuits.get("power_mon"))
+            chain = bf.regulator_chain(
+                circuits["power"], monitor=circuits.get("power_mon"))
             for st in chain:
                 stage.setdefault(st.rail_out, 2)
                 # the buck's PG / FB sense nets ride the same stage
@@ -273,7 +273,7 @@ def generate(out: Path = DEFAULT_OUT, sheets=None) -> Path:
         L.append("<details><summary>step rationale (from the spice gate "
                  "detail)</summary>")
         L.append("")
-        for i, (net, ch) in enumerate(rows, 1):
+        for i, (_net, ch) in enumerate(rows, 1):
             L.append(f"- **{st}.{i} {ch.name}** ({ch.sheet}): {ch.detail}")
         L.append("")
         L.append("</details>")

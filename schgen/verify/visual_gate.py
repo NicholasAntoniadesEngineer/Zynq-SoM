@@ -30,7 +30,7 @@ class Box:
     kind: str      # body | pin_name | pin_number | reference | value | label
     owner: str     # "U1", "label:STM32_USB_CC1", …
 
-    def intersects(self, o: "Box", pad: float = 0.0) -> bool:
+    def intersects(self, o: Box, pad: float = 0.0) -> bool:
         return (self.x0 - pad < o.x1 and self.x1 + pad > o.x0
                 and self.y0 - pad < o.y1 and self.y1 + pad > o.y0)
 
@@ -96,10 +96,12 @@ def _cross(a: Seg, b: Seg) -> bool:
 def _collinear_overlap(a: Seg, b: Seg) -> bool:
     eps = 1e-6
     if a.horizontal and b.horizontal and abs(a.y0 - b.y0) < eps:
-        a0, a1 = sorted((a.x0, a.x1)); b0, b1 = sorted((b.x0, b.x1))
+        a0, a1 = sorted((a.x0, a.x1))
+        b0, b1 = sorted((b.x0, b.x1))
         return min(a1, b1) - max(a0, b0) > eps
     if a.vertical and b.vertical and abs(a.x0 - b.x0) < eps:
-        a0, a1 = sorted((a.y0, a.y1)); b0, b1 = sorted((b.y0, b.y1))
+        a0, a1 = sorted((a.y0, a.y1))
+        b0, b1 = sorted((b.y0, b.y1))
         return min(a1, b1) - max(a0, b0) > eps
     return False
 
@@ -153,7 +155,9 @@ def _seg_box(s: Seg, half: float = 0.127) -> Box:
     return Box(x0 - half, y0 - half, x1 + half, y1 + half, "wire", f"net:{s.net}")
 
 
-def check(geo: SheetGeometry, clearance_mm: float = VISUAL_CLEARANCE_MM) -> VisualResult:
+def check(
+    geo: SheetGeometry, clearance_mm: float = VISUAL_CLEARANCE_MM
+) -> VisualResult:
     res = VisualResult(ok=True)
 
     # text/body vs text/body — nothing may touch anything it doesn't own
@@ -174,7 +178,7 @@ def check(geo: SheetGeometry, clearance_mm: float = VISUAL_CLEARANCE_MM) -> Visu
     for s in geo.wires:
         wb = _seg_box(s)
         for b in geo.boxes:
-            if b.kind == "body" and f"net:" in b.owner:
+            if b.kind == "body" and "net:" in b.owner:
                 continue
             # a net's OWN label is ATTACHED to the wire: zero-distance
             # contact at the anchor is the attachment itself (modelled at

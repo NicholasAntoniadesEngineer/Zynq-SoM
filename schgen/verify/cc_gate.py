@@ -141,7 +141,7 @@ def _harvest_nodes(circuit: Circuit, placement, routed,
             pad_tips.setdefault((part.ref, pin.number), []).append((x, y))
     bonds: list[tuple[tuple[float, float], tuple[float, float]]] = []
     for tips in pad_tips.values():
-        for a, b in zip(tips, tips[1:]):
+        for a, b in zip(tips, tips[1:], strict=False):
             bonds.append((a, b))
 
     # 2. power symbols: a node carrying the rail NAME (legal same-name merge

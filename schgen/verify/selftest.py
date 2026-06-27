@@ -87,14 +87,14 @@ import uuid as _uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen.layout import place
 from schgen.core import sexpr
-from schgen.output.emit import Junction as EJunction
-from schgen.output.emit import PlacedDesign, Wire, emit
-from schgen.output.emit import stable_uuid as _stable_uuid
 from schgen.core.model import Circuit, NetClass, PinRef
 from schgen.core.sexpr import Sym
 from schgen.core.symbols import GRID, Library, pin_page_position
+from schgen.layout import place
+from schgen.output.emit import Junction as EJunction
+from schgen.output.emit import PlacedDesign, Wire, emit
+from schgen.output.emit import stable_uuid as _stable_uuid
 from schgen.verify import netlist_gate, visual_gate
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -331,7 +331,7 @@ def mutate_foreign_junction(b: Built) -> tuple[str, None, str] | None:
 # was that mutants never passed geo, so visual_gate.check ran on the baseline
 # only and was never tested against a defect).
 
-def _rebuild_geo(b: "Built") -> "visual_gate.SheetGeometry":
+def _rebuild_geo(b: Built) -> visual_gate.SheetGeometry:
     """A fresh SheetGeometry equivalent to the baseline emission: the placer's
     boxes + the routed segments as visual_gate Segs (the same construction
     place.place_and_route uses)."""
@@ -350,7 +350,7 @@ def mutate_geo_wire_crosses_foreign(b: Built):
     vs = [s for s in geo.wires if abs(s.x0 - s.x1) < 1e-6]   # vertical
     for v in vs:
         vy0, vy1 = sorted((v.y0, v.y1))
-        for i, h in enumerate(hs):
+        for _i, h in enumerate(hs):
             if h.net == v.net:
                 continue
             hx0, hx1 = sorted((h.x0, h.x1))
@@ -940,8 +940,13 @@ def _ratsnest_fixture():
     fully inside a small Edge.Cuts rectangle — the LAW-5 ratsnest gate PASSES
     it. Used to prove the gate (off-board / dispersion) actually bites a defect
     without rebuilding the whole 505-footprint carrier board."""
-    from schgen.generate.pcb import (PcbModel, FootprintInst, resolve_mod,
-                                     ORIGIN_X, ORIGIN_Y)
+    from schgen.generate.pcb import (
+        ORIGIN_X,
+        ORIGIN_Y,
+        FootprintInst,
+        PcbModel,
+        resolve_mod,
+    )
     fp = "Resistor_SMD:R_0603_1608Metric"
     mod = resolve_mod(fp)
     bw, bh = 60.0, 40.0
@@ -978,7 +983,6 @@ def _mg_ratsnest(which: str, lib: Library):
     subsystem. BASELINE — the tight two-cluster fixture PASSES. MUTANT — move
     one part far outside Edge.Cuts (off-board) or scatter subsys_a across the
     whole board (dispersion blows past the threshold)."""
-    import copy as _copy
     from schgen.verify import ratsnest_gate
     base = ratsnest_gate.check(_ratsnest_fixture())
     base_ok = base.ok

@@ -30,8 +30,13 @@ import colorsys
 from pathlib import Path
 
 from schgen.generate import pcb as pcb_mod
-from schgen.generate.pcb import (PcbModel, ORIGIN_X, ORIGIN_Y,
-                                 _inst_courtyard, net_pad_positions)
+from schgen.generate.pcb import (
+    ORIGIN_X,
+    ORIGIN_Y,
+    PcbModel,
+    _inst_courtyard,
+    net_pad_positions,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CARRIER = REPO_ROOT / "carrier"
@@ -65,7 +70,7 @@ def _palette(sheets: list[str]) -> dict[str, tuple[int, int, int]]:
 
 
 def _hex(rgb: tuple[int, int, int]) -> str:
-    return "#%02x%02x%02x" % rgb
+    return "#{:02x}{:02x}{:02x}".format(*rgb)
 
 
 # ---- per-net airwire MST (the unrouted ratsnest) --------------------------------
@@ -113,7 +118,7 @@ def _airwires(model: PcbModel, side: str | None):
     side PNG shows only the airwires that touch that side's copper."""
     side_of_ref = {inst.ref: inst.side for inst in model.insts}
     out = []
-    for net, pts in sorted(net_pad_positions(model).items()):
+    for _net, pts in sorted(net_pad_positions(model).items()):
         # de-duplicate identical pad centers within a net so the MST is stable
         for a, b in _mst_edges(pts):
             xa, ya, ra, sa = pts[a]
@@ -132,7 +137,7 @@ def cross_airwire_length(model: PcbModel) -> tuple[float, float, int]:
     side_of_ref = {inst.ref: inst.side for inst in model.insts}  # noqa: F841
     cross = total = 0.0
     n_cross = 0
-    for net, pts in sorted(net_pad_positions(model).items()):
+    for _net, pts in sorted(net_pad_positions(model).items()):
         for a, b in _mst_edges(pts):
             xa, ya, _ra, sa = pts[a]
             xb, yb, _rb, sb = pts[b]

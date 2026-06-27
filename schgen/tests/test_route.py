@@ -13,8 +13,17 @@ from __future__ import annotations
 
 import pytest
 
-from schgen.layout.route import Grid, RouteError, _NetGeom, _components, cell_of, cells_between, point_of, snap_ok
 from schgen.core.symbols import GRID
+from schgen.layout.route import (
+    Grid,
+    RouteError,
+    _components,
+    _NetGeom,
+    cell_of,
+    cells_between,
+    point_of,
+    snap_ok,
+)
 
 U = GRID  # 1.27 mm
 

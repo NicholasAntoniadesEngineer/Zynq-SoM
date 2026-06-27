@@ -9,7 +9,12 @@ from __future__ import annotations
 from schgen.core.sexpr import Sym
 
 from .constants import (
-    ORIGIN_X, ORIGIN_Y, CONN_MATING_FACE, _CONN_DESC, _INT_DESC, _SW_DESC,
+    _CONN_DESC,
+    _INT_DESC,
+    _SW_DESC,
+    CONN_MATING_FACE,
+    ORIGIN_X,
+    ORIGIN_Y,
 )
 from .mating_face import _inst_courtyard
 
@@ -475,7 +480,11 @@ def _declutter_refdes(model, uid, doc: list) -> int:
         if fat is None:
             continue
         fx, fy = float(fat[1]), float(fat[2])
-        frot = float(fat[3]) if (len(fat) > 3 and isinstance(fat[3], (int, float))) else 0.0
+        frot = (
+            float(fat[3])
+            if (len(fat) > 3 and isinstance(fat[3], (int, float)))
+            else 0.0
+        )
         a = math.radians(frot)
         ca, sa = math.cos(a), math.sin(a)
         flay = _sub(node, "layer")
@@ -502,7 +511,7 @@ def _declutter_refdes(model, uid, doc: list) -> int:
             # spot (U11001 rot-90: CCW x=85.71 vs KiCad x=71.49), so the declutter
             # never saw its real silk collision. Both sides now use the CW form
             # (the B.Cu mirror collapses to the same form here since lx=0).
-            if bottom:                          # B.Cu fp is mirrored: fp+R(-frot)(lx,ly)
+            if bottom:                          # B.Cu fp mirrored: fp+R(-frot)(lx,ly)
                 bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
             else:
                 bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca

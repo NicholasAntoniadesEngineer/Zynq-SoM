@@ -234,7 +234,7 @@ class Circuit:
         mod = _ilu.module_from_spec(spec)
         spec.loader.exec_module(mod)          # type: ignore[union-attr]
         if ref is None:
-            ref = self.auto_ref((getattr(mod, "PREFIX", "U") or "U"))
+            ref = self.auto_ref(getattr(mod, "PREFIX", "U") or "U")
         fields = {"LCSC": getattr(mod, "LCSC", "") or (lcsc or "")}
         if lib_id is not None:
             fields["MPN"] = mod.MPN
@@ -380,7 +380,7 @@ class Circuit:
         return self.port_types.get(net, PortType())
 
     # ---- abstract-port binding (reusable-subsystem contract) ----------------
-    def bind(self, mapping: dict[str, str]) -> "Circuit":
+    def bind(self, mapping: dict[str, str]) -> Circuit:
         """Rename this circuit's externally-visible net names IN PLACE.
 
         This is the binding half of the reusable-subsystem contract: a
@@ -412,7 +412,7 @@ class Circuit:
         name unless they were already the same net (that would silently merge
         two distinct nets — a LAW-0 short). Returns ``self`` for chaining.
         """
-        for abstract, real in mapping.items():
+        for abstract, _real in mapping.items():
             net = self.nets.get(abstract)
             if net is None:
                 raise CircuitError(
@@ -779,7 +779,7 @@ class Circuit:
         return r
 
     # ---- pagination support (DEF-J: auto-split a congested sheet) -----------
-    def subset(self, refs: set[str], *, page: int) -> "Circuit":
+    def subset(self, refs: set[str], *, page: int) -> Circuit:
         """A child Circuit holding exactly ``refs`` plus every net among them.
 
         The placer's auto-paginator (place.partition_pages) calls this to split

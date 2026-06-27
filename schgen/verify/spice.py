@@ -347,8 +347,8 @@ def _buck_fb(sheet: str, c, res: Result) -> None:
     LM61460) checks against the RIGHT reference. The FB net is found by
     topology (the regulator's SIGNAL net carrying the 2-R divider), not a
     fixed pin number, since each part numbers FB differently."""
-    from schgen.verify.powertree import _detect_regs
     from schgen.generate.bringup_facts import FB_VREF
+    from schgen.verify.powertree import _detect_regs
 
     class _One:
         def __init__(self, name, circuit):
@@ -493,7 +493,7 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
             continue
         vz_lo, _vz_nom, vz_hi = ZENER_5V1_VZ[mpn]
 
-        def en_at(vin: float, vz_test: float) -> float:
+        def en_at(vin: float, vz_test: float, r_ohm: float = r_ohm) -> float:
             # zener off below its near-zero-current knee: EN = vin - I_hys*R
             vz_knee = vz_test - ZENER_5V1_IZT * ZENER_5V1_ZZT
             en_open = vin - TPS54302_EN_IHYS * r_ohm
@@ -570,7 +570,6 @@ def run_ngspice(res: Result) -> None:
                       ch.detail)
         v = re.search(r"@ ([\d.]+) V", ch.detail)
         if ch.kind == "fb_divider":
-            m2 = re.search(r"= ([\d.eE+-]+)g?/([\d.eE+-]+)", ch.detail)
             continue   # FB law is algebraic on VREF, not a 2-R network op
         if not m or not v:
             continue

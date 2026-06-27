@@ -11,7 +11,11 @@ from schgen.core import sexpr
 from schgen.core.sexpr import Sym
 
 from .constants import (
-    _FOOTPRINT_ALIASES, CONN_MATING_FACE, _INT_DESC, _SW_DESC, _FOUR_LAYER,
+    _FOOTPRINT_ALIASES,
+    _FOUR_LAYER,
+    _INT_DESC,
+    _SW_DESC,
+    CONN_MATING_FACE,
 )
 
 

@@ -31,7 +31,8 @@ def test_power_pin_name_inference():
     assert design_rules.is_power_pin_name("VCC_3V3")
     assert not design_rules.is_power_pin_name("VSS")        # ground, not a supply
     assert not design_rules.is_power_pin_name("VOUT")       # output rail, not an input
-    assert not design_rules.is_power_pin_name("VLAN")       # VL prefix must not over-match
+    # VL prefix must not over-match
+    assert not design_rules.is_power_pin_name("VLAN")
     assert not design_rules.is_power_pin_name("")
 
 

@@ -36,10 +36,15 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from schgen.generate.pcb import (PcbModel, ORIGIN_X, ORIGIN_Y, CONN_MATING_FACE,
-                                 EDGE_FLUSH_MM, _inst_courtyard,
-                                 _mating_face_out_dir)
-
+from schgen.generate.pcb import (
+    CONN_MATING_FACE,
+    EDGE_FLUSH_MM,
+    ORIGIN_X,
+    ORIGIN_Y,
+    PcbModel,
+    _inst_courtyard,
+    _mating_face_out_dir,
+)
 
 # overlap (mm^2 of courtyard area inside the SoM core) below this is numerical
 # touch from grid snap, not a real placement under the module.
@@ -97,7 +102,8 @@ class MechResult:
         sc = self.som_core
         if sc:
             L.append(f"  SoM module-body core: ({sc[0]:.1f},{sc[1]:.1f}).."
-                     f"({sc[2]:.1f},{sc[3]:.1f}) mm — bottom-passives-only, TOP keepout")
+                     f"({sc[2]:.1f},{sc[3]:.1f}) mm — "
+                     f"bottom-passives-only, TOP keepout")
         L.append(f"  off-board connectors: {self.n_connectors} "
                  f"({len(self.bad_connectors)} mis-placed)")
         for ref, mpn, edge, rot, face_dir, flush, ok in self.connectors:

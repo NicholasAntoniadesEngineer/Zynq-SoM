@@ -33,9 +33,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from schgen.generate.pcb import (PcbModel, ORIGIN_X, ORIGIN_Y, CONN_MATING_FACE,
-                                 _inst_pad_bbox)
-
+from schgen.generate.pcb import (
+    CONN_MATING_FACE,
+    PcbModel,
+    _inst_pad_bbox,
+)
 
 # overmold-family -> minimum required edge-to-edge gap (mm) between two of that
 # family's connectors mating SIMULTANEOUSLY on the same edge. The value is the

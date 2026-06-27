@@ -32,8 +32,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from schgen.generate import bringup_facts as bf
 from schgen.core.link import load_subsystem
+from schgen.generate import bringup_facts as bf
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "carrier" / "firmware" / "sc"
@@ -431,7 +431,7 @@ def gen_sc_tables_c(m: Model) -> str:
 
     # i2c device map
     L.append("const sc_i2c_dev_t sc_i2c_devices[SC_I2C_DEV_COUNT] = {")
-    for macro, label, cmac in _i2c_rows(m):
+    for _macro, label, cmac in _i2c_rows(m):
         L.append(f"    {{ \"{label}\", {cmac} }},")
     L.append("};")
     return "\n".join(L) + "\n"
@@ -821,14 +821,20 @@ def gen_sc_rtc_c(m: Model) -> str:
         " * Rev 1.4, 'EEPROM Backup Register' (cross-checked against the constiko",
         " * RV-3028-C7 Arduino library): TCE=bit5, FEDE=bit4, BSM=bits3:2,",
         " * TCR=bits1:0.  Re-confirm if your part revision differs. */",
-        "#define SC_RTC_TCR_MASK     (0x3u << 0)  /* trickle R: 00=3k 01=5k 10=9k 11=15k */",
-        "#define SC_RTC_TCR_3K       (0x0u << 0)  /* ~3k -> gentle ML1220 trickle @3.3V */",
-        "#define SC_RTC_BSM_LSM      (0x3u << 2)  /* Backup Switchover: Level Switching */",
-        "#define SC_RTC_FEDE         (0x1u << 4)  /* Fast Edge Detect (DS default 1) */",
+        "#define SC_RTC_TCR_MASK     (0x3u << 0)  "
+        "/* trickle R: 00=3k 01=5k 10=9k 11=15k */",
+        "#define SC_RTC_TCR_3K       (0x0u << 0)  "
+        "/* ~3k -> gentle ML1220 trickle @3.3V */",
+        "#define SC_RTC_BSM_LSM      (0x3u << 2)  "
+        "/* Backup Switchover: Level Switching */",
+        "#define SC_RTC_FEDE         (0x1u << 4)  "
+        "/* Fast Edge Detect (DS default 1) */",
         "#define SC_RTC_TCE          (0x1u << 5)  /* Trickle Charge Enable */",
         "",
-        "#define SC_RTC_CTRL1_EERD   (0x1u << 3)  /* 1 = disable auto EEPROM refresh */",
-        "#define SC_RTC_EECMD_UPDATE 0x11u        /* 'update all configuration EEPROM' */",
+        "#define SC_RTC_CTRL1_EERD   (0x1u << 3)  "
+        "/* 1 = disable auto EEPROM refresh */",
+        "#define SC_RTC_EECMD_UPDATE 0x11u        "
+        "/* 'update all configuration EEPROM' */",
         "",
         "static int rtc_w(uint8_t reg, uint8_t val) {",
         "    uint8_t b[2] = { reg, val };",
@@ -846,10 +852,12 @@ def gen_sc_rtc_c(m: Model) -> str:
         "    /* 2. set TCE + 3k series + fast-edge + level switchover, preserving",
         "     *    every other bit (read-modify-write, not a raw value). */",
         "    bk &= (uint8_t)~SC_RTC_TCR_MASK;",
-        "    bk |= (uint8_t)(SC_RTC_TCE | SC_RTC_FEDE | SC_RTC_BSM_LSM | SC_RTC_TCR_3K);",
+        "    bk |= (uint8_t)(SC_RTC_TCE | SC_RTC_FEDE "
+        "| SC_RTC_BSM_LSM | SC_RTC_TCR_3K);",
         "    /* 3. disable auto config-EEPROM refresh (EERD=1) before the update. */",
         "    if (rtc_r(SC_RTC_REG_CTRL1, &c1) != 0) return -1;",
-        "    if (rtc_w(SC_RTC_REG_CTRL1, (uint8_t)(c1 | SC_RTC_CTRL1_EERD)) != 0) return -1;",
+        "    if (rtc_w(SC_RTC_REG_CTRL1, (uint8_t)(c1 | SC_RTC_CTRL1_EERD)) "
+        "!= 0) return -1;",
         "    /* 4. write the new value into the RAM mirror. */",
         "    if (rtc_w(SC_RTC_REG_EEBACKUP, bk) != 0) return -1;",
         "    /* 5. commit RAM -> EEPROM: EECMD 0x00 then 0x11 (update all config). */",
@@ -857,7 +865,8 @@ def gen_sc_rtc_c(m: Model) -> str:
         "    if (rtc_w(SC_RTC_REG_EECMD, SC_RTC_EECMD_UPDATE) != 0) return -1;",
         "    sc_delay_ms(20);   /* config-EEPROM write latency (~16 ms typ). */",
         "    /* 6. re-enable auto refresh (EERD=0). */",
-        "    if (rtc_w(SC_RTC_REG_CTRL1, (uint8_t)(c1 & ~SC_RTC_CTRL1_EERD)) != 0) return -1;",
+        "    if (rtc_w(SC_RTC_REG_CTRL1, (uint8_t)(c1 & ~SC_RTC_CTRL1_EERD)) "
+        "!= 0) return -1;",
         "    sc_log(\"RV-3028 trickle charger enabled (ML1220, ~3k)\");",
         "    return 0;",
         "}",
@@ -1028,11 +1037,15 @@ def gen_readme(m: Model, files: list[str]) -> str:
         "| file | role |",
         "|---|---|",
         "| `sc_hal.h` | the platform-op abstraction + the Zephyr port note |",
-        "| `sc_tables.h` / `sc_tables.c` | netlist-derived tables: rail step table, module gates, I2C device map |",
-        "| `sc_seq.h` / `sc_seq.c` | the portable rail-sequencing state machine (step table + stepper) |",
-        "| `sc_wdt.h` / `sc_wdt.c` | TPS3823 watchdog kick, with the C2 power-up guard |",
+        "| `sc_tables.h` / `sc_tables.c` | netlist-derived tables: rail step "
+        "table, module gates, I2C device map |",
+        "| `sc_seq.h` / `sc_seq.c` | the portable rail-sequencing state machine "
+        "(step table + stepper) |",
+        "| `sc_wdt.h` / `sc_wdt.c` | TPS3823 watchdog kick, with the C2 "
+        "power-up guard |",
         "| `sc_pd.h` / `sc_pd.c` | FUSB302B PD negotiate entry points (hooks) |",
-        "| `sc_app.c` | a reference bring-up flow tying it together (C2-correct order) |",
+        "| `sc_app.c` | a reference bring-up flow tying it together "
+        "(C2-correct order) |",
         "| `sc_hal_zephyr.c.txt` | commented reference Zephyr HAL port |",
         "",
         "## Derived rail-sequencing order",
@@ -1046,7 +1059,7 @@ def gen_readme(m: Model, files: list[str]) -> str:
                  f"({mv} mV, EN `{st.enable}`)")
     L += [
         "",
-        f"Always-on (pre-PD, up before sequencing): "
+        "Always-on (pre-PD, up before sequencing): "
         + ", ".join(f"`{r}`" for r in m.always_on) + ".",
         "",
         "Then the SY6280 module load switches, one at a time:",

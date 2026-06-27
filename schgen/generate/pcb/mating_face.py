@@ -13,7 +13,11 @@ from schgen.core import sexpr
 from schgen.core.sexpr import Sym
 
 from .constants import (
-    FootprintInst, PcbModel, _ROT_TABLES, _ROT_FACE_POS_Y, _FACE_VEC,
+    _FACE_VEC,
+    _ROT_FACE_POS_Y,
+    _ROT_TABLES,
+    FootprintInst,
+    PcbModel,
 )
 from .footprint import _footprint_bbox
 
@@ -176,7 +180,9 @@ def _inst_pad_bbox(inst: FootprintInst) -> tuple[float, float, float, float]:
             round(inst.x + pb[2], 3), round(inst.y + pb[3], 3))
 
 
-def net_pad_positions(model: PcbModel) -> dict[str, list[tuple[float, float, str, str]]]:
+def net_pad_positions(
+    model: PcbModel,
+) -> dict[str, list[tuple[float, float, str, str]]]:
     """net name -> [(x, y, ref, sheet), ...] pad centers in the board page
     frame, for every REAL net (skips no-net + the unconnected- placeholders).
     Used to draw the unrouted airwires and to budget cross-subsystem nets."""

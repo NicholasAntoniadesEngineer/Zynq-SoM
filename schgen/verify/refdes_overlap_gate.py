@@ -102,8 +102,6 @@ def _collect(pcb_path: Path, layer: str):
         # the top compose: fp + R(-frot)·(lx,ly), verified vs the KiCad renderer.
         # (On THIS board every B.SilkS ref has lx=0 so the two only differ in the
         # frot=90 y-term, but the mirror must be right for any lx!=0 part.)
-        flay = _sub(node, "layer")
-        bottom = flay is not None and flay[1] == "B.Cu"
         for c in node:
             if not (isinstance(c, list) and len(c) > 2 and c[0] == "property"
                     and c[1] == "Reference"):

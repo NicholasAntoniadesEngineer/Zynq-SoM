@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import pytest
 
-from schgen.generate.firmware import ID_EEPROM_BASE, RV3028_ADDR, _id_eeprom_addr
 from schgen.core.link import load_subsystem
 from schgen.core.model import Circuit
+from schgen.generate.firmware import ID_EEPROM_BASE, RV3028_ADDR, _id_eeprom_addr
 
 
 @pytest.fixture(scope="module")

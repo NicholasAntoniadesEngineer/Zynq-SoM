@@ -141,7 +141,8 @@ REG_SPECS: dict[str, RegSpec] = {
     # LM61460 re-spec). Do NOT remove it without updating that test (audit 2026-06-20
     # flagged removal as "not proven safe" — and it broke the test).
     "TPS54302": RegSpec("buck", 3.0, eff=0.90, in_pin="3", out_pin="2",
-                        note="TI 3 A synchronous buck (SW->L->rail); thermal-gate test fixture"),
+                        note="TI 3 A synchronous buck (SW->L->rail); "
+                             "thermal-gate test fixture"),
     # power.py +5V buck U1 — RE-SPEC'd (wt/buck) from the LMR33630 (3 A) to the
     # LM61460 (6 A): the +5V chain is the board's heaviest converter (2.95 A),
     # which ran the old 3 A part at 98% with no headroom. 6 A -> ~2x margin.
@@ -685,7 +686,7 @@ def render_svg(res: Result, out: Path) -> Path:
                 if depth.get(reg.vout, -1) < d:
                     depth[reg.vout] = d
                     changed = True
-    for s, _r, a, b in res.bridges:
+    for _s, _r, a, b in res.bridges:
         if a in depth and b not in depth:
             depth[b] = depth[a] + 1
     orphans = [r for r in sorted(res.rails) if r not in depth]
@@ -734,7 +735,7 @@ def render_svg(res: Result, out: Path) -> Path:
                  f'height="14" fill="white" fill-opacity="0.85"/>')
         e.append(f'<text x="{bx - 104}" y="{by - 5}" '
                  f'fill="{color}">{_esc(label)}</text>')
-    for s, _r, a, b in res.bridges:
+    for _s, _r, a, b in res.bridges:
         if a not in pos or b not in pos:
             continue
         x0, y0 = pos[a]

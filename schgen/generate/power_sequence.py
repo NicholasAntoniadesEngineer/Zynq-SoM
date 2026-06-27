@@ -32,7 +32,7 @@ import argparse
 from pathlib import Path
 
 from schgen.verify import powertree
-from schgen.verify.powertree import Reg, Result, SOURCES, rail_volts
+from schgen.verify.powertree import SOURCES, Reg, Result, rail_volts
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "carrier" / "docs" / "power_sequence.svg"
@@ -271,8 +271,12 @@ def generate(sheets, res: Result | None = None,
 
 
 def cmd_power_sequence(args: argparse.Namespace) -> int:
-    from schgen.core.link import (all_subsystem_paths, link,
-                                  load_som_contract, load_subsystem)
+    from schgen.core.link import (
+        all_subsystem_paths,
+        link,
+        load_som_contract,
+        load_subsystem,
+    )
     names = [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
     link(sheets, load_som_contract())

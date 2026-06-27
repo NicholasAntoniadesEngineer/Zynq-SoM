@@ -15,18 +15,32 @@ from schgen.core.sexpr import Sym
 from schgen.output.emit import stable_uuid
 
 from .constants import (
-    REPO_ROOT, CARRIER, ORIGIN_X, ORIGIN_Y, POWER_CLASS, POWER_TRACK_MM,
-    POWER_CLEARANCE_MM, DEFAULT_TRACK_MM, DEFAULT_CLEARANCE_MM, PcbModel,
+    CARRIER,
+    DEFAULT_CLEARANCE_MM,
+    DEFAULT_TRACK_MM,
+    ORIGIN_X,
+    ORIGIN_Y,
+    POWER_CLASS,
+    POWER_CLEARANCE_MM,
+    POWER_TRACK_MM,
+    REPO_ROOT,
+    PcbModel,
+)
+from .embed import (
+    _edge_rect,
+    _embed_footprint,
+    _layers_node,
+    _som_body_silk,
+    _som_keepout_zone,
+    _stackup_node,
 )
 from .footprint import board_parts
-from .embed import (
-    _layers_node, _stackup_node, _edge_rect, _som_body_silk,
-    _som_keepout_zone, _embed_footprint,
-)
-from .silk import (
-    _connector_descriptors, _declutter_refdes, _hide_undersom_bottom_refs,
-)
 from .placement import build_model
+from .silk import (
+    _connector_descriptors,
+    _declutter_refdes,
+    _hide_undersom_bottom_refs,
+)
 
 
 def emit_pcb(model: PcbModel, out_path: Path) -> Path:
@@ -486,10 +500,12 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
     }
     if ratsnest:
         from schgen.generate import ratsnest as rn_mod
-        from schgen.verify import ratsnest_gate
-        from schgen.verify import placement_mech
-        from schgen.verify import connector_model_gate
-        from schgen.verify import connector_spacing_gate
+        from schgen.verify import (
+            connector_model_gate,
+            connector_spacing_gate,
+            placement_mech,
+            ratsnest_gate,
+        )
         result["ratsnest"] = rn_mod.generate(model)
         result["ratsnest_gate"] = ratsnest_gate.check(model)
         # LAW-6 mechanical/use-case gate — runs on the SAME placed model (no

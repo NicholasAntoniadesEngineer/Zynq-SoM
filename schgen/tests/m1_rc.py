@@ -11,9 +11,17 @@ import subprocess
 import sys
 from pathlib import Path
 
-from schgen.output.emit import HierLabel, Junction, NoConnect, PlacedDesign, PlacedPart, PlacedPower, Wire, emit
 from schgen.core.model import Circuit
 from schgen.core.symbols import Library, pin_page_position
+from schgen.output.emit import (
+    HierLabel,
+    Junction,
+    PlacedDesign,
+    PlacedPart,
+    PlacedPower,
+    Wire,
+    emit,
+)
 from schgen.verify import netlist_gate
 
 OUT = Path("/tmp/schgen_m1/rc.kicad_sch")

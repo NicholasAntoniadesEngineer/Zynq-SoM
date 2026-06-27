@@ -22,9 +22,8 @@ from pathlib import Path
 import pytest
 
 from schgen.generate import pcb
-from schgen.generate.pcb import FootprintInst, PcbModel, ORIGIN_X, ORIGIN_Y
+from schgen.generate.pcb import ORIGIN_X, ORIGIN_Y, FootprintInst, PcbModel
 from schgen.verify import connector_model_gate as cmg
-
 
 # ---- the static contract: the current footprints are all clean ----------------
 

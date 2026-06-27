@@ -164,7 +164,8 @@ def _parse_symbol(lib_id: str, block: list) -> SymbolDef:
     pn = sexpr.find(block, "pin_names")
     pnames_hidden = bool(pn and (sexpr.find(pn, "hide") or sexpr.Sym("hide") in pn))
     pnum = sexpr.find(block, "pin_numbers")
-    pnums_hidden = bool(pnum and (sexpr.find(pnum, "hide") or sexpr.Sym("hide") in pnum))
+    pnums_hidden = bool(
+        pnum and (sexpr.find(pnum, "hide") or sexpr.Sym("hide") in pnum))
 
     def walk(node: list) -> None:
         nonlocal xs, ys
@@ -190,13 +191,16 @@ def _parse_symbol(lib_id: str, block: list) -> SymbolDef:
             for tag in ("start", "end"):
                 pt = sexpr.find(r, tag)
                 if pt:
-                    xs.append(float(pt[1])); ys.append(float(pt[2]))
+                    xs.append(float(pt[1]))
+                    ys.append(float(pt[2]))
         for poly in sexpr.find_all(node, "polyline"):
             ptsl = sexpr.find(poly, "pts")
             for xy in sexpr.find_all(ptsl or [], "xy"):
-                xs.append(float(xy[1])); ys.append(float(xy[2]))
+                xs.append(float(xy[1]))
+                ys.append(float(xy[2]))
         for c in sexpr.find_all(node, "circle"):
-            ctr = sexpr.find(c, "center"); rad = sexpr.find(c, "radius")
+            ctr = sexpr.find(c, "center")
+            rad = sexpr.find(c, "radius")
             if ctr and rad:
                 xs += [float(ctr[1]) - float(rad[1]), float(ctr[1]) + float(rad[1])]
                 ys += [float(ctr[2]) - float(rad[1]), float(ctr[2]) + float(rad[1])]
@@ -204,7 +208,8 @@ def _parse_symbol(lib_id: str, block: list) -> SymbolDef:
             for tag in ("start", "mid", "end"):
                 pt = sexpr.find(a, tag)
                 if pt:
-                    xs.append(float(pt[1])); ys.append(float(pt[2]))
+                    xs.append(float(pt[1]))
+                    ys.append(float(pt[2]))
 
     walk(block)
     if not xs:   # body fallback: hull of pin roots

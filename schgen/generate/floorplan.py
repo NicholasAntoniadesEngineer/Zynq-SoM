@@ -258,7 +258,7 @@ _FIXED_DIMS = {
     "D_SMA": (4.3, 2.6),
     "D_SMB": (5.4, 3.6),
     "TestPoint_Pad_D1.5mm": (1.5, 1.5),
-    "MountingHole_3.2mm_M3_Pad": (6.4, 6.4),   # M3 plated pad OD (lib has no parts/ folder)
+    "MountingHole_3.2mm_M3_Pad": (6.4, 6.4),   # M3 plated pad OD (no parts/ folder)
 }
 _DEFAULT_DIMS = (1.6, 0.8)      # unspecified passive
 
@@ -645,7 +645,7 @@ def load_floorplan_spec(path: Path = FLOORPLAN_SPEC,
                          source=str(path.relative_to(REPO_ROOT)))
 
 
-def export_floorplan_spec(plan: "Plan", path: Path = FLOORPLAN_SPEC) -> Path:
+def export_floorplan_spec(plan: Plan, path: Path = FLOORPLAN_SPEC) -> Path:
     """Write the CURRENT derived plan as a carrier/floorplan.json the user can
     edit — a round-trip seed. Edge sheets are grouped by edge (each list in the
     placed order along that edge); interior sheets carry their derived anchor
@@ -773,10 +773,10 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
         # near J1's x/y, etc. — the lever that holds the LAW-5 cross-subsystem
         # airwire under budget. Pinned blocks sort first (by their declared
         # slot), then auto blocks by target; deterministic, name breaks ties.
-        def _ord_key(bb: Block) -> tuple:
+        def _ord_key(bb: Block, _edge: str = edge) -> tuple:
             if bb.order_hint is not None:
                 return (0, float(bb.order_hint), bb.name)
-            return (1, _edge_target(bb, edge, plan), bb.name)
+            return (1, _edge_target(bb, _edge, plan), bb.name)
         blocks = sorted(placed[edge], key=_ord_key)
         if not blocks:
             continue
@@ -808,7 +808,9 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
         wts = [max(sum(b.j_aff.values()), 0.0) + 0.05 for b in blocks]
         tgts = [_edge_target(b, edge, plan) for b in blocks]
         wsum = sum(wts)
-        start = sum(w * (t - o) for w, t, o in zip(wts, tgts, offs)) / wsum
+        start = sum(
+            w * (t - o) for w, t, o in zip(wts, tgts, offs, strict=False)
+        ) / wsum
         start = max(lo, min(start, hi - total))   # clamp inside the edge
         pos = start
         for i, b in enumerate(blocks):
@@ -1248,7 +1250,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # finds a smaller board the strict `schgen board` gate then re-proves — it never
     # relaxes a gate. Deterministic: a fixed 1 mm grid, smallest-area wins.
     FINE_SNAP = 1.0
-    a0, bw0, bh0 = _area, bw, bh
+    bw0, bh0 = bw, bh
     nsteps = int(REFINE_SPAN / FINE_SNAP) + 1
     ws = [round(bw0 - k * FINE_SNAP, 1) for k in range(0, nsteps)]
     hs = [round(bh0 - k * FINE_SNAP, 1) for k in range(0, nsteps)]
@@ -1278,7 +1280,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
     return plan
 
 
-def _outline_note(som: SomGeom, seed: "Outline", w: float, h: float,
+def _outline_note(som: SomGeom, seed: Outline, w: float, h: float,
                   grow: float, fit_grow: float = 0.0,
                   est_real: float = 0.0, budget: float = 0.0) -> str:
     extra = ""
@@ -1553,7 +1555,6 @@ def build_notes(plan: Plan, sheets, regs) -> list[Note]:
     for b in ordered:
         c = by_name[b.name]
         nets = set(c.nets)
-        kinds = {pt.kind for pt in c.port_types.values()}
         conn_vals = {v for _r, v, _w, _h in b.conns}
         if "TYPE-C-31-M-12" in conn_vals and "+VIN" in nets:
             efuse = _has_value(c, "TPS2594")
@@ -1789,7 +1790,7 @@ def render_svg(plan: Plan, notes: list[Note], out: Path) -> Path:
         # equal gaps between multiple connectors (to scale)
         n_c = len(b.conns)
         run = sum(c[2] for c in b.conns)
-        for k, (_ref, val, cw, cd) in enumerate(b.conns):
+        for k, (_ref, _val, cw, cd) in enumerate(b.conns):
             if b.edge in ("N", "S", ""):
                 gap = (b.w - run) / (n_c + 1)
                 cx0 = b.x + gap * (k + 1) + sum(c[2] for c in b.conns[:k])
@@ -2076,8 +2077,13 @@ def render_md(plan: Plan, notes: list[Note], sheets, regs,
 # ---- entry points -----------------------------------------------------------------
 
 def generate(sheets=None, link_result=None) -> list[Path]:
+    from schgen.core.link import (
+        all_subsystem_paths,
+        link,
+        load_som_contract,
+        load_subsystem,
+    )
     from schgen.verify import powertree
-    from schgen.core.link import all_subsystem_paths, link, load_som_contract, load_subsystem
     if sheets is None:
         sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     if link_result is None:
@@ -2096,9 +2102,13 @@ def cmd_floorplan(args: argparse.Namespace) -> int:
         # editable carrier/floorplan.json. Built WITHOUT the spec influencing the
         # result on a clean export (so the seed reflects the pure auto layout);
         # if a spec already exists it still validates against the sheet names.
+        from schgen.core.link import (
+            all_subsystem_paths,
+            link,
+            load_som_contract,
+            load_subsystem,
+        )
         from schgen.verify import powertree
-        from schgen.core.link import all_subsystem_paths, link, \
-            load_som_contract, load_subsystem
         sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
         link_result = link(sheets, load_som_contract())
         regs = powertree.analyze(sheets).regs

@@ -11,7 +11,16 @@ from __future__ import annotations
 
 import pytest
 
-from schgen.core.model import Circuit, CircuitError, NetClass, PinRef, PortType, _default_footprint, _passive_uF, pair_polarity
+from schgen.core.model import (
+    Circuit,
+    CircuitError,
+    NetClass,
+    PinRef,
+    PortType,
+    _default_footprint,
+    _passive_uF,
+    pair_polarity,
+)
 
 
 # --------------------------------------------------------------------------- #

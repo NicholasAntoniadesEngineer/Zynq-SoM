@@ -44,7 +44,8 @@ def test_silent_float_detected():
     # 4-pin IC: pins 1,2 netted, pin 3 NC, pin 4 left FLOATING -> flagged.
     c = Circuit("t", "t")
     c.part("U1", "X:Y", "PART")
-    c.net("A", "U1.1"); c.net("A", "U1.2")
+    c.net("A", "U1.1")
+    c.net("A", "U1.2")
     c.nc("U1.3")
     r = pin_completeness.run([_sheet("t", c)], lib=_Lib(), allowlist={})
     assert not r.ok, "pin 4 (neither netted nor NC) must be a SILENT FLOAT"
@@ -57,8 +58,10 @@ def test_fully_accounted_part_passes():
     # every pin netted or NC -> no float.
     c = Circuit("t", "t")
     c.part("U1", "X:Y", "PART")
-    c.net("A", "U1.1"); c.net("A", "U1.2")
-    c.net("B", "U1.3"); c.net("B", "U1.4")
+    c.net("A", "U1.1")
+    c.net("A", "U1.2")
+    c.net("B", "U1.3")
+    c.net("B", "U1.4")
     r = pin_completeness.run([_sheet("t", c)], lib=_Lib(), allowlist={})
     assert r.ok, r.floats
     assert not r.floats
@@ -70,7 +73,8 @@ def test_allowlist_splits_seed_vs_new():
     # pin 3 NC and in the allowlist -> [seed]; pin 4 NC but not -> [new].
     c = Circuit("t", "t")
     c.part("U1", "X:Y", "PART")
-    c.net("A", "U1.1"); c.net("A", "U1.2")
+    c.net("A", "U1.1")
+    c.net("A", "U1.2")
     c.nc("U1.3", "U1.4")
     r = pin_completeness.run([_sheet("t", c)], lib=_Lib(),
                              allowlist={"t": {"U1": ["3"]}})

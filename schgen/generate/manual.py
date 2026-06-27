@@ -17,9 +17,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from schgen.generate import bringup_facts as bf
 from schgen.core.link import all_subsystem_paths, load_subsystem
 from schgen.core.model import Circuit
+from schgen.generate import bringup_facts as bf
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "carrier" / "docs" / "BRINGUP.md"
@@ -199,8 +199,8 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("")
     L.append("With **all DIPs open**, expect:")
     L.append("")
-    L.append(f"- `+VIN` stays at the **5 V default contract** at first power "
-             f"and the board")
+    L.append("- `+VIN` stays at the **5 V default contract** at first power "
+             "and the board")
     L.append("  runs **reduced on 5 V**. The FUSB302B is a PD **PHY only** — "
              "it does NOT")
     L.append("  negotiate by itself; reaching the negotiated "
@@ -349,8 +349,8 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("")
     L.append("Software vetoes for the module cells live on the "
              f"TCA9535 expander at I2C `0x{exp.addr:02X}`")
-    L.append("(`bringup_rails.{}`; POR state = all inputs = DIP rules). "
-             "Port map is generated".format(exp.ref))
+    L.append(f"(`bringup_rails.{exp.ref}`; POR state = all inputs = DIP rules). "
+             "Port map is generated")
     L.append("into `carrier/firmware/zynq_carrier_contract.h` (`schgen "
              "firmware`).")
     L.append("")

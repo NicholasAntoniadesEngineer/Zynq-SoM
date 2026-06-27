@@ -31,13 +31,13 @@ DEVKIT_DIR = REPO_ROOT / "examples" / "devkit_mini"
 def build_devkit(render: bool = True) -> bool:
     """Build examples/devkit_mini -> schematics + hierarchy + renders, and prove
     the netlist (board gate + cc gate). Returns True iff every gate passes."""
-    from schgen.core.symbols import Library
-    from schgen.layout import place
-    from schgen.output.emit import (HierLabel, Junction as EJunction,
-                                     PlacedDesign, Wire, emit)
-    from schgen.generate import board as board_mod
-    from schgen.verify import cc_gate, netlist_gate
     from examples.devkit_mini import devkit_mini
+    from schgen.core.symbols import Library
+    from schgen.generate import board as board_mod
+    from schgen.layout import place
+    from schgen.output.emit import Junction as EJunction
+    from schgen.output.emit import PlacedDesign, Wire, emit
+    from schgen.verify import cc_gate, netlist_gate
 
     lib = Library()
     sch_dir = DEVKIT_DIR / "schematic"

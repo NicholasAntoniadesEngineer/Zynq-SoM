@@ -336,7 +336,8 @@ def _render(entries: list[PinEntry], live: dict, refs: tuple[str, ...],
         f"# Device: {live['value']} ({live['zynq_ref']} on the SoM)",
         "# Sources (all programmatic, zero hand-typed pins):",
         f"#   ball map : {rel(som_sch)} netlist (kicad-cli, at generation time)",
-        f"#   contract : {rel(contract_path)} (cross-checked pin-for-pin, stale = build FAIL)",
+        f"#   contract : {rel(contract_path)} "
+        "(cross-checked pin-for-pin, stale = build FAIL)",
         "#   types    : carrier subsystems' typed-port registry",
         "# VCCO rail map (carrier/PLAN.md): "
         + ", ".join(f"bank {b} = {BANK_RAIL[b]}" for b in banks),

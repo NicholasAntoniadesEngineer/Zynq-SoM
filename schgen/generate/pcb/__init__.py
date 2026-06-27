@@ -79,12 +79,12 @@ from schgen.core import sexpr as sexpr
 from schgen.core.sexpr import Sym as Sym
 
 from . import constants as _constants
+from . import embed as _embed
+from . import emit as _emit
 from . import footprint as _footprint
 from . import mating_face as _mating_face
 from . import placement as _placement
-from . import embed as _embed
 from . import silk as _silk
-from . import emit as _emit
 
 # Pull every name (public AND the underscore-prefixed internals — several tests
 # and gates reach for ``pcb._rot_bbox`` / ``pcb._CONN_DESC`` / etc.) from each

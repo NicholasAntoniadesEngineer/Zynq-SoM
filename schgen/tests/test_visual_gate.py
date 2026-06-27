@@ -10,9 +10,17 @@ T-touch short (_foreign_t_touch), and text/wire box overlap (check()).
 
 from __future__ import annotations
 
-from schgen.verify.visual_gate import (Box, Junction, Seg, SheetGeometry,
-                                       _collinear_overlap, _cross,
-                                       _foreign_t_touch, _point_on_seg, check)
+from schgen.verify.visual_gate import (
+    Box,
+    Junction,
+    Seg,
+    SheetGeometry,
+    _collinear_overlap,
+    _cross,
+    _foreign_t_touch,
+    _point_on_seg,
+    check,
+)
 
 
 def test_same_net_junction_passes():

@@ -63,7 +63,7 @@ class Meta:
 
     __slots__ = ("bind_map", "expects", "_buses", "_notes")
 
-    def __init__(self, meta: "Meta | dict[str, Any] | None" = None):
+    def __init__(self, meta: Meta | dict[str, Any] | None = None):
         if isinstance(meta, Meta):
             self.bind_map = meta.bind_map
             self.expects = meta.expects

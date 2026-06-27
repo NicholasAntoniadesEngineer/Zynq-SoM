@@ -105,7 +105,8 @@ def test_compliance_cited_sheets_exist():
     for line in text.splitlines():
         if not line.startswith("## ") or "sheet" not in line:
             continue
-        # header e.g. "## 3. Gigabit Ethernet 1000BASE-T — sheets `ethernet`, `rj45_connector`"
+        # header e.g.
+        # "## 3. Gigabit Ethernet 1000BASE-T — sheets `ethernet`, `rj45_connector`"
         for tok in re.findall(r"`([a-z0-9_]+)`", line):
             cited.add(tok)
     assert cited, "no sheet citations found in COMPLIANCE headers"

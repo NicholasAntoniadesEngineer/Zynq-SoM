@@ -15,7 +15,8 @@ numbers below are JLCPCB's own impedance-calculator output for THIS stackup
 the geometry):
 
   90R  differential (USB 2.0 HS):   width 10.28 mil = 0.2611 mm, gap 8 mil = 0.2032 mm
-  100R differential (TMDS/LVDS/MIPI/MDI): width 8.08 mil = 0.2052 mm, gap 8 mil = 0.2032 mm
+  100R differential (TMDS/LVDS/MIPI/MDI): width 8.08 mil = 0.2052 mm,
+      gap 8 mil = 0.2032 mm
 
 NOTE: the often-quoted "90R at 0.127/0.127 mm" geometry belongs to the
 THINNER JLC04161H-3313 prepreg (0.0994 mm), not the 7628 stackup this

@@ -16,9 +16,11 @@ a pad NUMBER in that part's assigned footprint. A symbol pin not in the pad set
 is a VIOLATION (a guaranteed open).
 
 FOOTPRINT RESOLUTION (covers every part on the board):
-  * KiCad standard libs:    "<nick>:<name>"  -> <KICAD_FP_ROOT>/<nick>.pretty/<name>.kicad_mod
+  * KiCad standard libs:    "<nick>:<name>"  ->
+        <KICAD_FP_ROOT>/<nick>.pretty/<name>.kicad_mod
   * per-part dossiers:       "<MPN>:<MPN>"    -> parts/<MPN>/<MPN>.kicad_mod
-  * repo fp-lib-table libs:  "<nick>:<name>"  -> the .pretty dir the table maps <nick> to
+  * repo fp-lib-table libs:  "<nick>:<name>"  ->
+        the .pretty dir the table maps <nick> to
 A footprint that resolves to no file is reported as "unresolved" (informational,
 never a violation and never a crash) — a visible resolution backlog, not a
 silent pass.

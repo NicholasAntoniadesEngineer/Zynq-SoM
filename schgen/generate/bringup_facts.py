@@ -24,7 +24,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen.core.link import load_som_contract, load_subsystem
+from schgen.core.link import load_som_contract
 from schgen.core.model import Circuit, NetClass, PinRef
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -34,7 +34,7 @@ SOM_SCH = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 GATE_PIN_A, GATE_PIN_B, GATE_PIN_Y = "1", "2", "4"   # SN74LVC1G08
 SY6280_ILIM_NUMERATOR = 6800.0                       # ILIM(A) = 6800/RSET
 FB_VREF = {"TPS54302": 0.596, "LMR33630": 1.0,       # buck FB reference [V]
-           "LM61460": 1.0}                           # LM61460 Vref 1.0 V (TI SNVSBD5D 8.3.11)
+           "LM61460": 1.0}                           # LM61460 Vref 1.0V (SNVSBD5D)
 TCA9535_BASE_ADDR = 0x20                             # 0b0100_A2A1A0
 INA3221_BASE_ADDR = 0x40                             # + A0 strap decode
 FUSB302B_ADDR = 0x22                                 # fixed (onsemi DS)

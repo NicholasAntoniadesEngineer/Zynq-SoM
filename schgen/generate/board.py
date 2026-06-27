@@ -26,11 +26,20 @@ import re
 import subprocess
 from pathlib import Path
 
-from schgen.layout import place
-from schgen.layout import textmetrics as tm
-from schgen.output.emit import HierLabel, Junction as EJunction, PlacedDesign, SheetPin, SheetSymbol, Wire, emit, stable_uuid
 from schgen.core.model import Circuit, NetClass, PinRef
 from schgen.core.symbols import Library, pin_page_position
+from schgen.layout import place
+from schgen.layout import textmetrics as tm
+from schgen.output.emit import (
+    HierLabel,
+    PlacedDesign,
+    SheetPin,
+    SheetSymbol,
+    Wire,
+    emit,
+    stable_uuid,
+)
+from schgen.output.emit import Junction as EJunction
 from schgen.verify import netlist_gate
 
 _REF_RE = re.compile(r"^(#?[A-Za-z_]+?)0*(\d+)$")
@@ -319,7 +328,7 @@ def build_board(sheets, lib: Library, outdir: Path, *,
     TITLE_CLEAR = 25.4       # band reserved at the page bottom
     MARGIN = 10.16
     paper, col_geo = PAPERS[-1][0], []
-    for paper, page_w, page_h in PAPERS:
+    for paper, page_w, page_h in PAPERS:  # noqa: B007  paper escapes loop below
         usable_h = page_h - TOP_Y - TITLE_CLEAR
         if max(e[5] for e in entries) > usable_h:
             continue

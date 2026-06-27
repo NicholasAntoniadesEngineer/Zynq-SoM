@@ -50,9 +50,9 @@ import hashlib
 import json
 from pathlib import Path
 
+from schgen.core.model import NetClass
 from schgen.generate import bringup_facts as bf
 from schgen.verify import powertree, testpoints
-from schgen.core.model import NetClass
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CARRIER = REPO_ROOT / "carrier"
@@ -321,7 +321,12 @@ def generate(sheets, link_result, *,
 # ---- CLI -----------------------------------------------------------------------
 
 def cmd_manifest(args: argparse.Namespace) -> int:
-    from schgen.core.link import all_subsystem_paths, link, load_som_contract, load_subsystem
+    from schgen.core.link import (
+        all_subsystem_paths,
+        link,
+        load_som_contract,
+        load_subsystem,
+    )
     names = args.subsystems or [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
     res = link(sheets, load_som_contract())

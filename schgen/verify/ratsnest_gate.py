@@ -33,10 +33,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from schgen.core.config import CROSS_K
-from schgen.generate.pcb import (PcbModel, ORIGIN_X, ORIGIN_Y,
-                                 _inst_courtyard, _inst_pad_bbox)
 from schgen.generate import ratsnest as rn
-
+from schgen.generate.pcb import (
+    ORIGIN_X,
+    ORIGIN_Y,
+    PcbModel,
+    _inst_courtyard,
+    _inst_pad_bbox,
+)
 
 # A subsystem whose footprints' bbox area exceeds this multiple of the sum of
 # their courtyard areas is DISPERSED (scattered, not a contiguous cluster). A

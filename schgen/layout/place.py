@@ -31,13 +31,13 @@ import os
 import sys
 from dataclasses import dataclass, field
 
-from schgen.layout import route
 from schgen.core import sexpr
+from schgen.core.config import GRID
+from schgen.core.model import Circuit, NetClass, PinRef
+from schgen.core.symbols import Library, Pin, SymbolDef, pin_page_position
+from schgen.layout import route
 from schgen.layout import textmetrics as tm
 from schgen.output.emit import HierLabel, LocalLabel, NoConnect, PlacedPart, PlacedPower
-from schgen.core.config import GRID
-from schgen.core.model import Circuit, NetClass, PartitionError, PinRef
-from schgen.core.symbols import Library, Pin, SymbolDef, pin_page_position
 from schgen.verify import visual_gate
 from schgen.verify.visual_gate import Box, Junction, SheetGeometry
 
@@ -129,7 +129,7 @@ class Spacing:
     flags_dy: float = 16.51       # cluster row -> power-flag row
     flag_pitch: float = 10.16
 
-    def expanded(self) -> "Spacing":
+    def expanded(self) -> Spacing:
         def up(v: float) -> float:
             return gceil(v * 1.25)
         return Spacing(port_run=up(self.port_run),
@@ -455,7 +455,7 @@ class _Engine:
     def _plan_seg_boxes(self):
         for paths in self.pl.plans.values():
             for path in paths:
-                for a, b in zip(path, path[1:]):
+                for a, b in zip(path, path[1:], strict=False):
                     x0, x1 = sorted((a[0], b[0]))
                     y0, y1 = sorted((a[1], b[1]))
                     yield (x0 - 0.127, y0 - 0.127, x1 + 0.127, y1 + 0.127)
@@ -581,7 +581,7 @@ class _Engine:
         for ref in self.multi:
             sdef = lib.get(c.parts[ref].lib_id)
             pin_nets = [self.net_of(ref, p.number) for p in sdef.pins]
-            sig_pins = [p for p, n in zip(sdef.pins, pin_nets)
+            sig_pins = [p for p, n in zip(sdef.pins, pin_nets, strict=False)
                         if n is not None
                         and n.net_class in (NetClass.SIGNAL, NetClass.PORT)]
             has_gnd = any(n is not None and n.net_class is NetClass.GROUND
@@ -684,7 +684,6 @@ class _Engine:
 
     def _linearise(self, comp: set[str],
                    legs: dict[str, list[tuple[str, str, str]]]) -> _FloatChain:
-        c = self.c
         ends: list[tuple[str, str, str, str]] = []   # (ref, net, far, kind)
         for n in sorted(comp):
             for ref, far, fk in legs[n]:
@@ -726,7 +725,7 @@ class _Engine:
             break
         # leftover legs become hangs (caps to GND beside the chain)
         for n in sorted(comp):
-            for ref, far, fk in legs[n]:
+            for ref, _far, fk in legs[n]:
                 if ref in used:
                     continue
                 if fk == "gnd":
@@ -772,7 +771,7 @@ class _Engine:
                              f"dangling internal net")
         hangs: dict[str, list[str]] = {}
         for n in sorted(comp):
-            for ref, far, fk in legs[n]:
+            for ref, _far, fk in legs[n]:
                 if ref in used:
                     continue
                 if fk == "gnd":
@@ -1005,7 +1004,7 @@ class _Engine:
             # same-net SIGNAL/PORT pin group (stacked duplicate pads, paired
             # connector pins): bus bar on the tip column, ONE line from the
             # topmost pin
-            for (_pa, pa, _na), (_pb, pb, _nb) in zip(run, run[1:]):
+            for (_pa, pa, _na), (_pb, pb, _nb) in zip(run, run[1:], strict=False):
                 self.pl.plan(net0.name, pa, pb)
             pin0, pt0, _ = run[0]
             # a SIGNAL net COMPLETE inside this pin group (a connector
@@ -1066,7 +1065,7 @@ class _Engine:
         # are NEARER to; a direction crossing a handled (channel / trunk)
         # row — whose wire spans the whole gap — is vetoed
         hang_sgn = -1 if side == "left" else 1
-        attach_rows = [l.pin_pt[1] for l in lines if l.attach]
+        attach_rows = [ln.pin_pt[1] for ln in lines if ln.attach]
         side_rows = [pt[1] for pt in rows_all]
         if attach_rows and len(side_rows) > 1:
             veto_up = any(r < min(attach_rows) - 1e-6 for r in handled_rows)
@@ -1075,24 +1074,24 @@ class _Engine:
             d_bot = max(side_rows) - max(attach_rows)
             cands_h = sorted(((veto_up, d_top, -1), (veto_dn, d_bot, 1)))
             hang_sgn = cands_h[0][2]
-        lines.sort(key=lambda l: l.pin_pt[1], reverse=(hang_sgn > 0))
+        lines.sort(key=lambda ln: ln.pin_pt[1], reverse=(hang_sgn > 0))
         if attach_rows:
             rank_row = min(attach_rows) if hang_sgn < 0 else max(attach_rows)
             rank_pin_y = rank_row + hang_sgn * sp.hang_stub
         else:
             rank_pin_y = lines[0].pin_pt[1] + hang_sgn * sp.hang_stub
-        def label_len(l: _Line) -> float:
-            if l.net_class is NetClass.PORT:
-                return self._glabel_len(l.net)
-            return tm.text_wh(l.net)[0] + 0.7
+        def label_len(ln: _Line) -> float:
+            if ln.net_class is NetClass.PORT:
+                return self._glabel_len(ln.net)
+            return tm.text_wh(ln.net)[0] + 0.7
 
-        def is_labeled(l: _Line) -> bool:
-            if l.force_label or l.net_class is NetClass.PORT:
+        def is_labeled(ln: _Line) -> bool:
+            if ln.force_label or ln.net_class is NetClass.PORT:
                 return True
-            return (l.net_class is NetClass.SIGNAL
-                    and self._net_shared(l.net, ref)
-                    and (l.net not in self.trunks or ref in self.shunts)
-                    and self._series_of(l.net) is None)
+            return (ln.net_class is NetClass.SIGNAL
+                    and self._net_shared(ln.net, ref)
+                    and (ln.net not in self.trunks or ref in self.shunts)
+                    and self._series_of(ln.net) is None)
 
         # two-column label fan (the som-connector pattern): attach-free
         # labels on clashing adjacent rows alternate inner/outer; attach
@@ -1109,16 +1108,16 @@ class _Engine:
                    and prev_col == "inner" else "inner")
             cols[idx] = col
             prev_cy, prev_col = ln.pin_pt[1], col
-        inner_len = max((label_len(l) for i, l in enumerate(lines)
+        inner_len = max((label_len(ln) for i, ln in enumerate(lines)
                          if cols.get(i) == "inner"), default=0.0)
 
         prev_gb: tuple[float, float, float, float] | None = None
         lane_edge: float | None = None           # outermost text edge so far
 
-        def approx_box(l: _Line, ax: float):
-            ll = label_len(l)
+        def approx_box(ln: _Line, ax: float):
+            ll = label_len(ln)
             x0, x1 = (ax - ll, ax) if sgn < 0 else (ax, ax + ll)
-            return (x0, l.pin_pt[1] - 1.45, x1, l.pin_pt[1] + 1.45)
+            return (x0, ln.pin_pt[1] - 1.45, x1, ln.pin_pt[1] + 1.45)
 
         for idx, ln in enumerate(lines):
             px, py = ln.pin_pt
@@ -1417,7 +1416,7 @@ class _Engine:
         jx = jxc
         for _, pt, _ in run:
             self.pl.plan(net0.name, pt, (jx, pt[1]))
-        for y0, y1 in zip(ys, ys[1:]):
+        for y0, y1 in zip(ys, ys[1:], strict=False):
             self.pl.plan(net0.name, (jx, y0), (jx, y1))
         self.power(net0.name, jx, end_y, rot)
 
@@ -1438,14 +1437,14 @@ class _Engine:
                 edge = min(edge, b.x0) if sgn < 0 else max(edge, b.x1)
         for net2, paths in self.pl.plans.items():
             for path in paths[plans_mark.get(net2, 0):]:
-                for a, b in zip(path, path[1:]):
+                for a, b in zip(path, path[1:], strict=False):
                     if min(a[1], b[1]) < y1 and max(a[1], b[1]) > y0:
                         edge = (min(edge, a[0], b[0]) if sgn < 0
                                 else max(edge, a[0], b[0]))
         bar_x = gfloor(edge - 2 * U) if sgn < 0 else gceil(edge + 2 * U)
         for px, py in pts:
             self.pl.plan(net, (px, py), (bar_x, py))
-        for ya, yb in zip(ys, ys[1:]):
+        for ya, yb in zip(ys, ys[1:], strict=False):
             self.pl.plan(net, (bar_x, ya), (bar_x, yb))
         if self.c.nets[net].net_class is NetClass.GROUND:
             end = (bar_x, round(ys[-1] + 2 * U, 3))
@@ -1641,7 +1640,7 @@ class _Engine:
         xs = sorted(p[0] for p in pts)
         for x, y in pts:
             self.pl.plan(net, (x, y), (x, bar_y))
-        for xa, xb in zip(xs, xs[1:]):
+        for xa, xb in zip(xs, xs[1:], strict=False):
             self.pl.plan(net, (xa, bar_y), (xb, bar_y))
         mid = xs[len(xs) // 2]
         self.power(net, mid, bar_y, rot)
@@ -1739,7 +1738,7 @@ class _Engine:
             self.label(net, lx, y, 0)
         elif len(nodes) == 1:
             return
-        for xa, xb in zip(nodes, nodes[1:]):
+        for xa, xb in zip(nodes, nodes[1:], strict=False):
             self.pl.plan(net, (xa, y), (xb, y))
 
     # ---- generic part cell ----------------------------------------------------------
@@ -1838,7 +1837,7 @@ class _Engine:
 
     def _rung_of(self, net: str, trunk_jobs: dict[str, _Trunk]):
         for t in trunk_jobs.values():
-            for r, a, b in self.series:
+            for _r, a, b in self.series:
                 if {a, b} == {net, t.net}:
                     return t
         return None
@@ -1848,7 +1847,7 @@ class _Engine:
         for b in self.pl.boxes:
             if b.x0 < x1 and b.x1 > x0:
                 floor = max(floor, b.y1)
-        for (sx0, sy0, sx1, sy1) in self._plan_seg_boxes():
+        for (sx0, _sy0, sx1, sy1) in self._plan_seg_boxes():
             if sx0 < x1 and sx1 > x0:
                 floor = max(floor, sy1)
         return floor
@@ -1892,9 +1891,8 @@ class _Engine:
 
     # ---- trunk builder -----------------------------------------------------------
     def _build_trunk(self, t: _Trunk) -> None:
-        sp = self.sp
         votes = 0
-        for pt, side in t.direct:
+        for _pt, side in t.direct:
             votes += 1 if side == "top" else -1 if side == "bottom" else 0
         for (_n, _pt, k, _legs, _row) in t.rungs:
             if k == "bottom_far":
@@ -2042,7 +2040,7 @@ class _Engine:
         # terminators (caps to a ground-class net) at whichever outer end
         # grows the sheet LESS — the band is exactly the trunk row plus the
         # cap's own drop, so far-away rows cannot push the cap off the page
-        for i, ref in enumerate(self.hang.pop(t.net, [])):
+        for _i, ref in enumerate(self.hang.pop(t.net, [])):
             ex0c, _, ex1c, _ = self._extent()
             edge_r = gceil(self._band_edge(ty - 2 * U, ty + 10 * U, +1,
                                            default=max(nodes) if nodes
@@ -2065,7 +2063,8 @@ class _Engine:
         # ERC: a power_in pin on a SIGNAL trunk needs a PWR_FLAG driver.
         # Pick the stub BEFORE drawing legs so it becomes a split node.
         if self._needs_flag(t.net):
-            gaps = sorted(zip(nodes, nodes[1:]), key=lambda ab: ab[1] - ab[0])
+            gaps = sorted(zip(nodes, nodes[1:], strict=False),
+                          key=lambda ab: ab[1] - ab[0])
             xa, xb = gaps[-1]
             fx = gsnap((xa + xb) / 2)
             dy = -2.54 if t.zone == "above" else 2.54
@@ -2073,7 +2072,7 @@ class _Engine:
             self.flag(t.net, fx, ty + dy, 0 if t.zone == "above" else 180)
             nodes = sorted(set(nodes + [fx]))
 
-        for xa, xb in zip(nodes, nodes[1:]):
+        for xa, xb in zip(nodes, nodes[1:], strict=False):
             self.pl.plan(t.net, (xa, ty), (xb, ty))
         if self.c.nets[t.net].net_class is NetClass.PORT:
             # the trunk IS the sheet's external interface: hier label on a
@@ -2127,7 +2126,7 @@ class _Engine:
         elif len(nodes) == 1:
             return
         nodes = sorted(nodes)
-        for xa, xb in zip(nodes, nodes[1:]):
+        for xa, xb in zip(nodes, nodes[1:], strict=False):
             self.pl.plan(net, (xa, y), (xb, y))
 
     def _rung_bar_y(self, t: _Trunk) -> float:
@@ -2142,10 +2141,10 @@ class _Engine:
         x0 = pt[0]
         cols = [round(x0 + i * 6 * U, 3) for i in range(len(legs))]
         self.pl.plan(far_net, pt, (x0, bar))
-        for xa, xb in zip(cols, cols[1:]):
+        for xa, xb in zip(cols, cols[1:], strict=False):
             self.pl.plan(far_net, (xa, bar), (xb, bar))
         self.llabel(far_net, x0 + 1.27, bar)
-        for i, (ref, xc) in enumerate(zip(legs, cols)):
+        for i, (ref, xc) in enumerate(zip(legs, cols, strict=False)):
             att_y = round(bar + i * 6 * U, 3)
             if att_y != bar:
                 self.pl.plan(far_net, (xc, bar), (xc, att_y))
@@ -2352,7 +2351,7 @@ class _Engine:
             if net in skip:
                 continue
             for path in paths:
-                for a, bb in zip(path, path[1:]):
+                for a, bb in zip(path, path[1:], strict=False):
                     sx0, sx1 = sorted((a[0], bb[0]))
                     sy0, sy1 = sorted((a[1], bb[1]))
                     if sy0 - 0.3 <= y <= sy1 + 0.3 \
@@ -2434,7 +2433,7 @@ class _Engine:
             if n2 == net:
                 continue
             for path in paths:
-                for a, bb in zip(path, path[1:]):
+                for a, bb in zip(path, path[1:], strict=False):
                     sx0, sx1 = sorted((a[0], bb[0]))
                     sy0, sy1 = sorted((a[1], bb[1]))
                     if sx0 - 0.2 <= x <= sx1 + 0.2 \
@@ -2471,7 +2470,7 @@ class _Engine:
             if n == net:
                 continue
             for path in paths:
-                for a, bb in zip(path, path[1:]):
+                for a, bb in zip(path, path[1:], strict=False):
                     sx0, sx1 = sorted((a[0], bb[0]))
                     sy0, sy1 = sorted((a[1], bb[1]))
                     if sx0 - 0.3 <= x <= sx1 + 0.3 \
@@ -2704,7 +2703,7 @@ class _Engine:
                 else:
                     xm = gsnap((tops[0] + tops[-1]) / 2)
                     nodes = sorted(set(tops + [xm]))
-                    for a, b in zip(nodes, nodes[1:]):
+                    for a, b in zip(nodes, nodes[1:], strict=False):
                         self.pl.plan(rail, (a, ry), (b, ry))
                     self.pl.plan(rail, (xm, ry), (xm, ry - 2.54))
                     self.power(rail, xm, ry - 2.54)
@@ -2818,7 +2817,7 @@ class _Engine:
                 x = gceil(x + 2 * self.sp.cap_pitch)
         self.cluster = {}
 
-    # ---- template: connector fan (SoM mezzanine sheets) -------------------------------
+    # ---- template: connector fan (SoM mezzanine sheets) ----------------------------
     CONN_RUN = 10.16
     CONN_COL_GAP = 1.27
     CONN_MID_GAP = 2.54
@@ -2906,13 +2905,13 @@ class _Engine:
                 cols.append(col)
                 prev_y, prev_col = y, col
             inner_len = max((self._glabel_len(n)
-                             for (y, x, n), cl in zip(ports, cols)
+                             for (y, x, n), cl in zip(ports, cols, strict=False)
                              if cl == "inner"), default=0.0)
             lx_outer = out(sgn, abs(lx_inner) + inner_len + self.CONN_COL_GAP)
             outer_len = max((self._glabel_len(n)
-                             for (y, x, n), cl in zip(ports, cols)
+                             for (y, x, n), cl in zip(ports, cols, strict=False)
                              if cl == "outer"), default=0.0)
-            for (y, px, net), col in zip(ports, cols):
+            for (y, px, net), col in zip(ports, cols, strict=False):
                 lx = lx_inner if col == "inner" else lx_outer
                 pl.plan(net, (px, y), (lx, y))
                 self.label(net, lx, y, 180 if sgn < 0 else 0)
@@ -2931,7 +2930,7 @@ class _Engine:
                 for y, px in taps:
                     pl.plan(net, (px, y), (x_r, y))
                 ys = [y for y, _ in taps]
-                for y0, y1 in zip(ys, ys[1:]):
+                for y0, y1 in zip(ys, ys[1:], strict=False):
                     pl.plan(net, (x_r, y0), (x_r, y1))
 
             # A POWER rail may tap a DF40 side in SEVERAL non-contiguous
@@ -2959,7 +2958,10 @@ class _Engine:
                 return groups
 
             def place_power_cluster(net: str,
-                                    taps: list[tuple[float, float]]) -> None:
+                                    taps: list[tuple[float, float]],
+                                    rails=rails, sgn=sgn, y_lo=y_lo,
+                                    lx_inner=lx_inner, y_hi=y_hi,
+                                    mid_x=mid_x) -> None:
                 ys = [y for y, _ in taps]
                 # by construction a contiguous cluster has no foreign row in
                 # its own (ys[0], ys[-1]) span — assert it stays true so the
@@ -3023,7 +3025,7 @@ class _Engine:
             fx += sp.flag_pitch
         return pl
 
-    # ---- template: regulator stage rows ------------------------------------------------
+    # ---- template: regulator stage rows --------------------------------------------
     def _detect_stages(self) -> dict[str, dict]:
         stages: dict[str, dict] = {}
         for ref in self.multi:
@@ -3044,9 +3046,6 @@ class _Engine:
                     stages[ref] = {"kind": "ldo", "out": net.name}
                     break
                 if net.net_class is NetClass.SIGNAL:
-                    inds = [(r, a, b) for r, a, b in self.series
-                            if net.name in (a, b)
-                            and self.c.parts[r].lib_id == "Device:L"]
                     pl_ind = [(r, rl) for sig, lst in self.pull.items()
                               if sig == net.name for r, rl in lst
                               if self.c.parts[r].lib_id == "Device:L"]
@@ -3317,8 +3316,6 @@ class _Engine:
                      biased-aux + RT/aux locals as labeled left columns.
         """
         sp = self.sp
-        c = self.c
-        out_rail = st["out"]
         in_rail = self._stage_in_rail_box(ref)
         pp, sdef, body, sides = self._place_body(ref, 0.0, ay)
         pins = {p.number: pin_page_position(p, 0.0, ay, 0) for p in sdef.pins}
@@ -3356,7 +3353,7 @@ class _Engine:
                 # purge it so the leftover rank placer does not place the SAME
                 # cap a second time (a double-draw + a stray duplicate-name
                 # label islet; the VCC-on-top LM61460 box exposed this).
-                for cref, _u, _l in chain.legs:
+                for _cref, _u, _l in chain.legs:
                     self.hang.pop(n.name, None)
                     self.pull.pop(n.name, None)
             else:
@@ -3699,7 +3696,7 @@ class _Engine:
             cols = cols + [uvlo_col]
         nodes = [pv[0]] + cols + [tx for tx, _ in strap_taps]
         nodes_sorted = sorted(set(nodes))
-        for xa, xb in zip(nodes_sorted, nodes_sorted[1:]):
+        for xa, xb in zip(nodes_sorted, nodes_sorted[1:], strict=False):
             self.pl.plan(in_rail, (xa, pv[1]), (xb, pv[1]))
         for tx, spt in strap_taps:
             self.pl.plan(in_rail, (tx, pv[1]), (tx, spt[1]), spt)
@@ -3707,7 +3704,7 @@ class _Engine:
         self.pl.plan(in_rail, (rail_x, pv[1]), (rail_x, pv[1] - 5.08))
         self.power(in_rail, rail_x, pv[1] - 5.08)
         cap_cols = cols[:len(cin)]
-        for refc, x in zip(cin, cap_cols):
+        for refc, x in zip(cin, cap_cols, strict=False):
             far_pt, far = self._vertical_2pin(refc, x, pv[1],
                                               in_rail, downward=True)
             self.power(far, *far_pt)
@@ -3750,7 +3747,7 @@ class _Engine:
                 self.power(far2, *far_pt2)
             # midpoint rail tying the shunt columns + the EN drop together
             mid_xs_sorted = sorted(set(mid_xs + [xv]))
-            for xa, xb in zip(mid_xs_sorted, mid_xs_sorted[1:]):
+            for xa, xb in zip(mid_xs_sorted, mid_xs_sorted[1:], strict=False):
                 self.pl.plan(uvlo_net, (xa, y_tie), (xb, y_tie))
             # EN pin elbows down its own column into the clear track
             self.pl.plan(uvlo_net, pe_u, (xv, pe_u[1]), (xv, y_tie))
@@ -4089,7 +4086,7 @@ class _Engine:
         x_r = gsnap(slot - sp.cap_pitch / 2)
         nodes.append(x_r)
         nodes = sorted(set(nodes))
-        for xa, xb in zip(nodes, nodes[1:]):
+        for xa, xb in zip(nodes, nodes[1:], strict=False):
             self.pl.plan(out_rail, (xa, y_sw), (xb, y_sw))
         self.pl.plan(out_rail, (x_r, y_sw), (x_r, y_sw - 5.08))
         self.power(out_rail, x_r, y_sw - 5.08)
@@ -4115,7 +4112,7 @@ class _Engine:
         x_r = gsnap(slot - sp.cap_pitch / 2)
         nodes.append(x_r)
         nodes = sorted(set(nodes))
-        for xa, xb in zip(nodes, nodes[1:]):
+        for xa, xb in zip(nodes, nodes[1:], strict=False):
             self.pl.plan(out_rail, (xa, y_r), (xb, y_r))
         self.pl.plan(out_rail, (x_r, y_r), (x_r, y_r - 5.08))
         self.power(out_rail, x_r, y_r - 5.08)
@@ -4195,11 +4192,11 @@ class _Engine:
         """Register a placed part's trunk direct pins and side rungs at
         page coordinates."""
         for t in trunk_jobs.values():
-            for (r, num, side, tip) in self._side_tips(ref):
+            for (_r, num, side, tip) in self._side_tips(ref):
                 if self._on_net(ref, num, t.net):
                     t.direct.append(((round(ax + tip[0], 3),
                                       round(ay + tip[1], 3)), side))
-        for (r, num, side, tip) in self._side_tips(ref):
+        for (_r, num, side, tip) in self._side_tips(ref):
             if (ref, num, side) not in srung_keys:
                 continue
             n = self.net_of(ref, num)
@@ -4297,7 +4294,7 @@ class _Engine:
             else:
                 xm = gsnap((xs[0] + xs[-1]) / 2)
                 nodes = sorted(set(xs + [xm]))
-                for a, b in zip(nodes, nodes[1:]):
+                for a, b in zip(nodes, nodes[1:], strict=False):
                     self.pl.plan(rail, (a, bar_y), (b, bar_y))
                 self.pl.plan(rail, (xm, bar_y), (xm, bar_y - 2 * U))
                 self.power(rail, xm, bar_y - 2 * U)
@@ -4352,7 +4349,7 @@ class _Engine:
             if c.nets[net].net_class is not NetClass.SIGNAL:
                 return False
             return (net in self.trunks or net in self.pl.label_bridged
-                    or any(l.name == net for l in self.pl.llabels)
+                    or any(ll.name == net for ll in self.pl.llabels)
                     or any(h.name == net for h in self.pl.hlabels))
 
         left = [s for s in self.series
@@ -4479,7 +4476,7 @@ class _Engine:
             x = round(x + pitch, 3)
         self._pin_islets = set()
 
-    # ---- template: signal-flow chain ----------------------------------------------------
+    # ---- template: signal-flow chain -----------------------------------------------
     def _chain_order(self) -> list[str]:
         """Multi-pin parts in left->right flow order, shunt banks excluded.
 
@@ -4553,7 +4550,7 @@ class _Engine:
         saved = dict(self.orient)
         best = ((-1, 0, 0), {})
         for combo in itertools.product((0, 180), repeat=len(order)):
-            for ref, rot in zip(order, combo):
+            for ref, rot in zip(order, combo, strict=False):
                 if rot:
                     self.orient[ref] = rot
                 else:
@@ -4571,7 +4568,7 @@ class _Engine:
             # a side rung whose lane to its trunk's zone must cross a
             # channel row is unroutable — heavily penalized
             blocked = 0
-            for tname, t in self.trunks.items():
+            for tname, _t in self.trunks.items():
                 votes = 0
                 for ref in order:
                     for (_r, _num, s2, _t2) in [
@@ -4613,7 +4610,7 @@ class _Engine:
                         inward += 1
             score = (pairs, -blocked, -inward)
             if score > best[0]:
-                best = (score, dict(zip(order, combo)))
+                best = (score, dict(zip(order, combo, strict=False)))
         self.orient = saved
         return best
 
@@ -4626,7 +4623,8 @@ class _Engine:
         tips = sorted(tips, key=lambda t: t[1])
         if len(tips) == 1:
             return tips[0], []
-        if any(abs(b[1] - a[1] - 2.54) > 1e-6 for a, b in zip(tips, tips[1:])):
+        if any(abs(b[1] - a[1] - 2.54) > 1e-6
+               for a, b in zip(tips, tips[1:], strict=False)):
             return None
         return tips[0], tips[1:]
 
@@ -4709,7 +4707,7 @@ class _Engine:
             dys = [round((ay_a + ta[1]) - tb[1], 3)
                    for _n, ta, tb, _ea, _eb in pairs]
             dy = max(sorted(set(dys)), key=lambda d: (dys.count(d), -abs(d)))
-            aligned = [p for p, d in zip(pairs, dys) if d == dy]
+            aligned = [p for p, d in zip(pairs, dys, strict=False) if d == dy]
             # misaligned rows: JOG (Z through a staircase lane past every
             # fan label) unless the staircase vertical would cross an
             # ALIGNED run (which spans the whole channel) or the jogs
@@ -4719,7 +4717,7 @@ class _Engine:
             spans: dict[str, tuple[float, float]] = {}
             cand: list = []
             demoted: list = []
-            for p, d in zip(pairs, dys):
+            for p, d in zip(pairs, dys, strict=False):
                 if d == dy:
                     continue
                 ya = round(ay_a + p[1][1], 3)
@@ -4813,7 +4811,7 @@ class _Engine:
         trunk_jobs = dict(self.trunks)
         for t in trunk_jobs.values():
             for ref in order:
-                for (r, num, side, tip) in self._side_tips(ref):
+                for (_r, num, side, _tip) in self._side_tips(ref):
                     if self._on_net(ref, num, t.net):
                         handled.add((ref, num, side))
         # side rungs: a LEFT/RIGHT pin whose net reaches a trunk through one
@@ -4821,7 +4819,7 @@ class _Engine:
         # vertical leg, built with the trunk. Mark handled before fans run.
         srung_keys: set[tuple[str, str, str]] = set()
         for ref in order:
-            for (r, num, side, tip) in self._side_tips(ref):
+            for (_r, num, side, _tip) in self._side_tips(ref):
                 if side not in ("left", "right") or (ref, num, side) in handled:
                     continue
                 n = self.net_of(ref, num)
@@ -4962,12 +4960,12 @@ class _Engine:
                         jx = jog_x
                         jog_x = round(jog_x + 2 * U, 3)
                     # bused groups: bar on the tip column
-                    for t0, t1 in zip([ta] + ea, ea):
+                    for t0, t1 in zip([ta] + ea, ea, strict=False):
                         self.pl.plan(n, (round(ax_a + t0[0], 3),
                                          round(ay_a + t0[1], 3)),
                                      (round(ax_a + t1[0], 3),
                                       round(ay_a + t1[1], 3)))
-                    for t0, t1 in zip([tb] + eb, eb):
+                    for t0, t1 in zip([tb] + eb, eb, strict=False):
                         self.pl.plan(n, (round(ax + t0[0], 3),
                                          round(ay + t0[1], 3)),
                                      (round(ax + t1[0], 3),
@@ -4984,7 +4982,7 @@ class _Engine:
                        else -1)
 
         # channel runs (straight, or a Z-jog through its staircase lane)
-        for n, a_ref, b_ref in channels:
+        for n, _a_ref, _b_ref in channels:
             (ta, tb, jx) = chan_tips[n]
             if jx is not None:
                 self.pl.plan(n, ta, (jx, ta[1]))
@@ -5030,7 +5028,7 @@ class _Engine:
                 self.pl.plan(n, (lx2, y), end2)
                 self.label(n, *end2, 90)
             nodes = sorted(set(nodes))
-            for xa, xb in zip(nodes, nodes[1:]):
+            for xa, xb in zip(nodes, nodes[1:], strict=False):
                 self.pl.plan(n, (xa, y), (xb, y))
             if c.nets[n].net_class is NetClass.SIGNAL:
                 # mid-run: clear of the a-part's risers and the b-side caps
@@ -5062,7 +5060,7 @@ class _Engine:
         self._pull_rank_columns()
         self._series_port_columns()
         self._trunk_series_columns()     # in-line shunt across two SIGNAL trunks
-        for ch in [ch for ch in self.float_chains if ch.kind == "rail"]:
+        for _ch in [ch for ch in self.float_chains if ch.kind == "rail"]:
             self._leftover_chains_columns()
             break
         self._port_strap_columns()
@@ -5070,7 +5068,7 @@ class _Engine:
         return self.pl
 
     def _pin_num_at(self, ref: str, tip_rel, side: str) -> str:
-        for (r, num, s, t) in self._side_tips(ref):
+        for (_r, num, s, t) in self._side_tips(ref):
             if s == side and t == tip_rel:
                 return num
         raise PlaceError(f"{ref}: no {side} pin at {tip_rel}")
@@ -5190,17 +5188,23 @@ def _translate(pl: Placement, dx: float, dy: float) -> None:
         return None if t is None else (round(t[0] + dx, 3),
                                        round(t[1] + dy, 3), t[2])
     for p in pl.parts:
-        p.x = round(p.x + dx, 3); p.y = round(p.y + dy, 3)
-        p.ref_pos = mv(p.ref_pos); p.val_pos = mv(p.val_pos)
+        p.x = round(p.x + dx, 3)
+        p.y = round(p.y + dy, 3)
+        p.ref_pos = mv(p.ref_pos)
+        p.val_pos = mv(p.val_pos)
     for pw in pl.powers:
-        pw.x = round(pw.x + dx, 3); pw.y = round(pw.y + dy, 3)
+        pw.x = round(pw.x + dx, 3)
+        pw.y = round(pw.y + dy, 3)
         pw.val_pos = mv(pw.val_pos)
     for h in pl.hlabels:
-        h.x = round(h.x + dx, 3); h.y = round(h.y + dy, 3)
+        h.x = round(h.x + dx, 3)
+        h.y = round(h.y + dy, 3)
     for ll in pl.llabels:
-        ll.x = round(ll.x + dx, 3); ll.y = round(ll.y + dy, 3)
+        ll.x = round(ll.x + dx, 3)
+        ll.y = round(ll.y + dy, 3)
     for n in pl.no_connects:
-        n.x = round(n.x + dx, 3); n.y = round(n.y + dy, 3)
+        n.x = round(n.x + dx, 3)
+        n.y = round(n.y + dy, 3)
     for net, paths in pl.plans.items():
         pl.plans[net] = [[(round(x + dx, 3), round(y + dy, 3))
                           for x, y in path] for path in paths]

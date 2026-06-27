@@ -298,7 +298,8 @@ class Result:
     devices: list[Device] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)        # over-Tj failures
     findings: list[str] = field(default_factory=list)      # unspeced devices
-    waived: dict[str, tuple[str, str]] = field(default_factory=dict)  # ref->(sheet,reason)
+    # ref->(sheet,reason)
+    waived: dict[str, tuple[str, str]] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
     ta: float = TA_AMBIENT
     margin: float = TJ_MARGIN

@@ -12,8 +12,13 @@ HDMIs together) that MUST FAIL — proving the gate bites.
 from __future__ import annotations
 
 from schgen.generate import pcb
-from schgen.generate.pcb import (FootprintInst, PcbModel, ORIGIN_X, ORIGIN_Y,
-                                 _inst_pad_bbox)
+from schgen.generate.pcb import (
+    ORIGIN_X,
+    ORIGIN_Y,
+    FootprintInst,
+    PcbModel,
+    _inst_pad_bbox,
+)
 from schgen.verify import connector_spacing_gate as cs
 
 

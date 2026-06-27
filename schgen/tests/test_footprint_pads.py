@@ -67,7 +67,8 @@ def test_pin_exceeding_pads_is_detected():
 
         c = Circuit("t", "t")
         c.part("U1", "X:Y", "PART", str(mod))
-        c.net("A", "U1.1"); c.net("A", "U1.2")   # geometry irrelevant here
+        c.net("A", "U1.1")
+        c.net("A", "U1.2")   # geometry irrelevant here
         r = footprint_pads.run([_sheet("t", c)], lib=_Lib())
         assert not r.ok, "pin 4 with no pad must be a VIOLATION"
         assert r.checked == 1
@@ -87,7 +88,8 @@ def test_normal_part_passes():
 
         c = Circuit("t", "t")
         c.part("U1", "X:Y", "PART", str(mod))
-        c.net("A", "U1.1"); c.net("A", "U1.2")
+        c.net("A", "U1.1")
+        c.net("A", "U1.2")
         r = footprint_pads.run([_sheet("t", c)], lib=_Lib())
         assert r.ok, r.violations
         assert r.checked == 1
@@ -97,7 +99,8 @@ def test_normal_part_passes():
 def test_unresolved_footprint_is_reported_not_crashing():
     c = Circuit("t", "t")
     c.part("U1", "X:Y", "PART", "NoSuchLib:NoSuchFootprint")
-    c.net("A", "U1.1"); c.net("A", "U1.2")
+    c.net("A", "U1.1")
+    c.net("A", "U1.2")
 
     class _Lib:
         def pin_numbers(self, lib_id):

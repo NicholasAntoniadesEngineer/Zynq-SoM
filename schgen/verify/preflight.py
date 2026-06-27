@@ -100,7 +100,8 @@ def query_jlc(lcsc_id: str, timeout: int = 20) -> dict | None:
 def query_lcsc_exists(lcsc_id: str, timeout: int = 20) -> bool:
     """Does the part exist in the LCSC catalog at all? (fallback signal)"""
     req = urllib.request.Request(LCSC_DETAIL_URL.format(code=lcsc_id),
-                                 headers={"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                                 headers={"User-Agent": (
+                              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                               "AppleWebKit/537.36 (KHTML, like Gecko) "
                               "Chrome/120.0.0.0 Safari/537.36")})
     try:

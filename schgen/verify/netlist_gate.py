@@ -240,7 +240,7 @@ def _emitted_nc_cheats(circuit: Circuit, sch_text: str) -> list[str]:
     for block in sexpr.find_all(sexpr.find(doc, "lib_symbols") or [], "symbol"):
         pins: list[Pin] = []
 
-        def walk(node: list) -> None:
+        def walk(node: list, pins: list[Pin] = pins) -> None:
             for sub in sexpr.find_all(node, "symbol"):
                 walk(sub)
             for p in sexpr.find_all(node, "pin"):

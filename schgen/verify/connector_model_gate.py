@@ -60,9 +60,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from schgen.generate.pcb import (PcbModel, CONN_MATING_FACE, resolve_mod,
-                                 sexpr, Sym)
-
+from schgen.generate.pcb import CONN_MATING_FACE, PcbModel, Sym, resolve_mod, sexpr
 
 # Off-board connector MPNs whose mouth-vs-pad-geometry is NOT a clean
 # "mouth opposite the dense tail row" rule, so the geometry cross-check (2) is
@@ -181,7 +179,7 @@ class ConnModelResult:
         L = [f"LAW-6 CONNECTOR-MODEL ORIENTATION GATE: "
              f"{'PASS' if self.ok else 'FAIL'}"]
         L.append(f"  off-board connectors inspected: {self.n_connectors}")
-        for ref, mpn, value, z, ok in self.models:
+        for ref, mpn, _value, z, ok in self.models:
             mark = "OK " if ok else "BAD"
             zs = "none" if z is None else f"{z:g}"
             L.append(f"    {mark} {ref:9s} {mpn:16s} model_z={zs}")

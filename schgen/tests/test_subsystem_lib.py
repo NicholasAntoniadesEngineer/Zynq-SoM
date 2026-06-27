@@ -10,7 +10,6 @@ from schgen.core.model import Circuit, CircuitError, NetClass, PinRef
 from schgen.core.subsystem import Meta
 from schgen.verify import subsystem_structure
 
-
 # ---- the standard meta contract (schgen.core.subsystem.Meta) --------------------
 
 def test_meta_none_is_all_defaults():

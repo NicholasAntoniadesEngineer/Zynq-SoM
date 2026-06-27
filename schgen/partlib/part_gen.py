@@ -42,8 +42,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core import sexpr
-from schgen.layout import textmetrics
 from schgen.core.sexpr import Sym
+from schgen.layout import textmetrics
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PARTS_DIR = REPO_ROOT / "parts"

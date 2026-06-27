@@ -8,9 +8,8 @@ from __future__ import annotations
 
 import types
 
-from schgen.verify import powertree
 from schgen.core.model import Circuit
-from schgen.verify import part_rules
+from schgen.verify import part_rules, powertree
 
 
 def _sheet(name, c):

@@ -54,10 +54,9 @@ from pathlib import Path
 
 import pytest
 
-from schgen.generate.pcb import (FootprintInst, PcbModel, ORIGIN_X, ORIGIN_Y,
-                                 resolve_mod)
-from schgen.verify import (model3d_gate, connector_model_gate as cmg,
-                          ratsnest_gate, refdes_overlap_gate)
+from schgen.generate.pcb import ORIGIN_X, ORIGIN_Y, FootprintInst, PcbModel, resolve_mod
+from schgen.verify import connector_model_gate as cmg
+from schgen.verify import model3d_gate, ratsnest_gate, refdes_overlap_gate
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _CARRIER_PCB = _REPO_ROOT / "carrier" / "Zynq_Carrier.kicad_pcb"

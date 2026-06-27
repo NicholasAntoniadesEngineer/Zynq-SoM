@@ -189,7 +189,7 @@ CONN_MATING_FACE: dict[str, str] = {
                                # shell mouth +Y) — same rule as HDMI/RJ45. Was "-Y"
                                # which placed all 4 USB-C at rot 0 with the mouth
                                # facing INBOARD on the N edge (user caught it; render
-                               # + .wrl end-cavity test (+Y 582 verts vs -Y 48) confirm).
+                               # + .wrl end-cavity test (+Y 582 vs -Y 48) confirm).
     "HDMI-019S":       "+Y",   # HDMI receptacle mouth (plug enters OPPOSITE the
                                # SMT contact row at -Y; verified from footprint
                                # geometry — was -Y, faced inward in the render)
@@ -381,17 +381,17 @@ _INT_DESC: dict[str, str] = {
 # docstring + maps; debug_boot boot-DIP) — a wrong legend is worse than none
 # (LAW 0). The single-pole enables + tactile buttons get a plain function label.
 _SW_DESC: dict[str, str] = {
-    "SW1001":  "AUX EN",                         # board_aux:  gates +3V3_AUX (QWIIC/aux)
+    "SW1001":  "AUX EN",                         # board_aux:  gates +3V3_AUX (aux)
     "SW7001":  "RAIL: 5V 3V3 1V8 LED",           # bringup:    rail DIP  (pos 1..4)
-    "SW7002":  "MOD: HTX HRX LCD CAM SD USB PMD", # bringup:   module DIP (pos 1..7, 8=spare)
+    "SW7002":  "MOD: HTX HRX LCD CAM SD USB PMD", # bringup:   module DIP (1..7,8=spare)
     "SW7003":  "BTN0",                           # bringup:    PL_BTN0 user button
     "SW7004":  "BTN1",                           # bringup:    PL_BTN1 user button
-    "SW7005":  "SC RST",                         # bringup:    system-controller reset (NRST)
+    "SW7005":  "SC RST",                         # bringup:    sys-ctrlr reset (NRST)
     "SW7006":  "5V: HTX LCD",                    # bringup:    +5V module DIP (pos 1..2)
-    "SW9001":  "BOOT: DFU BSEL BSEL",            # debug_boot: boot DIP (1=USB-DFU 2-3=BOOTSEL)
+    "SW9001":  "BOOT: DFU BSEL BSEL",            # debug_boot: boot DIP (1=DFU 2-3=BSEL)
     "SW9002":  "RST",                            # debug_boot: reset button
     "SW19001": "PMOD EN",                        # pmod_expansion: port power enable
-    "SW28001": "JTAG EN",                        # usb_jtag:   USB-JTAG bridge output enable
+    "SW28001": "JTAG EN",                        # usb_jtag:   USB-JTAG bridge OE
     "SW33001": "USR0",                           # user_io:    user button 0
     "SW33002": "USR1",                           # user_io:    user button 1
     "SW33003": "USR2",                           # user_io:    user button 2
