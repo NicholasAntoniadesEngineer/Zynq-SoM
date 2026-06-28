@@ -55,7 +55,7 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
 
     doc: list = [
         Sym("kicad_pcb"),
-        [Sym("version"), 20241229],
+        [Sym("version"), 20260206],
         [Sym("generator"), "schgen"],
         [Sym("generator_version"), "1.0"],
         [Sym("general"), [Sym("thickness"), 1.6],

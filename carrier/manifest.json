@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "fc6289e96dfb598750f3f123dc956777dfd8d9caeb6b171e4601e0bc0d4904b6"
+      "sha256": "445f313244bc7d87680b7fb71d10be10486dacd008e5b33936d9bc10f3956fca"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -10,7 +10,7 @@
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
-      "sha256": "56bab55ed3049f9635961f26c9c18d482af00101ef382b2b7d56f9e247d3a71d"
+      "sha256": "5e3de622545aa2cc19004215783815b949c4383f8ce5e5f8fc94f54910542b0f"
     },
     {
       "path": "docs/BRINGUP.md",
@@ -162,151 +162,151 @@
     },
     {
       "path": "schematic/board_aux.kicad_sch",
-      "sha256": "30b679a88fb80b09d3d1cb4eaa56931047a735ced2a38a93e4b385e4d63428e6"
+      "sha256": "8157c8631f09921452b9efea46363e79286674a4fc1fe7263a894fcab7281aea"
     },
     {
       "path": "schematic/board_qwiic.kicad_sch",
-      "sha256": "bc9d34fdf65cb995403c17bb862d694b6a5f8d8ee5e99baff8ef75221cf2f011"
+      "sha256": "b34f9f8720caa24795d7a9dbc85b0440328eb2c9d41224619a945c6d7e26b9a4"
     },
     {
       "path": "schematic/board_services.kicad_sch",
-      "sha256": "f6e54ce54caec9396885e1b476cd64896b626e5c00992db02680111451401e16"
+      "sha256": "eafbdde3d2c8b9f7b8de80473329aa39b12f5077994c06358f90e8dbc3e3427e"
     },
     {
       "path": "schematic/bringup_en.kicad_sch",
-      "sha256": "a67c626772a15892e312d6efd7ee58425b389e62ba0a15373df4465499eff186"
+      "sha256": "46ea85de50663a3a3cca03a50a283457e932aec71ba7c21db7a8f9cb8719990a"
     },
     {
       "path": "schematic/bringup_en_modules.kicad_sch",
-      "sha256": "e48e2f63a947c7935a71a24512ad95272dc652a68a30dd7e6d3359ab576ca729"
+      "sha256": "4f543b5fccdabb2398e30eb57caadc995d080759c999db4c6ad9ae6a3e00d4da"
     },
     {
       "path": "schematic/bringup_modules.kicad_sch",
-      "sha256": "0817189f3882d038f54204b1c1e3d86b1847d8ccd7112068bf0931fd05b603a9"
+      "sha256": "ddb84b013a199d145866a6bc4fba924043584fd695798d1af6a7e23611a69cd0"
     },
     {
       "path": "schematic/bringup_rails.kicad_sch",
-      "sha256": "59b9005a791b29ba22c7160240df49ee93f6feee2f98dea91c10f073856bb047"
+      "sha256": "4ca40a1db0e2a8dbc6c5466c8bcaf1fa17337021f6dc79df79d1759076b4fefa"
     },
     {
       "path": "schematic/camera.kicad_sch",
-      "sha256": "d180894b819c816b69220688005cc807d80dcaf3de5bf8b2977785fe6aa67438"
+      "sha256": "41f51c0946f43e90df51ab9e00c1582e209a420623cc7dad2ed69337ab3c844a"
     },
     {
       "path": "schematic/debug_boot.kicad_sch",
-      "sha256": "7b3910f57154e3b09b3786e1b3264e237bf61adb1a61546404666b062ca69edc"
+      "sha256": "8ba37d80f16968445b18d9c9f38bf679fe24de346e227d7eddf230309c1d4426"
     },
     {
       "path": "schematic/ethernet.kicad_sch",
-      "sha256": "b4b3b41c5eae6869bc67ff74bcbb4c6bd58859009ac83dd14e976bc50458905d"
+      "sha256": "a56d3fab2d1b3662a0c50a2cbd8021b843e03726f33df30e9bdc36b776b25809"
     },
     {
       "path": "schematic/fmc.kicad_sch",
-      "sha256": "d995369530fd3feb636f57e33630e34bb8980d44b0497b6c30ffcd855eec866f"
+      "sha256": "cb24c5b4054e1d40c1f0c76541837056edd29c87a880a87ca171cc8b66ca60d5"
     },
     {
       "path": "schematic/hdmi_rx.kicad_sch",
-      "sha256": "f207bad660dcf569911ad3de6fffae0c3b717a82f010cfe77044b277cf642a35"
+      "sha256": "f4a02bca60a7ec89841e611b87b23d2e17805946afc9b1d6178c3686e094bd34"
     },
     {
       "path": "schematic/hdmi_rx_term.kicad_sch",
-      "sha256": "af4d2b000affe28fc7786caea0006097f7b2fa1405784cbf21d9f6098597e0e2"
+      "sha256": "05073fba1768158e41d5696d18f17d3fba9aa7e10b9a31947cc2379ec9836313"
     },
     {
       "path": "schematic/hdmi_tx.kicad_sch",
-      "sha256": "0c179b829b9910222f4ace28e284a924e6e422451a982c5da33378f021fc4140"
+      "sha256": "cd685d3b6c140c9d0de1a4e7060de9cb897c5ce1c31a5ac517d57db2be948400"
     },
     {
       "path": "schematic/lcd.kicad_sch",
-      "sha256": "40cafabf6f7523b2448bb9478b9c2206cde9b0e64741333b4098e362ebc12fc0"
+      "sha256": "5d03a499d3b4fd0f5b3f47e379425b3c97792239dca299cd9750ddc8bcf121b7"
     },
     {
       "path": "schematic/mechanical.kicad_sch",
-      "sha256": "8b3d930e2f4482baa939eaa299d920c63ba585b6b2cd887333c34b0f7cf26217"
+      "sha256": "62d4bbe85b80aabe4f473b9d18c86288e1c3123477ee2fc37f2f068716c412e2"
     },
     {
       "path": "schematic/microsd.kicad_sch",
-      "sha256": "3dac46775ae95e70d0430b5136810783cd3a323fd1868d7a6e399729e0177acb"
+      "sha256": "6b4dbcda87da4df2fd4be0644fdd00de03ebad793ed1b906af4ae90c700b3036"
     },
     {
       "path": "schematic/motor_pwm.kicad_sch",
-      "sha256": "a377a6b06723bf64796a0350b32f6fb1441617bdc2a9f8b3d608571025368893"
+      "sha256": "65d72a1e57e6c1c3f2f796bb5500f00f5dbd9de021e6f18488a418378d744368"
     },
     {
       "path": "schematic/motor_sense.kicad_sch",
-      "sha256": "ecd9ce197e2ba361d831a89815940f488e50d31d8254ee3315d51f1af7d3e6b7"
+      "sha256": "3ba47d1a1987c83220cad848aa1c738a96430003cb0369090382e72173710c7f"
     },
     {
       "path": "schematic/pd_input.kicad_sch",
-      "sha256": "29dc8ddd3153cb498f793bf9863e51192979a212349d5ef8e32c4d57e8034ff4"
+      "sha256": "4737dc071a4dd1312893960e0cd5c2d80430821c69dcf944ae24e51e990dd742"
     },
     {
       "path": "schematic/pmod.kicad_sch",
-      "sha256": "0473bee97fd9392699a594672dbf3eee8e867832d9eae14791d0f107dd87fcfd"
+      "sha256": "62d0db945895644ca264be8eef698e4ac83c0ae45ad5b677a7e23ee6c540d544"
     },
     {
       "path": "schematic/pmod_expansion.kicad_sch",
-      "sha256": "31a40f368dc558302f1ab14faa8ecbc72801b5a43260712c4b1a3da1e09e683e"
+      "sha256": "75cf1446959027367d28c955d24b840ea4bdca28969367ddc8190719ed8e6b9f"
     },
     {
       "path": "schematic/power.kicad_sch",
-      "sha256": "9e4ba97765b4114fd29a27576b4610911406b1a608541169ec84770024149557"
+      "sha256": "a8c51886e03837d4d682e83b08e5af0842223c9c0075fc6e31756cbbeb630e62"
     },
     {
       "path": "schematic/power_mon.kicad_sch",
-      "sha256": "c1e0af0d64fb29bc9fdf676736c3b2a9c3d7cc863aa1d7cbd758993a71290877"
+      "sha256": "94ac2e35ed8713e036ac2b62f0e7cd40eef2a8243989a73cb0df15e0487d751b"
     },
     {
       "path": "schematic/power_som.kicad_sch",
-      "sha256": "1bb3d92f289903395f4c4cdbfeae5ee5b19e619090a56df5f2c65a63cc0b321f"
+      "sha256": "cfb672dc42f361f46c5c5e285b4863af92d28a5663650edcd5840225aaa8a8c5"
     },
     {
       "path": "schematic/rj45_connector.kicad_sch",
-      "sha256": "fe254bc896330a3973cc1bf5dd4664970bab866733d3445c09903b2c195ab298"
+      "sha256": "ecd79562cea3b65e3732d7875c10945d74547d08f18a7b72dad24790c9b1a480"
     },
     {
       "path": "schematic/som_decoupling.kicad_sch",
-      "sha256": "e89a2db52b9a771e83d4206830d41386113e1aa3280abca5da95e4e5c963816c"
+      "sha256": "f61f6e708beaddd087ee192ff070bd0ea0ffa58a1c7697e53234dd13997cfb48"
     },
     {
       "path": "schematic/som_j1.kicad_sch",
-      "sha256": "1ecfe0cd6b7b82d2fa2e6ed0ac382ba748ea3e7c3e84171666759916b26e8526"
+      "sha256": "0e8d6af7689ca0cfd8636101102497b12b68ac7ce092ca2a34cd69b193901365"
     },
     {
       "path": "schematic/som_j2.kicad_sch",
-      "sha256": "47193c4cbcd48aa3e9e86e3c17ef5efaa742b85e54cd00e634a1d6145a235e65"
+      "sha256": "228e78be39679d4327e1574e000f5941ad742e6d43f3ffa03b4065f64024de0c"
     },
     {
       "path": "schematic/som_j3.kicad_sch",
-      "sha256": "0f43245d4b72b4ca097e255aaba94d1da442330721bdf3a4e7c3e0ff9fb01fd4"
+      "sha256": "b0663aed85f65f52235003d9ea8a99f07f856c0a80ae618a8ed8a923e0ebb612"
     },
     {
       "path": "schematic/uart_bridge.kicad_sch",
-      "sha256": "702ff2ca2089c0238f9cd319bbb59177d8f606adabfc6a9cad4cb0638a1b161e"
+      "sha256": "b97b1c5e0bbda9582bc1e30f945974b4060da9bea7893d03c53df855793a92d7"
     },
     {
       "path": "schematic/usb_jtag.kicad_sch",
-      "sha256": "423b3842431065045803f1f256aa86555b55c10ec4ee6a47a223b01f014f4cd5"
+      "sha256": "0980a1097254acef6cb07c0ce44fbc3ea095923c457f1550f3539ab1bde8b5e2"
     },
     {
       "path": "schematic/usb_jtag_connector.kicad_sch",
-      "sha256": "a75f3835d06559ef577db25451cbebfb6a159f16de98458c8daf740fc1ef906d"
+      "sha256": "b4767dd5e64835329e029b25709a8191561973bc5eb287a338a7cb38094ccda7"
     },
     {
       "path": "schematic/usb_pd.kicad_sch",
-      "sha256": "d994874ef08949860229dcc2c5395e2e04c4256a62d5b7f237d0168469adf84d"
+      "sha256": "47e00243b828ff2977864e9a78892db472ef7b1dfeddba6f4ad42df2c0abb9a6"
     },
     {
       "path": "schematic/usb_uart_connector.kicad_sch",
-      "sha256": "b5e1aab865ed837f3c30016b05bbe560cd388b801229d4fcafe1a9cb2f3d7096"
+      "sha256": "ff1f742b3ed39ab4b68c2b7653e0555599fbb54644d82c894f1d2a0b95f98f13"
     },
     {
       "path": "schematic/usbc_otg.kicad_sch",
-      "sha256": "4ea7c3b104e8dce988099fddf1e6ef49b130a45aa2f0dbb300c1be14ea747479"
+      "sha256": "065fcdbc43fd7eeb8200f0eec0b0cb90d881ad89ae81cbbe529a036b8eb72488"
     },
     {
       "path": "schematic/user_io.kicad_sch",
-      "sha256": "6edf1166fafd20e08523d7594e1489f9c9478dcfb56439ec7833ca32ff543af8"
+      "sha256": "b2b1a85b9a24791d4962dc0fa6bd931b17db5050e61373cb8f99e283c03d9db9"
     }
   ],
   "bom": {

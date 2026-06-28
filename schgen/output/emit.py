@@ -220,7 +220,7 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
     inst_path = instance_path or f"/{root_uuid}"
     uid = _IdFactory(root_uuid)
     doc: list = [Sym("kicad_sch"),
-                 [Sym("version"), 20250114],
+                 [Sym("version"), 20260306],
                  [Sym("generator"), "schgen"],
                  [Sym("generator_version"), "1.0"],
                  [Sym("uuid"), root_uuid],

@@ -773,7 +773,7 @@ def convert_footprint(result: dict, name: str, info: dict,
     smd = bool(result.get("SMT")) and "-TH_" not in (pkg.get("title") or "")
 
     fp: list = [Sym("footprint"), name,
-                [Sym("version"), 20240108],
+                [Sym("version"), 20260206],
                 [Sym("generator"), "schgen_part_gen"],
                 [Sym("generator_version"), "1.0"],
                 [Sym("layer"), "F.Cu"],
