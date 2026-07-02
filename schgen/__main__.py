@@ -1084,6 +1084,50 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("REFDES SILK (LAW 1): FAIL — gate did not run")
             ok_all = False
+        # PLACEMENT-CONTRACT gate (Phase L, HARD) — the datasheet intra-zone
+        # layout contract (hot loop / FB cluster / bulk_out / same-side ...)
+        # checked on the SAME placed model (no rebuild). A value-sorted power zone
+        # (the "before" defect) FAILS here even under DRC=0 + ratsnest/mech-pass;
+        # only ``power`` carries a contract today. LAW 4: no soft mode.
+        pcg = pcb_res.get("placement_contract")
+        if pcg is not None:
+            (rep_dir / "placement_contract.txt").write_text(pcg.summary() + "\n")
+            print(f"PLACEMENT CONTRACT (Phase L): "
+                  f"{'PASS' if pcg.ok else 'FAIL'} "
+                  f"(contract={'yes' if pcg.have_contract else 'none'}, "
+                  f"{pcg.checked} structures, {len(pcg.violations)} violations, "
+                  f"{len(pcg.missing_refs)} unresolved "
+                  f"-> {rep_dir / 'placement_contract.txt'})")
+            for _v in sorted(pcg.violations):
+                print(f"  PLACEMENT CONTRACT: {_v}")
+            for _m in sorted(pcg.missing_refs):
+                print(f"  PLACEMENT CONTRACT MISSING: {_m}")
+            ok_all = ok_all and pcg.ok
+        else:
+            print("PLACEMENT CONTRACT (Phase L): FAIL — gate did not run")
+            ok_all = False
+        # COMPOSITION-LEVEL FLOW/FACING/FAR gate (Phase L, HARD) — the contract's
+        # EXTERNAL terms (power-chain adjacency, output facing downstream, analog
+        # moat) checked on the whole placed board (zone centroids). LAW 4: strict
+        # (an unresolved FAR/flow target FAILS, never a silent skip).
+        pfg = pcb_res.get("placement_flow")
+        if pfg is not None:
+            (rep_dir / "placement_flow.txt").write_text(pfg.summary() + "\n")
+            print(f"PLACEMENT FLOW (Phase L): "
+                  f"{'PASS' if pfg.ok else 'FAIL'} "
+                  f"({pfg.n_contracts} external contract(s); "
+                  f"flow {pfg.flow_fail}/{pfg.flow_checked}, "
+                  f"facing {pfg.facing_fail}/{pfg.facing_checked}, "
+                  f"far {pfg.far_fail}/{pfg.far_checked} "
+                  f"-> {rep_dir / 'placement_flow.txt'})")
+            for _v in sorted(pfg.violations):
+                print(f"  PLACEMENT FLOW: {_v}")
+            for _u in sorted(pfg.unresolved):
+                print(f"  PLACEMENT FLOW UNRESOLVED: {_u}")
+            ok_all = ok_all and pfg.ok
+        else:
+            print("PLACEMENT FLOW (Phase L): FAIL — gate did not run")
+            ok_all = False
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
         ok_all = False

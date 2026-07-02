@@ -639,3 +639,74 @@ bridges at the RJ45; MDI 49.9Ω termination belongs on the SoM (PHY) side — ca
 correctly has none. Magnetics↔RJ45 <25mm is a COMPOSITION-level term (two sheets).
 power_som contract v1 drafted (orchestrator): third LM61460, pilot structures + new
 en_cluster type; pending engine extensions E1-E4 flagged in the file header.
+
+### Decision D10 — generic structure vocabulary (stops per-part gate branches)
+Drafting power_som + ethernet back-to-back exposed a scaling flaw: each new subsystem
+was minting bespoke structure types (en_cluster, next bst_cluster, esd_cluster...) each
+needing its own gate branch forever. CORRECTION: the gate grows ONE generic intra-zone
+type — **proximity** {members, anchor_part, anchor_pin(s), max_mm, same_side, min_from
+(optional list of {part/pin, min_mm})} — which expresses EN clusters, BST networks, ESD
+arrays, LDO caps, kelvin filters alike. Buck-specific types (hot_loop existential,
+fb_cluster, sw_node, bulk_in/out) stay bespoke — their semantics are genuinely special.
+power_som's en_cluster converts to proximity when the generic type lands (E4 → E4').
+COMPOSITION vocabulary grows: **near_max** {other_sheet, max_mm, basis} (first CITED
+instance: magnetics↔RJ45 ≤ 25mm, Pulse v7 p.1), **far_min** (exists), **region_void**
+(the ethernet moat: the corridor between T1's media pin row and the jack must contain
+no components but the declared BST/bridge parts — plane voids are routing-phase).
+
+### Ethernet + rj45 contract content (ready to instantiate once D10 types land)
+ethernet sheet: proximity(BST R+C pairs → their MCT pins 24/21/18/15, ≤4mm judgment,
+media side); proximity(C5 barrier → media row, ≤8mm judgment); same_side(T1).
+COMPOSITION: near_max(rj45_connector, 25mm, CITED Pulse v7 p.1); region_void(T1 media
+row ↔ jack, allow BST/C5/bridge parts only); far_min(power/power_som switching, 10mm);
+min distance T1→SoM region ≥25mm (Pulse v7 p.2, measured across mezzanine — remote-PHY
+caveat recorded); advisory total path <100mm. rj45 sheet: LED resistors R1/R2 on the
+LOGIC side of the moat boundary.
+
+### Research wave COMPLETE (5/5 verified) — remaining contract content (D10 vocabulary)
+FUSB302B research falsified two secondary-source values (VCONN=10nF per EVBUM2509 not
+0.1µF; VDD value UNSTATED by onsemi) — only CC 200-600pF is primary-cited (AN-5086).
+Two netlist FINDINGS spawned as task chips: INA3221 input RC filter absent (SBOS576C
+7.4.3 conditional, plausible with 8 ESCs); CC1/CC2 have NO ESD element at the
+user-touchable receptacle (AN-5086 TVS, cReceiver budget constraint with existing 200p).
+
+**usb_pd**: proximity(C1→U1 pins3/4 ≤2mm judgment — onsemi states no value/distance;
+C2 10µ ≤5mm; C3→pin2 ≤3mm; C4/C5 200p→CC pins 10/11,14/1 ≤3mm, basis AN-5086 cReceiver
++ EVB topology); same_side(U1); EP→GND (DS Fig.5) via array = fanout-phase judgment.
+external: flow [pd_input, usb_pd, power] (consistent with pilot); near_max(pd_input,
+15mm judgment — keeps the CC net short end-to-end). VCONN NC = correct (sink-only).
+
+**motor_sense**: proximity(C2 0.1µ→U2 VS pin4 ≤2mm, SBOS576C 8.2/8.3 "close as
+possible"|judgment:2.0; C3 10µ ≤5mm); proximity(U2→RS1 ≤10mm, SBOS576C 7.4.1 "close as
+possible"|judgment:10.0); proximity(D1 TVS→J2 pads ≤5mm judgment — clamp at entry);
+proximity(C4 470µ→J3 ≤8mm judgment — load-side bulk per README); advisory in-line order
+J2→RS1→J3 (kelvin tap geometry itself = routing-phase); same_side(U2 with RS1).
+external: near(motor_pwm) per D9 (floorplan edge move W — connectors change edges!);
+far_min(power/power_som switching 10mm judgment; SBOS576C 7.4.1 noise-coupling basis).
+
+**hdmi_rx**: proximity(U2,U3→J1 pads ≤5mm, SLVSD85B 10.1 "close to connector as
+possible"|judgment:5.0); proximity(U4→J1 ≤6mm, SLVSBO7O 7.4.1 + per-pin footnote);
+region: no other hdmi_rx part between J1 and U2/U3 (implication basis — "protected
+traces between TVS and connector"); flow-through orientation (IO row perpendicular to
+pair direction, NC row completes pass-through — SLVSD85B 5/7.3.10) = template term,
+advisory in gate v1; same_side(U2,U3,U4 with J1); no decoupling (passive parts, cited).
+external: advisory flow [hdmi_rx → som].
+
+NEXT ENGINE WAVE (blocked on FLOW worker landing): E1 carrier-local registry, E2
+foreign-less fb_cluster, E3 @som downstream, E4' generic proximity type (+ fail-loud on
+unknown types), E5 composition near_max/region_void; then instantiate the 4 contracts +
+templates; render loop per subsystem (orchestrator).
+
+### Composition wave landed — FLOW/FACING/FAR gate + power re-faced (orchestrator verdict: PASS)
+Both new gates wired into the build (HARD-FAIL, LAW 4): placement_contract + placement_flow
+reports in carrier/reports/. Board build PASS, byte-deterministic (hash-verified by
+orchestrator), 52 targeted tests green. Render verdict (power_v3_top.png): the 180° turn
+lands COUT banks on the W column — power flows E→W toward power_som/SoM (facing 3.0°,
+was 152.6°). Pilot OPEN item (a) CLOSED.
+Orchestrator rulings on worker-flagged decisions: (1) SoM-detour FLOW term ACCEPTED —
+the bare sqrt(area) budget mis-modeled a center-module board; fixing the model is
+improve-the-algorithm, not soften-the-gate. (2) The 1.9mm flow margin (power→power_som
+120.3/122.2) is REAL signal: the floorplan holds these zones apart — floorplan
+improvement queued with the composition work, gate left strict. (3) zone-centroid vs
+stage-centroid facing divergence risk noted for multi-contract future — revisit when a
+leftover-heavy zone gets a contract.

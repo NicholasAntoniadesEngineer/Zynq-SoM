@@ -497,6 +497,7 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         "placement_mech": None,
         "connector_model": None, "connector_spacing": None,
         "refdes_silk": None,
+        "placement_contract": None, "placement_flow": None,
     }
     if ratsnest:
         from schgen.generate import ratsnest as rn_mod
@@ -523,6 +524,18 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         from schgen.verify import refdes_overlap_gate
         result["refdes_silk"] = refdes_overlap_gate.check(
             pcb_path, enforce_bottom=True)
+        # PLACEMENT-CONTRACT gate (Phase L) — the datasheet intra-zone layout
+        # contract (hot loop / FB cluster / bulk_out / same-side ...) checked on
+        # the SAME placed model. HARD: a value-sorted power zone (the "before"
+        # defect) FAILS here even under DRC=0 / ratsnest-pass. Only ``power``
+        # carries a contract today; the gate is vacuously green for the rest.
+        from schgen.verify import placement_contract_gate, placement_flow_gate
+        result["placement_contract"] = placement_contract_gate.check(
+            model, sheet_name="power")
+        # COMPOSITION-LEVEL FLOW/FACING/FAR gate — the contract's EXTERNAL terms
+        # (power chain adjacency, output facing downstream, analog moat) checked
+        # on the whole placed board (zone centroids). HARD.
+        result["placement_flow"] = placement_flow_gate.check(model)
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result

@@ -223,4 +223,37 @@ CONTRACT: dict = {
     # ADVISORY intra-subsystem power-flow order (NOT gated): stages arranged
     # left-to-right as the schematic stage rows, VIN entry -> +1V8 exit.
     "stage_order": ["U1", "U2", "U3"],
+    # COMPOSITION-LEVEL (EXTERNAL) terms — the typed adjacency the placement_flow
+    # gate enforces on the WHOLE board (zone-centroid geometry), distinct from the
+    # intra-zone structures above. See AI_LAYOUT_ROUTING_CONCEPT.md "Phase L /
+    # External (drives composition)". Every distance carries a ``basis`` (judgment
+    # here — the datasheet is silent on inter-subsystem spacing; LAW 7).
+    "external": {
+        # FLOW: the board-level power chain this subsystem sits in. The gate
+        # checks each consecutive hop's zone-centroid distance is within a
+        # board-scaled budget. pd_input feeds usb_pd (the PD sink+FUSB302), which
+        # commands the input rail into ``power`` (the 2 bucks + LDO), whose
+        # outputs feed ``power_som`` (the SoM +5V/+3V3 rails). Names are SHEET
+        # names (== subsystem package names).
+        "flow": ["usb_pd", "power", "power_som"],
+        # FACING: this subsystem's OUTPUT-role parts (the bulk_out COUT bank —
+        # the physical output node of each stage) must point toward the DOWNSTREAM
+        # zone in the flow (``power_som``/SoM), not away from it. The gate reads
+        # the roles/structures whose members carry the output and checks the
+        # centroid vector sign. ``output_roles`` selects those members from
+        # ``roles`` (v2: the bulk_out COUT caps ARE the output node).
+        "downstream": "power_som",
+        "output_roles": ["cout_bulk"],
+        # FAR: keep the switching power stage away from noise-sensitive analog
+        # regions. Ethernet's magnetics/MDI line side is the nearest such region
+        # on this board; until finer per-region contracts exist, the gate resolves
+        # ``ethernet.line_side`` to the whole ``ethernet`` zone (documented
+        # coarsening — strict: an UNRESOLVED target FAILS, never a silent skip).
+        "far": [
+            {"what": "ethernet.line_side", "min_mm": 10.0,
+             "basis": "judgment:10.0 — buck switching node vs Ethernet MDI/"
+                      "magnetics analog line side; datasheet silent on inter-"
+                      "subsystem spacing (SNVSBD5D covers intra-stage only)"},
+        ],
+    },
 }

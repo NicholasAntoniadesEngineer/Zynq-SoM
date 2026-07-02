@@ -51,6 +51,7 @@ from .placement import _eff_bbox_for, _shelf_pack
 _IND_BODY_GAP = 1.0        # inductor body -> IC courtyard, its pad toward SW
 _LDO_GAP = 0.6             # LDO Cin/Cout -> its pins (gate bound 2.0)
 _COUT_GAP = 1.0            # COUT cap column -> inductor output pad (gate bound 5.0)
+_LEFTOVER_BAND_GAP = 2.0   # stage cluster -> leftover band (LAW-1 refdes headroom)
 # Inter-stage gaps are CONSTRAINT-DERIVED per pair (v2), NOT a uniform widened gap.
 # Two bucks sharing a row keep a small headroom gap (_INTERSTAGE_GAP0) for their
 # FB<->foreign-SW isolation; a pair with NO foreign-SW constraint (buck|LDO — the
@@ -538,7 +539,8 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
                side_of: dict[str, str],
                bbox_of: dict[str, tuple[float, float, float, float]],
                resolvable: dict[str, Path],
-               rot_out: dict[str, float] | None = None
+               rot_out: dict[str, float] | None = None,
+               facing: str | None = None
                ) -> tuple[dict[str, tuple[float, float]],
                           dict[str, tuple[float, float]],
                           float, float] | None:
@@ -550,8 +552,18 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
     placement rotation for every constructed member — the SAME channel LEVER-L1
     uses (folded into ``zone_extra_rot`` by ``build_model``). This is the one
     piece the 4-tuple cannot carry (see the module docstring); the ``build_zone``
-    positional signature is unchanged, so the hook stays a drop-in. Only the
-    ``power`` pilot is wired for now; an unrecognised contract returns None."""
+    positional signature is unchanged, so the hook stays a drop-in.
+
+    ``facing`` (optional; N/E/S/W) is the zone-local direction the DOWNSTREAM zone
+    lies in (the hook derives it from the floorplan — the ``power_som``/SoM flow
+    direction, i.e. the board INTERIOR). After the column is composed (output/COUT
+    edge toward +X by construction), a size-preserving 180-deg whole-zone TURN is
+    applied when it makes the OUTPUT-role (bulk_out) parts face the ``facing``
+    direction — so the composition-level FLOW gate's FACING check passes. A turn
+    is a rigid {0,90,180,270} operation on every part (legal for every footprint,
+    same side), and preserves the zone bounding box, so the floorplan block size
+    is unchanged. Only the ``power`` pilot is wired for now; an unrecognised
+    contract returns None."""
     if contract is None or contract.get("subsystem") != "power":
         return None
     rot_out = rot_out if rot_out is not None else {}
@@ -793,6 +805,24 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
         placed_abs = (min(valid, key=_width) if valid
                       else min(ok_cands, key=_width))
 
+    # --- FACING: turn the composed column so its OUTPUT faces downstream -------
+    # The column is built with the COUT (bulk_out) bank toward +X of each stage,
+    # so by construction the zone's OUTPUT edge faces +X (E). The downstream zone
+    # (power_som/SoM) is toward the board INTERIOR; the hook passes that direction
+    # as ``facing`` (N/E/S/W). A size-preserving 180-deg whole-zone TURN flips the
+    # output from +X to -X (and top<->bottom), which is a rigid {0,90,180,270}
+    # op on every part (legal, same side) and leaves the zone bbox unchanged — so
+    # the floorplan block size the plan already committed to does not move. We
+    # apply the turn iff it moves the OUTPUT-role centroid onto the ``facing``
+    # half of the zone (the SAME dot-product test the FLOW gate's FACING check
+    # applies to the emitted board). Deterministic; no-op when ``facing`` is None
+    # or already correct.
+    out_libs = [k for k, v in roles.items()
+                if v in set(contract.get("external", {}).get(
+                    "output_roles", ["cout_bulk"]))]
+    out_brefs = {b for b in (bref(x) for x in out_libs) if b is not None}
+    placed_abs = _apply_facing(placed_abs, out_brefs, facing)
+
     # --- leftovers: shelf-pack below the stage row, stages as blockers ---------
     stage_refs = set(placed_abs)
     leftovers = [r for r in refs if r not in stage_refs]
@@ -823,7 +853,15 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
         lt = [r for r in leftovers if side_of.get(r, "top") == "top"]
         lb = [r for r in leftovers if side_of.get(r, "top") == "bottom"]
         target_w = max(zw - 2 * ZONE_PAD, 8.0)
-        band_top = row_bottom + PLACE_CLEAR
+        # LAW 1: leave a REFDES-height gap (not just PLACE_CLEAR) between the stage
+        # cluster and the leftover band. The refdes declutter pass flings a
+        # stage-edge ref that cannot fit at its footprint to the nearest clear
+        # spot; with only a PLACE_CLEAR gap that spot can land IN the leftover band
+        # (a decluttered stage ref overprinting a leftover ref — the one F.SilkS
+        # overlap the whole-zone facing turn otherwise induced). A ~2 mm band gap
+        # gives the flung text its own lane. Courtyard clearance is already met by
+        # PLACE_CLEAR; this only adds refdes headroom, never removes clearance.
+        band_top = row_bottom + _LEFTOVER_BAND_GAP
         t_lo, t_w, t_h, b_lo, b_w, b_h = _pack_leftover_bands(
             lt, lb, target_w, bbox_of, resolvable)
         for r, (dx, dy) in t_lo.items():
@@ -910,3 +948,92 @@ def _row_extent(placed: dict[str, _Part]) -> tuple[float, float]:
     zw = round(max(b[2] for b in allb) + ZONE_PAD, 4)
     zh = round(max(b[3] for b in allb) + ZONE_PAD, 4)
     return zw, zh
+
+
+# --- FACING (Unit 3): turn the composed zone so its output faces downstream -------
+
+_FACING_VEC: dict[str, tuple[float, float]] = {
+    # zone-local (page frame, +y DOWN): N is -y, S is +y, W is -x, E is +x.
+    "N": (0.0, -1.0), "S": (0.0, 1.0), "W": (-1.0, 0.0), "E": (1.0, 0.0),
+}
+
+
+def _pad_center(p: _Part) -> tuple[float, float]:
+    """(x, y) center of a placed part's pad-box union in the zone-local frame."""
+    b = p.pad_boxes().values()
+    xs = [x for bb in b for x in (bb[0], bb[2])]
+    ys = [y for bb in b for y in (bb[1], bb[3])]
+    return ((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0)
+
+
+def _centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
+    return (sum(p[0] for p in pts) / len(pts),
+            sum(p[1] for p in pts) / len(pts))
+
+
+def _turn_zone_180(placed: dict[str, _Part]) -> dict[str, _Part]:
+    """Rigid 180-deg TURN of the whole composed zone about its pad-extent center:
+    every part rotation gains 180 deg and its position reflects through the center,
+    preserving every intra-zone relationship AND the zone bounding box (so the
+    floorplan block size is unchanged). Legal for every footprint ({0,90,180,270}).
+    Mirrors the per-stage ``_mirror_stage`` transform, applied zone-wide."""
+    # extent center over every part's pad boxes
+    allpts: list[tuple[float, float]] = []
+    for p in placed.values():
+        for bb in p.pad_boxes().values():
+            allpts.append((bb[0], bb[1]))
+            allpts.append((bb[2], bb[3]))
+    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
+    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    out: dict[str, _Part] = {}
+    for ref, p in placed.items():
+        nrot = (p.rot + 180.0) % 360.0
+        ob = _g._pad_boxes(p.mod, p.rot, p.side)
+        nb = _g._pad_boxes(p.mod, nrot, p.side)
+        ocx = p.ox + (min(b[0] for b in ob.values())
+                      + max(b[2] for b in ob.values())) / 2.0
+        ocy = p.oy + (min(b[1] for b in ob.values())
+                      + max(b[3] for b in ob.values())) / 2.0
+        ncx = 2 * ecx - ocx
+        ncy = 2 * ecy - ocy
+        nhx = (min(b[0] for b in nb.values())
+               + max(b[2] for b in nb.values())) / 2.0
+        nhy = (min(b[1] for b in nb.values())
+               + max(b[3] for b in nb.values())) / 2.0
+        out[ref] = _Part(ref, p.mod, nrot, p.side,
+                         round(ncx - nhx, 4), round(ncy - nhy, 4))
+    # re-anchor to a ZONE_PAD-margined top-left (the turn moved the extent origin);
+    # the plan/floorplan expects offsets in [ZONE_PAD, ...] just like the un-turned
+    # composition, so shift so the min pad corner sits at ZONE_PAD.
+    minx = min(bb[0] for p in out.values() for bb in p.pad_boxes().values())
+    miny = min(bb[1] for p in out.values() for bb in p.pad_boxes().values())
+    dx, dy = ZONE_PAD - minx, ZONE_PAD - miny
+    return {ref: _Part(ref, p.mod, p.rot, p.side,
+                       round(p.ox + dx, 4), round(p.oy + dy, 4))
+            for ref, p in out.items()}
+
+
+def _apply_facing(placed: dict[str, _Part], out_brefs: set[str],
+                  facing: str | None) -> dict[str, _Part]:
+    """Return ``placed`` turned 180 deg iff that lands the OUTPUT-role parts on the
+    ``facing`` half of the zone (the same dot-product test the FLOW gate applies).
+    No-op when ``facing`` is unset/unknown, there are no output parts, or the
+    output already faces ``facing``. Deterministic."""
+    fv = _FACING_VEC.get((facing or "").upper())
+    if fv is None or not out_brefs:
+        return placed
+    present = [r for r in out_brefs if r in placed]
+    if not present:
+        return placed
+
+    def _dot(pl: dict[str, _Part]) -> float:
+        zc = _centroid([_pad_center(p) for p in pl.values()])
+        oc = _centroid([_pad_center(pl[r]) for r in present])
+        return (oc[0] - zc[0]) * fv[0] + (oc[1] - zc[1]) * fv[1]
+
+    if _dot(placed) > 0.0:
+        return placed                     # output already faces downstream
+    turned = _turn_zone_180(placed)
+    # only accept the turn if it actually improves facing (defensive: a symmetric
+    # zone could tie — then keep the original to stay deterministic).
+    return turned if _dot(turned) > _dot(placed) else placed

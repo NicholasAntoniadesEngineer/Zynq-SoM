@@ -487,6 +487,46 @@ def _connector_sheet_edges() -> dict[str, str]:
     return dict(spec.edge_of)
 
 
+def _downstream_facing(sheet: str, contract: dict) -> str | None:
+    """The zone-LOCAL direction (N/E/S/W) the contract's declared DOWNSTREAM zone
+    lies in, for the stage-template FACING turn (Unit 3). Deterministic, derived
+    from the DECLARATIVE carrier/floorplan.json (the same spec build_plan reads) —
+    NOT the final packed positions, so it cannot deadlock the sizing pass (the
+    template's facing turn is bbox-preserving, so it never changes the block size
+    the plan is about to commit to).
+
+    Rule: the downstream zone (``external.downstream``, e.g. ``power_som``) is a
+    SoM-power subsystem that sits toward the board INTERIOR / SoM. A contracted
+    INTERIOR block declared on floorplan side ``S`` has its interior toward ``S``'s
+    opposite (N<->S, E<->W); an EDGE block's interior is likewise inboard. So the
+    facing direction is the INTERIOR direction = the opposite of this sheet's
+    declared board side. Returns None if the side cannot be determined (the
+    template then skips the turn — no facing hint, no change)."""
+    ext = contract.get("external") or {}
+    if not ext.get("downstream"):
+        return None
+    from schgen.generate.floorplan import FLOORPLAN_SPEC, load_floorplan_spec
+    if not FLOORPLAN_SPEC.exists():
+        return None
+    try:
+        spec = load_floorplan_spec()
+    except Exception:  # noqa: BLE001 — a malformed spec is reported by build_plan
+        return None
+    if spec is None:
+        return None
+    _OPP = {"N": "S", "S": "N", "E": "W", "W": "E"}
+    # interior blocks declare {"side": X}; edge blocks are in spec.edge_of.
+    side = None
+    cfg = spec.interior.get(sheet)
+    if isinstance(cfg, dict):
+        side = cfg.get("side")
+    if side is None:
+        side = spec.edge_of.get(sheet)
+    if side not in _OPP:
+        return None
+    return _OPP[side]                     # interior/downstream = opposite the edge
+
+
 def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
     """The SHARED packer: for every non-SoM subsystem, its REAL 2-sided packed
     zone (w, h) + per-part offsets, keyed on the STABLE board-unique refs. Built
@@ -606,9 +646,17 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
             for _m in _members:
                 side_of[_m] = "top"
             tmpl_rot: dict[str, float] = {}
+            # FACING hint (Unit 3): the zone-local direction the contract's
+            # declared DOWNSTREAM zone (external.flow / external.downstream) lies
+            # in — the template turns the composed column so its OUTPUT-role parts
+            # face that way, so the composition-level FLOW gate's FACING check
+            # passes. Derived from the floorplan (below) without needing the final
+            # plan positions (the turn is bbox-preserving, so it does not perturb
+            # the block size the plan is about to commit to).
+            _facing = _downstream_facing(sheet, _contract)
             _tmpl = stage_templates.build_zone(
                 sheet, _contract, refs_by_sheet[sheet], side_of, bbox_of,
-                resolvable, tmpl_rot)
+                resolvable, tmpl_rot, facing=_facing)
             if _tmpl is not None:
                 zone_extra_rot.update(tmpl_rot)
         if _tmpl is not None:

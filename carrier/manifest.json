@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "445f313244bc7d87680b7fb71d10be10486dacd008e5b33936d9bc10f3956fca"
+      "sha256": "08b6cd7eeef66dace3d282233dc3474bf241f585b7e7f11ea293734dcf1db6ce"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -26,15 +26,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "f77062e385d98f8f3e9cdab4bbd7ad125800a8ff95ac4e8a0e9c757b243d1598"
+      "sha256": "f4b7b7bd0b29567ac81ce67fa48f1946279dc0b03489cd14b90554fce2fccf41"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "b4c43df022914b7062afc3bb873aac39743fe63f7b0930415d3f583cad420618"
+      "sha256": "fd1686559282cc86c023e7b9fb9abacb3663d63dd97f2ed862a7a3f83f0acaf6"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "d899fe231c9e8bdbd61ba812082079731eeb9af2fafc8e53e216f706c2914d1f"
+      "sha256": "dfd9a3210832dfb0101965b384cabf39a6b331f9929c7a46dffef958ade8daed"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -98,7 +98,7 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "6a7107029b2f6a9036ba527b025bcc795697d3a0d32fbf5837c4e3e36f0bb7d2"
+      "sha256": "182dbebdca3b5847aa61f279b33442a01b7781c8c5392c7bec0e4b02f136278e"
     },
     {
       "path": "reports/design_rules.txt",
@@ -129,8 +129,16 @@
       "sha256": "2f190bb8ba13265261e8d70ccd519a1b5b1c3ea42a3789d846ef380bab75016e"
     },
     {
+      "path": "reports/placement_contract.txt",
+      "sha256": "2db292308811a49a0073321b2adb9979677c5f76c8bfb5d88383fad70ac6dc4e"
+    },
+    {
+      "path": "reports/placement_flow.txt",
+      "sha256": "822b956ac682f98ac54c5b26473b6414a0d0e8e069a5625122a23b350276412b"
+    },
+    {
       "path": "reports/placement_mech.txt",
-      "sha256": "09abe1a09078ecf2d212d53a7406b21b8e44ad003498585a54b3f4333c5c78dd"
+      "sha256": "dc873137a1e222a1638a43a5a71ff26749b600beda1776f5debd508d371ec559"
     },
     {
       "path": "reports/power_tree.txt",
@@ -138,7 +146,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "2c33eabce6ef91d6616cff31b1c3072962767e5baf675a4bbc1a9c47851b8362"
+      "sha256": "8fb3dfa006f5943bbdc231bc1b71b3a237ad9694322c78a8e124181a4de22ef4"
     },
     {
       "path": "reports/spice.txt",
