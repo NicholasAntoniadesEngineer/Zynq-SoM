@@ -606,3 +606,36 @@ return-path gate fix (Xilinx IO_LxxP/N pair naming).
 PILOT CONCLUSION: the contract→template→gate→render loop WORKS — two render-loop
 iterations caught three defects no gate could see (contract omission, board inflation,
 instrument artifact) and drove them to fixed. The methodology is validated end-to-end.
+
+### Phase L expansion — extraction verified, spec errors caught (orchestrator log)
+Haiku netlist extraction (6 subsystems) landed and CORRECTED two of my research specs
+before they hardened: motor_sense uses an **INA3221** (not INA226; shunt in-line between
+two XT60s), hdmi_rx's ESD is **TPD4E02B04 x2 + TPD4E05U06** (not TPD12S016). Research
+agent redirected to the correct datasheets. **Process lesson recorded: extraction
+precedes research targeting — never spec research from memory.**
+Key extraction facts for the contracts: power_som is a THIRD LM61460 buck (U4) — the
+pilot's structures + SNVSBD5D citations transfer wholesale (plus one new en_cluster
+structure: R12 series + D5 zener clamp + C20 at EN pin 7); ethernet's line side is
+fully characterized (HX5008 MDI=PHY-side / MX=line-side; Bob-Smith 75R||1n per MCT →
+BS_COMMON → single 2kV barrier cap → CHASSIS_GND) — the moat contract can bind exact
+nets; usb_pd is a 6-part proximity contract (VDD/VBUS caps + CC 200p filters at the
+FUSB302); rj45's LED resistors legitimately bridge the moat (+VLED logic rail to
+in-jack LEDs) — the contract must place them on the LOGIC side of the boundary.
+
+### Return-path gate landed — SI FINDING on J2 (orchestrator-verified)
+Xilinx pair-naming fixed (IO_L<n>_<P|N>_<bank> + capability-token variants): 69 HS-capable
+pairs detected across the DF40s (was 5; J2/J3 were silently 0). REAL-BOARD VERDICT: FAIL
+at K=2 — 29/138 HS contacts lack a ground within 2 steps, 28 concentrated on J2 banks
+13/33 (FMC-class IO), worst distance 4. Caveats recorded: detection is conservative
+(every IO pair treated as HS; per-pair criticality triage = follow-up); SoM pinout is
+fixed → remediation lives in the mezzanine ESCAPE FANOUT (ground-via placement — feeds
+the escape-block design) + routing-phase return vias. Also a SoM-design data point.
+Ethernet line-side research landed (Pulse v7 + TI SNLA079D/387 + Micrel/Microsemi,
+pdftotext-verified): magnetics↔RJ45 <25mm; PHY↔magnetics ≥25mm (measured ACROSS the
+mezzanine — remote-PHY caveat); moat = NO plane under discrete magnetics/RJ45/between,
+boundary across the transformer body (pins 1-12 vs 13-24); 20mil keep-outs + 50mil
+arcing clearance as the citable width bounds; BST 75Ω+1nF≥2kV at MEDIA CTs; 2×1206
+bridges at the RJ45; MDI 49.9Ω termination belongs on the SoM (PHY) side — carrier
+correctly has none. Magnetics↔RJ45 <25mm is a COMPOSITION-level term (two sheets).
+power_som contract v1 drafted (orchestrator): third LM61460, pilot structures + new
+en_cluster type; pending engine extensions E1-E4 flagged in the file header.
