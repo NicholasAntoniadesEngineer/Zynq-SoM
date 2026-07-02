@@ -1,38 +1,38 @@
-LAW-5 RATSNEST GATE: PASS (board 154 x 152 mm)
+LAW-5 RATSNEST GATE: PASS (board 170 x 145 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 14038.5 mm (budget 15147 mm, OK; 480 edges; 14038.5/24186.2 mm = 58.0% of total)
+  cross-subsystem airwire: 14161.6 mm (budget 15543 mm, OK; 468 edges; 14161.6/23511.9 mm = 60.2% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
-    pmod                   n=26  bbox_area=    3349 disp=  5.9
-    hdmi_tx                n=12  bbox_area=    1659 disp=  5.4
-    usb_jtag_connector     n=6   bbox_area=     603 disp=  5.4
-    usb_pd                 n=6   bbox_area=     186 disp=  4.9
-    hdmi_rx                n=10  bbox_area=    1260 disp=  4.8
-    bringup_en             n=15  bbox_area=     475 disp=  4.8
-    usbc_otg               n=12  bbox_area=     950 disp=  4.8
-    user_io                n=17  bbox_area=     930 disp=  4.7
-    pd_input               n=13  bbox_area=     974 disp=  4.3
-    motor_pwm              n=13  bbox_area=    1256 disp=  4.3
-    microsd                n=15  bbox_area=    1402 disp=  4.1
-    camera                 n=13  bbox_area=     790 disp=  3.9
-    fmc                    n=8   bbox_area=    1375 disp=  3.8
-    rj45_connector         n=3   bbox_area=    1181 disp=  3.8
-    usb_uart_connector     n=5   bbox_area=     391 disp=  3.7
-    lcd                    n=20  bbox_area=    1069 disp=  3.5
-    debug_boot             n=10  bbox_area=    1046 disp=  3.3
-    board_services         n=9   bbox_area=    1191 disp=  3.3
-    pmod_expansion         n=15  bbox_area=    1141 disp=  3.2
-    bringup_rails          n=23  bbox_area=    1382 disp=  2.9
-    power_mon              n=10  bbox_area=     277 disp=  2.8
-    bringup_en_modules     n=54  bbox_area=     935 disp=  2.6
-    ethernet               n=10  bbox_area=     838 disp=  2.5
-    motor_sense            n=10  bbox_area=    1891 disp=  2.4
-    usb_jtag               n=19  bbox_area=     496 disp=  1.9
-    board_qwiic            n=2   bbox_area=      83 disp=  1.8
+    hdmi_rx                n=10  bbox_area=    1495 disp=  5.7
+    hdmi_tx                n=12  bbox_area=    1687 disp=  5.5
+    usb_jtag_connector     n=6   bbox_area=     616 disp=  5.5
+    usb_uart_connector     n=5   bbox_area=     578 disp=  5.5
+    pmod                   n=26  bbox_area=    3062 disp=  5.4
+    lcd                    n=20  bbox_area=    1527 disp=  5.0
+    power                  n=51  bbox_area=    2223 disp=  5.0
+    user_io                n=17  bbox_area=     982 disp=  4.9
+    fmc                    n=8   bbox_area=    1695 disp=  4.7
+    pmod_expansion         n=15  bbox_area=    1629 disp=  4.5
+    pd_input               n=13  bbox_area=     960 disp=  4.3
+    camera                 n=13  bbox_area=     832 disp=  4.1
+    bringup_rails          n=23  bbox_area=    1676 disp=  3.5
+    rj45_connector         n=3   bbox_area=    1062 disp=  3.4
+    usbc_otg               n=12  bbox_area=     666 disp=  3.4
+    board_aux              n=18  bbox_area=     490 disp=  3.2
+    motor_sense            n=10  bbox_area=    2513 disp=  3.2
+    debug_boot             n=10  bbox_area=     989 disp=  3.1
+    board_services         n=9   bbox_area=    1081 disp=  3.0
+    ethernet               n=10  bbox_area=     936 disp=  2.9
+    power_mon              n=10  bbox_area=     263 disp=  2.7
+    bringup_en             n=15  bbox_area=     253 disp=  2.5
+    microsd                n=15  bbox_area=     795 disp=  2.3
+    usb_pd                 n=6   bbox_area=      80 disp=  2.1
+    board_qwiic            n=2   bbox_area=      80 disp=  1.8
+    uart_bridge            n=10  bbox_area=     109 disp=  1.6
+    usb_jtag               n=19  bbox_area=     410 disp=  1.6
+    power_som              n=23  bbox_area=     316 disp=  1.5
+    bringup_en_modules     n=54  bbox_area=     531 disp=  1.5
     hdmi_rx_term           n=10  bbox_area=      63 disp=  1.5
-    board_aux              n=18  bbox_area=     201 disp=  1.3
-    uart_bridge            n=10  bbox_area=      85 disp=  1.2
-    power                  n=51  bbox_area=     514 disp=  1.1
-    bringup_modules        n=71  bbox_area=     364 disp=  0.9
-    power_som              n=23  bbox_area=     175 disp=  0.8
+    motor_pwm              n=13  bbox_area=     410 disp=  1.4
+    bringup_modules        n=71  bbox_area=     337 disp=  0.9

@@ -585,6 +585,39 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
         # subsystems stay squarish.
         is_edge = sheet in edge_sheets
         aspect = EDGE_ZONE_ASPECT if is_edge else 1.0
+
+        # PLACEMENT CONTRACT: a subsystem carrying a placement_contract.py gets a
+        # datasheet-faithful STAGE TEMPLATE (Phase L) instead of the size-sorted
+        # shelf pack. The template FORCES every contract member to the IC's side
+        # (the same_side override) BEFORE building — so both the 2-side classifier
+        # here and any later L4 pull see "top" — then returns the SAME 4-tuple
+        # _pack_one_zone does (drop-in). A None result falls through to the legacy
+        # packer UNCHANGED (byte-identical for every non-contracted sheet). The
+        # template's chosen passive rotations come back via ``tmpl_rot`` and fold
+        # into zone_extra_rot (the SAME channel LEVER-L1 uses). See stage_templates.
+        from schgen.verify.placement_contract_gate import load_contract
+
+        from . import stage_templates
+        _contract = load_contract(sheet)
+        _tmpl = None
+        if _contract is not None:
+            _members = stage_templates.contract_member_brefs(sheet, _contract,
+                                                             resolvable)
+            for _m in _members:
+                side_of[_m] = "top"
+            tmpl_rot: dict[str, float] = {}
+            _tmpl = stage_templates.build_zone(
+                sheet, _contract, refs_by_sheet[sheet], side_of, bbox_of,
+                resolvable, tmpl_rot)
+            if _tmpl is not None:
+                zone_extra_rot.update(tmpl_rot)
+        if _tmpl is not None:
+            t_off, b_off, zw, zh = _tmpl
+            top_off[sheet] = t_off
+            bot_off[sheet] = b_off
+            zone_box[sheet] = (zw, zh)
+            continue
+
         t_off, b_off, zw, zh = _pack_one_zone(
             refs_by_sheet[sheet], side_of, bbox_of, resolvable, aspect,
             conn_rot=sheet_conn_rot.get(sheet),
