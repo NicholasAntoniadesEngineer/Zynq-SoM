@@ -9,19 +9,21 @@ library refs, existential hot-loop, basis strings).
 
 CARRIER-LOCAL PACKAGE NOTE: this subsystem lives in carrier/subsystems/ (a
 board-local package), NOT the portable top-level subsystems/ library. The
-contract registry (placement_contract_gate.load_contract) currently only
-imports ``subsystems.<sheet>.placement_contract`` — it must learn the
-carrier-local path before this contract goes live.
+contract registry (placement_contract_gate.load_contract) resolves both the
+portable ``subsystems.<sheet>`` root AND the carrier-local
+``carrier.subsystems.<sheet>`` root (E1), so this board-local contract registers
+the same way the portable ones do.
 
-PENDING ENGINE EXTENSIONS this contract requires (flagged, not assumed):
-  (E1) registry: also resolve ``carrier.subsystems.<sheet>.placement_contract``.
-  (E2) fb_cluster gate branch: tolerate ABSENT foreign_* keys (single-buck
+ENGINE EXTENSIONS this contract exercises (LANDED — no longer pending):
+  (E1) registry: also resolves ``carrier.subsystems.<sheet>.placement_contract``.
+  (E2) fb_cluster gate branch: tolerates ABSENT foreign_* keys (single-buck
        sheet — the foreign-SW guard is inter-subsystem here, carried by the
        composition FAR/flow gate, not intra-zone geometry).
-  (E3) flow/facing gate: resolve downstream "@som" to the SoM core rect
+  (E3) flow/facing gate: resolves downstream "@som" to the SoM core rect
        (PcbModel.som_core centroid) — the SoM is a fixed region, not a zone.
-  (E4) NEW structure type ``en_cluster`` (below): the gate must FAIL LOUD on
-       unknown structure types (never skip silently) until the branch exists.
+  (E4') the EN clamp is expressed with the GENERIC ``proximity`` structure type
+       (Decision D10), replacing the one-off ``en_cluster`` — the gate FAILS
+       LOUD on any structure type it does not implement.
 
 LM61460 PIN MAP (SNVSBD5D Rev. D, identical to the pilot):
     1 BIAS  2 VCC  3 AGND  4 FB  5 PGOOD  6 RT  7 EN/SYNC
@@ -112,14 +114,17 @@ CONTRACT: dict = {
          "pin": _RT, "max_pad_to_pin_mm": 3.0,
          "basis": "SNVSBD5D 8.3.5, 11.1|judgment:3.0"},
 
-        # EN CLUSTER (new type, E4) — the always-on EN strap: R12 10k series
-        # from +VIN_SYS, D5 5.1V zener clamp EN->GND, C20 100n EN bypass. The
-        # clamp node must stay short (a long EN node picks up SW noise and the
-        # zener's clamp action needs the loop tight); the datasheet's EN section
-        # (SNVSBD5D 9.2.2.2 / power_som.py PWR-1) gives no distance -> judgment.
-        {"type": "en_cluster", "ic": "U4", "pin": _EN,
+        # EN CLUSTER — the always-on EN strap: R12 10k series from +VIN_SYS,
+        # D5 5.1V zener clamp EN->GND, C20 100n EN bypass. The clamp node must
+        # stay short (a long EN node picks up SW noise and the zener's clamp
+        # action needs the loop tight); the datasheet's EN section (SNVSBD5D
+        # 9.2.2.2 / power_som.py PWR-1) gives no distance -> judgment. Expressed
+        # as the GENERIC ``proximity`` type (E4' / Decision D10): the EN cluster
+        # is a set of members near a specific anchor pin, exactly what proximity
+        # encodes — no bespoke gate branch needed.
+        {"type": "proximity", "anchor": "U4", "anchor_pins": [_EN],
          "members": ["R12", "D5", "C20"],
-         "max_pad_to_pin_mm": 3.0, "same_side": True,
+         "max_mm": 3.0, "same_side": True,
          "basis": "SNVSBD5D 9.2.2.2 (EN clamp, PWR-1)|judgment:3.0"},
 
         {"type": "same_side", "ics": ["U4"],

@@ -33,10 +33,21 @@ CENTROIDS (not pad boxes — this is board-level composition, not intra-stage):
   exist (documented). A target that does NOT resolve to a placed zone is reported
   UNRESOLVED and FAILS (strict — never a silent skip; LAW 4 / LAW 7).
 
+* **NEAR_MAX** (E5-lite) — the DUAL of FAR: each declared ``{"other": <zone>,
+  "max_mm": d}`` requires the contracted zone's centroid to sit WITHIN ``<= d`` mm
+  of the named zone (keep two zones close — e.g. usb_pd near its Type-C
+  receptacle, ethernet near its RJ45). Strict resolve like FAR.
+
+The FLOW, FACING and NEAR_MAX targets may name the special ``@som`` token (E3):
+it resolves to the SoM CORE-rectangle centroid (``model.som_core``) rather than a
+placed zone, so a subsystem can flow/face/near the plugged-in SoM — a FIXED region,
+not a sheet zone. Without a placed SoM the token is UNRESOLVED (strict).
+
 LAW 4 (strict, no softening): a failing term is FIXED by placing the zones/parts
-correctly (the FACING term drives the stage-template ``facing`` step; FLOW/FAR
-drive the floorplan), never waived here and never made configurable to weaken it.
-Every measured quantity is reported AS A NUMBER so a regression shows as a number.
+correctly (the FACING term drives the stage-template ``facing`` step; FLOW/FAR/
+NEAR_MAX drive the floorplan), never waived here and never made configurable to
+weaken it. Every measured quantity is reported AS A NUMBER so a regression shows
+as a number.
 
 Determinism: the summary sorts every list; centroids are rounded; no global
 state, no import side effects.
@@ -92,6 +103,33 @@ def _zone_centroids(model: PcbModel) -> dict[str, tuple[float, float]]:
             for s, a in acc.items() if a[2] > 0}
 
 
+# E3: the SoM is a FIXED core region (``model.som_core``), not a placed zone —
+# a carrier plugs a SoM into the board and a subsystem's OUTPUT can face THAT
+# region (e.g. power_som's +5V_SOM feeds the SoM DF40 VIN). A contract names it
+# with the special ``downstream``/flow token ``@som``; this resolver returns the
+# som_core rect centroid, or None when no SoM is placed (synthetic tests).
+_SOM_TOKEN = "@som"
+
+
+def _som_centroid(model: PcbModel) -> tuple[float, float] | None:
+    """(x, y) centroid of the SoM core rectangle (``model.som_core``), or None if
+    the board has no plugged-in SoM region."""
+    if model.som_core is None:
+        return None
+    x0, y0, x1, y1 = model.som_core
+    return (round((x0 + x1) / 2.0, 4), round((y0 + y1) / 2.0, 4))
+
+
+def _resolve_target(name: str, centroids: dict[str, tuple[float, float]],
+                    model: PcbModel) -> tuple[float, float] | None:
+    """Resolve a FLOW/FACING target NAME to a centroid: the special ``@som`` token
+    (E3) resolves to the SoM core centroid; every other name is a sheet-zone
+    centroid. None when the target is not placed (strict callers fail on None)."""
+    if name == _SOM_TOKEN:
+        return _som_centroid(model)
+    return centroids.get(name)
+
+
 def _members_centroid(model: PcbModel, sheet: str,
                       brefs: set[str]) -> tuple[float, float] | None:
     """(x, y) centroid of the given BOARD refs on ``sheet``, or None if none are
@@ -123,6 +161,8 @@ class PlacementFlowResult:
     facing_fail: int = 0
     far_checked: int = 0
     far_fail: int = 0
+    near_max_checked: int = 0        # E5-lite: NEAR_MAX zone-centroid caps
+    near_max_fail: int = 0
     unresolved: list[str] = field(default_factory=list)
     violations: list[str] = field(default_factory=list)
     # per-hop / per-term detail lines (always reported, pass or fail)
@@ -139,7 +179,8 @@ class PlacementFlowResult:
             "  fails: "
             f"flow={self.flow_fail}/{self.flow_checked} "
             f"facing={self.facing_fail}/{self.facing_checked} "
-            f"far={self.far_fail}/{self.far_checked}")
+            f"far={self.far_fail}/{self.far_checked} "
+            f"near_max={self.near_max_fail}/{self.near_max_checked}")
         L.append(f"  unresolved: {len(self.unresolved)}")
         for u in sorted(self.unresolved):
             L.append(f"    UNRESOLVED {u}")
@@ -199,7 +240,8 @@ def check(model: PcbModel,
         flow = ext.get("flow", [])
         for a, b in zip(flow, flow[1:], strict=False):
             res.flow_checked += 1
-            ca, cb = centroids.get(a), centroids.get(b)
+            ca = _resolve_target(a, centroids, model)   # E3: @som resolves too
+            cb = _resolve_target(b, centroids, model)
             if ca is None or cb is None:
                 gone = "/".join(x for x, c in ((a, ca), (b, cb)) if c is None)
                 miss = f"{sheet}: flow zone {gone} not placed"
@@ -250,6 +292,34 @@ def check(model: PcbModel,
                 add(f"far {sheet} vs {what}: {d:.2f}mm < {min_mm:g}mm "
                     f"[{basis}]")
 
+        # ---- NEAR_MAX (E5-lite): zone-centroid distance <= max_mm -------------
+        # The DUAL of FAR: keep this zone CLOSE to a named zone (e.g. usb_pd near
+        # its pd_input receptacle, ethernet near its RJ45). The ``other`` name is a
+        # sheet zone or the ``@som`` token (E3). Strict: an unresolved target FAILS,
+        # never a silent skip (LAW 4). Every measured distance is a NUMBER.
+        for near in ext.get("near_max", []):
+            res.near_max_checked += 1
+            other = near.get("other", "?")
+            max_mm = float(near.get("max_mm", 0.0))
+            basis = near.get("basis", "")
+            czone = centroids.get(sheet)
+            ctgt = _resolve_target(other, centroids, model)
+            if czone is None or ctgt is None:
+                un = f"{sheet}: near_max target {other!r} not placed"
+                if un not in res.unresolved:
+                    res.unresolved.append(un)
+                res.near_max_fail += 1
+                add(f"near_max {sheet} to {other}: UNRESOLVED ({other!r} not "
+                    f"placed) [{basis}]")
+                continue
+            d = _dist(czone, ctgt)
+            res.detail.append(
+                f"near_max {sheet} to {other}: {d:.2f}mm / <= {max_mm:g}mm")
+            if d > max_mm:
+                res.near_max_fail += 1
+                add(f"near_max {sheet} to {other}: {d:.2f}mm > {max_mm:g}mm "
+                    f"[{basis}]")
+
     res.ok = (not res.violations and not res.unresolved)
     return res
 
@@ -282,7 +352,7 @@ def _facing(res: PlacementFlowResult, model: PcbModel, sheet: str,
     out_brefs = {ref_map[r] for r in out_libs if r in ref_map}
 
     czone = centroids.get(sheet)
-    cds = centroids.get(downstream)
+    cds = _resolve_target(downstream, centroids, model)   # E3: @som resolves too
     cout = _members_centroid(model, sheet, out_brefs)
     if czone is None or cds is None or cout is None:
         missing = []

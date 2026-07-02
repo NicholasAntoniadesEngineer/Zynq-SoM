@@ -53,26 +53,69 @@ from schgen.generate.pcb import PcbModel
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SUBSYSTEMS_DIR = _REPO_ROOT / "subsystems"
+_CARRIER_SUBSYSTEMS_DIR = _REPO_ROOT / "carrier" / "subsystems"
+
+# The two package roots a placement contract can live under, tried in order: the
+# portable top-level library first, then the carrier-local package (E1). A sheet
+# name is unique across both (the sheet_index / discovery order proves it), so a
+# name resolves to at most one contract.
+_CONTRACT_ROOTS: tuple[tuple[Path, str], ...] = (
+    (_SUBSYSTEMS_DIR, "subsystems"),
+    (_CARRIER_SUBSYSTEMS_DIR, "carrier.subsystems"),
+)
+
+# ENGINE-WIRED sheets. A placement contract that merely EXISTS is authored data;
+# it is only ENGINE-ACTIVE (drives the stage-template placer + the emit gate
+# chain) once its sheet is listed here. This mirrors the SAME "power is the pilot"
+# scoping already hard-wired in two peers: ``stage_templates.build_zone`` returns
+# None unless ``subsystem == "power"``, and ``emit`` checks ``sheet_name="power"``.
+# WHY: ``load_contract`` is consumed by the placer's same-side override (it forces
+# every contract member to the IC side BEFORE packing). Until a sheet's TEMPLATE
+# is wired, that override would perturb an un-templated zone's geometry for no
+# gain (34 passives flip bottom->top, inflating the board) — so a contract stays
+# INERT to the placer/emit until it is wired here. The FULL set of authored
+# contracts is still discoverable for offline verification via ``discover_contract``
+# / ``check_all`` (the red-on-before proof), which do NOT consult this gate.
+_WIRED_SHEETS: frozenset[str] = frozenset({"power"})
 
 
 # --- contract registry ------------------------------------------------------------
-# ``load_contract(sheet)`` returns the plain-data CONTRACT dict for a sheet, or
-# None if that subsystem carries no placement contract. Designed so more
-# subsystems register by adding a ``placement_contract.py`` to their package:
-# the loader imports ``subsystems.<sheet>.placement_contract`` and reads its
-# ``CONTRACT`` constant. ``power`` is the pilot; the import path is uniform.
+# ``discover_contract(sheet)`` resolves the plain-data CONTRACT dict for ANY sheet
+# that carries a ``placement_contract.py`` under either root (E1) — pure authored
+# data, no wiring gate. ``load_contract(sheet)`` is the ENGINE-FACING entry: it
+# returns the contract ONLY for an engine-WIRED sheet (see ``_WIRED_SHEETS``), so
+# the placer/emit stay byte-identical to the pilot until a sheet is wired. Both
+# import ``<root>.<sheet>.placement_contract`` and read its ``CONTRACT`` constant.
+
+def discover_contract(sheet_name: str) -> dict | None:
+    """Resolve ``<root>/<sheet>/placement_contract.py``'s ``CONTRACT`` dict for
+    ANY authored contract (no wiring gate), or None if no root carries one. Both
+    the portable ``subsystems/`` library and the carrier-local
+    ``carrier/subsystems/`` package are searched (E1). Used by ``check_all`` and
+    the offline red-on-before proof — sheets need NOT be engine-wired to be
+    discovered here."""
+    import importlib
+    for root_dir, pkg_prefix in _CONTRACT_ROOTS:
+        pkg = root_dir / sheet_name / "placement_contract.py"
+        if not pkg.exists():
+            continue
+        mod = importlib.import_module(
+            f"{pkg_prefix}.{sheet_name}.placement_contract")
+        return getattr(mod, "CONTRACT", None)
+    return None
+
 
 def load_contract(sheet_name: str) -> dict | None:
-    """Load ``subsystems/<sheet>/placement_contract.py``'s ``CONTRACT`` dict, or
-    None if the subsystem package has no placement contract. Any subsystem that
-    adds such a module registers automatically — no edit here."""
-    pkg = _SUBSYSTEMS_DIR / sheet_name / "placement_contract.py"
-    if not pkg.exists():
+    """ENGINE-FACING loader: the CONTRACT dict for ``sheet_name`` IFF it is an
+    engine-WIRED sheet (``_WIRED_SHEETS``), else None. This keeps the stage-template
+    placer and the emit gate chain scoped to the pilot exactly as
+    ``stage_templates.build_zone`` / ``emit`` already are — an authored-but-unwired
+    contract is INERT here (it neither perturbs the placer nor gates the build)
+    until its template is wired. Use ``discover_contract`` to read a contract
+    regardless of wiring (offline verification / the red-on-before proof)."""
+    if sheet_name not in _WIRED_SHEETS:
         return None
-    import importlib
-    mod = importlib.import_module(
-        f"subsystems.{sheet_name}.placement_contract")
-    return getattr(mod, "CONTRACT", None)
+    return discover_contract(sheet_name)
 
 
 # --- pad geometry (pad-edge-to-pad-edge) ------------------------------------------
@@ -219,6 +262,8 @@ class PlacementContractResult:
     bias_fail: int = 0
     rt_fail: int = 0
     ldo_fail: int = 0
+    proximity_fail: int = 0
+    unknown_fail: int = 0
     missing_refs: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
@@ -232,7 +277,8 @@ class PlacementContractResult:
             f"bulk={self.bulk_fail} bulk_out={self.bulk_out_fail} "
             f"sw_node={self.sw_node_fail} "
             f"fb={self.fb_fail} boot={self.boot_fail} vcc={self.vcc_fail} "
-            f"bias={self.bias_fail} rt={self.rt_fail} ldo={self.ldo_fail}")
+            f"bias={self.bias_fail} rt={self.rt_fail} ldo={self.ldo_fail} "
+            f"proximity={self.proximity_fail} unknown={self.unknown_fail}")
         L.append(f"  unresolved refs: {len(self.missing_refs)}")
         for r in sorted(self.missing_refs):
             L.append(f"    MISSING {r}")
@@ -381,11 +427,18 @@ def check(model: PcbModel, sheet_name: str = "power",
             ic = st["ic"]
             ic_boxes = boxes(ic)
             own_l = boxes(st["own_inductor"])
-            for_ic = boxes(st["foreign_ic"])
-            for_l = boxes(st["foreign_inductor"])
+            # E2: a single-buck sheet (e.g. power_som) has NO foreign switcher —
+            # the foreign_* keys are absent and the foreign-SW guard is an
+            # inter-zone concern carried by the composition gate, not intra-zone
+            # geometry. Tolerate their absence (no foreign check), never KeyError.
+            foreign_ic_ref = st.get("foreign_ic")
+            for_ic = boxes(foreign_ic_ref) if foreign_ic_ref else None
+            foreign_l_ref = st.get("foreign_inductor")
+            for_l = boxes(foreign_l_ref) if foreign_l_ref else None
+            foreign_sw_pin = st.get("foreign_sw_pin")
             to_fb = float(st["max_to_fb_mm"])
             min_own = float(st["min_to_own_sw_mm"])
-            min_for = float(st["min_to_foreign_sw_mm"])
+            min_for = float(st.get("min_to_foreign_sw_mm", 0.0))
             for mref in st["members"]:
                 mb = boxes(mref)
                 if mb is None:
@@ -410,18 +463,21 @@ def check(model: PcbModel, sheet_name: str = "power",
                     res.fb_fail += 1
                     add(f"fb_cluster {ic} {mref}: {own_d:.2f}mm < {min_own:g}mm "
                         f"from own SW/L (too close) [{st['basis']}]")
-                # >= min from the OTHER buck's SW pad / inductor
-                for_d = None
-                if for_ic is not None:
-                    for_d = _pins_to_part(for_ic, mb, [st["foreign_sw_pin"]])
-                if for_l is not None:
-                    dl = _part_to_part(mb, for_l)
-                    for_d = dl if for_d is None else (
-                        dl if dl is not None and dl < for_d else for_d)
-                if for_d is not None and for_d < min_for:
-                    res.fb_fail += 1
-                    add(f"fb_cluster {ic} {mref}: {for_d:.2f}mm < {min_for:g}mm "
-                        f"from foreign {st['foreign_ic']} SW/L [{st['basis']}]")
+                # >= min from the OTHER buck's SW pad / inductor. E2: skipped
+                # entirely on a single-buck sheet (no foreign_* keys declared).
+                if foreign_ic_ref is not None:
+                    for_d = None
+                    if for_ic is not None and foreign_sw_pin is not None:
+                        for_d = _pins_to_part(for_ic, mb, [foreign_sw_pin])
+                    if for_l is not None:
+                        dl = _part_to_part(mb, for_l)
+                        for_d = dl if for_d is None else (
+                            dl if dl is not None and dl < for_d else for_d)
+                    if for_d is not None and for_d < min_for:
+                        res.fb_fail += 1
+                        add(f"fb_cluster {ic} {mref}: {for_d:.2f}mm < "
+                            f"{min_for:g}mm from foreign {foreign_ic_ref} SW/L "
+                            f"[{st['basis']}]")
 
         elif typ == "boot":
             ic = st["ic"]
@@ -491,6 +547,18 @@ def check(model: PcbModel, sheet_name: str = "power",
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
                         f"to pin {pin} [{st['basis']}]")
 
+        elif typ == "proximity":
+            # E4' — the GENERIC intra-zone structure (Decision D10): every member
+            # part must sit within ``max_mm`` pad-edge of the ANCHOR (a specific
+            # part), measured either to a set of the anchor's ``anchor_pins`` (if
+            # given) or to ANY pad of the anchor (absent). ``same_side`` (optional)
+            # requires each member on the anchor's PCB side. ``min_from`` (optional)
+            # is a list of {part, pin(optional), min_mm} clearances each member
+            # must respect. Universal per-member (every member checked); every
+            # measured distance is reported AS A NUMBER. Expresses EN clusters,
+            # BST networks, ESD arrays, kelvin filters alike (D10 vocabulary).
+            _proximity(st, res, inst, boxes, add)
+
         elif typ == "same_side":
             roles = contract.get("roles", {})
             for ic in st["ics"]:
@@ -505,7 +573,11 @@ def check(model: PcbModel, sheet_name: str = "power",
                 for s2 in contract.get("structures", []):
                     if s2.get("type") == "same_side":
                         continue
-                    if s2.get("ic") != ic:
+                    # buck-style structures key on ``ic``; the generic proximity
+                    # type keys on ``anchor`` — collect members from BOTH when the
+                    # anchoring part is this same_side ref, so a proximity-based
+                    # contract (E4') gets the same-side override too.
+                    if s2.get("ic") != ic and s2.get("anchor") != ic:
                         continue
                     for k in ("cap", "inductor", "resistor", "cin", "cout"):
                         if k in s2:
@@ -525,5 +597,101 @@ def check(model: PcbModel, sheet_name: str = "power",
                 # keep roles referenced so a future template can rely on it
                 _ = roles
 
+        else:
+            # E4' FAIL LOUD: an unimplemented structure type is a VIOLATION, never
+            # a silent skip. A contract that declares a type this gate cannot check
+            # would otherwise pass vacuously (a false green — LAW 4). The count +
+            # the violation line name the type and the sheet.
+            res.unknown_fail += 1
+            add(f"UNKNOWN structure type {typ!r} — gate has no branch to check "
+                f"it (fail-loud) [{st.get('basis', '')}]")
+
     res.ok = (not res.violations)
     return res
+
+
+# --- proximity (E4' / Decision D10 generic intra-zone type) ------------------------
+
+def _proximity(st: dict, res: PlacementContractResult, inst, boxes, add) -> None:
+    """Check ONE ``proximity`` structure against the placed geometry.
+
+    Schema (all distances pad-edge-to-pad-edge, mm):
+      ``members``      list of member part refs (LIBRARY refs). Universal — EVERY
+                       member is checked, so a stray one cannot hide behind a
+                       compliant sibling.
+      ``anchor``       the part the members cluster around.
+      ``anchor_pins``  optional list of anchor pin names; when given the distance
+                       is measured to those pins only, else to ANY pad of the
+                       anchor (absent = whole-part proximity).
+      ``max_mm``       each member must be within this of the anchor (pins).
+      ``same_side``    optional bool; each member must share the anchor's side.
+      ``min_from``     optional list of {part, pin (optional), min_mm}; each member
+                       must clear each named part (pin, or any pad) by >= min_mm.
+
+    Every measured distance is reported AS A NUMBER (LAW 4). The single
+    ``proximity_fail`` counter aggregates every failing (member, constraint) pair.
+    """
+    anchor = st.get("anchor")
+    anchor_it = inst(anchor) if anchor else None
+    anchor_boxes = boxes(anchor) if anchor else None
+    anchor_pins = st.get("anchor_pins")     # None -> any pad of the anchor
+    max_mm = float(st["max_mm"])
+    same_side = bool(st.get("same_side", False))
+    basis = st.get("basis", "")
+
+    for mref in st.get("members", []):
+        mb = boxes(mref)
+        mit = inst(mref)
+        if mb is None or anchor_boxes is None:
+            continue
+        # --- max_mm to the anchor (pins if given, else any pad) ----------------
+        if anchor_pins:
+            d = _pins_to_part(anchor_boxes, mb, anchor_pins)
+        else:
+            d = _part_to_part(anchor_boxes, mb)
+        tgt = (f"pins {'/'.join(anchor_pins)}" if anchor_pins else "any pad")
+        if d is None or d > max_mm:
+            res.proximity_fail += 1
+            add(f"proximity {anchor} {mref}: "
+                f"{'n/a' if d is None else f'{d:.2f}mm'} > {max_mm:g}mm "
+                f"to {anchor} {tgt} [{basis}]")
+        # --- same_side (each member shares the anchor's PCB side) --------------
+        if same_side and anchor_it is not None and mit is not None \
+                and mit.side != anchor_it.side:
+            res.proximity_fail += 1
+            add(f"proximity {anchor} {mref}: on {mit.side} but anchor "
+                f"{anchor} is {anchor_it.side} (same_side) [{basis}]")
+        # --- min_from clearances ----------------------------------------------
+        for mf in st.get("min_from", []):
+            other = mf.get("part")
+            ob = boxes(other) if other else None
+            if ob is None:
+                continue
+            mm = float(mf.get("min_mm", 0.0))
+            opin = mf.get("pin")
+            fd = (_pins_to_part(ob, mb, [opin]) if opin
+                  else _part_to_part(ob, mb))
+            otgt = (f"pin {opin}" if opin else "any pad")
+            if fd is not None and fd < mm:
+                res.proximity_fail += 1
+                add(f"proximity {anchor} {mref}: {fd:.2f}mm < {mm:g}mm from "
+                    f"{other} {otgt} (too close) [{basis}]")
+
+
+# --- check_all (discover + check every registered contract) ------------------------
+
+def check_all(model: PcbModel) -> dict[str, PlacementContractResult]:
+    """Run :func:`check` for EVERY authored placement contract present in the
+    board ``model`` (every sheet with a placed footprint that carries a contract),
+    WIRED OR NOT — it discovers via :func:`discover_contract`, bypassing the
+    engine-wiring gate, so it sees the full authored set (the red-on-before proof
+    needs the unwired sheets). Returns ``{sheet: PlacementContractResult}`` — the
+    intra-zone verdict per contracted subsystem. Deterministic: sheets are
+    iterated in sorted order."""
+    out: dict[str, PlacementContractResult] = {}
+    for sheet in sorted({i.sheet for i in model.insts}):
+        c = discover_contract(sheet)
+        if c is None:
+            continue
+        out[sheet] = check(model, sheet_name=sheet, contract=c)
+    return out
