@@ -47,6 +47,17 @@ FLOORPLAN_SPEC = REPO_ROOT / "carrier" / "floorplan.json"
 
 _EDGES = ("N", "E", "S", "W")
 
+# EDGE-SEAT override (Decision D11) — the NAMED interior blocks whose explicit
+# floorplan ``{"near": <edge connector>}`` anchor must WIN over the net-affinity
+# pull, so the block seats adjacent to its connector instead of drifting to the
+# board centre with its shared rails. Scoped to exactly these names (usb_pd: the
+# FUSB302 PD PHY must sit at its Type-C receptacle to keep the CC net short — its
+# near_max/flow terms). ``_EDGE_SEAT_ZONE_W`` is the zone-anchor weight used for
+# them (large enough to dominate the powered affinity sum); their SoM pull is
+# dropped. Keep this set MINIMAL — widening it re-quantises other blocks' seats.
+_EDGE_SEAT_BLOCKS: frozenset[str] = frozenset({"usb_pd"})
+_EDGE_SEAT_ZONE_W = 60.0
+
 # Board outline — DERIVED, not hardcoded. ``derive_outline`` (below) computes
 # BOARD_W/BOARD_H from the SoM footprint + the edge-connector depths + the
 # total component area + a perimeter keepout; ``build_plan`` calls it FIRST and
@@ -1461,10 +1472,45 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         else:
             zax, zay = _zone_anchor(
                 plan, b.zone if b.zone in ("N", "E", "S", "W") else "E")
-        sp = SOM_W * max(som_pull.get(b.name, 0.0), 0.0)
-        wsum = ZONE_W + sp
-        ax = ZONE_W * zax + sp * som_cx
-        ay = ZONE_W * zay + sp * som_cy
+        # ZONE-ANCHOR OVERRIDE for usb_pd ONLY (Decision D11, flagged loudly).
+        # usb_pd shares VDD/VBUS/CC/I2C/INT nets with power + the SoM, so its
+        # net-affinity centroid drags the PD PHY to the board CENTRE — ~25 mm off
+        # its pd_input receptacle and over the usb_pd->power flow budget once the
+        # proximity-cluster template tightened its zone. That violates its
+        # CITED-intent CC-run rule (near_max, now the D11 edge-gap metric) AND the
+        # flow budget. The datasheet-true fix is to seat the PHY at its receptacle;
+        # here that means letting the explicit floorplan ``{"near": "pd_input"}``
+        # anchor WIN over the net pull for THIS block. We raise usb_pd's zone weight
+        # to dominate + drop its SoM pull, and aim the anchor at pd_input's
+        # INTERIOR-facing edge (just inboard of the connector, toward power) rather
+        # than its centroid — so usb_pd seats snug UNDER the receptacle (near_max
+        # gap small) AND toward the board interior where power lives (flow budget
+        # met), resolving the pd_input<->power tug that the centroid anchor could
+        # not. Scoped to the ONE named block — every other interior block's anchor
+        # (and thus board-identity) is unchanged. If a future subsystem needs the
+        # same, promote this to a spec-level pull knob rather than widening the set.
+        if b.name in _EDGE_SEAT_BLOCKS and b.zone.startswith("@") \
+                and b.zone[1:] in edge_pos:
+            zw, sp = _EDGE_SEAT_ZONE_W, 0.0
+            eb2 = edge_pos[b.zone[1:]]
+            edge = getattr(eb2, "edge", "")
+            # aim just INBOARD of the connector body (interior direction) so the
+            # block tucks against the receptacle's inner face, not off to a side.
+            if edge == "N":
+                zax, zay = eb2.cx, eb2.y + eb2.h + b.h / 2
+            elif edge == "S":
+                zax, zay = eb2.cx, eb2.y - b.h / 2
+            elif edge == "W":
+                zax, zay = eb2.x + eb2.w + b.w / 2, eb2.cy
+            elif edge == "E":
+                zax, zay = eb2.x - b.w / 2, eb2.cy
+            # else: keep the centroid (zax, zay already set above)
+        else:
+            zw = ZONE_W
+            sp = SOM_W * max(som_pull.get(b.name, 0.0), 0.0)
+        wsum = zw + sp
+        ax = zw * zax + sp * som_cx
+        ay = zw * zay + sp * som_cy
         for nb, w in affinity.get(b.name, {}).items():
             if nb in centers:
                 ncx, ncy = centers[nb]
@@ -1477,9 +1523,15 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     # place the most-connected (and, as a tiebreak, the largest) interior block
     # first, so the hub subsystems anchor near the SoM and pull the rest in —
     # this is what keeps the cross-subsystem airwire under the LAW-5 budget.
-    order = sorted(interior, key=lambda b: (-_conn(b),
-                                            -(zbox[b.name][0] *
-                                              zbox[b.name][1]), b.name))
+    # EDGE-SEAT blocks (usb_pd, D11) are placed FIRST — before the big interior
+    # blocks (fmc, ...) fill the area behind their connector — so they can claim
+    # the cell snug against their receptacle (the near_max/flow requirement). Then
+    # the rest in connectivity order (most-connected first, the LAW-5 lever).
+    order = sorted(
+        interior,
+        key=lambda b: (0 if b.name in _EDGE_SEAT_BLOCKS else 1,
+                       -_conn(b),
+                       -(zbox[b.name][0] * zbox[b.name][1]), b.name))
     for b in order:
         b.w, b.h = zbox[b.name]
         b.area = round(b.w * b.h, 1)

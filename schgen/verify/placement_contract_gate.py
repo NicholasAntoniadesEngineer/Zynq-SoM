@@ -76,7 +76,12 @@ _CONTRACT_ROOTS: tuple[tuple[Path, str], ...] = (
 # INERT to the placer/emit until it is wired here. The FULL set of authored
 # contracts is still discoverable for offline verification via ``discover_contract``
 # / ``check_all`` (the red-on-before proof), which do NOT consult this gate.
-_WIRED_SHEETS: frozenset[str] = frozenset({"power"})
+#
+# ``usb_pd`` (D11 wiring): the FUSB302B bypass/CC-filter network is a PROXIMITY-only
+# contract driven by the generic proximity-cluster template (stage_templates
+# ``_build_proximity_zone``); all 6 parts are contracted so its stage template is
+# active and its intra-zone gate + external near_max (D11 edge-gap) are enforced.
+_WIRED_SHEETS: frozenset[str] = frozenset({"power", "usb_pd"})
 
 
 # --- contract registry ------------------------------------------------------------

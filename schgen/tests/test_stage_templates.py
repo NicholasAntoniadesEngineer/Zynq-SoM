@@ -31,6 +31,11 @@ from schgen.generate.pcb.constants import PLACE_CLEAR
 from schgen.verify import placement_contract_gate as g
 
 _POWER = "power"
+# Every engine-WIRED sheet gets a stage template, so its zone geometry LEGITIMATELY
+# differs registry-on vs -off; only these sheets may change. usb_pd joined in the
+# D11 wave (its proximity-cluster template). Read the live set so a future wiring
+# needs no test edit.
+_WIRED = set(g._WIRED_SHEETS)
 
 
 # ---------------------------------------------------------------------------
@@ -57,9 +62,9 @@ def _zone_geom_with_contract(enabled: bool):
 # ---------------------------------------------------------------------------
 
 def test_every_other_sheet_is_byte_identical():
-    """The decisive regression test: enabling the template changes ONLY the
-    ``power`` zone; every other sheet's geometry is byte-identical (the legacy
-    packer is untouched)."""
+    """The decisive regression test: enabling the templates changes ONLY the
+    engine-WIRED zones (``power`` + ``usb_pd``); every OTHER sheet's geometry is
+    byte-identical (the legacy packer is untouched)."""
     off = _zone_geom_with_contract(enabled=False)
     on = _zone_geom_with_contract(enabled=True)
 
@@ -67,7 +72,7 @@ def test_every_other_sheet_is_byte_identical():
     assert _POWER in sheets
     changed = []
     for sheet in sorted(sheets):
-        if sheet == _POWER:
+        if sheet in _WIRED:
             continue
         same = (
             off.zone_box.get(sheet) == on.zone_box.get(sheet)
@@ -75,31 +80,34 @@ def test_every_other_sheet_is_byte_identical():
             and off.bot_off.get(sheet) == on.bot_off.get(sheet))
         if not same:
             changed.append(sheet)
-    assert not changed, f"template perturbed non-power sheets: {changed}"
+    assert not changed, f"template perturbed non-wired sheets: {changed}"
 
     # per-ref side / conn_rot / zone_extra_rot: identical for every ref that is
-    # NOT a power-sheet ref (the template's same-side override + rotations are the
-    # only intended deltas, and they live entirely on the power sheet).
-    power_refs = set(on.refs_by_sheet.get(_POWER, [])) \
-        | set(off.refs_by_sheet.get(_POWER, []))
+    # NOT a wired-sheet ref (the templates' same-side override + rotations are the
+    # only intended deltas, and they live entirely on the wired sheets).
+    wired_refs: set[str] = set()
+    for s in _WIRED:
+        wired_refs |= set(on.refs_by_sheet.get(s, [])) \
+            | set(off.refs_by_sheet.get(s, []))
     for ref in set(off.side_of) | set(on.side_of):
-        if ref in power_refs:
+        if ref in wired_refs:
             continue
         assert off.side_of.get(ref) == on.side_of.get(ref), \
             f"side_of[{ref}] changed off={off.side_of.get(ref)} " \
             f"on={on.side_of.get(ref)}"
     for ref in set(off.conn_rot) | set(on.conn_rot):
-        if ref in power_refs:
+        if ref in wired_refs:
             continue
         assert off.conn_rot.get(ref) == on.conn_rot.get(ref), ref
     for ref in set(off.zone_extra_rot) | set(on.zone_extra_rot):
-        if ref in power_refs:
+        if ref in wired_refs:
             continue
         assert off.zone_extra_rot.get(ref) == on.zone_extra_rot.get(ref), ref
 
-    # and the power zone MUST have actually changed (proves the template ran).
-    assert off.zone_box.get(_POWER) != on.zone_box.get(_POWER), \
-        "the template did not change the power zone at all"
+    # and the wired zones MUST have actually changed (proves the templates ran).
+    for s in _WIRED:
+        assert off.zone_box.get(s) != on.zone_box.get(s), \
+            f"the template did not change the {s} zone at all"
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +256,124 @@ def test_power_zone_width_within_budget(_power_inputs):
 
 
 # ---------------------------------------------------------------------------
+# (1b) PROXIMITY-CLUSTER template — usb_pd (D11 wiring), no board build
+# ---------------------------------------------------------------------------
+# The generic proximity-cluster builder anchors the IC at the origin and seats the
+# 6-part FUSB302B bypass/CC network by the SAME backtracking search the buck uses.
+# These drive build_zone on usb_pd's REAL inputs (its band + footprints), with NO
+# full board build, and assert: it produces a result, it is deterministic, every
+# member lands top-side, and the emitted geometry PASSES usb_pd's intra-zone gate.
+
+_USB_PD = "usb_pd"
+
+
+def _subsystem_inputs(sheet: str):
+    """side_of / bbox_of / resolvable / refs for ``sheet``, built the SAME way
+    subsystem_zone_geometry does (per-sheet decoupling classification on the
+    board-unique ref namespace), so build_zone gets its real inputs — no board
+    build. Mirrors ``_power_inputs`` for an arbitrary contracted sheet."""
+    import json
+
+    from schgen.core.link import load_subsystem
+    from schgen.core.model import PinRef
+    from schgen.generate.board import _renamed_ref
+    from schgen.generate.pcb.constants import CARRIER
+    from schgen.generate.pcb.footprint import _footprint_bbox, resolve_mod
+    from schgen.generate.pcb.placement import _classify_side, _decoupling_caps
+
+    idx = json.loads((CARRIER / "sheet_index.json").read_text())[sheet]
+    sc = load_subsystem(sheet)
+    snets = {n: [PinRef(_renamed_ref(p.ref, idx, sheet=sheet)
+                        if not p.ref.startswith("#") else p.ref, p.pin)
+                 for p in net.pins] for n, net in sc.circuit.nets.items()}
+    sdec = _decoupling_caps(snets)
+    refs, side_of, bbox_of, resolvable = [], {}, {}, {}
+    for ref, part in sc.circuit.parts.items():
+        bref = _renamed_ref(ref, idx, sheet=sheet)
+        mod = resolve_mod(part.footprint)
+        if mod is None:
+            continue
+        resolvable[bref] = mod
+        bbox_of[bref] = _footprint_bbox(mod)
+        side_of[bref] = _classify_side(bref, part.lib_id, bbox_of[bref], sdec,
+                                       True)
+        refs.append(bref)
+    return refs, side_of, bbox_of, resolvable
+
+
+@pytest.fixture(scope="module")
+def _usb_pd_inputs():
+    return _subsystem_inputs(_USB_PD)
+
+
+def _run_prox(inputs):
+    refs, side_of, bbox_of, resolvable = inputs
+    contract = g.load_contract(_USB_PD)
+    side = dict(side_of)
+    for m in T.contract_member_brefs(_USB_PD, contract, resolvable):
+        side[m] = "top"
+    rot: dict[str, float] = {}
+    res = T.build_zone(_USB_PD, contract, refs, side, bbox_of, resolvable, rot)
+    return res, rot, side, contract
+
+
+def test_proximity_zone_is_deterministic(_usb_pd_inputs):
+    """Two runs of the proximity-cluster template are byte-identical (no
+    randomness — the same discipline as the buck template)."""
+    r1, rot1, _, _ = _run_prox(_usb_pd_inputs)
+    r2, rot2, _, _ = _run_prox(_usb_pd_inputs)
+    assert r1 is not None and r1 == r2, "proximity template not deterministic"
+    assert rot1 == rot2
+
+
+def test_proximity_all_members_top_side(_usb_pd_inputs):
+    """Every one of usb_pd's 6 contracted parts (U1 + the 5 caps) lands on the
+    top offset map — the same_side override (FUSB302B EVB co-location)."""
+    (top_off, bot_off, _zw, _zh), _rot, _side, _c = _run_prox(_usb_pd_inputs)
+    members = T.contract_member_brefs(_USB_PD, g.load_contract(_USB_PD),
+                                      _usb_pd_inputs[3])
+    assert len(members) == 6, sorted(members)
+    for m in members:
+        assert m in top_off, f"proximity member {m} not placed top-side"
+        assert m not in bot_off, f"proximity member {m} landed on the bottom"
+
+
+def test_proximity_zone_passes_its_own_gate(_usb_pd_inputs):
+    """The emitted proximity geometry PASSES usb_pd's intra-zone placement
+    contract (all 5 proximity structures + same_side), measured with the gate's
+    pad boxes — the same measure the gate applies to the real board."""
+    (top_off, _bot, _zw, _zh), rot, _side, contract = _run_prox(_usb_pd_inputs)
+    band = g._board_refs_by_sheet(_USB_PD)
+    _refs, _si, _bb, resolvable = _usb_pd_inputs
+
+    ZX, ZY = 30.0, 40.0
+    from schgen.generate.pcb import (
+        ORIGIN_X,
+        ORIGIN_Y,
+        FootprintInst,
+        PcbModel,
+    )
+    from schgen.generate.pcb.footprint import pad_names
+    insts = []
+    for r, (dx, dy) in top_off.items():
+        mod = resolvable[r]
+        insts.append(FootprintInst(
+            ref=r, value="x", footprint="x",
+            x=ORIGIN_X + ZX + dx, y=ORIGIN_Y + ZY + dy,
+            rotation=rot.get(r, 0.0),
+            pad_nets={p: (0, "") for p in pad_names(mod)},
+            mod_path=mod, sheet=_USB_PD, side="top"))
+    m = PcbModel(board_w=170.0, board_h=145.0, insts=insts,
+                 net_numbers={"": 0}, netclass_of={}, classes={},
+                 placed=len(insts), deferred=[], n_top=len(insts), n_bottom=0,
+                 two_side=True)
+    res = g.check(m, sheet_name=_USB_PD, contract=contract, ref_map=band)
+    print("\n" + res.summary())
+    assert res.ok, res.summary()
+    assert res.proximity_fail == 0 and res.same_side_fail == 0, res.summary()
+
+
+# ---------------------------------------------------------------------------
 # (2) GATE-GREEN integration — the template makes the real board pass
 # ---------------------------------------------------------------------------
 
@@ -259,23 +385,27 @@ def _real_model():
 
 
 def test_gate_is_green_on_the_templated_board(_real_model):
-    """The placement-contract gate PASSES the emitted power zone: ok=True, no
-    violations, no unresolved refs. Prints the summary for the orchestrator."""
-    res = g.check(_real_model, _POWER)
-    print("\n" + res.summary())
-    assert res.have_contract is True
-    assert res.missing_refs == [], f"unresolved refs: {res.missing_refs}"
-    assert res.ok is True, res.summary()
-    assert not res.violations, res.summary()
+    """The placement-contract gate PASSES every WIRED sheet's zone (power + the
+    usb_pd proximity cluster): ok=True, no violations, no unresolved refs. Prints
+    each summary for the orchestrator."""
+    for sheet in sorted(g._WIRED_SHEETS):
+        res = g.check(_real_model, sheet)
+        print(f"\n--- {sheet} ---\n" + res.summary())
+        assert res.have_contract is True, sheet
+        assert res.missing_refs == [], f"{sheet} unresolved refs: {res.missing_refs}"
+        assert res.ok is True, res.summary()
+        assert not res.violations, res.summary()
 
 
-def test_power_zone_coordinate_dump(_real_model):
-    """Print a sorted (ref, x, y, side) dump of the power zone so the orchestrator
-    can pre-check the layout before rendering. Always passes — it is a report."""
-    rows = sorted(
-        (i.ref, round(i.x, 3), round(i.y, 3), i.side)
-        for i in _real_model.insts if i.sheet == _POWER)
-    print(f"\npower zone: {len(rows)} parts")
-    for ref, x, y, s in rows:
-        print(f"  {ref:8} x={x:9.3f} y={y:9.3f} {s}")
-    assert rows
+def test_wired_zone_coordinate_dumps(_real_model):
+    """Print a sorted (ref, x, y, rot, side) dump of every WIRED zone (power +
+    usb_pd) so the orchestrator can pre-check the layout before rendering. Always
+    passes — it is a report."""
+    for sheet in sorted(g._WIRED_SHEETS):
+        rows = sorted(
+            (i.ref, round(i.x, 3), round(i.y, 3), round(i.rotation, 1), i.side)
+            for i in _real_model.insts if i.sheet == sheet)
+        print(f"\n{sheet} zone: {len(rows)} parts")
+        for ref, x, y, rot, s in rows:
+            print(f"  {ref:8} x={x:9.3f} y={y:9.3f} rot={rot:5.1f} {s}")
+        assert rows

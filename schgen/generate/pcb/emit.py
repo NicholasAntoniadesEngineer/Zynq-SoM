@@ -43,6 +43,40 @@ from .silk import (
 )
 
 
+def _check_wired_contracts(model: PcbModel, gate_mod):
+    """Run the intra-zone placement-contract gate on EVERY engine-WIRED sheet
+    (``gate_mod._WIRED_SHEETS``) and MERGE the per-sheet results into one
+    ``PlacementContractResult``: ``ok`` is the AND, ``checked`` / the per-type fail
+    counters / ``violations`` / ``missing_refs`` are summed, and ``summary()`` is
+    the concatenation of every sheet's summary. So a regression on ANY wired sheet
+    (power OR usb_pd) fails the board, and the report shows both. Deterministic:
+    wired sheets are iterated in sorted order. Falls back to the pure ``power``
+    result if no sheet is wired (never happens today)."""
+    wired = sorted(gate_mod._WIRED_SHEETS)
+    per = [gate_mod.check(model, sheet_name=s) for s in wired]
+    if not per:
+        return gate_mod.check(model, sheet_name="power")
+    if len(per) == 1:
+        return per[0]
+    merged = gate_mod.PlacementContractResult(
+        sheet="+".join(wired), have_contract=any(r.have_contract for r in per))
+    merged.ok = all(r.ok for r in per)
+    _counts = ("checked", "hot_loop_fail", "same_side_fail", "bulk_fail",
+               "bulk_out_fail", "sw_node_fail", "fb_fail", "boot_fail",
+               "vcc_fail", "bias_fail", "rt_fail", "ldo_fail", "proximity_fail",
+               "unknown_fail")
+    for attr in _counts:
+        setattr(merged, attr, sum(getattr(r, attr) for r in per))
+    for r in per:
+        merged.violations.extend(r.violations)
+        merged.missing_refs.extend(r.missing_refs)
+    # a concatenated, per-sheet summary the report writer prints verbatim.
+    merged._sheet_summaries = [r.summary() for r in per]  # type: ignore[attr-defined]
+    merged.summary = (  # type: ignore[method-assign]
+        lambda: "\n\n".join(merged._sheet_summaries))
+    return merged
+
+
 def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     """Serialise the .kicad_pcb."""
     board_uuid = stable_uuid("Zynq_Carrier", "pcb")
@@ -525,13 +559,15 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         result["refdes_silk"] = refdes_overlap_gate.check(
             pcb_path, enforce_bottom=True)
         # PLACEMENT-CONTRACT gate (Phase L) — the datasheet intra-zone layout
-        # contract (hot loop / FB cluster / bulk_out / same-side ...) checked on
-        # the SAME placed model. HARD: a value-sorted power zone (the "before"
-        # defect) FAILS here even under DRC=0 / ratsnest-pass. Only ``power``
-        # carries a contract today; the gate is vacuously green for the rest.
+        # contract (hot loop / FB cluster / bulk_out / same-side / proximity ...)
+        # checked on the SAME placed model. HARD: a value-sorted zone (the "before"
+        # defect) FAILS here even under DRC=0 / ratsnest-pass. The gate runs on
+        # EVERY engine-WIRED sheet (``_WIRED_SHEETS`` — power + usb_pd today), not
+        # just power; the per-sheet results are merged into one verdict (ok = AND,
+        # summaries concatenated) so a regression on ANY wired sheet fails the board.
         from schgen.verify import placement_contract_gate, placement_flow_gate
-        result["placement_contract"] = placement_contract_gate.check(
-            model, sheet_name="power")
+        result["placement_contract"] = _check_wired_contracts(
+            model, placement_contract_gate)
         # COMPOSITION-LEVEL FLOW/FACING/FAR gate — the contract's EXTERNAL terms
         # (power chain adjacency, output facing downstream, analog moat) checked
         # on the whole placed board (zone centroids). HARD.

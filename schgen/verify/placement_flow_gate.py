@@ -33,10 +33,14 @@ CENTROIDS (not pad boxes — this is board-level composition, not intra-stage):
   exist (documented). A target that does NOT resolve to a placed zone is reported
   UNRESOLVED and FAILS (strict — never a silent skip; LAW 4 / LAW 7).
 
-* **NEAR_MAX** (E5-lite) — the DUAL of FAR: each declared ``{"other": <zone>,
-  "max_mm": d}`` requires the contracted zone's centroid to sit WITHIN ``<= d`` mm
-  of the named zone (keep two zones close — e.g. usb_pd near its Type-C
-  receptacle, ethernet near its RJ45). Strict resolve like FAR.
+* **NEAR_MAX** (E5-lite, D11) — the DUAL of FAR: each declared ``{"other": <zone>,
+  "max_mm": d}`` requires the EDGE-to-EDGE GAP between the contracted zone's
+  bounding box and the named zone's box to be ``<= d`` mm (0 when they overlap or
+  abut) — keep two zones close (e.g. usb_pd near its Type-C receptacle, ethernet
+  near its RJ45). D11 replaced the earlier zone-CENTROID distance: a centroid cap
+  is bounded below by the zones' half-extents, so it false-failed two ADJACENT
+  zones; the edge gap is the real empty space between them. Strict resolve like
+  FAR (the ``@som`` token resolves to the SoM core rectangle).
 
 The FLOW, FACING and NEAR_MAX targets may name the special ``@som`` token (E3):
 it resolves to the SoM CORE-rectangle centroid (``model.som_core``) rather than a
@@ -101,6 +105,68 @@ def _zone_centroids(model: PcbModel) -> dict[str, tuple[float, float]]:
         a[2] += 1.0
     return {s: (round(a[0] / a[2], 4), round(a[1] / a[2], 4))
             for s, a in acc.items() if a[2] > 0}
+
+
+# --- zone bounding boxes (D11: near_max is an EDGE-to-EDGE gap, not centroids) ------
+# The NEAR_MAX metric measures the GAP between two zones' bounding boxes, not their
+# centroid distance. Centroid distance is bounded below by the sum of the zones'
+# half-extents, so a tight centroid cap false-fails two ADJACENT zones (the D11
+# defect: usb_pd<->pd_input measured ~38.6 mm centroid, near the geometric floor,
+# yet the zones abut). The edge-gap is 0 when the zones overlap and grows only with
+# the real empty space between them — the physical quantity "keep these two close"
+# actually means. Each zone's box is the UNION of its parts' PAD boxes (the same
+# board-page-frame pad geometry the intra-zone gate measures, so the box lands where
+# KiCad's copper does); the ``@som`` token's box is ``model.som_core`` directly.
+
+def _zone_bboxes(model: PcbModel) -> dict[str, tuple[float, float, float, float]]:
+    """sheet name -> (x0, y0, x1, y1) axis-aligned bbox over every placed
+    footprint's PAD boxes on that sheet (board page frame). Deterministic;
+    reuses the intra-zone gate's pad geometry so the box matches the emitted
+    copper. A sheet with no resolvable pad geometry is omitted."""
+    from schgen.verify.placement_contract_gate import _inst_pad_boxes
+    acc: dict[str, list[float]] = {}
+    for i in model.insts:
+        try:
+            boxes = _inst_pad_boxes(i)
+        except Exception:  # noqa: BLE001 — a sheet with no parsable pads is skipped
+            continue
+        if not boxes:
+            continue
+        a = acc.get(i.sheet)
+        for b in boxes.values():
+            if a is None:
+                a = [b[0], b[1], b[2], b[3]]
+                acc[i.sheet] = a
+            else:
+                a[0] = min(a[0], b[0])
+                a[1] = min(a[1], b[1])
+                a[2] = max(a[2], b[2])
+                a[3] = max(a[3], b[3])
+    return {s: (round(a[0], 4), round(a[1], 4), round(a[2], 4), round(a[3], 4))
+            for s, a in acc.items()}
+
+
+def _bbox_gap(a: tuple[float, float, float, float],
+              b: tuple[float, float, float, float]) -> float:
+    """Edge-to-edge gap between two axis-aligned boxes (0.0 if they overlap or
+    touch). The Euclidean distance between the nearest edges — the empty space
+    between the two zones."""
+    dx = max(a[0] - b[2], b[0] - a[2], 0.0)
+    dy = max(a[1] - b[3], b[1] - a[3], 0.0)
+    return math.hypot(dx, dy)
+
+
+def _resolve_target_bbox(name: str,
+                         bboxes: dict[str, tuple[float, float, float, float]],
+                         model: PcbModel
+                         ) -> tuple[float, float, float, float] | None:
+    """Resolve a NEAR_MAX target NAME to a bounding box: the special ``@som``
+    token (E3) resolves to the SoM core rectangle (``model.som_core``); every
+    other name is a sheet-zone bbox. None when the target is not placed (strict
+    callers fail on None)."""
+    if name == _SOM_TOKEN:
+        return model.som_core
+    return bboxes.get(name)
 
 
 # E3: the SoM is a FIXED core region (``model.som_core``), not a placed zone —
@@ -208,6 +274,7 @@ def check(model: PcbModel,
     with no ``external`` block contributes nothing."""
     res = PlacementFlowResult()
     centroids = _zone_centroids(model)
+    bboxes = _zone_bboxes(model)           # D11: near_max is an edge-to-edge gap
     area = max(float(model.board_w) * float(model.board_h), 1.0)
     res.board_area = area
     # free-space term + the SoM go-around detour (0 without a placed som_core).
@@ -292,19 +359,22 @@ def check(model: PcbModel,
                 add(f"far {sheet} vs {what}: {d:.2f}mm < {min_mm:g}mm "
                     f"[{basis}]")
 
-        # ---- NEAR_MAX (E5-lite): zone-centroid distance <= max_mm -------------
+        # ---- NEAR_MAX (E5-lite, D11): zone bbox EDGE-to-EDGE gap <= max_mm -----
         # The DUAL of FAR: keep this zone CLOSE to a named zone (e.g. usb_pd near
-        # its pd_input receptacle, ethernet near its RJ45). The ``other`` name is a
-        # sheet zone or the ``@som`` token (E3). Strict: an unresolved target FAILS,
-        # never a silent skip (LAW 4). Every measured distance is a NUMBER.
+        # its pd_input receptacle, ethernet near its RJ45). D11: the metric is the
+        # zones' bounding-box EDGE gap (0 when they overlap/abut), NOT the centroid
+        # distance — a centroid cap is bounded below by the zones' half-extents, so
+        # it false-fails two ADJACENT zones. The ``other`` name is a sheet zone or
+        # the ``@som`` token (E3). Strict: an unresolved target FAILS, never a silent
+        # skip (LAW 4). Every measured gap is reported AS A NUMBER.
         for near in ext.get("near_max", []):
             res.near_max_checked += 1
             other = near.get("other", "?")
             max_mm = float(near.get("max_mm", 0.0))
             basis = near.get("basis", "")
-            czone = centroids.get(sheet)
-            ctgt = _resolve_target(other, centroids, model)
-            if czone is None or ctgt is None:
+            bzone = bboxes.get(sheet)
+            btgt = _resolve_target_bbox(other, bboxes, model)
+            if bzone is None or btgt is None:
                 un = f"{sheet}: near_max target {other!r} not placed"
                 if un not in res.unresolved:
                     res.unresolved.append(un)
@@ -312,12 +382,12 @@ def check(model: PcbModel,
                 add(f"near_max {sheet} to {other}: UNRESOLVED ({other!r} not "
                     f"placed) [{basis}]")
                 continue
-            d = _dist(czone, ctgt)
+            d = _bbox_gap(bzone, btgt)
             res.detail.append(
-                f"near_max {sheet} to {other}: {d:.2f}mm / <= {max_mm:g}mm")
+                f"near_max {sheet} to {other}: {d:.2f}mm gap / <= {max_mm:g}mm")
             if d > max_mm:
                 res.near_max_fail += 1
-                add(f"near_max {sheet} to {other}: {d:.2f}mm > {max_mm:g}mm "
+                add(f"near_max {sheet} to {other}: {d:.2f}mm gap > {max_mm:g}mm "
                     f"[{basis}]")
 
     res.ok = (not res.violations and not res.unresolved)

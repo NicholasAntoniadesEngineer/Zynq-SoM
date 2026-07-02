@@ -277,6 +277,59 @@ def test_near_max_unresolved_target_fails_strict():
 
 
 # ---------------------------------------------------------------------------
+# (3a') NEAR_MAX EDGE-GAP metric (D11) — bbox edge-to-edge, not centroids
+# ---------------------------------------------------------------------------
+# D11 replaced the near_max centroid distance with the zones' bounding-box
+# EDGE-to-EDGE gap (0 when they overlap/abut). These tests pin the NEW metric:
+# a wide zone whose CENTROID is far but whose near EDGE abuts the target passes;
+# overlapping zones read gap 0; and the gap grows only with the real empty space.
+
+def _wide_zone(sheet: str, xs: list[float], y: float = 30.0
+               ) -> list[FootprintInst]:
+    """A zone spanning several X positions (a real bounding-box extent), so its
+    centroid and its near/far edges are distinct — the case that distinguishes
+    the D11 edge-gap from the old centroid metric."""
+    return [_fzone(sheet, x, y) for x in xs]
+
+
+def test_near_max_edge_gap_passes_where_centroid_would_fail():
+    """D11: a WIDE usb_pd zone (centroid ~30 mm from pd_input) whose near EDGE
+    abuts pd_input passes a tight 10 mm edge-gap cap — the old centroid metric
+    (~30 mm) would have false-failed it. This is the exact D11 defect."""
+    # usb_pd spans x in [10..50] (centroid ~30); pd_input a small zone at x~52.
+    insts = _wide_zone("usb_pd", [10.0, 30.0, 50.0]) + [_fzone("pd_input", 52.0, 30.0)]
+    m = _fmodel(insts)
+    res = f.check(m, contracts={"usb_pd": _near_contract(max_mm=10.0)})
+    assert res.ok, res.summary()          # near edges ~2 mm apart -> gap << 10
+    assert res.near_max_fail == 0 and res.near_max_checked == 1, res.summary()
+    # the reported number is a GAP, and it is far below the centroid distance
+    gap_lines = [d for d in res.detail if "near_max usb_pd to pd_input" in d]
+    assert gap_lines and "gap" in gap_lines[0], res.summary()
+
+
+def test_near_max_edge_gap_zero_on_overlap():
+    """D11: overlapping zones read edge gap 0 -> any non-negative cap passes."""
+    insts = _wide_zone("usb_pd", [40.0, 50.0]) + _wide_zone("pd_input", [45.0, 55.0])
+    m = _fmodel(insts)
+    res = f.check(m, contracts={"usb_pd": _near_contract(max_mm=0.5)})
+    assert res.ok, res.summary()
+    assert any("near_max usb_pd to pd_input: 0.00mm gap" in d
+               for d in res.detail), res.summary()
+
+
+def test_near_max_edge_gap_too_far_mutant_is_killed():
+    """D11 MUTANT: a real empty gap beyond the cap fails, and the reported number
+    is the EDGE gap (not the larger centroid distance)."""
+    insts = _wide_zone("usb_pd", [10.0, 20.0]) + [_fzone("pd_input", 100.0, 30.0)]
+    m = _fmodel(insts)
+    res = f.check(m, contracts={"usb_pd": _near_contract(max_mm=15.0)})
+    assert res.ok is False, res.summary()
+    assert res.near_max_fail == 1, res.summary()
+    assert any("near_max usb_pd to pd_input" in v and "gap >" in v
+               for v in res.violations), res.summary()
+
+
+# ---------------------------------------------------------------------------
 # (3b) @som DOWNSTREAM resolution (E3) — flow/facing to the SoM core region
 # ---------------------------------------------------------------------------
 
@@ -328,13 +381,15 @@ def test_facing_at_som_resolves(monkeypatch):
 # ---------------------------------------------------------------------------
 # (4) DECISIVE RED-ON-BEFORE INTEGRATION — check_all on the real board
 # ---------------------------------------------------------------------------
-# The four NEW contracts MUST currently FAIL (the scattered value-sorted packer
-# cannot satisfy them — no template is wired for these sheets yet) while ``power``
-# (its template active) stays GREEN. This is the pilot's red-on-before proof:
-# the gate BITES before the template lands. When the templates are wired in a
-# LATER wave these assertions invert (like the intra-zone gate's wave A->B test).
+# The REMAINING NEW contracts MUST currently FAIL (the scattered value-sorted packer
+# cannot satisfy them — no template is wired for these sheets yet) while the WIRED
+# sheets (``power`` + ``usb_pd``, their templates active) stay GREEN. This is the
+# pilot's red-on-before proof: the gate BITES before the template lands. As each
+# template is wired in a later wave, that sheet moves from ``_RED_ON_BEFORE`` to
+# ``_GREEN_WIRED`` (usb_pd did so in the D11 wave, like the intra-zone wave A->B).
 
-_RED_ON_BEFORE = ("usb_pd", "ethernet", "hdmi_rx", "motor_sense")
+_GREEN_WIRED = ("power", "usb_pd")
+_RED_ON_BEFORE = ("ethernet", "hdmi_rx", "motor_sense")
 
 
 @pytest.fixture(scope="module")
@@ -346,24 +401,27 @@ def _real_model():
 
 def test_check_all_discovers_every_registered_contract(_real_model):
     """``check_all`` discovers every registered contract present on the board —
-    the pilot ``power`` + ``power_som`` + the four new sheets, all resolved via
-    the two-root registry (E1)."""
+    the wired ``power`` + ``usb_pd`` + ``power_som`` + the remaining new sheets,
+    all resolved via the two-root registry (E1)."""
     results = g.check_all(_real_model)
-    for sheet in ("power", "power_som", *_RED_ON_BEFORE):
+    for sheet in (*_GREEN_WIRED, "power_som", *_RED_ON_BEFORE):
         assert sheet in results, (
             f"{sheet} contract not discovered by check_all "
             f"(got {sorted(results)})")
 
 
-def test_power_stays_green_on_the_real_board(_real_model):
-    """CONTROL: ``power`` (its stage template active) is GREEN — proving the new
-    contracts' failures below are REAL red-on-before, not a broken build."""
-    res = g.check(_real_model, "power")
-    print("\n" + res.summary())
-    assert res.missing_refs == [], res.summary()
-    assert res.ok is True, (
-        "power regressed — the red-on-before proof needs power green:\n"
-        + res.summary())
+def test_wired_sheets_stay_green_on_the_real_board(_real_model):
+    """CONTROL: every ENGINE-WIRED sheet (``power`` + ``usb_pd``, their templates
+    active) is GREEN — proving the remaining contracts' failures below are REAL
+    red-on-before, not a broken build."""
+    for sheet in _GREEN_WIRED:
+        res = g.check(_real_model, sheet)
+        print(f"\n--- {sheet} (wired, expect green) ---")
+        print(res.summary())
+        assert res.missing_refs == [], res.summary()
+        assert res.ok is True, (
+            f"{sheet} regressed — the red-on-before proof needs the wired "
+            f"sheets green:\n" + res.summary())
 
 
 def test_new_contracts_are_red_on_before(_real_model):

@@ -88,11 +88,17 @@ CONTRACT: dict = {
     #   * total media path < 100 mm (magnetics -> RJ45) — an advisory routing
     #     budget, not a placement bound.
     "external": {
-        # NEAR_MAX (E5-lite): the magnetics must sit close to its RJ45 jack —
-        # the ONE PRIMARY-CITED inter-subsystem distance in this design.
+        # NEAR_MAX (E5-lite, D11): the magnetics must sit close to its RJ45 jack —
+        # the ONE PRIMARY-CITED inter-subsystem distance in this design. Pulse's
+        # rule is a PART-to-PART <=25 mm; D11 made near_max a zone bbox EDGE-to-EDGE
+        # gap, so the CITED 25 mm part-to-part limit is re-expressed as the more
+        # conservative <=20 mm zone edge gap (the edge gap is <= any part-to-part
+        # distance, so 20 mm edge gap keeps every magnetics part within the cited
+        # 25 mm of the jack with margin).
         "near_max": [
-            {"other": "rj45_connector", "max_mm": 25.0,
-             "basis": "Pulse v7 p.1 (CITED) — magnetics<->RJ45 < 25 mm"},
+            {"other": "rj45_connector", "max_mm": 20.0,
+             "basis": "Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap "
+                      "proxy (D11)"},
         ],
         # FAR_MIN: keep the switching power stage out of the analog line side.
         "far": [

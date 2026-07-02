@@ -371,24 +371,40 @@ def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
 _CAND_STEP = 0.5           # candidate-position grid step (mm) around a pin
 _CAND_CAP = 400            # keep the N nearest in-bound poses per part (speed cap)
 
-_Demand = tuple[str, list[str], float, "list[str] | None", float]
+_Demand = tuple[str, "list[str] | None", float, "list[str] | None", float]
 # a candidate pose carries its precomputed courtyard box (backtracking is then a
 # pure box-overlap test — no footprint re-parse in the hot loop)
 _Cand = tuple[_Part, tuple[float, float, float, float]]
 
 
 def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
-                icb: tuple[float, float, float, float], target_pins: list[str],
+                icb: tuple[float, float, float, float],
+                target_pins: list[str] | None,
                 bound: float, keep_pins: list[str] | None, keep_min: float,
-                pad: float, skel_boxes: list[tuple[float, float, float, float]]
-                ) -> list[_Cand]:
-    """Up-to-_CAND_CAP nearest-pin-first candidate poses for ``bref``: rot in
-    {90,0} over a _CAND_STEP grid on the LEFT/TOP/BOTTOM of the IC (never the +X
-    inductor lane), each meeting the pad-edge bound (+ keep-pin minimum) AND
-    already clear of the skeleton (so the backtracking only tests peers). The
-    courtyard box is precomputed. Deterministic tie-break."""
-    tgt = _pin_box(ib, target_pins)
+                pad: float, skel_boxes: list[tuple[float, float, float, float]],
+                forbid_plus_x: bool = True) -> list[_Cand]:
+    """Up-to-_CAND_CAP nearest-target-first candidate poses for ``bref``: rot in
+    {90,0} over a _CAND_STEP grid around the target, each meeting the pad-edge
+    bound (+ keep-pin minimum) AND already clear of the skeleton (so the
+    backtracking only tests peers). The courtyard box is precomputed.
+    Deterministic tie-break.
+
+    ``target_pins`` = the anchor pins the part hugs; None -> the anchor's WHOLE
+    pad box (a proximity structure with no ``anchor_pins``), and the pad-edge
+    bound is then measured to any anchor pad. ``forbid_plus_x`` (default True,
+    the buck's +X inductor lane exclusion) is turned OFF for the generic
+    proximity cluster (no inductor — parts may seat on all four sides of the
+    anchor)."""
+    if target_pins:
+        tgt = _pin_box(ib, target_pins)
+    else:
+        # no anchor_pins -> centre the search on the whole anchor pad box and
+        # measure the bound to ANY anchor pad.
+        allb = list(ib.values())
+        tgt = (min(b[0] for b in allb), min(b[1] for b in allb),
+               max(b[2] for b in allb), max(b[3] for b in allb))
     tcx, tcy = (tgt[0] + tgt[2]) / 2.0, (tgt[1] + tgt[3]) / 2.0
+    all_pins = list(ib) if not target_pins else target_pins
     n = int((9.0 + pad) / _CAND_STEP)
     halo = PLACE_CLEAR + pad
     scored: list[tuple[float, float, float, _Part, tuple]] = []
@@ -399,13 +415,13 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
                 cy = round(tcy + gy * _CAND_STEP, 4)
                 p = _Part(bref, mod, rot, "top", cx, cy)
                 b = p.local_box()
-                if b[2] + halo > icb[2]:              # +X inductor lane
+                if forbid_plus_x and b[2] + halo > icb[2]:   # +X inductor lane
                     continue
                 if _boxes_overlap(b, icb, halo):
                     continue
                 if any(_boxes_overlap(b, s, halo) for s in skel_boxes):
                     continue
-                d = _pins_to_target(p, ib, target_pins)
+                d = _pins_to_target(p, ib, all_pins)
                 if d > bound:
                     continue
                 if keep_pins and _pins_to_target(p, ib, keep_pins) < keep_min:
@@ -417,18 +433,22 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
 
 def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
               ib: dict[str, tuple], icb: tuple[float, float, float, float],
-              skeleton: list[_Part], pad: float) -> list[_Part]:
+              skeleton: list[_Part], pad: float,
+              forbid_plus_x: bool = True) -> list[_Part]:
     """Seat every demand collision-free by DETERMINISTIC backtracking over each
     part's ranked candidate poses (most-constrained variable first). Candidates
     are pre-cleared of the skeleton, so the search is a pure peer box-overlap test.
     If no full assignment exists at this ``pad`` it returns each part's nearest
-    candidate (colliding) so the caller's widen loop retries — bounds never relax."""
+    candidate (colliding) so the caller's widen loop retries — bounds never relax.
+    ``forbid_plus_x`` (default True) keeps the buck's +X inductor-lane exclusion;
+    the generic proximity cluster turns it OFF (all four sides available)."""
     halo = PLACE_CLEAR + pad
     skel_boxes = [s.local_box() for s in skeleton]
     cand: dict[str, list[_Cand]] = {}
     for bref, tpins, bound, keep, kmin in demands:
         cand[bref] = _candidates(bref, resolvable[bref], ib, icb, tpins, bound,
-                                 keep, kmin, pad, skel_boxes)
+                                 keep, kmin, pad, skel_boxes,
+                                 forbid_plus_x=forbid_plus_x)
     order = sorted((d[0] for d in demands), key=lambda r: len(cand[r]))
     chosen: dict[str, tuple[float, float, float, float]] = {}
     picked: dict[str, _Part] = {}
@@ -469,6 +489,100 @@ def _pins_to_target(p: _Part, ib: dict[str, tuple],
         for qb in pads:
             best = min(best, _g._box_gap(pb, qb))
     return best
+
+
+# --- the generic proximity cluster (D10 / Decision D11 wiring) --------------------
+# A subsystem whose contract carries ONLY ``proximity`` / ``same_side`` structures
+# (no buck ``hot_loop``) is placed by anchoring its IC at the origin and seating
+# every member with the SAME deterministic ranked-candidate backtracking the buck
+# uses — honouring each proximity structure's ``max_mm`` (+ optional ``min_from``
+# clearances) and courtyard clearance. There is no inductor lane to avoid, so the
+# +X exclusion is OFF (members may seat on all four sides of the anchor). Widen-on-
+# infeasible; deterministic; no randomness — the same discipline as the buck.
+
+# solved RELATIVE geometry cache, keyed on (anchor fp, member fps in demand order,
+# the demand bounds) — never on board refs, so it is deterministic + reusable.
+_PROX_CACHE: dict[tuple, list[tuple[float, float, float]]] = {}
+
+
+def _build_proximity_cluster(anchor_bref: str, contract: dict,
+                             bref_of: dict[str, str],
+                             resolvable: dict[str, Path]) -> list[_Part] | None:
+    """Construct a proximity-only contract as rigid local-frame parts: the anchor
+    IC at (0,0) rot 0 top, every member of every ``proximity`` structure seated by
+    the backtracking search within its ``max_mm`` of the structure's anchor pins
+    (or any anchor pad if none), respecting ``min_from`` clearances against the
+    anchor's pins and courtyard clearance. Returns the placed parts, or None if a
+    member/anchor ref does not resolve.
+
+    ``bref_of`` maps a contract LIBRARY ref to the board ref on this sheet (already
+    filtered to resolvable refs by the caller). Every member on the top side (the
+    same_side override the hook applies before templating)."""
+    anchor_mod = resolvable.get(anchor_bref)
+    if anchor_mod is None:
+        return None
+
+    # collect the per-member demand from every proximity structure (stable order:
+    # structure order in the contract, then member order within a structure).
+    demands: list[_Demand] = []
+    member_brefs: list[str] = []
+    for st in contract.get("structures", []):
+        if st.get("type") != "proximity":
+            continue
+        if bref_of.get(st.get("anchor", "")) != anchor_bref:
+            continue                       # a different anchor — not this cluster
+        apins = st.get("anchor_pins")      # None -> any anchor pad
+        bound = float(st["max_mm"])
+        # min_from against an anchor PIN becomes the (keep_pins, keep_min) clause the
+        # candidate generator already honours; a peer-part min_from is enforced by
+        # the collision halo (every member clears every other by PLACE_CLEAR).
+        keep_pins: list[str] | None = None
+        keep_min = 0.0
+        for mf in st.get("min_from", []):
+            if bref_of.get(mf.get("part", "")) == anchor_bref and mf.get("pin"):
+                keep_pins = [mf["pin"]]
+                keep_min = float(mf.get("min_mm", 0.0))
+                break
+        for mlib in st.get("members", []):
+            mb = bref_of.get(mlib)
+            if mb is None or mb not in resolvable:
+                return None
+            demands.append((mb, list(apins) if apins else None, bound,
+                            keep_pins, keep_min))
+            member_brefs.append(mb)
+
+    if not demands:
+        # a same_side-only / empty contract: just the anchor (nothing to seat).
+        return [_Part(anchor_bref, anchor_mod, 0.0, "top", 0.0, 0.0)]
+
+    # cache signature: anchor fp + (member fp, bound) per demand, in order.
+    sig = (str(anchor_mod),
+           tuple((str(resolvable[d[0]]), round(d[2], 4),
+                  tuple(d[1] or []), round(d[4], 4)) for d in demands))
+    cached = _PROX_CACHE.get(sig)
+    if cached is not None:
+        anchor = _Part(anchor_bref, anchor_mod, 0.0, "top", 0.0, 0.0)
+        return [anchor] + [
+            _Part(mb, resolvable[mb], rot, "top", ox, oy)
+            for mb, (rot, ox, oy) in zip(member_brefs, cached, strict=True)]
+
+    # widen-on-infeasible loop: grow whitespace until the seat is collision-free
+    # (rules never relax). The anchor is the sole skeleton; the +X lane is OFF.
+    anchor = _Part(anchor_bref, anchor_mod, 0.0, "top", 0.0, 0.0)
+    ib = anchor.pad_boxes()
+    icb = anchor.local_box()
+    seated: list[_Part] = []
+    for scale in range(0, 20):
+        pad = scale * 0.25
+        seated = _seat_all(demands, resolvable, ib, icb, [anchor], pad,
+                           forbid_plus_x=False)
+        if not _any_overlap([anchor, *seated]):
+            break
+    parts = [anchor, *seated]
+    by_bref = {p.bref: p for p in seated}
+    _PROX_CACHE[sig] = [(by_bref[mb].rot, by_bref[mb].ox, by_bref[mb].oy)
+                        for mb in member_brefs]
+    return parts
 
 
 # --- the LDO stage ----------------------------------------------------------------
@@ -562,11 +676,26 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
     direction — so the composition-level FLOW gate's FACING check passes. A turn
     is a rigid {0,90,180,270} operation on every part (legal for every footprint,
     same side), and preserves the zone bounding box, so the floorplan block size
-    is unchanged. Only the ``power`` pilot is wired for now; an unrecognised
-    contract returns None."""
-    if contract is None or contract.get("subsystem") != "power":
+    is unchanged.
+
+    DISPATCH (D11 wiring): a BUCK-STAGE contract (has a ``hot_loop`` structure —
+    the power/power_som pattern) takes the existing datasheet-stage path below; a
+    PROXIMITY-ONLY contract (only ``proximity``/``same_side`` structures — e.g.
+    usb_pd's FUSB302B bypass/CC-filter network) is built by the generic
+    proximity-cluster builder (:func:`_build_proximity_zone`). An unrecognised
+    contract returns None (falls through to the legacy packer)."""
+    if contract is None:
         return None
     rot_out = rot_out if rot_out is not None else {}
+    _types = {st.get("type") for st in contract.get("structures", [])}
+    if "hot_loop" not in _types:
+        # not a buck-stage contract. A proximity-bearing contract -> the generic
+        # cluster builder; anything else falls through to the legacy packer.
+        if "proximity" in _types:
+            return _build_proximity_zone(
+                sheet_name, contract, refs, side_of, bbox_of, resolvable,
+                rot_out)
+        return None
 
     # LIBRARY ref -> BOARD ref for this sheet (same band the gate/netlist use).
     lib2board = _g._board_refs_by_sheet(sheet_name)
@@ -868,6 +997,87 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
             top_off[r] = (round(dx, 4), round(dy + band_top - ZONE_PAD, 4))
         for r, (dx, dy) in b_lo.items():
             bot_off[r] = (round(dx, 4), round(dy + band_top - ZONE_PAD, 4))
+        zw = round(max(zw, t_w, b_w), 4)
+        zh = round(max(zh, band_top - ZONE_PAD + t_h, band_top - ZONE_PAD + b_h),
+                   4)
+
+    return top_off, bot_off, round(zw, 4), round(zh, 4)
+
+
+def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
+                          side_of: dict[str, str],
+                          bbox_of: dict[str, tuple[float, float, float, float]],
+                          resolvable: dict[str, Path],
+                          rot_out: dict[str, float]
+                          ) -> tuple[dict[str, tuple[float, float]],
+                                     dict[str, tuple[float, float]],
+                                     float, float] | None:
+    """Build a PROXIMITY-ONLY contract (usb_pd's FUSB302B bypass/CC network) as a
+    single rigid cluster around its anchor IC, re-anchored into the zone frame,
+    then shelf-pack the true leftovers into a band below (the SAME leftover machinery
+    the power path uses). Returns the ``_pack_one_zone`` 4-tuple, or None to fall
+    through. Deterministic; the cluster's chosen rotations come back via ``rot_out``
+    (the SAME channel LEVER-L1 uses), folded into ``zone_extra_rot`` by build_model."""
+    lib2board = _g._board_refs_by_sheet(sheet_name)
+    board_set = set(refs)
+    bref_of = {lib: b for lib, b in lib2board.items()
+               if b in board_set and b in resolvable}
+
+    # the anchor is the same_side IC (or the single proximity anchor). Prefer a
+    # same_side ``ics`` entry; else the first proximity structure's anchor.
+    anchor_lib: str | None = None
+    for st in contract.get("structures", []):
+        if st.get("type") == "same_side" and st.get("ics"):
+            anchor_lib = st["ics"][0]
+            break
+    if anchor_lib is None:
+        for st in contract.get("structures", []):
+            if st.get("type") == "proximity":
+                anchor_lib = st.get("anchor")
+                break
+    anchor_bref = bref_of.get(anchor_lib or "")
+    if anchor_bref is None:
+        return None
+
+    parts = _build_proximity_cluster(anchor_bref, contract, bref_of, resolvable)
+    if parts is None:
+        return None
+
+    # re-anchor: shift so the cluster's min pad corner sits at ZONE_PAD (parts can
+    # sit on all four sides of the anchor, so origin-relative offsets go negative).
+    minx = min(b[0] for p in parts for b in p.pad_boxes().values())
+    miny = min(b[1] for p in parts for b in p.pad_boxes().values())
+    dx, dy = ZONE_PAD - minx, ZONE_PAD - miny
+    placed_abs = {p.bref: _Part(p.bref, p.mod, p.rot, p.side,
+                                round(p.ox + dx, 4), round(p.oy + dy, 4))
+                  for p in parts}
+
+    top_off: dict[str, tuple[float, float]] = {}
+    bot_off: dict[str, tuple[float, float]] = {}
+    for p in placed_abs.values():
+        top_off[p.bref] = (p.ox, p.oy)
+        if abs(p.rot) > 1e-6:
+            rot_out[p.bref] = p.rot % 360.0
+
+    zw, zh = _row_extent(placed_abs)
+    row_bottom = max((pp.local_box()[3] for pp in placed_abs.values()),
+                     default=ZONE_PAD)
+
+    # leftovers: everything not in the cluster, banded below (usb_pd has none — all
+    # 6 parts are contracted — but keep the band so a lightly-contracted subsystem
+    # still packs its extras, exactly like the power path).
+    leftovers = [r for r in refs if r not in placed_abs]
+    if leftovers:
+        lt = [r for r in leftovers if side_of.get(r, "top") == "top"]
+        lb = [r for r in leftovers if side_of.get(r, "top") == "bottom"]
+        target_w = max(zw - 2 * ZONE_PAD, 8.0)
+        band_top = row_bottom + _LEFTOVER_BAND_GAP
+        t_lo, t_w, t_h, b_lo, b_w, b_h = _pack_leftover_bands(
+            lt, lb, target_w, bbox_of, resolvable)
+        for r, (ox, oy) in t_lo.items():
+            top_off[r] = (round(ox, 4), round(oy + band_top - ZONE_PAD, 4))
+        for r, (ox, oy) in b_lo.items():
+            bot_off[r] = (round(ox, 4), round(oy + band_top - ZONE_PAD, 4))
         zw = round(max(zw, t_w, b_w), 4)
         zh = round(max(zh, band_top - ZONE_PAD + t_h, band_top - ZONE_PAD + b_h),
                    4)

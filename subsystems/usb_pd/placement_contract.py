@@ -88,13 +88,17 @@ CONTRACT: dict = {
         # (pd_input) feeds this PHY (usb_pd), which commands the input rail into
         # ``power``. Consistent with the power pilot's chain.
         "flow": ["pd_input", "usb_pd", "power"],
-        # NEAR_MAX (E5-lite): keep the PHY close to its receptacle so the CC net
-        # stays short end-to-end (a long CC run degrades the BMC PHY). onsemi
-        # gives no number -> judgment.
+        # NEAR_MAX (E5-lite, D11): keep the PHY close to its receptacle so the CC
+        # net stays short end-to-end (a long CC run degrades the BMC PHY). D11 made
+        # near_max a zone bbox EDGE-to-EDGE gap (not centroid distance), so the cap
+        # is now the allowed empty SPACE between the usb_pd zone and pd_input — a
+        # tight gap the earlier centroid metric could not express (the zones abut,
+        # centroid ~= their half-extents). onsemi gives no number -> judgment.
         "near_max": [
-            {"other": "pd_input", "max_mm": 15.0,
-             "basis": "judgment:15.0 — keep the CC net short end-to-end; onsemi "
-                      "numbers no inter-part CC-run length"},
+            {"other": "pd_input", "max_mm": 10.0,
+             "basis": "judgment:10.0 (D11 edge-gap metric) — keep the CC net "
+                      "short end-to-end; onsemi numbers no inter-part CC-run "
+                      "length"},
         ],
     },
 }

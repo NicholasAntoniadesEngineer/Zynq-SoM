@@ -710,3 +710,151 @@ improve-the-algorithm, not soften-the-gate. (2) The 1.9mm flow margin (power→p
 improvement queued with the composition work, gate left strict. (3) zone-centroid vs
 stage-centroid facing divergence risk noted for multi-contract future — revisit when a
 leftover-heavy zone gets a contract.
+
+### Engine wave 1 landed (61184b6) + Decision D11
+E1-E5 + 4 contracts committed; red-on-before proven (usb_pd 4 / ethernet 9 / hdmi_rx 3 /
+motor_sense 5 violations on the scattered board, power green, build PASS, board
+byte-identical via the _WIRED_SHEETS discover/load split — orchestrator-accepted as the
+correct generalization of the pilot's own scoping).
+**D11 — near_max metric corrected: zone-EDGE gap, not centroid distance.** Centroid
+distance is bounded below by the zones' half-extents, so a tight centroid bound
+false-fails adjacent zones (usb_pd↔pd_input measured 38.6mm centroid ≈ near the
+geometric floor). near_max v2 = bbox edge-to-edge gap, thresholds re-judged: usb_pd↔
+pd_input ≤ 10mm gap (judgment), ethernet↔rj45 25mm stays CITED but re-expressed as the
+Pulse magnetics-body↔jack-body distance intent (edge gap ≤ 20mm judgment as the
+conservative proxy for the ≤25mm part-to-part rule). Floorplan facts to fix in wiring
+waves: motor cluster (D9) and any residual usb_pd adjacency after the metric fix.
+
+### usb_pd wave — partial accept + silk REJECTION (orchestrator review)
+usb_pd end-to-end GREEN (near_max edge-gap 0.00mm — zones abut; all 6 parts clustered
+at the PHY top-side; D11 metric landed; edge-seat floorplan override for usb_pd used
+and loudly flagged per spec). Board 170×145 → 170×151 (+4.1%) — render verdict pending
+rework. **REJECTED: the silk declutter font-shrink** — evidence: 17 refdes emitted at
+0.5mm + 7 at 0.62mm incl. sheets outside the wave (pen>0 trigger applied board-wide);
+0.5mm is below the ~0.8mm fab-legibility floor. PRINCIPLE RECORDED (silk LAW-4 analog):
+**declutter may never shrink below the 0.8mm fab floor — when no clear spot exists at
+floor size, WIDEN the relocation search, never the shrink ladder.** Rework ordered:
+0.8mm absolute floor (retro-fixing the pre-existing 0.62 tier = deliberate board-wide
+DFM upgrade), wider-radius relocation for the 3 motivating overlaps, size-distribution
+proof in acceptance.
+
+### Next-wave spec: connector-zone proximity (ethernet + hdmi_rx + power_som wiring)
+Design ruling for connector-anchored proximity (hdmi_rx): the LAW-6 connector seat is
+IMMOVABLE (edge-flush, mating face off-board) — the proximity builder therefore treats
+the connector as a FIXED anchor: J1 seats first via _pack_connector_zone exactly as
+today; contract members (U2/U3 TMDS ESD ≤5mm, U4 ≤6mm) then seat INBOARD of the
+connector's inner pad row by the ranked-candidate CSP, honoring the flow-through
+advisory (ESD IO rows aligned between J1 pads and the zone-interior/mezzanine
+direction); remaining hdmi_rx parts (EEPROM, pulls, dividers) shelf-pack behind.
+Zone extents/edge seating unchanged — the template composes WITH the connector packer,
+never re-seats the connector.
+ethernet: T1 interior anchor (proximity builder as usb_pd) + BST pairs at MCT pins;
+near_max(rj45 edge-gap ≤20mm) likely needs ethernet added to _EDGE_SEAT_BLOCKS
+(same flagged mechanism as usb_pd — seat against the jack block).
+power_som: near-free wiring — it is a 1-stage buck; the existing buck template handles
+it (hot_loop dispatch). Add to _WIRED_SHEETS + facing derivation (interior side E →
+downstream @som is W-ish; verify with the flow gate's E3 resolution). Render check after.
+Sequencing: silk rework lands → orchestrator render verdict on usb_pd + board growth →
+commit → THIS wave → motor_sense last (D9 edge-list move = biggest blast radius, its
+near_max(motor_pwm) currently 132mm — the floorplan move is the fix, contract already
+red-proven).
+
+### Decision D12 — two-ring Fable-thread architecture (2026-07-02 evening, user-directed)
+Ring 0 = main orchestrator (strategy, merge authority, final verdicts). Ring 1 = FABLE
+problem-owner threads, each owning one hard judgment-heavy problem end-to-end incl. its
+OWN render loop (parallelizes the perception bottleneck), delivering evidence-backed
+units for Ring-0 merge review; plus Fable adversarial panels (EE/DFM/SI lenses) at major
+merges. Ring 2 = Opus/Haiku spec-gated workers (unchanged). Problem owners: T1
+composition (zone-pose optimization against the now-real contract objectives — the
+deep-placement problem reborn with an honest cost function), T2 escape/fanout (DF40
+escape block + J2 return-path remediation + pair triage), T3 routing-intent (queued
+behind T2 per the layout-first decree). Rationale: today's error log proves
+single-threaded judgment fails predictably; every catch was more judgment applied later.
+
+### D12 amendment — ALL-FABLE fleet (user decree, time-limited window)
+Every agent at every ring runs Fable 5 while access lasts. Tier-splitting suspended;
+Opus/Haiku = fallback only. Two in-flight Opus workers (silk rework, lightweight
+contracts) grandfathered to completion — their work is gate-checked.
+
+### Whole-board render audit — findings register (orchestrator, LAW-1 sweep of unaudited zones)
+Renders from the live board (silk-rework-intermediate hash 1812bc53; zone geometry valid).
+- **F1 ethernet/rj45 (HIGH):** magnetics↔jack ≥27mm (CITED Pulse ≤25 violated); TWO
+  FOREIGN QFNs (U21001/U21002) sit IN the line-side isolation corridor; Bob-Smith network
+  absent from the line side entirely; T1's pin rows face N/S while the jack is E
+  (media row must face the jack). → ethernet wave: orient T1, region_void the corridor,
+  near_max adjacency, BST at MCT pins.
+- **F2 hdmi_rx (MED-HIGH):** ESD arrays 8-10mm from J1 (bounds 5/6mm), arranged as a
+  size-row not per-pair opposite their TMDS pins, rotated 90° off the flow-through axis.
+  → wave adds pair-alignment + rotation to the template; contract orientation term
+  graduates from advisory to gated.
+- **F3 motor_sense (HIGH):** XT60s edge-seated ✓ but the sense cluster (INA3221, SMBJ
+  TVS, 470µF) sits ~50mm away; TVS not at the inlet, bulk not at the outlet; the in-line
+  battery→shunt→ESC path traverses half the board with foreign zones interleaved.
+  79x32mm zone bbox. → D9 move + contract wiring; render quantified the before.
+- **F4 camera (MED):** CSI ESD parts ~15mm north of the CAM FFC — port-entry parts
+  belong at the port (same class as F2). The lightweight wave's camera contract will
+  red-flag exactly this.
+- **F5 SoM shadow (NOTE for T2):** bottom shadow = som_decoupling grid + foreign L4
+  strays; the escape block will claim this space — needs an eviction/coexistence rule.
+- **F6 interior sparseness (NOTE for T1):** visible scatter/whitespace = the measured
+  board growth; composition thread owns recovery.
+
+### Render audit pass 2 (orchestrator)
+- **F7 motor_pwm (HIGH, compounds F1+F3):** sheet-21 buffers/ICs (U21001/U21002) and
+  RS21xxx networks sit at the E side — INSIDE ethernet's isolation corridor — while the
+  ESC PWM connector is at the W edge. The corridor squatters and the motor smear are ONE
+  defect: relocating motor_pwm's electronics to its W connector clears the ethernet moat
+  nearly for free. The D9 motor wave and the ethernet wave are therefore COUPLED — spec
+  them as one composition move (motor cluster W: pwm buffers + sense + XT60s per D9;
+  ethernet corridor voided).
+- Minor: Y28001 crystal ~8mm from its usb_jtag IC (wants ≤5mm) — add to usb_jtag
+  lightweight contract. N-edge connectors verified seated (whole-board view). Bottom
+  side globally orderly: clusters hold, no off-board, mounting holes clear; big uniform
+  bringup passive grid center-left is electrically benign (straps/LEDs), low priority.
+
+### Decision D13 — ESCAPE HEADROOM (user input: dense many-pin ICs starve routing)
+Measured on the live board (per-side courtyard gaps): FUSB302 ENTOMBED 0.5-0.7mm on all
+4 sides with CC/I2C/INT exiting (F8, HIGH — my proximity template's defect); bucks
+equally tight but ACCEPTABLE (self-terminating cluster: only EN escapes — the TI
+reference layout is itself tight); T10001 magnetics walled 0.8mm E/S by foreign parts
+with 8 diff pairs needing through (F9, folds into F1/F7).
+**The rule (nuanced):** escape demand is PER SIDE, PER NET — count the nets on a side's
+pins that EXIT the cluster; that side needs a reserved corridor ≥ exit_nets × (trace+
+space) × margin, with a floor (judgment: 2x 0.1/0.1mm lanes minimum + 1.0mm clearance).
+A side fully TERMINATED by cluster members may be tight (terminus ≠ obstruction).
+**Consequences (queued):** (1) NEW `escape_headroom` placement gate — per multi-pin IC,
+per side: free corridor depth vs exit-net demand; the routability proxy placement always
+lacked. (2) Proximity-builder fix: exit-side reservation as a HARD CSP constraint —
+members may occupy a side only if all that side's pins terminate at members; usb_pd
+re-runs red→green under the new gate. (3) T1 composition spec review will require
+inter-zone channel reservation (the deep-dive constraint-legalizer lens already carries
+it). (4) Buck-template exemption documented (self-terminating rationale).
+Wave queued directly behind the silk landing (same main-tree unit; avoids concurrent
+build races).
+
+### Deep-dive landed (32 Fable agents, 4.0M tokens) — specs + critique triage
+T1_COMPOSITION_SPEC.md + T2_ESCAPE_SPEC.md saved at repo root (synthesis of judged
+design brackets; T1 = incremental-migration spine + constraint-legalizer engine; T2 =
+return-path-first + toolchain-pragmatist). The panel CAUGHT a stale orchestrator figure
+(the "1.9mm flow margin" was pre-facing-turn; live margin ~63mm) — re-measure-don't-
+trust institutionalized. Ring-0 spec review will inject D13 channel-reservation into T1
+(thin: 3 refs) before launch; T2 carries it natively (19 refs).
+**Completeness critique triage (orchestrator):**
+- **GAP1 (CRITICAL-class): thermal gate PASSES on unemitted copper** — LM61460 RthJA
+  credit (58.7→30 C/W) assumes pours+via fields that do not exist (0 zones/vias/segments
+  emitted); backed-out Tj without them ≈192°C vs the 140°C bound. QUEUED FIRST: the
+  one-day zone-emission spike (deterministic In1.Cu GND zone via the embed.py template
+  path, build-twice proof) + a copper-debt report enumerating every basis string
+  predicated on unemitted copper. Unblocks T2; unfictionalizes thermal.
+- **GAP5: return_path_gate not in the build chain** — wire report-first with the
+  29-failing-contact count as a RATCHET baseline (may only decrease); build A.5
+  (rail-vs-contact ampacity) verbatim; TP probe-access scalar.
+- **GAP4: ledger.jsonl per build** (W×H, area, per-gate worst margins, DRC count, silk
+  distribution) + pre-committed cumulative AREA CAP with basis — kills the measured
+  perverse incentive (sqrt(area) budgets self-legitimize growth). Backfill from git.
+- **GAP2: DSN/Freerouting harness as repo code** (numbers-only, interpretation deferred
+  — decree-compliant); gives T2 its escape-region routability probe.
+- **GAP3: DFM closure wave** (fiducials emitted+registered, CPL/pos export, fab-profile
+  gate, ASSEMBLY_NOTES refresh, double-sided-SMT ratification ask).
+- Below-fold items adopted: DF40 mated-height scalar gate; region_void fail-loud check
+  at ethernet wave; D7 EMC scoping gets a basis string; sequencing analysis note.

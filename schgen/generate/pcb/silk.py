@@ -6,6 +6,8 @@ change.
 
 from __future__ import annotations
 
+import math
+
 from schgen.core.sexpr import Sym
 
 from .constants import (
@@ -17,6 +19,16 @@ from .constants import (
     ORIGIN_Y,
 )
 from .mating_face import _inst_courtyard
+
+# ABSOLUTE silk refdes height floor (mm). judgment:0.8 — fab legibility floor
+# (common 1oz silk capability, JLC-class): text below ~0.8 mm does not print
+# legibly, so a designator nobody can read is WORSE than the overlap it dodged.
+# The declutter's font-shrink ladder must NEVER emit text below this; when no
+# clear spot exists at >= this size, the RELOCATION SEARCH widens (more rings /
+# more angles in _place_clear_label) instead of shrinking further. This floor is
+# a deliberate BOARD-WIDE DFM upgrade: it also retro-fixes the pre-existing
+# 0.62-tier outputs (refs the old ladder shrank to 0.62 mm now stop at 0.8).
+_REFDES_MIN_SIZE = 0.8
 
 
 def _rects_overlap(a, b) -> bool:
@@ -199,7 +211,16 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
     (LAW 1). This matters for an edge-flushed connector whose courtyard hugs the
     edge — the outward direction is empty (pen 0) but off-board, so it would
     otherwise win. An off-board spot is only ever returned if NO on-board
-    candidate exists at all (cannot happen for a real part)."""
+    candidate exists at all (cannot happen for a real part).
+
+    WIDENED FALLBACK (DFM rework): when the compact 8-direction scan finds NO
+    fully-clear on-board spot, the search WIDENS — 16 angles per ring and larger
+    ring offsets — before giving up. The caller must never respond to a crowded
+    neighbourhood by shrinking text below the fab-legibility floor
+    (_REFDES_MIN_SIZE); finding a clear spot farther out is the correct move. The
+    widened pass runs ONLY after the compact scan failed, so every label the
+    compact scan already places keeps its exact position (deterministic,
+    byte-stable for the non-crowded board)."""
     midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
     w = max(len(label), 1) * size * 0.72
     h = size * 1.1
@@ -231,6 +252,31 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
                     best_pen, best = pen, (tx, ty, box, extra)
             if best_any_pen is None or pen < best_any_pen:
                 best_any_pen, best_any = pen, (tx, ty, box, extra)
+
+    # -- widened relocation search: 16 angles per ring, larger offsets ---------
+    # Rings are centred on the courtyard: for angle a the candidate centre sits at
+    # (mid + rx·cos a, mid + ry·sin a) where rx/ry extend the courtyard half-span
+    # by the ring offset plus the label half-extent — so every candidate clears
+    # the courtyard by ~``extra`` like the compact scan's cardinal spots. First
+    # fully-clear ON-BOARD candidate wins (deterministic ring/angle order).
+    for extra in (2.2, 4.4, 6.6, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 28.0, 32.0):
+        rx = (cx1 - cx0) / 2.0 + g + extra + w / 2
+        ry = (cy1 - cy0) / 2.0 + g + extra + h / 2
+        for k in range(16):
+            a = math.tau * k / 16.0
+            tx = midx + rx * math.cos(a)
+            ty = midy + ry * math.sin(a)
+            box = _text_box(label, tx, ty, size)
+            onboard = bounds is None or (
+                box[0] >= bounds[0] and box[1] >= bounds[1]
+                and box[2] <= bounds[2] and box[3] <= bounds[3])
+            if not onboard:
+                continue
+            pen = sum(_overlap_area(box, o) for o in occupied)
+            if pen == 0.0:
+                return tx, ty, box, extra
+            if best_pen is None or pen < best_pen:
+                best_pen, best = pen, (tx, ty, box, extra)
     return best if best is not None else best_any
 
 
@@ -365,7 +411,7 @@ def _hide_undersom_bottom_refs(model, doc: list) -> int:
     """Hide the B.SilkS reference of every BOTTOM-side part under the SoM shadow.
     Those parts (the som_decoupling bypass bank + co-located passives) sit on a
     uniform ~2 mm grid with no room for a legible refdes at ANY font (a 6-char ref
-    is wider than the pitch even at the 0.5 mm silk floor), so they get the
+    is wider than the pitch even at the 0.8 mm _REFDES_MIN_SIZE floor), so they get the
     test-point treatment: the ref stays in the footprint data (netlist/BOM), just
     not printed. Keyed on a B.Cu footprint whose origin is inside model.som_keepout.
     Runs BEFORE _declutter_refdes so the hidden refs are skipped there. Returns the
@@ -538,22 +584,43 @@ def _declutter_refdes(model, uid, doc: list) -> int:
         tx, ty, nbox, off = _place_clear_label(
             court[0], court[1], court[2], court[3], ref, size,
             occ + plc, bounds=(ex0, ey0, ex1, ey1))
-        # if the only clear spot is far (a dense IC/diode grid flings the ref out,
-        # ambiguous to read), retry at smaller fonts to find a CLOSER clear spot —
-        # honours the offset _place_clear_label reports, the way the descriptor
-        # placer degrades a far label. A smaller refdes fits the in-cluster gaps.
+
+        def _pen(bx, _occ=occ, _plc=plc) -> float:
+            return (sum(_overlap_area(bx, o) for o in _occ)
+                    + sum(_overlap_area(bx, p) for p in _plc))
+
+        # Retry at smaller fonts when the chosen spot is either FAR (a dense grid
+        # flung the ref out, ambiguous to read) OR still OVERLAPS (no fully-clear
+        # spot existed at the authored size — a tight stage cluster whose 0603
+        # refdes text collides even at the nearest slot). Each tier is CLAMPED to
+        # the ABSOLUTE fab-legibility floor _REFDES_MIN_SIZE (judgment:0.8 — common
+        # 1oz silk capability): the ladder may NEVER emit text below it — an
+        # unreadable designator is worse than the overlap it dodged. When even the
+        # floor size finds no clear spot, the answer is the WIDENED relocation
+        # search inside _place_clear_label (more rings/angles), never smaller text.
+        # (Deliberate board-wide DFM upgrade: the pre-existing 0.62 tier now clamps
+        # to 0.8 too.) We accept a shrunk spot only if it is CLOSER and/or strictly
+        # LESS overlapping (never worse — LAW 1).
         new_size = size
-        if off > 8.0:
+        cur_pen = _pen(nbox)
+        if off > 8.0 or cur_pen > 0.0:
+            tried = {round(size, 3)}
             for shrink in (0.78, 0.62):
-                s2 = round(size * shrink, 3)
-                if s2 < 0.6:
-                    break
+                s2 = max(round(size * shrink, 3), _REFDES_MIN_SIZE)
+                if s2 in tried or s2 >= size:
+                    continue                     # floor-clamped duplicate tier
+                tried.add(s2)
                 tx2, ty2, nbox2, off2 = _place_clear_label(
                     court[0], court[1], court[2], court[3], ref, s2,
                     occ + plc, bounds=(ex0, ey0, ex1, ey1))
-                if off2 < off - 0.5:                 # meaningfully closer
+                pen2 = _pen(nbox2)
+                # take the shrunk spot if it removes an overlap, or (overlap already
+                # gone) if it is meaningfully closer.
+                if (pen2 < cur_pen - 1e-9) or (
+                        cur_pen <= 0.0 and off2 < off - 0.5):
                     tx, ty, nbox, off, new_size = tx2, ty2, nbox2, off2, s2
-                    if off <= 8.0:
+                    cur_pen = pen2
+                    if cur_pen <= 0.0 and off <= 8.0:
                         break
         # rewrite the ref's footprint-local (at) so it composes back to (tx, ty);
         # the inverse mirrors per side (a B.Cu footprint is mirrored, frot negates).
