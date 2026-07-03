@@ -72,11 +72,15 @@ def _rot_bbox_cw(bbox: tuple[float, float, float, float],
     return _rot_bbox(bbox, (360.0 - (int(round(rot)) % 360)) % 360)
 
 
-def _rot_pad_bbox(mod_path: Path, rotation: float,
-                  side: str = "top") -> tuple[float, float, float, float] | None:
-    """The COPPER (pad) bounding box of a footprint after its placement rotation
-    + (for a bottom part) the F->B X-mirror, in the footprint-local frame —
-    includes each pad's real size (and the 90/270 size swap of a rotated pad).
+def _rot_pad_bbox(mod_path: Path,
+                  rotation: float) -> tuple[float, float, float, float] | None:
+    """The COPPER (pad) bounding box of a footprint after its placement rotation,
+    in the footprint-local frame — includes each pad's real size (and the 90/270
+    size swap of a rotated pad). SIDE-INDEPENDENT: emission keeps a bottom
+    footprint's local coordinates unchanged (embed._flip_to_bottom) and KiCad
+    loads a B.Cu footprint by applying ONLY the rotation (pcbnew-verified on
+    C22025 + the 4D03 network) — the historical F->B X-mirror here was the
+    bottom-convention split, measured wrong on all 319 bottom parts.
     Used to seat an off-board connector so its OUTERMOST pad sits exactly at the
     board-edge copper clearance (the mouth/shell then reaches/overhangs the edge,
     as a real hand-laid connector does). Returns None for a pad-less footprint."""
@@ -97,9 +101,6 @@ def _rot_pad_bbox(mod_path: Path, rotation: float,
                             if len(at) > 3 and isinstance(at[3], (int, float))
                             else 0.0)
         sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 else (0.0, 0.0)
-        if side == "bottom":
-            px = -px                            # F->B mirror about origin X
-            prot = -prot
         # pad CENTER under KiCad's CLOCKWISE footprint rotation (y-axis points
         # down): cx = px·cos + py·sin, cy = -px·sin + py·cos. This matches where
         # KiCad/DRC actually place an asymmetric pad (a CCW transform mirrors the
@@ -124,9 +125,10 @@ def _rot_pad_bbox(mod_path: Path, rotation: float,
 
 def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
     """Every pad of a placed footprint as (pad_name, x, y, net_name) in the
-    BOARD page frame. Applies the footprint rotation and, for a bottom-side
-    part, the F->B X-mirror about the origin (KiCad's flip convention) — so the
-    pad centers match where the copper actually lands."""
+    BOARD page frame: at + R_cw(rot)·(px, py), BOTH sides. NO bottom X-mirror —
+    the emitted board keeps a B.Cu footprint's local coordinates unchanged and
+    KiCad applies only the rotation at load (pcbnew-verified; the old mirror
+    here put every bottom airwire endpoint on the WRONG pad, 0.8–3.0 mm off)."""
     out: list[tuple[str, float, float, str]] = []
     doc = sexpr.loads(inst.mod_path.read_text())
     rot = math.radians(inst.rotation or 0.0)
@@ -139,8 +141,6 @@ def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
         if not (at and len(at) >= 3):
             continue
         px, py = float(at[1]), float(at[2])
-        if inst.side == "bottom":
-            px = -px                       # F->B mirror about the origin X axis
         # rotate about origin in KiCad's TRUE (CLOCKWISE, +y-DOWN page) sign — the
         # SAME matrix _rot_pad_bbox uses (cx = px·cos + py·sin, cy = -px·sin +
         # py·cos). For the symmetric parts this equals the old math-CCW form, but
@@ -155,12 +155,10 @@ def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
 
 def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
     """The placed footprint's courtyard bbox in the BOARD page frame, with the
-    placement rotation and (for a bottom part) the F->B X-mirror applied. This
+    placement rotation applied — SAME transform both sides (a B.Cu footprint's
+    stored local frame IS the final front-view frame; see _inst_pad_geom). This
     is the box the LAW-5 off-board + grouping gate reasons about."""
-    bx0, by0, bx1, by1 = _footprint_bbox(inst.mod_path)
-    if inst.side == "bottom":
-        bx0, bx1 = -bx1, -bx0
-    rb = _rot_bbox_cw((bx0, by0, bx1, by1), inst.rotation or 0.0)
+    rb = _rot_bbox_cw(_footprint_bbox(inst.mod_path), inst.rotation or 0.0)
     return (round(inst.x + rb[0], 3), round(inst.y + rb[1], 3),
             round(inst.x + rb[2], 3), round(inst.y + rb[3], 3))
 
@@ -173,7 +171,7 @@ def _inst_pad_bbox(inst: FootprintInst) -> tuple[float, float, float, float]:
     off-board check uses THIS so a correctly-seated edge connector (pads on-board,
     mouth overhanging) is not false-flagged, while a genuinely off-board part
     (copper outside Edge.Cuts) still fails."""
-    pb = _rot_pad_bbox(inst.mod_path, inst.rotation or 0.0, inst.side)
+    pb = _rot_pad_bbox(inst.mod_path, inst.rotation or 0.0)
     if pb is None:
         return _inst_courtyard(inst)        # pad-less fab-art: fall back
     return (round(inst.x + pb[0], 3), round(inst.y + pb[1], 3),

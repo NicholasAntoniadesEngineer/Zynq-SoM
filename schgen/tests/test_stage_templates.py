@@ -190,21 +190,20 @@ def test_no_courtyard_overlap_in_zone(_power_inputs):
     """No two placed parts' courtyards overlap within the emitted zone (reusing
     the gate's pad boxes + a PLACE_CLEAR halo — the template asserts this by
     construction and widens gaps on any collision)."""
-    (top_off, bot_off, _zw, _zh), rot, side = _run_template(_power_inputs)
+    (top_off, bot_off, _zw, _zh), rot, _side = _run_template(_power_inputs)
     _refs, _side_in, bbox_of, resolvable = _power_inputs
     from schgen.generate.pcb.mating_face import _rot_bbox_cw
-    from schgen.generate.pcb.placement import _eff_bbox_for
 
     # Courtyard overlap is a PER-SIDE property: a TOP part and a BOTTOM part at the
     # same XY do NOT collide (different copper layers) — this is exactly how the
     # legacy packer overlays its top+bottom sub-packs on one XY area, and the
     # template's leftovers follow suit. Check overlaps WITHIN each side only (top
     # holds every contract member + top leftovers; bottom holds bottom leftovers).
+    # Bbox transform is SIDE-INDEPENDENT (unified no-bottom-mirror convention).
     for off in (top_off, bot_off):
         boxes: list[tuple[str, tuple[float, float, float, float]]] = []
         for ref, (ox, oy) in off.items():
-            s = side.get(ref, "top")
-            rb = _rot_bbox_cw(_eff_bbox_for(bbox_of[ref], s), rot.get(ref, 0.0))
+            rb = _rot_bbox_cw(bbox_of[ref], rot.get(ref, 0.0))
             boxes.append((ref, (ox + rb[0], oy + rb[1], ox + rb[2], oy + rb[3])))
         halo = PLACE_CLEAR / 2.0
         for i in range(len(boxes)):
@@ -228,7 +227,7 @@ def test_bulk_out_caps_seated_at_inductor_output(_power_inputs):
 
     def pad_boxes(bref):
         off = top_off[bref]
-        rel = g._pad_boxes(resolvable[bref], rot.get(bref, 0.0), "top")
+        rel = g._pad_boxes(resolvable[bref], rot.get(bref, 0.0))
         return {n: (off[0] + b[0], off[1] + b[1], off[0] + b[2], off[1] + b[3])
                 for n, b in rel.items()}
 

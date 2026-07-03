@@ -403,8 +403,8 @@ class LocalMetrics:
     ``offsets``   (ref, dx, dy) for every packed part (top + bottom), zone-local.
     ``pad_union`` (ref, x0, y0, x1, y1) per-part PAD-union box, zone-local —
                   the part's packed offset + its pad geometry under
-                  ``(conn_rot + zone_extra_rot) % 360`` and its side (the SAME
-                  transform ``placement_contract_gate._pad_boxes`` uses).
+                  ``(conn_rot + zone_extra_rot) % 360`` (side-independent, the
+                  SAME transform ``placement_contract_gate._pad_boxes`` uses).
     ``zone_wh``   the packed zone (w, h)."""
     offsets: tuple[tuple[str, float, float], ...]
     pad_union: tuple[tuple[str, float, float, float, float], ...]
@@ -438,8 +438,7 @@ def zone_local_metrics(zg=None) -> dict[str, LocalMetrics]:
                 continue
             rot = (zg.conn_rot.get(ref, 0.0)
                    + zg.zone_extra_rot.get(ref, 0.0)) % 360.0
-            side = zg.side_of.get(ref, "top")
-            boxes = _pad_boxes(mod, rot, side)
+            boxes = _pad_boxes(mod, rot)
             if not boxes:
                 continue
             x0 = min(b[0] for b in boxes.values()) + dx

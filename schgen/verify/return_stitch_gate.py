@@ -328,10 +328,11 @@ def _check_clearance(model, conns, vias, segs, res) -> None:
     """Emitted-primitive vs FOREIGN-pad clearance >= the DRC rule minimums
     (independent of the generator's construct margins).  Netclass-aware: a
     POWER-class foreign pad demands 0.2, everything else 0.15 (kicad-cli
-    applies max(netclass) per pair).  Bottom-side pads are checked under
-    BOTH mirror conventions (the in-process model mirrors bottom footprints;
-    the emitted board does not — measured split, see escape.py)."""
-    from schgen.generate.pcb.escape import _emitted_pad_boxes
+    applies max(netclass) per pair).  Pad geometry is the ONE unified
+    convention (== the emitted board; the historical bottom-mirror split and
+    its both-conventions workaround were removed when the model was
+    reconciled to emission), so the same-net GND exemption now applies on
+    BOTH sides — the stitch copper IS the GND net."""
     from schgen.verify.placement_contract_gate import _inst_pad_boxes
 
     if not (vias or segs):
@@ -344,18 +345,18 @@ def _check_clearance(model, conns, vias, segs, res) -> None:
     win = (min(xs) - 3, min(ys) - 3, max(xs) + 3, max(ys) + 3)
     foreign: list[tuple[tuple, str, float, str]] = []
     for oi in sorted(model.insts, key=lambda i: i.ref):
-        for pad, bbs in sorted(_emitted_pad_boxes(oi, _inst_pad_boxes).items()):
+        for pad, bb in sorted(_inst_pad_boxes(oi).items()):
             net = oi.pad_nets.get(pad, (0, ""))[1]
-            if net == "GND" and oi.side != "bottom":
-                continue        # same net (bottom GND pads stay foreign —
-                #                 the mirror split makes their side untrusted)
+            if net == "GND":
+                continue        # same net as the stitch copper (both sides —
+                #                 the pad's position/net binding is trusted
+                #                 now that model == emission)
             rule = 0.2 if model.netclass_of.get(net) == "POWER" else \
                 RULE_CLEARANCE
-            for bb in bbs:
-                if (bb[2] < win[0] or bb[0] > win[2] or bb[3] < win[1]
-                        or bb[1] > win[3]):
-                    continue
-                foreign.append((bb, oi.side, rule, f"{oi.ref}.{pad}"))
+            if (bb[2] < win[0] or bb[0] > win[2] or bb[3] < win[1]
+                    or bb[1] > win[3]):
+                continue
+            foreign.append((bb, oi.side, rule, f"{oi.ref}.{pad}"))
 
     def box_dist(x, y, b):
         dx = max(b[0] - x, x - b[2], 0.0)

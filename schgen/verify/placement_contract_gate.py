@@ -21,9 +21,10 @@ and the basis.
 
 DISTANCE MEASURE: pad-edge-to-pad-edge. Every pad of every relevant footprint is
 transformed to an axis-aligned BOUNDING BOX in the board page frame (the
-footprint placement rotation in KiCad's true CLOCKWISE / +y-down sign, plus the
-F->B X-mirror for a bottom-side part — the SAME transform ``_inst_pad_geom`` /
-``_rot_pad_bbox`` use, so the boxes land where KiCad's copper does, pad size and
+footprint placement rotation in KiCad's true CLOCKWISE / +y-down sign,
+SIDE-INDEPENDENT — the emitted board applies NO F->B mirror to a bottom part's
+local coordinates; the SAME transform ``_inst_pad_geom`` / ``_rot_pad_bbox``
+use, so the boxes land where KiCad's copper does, pad size and
 rotation included). The distance between two pads is the gap between their boxes
 (0 if they overlap). A part-to-pin distance is the MIN over the part's pads to
 the target pin's box; a part-to-part distance the MIN over both pad sets.
@@ -192,18 +193,21 @@ def wired_term_participants() -> tuple[frozenset[str], frozenset[str]]:
 
 # --- pad geometry (pad-edge-to-pad-edge) ------------------------------------------
 
-_pad_box_cache: dict[tuple[str, float, str], dict[str, tuple]] = {}
+_pad_box_cache: dict[tuple[str, float], dict[str, tuple]] = {}
 
 
 def _pad_boxes(
-    mod_path: Path, rotation: float, side: str
+    mod_path: Path, rotation: float
 ) -> dict[str, tuple[float, float, float, float]]:
     """pad name -> axis-aligned board-local bbox (min_x,min_y,max_x,max_y),
     relative to the footprint origin, after the placement ``rotation`` (KiCad
-    CLOCKWISE, +y-down) and, for a bottom part, the F->B X-mirror. Mirrors the
-    transform in ``mating_face._inst_pad_geom`` / ``_rot_pad_bbox`` (pad size +
-    the pad's own rotation included). Cached by (path, rotation, side)."""
-    key = (str(mod_path), round(rotation or 0.0, 3), side)
+    CLOCKWISE, +y-down). SIDE-INDEPENDENT: the emitted board keeps a bottom
+    footprint's local coordinates unchanged and KiCad applies only the rotation
+    at load (pcbnew-verified) — the historical bottom X-mirror here disagreed
+    with the emitted copper on every bottom part. Mirrors the transform in
+    ``mating_face._inst_pad_geom`` / ``_rot_pad_bbox`` (pad size + the pad's
+    own rotation included). Cached by (path, rotation)."""
+    key = (str(mod_path), round(rotation or 0.0, 3))
     hit = _pad_box_cache.get(key)
     if hit is not None:
         return hit
@@ -224,9 +228,6 @@ def _pad_boxes(
             float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float))
             else 0.0)
         sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 else (0.0, 0.0)
-        if side == "bottom":
-            px = -px                          # F->B mirror about origin X
-            prot = -prot
         cx = px * cs + py * sn                # CW footprint rotation (+y-down)
         cy = -px * sn + py * cs
         tot = R + prot                        # pad-own rotation folded in
@@ -246,7 +247,7 @@ def _pad_boxes(
 
 def _inst_pad_boxes(inst) -> dict[str, tuple[float, float, float, float]]:
     """pad name -> board-page-frame bbox for a placed FootprintInst."""
-    rel = _pad_boxes(inst.mod_path, inst.rotation or 0.0, inst.side)
+    rel = _pad_boxes(inst.mod_path, inst.rotation or 0.0)
     return {n: (inst.x + b[0], inst.y + b[1], inst.x + b[2], inst.y + b[3])
             for n, b in rel.items()}
 

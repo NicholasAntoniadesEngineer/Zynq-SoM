@@ -50,10 +50,16 @@ def _flip_layer_token(name: str) -> str:
 
 def _flip_to_bottom(node: list) -> None:
     """Recursively flip a footprint subtree from the top (F.Cu) to the bottom
-    (B.Cu) side, the KiCad way: swap every (layer ...)/(layers ...) F.* token to
-    its B.* twin, and add (justify mirror) to text effects. Local coordinates
-    are NOT touched — KiCad mirrors at render time from the layer. Deterministic
-    and reversible (re-running on a B.* tree is a no-op for the layers)."""
+    (B.Cu) side: swap every (layer ...)/(layers ...) F.* token to its B.* twin,
+    and add (justify mirror) to text effects so the glyphs read correctly from
+    the back. Local coordinates are NOT touched, and KiCad applies NO position
+    mirror at load or render — a B.Cu footprint's stored coordinates ARE the
+    final front-view frame (pcbnew-verified; the whole in-process model shares
+    this convention). CONSEQUENCE: the emitted bottom land pattern is the
+    CHIRAL MIRROR of the part's top-side pattern, so only mirror-symmetric,
+    non-polarized parts may be placed bottom (guarded by
+    tests/test_bottom_convention.py). Deterministic and reversible (re-running
+    on a B.* tree is a no-op for the layers)."""
     for sub in node:
         if not isinstance(sub, list) or not sub:
             continue
@@ -104,11 +110,12 @@ def _embed_footprint(inst, uid) -> list:
     if not inserted:
         out.insert(1, at_node)
 
-    # 2-side assembly: a bottom-side footprint flips to B.Cu. KiCad's on-disk
-    # convention keeps the local pad/graphic COORDINATES unchanged and only
-    # swaps every F.* layer token to its B.* twin (the renderer mirrors based on
-    # the layer), plus a (justify mirror) on text. Done before the uuid/net pass
-    # so the flipped tree is what gets stamped.
+    # 2-side assembly: a bottom-side footprint flips to B.Cu. The local
+    # pad/graphic COORDINATES stay unchanged and only every F.* layer token
+    # swaps to its B.* twin, plus a (justify mirror) on text glyphs. KiCad
+    # applies NO position mirror on load — the stored frame IS the front-view
+    # frame (see _flip_to_bottom). Done before the uuid/net pass so the
+    # flipped tree is what gets stamped.
     if inst.side == "bottom":
         _flip_to_bottom(out)
 

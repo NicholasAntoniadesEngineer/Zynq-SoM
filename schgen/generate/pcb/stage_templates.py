@@ -42,7 +42,7 @@ from .constants import PLACE_CLEAR, ZONE_PAD
 from .footprint import _footprint_bbox
 from .footprint import has_thru_pads as _has_thru_pads
 from .mating_face import _rot_bbox_cw
-from .placement import _eff_bbox_for, _shelf_pack
+from .placement import _shelf_pack
 
 # Construction gaps (mm). Most placements are COURTYARD-clearance driven (part
 # courtyard clears its neighbour by PLACE_CLEAR + the widen ``pad``), which lands
@@ -69,7 +69,8 @@ _ROW_WIDTH_BUDGET = 46.0
 
 # --- local-frame primitives -------------------------------------------------------
 # A "placed part" during construction is (bref, rot, side, ox, oy): its pad boxes
-# in the stage-local frame are _pad_boxes(mod, rot, side) shifted by (ox, oy). We
+# in the stage-local frame are _pad_boxes(mod, rot) shifted by (ox, oy) — the
+# transform is SIDE-INDEPENDENT (unified no-bottom-mirror convention). We
 # reuse the gate's _pad_boxes so the geometry the template constructs is EXACTLY
 # the geometry the gate later measures on the emitted board.
 
@@ -87,23 +88,22 @@ class _Part:
         self.oy = oy
 
     def pad_boxes(self) -> dict[str, tuple[float, float, float, float]]:
-        rel = _g._pad_boxes(self.mod, self.rot, self.side)
+        rel = _g._pad_boxes(self.mod, self.rot)
         return {n: (self.ox + b[0], self.oy + b[1], self.ox + b[2], self.oy + b[3])
                 for n, b in rel.items()}
 
     def local_box(self) -> tuple[float, float, float, float]:
-        """Courtyard bbox (F->B mirror for a bottom part, plus rotation) in the
-        stage-local frame — the box used for overlap/extent, matching the packer's
-        ``_eff_bbox_for`` + rotation convention (the SAME transform
-        ``mating_face._inst_courtyard`` applies to the emitted footprint)."""
-        rb = _rot_bbox_cw(_eff_bbox_for(_footprint_bbox(self.mod), self.side),
-                          self.rot)
+        """Courtyard bbox (rotation applied, SIDE-INDEPENDENT — the unified
+        no-bottom-mirror convention) in the stage-local frame — the box used
+        for overlap/extent (the SAME transform ``mating_face._inst_courtyard``
+        applies to the emitted footprint)."""
+        rb = _rot_bbox_cw(_footprint_bbox(self.mod), self.rot)
         return (self.ox + rb[0], self.oy + rb[1], self.ox + rb[2], self.oy + rb[3])
 
 
 def _pad_half(mod: Path) -> tuple[float, float]:
     """Half width/height of a 2-pin passive's pad box at rot 0 (for gap solves)."""
-    pb = _g._pad_boxes(mod, 0.0, "top")
+    pb = _g._pad_boxes(mod, 0.0)
     b = next(iter(pb.values()))
     return (b[2] - b[0]) / 2.0, (b[3] - b[1]) / 2.0
 
@@ -825,8 +825,8 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
         sp: list[_Part] = []
         for p in parts:
             nrot = (p.rot + 180.0) % 360.0
-            nb = _g._pad_boxes(p.mod, nrot, p.side)
-            ob = _g._pad_boxes(p.mod, p.rot, p.side)
+            nb = _g._pad_boxes(p.mod, nrot)
+            ob = _g._pad_boxes(p.mod, p.rot)
             ocx = p.ox + (min(b[0] for b in ob.values())
                           + max(b[2] for b in ob.values())) / 2.0
             ocy = p.oy + (min(b[1] for b in ob.values())
@@ -1095,7 +1095,7 @@ def _pack_leftover_bands(lt: list[str], lb: list[str], target_w: float,
     ``target_w`` in a shared (0,0)-based frame; the BOTTOM pack avoids any top-side
     THROUGH-HOLE leftover pad (copper on all layers would short a bottom SMD),
     exactly as ``_pack_one_zone`` does. Returns (t_lo, t_w, t_h, b_lo, b_w, b_h)."""
-    t_items = [(r, _eff_bbox_for(bbox_of[r], "top"), 0.0) for r in lt]
+    t_items = [(r, bbox_of[r], 0.0) for r in lt]
     t_lo, t_w, t_h = _shelf_pack(t_items, target_w)
     blockers = []
     for r in lt:
@@ -1106,7 +1106,7 @@ def _pack_leftover_bands(lt: list[str], lb: list[str], target_w: float,
                              oy + by0 - PLACE_CLEAR / 2,
                              ox + bx1 + PLACE_CLEAR / 2,
                              oy + by1 + PLACE_CLEAR / 2))
-    b_items = [(r, _eff_bbox_for(bbox_of[r], "bottom"), 0.0) for r in lb]
+    b_items = [(r, bbox_of[r], 0.0) for r in lb]
     b_lo, b_w, b_h = _shelf_pack(b_items, target_w, blockers)
     return t_lo, t_w, t_h, b_lo, b_w, b_h
 
@@ -1198,8 +1198,8 @@ def _turn_zone_180(placed: dict[str, _Part]) -> dict[str, _Part]:
     out: dict[str, _Part] = {}
     for ref, p in placed.items():
         nrot = (p.rot + 180.0) % 360.0
-        ob = _g._pad_boxes(p.mod, p.rot, p.side)
-        nb = _g._pad_boxes(p.mod, nrot, p.side)
+        ob = _g._pad_boxes(p.mod, p.rot)
+        nb = _g._pad_boxes(p.mod, nrot)
         ocx = p.ox + (min(b[0] for b in ob.values())
                       + max(b[2] for b in ob.values())) / 2.0
         ocy = p.oy + (min(b[1] for b in ob.values())

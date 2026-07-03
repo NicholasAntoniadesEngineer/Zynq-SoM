@@ -32,8 +32,9 @@ FLOORPLAN COMPOSITION (T1): 6 hard / 10 soft terms; hard RED 0, soft RED 1 (advi
     managed R9005 (debug_boot) in escape:J3:N [T2 STAY]
     managed R9006 (debug_boot) in escape:J3:S [T2 STAY]
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    bringup_en_modules | bringup_rails: 24 airwires (670.7 mm) -> corridor >= 6.8 mm
-    bringup_en_modules | bringup_modules: 12 airwires (215.1 mm) -> corridor >= 4.4 mm
-    bringup_rails | som_decoupling: 10 airwires (44.7 mm) -> corridor >= 4.0 mm
+    bringup_en_modules | bringup_rails: 24 airwires (670.4 mm) -> corridor >= 6.8 mm
+    bringup_en_modules | bringup_modules: 16 airwires (222.4 mm) -> corridor >= 5.2 mm
+    bringup_rails | som_decoupling: 12 airwires (54.3 mm) -> corridor >= 4.4 mm
     ethernet | rj45_connector: 8 airwires (288.5 mm) -> corridor >= 3.6 mm
-    motor_sense | power_mon: 7 airwires (58.4 mm) -> corridor >= 3.4 mm
+    motor_sense | power_mon: 7 airwires (58.6 mm) -> corridor >= 3.4 mm
+    fmc | som_decoupling: 6 airwires (21.5 mm) -> corridor >= 3.2 mm

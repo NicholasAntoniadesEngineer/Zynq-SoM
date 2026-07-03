@@ -1,7 +1,7 @@
 RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
   remediation set (v1-failing contacts): 29
   covered by som_escape GND vias        : 29
-  worst contact->via distance           : 1.7772 mm
+  worst contact->via distance           : 1.7896 mm
   som_escape stitch vias                : 8
   som_interface hash                    : ok
   emitted-file parity                   : ok
@@ -10,10 +10,10 @@ RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
     J2: 28 contacts, 0 uncovered
     J3: 0 contacts, 0 uncovered
   triage-ranked coverage (GENUINE first — ordering only, never a waiver):
-    [GENUINE ] J2 pad  69 ZYNQ_HDMI_TX_TMDS_0_N        -> 1.7050 mm
-    [GENUINE ] J2 pad  70 ZYNQ_HDMI_TX_TMDS_1_P        -> 1.7513 mm
-    [GENUINE ] J2 pad  71 ZYNQ_HDMI_TX_TMDS_CLK_P      -> 1.6841 mm
-    [GENUINE ] J2 pad  72 ZYNQ_HDMI_TX_TMDS_2_P        -> 1.4819 mm
+    [GENUINE ] J2 pad  69 ZYNQ_HDMI_TX_TMDS_0_N        -> 1.7557 mm
+    [GENUINE ] J2 pad  70 ZYNQ_HDMI_TX_TMDS_1_P        -> 1.7896 mm
+    [GENUINE ] J2 pad  71 ZYNQ_HDMI_TX_TMDS_CLK_P      -> 1.6548 mm
+    [GENUINE ] J2 pad  72 ZYNQ_HDMI_TX_TMDS_2_P        -> 1.4624 mm
     [GENUINE ] J2 pad  80 HDMI_RX_D2_N                 -> 1.7772 mm
     [GENUINE ] J2 pad  82 HDMI_RX_D1_P                 -> 1.3995 mm
     [GENUINE ] J2 pad  90 HDMI_RX_CLK_P                -> 1.4128 mm
@@ -22,10 +22,10 @@ RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
     [LOW     ] J2 pad  10 IO_L24_P_13                  -> 1.3550 mm
     [LOW     ] J2 pad  11 ZYNQ_PS_UART0_CTS_N          -> 1.4128 mm
     [LOW     ] J2 pad  20 IO_L2_P_13                   -> 1.5487 mm
-    [LOW     ] J2 pad  29 PMODX_IO1                    -> 1.4819 mm
-    [LOW     ] J2 pad  30 LCD_CTP_SDA                  -> 1.2845 mm
-    [LOW     ] J2 pad  31 PMODX_IO4                    -> 1.0817 mm
-    [LOW     ] J2 pad  32 LCD_CTP_INT                  -> 1.0050 mm
+    [LOW     ] J2 pad  29 PMODX_IO1                    -> 1.4624 mm
+    [LOW     ] J2 pad  30 LCD_CTP_SDA                  -> 1.2143 mm
+    [LOW     ] J2 pad  31 PMODX_IO4                    -> 1.0171 mm
+    [LOW     ] J2 pad  32 LCD_CTP_INT                  -> 0.9563 mm
     [LOW     ] J2 pad  39 PMODX_IO6                    -> 1.4819 mm
     [LOW     ] J2 pad  40 DBG_UART_TXD                 -> 1.3697 mm
     [LOW     ] J2 pad  41 PMODX_IO5                    -> 1.3697 mm

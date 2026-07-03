@@ -454,10 +454,12 @@ def _declutter_refdes(model, uid, doc: list) -> int:
     ref keeps its exact authored position (byte-identical) — to the nearest clear
     spot just outside its OWN footprint courtyard, reusing _place_clear_label.
 
-    BOTH sides (F.SilkS + B.SilkS): a B.Cu footprint is MIRRORED, so its child
-    board position is fp + R(-frot)·(lx,ly) (verified against the KiCad renderer)
-    and the inverse-(at) rewrite mirrors the top one. The ref's local (at) is
-    rewritten by inverse-composing the chosen board point. Greedy in ref-name
+    BOTH sides (F.SilkS + B.SilkS) compose IDENTICALLY: child board position is
+    fp + R_cw(frot)·(lx,ly) — KiCad applies NO position mirror to a B.Cu
+    footprint's children (only the text GLYPHS render mirrored via `justify
+    mirror`; unified no-bottom-mirror convention, pcbnew-verified). The ref's
+    local (at) is rewritten by inverse-composing the chosen board point. Greedy
+    in ref-name
     order; top refs are visited first (one shared `placed`) so F.SilkS stays
     byte-identical. Under-SoM bottom refs are hidden upstream
     (_hide_undersom_bottom_refs) — a ~2 mm cap grid has no room for a legible ref —
@@ -555,12 +557,10 @@ def _declutter_refdes(model, uid, doc: list) -> int:
             # screen coords (y-down). The TOP-side compose was previously CCW
             # (fy + lx·sa) which placed a rotated ref ~14 mm off its true render
             # spot (U11001 rot-90: CCW x=85.71 vs KiCad x=71.49), so the declutter
-            # never saw its real silk collision. Both sides now use the CW form
-            # (the B.Cu mirror collapses to the same form here since lx=0).
-            if bottom:                          # B.Cu fp mirrored: fp+R(-frot)(lx,ly)
-                bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
-            else:
-                bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
+            # never saw its real silk collision. ONE form, BOTH sides — a B.Cu
+            # footprint's children compose with the SAME CW transform, no
+            # position mirror (unified convention, pcbnew-verified).
+            bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
             court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
             (bot_refs if bottom else top_refs).append(
                 (ref, c, lat, fx, fy, ca, sa, court, size,
@@ -623,10 +623,10 @@ def _declutter_refdes(model, uid, doc: list) -> int:
                     if cur_pen <= 0.0 and off <= 8.0:
                         break
         # rewrite the ref's footprint-local (at) so it composes back to (tx, ty);
-        # the inverse mirrors per side (a B.Cu footprint is mirrored, frot negates).
+        # ONE inverse, both sides (no side-dependent mirror — unified convention).
         dx, dy = tx - fx, ty - fy
         # inverse of the CW forward bx=fx+lx·ca+ly·sa, by=fy-lx·sa+ly·ca:
-        #   lx = dx·ca - dy·sa,  ly = dx·sa + dy·ca   (both sides — top is now CW).
+        #   lx = dx·ca - dy·sa,  ly = dx·sa + dy·ca   (both sides CW).
         lat[1] = round(dx * ca - dy * sa, 4)
         lat[2] = round(dx * sa + dy * ca, 4)
         if new_size != size:

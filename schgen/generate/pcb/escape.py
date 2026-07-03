@@ -225,44 +225,21 @@ def _net_rule(model, net: str) -> float:
     return 0.2 if model.netclass_of.get(net) == "POWER" else 0.15
 
 
-def _emitted_pad_boxes(oi, pad_boxes_fn) -> dict[str, list[tuple]]:
-    """pad -> BOARD-frame boxes as the EMITTED board realises them.
-
-    For TOP parts the in-process convention (pad_boxes_fn) matches emission.
-    For BOTTOM parts there is a measured convention split: the in-process
-    model X-MIRRORS bottom footprints (placement_contract_gate._pad_boxes),
-    while embed._flip_to_bottom keeps local coordinates unchanged and
-    kicad-cli reads them UNMIRRORED (proven by DRC: C22025 pad 1 [+VIN_SYS]
-    lands at the model's pad-2 spot).  Until the engine owners reconcile the
-    two, escape feasibility uses the UNION of both conventions per pad —
-    correct under either, at a small candidate-space cost."""
-    from schgen.verify.placement_contract_gate import _pad_boxes
-
-    mirrored = pad_boxes_fn(oi)
-    if oi.side != "bottom":
-        return {p: [b] for p, b in mirrored.items()}
-    plain = _pad_boxes(oi.mod_path, oi.rotation or 0.0, "top")
-    out: dict[str, list[tuple]] = {}
-    for p, b in mirrored.items():
-        out[p] = [b]
-        pb = plain.get(p)
-        if pb is not None:
-            out[p].append((oi.x + pb[0], oi.y + pb[1],
-                           oi.x + pb[2], oi.y + pb[3]))
-    return out
-
-
 def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
                                                                 float, float],
                        ) -> _Obstacles:
     """Pad-accurate obstacle boxes (LOCAL frame) within ``region`` around one
     DF40 connector.  F.Cu = the connector's own non-GND pads (signal + power +
     the no-net mech pads) + every other top-side inst's pads; B.Cu = every
-    bottom-side inst's netted pads (BOTH mirror conventions, ALL nets — the
-    bottom-mirror split makes per-net exemptions unsafe there); holes = every
-    thru/NPTH pad (conservative: the full pad box radius).  Only the
-    CONNECTOR's own GND pads are same-net-exempt (annulus may touch; the
-    drill may not — CLR_HOLE_SAMENET_PAD)."""
+    bottom-side inst's netted pads (ALL nets — foreign parts stay obstacles
+    regardless of net, exactly as on the top side); holes = every thru/NPTH
+    pad (conservative: the full pad box radius).  Only the CONNECTOR's own GND
+    pads are same-net-exempt (annulus may touch; the drill may not —
+    CLR_HOLE_SAMENET_PAD).  Pad geometry is the ONE unified convention
+    (``pad_boxes_fn`` == the contract gate's boxes == the emitted board — the
+    historical bottom-mirror split and its union-of-conventions workaround
+    were removed when the conventions were reconciled; DRC on C22025 had
+    proven emission unmirrored)."""
     from schgen.core import sexpr
     from schgen.core.sexpr import Sym
 
@@ -277,7 +254,7 @@ def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
         return (min(xs), min(ys), max(xs), max(ys))
 
     for oi in sorted(model.insts, key=lambda i: i.ref):
-        boxes = _emitted_pad_boxes(oi, pad_boxes_fn)
+        boxes = pad_boxes_fn(oi)
         thru: set[str] = set()
         # thru/NPTH pads of this footprint (their barrels are on every layer)
         try:
@@ -289,27 +266,27 @@ def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
                     thru.add(str(node[1]))
         except Exception:  # noqa: BLE001 — unreadable mod = no thru info
             pass
-        for pad, bbs in sorted(boxes.items()):
+        for pad, bb in sorted(boxes.items()):
             net = oi.pad_nets.get(pad, (0, ""))[1]
             label = f"{oi.ref}({oi.sheet}).{pad}"
             rule = _net_rule(model, net)
-            for bb in bbs:
-                lb = _local_box(bb)
-                if lb[2] < u0 or lb[0] > u1 or lb[3] < v0 or lb[1] > v1:
-                    continue
-                if oi.ref == inst.ref and net == "GND":
-                    obs.samenet_pads.append((*lb, rule, label))
-                elif oi.side == "top" or oi.ref == inst.ref:
-                    obs.f_cu.append((*lb, rule, label))
-                else:
-                    # bottom part: every netted pad is foreign B.Cu copper
-                    # under at least one convention (incl. its GND pads —
-                    # the mirror split makes the net-per-position untrusted)
-                    obs.b_cu.append((*lb, rule, label))
-                if pad in thru:
-                    cu, cv = (lb[0] + lb[2]) / 2, (lb[1] + lb[3]) / 2
-                    r = max(lb[2] - lb[0], lb[3] - lb[1]) / 2
-                    obs.holes.append((cu, cv, r, label))
+            lb = _local_box(bb)
+            if lb[2] < u0 or lb[0] > u1 or lb[3] < v0 or lb[1] > v1:
+                continue
+            if oi.ref == inst.ref and net == "GND":
+                obs.samenet_pads.append((*lb, rule, label))
+            elif oi.side == "top" or oi.ref == inst.ref:
+                obs.f_cu.append((*lb, rule, label))
+            else:
+                # bottom part: every netted pad is foreign B.Cu copper
+                # (incl. its GND pads — same conservatism as the top side,
+                # where every other part's pad is an obstacle regardless
+                # of net; the gate applies the same-net exemption)
+                obs.b_cu.append((*lb, rule, label))
+            if pad in thru:
+                cu, cv = (lb[0] + lb[2]) / 2, (lb[1] + lb[3]) / 2
+                r = max(lb[2] - lb[0], lb[3] - lb[1]) / 2
+                obs.holes.append((cu, cv, r, label))
     return obs
 
 

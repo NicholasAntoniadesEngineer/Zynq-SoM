@@ -216,15 +216,16 @@ def _classify_side(ref: str, lib: str, bbox: tuple,
     return "top"
 
 
-def _eff_bbox_for(bbox: tuple[float, float, float, float],
-                  side: str) -> tuple[float, float, float, float]:
-    """The footprint's on-board local bbox. A BOTTOM part is flipped to B.Cu,
-    which mirrors its geometry about the origin's X axis (KiCad's F->B
-    convention), so its courtyard occupies the X-mirror of the top bbox."""
-    bx0, by0, bx1, by1 = bbox
-    if side == "bottom":
-        return (-bx1, by0, -bx0, by1)
-    return (bx0, by0, bx1, by1)
+# BOTTOM-SIDE CONVENTION (the unified truth, pcbnew-verified): a footprint's
+# local geometry is SIDE-INDEPENDENT. embed._flip_to_bottom swaps only the
+# layer tokens; KiCad loads a B.Cu footprint by applying the placement rotation
+# to the UNCHANGED local coordinates — there is NO F->B X-mirror anywhere in
+# the pipeline. The historical `_eff_bbox_for` helper mirrored bottom bboxes
+# about X and was DELETED when the convention was unified (it disagreed with
+# the emitted board on every one of the 319 bottom parts). Consequence: an
+# emitted bottom footprint is the CHIRAL MIRROR of its top-side land pattern —
+# only mirror-symmetric, non-polarized parts may be placed bottom
+# (schgen/tests/test_bottom_convention.py guards this).
 
 
 def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
@@ -254,9 +255,8 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
         sr[side_of[r]].append(r)
     conn_rot = conn_rot or {}
 
-    def items(refs, side):
-        return [(r, _eff_bbox_for(bbox_of[r], side), conn_rot.get(r, 0.0))
-                for r in refs]
+    def items(refs, _side):
+        return [(r, bbox_of[r], conn_rot.get(r, 0.0)) for r in refs]
 
     if conn_rot and outer_dir:
         return _pack_connector_zone(sr, items, bbox_of, resolvable,
@@ -356,8 +356,8 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
     horiz = outer_dir in ("N", "S")     # connectors row spreads along X (N/S) ...
     #                                     ... or down Y (W/E)
     # haloed ROTATED bbox of each connector (the box it really occupies)
-    def hbox(r, side):
-        rb = _rot_bbox(_eff_bbox_for(bbox_of[r], side), conn_rot.get(r, 0.0))
+    def hbox(r, _side):
+        rb = _rot_bbox(bbox_of[r], conn_rot.get(r, 0.0))
         return (rb[0] - PLACE_CLEAR / 2, rb[1] - PLACE_CLEAR / 2,
                 rb[2] + PLACE_CLEAR / 2, rb[3] + PLACE_CLEAR / 2)
 
@@ -407,7 +407,7 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
     row_span = max(cursor, 8.0)
     target_w = max(row_span - ZONE_PAD, (tot_area * 0.62) ** 0.5 * aspect)
 
-    rt = [(r, _eff_bbox_for(bbox_of[r], "top"), 0.0) for r in rest_top]
+    rt = [(r, bbox_of[r], 0.0) for r in rest_top]
     t_rest, _tw, _th = _shelf_pack(rt, target_w)
     blockers: list[tuple[float, float, float, float]] = []
     for r in rest_top:
@@ -419,7 +419,7 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
                          oy + by0 - PLACE_CLEAR / 2 + (behind if horiz else 0),
                          ox + bx1 + PLACE_CLEAR / 2 + (0 if horiz else behind),
                          oy + by1 + PLACE_CLEAR / 2 + (behind if horiz else 0)))
-    rb = [(r, _eff_bbox_for(bbox_of[r], "bottom"), 0.0) for r in rest_bot]
+    rb = [(r, bbox_of[r], 0.0) for r in rest_bot]
     b_rest, _bw, _bh = _shelf_pack(rb, target_w, blockers)
 
     for r, (dx, dy) in t_rest.items():
@@ -434,10 +434,9 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
     for side in ("top", "bottom"):
         for r, (ox, oy) in placed[side].items():
             if r in conn_rot:
-                rb2 = _rot_bbox(_eff_bbox_for(bbox_of[r], side),
-                                conn_rot.get(r, 0.0))
+                rb2 = _rot_bbox(bbox_of[r], conn_rot.get(r, 0.0))
             else:
-                rb2 = _eff_bbox_for(bbox_of[r], side)
+                rb2 = bbox_of[r]
             zw = max(zw, ox + rb2[2] + PLACE_CLEAR / 2)
             zh = max(zh, oy + rb2[3] + PLACE_CLEAR / 2)
     zw = round(zw + ZONE_PAD, 4)
@@ -452,10 +451,9 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
         for side in ("top", "bottom"):
             for r, (ox, oy) in placed[side].items():
                 if r in conn_rot:
-                    rb2 = _rot_bbox(_eff_bbox_for(bbox_of[r], side),
-                                    conn_rot.get(r, 0.0))
+                    rb2 = _rot_bbox(bbox_of[r], conn_rot.get(r, 0.0))
                 else:
-                    rb2 = _eff_bbox_for(bbox_of[r], side)
+                    rb2 = bbox_of[r]
                 if flip_y:
                     noy = zh - (oy + rb2[3]) - rb2[1]
                     out[side][r] = (round(ox, 4), round(noy, 4))
@@ -957,14 +955,15 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         def _eff_box(ref: str, px: float, py: float
                      ) -> tuple[float, float, float, float]:
             # apply the part's placement ROTATION (a LEVER-L1 zone rotation turns
-            # interior passives 90 deg) BEFORE the F->B side mirror, so the L4
-            # collision/dispersion bound matches the courtyard the part really
-            # occupies — otherwise a rotated zone's bottom passives could be
-            # bound by their un-rotated box and the move clip a neighbour. Uses
-            # KiCad's CLOCKWISE sign (_rot_bbox_cw) so the bound matches where the
-            # emitted footprint really lands (the same sign _rot_pad_bbox uses).
-            rb = _rot_bbox_cw(bbox_of[ref], fixed_rot.get(ref, 0.0))
-            ex0, ey0, ex1, ey1 = _eff_bbox_for(rb, side_of.get(ref, "top"))
+            # interior passives 90 deg) so the L4 collision/dispersion bound
+            # matches the courtyard the part really occupies — otherwise a
+            # rotated zone's bottom passives could be bound by their un-rotated
+            # box and the move clip a neighbour. Uses KiCad's CLOCKWISE sign
+            # (_rot_bbox_cw) so the bound matches where the emitted footprint
+            # really lands (the same sign _rot_pad_bbox uses). SAME box both
+            # sides — emission applies no F->B mirror (unified convention).
+            ex0, ey0, ex1, ey1 = _rot_bbox_cw(bbox_of[ref],
+                                              fixed_rot.get(ref, 0.0))
             return (px + ex0, py + ey0, px + ex1, py + ey1)
 
         def _halo(b: tuple[float, float, float, float], m: float
@@ -1087,8 +1086,7 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     for ref, edge in zg.conn_edge.items():
         if ref not in resolvable or ref not in pos:
             continue
-        pb = _rot_pad_bbox(resolvable[ref], fixed_rot.get(ref, 0.0),
-                           side_of.get(ref, "top"))
+        pb = _rot_pad_bbox(resolvable[ref], fixed_rot.get(ref, 0.0))
         if pb is None:
             continue
         px0, py0, px1, py1 = pb
