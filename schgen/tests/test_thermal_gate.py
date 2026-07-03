@@ -2,20 +2,48 @@
 
 Locks: the dissipation model per device kind; the CURRENT board passes (every
 speced regulator under its Tj guard band, real device coverage); a synthetic
-LDO dropping too much power runs OVER Tj and FAILS; and an author waive_thermal
-demotes that ERROR to a note. Pure/offline (Tj = Ta + Pd*RthJA over the
-powertree tree; no kicad-cli, no network)."""
+LDO dropping too much power runs OVER Tj and FAILS; an author waive_thermal
+demotes that ERROR to a note; and — the GAP1 honesty lock — every pour-aware
+RthJA credit is granted ONLY against copper VERIFIED in the emitted board
+(red-on-fiction: the old 58.7->30 C/W basis MUST fail when the copper is not
+emitted). Pure/offline (Tj = Ta + Pd*RthJA over the powertree tree; no
+kicad-cli, no network — the board evidence is a parsed file / synthetic
+BoardCopper)."""
 
 from __future__ import annotations
 
 import types
+from pathlib import Path
 
 from schgen.core.model import Circuit
 from schgen.verify import powertree, thermal
+from schgen.verify.copper_debt import BoardCopper, FpInfo, ViaInfo, ZoneInfo
+
+REPO = Path(__file__).resolve().parents[2]
 
 
 def _sheet(name, c):
     return types.SimpleNamespace(name=name, circuit=c)
+
+
+def _synthetic_copper(value: str, x: float = 100.0, y: float = 100.0,
+                      n_vias: int = 8, pour_layers=("F.Cu", "B.Cu"),
+                      plane: bool = True) -> BoardCopper:
+    """A minimal BoardCopper granting (or, degraded, denying) a pour credit
+    for one instance of ``value`` at (x, y)."""
+    bc = BoardCopper(path=Path("synthetic"))
+    if plane:
+        bc.zones.append(ZoneInfo("GND_plane_In1", "GND", ("In1.Cu",),
+                                 keepout=False, filled=True,
+                                 bbox=(0.0, 0.0, 200.0, 200.0)))
+    for lay in pour_layers:
+        bc.zones.append(ZoneInfo(f"thermal_pour_U1_{lay[0]}", "GND", (lay,),
+                                 keepout=False, filled=True,
+                                 bbox=(x - 4, y - 4, x + 4, y + 4)))
+    for i in range(n_vias):
+        bc.vias.append(ViaInfo(x + 1.5, y - 2.0 + 0.5 * i, "GND"))
+    bc.footprints.append(FpInfo("U1", value, x, y, "F.Cu", ()))
+    return bc
 
 
 def test_dissipation_model():
@@ -33,12 +61,38 @@ def test_dissipation_model():
 
 
 def test_current_board_passes_thermal():
+    """The real board + the real EMITTED copper: every credit verified from
+    the .kicad_pcb the build wrote (the same call cmd_board makes)."""
     from schgen.core.link import all_subsystem_paths, load_subsystem
+    from schgen.verify import copper_debt
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
-    r = thermal.analyze(sheets)
+    copper = copper_debt.scan_board(REPO / "carrier" / "Zynq_Carrier.kicad_pcb")
+    r = thermal.analyze(sheets, copper=copper, copper_src="Zynq_Carrier")
     assert r.ok, f"unexpected over-Tj devices: {r.errors}"
     assert not r.findings, f"unspeced devices: {r.findings}"
     assert len(r.devices) > 10        # real device coverage, not a no-op
+    # the LM61460 bucks must be CREDITED (their copper is emitted), and the
+    # hottest of them must carry a real positive margin
+    bucks = [d for d in r.devices if d.value.startswith("LM61460")]
+    assert len(bucks) == 3 and all(d.poured for d in bucks), \
+        [f"{d.sheet}:{d.ref} granted={d.pour_granted}" for d in bucks]
+
+
+def test_current_board_fails_without_emitted_copper():
+    """RED-ON-FICTION (the GAP1 defect, locked): the SAME sheets with NO
+    board evidence must FAIL — the LM61460 bucks back out to the bare
+    58.7 C/W (power:U1 ~192 C vs the 140 C guard) and the DYD LDO to the
+    231 C/W DBV fallback. This is exactly the state the old gate PASSED."""
+    from schgen.core.link import all_subsystem_paths, load_subsystem
+    sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
+    r = thermal.analyze(sheets)                   # copper=None: fail-closed
+    assert not r.ok, "no-copper analysis must FAIL (the fiction the old " \
+                     "pour credit hid)"
+    u1 = next(d for d in r.devices
+              if d.sheet == "power" and d.value.startswith("LM61460"))
+    assert not u1.poured and u1.rth_ja == 58.7
+    assert u1.tj > 185.0, f"backed-out Tj should be ~192 C, got {u1.tj:.1f}"
+    assert any("POUR CREDIT WITHHELD" in e for e in r.errors), r.errors[:2]
 
 
 def _hot_ldo_sheet():
@@ -116,10 +170,7 @@ def test_tps54302_over_2A_fails_at_datasheet_rthja():
     assert not r.ok and dev.over, "must FAIL the 125 C rec-max guard"
 
 
-def test_lm61460_ep_buck_passes_same_load():
-    """The swap target: the LM61460 (EP-equivalent PGND/SW pads -> GND pour,
-    pour-credit 30 C/W) carries the SAME +3V3 load comfortably under its 150 C
-    rec-max guard — proving the reselection actually fixes the finding."""
+def _lm61460_buck_sheet():
     c = Circuit("th", "th")
     c.part("U1", "LM61460AANRJRR:LM61460AANRJRR", "LM61460AANRJRR", "")
     c.part("L1", "Device:L", "10uH", "")
@@ -128,10 +179,84 @@ def test_lm61460_ep_buck_passes_same_load():
     c.net("SW_X", "U1.10", "L1.1")         # SW (pin 10) -> inductor
     c.net("+3V3", "L1.2")
     c.draws("+3V3", 2.745, "synthetic buck load")
-    pt = powertree.analyze([_sheet("th", c)])
-    r = thermal.analyze([_sheet("th", c)], pt_res=pt)
+    return [_sheet("th", c)]
+
+
+def test_lm61460_ep_buck_passes_same_load():
+    """The swap target: the LM61460 (PGND/SW pads -> emitted GND pours + via
+    field, pour-credit 35 C/W) carries the SAME +3V3 load comfortably under
+    its 150 C rec-max guard — proving the reselection actually fixes the
+    finding. The credit is granted only because the (synthetic) board copper
+    VERIFIES: In1 plane + 8 vias + F/B pours at the instance."""
+    sheets = _lm61460_buck_sheet()
+    pt = powertree.analyze(sheets)
+    copper = _synthetic_copper("LM61460AANRJRR")
+    r = thermal.analyze(sheets, pt_res=pt, copper=copper, copper_src="synth")
     dev = next(d for d in r.devices if d.ref == "U1")
-    # Pd = (1/0.85-1)*3.3*2.745 = 1.599 W ; Tj = 50 + 1.599*30 = 98 C < 140 guard
-    assert dev.poured, "LM61460 must take the cited pour-aware RthJA credit"
-    assert dev.tj < 110.0, f"Tj should be ~98 C at the pour RthJA, got {dev.tj:.1f}"
+    # Pd = (1/0.85-1)*3.3*2.745 = 1.599 W ; Tj = 50 + 1.599*35 = 106 C < 140
+    assert dev.poured, "LM61460 must take the verified pour-aware RthJA credit"
+    assert dev.tj < 110.0, f"Tj should be ~106 C at the pour RthJA, got {dev.tj:.1f}"
     assert r.ok and not dev.over, "the EP buck must PASS with real margin"
+
+
+def test_lm61460_old_basis_fails_without_emitted_copper():
+    """RED-ON-FICTION lock (LAW 0 / GAP1): the OLD pour-credit basis — trust
+    the prose, no emitted copper — must FAIL. Same buck, same load, NO board
+    evidence: Tj computes at the bare 58.7 C/W (143.9 C > the 140 C guard)
+    and the error says WHY the credit was withheld."""
+    sheets = _lm61460_buck_sheet()
+    pt = powertree.analyze(sheets)
+    r = thermal.analyze(sheets, pt_res=pt)        # copper=None
+    dev = next(d for d in r.devices if d.ref == "U1")
+    assert not dev.poured and dev.rth_ja == 58.7
+    assert dev.tj > 140.0, f"bare-RthJA Tj should be ~144 C, got {dev.tj:.1f}"
+    assert not r.ok and dev.over
+    assert any("POUR CREDIT WITHHELD" in e for e in r.errors), r.errors
+
+
+def test_lm61460_partial_copper_is_not_enough():
+    """A short via field (5 < the 6 floor), a missing local pour, or a
+    missing In1 plane keeps the credit WITHHELD — the evidence bar is the
+    emitter's actual output, not 'some copper somewhere' (LAW 4)."""
+    sheets = _lm61460_buck_sheet()
+    pt = powertree.analyze(sheets)
+    for degraded in (
+            _synthetic_copper("LM61460AANRJRR", n_vias=5),
+            _synthetic_copper("LM61460AANRJRR", pour_layers=("F.Cu",)),
+            _synthetic_copper("LM61460AANRJRR", plane=False)):
+        r = thermal.analyze(sheets, pt_res=pt, copper=degraded)
+        dev = next(d for d in r.devices if d.ref == "U1")
+        assert not dev.poured and not r.ok, \
+            "degraded copper must withhold the credit"
+
+
+def _dyd_ldo_sheet():
+    """The VADJ LDO shape: TLV75725 DYD (footprint carries 'DYD'), 0.4 A of
+    +3V3 -> +2V5 (Pd = 0.32 W)."""
+    c = Circuit("th", "th")
+    c.part("U1", "TLV75725PDYDR:TLV75725PDYDR", "TLV75725PDYDR",
+           "TLV75725PDYDR:TLV75725PDYDR")
+    c.net("+3V3", "U1.1")
+    c.net("+2V5_VADJ", "U1.5")
+    c.net("GND", "U1.2")
+    c.draws("+2V5_VADJ", 0.4, "synthetic VADJ load")
+    return [_sheet("th", c)]
+
+
+def test_dyd_ldo_credit_gated_on_copper():
+    """The DYD 92.5 C/W is a JESD51-5 (pad + vias + buried plane) figure —
+    WITH the emitted copper the LDO passes (~79.6 C); WITHOUT it the gate
+    falls back to the DBV bare 231 C/W and correctly FAILS (~123.9 C > the
+    115 C guard)."""
+    sheets = _dyd_ldo_sheet()
+    pt = powertree.analyze(sheets)
+    good = _synthetic_copper("TLV75725PDYDR", n_vias=2,
+                             pour_layers=("F.Cu",))
+    r = thermal.analyze(sheets, pt_res=pt, copper=good, copper_src="synth")
+    dev = next(d for d in r.devices if d.ref == "U1")
+    assert dev.poured and dev.rth_ja == 92.5 and r.ok, \
+        f"DYD with copper should pass at 92.5 C/W: Tj {dev.tj:.1f}, {r.errors}"
+    r2 = thermal.analyze(sheets, pt_res=pt)       # no copper
+    dev2 = next(d for d in r2.devices if d.ref == "U1")
+    assert dev2.rth_ja == 231.0 and dev2.over and not r2.ok, \
+        f"DYD without copper must fail at the DBV fallback: Tj {dev2.tj:.1f}"

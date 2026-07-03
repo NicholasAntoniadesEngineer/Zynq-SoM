@@ -858,3 +858,21 @@ trust institutionalized. Ring-0 spec review will inject D13 channel-reservation 
   gate, ASSEMBLY_NOTES refresh, double-sided-SMT ratification ask).
 - Below-fold items adopted: DF40 mated-height scalar gate; region_void fail-loud check
   at ethernet wave; D7 EMC scoping gets a basis string; sequencing analysis note.
+
+### T2 COMPLETE (parked for merge) + two engine discoveries
+T2 delivered in worktree: 29/29 J-contact remediation (worst 1.78mm vs 2.0 gate), 8
+stitch vias, F.Cu ladder + In1.Cu GND zone EMITTED (first real copper), zero part
+movement, byte-deterministic x2, 530 tests, red-on-before pinned as pytest fixture,
+si_triage (29 = 8 GENUINE TMDS/HDMI + 1 MODERATE + 20 LOW), T1 corridor sidecar
+(carrier/escape_block.json), F5 coexistence data, GAP1 reconciliation surface flagged.
+Merge order: AFTER GAP1 lands (shared embed/emit surface).
+**DEFECT REGISTERED — bottom-mirror convention split (LAW-0-class landmine):**
+in-process pad geometry X-mirrors bottom footprints; EMISSION does not; kicad-cli reads
+unmirrored (T2 DRC-proved on C22025). Contained TODAY (verified: zero polarized/active
+bottom parts; swapped pads on non-polar 2-pin passives are electrically identical) but
+(a) any future bottom active/polarized part would emit REVERSED, (b) bottom pad-level
+gate measurements use the wrong convention. FIX QUEUED behind GAP1 (same files):
+unify to ONE convention + a guard test (no asymmetric/polarized bottom part until
+unified) + re-run all pad-geometry gates. T2's union-of-conventions workaround is safe.
+**DFM rule adopted:** CLR_HOLE_SAMENET_PAD=0.10 (via-in-pad kills solder pads even
+same-net — T2's honest lattice found off-pad seats instead).

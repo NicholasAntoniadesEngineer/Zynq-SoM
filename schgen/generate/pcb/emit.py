@@ -29,10 +29,13 @@ from .constants import (
 from .embed import (
     _edge_rect,
     _embed_footprint,
+    _gnd_plane_zone,
+    _iso_void_zones,
     _layers_node,
     _som_body_silk,
     _som_keepout_zone,
     _stackup_node,
+    _thermal_copper_nodes,
 )
 from .footprint import board_parts
 from .placement import build_model
@@ -129,6 +132,17 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     if model.som_keepout is not None:
         doc.append(_som_keepout_zone(model.som_keepout, uid))
 
+    # EMITTED copper (LAW-0 honesty — the thermal gate credits only what is in
+    # this file): the In1.Cu GND plane, its ethernet-isolation voids, and the
+    # per-buck/LDO local GND pours. All zones are UNFILLED-with-fill-settings
+    # (byte-deterministic; DRC refills in memory via --refill-zones below).
+    plane = _gnd_plane_zone(model, uid)
+    if plane is not None:
+        doc.append(plane)
+    doc.extend(_iso_void_zones(model, uid))
+    thermal_zones, thermal_vias = _thermal_copper_nodes(model, uid)
+    doc.extend(thermal_zones)
+
     # SoM module-body OUTLINE on the top silk (LAW 6 documentation) — the
     # rectangle around the DF40 receptacles the user expected to see.
     if model.som_core is not None:
@@ -149,6 +163,11 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     # LAW 1: relocate any interior refdes that overprints another (dense diode/IC
     # strings). Runs last so it clears every courtyard AND the labels just placed.
     _declutter_refdes(model, uid, doc)
+
+    # the per-buck thermal-via fields (board-level GND vias keyed on each
+    # part's placed position) — appended after the text passes above, which
+    # scan ``doc`` for footprint/label nodes only.
+    doc.extend(thermal_vias)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(sexpr.dumps(doc) + "\n")
@@ -584,9 +603,13 @@ def run_pcb_drc(pcb_path: Path) -> dict:
     import tempfile
     with tempfile.TemporaryDirectory(prefix="schgen_drc_") as td:
         rpt = Path(td) / "drc.json"
+        # --refill-zones: the emitted zones are UNFILLED on disk (byte
+        # determinism); DRC computes the real fill in memory so the plane/pour
+        # connectivity + clearance are actually checked (the file is NOT
+        # rewritten — no --save-board).
         proc = subprocess.run(
             ["kicad-cli", "pcb", "drc", "--format", "json",
-             "--severity-error", "--severity-warning",
+             "--severity-error", "--severity-warning", "--refill-zones",
              "-o", str(rpt), str(pcb_path)],
             capture_output=True, text=True)
         data = {}

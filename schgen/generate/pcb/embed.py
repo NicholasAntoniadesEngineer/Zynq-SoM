@@ -7,6 +7,8 @@ change.
 
 from __future__ import annotations
 
+import math
+
 from schgen.core import sexpr
 from schgen.core.sexpr import Sym
 
@@ -15,7 +17,25 @@ from .constants import (
     _FOUR_LAYER,
     _INT_DESC,
     _SW_DESC,
+    CLR_HOLE_SAMENET_PAD,
     CONN_MATING_FACE,
+    GND_PLANE_CLEARANCE,
+    GND_PLANE_EDGE_BACK,
+    GND_PLANE_LAYER,
+    ISO_VOID_MARGIN,
+    ISO_VOID_VALUES,
+    ORIGIN_X,
+    ORIGIN_Y,
+    POUR_CLEARANCE,
+    THERMAL_COPPER,
+    THERMAL_VIA_CLEAR,
+    THERMAL_VIA_DRILL,
+    THERMAL_VIA_EDGE,
+    THERMAL_VIA_H2H,
+    THERMAL_VIA_SIZE,
+    THERMAL_VIA_SPACING,
+    ZONE_MIN_THICKNESS,
+    PcbModel,
 )
 
 
@@ -386,3 +406,265 @@ def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
             [Sym("fill"), [Sym("thermal_gap"), 0.5],
              [Sym("thermal_bridge_width"), 0.5]],
             [Sym("polygon"), pts]]
+
+
+# ---- EMITTED thermal copper: In1 GND plane + per-part via fields + pours ---------
+#
+# LAW-0 honesty: the thermal gate (schgen/verify/thermal.py) credits a
+# pour-aware effective RthJA ONLY against copper that is actually in the
+# emitted .kicad_pcb. These emitters put that copper there:
+#   * a board-interior GND plane zone on In1.Cu (the stackup L2 GND layer),
+#   * per-buck/LDO local GND pours + thermal-via fields at the power-ground
+#     pads (SNVSBD5D 11.1.1 / JESD51-5), keyed on the part's placed position,
+#   * rule-area plane VOIDS under the ethernet magnetics/RJ45 (isolation).
+# DETERMINISM: every zone is emitted UNFILLED but with (fill yes ...) settings
+# — the file carries no fill polygons, so build-twice is byte-identical; the
+# build's DRC runs kicad-cli with --refill-zones, so the REAL computed fill
+# (connectivity, clearance, starved thermals) is what gets checked, in memory,
+# without rewriting the board.
+
+def _corners_rot(rect: tuple[float, float, float, float], inst,
+                 model: PcbModel) -> list[tuple[float, float]]:
+    """A footprint-LOCAL rect's 4 corners placed on the board with the KiCad
+    CW (+y-down) placement rotation, then clamped into the board interior
+    (GND_PLANE_EDGE_BACK inside Edge.Cuts). NO bottom-side mirror: KiCad
+    stores a B.Cu footprint's local coordinates in the FINAL (front-view)
+    frame and applies only the rotation at load — verified against pcbnew
+    (bottom 4D03 network + rot-90 bottom caps land at at+R(rot)·(px,py))."""
+    x0, y0, x1, y1 = rect
+    r = math.radians(inst.rotation or 0.0)
+    cs, sn = math.cos(r), math.sin(r)
+    lo_x = ORIGIN_X + GND_PLANE_EDGE_BACK
+    lo_y = ORIGIN_Y + GND_PLANE_EDGE_BACK
+    hi_x = ORIGIN_X + model.board_w - GND_PLANE_EDGE_BACK
+    hi_y = ORIGIN_Y + model.board_h - GND_PLANE_EDGE_BACK
+    out: list[tuple[float, float]] = []
+    for px, py in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)):
+        bx = inst.x + px * cs + py * sn
+        by = inst.y - px * sn + py * cs
+        out.append((round(min(max(bx, lo_x), hi_x), 3),
+                    round(min(max(by, lo_y), hi_y), 3)))
+    return out
+
+
+def _fill_zone(net_num: int, net_name: str, zname: str, layer: str,
+               corners: list[tuple[float, float]], uid_key: str, uid,
+               clearance: float, solid: bool) -> list:
+    """A REAL copper zone (net + fill settings), emitted UNFILLED (see the
+    determinism note above). ``solid`` picks solid pad connection (the local
+    thermal pours — the whole point is dumping heat through the pads); the
+    plane keeps thermal reliefs so TH parts stay hand-solderable."""
+    pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
+    connect = ([Sym("connect_pads"), Sym("yes"), [Sym("clearance"), clearance]]
+               if solid else
+               [Sym("connect_pads"), [Sym("clearance"), clearance]])
+    return [Sym("zone"),
+            [Sym("net"), net_num], [Sym("net_name"), net_name],
+            [Sym("layer"), layer],
+            [Sym("uuid"), uid(uid_key)],
+            [Sym("name"), zname],
+            [Sym("hatch"), Sym("edge"), 0.5],
+            connect,
+            [Sym("min_thickness"), ZONE_MIN_THICKNESS],
+            [Sym("filled_areas_thickness"), Sym("no")],
+            [Sym("fill"), Sym("yes"), [Sym("thermal_gap"), 0.5],
+             [Sym("thermal_bridge_width"), 0.5]],
+            [Sym("polygon"), pts]]
+
+
+def _gnd_plane_zone(model: PcbModel, uid) -> list | None:
+    """The board-interior GND plane on In1.Cu (stackup L2): outline inset
+    GND_PLANE_EDGE_BACK from Edge.Cuts (above the 0.3 mm copper-edge design
+    rule). This is the plane the DP90/DP100 microstrip geometry references and
+    the buried half of every emitted thermal-via path."""
+    num = model.net_numbers.get("GND")
+    if not num:
+        return None
+    b = GND_PLANE_EDGE_BACK
+    x0, y0 = round(ORIGIN_X + b, 3), round(ORIGIN_Y + b, 3)
+    x1 = round(ORIGIN_X + model.board_w - b, 3)
+    y1 = round(ORIGIN_Y + model.board_h - b, 3)
+    return _fill_zone(num, "GND", "GND_plane_In1", GND_PLANE_LAYER,
+                      [(x0, y0), (x1, y0), (x1, y1), (x0, y1)],
+                      "gnd-plane", uid, GND_PLANE_CLEARANCE, solid=False)
+
+
+def _iso_void_zones(model: PcbModel, uid) -> list[list]:
+    """Rule-area VOIDS (copperpour not_allowed on In1.Cu) punched in the GND
+    plane under the ethernet line-side parts (ISO_VOID_VALUES: HX5008
+    magnetics + RJ45): Pulse layout guidance + the Bob-Smith 2kV island say no
+    ground plane belongs under the isolation transformer / media pins. Tracks
+    and vias stay allowed (the media pairs must still cross); ONLY the plane
+    pour is voided. The RJ45<->magnetics corridor is routing-wave debt
+    (carrier/reports/copper_debt.txt)."""
+    from .mating_face import _inst_courtyard
+    out: list[list] = []
+    for inst in model.insts:
+        if not inst.value.startswith(ISO_VOID_VALUES):
+            continue
+        cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
+        m = ISO_VOID_MARGIN
+        corners = [(round(cx0 - m, 3), round(cy0 - m, 3)),
+                   (round(cx1 + m, 3), round(cy0 - m, 3)),
+                   (round(cx1 + m, 3), round(cy1 + m, 3)),
+                   (round(cx0 - m, 3), round(cy1 + m, 3))]
+        pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
+        out.append([Sym("zone"),
+                    [Sym("net"), 0], [Sym("net_name"), ""],
+                    [Sym("layers"), GND_PLANE_LAYER],
+                    [Sym("uuid"), uid(f"iso-void:{inst.ref}")],
+                    [Sym("name"), f"ethernet_isolation_void_{inst.ref}"],
+                    [Sym("hatch"), Sym("edge"), 0.5],
+                    [Sym("connect_pads"), [Sym("clearance"), 0]],
+                    [Sym("min_thickness"), ZONE_MIN_THICKNESS],
+                    [Sym("keepout"),
+                     [Sym("tracks"), Sym("allowed")],
+                     [Sym("vias"), Sym("allowed")],
+                     [Sym("pads"), Sym("allowed")],
+                     [Sym("copperpour"), Sym("not_allowed")],
+                     [Sym("footprints"), Sym("allowed")]],
+                    [Sym("fill"), [Sym("thermal_gap"), 0.5],
+                     [Sym("thermal_bridge_width"), 0.5]],
+                    [Sym("polygon"), pts]])
+    return out
+
+
+# per-.kicad_mod pad table cache: [(px, py, prot_deg, sw, sh, drill), ...]
+_MOD_PAD_CACHE: dict[str, list[tuple[float, float, float, float, float, float]]] = {}
+
+
+def _mod_pads(mod_path) -> list[tuple[str, float, float, float, float, float, float]]:
+    """(pad_name, px, py, prot_deg, sw, sh, drill) rows of a .kicad_mod, in the
+    footprint LOCAL frame (drill 0 => SMD). Cached per path."""
+    key = str(mod_path)
+    cached = _MOD_PAD_CACHE.get(key)
+    if cached is not None:
+        return cached  # type: ignore[return-value]
+    rows: list = []
+    doc = sexpr.loads(mod_path.read_text())
+    for node in doc:
+        if not (isinstance(node, list) and node and node[0] == Sym("pad")):
+            continue
+        name = str(node[1]) if len(node) > 1 else ""
+        at = sexpr.find(node, "at")
+        sz = sexpr.find(node, "size")
+        if not (at and len(at) >= 3 and sz and len(sz) >= 3):
+            continue
+        prot = float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float)) \
+            else 0.0
+        dr = sexpr.find(node, "drill")
+        drill = float(dr[1]) if dr and len(dr) > 1 and \
+            isinstance(dr[1], (int, float)) else 0.0
+        rows.append((name, float(at[1]), float(at[2]), prot,
+                     float(sz[1]), float(sz[2]), drill))
+    _MOD_PAD_CACHE[key] = rows
+    return rows
+
+
+def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float]]:
+    """Every pad of a placed footprint as an axis-aligned obstacle
+    (cx, cy, half_w, half_h, net_name, drill) in the BOARD frame: the KiCad
+    CW rotation, NO bottom mirror (a B.Cu footprint's stored coordinates are
+    already the final front-view frame — pcbnew-verified; an X-mirror here
+    put a thermal via onto C16003's +3V3_SD pad while the model thought the
+    spot was that cap's GND pad)."""
+    r = math.radians(inst.rotation or 0.0)
+    cs, sn = math.cos(r), math.sin(r)
+    out: list[tuple[float, float, float, float, str, float]] = []
+    for name, px, py, prot, sw, sh, drill in _mod_pads(inst.mod_path):
+        pr = math.radians(prot)
+        cx = inst.x + px * cs + py * sn
+        cy = inst.y - px * sn + py * cs
+        tot = r + pr
+        ct, st = abs(math.cos(tot)), abs(math.sin(tot))
+        hx = ct * sw / 2 + st * sh / 2
+        hy = st * sw / 2 + ct * sh / 2
+        nname = inst.pad_nets.get(name, (0, ""))[1]
+        out.append((round(cx, 4), round(cy, 4), hx, hy, nname, drill))
+    return out
+
+
+def _via_site_ok(vx: float, vy: float, model: PcbModel,
+                 obstacles: list[tuple[float, float, float, float, str, float]],
+                 chosen: list[tuple[float, float]]) -> bool:
+    """A thermal-via candidate survives when its barrel keeps THERMAL_VIA_CLEAR
+    to every FOREIGN (non-GND) pad's copper, its HOLE edge keeps
+    CLR_HOLE_SAMENET_PAD to SAME-net (GND) solder-pad copper (a via hole in a
+    pad wicks the joint's solder even on the same net — the T2-wave DFM rule;
+    the via ties to the pad through the POUR, never in the joint),
+    THERMAL_VIA_H2H hole-edge spacing to every drilled pad (any net),
+    THERMAL_VIA_EDGE to Edge.Cuts, and THERMAL_VIA_SPACING to the vias
+    already chosen."""
+    if not (ORIGIN_X + THERMAL_VIA_EDGE <= vx
+            <= ORIGIN_X + model.board_w - THERMAL_VIA_EDGE
+            and ORIGIN_Y + THERMAL_VIA_EDGE <= vy
+            <= ORIGIN_Y + model.board_h - THERMAL_VIA_EDGE):
+        return False
+    vr = THERMAL_VIA_SIZE / 2
+    hr = THERMAL_VIA_DRILL / 2
+    for cx, cy, hx, hy, nname, drill in obstacles:
+        dx = max(0.0, abs(vx - cx) - hx)
+        dy = max(0.0, abs(vy - cy) - hy)
+        gap = math.hypot(dx, dy)
+        if nname != "GND" and gap < vr + THERMAL_VIA_CLEAR:
+            return False
+        if nname == "GND" and gap < hr + CLR_HOLE_SAMENET_PAD:
+            return False
+        if drill > 0 and math.hypot(vx - cx, vy - cy) < \
+                hr + drill / 2 + THERMAL_VIA_H2H:
+            return False
+    return all(math.hypot(vx - ox, vy - oy) >= THERMAL_VIA_SPACING
+               for ox, oy in chosen)
+
+
+def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]:
+    """(zones, vias) for every placed THERMAL_COPPER part: a local GND pour per
+    listed layer (rotated with the part, solid pad connection) + a GND
+    thermal-via field at the LOCAL candidate sites that survive the obstacle
+    filter (deterministic: fixed site order, fixed inst order, first max_vias
+    win). The vias tie the power-ground pads through the local pour into the
+    In1 GND plane — the copper the thermal gate's pour credit is verified
+    against."""
+    num = model.net_numbers.get("GND")
+    if not num:
+        return [], []
+    zones: list[list] = []
+    vias: list[list] = []
+    for inst in model.insts:
+        spec = next((s for pfx, s in THERMAL_COPPER.items()
+                     if inst.value.startswith(pfx)), None)
+        if spec is None:
+            continue
+        # local pours (per layer; the B.Cu twin gives the buck a second outer
+        # spreader stitched by the same via field)
+        corners = _corners_rot(spec["pour"], inst, model)
+        for layer in spec["pour_layers"]:
+            zones.append(_fill_zone(
+                num, "GND", f"thermal_pour_{inst.ref}_{layer.split('.')[0]}",
+                layer, corners, f"thpour:{inst.ref}:{layer}", uid,
+                POUR_CLEARANCE, solid=True))
+        # obstacle set: every pad of every footprint within reach
+        reach = max(abs(v) for site in spec["via_sites"] for v in site) + 8.0
+        obstacles: list[tuple[float, float, float, float, str, float]] = []
+        for other in model.insts:
+            if math.hypot(other.x - inst.x, other.y - inst.y) <= reach + 12.0:
+                obstacles.extend(_pad_obstacles(other))
+        r = math.radians(inst.rotation or 0.0)
+        cs, sn = math.cos(r), math.sin(r)
+        chosen: list[tuple[float, float]] = []
+        for sx, sy in spec["via_sites"]:
+            if len(chosen) >= spec["max_vias"]:
+                break
+            vx = round(inst.x + sx * cs + sy * sn, 3)
+            vy = round(inst.y - sx * sn + sy * cs, 3)
+            if _via_site_ok(vx, vy, model, obstacles, chosen):
+                chosen.append((vx, vy))
+        for i, (vx, vy) in enumerate(chosen):
+            vias.append([Sym("via"),
+                         [Sym("at"), vx, vy],
+                         [Sym("size"), THERMAL_VIA_SIZE],
+                         [Sym("drill"), THERMAL_VIA_DRILL],
+                         [Sym("layers"), "F.Cu", "B.Cu"],
+                         [Sym("net"), num],
+                         [Sym("uuid"), uid(f"thvia:{inst.ref}:{i}")]])
+    return zones, vias

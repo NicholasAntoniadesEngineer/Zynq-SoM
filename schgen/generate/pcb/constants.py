@@ -215,6 +215,94 @@ CONN_MATING_FACE: dict[str, str] = {
                                # In-plane HORIZONTAL mouth -> the +X table. Render-
                                # verified the mouth seats toward the board edge.
 }
+# ---- emitted thermal copper (LAW-0 honesty: the thermal gate credits ONLY
+# copper that is actually IN the .kicad_pcb) ----------------------------------
+#
+# The board-wide GND plane on In1.Cu (the stackup's L2 GND layer) is emitted as
+# an UNFILLED zone carrying its fill settings: the on-disk file stays byte-
+# deterministic (no fill polygons; KiCad refills on demand), while DRC runs
+# with --refill-zones so connectivity/clearance of the REAL fill is what gets
+# checked. Geometry knobs:
+GND_PLANE_LAYER = "In1.Cu"      # the stackup L2 GND plane (Sig/GND/PWR/Sig)
+GND_PLANE_EDGE_BACK = 0.5       # zone outline inset from Edge.Cuts (mm) — above
+#                                 the 0.3 min_copper_edge_clearance design rule
+GND_PLANE_CLEARANCE = 0.3       # plane-to-foreign-copper clearance (mm)
+POUR_CLEARANCE = 0.2            # local thermal-pour clearance (mm)
+ZONE_MIN_THICKNESS = 0.25       # fill min width (matches the project defaults)
+THERMAL_VIA_SIZE = 0.6          # thermal-stitch via copper dia (mm)
+THERMAL_VIA_DRILL = 0.3         # thermal-stitch via drill (mm, JLC standard)
+THERMAL_VIA_CLEAR = 0.25        # via-copper to FOREIGN pad-copper margin (mm)
+#                                 (> the 0.15 board clearance — slack on top)
+CLR_HOLE_SAMENET_PAD = 0.10     # via-hole EDGE to SAME-net solder-pad copper
+#                                 (mm): a hole in/at a solder pad wicks paste
+#                                 even on the same net (DFM rule adopted at the
+#                                 T2 wave — AI_LAYOUT_ROUTING_CONCEPT.md); the
+#                                 thermal vias seat OFF-pad in the pour, tied
+#                                 by fill, never in the solder joint
+THERMAL_VIA_H2H = 0.45          # via-hole EDGE to other hole EDGE margin (mm)
+#                                 (> the 0.25 min_hole_to_hole design rule)
+THERMAL_VIA_EDGE = 1.0          # via center keep-back from Edge.Cuts (mm)
+THERMAL_VIA_SPACING = 0.8       # min center spacing between emitted vias (mm)
+
+# Per-part thermal-copper emission spec, keyed by part-VALUE prefix. For every
+# placed instance the emitter drops a local GND pour (rect in the footprint
+# LOCAL frame, rotated with the part) on the listed layers plus a thermal-via
+# field at the listed LOCAL candidate sites (filtered against neighbouring
+# foreign copper/holes; first max_vias survivors win — deterministic). The
+# sites are researched from the part's own .kicad_mod pad map:
+#   LM61460 VQFN-HR (RJR): PGND1/PGND2 = pads 9/11 at (1.825, +/-1.45); SW pad
+#   ends x=2.225; BOOT/bias row at y=+/-1.6 ends y=1.95. Sites hug the PGND
+#   pads (right column + above/below) per SNVSBD5D 11.1.1 ("place thermal vias
+#   near the PGND pins, connect to the internal ground plane").
+#   TLV75725 DYD: thermal pad = pad 6 at (0,0) rot 90 (0.975x1.7 -> x +/-0.85);
+#   signal rows at y=+/-1.3. Sites flank the pad on X per JESD51-5 (the DS DYD
+#   RthJA is defined WITH pad-adjacent thermal vias into the buried plane).
+# NOTE the candidate ORDER is the preference order; the +x column beside SW is
+# listed LAST because the hot-loop inductor legitimately owns that side (the
+# placement contract puts L on SW) — the surviving sites are the +/-y bands
+# above/below the PGND pads, exactly where the LM61460EVM stitches.
+THERMAL_COPPER: dict[str, dict] = {
+    # Row 1 hugs the PGND pads (y +/-2.5 — 0.55 off the pad copper); row 2
+    # seats BEYOND the hot-loop input caps (y +/-4.35): the caps' GND pads at
+    # local y ~3.4 are SOLDER JOINTS, and CLR_HOLE_SAMENET_PAD forbids a via
+    # hole in them (the first cut at y +/-3.35 put 10 via holes into cap/diode
+    # GND pads — caught by the same-net audit). Fallbacks cover the
+    # D22005/inductor variations around the power_som instance.
+    "LM61460": {
+        "via_sites": [(1.55, -2.5), (1.55, 2.5),
+                      (2.45, -2.5), (2.45, 2.5),
+                      (1.55, -4.35), (1.55, 4.35),
+                      (2.45, -4.35), (2.45, 4.35),
+                      (1.0, -4.35), (1.0, 4.35),
+                      (-1.6, -2.7), (-1.6, 2.7),
+                      (0.3, -2.6), (0.3, 2.6),
+                      (2.85, -1.45), (2.85, 0.0), (2.85, 1.45)],
+        "max_vias": 8,
+        "pour": (-3.0, -4.75, 4.4, 4.75),      # local-frame rect x0,y0,x1,y1
+        "pour_layers": ("F.Cu", "B.Cu"),
+        "cite": "TI SNVSBD5D 11.1.1 thermal-via field at PGND1/PGND2",
+    },
+    "TLV75725": {
+        "via_sites": [(-1.75, 0.0), (1.75, 0.0),
+                      (1.85, -1.0), (1.85, 1.0),
+                      (2.35, -0.55), (2.35, 0.55),
+                      (-1.85, -1.0), (-1.85, 1.0)],
+        "max_vias": 3,
+        "pour": (-2.9, -1.6, 2.9, 1.6),
+        "pour_layers": ("F.Cu",),
+        "cite": "TI TLV757P DYD JESD51-5 pad-adjacent thermal vias",
+    },
+}
+
+# Ethernet isolation: the full-board In1 GND plane must NOT run under the
+# line-side magnetics / RJ45 media area (Pulse HX5008 layout guidance + the
+# Bob-Smith 2kV island) — a rule-area VOID (copperpour not_allowed on In1.Cu)
+# is emitted over each of these parts' courtyards, grown by the margin below.
+# The RJ45<->magnetics media CORRIDOR is NOT voided yet (routing-wave debt —
+# tracked in carrier/reports/copper_debt.txt).
+ISO_VOID_VALUES = ("HX5008", "KH-5224")
+ISO_VOID_MARGIN = 0.6           # courtyard grow for the plane void (mm)
+
 # EDGE -> placement rotation (deg, KiCad CCW) that turns the mating face OFF-BOARD.
 # Derived in the CODE's actual page frame (+y DOWN: N/top edge = MIN y, off-board
 # from N is toward -Y; S/bottom = MAX y, off-board +Y; E/right off-board +X;

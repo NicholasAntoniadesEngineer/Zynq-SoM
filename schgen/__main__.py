@@ -322,9 +322,12 @@ def _pcb_error_count(pcb_path: Path) -> int:
     import tempfile as _tf
     with _tf.TemporaryDirectory(prefix="schgen_pcbdrc_") as td:
         rpt = Path(td) / "drc.json"
+        # --refill-zones: the emitted zones are unfilled on disk (byte
+        # determinism) — DRC must judge the REAL computed fill (LAW 0).
         subprocess.run(
             ["kicad-cli", "pcb", "drc", "--format", "json",
-             "--severity-error", "-o", str(rpt), str(pcb_path)],
+             "--severity-error", "--refill-zones",
+             "-o", str(rpt), str(pcb_path)],
             capture_output=True, text=True)
         if not rpt.exists():
             return -1
@@ -697,18 +700,11 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  POWER TREE ERROR: {e}")
     ok_all = ok_all and pt_res.ok
 
-    # per-device thermal (Tj) gate (verification P2): turns the PWR-2/PWR-3
-    # thermal decisions (prose-only) into a regression lock. Reuses pt_res'
-    # regulator tree + I_out; FAILS on any device whose Tj = Ta + Pd*RthJA
-    # exceeds Tj_max - margin (real exceptions author-waived: c.waive_thermal).
-    from schgen.verify import thermal
-    th_res = thermal.run(sheets, rep_dir, pt_res=pt_res)
-    print(f"THERMAL: {'PASS' if th_res.ok else 'FAIL'} "
-          f"({len(th_res.devices)} devices, {len(th_res.errors)} over-limit, "
-          f"{len(th_res.findings)} unspeced -> {rep_dir / 'thermal.txt'})")
-    for e in th_res.errors:
-        print(f"  THERMAL ERROR: {e}")
-    ok_all = ok_all and th_res.ok
+    # per-device thermal (Tj) gate: MOVED below, after the PCB emit + join —
+    # its pour-aware RthJA credits are granted only against copper VERIFIED in
+    # the just-emitted .kicad_pcb (LAW 0 / GAP1: prose is not evidence), so it
+    # must run once the board file is complete (never concurrently with the
+    # PCB worker thread writing it).
 
     # test-point coverage gate (round 4): every rail + key single-ended bus
     # owns a probe point or an explicit author waiver.
@@ -957,6 +953,7 @@ def cmd_board(args: argparse.Namespace) -> int:
     # ~70 s DRC overlaps the verify+downstream phase; JOINED here, before SI
     # extends the .dru it wrote. It merged into the same .kicad_pro build_board
     # opened (build_board finished before the thread started).
+    pcb_res = None
     try:
         _pcb_thread.join()
         if "exc" in _pcb_holder:
@@ -1130,6 +1127,46 @@ def cmd_board(args: argparse.Namespace) -> int:
             ok_all = False
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
+        ok_all = False
+
+    # per-device thermal (Tj) gate (verification P2): turns the PWR-2/PWR-3
+    # thermal decisions (prose-only) into a regression lock. Reuses pt_res'
+    # regulator tree + I_out; FAILS on any device whose Tj = Ta + Pd*RthJA
+    # exceeds Tj_max - margin (real exceptions author-waived: c.waive_thermal).
+    # Runs HERE — after the PCB worker thread is joined — because the
+    # pour-aware RthJA credits are granted only against copper VERIFIED in the
+    # emitted .kicad_pcb (LAW 0 / GAP1: the 58.7->30 C/W LM61460 credit once
+    # passed on a via field that did not exist). If the PCB step failed, no
+    # evidence is passed and every credit is withheld (fail-closed) — the gate
+    # then fails on the honest bare-RthJA numbers instead of trusting prose.
+    from schgen.verify import thermal
+    _pcb_file = pcb_res["pcb"] if isinstance(pcb_res, dict) else None
+    th_res = thermal.run(sheets, rep_dir, pt_res=pt_res, pcb_path=_pcb_file)
+    print(f"THERMAL: {'PASS' if th_res.ok else 'FAIL'} "
+          f"({len(th_res.devices)} devices, {len(th_res.errors)} over-limit, "
+          f"{len(th_res.findings)} unspeced; pour evidence: "
+          f"{th_res.copper_src or 'NONE (credits withheld)'} "
+          f"-> {rep_dir / 'thermal.txt'})")
+    for e in th_res.errors:
+        print(f"  THERMAL ERROR: {e}")
+    ok_all = ok_all and th_res.ok
+
+    # COPPER-DEBT ledger (report-only, GAP1 follow-through): every gate basis
+    # string / design prose predicated on copper, measured against what the
+    # emitter actually wrote this build (carrier/reports/copper_debt.txt).
+    # Never flips the verdict — the thermal gate above already HARD-verifies
+    # the CRITICAL entries against the same scan.
+    from schgen.verify import copper_debt
+    try:
+        cd_res = copper_debt.run(rep_dir, _pcb_file)
+        print(f"COPPER DEBT: {cd_res.n_entries} copper-predicated claims "
+              f"({cd_res.n_status('EMITTED')} emitted, "
+              f"{cd_res.n_status('PARTIAL')} partial, "
+              f"{cd_res.n_status('NOTHING')} unemitted, "
+              f"{cd_res.n_status('UNMEASURED')} unmeasured) "
+              f"-> {rep_dir / 'copper_debt.txt'} (report-only)")
+    except Exception as exc:  # noqa: BLE001
+        print(f"COPPER DEBT: FAIL — {exc}")
         ok_all = False
 
     # floorplan suggestion (SVG + MD), derived from the same sheets/link. Built

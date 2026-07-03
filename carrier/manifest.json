@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "9a3752177e3065bdf0b52b75a0e6cb78fe3cbea16f794d3114ca0f8491fd10a7"
+      "sha256": "4f6a455e0158d359323923743f54b30e60f9729fe723c4d7774b91401dd9e311"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -101,6 +101,10 @@
       "sha256": "e3b20654cb1e0d7bc24521bfb48fc14b15eb9bfc02d48169cd2d7570c11198c4"
     },
     {
+      "path": "reports/copper_debt.txt",
+      "sha256": "9bd5d82f654e7390d1959691f48eeeea896c3982f770b4bccea77142fdc233af"
+    },
+    {
       "path": "reports/design_rules.txt",
       "sha256": "6b5cf9397056f5860b9b2e5139b4b7bd108a24f2081007adff6087ffd2d2c0ae"
     },
@@ -166,7 +170,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "c21133a0de59530c0a80f11c737a66307a59206e7df1db1e8c7d659651e14ec4"
+      "sha256": "c4fb8558df84fdd56d6b8d9c16fedfb68191679ec667dbc2074dd18d4a1763f7"
     },
     {
       "path": "schematic/board_aux.kicad_sch",
