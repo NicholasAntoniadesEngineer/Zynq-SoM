@@ -60,7 +60,7 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 | fmc | S | (59, 37, 52.91 x 15.49) | 8 | 819.6 | (16) |
 | hdmi_rx_term | @hdmi_rx | (69, 123, 7.87 x 10.4) | 10 | 81.8 |  |
 | mechanical | E | (116, 19, 13 x 13) | 4 | 169 |  |
-| power | E | (145, 88, 23.9349 x 47.6504) | 51 | 1140.5 | (17) |
+| power | E | (144.98, 88, 23.9349 x 47.6504) | 51 | 1140.5 | (17) |
 | power_mon | E | (128, 39, 9.14 x 13.828) | 10 | 126.4 | (18) |
 | power_som | E | (106, 107, 12.05 x 16.3) | 23 | 196.4 |  |
 | uart_bridge | @rj45_connector | (88, 27, 7.87 x 8.94) | 10 | 70.4 | (19) |

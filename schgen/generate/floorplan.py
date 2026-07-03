@@ -794,6 +794,7 @@ class Plan:
         self.interior_blocks: list[Block] = []
         self.factor = ROUTE_FACTOR
         self.spilled: list[str] = []      # edge blocks moved off their edge
+        self.composition: list[str] = []  # T1 P6 legalizer log (final pack)
 
     @property
     def blocks(self) -> list[Block]:
@@ -1174,6 +1175,27 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                 and any("MountingHole" not in pt.footprint
                         for pt in sc.circuit.parts.values()))
 
+    # ---- T1 P6-wire: composition-legalizer inputs (ONCE per build_plan) ----
+    # TermIndex + zone-local metrics + the D13 channel-demand map + T2's
+    # escape corridors, threaded into every _attempt_pack call (spec D-3:
+    # every candidate board is legalized; the compaction objective runs only
+    # at the fixed-outline call + the final re-pack). Channel demand proxy =
+    # EXCLUSIVE pair nets (nets whose sheet-set is exactly {a, b} — the
+    # pair's private harness): position-independent, deterministic, and it
+    # matches the emitted MST pair count on the measured hotspot pairs
+    # (pd_input|usb_pd: 8 == the 8 MST cross-airwires measured at P0).
+    from schgen.generate import floorplan_compose as _fc
+    compose_index = _fc.build_term_index([sc.name for sc in sheets])
+    compose = None
+    if compose_index.hard:
+        _channels: dict[frozenset, int] = {}
+        for _ss in sheets_of_net.values():
+            if len(_ss) == 2:
+                _key = frozenset(_ss)
+                _channels[_key] = _channels.get(_key, 0) + 1
+        compose = (compose_index, _fc.zone_local_metrics(zg), _channels,
+                   _fc.escape_corridors())
+
     # GROW the derived outline (keeping the SoM centered + the seed aspect) until
     # the edge-pinned + interior-anchored layout (a) fits every REAL packed block
     # AND (b) holds its cross-subsystem airwire under the LAW-5 budget. (b) is the
@@ -1240,7 +1262,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         BOARD_W, BOARD_H = spec.outline          # type: ignore[misc]
         plan.som_x = _r5((BOARD_W - som.w) / 2)
         plan.som_y = _r5((BOARD_H - som.h) / 2)
-        if not _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull):
+        if not _attempt_pack(plan, interior, edge_of, zbox, affinity,
+                             som_pull, compose=compose, compact=True):
             raise RuntimeError(
                 "floorplan: the REAL 2-sided packed blocks do not fit the fixed "
                 f"outline {BOARD_W:g}x{BOARD_H:g} declared in "
@@ -1284,7 +1307,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
             plan.som_x = _r5((BOARD_W - som.w) / 2)
             plan.som_y = _r5((BOARD_H - som.h) / 2)
             if not _attempt_pack(plan, interior, edge_of, zbox,
-                                 affinity, som_pull):
+                                 affinity, som_pull, compose=compose):
                 continue
             fit_seen = True
             budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
@@ -1320,7 +1343,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         plan.som_x = _r5((BOARD_W - som.w) / 2)
         plan.som_y = _r5((BOARD_H - som.h) / 2)
         if not _attempt_pack(plan, interior, edge_of, zbox,
-                             affinity, som_pull):
+                             affinity, som_pull, compose=compose):
             return False, 0.0, 0.0
         bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
         px = _cross_proxy(plan, plan.edge_blocks + interior,
@@ -1366,7 +1389,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     plan.som_y = _r5((BOARD_H - som.h) / 2)
     # RE-PACK at the chosen winner so plan holds exactly that layout (the search
     # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
-    _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull)
+    _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
+                  compose=compose, compact=True)
     plan.interior_blocks = interior
     OUTLINE_NOTE = (
         f"{outline.note}; then SMALLEST-AREA search over aspects "
@@ -1459,7 +1483,9 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                   edge_of: dict[str, str],
                   zbox: dict[str, tuple[float, float]],
                   affinity: dict[str, dict[str, float]],
-                  som_pull: dict[str, float]) -> bool:
+                  som_pull: dict[str, float],
+                  compose: tuple | None = None,
+                  compact: bool = False) -> bool:
     plan.spilled = []
     for b in plan.edge_blocks:
         b.w, b.h = zbox[b.name]
@@ -1667,6 +1693,80 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
         if not moved:
             break
+
+    # ---- T1 P6-wire: LEGALIZE(+COMPACT) the wired composition terms --------
+    # (spec §6 P6 / D-3): every candidate board is legalized against the HARD
+    # terms + the D13 channel corridors + T2's escape-lane rects; an
+    # infeasible candidate is REJECTED so the outer smallest-area scan grows
+    # (LAW 4 — nothing waived). Green-seed candidates come back UNTOUCHED
+    # (seed-first short-circuit inside legalize_compact — the timing story);
+    # the compaction objective (wired hop pulls) runs only when
+    # ``compact=True`` (the fixed-outline call + the final re-pack).
+    if compose is not None:
+        c_index, c_metrics, c_channels, c_corridors = compose
+        if c_index.hard:
+            from schgen.generate import floorplan_compose as fc_
+            from schgen.generate.pcb.placement import som_core_rect
+            parts_: set[str] = set()
+            for t in c_index.hard:
+                if t.kind in ("flow_hop", "near_max", "facing"):
+                    parts_.add(t.subject)
+                    parts_.add(t.target)
+            inames = {b.name for b in interior}
+            # movable = hard participants that are POSE-PREDICTABLE (the
+            # l4_exempt partition). An L4-GUARDED participant (power_som
+            # pre-P7) stays a FIXED rect: moving its pose re-rolls its L4
+            # bottom slide — measured at the P6-wire gate: a 3.65mm
+            # power_som compaction move flipped one intra-zone proximity
+            # 34->35, REJECTED by the banded no-worsen rule. Guarded sheets
+            # gain their solver DOF at their own wave (template + exempt).
+            from schgen.verify.placement_contract_gate import (
+                wired_term_participants,
+            )
+            _exempt, _ = wired_term_participants()
+            movable_names = sorted(parts_ & inames & set(_exempt))
+            if movable_names:
+                movable = [fc_.LegalizeVar(b.name, b.w, b.h, (b.x, b.y),
+                                           b.x, b.y)
+                           for b in interior if b.name in movable_names]
+                fixed_rects: list[tuple[str, float, float, float, float]] = [
+                    ("som", plan.som_x - _SOM_OCC_PAD,
+                     plan.som_y - _SOM_OCC_PAD,
+                     plan.som_x + plan.som.w + _SOM_OCC_PAD,
+                     plan.som_y + plan.som.h + _SOM_OCC_PAD)]
+                for kx, ky in ((0.0, 0.0), (BOARD_W - MH_CORNER_KO, 0.0),
+                               (BOARD_W - MH_CORNER_KO,
+                                BOARD_H - MH_CORNER_KO),
+                               (0.0, BOARD_H - MH_CORNER_KO)):
+                    fixed_rects.append((f"corner@{kx:g},{ky:g}", kx, ky,
+                                        kx + MH_CORNER_KO,
+                                        ky + MH_CORNER_KO))
+                for b in plan.edge_blocks:
+                    fixed_rects.append((b.name, b.x, b.y,
+                                        b.x + b.w, b.y + b.h))
+                for b in interior:
+                    if b.name not in movable_names:
+                        fixed_rects.append((b.name, b.x, b.y,
+                                            b.x + b.w, b.y + b.h))
+                fixed_rects.extend(c_corridors)
+                fixed_poses = {b.name: (b.x, b.y)
+                               for b in plan.edge_blocks}
+                for b in interior:
+                    if b.name not in movable_names:
+                        fixed_poses[b.name] = (b.x, b.y)
+                som_page = som_core_rect(plan.som_x, plan.som_y,
+                                         plan.som.w, plan.som.h)
+                log: list[str] = []
+                if not fc_.legalize_compact(
+                        BOARD_W, BOARD_H, som_page, fixed_rects, movable,
+                        c_index, c_metrics, fixed_poses, c_channels, CLEAR,
+                        compact=compact, log=log):
+                    return False
+                byn = {b.name: b for b in interior}
+                for v in movable:
+                    byn[v.name].x = v.x
+                    byn[v.name].y = v.y
+                plan.composition = log
     return True
 
 
