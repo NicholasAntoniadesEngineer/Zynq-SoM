@@ -1045,3 +1045,30 @@ F8 escape-headroom gate still queued (D13 consequence #1), F9 folded into P7a.
 **Board state at pause:** 170×151mm, all gates green on main, 15 subsystems under
 contract (2 wired green: power, usb_pd), J2 remediation in locked copper, honest
 thermal (worst margin 5.2°C), In1 GND plane + 26 thermal vias + 8 stitch vias real.
+
+---
+
+## RESUME (2026-07-03, Fable retired → all-Opus) — P7a ratifications
+
+Model note: Fable 5 access ended; orchestrator + all subagents now Opus 4.8. Delegation
+pattern kept for parallelism/context, not a quality gap.
+
+**P7a ethernet ratification decisions (Ring-0):**
+- **Edit B (ethernet exclusive pull) — RATIFIED.** Spec-pre-sanctioned by D-1; mirrors
+  usb_pd 1:1; board byte-identical; keeps seat-consistency advisory green. Keep applied.
+- **Edit A (corridor clear) — RATIFIED, corrected target.** The re-verification stands:
+  the squatter is `power_mon` (2×INA3221 rail telemetry), NOT motor_pwm (my brief was
+  wrong — the re-verify-audit-findings law caught it). Apply `power_mon: {near:
+  power_som}` — clears the ethernet moat AND shortens power_mon→power_som flow (a free
+  win). Requires the full accept loop + render verdict + delta report on the rebuilt
+  board before it lands.
+- **Edit C (+0.66% board growth 170×151→170×152) — RATIFIED as datasheet-forced.**
+  Proven forced (pinned-outline pack fails; the Bob-Smith network at MCT pins is real
+  datasheet copper, 295→555mm² zone; never-redraw law forbids compressing it); far
+  inside the spec's ~+5%/wave allowance; buys ethernet 23→0 + flow improvements.
+  DECISION: re-base ledger `cumulative_area_cap_mm2` 25,670→25,840 WITH datasheet basis
+  string (ratified+visible = the cap working as designed, NOT silent self-legitimization
+  — the escalation IS the accountability). **Recovery target HOLDS at 24,600** — the
+  recovery obligation grew to ~1,240mm², lands on P10 (_rotate_zone_90). WATCH: this is
+  the FIRST cap adjustment; if P7c/P8/P9 also force growth, the GAP4 extrapolation
+  warning (~200×160 endpoint) triggers a hard board-size review with the user.
