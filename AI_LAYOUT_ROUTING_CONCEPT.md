@@ -977,3 +977,11 @@ T1 merge point set: rebase onto 4a45f99 (T2's escape now on main — new interac
 surface: T2's channel vias + return_stitch/escape_lane gates in the chain; the rebased
 build must prove coexistence), deliver P0–P6core as the merge unit, then continue
 P6-wire → P7 (ethernet corridor+F1/F7) → P8 (D9) → P9 → P10 (area verdict vs 24,600).
+
+### D12 final amendment (2026-07-03, user decree) — Fable 5 is Ring-0 ONLY
+All subagents run Opus 4.8 exclusively (never Fable — concept/guidance correctness
+concentrates at the orchestrator; workflow agent() calls must pass model:opus
+explicitly since inherit=Fable). In-flight Fable threads (T1 P6-wire, hardening
+mirror-fix) transition via orderly handoff: state + handoff notes written to their
+worktrees, Opus successors continue. Ring-2 delegation contract (mechanical acceptance
+written before work) applies to all spawned work again.
