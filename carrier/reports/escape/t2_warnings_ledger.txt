@@ -1,0 +1,34 @@
+T2 ESCAPE WAVE — DRC WARNINGS LEDGER (delta-0 acceptance evidence)
+==================================================================
+Measured with kicad-cli 10.0.2, project netclasses loaded (.kicad_pro
+adjacent), --severity-error --severity-warning --refill-zones, on the SAME
+placed model emitted WITHOUT and WITH the escape copper (2026-07-02).
+
+PRE-WAVE  (no escape copper):  n=256
+  silk_edge_clearance: 34, lib_footprint_issues: 107, text_height: 25,
+  silk_overlap: 48, silk_over_copper: 42
+POST-WAVE (8 vias + 10 ladder segments + In1 GND zone): n=256
+  silk_edge_clearance: 34, lib_footprint_issues: 107, text_height: 25,
+  silk_overlap: 48, silk_over_copper: 42
+
+DELTA: 0 by type and in total.  Copper-class counts (clearance, hole_*,
+track_dangling, via_dangling, isolated_copper, starved_thermal): 0 both
+sides — the ladder leaves no dangling ends (spine ends at attach points,
+stubs end on pads/spine, vias on the spine + the in-memory-filled In1 plane).
+
+Note: during development ONE post-wave clearance ERROR appeared (via vs
+C22025 pad 1 [+VIN_SYS], 0.1404 < 0.2000) and was root-caused to the
+bottom-mirror convention split + POWER-netclass clearance — both fixed in
+escape.py (_emitted_pad_boxes union + netclass-aware rules); the final board
+is error-clean and delta-0 as above.
+
+RECONCILIATION ADDENDUM (2026-07-03, base 28f8e15 / GAP1 landed)
+----------------------------------------------------------------
+Re-measured on the merged tree (GAP1's plane + ISO voids + 26 thermal vias +
+buck pours, PLUS the 8 escape vias + 10 ladder segments):
+  GAP1 committed baseline: n=256, errors=0 (same by-type as above)
+  reconciled T2 board    : n=256, errors=0 (same by-type as above)
+DELTA still 0.  The reconciled board is an exact byte-superset of GAP1's
+committed board (appended: 18 locked escape nodes, 0 zones — the In1 plane is
+GAP1's canonical zone; T2 emits none).  Worst contact->via 1.7772 mm UNCHANGED
+against the merged plane geometry.
