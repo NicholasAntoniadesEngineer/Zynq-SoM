@@ -978,10 +978,70 @@ surface: T2's channel vias + return_stitch/escape_lane gates in the chain; the r
 build must prove coexistence), deliver P0–P6core as the merge unit, then continue
 P6-wire → P7 (ethernet corridor+F1/F7) → P8 (D9) → P9 → P10 (area verdict vs 24,600).
 
-### D12 final amendment (2026-07-03, user decree) — Fable 5 is Ring-0 ONLY
-All subagents run Opus 4.8 exclusively (never Fable — concept/guidance correctness
-concentrates at the orchestrator; workflow agent() calls must pass model:opus
-explicitly since inherit=Fable). In-flight Fable threads (T1 P6-wire, hardening
-mirror-fix) transition via orderly handoff: state + handoff notes written to their
-worktrees, Opus successors continue. Ring-2 delegation contract (mechanical acceptance
-written before work) applies to all spawned work again.
+### BOTTOM-MIRROR CONVENTION UNIFIED (hardening wave, 2026-07-03, worktree)
+The registered LAW-0-class landmine is CLOSED — ONE convention everywhere, the
+EMISSION truth: a footprint's local geometry is SIDE-INDEPENDENT (embed._flip_to_bottom
+swaps layer tokens only; KiCad applies just the placement rotation at load —
+re-proven with pcbnew 10.0.2 loading the emitted board: every pad of all 564
+footprints at fp_at + R_cw(rot)·(px,py), worst residual 0.7 um).
+**Red-on-before (measured, pinned as pytest):** position MULTISETS agreed (all 319
+bottom parts are X-symmetric passives) but NET-at-position was wrong on 319/319
+bottom parts — all 650 bottom pads — displacement 0.79..2.96 mm (C16003 +3V3_SD
+modeled at its GND pad's true spot; RN36001 ESC_SIG0 2.40 mm off).
+**Consumers unified (mirror deleted):** mating_face._rot_pad_bbox/_inst_pad_geom/
+_inst_courtyard (ratsnest airwire endpoints + LAW-5 boxes), placement._eff_bbox_for
+(DELETED — packers/L4 use the plain bbox), placement_contract_gate._pad_boxes (side
+param dropped; cache key (path,rot)), escape._emitted_pad_boxes union workaround
+(DELETED — obstacles are the single truth), return_stitch_gate._check_clearance
+(both-conventions scan dropped; same-net GND exemption now side-symmetric — the
+asymmetry's only documented basis was the split), floorplan_compose/stage_templates
+(signature follow-ups), silk._declutter_refdes (code was already correct; lying
+mirror comments fixed). embed._pad_obstacles/_corners_rot were already unmirrored.
+**Board delta (the only one, explained):** two band-3 TMDS stitch vias near the
+hdmi_rx_term bottom wall upgrade 0.4/0.25 -> 0.45/0.3 (VIA_LADDER's preferred size)
+and re-seat <=0.07 mm (+ their stub follows): the phantom X-mirrored copies of
+R13001-8's pads had closed the 0.45 windows — a placement decision made on wrong
+geometry, now made on the emitted truth. All other bytes identical; DRC delta-0.
+**Guards (schgen/tests/test_bottom_convention.py):** (1) model-vs-emitted pad
+position+net parity on every footprint (the permanent instrument); (2) polarized/
+chiral-bottom entry guard — bottom parts must be passive-class, non-polarized,
+pad-multiset achiral; >2-pad parts must be on the proven mirror-safe list
+(4D03WGJ0330T5E with basis) or the build's suite fails; (3) red-on-before pin —
+the old mirrored transform must disagree >2 mm on today's board; (4) fast synthetic
+asymmetric-footprint side-independence unit. NOTE the standing physical rule the
+guard enforces: an emitted bottom land pattern is the CHIRAL MIRROR of the part's
+top pattern — a polarized/asymmetric part classified bottom would assemble reversed.
+
+---
+
+## ⏸ PAUSE STATE (2026-07-03 ~17:40, user-requested)
+
+**Everything landed is pushed through `35cc213`** (16 units this arc). Laws in force:
+Fable 5 = Ring-0/main-loop ONLY; ALL subagents Opus 4.8 (workflow agent() must pass
+model:'opus' explicitly); never-idle orchestrator law; no-stash fleet protocol;
+commit+push per verified unit.
+
+**Paused in flight — P7a ethernet wave (Opus), worktree `.claude/worktrees/p7-ethernet`
+at 35cc213, uncommitted:** stopped during final fast-suite verification with gates
+already green (ESCAPE LANES PASS; RETURN STITCH 29/29 worst 1.714/2.0mm — improved;
+ethernet placed WITHOUT re-placing hdmi_rx). Resume = verify-partials-first brief
+(the proven pattern): finish the fast suite (it was re-running without -x), check for
+P7A_RATIFICATION_REQUEST.md (motor_pwm corridor relocation intent edit — Ring-0 must
+ratify before it applies), render evidence, then Ring-0 merge.
+
+**Resume queue after P7a:** P7b hdmi_rx wave (ESD pair-alignment + flow-through
+rotation, F2) → P7c power_som wave (buck template + bottom-keepout-under-
+THERMAL_COPPER, ratified; graduate to l4_exempt) → P8 D9 motor_sense E→W (pre-ratified,
+via `schgen compose --repair --allow-intent`) → P9 motor wiring → P10 area verdict
+(cap 25,670 / target 24,600, ledger.jsonl) → then: DFM closure wave (GAP3 fiducials/
+CPL/fab-profile), GAP2 DSN harness as repo code (numbers-only), A.5 ampacity gate,
+polarized-bottom emission-mirroring wave (chirality tripwire currently guards).
+
+**Open items for the user:** 2 task chips pending (INA3221 input filter; CC-line ESD
+TVS at the Type-C inlet). Findings register F1-F9: F1/F7 in flight (P7a), F2→P7b,
+F3→P8/P9, F4 red-flagged by camera lightweight contract, F5 consumed by T2, F6→P10,
+F8 escape-headroom gate still queued (D13 consequence #1), F9 folded into P7a.
+
+**Board state at pause:** 170×151mm, all gates green on main, 15 subsystems under
+contract (2 wired green: power, usb_pd), J2 remediation in locked copper, honest
+thermal (worst margin 5.2°C), In1 GND plane + 26 thermal vias + 8 stitch vias real.
