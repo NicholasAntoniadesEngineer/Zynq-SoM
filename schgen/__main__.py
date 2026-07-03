@@ -1125,6 +1125,15 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("PLACEMENT FLOW (Phase L): FAIL — gate did not run")
             ok_all = False
+        # T1 COMPOSITION term ledger (ADVISORY report, never a gate — D-5).
+        # Every authored external term (wired or not) + the D13 channel-demand
+        # hotspots, measured on the same emitted model by the gate's kernels.
+        fcomp = pcb_res.get("floorplan_composition")
+        if fcomp is not None:
+            (rep_dir / "floorplan_composition.txt").write_text(fcomp + "\n")
+            head = fcomp.splitlines()[0] if fcomp else ""
+            print(f"COMPOSITION LEDGER (T1, advisory): {head} "
+                  f"-> {rep_dir / 'floorplan_composition.txt'}")
         # RETURN-STITCH gate (T2, return-path v2, HARD) — every v1-failing
         # DF40 contact must have a carrier GND stitch via <= 2.0 mm, on a
         # file-visible GND ladder, under the In1 plane.  Class-blind (LAW 4).
@@ -1516,6 +1525,54 @@ def main(argv: list[str] | None = None) -> int:
                          "instead of the SVG/MD — edit it to drive placement")
     from schgen.generate.floorplan import cmd_floorplan
     fl.set_defaults(func=cmd_floorplan)
+    cp = sub.add_parser(
+        "compose", help="T1 composition driver — measure the emitted board's "
+                        "composition term ledger (advisory floors = repair "
+                        "TRIGGERS, never gates) and, with --repair, propose/"
+                        "apply ONE reviewed floorplan.json SpecEdit per "
+                        "invocation (pull tuning; edge moves only via "
+                        "--allow-intent — the D-1 reviewed-JSON-diff rule)")
+    cp.add_argument("--measure", action="store_true",
+                    help="measure + write carrier/reports/compose_ledger.* "
+                         "(driver-written; a plain board build never touches "
+                         "them)")
+    cp.add_argument("--repair", action="store_true",
+                    help="propose candidate SpecEdits from the repair "
+                         "triggers; applies the best ONE unless --dry-run")
+    cp.add_argument("--dry-run", action="store_true",
+                    help="rank + print candidates; records the measurement "
+                         "ledger but NEVER edits carrier/floorplan.json")
+    cp.add_argument("--allow-intent", action="append", default=[],
+                    metavar="NAME:FROM->TO",
+                    help="ratify ONE edge move (repeatable), e.g. "
+                         "motor_sense:E->W (D9)")
+    cp.add_argument("--max-steps", type=int, default=4,
+                    help="reserved (one step per invocation today)")
+
+    def _cmd_compose(args: argparse.Namespace) -> int:
+        from schgen.generate import compose_repair as cr
+        if args.repair:
+            return cr.repair(dry_run=args.dry_run,
+                             allow_intent=args.allow_intent,
+                             max_steps=args.max_steps)
+        # default / --measure: measurement only
+        from schgen.generate.pcb.placement import build_model
+        print("compose: measuring the emitted board (build_model + gates)...")
+        led = cr.measure_ledger(build_model())
+        cr.write_ledger(led, "measure")
+        b = led["board"]
+        agg = led["aggregate_hard_margin"]
+        print(f"compose: board {b['w']:g}x{b['h']:g} = {b['area_mm2']} mm^2; "
+              f"hard margin sum {agg['sum']} / min {agg['min']} mm; "
+              f"{len(led['repair_triggers'])} trigger(s) -> "
+              f"{cr.LEDGER_JSON}")
+        for t in led["repair_triggers"]:
+            print(f"  TRIGGER: {t}")
+        for s in led["seat_consistency"]:
+            print(f"  SEAT-CONSISTENCY: {s}")
+        return 0
+
+    cp.set_defaults(func=_cmd_compose)
     pq = sub.add_parser(
         "power-sequence", help="generate carrier/docs/power_sequence.svg — the "
                                "staged power-up bring-up diagram derived from "

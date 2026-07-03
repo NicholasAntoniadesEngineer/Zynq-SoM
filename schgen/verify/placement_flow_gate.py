@@ -68,6 +68,12 @@ from schgen.verify.placement_contract_gate import (
     load_contract,
 )
 
+# ---- single-oracle metric kernels (T1 P1) ----------------------------------------
+# These publics are THE metric definitions for board-level composition: the gate
+# below uses them, and the T1 composition engine/evaluator (floorplan_compose)
+# imports the SAME functions so the two can never drift (single-oracle rule —
+# the DLS "two evaluators, one truth" graft). Pure functions, no global state.
+
 # FLOW budget. A hop is "close enough" if the two zone centroids are within a
 # board-scaled FREE-SPACE budget FLOW_K * sqrt(board_area) PLUS the SoM-detour
 # term (below). JUDGMENT: the datasheet numbers no inter-subsystem spacing; 0.35
@@ -92,9 +98,24 @@ FLOW_K = 0.35
 FLOW_SOM_K = 1.0
 
 
+def flow_budget(board_w: float, board_h: float,
+                som_core: tuple[float, float, float, float] | None) -> float:
+    """The FLOW hop budget (mm) for a ``board_w x board_h`` board with the given
+    SoM core rectangle (or None): ``FLOW_K * sqrt(area) + FLOW_SOM_K * som_diag``.
+    EXACTLY the arithmetic :func:`check` reports as ``flow_budget_mm`` (extracted
+    single-oracle kernel — the composition engine recomputes budgets per candidate
+    board size through THIS function, so gate and engine can never drift)."""
+    area = max(float(board_w) * float(board_h), 1.0)
+    som_diag = 0.0
+    if som_core is not None:
+        sx0, sy0, sx1, sy1 = som_core
+        som_diag = math.hypot(sx1 - sx0, sy1 - sy0)
+    return FLOW_K * math.sqrt(area) + FLOW_SOM_K * som_diag
+
+
 # --- zone centroid geometry -------------------------------------------------------
 
-def _zone_centroids(model: PcbModel) -> dict[str, tuple[float, float]]:
+def zone_centroids(model: PcbModel) -> dict[str, tuple[float, float]]:
     """sheet name -> (x, y) centroid of every placed footprint on that sheet
     (board page frame, equal-weight over parts). Deterministic."""
     acc: dict[str, list[float]] = {}
@@ -118,7 +139,7 @@ def _zone_centroids(model: PcbModel) -> dict[str, tuple[float, float]]:
 # board-page-frame pad geometry the intra-zone gate measures, so the box lands where
 # KiCad's copper does); the ``@som`` token's box is ``model.som_core`` directly.
 
-def _zone_bboxes(model: PcbModel) -> dict[str, tuple[float, float, float, float]]:
+def zone_bboxes(model: PcbModel) -> dict[str, tuple[float, float, float, float]]:
     """sheet name -> (x0, y0, x1, y1) axis-aligned bbox over every placed
     footprint's PAD boxes on that sheet (board page frame). Deterministic;
     reuses the intra-zone gate's pad geometry so the box matches the emitted
@@ -146,14 +167,36 @@ def _zone_bboxes(model: PcbModel) -> dict[str, tuple[float, float, float, float]
             for s, a in acc.items()}
 
 
-def _bbox_gap(a: tuple[float, float, float, float],
-              b: tuple[float, float, float, float]) -> float:
+def bbox_gap(a: tuple[float, float, float, float],
+             b: tuple[float, float, float, float]) -> float:
     """Edge-to-edge gap between two axis-aligned boxes (0.0 if they overlap or
     touch). The Euclidean distance between the nearest edges — the empty space
     between the two zones."""
     dx = max(a[0] - b[2], b[0] - a[2], 0.0)
     dy = max(a[1] - b[3], b[1] - a[3], 0.0)
     return math.hypot(dx, dy)
+
+
+def facing_dot(czone: tuple[float, float], cout: tuple[float, float],
+               cdown: tuple[float, float]) -> tuple[float, float]:
+    """FACING kernel: (dot, angle_deg) between (zone->output) and
+    (zone->downstream). Positive dot == the output parts sit on the
+    downstream-facing half of the zone. EXACTLY the arithmetic the gate's
+    FACING check reports (extracted single-oracle kernel)."""
+    ox, oy = cout[0] - czone[0], cout[1] - czone[1]
+    dx, dy = cdown[0] - czone[0], cdown[1] - czone[1]
+    dot = ox * dx + oy * dy
+    mo = math.hypot(ox, oy)
+    md = math.hypot(dx, dy)
+    angle = (math.degrees(math.acos(max(-1.0, min(1.0, dot / (mo * md)))))
+             if mo > 1e-9 and md > 1e-9 else 180.0)
+    return dot, angle
+
+
+# back-compat private aliases (pre-P1 names; same objects, never redefined)
+_zone_centroids = zone_centroids
+_zone_bboxes = zone_bboxes
+_bbox_gap = bbox_gap
 
 
 def _resolve_target_bbox(name: str,
@@ -217,6 +260,21 @@ def _dist(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 # --- result -----------------------------------------------------------------------
 
+@dataclass(frozen=True)
+class FlowTerm:
+    """One examined external term as DATA (additive T1 P2 channel — the summary
+    text is unchanged; the composition ledger consumes these instead of parsing
+    the report strings). ``measured`` is mm (facing: the angle in degrees);
+    unresolved terms carry ``math.inf`` and ok=False."""
+    kind: str          # flow | facing | far | near_max
+    subject: str
+    target: str        # RAW target string as declared (dotted regions kept)
+    measured: float
+    bound: float
+    ok: bool
+    basis: str = ""
+
+
 @dataclass
 class PlacementFlowResult:
     ok: bool = True
@@ -235,6 +293,8 @@ class PlacementFlowResult:
     detail: list[str] = field(default_factory=list)
     board_area: float = 0.0
     flow_budget_mm: float = 0.0
+    # additive T1 P2: every examined term as data (summary text unchanged)
+    terms: list[FlowTerm] = field(default_factory=list)
 
     def summary(self) -> str:
         L = [f"PLACEMENT-FLOW GATE: {'PASS' if self.ok else 'FAIL'} "
@@ -273,16 +333,13 @@ def check(model: PcbModel,
     is derived from the frozen per-sheet band the real board uses. A subsystem
     with no ``external`` block contributes nothing."""
     res = PlacementFlowResult()
-    centroids = _zone_centroids(model)
-    bboxes = _zone_bboxes(model)           # D11: near_max is an edge-to-edge gap
+    centroids = zone_centroids(model)
+    bboxes = zone_bboxes(model)            # D11: near_max is an edge-to-edge gap
     area = max(float(model.board_w) * float(model.board_h), 1.0)
     res.board_area = area
-    # free-space term + the SoM go-around detour (0 without a placed som_core).
-    som_diag = 0.0
-    if model.som_core is not None:
-        sx0, sy0, sx1, sy1 = model.som_core
-        som_diag = math.hypot(sx1 - sx0, sy1 - sy0)
-    budget = FLOW_K * math.sqrt(area) + FLOW_SOM_K * som_diag
+    # free-space term + the SoM go-around detour (0 without a placed som_core) —
+    # the extracted single-oracle kernel (identical arithmetic, P1 refactor).
+    budget = flow_budget(model.board_w, model.board_h, model.som_core)
     res.flow_budget_mm = round(budget, 4)
 
     # gather contracts: injected, or loaded for every sheet in the model
@@ -317,10 +374,14 @@ def check(model: PcbModel,
                 res.flow_fail += 1
                 cid = contract.get("contract", "?")
                 add(f"flow {a}->{b}: zone(s) not placed [{cid}]")
+                res.terms.append(FlowTerm("flow", a, b, math.inf,
+                                          round(budget, 4), False))
                 continue
             d = _dist(ca, cb)
             res.detail.append(
                 f"flow {a}->{b}: {d:.2f}mm / {budget:.1f}mm budget")
+            res.terms.append(FlowTerm("flow", a, b, d, round(budget, 4),
+                                      d <= budget))
             if d > budget:
                 res.flow_fail += 1
                 add(f"flow {a}->{b}: {d:.2f}mm > {budget:.1f}mm budget "
@@ -350,10 +411,14 @@ def check(model: PcbModel,
                 res.far_fail += 1
                 add(f"far {sheet} vs {what}: UNRESOLVED (zone {zname!r} not "
                     f"placed) [{basis}]")
+                res.terms.append(FlowTerm("far", sheet, what, math.inf,
+                                          min_mm, False, basis))
                 continue
             d = _dist(czone, ctgt)
             res.detail.append(
                 f"far {sheet} vs {what}: {d:.2f}mm / >= {min_mm:g}mm")
+            res.terms.append(FlowTerm("far", sheet, what, d, min_mm,
+                                      d >= min_mm, basis))
             if d < min_mm:
                 res.far_fail += 1
                 add(f"far {sheet} vs {what}: {d:.2f}mm < {min_mm:g}mm "
@@ -381,10 +446,14 @@ def check(model: PcbModel,
                 res.near_max_fail += 1
                 add(f"near_max {sheet} to {other}: UNRESOLVED ({other!r} not "
                     f"placed) [{basis}]")
+                res.terms.append(FlowTerm("near_max", sheet, other, math.inf,
+                                          max_mm, False, basis))
                 continue
-            d = _bbox_gap(bzone, btgt)
+            d = bbox_gap(bzone, btgt)
             res.detail.append(
                 f"near_max {sheet} to {other}: {d:.2f}mm gap / <= {max_mm:g}mm")
+            res.terms.append(FlowTerm("near_max", sheet, other, d, max_mm,
+                                      d <= max_mm, basis))
             if d > max_mm:
                 res.near_max_fail += 1
                 add(f"near_max {sheet} to {other}: {d:.2f}mm gap > {max_mm:g}mm "
@@ -412,6 +481,8 @@ def _facing(res: PlacementFlowResult, model: PcbModel, sheet: str,
         res.facing_fail += 1
         add(f"facing {sheet}: no output-role parts declared for "
             f"{sorted(output_roles)} [{contract.get('contract', '?')}]")
+        res.terms.append(FlowTerm("facing", sheet, downstream, math.inf,
+                                  90.0, False, contract.get("contract", "?")))
         return
 
     # library -> board ref map (injected for tests, else the frozen band)
@@ -438,20 +509,18 @@ def _facing(res: PlacementFlowResult, model: PcbModel, sheet: str,
         res.facing_fail += 1
         add(f"facing {sheet}->{downstream}: UNRESOLVED (not placed: "
             f"{missing}) [{contract.get('contract', '?')}]")
+        res.terms.append(FlowTerm("facing", sheet, downstream, math.inf,
+                                  90.0, False, contract.get("contract", "?")))
         return
 
     # vector zone->output and zone->downstream; positive dot == output faces
-    # the downstream half of the zone.
-    ox, oy = cout[0] - czone[0], cout[1] - czone[1]
-    dx, dy = cds[0] - czone[0], cds[1] - czone[1]
-    dot = ox * dx + oy * dy
-    mo = math.hypot(ox, oy)
-    md = math.hypot(dx, dy)
-    angle = (math.degrees(math.acos(max(-1.0, min(1.0, dot / (mo * md)))))
-             if mo > 1e-9 and md > 1e-9 else 180.0)
+    # the downstream half of the zone (extracted single-oracle kernel, P1).
+    dot, angle = facing_dot(czone, cout, cds)
     res.detail.append(
         f"facing {sheet}->{downstream}: dot={dot:+.2f} "
         f"angle={angle:.1f}deg (output@{cout} zone@{czone} down@{cds})")
+    res.terms.append(FlowTerm("facing", sheet, downstream, angle, 90.0,
+                              dot > 0.0, contract.get("contract", "?")))
     if dot <= 0.0:
         res.facing_fail += 1
         add(f"facing {sheet}->{downstream}: output parts face AWAY "

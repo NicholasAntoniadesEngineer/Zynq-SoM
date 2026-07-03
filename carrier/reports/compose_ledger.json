@@ -1,0 +1,1913 @@
+[
+ {
+  "ledger": {
+   "advisory_gate": {
+    "ok": false,
+    "terms": [
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "ethernet",
+      "target": "power"
+     },
+     {
+      "bound": 20.0,
+      "kind": "near_max",
+      "measured": 0.0,
+      "ok": true,
+      "subject": "ethernet",
+      "target": "rj45_connector"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 60.4047,
+      "ok": true,
+      "subject": "motor_sense",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 51.2733,
+      "ok": true,
+      "subject": "motor_sense",
+      "target": "power_som"
+     },
+     {
+      "bound": 20.0,
+      "kind": "near_max",
+      "measured": 68.6457,
+      "ok": false,
+      "subject": "motor_sense",
+      "target": "motor_pwm"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 47.77,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 16.9331,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "power",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 62.7198,
+      "ok": true,
+      "subject": "power_mon",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 24.7437,
+      "ok": true,
+      "subject": "power_som",
+      "target": "@som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 75.4798,
+      "ok": true,
+      "subject": "power_som",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 15.0721,
+      "ok": true,
+      "subject": "pd_input",
+      "target": "usb_pd"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "near_max",
+      "measured": 1.92,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "pd_input"
+     }
+    ],
+    "unresolved": [],
+    "violations": [
+     "near_max motor_sense to motor_pwm: 68.65mm gap > 20mm [judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out]"
+    ]
+   },
+   "aggregate_hard_margin": {
+    "min": 8.08,
+    "sum": 348.68
+   },
+   "board": {
+    "area_mm2": 25670.0,
+    "h": 151.0,
+    "w": 170.0
+   },
+   "channel_hotspots": {
+    "bringup_en_modules|bringup_modules": {
+     "airwires": 12,
+     "corridor_mm": 4.4,
+     "mm": 215.1
+    },
+    "bringup_en_modules|bringup_rails": {
+     "airwires": 24,
+     "corridor_mm": 6.800000000000001,
+     "mm": 670.7
+    },
+    "bringup_rails|som_decoupling": {
+     "airwires": 10,
+     "corridor_mm": 4.0,
+     "mm": 44.7
+    },
+    "ethernet|rj45_connector": {
+     "airwires": 8,
+     "corridor_mm": 3.6,
+     "mm": 288.5
+    },
+    "motor_sense|power_mon": {
+     "airwires": 7,
+     "corridor_mm": 3.4000000000000004,
+     "mm": 58.4
+    }
+   },
+   "contract_violations": {
+    "ethernet": 23,
+    "hdmi_rx": 3,
+    "motor_sense": 11,
+    "power": 0,
+    "power_som": 32,
+    "usb_pd": 0
+   },
+   "flow_gate": {
+    "flow_budget_mm": 123.3348,
+    "ok": true,
+    "terms": [
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 47.77,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 16.9331,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "power",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 15.0721,
+      "ok": true,
+      "subject": "pd_input",
+      "target": "usb_pd"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "near_max",
+      "measured": 1.92,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "pd_input"
+     }
+    ],
+    "unresolved": [],
+    "violations": []
+   },
+   "intent_gated": [
+    "near_max motor_sense->motor_pwm: subject is an EDGE block \u2014 repair is an INTENT edge move (--allow-intent motor_sense:<FROM>-><TO>)"
+   ],
+   "law5": {
+    "budget_mm": 15861.6,
+    "cross_mm": 13506.3,
+    "dispersed": 0,
+    "dispersion_by_sheet": {
+     "board_aux": 2.92,
+     "board_qwiic": 1.77,
+     "board_services": 2.86,
+     "bringup_en": 1.24,
+     "bringup_en_modules": 1.28,
+     "bringup_modules": 1.09,
+     "bringup_rails": 3.68,
+     "camera": 5.06,
+     "debug_boot": 3.14,
+     "ethernet": 0.87,
+     "fmc": 4.58,
+     "hdmi_rx": 5.64,
+     "hdmi_rx_term": 1.46,
+     "hdmi_tx": 3.68,
+     "lcd": 5.05,
+     "microsd": 3.81,
+     "motor_pwm": 1.4,
+     "motor_sense": 3.22,
+     "pd_input": 2.51,
+     "pmod": 4.55,
+     "pmod_expansion": 2.96,
+     "power": 2.5,
+     "power_mon": 4.59,
+     "power_som": 0.79,
+     "rj45_connector": 3.67,
+     "som_decoupling": 8.85,
+     "uart_bridge": 1.89,
+     "usb_jtag": 1.62,
+     "usb_jtag_connector": 5.41,
+     "usb_pd": 2.07,
+     "usb_uart_connector": 5.4,
+     "usbc_otg": 3.33,
+     "user_io": 4.9
+    },
+    "off_board": 0,
+    "ok": true,
+    "slack_mm": 2355.3,
+    "slack_pct": 14.85
+   },
+   "repair_triggers": [
+    "ADVISORY-RED near_max motor_sense->motor_pwm: 68.65 vs 20.00 (repair-before-wire blocker)"
+   ],
+   "seat_consistency": [],
+   "terms": [
+    {
+     "basis": "facing/output_roles [placement/v2]",
+     "bound": 90.0,
+     "enforced": true,
+     "kind": "facing",
+     "margin": 73.0669,
+     "measured": 16.9331,
+     "ok": true,
+     "subject": "power",
+     "target": "power_som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)",
+     "bound": 10.0,
+     "enforced": true,
+     "kind": "far_min",
+     "margin": 73.6434,
+     "measured": 83.6434,
+     "ok": true,
+     "subject": "power",
+     "target": "ethernet.line_side"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 108.2627,
+     "measured": 15.0721,
+     "ok": true,
+     "subject": "pd_input",
+     "target": "usb_pd"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 75.5648,
+     "measured": 47.77,
+     "ok": true,
+     "subject": "power",
+     "target": "power_som"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 10.0645,
+     "measured": 113.2703,
+     "ok": true,
+     "subject": "usb_pd",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 (D11 edge-gap metric) \u2014 keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length",
+     "bound": 10.0,
+     "enforced": true,
+     "kind": "near_max",
+     "margin": 8.08,
+     "measured": 1.92,
+     "ok": true,
+     "subject": "usb_pd",
+     "target": "pd_input"
+    },
+    {
+     "basis": "facing/output_roles [placement/v2]",
+     "bound": 90.0,
+     "enforced": false,
+     "kind": "facing",
+     "margin": 65.2563,
+     "measured": 24.7437,
+     "ok": true,
+     "subject": "power_som",
+     "target": "@som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 buck switching node vs Ethernet media/magnetics analog line side",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 73.6434,
+     "measured": 83.6434,
+     "ok": true,
+     "subject": "ethernet",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 50.4047,
+     "measured": 60.4047,
+     "ok": true,
+     "subject": "motor_sense",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 41.2733,
+     "measured": 51.2733,
+     "ok": true,
+     "subject": "motor_sense",
+     "target": "power_som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 same rationale as the power pilot",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 65.4798,
+     "measured": 75.4798,
+     "ok": true,
+     "subject": "power_som",
+     "target": "ethernet.line_side"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": false,
+     "kind": "flow_hop",
+     "margin": 60.615,
+     "measured": 62.7198,
+     "ok": true,
+     "subject": "power_mon",
+     "target": "power_som"
+    },
+    {
+     "basis": "carrier/floorplan.json near-intent (advisory)",
+     "bound": 0.0,
+     "enforced": false,
+     "kind": "near_intent",
+     "margin": 0.0,
+     "measured": 34.9677,
+     "ok": true,
+     "subject": "hdmi_rx_term",
+     "target": "hdmi_rx"
+    },
+    {
+     "basis": "carrier/floorplan.json near-intent (advisory)",
+     "bound": 0.0,
+     "enforced": false,
+     "kind": "near_intent",
+     "margin": 0.0,
+     "measured": 22.5757,
+     "ok": true,
+     "subject": "uart_bridge",
+     "target": "rj45_connector"
+    },
+    {
+     "basis": "Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)",
+     "bound": 20.0,
+     "enforced": false,
+     "kind": "near_max",
+     "margin": 20.0,
+     "measured": 0.0,
+     "ok": true,
+     "subject": "ethernet",
+     "target": "rj45_connector"
+    },
+    {
+     "basis": "judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out",
+     "bound": 20.0,
+     "enforced": false,
+     "kind": "near_max",
+     "margin": -48.6457,
+     "measured": 68.6457,
+     "ok": false,
+     "subject": "motor_sense",
+     "target": "motor_pwm"
+    }
+   ]
+  },
+  "step": "measure (no candidates)"
+ },
+ {
+  "ledger": {
+   "advisory_gate": {
+    "ok": false,
+    "terms": [
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "ethernet",
+      "target": "power"
+     },
+     {
+      "bound": 20.0,
+      "kind": "near_max",
+      "measured": 0.0,
+      "ok": true,
+      "subject": "ethernet",
+      "target": "rj45_connector"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 60.4047,
+      "ok": true,
+      "subject": "motor_sense",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 51.2733,
+      "ok": true,
+      "subject": "motor_sense",
+      "target": "power_som"
+     },
+     {
+      "bound": 20.0,
+      "kind": "near_max",
+      "measured": 68.6457,
+      "ok": false,
+      "subject": "motor_sense",
+      "target": "motor_pwm"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 47.77,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 16.9331,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "power",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 62.7198,
+      "ok": true,
+      "subject": "power_mon",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 24.7437,
+      "ok": true,
+      "subject": "power_som",
+      "target": "@som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 75.4798,
+      "ok": true,
+      "subject": "power_som",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 15.0721,
+      "ok": true,
+      "subject": "pd_input",
+      "target": "usb_pd"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "near_max",
+      "measured": 1.92,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "pd_input"
+     }
+    ],
+    "unresolved": [],
+    "violations": [
+     "near_max motor_sense to motor_pwm: 68.65mm gap > 20mm [judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out]"
+    ]
+   },
+   "aggregate_hard_margin": {
+    "min": 8.08,
+    "sum": 348.68
+   },
+   "board": {
+    "area_mm2": 25670.0,
+    "h": 151.0,
+    "w": 170.0
+   },
+   "channel_hotspots": {
+    "bringup_en_modules|bringup_modules": {
+     "airwires": 12,
+     "corridor_mm": 4.4,
+     "mm": 215.1
+    },
+    "bringup_en_modules|bringup_rails": {
+     "airwires": 24,
+     "corridor_mm": 6.800000000000001,
+     "mm": 670.7
+    },
+    "bringup_rails|som_decoupling": {
+     "airwires": 10,
+     "corridor_mm": 4.0,
+     "mm": 44.7
+    },
+    "ethernet|rj45_connector": {
+     "airwires": 8,
+     "corridor_mm": 3.6,
+     "mm": 288.5
+    },
+    "motor_sense|power_mon": {
+     "airwires": 7,
+     "corridor_mm": 3.4000000000000004,
+     "mm": 58.4
+    }
+   },
+   "contract_violations": {
+    "camera": 2,
+    "ethernet": 23,
+    "hdmi_rx": 3,
+    "hdmi_tx": 7,
+    "lcd": 7,
+    "microsd": 10,
+    "motor_sense": 11,
+    "pd_input": 6,
+    "pmod": 4,
+    "power": 0,
+    "power_som": 32,
+    "uart_bridge": 12,
+    "usb_jtag": 16,
+    "usb_pd": 0,
+    "usbc_otg": 4
+   },
+   "flow_gate": {
+    "flow_budget_mm": 123.3348,
+    "ok": true,
+    "terms": [
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 47.77,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 16.9331,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "power",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 15.0721,
+      "ok": true,
+      "subject": "pd_input",
+      "target": "usb_pd"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "near_max",
+      "measured": 1.92,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "pd_input"
+     }
+    ],
+    "unresolved": [],
+    "violations": []
+   },
+   "intent_gated": [
+    "near_max motor_sense->motor_pwm: subject is an EDGE block \u2014 repair is an INTENT edge move (--allow-intent motor_sense:<FROM>-><TO>)"
+   ],
+   "law5": {
+    "budget_mm": 15861.6,
+    "cross_mm": 13506.3,
+    "dispersed": 0,
+    "dispersion_by_sheet": {
+     "board_aux": 2.92,
+     "board_qwiic": 1.77,
+     "board_services": 2.86,
+     "bringup_en": 1.24,
+     "bringup_en_modules": 1.28,
+     "bringup_modules": 1.09,
+     "bringup_rails": 3.68,
+     "camera": 5.06,
+     "debug_boot": 3.14,
+     "ethernet": 0.87,
+     "fmc": 4.58,
+     "hdmi_rx": 5.64,
+     "hdmi_rx_term": 1.46,
+     "hdmi_tx": 3.68,
+     "lcd": 5.05,
+     "microsd": 3.81,
+     "motor_pwm": 1.4,
+     "motor_sense": 3.22,
+     "pd_input": 2.51,
+     "pmod": 4.55,
+     "pmod_expansion": 2.96,
+     "power": 2.5,
+     "power_mon": 4.59,
+     "power_som": 0.79,
+     "rj45_connector": 3.67,
+     "som_decoupling": 8.85,
+     "uart_bridge": 1.89,
+     "usb_jtag": 1.62,
+     "usb_jtag_connector": 5.41,
+     "usb_pd": 2.07,
+     "usb_uart_connector": 5.4,
+     "usbc_otg": 3.33,
+     "user_io": 4.9
+    },
+    "off_board": 0,
+    "ok": true,
+    "slack_mm": 2355.3,
+    "slack_pct": 14.85
+   },
+   "repair_triggers": [
+    "ADVISORY-RED near_max motor_sense->motor_pwm: 68.65 vs 20.00 (repair-before-wire blocker)"
+   ],
+   "seat_consistency": [],
+   "terms": [
+    {
+     "basis": "facing/output_roles [placement/v2]",
+     "bound": 90.0,
+     "enforced": true,
+     "kind": "facing",
+     "margin": 73.0669,
+     "measured": 16.9331,
+     "ok": true,
+     "subject": "power",
+     "target": "power_som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)",
+     "bound": 10.0,
+     "enforced": true,
+     "kind": "far_min",
+     "margin": 73.6434,
+     "measured": 83.6434,
+     "ok": true,
+     "subject": "power",
+     "target": "ethernet.line_side"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 108.2627,
+     "measured": 15.0721,
+     "ok": true,
+     "subject": "pd_input",
+     "target": "usb_pd"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 75.5648,
+     "measured": 47.77,
+     "ok": true,
+     "subject": "power",
+     "target": "power_som"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 10.0645,
+     "measured": 113.2703,
+     "ok": true,
+     "subject": "usb_pd",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 (D11 edge-gap metric) \u2014 keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length",
+     "bound": 10.0,
+     "enforced": true,
+     "kind": "near_max",
+     "margin": 8.08,
+     "measured": 1.92,
+     "ok": true,
+     "subject": "usb_pd",
+     "target": "pd_input"
+    },
+    {
+     "basis": "facing/output_roles [placement/v2]",
+     "bound": 90.0,
+     "enforced": false,
+     "kind": "facing",
+     "margin": 65.2563,
+     "measured": 24.7437,
+     "ok": true,
+     "subject": "power_som",
+     "target": "@som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 buck switching node vs Ethernet media/magnetics analog line side",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 73.6434,
+     "measured": 83.6434,
+     "ok": true,
+     "subject": "ethernet",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 50.4047,
+     "measured": 60.4047,
+     "ok": true,
+     "subject": "motor_sense",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 41.2733,
+     "measured": 51.2733,
+     "ok": true,
+     "subject": "motor_sense",
+     "target": "power_som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 same rationale as the power pilot",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 65.4798,
+     "measured": 75.4798,
+     "ok": true,
+     "subject": "power_som",
+     "target": "ethernet.line_side"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": false,
+     "kind": "flow_hop",
+     "margin": 60.615,
+     "measured": 62.7198,
+     "ok": true,
+     "subject": "power_mon",
+     "target": "power_som"
+    },
+    {
+     "basis": "carrier/floorplan.json near-intent (advisory)",
+     "bound": 0.0,
+     "enforced": false,
+     "kind": "near_intent",
+     "margin": 0.0,
+     "measured": 34.9677,
+     "ok": true,
+     "subject": "hdmi_rx_term",
+     "target": "hdmi_rx"
+    },
+    {
+     "basis": "carrier/floorplan.json near-intent (advisory)",
+     "bound": 0.0,
+     "enforced": false,
+     "kind": "near_intent",
+     "margin": 0.0,
+     "measured": 22.5757,
+     "ok": true,
+     "subject": "uart_bridge",
+     "target": "rj45_connector"
+    },
+    {
+     "basis": "Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)",
+     "bound": 20.0,
+     "enforced": false,
+     "kind": "near_max",
+     "margin": 20.0,
+     "measured": 0.0,
+     "ok": true,
+     "subject": "ethernet",
+     "target": "rj45_connector"
+    },
+    {
+     "basis": "judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out",
+     "bound": 20.0,
+     "enforced": false,
+     "kind": "near_max",
+     "margin": -48.6457,
+     "measured": 68.6457,
+     "ok": false,
+     "subject": "motor_sense",
+     "target": "motor_pwm"
+    }
+   ]
+  },
+  "step": "measure (no candidates)"
+ },
+ {
+  "ledger": {
+   "advisory_gate": {
+    "ok": false,
+    "terms": [
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "ethernet",
+      "target": "power"
+     },
+     {
+      "bound": 20.0,
+      "kind": "near_max",
+      "measured": 0.0,
+      "ok": true,
+      "subject": "ethernet",
+      "target": "rj45_connector"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 60.4047,
+      "ok": true,
+      "subject": "motor_sense",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 38.7506,
+      "ok": true,
+      "subject": "motor_sense",
+      "target": "power_som"
+     },
+     {
+      "bound": 20.0,
+      "kind": "near_max",
+      "measured": 68.6457,
+      "ok": false,
+      "subject": "motor_sense",
+      "target": "motor_pwm"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 63.119,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 1.6866,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "power",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 47.1948,
+      "ok": true,
+      "subject": "power_mon",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 9.8851,
+      "ok": true,
+      "subject": "power_som",
+      "target": "@som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 59.0118,
+      "ok": true,
+      "subject": "power_som",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 15.0721,
+      "ok": true,
+      "subject": "pd_input",
+      "target": "usb_pd"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "near_max",
+      "measured": 1.92,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "pd_input"
+     }
+    ],
+    "unresolved": [],
+    "violations": [
+     "near_max motor_sense to motor_pwm: 68.65mm gap > 20mm [judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out]"
+    ]
+   },
+   "aggregate_hard_margin": {
+    "min": 8.08,
+    "sum": 348.58
+   },
+   "board": {
+    "area_mm2": 25670.0,
+    "h": 151.0,
+    "w": 170.0
+   },
+   "channel_hotspots": {
+    "bringup_en_modules|bringup_modules": {
+     "airwires": 12,
+     "corridor_mm": 4.4,
+     "mm": 215.1
+    },
+    "bringup_en_modules|bringup_rails": {
+     "airwires": 24,
+     "corridor_mm": 6.800000000000001,
+     "mm": 670.7
+    },
+    "bringup_rails|som_decoupling": {
+     "airwires": 10,
+     "corridor_mm": 4.0,
+     "mm": 44.7
+    },
+    "ethernet|rj45_connector": {
+     "airwires": 8,
+     "corridor_mm": 3.6,
+     "mm": 288.5
+    },
+    "motor_sense|power_mon": {
+     "airwires": 7,
+     "corridor_mm": 3.4000000000000004,
+     "mm": 58.4
+    }
+   },
+   "contract_violations": {
+    "camera": 2,
+    "ethernet": 23,
+    "hdmi_rx": 3,
+    "hdmi_tx": 7,
+    "lcd": 7,
+    "microsd": 10,
+    "motor_sense": 11,
+    "pd_input": 6,
+    "pmod": 4,
+    "power": 0,
+    "power_som": 34,
+    "uart_bridge": 12,
+    "usb_jtag": 16,
+    "usb_pd": 0,
+    "usbc_otg": 4
+   },
+   "flow_gate": {
+    "flow_budget_mm": 123.3348,
+    "ok": true,
+    "terms": [
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 63.119,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 1.6866,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "power",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 15.0721,
+      "ok": true,
+      "subject": "pd_input",
+      "target": "usb_pd"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "near_max",
+      "measured": 1.92,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "pd_input"
+     }
+    ],
+    "unresolved": [],
+    "violations": []
+   },
+   "intent_gated": [
+    "near_max motor_sense->motor_pwm: subject is an EDGE block \u2014 repair is an INTENT edge move (--allow-intent motor_sense:<FROM>-><TO>)"
+   ],
+   "law5": {
+    "budget_mm": 15861.6,
+    "cross_mm": 13567.4,
+    "dispersed": 0,
+    "dispersion_by_sheet": {
+     "board_aux": 2.92,
+     "board_qwiic": 1.77,
+     "board_services": 2.86,
+     "bringup_en": 1.24,
+     "bringup_en_modules": 1.28,
+     "bringup_modules": 1.09,
+     "bringup_rails": 3.68,
+     "camera": 5.06,
+     "debug_boot": 3.14,
+     "ethernet": 0.87,
+     "fmc": 4.58,
+     "hdmi_rx": 5.64,
+     "hdmi_rx_term": 1.46,
+     "hdmi_tx": 3.68,
+     "lcd": 5.05,
+     "microsd": 3.81,
+     "motor_pwm": 1.4,
+     "motor_sense": 3.22,
+     "pd_input": 2.51,
+     "pmod": 4.55,
+     "pmod_expansion": 2.96,
+     "power": 2.5,
+     "power_mon": 4.59,
+     "power_som": 4.99,
+     "rj45_connector": 3.67,
+     "som_decoupling": 8.85,
+     "uart_bridge": 1.89,
+     "usb_jtag": 1.62,
+     "usb_jtag_connector": 5.41,
+     "usb_pd": 2.07,
+     "usb_uart_connector": 5.4,
+     "usbc_otg": 3.33,
+     "user_io": 3.37
+    },
+    "off_board": 0,
+    "ok": true,
+    "slack_mm": 2294.2,
+    "slack_pct": 14.46
+   },
+   "repair_triggers": [
+    "ADVISORY-RED near_max motor_sense->motor_pwm: 68.65 vs 20.00 (repair-before-wire blocker)"
+   ],
+   "seat_consistency": [],
+   "terms": [
+    {
+     "basis": "facing/output_roles [placement/v2]",
+     "bound": 90.0,
+     "enforced": true,
+     "kind": "facing",
+     "margin": 88.3134,
+     "measured": 1.6866,
+     "ok": true,
+     "subject": "power",
+     "target": "power_som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)",
+     "bound": 10.0,
+     "enforced": true,
+     "kind": "far_min",
+     "margin": 73.6434,
+     "measured": 83.6434,
+     "ok": true,
+     "subject": "power",
+     "target": "ethernet.line_side"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 108.2627,
+     "measured": 15.0721,
+     "ok": true,
+     "subject": "pd_input",
+     "target": "usb_pd"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 60.2158,
+     "measured": 63.119,
+     "ok": true,
+     "subject": "power",
+     "target": "power_som"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 10.0645,
+     "measured": 113.2703,
+     "ok": true,
+     "subject": "usb_pd",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 (D11 edge-gap metric) \u2014 keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length",
+     "bound": 10.0,
+     "enforced": true,
+     "kind": "near_max",
+     "margin": 8.08,
+     "measured": 1.92,
+     "ok": true,
+     "subject": "usb_pd",
+     "target": "pd_input"
+    },
+    {
+     "basis": "facing/output_roles [placement/v2]",
+     "bound": 90.0,
+     "enforced": false,
+     "kind": "facing",
+     "margin": 80.1149,
+     "measured": 9.8851,
+     "ok": true,
+     "subject": "power_som",
+     "target": "@som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 buck switching node vs Ethernet media/magnetics analog line side",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 73.6434,
+     "measured": 83.6434,
+     "ok": true,
+     "subject": "ethernet",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 50.4047,
+     "measured": 60.4047,
+     "ok": true,
+     "subject": "motor_sense",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 28.7506,
+     "measured": 38.7506,
+     "ok": true,
+     "subject": "motor_sense",
+     "target": "power_som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 same rationale as the power pilot",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 49.0118,
+     "measured": 59.0118,
+     "ok": true,
+     "subject": "power_som",
+     "target": "ethernet.line_side"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": false,
+     "kind": "flow_hop",
+     "margin": 76.14,
+     "measured": 47.1948,
+     "ok": true,
+     "subject": "power_mon",
+     "target": "power_som"
+    },
+    {
+     "basis": "carrier/floorplan.json near-intent (advisory)",
+     "bound": 0.0,
+     "enforced": false,
+     "kind": "near_intent",
+     "margin": 0.0,
+     "measured": 34.9677,
+     "ok": true,
+     "subject": "hdmi_rx_term",
+     "target": "hdmi_rx"
+    },
+    {
+     "basis": "carrier/floorplan.json near-intent (advisory)",
+     "bound": 0.0,
+     "enforced": false,
+     "kind": "near_intent",
+     "margin": 0.0,
+     "measured": 22.5757,
+     "ok": true,
+     "subject": "uart_bridge",
+     "target": "rj45_connector"
+    },
+    {
+     "basis": "Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)",
+     "bound": 20.0,
+     "enforced": false,
+     "kind": "near_max",
+     "margin": 20.0,
+     "measured": 0.0,
+     "ok": true,
+     "subject": "ethernet",
+     "target": "rj45_connector"
+    },
+    {
+     "basis": "judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out",
+     "bound": 20.0,
+     "enforced": false,
+     "kind": "near_max",
+     "margin": -48.6457,
+     "measured": 68.6457,
+     "ok": false,
+     "subject": "motor_sense",
+     "target": "motor_pwm"
+    }
+   ]
+  },
+  "step": "measure (no candidates)"
+ },
+ {
+  "ledger": {
+   "advisory_gate": {
+    "ok": false,
+    "terms": [
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "ethernet",
+      "target": "power"
+     },
+     {
+      "bound": 20.0,
+      "kind": "near_max",
+      "measured": 0.0,
+      "ok": true,
+      "subject": "ethernet",
+      "target": "rj45_connector"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 60.4047,
+      "ok": true,
+      "subject": "motor_sense",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 38.7506,
+      "ok": true,
+      "subject": "motor_sense",
+      "target": "power_som"
+     },
+     {
+      "bound": 20.0,
+      "kind": "near_max",
+      "measured": 68.6457,
+      "ok": false,
+      "subject": "motor_sense",
+      "target": "motor_pwm"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 63.119,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 1.6866,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "power",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 47.1948,
+      "ok": true,
+      "subject": "power_mon",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 9.8851,
+      "ok": true,
+      "subject": "power_som",
+      "target": "@som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 59.0118,
+      "ok": true,
+      "subject": "power_som",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 15.0721,
+      "ok": true,
+      "subject": "pd_input",
+      "target": "usb_pd"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "near_max",
+      "measured": 1.92,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "pd_input"
+     }
+    ],
+    "unresolved": [],
+    "violations": [
+     "near_max motor_sense to motor_pwm: 68.65mm gap > 20mm [judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out]"
+    ]
+   },
+   "aggregate_hard_margin": {
+    "min": 8.08,
+    "sum": 348.58
+   },
+   "board": {
+    "area_mm2": 25670.0,
+    "h": 151.0,
+    "w": 170.0
+   },
+   "channel_hotspots": {
+    "bringup_en_modules|bringup_modules": {
+     "airwires": 12,
+     "corridor_mm": 4.4,
+     "mm": 215.1
+    },
+    "bringup_en_modules|bringup_rails": {
+     "airwires": 24,
+     "corridor_mm": 6.800000000000001,
+     "mm": 670.7
+    },
+    "bringup_rails|som_decoupling": {
+     "airwires": 10,
+     "corridor_mm": 4.0,
+     "mm": 44.7
+    },
+    "ethernet|rj45_connector": {
+     "airwires": 8,
+     "corridor_mm": 3.6,
+     "mm": 288.5
+    },
+    "motor_sense|power_mon": {
+     "airwires": 7,
+     "corridor_mm": 3.4000000000000004,
+     "mm": 58.4
+    }
+   },
+   "contract_violations": {
+    "camera": 2,
+    "ethernet": 23,
+    "hdmi_rx": 3,
+    "hdmi_tx": 7,
+    "lcd": 7,
+    "microsd": 10,
+    "motor_sense": 11,
+    "pd_input": 6,
+    "pmod": 4,
+    "power": 0,
+    "power_som": 34,
+    "uart_bridge": 12,
+    "usb_jtag": 16,
+    "usb_pd": 0,
+    "usbc_otg": 4
+   },
+   "flow_gate": {
+    "flow_budget_mm": 123.3348,
+    "ok": true,
+    "terms": [
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 63.119,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 90.0,
+      "kind": "facing",
+      "measured": 1.6866,
+      "ok": true,
+      "subject": "power",
+      "target": "power_som"
+     },
+     {
+      "bound": 10.0,
+      "kind": "far",
+      "measured": 83.6434,
+      "ok": true,
+      "subject": "power",
+      "target": "ethernet.line_side"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 15.0721,
+      "ok": true,
+      "subject": "pd_input",
+      "target": "usb_pd"
+     },
+     {
+      "bound": 123.3348,
+      "kind": "flow",
+      "measured": 113.2703,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "power"
+     },
+     {
+      "bound": 10.0,
+      "kind": "near_max",
+      "measured": 1.92,
+      "ok": true,
+      "subject": "usb_pd",
+      "target": "pd_input"
+     }
+    ],
+    "unresolved": [],
+    "violations": []
+   },
+   "intent_gated": [
+    "near_max motor_sense->motor_pwm: subject is an EDGE block \u2014 repair is an INTENT edge move (--allow-intent motor_sense:<FROM>-><TO>)"
+   ],
+   "law5": {
+    "budget_mm": 15861.6,
+    "cross_mm": 13567.4,
+    "dispersed": 0,
+    "dispersion_by_sheet": {
+     "board_aux": 2.92,
+     "board_qwiic": 1.77,
+     "board_services": 2.86,
+     "bringup_en": 1.24,
+     "bringup_en_modules": 1.28,
+     "bringup_modules": 1.09,
+     "bringup_rails": 3.68,
+     "camera": 5.06,
+     "debug_boot": 3.14,
+     "ethernet": 0.87,
+     "fmc": 4.58,
+     "hdmi_rx": 5.64,
+     "hdmi_rx_term": 1.46,
+     "hdmi_tx": 3.68,
+     "lcd": 5.05,
+     "microsd": 3.81,
+     "motor_pwm": 1.4,
+     "motor_sense": 3.22,
+     "pd_input": 2.51,
+     "pmod": 4.55,
+     "pmod_expansion": 2.96,
+     "power": 2.5,
+     "power_mon": 4.59,
+     "power_som": 4.99,
+     "rj45_connector": 3.67,
+     "som_decoupling": 8.85,
+     "uart_bridge": 1.89,
+     "usb_jtag": 1.62,
+     "usb_jtag_connector": 5.41,
+     "usb_pd": 2.07,
+     "usb_uart_connector": 5.4,
+     "usbc_otg": 3.33,
+     "user_io": 3.37
+    },
+    "off_board": 0,
+    "ok": true,
+    "slack_mm": 2294.2,
+    "slack_pct": 14.46
+   },
+   "repair_triggers": [
+    "ADVISORY-RED near_max motor_sense->motor_pwm: 68.65 vs 20.00 (repair-before-wire blocker)"
+   ],
+   "seat_consistency": [],
+   "terms": [
+    {
+     "basis": "facing/output_roles [placement/v2]",
+     "bound": 90.0,
+     "enforced": true,
+     "kind": "facing",
+     "margin": 88.3134,
+     "measured": 1.6866,
+     "ok": true,
+     "subject": "power",
+     "target": "power_som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)",
+     "bound": 10.0,
+     "enforced": true,
+     "kind": "far_min",
+     "margin": 73.6434,
+     "measured": 83.6434,
+     "ok": true,
+     "subject": "power",
+     "target": "ethernet.line_side"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 108.2627,
+     "measured": 15.0721,
+     "ok": true,
+     "subject": "pd_input",
+     "target": "usb_pd"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 60.2158,
+     "measured": 63.119,
+     "ok": true,
+     "subject": "power",
+     "target": "power_som"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": true,
+     "kind": "flow_hop",
+     "margin": 10.0645,
+     "measured": 113.2703,
+     "ok": true,
+     "subject": "usb_pd",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 (D11 edge-gap metric) \u2014 keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length",
+     "bound": 10.0,
+     "enforced": true,
+     "kind": "near_max",
+     "margin": 8.08,
+     "measured": 1.92,
+     "ok": true,
+     "subject": "usb_pd",
+     "target": "pd_input"
+    },
+    {
+     "basis": "facing/output_roles [placement/v2]",
+     "bound": 90.0,
+     "enforced": false,
+     "kind": "facing",
+     "margin": 80.1149,
+     "measured": 9.8851,
+     "ok": true,
+     "subject": "power_som",
+     "target": "@som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 buck switching node vs Ethernet media/magnetics analog line side",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 73.6434,
+     "measured": 83.6434,
+     "ok": true,
+     "subject": "ethernet",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 50.4047,
+     "measured": 60.4047,
+     "ok": true,
+     "subject": "motor_sense",
+     "target": "power"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 28.7506,
+     "measured": 38.7506,
+     "ok": true,
+     "subject": "motor_sense",
+     "target": "power_som"
+    },
+    {
+     "basis": "judgment:10.0 \u2014 same rationale as the power pilot",
+     "bound": 10.0,
+     "enforced": false,
+     "kind": "far_min",
+     "margin": 49.0118,
+     "measured": 59.0118,
+     "ok": true,
+     "subject": "power_som",
+     "target": "ethernet.line_side"
+    },
+    {
+     "basis": "flow chain [placement/v2]",
+     "bound": 123.3348,
+     "enforced": false,
+     "kind": "flow_hop",
+     "margin": 76.14,
+     "measured": 47.1948,
+     "ok": true,
+     "subject": "power_mon",
+     "target": "power_som"
+    },
+    {
+     "basis": "carrier/floorplan.json near-intent (advisory)",
+     "bound": 0.0,
+     "enforced": false,
+     "kind": "near_intent",
+     "margin": 0.0,
+     "measured": 34.9677,
+     "ok": true,
+     "subject": "hdmi_rx_term",
+     "target": "hdmi_rx"
+    },
+    {
+     "basis": "carrier/floorplan.json near-intent (advisory)",
+     "bound": 0.0,
+     "enforced": false,
+     "kind": "near_intent",
+     "margin": 0.0,
+     "measured": 22.5757,
+     "ok": true,
+     "subject": "uart_bridge",
+     "target": "rj45_connector"
+    },
+    {
+     "basis": "Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)",
+     "bound": 20.0,
+     "enforced": false,
+     "kind": "near_max",
+     "margin": 20.0,
+     "measured": 0.0,
+     "ok": true,
+     "subject": "ethernet",
+     "target": "rj45_connector"
+    },
+    {
+     "basis": "judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out",
+     "bound": 20.0,
+     "enforced": false,
+     "kind": "near_max",
+     "margin": -48.6457,
+     "measured": 68.6457,
+     "ok": false,
+     "subject": "motor_sense",
+     "target": "motor_pwm"
+    }
+   ]
+  },
+  "step": "measure (no candidates)"
+ }
+]

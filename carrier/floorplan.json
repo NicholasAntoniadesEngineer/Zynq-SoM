@@ -76,7 +76,14 @@
       "side": "E"
     },
     "usb_pd": {
-      "near": "pd_input"
+      "near": "pd_input",
+      "pull": {
+        "to": "pd_input",
+        "weight": 60.0,
+        "face": "inboard",
+        "exclusive": true,
+        "basis": "D11 edge-seat override, migrated from _EDGE_SEAT_BLOCKS (T1 P3): FUSB302 PD PHY seats at its Type-C inlet - CC-run near_max (judgment:10.0 edge-gap) + usb_pd->power flow budget"
+      }
     },
     "user_io": {
       "side": "S"

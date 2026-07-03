@@ -961,3 +961,19 @@ Executed per Ring-0 direction. Interface decisions (flagged for review):
 Re-verified on the merged tree: 29/29 covered, worst 1.7772 mm UNCHANGED against the
 merged plane, 8 vias + 10 segments, DRC errors 0 + warnings delta-0 vs the GAP1
 baseline, byte-superset of 28f8e15's board, emit-twice byte-identical, ruff green.
+
+### T1 rebase + P5b + P6-core — Ring-0 rulings
+RATIFIED (all four): (1) P5b exemption partition {pd_input, power, usb_pd} exempt /
+{ethernet:14.0, power_som:25.0} guarded — measured bases; the rebase-caught coupling
+(L4 exemption parked power_som caps into U22004's thermal-via field → 6/8 sites lost →
+honest-thermal board-dead red) is the serialized-merge discipline earning its cost;
+(2) P7 power_som wave carries the packer bottom-keepout-under-THERMAL_COPPER item (the
+durable fix); (3) D13 terminus-precedence (channel floor yields to hard near_max pairs
+— an abutted pair IS the terminus, same logic as decoupling-at-pins); (4) stash incident
+closed — T2's merged work verified on MAIN independent of its worktree.
+**FLEET PROTOCOL (new, binding): worktree threads NEVER use `git stash` (the stash list
+is repo-shared) — checkpoint via temp branches or explicit stash-ref-by-hash only.**
+T1 merge point set: rebase onto 4a45f99 (T2's escape now on main — new interaction
+surface: T2's channel vias + return_stitch/escape_lane gates in the chain; the rebased
+build must prove coexistence), deliver P0–P6core as the merge unit, then continue
+P6-wire → P7 (ethernet corridor+F1/F7) → P8 (D9) → P9 → P10 (area verdict vs 24,600).

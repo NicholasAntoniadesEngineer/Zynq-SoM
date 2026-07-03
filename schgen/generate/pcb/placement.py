@@ -467,27 +467,30 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
     return placed["top"], placed["bottom"], zw, zh
 
 
-def _connector_sheet_edges() -> dict[str, str]:
+def _connector_sheet_edges(spec=None) -> dict[str, str]:
     """sheet -> board EDGE (N/E/S/W) for every subsystem that carries an off-board
     connector (LAW 6). The edge is read from the DECLARATIVE carrier/floorplan.json
     (the same spec build_plan pins blocks from); a connector sheet pinned to an
     INTERIOR slot, or absent from the spec, is reported (the placement_mech gate
     then HARD-FAILS it — an off-board connector that is not on an edge is
-    unbuildable). Deterministic: the spec is read once and keyed by sheet name."""
-    from schgen.generate.floorplan import FLOORPLAN_SPEC, load_floorplan_spec
+    unbuildable). Deterministic: the spec is read once and keyed by sheet name.
+    ``spec`` may be INJECTED (T1 P4, IM1 — candidate-edit evaluation without a
+    file write); default None reads the file exactly as before."""
     out: dict[str, str] = {}
-    if not FLOORPLAN_SPEC.exists():
-        return out
-    try:
-        spec = load_floorplan_spec()
-    except Exception:  # noqa: BLE001 — a malformed spec is reported by build_plan
-        return out
+    if spec is None:
+        from schgen.generate.floorplan import FLOORPLAN_SPEC, load_floorplan_spec
+        if not FLOORPLAN_SPEC.exists():
+            return out
+        try:
+            spec = load_floorplan_spec()
+        except Exception:  # noqa: BLE001 — a malformed spec is reported by build_plan
+            return out
     if spec is None:
         return out
     return dict(spec.edge_of)
 
 
-def _downstream_facing(sheet: str, contract: dict) -> str | None:
+def _downstream_facing(sheet: str, contract: dict, spec=None) -> str | None:
     """The zone-LOCAL direction (N/E/S/W) the contract's declared DOWNSTREAM zone
     lies in, for the stage-template FACING turn (Unit 3). Deterministic, derived
     from the DECLARATIVE carrier/floorplan.json (the same spec build_plan reads) —
@@ -505,13 +508,14 @@ def _downstream_facing(sheet: str, contract: dict) -> str | None:
     ext = contract.get("external") or {}
     if not ext.get("downstream"):
         return None
-    from schgen.generate.floorplan import FLOORPLAN_SPEC, load_floorplan_spec
-    if not FLOORPLAN_SPEC.exists():
-        return None
-    try:
-        spec = load_floorplan_spec()
-    except Exception:  # noqa: BLE001 — a malformed spec is reported by build_plan
-        return None
+    if spec is None:
+        from schgen.generate.floorplan import FLOORPLAN_SPEC, load_floorplan_spec
+        if not FLOORPLAN_SPEC.exists():
+            return None
+        try:
+            spec = load_floorplan_spec()
+        except Exception:  # noqa: BLE001 — malformed spec reported by build_plan
+            return None
     if spec is None:
         return None
     _OPP = {"N": "S", "S": "N", "E": "W", "W": "E"}
@@ -527,11 +531,15 @@ def _downstream_facing(sheet: str, contract: dict) -> str | None:
     return _OPP[side]                     # interior/downstream = opposite the edge
 
 
-def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
+def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
     """The SHARED packer: for every non-SoM subsystem, its REAL 2-sided packed
     zone (w, h) + per-part offsets, keyed on the STABLE board-unique refs. Built
     from the subsystem circuits (no dependence on the emitted root schematic), so
-    `schgen floorplan` and `schgen board` get byte-identical geometry."""
+    `schgen floorplan` and `schgen board` get byte-identical geometry.
+
+    ``spec`` (T1 P4, IM1): an injected FloorplanSpec for candidate-edit
+    evaluation — edge assignment + facing derivation use it instead of
+    re-reading carrier/floorplan.json; default None is byte-identical."""
     import json as _json
 
     from schgen.core.link import all_subsystem_paths, load_subsystem
@@ -555,7 +563,7 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
     # LAW 6: off-board connector refs per sheet + their MPN (for the rotation).
     conn_mpn_of: dict[str, str] = {}    # bref -> mating-face MPN
 
-    sheet_edge = _connector_sheet_edges()    # sheet -> board edge (from the spec)
+    sheet_edge = _connector_sheet_edges(spec)  # sheet -> board edge (spec)
 
     for i, sc in enumerate(sheets, start=1):
         if sc.name.startswith("som_j") or sc.name == "som_decoupling":
@@ -653,7 +661,7 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
             # passes. Derived from the floorplan (below) without needing the final
             # plan positions (the turn is bbox-preserving, so it does not perturb
             # the block size the plan is about to commit to).
-            _facing = _downstream_facing(sheet, _contract)
+            _facing = _downstream_facing(sheet, _contract, spec)
             _tmpl = stage_templates.build_zone(
                 sheet, _contract, refs_by_sheet[sheet], side_of, bbox_of,
                 resolvable, tmpl_rot, facing=_facing)
@@ -706,7 +714,29 @@ def subsystem_zone_geometry(two_side: bool = True) -> ZoneGeom:
 
 # ---- the model build -------------------------------------------------------------
 
-def build_model(two_side: bool = True) -> PcbModel:
+def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
+                  ) -> tuple[float, float, float, float]:
+    """SoM module-body CORE rectangle (KiCad page frame, NO halo) — the
+    rectangle the plugged-in SoM physically covers, grown SOM_CORE_CLEARANCE
+    (3%, 1.5% each side, centred) beyond the bare DF40 body span so the silk
+    outline + the keepout reserve a mating-clearance margin around the module
+    (user request). The placement_mech gate forbids any non-passive/test-point/
+    tall part inside it AND any carrier TOP-side part (the SoM's own bottom
+    components occupy the standoff gap) — LAW 6.
+
+    ``som_x/som_y`` are the floorplan-frame top-left of the SoM body
+    (``plan.som_x/som_y``); the returned rect is page-frame (ORIGIN-shifted).
+    Extracted single-oracle kernel (T1 P1): ``build_model`` emits THIS rect as
+    ``model.som_core`` and the composition evaluator resolves ``@som`` through
+    the SAME function, so engine and gate geometry can never drift."""
+    ccx = som_w * SOM_CORE_CLEARANCE / 2
+    ccy = som_h * SOM_CORE_CLEARANCE / 2
+    return (ORIGIN_X + som_x - ccx, ORIGIN_Y + som_y - ccy,
+            ORIGIN_X + som_x + som_w + ccx,
+            ORIGIN_Y + som_y + som_h + ccy)
+
+
+def build_model(two_side: bool = True, spec=None) -> PcbModel:
     from schgen.core.link import (
         all_subsystem_paths,
         link,
@@ -740,7 +770,7 @@ def build_model(two_side: bool = True) -> PcbModel:
     # and the PCB zone (w, h) are byte-identical -> the placement lands inside the
     # floorplan block and FLOORPLAN.svg agrees with the PCB ratsnest by
     # construction (no more 235x215-vs-165x155 divergence).
-    zg = subsystem_zone_geometry(two_side=two_side)
+    zg = subsystem_zone_geometry(two_side=two_side, spec=spec)
     zone_box = zg.zone_box
     top_off = zg.top_off
     bot_off = zg.bot_off
@@ -778,7 +808,7 @@ def build_model(two_side: bool = True) -> PcbModel:
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     link_result = link(sheets, load_som_contract())
     regs = powertree.analyze(sheets).regs
-    plan = fp.build_plan(sheets, link_result, regs)
+    plan = fp.build_plan(sheets, link_result, regs, spec=spec)
     classes, netclass_of = _net_classes(sheets)
     board_w, board_h = fp.BOARD_W, fp.BOARD_H
 
@@ -969,7 +999,21 @@ def build_model(two_side: bool = True) -> PcbModel:
         DISP_CAP_L4 = 5.0          # conservative; LAW-5 gate fails only at 9.0x
         EDGE_MARGIN = 0.6          # keep shifted copper this far inside Edge.Cuts
         STEP = 1.0
+        # T1 P5 (decision D-2): participants of WIRED flow/near_max/facing
+        # contract terms are L4-EXEMPT — their emitted geometry must be
+        # PREDICTABLE from the floorplan pose (the composition legalizer's
+        # windows are built on that prediction; measured pre-P5: L4 moved
+        # pd_input's centroid 10.8 mm and power_som's 23 mm AFTER the pose,
+        # which is exactly the evaluator blindness D-2 closes). far-only
+        # participants (ethernet) KEEP L4 and carry FAR_L4_GUARD_MM in the
+        # evaluator instead. Lazy import (generate <-> verify house pattern).
+        from schgen.verify.placement_contract_gate import (
+            wired_term_participants,
+        )
+        _l4_exempt, _far_only = wired_term_participants()
         for sheet in sorted(zorigin):
+            if sheet in _l4_exempt:
+                continue           # T1 P5: emit-faithful wired-term participant
             movers = [r for r in bot_off.get(sheet, {})
                       if side_of.get(r) == "bottom" and r in pos
                       and r[:1] in ("R", "C", "L")
@@ -1094,18 +1138,7 @@ def build_model(two_side: bool = True) -> PcbModel:
             n_top += 1
 
     kx0, ky0, kx1, ky1 = keepout
-    # SoM module-body CORE (board page frame, NO halo) — the rectangle the
-    # plugged-in SoM physically covers. Grown SOM_CORE_CLEARANCE (3%, 1.5% each
-    # side, centred) beyond the bare DF40 body span so the silk outline + the
-    # keepout reserve a mating-clearance margin around the module (user request).
-    # The placement_mech gate forbids any non-passive/test-point/tall part inside
-    # it AND any carrier TOP-side part (the SoM's own bottom components occupy the
-    # standoff gap) — LAW 6.
-    _ccx = som.w * SOM_CORE_CLEARANCE / 2
-    _ccy = som.h * SOM_CORE_CLEARANCE / 2
-    som_core = (ORIGIN_X + plan.som_x - _ccx, ORIGIN_Y + plan.som_y - _ccy,
-                ORIGIN_X + plan.som_x + som.w + _ccx,
-                ORIGIN_Y + plan.som_y + som.h + _ccy)
+    som_core = som_core_rect(plan.som_x, plan.som_y, som.w, som.h)
     model = PcbModel(
         board_w=board_w, board_h=board_h, insts=insts,
         net_numbers=net_numbers, netclass_of=netclass_of, classes=classes,

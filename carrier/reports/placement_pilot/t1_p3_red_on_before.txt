@@ -1,0 +1,14 @@
+
+schgen/tests/test_floorplan_pull.py:129: AssertionError
+=========================== short test summary info ============================
+FAILED schgen/tests/test_floorplan_pull.py::test_pull_parses - schgen.generat...
+FAILED schgen/tests/test_floorplan_pull.py::test_pull_nonpositive_weight_rejected
+FAILED schgen/tests/test_floorplan_pull.py::test_pull_missing_basis_rejected
+FAILED schgen/tests/test_floorplan_pull.py::test_pull_unknown_target_rejected
+FAILED schgen/tests/test_floorplan_pull.py::test_pull_inboard_requires_edge_target
+FAILED schgen/tests/test_floorplan_pull.py::test_pull_exclusive_requires_matching_near
+FAILED schgen/tests/test_floorplan_pull.py::test_pull_bad_face_rejected - Ass...
+FAILED schgen/tests/test_floorplan_pull.py::test_spec_without_pull_still_parses
+FAILED schgen/tests/test_floorplan_pull.py::test_edge_seat_blocks_hack_is_gone
+FAILED schgen/tests/test_floorplan_pull.py::test_carrier_spec_carries_the_usb_pd_pull
+10 failed, 1 passed in 0.28s

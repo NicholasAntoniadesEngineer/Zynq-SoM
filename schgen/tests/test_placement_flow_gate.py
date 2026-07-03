@@ -286,3 +286,64 @@ def test_flow_gate_runs_on_the_real_board(_real_model):
     assert res.flow_checked >= 2, res.summary()
     assert res.facing_checked >= 1, res.summary()
     assert res.far_checked >= 1, res.summary()
+
+
+# ---------------------------------------------------------------------------
+# (3) T1 P1 — single-oracle metric kernels (identity: kernel == gate report)
+# ---------------------------------------------------------------------------
+
+def test_flow_budget_kernel_matches_gate_report():
+    """IDENTITY: the published ``flow_budget`` kernel computes EXACTLY the
+    budget the gate reports (``flow_budget_mm``) — with and without a placed
+    SoM core. The composition engine recomputes per-candidate budgets through
+    this kernel, so any drift here is an engine/gate split-brain."""
+    m = _model([_zone("usb_pd", 20.0, 20.0), _zone("power", 40.0, 30.0)])
+    res = g.check(m, contracts={"power": _flow_contract()})
+    assert res.flow_budget_mm == round(
+        g.flow_budget(m.board_w, m.board_h, m.som_core), 4), res.summary()
+
+    m2 = _model([_zone("usb_pd", 20.0, 20.0), _zone("power", 40.0, 30.0)])
+    m2.som_core = (60.0, 60.0, 111.0, 103.0)
+    res2 = g.check(m2, contracts={"power": _flow_contract()})
+    assert res2.flow_budget_mm == round(
+        g.flow_budget(m2.board_w, m2.board_h, m2.som_core), 4), res2.summary()
+    assert res2.flow_budget_mm > res.flow_budget_mm   # SoM detour widens
+
+
+def test_facing_dot_kernel_matches_gate_detail():
+    """IDENTITY: ``facing_dot`` reproduces the dot/angle the FACING check
+    prints in its detail line."""
+    dot, angle = g.facing_dot((10.0, 10.0), (12.0, 10.0), (20.0, 10.0))
+    assert dot > 0.0 and angle == 0.0
+    dot2, angle2 = g.facing_dot((10.0, 10.0), (8.0, 10.0), (20.0, 10.0))
+    assert dot2 < 0.0 and angle2 == 180.0
+    # degenerate zero-length output vector reports 180 (the gate's convention)
+    _d3, a3 = g.facing_dot((10.0, 10.0), (10.0, 10.0), (20.0, 10.0))
+    assert a3 == 180.0
+
+
+def test_bbox_gap_public_and_aliases_are_same_objects():
+    """The pre-P1 private names remain bound to the SAME function objects (no
+    fork, no drift; back-compat only)."""
+    assert g._bbox_gap is g.bbox_gap
+    assert g._zone_centroids is g.zone_centroids
+    assert g._zone_bboxes is g.zone_bboxes
+    assert g.bbox_gap((0, 0, 1, 1), (3, 0, 4, 1)) == 2.0
+    assert g.bbox_gap((0, 0, 2, 2), (1, 1, 3, 3)) == 0.0   # overlap -> 0
+
+
+def test_som_core_rect_kernel_matches_build_model_arithmetic():
+    """IDENTITY: ``som_core_rect`` reproduces the exact som_core arithmetic
+    build_model used inline pre-P1 (ORIGIN shift + 3% centred growth)."""
+    from schgen.generate.pcb.constants import (
+        ORIGIN_X,
+        ORIGIN_Y,
+        SOM_CORE_CLEARANCE,
+    )
+    from schgen.generate.pcb.placement import som_core_rect
+    sx, sy, sw, sh = 59.5, 54.0, 51.0, 43.0
+    ccx = sw * SOM_CORE_CLEARANCE / 2
+    ccy = sh * SOM_CORE_CLEARANCE / 2
+    assert som_core_rect(sx, sy, sw, sh) == (
+        ORIGIN_X + sx - ccx, ORIGIN_Y + sy - ccy,
+        ORIGIN_X + sx + sw + ccx, ORIGIN_Y + sy + sh + ccy)

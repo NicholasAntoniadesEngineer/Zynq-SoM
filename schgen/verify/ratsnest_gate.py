@@ -101,6 +101,13 @@ class RatsnestResult:
         return "\n".join(L)
 
 
+def dispersion_by_sheet(res: RatsnestResult) -> dict[str, float]:
+    """{sheet: dispersion} from a computed :class:`RatsnestResult` — the T1
+    composition ledger's per-sheet scalar view of the SAME numbers the summary
+    prints (additive helper; the gate verdict/summary are unchanged)."""
+    return {name: disp for name, _n, _area, disp in res.clusters}
+
+
 def check(model: PcbModel) -> RatsnestResult:
     res = RatsnestResult(board_w=model.board_w, board_h=model.board_h)
     bx0, by0 = ORIGIN_X, ORIGIN_Y

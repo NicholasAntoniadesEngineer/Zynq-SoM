@@ -632,6 +632,14 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         # (power chain adjacency, output facing downstream, analog moat) checked
         # on the whole placed board (zone centroids). HARD.
         result["placement_flow"] = placement_flow_gate.check(model)
+        # T1 COMPOSITION term ledger (ADVISORY, P2): every authored external
+        # term — wired or not — measured on the SAME model via the gate's own
+        # kernels, plus the D13 channel-demand table. A report, never a gate
+        # (decision D-5: the hard gates above remain the sole arbiters);
+        # ``schgen board`` writes it to reports/floorplan_composition.txt.
+        from schgen.generate import floorplan_compose
+        result["floorplan_composition"] = floorplan_compose.compose_report(
+            model)
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result

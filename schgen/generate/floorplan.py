@@ -47,16 +47,13 @@ FLOORPLAN_SPEC = REPO_ROOT / "carrier" / "floorplan.json"
 
 _EDGES = ("N", "E", "S", "W")
 
-# EDGE-SEAT override (Decision D11) — the NAMED interior blocks whose explicit
-# floorplan ``{"near": <edge connector>}`` anchor must WIN over the net-affinity
-# pull, so the block seats adjacent to its connector instead of drifting to the
-# board centre with its shared rails. Scoped to exactly these names (usb_pd: the
-# FUSB302 PD PHY must sit at its Type-C receptacle to keep the CC net short — its
-# near_max/flow terms). ``_EDGE_SEAT_ZONE_W`` is the zone-anchor weight used for
-# them (large enough to dominate the powered affinity sum); their SoM pull is
-# dropped. Keep this set MINIMAL — widening it re-quantises other blocks' seats.
-_EDGE_SEAT_BLOCKS: frozenset[str] = frozenset({"usb_pd"})
-_EDGE_SEAT_ZONE_W = 60.0
+# The edge-seat override (Decision D11) is now SPEC DATA: an interior entry in
+# carrier/floorplan.json may carry a validated ``pull`` knob (T1 P3, decision
+# D-1 — seat authority lives in the reviewed JSON, not a code constant). An
+# EXCLUSIVE pull replaces the old ``_EDGE_SEAT_BLOCKS`` hack verbatim (zone
+# weight = pull.weight, SoM pull dropped, anchor aimed at the pulled edge
+# block's inboard face); a non-exclusive pull adds ONE weighted point to the
+# anchor accumulation. Schema + invariants: ``load_floorplan_spec``.
 
 # Board outline — DERIVED, not hardcoded. ``derive_outline`` (below) computes
 # BOARD_W/BOARD_H from the SoM footprint + the edge-connector depths + the
@@ -455,6 +452,8 @@ class Block:
     order_hint: int | None = None  # spec-pinned slot ALONG the edge (overrides
                                    # the auto J-affinity sort when not None)
     pinned: bool = False          # placed by carrier/floorplan.json (vs auto)
+    pull: dict | None = None      # validated floorplan.json pull knob (T1 P3):
+                                  # {"to","weight","face","exclusive","basis"}
 
     @property
     def cx(self) -> float:
@@ -518,7 +517,10 @@ class FloorplanSpec:
                    The list ORDER is the order ALONG the edge (N/S left->right,
                    W/E top->bottom), overriding the auto J-affinity sort.
     ``interior`` : subsystem -> {"side": N/E/S/W} or {"near": <subsystem>} —
-                   the anchor the interior packer pulls the block toward.
+                   the anchor the interior packer pulls the block toward —
+                   optionally + {"pull": {to, weight, face, exclusive, basis}}
+                   (T1 P3: the validated seat-authority knob; see
+                   ``_validate_pull``).
     Every other subsystem (not named anywhere) keeps the auto-derivation, so the
     spec is optional and incremental. ``edge_of`` / ``edge_order`` / ``anchor_of``
     are the flat lookups build_plan consumes. Deterministic: the spec is read
@@ -551,6 +553,79 @@ class FloorplanSpec:
 
 class FloorplanSpecError(ValueError):
     """A malformed carrier/floorplan.json — reported with the offending key."""
+
+
+def _validate_pull(path: Path, name: str, anchor: dict,
+                   edges: dict[str, tuple[str, ...]],
+                   valid_names: set[str] | None) -> None:
+    """Validate one interior entry's ``pull`` knob (T1 P3, decision D-1).
+
+    Schema: ``{"to": <existing block>, "weight": >0, "face":
+    "inboard"|"center" (default center), "exclusive": bool (default false),
+    "basis": non-empty}``. Invariants (each a loud FloorplanSpecError, never a
+    silent mis-anchor):
+      - unknown keys rejected (a typo must fail the build);
+      - ``exclusive`` requires the entry's ``near`` anchor to BE ``pull.to``
+        AND ``pull.to`` to sit on an edge list — the exact precondition of the
+        packer's edge-seat branch, so an exclusive pull can never silently do
+        nothing;
+      - ``face: inboard`` aims at an edge block's inner face — meaningless for
+        an interior target, so it too requires ``pull.to`` on an edge list;
+      - one pull per block (the dict shape enforces it)."""
+    pull = anchor["pull"]
+    if not isinstance(pull, dict):
+        raise FloorplanSpecError(
+            f"{path.name}: interior[{name!r}].pull must be an object")
+    allowed = {"to", "weight", "face", "exclusive", "basis"}
+    if set(pull) - allowed:
+        raise FloorplanSpecError(
+            f"{path.name}: interior[{name!r}].pull unknown key(s) "
+            f"{sorted(set(pull) - allowed)} (allowed: {sorted(allowed)})")
+    for req in ("to", "weight", "basis"):
+        if req not in pull:
+            raise FloorplanSpecError(
+                f"{path.name}: interior[{name!r}].pull requires {req!r} "
+                f"(weight/basis make the seat auditable)")
+    to = pull["to"]
+    if not isinstance(to, str) or (valid_names is not None
+                                   and to not in valid_names):
+        raise FloorplanSpecError(
+            f"{path.name}: interior[{name!r}].pull.to references unknown "
+            f"subsystem {to!r}")
+    try:
+        weight = float(pull["weight"])
+    except (TypeError, ValueError) as exc:
+        raise FloorplanSpecError(
+            f"{path.name}: interior[{name!r}].pull.weight must be a number"
+        ) from exc
+    if weight <= 0:
+        raise FloorplanSpecError(
+            f"{path.name}: interior[{name!r}].pull.weight must be > 0 "
+            f"(got {weight:g})")
+    face = pull.get("face", "center")
+    if face not in ("inboard", "center"):
+        raise FloorplanSpecError(
+            f"{path.name}: interior[{name!r}].pull.face must be "
+            f"\"inboard\" or \"center\" (got {face!r})")
+    basis = pull.get("basis")
+    if not isinstance(basis, str) or not basis.strip():
+        raise FloorplanSpecError(
+            f"{path.name}: interior[{name!r}].pull.basis must be a non-empty "
+            f"string (LAW 7: every seat carries its why)")
+    edge_names = {n for names in edges.values() for n in names}
+    if face == "inboard" and to not in edge_names:
+        raise FloorplanSpecError(
+            f"{path.name}: interior[{name!r}].pull.face=\"inboard\" requires "
+            f"pull.to {to!r} to be on an edge list (an interior block has no "
+            f"inboard face)")
+    if bool(pull.get("exclusive", False)):
+        if anchor.get("near") != to or to not in edge_names:
+            raise FloorplanSpecError(
+                f"{path.name}: interior[{name!r}].pull.exclusive requires "
+                f"the entry's \"near\" anchor to be pull.to ({to!r}) AND "
+                f"{to!r} to be an edge block — the packer's edge-seat branch "
+                f"fires only on that anchor, so a mismatched exclusive pull "
+                f"would silently do nothing")
 
 
 def load_floorplan_spec(path: Path = FLOORPLAN_SPEC,
@@ -633,10 +708,10 @@ def load_floorplan_spec(path: Path = FLOORPLAN_SPEC,
                 f"{path.name}: interior[{name!r}] must be an object "
                 f"(\"side\" or \"near\")")
         keys = set(anchor)
-        if keys - {"side", "near"}:
+        if keys - {"side", "near", "pull"}:
             raise FloorplanSpecError(
-                f"{path.name}: interior[{name!r}] only \"side\" or \"near\" "
-                f"are allowed (got {sorted(keys)})")
+                f"{path.name}: interior[{name!r}] only \"side\", \"near\" or "
+                f"\"pull\" are allowed (got {sorted(keys)})")
         if "side" in anchor and anchor["side"] not in _EDGES:
             raise FloorplanSpecError(
                 f"{path.name}: interior[{name!r}].side must be N/E/S/W")
@@ -649,11 +724,15 @@ def load_floorplan_spec(path: Path = FLOORPLAN_SPEC,
                 raise FloorplanSpecError(
                     f"{path.name}: interior[{name!r}].near references unknown "
                     f"subsystem {tgt!r}")
+        if "pull" in anchor:
+            _validate_pull(path, name, anchor, edges, valid_names)
         seen[name] = "interior"
         interior[name] = dict(anchor)
 
     return FloorplanSpec(outline=outline, edges=edges, interior=interior,
-                         source=str(path.relative_to(REPO_ROOT)))
+                         source=str(path.relative_to(REPO_ROOT)
+                                    if path.is_relative_to(REPO_ROOT)
+                                    else path))
 
 
 def export_floorplan_spec(plan: Plan, path: Path = FLOORPLAN_SPEC) -> Path:
@@ -685,6 +764,8 @@ def export_floorplan_spec(plan: Plan, path: Path = FLOORPLAN_SPEC) -> Path:
             interior[b.name] = {"side": b.zone}
         else:
             interior[b.name] = {"side": "E"}   # default cluster side
+        if b.pull:
+            interior[b.name]["pull"] = dict(b.pull)   # round-trip the knob
 
     spec = {
         "outline": "auto",
@@ -914,7 +995,8 @@ def _zone_anchor(plan: Plan, zone: str) -> tuple[float, float]:
     }[zone]
 
 
-def build_plan(sheets, link_result, regs) -> Plan:
+def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
+               ) -> Plan:
     som = extract_som()
     # DERIVE the outline FIRST, then rebind the module globals so every
     # consumer downstream (Plan.__init__, the packer, the SVG/MD, the PCB
@@ -932,8 +1014,12 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # under an edge is PINNED to that edge in the listed order; an interior entry
     # sets its anchor. Everything else keeps the auto-derivation below. The spec
     # is validated against the real sheet names here, so a typo FAILS the build.
+    # ``spec`` may be INJECTED (T1 P4 spec-injection, IM1: the compose driver
+    # evaluates candidate SpecEdits without touching the file); the default
+    # None path reads carrier/floorplan.json exactly as before (byte-identical).
     valid_names = {sc.name for sc in sheets if not sc.name.startswith("som_j")}
-    spec = load_floorplan_spec(valid_names=valid_names)
+    if spec is None:
+        spec = load_floorplan_spec(valid_names=valid_names)
     spec_edge_of = spec.edge_of if spec else {}
     spec_edge_order = spec.edge_order if spec else {}
     spec_interior = spec.interior if spec else {}
@@ -997,6 +1083,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
         sp = spec_interior.get(b.name)
         if sp is not None:
             b.pinned = True
+            b.pull = sp.get("pull")
             if "near" in sp:
                 b.zone = f"@{sp['near']}"
             else:
@@ -1063,7 +1150,7 @@ def build_plan(sheets, link_result, regs) -> Plan:
     # keeps the floorplan importable without the PCB module's heavier deps and
     # avoids a circular import (pcb imports floorplan for build_plan).
     from schgen.generate import pcb as _pcb
-    zg = _pcb.subsystem_zone_geometry(two_side=True)
+    zg = _pcb.subsystem_zone_geometry(two_side=True, spec=spec)
     zbox = dict(zg.zone_box)
     # a block with no packed zone (a reservation-only deferred-connector block,
     # or the mounting-holes-only `mechanical` sheet whose holes are corner-forced
@@ -1472,45 +1559,53 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         else:
             zax, zay = _zone_anchor(
                 plan, b.zone if b.zone in ("N", "E", "S", "W") else "E")
-        # ZONE-ANCHOR OVERRIDE for usb_pd ONLY (Decision D11, flagged loudly).
-        # usb_pd shares VDD/VBUS/CC/I2C/INT nets with power + the SoM, so its
-        # net-affinity centroid drags the PD PHY to the board CENTRE — ~25 mm off
-        # its pd_input receptacle and over the usb_pd->power flow budget once the
-        # proximity-cluster template tightened its zone. That violates its
-        # CITED-intent CC-run rule (near_max, now the D11 edge-gap metric) AND the
-        # flow budget. The datasheet-true fix is to seat the PHY at its receptacle;
-        # here that means letting the explicit floorplan ``{"near": "pd_input"}``
-        # anchor WIN over the net pull for THIS block. We raise usb_pd's zone weight
-        # to dominate + drop its SoM pull, and aim the anchor at pd_input's
-        # INTERIOR-facing edge (just inboard of the connector, toward power) rather
-        # than its centroid — so usb_pd seats snug UNDER the receptacle (near_max
-        # gap small) AND toward the board interior where power lives (flow budget
-        # met), resolving the pd_input<->power tug that the centroid anchor could
-        # not. Scoped to the ONE named block — every other interior block's anchor
-        # (and thus board-identity) is unchanged. If a future subsystem needs the
-        # same, promote this to a spec-level pull knob rather than widening the set.
-        if b.name in _EDGE_SEAT_BLOCKS and b.zone.startswith("@") \
-                and b.zone[1:] in edge_pos:
-            zw, sp = _EDGE_SEAT_ZONE_W, 0.0
+        # ZONE-ANCHOR PULL OVERRIDE (Decision D11 -> T1 P3 spec knob). An
+        # EXCLUSIVE pull (validated in load_floorplan_spec: near == pull.to ==
+        # an edge block) makes the explicit floorplan anchor WIN over the
+        # net-affinity pull: zone weight = pull.weight (dominates the powered
+        # affinity sum), the SoM pull is dropped, and with face="inboard" the
+        # anchor aims just INBOARD of the pulled connector body so the block
+        # tucks against the receptacle's inner face, toward the board interior
+        # (usb_pd: the FUSB302 PD PHY seats at its Type-C inlet — its CITED
+        # CC-run near_max + the flow budget). The old code-constant hack
+        # (_EDGE_SEAT_BLOCKS/_EDGE_SEAT_ZONE_W) is GONE — the seat authority
+        # is the reviewed carrier/floorplan.json (D-1); geometry unchanged.
+        pull = b.pull
+        exclusive = bool(pull and pull.get("exclusive", False))
+        if exclusive and b.zone.startswith("@") and b.zone[1:] in edge_pos:
+            zw, sp = float(pull["weight"]), 0.0
             eb2 = edge_pos[b.zone[1:]]
             edge = getattr(eb2, "edge", "")
-            # aim just INBOARD of the connector body (interior direction) so the
-            # block tucks against the receptacle's inner face, not off to a side.
-            if edge == "N":
-                zax, zay = eb2.cx, eb2.y + eb2.h + b.h / 2
-            elif edge == "S":
-                zax, zay = eb2.cx, eb2.y - b.h / 2
-            elif edge == "W":
-                zax, zay = eb2.x + eb2.w + b.w / 2, eb2.cy
-            elif edge == "E":
-                zax, zay = eb2.x - b.w / 2, eb2.cy
-            # else: keep the centroid (zax, zay already set above)
+            if pull.get("face", "center") == "inboard":
+                # aim just INBOARD of the connector body (interior direction)
+                if edge == "N":
+                    zax, zay = eb2.cx, eb2.y + eb2.h + b.h / 2
+                elif edge == "S":
+                    zax, zay = eb2.cx, eb2.y - b.h / 2
+                elif edge == "W":
+                    zax, zay = eb2.x + eb2.w + b.w / 2, eb2.cy
+                elif edge == "E":
+                    zax, zay = eb2.x - b.w / 2, eb2.cy
+                # else: keep the centroid (zax, zay already set above)
+            # face == "center": keep the block centroid (zax, zay already set)
         else:
             zw = ZONE_W
             sp = SOM_W * max(som_pull.get(b.name, 0.0), 0.0)
         wsum = zw + sp
         ax = zw * zax + sp * som_cx
         ay = zw * zay + sp * som_cy
+        # NON-exclusive pull: ONE weighted point at the pull target's centre
+        # joins the accumulation (a tuning nudge, not a seat override). The
+        # target must already be placed (edge blocks always are; an interior
+        # target placed later this pass contributes nothing yet — documented,
+        # deterministic).
+        if pull and not exclusive:
+            pt = centers.get(pull["to"])
+            if pt is not None:
+                pw = float(pull["weight"])
+                ax += pw * pt[0]
+                ay += pw * pt[1]
+                wsum += pw
         for nb, w in affinity.get(b.name, {}).items():
             if nb in centers:
                 ncx, ncy = centers[nb]
@@ -1523,13 +1618,14 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     # place the most-connected (and, as a tiebreak, the largest) interior block
     # first, so the hub subsystems anchor near the SoM and pull the rest in —
     # this is what keeps the cross-subsystem airwire under the LAW-5 budget.
-    # EDGE-SEAT blocks (usb_pd, D11) are placed FIRST — before the big interior
-    # blocks (fmc, ...) fill the area behind their connector — so they can claim
-    # the cell snug against their receptacle (the near_max/flow requirement). Then
-    # the rest in connectivity order (most-connected first, the LAW-5 lever).
+    # EXCLUSIVE-pull blocks (usb_pd, D11 — the spec knob, T1 P3) are placed
+    # FIRST — before the big interior blocks (fmc, ...) fill the area behind
+    # their connector — so they can claim the cell snug against their
+    # receptacle (the near_max/flow requirement). Then the rest in
+    # connectivity order (most-connected first, the LAW-5 lever).
     order = sorted(
         interior,
-        key=lambda b: (0 if b.name in _EDGE_SEAT_BLOCKS else 1,
+        key=lambda b: (0 if (b.pull and b.pull.get("exclusive", False)) else 1,
                        -_conn(b),
                        -(zbox[b.name][0] * zbox[b.name][1]), b.name))
     for b in order:

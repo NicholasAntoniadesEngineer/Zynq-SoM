@@ -123,6 +123,73 @@ def load_contract(sheet_name: str) -> dict | None:
     return discover_contract(sheet_name)
 
 
+def discover_all() -> dict[str, dict]:
+    """Every authored contract under both roots: sheet -> CONTRACT dict (T1 P5
+    thin helper; wired or not — discovery, no gating). Deterministic: sorted by
+    the subsystem discovery order's stems."""
+    from schgen.core.link import all_subsystem_paths
+    out: dict[str, dict] = {}
+    for p in sorted(all_subsystem_paths()):
+        c = discover_contract(p.stem)
+        if c is not None:
+            out[p.stem] = c
+    return out
+
+
+def wired_term_participants() -> tuple[frozenset[str], frozenset[str]]:
+    """(l4_exempt, l4_guarded) — the PER-KIND participants of the WIRED
+    sheets' external terms (T1 P5, decision D-2; partition REFINED at the
+    28f8e15 rebase — P5b).
+
+    ``l4_exempt`` (LEVER-L4 skips them; emitted geometry predictable from the
+    floorplan pose): participants of WIRED **near_max** terms — their windows
+    are GUARD_MM-tight, so mm-scale exactness is load-bearing — plus the
+    WIRED sheets themselves (their stage templates force contract members to
+    the top side, so their zones are THERMAL-VIA-FIELD-SAFE by construction;
+    measured: power kept 8/8 vias per buck under exemption).
+
+    ``l4_guarded`` (KEEP L4; the evaluator carries a measured per-sheet guard
+    from FAR_L4_GUARD_MM instead): every other hard-term participant — far
+    targets (ethernet) and un-templated flow/facing targets (power_som
+    today). REBASE FINDING (28f8e15, GAP1 copper): exempting the un-templated
+    power_som parked its bottom caps back inside the buck's DATASHEET
+    thermal-via field (U22004 dropped to 2/6 vias -> pour credit denied ->
+    thermal gate red at the bare 58.7 C/W, board FAIL). Until a sheet's own
+    wave lands its template (same_side override), its bottom cluster must
+    keep sliding clear of the via field — L4 does exactly that — and its
+    flow/facing budgets (123 mm / half-plane) tolerate the measured guard.
+    The sheet graduates to ``l4_exempt`` at its wiring wave (P7 for
+    power_som) — re-pin the participants test then.
+
+    The ``@som`` token is dropped (a fixed region, not a zone). Edge-pinned
+    sheets are NOT excluded: their POSE is fixed but their bottom passives
+    are L4-mobile (measured P2: pd_input centroid moved 10.8 mm under L4 —
+    the mobility that broke the usb_pd seat prediction; pd_input is
+    via-field-safe: its eFuse uses in-footprint EP via-pads, CD-03)."""
+    exempt: set[str] = set(_WIRED_SHEETS)
+    others: set[str] = set()
+    for sheet, c in sorted(discover_all().items()):
+        if sheet not in _WIRED_SHEETS:
+            continue
+        ext = c.get("external") or {}
+        for nm in ext.get("near_max", []):
+            exempt.add(sheet)
+            exempt.add(str(nm.get("other", "")).split(".", 1)[0])
+        flow = list(ext.get("flow", []))
+        for a, b in zip(flow, flow[1:], strict=False):
+            others.update((str(a).split(".", 1)[0],
+                           str(b).split(".", 1)[0]))
+        if ext.get("downstream") and ext.get("output_roles"):
+            others.add(sheet)
+            others.add(str(ext["downstream"]).split(".", 1)[0])
+        for far in ext.get("far", []):
+            others.add(sheet)
+            others.add(str(far.get("what", "")).split(".", 1)[0])
+    exempt.discard("@som")
+    others.discard("@som")
+    return frozenset(exempt), frozenset(others - exempt)
+
+
 # --- pad geometry (pad-edge-to-pad-edge) ------------------------------------------
 
 _pad_box_cache: dict[tuple[str, float, str], dict[str, tuple]] = {}
