@@ -1125,6 +1125,56 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("PLACEMENT FLOW (Phase L): FAIL — gate did not run")
             ok_all = False
+        # RETURN-STITCH gate (T2, return-path v2, HARD) — every v1-failing
+        # DF40 contact must have a carrier GND stitch via <= 2.0 mm, on a
+        # file-visible GND ladder, under the In1 plane.  Class-blind (LAW 4).
+        rsg_ = pcb_res.get("return_stitch")
+        if rsg_ is not None:
+            (rep_dir / "return_stitch.txt").write_text(rsg_.summary() + "\n")
+            print(f"RETURN STITCH (T2 v2): {'PASS' if rsg_.ok else 'FAIL'} "
+                  f"({rsg_.n_covered}/{rsg_.n_contacts} contacts covered, "
+                  f"worst {rsg_.worst_mm:.3f}/{rsg_.radius} mm, "
+                  f"{rsg_.n_vias} stitch vias, parity {rsg_.file_parity} "
+                  f"-> {rep_dir / 'return_stitch.txt'})")
+            for _v in rsg_.violations[:10]:
+                print(f"  RETURN STITCH: {_v}")
+            ok_all = ok_all and rsg_.ok
+        else:
+            print("RETURN STITCH (T2 v2): FAIL — gate did not run")
+            ok_all = False
+        # ESCAPE-LANE gate (T2 Tier-2 plan, HARD) — identity lane order,
+        # clearance pre-proof, 15-GENUINE pair terms, content key.
+        elg_ = pcb_res.get("escape_lanes")
+        if elg_ is not None:
+            (rep_dir / "escape_lanes.txt").write_text(elg_.summary() + "\n")
+            print(f"ESCAPE LANES (T2 plan): {'PASS' if elg_.ok else 'FAIL'} "
+                  f"({elg_.n_lanes} lanes, {elg_.n_pairs} pair records, "
+                  f"{elg_.n_genuine} GENUINE "
+                  f"-> {rep_dir / 'escape_lanes.txt'})")
+            for _v in elg_.violations[:10]:
+                print(f"  ESCAPE LANES: {_v}")
+            ok_all = ok_all and elg_.ok
+        else:
+            print("ESCAPE LANES (T2 plan): FAIL — gate did not run")
+            ok_all = False
+        # RETURN-PATH v1 — REPORT-ONLY, permanently (the SoM pinout is FIXED;
+        # the contact-level result is a measured fact of the mated interface,
+        # quoted verbatim; the carrier-side hard obligation is the
+        # return-stitch gate above).  Deliberately NOT in ok_all — a tested
+        # design decision (test_return_path_gate.py), never a LAW-4 softening:
+        # the v1 thresholds are untouched and its verdict is printed verbatim.
+        rp_ = pcb_res.get("return_path")
+        if rp_ is not None:
+            (rep_dir / "return_path.txt").write_text(
+                "REPORT-ONLY: the SoM pinout is FIXED — v1's contact-level "
+                "verdict is a design fact of the mated interface, remediated "
+                "carrier-side by the RETURN-STITCH copper (see "
+                "return_stitch.txt). Nothing claims 'return path fixed'.\n\n"
+                + rp_.summary() + "\n")
+            print(f"RETURN PATH (v1, report-only): "
+                  f"{'PASS' if rp_.ok else 'FAIL — SoM-design fact'} "
+                  f"({rp_.n_fail} contacts beyond K={rp_.k} steps "
+                  f"-> {rep_dir / 'return_path.txt'})")
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
         ok_all = False

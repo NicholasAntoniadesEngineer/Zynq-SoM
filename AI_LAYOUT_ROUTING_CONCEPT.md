@@ -876,3 +876,88 @@ unify to ONE convention + a guard test (no asymmetric/polarized bottom part unti
 unified) + re-run all pad-geometry gates. T2's union-of-conventions workaround is safe.
 **DFM rule adopted:** CLR_HOLE_SAMENET_PAD=0.10 (via-in-pad kills solder pads even
 same-net — T2's honest lattice found off-pad seats instead).
+
+### T2 ESCAPE wave LANDED (2026-07-02, worktree t2-escape) — D13 native entry
+**Deliverable: carrier escape-fanout return stitching.** Nothing here claims "return
+path fixed": v1 (return_path_gate, K=2) is RED BY MODULE DESIGN — the SoM pinout is
+fixed, 29 HS-capable contacts (J1=1, J2=28, J3=0; 8 GENUINE TMDS/HDMI_RX halves) have
+no ground contact within K=2 steps and no carrier copper can change that. v1 is now
+REPORT-only permanently (docstring codifies the two-gate split; pytest pins 69/138/29/4
+and asserts v1 is ABSENT from ok_all as a TESTED decision). The carrier-side HARD
+obligation is `return_stitch_gate` (v2): every v1-failing contact ≤ 2.0 mm from a
+carrier GND stitch via on a file-visible F.Cu ladder under the In1 GND plane — ANDed
+into ok_all, class-blind (triage orders, never waives).
+**Landed copper (derived live, stale-scalar law):** 8 stitch vias (J2=6, J1=2 incl.
+the judgment:2 redundancy partner), worst contact→via 1.7772 mm (construct bound 1.8,
+gate 2.0); F.Cu ladder = 2 spines + 5 pair-gap stubs (J2) + 2 single-pad stubs (J1) +
+1 via-stub; one In1.Cu GND zone (SoM keepout +2.0), emitted UNFILLED + `--refill-zones`
+at the two and only two DRC sites (P0 probe: kicad-cli 10.0.2 fills in memory, input
+hash unchanged; `(locked yes)` parses clean; project netclasses are the effective
+clearance authority — the manufacturing .kicad_dru is NOT auto-loaded).
+DRC ledger delta vs pre-wave board = 0 (errors 0, warnings by-type identical);
+build-twice byte-identical; byte-superset proven (pre-board == post-board minus
+appended nodes). One escalation fired and is ledgered: band 3 (8 contacts, TMDS)
+split at u=2.0 by the hdmi_rx_term B.Cu wall; the 3R seat lives at (2.60, 0.30)
+local via exact corner-distance windows the 0.05 lattice found.
+**Two-tier decision:** Tier-2 lane COPPER deferred to the routing phase (consumer
+named: Freerouting locked-preroute; ~270 asserted-dangling stubs would couple build
+health to kicad-cli warning semantics for zero gain). The PLAN is landed + HARD-gated
+today (`escape_lane_gate`): identity/monotonic ports, adjacent-lane clearance
+pre-proof, 15-GENUINE pair hard terms (same-row, |Δlane|≤2 — measured), netted pins
+93/100/100, poses-inclusive content_key. PLANES OWN POWER: power contacts are
+plane-escape records (bus-grouped runs), never 0.4-wide surface lanes at 0.4 pitch.
+**Port ledger:** carrier/escape_block.json (schema escape/v1) — 293 lanes, 40
+function-level PairRecs (v1's 69 is the interface-level HS-capable overcount over raw
+IO_L*_P/N names; both quoted), triage table, coexistence verdicts, and
+`t1_constraints.corridors`: 6 machine-readable escape-corridor rects (J1/J2/J3 × N/S)
+the T1 composition legalizer must keep clear — the D13 sidecar, consumable as-is.
+**F5 coexistence rule (data, never silent deletion):** bottom-shadow parts inside the
+escape region get STAY / CONSTRAINT / EVICT verdicts with basis strings.
+Today: som_decoupling + power_som = STAY (function); hdmi_rx_term R13001–R13008 =
+CONSTRAINT (their pads closed band-3's v=0 window and forced the split + v-nudged
+seats); EVICT list EMPTY — it fires only when a failing contact becomes
+unconstructable, and its named consumer is the queued bottom-channel-keepout unit.
+**Engine finding (for the placement/emission owners, F5-adjacent):** the in-process
+pad-box convention X-MIRRORS bottom footprints (placement_contract_gate._pad_boxes)
+but embed._flip_to_bottom emits local coordinates UNCHANGED and kicad-cli reads them
+unmirrored — DRC proved C22025 pad 1 [+VIN_SYS] lands at the model's pad-2 spot. For
+symmetric passives only the NET assignment swaps sides, so ratsnest/contract gates see
+mirrored nets on every bottom part. T2 works around it (obstacles = union of both
+conventions; netclass-aware clearances 0.15/0.2); the RECONCILIATION belongs to the
+engine owners — flagged, not silently fixed.
+**DFM finding:** a 0.3 mm drill centered in the 0.2 mm DF40 GND pair-gap would cut
+both solder-pad edges (via-in-pad on a fine-pitch connector = reflow wicking risk) —
+codified as CLR_HOLE_SAMENET_PAD = 0.10 (drill stays off ALL pad copper, same-net
+included; annulus overlap of same-net copper stays legal).
+**Queued follow-ons (each red-on-before, consumer named):** Tier-2 lane copper + full
+GND-cluster stitch (routing phase); bottom-channel keepout if a via window closes
+(consumer of EVICT verdicts); deterministic in-file In1 fill if the in-memory posture
+ever fails a probe; bottom-mirror emission reconciliation (engine owners).
+
+### T2 x GAP1 RECONCILIATION (2026-07-03, worktree t2-escape, base 28f8e15)
+Executed per Ring-0 direction. Interface decisions (flagged for review):
+1. **ONE In1 plane — GAP1's is canonical** (board-interior inset 0.5, thermal-relief
+   pads, clearance 0.3, ethernet ISO voids). T2 emits NO zone; escape.py now VERIFIES
+   the canonical plane covers the escape region (SoM keepout +2.0), that no ISO void
+   intersects it (fail-loud — live voids sit at J23001/T10001, far from the DF40s),
+   and the barrel precondition is scoped to that region. return_stitch_gate re-derives
+   the same plane/void geometry independently (vias in-plane, outside every void) and
+   file-parity asserts the canonical plane is in the written board.
+2. **Unified via emission — T2's builder is the general one**: embed._via_node is now
+   dict-driven (any size/drill/net, optional `(locked yes)`, caller-chosen uid key);
+   GAP1's thermal-via emission routes through it with locked=False + its original
+   `thvia:` uid keys — BYTE-IDENTICAL to the inline construction it replaces (proven:
+   the reconciled board is an exact byte-superset of GAP1's committed board + the 18
+   locked escape nodes). Segments: _segment_node (T2, sole user). Zones: GAP1's
+   _fill_zone family (T2's zone builder deleted). Thermal vias stay UNLOCKED (their
+   seats re-derive per placement); only the T2 escape preroute is locked.
+3. **CLR_HOLE_SAMENET_PAD single-sourced** from constants.py (GAP1 adopted the T2 DFM
+   rule board-wide; escape.py imports it).
+4. **Convention note:** GAP1 independently confirmed the bottom-mirror emission split
+   (their _pad_obstacles: "NO bottom mirror — pcbnew-verified") and uses unmirrored
+   obstacles; T2 keeps the UNION of both conventions for escape feasibility (safe
+   under either) until the engine owners reconcile the in-process gates that still
+   mirror (ratsnest/contract). Same physics, different conservatism — both documented.
+Re-verified on the merged tree: 29/29 covered, worst 1.7772 mm UNCHANGED against the
+merged plane, 8 vias + 10 segments, DRC errors 0 + warnings delta-0 vs the GAP1
+baseline, byte-superset of 28f8e15's board, emit-twice byte-identical, ruff green.

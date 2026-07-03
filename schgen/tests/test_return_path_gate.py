@@ -310,3 +310,58 @@ def test_real_board_runs_and_is_wellformed():
 
 def test_real_board_determinism_full():
     assert g.check().summary() == g.check().summary()
+
+
+# ---------------------------------------------------------------------------
+# T2 escape wave: pinned population scalars + the two-gate split (see the
+# module docstring "TWO-GATE SPLIT").
+# ---------------------------------------------------------------------------
+def test_real_board_pinned_scalars():
+    """The v1 population scalars are PINNED: the SoM pinout is fixed, so any
+    drift here means the mated interface moved and the escape stitching
+    (schgen/generate/pcb/escape.py) must be re-derived deliberately.  The
+    same pins live in return_stitch_gate.V1_PINNED — this test is the alarm,
+    the gate cross-check is the enforcement."""
+    res = g.check()
+    assert res.n_pairs == 69
+    assert res.n_pair_contacts == 138
+    assert res.n_fail == 29
+    assert res.worst_distance == 4
+    per = {r: fc for r, (_pc, fc) in res.per_conn.items()}
+    assert per == {"J1": 1, "J2": 28, "J3": 0}
+
+
+def test_v1_is_report_only_by_design():
+    """v1 is deliberately ABSENT from the board ok_all (report-only): its
+    contact-level verdict is a fact of the FIXED SoM pinout; the carrier-side
+    hard obligation is return_stitch_gate (which IS ANDed in).  This test
+    makes the exclusion a TESTED design decision, not a wiring accident that
+    could later read as LAW-4 softening — and proves the thresholds are
+    untouched and the verdict is still printed."""
+    from pathlib import Path
+    main_src = (Path(g.__file__).resolve().parents[1].parent
+                / "schgen" / "__main__.py").read_text()
+    # the v2 gate IS wired hard
+    assert 'pcb_res.get("return_stitch")' in main_src
+    assert "ok_all = ok_all and rsg_.ok" in main_src
+    # v1 is REPORTED (verbatim summary written) but never ANDed into ok_all
+    assert 'pcb_res.get("return_path")' in main_src
+    assert "rp_.summary()" in main_src
+    import re as _re
+    for line in main_src.splitlines():
+        if "ok_all" in line and "rp_" in line:
+            raise AssertionError(f"v1 wired into ok_all: {line!r}")
+    # the thresholds themselves are untouched (K fixed at 2, not a tunable)
+    assert g.K == 2
+    src = Path(g.__file__).read_text()
+    assert _re.search(r"^K = 2$", src, _re.M)
+
+
+def test_v2_gate_cross_check_matches_pins():
+    from schgen.verify import return_stitch_gate as rsg
+    assert rsg.V1_PINNED == {"n_pairs": 69, "n_pair_contacts": 138,
+                             "n_fail": 29, "worst_distance": 4}
+    res = g.check()
+    live = {"n_pairs": res.n_pairs, "n_pair_contacts": res.n_pair_contacts,
+            "n_fail": res.n_fail, "worst_distance": res.worst_distance}
+    assert live == rsg.V1_PINNED

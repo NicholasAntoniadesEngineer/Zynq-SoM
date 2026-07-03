@@ -1106,7 +1106,7 @@ def build_model(two_side: bool = True) -> PcbModel:
     som_core = (ORIGIN_X + plan.som_x - _ccx, ORIGIN_Y + plan.som_y - _ccy,
                 ORIGIN_X + plan.som_x + som.w + _ccx,
                 ORIGIN_Y + plan.som_y + som.h + _ccy)
-    return PcbModel(
+    model = PcbModel(
         board_w=board_w, board_h=board_h, insts=insts,
         net_numbers=net_numbers, netclass_of=netclass_of, classes=classes,
         placed=placed, deferred=deferred,
@@ -1114,3 +1114,11 @@ def build_model(two_side: bool = True) -> PcbModel:
                      ORIGIN_X + kx1, ORIGIN_Y + ky1),
         n_top=n_top, n_bottom=n_bottom, two_side=two_side,
         som_core=som_core)
+    # T2 escape wave: DF40 return-stitch copper + the Tier-2 lane plan,
+    # derived from the fully-placed model (function-level import — escape.py
+    # lazily imports the verify gates, which import this package; importing it
+    # here at module level would deadlock package init).
+    from .escape import build_escape_copper, build_escape_plan
+    model.copper, model.escape_meta = build_escape_copper(model)
+    model.escape_plan = build_escape_plan(model)
+    return model

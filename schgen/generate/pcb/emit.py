@@ -32,10 +32,12 @@ from .embed import (
     _gnd_plane_zone,
     _iso_void_zones,
     _layers_node,
+    _segment_node,
     _som_body_silk,
     _som_keepout_zone,
     _stackup_node,
     _thermal_copper_nodes,
+    _via_node,
 )
 from .footprint import board_parts
 from .placement import build_model
@@ -168,6 +170,23 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     # part's placed position) — appended after the text passes above, which
     # scan ``doc`` for footprint/label nodes only.
     doc.extend(thermal_vias)
+
+    # T2 escape copper (DF40 return stitching) — appended AFTER the footprint
+    # loop and after every silk pass so the segment/via nodes are invisible to
+    # the refdes/descriptor scans (dedicated transparency test).  Per-kind uids
+    # (stitch-via / stitch-seg) ride the existing uid() sequencer, so every
+    # pre-existing uuid stream stays byte-identical.  RECONCILED with GAP1
+    # (28f8e15): the In1.Cu GND plane is GAP1's board-interior zone above —
+    # the escape generator emits NO zone of its own; its vias LAND ON that
+    # plane (escape.py verifies coverage/void non-overlap; the return-stitch
+    # gate re-verifies independently).
+    for c in getattr(model, "copper", None) or []:
+        if c["kind"] == "via":
+            doc.append(_via_node(c, uid))
+        elif c["kind"] == "segment":
+            doc.append(_segment_node(c, uid))
+        else:  # pragma: no cover - generator emits only the two kinds
+            raise ValueError(f"unknown escape copper kind {c['kind']!r}")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(sexpr.dumps(doc) + "\n")
@@ -551,7 +570,29 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         "connector_model": None, "connector_spacing": None,
         "refdes_silk": None,
         "placement_contract": None, "placement_flow": None,
+        "return_stitch": None, "escape_lanes": None, "return_path": None,
     }
+    # T2 escape gates — return-stitch v2 (HARD) on the SAME model, with
+    # emitted-file parity against the .kicad_pcb just written; the escape-lane
+    # gate (HARD) on the Tier-2 plan; v1 return-path REPORT-only (the
+    # SoM-design fact, quoted verbatim in the board report — never in ok_all).
+    from schgen.verify import escape_lane_gate, return_path_gate, return_stitch_gate
+    result["return_stitch"] = return_stitch_gate.check(model, pcb_path)
+    result["escape_lanes"] = escape_lane_gate.check(model)
+    result["return_path"] = return_path_gate.check()
+    # the portable Tier-2 escape block artifact (ports + pairs + triage +
+    # the T1 composition-legalizer sidecar constraints), hash-keyed.
+    if model.escape_plan is not None:
+        block_path = CARRIER / "escape_block.json"
+        payload = dict(model.escape_plan)
+        payload["escape_meta"] = {
+            k: model.escape_meta.get(k)
+            for k in ("worst_cover_mm", "vias", "coverage_mm",
+                      "escape_region", "plane", "coexistence",
+                      "som_interface_sha256", "constants")}
+        block_path.write_text(json.dumps(payload, indent=1, sort_keys=True,
+                                         default=list) + "\n")
+        result["escape_block"] = block_path
     if ratsnest:
         from schgen.generate import ratsnest as rn_mod
         from schgen.verify import (

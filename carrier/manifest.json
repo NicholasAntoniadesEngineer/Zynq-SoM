@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "4f6a455e0158d359323923743f54b30e60f9729fe723c4d7774b91401dd9e311"
+      "sha256": "3ed54ba15f23446a6bff06c41646297680b1b5f7a85f5e59de50d2cfb2b99cec"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -102,11 +102,15 @@
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "9bd5d82f654e7390d1959691f48eeeea896c3982f770b4bccea77142fdc233af"
+      "sha256": "0bcba314ce6a7eecd86b1533042fd218572558050fb4b60df017eca6c8bd186e"
     },
     {
       "path": "reports/design_rules.txt",
       "sha256": "6b5cf9397056f5860b9b2e5139b4b7bd108a24f2081007adff6087ffd2d2c0ae"
+    },
+    {
+      "path": "reports/escape_lanes.txt",
+      "sha256": "6c46fc99883b8f40493dbe411dcfa65cb9810598fc0d150faec88202efa72565"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -151,6 +155,14 @@
     {
       "path": "reports/ratsnest.txt",
       "sha256": "7023c3bc93b5daecfd00b5fd0d621e10310deb843aba288e9b28e804d42b6e53"
+    },
+    {
+      "path": "reports/return_path.txt",
+      "sha256": "37c69a6c2548850f05c90f197d5e45ed70400ff3a703555f6133c6e849013106"
+    },
+    {
+      "path": "reports/return_stitch.txt",
+      "sha256": "d9d69182124d07a2086ebb35367ba747cbda36d4ed5693649ee8f79d35333ef5"
     },
     {
       "path": "reports/spice.txt",

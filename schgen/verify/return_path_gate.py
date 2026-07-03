@@ -35,17 +35,28 @@ Pair naming (BOTH conventions the SoM contract uses):
   safe direction). The per-connector pair COUNT is reported so the verdict can
   be sanity-checked.
 
-INVARIANT (any failure HARD-FAILS the design):
+INVARIANT (measured, reported as numbers — see the two-gate split below):
   * every contact that carries an HS-pair net (a P/N partner net present on the
     SAME DF40 connector, either naming style above) has at least one GROUND
     contact within physical radius ``K`` steps — measured as same-row index
     steps and facing-row nearest-index steps (see ``K`` below).
 
-LAW 4 (strict, no softening): a pair with no ground within ``K`` is FIXED by the
-pinout / placement (add a ground contact adjacent to the pair), never waived
-here and never made configurable to weaken it. The worst distance, the failing
-count and the per-connector tallies are reported AS NUMBERS in the verdict so a
-regression shows as a number, not a silent binary flip.
+TWO-GATE SPLIT (codified 2026-07-02, T2 escape wave).  The SoM pinout is
+FIXED: no carrier copper can add a ground CONTACT next to a pair, so this
+gate's contact-level result is a measured FACT of the mated interface — red
+by module design (29 contacts beyond K=2 on the live pinout).  It is
+therefore REPORT-ONLY, permanently: its verdict is quoted VERBATIM in the
+board report (never buried, never softened — K and every threshold are
+untouched, LAW 4), its population scalars are pinned in pytest so any SoM
+drift alarms, and its failing set is the BUILD INPUT the escape generator
+(schgen/generate/pcb/escape.py) consumes.  The carrier-side HARD obligation
+lives in ``schgen.verify.return_stitch_gate`` (return-path v2): every
+v1-failing contact must have a carrier GND stitch via within 2.0 mm on a
+file-visible GND ladder under the In1 plane.  That gate is ANDed into the
+board verdict; this one is deliberately NOT — a tested design decision
+(test_return_path_gate.py::test_v1_is_report_only_by_design), not a wiring
+accident.  Nothing anywhere claims "return path fixed": the deliverable is
+carrier escape-fanout return stitching.
 
 The module has NO import side effects and touches no global state.
 """

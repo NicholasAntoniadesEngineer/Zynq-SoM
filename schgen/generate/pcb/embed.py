@@ -372,6 +372,45 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
     return out
 
 
+# ---- T2 escape copper emission (RECONCILED with GAP1 @ 28f8e15) -------------------
+# The GENERAL via/segment node builders.  Interface decision (flagged for
+# Ring-0): T2's dict-driven builders are the general implementation — any
+# size/drill/net, optional (locked yes), caller-chosen uid key — so GAP1's
+# fixed-size thermal-via emission now routes through _via_node (byte-identical
+# output: without "locked" the node shape matches GAP1's original inline
+# construction exactly, and the uid key is passed through unchanged).  Zones
+# are GAP1's territory (_fill_zone/_gnd_plane_zone/_iso_void_zones below):
+# T2 emits NO zone — its stitch vias land on GAP1's canonical In1 GND plane.
+# (locked yes) probe-verified on kicad-cli 10.0.2 (T2 P0): parses + DRCs clean.
+
+def _via_node(c: dict, uid, uid_key: str = "stitch-via") -> list:
+    """A board-level GND via node.  ``c`` keys: x, y, size, drill, net,
+    optional locked (default True — the T2 escape vias are Freerouting
+    fixed-preroute; GAP1's thermal vias pass locked=False)."""
+    node = [Sym("via"),
+            [Sym("at"), c["x"], c["y"]],
+            [Sym("size"), c["size"]],
+            [Sym("drill"), c["drill"]],
+            [Sym("layers"), "F.Cu", "B.Cu"]]
+    if c.get("locked", True):
+        node.append([Sym("locked"), Sym("yes")])
+    node.append([Sym("net"), c["net"]])
+    node.append([Sym("uuid"), uid(uid_key)])
+    return node
+
+
+def _segment_node(c: dict, uid) -> list:
+    """A locked ladder segment (spine / GND-pad stub / via stub)."""
+    return [Sym("segment"),
+            [Sym("start"), c["x1"], c["y1"]],
+            [Sym("end"), c["x2"], c["y2"]],
+            [Sym("width"), c["width"]],
+            [Sym("layer"), c["layer"]],
+            [Sym("locked"), Sym("yes")],
+            [Sym("net"), c["net"]],
+            [Sym("uuid"), uid("stitch-seg")]]
+
+
 def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
     """A rule-area MARKER over the SoM body on both copper layers (drawn in the
     ratsnest view + KiCad as a hatched region). It is PERMISSIVE: under an SMD
@@ -660,11 +699,12 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
             if _via_site_ok(vx, vy, model, obstacles, chosen):
                 chosen.append((vx, vy))
         for i, (vx, vy) in enumerate(chosen):
-            vias.append([Sym("via"),
-                         [Sym("at"), vx, vy],
-                         [Sym("size"), THERMAL_VIA_SIZE],
-                         [Sym("drill"), THERMAL_VIA_DRILL],
-                         [Sym("layers"), "F.Cu", "B.Cu"],
-                         [Sym("net"), num],
-                         [Sym("uuid"), uid(f"thvia:{inst.ref}:{i}")]])
+            # through the unified builder (T2 reconciliation): locked=False
+            # keeps the node shape + uid key byte-identical to the original
+            # inline construction — thermal vias stay unlocked (their seats
+            # re-derive per placement; only the T2 escape preroute is locked).
+            vias.append(_via_node(
+                {"x": vx, "y": vy, "size": THERMAL_VIA_SIZE,
+                 "drill": THERMAL_VIA_DRILL, "net": num, "locked": False},
+                uid, uid_key=f"thvia:{inst.ref}:{i}"))
     return zones, vias

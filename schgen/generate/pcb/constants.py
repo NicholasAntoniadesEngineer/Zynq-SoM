@@ -103,6 +103,16 @@ class PcbModel:
     # footprint of the plugged-in SoM. Under it ONLY low-profile passives may
     # sit (LAW 6); the placement_mech gate enforces it.
     som_core: tuple[float, float, float, float] | None = None  # x0,y0,x1,y1
+    # T2 escape wave — DF40 return-stitch copper (schgen/generate/pcb/escape.py):
+    # plain dicts (kind: via/segment/zone, board-frame mm, group="som_escape"),
+    # appended by emit_pcb AFTER the footprint loop and the silk passes.
+    # RECONCILIATION INTERFACE (GAP1 copper-spike wave): everything BELOW this
+    # list (embed._via_node/_segment_node/_gnd_plane_zone + the emit append
+    # block + the two --refill-zones DRC sites) is emission mechanics Ring-0
+    # reconciles at merge; the computed dicts themselves are wave-local.
+    copper: list = field(default_factory=list)
+    escape_meta: dict = field(default_factory=dict)
+    escape_plan: dict | None = None
 
 
 # ---- footprint resolution + parsing ----------------------------------------------

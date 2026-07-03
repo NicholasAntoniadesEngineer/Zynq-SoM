@@ -136,8 +136,17 @@ def test_committed_board_contains_thermal_copper():
     voids = bc.zone_named("ethernet_isolation_void")
     assert len(voids) == 2 and all(z.keepout and "In1.Cu" in z.layers
                                    for z in voids)
-    # still an UNROUTED foundation: zones+vias only, no track segments
-    assert bc.segments == 0
+    # still an UNROUTED foundation — the ONLY track segments are the T2
+    # escape-wave GND return ladder (locked Freerouting preroute: spines +
+    # GND-pad stubs under the DF40s; re-pinned at the T2xGAP1 reconciliation,
+    # base 28f8e15). Any OTHER segment would be a stray route.
+    assert bc.segments == 10, bc.segments
+    text = BOARD.read_text()
+    import re as _re
+    seg_blocks = _re.findall(r"\(segment\b.*?\n\t\)", text, _re.DOTALL)
+    assert len(seg_blocks) == 10
+    for sb in seg_blocks:
+        assert "(locked yes)" in sb, "non-preroute segment on the foundation"
 
 
 def test_committed_board_zones_unfilled_on_disk():
@@ -173,12 +182,16 @@ def test_copper_debt_ledger_complete_and_deterministic():
     assert by["CD-01"].status == "EMITTED", by["CD-01"].emits
     assert by["CD-02"].status == "EMITTED", by["CD-02"].emits
     assert by["CD-03"].status == "EMITTED", by["CD-03"].emits
-    # honest debt stays visible: chassis bond / Bob-Smith / SoM fanout are
-    # NOT emitted; the ethernet moat is PARTIAL (bodies voided, corridor not)
+    # honest debt stays visible: chassis bond / Bob-Smith are NOT emitted;
+    # the ethernet moat is PARTIAL (bodies voided, corridor not); the SoM
+    # fanout moved NOTHING -> PARTIAL at the T2 reconciliation (the 8 escape
+    # GND stitch vias land under the SoM body; the RAIL fanout vias are still
+    # debt — the ledger text says so)
     assert by["CD-04"].status == "NOTHING"
     assert by["CD-05"].status == "NOTHING"
     assert by["CD-06"].status == "PARTIAL"
-    assert by["CD-08"].status == "NOTHING"
+    assert by["CD-08"].status == "PARTIAL", by["CD-08"].emits
+    assert "rail fanout vias: none emitted" in by["CD-08"].emits
 
 
 def test_copper_debt_unmeasured_without_board():

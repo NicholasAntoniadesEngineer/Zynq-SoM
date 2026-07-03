@@ -1,0 +1,5193 @@
+{
+ "content_key": "08159d8003ec801f19e90b56fb1234108a2d4fd84ec74b17e209a422b56c65df",
+ "escape_meta": {
+  "coexistence": [
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J1",
+    "ref": "C1005",
+    "sheet": "board_aux",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J1",
+    "ref": "R1003",
+    "sheet": "board_aux",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "SoM rail-entry parts; outside all live windows this build (re-derived every build)",
+    "conn": "J2",
+    "ref": "C22021",
+    "sheet": "power_som",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "SoM rail-entry parts; outside all live windows this build (re-derived every build)",
+    "conn": "J2",
+    "ref": "C22025",
+    "sheet": "power_som",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
+    "conn": "J2",
+    "ref": "R13001",
+    "sheet": "hdmi_rx_term",
+    "verdict": "CONSTRAINT"
+   },
+   {
+    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
+    "conn": "J2",
+    "ref": "R13002",
+    "sheet": "hdmi_rx_term",
+    "verdict": "CONSTRAINT"
+   },
+   {
+    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
+    "conn": "J2",
+    "ref": "R13003",
+    "sheet": "hdmi_rx_term",
+    "verdict": "CONSTRAINT"
+   },
+   {
+    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
+    "conn": "J2",
+    "ref": "R13004",
+    "sheet": "hdmi_rx_term",
+    "verdict": "CONSTRAINT"
+   },
+   {
+    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
+    "conn": "J2",
+    "ref": "R13005",
+    "sheet": "hdmi_rx_term",
+    "verdict": "CONSTRAINT"
+   },
+   {
+    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
+    "conn": "J2",
+    "ref": "R13006",
+    "sheet": "hdmi_rx_term",
+    "verdict": "CONSTRAINT"
+   },
+   {
+    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
+    "conn": "J2",
+    "ref": "R13007",
+    "sheet": "hdmi_rx_term",
+    "verdict": "CONSTRAINT"
+   },
+   {
+    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
+    "conn": "J2",
+    "ref": "R13008",
+    "sheet": "hdmi_rx_term",
+    "verdict": "CONSTRAINT"
+   },
+   {
+    "basis": "SoM rail-entry parts; outside all live windows this build (re-derived every build)",
+    "conn": "J2",
+    "ref": "R22015",
+    "sheet": "power_som",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "SoM rail-entry parts; outside all live windows this build (re-derived every build)",
+    "conn": "J2",
+    "ref": "R22018",
+    "sheet": "power_som",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R9001",
+    "sheet": "debug_boot",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R9002",
+    "sheet": "debug_boot",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R9005",
+    "sheet": "debug_boot",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R9006",
+    "sheet": "debug_boot",
+    "verdict": "STAY"
+   }
+  ],
+  "constants": {
+   "CLR": {
+    "edge": 0.3,
+    "hole_foreign": 0.3,
+    "hole_hole": 0.5,
+    "hole_samenet_pad": 0.1,
+    "margin_over_netclass_rule": 0.1,
+    "track_foreign": 0.15
+   },
+   "LATTICE_MM": 0.05,
+   "R_CONSTRUCT": 1.8,
+   "VIA_LADDER": [
+    [
+     0.45,
+     0.3
+    ],
+    [
+     0.4,
+     0.25
+    ],
+    [
+     0.35,
+     0.2
+    ]
+   ],
+   "widths": {
+    "spine": 0.3,
+    "stub_pair": 0.3,
+    "stub_single": 0.25
+   },
+   "zone_grow": 2.0
+  },
+  "coverage_mm": {
+   "J1": {
+    "90": 1.355
+   },
+   "J2": {
+    "10": 1.355,
+    "11": 1.4128,
+    "20": 1.5487,
+    "29": 1.4819,
+    "30": 1.2845,
+    "31": 1.0817,
+    "32": 1.005,
+    "39": 1.4819,
+    "40": 1.3697,
+    "41": 1.3697,
+    "42": 1.4819,
+    "49": 1.3633,
+    "50": 1.4624,
+    "51": 1.4624,
+    "59": 1.4819,
+    "60": 1.3697,
+    "61": 1.3697,
+    "62": 1.4819,
+    "69": 1.705,
+    "70": 1.7513,
+    "71": 1.6841,
+    "72": 1.4819,
+    "80": 1.7772,
+    "81": 1.5487,
+    "82": 1.3995,
+    "90": 1.4128,
+    "91": 1.355,
+    "92": 1.4128
+   }
+  },
+  "escape_region": [
+   82.0,
+   76.5,
+   138.0,
+   124.5
+  ],
+  "plane": {
+   "layer": "In1.Cu",
+   "rect": [
+    25.5,
+    25.5,
+    194.5,
+    175.5
+   ],
+   "source": "GAP1 embed._gnd_plane_zone (canonical; T2 emits no zone)",
+   "voids_checked": [
+    "ethernet_isolation_void_J23001",
+    "ethernet_isolation_void_T10001"
+   ]
+  },
+  "som_interface_sha256": "1b0199b345cd82bef43b5b5c271157d77d5dad55571f72e1f7da56febe52c6a6",
+  "vias": {
+   "J1": 2,
+   "J2": 6
+  },
+  "worst_cover_mm": 1.7772
+ },
+ "genuine_pairs": [
+  "CAM_CLK_*",
+  "CAM_D0_*",
+  "CAM_D1_*",
+  "ETH_PHY_MDI0_*",
+  "ETH_PHY_MDI1_*",
+  "ETH_PHY_MDI2_*",
+  "ETH_PHY_MDI3_*",
+  "HDMI_RX_CLK_*",
+  "HDMI_RX_D0_*",
+  "HDMI_RX_D1_*",
+  "HDMI_RX_D2_*",
+  "ZYNQ_HDMI_TX_TMDS_0_*",
+  "ZYNQ_HDMI_TX_TMDS_1_*",
+  "ZYNQ_HDMI_TX_TMDS_2_*",
+  "ZYNQ_HDMI_TX_TMDS_CLK_*"
+ ],
+ "lanes": {
+  "J1": [
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 0,
+    "layer": "F.Cu",
+    "net": "IO_L2_N_35",
+    "pad": "100",
+    "port": [
+     95.61,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 1,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "99",
+    "port": [
+     96.01,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 2,
+    "layer": "F.Cu",
+    "net": "ETH_LED1",
+    "pad": "98",
+    "port": [
+     96.41,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 3,
+    "layer": "F.Cu",
+    "net": "ETH_PHY_MDI0_P",
+    "pad": "97",
+    "port": [
+     96.81,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 4,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "96",
+    "port": [
+     97.21,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 5,
+    "layer": "F.Cu",
+    "net": "ETH_PHY_MDI0_N",
+    "pad": "95",
+    "port": [
+     97.61,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 6,
+    "layer": "F.Cu",
+    "net": "ETH_LED2",
+    "pad": "94",
+    "port": [
+     98.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 7,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "93",
+    "port": [
+     98.41,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 8,
+    "layer": "F.Cu",
+    "net": "FMC_LA08_N",
+    "pad": "92",
+    "port": [
+     98.81,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 9,
+    "layer": "F.Cu",
+    "net": "ETH_PHY_MDI1_P",
+    "pad": "91",
+    "port": [
+     99.21,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 10,
+    "layer": "F.Cu",
+    "net": "FMC_LA10_P",
+    "pad": "90",
+    "port": [
+     99.61,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 11,
+    "layer": "F.Cu",
+    "net": "ETH_PHY_MDI1_N",
+    "pad": "89",
+    "port": [
+     100.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 12,
+    "layer": "F.Cu",
+    "net": "FMC_LA10_N",
+    "pad": "88",
+    "port": [
+     100.41,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 13,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "87",
+    "port": [
+     100.81,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 14,
+    "layer": "F.Cu",
+    "net": "IO_0_35",
+    "pad": "86",
+    "port": [
+     101.21,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 15,
+    "layer": "F.Cu",
+    "net": "ETH_PHY_MDI2_P",
+    "pad": "85",
+    "port": [
+     101.61,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 16,
+    "layer": "F.Cu",
+    "net": "FMC_LA09_N",
+    "pad": "84",
+    "port": [
+     102.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 17,
+    "layer": "F.Cu",
+    "net": "ETH_PHY_MDI2_N",
+    "pad": "83",
+    "port": [
+     102.41,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 18,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "82",
+    "port": [
+     102.81,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 19,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "81",
+    "port": [
+     103.21,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 20,
+    "layer": "F.Cu",
+    "net": "FMC_LA09_P",
+    "pad": "80",
+    "port": [
+     103.61,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 21,
+    "layer": "F.Cu",
+    "net": "ETH_PHY_MDI3_P",
+    "pad": "79",
+    "port": [
+     104.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 22,
+    "layer": "F.Cu",
+    "net": "FMC_LA11_P",
+    "pad": "78",
+    "port": [
+     104.41,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 23,
+    "layer": "F.Cu",
+    "net": "ETH_PHY_MDI3_N",
+    "pad": "77",
+    "port": [
+     104.81,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 24,
+    "layer": "F.Cu",
+    "net": "FMC_LA11_N",
+    "pad": "76",
+    "port": [
+     105.21,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 25,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "75",
+    "port": [
+     105.61,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 26,
+    "layer": "F.Cu",
+    "net": "FMC_LA08_P",
+    "pad": "74",
+    "port": [
+     106.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 27,
+    "layer": "F.Cu",
+    "net": "SDIO_D2",
+    "pad": "73",
+    "port": [
+     106.41,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 28,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "72",
+    "port": [
+     106.81,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 29,
+    "layer": "F.Cu",
+    "net": "SDIO_D3",
+    "pad": "71",
+    "port": [
+     107.21,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 30,
+    "layer": "F.Cu",
+    "net": "ZYNQ_TDI",
+    "pad": "70",
+    "port": [
+     107.61,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 31,
+    "layer": "F.Cu",
+    "net": "SDIO_CMD",
+    "pad": "69",
+    "port": [
+     108.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 32,
+    "layer": "F.Cu",
+    "net": "ZYNQ_TDO",
+    "pad": "68",
+    "port": [
+     108.41,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 33,
+    "layer": "F.Cu",
+    "net": "SDIO_CLK",
+    "pad": "67",
+    "port": [
+     108.81,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 34,
+    "layer": "F.Cu",
+    "net": "ZYNQ_TMS",
+    "pad": "66",
+    "port": [
+     109.21,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 35,
+    "layer": "F.Cu",
+    "net": "SDIO_D0",
+    "pad": "65",
+    "port": [
+     109.61,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 36,
+    "layer": "F.Cu",
+    "net": "ZYNQ_TCK",
+    "pad": "64",
+    "port": [
+     110.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 37,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "63",
+    "port": [
+     110.41,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 38,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "62",
+    "port": [
+     110.81,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 39,
+    "layer": "F.Cu",
+    "net": "SDIO_D1",
+    "pad": "61",
+    "port": [
+     111.21,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 40,
+    "layer": "F.Cu",
+    "net": "STM32_GPIO7",
+    "pad": "59",
+    "port": [
+     112.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 41,
+    "layer": "F.Cu",
+    "net": "STM32_BOOT0",
+    "pad": "57",
+    "port": [
+     112.81,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 42,
+    "layer": "F.Cu",
+    "net": "STM32_I2C2_SCL",
+    "pad": "55",
+    "port": [
+     113.61,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 43,
+    "layer": "F.Cu",
+    "net": "STM32_GPIO8",
+    "pad": "54",
+    "port": [
+     114.01,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 44,
+    "layer": "F.Cu",
+    "net": "STM32_GPIO5",
+    "pad": "53",
+    "port": [
+     114.41,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 45,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_MIO9",
+    "pad": "52",
+    "port": [
+     114.81,
+     79.865
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 46,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "51",
+    "port": [
+     115.21,
+     82.55
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 0,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "1",
+    "port": [
+     95.61,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 1,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "2",
+    "port": [
+     96.0101,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 2,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "3",
+    "port": [
+     96.41,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 3,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "4",
+    "port": [
+     96.81,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 4,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "5",
+    "port": [
+     97.21,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 5,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "6",
+    "port": [
+     97.61,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 6,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "7",
+    "port": [
+     98.01,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 7,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "8",
+    "port": [
+     98.41,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 8,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "9",
+    "port": [
+     98.81,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 9,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "10",
+    "port": [
+     99.21,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 10,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "11",
+    "port": [
+     99.61,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 11,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "12",
+    "port": [
+     100.01,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 12,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "13",
+    "port": [
+     100.41,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J1:+5V_SOM:1",
+    "dir": "plane",
+    "lane": 13,
+    "layer": "F.Cu",
+    "net": "+5V_SOM",
+    "pad": "14",
+    "port": [
+     100.81,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 14,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "15",
+    "port": [
+     101.21,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 15,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "16",
+    "port": [
+     101.61,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 16,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "17",
+    "port": [
+     102.01,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 17,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "18",
+    "port": [
+     102.41,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 18,
+    "layer": "F.Cu",
+    "net": "STM32_USB_D_P",
+    "pad": "19",
+    "port": [
+     102.81,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2611
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 19,
+    "layer": "F.Cu",
+    "net": "USB_ID",
+    "pad": "20",
+    "port": [
+     103.21,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 20,
+    "layer": "F.Cu",
+    "net": "STM32_USB_D_N",
+    "pad": "21",
+    "port": [
+     103.61,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2611
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 21,
+    "layer": "F.Cu",
+    "net": "USB_VBUS",
+    "pad": "22",
+    "port": [
+     104.01,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 22,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "23",
+    "port": [
+     104.41,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 23,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "28",
+    "port": [
+     106.41,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 24,
+    "layer": "F.Cu",
+    "net": "STM32_USB_CC1",
+    "pad": "29",
+    "port": [
+     106.81,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 25,
+    "layer": "F.Cu",
+    "net": "USB_D-",
+    "pad": "30",
+    "port": [
+     107.21,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "GENUINE",
+    "width": 0.2611
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 26,
+    "layer": "F.Cu",
+    "net": "STM32_USB_CC2",
+    "pad": "31",
+    "port": [
+     107.61,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 27,
+    "layer": "F.Cu",
+    "net": "USB_D+",
+    "pad": "32",
+    "port": [
+     108.01,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "GENUINE",
+    "width": 0.2611
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 28,
+    "layer": "F.Cu",
+    "net": "STM32_RAIL_EN_5V0",
+    "pad": "33",
+    "port": [
+     108.41,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 29,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "34",
+    "port": [
+     108.81,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 30,
+    "layer": "F.Cu",
+    "net": "STM32_RAIL_EN_3V3",
+    "pad": "35",
+    "port": [
+     109.21,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 31,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_MIO8\\VM1",
+    "pad": "36",
+    "port": [
+     109.61,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "plane",
+    "lane": 32,
+    "layer": "F.Cu",
+    "net": "+3V3_SC",
+    "pad": "37",
+    "port": [
+     110.01,
+     84.735
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 33,
+    "layer": "F.Cu",
+    "net": "VBUS_OUT_EN",
+    "pad": "38",
+    "port": [
+     110.41,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 34,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "39",
+    "port": [
+     110.81,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 35,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_MIO7/VM0",
+    "pad": "40",
+    "port": [
+     111.21,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 36,
+    "layer": "F.Cu",
+    "net": "SC_INT_N",
+    "pad": "41",
+    "port": [
+     111.61,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 37,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_UART0_RXD",
+    "pad": "42",
+    "port": [
+     112.01,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 38,
+    "layer": "F.Cu",
+    "net": "STM32_RAIL_EN_1V8",
+    "pad": "43",
+    "port": [
+     112.41,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 39,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "44",
+    "port": [
+     112.81,
+     82.55
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 40,
+    "layer": "F.Cu",
+    "net": "STM32_GPIO6",
+    "pad": "45",
+    "port": [
+     113.21,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 41,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_MIO12",
+    "pad": "46",
+    "port": [
+     113.61,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 42,
+    "layer": "F.Cu",
+    "net": "STM32_NRST",
+    "pad": "47",
+    "port": [
+     114.01,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 43,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_UART0_TXD",
+    "pad": "48",
+    "port": [
+     114.41,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 44,
+    "layer": "F.Cu",
+    "net": "STM32_I2C2_SDA",
+    "pad": "49",
+    "port": [
+     114.81,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 45,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_MIO0",
+    "pad": "50",
+    "port": [
+     115.21,
+     85.235
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   }
+  ],
+  "J2": [
+   {
+    "bus_group": "J2:+3V3:-1",
+    "dir": "plane",
+    "lane": 0,
+    "layer": "F.Cu",
+    "net": "+3V3",
+    "pad": "100",
+    "port": [
+     95.61,
+     115.925
+    ],
+    "row": -1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J2:+3V3:-1",
+    "dir": "plane",
+    "lane": 1,
+    "layer": "F.Cu",
+    "net": "+3V3",
+    "pad": "99",
+    "port": [
+     96.01,
+     115.925
+    ],
+    "row": -1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J2:+3V3:-1",
+    "dir": "plane",
+    "lane": 2,
+    "layer": "F.Cu",
+    "net": "+3V3",
+    "pad": "98",
+    "port": [
+     96.41,
+     115.925
+    ],
+    "row": -1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 3,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "97",
+    "port": [
+     96.81,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 4,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "96",
+    "port": [
+     97.21,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 5,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "95",
+    "port": [
+     97.61,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 6,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_D0_N",
+    "pad": "94",
+    "port": [
+     98.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 7,
+    "layer": "F.Cu",
+    "net": "ESC_PWM_IN2",
+    "pad": "93",
+    "port": [
+     98.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 8,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_D0_P",
+    "pad": "92",
+    "port": [
+     98.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 9,
+    "layer": "F.Cu",
+    "net": "ESC_PWM_IN3",
+    "pad": "91",
+    "port": [
+     99.21,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 10,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_CLK_P",
+    "pad": "90",
+    "port": [
+     99.61,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 11,
+    "layer": "F.Cu",
+    "net": "IO_L6_P_33",
+    "pad": "89",
+    "port": [
+     100.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 12,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_CLK_N",
+    "pad": "88",
+    "port": [
+     100.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 13,
+    "layer": "F.Cu",
+    "net": "PL_BTN1",
+    "pad": "87",
+    "port": [
+     100.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 14,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "86",
+    "port": [
+     101.21,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 15,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "85",
+    "port": [
+     101.61,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 16,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_D1_N",
+    "pad": "84",
+    "port": [
+     102.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 17,
+    "layer": "F.Cu",
+    "net": "ESC_PWM_IN1",
+    "pad": "83",
+    "port": [
+     102.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 18,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_D1_P",
+    "pad": "82",
+    "port": [
+     102.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 19,
+    "layer": "F.Cu",
+    "net": "ESC_PWM_IN0",
+    "pad": "81",
+    "port": [
+     103.21,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 20,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_D2_N",
+    "pad": "80",
+    "port": [
+     103.61,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 21,
+    "layer": "F.Cu",
+    "net": "PL_BTN0",
+    "pad": "79",
+    "port": [
+     104.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 22,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_D2_P",
+    "pad": "78",
+    "port": [
+     104.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 23,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_CEC",
+    "pad": "77",
+    "port": [
+     104.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 24,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "76",
+    "port": [
+     105.21,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 25,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "75",
+    "port": [
+     105.61,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 26,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_TMDS_2_N",
+    "pad": "74",
+    "port": [
+     106.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 27,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_TMDS_CLK_N",
+    "pad": "73",
+    "port": [
+     106.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 28,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_TMDS_2_P",
+    "pad": "72",
+    "port": [
+     106.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 29,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_TMDS_CLK_P",
+    "pad": "71",
+    "port": [
+     107.21,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 30,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_TMDS_1_P",
+    "pad": "70",
+    "port": [
+     107.61,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 31,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_TMDS_0_N",
+    "pad": "69",
+    "port": [
+     108.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 32,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_TMDS_1_N",
+    "pad": "68",
+    "port": [
+     108.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 33,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_TMDS_0_P",
+    "pad": "67",
+    "port": [
+     108.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 34,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "66",
+    "port": [
+     109.21,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 35,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "65",
+    "port": [
+     109.61,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 36,
+    "layer": "F.Cu",
+    "net": "IO_L7_N_13",
+    "pad": "64",
+    "port": [
+     110.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 37,
+    "layer": "F.Cu",
+    "net": "IO_L4_N_13",
+    "pad": "63",
+    "port": [
+     110.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 38,
+    "layer": "F.Cu",
+    "net": "IO_L7_P_13",
+    "pad": "62",
+    "port": [
+     110.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 39,
+    "layer": "F.Cu",
+    "net": "IO_L4_P_13",
+    "pad": "61",
+    "port": [
+     111.21,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 40,
+    "layer": "F.Cu",
+    "net": "IO_L8_N_13",
+    "pad": "60",
+    "port": [
+     111.61,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 41,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_CEC",
+    "pad": "59",
+    "port": [
+     112.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 42,
+    "layer": "F.Cu",
+    "net": "IO_L8_P_13",
+    "pad": "58",
+    "port": [
+     112.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 43,
+    "layer": "F.Cu",
+    "net": "ESC_BUF_OE_N",
+    "pad": "57",
+    "port": [
+     112.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 44,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "56",
+    "port": [
+     113.21,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 45,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "55",
+    "port": [
+     113.61,
+     118.11
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 46,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_HPD",
+    "pad": "54",
+    "port": [
+     114.01,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 47,
+    "layer": "F.Cu",
+    "net": "IO_L10_P_13",
+    "pad": "53",
+    "port": [
+     114.41,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 48,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_SDA",
+    "pad": "52",
+    "port": [
+     114.81,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 49,
+    "layer": "F.Cu",
+    "net": "IO_L10_N_13",
+    "pad": "51",
+    "port": [
+     115.21,
+     115.425
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": "J2:+3V3:1",
+    "dir": "plane",
+    "lane": 0,
+    "layer": "F.Cu",
+    "net": "+3V3",
+    "pad": "1",
+    "port": [
+     95.61,
+     120.295
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J2:+3V3:1",
+    "dir": "plane",
+    "lane": 1,
+    "layer": "F.Cu",
+    "net": "+3V3",
+    "pad": "2",
+    "port": [
+     96.0101,
+     120.295
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J2:+3V3:1",
+    "dir": "plane",
+    "lane": 2,
+    "layer": "F.Cu",
+    "net": "+3V3",
+    "pad": "3",
+    "port": [
+     96.41,
+     120.295
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 3,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "4",
+    "port": [
+     96.81,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 4,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "5",
+    "port": [
+     97.21,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 5,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "6",
+    "port": [
+     97.61,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 6,
+    "layer": "F.Cu",
+    "net": "IO_L24_N_13",
+    "pad": "7",
+    "port": [
+     98.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 7,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_UART0_RTS_N",
+    "pad": "8",
+    "port": [
+     98.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 8,
+    "layer": "F.Cu",
+    "net": "IO_L15_P_13",
+    "pad": "9",
+    "port": [
+     98.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 9,
+    "layer": "F.Cu",
+    "net": "IO_L24_P_13",
+    "pad": "10",
+    "port": [
+     99.21,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 10,
+    "layer": "F.Cu",
+    "net": "ZYNQ_PS_UART0_CTS_N",
+    "pad": "11",
+    "port": [
+     99.61,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 11,
+    "layer": "F.Cu",
+    "net": "IO_L19_P_13",
+    "pad": "12",
+    "port": [
+     100.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 12,
+    "layer": "F.Cu",
+    "net": "IO_L21_P_13",
+    "pad": "13",
+    "port": [
+     100.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 13,
+    "layer": "F.Cu",
+    "net": "IO_L2_N_13",
+    "pad": "14",
+    "port": [
+     100.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 14,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "15",
+    "port": [
+     101.21,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 15,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "16",
+    "port": [
+     101.61,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 16,
+    "layer": "F.Cu",
+    "net": "SD_CARD_DETECT",
+    "pad": "17",
+    "port": [
+     102.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 17,
+    "layer": "F.Cu",
+    "net": "IO_L3_P_13",
+    "pad": "18",
+    "port": [
+     102.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 18,
+    "layer": "F.Cu",
+    "net": "IO_L22_P_13",
+    "pad": "19",
+    "port": [
+     102.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 19,
+    "layer": "F.Cu",
+    "net": "IO_L2_P_13",
+    "pad": "20",
+    "port": [
+     103.21,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 20,
+    "layer": "F.Cu",
+    "net": "IO_L6_P_13",
+    "pad": "21",
+    "port": [
+     103.61,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 21,
+    "layer": "F.Cu",
+    "net": "ZYNQ_HDMI_TX_SCL",
+    "pad": "22",
+    "port": [
+     104.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 22,
+    "layer": "F.Cu",
+    "net": "IO_25_13",
+    "pad": "23",
+    "port": [
+     104.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 23,
+    "layer": "F.Cu",
+    "net": "IO_L5_N_13",
+    "pad": "24",
+    "port": [
+     104.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 24,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "25",
+    "port": [
+     105.21,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 25,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "26",
+    "port": [
+     105.61,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 26,
+    "layer": "F.Cu",
+    "net": "PMODX_IO2",
+    "pad": "27",
+    "port": [
+     106.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 27,
+    "layer": "F.Cu",
+    "net": "LCD_CTP_SCL",
+    "pad": "28",
+    "port": [
+     106.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 28,
+    "layer": "F.Cu",
+    "net": "PMODX_IO1",
+    "pad": "29",
+    "port": [
+     106.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 29,
+    "layer": "F.Cu",
+    "net": "LCD_CTP_SDA",
+    "pad": "30",
+    "port": [
+     107.21,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 30,
+    "layer": "F.Cu",
+    "net": "PMODX_IO4",
+    "pad": "31",
+    "port": [
+     107.61,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 31,
+    "layer": "F.Cu",
+    "net": "LCD_CTP_INT",
+    "pad": "32",
+    "port": [
+     108.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 32,
+    "layer": "F.Cu",
+    "net": "PMODX_IO3",
+    "pad": "33",
+    "port": [
+     108.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 33,
+    "layer": "F.Cu",
+    "net": "LCD_CTP_RST",
+    "pad": "34",
+    "port": [
+     108.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 34,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "35",
+    "port": [
+     109.21,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 35,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "36",
+    "port": [
+     109.61,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 36,
+    "layer": "F.Cu",
+    "net": "ESC_FAULT_N",
+    "pad": "37",
+    "port": [
+     110.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 37,
+    "layer": "F.Cu",
+    "net": "IO_L5P_13",
+    "pad": "38",
+    "port": [
+     110.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 38,
+    "layer": "F.Cu",
+    "net": "PMODX_IO6",
+    "pad": "39",
+    "port": [
+     110.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 39,
+    "layer": "F.Cu",
+    "net": "DBG_UART_TXD",
+    "pad": "40",
+    "port": [
+     111.21,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 40,
+    "layer": "F.Cu",
+    "net": "PMODX_IO5",
+    "pad": "41",
+    "port": [
+     111.61,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 41,
+    "layer": "F.Cu",
+    "net": "DBG_UART_RXD",
+    "pad": "42",
+    "port": [
+     112.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 42,
+    "layer": "F.Cu",
+    "net": "IO_L3_N_13",
+    "pad": "43",
+    "port": [
+     112.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 43,
+    "layer": "F.Cu",
+    "net": "HDMI_RX_5V_DET",
+    "pad": "44",
+    "port": [
+     112.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 44,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "45",
+    "port": [
+     113.21,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 45,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "46",
+    "port": [
+     113.61,
+     118.11
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 46,
+    "layer": "F.Cu",
+    "net": "PMODX_IO8",
+    "pad": "47",
+    "port": [
+     114.01,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 47,
+    "layer": "F.Cu",
+    "net": "IO_L9_DQS_N_13",
+    "pad": "48",
+    "port": [
+     114.41,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 48,
+    "layer": "F.Cu",
+    "net": "PMODX_IO7",
+    "pad": "49",
+    "port": [
+     114.81,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 49,
+    "layer": "F.Cu",
+    "net": "IO_L9_DQS_P_13",
+    "pad": "50",
+    "port": [
+     115.21,
+     120.795
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   }
+  ],
+  "J3": [
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 0,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "100",
+    "port": [
+     87.63,
+     110.13
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "plane",
+    "lane": 1,
+    "layer": "F.Cu",
+    "net": "+3V3",
+    "pad": "99",
+    "port": [
+     85.445,
+     109.73
+    ],
+    "row": -1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 2,
+    "layer": "F.Cu",
+    "net": "WATCHDOG_RST_N",
+    "pad": "98",
+    "port": [
+     84.945,
+     109.33
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "plane",
+    "lane": 3,
+    "layer": "F.Cu",
+    "net": "+3V3",
+    "pad": "97",
+    "port": [
+     85.445,
+     108.93
+    ],
+    "row": -1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 4,
+    "layer": "F.Cu",
+    "net": "WATCHDOG_KICK",
+    "pad": "96",
+    "port": [
+     84.945,
+     108.53
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 5,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "95",
+    "port": [
+     87.63,
+     108.13
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 6,
+    "layer": "F.Cu",
+    "net": "ESC_PWM_IN7",
+    "pad": "94",
+    "port": [
+     84.945,
+     107.73
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 7,
+    "layer": "F.Cu",
+    "net": "ESC_PWM_IN5",
+    "pad": "93",
+    "port": [
+     84.945,
+     107.33
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 8,
+    "layer": "F.Cu",
+    "net": "ESC_PWM_IN6",
+    "pad": "92",
+    "port": [
+     84.945,
+     106.93
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 9,
+    "layer": "F.Cu",
+    "net": "ESC_PWM_IN4",
+    "pad": "91",
+    "port": [
+     84.945,
+     106.53
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 10,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "90",
+    "port": [
+     87.63,
+     106.13
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 11,
+    "layer": "F.Cu",
+    "net": "CAM_SDA",
+    "pad": "89",
+    "port": [
+     84.945,
+     105.73
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 12,
+    "layer": "F.Cu",
+    "net": "IO_L23_P_34",
+    "pad": "88",
+    "port": [
+     84.945,
+     105.33
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 13,
+    "layer": "F.Cu",
+    "net": "CAM_LED",
+    "pad": "87",
+    "port": [
+     84.945,
+     104.93
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 14,
+    "layer": "F.Cu",
+    "net": "CAM_SCL",
+    "pad": "86",
+    "port": [
+     84.945,
+     104.53
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 15,
+    "layer": "F.Cu",
+    "net": "CAM_EN",
+    "pad": "85",
+    "port": [
+     84.945,
+     104.13
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 16,
+    "layer": "F.Cu",
+    "net": "IO_L22_N_34",
+    "pad": "84",
+    "port": [
+     84.945,
+     103.73
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 17,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "83",
+    "port": [
+     87.63,
+     103.33
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 18,
+    "layer": "F.Cu",
+    "net": "IO_L24_P_34",
+    "pad": "82",
+    "port": [
+     84.945,
+     102.93
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 19,
+    "layer": "F.Cu",
+    "net": "LCD_BL_PWM",
+    "pad": "81",
+    "port": [
+     84.945,
+     102.53
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 20,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "80",
+    "port": [
+     87.63,
+     102.13
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 21,
+    "layer": "F.Cu",
+    "net": "LCD_DISP",
+    "pad": "79",
+    "port": [
+     84.945,
+     101.73
+    ],
+    "row": -1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 22,
+    "layer": "F.Cu",
+    "net": "LCD_DE",
+    "pad": "78",
+    "port": [
+     84.945,
+     101.33
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 23,
+    "layer": "F.Cu",
+    "net": "LCD_VSYNC",
+    "pad": "77",
+    "port": [
+     84.945,
+     100.93
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 24,
+    "layer": "F.Cu",
+    "net": "LCD_HSYNC",
+    "pad": "76",
+    "port": [
+     84.945,
+     100.53
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 25,
+    "layer": "F.Cu",
+    "net": "LCD_PCLK",
+    "pad": "75",
+    "port": [
+     84.945,
+     100.13
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 26,
+    "layer": "F.Cu",
+    "net": "LCD_B7",
+    "pad": "74",
+    "port": [
+     84.945,
+     99.73
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 27,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "73",
+    "port": [
+     87.63,
+     99.33
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 28,
+    "layer": "F.Cu",
+    "net": "LCD_B6",
+    "pad": "72",
+    "port": [
+     84.945,
+     98.93
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 29,
+    "layer": "F.Cu",
+    "net": "LCD_B5",
+    "pad": "71",
+    "port": [
+     84.945,
+     98.53
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 30,
+    "layer": "F.Cu",
+    "net": "LCD_B4",
+    "pad": "70",
+    "port": [
+     84.945,
+     98.13
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 31,
+    "layer": "F.Cu",
+    "net": "LCD_B3",
+    "pad": "69",
+    "port": [
+     84.945,
+     97.73
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 32,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "68",
+    "port": [
+     87.63,
+     97.33
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 33,
+    "layer": "F.Cu",
+    "net": "LCD_B2",
+    "pad": "67",
+    "port": [
+     84.945,
+     96.93
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 34,
+    "layer": "F.Cu",
+    "net": "LCD_B1",
+    "pad": "66",
+    "port": [
+     84.945,
+     96.53
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 35,
+    "layer": "F.Cu",
+    "net": "LCD_B0",
+    "pad": "65",
+    "port": [
+     84.945,
+     96.13
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 36,
+    "layer": "F.Cu",
+    "net": "LCD_G7",
+    "pad": "64",
+    "port": [
+     84.945,
+     95.73
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 37,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "63",
+    "port": [
+     87.63,
+     95.33
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 38,
+    "layer": "F.Cu",
+    "net": "LCD_G6",
+    "pad": "62",
+    "port": [
+     84.945,
+     94.93
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 39,
+    "layer": "F.Cu",
+    "net": "LCD_G5",
+    "pad": "61",
+    "port": [
+     84.945,
+     94.53
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 40,
+    "layer": "F.Cu",
+    "net": "LCD_G4",
+    "pad": "60",
+    "port": [
+     84.945,
+     94.13
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 41,
+    "layer": "F.Cu",
+    "net": "LCD_G3",
+    "pad": "59",
+    "port": [
+     84.945,
+     93.73
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 42,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "58",
+    "port": [
+     87.63,
+     93.33
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 43,
+    "layer": "F.Cu",
+    "net": "LCD_G2",
+    "pad": "57",
+    "port": [
+     84.945,
+     92.93
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 44,
+    "layer": "F.Cu",
+    "net": "LCD_G1",
+    "pad": "56",
+    "port": [
+     84.945,
+     92.53
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 45,
+    "layer": "F.Cu",
+    "net": "LCD_G0",
+    "pad": "55",
+    "port": [
+     84.945,
+     92.13
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 46,
+    "layer": "F.Cu",
+    "net": "LCD_R7",
+    "pad": "54",
+    "port": [
+     84.945,
+     91.73
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 47,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "53",
+    "port": [
+     87.63,
+     91.33
+    ],
+    "row": -1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 48,
+    "layer": "F.Cu",
+    "net": "FMC_LA07_N",
+    "pad": "52",
+    "port": [
+     84.945,
+     90.93
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 49,
+    "layer": "F.Cu",
+    "net": "FMC_LA06_P",
+    "pad": "51",
+    "port": [
+     84.945,
+     90.53
+    ],
+    "row": -1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": "J3:+2V5_VADJ:1",
+    "dir": "plane",
+    "lane": 0,
+    "layer": "F.Cu",
+    "net": "+2V5_VADJ",
+    "pad": "1",
+    "port": [
+     89.815,
+     110.13
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": "J3:+2V5_VADJ:1",
+    "dir": "plane",
+    "lane": 1,
+    "layer": "F.Cu",
+    "net": "+2V5_VADJ",
+    "pad": "2",
+    "port": [
+     89.815,
+     109.7299
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 2,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "3",
+    "port": [
+     87.63,
+     109.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "plane",
+    "lane": 3,
+    "layer": "F.Cu",
+    "net": "+2V5_VADJ",
+    "pad": "4",
+    "port": [
+     89.815,
+     108.93
+    ],
+    "row": 1,
+    "si_class": "POWER",
+    "width": 0.4
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 4,
+    "layer": "F.Cu",
+    "net": "CAM_D0_P",
+    "pad": "5",
+    "port": [
+     90.315,
+     108.53
+    ],
+    "row": 1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 5,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "6",
+    "port": [
+     87.63,
+     108.13
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 6,
+    "layer": "F.Cu",
+    "net": "CAM_D0_N",
+    "pad": "7",
+    "port": [
+     90.315,
+     107.73
+    ],
+    "row": 1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 7,
+    "layer": "F.Cu",
+    "net": "FMC_CLK1_M2C_P",
+    "pad": "8",
+    "port": [
+     90.315,
+     107.33
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 8,
+    "layer": "F.Cu",
+    "net": "CAM_CLK_P",
+    "pad": "9",
+    "port": [
+     90.315,
+     106.93
+    ],
+    "row": 1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 9,
+    "layer": "F.Cu",
+    "net": "FMC_CLK1_M2C_N",
+    "pad": "10",
+    "port": [
+     90.315,
+     106.53
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 10,
+    "layer": "F.Cu",
+    "net": "CAM_CLK_N",
+    "pad": "11",
+    "port": [
+     90.315,
+     106.13
+    ],
+    "row": 1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 11,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "12",
+    "port": [
+     87.63,
+     105.73
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 12,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "13",
+    "port": [
+     87.63,
+     105.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 13,
+    "layer": "F.Cu",
+    "net": "FMC_CLK0_M2C_P",
+    "pad": "14",
+    "port": [
+     90.315,
+     104.93
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 14,
+    "layer": "F.Cu",
+    "net": "CAM_D1_N",
+    "pad": "15",
+    "port": [
+     90.315,
+     104.53
+    ],
+    "row": 1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 15,
+    "layer": "F.Cu",
+    "net": "FMC_CLK0_M2C_N",
+    "pad": "16",
+    "port": [
+     90.315,
+     104.13
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 16,
+    "layer": "F.Cu",
+    "net": "CAM_D1_P",
+    "pad": "17",
+    "port": [
+     90.315,
+     103.73
+    ],
+    "row": 1,
+    "si_class": "GENUINE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 17,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "18",
+    "port": [
+     87.63,
+     103.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 18,
+    "layer": "F.Cu",
+    "net": "LCD_R0",
+    "pad": "19",
+    "port": [
+     90.315,
+     102.93
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 19,
+    "layer": "F.Cu",
+    "net": "FMC_LA00_CC_N",
+    "pad": "20",
+    "port": [
+     90.315,
+     102.53
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 20,
+    "layer": "F.Cu",
+    "net": "LCD_R1",
+    "pad": "21",
+    "port": [
+     90.315,
+     102.13
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 21,
+    "layer": "F.Cu",
+    "net": "FMC_LA00_CC_P",
+    "pad": "22",
+    "port": [
+     90.315,
+     101.73
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 22,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "23",
+    "port": [
+     87.63,
+     101.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 23,
+    "layer": "F.Cu",
+    "net": "FMC_LA01_CC_P",
+    "pad": "24",
+    "port": [
+     90.315,
+     100.93
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 24,
+    "layer": "F.Cu",
+    "net": "IO_L18_N_35",
+    "pad": "25",
+    "port": [
+     90.315,
+     100.53
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 25,
+    "layer": "F.Cu",
+    "net": "FMC_LA01_CC_N",
+    "pad": "26",
+    "port": [
+     90.315,
+     100.13
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 26,
+    "layer": "F.Cu",
+    "net": "IO_L18_P_35",
+    "pad": "27",
+    "port": [
+     90.315,
+     99.73
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 27,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "28",
+    "port": [
+     87.63,
+     99.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 28,
+    "layer": "F.Cu",
+    "net": "IO_L16_N_35",
+    "pad": "29",
+    "port": [
+     90.315,
+     98.93
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 29,
+    "layer": "F.Cu",
+    "net": "LCD_R2",
+    "pad": "30",
+    "port": [
+     90.315,
+     98.53
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 30,
+    "layer": "F.Cu",
+    "net": "IO_L16_P_35",
+    "pad": "31",
+    "port": [
+     90.315,
+     98.13
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 31,
+    "layer": "F.Cu",
+    "net": "FMC_LA03_N",
+    "pad": "32",
+    "port": [
+     90.315,
+     97.73
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 32,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "33",
+    "port": [
+     87.63,
+     97.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 33,
+    "layer": "F.Cu",
+    "net": "FMC_LA03_P",
+    "pad": "34",
+    "port": [
+     90.315,
+     96.93
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 34,
+    "layer": "F.Cu",
+    "net": "FMC_LA02_N",
+    "pad": "35",
+    "port": [
+     90.315,
+     96.53
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 35,
+    "layer": "F.Cu",
+    "net": "LCD_R3",
+    "pad": "36",
+    "port": [
+     90.315,
+     96.13
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 36,
+    "layer": "F.Cu",
+    "net": "FMC_LA02_P",
+    "pad": "37",
+    "port": [
+     90.315,
+     95.73
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 37,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "38",
+    "port": [
+     87.63,
+     95.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 38,
+    "layer": "F.Cu",
+    "net": "PUDC_34",
+    "pad": "39",
+    "port": [
+     90.315,
+     94.93
+    ],
+    "row": 1,
+    "si_class": "LOW",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 39,
+    "layer": "F.Cu",
+    "net": "LCD_R4",
+    "pad": "40",
+    "port": [
+     90.315,
+     94.53
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 40,
+    "layer": "F.Cu",
+    "net": "LCD_R5",
+    "pad": "41",
+    "port": [
+     90.315,
+     94.13
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 41,
+    "layer": "F.Cu",
+    "net": "FMC_LA04_P",
+    "pad": "42",
+    "port": [
+     90.315,
+     93.73
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 42,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "43",
+    "port": [
+     87.63,
+     93.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 43,
+    "layer": "F.Cu",
+    "net": "FMC_LA04_N",
+    "pad": "44",
+    "port": [
+     90.315,
+     92.93
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 44,
+    "layer": "F.Cu",
+    "net": "FMC_LA05_N",
+    "pad": "45",
+    "port": [
+     90.315,
+     92.53
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 45,
+    "layer": "F.Cu",
+    "net": "LCD_R6",
+    "pad": "46",
+    "port": [
+     90.315,
+     92.13
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2032
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 46,
+    "layer": "F.Cu",
+    "net": "FMC_LA05_P",
+    "pad": "47",
+    "port": [
+     90.315,
+     91.73
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "inward",
+    "lane": 47,
+    "layer": "F.Cu",
+    "net": "GND",
+    "pad": "48",
+    "port": [
+     87.63,
+     91.33
+    ],
+    "row": 1,
+    "si_class": "GND",
+    "width": 0.3
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 48,
+    "layer": "F.Cu",
+    "net": "FMC_LA06_N",
+    "pad": "49",
+    "port": [
+     90.315,
+     90.93
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   },
+   {
+    "bus_group": null,
+    "dir": "outward",
+    "lane": 49,
+    "layer": "F.Cu",
+    "net": "FMC_LA07_P",
+    "pad": "50",
+    "port": [
+     90.315,
+     90.53
+    ],
+    "row": 1,
+    "si_class": "MODERATE",
+    "width": 0.2052
+   }
+  ]
+ },
+ "netted_counts": {
+  "J1": 93,
+  "J2": 100,
+  "J3": 100
+ },
+ "pairs": [
+  {
+   "base": "ETH_PHY_MDI0_*",
+   "conn": "J1",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "ETH_PHY_MDI0_N",
+    "ETH_PHY_MDI0_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "ETH_PHY_MDI1_*",
+   "conn": "J1",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "ETH_PHY_MDI1_N",
+    "ETH_PHY_MDI1_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "ETH_PHY_MDI2_*",
+   "conn": "J1",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "ETH_PHY_MDI2_N",
+    "ETH_PHY_MDI2_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "ETH_PHY_MDI3_*",
+   "conn": "J1",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "ETH_PHY_MDI3_N",
+    "ETH_PHY_MDI3_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "FMC_LA08_*",
+   "conn": "J1",
+   "convergence": "split",
+   "delta_lane": 18,
+   "halves": [
+    "FMC_LA08_N",
+    "FMC_LA08_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA09_*",
+   "conn": "J1",
+   "convergence": "split",
+   "delta_lane": 4,
+   "halves": [
+    "FMC_LA09_N",
+    "FMC_LA09_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA10_*",
+   "conn": "J1",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_LA10_N",
+    "FMC_LA10_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA11_*",
+   "conn": "J1",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_LA11_N",
+    "FMC_LA11_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "STM32_USB_D_*",
+   "conn": "J1",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "STM32_USB_D_N",
+    "STM32_USB_D_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "HDMI_RX_CLK_*",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "HDMI_RX_CLK_N",
+    "HDMI_RX_CLK_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "HDMI_RX_D0_*",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "HDMI_RX_D0_N",
+    "HDMI_RX_D0_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "HDMI_RX_D1_*",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "HDMI_RX_D1_N",
+    "HDMI_RX_D1_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "HDMI_RX_D2_*",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "HDMI_RX_D2_N",
+    "HDMI_RX_D2_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "IO_L10_*_13",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "IO_L10_N_13",
+    "IO_L10_P_13"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "IO_L24_*_13",
+   "conn": "J2",
+   "convergence": "split",
+   "delta_lane": 3,
+   "halves": [
+    "IO_L24_N_13",
+    "IO_L24_P_13"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "IO_L2_*_13",
+   "conn": "J2",
+   "convergence": "split",
+   "delta_lane": 6,
+   "halves": [
+    "IO_L2_N_13",
+    "IO_L2_P_13"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "IO_L3_*_13",
+   "conn": "J2",
+   "convergence": "split",
+   "delta_lane": 25,
+   "halves": [
+    "IO_L3_N_13",
+    "IO_L3_P_13"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "IO_L4_*_13",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "IO_L4_N_13",
+    "IO_L4_P_13"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "IO_L7_*_13",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "IO_L7_N_13",
+    "IO_L7_P_13"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "IO_L8_*_13",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "IO_L8_N_13",
+    "IO_L8_P_13"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "IO_L9_DQS_*_13",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "IO_L9_DQS_N_13",
+    "IO_L9_DQS_P_13"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "ZYNQ_HDMI_TX_TMDS_0_*",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "ZYNQ_HDMI_TX_TMDS_0_N",
+    "ZYNQ_HDMI_TX_TMDS_0_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "ZYNQ_HDMI_TX_TMDS_1_*",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "ZYNQ_HDMI_TX_TMDS_1_N",
+    "ZYNQ_HDMI_TX_TMDS_1_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "ZYNQ_HDMI_TX_TMDS_2_*",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "ZYNQ_HDMI_TX_TMDS_2_N",
+    "ZYNQ_HDMI_TX_TMDS_2_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "ZYNQ_HDMI_TX_TMDS_CLK_*",
+   "conn": "J2",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "ZYNQ_HDMI_TX_TMDS_CLK_N",
+    "ZYNQ_HDMI_TX_TMDS_CLK_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "CAM_CLK_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "CAM_CLK_N",
+    "CAM_CLK_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "CAM_D0_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "CAM_D0_N",
+    "CAM_D0_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "CAM_D1_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "CAM_D1_N",
+    "CAM_D1_P"
+   ],
+   "same_row": true,
+   "si_class": "GENUINE"
+  },
+  {
+   "base": "FMC_CLK0_M2C_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_CLK0_M2C_N",
+    "FMC_CLK0_M2C_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_CLK1_M2C_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_CLK1_M2C_N",
+    "FMC_CLK1_M2C_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA00_CC_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_LA00_CC_N",
+    "FMC_LA00_CC_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA01_CC_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_LA01_CC_N",
+    "FMC_LA01_CC_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA02_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_LA02_N",
+    "FMC_LA02_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA03_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_LA03_N",
+    "FMC_LA03_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA04_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_LA04_N",
+    "FMC_LA04_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA05_*",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "FMC_LA05_N",
+    "FMC_LA05_P"
+   ],
+   "same_row": true,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA06_*",
+   "conn": "J3",
+   "convergence": "row_wrap",
+   "delta_lane": 1,
+   "halves": [
+    "FMC_LA06_N",
+    "FMC_LA06_P"
+   ],
+   "same_row": false,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "FMC_LA07_*",
+   "conn": "J3",
+   "convergence": "row_wrap",
+   "delta_lane": 1,
+   "halves": [
+    "FMC_LA07_N",
+    "FMC_LA07_P"
+   ],
+   "same_row": false,
+   "si_class": "MODERATE"
+  },
+  {
+   "base": "IO_L16_*_35",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "IO_L16_N_35",
+    "IO_L16_P_35"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  },
+  {
+   "base": "IO_L18_*_35",
+   "conn": "J3",
+   "convergence": "quad",
+   "delta_lane": 2,
+   "halves": [
+    "IO_L18_N_35",
+    "IO_L18_P_35"
+   ],
+   "same_row": true,
+   "si_class": "LOW"
+  }
+ ],
+ "schema": "escape/v1",
+ "t1_constraints": {
+  "consumer": "T1 composition legalizer (D13): treat every corridor rect + the som_escape via sites as placement constraints",
+  "corridors": {
+   "J1:N": {
+    "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
+    "rect": [
+     95.11,
+     79.565,
+     115.71,
+     80.865
+    ]
+   },
+   "J1:S": {
+    "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
+    "rect": [
+     95.11,
+     84.235,
+     115.71,
+     85.535
+    ]
+   },
+   "J2:N": {
+    "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
+    "rect": [
+     95.11,
+     115.125,
+     115.71,
+     116.425
+    ]
+   },
+   "J2:S": {
+    "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
+    "rect": [
+     95.11,
+     119.795,
+     115.71,
+     121.095
+    ]
+   },
+   "J3:N": {
+    "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
+    "rect": [
+     84.645,
+     90.03,
+     85.945,
+     110.63
+    ]
+   },
+   "J3:S": {
+    "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
+    "rect": [
+     89.315,
+     90.03,
+     90.615,
+     110.63
+    ]
+   }
+  }
+ }
+}
