@@ -571,7 +571,14 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         "refdes_silk": None,
         "placement_contract": None, "placement_flow": None,
         "return_stitch": None, "escape_lanes": None, "return_path": None,
+        "fanout": None,
     }
+    # FAN-OUT CLEARANCE gate (D13 NO-ROUTING wave, REPORT-FIRST ratchet) — the
+    # intelligent-uniform placement floor: every multi-pin IC gets breathing room
+    # scaled to its pin count, measured to same-side FOREIGN parts only (own-cluster
+    # decoupling + DF40 plugs excluded). Runs on the SAME placed model (no rebuild).
+    from schgen.verify import fanout_gate
+    result["fanout"] = fanout_gate.check(model)
     # T2 escape gates — return-stitch v2 (HARD) on the SAME model, with
     # emitted-file parity against the .kicad_pcb just written; the escape-lane
     # gate (HARD) on the Tier-2 plan; v1 return-path REPORT-only (the

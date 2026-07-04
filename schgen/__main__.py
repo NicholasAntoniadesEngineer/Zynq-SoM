@@ -1200,6 +1200,40 @@ def cmd_board(args: argparse.Namespace) -> int:
                   f"{'PASS' if rp_.ok else 'FAIL — SoM-design fact'} "
                   f"({rp_.n_fail} contacts beyond K={rp_.k} steps "
                   f"-> {rep_dir / 'return_path.txt'})")
+        # FAN-OUT CLEARANCE gate (D13 NO-ROUTING wave, REPORT-FIRST RATCHET) — the
+        # intelligent-uniform placement floor: every multi-pin IC gets breathing
+        # room scaled to its pin count, measured to same-side FOREIGN parts only
+        # (own-cluster decoupling + DF40 plugs excluded). The offender list IS the
+        # deliverable (carrier/reports/fanout.txt). REPORT-FIRST: ``ok`` passes as
+        # long as the starved count does not EXCEED the ratchet baseline (a NEW
+        # starved IC — a placement change that crowds a previously-clear part —
+        # fails LOUDLY); the standing debt is visible + must only DECREASE. NOT
+        # hard-fail yet (many ICs are starved at the 0.5 mm pack floor; the
+        # templates retire the debt build over build). On a PASS the baseline is
+        # ratcheted DOWN to the live count (never up) so the debt can never regrow.
+        fo_ = pcb_res.get("fanout")
+        if fo_ is not None:
+            (rep_dir / "fanout.txt").write_text(fo_.summary() + "\n")
+            print(f"FAN-OUT CLEARANCE (D13, report-first): "
+                  f"{'PASS' if fo_.ok else 'FAIL — RATCHET REGRESSION'} "
+                  f"({fo_.n_subjects} multi-pin subjects, {fo_.n_starved} starved, "
+                  f"baseline {fo_.baseline} "
+                  f"-> {rep_dir / 'fanout.txt'})")
+            for _r in fo_.starved_records:
+                print(f"  FAN-OUT STARVED: {_r.ref} ({_r.sheet}) {_r.pins}pin "
+                      f"clr={_r.clearance:.3f} need={_r.need:.2f} "
+                      f"slack={_r.slack:+.3f} nearest={_r.nearest_ref}")
+            for _g in fo_.regressions:
+                print(f"  FAN-OUT REGRESSION: {_g}")
+            ok_all = ok_all and fo_.ok
+            if fo_.ok:
+                # ratchet the ceiling DOWN to the live count (write_baseline never
+                # raises it) so a future build that starves a new IC fails.
+                from schgen.verify import fanout_gate
+                fanout_gate.write_baseline(fo_.n_starved)
+        else:
+            print("FAN-OUT CLEARANCE (D13, report-first): FAIL — gate did not run")
+            ok_all = False
     except Exception as exc:  # noqa: BLE001
         print(f"PCB: FAIL — {exc}")
         ok_all = False
