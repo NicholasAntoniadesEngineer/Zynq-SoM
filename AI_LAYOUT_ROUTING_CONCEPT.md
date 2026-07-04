@@ -1133,3 +1133,20 @@ per-net routing calc. Decoupling caps stay tight ON their pins (contract intent)
 room is on a component's FREE sides. Existing placement-time gates that touch
 routing-readiness (return-stitch = ground-return contact adequacy; rail-ampacity =
 contact count) STAY — they are placement/SI checks, not routing.
+
+### FAN-OUT CLEARANCE — design intent (2026-07-04, user-confirmed: "intelligent not dumb")
+The basic-fan-out gate/rule is a UNIFORM STRUCTURE with an INTELLIGENT VALUE:
+- **Uniform rule:** every component gets a fan-out clearance floor — one principle, board-wide.
+- **Intelligent clearance (scaled to real need, NOT a constant halo):** derived from the
+  component's own fan-out demand — pin count / pitch / package. A many-pin fine-pitch IC
+  gets real breathing room; a 2-pin passive gets ~none. (Simple formula/tiers — NOT a
+  per-net routing calc; that's the routing-flavored over-engineering we rejected.)
+- **Cluster-aware (the anti-dumb guard):** clearance is measured against FOREIGN parts
+  only. A component's own contract-cluster members (its decoupling caps, hot-loop caps,
+  FB divider) sit TIGHT on/at its pins by design and do NOT count as crowding. Fan-out
+  room is the gap to UNRELATED neighbors — so the rule never pries a decoupling cap off
+  its pin and never fights the placement contracts.
+- **Rejected as "dumb":** flat uniform halo on every part (bloats the board + breaks
+  decoupling); per-net escape-lane demand analysis (over-engineered, routing-flavored).
+The escape-headroom workflow's MEASUREMENT (which components are packed too tight vs
+foreign parts) feeds this; its design phase is re-aimed at this intelligent-uniform floor.
