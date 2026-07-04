@@ -61,13 +61,20 @@
       "side": "E"
     },
     "power_mon": {
-      "side": "E"
+      "near": "power_som"
     },
     "power_som": {
       "side": "E"
     },
     "ethernet": {
-      "near": "rj45_connector"
+      "near": "rj45_connector",
+      "pull": {
+        "to": "rj45_connector",
+        "weight": 60.0,
+        "face": "inboard",
+        "exclusive": true,
+        "basis": "D11 near_max edge-gap <=20mm proxy for Pulse v7 p.1 <=25mm part-to-part (T1 P7a ethernet wave): magnetics seat at the RJ45 jack. Migrated per D-1 seat-consistency rule when ethernet joins _WIRED_SHEETS - same mechanism as usb_pd's pd_input pull."
+      }
     },
     "uart_bridge": {
       "near": "rj45_connector"

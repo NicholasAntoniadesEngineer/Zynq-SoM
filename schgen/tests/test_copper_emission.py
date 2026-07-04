@@ -140,11 +140,18 @@ def test_committed_board_contains_thermal_copper():
     # escape-wave GND return ladder (locked Freerouting preroute: spines +
     # GND-pad stubs under the DF40s; re-pinned at the T2xGAP1 reconciliation,
     # base 28f8e15). Any OTHER segment would be a stray route.
-    assert bc.segments == 10, bc.segments
+    # T1 P7a (ethernet wave): the datasheet ethernet zone reshaped the board
+    # (170x151 -> 170x152) and the T2 escape return ladder REGENERATED live to
+    # the new geometry — one GND-pad stub dropped, so the preroute is now 9
+    # locked segments (was 10). The build's own RETURN STITCH gate is the
+    # arbiter and PASSED 29/29; every remaining segment is still (locked yes)
+    # net-209 GND preroute (verified), so this is an escape-wave re-pin, not a
+    # stray route. Re-run/re-pin at the P7b escape re-verification hook.
+    assert bc.segments == 9, bc.segments
     text = BOARD.read_text()
     import re as _re
     seg_blocks = _re.findall(r"\(segment\b.*?\n\t\)", text, _re.DOTALL)
-    assert len(seg_blocks) == 10
+    assert len(seg_blocks) == 9
     for sb in seg_blocks:
         assert "(locked yes)" in sb, "non-preroute segment on the foundation"
 

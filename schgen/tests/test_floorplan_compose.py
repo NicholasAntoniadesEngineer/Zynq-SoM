@@ -406,26 +406,32 @@ def test_exactness_mutation_twin_kills_dead_evaluator(_board_ctx):
 
 def test_wired_term_participants_pinned_today():
     """PINNED (re-pinned at every wiring wave): with _WIRED_SHEETS ==
-    {power, usb_pd}, the L4-exempt set is {pd_input, power, usb_pd}
-    (near_max participants + the templated wired sheets) and the L4-guarded
-    set is {ethernet, power_som}.
+    {power, usb_pd, ethernet}, the L4-exempt set is
+    {pd_input, power, usb_pd, ethernet, rj45_connector} (near_max
+    participants + the templated wired sheets) and the L4-guarded set is
+    {power_som}.
 
     History: the T1 spec's "{pd_input, power_som}" figure predates the P2
     measurement (power has L4-mobile bottom leftovers); the P5b rebase onto
     28f8e15 (GAP1 copper) then REMOVED power_som from the exempt set — its
     un-templated bottom caps parked inside U22004's datasheet thermal-via
     field and killed the pour credit (board FAIL). power_som re-joins at its
-    P7 wave (template + same_side)."""
+    P7 wave (template + same_side). T1 P7a (ethernet wave): ethernet joins
+    _WIRED_SHEETS, so its near_max->rj45 term makes BOTH ethernet AND
+    rj45_connector L4-EXEMPT (the near_max window is GUARD-tight, so mm-scale
+    exactness is load-bearing); ethernet thus GRADUATES from far-guarded to
+    exempt, leaving power_som the sole guarded sheet until its own wave."""
     from schgen.verify.placement_contract_gate import (
         _WIRED_SHEETS,
         wired_term_participants,
     )
-    assert _WIRED_SHEETS == frozenset({"power", "usb_pd"}), (
+    assert _WIRED_SHEETS == frozenset({"power", "usb_pd", "ethernet"}), (
         "wiring changed — re-pin this test with the new wave's sets")
     exempt, guarded = wired_term_participants()
-    assert exempt == frozenset({"pd_input", "power", "usb_pd"}), \
+    assert exempt == frozenset(
+        {"pd_input", "power", "usb_pd", "ethernet", "rj45_connector"}), \
         sorted(exempt)
-    assert guarded == frozenset({"ethernet", "power_som"}), sorted(guarded)
+    assert guarded == frozenset({"power_som"}), sorted(guarded)
     import schgen.generate.floorplan_compose as _fc
     for s in sorted(guarded):
         assert s in _fc.FAR_L4_GUARD_MM, (

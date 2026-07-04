@@ -82,7 +82,15 @@ _CONTRACT_ROOTS: tuple[tuple[Path, str], ...] = (
 # contract driven by the generic proximity-cluster template (stage_templates
 # ``_build_proximity_zone``); all 6 parts are contracted so its stage template is
 # active and its intra-zone gate + external near_max (D11 edge-gap) are enforced.
-_WIRED_SHEETS: frozenset[str] = frozenset({"power", "usb_pd"})
+#
+# ``ethernet`` (T1 P7a wave): the Pulse HX5008NL magnetics (T1) with its media-side
+# Bob-Smith termination (R1-R4/C1-C4 at MCT pins 24/21/18/15) + the C5 barrier cap.
+# A PROXIMITY-only contract, same builder as usb_pd, with the media-row FACING turn
+# (stage_templates ``_apply_facing`` via the ``near`` anchor's edge) so T1's centre-
+# tap row faces the RJ45 jack. Its external near_max (rj45 edge-gap <=20mm, D11) and
+# far (power >=10mm) terms graduate from advisory to gated here; ethernet joins the
+# near_max L4-EXEMPT set by construction (``wired_term_participants``).
+_WIRED_SHEETS: frozenset[str] = frozenset({"power", "usb_pd", "ethernet"})
 
 
 # --- contract registry ------------------------------------------------------------

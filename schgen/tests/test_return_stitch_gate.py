@@ -420,9 +420,29 @@ def test_coexistence_verdicts_present(model):
     assert co, "coexistence table empty"
     assert all(c["verdict"] in ("STAY", "CONSTRAINT", "EVICT") for c in co)
     assert all(c["basis"] for c in co)
-    # the hdmi_rx_term straps measurably narrow J2's windows this build
-    assert any(c["sheet"] == "hdmi_rx_term" and c["verdict"] == "CONSTRAINT"
-               for c in co)
+    # CONSTRAINT is a GEOMETRY-DERIVED verdict, re-derived every build: an
+    # hdmi_rx_term strap earns it IFF it lands in a connector whose escape ledger
+    # recorded a window split (split_u/split_row) that build. Assert the machinery
+    # tracks the ledger EXACTLY — not a fixed CONSTRAINT count (a packer that opens
+    # the windows, like the T1 ethernet-wave repack, legitimately leaves 0 splits
+    # and thus all-STAY; a CONSTRAINT with no split, or a split with no CONSTRAINT,
+    # is the real bug this kills). See ``escape._coexistence`` ``escal_conns``.
+    ledger = model.escape_meta["ledger"]
+    split_conns = {e["conn"] for e in ledger
+                   if e.get("kind") in ("split_u", "split_row")}
+    constrained = {c["conn"] for c in co if c["verdict"] == "CONSTRAINT"}
+    assert all(c["sheet"] == "hdmi_rx_term"
+               for c in co if c["verdict"] == "CONSTRAINT"), (
+        "only hdmi_rx_term straps may be CONSTRAINT")
+    assert constrained <= split_conns, (
+        f"CONSTRAINT on a connector with no window split: "
+        f"{constrained - split_conns}")
+    # every split connector with an hdmi_rx_term strap in its region MUST show the
+    # CONSTRAINT (never a silent STAY that hides a narrowed window)
+    hdmi_conns = {c["conn"] for c in co if c["sheet"] == "hdmi_rx_term"}
+    assert (split_conns & hdmi_conns) <= constrained, (
+        f"window split near an hdmi_rx_term strap not surfaced as CONSTRAINT: "
+        f"{(split_conns & hdmi_conns) - constrained}")
     # nothing was deleted or moved: verdicts are data, the insts still exist
     refs = {i.ref for i in model.insts}
     assert all(c["ref"] in refs for c in co)

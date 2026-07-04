@@ -21,9 +21,9 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 | J2 | (136.5, 129.5) rot 180 | (21, 38.5) | 19.8 x 3.78 mm |
 | J3 | (154.5, 112) rot 90 | (3, 21) | 3.78 x 19.8 mm |
 
-Derived board: **170 x 151 mm**; SoM origin at **(60, 54.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
+Derived board: **170 x 152 mm**; SoM origin at **(60, 55)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 170x151 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 14746 <= LAW-5 budget 15862 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 170x152 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 15676 <= LAW-5 budget 15914 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -34,39 +34,39 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 | N | usbc_otg | (94.5, 1.5, 20.57 x 21.718) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
 | N | usb_jtag_connector | (115.5, 1.5, 10.95 x 16.038) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
 | N | usb_uart_connector | (126.5, 1.5, 10.95 x 16.038) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
-| W | camera | (1.5, 43.5, 30.27 x 21.9) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (6) |
-| W | lcd | (1.5, 65.5, 35.963 x 26.7) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (7) |
-| W | motor_pwm | (1.5, 92.5, 22.1 x 20.604) |  |  |
-| E | motor_sense | (119.5, 54, 48.916 x 33.088) | XT60PW-M (XT60 ESC power inlet (horizontal)), XT60PW-M (XT60 ESC power inlet (horizontal)) |  |
-| E | rj45_connector | (141, 26.5, 27.37 x 19.4) |  |  |
-| E | board_qwiic | (156, 46.5, 12.326 x 7.5) |  |  |
-| S | hdmi_rx | (10, 126, 17.57 x 23.336) | HDMI-019S (HDMI receptacle) | (8) |
-| S | hdmi_tx | (47.5, 125.5, 20.57 x 23.846) | HDMI-019S (HDMI receptacle) | (9) |
-| S | pmod | (88, 126, 33.58 x 23.509) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (10) |
-| S | pmod_expansion | (122, 119.5, 21.84 x 29.773) | DS1024-2x6R2 (PMOD 2x6 socket) | (11) |
+| W | camera | (1.5, 44, 30.27 x 21.9) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (6) |
+| W | lcd | (1.5, 66, 35.963 x 26.7) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (7) |
+| W | motor_pwm | (1.5, 93, 22.1 x 20.604) |  |  |
+| E | motor_sense | (119.5, 54.5, 48.916 x 33.088) | XT60PW-M (XT60 ESC power inlet (horizontal)), XT60PW-M (XT60 ESC power inlet (horizontal)) |  |
+| E | rj45_connector | (141, 27, 27.37 x 19.4) |  |  |
+| E | board_qwiic | (156, 47, 12.326 x 7.5) |  |  |
+| S | hdmi_rx | (10, 127, 17.57 x 23.336) | HDMI-019S (HDMI receptacle) | (8) |
+| S | hdmi_tx | (47.5, 126.5, 20.57 x 23.846) | HDMI-019S (HDMI receptacle) | (9) |
+| S | pmod | (88, 127, 33.58 x 23.509) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (10) |
+| S | pmod_expansion | (122, 120.5, 21.84 x 29.773) | DS1024-2x6R2 (PMOD 2x6 socket) | (11) |
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (46, 43, 11.68 x 15.744) | 18 | 183.9 |  |
-| board_services | W | (28, 7, 22.8 x 20.2) | 9 | 460.6 |  |
-| bringup_en | E | (136, 88, 8.68 x 15.3) | 15 | 132.8 |  |
-| bringup_en_modules | E | (50, 99, 17.57 x 25.2) | 54 | 442.8 |  |
-| bringup_modules | E | (30, 95, 19.3 x 18.466) | 71 | 356.4 | (12) |
-| bringup_rails | E | (68, 99, 36.84 x 23.06) | 23 | 849.5 | (13) |
-| debug_boot | N | (40, 60, 17.75 x 29.944) | 10 | 531.5 | (14) |
-| ethernet | @rj45_connector | (113, 33, 14.3 x 20.66) | 10 | 295.4 | (15) |
-| fmc | S | (59, 37, 52.91 x 15.49) | 8 | 819.6 | (16) |
-| hdmi_rx_term | @hdmi_rx | (69, 123, 7.87 x 10.4) | 10 | 81.8 |  |
-| mechanical | E | (116, 19, 13 x 13) | 4 | 169 |  |
-| power | E | (144.98, 88, 23.9349 x 47.6504) | 51 | 1140.5 | (17) |
-| power_mon | E | (128, 39, 9.14 x 13.828) | 10 | 126.4 | (18) |
-| power_som | E | (106, 107, 12.05 x 16.3) | 23 | 196.4 |  |
-| uart_bridge | @rj45_connector | (88, 27, 7.87 x 8.94) | 10 | 70.4 | (19) |
-| usb_jtag | E | (30, 28, 28.19 x 14.448) | 19 | 407.3 |  |
+| board_aux | E | (113, 103, 11.68 x 15.744) | 18 | 183.9 |  |
+| board_services | W | (28, 4, 22.8 x 20.2) | 9 | 460.6 |  |
+| bringup_en | E | (79, 37, 8.68 x 15.3) | 15 | 132.8 |  |
+| bringup_en_modules | E | (40, 54, 17.57 x 25.2) | 54 | 442.8 |  |
+| bringup_modules | E | (21, 25, 19.3 x 18.466) | 71 | 356.4 | (12) |
+| bringup_rails | E | (41, 30, 36.84 x 23.06) | 23 | 849.5 | (13) |
+| debug_boot | N | (40, 80, 17.75 x 29.944) | 10 | 531.5 | (14) |
+| ethernet | @rj45_connector | (115, 26, 25.5076 x 21.745) | 10 | 554.7 | (15) |
+| fmc | S | (59, 99, 52.91 x 15.49) | 8 | 819.6 | (16) |
+| hdmi_rx_term | @hdmi_rx | (67, 115, 7.87 x 10.4) | 10 | 81.8 |  |
+| mechanical | E | (138, 12, 13 x 13) | 4 | 169 |  |
+| power | E | (144.14, 87.888, 23.9349 x 47.6504) | 51 | 1140.5 | (17) |
+| power_mon | @power_som | (78, 115, 9.14 x 13.828) | 10 | 126.4 | (18) |
+| power_som | E | (125, 103, 12.05 x 16.3) | 23 | 196.4 |  |
+| uart_bridge | @rj45_connector | (95, 24, 7.87 x 8.94) | 10 | 70.4 | (19) |
+| usb_jtag | E | (113, 88, 28.19 x 14.448) | 19 | 407.3 |  |
 | usb_pd | @pd_input | (79, 26, 8.18 x 10.28) | 6 | 84.1 | (20) |
-| user_io | S | (112, 88, 23.11 x 18.3) | 17 | 422.9 | (21) |
+| user_io | S | (88, 34, 23.11 x 18.3) | 17 | 422.9 | (21) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
 

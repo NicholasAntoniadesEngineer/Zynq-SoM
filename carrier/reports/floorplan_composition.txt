@@ -1,40 +1,52 @@
-FLOORPLAN COMPOSITION (T1): 6 hard / 10 soft terms; hard RED 0, soft RED 1 (advisory)
-  aggregate hard margin: sum 348.58 mm, min 8.08 mm (informational)
+FLOORPLAN COMPOSITION (T1): 8 hard / 9 soft terms; hard RED 0, soft RED 1 (advisory)
+  aggregate hard margin: sum 458.98 mm, min 8.08 mm (informational)
   hard terms:
-    HARD facing power->power_som: 1.69 vs 90.00 (margin +88.31) ok [facing/output_roles [placement/v2]] dot=+834.54
-    HARD far_min power->ethernet.line_side: 83.64 vs 10.00 (margin +73.64) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
-    HARD flow_hop pd_input->usb_pd: 15.07 vs 123.33 (margin +108.26) ok [flow chain [placement/v2]]
-    HARD flow_hop power->power_som: 63.12 vs 123.33 (margin +60.22) ok [flow chain [placement/v2]]
-    HARD flow_hop usb_pd->power: 113.27 vs 123.33 (margin +10.06) ok [flow chain [placement/v2]]
+    HARD facing power->power_som: 0.35 vs 90.00 (margin +89.65) ok [facing/output_roles [placement/v2]] dot=+518.02
+    HARD far_min ethernet->power: 79.93 vs 10.00 (margin +69.93) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
+    HARD far_min power->ethernet.line_side: 79.93 vs 10.00 (margin +69.93) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
+    HARD flow_hop pd_input->usb_pd: 15.07 vs 123.52 (margin +108.45) ok [flow chain [placement/v2]]
+    HARD flow_hop power->power_som: 39.16 vs 123.52 (margin +84.36) ok [flow chain [placement/v2]]
+    HARD flow_hop usb_pd->power: 112.42 vs 123.52 (margin +11.10) ok [flow chain [placement/v2]]
+    HARD near_max ethernet->rj45_connector: 2.52 vs 20.00 (margin +17.48) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
     HARD near_max usb_pd->pd_input: 1.92 vs 10.00 (margin +8.08) ok [judgment:10.0 (D11 edge-gap metric) — keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power_som->@som: 9.89 vs 90.00 (margin +80.11) ok [facing/output_roles [placement/v2]] dot=+272.11
-    soft far_min ethernet->power: 83.64 vs 10.00 (margin +73.64) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
-    soft far_min motor_sense->power: 60.40 vs 10.00 (margin +50.40) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    soft far_min motor_sense->power_som: 38.75 vs 10.00 (margin +28.75) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    soft far_min power_som->ethernet.line_side: 59.01 vs 10.00 (margin +49.01) ok [judgment:10.0 — same rationale as the power pilot]
-    soft flow_hop power_mon->power_som: 47.19 vs 123.33 (margin +76.14) ok [flow chain [placement/v2]]
-    soft near_intent hdmi_rx_term->hdmi_rx: 34.97 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
-    soft near_intent uart_bridge->rj45_connector: 22.58 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
-    soft near_max ethernet->rj45_connector: 0.00 vs 20.00 (margin +20.00) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
-    soft near_max motor_sense->motor_pwm: 68.65 vs 20.00 (margin -48.65) RED [judgment:20.0 (D9) — motor telemetry beside the PWM out]
-  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 12 T2-coexistence-managed
-    managed C22021 (power_som) in escape:J2:N [T2 STAY]
-    managed R1003 (board_aux) in escape:J1:S [T2 STAY]
-    managed R13001 (hdmi_rx_term) in escape:J2:N [T2 CONSTRAINT]
-    managed R13002 (hdmi_rx_term) in escape:J2:N [T2 CONSTRAINT]
-    managed R13005 (hdmi_rx_term) in escape:J2:S [T2 CONSTRAINT]
-    managed R13006 (hdmi_rx_term) in escape:J2:S [T2 CONSTRAINT]
-    managed R22015 (power_som) in escape:J2:S [T2 STAY]
-    managed R22018 (power_som) in escape:J2:S [T2 STAY]
-    managed R9001 (debug_boot) in escape:J3:N [T2 STAY]
-    managed R9002 (debug_boot) in escape:J3:S [T2 STAY]
-    managed R9005 (debug_boot) in escape:J3:N [T2 STAY]
-    managed R9006 (debug_boot) in escape:J3:S [T2 STAY]
+    soft facing power_som->@som: 24.23 vs 90.00 (margin +65.77) ok [facing/output_roles [placement/v2]] dot=+323.35
+    soft far_min motor_sense->power: 58.73 vs 10.00 (margin +48.73) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    soft far_min motor_sense->power_som: 37.25 vs 10.00 (margin +27.25) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    soft far_min power_som->ethernet.line_side: 68.09 vs 10.00 (margin +58.09) ok [judgment:10.0 — same rationale as the power pilot]
+    soft flow_hop power_mon->power_som: 42.75 vs 123.52 (margin +80.77) ok [flow chain [placement/v2]]
+    soft near_intent hdmi_rx_term->hdmi_rx: 28.93 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_intent power_mon->power_som: 26.12 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_intent uart_bridge->rj45_connector: 41.44 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_max motor_sense->motor_pwm: 40.83 vs 20.00 (margin -20.83) RED [judgment:20.0 (D9) — motor telemetry beside the PWM out]
+  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 21 T2-coexistence-managed
+    managed C11001 (fmc) in escape:J2:N [T2 STAY]
+    managed C11002 (fmc) in escape:J2:N [T2 STAY]
+    managed C11004 (fmc) in escape:J2:N [T2 STAY]
+    managed C11005 (fmc) in escape:J2:N [T2 STAY]
+    managed C13001 (hdmi_rx_term) in escape:J2:S [T2 STAY]
+    managed C13002 (hdmi_rx_term) in escape:J2:S [T2 STAY]
+    managed C4003 (bringup_en) in escape:J1:N [T2 STAY]
+    managed R4001 (bringup_en) in escape:J1:N [T2 STAY]
+    managed R4004 (bringup_en) in escape:J1:S [T2 STAY]
+    managed R4005 (bringup_en) in escape:J1:S [T2 STAY]
+    managed R5008 (bringup_en_modules) in escape:J3:N [T2 STAY]
+    managed R5009 (bringup_en_modules) in escape:J3:S [T2 STAY]
+    managed R5012 (bringup_en_modules) in escape:J3:N [T2 STAY]
+    managed R5013 (bringup_en_modules) in escape:J3:S [T2 STAY]
+    managed R5016 (bringup_en_modules) in escape:J3:N [T2 STAY]
+    managed R5017 (bringup_en_modules) in escape:J3:S [T2 STAY]
+    managed R5020 (bringup_en_modules) in escape:J3:N [T2 STAY]
+    managed R5021 (bringup_en_modules) in escape:J3:S [T2 STAY]
+    managed R9002 (debug_boot) in escape:J3:N [T2 STAY]
+    managed R9004 (debug_boot) in escape:J3:S [T2 STAY]
+    managed R9006 (debug_boot) in escape:J3:N [T2 STAY]
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    bringup_en_modules | bringup_rails: 24 airwires (670.4 mm) -> corridor >= 6.8 mm
-    bringup_en_modules | bringup_modules: 16 airwires (222.4 mm) -> corridor >= 5.2 mm
-    bringup_rails | som_decoupling: 12 airwires (54.3 mm) -> corridor >= 4.4 mm
-    ethernet | rj45_connector: 8 airwires (288.5 mm) -> corridor >= 3.6 mm
-    motor_sense | power_mon: 7 airwires (58.6 mm) -> corridor >= 3.4 mm
-    fmc | som_decoupling: 6 airwires (21.5 mm) -> corridor >= 3.2 mm
+    bringup_en_modules | bringup_rails: 24 airwires (541.4 mm) -> corridor >= 6.8 mm
+    bringup_en_modules | bringup_modules: 10 airwires (386.9 mm) -> corridor >= 4.0 mm
+    bringup_en | bringup_rails: 9 airwires (104.9 mm) -> corridor >= 3.8 mm
+    ethernet | rj45_connector: 9 airwires (222.3 mm) -> corridor >= 3.8 mm
+    power_som | usb_jtag: 9 airwires (26.1 mm) -> corridor >= 3.8 mm
+    hdmi_rx | hdmi_rx_term: 8 airwires (520.8 mm) -> corridor >= 3.6 mm
+    bringup_modules | bringup_rails: 6 airwires (25.0 mm) -> corridor >= 3.2 mm
+    uart_bridge | user_io: 6 airwires (28.4 mm) -> corridor >= 3.2 mm

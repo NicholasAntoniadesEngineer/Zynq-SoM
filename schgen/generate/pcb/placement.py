@@ -529,6 +529,47 @@ def _downstream_facing(sheet: str, contract: dict, spec=None) -> str | None:
     return _OPP[side]                     # interior/downstream = opposite the edge
 
 
+def _media_facing(sheet: str, contract: dict, spec=None) -> str | None:
+    """The zone-LOCAL direction (N/E/S/W) a PROXIMITY contract's ANCHOR-PIN row
+    (its media / line side) must face, for the proximity-cluster FACING turn
+    (T1 P7a). Derived from the DECLARATIVE floorplan — NOT packed positions — so
+    it cannot deadlock sizing, and the turn is bbox-preserving so it never changes
+    the committed block size.
+
+    Rule: a contract that OPTS IN with ``external.media_faces_near_max: true``
+    (ethernet — its Bob-Smith centre-tap row is a DIRECTIONAL media side that must
+    point at the RJ45 jack) faces its primary ``external.near_max`` target's board
+    edge. The turn is OPT-IN, not inferred from near_max presence, precisely so a
+    non-directional bypass cluster (usb_pd's FUSB302 caps surround the IC on all
+    sides — there is no media row to orient) is NEVER turned and stays byte-
+    identical. Returns None if the contract does not opt in, has no near_max, or the
+    target's edge cannot be resolved (the template then skips the turn).
+    """
+    ext = contract.get("external") or {}
+    if not ext.get("media_faces_near_max"):
+        return None
+    nm = ext.get("near_max") or []
+    if not nm:
+        return None
+    # the primary near_max target's zone (coarsen a dotted region.zone), then its
+    # declared board edge — the direction the media row points toward.
+    target = str(nm[0].get("other", "")).split(".", 1)[0]
+    if not target:
+        return None
+    if spec is None:
+        from schgen.generate.floorplan import FLOORPLAN_SPEC, load_floorplan_spec
+        if not FLOORPLAN_SPEC.exists():
+            return None
+        try:
+            spec = load_floorplan_spec()
+        except Exception:  # noqa: BLE001 — malformed spec reported by build_plan
+            return None
+    if spec is None:
+        return None
+    edge = spec.edge_of.get(target)       # the near target's board edge
+    return edge if edge in ("N", "E", "S", "W") else None
+
+
 def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
     """The SHARED packer: for every non-SoM subsystem, its REAL 2-sided packed
     zone (w, h) + per-part offsets, keyed on the STABLE board-unique refs. Built
@@ -652,14 +693,17 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
             for _m in _members:
                 side_of[_m] = "top"
             tmpl_rot: dict[str, float] = {}
-            # FACING hint (Unit 3): the zone-local direction the contract's
-            # declared DOWNSTREAM zone (external.flow / external.downstream) lies
-            # in — the template turns the composed column so its OUTPUT-role parts
-            # face that way, so the composition-level FLOW gate's FACING check
-            # passes. Derived from the floorplan (below) without needing the final
-            # plan positions (the turn is bbox-preserving, so it does not perturb
-            # the block size the plan is about to commit to).
-            _facing = _downstream_facing(sheet, _contract, spec)
+            # FACING hint (Unit 3 + T1 P7a): the zone-local direction the
+            # contract's OUTPUT / MEDIA side must face. A BUCK/downstream contract
+            # (external.downstream) faces its downstream zone so the FLOW gate's
+            # FACING check passes (_downstream_facing). A PROXIMITY contract with a
+            # near_max term (ethernet's magnetics -> RJ45) faces the near target's
+            # edge so T1's media/centre-tap row points at the jack (_media_facing).
+            # A contract is one or the other, so the OR is unambiguous. Derived from
+            # the floorplan (not final positions); the turn is bbox-preserving, so
+            # it never perturbs the block size the plan is about to commit to.
+            _facing = (_downstream_facing(sheet, _contract, spec)
+                       or _media_facing(sheet, _contract, spec))
             _tmpl = stage_templates.build_zone(
                 sheet, _contract, refs_by_sheet[sheet], side_of, bbox_of,
                 resolvable, tmpl_rot, facing=_facing)

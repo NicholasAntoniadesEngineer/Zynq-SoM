@@ -388,8 +388,8 @@ def test_facing_at_som_resolves(monkeypatch):
 # template is wired in a later wave, that sheet moves from ``_RED_ON_BEFORE`` to
 # ``_GREEN_WIRED`` (usb_pd did so in the D11 wave, like the intra-zone wave A->B).
 
-_GREEN_WIRED = ("power", "usb_pd")
-_RED_ON_BEFORE = ("ethernet", "hdmi_rx", "motor_sense")
+_GREEN_WIRED = ("power", "usb_pd", "ethernet")
+_RED_ON_BEFORE = ("hdmi_rx", "motor_sense")
 
 
 @pytest.fixture(scope="module")

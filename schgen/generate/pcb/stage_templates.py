@@ -34,6 +34,7 @@ rounded offsets, so two builds are byte-identical.
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from schgen.verify import placement_contract_gate as _g
@@ -694,7 +695,7 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
         if "proximity" in _types:
             return _build_proximity_zone(
                 sheet_name, contract, refs, side_of, bbox_of, resolvable,
-                rot_out)
+                rot_out, facing=facing)
         return None
 
     # LIBRARY ref -> BOARD ref for this sheet (same band the gate/netlist use).
@@ -1008,7 +1009,8 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
                           side_of: dict[str, str],
                           bbox_of: dict[str, tuple[float, float, float, float]],
                           resolvable: dict[str, Path],
-                          rot_out: dict[str, float]
+                          rot_out: dict[str, float],
+                          facing: str | None = None
                           ) -> tuple[dict[str, tuple[float, float]],
                                      dict[str, tuple[float, float]],
                                      float, float] | None:
@@ -1017,7 +1019,15 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
     then shelf-pack the true leftovers into a band below (the SAME leftover machinery
     the power path uses). Returns the ``_pack_one_zone`` 4-tuple, or None to fall
     through. Deterministic; the cluster's chosen rotations come back via ``rot_out``
-    (the SAME channel LEVER-L1 uses), folded into ``zone_extra_rot`` by build_model."""
+    (the SAME channel LEVER-L1 uses), folded into ``zone_extra_rot`` by build_model.
+
+    ``facing`` (optional; N/E/S/W; T1 P7a): the zone-local direction the MEDIA side
+    — the members that hug an ``anchor_pins`` centre-tap row — must face. A rigid
+    {0,90,180,270}-deg whole-cluster turn (``_apply_media_facing``) is applied so
+    those members land on the ``facing`` half of the zone (ethernet's Bob-Smith
+    R/C row faces the RJ45 jack). Applied BEFORE the extent/leftover pack so a
+    90/270 turn's w<->h swap is reflected in the returned block size. No-op when
+    ``facing`` is None or the contract has no anchor-pinned proximity members."""
     lib2board = _g._board_refs_by_sheet(sheet_name)
     board_set = set(refs)
     bref_of = {lib: b for lib, b in lib2board.items()
@@ -1051,6 +1061,23 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
     placed_abs = {p.bref: _Part(p.bref, p.mod, p.rot, p.side,
                                 round(p.ox + dx, 4), round(p.oy + dy, 4))
                   for p in parts}
+
+    # MEDIA FACING (T1 P7a): the members that hug an ``anchor_pins`` centre-tap row
+    # (ethernet's Bob-Smith R/C at T1's MCT pins 24/21/18/15) form the MEDIA side;
+    # turn the whole cluster so they face ``facing`` (the RJ45 jack's edge). Applied
+    # HERE — after re-anchor, before the extent/leftover pack — so a 90/270 turn's
+    # w<->h swap flows into the returned block size and the re-anchor stays valid.
+    media_brefs: set[str] = set()
+    for st in contract.get("structures", []):
+        if st.get("type") != "proximity" or not st.get("anchor_pins"):
+            continue
+        if bref_of.get(st.get("anchor", "")) != anchor_bref:
+            continue
+        for mlib in st.get("members", []):
+            mb = bref_of.get(mlib)
+            if mb is not None:
+                media_brefs.add(mb)
+    placed_abs = _apply_media_facing(placed_abs, media_brefs, facing)
 
     top_off: dict[str, tuple[float, float]] = {}
     bot_off: dict[str, tuple[float, float]] = {}
@@ -1247,3 +1274,94 @@ def _apply_facing(placed: dict[str, _Part], out_brefs: set[str],
     # only accept the turn if it actually improves facing (defensive: a symmetric
     # zone could tie — then keep the original to stay deterministic).
     return turned if _dot(turned) > _dot(placed) else placed
+
+
+def _turn_zone_quadrant(placed: dict[str, _Part], deg: float
+                        ) -> dict[str, _Part]:
+    """Rigid {0,90,180,270}-deg TURN of the whole composed zone about its pad-extent
+    center, then re-anchored so its min pad corner sits at ZONE_PAD. Every part
+    rotation gains ``deg`` and its position rotates about the center by the SAME
+    CLOCKWISE (+y-down) transform ``_pad_boxes`` uses — so intra-zone geometry is
+    preserved exactly and the result stays on-grid/on-side. The bbox is preserved
+    for 0/180; a 90/270 turn SWAPS w<->h (the caller re-reads the extent), which is
+    fine for a small square-ish proximity cluster whose block size the plan has not
+    yet committed (the proximity path applies facing BEFORE computing zw/zh).
+    Generalises ``_turn_zone_180`` to any quadrant (T1 P7a: a media row must be able
+    to face any of the four edges, not only the opposite one)."""
+    deg = deg % 360.0
+    if abs(deg) < 1e-6:
+        return placed
+    R = math.radians(deg)
+    cs, sn = math.cos(R), math.sin(R)
+    # extent center over every part's pad boxes (pre-turn frame)
+    allpts: list[tuple[float, float]] = []
+    for p in placed.values():
+        for bb in p.pad_boxes().values():
+            allpts.append((bb[0], bb[1]))
+            allpts.append((bb[2], bb[3]))
+    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
+    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    out: dict[str, _Part] = {}
+    for ref, p in placed.items():
+        nrot = (p.rot + deg) % 360.0
+        ob = _g._pad_boxes(p.mod, p.rot)
+        nb = _g._pad_boxes(p.mod, nrot)
+        # old pad-union center (zone-local), rotate it about the extent center by
+        # the SAME CW transform, then back out the new footprint half-offset so the
+        # part origin lands where the rotated center wants it.
+        ocx = p.ox + (min(b[0] for b in ob.values())
+                      + max(b[2] for b in ob.values())) / 2.0
+        ocy = p.oy + (min(b[1] for b in ob.values())
+                      + max(b[3] for b in ob.values())) / 2.0
+        rx, ry = ocx - ecx, ocy - ecy
+        # CW rotation (+y-down), matches _pad_boxes
+        ncx = ecx + (rx * cs + ry * sn)
+        ncy = ecy + (-rx * sn + ry * cs)
+        nhx = (min(b[0] for b in nb.values())
+               + max(b[2] for b in nb.values())) / 2.0
+        nhy = (min(b[1] for b in nb.values())
+               + max(b[3] for b in nb.values())) / 2.0
+        out[ref] = _Part(ref, p.mod, nrot, p.side,
+                         round(ncx - nhx, 4), round(ncy - nhy, 4))
+    # re-anchor to a ZONE_PAD-margined top-left (the turn moved the extent origin).
+    minx = min(bb[0] for p in out.values() for bb in p.pad_boxes().values())
+    miny = min(bb[1] for p in out.values() for bb in p.pad_boxes().values())
+    dx, dy = ZONE_PAD - minx, ZONE_PAD - miny
+    return {ref: _Part(ref, p.mod, p.rot, p.side,
+                       round(p.ox + dx, 4), round(p.oy + dy, 4))
+            for ref, p in out.items()}
+
+
+def _apply_media_facing(placed: dict[str, _Part], media_brefs: set[str],
+                        facing: str | None) -> dict[str, _Part]:
+    """Turn the composed PROXIMITY cluster by whichever of {0,90,180,270} deg lands
+    the MEDIA parts (the anchor-pin discretes — e.g. ethernet's Bob-Smith R/C at T1's
+    centre-tap row) on the ``facing`` half of the zone. Unlike ``_apply_facing`` (a
+    binary 180 flip toward the opposite edge), a media row may need to face ANY of
+    the four edges, so all four quadrant turns are scored and the best (highest
+    dot with the facing vector, ties -> smallest turn) is chosen. Deterministic;
+    no-op when ``facing`` is unset/unknown or there are no media parts."""
+    fv = _FACING_VEC.get((facing or "").upper())
+    if fv is None or not media_brefs:
+        return placed
+    present = [r for r in media_brefs if r in placed]
+    if not present:
+        return placed
+
+    def _dot(pl: dict[str, _Part]) -> float:
+        zc = _centroid([_pad_center(p) for p in pl.values()])
+        mc = _centroid([_pad_center(pl[r]) for r in present])
+        return (mc[0] - zc[0]) * fv[0] + (mc[1] - zc[1]) * fv[1]
+
+    best = placed
+    best_dot = _dot(placed)
+    best_turn = 0.0
+    for deg in (90.0, 180.0, 270.0):
+        cand = _turn_zone_quadrant(placed, deg)
+        d = _dot(cand)
+        # strictly better, or equal-but-smaller-turn (determinism); the 0-turn
+        # incumbent already holds best_turn=0 so it wins ties against 90/180/270.
+        if d > best_dot + 1e-6:
+            best, best_dot, best_turn = cand, d, deg
+    _ = best_turn
+    return best

@@ -98,7 +98,11 @@ CHANNEL_MIN_NETS = 6     # judgment: below ~6 shared airwires two zones are not
 #                          a routing channel hotspot (P0 measured pair table:
 #                          the hotspot pairs are 7-24 edges, the long tail <=5)
 
-_KNOWN_EXTERNAL_KEYS = {"flow", "downstream", "output_roles", "far", "near_max"}
+# ``media_faces_near_max`` is a TEMPLATE-orientation flag (T1 P7a), not a
+# composition term — it is known-and-ignored here (the proximity template consumes
+# it via ``placement._media_facing``; there is no floorplan-frame term to add).
+_KNOWN_EXTERNAL_KEYS = {"flow", "downstream", "output_roles", "far", "near_max",
+                        "media_faces_near_max"}
 _SOM_TOKEN = "@som"
 
 

@@ -88,6 +88,15 @@ CONTRACT: dict = {
     #   * total media path < 100 mm (magnetics -> RJ45) — an advisory routing
     #     budget, not a placement bound.
     "external": {
+        # MEDIA-FACING opt-in (T1 P7a): T1's centre-tap row (MCT pins 24/21/18/15,
+        # where the Bob-Smith R/C members cluster) is a DIRECTIONAL media side that
+        # must point at the RJ45 jack. The proximity-cluster template applies a
+        # rigid {0,90,180,270} whole-zone turn so those members land on the half of
+        # the zone facing the near_max target's edge (rj45_connector is on E, so the
+        # media row faces E). Opt-in (not inferred from near_max) so a NON-directional
+        # bypass cluster like usb_pd (caps surround the IC on all sides) is never
+        # turned — see ``placement._media_facing``.
+        "media_faces_near_max": True,
         # NEAR_MAX (E5-lite, D11): the magnetics must sit close to its RJ45 jack —
         # the ONE PRIMARY-CITED inter-subsystem distance in this design. Pulse's
         # rule is a PART-to-PART <=25 mm; D11 made near_max a zone bbox EDGE-to-EDGE

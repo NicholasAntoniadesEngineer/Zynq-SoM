@@ -8,7 +8,7 @@ its pour credits against the same scan, so CD-01/CD-02 cannot pass on
 fiction regardless of this file. 'where' lines are anchor-resolved at
 report time (a vanished anchor reads ANCHOR-NOT-FOUND, never a stale line).
 
-emitted copper inventory: 8 fill zones (with In1.Cu GND plane), 3 rule areas, 34 vias (34 GND), 10 segments
+emitted copper inventory: 8 fill zones (with In1.Cu GND plane), 3 rule areas, 34 vias (34 GND), 9 segments
 
 CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
   assumes: full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)
@@ -20,7 +20,7 @@ CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
 CD-02  TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)   [EMITTED]
   assumes: DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)
   where:   schgen/verify/thermal.py:308
-  emits:   In1.Cu GND plane: YES; U11001: 2 GND vias<=3.0mm, F.Cu pour YES
+  emits:   In1.Cu GND plane: YES; U11001: 3 GND vias<=3.0mm, F.Cu pour YES
   risk:    at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper
 
 CD-03  TPS26631 PWP 2s2p RthJA (33.6 C/W)   [EMITTED]
@@ -51,13 +51,13 @@ CD-06  Ethernet isolation moat (In1 plane voids)   [PARTIAL]
 CD-07  DP90/DP100 L2 reference plane   [EMITTED]
   assumes: the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet
   where:   schgen/generate/constraints.py:10
-  emits:   In1.Cu GND plane zone 25.5,25.5 -> 194.5,175.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
+  emits:   In1.Cu GND plane zone 25.5,25.5 -> 194.5,176.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
   risk:    without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)
 
 CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
   assumes: the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine
   where:   schgen/generate/pcb/embed.py:426
-  emits:   GND vias inside the SoM body zone: 8 (SoM zone found); rail fanout vias: none emitted
+  emits:   GND vias inside the SoM body zone: 7 (SoM zone found); rail fanout vias: none emitted
   risk:    until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists
 
 COPPER DEBT: 8 entries — 4 emitted, 2 partial, 2 unemitted, 0 unmeasured (report-only)
