@@ -45,6 +45,13 @@ from .footprint import (
 )
 from .mating_face import _rot_bbox, _rot_bbox_cw, _rot_pad_bbox, connector_edge_rotation
 
+# BREATHE fan-out spread phases (schgen/generate/pcb/breathe.py). Phase A is the
+# tight-leash adjacent-slack expansion (lands first, cannot scatter); Phase B is
+# the wider omnidirectional free-space redistribution for still-starved movers.
+# Kept as a module constant so the run can be A-only or A+B without touching the
+# call site (Phase B is appended only after A proves green + byte-deterministic).
+_BREATHE_PHASES: tuple[str, ...] = ("A",)
+
 
 def _fanout_meta(refs: list[str], resolvable: dict[str, Path]
                  ) -> dict[str, tuple[float, bool]]:
@@ -1231,6 +1238,37 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         grid_placed.add(ref)
 
     fixed = set(mh_refs) | set(som_j_refs)
+
+    # ---- FAN-OUT BREATHE: spread starved movers into adjacent free space -------
+    # The seed pack (PLACE_CLEAR=0.5) fits the fixed 178x163 floorplan but leaves
+    # ~54% of the board empty in pockets DIRECTLY ADJACENT to the dense clusters.
+    # This pass moves each fan-out-starved MOVABLE IC (+ its riding cluster
+    # passives, rigid) into that adjacent free space up to its intelligent
+    # fan-out need, bounded by a per-sheet locality leash (LAW-5), committing only
+    # positions validated _free against a stamped occupancy grid (board edge + SoM
+    # keepout + escape region + DF40 6mm bands + every FIXED courtyard +
+    # top-THT-on-bottom). Mutates ONLY pos[ref] for movers; the board outline, the
+    # SoM core, the DF40 receptacles and the escape copper are untouched, so T2
+    # regenerates byte-identical (HARD constraint #1/#2, LAW-0). Same guard as L4
+    # (two_side): the movers are the same 2-sided set.
+    if two_side:
+        from schgen.generate.pcb.breathe import _eff_box as _bz_eff
+        from schgen.generate.pcb.breathe import _halo as _bz_halo
+        from schgen.generate.pcb.breathe import breathe_fanout
+        _page_keepout = (ORIGIN_X + keepout[0], ORIGIN_Y + keepout[1],
+                         ORIGIN_X + keepout[2], ORIGIN_Y + keepout[3])
+        _df40_bands = [
+            _bz_halo(_bz_eff(bbox_of[r], fixed_rot.get(r, 0.0),
+                             pos[r][0], pos[r][1]), 6.0)
+            for r in som_j_refs if r in bbox_of and r in pos]
+        for _ph in _BREATHE_PHASES:
+            breathe_fanout(
+                pos, resolvable=resolvable, parts=parts, bbox_of=bbox_of,
+                fixed_rot=fixed_rot, side_of=side_of, zorigin=zorigin,
+                board_w=board_w, board_h=board_h,
+                som_keepout=_page_keepout, conn_edge=zg.conn_edge,
+                mh_refs=set(mh_refs), som_j_refs=set(som_j_refs),
+                df40_pad_boxes=_df40_bands, phase=_ph)
 
     insts: list[FootprintInst] = []
     placed = 0
