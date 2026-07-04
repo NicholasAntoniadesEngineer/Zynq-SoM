@@ -161,3 +161,24 @@ Together these fix the **three headline symptoms** (empty-yet-cramped, fan-out d
 ---
 
 *Total to full target (Steps 1–5): ~4–6 weeks, medium aggregate risk, best sequenced so the two size-S steps land first and de-risk the rest. Minimum-viable (Steps 1–2): ~1 week, low risk, captures the 80%.*
+---
+
+## MEASURED RESULTS (2026-07-04) — the empirical verdict
+
+Four independent experiments (3 workflows + a hands-on airwire decomposition), all on the FIXED 178×163 board, all gate-verified, master-safe:
+
+**1. Airwire decomposition (hands-on).** The 15,186 mm cross-airwire = **58% HUB** (part↔SoM DF40; packing-bound, near-irreducible) + **42% PEER** (subsystem↔subsystem, 6,462 mm — the only improvable part). Peer airwire concentrates in a few mis-placed coupled pairs: `hdmi_rx↔hdmi_rx_term` 68 mm apart (also an **SI defect** — TMDS stub), `usb_jtag↔connector` 110 mm, the bringup cluster — while `ethernet↔rj45` is 16 mm.
+
+**2. Global QP relaxation (Step 3) — NEGATIVE.** CG solve on block centroids: **15,705 mm, +3.4% WORSE**. Minimizes squared (not linear) wirelength + hands off to the same `place_near` legalizer → net loss. Needs Step-4 (min-displacement legalizer) to pay off. Banked `wip/global-qp`.
+
+**3. `AFF_POW` sweep — greedy is a genuine concave optimum.** 1.0 (undistorted) = **+2.4% worse**; 2.0 = +2.4% worse AND breaks fan-out; 1.6 (current) is the minimum. The objective "distortion" is load-bearing, not obsolete.
+
+**4. Surgical clustering fix — diagnosis CONFIRMED, blocked on the fixed board.** Root cause: `ethernet`/`usb_pd` carry exclusive weight-60 connector pulls in `floorplan.json`; `usb_jtag`/`hdmi_rx_term` **lack them** (a data gap, not a bug). Adding them proves the 42% peer is improvable: best **−4.1% (→14,558 mm)**, and `hdmi_rx↔term` **68→8 mm (SI defect fixed)**. BUT every co-location either **grows the board** (usb_jtag's n=19 zone needs ≥180 mm width) or **trips the J2 stitch-via gate** (a B.Cu passive shifts into the stitch corridor — the baseline is on a knife-edge). Banked `wip/clustering-fix` (report-only; source left at baseline).
+
+### Conclusion
+**Fixed-board cross-airwire is near-saturated by the greedy Lloyd** — proven three ways. The 42% peer *is* improvable (~4% + a real SI fix), but only by unblocking one of two structural gates:
+- **A — bottom-channel-keepout unit**: make the J2 stitch-via corridor a HARD placement keepout so passives never intrude → removes the knife-edge fragility AND unlocks the `hdmi_rx_term` co-location (SI fix + airwire). Fixed board, no growth. *(LAW-0-adjacent: return-path corridor.)*
+- **B — board growth** (escape-safe via the Step-2 datum-freeze): the unbounded path to real fan-out + the `usb_jtag` co-location.
+
+### Landed
+`place_near` expanding-ring speedup (I2) — byte-identical, faster engine (`75fa591`).
