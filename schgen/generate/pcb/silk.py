@@ -222,8 +222,15 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
     compact scan already places keeps its exact position (deterministic,
     byte-stable for the non-crowded board)."""
     midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
-    w = max(len(label), 1) * size * 0.72
-    h = size * 1.1
+    # match _text_box's CORRECTED extent (Newstroke advances ~1.0*size/glyph + the
+    # stroke thickness on each side). The old 0.72 aspect here under-measured the
+    # candidate-box width ~28%, so the relocation search seated a ref where its OWN
+    # collision test (_text_box, wider) — and the refdes gate — then saw an overlap:
+    # exactly the U5004/U5007 stack a placement reshuffle exposed. Keep the search
+    # box == the checked box so a "clear" spot is really clear (LAW 4: match KiCad).
+    thick = max(0.12, size * 0.15)
+    w = max(len(label), 1) * size * 1.0 + thick
+    h = size + thick
     g = 0.9
     best = None            # best ON-BOARD candidate (lowest courtyard overlap)
     best_pen = None

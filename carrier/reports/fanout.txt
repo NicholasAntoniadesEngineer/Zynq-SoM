@@ -1,29 +1,12 @@
 FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
-  multi-pin subjects: 110  starved: 18  baseline(ratchet): 18
+  multi-pin subjects: 110  starved: 0  baseline(ratchet): 18
   intelligent need = pin-count tier; clearance = min courtyard gap to nearest FOREIGN part
   cluster-aware: own-sheet 2-pin R/C/L excluded; DF40 plugs (som_j*, >=40-pin) excluded (no-inflate)
   OFFENDERS (starved, worst slack first):
-    STARVED J36001    motor_pwm         24pin [top] clr=0.500 need=1.50 slack=-1.000 nearest=U36001 (motor_pwm)
-    STARVED U17001    pd_input          21pin [top] clr=0.500 need=1.50 slack=-1.000 nearest=TP17001 (pd_input)
-    STARVED U27001    uart_bridge       25pin [top] clr=0.500 need=1.50 slack=-1.000 nearest=TP27001 (uart_bridge)
-    STARVED J29001    usb_jtag_connector  16pin [top] clr=0.310 need=1.00 slack=-0.690 nearest=J31001 (usb_uart_connector)
-    STARVED J31001    usb_uart_connector  16pin [top] clr=0.310 need=1.00 slack=-0.690 nearest=J29001 (usb_jtag_connector)
-    STARVED U7001     bringup_rails     24pin [top] clr=0.940 need=1.50 slack=-0.560 nearest=SW7006 (bringup_rails)
-    STARVED J9001     debug_boot        14pin [top] clr=0.500 need=1.00 slack=-0.500 nearest=J9002 (debug_boot)
-    STARVED J9002     debug_boot        10pin [top] clr=0.500 need=1.00 slack=-0.500 nearest=J9001 (debug_boot)
-    STARVED SW7002    bringup_rails     16pin [top] clr=0.500 need=1.00 slack=-0.500 nearest=TP7001 (bringup_rails)
-    STARVED U21001    power_mon         17pin [top] clr=0.500 need=1.00 slack=-0.500 nearest=U21002 (power_mon)
-    STARVED U21002    power_mon         17pin [top] clr=0.500 need=1.00 slack=-0.500 nearest=U21001 (power_mon)
-    STARVED U22004    power_som         14pin [top] clr=0.500 need=1.00 slack=-0.500 nearest=D22005 (power_som)
-    STARVED U36001    motor_pwm         20pin [top] clr=0.500 need=1.00 slack=-0.500 nearest=D36001 (motor_pwm)
-    STARVED U14001    hdmi_tx           24pin [top] clr=1.090 need=1.50 slack=-0.410 nearest=TP14001 (hdmi_tx)
-    STARVED J37003    motor_sense        4pin [top] clr=0.332 need=0.50 slack=-0.168 nearest=U20003 (power)
-    STARVED U20003    power              5pin [top] clr=0.332 need=0.50 slack=-0.168 nearest=J37003 (motor_sense)
-    STARVED U28001    usb_jtag          20pin [top] clr=0.940 need=1.00 slack=-0.060 nearest=SW28001 (usb_jtag)
-    STARVED U16001    microsd           25pin [top] clr=1.450 need=1.50 slack=-0.050 nearest=TP16001 (microsd)
+    (none)
   (tightest PASSING subjects:)
-    ok      D36001    motor_pwm          6pin clr=0.500 need=0.50 slack=+0.000
-    ok      D36002    motor_pwm          6pin clr=0.500 need=0.50 slack=+0.000
     ok      J18001    pmod              12pin clr=1.000 need=1.00 slack=+0.000
     ok      J18002    pmod              12pin clr=1.000 need=1.00 slack=+0.000
     ok      Q20001    power              3pin clr=0.500 need=0.50 slack=+0.000
+    ok      SW1001    board_aux          8pin clr=0.500 need=0.50 slack=+0.000
+    ok      SW19001   pmod_expansion     8pin clr=0.500 need=0.50 slack=+0.000

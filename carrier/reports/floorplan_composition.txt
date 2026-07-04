@@ -1,52 +1,42 @@
-FLOORPLAN COMPOSITION (T1): 8 hard / 9 soft terms; hard RED 0, soft RED 1 (advisory)
-  aggregate hard margin: sum 458.98 mm, min 8.08 mm (informational)
+FLOORPLAN COMPOSITION (T1): 8 hard / 12 soft terms; hard RED 0, soft RED 1 (advisory)
+  aggregate hard margin: sum 398.08 mm, min 8.08 mm (informational)
   hard terms:
-    HARD facing power->power_som: 0.35 vs 90.00 (margin +89.65) ok [facing/output_roles [placement/v2]] dot=+518.02
-    HARD far_min ethernet->power: 79.93 vs 10.00 (margin +69.93) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
-    HARD far_min power->ethernet.line_side: 79.93 vs 10.00 (margin +69.93) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
-    HARD flow_hop pd_input->usb_pd: 15.07 vs 123.52 (margin +108.45) ok [flow chain [placement/v2]]
-    HARD flow_hop power->power_som: 39.16 vs 123.52 (margin +84.36) ok [flow chain [placement/v2]]
-    HARD flow_hop usb_pd->power: 112.42 vs 123.52 (margin +11.10) ok [flow chain [placement/v2]]
-    HARD near_max ethernet->rj45_connector: 2.52 vs 20.00 (margin +17.48) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
+    HARD facing power->power_som: 29.19 vs 90.00 (margin +60.81) ok [facing/output_roles [placement/v2]] dot=+936.50
+    HARD far_min ethernet->power: 80.82 vs 10.00 (margin +70.82) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
+    HARD far_min power->ethernet.line_side: 80.82 vs 10.00 (margin +70.82) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
+    HARD flow_hop pd_input->usb_pd: 15.13 vs 126.88 (margin +111.75) ok [flow chain [placement/v2]]
+    HARD flow_hop power->power_som: 81.10 vs 126.88 (margin +45.77) ok [flow chain [placement/v2]]
+    HARD flow_hop usb_pd->power: 115.60 vs 126.88 (margin +11.28) ok [flow chain [placement/v2]]
+    HARD near_max ethernet->rj45_connector: 1.25 vs 20.00 (margin +18.75) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
     HARD near_max usb_pd->pd_input: 1.92 vs 10.00 (margin +8.08) ok [judgment:10.0 (D11 edge-gap metric) — keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power_som->@som: 24.23 vs 90.00 (margin +65.77) ok [facing/output_roles [placement/v2]] dot=+323.35
-    soft far_min motor_sense->power: 58.73 vs 10.00 (margin +48.73) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    soft far_min motor_sense->power_som: 37.25 vs 10.00 (margin +27.25) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    soft far_min power_som->ethernet.line_side: 68.09 vs 10.00 (margin +58.09) ok [judgment:10.0 — same rationale as the power pilot]
-    soft flow_hop power_mon->power_som: 42.75 vs 123.52 (margin +80.77) ok [flow chain [placement/v2]]
-    soft near_intent hdmi_rx_term->hdmi_rx: 28.93 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
-    soft near_intent power_mon->power_som: 26.12 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
-    soft near_intent uart_bridge->rj45_connector: 41.44 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
-    soft near_max motor_sense->motor_pwm: 40.83 vs 20.00 (margin -20.83) RED [judgment:20.0 (D9) — motor telemetry beside the PWM out]
-  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 21 T2-coexistence-managed
-    managed C11001 (fmc) in escape:J2:N [T2 STAY]
-    managed C11002 (fmc) in escape:J2:N [T2 STAY]
-    managed C11004 (fmc) in escape:J2:N [T2 STAY]
-    managed C11005 (fmc) in escape:J2:N [T2 STAY]
-    managed C13001 (hdmi_rx_term) in escape:J2:S [T2 STAY]
-    managed C13002 (hdmi_rx_term) in escape:J2:S [T2 STAY]
-    managed C4003 (bringup_en) in escape:J1:N [T2 STAY]
-    managed R4001 (bringup_en) in escape:J1:N [T2 STAY]
-    managed R4004 (bringup_en) in escape:J1:S [T2 STAY]
-    managed R4005 (bringup_en) in escape:J1:S [T2 STAY]
-    managed R5008 (bringup_en_modules) in escape:J3:N [T2 STAY]
-    managed R5009 (bringup_en_modules) in escape:J3:S [T2 STAY]
-    managed R5012 (bringup_en_modules) in escape:J3:N [T2 STAY]
-    managed R5013 (bringup_en_modules) in escape:J3:S [T2 STAY]
-    managed R5016 (bringup_en_modules) in escape:J3:N [T2 STAY]
-    managed R5017 (bringup_en_modules) in escape:J3:S [T2 STAY]
-    managed R5020 (bringup_en_modules) in escape:J3:N [T2 STAY]
-    managed R5021 (bringup_en_modules) in escape:J3:S [T2 STAY]
-    managed R9002 (debug_boot) in escape:J3:N [T2 STAY]
-    managed R9004 (debug_boot) in escape:J3:S [T2 STAY]
-    managed R9006 (debug_boot) in escape:J3:N [T2 STAY]
+    soft facing power_som->@som: 10.32 vs 90.00 (margin +79.68) ok [facing/output_roles [placement/v2]] dot=+461.72
+    soft far_min motor_sense->power: 57.06 vs 10.00 (margin +47.06) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    soft far_min motor_sense->power_som: 85.34 vs 10.00 (margin +75.34) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    soft far_min power_som->ethernet.line_side: 117.17 vs 10.00 (margin +107.17) ok [judgment:10.0 — same rationale as the power pilot]
+    soft flow_hop camera->@som: 73.99 vs 126.88 (margin +52.89) ok [flow chain [placement/v2]]
+    soft flow_hop hdmi_tx->@som: 62.41 vs 126.88 (margin +64.47) ok [flow chain [placement/v2]]
+    soft flow_hop power_mon->power_som: 60.31 vs 126.88 (margin +66.56) ok [flow chain [placement/v2]]
+    soft near_intent hdmi_rx_term->hdmi_rx: 44.08 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_intent power_mon->power_som: 49.23 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_intent uart_bridge->rj45_connector: 28.89 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_max hdmi_rx_term->som_j2: 0.00 vs 10.00 (margin +10.00) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
+    soft near_max motor_sense->motor_pwm: 55.21 vs 20.00 (margin -35.21) RED [judgment:20.0 (D9) — motor telemetry beside the PWM out]
+  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 7 T2-coexistence-managed
+    managed C6005 (bringup_modules) in escape:J3:N [T2 STAY]
+    managed R13001 (hdmi_rx_term) in escape:J2:N [T2 STAY]
+    managed R13002 (hdmi_rx_term) in escape:J2:N [T2 STAY]
+    managed R13005 (hdmi_rx_term) in escape:J2:S [T2 STAY]
+    managed R13006 (hdmi_rx_term) in escape:J2:S [T2 STAY]
+    managed R13007 (hdmi_rx_term) in escape:J2:S [T2 STAY]
+    managed R13008 (hdmi_rx_term) in escape:J2:S [T2 STAY]
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    bringup_en_modules | bringup_rails: 24 airwires (541.4 mm) -> corridor >= 6.8 mm
-    bringup_en_modules | bringup_modules: 10 airwires (386.9 mm) -> corridor >= 4.0 mm
-    bringup_en | bringup_rails: 9 airwires (104.9 mm) -> corridor >= 3.8 mm
-    ethernet | rj45_connector: 9 airwires (222.3 mm) -> corridor >= 3.8 mm
-    power_som | usb_jtag: 9 airwires (26.1 mm) -> corridor >= 3.8 mm
-    hdmi_rx | hdmi_rx_term: 8 airwires (520.8 mm) -> corridor >= 3.6 mm
-    bringup_modules | bringup_rails: 6 airwires (25.0 mm) -> corridor >= 3.2 mm
-    uart_bridge | user_io: 6 airwires (28.4 mm) -> corridor >= 3.2 mm
+    bringup_en_modules | bringup_rails: 24 airwires (1144.6 mm) -> corridor >= 6.8 mm
+    power | power_mon: 12 airwires (179.7 mm) -> corridor >= 4.4 mm
+    bringup_en_modules | bringup_modules: 10 airwires (355.5 mm) -> corridor >= 4.0 mm
+    ethernet | rj45_connector: 9 airwires (214.5 mm) -> corridor >= 3.8 mm
+    board_aux | debug_boot: 8 airwires (114.2 mm) -> corridor >= 3.6 mm
+    pmod_expansion | power_mon: 7 airwires (42.4 mm) -> corridor >= 3.4 mm
+    power_som | usb_jtag: 7 airwires (22.4 mm) -> corridor >= 3.4 mm
+    debug_boot | usb_jtag: 6 airwires (223.8 mm) -> corridor >= 3.2 mm
+    som_decoupling | user_io: 6 airwires (24.9 mm) -> corridor >= 3.2 mm

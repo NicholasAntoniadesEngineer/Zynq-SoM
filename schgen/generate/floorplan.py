@@ -90,12 +90,103 @@ def _is_overmold_block(b) -> bool:
     return any(v in _OVERMOLD_FAMILIES for (_r, v, _w, _h) in b.conns)
 
 
+def _fanout_sep(a_reach: tuple, b_reach: tuple, axis: str) -> float:
+    """Required extra separation (mm) between two blocks abutting along ``axis``,
+    from the D13 per-side reaches. ``a_reach``/``b_reach`` are (W, E, N, S) tuples;
+    ``axis`` is "E" when B is to the +x (right) of A, "W" for -x, "S" for +y (below),
+    "N" for -y. The two FACING sides' reaches sum: for B to the E of A, A's E reach
+    meets B's W reach; etc. Symmetric — the caller passes the resolved direction."""
+    idx = {"W": (0, 1), "E": (1, 0), "N": (2, 3), "S": (3, 2)}[axis]
+    return a_reach[idx[0]] + b_reach[idx[1]]
+
+
 def _pair_gap(a, b) -> float:
     """Along-edge clearance between two adjacent edge blocks: the wide CABLE gap if
-    either carries an overmold cable connector, else the tight default CLEAR."""
+    either carries an overmold cable connector, else the fan-out-aware default.
+
+    D13 FAN-OUT CLEARANCE: two abutting blocks in an edge RUN are laid along the
+    edge axis (N/S runs spread along X, W/E runs along Y), so ``a`` sits before ``b``
+    on that axis. They are held the sum of their FACING-side reaches apart (never
+    below CLEAR) so a multi-pin subject whose zone-internal margin does not already
+    cover its fan-out floor still gets that floor to the foreign part in the
+    neighbouring block. The cable gap always wins when present (>= any reach). The
+    facing sides are resolved from the edge orientation."""
     if _is_overmold_block(a) or _is_overmold_block(b):
         return CABLE_NEIGHBOR_GAP
-    return CLEAR
+    # a run on the N/S edge spreads along X (a is to the W of b); a W/E run spreads
+    # along Y (a is to the N of b). Use the facing-side reaches accordingly.
+    axis = "E" if (a.edge or b.edge) in ("N", "S") else "S"
+    return round(max(CLEAR, _fanout_sep(a.fanout_reach, b.fanout_reach, axis)), 4)
+
+
+# (reach_w, reach_e, reach_n, reach_s): extra clearance (mm) a multi-pin subject
+# needs beyond a neighbour's zone on each of the 4 board-frame sides of this block.
+# DIRECTIONAL (not a single scalar) so a reservation is spent ONLY on the side an IC
+# is actually exposed, not all four — a flat scalar reach over-reserved 3 sides and
+# blew the board (the escape router then had no via seat). A zone is placed axis-
+# aligned (never block-rotated), so its local W/E/N/S ARE the board W/E/N/S.
+_ZeroReach = (0.0, 0.0, 0.0, 0.0)
+
+
+def _block_fanout_reach(sheet: str, zg) -> tuple[float, float, float, float]:
+    """Per-SIDE extra clearance (mm) a multi-pin subject in ``sheet``'s zone needs
+    BEYOND a neighbouring block's edge — the D13 fan-out floor NOT already met by the
+    zone's own internal margin, resolved to the side the subject faces.
+
+    For each multi-pin subject (>=3 pins, the gate's tiers) with intelligent NEED, we
+    look at its courtyard's margin to EACH of the 4 zone-box edges. The subject
+    reserves ``need - margin`` (clamped >=0) on a side ONLY when it is the CLOSE
+    subject to that edge — i.e. within one need of it — so an IC buried in the middle
+    of the zone reserves nothing and only an edge-hugging IC pushes a neighbour on the
+    one side it is exposed. A block with no exposed multi-pin subject reaches all
+    zeros and packs at the tight CLEAR. Matches the emitted board (same zone geometry
+    + rotations the PCB places); tiers/subject rule from the fan-out gate."""
+    from schgen.generate.pcb import placement as _pl
+    from schgen.generate.pcb.constants import GRID
+    from schgen.generate.pcb.mating_face import _rot_bbox
+    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS, intelligent_need
+    zbox = zg.zone_box.get(sheet)
+    if zbox is None:
+        return _ZeroReach
+    zw, zh = zbox
+    rot_of = dict(zg.conn_rot)
+    rot_of.update(zg.zone_extra_rot)
+    rw = re = rn = rs = 0.0
+    for side_off in (zg.top_off.get(sheet, {}), zg.bot_off.get(sheet, {})):
+        for ref, (ox, oy) in side_off.items():
+            mod = zg.resolvable.get(ref)
+            bbox = zg.bbox_of.get(ref)
+            if mod is None or bbox is None:
+                continue
+            pins = len(_pl.pad_names(mod))
+            if pins < MIN_SUBJECT_PINS:
+                continue
+            need = intelligent_need(pins)[0]
+            rb = _rot_bbox(bbox, rot_of.get(ref, 0.0))
+            cx0, cy0 = ox + rb[0], oy + rb[1]
+            cx1, cy1 = ox + rb[2], oy + rb[3]
+            mw, me = cx0, zw - cx1          # margin to W (left) / E (right) edge
+            mn, ms = cy0, zh - cy1          # margin to N (top) / S (bottom) edge
+            # CREDITED margin: the zone ORIGIN is grid-snapped once at emit and raw
+            # part offsets are added, so a subject's absolute position can shift up to
+            # ~GRID relative to a neighbour block that snapped the other way. Credit
+            # only the margin that PROVABLY survives that snap (margin - GRID), so the
+            # reserved gap still holds on the emitted board — the exact erosion that
+            # left camera's U8001 at clr 0.414 when the raw margin looked sufficient.
+            cmw, cme = max(0.0, mw - GRID), max(0.0, me - GRID)
+            cmn, cms = max(0.0, mn - GRID), max(0.0, ms - GRID)
+            # reserve on a side only if this subject is the CLOSE one to it (within
+            # its own need of that edge) — otherwise an inboard part already blocks a
+            # neighbour there and no cross-block reservation is warranted.
+            if mw <= need:
+                rw = max(rw, need - cmw)
+            if me <= need:
+                re = max(re, need - cme)
+            if mn <= need:
+                rn = max(rn, need - cmn)
+            if ms <= need:
+                rs = max(rs, need - cms)
+    return (round(rw, 4), round(re, 4), round(rn, 4), round(rs, 4))
 
 
 CLEAR = 0.3              # block-to-block clearance — TIGHTENED (was 1.5). The
@@ -454,6 +545,18 @@ class Block:
     pinned: bool = False          # placed by carrier/floorplan.json (vs auto)
     pull: dict | None = None      # validated floorplan.json pull knob (T1 P3):
                                   # {"to","weight","face","exclusive","basis"}
+    fanout_reach: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0)
+                                  # D13 FAN-OUT CLEARANCE, per board-frame side
+                                  # (W, E, N, S): extra clearance (mm) a multi-pin
+                                  # subject exposed on that side of THIS block needs
+                                  # beyond a neighbour's zone edge — the intelligent
+                                  # fan-out floor not already met by the zone's own
+                                  # internal margin. A neighbour on a given side is
+                                  # held (this block's reach on that side + the
+                                  # neighbour's reach on its facing side) away, so an
+                                  # edge-hugging IC keeps its fan-out floor to the
+                                  # foreign part next door WITHOUT reserving space on
+                                  # the 3 sides it is not exposed on.
 
     @property
     def cx(self) -> float:
@@ -935,30 +1038,46 @@ class _Occupancy:
     STEP = 1.0
 
     def __init__(self) -> None:
-        self.rects: list[tuple[float, float, float, float]] = []
+        # (x, y, w, h, reach): reach is the occupant's D13 per-side fan-out reach
+        # (W, E, N, S) — the extra clearance a multi-pin subject exposed on that side
+        # needs. SoM/corner reservations carry the zero reach.
+        self.rects: list[tuple[float, float, float, float,
+                               tuple[float, float, float, float]]] = []
 
-    def add(self, x: float, y: float, w: float, h: float) -> None:
-        self.rects.append((x, y, w, h))
+    def add(self, x: float, y: float, w: float, h: float,
+            reach: tuple[float, float, float, float] = _ZeroReach) -> None:
+        self.rects.append((x, y, w, h, reach))
 
-    def remove(self, x: float, y: float, w: float, h: float) -> None:
+    def remove(self, x: float, y: float, w: float, h: float,
+               reach: tuple[float, float, float, float] = _ZeroReach) -> None:
         """Drop a previously-added rect (for the iterative re-placement pass)."""
         try:
-            self.rects.remove((x, y, w, h))
+            self.rects.remove((x, y, w, h, reach))
         except ValueError:
             pass
 
-    def fits(self, x: float, y: float, w: float, h: float) -> bool:
+    def fits(self, x: float, y: float, w: float, h: float,
+             reach: tuple[float, float, float, float] = _ZeroReach) -> bool:
         if x < CLEAR or y < CLEAR or x + w > BOARD_W - CLEAR \
                 or y + h > BOARD_H - CLEAR:
             return False
-        for rx, ry, rw, rh in self.rects:
-            if not (x + w + CLEAR <= rx or rx + rw + CLEAR <= x
-                    or y + h + CLEAR <= ry or ry + rh + CLEAR <= y):
+        for rx, ry, rw, rh, r_reach in self.rects:
+            # D13 DIRECTIONAL gap: on each axis the required separation uses only the
+            # two FACING sides' reaches (candidate to the W of the occupant meets the
+            # candidate's E reach + the occupant's W reach, etc.), never below CLEAR.
+            # Separated if the gap holds on EITHER axis (blocks don't overlap).
+            gx = max(CLEAR, _fanout_sep(reach, r_reach,
+                                        "E" if x <= rx else "W"))
+            gy = max(CLEAR, _fanout_sep(reach, r_reach,
+                                        "S" if y <= ry else "N"))
+            if not (x + w + gx <= rx or rx + rw + gx <= x
+                    or y + h + gy <= ry or ry + rh + gy <= y):
                 return False
         return True
 
     def place_near(self, ax: float, ay: float, w: float,
-                   h: float) -> tuple[float, float, float, float] | None:
+                   h: float, reach: tuple[float, float, float, float] = _ZeroReach
+                   ) -> tuple[float, float, float, float] | None:
         """Deterministic: scan lattice positions sorted by city-block distance
         of the block CENTER from the anchor; first fit wins. The block is placed
         AXIS-ALIGNED (no width/height swap) — the PCB places this same zone box
@@ -974,7 +1093,7 @@ class _Occupancy:
                 cands.append((round(d, 1), x, y))
         cands.sort()
         for _d, x, y in cands:
-            if self.fits(x, y, w, h):
+            if self.fits(x, y, w, h, reach):
                 return x, y, w, h
         return None
 
@@ -1161,6 +1280,16 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         if b.name not in zbox:
             a = sheet_area(by_name[b.name].circuit, ROUTE_FACTOR)
             zbox[b.name] = (_r5(max(12.0, a ** 0.5)), _r5(max(8.0, a ** 0.5)))
+
+    # D13 FAN-OUT CLEARANCE: each block's fan-out reach (extra clearance a multi-pin
+    # subject near the block edge needs beyond a neighbour's zone, not already met by
+    # its zone-internal margin). Threaded into the edge-run gaps (_pair_gap) and the
+    # interior occupancy lattice so an IC on a block boundary keeps its fan-out floor
+    # to the foreign part next door — retiring the cross-block offenders (motor_sense
+    # XT60 vs power IC, ethernet magnetics vs a bringup test point) without a flat
+    # halo. Zero for a block with no under-margined multi-pin subject -> tight CLEAR.
+    for b in plan.edge_blocks + interior:
+        b.fanout_reach = _block_fanout_reach(b.name, zg)
 
     # number of placed (non-SoM) subsystems == the gate's n_subsystems, so the
     # grow loop can size the board against the SAME LAW-5 cross-airwire budget.
@@ -1526,8 +1655,15 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             b = eb[j]
             if a.edge == b.edge:
                 continue
-            if not (a.x + a.w + CLEAR <= b.x or b.x + b.w + CLEAR <= a.x
-                    or a.y + a.h + CLEAR <= b.y or b.y + b.h + CLEAR <= a.y):
+            # D13 DIRECTIONAL corner clearance (same facing-side rule the occupancy
+            # lattice uses) so two adjacent-edge blocks meeting at a corner keep the
+            # fan-out floor of any exposed multi-pin subject between them.
+            cgx = max(CLEAR, _fanout_sep(a.fanout_reach, b.fanout_reach,
+                                         "E" if a.x <= b.x else "W"))
+            cgy = max(CLEAR, _fanout_sep(a.fanout_reach, b.fanout_reach,
+                                         "S" if a.y <= b.y else "N"))
+            if not (a.x + a.w + cgx <= b.x or b.x + b.w + cgx <= a.x
+                    or a.y + a.h + cgy <= b.y or b.y + b.h + cgy <= a.y):
                 return False
 
     occ = _Occupancy()
@@ -1549,7 +1685,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         occ.add(cx, cy, MH_CORNER_KO, MH_CORNER_KO)
     centers: dict[str, tuple[float, float]] = {}
     for b in plan.edge_blocks:        # edge blocks are pinned anchors already
-        occ.add(b.x, b.y, b.w, b.h)
+        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
         centers[b.name] = (b.cx, b.cy)
 
     edge_pos = {b.name: b for b in plan.edge_blocks}
@@ -1658,11 +1794,11 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         b.w, b.h = zbox[b.name]
         b.area = round(b.w * b.h, 1)
         ax, ay = _anchor(b)
-        pos = occ.place_near(ax, ay, b.w, b.h)
+        pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach)
         if pos is None:
             return False
         b.x, b.y, b.w, b.h = pos
-        occ.add(b.x, b.y, b.w, b.h)
+        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
         centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
 
     # ITERATIVE REFINEMENT: the first pass anchored blocks on whatever neighbours
@@ -1679,17 +1815,17 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     for _pass in range(16):
         moved = False
         for b in order:
-            occ.remove(b.x, b.y, b.w, b.h)
+            occ.remove(b.x, b.y, b.w, b.h, b.fanout_reach)
             ax, ay = _anchor(b)
-            pos = occ.place_near(ax, ay, b.w, b.h)
+            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach)
             if pos is None:                 # re-place where it was (always fits)
-                occ.add(b.x, b.y, b.w, b.h)
+                occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
                 continue
             nx, ny, _w, _h = pos
             if (nx, ny) != (b.x, b.y):
                 moved = True
             b.x, b.y = nx, ny
-            occ.add(b.x, b.y, b.w, b.h)
+            occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
             centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
         if not moved:
             break

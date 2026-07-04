@@ -1,14 +1,14 @@
-PLACEMENT-FLOW GATE: PASS (3 external contract(s); board_area=25840mm^2, flow_budget=123.5mm)
+PLACEMENT-FLOW GATE: PASS (3 external contract(s); board_area=29014mm^2, flow_budget=126.9mm)
   fails: flow=0/4 facing=0/1 far=0/2 near_max=0/2
   unresolved: 0
   violations: 0
   detail: 9
-    facing power->power_som: dot=+518.02 angle=0.3deg (output@(169.935, 135.8622) zone@(182.7386, 139.1836) down@(144.8903, 129.119))
-    far ethernet vs power: 79.93mm / >= 10mm
-    far power vs ethernet.line_side: 79.93mm / >= 10mm
-    flow pd_input->usb_pd: 15.07mm / 123.5mm budget
-    flow power->power_som: 39.16mm / 123.5mm budget
-    flow usb_pd->power: 112.42mm / 123.5mm budget
-    flow usb_pd->power: 112.42mm / 123.5mm budget
-    near_max ethernet to rj45_connector: 2.52mm gap / <= 20mm
+    facing power->power_som: dot=+936.50 angle=29.2deg (output@(172.475, 142.2122) zone@(185.2786, 145.5336) down@(106.8143, 166.0459))
+    far ethernet vs power: 80.82mm / >= 10mm
+    far power vs ethernet.line_side: 80.82mm / >= 10mm
+    flow pd_input->usb_pd: 15.13mm / 126.9mm budget
+    flow power->power_som: 81.10mm / 126.9mm budget
+    flow usb_pd->power: 115.60mm / 126.9mm budget
+    flow usb_pd->power: 115.60mm / 126.9mm budget
+    near_max ethernet to rj45_connector: 1.25mm gap / <= 20mm
     near_max usb_pd to pd_input: 1.92mm gap / <= 10mm

@@ -38,14 +38,47 @@ from .footprint import (
     board_netlist,
     board_parts,
     has_thru_pads,
-    pad_names,
+    pad_names,  # noqa: F401 — used by _fanout_meta for D13 pin-count tiers
     resolve_mod,
 )
 from .mating_face import _rot_bbox, _rot_bbox_cw, _rot_pad_bbox, connector_edge_rotation
 
 
+def _fanout_meta(refs: list[str], resolvable: dict[str, Path]
+                 ) -> dict[str, tuple[float, bool]]:
+    """``ref -> (fanout_need_mm, is_cluster_passive)`` for a set of refs, using the
+    SAME tiers + cluster-passive rule as the D13 FAN-OUT CLEARANCE gate
+    (schgen/verify/fanout_gate.py — imported lazily so the generate<->verify cycle
+    stays a function-level dependency, the house pattern). ``need`` is the
+    intelligent fan-out floor scaled by the part's REAL pin count (padgrid, the
+    same count ``len(inst.pad_nets)`` the gate measures); a sub-3-pin part is not a
+    fan-out subject and gets the base PLACE_CLEAR (no demand). ``is_cluster_passive``
+    flags a discrete 2-pin R/C/L — a decoupling/hot-loop/FB member that sits TIGHT
+    on its IC's pins by design and must NEVER receive the fan-out push (constraint
+    1). Single source of truth: the gate owns the tiers; this only reads them."""
+    from schgen.verify.fanout_gate import (
+        MIN_SUBJECT_PINS,
+        _is_cluster_passive,
+        intelligent_need,
+    )
+    out: dict[str, tuple[float, bool]] = {}
+    for ref in refs:
+        mod = resolvable.get(ref)
+        if mod is None:
+            continue
+        pins = len(pad_names(mod))
+        is_cp = _is_cluster_passive(ref, pins)
+        if pins >= MIN_SUBJECT_PINS:
+            need = intelligent_need(pins)[0]
+        else:
+            need = PLACE_CLEAR          # not a fan-out subject: base floor only
+        out[ref] = (need, is_cp)
+    return out
+
+
 def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
-                blockers: list[tuple[float, float, float, float]] | None = None
+                blockers: list[tuple[float, float, float, float]] | None = None,
+                fanout: dict[str, tuple[float, bool]] | None = None
                 ) -> tuple[dict[str, tuple[float, float]], float, float]:
     """Deterministic shelf packer for ONE subsystem's footprints.
 
@@ -60,25 +93,60 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     laid LARGEST-first (by haloed height, then width, then ref) so tall parts
     anchor each row. There is NO overflow path: the returned box is exactly
     large enough to hold every part, so the caller sizes the zone to fit and
-    never spills a part off-board."""
+    never spills a part off-board.
+
+    ``fanout`` (optional; D13 FAN-OUT CLEARANCE — schgen/verify/fanout_gate.py) is
+    ``ref -> (need_mm, is_cluster_passive)``. When given, the packer reserves the
+    INTELLIGENT fan-out floor: a multi-pin subject IC gets ``need_mm`` of courtyard
+    gap to every FOREIGN neighbour (need scaled by pin count — the gate's tiers),
+    but its OWN-cluster 2-pin R/C/L decoupling stays TIGHT (the base PLACE_CLEAR),
+    because the extra margin is PAIRWISE and is waived when the neighbour is a
+    cluster passive (``is_cluster_passive`` True). This is the anti-dumb guard: the
+    floor is reserved against unrelated parts only, so it never pries a decoupling
+    cap off a pin (constraint 1) and only grows the zone where a real IC abuts a
+    real foreign neighbour. Refs absent from ``fanout`` (or ``fanout is None``) use
+    the base PLACE_CLEAR — byte-identical to the pre-D13 pack."""
     blk = list(blockers or [])
     placed: dict[str, tuple[float, float]] = {}
-    occ: list[tuple[float, float, float, float]] = list(blk)
-    # haloed rotated bbox per ref
+    fanout = fanout or {}
+    # occupant = (x0,y0,x1,y1, extra, is_cp): the PLACE_CLEAR/2-haloed box plus the
+    # EXTRA fan-out margin this part demands against a FOREIGN neighbour and whether
+    # it is a cluster passive (so a subject waives its extra against it). Blockers
+    # carry no fan-out demand and are never a cluster passive.
+    occ: list[tuple[float, float, float, float, float, bool]] = [
+        (b[0], b[1], b[2], b[3], 0.0, False) for b in blk]
+    # haloed rotated bbox + fan-out (extra, is_cp) per ref
     halo: dict[str, tuple[float, float, float, float]] = {}
+    extra_of: dict[str, float] = {}
+    iscp_of: dict[str, bool] = {}
     for ref, bbox, rot in items:
         rb = _rot_bbox(bbox, rot)
         halo[ref] = (rb[0] - PLACE_CLEAR / 2, rb[1] - PLACE_CLEAR / 2,
                      rb[2] + PLACE_CLEAR / 2, rb[3] + PLACE_CLEAR / 2)
+        need, is_cp = fanout.get(ref, (PLACE_CLEAR, False))
+        # base gap between two touching PLACE_CLEAR/2 halos is already PLACE_CLEAR;
+        # the fan-out floor asks for ``need`` total, so the EXTRA to reserve on this
+        # part's side is need - PLACE_CLEAR (never negative — a sub-floor need is met
+        # by the base halo alone).
+        extra_of[ref] = max(0.0, need - PLACE_CLEAR)
+        iscp_of[ref] = is_cp
     order = sorted(items, key=lambda it: (
         -(halo[it[0]][3] - halo[it[0]][1]),
         -(halo[it[0]][2] - halo[it[0]][0]), it[0]))
 
-    def _free(x0, y0, x1, y1, w_lim) -> bool:
+    def _free(x0, y0, x1, y1, w_lim, extra, is_cp) -> bool:
         if x1 > ZONE_PAD + w_lim + 1e-6:
             return False
-        for rx0, ry0, rx1, ry1 in occ:
-            if not (x1 <= rx0 or rx1 <= x0 or y1 <= ry0 or ry1 <= y0):
+        for rx0, ry0, rx1, ry1, r_extra, r_cp in occ:
+            # PAIRWISE fan-out gap: the candidate demands its own ``extra`` against
+            # the occupant unless the occupant is one of ITS cluster passives, and
+            # the occupant demands ``r_extra`` against the candidate unless the
+            # candidate is one of the occupant's cluster passives. Cluster identity
+            # is same-zone here, so a 2-pin R/C/L (is_cp) never triggers or receives
+            # the extra — decoupling stays tight (LAW-0/constraint 1).
+            g = max(0.0 if is_cp else r_extra, 0.0 if r_cp else extra)
+            if not (x1 + g <= rx0 or rx1 + g <= x0
+                    or y1 + g <= ry0 or ry1 + g <= y0):
                 return False
         return True
 
@@ -89,6 +157,7 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     for ref, _bbox, _rot in order:
         hx0, hy0, hx1, hy1 = halo[ref]
         hw, hh = hx1 - hx0, hy1 - hy0
+        extra, is_cp = extra_of[ref], iscp_of[ref]
         w_lim = max(target_w, hw)
         # raster scan within the growing shelf area; blockers force a slide.
         cx = ZONE_PAD
@@ -103,12 +172,12 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
                 scan_cy += scan_row_h if scan_row_h else hh
                 scan_row_h = 0.0
                 continue
-            if _free(cx, scan_cy, cx + hw, scan_cy + hh, w_lim):
+            if _free(cx, scan_cy, cx + hw, scan_cy + hh, w_lim, extra, is_cp):
                 slot = (cx, scan_cy)
                 break
             cx += GRID
         sx, sy = slot
-        occ.append((sx, sy, sx + hw, sy + hh))
+        occ.append((sx, sy, sx + hw, sy + hh, extra, is_cp))
         placed[ref] = (round(sx - hx0, 4), round(sy - hy0, 4))
         used_w = max(used_w, sx + hw)
         used_h = max(used_h, sy + hh)
@@ -266,6 +335,12 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
                    for r in sheet_refs)
     target_w = max(8.0, (tot_area * 0.62) ** 0.5) * aspect
+    # D13 FAN-OUT CLEARANCE: the intelligent-uniform fan-out floor for every part in
+    # this zone (need scaled by pin count; cluster passives flagged so they stay
+    # tight). Measured on the SAME copper side by the gate, so each side's pack gets
+    # its own reservation — top ICs breathe against top neighbours, bottom against
+    # bottom. Computed once from the resolvable footprints.
+    fmeta = _fanout_meta(sheet_refs, resolvable)
     # LAW 6: pull the tactile buttons into a clean uniform grid at the top of the
     # zone, then shelf-pack the remaining parts around that array (its cells are
     # blockers). >=2 buttons trigger the grid; otherwise the plain shelf pack.
@@ -274,11 +349,13 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
         g_off, g_occ, g_w, g_h = _grid_controls(top_btns, bbox_of, resolvable,
                                                 target_w)
         rest_top = [r for r in sr["top"] if r not in set(top_btns)]
-        r_off, rw, rh = _shelf_pack(items(rest_top, "top"), target_w, g_occ)
+        r_off, rw, rh = _shelf_pack(items(rest_top, "top"), target_w, g_occ,
+                                    fanout=fmeta)
         t_off = {**g_off, **r_off}
         tw, th = max(g_w, rw), max(g_h, rh)
     else:
-        t_off, tw, th = _shelf_pack(items(sr["top"], "top"), target_w)
+        t_off, tw, th = _shelf_pack(items(sr["top"], "top"), target_w,
+                                    fanout=fmeta)
     blockers: list[tuple[float, float, float, float]] = []
     for r in sr["top"]:
         if not has_thru_pads(resolvable[r]):
@@ -290,7 +367,7 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
                          ox + bx1 + PLACE_CLEAR / 2,
                          oy + by1 + PLACE_CLEAR / 2))
     b_off, bw, bh = _shelf_pack(items(sr["bottom"], "bottom"),
-                                target_w, blockers)
+                                target_w, blockers, fanout=fmeta)
     return t_off, b_off, round(max(tw, bw), 4), round(max(th, bh), 4)
 
 
@@ -407,8 +484,13 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
     row_span = max(cursor, 8.0)
     target_w = max(row_span - ZONE_PAD, (tot_area * 0.62) ** 0.5 * aspect)
 
+    # D13 FAN-OUT CLEARANCE for the inboard "rest" parts (the multi-pin IC + its
+    # test points behind the connector row, e.g. microsd U16001 vs TP16001). The
+    # connector row itself sits >= CONN_REST_GAP (2.0 mm) ahead, already clearing
+    # every connector's fan-out need; this reserves the floor AMONG the rest parts.
+    fmeta = _fanout_meta(rest_top + rest_bot, resolvable)
     rt = [(r, bbox_of[r], 0.0) for r in rest_top]
-    t_rest, _tw, _th = _shelf_pack(rt, target_w)
+    t_rest, _tw, _th = _shelf_pack(rt, target_w, fanout=fmeta)
     blockers: list[tuple[float, float, float, float]] = []
     for r in rest_top:
         if not has_thru_pads(resolvable[r]):
@@ -420,7 +502,7 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
                          ox + bx1 + PLACE_CLEAR / 2 + (0 if horiz else behind),
                          oy + by1 + PLACE_CLEAR / 2 + (behind if horiz else 0)))
     rb = [(r, bbox_of[r], 0.0) for r in rest_bot]
-    b_rest, _bw, _bh = _shelf_pack(rb, target_w, blockers)
+    b_rest, _bw, _bh = _shelf_pack(rb, target_w, blockers, fanout=fmeta)
 
     for r, (dx, dy) in t_rest.items():
         placed["top"][r] = (round(dx + (0 if horiz else behind), 4),
