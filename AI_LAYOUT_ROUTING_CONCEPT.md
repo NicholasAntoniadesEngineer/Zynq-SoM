@@ -1072,3 +1072,48 @@ pattern kept for parallelism/context, not a quality gap.
   recovery obligation grew to ~1,240mm², lands on P10 (_rotate_zone_90). WATCH: this is
   the FIRST cap adjustment; if P7c/P8/P9 also force growth, the GAP4 extrapolation
   warning (~200×160 endpoint) triggers a hard board-size review with the user.
+
+---
+
+## Contract COVERAGE AUDIT (2026-07-04) — the real remaining scope
+
+Full 36-subsystem matrix audited (workflow, 4 Opus agents, both package roots). Answers
+"which remaining sections need ethernet-level contracts". Ground truth: _WIRED_SHEETS =
+{power, usb_pd, ethernet}; 15 contracts exist (5 critical-v2, 10 lightweight).
+
+**9 subsystems need CRITICAL (ethernet-level):**
+- DONE (wired green): power, usb_pd, ethernet.
+- Contract authored, needs TEMPLATE+WIRE only (no research): **hdmi_rx (P7b)**,
+  **power_som (P7c)**, **motor_sense (D9)**.
+- Needs NEW research→v2→template→wire — the HDMI/MIPI HIGH-SPEED FAMILY:
+  - **hdmi_tx** ⬆ lightweight→critical (TPD12S016 flow-through, 8 TMDS cross the clamp —
+    the transmit mirror of hdmi_rx; was mis-tiered).
+  - **camera** ⬆ lightweight→critical (2-lane MIPI CSI-2 D-PHY, in-path 100R terms that
+    must sit at the receiver/mezzanine end).
+  - **hdmi_rx_term** ⬆ none→critical (8×49.9R TMDS sink terms at the FPGA RX end — Zynq
+    HR bank has no on-die TMDS termination, DEF-6; the SI companion to hdmi_rx).
+
+**13 LIGHTWEIGHT** (6 already adequate: pd_input/usbc_otg/lcd/microsd/usb_jtag/
+uart_bridge; 7 to author: power_mon, motor_pwm, fmc, pmod_expansion, board_qwiic,
+usb_jtag_connector, usb_uart_connector — mostly in-path-ESD-at-connector).
+
+**Correctly NONE (~14):** user_io, debug_boot, mechanical, rj45_connector, bringup_*,
+som_j1/2/3, + optional-only board_aux/board_services/som_decoupling.
+
+**Audit CORRECTED my orchestrator read (recorded honestly):**
+- fmc → NOT critical (its 14 diff pairs die at an uncontrolled stock 0.1" header —
+  placement isn't the circuit). De-escalated to lightweight.
+- power_mon → NOT critical (telemetry, no regulation loop, no diff pairs) — lightweight.
+- ADDED hdmi_rx_term as a critical I had missed (the 49.9R RX-end terminations).
+- Do NOT inflate the som_jN DF40 plugs to contracts — their diff-pair/return-path
+  criticality belongs to the ESCAPE-BLOCK program (T2/best-practice gates 2/3), which is
+  already how it's handled — no passives to cluster.
+
+**EXPANDED QUEUE (supersedes the old P7b/c/D9-only plan):**
+Wave 1 (template+wire, authored): P7b hdmi_rx · P7c power_som · D9 motor_sense.
+Wave 2 (HS family, research→wire, shares hdmi_rx's flow-through/term-at-receiver
+template): hdmi_rx_term · hdmi_tx · camera.
+Wave 3 (lightweight backfill, batch, not wired): the 7 lightweight authors.
+Then P10 area verdict. CROSS-CUTS: the escape-headroom (D13) gate — once built — applies
+to EVERY critical wave's template (fan-out room reserved on escape sides), so it must
+land before/with Wave 1's templates.
