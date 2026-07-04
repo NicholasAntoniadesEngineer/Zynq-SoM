@@ -1,24 +1,24 @@
 FLOORPLAN COMPOSITION (T1): 8 hard / 12 soft terms; hard RED 0, soft RED 1 (advisory)
-  aggregate hard margin: sum 396.5 mm, min 8.08 mm (informational)
+  aggregate hard margin: sum 398.08 mm, min 8.08 mm (informational)
   hard terms:
-    HARD facing power->power_som: 30.16 vs 90.00 (margin +59.84) ok [facing/output_roles [placement/v2]] dot=+934.41
+    HARD facing power->power_som: 29.19 vs 90.00 (margin +60.81) ok [facing/output_roles [placement/v2]] dot=+936.50
     HARD far_min ethernet->power: 80.82 vs 10.00 (margin +70.82) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
     HARD far_min power->ethernet.line_side: 80.82 vs 10.00 (margin +70.82) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
     HARD flow_hop pd_input->usb_pd: 15.13 vs 126.88 (margin +111.75) ok [flow chain [placement/v2]]
-    HARD flow_hop power->power_som: 81.70 vs 126.88 (margin +45.17) ok [flow chain [placement/v2]]
+    HARD flow_hop power->power_som: 81.10 vs 126.88 (margin +45.77) ok [flow chain [placement/v2]]
     HARD flow_hop usb_pd->power: 115.60 vs 126.88 (margin +11.28) ok [flow chain [placement/v2]]
     HARD near_max ethernet->rj45_connector: 1.25 vs 20.00 (margin +18.75) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
     HARD near_max usb_pd->pd_input: 1.92 vs 10.00 (margin +8.08) ok [judgment:10.0 (D11 edge-gap metric) — keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power_som->@som: 10.86 vs 90.00 (margin +79.14) ok [facing/output_roles [placement/v2]] dot=+453.77
+    soft facing power_som->@som: 10.32 vs 90.00 (margin +79.68) ok [facing/output_roles [placement/v2]] dot=+461.72
     soft far_min motor_sense->power: 57.06 vs 10.00 (margin +47.06) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    soft far_min motor_sense->power_som: 86.69 vs 10.00 (margin +76.69) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    soft far_min power_som->ethernet.line_side: 118.56 vs 10.00 (margin +108.56) ok [judgment:10.0 — same rationale as the power pilot]
-    soft flow_hop camera->@som: 74.34 vs 126.88 (margin +52.54) ok [flow chain [placement/v2]]
+    soft far_min motor_sense->power_som: 85.34 vs 10.00 (margin +75.34) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    soft far_min power_som->ethernet.line_side: 117.17 vs 10.00 (margin +107.17) ok [judgment:10.0 — same rationale as the power pilot]
+    soft flow_hop camera->@som: 73.99 vs 126.88 (margin +52.89) ok [flow chain [placement/v2]]
     soft flow_hop hdmi_tx->@som: 62.41 vs 126.88 (margin +64.47) ok [flow chain [placement/v2]]
-    soft flow_hop power_mon->power_som: 60.53 vs 126.88 (margin +66.34) ok [flow chain [placement/v2]]
+    soft flow_hop power_mon->power_som: 60.31 vs 126.88 (margin +66.56) ok [flow chain [placement/v2]]
     soft near_intent hdmi_rx_term->hdmi_rx: 44.08 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
-    soft near_intent power_mon->power_som: 49.50 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_intent power_mon->power_som: 49.23 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
     soft near_intent uart_bridge->rj45_connector: 28.89 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
     soft near_max hdmi_rx_term->som_j2: 0.00 vs 10.00 (margin +10.00) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
     soft near_max motor_sense->motor_pwm: 55.21 vs 20.00 (margin -35.21) RED [judgment:20.0 (D9) — motor telemetry beside the PWM out]
@@ -36,7 +36,7 @@ FLOORPLAN COMPOSITION (T1): 8 hard / 12 soft terms; hard RED 0, soft RED 1 (advi
     bringup_en_modules | bringup_modules: 10 airwires (351.0 mm) -> corridor >= 4.0 mm
     ethernet | rj45_connector: 9 airwires (214.5 mm) -> corridor >= 3.8 mm
     board_aux | debug_boot: 8 airwires (114.2 mm) -> corridor >= 3.6 mm
-    pmod_expansion | power_mon: 7 airwires (42.5 mm) -> corridor >= 3.4 mm
-    power_som | usb_jtag: 7 airwires (24.3 mm) -> corridor >= 3.4 mm
+    pmod_expansion | power_mon: 7 airwires (42.4 mm) -> corridor >= 3.4 mm
+    power_som | usb_jtag: 7 airwires (22.4 mm) -> corridor >= 3.4 mm
     debug_boot | usb_jtag: 6 airwires (223.8 mm) -> corridor >= 3.2 mm
     som_decoupling | user_io: 6 airwires (24.9 mm) -> corridor >= 3.2 mm

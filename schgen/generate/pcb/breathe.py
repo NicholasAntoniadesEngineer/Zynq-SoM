@@ -169,6 +169,7 @@ class _Grid:
 def _is_fixed(ref: str, sheet: str, footprint: str, *,
               mh_refs: set[str], som_j_refs: set[str],
               conn_edge: dict[str, str], contract_sheets: set[str],
+              contract_members: frozenset[str] | set[str] = frozenset(),
               l4_exempt: frozenset[str]) -> bool:
     if sheet.startswith("som_j"):
         return True                       # DF40 receptacles (HARD constraint #2)
@@ -181,7 +182,11 @@ def _is_fixed(ref: str, sheet: str, footprint: str, *,
     if "Fiducial" in footprint:
         return True                       # fab-art
     if sheet in contract_sheets:
-        return True                       # datasheet-true template sheets
+        return True                       # datasheet-true template sheets (wired)
+    if ref in contract_members:
+        return True                       # ANY contract's distance-constrained member
+        #                                   (buck hot-loop/FB/inductor, crystals,
+        #                                   in-path ESD/terminations) — inviolable
     if ref in l4_exempt:
         return True                       # T1-wired term participants
     return False
@@ -219,6 +224,20 @@ def breathe_fanout(
     )
     contract_sheets = {s for s in zorigin if load_contract(s) is not None}
     l4_exempt, _far = wired_term_participants()
+    # EVERY subsystem contract's members (not just the 3 wired sheets above):
+    # discover_all() + contract_member_brefs give the parts pinned to datasheet-true
+    # distances from connectors/pins — buck hot-loop caps + FB divider + inductor,
+    # crystals, in-path ESD / terminations. Those distances are INVIOLABLE (user
+    # law: "contracts requiring specific distances from connectors and pins
+    # absolutely cannot be overruled"), so the spread must never move them.
+    from schgen.generate.pcb import stage_templates as _st
+    from schgen.verify.placement_contract_gate import discover_all
+    contract_members: set[str] = set()
+    for _sh, _ct in discover_all().items():
+        try:
+            contract_members |= _st.contract_member_brefs(_sh, _ct, resolvable)
+        except Exception:  # noqa: BLE001 — a malformed contract must not break placement
+            continue
 
     def rot_of(r: str) -> float:
         return fixed_rot.get(r, 0.0)
@@ -241,6 +260,7 @@ def breathe_fanout(
         fp = parts[r][1] if r in parts else ""
         if _is_fixed(r, sheet, fp, mh_refs=mh_refs, som_j_refs=som_j_refs,
                      conn_edge=conn_edge, contract_sheets=contract_sheets,
+                     contract_members=contract_members,
                      l4_exempt=l4_exempt):
             fixed.append(r)
         else:

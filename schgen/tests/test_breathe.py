@@ -194,3 +194,20 @@ def test_committed_positions_grid_snapped():
         py = ORIGIN_Y + pos["U1"][1]
         assert abs((px / GRID) - round(px / GRID)) < 1e-6, px
         assert abs((py / GRID) - round(py / GRID)) < 1e-6, py
+
+
+def test_contract_members_are_fixed():
+    """User law: a part pinned to a datasheet-true distance from a connector/pin
+    (buck hot-loop cap / FB divider / inductor, a crystal, an in-path ESD or
+    termination) is INVIOLABLE — the spread must NEVER move it, on ANY contracted
+    sheet (not only the 3 engine-wired ones). A non-member generic shelf part on an
+    UN-contracted sheet stays movable so the generic clusters still loosen."""
+    kw = dict(mh_refs=set(), som_j_refs=set(), conn_edge={}, contract_sheets=set(),
+              l4_exempt=frozenset())
+    members = {"C22014", "L22003", "R22012", "Y28001", "RN36001"}  # buck/xtal/net
+    for m in members:
+        assert bz._is_fixed(m, "power_som", "Capacitor_SMD:C_0402",
+                            contract_members=members, **kw), m
+    # a generic bringup_modules passive (NOT a contract member) stays MOVABLE
+    assert not bz._is_fixed("C6001", "bringup_modules", "Capacitor_SMD:C_0402",
+                            contract_members=members, **kw)

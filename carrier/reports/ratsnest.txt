@@ -1,7 +1,7 @@
 LAW-5 RATSNEST GATE: PASS (board 178 x 163 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 15198.9 mm (budget 16863 mm, OK; 436 edges; 15198.9/25238.8 mm = 60.2% of total)
+  cross-subsystem airwire: 15186.5 mm (budget 16863 mm, OK; 436 edges; 15186.5/25236 mm = 60.2% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
     usbc_otg               n=12  bbox_area=    1081 disp=  5.4
@@ -14,12 +14,12 @@ LAW-5 RATSNEST GATE: PASS (board 178 x 163 mm)
     pmod_expansion         n=15  bbox_area=    1719 disp=  4.8
     power_mon              n=10  bbox_area=     469 disp=  4.8
     motor_pwm              n=13  bbox_area=    1291 disp=  4.4
-    camera                 n=13  bbox_area=     886 disp=  4.4
     microsd                n=15  bbox_area=    1518 disp=  4.4
     board_services         n=9   bbox_area=    1541 disp=  4.2
     bringup_rails          n=23  bbox_area=    1922 disp=  4.1
+    camera                 n=13  bbox_area=     792 disp=  3.9
     debug_boot             n=10  bbox_area=    1155 disp=  3.7
-    lcd                    n=20  bbox_area=    1024 disp=  3.4
+    lcd                    n=20  bbox_area=     993 disp=  3.3
     hdmi_tx                n=12  bbox_area=     984 disp=  3.2
     motor_sense            n=10  bbox_area=    2474 disp=  3.1
     fmc                    n=8   bbox_area=     911 disp=  2.5
@@ -29,9 +29,9 @@ LAW-5 RATSNEST GATE: PASS (board 178 x 163 mm)
     usb_pd                 n=6   bbox_area=      78 disp=  2.1
     uart_bridge            n=10  bbox_area=     127 disp=  1.9
     board_qwiic            n=2   bbox_area=      82 disp=  1.8
-    usb_jtag               n=19  bbox_area=     465 disp=  1.8
+    power_som              n=23  bbox_area=     383 disp=  1.8
     rj45_connector         n=3   bbox_area=     543 disp=  1.7
-    power_som              n=23  bbox_area=     361 disp=  1.7
+    usb_jtag               n=19  bbox_area=     442 disp=  1.7
     ethernet               n=10  bbox_area=     533 disp=  1.6
     hdmi_rx_term           n=10  bbox_area=      63 disp=  1.5
     bringup_modules        n=71  bbox_area=     484 disp=  1.3
