@@ -17,6 +17,8 @@ from .constants import (
     CONN_MATING_FACE,
     EDGE_PAD_CLEAR,
     EDGE_ZONE_ASPECT,
+    FID_INSET,
+    FIDUCIAL_FOOTPRINT,
     GRID,
     INTERIOR_ZONE_ASPECT,
     INTERIOR_ZONE_BAND_TARGET,
@@ -1260,6 +1262,45 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             n_bottom += 1
         else:
             n_top += 1
+
+    # ---- FIDUCIALS (GAP3 / ASSEMBLY_NOTES) — PCB-only fab-art -----------------
+    # Optical registration marks for the fine-pitch pick-and-place. NET-LESS (pad
+    # name "" -> net 0), no BOM line: injected here as synthetic FootprintInsts
+    # (NOT schematic circuit parts — a pinless part trips the per-sheet netlist
+    # "parts present" gate). Positions are FIXED and deterministic, on the F.Cu top
+    # side (the P&P registers from the assembly side). All page-frame mm.
+    #   3 GLOBAL in an asymmetric L (top-left, top-right, bottom-left — the missing
+    #   4th corner lets the machine resolve board rotation), inset FID_INSET past
+    #   each corner so they sit clear inside the corner M3 mounting-hole pads.
+    #   1 LOCAL PAIR diagonally flanking the densest 0.4 mm DF40 (J2) so the
+    #   fine-pitch stencil can register there too (seated in the dead corners of the
+    #   SoM keepout, clear of every DF40 pad + the under-SoM decoupling grid).
+    fid_mod = resolve_mod(FIDUCIAL_FOOTPRINT)
+    fid_insts: list[FootprintInst] = []
+    if fid_mod is not None:
+        x0, y0 = ORIGIN_X, ORIGIN_Y
+        x1, y1 = ORIGIN_X + board_w, ORIGIN_Y + board_h
+        fid_pos: list[tuple[str, float, float]] = [
+            ("FID1", x0 + FID_INSET, y0 + FID_INSET),          # top-left
+            ("FID2", x1 - FID_INSET, y0 + FID_INSET),          # top-right
+            ("FID3", x0 + FID_INSET, y1 - FID_INSET),          # bottom-left
+        ]
+        # local pair: opposite corners of the SoM keepout (dead area between the
+        # keepout edge and the DF40 courtyards), ~3 mm in from the keepout corners.
+        kx0, ky0, kx1, ky1 = keepout
+        ins = 3.0
+        fid_pos += [
+            ("FID4", ORIGIN_X + kx0 + ins, ORIGIN_Y + ky0 + ins),   # SoM NW corner
+            ("FID5", ORIGIN_X + kx1 - ins, ORIGIN_Y + ky1 - ins),   # SoM SE corner
+        ]
+        for ref, fx, fy in fid_pos:
+            fid_insts.append(FootprintInst(
+                ref=ref, value="Fiducial", footprint=FIDUCIAL_FOOTPRINT,
+                x=round(fx, 4), y=round(fy, 4), rotation=0.0,
+                pad_nets={}, mod_path=fid_mod, sheet="mechanical", side="top"))
+        insts.extend(fid_insts)
+        placed += len(fid_insts)
+        n_top += len(fid_insts)
 
     kx0, ky0, kx1, ky1 = keepout
     som_core = som_core_rect(plan.som_x, plan.som_y, som.w, som.h)

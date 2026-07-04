@@ -1278,6 +1278,46 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"COPPER DEBT: FAIL — {exc}")
         ok_all = False
 
+    # CPL / COMPONENT-PLACEMENT list (GAP3 assembly readiness): kicad-cli exports
+    # the pick-and-place position file from the just-emitted, DRC-clean .kicad_pcb
+    # into carrier/manufacturing/. It ships to the assembler alongside bom_jlc.csv;
+    # includes the fiducials (in_pos_files) so the P&P can register the stencil.
+    # Deterministic (position data derived from the board); best-effort — a missing
+    # kicad-cli WARNS and never fails the board (the .kicad_pcb is the source).
+    if _pcb_file is not None:
+        cpl_path = man_dir / "Zynq_Carrier_cpl.csv"
+        try:
+            _cpl = subprocess.run(
+                ["kicad-cli", "pcb", "export", "pos", "--format", "csv",
+                 "--units", "mm", "--side", "both",
+                 "--output", str(cpl_path), str(_pcb_file)],
+                capture_output=True, text=True, timeout=120)
+            if _cpl.returncode == 0 and cpl_path.exists():
+                n_cpl = max(0, sum(1 for _ in cpl_path.open()) - 1)
+                print(f"CPL: {cpl_path.relative_to(REPO_ROOT)} "
+                      f"({n_cpl} placements — pick-and-place position file)")
+            else:
+                print(f"CPL: skipped — kicad-cli export pos rc="
+                      f"{_cpl.returncode}: {_cpl.stderr.strip()[:120]}")
+        except (OSError, subprocess.SubprocessError) as exc:
+            print(f"CPL: skipped — {exc}")
+
+    # FAB PROFILE: DFM manufacturability gate (GAP3, HARD). Measures the emitted
+    # board's tightest demanded geometry (trace/clearance/drill/via-dia/via-annular/
+    # hole-to-hole) and FAILS if any is FINER than the pinned JLCPCB 4-layer
+    # capability floor (cited in the module). DRC cannot catch this — KiCad enforces
+    # the PROJECT rules, not the FAB's physical floor. PASSES today (reported per
+    # metric); a future change demanding sub-fab geometry fails the build. LAW 4.
+    from schgen.verify import fab_profile
+    fab_res = fab_profile.run(rep_dir)
+    print(f"FAB PROFILE: {'PASS' if fab_res.ok else 'FAIL'} "
+          f"({fab_res.profile.name}; "
+          f"{sum(1 for *_r, ok in fab_res.rows if ok)}/{len(fab_res.rows)} "
+          f"metrics at/above floor -> {rep_dir / 'fab_profile.txt'})")
+    for e in fab_res.errors:
+        print(f"  FAB PROFILE ERROR: {e}")
+    ok_all = ok_all and fab_res.ok
+
     # floorplan suggestion (SVG + MD), derived from the same sheets/link. Built
     # HERE — strictly AFTER _pcb_thread.join() above — so its fp.build_plan call
     # no longer races the PCB thread's writes to fp.BOARD_W/BOARD_H. With the PCB

@@ -1,0 +1,16 @@
+FAB PROFILE GATE  (JLCPCB standard 4-layer (1oz))
+  source: JLCPCB PCB Manufacturing & Assembly Capabilities (jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; retrieved 2026-07
+
+  metric              board demands    fab floor   verdict
+  ----------------------------------------------------------
+  min trace width         0.2032 mm    0.0900 mm   PASS
+  min clearance           0.1500 mm    0.0900 mm   PASS
+  min drill               0.3000 mm    0.1500 mm   PASS
+  min via diameter        0.4500 mm    0.2500 mm   PASS
+  min via annular         0.0750 mm    0.0750 mm   PASS
+  min hole-to-hole        0.2500 mm    0.1500 mm   PASS
+
+  segments 9, vias 34, drilled holes 216
+  (.kicad_pro min_via_annular_width DRC floor: 0.0500 mm — permissive rule, not what the board emits)
+
+  VERDICT: PASS — every demanded feature is at or above the fab floor

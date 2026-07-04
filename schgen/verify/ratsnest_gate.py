@@ -137,8 +137,12 @@ def check(model: PcbModel) -> RatsnestResult:
                 f"({px0:.1f},{py0:.1f})..({px1:.1f},{py1:.1f}) outside "
                 f"Edge.Cuts ({bx0:.0f},{by0:.0f})..({bx1:.0f},{by1:.0f})")
         cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
-        if inst.mod_path.name.startswith("MountingHole"):
-            continue          # corner-forced fixed-position fab-art (see above)
+        if inst.mod_path.name.startswith(("MountingHole", "Fiducial")):
+            continue          # corner-/keepout-forced fixed-position fab-art: the
+            #                   3 global fiducials span the board by design (corner
+            #                   L) and the local pair sits at the SoM keepout — like
+            #                   the mounting holes, measuring their spread as
+            #                   "dispersion" is a category error (fixed, net-less).
         area = (cx1 - cx0) * (cy1 - cy0)
         by_sheet.setdefault(inst.sheet, []).append((cx0, cy0, cx1, cy1, area))
 

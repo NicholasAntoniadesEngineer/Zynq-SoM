@@ -191,7 +191,7 @@ every PNG below passed the netlist, ERC and visual gates.
 | [hdmi_rx_term](renders/hdmi_rx_term.png) | HDMI-RX TMDS sink termination (8x49.9R to AVCC=+3V3) |
 | [hdmi_tx](renders/hdmi_tx.png) | HDMI TX: TPD12S016 + HDMI-A receptacle (source) |
 | [lcd](renders/lcd.png) | 40-pin TTL RGB LCD + SY7201 backlight boost |
-| [mechanical](renders/mechanical.png) | Mechanical: M3 mounts, chassis-GND bond, fiducials |
+| [mechanical](renders/mechanical.png) | Mechanical: M3 mounts + chassis-GND bond (fiducials are PCB-only, emitted by the placer) |
 | [microsd](renders/microsd.png) | microSD slot (1.8V SoM <-> 3.3V card, TXS02612) |
 | [motor_pwm](renders/motor_pwm.png) | 8-ch PWM/ESC output buffer (5V, PL-isolating) |
 | [motor_sense](renders/motor_sense.png) | ESC motor-rail telemetry: INA3221 + 10mR shunt (I2C 0x42) |

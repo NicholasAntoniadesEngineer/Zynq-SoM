@@ -18,6 +18,7 @@ from .constants import (
     CARRIER,
     DEFAULT_CLEARANCE_MM,
     DEFAULT_TRACK_MM,
+    FIDUCIAL_FOOTPRINT,
     ORIGIN_X,
     ORIGIN_Y,
     POWER_CLASS,
@@ -556,10 +557,14 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
     dru_path = CARRIER / "manufacturing" / "Zynq_Carrier_pcb.kicad_dru"
     write_dru(model, dru_path)
 
+    # fiducials are PCB-only synthetic footprints (GAP3) — not in board_parts()
+    # (the schematic-derived set), so add their count to keep placed == total.
+    n_fid = sum(1 for i in model.insts
+                if i.footprint == FIDUCIAL_FOOTPRINT)
     result = {
         "pcb": pcb_path, "pro": pro_path, "dru": dru_path,
         "board_w": model.board_w, "board_h": model.board_h,
-        "placed": model.placed, "total": len(board_parts()),
+        "placed": model.placed, "total": len(board_parts()) + n_fid,
         "nets": len([n for n in model.net_numbers if n]),
         "classes": sorted(model.classes), "deferred": model.deferred,
         "n_top": model.n_top, "n_bottom": model.n_bottom,

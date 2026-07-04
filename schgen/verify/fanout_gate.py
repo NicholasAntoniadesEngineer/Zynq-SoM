@@ -123,6 +123,14 @@ def _is_df40(inst) -> bool:
     return bool(_DF40_SHEET_RE.match(inst.sheet)) or len(inst.pad_nets) >= DF40_MIN_PINS
 
 
+def _is_fiducial(inst) -> bool:
+    """A fiducial is PCB-only fab-art (a 1 mm bare-copper registration dot, no net,
+    no pin). It never blocks an IC's fan-out — the assembler places parts around it
+    and it carries no escape traffic — so it must NOT count as a crowding foreign
+    neighbour (same principle as the DF40-plug exclusion)."""
+    return "Fiducial" in inst.footprint
+
+
 def intelligent_need(pins: int) -> tuple[float, str]:
     """The fan-out clearance FLOOR (mm) a part with ``pins`` pins needs, + a basis
     string. UNIFORM rule, INTELLIGENT value — scaled by pin count via simple tiers."""
@@ -260,6 +268,8 @@ def check(model: PcbModel, baseline: int | None = None) -> FanoutResult:
                 continue                      # opposite copper plane — not fan-out room
             if _is_df40(other):
                 continue                      # DF40 plugs never count as crowding
+            if _is_fiducial(other):
+                continue                      # fiducials are fab-art, not fan-out room
             if other.sheet == inst.sheet and _is_cluster_passive(
                     other.ref, len(other.pad_nets)):
                 continue                      # own-cluster decoupling — tight BY DESIGN

@@ -177,6 +177,12 @@ def check(model: PcbModel) -> MechResult:
                 continue
             if inst.mod_path.name.startswith("MountingHole"):
                 continue          # not a placed component
+            if inst.mod_path.name.startswith("Fiducial"):
+                continue          # zero-height PCB fab-art (a bare-copper
+                #                   registration dot) — no body to collide with the
+                #                   module in the standoff gap; the local pair is
+                #                   DELIBERATELY next to the under-SoM DF40s so the
+                #                   fine-pitch stencil can register there (GAP3).
             if inst.sheet.startswith("som_j"):
                 continue          # the DF40 mezzanine receptacles ARE the SoM
                 #                   interface — they MUST sit under the module

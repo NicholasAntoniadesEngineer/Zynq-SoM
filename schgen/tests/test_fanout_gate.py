@@ -171,9 +171,14 @@ def test_ratchet_passes_at_or_below_baseline_fails_above():
     assert not fg.check(m, baseline=1).ok
 
 
-def test_first_run_self_pins_baseline_and_passes():
+def test_first_run_self_pins_baseline_and_passes(monkeypatch, tmp_path):
     """With no baseline supplied and no sidecar, the current starved count is adopted as
-    the baseline and the gate PASSES (first run pins the debt, never blocks)."""
+    the baseline and the gate PASSES (first run pins the debt, never blocks).
+
+    Hermetic: the repo now SHIPS a ratcheted sidecar (starved_baseline 0), so point the
+    gate at an ABSENT temp path to exercise the genuine first-run / no-sidecar branch
+    rather than reading the real ceiling (which would make this test order-dependent)."""
+    monkeypatch.setattr(fg, "_BASELINE_PATH", tmp_path / "absent_fanout_baseline.json")
     ic = _part("U1", ORIGIN_X + 20, ORIGIN_Y + 20, npins=8, sheet="a")
     near = _part("U2", ORIGIN_X + 21.9, ORIGIN_Y + 20, npins=8, sheet="b")
     res = fg.check(_model([ic, near]), baseline=None)

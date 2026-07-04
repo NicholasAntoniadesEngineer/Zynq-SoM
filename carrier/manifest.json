@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "f8c844ae6f6cc0b2110c5dfc99ac7f22bf6637c48fb1230856d5cff6899730df"
+      "sha256": "ce293803980f771c121225903e7d1bcc7a7c245f85b48fbebf05b82c84f57b67"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -34,7 +34,7 @@
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "92a1ea0507ba5e180460be45e0fc28466431eee2d53954acc65dab195b612998"
+      "sha256": "50756c6b710c29e686a240ca90258287cdf39eb393f52de2aaee263fe2033463"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -55,6 +55,10 @@
     {
       "path": "manufacturing/SI_CONSTRAINTS.md",
       "sha256": "cd1795d28287679188b9a657c514d7035f5d4baaea9d0b650959e757348e44ca"
+    },
+    {
+      "path": "manufacturing/Zynq_Carrier_cpl.csv",
+      "sha256": "6fa815e998927afe37be678713704c4c44e4128fa8846f54e9550fb48a1ca023"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -102,7 +106,7 @@
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "5167561f1c78587618d9a3f800d16eeda919e54715f28517bad73bc863777a41"
+      "sha256": "10b50c0ea5124980b9aaccd9b3e5032be548f97ba9d3b88af6476e9f19231703"
     },
     {
       "path": "reports/design_rules.txt",
@@ -111,6 +115,10 @@
     {
       "path": "reports/escape_lanes.txt",
       "sha256": "6c46fc99883b8f40493dbe411dcfa65cb9810598fc0d150faec88202efa72565"
+    },
+    {
+      "path": "reports/fab_profile.txt",
+      "sha256": "001bb5905383097bb2bcb894af49bd60bbed50d4c1db48ae5b4a35ed41b07113"
     },
     {
       "path": "reports/fanout.txt",
@@ -262,7 +270,7 @@
     },
     {
       "path": "schematic/mechanical.kicad_sch",
-      "sha256": "62d4bbe85b80aabe4f473b9d18c86288e1c3123477ee2fc37f2f068716c412e2"
+      "sha256": "7a903bce5d0acb57a17a34e330b16d8a2824762a3cb61cdc5b3e784aed4355ec"
     },
     {
       "path": "schematic/microsd.kicad_sch",

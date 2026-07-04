@@ -53,6 +53,21 @@ ORIGIN_Y = 25.0
 MH_INSET = 5.0          # M3 hole center inset from each board corner
 GRID = 1.27             # placement snap grid (mm)
 
+# --- fiducials (GAP3 / carrier/manufacturing/ASSEMBLY_NOTES.md) ----------------
+# Optical registration marks for fine-pitch pick-and-place. ASSEMBLY_NOTES REQUIRES
+# 3 GLOBAL fiducials in an L (asymmetric so the machine can resolve rotation), each
+# a 1 mm bare-copper dot + 2 mm solder-mask opening. We use the stock KiCad
+# Fiducial:Fiducial_1mm_Mask2mm footprint (1 mm F.Cu pad, 0.5 mm mask margin -> 2 mm
+# opening — EXACT match). A fiducial carries NO net (its pad name is "" -> net 0), no
+# BOM line: it is PCB-only fab-art injected as a synthetic FootprintInst in
+# build_model (NOT a schematic circuit part — a pinless part would trip the per-sheet
+# netlist "parts present" gate). Local pairs flank the densest 0.4 mm DF40 (J2) so
+# the assembler can register the fine-pitch stencil there too.
+FIDUCIAL_FOOTPRINT = "Fiducial:Fiducial_1mm_Mask2mm"
+FID_INSET = 9.0          # global fiducial center inset from each board corner
+#                          (> MH_INSET 5 so it sits INSIDE the corner mounting hole,
+#                          clear of the M3 3.2 mm pad + its keepout)
+
 # --- subsystem-zone outline derivation (LAW 5) -------------------------------
 PERIM = 3.0              # perimeter keepout ring (no zone touches the edge)
 MH_KEEPOUT = 5.0         # extra inset reserving the corner mounting-hole pads

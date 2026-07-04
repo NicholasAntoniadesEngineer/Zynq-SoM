@@ -1,32 +1,47 @@
 # Carrier assembly + fab requirements (DFM)
 
-Mechanical / fab-art requirements the netlist + BOM + CPL do not carry. Hand
-this to the layout engineer and the assembly house with the generated
-`bom_jlc.csv` and (when emitted) the CPL. Suggested positions are for a
-~120 × 100 mm board (the floorplan target, `carrier/docs/FLOORPLAN.svg`);
-finalise against the real outline.
+Mechanical / fab-art requirements the netlist + BOM do not carry. Hand this to
+the layout engineer and the assembly house with the generated `bom_jlc.csv` and
+the CPL (`Zynq_Carrier_cpl.csv`, regenerated every `schgen board` by
+`kicad-cli pcb export pos`). **Board outline: 178 × 163 mm** (the emitted
+`Zynq_Carrier.kicad_pcb`, page frame (25,25)–(203,188); NOT the old ~120 × 100
+floorplan target — that number is stale). All positions below are in the board
+(page) frame.
 
-## Fiducials (REQUIRED for fine-pitch pick-and-place)
+## Fiducials — EMITTED (5 on the board; GAP3 closed)
 
-The board carries fine-pitch / no-lead parts (FMC SEAF mezzanine, HDMI, microSD,
-FFC tails, QFN/SON/HTSSOP regulators + the FUSB302 WQFN). These need optical
-fiducials or the assembler cannot register the stencil and the fine-pitch
-placements.
+The board carries fine-pitch / no-lead parts (the 0.4 mm-pitch SoM DF40
+receptacles J1/J2/J3, HDMI, microSD, FFC tails, QFN/SON/HTSSOP regulators + the
+FUSB302 WQFN). These need optical fiducials or the assembler cannot register the
+stencil. **Fiducials are now emitted** by the placer as PCB-only fab-art
+(`Fiducial:Fiducial_1mm_Mask2mm` = 1.0 mm bare-copper dot + 2.0 mm solder-mask
+opening, net-less, no BOM line — see `schgen/generate/pcb/placement.py`
+`build_model`). They appear in the CPL (`in_pos_files`) so the P&P registers off
+them.
 
-- **3 global fiducials**, one per board corner in an L (not symmetric), so the
-  machine can resolve rotation. Each = 1.0 mm bare copper dot + 2.0 mm
-  solder-mask opening, ≥ 5 mm from any board edge, no copper/silk inside the
-  mask ring.
-- **Local (per-part) fiducials**: a pair diagonally across the **SoM DF40
-  connectors** (J1/J2/J3 — the densest, most rotation-sensitive 0.4 mm-pitch
-  parts) and one at each **QFN/SON** EP part (FUSB302, INA3221, TPS26631,
-  TPD12S016). Same 1 mm/2 mm geometry.
+- **3 global fiducials** in an asymmetric **L** (the missing 4th corner lets the
+  machine resolve board rotation), on the top (assembly) side, inset 9 mm from
+  each corner so they sit clear inside the corner M3 mounting-hole pads:
+  - `FID1` (top-left)  = (34, 34)
+  - `FID2` (top-right) = (194, 34)
+  - `FID3` (bottom-left) = (34, 179)
+- **Local pair** flanking the densest 0.4 mm DF40 (the SoM region), seated in the
+  dead corners of the SoM body keepout, clear of every DF40 pad + the under-SoM
+  decoupling grid:
+  - `FID4` = (91, 87.5)   (SoM keepout NW corner)
+  - `FID5` = (137, 125.5) (SoM keepout SE corner)
+
+> The FMC site is a generic 2×20 0.1″ header (the VITA 57.1 SEAF/ASP mezzanine
+> was removed per user request 2026-06-18) — it is NOT a fine-pitch no-lead part
+> and needs no local fiducial.
 
 ## Tooling / mounting holes
 
-- **4 × M3 mounting holes**, board corners, 6 mm keep-out, plated + tied to
-  `CHASSIS_GND` (see the chassis bond below) — they double as the assembly
-  tooling holes.
+- **4 × M3 mounting holes** (H1–H4), EMITTED at the board corners inset 5 mm:
+  (30.48, 30.48), (198.12, 30.48), (198.12, 182.88), (30.48, 182.88); 6 mm
+  keep-out, plated + tied to `CHASSIS_GND` (see the chassis bond below) — they
+  double as the assembly tooling holes. The 3 global fiducials sit inset just
+  inside these (9 mm), clear of the M3 pads.
 - If the assembler needs dedicated tooling holes, add **2 × 2.5 mm
   non-plated** on a diagonal.
 
@@ -71,10 +86,30 @@ chassis/shield return current cannot flow through signal ground:
   the rails) and mouse-bite or V-score breakaways. The fine-pitch parts argue
   for V-score over mouse-bite near board edges to avoid flex-cracking.
 
-> NOTE: this is a static requirements sheet. A future generator
-> (`schgen` floorplan extension) can emit the actual fiducial / tooling-hole
-> coordinates once the board outline is frozen — the floorplan already derives
-> the outline + per-block courtyards.
+## Double-sided SMT — RATIFIED process decision
+
+The board is a **two-sided SMT assembly**: of 569 placed footprints, **313 sit on
+the bottom (B.Cu)** — the per-subsystem decoupling / small passives and the
+under-SoM power-entry bypass grid live on the bottom to pull cross-airwire and to
+keep the top routable (LAW 5/6). This is a **deliberate, ratified** process choice,
+NOT an accident of packing:
+
+- The assembler must run **two reflow passes** (bottom first, then top, or
+  top-first with bottom on adhesive) — quote accordingly. Every bottom part is a
+  small, mirror-symmetric, non-polarized passive (the placer's 2-side classifier
+  forbids bottom-side polarized/active parts), so a swapped-pad mirror is
+  electrically identical (verified) — no bottom part is orientation-sensitive.
+- All connectors, ICs, regulators, the SoM DF40 receptacles, mounting holes and
+  the fiducials are **top-side** (259 footprints) — the P&P registers off the
+  top fiducials for the fine-pitch pass.
+- If the assembler prefers a single-sided build, set `two_side=False` in the PCB
+  step (everything moves to the top) — the board grows and routability drops, so
+  the two-sided default stands unless the quote says otherwise.
+
+> NOTE: fiducial + mounting-hole coordinates ARE now emitted (above) and land
+> deterministically from `schgen board` (the placer fixes them; re-runs are
+> byte-identical). This sheet stays the home for the requirements the netlist/BOM
+> cannot carry (chassis bond, silk, panelisation, hand-insert consumables).
 
 ## Board-services block (board_aux / board_services / board_qwiic)
 
