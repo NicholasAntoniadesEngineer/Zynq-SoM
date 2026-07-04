@@ -50,7 +50,7 @@ from .mating_face import _rot_bbox, _rot_bbox_cw, _rot_pad_bbox, connector_edge_
 # the wider omnidirectional free-space redistribution for still-starved movers.
 # Kept as a module constant so the run can be A-only or A+B without touching the
 # call site (Phase B is appended only after A proves green + byte-deterministic).
-_BREATHE_PHASES: tuple[str, ...] = ("A",)
+_BREATHE_PHASES: tuple[str, ...] = ("A", "B")
 
 
 def _fanout_meta(refs: list[str], resolvable: dict[str, Path]

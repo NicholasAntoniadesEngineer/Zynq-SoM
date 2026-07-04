@@ -14,7 +14,7 @@ FLOORPLAN COMPOSITION (T1): 8 hard / 12 soft terms; hard RED 0, soft RED 1 (advi
     soft far_min motor_sense->power: 57.06 vs 10.00 (margin +47.06) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
     soft far_min motor_sense->power_som: 86.69 vs 10.00 (margin +76.69) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
     soft far_min power_som->ethernet.line_side: 118.56 vs 10.00 (margin +108.56) ok [judgment:10.0 — same rationale as the power pilot]
-    soft flow_hop camera->@som: 74.00 vs 126.88 (margin +52.87) ok [flow chain [placement/v2]]
+    soft flow_hop camera->@som: 74.34 vs 126.88 (margin +52.54) ok [flow chain [placement/v2]]
     soft flow_hop hdmi_tx->@som: 62.41 vs 126.88 (margin +64.47) ok [flow chain [placement/v2]]
     soft flow_hop power_mon->power_som: 60.53 vs 126.88 (margin +66.34) ok [flow chain [placement/v2]]
     soft near_intent hdmi_rx_term->hdmi_rx: 44.08 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
@@ -31,9 +31,9 @@ FLOORPLAN COMPOSITION (T1): 8 hard / 12 soft terms; hard RED 0, soft RED 1 (advi
     managed R13007 (hdmi_rx_term) in escape:J2:S [T2 STAY]
     managed R13008 (hdmi_rx_term) in escape:J2:S [T2 STAY]
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    bringup_en_modules | bringup_rails: 24 airwires (1145.9 mm) -> corridor >= 6.8 mm
+    bringup_en_modules | bringup_rails: 24 airwires (1146.5 mm) -> corridor >= 6.8 mm
     power | power_mon: 12 airwires (179.7 mm) -> corridor >= 4.4 mm
-    bringup_en_modules | bringup_modules: 10 airwires (355.5 mm) -> corridor >= 4.0 mm
+    bringup_en_modules | bringup_modules: 10 airwires (351.0 mm) -> corridor >= 4.0 mm
     ethernet | rj45_connector: 9 airwires (214.5 mm) -> corridor >= 3.8 mm
     board_aux | debug_boot: 8 airwires (114.2 mm) -> corridor >= 3.6 mm
     pmod_expansion | power_mon: 7 airwires (42.5 mm) -> corridor >= 3.4 mm
