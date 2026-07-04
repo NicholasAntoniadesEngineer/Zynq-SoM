@@ -700,6 +700,22 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  POWER TREE ERROR: {e}")
     ok_all = ok_all and pt_res.ok
 
+    # RAIL AMPACITY: best-practice gate #5 / GAP5 — DF40 power-delivery contact
+    # adequacy. Reuses pt_res' rail tree (no recompute); counts the DF40 contacts
+    # assigned to each SoM-delivered rail (som_interface.json, linker rail maps)
+    # and HARD-FAILS any rail whose current exceeds n_contacts x 0.3 A (Hirose
+    # DF40 rated, CITED) x 0.8 derate. Same wiring pattern as thermal/return_stitch.
+    # Ring-0: keep this block minimal when reconciling with concurrent gate adds.
+    from schgen.verify import rail_ampacity
+    ra_res = rail_ampacity.run(sheets, rep_dir, pt_res=pt_res)
+    print(f"RAIL AMPACITY: {'PASS' if ra_res.ok else 'FAIL'} "
+          f"({len(ra_res.rails)} delivery rails, {len(ra_res.errors)} "
+          f"under-contacted, {len(ra_res.findings)} unbooked "
+          f"-> {rep_dir / 'rail_ampacity.txt'})")
+    for e in ra_res.errors:
+        print(f"  RAIL AMPACITY ERROR: {e}")
+    ok_all = ok_all and ra_res.ok
+
     # per-device thermal (Tj) gate: MOVED below, after the PCB emit + join —
     # its pour-aware RthJA credits are granted only against copper VERIFIED in
     # the just-emitted .kicad_pcb (LAW 0 / GAP1: prose is not evidence), so it
