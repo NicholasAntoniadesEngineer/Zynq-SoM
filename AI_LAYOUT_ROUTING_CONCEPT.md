@@ -1117,3 +1117,19 @@ Wave 3 (lightweight backfill, batch, not wired): the 7 lightweight authors.
 Then P10 area verdict. CROSS-CUTS: the escape-headroom (D13) gate — once built — applies
 to EVERY critical wave's template (fan-out room reserved on escape sides), so it must
 land before/with Wave 1's templates.
+
+---
+
+## NO-ROUTING LAW (2026-07-04, user decree)
+
+**"Until I see otherwise we are not routing."** NO autorouter / Freerouting / DSN-SES /
+route-completion measurement / route harness — the GAP2 route-harness was abandoned
+unmerged. Routing is OFF until the user explicitly re-enables it.
+
+FOCUS = PLACEMENT, and specifically **very basic fan-out of all components**: every
+component (esp. multi-pin ICs) gets a basic minimum breathing-room clearance so its pins
+can fan out — a simple uniform spacing floor applied broadly, checked by a gate, NOT a
+per-net routing calc. Decoupling caps stay tight ON their pins (contract intent); fan-out
+room is on a component's FREE sides. Existing placement-time gates that touch
+routing-readiness (return-stitch = ground-return contact adequacy; rail-ampacity =
+contact count) STAY — they are placement/SI checks, not routing.
