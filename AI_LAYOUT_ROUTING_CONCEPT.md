@@ -1150,3 +1150,59 @@ The basic-fan-out gate/rule is a UNIFORM STRUCTURE with an INTELLIGENT VALUE:
   decoupling); per-net escape-lane demand analysis (over-engineered, routing-flavored).
 The escape-headroom workflow's MEASUREMENT (which components are packed too tight vs
 foreign parts) feeds this; its design phase is re-aimed at this intelligent-uniform floor.
+
+---
+
+## ⏸ STOPPING POINT (2026-07-04, user: "bank the infra, board is good enough for now")
+
+**master = origin/master = HEAD = `ae80eb8`** — all refs aligned, everything pushed.
+Board **178×163mm**, DRC 0, **all gates green together**, byte-identical ×3.
+
+**What LANDED this arc (the two things the user cared about — both DONE):**
+1. **FAN-OUT (D13) — COMPLETE + HARD.** `schgen/verify/fanout_gate.py` (uniform rule /
+   intelligent pin-count-tiered value / cluster-aware foreign-only measure) + placer
+   reservation in `placement.py` (`_fanout_meta`/`_shelf_pack` fanout param). The 18
+   starved multi-pin ICs the user flagged → **0 starved** (110 subjects, baseline 0, gate
+   is HARD). Cost +12.3% board (170×152→178×163), user-ratified "accept as-is". This is
+   the literal answer to "multi-pin ICs need more room to fan out."
+2. **DFM / GAP3 assembly-readiness — COMPLETE** (`ae80eb8`). 5 fiducials EMITTED (3
+   global asymmetric-L + 2 local at the densest DF40; PCB-only synthetic FootprintInsts,
+   569/569); CPL export (`carrier/manufacturing/Zynq_Carrier_cpl.csv`, 507); **fab-profile
+   gate** (`schgen/verify/fab_profile.py`, HARD, cited JLCPCB 4-layer, 6/6 PASS — catches
+   sub-fab geometry DRC can't); ASSEMBLY_NOTES refreshed. Fixed a non-hermetic fanout test
+   (was failing on master; the gate was untouched — LAW 4).
+
+**What is DEFERRED (user's explicit call — do NOT restart without a new go-ahead):**
+The 6 datasheet-true **template wirings** (hdmi_rx, power_som, motor_sense + the HS family
+hdmi_tx/camera/hdmi_rx_term). Contracts are authored; wiring them into `_WIRED_SHEETS`
+needs new placement-engine capability that hit two REAL walls (agents correctly refused to
+hack past them):
+- **BLOCKER A — T2-escape graze.** Wiring the 3 crit sheets repacks the floorplan and
+  grazes `som_j1` pad 14 (0.30 vs 0.325mm min). The T2 locked-copper escape block cannot
+  be perturbed. Resume needs the packer to treat the T2 corridor + DF40 pad field as a
+  hard keepout during crit-sheet repack (not just post-hoc gate).
+- **BLOCKER B — connector-edge-aware cluster orientation.** The HS sheets need to rotate a
+  part cluster around a FIXED-mouth off-board connector (mouth stays inboard, LAW-6; pads
+  never over caps, LAW-0; power faces downstream, FLOW) — no engine capability exists yet.
+
+**Infra is BANKED durably (not fragile in worktrees):**
+- `origin/wip/crit-templates-infra` — multi-anchor cluster builder (motor_sense), seater
+  node-budget + greedy fallback (fixes the infinite-backtrack hang), `som_j*` near_max
+  resolution fix (load-bearing: any wired som_j* needs it to build). + HANDOFF.md.
+- `origin/wip/hs-templates-infra` — superset builder (multi-anchor + budget + conn_rot
+  threading for BLOCKER B) + HANDOFF.md documenting the connector-orientation gap.
+Both were byte-identity-safe (unwired sheets use the legacy path); NOT merged to master
+because the value is dormant until a sheet is wired, and the two rewrites conflict (resume
+picks the hs superset). Worktrees removed; branches hold the exact diffs.
+
+**Contract coverage:** 25 of 36 subsystems under contract (3 wired green: power, usb_pd,
+ethernet). Full matrix in the COVERAGE AUDIT section above.
+
+**Still open for the user (task chips, NOT auto-launched):** INA3221 input RC filter;
+CC-line ESD TVS at the Type-C inlet.
+
+**RESUME PROTOCOL when the user re-opens template wiring:** fresh Opus worktree at master;
+cherry-pick `wip/hs-templates-infra` as the engine base; solve BLOCKER A (T2 keepout in
+repack) first since Wave-1 needs it; then wire one sheet at a time with red-on-before +
+Ring-0 render verdict + commit/push per sheet. Laws unchanged: NO ROUTING; all subagents
+Opus 4.8; commit+push per verified unit; keep master current.
