@@ -28,23 +28,17 @@ from schgen.verify import placement_contract_gate as g
 # The lightweight-tier sheets (D6 "rest of the board"). board_qwiic is
 # EXCLUDED: it exists only as a carrier-local package (carrier/subsystems/
 # board_qwiic), not in the top-level subsystems/ library this wave covers.
+# ``camera`` and ``hdmi_tx`` were PROMOTED out of this tier to CRITICAL, datasheet-
+# cited placement/v2 contracts (the HS-family audit — they are high-speed: MIPI
+# CSI-2 D-PHY and flow-through HDMI TMDS). Their v2 schema (an ``external`` block,
+# citations) is covered by ``test_hs_family_contracts.py``, not this lightweight
+# suite, so they are no longer asserted lightweight here.
 _LIGHTWEIGHT = (
-    "camera", "lcd", "microsd", "uart_bridge", "usb_jtag",
-    "usbc_otg", "hdmi_tx", "pd_input", "pmod",
+    "lcd", "microsd", "uart_bridge", "usb_jtag",
+    "usbc_otg", "pd_input", "pmod",
 )
 
 _ALLOWED_TYPES = {"proximity", "same_side"}
-
-# WAVE-3 BACKFILL (the audit's "lightweight, needs authoring" set — AI_LAYOUT_
-# ROUTING_CONCEPT.md "Contract COVERAGE AUDIT 2026-07-04"). Unlike ``_LIGHTWEIGHT``
-# these SPAN BOTH package roots: power_mon / motor_pwm / fmc / board_qwiic are
-# carrier-local (carrier/subsystems/<name>/), pmod_expansion / usb_jtag_connector
-# / usb_uart_connector are portable. ``discover_contract`` resolves both roots, so
-# these get the SAME validity + integration coverage.
-_NEW_LIGHTWEIGHT = (
-    "power_mon", "motor_pwm", "fmc", "pmod_expansion", "board_qwiic",
-    "usb_jtag_connector", "usb_uart_connector",
-)
 
 
 def _structure_refs(st: dict) -> set[str]:
@@ -192,109 +186,6 @@ def test_lightweight_contracts_run_on_the_real_board(_real_model):
     results = g.check_all(_real_model)
     print("\n=== LIGHTWEIGHT TIER (check_all) — red expected, not asserted ===")
     for sheet in _LIGHTWEIGHT:
-        res = results[sheet]
-        n_struct = len(g.discover_contract(sheet)["structures"])
-        print(f"\n--- {sheet}: {len(res.violations)} violation(s), "
-              f"{res.checked} structure(s) ---")
-        print(res.summary())
-        assert res.have_contract is True, sheet
-        assert res.missing_refs == [], (
-            f"{sheet}: contract refs did not map to board refs: "
-            f"{res.missing_refs}")
-        assert res.checked == n_struct, (
-            f"{sheet}: gate examined {res.checked} of {n_struct} structures")
-        assert res.unknown_fail == 0, (
-            f"{sheet}: gate hit an unknown structure type:\n{res.summary()}")
-
-
-# ---------------------------------------------------------------------------
-# WAVE-3 BACKFILL — the 7 newly-authored lightweight contracts (both roots)
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize("sheet", _NEW_LIGHTWEIGHT)
-def test_backfill_contract_imports_and_schema_is_lightweight(sheet):
-    """Each backfill contract imports cleanly and carries ONLY the lightweight
-    schema: proximity/same_side structures, a judgment ``basis`` on every
-    structure, positive distance bounds, and NO composition ``external`` block."""
-    c = g.discover_contract(sheet)
-    assert c is not None, f"{sheet}: no placement_contract.py discovered"
-    assert c.get("sheet") == sheet
-    assert c.get("subsystem") == sheet
-    assert c.get("tier") == "lightweight", c.get("tier")
-    assert "external" not in c, (
-        f"{sheet}: lightweight contracts carry NO composition block")
-    structures = c.get("structures", [])
-    assert structures, f"{sheet}: contract has no structures"
-    for st in structures:
-        typ = st.get("type")
-        assert typ in _ALLOWED_TYPES, (
-            f"{sheet}: structure type {typ!r} is not lightweight-tier")
-        basis = st.get("basis")
-        assert isinstance(basis, str) and basis.strip(), (
-            f"{sheet}: structure {typ} missing its basis string")
-        assert "judgment" in basis, (
-            f"{sheet}: lightweight basis must record its judgment: {basis}")
-        if typ == "proximity":
-            assert st.get("anchor"), f"{sheet}: proximity without an anchor"
-            members = st.get("members")
-            assert members and all(isinstance(m, str) for m in members), (
-                f"{sheet}: proximity without members")
-            assert float(st["max_mm"]) > 0.0
-        else:  # same_side
-            assert st.get("ics"), f"{sheet}: same_side without ics"
-
-
-@pytest.mark.parametrize("sheet", _NEW_LIGHTWEIGHT)
-def test_backfill_contract_refs_and_pins_exist_in_the_netlist(sheet):
-    """Every ref the backfill contract names (structures + roles) exists in the
-    subsystem netlist, and every ``anchor_pins`` entry is a real pin NUMBER of
-    its anchor part (dossier pin table) — no guessed refs/pins."""
-    c = g.discover_contract(sheet)
-    assert c is not None, sheet
-    parts = load_subsystem(sheet).circuit.parts
-    for st in c["structures"]:
-        for ref in sorted(_structure_refs(st)):
-            assert ref in parts, (
-                f"{sheet}: contract names {ref!r} but the netlist has no "
-                f"such part (has {sorted(parts)})")
-        pins = st.get("anchor_pins")
-        if pins:
-            anchor = parts[st["anchor"]]
-            assert anchor.pin_numbers, (
-                f"{sheet}: anchor {st['anchor']} has no dossier pin table "
-                f"to verify anchor_pins against")
-            for p in pins:
-                assert p in anchor.pin_numbers, (
-                    f"{sheet}: anchor {st['anchor']} has no pin {p!r} "
-                    f"(has {sorted(anchor.pin_numbers)})")
-    for ref in c.get("roles", {}):
-        assert ref in parts, f"{sheet}: roles names unknown ref {ref!r}"
-
-
-def test_backfill_sheets_stay_unwired():
-    """The backfill tier does NOT wire the engine: ``_WIRED_SHEETS`` carries none
-    of these sheets, so the contracts stay INERT to the placer/emit (authored
-    data only — the red-on-before discipline)."""
-    assert g._WIRED_SHEETS.isdisjoint(_NEW_LIGHTWEIGHT), (
-        f"backfill sheet unexpectedly wired: "
-        f"{sorted(g._WIRED_SHEETS & set(_NEW_LIGHTWEIGHT))}")
-    for sheet in _NEW_LIGHTWEIGHT:
-        assert g.load_contract(sheet) is None, (
-            f"{sheet}: engine-facing load_contract must stay None (unwired)")
-
-
-def test_backfill_contracts_run_on_the_real_board(_real_model):
-    """The gate RUNS every backfill contract against real geometry: refs resolve
-    to placed board footprints (nothing silently skipped) and every structure is
-    examined. Each sheet's violation count is PRINTED — red is EXPECTED (no
-    template wired), and deliberately NOT asserted. Carrier-local sheets
-    (power_mon/motor_pwm/fmc/board_qwiic) are discovered via the carrier root."""
-    results = g.check_all(_real_model)
-    print("\n=== WAVE-3 BACKFILL (check_all) — red expected, not asserted ===")
-    for sheet in _NEW_LIGHTWEIGHT:
-        assert sheet in results, (
-            f"{sheet} contract not discovered by check_all "
-            f"(got {sorted(results)})")
         res = results[sheet]
         n_struct = len(g.discover_contract(sheet)["structures"])
         print(f"\n--- {sheet}: {len(res.violations)} violation(s), "

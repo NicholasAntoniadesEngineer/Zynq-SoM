@@ -1,60 +1,112 @@
-"""LIGHTWEIGHT PLACEMENT CONTRACT (D6) for the ``camera`` subsystem — data only.
+"""PLACEMENT CONTRACT (v2, CRITICAL) for the ``camera`` subsystem — plain data.
 
-LIGHTWEIGHT TIER (Decision D6, AI_LAYOUT_ROUTING_CONCEPT.md "Phase L"): the six
-critical subsystems (power, power_som, usb_pd, ethernet, hdmi_rx, motor_sense)
-carry DEEP datasheet-grounded contracts; "the rest get lightweight contracts"
-covering ONLY the two portable, netlist-derivable electrical truths:
+camera is the Raspberry-Pi 15-pin FFC 2-lane MIPI CSI-2 D-PHY port: the FFC (J1),
+two low-cap ESD arrays (U1/U2) that clamp the user-touchable FFC lines, and the
+THREE in-path 100 ohm D-PHY differential terminations (R1 = CSI_D0, R2 = CSI_D1,
+R3 = CSI_CLK). This contract was PROMOTED from the D6 lightweight tier to a
+CRITICAL, datasheet-cited v2 (the HS-family audit) to encode the ONE SI truth the
+lightweight tier missed: on a 7-series HR-bank RX the 100 ohm D-PHY termination is
+an EXTERNAL resistor that MUST be placed at the RECEIVER (FPGA/mezzanine) END of
+each lane, NOT at the FFC. See ``subsystems/power/placement_contract.py`` for the
+schema rationale and ``subsystems/usb_pd/placement_contract.py`` for the
+proximity/same_side + external exemplar.
 
-  1. per-pin SUPPLY-RAIL DECOUPLING proximity (every IC bypass cap tight to the
-     IC's supply pin, same side), and
-  2. PORT-ENTRY ESD (a protection part on connector-adjacent nets kept near its
-     connector).
+PRIMARY CITATIONS (pdftotext-verified):
+  * Xilinx XAPP894 (v1.0.1, Feb 1 2021) "D-PHY Solutions" — the 7-series external-
+    resistor ("compatible") D-PHY topology this camera uses (camera.py: "a fixed
+    external 100R differential termination per D-PHY pair, placed at the FPGA/SoM-
+    connector END of each trace (NOT at the FFC)"):
+      - LVDS section (Figure 4): "a current transmitter generating a voltage drop
+        across a termination resistor placed at the receiver side." (the term IS a
+        receiver-end element).
+      - Figure 6 (Basic DC-coupling Circuit), the resistor-network annotation:
+        "Place close to FPGA." (the external termination network goes at the FPGA
+        receiver, not the far cable/FFC end).
+  * MIPI D-PHY / CSI-2: HS line termination is 100 ohm differential at the
+    receiver (80-125 ohm range, 100 ohm nominal); it is switched OUT in LP mode.
+    (D-PHY spec; camera.py types each lane diff_pair @100R.)
 
-NO invented electrical requirements, NO composition/``external`` block (those
-are for the critical-six only). This contract is NOT wired into the engine
-(``placement_contract_gate._WIRED_SHEETS`` is untouched); it is authored data,
-discoverable via ``discover_contract`` / ``check_all`` for the red-on-before
-proof. RED-ON-BEFORE IS EXPECTED: the scattered value-sorted PCB packer does not
-satisfy it until a template lands.
+camera parts (from camera.py, netlist-verified):
+    J1  SFW15R-1STE1LF   15P FFC (the user-touchable camera port); FFC pin n = RPi
+                         pin n. CSI pairs: D0 = FFC 3/2, D1 = FFC 6/5, CLK = 9/8.
+    U1  TPD4E02B04DQAR   low-cap ESD array, clamps CSI D0+D1 (IO1..IO4)
+    U2  TPD4E02B04DQAR   low-cap ESD array, clamps CSI CLK (IO1/IO2) + the two
+                         spare channels on CAM_SCL/CAM_SDA (IO3/IO4)
+    R1  100R  -> CSI_D0_P/N   in-path D-PHY diff termination (RECEIVER-end)
+    R2  100R  -> CSI_D1_P/N   in-path D-PHY diff termination (RECEIVER-end)
+    R3  100R  -> CSI_CLK_P/N  in-path D-PHY diff termination (RECEIVER-end)
+    R4/R5  4k7   CAM I2C pull-ups (+VDD_CAM) — leftovers
+    C1/C2  100n/10u  +VDD_CAM bypass at the connector — leftovers
 
-Schema + gate: see ``subsystems/usb_pd/placement_contract.py`` (the ``proximity``
-+ ``same_side`` exemplar) and ``schgen/verify/placement_contract_gate.py``.
-Refs are LIBRARY refs (camera.py's J1/U1/U2/...); the gate carries them to board
-refs with the same per-sheet band rename the netlist uses.
-
-CAMERA IS AN ESD-ONLY CELL. The only active parts are the two TI TPD4E02B04DQAR
-low-cap ESD arrays (U1 = CSI D0/D1, U2 = CSI CLK + the two spare channels on the
-cable-facing I2C control lines) — there is NO powered IC with a decoupling rail,
-so this contract has NO decoupling structure. C1 (100n) / C2 (10u) are the gated
-+VDD_CAM bypass at the connector, not an IC's per-pin bypass, so they are left to
-the packer (lightweight tier = per-IC decoupling only). The ESD arrays clamp the
-user-facing FFC lines jack -> host, so they are the port-entry protection.
-
-TPD4E02B04DQAR pin map (USON-10): 1/2/4/5 = IO1..IO4, 3/8 = GND, 6/7/9/10 = NC.
+Every threshold carries a ``basis`` string (a CITED XAPP894 reference or
+``judgment:<value>`` — LAW 7 / LAW 4).
 """
 
 from __future__ import annotations
 
 CONTRACT: dict = {
-    "contract": "placement/lightweight-v0",
+    "contract": "placement/v2",
     "subsystem": "camera",
     "sheet": "camera",
-    "tier": "lightweight",
-    "citations": [],
+    "citations": ["Xilinx XAPP894 v1.0.1 (D-PHY Solutions)",
+                  "MIPI D-PHY (100R HS termination at receiver)"],
     "roles": {
         "J1": "ffc_connector",
         "U1": "esd_array", "U2": "esd_array",
+        "R1": "dphy_term", "R2": "dphy_term", "R3": "dphy_term",
     },
     "structures": [
-        # ---- PORT-ENTRY ESD: the two TPD4E02B04 arrays near the FFC (J1) -------
-        # Both arrays sit on the user-touchable FFC lines (U1 = CSI D0/D1, U2 =
-        # CSI CLK + the spare I2C-control channels); a strike enters at J1, so the
-        # clamp belongs at the port entry. Universal per-member (both arrays).
-        # (the proximity's own same_side clause keeps the arrays on J1's side —
-        # a separate same_side structure would key on U1/U2 as ANCHORS and find
-        # no members, so it is omitted; the clause below carries the requirement.)
+        # ---- PORT-ENTRY ESD (flow-through at the FFC): U1/U2 <= 5 mm of J1 -----
+        # Both arrays clamp the user-touchable FFC lines, so a strike enters at J1
+        # and the clamp belongs at the port entry (jack -> host). Universal per
+        # member (both arrays). same_side keeps them on J1's side. No datasheet mm
+        # -> judgment 5.0 (generic ESD-at-connector, same family as hdmi_rx/usb_pd).
         {"type": "proximity", "anchor": "J1",
          "members": ["U1", "U2"], "max_mm": 5.0, "same_side": True,
-         "basis": "judgment:5.0 — ESD at port entry (lightweight tier)"},
+         "basis": "ESD at the FFC port entry (jack->host clamp)|judgment:5.0"},
+        # ---- D-PHY TERMINATIONS at the RECEIVER end, CLEAR of the FFC ----------
+        # XAPP894 (Fig 4 / Fig 6 "Place close to FPGA") puts the 100R diff term at
+        # the RECEIVER. On this sheet the receiver is the SoM/mezzanine (off-sheet,
+        # bank pins on som_j2), so the gatable INTRA-zone requirement is a NEGATIVE
+        # one: all three terminations must CLEAR the FFC (J1) — a term hugging the
+        # FFC is the exact wrong-end defect XAPP894 forbids. This structure hosts
+        # the clearance on U1 (an FFC-side ESD array, a real anchor) with a LOOSE
+        # max (the terms need not be near U1) so its load-bearing clause is the
+        # ``min_from J1 >= 8 mm`` applied to EACH of the three terms — pushing them
+        # to the mezzanine-facing side of the zone (the external flow term aims that
+        # side at @som).
+        {"type": "proximity", "anchor": "U1",
+         "members": ["R1", "R2", "R3"], "max_mm": 40.0, "same_side": True,
+         "min_from": [{"part": "J1", "min_mm": 8.0}],
+         "basis": "XAPP894 Fig 4/Fig 6 'Place close to FPGA' — every D-PHY term at "
+                  "the RECEIVER end, >=8mm clear of the FFC|judgment:8.0 FFC "
+                  "clearance (40mm max is a loose zone-span host bound)"},
+        # ---- TERM CLUSTER: R1/R2/R3 tight together (short, matched stubs) ------
+        # The three terminations stay clustered so the four D-PHY stubs (each bank
+        # pin -> 100R) are short and length-matched at the receiver. Anchored to R1;
+        # anchor-pin absent -> measured to any pad of R1.
+        {"type": "proximity", "anchor": "R1",
+         "members": ["R2", "R3"], "max_mm": 6.0, "same_side": True,
+         "basis": "D-PHY term trio clustered for short matched stubs at the "
+                  "receiver|judgment:6.0"},
+        # ---- SAME SIDE: ESD + terminations on the FFC/receiver side -----------
+        {"type": "same_side", "ics": ["J1"],
+         "basis": "camera discretes co-located on the FFC side (no via mid-lane "
+                  "on the D-PHY pairs)"},
     ],
+    "stage_order": ["J1"],
+    # ADVISORY (recorded, NOT gated):
+    #   * RECEIVER-END FACING: the R1/R2/R3 termination cluster should sit on the
+    #     mezzanine-facing half of the camera zone (the CSI lanes run FFC -> term
+    #     -> SoM bank); the ``flow`` term below aims the zone at @som. A facing-
+    #     aware template term (like ethernet's media_faces_near_max) is future work.
+    #   * The XAPP894 LP-observability resistor-divider is a DNP stuffing option
+    #     off this sheet (camera.py CAM-1). C1/C2/R4/R5 are rail bypass / I2C pull-
+    #     ups (leftovers), not layout-critical.
+    "external": {
+        # FLOW: the CSI-2 lanes run camera -> the SoM/mezzanine receiver. @som
+        # resolves to the SoM core rectangle (E3); keeping the zone's receiver-end
+        # (term) side toward the module keeps each D-PHY stub short.
+        "flow": ["camera", "@som"],
+    },
 }
