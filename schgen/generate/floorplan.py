@@ -31,6 +31,7 @@ import argparse
 import json
 import re
 from dataclasses import dataclass, field
+from heapq import heappop, heappush
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -1081,20 +1082,73 @@ class _Occupancy:
         """Deterministic: scan lattice positions sorted by city-block distance
         of the block CENTER from the anchor; first fit wins. The block is placed
         AXIS-ALIGNED (no width/height swap) — the PCB places this same zone box
-        un-rotated at this very (x, y), so a rotation here would diverge."""
+        un-rotated at this very (x, y), so a rotation here would diverge.
+
+        EXPANDING-RING (I2): byte-identical to the historical build-all-cells-
+        then-sort scan, but it materialises cells lazily in nondecreasing true
+        city-block distance and STOPS at the first fitting bucket instead of
+        sorting all ~44k lattice cells on every call. The emitted order is
+        exactly ``(round(d, 1), x, y)`` ascending — same first-fit result.
+
+        Correctness rests on two invariants:
+          * the per-axis cost uses the SAME sub-expression ``|coord + half - a|``
+            as the flat scan, so ``xcost + ycost`` is bit-identical to
+            ``|x + w/2 - ax| + |y + h/2 - ay|`` and ``round(,1)`` buckets match
+            even on banker's-rounding boundaries (true d = D + 0.05 -> bucket D);
+          * a rounded-distance bucket is finalised (sorted by ``(x, y)`` and
+            first-fit tested) only once the merge frontier's true distance
+            exceeds the bucket value by more than the 0.05 rounding half-width,
+            so no later cell can still fall into an already-tested bucket.
+        """
         s = self.STEP
-        cands = []
         nx = int(BOARD_W / s) + 1
         ny = int(BOARD_H / s) + 1
-        for ix in range(nx):
-            for iy in range(ny):
-                x, y = ix * s, iy * s
-                d = abs(x + w / 2 - ax) + abs(y + h / 2 - ay)
-                cands.append((round(d, 1), x, y))
-        cands.sort()
-        for _d, x, y in cands:
-            if self.fits(x, y, w, h, reach):
-                return x, y, w, h
+        hw = w / 2
+        hh = h / 2
+        # sorted (cost, coord) along each axis; ascending cost, coord tie-break.
+        xs = sorted((abs(ix * s + hw - ax), ix * s) for ix in range(nx))
+        ys = sorted((abs(iy * s + hh - ay), iy * s) for iy in range(ny))
+        if not xs or not ys:
+            return None
+        _HALF = 0.05 + 1e-9    # rounding half-width + float margin
+        # merge-frontier heap over the (sorted-x) x (sorted-y) cost matrix; each
+        # (i, j) pushed once. Cells stream out in nondecreasing true distance.
+        heap = [(xs[0][0] + ys[0][0], 0, 0)]
+        seen = {(0, 0)}
+        buckets: dict[float, list[tuple[float, float]]] = {}
+        bkeys: list[float] = []    # min-heap of DISTINCT pending bucket keys
+        while heap:
+            _d, i, j = heappop(heap)
+            xcost, x = xs[i]
+            ycost, y = ys[j]
+            key = round(xcost + ycost, 1)
+            cell = buckets.get(key)
+            if cell is None:
+                buckets[key] = [(x, y)]
+                heappush(bkeys, key)
+            else:
+                cell.append((x, y))
+            if i + 1 < len(xs) and (i + 1, j) not in seen:
+                seen.add((i + 1, j))
+                heappush(heap, (xs[i + 1][0] + ys[j][0], i + 1, j))
+            if j + 1 < len(ys) and (i, j + 1) not in seen:
+                seen.add((i, j + 1))
+                heappush(heap, (xs[i][0] + ys[j + 1][0], i, j + 1))
+            frontier = heap[0][0] if heap else float("inf")
+            # finalise every front bucket that can no longer receive a cell.
+            # Cells arrive in nondecreasing true distance, so a bucket only goes
+            # final once the frontier clears it by more than the rounding half-
+            # width; bkeys keeps those front keys cheap to reach in order.
+            thresh = frontier - _HALF
+            while bkeys and bkeys[0] <= thresh:
+                for x, y in sorted(buckets.pop(heappop(bkeys))):
+                    if self.fits(x, y, w, h, reach):
+                        return x, y, w, h
+        # heap drained: no unfinalised cell remains — sweep the tail in order.
+        while bkeys:
+            for x, y in sorted(buckets.pop(heappop(bkeys))):
+                if self.fits(x, y, w, h, reach):
+                    return x, y, w, h
         return None
 
 
