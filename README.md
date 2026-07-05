@@ -36,8 +36,16 @@ programmatically (`schgen som-interface`), never hand-edited.
 
 ```bash
 pip install pymupdf pillow                    # kicad-cli must be on PATH
-PYTHONPATH=. python -m schgen board           # EVERY sheet + link + project
+PYTHONPATH=. python -m schgen board           # EVERY sheet + link + project + all images (~300s)
+PYTHONPATH=. python -m schgen board --no-render   # every gate, skip the 3D raytrace (~260s)
 ```
+
+`--no-render` runs every gate on the same emitted board but skips the output renders (the 37
+per-sheet schematic PNGs + the multi-angle 3D raytrace) — the emitted `.kicad_sch`/`.kicad_pcb`
+are byte-identical either way. The per-sheet PNGs draw concurrently with ERC so they cost little
+wall-time; the real saving is the serial ~28 s 3D raytrace (≈15 % off a ~300 s build). Drop the
+flag for the committed renders. The bulk of build time is gate computation (DRC / ERC / ratsnest
+MST / escape lanes), not rendering.
 
 `schgen build <name>` gates a single sheet (preview into a tempdir, nothing
 committed). `schgen board` regenerates the committed outputs in place:

@@ -530,7 +530,8 @@ def cmd_board(args: argparse.Namespace) -> int:
         name, _sc, c, sch, _vis, _paper = item
         net_res = netlist_gate.check(c, sch)
         erc_ok, _txt = _erc(sch, rep_dir / f"{name}.erc.rpt")
-        _render(sch, ren_dir / f"{name}.png")
+        if not getattr(args, "no_render", False):
+            _render(sch, ren_dir / f"{name}.png")
         return name, net_res, erc_ok
 
     gate_out: dict[str, tuple] = {}
@@ -1379,6 +1380,8 @@ def cmd_board(args: argparse.Namespace) -> int:
     try:
         from schgen.output import render3d
         _pcb_path = pcb_res.get("pcb") if isinstance(pcb_res, dict) else None
+        if getattr(args, "no_render", False):
+            _pcb_path = None                 # fast inner-loop: skip the 3D raytrace
         if _pcb_path is not None:
             _r3d = render3d.render(Path(_pcb_path),
                                    REPO_ROOT / "carrier" / "renders")
@@ -1549,6 +1552,14 @@ def main(argv: list[str] | None = None) -> int:
     bd.add_argument("--timing", action="store_true",
                     help="print a per-phase wall-time breakdown at the end "
                          "(build observability; does not change any artifact)")
+    bd.add_argument("--no-render", action="store_true",
+                    help="skip the OUTPUT renders (the 37 per-sheet schematic PNGs "
+                         "+ the serial ~28 s multi-angle 3D raytrace) — runs every "
+                         "GATE on the same emitted board. Fast gate-verify loop; "
+                         "the emitted .kicad_sch/.kicad_pcb are byte-identical "
+                         "either way (~15% off a ~300 s build — the per-sheet PNGs "
+                         "draw concurrently with ERC so the 3D raytrace is the real "
+                         "saving; the 2 ratsnest PNGs still draw in the PCB thread).")
     bd.set_defaults(func=cmd_board)
     nt = sub.add_parser("nets", help="regenerate carrier/nets.py (the "
                                      "cross-sheet net-name contract)")
