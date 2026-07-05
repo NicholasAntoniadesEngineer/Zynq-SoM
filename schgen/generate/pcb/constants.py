@@ -6,6 +6,7 @@ submodule imports its constants from here, so this is the dependency leaf.
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -162,7 +163,32 @@ DEFAULT_CLEARANCE_MM = 0.15
 # Mandatory clearance between any two footprint courtyards AND between a
 # footprint and the board edge — so the emitted PCB has NO courtyard-overlap /
 # pad-clearance / copper-edge DRC errors (only the expected unrouted-net items).
-PLACE_CLEAR = 0.5
+#
+# BOARD-GROWTH KNOB: the value is the baseline 0.5 unless overridden by the env
+# var SCHGEN_PLACE_CLEAR (a float mm). RAISING it loosens the FREE (non-contract)
+# cluster packing + inter-zone gaps -> the cramped clusters (bringup_modules,
+# usb_jtag, motor_pwm) get real fan-out breathing room; when the looser zones no
+# longer fit the current footprint the smallest-area packing board grows (see
+# PLACE_CLEAR_BASELINE below + the L4-corridor keepout it arms + TEMPLATE_CLEAR
+# which freezes the DATASHEET zones so a grow never perturbs a contracted layout).
+# Reading it from the env (default 0.5) keeps the shipping board BYTE-IDENTICAL
+# when unset, and lets a grow sweep drive the size WITHOUT editing this file per
+# level. A malformed value fails loudly at import.
+#
+# MEASURED SWEET SPOT (frozen-template sweep, all gates incl. escape/return-stitch
+# GREEN + byte-identical baseline): SCHGEN_PLACE_CLEAR=0.82 -> board 179x164 mm
+# (+1.2% area) with bringup_modules +33%, usb_jtag +6%, motor_pwm +4% cluster
+# fan-out. The clean ceiling is here: at >=0.85 (board 185x165, +5% area) a
+# motor_pwm bottom passive (R17006) lands on U17001's through-hole GND pad -> a
+# 2-error DRC short (a 2-side-packer PTH-reservation gap in the template path,
+# tracked separately). So the fan-out is nearly FREE in board area: the growth
+# knob buys +33% cluster room at +1.2% board, not the naive +5/10/15% board.
+try:
+    PLACE_CLEAR = float(os.environ.get("SCHGEN_PLACE_CLEAR", "0.5"))
+except ValueError as _e:                       # pragma: no cover - operator error
+    raise ValueError(
+        f"SCHGEN_PLACE_CLEAR must be a float mm, got "
+        f"{os.environ.get('SCHGEN_PLACE_CLEAR')!r}") from _e
 
 # The BYTE-IDENTICAL baseline value of PLACE_CLEAR (the shipping 178x163 board,
 # md5 6a734353). RAISING PLACE_CLEAR above this GROWS the board for real fan-out
@@ -172,6 +198,21 @@ PLACE_CLEAR = 0.5
 # the baseline it is a strict no-op (byte-identity holds) and it engages exactly
 # when a grow needs it. A single, honest grow signal; not a softened gate.
 PLACE_CLEAR_BASELINE = 0.5
+
+# DATASHEET-TEMPLATE clearance — FROZEN at the baseline, independent of the
+# PLACE_CLEAR growth knob. The contracted subsystems (power/power_som bucks,
+# usb_pd, etc.) lay out their parts against DATASHEET windows (SW<=3mm,
+# COUT<=5mm, hot-loop<=1mm) using stage-gap maths built on this clearance. If
+# those gaps grew with PLACE_CLEAR, the template parts would slide PAST their
+# datasheet windows (contract gate FAIL) and, once the inflated halo makes the
+# seating DFS infeasible, hit the node-budget fallback and COLLAPSE onto shared
+# coordinates (courtyard-overlap + net-short DRC, a LAW-0 break — observed at
+# PLACE_CLEAR=0.52: a power buck zone stacked 9 parts at one point -> 96 shorts).
+# Freezing template clearance at baseline keeps every datasheet zone
+# BYTE-IDENTICAL internally at any board-growth level, so a grow loosens only the
+# FREE clusters + inter-zone gaps (where fan-out room actually helps) and never
+# perturbs a contracted layout. == PLACE_CLEAR_BASELINE by construction.
+TEMPLATE_CLEAR = PLACE_CLEAR_BASELINE
 EDGE_CLEAR = 2.0
 ZONE_GAP = 0.8             # gap between two adjacent subsystem zones
 ZONE_PAD = 0.3            # padding inside a subsystem zone around its parts

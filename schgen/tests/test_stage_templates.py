@@ -39,6 +39,45 @@ _WIRED = set(g._WIRED_SHEETS)
 
 
 # ---------------------------------------------------------------------------
+# BOARD-GROWTH KNOB invariants (frozen datasheet template)
+# ---------------------------------------------------------------------------
+
+def test_template_clear_frozen_at_baseline():
+    """The datasheet-stage geometry must use TEMPLATE_CLEAR, FROZEN at the
+    byte-identical baseline, so a board-growth PLACE_CLEAR never slides a
+    contract member past its datasheet window nor collapses a template zone.
+    Guards the frozen-template swap (constants.TEMPLATE_CLEAR ==
+    PLACE_CLEAR_BASELINE, and stage_templates imports it)."""
+    from schgen.generate.pcb.constants import (
+        PLACE_CLEAR_BASELINE,
+        TEMPLATE_CLEAR,
+    )
+    assert TEMPLATE_CLEAR == PLACE_CLEAR_BASELINE == 0.5
+    assert T.TEMPLATE_CLEAR == 0.5           # the name the templates actually use
+
+
+def test_place_clear_env_default_is_baseline(monkeypatch):
+    """With SCHGEN_PLACE_CLEAR unset, PLACE_CLEAR is the baseline 0.5 (shipping
+    board byte-identical). A set value is read as a float; a malformed value
+    fails loudly."""
+    import importlib
+
+    from schgen.generate.pcb import constants as C
+    monkeypatch.delenv("SCHGEN_PLACE_CLEAR", raising=False)
+    importlib.reload(C)
+    assert C.PLACE_CLEAR == 0.5
+    monkeypatch.setenv("SCHGEN_PLACE_CLEAR", "0.82")
+    importlib.reload(C)
+    assert C.PLACE_CLEAR == 0.82
+    monkeypatch.setenv("SCHGEN_PLACE_CLEAR", "not-a-float")
+    with pytest.raises(ValueError):
+        importlib.reload(C)
+    # restore the module to the baseline value for any later test in this session
+    monkeypatch.delenv("SCHGEN_PLACE_CLEAR", raising=False)
+    importlib.reload(C)
+
+
+# ---------------------------------------------------------------------------
 # helpers to drive subsystem_zone_geometry with the registry on/off
 # ---------------------------------------------------------------------------
 

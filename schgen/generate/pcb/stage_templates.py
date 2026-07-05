@@ -39,7 +39,7 @@ from pathlib import Path
 
 from schgen.verify import placement_contract_gate as _g
 
-from .constants import PLACE_CLEAR, ZONE_PAD
+from .constants import TEMPLATE_CLEAR, ZONE_PAD
 from .footprint import _footprint_bbox
 from .footprint import has_thru_pads as _has_thru_pads
 from .mating_face import _rot_bbox_cw
@@ -60,7 +60,7 @@ _LEFTOVER_BAND_GAP = 2.0   # stage cluster -> leftover band (LAW-1 refdes headro
 # grade gap below. v1 grew EVERY gap in lockstep, handing the LDO a needless
 # buck-grade ~13 mm gap; per-pair gaps + the multi-row layout search recover it.
 _INTERSTAGE_GAP0 = 6.0
-_NONSW_STAGE_GAP = round(PLACE_CLEAR + 0.7, 4)   # ~1.2 mm: a pair with no SW rule
+_NONSW_STAGE_GAP = round(TEMPLATE_CLEAR + 0.7, 4)   # ~1.2 mm: a pair with no SW rule
 # Row-wrap width budget (mm): the layout search prefers the fewest-rows layout that
 # keeps the power ZONE width within this bound (acceptance: zone width <= 48 mm) AND
 # satisfies foreign-SW. Two ~25 mm bucks WITH their COUT banks cannot share a row
@@ -245,7 +245,7 @@ def _lay_buck(ic_bref: str, ic_mod: Path, resolvable: dict[str, Path],
     parts: list[_Part] = [ic]
 
     m = 0.2                              # a hair of extra margin past PLACE_CLEAR
-    clr = PLACE_CLEAR + m + pad
+    clr = TEMPLATE_CLEAR + m + pad
     vin1, pgnd1 = pins["vin1"], pins["pgnd1"]
     vin2, pgnd2 = pins["vin2"], pins["pgnd2"]
 
@@ -322,7 +322,7 @@ def _hf_cap(mod: Path, ib: dict[str, tuple], pair: list[str], direction: str,
     a left-stacked bulk over-subscribes that region)."""
     p = _beside(mod, 0.0, "top", _pin_box(ib, pair), direction, gap)
     hx, _hy = _crtyd_half(mod, 0.0)
-    ox = ind_left - PLACE_CLEAR - hx     # push fully +X (clamped by the inductor)
+    ox = ind_left - TEMPLATE_CLEAR - hx     # push fully +X (clamped by the inductor)
     return _Part(bref, mod, 0.0, "top", round(ox, 4), p.oy)
 
 
@@ -334,7 +334,7 @@ def _bulk_cap(mod: Path, hf: _Part, direction: str, gap: float,
     hfb = hf.local_box()
     hx, hy = _crtyd_half(mod, 90.0)
     cy = (hfb[3] + gap + hy) if direction == "D" else (hfb[1] - gap - hy)
-    ox = min(hf.ox, ind_left - PLACE_CLEAR - hx)
+    ox = min(hf.ox, ind_left - TEMPLATE_CLEAR - hx)
     return _Part(bref, mod, 90.0, "top", round(ox, 4), round(cy, 4))
 
 
@@ -356,7 +356,7 @@ def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
     hx = max(h[0] for h in halves)
     col_x = round(ind_out_box[2] + _COUT_GAP + pad + hx, 4)
     pad_cy = (ind_out_box[1] + ind_out_box[3]) / 2.0
-    step = PLACE_CLEAR + pad
+    step = TEMPLATE_CLEAR + pad
     # total column height, then lay caps top->bottom centred on the pad Y.
     heights = [2 * h[1] for h in halves]
     total = sum(heights) + step * (len(out_caps) - 1)
@@ -407,7 +407,7 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
     tcx, tcy = (tgt[0] + tgt[2]) / 2.0, (tgt[1] + tgt[3]) / 2.0
     all_pins = list(ib) if not target_pins else target_pins
     n = int((9.0 + pad) / _CAND_STEP)
-    halo = PLACE_CLEAR + pad
+    halo = TEMPLATE_CLEAR + pad
     scored: list[tuple[float, float, float, _Part, tuple]] = []
     for rot in (90.0, 0.0):
         for gx in range(-n, n + 1):
@@ -443,7 +443,7 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
     candidate (colliding) so the caller's widen loop retries — bounds never relax.
     ``forbid_plus_x`` (default True) keeps the buck's +X inductor-lane exclusion;
     the generic proximity cluster turns it OFF (all four sides available)."""
-    halo = PLACE_CLEAR + pad
+    halo = TEMPLATE_CLEAR + pad
     skel_boxes = [s.local_box() for s in skeleton]
     cand: dict[str, list[_Cand]] = {}
     for bref, tpins, bound, keep, kmin in demands:
@@ -633,7 +633,7 @@ def _any_overlap(parts: list[_Part]) -> bool:
     boxes = [(p.bref, p.local_box()) for p in parts]
     for i in range(len(boxes)):
         for j in range(i + 1, len(boxes)):
-            if _boxes_overlap(boxes[i][1], boxes[j][1], PLACE_CLEAR):
+            if _boxes_overlap(boxes[i][1], boxes[j][1], TEMPLATE_CLEAR):
                 return True
     return False
 
@@ -891,7 +891,7 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
                     gap = (_INTERSTAGE_GAP0 if (_has_sw(si) and _has_sw(nxt))
                            else _NONSW_STAGE_GAP)
                     x = ext[2] + dx + gap
-            y_base = row_bottom + PLACE_CLEAR
+            y_base = row_bottom + TEMPLATE_CLEAR
         return abs_parts
 
     def _width(placed: dict[str, _Part]) -> float:
@@ -1143,10 +1143,10 @@ def _pack_leftover_bands(lt: list[str], lb: list[str], target_w: float,
         if r in resolvable and _has_thru_pads(resolvable[r]):
             ox, oy = t_lo[r]
             bx0, by0, bx1, by1 = bbox_of[r]
-            blockers.append((ox + bx0 - PLACE_CLEAR / 2,
-                             oy + by0 - PLACE_CLEAR / 2,
-                             ox + bx1 + PLACE_CLEAR / 2,
-                             oy + by1 + PLACE_CLEAR / 2))
+            blockers.append((ox + bx0 - TEMPLATE_CLEAR / 2,
+                             oy + by0 - TEMPLATE_CLEAR / 2,
+                             ox + bx1 + TEMPLATE_CLEAR / 2,
+                             oy + by1 + TEMPLATE_CLEAR / 2))
     b_items = [(r, bbox_of[r], 0.0) for r in lb]
     b_lo, b_w, b_h = _shelf_pack(b_items, target_w, blockers)
     return t_lo, t_w, t_h, b_lo, b_w, b_h
