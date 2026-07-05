@@ -38,6 +38,7 @@ import math
 from pathlib import Path
 
 from schgen.verify import placement_contract_gate as _g
+from schgen.verify.fanout_gate import _is_cluster_passive, intelligent_need
 
 from .constants import TEMPLATE_CLEAR, ZONE_PAD
 from .footprint import _footprint_bbox
@@ -614,6 +615,335 @@ def _build_proximity_cluster(anchor_bref: str, contract: dict,
     return parts
 
 
+# --- the general MULTI-ANCHOR contract solver -------------------------------------
+# The single-anchor cluster above solves ONE star (an anchor + its direct members).
+# A real contract is a MULTI-ANCHOR constraint GRAPH: a member of one proximity
+# structure is the ANCHOR of the next (camera: J1->U1/U2, then U1->R1/R2/R3 with a
+# min_from clearance against J1, then R1->R2/R3), and a ``min_from`` may name ANY
+# part (not just the anchor's own pins). The single-anchor builder drops every
+# non-primary-anchor member to the unconstrained leftover pack, silently violating
+# those structures. This solver treats the WHOLE contract as a graph and seats
+# every part in ONE global frame, honouring every ``proximity`` (pad-edge <= max_mm
+# to the anchor's pins/pads) + every ``min_from`` (pad-edge >= min_mm from an
+# arbitrary part) + same_side (all top) + courtyard clearance — the SAME measures
+# the gate reads. It reuses the buck/cluster discipline exactly: ranked-candidate
+# backtracking, widen-on-infeasible, no randomness, geometry-only cache.
+_MULTI_CACHE: dict[tuple, list[tuple[str, float, float, float]]] = {}
+
+# per-member constraint atoms parsed from the contract's proximity structures:
+# _Attract = (anchor bref, pins|None, max_mm); _Repel = (part bref, pin|None, min_mm).
+_Attract = tuple[str, "tuple[str, ...] | None", float]
+_Repel = tuple[str, "str | None", float]
+
+_ROOT_GAP = 2.0            # deterministic gap between two independent roots (mm)
+_GRID_MAX_N = 60           # cap the candidate grid half-extent (30 mm at _CAND_STEP)
+# The two FROZEN pilot proximity sheets keep the legacy single-anchor cluster so
+# their proven byte-identical layout never moves; every other proximity contract
+# uses the general graph solver below.
+_PILOT_PROX_SHEETS = frozenset({"usb_pd", "ethernet"})
+
+
+def _is_single_anchor_star(contract: dict, bref_of: dict[str, str]) -> bool:
+    """True when the contract's ``proximity`` structures form ONE star the legacy
+    single-anchor cluster already solves byte-identically: exactly one distinct
+    RESOLVED proximity anchor, and no ``min_from`` naming a part OTHER than that
+    anchor (the legacy path honours min_from only against the anchor's own pins).
+    usb_pd (U1) and ethernet (T1) are single-anchor stars -> unchanged path."""
+    anchors: set[str] = set()
+    for st in contract.get("structures", []):
+        if st.get("type") != "proximity":
+            continue
+        a = bref_of.get(st.get("anchor", ""))
+        if a is not None:
+            anchors.add(a)
+        for mf in st.get("min_from", []):
+            mp = bref_of.get(mf.get("part", ""))
+            if mp is not None and mp != a:
+                return False          # cross-part clearance -> needs the graph solver
+    return len(anchors) <= 1
+
+
+def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
+    """Deterministic Kahn topological sort (ready set drained in ``sorted`` bref
+    order, so the output is byte-stable). Returns None on a cycle (an ill-formed
+    contract — the caller falls through to the legacy packer)."""
+    indeg = {p: len(deps.get(p, set())) for p in parts}
+    ready = sorted(p for p in parts if indeg[p] == 0)
+    out: list[str] = []
+    while ready:
+        p = ready.pop(0)
+        out.append(p)
+        for q in sorted(parts):
+            if p in deps.get(q, set()):
+                indeg[q] -= 1
+                if indeg[q] == 0:
+                    ready.append(q)
+        ready.sort()
+    return out if len(out) == len(parts) else None
+
+
+def _gcandidates(bref: str, mod: Path,
+                 attractors: list[_Attract], repuls: list[_Repel],
+                 placed: dict[str, _Part], pad: float) -> list[_Part]:
+    """Ranked candidate poses (rot in {90,0} on the _CAND_STEP grid) for ``bref``
+    in the GLOBAL frame, each meeting EVERY attractor's pad-edge ``max_mm`` to its
+    (already-placed) anchor's pins/pads, EVERY repulsor's pad-edge ``min_mm``, and
+    already clear of every placed part's courtyard by the halo. The grid centres on
+    the tightest (smallest-``max_mm``) attractor's target and its radius tracks that
+    bound (capped), so the nearest in-bound poses come first. Deterministic
+    tie-break; the same measure (``_pins_to_target`` == the gate's pad-edge gap)."""
+    # per-attractor (anchor pad boxes, target pins, bound); primary = tightest bound
+    att: list[tuple[dict[str, tuple], list[str], float]] = []
+    for ab, apins, bound in attractors:
+        pb = placed[ab].pad_boxes()
+        att.append((pb, list(apins) if apins else list(pb), bound))
+    prim = min(range(len(att)), key=lambda k: att[k][2])
+    ppb, ppins, pbound = att[prim]
+    tgt = _pin_box(ppb, ppins)
+    tcx, tcy = (tgt[0] + tgt[2]) / 2.0, (tgt[1] + tgt[3]) / 2.0
+    rep: list[tuple[dict[str, tuple], list[str], float]] = []
+    for rb, rpin, mm in repuls:
+        pb = placed[rb].pad_boxes()
+        rep.append((pb, [rpin] if rpin else list(pb), mm))
+    placed_boxes = [pp.local_box() for pp in placed.values()]
+    halo = TEMPLATE_CLEAR + pad
+    # FAN-OUT clearance (mirror fanout_gate exactly, single source of truth): a member
+    # that is NOT a plain 2-pin decoupling passive (a diode, resistor network, shunt,
+    # crystal, IC) must not crowd a placed multi-pin IC's escape apron — keep it
+    # >= intelligent_need(pins) from every placed >=3-pin subject's courtyard. Plain
+    # R/C/L decoupling is EXEMPT (it sits tight on pins by design). Without this the
+    # solver ranks nearest-first and parks e.g. a gate-resistor network 0.56 mm off a
+    # 20-pin driver, starving its fan-out (the ratchet regression). Since every such
+    # member's contract max_mm exceeds its target IC's need, the [need, max_mm] band
+    # is non-empty, so the contract still holds.
+    member_pins = len(_g._pad_boxes(mod, 0.0))
+    subjects: list[tuple[tuple[float, float, float, float], float]] = []
+    if not _is_cluster_passive(bref, member_pins):
+        for pp in placed.values():
+            npins = len(_g._pad_boxes(pp.mod, 0.0))
+            if npins >= 3:
+                subjects.append((pp.local_box(), intelligent_need(npins)[0]))
+    # Grid radius must reach ANY target pad — a big connector's far edge pads (the
+    # target box spans the whole part when anchor_pins is absent) — PLUS the bound
+    # PLUS a body-slack so the member's pad can hug an inner pin from OUTSIDE the
+    # courtyard (the same 9 mm slack the proven single-anchor _candidates uses). A
+    # too-tight radius (bound only) can't reach an inner pin or a wide connector's
+    # edge and yields zero candidates (the microsd/motor_sense infeasibility).
+    t_half = max(tgt[2] - tgt[0], tgt[3] - tgt[1]) / 2.0
+    n = min(int((t_half + pbound + 9.0 + pad) / _CAND_STEP), _GRID_MAX_N)
+    scored: list[tuple[float, float, float, float, _Part]] = []
+    for rot in (90.0, 0.0):
+        for gx in range(-n, n + 1):
+            for gy in range(-n, n + 1):
+                cx = round(tcx + gx * _CAND_STEP, 4)
+                cy = round(tcy + gy * _CAND_STEP, 4)
+                p = _Part(bref, mod, rot, "top", cx, cy)
+                b = p.local_box()
+                if any(_boxes_overlap(b, q, halo) for q in placed_boxes):
+                    continue
+                dsum = 0.0
+                ok = True
+                for pb, pins, bound in att:
+                    d = _pins_to_target(p, pb, pins)
+                    if d > bound:
+                        ok = False
+                        break
+                    dsum += d
+                if not ok:
+                    continue
+                for pb, pins, mm in rep:
+                    if _pins_to_target(p, pb, pins) < mm:
+                        ok = False
+                        break
+                if not ok:
+                    continue
+                # fan-out: this non-passive member must clear every placed multi-pin
+                # IC's escape apron (its courtyard by >= that IC's need).
+                for sb, need in subjects:
+                    if _boxes_overlap(b, sb, need):
+                        ok = False
+                        break
+                if not ok:
+                    continue
+                scored.append((round(dsum, 4), abs(cx), abs(cy), rot, p))
+    scored.sort(key=lambda t: (t[0], t[1], t[2], t[3]))
+    return [t[4] for t in scored[:_CAND_CAP]]
+
+
+def _seat_multi(order: list[str], roots: set[str],
+                attractors: dict[str, list[_Attract]],
+                repulsors: dict[str, list[_Repel]],
+                resolvable: dict[str, Path], pad: float) -> dict[str, _Part] | None:
+    """Seat the graph GREEDILY in topological order: roots (a connector/IC that
+    anchors others) laid deterministically left-to-right, then each member placed at
+    its BEST (nearest, deterministic) candidate against the already-committed
+    upstream — honouring every attractor's max_mm + every repulsor's min_mm +
+    courtyard clearance. No backtracking: the candidate GRID SCAN is the cost, so
+    regenerating it per DFS node explodes (a real hang); topological order means each
+    member's anchors are already fixed, so one nearest-first pick per part is a
+    sound, fast greedy. A part with zero candidates returns None -> the caller's
+    widen loop grows whitespace and retries (bounds never relax). Deterministic."""
+    placed: dict[str, _Part] = {}
+    x_cursor = 0.0
+    for r in sorted(roots):
+        p0 = _Part(r, resolvable[r], 0.0, "top", 0.0, 0.0)
+        dx = round(x_cursor - p0.local_box()[0], 4)
+        p = _Part(r, resolvable[r], 0.0, "top", dx, 0.0)
+        placed[r] = p
+        x_cursor = p.local_box()[2] + TEMPLATE_CLEAR + pad + _ROOT_GAP
+    for bref in order:
+        if bref in roots:
+            continue
+        cands = _gcandidates(bref, resolvable[bref], attractors[bref],
+                             repulsors.get(bref, []), placed, pad)
+        if not cands:
+            return None
+        placed[bref] = cands[0]
+    return placed
+
+
+def _solve_contract(contract: dict, bref_of: dict[str, str],
+                    resolvable: dict[str, Path]) -> list[_Part] | None:
+    """Solve a MULTI-ANCHOR proximity contract as one rigid, collision-free local-
+    frame cluster satisfying every ``proximity`` (max_mm) + ``min_from`` (arbitrary
+    part, min_mm) + same_side. Returns the placed parts in topological order, or
+    None (a missing/unresolved anchor, a cyclic graph, or infeasible even after the
+    widen loop) so the caller falls through to the legacy packer and the gate
+    reports it. Deterministic; geometry-only cache keyed on footprints + bounds."""
+    attractors: dict[str, list[_Attract]] = {}
+    repulsors: dict[str, list[_Repel]] = {}
+    all_parts: set[str] = set()
+    members: set[str] = set()
+    for st in contract.get("structures", []):
+        if st.get("type") != "proximity":
+            continue
+        a = bref_of.get(st.get("anchor", ""))
+        if a is None or a not in resolvable:
+            return None
+        apins = tuple(st["anchor_pins"]) if st.get("anchor_pins") else None
+        bound = float(st["max_mm"])
+        mfs: list[tuple[str, str | None, float]] = []
+        for mf in st.get("min_from", []):
+            rp = bref_of.get(mf.get("part", ""))
+            if rp is None or rp not in resolvable:
+                continue
+            mfs.append((rp, mf.get("pin"), float(mf.get("min_mm", 0.0))))
+        all_parts.add(a)
+        for mlib in st.get("members", []):
+            mb = bref_of.get(mlib)
+            if mb is None or mb not in resolvable:
+                return None
+            all_parts.add(mb)
+            members.add(mb)
+            attractors.setdefault(mb, []).append((a, apins, bound))
+            for rp, pin, mm in mfs:
+                repulsors.setdefault(mb, []).append((rp, pin, mm))
+                all_parts.add(rp)
+    if not members:
+        return None
+
+    # Connected components under (attractor + repulsor) edges. Each is an
+    # independent rigid cluster (an anchor + everything that clusters around it).
+    # Solving a component IN ISOLATION gives its members the full 360 deg around
+    # their anchor; jamming a foreign root adjacent would steal exactly the space an
+    # edge-pin bypass needs (the microsd VCCA-cap-vs-SD-slot infeasibility).
+    adj: dict[str, set[str]] = {p: set() for p in all_parts}
+    for m in members:
+        for a, _p, _b in attractors.get(m, []):
+            adj[m].add(a)
+            adj[a].add(m)
+        for rp, _pin, _mm in repulsors.get(m, []):
+            adj[m].add(rp)
+            adj[rp].add(m)
+    comps: list[set[str]] = []
+    seen: set[str] = set()
+    for p in sorted(all_parts):
+        if p in seen:
+            continue
+        stack, comp = [p], set()
+        while stack:
+            q = stack.pop()
+            if q in seen:
+                continue
+            seen.add(q)
+            comp.add(q)
+            stack.extend(adj[q] - seen)
+        comps.append(comp)
+
+    sig = (tuple((b, str(resolvable[b])) for b in sorted(all_parts)),
+           tuple((m, tuple((a, p or (), round(bd, 4))
+                           for a, p, bd in attractors.get(m, [])),
+                  tuple((r, pn or "", round(mm, 4))
+                        for r, pn, mm in repulsors.get(m, [])))
+                 for m in sorted(members)))
+    cached = _MULTI_CACHE.get(sig)
+    if cached is not None:
+        return [_Part(b, resolvable[b], rot, "top", ox, oy)
+                for b, rot, ox, oy in cached]
+
+    clusters: list[list[_Part]] = []
+    for comp in sorted(comps, key=sorted):
+        cl = _solve_component(comp, members, attractors, repulsors, resolvable)
+        if cl is None:
+            return None
+        clusters.append(cl)
+    parts = _compose_clusters(clusters)
+    _MULTI_CACHE[sig] = [(p.bref, p.rot, p.ox, p.oy) for p in parts]
+    return parts
+
+
+def _solve_component(comp: set[str], members: set[str],
+                     attractors: dict[str, list[_Attract]],
+                     repulsors: dict[str, list[_Repel]],
+                     resolvable: dict[str, Path]) -> list[_Part] | None:
+    """Seat ONE connected component (a root anchor + everything clustering around
+    it) as a rigid collision-free cluster: root(s) at the origin, every member
+    DFS-seated around its in-component anchors honouring each attractor/repulsor,
+    widen-on-infeasible. Returns the placed parts (topological order) or None."""
+    members_c = comp & members
+    roots_c = comp - members_c
+    deps: dict[str, set[str]] = {p: set() for p in comp}
+    for m in members_c:
+        for a, _p, _b in attractors.get(m, []):
+            if a in comp:
+                deps[m].add(a)
+        for rp, _pin, _mm in repulsors.get(m, []):
+            if rp in comp:
+                deps[m].add(rp)
+        deps[m].discard(m)
+    order = _topo_order(comp, deps)
+    if order is None:
+        return None
+    for scale in range(0, 24):
+        placed = _seat_multi(order, roots_c, attractors, repulsors,
+                             resolvable, scale * 0.25)
+        if placed is None:
+            continue
+        parts = [placed[b] for b in order]
+        if not _any_overlap(parts):
+            return parts
+    return None
+
+
+def _compose_clusters(clusters: list[list[_Part]]) -> list[_Part]:
+    """Lay independent solved clusters left-to-right, each normalised to its own
+    min courtyard corner and separated by a clearance gap — collision-free by
+    construction. The common case (one connected contract) is a single cluster,
+    re-anchored to the origin but otherwise the seated geometry unchanged."""
+    out: list[_Part] = []
+    x_cursor = 0.0
+    for cl in clusters:
+        minx = min(p.local_box()[0] for p in cl)
+        miny = min(p.local_box()[1] for p in cl)
+        width = max(p.local_box()[2] for p in cl) - minx
+        for p in cl:
+            out.append(_Part(p.bref, p.mod, p.rot, "top",
+                             round(p.ox - minx + x_cursor, 4),
+                             round(p.oy - miny, 4)))
+        x_cursor += width + TEMPLATE_CLEAR + _ROOT_GAP
+    return out
+
+
 # --- the LDO stage ----------------------------------------------------------------
 
 def _build_ldo_stage(ic_bref: str, resolvable: dict[str, Path],
@@ -1086,7 +1416,16 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
     if anchor_bref is None:
         return None
 
-    parts = _build_proximity_cluster(anchor_bref, contract, bref_of, resolvable)
+    # DISPATCH: the two FROZEN pilot sheets (usb_pd/ethernet) keep the byte-identical
+    # legacy single-anchor cluster; EVERY other contract — single- or multi-anchor —
+    # is solved by the general graph solver (the one reusable mechanic). The legacy
+    # cluster is retained only to freeze the pilots' proven layout; it is also the
+    # single-anchor DFS whose backtracking exhausts its node budget on a large star
+    # (hdmi_rx_term's 10-part cluster hangs ~20s), so new wiring must not use it.
+    if sheet_name in _PILOT_PROX_SHEETS and _is_single_anchor_star(contract, bref_of):
+        parts = _build_proximity_cluster(anchor_bref, contract, bref_of, resolvable)
+    else:
+        parts = _solve_contract(contract, bref_of, resolvable)
     if parts is None:
         return None
 

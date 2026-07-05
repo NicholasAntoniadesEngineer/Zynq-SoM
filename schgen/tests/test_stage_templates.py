@@ -447,3 +447,110 @@ def test_wired_zone_coordinate_dumps(_real_model):
         for ref, x, y, rot, s in rows:
             print(f"  {ref:8} x={x:9.3f} y={y:9.3f} rot={rot:5.1f} {s}")
         assert rows
+
+
+# ---------------------------------------------------------------------------
+# (4) MULTI-ANCHOR contract solver — the general reusable mechanic. A contract
+#     whose proximity structures form a MULTI-ANCHOR graph (camera: J1->U1/U2,
+#     U1->R1/R2/R3 with min_from J1, R1->R2/R3) cannot be satisfied by the
+#     single-anchor cluster builder (its non-primary-anchor members fall to the
+#     unconstrained leftover shelf-pack). These drive build_zone on the sheet's
+#     REAL inputs (no board build) and assert the emitted geometry PASSES the
+#     sheet's own contract gate — the same measure the real board is held to.
+# ---------------------------------------------------------------------------
+
+def _zone_model(sheet: str, top_off, bot_off, rot, resolvable):
+    """Synthesize a minimal PcbModel from a build_zone offset result so the
+    placement-contract gate can measure it — the SAME construction the usb_pd
+    gate test uses, but including BOTH sides so a member that (wrongly) lands
+    bottom is still seen by the gate rather than silently dropped."""
+    from schgen.generate.pcb import (
+        ORIGIN_X,
+        ORIGIN_Y,
+        FootprintInst,
+        PcbModel,
+    )
+    from schgen.generate.pcb.footprint import pad_names
+    zx, zy = 30.0, 40.0
+    insts = []
+    for side, off in (("top", top_off), ("bottom", bot_off)):
+        for r, (dx, dy) in off.items():
+            mod = resolvable[r]
+            insts.append(FootprintInst(
+                ref=r, value="x", footprint="x",
+                x=ORIGIN_X + zx + dx, y=ORIGIN_Y + zy + dy,
+                rotation=rot.get(r, 0.0),
+                pad_nets={p: (0, "") for p in pad_names(mod)},
+                mod_path=mod, sheet=sheet, side=side))
+    return PcbModel(board_w=200.0, board_h=180.0, insts=insts,
+                    net_numbers={"": 0}, netclass_of={}, classes={},
+                    placed=len(insts), deferred=[], n_top=len(insts),
+                    n_bottom=0, two_side=True)
+
+
+def _run_zone(sheet: str):
+    """build_zone on a sheet's real inputs using its DISCOVERED contract (works
+    for un-wired sheets too), with contract members forced top-side (the
+    same_side override the hook applies before templating)."""
+    refs, side_of, bbox_of, resolvable = _subsystem_inputs(sheet)
+    contract = g.discover_contract(sheet)
+    side = dict(side_of)
+    for m in T.contract_member_brefs(sheet, contract, resolvable):
+        side[m] = "top"
+    rot: dict[str, float] = {}
+    res = T.build_zone(sheet, contract, refs, side, bbox_of, resolvable, rot)
+    return res, rot, resolvable, contract
+
+
+def test_camera_multi_anchor_contract_is_satisfied():
+    """CAMERA is the multi-anchor archetype: the FFC (J1) anchors the two ESD
+    arrays (<=5 mm), U1 anchors the three D-PHY terminations (<=40 mm) which must
+    ALSO clear the FFC by >=8 mm (min_from J1 — the receiver-end SI truth), and
+    R1 anchors the term cluster (<=6 mm). The single-anchor builder drops the
+    U1/R1-anchored members to the leftover pack (violating both the U1 proximity
+    and the >=8 mm FFC clearance). The general multi-anchor solver must place all
+    six parts so the camera contract's gate reports ZERO proximity violations."""
+    res, rot, resolvable, contract = _run_zone("camera")
+    assert res is not None, "build_zone returned None for camera"
+    top_off, bot_off, _zw, _zh = res
+    m = _zone_model("camera", top_off, bot_off, rot, resolvable)
+    band = g._board_refs_by_sheet("camera")
+    chk = g.check(m, sheet_name="camera", contract=contract, ref_map=band)
+    print("\n" + chk.summary())
+    assert chk.missing_refs == [], f"camera unresolved refs: {chk.missing_refs}"
+    assert chk.proximity_fail == 0, chk.summary()
+    assert chk.ok, chk.summary()
+
+
+def _proximity_sheets() -> list[str]:
+    """Every discovered contract whose structures carry a ``proximity`` (so the
+    zone builder runs) but NO ``hot_loop`` (a buck — its own datasheet path). This
+    is exactly the set the general solver must satisfy: the wired usb_pd/ethernet
+    plus every currently-inert proximity contract. Data-driven so a future contract
+    is covered with no test edit."""
+    out = []
+    for sheet, c in g.discover_all().items():
+        types = {s.get("type") for s in c.get("structures", [])}
+        if "proximity" in types and "hot_loop" not in types:
+            out.append(sheet)
+    return sorted(out)
+
+
+@pytest.mark.parametrize("sheet", _proximity_sheets())
+def test_proximity_contract_is_solved(sheet):
+    """The general zone builder places EVERY proximity contract so its own gate
+    reports zero proximity/same_side violations — measured on synthesized geometry
+    with the gate's pad boxes, no board build. This is the reusable-mechanic proof:
+    the placer satisfies any authored proximity/min_from/same_side graph (single-
+    or multi-anchor) programmatically, with no per-sheet intervention."""
+    res, rot, resolvable, contract = _run_zone(sheet)
+    assert res is not None, f"build_zone returned None for {sheet}"
+    top_off, bot_off, _zw, _zh = res
+    m = _zone_model(sheet, top_off, bot_off, rot, resolvable)
+    band = g._board_refs_by_sheet(sheet)
+    chk = g.check(m, sheet_name=sheet, contract=contract, ref_map=band)
+    print(f"\n[{sheet}] " + chk.summary())
+    assert chk.missing_refs == [], f"{sheet} unresolved refs: {chk.missing_refs}"
+    assert chk.proximity_fail == 0, chk.summary()
+    assert chk.same_side_fail == 0, chk.summary()
+    assert chk.ok, chk.summary()

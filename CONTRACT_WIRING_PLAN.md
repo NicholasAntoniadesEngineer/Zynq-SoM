@@ -24,12 +24,56 @@ plan is step two: enforce it** by wiring each violated contract.
 (or an explicitly-documented smaller subset if some prove infeasible). Every wired sheet:
 PLACEMENT CONTRACT 0 violations + ALL gates green + build-twice byte-identical.
 
+## THE MECHANIC IS BUILT (2026-07-05) — the reusable product
+
+The blocker was never per-sheet effort; it was a **missing engine capability**. The placer only
+ever modelled a **single anchor-star** (one IC + its direct members). A real contract is a
+**multi-anchor constraint graph** (camera: FFC→ESD, then ESD-IC→terminations with a `min_from`
+clearance vs the FFC, then term→term-cluster), so **11 of the 18** violated contracts were
+*structurally un-enforceable* — the placer dropped every non-primary-anchor member to an
+unconstrained shelf-pack, and no amount of wiring could fix that.
+
+**Landed:** a general **multi-anchor constraint-graph solver** (`_solve_contract` in
+`stage_templates.py`) — parses any contract's proximity structures into attractors
+(pad-edge ≤ `max_mm` to an anchor's pins) + repulsors (pad-edge ≥ `min_mm` from *any* part) +
+same_side, splits into connected components, seats each greedily in topological order with
+widen-on-infeasible, and **respects fan-out clearance** (mirrors `fanout_gate` exactly — non-passive
+members keep ≥ `intelligent_need` from multi-pin ICs; plain decoupling stays exempt). Deterministic,
+no randomness. The two pilot sheets (usb_pd/ethernet) keep the byte-identical legacy path.
+**Proven:** a data-driven parametrized test (`test_proximity_contract_is_solved`) shows **all 19
+proximity contracts now satisfy their own gate** (were 18-violated); camera is the multi-anchor
+archetype test. Three real bugs were found+fixed via the fast (1 s) test loop: grid-radius sizing,
+independent-cluster jamming (→ per-component isolation), and per-node backtracking blow-up (→ greedy).
+
+## WIRING IS A DELICATE BOARD-INTEGRATION FOLLOW-UP (not a mechanic gap)
+
+Flipping contracts into `_WIRED_SHEETS` is electrically correct (the contract gate + fan-out gate
+both pass for the wired sheets) but **perturbs a hand-optimised board**, and each perturbation trips
+a *different* delicate constraint — measured, not theorised:
+- **Batch of 5** (fmc/motor_pwm/power_mon/uart_bridge/usb_jtag): contract gate PASS (59 structures,
+  0 viol), coverage 18→13, DRC 0 — but the board grew 178→**188 mm** because motor_pwm + usb_jtag
+  are known **cramped clusters** (breathe.py), and that growth repacked the *unrelated* bringup zone
+  under the fan-out floor (12→6 starved after the fan-out-aware fix).
+- **Batch of 3** (fmc/power_mon/uart_bridge): fan-out back to **0 starved**, but the layout shift
+  moved a bringup B.Cu cap (C5009) into the **DF40 stitch-via corridor** → a **LAW-0 return-path**
+  failure (`no feasible stitch-via seat for J2.92`), thermal cascading from the aborted pour.
+
+**Lesson:** the board is a tight optimum; enforcing new datasheet clustering on it cascades into
+fan-out (cramped clusters), the DF40 return-stitch corridor (LAW-0, *untouchable*), and thermal.
+Wiring therefore needs a **staged campaign** with real dependencies, NOT a one-shot flip:
+1. floorplan **compaction** so a solved cluster is ≤ its old scattered footprint (no board growth), OR
+   a conscious board-growth budget the user signs off on;
+2. the **queued bottom-channel-keepout unit** (move blocking B.Cu strays out of the DF40 corridor);
+3. thermal-pour re-credit after any layout shift;
+4. then wire, one sheet at a time, each build-verified green.
+
 ## Current state / resume point
-- **master = fdbefe9** — coverage report live; thermal buck-spread + place_near speedup + escape-safe
-  growth enabler all landed. Board 178×163, all gates green.
-- **WIRED (3):** power, usb_pd, ethernet.
-- **INERT-MET (2)** — coincidentally OK, no wiring needed (optionally gate for lock-in): board_qwiic, hdmi_rx_term.
-- **INERT-VIOLATED (18)** — the backlog below. **0 / 18 done.**
+- **master = e55d854** (coverage report). Board 178×163, all gates green.
+- **MECHANIC:** the multi-anchor solver is committed (inert — `_WIRED_SHEETS` still the 3 pilots — so
+  the shipping board is **byte-identical**; the solver only activates when a sheet is wired).
+- **WIRED (3):** power, usb_pd, ethernet. **INERT-VIOLATED (13 after the coverage report's own count;
+  18 by structure).** Wiring is the staged campaign above; **0 sheets wired past the pilots** (each
+  attempt tripped a delicate board constraint — see the measured batches).
 
 ## The per-sheet wiring procedure (the repeatable unit — do ONE sheet at a time)
 For each sheet `<S>`:
