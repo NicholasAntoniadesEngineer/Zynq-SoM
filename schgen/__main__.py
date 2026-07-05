@@ -1557,7 +1557,7 @@ def main(argv: list[str] | None = None) -> int:
                          "+ the serial ~28 s multi-angle 3D raytrace) — runs every "
                          "GATE on the same emitted board. Fast gate-verify loop; "
                          "the emitted .kicad_sch/.kicad_pcb are byte-identical "
-                         "either way (~15% off a ~300 s build — the per-sheet PNGs "
+                         "either way (~40 s off a ~300 s build — the per-sheet PNGs "
                          "draw concurrently with ERC so the 3D raytrace is the real "
                          "saving; the 2 ratsnest PNGs still draw in the PCB thread).")
     bd.set_defaults(func=cmd_board)
