@@ -163,6 +163,15 @@ DEFAULT_CLEARANCE_MM = 0.15
 # footprint and the board edge — so the emitted PCB has NO courtyard-overlap /
 # pad-clearance / copper-edge DRC errors (only the expected unrouted-net items).
 PLACE_CLEAR = 0.5
+
+# The BYTE-IDENTICAL baseline value of PLACE_CLEAR (the shipping 178x163 board,
+# md5 6a734353). RAISING PLACE_CLEAR above this GROWS the board for real fan-out
+# breathing room; that grow re-packs parts and can drag a B.Cu passive into a
+# DF40 escape seat band. The escape/return-stitch CORRIDOR keepout (placement.py
+# L4 bottom-pull) is therefore ARMED only when PLACE_CLEAR > this baseline — so at
+# the baseline it is a strict no-op (byte-identity holds) and it engages exactly
+# when a grow needs it. A single, honest grow signal; not a softened gate.
+PLACE_CLEAR_BASELINE = 0.5
 EDGE_CLEAR = 2.0
 ZONE_GAP = 0.8             # gap between two adjacent subsystem zones
 ZONE_PAD = 0.3            # padding inside a subsystem zone around its parts

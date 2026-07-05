@@ -188,6 +188,59 @@ def _box_dist(x: float, y: float, box: tuple[float, float, float, float]) -> flo
     return math.hypot(dx, dy)
 
 
+# ---- ESCAPE / RETURN-STITCH CORRIDOR (placement keepout) --------------------------
+#
+# The escape router seats its stitch vias + return ladder in a thin band along each
+# DF40's pad-row axis (v~0), reaching R_CONSTRUCT past the outermost failing pad in
+# u.  A FOREIGN part (esp. a B.Cu passive under the SoM, dragged in by the L4 bottom-
+# pull when the board grows and re-packs) that lands in that band displaces a via
+# seat -> the seat shifts -> the redundant/stub geometry grazes a DF40 pad (0.300 <
+# 0.325) OR the return_stitch gate fails.  This corridor is the region the placer
+# must keep FOREIGN parts out of, on BOTH sides, so the escape geometry stays fixed.
+# It is a PLACEMENT keepout only — it never touches escape.py's router logic, the
+# DF40 mezzanine, or the return copper (LAW 0).
+#
+# CORRIDOR_V_MARGIN: clearance added past the pad-tip v so the band covers the via
+# annulus + ladder stub the router puts at the pad tips.  In u the corridor grows
+# by R_CONSTRUCT (the reach past the outermost pad), so a part just off the pad end
+# can still displace the reach-limited seat window.
+CORRIDOR_V_MARGIN = 0.15
+
+
+def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
+    """The escape/return-stitch seat corridor for ONE DF40, in its LOCAL (u, v)
+    frame: (u0, v0, u1, v1).  Derived LIVE from the connector's own pad centres
+    (re-measured each build — it follows the part), so it is exact for any DF40
+    pose.  u spans the pad row + R_CONSTRUCT reach; v spans the pad rows + the
+    annulus/stub margin.  A pure function of the footprint geometry."""
+    from schgen.verify import return_path_gate as rpg
+    pads = rpg._parse_pad_positions(mod_path)
+    us = [p[0] for p in pads.values()]
+    vs = [p[1] for p in pads.values()]
+    u_half = max(abs(min(us)), abs(max(us))) + R_CONSTRUCT
+    v_half = max(abs(min(vs)), abs(max(vs))) + CORRIDOR_V_MARGIN
+    return (-u_half, -v_half, u_half, v_half)
+
+
+def corridor_board_rect(mod_path, cx: float, cy: float, rot: float
+                        ) -> tuple[float, float, float, float]:
+    """Axis-aligned board-frame keepout rect (x0, y0, x1, y1) for a DF40 seated
+    at centre (``cx``, ``cy``) with placement rotation ``rot`` (CW degrees, the
+    KiCad/placer sign).  Transforms the LOCAL corridor's four corners through the
+    connector pose and takes their bbox.  Frame-agnostic: (cx, cy) may be page mm
+    OR ORIGIN-relative packer coords — the caller supplies matching centres, and
+    the returned rect lands in that same frame (used by both the emitted-model
+    escape check and the ORIGIN-relative placer passes)."""
+    cu0, cv0, cu1, cv1 = df40_corridor_local(mod_path)
+    c = math.cos(math.radians(rot or 0.0))
+    s = math.sin(math.radians(rot or 0.0))
+    # CW transform (matches _to_board): bx = cx + u*c + v*s, by = cy - u*s + v*c
+    xs = [cx + u * c + v * s for u in (cu0, cu1) for v in (cv0, cv1)]
+    ys = [cy - u * s + v * c for u in (cu0, cu1) for v in (cv0, cv1)]
+    return (round(min(xs), 4), round(min(ys), 4),
+            round(max(xs), 4), round(max(ys), 4))
+
+
 def _seg_box_dist(a: tuple[float, float], b: tuple[float, float],
                   box: tuple[float, float, float, float]) -> float:
     """Min distance from segment a-b to a box (axis-aligned segments only —

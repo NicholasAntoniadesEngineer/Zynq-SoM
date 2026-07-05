@@ -1130,6 +1130,32 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             for r in pos
             if side_of.get(r) == "bottom" and r in bbox_of}
 
+        # ESCAPE/RETURN-STITCH CORRIDOR keepout (LAW 0): the SoM-ward pull must
+        # NEVER slide a bottom passive into a DF40 escape seat band — that displaces
+        # a stitch-via seat and the regenerated return ladder grazes a DF40 pad
+        # (0.300 < 0.325) / the return_stitch gate fails (the confirmed grow-break:
+        # R5010/R5014 pulled into J1's empty seat window when the board grows and
+        # re-packs). Add each DF40's seat corridor to the L4 collision set so the
+        # pull stops SHORT of it.
+        #
+        # ARMED ONLY WHEN THE BOARD HAS GROWN (PLACE_CLEAR > its byte-identical
+        # baseline). At the baseline 178x163 board the L4 pull legitimately seats
+        # J2's board_services / hdmi_rx_term terminations inside J2's corridor (the
+        # escape router's coexistence ledger accepts them and threads its vias
+        # between them) — reserving corridors there would EVICT those tolerated
+        # parts and change the valid board. So on the baseline this keepout is a
+        # strict NO-OP (empty list -> byte-identity holds); it engages exactly when
+        # a grow would otherwise drag a stray into a seat band. Deterministic.
+        _escape_corridors: list[tuple[float, float, float, float]] = []
+        from schgen.generate.pcb import constants as _const
+        if _const.PLACE_CLEAR > _const.PLACE_CLEAR_BASELINE:  # board has grown
+            from schgen.generate.pcb.escape import corridor_board_rect
+            _escape_corridors = [
+                corridor_board_rect(resolvable[r], pos[r][0], pos[r][1],
+                                    fixed_rot.get(r, 0.0))
+                for r in sorted(som_j_refs)
+                if r in resolvable and r in pos]
+
         DISP_CAP_L4 = 5.0          # conservative; LAW-5 gate fails only at 9.0x
         EDGE_MARGIN = 0.6          # keep shifted copper this far inside Edge.Cuts
         STEP = 1.0
@@ -1161,8 +1187,11 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             if dist < 1.0:
                 continue
             ux, uy = vx / dist, vy / dist
-            # bottom occupancy EXCLUDING this subsystem's own movers
-            others = [bot_box[r] for r in bot_box if r not in set(movers)]
+            # bottom occupancy EXCLUDING this subsystem's own movers, PLUS the
+            # DF40 escape/return-stitch seat corridors (LAW 0) — a mover may never
+            # slide into a seat band and displace a stitch via.
+            others = ([bot_box[r] for r in bot_box if r not in set(movers)]
+                      + _escape_corridors)
             allr = [r for r in (list(top_off.get(sheet, {}))
                                 + list(bot_off.get(sheet, {})))
                     if r in pos and r in bbox_of]

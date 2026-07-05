@@ -454,9 +454,23 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
     chosen: dict[str, tuple[float, float, float, float]] = {}
     picked: dict[str, _Part] = {}
 
+    # DFS backtracking is worst-case O(len(cand) ** len(order)). When a template is
+    # INFEASIBLE at this halo (e.g. the demanded gap exceeds what the candidate grid
+    # can satisfy), the tree explodes and the build HANGS (a real 34-min hang was
+    # caused by inflating a clearance into the template halo). A node budget bounds
+    # the search: exhaust it -> treat as no-assignment -> the nearest-candidate
+    # fallback below -> the caller's widen loop retries. Feasible templates solve in
+    # a few hundred nodes, so the cap never changes a solvable layout (LAW 4: this
+    # bounds effort, not the rules — bounds never relax).
+    _NODE_BUDGET = 300_000
+    nodes = [0]
+
     def _bt(i: int) -> bool:
         if i == len(order):
             return True
+        nodes[0] += 1
+        if nodes[0] > _NODE_BUDGET:
+            return False        # search exploded -> infeasible -> fallback + widen
         bref = order[i]
         placed_boxes = list(chosen.values())
         for p, b in cand[bref]:

@@ -1479,12 +1479,22 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     aspects = sorted({seed_aspect, 1.0, 1.1, 1.2, 1.3, 1.4})
     best: tuple | None = None             # (area, w, h, est_real, budget)
     fit_seen = False
+    # Cheap infeasibility prune for the board-size search: SoM + summed block XY
+    # areas are a HARD lower bound (blocks + SoM cannot overlap), so any board below
+    # it provably cannot pack — skip the O(board_area) _attempt_pack lattice scan.
+    # Sound: never prunes a feasible board (real inter-block gaps only make the true
+    # minimum LARGER), so the selected board is unchanged. Keeps the search fast when
+    # a larger zone (e.g. a grow knob) inflates the blocks — without it the fine
+    # refinement pays a full slow pack on ~1000s of too-small boards (a 30-min+ stall).
+    _min_pack_area = som.w * som.h + sum(bw * bh for bw, bh in zbox.values())
     for aspect in aspects:
         for _try in range(80):
             grow = _try * OUTLINE_SNAP
             w = _snap_up_fp(outline.w + grow * (aspect / seed_aspect))
             h = _snap_up_fp(outline.h + grow)
             if w < h:                     # keep landscape
+                continue
+            if w * h < _min_pack_area:    # provably too small — skip the slow pack
                 continue
             BOARD_W, BOARD_H = w, h
             plan.som_x = _r5((BOARD_W - som.w) / 2)
@@ -1560,8 +1570,10 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     hs = [round(bh0 - k * FINE_SNAP, 1) for k in range(0, nsteps)]
     for w in ws:
         for h in hs:
-            if w <= 0 or h <= 0 or w < h or w * h >= bw * bh - 1e-6:
-                continue                  # only strictly-smaller, landscape boards
+            if (w <= 0 or h <= 0 or w < h or w * h >= bw * bh - 1e-6
+                    or w * h < _min_pack_area):
+                continue                  # strictly-smaller landscape boards, above
+                #                           the hard min-pack-area floor
             ok, er, bud = _passes(w, h)
             if ok:
                 bw, bh, best_er, best_bud = w, h, er, bud
