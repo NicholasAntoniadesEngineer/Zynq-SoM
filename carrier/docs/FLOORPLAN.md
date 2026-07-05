@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **178 x 163 mm**; SoM origin at **(64, 60.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 178x163 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 16352 <= LAW-5 budget 16863 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 178x163 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 16601 <= LAW-5 budget 16863 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -60,11 +60,11 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 | fmc | S | (63, 105, 52.91 x 15.49) | 8 | 819.6 | (16) |
 | hdmi_rx_term | @hdmi_rx | (71, 122, 7.87 x 10.4) | 10 | 81.8 |  |
 | mechanical | E | (108, 24, 13 x 13) | 4 | 169 |  |
-| power | E | (146.64, 94, 23.9349 x 47.6504) | 51 | 1140.5 | (17) |
-| power_mon | @power_som | (148, 144, 9.14 x 17.172) | 10 | 157 | (18) |
+| power | E | (146.64, 94, 23.9349 x 55.1504) | 51 | 1320 | (17) |
+| power_mon | @power_som | (148, 11, 9.14 x 17.172) | 10 | 157 | (18) |
 | power_som | E | (75, 139, 12.15 x 22.66) | 23 | 275.3 |  |
 | uart_bridge | @rj45_connector | (117, 61, 7.87 x 11.9) | 10 | 93.7 | (19) |
-| usb_jtag | E | (83, 123, 28.19 x 14.448) | 19 | 407.3 |  |
+| usb_jtag | E | (82, 123, 28.19 x 14.448) | 19 | 407.3 |  |
 | usb_pd | @pd_input | (84, 26, 8.18 x 10.28) | 6 | 84.1 | (20) |
 | user_io | S | (39, 73, 23.11 x 18.3) | 17 | 422.9 | (21) |
 

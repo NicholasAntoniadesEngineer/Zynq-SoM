@@ -1,18 +1,18 @@
 LAW-5 RATSNEST GATE: PASS (board 178 x 163 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 15186.5 mm (budget 16863 mm, OK; 436 edges; 15186.5/25236 mm = 60.2% of total)
+  cross-subsystem airwire: 15383.7 mm (budget 16863 mm, OK; 429 edges; 15383.7/25626.5 mm = 60.0% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
     usbc_otg               n=12  bbox_area=    1081 disp=  5.4
     usb_uart_connector     n=5   bbox_area=     572 disp=  5.4
     usb_jtag_connector     n=6   bbox_area=     599 disp=  5.3
+    pmod_expansion         n=15  bbox_area=    1777 disp=  5.0
     board_aux              n=18  bbox_area=     744 disp=  4.9
     hdmi_rx                n=10  bbox_area=    1291 disp=  4.9
+    power_mon              n=10  bbox_area=     482 disp=  4.9
     user_io                n=17  bbox_area=     959 disp=  4.8
     pmod                   n=26  bbox_area=    2725 disp=  4.8
-    pmod_expansion         n=15  bbox_area=    1719 disp=  4.8
-    power_mon              n=10  bbox_area=     469 disp=  4.8
     motor_pwm              n=13  bbox_area=    1291 disp=  4.4
     microsd                n=15  bbox_area=    1518 disp=  4.4
     board_services         n=9   bbox_area=    1541 disp=  4.2
@@ -22,10 +22,10 @@ LAW-5 RATSNEST GATE: PASS (board 178 x 163 mm)
     lcd                    n=20  bbox_area=     993 disp=  3.3
     hdmi_tx                n=12  bbox_area=     984 disp=  3.2
     motor_sense            n=10  bbox_area=    2474 disp=  3.1
+    power                  n=51  bbox_area=    1292 disp=  2.9
     fmc                    n=8   bbox_area=     911 disp=  2.5
     pd_input               n=13  bbox_area=     567 disp=  2.5
     bringup_en             n=15  bbox_area=     249 disp=  2.5
-    power                  n=51  bbox_area=    1115 disp=  2.5
     usb_pd                 n=6   bbox_area=      78 disp=  2.1
     uart_bridge            n=10  bbox_area=     127 disp=  1.9
     board_qwiic            n=2   bbox_area=      82 disp=  1.8

@@ -66,6 +66,20 @@ _NONSW_STAGE_GAP = round(TEMPLATE_CLEAR + 0.7, 4)   # ~1.2 mm: a pair with no SW
 # satisfies foreign-SW. Two ~25 mm bucks WITH their COUT banks cannot share a row
 # under this bound, so the search stacks one buck per row (LDO beside the last).
 _ROW_WIDTH_BUDGET = 46.0
+# Inter-ROW gap between two BUCK-bearing rows (mm). When the layout search stacks
+# one buck per row (the L2/L3 shapes the power sheet selects), consecutive
+# buck rows are otherwise separated only by the courtyard-grade TEMPLATE_CLEAR
+# below, packing the two hot LM61460 ICs ~18 mm apart center-to-center. The three
+# bucks share ONE In1 GND plane, so their self-heat superposes; widening the
+# buck-to-buck ROW boundary spreads the two hottest dies (U20001/U20002) apart to
+# thin the mutual-heating field WITHOUT touching any stage's internal topology
+# (each buck's hot-loop cap / inductor / COUT bank / FB divider is unchanged), the
+# power tree (shared +VIN_SYS input, +5V interstage rail), or the zone WIDTH (the
+# board-inflating dimension). The extra separation runs ALONG the E edge as zone
+# HEIGHT, which the E side-band absorbs (verified: emitted board dims + all gates).
+# Applied ONLY at a buck|buck row boundary; a buck|LDO or LDO row boundary keeps
+# the tight TEMPLATE_CLEAR (the LDO is cool, no benefit to spreading it).
+_INTERROW_BUCK_GAP = 8.0
 
 
 # --- local-frame primitives -------------------------------------------------------
@@ -872,7 +886,7 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
             for si in range(len(stages))]
         abs_parts: dict[str, _Part] = {}
         y_base = ZONE_PAD
-        for row in layout:
+        for ri, row in enumerate(layout):
             row_min_y = min(_stage_extent(frames[si])[1] for si in row)
             dy = y_base - row_min_y
             x = ZONE_PAD
@@ -891,7 +905,16 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
                     gap = (_INTERSTAGE_GAP0 if (_has_sw(si) and _has_sw(nxt))
                            else _NONSW_STAGE_GAP)
                     x = ext[2] + dx + gap
-            y_base = row_bottom + TEMPLATE_CLEAR
+            # inter-ROW gap: widen ONLY at a buck|buck row boundary (spreads the
+            # two hottest dies on the shared plane; a buck|LDO or LDO boundary
+            # keeps the tight courtyard gap). See _INTERROW_BUCK_GAP.
+            row_gap = TEMPLATE_CLEAR
+            if ri + 1 < len(layout):
+                nxt_row = layout[ri + 1]
+                if (any(_has_sw(si) for si in row)
+                        and any(_has_sw(si) for si in nxt_row)):
+                    row_gap = _INTERROW_BUCK_GAP
+            y_base = row_bottom + row_gap
         return abs_parts
 
     def _width(placed: dict[str, _Part]) -> float:
