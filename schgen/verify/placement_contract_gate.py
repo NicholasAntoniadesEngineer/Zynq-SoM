@@ -145,6 +145,47 @@ def discover_all() -> dict[str, dict]:
     return out
 
 
+def coverage(model) -> dict:
+    """Check EVERY authored contract (wired OR not) against the emitted ``model``,
+    using the SAME intra-zone measurement as the hard gate (``check``). Returns
+    ``sheet -> PlacementContractResult``. The hard gate stays scoped to
+    ``_WIRED_SHEETS``; this is the ACCOUNTABILITY layer — it surfaces the UN-wired
+    contracts whose authored SI/PI intent the placer does not yet enforce, so a
+    silently-violated decoupling/ESD proximity is VISIBLE in every build instead
+    of being an inert comment. Deterministic (discover_all is sorted)."""
+    return {sheet: check(model, sheet, contract=c)
+            for sheet, c in sorted(discover_all().items())}
+
+
+def coverage_report(cov: dict) -> tuple[str, int, int, int]:
+    """Format ``coverage()`` -> (text, n_wired, n_inert_met, n_inert_violated).
+    One line per authored contract: wired(gated) / inert-met / inert-VIOLATED +
+    the worst intra-zone violation. The tally is the enforcement-gap headline."""
+    wired = met = viol = 0
+    detail: list[str] = []
+    for sheet in sorted(cov):
+        res = cov[sheet]
+        if not getattr(res, "have_contract", False):
+            continue
+        w = sheet in _WIRED_SHEETS
+        nv = len(res.violations)
+        if w:
+            wired += 1
+            status = "WIRED-gated"
+        elif nv == 0:
+            met += 1
+            status = "inert-met"
+        else:
+            viol += 1
+            status = "inert-VIOLATED"
+        worst = (res.violations[0] if res.violations else "").split(" [")[0]
+        detail.append(f"  {sheet:22} {status:15} {res.checked:2} chk  "
+                      f"{nv} viol  {worst[:64]}")
+    head = (f"CONTRACT COVERAGE: {wired} wired(gated) / {met} inert-met / "
+            f"{viol} inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)")
+    return head + "\n" + "\n".join(detail), wired, met, viol
+
+
 def wired_term_participants() -> tuple[frozenset[str], frozenset[str]]:
     """(l4_exempt, l4_guarded) — the PER-KIND participants of the WIRED
     sheets' external terms (T1 P5, decision D-2; partition REFINED at the

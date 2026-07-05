@@ -1119,6 +1119,20 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("PLACEMENT CONTRACT (Phase L): FAIL — gate did not run")
             ok_all = False
+        # CONTRACT COVERAGE (ADVISORY): EVERY authored contract vs the emitted
+        # board — not just the 3 _WIRED_SHEETS the hard gate covers. Surfaces the
+        # un-wired contracts' silently-violated intra-zone SI/PI proximities
+        # (decoupling far from its IC, ESD far from its connector) so the
+        # enforcement gap is VISIBLE + tracked, not an inert comment. Report-only
+        # (a wiring backlog); the hard PLACEMENT CONTRACT above stays the arbiter.
+        cov = pcb_res.get("contract_coverage")
+        if cov is not None:
+            from schgen.verify import placement_contract_gate as _cov_g
+            _cov_txt, _nw, _nm, _nv = _cov_g.coverage_report(cov)
+            (rep_dir / "contract_coverage.txt").write_text(_cov_txt + "\n")
+            print(f"CONTRACT COVERAGE (advisory): {_nw} wired-gated / {_nm} "
+                  f"inert-met / {_nv} inert-VIOLATED (un-enforced SI/PI intent) "
+                  f"-> {rep_dir / 'contract_coverage.txt'}")
         # COMPOSITION-LEVEL FLOW/FACING/FAR gate (Phase L, HARD) — the contract's
         # EXTERNAL terms (power-chain adjacency, output facing downstream, analog
         # moat) checked on the whole placed board (zone centroids). LAW 4: strict

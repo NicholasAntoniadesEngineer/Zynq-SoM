@@ -652,6 +652,14 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         from schgen.generate import floorplan_compose
         result["floorplan_composition"] = floorplan_compose.compose_report(
             model)
+        # CONTRACT COVERAGE (ADVISORY): check EVERY authored placement contract
+        # (wired or not) against the emitted board, not just the 3 _WIRED_SHEETS
+        # the hard gate covers. Surfaces the un-wired contracts whose authored
+        # SI/PI intent (decoupling <=2mm, ESD-at-connector, term-at-receiver) the
+        # placer does not yet enforce — so a silently-violated contract is VISIBLE
+        # every build instead of an inert comment. Report-only (the hard gate stays
+        # scoped to _WIRED_SHEETS); written to reports/contract_coverage.txt.
+        result["contract_coverage"] = placement_contract_gate.coverage(model)
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result
