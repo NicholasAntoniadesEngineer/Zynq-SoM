@@ -62,6 +62,43 @@ multi-anchor solver landed in 3 tight iterations; where none existed (flow-gate 
 the refit took **4 blind 10-minute build iterations**. Feedback latency is worth more
 than any single algorithm improvement — *subject to Principle 0*.
 
+## The two products (the point of all of it)
+
+The end goal is exactly two artifacts, each at advanced-human-engineer quality: a
+**visually coherent schematic** and an **electrically logical PCB layout**. The system
+achieves both today through hand-tuning accumulated on this one board; the refinement is
+achieving them **by construction, on any project**. Mechanism: every quality the eye
+judges becomes (a) explicit knowledge-as-data and (b) a checkable metric promoted under
+Principle 0.
+
+**S-track (schematic).** A human expert's sheet has a visual GRAMMAR: signal flow
+left→right, power top / ground bottom, functional grouping, datasheet-familiar idioms,
+alignment/symmetry, minimal crossings, readable labels. Today the gates check
+CORRECTNESS (netlist equivalence, ERC, zero-overlap); STYLE is emergent from layout
+heuristics + the eye. Refinements:
+  - **Schematic idiom templates keyed by MPN/pattern** — the sheet-side twin of the PCB
+    stage templates: a buck drawn as the datasheet application figure, LDO / ESD array /
+    crystal / divider / connector-fan micro-layouts. Part-keyed → portable to every
+    future project by construction.
+  - **Style metrics as gates** (flow-direction score, alignment score, crossing count,
+    label clarity), each validated against human-blessed golden sheets per the promotion
+    protocol — the ratchet applied to aesthetics, one eye-judged class at a time.
+
+**L-track (layout).** An expert's placement simultaneously satisfies all the physics
+(hot loops, decoupling at pins, terminations at receivers, return continuity, thermal
+spread, mechanics). The expert knowledge is ALREADY SERIALIZED — 23 datasheet-cited
+placement contracts — and the engine obeys 3. Closing 3/23 → 23/23 via P3 is the single
+largest step toward advanced-human placement, because it activates written knowledge;
+then the contract vocabulary grows toward what humans do implicitly (analog/noisy zoning
+classes, star-ground points, length-match groups as first-class contract types).
+
+**The scalability thesis.** The portable subsystem package (circuit + contract + idiom
+template + tests, datasheet-cited, zero project coupling — verified) is the UNIT OF
+ACCUMULATED ENGINEERING KNOWLEDGE. The engine is the solver that composes packages; a
+project is just data (floorplan spec + module contract + adapter binds). Every board
+built enriches the library, so each next board starts smarter — knowledge compounds in
+data, not in tuning.
+
 ## Phases
 
 ### P1 — Engine/Project separation (the variant enabler)
@@ -105,9 +142,9 @@ suggested slack) alongside the human report — precedent: `coverage()`. The AI 
 structure instead of grepping prose; a `schgen board --json` summary emits the full gate
 state. Renders remain the human/AI *visual* channel per Principle 0.
 
-### P5 — Horizon (explicitly gated)
-Routing stays OFF until the user lifts the no-routing law. When lifted it enters under the
-same discipline: visual ground truth, gate ratchet, determinism, promotion protocol.
+### Out of scope — routing (user decree)
+Routing is NOT addressed by this roadmap, at all. "Layout" throughout means PLACEMENT —
+and placement is a primary concern of this plan (the L-track and P3 are its backbone).
 
 ## Sequencing & safety
 P1 → P2 → P3 → P4 (P4 items can ride along earlier phases opportunistically). Every
