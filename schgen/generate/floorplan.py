@@ -1886,9 +1886,11 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     # their connector — so they can claim the cell snug against their
     # receptacle (the near_max/flow requirement). Then the rest in
     # connectivity order (most-connected first, the LAW-5 lever).
+    _mfa_prio = _project_spec().module_face_anchors
     order = sorted(
         interior,
-        key=lambda b: (0 if (b.pull and b.pull.get("exclusive", False)) else 1,
+        key=lambda b: (0 if b.name in _mfa_prio else
+                       1 if (b.pull and b.pull.get("exclusive", False)) else 2,
                        -_conn(b),
                        -(zbox[b.name][0] * zbox[b.name][1]), b.name))
     for b in order:
@@ -1994,10 +1996,15 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 som_page = som_core_rect(plan.som_x, plan.som_y,
                                          plan.som.w, plan.som.h)
                 log: list[str] = []
+                _j_rects = {
+                    f"som_j{j.ref[1:].lower()}": (
+                        plan.som_x + j.x - j.w / 2, plan.som_y + j.y - j.h / 2,
+                        plan.som_x + j.x + j.w / 2, plan.som_y + j.y + j.h / 2)
+                    for j in plan.som.js}
                 if not fc_.legalize_compact(
                         BOARD_W, BOARD_H, som_page, fixed_rects, movable,
                         c_index, c_metrics, fixed_poses, c_channels, CLEAR,
-                        compact=compact, log=log):
+                        compact=compact, log=log, som_j_rects=_j_rects):
                     return False
                 byn = {b.name: b for b in interior}
                 for v in movable:

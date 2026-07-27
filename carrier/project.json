@@ -3,12 +3,27 @@
   "_comment": "PROJECT SPEC (P1 engine/project separation) - board-specific knowledge that previously lived as engine constants. The engine is mechanism; this file is policy. See docs/AI_PLATFORM_ROADMAP.md.",
   "placement": {
     "wired_sheets": [
+      "board_qwiic",
+      "camera",
       "ethernet",
+      "fmc",
+      "hdmi_rx",
+      "hdmi_rx_term",
+      "hdmi_tx",
+      "lcd",
+      "microsd",
+      "motor_pwm",
+      "motor_sense",
       "pd_input",
+      "pmod",
+      "pmod_expansion",
       "power",
       "power_mon",
       "uart_bridge",
+      "usb_jtag",
+      "usb_jtag_connector",
       "usb_pd",
+      "usb_uart_connector",
       "usbc_otg"
     ],
     "pilot_prox_sheets": [
@@ -20,7 +35,8 @@
       6.0
     ],
     "module_face_anchors": {
-      "power_som": "E"
+      "power_som": "E",
+      "hdmi_rx_term": "S"
     },
     "reg_band_prefixes": [
       "bringup",

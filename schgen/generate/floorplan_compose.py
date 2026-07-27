@@ -392,7 +392,7 @@ def wired_term_sheets(index: TermIndex) -> set[str]:
     out: set[str] = set()
     for t in index.hard:
         out.add(t.subject)
-        if t.target != _SOM_TOKEN:
+        if t.target != _SOM_TOKEN and not t.target.startswith("som_j"):
             out.add(t.target)
     return out
 
@@ -540,8 +540,9 @@ def evaluate_terms(board_w: float, board_h: float,
                    poses: dict[str, tuple[float, float]],
                    metrics: dict[str, LocalMetrics],
                    index: TermIndex,
-                   far_guard: dict[str, float] | None = None
-                   ) -> list[TermEval]:
+                   far_guard: dict[str, float] | None = None,
+                   som_j_rects: dict[str, tuple[float, float, float, float]]
+                   | None = None) -> list[TermEval]:
     """EXACT floorplan-frame evaluation of every term at the candidate ``poses``
     (zone top-left origins, floorplan/board frame). Argument-pure: board size,
     SoM rect (the PAGE-frame ``som_core_rect`` — the ``@som`` resolver), poses,
@@ -567,6 +568,13 @@ def evaluate_terms(board_w: float, board_h: float,
                 return None
             x0, y0, x1, y1 = som_core
             return (round((x0 + x1) / 2.0, 4), round((y0 + y1) / 2.0, 4))
+        if name.startswith("som_j"):
+            r = (som_j_rects or {}).get(name)
+            if r is None:
+                return None
+            from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+            return (round((r[0] + r[2]) / 2.0 + ORIGIN_X, 4),
+                    round((r[1] + r[3]) / 2.0 + ORIGIN_Y, 4))
         if name not in poses or name not in metrics:
             return None
         return predicted_centroid(poses[name], metrics[name])
@@ -574,6 +582,13 @@ def evaluate_terms(board_w: float, board_h: float,
     def bbox_of(name: str) -> tuple[float, float, float, float] | None:
         if name == _SOM_TOKEN:
             return som_core
+        if name.startswith("som_j"):
+            r = (som_j_rects or {}).get(name)
+            if r is None:
+                return None
+            from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+            return (r[0] + ORIGIN_X, r[1] + ORIGIN_Y,
+                    r[2] + ORIGIN_X, r[3] + ORIGIN_Y)
         if name not in poses or name not in metrics:
             return None
         return predicted_bbox(poses[name], metrics[name])
@@ -922,7 +937,9 @@ def legalize_compact(board_w: float, board_h: float,
                      channel_demand: dict[frozenset, int],
                      clear: float,
                      compact: bool = False,
-                     log: list[str] | None = None) -> bool:
+                     log: list[str] | None = None,
+                     som_j_rects: dict[str, tuple[float, float, float, float]]
+                     | None = None) -> bool:
     """T1 P6-core: make every WIRED composition term hold BY CONSTRUCTION for
     one candidate board (spec §6 P6 + the Ring-0 D13 channel injection).
 
@@ -954,6 +971,11 @@ def legalize_compact(board_w: float, board_h: float,
 
     Argument-pure: never reads ``fp.BOARD_W/BOARD_H`` (the 2026-06-19 race
     class). Deterministic: sorted iteration, fixed caps, no RNG."""
+    if som_j_rects:
+        # DF40 receptacle targets resolve like FIXED participants: pose =
+        # rect top-left (hull dims come from the rect in _near_max_edges).
+        fixed_poses = {**fixed_poses,
+                       **{n: (r[0], r[1]) for n, r in som_j_rects.items()}}
     if log is None:
         log = []
     hard = [t for t in index.hard]
@@ -1040,14 +1062,17 @@ def legalize_compact(board_w: float, board_h: float,
     def _near_max_edges(t: Term, axis: str
                         ) -> list[tuple[str, str, float, object]]:
         s, g = t.subject, t.target
-        hs, hg = hull(s), hull(g)
+        _jr = (som_j_rects or {}).get(g) if g.startswith("som_j") else None
+        hs, hg = hull(s), (hull(g) if _jr is None
+                           else (0.0, 0.0, _jr[2] - _jr[0], _jr[3] - _jr[1]))
         bound = (t.bound or 0.0) - GUARD_MM
         if hs is None or hg is None or bound < 0 \
                 or (s not in vset and g not in vset):
             return []
         sr = (seed_rect[s] if s in vset
               else _abs(fixed_poses[s], hs))
-        gr = (seed_rect[g] if g in vset
+        gr = (_jr if _jr is not None
+              else seed_rect[g] if g in vset
               else _abs(fixed_poses[g], hg))
         dom, s_first = _pair_axis(sr, gr)
         lo, hi = (s, g) if s_first else (g, s)
@@ -1220,7 +1245,8 @@ def legalize_compact(board_w: float, board_h: float,
 
     def reds(p) -> list[TermEval]:
         return [e for e in evaluate_terms(board_w, board_h, som_core_page,
-                                          p, metrics, index)
+                                          p, metrics, index,
+                                          som_j_rects=som_j_rects)
                 if e.term.enforced and not e.ok]
 
     r1 = reds(poses_now())
