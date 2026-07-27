@@ -41,7 +41,7 @@ from schgen.core.project import spec as _project_spec
 from schgen.verify import placement_contract_gate as _g
 from schgen.verify.fanout_gate import _is_cluster_passive, intelligent_need
 
-from .constants import TEMPLATE_CLEAR, ZONE_PAD
+from .constants import CONN_MATING_FACE, TEMPLATE_CLEAR, ZONE_PAD
 from .footprint import _footprint_bbox
 from .footprint import has_thru_pads as _has_thru_pads
 from .mating_face import _rot_bbox_cw
@@ -685,7 +685,9 @@ def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
 
 def _gcandidates(bref: str, mod: Path,
                  attractors: list[_Attract], repuls: list[_Repel],
-                 placed: dict[str, _Part], pad: float) -> list[_Part]:
+                 placed: dict[str, _Part], pad: float,
+                 forbid: list[tuple[float, float, float, float]] | None = None
+                 ) -> list[_Part]:
     """Ranked candidate poses (rot in {90,0} on the _CAND_STEP grid) for ``bref``
     in the GLOBAL frame, each meeting EVERY attractor's pad-edge ``max_mm`` to its
     (already-placed) anchor's pins/pads, EVERY repulsor's pad-edge ``min_mm``, and
@@ -742,6 +744,8 @@ def _gcandidates(bref: str, mod: Path,
                 b = p.local_box()
                 if any(_boxes_overlap(b, q, halo) for q in placed_boxes):
                     continue
+                if forbid and any(_boxes_overlap(b, f, halo) for f in forbid):
+                    continue
                 dsum = 0.0
                 ok = True
                 for pb, pins, bound in att:
@@ -774,7 +778,10 @@ def _gcandidates(bref: str, mod: Path,
 def _seat_multi(order: list[str], roots: set[str],
                 attractors: dict[str, list[_Attract]],
                 repulsors: dict[str, list[_Repel]],
-                resolvable: dict[str, Path], pad: float) -> dict[str, _Part] | None:
+                resolvable: dict[str, Path], pad: float,
+                conn_roots: set[str] | None = None,
+                outer_vec: tuple[float, float] | None = None
+                ) -> dict[str, _Part] | None:
     """Seat the graph GREEDILY in topological order: roots (a connector/IC that
     anchors others) laid deterministically left-to-right, then each member placed at
     its BEST (nearest, deterministic) candidate against the already-committed
@@ -792,11 +799,34 @@ def _seat_multi(order: list[str], roots: set[str],
         p = _Part(r, resolvable[r], 0.0, "top", dx, 0.0)
         placed[r] = p
         x_cursor = p.local_box()[2] + TEMPLATE_CLEAR + pad + _ROOT_GAP
+    # LAW-6 SEAT-SWEEP exclusion: an EDGE sheet's mating connector is later slid
+    # flush to the board edge (perpendicular axis only), sweeping its lateral span
+    # toward ``outer_vec``. A member seated in that sweep corridor collides after
+    # the slide (measured: usbc/pd ESD at clr=0.000 under the seated Type-C, DRC
+    # 28). Forbid the corridor: the connector courtyard extended to the edge.
+    _sweeps: list[tuple[float, float, float, float]] = []
+    if conn_roots and outer_vec is not None:
+        _far = 1e4
+        for r in sorted(conn_roots):
+            if r not in placed:
+                continue
+            x0, y0, x1, y1 = placed[r].local_box()
+            vx, vy = outer_vec
+            if vx > 0:
+                x1 = _far
+            elif vx < 0:
+                x0 = -_far
+            if vy > 0:
+                y1 = _far
+            elif vy < 0:
+                y0 = -_far
+            _sweeps.append((x0, y0, x1, y1))
     for bref in order:
         if bref in roots:
             continue
         cands = _gcandidates(bref, resolvable[bref], attractors[bref],
-                             repulsors.get(bref, []), placed, pad)
+                             repulsors.get(bref, []), placed, pad,
+                             forbid=_sweeps or None)
         if not cands:
             return None
         placed[bref] = cands[0]
@@ -804,7 +834,8 @@ def _seat_multi(order: list[str], roots: set[str],
 
 
 def _solve_contract(contract: dict, bref_of: dict[str, str],
-                    resolvable: dict[str, Path]) -> list[_Part] | None:
+                    resolvable: dict[str, Path],
+                    outer_dir: str | None = None) -> list[_Part] | None:
     """Solve a MULTI-ANCHOR proximity contract as one rigid, collision-free local-
     frame cluster satisfying every ``proximity`` (max_mm) + ``min_from`` (arbitrary
     part, min_mm) + same_side. Returns the placed parts in topological order, or
@@ -871,7 +902,8 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
             stack.extend(adj[q] - seen)
         comps.append(comp)
 
-    sig = (tuple((b, str(resolvable[b])) for b in sorted(all_parts)),
+    sig = (outer_dir or "",
+           tuple((b, str(resolvable[b])) for b in sorted(all_parts)),
            tuple((m, tuple((a, p or (), round(bd, 4))
                            for a, p, bd in attractors.get(m, [])),
                   tuple((r, pn or "", round(mm, 4))
@@ -882,9 +914,14 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
         return [_Part(b, resolvable[b], rot, "top", ox, oy)
                 for b, rot, ox, oy in cached]
 
+    _outer_vec = {"N": (0.0, -1.0), "S": (0.0, 1.0),
+                  "E": (1.0, 0.0), "W": (-1.0, 0.0)}.get(outer_dir or "")
+    _conn_roots = {r for r in (all_parts - members)
+                   if resolvable[r].stem in CONN_MATING_FACE}
     clusters: list[list[_Part]] = []
     for comp in sorted(comps, key=sorted):
-        cl = _solve_component(comp, members, attractors, repulsors, resolvable)
+        cl = _solve_component(comp, members, attractors, repulsors, resolvable,
+                              conn_roots=_conn_roots, outer_vec=_outer_vec)
         if cl is None:
             return None
         clusters.append(cl)
@@ -896,7 +933,10 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
 def _solve_component(comp: set[str], members: set[str],
                      attractors: dict[str, list[_Attract]],
                      repulsors: dict[str, list[_Repel]],
-                     resolvable: dict[str, Path]) -> list[_Part] | None:
+                     resolvable: dict[str, Path],
+                     conn_roots: set[str] | None = None,
+                     outer_vec: tuple[float, float] | None = None
+                     ) -> list[_Part] | None:
     """Seat ONE connected component (a root anchor + everything clustering around
     it) as a rigid collision-free cluster: root(s) at the origin, every member
     DFS-seated around its in-component anchors honouring each attractor/repulsor,
@@ -917,7 +957,9 @@ def _solve_component(comp: set[str], members: set[str],
         return None
     for scale in range(0, 24):
         placed = _seat_multi(order, roots_c, attractors, repulsors,
-                             resolvable, scale * 0.25)
+                             resolvable, scale * 0.25,
+                             conn_roots=(conn_roots or set()) & comp,
+                             outer_vec=outer_vec)
         if placed is None:
             continue
         parts = [placed[b] for b in order]
@@ -1014,7 +1056,8 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
                bbox_of: dict[str, tuple[float, float, float, float]],
                resolvable: dict[str, Path],
                rot_out: dict[str, float] | None = None,
-               facing: str | None = None
+               facing: str | None = None,
+               outer_dir: str | None = None
                ) -> tuple[dict[str, tuple[float, float]],
                           dict[str, tuple[float, float]],
                           float, float] | None:
@@ -1054,7 +1097,7 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
         if "proximity" in _types:
             return _build_proximity_zone(
                 sheet_name, contract, refs, side_of, bbox_of, resolvable,
-                rot_out, facing=facing)
+                rot_out, facing=facing, outer_dir=outer_dir)
         return None
 
     # LIBRARY ref -> BOARD ref for this sheet (same band the gate/netlist use).
@@ -1378,7 +1421,8 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
                           bbox_of: dict[str, tuple[float, float, float, float]],
                           resolvable: dict[str, Path],
                           rot_out: dict[str, float],
-                          facing: str | None = None
+                          facing: str | None = None,
+                          outer_dir: str | None = None
                           ) -> tuple[dict[str, tuple[float, float]],
                                      dict[str, tuple[float, float]],
                                      float, float] | None:
@@ -1426,7 +1470,8 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
     if sheet_name in _PILOT_PROX_SHEETS and _is_single_anchor_star(contract, bref_of):
         parts = _build_proximity_cluster(anchor_bref, contract, bref_of, resolvable)
     else:
-        parts = _solve_contract(contract, bref_of, resolvable)
+        parts = _solve_contract(contract, bref_of, resolvable,
+                                outer_dir=outer_dir)
     if parts is None:
         return None
 

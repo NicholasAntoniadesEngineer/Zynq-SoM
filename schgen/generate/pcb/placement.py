@@ -797,7 +797,8 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                        or _media_facing(sheet, _contract, spec))
             _tmpl = stage_templates.build_zone(
                 sheet, _contract, refs_by_sheet[sheet], side_of, bbox_of,
-                resolvable, tmpl_rot, facing=_facing)
+                resolvable, tmpl_rot, facing=_facing,
+                outer_dir=sheet_outer.get(sheet))
             if _tmpl is not None:
                 zone_extra_rot.update(tmpl_rot)
         if _tmpl is not None:
