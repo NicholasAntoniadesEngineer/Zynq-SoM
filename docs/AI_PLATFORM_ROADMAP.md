@@ -71,18 +71,18 @@ achieving them **by construction, on any project**. Mechanism: every quality the
 judges becomes (a) explicit knowledge-as-data and (b) a checkable metric promoted under
 Principle 0.
 
-**S-track (schematic).** A human expert's sheet has a visual GRAMMAR: signal flow
-left→right, power top / ground bottom, functional grouping, datasheet-familiar idioms,
-alignment/symmetry, minimal crossings, readable labels. Today the gates check
-CORRECTNESS (netlist equivalence, ERC, zero-overlap); STYLE is emergent from layout
-heuristics + the eye. Refinements:
-  - **Schematic idiom templates keyed by MPN/pattern** — the sheet-side twin of the PCB
-    stage templates: a buck drawn as the datasheet application figure, LDO / ESD array /
-    crystal / divider / connector-fan micro-layouts. Part-keyed → portable to every
-    future project by construction.
-  - **Style metrics as gates** (flow-direction score, alignment score, crossing count,
-    label clarity), each validated against human-blessed golden sheets per the promotion
-    protocol — the ratchet applied to aesthetics, one eye-judged class at a time.
+**S-track (schematic): PRESERVE + TRANSFER — not improve.** USER JUDGMENT (2026-07-09):
+the current sheets ARE golden-reference quality. Schematic generation is a SOLVED
+problem on this project; the 27 rendered sheets are the standard itself. The S-track
+therefore has exactly two legitimate jobs, and neither changes current output:
+  - **Preserve**: the golden-render drift checks already lock today's look — they stay,
+    and any S-track mechanism must be RENDER-IDENTICAL on this project.
+  - **Transfer**: make a FUTURE project's sheets come out at this same standard
+    automatically. Means: the layout engine's quality must not depend on this-board
+    tuning — where it does, extract the tuning into part-keyed / pattern-keyed data
+    (idiom knowledge) validated by reproducing the CURRENT golden sheets exactly, then
+    reusable on new circuits. Style metrics, if ever added, exist only as regression
+    armor calibrated to today's goldens — never as a pressure to change them.
 
 **L-track (layout).** An expert's placement simultaneously satisfies all the physics
 (hot loops, decoupling at pins, terminations at receivers, return continuity, thermal
