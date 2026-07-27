@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from dataclasses import dataclass, field
 from heapq import heappop, heappush
@@ -66,6 +67,18 @@ _EDGES = ("N", "E", "S", "W")
 BOARD_W = 120.0
 BOARD_H = 100.0
 OUTLINE_NOTE = ""        # human-readable derivation, set by derive_outline
+
+# SoM (DF40 mezzanine) placement OFFSET from board centre (mm) — the SHIPPING pose.
+# The default (-8, +6) is the measured optimum of a 20-configuration build sweep over
+# SoM poses: 186x157 board, cross-airwire 14344 mm (-6.8% vs the centred pose), every
+# gate green. The demand-weighted connector centroid sits W+S of centre (lcd/camera W,
+# hdmi/pmod S), so shifting the SoM toward it shortens the dominant SoM-fanout
+# airwire; larger shifts break fan-out (dy>=6 at dx!=-8), thermal (dy=7) or the DF40
+# stitch corridor (dy>=8). (-8,+5) is the size-optimal green alternative (182x158,
+# 28756 mm2, airwire 15090). SCHGEN_SOM_DX/DY override for experiments; 0/0 recovers
+# the historical centred pose. The LAW-5 + placement gates remain the arbiters.
+SOM_DX = float(os.environ.get("SCHGEN_SOM_DX", "-8"))
+SOM_DY = float(os.environ.get("SCHGEN_SOM_DY", "6"))
 
 EDGE_MARGIN = 10.0       # board corners kept clear of edge connectors AND the
                          # corner-forced M3 mounting holes (MH_INSET 5 + pad ~3)
@@ -892,8 +905,8 @@ def export_floorplan_spec(plan: Plan, path: Path = FLOORPLAN_SPEC) -> Path:
 class Plan:
     def __init__(self, som: SomGeom):
         self.som = som
-        self.som_x = _r5((BOARD_W - som.w) / 2)
-        self.som_y = _r5((BOARD_H - som.h) / 2)
+        self.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
+        self.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
         self.edge_blocks: list[Block] = []
         self.interior_blocks: list[Block] = []
         self.factor = ROUTE_FACTOR
@@ -1443,8 +1456,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # here. If the blocks don't even fit the fixed box, FAIL with a clear message.
     if isinstance(spec.outline if spec else "auto", tuple):
         BOARD_W, BOARD_H = spec.outline          # type: ignore[misc]
-        plan.som_x = _r5((BOARD_W - som.w) / 2)
-        plan.som_y = _r5((BOARD_H - som.h) / 2)
+        plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
+        plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
         if not _attempt_pack(plan, interior, edge_of, zbox, affinity,
                              som_pull, compose=compose, compact=True):
             raise RuntimeError(
@@ -1497,8 +1510,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
             if w * h < _min_pack_area:    # provably too small — skip the slow pack
                 continue
             BOARD_W, BOARD_H = w, h
-            plan.som_x = _r5((BOARD_W - som.w) / 2)
-            plan.som_y = _r5((BOARD_H - som.h) / 2)
+            plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
+            plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
             if not _attempt_pack(plan, interior, edge_of, zbox,
                                  affinity, som_pull, compose=compose):
                 continue
@@ -1533,8 +1546,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     def _passes(w: float, h: float) -> tuple[bool, float, float]:
         global BOARD_W, BOARD_H
         BOARD_W, BOARD_H = w, h
-        plan.som_x = _r5((BOARD_W - som.w) / 2)
-        plan.som_y = _r5((BOARD_H - som.h) / 2)
+        plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
+        plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
         if not _attempt_pack(plan, interior, edge_of, zbox,
                              affinity, som_pull, compose=compose):
             return False, 0.0, 0.0
@@ -1580,8 +1593,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     best = (round(bw * bh, 1), bw, bh, best_er, best_bud)
 
     _area, BOARD_W, BOARD_H, est_real, budget = best
-    plan.som_x = _r5((BOARD_W - som.w) / 2)
-    plan.som_y = _r5((BOARD_H - som.h) / 2)
+    plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
+    plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
     # RE-PACK at the chosen winner so plan holds exactly that layout (the search
     # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
     _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
@@ -1781,6 +1794,15 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         a small zone bias. The (powered) affinity weights dwarf the zone term, so
         a cluster (bringup_rails <-> bringup_en_modules, power <-> power_mon, ...)
         collapses to a tight group near the SoM strips it shares."""
+        # power_som is the SoM POWER INPUT: hard-anchor it just outside the SoM's E
+        # escape halo, centred on the SoM (its true electrical seat, like
+        # som_decoupling under the SoM). This keeps it W of the E-edge power buck so
+        # the power->power_som output FACING holds under ANY SoM offset — without it
+        # the E-side crowding + net-affinity drift it far south and break the flow
+        # facing gate (measured under SCHGEN_SOM_DX/DY). No-op at the centred default.
+        if b.name == "power_som" and (SOM_DX or SOM_DY):
+            return (plan.som_x + plan.som.w + SOM_HALO + b.w / 2,
+                    plan.som_y + plan.som.h / 2)
         if b.zone.startswith("@") and b.zone[1:] in edge_pos:
             eb = edge_pos[b.zone[1:]]
             zax, zay = eb.cx, eb.cy

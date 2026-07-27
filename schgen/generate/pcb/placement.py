@@ -1147,8 +1147,15 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         # strict NO-OP (empty list -> byte-identity holds); it engages exactly when
         # a grow would otherwise drag a stray into a seat band. Deterministic.
         _escape_corridors: list[tuple[float, float, float, float]] = []
+        from schgen.generate import floorplan as _fp
         from schgen.generate.pcb import constants as _const
-        if _const.PLACE_CLEAR > _const.PLACE_CLEAR_BASELINE:  # board has grown
+        # ARM when the board has grown (PLACE_CLEAR) OR the SoM is offset
+        # (SCHGEN_SOM_DX/DY): both redirect the L4 SoM-ward pull, which can drag a
+        # bottom passive into a DF40 stitch-via seat (measured: pmod's C18001 into
+        # J2's corridor under an S-offset). Byte-identical NO-OP at the centred,
+        # ungrown default (empty list). Deterministic.
+        if (_const.PLACE_CLEAR > _const.PLACE_CLEAR_BASELINE
+                or _fp.SOM_DX or _fp.SOM_DY):
             from schgen.generate.pcb.escape import corridor_board_rect
             _escape_corridors = [
                 corridor_board_rect(resolvable[r], pos[r][0], pos[r][1],

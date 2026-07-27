@@ -1,7 +1,7 @@
 RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
   remediation set (v1-failing contacts): 29
   covered by som_escape GND vias        : 29
-  worst contact->via distance           : 1.6548 mm
+  worst contact->via distance           : 1.4819 mm
   som_escape stitch vias                : 7
   som_interface hash                    : ok
   emitted-file parity                   : ok
@@ -10,22 +10,22 @@ RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
     J2: 28 contacts, 0 uncovered
     J3: 0 contacts, 0 uncovered
   triage-ranked coverage (GENUINE first — ordering only, never a waiver):
-    [GENUINE ] J2 pad  69 ZYNQ_HDMI_TX_TMDS_0_N        -> 1.4624 mm
-    [GENUINE ] J2 pad  70 ZYNQ_HDMI_TX_TMDS_1_P        -> 1.3633 mm
-    [GENUINE ] J2 pad  71 ZYNQ_HDMI_TX_TMDS_CLK_P      -> 1.3779 mm
-    [GENUINE ] J2 pad  72 ZYNQ_HDMI_TX_TMDS_2_P        -> 1.5028 mm
-    [GENUINE ] J2 pad  80 HDMI_RX_D2_N                 -> 1.3559 mm
-    [GENUINE ] J2 pad  82 HDMI_RX_D1_P                 -> 1.5995 mm
-    [GENUINE ] J2 pad  90 HDMI_RX_CLK_P                -> 1.3633 mm
-    [GENUINE ] J2 pad  92 HDMI_RX_D0_P                 -> 1.6548 mm
+    [GENUINE ] J2 pad  69 ZYNQ_HDMI_TX_TMDS_0_N        -> 1.4819 mm
+    [GENUINE ] J2 pad  70 ZYNQ_HDMI_TX_TMDS_1_P        -> 1.3697 mm
+    [GENUINE ] J2 pad  71 ZYNQ_HDMI_TX_TMDS_CLK_P      -> 1.3697 mm
+    [GENUINE ] J2 pad  72 ZYNQ_HDMI_TX_TMDS_2_P        -> 1.4819 mm
+    [GENUINE ] J2 pad  80 HDMI_RX_D2_N                 -> 1.4128 mm
+    [GENUINE ] J2 pad  82 HDMI_RX_D1_P                 -> 1.4128 mm
+    [GENUINE ] J2 pad  90 HDMI_RX_CLK_P                -> 1.4128 mm
+    [GENUINE ] J2 pad  92 HDMI_RX_D0_P                 -> 1.4128 mm
     [MODERATE] J1 pad  90 FMC_LA10_P                   -> 1.3550 mm
-    [LOW     ] J2 pad  10 IO_L24_P_13                  -> 1.4624 mm
-    [LOW     ] J2 pad  11 ZYNQ_PS_UART0_CTS_N          -> 1.3633 mm
-    [LOW     ] J2 pad  20 IO_L2_P_13                   -> 1.4278 mm
-    [LOW     ] J2 pad  29 PMODX_IO1                    -> 1.5028 mm
-    [LOW     ] J2 pad  30 LCD_CTP_SDA                  -> 1.3779 mm
-    [LOW     ] J2 pad  31 PMODX_IO4                    -> 1.3633 mm
-    [LOW     ] J2 pad  32 LCD_CTP_INT                  -> 1.4624 mm
+    [LOW     ] J2 pad  10 IO_L24_P_13                  -> 1.3550 mm
+    [LOW     ] J2 pad  11 ZYNQ_PS_UART0_CTS_N          -> 1.4128 mm
+    [LOW     ] J2 pad  20 IO_L2_P_13                   -> 1.3550 mm
+    [LOW     ] J2 pad  29 PMODX_IO1                    -> 1.4819 mm
+    [LOW     ] J2 pad  30 LCD_CTP_SDA                  -> 1.3697 mm
+    [LOW     ] J2 pad  31 PMODX_IO4                    -> 1.3697 mm
+    [LOW     ] J2 pad  32 LCD_CTP_INT                  -> 1.4819 mm
     [LOW     ] J2 pad  39 PMODX_IO6                    -> 1.4819 mm
     [LOW     ] J2 pad  40 DBG_UART_TXD                 -> 1.3697 mm
     [LOW     ] J2 pad  41 PMODX_IO5                    -> 1.3697 mm
@@ -37,8 +37,8 @@ RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
     [LOW     ] J2 pad  60 IO_L8_N_13                   -> 1.3697 mm
     [LOW     ] J2 pad  61 IO_L4_P_13                   -> 1.3697 mm
     [LOW     ] J2 pad  62 IO_L7_P_13                   -> 1.4819 mm
-    [LOW     ] J2 pad  81 ESC_PWM_IN0                  -> 1.4278 mm
-    [LOW     ] J2 pad  91 ESC_PWM_IN3                  -> 1.4624 mm
+    [LOW     ] J2 pad  81 ESC_PWM_IN0                  -> 1.3550 mm
+    [LOW     ] J2 pad  91 ESC_PWM_IN3                  -> 1.3550 mm
 
   ---- return-path v1 verdict (SoM-design fact, quoted verbatim; NOT waived by this gate) ----
   | RETURN-PATH GATE (HS pairs): FAIL (K=2 contact steps)
