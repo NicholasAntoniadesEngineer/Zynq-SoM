@@ -1306,6 +1306,36 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                 mh_refs=set(mh_refs), som_j_refs=set(som_j_refs),
                 df40_pad_boxes=_df40_bands, phase=_ph)
 
+    # FACING REFIT (position-aware, FINAL): build_zone turned each contracted
+    # zone with the SPEC-derived facing hint, but the packer may seat the zone
+    # ANYWHERE (capacity exiled power to the far W when the E side filled) and
+    # every later mover (grid, L4 pull, edge-seat, BREATHE) shifts the geometry
+    # again — so the decision is only meaningful HERE, on the frozen positions.
+    # refit_facing replicates the FLOW gate's facing_dot kernel exactly and turns
+    # the zone 180 deg (rigid, bbox-preserving) iff the gate would fail; a
+    # gate-passing pose is an exact no-op, keeping the default board
+    # byte-identical. LAW 6: a zone carrying a seated connector never turns.
+    from schgen.verify.placement_contract_gate import load_contract as _lc_refit
+
+    from . import stage_templates as _st_refit
+    for sheet in sorted(zorigin):
+        _c = _lc_refit(sheet)
+        ds = ((_c or {}).get("external") or {}).get("downstream")
+        if not ds:
+            continue
+        srefs = sorted(r for r in zg.refs_by_sheet.get(sheet, []) if r in pos)
+        drefs = [r for r in zg.refs_by_sheet.get(ds, []) if r in pos]
+        if not srefs or not drefs or any(r in zg.conn_rot for r in srefs):
+            continue
+        cds = (sum(pos[r][0] for r in drefs) / len(drefs),
+               sum(pos[r][1] for r in drefs) / len(drefs))
+        _turn = _st_refit.refit_facing(sheet, _c, {r: pos[r] for r in srefs},
+                                       fixed_rot, resolvable, cds)
+        if _turn:
+            for r, (x, y, rot) in _turn.items():
+                pos[r] = (x, y)
+                fixed_rot[r] = rot
+
     insts: list[FootprintInst] = []
     placed = 0
     n_top = n_bottom = 0

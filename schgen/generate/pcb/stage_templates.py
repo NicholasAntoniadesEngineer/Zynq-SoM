@@ -1652,6 +1652,86 @@ def _apply_facing(placed: dict[str, _Part], out_brefs: set[str],
     return turned if _dot(turned) > _dot(placed) else placed
 
 
+def refit_facing(sheet_name: str, contract: dict,
+                 parts_xy: dict[str, tuple[float, float]],
+                 rots_now: dict[str, float],
+                 resolvable: dict[str, Path],
+                 down_centroid: tuple[float, float]
+                 ) -> dict[str, tuple[float, float, float]] | None:
+    """POSITION-AWARE facing refit on the FINAL absolute positions — run after
+    every mover (grid translation, L4 pull, connector edge-seat, BREATHE), on the
+    exact coordinates the model will freeze.
+
+    ``build_zone`` turned the zone with the SPEC-derived facing hint (positions
+    did not exist yet), but the packer may seat the zone anywhere — capacity
+    exiled power to the far W when the E side filled — and later movers shift the
+    downstream centroid again, so only the final frame is decidable. The decision
+    replicates the FLOW gate's ``facing_dot`` kernel EXACTLY: equal-weight
+    PART-ORIGIN centroids over the sheet's placed parts (czone) and the
+    output-role parts (cout), downstream vector anchored AT czone. Turn 180 iff
+    the gate's dot is non-positive AND the turn improves it — exactly when the
+    gate would fail — so a gate-passing pose is an exact NO-OP and the default
+    board stays byte-identical. The turn is a rigid reflection through the zone's
+    pad-extent centre (bbox-preserving, every part +180 deg); returns
+    ``{ref: (x, y, new_rot)}`` for the turned zone, or None for the no-op."""
+    roles = contract.get("roles", {})
+    out_libs = [k for k, v in roles.items()
+                if v in set(contract.get("external", {}).get(
+                    "output_roles", ["cout_bulk"]))]
+    lib2board = _g._board_refs_by_sheet(sheet_name)
+    out_brefs = {lib2board.get(x) for x in out_libs} - {None}
+    present = sorted(r for r in out_brefs if r in parts_xy)
+    if not present:
+        return None
+    if any(r not in resolvable for r in parts_xy):
+        return None
+    placed = {r: _Part(r, resolvable[r], rots_now.get(r, 0.0) % 360.0,
+                       "top", x, y)
+              for r, (x, y) in parts_xy.items()}
+
+    def _gate_dot(xy: dict[str, tuple[float, float]]) -> float:
+        n = len(xy)
+        zcx = sum(p[0] for p in xy.values()) / n
+        zcy = sum(p[1] for p in xy.values()) / n
+        ocx = sum(xy[r][0] for r in present) / len(present)
+        ocy = sum(xy[r][1] for r in present) / len(present)
+        dvx = down_centroid[0] - zcx
+        dvy = down_centroid[1] - zcy
+        return (ocx - zcx) * dvx + (ocy - zcy) * dvy
+
+    if _gate_dot(parts_xy) > 0.0:
+        return None                       # gate passes this pose: exact no-op
+
+    # rigid 180 about the pad-extent centre, ABSOLUTE frame (no re-anchor — the
+    # extent is symmetric under the reflection, so the zone bbox stays put).
+    allpts: list[tuple[float, float]] = []
+    for p in placed.values():
+        for bb in p.pad_boxes().values():
+            allpts.append((bb[0], bb[1]))
+            allpts.append((bb[2], bb[3]))
+    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
+    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    turned: dict[str, tuple[float, float, float]] = {}
+    for r, p in placed.items():
+        nrot = (p.rot + 180.0) % 360.0
+        ob = _g._pad_boxes(p.mod, p.rot)
+        nb = _g._pad_boxes(p.mod, nrot)
+        ocx = p.ox + (min(b[0] for b in ob.values())
+                      + max(b[2] for b in ob.values())) / 2.0
+        ocy = p.oy + (min(b[1] for b in ob.values())
+                      + max(b[3] for b in ob.values())) / 2.0
+        nhx = (min(b[0] for b in nb.values())
+               + max(b[2] for b in nb.values())) / 2.0
+        nhy = (min(b[1] for b in nb.values())
+               + max(b[3] for b in nb.values())) / 2.0
+        turned[r] = (round(2 * ecx - ocx - nhx, 4),
+                     round(2 * ecy - ocy - nhy, 4), nrot)
+    if _gate_dot({r: (t[0], t[1]) for r, t in turned.items()}
+                 ) <= _gate_dot(parts_xy):
+        return None                       # symmetric tie: keep deterministic
+    return turned
+
+
 def _turn_zone_quadrant(placed: dict[str, _Part], deg: float
                         ) -> dict[str, _Part]:
     """Rigid {0,90,180,270}-deg TURN of the whole composed zone about its pad-extent
