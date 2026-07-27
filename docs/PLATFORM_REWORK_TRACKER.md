@@ -7,10 +7,10 @@ product; NO master merge until user approval. Baselines: carrier pcb md5 e405097
 ## Units
 | # | Unit | Status |
 |---|---|---|
-| U1a | Project spec v1 (carrier/project.json + loader) + extract _WIRED_SHEETS | pending |
-| U1b | Extract _PILOT_PROX_SHEETS + SOM pose defaults to spec | pending |
-| U1c | Declarative module-face anchors (kill b.name=="power_som") + reg-band prefixes | pending |
-| U1d | Byte-identity proof through the spec path (md5 e405097b) | pending |
+| U1a | Project spec v1 (carrier/project.json + loader) + extract _WIRED_SHEETS | DONE |
+| U1b | Extract _PILOT_PROX_SHEETS + SOM pose defaults to spec | DONE |
+| U1c | Declarative module-face anchors (kill b.name=="power_som") + reg-band prefixes | DONE |
+| U1d | Byte-identity proof through the spec path (md5 e405097b) | DONE |
 | U1e | ModuleGeom: module pcb/interface paths from spec (generalize SomGeom entry) | pending |
 | U1f | --project CLI + CARRIER path resolution via project root | pending |
 | U1g | devkit_mini second-project proof: green board, ZERO engine edits | pending |
@@ -22,4 +22,5 @@ product; NO master merge until user approval. Baselines: carrier pcb md5 e405097
 
 ## Log
 (newest first)
+- U1a-d DONE: project spec v1 (5 extractions), byte-identical e405097b.
 - 2026-07-09: branch created off master 8b036b1; tracker initialized.
