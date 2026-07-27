@@ -1,24 +1,24 @@
-CONTRACT COVERAGE: 3 wired(gated) / 1 inert-met / 19 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
-  board_qwiic            inert-VIOLATED   1 chk  1 viol  proximity J1 U1: 5.02mm > 5mm to J1 any pad
+CONTRACT COVERAGE: 3 wired(gated) / 2 inert-met / 18 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
+  board_qwiic            inert-met        1 chk  0 viol  
   camera                 inert-VIOLATED   4 chk  5 viol  proximity J1 U1: 17.98mm > 5mm to J1 any pad
   ethernet               WIRED-gated      6 chk  0 viol  
   fmc                    inert-VIOLATED   3 chk  6 viol  proximity U1 C3: 9.54mm > 2mm to U1 pins 1
-  hdmi_rx                inert-VIOLATED   3 chk  3 viol  proximity J1 U2: 7.40mm > 5mm to J1 any pad
+  hdmi_rx                inert-VIOLATED   3 chk  3 viol  proximity J1 U2: 7.78mm > 5mm to J1 any pad
   hdmi_rx_term           inert-met        4 chk  0 viol  
-  hdmi_tx                inert-VIOLATED   6 chk  13 viol  proximity J1 U1: 8.14mm > 5mm to J1 any pad
-  lcd                    inert-VIOLATED   3 chk  7 viol  proximity U1 C1: 9.67mm > 2mm to U1 pins 6
-  microsd                inert-VIOLATED   5 chk  10 viol  proximity U1 C1: 27.48mm > 2mm to U1 pins 5
-  motor_pwm              inert-VIOLATED   7 chk  17 viol  proximity U1 C1: 25.37mm > 2mm to U1 pins 20
-  motor_sense            inert-VIOLATED   6 chk  11 viol  proximity U2 C2: 19.54mm > 2mm to U2 pins 4
+  hdmi_tx                inert-VIOLATED   6 chk  13 viol  proximity J1 U1: 7.25mm > 5mm to J1 any pad
+  lcd                    inert-VIOLATED   3 chk  7 viol  proximity U1 C1: 8.64mm > 2mm to U1 pins 6
+  microsd                inert-VIOLATED   5 chk  10 viol  proximity U1 C1: 31.27mm > 2mm to U1 pins 5
+  motor_pwm              inert-VIOLATED   7 chk  17 viol  proximity U1 C1: 20.20mm > 2mm to U1 pins 20
+  motor_sense            inert-VIOLATED   6 chk  11 viol  proximity U2 C2: 27.25mm > 2mm to U2 pins 4
   pd_input               inert-VIOLATED   4 chk  6 viol  proximity U1 C1: 4.54mm > 2mm to U1 pins 1/2/3
-  pmod                   inert-VIOLATED   2 chk  4 viol  proximity J1 U1: 13.57mm > 5mm to J1 any pad
-  pmod_expansion         inert-VIOLATED   4 chk  8 viol  proximity U1 C1: 13.32mm > 2mm to U1 pins 5
+  pmod                   inert-VIOLATED   2 chk  4 viol  proximity J1 U1: 13.95mm > 5mm to J1 any pad
+  pmod_expansion         inert-VIOLATED   4 chk  8 viol  proximity U1 C1: 13.42mm > 2mm to U1 pins 5
   power                  WIRED-gated     20 chk  0 viol  
-  power_mon              inert-VIOLATED   7 chk  15 viol  proximity U1 C1: 7.12mm > 2mm to U1 pins 4
+  power_mon              inert-VIOLATED   7 chk  17 viol  proximity U1 C1: 16.07mm > 2mm to U1 pins 4
   power_som              inert-VIOLATED  11 chk  36 viol  hot_loop U4 pins 8/9 (VIN/PGND): none within 1mm same-side > 1mm
-  uart_bridge            inert-VIOLATED   4 chk  10 viol  proximity U1 C1: on bottom but anchor U1 is top (same_side)
-  usb_jtag               inert-VIOLATED   6 chk  16 viol  proximity U4 C1: 20.77mm > 2mm to U4 pins 1
+  uart_bridge            inert-VIOLATED   4 chk  12 viol  proximity U1 C1: 11.89mm > 2mm to U1 pins 7
+  usb_jtag               inert-VIOLATED   6 chk  16 viol  proximity U4 C1: 29.29mm > 2mm to U4 pins 1
   usb_jtag_connector     inert-VIOLATED   1 chk  1 viol  proximity J1 U1: 6.35mm > 5mm to J1 any pad
   usb_pd                 WIRED-gated      6 chk  0 viol  
   usb_uart_connector     inert-VIOLATED   1 chk  1 viol  proximity J1 U1: 6.35mm > 5mm to J1 any pad
-  usbc_otg               inert-VIOLATED   3 chk  4 viol  proximity U1 C1: 26.15mm > 2mm to U1 pins 5
+  usbc_otg               inert-VIOLATED   3 chk  4 viol  proximity U1 C1: 26.08mm > 2mm to U1 pins 5

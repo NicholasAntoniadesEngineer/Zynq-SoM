@@ -1,26 +1,12 @@
 {
- "content_key": "f4a35518ef2c680cdaf11bf2438a2aba48acda4868fef1f6a5d404ddb4e0093b",
+ "content_key": "91194a13fbbbeeadf2b3a61e175f8e0cb2f70b8906f6fea93526c3e2a052ba22",
  "escape_meta": {
   "coexistence": [
    {
     "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
-    "conn": "J1",
-    "ref": "R28001",
-    "sheet": "usb_jtag",
-    "verdict": "STAY"
-   },
-   {
-    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
-    "conn": "J1",
-    "ref": "R28002",
-    "sheet": "usb_jtag",
-    "verdict": "STAY"
-   },
-   {
-    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
-    "conn": "J1",
-    "ref": "R28003",
-    "sheet": "usb_jtag",
+    "conn": "J2",
+    "ref": "C3003",
+    "sheet": "board_services",
     "verdict": "STAY"
    },
    {
@@ -52,6 +38,13 @@
     "verdict": "STAY"
    },
    {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J2",
+    "ref": "R3001",
+    "sheet": "board_services",
+    "verdict": "STAY"
+   },
+   {
     "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
     "conn": "J3",
     "ref": "C13002",
@@ -69,13 +62,6 @@
     "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
     "conn": "J3",
     "ref": "R13002",
-    "sheet": "hdmi_rx_term",
-    "verdict": "STAY"
-   },
-   {
-    "basis": "TMDS termination must live at the connector; its pads narrow the channel windows (seat ledger names the splits) \u2014 evict only if a failing contact becomes unconstructable; consumer: bottom-channel-keepout unit",
-    "conn": "J3",
-    "ref": "R13004",
     "sheet": "hdmi_rx_term",
     "verdict": "STAY"
    },
@@ -176,18 +162,18 @@
    }
   },
   "escape_region": [
-   82.0,
-   85.5,
-   138.0,
-   133.5
+   83.0,
+   89.5,
+   139.0,
+   137.5
   ],
   "plane": {
    "layer": "In1.Cu",
    "rect": [
     25.5,
     25.5,
-    210.5,
-    181.5
+    212.5,
+    189.5
    ],
    "source": "GAP1 embed._gnd_plane_zone (canonical; T2 emits no zone)",
    "voids_checked": [
@@ -229,8 +215,8 @@
     "net": "IO_L2_N_35",
     "pad": "100",
     "port": [
-     95.61,
-     88.755
+     96.88,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -244,8 +230,8 @@
     "net": "GND",
     "pad": "99",
     "port": [
-     96.01,
-     91.44
+     97.28,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -259,8 +245,8 @@
     "net": "ETH_LED1",
     "pad": "98",
     "port": [
-     96.41,
-     88.755
+     97.68,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -274,8 +260,8 @@
     "net": "ETH_PHY_MDI0_P",
     "pad": "97",
     "port": [
-     96.81,
-     88.755
+     98.08,
+     93.835
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -289,8 +275,8 @@
     "net": "GND",
     "pad": "96",
     "port": [
-     97.21,
-     91.44
+     98.48,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -304,8 +290,8 @@
     "net": "ETH_PHY_MDI0_N",
     "pad": "95",
     "port": [
-     97.61,
-     88.755
+     98.88,
+     93.835
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -319,8 +305,8 @@
     "net": "ETH_LED2",
     "pad": "94",
     "port": [
-     98.01,
-     88.755
+     99.28,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -334,8 +320,8 @@
     "net": "GND",
     "pad": "93",
     "port": [
-     98.41,
-     91.44
+     99.68,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -349,8 +335,8 @@
     "net": "FMC_LA08_N",
     "pad": "92",
     "port": [
-     98.81,
-     88.755
+     100.08,
+     93.835
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -364,8 +350,8 @@
     "net": "ETH_PHY_MDI1_P",
     "pad": "91",
     "port": [
-     99.21,
-     88.755
+     100.48,
+     93.835
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -379,8 +365,8 @@
     "net": "FMC_LA10_P",
     "pad": "90",
     "port": [
-     99.61,
-     88.755
+     100.88,
+     93.835
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -394,8 +380,8 @@
     "net": "ETH_PHY_MDI1_N",
     "pad": "89",
     "port": [
-     100.01,
-     88.755
+     101.28,
+     93.835
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -409,8 +395,8 @@
     "net": "FMC_LA10_N",
     "pad": "88",
     "port": [
-     100.41,
-     88.755
+     101.68,
+     93.835
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -424,8 +410,8 @@
     "net": "GND",
     "pad": "87",
     "port": [
-     100.81,
-     91.44
+     102.08,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -439,8 +425,8 @@
     "net": "IO_0_35",
     "pad": "86",
     "port": [
-     101.21,
-     88.755
+     102.48,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -454,8 +440,8 @@
     "net": "ETH_PHY_MDI2_P",
     "pad": "85",
     "port": [
-     101.61,
-     88.755
+     102.88,
+     93.835
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -469,8 +455,8 @@
     "net": "FMC_LA09_N",
     "pad": "84",
     "port": [
-     102.01,
-     88.755
+     103.28,
+     93.835
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -484,8 +470,8 @@
     "net": "ETH_PHY_MDI2_N",
     "pad": "83",
     "port": [
-     102.41,
-     88.755
+     103.68,
+     93.835
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -499,8 +485,8 @@
     "net": "GND",
     "pad": "82",
     "port": [
-     102.81,
-     91.44
+     104.08,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -514,8 +500,8 @@
     "net": "GND",
     "pad": "81",
     "port": [
-     103.21,
-     91.44
+     104.48,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -529,8 +515,8 @@
     "net": "FMC_LA09_P",
     "pad": "80",
     "port": [
-     103.61,
-     88.755
+     104.88,
+     93.835
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -544,8 +530,8 @@
     "net": "ETH_PHY_MDI3_P",
     "pad": "79",
     "port": [
-     104.01,
-     88.755
+     105.28,
+     93.835
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -559,8 +545,8 @@
     "net": "FMC_LA11_P",
     "pad": "78",
     "port": [
-     104.41,
-     88.755
+     105.68,
+     93.835
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -574,8 +560,8 @@
     "net": "ETH_PHY_MDI3_N",
     "pad": "77",
     "port": [
-     104.81,
-     88.755
+     106.08,
+     93.835
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -589,8 +575,8 @@
     "net": "FMC_LA11_N",
     "pad": "76",
     "port": [
-     105.21,
-     88.755
+     106.48,
+     93.835
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -604,8 +590,8 @@
     "net": "GND",
     "pad": "75",
     "port": [
-     105.61,
-     91.44
+     106.88,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -619,8 +605,8 @@
     "net": "FMC_LA08_P",
     "pad": "74",
     "port": [
-     106.01,
-     88.755
+     107.28,
+     93.835
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -634,8 +620,8 @@
     "net": "SDIO_D2",
     "pad": "73",
     "port": [
-     106.41,
-     88.755
+     107.68,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -649,8 +635,8 @@
     "net": "GND",
     "pad": "72",
     "port": [
-     106.81,
-     91.44
+     108.08,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -664,8 +650,8 @@
     "net": "SDIO_D3",
     "pad": "71",
     "port": [
-     107.21,
-     88.755
+     108.48,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -679,8 +665,8 @@
     "net": "ZYNQ_TDI",
     "pad": "70",
     "port": [
-     107.61,
-     88.755
+     108.88,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -694,8 +680,8 @@
     "net": "SDIO_CMD",
     "pad": "69",
     "port": [
-     108.01,
-     88.755
+     109.28,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -709,8 +695,8 @@
     "net": "ZYNQ_TDO",
     "pad": "68",
     "port": [
-     108.41,
-     88.755
+     109.68,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -724,8 +710,8 @@
     "net": "SDIO_CLK",
     "pad": "67",
     "port": [
-     108.81,
-     88.755
+     110.08,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -739,8 +725,8 @@
     "net": "ZYNQ_TMS",
     "pad": "66",
     "port": [
-     109.21,
-     88.755
+     110.48,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -754,8 +740,8 @@
     "net": "SDIO_D0",
     "pad": "65",
     "port": [
-     109.61,
-     88.755
+     110.88,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -769,8 +755,8 @@
     "net": "ZYNQ_TCK",
     "pad": "64",
     "port": [
-     110.01,
-     88.755
+     111.28,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -784,8 +770,8 @@
     "net": "GND",
     "pad": "63",
     "port": [
-     110.41,
-     91.44
+     111.68,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -799,8 +785,8 @@
     "net": "GND",
     "pad": "62",
     "port": [
-     110.81,
-     91.44
+     112.08,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -814,8 +800,8 @@
     "net": "SDIO_D1",
     "pad": "61",
     "port": [
-     111.21,
-     88.755
+     112.48,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -829,8 +815,8 @@
     "net": "STM32_GPIO7",
     "pad": "59",
     "port": [
-     112.01,
-     88.755
+     113.28,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -844,8 +830,8 @@
     "net": "STM32_BOOT0",
     "pad": "57",
     "port": [
-     112.81,
-     88.755
+     114.08,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -859,8 +845,8 @@
     "net": "STM32_I2C2_SCL",
     "pad": "55",
     "port": [
-     113.61,
-     88.755
+     114.88,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -874,8 +860,8 @@
     "net": "STM32_GPIO8",
     "pad": "54",
     "port": [
-     114.01,
-     88.755
+     115.28,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -889,8 +875,8 @@
     "net": "STM32_GPIO5",
     "pad": "53",
     "port": [
-     114.41,
-     88.755
+     115.68,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -904,8 +890,8 @@
     "net": "ZYNQ_PS_MIO9",
     "pad": "52",
     "port": [
-     114.81,
-     88.755
+     116.08,
+     93.835
     ],
     "row": -1,
     "si_class": "LOW",
@@ -919,8 +905,8 @@
     "net": "GND",
     "pad": "51",
     "port": [
-     115.21,
-     91.44
+     116.48,
+     96.52
     ],
     "row": -1,
     "si_class": "GND",
@@ -934,8 +920,8 @@
     "net": "+5V_SOM",
     "pad": "1",
     "port": [
-     95.61,
-     93.625
+     96.88,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -949,8 +935,8 @@
     "net": "+5V_SOM",
     "pad": "2",
     "port": [
-     96.0101,
-     93.625
+     97.2801,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -964,8 +950,8 @@
     "net": "+5V_SOM",
     "pad": "3",
     "port": [
-     96.41,
-     93.625
+     97.68,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -979,8 +965,8 @@
     "net": "+5V_SOM",
     "pad": "4",
     "port": [
-     96.81,
-     93.625
+     98.08,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -994,8 +980,8 @@
     "net": "+5V_SOM",
     "pad": "5",
     "port": [
-     97.21,
-     93.625
+     98.48,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1009,8 +995,8 @@
     "net": "+5V_SOM",
     "pad": "6",
     "port": [
-     97.61,
-     93.625
+     98.88,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1024,8 +1010,8 @@
     "net": "+5V_SOM",
     "pad": "7",
     "port": [
-     98.01,
-     93.625
+     99.28,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1039,8 +1025,8 @@
     "net": "+5V_SOM",
     "pad": "8",
     "port": [
-     98.41,
-     93.625
+     99.68,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1054,8 +1040,8 @@
     "net": "+5V_SOM",
     "pad": "9",
     "port": [
-     98.81,
-     93.625
+     100.08,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1069,8 +1055,8 @@
     "net": "+5V_SOM",
     "pad": "10",
     "port": [
-     99.21,
-     93.625
+     100.48,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1084,8 +1070,8 @@
     "net": "+5V_SOM",
     "pad": "11",
     "port": [
-     99.61,
-     93.625
+     100.88,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1099,8 +1085,8 @@
     "net": "+5V_SOM",
     "pad": "12",
     "port": [
-     100.01,
-     93.625
+     101.28,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1114,8 +1100,8 @@
     "net": "+5V_SOM",
     "pad": "13",
     "port": [
-     100.41,
-     93.625
+     101.68,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1129,8 +1115,8 @@
     "net": "+5V_SOM",
     "pad": "14",
     "port": [
-     100.81,
-     93.625
+     102.08,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1144,8 +1130,8 @@
     "net": "GND",
     "pad": "15",
     "port": [
-     101.21,
-     91.44
+     102.48,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1159,8 +1145,8 @@
     "net": "GND",
     "pad": "16",
     "port": [
-     101.61,
-     91.44
+     102.88,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1174,8 +1160,8 @@
     "net": "GND",
     "pad": "17",
     "port": [
-     102.01,
-     91.44
+     103.28,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1189,8 +1175,8 @@
     "net": "GND",
     "pad": "18",
     "port": [
-     102.41,
-     91.44
+     103.68,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1204,8 +1190,8 @@
     "net": "STM32_USB_D_P",
     "pad": "19",
     "port": [
-     102.81,
-     94.125
+     104.08,
+     99.205
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -1219,8 +1205,8 @@
     "net": "USB_ID",
     "pad": "20",
     "port": [
-     103.21,
-     94.125
+     104.48,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1234,8 +1220,8 @@
     "net": "STM32_USB_D_N",
     "pad": "21",
     "port": [
-     103.61,
-     94.125
+     104.88,
+     99.205
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -1249,8 +1235,8 @@
     "net": "USB_VBUS",
     "pad": "22",
     "port": [
-     104.01,
-     94.125
+     105.28,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1264,8 +1250,8 @@
     "net": "GND",
     "pad": "23",
     "port": [
-     104.41,
-     91.44
+     105.68,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1279,8 +1265,8 @@
     "net": "GND",
     "pad": "28",
     "port": [
-     106.41,
-     91.44
+     107.68,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1294,8 +1280,8 @@
     "net": "STM32_USB_CC1",
     "pad": "29",
     "port": [
-     106.81,
-     94.125
+     108.08,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1309,8 +1295,8 @@
     "net": "USB_D-",
     "pad": "30",
     "port": [
-     107.21,
-     94.125
+     108.48,
+     99.205
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -1324,8 +1310,8 @@
     "net": "STM32_USB_CC2",
     "pad": "31",
     "port": [
-     107.61,
-     94.125
+     108.88,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1339,8 +1325,8 @@
     "net": "USB_D+",
     "pad": "32",
     "port": [
-     108.01,
-     94.125
+     109.28,
+     99.205
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -1354,8 +1340,8 @@
     "net": "STM32_RAIL_EN_5V0",
     "pad": "33",
     "port": [
-     108.41,
-     94.125
+     109.68,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1369,8 +1355,8 @@
     "net": "GND",
     "pad": "34",
     "port": [
-     108.81,
-     91.44
+     110.08,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1384,8 +1370,8 @@
     "net": "STM32_RAIL_EN_3V3",
     "pad": "35",
     "port": [
-     109.21,
-     94.125
+     110.48,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1399,8 +1385,8 @@
     "net": "ZYNQ_PS_MIO8\\VM1",
     "pad": "36",
     "port": [
-     109.61,
-     94.125
+     110.88,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1414,8 +1400,8 @@
     "net": "+3V3_SC",
     "pad": "37",
     "port": [
-     110.01,
-     93.625
+     111.28,
+     98.705
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1429,8 +1415,8 @@
     "net": "VBUS_OUT_EN",
     "pad": "38",
     "port": [
-     110.41,
-     94.125
+     111.68,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1444,8 +1430,8 @@
     "net": "GND",
     "pad": "39",
     "port": [
-     110.81,
-     91.44
+     112.08,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1459,8 +1445,8 @@
     "net": "ZYNQ_PS_MIO7/VM0",
     "pad": "40",
     "port": [
-     111.21,
-     94.125
+     112.48,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1474,8 +1460,8 @@
     "net": "SC_INT_N",
     "pad": "41",
     "port": [
-     111.61,
-     94.125
+     112.88,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1489,8 +1475,8 @@
     "net": "ZYNQ_PS_UART0_RXD",
     "pad": "42",
     "port": [
-     112.01,
-     94.125
+     113.28,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1504,8 +1490,8 @@
     "net": "STM32_RAIL_EN_1V8",
     "pad": "43",
     "port": [
-     112.41,
-     94.125
+     113.68,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1519,8 +1505,8 @@
     "net": "GND",
     "pad": "44",
     "port": [
-     112.81,
-     91.44
+     114.08,
+     96.52
     ],
     "row": 1,
     "si_class": "GND",
@@ -1534,8 +1520,8 @@
     "net": "STM32_GPIO6",
     "pad": "45",
     "port": [
-     113.21,
-     94.125
+     114.48,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1549,8 +1535,8 @@
     "net": "ZYNQ_PS_MIO12",
     "pad": "46",
     "port": [
-     113.61,
-     94.125
+     114.88,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1564,8 +1550,8 @@
     "net": "STM32_NRST",
     "pad": "47",
     "port": [
-     114.01,
-     94.125
+     115.28,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1579,8 +1565,8 @@
     "net": "ZYNQ_PS_UART0_TXD",
     "pad": "48",
     "port": [
-     114.41,
-     94.125
+     115.68,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1594,8 +1580,8 @@
     "net": "STM32_I2C2_SDA",
     "pad": "49",
     "port": [
-     114.81,
-     94.125
+     116.08,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1609,8 +1595,8 @@
     "net": "ZYNQ_PS_MIO0",
     "pad": "50",
     "port": [
-     115.21,
-     94.125
+     116.48,
+     99.205
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1626,8 +1612,8 @@
     "net": "+3V3",
     "pad": "100",
     "port": [
-     95.61,
-     124.815
+     96.88,
+     128.625
     ],
     "row": -1,
     "si_class": "POWER",
@@ -1641,8 +1627,8 @@
     "net": "+3V3",
     "pad": "99",
     "port": [
-     96.01,
-     124.815
+     97.28,
+     128.625
     ],
     "row": -1,
     "si_class": "POWER",
@@ -1656,8 +1642,8 @@
     "net": "+3V3",
     "pad": "98",
     "port": [
-     96.41,
-     124.815
+     97.68,
+     128.625
     ],
     "row": -1,
     "si_class": "POWER",
@@ -1671,8 +1657,8 @@
     "net": "GND",
     "pad": "97",
     "port": [
-     96.81,
-     127.0
+     98.08,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -1686,8 +1672,8 @@
     "net": "GND",
     "pad": "96",
     "port": [
-     97.21,
-     127.0
+     98.48,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -1701,8 +1687,8 @@
     "net": "GND",
     "pad": "95",
     "port": [
-     97.61,
-     127.0
+     98.88,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -1716,8 +1702,8 @@
     "net": "HDMI_RX_D0_N",
     "pad": "94",
     "port": [
-     98.01,
-     124.315
+     99.28,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1731,8 +1717,8 @@
     "net": "ESC_PWM_IN2",
     "pad": "93",
     "port": [
-     98.41,
-     124.315
+     99.68,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1746,8 +1732,8 @@
     "net": "HDMI_RX_D0_P",
     "pad": "92",
     "port": [
-     98.81,
-     124.315
+     100.08,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1761,8 +1747,8 @@
     "net": "ESC_PWM_IN3",
     "pad": "91",
     "port": [
-     99.21,
-     124.315
+     100.48,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1776,8 +1762,8 @@
     "net": "HDMI_RX_CLK_P",
     "pad": "90",
     "port": [
-     99.61,
-     124.315
+     100.88,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1791,8 +1777,8 @@
     "net": "IO_L6_P_33",
     "pad": "89",
     "port": [
-     100.01,
-     124.315
+     101.28,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1806,8 +1792,8 @@
     "net": "HDMI_RX_CLK_N",
     "pad": "88",
     "port": [
-     100.41,
-     124.315
+     101.68,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1821,8 +1807,8 @@
     "net": "PL_BTN1",
     "pad": "87",
     "port": [
-     100.81,
-     124.315
+     102.08,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1836,8 +1822,8 @@
     "net": "GND",
     "pad": "86",
     "port": [
-     101.21,
-     127.0
+     102.48,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -1851,8 +1837,8 @@
     "net": "GND",
     "pad": "85",
     "port": [
-     101.61,
-     127.0
+     102.88,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -1866,8 +1852,8 @@
     "net": "HDMI_RX_D1_N",
     "pad": "84",
     "port": [
-     102.01,
-     124.315
+     103.28,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1881,8 +1867,8 @@
     "net": "ESC_PWM_IN1",
     "pad": "83",
     "port": [
-     102.41,
-     124.315
+     103.68,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1896,8 +1882,8 @@
     "net": "HDMI_RX_D1_P",
     "pad": "82",
     "port": [
-     102.81,
-     124.315
+     104.08,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1911,8 +1897,8 @@
     "net": "ESC_PWM_IN0",
     "pad": "81",
     "port": [
-     103.21,
-     124.315
+     104.48,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1926,8 +1912,8 @@
     "net": "HDMI_RX_D2_N",
     "pad": "80",
     "port": [
-     103.61,
-     124.315
+     104.88,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1941,8 +1927,8 @@
     "net": "PL_BTN0",
     "pad": "79",
     "port": [
-     104.01,
-     124.315
+     105.28,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1956,8 +1942,8 @@
     "net": "HDMI_RX_D2_P",
     "pad": "78",
     "port": [
-     104.41,
-     124.315
+     105.68,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1971,8 +1957,8 @@
     "net": "ZYNQ_HDMI_TX_CEC",
     "pad": "77",
     "port": [
-     104.81,
-     124.315
+     106.08,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1986,8 +1972,8 @@
     "net": "GND",
     "pad": "76",
     "port": [
-     105.21,
-     127.0
+     106.48,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -2001,8 +1987,8 @@
     "net": "GND",
     "pad": "75",
     "port": [
-     105.61,
-     127.0
+     106.88,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -2016,8 +2002,8 @@
     "net": "ZYNQ_HDMI_TX_TMDS_2_N",
     "pad": "74",
     "port": [
-     106.01,
-     124.315
+     107.28,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2031,8 +2017,8 @@
     "net": "ZYNQ_HDMI_TX_TMDS_CLK_N",
     "pad": "73",
     "port": [
-     106.41,
-     124.315
+     107.68,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2046,8 +2032,8 @@
     "net": "ZYNQ_HDMI_TX_TMDS_2_P",
     "pad": "72",
     "port": [
-     106.81,
-     124.315
+     108.08,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2061,8 +2047,8 @@
     "net": "ZYNQ_HDMI_TX_TMDS_CLK_P",
     "pad": "71",
     "port": [
-     107.21,
-     124.315
+     108.48,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2076,8 +2062,8 @@
     "net": "ZYNQ_HDMI_TX_TMDS_1_P",
     "pad": "70",
     "port": [
-     107.61,
-     124.315
+     108.88,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2091,8 +2077,8 @@
     "net": "ZYNQ_HDMI_TX_TMDS_0_N",
     "pad": "69",
     "port": [
-     108.01,
-     124.315
+     109.28,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2106,8 +2092,8 @@
     "net": "ZYNQ_HDMI_TX_TMDS_1_N",
     "pad": "68",
     "port": [
-     108.41,
-     124.315
+     109.68,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2121,8 +2107,8 @@
     "net": "ZYNQ_HDMI_TX_TMDS_0_P",
     "pad": "67",
     "port": [
-     108.81,
-     124.315
+     110.08,
+     128.125
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2136,8 +2122,8 @@
     "net": "GND",
     "pad": "66",
     "port": [
-     109.21,
-     127.0
+     110.48,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -2151,8 +2137,8 @@
     "net": "GND",
     "pad": "65",
     "port": [
-     109.61,
-     127.0
+     110.88,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -2166,8 +2152,8 @@
     "net": "IO_L7_N_13",
     "pad": "64",
     "port": [
-     110.01,
-     124.315
+     111.28,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2181,8 +2167,8 @@
     "net": "IO_L4_N_13",
     "pad": "63",
     "port": [
-     110.41,
-     124.315
+     111.68,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2196,8 +2182,8 @@
     "net": "IO_L7_P_13",
     "pad": "62",
     "port": [
-     110.81,
-     124.315
+     112.08,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2211,8 +2197,8 @@
     "net": "IO_L4_P_13",
     "pad": "61",
     "port": [
-     111.21,
-     124.315
+     112.48,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2226,8 +2212,8 @@
     "net": "IO_L8_N_13",
     "pad": "60",
     "port": [
-     111.61,
-     124.315
+     112.88,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2241,8 +2227,8 @@
     "net": "HDMI_RX_CEC",
     "pad": "59",
     "port": [
-     112.01,
-     124.315
+     113.28,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2256,8 +2242,8 @@
     "net": "IO_L8_P_13",
     "pad": "58",
     "port": [
-     112.41,
-     124.315
+     113.68,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2271,8 +2257,8 @@
     "net": "ESC_BUF_OE_N",
     "pad": "57",
     "port": [
-     112.81,
-     124.315
+     114.08,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2286,8 +2272,8 @@
     "net": "GND",
     "pad": "56",
     "port": [
-     113.21,
-     127.0
+     114.48,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -2301,8 +2287,8 @@
     "net": "GND",
     "pad": "55",
     "port": [
-     113.61,
-     127.0
+     114.88,
+     130.81
     ],
     "row": -1,
     "si_class": "GND",
@@ -2316,8 +2302,8 @@
     "net": "ZYNQ_HDMI_TX_HPD",
     "pad": "54",
     "port": [
-     114.01,
-     124.315
+     115.28,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2331,8 +2317,8 @@
     "net": "IO_L10_P_13",
     "pad": "53",
     "port": [
-     114.41,
-     124.315
+     115.68,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2346,8 +2332,8 @@
     "net": "ZYNQ_HDMI_TX_SDA",
     "pad": "52",
     "port": [
-     114.81,
-     124.315
+     116.08,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2361,8 +2347,8 @@
     "net": "IO_L10_N_13",
     "pad": "51",
     "port": [
-     115.21,
-     124.315
+     116.48,
+     128.125
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2376,8 +2362,8 @@
     "net": "+3V3",
     "pad": "1",
     "port": [
-     95.61,
-     129.185
+     96.88,
+     132.995
     ],
     "row": 1,
     "si_class": "POWER",
@@ -2391,8 +2377,8 @@
     "net": "+3V3",
     "pad": "2",
     "port": [
-     96.0101,
-     129.185
+     97.2801,
+     132.995
     ],
     "row": 1,
     "si_class": "POWER",
@@ -2406,8 +2392,8 @@
     "net": "+3V3",
     "pad": "3",
     "port": [
-     96.41,
-     129.185
+     97.68,
+     132.995
     ],
     "row": 1,
     "si_class": "POWER",
@@ -2421,8 +2407,8 @@
     "net": "GND",
     "pad": "4",
     "port": [
-     96.81,
-     127.0
+     98.08,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2436,8 +2422,8 @@
     "net": "GND",
     "pad": "5",
     "port": [
-     97.21,
-     127.0
+     98.48,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2451,8 +2437,8 @@
     "net": "GND",
     "pad": "6",
     "port": [
-     97.61,
-     127.0
+     98.88,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2466,8 +2452,8 @@
     "net": "IO_L24_N_13",
     "pad": "7",
     "port": [
-     98.01,
-     129.685
+     99.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2481,8 +2467,8 @@
     "net": "ZYNQ_PS_UART0_RTS_N",
     "pad": "8",
     "port": [
-     98.41,
-     129.685
+     99.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2496,8 +2482,8 @@
     "net": "IO_L15_P_13",
     "pad": "9",
     "port": [
-     98.81,
-     129.685
+     100.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2511,8 +2497,8 @@
     "net": "IO_L24_P_13",
     "pad": "10",
     "port": [
-     99.21,
-     129.685
+     100.48,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2526,8 +2512,8 @@
     "net": "ZYNQ_PS_UART0_CTS_N",
     "pad": "11",
     "port": [
-     99.61,
-     129.685
+     100.88,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2541,8 +2527,8 @@
     "net": "IO_L19_P_13",
     "pad": "12",
     "port": [
-     100.01,
-     129.685
+     101.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2556,8 +2542,8 @@
     "net": "IO_L21_P_13",
     "pad": "13",
     "port": [
-     100.41,
-     129.685
+     101.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2571,8 +2557,8 @@
     "net": "IO_L2_N_13",
     "pad": "14",
     "port": [
-     100.81,
-     129.685
+     102.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2586,8 +2572,8 @@
     "net": "GND",
     "pad": "15",
     "port": [
-     101.21,
-     127.0
+     102.48,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2601,8 +2587,8 @@
     "net": "GND",
     "pad": "16",
     "port": [
-     101.61,
-     127.0
+     102.88,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2616,8 +2602,8 @@
     "net": "SD_CARD_DETECT",
     "pad": "17",
     "port": [
-     102.01,
-     129.685
+     103.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2631,8 +2617,8 @@
     "net": "IO_L3_P_13",
     "pad": "18",
     "port": [
-     102.41,
-     129.685
+     103.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2646,8 +2632,8 @@
     "net": "IO_L22_P_13",
     "pad": "19",
     "port": [
-     102.81,
-     129.685
+     104.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2661,8 +2647,8 @@
     "net": "IO_L2_P_13",
     "pad": "20",
     "port": [
-     103.21,
-     129.685
+     104.48,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2676,8 +2662,8 @@
     "net": "IO_L6_P_13",
     "pad": "21",
     "port": [
-     103.61,
-     129.685
+     104.88,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2691,8 +2677,8 @@
     "net": "ZYNQ_HDMI_TX_SCL",
     "pad": "22",
     "port": [
-     104.01,
-     129.685
+     105.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2706,8 +2692,8 @@
     "net": "IO_25_13",
     "pad": "23",
     "port": [
-     104.41,
-     129.685
+     105.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2721,8 +2707,8 @@
     "net": "IO_L5_N_13",
     "pad": "24",
     "port": [
-     104.81,
-     129.685
+     106.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2736,8 +2722,8 @@
     "net": "GND",
     "pad": "25",
     "port": [
-     105.21,
-     127.0
+     106.48,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2751,8 +2737,8 @@
     "net": "GND",
     "pad": "26",
     "port": [
-     105.61,
-     127.0
+     106.88,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2766,8 +2752,8 @@
     "net": "PMODX_IO2",
     "pad": "27",
     "port": [
-     106.01,
-     129.685
+     107.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2781,8 +2767,8 @@
     "net": "LCD_CTP_SCL",
     "pad": "28",
     "port": [
-     106.41,
-     129.685
+     107.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2796,8 +2782,8 @@
     "net": "PMODX_IO1",
     "pad": "29",
     "port": [
-     106.81,
-     129.685
+     108.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2811,8 +2797,8 @@
     "net": "LCD_CTP_SDA",
     "pad": "30",
     "port": [
-     107.21,
-     129.685
+     108.48,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2826,8 +2812,8 @@
     "net": "PMODX_IO4",
     "pad": "31",
     "port": [
-     107.61,
-     129.685
+     108.88,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2841,8 +2827,8 @@
     "net": "LCD_CTP_INT",
     "pad": "32",
     "port": [
-     108.01,
-     129.685
+     109.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2856,8 +2842,8 @@
     "net": "PMODX_IO3",
     "pad": "33",
     "port": [
-     108.41,
-     129.685
+     109.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2871,8 +2857,8 @@
     "net": "LCD_CTP_RST",
     "pad": "34",
     "port": [
-     108.81,
-     129.685
+     110.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2886,8 +2872,8 @@
     "net": "GND",
     "pad": "35",
     "port": [
-     109.21,
-     127.0
+     110.48,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2901,8 +2887,8 @@
     "net": "GND",
     "pad": "36",
     "port": [
-     109.61,
-     127.0
+     110.88,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -2916,8 +2902,8 @@
     "net": "ESC_FAULT_N",
     "pad": "37",
     "port": [
-     110.01,
-     129.685
+     111.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2931,8 +2917,8 @@
     "net": "IO_L5P_13",
     "pad": "38",
     "port": [
-     110.41,
-     129.685
+     111.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2946,8 +2932,8 @@
     "net": "PMODX_IO6",
     "pad": "39",
     "port": [
-     110.81,
-     129.685
+     112.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2961,8 +2947,8 @@
     "net": "DBG_UART_TXD",
     "pad": "40",
     "port": [
-     111.21,
-     129.685
+     112.48,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2976,8 +2962,8 @@
     "net": "PMODX_IO5",
     "pad": "41",
     "port": [
-     111.61,
-     129.685
+     112.88,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2991,8 +2977,8 @@
     "net": "DBG_UART_RXD",
     "pad": "42",
     "port": [
-     112.01,
-     129.685
+     113.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3006,8 +2992,8 @@
     "net": "IO_L3_N_13",
     "pad": "43",
     "port": [
-     112.41,
-     129.685
+     113.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3021,8 +3007,8 @@
     "net": "HDMI_RX_5V_DET",
     "pad": "44",
     "port": [
-     112.81,
-     129.685
+     114.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3036,8 +3022,8 @@
     "net": "GND",
     "pad": "45",
     "port": [
-     113.21,
-     127.0
+     114.48,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -3051,8 +3037,8 @@
     "net": "GND",
     "pad": "46",
     "port": [
-     113.61,
-     127.0
+     114.88,
+     130.81
     ],
     "row": 1,
     "si_class": "GND",
@@ -3066,8 +3052,8 @@
     "net": "PMODX_IO8",
     "pad": "47",
     "port": [
-     114.01,
-     129.685
+     115.28,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3081,8 +3067,8 @@
     "net": "IO_L9_DQS_N_13",
     "pad": "48",
     "port": [
-     114.41,
-     129.685
+     115.68,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3096,8 +3082,8 @@
     "net": "PMODX_IO7",
     "pad": "49",
     "port": [
-     114.81,
-     129.685
+     116.08,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3111,8 +3097,8 @@
     "net": "IO_L9_DQS_P_13",
     "pad": "50",
     "port": [
-     115.21,
-     129.685
+     116.48,
+     133.495
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3128,8 +3114,8 @@
     "net": "GND",
     "pad": "100",
     "port": [
-     87.63,
-     119.02
+     88.9,
+     122.83
     ],
     "row": -1,
     "si_class": "GND",
@@ -3143,8 +3129,8 @@
     "net": "+3V3",
     "pad": "99",
     "port": [
-     85.445,
-     118.62
+     86.715,
+     122.43
     ],
     "row": -1,
     "si_class": "POWER",
@@ -3158,8 +3144,8 @@
     "net": "WATCHDOG_RST_N",
     "pad": "98",
     "port": [
-     84.945,
-     118.22
+     86.215,
+     122.03
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3173,8 +3159,8 @@
     "net": "+3V3",
     "pad": "97",
     "port": [
-     85.445,
-     117.82
+     86.715,
+     121.63
     ],
     "row": -1,
     "si_class": "POWER",
@@ -3188,8 +3174,8 @@
     "net": "WATCHDOG_KICK",
     "pad": "96",
     "port": [
-     84.945,
-     117.42
+     86.215,
+     121.23
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3203,8 +3189,8 @@
     "net": "GND",
     "pad": "95",
     "port": [
-     87.63,
-     117.02
+     88.9,
+     120.83
     ],
     "row": -1,
     "si_class": "GND",
@@ -3218,8 +3204,8 @@
     "net": "ESC_PWM_IN7",
     "pad": "94",
     "port": [
-     84.945,
-     116.62
+     86.215,
+     120.43
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3233,8 +3219,8 @@
     "net": "ESC_PWM_IN5",
     "pad": "93",
     "port": [
-     84.945,
-     116.22
+     86.215,
+     120.03
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3248,8 +3234,8 @@
     "net": "ESC_PWM_IN6",
     "pad": "92",
     "port": [
-     84.945,
-     115.82
+     86.215,
+     119.63
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3263,8 +3249,8 @@
     "net": "ESC_PWM_IN4",
     "pad": "91",
     "port": [
-     84.945,
-     115.42
+     86.215,
+     119.23
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3278,8 +3264,8 @@
     "net": "GND",
     "pad": "90",
     "port": [
-     87.63,
-     115.02
+     88.9,
+     118.83
     ],
     "row": -1,
     "si_class": "GND",
@@ -3293,8 +3279,8 @@
     "net": "CAM_SDA",
     "pad": "89",
     "port": [
-     84.945,
-     114.62
+     86.215,
+     118.43
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3308,8 +3294,8 @@
     "net": "IO_L23_P_34",
     "pad": "88",
     "port": [
-     84.945,
-     114.22
+     86.215,
+     118.03
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3323,8 +3309,8 @@
     "net": "CAM_LED",
     "pad": "87",
     "port": [
-     84.945,
-     113.82
+     86.215,
+     117.63
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3338,8 +3324,8 @@
     "net": "CAM_SCL",
     "pad": "86",
     "port": [
-     84.945,
-     113.42
+     86.215,
+     117.23
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3353,8 +3339,8 @@
     "net": "CAM_EN",
     "pad": "85",
     "port": [
-     84.945,
-     113.02
+     86.215,
+     116.83
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3368,8 +3354,8 @@
     "net": "IO_L22_N_34",
     "pad": "84",
     "port": [
-     84.945,
-     112.62
+     86.215,
+     116.43
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3383,8 +3369,8 @@
     "net": "GND",
     "pad": "83",
     "port": [
-     87.63,
-     112.22
+     88.9,
+     116.03
     ],
     "row": -1,
     "si_class": "GND",
@@ -3398,8 +3384,8 @@
     "net": "IO_L24_P_34",
     "pad": "82",
     "port": [
-     84.945,
-     111.82
+     86.215,
+     115.63
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3413,8 +3399,8 @@
     "net": "LCD_BL_PWM",
     "pad": "81",
     "port": [
-     84.945,
-     111.42
+     86.215,
+     115.23
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3428,8 +3414,8 @@
     "net": "GND",
     "pad": "80",
     "port": [
-     87.63,
-     111.02
+     88.9,
+     114.83
     ],
     "row": -1,
     "si_class": "GND",
@@ -3443,8 +3429,8 @@
     "net": "LCD_DISP",
     "pad": "79",
     "port": [
-     84.945,
-     110.62
+     86.215,
+     114.43
     ],
     "row": -1,
     "si_class": "LOW",
@@ -3458,8 +3444,8 @@
     "net": "LCD_DE",
     "pad": "78",
     "port": [
-     84.945,
-     110.22
+     86.215,
+     114.03
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3473,8 +3459,8 @@
     "net": "LCD_VSYNC",
     "pad": "77",
     "port": [
-     84.945,
-     109.82
+     86.215,
+     113.63
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3488,8 +3474,8 @@
     "net": "LCD_HSYNC",
     "pad": "76",
     "port": [
-     84.945,
-     109.42
+     86.215,
+     113.23
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3503,8 +3489,8 @@
     "net": "LCD_PCLK",
     "pad": "75",
     "port": [
-     84.945,
-     109.02
+     86.215,
+     112.83
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3518,8 +3504,8 @@
     "net": "LCD_B7",
     "pad": "74",
     "port": [
-     84.945,
-     108.62
+     86.215,
+     112.43
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3533,8 +3519,8 @@
     "net": "GND",
     "pad": "73",
     "port": [
-     87.63,
-     108.22
+     88.9,
+     112.03
     ],
     "row": -1,
     "si_class": "GND",
@@ -3548,8 +3534,8 @@
     "net": "LCD_B6",
     "pad": "72",
     "port": [
-     84.945,
-     107.82
+     86.215,
+     111.63
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3563,8 +3549,8 @@
     "net": "LCD_B5",
     "pad": "71",
     "port": [
-     84.945,
-     107.42
+     86.215,
+     111.23
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3578,8 +3564,8 @@
     "net": "LCD_B4",
     "pad": "70",
     "port": [
-     84.945,
-     107.02
+     86.215,
+     110.83
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3593,8 +3579,8 @@
     "net": "LCD_B3",
     "pad": "69",
     "port": [
-     84.945,
-     106.62
+     86.215,
+     110.43
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3608,8 +3594,8 @@
     "net": "GND",
     "pad": "68",
     "port": [
-     87.63,
-     106.22
+     88.9,
+     110.03
     ],
     "row": -1,
     "si_class": "GND",
@@ -3623,8 +3609,8 @@
     "net": "LCD_B2",
     "pad": "67",
     "port": [
-     84.945,
-     105.82
+     86.215,
+     109.63
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3638,8 +3624,8 @@
     "net": "LCD_B1",
     "pad": "66",
     "port": [
-     84.945,
-     105.42
+     86.215,
+     109.23
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3653,8 +3639,8 @@
     "net": "LCD_B0",
     "pad": "65",
     "port": [
-     84.945,
-     105.02
+     86.215,
+     108.83
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3668,8 +3654,8 @@
     "net": "LCD_G7",
     "pad": "64",
     "port": [
-     84.945,
-     104.62
+     86.215,
+     108.43
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3683,8 +3669,8 @@
     "net": "GND",
     "pad": "63",
     "port": [
-     87.63,
-     104.22
+     88.9,
+     108.03
     ],
     "row": -1,
     "si_class": "GND",
@@ -3698,8 +3684,8 @@
     "net": "LCD_G6",
     "pad": "62",
     "port": [
-     84.945,
-     103.82
+     86.215,
+     107.63
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3713,8 +3699,8 @@
     "net": "LCD_G5",
     "pad": "61",
     "port": [
-     84.945,
-     103.42
+     86.215,
+     107.23
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3728,8 +3714,8 @@
     "net": "LCD_G4",
     "pad": "60",
     "port": [
-     84.945,
-     103.02
+     86.215,
+     106.83
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3743,8 +3729,8 @@
     "net": "LCD_G3",
     "pad": "59",
     "port": [
-     84.945,
-     102.62
+     86.215,
+     106.43
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3758,8 +3744,8 @@
     "net": "GND",
     "pad": "58",
     "port": [
-     87.63,
-     102.22
+     88.9,
+     106.03
     ],
     "row": -1,
     "si_class": "GND",
@@ -3773,8 +3759,8 @@
     "net": "LCD_G2",
     "pad": "57",
     "port": [
-     84.945,
-     101.82
+     86.215,
+     105.63
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3788,8 +3774,8 @@
     "net": "LCD_G1",
     "pad": "56",
     "port": [
-     84.945,
-     101.42
+     86.215,
+     105.23
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3803,8 +3789,8 @@
     "net": "LCD_G0",
     "pad": "55",
     "port": [
-     84.945,
-     101.02
+     86.215,
+     104.83
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3818,8 +3804,8 @@
     "net": "LCD_R7",
     "pad": "54",
     "port": [
-     84.945,
-     100.62
+     86.215,
+     104.43
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3833,8 +3819,8 @@
     "net": "GND",
     "pad": "53",
     "port": [
-     87.63,
-     100.22
+     88.9,
+     104.03
     ],
     "row": -1,
     "si_class": "GND",
@@ -3848,8 +3834,8 @@
     "net": "FMC_LA07_N",
     "pad": "52",
     "port": [
-     84.945,
-     99.82
+     86.215,
+     103.63
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3863,8 +3849,8 @@
     "net": "FMC_LA06_P",
     "pad": "51",
     "port": [
-     84.945,
-     99.42
+     86.215,
+     103.23
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -3878,8 +3864,8 @@
     "net": "+2V5_VADJ",
     "pad": "1",
     "port": [
-     89.815,
-     119.02
+     91.085,
+     122.83
     ],
     "row": 1,
     "si_class": "POWER",
@@ -3893,8 +3879,8 @@
     "net": "+2V5_VADJ",
     "pad": "2",
     "port": [
-     89.815,
-     118.6199
+     91.085,
+     122.4299
     ],
     "row": 1,
     "si_class": "POWER",
@@ -3908,8 +3894,8 @@
     "net": "GND",
     "pad": "3",
     "port": [
-     87.63,
-     118.22
+     88.9,
+     122.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -3923,8 +3909,8 @@
     "net": "+2V5_VADJ",
     "pad": "4",
     "port": [
-     89.815,
-     117.82
+     91.085,
+     121.63
     ],
     "row": 1,
     "si_class": "POWER",
@@ -3938,8 +3924,8 @@
     "net": "CAM_D0_P",
     "pad": "5",
     "port": [
-     90.315,
-     117.42
+     91.585,
+     121.23
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -3953,8 +3939,8 @@
     "net": "GND",
     "pad": "6",
     "port": [
-     87.63,
-     117.02
+     88.9,
+     120.83
     ],
     "row": 1,
     "si_class": "GND",
@@ -3968,8 +3954,8 @@
     "net": "CAM_D0_N",
     "pad": "7",
     "port": [
-     90.315,
-     116.62
+     91.585,
+     120.43
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -3983,8 +3969,8 @@
     "net": "FMC_CLK1_M2C_P",
     "pad": "8",
     "port": [
-     90.315,
-     116.22
+     91.585,
+     120.03
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -3998,8 +3984,8 @@
     "net": "CAM_CLK_P",
     "pad": "9",
     "port": [
-     90.315,
-     115.82
+     91.585,
+     119.63
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -4013,8 +3999,8 @@
     "net": "FMC_CLK1_M2C_N",
     "pad": "10",
     "port": [
-     90.315,
-     115.42
+     91.585,
+     119.23
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4028,8 +4014,8 @@
     "net": "CAM_CLK_N",
     "pad": "11",
     "port": [
-     90.315,
-     115.02
+     91.585,
+     118.83
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -4043,8 +4029,8 @@
     "net": "GND",
     "pad": "12",
     "port": [
-     87.63,
-     114.62
+     88.9,
+     118.43
     ],
     "row": 1,
     "si_class": "GND",
@@ -4058,8 +4044,8 @@
     "net": "GND",
     "pad": "13",
     "port": [
-     87.63,
-     114.22
+     88.9,
+     118.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -4073,8 +4059,8 @@
     "net": "FMC_CLK0_M2C_P",
     "pad": "14",
     "port": [
-     90.315,
-     113.82
+     91.585,
+     117.63
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4088,8 +4074,8 @@
     "net": "CAM_D1_N",
     "pad": "15",
     "port": [
-     90.315,
-     113.42
+     91.585,
+     117.23
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -4103,8 +4089,8 @@
     "net": "FMC_CLK0_M2C_N",
     "pad": "16",
     "port": [
-     90.315,
-     113.02
+     91.585,
+     116.83
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4118,8 +4104,8 @@
     "net": "CAM_D1_P",
     "pad": "17",
     "port": [
-     90.315,
-     112.62
+     91.585,
+     116.43
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -4133,8 +4119,8 @@
     "net": "GND",
     "pad": "18",
     "port": [
-     87.63,
-     112.22
+     88.9,
+     116.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -4148,8 +4134,8 @@
     "net": "LCD_R0",
     "pad": "19",
     "port": [
-     90.315,
-     111.82
+     91.585,
+     115.63
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4163,8 +4149,8 @@
     "net": "FMC_LA00_CC_N",
     "pad": "20",
     "port": [
-     90.315,
-     111.42
+     91.585,
+     115.23
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4178,8 +4164,8 @@
     "net": "LCD_R1",
     "pad": "21",
     "port": [
-     90.315,
-     111.02
+     91.585,
+     114.83
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4193,8 +4179,8 @@
     "net": "FMC_LA00_CC_P",
     "pad": "22",
     "port": [
-     90.315,
-     110.62
+     91.585,
+     114.43
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4208,8 +4194,8 @@
     "net": "GND",
     "pad": "23",
     "port": [
-     87.63,
-     110.22
+     88.9,
+     114.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -4223,8 +4209,8 @@
     "net": "FMC_LA01_CC_P",
     "pad": "24",
     "port": [
-     90.315,
-     109.82
+     91.585,
+     113.63
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4238,8 +4224,8 @@
     "net": "IO_L18_N_35",
     "pad": "25",
     "port": [
-     90.315,
-     109.42
+     91.585,
+     113.23
     ],
     "row": 1,
     "si_class": "LOW",
@@ -4253,8 +4239,8 @@
     "net": "FMC_LA01_CC_N",
     "pad": "26",
     "port": [
-     90.315,
-     109.02
+     91.585,
+     112.83
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4268,8 +4254,8 @@
     "net": "IO_L18_P_35",
     "pad": "27",
     "port": [
-     90.315,
-     108.62
+     91.585,
+     112.43
     ],
     "row": 1,
     "si_class": "LOW",
@@ -4283,8 +4269,8 @@
     "net": "GND",
     "pad": "28",
     "port": [
-     87.63,
-     108.22
+     88.9,
+     112.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -4298,8 +4284,8 @@
     "net": "IO_L16_N_35",
     "pad": "29",
     "port": [
-     90.315,
-     107.82
+     91.585,
+     111.63
     ],
     "row": 1,
     "si_class": "LOW",
@@ -4313,8 +4299,8 @@
     "net": "LCD_R2",
     "pad": "30",
     "port": [
-     90.315,
-     107.42
+     91.585,
+     111.23
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4328,8 +4314,8 @@
     "net": "IO_L16_P_35",
     "pad": "31",
     "port": [
-     90.315,
-     107.02
+     91.585,
+     110.83
     ],
     "row": 1,
     "si_class": "LOW",
@@ -4343,8 +4329,8 @@
     "net": "FMC_LA03_N",
     "pad": "32",
     "port": [
-     90.315,
-     106.62
+     91.585,
+     110.43
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4358,8 +4344,8 @@
     "net": "GND",
     "pad": "33",
     "port": [
-     87.63,
-     106.22
+     88.9,
+     110.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -4373,8 +4359,8 @@
     "net": "FMC_LA03_P",
     "pad": "34",
     "port": [
-     90.315,
-     105.82
+     91.585,
+     109.63
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4388,8 +4374,8 @@
     "net": "FMC_LA02_N",
     "pad": "35",
     "port": [
-     90.315,
-     105.42
+     91.585,
+     109.23
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4403,8 +4389,8 @@
     "net": "LCD_R3",
     "pad": "36",
     "port": [
-     90.315,
-     105.02
+     91.585,
+     108.83
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4418,8 +4404,8 @@
     "net": "FMC_LA02_P",
     "pad": "37",
     "port": [
-     90.315,
-     104.62
+     91.585,
+     108.43
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4433,8 +4419,8 @@
     "net": "GND",
     "pad": "38",
     "port": [
-     87.63,
-     104.22
+     88.9,
+     108.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -4448,8 +4434,8 @@
     "net": "PUDC_34",
     "pad": "39",
     "port": [
-     90.315,
-     103.82
+     91.585,
+     107.63
     ],
     "row": 1,
     "si_class": "LOW",
@@ -4463,8 +4449,8 @@
     "net": "LCD_R4",
     "pad": "40",
     "port": [
-     90.315,
-     103.42
+     91.585,
+     107.23
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4478,8 +4464,8 @@
     "net": "LCD_R5",
     "pad": "41",
     "port": [
-     90.315,
-     103.02
+     91.585,
+     106.83
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4493,8 +4479,8 @@
     "net": "FMC_LA04_P",
     "pad": "42",
     "port": [
-     90.315,
-     102.62
+     91.585,
+     106.43
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4508,8 +4494,8 @@
     "net": "GND",
     "pad": "43",
     "port": [
-     87.63,
-     102.22
+     88.9,
+     106.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -4523,8 +4509,8 @@
     "net": "FMC_LA04_N",
     "pad": "44",
     "port": [
-     90.315,
-     101.82
+     91.585,
+     105.63
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4538,8 +4524,8 @@
     "net": "FMC_LA05_N",
     "pad": "45",
     "port": [
-     90.315,
-     101.42
+     91.585,
+     105.23
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4553,8 +4539,8 @@
     "net": "LCD_R6",
     "pad": "46",
     "port": [
-     90.315,
-     101.02
+     91.585,
+     104.83
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4568,8 +4554,8 @@
     "net": "FMC_LA05_P",
     "pad": "47",
     "port": [
-     90.315,
-     100.62
+     91.585,
+     104.43
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4583,8 +4569,8 @@
     "net": "GND",
     "pad": "48",
     "port": [
-     87.63,
-     100.22
+     88.9,
+     104.03
     ],
     "row": 1,
     "si_class": "GND",
@@ -4598,8 +4584,8 @@
     "net": "FMC_LA06_N",
     "pad": "49",
     "port": [
-     90.315,
-     99.82
+     91.585,
+     103.63
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -4613,8 +4599,8 @@
     "net": "FMC_LA07_P",
     "pad": "50",
     "port": [
-     90.315,
-     99.42
+     91.585,
+     103.23
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -5116,55 +5102,55 @@
    "J1:N": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
-     95.11,
-     88.455,
-     115.71,
-     89.755
+     96.38,
+     93.535,
+     116.98,
+     94.835
     ]
    },
    "J1:S": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
-     95.11,
-     93.125,
-     115.71,
-     94.425
+     96.38,
+     98.205,
+     116.98,
+     99.505
     ]
    },
    "J2:N": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
-     95.11,
-     124.015,
-     115.71,
-     125.315
+     96.38,
+     127.825,
+     116.98,
+     129.125
     ]
    },
    "J2:S": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
-     95.11,
-     128.685,
-     115.71,
-     129.985
+     96.38,
+     132.495,
+     116.98,
+     133.795
     ]
    },
    "J3:N": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
-     84.645,
-     98.92,
-     85.945,
-     119.52
+     85.915,
+     102.73,
+     87.215,
+     123.33
     ]
    },
    "J3:S": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
-     89.315,
-     98.92,
-     90.615,
-     119.52
+     90.585,
+     102.73,
+     91.885,
+     123.33
     ]
    }
   }
