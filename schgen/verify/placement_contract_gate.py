@@ -49,6 +49,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core import sexpr
+from schgen.core.project import spec as _project_spec
 from schgen.core.sexpr import Sym
 from schgen.generate.pcb import PcbModel
 
@@ -90,7 +91,7 @@ _CONTRACT_ROOTS: tuple[tuple[Path, str], ...] = (
 # tap row faces the RJ45 jack. Its external near_max (rj45 edge-gap <=20mm, D11) and
 # far (power >=10mm) terms graduate from advisory to gated here; ethernet joins the
 # near_max L4-EXEMPT set by construction (``wired_term_participants``).
-_WIRED_SHEETS: frozenset[str] = frozenset({"power", "usb_pd", "ethernet"})
+_WIRED_SHEETS: frozenset[str] = _project_spec().wired_sheets
 
 
 # --- contract registry ------------------------------------------------------------

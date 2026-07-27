@@ -1,0 +1,11 @@
+{
+  "name": "carrier",
+  "_comment": "PROJECT SPEC (P1 engine/project separation) - board-specific knowledge that previously lived as engine constants. The engine is mechanism; this file is policy. See docs/AI_PLATFORM_ROADMAP.md.",
+  "placement": {
+    "wired_sheets": ["ethernet", "power", "usb_pd"],
+    "pilot_prox_sheets": ["ethernet", "usb_pd"],
+    "module_offset": [-8.0, 6.0],
+    "module_face_anchors": {"power_som": "E"},
+    "reg_band_prefixes": ["bringup", "power"]
+  }
+}

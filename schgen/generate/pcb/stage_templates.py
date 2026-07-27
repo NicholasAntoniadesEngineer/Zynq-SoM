@@ -37,6 +37,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+from schgen.core.project import spec as _project_spec
 from schgen.verify import placement_contract_gate as _g
 from schgen.verify.fanout_gate import _is_cluster_passive, intelligent_need
 
@@ -637,10 +638,10 @@ _Repel = tuple[str, "str | None", float]
 
 _ROOT_GAP = 2.0            # deterministic gap between two independent roots (mm)
 _GRID_MAX_N = 60           # cap the candidate grid half-extent (30 mm at _CAND_STEP)
-# The two FROZEN pilot proximity sheets keep the legacy single-anchor cluster so
-# their proven byte-identical layout never moves; every other proximity contract
-# uses the general graph solver below.
-_PILOT_PROX_SHEETS = frozenset({"usb_pd", "ethernet"})
+# The FROZEN pilot proximity sheets (project spec) keep the legacy single-anchor
+# cluster so their proven byte-identical layout never moves; every other proximity
+# contract uses the general graph solver below.
+_PILOT_PROX_SHEETS = _project_spec().pilot_prox_sheets
 
 
 def _is_single_anchor_star(contract: dict, bref_of: dict[str, str]) -> bool:

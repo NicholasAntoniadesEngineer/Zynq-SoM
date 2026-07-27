@@ -35,6 +35,8 @@ from dataclasses import dataclass, field
 from heapq import heappop, heappush
 from pathlib import Path
 
+from schgen.core.project import spec as _project_spec
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SOM_PCB = REPO_ROOT / "som" / "Zynq_SoM.kicad_pcb"
 PARTS_DIR = REPO_ROOT / "parts"
@@ -68,17 +70,17 @@ BOARD_W = 120.0
 BOARD_H = 100.0
 OUTLINE_NOTE = ""        # human-readable derivation, set by derive_outline
 
-# SoM (DF40 mezzanine) placement OFFSET from board centre (mm) — the SHIPPING pose.
-# The default (-8, +6) is the measured optimum of a 20-configuration build sweep over
-# SoM poses: 186x157 board, cross-airwire 14344 mm (-6.8% vs the centred pose), every
-# gate green. The demand-weighted connector centroid sits W+S of centre (lcd/camera W,
-# hdmi/pmod S), so shifting the SoM toward it shortens the dominant SoM-fanout
-# airwire; larger shifts break fan-out (dy>=6 at dx!=-8), thermal (dy=7) or the DF40
-# stitch corridor (dy>=8). (-8,+5) is the size-optimal green alternative (182x158,
-# 28756 mm2, airwire 15090). SCHGEN_SOM_DX/DY override for experiments; 0/0 recovers
-# the historical centred pose. The LAW-5 + placement gates remain the arbiters.
-SOM_DX = float(os.environ.get("SCHGEN_SOM_DX", "-8"))
-SOM_DY = float(os.environ.get("SCHGEN_SOM_DY", "6"))
+# Module (SoM) placement OFFSET from board centre (mm) — the project's SHIPPING
+# pose, read from project.json placement.module_offset (P1: the pose is project
+# POLICY, not an engine constant). For the carrier, (-8,+6) is the measured optimum
+# of a 20-configuration build sweep (demand-weighted connector centroid sits W+S of
+# centre; larger shifts break fan-out / thermal / the DF40 stitch corridor — see the
+# som-offset record). SCHGEN_SOM_DX/DY env overrides for experiments; 0/0 recovers
+# the centred pose. The LAW-5 + placement gates remain the arbiters.
+SOM_DX = float(os.environ.get("SCHGEN_SOM_DX",
+                              str(_project_spec().module_offset[0])))
+SOM_DY = float(os.environ.get("SCHGEN_SOM_DY",
+                              str(_project_spec().module_offset[1])))
 
 EDGE_MARGIN = 10.0       # board corners kept clear of edge connectors AND the
                          # corner-forced M3 mounting holes (MH_INSET 5 + pad ~3)
@@ -1277,7 +1279,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                 b.zone = sp.get("side", "E")
             continue
         dom = _dominant_j(b.j_aff)
-        if b.name in reg_sheets or b.name.startswith(("bringup", "power")):
+        if (b.name in reg_sheets
+                or b.name.startswith(_project_spec().reg_band_prefixes)):
             b.zone = "E"
             continue
         b.zone = j_edge[dom] if dom else "E"
@@ -1794,15 +1797,25 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         a small zone bias. The (powered) affinity weights dwarf the zone term, so
         a cluster (bringup_rails <-> bringup_en_modules, power <-> power_mon, ...)
         collapses to a tight group near the SoM strips it shares."""
-        # power_som is the SoM POWER INPUT: hard-anchor it just outside the SoM's E
-        # escape halo, centred on the SoM (its true electrical seat, like
-        # som_decoupling under the SoM). This keeps it W of the E-edge power buck so
-        # the power->power_som output FACING holds under ANY SoM offset — without it
-        # the E-side crowding + net-affinity drift it far south and break the flow
-        # facing gate (measured under SCHGEN_SOM_DX/DY). No-op at the centred default.
-        if b.name == "power_som" and (SOM_DX or SOM_DY):
-            return (plan.som_x + plan.som.w + SOM_HALO + b.w / 2,
-                    plan.som_y + plan.som.h / 2)
+        # MODULE-FACE ANCHOR (project.json placement.module_face_anchors): a block
+        # declared {name: face} hard-anchors just outside the module's escape halo
+        # on that face, centred (its true electrical seat — the carrier declares
+        # power_som:E, the SoM power input). This keeps it clear of edge crowding
+        # so downstream FACING holds under ANY module offset (measured: without it
+        # the E-side crowding drifts power_som ~100 mm and breaks the flow gate).
+        # No-op at the centred default pose (byte-identity).
+        _mfa = _project_spec().module_face_anchors
+        if b.name in _mfa and (SOM_DX or SOM_DY):
+            _face = _mfa[b.name]
+            _fx = {"E": plan.som_x + plan.som.w + SOM_HALO + b.w / 2,
+                   "W": plan.som_x - SOM_HALO - b.w / 2,
+                   "N": plan.som_x + plan.som.w / 2,
+                   "S": plan.som_x + plan.som.w / 2}[_face]
+            _fy = {"E": plan.som_y + plan.som.h / 2,
+                   "W": plan.som_y + plan.som.h / 2,
+                   "N": plan.som_y - SOM_HALO - b.h / 2,
+                   "S": plan.som_y + plan.som.h + SOM_HALO + b.h / 2}[_face]
+            return (_fx, _fy)
         if b.zone.startswith("@") and b.zone[1:] in edge_pos:
             eb = edge_pos[b.zone[1:]]
             zax, zay = eb.cx, eb.cy
