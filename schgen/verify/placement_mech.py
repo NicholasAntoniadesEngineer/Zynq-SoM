@@ -15,11 +15,13 @@ LAW 6 makes the MECHANIZABLE rules a HARD gate (any failure fails the board):
       board edge with its mouth pointing OFF the board. An interior connector, or
       one rotated so its mouth faces inward, is a FAIL.
 
-  (b) SoM MODULE-BODY KEEPOUT (passives-only). The rectangle the plugged-in SoM
-      overhangs (model.som_core) is reserved: ONLY low-profile passives (R/C/L)
-      may sit beneath it. A connector, IC, magnetic, transistor, crystal, button,
-      switch, coin cell, or TEST POINT whose courtyard overlaps the core is a
-      FAIL — the module physically covers it.
+  (b) SoM MODULE-BODY KEEPOUT (side-split; LAW 6 as amended 2026-07-09). The
+      rectangle the plugged-in SoM overhangs (model.som_core): the carrier TOP
+      under it is a FULL keepout — NO component at all, low-profile passives
+      included (the mated standoff gap leaves no usable height). The carrier
+      BOTTOM under it is the OPPOSITE board face — any part is fine there
+      (som_decoupling's caps live there). Only the DF40 receptacles themselves,
+      mounting holes and the zero-height stencil fiducials are exempt on top.
 
   (c) CONTROLS REACHABLE. A button / switch must be pressable and a coin cell
       replaceable — none may sit under the SoM (a control buried under the module
