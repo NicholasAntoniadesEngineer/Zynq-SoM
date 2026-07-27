@@ -14,13 +14,15 @@ product; NO master merge until user approval. Baselines: carrier pcb md5 e405097
 | U1e | ModuleGeom: module pcb/interface paths from spec (generalize SomGeom entry) | pending |
 | U1f | --project CLI + CARRIER path resolution via project root | pending |
 | U1g | devkit_mini second-project proof: green board, ZERO engine edits | pending |
-| U2a | Defect-injection corpus library + gate-fires proof per class | pending |
+| U2a | Defect-injection corpus library + gate-fires proof per class | DONE (13 tests, 1.1s) |
 | U2b | Fast flow/facing synthetic harness (validated vs corpus + visual sample) | pending |
-| U3a | Wire contracts incrementally: coverage 19 inert-VIOLATED -> 0 (or documented infeasible), mechanizing each cascade fix | pending |
-| U4a | schgen board --json structured gate verdicts | pending |
+| U3a | Wire contracts: coverage 19 -> 0; cascade fixes mechanized | IN PROGRESS: W1 done (19->14, sweep fix landed); FULL WIRE (22 sheets) building |
+| U4a | board_verdicts.json always-on structured verdicts | implemented; verify on next build |
 | FIN | Deep retrospective vs all user asks + decided next steps | pending |
 
 ## Log
 (newest first)
+- U3a: W1 (4 sheets) green after mechanizing the LAW-6 seat-sweep exclusion (DRC 28->0); coverage 19->14; FULL WIRE build launched (15 more sheets).
+- U2a DONE: defect corpus 13/13. U4a implemented (board_verdicts.json).
 - U1a-d DONE: project spec v1 (5 extractions), byte-identical e405097b.
 - 2026-07-09: branch created off master 8b036b1; tracker initialized.
