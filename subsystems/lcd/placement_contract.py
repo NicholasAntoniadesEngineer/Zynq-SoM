@@ -44,6 +44,7 @@ CONTRACT: dict = {
     "roles": {
         "U1": "boost_ic", "U2": "esd_array", "J1": "ffc_connector",
         "C1": "boost_in_bulk", "C5": "boost_in_hf",
+        "L1": "boost_l", "D1": "boost_d", "C2": "vled_cap",
     },
     "structures": [
         # ---- DECOUPLING: SY7201 IN-pin bypass (C1 10u + C5 1u) tight to pin 6 --
@@ -57,6 +58,20 @@ CONTRACT: dict = {
         {"type": "proximity", "anchor": "J1",
          "members": ["U2"], "max_mm": 5.0, "same_side": True,
          "basis": "judgment:5.0 — ESD at port entry (lightweight tier)"},
+        # ---- BOOST SWITCHING CHAIN: U1.LX -> L1 -> D1 -> C2 -------------------
+        # 2026-07-28 audit: the boost loop was TORN (U1-to-L1 37.5mm, input cap
+        # to inductor 35.6mm) because L1/D1/C2 carried no structure at all — a
+        # switching converter's hot loop left to the leftover band. Chain the
+        # loop tight; whole-part anchors (no pin-number guessing on SOT-23-6).
+        {"type": "proximity", "anchor": "U1",
+         "members": ["L1"], "max_mm": 3.0, "same_side": True,
+         "basis": "boost LX hot loop — inductor at the switch pin|judgment:3.0"},
+        {"type": "proximity", "anchor": "L1",
+         "members": ["D1"], "max_mm": 4.0, "same_side": True,
+         "basis": "catch diode on the LX node beside the inductor|judgment:4.0"},
+        {"type": "proximity", "anchor": "D1",
+         "members": ["C2"], "max_mm": 4.0, "same_side": True,
+         "basis": "VLED output cap closes the boost loop|judgment:4.0"},
         # ---- SAME SIDE: the boost's input caps on the driver's side -----------
         {"type": "same_side", "ics": ["U1"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},

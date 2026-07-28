@@ -68,4 +68,10 @@ CONTRACT: dict = {
         {"type": "same_side", "ics": ["U1"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},
     ],
+    "external": {
+        "near_max": [
+            {"other": "usb_uart_connector", "max_mm": 40.0,
+             "basis": "judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector"},
+        ],
+    },
 }
