@@ -1604,8 +1604,11 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
     # RE-PACK at the chosen winner so plan holds exactly that layout (the search
     # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
-    _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
-                  compose=compose, compact=True)
+    if not _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
+                         compose=compose, compact=True):
+        raise RuntimeError(
+            f"floorplan: the winning outline {BOARD_W:g}x{BOARD_H:g} failed "
+            "the final compact re-pack — refusing to emit a stale layout")
     plan.interior_blocks = interior
     OUTLINE_NOTE = (
         f"{outline.note}; then SMALLEST-AREA search over aspects "

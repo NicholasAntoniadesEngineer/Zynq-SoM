@@ -216,3 +216,36 @@ def test_escape_corridors_load_and_act_as_keepouts(tmp_path):
     ay0, ay1 = a.y, a.y + 10
     assert ay1 <= y0 + 1e-6 or ay0 >= y1 - 1e-6, (
         f"movable still intrudes the corridor: {ay0}..{ay1} vs {y0}..{y1}")
+
+
+def test_cross_axis_repair_flip_never_emits_overlap():
+    """The measured 2026-07-28 producer, hermetic (bare-near uart_bridge
+    emitted INSIDE board_aux, 41 DRC errors): the near_max window drags the
+    movable up past a fixed obstacle; the y-axis repair flips their
+    separation onto the ALREADY-SOLVED x axis where nothing enforces it, and
+    the seed-restore descent's empty x-window keeps the stale x — the pre-fix
+    engine returned True with the movable's final rect inside the obstacle.
+    CONTRACT under proof: overlap candidate -> either repaired (disjoint,
+    every edge satisfied) or pack-fail — never emitted."""
+    mets = {"a": _metrics_one_part(10, 10), "t": _metrics_one_part(10, 8)}
+    a = fc.LegalizeVar("a", 10, 10, (44.0, 60.0), 44.0, 60.0)
+    idx = _index([_near("a", "t", 30.0)])
+    obstacle = (40.0, 30.0, 60.0, 50.0)
+    fixed = [("t", 48.0, 2.0, 58.0, 10.0), ("o", *obstacle)]
+    fixed_poses = {"t": (48.0, 2.0)}
+    log: list[str] = []
+    ok = fc.legalize_compact(100.0, 100.0, _SOM, fixed, [a], idx, mets,
+                             fixed_poses, {}, 0.3, log=log)
+    if ok:
+        ax0, ay0, ax1, ay1 = a.x, a.y, a.x + 10.0, a.y + 10.0
+        for fn, x0, y0, x1, y1 in fixed:
+            ox = min(ax1, x1) - max(ax0, x0)
+            oy = min(ay1, y1) - max(ay0, y0)
+            assert not (ox > 1e-6 and oy > 1e-6), (
+                f"legalizer emitted a|{fn} overlap {ox:.2f}x{oy:.2f}", log)
+        post = fc.evaluate_terms(
+            100.0, 100.0, _SOM, {"a": (a.x, a.y), **fixed_poses}, mets, idx)
+        assert all(e.ok for e in post if e.term.enforced), log
+    else:
+        assert any("REJECT" in x or "INFEASIBLE" in x for x in log), (
+            "pack-fail must be NAMED in the log", log)

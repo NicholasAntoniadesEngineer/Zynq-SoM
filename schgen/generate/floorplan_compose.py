@@ -960,16 +960,23 @@ def legalize_compact(board_w: float, board_h: float,
           axis flips of cycle separations -> else False (candidate rejected,
           outer grow — LAW 4). Feasible potentials seed a Gauss-Seidel
           window pass that pulls every variable back toward its SEED (the
-          minimal-perturbation point of the polytope).
+          minimal-perturbation point of the polytope). Then EVERY edge on
+          both axes is re-verified: a repair flip lands its separation on the
+          other axis, and when that axis was already solved nothing enforces
+          it — an unsatisfied edge rejects the candidate.
       L5  EXACT accept: ``evaluate_terms`` (full emit rounding chain, GUARD +
           FAR_L4_GUARD) over ALL hard terms; any red -> False with the
           binding term named in ``log``.
       L4' optional COMPACTION (``compact=True``, the final pack only): the
           weighted-median coordinate descent over deduped wired hop pulls
           (W_HOP) + the seed anchor (W_SEED), quantize-Q-then-CLAMP,
-          MEDIAN_PASSES; GUARDED — if compaction turns any hard term red it
-          is REVERTED wholesale (compaction is an optimizer, never a risk).
-      L6  write-back round-4 into the vars.
+          MEDIAN_PASSES; GUARDED — if compaction turns any hard term red or
+          breaks a separation it is REVERTED wholesale (compaction is an
+          optimizer, never a risk).
+      L6  final-rect disjointness backstop (any residual overlap of a
+          movable with a fixed rect or another movable rejects — the module
+          NEVER returns True with overlapping rects), then write-back
+          round-4 into the vars.
 
     Argument-pure: never reads ``fp.BOARD_W/BOARD_H`` (the 2026-06-19 race
     class). Deterministic: sorted iteration, fixed caps, no RNG."""
@@ -1237,6 +1244,16 @@ def legalize_compact(board_w: float, board_h: float,
         # seed-restore: coordinate descent, each var clamped to its window's
         # nearest point to the SEED (minimal perturbation), MEDIAN_PASSES.
         _descend(posx, posy, hops=(), seed_only=True)
+        # TRAP (measured: uart_bridge emitted INSIDE board_aux, DRC 41): a
+        # y-repair flip lands its sep on the ALREADY-SOLVED x axis unenforced.
+        for axis, pos in (("x", posx), ("y", posy)):
+            for u, v, c, tag in build_edges(axis):
+                if pos.get(v, 0.0) - pos.get(u, 0.0) > c + 1e-9:
+                    kind = tag[0] if isinstance(tag, tuple) else str(tag)
+                    log.append(f"REJECT: {axis}-edge unsatisfied after axis "
+                               f"solve ({kind} {u}|{v}) — repair flip landed "
+                               f"on an already-solved axis")
+                    return False
 
     # ---- L5: exact accept (pre-compaction) ----------------------------------
     def poses_now() -> dict[str, tuple[float, float]]:
@@ -1264,13 +1281,26 @@ def legalize_compact(board_w: float, board_h: float,
         keepx, keepy = dict(posx), dict(posy)
         hops = tuple(t for t in hard if t.kind == "flow_hop")
         _descend(posx, posy, hops=hops, seed_only=False)
-        if reds(poses_now()):
+        if (reds(poses_now()) or not edges_ok("x", posx)
+                or not edges_ok("y", posy)):
             posx, posy = keepx, keepy
-            log.append("compaction REVERTED (would break a hard term)")
+            log.append("compaction REVERTED (would break a hard term "
+                       "or separation)")
         else:
             log.append("compacted (wired hop pulls applied)")
 
     # ---- L6: write-back ------------------------------------------------------
+    rect = {n: (round(posx[n], 4), round(posy[n], 4),
+                round(posx[n], 4) + by_name[n].w,
+                round(posy[n], 4) + by_name[n].h) for n in names}
+    for i, n in enumerate(names):
+        x0, y0, x1, y1 = rect[n]
+        for m, (u0, v0, u1, v1) in ([(m, rect[m]) for m in names[i + 1:]]
+                                    + sorted(frect.items())):
+            if (min(x1, u1) - max(x0, u0) > 1e-6
+                    and min(y1, v1) - max(y0, v0) > 1e-6):
+                log.append(f"REJECT: final rect overlap {n}|{m}")
+                return False
     for n in names:
         v = by_name[n]
         v.x = round(posx[n], 4)
