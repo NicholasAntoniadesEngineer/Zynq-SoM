@@ -1,0 +1,60 @@
+* power_som.cir — SPICE subckt for the always-on +VIN -> +5V_SOM LM61460 buck.
+*
+* CARRIER-LOCAL: unlike the project-agnostic subsystems/<name>/ library, this
+* subsystem wires the carrier's REAL net names, so the subckt pins are those
+* carrier nets (the buck's input/output rails + ground), not an abstract
+* interface. U4 (LM61460) is a mixed-signal synchronous switcher with no useful
+* small-signal DC model here; this subckt captures the PASSIVE network whose
+* elements span TWO carrier external nets — the per-VIN-pin HF input bypass, the
+* input bulk and the output bulk — which is what the local test and any
+* board-level .op reason about. The regulator control passives (BOOT/VCC/BIAS/EN
+* clamp/FB divider + feedforward) terminate on PRIVATE control nodes and so are
+* NOT subckt elements; they are documented below for completeness.
+*
+* Values mirror devkit_mini/subsystems/power_som/power_som.py one-for-one (parse_si
+* compatible); test_cir_passives_match_netlist enforces equality against the
+* external-spanning netlist caps:
+*   C14 100n  VIN1/PGND1 HF bypass   (+VIN_SYS -> GND)
+*   C25 100n  VIN2/PGND2 HF bypass   (+VIN_SYS -> GND)
+*   C15 10u   input bulk             (+VIN_SYS -> GND)
+*   C16 10u   input bulk             (+VIN_SYS -> GND)
+*   C18 22u   output bulk            (+5V_SOM  -> GND)
+*   C19 22u   output bulk            (+5V_SOM  -> GND)
+*
+* The remaining passives terminate on a PRIVATE (buck control) node and are NOT
+* subckt elements — documented here for completeness:
+*   C17 100n  BOOT cap (SW_5V_SOM <-> BOOT_5V_SOM)   C22 1u  VCC bypass (U4_VCC->GND)
+*   C23 1u    BIAS bypass (BIAS_5V_SOM -> GND)        C20 100n EN bypass (EN_5V_SOM->GND)
+*   C21 22p   FB feedforward (+5V_SOM -> CFF_5V_SOM)  R19 1k  RFF (CFF_5V_SOM->FB)
+*   R14/R15  47.5k/13k FB divider (-> FB_5V_SOM, 4.654 V)
+*   R12 10k  EN series (+VIN_SYS->EN)  D5 MMSZ5231B 5.1 V EN zener (EN->GND)
+*   R17 10R  BIAS series (+5V_SOM->BIAS)  R18 22k RT (fSW)  D4/R16  PG LED + 1k
+*   L3 10uH  buck inductor (SW_5V_SOM -> +5V_SOM)
+*
+* Pin order: +VIN_SYS +5V_SOM GND (the input rail first, output next, GND last by
+* convention; the EN/BOOT/FB/BIAS control nets carry no two-external-net passive
+* and so are not subckt pins).
+
+.subckt power_som +VIN_SYS +5V_SOM GND
+
+* LM61460 input bypass + bulk on the post-RS1 buck-input rail
+* (DS SNVSBD5D 9.2.2.5: 2x100n HF, one at each VIN/PGND pair, + 2x10u bulk)
+C14 +VIN_SYS GND 100n
+C25 +VIN_SYS GND 100n
+C15 +VIN_SYS GND 10u
+C16 +VIN_SYS GND 10u
+
+* LM61460 output bulk on the always-on +5V_SOM rail (DS 9.2.2.4)
+C18 +5V_SOM GND 22u
+C19 +5V_SOM GND 22u
+
+.ends power_som
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto +VIN_SYS settles to 1 V at DC across the input
+* bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

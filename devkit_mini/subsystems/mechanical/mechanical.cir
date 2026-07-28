@@ -1,0 +1,34 @@
+* mechanical.cir — SPICE stub for the carrier-LOCAL board-mechanical sheet.
+*
+* CARRIER-LOCAL, project-specific sheet (NOT a reusable library subsystem and
+* NOT a thin adapter): the four M3 corner mounting holes (H1..H4) and their
+* CHASSIS_GND bond — the board-mechanical fab-art that has no electrical
+* interface to bind. The holes moved here off the rj45_connector jack sheet so
+* the per-subsystem PCB ratsnest stops bundling them with the Ethernet jack.
+*
+* There is NOTHING to analyse electrically: a mounting hole is a single plated
+* pad tied to CHASSIS_GND (a chassis/earth bond, never a rail). The single-point
+* GND<->CHASSIS_GND star is a PCB-layout COPPER STITCH, not a netlisted device —
+* a netlisted bond would DC-merge two deliberately-separate nets (LAW 0), so it
+* is deliberately absent here. The subckt therefore exposes ONLY the CHASSIS_GND
+* node, tied to ground through a 1G keep-resistor purely so ngspice sees the node
+* and nothing dangles. It is an INTERFACE stub, deliberately R-only.
+
+.subckt mechanical CHASSIS_GND
+
+* the four M3 holes are all the SAME CHASSIS_GND node (plated copper to the
+* chassis island); no winding, no passive — modelled as one node. A single 1G
+* keep-resistor to ground prevents a floating node (the real GND<->CHASSIS_GND
+* star is a layout copper stitch, modelled here as a high-Z bond only so the
+* node is not left floating; NOT a netlisted DC merge).
+Rk1 CHASSIS_GND 0 1G
+
+.ends mechanical
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto CHASSIS_GND settles to ~0 V at DC (1G >> 1k).
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end

@@ -1,0 +1,44 @@
+* debug_boot.cir — SPICE subckt for the carrier debug_boot subsystem.
+*
+* CARRIER-LOCAL: the subckt pins are the subsystem's real carrier nets (rails +
+* the strapped debug/boot signals), NOT abstract names. debug_boot has NO active
+* parts (it is headers + a DIP + a reset tact), so this subckt captures the
+* full PASSIVE network it adds: the JTAG insurance pull-ups, the BOOT0 series
+* strap, and the BOOTSEL/spare defined-high pull-ups. The DIP/reset switch
+* contacts are open at DC (the operator closes them), so the pull-ups define
+* every strapped node's resting level.
+*
+* Values mirror devkit_mini/subsystems/debug_boot/debug_boot.py one-for-one:
+*   R1 4k7  JTAG TMS pull-up   (+3V3 -> ZYNQ_TMS)
+*   R2 4k7  JTAG TDI pull-up   (+3V3 -> ZYNQ_TDI)
+*   R3 100R BOOT0 series strap (+3V3_SC -> BOOT0_SET, DIP pos1)
+*   R4 10k  BOOTSEL0 pull-up   (+3V3_SC -> STM32_GPIO7)
+*   R5 10k  BOOTSEL1 pull-up   (+3V3_SC -> STM32_GPIO8)
+*   R6 10k  spare    pull-up   (+3V3_SC -> BOOT_SPARE)
+*
+* Port order: the two rails, GND, then the strapped signals.
+
+.subckt debug_boot V3V3 V3V3SC GND TMS TDI BOOT0SET GPIO7 GPIO8 BOOTSPARE
+
+* JTAG insurance pull-ups (Zynq dedicated JTAG pins float without a probe)
+R1 V3V3 TMS 4k7
+R2 V3V3 TDI 4k7
+
+* BOOT0 series strap: 100R from +3V3_SC into the DIP pos1 node (vs the SoM's
+* 1k5 pull-down -> ~3.1 V at BOOT0 when the DIP closes).
+R3 V3V3SC BOOT0SET 100R
+
+* BOOTSEL[0:1] + spare defined-high pull-ups (closed = GND, open = pulled high)
+R4 V3V3SC GPIO7 10k
+R5 V3V3SC GPIO8 10k
+R6 V3V3SC BOOTSPARE 10k
+
+.ends debug_boot
+
+* Standalone smoke harness (ngspice -b; harmless under any board use): the
+* always-on SC rail at 3.3 V holds an open BOOTSEL strap high through its 10k.
+.subckt _src P
+V1 vin 0 3.3
+R1 vin P 10k
+.ends _src
+.end

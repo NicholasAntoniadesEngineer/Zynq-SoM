@@ -1,0 +1,57 @@
+* power_mon.cir — SPICE subckt for the 2x INA3221 rail telemetry block.
+*
+* CARRIER-LOCAL: unlike the project-agnostic subsystems/<name>/ library, this
+* subsystem wires the carrier's REAL net names, so the subckt pins are those
+* carrier nets (the four monitored rails split at their shunts, the always-on SC
+* supply + ground), not an abstract interface. The INA3221s are digital I2C
+* monitor ICs with no useful analog small-signal behaviour; this subckt captures
+* the PASSIVE network whose elements span TWO carrier external nets — the four
+* SERIES SENSE SHUNTS (RS1..RS4) and the per-IC supply decoupling — which is what
+* the local test and any board-level .op reason about. The CRITICAL-alert pull-up
+* terminates on the PMON_ALERT_N PORT (an internal/abstract status node here) and
+* so is NOT a subckt element; it is documented below for completeness.
+*
+* Values mirror devkit_mini/subsystems/power_mon/power_mon.py one-for-one (parse_si
+* compatible); test_cir_shunts_match_netlist / test_cir_caps_match_netlist
+* enforce equality against the external-spanning netlist passives:
+*   RS1 10mR  +VIN sense shunt        (+VIN     -> +VIN_SYS)
+*   RS2 10mR  +5V  sense shunt        (+5V_REG  -> +5V)
+*   RS3 10mR  +3V3 sense shunt        (+3V3_REG -> +3V3)
+*   RS4 20mR  +1V8 sense shunt        (+1V8_REG -> +1V8)
+*   C1  100n  U1 supply bypass        (+3V3_SC  -> GND)
+*   C2  100n  U2 supply bypass        (+3V3_SC  -> GND)
+*   C3  10u   bulk supply decoupling  (+3V3_SC  -> GND)
+*
+* The remaining passive terminates on an internal PORT node and is NOT a subckt
+* element — documented here for completeness:
+*   R1  10k   PMON_ALERT_N defined-high pull-up (+3V3_SC -> PMON_ALERT_N, the
+*             wire-OR CRITICAL alert to the bringup expander)
+*
+* Pin order: the four monitored rails (each as reg/source-side + board/load-side
+* pair, the order power_mon.py declares them), then the always-on SC supply, then
+* GND last by convention:
+*   +VIN +VIN_SYS +5V_REG +5V +3V3_REG +3V3 +1V8_REG +1V8 +3V3_SC GND
+
+.subckt power_mon +VIN +VIN_SYS +5V_REG +5V +3V3_REG +3V3 +1V8_REG +1V8 +3V3_SC GND
+
+* series sense shunts (research dossier table 1): 10 mR on the 3 A nets, 20 mR
+* on the 600 mA +1V8. Each splits its rail so the channel reads its own loads.
+RS1 +VIN     +VIN_SYS 10mR
+RS2 +5V_REG  +5V      10mR
+RS3 +3V3_REG +3V3     10mR
+RS4 +1V8_REG +1V8     20mR
+
+* per-IC supply decoupling + bulk on the always-on +3V3_SC rail
+C1 +3V3_SC GND 100n
+C2 +3V3_SC GND 100n
+C3 +3V3_SC GND 10u
+
+.ends power_mon
+
+* Standalone smoke harness (ngspice -b runs it; harmless under any board use):
+* a 1 V source through 1k onto +3V3_SC settles to 1 V at DC across the bypass.
+.subckt _src P
+V1 vin 0 1
+R1 vin P 1k
+.ends _src
+.end
