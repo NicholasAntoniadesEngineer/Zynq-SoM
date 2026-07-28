@@ -1065,36 +1065,121 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
             pos += sp + (gaps[i] if i < len(gaps) else 0.0)
 
 
+_SPATIAL_TRACE = os.environ.get("SCHGEN_SPATIAL_TRACE", "") == "1"
+
+_Rect = tuple[float, float, float, float, tuple[float, float, float, float]]
+
+
+def _spatial_bounds(far_ceil: float = 0.0,
+                    max_reach: float | None = None) -> tuple[float, float]:
+    """Static spatial-index bounds derived from the same constants/inputs the
+    separation checks read: the per-side reach bound (the intelligent_need
+    tier top + GRID snap guard + 0.05 quantization floor, raised to the max
+    ACTUAL block reach value of this query set — reaches exceed the tier
+    floor when a courtyard overhangs its zone box), and the interaction
+    envelope (max over CLEAR, PLACE_CLEAR, the doubled reach bound, the
+    overmold CABLE_NEIGHBOR_GAP and the contract far_min ceiling) used as
+    the bucket size. Pure derivation from pre-pack inputs — recomputed per
+    index, no state, never touched by solve results."""
+    from schgen.generate.pcb.constants import GRID, PLACE_CLEAR
+    from schgen.verify.fanout_gate import _TIER_TOP, _TIERS
+    need_ceil = max(_TIER_TOP[0], max(n for _p, n, _b in _TIERS))
+    reach_floor = round(need_ceil + GRID + 0.05, 4)
+    reach_bound = max(reach_floor, max_reach or 0.0)
+    envelope = max(CLEAR, PLACE_CLEAR, 2 * reach_bound,
+                   CABLE_NEIGHBOR_GAP, far_ceil)
+    return reach_bound, envelope
+
+
 class _Occupancy:
     """Lattice occupancy for first-fit-nearest-anchor placement. STEP TIGHTENED
     2.0 -> 1.0: a finer lattice lets each interior block land closer to its
     anchor centroid (less quantisation slop), so net-sharing subsystems cluster
     tighter and the cross-subsystem airwire (the binding LAW-5 term) drops,
     letting the grow loop stop at a smaller board. Determinism is preserved (the
-    scan order is still distance-sorted then lattice-index stable)."""
+    scan order is still distance-sorted then lattice-index stable).
+
+    SPATIAL NEIGHBORHOOD INDEX: rects are bucketed into a uniform grid
+    (bucket = the static interaction envelope), each inserted over its own
+    box inflated per side by ITS OWN fan-out reach + CLEAR; a ``fits`` query
+    scans only the cells covered by the candidate box inflated per side by
+    the CANDIDATE'S own reach. Any rect outside those cells is provably
+    non-interacting: the per-axis gap is max(CLEAR, facing reach sum), and
+    each pair's facing components are carried by the two inflations, so a
+    gap-violating pair's inflated boxes always intersect and share a cell.
+    The accept/reject boolean is identical to the exhaustive scan — pure
+    indexing acceleration, no caching, index dies with the instance. Bucket
+    lists append in insertion order and cells scan in fixed row-major order,
+    so iteration is deterministic. ``SCHGEN_SPATIAL_TRACE=1`` swaps in the
+    trace kernel (both scans per query, divergence raises); selected once at
+    import — zero cost when off."""
     STEP = 1.0
 
-    def __init__(self) -> None:
+    def __init__(self, far_ceil: float = 0.0,
+                 max_reach: float | None = None) -> None:
         # (x, y, w, h, reach): reach is the occupant's D13 per-side fan-out reach
         # (W, E, N, S) — the extra clearance a multi-pin subject exposed on that side
         # needs. SoM/corner reservations carry the zero reach.
-        self.rects: list[tuple[float, float, float, float,
-                               tuple[float, float, float, float]]] = []
+        self.rects: list[_Rect] = []
+        reach_bound, envelope = _spatial_bounds(far_ceil, max_reach)
+        if max(CLEAR, 2 * reach_bound) > envelope + 1e-9:
+            raise AssertionError(
+                f"spatial index: max pair interaction "
+                f"{max(CLEAR, 2 * reach_bound):.4f} mm (CLEAR {CLEAR:g} vs "
+                f"doubled reach bound {reach_bound:.4f}) exceeds the static "
+                f"interaction envelope {envelope:.4f} mm (max over CLEAR, "
+                f"PLACE_CLEAR, 2x reach bound, CABLE_NEIGHBOR_GAP "
+                f"{CABLE_NEIGHBOR_GAP:g}, contract far_min ceiling "
+                f"{far_ceil:g}) — the derived bounds drifted; fix "
+                f"_spatial_bounds, never widen a gate")
+        self._reach_bound = reach_bound
+        self._bucket = envelope
+        self._cells: dict[tuple[int, int], list[_Rect]] = {}
 
     def add(self, x: float, y: float, w: float, h: float,
             reach: tuple[float, float, float, float] = _ZeroReach) -> None:
-        self.rects.append((x, y, w, h, reach))
+        for c in reach:
+            if c > self._reach_bound:
+                raise AssertionError(
+                    f"spatial index: fan-out reach component {c} mm exceeds "
+                    f"the static reach bound {self._reach_bound:.4f} mm "
+                    f"(max of the intelligent_need tier top + GRID + 0.05 "
+                    f"floor and this query set's declared max reach) — "
+                    f"this rect was not in the bound derivation; re-derive "
+                    f"_spatial_bounds before indexing it")
+        rect = (x, y, w, h, reach)
+        self.rects.append(rect)
+        b = self._bucket
+        rw_, re_, rn_, rs_ = reach
+        iy0 = int((y - rn_ - CLEAR) // b)
+        iy1 = int((y + h + rs_ + CLEAR) // b)
+        for ix in range(int((x - rw_ - CLEAR) // b),
+                        int((x + w + re_ + CLEAR) // b) + 1):
+            for iy in range(iy0, iy1 + 1):
+                self._cells.setdefault((ix, iy), []).append(rect)
 
     def remove(self, x: float, y: float, w: float, h: float,
                reach: tuple[float, float, float, float] = _ZeroReach) -> None:
         """Drop a previously-added rect (for the iterative re-placement pass)."""
+        rect = (x, y, w, h, reach)
         try:
-            self.rects.remove((x, y, w, h, reach))
+            self.rects.remove(rect)
         except ValueError:
-            pass
+            return
+        b = self._bucket
+        rw_, re_, rn_, rs_ = reach
+        iy0 = int((y - rn_ - CLEAR) // b)
+        iy1 = int((y + h + rs_ + CLEAR) // b)
+        for ix in range(int((x - rw_ - CLEAR) // b),
+                        int((x + w + re_ + CLEAR) // b) + 1):
+            for iy in range(iy0, iy1 + 1):
+                lst = self._cells.get((ix, iy))
+                if lst is not None:
+                    lst.remove(rect)
 
-    def fits(self, x: float, y: float, w: float, h: float,
-             reach: tuple[float, float, float, float] = _ZeroReach) -> bool:
+    def _fits_exhaustive(self, x: float, y: float, w: float, h: float,
+                         reach: tuple[float, float, float, float] = _ZeroReach
+                         ) -> bool:
         if x < CLEAR or y < CLEAR or x + w > BOARD_W - CLEAR \
                 or y + h > BOARD_H - CLEAR:
             return False
@@ -1111,6 +1196,47 @@ class _Occupancy:
                     or y + h + gy <= ry or ry + rh + gy <= y):
                 return False
         return True
+
+    def _fits_hashed(self, x: float, y: float, w: float, h: float,
+                     reach: tuple[float, float, float, float] = _ZeroReach
+                     ) -> bool:
+        if x < CLEAR or y < CLEAR or x + w > BOARD_W - CLEAR \
+                or y + h > BOARD_H - CLEAR:
+            return False
+        b = self._bucket
+        cells = self._cells
+        cw_, ce_, cn_, cs_ = reach
+        iy0 = int((y - cn_) // b)
+        iy1 = int((y + h + cs_) // b)
+        for ix in range(int((x - cw_) // b), int((x + w + ce_) // b) + 1):
+            for iy in range(iy0, iy1 + 1):
+                lst = cells.get((ix, iy))
+                if not lst:
+                    continue
+                for rx, ry, rw, rh, r_reach in lst:
+                    gx = max(CLEAR, _fanout_sep(reach, r_reach,
+                                                "E" if x <= rx else "W"))
+                    gy = max(CLEAR, _fanout_sep(reach, r_reach,
+                                                "S" if y <= ry else "N"))
+                    if not (x + w + gx <= rx or rx + rw + gx <= x
+                            or y + h + gy <= ry or ry + rh + gy <= y):
+                        return False
+        return True
+
+    def _fits_traced(self, x: float, y: float, w: float, h: float,
+                     reach: tuple[float, float, float, float] = _ZeroReach
+                     ) -> bool:
+        ref = self._fits_exhaustive(x, y, w, h, reach)
+        new = self._fits_hashed(x, y, w, h, reach)
+        if ref is not new:
+            raise AssertionError(
+                f"spatial index DIVERGENCE: exhaustive={ref} hashed={new} "
+                f"for query x={x} y={y} w={w} h={h} reach={reach} over "
+                f"{len(self.rects)} rects (bucket={self._bucket:.4f}, "
+                f"reach bound={self._reach_bound:.4f})")
+        return new
+
+    fits = _fits_traced if _SPATIAL_TRACE else _fits_hashed
 
     def place_near(self, ax: float, ay: float, w: float,
                    h: float, reach: tuple[float, float, float, float] = _ZeroReach
@@ -1381,6 +1507,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # halo. Zero for a block with no under-margined multi-pin subject -> tight CLEAR.
     for b in plan.edge_blocks + interior:
         b.fanout_reach = _block_fanout_reach(b.name, zg)
+    max_reach = max((c for b in plan.edge_blocks + interior
+                     for c in b.fanout_reach), default=0.0)
 
     # number of placed (non-SoM) subsystems == the gate's n_subsystems, so the
     # grow loop can size the board against the SAME LAW-5 cross-airwire budget.
@@ -1406,6 +1534,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # (pd_input|usb_pd: 8 == the 8 MST cross-airwires measured at P0).
     from schgen.generate import floorplan_compose as _fc
     compose_index = _fc.build_term_index([sc.name for sc in sheets])
+    far_ceil = max((t.bound or 0.0 for t in compose_index.terms
+                    if t.kind == "far_min"), default=0.0)
     compose = None
     if compose_index.hard:
         _channels: dict[frozenset, int] = {}
@@ -1483,7 +1613,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
         plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
         if not _attempt_pack(plan, interior, edge_of, zbox, affinity,
-                             som_pull, compose=compose, compact=True):
+                             som_pull, compose=compose, compact=True,
+                             far_ceil=far_ceil, max_reach=max_reach):
             raise RuntimeError(
                 "floorplan: the REAL 2-sided packed blocks do not fit the fixed "
                 f"outline {BOARD_W:g}x{BOARD_H:g} declared in "
@@ -1537,7 +1668,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
             plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
             plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
             if not _attempt_pack(plan, interior, edge_of, zbox,
-                                 affinity, som_pull, compose=compose):
+                                 affinity, som_pull, compose=compose,
+                                 far_ceil=far_ceil, max_reach=max_reach):
                 continue
             fit_seen = True
             budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
@@ -1573,7 +1705,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
         plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
         if not _attempt_pack(plan, interior, edge_of, zbox,
-                             affinity, som_pull, compose=compose):
+                             affinity, som_pull, compose=compose,
+                             far_ceil=far_ceil, max_reach=max_reach):
             return False, 0.0, 0.0
         bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
         px = _cross_proxy(plan, plan.edge_blocks + interior,
@@ -1622,7 +1755,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # RE-PACK at the chosen winner so plan holds exactly that layout (the search
     # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
     if not _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
-                         compose=compose, compact=True):
+                         compose=compose, compact=True, far_ceil=far_ceil,
+                         max_reach=max_reach):
         raise RuntimeError(
             f"floorplan: the winning outline {BOARD_W:g}x{BOARD_H:g} failed "
             "the final compact re-pack — refusing to emit a stale layout")
@@ -1720,7 +1854,9 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                   affinity: dict[str, dict[str, float]],
                   som_pull: dict[str, float],
                   compose: tuple | None = None,
-                  compact: bool = False) -> bool:
+                  compact: bool = False,
+                  far_ceil: float = 0.0,
+                  max_reach: float | None = None) -> bool:
     plan.spilled = []
     for b in plan.edge_blocks:
         b.w, b.h = zbox[b.name]
@@ -1772,7 +1908,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                     or a.y + a.h + cgy <= b.y or b.y + b.h + cgy <= a.y):
                 return False
 
-    occ = _Occupancy()
+    occ = _Occupancy(far_ceil, max_reach)
     # reserve the SoM body PLUS a clearance pad: the placement_mech keepout
     # (som_core) is drawn ~3% larger than the bare body for mating clearance, so a
     # zone packed flush against the body clips that enlarged core (the ethernet
