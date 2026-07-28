@@ -98,5 +98,7 @@ each PNG passing the netlist, ERC and visual gates.
 
 <img src="docs/block_diagram.svg" alt="Generated block diagram" width="900">
 
+[<img src="carrier/renders/ratsnest_top.png" alt="Board ratsnest (top)" width="420">](carrier/README.md#ratsnest-views)<br>**[Ratsnest views](carrier/README.md#ratsnest-views)** — airwires per subsystem.
+
 See **[carrier/README.md](carrier/README.md#generated-3d-board-views)** for all 8 board views + the full sheet gallery (thumbnails + descriptions).
 <!-- /schgen:gallery -->
