@@ -1,0 +1,33 @@
+schgen design-rule completeness gate
+================================================================
+
+rules (model-only, pin FUNCTION inferred by NAME):
+  DECAP every multi-pin IC supply pin has a cap to GND on its sheet
+  I2C   every i2c-typed bus net has a pull-up to a rail (board-wide)
+  RESET every reset net carries an RC (cap-to-GND + pull resistor)
+  STRAP no config-input pin floats on a passive-only undriven net
+  EP    every exposed/thermal pad is netted to a GROUND net (never nc/floating, never a non-GND net)
+
+checked: 15 IC supply pins, 2 i2c nets, 2 reset nets, 0 config pins, 3 exposed pads
+
+DECAP — missing decoupling (0):
+  (none)
+
+I2C — i2c bus with no pull-up (2):
+  * STM32_I2C2_SCL (i2c, typed on power_mon) has NO pull-up resistor to any power rail anywhere on the board — an open-drain I2C bus is dead without pull-ups; add a pull-up or c.waive_pull('STM32_I2C2_SCL', reason)
+  * STM32_I2C2_SDA (i2c, typed on power_mon) has NO pull-up resistor to any power rail anywhere on the board — an open-drain I2C bus is dead without pull-ups; add a pull-up or c.waive_pull('STM32_I2C2_SDA', reason)
+
+RESET — reset without a full RC (0):
+  (none)
+
+STRAP — floating control input (0):
+  (none)
+
+EP — exposed pad not on GND (0):
+  (none)
+
+waivers — author-declared, verbatim (2):
+  RESET CP2102N_RST_N (on uart_bridge): open-drain RST: 1k pull-up only, internal POR; no RC cap
+  RESET STM32_NRST (on debug_boot): internal-pull whitelist (part provides its own pull; external RC optional)
+
+DESIGN RULES: FAIL (2 findings, 2 waived)

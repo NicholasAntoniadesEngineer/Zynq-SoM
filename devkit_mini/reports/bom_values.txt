@@ -1,0 +1,9 @@
+bom value gate (LCSC actual value == declared value)
+============================================================
+catalog: 102 LCSC codes; 104 inline-passive checks
+mismatches: none
+
+UNVERIFIED — reported, NOT failing (3):
+  som_j1:J1 'DF40C-100DP-0.4V(51)' LCSC C531031 (not in catalog)
+  som_j2:J2 'DF40C-100DP-0.4V(51)' LCSC C531031 (not in catalog)
+  som_j3:J3 'DF40C-100DP-0.4V(51)' LCSC C531031 (not in catalog)

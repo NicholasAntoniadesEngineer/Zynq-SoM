@@ -1,0 +1,33 @@
+schgen per-part rule engine (ratings vs netlist usage)
+==============================================================================
+
+enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
+57 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+
+UNSPEC — reported, NOT failing (22):
+  ? debug_boot:J1 (878311420, LCSC C240854) — no ratings row
+  ? debug_boot:J2 (HX_JN1.27-2x5, LCSC C42372555) — no ratings row
+  ? debug_boot:SW1 (DIP-4, LCSC C3293144) — no ratings row
+  ? debug_boot:SW2 (RESET, LCSC C318884) — no ratings row
+  ? pd_input:C3 (47n) — cap rail unresolved
+  ? pd_input:J1 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
+  ? power:C24 (1u) — cap rail unresolved
+  ? power:C28 (1u) — cap rail unresolved
+  ? power:C31 (1u) — cap rail unresolved
+  ? power:C32 (1u) — cap rail unresolved
+  ? power:C4 (100n) — cap rail unresolved
+  ? power:C9 (100n) — cap rail unresolved
+  ? power:R1 (40.2k, LCSC C12447) — no ratings row
+  ? power:R4 (23.2k, LCSC C23346) — no ratings row
+  ? power_som:C17 (100n) — cap rail unresolved
+  ? power_som:C20 (100n) — cap rail unresolved
+  ? power_som:C22 (1u) — cap rail unresolved
+  ? power_som:C23 (1u) — cap rail unresolved
+  ? som_j1:J1 (DF40C-100DP-0.4V(51), LCSC C531031) — no ratings row
+  ? som_j2:J2 (DF40C-100DP-0.4V(51), LCSC C531031) — no ratings row
+  ? som_j3:J3 (DF40C-100DP-0.4V(51), LCSC C531031) — no ratings row
+  ? usb_uart_connector:J1 (TYPE-C-31-M-12, LCSC C165948) — no ratings row
+
+errors: none
+
+PART RULES: PASS (57 checks, 0 findings, 22 unspeced, 0 waived)

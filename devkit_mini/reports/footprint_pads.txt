@@ -1,0 +1,5 @@
+footprint pad-coverage gate (every symbol pin NUMBER has a footprint PAD)
+================================================================
+STATUS: HARD-FAIL (any symbol pin with no footprint pad fails the board) — the ethernet:T1 25/26 open that motivated it is fixed
+147 parts with a resolved footprint checked
+violations: none

@@ -1,0 +1,49 @@
+schgen test-point coverage gate
+================================================================
+
+rule: every POWER/GROUND rail + key single-ended bus (i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) owns a probe point or an explicit waiver.
+
+required nets (23):
+  +1V8                   [rail     ] TP @ power:TP3
+  +1V8_REG               [rail     ] WAIVED (power_mon): reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)
+  +3V3                   [rail     ] TP @ power:TP2
+  +3V3_REG               [rail     ] WAIVED (power_mon): reg-side of RS3 — probe across the shunt (the +3V3 TP is the post-shunt/load side)
+  +3V3_SC                [rail     ] UNCOVERED
+  +5V                    [rail     ] TP @ power:TP1
+  +5V_REG                [rail     ] WAIVED (power_mon): reg-side of RS2 — probe across the shunt (the +5V TP is the post-shunt/load side)
+  +5V_SOM                [rail     ] TP @ power_som:TP1
+  +VBUS_IN               [rail     ] TP @ pd_input:TP1
+  +VIN                   [rail     ] TP @ pd_input:TP2
+  +VIN_SYS               [rail     ] WAIVED (power_mon): reg-side of RS1 — probe across the shunt (the +VIN @ pd_input TP is the post-shunt/load side)
+  CHASSIS_GND            [rail     ] WAIVED (pd_input): chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed
+  EN_1V8                 [enable   ] UNCOVERED
+  EN_3V3                 [enable   ] UNCOVERED
+  EN_5V0                 [enable   ] UNCOVERED
+  GND                    [rail     ] TP @ power:TP4
+  SDIO_CLK               [sd_bus   ] UNCOVERED
+  SDIO_CMD               [sd_bus   ] UNCOVERED
+  STM32_I2C2_SCL         [i2c      ] UNCOVERED
+  STM32_I2C2_SDA         [i2c      ] UNCOVERED
+  VBUS_OUT_EN            [enable   ] UNCOVERED
+  ZYNQ_PS_UART0_RXD      [uart     ] TP @ uart_bridge:TP2
+  ZYNQ_PS_UART0_TXD      [uart     ] TP @ uart_bridge:TP1
+
+waivers — author-declared, verbatim (5):
+  +1V8_REG               (power_mon) reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)
+  +3V3_REG               (power_mon) reg-side of RS3 — probe across the shunt (the +3V3 TP is the post-shunt/load side)
+  +5V_REG                (power_mon) reg-side of RS2 — probe across the shunt (the +5V TP is the post-shunt/load side)
+  +VIN_SYS               (power_mon) reg-side of RS1 — probe across the shunt (the +VIN @ pd_input TP is the post-shunt/load side)
+  CHASSIS_GND            (pd_input) chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed
+
+ERRORS (9):
+  ERROR: +3V3_SC [rail] has no test point and no waiver — add c.testpoint('+3V3_SC') or c.waive_tp('+3V3_SC', reason)
+  ERROR: EN_1V8 [enable] has no test point and no waiver — add c.testpoint('EN_1V8') or c.waive_tp('EN_1V8', reason)
+  ERROR: EN_3V3 [enable] has no test point and no waiver — add c.testpoint('EN_3V3') or c.waive_tp('EN_3V3', reason)
+  ERROR: EN_5V0 [enable] has no test point and no waiver — add c.testpoint('EN_5V0') or c.waive_tp('EN_5V0', reason)
+  ERROR: SDIO_CLK [sd_bus] has no test point and no waiver — add c.testpoint('SDIO_CLK') or c.waive_tp('SDIO_CLK', reason)
+  ERROR: SDIO_CMD [sd_bus] has no test point and no waiver — add c.testpoint('SDIO_CMD') or c.waive_tp('SDIO_CMD', reason)
+  ERROR: STM32_I2C2_SCL [i2c] has no test point and no waiver — add c.testpoint('STM32_I2C2_SCL') or c.waive_tp('STM32_I2C2_SCL', reason)
+  ERROR: STM32_I2C2_SDA [i2c] has no test point and no waiver — add c.testpoint('STM32_I2C2_SDA') or c.waive_tp('STM32_I2C2_SDA', reason)
+  ERROR: VBUS_OUT_EN [enable] has no test point and no waiver — add c.testpoint('VBUS_OUT_EN') or c.waive_tp('VBUS_OUT_EN', reason)
+
+TESTPOINTS: FAIL (9/23 required nets covered, 5 waived)
