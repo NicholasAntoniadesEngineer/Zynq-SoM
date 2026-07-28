@@ -1,4 +1,69 @@
+PLACEMENT-CONTRACT GATE (board_qwiic): PASS (contract=yes, 1 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (camera): PASS (contract=yes, 4 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
 PLACEMENT-CONTRACT GATE (ethernet): PASS (contract=yes, 6 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (fmc): PASS (contract=yes, 3 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (hdmi_rx): PASS (contract=yes, 3 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (hdmi_rx_term): PASS (contract=yes, 4 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (hdmi_tx): PASS (contract=yes, 6 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (lcd): PASS (contract=yes, 3 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (microsd): PASS (contract=yes, 5 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (motor_pwm): PASS (contract=yes, 7 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (motor_sense): PASS (contract=yes, 6 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (pd_input): PASS (contract=yes, 4 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (pmod): PASS (contract=yes, 2 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (pmod_expansion): PASS (contract=yes, 4 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0
@@ -8,7 +73,42 @@ PLACEMENT-CONTRACT GATE (power): PASS (contract=yes, 20 structures)
   unresolved refs: 0
   violations: 0
 
+PLACEMENT-CONTRACT GATE (power_mon): PASS (contract=yes, 7 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (power_som): PASS (contract=yes, 11 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (uart_bridge): PASS (contract=yes, 4 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (usb_jtag): PASS (contract=yes, 6 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (usb_jtag_connector): PASS (contract=yes, 1 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
 PLACEMENT-CONTRACT GATE (usb_pd): PASS (contract=yes, 6 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (usb_uart_connector): PASS (contract=yes, 1 structures)
+  fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
+  unresolved refs: 0
+  violations: 0
+
+PLACEMENT-CONTRACT GATE (usbc_otg): PASS (contract=yes, 3 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0

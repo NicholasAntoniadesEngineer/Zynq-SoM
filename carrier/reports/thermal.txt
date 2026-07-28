@@ -40,7 +40,7 @@ datasheet provenance (every RthJA / Tj_max / Rds_on cited):
 
 pour-aware effective RthJA (* rows) — basis, per part (bare->credited, cited; conservative, bench-verify at bring-up):
   LM61460AANRJRR   bare 58.7 -> eff 35 C/W ; DS 7.3: bare 58.7 C/W (JESD51-7) vs 25 C/W on a 4-layer PCB (DS note + LM61460-Q1 EVM). Credit gated on EMITTED copper, verified in the .kicad_pcb per build: In1.Cu GND plane + 8-via PGND field + local F.Cu/B.Cu pours (SNVSBD5D 11.1.1). Credited 35 C/W — 10 C/W above the DS 4-layer 25, ~30% of the bare->4L delta held back (0.5-oz inner plane, modest pours vs the EVM, 3-buck mutual heating)
-                   emitted-copper evidence (verified in the board file): In1 GND plane + U20001: 8/6 GND vias<=5.2mm, local F+B pour YES; U20002: 8/6 GND vias<=5.2mm, local F+B pour YES; U22004: 8/6 GND vias<=5.2mm, local F+B pour YES
+                   emitted-copper evidence (verified in the board file): In1 GND plane + U20001: 8/6 GND vias<=5.2mm, local F+B pour YES; U20002: 8/6 GND vias<=5.2mm, local F+B pour YES; U22004: 7/6 GND vias<=5.2mm, local F+B pour YES
   TLV75725PDYDR    bare 231 -> eff 92.5 C/W ; DS DYD RthJA 92.5 C/W presumes the JESD51-5 stackup (thermal pad soldered + vias into a buried plane). Credit gated on EMITTED copper, verified per build: In1.Cu GND plane + >=2 GND vias beside the pad + local F.Cu pour. Fallback without it: DBV bare 231 C/W (no pad benefit claimable)
                    emitted-copper evidence (verified in the board file): In1 GND plane + U11001: 3/2 GND vias<=3mm, local F pour YES
 

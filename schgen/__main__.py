@@ -1449,6 +1449,39 @@ def cmd_board(args: argparse.Namespace) -> int:
         for label, dt in sorted(_laps, key=lambda x: -x[1]):
             print(f"  {dt:7.2f}  ({100 * dt / total:4.1f}%)  {label}")
         print(f"  {total:7.2f}  TOTAL")
+    # MACHINE-READABLE VERDICTS (P4): every board gate's structured result ->
+    # reports/board_verdicts.json (scalars + string lists, generically pruned).
+    # The human report text + renders stay the authoritative channels (Principle
+    # 0); this file is the standing AI/tooling interface — no CLI flag, always on.
+    if pcb_res is not None:
+        import dataclasses as _dc
+
+        def _lean(o):
+            if _dc.is_dataclass(o) and not isinstance(o, type):
+                out = {}
+                for f in _dc.fields(o):
+                    v = getattr(o, f.name)
+                    if isinstance(v, (int, float, str, bool)) or v is None:
+                        out[f.name] = v
+                    elif (isinstance(v, (list, tuple))
+                          and all(isinstance(x, str) for x in v)):
+                        out[f.name] = list(v)[:200]
+                return out
+            if isinstance(o, dict):
+                sub = {k: _lean(v) for k, v in o.items()}
+                return {k: v for k, v in sub.items() if v not in (None, {})}
+            if isinstance(o, (int, float, str, bool)) or o is None:
+                return o
+            return None
+
+        _verd = {k: _lean(v) for k, v in pcb_res.items()}
+        _verd = {k: v for k, v in _verd.items() if v not in (None, {})}
+        _verd["board_ok"] = ok_all
+        (rep_dir / "board_verdicts.json").write_text(
+            json.dumps(_verd, indent=1, default=str, sort_keys=True) + "\n")
+        print(f"VERDICTS: {rep_dir / 'board_verdicts.json'} "
+              f"({len(_verd)} gates, machine-readable)")
+
     print(f"BOARD: {'PASS' if ok_all else 'FAIL'} "
           f"({len(sheets)} sheets -> {CARRIER / 'Zynq_Carrier.kicad_pro'})")
     return 0 if ok_all else 1

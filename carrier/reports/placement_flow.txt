@@ -1,14 +1,23 @@
-PLACEMENT-FLOW GATE: PASS (3 external contract(s); board_area=31020mm^2, flow_budget=128.9mm)
-  fails: flow=0/4 facing=0/1 far=0/2 near_max=0/2
+PLACEMENT-FLOW GATE: PASS (8 external contract(s); board_area=36120mm^2, flow_budget=133.8mm)
+  fails: flow=0/7 facing=0/2 far=0/5 near_max=0/4
   unresolved: 0
   violations: 0
-  detail: 9
-    facing power->power_som: dot=+1240.93 angle=1.7deg (output@(59.4849, 52.7132) zone@(46.6813, 49.333) down@(136.5763, 75.9431))
-    far ethernet vs power: 131.33mm / >= 10mm
-    far power vs ethernet.line_side: 131.33mm / >= 10mm
-    flow pd_input->usb_pd: 15.05mm / 128.9mm budget
-    flow power->power_som: 93.75mm / 128.9mm budget
-    flow usb_pd->power: 62.42mm / 128.9mm budget
-    flow usb_pd->power: 62.42mm / 128.9mm budget
-    near_max ethernet to rj45_connector: 2.52mm gap / <= 20mm
-    near_max usb_pd to pd_input: 1.92mm gap / <= 10mm
+  detail: 18
+    facing power->power_som: dot=+1273.11 angle=2.6deg (output@(86.1549, 76.8432) zone@(73.3513, 73.463) down@(165.203, 102.183))
+    facing power_som->@som: dot=+516.76 angle=22.4deg (output@(152.155, 101.0649) zone@(165.203, 102.183) down@(124.5, 115.0))
+    far ethernet vs power: 133.50mm / >= 10mm
+    far motor_sense vs power: 156.58mm / >= 10mm
+    far motor_sense vs power_som: 62.11mm / >= 10mm
+    far power vs ethernet.line_side: 133.50mm / >= 10mm
+    far power_som vs ethernet.line_side: 62.93mm / >= 10mm
+    flow camera->@som: 94.07mm / 133.8mm budget
+    flow hdmi_tx->@som: 65.68mm / 133.8mm budget
+    flow pd_input->usb_pd: 16.22mm / 133.8mm budget
+    flow power->power_som: 96.24mm / 133.8mm budget
+    flow power_mon->power_som: 71.76mm / 133.8mm budget
+    flow usb_pd->power: 55.34mm / 133.8mm budget
+    flow usb_pd->power: 55.34mm / 133.8mm budget
+    near_max ethernet to rj45_connector: 1.25mm gap / <= 20mm
+    near_max hdmi_rx_term to som_j2: 6.24mm gap / <= 10mm
+    near_max motor_sense to motor_pwm: 2.04mm gap / <= 20mm
+    near_max usb_pd to pd_input: 2.48mm gap / <= 10mm
