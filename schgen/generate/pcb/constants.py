@@ -11,11 +11,12 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
 from schgen.generate import constraints as cst
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PARTS_DIR = REPO_ROOT / "parts"
-CARRIER = REPO_ROOT / "carrier"
+CARRIER = PROJECT_ROOT
 
 # KiCad-installed standard footprint libraries (the non-parts/ footprints —
 # Resistor_SMD, Capacitor_SMD, Package_*, Diode_SMD, LED_SMD, TestPoint,

@@ -44,10 +44,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core.model import Circuit, NetClass, PortType, pair_polarity
+from schgen.core.project import PROJECT_ROOT
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
-SOM_INTERFACE = REPO_ROOT / "carrier" / "som_interface.json"
+SUBSYSTEMS_DIR = PROJECT_ROOT / "subsystems"
+SOM_INTERFACE = PROJECT_ROOT / "som_interface.json"
 
 # ---- the alias map -------------------------------------------------------------
 # Rail spellings differ between the SoM project and the carrier house style.
@@ -475,7 +476,7 @@ def link(sheets: list[SheetCircuit],
 
 def _load_som_conn_gen():
     import importlib.util
-    gen_path = REPO_ROOT / "carrier" / "som_conn_gen.py"
+    gen_path = PROJECT_ROOT / "som_conn_gen.py"
     spec = importlib.util.spec_from_file_location("_link_som_conn_gen", gen_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -620,7 +621,7 @@ def cmd_link(args: argparse.Namespace) -> int:
     # `schgen board` uses, so the two agree. `-o OUTDIR` redirects every
     # artifact there instead (an isolated-output escape hatch); it is never
     # carrier/out. The board emission goes to the normal carrier/ taxonomy.
-    carrier = REPO_ROOT / "carrier"
+    carrier = PROJECT_ROOT
     override = args.outdir
     if override is None and args.subsystems:
         # Guard (DEF-4): a PARTIAL link — an explicit subset of sheets — must

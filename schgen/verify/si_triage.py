@@ -38,8 +38,10 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_SOM_CONN_GEN = _REPO_ROOT / "carrier" / "som_conn_gen.py"
+_SOM_CONN_GEN = PROJECT_ROOT / "som_conn_gen.py"
 
 GENUINE = "GENUINE"
 MODERATE = "MODERATE"

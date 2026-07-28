@@ -43,8 +43,10 @@ import importlib.util
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CARRIER_SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
+CARRIER_SUBSYSTEMS_DIR = PROJECT_ROOT / "subsystems"
 LIBRARY_SUBSYSTEMS_DIR = REPO_ROOT / "subsystems"
 
 

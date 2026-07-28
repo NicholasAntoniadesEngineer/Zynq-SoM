@@ -40,6 +40,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core.config import MISPLACED_OVERLAP
+from schgen.core.project import PROJECT_ROOT
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PARTS_DIR = _REPO_ROOT / "parts"
@@ -153,7 +154,7 @@ def _resolve_model_path(raw: str, model_dir: Path) -> Path | None:
     s = s.replace("${KISYS3DMOD}", str(model_dir))
     # our part .wrl models reference ${KIPRJMOD}/../parts/<MPN>/<MPN>.wrl, where
     # KIPRJMOD is the carrier project dir; resolve it to the repo's carrier/.
-    s = s.replace("${KIPRJMOD}", str(_REPO_ROOT / "carrier"))
+    s = s.replace("${KIPRJMOD}", str(PROJECT_ROOT))
     if "$" in s:                       # an env var we do not know -> unresolved
         return None
     p = Path(s)

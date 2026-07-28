@@ -23,10 +23,11 @@ import argparse
 from pathlib import Path
 
 from schgen.core.link import load_subsystem
+from schgen.core.project import PROJECT_ROOT
 from schgen.generate import bringup_facts as bf
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_OUT = REPO_ROOT / "carrier" / "firmware" / "zynq_carrier_contract.h"
+DEFAULT_OUT = PROJECT_ROOT / "firmware" / "zynq_carrier_contract.h"
 
 SOURCES = (
     "carrier/som_interface.json",

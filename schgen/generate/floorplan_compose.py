@@ -39,6 +39,8 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # ---- constants (T1 spec §4 — every threshold carries a basis; none runtime-
@@ -106,7 +108,7 @@ _KNOWN_EXTERNAL_KEYS = {"flow", "downstream", "output_roles", "far", "near_max",
 _SOM_TOKEN = "@som"
 
 
-ESCAPE_SIDECAR = REPO_ROOT / "carrier" / "escape_block.json"
+ESCAPE_SIDECAR = PROJECT_ROOT / "escape_block.json"
 
 
 def escape_corridors(path: Path | None = None

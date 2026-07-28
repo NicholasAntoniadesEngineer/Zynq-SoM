@@ -14,11 +14,17 @@ a spec is a build error, not a silent default.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PROJECT_ROOT = REPO_ROOT / "carrier"
+# U1f: the project root is data, not engine — SCHGEN_PROJECT names a directory
+# (relative to the repo root, or absolute) holding project.json; the CLI's
+# --project sets it before engine modules resolve their paths.
+_PROJ = os.environ.get("SCHGEN_PROJECT", "carrier")
+PROJECT_ROOT = (Path(_PROJ) if Path(_PROJ).is_absolute()
+                else REPO_ROOT / _PROJ)
 
 
 @dataclass(frozen=True)

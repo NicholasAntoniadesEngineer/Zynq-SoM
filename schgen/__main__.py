@@ -21,6 +21,17 @@ the declared circuits — manufacture-ready part selection lives in the model.
 
 from __future__ import annotations
 
+import os as _os
+import sys as _sys
+
+# U1f: --project must be visible BEFORE engine modules import (their paths
+# resolve at import time from SCHGEN_PROJECT).
+if "--project" in _sys.argv:
+    _i = _sys.argv.index("--project")
+    if _i + 1 < len(_sys.argv):
+        _os.environ["SCHGEN_PROJECT"] = _sys.argv[_i + 1]
+        del _sys.argv[_i:_i + 2]
+
 import argparse
 import ast
 import csv
@@ -33,6 +44,7 @@ import sys
 from pathlib import Path
 
 from schgen.core.model import Circuit, NetClass
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.symbols import Library
 from schgen.layout import place
 from schgen.output.emit import Junction as EJunction
@@ -40,7 +52,7 @@ from schgen.output.emit import PlacedDesign, Wire, emit
 from schgen.verify import netlist_gate, visual_gate
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SUBSYSTEMS_DIR = REPO_ROOT / "carrier" / "subsystems"
+SUBSYSTEMS_DIR = PROJECT_ROOT / "subsystems"
 
 
 def _subsystem_path(name_or_path: str) -> Path:
@@ -312,7 +324,7 @@ def cmd_bom(args: argparse.Namespace) -> int:
     return 0
 
 
-CARRIER = REPO_ROOT / "carrier"
+CARRIER = PROJECT_ROOT
 
 
 def _pcb_error_count(pcb_path: Path) -> int:
@@ -1384,7 +1396,7 @@ def cmd_board(args: argparse.Namespace) -> int:
             _pcb_path = None                 # fast inner-loop: skip the 3D raytrace
         if _pcb_path is not None:
             _r3d = render3d.render(Path(_pcb_path),
-                                   REPO_ROOT / "carrier" / "renders")
+                                   PROJECT_ROOT / "renders")
             # If THIS build just CREATED the 3D PNGs (a fresh tree where the
             # gallery step above saw none on disk), re-splice the READMEs so the
             # 3D gallery references the renders in this same build, not the next
@@ -1628,7 +1640,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="SoM connectors to trace (default: J1,J2,J3 — the "
                          "PL fans out on J1 too: bank-35 FMC LA08-11)")
     xd.add_argument("-o", "--output", type=Path,
-                    default=REPO_ROOT / "carrier" / "fpga"
+                    default=PROJECT_ROOT / "fpga"
                     / "Zynq_Carrier_pins.xdc")
     from schgen.generate.xdc import cmd_xdc
     xd.set_defaults(func=cmd_xdc)

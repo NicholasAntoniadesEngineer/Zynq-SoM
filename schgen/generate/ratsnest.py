@@ -29,6 +29,7 @@ import argparse
 import colorsys
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
 from schgen.generate import pcb as pcb_mod
 from schgen.generate.pcb import (
     ORIGIN_X,
@@ -39,7 +40,7 @@ from schgen.generate.pcb import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CARRIER = REPO_ROOT / "carrier"
+CARRIER = PROJECT_ROOT
 
 PNG_TOP = CARRIER / "renders" / "ratsnest_top.png"
 PNG_BOTTOM = CARRIER / "renders" / "ratsnest_bottom.png"

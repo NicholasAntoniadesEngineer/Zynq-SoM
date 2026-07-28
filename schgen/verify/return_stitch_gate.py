@@ -37,6 +37,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
+
 #: HARD admission radius (mm), contact pad center -> nearest som_escape GND
 #: via center.  Basis: K=2 admits a ground at ~2 contact steps; the channel
 #: geometry bounds the equivalent carrier-side spur at
@@ -110,7 +112,7 @@ class ReturnStitchResult:
 
 
 def _som_interface_sha256() -> str:
-    p = _REPO_ROOT / "carrier" / "som_interface.json"
+    p = PROJECT_ROOT / "som_interface.json"
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 

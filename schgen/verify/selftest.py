@@ -89,6 +89,7 @@ from pathlib import Path
 
 from schgen.core import sexpr
 from schgen.core.model import Circuit, NetClass, PinRef
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.sexpr import Sym
 from schgen.core.symbols import GRID, Library, pin_page_position
 from schgen.layout import place
@@ -103,7 +104,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # sheet (small enough that mutating EVERY wire stays fast).
 DEFAULT_SHEETS = (
     REPO_ROOT / "schgen" / "tests" / "m1_rc_sheet.py",
-    REPO_ROOT / "carrier" / "subsystems" / "uart_bridge.py",
+    PROJECT_ROOT / "subsystems" / "uart_bridge.py",
 )
 
 
@@ -1119,7 +1120,7 @@ def _resolve_sheet(spec: str) -> Path:
     p = Path(spec)
     if p.suffix == ".py" and p.exists():
         return p.resolve()
-    cand = REPO_ROOT / "carrier" / "subsystems" / f"{spec}.py"
+    cand = PROJECT_ROOT / "subsystems" / f"{spec}.py"
     if cand.exists():
         return cand
     raise SystemExit(f"selftest: sheet not found: {spec}")

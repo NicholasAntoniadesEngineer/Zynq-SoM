@@ -28,9 +28,11 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-LEDGER_JSON = REPO_ROOT / "carrier" / "reports" / "compose_ledger.json"
-LEDGER_MD = REPO_ROOT / "carrier" / "reports" / "compose_ledger.md"
+LEDGER_JSON = PROJECT_ROOT / "reports" / "compose_ledger.json"
+LEDGER_MD = PROJECT_ROOT / "reports" / "compose_ledger.md"
 
 # ---- advisory floors (T1 spec §4 — repair TRIGGERS, never pass/fail) -----------
 FLOOR_FLOW_MM = 10.0      # judgment: 2 x OUTLINE_SNAP (5.0) — a flow hop within

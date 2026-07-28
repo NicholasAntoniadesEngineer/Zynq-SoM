@@ -40,10 +40,11 @@ import json
 import re
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.som_interface import extract_zynq
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CARRIER = REPO_ROOT / "carrier"
+CARRIER = PROJECT_ROOT
 DEFAULT_SOM = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 DEFAULT_CONTRACT = CARRIER / "som_interface.json"
 DEFAULT_OUT = CARRIER / "firmware" / "carrier_pl.dtsi"

@@ -55,12 +55,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core import sexpr
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.sexpr import Sym
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-_PCB = REPO_ROOT / "carrier" / "Zynq_Carrier.kicad_pcb"
-_DRU = REPO_ROOT / "carrier" / "manufacturing" / "Zynq_Carrier_pcb.kicad_dru"
-_PRO = REPO_ROOT / "carrier" / "Zynq_Carrier.kicad_pro"
+_PCB = PROJECT_ROOT / "Zynq_Carrier.kicad_pcb"
+_DRU = PROJECT_ROOT / "manufacturing" / "Zynq_Carrier_pcb.kicad_dru"
+_PRO = PROJECT_ROOT / "Zynq_Carrier.kicad_pro"
 
 
 # ---- the fab capability profile (PINNED, CITED) --------------------------------

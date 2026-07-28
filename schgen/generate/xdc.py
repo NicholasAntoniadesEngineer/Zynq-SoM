@@ -36,12 +36,13 @@ from pathlib import Path
 
 from schgen.core.link import _vcco_rail_map
 from schgen.core.model import Circuit, NetClass, PortType
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.som_interface import extract_zynq
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOM = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
-DEFAULT_CONTRACT = REPO_ROOT / "carrier" / "som_interface.json"
-DEFAULT_OUT = REPO_ROOT / "carrier" / "fpga" / "Zynq_Carrier_pins.xdc"
+DEFAULT_CONTRACT = PROJECT_ROOT / "som_interface.json"
+DEFAULT_OUT = PROJECT_ROOT / "fpga" / "Zynq_Carrier_pins.xdc"
 
 # Carrier spelling of SoM rail names (mirror of link.RAIL_ALIASES — the one
 # enumerated rail alias; signals are NEVER respelled).
@@ -56,7 +57,7 @@ def _function_map() -> dict[str, str]:
     as som_conn_gen renamed it — or every renamed pin would read as an orphan.
     Loaded from the SAME source the J-sheets use, so the two cannot drift."""
     import importlib.util
-    gen_path = REPO_ROOT / "carrier" / "som_conn_gen.py"
+    gen_path = PROJECT_ROOT / "som_conn_gen.py"
     spec = importlib.util.spec_from_file_location("_xdc_som_conn_gen", gen_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

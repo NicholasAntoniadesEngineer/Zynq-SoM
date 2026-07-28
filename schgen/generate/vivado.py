@@ -38,14 +38,15 @@ import argparse
 import tempfile
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.som_interface import extract_zynq
 from schgen.generate import xdc
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOM = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
-DEFAULT_CONTRACT = REPO_ROOT / "carrier" / "som_interface.json"
-DEFAULT_OUT = REPO_ROOT / "carrier" / "fpga" / "create_project.tcl"
-DEFAULT_XDC = REPO_ROOT / "carrier" / "fpga" / "Zynq_Carrier_pins.xdc"
+DEFAULT_CONTRACT = PROJECT_ROOT / "som_interface.json"
+DEFAULT_OUT = PROJECT_ROOT / "fpga" / "create_project.tcl"
+DEFAULT_XDC = PROJECT_ROOT / "fpga" / "Zynq_Carrier_pins.xdc"
 
 # Vivado project + block-design names (stable identifiers, not timestamps).
 PROJECT_NAME = "zynq_carrier"

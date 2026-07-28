@@ -68,6 +68,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
+
 # Physical search radius, in CONTACT STEPS, for a ground return contact around an
 # HS-pair contact. K = 2 means: the two same-row neighbours on each side, plus
 # the facing-row contacts within +/-2 along-row indices of the pair contact. The
@@ -82,7 +84,7 @@ K = 2
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PARTS_DIR = _REPO_ROOT / "parts"
-_INTERFACE_JSON = _REPO_ROOT / "carrier" / "som_interface.json"
+_INTERFACE_JSON = PROJECT_ROOT / "som_interface.json"
 
 # A pad block in a KiCad .kicad_mod, single- or multi-line, capturing the pad
 # NUMBER then the first (at X Y ...) inside the same block.

@@ -36,11 +36,12 @@ import re
 from pathlib import Path
 
 from schgen.core.link import all_subsystem_paths, load_subsystem
+from schgen.core.project import PROJECT_ROOT
 from schgen.generate import bringup_facts as bf
 from schgen.verify import spice, testpoints
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_OUT = REPO_ROOT / "carrier" / "docs" / "TEST_PLAN.md"
+DEFAULT_OUT = PROJECT_ROOT / "docs" / "TEST_PLAN.md"
 
 # The six bring-up stages, in the order schgen.manual stages them. Each
 # acceptance step is assigned to exactly one of these by the net it tests.

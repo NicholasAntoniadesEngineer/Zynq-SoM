@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core import sexpr
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.sexpr import Sym
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -570,6 +571,6 @@ def run(reports_dir: Path, pcb_path: Path | None) -> Result:
 
 
 if __name__ == "__main__":
-    _pcb = REPO_ROOT / "carrier" / "Zynq_Carrier.kicad_pcb"
-    _res = run(REPO_ROOT / "carrier" / "reports", _pcb)
+    _pcb = PROJECT_ROOT / "Zynq_Carrier.kicad_pcb"
+    _res = run(PROJECT_ROOT / "reports", _pcb)
     print(report(_res))

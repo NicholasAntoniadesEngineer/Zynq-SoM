@@ -62,6 +62,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core.model import Circuit, NetClass
+from schgen.core.project import PROJECT_ROOT
 from schgen.verify import powertree
 
 # ---- per-contact ampacity + derating (CITED where possible) --------------------
@@ -91,7 +92,7 @@ DERATING_BASIS = (
     "share + temp-rise tolerance — JUDGMENT, fixed floor (LAW 4)")
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_INTERFACE_JSON = _REPO_ROOT / "carrier" / "som_interface.json"
+_INTERFACE_JSON = PROJECT_ROOT / "som_interface.json"
 
 
 # ---- SoM-net -> carrier-rail resolution (reuse the linker's exact maps) ---------

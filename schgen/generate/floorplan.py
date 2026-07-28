@@ -35,19 +35,20 @@ from dataclasses import dataclass, field
 from heapq import heappop, heappush
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.project import spec as _project_spec
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SOM_PCB = REPO_ROOT / "som" / "Zynq_SoM.kicad_pcb"
 PARTS_DIR = REPO_ROOT / "parts"
-OUT_SVG = REPO_ROOT / "carrier" / "docs" / "FLOORPLAN.svg"
-OUT_MD = REPO_ROOT / "carrier" / "docs" / "FLOORPLAN.md"
+OUT_SVG = PROJECT_ROOT / "docs" / "FLOORPLAN.svg"
+OUT_MD = PROJECT_ROOT / "docs" / "FLOORPLAN.md"
 # DECLARATIVE floorplan spec (human-editable). When present, build_plan reads it
 # and OVERRIDES the auto-derivation: a subsystem listed under an edge is pinned
 # to that edge, in the listed order; an interior entry sets its anchor. Any
 # subsystem NOT named in the spec falls back to the auto-derivation, so the spec
 # is optional + incremental. Round-trip seeded by `schgen floorplan --export`.
-FLOORPLAN_SPEC = REPO_ROOT / "carrier" / "floorplan.json"
+FLOORPLAN_SPEC = PROJECT_ROOT / "floorplan.json"
 
 _EDGES = ("N", "E", "S", "W")
 

@@ -36,8 +36,10 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CARRIER = REPO_ROOT / "carrier"
+CARRIER = PROJECT_ROOT
 SI_SPEC_PATH = CARRIER / "research" / "si_spec.json"
 MM_PER_MIL = 0.0254
 

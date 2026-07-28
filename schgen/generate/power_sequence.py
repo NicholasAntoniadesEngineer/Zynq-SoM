@@ -31,11 +31,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from schgen.core.project import PROJECT_ROOT
 from schgen.verify import powertree
 from schgen.verify.powertree import SOURCES, Reg, Result, rail_volts
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_OUT = REPO_ROOT / "carrier" / "docs" / "power_sequence.svg"
+DEFAULT_OUT = PROJECT_ROOT / "docs" / "power_sequence.svg"
 
 _FONT = "ui-monospace, SFMono-Regular, Menlo, monospace"
 

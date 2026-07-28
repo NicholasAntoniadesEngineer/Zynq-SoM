@@ -49,13 +49,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core import sexpr
+from schgen.core.project import PROJECT_ROOT
 from schgen.core.project import spec as _project_spec
 from schgen.core.sexpr import Sym
 from schgen.generate.pcb import PcbModel
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SUBSYSTEMS_DIR = _REPO_ROOT / "subsystems"
-_CARRIER_SUBSYSTEMS_DIR = _REPO_ROOT / "carrier" / "subsystems"
+_CARRIER_SUBSYSTEMS_DIR = PROJECT_ROOT / "subsystems"
 
 # The two package roots a placement contract can live under, tried in order: the
 # portable top-level library first, then the carrier-local package (E1). A sheet
@@ -349,7 +350,7 @@ def _board_refs_by_sheet(sheet_name: str) -> dict[str, str]:
 
     from schgen.core.link import load_subsystem
     from schgen.generate.board import _renamed_ref
-    idx_path = _REPO_ROOT / "carrier" / "sheet_index.json"
+    idx_path = PROJECT_ROOT / "sheet_index.json"
     sheet_index = (json.loads(idx_path.read_text())
                    if idx_path.exists() else {})
     idx = sheet_index.get(sheet_name)

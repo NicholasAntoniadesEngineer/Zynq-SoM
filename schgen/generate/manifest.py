@@ -51,11 +51,12 @@ import json
 from pathlib import Path
 
 from schgen.core.model import NetClass
+from schgen.core.project import PROJECT_ROOT
 from schgen.generate import bringup_facts as bf
 from schgen.verify import powertree, testpoints
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CARRIER = REPO_ROOT / "carrier"
+CARRIER = PROJECT_ROOT
 DEFAULT_OUT = CARRIER / "manifest.json"
 
 # I2C bus the bring-up devices live on (firmware contract: STM32_I2C2, the

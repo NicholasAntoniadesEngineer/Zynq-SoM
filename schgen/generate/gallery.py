@@ -24,9 +24,10 @@ import os
 from pathlib import Path
 
 from schgen.core.link import all_subsystem_paths, load_subsystem
+from schgen.core.project import PROJECT_ROOT
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RENDERS = REPO_ROOT / "carrier" / "renders"
+RENDERS = PROJECT_ROOT / "renders"
 DIAGRAM = REPO_ROOT / "docs" / "block_diagram.svg"
 
 BEGIN = "<!-- schgen:gallery -->"
@@ -203,7 +204,7 @@ def generate() -> list[Path]:
     (next to the renders); the root README.md gets the COMPACT block."""
     changed = []
     root = REPO_ROOT / "README.md"
-    carrier = REPO_ROOT / "carrier" / "README.md"
+    carrier = PROJECT_ROOT / "README.md"
     if _splice(root, _compact_section(root.parent)):
         changed.append(root)
     if _splice(carrier, _full_section(carrier.parent)):

@@ -19,10 +19,11 @@ from pathlib import Path
 
 from schgen.core.link import all_subsystem_paths, load_subsystem
 from schgen.core.model import Circuit
+from schgen.core.project import PROJECT_ROOT
 from schgen.generate import bringup_facts as bf
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_OUT = REPO_ROOT / "carrier" / "docs" / "BRINGUP.md"
+DEFAULT_OUT = PROJECT_ROOT / "docs" / "BRINGUP.md"
 
 # PLAN.md round-2 locked input contract (cited, not derived):
 PD_CONTRACT = "20 V / 3 A (60 W) USB-C PD"
