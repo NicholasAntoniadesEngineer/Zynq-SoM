@@ -640,6 +640,7 @@ _Repel = tuple[str, "str | None", float]
 _ROOT_GAP = 2.0            # deterministic gap between two independent roots (mm)
 _SEAT_SLIDE = 1.2          # edge-seat courtyard->pad-flush slide allowance (mm)
 _SNAP_EROSION = 0.75       # GRID/2 origin snap + edge-band rounding slop (mm)
+_NET_W = 0.1               # wiring-disorder weight in the candidate score (mm/mm)
 _OVEC = {"N": (0.0, -1.0), "S": (0.0, 1.0), "E": (1.0, 0.0), "W": (-1.0, 0.0)}
 _GRID_MAX_N = 60           # cap the candidate grid half-extent (30 mm at _CAND_STEP)
 # The FROZEN pilot proximity sheets (project spec) keep the legacy single-anchor
@@ -869,18 +870,71 @@ def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
     return out if len(out) == len(parts) else None
 
 
+_SHEET_NETS_CACHE: dict[str, dict[tuple[str, str], str]] = {}
+
+
+def _sheet_pad_nets(sheet_name: str) -> dict[tuple[str, str], str]:
+    """(board ref, pad name) -> net name for ``sheet_name``, from the SUBSYSTEM
+    circuit through the same band rename the netlist uses — the source this layer
+    already packs from, so ``schgen floorplan``/``schgen board``/tests all see
+    the identical map (no emitted-schematic dependence). Memoized; {} when the
+    sheet has no loadable circuit (synthetic harnesses)."""
+    hit = _SHEET_NETS_CACHE.get(sheet_name)
+    if hit is not None:
+        return hit
+    out: dict[tuple[str, str], str] = {}
+    try:
+        from schgen.core.link import load_subsystem
+        band = _g._board_refs_by_sheet(sheet_name)
+        sc = load_subsystem(sheet_name)
+    except SystemExit:
+        band, sc = {}, None
+    if sc is not None:
+        for nname, net in sc.circuit.nets.items():
+            for p in net.pins:
+                b = band.get(p.ref)
+                if b is not None:
+                    out[(b, p.pin)] = nname
+    _SHEET_NETS_CACHE[sheet_name] = out
+    return out
+
+
+def _net_rot180_differs(mod: Path, mem_nets: dict[str, str]) -> bool:
+    """True when a 180-deg turn changes the part's pad-NET geometry (an RN's
+    channel order, an asymmetric pinout) — exactly the parts where 180/270
+    candidate rotations can lower wiring disorder. A net-180-symmetric part
+    keeps the 2-rotation set (180 would be a geometric no-op)."""
+    def sig(rot: float):
+        return sorted((round((b[0] + b[2]) / 2, 2), round((b[1] + b[3]) / 2, 2),
+                       mem_nets[n])
+                      for n, b in _g._pad_boxes(mod, rot).items()
+                      if n in mem_nets)
+    return sig(0.0) != sig(180.0)
+
+
 def _gcandidates(bref: str, mod: Path,
                  attractors: list[_Attract], repuls: list[_Repel],
                  placed: dict[str, _Part], pad: float,
                  forbid: list[tuple[float, float, float, float]] | None = None,
-                 conn_roots: set[str] | None = None) -> list[_Part]:
+                 conn_roots: set[str] | None = None,
+                 pad_net: dict[tuple[str, str], str] | None = None
+                 ) -> list[_Part]:
     """Ranked candidate poses (rot in {90,0} on the _CAND_STEP grid) for ``bref``
     in the GLOBAL frame, each meeting EVERY attractor's pad-edge ``max_mm`` to its
     (already-placed) anchor's pins/pads, EVERY repulsor's pad-edge ``min_mm``, and
     already clear of every placed part's courtyard by the halo. The grid centres on
     the tightest (smallest-``max_mm``) attractor's target and its radius tracks that
     bound (capped), so the nearest in-bound poses come first. Deterministic
-    tie-break; the same measure (``_pins_to_target`` == the gate's pad-edge gap)."""
+    tie-break; the same measure (``_pins_to_target`` == the gate's pad-edge gap).
+
+    ``pad_net`` ((bref, pad) -> net) arms WIRING-DISORDER scoring for a >=4-pad
+    member: each pose's score gains ``_NET_W`` x the summed Manhattan distance
+    from every member pad to the nearest already-placed same-net pad (nets with
+    no placed pad skipped), so a resistor network's channel order follows the
+    flow instead of fighting it (anchor distance alone parked RN36001 with its
+    own airwires crossing its body — the measured defect). Such a part also
+    tries 180/270 when a 180 turn changes its pad-net geometry
+    (``_net_rot180_differs``); 2-3-pin parts keep the 2-rotation set."""
     # per-attractor (anchor pad boxes, target pins, bound); primary = tightest bound
     att: list[tuple[dict[str, tuple], list[str], float]] = []
     for ab, apins, bound in attractors:
@@ -930,8 +984,43 @@ def _gcandidates(bref: str, mod: Path,
     # edge and yields zero candidates (the microsd/motor_sense infeasibility).
     t_half = max(tgt[2] - tgt[0], tgt[3] - tgt[1]) / 2.0
     n = min(int((t_half + pbound + 9.0 + pad) / _CAND_STEP), _GRID_MAX_N)
+    mem_nets: dict[str, str] = {}
+    net_pts: dict[str, list[tuple[float, float]]] = {}
+    if pad_net and member_pins >= 4:
+        mem_nets = {pn: pad_net[(bref, pn)]
+                    for pn in _g._pad_boxes(mod, 0.0) if (bref, pn) in pad_net}
+        want = set(mem_nets.values())
+        for pp in placed.values():
+            for pn, bb in pp.pad_boxes().items():
+                nn = pad_net.get((pp.bref, pn))
+                if nn in want:
+                    net_pts.setdefault(nn, []).append(
+                        ((bb[0] + bb[2]) / 2.0, (bb[1] + bb[3]) / 2.0))
+    rots = (90.0, 0.0)
+    if net_pts and _net_rot180_differs(mod, mem_nets):
+        rots = (0.0, 90.0, 180.0, 270.0)
+    align: dict[float, list[tuple[float, float, list[tuple[float, float]]]]] = {}
+    rel_pads: dict[float, list[tuple[float, float, float, float]]] = {}
+    for rot in rots:
+        arr = []
+        for pn, bb in _g._pad_boxes(mod, rot).items():
+            pts = net_pts.get(mem_nets.get(pn, ""))
+            if pts:
+                arr.append(((bb[0] + bb[2]) / 2.0, (bb[1] + bb[3]) / 2.0, pts))
+        align[rot] = arr
+        rel_pads[rot] = list(_g._pad_boxes(mod, rot).values())
+    # per-pose gap math inlined allocation-free (same floats as _pins_to_target
+    # -> identical ranking): the dict rebuild per pose was the measured hot spot.
+    att_pre = [([pb[pin] for pin in pins if pin in pb],
+                bound - _SNAP_EROSION if bound >= 5.0 else bound)
+               for pb, pins, bound in att]
+    rep_pre = [([pb[pin] for pin in pins if pin in pb],
+                mm + (_SNAP_EROSION if mm >= 5.0 else 0.0))
+               for pb, pins, mm in rep]
+    _hypot = math.hypot
     scored: list[tuple[float, float, float, float, _Part]] = []
-    for rot in (90.0, 0.0):
+    for rot in rots:
+        rel = rel_pads[rot]
         for gx in range(-n, n + 1):
             for gy in range(-n, n + 1):
                 cx = round(tcx + gx * _CAND_STEP, 4)
@@ -949,18 +1038,53 @@ def _gcandidates(bref: str, mod: Path,
                 # (hdmi_tx J1->U1 5.04 vs 5.00, measured). Solve with half a
                 # grid of allowance in BOTH directions so the snap can never
                 # push a met bound over the line.
-                for pb, pins, bound in att:
-                    d = _pins_to_target(p, pb, pins)
-                    eff = bound - _SNAP_EROSION if bound >= 5.0 else bound
-                    if d > eff:
+                for tboxes, eff in att_pre:
+                    best = 1e9
+                    for tb in tboxes:
+                        t0, t1, t2, t3 = tb
+                        for rb in rel:
+                            dx = t0 - (cx + rb[2])
+                            qx = (cx + rb[0]) - t2
+                            if qx > dx:
+                                dx = qx
+                            if dx < 0.0:
+                                dx = 0.0
+                            dy = t1 - (cy + rb[3])
+                            qy = (cy + rb[1]) - t3
+                            if qy > dy:
+                                dy = qy
+                            if dy < 0.0:
+                                dy = 0.0
+                            g = _hypot(dx, dy)
+                            if g < best:
+                                best = g
+                    if best > eff:
                         ok = False
                         break
-                    dsum += d
+                    dsum += best
                 if not ok:
                     continue
-                for pb, pins, mm in rep:
-                    if _pins_to_target(p, pb, pins) < mm + (
-                            _SNAP_EROSION if mm >= 5.0 else 0.0):
+                for tboxes, mmv in rep_pre:
+                    best = 1e9
+                    for tb in tboxes:
+                        t0, t1, t2, t3 = tb
+                        for rb in rel:
+                            dx = t0 - (cx + rb[2])
+                            qx = (cx + rb[0]) - t2
+                            if qx > dx:
+                                dx = qx
+                            if dx < 0.0:
+                                dx = 0.0
+                            dy = t1 - (cy + rb[3])
+                            qy = (cy + rb[1]) - t3
+                            if qy > dy:
+                                dy = qy
+                            if dy < 0.0:
+                                dy = 0.0
+                            g = _hypot(dx, dy)
+                            if g < best:
+                                best = g
+                    if best < mmv:
                         ok = False
                         break
                 if not ok:
@@ -973,7 +1097,12 @@ def _gcandidates(bref: str, mod: Path,
                         break
                 if not ok:
                     continue
-                scored.append((round(dsum, 4), abs(cx), abs(cy), rot, p))
+                dis = 0.0
+                for rxc, ryc, pts in align[rot]:
+                    px, py = cx + rxc, cy + ryc
+                    dis += min(abs(px - qx) + abs(py - qy) for qx, qy in pts)
+                scored.append((round(dsum + _NET_W * dis, 4),
+                               abs(cx), abs(cy), rot, p))
     scored.sort(key=lambda t: (t[0], t[1], t[2], t[3]))
     return [t[4] for t in scored[:_CAND_CAP]]
 
@@ -984,7 +1113,8 @@ def _seat_multi(order: list[str], roots: set[str],
                 resolvable: dict[str, Path], pad: float,
                 conn_roots: set[str] | None = None,
                 outer_vec: tuple[float, float] | None = None,
-                root_rot: dict[str, float] | None = None
+                root_rot: dict[str, float] | None = None,
+                pad_net: dict[tuple[str, str], str] | None = None
                 ) -> dict[str, _Part] | None:
     """Seat the graph GREEDILY in topological order: roots (a connector/IC that
     anchors others) laid deterministically left-to-right, then each member placed at
@@ -1061,7 +1191,8 @@ def _seat_multi(order: list[str], roots: set[str],
             continue
         cands = _gcandidates(bref, resolvable[bref], attractors[bref],
                              repulsors.get(bref, []), placed, pad,
-                             forbid=_sweeps or None, conn_roots=conn_roots)
+                             forbid=_sweeps or None, conn_roots=conn_roots,
+                             pad_net=pad_net)
         if not cands:
             return None
         placed[bref] = cands[0]
@@ -1071,7 +1202,9 @@ def _seat_multi(order: list[str], roots: set[str],
 def _solve_contract(contract: dict, bref_of: dict[str, str],
                     resolvable: dict[str, Path],
                     outer_dir: str | None = None,
-                    sheet_name: str | None = None) -> list[_Part] | None:
+                    sheet_name: str | None = None,
+                    pad_net: dict[tuple[str, str], str] | None = None
+                    ) -> list[_Part] | None:
     """Solve a MULTI-ANCHOR proximity contract as one rigid, collision-free local-
     frame cluster satisfying every ``proximity`` (max_mm) + ``min_from`` (arbitrary
     part, min_mm) + same_side. Returns the placed parts in topological order, or
@@ -1172,7 +1305,9 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
                            for a, p, bd in attractors.get(m, [])),
                   tuple((r, pn or "", round(mm, 4))
                         for r, pn, mm in repulsors.get(m, [])))
-                 for m in sorted(members)))
+                 for m in sorted(members)),
+           tuple(sorted((r, p, n) for (r, p), n in (pad_net or {}).items()
+                        if r in all_parts)))
     cached = _MULTI_CACHE.get(sig)
     if cached is not None:
         return [_Part(b, resolvable[b], rot, "top", ox, oy)
@@ -1182,7 +1317,7 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
     for comp in sorted(comps, key=sorted):
         cl = _solve_component(comp, members, attractors, repulsors, resolvable,
                               conn_roots=_conn_roots, outer_vec=_outer_vec,
-                              root_rot=_root_rot)
+                              root_rot=_root_rot, pad_net=pad_net)
         if cl is None:
             return None
         clusters.append(cl)
@@ -1198,7 +1333,8 @@ def _solve_component(comp: set[str], members: set[str],
                      resolvable: dict[str, Path],
                      conn_roots: set[str] | None = None,
                      outer_vec: tuple[float, float] | None = None,
-                     root_rot: dict[str, float] | None = None
+                     root_rot: dict[str, float] | None = None,
+                     pad_net: dict[tuple[str, str], str] | None = None
                      ) -> list[_Part] | None:
     """Seat ONE connected component (a root anchor + everything clustering around
     it) as a rigid collision-free cluster: root(s) at the origin, every member
@@ -1222,7 +1358,8 @@ def _solve_component(comp: set[str], members: set[str],
         placed = _seat_multi(order, roots_c, attractors, repulsors,
                              resolvable, scale * 0.25,
                              conn_roots=(conn_roots or set()) & comp,
-                             outer_vec=outer_vec, root_rot=root_rot)
+                             outer_vec=outer_vec, root_rot=root_rot,
+                             pad_net=pad_net)
         if placed is None:
             continue
         parts = [placed[b] for b in order]
@@ -1617,11 +1754,13 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
                 _att_of[_mb] = [(_ic, _pins, _mm)]
                 _rep_of[_mb] = _rep
 
+    _pad_net = _sheet_pad_nets(sheet_name)
+
     def _try_place(mb, att, frame, rep=()):
         rep = [r for r in rep if r[0] in frame]
         for wpad in (0.0, 0.5, 1.0):
             cands = _gcandidates(mb, resolvable[mb], att, list(rep), frame,
-                                 wpad)
+                                 wpad, pad_net=_pad_net)
             if cands:
                 return cands[0]
         return None
@@ -1947,7 +2086,8 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
         parts = _build_proximity_cluster(anchor_bref, contract, bref_of, resolvable)
     else:
         parts = _solve_contract(contract, bref_of, resolvable,
-                                outer_dir=outer_dir, sheet_name=sheet_name)
+                                outer_dir=outer_dir, sheet_name=sheet_name,
+                                pad_net=_sheet_pad_nets(sheet_name))
     if parts is None:
         return None
 

@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "6bf1bab09e2f4ef134250bc1f0278f4be52dd0a66c74d20d862349451421b5f0"
+      "sha256": "453780600b41fb5d410735ab19acf5d34b6c811ba286274ea2c94f4255f546e0"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -26,15 +26,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "324863fcb4d0c3e14e9fca458d813a610b6926956fdae2b618ac71386ca88559"
+      "sha256": "a10ac56da40327119eb9bf2b2e067980e559a232ddf877ecf0d54aeba13bcc23"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "235231a10b6820657f1bd32a86c52fb4e05974d6aeaf91ea060d2af0cd6d7274"
+      "sha256": "9a45eb7a4b1b4e7ec325e0d3ef7dadd252991de059ec2983ceacc8efb655560a"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "3b41b189deb5515af9d800fbe7c0c589636a949c04a5b4857bc99aae15a79eb1"
+      "sha256": "f2152f17e5226bf94eff0e1fbe5049111a9036667707568bd9f4f772eb76ba16"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -58,7 +58,7 @@
     },
     {
       "path": "manufacturing/Zynq_Carrier_cpl.csv",
-      "sha256": "7063b48e5cd19d771aab8590d30724eeb6e11fcaa591b4b5db22a5812c6acd11"
+      "sha256": "b7712bec56984381e9011b0f3febc66a4fa12826ff1262b3a5a333f229891373"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -102,7 +102,7 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "38d4af458a6490a60b697626a298e89b9ba0162f2493a4277d2efba083e903a2"
+      "sha256": "c65d8435cac2de098c70d16b21b27f05dff478315bc108db173ec27a378d83b0"
     },
     {
       "path": "reports/contract_coverage.txt",
@@ -110,7 +110,7 @@
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "50bdd79d1043aab3fcd9febac5d4927c7ca3001004e2efe7540eacc93164a8aa"
+      "sha256": "8b7a66d6aa20885f9182d5692d381baa3ff21f1871ab8f8fbc92541a4d49e91a"
     },
     {
       "path": "reports/design_rules.txt",
@@ -126,7 +126,7 @@
     },
     {
       "path": "reports/fanout.txt",
-      "sha256": "fb54d7786254caa760e30e990c81968234326194404a806f0291f73136870754"
+      "sha256": "c255754cb0a739a651ae9b0631fea6f08e86fa6c059e94ceea9f93571b2ecb01"
     },
     {
       "path": "reports/fanout_red_on_before.txt",
@@ -134,7 +134,7 @@
     },
     {
       "path": "reports/floorplan_composition.txt",
-      "sha256": "e7c56bb67f50fe09973c097f8f14e3bc26836d8f5a6cc0a7d85ba16ca72444a3"
+      "sha256": "c74f8b2ccf2af9fb46a9f177b37a0263c93bcaea5767dbca6189d03d6d0284fe"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -166,11 +166,11 @@
     },
     {
       "path": "reports/placement_flow.txt",
-      "sha256": "f0c15b2a065d45b12dd1ab2a9714996e0b1ca281ed3daa461502d7ffe7082e4c"
+      "sha256": "c96270e67255e0befee1a2d41d9d8dd616d9988282139789d227bc8230a091a9"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "2ef953b6fe4f7655d9137603106c4095e87856fd458e8e11cbc56bf91b38a4ef"
+      "sha256": "86eea3790ca4c59202a3101aad22b034f7bf5f7241ee6abad09ca840524449e0"
     },
     {
       "path": "reports/power_tree.txt",
@@ -182,7 +182,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "e257876a9ad5494a4f3d7aee7ad52b94b87aa3df262c7b004aadeeefc061b473"
+      "sha256": "c025b2ca1c90e35d372e2faa8efb8410cd3cc7da04e4f40a4e69e65abf07241f"
     },
     {
       "path": "reports/return_path.txt",
