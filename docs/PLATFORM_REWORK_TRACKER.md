@@ -22,6 +22,7 @@ product; NO master merge until user approval. Baselines: carrier pcb md5 e405097
 
 ## Log
 (newest first)
+- FINAL GATE: full pytest suite 720 passed / 0 failed (311f120) — 7 pre-wire-world tests re-pinned to full-wire invariants (red-on-before -> holds-on-board; participants 23-wired/guarded-empty; bottom-convention worst re-measured).
 - U3a FULL WIRE GREEN: 22 wired sheets, EXIT 0 (DRC 0, contract 0/106, fan-out 0/110 starved, silk 0, LAW-5/6 PASS) at 214x165. Convergence mechanized 6 engine defects, each measured on the emitted board, never softened a gate:
   1. zone-frame rotation: conn roots must be BUILT at their final LAW-6 rotation (connector_edge_rotation) or every solved adjacency shatters when placement rotates them (camera 3.7mm vs 8mm min_from).
   2. double-rotation: solver rot_out must EXCLUDE mating connectors (placement ADDS zone_extra_rot to conn_rot: 180+180=0 emitted, 8 connectors mouth-inward) — two emitter sites, both guarded.
