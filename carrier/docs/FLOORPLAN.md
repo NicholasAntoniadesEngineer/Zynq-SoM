@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **204 x 191 mm**; SoM origin at **(69, 80.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 204x191 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 17743 <= LAW-5 budget 19542 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 204x191 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 17742 <= LAW-5 budget 19542 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -59,12 +59,12 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 | ethernet | @rj45_connector | (149, 17, 25.5076 x 21.745) | 10 | 554.7 | (15) |
 | fmc | S | (47, 71, 18.685 x 61.63) | 8 | 1151.6 | (16) |
 | hdmi_rx_term | S | (88, 126.59, 11.805 x 7.805) | 10 | 92.1 |  |
-| mechanical | E | (137, 46, 13 x 13) | 4 | 169 |  |
+| mechanical | E | (134, 43, 13 x 13) | 4 | 169 |  |
 | power | E | (22.7651, 31, 23.9349 x 55.1504) | 51 | 1320 | (17) |
 | power_mon | @power_som | (50.2114, 42.3195, 26.4886 x 14.3805) | 10 | 380.9 | (18) |
-| power_som | E | (120.8, 87.687, 23.9349 x 24.335) | 23 | 582.5 |  |
+| power_som | E | (120.8, 87.937, 23.9349 x 24.335) | 23 | 582.5 |  |
 | uart_bridge | @usb_uart_connector | (159, 42, 9.2751 x 15.2) | 10 | 141 | (19) |
-| usb_jtag | E | (138, 60, 29.7501 x 27.387) | 19 | 814.8 |  |
+| usb_jtag | E | (138, 60, 29.0351 x 27.637) | 19 | 802.4 |  |
 | usb_pd | @pd_input | (82.5, 24, 8.18 x 10.28) | 6 | 84.1 | (20) |
 | user_io | S | (110, 125, 23.11 x 18.3) | 17 | 422.9 | (21) |
 

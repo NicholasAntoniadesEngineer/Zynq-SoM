@@ -668,6 +668,188 @@ def _is_single_anchor_star(contract: dict, bref_of: dict[str, str]) -> bool:
     return len(anchors) <= 1
 
 
+_FLIP_MIN_PINS = 10
+_FLIP_SYM_TOL = 0.1
+_FLIP_DOM_PCT = 60
+
+_SOM_PARTNERS: dict[str, tuple[Path, float, dict[str, tuple[str, ...]]]] | None \
+    = None
+_SHEET_INTER: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {}
+_FLIP_CACHE: dict[tuple[str, str], float] = {}
+
+
+def _raw_pad_centers(mod: Path) -> list[tuple[float, float]]:
+    """Every physical pad's center (rot-0 footprint frame) — NOT name-merged,
+    so repeated pad names keep their copies for the symmetry multiset."""
+    from schgen.core import sexpr
+    from schgen.core.sexpr import Sym
+    out: list[tuple[float, float]] = []
+    for node in sexpr.loads(mod.read_text()):
+        if isinstance(node, list) and node and node[0] == Sym("pad"):
+            at = sexpr.find(node, "at")
+            if at and len(at) >= 3:
+                out.append((float(at[1]), float(at[2])))
+    return out
+
+
+def _pad_set_180_symmetric(mod: Path) -> bool:
+    """True iff the pad-center multiset maps onto itself under a 180-deg turn
+    about the pad-extent center, within _FLIP_SYM_TOL — the geometric freedom
+    that makes a root flip envelope-preserving."""
+    pts = _raw_pad_centers(mod)
+    if not pts:
+        return False
+    cx = (min(p[0] for p in pts) + max(p[0] for p in pts)) / 2.0
+    cy = (min(p[1] for p in pts) + max(p[1] for p in pts)) / 2.0
+    rest = sorted(pts)
+    for x, y in pts:
+        tx, ty = 2.0 * cx - x, 2.0 * cy - y
+        hit = next((q for q in rest
+                    if abs(q[0] - tx) <= _FLIP_SYM_TOL
+                    and abs(q[1] - ty) <= _FLIP_SYM_TOL), None)
+        if hit is None:
+            return False
+        rest.remove(hit)
+    return True
+
+
+def _som_partner_nets() -> dict[str, tuple[Path, float, dict[str, tuple[str, ...]]]]:
+    """som_j sheet -> (receptacle footprint, its board rotation, net -> pins).
+    The rotation replicates placement's som_j kernel exactly (extract_som rects,
+    90 deg iff the carrier-view rect is portrait). Empty for a project with no
+    som_j sheets (the chooser is then a no-op)."""
+    global _SOM_PARTNERS
+    if _SOM_PARTNERS is not None:
+        return _SOM_PARTNERS
+    import re
+
+    from schgen.core.link import all_subsystem_paths, load_subsystem
+
+    from .footprint import resolve_mod
+    out: dict[str, tuple[Path, float, dict[str, tuple[str, ...]]]] = {}
+    jsheets = sorted(p.stem for p in all_subsystem_paths()
+                     if re.fullmatch(r"som_j\d", p.stem))
+    if jsheets:
+        from schgen.generate.floorplan import extract_som
+        jrot = {j.ref: (90.0 if j.w < j.h else 0.0) for j in extract_som().js}
+        for s in jsheets:
+            jref = "J" + s[len("som_j"):]
+            sc = load_subsystem(s)
+            part = sc.circuit.parts.get(jref)
+            mod = resolve_mod(part.footprint) if part is not None else None
+            if mod is None or jref not in jrot:
+                continue
+            nets: dict[str, tuple[str, ...]] = {}
+            for nm, net in sc.circuit.nets.items():
+                pins = tuple(pr.pin for pr in net.pins if pr.ref == jref)
+                if pins:
+                    nets[nm] = pins
+            out[s] = (mod, jrot[jref], nets)
+    _SOM_PARTNERS = out
+    return out
+
+
+def _sheet_inter_nets(sheet_name: str) -> dict[str, dict[str, tuple[str, ...]]]:
+    """lib ref -> {inter-sheet net -> its pins on that ref} for ``sheet_name``.
+    Inter-sheet = PORT/POWER/GROUND class (the classes that merge by name in
+    the emitted root schematic)."""
+    hit = _SHEET_INTER.get(sheet_name)
+    if hit is not None:
+        return hit
+    from schgen.core.link import load_subsystem
+    from schgen.core.model import NetClass
+    sc = load_subsystem(sheet_name)
+    per_ref: dict[str, dict[str, tuple[str, ...]]] = {}
+    for nm, net in sc.circuit.nets.items():
+        if net.net_class not in (NetClass.PORT, NetClass.POWER,
+                                 NetClass.GROUND):
+            continue
+        for pr in net.pins:
+            if pr.ref.startswith("#"):
+                continue
+            d = per_ref.setdefault(pr.ref, {})
+            d[nm] = d.get(nm, ()) + (pr.pin,)
+    _SHEET_INTER[sheet_name] = per_ref
+    return per_ref
+
+
+def _long_axis_coords(mod: Path, rot: float) -> dict[str, float]:
+    """pad name -> its center coordinate along the part's LONG axis at ``rot``
+    (x if the pad-center extent is at least as wide as tall, else y)."""
+    boxes = _g._pad_boxes(mod, rot)
+    cs = {n: ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0)
+          for n, b in boxes.items()}
+    xs = [c[0] for c in cs.values()]
+    ys = [c[1] for c in cs.values()]
+    ax = 0 if (max(xs) - min(xs)) >= (max(ys) - min(ys)) else 1
+    return {n: c[ax] for n, c in cs.items()}
+
+
+def _inversion_count(pairs: list[tuple[float, float, str]]) -> int:
+    """Kendall inversions of the second coordinate over the order of the first
+    (ties in the first broken by net name; equal seconds count 0)."""
+    seq = [b for _a, b, _n in sorted(pairs, key=lambda t: (t[0], t[2]))]
+    inv = 0
+    for i in range(len(seq)):
+        for j in range(i + 1, len(seq)):
+            if seq[i] > seq[j] + 1e-9:
+                inv += 1
+    return inv
+
+
+def _som_flip_rot(sheet_name: str, lib_ref: str, mod: Path) -> float:
+    """The generic root ORIENTATION chooser: 180.0 iff building this root
+    flipped strictly reduces the Kendall inversions between its pad order and
+    its dominant som_j partner's pad order (both along their own long axes,
+    one (part-mean, partner-mean) sample per shared net); else 0.0.
+
+    A root whose pad multiset is 180-symmetric flips for FREE (same courtyard/
+    envelope — only the pin->position assignment reverses), and when >= 60% of
+    its inter-sheet nets land on ONE som_j receptacle the two pin sequences
+    either run WITH or AGAINST each other; anti-aligned sequences braid every
+    airwire across every other (fmc's 2x20 vs J3: inversions 229 at rot 0 vs
+    25 at 180 — measured ~-90% board crossings). Position-independent (pure
+    pad ORDER), so decidable at zone-build time before any floorplan exists.
+    Mating connectors are excluded (LAW-6 owns their rotation); >= 10 pins so
+    2-pin passives and small straps never churn. Deterministic, cached."""
+    key = (sheet_name, lib_ref)
+    hit = _FLIP_CACHE.get(key)
+    if hit is not None:
+        return hit
+    rot = 0.0
+    if (len(_g._pad_boxes(mod, 0.0)) >= _FLIP_MIN_PINS
+            and mod.stem not in CONN_MATING_FACE
+            and not sheet_name.startswith("som_j")
+            and _pad_set_180_symmetric(mod)):
+        inter = _sheet_inter_nets(sheet_name).get(lib_ref, {})
+        partners = _som_partner_nets()
+        if inter and partners:
+            counts = {s: sum(1 for nm in inter if nm in p[2])
+                      for s, p in partners.items()}
+            psheet, cnt = sorted(counts.items(),
+                                 key=lambda kv: (-kv[1], kv[0]))[0]
+            if cnt * 100 >= _FLIP_DOM_PCT * len(inter):
+                jmod, jrot, jnets = partners[psheet]
+                jcoord = _long_axis_coords(jmod, jrot)
+                knets = sorted(nm for nm in inter if nm in jnets)
+
+                def _inv(r: float) -> int:
+                    pc = _long_axis_coords(mod, r)
+                    pairs: list[tuple[float, float, str]] = []
+                    for nm in knets:
+                        a = [pc[p] for p in inter[nm] if p in pc]
+                        b = [jcoord[p] for p in jnets[nm] if p in jcoord]
+                        if a and b:
+                            pairs.append((sum(a) / len(a),
+                                          sum(b) / len(b), nm))
+                    return _inversion_count(pairs)
+
+                if _inv(180.0) < _inv(0.0):
+                    rot = 180.0
+    _FLIP_CACHE[key] = rot
+    return rot
+
+
 def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
     """Deterministic Kahn topological sort (ready set drained in ``sorted`` bref
     order, so the output is byte-stable). Returns None on a cycle (an ill-formed
@@ -888,13 +1070,20 @@ def _seat_multi(order: list[str], roots: set[str],
 
 def _solve_contract(contract: dict, bref_of: dict[str, str],
                     resolvable: dict[str, Path],
-                    outer_dir: str | None = None) -> list[_Part] | None:
+                    outer_dir: str | None = None,
+                    sheet_name: str | None = None) -> list[_Part] | None:
     """Solve a MULTI-ANCHOR proximity contract as one rigid, collision-free local-
     frame cluster satisfying every ``proximity`` (max_mm) + ``min_from`` (arbitrary
     part, min_mm) + same_side. Returns the placed parts in topological order, or
     None (a missing/unresolved anchor, a cyclic graph, or infeasible even after the
     widen loop) so the caller falls through to the legacy packer and the gate
-    reports it. Deterministic; geometry-only cache keyed on footprints + bounds."""
+    reports it. Deterministic; geometry-only cache keyed on footprints + bounds.
+
+    ``sheet_name`` (optional) enables the generic root ORIENTATION chooser
+    (:func:`_som_flip_rot`): a non-mating root whose 180-flip strictly reduces
+    its Kendall inversions against its dominant som_j partner is BUILT at 180 —
+    the members then seat against the flipped pad geometry, and the rotation
+    flows out through the same ``rot_out`` channel the members use."""
     attractors: dict[str, list[_Attract]] = {}
     repulsors: dict[str, list[_Repel]] = {}
     all_parts: set[str] = set()
@@ -967,6 +1156,14 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
     _root_rot = {r: connector_edge_rotation(
                      CONN_MATING_FACE[resolvable[r].stem], outer_dir)
                  for r in _conn_roots} if outer_dir else {}
+    if sheet_name:
+        _lib_of = {b: lb for lb, b in bref_of.items()}
+        for r in sorted(all_parts - members):
+            if r in _conn_roots or r in _root_rot or r not in _lib_of:
+                continue
+            fr = _som_flip_rot(sheet_name, _lib_of[r], resolvable[r])
+            if fr:
+                _root_rot[r] = fr
 
     sig = (outer_dir or "",
            tuple(sorted(_root_rot.items())),
@@ -1750,7 +1947,7 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
         parts = _build_proximity_cluster(anchor_bref, contract, bref_of, resolvable)
     else:
         parts = _solve_contract(contract, bref_of, resolvable,
-                                outer_dir=outer_dir)
+                                outer_dir=outer_dir, sheet_name=sheet_name)
     if parts is None:
         return None
 

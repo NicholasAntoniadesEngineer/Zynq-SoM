@@ -544,6 +544,43 @@ def _run_zone(sheet: str):
     return res, rot, resolvable, contract
 
 
+def test_fmc_header_root_is_flipped_and_members_follow():
+    """The generic root ORIENTATION chooser: fmc's 2x20 header (J11001) is
+    pad-180-symmetric, non-mating, and its inter-sheet nets land dominantly on
+    som_j3 with the pin sequence ANTI-aligned (inversions 229 vs 25), so the
+    zone must BUILD it at rot 180 and the header-cap members (C1/C2/C5 at
+    anchor pins 1/2) must seat within the 8 mm bound at the FLIPPED pin-1/2
+    end — while the same offsets against an UN-flipped header would miss it."""
+    res, rot, resolvable, _contract = _run_zone("fmc")
+    assert res is not None
+    top_off, bot_off, _zw, _zh = res
+    assert rot.get("J11001") == 180.0, f"header not flipped: {rot.get('J11001')}"
+    m = _zone_model("fmc", top_off, bot_off, rot, resolvable)
+    inst = {i.ref: i for i in m.insts}
+    flipped = g._inst_pad_boxes(inst["J11001"])
+    for cap in ("C11001", "C11002", "C11005"):
+        cb = g._inst_pad_boxes(inst[cap])
+        d_anchor = g._pins_to_part(flipped, cb, ["1", "2"])
+        d_far_end = g._pins_to_part(flipped, cb, ["39", "40"])
+        assert d_anchor is not None and d_anchor <= 8.0, f"{cap}: {d_anchor}"
+        assert d_far_end is not None and d_far_end > 8.0, \
+            f"{cap} seated at the WRONG (GND) end: {d_far_end}"
+
+
+def test_flip_chooser_excludes_mating_and_small_parts():
+    """LAW-6 exclusion + the >=10-pin floor, on the decision kernel itself."""
+    from schgen.core.link import load_subsystem
+    from schgen.generate.pcb.footprint import resolve_mod
+    pmod = load_subsystem("pmod")
+    sock = resolve_mod(pmod.circuit.parts["J1"].footprint)
+    assert T._som_flip_rot("pmod", "J1", sock) == 0.0
+    fmc = load_subsystem("fmc")
+    ldo = resolve_mod(fmc.circuit.parts["U1"].footprint)
+    assert T._som_flip_rot("fmc", "U1", ldo) == 0.0
+    hdr = resolve_mod(fmc.circuit.parts["J1"].footprint)
+    assert T._som_flip_rot("fmc", "J1", hdr) == 180.0
+
+
 def test_camera_multi_anchor_contract_is_satisfied():
     """CAMERA is the multi-anchor archetype: the FFC (J1) anchors the two ESD
     arrays (<=5 mm), U1 anchors the three D-PHY terminations (<=40 mm) which must

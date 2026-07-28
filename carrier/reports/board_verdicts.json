@@ -513,11 +513,11 @@
    "lib_footprint_issues": 107,
    "silk_edge_clearance": 34,
    "silk_over_copper": 20,
-   "silk_overlap": 34,
+   "silk_overlap": 33,
    "text_height": 25
   },
   "n_unconnected": 499,
-  "n_violations": 220,
+  "n_violations": 219,
   "returncode": 0,
   "stderr": ""
  },
@@ -611,23 +611,23 @@
  "ratsnest": {
   "board_h": 191.0,
   "board_w": 204.0,
-  "cross_mm": 17313.8,
+  "cross_mm": 17129.1,
   "n_bottom": 198,
   "n_cross": 406,
   "n_top": 371,
-  "total_mm": 26044.4
+  "total_mm": 25876.4
  },
  "ratsnest_gate": {
   "board_h": 191.0,
   "board_w": 204.0,
   "cross_budget_mm": 19541.9,
-  "cross_mm": 17313.8,
+  "cross_mm": 17129.1,
   "dispersed": [],
   "n_cross": 406,
   "n_subsystems": 33,
   "off_board": [],
   "ok": true,
-  "total_mm": 26044.4
+  "total_mm": 25876.4
  },
  "refdes_silk": {
   "bottom_pairs": 0,
