@@ -122,10 +122,16 @@ CONTRACT: dict = {
         # as the GENERIC ``proximity`` type (E4' / Decision D10): the EN cluster
         # is a set of members near a specific anchor pin, exactly what proximity
         # encodes — no bespoke gate branch needed.
+        # RE-JUDGED 3.0 -> 6.0 (2026-07-28): EN/SYNC is a slow logic input;
+        # 3.0 was measured UNPLACEABLE against the datasheet-faithful core
+        # banks (hot-loop 1.0 + boot/vcc 2.0 + fb/rt/bias 3.0 fully ring the
+        # 4x4 QFN; the solver's bound-priority displacement proved single-slot
+        # musical chairs — no legal assignment exists at 3.0). 6.0 keeps the
+        # clamp node one grid-step off the pin region, far from SW.
         {"type": "proximity", "anchor": "U4", "anchor_pins": [_EN],
          "members": ["R12", "D5", "C20"],
-         "max_mm": 3.0, "same_side": True,
-         "basis": "SNVSBD5D 9.2.2.2 (EN clamp, PWR-1)|judgment:3.0"},
+         "max_mm": 6.0, "same_side": True,
+         "basis": "SNVSBD5D 9.2.2.2 (EN clamp, PWR-1)|judgment:6.0"},
 
         {"type": "same_side", "ics": ["U4"],
          "basis": "SNVSBD5D 11.1 Fig 11-2"},
