@@ -41,10 +41,10 @@ from schgen.core.project import spec as _project_spec
 from schgen.verify import placement_contract_gate as _g
 from schgen.verify.fanout_gate import _is_cluster_passive, intelligent_need
 
-from .constants import CONN_MATING_FACE, TEMPLATE_CLEAR, ZONE_PAD
+from .constants import CONN_MATING_FACE, EDGE_PAD_CLEAR, TEMPLATE_CLEAR, ZONE_PAD
 from .footprint import _footprint_bbox
 from .footprint import has_thru_pads as _has_thru_pads
-from .mating_face import _rot_bbox_cw
+from .mating_face import _rot_bbox_cw, connector_edge_rotation
 from .placement import _shelf_pack
 
 # Construction gaps (mm). Most placements are COURTYARD-clearance driven (part
@@ -637,6 +637,8 @@ _Attract = tuple[str, "tuple[str, ...] | None", float]
 _Repel = tuple[str, "str | None", float]
 
 _ROOT_GAP = 2.0            # deterministic gap between two independent roots (mm)
+_SEAT_SLIDE = 1.2          # edge-seat courtyard->pad-flush slide allowance (mm)
+_OVEC = {"N": (0.0, -1.0), "S": (0.0, 1.0), "E": (1.0, 0.0), "W": (-1.0, 0.0)}
 _GRID_MAX_N = 60           # cap the candidate grid half-extent (30 mm at _CAND_STEP)
 # The FROZEN pilot proximity sheets (project spec) keep the legacy single-anchor
 # cluster so their proven byte-identical layout never moves; every other proximity
@@ -686,8 +688,8 @@ def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
 def _gcandidates(bref: str, mod: Path,
                  attractors: list[_Attract], repuls: list[_Repel],
                  placed: dict[str, _Part], pad: float,
-                 forbid: list[tuple[float, float, float, float]] | None = None
-                 ) -> list[_Part]:
+                 forbid: list[tuple[float, float, float, float]] | None = None,
+                 conn_roots: set[str] | None = None) -> list[_Part]:
     """Ranked candidate poses (rot in {90,0} on the _CAND_STEP grid) for ``bref``
     in the GLOBAL frame, each meeting EVERY attractor's pad-edge ``max_mm`` to its
     (already-placed) anchor's pins/pads, EVERY repulsor's pad-edge ``min_mm``, and
@@ -720,12 +722,22 @@ def _gcandidates(bref: str, mod: Path,
     # member's contract max_mm exceeds its target IC's need, the [need, max_mm] band
     # is non-empty, so the contract still holds.
     member_pins = len(_g._pad_boxes(mod, 0.0))
+    own_need = intelligent_need(member_pins)[0] if member_pins >= 3 else 0.0
     subjects: list[tuple[tuple[float, float, float, float], float]] = []
-    if not _is_cluster_passive(bref, member_pins):
-        for pp in placed.values():
-            npins = len(_g._pad_boxes(pp.mod, 0.0))
-            if npins >= 3:
-                subjects.append((pp.local_box(), intelligent_need(npins)[0]))
+    for pp in placed.values():
+        npins = len(_g._pad_boxes(pp.mod, 0.0))
+        if npins >= 3 and not _is_cluster_passive(bref, member_pins):
+            need = intelligent_need(npins)[0]
+            if conn_roots and pp.bref in conn_roots:
+                need += _SEAT_SLIDE
+            subjects.append((pp.local_box(), need))
+        # SYMMETRIC apron: a multi-pin member is itself a gate subject and
+        # must keep its OWN need from every placed non-exempt crowder (the
+        # shunt-anchored INA3221 landed 0.637 from its 2-pin shunt: RS is a
+        # crowder, the IC was the subject, and only the reverse direction
+        # was enforced).
+        if own_need and not _is_cluster_passive(pp.bref, npins):
+            subjects.append((pp.local_box(), own_need))
     # Grid radius must reach ANY target pad — a big connector's far edge pads (the
     # target box spans the whole part when anchor_pins is absent) — PLUS the bound
     # PLUS a body-slack so the member's pad can hug an inner pin from OUTSIDE the
@@ -780,7 +792,8 @@ def _seat_multi(order: list[str], roots: set[str],
                 repulsors: dict[str, list[_Repel]],
                 resolvable: dict[str, Path], pad: float,
                 conn_roots: set[str] | None = None,
-                outer_vec: tuple[float, float] | None = None
+                outer_vec: tuple[float, float] | None = None,
+                root_rot: dict[str, float] | None = None
                 ) -> dict[str, _Part] | None:
     """Seat the graph GREEDILY in topological order: roots (a connector/IC that
     anchors others) laid deterministically left-to-right, then each member placed at
@@ -792,41 +805,69 @@ def _seat_multi(order: list[str], roots: set[str],
     sound, fast greedy. A part with zero candidates returns None -> the caller's
     widen loop grows whitespace and retries (bounds never relax). Deterministic."""
     placed: dict[str, _Part] = {}
-    x_cursor = 0.0
+    # ROOT ROW AXIS (LAW 6): roots lay along the EDGE-PARALLEL axis (an E/W edge
+    # runs vertically, so its connectors spread along Y; N/S along X — interior
+    # sheets keep X). Two mating connectors on one sheet keep the CABLE gap
+    # (motor_sense's XT60 pair overlapped at 0.00 when both sat at y=0 and the
+    # edge-seat stacked them). Deterministic sorted order.
+    _along_y = outer_vec is not None and abs(outer_vec[0]) > abs(outer_vec[1])
+    cursor = 0.0
+    prev_conn = False
     for r in sorted(roots):
-        p0 = _Part(r, resolvable[r], 0.0, "top", 0.0, 0.0)
-        dx = round(x_cursor - p0.local_box()[0], 4)
-        p = _Part(r, resolvable[r], 0.0, "top", dx, 0.0)
+        is_conn = bool(conn_roots and r in conn_roots)
+        gap = _ROOT_GAP
+        if prev_conn and is_conn:
+            from schgen.generate.floorplan import CABLE_NEIGHBOR_GAP
+            gap = CABLE_NEIGHBOR_GAP
+        rr = (root_rot or {}).get(r, 0.0)
+        p0 = _Part(r, resolvable[r], rr, "top", 0.0, 0.0)
+        b0 = p0.local_box()
+        if _along_y:
+            d = round(cursor - b0[1], 4)
+            p = _Part(r, resolvable[r], rr, "top", 0.0, d)
+            cursor = p.local_box()[3] + TEMPLATE_CLEAR + pad + gap
+        else:
+            d = round(cursor - b0[0], 4)
+            p = _Part(r, resolvable[r], rr, "top", d, 0.0)
+            cursor = p.local_box()[2] + TEMPLATE_CLEAR + pad + gap
         placed[r] = p
-        x_cursor = p.local_box()[2] + TEMPLATE_CLEAR + pad + _ROOT_GAP
-    # LAW-6 SEAT-SWEEP exclusion: an EDGE sheet's mating connector is later slid
-    # flush to the board edge (perpendicular axis only), sweeping its lateral span
-    # toward ``outer_vec``. A member seated in that sweep corridor collides after
-    # the slide (measured: usbc/pd ESD at clr=0.000 under the seated Type-C, DRC
-    # 28). Forbid the corridor: the connector courtyard extended to the edge.
+        prev_conn = is_conn
+    # LAW-6 OUTBOARD HALF-PLANE exclusion: the edge-seat slides each mating
+    # connector flush to the board edge, so the zone's outer face must BE the
+    # connector face — NOTHING may sit outboard of the innermost connector face
+    # (members beside-but-outboard opened 11-23mm contract gaps when the seat
+    # slid the connector away; leftover TPs in the slide path were crushed at
+    # clr=0.000). Supersedes the earlier per-connector sweep corridor (subset).
     _sweeps: list[tuple[float, float, float, float]] = []
     if conn_roots and outer_vec is not None:
         _far = 1e4
+        vx, vy = outer_vec
+        faces = []
         for r in sorted(conn_roots):
             if r not in placed:
                 continue
-            x0, y0, x1, y1 = placed[r].local_box()
-            vx, vy = outer_vec
+            pbs = list(placed[r].pad_boxes().values())
+            faces.append(max(b[2] for b in pbs) if vx > 0
+                         else min(b[0] for b in pbs) if vx < 0
+                         else max(b[3] for b in pbs) if vy > 0
+                         else min(b[1] for b in pbs))
+        if faces:
+            face = min(faces) if (vx > 0 or vy > 0) else max(faces)
+            face += -_SEAT_SLIDE if (vx > 0 or vy > 0) else _SEAT_SLIDE
             if vx > 0:
-                x1 = _far
+                _sweeps.append((face, -_far, _far, _far))
             elif vx < 0:
-                x0 = -_far
-            if vy > 0:
-                y1 = _far
-            elif vy < 0:
-                y0 = -_far
-            _sweeps.append((x0, y0, x1, y1))
+                _sweeps.append((-_far, -_far, face, _far))
+            elif vy > 0:
+                _sweeps.append((-_far, face, _far, _far))
+            else:
+                _sweeps.append((-_far, -_far, _far, face))
     for bref in order:
         if bref in roots:
             continue
         cands = _gcandidates(bref, resolvable[bref], attractors[bref],
                              repulsors.get(bref, []), placed, pad,
-                             forbid=_sweeps or None)
+                             forbid=_sweeps or None, conn_roots=conn_roots)
         if not cands:
             return None
         placed[bref] = cands[0]
@@ -902,7 +943,21 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
             stack.extend(adj[q] - seen)
         comps.append(comp)
 
+    _outer_vec = {"N": (0.0, -1.0), "S": (0.0, 1.0),
+                  "E": (1.0, 0.0), "W": (-1.0, 0.0)}.get(outer_dir or "")
+    _conn_roots = {r for r in (all_parts - members)
+                   if resolvable[r].stem in CONN_MATING_FACE}
+    # LAW 6: zone offsets are for the FINAL-ROTATED part (the legacy packer's
+    # convention) — the board's conn_rot supplies the rotation, so the solver
+    # must build the connector's geometry AT that rotation or every solved
+    # adjacency shatters when placement rotates it (camera's W-edge FFC turned
+    # 90 deg: terms 3.7mm from the jack, TPs in the slide path).
+    _root_rot = {r: connector_edge_rotation(
+                     CONN_MATING_FACE[resolvable[r].stem], outer_dir)
+                 for r in _conn_roots} if outer_dir else {}
+
     sig = (outer_dir or "",
+           tuple(sorted(_root_rot.items())),
            tuple((b, str(resolvable[b])) for b in sorted(all_parts)),
            tuple((m, tuple((a, p or (), round(bd, 4))
                            for a, p, bd in attractors.get(m, [])),
@@ -914,18 +969,16 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
         return [_Part(b, resolvable[b], rot, "top", ox, oy)
                 for b, rot, ox, oy in cached]
 
-    _outer_vec = {"N": (0.0, -1.0), "S": (0.0, 1.0),
-                  "E": (1.0, 0.0), "W": (-1.0, 0.0)}.get(outer_dir or "")
-    _conn_roots = {r for r in (all_parts - members)
-                   if resolvable[r].stem in CONN_MATING_FACE}
     clusters: list[list[_Part]] = []
     for comp in sorted(comps, key=sorted):
         cl = _solve_component(comp, members, attractors, repulsors, resolvable,
-                              conn_roots=_conn_roots, outer_vec=_outer_vec)
+                              conn_roots=_conn_roots, outer_vec=_outer_vec,
+                              root_rot=_root_rot)
         if cl is None:
             return None
         clusters.append(cl)
-    parts = _compose_clusters(clusters)
+    parts = _compose_clusters(clusters, conn_roots=_conn_roots,
+                              outer_vec=_outer_vec)
     _MULTI_CACHE[sig] = [(p.bref, p.rot, p.ox, p.oy) for p in parts]
     return parts
 
@@ -935,7 +988,8 @@ def _solve_component(comp: set[str], members: set[str],
                      repulsors: dict[str, list[_Repel]],
                      resolvable: dict[str, Path],
                      conn_roots: set[str] | None = None,
-                     outer_vec: tuple[float, float] | None = None
+                     outer_vec: tuple[float, float] | None = None,
+                     root_rot: dict[str, float] | None = None
                      ) -> list[_Part] | None:
     """Seat ONE connected component (a root anchor + everything clustering around
     it) as a rigid collision-free cluster: root(s) at the origin, every member
@@ -959,7 +1013,7 @@ def _solve_component(comp: set[str], members: set[str],
         placed = _seat_multi(order, roots_c, attractors, repulsors,
                              resolvable, scale * 0.25,
                              conn_roots=(conn_roots or set()) & comp,
-                             outer_vec=outer_vec)
+                             outer_vec=outer_vec, root_rot=root_rot)
         if placed is None:
             continue
         parts = [placed[b] for b in order]
@@ -968,22 +1022,105 @@ def _solve_component(comp: set[str], members: set[str],
     return None
 
 
-def _compose_clusters(clusters: list[list[_Part]]) -> list[_Part]:
-    """Lay independent solved clusters left-to-right, each normalised to its own
-    min courtyard corner and separated by a clearance gap — collision-free by
-    construction. The common case (one connected contract) is a single cluster,
-    re-anchored to the origin but otherwise the seated geometry unchanged."""
+def _compose_clusters(clusters: list[list[_Part]],
+                      conn_roots: set[str] | None = None,
+                      outer_vec: tuple[float, float] | None = None
+                      ) -> list[_Part]:
+    """Lay independent solved clusters along the EDGE-PARALLEL axis (X for
+    interior/N/S sheets, Y for E/W), each normalised and clearance-separated —
+    collision-free by construction. On an EDGE sheet every cluster's mating-
+    connector OUTER face is additionally ALIGNED to the common outer line, and
+    conn-bearing neighbours keep the CABLE gap, so the composed zone presents
+    ONE flush connector face for the edge-seat (slide ~= 0, contract adjacency
+    preserved). Single-cluster zones are re-anchored only."""
+    along_y = outer_vec is not None and abs(outer_vec[0]) > abs(outer_vec[1])
+    vx, vy = outer_vec if outer_vec is not None else (0.0, 0.0)
     out: list[_Part] = []
-    x_cursor = 0.0
+    cursor = 0.0
+    prev_conn = False
+    placed_clusters: list[list[_Part]] = []
     for cl in clusters:
+        has_conn = bool(conn_roots and any(p.bref in conn_roots for p in cl))
+        gap = _ROOT_GAP
+        if prev_conn and has_conn:
+            from schgen.generate.floorplan import CABLE_NEIGHBOR_GAP
+            gap = CABLE_NEIGHBOR_GAP
         minx = min(p.local_box()[0] for p in cl)
         miny = min(p.local_box()[1] for p in cl)
-        width = max(p.local_box()[2] for p in cl) - minx
-        for p in cl:
-            out.append(_Part(p.bref, p.mod, p.rot, "top",
-                             round(p.ox - minx + x_cursor, 4),
-                             round(p.oy - miny, 4)))
-        x_cursor += width + TEMPLATE_CLEAR + _ROOT_GAP
+        if along_y:
+            height = max(p.local_box()[3] for p in cl) - miny
+            moved = [_Part(p.bref, p.mod, p.rot, "top",
+                           round(p.ox - minx, 4),
+                           round(p.oy - miny + cursor, 4)) for p in cl]
+            cursor += height + TEMPLATE_CLEAR + gap
+        else:
+            width = max(p.local_box()[2] for p in cl) - minx
+            moved = [_Part(p.bref, p.mod, p.rot, "top",
+                           round(p.ox - minx + cursor, 4),
+                           round(p.oy - miny, 4)) for p in cl]
+            cursor += width + TEMPLATE_CLEAR + gap
+        placed_clusters.append(moved)
+        prev_conn = has_conn
+    # OUTER-FACE ALIGNMENT: shift each conn-bearing cluster along the outer axis
+    # so every connector face sits on the common outermost line.
+    if conn_roots and outer_vec is not None:
+        def _face(cl: list[_Part]) -> float | None:
+            fs = []
+            for p in cl:
+                if p.bref not in conn_roots:
+                    continue
+                pbs = list(p.pad_boxes().values())
+                fs.append(max(b[2] for b in pbs) if vx > 0
+                          else min(b[0] for b in pbs) if vx < 0
+                          else max(b[3] for b in pbs) if vy > 0
+                          else min(b[1] for b in pbs))
+            if not fs:
+                return None
+            return max(fs) if (vx > 0 or vy > 0) else min(fs)
+        faces = [f for f in (_face(cl) for cl in placed_clusters)
+                 if f is not None]
+        if faces:
+            target = max(faces) if (vx > 0 or vy > 0) else min(faces)
+            for i, cl in enumerate(placed_clusters):
+                f = _face(cl)
+                if f is None:
+                    continue
+                d = round(target - f, 4)
+                if d:
+                    placed_clusters[i] = [
+                        _Part(p.bref, p.mod, p.rot, "top",
+                              round(p.ox + (d if vx else 0.0), 4),
+                              round(p.oy + (d if vy else 0.0), 4))
+                        for p in cl]
+            # clusters WITHOUT a connector must stay INBOARD of the aligned
+            # pad line — normalising them to 0 left an LDO cluster outboard
+            # of it, and the seat-line shift dragged its cap off-board
+            # (C16002, 1.0mm past Edge.Cuts, measured).
+            inline = round(target + (_SEAT_SLIDE if (vx < 0 or vy < 0)
+                                     else -_SEAT_SLIDE), 4)
+            for i, cl in enumerate(placed_clusters):
+                if _face(cl) is not None:
+                    continue
+                if vx > 0:
+                    e = max(p.local_box()[2] for p in cl)
+                    d = min(0.0, round(inline - e, 4))
+                elif vx < 0:
+                    e = min(p.local_box()[0] for p in cl)
+                    d = max(0.0, round(inline - e, 4))
+                elif vy > 0:
+                    e = max(p.local_box()[3] for p in cl)
+                    d = min(0.0, round(inline - e, 4))
+                else:
+                    e = min(p.local_box()[1] for p in cl)
+                    d = max(0.0, round(inline - e, 4))
+                if d:
+                    placed_clusters[i] = [
+                        _Part(p.bref, p.mod, p.rot, "top",
+                              round(p.ox + (d if vx else 0.0), 4),
+                              round(p.oy + (d if vy else 0.0), 4))
+                        for p in cl]
+    for cl in placed_clusters:
+        out.extend(cl)
     return out
 
 
@@ -1201,6 +1338,121 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
         else:
             return None
 
+    # generic proximity members join their anchor IC's STAGE FRAME before the
+    # row composer runs — post-compose the pin region is packed solid and the
+    # greedy finds no candidate (power_som's EN clamp trio measured 13-15mm in
+    # the leftover band against an authored 3mm).
+    _stage_of = {p.bref: si for si, sp in enumerate(stages) for p in sp}
+    # tightest authored bound per board ref (movability: a part is displaceable
+    # for a TIGHTER member iff its own slack allows re-solving it elsewhere).
+    _bound_of: dict[str, float] = {}
+    _att_of: dict[str, list] = {}
+    _rep_of: dict[str, list] = {}
+    for st in structs:
+        _t = st.get("type")
+        if _t == "proximity":
+            _a = bref(st.get("anchor", ""))
+            _mm = float(st.get("max_mm", 0.0) or 0.0)
+            if _a is None or _mm <= 0.0:
+                continue
+            _ap = st.get("anchor_pins")
+            for _ml in st.get("members", []):
+                _mb = bref(_ml)
+                if _mb is not None and _mm < _bound_of.get(_mb, 1e9):
+                    _bound_of[_mb] = _mm
+                    _att_of[_mb] = [(_a, tuple(_ap) if _ap else None, _mm)]
+                    _rep_of[_mb] = []
+            continue
+        # typed recipe structures, translated to the same (anchor, pins,
+        # bound) form so displacement can re-solve their members faithfully.
+        _spec = {"fb_cluster": ("members", "fb_pin", "max_to_fb_mm"),
+                 "rt_r": ("resistor", "pin", "max_pad_to_pin_mm"),
+                 "bias_cap": ("cap", "pin", "max_pad_to_pin_mm"),
+                 "boot": ("cap", "pins", "max_pad_to_pin_mm"),
+                 "vcc_cap": ("cap", "pin", "max_pad_to_pin_mm")}.get(_t)
+        if _spec is None:
+            continue
+        _mk, _pk, _bk = _spec
+        _ic = bref(st.get("ic", ""))
+        _mm = float(st.get(_bk, 0.0) or 0.0)
+        if _ic is None or _mm <= 0.0:
+            continue
+        _pins = st.get(_pk)
+        _pins = tuple(_pins) if isinstance(_pins, list) else (_pins,)
+        _mls = st.get(_mk)
+        _mls = _mls if isinstance(_mls, list) else [_mls]
+        _rep = []
+        if _t == "fb_cluster":
+            _msw = float(st.get("min_to_own_sw_mm", 0.0) or 0.0)
+            if _msw > 0.0:
+                if st.get("own_sw_pin"):
+                    _rep.append((_ic, st["own_sw_pin"], _msw))
+                _ol = bref(st.get("own_inductor", ""))
+                if _ol is not None:
+                    _rep.append((_ol, None, _msw))
+        for _ml in _mls:
+            _mb = bref(_ml)
+            if _mb is not None and _mm < _bound_of.get(_mb, 1e9):
+                _bound_of[_mb] = _mm
+                _att_of[_mb] = [(_ic, _pins, _mm)]
+                _rep_of[_mb] = _rep
+
+    def _try_place(mb, att, frame, rep=()):
+        rep = [r for r in rep if r[0] in frame]
+        for wpad in (0.0, 0.5, 1.0):
+            cands = _gcandidates(mb, resolvable[mb], att, list(rep), frame,
+                                 wpad)
+            if cands:
+                return cands[0]
+        return None
+
+    for st in structs:
+        if st.get("type") != "proximity":
+            continue
+        ab = bref(st.get("anchor", ""))
+        si = _stage_of.get(ab)
+        bound = float(st.get("max_mm", 0.0) or 0.0)
+        if si is None or bound <= 0.0:
+            continue
+        apins = st.get("anchor_pins")
+        att = [(ab, tuple(apins) if apins else None, bound)]
+        for mlib in st.get("members", []):
+            mb = bref(mlib)
+            if mb is None or mb in _stage_of or mb not in resolvable:
+                continue
+            frame = {p.bref: p for p in stages[si]}
+            got = _try_place(mb, att, frame)
+            if got is None:
+                # BOUND-PRIORITY DISPLACEMENT: the recipe ringed the anchor
+                # with slacker-bound parts (fb/rt at 5-10mm squatting the EN
+                # clamp's 3mm ring — priority inversion, measured). Evict the
+                # slackest ring part that can re-solve within ITS OWN bound,
+                # then retry; restore on any failure.
+                ring = [r for r in frame
+                        if r != ab and _bound_of.get(r, 0.0) >= bound
+                        and r in _att_of
+                        and len(_g._pad_boxes(frame[r].mod, 0.0)) <= 2]
+                ring.sort(key=lambda r: (-_bound_of[r], r))
+                for victim in ring:
+                    f2 = dict(frame)
+                    f2.pop(victim)
+                    got2 = _try_place(mb, att, f2)
+                    if got2 is None:
+                        continue
+                    f2[mb] = got2
+                    back = _try_place(victim, _att_of[victim], f2,
+                                      _rep_of.get(victim, ()))
+                    if back is None:
+                        continue
+                    stages[si] = [*(p for p in stages[si]
+                                    if p.bref != victim), got2, back]
+                    _stage_of[mb] = si
+                    got = got2
+                    break
+            else:
+                stages[si] = [*stages[si], got]
+                _stage_of[mb] = si
+
     # --- compose stages into ROWS (multi-row layout search, v2) ----------------
     # v1 laid every stage in ONE left->right row with the 2nd buck MIRRORED (FB
     # faces +X, away from stage-1's SW) and grew a UNIFORM inter-stage gap until the
@@ -1375,7 +1627,11 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
     bot_off: dict[str, tuple[float, float]] = {}
     for p in placed_abs.values():
         top_off[p.bref] = (p.ox, p.oy)
-        if abs(p.rot) > 1e-6:
+        if abs(p.rot) > 1e-6 and p.mod.stem not in CONN_MATING_FACE:
+            # a mating connector's rotation is OWNED by the LAW-6 conn_rot
+            # machinery — the zone builds its geometry AT that rotation but
+            # must not ALSO emit it as extra rot (double rotation = mouths
+            # inward, 8 mis-placed connectors, measured).
             rot_out[p.bref] = p.rot % 360.0
 
     zw, zh = _row_extent(placed_abs)
@@ -1505,12 +1761,13 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
     bot_off: dict[str, tuple[float, float]] = {}
     for p in placed_abs.values():
         top_off[p.bref] = (p.ox, p.oy)
-        if abs(p.rot) > 1e-6:
+        if abs(p.rot) > 1e-6 and p.mod.stem not in CONN_MATING_FACE:
             rot_out[p.bref] = p.rot % 360.0
 
     zw, zh = _row_extent(placed_abs)
     row_bottom = max((pp.local_box()[3] for pp in placed_abs.values()),
                      default=ZONE_PAD)
+    _gx = _gy = 0.0
 
     # leftovers: everything not in the cluster, banded below (usb_pd has none — all
     # 6 parts are contracted — but keep the band so a lightly-contracted subsystem
@@ -1519,17 +1776,102 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
     if leftovers:
         lt = [r for r in leftovers if side_of.get(r, "top") == "top"]
         lb = [r for r in leftovers if side_of.get(r, "top") == "bottom"]
+        # LAW 6: the leftover band sits on the INBOARD side of the cluster —
+        # on an edge sheet the outer side IS the mating-connector face and a
+        # banded TP/strap there lands in the edge-seat slide path (measured:
+        # camera/hdmi TPs crushed at clr=0.000). N keeps the historical
+        # below-band (inboard == +y); S bands above; E left; W right.
+        _in = {"S": (0.0, -1.0)}.get(outer_dir or "N", (0.0, 1.0))
         target_w = max(zw - 2 * ZONE_PAD, 8.0)
-        band_top = row_bottom + _LEFTOVER_BAND_GAP
+        # the band must clear every mating connector by its fan-out need plus
+        # the seat slide (a TP at 0.00 below the camera FFC was the defect).
+        _conn_lo, _conn_hi = [], []
+        if outer_dir:
+            for pp in placed_abs.values():
+                if pp.mod.stem in CONN_MATING_FACE:
+                    bb = pp.local_box()
+                    _conn_lo.append(bb[1])
+                    _conn_hi.append(bb[3])
         t_lo, t_w, t_h, b_lo, b_w, b_h = _pack_leftover_bands(
             lt, lb, target_w, bbox_of, resolvable)
+        row_top = min((pp.local_box()[1] for pp in placed_abs.values()),
+                      default=ZONE_PAD)
+        _need_gap = 1.0 + _SEAT_SLIDE
+        if _in == (0.0, 1.0):
+            floor_y = max([row_bottom]
+                          + [h + _need_gap for h in _conn_hi])
+            bx, by = 0.0, floor_y + _LEFTOVER_BAND_GAP - ZONE_PAD
+        else:
+            bh_all = max(t_h, b_h)
+            ceil_y = min([row_top] + [lo - _need_gap for lo in _conn_lo])
+            bx, by = 0.0, ceil_y - _LEFTOVER_BAND_GAP - bh_all - ZONE_PAD
+        if outer_dir == "W":
+            _pf0 = [min(b[0] for b in pp.pad_boxes().values())
+                    for pp in placed_abs.values()
+                    if pp.mod.stem in CONN_MATING_FACE]
+            if _pf0:
+                bx = min(_pf0) + _SEAT_SLIDE
         for r, (ox, oy) in t_lo.items():
-            top_off[r] = (round(ox, 4), round(oy + band_top - ZONE_PAD, 4))
+            top_off[r] = (round(ox + bx, 4), round(oy + by, 4))
         for r, (ox, oy) in b_lo.items():
-            bot_off[r] = (round(ox, 4), round(oy + band_top - ZONE_PAD, 4))
-        zw = round(max(zw, t_w, b_w), 4)
-        zh = round(max(zh, band_top - ZONE_PAD + t_h, band_top - ZONE_PAD + b_h),
-                   4)
+            bot_off[r] = (round(ox + bx, 4), round(oy + by, 4))
+        # global re-anchor: a band on the -x/-y side pushes offsets negative;
+        # shift EVERYTHING so the min offset sits at ZONE_PAD again.
+        allx = [v[0] for v in top_off.values()] + [v[0] for v in bot_off.values()]
+        ally = [v[1] for v in top_off.values()] + [v[1] for v in bot_off.values()]
+        sx = ZONE_PAD - min(allx) if min(allx) < ZONE_PAD else 0.0
+        sy = ZONE_PAD - min(ally) if min(ally) < ZONE_PAD else 0.0
+        if sx or sy:
+            _gx, _gy = sx, sy
+            top_off = {r: (round(x + sx, 4), round(y + sy, 4))
+                       for r, (x, y) in top_off.items()}
+            bot_off = {r: (round(x + sx, 4), round(y + sy, 4))
+                       for r, (x, y) in bot_off.items()}
+        ext_x = [pp.local_box()[2] + sx for pp in placed_abs.values()]
+        ext_y = [pp.local_box()[3] + sy for pp in placed_abs.values()]
+        if t_lo or b_lo:
+            ext_x += [bx + sx + t_w, bx + sx + b_w]
+            ext_y += [by + sy + t_h, by + sy + b_h]
+        zw = round(max(ext_x) + ZONE_PAD, 4)
+        zh = round(max(ext_y) + ZONE_PAD, 4)
+
+    _connp = [pp for pp in placed_abs.values()
+              if pp.mod.stem in CONN_MATING_FACE]
+    if outer_dir and _connp:
+        # SEAT-LINE REPLICATION: the board edge-seat overwrites each mating
+        # connector's perpendicular coordinate so its outer PAD sits at
+        # EDGE_PAD_CLEAR inside the board edge == this zone's outer boundary.
+        # Put the boundary exactly there; the mouth overhangs off-zone the
+        # same way it overhangs off-board (a DS1024's 9mm mouth counted in
+        # the extents left ESD members 13.5mm from the pads; limit 5).
+        vx, vy = _OVEC[outer_dir]
+
+        def _pface(pp: _Part) -> float:
+            pbs = list(pp.pad_boxes().values())
+            return (max(b[2] for b in pbs) + _gx if vx > 0
+                    else min(b[0] for b in pbs) + _gx if vx < 0
+                    else max(b[3] for b in pbs) + _gy if vy > 0
+                    else min(b[1] for b in pbs) + _gy)
+
+        faces = [_pface(pp) for pp in _connp]
+        if vx > 0:
+            zw = max(faces) + EDGE_PAD_CLEAR
+        elif vy > 0:
+            zh = max(faces) + EDGE_PAD_CLEAR
+        else:
+            d = EDGE_PAD_CLEAR - min(faces)
+            if vx < 0:
+                top_off = {r: (round(x + d, 4), y)
+                           for r, (x, y) in top_off.items()}
+                bot_off = {r: (round(x + d, 4), y)
+                           for r, (x, y) in bot_off.items()}
+                zw += d
+            else:
+                top_off = {r: (x, round(y + d, 4))
+                           for r, (x, y) in top_off.items()}
+                bot_off = {r: (x, round(y + d, 4))
+                           for r, (x, y) in bot_off.items()}
+                zh += d
 
     return top_off, bot_off, round(zw, 4), round(zh, 4)
 
@@ -1576,14 +1918,19 @@ def _foreign_ok(placed: dict[str, _Part], contract: dict,
                 lib2board: dict[str, str], board_set: set[str],
                 resolvable: dict[str, Path], min_foreign: float) -> bool:
     """Every FB member clears the OTHER buck's SW pad / inductor by >= min."""
-    def b(lib: str) -> str | None:
-        x = lib2board.get(lib)
+    def b(lib: str | None) -> str | None:
+        x = lib2board.get(lib) if lib else None
         return x if x in placed else None
     for st in contract.get("structures", []):
         if st.get("type") != "fb_cluster":
             continue
+        # E2: a single-buck sheet's fb_cluster has NO foreign_* keys — the
+        # foreign-SW guard is inter-subsystem there (FAR/flow gate), not
+        # intra-zone geometry.
+        if "foreign_ic" not in st:
+            continue
         for_ic = b(st["foreign_ic"])
-        for_l = b(st["foreign_inductor"])
+        for_l = b(st.get("foreign_inductor"))
         if for_ic is None:
             continue
         for_boxes = placed[for_ic].pad_boxes()

@@ -189,19 +189,20 @@ def _block_fanout_reach(sheet: str, zg) -> tuple[float, float, float, float]:
             # only the margin that PROVABLY survives that snap (margin - GRID), so the
             # reserved gap still holds on the emitted board — the exact erosion that
             # left camera's U8001 at clr 0.414 when the raw margin looked sufficient.
-            cmw, cme = max(0.0, mw - GRID), max(0.0, me - GRID)
-            cmn, cms = max(0.0, mn - GRID), max(0.0, ms - GRID)
-            # reserve on a side only if this subject is the CLOSE one to it (within
-            # its own need of that edge) — otherwise an inboard part already blocks a
-            # neighbour there and no cross-block reservation is warranted.
-            if mw <= need:
-                rw = max(rw, need - cmw)
-            if me <= need:
-                re = max(re, need - cme)
-            if mn <= need:
-                rn = max(rn, need - cmn)
-            if ms <= need:
-                rs = max(rs, need - cms)
+            # reserve on a side only if this subject is the CLOSE one to it
+            # (within need + snap of the edge). Straight formula, clamped at
+            # the END: the old max(0, margin - GRID) credit under-reserved
+            # whenever margin < GRID (pd_input's USBLC6 at margin 0.29 got
+            # 0.5 instead of 1.48 and the emitted blocks overlapped by 0.18).
+            lim = need + GRID
+            if mw <= lim:
+                rw = max(rw, lim - mw)
+            if me <= lim:
+                re = max(re, lim - me)
+            if mn <= lim:
+                rn = max(rn, lim - mn)
+            if ms <= lim:
+                rs = max(rs, lim - ms)
     return (round(rw, 4), round(re, 4), round(rn, 4), round(rs, 4))
 
 

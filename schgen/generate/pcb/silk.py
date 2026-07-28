@@ -248,7 +248,8 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
                        (cx1 + dx, cy0 - dy),      # NE
                        (cx0 - dx, cy0 - dy)):     # NW
             box = _text_box(label, tx, ty, size)
-            pen = sum(_overlap_area(box, o) for o in occupied)
+            gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
+            pen = sum(_overlap_area(gb, o) for o in occupied)
             onboard = bounds is None or (
                 box[0] >= bounds[0] and box[1] >= bounds[1]
                 and box[2] <= bounds[2] and box[3] <= bounds[3])
@@ -279,7 +280,8 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
                 and box[2] <= bounds[2] and box[3] <= bounds[3])
             if not onboard:
                 continue
-            pen = sum(_overlap_area(box, o) for o in occupied)
+            gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
+            pen = sum(_overlap_area(gb, o) for o in occupied)
             if pen == 0.0:
                 return tx, ty, box, extra
             if best_pen is None or pen < best_pen:
@@ -584,8 +586,12 @@ def _declutter_refdes(model, uid, doc: list) -> int:
     for ref, c, lat, fx, fy, ca, sa, court, size, box, bottom in refs:
         occ = occupied_bot if bottom else occupied   # bottom clears only bottom silk
         plc = placed_bot if bottom else placed_top
-        if not (any(_overlap_area(box, o) > 0.0 for o in occ)
-                or any(_overlap_area(box, p) > 0.0 for p in plc)):
+        # 0.02 mm guard band: exact tangency passes an area test but float
+        # noise re-reads it as an overlap in the gate (C6007|R6017 abutted at
+        # y=79.808 and differed by 1e-14).
+        gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
+        if not (any(_overlap_area(gb, o) > 0.0 for o in occ)
+                or any(_overlap_area(gb, p) > 0.0 for p in plc)):
             plc.append(box)                          # clear -> keep authored spot
             continue
         tx, ty, nbox, off = _place_clear_label(
