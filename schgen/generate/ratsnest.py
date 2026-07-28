@@ -266,6 +266,105 @@ def _png(model: PcbModel, palette: dict, side: str, out: Path) -> None:
     im.save(out, "PNG", optimize=True)
 
 
+PNG_SHEET_DIR = CARRIER / "renders" / "ratsnest"
+_SHEET_SC = 12.0
+_SHEET_M = 10.0
+
+
+def _png_sheet(model: PcbModel, sheet: str, refs: set[str], out: Path,
+               som_refs: set[str] | None = None) -> None:
+    from PIL import Image, ImageDraw
+    insts = {i.ref: i for i in model.insts}
+    som_refs = som_refs or set()
+    boxes = [_inst_courtyard(insts[r]) for r in sorted(refs | som_refs)]
+    if som_refs and model.som_keepout:
+        boxes.append(model.som_keepout)
+    x0 = min(b[0] for b in boxes) - _SHEET_M
+    y0 = min(b[1] for b in boxes) - _SHEET_M
+    x1 = max(b[2] for b in boxes) + _SHEET_M
+    y1 = max(b[3] for b in boxes) + _SHEET_M
+    im = Image.new("RGB", (int((x1 - x0) * _SHEET_SC),
+                           int((y1 - y0) * _SHEET_SC)), (15, 17, 21))
+    d = ImageDraw.Draw(im, "RGBA")
+
+    def px(x):
+        return (x - x0) * _SHEET_SC
+
+    def py(y):
+        return (y - y0) * _SHEET_SC
+
+    if model.som_keepout:
+        kx0, ky0, kx1, ky1 = model.som_keepout
+        d.rectangle([px(kx0), py(ky0), px(kx1), py(ky1)],
+                    outline=(201, 148, 32, 255), width=2)
+    for i in sorted(model.insts, key=lambda i: i.ref):
+        bx0, by0, bx1, by1 = _inst_courtyard(i)
+        if bx1 < x0 or bx0 > x1 or by1 < y0 or by0 > y1:
+            continue
+        own = i.ref in refs
+        if own:
+            fill = ((70, 160, 255, 235) if i.side == "top"
+                    else (255, 170, 60, 235))
+        elif i.ref in som_refs:
+            fill = ((110, 150, 190, 235) if i.side == "top"
+                    else (80, 105, 135, 235))
+        else:
+            fill = ((60, 66, 78, 200) if i.side == "top"
+                    else (40, 44, 54, 200))
+        d.rectangle([px(bx0), py(by0), px(bx1), py(by1)], fill=fill,
+                    outline=(15, 17, 21, 255), width=1)
+        if own and i.side == "bottom":
+            d.rectangle([px(bx0), py(by0), px(bx1), py(by1)],
+                        outline=(255, 230, 120, 255), width=2)
+    for _net, pts in sorted(net_pad_positions(model).items()):
+        if not any(p[2] in refs for p in pts):
+            continue
+        for a, b in _mst_edges(pts):
+            xa, ya, ra, _sa = pts[a]
+            xb, yb, rb, _sb = pts[b]
+            own_edge = ra in refs and rb in refs
+            to_som = ((ra in refs and rb in som_refs)
+                      or (rb in refs and ra in som_refs))
+            leaves = (ra in refs) != (rb in refs)
+            ln = abs(xb - xa) + abs(yb - ya)
+            col = ((120, 220, 160, 220) if own_edge
+                   else (255, 59, 48, 235) if to_som
+                   else (255, 110, 100, 130) if leaves
+                   else (110, 118, 132, 70))
+            d.line([px(xa), py(ya), px(xb), py(yb)], fill=col,
+                   width=2 if (to_som or (own_edge and ln > 12)) else 1)
+    for r in sorted(refs):
+        bx0, by0, _bx1, _by1 = _inst_courtyard(insts[r])
+        d.text((px(bx0), py(by0) - 11), r, fill=(240, 240, 245, 255))
+    im.save(out, "PNG", optimize=True)
+
+
+def per_subsystem_pngs(model: PcbModel) -> list[Path]:
+    """One ratsnest crop per subsystem (own parts colored top/bottom, foreign
+    context grey, intra airwires green, leaving airwires red) plus a composite
+    ``som.png`` for the module region — the per-sheet LAW-5 inspection set."""
+    PNG_SHEET_DIR.mkdir(parents=True, exist_ok=True)
+    for stale in PNG_SHEET_DIR.glob("*.png"):
+        stale.unlink()
+    by_sheet: dict[str, set[str]] = {}
+    for i in model.insts:
+        by_sheet.setdefault(i.sheet, set()).add(i.ref)
+    som_refs = {r for sh, rr in by_sheet.items()
+                if sh.startswith("som_") for r in rr}
+    out: list[Path] = []
+    for sheet, refs in sorted(by_sheet.items()):
+        if sheet.startswith("som_"):
+            continue
+        p = PNG_SHEET_DIR / f"{sheet}.png"
+        _png_sheet(model, sheet, refs, p, som_refs=som_refs)
+        out.append(p)
+    if som_refs:
+        p = PNG_SHEET_DIR / "som.png"
+        _png_sheet(model, "som", som_refs, p)
+        out.append(p)
+    return out
+
+
 # ---- entry point -----------------------------------------------------------------
 
 def generate(model: PcbModel | None = None) -> dict:
@@ -277,6 +376,7 @@ def generate(model: PcbModel | None = None) -> dict:
     palette = _palette(sheets)
     _png(model, palette, "top", PNG_TOP)
     _png(model, palette, "bottom", PNG_BOTTOM)
+    per_subsystem_pngs(model)
     SVG_COMBINED.parent.mkdir(parents=True, exist_ok=True)
     SVG_COMBINED.write_text(_svg(model, palette))
     cross, total, n_cross = cross_airwire_length(model)
