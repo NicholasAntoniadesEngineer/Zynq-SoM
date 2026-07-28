@@ -124,11 +124,10 @@ def test_real_term_index_structure():
     fac = kinds.get(("facing", "power", "power_som"))
     assert fac is not None and fac.out_refs, "facing must resolve board refs"
     # near_intent advisories from floorplan.json (no contract near_max pair);
-    # hdmi_rx_term graduated to a contract-covered S-face anchor at full wire
+    # uart_bridge graduated to a contract near_max at the audit wave
     ni = [t for t in idx.terms if t.kind == "near_intent"]
     ni_pairs = {(t.subject, t.target_raw) for t in ni}
-    assert ("power_mon", "power_som") in ni_pairs
-    assert ("uart_bridge", "rj45_connector") in ni_pairs
+    assert ni_pairs == {("power_mon", "power_som")}
     assert all(not t.enforced for t in ni)
     # usb_pd's near intent is COVERED by its contract near_max -> NOT near_intent
     assert ("usb_pd", "pd_input") not in ni_pairs
