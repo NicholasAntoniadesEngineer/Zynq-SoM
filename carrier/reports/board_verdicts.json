@@ -513,11 +513,11 @@
    "lib_footprint_issues": 107,
    "silk_edge_clearance": 34,
    "silk_over_copper": 20,
-   "silk_overlap": 34,
+   "silk_overlap": 33,
    "text_height": 25
   },
   "n_unconnected": 499,
-  "n_violations": 220,
+  "n_violations": 219,
   "returncode": 0,
   "stderr": ""
  },
@@ -535,7 +535,7 @@
   "ok": true,
   "regressions": []
  },
- "floorplan_composition": "FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)\n  aggregate hard margin: sum 1166.85 mm, min 3.77 mm (informational)\n  hard terms:\n    HARD facing power->power_som: 3.33 vs 90.00 (margin +86.67) ok [facing/output_roles [placement/v2]] dot=+1436.63\n    HARD facing power_som->@som: 19.46 vs 90.00 (margin +70.53) ok [facing/output_roles [placement/v2]] dot=+525.13\n    HARD far_min ethernet->power: 140.87 vs 10.00 (margin +130.87) ok [judgment:10.0 \u2014 buck switching node vs Ethernet media/magnetics analog line side]\n    HARD far_min motor_sense->power: 163.68 vs 10.00 (margin +153.68) ok [judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]\n    HARD far_min motor_sense->power_som: 66.10 vs 10.00 (margin +56.10) ok [judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]\n    HARD far_min power->ethernet.line_side: 140.87 vs 10.00 (margin +130.87) ok [judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]\n    HARD far_min power_som->ethernet.line_side: 63.65 vs 10.00 (margin +53.65) ok [judgment:10.0 \u2014 same rationale as the power pilot]\n    HARD flow_hop camera->@som: 90.12 vs 134.96 (margin +44.84) ok [flow chain [placement/v2]]\n    HARD flow_hop hdmi_tx->@som: 72.40 vs 134.96 (margin +62.55) ok [flow chain [placement/v2]]\n    HARD flow_hop pd_input->usb_pd: 15.78 vs 134.96 (margin +119.17) ok [flow chain [placement/v2]]\n    HARD flow_hop power->power_som: 108.67 vs 134.96 (margin +26.28) ok [flow chain [placement/v2]]\n    HARD flow_hop power_mon->power_som: 62.43 vs 134.96 (margin +72.52) ok [flow chain [placement/v2]]\n    HARD flow_hop usb_pd->power: 58.62 vs 134.96 (margin +76.34) ok [flow chain [placement/v2]]\n    HARD near_max ethernet->rj45_connector: 1.25 vs 20.00 (margin +18.75) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]\n    HARD near_max hdmi_rx_term->som_j2: 6.23 vs 10.00 (margin +3.77) ok [XAPP460 p.23 (term AT the receiver) \u2014 island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]\n    HARD near_max motor_sense->motor_pwm: 2.12 vs 20.00 (margin +17.88) ok [judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out]\n    HARD near_max uart_bridge->usb_uart_connector: 5.15 vs 40.00 (margin +34.85) ok [judgment:10.0 (D11 edge-gap) \u2014 CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]\n    HARD near_max usb_pd->pd_input: 2.48 vs 10.00 (margin +7.52) ok [judgment:10.0 (D11 edge-gap metric) \u2014 keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]\n  soft terms (advisory ledger \u2014 repair triggers, never gates):\n    soft near_intent power_mon->power_som: 29.80 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory\n  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 4 T2-coexistence-managed\n    managed C4002 (bringup_en) in escape:J3:N [T2 STAY]\n    managed R4001 (bringup_en) in escape:J3:N [T2 STAY]\n    managed R4003 (bringup_en) in escape:J3:N [T2 STAY]\n    managed R4005 (bringup_en) in escape:J3:N [T2 STAY]\n  D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):\n    bringup_en_modules | bringup_rails: 43 airwires (866.6 mm) -> corridor >= 10.6 mm\n    bringup_en_modules | bringup_modules: 13 airwires (311.5 mm) -> corridor >= 4.6 mm\n    ethernet | rj45_connector: 9 airwires (246.1 mm) -> corridor >= 3.8 mm",
+ "floorplan_composition": "FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)\n  aggregate hard margin: sum 1166.85 mm, min 3.77 mm (informational)\n  hard terms:\n    HARD facing power->power_som: 3.33 vs 90.00 (margin +86.67) ok [facing/output_roles [placement/v2]] dot=+1436.63\n    HARD facing power_som->@som: 19.46 vs 90.00 (margin +70.53) ok [facing/output_roles [placement/v2]] dot=+525.13\n    HARD far_min ethernet->power: 140.87 vs 10.00 (margin +130.87) ok [judgment:10.0 \u2014 buck switching node vs Ethernet media/magnetics analog line side]\n    HARD far_min motor_sense->power: 163.68 vs 10.00 (margin +153.68) ok [judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]\n    HARD far_min motor_sense->power_som: 66.10 vs 10.00 (margin +56.10) ok [judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]\n    HARD far_min power->ethernet.line_side: 140.87 vs 10.00 (margin +130.87) ok [judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]\n    HARD far_min power_som->ethernet.line_side: 63.65 vs 10.00 (margin +53.65) ok [judgment:10.0 \u2014 same rationale as the power pilot]\n    HARD flow_hop camera->@som: 90.12 vs 134.96 (margin +44.84) ok [flow chain [placement/v2]]\n    HARD flow_hop hdmi_tx->@som: 72.40 vs 134.96 (margin +62.55) ok [flow chain [placement/v2]]\n    HARD flow_hop pd_input->usb_pd: 15.78 vs 134.96 (margin +119.17) ok [flow chain [placement/v2]]\n    HARD flow_hop power->power_som: 108.67 vs 134.96 (margin +26.28) ok [flow chain [placement/v2]]\n    HARD flow_hop power_mon->power_som: 62.43 vs 134.96 (margin +72.52) ok [flow chain [placement/v2]]\n    HARD flow_hop usb_pd->power: 58.62 vs 134.96 (margin +76.34) ok [flow chain [placement/v2]]\n    HARD near_max ethernet->rj45_connector: 1.25 vs 20.00 (margin +18.75) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]\n    HARD near_max hdmi_rx_term->som_j2: 6.23 vs 10.00 (margin +3.77) ok [XAPP460 p.23 (term AT the receiver) \u2014 island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]\n    HARD near_max motor_sense->motor_pwm: 2.12 vs 20.00 (margin +17.88) ok [judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out]\n    HARD near_max uart_bridge->usb_uart_connector: 5.15 vs 40.00 (margin +34.85) ok [judgment:10.0 (D11 edge-gap) \u2014 CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]\n    HARD near_max usb_pd->pd_input: 2.48 vs 10.00 (margin +7.52) ok [judgment:10.0 (D11 edge-gap metric) \u2014 keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]\n  soft terms (advisory ledger \u2014 repair triggers, never gates):\n    soft near_intent power_mon->power_som: 29.80 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory\n  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 4 T2-coexistence-managed\n    managed C4002 (bringup_en) in escape:J3:N [T2 STAY]\n    managed R4001 (bringup_en) in escape:J3:N [T2 STAY]\n    managed R4003 (bringup_en) in escape:J3:N [T2 STAY]\n    managed R4005 (bringup_en) in escape:J3:N [T2 STAY]\n  D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):\n    bringup_en_modules | bringup_rails: 43 airwires (866.6 mm) -> corridor >= 10.6 mm\n    bringup_en_modules | bringup_modules: 13 airwires (311.5 mm) -> corridor >= 4.6 mm\n    ethernet | rj45_connector: 9 airwires (246.1 mm) -> corridor >= 3.8 mm\n    hdmi_rx | hdmi_rx_term: 8 airwires (632.8 mm) -> corridor >= 3.6 mm",
  "n_bottom": 198,
  "n_top": 371,
  "nets": 452,
@@ -611,23 +611,23 @@
  "ratsnest": {
   "board_h": 179.0,
   "board_w": 209.0,
-  "cross_mm": 17494.7,
+  "cross_mm": 17426.9,
   "n_bottom": 198,
-  "n_cross": 418,
+  "n_cross": 419,
   "n_top": 371,
-  "total_mm": 25922.2
+  "total_mm": 25843.8
  },
  "ratsnest_gate": {
   "board_h": 179.0,
   "board_w": 209.0,
   "cross_budget_mm": 19148.5,
-  "cross_mm": 17494.7,
+  "cross_mm": 17426.9,
   "dispersed": [],
-  "n_cross": 418,
+  "n_cross": 419,
   "n_subsystems": 33,
   "off_board": [],
   "ok": true,
-  "total_mm": 25922.2
+  "total_mm": 25843.8
  },
  "refdes_silk": {
   "bottom_pairs": 0,
