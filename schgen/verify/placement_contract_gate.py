@@ -109,7 +109,10 @@ def discover_contract(sheet_name: str) -> dict | None:
     the portable ``subsystems/`` library and the carrier-local
     ``carrier/subsystems/`` package are searched (E1). Used by ``check_all`` and
     the offline red-on-before proof — sheets need NOT be engine-wired to be
-    discovered here."""
+    discovered here. Every discovered contract passes the load-time PIN-NAME
+    chokepoint (:func:`validate_contract_pins`, memoised per sheet) — a pin that
+    is not a footprint pad id raises :class:`ContractPinError` HERE, so both the
+    gate and the stage-template solver inherit the guard."""
     import importlib
     for root_dir, pkg_prefix in _CONTRACT_ROOTS:
         pkg = root_dir / sheet_name / "placement_contract.py"
@@ -117,7 +120,11 @@ def discover_contract(sheet_name: str) -> dict | None:
             continue
         mod = importlib.import_module(
             f"{pkg_prefix}.{sheet_name}.placement_contract")
-        return getattr(mod, "CONTRACT", None)
+        contract = getattr(mod, "CONTRACT", None)
+        if contract is not None and sheet_name not in _PIN_VALIDATED:
+            validate_contract_pins(sheet_name, contract)
+            _PIN_VALIDATED.add(sheet_name)
+        return contract
     return None
 
 
@@ -132,6 +139,106 @@ def load_contract(sheet_name: str) -> dict | None:
     if sheet_name not in _WIRED_SHEETS:
         return None
     return discover_contract(sheet_name)
+
+
+# --- pin-name validation (the load-time chokepoint) --------------------------------
+
+class ContractPinError(ValueError):
+    """A contract structure names a pin that is not a pad id of its part's
+    resolved footprint. Authors naturally write symbol pin NAMES ("ILIM",
+    "VDD", "+"); the gate and the stage-template solver consume FOOTPRINT pad
+    ids ("11", "4", "2") — a bad name previously surfaced only as a bare
+    ``ValueError: min() iterable argument is empty`` deep inside candidate
+    generation (``stage_templates._pin_box``). Raised at contract LOAD by
+    :func:`validate_contract_pins` with the sheet, structure index/type, part,
+    the missing pin and the sorted available pad ids."""
+
+
+_PIN_FIELDS: dict[str, tuple[tuple[str, str], ...]] = {
+    "hot_loop": (("ic", "pin_pairs"),),
+    "bulk_in": (("ic", "vin_pins"),),
+    "bulk_out": (("inductor", "inductor_out_pin"),),
+    "sw_node": (("ic", "sw_pin"),),
+    "fb_cluster": (("ic", "fb_pin"), ("ic", "own_sw_pin"),
+                   ("foreign_ic", "foreign_sw_pin")),
+    "boot": (("ic", "pins"),),
+    "vcc_cap": (("ic", "pin"),),
+    "bias_cap": (("ic", "pin"),),
+    "rt_r": (("ic", "pin"),),
+    "ldo_stage": (("ic", "cin_pin"), ("ic", "cout_pin")),
+    "proximity": (("anchor", "anchor_pins"),),
+}
+
+_PIN_VALIDATED: set[str] = set()
+
+
+def _named_pins(v) -> list[str]:
+    """Flatten a pin-field value (str | list[str] | nested pin_pairs) to the
+    named pin strings."""
+    if isinstance(v, str):
+        return [v]
+    out: list[str] = []
+    for x in v:
+        out.extend(_named_pins(x))
+    return out
+
+
+def validate_contract_pins(sheet_name: str, contract: dict) -> None:
+    """Assert every pin the contract's structures name (``anchor_pins``, the
+    typed fields in ``_PIN_FIELDS``, ``min_from[].pin``) EXISTS in the pad set
+    of the named part's resolved footprint (the SAME ``_pad_boxes`` pad ids the
+    gate measures and the solver seats against). ``_PIN_FIELDS`` maps each
+    structure type to its (part-ref key, pin-field key) pairs — the exact pin
+    selections the gate's ``check`` branches and the solver's structure
+    translations (``_buck_pins`` / ``_lay_buck`` / ``_build_ldo_stage`` /
+    ``_solve_contract``) read, each validated against the PART the field
+    measures to (``bulk_out.inductor_out_pin`` -> the inductor,
+    ``fb_cluster.foreign_sw_pin`` -> the foreign IC). A part that does not
+    resolve — absent from the subsystem netlist, no/unresolvable footprint —
+    is SKIPPED: soft-missing refs keep their existing unresolved handling
+    downstream; only a bad PIN NAME on a resolvable part raises
+    :class:`ContractPinError`."""
+    from schgen.core.link import load_subsystem
+    from schgen.generate.pcb.footprint import resolve_mod
+
+    parts = load_subsystem(sheet_name).circuit.parts
+    pads_of: dict[str, frozenset[str] | None] = {}
+
+    def pads(ref: str) -> frozenset[str] | None:
+        if ref not in pads_of:
+            part = parts.get(ref)
+            fp = getattr(part, "footprint", "") if part is not None else ""
+            mod = resolve_mod(fp) if fp else None
+            pads_of[ref] = None if mod is None else frozenset(
+                p for p in _pad_boxes(mod, 0.0) if p)
+        return pads_of[ref]
+
+    def demand(idx: int, typ: str, ref: str, fld: str,
+               pins: list[str]) -> None:
+        avail = pads(ref)
+        if avail is None:
+            return
+        for p in pins:
+            if p not in avail:
+                raise ContractPinError(
+                    f"placement contract {sheet_name!r} structure #{idx} "
+                    f"({typ}): {fld} names pin {p!r} but {ref} (footprint "
+                    f"{parts[ref].footprint!r}) has no such pad — pin fields "
+                    f"must be FOOTPRINT pad ids, not symbol pin names. "
+                    f"Available pads: "
+                    f"{sorted(avail, key=lambda s: (len(s), s))}")
+
+    for idx, st in enumerate(contract.get("structures", [])):
+        typ = str(st.get("type"))
+        for ref_key, fld in _PIN_FIELDS.get(typ, ()):
+            ref, val = st.get(ref_key), st.get(fld)
+            if ref and val:
+                demand(idx, typ, ref, fld, _named_pins(val))
+        if typ == "proximity":
+            for mf in st.get("min_from", []):
+                ref, p = mf.get("part"), mf.get("pin")
+                if ref and p:
+                    demand(idx, typ, ref, "min_from.pin", [p])
 
 
 def discover_all() -> dict[str, dict]:
