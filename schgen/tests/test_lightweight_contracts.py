@@ -133,16 +133,15 @@ def test_usb_jtag_carries_the_crystal_structure():
     assert "crystal" in st["basis"]
 
 
-def test_lightweight_sheets_stay_unwired():
-    """The lightweight tier does NOT wire the engine: ``_WIRED_SHEETS`` carries
-    none of these sheets, so the contracts stay INERT to the placer/emit
-    (authored data only — the red-on-before discipline)."""
-    assert g._WIRED_SHEETS.isdisjoint(_LIGHTWEIGHT), (
-        f"lightweight sheet unexpectedly wired: "
-        f"{sorted(g._WIRED_SHEETS & set(_LIGHTWEIGHT))}")
+def test_lightweight_sheets_are_wired():
+    """Full-wire world (platform-rework): the lightweight tier IS engine-wired
+    via the project spec — load_contract resolves for every sheet and the
+    placer/emit gate enforces it."""
+    missing = set(_LIGHTWEIGHT) - set(g._WIRED_SHEETS)
+    assert not missing, f"lightweight sheet lost wiring: {sorted(missing)}"
     for sheet in _LIGHTWEIGHT:
-        assert g.load_contract(sheet) is None, (
-            f"{sheet}: engine-facing load_contract must stay None (unwired)")
+        assert g.load_contract(sheet) is not None, (
+            f"{sheet}: engine-facing load_contract must resolve (wired)")
 
 
 # ---------------------------------------------------------------------------

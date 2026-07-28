@@ -424,23 +424,17 @@ def test_wired_sheets_stay_green_on_the_real_board(_real_model):
             f"sheets green:\n" + res.summary())
 
 
-def test_new_contracts_are_red_on_before(_real_model):
-    """DECISIVE: every NEW contract currently FAILS on the emitted board (the
-    scattered packer scatters its passives) — the gate BITES before any template
-    lands. Each contract's violation summary is PRINTED for the orchestrator."""
+def test_new_contracts_hold_on_board(_real_model):
+    """Full-wire world: these once-red contracts now solve through the wired
+    placer and HOLD on the emitted board (the gate-bites proof lives in the
+    hermetic defect corpus)."""
     results = g.check_all(_real_model)
-    print("\n=== RED-ON-BEFORE (check_all) — new contracts must FAIL ===")
     for sheet in _RED_ON_BEFORE:
         res = results[sheet]
-        print(f"\n--- {sheet} ---")
-        print(res.summary())
         assert res.have_contract is True, sheet
         assert res.missing_refs == [], (
             f"{sheet}: contract refs did not map to board refs: "
             f"{res.missing_refs}")
-        assert res.ok is False, (
-            f"{sheet} is UNEXPECTEDLY green — red-on-before expects the "
-            f"scattered packer to VIOLATE this contract:\n{res.summary()}")
-        assert (res.proximity_fail + res.same_side_fail) >= 1, (
-            f"{sheet} failed but with no proximity/same_side violation:\n"
+        assert res.ok is True, (
+            f"{sheet} regressed — its wired contract no longer holds:\n"
             f"{res.summary()}")

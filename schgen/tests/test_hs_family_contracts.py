@@ -129,13 +129,13 @@ def test_no_unknown_structure_type(sheet: str):
             f"{sheet}: unimplemented structure type {st['type']!r}")
 
 
-def test_hs_family_sheets_are_not_wired_yet():
-    """The HS-family sheets are DATA ONLY this wave — ``_WIRED_SHEETS`` is
-    untouched (templates land later under the escape-headroom rule), so the placer
-    stays byte-identical and the red-on-before proof below is honest."""
+def test_hs_family_sheets_are_wired():
+    """Full-wire world (platform-rework): every HS-family sheet is engine-WIRED
+    via the project spec, so its contract gates the build. The historical
+    red-on-before proof lives in the hermetic defect corpus now."""
     for sheet in _HS_FAMILY:
-        assert sheet not in g._WIRED_SHEETS, (
-            f"{sheet} was wired — this wave authors DATA only")
+        assert sheet in g._WIRED_SHEETS, (
+            f"{sheet} lost its wiring — project.json wired_sheets regressed")
 
 
 # ---------------------------------------------------------------------------
@@ -199,26 +199,19 @@ def test_wired_sheets_stay_green(_real_model):
             + res.summary())
 
 
-def test_intra_zone_contracts_are_red_on_before(_real_model):
-    """DECISIVE (intra-zone): hdmi_tx + camera currently FAIL check_all (the
-    scattered packer flings their passives to the bottom side far from the
-    connector/anchor), with NO unresolved refs — the gate BITES before any template
-    lands. Each violation summary is PRINTED for the orchestrator."""
+def test_intra_zone_contracts_hold_on_board(_real_model):
+    """Full-wire world: hdmi_tx + camera solve through the stage-template
+    placer and their intra-zone contracts HOLD on the emitted board (the
+    red-on-before scatter these once proved is now a defect-corpus case)."""
     results = g.check_all(_real_model)
-    print("\n=== HS-FAMILY RED-ON-BEFORE (intra-zone, check_all) — must FAIL ===")
     for sheet in _INTRA_RED:
         res = results[sheet]
-        print(f"\n--- {sheet} ---")
-        print(res.summary())
         assert res.have_contract is True, sheet
         assert res.missing_refs == [], (
             f"{sheet}: contract refs did not map to board refs: "
             f"{res.missing_refs}")
-        assert res.ok is False, (
-            f"{sheet} is UNEXPECTEDLY green — red-on-before expects the scattered "
-            f"packer to VIOLATE this contract:\n{res.summary()}")
-        assert (res.proximity_fail + res.same_side_fail) >= 1, (
-            f"{sheet} failed but with no proximity/same_side violation:\n"
+        assert res.ok is True, (
+            f"{sheet} regressed — its wired contract no longer holds:\n"
             f"{res.summary()}")
 
 
