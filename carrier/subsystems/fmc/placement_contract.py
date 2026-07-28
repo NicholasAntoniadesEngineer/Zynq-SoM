@@ -73,5 +73,9 @@ CONTRACT: dict = {
         # ---- SAME SIDE: the LDO caps on the LDO's side -------------------------
         {"type": "same_side", "ics": ["U1"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},
+        {"type": "proximity", "anchor": "J1", "anchor_pins": ["1", "2"],
+         "members": ["C1", "C2", "C5"], "max_mm": 8.0,
+         "basis": "header power caps at the pin-1/2 end; measured ~50mm at "
+                  "the GND end|judgment:8.0"},
     ],
 }

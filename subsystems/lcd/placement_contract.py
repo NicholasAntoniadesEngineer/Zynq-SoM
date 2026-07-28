@@ -45,6 +45,7 @@ CONTRACT: dict = {
         "U1": "boost_ic", "U2": "esd_array", "J1": "ffc_connector",
         "C1": "boost_in_bulk", "C5": "boost_in_hf",
         "L1": "boost_l", "D1": "boost_d", "C2": "vled_cap",
+        "R1": "iset_fb", "R4": "en_pulldown",
     },
     "structures": [
         # ---- DECOUPLING: SY7201 IN-pin bypass (C1 10u + C5 1u) tight to pin 6 --
@@ -72,6 +73,13 @@ CONTRACT: dict = {
         {"type": "proximity", "anchor": "D1",
          "members": ["C2"], "max_mm": 4.0, "same_side": True,
          "basis": "VLED output cap closes the boost loop|judgment:4.0"},
+        {"type": "proximity", "anchor": "U1", "anchor_pins": ["3"],
+         "members": ["R1"], "max_mm": 4.0,
+         "basis": "ISET/FB current-sense return at the FB pin; rode the far "
+                  "half, measured 30mm|judgment:4.0"},
+        {"type": "proximity", "anchor": "U1", "anchor_pins": ["4"],
+         "members": ["R4"], "max_mm": 8.0,
+         "basis": "EN/PWM pull-down with its pin; measured 42.6mm|judgment:8.0"},
         # ---- SAME SIDE: the boost's input caps on the driver's side -----------
         {"type": "same_side", "ics": ["U1"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},

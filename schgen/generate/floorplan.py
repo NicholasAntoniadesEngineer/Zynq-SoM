@@ -195,7 +195,9 @@ def _block_fanout_reach(sheet: str, zg) -> tuple[float, float, float, float]:
             # the END: the old max(0, margin - GRID) credit under-reserved
             # whenever margin < GRID (pd_input's USBLC6 at margin 0.29 got
             # 0.5 instead of 1.48 and the emitted blocks overlapped by 0.18).
-            lim = need + GRID
+            # +0.05: 4dp quantization + seat slides eat microns; a reach met
+            # exactly emerged 15um short on the board (measured).
+            lim = need + GRID + 0.05
             if mw <= lim:
                 rw = max(rw, lim - mw)
             if me <= lim:
@@ -2013,6 +2015,21 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                     byn[v.name].x = v.x
                     byn[v.name].y = v.y
                 plan.composition = log
+                # a candidate whose final rects still overlap is REJECTED, not
+                # emitted — the legalizer accepted uart_bridge inside board_aux
+                # (41 DRC errors, measured) and a seat aim-point in occupied
+                # space reproduces the class.
+                rects = ([(b.name, b.x, b.y, b.x + b.w, b.y + b.h)
+                          for b in interior]
+                         + [(b.name, b.x, b.y, b.x + b.w, b.y + b.h)
+                            for b in plan.edge_blocks])
+                for i in range(len(rects)):
+                    for j in range(i + 1, len(rects)):
+                        _, ax0, ay0, ax1, ay1 = rects[i]
+                        _, bx0, by0, bx1, by1 = rects[j]
+                        if (min(ax1, bx1) - max(ax0, bx0) > 1e-6
+                                and min(ay1, by1) - max(ay0, by0) > 1e-6):
+                            return False
     return True
 
 

@@ -79,5 +79,13 @@ CONTRACT: dict = {
         # ---- SAME SIDE: each IC's bypass on that IC's side ---------------------
         {"type": "same_side", "ics": ["U1", "U2"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},
+        {"type": "proximity", "anchor": "J1", "members": ["U1"], "max_mm": 8.0,
+         "same_side": True,
+         "basis": "level-shifter B-port at the card socket; SD_CARD_CLK "
+                  "measured 15.0mm|judgment:8.0"},
+        {"type": "proximity", "anchor": "J1", "anchor_pins": ["4"],
+         "members": ["C3"], "max_mm": 8.0,
+         "basis": "card-rail hold-up bulk at the slot VDD pad; measured "
+                  "~12mm|judgment:8.0"},
     ],
 }

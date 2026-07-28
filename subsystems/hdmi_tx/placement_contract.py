@@ -91,6 +91,17 @@ CONTRACT: dict = {
          "members": ["U1"], "max_mm": 5.5, "same_side": True,
          "basis": "SLLSE96F 8.2/10.1 + SLLA324 Fig 8 (companion AT the HDMI "
                   "connector, TMDS pass-through)|judgment:5.5"},
+        {"type": "proximity", "anchor": "J1", "anchor_pins": ["1"],
+         "members": ["U1"], "max_mm": 9.0, "same_side": True,
+         "basis": "flow-through centering, outer TMDS pad A; TMDS_2 measured "
+                  "20.0mm|judgment:9.0"},
+        {"type": "proximity", "anchor": "J1", "anchor_pins": ["12"],
+         "members": ["U1"], "max_mm": 9.0, "same_side": True,
+         "basis": "flow-through centering, outer TMDS pad B|judgment:9.0"},
+        {"type": "proximity", "anchor": "U1", "members": ["R1", "R2"],
+         "max_mm": 6.0,
+         "basis": "LS_OE / CT_HPD straps at their pins; measured "
+                  "15.9/15.7mm|judgment:6.0"},
         # ---- SUPPLY BYPASS: VCCA 100 nF <= 2 mm of pin 24 ---------------------
         # SLLSE96F 10.1 says supply/VBUS caps go "close to their respective pins";
         # the datasheet numbers no distance -> judgment 2.0 (HF bypass wants the

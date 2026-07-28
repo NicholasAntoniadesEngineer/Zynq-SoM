@@ -77,7 +77,14 @@
       }
     },
     "uart_bridge": {
-      "near": "usb_uart_connector"
+      "near": "usb_uart_connector",
+      "pull": {
+        "to": "usb_uart_connector",
+        "weight": 60.0,
+        "face": "inboard",
+        "exclusive": true,
+        "basis": "D11 edge-seat override (audit 2026-07-28): CP2102N FS pair terminates at the UART USB-C - near_max judgment:40.0 edge-gap; bare-near attraction overlapped board_aux (DRC 41, measured)"
+      }
     },
     "usb_jtag": {
       "side": "E"

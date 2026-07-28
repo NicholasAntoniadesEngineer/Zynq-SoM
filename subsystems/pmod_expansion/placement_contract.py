@@ -79,5 +79,16 @@ CONTRACT: dict = {
         # ---- SAME SIDE: the SY6280 bypass on the switch's side ----------------
         {"type": "same_side", "ics": ["U1"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},
+        {"type": "proximity", "anchor": "U1", "anchor_pins": ["1"],
+         "members": ["C3"], "max_mm": 3.0, "same_side": True,
+         "basis": "SY6280 output cap at OUT; nearest rail cap measured "
+                  "16.6mm|judgment:3.0"},
+        {"type": "proximity", "anchor": "J1", "members": ["C4", "C5"],
+         "max_mm": 6.0,
+         "basis": "socket VCC bypass at the socket (C4 100n + C5 10u on "
+                  "+VSW_PMOD, empirically verified)|judgment:6.0"},
+        {"type": "proximity", "anchor": "D1", "members": ["R3"], "max_mm": 5.0,
+         "basis": "LED with its series resistor; measured 11.7mm split across "
+                  "sides|judgment:5.0"},
     ],
 }

@@ -66,8 +66,21 @@ CONTRACT: dict = {
          "basis": "judgment:2.0 — generic per-pin bypass proximity "
                   "(D6 lightweight tier)"},
         # ---- PORT-ENTRY protection: data ESD + VBUS surge TVS at the inlet -----
+        {"type": "proximity", "anchor": "U1", "anchor_pins": ["11"],
+         "members": ["R5"], "max_mm": 4.0,
+         "basis": "ILIM set resistor short/quiet; measured 13.8mm|judgment:4.0"},
+        {"type": "proximity", "anchor": "U1", "anchor_pins": ["10"],
+         "members": ["C3"], "max_mm": 4.0,
+         "basis": "dVdT soft-start cap at its pin; measured 10.4mm|judgment:4.0"},
+        {"type": "proximity", "anchor": "U1", "anchor_pins": ["8"],
+         "members": ["R3", "R4"], "max_mm": 5.0,
+         "basis": "OVP divider at the pin; measured ~11mm|judgment:5.0"},
+        {"type": "proximity", "anchor": "J1", "anchor_pins": ["A4B9", "B4A9"],
+         "members": ["D1"], "max_mm": 5.0, "same_side": True,
+         "basis": "surge TVS on the VBUS pads, not the shell; any-pad passed "
+                  "via shell while VBUS measured 10.75mm|judgment:5.0"},
         {"type": "proximity", "anchor": "J1",
-         "members": ["U2", "D1"], "max_mm": 5.0, "same_side": True,
+         "members": ["U2"], "max_mm": 5.0, "same_side": True,
          "basis": "judgment:5.0 — ESD at port entry (lightweight tier)"},
         # ---- SAME SIDE: the eFuse caps on the eFuse's side ---------------------
         {"type": "same_side", "ics": ["U1"],

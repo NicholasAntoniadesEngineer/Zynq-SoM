@@ -83,7 +83,11 @@ CONTRACT: dict = {
          "members": ["Y1"], "max_mm": 5.0, "same_side": True,
          "basis": "judgment:5.0 — crystal at its IC (render-audit finding)"},
         # ---- SAME SIDE: each IC's bypass (and the crystal) on that IC's side ---
-        {"type": "same_side", "ics": ["U4", "U1", "U2"],
+        {"type": "proximity", "anchor": "Y1", "members": ["C5", "C6"],
+         "max_mm": 3.0, "same_side": True,
+         "basis": "crystal load caps inside the oscillator loop; measured "
+                  "11.3/14.1mm on the OPPOSITE side|judgment:3.0"},
+        {"type": "same_side", "ics": ["U4", "U1", "U2", "Y1"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},
     ],
 }

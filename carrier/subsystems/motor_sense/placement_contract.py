@@ -82,9 +82,14 @@ CONTRACT: dict = {
          "basis": "open-drain CRITICAL pull-up lives with the INA3221; was "
                   "orphaned 65mm|judgment:8.0"},
         # ---- TVS clamp at the entry: D1 <= 5 mm of J2 -------------------------
-        {"type": "proximity", "anchor": "J2",
-         "members": ["D1"], "max_mm": 5.0,
-         "basis": "clamp at the ESC-bus entry connector|judgment:5.0"},
+        {"type": "proximity", "anchor": "J2", "anchor_pins": ["2"],
+         "members": ["D1"], "max_mm": 6.0,
+         "basis": "clamp on the '+' entry pad — any-pad passed via a GND tab "
+                  "while the + run measured 18.9mm|judgment:6.0"},
+        {"type": "proximity", "anchor": "J3", "anchor_pins": ["2"],
+         "members": ["RS1"], "max_mm": 30.0,
+         "basis": "in-line J2->RS1->J3: bound to BOTH ends so the chain sits "
+                  "between the XT60s; measured 51mm north|judgment:30.0"},
         # ---- load-side bulk: C4 470 uF <= 8 mm of J3 --------------------------
         {"type": "proximity", "anchor": "J3",
          "members": ["C4"], "max_mm": 8.0,

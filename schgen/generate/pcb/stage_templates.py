@@ -1192,8 +1192,19 @@ def contract_member_brefs(sheet_name: str, contract: dict,
     before templating, so the 2-side classifier and later L4 see the override.
     Only refs present on this sheet (resolvable) are returned."""
     lib2board = _g._board_refs_by_sheet(sheet_name)
+    libs: set[str] = set(contract.get("roles", {}))
+    # membership comes from the STRUCTURES, not just the roles dict — a
+    # structure whose member lacked a roles entry stranded that part on the
+    # netlist side (12 same_side violations, measured).
+    for st in contract.get("structures", []):
+        for key in ("members", "caps"):
+            libs.update(st.get(key) or [])
+        for key in ("cap", "resistor", "inductor", "cin", "cout"):
+            v = st.get(key)
+            if isinstance(v, str):
+                libs.add(v)
     out: set[str] = set()
-    for lib in contract.get("roles", {}):
+    for lib in libs:
         b = lib2board.get(lib)
         if b is not None and b in resolvable:
             out.add(b)
