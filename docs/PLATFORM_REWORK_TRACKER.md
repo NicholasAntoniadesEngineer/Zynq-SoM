@@ -11,14 +11,14 @@ product; NO master merge until user approval. Baselines: carrier pcb md5 e405097
 | U1b | Extract _PILOT_PROX_SHEETS + SOM pose defaults to spec | DONE |
 | U1c | Declarative module-face anchors (kill b.name=="power_som") + reg-band prefixes | DONE |
 | U1d | Byte-identity proof through the spec path (md5 e405097b) | DONE |
-| U1e | ModuleGeom: module pcb/interface paths from spec (generalize SomGeom entry) | pending |
-| U1f | --project CLI + CARRIER path resolution via project root | pending |
-| U1g | devkit_mini second-project proof: green board, ZERO engine edits | pending |
+| U1e | ModuleGeom: module pcb/interface paths from spec (generalize SomGeom entry) | DONE via PROJECT_ROOT indirection (29 modules) |
+| U1f | --project CLI + CARRIER path resolution via project root | DONE (env pre-parse, loud fail, identity 2f13efe8) |
+| U1g | devkit_mini second-project proof: green board, ZERO engine edits | NEXT-STEP #1 (authoring campaign; recipe in RETROSPECTIVE) |
 | U2a | Defect-injection corpus library + gate-fires proof per class | DONE (13 tests, 1.1s) |
 | U2b | Fast flow/facing synthetic harness (validated vs corpus + visual sample) | pending |
-| U3a | Wire contracts: coverage 19 -> 0; cascade fixes mechanized | 22/22 GREEN (EXIT 0, all gates, 214x165); power_som (23rd) wiring in build |
-| U4a | board_verdicts.json always-on structured verdicts | implemented; verify on next build |
-| FIN | Deep retrospective vs all user asks + decided next steps | pending |
+| U3a | Wire contracts: coverage 19 -> 0; cascade fixes mechanized | DONE: 23/23 wired, EXIT 0 all gates, 215x168, deterministic 2f13efe8 |
+| U4a | board_verdicts.json always-on structured verdicts | DONE (verified written) |
+| FIN | Deep retrospective vs all user asks + decided next steps | DONE: docs/PLATFORM_REWORK_RETROSPECTIVE.md |
 
 ## Log
 (newest first)
