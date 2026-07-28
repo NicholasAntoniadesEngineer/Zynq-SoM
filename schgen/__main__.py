@@ -1146,6 +1146,13 @@ def cmd_board(args: argparse.Namespace) -> int:
             print(f"CONTRACT COVERAGE (advisory): {_nw} wired-gated / {_nm} "
                   f"inert-met / {_nv} inert-VIOLATED (un-enforced SI/PI intent) "
                   f"-> {rep_dir / 'contract_coverage.txt'}")
+        from schgen.verify import contract_coverage_lint as _ccl
+        _cl = _ccl.lint_project()
+        (rep_dir / "contract_coverage_lint.txt").write_text(_cl.report() + "\n")
+        print(f"{_cl.summary_line()} "
+              f"-> {rep_dir / 'contract_coverage_lint.txt'}")
+        if _ccl.ENFORCE:
+            ok_all = ok_all and _cl.ok
         # COMPOSITION-LEVEL FLOW/FACING/FAR gate (Phase L, HARD) — the contract's
         # EXTERNAL terms (power-chain adjacency, output facing downstream, analog
         # moat) checked on the whole placed board (zone centroids). LAW 4: strict

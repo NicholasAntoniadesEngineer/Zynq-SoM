@@ -102,5 +102,30 @@
     "user_io": {
       "side": "S"
     }
+  },
+  "edge_order": {
+    "N": [
+      "microsd",
+      "pd_input",
+      "usbc_otg",
+      "usb_jtag_connector",
+      "usb_uart_connector"
+    ],
+    "E": [
+      "rj45_connector",
+      "board_qwiic",
+      "motor_sense",
+      "motor_pwm"
+    ],
+    "S": [
+      "hdmi_tx",
+      "hdmi_rx",
+      "pmod",
+      "pmod_expansion"
+    ],
+    "W": [
+      "lcd",
+      "camera"
+    ]
   }
 }

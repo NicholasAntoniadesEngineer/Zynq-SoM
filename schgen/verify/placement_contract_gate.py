@@ -448,14 +448,15 @@ def _part_to_part(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
 
 # --- ref mapping ------------------------------------------------------------------
 
-def _board_refs_by_sheet(sheet_name: str) -> dict[str, str]:
+def _board_refs_by_sheet(sheet_name: str, parts=None) -> dict[str, str]:
     """LIBRARY ref -> board-unique ref for ``sheet_name``, via the SAME per-sheet
     band rename the netlist/board flow uses (``board._renamed_ref`` + the frozen
     ``carrier/sheet_index.json`` band). So the contract's U1 resolves to the same
-    U20001 KiCad extracted, exactly like ``footprint.board_parts``."""
+    U20001 KiCad extracted, exactly like ``footprint.board_parts``. ``parts``
+    (an iterable of library refs) skips the subsystem reload when the caller
+    already holds the circuit (contract_coverage_lint)."""
     import json
 
-    from schgen.core.link import load_subsystem
     from schgen.generate.board import _renamed_ref
     idx_path = PROJECT_ROOT / "sheet_index.json"
     sheet_index = (json.loads(idx_path.read_text())
@@ -467,9 +468,11 @@ def _board_refs_by_sheet(sheet_name: str) -> dict[str, str]:
         from schgen.core.link import all_subsystem_paths
         order = [p.stem for p in all_subsystem_paths()]
         idx = order.index(sheet_name) + 1 if sheet_name in order else 1
-    sc = load_subsystem(sheet_name)
+    if parts is None:
+        from schgen.core.link import load_subsystem
+        parts = load_subsystem(sheet_name).circuit.parts
     return {ref: _renamed_ref(ref, idx, sheet=sheet_name)
-            for ref in sc.circuit.parts}
+            for ref in parts}
 
 
 # --- result -----------------------------------------------------------------------

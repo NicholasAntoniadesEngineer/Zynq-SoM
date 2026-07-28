@@ -652,6 +652,7 @@ class FloorplanSpec:
     outline: object                       # "auto" | (w, h)
     edges: dict[str, tuple[str, ...]]     # edge -> ordered names
     interior: dict[str, dict]             # name -> {"side":..} | {"near":..}
+    ordered_edges: dict[str, list[str]] = field(default_factory=dict)
     source: str = ""
 
     @property
@@ -660,9 +661,13 @@ class FloorplanSpec:
 
     @property
     def edge_order(self) -> dict[str, int]:
-        """name -> its 0-based slot along its edge (lower = earlier)."""
+        """name -> its 0-based slot, ONLY for edges listed in the OPTIONAL
+        ``edge_order`` spec key. A bare ``edges`` list is MEMBERSHIP — the
+        along-edge order derives from J-affinity targets (list-index pinning
+        froze every edge in authored order and left the affinity mechanism
+        dead: hdmi + camera/lcd crossings, user-measured)."""
         out: dict[str, int] = {}
-        for names in self.edges.values():
+        for names in self.ordered_edges.values():
             for i, name in enumerate(names):
                 out[name] = i
         return out
@@ -852,7 +857,18 @@ def load_floorplan_spec(path: Path = FLOORPLAN_SPEC,
         seen[name] = "interior"
         interior[name] = dict(anchor)
 
+    ordered: dict[str, list[str]] = {}
+    for e, names in (raw.get("edge_order") or {}).items():
+        if e not in edges:
+            raise FloorplanSpecError(
+                f"{path.name}: edge_order[{e!r}] — edge not in 'edges'")
+        if not isinstance(names, list) or set(names) - set(edges[e]):
+            raise FloorplanSpecError(
+                f"{path.name}: edge_order[{e!r}] must list only members of "
+                f"edges[{e!r}]")
+        ordered[e] = [str(n) for n in names]
     return FloorplanSpec(outline=outline, edges=edges, interior=interior,
+                         ordered_edges=ordered,
                          source=str(path.relative_to(REPO_ROOT)
                                     if path.is_relative_to(REPO_ROOT)
                                     else path))
@@ -893,8 +909,9 @@ def export_floorplan_spec(plan: Plan, path: Path = FLOORPLAN_SPEC) -> Path:
     spec = {
         "outline": "auto",
         "_comment": ("DECLARATIVE carrier floorplan - edit this to drive the "
-                     "PCB placement. Order in each edge list = order ALONG that "
-                     "edge (N/S left->right, W/E top->bottom). interior: "
+                     "PCB placement. Each edge list = MEMBERSHIP; along-edge "
+                     "order derives from J-affinity unless an optional "
+                     "top-level edge_order key pins it. interior: "
                      "{\"side\":N/E/S/W} or {\"near\":<subsystem>}. Any "
                      "subsystem omitted falls back to auto-derivation. "
                      "Regenerate this seed with `schgen floorplan --export`."),
