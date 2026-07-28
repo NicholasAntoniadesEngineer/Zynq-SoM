@@ -44,7 +44,7 @@ from schgen.verify.fanout_gate import _is_cluster_passive, intelligent_need
 from .constants import CONN_MATING_FACE, EDGE_PAD_CLEAR, TEMPLATE_CLEAR, ZONE_PAD
 from .footprint import _footprint_bbox
 from .footprint import has_thru_pads as _has_thru_pads
-from .mating_face import _rot_bbox_cw, connector_edge_rotation
+from .mating_face import _rot_bbox_cw, _rot_pad_bbox, connector_edge_rotation
 from .placement import _shelf_pack
 
 # Construction gaps (mm). Most placements are COURTYARD-clearance driven (part
@@ -439,7 +439,8 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
                 if any(_boxes_overlap(b, s, halo) for s in skel_boxes):
                     continue
                 d = _pins_to_target(p, ib, all_pins)
-                if d > bound:
+                eff = bound - _SNAP_EROSION if bound >= 5.0 else bound
+                if d > eff:
                     continue
                 if keep_pins and _pins_to_target(p, ib, keep_pins) < keep_min:
                     continue
@@ -638,6 +639,7 @@ _Repel = tuple[str, "str | None", float]
 
 _ROOT_GAP = 2.0            # deterministic gap between two independent roots (mm)
 _SEAT_SLIDE = 1.2          # edge-seat courtyard->pad-flush slide allowance (mm)
+_SNAP_EROSION = 0.75       # GRID/2 origin snap + edge-band rounding slop (mm)
 _OVEC = {"N": (0.0, -1.0), "S": (0.0, 1.0), "E": (1.0, 0.0), "W": (-1.0, 0.0)}
 _GRID_MAX_N = 60           # cap the candidate grid half-extent (30 mm at _CAND_STEP)
 # The FROZEN pilot proximity sheets (project spec) keep the legacy single-anchor
@@ -760,16 +762,23 @@ def _gcandidates(bref: str, mod: Path,
                     continue
                 dsum = 0.0
                 ok = True
+                # the emit snaps each zone origin to GRID: a bound met with
+                # zero margin in-zone can emerge 0.04 over on the board
+                # (hdmi_tx J1->U1 5.04 vs 5.00, measured). Solve with half a
+                # grid of allowance in BOTH directions so the snap can never
+                # push a met bound over the line.
                 for pb, pins, bound in att:
                     d = _pins_to_target(p, pb, pins)
-                    if d > bound:
+                    eff = bound - _SNAP_EROSION if bound >= 5.0 else bound
+                    if d > eff:
                         ok = False
                         break
                     dsum += d
                 if not ok:
                     continue
                 for pb, pins, mm in rep:
-                    if _pins_to_target(p, pb, pins) < mm:
+                    if _pins_to_target(p, pb, pins) < mm + (
+                            _SNAP_EROSION if mm >= 5.0 else 0.0):
                         ok = False
                         break
                 if not ok:
@@ -846,11 +855,14 @@ def _seat_multi(order: list[str], roots: set[str],
         for r in sorted(conn_roots):
             if r not in placed:
                 continue
-            pbs = list(placed[r].pad_boxes().values())
-            faces.append(max(b[2] for b in pbs) if vx > 0
-                         else min(b[0] for b in pbs) if vx < 0
-                         else max(b[3] for b in pbs) if vy > 0
-                         else min(b[1] for b in pbs))
+            pp = placed[r]
+            # the SEAT's own pad kernel (shell/mounting tabs included) — the
+            # gate kernel's signal-pad face sat 1.9mm short on HDMI shells.
+            sb = _rot_pad_bbox(pp.mod, pp.rot)
+            faces.append(pp.ox + sb[2] if vx > 0
+                         else pp.ox + sb[0] if vx < 0
+                         else pp.oy + sb[3] if vy > 0
+                         else pp.oy + sb[1])
         if faces:
             face = min(faces) if (vx > 0 or vy > 0) else max(faces)
             face += -_SEAT_SLIDE if (vx > 0 or vy > 0) else _SEAT_SLIDE
@@ -1069,11 +1081,11 @@ def _compose_clusters(clusters: list[list[_Part]],
             for p in cl:
                 if p.bref not in conn_roots:
                     continue
-                pbs = list(p.pad_boxes().values())
-                fs.append(max(b[2] for b in pbs) if vx > 0
-                          else min(b[0] for b in pbs) if vx < 0
-                          else max(b[3] for b in pbs) if vy > 0
-                          else min(b[1] for b in pbs))
+                sb = _rot_pad_bbox(p.mod, p.rot)
+                fs.append(p.ox + sb[2] if vx > 0
+                          else p.ox + sb[0] if vx < 0
+                          else p.oy + sb[3] if vy > 0
+                          else p.oy + sb[1])
             if not fs:
                 return None
             return max(fs) if (vx > 0 or vy > 0) else min(fs)
@@ -1806,7 +1818,7 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
             ceil_y = min([row_top] + [lo - _need_gap for lo in _conn_lo])
             bx, by = 0.0, ceil_y - _LEFTOVER_BAND_GAP - bh_all - ZONE_PAD
         if outer_dir == "W":
-            _pf0 = [min(b[0] for b in pp.pad_boxes().values())
+            _pf0 = [pp.ox + _rot_pad_bbox(pp.mod, pp.rot)[0]
                     for pp in placed_abs.values()
                     if pp.mod.stem in CONN_MATING_FACE]
             if _pf0:
@@ -1847,11 +1859,11 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
         vx, vy = _OVEC[outer_dir]
 
         def _pface(pp: _Part) -> float:
-            pbs = list(pp.pad_boxes().values())
-            return (max(b[2] for b in pbs) + _gx if vx > 0
-                    else min(b[0] for b in pbs) + _gx if vx < 0
-                    else max(b[3] for b in pbs) + _gy if vy > 0
-                    else min(b[1] for b in pbs) + _gy)
+            sb = _rot_pad_bbox(pp.mod, pp.rot)
+            return (pp.ox + sb[2] + _gx if vx > 0
+                    else pp.ox + sb[0] + _gx if vx < 0
+                    else pp.oy + sb[3] + _gy if vy > 0
+                    else pp.oy + sb[1] + _gy)
 
         faces = [_pface(pp) for pp in _connp]
         if vx > 0:

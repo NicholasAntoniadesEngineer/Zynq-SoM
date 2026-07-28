@@ -43,6 +43,7 @@ CONTRACT: dict = {
         "U2": "sense_ic", "RS1": "shunt",
         "J2": "power_in", "J3": "power_out", "D1": "tvs",
         "C2": "vs_hf", "C3": "vs_bulk", "C4": "load_bulk",
+        "C1": "in_hf", "R1": "crit_pullup",
     },
     "structures": [
         # ---- VS bypass: 100 nF <= 2 mm of the INA3221 VS pin ------------------
@@ -56,11 +57,30 @@ CONTRACT: dict = {
          "basis": "SBOS576C 8.2/8.3 (supply bulk near the device)|judgment:5.0"},
         # ---- SENSE AMP at the shunt: U2 <= 10 mm of RS1 -----------------------
         # SBOS576C 7.4.1 "place the device close to the shunt"; expressed as a
-        # proximity with members=[U2] anchored to RS1 (whole-part) — the kelvin
-        # tap geometry itself (J2->RS1->J3 in-line) is a routing-phase concern.
+        # proximity with members=[U2] anchored to RS1 (whole-part). The in-line
+        # chain J2->RS1->J3 is a PLACEMENT concern after all: unconstrained, the
+        # placer parked the shunt+INA 52 mm from the connectors across a foreign
+        # column (2026-07-28 visual audit) — routing cannot repair that. RS1 is
+        # therefore anchored to J2 below, putting the whole sense chain at the
+        # power entry.
         {"type": "proximity", "anchor": "RS1",
          "members": ["U2"], "max_mm": 10.0, "same_side": True,
          "basis": "SBOS576C 7.4.1 (device close to the shunt)|judgment:10.0"},
+        # ---- in-line sense chain AT the entry: RS1 <= 12 mm of J2 -------------
+        {"type": "proximity", "anchor": "J2",
+         "members": ["RS1"], "max_mm": 12.0, "same_side": True,
+         "basis": "J2->RS1->J3 in-line current path at the connectors; measured "
+                  "52mm adrift when unconstrained|judgment:12.0"},
+        # ---- input HF bypass AT the entry node: C1 <= 6 mm of J2 --------------
+        {"type": "proximity", "anchor": "J2",
+         "members": ["C1"], "max_mm": 6.0, "same_side": True,
+         "basis": "ESC_VRAIL_IN HF bypass at the entry beside the TVS; was "
+                  "orphaned bottom-side|judgment:6.0"},
+        # ---- CRITICAL pull-up with the IC: R1 <= 8 mm of U2 -------------------
+        {"type": "proximity", "anchor": "U2",
+         "members": ["R1"], "max_mm": 8.0,
+         "basis": "open-drain CRITICAL pull-up lives with the INA3221; was "
+                  "orphaned 65mm|judgment:8.0"},
         # ---- TVS clamp at the entry: D1 <= 5 mm of J2 -------------------------
         {"type": "proximity", "anchor": "J2",
          "members": ["D1"], "max_mm": 5.0,

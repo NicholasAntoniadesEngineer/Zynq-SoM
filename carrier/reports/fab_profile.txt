@@ -10,7 +10,7 @@ FAB PROFILE GATE  (JLCPCB standard 4-layer (1oz))
   min via annular         0.0750 mm    0.0750 mm   PASS
   min hole-to-hole        0.2500 mm    0.1500 mm   PASS
 
-  segments 9, vias 33, drilled holes 215
+  segments 9, vias 34, drilled holes 216
   (.kicad_pro min_via_annular_width DRC floor: 0.0500 mm — permissive rule, not what the board emits)
 
   VERDICT: PASS — every demanded feature is at or above the fab floor
