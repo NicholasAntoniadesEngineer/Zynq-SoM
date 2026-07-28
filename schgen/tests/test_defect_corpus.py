@@ -65,7 +65,7 @@ def usb_pd_zone():
 
 @pytest.fixture(scope="module")
 def usbc_mods():
-    _refs, _side, _bbox, resolvable = _subsystem_inputs("usbc_otg")
+    resolvable = _subsystem_inputs("usbc_otg")[3]
     band = g._board_refs_by_sheet("usbc_otg")
     return {"typec": resolvable[band["J2"]], "esd": resolvable[band["U2"]],
             "switch": resolvable[band["U1"]]}

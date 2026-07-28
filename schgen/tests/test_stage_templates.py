@@ -305,19 +305,38 @@ def test_power_zone_width_within_budget(_power_inputs):
 _USB_PD = "usb_pd"
 
 
+def _hook_facing(sheet: str, contract: dict) -> str | None:
+    """The FACING hint exactly as the subsystem_zone_geometry hook derives it
+    (``_downstream_facing`` or ``_media_facing`` on the declarative floorplan)."""
+    from schgen.generate.pcb.placement import _downstream_facing, _media_facing
+    return _downstream_facing(sheet, contract) or _media_facing(sheet, contract)
+
+
 def _subsystem_inputs(sheet: str):
     """side_of / bbox_of / resolvable / refs for ``sheet``, built the SAME way
     subsystem_zone_geometry does (per-sheet decoupling classification on the
     board-unique ref namespace), so build_zone gets its real inputs — no board
-    build. Mirrors ``_power_inputs`` for an arbitrary contracted sheet."""
+    build. Mirrors ``_power_inputs`` for an arbitrary contracted sheet.
+
+    Also derives ``conn_rot`` (bref -> LAW-6 placement rotation for every
+    off-board mating connector) and ``outer_dir`` (the sheet's floorplan board
+    edge) EXACTLY as subsystem_zone_geometry does — same helpers
+    (``_connector_sheet_edges`` on carrier/floorplan.json ``edges``,
+    ``connector_edge_rotation`` on ``CONN_MATING_FACE[part.value]``) — so the
+    harness solves and renders the SAME frame the emitted board builds."""
     import json
 
     from schgen.core.link import load_subsystem
     from schgen.core.model import PinRef
     from schgen.generate.board import _renamed_ref
-    from schgen.generate.pcb.constants import CARRIER
+    from schgen.generate.pcb.constants import CARRIER, CONN_MATING_FACE
     from schgen.generate.pcb.footprint import _footprint_bbox, resolve_mod
-    from schgen.generate.pcb.placement import _classify_side, _decoupling_caps
+    from schgen.generate.pcb.mating_face import connector_edge_rotation
+    from schgen.generate.pcb.placement import (
+        _classify_side,
+        _connector_sheet_edges,
+        _decoupling_caps,
+    )
 
     idx = json.loads((CARRIER / "sheet_index.json").read_text())[sheet]
     sc = load_subsystem(sheet)
@@ -325,7 +344,9 @@ def _subsystem_inputs(sheet: str):
                         if not p.ref.startswith("#") else p.ref, p.pin)
                  for p in net.pins] for n, net in sc.circuit.nets.items()}
     sdec = _decoupling_caps(snets)
+    edge = _connector_sheet_edges().get(sheet)
     refs, side_of, bbox_of, resolvable = [], {}, {}, {}
+    conn_rot: dict[str, float] = {}
     for ref, part in sc.circuit.parts.items():
         bref = _renamed_ref(ref, idx, sheet=sheet)
         mod = resolve_mod(part.footprint)
@@ -336,7 +357,11 @@ def _subsystem_inputs(sheet: str):
         side_of[bref] = _classify_side(bref, part.lib_id, bbox_of[bref], sdec,
                                        True)
         refs.append(bref)
-    return refs, side_of, bbox_of, resolvable
+        if part.value in CONN_MATING_FACE and edge is not None:
+            conn_rot[bref] = connector_edge_rotation(
+                CONN_MATING_FACE[part.value], edge)
+    outer_dir = edge if conn_rot else None
+    return refs, side_of, bbox_of, resolvable, conn_rot, outer_dir
 
 
 @pytest.fixture(scope="module")
@@ -345,13 +370,17 @@ def _usb_pd_inputs():
 
 
 def _run_prox(inputs):
-    refs, side_of, bbox_of, resolvable = inputs
+    refs, side_of, bbox_of, resolvable, conn_rot, outer_dir = inputs
     contract = g.load_contract(_USB_PD)
     side = dict(side_of)
     for m in T.contract_member_brefs(_USB_PD, contract, resolvable):
         side[m] = "top"
     rot: dict[str, float] = {}
-    res = T.build_zone(_USB_PD, contract, refs, side, bbox_of, resolvable, rot)
+    res = T.build_zone(_USB_PD, contract, refs, side, bbox_of, resolvable, rot,
+                       facing=_hook_facing(_USB_PD, contract),
+                       outer_dir=outer_dir)
+    for bref, r in conn_rot.items():
+        rot[bref] = (r + rot.get(bref, 0.0)) % 360.0
     return res, rot, side, contract
 
 
@@ -382,7 +411,7 @@ def test_proximity_zone_passes_its_own_gate(_usb_pd_inputs):
     pad boxes — the same measure the gate applies to the real board."""
     (top_off, _bot, _zw, _zh), rot, _side, contract = _run_prox(_usb_pd_inputs)
     band = g._board_refs_by_sheet(_USB_PD)
-    _refs, _si, _bb, resolvable = _usb_pd_inputs
+    resolvable = _usb_pd_inputs[3]
 
     ZX, ZY = 30.0, 40.0
     from schgen.generate.pcb import (
@@ -463,7 +492,10 @@ def _zone_model(sheet: str, top_off, bot_off, rot, resolvable):
     """Synthesize a minimal PcbModel from a build_zone offset result so the
     placement-contract gate can measure it — the SAME construction the usb_pd
     gate test uses, but including BOTH sides so a member that (wrongly) lands
-    bottom is still seen by the gate rather than silently dropped."""
+    bottom is still seen by the gate rather than silently dropped. ``rot`` must
+    be the FINAL per-part board rotation (``_run_zone`` folds the LAW-6
+    conn_rot in), so an edge sheet's mating connector renders exactly as the
+    emitted board places it."""
     from schgen.generate.pcb import (
         ORIGIN_X,
         ORIGIN_Y,
@@ -491,14 +523,24 @@ def _zone_model(sheet: str, top_off, bot_off, rot, resolvable):
 def _run_zone(sheet: str):
     """build_zone on a sheet's real inputs using its DISCOVERED contract (works
     for un-wired sheets too), with contract members forced top-side (the
-    same_side override the hook applies before templating)."""
-    refs, side_of, bbox_of, resolvable = _subsystem_inputs(sheet)
+    same_side override the hook applies before templating), the hook's own
+    facing hint, and the sheet's REAL floorplan ``outer_dir`` — then the LAW-6
+    ``conn_rot`` folded into ``rot`` exactly as build_model composes
+    ``fixed_rot`` (conn_rot + zone_extra_rot; the solver's rot_out never
+    carries a mating connector), so ``rot`` is each part's FINAL board
+    rotation."""
+    refs, side_of, bbox_of, resolvable, conn_rot, outer_dir = \
+        _subsystem_inputs(sheet)
     contract = g.discover_contract(sheet)
     side = dict(side_of)
     for m in T.contract_member_brefs(sheet, contract, resolvable):
         side[m] = "top"
     rot: dict[str, float] = {}
-    res = T.build_zone(sheet, contract, refs, side, bbox_of, resolvable, rot)
+    res = T.build_zone(sheet, contract, refs, side, bbox_of, resolvable, rot,
+                       facing=_hook_facing(sheet, contract),
+                       outer_dir=outer_dir)
+    for bref, r in conn_rot.items():
+        rot[bref] = (r + rot.get(bref, 0.0)) % 360.0
     return res, rot, resolvable, contract
 
 
