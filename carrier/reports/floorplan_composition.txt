@@ -1,5 +1,5 @@
 FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
-  aggregate hard margin: sum 1138.43 mm, min 3.77 mm (informational)
+  aggregate hard margin: sum 1136.93 mm, min 3.77 mm (informational)
   hard terms:
     HARD facing power->power_som: 8.52 vs 90.00 (margin +81.48) ok [facing/output_roles [placement/v2]] dot=+1454.71
     HARD facing power_som->@som: 8.69 vs 90.00 (margin +81.31) ok [facing/output_roles [placement/v2]] dot=+533.52
@@ -8,7 +8,7 @@ FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advi
     HARD far_min motor_sense->power_som: 69.71 vs 10.00 (margin +59.71) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
     HARD far_min power->ethernet.line_side: 138.33 vs 10.00 (margin +128.33) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
     HARD far_min power_som->ethernet.line_side: 77.76 vs 10.00 (margin +67.76) ok [judgment:10.0 — same rationale as the power pilot]
-    HARD flow_hop camera->@som: 86.59 vs 136.35 (margin +49.75) ok [flow chain [placement/v2]]
+    HARD flow_hop camera->@som: 88.10 vs 136.35 (margin +48.25) ok [flow chain [placement/v2]]
     HARD flow_hop hdmi_tx->@som: 75.13 vs 136.35 (margin +61.22) ok [flow chain [placement/v2]]
     HARD flow_hop pd_input->usb_pd: 16.32 vs 136.35 (margin +120.03) ok [flow chain [placement/v2]]
     HARD flow_hop power->power_som: 111.08 vs 136.35 (margin +25.27) ok [flow chain [placement/v2]]

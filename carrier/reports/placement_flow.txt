@@ -10,7 +10,7 @@ PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=38964mm^2, flow_bu
     far motor_sense vs power_som: 69.71mm / >= 10mm
     far power vs ethernet.line_side: 138.33mm / >= 10mm
     far power_som vs ethernet.line_side: 77.76mm / >= 10mm
-    flow camera->@som: 86.59mm / 136.3mm budget
+    flow camera->@som: 88.10mm / 136.3mm budget
     flow hdmi_tx->@som: 75.13mm / 136.3mm budget
     flow pd_input->usb_pd: 16.32mm / 136.3mm budget
     flow power->power_som: 111.08mm / 136.3mm budget

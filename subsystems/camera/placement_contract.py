@@ -93,6 +93,10 @@ CONTRACT: dict = {
         {"type": "same_side", "ics": ["J1"],
          "basis": "camera discretes co-located on the FFC side (no via mid-lane "
                   "on the D-PHY pairs)"},
+        {"type": "proximity", "anchor": "J1", "anchor_pins": ["15"],
+         "members": ["C1", "C2"], "max_mm": 6.0,
+         "basis": "gated +VDD_CAM bypass at the FFC supply pad; measured "
+                  "8-10mm|judgment:6.0"},
     ],
     "stage_order": ["J1"],
     # ADVISORY (recorded, NOT gated):

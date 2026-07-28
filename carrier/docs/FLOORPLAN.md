@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **204 x 191 mm**; SoM origin at **(69, 80.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 204x191 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 17745 <= LAW-5 budget 19542 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 204x191 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 17743 <= LAW-5 budget 19542 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -31,10 +31,10 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 |---|---|---|---|---|
 | N | microsd | (53.5, 1.5, 21.398 x 26.4711) | TF-01A (microSD push-pull) | (1) |
 | N | pd_input | (77.5, 1.5, 29.3902 x 22.0264) | TYPE-C-31-M-12 (USB-C receptacle) | (2) |
-| N | usbc_otg | (110, 1.5, 22.8351 x 18.7981) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
+| N | usbc_otg | (110, 1.5, 23.2099 x 22.2682) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
 | N | usb_jtag_connector | (136, 1.5, 16.2101 x 14.6981) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
 | N | usb_uart_connector | (156, 1.5, 16.2101 x 14.1581) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
-| W | camera | (1.5, 56, 18.66 x 32.9751) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (6) |
+| W | camera | (1.5, 56, 17.2801 x 32.9751) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (6) |
 | W | lcd | (1.5, 89, 23.71 x 46.225) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (7) |
 | E | motor_pwm | (161.5, 108.5, 41.0349 x 20.3) |  |  |
 | E | rj45_connector | (175, 13, 27.37 x 19.4) |  |  |

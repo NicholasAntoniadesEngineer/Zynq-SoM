@@ -1,6 +1,6 @@
 CONTRACT COVERAGE: 23 wired(gated) / 0 inert-met / 0 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
   board_qwiic            WIRED-gated      1 chk  0 viol  
-  camera                 WIRED-gated      4 chk  0 viol  
+  camera                 WIRED-gated      5 chk  0 viol  
   ethernet               WIRED-gated      6 chk  0 viol  
   fmc                    WIRED-gated      4 chk  0 viol  
   hdmi_rx                WIRED-gated      3 chk  0 viol  
@@ -21,4 +21,4 @@ CONTRACT COVERAGE: 23 wired(gated) / 0 inert-met / 0 inert-VIOLATED  (authored S
   usb_jtag_connector     WIRED-gated      1 chk  0 viol  
   usb_pd                 WIRED-gated      6 chk  0 viol  
   usb_uart_connector     WIRED-gated      1 chk  0 viol  
-  usbc_otg               WIRED-gated      3 chk  0 viol  
+  usbc_otg               WIRED-gated      4 chk  0 viol  

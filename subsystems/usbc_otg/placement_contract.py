@@ -59,5 +59,9 @@ CONTRACT: dict = {
         # ---- SAME SIDE: the switch's input bypass on the switch's side ---------
         {"type": "same_side", "ics": ["U1"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},
+        {"type": "proximity", "anchor": "J2", "anchor_pins": ["A4B9", "B4A9"],
+         "members": ["C2", "C3"], "max_mm": 8.0,
+         "basis": "hot-plug hold-up bulk at the port VBUS (TPS2051C DS 150uF "
+                  "ref); measured ~14mm|judgment:8.0"},
     ],
 }

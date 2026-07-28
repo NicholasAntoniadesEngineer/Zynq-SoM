@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "09d87658a504260cdc04b894349d6186337691af440afc110e367c72898ee01c"
+      "sha256": "7eda3990deeb839b755d96648972bd6ea6a2ef53bf027ee2a226f70f8ffa85fd"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -26,15 +26,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "4d0dafeca7db72662a314b7c29151478a5a99d9e9ab7ac8f03ee8e2578698387"
+      "sha256": "096f16773a1856f772e2b6505b35e5768c7ec36e06d6a703d12893d5959bae46"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "2a7514786db43a9f6dc44825f42facaa92ada7c9afb6d35f5551e3e84b64a640"
+      "sha256": "ef26f37fefcd4fab9faf80383d902de2776faca5282d571d65386afe21b234e8"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "04afaf2992c4bab077b07822922c16827e34c4da22a68a6554ec5b39da192606"
+      "sha256": "1e0599b23beaa3025c21308aa4f59af68ea8af060aea21e9917e7148c3cc0ce7"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -58,7 +58,7 @@
     },
     {
       "path": "manufacturing/Zynq_Carrier_cpl.csv",
-      "sha256": "ebbf7fd0f239a24e7dd0e83c36bfce1ceda77ac77a9aaa33ff57ffb711d3959e"
+      "sha256": "143308907d8a7dac2f9589b8296479377b9b9081602482e98ec321f017dbb05e"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -106,7 +106,7 @@
     },
     {
       "path": "reports/contract_coverage.txt",
-      "sha256": "0b6a1497b2e20e0b80e3411648e1dab8052d086ffcf5ccc1b50d302deab9ea11"
+      "sha256": "f668814ea8f5f0c4f44d8ba565a1e3f671c20788316240d208e013223c53c7a8"
     },
     {
       "path": "reports/copper_debt.txt",
@@ -134,7 +134,7 @@
     },
     {
       "path": "reports/floorplan_composition.txt",
-      "sha256": "7844afb995f7e38ef267f85caaf5f277696b6cd8074814ba5b0445bd98d9fc26"
+      "sha256": "e7c56bb67f50fe09973c097f8f14e3bc26836d8f5a6cc0a7d85ba16ca72444a3"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -162,11 +162,11 @@
     },
     {
       "path": "reports/placement_contract.txt",
-      "sha256": "f703e5ee96c5a55c1b85c854bbbad48a24225f8e60521306a2ad02f0650259a3"
+      "sha256": "7dda086a689f48e67f0293bdc1647cc4f8811d744b691cfe5850b739ab7a6ce6"
     },
     {
       "path": "reports/placement_flow.txt",
-      "sha256": "4242dd52eec090c47c28a5c8ab2831478f2727c66f9e2966ea53d65050850ad2"
+      "sha256": "f0c15b2a065d45b12dd1ab2a9714996e0b1ca281ed3daa461502d7ffe7082e4c"
     },
     {
       "path": "reports/placement_mech.txt",
@@ -182,7 +182,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "138a10b00058eddc81ef841a14c59ef9bc5249750eab42e6a9361b204bc9a18f"
+      "sha256": "9f90f2211cc070007f7fc37ae7d95d534f22911a2fef23baa918d1278f7a9748"
     },
     {
       "path": "reports/return_path.txt",
