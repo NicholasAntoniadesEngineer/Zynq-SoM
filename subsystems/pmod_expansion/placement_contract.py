@@ -30,10 +30,15 @@ DECOUPLING derived from the netlist:
     C1 (100n)  via decouple("U1.IN")  -> the SY6280 input HF bypass (pin 5).
     R1 (13k)   SY6280 ISET (ILIM = 6800/13k = 523 mA); on U1.ISET pin 3 — the
                current-limit set resistor belongs tight to its ISET pin.
-    C2 (10u)   EXCLUDED: +VDD_PMOD input BULK on the same rail (SY6280 DS
-               strongly recommends it, but it is rail bulk, not the single-pin
-               HF bypass — packer precedent). C4/C5 EXCLUDED: connector-rail
-               bypass/bulk at the Pmod power pins (camera/microsd precedent).
+    C2 (10u)   +VDD_PMOD input BULK behind the HF bypass. CENSUS WAVE
+               2026-07-29: graduates from "packer precedent" — the SY6280 DS
+               is explicit (Pin Description: "IN ... decoupled with a 10uF
+               capacitor to GND"; App Info: "a 10uF ceramic capacitor from
+               VIN to GND is strongly recommended"), so the bulk is held at
+               the IN pin behind the 2 mm C1.
+    R2 (100k)  EN_PMODX default-OFF pulldown (R2.1 = EN_PMODX = U1.EN pin 4):
+               holds the gate OFF until SW1 closes. CENSUS WAVE: held at the
+               EN pin it defines.
 
 PORT-ENTRY ESD (cable-facing): each of the 8 Pmod IO carries a GND-referenced
 TPD4E1U06 clamp channel at the socket; a strike enters at J1 so both arrays
@@ -49,6 +54,7 @@ from __future__ import annotations
 
 _U1_IN = "5"
 _U1_ISET = "3"
+_U1_EN = "4"
 
 CONTRACT: dict = {
     "contract": "placement/lightweight-v0",
@@ -59,6 +65,7 @@ CONTRACT: dict = {
     "roles": {
         "U1": "load_switch", "U2": "esd_array", "U3": "esd_array",
         "J1": "pmod_socket", "C1": "cin_bypass", "R1": "iset",
+        "C2": "cin_bulk", "R2": "en_pulldown",
     },
     "structures": [
         # ---- DECOUPLING: SY6280 load-switch Cin + ISET -------------------------
@@ -66,10 +73,21 @@ CONTRACT: dict = {
          "members": ["C1"], "max_mm": 2.0, "same_side": True,
          "basis": "judgment:2.0 — generic per-pin bypass proximity "
                   "(D6 lightweight tier)"},
+        # ---- SY6280 IN bulk behind the HF bypass (census wave) -----------------
+        {"type": "proximity", "anchor": "U1", "anchor_pins": [_U1_IN],
+         "members": ["C2"], "max_mm": 4.0, "same_side": True,
+         "basis": "SY6280 DS Pin Description/App Info ('IN ... decoupled with "
+                  "a 10uF capacitor'; no mm stated) — bulk behind the HF "
+                  "bypass|judgment:4.0"},
         {"type": "proximity", "anchor": "U1", "anchor_pins": [_U1_ISET],
          "members": ["R1"], "max_mm": 2.0, "same_side": True,
          "basis": "judgment:2.0 — ISET resistor at its load-switch pin "
                   "(D6 lightweight tier)"},
+        # ---- EN default-OFF pulldown at its pin (census wave) ------------------
+        {"type": "proximity", "anchor": "U1", "anchor_pins": [_U1_EN],
+         "members": ["R2"], "max_mm": 6.0, "same_side": True,
+         "basis": "EN_PMODX default-OFF pulldown with the EN pin it defines"
+                  "|judgment:6.0"},
         # ---- PORT-ENTRY ESD: both TPD4E1U06 arrays at the Pmod socket ----------
         # (mirror of subsystems/pmod: same_side clause keeps the arrays on J1's
         # side; a separate same_side keyed on U2/U3 would find no members.)

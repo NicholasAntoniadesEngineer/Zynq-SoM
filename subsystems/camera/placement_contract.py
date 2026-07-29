@@ -35,8 +35,12 @@ camera parts (from camera.py, netlist-verified):
     R1  100R  -> CSI_D0_P/N   in-path D-PHY diff termination (RECEIVER-end)
     R2  100R  -> CSI_D1_P/N   in-path D-PHY diff termination (RECEIVER-end)
     R3  100R  -> CSI_CLK_P/N  in-path D-PHY diff termination (RECEIVER-end)
-    R4/R5  4k7   CAM I2C pull-ups (+VDD_CAM) — leftovers
-    C1/C2  100n/10u  +VDD_CAM bypass at the connector — leftovers
+    R4/R5  4k7   CAM I2C (CCI) pull-ups on +VDD_CAM. CENSUS WAVE 2026-07-29:
+                 graduate from "leftovers" — each held at its FFC bus pad
+                 (R4.2 = CAM_SCL = J1.13 + U2.4 tap; R5.2 = CAM_SDA = J1.14 +
+                 U2.5 tap) so the open-drain pulls ride the connector's I2C
+                 entry with the clamp taps.
+    C1/C2  100n/10u  +VDD_CAM bypass at the connector (structure below)
 
 Every threshold carries a ``basis`` string (a CITED XAPP894 reference or
 ``judgment:<value>`` — LAW 7 / LAW 4).
@@ -54,6 +58,7 @@ CONTRACT: dict = {
         "J1": "ffc_connector",
         "U1": "esd_array", "U2": "esd_array",
         "R1": "dphy_term", "R2": "dphy_term", "R3": "dphy_term",
+        "R4": "cci_scl_pullup", "R5": "cci_sda_pullup",
     },
     "structures": [
         # ---- PORT-ENTRY ESD (flow-through at the FFC): U1/U2 <= 5 mm of J1 -----
@@ -97,6 +102,15 @@ CONTRACT: dict = {
          "members": ["C1", "C2"], "max_mm": 6.0,
          "basis": "gated +VDD_CAM bypass at the FFC supply pad; measured "
                   "8-10mm|judgment:6.0"},
+        # ---- CCI I2C PULL-UPS at their FFC bus pads (census wave) --------------
+        {"type": "proximity", "anchor": "J1", "anchor_pins": ["13"],
+         "members": ["R4"], "max_mm": 8.0, "same_side": True,
+         "basis": "CAM_SCL 4k7 pull-up with the FFC I2C entry pad"
+                  "|judgment:8.0"},
+        {"type": "proximity", "anchor": "J1", "anchor_pins": ["14"],
+         "members": ["R5"], "max_mm": 8.0, "same_side": True,
+         "basis": "CAM_SDA 4k7 pull-up with the FFC I2C entry pad"
+                  "|judgment:8.0"},
     ],
     "stage_order": ["J1"],
     # ADVISORY (recorded, NOT gated):

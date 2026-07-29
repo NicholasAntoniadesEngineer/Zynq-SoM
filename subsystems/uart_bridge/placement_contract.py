@@ -24,17 +24,29 @@ the per-pin binding is AUTHORED by the source's decouple() calls (no ambiguity):
     C3 (100n)             via decouple("U1.6")  -> VDD pin bypass.
     C4 (100n)             via decouple("U1.5")  -> VIO pin bypass.
 
+CENSUS WAVE 2026-07-29 — the VBUS-sense divider + RST pull graduate:
+    R2 (22k1) + R3 (47k5)  the SiLabs self-powered VBUS divider (CP2102N DS
+              typical self-powered connection: VBUS sensed through a divider;
+              the repo netlist fixed a 20V-rail mis-tap 2026-06-11). Mid-node
+              CP2102N_VBUS_SNS = R2.2 = R3.1 = U1.8 (VBUS pin) — one lumped
+              divider held AT the sense pin so the 5.8V-abs-max pin's tap
+              stays short.
+    R1 (1k)   the open-drain ~RST pull-up (DS: RST requires the external
+              pull); R1.2 = CP2102N_RST_N = U1.9 — held at its pin.
+
 NO PORT-ENTRY ESD STRUCTURE: this sheet carries no connector — the USB-C
 receptacle and its USBLC6 ESD array live on the project-side
 ``usb_uart_connector`` sheet, so the port-entry term belongs there, not here.
 
-CP2102N pins used: VIO=5, VDD=6, VREGIN=7 (dossier numbers = SiLabs DS 1:1).
+CP2102N pins used: VIO=5, VDD=6, VREGIN=7, VBUS=8, ~RST=9 (dossier numbers =
+SiLabs DS 1:1).
 """
 
 from __future__ import annotations
 
-# CP2102N supply pins (authored by NUMBER, footprint-revision-independent).
+# CP2102N pins (authored by NUMBER, footprint-revision-independent).
 _VIO, _VDD, _VREGIN = "5", "6", "7"
+_VBUS_SNS, _RST = "8", "9"
 
 CONTRACT: dict = {
     "contract": "placement/lightweight-v0",
@@ -46,6 +58,7 @@ CONTRACT: dict = {
         "U1": "usb_uart_bridge",
         "C1": "vregin_hf", "C2": "vregin_bulk",
         "C3": "vdd_bypass", "C4": "vio_bypass",
+        "R1": "rst_pullup", "R2": "vbus_divider_top", "R3": "vbus_divider_bottom",
     },
     "structures": [
         # ---- DECOUPLING: VREGIN (pin 7) — 100n HF + 10u bulk, both authored
@@ -64,6 +77,19 @@ CONTRACT: dict = {
          "members": ["C4"], "max_mm": 2.0, "same_side": True,
          "basis": "judgment:2.0 — generic per-pin bypass proximity "
                   "(D6 lightweight tier)"},
+        # ---- VBUS-SENSE DIVIDER: both halves AT the VBUS pin (pin 8) -----------
+        # CP2102N DS self-powered connection: VBUS through a divider to the VBUS
+        # pin (5.8V abs-max). One lumped divider — mid-node R2.2/R3.1 = U1.8 —
+        # so both halves sit at the pin; DS numbers no mm -> judgment 5.0.
+        {"type": "proximity", "anchor": "U1", "anchor_pins": [_VBUS_SNS],
+         "members": ["R2", "R3"], "max_mm": 5.0, "same_side": True,
+         "basis": "CP2102N DS self-powered VBUS divider at the VBUS pin (DS "
+                  "numbers no mm)|judgment:5.0"},
+        # ---- ~RST open-drain pull-up at its pin (pin 9) ------------------------
+        {"type": "proximity", "anchor": "U1", "anchor_pins": [_RST],
+         "members": ["R1"], "max_mm": 6.0, "same_side": True,
+         "basis": "CP2102N DS open-drain ~RST external pull-up, held at the "
+                  "pin|judgment:6.0"},
         # ---- SAME SIDE: every bypass on the bridge's side ----------------------
         {"type": "same_side", "ics": ["U1"],
          "basis": "judgment — bypass co-located with its IC (lightweight tier)"},
@@ -71,7 +97,11 @@ CONTRACT: dict = {
     "external": {
         "near_max": [
             {"other": "usb_uart_connector", "max_mm": 40.0,
-             "basis": "judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector"},
+             "basis": "judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM "
+                      "pair terminates at the UART USB-C; measured 365mm of "
+                      "cross-board airwire (avg 122mm) with the block "
+                      "anchored mid-board and a STALE floorplan near-intent "
+                      "pointing at rj45_connector"},
         ],
     },
 }

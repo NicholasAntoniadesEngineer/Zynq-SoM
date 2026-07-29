@@ -34,7 +34,11 @@ DECOUPLING derived from the netlist:
 PORT-ENTRY protection: U2 (data-line ESD) and D1 (VBUS surge clamp) both clamp
 strikes entering at J1, so both belong at the port entry.
 
-TPS26631 pins used: IN=1/2/3, OUT=18/19/20.
+CENSUS WAVE 2026-07-29: R6 (100k FLT# pull-up, R6.2 = PD_FLT_N = U1.FLT# pin
+15, R6.1 = +VDD_LOGIC) graduates from ungated — the open-drain fault flag
+keeps its pull at the eFuse pin.
+
+TPS26631 pins used: IN=1/2/3, OUT=18/19/20, FLT#=15.
 """
 
 from __future__ import annotations
@@ -42,6 +46,7 @@ from __future__ import annotations
 # TPS26631 supply pins (authored by NUMBER, footprint-revision-independent).
 _U1_IN = ["1", "2", "3"]
 _U1_OUT = ["18", "19", "20"]
+_U1_FLT = "15"
 
 CONTRACT: dict = {
     "contract": "placement/lightweight-v0",
@@ -52,6 +57,7 @@ CONTRACT: dict = {
     "roles": {
         "J1": "usbc_receptacle", "U1": "efuse", "U2": "esd_array",
         "D1": "vbus_tvs", "C1": "in_bypass", "C2": "out_cap",
+        "R6": "flt_pullup",
     },
     "structures": [
         # ---- DECOUPLING: eFuse input HF bypass at the IN pins ------------------
@@ -75,6 +81,10 @@ CONTRACT: dict = {
         {"type": "proximity", "anchor": "U1", "anchor_pins": ["8"],
          "members": ["R3", "R4"], "max_mm": 5.0,
          "basis": "OVP divider at the pin; measured ~11mm|judgment:5.0"},
+        # ---- FLT# open-drain pull-up at the eFuse pin (census wave) ------------
+        {"type": "proximity", "anchor": "U1", "anchor_pins": [_U1_FLT],
+         "members": ["R6"], "max_mm": 6.0,
+         "basis": "open-drain FLT# pull-up with its pin|judgment:6.0"},
         {"type": "proximity", "anchor": "J1", "anchor_pins": ["A4B9", "B4A9"],
          "members": ["D1"], "max_mm": 5.0, "same_side": True,
          "basis": "surge TVS on the VBUS pads, not the shell; any-pad passed "

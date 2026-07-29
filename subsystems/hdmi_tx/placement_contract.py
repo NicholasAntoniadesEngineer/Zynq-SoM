@@ -72,6 +72,7 @@ CONTRACT: dict = {
         "U1": "hdmi_companion_esd", "J1": "hdmi_receptacle",
         "C1": "vcca_bypass", "C2": "vcc5v_bypass",
         "C3": "cable5v_hf", "C4": "cable5v_bulk",
+        "C5": "vdd_io_bulk",
     },
     "structures": [
         # ---- FLOW-THROUGH ESD at the connector: U1 <= 5 mm of J1 ---------------
@@ -131,6 +132,15 @@ CONTRACT: dict = {
          "members": ["C4"], "max_mm": 5.0, "same_side": True,
          "basis": "HDMI 1.4 4.2.7 (cable +5V bypass at the connector), bulk cap"
                   "|judgment:5.0"},
+        # ---- MODULE RAIL BULK: C5 (10u on +VDD_IO) behind the VCCA bypass ------
+        # Census wave 2026-07-29: the module's rail bulk graduates from ungated.
+        # The +VDD_IO rail feeds only U1.VCCA on this sheet, so the bulk's charge
+        # reservoir serves that pin, seated behind the 2 mm C1 HF cap. No
+        # datasheet mm for a rail bulk -> judgment 8.0 (house bulk family).
+        {"type": "proximity", "anchor": "U1", "anchor_pins": [_U1_VCCA],
+         "members": ["C5"], "max_mm": 8.0, "same_side": True,
+         "basis": "module +VDD_IO bulk behind the VCCA HF bypass (the rail's "
+                  "only consumer on this sheet)|judgment:8.0"},
         # ---- SAME SIDE: the companion + its bypass on one side ----------------
         {"type": "same_side", "ics": ["U1"],
          "basis": "SLLSE96F 10.1 — companion + bypass co-located (single-side "
@@ -144,10 +154,9 @@ CONTRACT: dict = {
     #     SoM (the mezzanine) and its B-side pins face J1, so the 4 TMDS pairs pass
     #     straight THROUGH the device with no U-turn. A-side pin set recorded here
     #     (``_U1_TMDS_A``) for a future orientation-aware template term.
-    #   * C5 (10u) is the module rail bulk on +VDD_IO (each module owns its bulk),
-    #     not a per-pin bypass -> left to the packer (matches the camera/microsd
-    #     10u peers). R1/R2 (10k straps to V_CCA) are static config, not layout-
-    #     critical -> leftovers.
+    #   * C5 (10u, +VDD_IO module bulk) graduated to a gated structure at the
+    #     2026-07-29 census wave (anchored behind the VCCA HF bypass) — the
+    #     earlier left-to-the-packer reading is reversed.
     "external": {
         # FLOW: the TMDS source path runs hdmi_tx -> the SoM/mezzanine (the Zynq
         # HDMI-TX bank drives the A-side lines). @som resolves to the SoM core
