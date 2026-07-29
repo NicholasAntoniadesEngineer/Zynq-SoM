@@ -10,7 +10,6 @@
       "usb_uart_connector"
     ],
     "E": [
-      "rj45_connector",
       "board_qwiic",
       "motor_sense",
       "motor_pwm"
@@ -22,8 +21,9 @@
       "pmod_expansion"
     ],
     "W": [
-      "camera",
-      "lcd"
+      "rj45_connector",
+      "lcd",
+      "camera"
     ]
   },
   "interior": {
@@ -112,7 +112,6 @@
       "usb_uart_connector"
     ],
     "E": [
-      "rj45_connector",
       "board_qwiic",
       "motor_sense",
       "motor_pwm"
@@ -124,6 +123,7 @@
       "pmod_expansion"
     ],
     "W": [
+      "rj45_connector",
       "lcd",
       "camera"
     ]

@@ -17,6 +17,7 @@ kicad-cli); the board checks parse the committed file.
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from schgen.core import sexpr
@@ -25,6 +26,7 @@ from schgen.generate.pcb.constants import (
     ORIGIN_X,
     ORIGIN_Y,
     THERMAL_COPPER,
+    THERMAL_VIA_SIZE,
     FootprintInst,
     PcbModel,
 )
@@ -98,6 +100,83 @@ def test_mini_model_full_via_field_and_pours():
     # every via: net 2 (GND), inside the F.Cu pour bbox
     for v in vias:
         assert int(sexpr.find(v, "net")[1]) == 2
+
+
+def _blocked_model(tmp_path) -> PcbModel:
+    """The 2026-07 field defect, minimised: a neighbouring subsystem's pad
+    field (foreign nets) lands on the buck's PREFERRED via seats — exactly how
+    the bringup ISET resistor grid vetoed 12 of U22004's 17 curated sites on
+    the 215x161 floorplan variant, leaving 5 of the 6 the pour credit needs."""
+    m = _mini_model()
+    buck = m.insts[0]
+    covered = THERMAL_COPPER["LM61460"]["via_sites"][:12]
+    pads = "\n".join(
+        f'\t(pad "{i}" smd roundrect (at {sx} {sy}) (size 0.4 0.4) '
+        '(layers "F.Cu"))' for i, (sx, sy) in enumerate(covered, start=1))
+    mod = tmp_path / "PadField.kicad_mod"
+    mod.write_text('(footprint "PadField"\n\t(layer "F.Cu")\n' + pads + "\n)\n")
+    m.insts.append(FootprintInst(
+        ref="J9", value="PadField", footprint="test:PadField",
+        x=buck.x, y=buck.y, rotation=0.0,
+        pad_nets={str(i): (14 + i, f"ISET_{i}")
+                  for i in range(1, len(covered) + 1)},
+        mod_path=mod, sheet="bringup"))
+    return m
+
+
+def test_blocked_buck_still_seats_the_pour_credit_floor(tmp_path):
+    """LAW-0/LAW-4: with the curated preference sites blocked, the emitter must
+    EXHAUST the legal seats around the pad field rather than hand the thermal
+    gate a short field (the variant-floorplan defect: 5/6 vias -> pour credit
+    withheld -> OVER Tj). The requirement is never lowered; the search is."""
+    m = _blocked_model(tmp_path)
+    buck = m.insts[0]
+    spec = THERMAL_COPPER["LM61460"]
+    need = embed._pour_credit_need(buck.value)
+    reach = max(abs(v) for site in spec["via_sites"] for v in site) + 20.0
+    obstacles = embed._via_obstacles(m, buck, reach)
+    curated = [(round(buck.x + sx, 3), round(buck.y + sy, 3))
+               for sx, sy in spec["via_sites"]]
+    survivors: list[tuple[float, float]] = []
+    for vx, vy in curated:
+        if embed._via_site_blocker(vx, vy, m, obstacles, survivors) is None:
+            survivors.append((vx, vy))
+    assert len(survivors) < need.min_vias, \
+        f"scenario is not a curated-list shortfall ({len(survivors)} seats)"
+
+    seqs: dict[str, int] = {}
+
+    def uid(kind: str) -> str:
+        n = seqs.get(kind, 0)
+        seqs[kind] = n + 1
+        return f"uid-{kind}-{n}"
+
+    _zones, vias = embed._thermal_copper_nodes(m, uid)
+    seats = [(float(sexpr.find(v, "at")[1]), float(sexpr.find(v, "at")[2]))
+             for v in vias]
+    within = [p for p in seats
+              if math.hypot(p[0] - buck.x, p[1] - buck.y) <= need.radius_mm]
+    assert len(within) >= need.min_vias, \
+        f"exhausted search still short: {len(within)} < {need.min_vias}"
+    assert any(p not in curated for p in within), \
+        "fallback lattice contributed nothing"
+    for vx, vy in seats:
+        assert embed._via_site_blocker(
+            vx, vy, m, obstacles,
+            [p for p in seats if p != (vx, vy)]) is None, \
+            f"illegal seat emitted at ({vx},{vy})"
+
+
+def test_fallback_sites_inside_the_pour_nearest_first():
+    spec = THERMAL_COPPER["LM61460"]
+    sites = embed._fallback_via_sites(spec)
+    x0, y0, x1, y1 = spec["pour"]
+    m = THERMAL_VIA_SIZE / 2
+    for sx, sy in sites:
+        assert x0 + m <= sx <= x1 - m and y0 + m <= sy <= y1 - m, (sx, sy)
+    radii = [round(math.hypot(sx, sy), 4) for sx, sy in sites]
+    assert radii == sorted(radii), "fallback must walk outward from the part"
+    assert embed._fallback_via_sites(spec) == sites
 
 
 def test_gnd_plane_zone_geometry():

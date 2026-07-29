@@ -319,6 +319,10 @@ THERMAL_VIA_H2H = 0.45          # via-hole EDGE to other hole EDGE margin (mm)
 #                                 (> the 0.25 min_hole_to_hole design rule)
 THERMAL_VIA_EDGE = 1.0          # via center keep-back from Edge.Cuts (mm)
 THERMAL_VIA_SPACING = 0.8       # min center spacing between emitted vias (mm)
+THERMAL_VIA_LATTICE_PITCH = 0.25  # exhaustive fallback-search step (mm) inside
+#                                 the part's own pour, walked nearest-first
+#                                 when neighbouring copper blocks the curated
+#                                 via_sites below (embed._fallback_via_sites)
 
 # Per-part thermal-copper emission spec, keyed by part-VALUE prefix. For every
 # placed instance the emitter drops a local GND pour (rect in the footprint
