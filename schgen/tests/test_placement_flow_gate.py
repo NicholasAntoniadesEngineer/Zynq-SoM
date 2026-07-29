@@ -244,6 +244,29 @@ def test_far_unresolved_target_fails_strict():
     assert any("UNRESOLVED" in v for v in res.violations), res.summary()
 
 
+def test_term_naming_uninstantiated_subsystem_is_na_not_failed():
+    """PROJECT-SCOPED RESOLUTION (E1): a term endpoint naming a subsystem the
+    ACTIVE PROJECT does not instantiate is N/A — reported in ``res.na`` and the
+    summary, never counted checked/failed. The strict UNRESOLVED failure
+    (test above) stays reserved for a project subsystem that fails to place."""
+    c = {"contract": "placement/test",
+         "external": {
+             "flow": ["no_such_subsystem", "power"],
+             "far": [{"what": "also_absent.line_side", "min_mm": 10.0,
+                      "basis": "j"}],
+             "near_max": [{"other": "gone_too", "max_mm": 5.0, "basis": "j"}],
+         }}
+    m = _model([_zone("power", 40.0, 30.0)])
+    res = g.check(m, contracts={"power": c})
+    assert res.ok, res.summary()
+    assert not res.violations and not res.unresolved, res.summary()
+    assert res.flow_checked == 0 and res.far_checked == 0 \
+        and res.near_max_checked == 0, res.summary()
+    assert len(res.na) == 3, res.summary()
+    assert any("no_such_subsystem" in x for x in res.na), res.summary()
+    assert "n/a (subsystem not in this project): 3" in res.summary()
+
+
 # ---------------------------------------------------------------------------
 # determinism + no-external behaviour
 # ---------------------------------------------------------------------------

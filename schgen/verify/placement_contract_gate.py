@@ -252,6 +252,17 @@ def validate_contract_pins(sheet_name: str, contract: dict) -> None:
                     demand(idx, typ, ref, "min_from.pin", [p])
 
 
+def project_zone_names() -> frozenset[str]:
+    """Sheet names of every subsystem the ACTIVE PROJECT instantiates (the
+    discovery set) — the resolution domain for a contract's EXTERNAL terms. A
+    term endpoint outside this set (and not the ``@som`` token) names a
+    subsystem this project does not compose, so the term is N/A for the
+    project — distinct from a project subsystem that fails to PLACE, which
+    stays a strict UNRESOLVED failure (E1 project isolation)."""
+    from schgen.core.link import all_subsystem_paths
+    return frozenset(p.stem for p in all_subsystem_paths())
+
+
 def discover_all() -> dict[str, dict]:
     """Every authored contract under both roots: sheet -> CONTRACT dict (T1 P5
     thin helper; wired or not — discovery, no gating). Deterministic: sorted by

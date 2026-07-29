@@ -1,5 +1,5 @@
-CONTRACT COVERAGE: 3 wired(gated) / 0 inert-met / 1 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
+CONTRACT COVERAGE: 4 wired(gated) / 0 inert-met / 0 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
   pd_input               WIRED-gated      8 chk  0 viol  
-  power                  inert-VIOLATED  20 chk  64 viol  hot_loop U1 pins 8/9 (VIN/PGND): none within 1mm same-side > 1mm
+  power                  WIRED-gated     20 chk  0 viol  
   uart_bridge            WIRED-gated      4 chk  0 viol  
   usb_uart_connector     WIRED-gated      1 chk  0 viol  

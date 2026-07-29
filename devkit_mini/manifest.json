@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "e5eaacfd44a2c06b98a4382633da03e468327e08bc21cf81ec9a1352e688a847"
+      "sha256": "b28373840e74ae74cb1b1f664cab6370fcab282840a7597374e85f1abef85161"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -14,15 +14,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "7acb1bd6b5effbe11171d0f9ee8ac6813708ae676cee89bc80974dd1d0b92625"
+      "sha256": "7d6abf7ce8414d2cf273cfc3e3002149f19d4fa791ab9046fa76018eeb3a49be"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "5d2787c8d813b59cb0ec8226e52e0a5c6157f0b1217043b9d17dd10727b13ea2"
+      "sha256": "e22af2888ffc71bad29e20501437403dceaa2b74578a68f09c41907b025b030c"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "591ff8218ced2d1f5fd0875e2070133e6443f7c8f9f7fa38a137136a3cb53ae5"
+      "sha256": "94a132abc1d8cb0fcada76e84b75370173f00d7607ff79e5f91c25b04d8a6642"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -46,7 +46,7 @@
     },
     {
       "path": "manufacturing/Zynq_Carrier_cpl.csv",
-      "sha256": "58f93600e0b01872cbbd55de450c6d09cfcac19799d7f82ff45f8a929638831d"
+      "sha256": "5b02a06295a58a367084894ebdd6ec333d15a5e9e02b6baa3cbc6da8576a08db"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -86,19 +86,19 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "d6ab0cd899b4bd9078699a8fb57dca8d9cf37987dc81a434be0d204e53a3434b"
+      "sha256": "cb08d64dcde9d5e801d397c1d5b83f62b6b6bd65c50a5555ef49ca900ec2657d"
     },
     {
       "path": "reports/contract_coverage.txt",
-      "sha256": "5b2086e41ff882cb1e02741b27736701576a7dfa7714c5cac85fba000641e9c6"
+      "sha256": "220f25980e2cfbe52be95d40a9701d56853bde0312800a24a807a775cf67beca"
     },
     {
       "path": "reports/contract_coverage_lint.txt",
-      "sha256": "70053cb982fd790f4f5c7a164b295c6b23b4258dc4a23b87c92385a003d55bc4"
+      "sha256": "af8ab6b9fa90a02af67443cf8aba3872bb690cb5cded9eb484261c1fd3bb2be7"
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "2f3c9ea76c40c682cb24b5ffe9f0fcbf65d2e5184ea74ae2ee68a5eb78d85b8f"
+      "sha256": "4c366ca86b34124fee77d7334a4257f414401feb62715edf80fa8fcbf041ef70"
     },
     {
       "path": "reports/design_rules.txt",
@@ -114,11 +114,11 @@
     },
     {
       "path": "reports/fanout.txt",
-      "sha256": "32457fa4b17e5fe621c06bcbd4bcdaa02611e396b83faa1486c33c436636ec83"
+      "sha256": "3491e9115d0551b37404c56a9b9a3780df1d11b67c13650be3c6ec3422579e0f"
     },
     {
       "path": "reports/floorplan_composition.txt",
-      "sha256": "f29e32689cadc713b02176e45d934264c786a98f331993eb7a6072557ef387b7"
+      "sha256": "840d4924d43c6ce99d2fd94f2cf6c17ecc1c08f977936a09e03043ae99f83fad"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -146,15 +146,15 @@
     },
     {
       "path": "reports/placement_contract.txt",
-      "sha256": "789ecb5dc40e96f582a7ab39ed886ebf25ee4edf85cb84d67e7674585dc94ea2"
+      "sha256": "1e9ddf8116d98fc8b134a677f55b7320d752da9405c5ebad36db5e23219c3808"
     },
     {
       "path": "reports/placement_flow.txt",
-      "sha256": "dda091bea6c1a13aa739b3afa9edc305f70221f2139453ba6eb292a533b7f15d"
+      "sha256": "3d091e95f74f1e782104b743034b9136076d900e2c8e0c57d2970e953daea10a"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "9a6a1002fed9a7ba9c8099a221b9655f4c75686654f1280a032f6cc9798fbc74"
+      "sha256": "df88b06d862b0cbb140ff18bc62a76e7e02299d3b84c5f399550fee27ddd5839"
     },
     {
       "path": "reports/power_tree.txt",
@@ -170,7 +170,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "7eb239e68f0d87eb94c35c1662384584c90140803b055b7aedf8d6232eb27294"
+      "sha256": "ae56bd4a292934d0c9bc21910e69714268defcef1024c4591b46646d66e0af65"
     },
     {
       "path": "reports/return_path.txt",
@@ -198,7 +198,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "a7356e118b39aad81567eac303ffacd9c1af920e7c3957552a05455825892a03"
+      "sha256": "4e553ffd257ab82d3f3f09c35c854a2dcd1b6d9f46b7cae52eaaf06840c1fb9d"
     },
     {
       "path": "schematic/debug_boot.kicad_sch",

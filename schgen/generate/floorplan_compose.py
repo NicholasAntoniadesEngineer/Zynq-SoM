@@ -240,6 +240,11 @@ class Term:
 class TermIndex:
     hard: tuple[Term, ...]      # enforced (declared by a wired sheet)
     soft: tuple[Term, ...]      # advisory (unwired declarations + near_intent)
+    # n/a for the caller's sheet universe (the ACTIVE PROJECT's subsystem set
+    # on a real build): an endpoint names a subsystem the project does not
+    # instantiate (project-scoped resolution, E1) — listed in the composition
+    # ledger, never evaluated, never legalized against.
+    na: tuple[Term, ...] = ()
 
     @property
     def terms(self) -> tuple[Term, ...]:
@@ -341,10 +346,17 @@ def build_term_index(sheet_names: list[str] | None = None) -> TermIndex:
                           basis="carrier/floorplan.json near-intent (advisory)",
                           enforced=False))
 
+    zones_known = frozenset(sheet_names)
+
+    def _is_na(t: Term) -> bool:
+        return any(n != _SOM_TOKEN and n not in zones_known
+                   for n in (t.subject, t.target))
+
     terms = [merged[k] for k in sorted(merged)]
-    hard = tuple(t for t in terms if t.enforced)
-    soft = tuple(t for t in terms if not t.enforced)
-    return TermIndex(hard=hard, soft=soft)
+    hard = tuple(t for t in terms if t.enforced and not _is_na(t))
+    soft = tuple(t for t in terms if not t.enforced and not _is_na(t))
+    na = tuple(t for t in terms if _is_na(t))
+    return TermIndex(hard=hard, soft=soft, na=na)
 
 
 def emit_mobile_sheets(zg, l4_exempt: frozenset[str] | None = None
@@ -856,6 +868,12 @@ def compose_report(model, index: TermIndex | None = None,
     L.append("  soft terms (advisory ledger — repair triggers, never gates):")
     for e in sorted(soft, key=lambda e: e.term.key):
         L.append("    " + e.line())
+    if index.na:
+        L.append("  n/a terms (endpoint subsystem not instantiated by this "
+                 "project — project-scoped resolution):")
+        for t in sorted(index.na, key=lambda t: t.key):
+            L.append(f"    n/a {t.kind} {t.subject}->{t.target_raw} "
+                     f"[{t.basis}]")
     unmanaged, managed = corridor_intrusions(model)
     ncorr = len(escape_corridors())
     L.append(f"  T2 escape corridors (D13 never-close): {ncorr} loaded, "

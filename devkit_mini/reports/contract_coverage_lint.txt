@@ -1,10 +1,24 @@
 CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
-CONTRACT COVERAGE LINT (advisory): 3 sheets, 28 parts — 17 structured / 0 free / 11 UNGATED
+CONTRACT COVERAGE LINT (advisory): 4 sheets, 79 parts — 55 structured / 0 free / 24 UNGATED
 
 pd_input             parts= 13  structured= 10  free= 0  UNGATED=  3
     UNGATED R6     -> R3006    100k                   nets: +3V3_SC, PD_FLT_N
     UNGATED TP1    -> TP3001   +VBUS_IN               nets: +VBUS_IN
     UNGATED TP2    -> TP3002   +VIN                   nets: +VIN
+power                parts= 51  structured= 38  free= 0  UNGATED= 13
+    UNGATED D1     -> D4001    red                    nets: +5V_REG, PG_5V0
+    UNGATED D2     -> D4002    red                    nets: +3V3_REG, PG_3V3
+    UNGATED D3     -> D4003    red                    nets: +3V3, PG_1V8_K
+    UNGATED Q1     -> Q4001    AO3400A                nets: GND, PG_1V8_D, PG_1V8_G
+    UNGATED R3     -> R4003    1k                     nets: GND, PG_5V0
+    UNGATED R6     -> R4006    330R                   nets: GND, PG_3V3
+    UNGATED R7     -> R4007    1k                     nets: +1V8, PG_1V8_G
+    UNGATED R8     -> R4008    100k                   nets: GND, PG_1V8_G
+    UNGATED R9     -> R4009    330R                   nets: PG_1V8_D, PG_1V8_K
+    UNGATED TP1    -> TP4001   +5V                    nets: +5V
+    UNGATED TP2    -> TP4002   +3V3                   nets: +3V3
+    UNGATED TP3    -> TP4003   +1V8                   nets: +1V8
+    UNGATED TP4    -> TP4004   GND                    nets: GND
 uart_bridge          parts= 10  structured=  5  free= 0  UNGATED=  5
     UNGATED R1     -> R11001   1k                     nets: +3V3, CP2102N_RST_N
     UNGATED R2     -> R11002   22k1                   nets: CP2102N_VBUS_SNS, USB_UART_VBUS
