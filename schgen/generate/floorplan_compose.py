@@ -794,15 +794,21 @@ def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
     return out
 
 
-def cross_airwires_by_pair(model) -> dict[tuple[str, str], tuple[int, float]]:
+def cross_airwires_by_pair(model, npp: dict | None = None,
+                           mst: dict | None = None
+                           ) -> dict[tuple[str, str], tuple[int, float]]:
     """Per-zone-pair cross-subsystem airwire (count, mm) over the SAME MST the
     LAW-5 gate measures — the D13 channel-demand instrument. Deterministic
     (sorted nets, sorted pair keys)."""
     from schgen.generate.pcb import net_pad_positions
-    from schgen.generate.ratsnest import _mst_edges
+    from schgen.generate.ratsnest import net_mst_edges
     pairs: dict[tuple[str, str], list[float]] = {}
-    for _net, pts in sorted(net_pad_positions(model).items()):
-        for a, b in _mst_edges(pts):
+    if npp is None:
+        npp = net_pad_positions(model)
+    if mst is None:
+        mst = net_mst_edges(model, npp)
+    for _net, pts in sorted(npp.items()):
+        for a, b in mst[_net]:
             xa, ya, _ra, sa = pts[a]
             xb, yb, _rb, sb = pts[b]
             if sa == sb:
@@ -821,7 +827,8 @@ def channel_demand_mm(n_airwires: int) -> float:
     return CHANNEL_FLOOR_MM + CHANNEL_PER_NET_MM * n_airwires
 
 
-def compose_report(model, index: TermIndex | None = None) -> str:
+def compose_report(model, index: TermIndex | None = None,
+                   npp: dict | None = None, mst: dict | None = None) -> str:
     """The HARD+SOFT composition term ledger for the emitted ``model`` — one
     line per term (measured, bound, margin, basis) + the aggregate-margin
     scalar (informational, IM10) + the D13 channel-demand hotspot table.
@@ -859,7 +866,7 @@ def compose_report(model, index: TermIndex | None = None) -> str:
         L.append(f"    UNMANAGED INTRUSION {x}")
     for x in managed:
         L.append(f"    managed {x}")
-    ch = [(k, v) for k, v in cross_airwires_by_pair(model).items()
+    ch = [(k, v) for k, v in cross_airwires_by_pair(model, npp, mst).items()
           if channel_demand_mm(v[0]) > 0.0
           and not (k[0].startswith("som_j") or k[1].startswith("som_j"))]
     L.append(f"  D13 channel hotspots (>= {CHANNEL_MIN_NETS} cross-airwires; "

@@ -108,7 +108,8 @@ def dispersion_by_sheet(res: RatsnestResult) -> dict[str, float]:
     return {name: disp for name, _n, _area, disp in res.clusters}
 
 
-def check(model: PcbModel) -> RatsnestResult:
+def check(model: PcbModel, npp: dict | None = None,
+          mst: dict | None = None) -> RatsnestResult:
     res = RatsnestResult(board_w=model.board_w, board_h=model.board_h)
     bx0, by0 = ORIGIN_X, ORIGIN_Y
     bx1, by1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
@@ -167,7 +168,8 @@ def check(model: PcbModel) -> RatsnestResult:
     res.clusters.sort(key=lambda c: -c[3])
 
     # (c) absolute, board-scaled cross-subsystem airwire budget.
-    res.cross_mm, res.total_mm, res.n_cross = rn.cross_airwire_length(model)
+    res.cross_mm, res.total_mm, res.n_cross = rn.cross_airwire_length(
+        model, npp, mst)
     res.n_subsystems = sum(1 for name in by_sheet
                            if not name.startswith("som_j"))
     res.cross_budget_mm = round(

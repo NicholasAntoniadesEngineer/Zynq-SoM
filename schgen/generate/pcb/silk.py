@@ -198,6 +198,70 @@ def _overlap_area(a, b) -> float:
     return dx * dy if (dx > 0.0 and dy > 0.0) else 0.0
 
 
+class _BoxIndex:
+    """Uniform-grid spatial index over obstacle boxes (static 8 mm cells).
+    Queries visit only the boxes sharing a cell with the probe, in insertion
+    order — dropped boxes contribute exactly 0.0 to the penalty sum, so
+    ``pen``/``hits`` equal the full-list scan bit-for-bit."""
+
+    __slots__ = ("cell", "cells", "boxes")
+
+    def __init__(self, boxes=(), cell: float = 8.0):
+        self.cell = cell
+        self.cells: dict[tuple[int, int], list[int]] = {}
+        self.boxes: list = []
+        for b in boxes:
+            self.add(b)
+
+    def add(self, b) -> None:
+        i = len(self.boxes)
+        self.boxes.append(b)
+        c = self.cell
+        for gx in range(int(b[0] // c), int(b[2] // c) + 1):
+            for gy in range(int(b[1] // c), int(b[3] // c) + 1):
+                self.cells.setdefault((gx, gy), []).append(i)
+
+    def _near(self, b) -> list[int]:
+        c = self.cell
+        gx0, gy0 = int(b[0] // c), int(b[1] // c)
+        gx1, gy1 = int(b[2] // c), int(b[3] // c)
+        if gx0 == gx1 and gy0 == gy1:
+            return self.cells.get((gx0, gy0), [])
+        out: set[int] = set()
+        for gx in range(gx0, gx1 + 1):
+            for gy in range(gy0, gy1 + 1):
+                out.update(self.cells.get((gx, gy), ()))
+        return sorted(out)
+
+    def pen(self, gb) -> float:
+        bx = self.boxes
+        return sum(_overlap_area(gb, bx[i]) for i in self._near(gb))
+
+    def hits(self, gb) -> bool:
+        bx = self.boxes
+        return any(_overlap_area(gb, bx[i]) > 0.0 for i in self._near(gb))
+
+
+class _PairIndex:
+    """Two `_BoxIndex` chained (static obstacles + placed labels): one running
+    penalty sum in first-then-second order — the same fold as scanning the
+    concatenated list."""
+
+    __slots__ = ("a", "b")
+
+    def __init__(self, a: _BoxIndex, b: _BoxIndex):
+        self.a = a
+        self.b = b
+
+    def pen(self, gb) -> float:
+        pen = 0
+        for i in self.a._near(gb):
+            pen += _overlap_area(gb, self.a.boxes[i])
+        for i in self.b._near(gb):
+            pen += _overlap_area(gb, self.b.boxes[i])
+        return pen
+
+
 def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
     """Nearest spot just OUTSIDE the courtyard (8 directions, growing offset)
     whose label box clears every occupied box. Returns the first fully-clear
@@ -221,6 +285,8 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
     widened pass runs ONLY after the compact scan failed, so every label the
     compact scan already places keeps its exact position (deterministic,
     byte-stable for the non-crowded board)."""
+    if isinstance(occupied, list):
+        occupied = _BoxIndex(occupied)
     midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
     # match _text_box's CORRECTED extent (Newstroke advances ~1.0*size/glyph + the
     # stroke thickness on each side). The old 0.72 aspect here under-measured the
@@ -249,7 +315,7 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
                        (cx0 - dx, cy0 - dy)):     # NW
             box = _text_box(label, tx, ty, size)
             gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
-            pen = sum(_overlap_area(gb, o) for o in occupied)
+            pen = occupied.pen(gb)
             onboard = bounds is None or (
                 box[0] >= bounds[0] and box[1] >= bounds[1]
                 and box[2] <= bounds[2] and box[3] <= bounds[3])
@@ -281,7 +347,7 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
             if not onboard:
                 continue
             gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
-            pen = sum(_overlap_area(gb, o) for o in occupied)
+            pen = occupied.pen(gb)
             if pen == 0.0:
                 return tx, ty, box, extra
             if best_pen is None or pen < best_pen:
@@ -313,8 +379,8 @@ def _connector_descriptors(model, uid, doc: list) -> list:
     ex0, ey0 = ORIGIN_X, ORIGIN_Y
     ex1, ey1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
     # everything already on the board that a label must not collide with
-    occupied: list = [_inst_courtyard(i) for i in model.insts]
-    occupied += _emitted_text_boxes(doc, include_silk_gfx=True)
+    occupied = _BoxIndex([_inst_courtyard(i) for i in model.insts]
+                         + _emitted_text_boxes(doc, include_silk_gfx=True))
     # number the PMOD ports PMOD0/1/2 in ref order (they span two sheets)
     pmods = sorted(i.ref for i in model.insts if i.value == "DS1024-2x6R2")
     pmod_n = {ref: n for n, ref in enumerate(pmods)}
@@ -352,7 +418,7 @@ def _connector_descriptors(model, uid, doc: list) -> list:
             else:                          # E
                 tx, ty = cx0 - g, midy
             tbox = _text_box(desc, tx, ty, dsize)
-            if not any(_overlap_area(tbox, o) > 0.0 for o in occupied):
+            if not occupied.hits(tbox):
                 clear = True
                 break
         # If stepping straight inboard never clears (a neighbour part sits on the
@@ -364,7 +430,7 @@ def _connector_descriptors(model, uid, doc: list) -> list:
                 cx0, cy0, cx1, cy1, desc, dsize, occupied,
                 bounds=(ex0, ey0, ex1, ey1))
         out.append(_silk_text(desc, tx, ty, dsize, uid(f"conn-desc:{inst.ref}")))
-        occupied.append(_text_box(desc, tx, ty, dsize))
+        occupied.add(_text_box(desc, tx, ty, dsize))
     # interior developer headers (_INT_DESC) + switches (_SW_DESC): overlap-aware.
     # Font shrinks with the label so the inline DIP position legends stay compact.
     for inst in model.insts:
@@ -395,7 +461,7 @@ def _connector_descriptors(model, uid, doc: list) -> list:
                                                       bounds=(ex0, ey0, ex1, ey1))
             if soff < off:
                 label, size, tx, ty, box = short, ssize, stx, sty, sbox
-        occupied.append(box)
+        occupied.add(box)
         out.append(_silk_text(label, tx, ty, size, uid(f"{pfx}:{inst.ref}")))
     return out
 
@@ -522,11 +588,13 @@ def _declutter_refdes(model, uid, doc: list) -> int:
             if gb is not None:
                 (silk_gfx_top if ln == "F.SilkS" else silk_gfx_bot).append(gb)
     occupied += silk_gfx_top
+    occupied = _BoxIndex(occupied)
     # B.SilkS refs need only clear BOTTOM-side silk (top parts are not on the
     # bottom layer + the F.SilkS function labels are top) — a far less crowded
     # obstacle set, so dense bottom banks find room the top-side set would deny.
-    occupied_bot = [_inst_courtyard(i) for i in model.insts if i.side == "bottom"]
-    occupied_bot += silk_gfx_bot
+    occupied_bot = _BoxIndex(
+        [_inst_courtyard(i) for i in model.insts if i.side == "bottom"]
+        + silk_gfx_bot)
     court_by_ref = {i.ref: _inst_courtyard(i) for i in model.insts}
     top_refs: list = []
     bot_refs: list = []
@@ -580,8 +648,8 @@ def _declutter_refdes(model, uid, doc: list) -> int:
     # conservative). Under-SoM bottom refs were hidden upstream and are skipped.
     refs = (sorted(top_refs, key=lambda r: r[0])
             + sorted(bot_refs, key=lambda r: r[0]))
-    placed_top: list = []
-    placed_bot: list = []
+    placed_top = _BoxIndex()
+    placed_bot = _BoxIndex()
     moved = 0
     for ref, c, lat, fx, fy, ca, sa, court, size, box, bottom in refs:
         occ = occupied_bot if bottom else occupied   # bottom clears only bottom silk
@@ -590,17 +658,15 @@ def _declutter_refdes(model, uid, doc: list) -> int:
         # noise re-reads it as an overlap in the gate (C6007|R6017 abutted at
         # y=79.808 and differed by 1e-14).
         gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
-        if not (any(_overlap_area(gb, o) > 0.0 for o in occ)
-                or any(_overlap_area(gb, p) > 0.0 for p in plc)):
-            plc.append(box)                          # clear -> keep authored spot
+        if not (occ.hits(gb) or plc.hits(gb)):
+            plc.add(box)                             # clear -> keep authored spot
             continue
         tx, ty, nbox, off = _place_clear_label(
             court[0], court[1], court[2], court[3], ref, size,
-            occ + plc, bounds=(ex0, ey0, ex1, ey1))
+            _PairIndex(occ, plc), bounds=(ex0, ey0, ex1, ey1))
 
         def _pen(bx, _occ=occ, _plc=plc) -> float:
-            return (sum(_overlap_area(bx, o) for o in _occ)
-                    + sum(_overlap_area(bx, p) for p in _plc))
+            return _occ.pen(bx) + _plc.pen(bx)
 
         # Retry at smaller fonts when the chosen spot is either FAR (a dense grid
         # flung the ref out, ambiguous to read) OR still OVERLAPS (no fully-clear
@@ -625,7 +691,7 @@ def _declutter_refdes(model, uid, doc: list) -> int:
                 tried.add(s2)
                 tx2, ty2, nbox2, off2 = _place_clear_label(
                     court[0], court[1], court[2], court[3], ref, s2,
-                    occ + plc, bounds=(ex0, ey0, ex1, ey1))
+                    _PairIndex(occ, plc), bounds=(ex0, ey0, ex1, ey1))
                 pen2 = _pen(nbox2)
                 # take the shrunk spot if it removes an overlap, or (overlap already
                 # gone) if it is meaningfully closer.
@@ -644,6 +710,6 @@ def _declutter_refdes(model, uid, doc: list) -> int:
         lat[2] = round(dx * sa + dy * ca, 4)
         if new_size != size:
             _set_font_size(c, new_size)
-        plc.append(nbox)
+        plc.add(nbox)
         moved += 1
     return moved

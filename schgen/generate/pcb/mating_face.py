@@ -183,7 +183,9 @@ def net_pad_positions(
 ) -> dict[str, list[tuple[float, float, str, str]]]:
     """net name -> [(x, y, ref, sheet), ...] pad centers in the board page
     frame, for every REAL net (skips no-net + the unconnected- placeholders).
-    Used to draw the unrouted airwires and to budget cross-subsystem nets."""
+    Used to draw the unrouted airwires and to budget cross-subsystem nets.
+    Pure but ~0.2 s per call: board-flow consumers compute it ONCE
+    (emit.generate) and thread it through as ``npp=``."""
     out: dict[str, list[tuple[float, float, str, str]]] = {}
     for inst in model.insts:
         for _pad, x, y, nname in _inst_pad_geom(inst):

@@ -613,8 +613,12 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
             placement_mech,
             ratsnest_gate,
         )
-        result["ratsnest"] = rn_mod.generate(model)
-        result["ratsnest_gate"] = ratsnest_gate.check(model)
+
+        from .mating_face import net_pad_positions
+        npp = net_pad_positions(model)
+        mst = rn_mod.net_mst_edges(model, npp)
+        result["ratsnest"] = rn_mod.generate(model, npp, mst)
+        result["ratsnest_gate"] = ratsnest_gate.check(model, npp, mst)
         # LAW-6 mechanical/use-case gate — runs on the SAME placed model (no
         # rebuild) so its connector-edge/orientation + SoM-keepout verdict is
         # exactly the board just emitted.
@@ -651,7 +655,7 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         # ``schgen board`` writes it to reports/floorplan_composition.txt.
         from schgen.generate import floorplan_compose
         result["floorplan_composition"] = floorplan_compose.compose_report(
-            model)
+            model, npp=npp, mst=mst)
         # CONTRACT COVERAGE (ADVISORY): check EVERY authored placement contract
         # (wired or not) against the emitted board, not just the 3 _WIRED_SHEETS
         # the hard gate covers. Surfaces the un-wired contracts whose authored
