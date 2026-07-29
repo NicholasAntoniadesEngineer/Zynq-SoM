@@ -16,11 +16,12 @@ Checks:
   * per-lane clearance pre-proof at the declared widths (adjacent outward
     lanes on the 0.4 pitch);
   * ports sit ON the escape line with the corridor margin;
-  * the 15 si_triage-GENUINE pairs meet the HARD pair terms (same-row,
-    |delta lane| <= 2 — basis: measured maximum over the 15 GENUINE pairs);
+  * the si_triage-GENUINE pairs meet the HARD pair terms (same-row,
+    |delta lane| <= 2 — basis: measured maximum over the GENUINE pairs);
     every other PairRec is report-only topology;
-  * pinned population scalars (netted contacts 93/100/100, 15 GENUINE
-    pairs) — a SoM-interface drift fails LOUDLY here;
+  * pinned population scalars (project.json ``escape``: netted contacts per
+    connector + GENUINE pair count — measured PROJECT facts) — a
+    SoM-interface drift fails LOUDLY here;
   * content_key verification (som_interface + DP footprint + constants +
     the three DF40 poses) — a floorplan move can never reuse a stale plan.
 """
@@ -29,13 +30,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-#: pinned population scalars (drift alarm).  Basis: measured 2026-07-02 on
-#: the live SoM interface + carrier link (J1 has 7 unnetted signal pads).
-NETTED_PINNED = {"J1": 93, "J2": 100, "J3": 100}
-N_GENUINE_PAIRS = 15
-GENUINE_DLANE_MAX = 2   # basis: measured maximum over the 15 GENUINE pairs
+from schgen.core.project import spec as _project_spec
+
+GENUINE_DLANE_MAX = 2   # basis: measured maximum over the GENUINE pairs
 RULE_CLEARANCE = 0.15
 PITCH = 0.4
+
+
+def _population_pins() -> tuple[dict[str, int] | None, int | None]:
+    """The drift-alarm population scalars are MEASURED PROJECT facts (which
+    contacts the project's link nets, how many si_triage-GENUINE pairs its
+    sheets bind) — pinned in project.json ``escape`` (``netted_contacts``,
+    ``genuine_pairs``), never an engine constant. Missing pins FAIL the gate
+    loudly in ``check`` (an alarm with no basis is no alarm)."""
+    esc = _project_spec().escape
+    netted = esc.get("netted_contacts")
+    genuine = esc.get("genuine_pairs")
+    return (({str(k): int(v) for k, v in netted.items()}
+             if isinstance(netted, dict) else None),
+            (int(genuine) if genuine is not None else None))
 
 
 @dataclass
@@ -71,7 +84,15 @@ def check(model) -> EscapeLaneResult:
     res.n_lanes = sum(len(v) for v in lanes.values())
 
     # ---- netted-count pins ----------------------------------------------------
-    for ref, n in sorted(NETTED_PINNED.items()):
+    netted_pinned, n_genuine_pinned = _population_pins()
+    if netted_pinned is None or n_genuine_pinned is None:
+        res.ok = False
+        res.violations.append(
+            "project.json declares no escape.netted_contacts / "
+            "escape.genuine_pairs — pin the project's measured population "
+            "(the drift alarm has no basis without it)")
+        netted_pinned = netted_pinned or {}
+    for ref, n in sorted(netted_pinned.items()):
         live = plan.get("netted_counts", {}).get(ref)
         if live != n:
             res.ok = False
@@ -141,11 +162,11 @@ def check(model) -> EscapeLaneResult:
             plan.get("genuine_pairs", [])):
         res.ok = False
         res.violations.append("genuine_pairs list inconsistent with PairRecs")
-    if res.n_genuine != N_GENUINE_PAIRS:
+    if n_genuine_pinned is not None and res.n_genuine != n_genuine_pinned:
         res.ok = False
         res.violations.append(
             f"GENUINE pair count {res.n_genuine} != pinned "
-            f"{N_GENUINE_PAIRS} — pinout drift, re-verify the hard terms")
+            f"{n_genuine_pinned} — pinout drift, re-verify the hard terms")
     for p in genuine:
         if not p["same_row"] or p["delta_lane"] > GENUINE_DLANE_MAX:
             res.ok = False

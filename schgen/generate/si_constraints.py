@@ -72,7 +72,7 @@ def load_si_spec(path: Path = SI_SPEC_PATH) -> list[PairSpec]:
     if not path.exists():
         raise FileNotFoundError(
             f"{path} not found — the vendored SI target table is required "
-            f"(committed under carrier/research/).")
+            f"(committed under the project's research/).")
     data = json.loads(path.read_text())
     out: list[PairSpec] = []
     for p in data.get("pairs", []):
@@ -175,8 +175,13 @@ class SiModel:
 
 
 def build_model(sheets) -> SiModel:
-    spec = load_si_spec()
     declared = declared_pairs(sheets)
+    # The vendored target table is REQUIRED exactly when the project declares
+    # diff pairs (a declared pair with no researched target is the real error);
+    # a project with zero declared pairs has nothing to constrain — its table
+    # is legitimately absent, never a crash.
+    spec = ([] if not declared and not SI_SPEC_PATH.exists()
+            else load_si_spec())
     spec_by_nets = {s.nets: s for s in spec}
 
     # pairs we emit = spec rows whose nets are present in the schematic.

@@ -769,6 +769,7 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
     if not num:
         return [], []
     zones: list[list] = []
+    zone_geom: list[tuple[str, list[tuple[float, float]], list]] = []
     vias: list[list] = []
     placed: list[tuple[float, float]] = []
     for inst in model.insts:
@@ -780,10 +781,12 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
         # spreader stitched by the same via field)
         corners = _corners_rot(spec["pour"], inst, model)
         for layer in spec["pour_layers"]:
-            zones.append(_fill_zone(
+            z = _fill_zone(
                 num, "GND", f"thermal_pour_{inst.ref}_{layer.split('.')[0]}",
                 layer, corners, f"thpour:{inst.ref}:{layer}", uid,
-                POUR_CLEARANCE, solid=True))
+                POUR_CLEARANCE, solid=True)
+            zones.append(z)
+            zone_geom.append((layer, corners, z))
         reach = max(abs(v) for site in spec["via_sites"] for v in site) + 20.0
         obstacles = _via_obstacles(model, inst, reach)
         r = math.radians(inst.rotation or 0.0)
@@ -812,4 +815,57 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
                 {"x": vx, "y": vy, "size": THERMAL_VIA_SIZE,
                  "drill": THERMAL_VIA_DRILL, "net": num, "locked": False},
                 uid, uid_key=f"thvia:{inst.ref}:{i}"))
+    _stagger_overlapping_pours(zone_geom)
     return zones, vias
+
+
+def _quads_overlap(a: list[tuple[float, float]],
+                   b: list[tuple[float, float]]) -> bool:
+    """Separating-axis test for two convex quads; exact edge-touch counts as
+    separated (only a real area overlap trips KiCad's zones_intersect)."""
+    for poly in (a, b):
+        for i in range(len(poly)):
+            x0, y0 = poly[i]
+            x1, y1 = poly[(i + 1) % len(poly)]
+            nx, ny = y1 - y0, x0 - x1
+            pa = [px * nx + py * ny for px, py in a]
+            pb = [px * nx + py * ny for px, py in b]
+            if max(pa) <= min(pb) + 1e-9 or max(pb) <= min(pa) + 1e-9:
+                return False
+    return True
+
+
+def _stagger_overlapping_pours(
+        zone_geom: list[tuple[str, list[tuple[float, float]], list]]) -> None:
+    """Two same-net local pours on one layer may legitimately overlap on a
+    dense board (two regulators side by side) — electrically one copper region,
+    but KiCad's DRC demands DISTINCT zone priorities for intersecting zones.
+    Give each overlap component's later members priorities 1..k (emission
+    order; the first keeps the implicit 0). Boards whose pours never overlap
+    emit no priority token — byte-identical output."""
+    by_layer: dict[str, list[tuple[list[tuple[float, float]], list]]] = {}
+    for layer, corners, z in zone_geom:
+        by_layer.setdefault(layer, []).append((corners, z))
+    for members in by_layer.values():
+        comp = list(range(len(members)))
+
+        def find(i: int, comp: list[int] = comp) -> int:
+            while comp[i] != i:
+                comp[i] = comp[comp[i]]
+                i = comp[i]
+            return i
+
+        for i in range(len(members)):
+            for j in range(i + 1, len(members)):
+                if _quads_overlap(members[i][0], members[j][0]):
+                    comp[find(i)] = find(j)
+        ranks: dict[int, int] = {}
+        for i, (_c, z) in enumerate(members):
+            root = find(i)
+            k = ranks.get(root, 0)
+            ranks[root] = k + 1
+            if k:
+                hatch_at = next(idx for idx, node in enumerate(z)
+                                if isinstance(node, list) and node
+                                and node[0] == Sym("hatch"))
+                z.insert(hatch_at + 1, [Sym("priority"), k])

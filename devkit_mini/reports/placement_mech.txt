@@ -1,0 +1,10 @@
+LAW-6 PLACEMENT (mechanical) GATE: FAIL (board 110 x 84 mm)
+  SoM module-body core: (54.2,45.4)..(105.8,88.6) mm — bottom-passives-only, TOP keepout
+  off-board connectors: 2 (0 mis-placed)
+    OK  J12001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+    OK  J3001     TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+  non-passive parts under SoM core: 2
+    UNDER-SoM TP3001 (pd_input) +VBUS_IN [TOP]: courtyard (64.0,45.3)..(66.5,47.8) overlaps SoM core — carrier TOP under the module is a keepout
+    UNDER-SoM TP3002 (pd_input) +VIN [TOP]: courtyard (67.9,45.3)..(70.4,47.8) overlaps SoM core — carrier TOP under the module is a keepout
+  controls under SoM core: 0
+  carrier TOP parts under SoM core (keepout): 0

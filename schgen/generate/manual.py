@@ -17,13 +17,27 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from schgen.core.link import all_subsystem_paths, load_subsystem
+from schgen.core.link import (
+    all_subsystem_paths,
+    load_subsystem,
+    missing_subsystems,
+)
 from schgen.core.model import Circuit
 from schgen.core.project import PROJECT_ROOT
 from schgen.generate import bringup_facts as bf
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = PROJECT_ROOT / "docs" / "BRINGUP.md"
+
+# The staged DIP-by-DIP procedure IS this document: every stage reads the
+# bring-up complement's netlists. A project without them has no such manual —
+# the board build SKIPs it loudly (missing_requirements), never crashes.
+REQUIRED_SHEETS = ("power", "power_mon", "bringup_rails", "bringup_en",
+                   "bringup_en_modules", "bringup_modules", "debug_boot")
+
+
+def missing_requirements() -> list[str]:
+    return missing_subsystems(REQUIRED_SHEETS)
 
 # PLAN.md round-2 locked input contract (cited, not derived):
 PD_CONTRACT = "20 V / 3 A (60 W) USB-C PD"
@@ -472,6 +486,10 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
 
 
 def cmd_manual(args: argparse.Namespace) -> int:
+    missing = missing_requirements()
+    if missing:
+        print(f"BRINGUP MANUAL: SKIP — project has no {', '.join(missing)}")
+        return 1
     out = generate(getattr(args, "output", None) or DEFAULT_OUT)
     lines = out.read_text().count("\n")
     print(f"BRINGUP MANUAL: {out} ({lines} lines)")

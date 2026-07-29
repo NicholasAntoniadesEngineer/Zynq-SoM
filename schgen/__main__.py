@@ -895,20 +895,33 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"VIVADO: FAIL — {exc}")
         ok_all = False
 
-    # round-4 system artifacts, derived from the same netlists.
+    # round-4 system artifacts, derived from the same netlists. Each generator
+    # resolves its input sheets against the ACTIVE PROJECT: absent optional
+    # inputs drop their sections; a generator whose REQUIRED role sheets the
+    # project does not carry SKIPs loudly (an honest capability verdict, not a
+    # failure — the project has no such artifact to generate).
     from schgen.generate import firmware, gallery, manual, testplan
     try:
         fw_out = firmware.generate()
-        print(f"FIRMWARE CONTRACT: {fw_out}")
+        fw_absent = firmware.absent_inputs()
+        print(f"FIRMWARE CONTRACT: {fw_out}"
+              + (f" (inputs absent on this project, sections omitted: "
+                 f"{', '.join(fw_absent)})" if fw_absent else ""))
     except Exception as exc:  # noqa: BLE001
         print(f"FIRMWARE CONTRACT: FAIL — {exc}")
         ok_all = False
-    try:
-        mn_out = manual.generate()
-        print(f"BRINGUP MANUAL: {mn_out}")
-    except Exception as exc:  # noqa: BLE001
-        print(f"BRINGUP MANUAL: FAIL — {exc}")
-        ok_all = False
+    mn_missing = manual.missing_requirements()
+    if mn_missing:
+        print(f"BRINGUP MANUAL: SKIP — project has no "
+              f"{', '.join(mn_missing)} (the staged bring-up procedure "
+              f"derives from them)")
+    else:
+        try:
+            mn_out = manual.generate()
+            print(f"BRINGUP MANUAL: {mn_out}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"BRINGUP MANUAL: FAIL — {exc}")
+            ok_all = False
     try:
         # measurable acceptance test plan (downstream P4 + DFM-3): SPICE
         # expected/limit values joined to test-point probe pads + DIP stages.
@@ -919,7 +932,7 @@ def cmd_board(args: argparse.Namespace) -> int:
         ok_all = False
     try:
         changed = gallery.generate()
-        print("GALLERY: README.md + carrier/README.md "
+        print(f"GALLERY: {gallery.readme_targets()} "
               + ("updated" if changed else "unchanged"))
     except Exception as exc:  # noqa: BLE001
         print(f"GALLERY: FAIL — {exc}")
@@ -940,13 +953,19 @@ def cmd_board(args: argparse.Namespace) -> int:
     # backs (rail-sequencing state machine + I2C/EN/monitor tables + WDT/PD
     # hooks), all netlist-derived. Additive; deterministic.
     from schgen.generate import scfw
-    try:
-        scfw_out = scfw.generate(CARRIER / "firmware" / "sc")
-        print(f"SCFW SCAFFOLD: {CARRIER / 'firmware' / 'sc'} "
-              f"({len(scfw_out)} files)")
-    except Exception as exc:  # noqa: BLE001
-        print(f"SCFW SCAFFOLD: FAIL — {exc}")
-        ok_all = False
+    scfw_missing = scfw.missing_requirements()
+    if scfw_missing:
+        print(f"SCFW SCAFFOLD: SKIP — project has no "
+              f"{', '.join(scfw_missing)} (the SC bring-up scaffold derives "
+              f"from the full bring-up complement)")
+    else:
+        try:
+            scfw_out = scfw.generate(CARRIER / "firmware" / "sc")
+            print(f"SCFW SCAFFOLD: {CARRIER / 'firmware' / 'sc'} "
+                  f"({len(scfw_out)} files)")
+        except Exception as exc:  # noqa: BLE001
+            print(f"SCFW SCAFFOLD: FAIL — {exc}")
+            ok_all = False
 
     # floorplan suggestion (SVG + MD) is built AFTER the PCB worker thread is
     # joined (see below), NOT here. floorplan.generate calls fp.build_plan, which
@@ -1411,7 +1430,7 @@ def cmd_board(args: argparse.Namespace) -> int:
             if _r3d:
                 from schgen.generate import gallery as _gal
                 if _gal.generate():
-                    print("GALLERY: README.md + carrier/README.md "
+                    print(f"GALLERY: {_gal.readme_targets()} "
                           "updated (3D board views)")
     except Exception as exc:  # noqa: BLE001
         print(f"3D RENDERS: skipped — {exc}")

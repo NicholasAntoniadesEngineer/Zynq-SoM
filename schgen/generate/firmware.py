@@ -22,29 +22,50 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from schgen.core.link import load_subsystem
+from schgen.core.link import has_subsystem, load_subsystem, missing_subsystems
 from schgen.core.project import PROJECT_ROOT
 from schgen.generate import bringup_facts as bf
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = PROJECT_ROOT / "firmware" / "zynq_carrier_contract.h"
 
-SOURCES = (
-    "carrier/som_interface.json",
-    "som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)",
-    "carrier/subsystems/power/power.py",
-    "carrier/subsystems/power_mon/power_mon.py",
-    "carrier/subsystems/bringup_rails/bringup_rails.py",
-    "carrier/subsystems/bringup_en/bringup_en.py",
-    "carrier/subsystems/bringup_en_modules/bringup_en_modules.py",
-    "carrier/subsystems/bringup_modules/bringup_modules.py",
-    "carrier/subsystems/debug_boot/debug_boot.py",
-    "carrier/subsystems/board_aux/board_aux.py",
-    "carrier/subsystems/board_services/board_services.py",
-    "carrier/research/debug_boot_pmod.md (BOOTSEL decode, SWD reservation)",
-    "carrier/research/power_mon.md (I2C address map)",
-    "carrier/research/bringup_power_gating.md (EN-cell semantics, GPIO plan)",
+# Netlist inputs, resolved against the ACTIVE PROJECT's sheet set: a section
+# whose input sheet the project does not carry is OMITTED (recorded in the
+# header + reported by absent_inputs()) — never a hard dependency on one
+# board's sheet roster.
+INPUT_SHEETS = ("bringup_rails", "bringup_en", "bringup_en_modules", "power",
+                "bringup_modules", "power_mon", "usb_pd", "board_services")
+
+_SHEET_SOURCES = ("power", "power_mon", "bringup_rails", "bringup_en",
+                  "bringup_en_modules", "bringup_modules", "debug_boot",
+                  "board_aux", "board_services")
+_RESEARCH_SOURCES = (
+    ("research/debug_boot_pmod.md", "BOOTSEL decode, SWD reservation"),
+    ("research/power_mon.md", "I2C address map"),
+    ("research/bringup_power_gating.md", "EN-cell semantics, GPIO plan"),
 )
+
+
+def absent_inputs() -> list[str]:
+    return missing_subsystems(INPUT_SHEETS)
+
+
+def _sources() -> list[str]:
+    from schgen.core.link import _carrier_subsystem_file
+    proj = PROJECT_ROOT.name
+    out = [f"{proj}/som_interface.json",
+           "som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)"]
+    for name in _SHEET_SOURCES:
+        f = _carrier_subsystem_file(name)
+        if f is None:
+            continue
+        try:
+            out.append(str(f.resolve().relative_to(REPO_ROOT)))
+        except ValueError:
+            out.append(str(f))
+    out += [f"{proj}/{rel} ({what})" for rel, what in _RESEARCH_SOURCES
+            if (PROJECT_ROOT / rel).exists()]
+    return out
 
 # board-services I2C devices on the (PCA9306-isolated) AUX segment of
 # STM32_I2C2 — fixed addresses per datasheet; the ID-EEPROM is strap-derived.
@@ -152,14 +173,19 @@ def _id_eeprom_addr(c) -> int:
 
 def generate(out: Path = DEFAULT_OUT) -> Path:
     stm32 = bf.stm32_pin_map()
-    rails_c = load_subsystem("bringup_rails").circuit
-    en_c = load_subsystem("bringup_en").circuit
-    enm_c = load_subsystem("bringup_en_modules").circuit
-    power_c = load_subsystem("power").circuit
-    mods_c = load_subsystem("bringup_modules").circuit
-    pmon_c = load_subsystem("power_mon").circuit
-    usbpd_c = load_subsystem("usb_pd").circuit
-    services_c = load_subsystem("board_services").circuit
+
+    def opt(name: str):
+        return load_subsystem(name).circuit if has_subsystem(name) else None
+
+    rails_c = opt("bringup_rails")
+    en_c = opt("bringup_en")
+    enm_c = opt("bringup_en_modules")
+    power_c = opt("power")
+    mods_c = opt("bringup_modules")
+    pmon_c = opt("power_mon")
+    usbpd_c = opt("usb_pd")
+    services_c = opt("board_services")
+    absent = absent_inputs()
 
     nets: dict[str, bf.Stm32Net] = stm32["nets"]
     internal: dict[str, bf.Stm32Net] = stm32["internal"]
@@ -173,44 +199,53 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
                 f"({role}), live SoM netlist says "
                 f"{'absent' if live is None else f'P{live.port}{live.pin}'}")
 
-    chain = bf.regulator_chain(power_c, monitor=pmon_c)
-    rail_cells = {c.enable: c for c in bf.en_cells(en_c)}
-    mod_cells = bf.en_cells(enm_c)
-    exp = bf.expander(rails_c)
-    monitors = bf.ina3221_monitors(pmon_c)
-    gates = {g.enable: g for g in bf.module_gates(mods_c)}
+    chain = bf.regulator_chain(power_c, monitor=pmon_c) if power_c else []
+    rail_cells = {c.enable: c for c in bf.en_cells(en_c)} if en_c else {}
+    mod_cells = bf.en_cells(enm_c) if enm_c else []
+    exp = bf.expander(rails_c) if rails_c else None
+    monitors = bf.ina3221_monitors(pmon_c) if pmon_c else []
+    gates = {g.enable: g for g in bf.module_gates(mods_c)} if mods_c else {}
     dip_of = {p.net: f"{p.switch} pos {p.position}"
-              for ref in bf.dip_switch_refs(rails_c)
+              for ref in (bf.dip_switch_refs(rails_c) if rails_c else [])
               for p in bf.dip_positions(rails_c, ref)}
 
     # -- I2C address map: strapped addresses DERIVED from the netlists --------
-    if not any("FUSB302" in p.value for p in usbpd_c.parts.values()):
+    if usbpd_c is not None \
+            and not any("FUSB302" in p.value for p in usbpd_c.parts.values()):
         raise FirmwareError("usb_pd netlist no longer carries a FUSB302 — "
                             "I2C address map stale")
-    addr_rows = [
-        ("ZC_I2C_ADDR_TCA9535", exp.addr,
-         "bring-up override expander (bringup_rails; A2=A1=A0 straps read "
-         "from the netlist)"),
-        ("ZC_I2C_ADDR_FUSB302B", bf.FUSB302B_ADDR,
-         "USB-PD PHY (usb_pd; fixed address, onsemi DS)"),
-    ] + [
+    addr_rows = []
+    if exp is not None:
+        addr_rows.append(
+            ("ZC_I2C_ADDR_TCA9535", exp.addr,
+             "bring-up override expander (bringup_rails; A2=A1=A0 straps read "
+             "from the netlist)"))
+    if usbpd_c is not None:
+        addr_rows.append(
+            ("ZC_I2C_ADDR_FUSB302B", bf.FUSB302B_ADDR,
+             "USB-PD PHY (usb_pd; fixed address, onsemi DS)"))
+    addr_rows += [
         (f"ZC_I2C_ADDR_INA3221_{k}", m.addr,
          f"rail monitor #{k} (power_mon {m.ref}; A0 strap read from the "
          f"netlist)")
         for k, m in enumerate(monitors, 1)
-    ] + [
-        ("ZC_I2C_ADDR_ID_EEPROM", _id_eeprom_addr(services_c),
-         "board-ID EEPROM w/ EUI-48 MAC (board_services 24AA025E48; A1/A0 "
-         "straps read from the netlist; on the board_aux-isolated AUX I2C)"),
-        ("ZC_I2C_ADDR_RTC", RV3028_ADDR,
-         "RTC (board_services RV-3028; fixed address, Micro Crystal DS; on "
-         "the board_aux-isolated AUX I2C). VBACKUP is a RECHARGEABLE ML1220 "
-         "(Mn-Li) for a maintenance-free RTC: firmware SHOULD ENABLE the "
-         "RV-3028 trickle charger (set TCE + a series resistance, e.g. 3k, in "
-         "the EEPROM Backup register) so it tops up whenever the board is "
-         "powered. Do NOT fit a primary CR1220 (it would be charged) or a LIR "
-         "Li-ion (its 4.2 V target exceeds the 3.3 V supply)."),
     ]
+    if services_c is not None:
+        addr_rows += [
+            ("ZC_I2C_ADDR_ID_EEPROM", _id_eeprom_addr(services_c),
+             "board-ID EEPROM w/ EUI-48 MAC (board_services 24AA025E48; A1/A0 "
+             "straps read from the netlist; on the board_aux-isolated AUX "
+             "I2C)"),
+            ("ZC_I2C_ADDR_RTC", RV3028_ADDR,
+             "RTC (board_services RV-3028; fixed address, Micro Crystal DS; "
+             "on the board_aux-isolated AUX I2C). VBACKUP is a RECHARGEABLE "
+             "ML1220 (Mn-Li) for a maintenance-free RTC: firmware SHOULD "
+             "ENABLE the RV-3028 trickle charger (set TCE + a series "
+             "resistance, e.g. 3k, in the EEPROM Backup register) so it tops "
+             "up whenever the board is powered. Do NOT fit a primary CR1220 "
+             "(it would be charged) or a LIR Li-ion (its 4.2 V target exceeds "
+             "the 3.3 V supply)."),
+        ]
     addrs = [a for _, a, _ in addr_rows]
     if len(set(addrs)) != len(addrs):
         raise FirmwareError(
@@ -226,8 +261,11 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append(" * generated-by: schgen firmware (schgen/firmware.py)")
     L.append(" * regenerate:   PYTHONPATH=. python -m schgen firmware")
     L.append(" * sources:")
-    for s in SOURCES:
+    for s in _sources():
         L.append(f" *   {s}")
+    if absent:
+        L.append(" * absent on this project (their sections are omitted):")
+        L.append(f" *   {', '.join(absent)}")
     L.append(" *")
     L.append(f" * system controller: SoM U9 = {stm32['value']}")
     L.append(" * All GPIO port/pin values are extracted LIVE from the SoM")
@@ -347,87 +385,94 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("")
 
     # -- section 6: rail sequencing + EN cells --------------------------------------
-    L.append("/* ---- Rail bring-up sequence (derived from the power.py "
-             "regulator     */")
-    L.append("/*      chain: each stage feeds the next) + EN-cell mapping "
-             "            */")
-    L.append("/* EN semantics (bringup_en): EN = DIP AND override; "
-             "override is a VETO  */")
-    L.append("/* — drive LOW to force a rail OFF; Hi-Z/HIGH leaves the DIP "
-             "in charge. */")
-    L.append("/* Software can NEVER force a rail ON with its DIP open.     "
-             "           */")
-    L.append(f"#define ZC_RAIL_COUNT {len(chain)}")
-    for k, st in enumerate(chain):
-        cell = rail_cells.get(st.enable)
-        gpio_name = RAIL_OVERRIDE_GPIO.get(cell.override_net) if cell else None
-        mv = round(st.vout * 1000) if st.vout is not None else 0
-        L.append(f"/* stage {k}: {st.rail_in} -> {st.rail_out} "
-                 f"({st.value} {st.ref}, power sheet; DIP "
-                 f"{dip_of.get(cell.dip_net, '?') if cell else '?'}; "
-                 f"PG LED {st.pg_led or '-'}) */")
-        L.append(f"#define ZC_RAIL{k}_NAME \"{st.rail_out}\"")
-        L.append(f"#define ZC_RAIL{k}_VOUT_MV {mv}")
-        L.append(f"#define ZC_RAIL{k}_EN_NET \"{st.enable}\"")
-        if gpio_name and gpio_name in nets:
-            e = nets[gpio_name]
-            L.append(f"#define ZC_RAIL{k}_OVERRIDE_GPIO_PORT '{e.port}'   "
-                     f"/* {cell.override_net} -> {gpio_name} */")
-            L.append(f"#define ZC_RAIL{k}_OVERRIDE_GPIO_PIN {e.pin}U")
-    int_net, int_gpio = EXPANDER_INT_GPIO
-    e = nets[int_gpio]
-    L.append(f"#define ZC_BRINGUP_INT_GPIO_PORT '{e.port}'   "
-             f"/* {int_net} -> {int_gpio} */")
-    L.append(f"#define ZC_BRINGUP_INT_GPIO_PIN {e.pin}U")
-    L.append("")
+    if power_c is not None:
+        L.append("/* ---- Rail bring-up sequence (derived from the power.py "
+                 "regulator     */")
+        L.append("/*      chain: each stage feeds the next) + EN-cell mapping "
+                 "            */")
+        L.append("/* EN semantics (bringup_en): EN = DIP AND override; "
+                 "override is a VETO  */")
+        L.append("/* — drive LOW to force a rail OFF; Hi-Z/HIGH leaves the DIP "
+                 "in charge. */")
+        L.append("/* Software can NEVER force a rail ON with its DIP open.     "
+                 "           */")
+        L.append(f"#define ZC_RAIL_COUNT {len(chain)}")
+        for k, st in enumerate(chain):
+            cell = rail_cells.get(st.enable)
+            gpio_name = RAIL_OVERRIDE_GPIO.get(cell.override_net) \
+                if cell else None
+            mv = round(st.vout * 1000) if st.vout is not None else 0
+            L.append(f"/* stage {k}: {st.rail_in} -> {st.rail_out} "
+                     f"({st.value} {st.ref}, power sheet; DIP "
+                     f"{dip_of.get(cell.dip_net, '?') if cell else '?'}; "
+                     f"PG LED {st.pg_led or '-'}) */")
+            L.append(f"#define ZC_RAIL{k}_NAME \"{st.rail_out}\"")
+            L.append(f"#define ZC_RAIL{k}_VOUT_MV {mv}")
+            L.append(f"#define ZC_RAIL{k}_EN_NET \"{st.enable}\"")
+            if gpio_name and gpio_name in nets:
+                e = nets[gpio_name]
+                L.append(f"#define ZC_RAIL{k}_OVERRIDE_GPIO_PORT '{e.port}'   "
+                         f"/* {cell.override_net} -> {gpio_name} */")
+                L.append(f"#define ZC_RAIL{k}_OVERRIDE_GPIO_PIN {e.pin}U")
+    if exp is not None:
+        int_net, int_gpio = EXPANDER_INT_GPIO
+        e = nets[int_gpio]
+        L.append(f"#define ZC_BRINGUP_INT_GPIO_PORT '{e.port}'   "
+                 f"/* {int_net} -> {int_gpio} */")
+        L.append(f"#define ZC_BRINGUP_INT_GPIO_PIN {e.pin}U")
+    if power_c is not None or exp is not None:
+        L.append("")
 
     # -- section 7: TCA9535 module-override port map ---------------------------------
-    L.append("/* ---- TCA9535 module-override port map — READ from the "
-             "bringup_rails  */")
-    L.append("/*      netlist (P0x/P1x pin -> net), joined to its EN cell "
-             "+ load      */")
-    L.append("/*      switch.  Bit index = position in the 16-bit port "
-             "word           */")
-    L.append("/*      (P00=bit0 ... P17=bit15).  POR state = all inputs => "
-             "DIP rules. */")
-    for pname in sorted(exp.ports):
-        net = exp.ports[pname]
-        bit = int(pname[1]) * 8 + int(pname[2])
-        cell = next((c for c in mod_cells if c.override_net == net), None)
-        if cell is not None:
-            g = gates.get(cell.enable)
-            ctx = (f"{net} -> {cell.enable}"
-                   + (f" ({g.rail_out}, ILIM {g.ilim_ma} mA, DIP "
-                      f"{dip_of.get(cell.dip_net, '?')})" if g else
-                      f" (DIP {dip_of.get(cell.dip_net, '?')})"))
-            L.append(f"#define ZC_TCA9535_BIT_{bf.c_ident(cell.enable)} "
-                     f"{bit}  /* {pname}: {ctx} */")
-        elif pname in EXPANDER_INPUT_NOTES:
-            # wave-3 G4: bound SC-side telemetry input (pull on the owning
-            # sheet, no 100k-to-GND here)
-            L.append(f"/* {pname} (bit {bit}): {net} — INPUT: "
-                     f"{EXPANDER_INPUT_NOTES[pname]} */")
-        else:
-            L.append(f"/* {pname} (bit {bit}): {net} — spare, 100k to GND */")
-    L.append("")
+    if exp is not None:
+        L.append("/* ---- TCA9535 module-override port map — READ from the "
+                 "bringup_rails  */")
+        L.append("/*      netlist (P0x/P1x pin -> net), joined to its EN cell "
+                 "+ load      */")
+        L.append("/*      switch.  Bit index = position in the 16-bit port "
+                 "word           */")
+        L.append("/*      (P00=bit0 ... P17=bit15).  POR state = all inputs => "
+                 "DIP rules. */")
+        for pname in sorted(exp.ports):
+            net = exp.ports[pname]
+            bit = int(pname[1]) * 8 + int(pname[2])
+            cell = next((c for c in mod_cells if c.override_net == net), None)
+            if cell is not None:
+                g = gates.get(cell.enable)
+                ctx = (f"{net} -> {cell.enable}"
+                       + (f" ({g.rail_out}, ILIM {g.ilim_ma} mA, DIP "
+                          f"{dip_of.get(cell.dip_net, '?')})" if g else
+                          f" (DIP {dip_of.get(cell.dip_net, '?')})"))
+                L.append(f"#define ZC_TCA9535_BIT_{bf.c_ident(cell.enable)} "
+                         f"{bit}  /* {pname}: {ctx} */")
+            elif pname in EXPANDER_INPUT_NOTES:
+                # wave-3 G4: bound SC-side telemetry input (pull on the owning
+                # sheet, no 100k-to-GND here)
+                L.append(f"/* {pname} (bit {bit}): {net} — INPUT: "
+                         f"{EXPANDER_INPUT_NOTES[pname]} */")
+            else:
+                L.append(f"/* {pname} (bit {bit}): {net} — spare, "
+                         f"100k to GND */")
+        L.append("")
 
     # -- section 8: INA3221 channel map ------------------------------------------------
-    L.append("/* ---- INA3221 rail-telemetry channel map (power_mon "
-             "netlist) --------- */")
-    for k, m in enumerate(monitors, 1):
-        L.append(f"/* monitor #{k}: {m.ref} @ 0x{m.addr:02X} */")
-        for ch in sorted(m.channels):
-            inp, inn = m.channels[ch]
-            if inp == "GND" and inn == "GND":
-                L.append(f"/* {m.ref} ch{ch}: unused (inputs tied to GND "
-                         f"per TI DS) */")
-                continue
-            shunt = _shunt_mohm(pmon_c, inp, inn)
-            L.append(f"#define ZC_PMON{k}_CH{ch}_RAIL \"{inn}\"  "
-                     f"/* {inp} -> {inn} */")
-            if shunt is not None:
-                L.append(f"#define ZC_PMON{k}_CH{ch}_SHUNT_MOHM {shunt}")
-    L.append("")
+    if pmon_c is not None:
+        L.append("/* ---- INA3221 rail-telemetry channel map (power_mon "
+                 "netlist) --------- */")
+        for k, m in enumerate(monitors, 1):
+            L.append(f"/* monitor #{k}: {m.ref} @ 0x{m.addr:02X} */")
+            for ch in sorted(m.channels):
+                inp, inn = m.channels[ch]
+                if inp == "GND" and inn == "GND":
+                    L.append(f"/* {m.ref} ch{ch}: unused (inputs tied to GND "
+                             f"per TI DS) */")
+                    continue
+                shunt = _shunt_mohm(pmon_c, inp, inn)
+                L.append(f"#define ZC_PMON{k}_CH{ch}_RAIL \"{inn}\"  "
+                         f"/* {inp} -> {inn} */")
+                if shunt is not None:
+                    L.append(f"#define ZC_PMON{k}_CH{ch}_SHUNT_MOHM {shunt}")
+        L.append("")
     L.append("#endif /* ZYNQ_CARRIER_CONTRACT_H */")
 
     out.parent.mkdir(parents=True, exist_ok=True)

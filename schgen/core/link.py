@@ -134,6 +134,19 @@ def load_subsystem(name_or_path: str) -> SheetCircuit:
     return SheetCircuit(name=c.name, circuit=c, path=path, module=mod)
 
 
+def has_subsystem(name: str) -> bool:
+    """True iff the ACTIVE PROJECT carries a subsystem netlist named ``name``
+    (flat or foldered form) — the project-scoped presence test every generator
+    must use before load_subsystem, so a role sheet one project lacks is an
+    honest absence, never a SystemExit."""
+    return _carrier_subsystem_file(name) is not None
+
+
+def missing_subsystems(names: tuple[str, ...]) -> list[str]:
+    """The subset of ``names`` the active project does NOT carry, in order."""
+    return [n for n in names if not has_subsystem(n)]
+
+
 def all_subsystem_paths() -> list[Path]:
     """Every carrier subsystem netlist, sorted by NAME (so sheet order is stable
     whether a subsystem is the flat ``<name>.py`` or the foldered

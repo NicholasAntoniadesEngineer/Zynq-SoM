@@ -22,9 +22,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # U1f: the project root is data, not engine — SCHGEN_PROJECT names a directory
 # (relative to the repo root, or absolute) holding project.json; the CLI's
 # --project sets it before engine modules resolve their paths.
-_PROJ = os.environ.get("SCHGEN_PROJECT", "carrier")
+DEFAULT_PROJECT = "carrier"
+_PROJ = os.environ.get("SCHGEN_PROJECT", DEFAULT_PROJECT)
 PROJECT_ROOT = (Path(_PROJ) if Path(_PROJ).is_absolute()
                 else REPO_ROOT / _PROJ)
+IS_DEFAULT_PROJECT = PROJECT_ROOT == REPO_ROOT / DEFAULT_PROJECT
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,8 @@ class ProjectSpec:
     module_offset: tuple[float, float]
     module_face_anchors: dict[str, str]
     reg_band_prefixes: tuple[str, ...]
+    bank_rails: dict[str, str]
+    escape: dict
 
 
 _CACHE: ProjectSpec | None = None
@@ -53,5 +57,8 @@ def spec() -> ProjectSpec:
                            float(pl["module_offset"][1])),
             module_face_anchors=dict(pl["module_face_anchors"]),
             reg_band_prefixes=tuple(pl["reg_band_prefixes"]),
+            bank_rails={str(k): str(v) for k, v in
+                        raw.get("fpga", {}).get("bank_rails", {}).items()},
+            escape=dict(raw.get("escape", {})),
         )
     return _CACHE
