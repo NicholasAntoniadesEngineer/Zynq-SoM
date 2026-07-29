@@ -53,5 +53,7 @@ NOT two floorplans. One floorplan where SIDE is a per-block degree of freedom:
    (the internal two-side split flips roles, so a bottom block can still
    present its user-facing parts on the board-top face).
 3. Double-sided assembly already paid for — cost accepted.
+4. Battery holder (ML1220 coin cell) explicitly bottom-eligible (user 2026-07-29)
+   — service access on standoffs, not user-facing.
 
 Sequencing: P1 starts after the wave-8 engine unit lands (same files).
