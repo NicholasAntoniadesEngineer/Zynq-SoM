@@ -35,6 +35,7 @@ rounded offsets, so two builds are byte-identical.
 from __future__ import annotations
 
 import math
+import os
 from pathlib import Path
 
 from schgen.core.project import spec as _project_spec
@@ -387,6 +388,7 @@ def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
 
 _CAND_STEP = 0.5           # candidate-position grid step (mm) around a pin
 _CAND_CAP = 400            # keep the N nearest in-bound poses per part (speed cap)
+_SEAT_TRACE = os.environ.get("SCHGEN_SEAT_TRACE", "") == "1"
 
 _Demand = tuple[str, "list[str] | None", float, "list[str] | None", float]
 # a candidate pose carries its precomputed courtyard box (backtracking is then a
@@ -481,27 +483,98 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
     # bounds effort, not the rules — bounds never relax).
     _NODE_BUDGET = 300_000
     nodes = [0]
+    n_ord = len(order)
 
-    def _bt(i: int) -> bool:
-        if i == len(order):
+    # The DFS conflict test is _boxes_overlap(b, q, halo) with the candidate box
+    # ``b`` and this call's fixed ``halo``: each candidate's halo-expanded box is
+    # hoisted once so the inner loop is four bare comparisons with the identical
+    # operand values. TRIPWIRE (permanent, loud): every candidate _candidates
+    # returned is skeleton-clear at this halo by construction — verify it with
+    # the expanded-box kernel itself, so either a broken pre-clear or a drifted
+    # kernel raises here, never a silent divergent seat.
+    exp: dict[str, list[tuple]] = {}
+    for br, cs in cand.items():
+        rows = []
+        for p, b in cs:
+            e0, e1, e2, e3 = b[0] - halo, b[1] - halo, b[2] + halo, b[3] + halo
+            for q in skel_boxes:
+                if e0 < q[2] and e2 > q[0] and e1 < q[3] and e3 > q[1]:
+                    raise AssertionError(
+                        f"seat DFS TRIPWIRE: candidate for {br} at "
+                        f"({p.ox}, {p.oy}) rot {p.rot} conflicts with the "
+                        f"skeleton under halo {halo} — _candidates no longer "
+                        f"pre-clears the skeleton, or the expanded-box kernel "
+                        f"drifted from _boxes_overlap; fix the kernel, never "
+                        f"relax the check")
+            rows.append((p, b, e0, e1, e2, e3))
+        exp[br] = rows
+
+    def _bt(i: int, boxes: list[tuple[float, float, float, float]]) -> bool:
+        if i == n_ord:
             return True
         nodes[0] += 1
         if nodes[0] > _NODE_BUDGET:
             return False        # search exploded -> infeasible -> fallback + widen
         bref = order[i]
-        placed_boxes = list(chosen.values())
-        for p, b in cand[bref]:
-            if any(_boxes_overlap(b, q, halo) for q in placed_boxes):
+        for p, b, e0, e1, e2, e3 in exp[bref]:
+            hit = False
+            for q in boxes:
+                if e0 < q[2] and e2 > q[0] and e1 < q[3] and e3 > q[1]:
+                    hit = True
+                    break
+            if hit:
                 continue
             chosen[bref] = b
             picked[bref] = p
-            if _bt(i + 1):
+            boxes.append(b)
+            if _bt(i + 1, boxes):
                 return True
+            boxes.pop()
             del chosen[bref]
             del picked[bref]
         return False
 
-    if _bt(0):
+    def _bt_traced(i: int, boxes: list[tuple[float, float, float, float]]
+                   ) -> bool:
+        """SCHGEN_SEAT_TRACE dual kernel: the expanded-box test and the original
+        _boxes_overlap scan run side by side on every DFS decision; any
+        divergence (or a box stack out of step with ``chosen``) raises."""
+        if i == n_ord:
+            return True
+        nodes[0] += 1
+        if nodes[0] > _NODE_BUDGET:
+            return False
+        if list(chosen.values()) != boxes:
+            raise AssertionError(
+                f"seat trace DIVERGENCE: DFS box stack {len(boxes)} out of "
+                f"step with chosen {len(chosen)} at depth {i}")
+        bref = order[i]
+        for p, b, e0, e1, e2, e3 in exp[bref]:
+            hit = False
+            for q in boxes:
+                if e0 < q[2] and e2 > q[0] and e1 < q[3] and e3 > q[1]:
+                    hit = True
+                    break
+            ref = any(_boxes_overlap(b, q, halo) for q in boxes)
+            if ref is not hit:
+                raise AssertionError(
+                    f"seat trace DIVERGENCE: expanded-box={hit} "
+                    f"_boxes_overlap={ref} for {bref} candidate at "
+                    f"({p.ox}, {p.oy}) rot {p.rot} over {len(boxes)} placed "
+                    f"(halo {halo})")
+            if hit:
+                continue
+            chosen[bref] = b
+            picked[bref] = p
+            boxes.append(b)
+            if _bt_traced(i + 1, boxes):
+                return True
+            boxes.pop()
+            del chosen[bref]
+            del picked[bref]
+        return False
+
+    if (_bt_traced if _SEAT_TRACE else _bt)(0, []):
         return [picked[d[0]] for d in demands]
     return [(cand[d[0]][0][0] if cand[d[0]]
              else _Part(d[0], resolvable[d[0]], 90.0, "top", icb[0] - 1.0, 0.0))
@@ -934,7 +1007,34 @@ def _gcandidates(bref: str, mod: Path,
     flow instead of fighting it (anchor distance alone parked RN36001 with its
     own airwires crossing its body — the measured defect). Such a part also
     tries 180/270 when a 180 turn changes its pad-net geometry
-    (``_net_rot180_differs``); 2-3-pin parts keep the 2-rotation set."""
+    (``_net_rot180_differs``); 2-3-pin parts keep the 2-rotation set.
+
+    Split into a shared head (``_gc_head``) and two pose-scan kernels:
+    ``_gc_scan_fast`` (production) and ``_gc_scan_ref`` (the pre-index scan,
+    verbatim). Under SCHGEN_SEAT_TRACE=1 both kernels run on every call and any
+    difference in the returned pose list raises — the same dual-kernel
+    discipline as the floorplan ``_Occupancy`` index."""
+    head = _gc_head(bref, mod, attractors, repuls, placed, pad, conn_roots,
+                    pad_net)
+    out = _gc_scan_fast(bref, mod, forbid, *head)
+    if _SEAT_TRACE:
+        ref = _gc_scan_ref(bref, mod, forbid, *head)
+        if ([(q.bref, q.rot, q.ox, q.oy) for q in out]
+                != [(q.bref, q.rot, q.ox, q.oy) for q in ref]):
+            raise AssertionError(
+                f"seat trace DIVERGENCE: _gc_scan_fast != _gc_scan_ref for "
+                f"{bref} ({len(out)} vs {len(ref)} poses)")
+    return out
+
+
+def _gc_head(bref: str, mod: Path,
+             attractors: list[_Attract], repuls: list[_Repel],
+             placed: dict[str, _Part], pad: float,
+             conn_roots: set[str] | None,
+             pad_net: dict[tuple[str, str], str] | None) -> tuple:
+    """Pose-independent solve inputs shared by both scan kernels — everything
+    the per-pose loops read, built exactly as the pre-split ``_gcandidates``
+    head did."""
     # per-attractor (anchor pad boxes, target pins, bound); primary = tightest bound
     att: list[tuple[dict[str, tuple], list[str], float]] = []
     for ab, apins, bound in attractors:
@@ -1017,6 +1117,14 @@ def _gcandidates(bref: str, mod: Path,
     rep_pre = [([pb[pin] for pin in pins if pin in pb],
                 mm + (_SNAP_EROSION if mm >= 5.0 else 0.0))
                for pb, pins, mm in rep]
+    return (tcx, tcy, n, halo, placed_boxes, subjects, att_pre, rep_pre, rots,
+            align, rel_pads)
+
+
+def _gc_scan_ref(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
+                 att_pre, rep_pre, rots, align, rel_pads):
+    """The pre-index pose scan, verbatim — the reference kernel trace mode
+    checks ``_gc_scan_fast`` against; on no production path."""
     _hypot = math.hypot
     scored: list[tuple[float, float, float, float, _Part]] = []
     for rot in rots:
@@ -1103,6 +1211,201 @@ def _gcandidates(bref: str, mod: Path,
                     dis += min(abs(px - qx) + abs(py - qy) for qx, qy in pts)
                 scored.append((round(dsum + _NET_W * dis, 4),
                                abs(cx), abs(cy), rot, p))
+    scored.sort(key=lambda t: (t[0], t[1], t[2], t[3]))
+    return [t[4] for t in scored[:_CAND_CAP]]
+
+
+def _gc_union(boxes):
+    if not boxes:
+        return None
+    return (min(b[0] for b in boxes), min(b[1] for b in boxes),
+            max(b[2] for b in boxes), max(b[3] for b in boxes))
+
+
+def _gc_scan_fast(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
+                  att_pre, rep_pre, rots, align, rel_pads):
+    """Exact-equivalent fast pose scan. Three pure accelerations, nothing else:
+    the per-rot rotated courtyard box is hoisted out of the grid loops (same
+    floats — ``local_box`` adds the identical offsets); the overlap tests
+    against placed/forbid/subject boxes run inline with the identical
+    ``_boxes_overlap`` operand values; and each exact attractor/repulsor pad
+    loop is preceded by a UNION-BOX lower bound on the same gap kernel. Union
+    coords are exact copies of member coords (min/max select, never round), and
+    IEEE sub/max/hypot are monotone, so lb <= exact best holds bitwise —
+    ``lb > eff`` implies the exact reject, ``lb >= mmv`` implies the exact
+    accept, every inconclusive case runs the verbatim exact loop, and the
+    surviving score/tie-break/sort path is unchanged. TRIPWIRE (permanent,
+    loud): an exact best below its lb raises. SCHGEN_SEAT_TRACE=1 additionally
+    diffs the full returned pose list against ``_gc_scan_ref``."""
+    _hypot = math.hypot
+    att3 = [(tboxes, eff, _gc_union(tboxes)) for tboxes, eff in att_pre]
+    rep3 = [(tboxes, mmv, _gc_union(tboxes)) for tboxes, mmv in rep_pre]
+    xs = [round(tcx + gx * _CAND_STEP, 4) for gx in range(-n, n + 1)]
+    ys = [round(tcy + gy * _CAND_STEP, 4) for gy in range(-n, n + 1)]
+    scored: list[tuple[float, float, float, float, _Part]] = []
+    for rot in rots:
+        rel = rel_pads[rot]
+        rb0, rb1, rb2, rb3 = _rot_bbox_cw(_footprint_bbox(mod), rot)
+        ru = _gc_union(rel)
+        ru0 = ru1 = ru2 = ru3 = 0.0
+        if ru is not None:
+            ru0, ru1, ru2, ru3 = ru
+        arr = align[rot]
+        for cx in xs:
+            b0 = cx + rb0
+            b2 = cx + rb2
+            h0 = b0 - halo
+            h2 = b2 + halo
+            cu0 = cx + ru0
+            cu2 = cx + ru2
+            for cy in ys:
+                b1 = cy + rb1
+                b3 = cy + rb3
+                h1 = b1 - halo
+                h3 = b3 + halo
+                ok = True
+                for q in placed_boxes:
+                    if h0 < q[2] and h2 > q[0] and h1 < q[3] and h3 > q[1]:
+                        ok = False
+                        break
+                if not ok:
+                    continue
+                if forbid:
+                    for f in forbid:
+                        if h0 < f[2] and h2 > f[0] and h1 < f[3] and h3 > f[1]:
+                            ok = False
+                            break
+                    if not ok:
+                        continue
+                cu1 = cy + ru1
+                cu3 = cy + ru3
+                dsum = 0.0
+                rel_off = None
+                for tboxes, eff, u in att3:
+                    if u is None or ru is None:
+                        if 1e9 > eff:
+                            ok = False
+                            break
+                        dsum += 1e9
+                        continue
+                    dx = u[0] - cu2
+                    qx = cu0 - u[2]
+                    if qx > dx:
+                        dx = qx
+                    if dx < 0.0:
+                        dx = 0.0
+                    dy = u[1] - cu3
+                    qy = cu1 - u[3]
+                    if qy > dy:
+                        dy = qy
+                    if dy < 0.0:
+                        dy = 0.0
+                    lb = _hypot(dx, dy)
+                    if lb > eff:
+                        ok = False
+                        break
+                    if rel_off is None:
+                        rel_off = [(cx + rb[0], cy + rb[1],
+                                    cx + rb[2], cy + rb[3]) for rb in rel]
+                    best = 1e9
+                    for tb in tboxes:
+                        t0, t1, t2, t3 = tb
+                        for ro in rel_off:
+                            dx = t0 - ro[2]
+                            qx = ro[0] - t2
+                            if qx > dx:
+                                dx = qx
+                            if dx < 0.0:
+                                dx = 0.0
+                            dy = t1 - ro[3]
+                            qy = ro[1] - t3
+                            if qy > dy:
+                                dy = qy
+                            if dy < 0.0:
+                                dy = 0.0
+                            g = _hypot(dx, dy)
+                            if g < best:
+                                best = g
+                    if best < lb:
+                        raise AssertionError(
+                            f"seat LB TRIPWIRE: exact attractor gap {best} < "
+                            f"union lower bound {lb} for {bref} pose "
+                            f"({cx}, {cy}) rot {rot} — union monotonicity "
+                            f"broke; fix the bound, never relax the test")
+                    if best > eff:
+                        ok = False
+                        break
+                    dsum += best
+                if not ok:
+                    continue
+                for tboxes, mmv, u in rep3:
+                    if u is None or ru is None:
+                        if 1e9 < mmv:
+                            ok = False
+                            break
+                        continue
+                    dx = u[0] - cu2
+                    qx = cu0 - u[2]
+                    if qx > dx:
+                        dx = qx
+                    if dx < 0.0:
+                        dx = 0.0
+                    dy = u[1] - cu3
+                    qy = cu1 - u[3]
+                    if qy > dy:
+                        dy = qy
+                    if dy < 0.0:
+                        dy = 0.0
+                    lb = _hypot(dx, dy)
+                    if lb >= mmv:
+                        continue
+                    if rel_off is None:
+                        rel_off = [(cx + rb[0], cy + rb[1],
+                                    cx + rb[2], cy + rb[3]) for rb in rel]
+                    best = 1e9
+                    for tb in tboxes:
+                        t0, t1, t2, t3 = tb
+                        for ro in rel_off:
+                            dx = t0 - ro[2]
+                            qx = ro[0] - t2
+                            if qx > dx:
+                                dx = qx
+                            if dx < 0.0:
+                                dx = 0.0
+                            dy = t1 - ro[3]
+                            qy = ro[1] - t3
+                            if qy > dy:
+                                dy = qy
+                            if dy < 0.0:
+                                dy = 0.0
+                            g = _hypot(dx, dy)
+                            if g < best:
+                                best = g
+                    if best < lb:
+                        raise AssertionError(
+                            f"seat LB TRIPWIRE: exact repulsor gap {best} < "
+                            f"union lower bound {lb} for {bref} pose "
+                            f"({cx}, {cy}) rot {rot} — union monotonicity "
+                            f"broke; fix the bound, never relax the test")
+                    if best < mmv:
+                        ok = False
+                        break
+                if not ok:
+                    continue
+                for sb, need in subjects:
+                    if (b0 - need < sb[2] and b2 + need > sb[0]
+                            and b1 - need < sb[3] and b3 + need > sb[1]):
+                        ok = False
+                        break
+                if not ok:
+                    continue
+                dis = 0.0
+                for rxc, ryc, pts in arr:
+                    px, py = cx + rxc, cy + ryc
+                    dis += min(abs(px - qx) + abs(py - qy) for qx, qy in pts)
+                scored.append((round(dsum + _NET_W * dis, 4),
+                               abs(cx), abs(cy), rot,
+                               _Part(bref, mod, rot, "top", cx, cy)))
     scored.sort(key=lambda t: (t[0], t[1], t[2], t[3]))
     return [t[4] for t in scored[:_CAND_CAP]]
 
