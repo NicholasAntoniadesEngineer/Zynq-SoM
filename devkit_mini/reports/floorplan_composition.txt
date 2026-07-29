@@ -1,29 +1,20 @@
-FLOORPLAN COMPOSITION (T1): 1 hard / 5 soft terms; hard RED 0, soft RED 3 (advisory)
-  aggregate hard margin: sum 37.94 mm, min 37.94 mm (informational)
+FLOORPLAN COMPOSITION (T1): 3 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
+  aggregate hard margin: sum 171.28 mm, min 32.44 mm (informational)
   hard terms:
-    HARD near_max uart_bridge->usb_uart_connector: 2.06 vs 40.00 (margin +37.94) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
+    HARD facing power->power_som: 14.24 vs 90.00 (margin +75.76) ok [facing/output_roles [placement/v2]] dot=+576.64
+    HARD flow_hop power->power_som: 43.22 vs 106.30 (margin +63.08) ok [flow chain [placement/v2]]
+    HARD near_max uart_bridge->usb_uart_connector: 7.56 vs 40.00 (margin +32.44) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power->power_som: 92.06 vs 90.00 (margin -2.06) RED [facing/output_roles [placement/v2]] dot=-10.68
-    soft far_min power->ethernet.line_side: inf vs 10.00 (margin -inf) RED [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)] UNRESOLVED
-    soft flow_hop power->power_som: 32.36 vs 104.01 (margin +71.64) ok [flow chain [placement/v2]]
-    soft flow_hop usb_pd->power: inf vs 104.01 (margin -inf) RED [flow chain [placement/v2]] UNRESOLVED
-    soft near_intent power_mon->power_som: 10.03 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
-  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 16 T2-coexistence-managed
-    managed C4007 (power) in escape:J3:S [T2 STAY]
-    managed C4012 (power) in escape:J3:S [T2 STAY]
-    managed C4023 (power) in escape:J3:S [T2 STAY]
-    managed C4025 (power) in escape:J3:S [T2 STAY]
-    managed C4027 (power) in escape:J3:S [T2 STAY]
-    managed C4029 (power) in escape:J3:S [T2 STAY]
-    managed C4032 (power) in escape:J3:S [T2 STAY]
+    soft near_intent power_mon->power_som: 0.00 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+  n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
+    n/a far_min power->ethernet.line_side [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
+    n/a flow_hop usb_pd->power [flow chain [placement/v2]]
+  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 6 T2-coexistence-managed
     managed C6015 (power_som) in escape:J2:N [T2 STAY]
     managed C6016 (power_som) in escape:J2:N [T2 STAY]
-    managed R4002 (power) in escape:J3:S [T2 STAY]
-    managed R4004 (power) in escape:J3:S [T2 STAY]
-    managed R4006 (power) in escape:J3:S [T2 STAY]
-    managed R4007 (power) in escape:J3:N [T2 STAY]
-    managed R6017 (power_som) in escape:J2:S [T2 STAY]
-    managed R6018 (power_som) in escape:J2:S [T2 STAY]
+    managed C6018 (power_som) in escape:J2:N [T2 STAY]
+    managed C6019 (power_som) in escape:J2:N [T2 STAY]
+    managed R1003 (debug_boot) in escape:J3:N [T2 STAY]
     managed R6019 (power_som) in escape:J2:S [T2 STAY]
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    power | power_mon: 29 airwires (170.6 mm) -> corridor >= 7.8 mm
+    power | power_mon: 8 airwires (167.5 mm) -> corridor >= 3.6 mm

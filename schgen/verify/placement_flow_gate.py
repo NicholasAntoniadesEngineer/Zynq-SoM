@@ -33,6 +33,14 @@ CENTROIDS (not pad boxes — this is board-level composition, not intra-stage):
   exist (documented). A target that does NOT resolve to a placed zone is reported
   UNRESOLVED and FAILS (strict — never a silent skip; LAW 4 / LAW 7).
 
+PROJECT-SCOPED RESOLUTION (E1): contracts are portable subsystem data, so an
+external term may name a peer subsystem the ACTIVE PROJECT does not instantiate
+(devkit_mini has no ``usb_pd``/``ethernet``). Such a term has no subject matter
+on this project's board: it is reported N/A (``res.na``, visible in the summary),
+never counted checked/failed. The strict UNRESOLVED failure above is reserved for
+a subsystem the project DOES instantiate whose zone fails to place — a placement
+bug, not a composition fact.
+
 * **NEAR_MAX** (E5-lite, D11) — the DUAL of FAR: each declared ``{"other": <zone>,
   "max_mm": d}`` requires the EDGE-to-EDGE GAP between the contracted zone's
   bounding box and the named zone's box to be ``<= d`` mm (0 when they overlap or
@@ -66,6 +74,7 @@ from schgen.generate.pcb import PcbModel
 from schgen.verify.placement_contract_gate import (
     _board_refs_by_sheet,
     load_contract,
+    project_zone_names,
 )
 
 # ---- single-oracle metric kernels (T1 P1) ----------------------------------------
@@ -288,6 +297,7 @@ class PlacementFlowResult:
     near_max_checked: int = 0        # E5-lite: NEAR_MAX zone-centroid caps
     near_max_fail: int = 0
     unresolved: list[str] = field(default_factory=list)
+    na: list[str] = field(default_factory=list)
     violations: list[str] = field(default_factory=list)
     # per-hop / per-term detail lines (always reported, pass or fail)
     detail: list[str] = field(default_factory=list)
@@ -310,6 +320,10 @@ class PlacementFlowResult:
         L.append(f"  unresolved: {len(self.unresolved)}")
         for u in sorted(self.unresolved):
             L.append(f"    UNRESOLVED {u}")
+        if self.na:
+            L.append(f"  n/a (subsystem not in this project): {len(self.na)}")
+            for x in sorted(self.na):
+                L.append(f"    {x}")
         L.append(f"  violations: {len(self.violations)}")
         for v in sorted(self.violations):
             L.append(f"    {v}")
@@ -352,6 +366,12 @@ def check(model: PcbModel,
     else:
         contracts = {s: c for s, c in contracts.items() if c.get("external")}
 
+    zones_known = project_zone_names()
+
+    def foreign(*names: str) -> list[str]:
+        return [n for n in names
+                if n != _SOM_TOKEN and n.split(".", 1)[0] not in zones_known]
+
     def add(v: str) -> None:
         res.violations.append(v)
 
@@ -363,6 +383,12 @@ def check(model: PcbModel,
         # ---- FLOW: each consecutive hop within the board-scaled budget --------
         flow = ext.get("flow", [])
         for a, b in zip(flow, flow[1:], strict=False):
+            gone_na = foreign(a, b)
+            if gone_na:
+                res.na.append(f"flow {a}->{b}: n/a — "
+                              f"{'/'.join(gone_na)} not a subsystem of this "
+                              f"project")
+                continue
             res.flow_checked += 1
             ca = _resolve_target(a, centroids, model)   # E3: @som resolves too
             cb = _resolve_target(b, centroids, model)
@@ -391,17 +417,26 @@ def check(model: PcbModel,
         downstream = ext.get("downstream")
         output_roles = set(ext.get("output_roles", []))
         if downstream and output_roles:
-            res.facing_checked += 1
-            _facing(res, model, sheet, contract, downstream, output_roles,
-                    centroids, ref_maps, add)
+            if foreign(downstream):
+                res.na.append(f"facing {sheet}->{downstream}: n/a — "
+                              f"{downstream!r} not a subsystem of this "
+                              f"project")
+            else:
+                res.facing_checked += 1
+                _facing(res, model, sheet, contract, downstream, output_roles,
+                        centroids, ref_maps, add)
 
         # ---- FAR: named-zone minimum separations ------------------------------
         for far in ext.get("far", []):
-            res.far_checked += 1
             what = far.get("what", "?")
             min_mm = float(far.get("min_mm", 0.0))
             basis = far.get("basis", "")
             zname = what.split(".", 1)[0]           # coarsen zone.region -> zone
+            if foreign(zname):
+                res.na.append(f"far {sheet} vs {what}: n/a — {zname!r} not a "
+                              f"subsystem of this project")
+                continue
+            res.far_checked += 1
             czone = centroids.get(sheet)
             ctgt = centroids.get(zname)
             if czone is None or ctgt is None:
@@ -433,10 +468,14 @@ def check(model: PcbModel,
         # the ``@som`` token (E3). Strict: an unresolved target FAILS, never a silent
         # skip (LAW 4). Every measured gap is reported AS A NUMBER.
         for near in ext.get("near_max", []):
-            res.near_max_checked += 1
             other = near.get("other", "?")
             max_mm = float(near.get("max_mm", 0.0))
             basis = near.get("basis", "")
+            if foreign(other):
+                res.na.append(f"near_max {sheet} to {other}: n/a — "
+                              f"{other!r} not a subsystem of this project")
+                continue
+            res.near_max_checked += 1
             bzone = bboxes.get(sheet)
             btgt = _resolve_target_bbox(other, bboxes, model)
             if bzone is None or btgt is None:
