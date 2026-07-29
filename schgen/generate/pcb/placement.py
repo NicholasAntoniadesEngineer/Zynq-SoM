@@ -19,7 +19,6 @@ from .constants import (
     EDGE_ZONE_ASPECT,
     FID_INSET,
     FIDUCIAL_FOOTPRINT,
-    GRID,
     INTERIOR_SHAPE_ASPECTS,
     INTERIOR_ZONE_ASPECT,
     INTERIOR_ZONE_BAND_TARGET,
@@ -45,7 +44,13 @@ from .footprint import (
     pad_names,  # noqa: F401 — used by _fanout_meta for D13 pin-count tiers
     resolve_mod,
 )
-from .mating_face import _rot_bbox, _rot_bbox_cw, _rot_pad_bbox, connector_edge_rotation
+from .mating_face import (
+    _inst_pad_geom,
+    _rot_bbox,
+    _rot_bbox_cw,
+    _rot_pad_bbox,
+    connector_edge_rotation,
+)
 
 # BREATHE fan-out spread phases (schgen/generate/pcb/breathe.py). Phase A is the
 # tight-leash adjacent-slack expansion (lands first, cannot scatter); Phase B is
@@ -91,20 +96,23 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
                 blockers: list[tuple[float, float, float, float]] | None = None,
                 fanout: dict[str, tuple[float, bool]] | None = None
                 ) -> tuple[dict[str, tuple[float, float]], float, float]:
-    """Deterministic shelf packer for ONE subsystem's footprints.
+    """Deterministic bottom-left packer for ONE subsystem's footprints.
 
-    ``items`` is [(ref, bbox, rotation), ...]; ``target_w`` is the width to
-    fill before wrapping to a new shelf row. ``blockers`` are zone-relative
+    ``items`` is [(ref, bbox, rotation), ...]; ``target_w`` is the strip width
+    the pack fills before growing downward. ``blockers`` are zone-relative
     rectangles (x0,y0,x1,y1) the placed boxes must AVOID — used to keep a
     bottom-side SMD out from under a top-side through-hole pad (whose copper is
     on every layer): a bottom part there would short to the THT pad. Returns
     ``(origin_of_ref, packed_w, packed_h)`` where ``origin_of_ref[ref]`` is the
     (x, y) to put at the footprint ORIGIN so its haloed rotated bbox sits inside
     the [0, packed_w] x [0, packed_h] zone with a ZONE_PAD margin. Parts are
-    laid LARGEST-first (by haloed height, then width, then ref) so tall parts
-    anchor each row. There is NO overflow path: the returned box is exactly
-    large enough to hold every part, so the caller sizes the zone to fit and
-    never spills a part off-board.
+    laid LARGEST-first (by haloed height, then width, then ref); each seats at
+    the lowest-then-leftmost legal position over candidate coordinates derived
+    from the wall and every occupant edge plus that PAIR's exact required gap —
+    so shorter parts backfill beside/above earlier tall ones instead of opening
+    a new shelf row, with no scan-grid quantization between neighbours. There
+    is NO overflow path: the returned box is exactly large enough to hold every
+    part, so the caller sizes the zone to fit and never spills a part off-board.
 
     ``fanout`` (optional; D13 FAN-OUT CLEARANCE — schgen/verify/fanout_gate.py) is
     ``ref -> (need_mm, is_cluster_passive)``. When given, the packer reserves the
@@ -163,40 +171,31 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
 
     used_w = ZONE_PAD
     used_h = ZONE_PAD
-    cy = ZONE_PAD
-    row_h = 0.0
     for ref, _bbox, _rot in order:
         hx0, hy0, hx1, hy1 = halo[ref]
         hw, hh = hx1 - hx0, hy1 - hy0
         extra, is_cp = extra_of[ref], iscp_of[ref]
         w_lim = max(target_w, hw)
-        # raster scan within the growing shelf area; blockers force a slide.
-        cx = ZONE_PAD
+        xs = {ZONE_PAD}
+        ys = {ZONE_PAD}
+        for _rx0, _ry0, rx1, ry1, r_extra, r_cp in occ:
+            g = max(0.0 if is_cp else r_extra, 0.0 if r_cp else extra)
+            xs.add(rx1 + g)
+            ys.add(ry1 + g)
+        xcand = sorted(x for x in xs if x + hw <= ZONE_PAD + w_lim + 1e-6)
         slot = None
-        guard = 0
-        scan_cy = cy
-        scan_row_h = row_h
-        while slot is None and guard < 100000:
-            guard += 1
-            if cx + hw > ZONE_PAD + w_lim + 1e-6:
-                cx = ZONE_PAD
-                scan_cy += scan_row_h if scan_row_h else hh
-                scan_row_h = 0.0
-                continue
-            if _free(cx, scan_cy, cx + hw, scan_cy + hh, w_lim, extra, is_cp):
-                slot = (cx, scan_cy)
+        for y in sorted(ys):
+            for x in xcand:
+                if _free(x, y, x + hw, y + hh, w_lim, extra, is_cp):
+                    slot = (x, y)
+                    break
+            if slot is not None:
                 break
-            cx += GRID
         sx, sy = slot
         occ.append((sx, sy, sx + hw, sy + hh, extra, is_cp))
         placed[ref] = (round(sx - hx0, 4), round(sy - hy0, 4))
         used_w = max(used_w, sx + hw)
         used_h = max(used_h, sy + hh)
-        # advance the primary shelf cursor in row order
-        if sy == cy:
-            row_h = max(row_h, hh)
-        else:
-            cy, row_h = sy, hh
     packed_w = round(max(used_w, ZONE_PAD) + ZONE_PAD, 4)
     packed_h = round(max(used_h, ZONE_PAD) + ZONE_PAD, 4)
     return placed, packed_w, packed_h
@@ -948,6 +947,202 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
                        bot_off=bot_off, zone_extra_rot=extra)
 
 
+def _segments_cross(s1: tuple, s2: tuple) -> bool:
+    (p1, p2), (p3, p4) = s1, s2
+    eps = 1e-9
+    if {(p1[0], p1[1]), (p2[0], p2[1])} & {(p3[0], p3[1]), (p4[0], p4[1])}:
+        return False
+
+    def d(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    d1, d2 = d(p3, p4, p1), d(p3, p4, p2)
+    d3, d4 = d(p1, p2, p3), d(p1, p2, p4)
+    return (((d1 > eps and d2 < -eps) or (d1 < -eps and d2 > eps))
+            and ((d3 > eps and d4 < -eps) or (d3 < -eps and d4 > eps)))
+
+
+def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
+                             refs_by_sheet: dict[str, list[str]],
+                             side_of: dict[str, str],
+                             resolvable: dict[str, Path],
+                             fixed_rot: dict[str, float],
+                             bbox_of: dict,
+                             nets: dict,
+                             pin_net: dict[tuple[str, str], tuple[int, str]],
+                             conn_seated: set[str],
+                             skip_sheets: set[str]
+                             ) -> dict[str, list[tuple[str, int, int]]]:
+    """Permute INTERCHANGEABLE parts among their own frozen slots so each
+    row/column's airwire fan uncrosses (the debug_boot boot-strap weave: six
+    identical bottom resistors laid in sorted-ref order, roughly REVERSED vs
+    their DIP-pad + SoM-pin partners — swapping members uncrosses the ratsnest
+    without moving a single slot). A group is same sheet, same side, same
+    footprint, same rotation, same cluster-passive class: swapping two members
+    exchanges byte-identical courtyards, so every clearance, fan-out
+    reservation, corridor and DRC relationship is EXACTLY preserved — only
+    which ref occupies which slot changes (the netlist itself never moves,
+    LAW 0). Members cluster into rows (shared y-band), then leftover singles
+    into columns. Each cluster is reordered by a bounded pairwise swap-descent
+    that MINIMIZES the measured local fan-crossing count: every member pad's
+    airwire is modelled as a straight segment to its nearest same-net partner
+    pad OUTSIDE the group (partners are static during the descent, so per-slot
+    segments are precomputed), and a swap is kept only when the crossing count
+    strictly drops — for the single-partner straight-fan case this reaches the
+    partner-order sort (zero inversions) and it generalizes to multi-net
+    members where a 1-D key sort can worsen the picture (measured on
+    debug_boot: centroid-key sort 2 -> 3 local crossings, this descent 2 -> 0).
+    Contracted sheets (stage/datasheet geometry owns member order) and
+    connector-seated parts are never touched. Deterministic: sorted groups,
+    sorted slots, fixed swap order, strict-improvement acceptance — a pure
+    function of the frozen positions + the netlist. Returns sheet ->
+    [(axis-size tag, crossings-before, crossings-after)] per reordered
+    cluster for the build report."""
+    from schgen.verify.fanout_gate import _is_cluster_passive
+
+    rotpads: dict[tuple[str, float], dict[str, tuple[float, float]]] = {}
+    pad_cache: dict[tuple[str, float, float], dict[str, tuple[float, float]]] = {}
+
+    def pad_xy(ref: str) -> dict[str, tuple[float, float]]:
+        ck = (ref, pos[ref][0], pos[ref][1])
+        got = pad_cache.get(ck)
+        if got is None:
+            rk = (str(resolvable[ref]), fixed_rot.get(ref, 0.0))
+            base = rotpads.get(rk)
+            if base is None:
+                stub = FootprintInst(
+                    ref=ref, value="", footprint="", x=0.0, y=0.0,
+                    rotation=rk[1], pad_nets={}, mod_path=resolvable[ref],
+                    sheet="", side="top")
+                base = {n: (x, y) for n, x, y, _nn in _inst_pad_geom(stub)}
+                rotpads[rk] = base
+            x, y = pos[ref]
+            got = {n: (px + x, py + y) for n, (px, py) in base.items()}
+            pad_cache[ck] = got
+        return got
+
+    report: dict[str, list[tuple[str, int, int]]] = {}
+    for sheet in sorted(refs_by_sheet):
+        if sheet in skip_sheets:
+            continue
+        groups: dict[tuple, list[str]] = {}
+        for r in refs_by_sheet[sheet]:
+            if r not in pos or r not in resolvable or r in conn_seated:
+                continue
+            pins = len(pad_names(resolvable[r]))
+            gk = (side_of.get(r, "top"), str(resolvable[r]),
+                  round(fixed_rot.get(r, 0.0), 1) % 360.0,
+                  _is_cluster_passive(r, pins))
+            groups.setdefault(gk, []).append(r)
+        for gk in sorted(groups):
+            members = sorted(groups[gk])
+            if len(members) < 2:
+                continue
+            gset = set(members)
+            eb = _rot_bbox_cw(bbox_of[members[0]], gk[2])
+            tol_x = max(0.6, (eb[2] - eb[0]) / 2)
+            tol_y = max(0.6, (eb[3] - eb[1]) / 2)
+            clusters: list[tuple[str, list[str]]] = []
+            rest: list[str] = []
+            row: list[str] = []
+            for m in sorted(members, key=lambda m: (pos[m][1], pos[m][0], m)):
+                if row and abs(pos[m][1] - pos[row[0]][1]) > tol_y:
+                    if len(row) > 1:
+                        clusters.append(("x", row))
+                    else:
+                        rest.extend(row)
+                    row = []
+                row.append(m)
+            if len(row) > 1:
+                clusters.append(("x", row))
+            elif row:
+                rest.extend(row)
+            col: list[str] = []
+            for m in sorted(rest, key=lambda m: (pos[m][0], pos[m][1], m)):
+                if col and abs(pos[m][0] - pos[col[0]][0]) > tol_x:
+                    if len(col) > 1:
+                        clusters.append(("y", col))
+                    col = []
+                col.append(m)
+            if len(col) > 1:
+                clusters.append(("y", col))
+            for axis, cluster in clusters:
+                ai = 0 if axis == "x" else 1
+                mlist = sorted(cluster)
+                slots = sorted((pos[m] for m in cluster),
+                               key=lambda p: (p[ai], p[1 - ai]))
+                static_pts: dict[str, list[tuple[float, float]]] = {}
+                for m in mlist:
+                    for pad in pad_names(resolvable[m]):
+                        _num, n = pin_net.get((m, pad), (0, ""))
+                        if not n or n in static_pts or n not in nets:
+                            continue
+                        pts = []
+                        for pr in nets[n]:
+                            if (pr.ref in gset or pr.ref.startswith("#")
+                                    or pr.ref not in pos
+                                    or pr.ref not in resolvable):
+                                continue
+                            xy = pad_xy(pr.ref).get(pr.pin)
+                            if xy is not None:
+                                pts.append(xy)
+                        static_pts[n] = pts
+                seg_of: dict[tuple[str, int], list[tuple]] = {}
+                for m in mlist:
+                    offs = {p: (x - pos[m][0], y - pos[m][1])
+                            for p, (x, y) in pad_xy(m).items()}
+                    for si, sp in enumerate(slots):
+                        segs = []
+                        for pad in sorted(offs):
+                            _num, n = pin_net.get((m, pad), (0, ""))
+                            pts = static_pts.get(n) if n else None
+                            if not pts:
+                                continue
+                            dx, dy = offs[pad]
+                            px, py = sp[0] + dx, sp[1] + dy
+                            tgt = min(pts, key=lambda q: (abs(q[0] - px)
+                                                          + abs(q[1] - py),
+                                                          q[0], q[1]))
+                            segs.append(((px, py), (tgt[0], tgt[1])))
+                        seg_of[(m, si)] = segs
+
+                def fan(assign: dict[str, int],
+                        _seg=seg_of, _ml=mlist) -> int:
+                    segs = [s for m in _ml for s in _seg[(m, assign[m])]]
+                    return sum(1 for a in range(len(segs))
+                               for b in range(a + 1, len(segs))
+                               if _segments_cross(segs[a], segs[b]))
+
+                order0 = sorted(cluster, key=lambda m: (pos[m][ai], m))
+                assign = {m: i for i, m in enumerate(order0)}
+                before = fan(assign)
+                if before == 0:
+                    continue
+                best = before
+                for _sweep in range(6):
+                    improved = False
+                    for a in range(len(mlist)):
+                        for b in range(a + 1, len(mlist)):
+                            ma, mb = mlist[a], mlist[b]
+                            assign[ma], assign[mb] = assign[mb], assign[ma]
+                            trial = fan(assign)
+                            if trial < best:
+                                best = trial
+                                improved = True
+                            else:
+                                assign[ma], assign[mb] = \
+                                    assign[mb], assign[ma]
+                    if not improved:
+                        break
+                if best == before:
+                    continue
+                for m in mlist:
+                    pos[m] = slots[assign[m]]
+                report.setdefault(sheet, []).append(
+                    (f"{axis}-{len(cluster)}", before, best))
+    return report
+
+
 # ---- the model build -------------------------------------------------------------
 
 def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
@@ -1132,25 +1327,26 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     # SoM receptacles
     for ref, jname in som_j_refs.items():
         pos[ref] = som_view[jname]
-    # subsystem footprints: GRID-SNAPPED zone origin + per-part packed offset.
-    # The shelf packer (above) reserved EXACT PLACE_CLEAR gaps between the parts
-    # in each zone's local frame; snapping each part's ABSOLUTE board position to
-    # the coarse GRID afterwards would round two neighbours across a half-grid
-    # boundary in OPPOSITE directions and collapse a 2.46 mm row pitch to 1.27 mm
-    # — a 0.19 mm courtyard overlap (the intra-zone courtyards_overlap DRC errors
-    # this caused). Instead snap the zone ORIGIN once and add the raw packed
-    # offsets, so the packer's exact intra-zone clearance is preserved verbatim
-    # while the zone as a whole still lands on the placement grid.
+    # subsystem footprints: EXACT floorplan zone origin + per-part packed offset.
+    # The packer reserved EXACT clearance/fan-out gaps in each zone's local frame
+    # and the floorplan pack search proved every inter-block gap, contract window
+    # and edge-seat distance on the RAW block positions — so the zone emits at
+    # those exact positions and the proofs transfer verbatim. The historical
+    # per-zone _gridify snap moved each zone up to +/-0.635 mm per axis
+    # INDEPENDENTLY of its neighbours and of the absolutely-seated edge
+    # connectors, eroding distances no gate input had modelled (measured: power
+    # snapped 0.42 toward user_io -> Q20001 fan-out clr 0.495 < 0.50; hdmi_rx
+    # snapped 0.63 away from its edge-seated J1 -> ESD proximity 5.21 > 5.0).
+    # Parts inside a zone stay off the coarse grid — cosmetic only; DRC, the
+    # gates and the escape router all measure emitted geometry.
     grid_placed: set[str] = set()
     for sheet in zorigin:
         zx, zy = zorigin[sheet]
-        gzx = _gridify(ORIGIN_X + zx) - ORIGIN_X
-        gzy = _gridify(ORIGIN_Y + zy) - ORIGIN_Y
         for r, (dx, dy) in top_off[sheet].items():
-            pos[r] = (gzx + dx, gzy + dy)
+            pos[r] = (zx + dx, zy + dy)
             grid_placed.add(r)
         for r, (dx, dy) in bot_off[sheet].items():
-            pos[r] = (gzx + dx, gzy + dy)
+            pos[r] = (zx + dx, zy + dy)
             grid_placed.add(r)
 
     # LAW 6: SoM power-entry decoupling — grid the som_decoupling caps on the
@@ -1446,6 +1642,11 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                 pos[r] = (x, y)
                 fixed_rot[r] = rot
 
+    _reorder_interchangeable(
+        pos, zg.refs_by_sheet, side_of, resolvable, fixed_rot, bbox_of,
+        nets, pin_net, set(zg.conn_rot),
+        {s for s in zorigin if _lc_refit(s) is not None})
+
     insts: list[FootprintInst] = []
     placed = 0
     n_top = n_bottom = 0
@@ -1458,9 +1659,9 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         pad_nets: dict[str, tuple[int, str]] = {}
         for pad in pad_names(mod):
             pad_nets[pad] = pin_net.get((ref, pad), (0, ""))
-        # subsystem parts carry a grid-snapped zone origin + the packer's RAW
-        # offset (intra-zone clearance preserved — see STEP 3 above), so they are
-        # NOT re-gridified here; only the fixed-position parts (mounting holes,
+        # subsystem parts carry the EXACT floorplan zone origin + the packer's
+        # RAW offset (every proven gap preserved — see STEP 3 above), so they are
+        # NOT gridified here; only the fixed-position parts (mounting holes,
         # SoM receptacles) snap their absolute board position to the grid.
         if ref in grid_placed:
             fx, fy = round(ORIGIN_X + bx, 4), round(ORIGIN_Y + by, 4)

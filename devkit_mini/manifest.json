@@ -2,11 +2,11 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "e75e5aac1dbdb02b38cb180d86a5908417f4d0240c5896d27027a910d49e6bf8"
+      "sha256": "3ee07e7d7de2257f78060816c8b0b1d2d46ea5c8ef9bc054c124eb955db97f81"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
-      "sha256": "dac745c114d398195f2a9dfe4b2900ad7098c175cbfce25eab58a5aedc32f3a9"
+      "sha256": "06e6ea2ba2b9dafbe714a946b81eb3ee50a40b0f55b39ab89163771ea1baa180"
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
@@ -14,15 +14,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "88d1baf5cbb7b311975eda3083c490a302bbc40d079e4d0257bb6798d2f0687b"
+      "sha256": "2f2ea7977e5a08fbc0578844ea0c80f581431b72e66af0b4159fd3fe3d7d8cfd"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "5cfed29677c24581472bbb5f1018ecc88e632ca1bcea1649041da904dcd06962"
+      "sha256": "7ce7d5a2ac2e41d1a11ad40f6f0a1874c43af05af2566aea574f6add3adf1a41"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "c5a32bd63489adf010b793b4cdd7d146a168c40c7c0903887d13da1ef11b6ba8"
+      "sha256": "14c5ba6937bc289f8d6c65957679349073736257dbe49d7b63f9de9e33230a66"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -46,7 +46,7 @@
     },
     {
       "path": "manufacturing/Zynq_Carrier_cpl.csv",
-      "sha256": "8df2f791ac102a9dd209632c006fb9e1f090aaa86955f95bef2fbc3db00aac73"
+      "sha256": "142eb354e49cf2959f3288bd6b86a95a7437cb021bf1d43008246ade164ee1e8"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -86,7 +86,7 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "e7dadd2d68d4b5e5f03af417f78eb5fc3f0eb429c9d9f06eaa22ad9bad91a446"
+      "sha256": "0eeaa07bc1e548f4a55be46ef4ccddbc119f4a5fd69c6028007a1578ba8a9068"
     },
     {
       "path": "reports/contract_coverage.txt",
@@ -98,7 +98,7 @@
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "c860e1967d0c5a886e1807c09dc308460b3c5210fabb8d2fb35d4a7a860f05e1"
+      "sha256": "82cee4fda61769afb6f21d8a4bba4c0891babd64d0c99b91871b2efb42e3b730"
     },
     {
       "path": "reports/design_rules.txt",
@@ -110,15 +110,15 @@
     },
     {
       "path": "reports/fab_profile.txt",
-      "sha256": "83c399a785d565b89c518f2a53729ab6532ebb83838c27a8e310faf10f7ce42e"
+      "sha256": "f546c7b97549f53f61d1e06702825e8029c0b60e1e249d3276e35f9aae968f03"
     },
     {
       "path": "reports/fanout.txt",
-      "sha256": "9050b486526d6d1da636eeae55587dedd83b0d4daab1e9046d8aedd30e1ffb06"
+      "sha256": "2673474febfc09232bf3773d392e8de0d66c7e3851b4328cfa3c8aeea562f66a"
     },
     {
       "path": "reports/floorplan_composition.txt",
-      "sha256": "dc96976597ba7f4d4b61fba46d0c47591ddc74b31999323c546ba05d42fdca65"
+      "sha256": "60dd0ac3bda931f01cc653aba5a9c3f27e6775a9b17f06cc92bdc56e73e0d951"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -150,11 +150,11 @@
     },
     {
       "path": "reports/placement_flow.txt",
-      "sha256": "c691901c076b45a27b306c6237eeb052e3e63fd9611224c2c1df5c37e0967d53"
+      "sha256": "b89b8d66dc4a16dddc1025a63df009b395f6cb78fcc6da5e1f888f0e77b640d0"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "5ed680515761d8de3251c6ca33d2e2f630e2a9030a6731911faa7c5e0e198353"
+      "sha256": "47abf7e18069a807d1a965e70ec8f6ff4a9dc2f47226b6ce6ff47c8f657006cb"
     },
     {
       "path": "reports/power_tree.txt",
@@ -166,7 +166,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "5ebeb125968822cb5cf91e0ce58fc5347309b346335ad2a4d00f46fb29701189"
+      "sha256": "58618ea2b15a1e303b9194595a9d12e3403da90069f8debe24a79d346e6a296d"
     },
     {
       "path": "reports/return_path.txt",
@@ -194,7 +194,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "8f76ad3d59766efdcc7ef78376b56d97ee91b7b46c0f734db4685422c6a26d4b"
+      "sha256": "fc1293d0590f1461215197d5a765dcec03a7de46067f968529ec81d2f319b947"
     },
     {
       "path": "schematic/debug_boot.kicad_sch",

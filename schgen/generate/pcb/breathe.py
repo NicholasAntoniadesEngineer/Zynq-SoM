@@ -461,13 +461,56 @@ def breathe_fanout(
             gridfor(side_of.get(r, "top")).stamp(
                 _halo(box_of(r, pos[r]), PLACE_CLEAR / 2), 1)
 
+    # STAYER-NEED GUARD: the stamped grid enforces only the PLACE_CLEAR halo, so
+    # a marching group could legally stop inside a STAYING subject's D13 fan-out
+    # floor (measured: SW9001's group landed 0.910 from J9001's 1.00-need
+    # courtyard — the mover's own clearance was validated, the stayer's never).
+    # Every candidate delta must also keep each moved member outside every
+    # foreign above-floor subject's need (own-sheet cluster passives waived,
+    # exactly the gate's rule), and a moved SUBJECT must never let its own
+    # aggregate clearance regress below min(its need, its current clearance).
+    guard_subjects: list[tuple[str, str, str, float]] = []
+    for r in sorted(pos):
+        if r not in bbox_of or r not in resolvable or r in som_j_refs:
+            continue
+        p = pins_of(r)
+        if p < MIN_SUBJECT_PINS or p >= 40:
+            continue
+        s_need, _sb = intelligent_need(p)
+        if s_need > PLACE_CLEAR + 1e-9:
+            guard_subjects.append((r, parts[r][0], side_of.get(r, "top"),
+                                   s_need))
+
     def group_free(grp: _Group, delta: tuple[float, float]) -> bool:
+        members = set(grp.members)
         for r in grp.members:
-            g = gridfor(side_of.get(r, "top"))
+            side = side_of.get(r, "top")
+            g = gridfor(side)
             b = _eff_box(bbox_of[r], rot_of(r),
                          pos[r][0] + delta[0], pos[r][1] + delta[1])
             if not g.free(_halo(b, PLACE_CLEAR / 2)):
                 return False
+            r_sheet = parts[r][0] if r in parts else ""
+            r_cp = _is_cluster_passive(r, pins_of(r))
+            for s, s_sheet, s_side, s_need in guard_subjects:
+                if s in members or s_side != side:
+                    continue
+                if r_cp and s_sheet == r_sheet:
+                    continue
+                if _rect_gap(b, box_of(s, pos[s])) < s_need - _EPS:
+                    return False
+            p = pins_of(r)
+            if p >= MIN_SUBJECT_PINS:
+                r_need, _rb = intelligent_need(p)
+                if r_need > PLACE_CLEAR + 1e-9:
+                    fb = foreign_boxes(r, members)
+                    old_b = box_of(r, pos[r])
+                    old_clr = min((_rect_gap(old_b, f) for f in fb),
+                                  default=float("inf"))
+                    new_clr = min((_rect_gap(b, f) for f in fb),
+                                  default=float("inf"))
+                    if new_clr < min(r_need, old_clr) - _EPS:
+                        return False
         return True
 
     def group_centroid_after(grp: _Group, delta: tuple[float, float]
@@ -551,10 +594,12 @@ def breathe_fanout(
             del last_free
 
         # grid-snap the winning ANCHOR origin; apply the SAME snapped delta to all.
-        # pos is the board-frame origin; the emitted page position is ORIGIN + pos,
-        # and the seed zone origins were gridified in PAGE frame
-        # (_gridify(ORIGIN + zx) - ORIGIN, placement.py:1030). Snap in the SAME page
-        # frame so a moved anchor stays on the placement grid exactly as the seed is.
+        # pos is the board-frame origin; the emitted page position is ORIGIN + pos.
+        # Zones now emit at their EXACT floorplan pose (no seed snap), but a MOVED
+        # anchor still snaps to the page placement grid for a stable, coarse move
+        # quantum — safe because the snapped delta is RE-VALIDATED (_free + leash)
+        # below and retreats or aborts on any collision, unlike the removed blind
+        # seed snap.
         if best_delta != (0.0, 0.0):
             ax, ay = pos[grp.anchor]
             snapped_ax = _gridify(ORIGIN_X + ax + best_delta[0]) - ORIGIN_X

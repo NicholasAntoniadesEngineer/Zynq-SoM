@@ -201,19 +201,19 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg
             cx1, cy1 = ox + rb[2], oy + rb[3]
             mw, me = cx0, zw - cx1          # margin to W (left) / E (right) edge
             mn, ms = cy0, zh - cy1          # margin to N (top) / S (bottom) edge
-            # CREDITED margin: the zone ORIGIN is grid-snapped once at emit and raw
-            # part offsets are added, so a subject's absolute position can shift up to
-            # ~GRID relative to a neighbour block that snapped the other way. Credit
-            # only the margin that PROVABLY survives that snap (margin - GRID), so the
-            # reserved gap still holds on the emitted board — the exact erosion that
-            # left camera's U8001 at clr 0.414 when the raw margin looked sufficient.
-            # reserve on a side only if this subject is the CLOSE one to it
-            # (within need + snap of the edge). Straight formula, clamped at
-            # the END: the old max(0, margin - GRID) credit under-reserved
-            # whenever margin < GRID (pd_input's USBLC6 at margin 0.29 got
-            # 0.5 instead of 1.48 and the emitted blocks overlapped by 0.18).
-            # +0.05: 4dp quantization + seat slides eat microns; a reach met
-            # exactly emerged 15um short on the board (measured).
+            # CREDITED margin: zones now emit at their EXACT floorplan pose (the
+            # per-zone _gridify snap was removed), but the +GRID term is KEPT —
+            # it also absorbs the residual post-pack emission shifts that are
+            # not modelled here: the LAW-6 edge-seat perpendicular slide and
+            # BREATHE's page-grid-snapped anchor moves. Measured: dropping it
+            # to need+0.05 starved J14001 (hdmi_tx, clr 1.370 < 1.50 vs the
+            # corner mounting hole) and J17001 (pd_input, 0.890 < 1.00 vs
+            # usbc_otg) on the emitted board. Straight formula, clamped at the
+            # END: a plain margin - GRID credit under-reserved whenever
+            # margin < GRID (pd_input's USBLC6 at margin 0.29 got 0.5 instead
+            # of 1.48 and the emitted blocks overlapped by 0.18). +0.05: 4dp
+            # quantization eats microns; a reach met exactly emerged 15um
+            # short on the board (measured).
             lim = need + GRID + 0.05
             if mw <= lim:
                 rw = max(rw, lim - mw)
@@ -1034,7 +1034,15 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
         if not blocks:
             continue
         span = (BOARD_H if edge in "WE" else BOARD_W)
-        lo, hi = EDGE_MARGIN, span - EDGE_MARGIN
+        # RUN-END reach: the corner windows hold the M3 mounting-hole courtyards
+        # (flat EDGE_MARGIN), but the FIRST/LAST block's facing fan-out reach
+        # must be consumed here exactly as _pair_gap consumes it between blocks
+        # — the run clamp was blind to it and the old per-zone emit snap merely
+        # masked that by luck (measured: hdmi_tx's J14001 emitted 1.370 < its
+        # 1.50 need from the SW corner hole once zones emit at exact poses).
+        lo_r = blocks[0].fanout_reach[0 if edge in ("N", "S") else 2]
+        hi_r = blocks[-1].fanout_reach[1 if edge in ("N", "S") else 3]
+        lo, hi = EDGE_MARGIN + lo_r, span - EDGE_MARGIN - hi_r
         # CONTIGUOUS band packed with minimal CLEAR gaps, then SLID so its
         # weighted centroid sits on the mean of the blocks' J-affinity targets —
         # this hauls the whole edge run toward the SoM strips it talks to (so the
@@ -1785,7 +1793,7 @@ def _cross_estimator(plan: Plan, zg, sheets):
     proxy: the ratsnest gate's own kernel (``ratsnest._mst_edges`` Manhattan-
     select Prim, Euclidean cross-edge sum, per-net PAD population) evaluated on
     the exact positions the PCB's STEP-3 emission derives from a candidate plan
-    — grid-snapped zone origins + the shared packer's per-part offsets, the
+    — exact zone origins + the shared packer's per-part offsets, the
     centered SoM receptacles + under-SoM decoupling grid, the corner mounting
     holes, and the LAW-6 edge-seated connectors. Replaces the block-centre
     proxy and its two measured constants (PROXY_TO_REAL, L4_PULL_CREDIT): the
@@ -1949,8 +1957,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
         for sheet in zg.zone_box:
             b = by_name.get(sheet)
             if b is not None:
-                zorig[sheet] = (_gridify(ORIGIN_X + b.x),
-                                _gridify(ORIGIN_Y + b.y))
+                zorig[sheet] = (round(ORIGIN_X + b.x, 4),
+                                round(ORIGIN_Y + b.y, 4))
         corners = ((MH_INSET, MH_INSET), (BOARD_W - MH_INSET, MH_INSET),
                    (BOARD_W - MH_INSET, BOARD_H - MH_INSET),
                    (MH_INSET, BOARD_H - MH_INSET))

@@ -7,7 +7,7 @@ contract terms it will be judged by — poses satisfy the terms only by luck (th
 measured F1/F3/F6/F7 defects). This module gives the ENGINE the same term
 vocabulary and an evaluator that predicts, for a candidate set of zone poses,
 EXACTLY what the emitted-board gate will measure — including the emit rounding
-chain (``_gridify`` zone-origin snap at GRID=1.27, the ``round(·, 4)`` position
+chain (zones emit at their EXACT floorplan pose, the ``round(·, 4)`` position
 writes and the gate's own centroid/bbox rounding), so the P6 legalizer can make
 wired terms hold BY CONSTRUCTION.
 
@@ -518,14 +518,12 @@ class TermEval:
 
 
 def _emitted_zone_frame(pose: tuple[float, float]) -> tuple[float, float]:
-    """The emit chain's zone-origin transform: ``gz = _gridify(ORIGIN + z) -
-    ORIGIN`` (placement.py STEP 3) — the ONE snap between the floorplan pose
-    and the copper."""
-    from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
-    from schgen.generate.pcb.footprint import _gridify
-    zx, zy = pose
-    return (_gridify(ORIGIN_X + zx) - ORIGIN_X,
-            _gridify(ORIGIN_Y + zy) - ORIGIN_Y)
+    """The emit chain's zone-origin transform: IDENTITY — placement.py STEP 3
+    emits every zone at its EXACT floorplan pose (the historical per-zone
+    _gridify snap perturbed proven inter-block gaps, contract windows and
+    edge-seat distances by up to +/-0.635 mm per axis and was removed), so
+    a predicted pose IS the emitted pose."""
+    return pose
 
 
 def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
