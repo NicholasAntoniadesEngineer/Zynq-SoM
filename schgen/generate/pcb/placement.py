@@ -20,6 +20,7 @@ from .constants import (
     FID_INSET,
     FIDUCIAL_FOOTPRINT,
     GRID,
+    INTERIOR_SHAPE_ASPECTS,
     INTERIOR_ZONE_ASPECT,
     INTERIOR_ZONE_BAND_TARGET,
     MH_INSET,
@@ -32,6 +33,7 @@ from .constants import (
     FootprintInst,
     PcbModel,
     ZoneGeom,
+    ZoneShape,
 )
 from .footprint import (
     _footprint_bbox,
@@ -757,6 +759,7 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
     top_off: dict[str, dict[str, tuple[float, float]]] = {}
     bot_off: dict[str, dict[str, tuple[float, float]]] = {}
     zone_extra_rot: dict[str, float] = {}
+    zone_shapes: dict[str, tuple[ZoneShape, ...]] = {}
     for sheet in sorted(refs_by_sheet):
         # EDGE-connector subsystems pack WIDE + SHALLOW (aspect > 1) so their
         # block sits behind the edge without eating deep into the board; INTERIOR
@@ -817,12 +820,28 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
             # facing is judged on the emitted board and refit_facing still
             # applies its position-aware 180 on the final frame. The turn's
             # +90 folds INTO each part's template rotation.
-            if (not is_edge) and zh > INTERIOR_ZONE_BAND_TARGET \
-                    and zw <= INTERIOR_ZONE_BAND_TARGET and zw < zh:
-                t_off, b_off, er, zw, zh = _rotate_zone_90(
-                    t_off, b_off, bbox_of, side_of, {}, zw, zh)
-                tmpl_rot = {r: (tmpl_rot.get(r, 0.0) + er[r]) % 360.0
-                            for r in er}
+            # MULTI-SHAPE (interior fragmentation lever): a contracted interior
+            # zone legally offers BOTH orientations — {as-built, turned} — and
+            # the floorplan pack search picks per block. Shape 0 stays exactly
+            # today's L1-lever outcome (byte-identity when the search keeps it);
+            # a datasheet stage layout is never re-flowed, so the turn is the
+            # only extra shape. Conn-seated zones are FIXED (LAW 6).
+            rt, rb, er, rw, rh = _rotate_zone_90(
+                t_off, b_off, bbox_of, side_of, {}, zw, zh)
+            r_rot = {r: (tmpl_rot.get(r, 0.0) + er[r]) % 360.0 for r in er}
+            turned_now = ((not is_edge) and zh > INTERIOR_ZONE_BAND_TARGET
+                          and zw <= INTERIOR_ZONE_BAND_TARGET and zw < zh)
+            ab = ZoneShape(w=zw, h=zh, top_off=t_off, bot_off=b_off,
+                           extra_rot=dict(tmpl_rot), tag="asbuilt")
+            tn = ZoneShape(w=rw, h=rh, top_off=rt, bot_off=rb,
+                           extra_rot=r_rot, tag="turned")
+            if turned_now:
+                t_off, b_off, zw, zh = rt, rb, rw, rh
+                tmpl_rot = r_rot
+            if (not is_edge) and sheet not in sheet_conn_rot \
+                    and (round(ab.w, 4), round(ab.h, 4)) \
+                    != (round(tn.w, 4), round(tn.h, 4)):
+                zone_shapes[sheet] = (tn, ab) if turned_now else (ab, tn)
             zone_extra_rot.update(tmpl_rot)
             top_off[sheet] = t_off
             bot_off[sheet] = b_off
@@ -846,6 +865,7 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
         # 19.3x68.47 band-kept and 30.73x36.45 depth-capped both packed 211x187 vs
         # 186x185 with this flat 68.47x19.3 strip — the packer seats thin strips
         # in any band; the declared side does not predict the seat).
+        sheet_rot: dict[str, float] = {}
         if (not is_edge) and zh > INTERIOR_ZONE_BAND_TARGET:
             rt_off, rb_off, rzw, rzh = _pack_one_zone(
                 refs_by_sheet[sheet], side_of, bbox_of, resolvable,
@@ -856,6 +876,29 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                 t_off, b_off, er, zw, zh = _rotate_zone_90(
                     t_off, b_off, bbox_of, side_of, {}, zw, zh)
                 zone_extra_rot.update(er)
+                sheet_rot = er
+
+        # MULTI-SHAPE (interior fragmentation lever): a shelf-packed interior
+        # zone additionally offers a REAL re-pack at each ladder aspect (its own
+        # offsets, all side rules honoured — _pack_one_zone verbatim); the
+        # floorplan pack search picks per block. Shape 0 stays exactly today's
+        # outcome. Conn-seated/edge zones are FIXED (LAW 6: mouth at the edge).
+        if (not is_edge) and sheet not in sheet_conn_rot:
+            seen = {(round(zw, 4), round(zh, 4))}
+            var: list[ZoneShape] = []
+            for asp in INTERIOR_SHAPE_ASPECTS:
+                vt, vb, vw, vh = _pack_one_zone(
+                    refs_by_sheet[sheet], side_of, bbox_of, resolvable, asp)
+                key = (round(vw, 4), round(vh, 4))
+                if key in seen:
+                    continue
+                seen.add(key)
+                var.append(ZoneShape(w=vw, h=vh, top_off=vt, bot_off=vb,
+                                     extra_rot={}, tag=f"a{asp:g}"))
+            if var:
+                zone_shapes[sheet] = (
+                    ZoneShape(w=zw, h=zh, top_off=t_off, bot_off=b_off,
+                              extra_rot=sheet_rot, tag="base"), *var)
 
         top_off[sheet] = t_off
         bot_off[sheet] = b_off
@@ -865,7 +908,44 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                     side_of=side_of, bbox_of=bbox_of, resolvable=resolvable,
                     refs_by_sheet=refs_by_sheet, mh_refs=sorted(mh_refs),
                     deferred=deferred, conn_rot=conn_rot, conn_edge=conn_edge,
-                    zone_extra_rot=zone_extra_rot)
+                    zone_extra_rot=zone_extra_rot, shapes=zone_shapes)
+
+
+def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
+    """Rewrite the flat ZoneGeom views (zone_box/top_off/bot_off/
+    zone_extra_rot) to each sheet's CHOSEN shape, so every shape-blind consumer
+    downstream (STEP-3 emission, L4, breathe, refit, gates' inputs) places the
+    exact geometry the floorplan committed to. ``chosen`` maps sheet ->
+    shape index (the plan blocks' ``shape_idx``); index 0 / absent = no-op.
+    An index without a registered shape set is an engine bug — raise, never
+    silently fall back to shape 0 (that is the silent-breakage class)."""
+    from dataclasses import replace as _dc_replace
+    sel: dict[str, int] = {}
+    for s, k in chosen.items():
+        if not k:
+            continue
+        shp = zg.shapes.get(s)
+        if shp is None or k >= len(shp):
+            raise AssertionError(
+                f"apply_chosen_shapes: {s} chose shape {k} but the zone "
+                f"geometry registered {0 if shp is None else len(shp)} shapes")
+        sel[s] = k
+    if not sel:
+        return zg
+    zone_box = dict(zg.zone_box)
+    top_off = dict(zg.top_off)
+    bot_off = dict(zg.bot_off)
+    extra = dict(zg.zone_extra_rot)
+    for s in sorted(sel):
+        shp = zg.shapes[s][sel[s]]
+        for r in (*zg.top_off.get(s, {}), *zg.bot_off.get(s, {})):
+            extra.pop(r, None)
+        zone_box[s] = (shp.w, shp.h)
+        top_off[s] = dict(shp.top_off)
+        bot_off[s] = dict(shp.bot_off)
+        extra.update(shp.extra_rot)
+    return _dc_replace(zg, zone_box=zone_box, top_off=top_off,
+                       bot_off=bot_off, zone_extra_rot=extra)
 
 
 # ---- the model build -------------------------------------------------------------
@@ -965,6 +1045,13 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     link_result = link(sheets, load_som_contract())
     regs = powertree.analyze(sheets).regs
     plan = fp.build_plan(sheets, link_result, regs, spec=spec)
+    # MULTI-SHAPE: the plan's pack search chose a shape per interior block;
+    # rebind the flat zone views to the CHOSEN shapes so STEP 3 emits the very
+    # offsets/rotations the committed block (w, h) was packed with.
+    zg = apply_chosen_shapes(zg, {b.name: b.shape_idx for b in plan.blocks})
+    zone_box = zg.zone_box
+    top_off = zg.top_off
+    bot_off = zg.bot_off
     classes, netclass_of = _net_classes(sheets)
     board_w, board_h = fp.BOARD_W, fp.BOARD_H
 

@@ -27,23 +27,23 @@ every PNG below passed the netlist, ERC and visual gates.
 
 |   |   |   |
 |---|---|---|
-| **debug_boot**<br>*(render pending)* | **mechanical**<br>*(render pending)* | **pd_input**<br>*(render pending)* |
-| **power**<br>*(render pending)* | **power_mon**<br>*(render pending)* | **power_som**<br>*(render pending)* |
-| **som_decoupling**<br>*(render pending)* | **som_j1**<br>*(render pending)* | **som_j2**<br>*(render pending)* |
-| **som_j3**<br>*(render pending)* | **uart_bridge**<br>*(render pending)* | **usb_uart_connector**<br>*(render pending)* |
+| [<img src="renders/debug_boot.png" width="220" alt="debug_boot">](renders/debug_boot.png)<br>**debug_boot** | [<img src="renders/mechanical.png" width="220" alt="mechanical">](renders/mechanical.png)<br>**mechanical** | [<img src="renders/pd_input.png" width="220" alt="pd_input">](renders/pd_input.png)<br>**pd_input** |
+| [<img src="renders/power.png" width="220" alt="power">](renders/power.png)<br>**power** | [<img src="renders/power_mon.png" width="220" alt="power_mon">](renders/power_mon.png)<br>**power_mon** | [<img src="renders/power_som.png" width="220" alt="power_som">](renders/power_som.png)<br>**power_som** |
+| [<img src="renders/som_decoupling.png" width="220" alt="som_decoupling">](renders/som_decoupling.png)<br>**som_decoupling** | [<img src="renders/som_j1.png" width="220" alt="som_j1">](renders/som_j1.png)<br>**som_j1** | [<img src="renders/som_j2.png" width="220" alt="som_j2">](renders/som_j2.png)<br>**som_j2** |
+| [<img src="renders/som_j3.png" width="220" alt="som_j3">](renders/som_j3.png)<br>**som_j3** | [<img src="renders/uart_bridge.png" width="220" alt="uart_bridge">](renders/uart_bridge.png)<br>**uart_bridge** | [<img src="renders/usb_uart_connector.png" width="220" alt="usb_uart_connector">](renders/usb_uart_connector.png)<br>**usb_uart_connector** |
 
 | sheet | description |
 |---|---|
-| debug_boot | JTAG + SWD headers, boot-request DIP, reset |
-| mechanical | Mechanical: M3 mounts + chassis-GND bond (fiducials are PCB-only, emitted by the placer) |
-| pd_input | Power inlet: USB-C PD 20V/3A + TPS26631 eFuse |
-| power | Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs |
-| power_mon | Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41) |
-| power_som | Power: +VIN -> +5V_SOM always-on buck |
-| som_decoupling | SoM power-entry decoupling under the DF40 mezzanine |
-| som_j1 | SoM J1: power / USB / STM32 / JTAG / SDIO / ETH MDI |
-| som_j2 | SoM J2: FPGA bank 13/33 IO + VCCO rails |
-| som_j3 | SoM J3: FPGA bank 33/34/35 IO + VCCO rails |
-| uart_bridge | UART bridge: CP2102N USB-UART |
-| usb_uart_connector | USB-C UFP console port -> CP2102N |
+| [debug_boot](renders/debug_boot.png) | JTAG + SWD headers, boot-request DIP, reset |
+| [mechanical](renders/mechanical.png) | Mechanical: M3 mounts + chassis-GND bond (fiducials are PCB-only, emitted by the placer) |
+| [pd_input](renders/pd_input.png) | Power inlet: USB-C PD 20V/3A + TPS26631 eFuse |
+| [power](renders/power.png) | Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs |
+| [power_mon](renders/power_mon.png) | Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41) |
+| [power_som](renders/power_som.png) | Power: +VIN -> +5V_SOM always-on buck |
+| [som_decoupling](renders/som_decoupling.png) | SoM power-entry decoupling under the DF40 mezzanine |
+| [som_j1](renders/som_j1.png) | SoM J1: power / USB / STM32 / JTAG / SDIO / ETH MDI |
+| [som_j2](renders/som_j2.png) | SoM J2: FPGA bank 13/33 IO + VCCO rails |
+| [som_j3](renders/som_j3.png) | SoM J3: FPGA bank 33/34/35 IO + VCCO rails |
+| [uart_bridge](renders/uart_bridge.png) | UART bridge: CP2102N USB-UART |
+| [usb_uart_connector](renders/usb_uart_connector.png) | USB-C UFP console port -> CP2102N |
 <!-- /schgen:gallery -->

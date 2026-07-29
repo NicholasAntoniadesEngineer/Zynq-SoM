@@ -8,56 +8,56 @@ its pour credits against the same scan, so CD-01/CD-02 cannot pass on
 fiction regardless of this file. 'where' lines are anchor-resolved at
 report time (a vanished anchor reads ANCHOR-NOT-FOUND, never a stale line).
 
-emitted copper inventory: 7 fill zones (with In1.Cu GND plane), 1 rule areas, 31 vias (31 GND), 9 segments
+emitted copper inventory: NO BOARD SCANNED (statuses UNMEASURED)
 
-CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
+CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [UNMEASURED]
   assumes: full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)
   where:   schgen/verify/thermal.py:253
            carrier/subsystems/power.py:24
-  emits:   In1.Cu GND plane: YES; U4001: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U4002: 10 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U6004: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
+  emits:   UNMEASURED — no emitted board scanned
   risk:    without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build.
 
-CD-02  TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)   [PARTIAL]
+CD-02  TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)   [UNMEASURED]
   assumes: DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)
   where:   schgen/verify/thermal.py:308
-  emits:   In1.Cu GND plane: YES; 
+  emits:   UNMEASURED — no emitted board scanned
   risk:    at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper
 
-CD-03  TPS26631 PWP 2s2p RthJA (33.6 C/W)   [EMITTED]
+CD-03  TPS26631 PWP 2s2p RthJA (33.6 C/W)   [UNMEASURED]
   assumes: HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)
   where:   schgen/verify/thermal.py:290
-  emits:   In1.Cu GND plane: YES; U3001: 4 in-footprint EP via-pads (GND, PTH)
+  emits:   UNMEASURED — no emitted board scanned
   risk:    low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed
 
-CD-04  CHASSIS_GND island + single-point GND bond   [NOTHING]
+CD-04  CHASSIS_GND island + single-point GND bond   [UNMEASURED]
   assumes: a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)
   where:   carrier/subsystems/mechanical/mechanical.py:3
-  emits:   CHASSIS_GND board-level copper: 0 zones, 0 vias (pads only otherwise); no bond stitch emitted
+  emits:   UNMEASURED — no emitted board scanned
   risk:    fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted
 
-CD-05  Bob-Smith trunk copper (BS_COMMON island)   [NOTHING]
+CD-05  Bob-Smith trunk copper (BS_COMMON island)   [UNMEASURED]
   assumes: a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)
   where:   subsystems/ethernet/ethernet.py:171
-  emits:   BS_COMMON board-level copper: 0 zones, 0 vias (pads only)
+  emits:   UNMEASURED — no emitted board scanned
   risk:    without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island
 
-CD-06  Ethernet isolation moat (In1 plane voids)   [NOTHING]
+CD-06  Ethernet isolation moat (In1 plane voids)   [UNMEASURED]
   assumes: NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there
   where:   subsystems/ethernet/ethernet.py:74
-           schgen/generate/pcb/constants.py:383
-  emits:   In1 rule-area voids: none; corridor between them: NOT voided (debt)
+           schgen/generate/pcb/constants.py:390
+  emits:   UNMEASURED — no emitted board scanned
   risk:    a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt
 
-CD-07  DP90/DP100 L2 reference plane   [EMITTED]
+CD-07  DP90/DP100 L2 reference plane   [UNMEASURED]
   assumes: the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet
   where:   schgen/generate/constraints.py:10
-  emits:   In1.Cu GND plane zone 25.5,25.5 -> 134.5,108.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
+  emits:   UNMEASURED — no emitted board scanned
   risk:    without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)
 
-CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
+CD-08  Under-SoM decoupling fanout vias   [UNMEASURED]
   assumes: the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine
   where:   schgen/generate/pcb/embed.py:427
-  emits:   GND vias inside the SoM body zone: 7 (SoM zone found); rail fanout vias: none emitted
+  emits:   UNMEASURED — no emitted board scanned
   risk:    until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists
 
-COPPER DEBT: 8 entries — 3 emitted, 2 partial, 3 unemitted, 0 unmeasured (report-only)
+COPPER DEBT: 8 entries — 0 emitted, 0 partial, 0 unemitted, 8 unmeasured (report-only)

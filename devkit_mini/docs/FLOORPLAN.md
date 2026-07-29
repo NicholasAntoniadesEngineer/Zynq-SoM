@@ -21,27 +21,27 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 | J2 | (136.5, 129.5) rot 180 | (21, 38.5) | 19.8 x 3.78 mm |
 | J3 | (154.5, 112) rot 90 | (3, 21) | 3.78 x 19.8 mm |
 
-Derived board: **110 x 84 mm**; SoM origin at **(30, 21)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
+Derived board: **105 x 87 mm**; SoM origin at **(27.5, 22.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1119mm2 / 0.6 fill -> area floor 78x70; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 110x84 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1505 <= LAW-5 budget 2307 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1119mm2 / 0.6 fill -> area floor 78x70; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 105x87 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1417 <= LAW-5 budget 2294 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| N | pd_input | (38.5, 1.5, 24.4554 x 22.0264) | TYPE-C-31-M-12 (USB-C receptacle) | (1) |
-| N | usb_uart_connector | (67, 1.5, 10.4501 x 19.1321) | TYPE-C-31-M-12 (USB-C receptacle) | (2) |
+| N | pd_input | (36, 1.5, 24.4554 x 22.0264) | TYPE-C-31-M-12 (USB-C receptacle) | (1) |
+| N | usb_uart_connector | (64.5, 1.5, 10.4501 x 19.1321) | TYPE-C-31-M-12 (USB-C receptacle) | (2) |
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| debug_boot | N | (83, 55, 26.64 x 17.044) | 10 | 454.1 | (3) |
-| mechanical | E | (94, 14, 13 x 13) | 4 | 169 |  |
-| power | E | (17, 67, 38.35 x 16) | 51 | 613.6 | (4) |
-| power_mon | @power_som | (19, 44, 9.14 x 17.172) | 10 | 157 | (5) |
-| power_som | E | (84, 30, 12.15 x 22.66) | 23 | 275.3 |  |
-| uart_bridge | @usb_uart_connector | (82, 12, 9.2751 x 15.2) | 10 | 141 | (6) |
+| debug_boot | N | (6, 18, 17.75 x 49.644) | 10 | 881.2 | (3) |
+| mechanical | E | (77, 4, 13 x 13) | 4 | 169 |  |
+| power | E | (94, 13, 10.7 x 63.36) | 51 | 678 | (4) |
+| power_mon | @power_som | (82, 38, 6.124 x 17.748) | 10 | 108.7 | (5) |
+| power_som | E | (47, 69, 27.39 x 11.06) | 23 | 302.9 |  |
+| uart_bridge | @usb_uart_connector | (80, 19.2271, 9.2751 x 15.2) | 10 | 141 | (6) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
 

@@ -5,13 +5,13 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
   Pd(LDO) = (Vin-Vout)*Iout ; Pd(buck) = (1/eff-1)*Vout*Iout, eff=0.85 ; Pd(switch/eFuse) = Iout^2*Rds_on
   RthJA = bare JEDEC, unless '*' = pour-aware effective RthJA (EP/power pads -> GND copper + vias; basis cited below)
   pour credits are granted ONLY against copper VERIFIED in the emitted board
-  emitted-copper evidence source: devkit_mini/Zynq_Carrier.kicad_pcb
+  emitted-copper evidence source: NONE — all pour credits withheld (fail-closed)
 
   device                 package                  kind        in->out               Iout/A   Pd/mW   RthJA    Tj/C   limit   mgn/C  verdict
   -----------------------------------------------------------------------------------------------------------------------------------------
-  power_som:U4           VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_SOM      2.154    1768   35.0*   111.9   140.0    28.1  ok
-  power:U1               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_REG      0.053      47   35.0*    51.6   140.0    88.4  ok
-  power:U2               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +5V->+3V3_REG          0.067      39   35.0*    51.4   140.0    88.6  ok
+  power_som:U4           VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_SOM      2.154    1768   58.7    153.8   140.0   -13.8  OVER
+  power:U1               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +VIN_SYS->+5V_REG      0.053      47   58.7     52.8   140.0    87.2  ok
+  power:U2               VQFN-HR-14 (RJR, PGND pads->GND pour) buck        +5V->+3V3_REG          0.067      39   58.7     52.3   140.0    87.7  ok
   power:U3               SOT-23-5                 ldo         +3V3->+1V8_REG         0.001       1  250.0     50.4   115.0    64.6  ok
   pd_input:U1            HTSSOP-20 (PWP)          efuse       +VBUS_IN->+VIN         0.571      10   33.6     50.3   115.0    64.7  ok
 
@@ -20,10 +20,12 @@ datasheet provenance (every RthJA / Tj_max / Rds_on cited):
   LM61460AANRJRR   VQFN-HR-14 (RJR, PGND pads->GND pour) TI SNVSBD5D LM61460 (VQFN-HR RthJA 58.7 C/W JESD51-7 bare; Tj op-max 150 C); eff floor 0.85 (DS plots ~88-91%)
   TPS26631PWPR     HTSSOP-20 (PWP)            TI SLVSE94 (HTSSOP-20 PowerPAD RthJA ~33.6 C/W 2s2p; FET Rds_on 31 mohm; Tj op-max 125 C)
 
-pour-aware effective RthJA (* rows) — basis, per part (bare->credited, cited; conservative, bench-verify at bring-up):
-  LM61460AANRJRR   bare 58.7 -> eff 35 C/W ; DS 7.3: bare 58.7 C/W (JESD51-7) vs 25 C/W on a 4-layer PCB (DS note + LM61460-Q1 EVM). Credit gated on EMITTED copper, verified in the .kicad_pcb per build: In1.Cu GND plane + 8-via PGND field + local F.Cu/B.Cu pours (SNVSBD5D 11.1.1). Credited 35 C/W — 10 C/W above the DS 4-layer 25, ~30% of the bare->4L delta held back (0.5-oz inner plane, modest pours vs the EVM, 3-buck mutual heating)
-                   emitted-copper evidence (verified in the board file): In1 GND plane + U4001: 8/6 GND vias<=5.2mm, local F+B pour YES; U4002: 10/6 GND vias<=5.2mm, local F+B pour YES; U6004: 8/6 GND vias<=5.2mm, local F+B pour YES
+notes (3):
+  + POUR CREDIT WITHHELD: power:U1 (LM61460AANRJRR) judged at the bare 58.7 C/W, not the credited 35 — required copper not verified: no emitted-board scan (fail-closed: credit withheld)
+  + POUR CREDIT WITHHELD: power:U2 (LM61460AANRJRR) judged at the bare 58.7 C/W, not the credited 35 — required copper not verified: no emitted-board scan (fail-closed: credit withheld)
+  + POUR CREDIT WITHHELD: power_som:U4 (LM61460AANRJRR) judged at the bare 58.7 C/W, not the credited 35 — required copper not verified: no emitted-board scan (fail-closed: credit withheld)
 
-errors: none
+ERRORS (1):
+  ERROR: OVER Tj: power_som:U4 (LM61460AANRJRR, VQFN-HR-14 (RJR, PGND pads->GND pour)) +VIN_SYS->+5V_SOM: Iout 2.154 A -> Pd 1768 mW, Tj = 50 + 1768mW*58.7 = 153.8 C > limit 140.0 C (Tj_max 150 - margin 10) [TI SNVSBD5D LM61460 (VQFN-HR RthJA 58.7 C/W JESD51-7 bare; Tj op-max 150 C); eff floor 0.85 (DS plots ~88-91%)] — POUR CREDIT WITHHELD (required copper not emitted: no emitted-board scan (fail-closed: credit withheld))
 
-THERMAL: PASS (5 devices speced, 0 over-limit, 0 unspeced, 0 waived); hottest power_som:U4 (LM61460AANRJRR) Tj 111.9 C
+THERMAL: FAIL (5 devices speced, 1 over-limit, 0 unspeced, 0 waived); hottest power_som:U4 (LM61460AANRJRR) Tj 153.8 C
