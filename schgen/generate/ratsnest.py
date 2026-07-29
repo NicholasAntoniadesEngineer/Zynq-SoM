@@ -112,16 +112,25 @@ def _mst_edges(pts: list[tuple[float, float, str, str]]
     return edges
 
 
-def _airwires(model: PcbModel, side: str | None):
+def net_mst_edges(model: PcbModel,
+                  npp: dict | None = None) -> dict[str, list[tuple[int, int]]]:
+    """Per-net MST edges over ``net_pad_positions`` — pure; board-flow callers
+    compute it once (emit.generate) and thread it through as ``mst=``."""
+    if npp is None:
+        npp = net_pad_positions(model)
+    return {net: _mst_edges(pts) for net, pts in sorted(npp.items())}
+
+
+def _airwires(model: PcbModel, side: str | None, npp: dict, mst: dict):
     """Yield (x0,y0,x1,y1, cross) airwire segments for the given side (or both
     if side is None). ``cross`` is True when the two pads belong to different
     subsystems. Both endpoints are filtered to the requested side so the per-
     side PNG shows only the airwires that touch that side's copper."""
     side_of_ref = {inst.ref: inst.side for inst in model.insts}
     out = []
-    for _net, pts in sorted(net_pad_positions(model).items()):
+    for _net, pts in sorted(npp.items()):
         # de-duplicate identical pad centers within a net so the MST is stable
-        for a, b in _mst_edges(pts):
+        for a, b in mst[_net]:
             xa, ya, ra, sa = pts[a]
             xb, yb, rb, sb = pts[b]
             if side is not None and not (side_of_ref.get(ra) == side
@@ -131,15 +140,20 @@ def _airwires(model: PcbModel, side: str | None):
     return out
 
 
-def cross_airwire_length(model: PcbModel) -> tuple[float, float, int]:
+def cross_airwire_length(model: PcbModel, npp: dict | None = None,
+                         mst: dict | None = None) -> tuple[float, float, int]:
     """(cross-subsystem airwire mm, total airwire mm, cross count) over the MST
     ratsnest — the LAW-5 budget metric. A small cross/total ratio means the
     subsystems cluster (few long inter-block wires)."""
     side_of_ref = {inst.ref: inst.side for inst in model.insts}  # noqa: F841
+    if npp is None:
+        npp = net_pad_positions(model)
+    if mst is None:
+        mst = net_mst_edges(model, npp)
     cross = total = 0.0
     n_cross = 0
-    for _net, pts in sorted(net_pad_positions(model).items()):
-        for a, b in _mst_edges(pts):
+    for _net, pts in sorted(npp.items()):
+        for a, b in mst[_net]:
             xa, ya, _ra, sa = pts[a]
             xb, yb, _rb, sb = pts[b]
             d = ((xa - xb) ** 2 + (ya - yb) ** 2) ** 0.5
@@ -152,7 +166,7 @@ def cross_airwire_length(model: PcbModel) -> tuple[float, float, int]:
 
 # ---- SVG ------------------------------------------------------------------------
 
-def _svg(model: PcbModel, palette: dict) -> str:
+def _svg(model: PcbModel, palette: dict, npp: dict, mst: dict) -> str:
     bw, bh = model.board_w, model.board_h
     W = int(bw * SCALE + 2 * PAD + 230)         # +legend column
     H = int(bh * SCALE + 2 * PAD + 40)
@@ -180,12 +194,13 @@ def _svg(model: PcbModel, palette: dict) -> str:
                  f'fill="none" stroke="#c99420" stroke-width="1" '
                  f'stroke-dasharray="4,3"/>')
     # airwires (intra faint, cross bold red), bottom under top
-    for x0, y0, x1, y1, cross in _airwires(model, None):
+    aw = _airwires(model, None, npp, mst)
+    for x0, y0, x1, y1, cross in aw:
         if cross:
             e.append(f'<line x1="{px(x0)}" y1="{py(y0)}" x2="{px(x1)}" '
                      f'y2="{py(y1)}" stroke="#ff3b30" stroke-width="0.9" '
                      f'opacity="0.85"/>')
-    for x0, y0, x1, y1, cross in _airwires(model, None):
+    for x0, y0, x1, y1, cross in aw:
         if not cross:
             e.append(f'<line x1="{px(x0)}" y1="{py(y0)}" x2="{px(x1)}" '
                      f'y2="{py(y1)}" stroke="#5b6472" stroke-width="0.35" '
@@ -219,7 +234,8 @@ def _svg(model: PcbModel, palette: dict) -> str:
 
 # ---- PNG (PIL, deterministic) ---------------------------------------------------
 
-def _png(model: PcbModel, palette: dict, side: str, out: Path) -> None:
+def _png(model: PcbModel, palette: dict, side: str, out: Path,
+         npp: dict, mst: dict) -> None:
     from PIL import Image, ImageDraw
     bw, bh = model.board_w, model.board_h
     W = int(bw * SCALE + 2 * PAD)
@@ -243,7 +259,7 @@ def _png(model: PcbModel, palette: dict, side: str, out: Path) -> None:
         d.rectangle([px(kx0), py(ky0), px(kx1), py(ky1)],
                     outline=(201, 148, 32), width=1)
     # airwires for this side (intra faint, cross bold red)
-    for x0, y0, x1, y1, cross in _airwires(model, side):
+    for x0, y0, x1, y1, cross in _airwires(model, side, npp, mst):
         if cross:
             d.line([px(x0), py(y0), px(x1), py(y1)],
                    fill=(255, 59, 48, 230), width=2)
@@ -272,6 +288,7 @@ _SHEET_M = 10.0
 
 
 def _png_sheet(model: PcbModel, sheet: str, refs: set[str], out: Path,
+               npp: dict, mst: dict,
                som_refs: set[str] | None = None) -> None:
     from PIL import Image, ImageDraw
     insts = {i.ref: i for i in model.insts}
@@ -316,10 +333,10 @@ def _png_sheet(model: PcbModel, sheet: str, refs: set[str], out: Path,
         if own and i.side == "bottom":
             d.rectangle([px(bx0), py(by0), px(bx1), py(by1)],
                         outline=(255, 230, 120, 255), width=2)
-    for _net, pts in sorted(net_pad_positions(model).items()):
+    for _net, pts in sorted(npp.items()):
         if not any(p[2] in refs for p in pts):
             continue
-        for a, b in _mst_edges(pts):
+        for a, b in mst[_net]:
             xa, ya, ra, _sa = pts[a]
             xb, yb, rb, _sb = pts[b]
             own_edge = ra in refs and rb in refs
@@ -339,10 +356,15 @@ def _png_sheet(model: PcbModel, sheet: str, refs: set[str], out: Path,
     im.save(out, "PNG", optimize=True)
 
 
-def per_subsystem_pngs(model: PcbModel) -> list[Path]:
+def per_subsystem_pngs(model: PcbModel, npp: dict | None = None,
+                       mst: dict | None = None) -> list[Path]:
     """One ratsnest crop per subsystem (own parts colored top/bottom, foreign
     context grey, intra airwires green, leaving airwires red) plus a composite
     ``som.png`` for the module region — the per-sheet LAW-5 inspection set."""
+    if npp is None:
+        npp = net_pad_positions(model)
+    if mst is None:
+        mst = net_mst_edges(model, npp)
     PNG_SHEET_DIR.mkdir(parents=True, exist_ok=True)
     for stale in PNG_SHEET_DIR.glob("*.png"):
         stale.unlink()
@@ -356,30 +378,37 @@ def per_subsystem_pngs(model: PcbModel) -> list[Path]:
         if sheet.startswith("som_"):
             continue
         p = PNG_SHEET_DIR / f"{sheet}.png"
-        _png_sheet(model, sheet, refs, p, som_refs=som_refs)
+        _png_sheet(model, sheet, refs, p, npp, mst, som_refs=som_refs)
         out.append(p)
     if som_refs:
         p = PNG_SHEET_DIR / "som.png"
-        _png_sheet(model, "som", som_refs, p)
+        _png_sheet(model, "som", som_refs, p, npp, mst)
         out.append(p)
     return out
 
 
 # ---- entry point -----------------------------------------------------------------
 
-def generate(model: PcbModel | None = None) -> dict:
+def generate(model: PcbModel | None = None, npp: dict | None = None,
+             mst: dict | None = None) -> dict:
     """Emit the two per-side PNGs + the combined SVG from the placed board.
-    Returns paths + the cross-subsystem airwire budget metric."""
+    Returns paths + the cross-subsystem airwire budget metric. ``npp``/``mst``
+    (pad positions + per-net MST) are computed once here when not threaded in
+    by the board flow."""
     if model is None:
         model = pcb_mod.build_model()
+    if npp is None:
+        npp = net_pad_positions(model)
+    if mst is None:
+        mst = net_mst_edges(model, npp)
     sheets = sorted({inst.sheet for inst in model.insts})
     palette = _palette(sheets)
-    _png(model, palette, "top", PNG_TOP)
-    _png(model, palette, "bottom", PNG_BOTTOM)
-    per_subsystem_pngs(model)
+    _png(model, palette, "top", PNG_TOP, npp, mst)
+    _png(model, palette, "bottom", PNG_BOTTOM, npp, mst)
+    per_subsystem_pngs(model, npp, mst)
     SVG_COMBINED.parent.mkdir(parents=True, exist_ok=True)
-    SVG_COMBINED.write_text(_svg(model, palette))
-    cross, total, n_cross = cross_airwire_length(model)
+    SVG_COMBINED.write_text(_svg(model, palette, npp, mst))
+    cross, total, n_cross = cross_airwire_length(model, npp, mst)
     return {
         "png_top": PNG_TOP, "png_bottom": PNG_BOTTOM, "svg": SVG_COMBINED,
         "cross_mm": cross, "total_mm": total, "n_cross": n_cross,
