@@ -43,12 +43,15 @@ NOT two floorplans. One floorplan where SIDE is a per-block degree of freedom:
   toward max(top, bottom) instead of their sum. Edge runs (99mm of 183 today) do
   not bind, so the interior win is real board shrink.
 
-## User decisions required before P2
+## User decisions (RESOLVED 2026-07-29)
 
-1. Bottom-side max component height (enclosure/standoff budget), in mm.
-2. Which families count as user-facing besides connectors/switches/LEDs (TPs are
-   probe-able on standoffs — default bottom-eligible unless overruled).
-3. Assembly cost stance: double-sided reflow is standard but priced; the ASSEMBLY
-   doc already sequences bottom-first.
+1. Bottom-side height: NO LIMIT.
+2. Bottom-eligible: everything EXCEPT connectors, probes/testpoints, LEDs,
+   switches (ethernet family, power supply, etc. all eligible). Policy: blocks
+   with seated connectors stay top-pinned; TP/LED/SW PARTS carry a face=top
+   constraint the zone packer honors inside a bottom-assigned block's variant
+   (the internal two-side split flips roles, so a bottom block can still
+   present its user-facing parts on the board-top face).
+3. Double-sided assembly already paid for — cost accepted.
 
 Sequencing: P1 starts after the wave-8 engine unit lands (same files).
