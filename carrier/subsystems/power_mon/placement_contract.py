@@ -36,20 +36,26 @@ the placement intent is unambiguous: the shunt belongs next to its monitor.
 DECOUPLING derived from the netlist: both INAs run off the always-on +3V3_SC.
     C1 (100n)  U1.VS bypass  (decouple("U1.VS"), pin 4; VPU=16 shares the rail).
     C2 (100n)  U2.VS bypass  (decouple("U2.VS"), pin 4).
-    C3 (10u)   EXCLUDED: shared +3V3_SC BULK (both INAs + the ALERT pull-up on
-               one net) — rail-level bulk with no unambiguous per-pin binding
-               (microsd/camera precedent: shared-rail bulk is left to the packer
-               at the lightweight tier).
-    R1 (10k)   EXCLUDED: PMON_ALERT_N pull-up, not a supply-decoupling element.
+    C3 (10u)   shared +3V3_SC BULK (both INAs + the ALERT pull-up on one net).
+               CENSUS WAVE 2026-07-29: graduates from "left to the packer" —
+               anchored at U1's VS/VPU pins (pins 4/16, the rail's primary
+               consumer pair on this sheet) with a loose bulk bound; the
+               binding judgment is recorded here.
+    R1 (10k)   PMON_ALERT_N wire-OR pull-up (R1.2 = U1.CRITICAL pin 9 =
+               U2.CRITICAL). CENSUS WAVE: held at the master INA's CRITICAL
+               pin so the open-drain flag keeps its pull inside the monitor
+               cluster.
 
-INA3221 pins used (pin_names, netlist): VS=4, IN-1=11, IN+1=12, IN-2=14,
-IN+2=15, IN-3=1, IN+3=2.
+INA3221 pins used (pin_names, netlist): VS=4, VPU=16, CRITICAL=9, IN-1=11,
+IN+1=12, IN-2=14, IN+2=15, IN-3=1, IN+3=2.
 """
 
 from __future__ import annotations
 
 # Supply / sense pins (authored by NUMBER, footprint-revision-independent).
 _VS = "4"
+_VPU = "16"
+_CRITICAL = "9"
 _CH1 = ["12", "11"]        # IN+1 / IN-1
 _CH2 = ["15", "14"]        # IN+2 / IN-2
 _CH3 = ["2", "1"]          # IN+3 / IN-3
@@ -65,6 +71,7 @@ CONTRACT: dict = {
         "RS1": "sense_shunt", "RS2": "sense_shunt",
         "RS3": "sense_shunt", "RS4": "sense_shunt",
         "C1": "vs_bypass", "C2": "vs_bypass",
+        "C3": "rail_bulk", "R1": "alert_pullup",
     },
     "structures": [
         # ---- DECOUPLING: each INA3221's VS supply bypass -----------------------
@@ -95,6 +102,16 @@ CONTRACT: dict = {
          "members": ["RS4"], "max_mm": 4.0, "same_side": True,
          "basis": "judgment:4.0 — Kelvin shunt at its INA input pair "
                   "(D6 lightweight tier)"},
+        # ---- RAIL BULK: the shared +3V3_SC 10u behind U1's VS/VPU bypass -------
+        {"type": "proximity", "anchor": "U1", "anchor_pins": [_VS, _VPU],
+         "members": ["C3"], "max_mm": 8.0, "same_side": True,
+         "basis": "shared +3V3_SC bulk at the master INA's supply pins (census "
+                  "wave; binding judgment in the header)|judgment:8.0"},
+        # ---- ALERT PULL-UP: the wire-OR 10k at U1's CRITICAL pin ---------------
+        {"type": "proximity", "anchor": "U1", "anchor_pins": [_CRITICAL],
+         "members": ["R1"], "max_mm": 8.0, "same_side": True,
+         "basis": "PMON_ALERT_N wire-OR pull-up with the master CRITICAL pin"
+                  "|judgment:8.0"},
         # ---- SAME SIDE: each INA's bypass + shunt on that INA's side -----------
         {"type": "same_side", "ics": ["U1", "U2"],
          "basis": "judgment — bypass/shunt co-located with its IC "

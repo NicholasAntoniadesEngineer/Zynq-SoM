@@ -29,12 +29,22 @@ DECOUPLING derived from the netlist:
                source comment ("slot VDD + both VCCB + ... + bulk").
     C4 (100n)  via decouple("U2.VCC")   -> the TPD6E001 clamp-reference bypass
                (SD-1: VCC biased to the card rail, bypassed locally).
-    C3 (22u)   EXCLUDED: the card-rail BULK serving slot + VCCB + pull-ups on
-               the shared +VDD_CARD net — rail-level bulk with no unambiguous
-               per-pin binding (camera precedent: connector-rail bulk is left
-               to the packer at the lightweight tier).
+    C3 (22u)   the card-rail BULK serving slot + VCCB + pull-ups on the shared
+               +VDD_CARD net — held at the slot VDD pad (structure below).
 
-TXS02612 pins used: VCCA=5, VCCB0=21, VCCB1=17. TPD6E001 pins: VCC=10, GND=5.
+CENSUS WAVE 2026-07-29 — the card-line pull bank graduates from ungated:
+    R1..R5 (100k)  SD-2 anti-float pulls on the TXS02612 B0 one-shot outputs
+               (R1=CMD, R2=D0, R3=D1, R4=D2, R5=D3; each R.2 on its
+               SD_CARD_* net, R.1 on +VDD_CARD). The card-side lines run
+               U1.B0 -> J1 slot -> U2 ESD; the pulls belong grouped on that
+               card-side bank (TI SCEA054A names the VALUE band >50k, no mm)
+               — held to the nearest of U1's B0 card pads {CMD=20, D0=18,
+               D1=16, D2=23, D3=22}.
+    R6 (10k)   card-detect pull-up (R6.2 = SD_CARD_DETECT = J1.CD pad 9):
+               held at the slot's CD pad.
+
+TXS02612 pins used: VCCA=5, VCCB0=21, VCCB1=17, B0 card pads CMD=20 D0=18
+D1=16 D2=23 D3=22. TPD6E001 pins: VCC=10, GND=5. TF-01A slot: VDD=4, CD=9.
 """
 
 from __future__ import annotations
@@ -42,7 +52,9 @@ from __future__ import annotations
 # Supply pins (authored by NUMBER, footprint-revision-independent).
 _U1_VCCA = "5"
 _U1_VCCB0, _U1_VCCB1 = "21", "17"
+_U1_B0 = ["20", "18", "16", "23", "22"]     # CMD, D0, D1, D2, D3 card pads
 _U2_VCC = "10"
+_J1_CD = "9"
 
 CONTRACT: dict = {
     "contract": "placement/lightweight-v0",
@@ -53,6 +65,8 @@ CONTRACT: dict = {
     "roles": {
         "U1": "level_translator", "U2": "esd_array", "J1": "sd_slot",
         "C1": "vcca_bypass", "C2": "vccb_bypass", "C4": "esd_vcc_bypass",
+        "R1": "card_pull", "R2": "card_pull", "R3": "card_pull",
+        "R4": "card_pull", "R5": "card_pull", "R6": "cd_pullup",
     },
     "structures": [
         # ---- DECOUPLING: TXS02612 host-side (VCCA) bypass ----------------------
@@ -87,5 +101,19 @@ CONTRACT: dict = {
          "members": ["C3"], "max_mm": 8.0,
          "basis": "card-rail hold-up bulk at the slot VDD pad; measured "
                   "~12mm|judgment:8.0"},
+        # ---- CARD-LINE PULL BANK grouped at the B0 card pads (census wave) -----
+        # SCEA054A fixes the VALUE (>50k band), not a mm; each 100k held to the
+        # nearest of U1's B0 card pads so the bank rides the card-side lines
+        # (U1 itself is held <=8mm off the slot above).
+        {"type": "proximity", "anchor": "U1", "anchor_pins": _U1_B0,
+         "members": ["R1", "R2", "R3", "R4", "R5"], "max_mm": 10.0,
+         "same_side": True,
+         "basis": "SD-2 anti-float pull bank grouped on the card-side lines "
+                  "(SCEA054A names the value band, no mm)|judgment:10.0"},
+        # ---- CARD-DETECT pull-up at the slot CD pad (census wave) --------------
+        {"type": "proximity", "anchor": "J1", "anchor_pins": [_J1_CD],
+         "members": ["R6"], "max_mm": 8.0, "same_side": True,
+         "basis": "card-detect pull-up with the slot's CD switch pad"
+                  "|judgment:8.0"},
     ],
 }
