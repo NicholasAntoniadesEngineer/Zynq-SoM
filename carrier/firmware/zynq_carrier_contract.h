@@ -7,7 +7,7 @@
  * sources:
  *   carrier/som_interface.json
  *   som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)
- *   carrier/subsystems/power/power.py
+ *   carrier/subsystems/power.py
  *   carrier/subsystems/power_mon/power_mon.py
  *   carrier/subsystems/bringup_rails/bringup_rails.py
  *   carrier/subsystems/bringup_en/bringup_en.py

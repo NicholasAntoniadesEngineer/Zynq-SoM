@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "c8c5395e2f8fa83f28697b84dbefd3f94be66eef909c56cf3bc5d43e42e130fa"
+      "sha256": "06d898a0151c85ecba2a67f12fc46f37d8db326f0eab8fc4a4125e6e99a324aa"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -26,15 +26,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "735e1452bf3638b7c46ed191a569d0c78482823163713e8b15794329050e6a56"
+      "sha256": "147fb3fb1d5ead5941e7157bf6cf6841c21f9a025135642ba2372bbdd94b5722"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "703e3b047ff5d0b3b27871a8eb5b88b12a36f211e78173133e748e751e8502c6"
+      "sha256": "a1bd42db67432c6b2ba57e15ee09e81869bfc33e11cc14af0b3ac2d9750cef21"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "3f9bf0b2f4eaf3f23232616b6af5447eac98a7a4c1876082bd4a5cb9cd710e45"
+      "sha256": "52012e0e0fbc136410e21c97665f1064ed67513e66cb706f212373ebd1830117"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -45,12 +45,20 @@
       "sha256": "fac9bef453c09a344d36a77effe71e13593b7e55609b76638ed1d3fa7cb57b38"
     },
     {
-      "path": "firmware/zynq_carrier_contract.h",
+      "path": "firmware/zynq_carrier_contract 2.h",
       "sha256": "0b665db4b5310a36a23596a1dea31f9ee72e3ce28933a5001b8971ef4e8ec204"
     },
     {
-      "path": "fpga/Zynq_Carrier_pins.xdc",
+      "path": "firmware/zynq_carrier_contract.h",
+      "sha256": "344a2685447e3b9e4837cc682187d41049f6bc286601b4bfa4c14523f94ecc5b"
+    },
+    {
+      "path": "fpga/Zynq_Carrier_pins 2.xdc",
       "sha256": "f6f7da6f52984cc8ca0e47fa75a92c974a8afbd9c37978a23ec4984cffa65fa8"
+    },
+    {
+      "path": "fpga/Zynq_Carrier_pins.xdc",
+      "sha256": "6ee439e69ef5e53c8b258ff5a469f71a1da9802229b6407d210b05bfc51c2804"
     },
     {
       "path": "manufacturing/SI_CONSTRAINTS.md",
@@ -58,7 +66,7 @@
     },
     {
       "path": "manufacturing/Zynq_Carrier_cpl.csv",
-      "sha256": "f876afaa967b9d1244378eba39d2a6ec55c5e3596596b95f9d1c8cf115099691"
+      "sha256": "e6eb085a25d66e5ff55ab92117e19a1befdff3666a2f858bcaa7eb1e7dce1f6f"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -102,7 +110,7 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "c5693be2091184b999570b61bf929cf1fea00de94a98563198564a030e04781f"
+      "sha256": "20e9cd09051dcef55033d5851ee005b5829b08969b14f0dc12312b0d30d2cb85"
     },
     {
       "path": "reports/contract_coverage.txt",
@@ -114,7 +122,7 @@
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "551722c9f1e0366d732f30ba63d8fc4bbf554eb520f3bb646272d014bf239635"
+      "sha256": "c7941666255a2b3f01c201b39ce4fca1fc89e66aa7904a2a60fc4541dd1a3012"
     },
     {
       "path": "reports/design_rules.txt",
@@ -138,7 +146,7 @@
     },
     {
       "path": "reports/floorplan_composition.txt",
-      "sha256": "a962c2952015e62bdaf8eb42e2e373f152e690b8f64730ac9406b9deebca10e7"
+      "sha256": "0ed722a04487d6c3e707fc8626703d8fb8a1a63d08caec025b676a0f7f7bd954"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -170,11 +178,11 @@
     },
     {
       "path": "reports/placement_flow.txt",
-      "sha256": "43423bc1d80bbd2e2f8de8a5713e352f968c006500bd462d5ea8f86532f651ae"
+      "sha256": "17a706469f6c932c79de0747f31d9c8cbeb9eb9cc1e8702eb7c83fea9ba31922"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "6f450ba9f6102a9238d7df2b552fb333758446940c98df94cefb60287b6a7afa"
+      "sha256": "29050b86f38f8e8049e996adf434986cda07017dfe730de65b5fbcdfd35c28f5"
     },
     {
       "path": "reports/power_tree.txt",
@@ -186,7 +194,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "2d0c5713e88acc55d5ff37760bbf1c1e07df350b54f9355c374b4c1a16663693"
+      "sha256": "b3d1a5d80ebfa33c4169ec0077615f4ac7b8a876d6bf092e04ba7db284e7b85c"
     },
     {
       "path": "reports/return_path.txt",

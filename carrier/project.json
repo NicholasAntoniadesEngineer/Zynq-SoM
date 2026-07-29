@@ -43,5 +43,22 @@
       "bringup",
       "power"
     ]
+  },
+  "fpga": {
+    "bank_rails": {
+      "13": "+3V3",
+      "33": "+3V3",
+      "34": "+3V3",
+      "35": "+2V5_VADJ"
+    }
+  },
+  "escape": {
+    "_comment": "Measured 2026-07-02 on the live SoM interface + carrier link (J1 has 7 unnetted signal pads); the escape-lane gate's drift alarm.",
+    "netted_contacts": {
+      "J1": 93,
+      "J2": 100,
+      "J3": 100
+    },
+    "genuine_pairs": 15
   }
 }

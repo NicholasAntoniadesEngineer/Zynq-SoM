@@ -5,7 +5,7 @@
 #   ball map : som/Zynq_SoM.kicad_sch netlist (kicad-cli, at generation time)
 #   contract : carrier/som_interface.json (cross-checked pin-for-pin, stale = build FAIL)
 #   types    : carrier subsystems' typed-port registry
-# VCCO rail map (carrier/PLAN.md): bank 13 = +3V3, bank 33 = +3V3, bank 34 = +3V3, bank 35 = +2V5_VADJ
+# VCCO rail map (project fpga.bank_rails): bank 13 = +3V3, bank 33 = +3V3, bank 34 = +3V3, bank 35 = +2V5_VADJ
 # 156 pins, banks 13/33/34/35, 30 clock-capable (MRCC/SRCC)
 # Ports named IO_* are the bound SoM contract nets not yet claimed
 # by a function sheet; the wave-3 function map renames them here

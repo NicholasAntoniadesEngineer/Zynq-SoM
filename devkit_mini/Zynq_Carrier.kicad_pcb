@@ -543,6 +543,7 @@
 		(uuid "4d020ecc-29d5-538d-83b8-b006370d0b12")
 		(name "thermal_pour_U4002_F")
 		(hatch edge 0.5)
+		(priority 1)
 		(connect_pads
 			yes
 			(clearance 0.2)
@@ -570,6 +571,7 @@
 		(uuid "73c0bd34-b9df-5208-9ec9-95dddbb492ea")
 		(name "thermal_pour_U4002_B")
 		(hatch edge 0.5)
+		(priority 1)
 		(connect_pads
 			yes
 			(clearance 0.2)

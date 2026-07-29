@@ -1,0 +1,6 @@
+PLACEMENT-FLOW GATE: PASS (1 external contract(s); board_area=9240mm^2, flow_budget=100.9mm)
+  fails: flow=0/0 facing=0/0 far=0/0 near_max=0/1
+  unresolved: 0
+  violations: 0
+  detail: 1
+    near_max uart_bridge to usb_uart_connector: 5.39mm gap / <= 40mm

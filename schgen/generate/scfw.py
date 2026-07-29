@@ -32,12 +32,23 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from schgen.core.link import load_subsystem
+from schgen.core.link import load_subsystem, missing_subsystems
 from schgen.core.project import PROJECT_ROOT
 from schgen.generate import bringup_facts as bf
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = PROJECT_ROOT / "firmware" / "sc"
+
+# Every table/state machine below reads the FULL bring-up complement; a project
+# that lacks any of these sheets has no SC bring-up scaffold to generate — the
+# board build SKIPs it loudly (missing_requirements), never crashes.
+REQUIRED_SHEETS = ("power", "power_mon", "bringup_en", "bringup_modules",
+                   "bringup_rails", "usb_pd", "board_services",
+                   "bringup_en_modules")
+
+
+def missing_requirements() -> list[str]:
+    return missing_subsystems(REQUIRED_SHEETS)
 
 CONTRACT_HEADER = "zynq_carrier_contract.h"   # the SC contract (schgen firmware)
 
@@ -1139,6 +1150,10 @@ def generate(out_dir: Path = DEFAULT_OUT) -> list[Path]:
 
 
 def cmd_scfw(args: argparse.Namespace) -> int:
+    missing = missing_requirements()
+    if missing:
+        print(f"SCFW SCAFFOLD: SKIP — project has no {', '.join(missing)}")
+        return 1
     out_dir = args.output or DEFAULT_OUT
     written = generate(out_dir)
     print(f"SCFW SCAFFOLD: {out_dir} ({len(written)} files)")

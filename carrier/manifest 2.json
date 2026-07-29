@@ -1,0 +1,1088 @@
+{
+  "artifacts": [
+    {
+      "path": "Zynq_Carrier.kicad_pcb",
+      "sha256": "c8c5395e2f8fa83f28697b84dbefd3f94be66eef909c56cf3bc5d43e42e130fa"
+    },
+    {
+      "path": "Zynq_Carrier.kicad_pro",
+      "sha256": "387362979b8b00fabdaded447ff4e9dbfef4b9b67b9490b42c9a72313e843366"
+    },
+    {
+      "path": "Zynq_Carrier.kicad_sch",
+      "sha256": "5e3de622545aa2cc19004215783815b949c4383f8ce5e5f8fc94f54910542b0f"
+    },
+    {
+      "path": "docs/BRINGUP.md",
+      "sha256": "0c772fae43df04f5d7ef35bc1421180e8a1c4d88923b4627381e2a47816147e9"
+    },
+    {
+      "path": "docs/COMPLIANCE.md",
+      "sha256": "5330bccb9619ebb29baa5d8bd987143758501a3c81c05e8d90652084918756ea"
+    },
+    {
+      "path": "docs/DESIGN_SPEC.md",
+      "sha256": "1942ae4005f49fc2a8460b4c7f242049dcf19193fa336917674f51f399393db5"
+    },
+    {
+      "path": "docs/FLOORPLAN.md",
+      "sha256": "ab9919ae4cc53d772521a6409f756c939568df2c74d417e663396a4734f7ef5b"
+    },
+    {
+      "path": "docs/FLOORPLAN.svg",
+      "sha256": "703e3b047ff5d0b3b27871a8eb5b88b12a36f211e78173133e748e751e8502c6"
+    },
+    {
+      "path": "docs/RATSNEST.svg",
+      "sha256": "3f9bf0b2f4eaf3f23232616b6af5447eac98a7a4c1876082bd4a5cb9cd710e45"
+    },
+    {
+      "path": "docs/power_sequence.svg",
+      "sha256": "dd02ffe2cbc50281fb3918f2bd5dd56973d69c0705a94b8451114988d7fae345"
+    },
+    {
+      "path": "docs/power_tree.svg",
+      "sha256": "fac9bef453c09a344d36a77effe71e13593b7e55609b76638ed1d3fa7cb57b38"
+    },
+    {
+      "path": "firmware/zynq_carrier_contract.h",
+      "sha256": "0b665db4b5310a36a23596a1dea31f9ee72e3ce28933a5001b8971ef4e8ec204"
+    },
+    {
+      "path": "fpga/Zynq_Carrier_pins.xdc",
+      "sha256": "f6f7da6f52984cc8ca0e47fa75a92c974a8afbd9c37978a23ec4984cffa65fa8"
+    },
+    {
+      "path": "manufacturing/SI_CONSTRAINTS.md",
+      "sha256": "cd1795d28287679188b9a657c514d7035f5d4baaea9d0b650959e757348e44ca"
+    },
+    {
+      "path": "manufacturing/Zynq_Carrier_cpl.csv",
+      "sha256": "f876afaa967b9d1244378eba39d2a6ec55c5e3596596b95f9d1c8cf115099691"
+    },
+    {
+      "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
+      "sha256": "75a3c23e11ea59be019a6a31de61182a2a1721ea78a8c767174415cd0d40eccb"
+    },
+    {
+      "path": "manufacturing/bom_jlc.csv",
+      "sha256": "8d08c1219d610111b1bb4198263cf78d45828268e0b097c877b1b5109d69a4d7"
+    },
+    {
+      "path": "manufacturing/layout_constraints.csv",
+      "sha256": "76d5269ae0e268912d393682aaff2871c18df114126d006d8949aed82edca219"
+    },
+    {
+      "path": "manufacturing/layout_constraints.kicad_dru",
+      "sha256": "7176e4f947307b215b2ab56e706420686d750dedc9a647f6859916c327a262f0"
+    },
+    {
+      "path": "manufacturing/preflight_report.txt",
+      "sha256": "9de80e77a2c1e779c73dd8ec2eb1464042f028a3d42b12f57e8ee55e739c7726"
+    },
+    {
+      "path": "reports/board_gate.txt",
+      "sha256": "16b635c1b9307915331aa3511f9e7f915cd95d0abbb7859515a338c25fc18067"
+    },
+    {
+      "path": "reports/bom_values.txt",
+      "sha256": "8a7ded66c7bd3c8a357a1bf9326a38bcbfd24884e7416b92324b6e7229a821e9"
+    },
+    {
+      "path": "reports/carrier_structure.txt",
+      "sha256": "727b2a6320a1f8e8731f5805ecee24bfbee768c14dfb6e75a0d84a56582eaa03"
+    },
+    {
+      "path": "reports/cc_gate.txt",
+      "sha256": "de85bff3011eb4519afd159104a7ac3c358386e31b4fdcdf84a66519bfa76f1b"
+    },
+    {
+      "path": "reports/connector_model.txt",
+      "sha256": "9c2aa438cfb0129a1e6bf0b82b6f250b9fa178043f982e67c23ecfe93cb7d59e"
+    },
+    {
+      "path": "reports/connector_spacing.txt",
+      "sha256": "c5693be2091184b999570b61bf929cf1fea00de94a98563198564a030e04781f"
+    },
+    {
+      "path": "reports/contract_coverage.txt",
+      "sha256": "f668814ea8f5f0c4f44d8ba565a1e3f671c20788316240d208e013223c53c7a8"
+    },
+    {
+      "path": "reports/contract_coverage_lint.txt",
+      "sha256": "6a9303f27877f1f41a5c0ff5d9d1bd9ab792e878eeec2832ea255d2bac6176c4"
+    },
+    {
+      "path": "reports/copper_debt.txt",
+      "sha256": "551722c9f1e0366d732f30ba63d8fc4bbf554eb520f3bb646272d014bf239635"
+    },
+    {
+      "path": "reports/design_rules.txt",
+      "sha256": "6b5cf9397056f5860b9b2e5139b4b7bd108a24f2081007adff6087ffd2d2c0ae"
+    },
+    {
+      "path": "reports/escape_lanes.txt",
+      "sha256": "6c46fc99883b8f40493dbe411dcfa65cb9810598fc0d150faec88202efa72565"
+    },
+    {
+      "path": "reports/fab_profile.txt",
+      "sha256": "001bb5905383097bb2bcb894af49bd60bbed50d4c1db48ae5b4a35ed41b07113"
+    },
+    {
+      "path": "reports/fanout.txt",
+      "sha256": "c255754cb0a739a651ae9b0631fea6f08e86fa6c059e94ceea9f93571b2ecb01"
+    },
+    {
+      "path": "reports/fanout_red_on_before.txt",
+      "sha256": "5887712e76631242b75d1623e51586e9d15061066fe6747c76f7d68608fa1c88"
+    },
+    {
+      "path": "reports/floorplan_composition.txt",
+      "sha256": "a962c2952015e62bdaf8eb42e2e373f152e690b8f64730ac9406b9deebca10e7"
+    },
+    {
+      "path": "reports/footprint_pads.txt",
+      "sha256": "6147a666f48dc82cdd756f8c77b0a5cf143c25e7bc2bbab13c7213a69c12e17f"
+    },
+    {
+      "path": "reports/gates.txt",
+      "sha256": "118d79959f5ac984d9e1bc212631efa020ace4caa5195a4381bbc28cde7026fa"
+    },
+    {
+      "path": "reports/link_report.txt",
+      "sha256": "041e99db2a206647aa65192cbb839ebc809d44d8c4116c0fff6c827775761445"
+    },
+    {
+      "path": "reports/model3d.txt",
+      "sha256": "0efaacb19d68b5bc250d72c9f669e7bd90de4040c2008432a4a29fc6a7cfc4e1"
+    },
+    {
+      "path": "reports/part_rules.txt",
+      "sha256": "e8db9ebb1ce1aaf8c4b17a99efd192bb6aa52327dfc872d24104f855b5abb512"
+    },
+    {
+      "path": "reports/pin_completeness.txt",
+      "sha256": "2f190bb8ba13265261e8d70ccd519a1b5b1c3ea42a3789d846ef380bab75016e"
+    },
+    {
+      "path": "reports/placement_contract.txt",
+      "sha256": "7dda086a689f48e67f0293bdc1647cc4f8811d744b691cfe5850b739ab7a6ce6"
+    },
+    {
+      "path": "reports/placement_flow.txt",
+      "sha256": "43423bc1d80bbd2e2f8de8a5713e352f968c006500bd462d5ea8f86532f651ae"
+    },
+    {
+      "path": "reports/placement_mech.txt",
+      "sha256": "6f450ba9f6102a9238d7df2b552fb333758446940c98df94cefb60287b6a7afa"
+    },
+    {
+      "path": "reports/power_tree.txt",
+      "sha256": "55bf0bf75e4f55aa8c9526ece2c310a6eae5885010666863cba4b6f9f5bf31c6"
+    },
+    {
+      "path": "reports/rail_ampacity.txt",
+      "sha256": "b49dd890296ee2fbeb05b9dea29b00176a6268015d1113b89b49ce34edec55d6"
+    },
+    {
+      "path": "reports/ratsnest.txt",
+      "sha256": "2d0c5713e88acc55d5ff37760bbf1c1e07df350b54f9355c374b4c1a16663693"
+    },
+    {
+      "path": "reports/return_path.txt",
+      "sha256": "37c69a6c2548850f05c90f197d5e45ed70400ff3a703555f6133c6e849013106"
+    },
+    {
+      "path": "reports/return_stitch.txt",
+      "sha256": "4a53ebdd8332ea349955e30a1f03c46f0f161373498e2898eb0c2f5e37103844"
+    },
+    {
+      "path": "reports/spice.txt",
+      "sha256": "a57e1fbd1eb0ce96e7012183f9df7b86c2e954af7f95d11f9ea660470b608fb6"
+    },
+    {
+      "path": "reports/subsystem_structure.txt",
+      "sha256": "65a3367691ddd491d588552d7dc08e3bc3988ca3fea6ab930c485f3780c68ad5"
+    },
+    {
+      "path": "reports/symbol_law.txt",
+      "sha256": "c47907c81fd19f001978c4a4442e3eccec03e58bce7f8f4e6a1aa3751b9462da"
+    },
+    {
+      "path": "reports/testpoints.txt",
+      "sha256": "9a8d24ac0a1e7c9b344e325adfcaf90be5f8e80a1fc7b28ac3412e3235ba3778"
+    },
+    {
+      "path": "reports/thermal.txt",
+      "sha256": "b25056e99ff85e6abc8a872ba9da5571ae7aa3f6c96252a59ed4a742200de7a8"
+    },
+    {
+      "path": "schematic/board_aux.kicad_sch",
+      "sha256": "8157c8631f09921452b9efea46363e79286674a4fc1fe7263a894fcab7281aea"
+    },
+    {
+      "path": "schematic/board_qwiic.kicad_sch",
+      "sha256": "b34f9f8720caa24795d7a9dbc85b0440328eb2c9d41224619a945c6d7e26b9a4"
+    },
+    {
+      "path": "schematic/board_services.kicad_sch",
+      "sha256": "eafbdde3d2c8b9f7b8de80473329aa39b12f5077994c06358f90e8dbc3e3427e"
+    },
+    {
+      "path": "schematic/bringup_en.kicad_sch",
+      "sha256": "46ea85de50663a3a3cca03a50a283457e932aec71ba7c21db7a8f9cb8719990a"
+    },
+    {
+      "path": "schematic/bringup_en_modules.kicad_sch",
+      "sha256": "4f543b5fccdabb2398e30eb57caadc995d080759c999db4c6ad9ae6a3e00d4da"
+    },
+    {
+      "path": "schematic/bringup_modules.kicad_sch",
+      "sha256": "ddb84b013a199d145866a6bc4fba924043584fd695798d1af6a7e23611a69cd0"
+    },
+    {
+      "path": "schematic/bringup_rails.kicad_sch",
+      "sha256": "4ca40a1db0e2a8dbc6c5466c8bcaf1fa17337021f6dc79df79d1759076b4fefa"
+    },
+    {
+      "path": "schematic/camera.kicad_sch",
+      "sha256": "41f51c0946f43e90df51ab9e00c1582e209a420623cc7dad2ed69337ab3c844a"
+    },
+    {
+      "path": "schematic/debug_boot.kicad_sch",
+      "sha256": "8ba37d80f16968445b18d9c9f38bf679fe24de346e227d7eddf230309c1d4426"
+    },
+    {
+      "path": "schematic/ethernet.kicad_sch",
+      "sha256": "a56d3fab2d1b3662a0c50a2cbd8021b843e03726f33df30e9bdc36b776b25809"
+    },
+    {
+      "path": "schematic/fmc.kicad_sch",
+      "sha256": "cb24c5b4054e1d40c1f0c76541837056edd29c87a880a87ca171cc8b66ca60d5"
+    },
+    {
+      "path": "schematic/hdmi_rx.kicad_sch",
+      "sha256": "f4a02bca60a7ec89841e611b87b23d2e17805946afc9b1d6178c3686e094bd34"
+    },
+    {
+      "path": "schematic/hdmi_rx_term.kicad_sch",
+      "sha256": "05073fba1768158e41d5696d18f17d3fba9aa7e10b9a31947cc2379ec9836313"
+    },
+    {
+      "path": "schematic/hdmi_tx.kicad_sch",
+      "sha256": "cd685d3b6c140c9d0de1a4e7060de9cb897c5ce1c31a5ac517d57db2be948400"
+    },
+    {
+      "path": "schematic/lcd.kicad_sch",
+      "sha256": "5d03a499d3b4fd0f5b3f47e379425b3c97792239dca299cd9750ddc8bcf121b7"
+    },
+    {
+      "path": "schematic/mechanical.kicad_sch",
+      "sha256": "7a903bce5d0acb57a17a34e330b16d8a2824762a3cb61cdc5b3e784aed4355ec"
+    },
+    {
+      "path": "schematic/microsd.kicad_sch",
+      "sha256": "6b4dbcda87da4df2fd4be0644fdd00de03ebad793ed1b906af4ae90c700b3036"
+    },
+    {
+      "path": "schematic/motor_pwm.kicad_sch",
+      "sha256": "65d72a1e57e6c1c3f2f796bb5500f00f5dbd9de021e6f18488a418378d744368"
+    },
+    {
+      "path": "schematic/motor_sense.kicad_sch",
+      "sha256": "3ba47d1a1987c83220cad848aa1c738a96430003cb0369090382e72173710c7f"
+    },
+    {
+      "path": "schematic/pd_input.kicad_sch",
+      "sha256": "4737dc071a4dd1312893960e0cd5c2d80430821c69dcf944ae24e51e990dd742"
+    },
+    {
+      "path": "schematic/pmod.kicad_sch",
+      "sha256": "62d0db945895644ca264be8eef698e4ac83c0ae45ad5b677a7e23ee6c540d544"
+    },
+    {
+      "path": "schematic/pmod_expansion.kicad_sch",
+      "sha256": "75cf1446959027367d28c955d24b840ea4bdca28969367ddc8190719ed8e6b9f"
+    },
+    {
+      "path": "schematic/power.kicad_sch",
+      "sha256": "a8c51886e03837d4d682e83b08e5af0842223c9c0075fc6e31756cbbeb630e62"
+    },
+    {
+      "path": "schematic/power_mon.kicad_sch",
+      "sha256": "94ac2e35ed8713e036ac2b62f0e7cd40eef2a8243989a73cb0df15e0487d751b"
+    },
+    {
+      "path": "schematic/power_som.kicad_sch",
+      "sha256": "cfb672dc42f361f46c5c5e285b4863af92d28a5663650edcd5840225aaa8a8c5"
+    },
+    {
+      "path": "schematic/rj45_connector.kicad_sch",
+      "sha256": "ecd79562cea3b65e3732d7875c10945d74547d08f18a7b72dad24790c9b1a480"
+    },
+    {
+      "path": "schematic/som_decoupling.kicad_sch",
+      "sha256": "f61f6e708beaddd087ee192ff070bd0ea0ffa58a1c7697e53234dd13997cfb48"
+    },
+    {
+      "path": "schematic/som_j1.kicad_sch",
+      "sha256": "0e8d6af7689ca0cfd8636101102497b12b68ac7ce092ca2a34cd69b193901365"
+    },
+    {
+      "path": "schematic/som_j2.kicad_sch",
+      "sha256": "228e78be39679d4327e1574e000f5941ad742e6d43f3ffa03b4065f64024de0c"
+    },
+    {
+      "path": "schematic/som_j3.kicad_sch",
+      "sha256": "b0663aed85f65f52235003d9ea8a99f07f856c0a80ae618a8ed8a923e0ebb612"
+    },
+    {
+      "path": "schematic/uart_bridge.kicad_sch",
+      "sha256": "b97b1c5e0bbda9582bc1e30f945974b4060da9bea7893d03c53df855793a92d7"
+    },
+    {
+      "path": "schematic/usb_jtag.kicad_sch",
+      "sha256": "0980a1097254acef6cb07c0ce44fbc3ea095923c457f1550f3539ab1bde8b5e2"
+    },
+    {
+      "path": "schematic/usb_jtag_connector.kicad_sch",
+      "sha256": "b4767dd5e64835329e029b25709a8191561973bc5eb287a338a7cb38094ccda7"
+    },
+    {
+      "path": "schematic/usb_pd.kicad_sch",
+      "sha256": "47e00243b828ff2977864e9a78892db472ef7b1dfeddba6f4ad42df2c0abb9a6"
+    },
+    {
+      "path": "schematic/usb_uart_connector.kicad_sch",
+      "sha256": "ff1f742b3ed39ab4b68c2b7653e0555599fbb54644d82c894f1d2a0b95f98f13"
+    },
+    {
+      "path": "schematic/usbc_otg.kicad_sch",
+      "sha256": "065fcdbc43fd7eeb8200f0eec0b0cb90d881ad89ae81cbbe529a036b8eb72488"
+    },
+    {
+      "path": "schematic/user_io.kicad_sch",
+      "sha256": "b2b1a85b9a24791d4962dc0fa6bd931b17db5050e61373cb8f99e283c03d9db9"
+    }
+  ],
+  "bom": {
+    "cost": null,
+    "extended": null,
+    "lines": 105,
+    "missing": [
+      "fmc:J1"
+    ],
+    "parts": 502
+  },
+  "device": "XC7Z020-CLG484 (U2 on the SoM)",
+  "gpio_map": [
+    {
+      "j_pins": [
+        "J1.57"
+      ],
+      "net": "STM32_BOOT0",
+      "pin": 8,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.49"
+      ],
+      "net": "STM32_DAC1",
+      "pin": 4,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.55"
+      ],
+      "net": "STM32_DAC2",
+      "pin": 5,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.33"
+      ],
+      "net": "STM32_GPIO1",
+      "pin": 11,
+      "port": "C"
+    },
+    {
+      "j_pins": [
+        "J1.35"
+      ],
+      "net": "STM32_GPIO2",
+      "pin": 5,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.43"
+      ],
+      "net": "STM32_GPIO3",
+      "pin": 10,
+      "port": "C"
+    },
+    {
+      "j_pins": [
+        "J1.41"
+      ],
+      "net": "STM32_GPIO4",
+      "pin": 15,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.53"
+      ],
+      "net": "STM32_GPIO5",
+      "pin": 14,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.45"
+      ],
+      "net": "STM32_GPIO6",
+      "pin": 13,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.59"
+      ],
+      "net": "STM32_GPIO7",
+      "pin": 10,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.54"
+      ],
+      "net": "STM32_GPIO8",
+      "pin": 11,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.47"
+      ],
+      "net": "STM32_NRST",
+      "pin": 10,
+      "port": "G"
+    },
+    {
+      "j_pins": [
+        "J1.29"
+      ],
+      "net": "STM32_USB_CC1",
+      "pin": 6,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.31"
+      ],
+      "net": "STM32_USB_CC2",
+      "pin": 4,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.21"
+      ],
+      "net": "STM32_USB_D_N",
+      "pin": 11,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.19"
+      ],
+      "net": "STM32_USB_D_P",
+      "pin": 12,
+      "port": "A"
+    }
+  ],
+  "i2c_map": [
+    {
+      "addr": 32,
+      "addr_hex": "0x20",
+      "bus": "STM32_I2C2",
+      "device": "TCA9535",
+      "ref": "U1",
+      "sheet": "bringup_rails"
+    },
+    {
+      "addr": 34,
+      "addr_hex": "0x22",
+      "bus": "STM32_I2C2",
+      "device": "FUSB302B",
+      "ref": "U1",
+      "sheet": "usb_pd"
+    },
+    {
+      "addr": 64,
+      "addr_hex": "0x40",
+      "bus": "STM32_I2C2",
+      "device": "INA3221",
+      "ref": "U1",
+      "sheet": "power_mon"
+    },
+    {
+      "addr": 65,
+      "addr_hex": "0x41",
+      "bus": "STM32_I2C2",
+      "device": "INA3221",
+      "ref": "U2",
+      "sheet": "power_mon"
+    },
+    {
+      "addr": 66,
+      "addr_hex": "0x42",
+      "bus": "STM32_I2C2",
+      "device": "INA3221",
+      "ref": "U2",
+      "sheet": "motor_sense"
+    },
+    {
+      "addr": 81,
+      "addr_hex": "0x51",
+      "bus": "AUX_I2C",
+      "device": "24AA025E48",
+      "ref": "U1",
+      "sheet": "board_services"
+    },
+    {
+      "addr": 82,
+      "addr_hex": "0x52",
+      "bus": "AUX_I2C",
+      "device": "RV-3028",
+      "ref": "U2",
+      "sheet": "board_services"
+    }
+  ],
+  "rails": [
+    {
+      "draws": [
+        {
+          "amps": 0.005,
+          "note": "TXS02612 VCCA (SoM-side level)",
+          "sheet": "microsd"
+        },
+        {
+          "amps": 0.001,
+          "note": "PG FET gate divider 10k+100k (16 uA), rounded up",
+          "sheet": "power"
+        }
+      ],
+      "limit_a": null,
+      "load_a": 0.006,
+      "name": "+1V8",
+      "source": null,
+      "volts": 1.8
+    },
+    {
+      "draws": [],
+      "limit_a": 0.6,
+      "load_a": 0.006,
+      "name": "+1V8_REG",
+      "source": "power:U3 AP2112K-1.8 [ldo]",
+      "volts": 1.8
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.35,
+          "note": "VADJ bank-35 VCCO budget (TLV75725 DYD 0.40 A envelope less ~0.05 A bank-35 VCCO)",
+          "sheet": "fmc"
+        },
+        {
+          "amps": 0.05,
+          "note": "Zynq bank 35 VCCO (LVDS_25 drivers, camera/FMC) \u2014 sec 3.1 re-budget",
+          "sheet": "som_j3"
+        }
+      ],
+      "limit_a": 0.4,
+      "load_a": 0.4,
+      "name": "+2V5_VADJ",
+      "source": "fmc:U1 TLV75725PDYDR [ldo]",
+      "volts": 2.5
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.001,
+          "note": "2x user-button 10k pull-ups when pressed",
+          "sheet": "bringup_rails"
+        },
+        {
+          "amps": 0.002,
+          "note": "JTAG TMS/TDI 4k7 insurance pulls when driven",
+          "sheet": "debug_boot"
+        },
+        {
+          "amps": 0.5,
+          "note": "bank-35 IO header +3V3 add-on allowance",
+          "sheet": "fmc"
+        },
+        {
+          "amps": 0.064,
+          "note": "8x TMDS sink termination 49.9R to AVCC (~8 mA/line driven low)",
+          "sheet": "hdmi_rx_term"
+        },
+        {
+          "amps": 0.009,
+          "note": "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA",
+          "sheet": "power"
+        },
+        {
+          "amps": 0.008,
+          "note": "RJ45 housing LEDs (2x 330R port-present indicator)",
+          "sheet": "rj45_connector"
+        },
+        {
+          "amps": 0.02,
+          "note": "Zynq banks 13+33 VCCO (LVCMOS33 static + PL output drive) + on-SoM BMI323 VDDIO rider",
+          "sheet": "som_j2"
+        },
+        {
+          "amps": 0.01,
+          "note": "Zynq bank 34 VCCO (LCD LVCMOS33 bus drive)",
+          "sheet": "som_j3"
+        },
+        {
+          "amps": 0.015,
+          "note": "CP2102N active ~14 mA typ + RST 1k pull-up",
+          "sheet": "uart_bridge"
+        },
+        {
+          "amps": 0.002,
+          "note": "4x button 10k pull-ups when pressed",
+          "sheet": "user_io"
+        }
+      ],
+      "limit_a": null,
+      "load_a": 2.245,
+      "name": "+3V3",
+      "source": null,
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.006,
+          "note": "status LED 3.9mA + 2x4k7 AUX-bus pull-ups",
+          "sheet": "board_aux"
+        },
+        {
+          "amps": 0.2,
+          "note": "QWIIC external module budget (200 mA)",
+          "sheet": "board_qwiic"
+        },
+        {
+          "amps": 0.005,
+          "note": "ID-EEPROM ~1mA + RV-3028 <0.1mA + TPS3823 15uA + INT# 10k pull",
+          "sheet": "board_services"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.211,
+      "name": "+3V3_AUX",
+      "source": "board_aux:U1 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "status LED (330R) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.3,
+          "note": "RPi camera module budget (camera_csi.md: V2 typ ~250 mA)",
+          "sheet": "camera"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.304,
+      "name": "+3V3_CAM",
+      "source": "bringup_modules:U4 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.045,
+          "note": "CH347 ~38 mA typ (DS) + SN74LVC125 + RST/mode/OE pull network",
+          "sheet": "usb_jtag"
+        }
+      ],
+      "limit_a": 0.6,
+      "load_a": 0.045,
+      "name": "+3V3_DBG",
+      "source": "usb_jtag:U4 AP2112K-3.3TRG1 [ldo]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "status LED (330R) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.001,
+          "note": "CEC 27k pull-up (EEPROM + EDID WC# are cable-5V-fed)",
+          "sheet": "hdmi_rx"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.005,
+      "name": "+3V3_HDMI_RX",
+      "source": "bringup_modules:U2 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "status LED (330R) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.002,
+          "note": "TPD12S016 ICCA + LS_OE/CT_HPD straps",
+          "sheet": "hdmi_tx"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.006,
+      "name": "+3V3_HDMI_TX",
+      "source": "bringup_modules:U1 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "status LED (330R) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.1,
+          "note": "panel logic 25-75 mA + touch <= 25 mA (lcd_backlight.md)",
+          "sheet": "lcd"
+        }
+      ],
+      "limit_a": 1.0,
+      "load_a": 0.104,
+      "name": "+3V3_LCD",
+      "source": "bringup_modules:U3 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "status LED (330R) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.2,
+          "note": "2x Pmod module budget ~100 mA each",
+          "sheet": "pmod"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.204,
+      "name": "+3V3_PMOD",
+      "source": "bringup_modules:U7 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.104,
+          "note": "1x Pmod module budget ~100 mA (Digilent spec) + status LED",
+          "sheet": "pmod_expansion"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.104,
+      "name": "+3V3_PMODX",
+      "source": "pmod_expansion:U1 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [],
+      "limit_a": 6.0,
+      "load_a": 2.245,
+      "name": "+3V3_REG",
+      "source": "power:U2 LM61460AANRJRR [buck]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.002,
+          "note": "3x SN74LVC1G08 + 100k pull networks",
+          "sheet": "bringup_en"
+        },
+        {
+          "amps": 0.005,
+          "note": "11x SN74LVC1G08 + 100k pull networks",
+          "sheet": "bringup_en_modules"
+        },
+        {
+          "amps": 0.005,
+          "note": "TCA9535 + DIP/I2C/INT pull networks (dossier R3 < 5 mA)",
+          "sheet": "bringup_rails"
+        },
+        {
+          "amps": 0.004,
+          "note": "BOOT0 strap ~2 mA closed + BOOTSEL pulls",
+          "sheet": "debug_boot"
+        },
+        {
+          "amps": 0.002,
+          "note": "INA3221 ~0.35 mA + CRITICAL pull-up",
+          "sheet": "motor_sense"
+        },
+        {
+          "amps": 0.002,
+          "note": "2x INA3221 ~0.7 mA + ALERT pull-up",
+          "sheet": "power_mon"
+        },
+        {
+          "amps": 0.002,
+          "note": "FUSB302B VDD (<1 mA); SC_INT_N pulled on bringup_rails (G2 wire-OR, single 10k)",
+          "sheet": "usb_pd"
+        },
+        {
+          "amps": 0.0005,
+          "note": "USBOTG_FLT# 100k pull-up (G4 re-rail)",
+          "sheet": "usbc_otg"
+        }
+      ],
+      "limit_a": 0.3,
+      "load_a": 0.0225,
+      "name": "+3V3_SC",
+      "source": "source: SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class \u2014 the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "status LED (330R) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.25,
+          "note": "SD card write burst ~200 mA + pull-ups + TXS02612 VCCB",
+          "sheet": "microsd"
+        }
+      ],
+      "limit_a": 1.0,
+      "load_a": 0.254,
+      "name": "+3V3_SD",
+      "source": "bringup_modules:U5 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "status LED (330R) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.012,
+          "note": "red ~1.3 mA (1k) + green/blue/white up to ~3.5 mA each (200R)",
+          "sheet": "user_io"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.016,
+      "name": "+3V3_USER_LED",
+      "source": "bringup_modules:U8 SY6280AAC [load_switch]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.08,
+          "note": "HCT245 buffer + light servo allowance (ILIM 523mA)",
+          "sheet": "motor_pwm"
+        },
+        {
+          "amps": 0.004,
+          "note": "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA",
+          "sheet": "power"
+        }
+      ],
+      "limit_a": null,
+      "load_a": 2.7443,
+      "name": "+5V",
+      "source": null,
+      "volts": 5.0
+    },
+    {
+      "draws": [],
+      "limit_a": 0.5,
+      "load_a": 0.045,
+      "name": "+5V_DBG",
+      "source": "source: debug USB-C VBUS (usb_jtag_connector J1) \u2014 host-supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag AP2112K-3.3 debug-island LDO; isolated from carrier +5V",
+      "volts": 5.0
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.003,
+          "note": "status LED (1k) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.055,
+          "note": "HDMI source +5V to cable \u2014 TPD12S016 switch limit 55 mA (DS 7.3.10)",
+          "sheet": "hdmi_tx"
+        }
+      ],
+      "limit_a": 0.523,
+      "load_a": 0.058,
+      "name": "+5V_HDMI_TX",
+      "source": "bringup_modules:U9 SY6280AAC [load_switch]",
+      "volts": 5.0
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.003,
+          "note": "status LED (1k) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.45,
+          "note": "SY7201 boost input @133 mA LED string (lcd_backlight.md operating point + margin)",
+          "sheet": "lcd"
+        }
+      ],
+      "limit_a": 1.0,
+      "load_a": 0.453,
+      "name": "+5V_LCD",
+      "source": "bringup_modules:U10 SY6280AAC [load_switch]",
+      "volts": 5.0
+    },
+    {
+      "draws": [],
+      "limit_a": 0.523,
+      "load_a": 0,
+      "name": "+5V_MOTOR_IO",
+      "source": "motor_pwm:U3 SY6280AAC [load_switch]",
+      "volts": 5.0
+    },
+    {
+      "draws": [],
+      "limit_a": 6.0,
+      "load_a": 2.7443,
+      "name": "+5V_REG",
+      "source": "power:U1 LM61460AANRJRR [buck]",
+      "volts": 5.0
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)",
+          "sheet": "power_som"
+        },
+        {
+          "amps": 2.15,
+          "note": "SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) \u2014 estimate, refine at bring-up",
+          "sheet": "som_j1"
+        }
+      ],
+      "limit_a": 6.0,
+      "load_a": 2.154,
+      "name": "+5V_SOM",
+      "source": "power_som:U4 LM61460AANRJRR [buck]",
+      "volts": 4.65
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.003,
+          "note": "status LED (1k) on the gated output",
+          "sheet": "bringup_modules"
+        },
+        {
+          "amps": 0.5,
+          "note": "downstream USB device budget, TPS2051C current-limited",
+          "sheet": "usbc_otg"
+        }
+      ],
+      "limit_a": 1.0,
+      "load_a": 0.503,
+      "name": "+5V_USB",
+      "source": "bringup_modules:U6 SY6280AAC [load_switch]",
+      "volts": 5.0
+    },
+    {
+      "draws": [],
+      "limit_a": 3.0,
+      "load_a": 1.3188,
+      "name": "+VBUS_IN",
+      "source": "source: USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)",
+      "volts": 20.0
+    },
+    {
+      "draws": [],
+      "limit_a": 3.529,
+      "load_a": 1.3188,
+      "name": "+VIN",
+      "source": "pd_input:U1 TPS26631PWPR [efuse]",
+      "volts": 20.0
+    },
+    {
+      "draws": [],
+      "limit_a": null,
+      "load_a": 1.3188,
+      "name": "+VIN_SYS",
+      "source": null,
+      "volts": 20.0
+    },
+    {
+      "draws": [],
+      "limit_a": null,
+      "load_a": 0.0,
+      "name": "CHASSIS_GND",
+      "source": null,
+      "volts": null
+    },
+    {
+      "draws": [],
+      "limit_a": null,
+      "load_a": 0.0,
+      "name": "GND",
+      "source": null,
+      "volts": null
+    }
+  ],
+  "testpoints": {
+    "covered": 56,
+    "required": 61,
+    "waived": 5
+  },
+  "xdc": {
+    "banks": [
+      "13",
+      "33",
+      "34",
+      "35"
+    ],
+    "pins": 156
+  }
+}

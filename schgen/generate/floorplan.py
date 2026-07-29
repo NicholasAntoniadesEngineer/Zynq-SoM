@@ -1454,16 +1454,11 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         for net in sc.circuit.nets.values():
             sheets_of_net.setdefault(net.name, set()).add(sc.name)
     # SoM membership: a net also touching a som_j sheet pulls toward the SoM.
-    # Track WHICH J strip(s) each net reaches too, so the airwire proxy that
-    # drives the grow loop (below) can charge the real connector->strip distance.
     som_nets: set[str] = set()
-    som_j_of_net: dict[str, set[str]] = {}
     for sc in sheets:
         if sc.name.startswith("som_j"):
-            jn = "J" + sc.name[len("som_j"):]
             for net in sc.circuit.nets.values():
                 som_nets.add(net.name)
-                som_j_of_net.setdefault(net.name, set()).add(jn)
     affinity: dict[str, dict[str, float]] = {}
     som_pull: dict[str, float] = {}
     for nname, ss in sheets_of_net.items():
@@ -1553,55 +1548,10 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # small for the airwire budget is, by the gate's own definition, not a valid
     # layout, so the placer grows it just enough — it does NOT relax the gate. The
     # SAME shared sizing drives both this floorplan and the PCB placement, so
-    # FLOORPLAN.svg and the PCB ratsnest cannot diverge.
-    #
-    # PROXY_TO_REAL: the block-centre MST proxy slightly OVER-estimates the real
-    # pad MST the gate measures — calibrated real/proxy ~= 0.92 and stable across
-    # board sizes (the proxy charges block-centre distances, the real gate the
-    # nearer pad-to-pad). Estimating real = proxy * PROXY_TO_REAL and stopping at
-    # the first board where that clears the budget with a SAFETY margin lands the
-    # board at the smallest size the real gate passes (verified +277 mm margin at
-    # 200x185). The REAL gate in ``schgen board`` is the final, strict arbiter; a
-    # mis-estimate could only make the board a touch bigger, never relax the gate.
-    PROXY_TO_REAL = 1.0
-    # SAFETY: PROXY_TO_REAL re-calibrated 0.93 -> 0.97 against the REAL pad-MST
-    # gate across the TIGHT-board regime (CLEAR 0.6): the measured real/proxy ratio
-    # is 0.94-0.97 (it RISES as the board shrinks because the per-pad MST the gate
-    # measures stops being shorter than the block-centre proxy once the blocks pack
-    # close), so the old 0.93 UNDER-estimated the real airwire and the smallest-
-    # area search would pick a board the strict gate then rejected (165x145 est
-    # passed but real 14017 > 13921 budget). 0.97 makes the floorplan's airwire
-    # estimate track the real gate, so the search stops at the smallest board the
-    # REAL gate actually passes. RE-CALIBRATED 0.97 -> 1.0: the real/proxy ratio
-    # RISES as the board shrinks (the pad-MST stops being shorter than the block-
-    # centre proxy once blocks pack close) and at the TIGHTER 160x145 regime it
-    # exceeded 0.97, so 0.97 UNDER-estimated and the search picked a board the real
-    # gate rejected (14166.7 > 14165 by 1.7mm — the exact failure mode noted above,
-    # now recurring). Since the block-centre proxy is ALWAYS >= the nearest pad-to-
-    # pad real airwire, est_real = proxy*1.0 is a PROVABLY SAFE upper bound: the
-    # search can never pick a board the real gate then rejects, and still lands the
-    # smallest passing board. SAFETY 1.0 (the calibration is the headroom). The
-    # REAL gate in `schgen board` remains the final, strict arbiter.
-    SAFETY = 1.0
-
-    # L4_PULL_CREDIT: the PCB placer's LEVER-L4 step (pcb.py — "BOTTOM-PULL toward
-    # the SoM") slides every subsystem's BOTTOM-side passive sub-cluster toward the
-    # SoM, collision- and dispersion-bounded, which SHORTENS the real cross-
-    # subsystem airwire the LAW-5 gate measures. The block-centre proxy here does
-    # NOT see that pull (it charges whole-block centres), so without a credit it
-    # over-states the airwire of the board the placer actually emits and the
-    # smallest-area search stops too early (it kept 165x135 even though the
-    # L4-placed board clears the budget at 161x134). MEASURED real(L4)/real(no-L4)
-    # is 0.944–0.958 across the tight regime (165x135: 0.958; 161x134: 0.944);
-    # 0.97 is a CONSERVATIVE credit (LESS reduction than the placer truly achieves)
-    # so proxy*PROXY_TO_REAL*L4_PULL_CREDIT stays a SAFE UPPER BOUND on the
-    # L4-placed real airwire — proven at every probed size (e.g. 161x134: estimate
-    # ~13.2k >= real 12.86k, budget 13.66k). This is NOT softening the gate: the
-    # estimate still over-bounds the REAL airwire of the REAL placement, and the
-    # strict LAW-5 gate in `schgen board` remains the only arbiter — a too-rosy
-    # estimate can only be caught there and leave the board a touch larger, never
-    # ship a board over budget. Grounded in the placer's behaviour, re-measurable.
-    L4_PULL_CREDIT = 0.97
+    # FLOORPLAN.svg and the PCB ratsnest cannot diverge. The estimate is the
+    # gate's own kernel on the STEP-3 pad population (``_cross_estimator``) —
+    # no calibrated constants; the strict gate in `schgen board` still judges.
+    est_cross = _cross_estimator(plan, zg, sheets)
 
     # DECLARATIVE fixed outline: carrier/floorplan.json {"outline":{"w","h"}}
     # PINS the board dimensions. The placer still packs the same blocks into that
@@ -1621,9 +1571,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                 f"carrier/floorplan.json — enlarge it or use \"outline\":\"auto\"")
         plan.interior_blocks = interior
         budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
-        proxy = _cross_proxy(plan, plan.edge_blocks + interior,
-                             sheets_of_net, som_j_of_net)
-        est_real = proxy * PROXY_TO_REAL * L4_PULL_CREDIT
+        est_real = est_cross(plan.edge_blocks + interior)
         OUTLINE_NOTE = (f"FIXED outline {BOARD_W:g}x{BOARD_H:g} mm declared in "
                         f"carrier/floorplan.json; estimated cross-subsystem "
                         f"airwire {est_real:.0f} mm (LAW-5 budget {budget:.0f} "
@@ -1636,11 +1584,11 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # whose SHORT axis is the SoM's tall axis. Here the placer GROWS from the seed
     # along a small, fixed family of aspect ratios and keeps the SMALLEST-AREA
     # board that (a) fits every REAL packed block AND (b) holds the estimated
-    # cross-subsystem airwire under the LAW-5 budget with the SAFETY margin. The
-    # REAL gate in `schgen board` is still the strict arbiter (a proxy
-    # under-estimate could only make the board a touch bigger, never relax the
-    # gate). Deterministic: aspects + grow steps are a fixed sorted grid, the
-    # smallest area wins, (w, h) breaks ties — no dict-order dependence.
+    # cross-subsystem airwire under the LAW-5 budget. The REAL gate in `schgen
+    # board` is still the strict arbiter (a mis-estimate could only make the
+    # board a touch bigger, never relax the gate). Deterministic: aspects + grow
+    # steps are a fixed sorted grid, the smallest area wins, (w, h) breaks ties
+    # — no dict-order dependence.
     seed_aspect = round(outline.w / outline.h, 4)
     # landscape aspects only (W >= H): the SoM is wider than tall and the W-edge
     # FMC/camera/LCD stack sets the height floor, so a portrait board buys nothing.
@@ -1673,10 +1621,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                 continue
             fit_seen = True
             budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
-            proxy = _cross_proxy(plan, plan.edge_blocks + interior,
-                                 sheets_of_net, som_j_of_net)
-            est_real = proxy * PROXY_TO_REAL * L4_PULL_CREDIT
-            if est_real <= budget * SAFETY:
+            est_real = est_cross(plan.edge_blocks + interior)
+            if est_real <= budget:
                 area = round(BOARD_W * BOARD_H, 1)
                 cand = (area, BOARD_W, BOARD_H, est_real, budget)
                 if best is None or cand < best:
@@ -1693,7 +1639,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # different fractions of the seed (e.g. 165x140, aspect 1.18, off the coarse
     # aspect grid). Starting from the best aspect-grown board, greedily shrink one
     # axis at a time by OUTLINE_SNAP while the blocks still pack AND the estimated
-    # cross-airwire still clears the budget — the SAME est_real <= budget*SAFETY
+    # cross-airwire still clears the budget — the SAME est_real <= budget
     # criterion the aspect search used (the strict REAL gate in `schgen board`
     # remains the final arbiter; this only lets the SIZING reach the true minimum-
     # area board on the snap grid, never relaxing a gate). Deterministic: a fixed
@@ -1709,10 +1655,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                              far_ceil=far_ceil, max_reach=max_reach):
             return False, 0.0, 0.0
         bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
-        px = _cross_proxy(plan, plan.edge_blocks + interior,
-                          sheets_of_net, som_j_of_net)
-        er = px * PROXY_TO_REAL * L4_PULL_CREDIT
-        return (er <= bud * SAFETY), er, bud
+        er = est_cross(plan.edge_blocks + interior)
+        return (er <= bud), er, bud
 
     _area, bw, bh, best_er, best_bud = best
     # The cross-airwire is NON-MONOTONIC in board size: shrinking by one snap step
@@ -1793,59 +1737,193 @@ def _snap_up_fp(v: float) -> float:
     return round(n * OUTLINE_SNAP, 1)
 
 
-def _cross_proxy(plan: Plan, blocks: list[Block],
-                 sheets_of_net: dict[str, set[str]],
-                 som_j_of_net: dict[str, set[str]]) -> float:
-    """A fast proxy for the LAW-5 cross-subsystem airwire of the CURRENT layout,
-    computed over BLOCK CENTRES (one point per subsystem) + the SoM J-strip points
-    each net reaches: for every net spanning >=2 of those points, the Euclidean
-    MST length. This is the same quantity the ratsnest gate measures, coarsened to
-    block granularity (intra-subsystem pad detail dropped) — it tracks the real
-    cross-airwire closely and monotonically, so the grow loop can use it to size
-    the board just large enough for the airwire budget. The REAL gate (on the full
-    pad MST) remains the final arbiter in ``schgen board``.
+def _cross_estimator(plan: Plan, zg, sheets):
+    """The LAW-5 sizing estimate as a STRUCTURAL measurement, not a calibrated
+    proxy: the ratsnest gate's own kernel (``ratsnest._mst_edges`` Manhattan-
+    select Prim, Euclidean cross-edge sum, per-net PAD population) evaluated on
+    the exact positions the PCB's STEP-3 emission derives from a candidate plan
+    — grid-snapped zone origins + the shared packer's per-part offsets, the
+    centered SoM receptacles + under-SoM decoupling grid, the corner mounting
+    holes, and the LAW-6 edge-seated connectors. Replaces the block-centre
+    proxy and its two measured constants (PROXY_TO_REAL, L4_PULL_CREDIT): the
+    4% block-granularity bias is gone by construction, and the placer's later
+    refinements (L4 bottom-pull, breathe, refit) net-SHORTEN the measured
+    cross (-2.2% on the shipping board), so the estimate reads as an honest
+    upper bound (est 17607 vs real 17192 at 215x161, +2.4%). The strict gate
+    in ``schgen board`` remains the only arbiter — a rosy estimate is caught
+    there. Deterministic: sorted nets, fixed point order.
 
-    ``blocks`` is passed explicitly (edge + the freshly-packed interior list)
-    rather than read from ``plan.blocks`` — inside the grow loop the interior is
-    not yet committed to ``plan.interior_blocks``, and missing those centres would
-    silently undercount the proxy."""
-    ctr = {b.name: (b.cx, b.cy) for b in blocks}
-    jpos = {f"J{j.ref[-1]}": (plan.som_x + j.x, plan.som_y + j.y)
-            for j in plan.som.js}
-    total = 0.0
-    for net, ss in sheets_of_net.items():
-        # iterate a SORTED order (ss is a set): the Euclidean Prim MST below
-        # tie-breaks on point ORDER, so a hash-seeded set iteration would make
-        # _cross_proxy (and thus the chosen board size) vary run-to-run. Sorting
-        # makes the proxy deterministic independent of PYTHONHASHSEED.
-        pts = [ctr[s] for s in sorted(ss) if s in ctr]
-        for jn in sorted(som_j_of_net.get(net, ())):
-            if jn in jpos:
-                pts.append(jpos[jn])
-        n = len(pts)
-        if n < 2:
-            continue
-        # Prim MST (Euclidean) — deterministic on the given point order.
-        in_tree = [False] * n
-        in_tree[0] = True
-        best = [((pts[i][0] - pts[0][0]) ** 2
-                 + (pts[i][1] - pts[0][1]) ** 2) ** 0.5 for i in range(n)]
-        for _ in range(n - 1):
-            u, ud = -1, None
-            for i in range(n):
-                if not in_tree[i] and (ud is None or best[i] < ud):
-                    ud, u = best[i], i
-            if u < 0:
-                break
-            in_tree[u] = True
-            total += ud
-            for i in range(n):
-                if not in_tree[i]:
-                    d = ((pts[i][0] - pts[u][0]) ** 2
-                         + (pts[i][1] - pts[u][1]) ** 2) ** 0.5
-                    if d < best[i]:
-                        best[i] = d
-    return total
+    Returns ``evaluate(blocks) -> float`` for the current BOARD_W/H + plan
+    pose; ``blocks`` is passed explicitly (edge + freshly-packed interior)
+    because inside the grow loop the interior is not yet committed to
+    ``plan.interior_blocks``."""
+    import json as _json
+
+    from schgen.generate.board import _renamed_ref
+    from schgen.generate.pcb.constants import (
+        EDGE_PAD_CLEAR,
+        MH_INSET,
+        ORIGIN_X,
+        ORIGIN_Y,
+        FootprintInst,
+    )
+    from schgen.generate.pcb.footprint import _gridify, resolve_mod
+    from schgen.generate.pcb.mating_face import _inst_pad_geom, _rot_pad_bbox
+    from schgen.generate.ratsnest import _mst_edges
+
+    idx_path = PROJECT_ROOT / "sheet_index.json"
+    sheet_index = (_json.loads(idx_path.read_text())
+                   if idx_path.exists() else {})
+
+    rot_of: dict[str, float] = dict(zg.conn_rot)
+    for ref, extra in zg.zone_extra_rot.items():
+        rot_of[ref] = (rot_of.get(ref, 0.0) + extra) % 360.0
+    som_rot = {j.ref: (90.0 if j.w < j.h else 0.0) for j in plan.som.js}
+    som_rel = {j.ref: (j.x, j.y) for j in plan.som.js}
+
+    owner_of: dict[str, tuple[str, object]] = {}
+    mod_of: dict[str, Path] = dict(zg.resolvable)
+    sheet_of: dict[str, str] = {}
+    off_of: dict[str, tuple[float, float]] = {}
+    for sheet in sorted(zg.zone_box):
+        for side_off in (zg.top_off.get(sheet, {}), zg.bot_off.get(sheet, {})):
+            for r, o in side_off.items():
+                off_of[r] = o
+                owner_of[r] = ("zone", sheet)
+                sheet_of[r] = sheet
+
+    dec_refs: list[str] = []
+    for i, sc in enumerate(sheets, start=1):
+        band = sheet_index.get(sc.name, i)
+        if sc.name.startswith("som_j"):
+            jn = "J" + sc.name[len("som_j"):]
+            for ref, part in sorted(sc.circuit.parts.items()):
+                bref = _renamed_ref(ref, band, sheet=sc.name)
+                mod = resolve_mod(part.footprint)
+                if not bref.startswith("J") or jn not in som_rel or mod is None:
+                    continue
+                mod_of[bref] = mod
+                sheet_of[bref] = sc.name
+                owner_of[bref] = ("som_j", jn)
+                rot_of[bref] = som_rot[jn]
+        elif sc.name == "som_decoupling":
+            for ref, part in sorted(sc.circuit.parts.items()):
+                bref = _renamed_ref(ref, band, sheet=sc.name)
+                mod = resolve_mod(part.footprint)
+                if mod is None:
+                    continue
+                mod_of[bref] = mod
+                sheet_of[bref] = sc.name
+                dec_refs.append(bref)
+        else:
+            for ref, part in sorted(sc.circuit.parts.items()):
+                if not part.lib_id.startswith("Mechanical:MountingHole"):
+                    continue
+                bref = _renamed_ref(ref, band, sheet=sc.name)
+                mod = resolve_mod(part.footprint)
+                if bref not in zg.mh_refs or mod is None:
+                    continue
+                mod_of[bref] = mod
+                sheet_of[bref] = sc.name
+                owner_of[bref] = ("mh", zg.mh_refs.index(bref) % 4)
+    for k, bref in enumerate(sorted(dec_refs)):
+        owner_of[bref] = ("dec", k)
+
+    pad_rel: dict[str, dict[str, list[tuple[float, float]]]] = {}
+    for bref in sorted(owner_of):
+        probe = FootprintInst(ref=bref, value="", footprint="", x=0.0, y=0.0,
+                              rotation=rot_of.get(bref, 0.0), pad_nets={},
+                              mod_path=mod_of[bref], sheet=sheet_of[bref])
+        rel: dict[str, list[tuple[float, float]]] = {}
+        for name, rx, ry, _n in _inst_pad_geom(probe):
+            rel.setdefault(name, []).append((rx, ry))
+        pad_rel[bref] = rel
+
+    net_pts: dict[str, list[tuple[str, str, float, float]]] = {}
+    for i, sc in enumerate(sheets, start=1):
+        band = sheet_index.get(sc.name, i)
+        for nname in sorted(sc.circuit.nets):
+            for p in sc.circuit.nets[nname].pins:
+                if p.ref.startswith("#"):
+                    continue
+                bref = _renamed_ref(p.ref, band, sheet=sc.name)
+                if bref not in owner_of:
+                    continue
+                for rx, ry in pad_rel[bref].get(p.pin, ()):
+                    net_pts.setdefault(nname, []).append(
+                        (bref, sheet_of[bref], rx, ry))
+    net_pts = {n: pts for n, pts in net_pts.items()
+               if len({s for _r, s, _x, _y in pts}) >= 2}
+
+    conn_pb = {ref: _rot_pad_bbox(mod_of[ref], rot_of.get(ref, 0.0))
+               for ref in sorted(zg.conn_edge) if ref in owner_of}
+    n_dec = len(dec_refs)
+    dec_cols = max(1, min(n_dec, round(
+        (n_dec * max(1.0, plan.som.w - 12.0)
+         / max(1.0, plan.som.h - 12.0)) ** 0.5))) if n_dec else 1
+    dec_rows = max(1, (n_dec + dec_cols - 1) // dec_cols) if n_dec else 1
+
+    def evaluate(blocks: list[Block]) -> float:
+        by_name = {b.name: b for b in blocks}
+        som_x, som_y = plan.som_x, plan.som_y
+        zorig: dict[str, tuple[float, float]] = {}
+        for sheet in zg.zone_box:
+            b = by_name.get(sheet)
+            if b is not None:
+                zorig[sheet] = (_gridify(ORIGIN_X + b.x),
+                                _gridify(ORIGIN_Y + b.y))
+        corners = ((MH_INSET, MH_INSET), (BOARD_W - MH_INSET, MH_INSET),
+                   (BOARD_W - MH_INSET, BOARD_H - MH_INSET),
+                   (MH_INSET, BOARD_H - MH_INSET))
+        rw = max(1.0, plan.som.w - 12.0)
+        rh = max(1.0, plan.som.h - 12.0)
+        part_pos: dict[str, tuple[float, float]] = {}
+        for bref, (kind, key) in owner_of.items():
+            if kind == "zone":
+                zo = zorig.get(key)
+                if zo is None:
+                    continue
+                dx, dy = off_of[bref]
+                part_pos[bref] = (round(zo[0] + dx, 4), round(zo[1] + dy, 4))
+            elif kind == "som_j":
+                jx, jy = som_rel[key]
+                part_pos[bref] = (_gridify(ORIGIN_X + som_x + jx),
+                                  _gridify(ORIGIN_Y + som_y + jy))
+            elif kind == "dec":
+                cxi, cyi = key % dec_cols, key // dec_cols
+                part_pos[bref] = (
+                    round(ORIGIN_X + som_x + 6.0 + rw * (cxi + 0.5) / dec_cols, 4),
+                    round(ORIGIN_Y + som_y + 6.0 + rh * (cyi + 0.5) / dec_rows, 4))
+            else:
+                cx, cy = corners[key]
+                part_pos[bref] = (_gridify(ORIGIN_X + cx),
+                                  _gridify(ORIGIN_Y + cy))
+        for ref, edge in sorted(zg.conn_edge.items()):
+            pb = conn_pb.get(ref)
+            if pb is None or ref not in part_pos:
+                continue
+            x, y = part_pos[ref]
+            if edge == "N":
+                y = round(ORIGIN_Y + EDGE_PAD_CLEAR - pb[1], 4)
+            elif edge == "S":
+                y = round(ORIGIN_Y + BOARD_H - EDGE_PAD_CLEAR - pb[3], 4)
+            elif edge == "W":
+                x = round(ORIGIN_X + EDGE_PAD_CLEAR - pb[0], 4)
+            elif edge == "E":
+                x = round(ORIGIN_X + BOARD_W - EDGE_PAD_CLEAR - pb[2], 4)
+            part_pos[ref] = (x, y)
+        cross = 0.0
+        for nname in sorted(net_pts):
+            pts = [(round(part_pos[r][0] + rx, 3),
+                    round(part_pos[r][1] + ry, 3), r, s)
+                   for r, s, rx, ry in net_pts[nname] if r in part_pos]
+            for a, b in _mst_edges(pts):
+                if pts[a][3] != pts[b][3]:
+                    cross += ((pts[a][0] - pts[b][0]) ** 2
+                              + (pts[a][1] - pts[b][1]) ** 2) ** 0.5
+        return cross
+
+    return evaluate
 
 
 def _attempt_pack(plan: Plan, interior: list[Block],

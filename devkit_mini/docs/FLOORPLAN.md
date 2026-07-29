@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **110 x 84 mm**; SoM origin at **(30, 21)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1119mm2 / 0.6 fill -> area floor 78x70; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 110x84 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1705 <= LAW-5 budget 2307 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1119mm2 / 0.6 fill -> area floor 78x70; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 110x84 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1505 <= LAW-5 budget 2307 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 

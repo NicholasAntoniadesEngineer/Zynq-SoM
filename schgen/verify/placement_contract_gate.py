@@ -56,15 +56,17 @@ from schgen.generate.pcb import PcbModel
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SUBSYSTEMS_DIR = _REPO_ROOT / "subsystems"
-_CARRIER_SUBSYSTEMS_DIR = PROJECT_ROOT / "subsystems"
+_PROJECT_SUBSYSTEMS_DIR = PROJECT_ROOT / "subsystems"
 
-# The two package roots a placement contract can live under, tried in order: the
-# portable top-level library first, then the carrier-local package (E1). A sheet
-# name is unique across both (the sheet_index / discovery order proves it), so a
-# name resolves to at most one contract.
-_CONTRACT_ROOTS: tuple[tuple[Path, str], ...] = (
+# The two roots a placement contract can live under, tried in order: the
+# portable top-level library first, then the ACTIVE PROJECT's local package
+# (E1). A sheet name is unique across both (the sheet_index / discovery order
+# proves it), so a name resolves to at most one contract. The project root is
+# imported BY FILE PATH (contracts are plain data): a package-name import here
+# would bleed one project's contracts into another under --project.
+_CONTRACT_ROOTS: tuple[tuple[Path, str | None], ...] = (
     (_SUBSYSTEMS_DIR, "subsystems"),
-    (_CARRIER_SUBSYSTEMS_DIR, "carrier.subsystems"),
+    (_PROJECT_SUBSYSTEMS_DIR, None),
 )
 
 # ENGINE-WIRED sheets. A placement contract that merely EXISTS is authored data;
@@ -106,20 +108,29 @@ _WIRED_SHEETS: frozenset[str] = _project_spec().wired_sheets
 def discover_contract(sheet_name: str) -> dict | None:
     """Resolve ``<root>/<sheet>/placement_contract.py``'s ``CONTRACT`` dict for
     ANY authored contract (no wiring gate), or None if no root carries one. Both
-    the portable ``subsystems/`` library and the carrier-local
-    ``carrier/subsystems/`` package are searched (E1). Used by ``check_all`` and
-    the offline red-on-before proof — sheets need NOT be engine-wired to be
-    discovered here. Every discovered contract passes the load-time PIN-NAME
-    chokepoint (:func:`validate_contract_pins`, memoised per sheet) — a pin that
-    is not a footprint pad id raises :class:`ContractPinError` HERE, so both the
-    gate and the stage-template solver inherit the guard."""
+    the portable ``subsystems/`` library and the ACTIVE PROJECT's local
+    ``<project>/subsystems/`` package are searched (E1) — a project without
+    local contracts has none; another project's contracts are NEVER consulted.
+    Used by ``check_all`` and the offline red-on-before proof — sheets need NOT
+    be engine-wired to be discovered here. Every discovered contract passes the
+    load-time PIN-NAME chokepoint (:func:`validate_contract_pins`, memoised per
+    sheet) — a pin that is not a footprint pad id raises
+    :class:`ContractPinError` HERE, so both the gate and the stage-template
+    solver inherit the guard."""
     import importlib
+    import importlib.util
     for root_dir, pkg_prefix in _CONTRACT_ROOTS:
         pkg = root_dir / sheet_name / "placement_contract.py"
         if not pkg.exists():
             continue
-        mod = importlib.import_module(
-            f"{pkg_prefix}.{sheet_name}.placement_contract")
+        if pkg_prefix is not None:
+            mod = importlib.import_module(
+                f"{pkg_prefix}.{sheet_name}.placement_contract")
+        else:
+            spec = importlib.util.spec_from_file_location(
+                f"_project_contract_{sheet_name}", pkg)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
         contract = getattr(mod, "CONTRACT", None)
         if contract is not None and sheet_name not in _PIN_VALIDATED:
             validate_contract_pins(sheet_name, contract)

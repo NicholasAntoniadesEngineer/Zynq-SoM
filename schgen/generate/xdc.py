@@ -15,10 +15,11 @@ Sources (all programmatic — a hand-typed ball map is banned):
 - electrical type: the carrier subsystems' typed-port registry
   (``pair_with`` pairs the diff lines; LVDS_25/TMDS_33 as typed).
 
-IOSTANDARD comes from the VCCO rail map decided in carrier/PLAN.md
-(rounds 2-4 + harvest flags): banks 13/33/34 run +3V3 -> LVCMOS33, bank 35
-runs +2V5_VADJ (shared camera/FMC 2.5 V) -> LVCMOS25. A bank with no rail
-decision FAILS the build — never a silent default.
+IOSTANDARD comes from the project's VCCO bank-rail decision
+(``project.json`` ``fpga.bank_rails`` — board policy, not engine data),
+cross-checked against the rail the project's ``som_conn_gen.VCCO_RAIL_MAP``
+actually drives. A bank with no rail decision FAILS the build — never a
+silent default.
 
 MRCC/SRCC-capable P-side balls get a commented ``create_clock`` template.
 Contract nets not yet claimed by a function sheet are still constrained
@@ -37,6 +38,7 @@ from pathlib import Path
 from schgen.core.link import _vcco_rail_map
 from schgen.core.model import Circuit, NetClass, PortType
 from schgen.core.project import PROJECT_ROOT
+from schgen.core.project import spec as _project_spec
 from schgen.core.som_interface import extract_zynq
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -65,15 +67,12 @@ def _function_map() -> dict[str, str]:
     m.update(mod.PUDC_STRAPS)   # PUDC_34: the strap part lives on bringup_rails
     return m
 
-# ---- the VCCO rail map (carrier/PLAN.md decisions, rounds 2-4) -----------------
-# bank id -> carrier rail powering +VCCO_<bank> on the SoM. The bank LIST is
-# discovered from the Zynq pin names; only the RAIL per bank is design intent.
-BANK_RAIL = {
-    "13": "+3V3",        # pmod + user_io + LCD touch I2C (round 3/harvest)
-    "33": "+3V3",        # spare / camera control
-    "34": "+3V3",        # LCD TTL panel (round 3: "LCD -> J3 bank 34")
-    "35": "+2V5_VADJ",   # SHARED camera D-PHY / FMC VADJ 2.5 V (harvest flag)
-}
+# bank id -> the project rail powering +VCCO_<bank> on the SoM. The bank LIST
+# is discovered from the Zynq pin names; the RAIL per bank is PROJECT policy
+# (project.json fpga.bank_rails), never an engine constant.
+def bank_rail_map() -> dict[str, str]:
+    return dict(_project_spec().bank_rails)
+
 
 _IOSTD_SINGLE = {3.3: "LVCMOS33", 2.5: "LVCMOS25", 1.8: "LVCMOS18"}
 _PAIR_KINDS = {"diff_pair", "usb_hs_pair", "tmds_pair"}
@@ -161,20 +160,21 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
     consumers, ptypes = _port_registry(sheets)
     func_map = _function_map()
 
-    # SYS-1 consistency gate: xdc's BANK_RAIL (which picks each pin's
-    # IOSTANDARD) MUST agree with the rail som_conn_gen actually drives onto
-    # +VCCO_<bank> (the real hardware). They are two independent copies; if a
-    # future SoM / bank re-rail (C3) edits one and not the other, the XDC would
-    # emit the wrong IOSTANDARD on the re-railed bank — a board-bring-up fault
-    # no other gate catches. Assert they agree.
+    # SYS-1 consistency gate: the project's declared bank railing (which picks
+    # each pin's IOSTANDARD) MUST agree with the rail som_conn_gen actually
+    # drives onto +VCCO_<bank> (the real hardware). They are two independent
+    # declarations; if a bank re-rail (C3) edits one and not the other, the XDC
+    # would emit the wrong IOSTANDARD on the re-railed bank — a board-bring-up
+    # fault no other gate catches. Assert they agree.
+    bank_rail = bank_rail_map()
     _vcco = {k.removeprefix("+VCCO_"): v for k, v in _vcco_rail_map().items()}
-    _drift = {b: {"BANK_RAIL": BANK_RAIL.get(b), "VCCO_RAIL_MAP": _vcco.get(b)}
-              for b in set(BANK_RAIL) | set(_vcco)
-              if BANK_RAIL.get(b) != _vcco.get(b)}
+    _drift = {b: {"bank_rails": bank_rail.get(b), "VCCO_RAIL_MAP": _vcco.get(b)}
+              for b in set(bank_rail) | set(_vcco)
+              if bank_rail.get(b) != _vcco.get(b)}
     if _drift:
         raise XdcError(
-            "VCCO bank-rail drift: schgen/xdc.BANK_RAIL and "
-            "carrier/som_conn_gen.VCCO_RAIL_MAP disagree — the XDC would emit "
+            "VCCO bank-rail drift: project.json fpga.bank_rails and the "
+            "project som_conn_gen.VCCO_RAIL_MAP disagree — the XDC would emit "
             f"the wrong IOSTANDARD on a re-railed bank: {_drift}")
     checks: list[str] = []
 
@@ -264,11 +264,11 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
     # -- IOSTANDARD per entry (rail map + typed ports) ------------------------
     by_net = {e.net: e for e in entries}
     for e in entries:
-        rail = BANK_RAIL.get(e.bank)
+        rail = bank_rail.get(e.bank)
         if rail is None:
             raise XdcError(f"bank {e.bank} ({e.net} @ {e.ball}): no VCCO "
-                           f"rail decision in BANK_RAIL — decide the rail "
-                           f"in carrier/PLAN.md first, never default")
+                           f"rail decision in project.json fpga.bank_rails — "
+                           f"decide the rail there, never default")
         volts = _rail_volts(rail)
         if e.ptype.kind in _PAIR_KINDS:
             comp = e.ptype.pair_with
@@ -309,7 +309,7 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
                   f"ports (no double-claims)")
 
     # -- write -----------------------------------------------------------------
-    text = _render(entries, live, refs, contract_path, som_sch)
+    text = _render(entries, live, refs, contract_path, som_sch, bank_rail)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(text)
     n_lines = sum(1 for ln in text.splitlines()
@@ -322,7 +322,8 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
 
 
 def _render(entries: list[PinEntry], live: dict, refs: tuple[str, ...],
-            contract_path: Path, som_sch: Path) -> str:
+            contract_path: Path, som_sch: Path,
+            bank_rail: dict[str, str]) -> str:
     def rel(p: Path) -> str:
         try:
             return str(Path(p).resolve().relative_to(REPO_ROOT))
@@ -340,8 +341,8 @@ def _render(entries: list[PinEntry], live: dict, refs: tuple[str, ...],
         f"#   contract : {rel(contract_path)} "
         "(cross-checked pin-for-pin, stale = build FAIL)",
         "#   types    : carrier subsystems' typed-port registry",
-        "# VCCO rail map (carrier/PLAN.md): "
-        + ", ".join(f"bank {b} = {BANK_RAIL[b]}" for b in banks),
+        "# VCCO rail map (project fpga.bank_rails): "
+        + ", ".join(f"bank {b} = {bank_rail[b]}" for b in banks),
         f"# {len(entries)} pins, banks {'/'.join(banks)}, "
         f"{n_clk} clock-capable (MRCC/SRCC)",
         "# Ports named IO_* are the bound SoM contract nets not yet claimed",
@@ -353,7 +354,7 @@ def _render(entries: list[PinEntry], live: dict, refs: tuple[str, ...],
     for bank in banks:
         bank_entries = sorted((e for e in entries if e.bank == bank),
                               key=lambda e: e.net)
-        rail = BANK_RAIL[bank]
+        rail = bank_rail[bank]
         lines += ["",
                   f"# ---- bank {bank} — VCCO = {rail} "
                   f"({len(bank_entries)} pins) " + "-" * 20]

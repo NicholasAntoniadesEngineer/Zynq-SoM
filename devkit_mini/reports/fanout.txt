@@ -1,0 +1,12 @@
+FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
+  multi-pin subjects: 17  starved: 0  baseline(ratchet): 0
+  intelligent need = pin-count tier; clearance = min courtyard gap to nearest FOREIGN part
+  cluster-aware: own-sheet 2-pin R/C/L excluded; DF40 plugs (som_j*, >=40-pin) excluded (no-inflate)
+  OFFENDERS (starved, worst slack first):
+    (none)
+  (tightest PASSING subjects:)
+    ok      SW1001    debug_boot         8pin clr=0.500 need=0.50 slack=+0.000
+    ok      SW1002    debug_boot         4pin clr=0.500 need=0.50 slack=+0.000
+    ok      U3002     pd_input           6pin clr=0.565 need=0.50 slack=+0.065
+    ok      Q4001     power              3pin clr=0.980 need=0.50 slack=+0.480
+    ok      U4003     power              5pin clr=0.980 need=0.50 slack=+0.480

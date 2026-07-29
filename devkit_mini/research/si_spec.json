@@ -1,0 +1,90 @@
+{
+ "_comment": "devkit_mini vendored SI target table - the subset of the researched carrier/research/si_spec.json rows whose pairs the devkit_mini sheets declare (same citations; the targets are interface-standard facts, not board policy).",
+ "pairs": [
+  {
+   "ac_coupled": false,
+   "interface": "Gigabit Ethernet (MDI, PHY-side)",
+   "intra_pair_skew_mil": 50,
+   "match_tol_mil": 50,
+   "net_n": "ETH_PHY_MDI0_N",
+   "net_p": "ETH_PHY_MDI0_P",
+   "notes": "PHY (RTL8211F) is on the SoM; carrier carries the 4 MDI pairs from SoM connector \u2192 HX5008NLT magnetics (T1) \u2192 RJ45. No series AC caps (transformer-isolated). Keep \u2265 30 mil pair-to-pair separation; minimize vias/stubs.",
+   "signal": "MDI pair 0 (PHY\u2192magnetics)",
+   "spec_cite": "IEEE 802.3 Clause 40 (1000BASE-T, 100\u03a9\u00b115% MDI); ANSI/TIA-568 link; PHY-vendor (RTL8211F / TI SNLA387) layout: intra-pair \u2264 50 mil, inter-pair \u2264 50 mm (~330 ps)",
+   "z_diff_ohm": 100
+  },
+  {
+   "ac_coupled": false,
+   "interface": "Gigabit Ethernet (MDI, PHY-side)",
+   "intra_pair_skew_mil": 50,
+   "match_tol_mil": 50,
+   "net_n": "ETH_PHY_MDI1_N",
+   "net_p": "ETH_PHY_MDI1_P",
+   "notes": "SoM \u2192 HX5008NLT (T1). Transformer-isolated, no series caps.",
+   "signal": "MDI pair 1 (PHY\u2192magnetics)",
+   "spec_cite": "IEEE 802.3 Clause 40 (100\u03a9\u00b115%); RTL8211F/TI SNLA387 layout: intra-pair \u226450 mil, inter-pair \u226450 mm",
+   "z_diff_ohm": 100
+  },
+  {
+   "ac_coupled": false,
+   "interface": "Gigabit Ethernet (MDI, PHY-side)",
+   "intra_pair_skew_mil": 50,
+   "match_tol_mil": 50,
+   "net_n": "ETH_PHY_MDI2_N",
+   "net_p": "ETH_PHY_MDI2_P",
+   "notes": "SoM \u2192 HX5008NLT (T1). Transformer-isolated, no series caps.",
+   "signal": "MDI pair 2 (PHY\u2192magnetics)",
+   "spec_cite": "IEEE 802.3 Clause 40 (100\u03a9\u00b115%); RTL8211F/TI SNLA387 layout: intra-pair \u226450 mil, inter-pair \u226450 mm",
+   "z_diff_ohm": 100
+  },
+  {
+   "ac_coupled": false,
+   "interface": "Gigabit Ethernet (MDI, PHY-side)",
+   "intra_pair_skew_mil": 50,
+   "match_tol_mil": 50,
+   "net_n": "ETH_PHY_MDI3_N",
+   "net_p": "ETH_PHY_MDI3_P",
+   "notes": "SoM \u2192 HX5008NLT (T1). Transformer-isolated, no series caps.",
+   "signal": "MDI pair 3 (PHY\u2192magnetics)",
+   "spec_cite": "IEEE 802.3 Clause 40 (100\u03a9\u00b115%); RTL8211F/TI SNLA387 layout: intra-pair \u226450 mil, inter-pair \u226450 mm",
+   "z_diff_ohm": 100
+  },
+  {
+   "ac_coupled": false,
+   "interface": "USB 2.0 HS (USB-C PD/device port)",
+   "intra_pair_skew_mil": 150,
+   "match_tol_mil": 150,
+   "net_n": "STM32_USB_D_N",
+   "net_p": "STM32_USB_D_P",
+   "notes": "pd_input.py: post-ESD (USBLC6-2SC6 U2) to STM32 USB. DC-coupled. FUSB302B handles CC ESD separately; CC1/CC2 (STM32_USB_CC1/CC2) are low-speed, no diff-pair routing constraint.",
+   "signal": "USB2 D+/D- (PD/STM32)",
+   "spec_cite": "USB 2.0 Spec Sec 7.1.1.3 / 7.1.6 (90\u03a9\u00b115%); USB-IF HS layout intra-pair \u2264150 mil",
+   "z_diff_ohm": 90
+  },
+  {
+   "ac_coupled": false,
+   "interface": "USB 2.0 HS (OTG, Type-C host port)",
+   "intra_pair_skew_mil": 150,
+   "match_tol_mil": 150,
+   "net_n": "USB_D-",
+   "net_p": "USB_D+",
+   "notes": "Net post-ESD (USBLC6-2SC6 U2 shunt 1\u21946/3\u21944) to SoM USB HS PHY. NOT AC-coupled (USB2 HS is DC-coupled). Connector pads USBC_DP_CONN/USBC_DM_CONN before ESD; keep stubs to ESD tap short.",
+   "signal": "USB2 D+/D- (OTG)",
+   "spec_cite": "USB 2.0 Spec Sec 7.1.1.3 / 7.1.6 (90\u03a9\u00b115% differential HS); USB-IF/HS layout: intra-pair \u2264150 mil (~1.6 mm), target \u22645 mm",
+   "z_diff_ohm": 90
+  },
+  {
+   "ac_coupled": false,
+   "interface": "USB 2.0 FS (UART console, USB-C UFP)",
+   "intra_pair_skew_mil": 150,
+   "match_tol_mil": 150,
+   "net_n": "USB_UART_DM",
+   "net_p": "USB_UART_DP",
+   "notes": "usb_uart_connector \u2192 ESD (USBLC6-2SC6 U1) \u2192 CP2102N (uart_bridge U1.3/U1.4). CP2102N is USB 2.0 Full-Speed; honor 90\u03a9/skew for robustness. DC-coupled.",
+   "signal": "USB2 D+/D- (CP2102N)",
+   "spec_cite": "USB 2.0 Spec Sec 7.1.1.3 (90\u03a9\u00b115% diff); USB-IF FS/HS layout intra-pair \u2264150 mil",
+   "z_diff_ohm": 90
+  }
+ ],
+ "single_ended": []
+}
