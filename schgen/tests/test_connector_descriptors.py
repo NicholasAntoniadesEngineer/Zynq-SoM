@@ -16,8 +16,8 @@ def _node_field(node, name):
     return None
 
 
-def test_every_offboard_connector_function_label_present():
-    m = pcb.build_model(True)
+def test_every_offboard_connector_function_label_present(carrier_model):
+    m = carrier_model
     labels = pcb._connector_descriptors(m, lambda k: "u", [])
     texts = [str(n[1]) for n in labels]
     # the full set of function labels the user reads on the board (off-board +
@@ -35,8 +35,8 @@ def test_every_offboard_connector_function_label_present():
     assert len(labels) == n_off + n_int, (len(labels), n_off, n_int)
 
 
-def test_descriptors_on_top_silk_and_on_board():
-    m = pcb.build_model(True)
+def test_descriptors_on_top_silk_and_on_board(carrier_model):
+    m = carrier_model
     ex0, ey0 = pcb.ORIGIN_X, pcb.ORIGIN_Y
     ex1, ey1 = ex0 + m.board_w, ey0 + m.board_h
     for n in pcb._connector_descriptors(m, lambda k: "u", []):
@@ -48,11 +48,11 @@ def test_descriptors_on_top_silk_and_on_board():
         assert ex0 <= x <= ex1 and ey0 <= y <= ey1, (n[1], x, y)
 
 
-def test_offboard_connector_ref_hidden_in_emitted_board(tmp_path):
+def test_offboard_connector_ref_hidden_in_emitted_board(tmp_path, carrier_model):
     """The off-board connector J-refs are HIDDEN on silk (function label replaces
     them); a non-connector IC keeps its visible ref."""
     import re
-    m = pcb.build_model(True)
+    m = carrier_model
     pcb.emit_pcb(m, tmp_path / "b.kicad_pcb")
     s = (tmp_path / "b.kicad_pcb").read_text()
 
@@ -71,11 +71,11 @@ def test_offboard_connector_ref_hidden_in_emitted_board(tmp_path):
 
 # ---- switches (DIP enables + tactile buttons) ----------------------------------
 
-def test_every_switch_gets_a_function_label():
+def test_every_switch_gets_a_function_label(carrier_model):
     """EVERY switch on the board (rail/module/5V/boot DIPs + tactile buttons) gets
     a silk function label so a ref shift can't silently drop one (one per ref,
     matched by the deterministic sw-desc:<ref> uuid — degrade-independent)."""
-    m = pcb.build_model(True)
+    m = carrier_model
     labels = pcb._connector_descriptors(m, lambda k: k, [])
     uuids = {str(_node_field(n, "uuid")[1]) for n in labels}
     for ref in pcb._SW_DESC:
@@ -83,13 +83,13 @@ def test_every_switch_gets_a_function_label():
     assert sum(1 for u in uuids if u.startswith("sw-desc:")) == len(pcb._SW_DESC)
 
 
-def test_switch_labels_clear_of_courtyards_and_designators(tmp_path):
+def test_switch_labels_clear_of_courtyards_and_designators(tmp_path, carrier_model):
     """LAW 1: no switch label may sit over any courtyard or any visible designator
     (the reason the interior labels are placed overlap-aware). Checked on the REAL
     emitted board, where the labels dodge the actually-emitted reference texts."""
     from schgen.core import sexpr
     p = tmp_path / "b.kicad_pcb"
-    m = pcb.build_model(True)
+    m = carrier_model
     pcb.emit_pcb(m, p)
     doc = sexpr.loads(p.read_text())
 
@@ -127,11 +127,11 @@ def test_switch_labels_clear_of_courtyards_and_designators(tmp_path):
             f"switch label {txt!r} over another designator"
 
 
-def test_switch_ref_hidden_in_emitted_board(tmp_path):
+def test_switch_ref_hidden_in_emitted_board(tmp_path, carrier_model):
     """The SW ref is hidden on silk (the function label replaces it), like the
     connectors — so a bare board reads MOD/RAIL/BOOT, not SW7002."""
     import re
-    m = pcb.build_model(True)
+    m = carrier_model
     pcb.emit_pcb(m, tmp_path / "b.kicad_pcb")
     s = (tmp_path / "b.kicad_pcb").read_text()
     i = s.find('"SW7002"')

@@ -172,10 +172,9 @@ _INTRA_RED = ("hdmi_tx", "camera")     # red via check_all (intra-zone)
 
 
 @pytest.fixture(scope="module")
-def _real_model():
-    """Build the REAL board model ONCE (~60-120 s)."""
-    from schgen.generate.pcb.placement import build_model
-    return build_model()
+def _real_model(carrier_model):
+    """The REAL board model — session-shared build, per-module copy."""
+    return carrier_model
 
 
 def test_check_all_discovers_the_hs_family(_real_model):

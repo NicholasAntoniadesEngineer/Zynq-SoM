@@ -502,11 +502,10 @@ def test_summary_is_deterministic():
 
 
 @pytest.fixture(scope="module")
-def _real_model():
-    """Build the REAL board model ONCE (~60-120 s). With the stage template
-    active, the ``power`` sheet is laid out to the SNVSBD5D datasheet contract."""
-    from schgen.generate.pcb.placement import build_model
-    return build_model()
+def _real_model(carrier_model):
+    """The REAL board model (session-shared build, per-module copy). With the
+    stage template active, ``power`` is laid out to the SNVSBD5D contract."""
+    return carrier_model
 
 
 def test_gate_is_green_on_the_templated_board(_real_model):

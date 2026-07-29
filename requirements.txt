@@ -5,6 +5,7 @@ pillow         # PNG handling / golden-render comparison
 
 # Test tooling (dev only — not needed to generate the board):
 pytest>=8      # fast unit suite: `python -m pytest schgen/tests/`
+pytest-xdist>=3  # default-parallel suite (pyproject addopts); serial: pytest -n 0
 
 # External tools (not pip-installable):
 #   kicad-cli   KiCad 9+  — netlist/ERC/SVG/PDF export (required)

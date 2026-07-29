@@ -59,8 +59,8 @@ def test_hdmi_is_a_policed_overmold_family():
 
 # ---- the real board must currently PASS (the two HDMIs are spread enough) -----
 
-def test_real_board_passes():
-    res = cs.check(pcb.build_model())
+def test_real_board_passes(carrier_model):
+    res = cs.check(carrier_model)
     assert res.ok, res.summary()
     # the real pair IS detected (same family, same edge) — proving the gate is
     # actually looking at them, not silently finding nothing.

@@ -445,10 +445,9 @@ def test_proximity_zone_passes_its_own_gate(_usb_pd_inputs):
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="module")
-def _real_model():
-    """Build the REAL board ONCE with the template active (~60-120 s)."""
-    from schgen.generate.pcb.placement import build_model
-    return build_model()
+def _real_model(carrier_model):
+    """The REAL templated board — session-shared build, per-module copy."""
+    return carrier_model
 
 
 def test_gate_is_green_on_the_templated_board(_real_model):

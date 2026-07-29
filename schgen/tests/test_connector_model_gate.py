@@ -36,10 +36,10 @@ def test_current_footprints_pass_footprint_only():
     assert not res.bad_z and not res.geom_conflicts
 
 
-def test_built_board_passes():
+def test_built_board_passes(carrier_model):
     """The real placed board: every placed off-board connector instance has a
     clean 3D-model orientation."""
-    res = cmg.check(pcb.build_model())
+    res = cmg.check(carrier_model)
     assert res.ok, res.summary()
     assert res.n_connectors >= len(pcb.CONN_MATING_FACE)
     assert not res.bad_z and not res.geom_conflicts

@@ -105,13 +105,13 @@ def test_shelf_pack_avoids_blockers():
         assert not _overlap(box, blocker, 0.0), f"{ref} sits in the blocker"
 
 
-def test_build_model_no_off_board_parts():
+def test_build_model_no_off_board_parts(carrier_model):
     """LAW 5/6: EVERY placed footprint's COPPER (pads) sits inside Edge.Cuts.
     An off-board edge connector's mating courtyard (USB-C shell / SD-card slot /
     PMOD module outline / RJ45 jack) legitimately OVERHANGS the edge so a cable
     can mate, but its copper stays on the board — so the off-board test uses the
     pad bbox, not the courtyard (mirrors verify.ratsnest_gate)."""
-    model = pcb.build_model()
+    model = carrier_model
     x0, y0 = pcb.ORIGIN_X, pcb.ORIGIN_Y
     x1, y1 = pcb.ORIGIN_X + model.board_w, pcb.ORIGIN_Y + model.board_h
     for inst in model.insts:

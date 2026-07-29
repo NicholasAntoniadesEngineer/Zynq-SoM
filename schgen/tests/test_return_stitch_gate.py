@@ -15,15 +15,14 @@ import math
 import pytest
 
 from schgen.generate.pcb import escape
-from schgen.generate.pcb import placement as pl
 from schgen.generate.pcb.emit import emit_pcb
 from schgen.verify import escape_lane_gate as elg
 from schgen.verify import return_stitch_gate as rsg
 
 
 @pytest.fixture(scope="module")
-def model():
-    return pl.build_model()
+def model(carrier_model):
+    return carrier_model
 
 
 @pytest.fixture(scope="module")
