@@ -417,7 +417,9 @@ def test_coexistence_verdicts_present(model):
     """F5: every bottom-side part inside the escape region carries an explicit
     STAY/CONSTRAINT/EVICT verdict with a basis string — never silent."""
     co = model.escape_meta["coexistence"]
-    assert co, "coexistence table empty"
+    assert isinstance(co, list), "coexistence table missing"
+    assert model.escape_meta.get("escape_region"), (
+        "escape_region absent — coexistence machinery dead, not merely clean")
     assert all(c["verdict"] in ("STAY", "CONSTRAINT", "EVICT") for c in co)
     assert all(c["basis"] for c in co)
     # CONSTRAINT is a GEOMETRY-DERIVED verdict, re-derived every build: an

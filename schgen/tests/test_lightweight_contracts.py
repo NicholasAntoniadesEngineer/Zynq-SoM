@@ -68,8 +68,11 @@ def test_contract_imports_and_schema_is_lightweight(sheet):
     assert c.get("sheet") == sheet
     assert c.get("subsystem") == sheet
     assert c.get("tier") == "lightweight", c.get("tier")
-    assert "external" not in c, (
-        f"{sheet}: lightweight contracts carry NO composition block")
+    ext = c.get("external")
+    if ext is not None:
+        assert set(ext) <= {"near_max"}, (
+            f"{sheet}: lightweight external carries only near_max "
+            f"seat-pulls (audit wave: uart_bridge), got {sorted(ext)}")
     structures = c.get("structures", [])
     assert structures, f"{sheet}: contract has no structures"
     for st in structures:
