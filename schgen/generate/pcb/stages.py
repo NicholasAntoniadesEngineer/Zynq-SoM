@@ -88,11 +88,11 @@ PLACEMENT_STAGES: tuple[Stage, ...] = (
     Stage("corridor_eviction", True, True, "board",
           "corridor collision re-check + bottom/THT/edge guards on every "
           "exit; moved and unmovable strays are registered fallback "
-          "events; escape gate (frame-shift caveat: the DF40 "
-          "emission-gridify lands AFTER this eviction math — corridor "
-          "shift up to 0.59 mm carrier / 0.38 mm devkit vs the 0.25 mm "
-          "eviction margin; re-check queued wave-8)",
-          "evict bottom strays from the PRE-gridify DF40 stitch corridors "
+          "events; escape gate. Corridors are measured at the POST-gridify "
+          "DF40 centres (registered evict_corridor_grid) — the same frame "
+          "the emitted board and the escape solver share, closing the "
+          "0.59/0.38 mm frame-shift vs the 0.25 mm eviction margin",
+          "evict bottom strays from the POST-gridify DF40 stitch corridors "
           "on FINAL board-frame positions"),
     Stage("instantiate", False, True, "board",
           "movement tripwire (this manifest): pos is frozen — the "
@@ -102,8 +102,9 @@ PLACEMENT_STAGES: tuple[Stage, ...] = (
     Stage("emission_frame", True, True, "page",
           "page projection = ORIGIN shift + the registered fixed_part_grid "
           "snap (MH/SoM refs only — measured DF40 shift up to 0.59 mm "
-          "carrier / 0.38 mm devkit, the frame-shift the corridor_eviction "
-          "caveat names); byte-identity proves inertness",
+          "carrier / 0.38 mm devkit; corridor_eviction pre-applies the same "
+          "snap via evict_corridor_grid, so its corridors do not move here); "
+          "byte-identity proves inertness",
           "page-frame baseline snapshot of the emitted instances "
           "(+ fiducials)"),
     Stage("escape_copper", False, True, "page",

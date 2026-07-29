@@ -187,9 +187,12 @@ def _block_fanout_reach(sheet: str, zg) -> tuple[tuple, tuple]:
 def _shape_fanout_reach(shape, zg) -> tuple[tuple, tuple]:
     """The SAME derivation as :func:`_block_fanout_reach` on ONE shape variant
     (its own box/offsets/rotations) — so the occupancy lattice reserves the
-    fan-out floor of the shape actually chosen, never shape 0's."""
+    fan-out floor of the shape actually chosen, never shape 0's. extra_rot
+    composes ADDITIVELY onto conn_rot (the emission/evaluate convention — a
+    conn-seated mirror shape carries extra 0.0 for its connector)."""
     rot_of = dict(zg.conn_rot)
-    rot_of.update(shape.extra_rot)
+    for r, e in shape.extra_rot.items():
+        rot_of[r] = (rot_of.get(r, 0.0) + e) % 360.0
     return _zone_fanout_reach(shape.w, shape.h,
                               (shape.top_off, shape.bot_off), rot_of, zg)
 
@@ -1657,6 +1660,9 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                 "floorplan: the REAL 2-sided packed blocks do not fit the fixed "
                 f"outline {BOARD_W:g}x{BOARD_H:g} declared in "
                 f"carrier/floorplan.json — enlarge it or use \"outline\":\"auto\"")
+        _choose_conn_shapes(plan, interior, edge_of, zbox, affinity,
+                            som_pull, compose, True, far_ceil, max_reach,
+                            shape_sets, zg, est_cross)
         plan.interior_blocks = interior
         budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
         est_real = est_cross(plan.edge_blocks + interior)
@@ -1796,6 +1802,9 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         raise RuntimeError(
             f"floorplan: the winning outline {BOARD_W:g}x{BOARD_H:g} failed "
             "the final compact re-pack — refusing to emit a stale layout")
+    _choose_conn_shapes(plan, interior, edge_of, zbox, affinity, som_pull,
+                        compose, True, far_ceil, max_reach, shape_sets, zg,
+                        est_cross)
     plan.interior_blocks = interior
     OUTLINE_NOTE = (
         f"{outline.note}; then SMALLEST-AREA search over aspects "
@@ -2509,6 +2518,49 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                         return False
                     _fb.record("legalize_only_compaction")
     return True
+
+
+def _choose_conn_shapes(plan: Plan, interior: list[Block],
+                        edge_of: dict[str, str],
+                        zbox: dict[str, tuple[float, float]],
+                        affinity: dict[str, dict[str, float]],
+                        som_pull: dict[str, float], compose, compact: bool,
+                        far_ceil: float, max_reach: float | None,
+                        shape_sets, zg, est_cross) -> None:
+    """MEMBER-FIELD MIRROR choice for connector-seated zones (wave-8 U3): a
+    conn-seated block never enters the interior shape search (LAW 6 pins it to
+    its edge run), so its registered mirror variant is chosen HERE, on the
+    final board — re-pack the WHOLE board with the mirror's reach/inset bound
+    in (the same legality path every candidate board takes) and keep the
+    mirror iff the pack stays legal AND the airwire kernel (the LAW-5 gate's
+    _mst_edges) strictly improves. Deterministic: sorted blocks, strict <; on
+    reject the incumbent pack is restored by re-running the identical
+    deterministic pack."""
+
+    def _repack() -> bool:
+        return _attempt_pack(plan, interior, edge_of, zbox, affinity,
+                             som_pull, compose=compose, compact=compact,
+                             far_ceil=far_ceil, max_reach=max_reach,
+                             shapes=shape_sets)
+
+    for b in sorted(plan.edge_blocks, key=lambda x: x.name):
+        variants = zg.shapes.get(b.name)
+        if not variants or len(variants) < 2:
+            continue
+        base_cross = est_cross(plan.edge_blocks + interior)
+        base_ri = (b.fanout_reach, b.fanout_inset)
+        b.fanout_reach, b.fanout_inset = _shape_fanout_reach(variants[1], zg)
+        b.shape_idx = 1
+        if _repack() and est_cross(plan.edge_blocks + interior) \
+                < base_cross - 1e-6:
+            continue
+        b.fanout_reach, b.fanout_inset = base_ri
+        b.shape_idx = 0
+        if not _repack():
+            raise RuntimeError(
+                f"floorplan: restoring the incumbent pack after rejecting "
+                f"{b.name}'s mirror shape failed — the deterministic re-pack "
+                f"must reproduce the accepted board")
 
 
 # ---- notes ------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 {
- "board_h": 102.0,
+ "board_h": 100.0,
  "board_ok": false,
- "board_w": 122.0,
+ "board_w": 123.0,
  "connector_model": {
   "bad_z": [],
   "geom_checked": [
@@ -14,8 +14,8 @@
   "ok": true
  },
  "connector_spacing": {
-  "board_h": 102.0,
-  "board_w": 122.0,
+  "board_h": 100.0,
+  "board_w": 123.0,
   "ok": true,
   "pairs": [],
   "violations": []
@@ -26,7 +26,7 @@
    "boot_fail": 0,
    "bulk_fail": 0,
    "bulk_out_fail": 0,
-   "checked": 8,
+   "checked": 9,
    "fb_fail": 0,
    "have_contract": true,
    "hot_loop_fail": 0,
@@ -68,7 +68,7 @@
    "boot_fail": 0,
    "bulk_fail": 0,
    "bulk_out_fail": 0,
-   "checked": 4,
+   "checked": 6,
    "fb_fail": 0,
    "have_contract": true,
    "hot_loop_fail": 0,
@@ -89,7 +89,7 @@
    "boot_fail": 0,
    "bulk_fail": 0,
    "bulk_out_fail": 0,
-   "checked": 1,
+   "checked": 4,
    "fb_fail": 0,
    "have_contract": true,
    "hot_loop_fail": 0,
@@ -111,11 +111,11 @@
    "lib_footprint_issues": 25,
    "silk_edge_clearance": 4,
    "silk_over_copper": 6,
-   "silk_overlap": 24,
+   "silk_overlap": 13,
    "text_height": 4
   },
   "n_unconnected": 400,
-  "n_violations": 63,
+  "n_violations": 52,
   "returncode": 0,
   "stderr": ""
  },
@@ -133,10 +133,10 @@
   "pinned": false
  },
  "fallbacks": {
-  "cand_cap_truncated": 4,
-  "corridor_evict_moved": 8,
+  "cand_cap_truncated": 7,
+  "corridor_evict_moved": 15,
   "corridor_stray_unmovable": 0,
-  "legalize_only_compaction": 2,
+  "legalize_only_compaction": 6,
   "seat_node_budget": 0,
   "thermal_via_lattice": 0
  },
@@ -147,9 +147,9 @@
   "ok": true,
   "regressions": []
  },
- "floorplan_composition": "FLOORPLAN COMPOSITION (T1): 3 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)\n  aggregate hard margin: sum 171.28 mm, min 32.44 mm (informational)\n  hard terms:\n    HARD facing power->power_som: 14.24 vs 90.00 (margin +75.76) ok [facing/output_roles [placement/v2]] dot=+576.64\n    HARD flow_hop power->power_som: 43.22 vs 106.30 (margin +63.08) ok [flow chain [placement/v2]]\n    HARD near_max uart_bridge->usb_uart_connector: 7.56 vs 40.00 (margin +32.44) ok [judgment:10.0 (D11 edge-gap) \u2014 CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]\n  soft terms (advisory ledger \u2014 repair triggers, never gates):\n    soft near_intent power_mon->power_som: 0.00 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory\n  n/a terms (endpoint subsystem not instantiated by this project \u2014 project-scoped resolution):\n    n/a far_min power->ethernet.line_side [judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]\n    n/a flow_hop usb_pd->power [flow chain [placement/v2]]\n  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 6 T2-coexistence-managed\n    managed C6015 (power_som) in escape:J2:N [T2 STAY]\n    managed C6016 (power_som) in escape:J2:N [T2 STAY]\n    managed C6018 (power_som) in escape:J2:N [T2 STAY]\n    managed C6019 (power_som) in escape:J2:N [T2 STAY]\n    managed R1003 (debug_boot) in escape:J3:N [T2 STAY]\n    managed R6019 (power_som) in escape:J2:S [T2 STAY]\n  D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):\n    power | power_mon: 8 airwires (167.5 mm) -> corridor >= 3.6 mm",
- "n_bottom": 62,
- "n_top": 90,
+ "floorplan_composition": "FLOORPLAN COMPOSITION (T1): 3 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)\n  aggregate hard margin: sum 169.04 mm, min 37.53 mm (informational)\n  hard terms:\n    HARD facing power->power_som: 9.03 vs 90.00 (margin +80.97) ok [facing/output_roles [placement/v2]] dot=+754.99\n    HARD flow_hop power->power_som: 55.54 vs 106.08 (margin +50.53) ok [flow chain [placement/v2]]\n    HARD near_max uart_bridge->usb_uart_connector: 2.47 vs 40.00 (margin +37.53) ok [judgment:10.0 (D11 edge-gap) \u2014 CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]\n  soft terms (advisory ledger \u2014 repair triggers, never gates):\n    soft near_intent power_mon->power_som: 0.14 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory\n  n/a terms (endpoint subsystem not instantiated by this project \u2014 project-scoped resolution):\n    n/a far_min power->ethernet.line_side [judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]\n    n/a flow_hop usb_pd->power [flow chain [placement/v2]]\n  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 7 T2-coexistence-managed\n    managed C6022 (power_som) in escape:J2:N [T2 STAY]\n    managed C6025 (power_som) in escape:J2:N [T2 STAY]\n    managed R5001 (power_mon) in escape:J3:S [T2 STAY]\n    managed RS5001 (power_mon) in escape:J3:N [T2 STAY]\n    managed RS5002 (power_mon) in escape:J3:S [T2 STAY]\n    managed RS5003 (power_mon) in escape:J3:N [T2 STAY]\n    managed RS5004 (power_mon) in escape:J3:S [T2 STAY]\n  D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):\n    power | power_mon: 9 airwires (185.0 mm) -> corridor >= 3.8 mm\n    power_som | som_decoupling: 6 airwires (29.5 mm) -> corridor >= 3.2 mm",
+ "n_bottom": 55,
+ "n_top": 97,
  "nets": 266,
  "placed": 152,
  "placement_contract": {
@@ -157,7 +157,7 @@
   "boot_fail": 0,
   "bulk_fail": 0,
   "bulk_out_fail": 0,
-  "checked": 33,
+  "checked": 39,
   "fb_fail": 0,
   "have_contract": true,
   "hot_loop_fail": 0,
@@ -174,17 +174,17 @@
   "violations": []
  },
  "placement_flow": {
-  "board_area": 12444.0,
+  "board_area": 12300.0,
   "detail": [
-   "flow power->power_som: 43.22mm / 106.3mm budget",
-   "facing power->power_som: dot=+576.64 angle=14.2deg (output@(123.025, 89.3322) zone@(136.4143, 92.5214) down@(93.1964, 93.1555))",
-   "near_max uart_bridge to usb_uart_connector: 7.56mm gap / <= 40mm"
+   "flow power->power_som: 55.54mm / 106.1mm budget",
+   "facing power->power_som: dot=+754.99 angle=9.0deg (output@(48.6549, 72.3732) zone@(35.2656, 69.184) down@(86.606, 90.3752))",
+   "near_max uart_bridge to usb_uart_connector: 2.47mm gap / <= 40mm"
   ],
   "facing_checked": 1,
   "facing_fail": 0,
   "far_checked": 0,
   "far_fail": 0,
-  "flow_budget_mm": 106.3017,
+  "flow_budget_mm": 106.0752,
   "flow_checked": 1,
   "flow_fail": 0,
   "n_contracts": 2,
@@ -200,8 +200,8 @@
  },
  "placement_mech": {
   "bad_connectors": [],
-  "board_h": 102.0,
-  "board_w": 122.0,
+  "board_h": 100.0,
+  "board_w": 123.0,
   "controls_under_som": [],
   "n_connectors": 2,
   "ok": true,
@@ -211,35 +211,35 @@
  "quantize_census": {
   "n_files": 13,
   "n_new": 0,
-  "n_registered": 13,
+  "n_registered": 14,
   "n_sites": 0,
   "ok": true
  },
  "ratsnest": {
-  "board_h": 102.0,
-  "board_w": 122.0,
-  "cross_mm": 1350.3,
-  "n_bottom": 62,
-  "n_cross": 64,
-  "n_top": 90,
-  "total_mm": 3566.0
+  "board_h": 100.0,
+  "board_w": 123.0,
+  "cross_mm": 1275.1,
+  "n_bottom": 55,
+  "n_cross": 75,
+  "n_top": 97,
+  "total_mm": 3297.9
  },
  "ratsnest_gate": {
-  "board_h": 102.0,
-  "board_w": 122.0,
-  "cross_budget_mm": 2677.3,
-  "cross_mm": 1350.3,
+  "board_h": 100.0,
+  "board_w": 123.0,
+  "cross_budget_mm": 2661.7,
+  "cross_mm": 1275.1,
   "dispersed": [],
-  "n_cross": 64,
+  "n_cross": 75,
   "n_subsystems": 8,
   "off_board": [],
   "ok": true,
-  "total_mm": 3566.0
+  "total_mm": 3297.9
  },
  "refdes_silk": {
   "bottom_pairs": 0,
-  "n_bottom": 12,
-  "n_top": 75,
+  "n_bottom": 5,
+  "n_top": 82,
   "ok": true,
   "top_pairs": []
  },
@@ -269,13 +269,13 @@
  },
  "stage_movement": {
   "breathe": 0,
-  "corridor_eviction": 8,
+  "corridor_eviction": 15,
   "edge_seat": 2,
   "escape_copper": 0,
   "instantiate": 0,
   "l4_pull": 32,
-  "refit_facing": 0,
-  "reorder": 12
+  "refit_facing": 51,
+  "reorder": 16
  },
  "total": 152,
  "two_side": true

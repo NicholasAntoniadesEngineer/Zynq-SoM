@@ -157,10 +157,12 @@ def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
     """The placed footprint's courtyard bbox in the BOARD page frame, with the
     placement rotation applied — SAME transform both sides (a B.Cu footprint's
     stored local frame IS the final front-view frame; see _inst_pad_geom). This
-    is the box the LAW-5 off-board + grouping gate reasons about."""
+    is the box the LAW-5 off-board + grouping gate reasons about. 4dp: the
+    measurement quantum (5e-5/corner) sits BELOW the D13 gate's documented
+    _TOUCH_EPS (1e-4) — at 3dp the quantum dominated the tolerance 5x."""
     rb = _rot_bbox_cw(_footprint_bbox(inst.mod_path), inst.rotation or 0.0)
-    return (round(inst.x + rb[0], 3), round(inst.y + rb[1], 3),
-            round(inst.x + rb[2], 3), round(inst.y + rb[3], 3))
+    return (round(inst.x + rb[0], 4), round(inst.y + rb[1], 4),
+            round(inst.x + rb[2], 4), round(inst.y + rb[3], 4))
 
 
 def _inst_pad_bbox(inst: FootprintInst) -> tuple[float, float, float, float]:

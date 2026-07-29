@@ -368,8 +368,16 @@ THERMAL_COPPER: dict[str, dict] = {
         "pour_layers": ("F.Cu", "B.Cu"),
         "cite": "TI SNVSBD5D 11.1.1 thermal-via field at PGND1/PGND2",
     },
+    # First pair = the TIGHTEST legal pad-adjacent flank (wave-8 U4): |x| =
+    # pad half-extent 0.85 (1.7/2, DYD thermal pad rot 90) + via hole radius
+    # 0.15 + CLR_HOLE_SAMENET_PAD 0.10 + 0.05 margin = 1.15 — the seats the
+    # exhaustive lattice measurably found when a neighbour blocked the old
+    # 1.75 ring (fmc U11001 3/3 lattice, scan B F11/L5); curating them
+    # retires that fallback and puts the vias closest to the pad per
+    # JESD51-5.
     "TLV75725": {
-        "via_sites": [(-1.75, 0.0), (1.75, 0.0),
+        "via_sites": [(-1.15, 0.0), (1.15, 0.0),
+                      (-1.75, 0.0), (1.75, 0.0),
                       (1.85, -1.0), (1.85, 1.0),
                       (2.35, -0.55), (2.35, 0.55),
                       (-1.85, -1.0), (-1.85, 1.0)],

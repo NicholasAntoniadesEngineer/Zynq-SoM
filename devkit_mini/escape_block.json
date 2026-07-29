@@ -31,27 +31,6 @@
     "verdict": "STAY"
    },
    {
-    "basis": "SoM rail-entry parts; outside all live windows this build (re-derived every build)",
-    "conn": "J2",
-    "ref": "R6019",
-    "sheet": "power_som",
-    "verdict": "STAY"
-   },
-   {
-    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
-    "conn": "J3",
-    "ref": "C5001",
-    "sheet": "power_mon",
-    "verdict": "STAY"
-   },
-   {
-    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
-    "conn": "J3",
-    "ref": "C5002",
-    "sheet": "power_mon",
-    "verdict": "STAY"
-   },
-   {
     "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
     "conn": "J3",
     "ref": "R5001",

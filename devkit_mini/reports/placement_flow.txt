@@ -1,4 +1,4 @@
-PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=12444mm^2, flow_budget=106.3mm)
+PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=12300mm^2, flow_budget=106.1mm)
   fails: flow=0/1 facing=0/1 far=0/0 near_max=0/1
   unresolved: 0
   n/a (subsystem not in this project): 2
@@ -6,6 +6,6 @@ PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=12444mm^2, flow_bu
     flow usb_pd->power: n/a — usb_pd not a subsystem of this project
   violations: 0
   detail: 3
-    facing power->power_som: dot=+576.64 angle=14.2deg (output@(123.025, 89.3322) zone@(136.4143, 92.5214) down@(93.1964, 93.1555))
-    flow power->power_som: 43.22mm / 106.3mm budget
-    near_max uart_bridge to usb_uart_connector: 7.56mm gap / <= 40mm
+    facing power->power_som: dot=+754.99 angle=9.0deg (output@(48.6549, 72.3732) zone@(35.2656, 69.184) down@(86.606, 90.3752))
+    flow power->power_som: 55.54mm / 106.1mm budget
+    near_max uart_bridge to usb_uart_connector: 2.47mm gap / <= 40mm

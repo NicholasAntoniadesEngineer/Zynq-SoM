@@ -151,6 +151,8 @@ def test_registered_transforms_replicate_historical_arithmetic():
     for v in (37.3, 0.0, -12.7, 104.229, 51.4999):
         assert quantize.fixed_part_grid(v) == round(round(v / 1.27) * 1.27, 4)
         assert quantize.breathe_anchor_grid(v) == quantize.fixed_part_grid(v)
+        assert quantize.evict_corridor_grid(25.0, v) == round(
+            quantize.fixed_part_grid(25.0 + v) - 25.0, 4)
         assert quantize.som_pose_half_mm(v) == round(round(v * 2) / 2, 1)
         assert quantize.legalize_pose_quantum(v) == round(round(v / 0.5)
                                                           * 0.5, 4)
@@ -170,7 +172,8 @@ def test_registered_transforms_replicate_historical_arithmetic():
 
 def test_every_transform_has_a_registry_entry():
     assert set(quantize.REGISTRY) == {
-        "fixed_part_grid", "breathe_anchor_grid", "som_pose_half_mm",
+        "fixed_part_grid", "breathe_anchor_grid", "evict_corridor_grid",
+        "som_pose_half_mm",
         "placeholder_zone_half_mm", "quant_credit", "snap_erosion_bound",
         "snap_erosion_pad", "seat_slide", "run_overflow_tol",
         "legalize_pose_quantum", "outline_snap_up", "outline_grow_step",

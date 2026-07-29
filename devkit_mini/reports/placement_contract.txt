@@ -1,4 +1,4 @@
-PLACEMENT-CONTRACT GATE (pd_input): PASS (contract=yes, 8 structures)
+PLACEMENT-CONTRACT GATE (pd_input): PASS (contract=yes, 9 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0
@@ -8,12 +8,12 @@ PLACEMENT-CONTRACT GATE (power): PASS (contract=yes, 20 structures)
   unresolved refs: 0
   violations: 0
 
-PLACEMENT-CONTRACT GATE (uart_bridge): PASS (contract=yes, 4 structures)
+PLACEMENT-CONTRACT GATE (uart_bridge): PASS (contract=yes, 6 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0
 
-PLACEMENT-CONTRACT GATE (usb_uart_connector): PASS (contract=yes, 1 structures)
+PLACEMENT-CONTRACT GATE (usb_uart_connector): PASS (contract=yes, 4 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0

@@ -1,8 +1,7 @@
 CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
-CONTRACT COVERAGE LINT (advisory): 4 sheets, 79 parts — 55 structured / 0 free / 24 UNGATED
+CONTRACT COVERAGE LINT (advisory): 4 sheets, 79 parts — 62 structured / 0 free / 17 UNGATED
 
-pd_input             parts= 13  structured= 10  free= 0  UNGATED=  3
-    UNGATED R6     -> R3006    100k                   nets: +3V3_SC, PD_FLT_N
+pd_input             parts= 13  structured= 11  free= 0  UNGATED=  2
     UNGATED TP1    -> TP3001   +VBUS_IN               nets: +VBUS_IN
     UNGATED TP2    -> TP3002   +VIN                   nets: +VIN
 power                parts= 51  structured= 38  free= 0  UNGATED= 13
@@ -19,13 +18,7 @@ power                parts= 51  structured= 38  free= 0  UNGATED= 13
     UNGATED TP2    -> TP4002   +3V3                   nets: +3V3
     UNGATED TP3    -> TP4003   +1V8                   nets: +1V8
     UNGATED TP4    -> TP4004   GND                    nets: GND
-uart_bridge          parts= 10  structured=  5  free= 0  UNGATED=  5
-    UNGATED R1     -> R11001   1k                     nets: +3V3, CP2102N_RST_N
-    UNGATED R2     -> R11002   22k1                   nets: CP2102N_VBUS_SNS, USB_UART_VBUS
-    UNGATED R3     -> R11003   47k5                   nets: CP2102N_VBUS_SNS, GND
+uart_bridge          parts= 10  structured=  8  free= 0  UNGATED=  2
     UNGATED TP1    -> TP11001  ZYNQ_PS_UART0_TXD      nets: ZYNQ_PS_UART0_TXD
     UNGATED TP2    -> TP11002  ZYNQ_PS_UART0_RXD      nets: ZYNQ_PS_UART0_RXD
-usb_uart_connector   parts=  5  structured=  2  free= 0  UNGATED=  3
-    UNGATED C1     -> C12001   10u                    nets: GND, USB_UART_VBUS
-    UNGATED R1     -> R12001   5.1k                   nets: GND, USB_UART_R1_CC
-    UNGATED R2     -> R12002   5.1k                   nets: GND, USB_UART_R2_CC
+usb_uart_connector   parts=  5  structured=  5  free= 0  UNGATED=  0
