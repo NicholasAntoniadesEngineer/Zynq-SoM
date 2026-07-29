@@ -799,10 +799,31 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                 sheet, _contract, refs_by_sheet[sheet], side_of, bbox_of,
                 resolvable, tmpl_rot, facing=_facing,
                 outer_dir=sheet_outer.get(sheet))
-            if _tmpl is not None:
-                zone_extra_rot.update(tmpl_rot)
         if _tmpl is not None:
             t_off, b_off, zw, zh = _tmpl
+            # LEVER L1 for CONTRACTED zones — the rigid 90-deg turn arm ONLY
+            # (a datasheet stage layout is never re-flowed): an interior
+            # template taller than the band whose width fits lies down flat,
+            # the SAME side-blind rule as the legacy lever below. Contract
+            # wiring routed fmc/power AROUND that lever and their walls came
+            # back upright — fmc's 2x20 header 18.7x61.6, power's stage column
+            # 23.9x55.2 — and together held the board at 215x161; laid flat
+            # the same blocks pack 186x185 (measured; a side-aware variant
+            # that kept power upright measured 211x189, and re-shaping toward
+            # the declared side's vertical band measured 211x187 — this
+            # board's bands are ~20 mm deep, flat-thin is the packable shape).
+            # The turn is contract-safe: intra-zone distances are preserved
+            # (proximity/same_side/stage recipes are turn-invariant); FLOW
+            # facing is judged on the emitted board and refit_facing still
+            # applies its position-aware 180 on the final frame. The turn's
+            # +90 folds INTO each part's template rotation.
+            if (not is_edge) and zh > INTERIOR_ZONE_BAND_TARGET \
+                    and zw <= INTERIOR_ZONE_BAND_TARGET and zw < zh:
+                t_off, b_off, er, zw, zh = _rotate_zone_90(
+                    t_off, b_off, bbox_of, side_of, {}, zw, zh)
+                tmpl_rot = {r: (tmpl_rot.get(r, 0.0) + er[r]) % 360.0
+                            for r in er}
+            zone_extra_rot.update(tmpl_rot)
             top_off[sheet] = t_off
             bot_off[sheet] = b_off
             zone_box[sheet] = (zw, zh)
@@ -819,18 +840,19 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
         # INTERIOR_ZONE_ASPECT shelf re-pack — fixes zones of small parts); if its
         # SINGLE tallest part is itself taller than the band so no re-flow can help
         # (a rigid 2x40 header), turn the whole BLOCK 90 deg instead. Edge zones are
-        # already seated flush on their edge and must not be touched here.
+        # already seated flush on their edge and must not be touched here. The flat
+        # bias is deliberately SIDE-BLIND: re-shaping an E-sided zone toward its
+        # declared side's vertical band was MEASURED net-negative (bringup_rails
+        # 19.3x68.47 band-kept and 30.73x36.45 depth-capped both packed 211x187 vs
+        # 186x185 with this flat 68.47x19.3 strip — the packer seats thin strips
+        # in any band; the declared side does not predict the seat).
         if (not is_edge) and zh > INTERIOR_ZONE_BAND_TARGET:
-            # (1) wide-shallow re-flow of the SAME parts (no rotation).
             rt_off, rb_off, rzw, rzh = _pack_one_zone(
                 refs_by_sheet[sheet], side_of, bbox_of, resolvable,
                 INTERIOR_ZONE_ASPECT)
             if rzh <= INTERIOR_ZONE_BAND_TARGET and rzh < zh:
                 t_off, b_off, zw, zh = rt_off, rb_off, rzw, rzh
             elif zw <= INTERIOR_ZONE_BAND_TARGET and zw < zh:
-                # (2) the zone is tall because a RIGID part is tall and re-flow
-                # cannot shrink the height; rotate the whole packed block 90 deg so
-                # it lies flat (its narrow width becomes the depth into the band).
                 t_off, b_off, er, zw, zh = _rotate_zone_90(
                     t_off, b_off, bbox_of, side_of, {}, zw, zh)
                 zone_extra_rot.update(er)
