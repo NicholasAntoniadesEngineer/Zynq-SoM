@@ -16,7 +16,6 @@ from .constants import (
     _PAD_RE,
     _THRU_PAD_RE,
     CARRIER,
-    GRID,
     PARTS_DIR,
     POWER_CLASS,
     _kicad_fp_root,
@@ -142,10 +141,6 @@ def _net_classes(sheets) -> tuple[dict[str, cst.DiffGeometry | None],
 
 
 # ---- placement -------------------------------------------------------------------
-
-def _gridify(v: float) -> float:
-    return round(round(v / GRID) * GRID, 4)
-
 
 _bbox_cache: dict[str, tuple[float, float, float, float]] = {}
 

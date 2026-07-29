@@ -38,6 +38,8 @@ import math
 import os
 from pathlib import Path
 
+from schgen.core import fallbacks as _fb
+from schgen.core import quantize as _q
 from schgen.core.project import spec as _project_spec
 from schgen.verify import placement_contract_gate as _g
 from schgen.verify.fanout_gate import (
@@ -190,13 +192,20 @@ def _build_buck_stage(ic_bref: str, members: dict[str, str],
                 for b, (rot, ox, oy) in zip(slot_brefs, cached, strict=True)]
 
     parts: list[_Part] = []
+    solved = False
     for scale in range(0, 20):          # widen loop: grow gaps, never relax rules
         pad = scale * 0.25
         parts = _lay_buck(ic_bref, ic_mod, resolvable, hf_caps, bulk_caps,
                           out_caps, inductor, fb_members, boot_cap, vcc_cap,
                           bias_r, bias_c, rt_r, pins, pad)
         if not _any_overlap(parts):
+            solved = True
             break
+    if not solved:
+        raise ZoneInfeasible(
+            f"buck stage {ic_bref}: 20-scale widen exhausted with parts "
+            f"still overlapping — the datasheet stage recipe is infeasible "
+            f"for these footprints (no silent overlap ship, no legacy pack)")
     # cache the relative geometry in the STABLE slot order (parts is built in the
     # same order _lay_buck appends, but re-key by bref to be order-robust)
     by_bref = {p.bref: p for p in parts}
@@ -390,6 +399,14 @@ def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
     return parts
 
 
+class ZoneInfeasible(RuntimeError):
+    """A placement-contracted zone could not be constructed: the solver is
+    infeasible or the contract names an unresolvable/unsupported structure.
+    LOUD BUILD FAILURE by law (no silent fallbacks, no legacy pack): the
+    message names the sheet/anchor and the binding constraint; nothing
+    downstream catches it — the build dies at the PCB step."""
+
+
 _CAND_STEP = 0.5           # candidate-position grid step (mm) around a pin
 _CAND_CAP = 400            # keep the N nearest in-bound poses per part (speed cap)
 _SEAT_TRACE = os.environ.get("SCHGEN_SEAT_TRACE", "") == "1"
@@ -445,13 +462,15 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
                 if any(_boxes_overlap(b, s, halo) for s in skel_boxes):
                     continue
                 d = _pins_to_target(p, ib, all_pins)
-                eff = bound - _SNAP_EROSION if bound >= 5.0 else bound
+                eff = _q.snap_erosion_bound(bound)
                 if d > eff:
                     continue
                 if keep_pins and _pins_to_target(p, ib, keep_pins) < keep_min:
                     continue
                 scored.append((round(d, 4), abs(cx), abs(cy), p, b))
     scored.sort(key=lambda t: (t[0], t[1], t[2], t[3].rot))
+    if len(scored) > _CAND_CAP:
+        _fb.record("cand_cap_truncated")
     return [(p, b) for _d, _ax, _ay, p, b in scored[:_CAND_CAP]]
 
 
@@ -578,7 +597,10 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
             del picked[bref]
         return False
 
-    if (_bt_traced if _SEAT_TRACE else _bt)(0, []):
+    solved = (_bt_traced if _SEAT_TRACE else _bt)(0, [])
+    if nodes[0] > _NODE_BUDGET:
+        _fb.record("seat_node_budget")
+    if solved:
         return [picked[d[0]] for d in demands]
     return [(cand[d[0]][0][0] if cand[d[0]]
              else _Part(d[0], resolvable[d[0]], 90.0, "top", icb[0] - 1.0, 0.0))
@@ -629,7 +651,9 @@ def _build_proximity_cluster(anchor_bref: str, contract: dict,
     same_side override the hook applies before templating)."""
     anchor_mod = resolvable.get(anchor_bref)
     if anchor_mod is None:
-        return None
+        raise ZoneInfeasible(
+            f"proximity cluster: anchor {anchor_bref} has no resolvable "
+            f"footprint — the contract names a part the board cannot place")
 
     # collect the per-member demand from every proximity structure (stable order:
     # structure order in the contract, then member order within a structure).
@@ -655,7 +679,9 @@ def _build_proximity_cluster(anchor_bref: str, contract: dict,
         for mlib in st.get("members", []):
             mb = bref_of.get(mlib)
             if mb is None or mb not in resolvable:
-                return None
+                raise ZoneInfeasible(
+                    f"proximity cluster at {anchor_bref}: member {mlib!r} "
+                    f"does not resolve on this sheet — unplaceable contract")
             demands.append((mb, list(apins) if apins else None, bound,
                             keep_pins, keep_min))
             member_brefs.append(mb)
@@ -676,22 +702,53 @@ def _build_proximity_cluster(anchor_bref: str, contract: dict,
             for mb, (rot, ox, oy) in zip(member_brefs, cached, strict=True)]
 
     # widen-on-infeasible loop: grow whitespace until the seat is collision-free
-    # (rules never relax). The anchor is the sole skeleton; the +X lane is OFF.
+    # AND every demand is POST-VERIFIED met (rules never relax; a nearest-
+    # colliding/stub fallback ship is forbidden by law). The anchor is the sole
+    # skeleton; the +X lane is OFF.
     anchor = _Part(anchor_bref, anchor_mod, 0.0, "top", 0.0, 0.0)
     ib = anchor.pad_boxes()
     icb = anchor.local_box()
     seated: list[_Part] = []
+    solved = False
     for scale in range(0, 20):
         pad = scale * 0.25
         seated = _seat_all(demands, resolvable, ib, icb, [anchor], pad,
                            forbid_plus_x=False)
-        if not _any_overlap([anchor, *seated]):
+        if (not _any_overlap([anchor, *seated])
+                and _demands_met(seated, demands, ib)):
+            solved = True
             break
+    if not solved:
+        raise ZoneInfeasible(
+            f"proximity cluster at {anchor_bref}: 20-scale widen exhausted "
+            f"without a collision-free, bound-satisfying seat for "
+            f"{[d[0] for d in demands]} — solver infeasible (no silent "
+            f"fallback, no legacy pack)")
     parts = [anchor, *seated]
     by_bref = {p.bref: p for p in seated}
     _PROX_CACHE[sig] = [(by_bref[mb].rot, by_bref[mb].ox, by_bref[mb].oy)
                         for mb in member_brefs]
     return parts
+
+
+def _demands_met(seated: list[_Part], demands: list[_Demand],
+                 ib: dict[str, tuple]) -> bool:
+    """POST-VERIFY a seat against its own demands with the same kernels the
+    candidate filter used (eff bound = snap_erosion_bound; keep_min floor) —
+    proof, not trust: a DFS failure's nearest-candidate/stub fallback can be
+    collision-free yet bound-violating, and shipping it silently is the
+    outlawed degradation."""
+    by_bref = {p.bref: p for p in seated}
+    for mb, tpins, bound, keep, kmin in demands:
+        part = by_bref.get(mb)
+        if part is None:
+            return False
+        d = _pins_to_target(part, ib, tpins or list(ib))
+        if d > _q.snap_erosion_bound(bound):
+            return False
+        if keep and _pins_to_target(part, ib, keep) < kmin:
+            return False
+    return True
 
 
 # --- the general MULTI-ANCHOR contract solver -------------------------------------
@@ -715,8 +772,6 @@ _Attract = tuple[str, "tuple[str, ...] | None", float]
 _Repel = tuple[str, "str | None", float]
 
 _ROOT_GAP = 2.0            # deterministic gap between two independent roots (mm)
-_SEAT_SLIDE = 1.2          # edge-seat courtyard->pad-flush slide allowance (mm)
-_SNAP_EROSION = 0.75       # GRID/2 origin snap + edge-band rounding slop (mm)
 _NET_W = 0.1               # wiring-disorder weight in the candidate score (mm/mm)
 _OVEC = {"N": (0.0, -1.0), "S": (0.0, 1.0), "E": (1.0, 0.0), "W": (-1.0, 0.0)}
 _GRID_MAX_N = 60           # cap the candidate grid half-extent (30 mm at _CAND_STEP)
@@ -1078,7 +1133,7 @@ def _gc_head(bref: str, mod: Path,
         # zone fell back to the legacy packer, 12 contract terms adrift).
         if npins >= 3 and not member_exempt:
             subjects.append((pp.local_box(),
-                             intelligent_need(npins)[0] + 0.05))
+                             _q.quant_credit(intelligent_need(npins)[0])))
         # SYMMETRIC apron: a multi-pin member is itself a gate subject and
         # must keep its OWN need from every placed non-exempt crowder (the
         # shunt-anchored INA3221 landed 0.637 from its 2-pin shunt: RS is a
@@ -1086,7 +1141,7 @@ def _gc_head(bref: str, mod: Path,
         # was enforced).
         if own_need and not (_is_cluster_passive(pp.bref, npins)
                              or is_testpoint_ref(pp.bref)):
-            subjects.append((pp.local_box(), own_need + 0.05))
+            subjects.append((pp.local_box(), _q.quant_credit(own_need)))
     # Grid radius must reach ANY target pad — a big connector's far edge pads (the
     # target box spans the whole part when anchor_pins is absent) — PLUS the bound
     # PLUS a body-slack so the member's pad can hug an inner pin from OUTSIDE the
@@ -1123,10 +1178,10 @@ def _gc_head(bref: str, mod: Path,
     # per-pose gap math inlined allocation-free (same floats as _pins_to_target
     # -> identical ranking): the dict rebuild per pose was the measured hot spot.
     att_pre = [([pb[pin] for pin in pins if pin in pb],
-                bound - _SNAP_EROSION if bound >= 5.0 else bound)
+                _q.snap_erosion_bound(bound))
                for pb, pins, bound in att]
     rep_pre = [([pb[pin] for pin in pins if pin in pb],
-                mm + (_SNAP_EROSION if mm >= 5.0 else 0.0))
+                _q.snap_erosion_pad(mm))
                for pb, pins, mm in rep]
     return (tcx, tcy, n, halo, placed_boxes, subjects, att_pre, rep_pre, rots,
             align, rel_pads)
@@ -1223,6 +1278,8 @@ def _gc_scan_ref(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
                 scored.append((round(dsum + _NET_W * dis, 4),
                                abs(cx), abs(cy), rot, p))
     scored.sort(key=lambda t: (t[0], t[1], t[2], t[3]))
+    if len(scored) > _CAND_CAP:
+        _fb.record("cand_cap_truncated")
     return [t[4] for t in scored[:_CAND_CAP]]
 
 
@@ -1418,6 +1475,8 @@ def _gc_scan_fast(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
                                abs(cx), abs(cy), rot,
                                _Part(bref, mod, rot, "top", cx, cy)))
     scored.sort(key=lambda t: (t[0], t[1], t[2], t[3]))
+    if len(scored) > _CAND_CAP:
+        _fb.record("cand_cap_truncated")
     return [t[4] for t in scored[:_CAND_CAP]]
 
 
@@ -1491,7 +1550,8 @@ def _seat_multi(order: list[str], roots: set[str],
                          else pp.oy + sb[1])
         if faces:
             face = min(faces) if (vx > 0 or vy > 0) else max(faces)
-            face += -_SEAT_SLIDE if (vx > 0 or vy > 0) else _SEAT_SLIDE
+            face += (-_q.seat_slide() if (vx > 0 or vy > 0)
+                     else _q.seat_slide())
             if vx > 0:
                 _sweeps.append((face, -_far, _far, _far))
             elif vx < 0:
@@ -1518,13 +1578,13 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
                     outer_dir: str | None = None,
                     sheet_name: str | None = None,
                     pad_net: dict[tuple[str, str], str] | None = None
-                    ) -> list[_Part] | None:
+                    ) -> list[_Part]:
     """Solve a MULTI-ANCHOR proximity contract as one rigid, collision-free local-
     frame cluster satisfying every ``proximity`` (max_mm) + ``min_from`` (arbitrary
-    part, min_mm) + same_side. Returns the placed parts in topological order, or
-    None (a missing/unresolved anchor, a cyclic graph, or infeasible even after the
-    widen loop) so the caller falls through to the legacy packer and the gate
-    reports it. Deterministic; geometry-only cache keyed on footprints + bounds.
+    part, min_mm) + same_side. Returns the placed parts in topological order;
+    raises ``ZoneInfeasible`` on a missing/unresolved ref, a cyclic graph, or
+    an infeasible solve after the widen loop (LOUD by law — the legacy packer
+    is deleted). Deterministic; geometry-only cache keyed on footprints + bounds.
 
     ``sheet_name`` (optional) enables the generic root ORIENTATION chooser
     (:func:`_som_flip_rot`): a non-mating root whose 180-flip strictly reduces
@@ -1540,7 +1600,9 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
             continue
         a = bref_of.get(st.get("anchor", ""))
         if a is None or a not in resolvable:
-            return None
+            raise ZoneInfeasible(
+                f"contract graph: proximity anchor {st.get('anchor')!r} "
+                f"does not resolve on this sheet — unplaceable contract")
         apins = tuple(st["anchor_pins"]) if st.get("anchor_pins") else None
         bound = float(st["max_mm"])
         mfs: list[tuple[str, str | None, float]] = []
@@ -1553,7 +1615,9 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
         for mlib in st.get("members", []):
             mb = bref_of.get(mlib)
             if mb is None or mb not in resolvable:
-                return None
+                raise ZoneInfeasible(
+                    f"contract graph: proximity member {mlib!r} does not "
+                    f"resolve on this sheet — unplaceable contract")
             all_parts.add(mb)
             members.add(mb)
             attractors.setdefault(mb, []).append((a, apins, bound))
@@ -1561,7 +1625,9 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
                 repulsors.setdefault(mb, []).append((rp, pin, mm))
                 all_parts.add(rp)
     if not members:
-        return None
+        raise ZoneInfeasible(
+            "contract graph: no resolvable proximity members — an authored "
+            "contract with nothing the solver can place")
 
     # Connected components under (attractor + repulsor) edges. Each is an
     # independent rigid cluster (an anchor + everything that clusters around it).
@@ -1632,8 +1698,6 @@ def _solve_contract(contract: dict, bref_of: dict[str, str],
         cl = _solve_component(comp, members, attractors, repulsors, resolvable,
                               conn_roots=_conn_roots, outer_vec=_outer_vec,
                               root_rot=_root_rot, pad_net=pad_net)
-        if cl is None:
-            return None
         clusters.append(cl)
     parts = _compose_clusters(clusters, conn_roots=_conn_roots,
                               outer_vec=_outer_vec)
@@ -1649,11 +1713,12 @@ def _solve_component(comp: set[str], members: set[str],
                      outer_vec: tuple[float, float] | None = None,
                      root_rot: dict[str, float] | None = None,
                      pad_net: dict[tuple[str, str], str] | None = None
-                     ) -> list[_Part] | None:
+                     ) -> list[_Part]:
     """Seat ONE connected component (a root anchor + everything clustering around
     it) as a rigid collision-free cluster: root(s) at the origin, every member
     DFS-seated around its in-component anchors honouring each attractor/repulsor,
-    widen-on-infeasible. Returns the placed parts (topological order) or None."""
+    widen-on-infeasible. Returns the placed parts (topological order); raises
+    ZoneInfeasible on a cycle or widen exhaustion (loud by law)."""
     members_c = comp & members
     roots_c = comp - members_c
     deps: dict[str, set[str]] = {p: set() for p in comp}
@@ -1667,7 +1732,9 @@ def _solve_component(comp: set[str], members: set[str],
         deps[m].discard(m)
     order = _topo_order(comp, deps)
     if order is None:
-        return None
+        raise ZoneInfeasible(
+            f"contract graph: cyclic constraint graph over {sorted(comp)} — "
+            f"no seat order exists")
     for scale in range(0, 24):
         placed = _seat_multi(order, roots_c, attractors, repulsors,
                              resolvable, scale * 0.25,
@@ -1679,7 +1746,10 @@ def _solve_component(comp: set[str], members: set[str],
         parts = [placed[b] for b in order]
         if not _any_overlap(parts):
             return parts
-    return None
+    raise ZoneInfeasible(
+        f"contract graph: component {sorted(comp)} found no collision-free "
+        f"seat after the 24-scale widen — solver infeasible (no silent "
+        f"fallback, no legacy pack)")
 
 
 def _compose_clusters(clusters: list[list[_Part]],
@@ -1756,8 +1826,8 @@ def _compose_clusters(clusters: list[list[_Part]],
             # pad line — normalising them to 0 left an LDO cluster outboard
             # of it, and the seat-line shift dragged its cap off-board
             # (C16002, 1.0mm past Edge.Cuts, measured).
-            inline = round(target + (_SEAT_SLIDE if (vx < 0 or vy < 0)
-                                     else -_SEAT_SLIDE), 4)
+            inline = round(target + (_q.seat_slide() if (vx < 0 or vy < 0)
+                                     else -_q.seat_slide()), 4)
             for i, cl in enumerate(placed_clusters):
                 if _face(cl) is not None:
                     continue
@@ -1868,10 +1938,11 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
                outer_dir: str | None = None
                ) -> tuple[dict[str, tuple[float, float]],
                           dict[str, tuple[float, float]],
-                          float, float] | None:
+                          float, float]:
     """Construct the datasheet layout for a contracted subsystem and return the
     ``_pack_one_zone`` 4-tuple ``(top_off, bot_off, zone_w, zone_h)`` (keyed on
-    BOARD-unique refs), or ``None`` to fall through to the legacy packer.
+    BOARD-unique refs). NO legacy fallback exists: an infeasible or
+    unresolvable contract raises ``ZoneInfeasible`` (loud build failure).
 
     ``rot_out`` (optional; the hook passes a live dict) is filled bref -> extra
     placement rotation for every constructed member — the SAME channel LEVER-L1
@@ -1894,19 +1965,24 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
     PROXIMITY-ONLY contract (only ``proximity``/``same_side`` structures — e.g.
     usb_pd's FUSB302B bypass/CC-filter network) is built by the generic
     proximity-cluster builder (:func:`_build_proximity_zone`). An unrecognised
-    contract returns None (falls through to the legacy packer)."""
+    contract raises ``ZoneInfeasible`` — a LOUD build failure naming the
+    sheet and the binding constraint (no silent fallback, no legacy pack)."""
     if contract is None:
-        return None
+        raise AssertionError(
+            f"build_zone({sheet_name}): called without a contract — the hook "
+            f"guards on load_contract; a None here is a programming error")
     rot_out = rot_out if rot_out is not None else {}
     _types = {st.get("type") for st in contract.get("structures", [])}
     if "hot_loop" not in _types:
-        # not a buck-stage contract. A proximity-bearing contract -> the generic
-        # cluster builder; anything else falls through to the legacy packer.
         if "proximity" in _types:
             return _build_proximity_zone(
                 sheet_name, contract, refs, side_of, bbox_of, resolvable,
                 rot_out, facing=facing, outer_dir=outer_dir)
-        return None
+        raise ZoneInfeasible(
+            f"{sheet_name}: contract has no hot_loop/proximity structure the "
+            f"template engine supports (types: "
+            f"{sorted(t for t in _types if t)}) — author a supported "
+            f"structure; there is no legacy pack")
 
     # LIBRARY ref -> BOARD ref for this sheet (same band the gate/netlist use).
     lib2board = _g._board_refs_by_sheet(sheet_name)
@@ -1961,7 +2037,9 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
     for ic in order:
         ic_b = bref(ic)
         if ic_b is None:
-            return None                      # contract ref missing -> fall through
+            raise ZoneInfeasible(
+                f"{sheet_name}: stage_order IC {ic!r} does not resolve on "
+                f"this sheet — unplaceable contract")
         role = roles.get(ic, "")
         if role == "buck_ic":
             hl = _find("hot_loop", ic)
@@ -1990,7 +2068,9 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
             need = hf + bulk_c + out_c + [ind, boot_c, vcc_c, bias_r_b, bias_c,
                                           rt_b] + fbm
             if any(x is None for x in need):
-                return None
+                raise ZoneInfeasible(
+                    f"{sheet_name}: buck stage {ic!r} has unresolvable "
+                    f"member ref(s) — unplaceable contract")
             pins = _buck_pins(ic)
             parts = _build_buck_stage(
                 ic_b, roles, resolvable, hf, bulk_c, out_c, ind, fbm,
@@ -2001,13 +2081,17 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
             ldo = _find("ldo_stage", ic)
             cin, cout = bref(ldo["cin"]), bref(ldo["cout"])
             if cin is None or cout is None:
-                return None
+                raise ZoneInfeasible(
+                    f"{sheet_name}: ldo stage {ic!r} cin/cout do not resolve "
+                    f"on this sheet — unplaceable contract")
             parts = _build_ldo_stage(ic_b, resolvable, cin, ldo["cin_pin"],
                                      cout, ldo["cout_pin"])
             stages.append(parts)
             stage_kind.append("ldo")
         else:
-            return None
+            raise ZoneInfeasible(
+                f"{sheet_name}: stage_order IC {ic!r} has unsupported role "
+                f"{role!r} (not buck_ic/ldo_ic) — no legacy pack")
 
     # generic proximity members join their anchor IC's STAGE FRAME before the
     # row composer runs — post-compose the pin region is packed solid and the
@@ -2085,13 +2169,24 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
         ab = bref(st.get("anchor", ""))
         si = _stage_of.get(ab)
         bound = float(st.get("max_mm", 0.0) or 0.0)
-        if si is None or bound <= 0.0:
-            continue
+        if si is None:
+            raise ZoneInfeasible(
+                f"{sheet_name}: proximity anchor {st.get('anchor')!r} is not "
+                f"a placed stage part — the structure would go silently "
+                f"unenforced; anchor it on a stage IC/member")
+        if bound <= 0.0:
+            raise ZoneInfeasible(
+                f"{sheet_name}: proximity at {st.get('anchor')!r} has no "
+                f"positive max_mm — malformed structure")
         apins = st.get("anchor_pins")
         att = [(ab, tuple(apins) if apins else None, bound)]
         for mlib in st.get("members", []):
             mb = bref(mlib)
-            if mb is None or mb in _stage_of or mb not in resolvable:
+            if mb is None or mb not in resolvable:
+                raise ZoneInfeasible(
+                    f"{sheet_name}: proximity member {mlib!r} does not "
+                    f"resolve on this sheet — unplaceable contract")
+            if mb in _stage_of:
                 continue
             frame = {p.bref: p for p in stages[si]}
             got = _try_place(mb, att, frame)
@@ -2122,6 +2217,12 @@ def build_zone(sheet_name: str, contract: dict, refs: list[str],
                     _stage_of[mb] = si
                     got = got2
                     break
+                if got is None:
+                    raise ZoneInfeasible(
+                        f"{sheet_name}: proximity member {mb} found no seat "
+                        f"within {bound} mm of {ab} even after bound-priority "
+                        f"displacement — solver infeasible (a silent drop to "
+                        f"the leftover pack is outlawed)")
             else:
                 stages[si] = [*stages[si], got]
                 _stage_of[mb] = si
@@ -2354,12 +2455,13 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
                           outer_dir: str | None = None
                           ) -> tuple[dict[str, tuple[float, float]],
                                      dict[str, tuple[float, float]],
-                                     float, float] | None:
+                                     float, float]:
     """Build a PROXIMITY-ONLY contract (usb_pd's FUSB302B bypass/CC network) as a
     single rigid cluster around its anchor IC, re-anchored into the zone frame,
     then shelf-pack the true leftovers into a band below (the SAME leftover machinery
-    the power path uses). Returns the ``_pack_one_zone`` 4-tuple, or None to fall
-    through. Deterministic; the cluster's chosen rotations come back via ``rot_out``
+    the power path uses). Returns the ``_pack_one_zone`` 4-tuple; raises
+    ``ZoneInfeasible`` on an unresolvable anchor or an infeasible solve.
+    Deterministic; the cluster's chosen rotations come back via ``rot_out``
     (the SAME channel LEVER-L1 uses), folded into ``zone_extra_rot`` by build_model.
 
     ``facing`` (optional; N/E/S/W; T1 P7a): the zone-local direction the MEDIA side
@@ -2388,7 +2490,9 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
                 break
     anchor_bref = bref_of.get(anchor_lib or "")
     if anchor_bref is None:
-        return None
+        raise ZoneInfeasible(
+            f"{sheet_name}: proximity contract has no resolvable anchor "
+            f"({anchor_lib!r}) — unplaceable contract")
 
     # DISPATCH: the two FROZEN pilot sheets (usb_pd/ethernet) keep the byte-identical
     # legacy single-anchor cluster; EVERY other contract — single- or multi-anchor —
@@ -2402,8 +2506,6 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
         parts = _solve_contract(contract, bref_of, resolvable,
                                 outer_dir=outer_dir, sheet_name=sheet_name,
                                 pad_net=_sheet_pad_nets(sheet_name))
-    if parts is None:
-        return None
 
     # re-anchor: shift so the cluster's min pad corner sits at ZONE_PAD (parts can
     # sit on all four sides of the anchor, so origin-relative offsets go negative).
@@ -2467,8 +2569,8 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
             for pp in placed_abs.values():
                 if pp.mod.stem in CONN_MATING_FACE:
                     bb = pp.local_box()
-                    _cn = intelligent_need(
-                        len(_g._pad_boxes(pp.mod, 0.0)))[0] + 0.05
+                    _cn = _q.quant_credit(intelligent_need(
+                        len(_g._pad_boxes(pp.mod, 0.0)))[0])
                     _conn_lo.append(bb[1] - _cn)
                     _conn_hi.append(bb[3] + _cn)
         t_lo, t_w, t_h, b_lo, b_w, b_h = _pack_leftover_bands(
@@ -2487,7 +2589,7 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
                     for pp in placed_abs.values()
                     if pp.mod.stem in CONN_MATING_FACE]
             if _pf0:
-                bx = min(_pf0) + _SEAT_SLIDE
+                bx = min(_pf0) + _q.seat_slide()
         for r, (ox, oy) in t_lo.items():
             top_off[r] = (round(ox + bx, 4), round(oy + by, 4))
         for r, (ox, oy) in b_lo.items():

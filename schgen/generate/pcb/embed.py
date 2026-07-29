@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import math
 
+from schgen.core import fallbacks as _fbk
 from schgen.core import sexpr
 from schgen.core.sexpr import Sym
 
@@ -793,8 +794,10 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
         cs, sn = math.cos(r), math.sin(r)
         chosen: list[tuple[float, float]] = []
         vetoes: dict[str, int] = {}
+        n_curated = len(spec["via_sites"])
         candidates = list(spec["via_sites"]) + _fallback_via_sites(spec)
-        for sx, sy in candidates:
+        n_lattice = 0
+        for ci, (sx, sy) in enumerate(candidates):
             if len(chosen) >= spec["max_vias"]:
                 break
             vx = round(inst.x + sx * cs + sy * sn, 3)
@@ -802,8 +805,16 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
             veto = _via_site_blocker(vx, vy, model, obstacles, placed + chosen)
             if veto is None:
                 chosen.append((vx, vy))
+                if ci >= n_curated:
+                    _fbk.record("thermal_via_lattice")
+                    n_lattice += 1
             else:
                 vetoes[veto] = vetoes.get(veto, 0) + 1
+        if n_lattice:
+            print(f"THERMAL VIA LATTICE: {inst.ref} ({inst.value}) seated "
+                  f"{n_lattice}/{len(chosen)} via(s) from the exhaustive "
+                  f"lattice — curated preferred site(s) blocked (registered "
+                  f"fallback; drift from datasheet-preferred via geometry)")
         placed.extend(chosen)
         _report_via_shortfall(inst, chosen, vetoes, len(candidates))
         for i, (vx, vy) in enumerate(chosen):

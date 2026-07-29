@@ -39,6 +39,7 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core import quantize as _q
 from schgen.core.project import PROJECT_ROOT
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -74,8 +75,6 @@ FAR_L4_GUARD_MM: dict[str, float] = {"ethernet": 14.0, "power_som": 25.0}
 W_HOP = 1.0     # judgment:1.0 — hop length IS the contract objective
 W_SEED = 0.05   # judgment:0.05 — one order below term cost; uninvolved blocks
 #                 keep their LAW-5-shaped seats
-Q = 0.5         # quantum for legalized pose write-back; matches the template
-#                 engine's _CAND_STEP (stage_templates.py); quantize-then-CLAMP
 REPAIR_MAX = 16          # judgment: bounded deterministic termination
 CUT_MAX = 8
 MEDIAN_PASSES = 8
@@ -1225,7 +1224,7 @@ def legalize_compact(board_w: float, board_h: float,
                         if acc >= tot / 2 - 1e-12:
                             best = p2       # tie -> LOWER endpoint (sorted)
                             break
-                    q = round(round(best / Q) * Q, 4)
+                    q = _q.legalize_pose_quantum(best)
                     q = max(lo, min(q, hi))
                     old = pos[n]
                     if abs(q - old) > 1e-12:

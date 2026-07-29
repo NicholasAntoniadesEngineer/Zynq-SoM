@@ -1057,17 +1057,6 @@ def cmd_board(args: argparse.Namespace) -> int:
             print("RATSNEST (LAW 5): FAIL — gate did not run")
             ok_all = False
 
-        # ORDER-OF-ASSEMBLY artifacts (advisory — reported, never in ok_all).
-        _asm = pcb_res.get("assembly") or {}
-        if _asm.get("error"):
-            print(f"ASSEMBLY: FAIL — {_asm['error']} (advisory)")
-        elif _asm:
-            print(f"ASSEMBLY: {_asm['n_steps']} steps + {_asm['n_phases']} "
-                  f"phases, {_asm['n_parts']} parts -> "
-                  f"{_asm['md'].relative_to(REPO_ROOT)} + "
-                  f"{_asm['png_dir'].relative_to(REPO_ROOT)} "
-                  f"({len(_asm['pngs'])} PNGs)")
-
         # LAW-6 MECHANICAL / USE-CASE PLACEMENT gate (HARD): the buildability
         # oracle DRC=0 + ratsnest-pass are blind to. The PCB step ran it on the
         # SAME placed model (no rebuild). FAIL the board on any off-board
@@ -1394,6 +1383,63 @@ def cmd_board(args: argparse.Namespace) -> int:
             + " (suggestion, not constraint)")
     except Exception as exc:  # noqa: BLE001
         print(f"FLOORPLAN: FAIL — {exc}")
+        ok_all = False
+
+    # GOVERNANCE gates (U1-U4): census re-read HERE — after the floorplan
+    # step — so BOTH build_plan invocations of this run are counted.
+    from schgen.core import fallbacks as _fbmod
+    from schgen.verify import fallback_gate, quantize_census
+    qc_res = quantize_census.check()
+    (rep_dir / "quantize_census.txt").write_text(qc_res.summary() + "\n")
+    print(f"QUANTIZE CENSUS: {'PASS' if qc_res.ok else 'FAIL'} "
+          f"({qc_res.n_registered} registered transforms, {qc_res.n_files} "
+          f"geometry files, {qc_res.n_sites} raw site(s), {qc_res.n_new} NEW "
+          f"-> {rep_dir / 'quantize_census.txt'})")
+    for _s in qc_res.new:
+        print(f"  QUANTIZE NEW RAW SITE: {_s}")
+    ok_all = ok_all and qc_res.ok
+    if isinstance(pcb_res, dict):
+        if pcb_res.get("fallbacks") is not None:
+            _fbc = _fbmod.census()
+            pcb_res["fallbacks"] = _fbc
+            fb_res = fallback_gate.check(_fbc)
+            _fired = {k: v for k, v in sorted(_fbc.items()) if v}
+            print(f"FALLBACKS: {'PASS' if fb_res.ok else 'FAIL — RATCHET'} "
+                  f"({len(_fbc)} registered paths; "
+                  + (", ".join(f"{k}={v}" for k, v in _fired.items())
+                     if _fired else "none fired")
+                  + (" — baseline PINNED this build" if fb_res.pinned else "")
+                  + ")")
+            for _r in fb_res.regressions:
+                print(f"  FALLBACK REGRESSION: {_r}")
+            ok_all = ok_all and fb_res.ok
+            pcb_res["fallback_gate"] = {
+                "ok": fb_res.ok, "pinned": fb_res.pinned,
+                "n_names": fb_res.n_names, "n_fired": fb_res.n_fired}
+        else:
+            print("FALLBACKS: FAIL — census did not run")
+            ok_all = False
+        _sm = pcb_res.get("stage_movement")
+        if _sm is not None:
+            _moved = {k: v for k, v in sorted(_sm.items()) if v}
+            print("STAGE MOVEMENT: may_move=no tripwire armed; "
+                  + (", ".join(f"{k}={v}" for k, v in _moved.items())
+                     if _moved else "no stage moved a part")
+                  + " (moved parts per stage)")
+        else:
+            print("STAGE MOVEMENT: FAIL — tracker did not run")
+            ok_all = False
+        pcb_res["quantize_census"] = {
+            "ok": qc_res.ok, "n_registered": qc_res.n_registered,
+            "n_files": qc_res.n_files, "n_sites": qc_res.n_sites,
+            "n_new": qc_res.n_new}
+    from schgen.generate import pipeline_doc
+    try:
+        _pd_path, _pd_changed = pipeline_doc.generate()
+        print(f"GEOMETRY PIPELINE: {_pd_path.relative_to(REPO_ROOT)} "
+              + ("updated" if _pd_changed else "unchanged"))
+    except Exception as exc:  # noqa: BLE001
+        print(f"GEOMETRY PIPELINE: FAIL — {exc}")
         ok_all = False
 
     _lap("pcb gen + DRC + ratsnest images + LAW-5 gate")

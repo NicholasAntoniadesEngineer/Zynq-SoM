@@ -41,6 +41,7 @@ from dataclasses import dataclass
 from math import hypot, pi
 from pathlib import Path
 
+from schgen.core import quantize as _q
 from schgen.verify.fanout_gate import (
     _is_cluster_passive,
     _rect_gap,
@@ -49,7 +50,7 @@ from schgen.verify.fanout_gate import (
 )
 
 from .constants import ORIGIN_X, ORIGIN_Y, PLACE_CLEAR
-from .footprint import _gridify, has_thru_pads, pad_names
+from .footprint import has_thru_pads, pad_names
 from .mating_face import _rot_bbox_cw
 
 # L4-local edge margin (placement.py:1127) — keep shifted copper this far inside
@@ -603,8 +604,10 @@ def breathe_fanout(
         # seed snap.
         if best_delta != (0.0, 0.0):
             ax, ay = pos[grp.anchor]
-            snapped_ax = _gridify(ORIGIN_X + ax + best_delta[0]) - ORIGIN_X
-            snapped_ay = _gridify(ORIGIN_Y + ay + best_delta[1]) - ORIGIN_Y
+            snapped_ax = _q.breathe_anchor_grid(
+                ORIGIN_X + ax + best_delta[0]) - ORIGIN_X
+            snapped_ay = _q.breathe_anchor_grid(
+                ORIGIN_Y + ay + best_delta[1]) - ORIGIN_Y
             sdelta = (round(snapped_ax - ax, 4), round(snapped_ay - ay, 4))
             # re-test _free + leash on the SNAPPED delta; if it collides, retreat to
             # the last free pre-snap sub-step; if that too fails, make no move.
@@ -619,8 +622,10 @@ def breathe_fanout(
                     ux, uy = bx / bn, by / bn
                     for k in range(int(bn / STEP), 0, -1):
                         cand = (ux * k * STEP, uy * k * STEP)
-                        cax = _gridify(ORIGIN_X + ax + cand[0]) - ORIGIN_X
-                        cay = _gridify(ORIGIN_Y + ay + cand[1]) - ORIGIN_Y
+                        cax = _q.breathe_anchor_grid(
+                            ORIGIN_X + ax + cand[0]) - ORIGIN_X
+                        cay = _q.breathe_anchor_grid(
+                            ORIGIN_Y + ay + cand[1]) - ORIGIN_Y
                         cd = (round(cax - ax, 4), round(cay - ay, 4))
                         if group_free(grp, cd) and leash_ok(grp, cd):
                             commit = cd

@@ -10,6 +10,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from schgen.core import fallbacks as _fb
+from schgen.core import quantize as _q
+
 from .constants import (
     _TOP_ALWAYS_LIBS,
     BUTTON_GAP,
@@ -36,7 +39,6 @@ from .constants import (
 )
 from .footprint import (
     _footprint_bbox,
-    _gridify,
     _net_classes,
     board_netlist,
     board_parts,
@@ -51,6 +53,7 @@ from .mating_face import (
     _rot_pad_bbox,
     connector_edge_rotation,
 )
+from .stages import StageTracker
 
 # BREATHE fan-out spread phases (schgen/generate/pcb/breathe.py). Phase A is the
 # tight-leash adjacent-slack expansion (lands first, cannot scatter); Phase B is
@@ -376,7 +379,8 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
                             oy + by0 - PLACE_CLEAR / 2,
                             ox + bx1 + PLACE_CLEAR / 2,
                             oy + by1 + PLACE_CLEAR / 2,
-                            max(0.0, need + 0.05 - PLACE_CLEAR), is_cp))
+                            max(0.0, _q.quant_credit(need) - PLACE_CLEAR),
+                            is_cp))
         r_off, rw, rh = _shelf_pack(items(rest_top, "top"), target_w,
                                     list(g_occ) + btn_blk, fanout=fmeta)
         t_off = {**g_off, **r_off}
@@ -789,8 +793,9 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
         # shelf pack. The template FORCES every contract member to the IC's side
         # (the same_side override) BEFORE building — so both the 2-side classifier
         # here and any later L4 pull see "top" — then returns the SAME 4-tuple
-        # _pack_one_zone does (drop-in). A None result falls through to the legacy
-        # packer UNCHANGED (byte-identical for every non-contracted sheet). The
+        # _pack_one_zone does (drop-in). There is NO legacy fallback: an
+        # infeasible/unresolvable contract raises ZoneInfeasible and the build
+        # dies loudly at the PCB step (user law: no silent fallbacks). The
         # template's chosen passive rotations come back via ``tmpl_rot`` and fold
         # into zone_extra_rot (the SAME channel LEVER-L1 uses). See stage_templates.
         from schgen.verify.placement_contract_gate import load_contract
@@ -1195,6 +1200,9 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     from schgen.generate import floorplan as fp
     from schgen.verify import powertree
 
+    _fb.reset()
+    _trk = StageTracker()
+
     nets = board_netlist()
     parts = board_parts()
 
@@ -1220,6 +1228,7 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     # floorplan block and FLOORPLAN.svg agrees with the PCB ratsnest by
     # construction (no more 235x215-vs-165x155 divergence).
     zg = subsystem_zone_geometry(two_side=two_side, spec=spec)
+    _trk.checkpoint("zone_pack", {})
     zone_box = zg.zone_box
     top_off = zg.top_off
     bot_off = zg.bot_off
@@ -1258,10 +1267,12 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     link_result = link(sheets, load_som_contract())
     regs = powertree.analyze(sheets).regs
     plan = fp.build_plan(sheets, link_result, regs, spec=spec)
+    _trk.checkpoint("plan_lattice", {})
     # MULTI-SHAPE: the plan's pack search chose a shape per interior block;
     # rebind the flat zone views to the CHOSEN shapes so STEP 3 emits the very
     # offsets/rotations the committed block (w, h) was packed with.
     zg = apply_chosen_shapes(zg, {b.name: b.shape_idx for b in plan.blocks})
+    _trk.checkpoint("shape_bind", {})
     zone_box = zg.zone_box
     top_off = zg.top_off
     bot_off = zg.bot_off
@@ -1389,6 +1400,12 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             pos[ref] = (round(px, 4), round(py, 4))
             side_of[ref] = "bottom"
             grid_placed.add(ref)
+
+    def _pose_snap() -> dict[str, tuple]:
+        return {r: (p[0], p[1], fixed_rot.get(r, 0.0))
+                for r, p in pos.items()}
+
+    _trk.checkpoint("step3_emission", _pose_snap())
 
     # ---- LEVER L4: BOTTOM-PULL toward the SoM (cross-airwire reduction) ------
     # The board is AIRWIRE-BUDGET bound (LAW 5) and the BOTTOM is ~82% empty. Every
@@ -1573,6 +1590,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                     pos[r] = (nx, ny)
                     bot_box[r] = _halo(_eff_box(r, nx, ny), PLACE_CLEAR / 2)
 
+    _trk.checkpoint("l4_pull", _pose_snap())
+
     # LAW 6: seat every off-board connector AT the board edge — push it outward
     # (perpendicular to its edge) until its outermost PAD clears EDGE_PAD_CLEAR,
     # so the mouth/shell reaches/overhangs the edge and a cable actually mates
@@ -1597,6 +1616,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             x = board_w - EDGE_PAD_CLEAR - px1
         pos[ref] = (round(x, 4), round(y, 4))
         grid_placed.add(ref)
+
+    _trk.checkpoint("edge_seat", _pose_snap())
 
     fixed = set(mh_refs) | set(som_j_refs)
 
@@ -1631,6 +1652,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                 mh_refs=set(mh_refs), som_j_refs=set(som_j_refs),
                 df40_pad_boxes=_df40_bands, phase=_ph)
 
+    _trk.checkpoint("breathe", _pose_snap())
+
     # FACING REFIT (position-aware, FINAL): build_zone turned each contracted
     # zone with the SPEC-derived facing hint, but the packer may seat the zone
     # ANYWHERE (capacity exiled power to the far W when the E side filled) and
@@ -1661,10 +1684,14 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                 pos[r] = (x, y)
                 fixed_rot[r] = rot
 
+    _trk.checkpoint("refit_facing", _pose_snap())
+
     _reorder_interchangeable(
         pos, zg.refs_by_sheet, side_of, resolvable, fixed_rot, bbox_of,
         nets, pin_net, set(zg.conn_rot),
         {s for s in zorigin if _lc_refit(s) is not None})
+
+    _trk.checkpoint("reorder", _pose_snap())
 
     # LAW 0: evict bottom-side strays from the DF40 stitch corridors (the
     # escape engine's own live-derived seat bands), on the FINAL positions —
@@ -1734,6 +1761,12 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                     break
                 if moved:
                     break
+            if moved:
+                _fb.record("corridor_evict_moved")
+            else:
+                _fb.record("corridor_stray_unmovable")
+
+    _trk.checkpoint("corridor_eviction", _pose_snap())
 
     insts: list[FootprintInst] = []
     placed = 0
@@ -1754,7 +1787,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         if ref in grid_placed:
             fx, fy = round(ORIGIN_X + bx, 4), round(ORIGIN_Y + by, 4)
         else:
-            fx, fy = _gridify(ORIGIN_X + bx), _gridify(ORIGIN_Y + by)
+            fx, fy = (_q.fixed_part_grid(ORIGIN_X + bx),
+                      _q.fixed_part_grid(ORIGIN_Y + by))
         insts.append(FootprintInst(
             ref=ref, value=value, footprint=footprint,
             x=fx, y=fy,
@@ -1805,6 +1839,13 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         placed += len(fid_insts)
         n_top += len(fid_insts)
 
+    _trk.checkpoint("instantiate", _pose_snap())
+
+    def _page_snap() -> dict[str, tuple]:
+        return {i.ref: (i.x, i.y, i.rotation, i.side) for i in insts}
+
+    _trk.checkpoint("emission_frame", _page_snap())
+
     kx0, ky0, kx1, ky1 = keepout
     som_core = som_core_rect(plan.som_x, plan.som_y, som.w, som.h)
     model = PcbModel(
@@ -1822,4 +1863,6 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     from .escape import build_escape_copper, build_escape_plan
     model.copper, model.escape_meta = build_escape_copper(model)
     model.escape_plan = build_escape_plan(model)
+    _trk.checkpoint("escape_copper", _page_snap())
+    model.stage_moves = dict(_trk.moves)
     return model

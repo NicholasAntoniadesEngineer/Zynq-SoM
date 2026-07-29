@@ -11,6 +11,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core import quantize as _quantize
 from schgen.core.project import PROJECT_ROOT
 from schgen.generate import constraints as cst
 
@@ -53,7 +54,7 @@ def _kicad_fp_root() -> Path | None:
 ORIGIN_X = 25.0          # board top-left in KiCad page mm
 ORIGIN_Y = 25.0
 MH_INSET = 5.0          # M3 hole center inset from each board corner
-GRID = 1.27             # placement snap grid (mm)
+GRID = _quantize.GRID_MM
 
 # --- fiducials (GAP3 / carrier/manufacturing/ASSEMBLY_NOTES.md) ----------------
 # Optical registration marks for fine-pitch pick-and-place. ASSEMBLY_NOTES REQUIRES
@@ -80,12 +81,6 @@ EDGE_BAND_PCB = 10.0     # nominal connector band each side (board-aspect seed)
 ZONE_FILL = 0.58         # zone-area packing efficiency for the seed board size
 ZONE_STEP = 2.54         # zone-placement raster scan step (mm)
 OUTLINE_GROW = 5.0       # board grow increment per fit attempt (mm)
-OUTLINE_SNAP_PCB = 5.0   # round the final W/H UP to this grid (mm)
-
-
-def _snap_up(v: float) -> float:
-    n = int((v + OUTLINE_SNAP_PCB - 1e-6) / OUTLINE_SNAP_PCB)
-    return round(n * OUTLINE_SNAP_PCB, 1)
 
 
 @dataclass
@@ -130,6 +125,9 @@ class PcbModel:
     copper: list = field(default_factory=list)
     escape_meta: dict = field(default_factory=dict)
     escape_plan: dict | None = None
+    # governance U3: per-stage moved-part counts from the StageTracker
+    # (stages.py) — observability only, never serialized into the board file.
+    stage_moves: dict = field(default_factory=dict)
 
 
 # ---- footprint resolution + parsing ----------------------------------------------

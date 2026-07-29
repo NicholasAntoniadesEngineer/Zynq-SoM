@@ -35,6 +35,8 @@ from dataclasses import dataclass, field
 from heapq import heappop, heappush
 from pathlib import Path
 
+from schgen.core import fallbacks as _fb
+from schgen.core import quantize as _q
 from schgen.core.project import PROJECT_ROOT
 from schgen.core.project import spec as _project_spec
 
@@ -231,7 +233,7 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg
             # transfers verbatim; movers that shift parts afterwards (BREATHE,
             # edge-seat) validate need themselves. +0.05: 4dp quantization eats
             # microns — a reach met exactly emerged 15um short (measured).
-            lim = need + 0.05
+            lim = _q.quant_credit(need)
             if mw <= lim:
                 rw = max(rw, lim - mw)
             if me <= lim:
@@ -275,7 +277,6 @@ EDGE_BAND = EDGE_DEPTH_CAP - 4.0   # depth of the connector band on each edge �
 # worst case that left the board ~70% empty. The grow loop + the STRICT LAW-5
 # ratsnest gate remain the final arbiters of routing headroom.
 PACK_EFFICIENCY = 0.60
-OUTLINE_SNAP = 5.0       # round the derived W/H UP to this grid (mm)
 
 FONT = "ui-monospace, SFMono-Regular, Menlo, monospace"
 SCALE = 6.0              # SVG px per mm
@@ -538,17 +539,13 @@ def derive_outline(sheets, som: SomGeom) -> Outline:
     w = max(banded_w, area_w) + 2 * PERIM_KEEPOUT
     h = max(banded_h, area_h) + 2 * PERIM_KEEPOUT
 
-    def snap_up(v: float) -> float:
-        return round(float(int((v + OUTLINE_SNAP - 1e-6) / OUTLINE_SNAP))
-                     * OUTLINE_SNAP, 1)
-
-    w, h = snap_up(w), snap_up(h)
+    w, h = _q.outline_snap_up(w), _q.outline_snap_up(h)
     note = (f"SoM {som.w:g}x{som.h:g} + {SOM_HALO:g}mm halo + {EDGE_BAND:g}mm "
             f"connector band/edge -> core {banded_w:g}x{banded_h:g}; "
             f"component area {comp_area:.0f}mm2 / {PACK_EFFICIENCY:g} fill "
             f"-> area floor {area_w:.0f}x{area_h:.0f}; + {PERIM_KEEPOUT:g}mm "
             f"perimeter keepout -> {w:g}x{h:g} mm (rounded up to "
-            f"{OUTLINE_SNAP:g}mm grid)")
+            f"{_q.OUTLINE_SNAP_MM:g}mm grid)")
     return Outline(w=w, h=h, note=note)
 
 
@@ -629,10 +626,6 @@ class Block:
     @property
     def cy(self) -> float:
         return self.y + self.h / 2
-
-
-def _r5(v: float) -> float:
-    return round(round(v * 2) / 2, 1)
 
 
 def _j_affinity(sheets, link_result) -> dict[str, dict[str, int]]:
@@ -972,8 +965,8 @@ def export_floorplan_spec(plan: Plan, path: Path = FLOORPLAN_SPEC) -> Path:
 class Plan:
     def __init__(self, som: SomGeom):
         self.som = som
-        self.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
-        self.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
+        self.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
+        self.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
         self.edge_blocks: list[Block] = []
         self.interior_blocks: list[Block] = []
         self.factor = ROUTE_FACTOR
@@ -1151,7 +1144,7 @@ def _spatial_bounds(far_ceil: float = 0.0,
     from schgen.generate.pcb.constants import PLACE_CLEAR
     from schgen.verify.fanout_gate import _TIER_TOP, _TIERS
     need_ceil = max(_TIER_TOP[0], max(n for _p, n, _b in _TIERS))
-    reach_floor = round(need_ceil + 0.05, 4)
+    reach_floor = round(_q.quant_credit(need_ceil), 4)
     reach_bound = max(reach_floor, max_reach or 0.0)
     envelope = max(CLEAR, PLACE_CLEAR, 2 * reach_bound,
                    CABLE_NEIGHBOR_GAP, far_ceil)
@@ -1390,8 +1383,8 @@ class _Occupancy:
 
 
 def _interior_dims(area: float) -> tuple[float, float]:
-    h = _r5(min(30.0, max(8.0, (area / 1.6) ** 0.5)))
-    w = _r5(max(8.0, area / h))
+    h = _q.placeholder_zone_half_mm(min(30.0, max(8.0, (area / 1.6) ** 0.5)))
+    w = _q.placeholder_zone_half_mm(max(8.0, area / h))
     return w, h
 
 
@@ -1566,7 +1559,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     for b in plan.edge_blocks + interior:
         if b.name not in zbox:
             a = sheet_area(by_name[b.name].circuit, ROUTE_FACTOR)
-            zbox[b.name] = (_r5(max(12.0, a ** 0.5)), _r5(max(8.0, a ** 0.5)))
+            zbox[b.name] = (_q.placeholder_zone_half_mm(max(12.0, a ** 0.5)),
+                            _q.placeholder_zone_half_mm(max(8.0, a ** 0.5)))
 
     # D13 FAN-OUT CLEARANCE: each block's fan-out reach (extra clearance a multi-pin
     # subject near the block edge needs beyond a neighbour's zone, not already met by
@@ -1653,8 +1647,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # here. If the blocks don't even fit the fixed box, FAIL with a clear message.
     if isinstance(spec.outline if spec else "auto", tuple):
         BOARD_W, BOARD_H = spec.outline          # type: ignore[misc]
-        plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
-        plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
+        plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
+        plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
         if not _attempt_pack(plan, interior, edge_of, zbox, affinity,
                              som_pull, compose=compose, compact=True,
                              far_ceil=far_ceil, max_reach=max_reach,
@@ -1702,16 +1696,16 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         for name, (bw, bh) in zbox.items())
     for aspect in aspects:
         for _try in range(80):
-            grow = _try * OUTLINE_SNAP
-            w = _snap_up_fp(outline.w + grow * (aspect / seed_aspect))
-            h = _snap_up_fp(outline.h + grow)
+            grow = _q.outline_grow(_try)
+            w = _q.outline_snap_up(outline.w + grow * (aspect / seed_aspect))
+            h = _q.outline_snap_up(outline.h + grow)
             if w < h:                     # keep landscape
                 continue
             if w * h < _min_pack_area:    # provably too small — skip the slow pack
                 continue
             BOARD_W, BOARD_H = w, h
-            plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
-            plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
+            plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
+            plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
             if not _attempt_pack(plan, interior, edge_of, zbox,
                                  affinity, som_pull, compose=compose,
                                  far_ceil=far_ceil, max_reach=max_reach,
@@ -1746,8 +1740,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     def _passes(w: float, h: float) -> tuple[bool, float, float]:
         global BOARD_W, BOARD_H
         BOARD_W, BOARD_H = w, h
-        plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
-        plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
+        plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
+        plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
         if not _attempt_pack(plan, interior, edge_of, zbox,
                              affinity, som_pull, compose=compose,
                              far_ceil=far_ceil, max_reach=max_reach,
@@ -1766,7 +1760,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # below where blocks can pack) and keep the smallest-area board that packs AND
     # clears the est-airwire budget. The window is small enough to stay fast yet
     # wide enough to step over the non-monotonic valley. Deterministic: fixed grid.
-    REFINE_SPAN = 40.0                     # mm each axis explored below the best
+
     # FINE step (1 mm, not the 5 mm OUTLINE_SNAP): the REAL packer's shelf quantum
     # makes feasibility JAGGED on the 1 mm scale — at the tight wall 161 and 163
     # pack but 160/162/164 do NOT, and the L4-credited airwire clears the budget at
@@ -1776,11 +1770,10 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # are rejected) and the L4-credited proxy vs the LAW-5 budget, so this only
     # finds a smaller board the strict `schgen board` gate then re-proves — it never
     # relaxes a gate. Deterministic: a fixed 1 mm grid, smallest-area wins.
-    FINE_SNAP = 1.0
     bw0, bh0 = bw, bh
-    nsteps = int(REFINE_SPAN / FINE_SNAP) + 1
-    ws = [round(bw0 - k * FINE_SNAP, 1) for k in range(0, nsteps)]
-    hs = [round(bh0 - k * FINE_SNAP, 1) for k in range(0, nsteps)]
+    nsteps = _q.fine_steps()
+    ws = [_q.fine_shrink(bw0, k) for k in range(0, nsteps)]
+    hs = [_q.fine_shrink(bh0, k) for k in range(0, nsteps)]
     for w in ws:
         for h in hs:
             if (w <= 0 or h <= 0 or w < h or w * h >= bw * bh - 1e-6
@@ -1793,8 +1786,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     best = (round(bw * bh, 1), bw, bh, best_er, best_bud)
 
     _area, BOARD_W, BOARD_H, est_real, budget = best
-    plan.som_x = _r5((BOARD_W - som.w) / 2 + SOM_DX)
-    plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
+    plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
+    plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
     # RE-PACK at the chosen winner so plan holds exactly that layout (the search
     # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
     if not _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
@@ -1831,11 +1824,6 @@ def _outline_note(som: SomGeom, seed: Outline, w: float, h: float,
             f"PCB places), SoM {som.w:g}x{som.h:g} centered{extra}")
 
 
-def _snap_up_fp(v: float) -> float:
-    n = int((v + OUTLINE_SNAP - 1e-6) / OUTLINE_SNAP)
-    return round(n * OUTLINE_SNAP, 1)
-
-
 def _cross_estimator(plan: Plan, zg, sheets):
     """The LAW-5 sizing estimate as a STRUCTURAL measurement, not a calibrated
     proxy: the ratsnest gate's own kernel (``ratsnest._mst_edges`` Manhattan-
@@ -1866,7 +1854,7 @@ def _cross_estimator(plan: Plan, zg, sheets):
         ORIGIN_Y,
         FootprintInst,
     )
-    from schgen.generate.pcb.footprint import _gridify, resolve_mod
+    from schgen.generate.pcb.footprint import resolve_mod
     from schgen.generate.pcb.mating_face import _inst_pad_geom, _rot_pad_bbox
     from schgen.generate.ratsnest import _mst_edges
 
@@ -2023,8 +2011,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
                 part_pos[bref] = (round(zo[0] + dx, 4), round(zo[1] + dy, 4))
             elif kind == "som_j":
                 jx, jy = som_rel[key]
-                part_pos[bref] = (_gridify(ORIGIN_X + som_x + jx),
-                                  _gridify(ORIGIN_Y + som_y + jy))
+                part_pos[bref] = (_q.fixed_part_grid(ORIGIN_X + som_x + jx),
+                                  _q.fixed_part_grid(ORIGIN_Y + som_y + jy))
             elif kind == "dec":
                 cxi, cyi = key % dec_cols, key // dec_cols
                 part_pos[bref] = (
@@ -2032,8 +2020,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
                     round(ORIGIN_Y + som_y + 6.0 + rh * (cyi + 0.5) / dec_rows, 4))
             else:
                 cx, cy = corners[key]
-                part_pos[bref] = (_gridify(ORIGIN_X + cx),
-                                  _gridify(ORIGIN_Y + cy))
+                part_pos[bref] = (_q.fixed_part_grid(ORIGIN_X + cx),
+                                  _q.fixed_part_grid(ORIGIN_Y + cy))
         for ref, edge in sorted(zg.conn_edge.items()):
             pb = conn_pb.get(ref)
             if pb is None or ref not in part_pos:
@@ -2093,7 +2081,8 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             near, span_b, dim = b.y, b.h, BOARD_H
         else:
             near, span_b, dim = b.x, b.w, BOARD_W
-        if near < EDGE_MARGIN - 0.1 or near + span_b > dim - EDGE_MARGIN + 0.1:
+        if (near < EDGE_MARGIN - _q.run_overflow_tol()
+                or near + span_b > dim - EDGE_MARGIN + _q.run_overflow_tol()):
             return False
 
     # EDGE-vs-SoM FIT (LAW 0/6): the edge runs never consulted the SoM — on a
@@ -2515,9 +2504,10 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 # COMPACTION may only land when it keeps every D13 pair gap;
                 # otherwise fall back to the legalize-only form the outline
                 # scan accepted (fresh deterministic pack, nothing stale).
-                if not (_legalize(compact)
-                        or (compact and _legalize(False))):
-                    return False
+                if not _legalize(compact):
+                    if not (compact and _legalize(False)):
+                        return False
+                    _fb.record("legalize_only_compaction")
     return True
 
 
