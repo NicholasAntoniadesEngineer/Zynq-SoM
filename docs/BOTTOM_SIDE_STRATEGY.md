@@ -1,0 +1,54 @@
+# Bottom-side placement — wave-9 design
+
+## The right abstraction
+
+NOT two floorplans. One floorplan where SIDE is a per-block degree of freedom:
+
+- The two surfaces share one outline, one edge-connector perimeter, one SoM region,
+  and every PUNCH-THROUGH: THT pads block the far side locally, escape/stitch vias
+  need both-side landing room, corridors are per-side bands, mounting holes pierce.
+  Two independent floorplans are each blind to the other's penetrations; one
+  allocator with a top layer + bottom layer + shared punch layer models the truth.
+- The ATOM of side assignment is the BLOCK, never the part: contract structures
+  (hot loops, terminations) are same-side by datasheet; a zone's existing internal
+  top/bot split (`top_off`/`bot_off`) stays intra-block.
+
+## Why the engine is closer than it looks
+
+- Gates are already side-aware: D13 crowding skips opposite-side neighbors; DRC is
+  per-layer; corridor eviction is already B.Cu-aware; the SoM bottom face is already
+  populated (som_decoupling). The gap is ONLY the block allocator: today a block's
+  rectangle claims both surfaces implicitly.
+- Wave-4 multi-shape is the natural carrier: a bottom placement is just MORE SHAPE
+  VARIANTS — the mirrored (X-flipped) re-pack of the same zone, tagged side=bottom.
+  The greedy deterministic chooser, chosen-shape plumbing, estimator-judges-chosen-
+  geometry, and P6 legalizer machinery all extend rather than fork.
+
+## Plan
+
+- P1 INFRASTRUCTURE (byte-identity-safe landing): `_Occupancy` becomes two layers +
+  punch layer; `Block.side`; `place_near` searches (x, y, side) over each block's
+  variant set; bottom variants = mirrored `_pack_one_zone` re-packs; estimator adds
+  a per-crossing VIA COST term for nets spanning sides; emission flips sides.
+  Eligibility defaults to top-only — with zero blocks opted in, the board must be
+  byte-identical (the control that lands the machinery inert).
+- P2 ELIGIBILITY (data, not code): floorplan.json per-block `"side": "top" |
+  "bottom" | "either"`. Hard rules derived, not asserted: connectors/switches/LEDs/
+  displays are user-facing = top; height-capped by the enclosure standoff budget
+  (USER DATA NEEDED); second-reflow mass rule (heavy parts top) as a new DFM gate —
+  an extension, no existing gate softened. First candidates: faceless blocks —
+  hdmi_rx_term, board_services, uart_bridge-class networks, bulk/termination groups.
+  Each opt-in lands as a measured A/B (area, airwire, via count).
+- P3 HARVEST: the sizing search re-derives the outline as interior demand drops
+  toward max(top, bottom) instead of their sum. Edge runs (99mm of 183 today) do
+  not bind, so the interior win is real board shrink.
+
+## User decisions required before P2
+
+1. Bottom-side max component height (enclosure/standoff budget), in mm.
+2. Which families count as user-facing besides connectors/switches/LEDs (TPs are
+   probe-able on standoffs — default bottom-eligible unless overruled).
+3. Assembly cost stance: double-sided reflow is standard but priced; the ASSEMBLY
+   doc already sequences bottom-first.
+
+Sequencing: P1 starts after the wave-8 engine unit lands (same files).
