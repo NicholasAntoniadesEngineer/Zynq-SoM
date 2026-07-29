@@ -107,14 +107,22 @@ def _is_overmold_block(b) -> bool:
     return any(v in _OVERMOLD_FAMILIES for (_r, v, _w, _h) in b.conns)
 
 
-def _fanout_sep(a_reach: tuple, b_reach: tuple, axis: str) -> float:
+def _fanout_sep(a_reach: tuple, a_inset: tuple, b_reach: tuple, b_inset: tuple,
+                axis: str) -> float:
     """Required extra separation (mm) between two blocks abutting along ``axis``,
-    from the D13 per-side reaches. ``a_reach``/``b_reach`` are (W, E, N, S) tuples;
-    ``axis`` is "E" when B is to the +x (right) of A, "W" for -x, "S" for +y (below),
-    "N" for -y. The two FACING sides' reaches sum: for B to the E of A, A's E reach
-    meets B's W reach; etc. Symmetric — the caller passes the resolved direction."""
-    idx = {"W": (0, 1), "E": (1, 0), "N": (2, 3), "S": (3, 2)}[axis]
-    return a_reach[idx[0]] + b_reach[idx[1]]
+    from the D13 per-side reaches + insets. ``axis`` is "E" when B is to the +x
+    (right) of A, "W" for -x, "S" for +y (below), "N" for -y; the facing sides
+    are A's axis side vs B's opposite. PAIR-EXACT composition: the gate demand
+    between a subject in A and the nearest countable part in B is one-sided —
+    subject apron minus the neighbour's real border inset — and two facing
+    demands share the same gap, so they compose by MAX, never by SUM (summing
+    doubled the reservation and inflated the board; aprons legally overlap in
+    the shared void). A side with no under-margined subject (reach 0) demands
+    nothing."""
+    ia, ib = {"W": (0, 1), "E": (1, 0), "N": (2, 3), "S": (3, 2)}[axis]
+    sa = a_reach[ia] - b_inset[ib] if a_reach[ia] > 0.0 else 0.0
+    sb = b_reach[ib] - a_inset[ia] if b_reach[ib] > 0.0 else 0.0
+    return max(sa, sb)
 
 
 def _pair_gap(a, b) -> float:
@@ -133,7 +141,8 @@ def _pair_gap(a, b) -> float:
     # a run on the N/S edge spreads along X (a is to the W of b); a W/E run spreads
     # along Y (a is to the N of b). Use the facing-side reaches accordingly.
     axis = "E" if (a.edge or b.edge) in ("N", "S") else "S"
-    return round(max(CLEAR, _fanout_sep(a.fanout_reach, b.fanout_reach, axis)), 4)
+    return round(max(CLEAR, _fanout_sep(a.fanout_reach, a.fanout_inset,
+                                        b.fanout_reach, b.fanout_inset, axis)), 4)
 
 
 # (reach_w, reach_e, reach_n, reach_s): extra clearance (mm) a multi-pin subject
@@ -145,22 +154,26 @@ def _pair_gap(a, b) -> float:
 _ZeroReach = (0.0, 0.0, 0.0, 0.0)
 
 
-def _block_fanout_reach(sheet: str, zg) -> tuple[float, float, float, float]:
-    """Per-SIDE extra clearance (mm) a multi-pin subject in ``sheet``'s zone needs
-    BEYOND a neighbouring block's edge — the D13 fan-out floor NOT already met by the
-    zone's own internal margin, resolved to the side the subject faces.
+def _block_fanout_reach(sheet: str, zg) -> tuple[tuple, tuple]:
+    """Per-SIDE (reach, inset) for ``sheet``'s zone — the two sufficient
+    statistics of the pair-exact D13 composition.
 
-    For each multi-pin subject (>=3 pins, the gate's tiers) with intelligent NEED, we
-    look at its courtyard's margin to EACH of the 4 zone-box edges. The subject
+    REACH: for each multi-pin subject (>=3 pins, the gate's tiers) with
+    intelligent NEED, its courtyard's margin to EACH of the 4 zone-box edges
     reserves ``need - margin`` (clamped >=0) on a side ONLY when it is the CLOSE
-    subject to that edge — i.e. within one need of it — so an IC buried in the middle
-    of the zone reserves nothing and only an edge-hugging IC pushes a neighbour on the
-    one side it is exposed. A block with no exposed multi-pin subject reaches all
-    zeros and packs at the tight CLEAR. Matches the emitted board (same zone geometry
-    + rotations the PCB places); tiers/subject rule from the fan-out gate."""
+    subject to that edge, so an IC buried mid-zone reserves nothing and only an
+    edge-hugging IC pushes a neighbour on the one side it is exposed.
+
+    INSET: the min courtyard margin of ANY gate-countable part (fiducials
+    excluded — the gate never counts them as crowding) to each zone side — the
+    credit this zone grants a neighbour's subject, since the gate measures
+    courtyard-to-courtyard, not courtyard-to-border. Negative when a courtyard
+    overhangs the zone box (the overhang then genuinely eats the pair gap).
+    Matches the emitted board (same zone geometry + rotations the PCB places);
+    tiers/subject rule from the fan-out gate."""
     zbox = zg.zone_box.get(sheet)
     if zbox is None:
-        return _ZeroReach
+        return _ZeroReach, _ZeroReach
     zw, zh = zbox
     rot_of = dict(zg.conn_rot)
     rot_of.update(zg.zone_extra_rot)
@@ -169,7 +182,7 @@ def _block_fanout_reach(sheet: str, zg) -> tuple[float, float, float, float]:
                                zg.bot_off.get(sheet, {})), rot_of, zg)
 
 
-def _shape_fanout_reach(shape, zg) -> tuple[float, float, float, float]:
+def _shape_fanout_reach(shape, zg) -> tuple[tuple, tuple]:
     """The SAME derivation as :func:`_block_fanout_reach` on ONE shape variant
     (its own box/offsets/rotations) — so the occupancy lattice reserves the
     fan-out floor of the shape actually chosen, never shape 0's."""
@@ -180,41 +193,45 @@ def _shape_fanout_reach(shape, zg) -> tuple[float, float, float, float]:
 
 
 def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg
-                       ) -> tuple[float, float, float, float]:
+                       ) -> tuple[tuple, tuple]:
     from schgen.generate.pcb import placement as _pl
-    from schgen.generate.pcb.constants import GRID
-    from schgen.generate.pcb.mating_face import _rot_bbox
-    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS, intelligent_need
+    from schgen.generate.pcb.mating_face import _rot_bbox_cw
+    from schgen.verify.fanout_gate import (
+        MIN_SUBJECT_PINS,
+        intelligent_need,
+        is_testpoint_ref,
+    )
     rw = re = rn = rs = 0.0
+    iw = ie = in_ = is_ = float("inf")
     for side_off in side_offs:
         for ref, (ox, oy) in side_off.items():
             mod = zg.resolvable.get(ref)
             bbox = zg.bbox_of.get(ref)
             if mod is None or bbox is None:
                 continue
-            pins = len(_pl.pad_names(mod))
-            if pins < MIN_SUBJECT_PINS:
+            if "Fiducial" in mod.stem or is_testpoint_ref(ref):
                 continue
-            need = intelligent_need(pins)[0]
-            rb = _rot_bbox(bbox, rot_of.get(ref, 0.0))
+            # KiCad's CW rotation sign — the SAME kernel emission and the D13
+            # gate measure with (_eff_box/_inst_courtyard); the math-CCW
+            # _rot_bbox skews an asymmetric part's rot-90/270 margins by its
+            # bbox asymmetry (TYPE-C: 1.97 mm).
+            rb = _rot_bbox_cw(bbox, rot_of.get(ref, 0.0))
             cx0, cy0 = ox + rb[0], oy + rb[1]
             cx1, cy1 = ox + rb[2], oy + rb[3]
             mw, me = cx0, zw - cx1          # margin to W (left) / E (right) edge
             mn, ms = cy0, zh - cy1          # margin to N (top) / S (bottom) edge
-            # CREDITED margin: zones now emit at their EXACT floorplan pose (the
-            # per-zone _gridify snap was removed), but the +GRID term is KEPT —
-            # it also absorbs the residual post-pack emission shifts that are
-            # not modelled here: the LAW-6 edge-seat perpendicular slide and
-            # BREATHE's page-grid-snapped anchor moves. Measured: dropping it
-            # to need+0.05 starved J14001 (hdmi_tx, clr 1.370 < 1.50 vs the
-            # corner mounting hole) and J17001 (pd_input, 0.890 < 1.00 vs
-            # usbc_otg) on the emitted board. Straight formula, clamped at the
-            # END: a plain margin - GRID credit under-reserved whenever
-            # margin < GRID (pd_input's USBLC6 at margin 0.29 got 0.5 instead
-            # of 1.48 and the emitted blocks overlapped by 0.18). +0.05: 4dp
-            # quantization eats microns; a reach met exactly emerged 15um
-            # short on the board (measured).
-            lim = need + GRID + 0.05
+            iw, ie = min(iw, mw), min(ie, me)
+            in_, is_ = min(in_, mn), min(is_, ms)
+            pins = len(_pl.pad_names(mod))
+            if pins < MIN_SUBJECT_PINS:
+                continue
+            need = intelligent_need(pins)[0]
+            # EXACT credit: zones emit at their exact floorplan pose and
+            # _pack_edges emits exact run positions, so the reservation
+            # transfers verbatim; movers that shift parts afterwards (BREATHE,
+            # edge-seat) validate need themselves. +0.05: 4dp quantization eats
+            # microns — a reach met exactly emerged 15um short (measured).
+            lim = need + 0.05
             if mw <= lim:
                 rw = max(rw, lim - mw)
             if me <= lim:
@@ -223,7 +240,10 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg
                 rn = max(rn, lim - mn)
             if ms <= lim:
                 rs = max(rs, lim - ms)
-    return (round(rw, 4), round(re, 4), round(rn, 4), round(rs, 4))
+    if iw == float("inf"):
+        iw = ie = in_ = is_ = 0.0
+    return ((round(rw, 4), round(re, 4), round(rn, 4), round(rs, 4)),
+            (round(iw, 4), round(ie, 4), round(in_, 4), round(is_, 4)))
 
 
 CLEAR = 0.3              # block-to-block clearance — TIGHTENED (was 1.5). The
@@ -591,12 +611,16 @@ class Block:
                                   # subject exposed on that side of THIS block needs
                                   # beyond a neighbour's zone edge — the intelligent
                                   # fan-out floor not already met by the zone's own
-                                  # internal margin. A neighbour on a given side is
-                                  # held (this block's reach on that side + the
-                                  # neighbour's reach on its facing side) away, so an
+                                  # internal margin. Composed PAIR-EXACTLY with the
+                                  # neighbour's facing reach/inset by _fanout_sep
+                                  # (MAX of one-sided demands, never SUM), so an
                                   # edge-hugging IC keeps its fan-out floor to the
                                   # foreign part next door WITHOUT reserving space on
                                   # the 3 sides it is not exposed on.
+    fanout_inset: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0)
+                                  # per-side min courtyard margin of ANY countable
+                                  # part to this block's border — the credit granted
+                                  # to a facing subject's apron (negative = overhang).
 
     @property
     def cx(self) -> float:
@@ -1079,40 +1103,55 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
             sp, dp = span_of(b, edge), depth_of(b, edge)
             # EDGE_INSET: every edge block is held this far OFF the board edge so
             # a flush off-board connector's PAD copper clears the board edge by
-            # >= the copper_edge_clearance rule (0.3 mm) even after the placer's
-            # grid snap. The connector mouth still sits at the perimeter (LAW 6 —
-            # the cable/plug overhangs the inset), but no pad is at the edge.
+            # >= the copper_edge_clearance rule (0.3 mm). The connector mouth
+            # still sits at the perimeter (LAW 6 — the cable/plug overhangs the
+            # inset), but no pad is at the edge.
+            # EXACT emission: blocks land at the run positions verbatim. The old
+            # per-block _r5 half-mm snap moved ADJACENT blocks independently by
+            # up to +/-0.25 each, eroding a reach-reserved pair gap by up to
+            # 0.5 mm (measured: pd_input/usbc_otg reserved 0.75, emitted 0.5446
+            # -> J17001 starved 0.890 < 1.00 vs C32001).
             if edge == "N":
-                b.x, b.y = _r5(pos), EDGE_INSET
+                b.x, b.y = round(pos, 4), EDGE_INSET
             elif edge == "S":
-                b.x, b.y = _r5(pos), _r5(BOARD_H - dp - EDGE_INSET)
+                b.x, b.y = round(pos, 4), round(BOARD_H - dp - EDGE_INSET, 4)
             elif edge == "W":
-                b.x, b.y = EDGE_INSET, _r5(pos)
+                b.x, b.y = EDGE_INSET, round(pos, 4)
             else:
-                b.x, b.y = _r5(BOARD_W - dp - EDGE_INSET), _r5(pos)
+                b.x, b.y = round(BOARD_W - dp - EDGE_INSET, 4), round(pos, 4)
             pos += sp + (gaps[i] if i < len(gaps) else 0.0)
 
 
 _SPATIAL_TRACE = os.environ.get("SCHGEN_SPATIAL_TRACE", "") == "1"
 
-_Rect = tuple[float, float, float, float, tuple[float, float, float, float]]
+_Rect = tuple[float, float, float, float,
+              tuple[float, float, float, float],
+              tuple[float, float, float, float]]
+
+
+def _halo4(reach: tuple, inset: tuple) -> tuple[float, float, float, float]:
+    """Per-side spatial-index inflation: a rect interacts out to its own reach
+    (its subjects' demand) OR its own courtyard overhang (-inset, the demand it
+    imposes on a neighbour's subject), whichever is larger; never negative."""
+    return (max(reach[0], -inset[0], 0.0), max(reach[1], -inset[1], 0.0),
+            max(reach[2], -inset[2], 0.0), max(reach[3], -inset[3], 0.0))
 
 
 def _spatial_bounds(far_ceil: float = 0.0,
                     max_reach: float | None = None) -> tuple[float, float]:
     """Static spatial-index bounds derived from the same constants/inputs the
     separation checks read: the per-side reach bound (the intelligent_need
-    tier top + GRID snap guard + 0.05 quantization floor, raised to the max
-    ACTUAL block reach value of this query set — reaches exceed the tier
-    floor when a courtyard overhangs its zone box), and the interaction
-    envelope (max over CLEAR, PLACE_CLEAR, the doubled reach bound, the
-    overmold CABLE_NEIGHBOR_GAP and the contract far_min ceiling) used as
-    the bucket size. Pure derivation from pre-pack inputs — recomputed per
-    index, no state, never touched by solve results."""
-    from schgen.generate.pcb.constants import GRID, PLACE_CLEAR
+    tier top + 0.05 quantization floor, raised to the max ACTUAL block reach
+    value of this query set — reaches exceed the tier floor when a courtyard
+    overhangs its zone box), and the interaction envelope (max over CLEAR,
+    PLACE_CLEAR, the doubled reach bound, the overmold CABLE_NEIGHBOR_GAP and
+    the contract far_min ceiling) used as the bucket size. Pure derivation
+    from pre-pack inputs — recomputed per index, no state, never touched by
+    solve results."""
+    from schgen.generate.pcb.constants import PLACE_CLEAR
     from schgen.verify.fanout_gate import _TIER_TOP, _TIERS
     need_ceil = max(_TIER_TOP[0], max(n for _p, n, _b in _TIERS))
-    reach_floor = round(need_ceil + GRID + 0.05, 4)
+    reach_floor = round(need_ceil + 0.05, 4)
     reach_bound = max(reach_floor, max_reach or 0.0)
     envelope = max(CLEAR, PLACE_CLEAR, 2 * reach_bound,
                    CABLE_NEIGHBOR_GAP, far_ceil)
@@ -1129,12 +1168,13 @@ class _Occupancy:
 
     SPATIAL NEIGHBORHOOD INDEX: rects are bucketed into a uniform grid
     (bucket = the static interaction envelope), each inserted over its own
-    box inflated per side by ITS OWN fan-out reach + CLEAR; a ``fits`` query
-    scans only the cells covered by the candidate box inflated per side by
-    the CANDIDATE'S own reach. Any rect outside those cells is provably
-    non-interacting: the per-axis gap is max(CLEAR, facing reach sum), and
-    each pair's facing components are carried by the two inflations, so a
-    gap-violating pair's inflated boxes always intersect and share a cell.
+    box inflated per side by ITS OWN halo (max of fan-out reach and courtyard
+    overhang, _halo4) + CLEAR; a ``fits`` query scans only the cells covered
+    by the candidate box inflated per side by the CANDIDATE'S own halo. Any
+    rect outside those cells is provably non-interacting: the per-axis gap is
+    max(CLEAR, rA - iB, rB - iA) and each one-sided term is bounded by the
+    two halos (rX <= hX, -iX <= hX), so a gap-violating pair's inflated
+    boxes always intersect and share a cell.
     The accept/reject boolean is identical to the exhaustive scan — pure
     indexing acceleration, no caching, index dies with the instance. Bucket
     lists append in insertion order and cells scan in fixed row-major order,
@@ -1165,20 +1205,21 @@ class _Occupancy:
         self._cells: dict[tuple[int, int], list[_Rect]] = {}
 
     def add(self, x: float, y: float, w: float, h: float,
-            reach: tuple[float, float, float, float] = _ZeroReach) -> None:
-        for c in reach:
+            reach: tuple[float, float, float, float] = _ZeroReach,
+            inset: tuple[float, float, float, float] = _ZeroReach) -> None:
+        for c in _halo4(reach, inset):
             if c > self._reach_bound:
                 raise AssertionError(
-                    f"spatial index: fan-out reach component {c} mm exceeds "
+                    f"spatial index: fan-out halo component {c} mm exceeds "
                     f"the static reach bound {self._reach_bound:.4f} mm "
-                    f"(max of the intelligent_need tier top + GRID + 0.05 "
+                    f"(max of the intelligent_need tier top + 0.05 "
                     f"floor and this query set's declared max reach) — "
                     f"this rect was not in the bound derivation; re-derive "
                     f"_spatial_bounds before indexing it")
-        rect = (x, y, w, h, reach)
+        rect = (x, y, w, h, reach, inset)
         self.rects.append(rect)
         b = self._bucket
-        rw_, re_, rn_, rs_ = reach
+        rw_, re_, rn_, rs_ = _halo4(reach, inset)
         iy0 = int((y - rn_ - CLEAR) // b)
         iy1 = int((y + h + rs_ + CLEAR) // b)
         for ix in range(int((x - rw_ - CLEAR) // b),
@@ -1187,15 +1228,16 @@ class _Occupancy:
                 self._cells.setdefault((ix, iy), []).append(rect)
 
     def remove(self, x: float, y: float, w: float, h: float,
-               reach: tuple[float, float, float, float] = _ZeroReach) -> None:
+               reach: tuple[float, float, float, float] = _ZeroReach,
+               inset: tuple[float, float, float, float] = _ZeroReach) -> None:
         """Drop a previously-added rect (for the iterative re-placement pass)."""
-        rect = (x, y, w, h, reach)
+        rect = (x, y, w, h, reach, inset)
         try:
             self.rects.remove(rect)
         except ValueError:
             return
         b = self._bucket
-        rw_, re_, rn_, rs_ = reach
+        rw_, re_, rn_, rs_ = _halo4(reach, inset)
         iy0 = int((y - rn_ - CLEAR) // b)
         iy1 = int((y + h + rs_ + CLEAR) // b)
         for ix in range(int((x - rw_ - CLEAR) // b),
@@ -1206,19 +1248,20 @@ class _Occupancy:
                     lst.remove(rect)
 
     def _fits_exhaustive(self, x: float, y: float, w: float, h: float,
-                         reach: tuple[float, float, float, float] = _ZeroReach
+                         reach: tuple[float, float, float, float] = _ZeroReach,
+                         inset: tuple[float, float, float, float] = _ZeroReach
                          ) -> bool:
         if x < CLEAR or y < CLEAR or x + w > BOARD_W - CLEAR \
                 or y + h > BOARD_H - CLEAR:
             return False
-        for rx, ry, rw, rh, r_reach in self.rects:
-            # D13 DIRECTIONAL gap: on each axis the required separation uses only the
-            # two FACING sides' reaches (candidate to the W of the occupant meets the
-            # candidate's E reach + the occupant's W reach, etc.), never below CLEAR.
-            # Separated if the gap holds on EITHER axis (blocks don't overlap).
-            gx = max(CLEAR, _fanout_sep(reach, r_reach,
+        for rx, ry, rw, rh, r_reach, r_inset in self.rects:
+            # D13 DIRECTIONAL gap: on each axis the required separation is the
+            # PAIR-EXACT facing composition (_fanout_sep — MAX of one-sided
+            # demands, inset-credited), never below CLEAR. Separated if the gap
+            # holds on EITHER axis (blocks don't overlap).
+            gx = max(CLEAR, _fanout_sep(reach, inset, r_reach, r_inset,
                                         "E" if x <= rx else "W"))
-            gy = max(CLEAR, _fanout_sep(reach, r_reach,
+            gy = max(CLEAR, _fanout_sep(reach, inset, r_reach, r_inset,
                                         "S" if y <= ry else "N"))
             if not (x + w + gx <= rx or rx + rw + gx <= x
                     or y + h + gy <= ry or ry + rh + gy <= y):
@@ -1226,14 +1269,15 @@ class _Occupancy:
         return True
 
     def _fits_hashed(self, x: float, y: float, w: float, h: float,
-                     reach: tuple[float, float, float, float] = _ZeroReach
+                     reach: tuple[float, float, float, float] = _ZeroReach,
+                     inset: tuple[float, float, float, float] = _ZeroReach
                      ) -> bool:
         if x < CLEAR or y < CLEAR or x + w > BOARD_W - CLEAR \
                 or y + h > BOARD_H - CLEAR:
             return False
         b = self._bucket
         cells = self._cells
-        cw_, ce_, cn_, cs_ = reach
+        cw_, ce_, cn_, cs_ = _halo4(reach, inset)
         iy0 = int((y - cn_) // b)
         iy1 = int((y + h + cs_) // b)
         for ix in range(int((x - cw_) // b), int((x + w + ce_) // b) + 1):
@@ -1241,10 +1285,10 @@ class _Occupancy:
                 lst = cells.get((ix, iy))
                 if not lst:
                     continue
-                for rx, ry, rw, rh, r_reach in lst:
-                    gx = max(CLEAR, _fanout_sep(reach, r_reach,
+                for rx, ry, rw, rh, r_reach, r_inset in lst:
+                    gx = max(CLEAR, _fanout_sep(reach, inset, r_reach, r_inset,
                                                 "E" if x <= rx else "W"))
-                    gy = max(CLEAR, _fanout_sep(reach, r_reach,
+                    gy = max(CLEAR, _fanout_sep(reach, inset, r_reach, r_inset,
                                                 "S" if y <= ry else "N"))
                     if not (x + w + gx <= rx or rx + rw + gx <= x
                             or y + h + gy <= ry or ry + rh + gy <= y):
@@ -1252,14 +1296,16 @@ class _Occupancy:
         return True
 
     def _fits_traced(self, x: float, y: float, w: float, h: float,
-                     reach: tuple[float, float, float, float] = _ZeroReach
+                     reach: tuple[float, float, float, float] = _ZeroReach,
+                     inset: tuple[float, float, float, float] = _ZeroReach
                      ) -> bool:
-        ref = self._fits_exhaustive(x, y, w, h, reach)
-        new = self._fits_hashed(x, y, w, h, reach)
+        ref = self._fits_exhaustive(x, y, w, h, reach, inset)
+        new = self._fits_hashed(x, y, w, h, reach, inset)
         if ref is not new:
             raise AssertionError(
                 f"spatial index DIVERGENCE: exhaustive={ref} hashed={new} "
-                f"for query x={x} y={y} w={w} h={h} reach={reach} over "
+                f"for query x={x} y={y} w={w} h={h} reach={reach} "
+                f"inset={inset} over "
                 f"{len(self.rects)} rects (bucket={self._bucket:.4f}, "
                 f"reach bound={self._reach_bound:.4f})")
         return new
@@ -1267,7 +1313,8 @@ class _Occupancy:
     fits = _fits_traced if _SPATIAL_TRACE else _fits_hashed
 
     def place_near(self, ax: float, ay: float, w: float,
-                   h: float, reach: tuple[float, float, float, float] = _ZeroReach
+                   h: float, reach: tuple[float, float, float, float] = _ZeroReach,
+                   inset: tuple[float, float, float, float] = _ZeroReach
                    ) -> tuple[float, float, float, float] | None:
         """Deterministic: scan lattice positions sorted by city-block distance
         of the block CENTER from the anchor; first fit wins. The block is placed
@@ -1332,12 +1379,12 @@ class _Occupancy:
             thresh = frontier - _HALF
             while bkeys and bkeys[0] <= thresh:
                 for x, y in sorted(buckets.pop(heappop(bkeys))):
-                    if self.fits(x, y, w, h, reach):
+                    if self.fits(x, y, w, h, reach, inset):
                         return x, y, w, h
         # heap drained: no unfinalised cell remains — sweep the tail in order.
         while bkeys:
             for x, y in sorted(buckets.pop(heappop(bkeys))):
-                if self.fits(x, y, w, h, reach):
+                if self.fits(x, y, w, h, reach, inset):
                     return x, y, w, h
         return None
 
@@ -1529,26 +1576,27 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # XT60 vs power IC, ethernet magnetics vs a bringup test point) without a flat
     # halo. Zero for a block with no under-margined multi-pin subject -> tight CLEAR.
     for b in plan.edge_blocks + interior:
-        b.fanout_reach = _block_fanout_reach(b.name, zg)
+        b.fanout_reach, b.fanout_inset = _block_fanout_reach(b.name, zg)
 
     # MULTI-SHAPE candidate sets for the pack search: per INTERIOR block, the
-    # (w, h, reach) of every legal shape (index 0 == the flat zbox/reach above,
-    # so a block without a registered set behaves exactly as before). Edge
+    # (w, h, reach, inset) of every legal shape (index 0 == the flat zbox/reach
+    # above, so a block without a registered set behaves exactly as before). Edge
     # blocks are connector-seated -> FIXED, never shape-searched (LAW 6).
-    shape_sets: dict[str, list[tuple[float, float,
-                                     tuple[float, float, float, float]]]] = {}
+    shape_sets: dict[str, list[tuple[float, float, tuple, tuple]]] = {}
     for b in interior:
         variants = zg.shapes.get(b.name)
         if not variants or len(variants) < 2:
             continue
         shape_sets[b.name] = [(zbox[b.name][0], zbox[b.name][1],
-                               b.fanout_reach)] + \
-            [(s.w, s.h, _shape_fanout_reach(s, zg)) for s in variants[1:]]
-    max_reach = max((c for b in plan.edge_blocks + interior
-                     for c in b.fanout_reach), default=0.0)
+                               b.fanout_reach, b.fanout_inset)] + \
+            [(s.w, s.h, *_shape_fanout_reach(s, zg)) for s in variants[1:]]
+    max_reach = max((max(r, -i) for b in plan.edge_blocks + interior
+                     for r, i in zip(b.fanout_reach, b.fanout_inset,
+                                     strict=True)), default=0.0)
     max_reach = max(max_reach,
-                    max((c for ss in shape_sets.values()
-                         for _w, _h, rch in ss for c in rch), default=0.0))
+                    max((max(r, -i) for ss in shape_sets.values()
+                         for _w, _h, rch, ins in ss
+                         for r, i in zip(rch, ins, strict=True)), default=0.0))
 
     # number of placed (non-SoM) subsystems == the gate's n_subsystems, so the
     # grow loop can size the board against the SAME LAW-5 cross-airwire budget.
@@ -1649,7 +1697,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # a larger zone (e.g. a grow knob) inflates the blocks — without it the fine
     # refinement pays a full slow pack on ~1000s of too-small boards (a 30-min+ stall).
     _min_pack_area = som.w * som.h + sum(
-        min(w * h for w, h, _r in shape_sets[name]) if name in shape_sets
+        min(w * h for w, h, _r, _i in shape_sets[name]) if name in shape_sets
         else bw * bh
         for name, (bw, bh) in zbox.items())
     for aspect in aspects:
@@ -2048,6 +2096,29 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         if near < EDGE_MARGIN - 0.1 or near + span_b > dim - EDGE_MARGIN + 0.1:
             return False
 
+    # EDGE-vs-SoM FIT (LAW 0/6): the edge runs never consulted the SoM — on a
+    # shrunk outline an edge zone's depth reached over the SoM body AND the
+    # DF40 return-stitch seat corridors (devkit at 102x70: pd_input's band
+    # covered J1's corridor; the escape's redundancy-partner seat then had no
+    # feasible cell and the build died). REJECT any candidate where an edge
+    # block intersects the SoM occupancy pad or a DF40 6 mm seat-corridor
+    # band, so the sizing search grows the board instead (LAW 4).
+    _SEAT_BAND = 6.0
+    _SOM_OCC_PAD = 1.5
+    som_rects = [(plan.som_x - _SOM_OCC_PAD, plan.som_y - _SOM_OCC_PAD,
+                  plan.som_x + plan.som.w + _SOM_OCC_PAD,
+                  plan.som_y + plan.som.h + _SOM_OCC_PAD)]
+    for j in plan.som.js:
+        som_rects.append((plan.som_x + j.x - j.w / 2 - _SEAT_BAND,
+                          plan.som_y + j.y - j.h / 2 - _SEAT_BAND,
+                          plan.som_x + j.x + j.w / 2 + _SEAT_BAND,
+                          plan.som_y + j.y + j.h / 2 + _SEAT_BAND))
+    for b in plan.edge_blocks:
+        for rx0, ry0, rx1, ry1 in som_rects:
+            if (min(b.x + b.w, rx1) - max(b.x, rx0) > 1e-6
+                    and min(b.y + b.h, ry1) - max(b.y, ry0) > 1e-6):
+                return False
+
     # CROSS-EDGE CORNER FIT (LAW 0/6): _pack_edges packs each edge as an INDEPENDENT
     # 1D run, so a deep block on one edge and a deep block on the ADJACENT edge can
     # occupy the SAME corner rectangle (a W-edge XT60+TVS block vs an S-edge HDMI
@@ -2069,9 +2140,11 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             # D13 DIRECTIONAL corner clearance (same facing-side rule the occupancy
             # lattice uses) so two adjacent-edge blocks meeting at a corner keep the
             # fan-out floor of any exposed multi-pin subject between them.
-            cgx = max(CLEAR, _fanout_sep(a.fanout_reach, b.fanout_reach,
+            cgx = max(CLEAR, _fanout_sep(a.fanout_reach, a.fanout_inset,
+                                         b.fanout_reach, b.fanout_inset,
                                          "E" if a.x <= b.x else "W"))
-            cgy = max(CLEAR, _fanout_sep(a.fanout_reach, b.fanout_reach,
+            cgy = max(CLEAR, _fanout_sep(a.fanout_reach, a.fanout_inset,
+                                         b.fanout_reach, b.fanout_inset,
                                          "S" if a.y <= b.y else "N"))
             if not (a.x + a.w + cgx <= b.x or b.x + b.w + cgx <= a.x
                     or a.y + a.h + cgy <= b.y or b.y + b.h + cgy <= a.y):
@@ -2083,7 +2156,6 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     # zone packed flush against the body clips that enlarged core (the ethernet
     # magnetics clipped it 0.1mm after the tight-pack). Pad the reservation so
     # packed zones stay clear of the 3% core.
-    _SOM_OCC_PAD = 1.5
     occ.add(plan.som_x - _SOM_OCC_PAD, plan.som_y - _SOM_OCC_PAD,
             plan.som.w + 2 * _SOM_OCC_PAD, plan.som.h + 2 * _SOM_OCC_PAD)
     # reserve the 4 corner mounting-hole keepouts: the PCB corner-forces an M3
@@ -2096,7 +2168,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         occ.add(cx, cy, MH_CORNER_KO, MH_CORNER_KO)
     centers: dict[str, tuple[float, float]] = {}
     for b in plan.edge_blocks:        # edge blocks are pinned anchors already
-        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
+        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset)
         centers[b.name] = (b.cx, b.cy)
 
     edge_pos = {b.name: b for b in plan.edge_blocks}
@@ -2238,31 +2310,33 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         cands = shapes.get(b.name) if shapes else None
         if cands is None:
             b.shape_idx = 0
-            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach)
+            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach,
+                                 b.fanout_inset)
             if pos is None:
                 return False
             b.x, b.y, b.w, b.h = pos
         else:
             best_key = None
             best = None
-            for k, (w, h, rch) in enumerate(cands):
+            for k, (w, h, rch, ins) in enumerate(cands):
                 if w > BOARD_W - 2 * CLEAR or h > BOARD_H - 2 * CLEAR:
                     continue
-                p = occ.place_near(ax, ay, w, h, rch)
+                p = occ.place_near(ax, ay, w, h, rch, ins)
                 if p is None:
                     continue
                 d = abs(p[0] + w / 2 - ax) + abs(p[1] + h / 2 - ay)
                 key = (round(d, 4), k)
                 if best_key is None or key < best_key:
-                    best_key, best = key, (k, p, rch)
+                    best_key, best = key, (k, p, rch, ins)
             if best is None:
                 return False
-            k, p, rch = best
+            k, p, rch, ins = best
             b.x, b.y, b.w, b.h = p
             b.shape_idx = k
             b.fanout_reach = rch
+            b.fanout_inset = ins
             b.area = round(b.w * b.h, 1)
-        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
+        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset)
         centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
 
     # ITERATIVE REFINEMENT: the first pass anchored blocks on whatever neighbours
@@ -2279,17 +2353,18 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     for _pass in range(16):
         moved = False
         for b in order:
-            occ.remove(b.x, b.y, b.w, b.h, b.fanout_reach)
+            occ.remove(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset)
             ax, ay = _anchor(b)
-            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach)
+            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach,
+                                 b.fanout_inset)
             if pos is None:                 # re-place where it was (always fits)
-                occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
+                occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset)
                 continue
             nx, ny, _w, _h = pos
             if (nx, ny) != (b.x, b.y):
                 moved = True
             b.x, b.y = nx, ny
-            occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
+            occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset)
             centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
         if not moved:
             break
@@ -2339,9 +2414,6 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             _exempt, _ = wired_term_participants()
             movable_names = sorted(parts_ & inames & set(_exempt))
             if movable_names:
-                movable = [fc_.LegalizeVar(b.name, b.w, b.h, (b.x, b.y),
-                                           b.x, b.y)
-                           for b in interior if b.name in movable_names]
                 fixed_rects: list[tuple[str, float, float, float, float]] = [
                     ("som", plan.som_x - _SOM_OCC_PAD,
                      plan.som_y - _SOM_OCC_PAD,
@@ -2369,37 +2441,83 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                         fixed_poses[b.name] = (b.x, b.y)
                 som_page = som_core_rect(plan.som_x, plan.som_y,
                                          plan.som.w, plan.som.h)
-                log: list[str] = []
                 _j_rects = {
                     f"som_j{j.ref[1:].lower()}": (
                         plan.som_x + j.x - j.w / 2, plan.som_y + j.y - j.h / 2,
                         plan.som_x + j.x + j.w / 2, plan.som_y + j.y + j.h / 2)
                     for j in plan.som.js}
-                if not fc_.legalize_compact(
-                        BOARD_W, BOARD_H, som_page, fixed_rects, movable,
-                        c_index, c_metrics, fixed_poses, c_channels, CLEAR,
-                        compact=compact, log=log, som_j_rects=_j_rects):
-                    return False
                 byn = {b.name: b for b in interior}
-                for v in movable:
-                    byn[v.name].x = v.x
-                    byn[v.name].y = v.y
-                plan.composition = log
-                # a candidate whose final rects still overlap is REJECTED, not
-                # emitted — the legalizer accepted uart_bridge inside board_aux
-                # (41 DRC errors, measured) and a seat aim-point in occupied
-                # space reproduces the class.
-                rects = ([(b.name, b.x, b.y, b.x + b.w, b.y + b.h)
-                          for b in interior]
-                         + [(b.name, b.x, b.y, b.x + b.w, b.y + b.h)
-                            for b in plan.edge_blocks])
-                for i in range(len(rects)):
-                    for j in range(i + 1, len(rects)):
-                        _, ax0, ay0, ax1, ay1 = rects[i]
-                        _, bx0, by0, bx1, by1 = rects[j]
-                        if (min(ax1, bx1) - max(ax0, bx0) > 1e-6
-                                and min(ay1, by1) - max(ay0, by0) > 1e-6):
-                            return False
+                orig = {b.name: (b.x, b.y) for b in interior}
+
+                def _pairs_hold() -> bool:
+                    # same predicate + same constraint SET as the occupancy
+                    # lattice: every INTERIOR block vs everything (interior,
+                    # edge, SoM pad, corner keepouts) — edge-vs-edge/corner
+                    # belongs to the run packer (EDGE_MARGIN abuts the KO).
+                    zz = (_ZeroReach, _ZeroReach)
+                    rects = ([(b.x, b.y, b.w, b.h,
+                               b.fanout_reach, b.fanout_inset)
+                              for b in interior]
+                             + [(b.x, b.y, b.w, b.h,
+                                 b.fanout_reach, b.fanout_inset)
+                                for b in plan.edge_blocks]
+                             + [(plan.som_x - _SOM_OCC_PAD,
+                                 plan.som_y - _SOM_OCC_PAD,
+                                 plan.som.w + 2 * _SOM_OCC_PAD,
+                                 plan.som.h + 2 * _SOM_OCC_PAD, *zz)]
+                             + [(kx, ky, MH_CORNER_KO, MH_CORNER_KO, *zz)
+                                for kx, ky in
+                                ((0.0, 0.0), (BOARD_W - MH_CORNER_KO, 0.0),
+                                 (BOARD_W - MH_CORNER_KO,
+                                  BOARD_H - MH_CORNER_KO),
+                                 (0.0, BOARD_H - MH_CORNER_KO))])
+                    for i in range(len(interior)):
+                        ax, ay, aw, ah, ar, ai = rects[i]
+                        for j in range(i + 1, len(rects)):
+                            bx, by, bw, bh, br, bi = rects[j]
+                            gx = max(CLEAR, _fanout_sep(
+                                ar, ai, br, bi, "E" if ax <= bx else "W"))
+                            gy = max(CLEAR, _fanout_sep(
+                                ar, ai, br, bi, "S" if ay <= by else "N"))
+                            if not (ax + aw + gx <= bx or bx + bw + gx <= ax
+                                    or ay + ah + gy <= by
+                                    or by + bh + gy <= ay):
+                                return False
+                    return True
+
+                def _legalize(do_compact: bool) -> bool:
+                    # a result whose rects overlap OR violate a D13 pair gap
+                    # is REJECTED, not emitted — the legalizer moves interior
+                    # blocks at flat CLEAR, blind to reach/inset (measured:
+                    # power compacted to 0.30 of user_io against a 1.15 pair
+                    # requirement, Q20001 emitted 0.938 < 1.50; power_mon to
+                    # 0.30 of usb_jtag against 0.90, U21002 1.450 < 2.00).
+                    for b in interior:
+                        b.x, b.y = orig[b.name]
+                    mv = [fc_.LegalizeVar(b.name, b.w, b.h, (b.x, b.y),
+                                          b.x, b.y)
+                          for b in interior if b.name in movable_names]
+                    lg: list[str] = []
+                    if not fc_.legalize_compact(
+                            BOARD_W, BOARD_H, som_page, fixed_rects, mv,
+                            c_index, c_metrics, fixed_poses, c_channels,
+                            CLEAR, compact=do_compact, log=lg,
+                            som_j_rects=_j_rects):
+                        return False
+                    for v in mv:
+                        byn[v.name].x = v.x
+                        byn[v.name].y = v.y
+                    if not _pairs_hold():
+                        return False
+                    plan.composition = lg
+                    return True
+
+                # COMPACTION may only land when it keeps every D13 pair gap;
+                # otherwise fall back to the legalize-only form the outline
+                # scan accepted (fresh deterministic pack, nothing stale).
+                if not (_legalize(compact)
+                        or (compact and _legalize(False))):
+                    return False
     return True
 
 

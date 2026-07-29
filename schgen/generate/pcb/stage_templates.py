@@ -40,7 +40,11 @@ from pathlib import Path
 
 from schgen.core.project import spec as _project_spec
 from schgen.verify import placement_contract_gate as _g
-from schgen.verify.fanout_gate import _is_cluster_passive, intelligent_need
+from schgen.verify.fanout_gate import (
+    _is_cluster_passive,
+    intelligent_need,
+    is_testpoint_ref,
+)
 
 from .constants import CONN_MATING_FACE, EDGE_PAD_CLEAR, TEMPLATE_CLEAR, ZONE_PAD
 from .footprint import _footprint_bbox
@@ -1061,21 +1065,28 @@ def _gc_head(bref: str, mod: Path,
     # is non-empty, so the contract still holds.
     member_pins = len(_g._pad_boxes(mod, 0.0))
     own_need = intelligent_need(member_pins)[0] if member_pins >= 3 else 0.0
+    member_exempt = (_is_cluster_passive(bref, member_pins)
+                     or is_testpoint_ref(bref))
     subjects: list[tuple[tuple[float, float, float, float], float]] = []
     for pp in placed.values():
         npins = len(_g._pad_boxes(pp.mod, 0.0))
-        if npins >= 3 and not _is_cluster_passive(bref, member_pins):
-            need = intelligent_need(npins)[0]
-            if conn_roots and pp.bref in conn_roots:
-                need += _SEAT_SLIDE
-            subjects.append((pp.local_box(), need))
+        # EXACT apron = need + the 4dp quantization guard. The old
+        # +_SEAT_SLIDE buffer on connector subjects was padding: the edge-seat
+        # slide is OUTWARD-only (+EDGE_INSET), so lateral/inboard member gaps
+        # never shrink — and at the 1.5/2.0 floors the buffer closed D1's
+        # legal [need, 6.0] annulus at J2 (motor_sense solver infeasible,
+        # zone fell back to the legacy packer, 12 contract terms adrift).
+        if npins >= 3 and not member_exempt:
+            subjects.append((pp.local_box(),
+                             intelligent_need(npins)[0] + 0.05))
         # SYMMETRIC apron: a multi-pin member is itself a gate subject and
         # must keep its OWN need from every placed non-exempt crowder (the
         # shunt-anchored INA3221 landed 0.637 from its 2-pin shunt: RS is a
         # crowder, the IC was the subject, and only the reverse direction
         # was enforced).
-        if own_need and not _is_cluster_passive(pp.bref, npins):
-            subjects.append((pp.local_box(), own_need))
+        if own_need and not (_is_cluster_passive(pp.bref, npins)
+                             or is_testpoint_ref(pp.bref)):
+            subjects.append((pp.local_box(), own_need + 0.05))
     # Grid radius must reach ANY target pad — a big connector's far edge pads (the
     # target box spans the whole part when anchor_pins is absent) — PLUS the bound
     # PLUS a body-slack so the member's pad can hug an inner pin from OUTSIDE the
@@ -2446,27 +2457,30 @@ def _build_proximity_zone(sheet_name: str, contract: dict, refs: list[str],
         # below-band (inboard == +y); S bands above; E left; W right.
         _in = {"S": (0.0, -1.0)}.get(outer_dir or "N", (0.0, 1.0))
         target_w = max(zw - 2 * ZONE_PAD, 8.0)
-        # the band must clear every mating connector by its fan-out need plus
-        # the seat slide (a TP at 0.00 below the camera FFC was the defect).
+        # the band must clear every mating connector by ITS OWN fan-out need
+        # (per-connector intelligent_need, not a hardcoded mid-tier value that
+        # under-reserved once a 16-pin USB-C needed 2.0; the band is
+        # inboard/lateral so the outward-only seat slide never shrinks the
+        # gap — no slide buffer).
         _conn_lo, _conn_hi = [], []
         if outer_dir:
             for pp in placed_abs.values():
                 if pp.mod.stem in CONN_MATING_FACE:
                     bb = pp.local_box()
-                    _conn_lo.append(bb[1])
-                    _conn_hi.append(bb[3])
+                    _cn = intelligent_need(
+                        len(_g._pad_boxes(pp.mod, 0.0)))[0] + 0.05
+                    _conn_lo.append(bb[1] - _cn)
+                    _conn_hi.append(bb[3] + _cn)
         t_lo, t_w, t_h, b_lo, b_w, b_h = _pack_leftover_bands(
             lt, lb, target_w, bbox_of, resolvable)
         row_top = min((pp.local_box()[1] for pp in placed_abs.values()),
                       default=ZONE_PAD)
-        _need_gap = 1.0 + _SEAT_SLIDE
         if _in == (0.0, 1.0):
-            floor_y = max([row_bottom]
-                          + [h + _need_gap for h in _conn_hi])
+            floor_y = max([row_bottom] + _conn_hi)
             bx, by = 0.0, floor_y + _LEFTOVER_BAND_GAP - ZONE_PAD
         else:
             bh_all = max(t_h, b_h)
-            ceil_y = min([row_top] + [lo - _need_gap for lo in _conn_lo])
+            ceil_y = min([row_top] + _conn_lo)
             bx, by = 0.0, ceil_y - _LEFTOVER_BAND_GAP - bh_all - ZONE_PAD
         if outer_dir == "W":
             _pf0 = [pp.ox + _rot_pad_bbox(pp.mod, pp.rot)[0]
