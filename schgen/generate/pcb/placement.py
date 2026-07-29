@@ -76,6 +76,7 @@ def _fanout_meta(refs: list[str], resolvable: dict[str, Path]
         MIN_SUBJECT_PINS,
         _is_cluster_passive,
         intelligent_need,
+        is_testpoint_ref,
     )
     out: dict[str, tuple[float, bool]] = {}
     for ref in refs:
@@ -83,7 +84,7 @@ def _fanout_meta(refs: list[str], resolvable: dict[str, Path]
         if mod is None:
             continue
         pins = len(pad_names(mod))
-        is_cp = _is_cluster_passive(ref, pins)
+        is_cp = _is_cluster_passive(ref, pins) or is_testpoint_ref(ref)
         if pins >= MIN_SUBJECT_PINS:
             need = intelligent_need(pins)[0]
         else:
@@ -130,10 +131,13 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     fanout = fanout or {}
     # occupant = (x0,y0,x1,y1, extra, is_cp): the PLACE_CLEAR/2-haloed box plus the
     # EXTRA fan-out margin this part demands against a FOREIGN neighbour and whether
-    # it is a cluster passive (so a subject waives its extra against it). Blockers
-    # carry no fan-out demand and are never a cluster passive.
+    # it is a cluster passive (so a subject waives its extra against it). A plain
+    # 4-tuple blocker carries no fan-out demand; a 6-tuple blocker (the control
+    # grid's button courtyards) carries its part's real (extra, is_cp).
     occ: list[tuple[float, float, float, float, float, bool]] = [
-        (b[0], b[1], b[2], b[3], 0.0, False) for b in blk]
+        (b[0], b[1], b[2], b[3],
+         b[4] if len(b) > 4 else 0.0,
+         b[5] if len(b) > 5 else False) for b in blk]
     # haloed rotated bbox + fan-out (extra, is_cp) per ref
     halo: dict[str, tuple[float, float, float, float]] = {}
     extra_of: dict[str, float] = {}
@@ -359,8 +363,22 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
         g_off, g_occ, g_w, g_h = _grid_controls(top_btns, bbox_of, resolvable,
                                                 target_w)
         rest_top = [r for r in sr["top"] if r not in set(top_btns)]
-        r_off, rw, rh = _shelf_pack(items(rest_top, "top"), target_w, g_occ,
-                                    fanout=fmeta)
+        # the grid CELLS block intrusion but carry no fan-out demand; each
+        # BUTTON's real haloed courtyard rides along with its (extra, is_cp)
+        # so the rest pack keeps the button's apron (a user_io LED shelf-packed
+        # 1.25 from a 1.5-need switch through the demand-less cell, measured).
+        btn_blk = []
+        for r in top_btns:
+            ox, oy = g_off[r]
+            bx0, by0, bx1, by1 = bbox_of[r]
+            need, is_cp = fmeta.get(r, (PLACE_CLEAR, False))
+            btn_blk.append((ox + bx0 - PLACE_CLEAR / 2,
+                            oy + by0 - PLACE_CLEAR / 2,
+                            ox + bx1 + PLACE_CLEAR / 2,
+                            oy + by1 + PLACE_CLEAR / 2,
+                            max(0.0, need + 0.05 - PLACE_CLEAR), is_cp))
+        r_off, rw, rh = _shelf_pack(items(rest_top, "top"), target_w,
+                                    list(g_occ) + btn_blk, fanout=fmeta)
         t_off = {**g_off, **r_off}
         tw, th = max(g_w, rw), max(g_h, rh)
     else:
@@ -1436,6 +1454,7 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             for r in pos
             if side_of.get(r) == "bottom" and r in bbox_of}
 
+
         # ESCAPE/RETURN-STITCH CORRIDOR keepout (LAW 0): the SoM-ward pull must
         # NEVER slide a bottom passive into a DF40 escape seat band — that displaces
         # a stitch-via seat and the regenerated return ladder grazes a DF40 pad
@@ -1646,6 +1665,75 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         pos, zg.refs_by_sheet, side_of, resolvable, fixed_rot, bbox_of,
         nets, pin_net, set(zg.conn_rot),
         {s for s in zorigin if _lc_refit(s) is not None})
+
+    # LAW 0: evict bottom-side strays from the DF40 stitch corridors (the
+    # escape engine's own live-derived seat bands), on the FINAL positions —
+    # after refit_facing, whose rigid 180 zone turn is what mapped a B.Cu
+    # passive into a band (devkit: power_som's C6022 landed 0.000 over J2
+    # pad 60 — the stitch-via search had no feasible seat and the build died
+    # in escape). Deterministic: sorted refs, minimal exit, fixed axis order;
+    # an unmovable stray stays and escape still fails loudly.
+    if two_side:
+        from schgen.generate.pcb.escape import corridor_board_rect
+        _corr0 = [corridor_board_rect(resolvable[r], pos[r][0], pos[r][1],
+                                      fixed_rot.get(r, 0.0))
+                  for r in sorted(som_j_refs)
+                  if r in resolvable and r in pos]
+
+        def _ebox(ref: str, px: float, py: float
+                  ) -> tuple[float, float, float, float]:
+            eb = _rot_bbox_cw(bbox_of[ref], fixed_rot.get(ref, 0.0))
+            return (px + eb[0], py + eb[1], px + eb[2], py + eb[3])
+
+        def _collide(bb, boxes) -> bool:
+            return any(bb[0] < o[2] and bb[2] > o[0]
+                       and bb[1] < o[3] and bb[3] > o[1] for o in boxes)
+
+        _EDGE_M = 0.6
+        _bot = {r: _ebox(r, pos[r][0], pos[r][1]) for r in pos
+                if side_of.get(r) == "bottom" and r in bbox_of}
+        _tht = [_ebox(r, pos[r][0], pos[r][1]) for r in pos
+                if side_of.get(r) == "top" and r in resolvable
+                and r in bbox_of and has_thru_pads(resolvable[r])]
+        for ref in sorted(_bot):
+            b = _bot[ref]
+            if not _collide(b, _corr0):
+                continue
+            exits: list[tuple[float, float, float]] = []
+            m = PLACE_CLEAR / 2
+            for cr in _corr0:
+                if not _collide(b, [cr]):
+                    continue
+                exits += [(cr[2] - b[0] + m, cr[2] - b[0] + m, 0.0),
+                          (b[2] - cr[0] + m, -(b[2] - cr[0] + m), 0.0),
+                          (cr[3] - b[1] + m, 0.0, cr[3] - b[1] + m),
+                          (b[3] - cr[1] + m, 0.0, -(b[3] - cr[1] + m))]
+            moved = False
+            for _d, ex, ey in sorted(exits):
+                for k in range(0, 9):
+                    sx = ex + (k if ex > 0 else -k if ex < 0 else 0.0)
+                    sy = ey + (k if ey > 0 else -k if ey < 0 else 0.0)
+                    nx = round(pos[ref][0] + sx, 4)
+                    ny = round(pos[ref][1] + sy, 4)
+                    nb = _ebox(ref, nx, ny)
+                    if (nb[0] < _EDGE_M or nb[1] < _EDGE_M
+                            or nb[2] > board_w - _EDGE_M
+                            or nb[3] > board_h - _EDGE_M):
+                        continue
+                    if _collide(nb, _corr0):
+                        continue
+                    grown = (nb[0] - PLACE_CLEAR, nb[1] - PLACE_CLEAR,
+                             nb[2] + PLACE_CLEAR, nb[3] + PLACE_CLEAR)
+                    if _collide(grown, [_bot[r] for r in _bot if r != ref]):
+                        continue
+                    if _collide(grown, _tht):
+                        continue
+                    pos[ref] = (nx, ny)
+                    _bot[ref] = nb
+                    moved = True
+                    break
+                if moved:
+                    break
 
     insts: list[FootprintInst] = []
     placed = 0

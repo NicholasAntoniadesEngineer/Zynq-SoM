@@ -53,14 +53,14 @@ def test_need_scales_with_pin_count():
     n20, _ = fg.intelligent_need(20)
     n48, _ = fg.intelligent_need(48)
     n100, _ = fg.intelligent_need(100)
-    assert n2 == 0.20 and n8 == 0.50 and n20 == 1.00 and n48 == 1.50 and n100 == 2.00
-    assert n2 < n8 < n20 < n48 < n100          # strictly monotonic (intelligent)
+    assert n2 == 0.20 and n8 == 1.50 and n20 == 2.00 and n48 == 2.00 and n100 == 2.00
+    assert n2 < n8 < n20 <= n48 <= n100        # monotone; 2.0 plateau at >= 9 pins
 
 
 # ---- a spacious IC PASSES, a starved one FAILS ---------------------------------------
 
 def test_spacious_ic_passes():
-    """An 8-pin IC (need 0.5 mm) whose nearest FOREIGN part is far is NOT starved."""
+    """An 8-pin IC (need 1.5 mm) whose nearest FOREIGN part is far is NOT starved."""
     ic = _part("U1", ORIGIN_X + 20, ORIGIN_Y + 20, npins=8, sheet="a")
     far = _part("R9", ORIGIN_X + 40, ORIGIN_Y + 20, npins=2, sheet="b")  # foreign ~18mm
     res = fg.check(_model([ic, far]), baseline=0)
@@ -71,7 +71,7 @@ def test_spacious_ic_passes():
 
 
 def test_starved_ic_fails():
-    """The SAME 8-pin IC with a FOREIGN part jammed against its courtyard (gap < 0.5 mm)
+    """The SAME 8-pin IC with a FOREIGN part jammed against its courtyard (gap < 1.5 mm)
     IS starved — and with baseline 0 the ratchet FAILS the board (a regression)."""
     ic = _part("U1", ORIGIN_X + 20, ORIGIN_Y + 20, npins=8, sheet="a")
     # a foreign IC ~0.2 mm off U1's courtyard (0603 half-w ~0.8 mm; centres 1.9 apart)
@@ -213,3 +213,16 @@ def test_records_sorted_worst_first_deterministic():
     assert [r.ref for r in r1.records] == [r.ref for r in r2.records]
     slacks = [r.slack for r in r1.records]
     assert slacks == sorted(slacks), "worst slack must come first"
+
+
+def test_testpoint_never_crowds():
+    """USER LAW 2026-07-29: a test point jammed against a subject IC — any sheet —
+    is exempt crowding; the subject's clearance is measured past it."""
+    ic = _part("U1", ORIGIN_X + 20, ORIGIN_Y + 20, npins=8, sheet="a")
+    tp = _part("TP1", ORIGIN_X + 21.9, ORIGIN_Y + 20, npins=1, sheet="b")
+    far = _part("R9", ORIGIN_X + 40, ORIGIN_Y + 20, npins=2, sheet="b")
+    res = fg.check(_model([ic, tp, far]), baseline=0)
+    rec = next(r for r in res.records if r.ref == "U1")
+    assert not rec.starved, res.summary()
+    assert rec.nearest_ref != "TP1"
+    assert res.ok

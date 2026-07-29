@@ -45,6 +45,7 @@ from schgen.verify.fanout_gate import (
     _is_cluster_passive,
     _rect_gap,
     intelligent_need,
+    is_testpoint_ref,
 )
 
 from .constants import ORIGIN_X, ORIGIN_Y, PLACE_CLEAR
@@ -495,7 +496,7 @@ def breathe_fanout(
             for s, s_sheet, s_side, s_need in guard_subjects:
                 if s in members or s_side != side:
                     continue
-                if r_cp and s_sheet == r_sheet:
+                if (r_cp and s_sheet == r_sheet) or is_testpoint_ref(r):
                     continue
                 if _rect_gap(b, box_of(s, pos[s])) < s_need - _EPS:
                     return False

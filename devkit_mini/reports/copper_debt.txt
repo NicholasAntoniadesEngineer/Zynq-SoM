@@ -14,7 +14,7 @@ CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
   assumes: full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)
   where:   schgen/verify/thermal.py:253
            carrier/subsystems/power.py:24
-  emits:   In1.Cu GND plane: YES; U4001: 10 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U4002: 10 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U6004: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
+  emits:   In1.Cu GND plane: YES; U4001: 11 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U4002: 11 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U6004: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
   risk:    without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build.
 
 CD-02  TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)   [PARTIAL]
@@ -51,7 +51,7 @@ CD-06  Ethernet isolation moat (In1 plane voids)   [NOTHING]
 CD-07  DP90/DP100 L2 reference plane   [EMITTED]
   assumes: the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet
   where:   schgen/generate/constraints.py:10
-  emits:   In1.Cu GND plane zone 25.5,25.5 -> 122.5,112.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
+  emits:   In1.Cu GND plane zone 25.5,25.5 -> 129.5,129.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
   risk:    without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)
 
 CD-08  Under-SoM decoupling fanout vias   [PARTIAL]

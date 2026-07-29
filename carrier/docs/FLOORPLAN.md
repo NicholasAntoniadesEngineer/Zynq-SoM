@@ -21,52 +21,52 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 | J2 | (136.5, 129.5) rot 180 | (21, 38.5) | 19.8 x 3.78 mm |
 | J3 | (154.5, 112) rot 90 | (3, 21) | 3.78 x 19.8 mm |
 
-Derived board: **188 x 168 mm**; SoM origin at **(59, 69)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
+Derived board: **183 x 164 mm**; SoM origin at **(56.5, 67)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 188x168 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 16274 <= LAW-5 budget 17594 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 183x164 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 16158 <= LAW-5 budget 17151 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| N | microsd | (49, 1.5, 17.32 x 30.0261) | TF-01A (microSD push-pull) | (1) |
-| N | pd_input | (68.5, 1.5, 24.4554 x 22.0264) | TYPE-C-31-M-12 (USB-C receptacle) | (2) |
-| N | usbc_otg | (96.5, 1.5, 23.2099 x 22.2682) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
-| N | usb_jtag_connector | (123, 1.5, 10.4501 x 18.6321) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
-| N | usb_uart_connector | (137.5, 1.5, 10.4501 x 18.6321) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
-| W | rj45_connector | (1.5, 38.5, 27.02 x 19.4) |  |  |
-| W | lcd | (1.5, 60, 23.71 x 45.725) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (6) |
-| W | camera | (1.5, 107.5, 16.0301 x 29.2251) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (7) |
-| E | motor_pwm | (146.5, 97, 39.9801 x 18.299) |  |  |
-| E | motor_sense | (169, 36, 17.425 x 59.6874) | XT60PW-M (XT60 ESC power inlet (horizontal)), XT60PW-M (XT60 ESC power inlet (horizontal)) |  |
-| E | board_qwiic | (175, 26.5, 11.6351 x 6.9999) |  |  |
-| S | hdmi_tx | (12.5, 138, 17.1547 x 28.5727) | HDMI-019S (HDMI receptacle) | (8) |
-| S | hdmi_rx | (49.5, 142, 16.5999 x 24.2561) | HDMI-019S (HDMI receptacle) | (9) |
-| S | pmod | (86.5, 152, 41.765 x 14.584) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (10) |
-| S | pmod_expansion | (129.5, 144, 34.015 x 22.523) | DS1024-2x6R2 (PMOD 2x6 socket) | (11) |
+| N | microsd | (47.854, 1.5, 17.32 x 30.0261) | TF-01A (microSD push-pull) | (1) |
+| N | pd_input | (66.874, 1.5, 24.4554 x 22.0264) | TYPE-C-31-M-12 (USB-C receptacle) | (2) |
+| N | usbc_otg | (93.0344, 1.5, 19.9879 x 22.2682) | TYPE-C-31-M-12 (USB-C receptacle) | (3) |
+| N | usb_jtag_connector | (114.472, 1.5, 10.4501 x 18.8541) | TYPE-C-31-M-12 (USB-C receptacle) | (4) |
+| N | usb_uart_connector | (126.372, 1.5, 10.4501 x 18.8541) | TYPE-C-31-M-12 (USB-C receptacle) | (5) |
+| W | rj45_connector | (1.5, 37.3565, 27.02 x 19.4) |  |  |
+| W | lcd | (1.5, 58.2115, 23.71 x 45.575) | AFC07-S40FCA-00 (FFC 40-pin 0.5mm (LCD)) | (6) |
+| W | camera | (1.5, 104.361, 16.0301 x 29.0751) | SFW15R-1STE1LF (FFC 15-pin 1mm (camera)) | (7) |
+| E | motor_pwm | (138.92, 94.2726, 42.5801 x 19.8) |  |  |
+| E | motor_sense | (160.575, 34.6352, 20.925 x 58.6874) | XT60PW-M (XT60 ESC power inlet (horizontal)), XT60PW-M (XT60 ESC power inlet (horizontal)) |  |
+| E | board_qwiic | (170.365, 26.4303, 11.1351 x 6.9999) |  |  |
+| S | hdmi_tx | (11.7501, 134.927, 17.1547 x 27.5727) | HDMI-019S (HDMI receptacle) | (8) |
+| S | hdmi_rx | (48.9048, 138.744, 16.5999 x 23.7561) | HDMI-019S (HDMI receptacle) | (9) |
+| S | pmod | (85.5047, 147.916, 41.765 x 14.584) | DS1024-2x6R2 (PMOD 2x6 socket), DS1024-2x6R2 (PMOD 2x6 socket) | (10) |
+| S | pmod_expansion | (127.97, 140.927, 38.435 x 21.573) | DS1024-2x6R2 (PMOD 2x6 socket) | (11) |
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (142, 68, 11.42 x 13.244) | 18 | 151.2 |  |
-| board_services | W | (152, 3, 22.8 x 20.01) | 9 | 456.2 |  |
-| bringup_en | E | (66, 114, 9.8 x 11.4) | 15 | 111.7 |  |
-| bringup_en_modules | E | (27, 72, 8.2 x 43.5) | 54 | 356.7 |  |
-| bringup_modules | E | (22, 119, 40.6 x 8.56) | 71 | 347.5 | (12) |
-| bringup_rails | E | (38, 67, 18.6 x 48.17) | 23 | 896 | (13) |
-| debug_boot | N | (70, 128, 29.48 x 15.2) | 10 | 448.1 | (14) |
-| ethernet | @rj45_connector | (29, 36, 21.745 x 25.2576) | 10 | 549.2 | (15) |
-| fmc | S | (53, 48, 61.63 x 18.685) | 8 | 1151.6 | (16) |
-| hdmi_rx_term | S | (78, 115.09, 11.805 x 7.805) | 10 | 92.1 |  |
-| mechanical | E | (106, 33, 13 x 13) | 4 | 169 |  |
-| power | E | (127.82, 115.599, 53.2104 x 23.9349) | 51 | 1273.6 | (17) |
-| power_mon | @power_som | (101.031, 131.6, 26.4886 x 14.3805) | 10 | 380.9 | (18) |
-| power_som | E | (116, 88.365, 23.9349 x 24.335) | 23 | 582.5 |  |
-| uart_bridge | @usb_uart_connector | (135, 23, 15.2 x 9.2751) | 10 | 141 | (19) |
-| usb_jtag | E | (18, 3, 27.637 x 29.0351) | 19 | 802.4 |  |
-| usb_pd | @pd_input | (76, 25, 10.28 x 8.18) | 6 | 84.1 | (20) |
-| user_io | S | (102, 113, 25.52 x 18.3) | 17 | 467 | (21) |
+| board_aux | E | (99, 34, 25.26 x 10.244) | 18 | 258.8 |  |
+| board_services | W | (140, 12, 22.8 x 21.01) | 9 | 479 |  |
+| bringup_en | E | (26, 80, 5.2 x 23.3) | 15 | 121.2 |  |
+| bringup_en_modules | E | (31, 112, 38.8 x 12.4) | 54 | 481.1 |  |
+| bringup_modules | E | (52, 35, 40.92 x 9.546) | 71 | 390.6 | (12) |
+| bringup_rails | E | (33, 60, 18.6 x 50.67) | 23 | 942.5 | (13) |
+| debug_boot | N | (67, 126, 31.48 x 16.2) | 10 | 510 | (14) |
+| ethernet | @rj45_connector | (29, 34, 21.745 x 25.2576) | 10 | 549.2 | (15) |
+| fmc | S | (53, 46, 61.63 x 18.685) | 8 | 1151.6 | (16) |
+| hdmi_rx_term | S | (76, 113.09, 11.805 x 7.805) | 10 | 92.1 |  |
+| mechanical | E | (145, 49, 13 x 13) | 4 | 169 |  |
+| power | E | (125, 115, 53.2104 x 23.9349) | 51 | 1273.6 | (17) |
+| power_mon | @power_som | (145, 63, 14.1915 x 29.4886) | 10 | 418.5 | (18) |
+| power_som | E | (113, 76, 24.335 x 23.9349) | 23 | 582.5 |  |
+| uart_bridge | @usb_uart_connector | (124, 21, 15.2 x 9.2751) | 10 | 141 | (19) |
+| usb_jtag | E | (115, 46, 28.637 x 29.0351) | 19 | 831.5 |  |
+| usb_pd | @pd_input | (74, 24, 10.28 x 8.18) | 6 | 84.1 | (20) |
+| user_io | S | (99, 111, 24.82 x 18.3) | 17 | 454.2 | (21) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
 

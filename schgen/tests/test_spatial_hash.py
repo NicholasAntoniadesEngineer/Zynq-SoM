@@ -39,7 +39,7 @@ def _sweep(occ: _Occupancy, w: float, h: float, step: float) -> list[bool]:
 
 def test_static_bounds_derivation():
     reach_bound, envelope = _spatial_bounds(far_ceil=10.0)
-    assert reach_bound == pytest.approx(3.32)
+    assert reach_bound == pytest.approx(2.05)
     assert envelope >= fp.CABLE_NEIGHBOR_GAP
     big_bound, big_env = _spatial_bounds(far_ceil=10.0, max_reach=11.331)
     assert big_bound == pytest.approx(11.331)
@@ -49,7 +49,7 @@ def test_static_bounds_derivation():
 def test_dense_pack_trace_differential(monkeypatch):
     monkeypatch.setattr(fp, "BOARD_W", 200.0)
     monkeypatch.setattr(fp, "BOARD_H", 180.0)
-    occ = _Occupancy(far_ceil=10.0)
+    occ = _Occupancy(far_ceil=10.0, max_reach=3.32)
     added = []
     k = 0
     for i in range(12):
@@ -69,7 +69,7 @@ def test_dense_pack_trace_differential(monkeypatch):
 def test_sparse_spread_trace_differential(monkeypatch):
     monkeypatch.setattr(fp, "BOARD_W", 400.0)
     monkeypatch.setattr(fp, "BOARD_H", 400.0)
-    occ = _Occupancy()
+    occ = _Occupancy(max_reach=3.32)
     for i in range(3):
         for j in range(3):
             occ.add(30.0 + i * 130.0, 25.0 + j * 140.0, 22.0, 18.0,
@@ -87,8 +87,8 @@ def test_place_near_first_fit_identical_to_exhaustive(monkeypatch):
         occ.add(10.0, 10.0, 30.0, 12.0, _REACHES[1])
         occ.add(110.0, 100.0, 24.0, 20.0, _REACHES[3])
         occ.add(20.0, 90.0, 18.0, 26.0, _REACHES[2])
-    hashed = _Occupancy(far_ceil=10.0)
-    exhaustive = _Occupancy(far_ceil=10.0)
+    hashed = _Occupancy(far_ceil=10.0, max_reach=3.32)
+    exhaustive = _Occupancy(far_ceil=10.0, max_reach=3.32)
     exhaustive.fits = exhaustive._fits_exhaustive
     _fill(hashed)
     _fill(exhaustive)

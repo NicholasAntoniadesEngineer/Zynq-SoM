@@ -67,21 +67,17 @@ from schgen.generate.pcb import PcbModel, _inst_courtyard
 # Fan-out clearance a multi-pin part needs, keyed by pin count. BASIS (kept deliberately
 # simple — tiers, not a routing calc): the gap must fit the escape traces the part's own
 # pins fan into before they can turn away, so it scales with pin count (more pins =>
-# more simultaneous escapes => a wider reserved apron). The break-points track package
-# classes at the carrier geometry (0.2 mm trace / 0.15 mm space => ~0.35 mm per
-# escaped lane): a 2-pin passive escapes on its own pads (~0); a <=8-pin SOT/SOIC needs
-# roughly one lane of room (0.5 mm ~= PLACE_CLEAR, the current pack floor); a 9-20-pin
-# QFN/TSSOP ~two-three lanes (1.0); a 21-48-pin QFP ~four lanes plus corner turn (1.5);
-# a >48-pin fine-pitch BGA/QFP needs a real keep-out apron (2.0). These are FLOORS, not
+# more simultaneous escapes => a wider reserved apron). USER LAW 2026-07-29: any
+# non-passive package gets an absolute floor of 1.5 mm; anything with >= 9 pins gets
+# at least 2.0 mm (routing-margin decree; supersedes the lane-count-derived 0.5/1.0
+# ladder at the same 0.2 mm trace / 0.15 mm space geometry). These are FLOORS, not
 # routed corridors — the escape-lane gate owns the per-net corridor math.
 _TIERS: tuple[tuple[int, float, str], ...] = (
     # (max_pins_inclusive, need_mm, package-class basis)
     (2,  0.20, "2-pin passive — escapes on its own pads"),
-    (8,  0.50, "<=8-pin SOT/SOIC — ~1 escape lane (== PLACE_CLEAR pack floor)"),
-    (20, 1.00, "9-20-pin QFN/TSSOP — ~2-3 escape lanes"),
-    (48, 1.50, "21-48-pin QFP — ~4 lanes + a corner turn"),
+    (8,  1.50, "<=8-pin non-passive — 1.5 mm absolute floor (user law 2026-07-29)"),
 )
-_TIER_TOP = (2.00, ">48-pin fine-pitch BGA/QFP — full keep-out apron")
+_TIER_TOP = (2.00, ">=9-pin package — 2.0 mm floor (user law 2026-07-29)")
 
 # A part with fewer than this many pins is not a fan-out SUBJECT (a 1-2-pin passive is a
 # cluster member, never a fan-out IC). Multi-pin == 3+.
@@ -121,6 +117,14 @@ def _is_cluster_passive(ref: str, pins: int) -> bool:
 
 def _is_df40(inst) -> bool:
     return bool(_DF40_SHEET_RE.match(inst.sheet)) or len(inst.pad_nets) >= DF40_MIN_PINS
+
+
+def is_testpoint_ref(ref: str) -> bool:
+    """USER LAW 2026-07-29: test points are EXEMPT from fan-out crowding — a TP pad
+    carries no courtyard traffic and no escape lanes, so it neither crowds a subject
+    nor demands apron room, on ANY sheet (unconditional, unlike the same-sheet
+    cluster-passive waiver)."""
+    return _ref_prefix(ref) == "TP"
 
 
 def _is_fiducial(inst) -> bool:
@@ -270,6 +274,8 @@ def check(model: PcbModel, baseline: int | None = None) -> FanoutResult:
                 continue                      # DF40 plugs never count as crowding
             if _is_fiducial(other):
                 continue                      # fiducials are fab-art, not fan-out room
+            if is_testpoint_ref(other.ref):
+                continue                      # test points exempt (user law 2026-07-29)
             if other.sheet == inst.sheet and _is_cluster_passive(
                     other.ref, len(other.pad_nets)):
                 continue                      # own-cluster decoupling — tight BY DESIGN
