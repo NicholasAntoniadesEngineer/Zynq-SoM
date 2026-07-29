@@ -13020,7 +13020,8 @@
 		(property
 			"Reference"
 			"J1001"
-			(at -11.8 0 0)
+			(hide yes)
+			(at 0 -3 0)
 			(layer "F.SilkS")
 			(effects
 				(font
@@ -13530,7 +13531,8 @@
 		(property
 			"Reference"
 			"J1002"
-			(at 9.825 0 0)
+			(hide yes)
+			(at 0 -4.02 0)
 			(layer "F.SilkS")
 			(effects
 				(font
@@ -16310,8 +16312,7 @@
 		(property
 			"Reference"
 			"J9002"
-			(hide yes)
-			(at 0 -3.35 0)
+			(at -14.225 0 0)
 			(layer "F.SilkS")
 			(effects
 				(font
@@ -26499,7 +26500,8 @@
 		(property
 			"Reference"
 			"SW1002"
-			(at 0 4.025 0)
+			(hide yes)
+			(at 0 -3.85 0)
 			(layer "F.SilkS")
 			(effects
 				(font
@@ -32553,10 +32555,10 @@
 		)
 	)
 	(gr_text
-		"SWD"
-		(at 69.167 93.98 0)
+		"JTAG"
+		(at 37.367 81.644 0)
 		(layer "F.SilkS")
-		(uuid "ad88c940-92c8-5d06-b474-70596e94ee99")
+		(uuid "64030ae6-2951-5fd0-af29-722ce43d398f")
 		(effects
 			(font
 				(size 1.1 1.1)
@@ -32565,10 +32567,34 @@
 		)
 	)
 	(gr_text
-		"AUX EN"
-		(at 43.89 57.017 0)
+		"SWD"
+		(at 55.883 73.094 0)
+		(layer "F.SilkS")
+		(uuid "0ef5a689-d760-5ac3-bda8-b11a3573ab2d")
+		(effects
+			(font
+				(size 1.1 1.1)
+				(thickness 0.176)
+			)
+		)
+	)
+	(gr_text
+		"BOOT: DFU BSEL BSEL"
+		(at 43.89 57.161 0)
 		(layer "F.SilkS")
 		(uuid "1f466497-03e9-563a-9556-04c53431cc61")
+		(effects
+			(font
+				(size 0.85 0.85)
+				(thickness 0.136)
+			)
+		)
+	)
+	(gr_text
+		"RST"
+		(at 44.05 93.427 0)
+		(layer "F.SilkS")
+		(uuid "78330a4b-904d-5331-9564-f3a779e8a037")
 		(effects
 			(font
 				(size 1.1 1.1)

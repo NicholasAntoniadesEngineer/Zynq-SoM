@@ -36,7 +36,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from schgen.core.project import IS_DEFAULT_PROJECT, PROJECT_ROOT
+from schgen.core.project import PROJECT_ROOT
 from schgen.generate import pcb as pcb_mod
 from schgen.generate.pcb import PcbModel, _inst_courtyard
 from schgen.generate.pcb.constants import (
@@ -166,10 +166,9 @@ def _polarity_notes(insts: tuple[FootprintInst, ...]) -> tuple[str, ...]:
 
 
 def _conn_desc(inst: FootprintInst) -> str:
-    """Sheet-keyed descriptors travel across projects; the REF-keyed tables
-    (_INT_DESC/_SW_DESC) are authored for the default project and a foreign
-    project reuses their refs — so ref lookups apply there ONLY."""
-    if IS_DEFAULT_PROJECT and inst.ref in _INT_DESC:
+    """Ref-keyed header labels (project silk_labels data) win; else the
+    sheet-keyed connector descriptor."""
+    if inst.ref in _INT_DESC:
         return _INT_DESC[inst.ref]
     return _CONN_DESC.get(inst.sheet, "")
 
@@ -460,8 +459,7 @@ def bringup_phases(model: PcbModel, sheets) -> list[Phase]:
             for i in sorted(by_sheet["debug_boot"], key=_ikey):
                 if i.ref[:1] not in ("J", "S"):
                     continue
-                desc = (_INT_DESC.get(i.ref) or _SW_DESC.get(i.ref)
-                        if IS_DEFAULT_PROJECT else None)
+                desc = _INT_DESC.get(i.ref) or _SW_DESC.get(i.ref)
                 dbg.append(f"{i.ref} ({desc})" if desc else i.ref)
             mate_cps = (f"boot/debug via debug_boot: {', '.join(dbg)}",)
         phases.append(Phase(

@@ -28,6 +28,17 @@
       "35": "+3V3"
     }
   },
+  "silk_labels": {
+    "_comment": "Ref-keyed silk FUNCTION labels, authored from this project's own subsystems (debug_boot is sheet 1): J1=Zynq 2x7 2.00mm JTAG header, J2=ARM 10-pin SWD header, SW1=boot DIP (pos1 BOOT0/DFU, pos2/3 BOOTSEL straps, pos4 spare - debug_boot.py position map), SW2=reset button. The SoM DF40 mezzanines are intentionally absent: the 'Zynq SoM' body-silk labels that region.",
+    "headers": {
+      "J1001": "JTAG",
+      "J1002": "SWD"
+    },
+    "switches": {
+      "SW1001": "BOOT: DFU BSEL BSEL",
+      "SW1002": "RST"
+    }
+  },
   "escape": {
     "_comment": "Measured 2026-07-29 on the live SoM interface + devkit_mini link (full J1/J2/J3 bind, same SoM contract; 4 si_triage-GENUINE pairs on the bound sheets).",
     "netted_contacts": {

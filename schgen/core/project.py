@@ -1,8 +1,9 @@
 """project — the PROJECT SPEC loader (P1 engine/project separation).
 
 Board-specific POLICY that previously lived as engine constants (wired sheet
-sets, the module pose, name-anchors, band prefixes) is data in the project's
-``project.json``; the engine is pure MECHANISM reading it here. One project
+sets, the module pose, name-anchors, band prefixes, ref-keyed silk function
+labels) is data in the project's ``project.json``; the engine is pure
+MECHANISM reading it here. One project
 today (``carrier/``); the resolution root generalizes to ``--project`` in a
 later unit without touching any consumer.
 
@@ -39,6 +40,8 @@ class ProjectSpec:
     reg_band_prefixes: tuple[str, ...]
     bank_rails: dict[str, str]
     escape: dict
+    header_desc: dict[str, str]
+    switch_desc: dict[str, str]
 
 
 _CACHE: ProjectSpec | None = None
@@ -49,6 +52,7 @@ def spec() -> ProjectSpec:
     if _CACHE is None:
         raw = json.loads((PROJECT_ROOT / "project.json").read_text())
         pl = raw["placement"]
+        lbl = raw.get("silk_labels", {})
         _CACHE = ProjectSpec(
             name=raw["name"],
             wired_sheets=frozenset(pl["wired_sheets"]),
@@ -60,5 +64,9 @@ def spec() -> ProjectSpec:
             bank_rails={str(k): str(v) for k, v in
                         raw.get("fpga", {}).get("bank_rails", {}).items()},
             escape=dict(raw.get("escape", {})),
+            header_desc={str(k): str(v)
+                         for k, v in lbl.get("headers", {}).items()},
+            switch_desc={str(k): str(v)
+                         for k, v in lbl.get("switches", {}).items()},
         )
     return _CACHE

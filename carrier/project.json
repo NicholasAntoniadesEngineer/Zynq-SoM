@@ -52,6 +52,34 @@
       "35": "+2V5_VADJ"
     }
   },
+  "silk_labels": {
+    "_comment": "Ref-keyed silk FUNCTION labels (interior headers + switches) - PROJECT data because per-sheet refs collide across projects. DIP legends list words in silkscreen-position order 1..N, VERIFIED against the owning subsystem's position map (bringup_rails SW1/SW2/SW6, debug_boot boot-DIP) - a wrong legend is worse than none (LAW 0). The SoM DF40 mezzanines are intentionally absent: the 'Zynq SoM' body-silk labels that region.",
+    "headers": {
+      "J11001": "GPIO",
+      "J9001": "JTAG",
+      "J9002": "SWD",
+      "J36001": "ESC PWM",
+      "J37002": "ESC PWR IN",
+      "J37003": "ESC PWR OUT"
+    },
+    "switches": {
+      "SW1001": "AUX EN",
+      "SW7001": "RAIL: 5V 3V3 1V8 LED",
+      "SW7002": "MOD: HTX HRX LCD CAM SD USB PMD",
+      "SW7003": "BTN0",
+      "SW7004": "BTN1",
+      "SW7005": "SC RST",
+      "SW7006": "5V: HTX LCD",
+      "SW9001": "BOOT: DFU BSEL BSEL",
+      "SW9002": "RST",
+      "SW19001": "PMOD EN",
+      "SW28001": "JTAG EN",
+      "SW33001": "USR0",
+      "SW33002": "USR1",
+      "SW33003": "USR2",
+      "SW33004": "USR3"
+    }
+  },
   "escape": {
     "_comment": "Measured 2026-07-02 on the live SoM interface + carrier link (J1 has 7 unnetted signal pads); the escape-lane gate's drift alarm.",
     "netted_contacts": {

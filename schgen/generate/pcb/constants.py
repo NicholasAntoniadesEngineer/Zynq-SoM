@@ -13,6 +13,7 @@ from pathlib import Path
 
 from schgen.core import quantize as _quantize
 from schgen.core.project import PROJECT_ROOT
+from schgen.core.project import spec as _project_spec
 from schgen.generate import constraints as cst
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -545,45 +546,8 @@ _CONN_DESC: dict[str, str] = {
     "pmod_expansion":      "PMOD",       # PMOD GPIO (numbered)
 }
 
-# Interior (non-edge) user/developer headers — labelled by REF (their sheets carry
-# >1 connector). The SoM DF40 mezzanines are intentionally NOT here: the "Zynq SoM"
-# body-silk already labels that region (the SoM mounts on them).
-_INT_DESC: dict[str, str] = {
-    "J11001": "GPIO",   # FMC-site 2x20 2.54mm breakout
-    "J9001":  "JTAG",   # Zynq 2x7 2.00mm JTAG header
-    "J9002":  "SWD",    # system-controller ARM Cortex 10-pin SWD header
-    # motor interface (drone demo): the 8-ch ESC PWM header + the in-line ESC
-    # power XT60s. Per-ref so IN vs OUT is on the silk (J37002=J2=ESC_VRAIL_IN
-    # in, J37003=J3=ESC_VRAIL out — local-ref order in motor_sense.py).
-    "J36001": "ESC PWM",      # motor_pwm: 3x8 servo/ESC signal header
-    "J37002": "ESC PWR IN",   # motor_sense: XT60 battery/bench-supply input
-    "J37003": "ESC PWR OUT",  # motor_sense: XT60 out to off-board ESCs
-}
+# Ref-keyed interior-header/switch function labels are PROJECT data (refs
+# collide across projects — project.json "silk_labels" authors them per board).
+_INT_DESC: dict[str, str] = dict(_project_spec().header_desc)
 
-# Switches — a short FUNCTION label beside every DIP enable + tactile button, the
-# same way connectors/headers are labelled. Keyed by the board-unique ref (the
-# per-sheet renumbering is deterministic); test_switch_descriptors asserts EVERY
-# switch on the board gets a label so a ref shift can't silently drop one.
-# The multi-position config DIPs carry an INLINE position legend (words in
-# silkscreen-position order 1..N — the DIP footprint already silk-prints the
-# numbers), so the bare board tells you what each rocker does. Every legend is
-# VERIFIED against the owning subsystem's position map (bringup_rails SW1/SW2/SW6
-# docstring + maps; debug_boot boot-DIP) — a wrong legend is worse than none
-# (LAW 0). The single-pole enables + tactile buttons get a plain function label.
-_SW_DESC: dict[str, str] = {
-    "SW1001":  "AUX EN",                         # board_aux:  gates +3V3_AUX (aux)
-    "SW7001":  "RAIL: 5V 3V3 1V8 LED",           # bringup:    rail DIP  (pos 1..4)
-    "SW7002":  "MOD: HTX HRX LCD CAM SD USB PMD", # bringup:   module DIP (1..7,8=spare)
-    "SW7003":  "BTN0",                           # bringup:    PL_BTN0 user button
-    "SW7004":  "BTN1",                           # bringup:    PL_BTN1 user button
-    "SW7005":  "SC RST",                         # bringup:    sys-ctrlr reset (NRST)
-    "SW7006":  "5V: HTX LCD",                    # bringup:    +5V module DIP (pos 1..2)
-    "SW9001":  "BOOT: DFU BSEL BSEL",            # debug_boot: boot DIP (1=DFU 2-3=BSEL)
-    "SW9002":  "RST",                            # debug_boot: reset button
-    "SW19001": "PMOD EN",                        # pmod_expansion: port power enable
-    "SW28001": "JTAG EN",                        # usb_jtag:   USB-JTAG bridge OE
-    "SW33001": "USR0",                           # user_io:    user button 0
-    "SW33002": "USR1",                           # user_io:    user button 1
-    "SW33003": "USR2",                           # user_io:    user button 2
-    "SW33004": "USR3",                           # user_io:    user button 3
-}
+_SW_DESC: dict[str, str] = dict(_project_spec().switch_desc)
