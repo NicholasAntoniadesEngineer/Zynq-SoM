@@ -37,7 +37,6 @@ import pytest
 
 from schgen.core import sexpr
 from schgen.core.sexpr import Sym
-from schgen.generate.pcb import placement as pl
 from schgen.generate.pcb.constants import FootprintInst
 from schgen.generate.pcb.emit import emit_pcb
 from schgen.generate.pcb.mating_face import (
@@ -48,8 +47,8 @@ from schgen.verify.placement_contract_gate import _pad_boxes
 
 
 @pytest.fixture(scope="module")
-def model():
-    return pl.build_model()
+def model(carrier_model):
+    return carrier_model
 
 
 @pytest.fixture(scope="module")

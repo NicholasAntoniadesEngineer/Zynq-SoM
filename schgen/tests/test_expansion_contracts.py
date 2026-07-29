@@ -393,10 +393,9 @@ _RED_ON_BEFORE = ("hdmi_rx", "motor_sense")
 
 
 @pytest.fixture(scope="module")
-def _real_model():
-    """Build the REAL board model ONCE (~60-120 s)."""
-    from schgen.generate.pcb.placement import build_model
-    return build_model()
+def _real_model(carrier_model):
+    """The REAL board model — session-shared build, per-module copy."""
+    return carrier_model
 
 
 def test_check_all_discovers_every_registered_contract(_real_model):

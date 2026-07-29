@@ -12,6 +12,13 @@
 # rule, while the existing debt is quantified for incremental cleanup. Do NOT
 # silence a rule by deleting it here to "fix" a new violation — fix the code.
 
+[tool.pytest.ini_options]
+# Default-parallel unit suite (pytest-xdist, see requirements.txt). loadgroup
+# honors the xdist_group pinning in schgen/tests/conftest.py so the expensive
+# session-scoped board build runs in at most two workers, once each; every
+# other test distributes freely. Serial escape hatch: pytest -n 0.
+addopts = "-n auto --dist loadgroup"
+
 [tool.ruff]
 # requirements.txt advertises "Python 3.11+", but the source actually uses
 # 3.12 f-string grammar (backslash escapes inside f-strings, e.g.

@@ -271,9 +271,8 @@ def test_no_external_block_contributes_nothing():
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="module")
-def _real_model():
-    from schgen.generate.pcb.placement import build_model
-    return build_model()
+def _real_model(carrier_model):
+    return carrier_model
 
 
 def test_flow_gate_runs_on_the_real_board(_real_model):
