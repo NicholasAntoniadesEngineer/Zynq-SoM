@@ -1,23 +1,23 @@
-PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=35738mm^2, flow_budget=133.4mm)
+PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=34615mm^2, flow_budget=132.4mm)
   fails: flow=0/7 facing=0/2 far=0/5 near_max=0/5
   unresolved: 0
   violations: 0
   detail: 19
-    facing power->power_som: dot=+1351.68 angle=7.3deg (output@(75.9949, 102.2432) zone@(63.1913, 98.863) down@(165.203, 112.343))
-    facing power_som->@som: dot=+535.21 angle=7.9deg (output@(152.155, 111.2249) zone@(165.203, 112.343) down@(124.0, 114.5))
-    far ethernet vs power: 146.86mm / >= 10mm
-    far motor_sense vs power: 165.60mm / >= 10mm
-    far motor_sense vs power_som: 69.46mm / >= 10mm
-    far power vs ethernet.line_side: 146.86mm / >= 10mm
-    far power_som vs ethernet.line_side: 67.19mm / >= 10mm
-    flow camera->@som: 95.26mm / 133.4mm budget
-    flow hdmi_tx->@som: 92.14mm / 133.4mm budget
-    flow pd_input->usb_pd: 15.78mm / 133.4mm budget
-    flow power->power_som: 102.90mm / 133.4mm budget
-    flow power_mon->power_som: 81.11mm / 133.4mm budget
-    flow usb_pd->power: 69.36mm / 133.4mm budget
-    flow usb_pd->power: 69.36mm / 133.4mm budget
-    near_max ethernet to rj45_connector: 1.25mm gap / <= 20mm
+    facing power->power_som: dot=+255.33 angle=70.8deg (output@(190.255, 52.7322) zone@(203.0586, 56.1124) down@(170.283, 104.723))
+    facing power_som->@som: dot=+589.80 angle=13.3deg (output@(157.235, 103.6049) zone@(170.283, 104.723) down@(124.5, 111.5))
+    far ethernet vs power: 143.66mm / >= 10mm
+    far motor_sense vs power: 30.85mm / >= 10mm
+    far motor_sense vs power_som: 67.17mm / >= 10mm
+    far power vs ethernet.line_side: 143.66mm / >= 10mm
+    far power_som vs ethernet.line_side: 116.32mm / >= 10mm
+    flow camera->@som: 95.89mm / 132.4mm budget
+    flow hdmi_tx->@som: 89.51mm / 132.4mm budget
+    flow pd_input->usb_pd: 16.29mm / 132.4mm budget
+    flow power->power_som: 58.63mm / 132.4mm budget
+    flow power_mon->power_som: 57.00mm / 132.4mm budget
+    flow usb_pd->power: 81.59mm / 132.4mm budget
+    flow usb_pd->power: 81.59mm / 132.4mm budget
+    near_max ethernet to rj45_connector: 1.67mm gap / <= 20mm
     near_max hdmi_rx_term to som_j2: 6.24mm gap / <= 10mm
     near_max motor_sense to motor_pwm: 2.12mm gap / <= 20mm
     near_max uart_bridge to usb_uart_connector: 5.13mm gap / <= 40mm

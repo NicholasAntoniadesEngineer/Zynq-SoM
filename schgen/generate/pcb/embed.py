@@ -32,6 +32,7 @@ from .constants import (
     THERMAL_VIA_DRILL,
     THERMAL_VIA_EDGE,
     THERMAL_VIA_H2H,
+    THERMAL_VIA_LATTICE_PITCH,
     THERMAL_VIA_SIZE,
     THERMAL_VIA_SPACING,
     ZONE_MIN_THICKNESS,
@@ -607,16 +608,17 @@ def _mod_pads(mod_path) -> list[tuple[str, float, float, float, float, float, fl
     return rows
 
 
-def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float]]:
+def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float, str]]:
     """Every pad of a placed footprint as an axis-aligned obstacle
-    (cx, cy, half_w, half_h, net_name, drill) in the BOARD frame: the KiCad
-    CW rotation, NO bottom mirror (a B.Cu footprint's stored coordinates are
-    already the final front-view frame — pcbnew-verified; an X-mirror here
+    (cx, cy, half_w, half_h, net_name, drill, label) in the BOARD frame: the
+    KiCad CW rotation, NO bottom mirror (a B.Cu footprint's stored coordinates
+    are already the final front-view frame — pcbnew-verified; an X-mirror here
     put a thermal via onto C16003's +3V3_SD pad while the model thought the
-    spot was that cap's GND pad)."""
+    spot was that cap's GND pad). ``label`` is the ref.pad the shortfall
+    diagnostic names when this pad vetoes a via site."""
     r = math.radians(inst.rotation or 0.0)
     cs, sn = math.cos(r), math.sin(r)
-    out: list[tuple[float, float, float, float, str, float]] = []
+    out: list[tuple[float, float, float, float, str, float, str]] = []
     for name, px, py, prot, sw, sh, drill in _mod_pads(inst.mod_path):
         pr = math.radians(prot)
         cx = inst.x + px * cs + py * sn
@@ -626,56 +628,149 @@ def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float]]:
         hx = ct * sw / 2 + st * sh / 2
         hy = st * sw / 2 + ct * sh / 2
         nname = inst.pad_nets.get(name, (0, ""))[1]
-        out.append((round(cx, 4), round(cy, 4), hx, hy, nname, drill))
+        out.append((round(cx, 4), round(cy, 4), hx, hy, nname, drill,
+                    f"{inst.ref}.{name}"))
     return out
 
 
-def _via_site_ok(vx: float, vy: float, model: PcbModel,
-                 obstacles: list[tuple[float, float, float, float, str, float]],
-                 chosen: list[tuple[float, float]]) -> bool:
-    """A thermal-via candidate survives when its barrel keeps THERMAL_VIA_CLEAR
-    to every FOREIGN (non-GND) pad's copper, its HOLE edge keeps
-    CLR_HOLE_SAMENET_PAD to SAME-net (GND) solder-pad copper (a via hole in a
-    pad wicks the joint's solder even on the same net — the T2-wave DFM rule;
-    the via ties to the pad through the POUR, never in the joint),
-    THERMAL_VIA_H2H hole-edge spacing to every drilled pad (any net),
-    THERMAL_VIA_EDGE to Edge.Cuts, and THERMAL_VIA_SPACING to the vias
-    already chosen."""
+def _via_obstacles(model: PcbModel, inst, reach: float) \
+        -> list[tuple[float, float, float, float, str, float, str]]:
+    """Everything a thermal-via candidate around ``inst`` must dodge: the pads
+    of every footprint whose origin is within ``reach``, plus the T2 escape
+    vias already planned on the model (``model.copper``) — an emitted via hole
+    takes the same hole-to-hole margin as a drilled pad, and the exhaustive
+    lattice search below reaches ground the curated site list never visited."""
+    names = {num: nm for nm, num in model.net_numbers.items()}
+    out: list[tuple[float, float, float, float, str, float, str]] = []
+    for other in model.insts:
+        if math.hypot(other.x - inst.x, other.y - inst.y) <= reach:
+            out.extend(_pad_obstacles(other))
+    for c in model.copper:
+        if c.get("kind") != "via":
+            continue
+        cx, cy = float(c["x"]), float(c["y"])
+        if math.hypot(cx - inst.x, cy - inst.y) > reach:
+            continue
+        vr = float(c.get("size", THERMAL_VIA_SIZE)) / 2
+        out.append((round(cx, 4), round(cy, 4), vr, vr,
+                    names.get(int(c.get("net", 0)), ""),
+                    float(c.get("drill", THERMAL_VIA_DRILL)),
+                    f"escape via @({cx:.3f},{cy:.3f})"))
+    return out
+
+
+def _via_site_blocker(vx: float, vy: float, model: PcbModel,
+                      obstacles: list[tuple[float, float, float, float,
+                                            str, float, str]],
+                      chosen: list[tuple[float, float]]) -> str | None:
+    """The object that vetoes a thermal-via candidate (named, with its
+    coordinates, for the shortfall diagnostic) — None when the site is legal.
+    A candidate survives when its barrel keeps THERMAL_VIA_CLEAR to every
+    FOREIGN (non-GND) pad's copper, its HOLE edge keeps CLR_HOLE_SAMENET_PAD
+    to SAME-net (GND) solder-pad copper (a via hole in a pad wicks the joint's
+    solder even on the same net — the T2-wave DFM rule; the via ties to the pad
+    through the POUR, never in the joint), THERMAL_VIA_H2H hole-edge spacing to
+    every drilled pad (any net), THERMAL_VIA_EDGE to Edge.Cuts, and
+    THERMAL_VIA_SPACING to the vias already chosen."""
     if not (ORIGIN_X + THERMAL_VIA_EDGE <= vx
             <= ORIGIN_X + model.board_w - THERMAL_VIA_EDGE
             and ORIGIN_Y + THERMAL_VIA_EDGE <= vy
             <= ORIGIN_Y + model.board_h - THERMAL_VIA_EDGE):
-        return False
+        return "Edge.Cuts keep-back"
     vr = THERMAL_VIA_SIZE / 2
     hr = THERMAL_VIA_DRILL / 2
-    for cx, cy, hx, hy, nname, drill in obstacles:
+    for cx, cy, hx, hy, nname, drill, label in obstacles:
         dx = max(0.0, abs(vx - cx) - hx)
         dy = max(0.0, abs(vy - cy) - hy)
         gap = math.hypot(dx, dy)
+        where = f"{label} [{nname or 'no-net'}] @({cx:.3f},{cy:.3f})"
         if nname != "GND" and gap < vr + THERMAL_VIA_CLEAR:
-            return False
+            return where
         if nname == "GND" and gap < hr + CLR_HOLE_SAMENET_PAD:
-            return False
+            return where
         if drill > 0 and math.hypot(vx - cx, vy - cy) < \
                 hr + drill / 2 + THERMAL_VIA_H2H:
-            return False
-    return all(math.hypot(vx - ox, vy - oy) >= THERMAL_VIA_SPACING
-               for ox, oy in chosen)
+            return where
+    for ox, oy in chosen:
+        if math.hypot(vx - ox, vy - oy) < THERMAL_VIA_SPACING:
+            return f"thermal via @({ox:.3f},{oy:.3f})"
+    return None
+
+
+def _fallback_via_sites(spec: dict) -> list[tuple[float, float]]:
+    """Every lattice site inside the part's OWN thermal pour (inset by the via
+    radius so the barrel's copper stays in poured copper), NEAREST-TO-ORIGIN
+    first — the exhaustive search the curated preference list falls back to
+    when a neighbour's pads block the preferred sites. Deterministic: a fixed
+    pitch and a total order on (radius, y, x)."""
+    x0, y0, x1, y1 = spec["pour"]
+    m = THERMAL_VIA_SIZE / 2
+    x0, y0, x1, y1 = x0 + m, y0 + m, x1 - m, y1 - m
+    ranked: list[tuple[float, float, float]] = []
+    for i in range(int((x1 - x0) / THERMAL_VIA_LATTICE_PITCH) + 1):
+        for j in range(int((y1 - y0) / THERMAL_VIA_LATTICE_PITCH) + 1):
+            sx = round(x0 + i * THERMAL_VIA_LATTICE_PITCH, 3)
+            sy = round(y0 + j * THERMAL_VIA_LATTICE_PITCH, 3)
+            ranked.append((round(math.hypot(sx, sy), 4), sy, sx))
+    return [(sx, sy) for _r, sy, sx in sorted(ranked)]
+
+
+def _pour_credit_need(value: str):
+    """The emitted-copper floor the THERMAL gate credits this part against,
+    READ from schgen.verify.thermal.POUR_EVIDENCE (never duplicated, so the
+    emitter's target and the gate's requirement cannot drift): the strictest
+    matching PourNeed, or None for a part that claims no pour credit."""
+    from schgen.verify.thermal import POUR_EVIDENCE
+    needs = [n for n in POUR_EVIDENCE.values()
+             if value.startswith(n.value_prefix)]
+    return max(needs, key=lambda n: (n.min_vias, n.radius_mm)) if needs else None
+
+
+def _report_via_shortfall(inst, chosen: list[tuple[float, float]],
+                          vetoes: dict[str, int], n_cand: int) -> str | None:
+    """LOUD, actionable line when a part's emitted via field lands UNDER the
+    pour-credit floor after the exhaustive search: how many seats it got, out
+    of how many candidate sites, and the objects that vetoed the most sites
+    (ranked, named, with coordinates) — the parts a human must move. Returns
+    the line (printed) or None when the field is whole."""
+    need = _pour_credit_need(inst.value)
+    if need is None:
+        return None
+    n_in = sum(1 for vx, vy in chosen
+               if math.hypot(vx - inst.x, vy - inst.y) <= need.radius_mm)
+    if n_in >= need.min_vias:
+        return None
+    top = sorted(vetoes.items(), key=lambda kv: (-kv[1], kv[0]))[:4]
+    line = (f"THERMAL VIA SHORTFALL: {inst.ref} ({inst.value}) at "
+            f"({inst.x:.3f},{inst.y:.3f}) rot {inst.rotation:g} seated "
+            f"{n_in}/{need.min_vias} GND vias within {need.radius_mm:g} mm; "
+            f"{n_cand} candidate seats searched (curated + lattice), every "
+            "other one blocked. Worst blockers: "
+            + "; ".join(f"{obj} x{n}" for obj, n in top)
+            + ". MOVE those parts (or this one): the thermal gate WITHHOLDS "
+              "the pour credit on a short field.")
+    print(line)
+    return line
 
 
 def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]:
     """(zones, vias) for every placed THERMAL_COPPER part: a local GND pour per
     listed layer (rotated with the part, solid pad connection) + a GND
     thermal-via field at the LOCAL candidate sites that survive the obstacle
-    filter (deterministic: fixed site order, fixed inst order, first max_vias
-    win). The vias tie the power-ground pads through the local pour into the
-    In1 GND plane — the copper the thermal gate's pour credit is verified
-    against."""
+    filter — the curated preference list first, then the EXHAUSTIVE
+    nearest-first lattice over the part's own pour (``_fallback_via_sites``)
+    when a neighbour's copper blocks the preferred sites, so the field is short
+    only where no legal seat exists at all (deterministic: fixed site order,
+    fixed inst order, first max_vias win). A field that still lands under the
+    pour-credit floor prints a shortfall line naming the blocking objects. The
+    vias tie the power-ground pads through the local pour into the In1 GND
+    plane — the copper the thermal gate's pour credit is verified against."""
     num = model.net_numbers.get("GND")
     if not num:
         return [], []
     zones: list[list] = []
     vias: list[list] = []
+    placed: list[tuple[float, float]] = []
     for inst in model.insts:
         spec = next((s for pfx, s in THERMAL_COPPER.items()
                      if inst.value.startswith(pfx)), None)
@@ -689,22 +784,25 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
                 num, "GND", f"thermal_pour_{inst.ref}_{layer.split('.')[0]}",
                 layer, corners, f"thpour:{inst.ref}:{layer}", uid,
                 POUR_CLEARANCE, solid=True))
-        # obstacle set: every pad of every footprint within reach
-        reach = max(abs(v) for site in spec["via_sites"] for v in site) + 8.0
-        obstacles: list[tuple[float, float, float, float, str, float]] = []
-        for other in model.insts:
-            if math.hypot(other.x - inst.x, other.y - inst.y) <= reach + 12.0:
-                obstacles.extend(_pad_obstacles(other))
+        reach = max(abs(v) for site in spec["via_sites"] for v in site) + 20.0
+        obstacles = _via_obstacles(model, inst, reach)
         r = math.radians(inst.rotation or 0.0)
         cs, sn = math.cos(r), math.sin(r)
         chosen: list[tuple[float, float]] = []
-        for sx, sy in spec["via_sites"]:
+        vetoes: dict[str, int] = {}
+        candidates = list(spec["via_sites"]) + _fallback_via_sites(spec)
+        for sx, sy in candidates:
             if len(chosen) >= spec["max_vias"]:
                 break
             vx = round(inst.x + sx * cs + sy * sn, 3)
             vy = round(inst.y - sx * sn + sy * cs, 3)
-            if _via_site_ok(vx, vy, model, obstacles, chosen):
+            veto = _via_site_blocker(vx, vy, model, obstacles, placed + chosen)
+            if veto is None:
                 chosen.append((vx, vy))
+            else:
+                vetoes[veto] = vetoes.get(veto, 0) + 1
+        placed.extend(chosen)
+        _report_via_shortfall(inst, chosen, vetoes, len(candidates))
         for i, (vx, vy) in enumerate(chosen):
             # through the unified builder (T2 reconciliation): locked=False
             # keeps the node shape + uid key byte-identical to the original
