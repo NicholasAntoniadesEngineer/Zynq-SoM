@@ -158,18 +158,35 @@ def _block_fanout_reach(sheet: str, zg) -> tuple[float, float, float, float]:
     one side it is exposed. A block with no exposed multi-pin subject reaches all
     zeros and packs at the tight CLEAR. Matches the emitted board (same zone geometry
     + rotations the PCB places); tiers/subject rule from the fan-out gate."""
-    from schgen.generate.pcb import placement as _pl
-    from schgen.generate.pcb.constants import GRID
-    from schgen.generate.pcb.mating_face import _rot_bbox
-    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS, intelligent_need
     zbox = zg.zone_box.get(sheet)
     if zbox is None:
         return _ZeroReach
     zw, zh = zbox
     rot_of = dict(zg.conn_rot)
     rot_of.update(zg.zone_extra_rot)
+    return _zone_fanout_reach(zw, zh,
+                              (zg.top_off.get(sheet, {}),
+                               zg.bot_off.get(sheet, {})), rot_of, zg)
+
+
+def _shape_fanout_reach(shape, zg) -> tuple[float, float, float, float]:
+    """The SAME derivation as :func:`_block_fanout_reach` on ONE shape variant
+    (its own box/offsets/rotations) — so the occupancy lattice reserves the
+    fan-out floor of the shape actually chosen, never shape 0's."""
+    rot_of = dict(zg.conn_rot)
+    rot_of.update(shape.extra_rot)
+    return _zone_fanout_reach(shape.w, shape.h,
+                              (shape.top_off, shape.bot_off), rot_of, zg)
+
+
+def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg
+                       ) -> tuple[float, float, float, float]:
+    from schgen.generate.pcb import placement as _pl
+    from schgen.generate.pcb.constants import GRID
+    from schgen.generate.pcb.mating_face import _rot_bbox
+    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS, intelligent_need
     rw = re = rn = rs = 0.0
-    for side_off in (zg.top_off.get(sheet, {}), zg.bot_off.get(sheet, {})):
+    for side_off in side_offs:
         for ref, (ox, oy) in side_off.items():
             mod = zg.resolvable.get(ref)
             bbox = zg.bbox_of.get(ref)
@@ -565,6 +582,9 @@ class Block:
     pinned: bool = False          # placed by carrier/floorplan.json (vs auto)
     pull: dict | None = None      # validated floorplan.json pull knob (T1 P3):
                                   # {"to","weight","face","exclusive","basis"}
+    shape_idx: int = 0            # MULTI-SHAPE: index into this sheet's legal
+                                  # shape set (ZoneGeom.shapes) picked by the
+                                  # pack search; 0 = the legacy single shape
     fanout_reach: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0)
                                   # D13 FAN-OUT CLEARANCE, per board-frame side
                                   # (W, E, N, S): extra clearance (mm) a multi-pin
@@ -1502,8 +1522,25 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # halo. Zero for a block with no under-margined multi-pin subject -> tight CLEAR.
     for b in plan.edge_blocks + interior:
         b.fanout_reach = _block_fanout_reach(b.name, zg)
+
+    # MULTI-SHAPE candidate sets for the pack search: per INTERIOR block, the
+    # (w, h, reach) of every legal shape (index 0 == the flat zbox/reach above,
+    # so a block without a registered set behaves exactly as before). Edge
+    # blocks are connector-seated -> FIXED, never shape-searched (LAW 6).
+    shape_sets: dict[str, list[tuple[float, float,
+                                     tuple[float, float, float, float]]]] = {}
+    for b in interior:
+        variants = zg.shapes.get(b.name)
+        if not variants or len(variants) < 2:
+            continue
+        shape_sets[b.name] = [(zbox[b.name][0], zbox[b.name][1],
+                               b.fanout_reach)] + \
+            [(s.w, s.h, _shape_fanout_reach(s, zg)) for s in variants[1:]]
     max_reach = max((c for b in plan.edge_blocks + interior
                      for c in b.fanout_reach), default=0.0)
+    max_reach = max(max_reach,
+                    max((c for ss in shape_sets.values()
+                         for _w, _h, rch in ss for c in rch), default=0.0))
 
     # number of placed (non-SoM) subsystems == the gate's n_subsystems, so the
     # grow loop can size the board against the SAME LAW-5 cross-airwire budget.
@@ -1539,7 +1576,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                 _key = frozenset(_ss)
                 _channels[_key] = _channels.get(_key, 0) + 1
         compose = (compose_index, _fc.zone_local_metrics(zg), _channels,
-                   _fc.escape_corridors())
+                   _fc.escape_corridors(), _fc.zone_shape_metrics(zg))
 
     # GROW the derived outline (keeping the SoM centered + the seed aspect) until
     # the edge-pinned + interior-anchored layout (a) fits every REAL packed block
@@ -1564,7 +1601,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
         if not _attempt_pack(plan, interior, edge_of, zbox, affinity,
                              som_pull, compose=compose, compact=True,
-                             far_ceil=far_ceil, max_reach=max_reach):
+                             far_ceil=far_ceil, max_reach=max_reach,
+                             shapes=shape_sets):
             raise RuntimeError(
                 "floorplan: the REAL 2-sided packed blocks do not fit the fixed "
                 f"outline {BOARD_W:g}x{BOARD_H:g} declared in "
@@ -1602,7 +1640,10 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # minimum LARGER), so the selected board is unchanged. Keeps the search fast when
     # a larger zone (e.g. a grow knob) inflates the blocks — without it the fine
     # refinement pays a full slow pack on ~1000s of too-small boards (a 30-min+ stall).
-    _min_pack_area = som.w * som.h + sum(bw * bh for bw, bh in zbox.values())
+    _min_pack_area = som.w * som.h + sum(
+        min(w * h for w, h, _r in shape_sets[name]) if name in shape_sets
+        else bw * bh
+        for name, (bw, bh) in zbox.items())
     for aspect in aspects:
         for _try in range(80):
             grow = _try * OUTLINE_SNAP
@@ -1617,7 +1658,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
             plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
             if not _attempt_pack(plan, interior, edge_of, zbox,
                                  affinity, som_pull, compose=compose,
-                                 far_ceil=far_ceil, max_reach=max_reach):
+                                 far_ceil=far_ceil, max_reach=max_reach,
+                                 shapes=shape_sets):
                 continue
             fit_seen = True
             budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
@@ -1652,7 +1694,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         plan.som_y = _r5((BOARD_H - som.h) / 2 + SOM_DY)
         if not _attempt_pack(plan, interior, edge_of, zbox,
                              affinity, som_pull, compose=compose,
-                             far_ceil=far_ceil, max_reach=max_reach):
+                             far_ceil=far_ceil, max_reach=max_reach,
+                             shapes=shape_sets):
             return False, 0.0, 0.0
         bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
         er = est_cross(plan.edge_blocks + interior)
@@ -1700,7 +1743,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
     if not _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
                          compose=compose, compact=True, far_ceil=far_ceil,
-                         max_reach=max_reach):
+                         max_reach=max_reach, shapes=shape_sets):
         raise RuntimeError(
             f"floorplan: the winning outline {BOARD_W:g}x{BOARD_H:g} failed "
             "the final compact re-pack — refusing to emit a stale layout")
@@ -1791,6 +1834,22 @@ def _cross_estimator(plan: Plan, zg, sheets):
                 off_of[r] = o
                 owner_of[r] = ("zone", sheet)
                 sheet_of[r] = sheet
+    # MULTI-SHAPE: per (sheet, shape k>=1) offset/rotation views, so a candidate
+    # plan whose block chose shape k is estimated with the SAME geometry the PCB
+    # will emit for it — never shape 0's. Index 0 stays the flat views above.
+    n_shapes = {sheet: len(v) for sheet, v in zg.shapes.items()}
+    off_k: dict[tuple[str, int], dict[str, tuple[float, float]]] = {}
+    rot_k: dict[tuple[str, int], dict[str, float]] = {}
+    for sheet in sorted(zg.shapes):
+        for k, shp in enumerate(zg.shapes[sheet]):
+            if k == 0:
+                continue
+            both = dict(shp.top_off)
+            both.update(shp.bot_off)
+            off_k[(sheet, k)] = both
+            rot_k[(sheet, k)] = {
+                r: (zg.conn_rot.get(r, 0.0) + e) % 360.0
+                for r, e in shp.extra_rot.items()}
 
     dec_refs: list[str] = []
     for i, sc in enumerate(sheets, start=1):
@@ -1829,17 +1888,30 @@ def _cross_estimator(plan: Plan, zg, sheets):
     for k, bref in enumerate(sorted(dec_refs)):
         owner_of[bref] = ("dec", k)
 
-    pad_rel: dict[str, dict[str, list[tuple[float, float]]]] = {}
-    for bref in sorted(owner_of):
+    def _pads_at(bref: str, rot: float) -> dict[str, list[tuple[float, float]]]:
         probe = FootprintInst(ref=bref, value="", footprint="", x=0.0, y=0.0,
-                              rotation=rot_of.get(bref, 0.0), pad_nets={},
+                              rotation=rot, pad_nets={},
                               mod_path=mod_of[bref], sheet=sheet_of[bref])
         rel: dict[str, list[tuple[float, float]]] = {}
         for name, rx, ry, _n in _inst_pad_geom(probe):
             rel.setdefault(name, []).append((rx, ry))
-        pad_rel[bref] = rel
+        return rel
 
-    net_pts: dict[str, list[tuple[str, str, float, float]]] = {}
+    pad_rel: dict[str, dict[str, list[tuple[float, float]]]] = {}
+    pad_rel_k: dict[tuple[str, int], dict[str, list[tuple[float, float]]]] = {}
+    for bref in sorted(owner_of):
+        pad_rel[bref] = _pads_at(bref, rot_of.get(bref, 0.0))
+        sh = sheet_of[bref]
+        for k in range(1, n_shapes.get(sh, 1)):
+            r_k = rot_k[(sh, k)].get(bref, 0.0)
+            pad_rel_k[(bref, k)] = (pad_rel[bref]
+                                    if r_k == rot_of.get(bref, 0.0)
+                                    else _pads_at(bref, r_k))
+
+    # net_pts entry = (bref, sheet, pads_by_shape): pads_by_shape[k] is the
+    # pin's pad offsets under that sheet's shape k (a 1-tuple for single-shape
+    # owners); ``evaluate`` indexes it with the candidate block's chosen shape.
+    net_pts: dict[str, list[tuple[str, str, tuple]]] = {}
     for i, sc in enumerate(sheets, start=1):
         band = sheet_index.get(sc.name, i)
         for nname in sorted(sc.circuit.nets):
@@ -1849,11 +1921,16 @@ def _cross_estimator(plan: Plan, zg, sheets):
                 bref = _renamed_ref(p.ref, band, sheet=sc.name)
                 if bref not in owner_of:
                     continue
-                for rx, ry in pad_rel[bref].get(p.pin, ()):
-                    net_pts.setdefault(nname, []).append(
-                        (bref, sheet_of[bref], rx, ry))
+                base = tuple(pad_rel[bref].get(p.pin, ()))
+                if not base:
+                    continue
+                sh = sheet_of[bref]
+                by_shape = (base,) + tuple(
+                    tuple(pad_rel_k[(bref, k)].get(p.pin, ()))
+                    for k in range(1, n_shapes.get(sh, 1)))
+                net_pts.setdefault(nname, []).append((bref, sh, by_shape))
     net_pts = {n: pts for n, pts in net_pts.items()
-               if len({s for _r, s, _x, _y in pts}) >= 2}
+               if len({s for _r, s, _p in pts}) >= 2}
 
     conn_pb = {ref: _rot_pad_bbox(mod_of[ref], rot_of.get(ref, 0.0))
                for ref in sorted(zg.conn_edge) if ref in owner_of}
@@ -1865,6 +1942,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
 
     def evaluate(blocks: list[Block]) -> float:
         by_name = {b.name: b for b in blocks}
+        sel = {b.name: b.shape_idx for b in blocks
+               if b.shape_idx and b.name in n_shapes}
         som_x, som_y = plan.som_x, plan.som_y
         zorig: dict[str, tuple[float, float]] = {}
         for sheet in zg.zone_box:
@@ -1883,7 +1962,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
                 zo = zorig.get(key)
                 if zo is None:
                     continue
-                dx, dy = off_of[bref]
+                k = sel.get(key, 0)
+                dx, dy = (off_k[(key, k)][bref] if k else off_of[bref])
                 part_pos[bref] = (round(zo[0] + dx, 4), round(zo[1] + dy, 4))
             elif kind == "som_j":
                 jx, jy = som_rel[key]
@@ -1916,7 +1996,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
         for nname in sorted(net_pts):
             pts = [(round(part_pos[r][0] + rx, 3),
                     round(part_pos[r][1] + ry, 3), r, s)
-                   for r, s, rx, ry in net_pts[nname] if r in part_pos]
+                   for r, s, byk in net_pts[nname] if r in part_pos
+                   for rx, ry in byk[sel.get(s, 0) if len(byk) > 1 else 0]]
             for a, b in _mst_edges(pts):
                 if pts[a][3] != pts[b][3]:
                     cross += ((pts[a][0] - pts[b][0]) ** 2
@@ -1934,7 +2015,9 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                   compose: tuple | None = None,
                   compact: bool = False,
                   far_ceil: float = 0.0,
-                  max_reach: float | None = None) -> bool:
+                  max_reach: float | None = None,
+                  shapes: dict[str, list[tuple[float, float, tuple]]]
+                  | None = None) -> bool:
     plan.spilled = []
     for b in plan.edge_blocks:
         b.w, b.h = zbox[b.name]
@@ -2131,14 +2214,46 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                        1 if (b.pull and b.pull.get("exclusive", False)) else 2,
                        -_conn(b),
                        -(zbox[b.name][0] * zbox[b.name][1]), b.name))
+    # MULTI-SHAPE choice — greedy best-local-fit, DETERMINISTIC: each block's
+    # shapes are tried in their FIXED registered order; every shape gets its own
+    # place_near (nearest fitting cell for that (w, h, reach)); the shape whose
+    # placed CENTER lands city-block-closest to the anchor wins, index breaks
+    # ties. On a tight board an unfittable shape scores infinity, so the search
+    # adopts whatever tessellates — the lever that lets the outline shrink. The
+    # choice is made ONCE here; the refinement passes below keep it (re-choosing
+    # every pass would triple their cost for a second-order gain). No search
+    # tree, no cross-candidate state: cost is <= |shapes| place_near calls.
     for b in order:
         b.w, b.h = zbox[b.name]
         b.area = round(b.w * b.h, 1)
         ax, ay = _anchor(b)
-        pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach)
-        if pos is None:
-            return False
-        b.x, b.y, b.w, b.h = pos
+        cands = shapes.get(b.name) if shapes else None
+        if cands is None:
+            b.shape_idx = 0
+            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach)
+            if pos is None:
+                return False
+            b.x, b.y, b.w, b.h = pos
+        else:
+            best_key = None
+            best = None
+            for k, (w, h, rch) in enumerate(cands):
+                if w > BOARD_W - 2 * CLEAR or h > BOARD_H - 2 * CLEAR:
+                    continue
+                p = occ.place_near(ax, ay, w, h, rch)
+                if p is None:
+                    continue
+                d = abs(p[0] + w / 2 - ax) + abs(p[1] + h / 2 - ay)
+                key = (round(d, 4), k)
+                if best_key is None or key < best_key:
+                    best_key, best = key, (k, p, rch)
+            if best is None:
+                return False
+            k, p, rch = best
+            b.x, b.y, b.w, b.h = p
+            b.shape_idx = k
+            b.fanout_reach = rch
+            b.area = round(b.w * b.h, 1)
         occ.add(b.x, b.y, b.w, b.h, b.fanout_reach)
         centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
 
@@ -2180,7 +2295,20 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     # the compaction objective (wired hop pulls) runs only when
     # ``compact=True`` (the fixed-outline call + the final re-pack).
     if compose is not None:
-        c_index, c_metrics, c_channels, c_corridors = compose
+        c_index, c_metrics, c_channels, c_corridors, c_shape_metrics = compose
+        chosen_m = {}
+        for b in interior:
+            if not b.shape_idx:
+                continue
+            sm = c_shape_metrics.get((b.name, b.shape_idx))
+            if sm is None:
+                raise AssertionError(
+                    f"floorplan: {b.name} chose shape {b.shape_idx} but no "
+                    f"per-shape zone metrics were registered — the legalizer "
+                    f"would judge shape-0 geometry (silent breakage)")
+            chosen_m[b.name] = sm
+        if chosen_m:
+            c_metrics = {**c_metrics, **chosen_m}
         if c_index.hard:
             from schgen.generate import floorplan_compose as fc_
             from schgen.generate.pcb.placement import som_core_rect

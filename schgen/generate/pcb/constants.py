@@ -246,6 +246,13 @@ INTERIOR_ZONE_ASPECT = 2.0       # wide-shallow target for over-tall interior zo
 SOM_SIDE_BAND_MM = 39.5          # depth of the interior strip beside the SoM keepout
 INTERIOR_ZONE_BAND_TARGET = 32.0 # re-flow/rotate an interior zone to <= this height
 
+# MULTI-SHAPE candidates (interior fragmentation lever): every shelf-packed
+# INTERIOR zone additionally offers a REAL re-pack at each of these aspects; a
+# contracted interior zone offers {as-built, turned}. The floorplan pack search
+# picks per-block shapes (greedy best-local-fit, fixed shape order) so mismatched
+# rigid rects can tessellate instead of leaving slivers.
+INTERIOR_SHAPE_ASPECTS = (2.2, 1.0, 0.45)
+
 # ---- LAW 6: off-board connector ORIENTATION ---------------------------------------
 # Every connector that mates with an external cable/plug/card MUST sit on a board
 # EDGE with its mating face (the slot/mouth/cable-exit) pointing OFF-BOARD, so the
@@ -459,6 +466,20 @@ EDGE_FLUSH_MM = round(EDGE_PAD_CLEAR + 0.2, 3)   # 0.6 mm — "at the very edge"
 # flow — proven: per-sheet decoupling classification == merged classification, and
 # board-unique-ref packing is byte-identical to build_model's old inline packing.
 
+@dataclass(frozen=True)
+class ZoneShape:
+    """ONE legal shape of a subsystem zone: a REAL re-pack/turn with its own
+    (w, h) + per-part offsets + per-part extra placement rotations. Index 0 of a
+    sheet's shape tuple is ALWAYS the legacy single shape (the same data the
+    ZoneGeom flat views hold), so a shape-blind consumer stays byte-identical."""
+    w: float
+    h: float
+    top_off: dict[str, tuple[float, float]]
+    bot_off: dict[str, tuple[float, float]]
+    extra_rot: dict[str, float]
+    tag: str
+
+
 @dataclass
 class ZoneGeom:
     zone_box: dict[str, tuple[float, float]]                # sheet -> (w, h)
@@ -474,6 +495,9 @@ class ZoneGeom:
     conn_edge: dict[str, str] = field(default_factory=dict)   # bref -> edge N/E/S/W
     zone_extra_rot: dict[str, float] = field(default_factory=dict)  # bref -> +rot
     #                                          from a LEVER-L1 90-deg zone rotation
+    shapes: dict[str, tuple[ZoneShape, ...]] = field(default_factory=dict)
+    #                # sheet -> its legal shape set (only sheets with >= 2 shapes;
+    #                # [0] == the flat views above, the pack search picks per block)
 
 
 # 4-layer controlled-impedance stackup: Sig / GND / PWR / Sig, JLC04161H-7628

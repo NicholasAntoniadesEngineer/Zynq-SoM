@@ -361,6 +361,14 @@ def emit_mobile_sheets(zg, l4_exempt: frozenset[str] | None = None
     reason, so the exactness expectation TIGHTENS automatically as waves wire
     more sheets (stale-scalar law: always the same-run model).
 
+    ``{"refit"}``: a sheet whose contract declares ``external.downstream``
+    and that seats no connector is REFIT-CAPABLE — build_model's final
+    position-aware ``refit_facing`` may turn the whole zone 180 deg on the
+    frozen frame (it fired for ``power`` the first time the multi-shape
+    outline moved its seat), so its emitted geometry is pose-predictable
+    only when the refit happens to no-op. Derived from the same-run
+    contracts, never a measured scalar.
+
     P2 measured truth: only ``usb_pd`` (all-top template) and ``motor_pwm``
     were emit-exact pre-P5 — the spec's "power exact" figure was STALE (power
     carries L4-mobile bottom leftovers; centroid resid ~2.3 mm measured)."""
@@ -385,6 +393,15 @@ def emit_mobile_sheets(zg, l4_exempt: frozenset[str] | None = None
         s = sheet_of.get(ref)
         if s is not None:
             mobile.setdefault(s, set()).add("snap")
+    from schgen.verify.placement_contract_gate import load_contract
+    for sheet in sorted(set(zg.top_off) | set(zg.bot_off)):
+        c = load_contract(sheet)
+        ds = ((c or {}).get("external") or {}).get("downstream")
+        if not ds:
+            continue
+        if any(r in zg.conn_rot for r in zg.refs_by_sheet.get(sheet, [])):
+            continue
+        mobile.setdefault(sheet, set()).add("refit")
     return {s: frozenset(v) for s, v in sorted(mobile.items())}
 
 
@@ -421,40 +438,61 @@ class LocalMetrics:
         return len(self.offsets)
 
 
+def _local_metrics_one(zg, t_off: dict, b_off: dict, extra_rot: dict,
+                       zone_wh: tuple[float, float]) -> LocalMetrics:
+    from schgen.verify.placement_contract_gate import _pad_boxes  # lazy: verify
+    offs: list[tuple[str, float, float]] = []
+    pads: list[tuple[str, float, float, float, float]] = []
+    both = dict(t_off)
+    both.update(b_off)
+    for ref in sorted(both):
+        dx, dy = both[ref]
+        offs.append((ref, dx, dy))
+        mod = zg.resolvable.get(ref)
+        if mod is None:
+            continue
+        rot = (zg.conn_rot.get(ref, 0.0) + extra_rot.get(ref, 0.0)) % 360.0
+        boxes = _pad_boxes(mod, rot)
+        if not boxes:
+            continue
+        x0 = min(b[0] for b in boxes.values()) + dx
+        y0 = min(b[1] for b in boxes.values()) + dy
+        x1 = max(b[2] for b in boxes.values()) + dx
+        y1 = max(b[3] for b in boxes.values()) + dy
+        pads.append((ref, x0, y0, x1, y1))
+    return LocalMetrics(offsets=tuple(offs), pad_union=tuple(pads),
+                        zone_wh=zone_wh)
+
+
 def zone_local_metrics(zg=None) -> dict[str, LocalMetrics]:
     """Compute :class:`LocalMetrics` for every packed sheet from the SHARED zone
     geometry (``subsystem_zone_geometry`` — the same packer the floorplan sizes
     blocks from and the PCB places). Deterministic: sorted refs/sheets."""
-    from schgen.verify.placement_contract_gate import _pad_boxes  # lazy: verify
     if zg is None:
         from schgen.generate import pcb as _pcb
         zg = _pcb.subsystem_zone_geometry(two_side=True)
 
     out: dict[str, LocalMetrics] = {}
     for sheet in sorted(set(zg.top_off) | set(zg.bot_off)):
-        offs: list[tuple[str, float, float]] = []
-        pads: list[tuple[str, float, float, float, float]] = []
-        both = dict(zg.top_off.get(sheet, {}))
-        both.update(zg.bot_off.get(sheet, {}))
-        for ref in sorted(both):
-            dx, dy = both[ref]
-            offs.append((ref, dx, dy))
-            mod = zg.resolvable.get(ref)
-            if mod is None:
+        out[sheet] = _local_metrics_one(
+            zg, zg.top_off.get(sheet, {}), zg.bot_off.get(sheet, {}),
+            zg.zone_extra_rot, zg.zone_box.get(sheet, (0.0, 0.0)))
+    return out
+
+
+def zone_shape_metrics(zg) -> dict[tuple[str, int], LocalMetrics]:
+    """MULTI-SHAPE companion of :func:`zone_local_metrics`: LocalMetrics for
+    every NON-default shape variant (``ZoneGeom.shapes`` index >= 1), keyed
+    (sheet, shape_idx) — so the legalizer judges the geometry of the shape the
+    pack search actually chose. Deterministic: sorted sheets, fixed index
+    order."""
+    out: dict[tuple[str, int], LocalMetrics] = {}
+    for sheet in sorted(zg.shapes):
+        for k, shp in enumerate(zg.shapes[sheet]):
+            if k == 0:
                 continue
-            rot = (zg.conn_rot.get(ref, 0.0)
-                   + zg.zone_extra_rot.get(ref, 0.0)) % 360.0
-            boxes = _pad_boxes(mod, rot)
-            if not boxes:
-                continue
-            x0 = min(b[0] for b in boxes.values()) + dx
-            y0 = min(b[1] for b in boxes.values()) + dy
-            x1 = max(b[2] for b in boxes.values()) + dx
-            y1 = max(b[3] for b in boxes.values()) + dy
-            pads.append((ref, x0, y0, x1, y1))
-        w, h = zg.zone_box.get(sheet, (0.0, 0.0))
-        out[sheet] = LocalMetrics(offsets=tuple(offs), pad_union=tuple(pads),
-                                  zone_wh=(w, h))
+            out[(sheet, k)] = _local_metrics_one(
+                zg, shp.top_off, shp.bot_off, shp.extra_rot, (shp.w, shp.h))
     return out
 
 

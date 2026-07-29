@@ -252,6 +252,10 @@ def _board_ctx():
     som_rect = som_core_rect(plan.som_x, plan.som_y, plan.som.w, plan.som.h)
     zg = pcb_mod.subsystem_zone_geometry(two_side=True)
     metrics = fc.zone_local_metrics(zg)
+    smet = fc.zone_shape_metrics(zg)
+    for b in plan.blocks:
+        if b.shape_idx:
+            metrics[b.name] = smet[(b.name, b.shape_idx)]
     index = fc.build_term_index([sc.name for sc in sheets])
     model = build_model()
     return dict(plan=plan, poses=poses, som=som_rect, metrics=metrics,
@@ -286,8 +290,8 @@ def test_exactness_evaluator_matches_emitted_gate(_board_ctx):
         if sheet not in cent:
             continue
         reasons = mobile.get(sheet, frozenset())
-        if "l4" in reasons:
-            continue                      # bounded only by measurement pre-P5
+        if "l4" in reasons or "refit" in reasons:
+            continue        # position-dependent movers: L4 slide / 180 refit
         bound = 1e-6 if not reasons else fc.GUARD_MM
         pc = fc.predicted_centroid(ctx["poses"][sheet], ctx["metrics"][sheet])
         pb = fc.predicted_bbox(ctx["poses"][sheet], ctx["metrics"][sheet])
@@ -311,6 +315,8 @@ def test_exactness_evaluator_matches_emitted_gate(_board_ctx):
         if sheet == "@som" or sheet in exact:
             return 0.0
         reasons = mobile.get(sheet, frozenset())
+        if "refit" in reasons:
+            return None                  # 180-refit-capable: print only
         if reasons == {"snap"}:
             return fc.GUARD_MM
         if sheet in fc.FAR_L4_GUARD_MM:

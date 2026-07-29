@@ -361,6 +361,10 @@ def plan_replica_metrics(spec):
     som_rect = som_core_rect(plan.som_x, plan.som_y, plan.som.w, plan.som.h)
     zg = pcb_mod.subsystem_zone_geometry(two_side=True, spec=spec)
     metrics = fc.zone_local_metrics(zg)
+    smet = fc.zone_shape_metrics(zg)
+    for b in plan.blocks:
+        if b.shape_idx:
+            metrics[b.name] = smet[(b.name, b.shape_idx)]
     return dict(plan=plan, poses=poses, som=som_rect, metrics=metrics,
                 W=fp.BOARD_W, H=fp.BOARD_H,
                 area=round(fp.BOARD_W * fp.BOARD_H, 1))
