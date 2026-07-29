@@ -1,0 +1,4 @@
+{
+ "allowed": {},
+ "note": "quantize census baseline — allowed RAW quantization sites per (file, detector), format 'relpath [detector]': count. EMPTY by construction: every live geometry snap/round/pad/credit is routed through schgen/core/quantize.py; any site the census finds is NEW and fails the board."
+}

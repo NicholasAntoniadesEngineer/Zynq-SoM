@@ -1,0 +1,11 @@
+{
+ "counts": {
+  "cand_cap_truncated": 2,
+  "corridor_evict_moved": 33,
+  "corridor_stray_unmovable": 0,
+  "legalize_only_compaction": 0,
+  "seat_node_budget": 0,
+  "thermal_via_lattice": 0
+ },
+ "note": "fallback ratchet ceilings \u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings."
+}
