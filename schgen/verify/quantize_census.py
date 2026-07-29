@@ -61,15 +61,7 @@ _BANNED_CALLS = frozenset({"_gridify", "_r5", "_snap_up", "_snap_up_fp"})
 _GEOM_TOKENS = ("need", "reach", "clr", "clear", "bound", "lim", "gap",
                 "margin")
 
-KNOWN_ASYMMETRIES: tuple[str, ...] = (
-    "_shelf_pack reserves extra = max(0, need - PLACE_CLEAR) WITHOUT the "
-    "quant_credit its sibling sites carry — 18 fan-out subjects sit at slack "
-    "exactly 0.000 (scan finding F1); behavior change queued for a "
-    "post-governance unit (byte-identity gate forbids it here)",
-    "the gate courtyard kernel rounds instance frames to 3dp (±5e-4/corner) "
-    "while _TOUCH_EPS is 1e-4 — the measurement quantum dominates the "
-    "documented tolerance 5x (scan finding F2); queued with F1",
-)
+KNOWN_ASYMMETRIES: tuple[str, ...] = ()
 
 
 @dataclass

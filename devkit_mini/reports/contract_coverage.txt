@@ -1,5 +1,5 @@
 CONTRACT COVERAGE: 4 wired(gated) / 0 inert-met / 0 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
-  pd_input               WIRED-gated      8 chk  0 viol  
+  pd_input               WIRED-gated      9 chk  0 viol  
   power                  WIRED-gated     20 chk  0 viol  
-  uart_bridge            WIRED-gated      4 chk  0 viol  
-  usb_uart_connector     WIRED-gated      1 chk  0 viol  
+  uart_bridge            WIRED-gated      6 chk  0 viol  
+  usb_uart_connector     WIRED-gated      4 chk  0 viol  

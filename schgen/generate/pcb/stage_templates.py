@@ -2824,11 +2824,45 @@ def _apply_facing(placed: dict[str, _Part], out_brefs: set[str],
     return turned if _dot(turned) > _dot(placed) else placed
 
 
+def _sheet_cross_mst(sheet_name: str,
+                     own_xy: dict[str, tuple[float, float]],
+                     own_rot: dict[str, float],
+                     resolvable: dict[str, Path],
+                     net_pins: dict[str, list[tuple[str, str]]],
+                     foreign_pts: dict[str, list[tuple[float, float, str]]]
+                     ) -> float:
+    """Cross-subsystem airwire (mm) of the nets touching ``sheet_name`` under
+    the candidate pose ``own_xy``/``own_rot`` — the LAW-5 gate's own kernel
+    (ratsnest._mst_edges Manhattan-select Prim, Euclidean cross-edge sum) on
+    the sheet's pad centres + the frozen foreign pads."""
+    from schgen.generate.ratsnest import _mst_edges
+    total = 0.0
+    for net in sorted(foreign_pts):
+        pts = [(x, y, "", s) for x, y, s in foreign_pts[net]]
+        for r, pn in net_pins.get(net, ()):
+            if r not in own_xy or r not in resolvable:
+                continue
+            bb = _g._pad_boxes(resolvable[r],
+                               own_rot.get(r, 0.0) % 360.0).get(pn)
+            if bb is None:
+                continue
+            pts.append((round(own_xy[r][0] + (bb[0] + bb[2]) / 2.0, 3),
+                        round(own_xy[r][1] + (bb[1] + bb[3]) / 2.0, 3),
+                        r, sheet_name))
+        for a, b in _mst_edges(pts):
+            if pts[a][3] != pts[b][3]:
+                total += ((pts[a][0] - pts[b][0]) ** 2
+                          + (pts[a][1] - pts[b][1]) ** 2) ** 0.5
+    return total
+
+
 def refit_facing(sheet_name: str, contract: dict,
                  parts_xy: dict[str, tuple[float, float]],
                  rots_now: dict[str, float],
                  resolvable: dict[str, Path],
-                 down_centroid: tuple[float, float]
+                 down_centroid: tuple[float, float],
+                 net_pins: dict[str, list[tuple[str, str]]],
+                 foreign_pts: dict[str, list[tuple[float, float, str]]]
                  ) -> dict[str, tuple[float, float, float]] | None:
     """POSITION-AWARE facing refit on the FINAL absolute positions — run after
     every mover (grid translation, L4 pull, connector edge-seat, BREATHE), on the
@@ -2837,15 +2871,15 @@ def refit_facing(sheet_name: str, contract: dict,
     ``build_zone`` turned the zone with the SPEC-derived facing hint (positions
     did not exist yet), but the packer may seat the zone anywhere — capacity
     exiled power to the far W when the E side filled — and later movers shift the
-    downstream centroid again, so only the final frame is decidable. The decision
-    replicates the FLOW gate's ``facing_dot`` kernel EXACTLY: equal-weight
-    PART-ORIGIN centroids over the sheet's placed parts (czone) and the
-    output-role parts (cout), downstream vector anchored AT czone. Turn 180 iff
-    the gate's dot is non-positive AND the turn improves it — exactly when the
-    gate would fail — so a gate-passing pose is an exact NO-OP and the default
-    board stays byte-identical. The turn is a rigid reflection through the zone's
-    pad-extent centre (bbox-preserving, every part +180 deg); returns
-    ``{ref: (x, y, new_rot)}`` for the turned zone, or None for the no-op."""
+    downstream centroid again, so only the final frame is decidable. The FLOW
+    gate's ``facing_dot`` kernel (equal-weight PART-ORIGIN centroids, downstream
+    vector anchored AT czone) stays the HARD constraint: a turn that would break
+    a passing gate is never taken, a turn that fixes a failing gate always is.
+    Inside that constraint the DECISION METRIC is the airwire kernel (wave-8
+    U3): the same ``_mst_edges`` the LAW-5 gate measures, on the sheet's nets —
+    turn 180 iff the cross-MST length strictly improves. The turn is a rigid
+    reflection through the zone's pad-extent centre (bbox-preserving, every
+    part +180 deg); returns ``{ref: (x, y, new_rot)}`` or None for the no-op."""
     roles = contract.get("roles", {})
     out_libs = [k for k, v in roles.items()
                 if v in set(contract.get("external", {}).get(
@@ -2871,9 +2905,6 @@ def refit_facing(sheet_name: str, contract: dict,
         dvy = down_centroid[1] - zcy
         return (ocx - zcx) * dvx + (ocy - zcy) * dvy
 
-    if _gate_dot(parts_xy) > 0.0:
-        return None                       # gate passes this pose: exact no-op
-
     # rigid 180 about the pad-extent centre, ABSOLUTE frame (no re-anchor — the
     # extent is symmetric under the reflection, so the zone bbox stays put).
     allpts: list[tuple[float, float]] = []
@@ -2898,10 +2929,19 @@ def refit_facing(sheet_name: str, contract: dict,
                + max(b[3] for b in nb.values())) / 2.0
         turned[r] = (round(2 * ecx - ocx - nhx, 4),
                      round(2 * ecy - ocy - nhy, 4), nrot)
-    if _gate_dot({r: (t[0], t[1]) for r, t in turned.items()}
-                 ) <= _gate_dot(parts_xy):
-        return None                       # symmetric tie: keep deterministic
-    return turned
+    turned_xy = {r: (t[0], t[1]) for r, t in turned.items()}
+    gate_now = _gate_dot(parts_xy) > 0.0
+    gate_turned = _gate_dot(turned_xy) > 0.0
+    if gate_now and not gate_turned:
+        return None                       # never break a passing gate
+    if not gate_now and gate_turned:
+        return turned                     # the gate fix — mandatory
+    air_now = _sheet_cross_mst(sheet_name, parts_xy, rots_now, resolvable,
+                               net_pins, foreign_pts)
+    air_turned = _sheet_cross_mst(
+        sheet_name, turned_xy, {r: t[2] for r, t in turned.items()},
+        resolvable, net_pins, foreign_pts)
+    return turned if air_turned < air_now - 1e-6 else None
 
 
 def _turn_zone_quadrant(placed: dict[str, _Part], deg: float

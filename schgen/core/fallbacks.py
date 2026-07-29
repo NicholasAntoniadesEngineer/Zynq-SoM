@@ -50,7 +50,10 @@ _register(
     "accepted (wired hop pulls forgone). Measured cause (scan B, L2): the "
     "compacted form passes the legalizer's own L5 accept but _pairs_hold "
     "rejects it — the legalizer moves blocks at flat CLEAR, blind to "
-    "reach/inset. ACTIVE 2/2 carrier final packs; devkit compacts 2/2.")
+    "reach/inset. Counted PER COMPACT PACK: the wave-8 U3 conn-shape "
+    "chooser re-runs the full compact pack per mirror trial, so the count "
+    "scales with trials (carrier 10 = final 2 + 4 trials x 2; the per-pack "
+    "behavior is unchanged).")
 _register(
     "seat_node_budget", "zone_pack",
     "A template seat DFS exceeded its 300k node budget and was treated as "
@@ -74,10 +77,10 @@ _register(
     "corridor_evict_moved", "corridor_eviction",
     "A bottom-side stray inside a DF40 stitch corridor was evicted to the "
     "nearest legal exit (per part moved). Measured (scan B, F13): carrier "
-    "0, devkit 33 (power/power_som bands). CAVEAT (scan L1): eviction "
-    "clears the PRE-gridify corridors with 0.25 mm margin while the DF40 "
-    "emission-gridify shifts the emitted corridor up to 0.59 mm — the "
-    "frame-shift re-check is a queued wave-8 unit.")
+    "0, devkit 33 (power/power_som bands). The scan-L1 frame-shift caveat "
+    "is CLOSED (wave-8 U1): corridors are measured at the POST-gridify "
+    "DF40 centres (registered evict_corridor_grid), the same frame the "
+    "emitted board and the escape solver share.")
 _register(
     "corridor_stray_unmovable", "corridor_eviction",
     "A bottom-side stray inside a DF40 stitch corridor found no legal exit "

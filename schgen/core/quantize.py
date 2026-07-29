@@ -81,6 +81,23 @@ def fixed_part_grid(v: float) -> float:
 
 
 _register(
+    "evict_corridor_grid",
+    f"round(round(round((origin + v) / {GRID_MM}) * {GRID_MM}, 4) - origin, 4)",
+    "The corridor-eviction stage measures each DF40 stitch corridor at its "
+    "POST-gridify centre: the emission fixed_part_grid snap (page frame) "
+    "mapped back to the board frame, so eviction clears the very corridors "
+    "the emitted board and the escape solver will have. Closes the scan-B "
+    "frame-shift landmine: eviction against PRE-gridify corridors held a "
+    "0.25 mm margin while the gridify moved the emitted corridor up to "
+    "0.59 mm carrier / 0.38 mm devkit.",
+    "pre-proof")
+
+
+def evict_corridor_grid(origin: float, v: float) -> float:
+    return round(fixed_part_grid(origin + v) - origin, 4)
+
+
+_register(
     "breathe_anchor_grid",
     f"round(round(v / {GRID_MM}) * {GRID_MM}, 4)",
     "A BREATHE-moved anchor snaps its winning delta to the page grid for a "
@@ -138,11 +155,20 @@ _register(
     "snap_erosion_bound",
     f"bound - {SNAP_EROSION_MM} if bound >= 5.0 else bound",
     "Template candidate bounds >= 5 mm are pre-tightened (conservative "
-    "direction). HONEST BASIS NOTE: the historical derivation (GRID/2 zone "
-    "snap + edge-band slop) is retired — zones emit exact; the live "
-    "displacement is the LAW-6 edge-seat slide, measured 1.5-1.96 mm (scan "
-    "finding F3: under-modeled 2-2.6x). Value unchanged under the "
-    "byte-identity gate; re-derivation is a queued post-governance unit.",
+    "direction). BASIS RE-BASED against measurement (wave-8 U2, scan "
+    "finding F3): the one post-solve mover is the LAW-6 edge-seat slide, "
+    "measured EXACTLY EDGE_INSET = 1.5 mm on every contracted conn sheet "
+    "(live probe, all 15 slides = 1.500; the 1.96 outlier is the "
+    "un-contracted rj45_connector, outside this engine) — member-member "
+    "distances have NO mover (breathe/reorder/L4 exempt contract members; "
+    "refit/facing turns rigid). An EDGE_INSET-derived scalar cover is "
+    "REFUTED: 1.5 and 2.0 both close motor_sense's D1 annulus (measured "
+    "solver-infeasible), and the exact outward-vector projection of "
+    "connector targets re-derives every conn zone and broke emergent "
+    "edge-run invariants in integration (USB-C run overlap, hdmi split "
+    "140 mm — measured, reverted). 0.75 is therefore RETAINED as declared "
+    "margin, not a cover claim; the honest cover needs the vector form "
+    "landed with the run/compose machinery re-proven.",
     "proof-preserving")
 
 
@@ -154,9 +180,9 @@ _register(
     "snap_erosion_pad",
     f"mm + ({SNAP_EROSION_MM} if mm >= 5.0 else 0.0)",
     "The min-clearance twin of snap_erosion_bound: repulsion minima >= 5 mm "
-    "grow by the same slop (conservative direction). Carries the same "
-    "stale-basis note as snap_erosion_bound (scan finding F3); value "
-    "unchanged under the byte-identity gate.",
+    "grow by the same margin (conservative direction; the same wave-8 U2 "
+    "re-based basis — declared margin, the slide grows these distances so "
+    "a covering pad is not needed).",
     "proof-preserving")
 
 

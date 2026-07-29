@@ -128,7 +128,11 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     floor is reserved against unrelated parts only, so it never pries a decoupling
     cap off a pin (constraint 1) and only grows the zone where a real IC abuts a
     real foreign neighbour. Refs absent from ``fanout`` (or ``fanout is None``) use
-    the base PLACE_CLEAR — byte-identical to the pre-D13 pack."""
+    the base PLACE_CLEAR. Every SUBJECT need (above the base floor) carries
+    the registered quant_credit, the same +0.05 its sibling reservation
+    sites hold (wave-8 U2 — 18 subjects sat at slack exactly 0.000 under
+    the un-credited pack; the credit keeps the proven floor above the 4dp
+    coordinate rounding); base-floor parts stay exactly PLACE_CLEAR."""
     blk = list(blockers or [])
     placed: dict[str, tuple[float, float]] = {}
     fanout = fanout or {}
@@ -151,10 +155,11 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
                      rb[2] + PLACE_CLEAR / 2, rb[3] + PLACE_CLEAR / 2)
         need, is_cp = fanout.get(ref, (PLACE_CLEAR, False))
         # base gap between two touching PLACE_CLEAR/2 halos is already PLACE_CLEAR;
-        # the fan-out floor asks for ``need`` total, so the EXTRA to reserve on this
-        # part's side is need - PLACE_CLEAR (never negative — a sub-floor need is met
-        # by the base halo alone).
-        extra_of[ref] = max(0.0, need - PLACE_CLEAR)
+        # a real fan-out demand (need above the base floor) reserves
+        # quant_credit(need) - PLACE_CLEAR extra, the same credited need the
+        # sibling reservation sites hold; base-floor parts reserve nothing.
+        extra_of[ref] = (max(0.0, _q.quant_credit(need) - PLACE_CLEAR)
+                         if need > PLACE_CLEAR else 0.0)
         iscp_of[ref] = is_cp
     order = sorted(items, key=lambda it: (
         -(halo[it[0]][3] - halo[it[0]][1]),
@@ -438,6 +443,123 @@ def _rotate_zone_90(t_off: dict[str, tuple[float, float]],
             off_out[ref] = (round(dy, 4), round(zw - dx, 4))
             extra_rot[ref] = 90.0
     return new_t, new_b, extra_rot, round(zh, 4), round(zw, 4)
+
+
+def _member_mirror_shape(sheet: str, t_off: dict[str, tuple[float, float]],
+                         b_off: dict[str, tuple[float, float]],
+                         zw: float, zh: float, conn_refs: set[str],
+                         bbox_of: dict, base_rot: dict[str, float],
+                         conn_rot_map: dict[str, float],
+                         resolvable: dict[str, Path]
+                         ) -> ZoneShape | None:
+    """Seat-preserving MEMBER-FIELD MIRROR for a connector-seated zone (wave-8
+    U3): every NON-connector member rotates 180 deg as ONE rigid field about
+    the member-field courtyard centre (both sides share the centre, so every
+    member-member and top-THT-vs-bottom relation is preserved exactly); every
+    seated connector keeps its offset and rotation (LAW 6 — the mouth stays at
+    the edge). Offered only when each mirrored member courtyard keeps
+    PLACE_CLEAR to every connector courtyard, stays inside the zone box, AND
+    the sheet's authored contract still holds on the mirrored layout —
+    measured with the contract gate's own proximity kernels (member-member
+    distances are mirror-invariant; only conn-involving ones can move). The
+    floorplan pack + the emitted-board gates re-validate full legality.
+    A part at rot r+180 occupies the point-reflection of its rot-r courtyard
+    when its ORIGIN is point-reflected, so the transform is origin -> 2C - o,
+    rot -> rot + 180."""
+    members = ([(r, o, 0) for r, o in t_off.items() if r not in conn_refs]
+               + [(r, o, 1) for r, o in b_off.items() if r not in conn_refs])
+    if not members:
+        return None
+
+    def _box(r: str, o: tuple[float, float], rot: float
+             ) -> tuple[float, float, float, float]:
+        bb = _rot_bbox_cw(bbox_of[r], rot)
+        return (o[0] + bb[0], o[1] + bb[1], o[0] + bb[2], o[1] + bb[3])
+
+    mboxes = [_box(r, o, base_rot.get(r, 0.0)) for r, o, _s in members]
+    cx = (min(b[0] for b in mboxes) + max(b[2] for b in mboxes)) / 2.0
+    cy = (min(b[1] for b in mboxes) + max(b[3] for b in mboxes)) / 2.0
+    conn_boxes = []
+    for r in sorted(conn_refs):
+        o = t_off.get(r) or b_off.get(r)
+        if o is not None and r in bbox_of:
+            conn_boxes.append(_box(r, o, conn_rot_map.get(r, 0.0)))
+    new_t = dict(t_off)
+    new_b = dict(b_off)
+    extra: dict[str, float] = {r: 0.0 for r in conn_refs}
+    eps = 1e-6
+    for (r, (ox, oy), side), bb in zip(members, mboxes, strict=True):
+        nb = (round(2 * cx - bb[2], 4), round(2 * cy - bb[3], 4),
+              round(2 * cx - bb[0], 4), round(2 * cy - bb[1], 4))
+        if nb[0] < -eps or nb[1] < -eps or nb[2] > zw + eps or nb[3] > zh + eps:
+            return None
+        if any(nb[0] - PLACE_CLEAR < c[2] and nb[2] + PLACE_CLEAR > c[0]
+               and nb[1] - PLACE_CLEAR < c[3] and nb[3] + PLACE_CLEAR > c[1]
+               for c in conn_boxes):
+            return None
+        (new_b if side else new_t)[r] = (round(2 * cx - ox, 4),
+                                         round(2 * cy - oy, 4))
+        extra[r] = (base_rot.get(r, 0.0) + 180.0) % 360.0
+    if not _mirror_contract_holds(sheet, new_t, new_b, conn_refs, extra,
+                                  conn_rot_map, resolvable):
+        return None
+    return ZoneShape(w=round(zw, 4), h=round(zh, 4), top_off=new_t,
+                     bot_off=new_b, extra_rot=extra, tag="mirror")
+
+
+def _mirror_contract_holds(sheet: str, t_off: dict, b_off: dict,
+                           conn_refs: set[str], extra: dict[str, float],
+                           conn_rot_map: dict[str, float],
+                           resolvable: dict[str, Path]) -> bool:
+    """The mirrored zone-local layout still satisfies every authored
+    ``proximity`` structure of ``sheet``'s contract (wired or advisory),
+    measured with the contract gate's OWN kernels (_pad_boxes gaps —
+    translate-invariant, so zone-local equals emitted). Structures not
+    involving a connector are mirror-invariant but measured anyway (cheap,
+    zero drift risk)."""
+    from schgen.verify import placement_contract_gate as _pcg
+    c = _pcg.discover_contract(sheet)
+    if c is None:
+        return True
+    lib2board = _pcg._board_refs_by_sheet(sheet)
+    off = dict(t_off)
+    off.update(b_off)
+
+    def _padb(bref: str) -> dict[str, tuple] | None:
+        mod = resolvable.get(bref)
+        o = off.get(bref)
+        if mod is None or o is None:
+            return None
+        rot = (conn_rot_map.get(bref, 0.0)
+               + extra.get(bref, 0.0)) % 360.0
+        return {pn: (b[0] + o[0], b[1] + o[1], b[2] + o[0], b[3] + o[1])
+                for pn, b in _pcg._pad_boxes(mod, rot).items()}
+
+    for st in c.get("structures", []):
+        if st.get("type") != "proximity":
+            continue
+        ab = _padb(lib2board.get(st.get("anchor", ""), ""))
+        if ab is None:
+            continue
+        pins = st.get("anchor_pins")
+        for mlib in st.get("members", []):
+            mb = _padb(lib2board.get(mlib, ""))
+            if mb is None:
+                continue
+            d = (_pcg._pins_to_part(ab, mb, pins) if pins
+                 else _pcg._part_to_part(ab, mb))
+            if d is None or d > float(st["max_mm"]):
+                return False
+            for mf in st.get("min_from", []):
+                ob = _padb(lib2board.get(mf.get("part", ""), ""))
+                if ob is None:
+                    continue
+                opin = mf.get("pin")
+                fd = (_pcg._pins_to_part(ob, mb, [opin]) if opin
+                      else _pcg._part_to_part(ob, mb))
+                if fd is not None and fd < float(mf.get("min_mm", 0.0)):
+                    return False
+    return True
 
 
 def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
@@ -842,28 +964,61 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
             # facing is judged on the emitted board and refit_facing still
             # applies its position-aware 180 on the final frame. The turn's
             # +90 folds INTO each part's template rotation.
-            # MULTI-SHAPE (interior fragmentation lever): a contracted interior
-            # zone legally offers BOTH orientations — {as-built, turned} — and
-            # the floorplan pack search picks per block. Shape 0 stays exactly
-            # today's L1-lever outcome (byte-identity when the search keeps it);
-            # a datasheet stage layout is never re-flowed, so the turn is the
-            # only extra shape. Conn-seated zones are FIXED (LAW 6).
+            # MULTI-SHAPE (interior fragmentation lever, wave-8 U3): a
+            # contracted interior zone legally offers ALL FOUR orientations —
+            # {as-built, 90, 180, 270}, each a rigid _rotate_zone_90 arm
+            # applied 1/2/3x (real re-derived offsets; a datasheet stage
+            # layout is never re-flowed) — and the floorplan pack search
+            # picks per block. Shape 0 stays exactly today's L1-lever
+            # outcome. A conn-seated zone instead offers the seat-preserving
+            # MEMBER-FIELD MIRROR (connector stays, LAW 6).
             rt, rb, er, rw, rh = _rotate_zone_90(
                 t_off, b_off, bbox_of, side_of, {}, zw, zh)
             r_rot = {r: (tmpl_rot.get(r, 0.0) + er[r]) % 360.0 for r in er}
+            rt2, rb2, _e2, rw2, rh2 = _rotate_zone_90(
+                rt, rb, bbox_of, side_of, {}, rw, rh)
+            rt3, rb3, _e3, rw3, rh3 = _rotate_zone_90(
+                rt2, rb2, bbox_of, side_of, {}, rw2, rh2)
             turned_now = ((not is_edge) and zh > INTERIOR_ZONE_BAND_TARGET
                           and zw <= INTERIOR_ZONE_BAND_TARGET and zw < zh)
             ab = ZoneShape(w=zw, h=zh, top_off=t_off, bot_off=b_off,
                            extra_rot=dict(tmpl_rot), tag="asbuilt")
             tn = ZoneShape(w=rw, h=rh, top_off=rt, bot_off=rb,
                            extra_rot=r_rot, tag="turned")
+            t2 = ZoneShape(w=rw2, h=rh2, top_off=rt2, bot_off=rb2,
+                           extra_rot={r: (tmpl_rot.get(r, 0.0) + 180.0)
+                                      % 360.0 for r in er}, tag="t180")
+            t3 = ZoneShape(w=rw3, h=rh3, top_off=rt3, bot_off=rb3,
+                           extra_rot={r: (tmpl_rot.get(r, 0.0) + 270.0)
+                                      % 360.0 for r in er}, tag="t270")
             if turned_now:
                 t_off, b_off, zw, zh = rt, rb, rw, rh
                 tmpl_rot = r_rot
-            if (not is_edge) and sheet not in sheet_conn_rot \
-                    and (round(ab.w, 4), round(ab.h, 4)) \
-                    != (round(tn.w, 4), round(tn.h, 4)):
-                zone_shapes[sheet] = (tn, ab) if turned_now else (ab, tn)
+            if (not is_edge) and sheet not in sheet_conn_rot:
+                ordered = (tn, ab, t2, t3) if turned_now else (ab, tn, t2, t3)
+                uniq: list[ZoneShape] = []
+                seen_geo: set[tuple] = set()
+                for s_ in ordered:
+                    key_ = (round(s_.w, 4), round(s_.h, 4),
+                            tuple(sorted(s_.top_off.items())),
+                            tuple(sorted(s_.bot_off.items())),
+                            tuple(sorted(s_.extra_rot.items())))
+                    if key_ in seen_geo:
+                        continue
+                    seen_geo.add(key_)
+                    uniq.append(s_)
+                if len(uniq) >= 2:
+                    zone_shapes[sheet] = tuple(uniq)
+            elif sheet in sheet_conn_rot:
+                mir = _member_mirror_shape(
+                    sheet, t_off, b_off, zw, zh, set(sheet_conn_rot[sheet]),
+                    bbox_of, dict(tmpl_rot), sheet_conn_rot[sheet],
+                    resolvable)
+                if mir is not None:
+                    zone_shapes[sheet] = (
+                        ZoneShape(w=zw, h=zh, top_off=t_off, bot_off=b_off,
+                                  extra_rot=dict(tmpl_rot), tag="asbuilt"),
+                        mir)
             zone_extra_rot.update(tmpl_rot)
             top_off[sheet] = t_off
             bot_off[sheet] = b_off
@@ -921,6 +1076,14 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                 zone_shapes[sheet] = (
                     ZoneShape(w=zw, h=zh, top_off=t_off, bot_off=b_off,
                               extra_rot=sheet_rot, tag="base"), *var)
+        elif sheet in sheet_conn_rot:
+            mir = _member_mirror_shape(
+                sheet, t_off, b_off, zw, zh, set(sheet_conn_rot[sheet]),
+                bbox_of, dict(sheet_rot), sheet_conn_rot[sheet], resolvable)
+            if mir is not None:
+                zone_shapes[sheet] = (
+                    ZoneShape(w=zw, h=zh, top_off=t_off, bot_off=b_off,
+                              extra_rot=dict(sheet_rot), tag="asbuilt"), mir)
 
         top_off[sheet] = t_off
         bot_off[sheet] = b_off
@@ -1659,13 +1822,21 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     # ANYWHERE (capacity exiled power to the far W when the E side filled) and
     # every later mover (grid, L4 pull, edge-seat, BREATHE) shifts the geometry
     # again — so the decision is only meaningful HERE, on the frozen positions.
-    # refit_facing replicates the FLOW gate's facing_dot kernel exactly and turns
-    # the zone 180 deg (rigid, bbox-preserving) iff the gate would fail; a
-    # gate-passing pose is an exact no-op, keeping the default board
-    # byte-identical. LAW 6: a zone carrying a seated connector never turns.
+    # The flow-gate facing_dot kernel stays the HARD constraint (a failing
+    # gate is always fixed, a passing gate never broken); within it the
+    # decision metric is the LAW-5 airwire kernel (wave-8 U3) on the sheet's
+    # nets — foreign pads frozen, own pads probed per pose. LAW 6: a zone
+    # carrying a seated connector never turns.
+    from schgen.verify.placement_contract_gate import _pad_boxes as _gpb
     from schgen.verify.placement_contract_gate import load_contract as _lc_refit
 
     from . import stage_templates as _st_refit
+    _net_pins_all: dict[str, list[tuple[str, str]]] = {}
+    for (_r, _p), (_num, _nm) in pin_net.items():
+        if _nm and not _nm.startswith("unconnected-"):
+            _net_pins_all.setdefault(_nm, []).append((_r, _p))
+    for _nm in _net_pins_all:
+        _net_pins_all[_nm].sort()
     for sheet in sorted(zorigin):
         _c = _lc_refit(sheet)
         ds = ((_c or {}).get("external") or {}).get("downstream")
@@ -1677,8 +1848,28 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             continue
         cds = (sum(pos[r][0] for r in drefs) / len(drefs),
                sum(pos[r][1] for r in drefs) / len(drefs))
+        _sset = set(srefs)
+        _npins: dict[str, list[tuple[str, str]]] = {}
+        _fpts: dict[str, list[tuple[float, float, str]]] = {}
+        for _nm, _pl in _net_pins_all.items():
+            own = [(r, p) for r, p in _pl if r in _sset]
+            if not own:
+                continue
+            _npins[_nm] = own
+            ext: list[tuple[float, float, str]] = []
+            for r, p in _pl:
+                if r in _sset or r not in pos or r not in resolvable:
+                    continue
+                bb = _gpb(resolvable[r], fixed_rot.get(r, 0.0) % 360.0).get(p)
+                if bb is None:
+                    continue
+                ext.append((round(pos[r][0] + (bb[0] + bb[2]) / 2.0, 3),
+                            round(pos[r][1] + (bb[1] + bb[3]) / 2.0, 3),
+                            parts[r][0]))
+            _fpts[_nm] = ext
         _turn = _st_refit.refit_facing(sheet, _c, {r: pos[r] for r in srefs},
-                                       fixed_rot, resolvable, cds)
+                                       fixed_rot, resolvable, cds,
+                                       _npins, _fpts)
         if _turn:
             for r, (x, y, rot) in _turn.items():
                 pos[r] = (x, y)
@@ -1699,11 +1890,18 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     # passive into a band (devkit: power_som's C6022 landed 0.000 over J2
     # pad 60 — the stitch-via search had no feasible seat and the build died
     # in escape). Deterministic: sorted refs, minimal exit, fixed axis order;
-    # an unmovable stray stays and escape still fails loudly.
+    # an unmovable stray stays and escape still fails loudly. Corridors are
+    # measured at each DF40's POST-gridify centre (registered
+    # evict_corridor_grid — the emission fixed_part_grid snap mapped back to
+    # this board frame), the ONE frame the emitted board and the escape
+    # solver share; strays emit un-gridified, so their pos IS that frame.
     if two_side:
         from schgen.generate.pcb.escape import corridor_board_rect
-        _corr0 = [corridor_board_rect(resolvable[r], pos[r][0], pos[r][1],
-                                      fixed_rot.get(r, 0.0))
+        _corr0 = [corridor_board_rect(
+                      resolvable[r],
+                      _q.evict_corridor_grid(ORIGIN_X, pos[r][0]),
+                      _q.evict_corridor_grid(ORIGIN_Y, pos[r][1]),
+                      fixed_rot.get(r, 0.0))
                   for r in sorted(som_j_refs)
                   if r in resolvable and r in pos]
 
