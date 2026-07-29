@@ -1,19 +1,89 @@
 {
- "content_key": "dc0409492da9434171d31c249d196c7c4758302448c0dada6ba4c1dd12270592",
+ "content_key": "4b031de3195ef9e1cb342294963ef1c28014a32745260beac61a52e24095e5b3",
  "escape_meta": {
   "coexistence": [
    {
     "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
-    "conn": "J2",
-    "ref": "C5004",
+    "conn": "J3",
+    "ref": "C5008",
     "sheet": "bringup_en_modules",
     "verdict": "STAY"
    },
    {
     "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
     "conn": "J3",
-    "ref": "R7006",
-    "sheet": "bringup_rails",
+    "ref": "C5010",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5001",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5002",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5004",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5007",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5009",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5011",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5013",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5015",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5017",
+    "sheet": "bringup_en_modules",
+    "verdict": "STAY"
+   },
+   {
+    "basis": "foreign L4 stray inside the escape region but outside every live via window this build \u2014 re-derived every build; becomes EVICT (consumer: bottom-channel-keepout unit) only on a proven window closure",
+    "conn": "J3",
+    "ref": "R5019",
+    "sheet": "bringup_en_modules",
     "verdict": "STAY"
    }
   ],
@@ -86,9 +156,9 @@
   },
   "escape_region": [
    84.0,
-   92.0,
+   91.0,
    140.0,
-   140.0
+   139.0
   ],
   "plane": {
    "layer": "In1.Cu",
@@ -96,7 +166,7 @@
     25.5,
     25.5,
     214.5,
-    194.5
+    192.5
    ],
    "source": "GAP1 embed._gnd_plane_zone (canonical; T2 emits no zone)",
    "voids_checked": [
@@ -139,7 +209,7 @@
     "pad": "100",
     "port": [
      98.15,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -154,7 +224,7 @@
     "pad": "99",
     "port": [
      98.55,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -169,7 +239,7 @@
     "pad": "98",
     "port": [
      98.95,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -184,7 +254,7 @@
     "pad": "97",
     "port": [
      99.35,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -199,7 +269,7 @@
     "pad": "96",
     "port": [
      99.75,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -214,7 +284,7 @@
     "pad": "95",
     "port": [
      100.15,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -229,7 +299,7 @@
     "pad": "94",
     "port": [
      100.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -244,7 +314,7 @@
     "pad": "93",
     "port": [
      100.95,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -259,7 +329,7 @@
     "pad": "92",
     "port": [
      101.35,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -274,7 +344,7 @@
     "pad": "91",
     "port": [
      101.75,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -289,7 +359,7 @@
     "pad": "90",
     "port": [
      102.15,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -304,7 +374,7 @@
     "pad": "89",
     "port": [
      102.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -319,7 +389,7 @@
     "pad": "88",
     "port": [
      102.95,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -334,7 +404,7 @@
     "pad": "87",
     "port": [
      103.35,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -349,7 +419,7 @@
     "pad": "86",
     "port": [
      103.75,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -364,7 +434,7 @@
     "pad": "85",
     "port": [
      104.15,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -379,7 +449,7 @@
     "pad": "84",
     "port": [
      104.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -394,7 +464,7 @@
     "pad": "83",
     "port": [
      104.95,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -409,7 +479,7 @@
     "pad": "82",
     "port": [
      105.35,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -424,7 +494,7 @@
     "pad": "81",
     "port": [
      105.75,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -439,7 +509,7 @@
     "pad": "80",
     "port": [
      106.15,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -454,7 +524,7 @@
     "pad": "79",
     "port": [
      106.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -469,7 +539,7 @@
     "pad": "78",
     "port": [
      106.95,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -484,7 +554,7 @@
     "pad": "77",
     "port": [
      107.35,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -499,7 +569,7 @@
     "pad": "76",
     "port": [
      107.75,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -514,7 +584,7 @@
     "pad": "75",
     "port": [
      108.15,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -529,7 +599,7 @@
     "pad": "74",
     "port": [
      108.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "MODERATE",
@@ -544,7 +614,7 @@
     "pad": "73",
     "port": [
      108.95,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -559,7 +629,7 @@
     "pad": "72",
     "port": [
      109.35,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -574,7 +644,7 @@
     "pad": "71",
     "port": [
      109.75,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -589,7 +659,7 @@
     "pad": "70",
     "port": [
      110.15,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -604,7 +674,7 @@
     "pad": "69",
     "port": [
      110.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -619,7 +689,7 @@
     "pad": "68",
     "port": [
      110.95,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -634,7 +704,7 @@
     "pad": "67",
     "port": [
      111.35,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -649,7 +719,7 @@
     "pad": "66",
     "port": [
      111.75,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -664,7 +734,7 @@
     "pad": "65",
     "port": [
      112.15,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -679,7 +749,7 @@
     "pad": "64",
     "port": [
      112.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -694,7 +764,7 @@
     "pad": "63",
     "port": [
      112.95,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -709,7 +779,7 @@
     "pad": "62",
     "port": [
      113.35,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -724,7 +794,7 @@
     "pad": "61",
     "port": [
      113.75,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -739,7 +809,7 @@
     "pad": "59",
     "port": [
      114.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -754,7 +824,7 @@
     "pad": "57",
     "port": [
      115.35,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -769,7 +839,7 @@
     "pad": "55",
     "port": [
      116.15,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -784,7 +854,7 @@
     "pad": "54",
     "port": [
      116.55,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -799,7 +869,7 @@
     "pad": "53",
     "port": [
      116.95,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -814,7 +884,7 @@
     "pad": "52",
     "port": [
      117.35,
-     96.375
+     95.105
     ],
     "row": -1,
     "si_class": "LOW",
@@ -829,7 +899,7 @@
     "pad": "51",
     "port": [
      117.75,
-     99.06
+     97.79
     ],
     "row": -1,
     "si_class": "GND",
@@ -844,7 +914,7 @@
     "pad": "1",
     "port": [
      98.15,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -859,7 +929,7 @@
     "pad": "2",
     "port": [
      98.5501,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -874,7 +944,7 @@
     "pad": "3",
     "port": [
      98.95,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -889,7 +959,7 @@
     "pad": "4",
     "port": [
      99.35,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -904,7 +974,7 @@
     "pad": "5",
     "port": [
      99.75,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -919,7 +989,7 @@
     "pad": "6",
     "port": [
      100.15,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -934,7 +1004,7 @@
     "pad": "7",
     "port": [
      100.55,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -949,7 +1019,7 @@
     "pad": "8",
     "port": [
      100.95,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -964,7 +1034,7 @@
     "pad": "9",
     "port": [
      101.35,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -979,7 +1049,7 @@
     "pad": "10",
     "port": [
      101.75,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -994,7 +1064,7 @@
     "pad": "11",
     "port": [
      102.15,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1009,7 +1079,7 @@
     "pad": "12",
     "port": [
      102.55,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1024,7 +1094,7 @@
     "pad": "13",
     "port": [
      102.95,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1039,7 +1109,7 @@
     "pad": "14",
     "port": [
      103.35,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1054,7 +1124,7 @@
     "pad": "15",
     "port": [
      103.75,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1069,7 +1139,7 @@
     "pad": "16",
     "port": [
      104.15,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1084,7 +1154,7 @@
     "pad": "17",
     "port": [
      104.55,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1099,7 +1169,7 @@
     "pad": "18",
     "port": [
      104.95,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1114,7 +1184,7 @@
     "pad": "19",
     "port": [
      105.35,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -1129,7 +1199,7 @@
     "pad": "20",
     "port": [
      105.75,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1144,7 +1214,7 @@
     "pad": "21",
     "port": [
      106.15,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "MODERATE",
@@ -1159,7 +1229,7 @@
     "pad": "22",
     "port": [
      106.55,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1174,7 +1244,7 @@
     "pad": "23",
     "port": [
      106.95,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1189,7 +1259,7 @@
     "pad": "28",
     "port": [
      108.95,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1204,7 +1274,7 @@
     "pad": "29",
     "port": [
      109.35,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1219,7 +1289,7 @@
     "pad": "30",
     "port": [
      109.75,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -1234,7 +1304,7 @@
     "pad": "31",
     "port": [
      110.15,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1249,7 +1319,7 @@
     "pad": "32",
     "port": [
      110.55,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "GENUINE",
@@ -1264,7 +1334,7 @@
     "pad": "33",
     "port": [
      110.95,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1279,7 +1349,7 @@
     "pad": "34",
     "port": [
      111.35,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1294,7 +1364,7 @@
     "pad": "35",
     "port": [
      111.75,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1309,7 +1379,7 @@
     "pad": "36",
     "port": [
      112.15,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1324,7 +1394,7 @@
     "pad": "37",
     "port": [
      112.55,
-     101.245
+     99.975
     ],
     "row": 1,
     "si_class": "POWER",
@@ -1339,7 +1409,7 @@
     "pad": "38",
     "port": [
      112.95,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1354,7 +1424,7 @@
     "pad": "39",
     "port": [
      113.35,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1369,7 +1439,7 @@
     "pad": "40",
     "port": [
      113.75,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1384,7 +1454,7 @@
     "pad": "41",
     "port": [
      114.15,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1399,7 +1469,7 @@
     "pad": "42",
     "port": [
      114.55,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1414,7 +1484,7 @@
     "pad": "43",
     "port": [
      114.95,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1429,7 +1499,7 @@
     "pad": "44",
     "port": [
      115.35,
-     99.06
+     97.79
     ],
     "row": 1,
     "si_class": "GND",
@@ -1444,7 +1514,7 @@
     "pad": "45",
     "port": [
      115.75,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1459,7 +1529,7 @@
     "pad": "46",
     "port": [
      116.15,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1474,7 +1544,7 @@
     "pad": "47",
     "port": [
      116.55,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1489,7 +1559,7 @@
     "pad": "48",
     "port": [
      116.95,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1504,7 +1574,7 @@
     "pad": "49",
     "port": [
      117.35,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1519,7 +1589,7 @@
     "pad": "50",
     "port": [
      117.75,
-     101.745
+     100.475
     ],
     "row": 1,
     "si_class": "LOW",
@@ -1536,7 +1606,7 @@
     "pad": "100",
     "port": [
      98.15,
-     131.165
+     129.895
     ],
     "row": -1,
     "si_class": "POWER",
@@ -1551,7 +1621,7 @@
     "pad": "99",
     "port": [
      98.55,
-     131.165
+     129.895
     ],
     "row": -1,
     "si_class": "POWER",
@@ -1566,7 +1636,7 @@
     "pad": "98",
     "port": [
      98.95,
-     131.165
+     129.895
     ],
     "row": -1,
     "si_class": "POWER",
@@ -1581,7 +1651,7 @@
     "pad": "97",
     "port": [
      99.35,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -1596,7 +1666,7 @@
     "pad": "96",
     "port": [
      99.75,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -1611,7 +1681,7 @@
     "pad": "95",
     "port": [
      100.15,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -1626,7 +1696,7 @@
     "pad": "94",
     "port": [
      100.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1641,7 +1711,7 @@
     "pad": "93",
     "port": [
      100.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1656,7 +1726,7 @@
     "pad": "92",
     "port": [
      101.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1671,7 +1741,7 @@
     "pad": "91",
     "port": [
      101.75,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1686,7 +1756,7 @@
     "pad": "90",
     "port": [
      102.15,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1701,7 +1771,7 @@
     "pad": "89",
     "port": [
      102.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1716,7 +1786,7 @@
     "pad": "88",
     "port": [
      102.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1731,7 +1801,7 @@
     "pad": "87",
     "port": [
      103.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1746,7 +1816,7 @@
     "pad": "86",
     "port": [
      103.75,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -1761,7 +1831,7 @@
     "pad": "85",
     "port": [
      104.15,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -1776,7 +1846,7 @@
     "pad": "84",
     "port": [
      104.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1791,7 +1861,7 @@
     "pad": "83",
     "port": [
      104.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1806,7 +1876,7 @@
     "pad": "82",
     "port": [
      105.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1821,7 +1891,7 @@
     "pad": "81",
     "port": [
      105.75,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1836,7 +1906,7 @@
     "pad": "80",
     "port": [
      106.15,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1851,7 +1921,7 @@
     "pad": "79",
     "port": [
      106.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1866,7 +1936,7 @@
     "pad": "78",
     "port": [
      106.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1881,7 +1951,7 @@
     "pad": "77",
     "port": [
      107.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -1896,7 +1966,7 @@
     "pad": "76",
     "port": [
      107.75,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -1911,7 +1981,7 @@
     "pad": "75",
     "port": [
      108.15,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -1926,7 +1996,7 @@
     "pad": "74",
     "port": [
      108.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1941,7 +2011,7 @@
     "pad": "73",
     "port": [
      108.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1956,7 +2026,7 @@
     "pad": "72",
     "port": [
      109.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1971,7 +2041,7 @@
     "pad": "71",
     "port": [
      109.75,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -1986,7 +2056,7 @@
     "pad": "70",
     "port": [
      110.15,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2001,7 +2071,7 @@
     "pad": "69",
     "port": [
      110.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2016,7 +2086,7 @@
     "pad": "68",
     "port": [
      110.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2031,7 +2101,7 @@
     "pad": "67",
     "port": [
      111.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "GENUINE",
@@ -2046,7 +2116,7 @@
     "pad": "66",
     "port": [
      111.75,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -2061,7 +2131,7 @@
     "pad": "65",
     "port": [
      112.15,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -2076,7 +2146,7 @@
     "pad": "64",
     "port": [
      112.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2091,7 +2161,7 @@
     "pad": "63",
     "port": [
      112.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2106,7 +2176,7 @@
     "pad": "62",
     "port": [
      113.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2121,7 +2191,7 @@
     "pad": "61",
     "port": [
      113.75,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2136,7 +2206,7 @@
     "pad": "60",
     "port": [
      114.15,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2151,7 +2221,7 @@
     "pad": "59",
     "port": [
      114.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2166,7 +2236,7 @@
     "pad": "58",
     "port": [
      114.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2181,7 +2251,7 @@
     "pad": "57",
     "port": [
      115.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2196,7 +2266,7 @@
     "pad": "56",
     "port": [
      115.75,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -2211,7 +2281,7 @@
     "pad": "55",
     "port": [
      116.15,
-     133.35
+     132.08
     ],
     "row": -1,
     "si_class": "GND",
@@ -2226,7 +2296,7 @@
     "pad": "54",
     "port": [
      116.55,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2241,7 +2311,7 @@
     "pad": "53",
     "port": [
      116.95,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2256,7 +2326,7 @@
     "pad": "52",
     "port": [
      117.35,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2271,7 +2341,7 @@
     "pad": "51",
     "port": [
      117.75,
-     130.665
+     129.395
     ],
     "row": -1,
     "si_class": "LOW",
@@ -2286,7 +2356,7 @@
     "pad": "1",
     "port": [
      98.15,
-     135.535
+     134.265
     ],
     "row": 1,
     "si_class": "POWER",
@@ -2301,7 +2371,7 @@
     "pad": "2",
     "port": [
      98.5501,
-     135.535
+     134.265
     ],
     "row": 1,
     "si_class": "POWER",
@@ -2316,7 +2386,7 @@
     "pad": "3",
     "port": [
      98.95,
-     135.535
+     134.265
     ],
     "row": 1,
     "si_class": "POWER",
@@ -2331,7 +2401,7 @@
     "pad": "4",
     "port": [
      99.35,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2346,7 +2416,7 @@
     "pad": "5",
     "port": [
      99.75,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2361,7 +2431,7 @@
     "pad": "6",
     "port": [
      100.15,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2376,7 +2446,7 @@
     "pad": "7",
     "port": [
      100.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2391,7 +2461,7 @@
     "pad": "8",
     "port": [
      100.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2406,7 +2476,7 @@
     "pad": "9",
     "port": [
      101.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2421,7 +2491,7 @@
     "pad": "10",
     "port": [
      101.75,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2436,7 +2506,7 @@
     "pad": "11",
     "port": [
      102.15,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2451,7 +2521,7 @@
     "pad": "12",
     "port": [
      102.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2466,7 +2536,7 @@
     "pad": "13",
     "port": [
      102.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2481,7 +2551,7 @@
     "pad": "14",
     "port": [
      103.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2496,7 +2566,7 @@
     "pad": "15",
     "port": [
      103.75,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2511,7 +2581,7 @@
     "pad": "16",
     "port": [
      104.15,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2526,7 +2596,7 @@
     "pad": "17",
     "port": [
      104.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2541,7 +2611,7 @@
     "pad": "18",
     "port": [
      104.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2556,7 +2626,7 @@
     "pad": "19",
     "port": [
      105.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2571,7 +2641,7 @@
     "pad": "20",
     "port": [
      105.75,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2586,7 +2656,7 @@
     "pad": "21",
     "port": [
      106.15,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2601,7 +2671,7 @@
     "pad": "22",
     "port": [
      106.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2616,7 +2686,7 @@
     "pad": "23",
     "port": [
      106.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2631,7 +2701,7 @@
     "pad": "24",
     "port": [
      107.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2646,7 +2716,7 @@
     "pad": "25",
     "port": [
      107.75,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2661,7 +2731,7 @@
     "pad": "26",
     "port": [
      108.15,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2676,7 +2746,7 @@
     "pad": "27",
     "port": [
      108.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2691,7 +2761,7 @@
     "pad": "28",
     "port": [
      108.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2706,7 +2776,7 @@
     "pad": "29",
     "port": [
      109.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2721,7 +2791,7 @@
     "pad": "30",
     "port": [
      109.75,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2736,7 +2806,7 @@
     "pad": "31",
     "port": [
      110.15,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2751,7 +2821,7 @@
     "pad": "32",
     "port": [
      110.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2766,7 +2836,7 @@
     "pad": "33",
     "port": [
      110.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2781,7 +2851,7 @@
     "pad": "34",
     "port": [
      111.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2796,7 +2866,7 @@
     "pad": "35",
     "port": [
      111.75,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2811,7 +2881,7 @@
     "pad": "36",
     "port": [
      112.15,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2826,7 +2896,7 @@
     "pad": "37",
     "port": [
      112.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2841,7 +2911,7 @@
     "pad": "38",
     "port": [
      112.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2856,7 +2926,7 @@
     "pad": "39",
     "port": [
      113.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2871,7 +2941,7 @@
     "pad": "40",
     "port": [
      113.75,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2886,7 +2956,7 @@
     "pad": "41",
     "port": [
      114.15,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2901,7 +2971,7 @@
     "pad": "42",
     "port": [
      114.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2916,7 +2986,7 @@
     "pad": "43",
     "port": [
      114.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2931,7 +3001,7 @@
     "pad": "44",
     "port": [
      115.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2946,7 +3016,7 @@
     "pad": "45",
     "port": [
      115.75,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2961,7 +3031,7 @@
     "pad": "46",
     "port": [
      116.15,
-     133.35
+     132.08
     ],
     "row": 1,
     "si_class": "GND",
@@ -2976,7 +3046,7 @@
     "pad": "47",
     "port": [
      116.55,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -2991,7 +3061,7 @@
     "pad": "48",
     "port": [
      116.95,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3006,7 +3076,7 @@
     "pad": "49",
     "port": [
      117.35,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -3021,7 +3091,7 @@
     "pad": "50",
     "port": [
      117.75,
-     136.035
+     134.765
     ],
     "row": 1,
     "si_class": "LOW",
@@ -5026,36 +5096,36 @@
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
      97.65,
-     96.075,
+     94.805,
      118.25,
-     97.375
+     96.105
     ]
    },
    "J1:S": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
      97.65,
-     100.745,
+     99.475,
      118.25,
-     102.045
+     100.775
     ]
    },
    "J2:N": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
      97.65,
-     130.365,
+     129.095,
      118.25,
-     131.665
+     130.395
     ]
    },
    "J2:S": {
     "purpose": "DF40 escape-lane corridor (T2) \u2014 composition legalizer must keep parts + zones out",
     "rect": [
      97.65,
-     135.035,
+     133.765,
      118.25,
-     136.335
+     135.065
     ]
    },
    "J3:N": {
