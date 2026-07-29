@@ -1,22 +1,22 @@
-PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=31920mm^2, flow_budget=129.8mm)
+PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=31584mm^2, flow_budget=129.5mm)
   fails: flow=0/7 facing=0/2 far=0/5 near_max=0/5
   unresolved: 0
   violations: 0
   detail: 19
-    facing power->power_som: dot=+363.11 angle=42.0deg (output@(178.1932, 141.879) zone@(175.004, 155.2683) down@(158.0378, 124.108))
-    facing power_som->@som: dot=+609.26 angle=6.3deg (output@(145.025, 122.9899) zone@(158.0378, 124.108) down@(112.0, 115.0))
+    facing power->power_som: dot=+353.54 angle=46.0deg (output@(178.1932, 141.879) zone@(175.004, 155.2683) down@(155.0378, 124.108))
+    facing power_som->@som: dot=+609.26 angle=6.3deg (output@(142.025, 122.9899) zone@(155.0378, 124.108) down@(109.0, 115.0))
     far ethernet vs power: 133.87mm / >= 10mm
-    far motor_sense vs power: 84.17mm / >= 10mm
-    far motor_sense vs power_som: 66.45mm / >= 10mm
+    far motor_sense vs power: 83.49mm / >= 10mm
+    far motor_sense vs power_som: 67.15mm / >= 10mm
     far power vs ethernet.line_side: 133.87mm / >= 10mm
-    far power_som vs ethernet.line_side: 103.78mm / >= 10mm
-    flow camera->@som: 84.50mm / 129.8mm budget
-    flow hdmi_tx->@som: 88.36mm / 129.8mm budget
-    flow pd_input->usb_pd: 16.89mm / 129.8mm budget
-    flow power->power_som: 35.48mm / 129.8mm budget
-    flow power_mon->power_som: 44.04mm / 129.8mm budget
-    flow usb_pd->power: 120.29mm / 129.8mm budget
-    flow usb_pd->power: 120.29mm / 129.8mm budget
+    far power_som vs ethernet.line_side: 101.06mm / >= 10mm
+    flow camera->@som: 81.77mm / 129.5mm budget
+    flow hdmi_tx->@som: 86.08mm / 129.5mm budget
+    flow pd_input->usb_pd: 16.89mm / 129.5mm budget
+    flow power->power_som: 37.01mm / 129.5mm budget
+    flow power_mon->power_som: 42.65mm / 129.5mm budget
+    flow usb_pd->power: 121.96mm / 129.5mm budget
+    flow usb_pd->power: 121.96mm / 129.5mm budget
     near_max ethernet to rj45_connector: 1.58mm gap / <= 20mm
     near_max hdmi_rx_term to som_j2: 6.62mm gap / <= 10mm
     near_max motor_sense to motor_pwm: 2.16mm gap / <= 20mm
