@@ -1057,6 +1057,17 @@ def cmd_board(args: argparse.Namespace) -> int:
             print("RATSNEST (LAW 5): FAIL — gate did not run")
             ok_all = False
 
+        # ORDER-OF-ASSEMBLY artifacts (advisory — reported, never in ok_all).
+        _asm = pcb_res.get("assembly") or {}
+        if _asm.get("error"):
+            print(f"ASSEMBLY: FAIL — {_asm['error']} (advisory)")
+        elif _asm:
+            print(f"ASSEMBLY: {_asm['n_steps']} steps + {_asm['n_phases']} "
+                  f"phases, {_asm['n_parts']} parts -> "
+                  f"{_asm['md'].relative_to(REPO_ROOT)} + "
+                  f"{_asm['png_dir'].relative_to(REPO_ROOT)} "
+                  f"({len(_asm['pngs'])} PNGs)")
+
         # LAW-6 MECHANICAL / USE-CASE PLACEMENT gate (HARD): the buildability
         # oracle DRC=0 + ratsnest-pass are blind to. The PCB step ran it on the
         # SAME placed model (no rebuild). FAIL the board on any off-board
