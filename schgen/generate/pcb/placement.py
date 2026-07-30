@@ -1557,6 +1557,35 @@ def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
             ORIGIN_Y + som_y + som_h + ccy)
 
 
+SOM_DECOUPLING_INSET = 6.0
+
+
+def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
+                         som_h: float, n: int
+                         ) -> list[tuple[float, float]]:
+    """The ``n`` bottom-side grid CENTRES (floorplan frame) of the
+    som_decoupling bypass bank — spread across the SoM shadow inset by
+    SOM_DECOUPLING_INSET, the dead area under the mezzanine where the caps
+    bypass the rails the carrier delivers to the DF40 right at the power entry
+    (LAW 6: the carrier bottom under the SoM is the opposite face from the
+    module, so any part is legal there).
+
+    SINGLE ORACLE: STEP-3 emission places the caps at exactly these centres and
+    the floorplan occupancy lattice reserves exactly these cells on B.Cu, so the
+    reserved bottom area and the emitted bank can never drift."""
+    if n <= 0:
+        return []
+    rx0 = som_x + SOM_DECOUPLING_INSET
+    ry0 = som_y + SOM_DECOUPLING_INSET
+    rw = max(1.0, som_w - 2 * SOM_DECOUPLING_INSET)
+    rh = max(1.0, som_h - 2 * SOM_DECOUPLING_INSET)
+    cols = max(1, min(n, round((n * rw / rh) ** 0.5)))
+    rows = max(1, (n + cols - 1) // cols)
+    return [(round(rx0 + rw * (i % cols + 0.5) / cols, 4),
+             round(ry0 + rh * (i // cols + 0.5) / rows, 4))
+            for i in range(n)]
+
+
 def build_model(two_side: bool = True, spec=None) -> PcbModel:
     from schgen.core.link import (
         all_subsystem_paths,
@@ -1755,21 +1784,11 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     # copper layer); the shadow is otherwise empty so the grid never collides.
     udec = sorted(r for r, (sh, _f, _v, _l) in parts.items()
                   if sh == "som_decoupling" and r in resolvable)
-    if udec:
-        M = 6.0                                    # inset from the SoM core edge
-        rx0, ry0 = plan.som_x + M, plan.som_y + M
-        rw = max(1.0, som.w - 2 * M)
-        rh = max(1.0, som.h - 2 * M)
-        n = len(udec)
-        cols = max(1, min(n, round((n * rw / rh) ** 0.5)))
-        rows = max(1, (n + cols - 1) // cols)
-        for i, ref in enumerate(udec):
-            cxi, cyi = i % cols, i // cols
-            px = rx0 + rw * (cxi + 0.5) / cols
-            py = ry0 + rh * (cyi + 0.5) / rows
-            pos[ref] = (round(px, 4), round(py, 4))
-            side_of[ref] = "bottom"
-            grid_placed.add(ref)
+    for ref, cell in zip(udec, som_decoupling_cells(
+            plan.som_x, plan.som_y, som.w, som.h, len(udec)), strict=True):
+        pos[ref] = cell
+        side_of[ref] = "bottom"
+        grid_placed.add(ref)
 
     def _pose_snap() -> dict[str, tuple]:
         return {r: (p[0], p[1], fixed_rot.get(r, 0.0))

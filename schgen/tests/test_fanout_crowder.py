@@ -108,13 +108,17 @@ def test_est_via_cost_high_speed_set_is_derived_not_listed():
 
 
 def test_impedance_row_dominates_the_ordinary_row():
-    """The decree's intent: high-speed pays materially more. Measured sweep
-    (bringup_rails opt-in): ordinary 0.0 emits 188x164 / 30832 mm² while every
-    strictly-positive point emits the identical better 185x163 / 30155, so the
-    ordinary row is an INTERIM proxy on that plateau, not a fitted constant."""
+    """The decree's intent: high-speed pays materially more. Wave-10 measured a
+    STEP at 0+ and blamed the punch model; wave-11 fixed the punch model and
+    re-swept — the step is GONE (0.0 and 2.2 emit the identical best board), so
+    the row stays 2.2 as the physically-derived member of one flat plateau. It
+    is still INTERIM, now for the est/emission gap alone, and the basis must
+    carry BOTH measurements so the caveat can never quietly become folklore."""
     assert q.est_via_cost(True) >= 3.0 * q.est_via_cost(False)
     assert q.est_via_cost(False) > 0.0
     basis = q.REGISTRY["est_via_cost"].basis
     assert "2026-07-30" in basis
     assert "INTERIM" in basis
     assert "BOTTOM_SIDE_MODEL_DEFECTS" in basis
+    assert "WAVE-11" in basis and "the step is GONE" in basis
+    assert "punch_free_plan_rejected" in basis

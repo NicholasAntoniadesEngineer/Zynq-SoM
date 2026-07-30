@@ -201,18 +201,21 @@ def _shape_fanout_reach(shape, zg) -> tuple[tuple, tuple]:
 
 
 def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
-                     side: str, mods: dict | None = None) -> tuple:
+                     side: str, mods: dict | None = None,
+                     pad_punch: bool = True) -> tuple:
     """Occupancy COMPONENTS of one zone shape (bottom-side P1), zone-local:
     the SECONDARY-side content bbox on the OPPOSITE copper face's mask (a
     2-sided overlay pack really occupies both surfaces) plus a PUNCH box per
-    through-hole part (copper on every layer). Zero-reach sub-rects — the
+    THROUGH-HOLE PAD (wave-11: the pad copper is the only geometry that
+    pierces — a THT connector's shell, courtyard and empty zone area are
+    top-side body and never blocked B.Cu). Zero-reach sub-rects — the
     block's D13 reach rides its main rect; for an all-top population every
     component check is implied by the main-rect check (contained boxes), the
     byte-inertness argument. ``mods`` (wave-9 chirality): per-ref mirrored-
     document override — a mirrored member's box is its mirrored document's
     bbox. Deterministic: sorted refs, 4dp rounding."""
     from schgen.generate.pcb.footprint import _footprint_bbox, has_thru_pads
-    from schgen.generate.pcb.mating_face import _rot_bbox_cw
+    from schgen.generate.pcb.mating_face import _rot_bbox_cw, thru_pad_boxes
     rot_of = dict(zg.conn_rot)
     for r, e in extra_rot.items():
         rot_of[r] = (rot_of.get(r, 0.0) + e) % 360.0
@@ -242,10 +245,22 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
             mod = (mods or {}).get(r) or zg.resolvable.get(r)
             if mod is None or not has_thru_pads(mod):
                 continue
-            c = _cb(r, ox, oy)
-            if c is not None:
-                comps.append((round(c[0], 4), round(c[1], 4),
-                              round(c[2] - c[0], 4), round(c[3] - c[1], 4),
+            if not pad_punch:
+                c = _cb(r, ox, oy)
+                if c is not None:
+                    comps.append((round(c[0], 4), round(c[1], 4),
+                                  round(c[2] - c[0], 4), round(c[3] - c[1], 4),
+                                  OCC_PUNCH))
+                continue
+            boxes = thru_pad_boxes(mod, rot_of.get(r, 0.0))
+            if not boxes:
+                raise AssertionError(
+                    f"floorplan: {r} ({mod}) declares through-hole pads but "
+                    f"the pad kernel found none — the punch set would silently "
+                    f"lose the geometry that pierces both copper faces")
+            for p in boxes:
+                comps.append((round(ox + p[0], 4), round(oy + p[1], 4),
+                              round(p[2] - p[0], 4), round(p[3] - p[1], 4),
                               OCC_PUNCH))
     return tuple(comps)
 
@@ -1072,6 +1087,18 @@ class Plan:
         self.factor = ROUTE_FACTOR
         self.spilled: list[str] = []      # edge blocks moved off their edge
         self.composition: list[str] = []  # T1 P6 legalizer log (final pack)
+        self.dec_bank: tuple[int, float] = (0, 0.0)
+        """(cap count, max courtyard half-extent) of the som_decoupling bank —
+        the REAL bottom-side occupancy under the SoM (wave-11 P2). The lattice
+        reserves the emission grid's own cells (placement.som_decoupling_cells)
+        instead of blanking the whole SoM rect on both faces."""
+        self.punch_free = True
+        """Reservation policy of the CURRENT pack (wave-11 monotonicity guard).
+        True = reserve only what genuinely pierces; False = the conservative
+        SUPERSET (edge blocks and the SoM claim whole rectangles on both copper
+        faces, a THT part punches its whole footprint bbox), which is exactly
+        the pre-wave-11 model. build_plan runs the outline search under both
+        and keeps the strictly better plan, ties to the conservative one."""
 
     @property
     def blocks(self) -> list[Block]:
@@ -1804,31 +1831,53 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # exactly as before; side + occupancy components are the bottom-side P1
     # degree of freedom). Edge blocks are connector-seated -> FIXED, never
     # shape-searched (LAW 6).
-    comps_of: dict[tuple[str, int], tuple] = {}
-    for b in interior:
-        if b.name in zg.zone_box:
-            flat_refs = (*zg.top_off.get(b.name, {}),
-                         *zg.bot_off.get(b.name, {}))
-            comps_of[(b.name, 0)] = _zone_components(
-                zg, zg.top_off.get(b.name, {}), zg.bot_off.get(b.name, {}),
-                {r: zg.zone_extra_rot[r] for r in flat_refs
-                 if r in zg.zone_extra_rot}, "top")
-        for k, s in enumerate(zg.shapes.get(b.name, ())):
-            if k:
-                comps_of[(b.name, k)] = _zone_components(
-                    zg, s.top_off, s.bot_off, s.extra_rot, s.side,
-                    mods=s.mirror)
-    shape_sets: dict[str, list[tuple]] = {}
-    for b in interior:
-        variants = zg.shapes.get(b.name)
-        if not variants or len(variants) < 2:
-            continue
-        shape_sets[b.name] = [(zbox[b.name][0], zbox[b.name][1],
-                               b.fanout_reach, b.fanout_inset, "top",
-                               comps_of.get((b.name, 0), ()))] + \
-            [(s.w, s.h, *_shape_fanout_reach(s, zg), s.side,
-              comps_of.get((b.name, k), ()))
-             for k, s in enumerate(variants) if k]
+    comps_by_policy: dict[bool, dict[tuple[str, int], tuple]] = {}
+    for _pad_punch in (True, False):
+        _co: dict[tuple[str, int], tuple] = {}
+        for b in plan.edge_blocks + interior:
+            if b.name in zg.zone_box:
+                flat_refs = (*zg.top_off.get(b.name, {}),
+                             *zg.bot_off.get(b.name, {}))
+                _co[(b.name, 0)] = _zone_components(
+                    zg, zg.top_off.get(b.name, {}),
+                    zg.bot_off.get(b.name, {}),
+                    {r: zg.zone_extra_rot[r] for r in flat_refs
+                     if r in zg.zone_extra_rot}, "top", pad_punch=_pad_punch)
+            for k, s in enumerate(zg.shapes.get(b.name, ())):
+                if k:
+                    _co[(b.name, k)] = _zone_components(
+                        zg, s.top_off, s.bot_off, s.extra_rot, s.side,
+                        mods=s.mirror, pad_punch=_pad_punch)
+        comps_by_policy[_pad_punch] = _co
+    from schgen.generate.pcb.footprint import _footprint_bbox as _dec_bbox
+    from schgen.generate.pcb.footprint import resolve_mod as _dec_resolve
+    _dec_sheet = by_name.get("som_decoupling")
+    _dec_boxes = [] if _dec_sheet is None else [
+        _dec_bbox(m) for m in
+        (_dec_resolve(p.footprint)
+         for _r, p in sorted(_dec_sheet.circuit.parts.items()))
+        if m is not None]
+    plan.dec_bank = (len(_dec_boxes),
+                     max((max((bb[0] ** 2 + bb[1] ** 2) ** 0.5,
+                              (bb[2] ** 2 + bb[1] ** 2) ** 0.5,
+                              (bb[0] ** 2 + bb[3] ** 2) ** 0.5,
+                              (bb[2] ** 2 + bb[3] ** 2) ** 0.5)
+                          for bb in _dec_boxes), default=0.0))
+    sets_by_policy: dict[bool, dict[str, list[tuple]]] = {}
+    for _pp, _co in comps_by_policy.items():
+        _ss: dict[str, list[tuple]] = {}
+        for b in interior:
+            variants = zg.shapes.get(b.name)
+            if not variants or len(variants) < 2:
+                continue
+            _ss[b.name] = [(zbox[b.name][0], zbox[b.name][1],
+                            b.fanout_reach, b.fanout_inset, "top",
+                            _co.get((b.name, 0), ()))] + \
+                [(s.w, s.h, *_shape_fanout_reach(s, zg), s.side,
+                  _co.get((b.name, k), ()))
+                 for k, s in enumerate(variants) if k]
+        sets_by_policy[_pp] = _ss
+    shape_sets = sets_by_policy[True]
     max_reach = max((max(r, -i) for b in plan.edge_blocks + interior
                      for r, i in zip(b.fanout_reach, b.fanout_inset,
                                      strict=True)), default=0.0)
@@ -1885,6 +1934,45 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # no calibrated constants; the strict gate in `schgen board` still judges.
     est_cross = _cross_estimator(plan, zg, sheets)
 
+    _pristine = {b.name: (b.shape_idx, b.fanout_reach, b.fanout_inset)
+                 for b in plan.edge_blocks + interior}
+    _SNAP_FIELDS = ("x", "y", "w", "h", "area", "shape_idx", "side",
+                    "fanout_reach", "fanout_inset")
+
+    def _reset_shapes() -> None:
+        """Re-arm every block's pre-search shape state. _choose_conn_shapes
+        reads a block's CURRENT reach as the incumbent to restore, so a second
+        search must never start from the first search's chosen mirror."""
+        for b in plan.edge_blocks + interior:
+            b.shape_idx, b.fanout_reach, b.fanout_inset = _pristine[b.name]
+
+    def _plan_snapshot() -> tuple:
+        return (BOARD_W, BOARD_H, plan.som_x, plan.som_y, plan.punch_free,
+                list(plan.spilled), list(plan.composition),
+                {b.name: tuple(getattr(b, f) for f in _SNAP_FIELDS)
+                 for b in plan.edge_blocks + interior})
+
+    def _plan_restore(s: tuple) -> None:
+        global BOARD_W, BOARD_H
+        BOARD_W, BOARD_H = s[0], s[1]
+        plan.som_x, plan.som_y, plan.punch_free = s[2], s[3], s[4]
+        plan.spilled, plan.composition = s[5], s[6]
+        for b in plan.edge_blocks + interior:
+            for f, v in zip(_SNAP_FIELDS, s[7][b.name], strict=True):
+                setattr(b, f, v)
+
+    def _guarded(run):
+        """Run the FREED-reservation pass. RuntimeError is the packer's own
+        infeasibility signal (no outline packs / the fixed outline does not
+        hold) — the greedy first-fit can fail on a strictly LARGER free set, so
+        that outcome means the freed plan simply loses to the conservative one.
+        Every other exception propagates: only declared infeasibility is
+        absorbed, and even that lands as the registered rejection event."""
+        try:
+            return run(True)
+        except RuntimeError:
+            return None
+
     # DECLARATIVE fixed outline: carrier/floorplan.json {"outline":{"w","h"}}
     # PINS the board dimensions. The placer still packs the same blocks into that
     # exact box and the REAL LAW-5 gate in `schgen board` still judges — a fixed
@@ -1894,21 +1982,41 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         BOARD_W, BOARD_H = spec.outline          # type: ignore[misc]
         plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
         plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
-        if not _attempt_pack(plan, interior, edge_of, zbox, affinity,
-                             som_pull, compose=compose, compact=True,
-                             far_ceil=far_ceil, max_reach=max_reach,
-                             shapes=shape_sets, comps_of=comps_of,
-                             side_est=est_cross):
-            raise RuntimeError(
-                "floorplan: the REAL 2-sided packed blocks do not fit the fixed "
-                f"outline {BOARD_W:g}x{BOARD_H:g} declared in "
-                f"carrier/floorplan.json — enlarge it or use \"outline\":\"auto\"")
-        _choose_conn_shapes(plan, interior, edge_of, zbox, affinity,
-                            som_pull, compose, True, far_ceil, max_reach,
-                            shape_sets, comps_of, zg, est_cross)
+
+        def _fixed_pack(pad_punch: bool) -> float:
+            plan.punch_free = pad_punch
+            if not _attempt_pack(plan, interior, edge_of, zbox, affinity,
+                                 som_pull, compose=compose, compact=True,
+                                 far_ceil=far_ceil, max_reach=max_reach,
+                                 shapes=sets_by_policy[pad_punch],
+                                 comps_of=comps_by_policy[pad_punch],
+                                 side_est=est_cross):
+                raise RuntimeError(
+                    "floorplan: the REAL 2-sided packed blocks do not fit the "
+                    f"fixed outline {BOARD_W:g}x{BOARD_H:g} declared in "
+                    "carrier/floorplan.json — enlarge it or use "
+                    "\"outline\":\"auto\"")
+            _choose_conn_shapes(plan, interior, edge_of, zbox, affinity,
+                                som_pull, compose, True, far_ceil, max_reach,
+                                sets_by_policy[pad_punch],
+                                comps_by_policy[pad_punch], zg, est_cross)
+            return est_cross(plan.edge_blocks + interior)
+
+        _fb_entry = _fb.snapshot()
+        _reset_shapes()
+        est_real = _fixed_pack(False)
+        cons_snap, cons_fb = _plan_snapshot(), _fb.snapshot()
+        _fb.restore(_fb_entry)
+        _reset_shapes()
+        free_er = _guarded(_fixed_pack)
+        if free_er is not None and free_er < est_real - 1e-6:
+            est_real = free_er
+        else:
+            _plan_restore(cons_snap)
+            _fb.restore(cons_fb)
+            _fb.record("punch_free_plan_rejected")
         plan.interior_blocks = interior
         budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
-        est_real = est_cross(plan.edge_blocks + interior)
         OUTLINE_NOTE = (f"FIXED outline {BOARD_W:g}x{BOARD_H:g} mm declared in "
                         f"carrier/floorplan.json; estimated cross-subsystem "
                         f"airwire {est_real:.0f} mm (LAW-5 budget {budget:.0f} "
@@ -1930,28 +2038,80 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # landscape aspects only (W >= H): the SoM is wider than tall and the W-edge
     # FMC/camera/LCD stack sets the height floor, so a portrait board buys nothing.
     aspects = sorted({seed_aspect, 1.0, 1.1, 1.2, 1.3, 1.4})
-    best: tuple | None = None             # (area, w, h, est_real, budget)
-    fit_seen = False
-    # Cheap infeasibility prune for the board-size search: SoM + summed block XY
-    # areas are a HARD lower bound (blocks + SoM cannot overlap), so any board below
-    # it provably cannot pack — skip the O(board_area) _attempt_pack lattice scan.
-    # Sound: never prunes a feasible board (real inter-block gaps only make the true
-    # minimum LARGER), so the selected board is unchanged. Keeps the search fast when
-    # a larger zone (e.g. a grow knob) inflates the blocks — without it the fine
-    # refinement pays a full slow pack on ~1000s of too-small boards (a 30-min+ stall).
-    _min_pack_area = som.w * som.h + sum(
-        min(w * h for w, h, *_ in shape_sets[name]) if name in shape_sets
-        else bw * bh
-        for name, (bw, bh) in zbox.items())
-    for aspect in aspects:
-        for _try in range(80):
-            grow = _q.outline_grow(_try)
-            w = _q.outline_snap_up(outline.w + grow * (aspect / seed_aspect))
-            h = _q.outline_snap_up(outline.h + grow)
-            if w < h:                     # keep landscape
-                continue
-            if w * h < _min_pack_area:    # provably too small — skip the slow pack
-                continue
+    def _search(pad_punch: bool) -> tuple:
+        """ONE full outline search under ONE reservation policy
+        (wave-11 monotonicity guard). Leaves ``plan`` holding the
+        winning layout and the module outline globals rebound to it;
+        returns its ``best`` tuple (area, w, h, est_real, budget).
+
+        DETERMINISM: every input is a pure function of ``pad_punch``
+        (the two pre-built comps/shape tables) and the same fixed
+        aspect/grow/fine grids the single search always used — no
+        state survives a call except the plan the caller keeps."""
+        global BOARD_W, BOARD_H
+        shape_sets = sets_by_policy[pad_punch]
+        comps_of = comps_by_policy[pad_punch]
+        plan.punch_free = pad_punch
+        best: tuple | None = None             # (area, w, h, est_real, budget)
+        fit_seen = False
+        # Cheap infeasibility prune for the board-size search: SoM + summed block XY
+        # areas are a HARD lower bound (blocks + SoM cannot overlap), so any board below
+        # it provably cannot pack — skip the O(board_area) _attempt_pack lattice scan.
+        # Sound: never prunes a feasible board (real inter-block gaps only
+        # make the true minimum LARGER), so the selected board is unchanged.
+        # Keeps the search fast when a larger zone (e.g. a grow knob) inflates
+        # the blocks — without it the fine refinement pays a full slow pack on
+        # ~1000s of too-small boards (a 30-min+ stall).
+        _min_pack_area = som.w * som.h + sum(
+            min(w * h for w, h, *_ in shape_sets[name]) if name in shape_sets
+            else bw * bh
+            for name, (bw, bh) in zbox.items())
+        for aspect in aspects:
+            for _try in range(80):
+                grow = _q.outline_grow(_try)
+                w = _q.outline_snap_up(outline.w + grow * (aspect / seed_aspect))
+                h = _q.outline_snap_up(outline.h + grow)
+                if w < h:                     # keep landscape
+                    continue
+                if w * h < _min_pack_area:    # provably too small — skip the slow pack
+                    continue
+                BOARD_W, BOARD_H = w, h
+                plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
+                plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
+                if not _attempt_pack(plan, interior, edge_of, zbox,
+                                     affinity, som_pull, compose=compose,
+                                     far_ceil=far_ceil, max_reach=max_reach,
+                                     shapes=shape_sets, comps_of=comps_of,
+                                     side_est=est_cross):
+                    continue
+                fit_seen = True
+                budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
+                est_real = est_cross(plan.edge_blocks + interior)
+                if est_real <= budget:
+                    area = round(BOARD_W * BOARD_H, 1)
+                    cand = (area, BOARD_W, BOARD_H, est_real, budget)
+                    if best is None or cand < best:
+                        best = cand
+                    break                     # this aspect's smallest passing board
+        if best is None:
+            raise RuntimeError(
+                "floorplan: could not fit all REAL packed blocks under the LAW-5 "
+                f"airwire budget on any searched outline (blocks "
+                f"{'did' if fit_seen else 'never'} fit)")
+
+        # INDEPENDENT-AXIS REFINEMENT: the aspect grow above moves W and H TOGETHER
+        # along a fixed aspect, so it cannot find a board whose W and H sit at
+        # different fractions of the seed (e.g. 165x140, aspect 1.18, off the coarse
+        # aspect grid). Starting from the best aspect-grown board, greedily shrink one
+        # axis at a time by OUTLINE_SNAP while the blocks still pack AND the estimated
+        # cross-airwire still clears the budget — the SAME est_real <= budget
+        # criterion the aspect search used (the strict REAL gate in `schgen board`
+        # remains the final arbiter; this only lets the SIZING reach the true minimum-
+        # area board on the snap grid, never relaxing a gate). Deterministic: a fixed
+        # axis order (H then W), fixed snap step, stop at the first non-improving pass.
+
+        def _passes(w: float, h: float) -> tuple[bool, float, float]:
+            global BOARD_W, BOARD_H
             BOARD_W, BOARD_H = w, h
             plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
             plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
@@ -1960,97 +2120,81 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                                  far_ceil=far_ceil, max_reach=max_reach,
                                  shapes=shape_sets, comps_of=comps_of,
                                  side_est=est_cross):
-                continue
-            fit_seen = True
-            budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
-            est_real = est_cross(plan.edge_blocks + interior)
-            if est_real <= budget:
-                area = round(BOARD_W * BOARD_H, 1)
-                cand = (area, BOARD_W, BOARD_H, est_real, budget)
-                if best is None or cand < best:
-                    best = cand
-                break                     # this aspect's smallest passing board
-    if best is None:
-        raise RuntimeError(
-            "floorplan: could not fit all REAL packed blocks under the LAW-5 "
-            f"airwire budget on any searched outline (blocks "
-            f"{'did' if fit_seen else 'never'} fit)")
+                return False, 0.0, 0.0
+            bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
+            er = est_cross(plan.edge_blocks + interior)
+            return (er <= bud), er, bud
 
-    # INDEPENDENT-AXIS REFINEMENT: the aspect grow above moves W and H TOGETHER
-    # along a fixed aspect, so it cannot find a board whose W and H sit at
-    # different fractions of the seed (e.g. 165x140, aspect 1.18, off the coarse
-    # aspect grid). Starting from the best aspect-grown board, greedily shrink one
-    # axis at a time by OUTLINE_SNAP while the blocks still pack AND the estimated
-    # cross-airwire still clears the budget — the SAME est_real <= budget
-    # criterion the aspect search used (the strict REAL gate in `schgen board`
-    # remains the final arbiter; this only lets the SIZING reach the true minimum-
-    # area board on the snap grid, never relaxing a gate). Deterministic: a fixed
-    # axis order (H then W), fixed snap step, stop at the first non-improving pass.
+        _area, bw, bh, best_er, best_bud = best
+        # The cross-airwire is NON-MONOTONIC in board size: shrinking by one snap step
+        # can momentarily LENGTHEN the airwire (blocks squeezed into worse slots) and
+        # then improve again a step later (165x150 -> 145 worsens, -> 140 passes). A
+        # greedy single-step descent stalls in that valley, so scan a bounded snap-grid
+        # WINDOW at/under the aspect-best (each axis down to REFINE_SPAN below, but not
+        # below where blocks can pack) and keep the smallest-area board that packs AND
+        # clears the est-airwire budget. The window is small enough to stay fast yet
+        # wide enough to step over the non-monotonic valley. Deterministic: fixed grid.
 
-    def _passes(w: float, h: float) -> tuple[bool, float, float]:
-        global BOARD_W, BOARD_H
-        BOARD_W, BOARD_H = w, h
+        # FINE step (1 mm, not the 5 mm OUTLINE_SNAP): the REAL packer's shelf quantum
+        # makes feasibility JAGGED on the 1 mm scale — at the tight wall 161 and 163
+        # pack but 160/162/164 do NOT, and the L4-credited airwire clears the budget at
+        # 161x134 (a board the 5 mm grid can never name, so the coarse search fell back
+        # to 165x135). Scanning a 1 mm grid lets the search LAND on those narrow packing
+        # islands. Each candidate still calls the REAL _attempt_pack (PACK_FAIL sizes
+        # are rejected) and the L4-credited proxy vs the LAW-5 budget, so this only
+        # finds a smaller board the strict `schgen board` gate then re-proves — it never
+        # relaxes a gate. Deterministic: a fixed 1 mm grid, smallest-area wins.
+        bw0, bh0 = bw, bh
+        nsteps = _q.fine_steps()
+        ws = [_q.fine_shrink(bw0, k) for k in range(0, nsteps)]
+        hs = [_q.fine_shrink(bh0, k) for k in range(0, nsteps)]
+        for w in ws:
+            for h in hs:
+                if (w <= 0 or h <= 0 or w < h or w * h >= bw * bh - 1e-6
+                        or w * h < _min_pack_area):
+                    continue                  # strictly-smaller landscape boards, above
+                    #                           the hard min-pack-area floor
+                ok, er, bud = _passes(w, h)
+                if ok:
+                    bw, bh, best_er, best_bud = w, h, er, bud
+        best = (round(bw * bh, 1), bw, bh, best_er, best_bud)
+
+        _area, BOARD_W, BOARD_H, est_real, budget = best
         plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
         plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
-        if not _attempt_pack(plan, interior, edge_of, zbox,
-                             affinity, som_pull, compose=compose,
-                             far_ceil=far_ceil, max_reach=max_reach,
-                             shapes=shape_sets, comps_of=comps_of,
-                             side_est=est_cross):
-            return False, 0.0, 0.0
-        bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
-        er = est_cross(plan.edge_blocks + interior)
-        return (er <= bud), er, bud
+        # RE-PACK at the chosen winner so plan holds exactly that layout (the search
+        # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
+        if not _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
+                             compose=compose, compact=True, far_ceil=far_ceil,
+                             max_reach=max_reach, shapes=shape_sets,
+                             comps_of=comps_of, side_est=est_cross):
+            raise RuntimeError(
+                f"floorplan: the winning outline {BOARD_W:g}x{BOARD_H:g} failed "
+                "the final compact re-pack — refusing to emit a stale layout")
+        _choose_conn_shapes(plan, interior, edge_of, zbox, affinity, som_pull,
+                            compose, True, far_ceil, max_reach, shape_sets,
+                            comps_of, zg, est_cross)
+        return best
 
-    _area, bw, bh, best_er, best_bud = best
-    # The cross-airwire is NON-MONOTONIC in board size: shrinking by one snap step
-    # can momentarily LENGTHEN the airwire (blocks squeezed into worse slots) and
-    # then improve again a step later (165x150 -> 145 worsens, -> 140 passes). A
-    # greedy single-step descent stalls in that valley, so scan a bounded snap-grid
-    # WINDOW at/under the aspect-best (each axis down to REFINE_SPAN below, but not
-    # below where blocks can pack) and keep the smallest-area board that packs AND
-    # clears the est-airwire budget. The window is small enough to stay fast yet
-    # wide enough to step over the non-monotonic valley. Deterministic: fixed grid.
-
-    # FINE step (1 mm, not the 5 mm OUTLINE_SNAP): the REAL packer's shelf quantum
-    # makes feasibility JAGGED on the 1 mm scale — at the tight wall 161 and 163
-    # pack but 160/162/164 do NOT, and the L4-credited airwire clears the budget at
-    # 161x134 (a board the 5 mm grid can never name, so the coarse search fell back
-    # to 165x135). Scanning a 1 mm grid lets the search LAND on those narrow packing
-    # islands. Each candidate still calls the REAL _attempt_pack (PACK_FAIL sizes
-    # are rejected) and the L4-credited proxy vs the LAW-5 budget, so this only
-    # finds a smaller board the strict `schgen board` gate then re-proves — it never
-    # relaxes a gate. Deterministic: a fixed 1 mm grid, smallest-area wins.
-    bw0, bh0 = bw, bh
-    nsteps = _q.fine_steps()
-    ws = [_q.fine_shrink(bw0, k) for k in range(0, nsteps)]
-    hs = [_q.fine_shrink(bh0, k) for k in range(0, nsteps)]
-    for w in ws:
-        for h in hs:
-            if (w <= 0 or h <= 0 or w < h or w * h >= bw * bh - 1e-6
-                    or w * h < _min_pack_area):
-                continue                  # strictly-smaller landscape boards, above
-                #                           the hard min-pack-area floor
-            ok, er, bud = _passes(w, h)
-            if ok:
-                bw, bh, best_er, best_bud = w, h, er, bud
-    best = (round(bw * bh, 1), bw, bh, best_er, best_bud)
+    _fb_entry = _fb.snapshot()
+    _reset_shapes()
+    best = _search(False)
+    cons_snap = _plan_snapshot()
+    cons_fb = _fb.snapshot()
+    _fb.restore(_fb_entry)
+    _reset_shapes()
+    free_best = _guarded(_search)
+    if free_best is not None and (
+            free_best[0] < best[0] - 1e-6
+            or (free_best[0] <= best[0] + 1e-6
+                and free_best[3] < best[3] - 1e-6)):
+        best = free_best
+    else:
+        _plan_restore(cons_snap)
+        _fb.restore(cons_fb)
+        _fb.record("punch_free_plan_rejected")
 
     _area, BOARD_W, BOARD_H, est_real, budget = best
-    plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
-    plan.som_y = _q.som_pose_half_mm((BOARD_H - som.h) / 2 + SOM_DY)
-    # RE-PACK at the chosen winner so plan holds exactly that layout (the search
-    # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
-    if not _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
-                         compose=compose, compact=True, far_ceil=far_ceil,
-                         max_reach=max_reach, shapes=shape_sets,
-                         comps_of=comps_of, side_est=est_cross):
-        raise RuntimeError(
-            f"floorplan: the winning outline {BOARD_W:g}x{BOARD_H:g} failed "
-            "the final compact re-pack — refusing to emit a stale layout")
-    _choose_conn_shapes(plan, interior, edge_of, zbox, affinity, som_pull,
-                        compose, True, far_ceil, max_reach, shape_sets,
-                        comps_of, zg, est_cross)
     plan.interior_blocks = interior
     OUTLINE_NOTE = (
         f"{outline.note}; then SMALLEST-AREA search over aspects "
@@ -2387,6 +2531,63 @@ def _pick_sided(finalists: list[tuple], est_of) -> tuple:
         else incumbent
 
 
+def _edge_components(b: Block, comps: tuple) -> tuple:
+    """Occupancy COMPONENTS of a pinned EDGE block (wave-11 P1). An edge block's
+    main rect is its own copper face only — its shell/courtyard/empty zone area
+    is top-side body and never blocked B.Cu; what genuinely pierces is its
+    through-hole PAD copper, which rides here as PUNCH sub-rects.
+
+    Every PUNCH box is swept OUT to the board edge along the block's edge
+    normal: the LAW-6 edge seat slides an off-board connector OUTWARD at
+    emission (measured 1.5 mm on every contracted conn sheet, 1.960 on
+    rj45_connector), so the piercing copper sweeps that band. Conservative
+    direction — the swept box only ever GROWS the reservation, and only into
+    the perimeter strip the edge run already owns."""
+    out = []
+    for dx, dy, cw, ch, cm in comps:
+        if cm == OCC_PUNCH:
+            if b.edge == "N":
+                dy, ch = -b.y, b.y + dy + ch
+            elif b.edge == "S":
+                ch = BOARD_H - b.y - dy
+            elif b.edge == "W":
+                dx, cw = -b.x, b.x + dx + cw
+            elif b.edge == "E":
+                cw = BOARD_W - b.x - dx
+        out.append((round(dx, 4), round(dy, 4), round(cw, 4), round(ch, 4), cm))
+    return tuple(out)
+
+
+def _som_components(plan: Plan, som_occ: tuple, bands: list) -> tuple:
+    """Occupancy COMPONENTS of the SoM reservation (wave-11 P2). LAW 6 as
+    amended 2026-07-09 makes the carrier TOP under the module a FULL keepout and
+    leaves the BOTTOM face free, so the main rect is OCC_TOP and the underside
+    carries only what is REALLY there:
+
+      * the som_decoupling bank's own grid cells (OCC_BOTTOM), taken from the
+        emission oracle ``placement.som_decoupling_cells`` and grown by each
+        cap's origin-radius bound so the reservation holds under any rotation;
+      * the three DF40 escape/return-stitch seat corridors (OCC_PUNCH) — the
+        escape router seats stitch vias and the return ladder there and the
+        band must stay clear of FOREIGN parts on BOTH faces. These are the same
+        ``_SEAT_BAND`` rects the edge-vs-SoM fit test rejects against, which
+        strictly contain escape.corridor_board_rect (R_CONSTRUCT 1.8 and
+        CORRIDOR_V_MARGIN 0.15 both well inside the 6 mm band).
+
+    The DF40 receptacles themselves are SMD: they occupy the top face only, and
+    the main rect already covers them."""
+    from schgen.generate.pcb.placement import som_decoupling_cells
+    ox, oy = som_occ[0], som_occ[1]
+    n, r = plan.dec_bank
+    comps = [(round(cx - r - ox, 4), round(cy - r - oy, 4),
+              round(2 * r, 4), round(2 * r, 4), OCC_BOTTOM)
+             for cx, cy in som_decoupling_cells(
+                 plan.som_x, plan.som_y, plan.som.w, plan.som.h, n)]
+    comps += [(round(x0 - ox, 4), round(y0 - oy, 4), round(x1 - x0, 4),
+               round(y1 - y0, 4), OCC_PUNCH) for x0, y0, x1, y1 in bands]
+    return tuple(comps)
+
+
 def _attempt_pack(plan: Plan, interior: list[Block],
                   edge_of: dict[str, str],
                   zbox: dict[str, tuple[float, float]],
@@ -2476,14 +2677,23 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                     or a.y + a.h + cgy <= b.y or b.y + b.h + cgy <= a.y):
                 return False
 
+    free = plan.punch_free
+    som_mask = OCC_TOP if free else OCC_PUNCH
+    som_occ = (plan.som_x - _SOM_OCC_PAD, plan.som_y - _SOM_OCC_PAD,
+               plan.som.w + 2 * _SOM_OCC_PAD, plan.som.h + 2 * _SOM_OCC_PAD)
+    som_comps = _som_components(plan, som_occ, som_rects[1:]) if free else ()
+    edge_mask = OCC_TOP if free else OCC_PUNCH
+    edge_comps = {b.name: _edge_components(
+        b, (comps_of or {}).get((b.name, b.shape_idx), ())) if free else ()
+        for b in plan.edge_blocks}
+
     occ = _Occupancy(far_ceil, max_reach)
     # reserve the SoM body PLUS a clearance pad: the placement_mech keepout
     # (som_core) is drawn ~3% larger than the bare body for mating clearance, so a
     # zone packed flush against the body clips that enlarged core (the ethernet
     # magnetics clipped it 0.1mm after the tight-pack). Pad the reservation so
     # packed zones stay clear of the 3% core.
-    occ.add(plan.som_x - _SOM_OCC_PAD, plan.som_y - _SOM_OCC_PAD,
-            plan.som.w + 2 * _SOM_OCC_PAD, plan.som.h + 2 * _SOM_OCC_PAD)
+    occ.add(*som_occ, _ZeroReach, _ZeroReach, som_mask, som_comps)
     # reserve the 4 corner mounting-hole keepouts: the PCB corner-forces an M3
     # hole into each corner, so no interior block may occupy a corner square (an
     # overlap was a real CHASSIS_GND/signal DRC short). Edge blocks clear the
@@ -2494,7 +2704,8 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         occ.add(cx, cy, MH_CORNER_KO, MH_CORNER_KO)
     centers: dict[str, tuple[float, float]] = {}
     for b in plan.edge_blocks:        # edge blocks are pinned anchors already
-        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset)
+        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
+                edge_mask, edge_comps[b.name])
         centers[b.name] = (b.cx, b.cy)
 
     edge_pos = {b.name: b for b in plan.edge_blocks}
@@ -2825,26 +3036,26 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                     # truth + _occ_pair_active rule the lattice enforces.
                     zz = (_ZeroReach, _ZeroReach)
 
-                    def _entity(bb: Block) -> list[tuple]:
-                        m = _side_mask(bb.side)
+                    def _entity(bb: Block, mask: int, cc: tuple
+                                ) -> list[tuple]:
                         ent = [(bb.x, bb.y, bb.w, bb.h,
                                 bb.fanout_reach, bb.fanout_inset,
-                                m, m, True)]
-                        for dx, dy, cw, ch, cm in _bcomps(bb):
+                                mask, mask, True)]
+                        for dx, dy, cw, ch, cm in cc:
                             ent.append((round(bb.x + dx, 4),
                                         round(bb.y + dy, 4),
-                                        cw, ch, *zz, cm, m, False))
+                                        cw, ch, *zz, cm, mask, False))
                         return ent
 
-                    ents = ([_entity(b) for b in interior]
-                            + [[(b.x, b.y, b.w, b.h, b.fanout_reach,
-                                 b.fanout_inset, OCC_PUNCH, OCC_PUNCH, True)]
+                    ents = ([_entity(b, _side_mask(b.side), _bcomps(b))
+                             for b in interior]
+                            + [_entity(b, edge_mask, edge_comps[b.name])
                                for b in plan.edge_blocks]
-                            + [[(plan.som_x - _SOM_OCC_PAD,
-                                 plan.som_y - _SOM_OCC_PAD,
-                                 plan.som.w + 2 * _SOM_OCC_PAD,
-                                 plan.som.h + 2 * _SOM_OCC_PAD, *zz,
-                                 OCC_PUNCH, OCC_PUNCH, True)]]
+                            + [[(*som_occ, *zz, som_mask, som_mask, True)]
+                               + [(round(som_occ[0] + dx, 4),
+                                   round(som_occ[1] + dy, 4), cw, ch, *zz,
+                                   cm, som_mask, False)
+                                  for dx, dy, cw, ch, cm in som_comps]]
                             + [[(kx, ky, MH_CORNER_KO, MH_CORNER_KO, *zz,
                                  OCC_PUNCH, OCC_PUNCH, True)]
                                for kx, ky in
