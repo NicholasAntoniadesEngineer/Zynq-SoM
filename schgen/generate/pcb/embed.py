@@ -57,11 +57,15 @@ def _flip_to_bottom(node: list) -> None:
     the back. Local coordinates are NOT touched, and KiCad applies NO position
     mirror at load or render — a B.Cu footprint's stored coordinates ARE the
     final front-view frame (pcbnew-verified; the whole in-process model shares
-    this convention). CONSEQUENCE: the emitted bottom land pattern is the
-    CHIRAL MIRROR of the part's top-side pattern, so only mirror-symmetric,
-    non-polarized parts may be placed bottom (guarded by
-    tests/test_bottom_convention.py). Deterministic and reversible (re-running
-    on a B.* tree is a no-op for the layers)."""
+    this convention). CONSEQUENCE for a LIBRARY document (inst.mirror=False,
+    the 2-side classifier population): the emitted bottom land pattern is the
+    CHIRAL MIRROR of the part's top-side pattern, so that population is
+    restricted to mirror-symmetric, non-polarized parts (guarded by
+    tests/test_bottom_convention.py). A MIRRORED document (inst.mirror=True,
+    pcb/mirror.py — block bottom variants) already carries the KiCad-exact
+    mirrored geometry, so this same layer flip completes a byte-equivalent
+    pcbnew LEFT_RIGHT flip and ANY part is legal. Deterministic and
+    reversible (re-running on a B.* tree is a no-op for the layers)."""
     for sub in node:
         if not isinstance(sub, list) or not sub:
             continue
@@ -118,6 +122,12 @@ def _embed_footprint(inst, uid) -> list:
     # applies NO position mirror on load — the stored frame IS the front-view
     # frame (see _flip_to_bottom). Done before the uuid/net pass so the
     # flipped tree is what gets stamped.
+    if inst.mirror:
+        from .mirror import is_mirrored_path
+        assert inst.side == "bottom" and is_mirrored_path(inst.mod_path), (
+            f"{inst.ref}: mirror=True demands side=bottom + a .mirrored_fp "
+            f"document (got side={inst.side!r}, mod={inst.mod_path}) — a "
+            f"mirrored instance emitted any other way is chiral-wrong copper")
     if inst.side == "bottom":
         _flip_to_bottom(out)
 
@@ -754,6 +764,23 @@ def _report_via_shortfall(inst, chosen: list[tuple[float, float]],
     return line
 
 
+_LAYER_SWAP = {"F.Cu": "B.Cu", "B.Cu": "F.Cu"}
+
+
+def _mirror_thermal_spec(spec: dict) -> dict:
+    """The THERMAL_COPPER curated geometry of a MIRRORED instance: the spec
+    rects/sites live in the LIBRARY local frame, so a mirrored part (whose
+    document frame is the pcbnew M_y mirror) needs y -> -y on the pour rect
+    and every via site, and its own-side outer pour swaps F.Cu <-> B.Cu —
+    the same one transform pcb/mirror.py applies to the footprint itself."""
+    p = spec["pour"]
+    return {**spec,
+            "pour": (p[0], 0.0 - p[3], p[2], 0.0 - p[1]),
+            "via_sites": [(sx, 0.0 - sy) for sx, sy in spec["via_sites"]],
+            "pour_layers": tuple(_LAYER_SWAP[la]
+                                 for la in spec["pour_layers"])}
+
+
 def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]:
     """(zones, vias) for every placed THERMAL_COPPER part: a local GND pour per
     listed layer (rotated with the part, solid pad connection) + a GND
@@ -778,6 +805,8 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
                      if inst.value.startswith(pfx)), None)
         if spec is None:
             continue
+        if inst.mirror:
+            spec = _mirror_thermal_spec(spec)
         # local pours (per layer; the B.Cu twin gives the buck a second outer
         # spreader stitched by the same via field)
         corners = _corners_rot(spec["pour"], inst, model)

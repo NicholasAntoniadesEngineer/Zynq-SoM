@@ -96,6 +96,7 @@ class FootprintInst:
     mod_path: Path
     sheet: str
     side: str = "top"     # "top" (F.Cu) | "bottom" (B.Cu) — 2-side assembly
+    mirror: bool = False  # True: mod_path IS the mirrored doc (pcb/mirror.py)
 
 
 @dataclass
@@ -485,7 +486,14 @@ class ZoneShape:
     for a ``side="bottom"`` shape the primary list emits on B.Cu and the
     secondary on F.Cu (``apply_chosen_shapes`` flips each part's emitted side
     by pack MEMBERSHIP, so a face=top part forced into the secondary list
-    still presents on the board top)."""
+    still presents on the board top).
+
+    ``mirror`` (wave-9 chirality): PRIMARY ref -> its KiCad-exact mirrored
+    .kicad_mod (pcb/mirror.py). Every shape evaluator (fan-out reach,
+    occupancy comps, zone metrics, the cross estimator) and
+    ``apply_chosen_shapes`` resolve these refs' geometry through this map, so
+    a chiral part's bottom variant is judged and emitted with the mirrored
+    document. Empty for every top shape (byte-inert)."""
     w: float
     h: float
     top_off: dict[str, tuple[float, float]]
@@ -493,6 +501,7 @@ class ZoneShape:
     extra_rot: dict[str, float]
     tag: str
     side: str = "top"
+    mirror: dict[str, Path] = field(default_factory=dict)
 
 
 @dataclass
@@ -513,6 +522,8 @@ class ZoneGeom:
     shapes: dict[str, tuple[ZoneShape, ...]] = field(default_factory=dict)
     #                # sheet -> its legal shape set (only sheets with >= 2 shapes;
     #                # [0] == the flat views above, the pack search picks per block)
+    mirror_refs: frozenset = frozenset()
+    #                # refs apply_chosen_shapes rebound to their mirrored document
 
 
 # 4-layer controlled-impedance stackup: Sig / GND / PWR / Sig, JLC04161H-7628

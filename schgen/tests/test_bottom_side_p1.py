@@ -67,15 +67,30 @@ def test_spec_layer_side_parsing(tmp_path):
         "edges": {"N": []},
         "interior": {"a_block": {"side": "either"},
                      "b_block": {"side": "S"},
-                     "c_block": {"near": "b_block", "side": "bottom"}},
+                     "c_block": {"near": "b_block", "side": "bottom"},
+                     "d_block": {"side": "E", "layer": "either"}},
     }))
     spec = load_floorplan_spec(p)
-    assert spec.layer_of == {"a_block": "either", "c_block": "bottom"}
+    assert spec.layer_of == {"a_block": "either", "c_block": "bottom",
+                             "d_block": "either"}
+    assert spec.interior["d_block"]["side"] == "E"
     p.write_text(json.dumps({
         "outline": "auto",
         "interior": {"a_block": {"side": "sideways"}},
     }))
     with pytest.raises(FloorplanSpecError, match="top/bottom/either"):
+        load_floorplan_spec(p)
+    p.write_text(json.dumps({
+        "outline": "auto",
+        "interior": {"a_block": {"layer": "E"}},
+    }))
+    with pytest.raises(FloorplanSpecError, match="layer must be"):
+        load_floorplan_spec(p)
+    p.write_text(json.dumps({
+        "outline": "auto",
+        "interior": {"a_block": {"side": "either", "layer": "bottom"}},
+    }))
+    with pytest.raises(FloorplanSpecError, match="copper face twice"):
         load_floorplan_spec(p)
 
 
@@ -124,16 +139,28 @@ def test_punch_default_matches_legacy(monkeypatch):
         assert not occ._fits_exhaustive(12, 12, 8, 8, mask=m)
 
 
-def test_zero_optin_no_bottom_machinery(zg_real):
-    for sheet, shapes in zg_real.shapes.items():
+def test_zero_optin_no_bottom_machinery(real_spec):
+    """The INERTNESS control is the spec with every copper-face declaration
+    stripped (the landed tree legitimately declares board_aux "either", so
+    the raw spec is no longer the zero-opt-in world)."""
+    stripped = dataclasses.replace(real_spec, interior={
+        name: {k: v for k, v in entry.items()
+               if k != "layer" and not (k == "side"
+                                        and v in ("top", "bottom", "either"))}
+        for name, entry in real_spec.interior.items()})
+    zg0 = subsystem_zone_geometry(two_side=True, spec=stripped)
+    for sheet, shapes in zg0.shapes.items():
         for s in shapes:
             assert s.side == "top", (sheet, s.tag)
-    zg2 = apply_chosen_shapes(zg_real, {})
-    assert zg2 is zg_real
-    any_multi = next(s for s in sorted(zg_real.shapes)
-                     if len(zg_real.shapes[s]) >= 2)
-    zg3 = apply_chosen_shapes(zg_real, {any_multi: 1})
-    assert zg3.side_of == zg_real.side_of
+            assert not s.mirror, (sheet, s.tag)
+    assert not zg0.mirror_refs
+    zg2 = apply_chosen_shapes(zg0, {})
+    assert zg2 is zg0
+    any_multi = next(s for s in sorted(zg0.shapes)
+                     if len(zg0.shapes[s]) >= 2)
+    zg3 = apply_chosen_shapes(zg0, {any_multi: 1})
+    assert zg3.side_of == zg0.side_of
+    assert zg3.resolvable == zg0.resolvable
 
 
 def test_bottom_variant_offered_and_deterministic(zg_real, zg_either):
@@ -149,9 +176,15 @@ def test_bottom_variant_offered_and_deterministic(zg_real, zg_either):
     for bs in bots:
         assert (bs.w, bs.h) == (s0.w, s0.h)
         assert set(bs.top_off) == set(s0.top_off)
-        exp = _mirror_offsets_x(s0.top_off, a.bbox_of,
-                                dict(s0.extra_rot), s0.w)
-        assert bs.top_off == exp
+        assert set(bs.mirror) == set(bs.top_off)
+        for r, (ox, oy) in s0.top_off.items():
+            assert bs.top_off[r] == (round(bs.w - ox, 4), oy)
+            assert bs.extra_rot[r] == \
+                (180.0 - s0.extra_rot.get(r, 0.0)) % 360.0
+        exp_sec = _mirror_offsets_x(
+            s0.bot_off, a.bbox_of,
+            {r: s0.extra_rot.get(r, 0.0) for r in s0.bot_off}, s0.w)
+        assert bs.bot_off == exp_sec
 
 
 def test_bottom_choice_flips_sides_by_membership(zg_either):

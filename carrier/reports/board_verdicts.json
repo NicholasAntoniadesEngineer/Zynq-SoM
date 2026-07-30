@@ -513,11 +513,11 @@
    "lib_footprint_issues": 107,
    "silk_edge_clearance": 34,
    "silk_over_copper": 20,
-   "silk_overlap": 17,
+   "silk_overlap": 16,
    "text_height": 25
   },
   "n_unconnected": 499,
-  "n_violations": 203,
+  "n_violations": 202,
   "returncode": 0,
   "stderr": ""
  },
@@ -551,8 +551,8 @@
   "regressions": []
  },
  "floorplan_composition": "FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)\n  aggregate hard margin: sum 957.96 mm, min 4.38 mm (informational)\n  hard terms:\n    HARD facing power->power_som: 40.54 vs 90.00 (margin +49.46) ok [facing/output_roles [placement/v2]] dot=+514.51\n    HARD facing power_som->@som: 82.24 vs 90.00 (margin +7.76) ok [facing/output_roles [placement/v2]] dot=+74.60\n    HARD far_min ethernet->power: 131.76 vs 10.00 (margin +121.76) ok [judgment:10.0 \u2014 buck switching node vs Ethernet media/magnetics analog line side]\n    HARD far_min motor_sense->power: 84.94 vs 10.00 (margin +74.94) ok [judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]\n    HARD far_min motor_sense->power_som: 61.40 vs 10.00 (margin +51.40) ok [judgment:10.0 \u2014 SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]\n    HARD far_min power->ethernet.line_side: 131.76 vs 10.00 (margin +121.76) ok [judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]\n    HARD far_min power_som->ethernet.line_side: 91.49 vs 10.00 (margin +81.49) ok [judgment:10.0 \u2014 same rationale as the power pilot]\n    HARD flow_hop camera->@som: 78.46 vs 128.59 (margin +50.13) ok [flow chain [placement/v2]]\n    HARD flow_hop hdmi_tx->@som: 85.35 vs 128.59 (margin +43.24) ok [flow chain [placement/v2]]\n    HARD flow_hop pd_input->usb_pd: 17.15 vs 128.59 (margin +111.44) ok [flow chain [placement/v2]]\n    HARD flow_hop power->power_som: 49.19 vs 128.59 (margin +79.40) ok [flow chain [placement/v2]]\n    HARD flow_hop power_mon->power_som: 56.00 vs 128.59 (margin +72.60) ok [flow chain [placement/v2]]\n    HARD flow_hop usb_pd->power: 122.11 vs 128.59 (margin +6.49) ok [flow chain [placement/v2]]\n    HARD near_max ethernet->rj45_connector: 1.58 vs 20.00 (margin +18.41) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]\n    HARD near_max hdmi_rx_term->som_j2: 5.62 vs 10.00 (margin +4.38) ok [XAPP460 p.23 (term AT the receiver) \u2014 island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]\n    HARD near_max motor_sense->motor_pwm: 1.80 vs 20.00 (margin +18.20) ok [judgment:20.0 (D9) \u2014 motor telemetry beside the PWM out]\n    HARD near_max uart_bridge->usb_uart_connector: 2.52 vs 40.00 (margin +37.48) ok [judgment:10.0 (D11 edge-gap) \u2014 CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]\n    HARD near_max usb_pd->pd_input: 2.38 vs 10.00 (margin +7.62) ok [judgment:10.0 (D11 edge-gap metric) \u2014 keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]\n  soft terms (advisory ledger \u2014 repair triggers, never gates):\n    soft near_intent power_mon->power_som: 32.74 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory\n  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 1 T2-coexistence-managed\n    managed C5011 (bringup_en_modules) in escape:J2:S [T2 STAY]\n  D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):\n    bringup_en_modules | bringup_rails: 34 airwires (531.4 mm) -> corridor >= 8.8 mm\n    bringup_en_modules | bringup_modules: 26 airwires (132.6 mm) -> corridor >= 7.2 mm\n    ethernet | rj45_connector: 9 airwires (229.5 mm) -> corridor >= 3.8 mm\n    hdmi_rx | hdmi_rx_term: 7 airwires (287.4 mm) -> corridor >= 3.4 mm\n    board_services | usb_jtag: 6 airwires (10.6 mm) -> corridor >= 3.2 mm",
- "n_bottom": 152,
- "n_top": 417,
+ "n_bottom": 143,
+ "n_top": 426,
  "nets": 452,
  "placed": 569,
  "placement_contract": {
@@ -634,28 +634,28 @@
  "ratsnest": {
   "board_h": 166.0,
   "board_w": 185.0,
-  "cross_mm": 15280.3,
-  "n_bottom": 152,
-  "n_cross": 423,
-  "n_top": 417,
-  "total_mm": 23034.1
+  "cross_mm": 15193.0,
+  "n_bottom": 143,
+  "n_cross": 422,
+  "n_top": 426,
+  "total_mm": 22946.4
  },
  "ratsnest_gate": {
   "board_h": 166.0,
   "board_w": 185.0,
   "cross_budget_mm": 17349.0,
-  "cross_mm": 15280.3,
+  "cross_mm": 15193.0,
   "dispersed": [],
-  "n_cross": 423,
+  "n_cross": 422,
   "n_subsystems": 33,
   "off_board": [],
   "ok": true,
-  "total_mm": 23034.1
+  "total_mm": 22946.4
  },
  "refdes_silk": {
   "bottom_pairs": 0,
-  "n_bottom": 100,
-  "n_top": 324,
+  "n_bottom": 91,
+  "n_top": 333,
   "ok": true,
   "top_pairs": []
  },
@@ -684,14 +684,14 @@
   "worst_mm": 1.4818991193735036
  },
  "stage_movement": {
-  "breathe": 23,
+  "breathe": 24,
   "corridor_eviction": 0,
   "edge_seat": 16,
   "escape_copper": 0,
   "instantiate": 0,
-  "l4_pull": 126,
+  "l4_pull": 115,
   "refit_facing": 51,
-  "reorder": 88
+  "reorder": 85
  },
  "total": 569,
  "two_side": true

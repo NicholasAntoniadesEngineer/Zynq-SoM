@@ -14,6 +14,7 @@ from schgen.core import fallbacks as _fb
 from schgen.core import quantize as _q
 
 from .constants import (
+    _INT_DESC,
     _TOP_ALWAYS_LIBS,
     BUTTON_GAP,
     CARRIER,
@@ -307,16 +308,24 @@ def _classify_side(ref: str, lib: str, bbox: tuple,
     return "top"
 
 
-# BOTTOM-SIDE CONVENTION (the unified truth, pcbnew-verified): a footprint's
-# local geometry is SIDE-INDEPENDENT. embed._flip_to_bottom swaps only the
-# layer tokens; KiCad loads a B.Cu footprint by applying the placement rotation
-# to the UNCHANGED local coordinates — there is NO F->B X-mirror anywhere in
-# the pipeline. The historical `_eff_bbox_for` helper mirrored bottom bboxes
-# about X and was DELETED when the convention was unified (it disagreed with
-# the emitted board on every one of the 319 bottom parts). Consequence: an
-# emitted bottom footprint is the CHIRAL MIRROR of its top-side land pattern —
-# only mirror-symmetric, non-polarized parts may be placed bottom
-# (schgen/tests/test_bottom_convention.py guards this).
+# BOTTOM-SIDE CONVENTIONS (both pcbnew-verified; tests/test_bottom_convention
+# instruments them). The LOAD rule is side-blind everywhere: KiCad places a
+# footprint's STORED local coordinates with the placement rotation only, no
+# side mirror, and every kernel here reads the same stored document — so the
+# convention question is purely WHICH document a bottom part stores.
+#  (1) achiral-swap (the 2-side classifier population: pushed passives +
+#      som_decoupling): the document is the library part unchanged; only the
+#      layer tokens flip at embed. The emitted land pattern is the chiral
+#      mirror of the part's top-side pattern, so this convention is legal ONLY
+#      for mirror-symmetric non-polarized parts (the entry guard enforces it).
+#  (2) KiCad-exact mirror (wave-9, block bottom variants): the document is the
+#      pcb/mirror.py mirrored twin (y -> -y, angles negated) placed at
+#      (180 - t) % 360 — byte-equivalent to a real pcbnew LEFT_RIGHT flip, so
+#      ANY footprint, chiral ICs included, may emit B.Cu. FootprintInst.mirror
+#      marks these; their mod_path IS the mirrored file, which keeps every
+#      geometry kernel side-blind with zero mirror branches.
+# The historical `_eff_bbox_for` X-mirror-at-the-KERNEL approach stays deleted
+# — it disagreed with the emitted board on all 319 bottom parts.
 
 
 def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
@@ -518,13 +527,16 @@ def _member_mirror_shape(sheet: str, t_off: dict[str, tuple[float, float]],
 def _mirror_contract_holds(sheet: str, t_off: dict, b_off: dict,
                            conn_refs: set[str], extra: dict[str, float],
                            conn_rot_map: dict[str, float],
-                           resolvable: dict[str, Path]) -> bool:
+                           resolvable: dict[str, Path],
+                           mods: dict[str, Path] | None = None) -> bool:
     """The mirrored zone-local layout still satisfies every authored
     ``proximity`` structure of ``sheet``'s contract (wired or advisory),
     measured with the contract gate's OWN kernels (_pad_boxes gaps —
     translate-invariant, so zone-local equals emitted). Structures not
     involving a connector are mirror-invariant but measured anyway (cheap,
-    zero drift risk)."""
+    zero drift risk). ``mods`` (wave-9 chirality): per-ref mirrored-document
+    override so a KiCad-exact mirrored primary member is measured with the
+    geometry it will actually emit."""
     from schgen.verify import placement_contract_gate as _pcg
     c = _pcg.discover_contract(sheet)
     if c is None:
@@ -534,7 +546,7 @@ def _mirror_contract_holds(sheet: str, t_off: dict, b_off: dict,
     off.update(b_off)
 
     def _padb(bref: str) -> dict[str, tuple] | None:
-        mod = resolvable.get(bref)
+        mod = (mods or {}).get(bref) or resolvable.get(bref)
         o = off.get(bref)
         if mod is None or o is None:
             return None
@@ -604,19 +616,44 @@ def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
     return out
 
 
+def _mirror_pack(t_off: dict[str, tuple[float, float]],
+                 b_off: dict[str, tuple[float, float]], zw: float,
+                 rot_of: dict[str, float], bbox_of: dict, resolvable: dict
+                 ) -> tuple[dict, dict, dict, dict]:
+    """(primary offsets, secondary offsets, extra_rot, mirror mods) of the
+    X-mirrored bottom variant of one packed layout. PRIMARY (emits B.Cu) is
+    the KiCad-EXACT chiral mirror: mod = the mirrored document, origin the
+    pure mirror (zw - ox, oy), rotation (180 - t) % 360 — the placed pattern
+    is exactly M_x of the top layout about the zone mid-axis
+    (R_cw(180 - t)·M_y == M_x·R_cw(t)), so ANY part is legal, chiral ICs
+    included. SECONDARY (presents on F.Cu — plain top emission, a top part
+    has no mirror) keeps the library document and rotation; its origins move
+    box-preservingly (_mirror_offsets_x), exactly the boxes the pack proved."""
+    from .mirror import mirrored_mod
+    mt = {r: (round(zw - ox, 4), oy) for r, (ox, oy) in t_off.items()}
+    mods = {r: mirrored_mod(resolvable[r]) for r in sorted(t_off)}
+    extra = {r: (180.0 - rot_of.get(r, 0.0)) % 360.0 for r in t_off}
+    extra.update({r: rot_of[r] for r in b_off if r in rot_of})
+    mb = _mirror_offsets_x(b_off, bbox_of,
+                           {r: rot_of.get(r, 0.0) for r in b_off}, zw)
+    return mt, mb, extra, mods
+
+
 def _bottom_zone_shapes(sheet: str, refs: list[str], side_of: dict[str, str],
                         bbox_of: dict, resolvable: dict,
                         face_top: frozenset[str],
                         tmpl: tuple | None, tmpl_rot: dict[str, float]
                         ) -> list[ZoneShape]:
     """Side-tagged BOTTOM shape variants for one bottom-eligible sheet
-    (bottom-side P1). A CONTRACTED (template) sheet offers ONE rigid X-mirror
-    of its as-built layout (a datasheet stage layout is never re-flowed),
-    kept only when the sheet's authored contract re-measures green on the
-    mirrored offsets — a reject is a registered fallback event, never a
-    silent drop. A shelf sheet offers a REAL role-flipped re-pack per ladder
-    aspect (face-top parts forced secondary), X-mirrored. Deterministic:
-    fixed aspect order, sorted refs, 4dp rounding."""
+    (bottom-side P1 + wave-9 chirality: the primary pack is the KiCad-exact
+    chiral mirror, see _mirror_pack). A CONTRACTED (template) sheet offers
+    ONE rigid mirror of its as-built layout (a datasheet stage layout is
+    never re-flowed), kept only when the sheet's authored contract
+    re-measures green on the mirrored geometry — a reject is a registered
+    fallback event, never a silent drop. A shelf sheet offers a REAL
+    role-flipped re-pack per ladder aspect (face-top parts forced
+    secondary), mirrored the same way. Deterministic: fixed aspect order,
+    sorted refs, 4dp rounding."""
     out: list[ZoneShape] = []
     if tmpl is not None:
         t_off, b_off, zw, zh = tmpl
@@ -628,14 +665,13 @@ def _bottom_zone_shapes(sheet: str, refs: list[str], side_of: dict[str, str],
                 f"{', '.join(stranded)} on the PRIMARY side (would emit B.Cu) "
                 f"— pin the sheet top in floorplan.json or extend the "
                 f"template; a user-facing part never emits face-down")
-        rot_of = {r: tmpl_rot.get(r, 0.0) for r in (*t_off, *b_off)}
-        mt = _mirror_offsets_x(t_off, bbox_of, rot_of, zw)
-        mb = _mirror_offsets_x(b_off, bbox_of, rot_of, zw)
-        if _mirror_contract_holds(sheet, mt, mb, set(), dict(tmpl_rot), {},
-                                  resolvable):
+        mt, mb, extra, mods = _mirror_pack(t_off, b_off, zw, dict(tmpl_rot),
+                                           bbox_of, resolvable)
+        if _mirror_contract_holds(sheet, mt, mb, set(), extra, {},
+                                  resolvable, mods=mods):
             out.append(ZoneShape(w=round(zw, 4), h=round(zh, 4), top_off=mt,
-                                 bot_off=mb, extra_rot=dict(tmpl_rot),
-                                 tag="bottom", side="bottom"))
+                                 bot_off=mb, extra_rot=extra,
+                                 tag="bottom", side="bottom", mirror=mods))
         else:
             _fb.record("bottom_variant_contract_reject")
         return out
@@ -647,11 +683,11 @@ def _bottom_zone_shapes(sheet: str, refs: list[str], side_of: dict[str, str],
         if key in seen:
             continue
         seen.add(key)
+        mt, mb, extra, mods = _mirror_pack(vt, vb, vw, {}, bbox_of,
+                                           resolvable)
         out.append(ZoneShape(
-            w=vw, h=vh,
-            top_off=_mirror_offsets_x(vt, bbox_of, {}, vw),
-            bot_off=_mirror_offsets_x(vb, bbox_of, {}, vw),
-            extra_rot={}, tag=f"bottom-a{asp:g}", side="bottom"))
+            w=vw, h=vh, top_off=mt, bot_off=mb, extra_rot=extra,
+            tag=f"bottom-a{asp:g}", side="bottom", mirror=mods))
     return out
 
 
@@ -980,8 +1016,10 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
             if _is_face_top_part(bref, part.lib_id, part.footprint):
                 face_top_of.setdefault(sc.name, set()).add(bref)
             elif (sc.name not in conn_class_of
-                  and any(t in part.lib_id or t in part.footprint
-                          for t in _CONN_CLASS_TOKENS)):
+                  and (any(t in part.lib_id or t in part.footprint
+                           for t in _CONN_CLASS_TOKENS)
+                       or bref in _INT_DESC
+                       or part.value in CONN_MATING_FACE)):
                 conn_class_of[sc.name] = bref
 
     # LAW 6: per-connector placement rotation (mating face -> off-board) keyed on
@@ -1021,7 +1059,7 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                    f"decision 2026-07-29)")
         if why:
             raise ValueError(
-                f"floorplan.json: {sheet} declares side "
+                f"floorplan.json: {sheet} declares copper-face "
                 f"\"{layer_pref[sheet]}\" but {why} — remove the declaration "
                 f"or pin the sheet top")
 
@@ -1246,8 +1284,11 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
     A side-tagged BOTTOM shape additionally flips its sheet's emitted part
     sides by pack MEMBERSHIP (primary list -> B.Cu, secondary -> F.Cu), so a
     face=top part the packer forced into the secondary list still presents on
-    the board top; the returned ``side_of`` carries the flip to every
-    downstream consumer (emission, L4, breathe, eviction, the gates)."""
+    the board top, and REBINDS every primary member's resolvable/bbox_of
+    entry to its KiCad-exact mirrored document (ZoneShape.mirror, wave-9
+    chirality) — the returned ``side_of``/``resolvable``/``bbox_of``/
+    ``mirror_refs`` carry both to every downstream consumer (emission, L4,
+    breathe, eviction, the gates)."""
     from dataclasses import replace as _dc_replace
     sel: dict[str, int] = {}
     for s, k in chosen.items():
@@ -1266,6 +1307,9 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
     bot_off = dict(zg.bot_off)
     extra = dict(zg.zone_extra_rot)
     side_of = dict(zg.side_of)
+    resolvable = dict(zg.resolvable)
+    bbox_of = dict(zg.bbox_of)
+    mirror_refs = set(zg.mirror_refs)
     for s in sorted(sel):
         shp = zg.shapes[s][sel[s]]
         for r in (*zg.top_off.get(s, {}), *zg.bot_off.get(s, {})):
@@ -1279,9 +1323,18 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
                 side_of[r] = "bottom"
             for r in shp.bot_off:
                 side_of[r] = "top"
+            assert set(shp.mirror) == set(shp.top_off), (
+                f"apply_chosen_shapes: {s} bottom shape {sel[s]} primary "
+                f"pack and mirror map disagree — a primary member without "
+                f"its mirrored document would emit the chiral-wrong pattern")
+            for r, mp in sorted(shp.mirror.items()):
+                resolvable[r] = mp
+                bbox_of[r] = _footprint_bbox(mp)
+                mirror_refs.add(r)
     return _dc_replace(zg, zone_box=zone_box, top_off=top_off,
                        bot_off=bot_off, zone_extra_rot=extra,
-                       side_of=side_of)
+                       side_of=side_of, resolvable=resolvable,
+                       bbox_of=bbox_of, mirror_refs=frozenset(mirror_refs))
 
 
 def _segments_cross(s1: tuple, s2: tuple) -> bool:
@@ -1591,6 +1644,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     top_off = zg.top_off
     bot_off = zg.bot_off
     side_of.update(zg.side_of)
+    resolvable.update(zg.resolvable)
+    bbox_of.update(zg.bbox_of)
     classes, netclass_of = _net_classes(sheets)
     board_w, board_h = fp.BOARD_W, fp.BOARD_H
 
@@ -1823,6 +1878,30 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         DISP_CAP_L4 = 5.0          # conservative; LAW-5 gate fails only at 9.0x
         EDGE_MARGIN = 0.6          # keep shifted copper this far inside Edge.Cuts
         STEP = 1.0
+        # BOTTOM-SIDE D13 SUBJECT RESERVATIONS (wave-9 chirality): a mover may
+        # never STOP inside a bottom-side multi-pin subject's fan-out floor —
+        # the D13 gate measures same-side courtyard gap >= intelligent_need,
+        # and a mirrored IC on B.Cu is exactly such a subject (measured: an
+        # L4-pulled C5002 parked 1.242 mm from U7001's 2.0 need, the one red
+        # of the 185x163 chirality outline). Same arithmetic as the gate
+        # (quant_credit(need)), mover halo PLACE_CLEAR/2 subtracted so the
+        # box test equals gap >= credited need; own-sheet subjects exempt
+        # (internal layout is the zone pack's, preserved rigidly).
+        from schgen.verify.fanout_gate import (
+            MIN_SUBJECT_PINS,
+            intelligent_need,
+        )
+        d13_bot: dict[str, tuple[str, tuple[float, float, float, float]]] = {}
+        for r in sorted(pos):
+            if (side_of.get(r) == "bottom" and r in resolvable
+                    and r in bbox_of and r in parts):
+                npins = len(pad_names(resolvable[r]))
+                if npins < MIN_SUBJECT_PINS:
+                    continue
+                need = _q.quant_credit(intelligent_need(npins)[0])
+                d13_bot[r] = (parts[r][0], _halo(
+                    _eff_box(r, pos[r][0], pos[r][1]),
+                    max(0.0, need - PLACE_CLEAR / 2)))
         # T1 P5 (decision D-2): participants of WIRED flow/near_max/facing
         # contract terms are L4-EXEMPT — their emitted geometry must be
         # PREDICTABLE from the floorplan pose (the composition legalizer's
@@ -1853,9 +1932,13 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             ux, uy = vx / dist, vy / dist
             # bottom occupancy EXCLUDING this subsystem's own movers, PLUS the
             # DF40 escape/return-stitch seat corridors (LAW 0) — a mover may never
-            # slide into a seat band and displace a stitch via.
-            others = ([bot_box[r] for r in bot_box if r not in set(movers)]
-                      + _escape_corridors)
+            # slide into a seat band and displace a stitch via — PLUS foreign
+            # bottom-side D13 subject floors (wave-9, see d13_bot above).
+            mset = set(movers)
+            others = ([bot_box[r] for r in bot_box if r not in mset]
+                      + _escape_corridors
+                      + [b for rr, (sh, b) in sorted(d13_bot.items())
+                         if sh != sheet and rr not in mset])
             allr = [r for r in (list(top_off.get(sheet, {}))
                                 + list(bot_off.get(sheet, {})))
                     if r in pos and r in bbox_of]
@@ -1904,6 +1987,12 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                               round(pos[r][1] + uy * chosen, 4))
                     pos[r] = (nx, ny)
                     bot_box[r] = _halo(_eff_box(r, nx, ny), PLACE_CLEAR / 2)
+                    if r in d13_bot:
+                        sh, b = d13_bot[r]
+                        grow = (b[2] - b[0]
+                                - (_eff_box(r, 0.0, 0.0)[2]
+                                   - _eff_box(r, 0.0, 0.0)[0])) / 2.0
+                        d13_bot[r] = (sh, _halo(_eff_box(r, nx, ny), grow))
 
     _trk.checkpoint("l4_pull", _pose_snap())
 
@@ -2072,6 +2161,21 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         _tht = [_ebox(r, pos[r][0], pos[r][1]) for r in pos
                 if side_of.get(r) == "top" and r in resolvable
                 and r in bbox_of and has_thru_pads(resolvable[r])]
+        from schgen.verify.fanout_gate import (
+            MIN_SUBJECT_PINS as _MSP,
+        )
+        from schgen.verify.fanout_gate import (
+            intelligent_need as _ineed,
+        )
+        _d13ev: dict[str, tuple[str, tuple[float, float, float, float]]] = {}
+        for r in sorted(_bot):
+            if r in resolvable and r in parts:
+                np_ = len(pad_names(resolvable[r]))
+                if np_ >= _MSP:
+                    g = max(0.0, _q.quant_credit(_ineed(np_)[0]) - PLACE_CLEAR)
+                    bb = _ebox(r, pos[r][0], pos[r][1])
+                    _d13ev[r] = (parts[r][0], (bb[0] - g, bb[1] - g,
+                                               bb[2] + g, bb[3] + g))
         for ref in sorted(_bot):
             b = _bot[ref]
             if not _collide(b, _corr0):
@@ -2104,6 +2208,11 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                     if _collide(grown, [_bot[r] for r in _bot if r != ref]):
                         continue
                     if _collide(grown, _tht):
+                        continue
+                    if _collide(grown, [b for rr, (sh, b) in
+                                        sorted(_d13ev.items())
+                                        if rr != ref
+                                        and sh != parts[ref][0]]):
                         continue
                     pos[ref] = (nx, ny)
                     _bot[ref] = nb
@@ -2143,7 +2252,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             ref=ref, value=value, footprint=footprint,
             x=fx, y=fy,
             rotation=fixed_rot.get(ref, 0.0), pad_nets=pad_nets,
-            mod_path=mod, sheet=sheet, side=side))
+            mod_path=mod, sheet=sheet, side=side,
+            mirror=ref in zg.mirror_refs))
         placed += 1
         if side == "bottom":
             n_bottom += 1
