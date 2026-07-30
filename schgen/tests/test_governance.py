@@ -177,7 +177,7 @@ def test_every_transform_has_a_registry_entry():
         "placeholder_zone_half_mm", "quant_credit", "snap_erosion_bound",
         "snap_erosion_pad", "seat_slide", "run_overflow_tol",
         "legalize_pose_quantum", "outline_snap_up", "outline_grow_step",
-        "outline_fine_grid"}
+        "outline_fine_grid", "est_via_cost"}
     for q in quantize.REGISTRY.values():
         assert q.klass in ("pre-proof", "proof-preserving", "re-validated")
         assert q.value and q.basis

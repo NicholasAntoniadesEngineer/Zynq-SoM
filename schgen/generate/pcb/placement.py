@@ -322,7 +322,8 @@ def _classify_side(ref: str, lib: str, bbox: tuple,
 def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
                    bbox_of: dict, resolvable: dict, aspect: float = 1.0,
                    conn_rot: dict[str, float] | None = None,
-                   outer_dir: str | None = None
+                   outer_dir: str | None = None,
+                   face_top: frozenset[str] | set[str] | None = None
                    ) -> tuple[dict[str, tuple[float, float]],
                               dict[str, tuple[float, float]],
                               float, float]:
@@ -340,10 +341,17 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     zone-LOCAL direction the board edge lies in once this zone is placed) makes
     the connector seat FLUSH at that outer boundary with the rest of the
     subsystem packed behind it, inward. When both are given the zone uses the
-    dedicated edge-aware packer; otherwise it is the plain shelf pack."""
+    dedicated edge-aware packer; otherwise it is the plain shelf pack.
+
+    ``face_top`` (bottom-side P1): refs FORCED into the SECONDARY pack list
+    regardless of their classified side — inside a bottom-assigned block the
+    internal two-side split flips roles at emission, so a TP/LED/SW part
+    packed secondary still presents on the board-TOP face (user decision
+    2026-07-29). Empty/None is byte-identical to the historical split."""
+    ft = face_top or frozenset()
     sr = {"top": [], "bottom": []}
     for r in sheet_refs:
-        sr[side_of[r]].append(r)
+        sr["bottom" if r in ft else side_of[r]].append(r)
     conn_rot = conn_rot or {}
 
     def items(refs, _side):
@@ -560,6 +568,91 @@ def _mirror_contract_holds(sheet: str, t_off: dict, b_off: dict,
                 if fd is not None and fd < float(mf.get("min_mm", 0.0)):
                     return False
     return True
+
+
+_FACE_TOP_PREFIXES = ("TP", "LED", "SW")
+
+
+def _is_face_top_part(bref: str, lib_id: str, footprint: str) -> bool:
+    """A part the user faces (test point / LED / switch — decision 2026-07-29):
+    inside a bottom-assigned block it must present on the board-TOP copper, so
+    the zone packer forces it into the SECONDARY pack list whose role flips to
+    F.Cu at emission. Ref-prefix first (the board namespace preserves it), lib
+    tokens as the safety net."""
+    m = re.match(r"[A-Za-z]+", bref)
+    if m and m.group(0) in _FACE_TOP_PREFIXES:
+        return True
+    return ("TestPoint" in footprint or "TestPoint" in lib_id
+            or footprint.startswith("LED_") or lib_id.startswith("Switch:"))
+
+
+_CONN_CLASS_TOKENS = ("PinHeader", "PinSocket", "Conn", "DF40")
+
+
+def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
+                      rot_of: dict[str, float], zw: float
+                      ) -> dict[str, tuple[float, float]]:
+    """X-mirror a zone-local offset map about the zone's vertical mid-axis:
+    each part's ROTATED courtyard box lands at the mirrored X span (an
+    isometry on boxes — every pairwise courtyard gap and the zone containment
+    are preserved exactly); rotations and local pad geometry are UNCHANGED
+    (the unified bottom-side convention applies no F->B mirror anywhere)."""
+    out: dict[str, tuple[float, float]] = {}
+    for r, (ox, oy) in off.items():
+        cb = _rot_bbox_cw(bbox_of[r], rot_of.get(r, 0.0))
+        out[r] = (round(zw - ox - cb[0] - cb[2], 4), oy)
+    return out
+
+
+def _bottom_zone_shapes(sheet: str, refs: list[str], side_of: dict[str, str],
+                        bbox_of: dict, resolvable: dict,
+                        face_top: frozenset[str],
+                        tmpl: tuple | None, tmpl_rot: dict[str, float]
+                        ) -> list[ZoneShape]:
+    """Side-tagged BOTTOM shape variants for one bottom-eligible sheet
+    (bottom-side P1). A CONTRACTED (template) sheet offers ONE rigid X-mirror
+    of its as-built layout (a datasheet stage layout is never re-flowed),
+    kept only when the sheet's authored contract re-measures green on the
+    mirrored offsets — a reject is a registered fallback event, never a
+    silent drop. A shelf sheet offers a REAL role-flipped re-pack per ladder
+    aspect (face-top parts forced secondary), X-mirrored. Deterministic:
+    fixed aspect order, sorted refs, 4dp rounding."""
+    out: list[ZoneShape] = []
+    if tmpl is not None:
+        t_off, b_off, zw, zh = tmpl
+        stranded = sorted(r for r in t_off if r in face_top)
+        if stranded:
+            raise ValueError(
+                f"bottom-side eligibility: {sheet} is declared bottom-eligible "
+                f"but its rigid template packs face=top part(s) "
+                f"{', '.join(stranded)} on the PRIMARY side (would emit B.Cu) "
+                f"— pin the sheet top in floorplan.json or extend the "
+                f"template; a user-facing part never emits face-down")
+        rot_of = {r: tmpl_rot.get(r, 0.0) for r in (*t_off, *b_off)}
+        mt = _mirror_offsets_x(t_off, bbox_of, rot_of, zw)
+        mb = _mirror_offsets_x(b_off, bbox_of, rot_of, zw)
+        if _mirror_contract_holds(sheet, mt, mb, set(), dict(tmpl_rot), {},
+                                  resolvable):
+            out.append(ZoneShape(w=round(zw, 4), h=round(zh, 4), top_off=mt,
+                                 bot_off=mb, extra_rot=dict(tmpl_rot),
+                                 tag="bottom", side="bottom"))
+        else:
+            _fb.record("bottom_variant_contract_reject")
+        return out
+    seen: set[tuple[float, float]] = set()
+    for asp in (1.0, *INTERIOR_SHAPE_ASPECTS):
+        vt, vb, vw, vh = _pack_one_zone(refs, side_of, bbox_of, resolvable,
+                                        asp, face_top=face_top)
+        key = (round(vw, 4), round(vh, 4))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(ZoneShape(
+            w=vw, h=vh,
+            top_off=_mirror_offsets_x(vt, bbox_of, {}, vw),
+            bot_off=_mirror_offsets_x(vb, bbox_of, {}, vw),
+            extra_rot={}, tag=f"bottom-a{asp:g}", side="bottom"))
+    return out
 
 
 def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
@@ -838,7 +931,17 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
     # LAW 6: off-board connector refs per sheet + their MPN (for the rotation).
     conn_mpn_of: dict[str, str] = {}    # bref -> mating-face MPN
 
+    if spec is None:
+        from schgen.generate.floorplan import FLOORPLAN_SPEC, load_floorplan_spec
+        if FLOORPLAN_SPEC.exists():
+            try:
+                spec = load_floorplan_spec()
+            except Exception:  # noqa: BLE001 — malformed spec reported by build_plan
+                spec = None
     sheet_edge = _connector_sheet_edges(spec)  # sheet -> board edge (spec)
+    layer_pref: dict[str, str] = dict(spec.layer_of) if spec else {}
+    face_top_of: dict[str, set[str]] = {}
+    conn_class_of: dict[str, str] = {}
 
     for i, sc in enumerate(sheets, start=1):
         if sc.name.startswith("som_j") or sc.name == "som_decoupling":
@@ -874,6 +977,12 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
             side_of[bref] = _classify_side(bref, part.lib_id, bbox_of[bref],
                                            sdec, two_side)
             refs_by_sheet.setdefault(sc.name, []).append(bref)
+            if _is_face_top_part(bref, part.lib_id, part.footprint):
+                face_top_of.setdefault(sc.name, set()).add(bref)
+            elif (sc.name not in conn_class_of
+                  and any(t in part.lib_id or t in part.footprint
+                          for t in _CONN_CLASS_TOKENS)):
+                conn_class_of[sc.name] = bref
 
     # LAW 6: per-connector placement rotation (mating face -> off-board) keyed on
     # the connector's assigned board edge; the local OUTER direction the edge lies
@@ -898,6 +1007,24 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
             sheet_conn_rot.setdefault(sheet, {})[bref] = rot
             sheet_outer[sheet] = edge
 
+    for sheet in sorted(s for s, p in layer_pref.items()
+                        if p in ("bottom", "either")):
+        why = None
+        if sheet not in refs_by_sheet:
+            why = "it has no packable zone (reservation/mounting-hole only)"
+        elif (sheet in edge_sheets or sheet in sheet_conn_rot
+                or sheet in sheet_edge):
+            why = "it carries a seated off-board connector (LAW 6 pins it top)"
+        elif sheet in conn_class_of:
+            why = (f"it contains connector-class part {conn_class_of[sheet]} "
+                   f"(blocks with seated connectors stay top-pinned, user "
+                   f"decision 2026-07-29)")
+        if why:
+            raise ValueError(
+                f"floorplan.json: {sheet} declares side "
+                f"\"{layer_pref[sheet]}\" but {why} — remove the declaration "
+                f"or pin the sheet top")
+
     zone_box: dict[str, tuple[float, float]] = {}
     top_off: dict[str, dict[str, tuple[float, float]]] = {}
     bot_off: dict[str, dict[str, tuple[float, float]]] = {}
@@ -909,6 +1036,8 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
         # subsystems stay squarish.
         is_edge = sheet in edge_sheets
         aspect = EDGE_ZONE_ASPECT if is_edge else 1.0
+        eligible = layer_pref.get(sheet) in ("bottom", "either")
+        face_top = frozenset(face_top_of.get(sheet, ()))
 
         # PLACEMENT CONTRACT: a subsystem carrying a placement_contract.py gets a
         # datasheet-faithful STAGE TEMPLATE (Phase L) instead of the size-sorted
@@ -1007,6 +1136,11 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                         continue
                     seen_geo.add(key_)
                     uniq.append(s_)
+                if eligible:
+                    uniq.extend(_bottom_zone_shapes(
+                        sheet, refs_by_sheet[sheet], side_of, bbox_of,
+                        resolvable, face_top, (t_off, b_off, zw, zh),
+                        tmpl_rot))
                 if len(uniq) >= 2:
                     zone_shapes[sheet] = tuple(uniq)
             elif sheet in sheet_conn_rot:
@@ -1072,6 +1206,10 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                 seen.add(key)
                 var.append(ZoneShape(w=vw, h=vh, top_off=vt, bot_off=vb,
                                      extra_rot={}, tag=f"a{asp:g}"))
+            if eligible:
+                var.extend(_bottom_zone_shapes(
+                    sheet, refs_by_sheet[sheet], side_of, bbox_of,
+                    resolvable, face_top, None, {}))
             if var:
                 zone_shapes[sheet] = (
                     ZoneShape(w=zw, h=zh, top_off=t_off, bot_off=b_off,
@@ -1103,7 +1241,13 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
     exact geometry the floorplan committed to. ``chosen`` maps sheet ->
     shape index (the plan blocks' ``shape_idx``); index 0 / absent = no-op.
     An index without a registered shape set is an engine bug — raise, never
-    silently fall back to shape 0 (that is the silent-breakage class)."""
+    silently fall back to shape 0 (that is the silent-breakage class).
+
+    A side-tagged BOTTOM shape additionally flips its sheet's emitted part
+    sides by pack MEMBERSHIP (primary list -> B.Cu, secondary -> F.Cu), so a
+    face=top part the packer forced into the secondary list still presents on
+    the board top; the returned ``side_of`` carries the flip to every
+    downstream consumer (emission, L4, breathe, eviction, the gates)."""
     from dataclasses import replace as _dc_replace
     sel: dict[str, int] = {}
     for s, k in chosen.items():
@@ -1121,6 +1265,7 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
     top_off = dict(zg.top_off)
     bot_off = dict(zg.bot_off)
     extra = dict(zg.zone_extra_rot)
+    side_of = dict(zg.side_of)
     for s in sorted(sel):
         shp = zg.shapes[s][sel[s]]
         for r in (*zg.top_off.get(s, {}), *zg.bot_off.get(s, {})):
@@ -1129,8 +1274,14 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
         top_off[s] = dict(shp.top_off)
         bot_off[s] = dict(shp.bot_off)
         extra.update(shp.extra_rot)
+        if shp.side == "bottom":
+            for r in shp.top_off:
+                side_of[r] = "bottom"
+            for r in shp.bot_off:
+                side_of[r] = "top"
     return _dc_replace(zg, zone_box=zone_box, top_off=top_off,
-                       bot_off=bot_off, zone_extra_rot=extra)
+                       bot_off=bot_off, zone_extra_rot=extra,
+                       side_of=side_of)
 
 
 def _segments_cross(s1: tuple, s2: tuple) -> bool:
@@ -1439,6 +1590,7 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     zone_box = zg.zone_box
     top_off = zg.top_off
     bot_off = zg.bot_off
+    side_of.update(zg.side_of)
     classes, netclass_of = _net_classes(sheets)
     board_w, board_h = fp.BOARD_W, fp.BOARD_H
 

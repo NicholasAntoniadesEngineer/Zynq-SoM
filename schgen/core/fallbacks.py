@@ -74,6 +74,15 @@ _register(
     "neighbour (per via; also printed loud per part). Measured (scan B, "
     "F11/L5): fmc U11001 (VADJ LDO) is 3/3 lattice-seated on the carrier.")
 _register(
+    "bottom_variant_contract_reject", "zone_pack",
+    "A sheet DECLARED bottom-eligible (floorplan.json interior side "
+    "\"bottom\"/\"either\") whose X-mirrored bottom shape failed the re-measure "
+    "of its authored placement contract (_mirror_contract_holds on the "
+    "mirrored offsets) — the bottom variant is NOT offered and the block "
+    "keeps its top-side shape set (a correctness choice, never a silent "
+    "degrade). Counted per zone-geometry pass; the board flow runs the "
+    "shared packer twice, so one rejected sheet counts 2.")
+_register(
     "corridor_evict_moved", "corridor_eviction",
     "A bottom-side stray inside a DF40 stitch corridor was evicted to the "
     "nearest legal exit (per part moved). Measured (scan B, F13): carrier "

@@ -128,11 +128,12 @@
  },
  "fallback_gate": {
   "n_fired": 3,
-  "n_names": 6,
+  "n_names": 7,
   "ok": true,
   "pinned": false
  },
  "fallbacks": {
+  "bottom_variant_contract_reject": 0,
   "cand_cap_truncated": 7,
   "corridor_evict_moved": 15,
   "corridor_stray_unmovable": 0,
@@ -211,7 +212,7 @@
  "quantize_census": {
   "n_files": 13,
   "n_new": 0,
-  "n_registered": 14,
+  "n_registered": 15,
   "n_sites": 0,
   "ok": true
  },

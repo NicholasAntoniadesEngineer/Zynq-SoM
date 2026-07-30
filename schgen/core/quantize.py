@@ -222,6 +222,27 @@ def run_overflow_tol() -> float:
 
 
 _register(
+    "est_via_cost",
+    "2 * (0.6 + 2 * 0.25) = 2.2 mm per side-crossing cross-subsystem MST edge",
+    "LAW-5 sizing-estimator VIA-COST term (bottom-side P1): a cross-subsystem "
+    "net whose endpoints sit on opposite copper faces needs a layer-transition "
+    "via, and one via consumes its barrel (0.6 mm copper dia — the project's "
+    "standard THERMAL_VIA_SIZE) plus a clearance annulus (2 x 0.25 mm "
+    "THERMAL_VIA_CLEAR) of routing channel on BOTH signal layers = 2.2 mm of "
+    "equivalent airwire. Charged ONLY on cross-sheet MST edges with differing "
+    "endpoint sides where an endpoint sheet chose a side-tagged BOTTOM shape: "
+    "the baseline board's existing top/bottom splits are already priced by "
+    "the calibrated LAW-5 budget, so the term is exactly zero when no block "
+    "opts in (the byte-inert control) and the strict ratsnest gate remains "
+    "the arbiter of any board it helped size.",
+    "pre-proof")
+
+
+def est_via_cost() -> float:
+    return 2 * (0.6 + 2 * 0.25)
+
+
+_register(
     "legalize_pose_quantum",
     f"round(round(v / {HALF_MM}) * {HALF_MM}, 4)",
     "The composition legalizer's L4' compaction writes each pulled pose back "

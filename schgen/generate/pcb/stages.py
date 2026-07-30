@@ -51,8 +51,10 @@ PLACEMENT_STAGES: tuple[Stage, ...] = (
           "fp.build_plan — block poses on the sized outline (smallest-area "
           "search + fine refinement + legalize/compact)"),
     Stage("shape_bind", False, False, "board",
-          "apply_chosen_shapes raises on an unregistered shape index",
-          "rebind zone views to the plan's chosen per-block shapes"),
+          "apply_chosen_shapes raises on an unregistered shape index; a "
+          "side-tagged bottom shape flips its parts' emitted sides by pack "
+          "membership (positions untouched — the tripwire still holds)",
+          "rebind zone views to the plan's chosen per-block shapes + sides"),
     Stage("step3_emission", True, True, "board",
           "exact floorplan pose transfer (no zone snap); every later gate "
           "and DRC measure the emitted result",
