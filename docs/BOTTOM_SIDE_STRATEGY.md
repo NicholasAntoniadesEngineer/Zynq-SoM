@@ -57,3 +57,25 @@ NOT two floorplans. One floorplan where SIDE is a per-block degree of freedom:
    — service access on standoffs, not user-facing.
 
 Sequencing: P1 starts after the wave-8 engine unit lands (same files).
+
+## P2 measured (2026-07-30)
+
+- Side choice is EST-DRIVEN inside the pack search (`_pick_sided`): when a
+  block's fitting variants span both faces, the per-face finalists are judged
+  by the sizing estimator restricted to that sheet's nets (cross-airwire +
+  registered `est_via_cost`) on the partial board — strict 1e-6 win or the
+  distance incumbent stays; distance still judges within a face. Zero opt-ins
+  means the judge cannot fire (byte-identity control held on both projects).
+- Achiral-safe opt-in frontier (unified convention — no chiral IC emission
+  yet): hdmi_rx_term + user_io only; 16 interior blocks excluded (ICs, diodes,
+  unproven multi-pad inductors or magnetics on the would-be-B.Cu primary;
+  conn-class jumpers; MH-only mechanical). Both measured NEUTRAL at 185x166:
+  hdmi_rx_term's bottom variant est +48..+65 mm (via cost, no cross win —
+  63/63 judgements keep top, including the P1 distance tie at 0.403);
+  user_io's variant is vacuous (all 8 parts face-top, primary empty) and the
+  judge RESCUED it from 36 distance-preferred bottom placements (up to
+  +245 mm worse cross). Boards byte-identical, so the opt-ins are reported,
+  not landed (user acceptance rule: measured wins only).
+- P3 outline harvest therefore waits on the chirality debt (embed-level local
+  mirror + kernel updates for IC-bearing blocks) before interior demand can
+  approach max(top, bottom) instead of the sum.
