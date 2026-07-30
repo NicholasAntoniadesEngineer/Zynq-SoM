@@ -57,3 +57,6 @@ env/
 
 # SoM audit working scripts (scratch)
 som/.som_audit_*.js
+
+# derived KiCad-exact mirrored footprint cache (schgen/generate/pcb/mirror.py)
+.mirrored_fp/

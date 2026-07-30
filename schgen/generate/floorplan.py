@@ -187,27 +187,31 @@ def _block_fanout_reach(sheet: str, zg) -> tuple[tuple, tuple]:
 
 def _shape_fanout_reach(shape, zg) -> tuple[tuple, tuple]:
     """The SAME derivation as :func:`_block_fanout_reach` on ONE shape variant
-    (its own box/offsets/rotations) — so the occupancy lattice reserves the
-    fan-out floor of the shape actually chosen, never shape 0's. extra_rot
-    composes ADDITIVELY onto conn_rot (the emission/evaluate convention — a
+    (its own box/offsets/rotations, chirality-mirrored members through their
+    mirrored documents) — so the occupancy lattice reserves the fan-out floor
+    of the shape actually chosen, never shape 0's. extra_rot composes
+    ADDITIVELY onto conn_rot (the emission/evaluate convention — a
     conn-seated mirror shape carries extra 0.0 for its connector)."""
     rot_of = dict(zg.conn_rot)
     for r, e in shape.extra_rot.items():
         rot_of[r] = (rot_of.get(r, 0.0) + e) % 360.0
     return _zone_fanout_reach(shape.w, shape.h,
-                              (shape.top_off, shape.bot_off), rot_of, zg)
+                              (shape.top_off, shape.bot_off), rot_of, zg,
+                              mods=shape.mirror)
 
 
 def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
-                     side: str) -> tuple:
+                     side: str, mods: dict | None = None) -> tuple:
     """Occupancy COMPONENTS of one zone shape (bottom-side P1), zone-local:
     the SECONDARY-side content bbox on the OPPOSITE copper face's mask (a
     2-sided overlay pack really occupies both surfaces) plus a PUNCH box per
     through-hole part (copper on every layer). Zero-reach sub-rects — the
     block's D13 reach rides its main rect; for an all-top population every
     component check is implied by the main-rect check (contained boxes), the
-    byte-inertness argument. Deterministic: sorted refs, 4dp rounding."""
-    from schgen.generate.pcb.footprint import has_thru_pads
+    byte-inertness argument. ``mods`` (wave-9 chirality): per-ref mirrored-
+    document override — a mirrored member's box is its mirrored document's
+    bbox. Deterministic: sorted refs, 4dp rounding."""
+    from schgen.generate.pcb.footprint import _footprint_bbox, has_thru_pads
     from schgen.generate.pcb.mating_face import _rot_bbox_cw
     rot_of = dict(zg.conn_rot)
     for r, e in extra_rot.items():
@@ -215,7 +219,8 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
 
     def _cb(r: str, ox: float, oy: float
             ) -> tuple[float, float, float, float] | None:
-        bb = zg.bbox_of.get(r)
+        mp = (mods or {}).get(r)
+        bb = _footprint_bbox(mp) if mp is not None else zg.bbox_of.get(r)
         if bb is None:
             return None
         c = _rot_bbox_cw(bb, rot_of.get(r, 0.0))
@@ -234,7 +239,7 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
                       OCC_TOP if side == "bottom" else OCC_BOTTOM))
     for off in (t_off, b_off):
         for r, (ox, oy) in sorted(off.items()):
-            mod = zg.resolvable.get(r)
+            mod = (mods or {}).get(r) or zg.resolvable.get(r)
             if mod is None or not has_thru_pads(mod):
                 continue
             c = _cb(r, ox, oy)
@@ -245,9 +250,10 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
     return tuple(comps)
 
 
-def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg
-                       ) -> tuple[tuple, tuple]:
+def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg,
+                       mods: dict | None = None) -> tuple[tuple, tuple]:
     from schgen.generate.pcb import placement as _pl
+    from schgen.generate.pcb.footprint import _footprint_bbox
     from schgen.generate.pcb.mating_face import _rot_bbox_cw
     from schgen.verify.fanout_gate import (
         MIN_SUBJECT_PINS,
@@ -260,6 +266,9 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg
         for ref, (ox, oy) in side_off.items():
             mod = zg.resolvable.get(ref)
             bbox = zg.bbox_of.get(ref)
+            mp = (mods or {}).get(ref)
+            if mp is not None:
+                mod, bbox = mp, _footprint_bbox(mp)
             if mod is None or bbox is None:
                 continue
             if "Fiducial" in mod.stem or is_testpoint_ref(ref):
@@ -738,13 +747,14 @@ class FloorplanSpec:
                    the anchor the interior packer pulls the block toward —
                    optionally + {"pull": {to, weight, face, exclusive, basis}}
                    (T1 P3: the validated seat-authority knob; see
-                   ``_validate_pull``). ``side`` also accepts the LAYER
-                   eligibility values "top"|"bottom"|"either" (bottom-side
-                   P1): the block's copper-face degree of freedom (the zone
-                   anchor then keeps the default) — exposed as ``layer_of``;
-                   absent = top, and seated-connector blocks may never
-                   declare bottom/either (validated loudly in the shared
-                   packer, where the connector content is known).
+                   ``_validate_pull``). The copper-face degree of freedom
+                   "top"|"bottom"|"either" (bottom-side P1) is the ``layer``
+                   key — combinable with a real N/E/S/W anchor — or, for an
+                   anchor-less block, a ``side`` holding the layer value (the
+                   P1 spelling; declaring both raises). Exposed as
+                   ``layer_of``; absent = top, and seated-connector blocks
+                   may never declare bottom/either (validated loudly in the
+                   shared packer, where the connector content is known).
     Every other subsystem (not named anywhere) keeps the auto-derivation, so the
     spec is optional and incremental. ``edge_of`` / ``edge_order`` / ``anchor_of``
     are the flat lookups build_plan consumes. Deterministic: the spec is read
@@ -775,10 +785,14 @@ class FloorplanSpec:
 
     @property
     def layer_of(self) -> dict[str, str]:
-        """name -> declared copper-face eligibility (only entries whose
-        ``side`` holds a layer value; every other block defaults top)."""
-        return {n: a["side"] for n, a in self.interior.items()
-                if a.get("side") in _LAYER_SIDES}
+        """name -> declared copper-face eligibility: the ``layer`` key, or a
+        ``side`` holding a layer value (the anchor-less P1 spelling — the
+        parser raises when both are given); every other block defaults top."""
+        out = {n: a["side"] for n, a in self.interior.items()
+               if a.get("side") in _LAYER_SIDES}
+        out.update({n: a["layer"] for n, a in self.interior.items()
+                    if "layer" in a})
+        return out
 
     @property
     def names(self) -> set[str]:
@@ -944,15 +958,25 @@ def load_floorplan_spec(path: Path = FLOORPLAN_SPEC,
                 f"{path.name}: interior[{name!r}] must be an object "
                 f"(\"side\" or \"near\")")
         keys = set(anchor)
-        if keys - {"side", "near", "pull"}:
+        if keys - {"side", "near", "pull", "layer"}:
             raise FloorplanSpecError(
-                f"{path.name}: interior[{name!r}] only \"side\", \"near\" or "
-                f"\"pull\" are allowed (got {sorted(keys)})")
+                f"{path.name}: interior[{name!r}] only \"side\", \"near\", "
+                f"\"pull\" or \"layer\" are allowed (got {sorted(keys)})")
         if "side" in anchor and anchor["side"] not in _EDGES + _LAYER_SIDES:
             raise FloorplanSpecError(
                 f"{path.name}: interior[{name!r}].side must be N/E/S/W "
                 f"(zone anchor) or top/bottom/either (copper-face "
                 f"eligibility, bottom-side P1)")
+        if "layer" in anchor and anchor["layer"] not in _LAYER_SIDES:
+            raise FloorplanSpecError(
+                f"{path.name}: interior[{name!r}].layer must be "
+                f"top/bottom/either (copper-face eligibility; use \"side\" "
+                f"for the N/E/S/W zone anchor)")
+        if "layer" in anchor and anchor.get("side") in _LAYER_SIDES:
+            raise FloorplanSpecError(
+                f"{path.name}: interior[{name!r}] declares the copper face "
+                f"twice (side={anchor['side']!r} and layer="
+                f"{anchor['layer']!r}) — keep exactly one")
         if "near" in anchor:
             tgt = anchor["near"]
             if not isinstance(tgt, str):
@@ -1007,19 +1031,17 @@ def export_floorplan_spec(plan: Plan, path: Path = FLOORPLAN_SPEC) -> Path:
 
     interior: dict[str, dict] = {}
     for b in sorted(plan.interior_blocks, key=lambda b: b.name):
-        if b.layer_pref != "top":
-            interior[b.name] = {"side": b.layer_pref}
-            if b.zone.startswith("@"):
-                interior[b.name] = {"near": b.zone[1:],
-                                    "side": b.layer_pref}
-        elif b.zone.startswith("@"):
-            interior[b.name] = {"near": b.zone[1:]}
+        if b.zone.startswith("@"):
+            entry: dict = {"near": b.zone[1:]}
         elif b.zone in _EDGES:
-            interior[b.name] = {"side": b.zone}
+            entry = {"side": b.zone}
         else:
-            interior[b.name] = {"side": "E"}   # default cluster side
+            entry = {"side": "E"}   # default cluster side
+        if b.layer_pref != "top":
+            entry["layer"] = b.layer_pref
+        interior[b.name] = entry
         if b.pull:
-            interior[b.name]["pull"] = dict(b.pull)   # round-trip the knob
+            entry["pull"] = dict(b.pull)   # round-trip the knob
 
     spec = {
         "outline": "auto",
@@ -1690,6 +1712,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
             if sv in _LAYER_SIDES:
                 b.layer_pref = sv
                 sv = "E"
+            if "layer" in sp:
+                b.layer_pref = sp["layer"]
             if "near" in sp:
                 b.zone = f"@{sp['near']}"
             else:
@@ -1792,7 +1816,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         for k, s in enumerate(zg.shapes.get(b.name, ())):
             if k:
                 comps_of[(b.name, k)] = _zone_components(
-                    zg, s.top_off, s.bot_off, s.extra_rot, s.side)
+                    zg, s.top_off, s.bot_off, s.extra_rot, s.side,
+                    mods=s.mirror)
     shape_sets: dict[str, list[tuple]] = {}
     for b in interior:
         variants = zg.shapes.get(b.name)
@@ -2114,6 +2139,7 @@ def _cross_estimator(plan: Plan, zg, sheets):
     n_shapes = {sheet: len(v) for sheet, v in zg.shapes.items()}
     off_k: dict[tuple[str, int], dict[str, tuple[float, float]]] = {}
     rot_k: dict[tuple[str, int], dict[str, float]] = {}
+    mir_k: dict[tuple[str, int], dict[str, Path]] = {}
     for sheet in sorted(zg.shapes):
         for k, shp in enumerate(zg.shapes[sheet]):
             if k == 0:
@@ -2124,6 +2150,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
             rot_k[(sheet, k)] = {
                 r: (zg.conn_rot.get(r, 0.0) + e) % 360.0
                 for r, e in shp.extra_rot.items()}
+            if shp.mirror:
+                mir_k[(sheet, k)] = shp.mirror
 
     dec_refs: list[str] = []
     for i, sc in enumerate(sheets, start=1):
@@ -2162,10 +2190,12 @@ def _cross_estimator(plan: Plan, zg, sheets):
     for k, bref in enumerate(sorted(dec_refs)):
         owner_of[bref] = ("dec", k)
 
-    def _pads_at(bref: str, rot: float) -> dict[str, list[tuple[float, float]]]:
+    def _pads_at(bref: str, rot: float, mod: Path | None = None
+                 ) -> dict[str, list[tuple[float, float]]]:
         probe = FootprintInst(ref=bref, value="", footprint="", x=0.0, y=0.0,
                               rotation=rot, pad_nets={},
-                              mod_path=mod_of[bref], sheet=sheet_of[bref])
+                              mod_path=mod or mod_of[bref],
+                              sheet=sheet_of[bref])
         rel: dict[str, list[tuple[float, float]]] = {}
         for name, rx, ry, _n in _inst_pad_geom(probe):
             rel.setdefault(name, []).append((rx, ry))
@@ -2178,9 +2208,11 @@ def _cross_estimator(plan: Plan, zg, sheets):
         sh = sheet_of[bref]
         for k in range(1, n_shapes.get(sh, 1)):
             r_k = rot_k[(sh, k)].get(bref, 0.0)
-            pad_rel_k[(bref, k)] = (pad_rel[bref]
-                                    if r_k == rot_of.get(bref, 0.0)
-                                    else _pads_at(bref, r_k))
+            mp = mir_k.get((sh, k), {}).get(bref)
+            if mp is None and r_k == rot_of.get(bref, 0.0):
+                pad_rel_k[(bref, k)] = pad_rel[bref]
+            else:
+                pad_rel_k[(bref, k)] = _pads_at(bref, r_k, mp)
 
     # net_pts entry = (bref, sheet, pads_by_shape): pads_by_shape[k] is the
     # pin's pad offsets under that sheet's shape k (a 1-tuple for single-shape

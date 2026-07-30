@@ -53,7 +53,8 @@ PLACEMENT_STAGES: tuple[Stage, ...] = (
     Stage("shape_bind", False, False, "board",
           "apply_chosen_shapes raises on an unregistered shape index; a "
           "side-tagged bottom shape flips its parts' emitted sides by pack "
-          "membership (positions untouched — the tripwire still holds)",
+          "membership and rebinds each primary member to its KiCad-exact "
+          "mirrored document (positions untouched — the tripwire still holds)",
           "rebind zone views to the plan's chosen per-block shapes + sides"),
     Stage("step3_emission", True, True, "board",
           "exact floorplan pose transfer (no zone snap); every later gate "
@@ -62,7 +63,8 @@ PLACEMENT_STAGES: tuple[Stage, ...] = (
           "origin + packed offset, som_decoupling grid"),
     Stage("l4_pull", True, True, "board",
           "collision _free set (bottom occupancy + top-THT + armed escape "
-          "corridors) + on-board margin + dispersion cap",
+          "corridors + foreign bottom-side D13 subject floors, wave-9) + "
+          "on-board margin + dispersion cap",
           "LEVER L4 — rigid SoM-ward pull of bottom passive clusters"),
     Stage("edge_seat", True, True, "board",
           "EDGE_PAD_CLEAR pad-flush seat on the perpendicular axis only; "
@@ -88,7 +90,8 @@ PLACEMENT_STAGES: tuple[Stage, ...] = (
           "permute interchangeable parts among their frozen slots to "
           "uncross airwire fans"),
     Stage("corridor_eviction", True, True, "board",
-          "corridor collision re-check + bottom/THT/edge guards on every "
+          "corridor collision re-check + bottom/THT/edge + foreign "
+          "bottom-side D13 subject floors (wave-9) on every "
           "exit; moved and unmovable strays are registered fallback "
           "events; escape gate. Corridors are measured at the POST-gridify "
           "DF40 centres (registered evict_corridor_grid) — the same frame "

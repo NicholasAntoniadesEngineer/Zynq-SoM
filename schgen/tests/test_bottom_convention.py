@@ -21,11 +21,16 @@ ESC_SIG0 2.40 mm off).  Ratsnest airwire endpoints, contract-gate distances
 and escape obstacles all consumed those wrong positions; the escape generator
 carried a union-of-both-conventions workaround (now removed).
 
-CONSEQUENCE GUARDED FOREVER: an emitted bottom land pattern is the CHIRAL
-MIRROR of the part's top-side pattern, so ONLY mirror-symmetric, non-polarized
-parts may be classified bottom (test_bottom_parts_achiral_nonpolarized) — a
-polarized/asymmetric-pinout part on the bottom would solder reversed or not
-at all.
+CONSEQUENCE GUARDED FOREVER (rescoped by wave-9 chirality): a bottom part
+emitted from an UNCHANGED library document (inst.mirror=False — the 2-side
+classifier population) lands the CHIRAL MIRROR of its top-side pattern, so
+that population stays restricted to mirror-symmetric, non-polarized parts
+(test_bottom_parts_achiral_nonpolarized). A part emitted from its
+pcb/mirror.py MIRRORED document (inst.mirror=True — block bottom variants,
+KiCad-exact pcbnew LEFT_RIGHT flip encoding, proven object-equal at 0.0 nm)
+carries the physically correct flipped pattern, so ANY footprint may emit
+that way; the guard instead demands the mirrored document + bottom side
+(tests/test_chirality.py holds the transform pins).
 """
 
 from __future__ import annotations
@@ -160,16 +165,30 @@ _POLARIZED_FP_TOKENS = ("CP_", "D_", "LED", "Diode", "Polar", "Tantal")
 
 
 def test_bottom_parts_achiral_nonpolarized(model):
-    """ENTRY GUARD (tripwire): every bottom-classified part must be (a) a
+    """ENTRY GUARD (tripwire): every NON-MIRRORED bottom part must be (a) a
     passive ref class, (b) a non-polarized footprint, (c) geometrically
     ACHIRAL — its pad (position, size) multiset invariant under the X-mirror —
-    and (d) if it has >2 pads, individually proven mirror-safe above. The
-    emitted bottom land pattern is the chiral mirror of the part's top-side
-    pattern (embed._flip_to_bottom keeps local coordinates, KiCad applies no
-    mirror), so any part failing these tests would assemble reversed — a
-    LAW-0 defect the netlist/DRC gates cannot see."""
+    and (d) if it has >2 pads, individually proven mirror-safe above. An
+    unchanged library document emitted on B.Cu lands the chiral mirror of the
+    part's top-side pattern (embed._flip_to_bottom keeps local coordinates,
+    KiCad applies no mirror), so any such part failing these tests would
+    assemble reversed — a LAW-0 defect the netlist/DRC gates cannot see.
+    inst.mirror=True parts are EXEMPT from achirality (their document IS the
+    KiCad-exact mirror, any footprint legal) but must carry that mirrored
+    document on the bottom side — enforced here and by the embed guard."""
+    from schgen.generate.pcb.constants import _INT_DESC, CONN_MATING_FACE
+    from schgen.generate.pcb.mirror import is_mirrored_path
     seen_bottom = 0
     for inst in model.insts:
+        if inst.mirror:
+            assert inst.side == "bottom" and is_mirrored_path(inst.mod_path), (
+                f"{inst.ref}: mirror=True must pair a .mirrored_fp document "
+                f"with side=bottom")
+            assert (inst.ref not in _INT_DESC
+                    and inst.value not in CONN_MATING_FACE), (
+                f"{inst.ref}: a mating connector may never emit face-down "
+                f"(user policy 2026-07-29; the JTAG/SWD-header hole)")
+            continue
         if inst.side != "bottom":
             continue
         seen_bottom += 1
@@ -225,7 +244,7 @@ def test_red_on_before_old_mirror_convention_was_wrong(model):
     affected = total = 0
     worst = 0.0
     for inst in model.insts:
-        if inst.side != "bottom":
+        if inst.side != "bottom" or inst.mirror:
             continue
         total += 1
         rot = math.radians(inst.rotation or 0.0)

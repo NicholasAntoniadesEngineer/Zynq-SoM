@@ -79,3 +79,36 @@ Sequencing: P1 starts after the wave-8 engine unit lands (same files).
 - P3 outline harvest therefore waits on the chirality debt (embed-level local
   mirror + kernel updates for IC-bearing blocks) before interior demand can
   approach max(top, bottom) instead of the sum.
+
+## Chirality PAID (wave-9, 2026-07-30)
+
+- KiCad-EXACT mirrored emission is live: `schgen/generate/pcb/mirror.py`
+  materialises each footprint's pcbnew-LEFT_RIGHT-flip twin (stored local
+  y -> -y, local angles -> -a; instance rotation t -> (180 - t) % 360; layers
+  still flipped by `embed._flip_to_bottom`; `(model ...)` untouched) as a
+  real .kicad_mod under `.mirrored_fp/` (gitignored derived cache, outside
+  parts/ so the model3d census never sees it). A mirrored instance is an
+  instance WHOSE mod_path IS the mirrored document, so every geometry kernel
+  (`_pad_boxes`/`_rot_pad_bbox`/`_footprint_bbox`/`_inst_pad_geom`/
+  `_mod_pads`/escape/silk/D13/contract/ratsnest) stays side-blind with zero
+  mirror branches.
+- GROUND TRUTH pinned against pcbnew 10.0.2 itself: a 32-footprint fixture
+  (SOT-23-5, QFN24 with rot-90 oval pads, FUSB302 MLP, HX5008 TH magnetics;
+  rots 0/37/90/270, both sides) emitted by `embed._embed_footprint` matched
+  KiCad's own `FOOTPRINT::Flip` objects pad-for-pad at 0.0 nm (584 pads:
+  position, orientation, layer set, shape, size, drill), side-blind loader
+  formula residual 0.5 nm, `kicad-cli pcb drc` 0 violations. Placed-pattern
+  identity: `R_cw(180 - t) . M_y == M_x . R_cw(t)`.
+- Bottom shape variants now carry the TRUE mirror (`_mirror_pack`): primary
+  pack = mirrored documents at origin (zw - ox, oy), rotation
+  (180 - t) % 360 (`ZoneShape.mirror`); secondary pack (face-top parts,
+  presents F.Cu) keeps plain top emission with box-preserving mirrored
+  origins. `apply_chosen_shapes` rebinds resolvable/bbox_of to the mirrored
+  documents (`ZoneGeom.mirror_refs` -> `FootprintInst.mirror`); the
+  estimator, D13 shape reach, occupancy comps, zone metrics and the contract
+  re-measure all judge the mirrored geometry. The achiral-swap convention
+  remains ONLY for the 2-side classifier population (pushed passives +
+  som_decoupling, byte-pinned boards) and its entry guard now scopes to
+  inst.mirror=False; mirrored parts of ANY footprint class are legal on
+  B.Cu (face-top TP/LED/SW still forced to present top; seated-connector /
+  conn-class / no-zone hard raises unchanged).

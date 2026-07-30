@@ -450,7 +450,8 @@ class LocalMetrics:
 
 
 def _local_metrics_one(zg, t_off: dict, b_off: dict, extra_rot: dict,
-                       zone_wh: tuple[float, float]) -> LocalMetrics:
+                       zone_wh: tuple[float, float],
+                       mods: dict | None = None) -> LocalMetrics:
     from schgen.verify.placement_contract_gate import _pad_boxes  # lazy: verify
     offs: list[tuple[str, float, float]] = []
     pads: list[tuple[str, float, float, float, float]] = []
@@ -459,7 +460,7 @@ def _local_metrics_one(zg, t_off: dict, b_off: dict, extra_rot: dict,
     for ref in sorted(both):
         dx, dy = both[ref]
         offs.append((ref, dx, dy))
-        mod = zg.resolvable.get(ref)
+        mod = (mods or {}).get(ref) or zg.resolvable.get(ref)
         if mod is None:
             continue
         rot = (zg.conn_rot.get(ref, 0.0) + extra_rot.get(ref, 0.0)) % 360.0
@@ -503,7 +504,8 @@ def zone_shape_metrics(zg) -> dict[tuple[str, int], LocalMetrics]:
             if k == 0:
                 continue
             out[(sheet, k)] = _local_metrics_one(
-                zg, shp.top_off, shp.bot_off, shp.extra_rot, (shp.w, shp.h))
+                zg, shp.top_off, shp.bot_off, shp.extra_rot, (shp.w, shp.h),
+                mods=shp.mirror)
     return out
 
 
