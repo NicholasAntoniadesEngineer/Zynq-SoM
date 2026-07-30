@@ -478,13 +478,21 @@ class ZoneShape:
     """ONE legal shape of a subsystem zone: a REAL re-pack/turn with its own
     (w, h) + per-part offsets + per-part extra placement rotations. Index 0 of a
     sheet's shape tuple is ALWAYS the legacy single shape (the same data the
-    ZoneGeom flat views hold), so a shape-blind consumer stays byte-identical."""
+    ZoneGeom flat views hold), so a shape-blind consumer stays byte-identical.
+
+    ``side`` (bottom-side P1): the copper face the block ASSIGNS its zone to.
+    ``top_off``/``bot_off`` always hold the packer's PRIMARY/SECONDARY lists;
+    for a ``side="bottom"`` shape the primary list emits on B.Cu and the
+    secondary on F.Cu (``apply_chosen_shapes`` flips each part's emitted side
+    by pack MEMBERSHIP, so a face=top part forced into the secondary list
+    still presents on the board top)."""
     w: float
     h: float
     top_off: dict[str, tuple[float, float]]
     bot_off: dict[str, tuple[float, float]]
     extra_rot: dict[str, float]
     tag: str
+    side: str = "top"
 
 
 @dataclass
