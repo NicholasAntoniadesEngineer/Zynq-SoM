@@ -150,6 +150,74 @@ Sequencing: P1 starts after the wave-8 engine unit lands (same files).
   hairline survivors are gone: U5001 -0.120 (STARVED) -> +0.400, SW7002 +0.005
   -> +0.050, U7001 +0.008 -> +0.215. `legalize_only_compaction` ratchets 16 ->
   14.
+## Wave-11 — the PUNCH MODEL is fixed (8,155.8 mm² of bottom released) and a MONOTONICITY GUARD makes the freedom free
+
+- P1 — PUNCH ONLY WHAT PIERCES. An edge block's main rect now carries its OWN
+  copper face (`OCC_TOP`) and the geometry that genuinely pierces rides as
+  PUNCH components. Two fixes, not one: applying the existing
+  `_zone_components` path to edge blocks would have released 5,839.6 mm²,
+  because that path punched each THT part's whole FOOTPRINT BBOX. The truth is
+  the PAD copper — 382.9 mm² union vs 2,699.0 mm² of bbox, so the interior-zone
+  punch model was itself ~7x too conservative and is now exact
+  (`mating_face.thru_pad_boxes`, one kernel shared with `_rot_pad_bbox`). Each
+  punch box is swept OUT to the board edge along the block's edge normal
+  because the LAW-6 edge seat slides a connector outward at emission (measured
+  1.500 mm on every contracted conn sheet, 1.960 on `rj45_connector`).
+  MEASURED: 15 edge blocks 8,548.0 -> 392.2 mm², **8,155.8 mm² released =
+  27.0 % of the 30,155 mm² surface**.
+- P2 — SoM: OCC_TOP ONLY. The module rect is the TOP keepout; the underside
+  carries the REAL content — the 18 `som_decoupling` cells (from the emission
+  oracle `placement.som_decoupling_cells`, one function for both the reservation
+  and the placement) on `OCC_BOTTOM`, plus the three DF40 escape/return-stitch
+  seat bands as PUNCH. The DF40s are SMD (top face only). MEASURED: of the
+  2,385 mm² rect, 1,936.1 mm² is genuinely occupied, so 448.9 mm² is released
+  inside it; the bands also reserve 291.6 mm² OUTSIDE it that interior bottom
+  blocks previously ignored, so P2 is a net +157.3 mm² and, more usefully, a
+  SHAPE change: the SoM underside is reachable and the corridor is reserved up
+  front instead of relying on `corridor_eviction` (`corridor_evict_moved` stays
+  0 on the carrier). The 6 mm `_SEAT_BAND` rects provably contain
+  `escape.corridor_board_rect` (true corridor union 217.9 mm²; R_CONSTRUCT 1.8
+  and CORRIDOR_V_MARGIN 0.15 both well inside 6.0).
+- THE FINDING: **the greedy search is NOT monotone in free area.** P1+P2 alone
+  emitted the same 185x163 board with cross-airwire 15,319 -> 16,536.1
+  (+1,217) — freeing the bottom moved the two already-bottom blocks, which
+  moved the `centers` map every later anchor reads, and two top blocks switched
+  shapes. A degree of freedom that can make the result worse is noise. So
+  `build_plan` now runs the outline search under BOTH reservation policies —
+  the wave-11 truth and the CONSERVATIVE SUPERSET (whole rects on both faces,
+  i.e. master's model) — and keeps the strictly better plan on
+  `(area, est_cross)`, ties to the conservative incumbent. Both are legal (a
+  superset reservation can only forbid placements), so this is a measurement,
+  not a degrade; the rejection is the registered, ratcheted fallback
+  `punch_free_plan_rejected`. Exactly two `_search(pad_punch)` calls per
+  `build_plan`, each a pure function of the flag over the same fixed grids; the
+  rejected search is rolled back (`_plan_restore` + `fallbacks.restore`) and
+  `_reset_shapes` re-arms the pre-search shape state so `_choose_conn_shapes`
+  can never restore the other search's mirror as its incumbent.
+- MEASURED, both projects: carrier **185x163 / 30,155 mm² / cross 15,319.0, md5
+  `8c093a49db4c7fc71edb1acc91ce756a` — the pin, byte-for-byte**, 28 gates
+  green; devkit **123x100, md5 `37bd122b3463b00e4b2d95d1e788b18b` — the pin**.
+  The whole wave is byte-inert because on every rung measured the freed surface
+  did not pay.
+- LADDER (9 rungs + the combination, ordinary via 2.2): `board_services`,
+  `bringup_en_modules`, `bringup_modules`, `hdmi_rx_term`, `usb_pd` and
+  `user_io` are byte-identical to the pin; `bringup_en` is +0.9 mm cross;
+  `power_mon` and the 8-block combination emit 185x163 with cross 16,536.1
+  (+1,217). `ethernet` is still NOT MEASURABLE. Nothing lands.
+- THE EST/EMISSION GAP SURVIVES — wave-10's hypothesis is REFUTED. `power_mon`
+  is the clean case: the guard's judge IS the sizing estimator, it preferred the
+  freed plan, and the emitted cross came out +1,217 mm worse. The gap is
+  therefore downstream of the lattice (the post-floorplan movers `l4_pull` /
+  `breathe` / `refit_facing` / `reorder` and pad-level geometry the block proxy
+  cannot see), not the punch model. That is the next lever.
+- ORDINARY-VIA ROW: the wave-10 STEP at 0+ is GONE — 0.0 and 2.2 now emit the
+  IDENTICAL best board (md5 `8c093a49…`). The whole swept range is one plateau,
+  so there is no measured reason to move the constant: **2.2 STAYS** as its
+  physically-derived member. Its registered basis is re-based on this
+  measurement; it remains INTERIM for the est/emission gap alone. (0.0 with the
+  wave-10 re-test set `power_mon`+`usb_pd`+`bringup_en` emits 185x163 with cross
+  16,526.7 — still negative.)
+
 - LADDER, everything else (one at a time + the full combination): under the
   0.0-ordinary model the est took bottom for `power_mon`, `usb_pd` and
   `bringup_en` and every one of those emitted boards was WORSE on both axes

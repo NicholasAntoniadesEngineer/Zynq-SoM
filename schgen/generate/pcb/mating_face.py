@@ -72,6 +72,76 @@ def _rot_bbox_cw(bbox: tuple[float, float, float, float],
     return _rot_bbox(bbox, (360.0 - (int(round(rot)) % 360)) % 360)
 
 
+_PAD_ROW_CACHE: dict[str, tuple[tuple[str, float, float, float,
+                                      float, float], ...]] = {}
+
+
+def _pad_rows(mod_path: Path) -> tuple[tuple[str, float, float, float,
+                                             float, float], ...]:
+    """(pad_type, px, py, pad_rot_deg, size_w, size_h) of every pad of a
+    .kicad_mod in the footprint LOCAL frame. Cached per path."""
+    key = str(mod_path)
+    cached = _PAD_ROW_CACHE.get(key)
+    if cached is not None:
+        return cached
+    rows: list[tuple[str, float, float, float, float, float]] = []
+    for node in sexpr.loads(mod_path.read_text()):
+        if not (isinstance(node, list) and node and node[0] == Sym("pad")):
+            continue
+        at = sexpr.find(node, "at")
+        sz = sexpr.find(node, "size")
+        if not (at and len(at) >= 3):
+            continue
+        prot = float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float)) \
+            else 0.0
+        sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 \
+            else (0.0, 0.0)
+        rows.append((str(node[2]) if len(node) > 2 else "",
+                     float(at[1]), float(at[2]), prot, sw, sh))
+    _PAD_ROW_CACHE[key] = tuple(rows)
+    return _PAD_ROW_CACHE[key]
+
+
+def _pad_boxes_local(mod_path: Path, rotation: float
+                     ) -> list[tuple[str, float, float, float, float]]:
+    """Every pad's axis-aligned COPPER box (pad_type, x0, y0, x1, y1) in the
+    footprint-local frame after a placement rotation. ONE kernel for the seat
+    bbox and the through-hole punch set.
+
+    pad CENTER under KiCad's CLOCKWISE footprint rotation (y-axis points down):
+    cx = px·cos + py·sin, cy = -px·sin + py·cos. This matches where KiCad/DRC
+    actually place an asymmetric pad (a CCW transform mirrors the off-axis pads
+    ~1.2 mm — the bug that seated the FPC mechanical pads on the edge). The
+    half-extent composes the footprint rotation with the pad's own rotation, so
+    it is exact for any angle, not just the 90s."""
+    R = math.radians(rotation or 0.0)
+    cs, sn = math.cos(R), math.sin(R)
+    out: list[tuple[str, float, float, float, float]] = []
+    for ptype, px, py, prot_deg, sw, sh in _pad_rows(mod_path):
+        prot = math.radians(prot_deg)
+        cx = px * cs + py * sn
+        cy = -px * sn + py * cs
+        tot = R + prot
+        ct, st = abs(math.cos(tot)), abs(math.sin(tot))
+        hx = ct * sw / 2 + st * sh / 2
+        hy = st * sw / 2 + ct * sh / 2
+        out.append((ptype, cx - hx, cy - hy, cx + hx, cy + hy))
+    return out
+
+
+def thru_pad_boxes(mod_path: Path, rotation: float
+                   ) -> list[tuple[float, float, float, float]]:
+    """The copper box of every THROUGH-HOLE pad after a placement rotation, in
+    the footprint-local frame — the ONLY footprint geometry that occupies both
+    copper faces. A THT connector's shell, courtyard and empty zone area do not:
+    they are top-side body, and reserving them on B.Cu is what falsely denied
+    the bottom perimeter to the block allocator (docs/BOTTOM_SIDE_MODEL_DEFECTS
+    .md). np_thru_hole (unplated mechanical holes) pierces exactly the same."""
+    return [(x0, y0, x1, y1)
+            for ptype, x0, y0, x1, y1 in _pad_boxes_local(mod_path, rotation)
+            if ptype in ("thru_hole", "np_thru_hole")]
+
+
 def _rot_pad_bbox(mod_path: Path,
                   rotation: float) -> tuple[float, float, float, float] | None:
     """The COPPER (pad) bounding box of a footprint after its placement rotation,
@@ -84,41 +154,11 @@ def _rot_pad_bbox(mod_path: Path,
     Used to seat an off-board connector so its OUTERMOST pad sits exactly at the
     board-edge copper clearance (the mouth/shell then reaches/overhangs the edge,
     as a real hand-laid connector does). Returns None for a pad-less footprint."""
-    doc = sexpr.loads(mod_path.read_text())
-    R = math.radians(rotation or 0.0)
-    cs, sn = math.cos(R), math.sin(R)
-    xs: list[float] = []
-    ys: list[float] = []
-    for node in doc:
-        if not (isinstance(node, list) and node and node[0] == Sym("pad")):
-            continue
-        at = sexpr.find(node, "at")
-        sz = sexpr.find(node, "size")
-        if not (at and len(at) >= 3):
-            continue
-        px, py = float(at[1]), float(at[2])
-        prot = math.radians(float(at[3])
-                            if len(at) > 3 and isinstance(at[3], (int, float))
-                            else 0.0)
-        sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 else (0.0, 0.0)
-        # pad CENTER under KiCad's CLOCKWISE footprint rotation (y-axis points
-        # down): cx = px·cos + py·sin, cy = -px·sin + py·cos. This matches where
-        # KiCad/DRC actually place an asymmetric pad (a CCW transform mirrors the
-        # off-axis pads ~1.2mm — the bug that seated the FPC mechanical pads on
-        # the edge). The outer courtyard bbox is ~symmetric so it was unaffected.
-        cx = px * cs + py * sn
-        cy = -px * sn + py * cs
-        # axis-aligned half-extent of the (sw x sh) pad rotated by the footprint
-        # rotation + the pad's own rotation — robust for any angle (not just 90s).
-        tot = R + prot
-        ct, st = abs(math.cos(tot)), abs(math.sin(tot))
-        hx = ct * sw / 2 + st * sh / 2
-        hy = st * sw / 2 + ct * sh / 2
-        xs += [cx - hx, cx + hx]
-        ys += [cy - hy, cy + hy]
-    if not xs:
+    boxes = _pad_boxes_local(mod_path, rotation)
+    if not boxes:
         return None
-    return (min(xs), min(ys), max(xs), max(ys))
+    return (min(b[1] for b in boxes), min(b[2] for b in boxes),
+            max(b[3] for b in boxes), max(b[4] for b in boxes))
 
 
 # ---- placed-geometry queries (for the ratsnest renderer + LAW-5 gate) ------------

@@ -529,8 +529,8 @@
   "violations": []
  },
  "fallback_gate": {
-  "n_fired": 2,
-  "n_names": 7,
+  "n_fired": 3,
+  "n_names": 8,
   "ok": true,
   "pinned": false
  },
@@ -540,6 +540,7 @@
   "corridor_evict_moved": 0,
   "corridor_stray_unmovable": 0,
   "legalize_only_compaction": 14,
+  "punch_free_plan_rejected": 2,
   "seat_node_budget": 0,
   "thermal_via_lattice": 0
  },

@@ -99,6 +99,25 @@ _register(
     "degradation is absorbed by the ladder/coexistence machinery).")
 
 
+_register(
+    "punch_free_plan_rejected", "plan_lattice",
+    "The MONOTONICITY GUARD kept the CONSERVATIVE reservation plan: the "
+    "outline search runs twice — once reserving the true piercing geometry "
+    "only (wave-11 punch model: edge blocks and the SoM keep their own copper "
+    "face, THT PADS punch) and once reserving whole rectangles on both faces "
+    "(the superset, i.e. master's model) — and keeps the plan that is "
+    "strictly better on (area, estimated cross-airwire), ties to the "
+    "conservative incumbent. Both reservations are LEGAL (a superset "
+    "reservation can only forbid placements, never permit an illegal one), so "
+    "this is a correctness-preserving measurement choice, not a degrade: it "
+    "fires when the freed bottom surface did NOT pay, and the emitted board "
+    "is then byte-identical to the conservative one. It also fires when the "
+    "freed pass raises the packer's own infeasibility RuntimeError — the "
+    "greedy first-fit can fail on a strictly larger free set — so that "
+    "outcome is a LOUD counted rejection, never a silent swallow. Fires at "
+    "most ONCE per build_plan; `schgen board` calls build_plan twice (the PCB "
+    "and the FLOORPLAN doc), so the carrier/devkit ceiling is 2.")
+
 _EVENTS: list[str] = []
 
 
@@ -113,6 +132,17 @@ def record(name: str) -> None:
             f"declare it in schgen/core/fallbacks.py (name, stage, meaning) "
             f"before it may fire")
     _EVENTS.append(name)
+
+
+def snapshot() -> tuple[str, ...]:
+    """Freeze the event log so a REJECTED exploratory pass can be rolled back —
+    the census must describe the EMITTED board, never a search the guard threw
+    away. Paired with ``restore``; the log is append-only otherwise."""
+    return tuple(_EVENTS)
+
+
+def restore(state: tuple[str, ...]) -> None:
+    _EVENTS[:] = list(state)
 
 
 def census() -> dict[str, int]:
