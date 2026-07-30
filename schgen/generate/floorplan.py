@@ -1872,7 +1872,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         if not _attempt_pack(plan, interior, edge_of, zbox, affinity,
                              som_pull, compose=compose, compact=True,
                              far_ceil=far_ceil, max_reach=max_reach,
-                             shapes=shape_sets, comps_of=comps_of):
+                             shapes=shape_sets, comps_of=comps_of,
+                             side_est=est_cross):
             raise RuntimeError(
                 "floorplan: the REAL 2-sided packed blocks do not fit the fixed "
                 f"outline {BOARD_W:g}x{BOARD_H:g} declared in "
@@ -1932,7 +1933,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
             if not _attempt_pack(plan, interior, edge_of, zbox,
                                  affinity, som_pull, compose=compose,
                                  far_ceil=far_ceil, max_reach=max_reach,
-                                 shapes=shape_sets, comps_of=comps_of):
+                                 shapes=shape_sets, comps_of=comps_of,
+                                 side_est=est_cross):
                 continue
             fit_seen = True
             budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
@@ -1968,7 +1970,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         if not _attempt_pack(plan, interior, edge_of, zbox,
                              affinity, som_pull, compose=compose,
                              far_ceil=far_ceil, max_reach=max_reach,
-                             shapes=shape_sets, comps_of=comps_of):
+                             shapes=shape_sets, comps_of=comps_of,
+                             side_est=est_cross):
             return False, 0.0, 0.0
         bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
         er = est_cross(plan.edge_blocks + interior)
@@ -2015,7 +2018,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
     # left plan at the last aspect tried). Deterministic: same (w, h) -> same pack.
     if not _attempt_pack(plan, interior, edge_of, zbox, affinity, som_pull,
                          compose=compose, compact=True, far_ceil=far_ceil,
-                         max_reach=max_reach, shapes=shape_sets, comps_of=comps_of):
+                         max_reach=max_reach, shapes=shape_sets,
+                         comps_of=comps_of, side_est=est_cross):
         raise RuntimeError(
             f"floorplan: the winning outline {BOARD_W:g}x{BOARD_H:g} failed "
             "the final compact re-pack — refusing to emit a stale layout")
@@ -2201,6 +2205,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
                 net_pts.setdefault(nname, []).append((bref, sh, by_shape))
     net_pts = {n: pts for n, pts in net_pts.items()
                if len({s for _r, s, _p in pts}) >= 2}
+    net_names = sorted(net_pts)
+    nets_by_sheet = _nets_by_sheet(net_pts)
 
     # VIA-COST term (bottom-side P1, registered est_via_cost): emitted side
     # per part under the shape-0 world + per bottom-tagged shape the PRIMARY
@@ -2227,7 +2233,12 @@ def _cross_estimator(plan: Plan, zg, sheets):
          / max(1.0, plan.som.h - 12.0)) ** 0.5))) if n_dec else 1
     dec_rows = max(1, (n_dec + dec_cols - 1) // dec_cols) if n_dec else 1
 
-    def evaluate(blocks: list[Block]) -> float:
+    def evaluate(blocks: list[Block], only_sheet: str | None = None) -> float:
+        """Full-kernel estimate, or (``only_sheet``) the same kernel summed
+        over just the nets touching that sheet — between two candidate poses
+        of that sheet's block the full-board difference equals this restricted
+        difference exactly (no other net's points move), which is what the
+        in-pack side judge consumes."""
         by_name = {b.name: b for b in blocks}
         sel = {b.name: b.shape_idx for b in blocks
                if b.shape_idx and b.name in n_shapes}
@@ -2289,7 +2300,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
             return "bottom" if r in flip_top[(s, k)] else "top"
 
         cross = 0.0
-        for nname in sorted(net_pts):
+        for nname in (nets_by_sheet.get(only_sheet, ())
+                      if only_sheet else net_names):
             pts = [(round(part_pos[r][0] + rx, 3),
                     round(part_pos[r][1] + ry, 3), r, s)
                    for r, s, byk in net_pts[nname] if r in part_pos
@@ -2308,6 +2320,37 @@ def _cross_estimator(plan: Plan, zg, sheets):
     return evaluate
 
 
+def _nets_by_sheet(net_pts: dict) -> dict[str, tuple[str, ...]]:
+    """sheet -> the sorted cross-subsystem nets touching it (the restricted
+    iteration set of ``evaluate(only_sheet=...)``). Deterministic: sorted
+    nets, sorted sheets."""
+    out: dict[str, list[str]] = {}
+    for nname in sorted(net_pts):
+        for s in sorted({s for _r, s, _p in net_pts[nname]}):
+            out.setdefault(s, []).append(nname)
+    return {s: tuple(ns) for s, ns in out.items()}
+
+
+def _pick_sided(finalists: list[tuple], est_of) -> tuple:
+    """EST-DRIVEN SIDE CHOICE (bottom-side P2): when a block's fitting shape
+    variants span BOTH copper faces, the pick is judged by the sizing
+    estimator (cross-airwire + registered est_via_cost), not anchor distance.
+    ``finalists`` = the per-face (key, cand) pairs sorted by the greedy
+    (distance, index) key, so finalists[0] is the incumbent the distance rule
+    would keep; the other face's finalist wins ONLY on a strict estimator
+    improvement (> 1e-6 mm). Deterministic: fixed candidate order feeds the
+    keys, strict comparison, ties keep the incumbent. A missing judge is a
+    HARD error — the side choice never silently degrades to distance."""
+    if est_of is None:
+        raise AssertionError(
+            "floorplan: a block's shape set spans copper faces but no "
+            "estimator judge was wired — pass side_est to _attempt_pack; "
+            "the side choice may not fall back to anchor distance")
+    incumbent, challenger = finalists[0][1], finalists[1][1]
+    return challenger if est_of(challenger) < est_of(incumbent) - 1e-6 \
+        else incumbent
+
+
 def _attempt_pack(plan: Plan, interior: list[Block],
                   edge_of: dict[str, str],
                   zbox: dict[str, tuple[float, float]],
@@ -2318,8 +2361,8 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                   far_ceil: float = 0.0,
                   max_reach: float | None = None,
                   shapes: dict[str, list[tuple]] | None = None,
-                  comps_of: dict[tuple[str, int], tuple] | None = None
-                  ) -> bool:
+                  comps_of: dict[tuple[str, int], tuple] | None = None,
+                  side_est=None) -> bool:
     plan.spilled = []
     for b in plan.edge_blocks:
         b.w, b.h = zbox[b.name]
@@ -2543,17 +2586,27 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                        -(zbox[b.name][0] * zbox[b.name][1]), b.name))
     # MULTI-SHAPE choice — greedy best-local-fit, DETERMINISTIC: each block's
     # shapes are tried in their FIXED registered order; every shape gets its own
-    # place_near (nearest fitting cell for that (w, h, reach)); the shape whose
-    # placed CENTER lands city-block-closest to the anchor wins, index breaks
-    # ties. On a tight board an unfittable shape scores infinity, so the search
-    # adopts whatever tessellates — the lever that lets the outline shrink. The
-    # choice is made ONCE here; the refinement passes below keep it (re-choosing
-    # every pass would triple their cost for a second-order gain). No search
-    # tree, no cross-candidate state: cost is <= |shapes| place_near calls.
+    # place_near (nearest fitting cell for that (w, h, reach)); WITHIN a copper
+    # face the shape whose placed CENTER lands city-block-closest to the anchor
+    # wins, index breaks ties. BETWEEN faces (a block whose fitting variants
+    # span top AND bottom) the per-face finalists are judged by the sizing
+    # estimator restricted to this sheet's nets — cross-airwire + est_via_cost
+    # on the partial board (edge blocks + blocks placed so far), the same
+    # kernel the outline search budgets with (_pick_sided; P1 measured the
+    # distance rule side-blind: top/bottom tie at 0.403 and the tie-break
+    # keeps top even when the estimator prefers the flip). On a tight board
+    # an unfittable shape scores infinity, so the search adopts whatever
+    # tessellates — the lever that lets the outline shrink. The choice is made
+    # ONCE here; the refinement passes below keep it (re-choosing every pass
+    # would triple their cost for a second-order gain). No search tree, no
+    # cross-candidate state: cost is <= |shapes| place_near calls + at most
+    # TWO restricted-estimator calls for the (rare) cross-face blocks.
     chosen_comps: dict[str, tuple] = {}
 
     def _bcomps(bb: Block) -> tuple:
         return chosen_comps.get(bb.name, ())
+
+    placed: list[Block] = []
 
     for b in order:
         b.w, b.h = zbox[b.name]
@@ -2571,8 +2624,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 return False
             b.x, b.y, b.w, b.h = pos
         else:
-            best_key = None
-            best = None
+            by_side: dict[str, tuple] = {}
             for k, (w, h, rch, ins, sd, cc) in enumerate(cands):
                 if w > BOARD_W - 2 * CLEAR or h > BOARD_H - 2 * CLEAR:
                     continue
@@ -2581,10 +2633,25 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                     continue
                 d = abs(p[0] + w / 2 - ax) + abs(p[1] + h / 2 - ay)
                 key = (round(d, 4), k)
-                if best_key is None or key < best_key:
-                    best_key, best = key, (k, p, rch, ins, sd, cc)
-            if best is None:
+                if sd not in by_side or key < by_side[sd][0]:
+                    by_side[sd] = (key, (k, p, rch, ins, sd, cc))
+            if not by_side:
                 return False
+            if len(by_side) == 1:
+                best = next(iter(by_side.values()))[1]
+            else:
+                def _est_of(cand, _b=b):
+                    k2, p2, _r2, _i2, sd2, _c2 = cand
+                    saved = (_b.x, _b.y, _b.w, _b.h, _b.shape_idx, _b.side)
+                    _b.x, _b.y, _b.w, _b.h = p2
+                    _b.shape_idx, _b.side = k2, sd2
+                    v = side_est(plan.edge_blocks + placed + [_b], _b.name)
+                    (_b.x, _b.y, _b.w, _b.h,
+                     _b.shape_idx, _b.side) = saved
+                    return v
+
+                best = _pick_sided(sorted(by_side.values()),
+                                   None if side_est is None else _est_of)
             k, p, rch, ins, sd, cc = best
             b.x, b.y, b.w, b.h = p
             b.shape_idx = k
@@ -2596,6 +2663,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
                 _side_mask(b.side), _bcomps(b))
         centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+        placed.append(b)
 
     # ITERATIVE REFINEMENT: the first pass anchored blocks on whatever neighbours
     # happened to be placed already, so a cluster's first member landed at its
@@ -2828,7 +2896,8 @@ def _choose_conn_shapes(plan: Plan, interior: list[Block],
         return _attempt_pack(plan, interior, edge_of, zbox, affinity,
                              som_pull, compose=compose, compact=compact,
                              far_ceil=far_ceil, max_reach=max_reach,
-                             shapes=shape_sets, comps_of=comps_of)
+                             shapes=shape_sets, comps_of=comps_of,
+                             side_est=est_cross)
 
     for b in sorted(plan.edge_blocks, key=lambda x: x.name):
         variants = zg.shapes.get(b.name)
