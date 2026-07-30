@@ -65,3 +65,38 @@ wins: est −145 mm for bringup_rails vs +420 mm on the emitted board.
 
 Nothing here softens a gate: every punch removed must be replaced by the exact
 geometry that genuinely pierces, and DRC/D13/escape gates judge the emitted board.
+
+## Wave-11 outcome (2026-07-31, merged 4483208)
+
+Both defects FIXED and measured. Edge blocks released **8,155.8 mm²** (27 % of the
+board); the SoM underside is reachable (+157.3 mm²). A THIRD defect surfaced en
+route: the existing `_zone_components` punch path reserved each THT part's whole
+FOOTPRINT BBOX (2,699.0 mm²) where the pad copper is **382.9 mm²** — the interior
+punch model was itself ~7x too conservative. Now exact via a shared
+`thru_pad_boxes` kernel.
+
+**But 0 blocks moved and the board is byte-identical.** Unguarded, freeing the
+surface COST +1,217 mm of airwire at unchanged area: the greedy cascade is not
+monotone in free area (freed bottom -> already-bottom blocks resettle -> the
+`centers` map shifts -> later blocks pick different shapes). A monotonicity guard
+now runs the outline search under both reservation policies and keeps the strictly
+better on (area, est_cross), ties to the incumbent — so freedom can no longer hurt,
+at the price of a second search (build 210 s -> 300 s).
+
+## DEFECT 3 — the search optimises a plan that is not the emitted board
+
+The guard's judge IS the sizing estimator; it PREFERRED the freed plan, and the
+EMITTED board came out worse. So the est/emission gap is NOT a symptom of the false
+punch reservation (wave-10's hypothesis, refuted). It lives downstream of the
+lattice: `build_model` runs l4_pull, breathe, edge-seat, refit_facing, reorder and
+corridor eviction AFTER the plan is chosen, and none of them are modelled in the
+estimate. The search therefore cannot distinguish a good bottom-side plan from a
+bad one — which is why 8,156 mm² of released surface bought nothing.
+
+Fix principle (wave 12): a stage that silently worsens the objective the search
+optimised is the defect. Either make those stages plan-preserving (accept a move
+only if it does not increase estimated cross-airwire — the same accept/reject
+discipline the monotonicity guard uses, never suppressing a move REQUIRED by
+D13/LAW-6/escape) or model their systematic effect in the estimate. Ordinary-via
+cost stays 2.2 INTERIM, now pending this gap alone (its 0+ step has vanished:
+0.0 and 2.2 emit the identical board).
