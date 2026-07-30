@@ -40,6 +40,9 @@ SEAT_SLIDE_MM = 1.2
 OUTLINE_SNAP_MM = 5.0
 REFINE_SPAN_MM = 40.0
 FINE_SNAP_MM = 1.0
+VIA_SIZE_MM = 0.6
+VIA_CLEAR_MM = 0.25
+STACK_THICKNESS_MM = 1.6
 
 
 @dataclass(frozen=True)
@@ -221,25 +224,57 @@ def run_overflow_tol() -> float:
     return 0.1
 
 
+EST_VIA_ORDINARY_MM = 2 * (VIA_SIZE_MM + 2 * VIA_CLEAR_MM)
+
+EST_VIA_COST_MM: dict[str, float] = {
+    "impedance": round(2 * 2 * (VIA_SIZE_MM + 2 * VIA_CLEAR_MM)
+                       + 2 * STACK_THICKNESS_MM, 4),
+    "ordinary": EST_VIA_ORDINARY_MM,
+}
+
 _register(
     "est_via_cost",
-    "2 * (0.6 + 2 * 0.25) = 2.2 mm per side-crossing cross-subsystem MST edge",
-    "LAW-5 sizing-estimator VIA-COST term (bottom-side P1): a cross-subsystem "
-    "net whose endpoints sit on opposite copper faces needs a layer-transition "
-    "via, and one via consumes its barrel (0.6 mm copper dia — the project's "
-    "standard THERMAL_VIA_SIZE) plus a clearance annulus (2 x 0.25 mm "
-    "THERMAL_VIA_CLEAR) of routing channel on BOTH signal layers = 2.2 mm of "
-    "equivalent airwire. Charged ONLY on cross-sheet MST edges with differing "
-    "endpoint sides where an endpoint sheet chose a side-tagged BOTTOM shape: "
-    "the baseline board's existing top/bottom splits are already priced by "
-    "the calibrated LAW-5 budget, so the term is exactly zero when no block "
-    "opts in (the byte-inert control) and the strict ratsnest gate remains "
-    "the arbiter of any board it helped size.",
+    "{impedance: 2 legs * 2 layers * (0.6 + 2 * 0.25) + 2 legs * 1.6 = 7.6, "
+    "ordinary: 2 * (0.6 + 2 * 0.25) = 2.2} mm per side-crossing "
+    "cross-subsystem MST edge, keyed on whether the net's routing class "
+    "carries a controlled-impedance geometry",
+    "LAW-5 sizing-estimator VIA-COST term, NET-CLASS AWARE (user decree "
+    "2026-07-30: \"vias are perfectly acceptable for all but most high speed "
+    "components\"). The class set is DERIVED, never listed: a net is charged "
+    "the impedance row iff schgen.generate.pcb.footprint._net_classes gives "
+    "its class a DiffGeometry — i.e. the typed port declared an impedance, "
+    "which is exactly DP90_USB / DP100_TMDS / DP<imp>_DIFF today and picks up "
+    "any future impedance class for free; I2C, SD_<lv>, POWER and Default "
+    "carry no geometry and take the ordinary row. IMPEDANCE = 7.6 mm: a "
+    "controlled-impedance pair changes layers as a PAIR (2 legs, else the "
+    "intra-pair skew budget — 0.15 mm for TMDS — is blown by the first "
+    "unmatched via), each leg's via consumes its barrel (0.6 mm = "
+    "THERMAL_VIA_SIZE) plus a clearance annulus (2 x 0.25 mm = "
+    "THERMAL_VIA_CLEAR) of routing channel on BOTH signal layers, and each "
+    "leg's transition adds the stackup's own 1.6 mm (JLC04161H-7628 4-layer) "
+    "of unbudgeted stub/electrical length — so a block with many impedance "
+    "nets loses its bottom variant on estimate, which is the intent (3.45x "
+    "the ordinary row). ORDINARY = 2.2 mm is the same barrel+annulus channel "
+    "on both signal layers, and it is INTERIM: the decree's 0.0 endpoint was "
+    "MEASURED and REFUTED — sweeping the ordinary row at 0.0 / 0.1 / 1.0 / "
+    "2.2 / 3.0 with the bringup_rails opt-in gives 188x164 (30832 mm², cross "
+    "15558.8) at 0.0 and the identical, better 185x163 board (30155 mm², "
+    "cross 15319.0) at EVERY strictly-positive point, so the response is a "
+    "step at 0+ and 2.2 is the physically-derived member of the measured "
+    "plateau, not a fitted constant. The step exists because a side flip "
+    "today also costs unmodelled emission-time disruption; per "
+    "docs/BOTTOM_SIDE_MODEL_DEFECTS.md that disruption is largely the "
+    "PUNCH-MODEL DEFECT (edge blocks + the SoM keepout reserve BOTH surfaces, "
+    "falsely denying 41.7 % of the bottom face), so this row should be "
+    "re-derived toward its physical value once the punch model and the "
+    "estimator/emission gap are fixed. DRC + the strict LAW-5 ratsnest gate "
+    "remain the arbiters of any board it helped size.",
     "pre-proof")
 
 
-def est_via_cost() -> float:
-    return 2 * (0.6 + 2 * 0.25)
+def est_via_cost(impedance_controlled: bool) -> float:
+    return EST_VIA_COST_MM["impedance" if impedance_controlled
+                           else "ordinary"]
 
 
 _register(

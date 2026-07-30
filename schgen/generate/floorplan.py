@@ -2109,7 +2109,7 @@ def _cross_estimator(plan: Plan, zg, sheets):
         ORIGIN_Y,
         FootprintInst,
     )
-    from schgen.generate.pcb.footprint import resolve_mod
+    from schgen.generate.pcb.footprint import _net_classes, resolve_mod
     from schgen.generate.pcb.mating_face import _inst_pad_geom, _rot_pad_bbox
     from schgen.generate.ratsnest import _mst_edges
 
@@ -2240,11 +2240,12 @@ def _cross_estimator(plan: Plan, zg, sheets):
     net_names = sorted(net_pts)
     nets_by_sheet = _nets_by_sheet(net_pts)
 
-    # VIA-COST term (bottom-side P1, registered est_via_cost): emitted side
+    # VIA-COST term (registered est_via_cost, NET-CLASS AWARE): emitted side
     # per part under the shape-0 world + per bottom-tagged shape the PRIMARY
     # membership that flips at emission — a cross-sheet MST edge whose ends
     # land on opposite faces because a block chose a bottom shape is charged
-    # one layer transition. Exactly zero with no bottom choice (inert).
+    # one layer transition, priced by the net's own routing class. Exactly
+    # zero with no bottom choice (inert).
     side0_of = {bref: ("bottom" if kind == "dec"
                        else zg.side_of.get(bref, "top"))
                 for bref, (kind, _k) in owner_of.items()}
@@ -2255,7 +2256,9 @@ def _cross_estimator(plan: Plan, zg, sheets):
             shape_side[(sheet, k)] = shp.side
             if shp.side == "bottom":
                 flip_top[(sheet, k)] = frozenset(shp.top_off)
-    via_mm = _q.est_via_cost()
+    _cls_geo, _cls_of = _net_classes(sheets)
+    via_of = {n: _q.est_via_cost(_cls_geo.get(_cls_of.get(n, "")) is not None)
+              for n in net_names}
 
     conn_pb = {ref: _rot_pad_bbox(mod_of[ref], rot_of.get(ref, 0.0))
                for ref in sorted(zg.conn_edge) if ref in owner_of}
@@ -2338,11 +2341,12 @@ def _cross_estimator(plan: Plan, zg, sheets):
                     round(part_pos[r][1] + ry, 3), r, s)
                    for r, s, byk in net_pts[nname] if r in part_pos
                    for rx, ry in byk[sel.get(s, 0) if len(byk) > 1 else 0]]
+            via_mm = via_of[nname]
             for a, b in _mst_edges(pts):
                 if pts[a][3] != pts[b][3]:
                     cross += ((pts[a][0] - pts[b][0]) ** 2
                               + (pts[a][1] - pts[b][1]) ** 2) ** 0.5
-                    if (bot_sel
+                    if (via_mm and bot_sel
                             and (pts[a][3] in bot_sel or pts[b][3] in bot_sel)
                             and _pt_side(pts[a][2], pts[a][3])
                             != _pt_side(pts[b][2], pts[b][3])):
