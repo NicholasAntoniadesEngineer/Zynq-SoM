@@ -116,7 +116,11 @@ def _is_cluster_passive(ref: str, pins: int) -> bool:
 
 
 def _is_df40(inst) -> bool:
-    return bool(_DF40_SHEET_RE.match(inst.sheet)) or len(inst.pad_nets) >= DF40_MIN_PINS
+    return is_df40_part(inst.sheet, len(inst.pad_nets))
+
+
+def is_df40_part(sheet: str, pins: int) -> bool:
+    return bool(_DF40_SHEET_RE.match(sheet)) or pins >= DF40_MIN_PINS
 
 
 def is_testpoint_ref(ref: str) -> bool:
@@ -133,6 +137,35 @@ def _is_fiducial(inst) -> bool:
     and it carries no escape traffic — so it must NOT count as a crowding foreign
     neighbour (same principle as the DF40-plug exclusion)."""
     return "Fiducial" in inst.footprint
+
+
+def counts_as_crowder(ref: str, sheet: str, pins: int, footprint: str,
+                      subject_sheet: str) -> bool:
+    """THE foreign-neighbour predicate — the ONE definition of "does this part
+    crowd that subject's fan-out apron", shared by the gate and by every engine
+    stage that optimises toward it (breathe's march/target/no-regression guard).
+
+    A private replica is how the machinery drifts from its own arbiter: BREATHE
+    carried a copy that omitted the test-point exemption, so it read a subject's
+    clearance as the gap to an exempt TP pad. That phantom crowder (a) faked
+    starvation, (b) aimed the away-from-crowder march at a part the gate does not
+    count, and (c) neutered the mover's own no-regression floor, which is
+    min(need, current clearance) — with the phantom current at 0.50 mm the guard
+    permitted a real 2.64 mm gap to collapse to 1.38 mm against a 1.50 mm need
+    (measured live: U5001 bringup_en_modules vs C15002 lcd, both TOP, the single
+    D13 red of the 185x163 bringup_rails outline). Call this; never re-derive it.
+
+    ``sheet``/``pins``/``footprint`` describe the candidate neighbour;
+    ``subject_sheet`` is the subject's sheet (same-sheet cluster passives are the
+    only sheet-relative waiver). SIDE is the caller's business — the gate and the
+    engine both filter to the subject's own copper face before asking. The four
+    exclusions are the module docstring's cluster-aware rule plus the test-point
+    law: DF40 plugs (no-inflate), fiducials (fab-art), TP pads (no courtyard
+    traffic, on ANY sheet), own-sheet 2-pin R/C/L (tight by design)."""
+    return not (is_df40_part(sheet, pins)
+                or "Fiducial" in footprint
+                or is_testpoint_ref(ref)
+                or (sheet == subject_sheet and _is_cluster_passive(ref, pins)))
 
 
 def intelligent_need(pins: int) -> tuple[float, str]:
@@ -270,15 +303,10 @@ def check(model: PcbModel, baseline: int | None = None) -> FanoutResult:
                 continue
             if other.side != inst.side:
                 continue                      # opposite copper plane — not fan-out room
-            if _is_df40(other):
-                continue                      # DF40 plugs never count as crowding
-            if _is_fiducial(other):
-                continue                      # fiducials are fab-art, not fan-out room
-            if is_testpoint_ref(other.ref):
-                continue                      # test points exempt (user law 2026-07-29)
-            if other.sheet == inst.sheet and _is_cluster_passive(
-                    other.ref, len(other.pad_nets)):
-                continue                      # own-cluster decoupling — tight BY DESIGN
+            if not counts_as_crowder(other.ref, other.sheet,
+                                     len(other.pad_nets), other.footprint,
+                                     inst.sheet):
+                continue
             gap = _rect_gap(my_box, obox)
             if gap < best_gap:
                 best_gap = gap

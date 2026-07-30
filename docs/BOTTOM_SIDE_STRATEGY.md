@@ -112,3 +112,51 @@ Sequencing: P1 starts after the wave-8 engine unit lands (same files).
   inst.mirror=False; mirrored parts of ANY footprint class are legal on
   B.Cu (face-top TP/LED/SW still forced to present top; seated-connector /
   conn-class / no-zone hard raises unchanged).
+
+## Wave-10 — D13 frontier root-caused; class-aware via cost; bringup_rails LANDED (185x163, -555 mm2)
+
+- U1 ROOT CAUSE (fixed): the top-vs-top D13 red that blocked `bringup_rails`
+  was never a bottom-side effect and never a frontier/compaction effect —
+  BREATHE carried a PRIVATE replica of the fan-out gate's foreign-neighbour
+  rule that omitted the TEST-POINT exemption. A TP pad therefore read as a
+  crowder, which faked starvation, aimed the away-from-crowder march at a part
+  the gate does not count, and neutered the mover's own no-regression floor
+  `min(need, current clearance)`. Measured: U5001 (bringup_en_modules, 5 pin,
+  TOP) read its clearance as 0.500 to TP5002, marched away from it, and
+  collapsed its REAL 2.640 gap to C15002 (lcd, TOP) to 1.380 against a 1.50
+  need. Both sides now call ONE predicate, `fanout_gate.counts_as_crowder`; no
+  gate softened, no padding added.
+- VIA COST IS NET-CLASS AWARE (user decree 2026-07-30). The charged set is
+  DERIVED, never listed: a net pays the impedance row iff its routing class
+  carries a `DiffGeometry` (DP90_USB / DP100_TMDS / DP<imp>_DIFF today, any
+  future impedance class for free). Impedance = 7.6 mm (2 legs x 2 layers of
+  barrel+annulus + 2 legs of 1.6 mm stackup stub); ordinary = 2.2 mm, 3.45x
+  cheaper. The decree's 0.0 endpoint was measured and REFUTED — see the sweep.
+- ORDINARY-ROW SWEEP (bringup_rails opt-in, emitted boards, all PASS):
+  0.0 -> 188x164 / 30832 mm2 / cross 15558.8; 0.1, 1.0, 2.2 and 3.0 -> the
+  IDENTICAL 185x163 / 30155 mm2 / cross 15319.0 (same md5). The response is a
+  STEP at 0+, not a curve, so 2.2 is chosen as the physically-derived member of
+  the measured plateau rather than a fitted constant. The step is the
+  unmodelled emission-time disruption a side flip still costs; per
+  `BOTTOM_SIDE_MODEL_DEFECTS.md` that is largely the PUNCH-MODEL defect (edge
+  blocks + the SoM keepout reserve BOTH surfaces, falsely denying 41.7 % of the
+  bottom face), so the ordinary row is INTERIM and should fall toward its
+  physical value once that is fixed.
+- LANDED: `bringup_rails` `"layer": "either"` — the est flips U7001 (24-pin,
+  now B.Cu) and its rail cluster to the bottom while the switches/TPs still
+  present on F.Cu. Carrier 185x166 -> **185x163, 30710 -> 30155 mm2 (-555,
+  -1.81 %)**, cross-airwire 15193.0 -> 15319.0 (within the re-derived 17191.5
+  budget), 34 vias, 28 gates green, D13 110 subjects 0 starved, and the
+  hairline survivors are gone: U5001 -0.120 (STARVED) -> +0.400, SW7002 +0.005
+  -> +0.050, U7001 +0.008 -> +0.215. `legalize_only_compaction` ratchets 16 ->
+  14.
+- LADDER, everything else (one at a time + the full combination): under the
+  0.0-ordinary model the est took bottom for `power_mon`, `usb_pd` and
+  `bringup_en` and every one of those emitted boards was WORSE on both axes
+  (185x175 / 185x169 / 185x166, cross +714 / +543 / +115); the 5 blocks the est
+  keeps top were byte-identical to the control; the 9-block combination was
+  185x179 with 7 DRC errors. `hdmi_rx_term` is the impedance row working as
+  intended — 8 high-speed nets, est +140 for bottom, keeps top. `ethernet` is
+  NOT MEASURABLE: its declaration makes the sizing search run >56 min at 98 %
+  CPU (heapq-dominated, no board emitted) vs 3.2 min. None of these land; they
+  are re-runnable once the punch model is fixed.

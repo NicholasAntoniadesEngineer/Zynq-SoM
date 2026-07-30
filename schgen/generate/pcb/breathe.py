@@ -45,6 +45,7 @@ from schgen.core import quantize as _q
 from schgen.verify.fanout_gate import (
     _is_cluster_passive,
     _rect_gap,
+    counts_as_crowder,
     intelligent_need,
     is_testpoint_ref,
 )
@@ -395,8 +396,8 @@ def breathe_fanout(
         return min(LEASH_B_MAX, max(LEASH_A_MAX, analytic))
 
     # ---- current foreign clearance for a group's subject ------------------------
-    # foreign = same-side courtyards, skipping same-sheet cluster passives, DF40,
-    # fiducials (exactly fanout_gate.check's skip list). We measure against the
+    # foreign = same-side courtyards judged by the GATE'S OWN predicate
+    # (fanout_gate.counts_as_crowder — no private replica), measured against the
     # live positions of FIXED parts + OTHER groups' current positions.
     def foreign_boxes(anchor: str, group_members: set[str]
                       ) -> list[tuple[float, float, float, float]]:
@@ -410,13 +411,12 @@ def breathe_fanout(
                 continue
             if side_of.get(r, "top") != side:
                 continue
-            if r in som_j_refs or pins_of(r) >= 40:
-                continue                    # DF40
-            if "Fiducial" in (parts[r][1] if r in parts else ""):
+            r_sheet = parts[r][0] if r in parts else ""
+            r_fp = parts[r][1] if r in parts else ""
+            if r in som_j_refs:
                 continue
-            if (r in parts and parts[r][0] == my_sheet
-                    and _is_cluster_passive(r, pins_of(r))):
-                continue                    # own-cluster passive
+            if not counts_as_crowder(r, r_sheet, pins_of(r), r_fp, my_sheet):
+                continue
             out.append(box_of(r, pos[r]))
         return out
 

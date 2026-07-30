@@ -56,8 +56,14 @@ def zg_either(real_spec):
 def test_est_via_cost_registered():
     reg = q.REGISTRY["est_via_cost"]
     assert reg.klass == "pre-proof"
-    assert "byte-inert" in reg.basis
-    assert q.est_via_cost() == pytest.approx(2.2)
+    assert "DiffGeometry" in reg.basis
+    assert q.est_via_cost(True) == pytest.approx(7.6)
+    assert q.est_via_cost(False) == pytest.approx(2.2)
+    assert q.EST_VIA_COST_MM["impedance"] == pytest.approx(
+        2 * 2 * (q.VIA_SIZE_MM + 2 * q.VIA_CLEAR_MM)
+        + 2 * q.STACK_THICKNESS_MM)
+    assert q.EST_VIA_COST_MM["ordinary"] == pytest.approx(
+        2 * (q.VIA_SIZE_MM + 2 * q.VIA_CLEAR_MM))
 
 
 def test_spec_layer_side_parsing(tmp_path):
