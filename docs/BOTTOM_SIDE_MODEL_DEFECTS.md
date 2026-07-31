@@ -41,62 +41,70 @@ use it. That region is the single largest contiguous free area on the board AND 
 closest area to J1/J2/J3 — i.e. the placement with the SHORTEST possible airwires
 to the module. The model forbids exactly the placement that would win most.
 
-## Consequence (explains every measurement so far)
-
-With ~40 % of the bottom falsely blocked — specifically the perimeter and the
-centre — a block opted to the bottom cannot sit under an edge zone or under the
-SoM. It is pushed into the contested interior, where it disturbs top-side packing
-instead of relieving it. That is why every bottom opt-in emitted a BIGGER board
-(rails 188x164, power_mon 185x175, usb_pd 185x169) while the estimator predicted
-wins: est −145 mm for bringup_rails vs +420 mm on the emitted board.
-
-## Fix principles (wave 11)
+## Fix principles (wave 11) — BOTH LANDED
 
 1. **Punch only what pierces.** Edge-block main rect carries its own side's mask;
    its THT pads emit PUNCH boxes via the existing `_zone_components` path. Same
    for any other whole-rect punch reservation.
 2. **SoM: OCC_TOP only.** Its bottom carries the real `som_decoupling` cap boxes
    plus the DF40 escape-corridor bands as punch — not a blanket rect.
-3. **Re-measure the est/emission gap AFTER 1+2.** The gap is plausibly a symptom
-   of forcing bottom blocks into contested space; if it survives, close it by
-   modelling emission-time disruption, and only then can the ordinary-net via cost
-   fall toward its true near-zero value (user decree 2026-07-30: vias are cheap
-   except on impedance-controlled nets).
 
-Nothing here softens a gate: every punch removed must be replaced by the exact
+Nothing there softens a gate: every punch removed was replaced by the exact
 geometry that genuinely pierces, and DRC/D13/escape gates judge the emitted board.
+Wave-11 released **8,155.8 mm² = 27.0 %** of the bottom surface. The board did
+not move.
 
-## Wave-11 outcome (2026-07-31, merged 4483208)
+## DEFECT 3 was WRONG — wave-12 measurement (supersedes it)
 
-Both defects FIXED and measured. Edge blocks released **8,155.8 mm²** (27 % of the
-board); the SoM underside is reachable (+157.3 mm²). A THIRD defect surfaced en
-route: the existing `_zone_components` punch path reserved each THT part's whole
-FOOTPRINT BBOX (2,699.0 mm²) where the pad copper is **382.9 mm²** — the interior
-punch model was itself ~7x too conservative. Now exact via a shared
-`thru_pad_boxes` kernel.
+Waves 10 and 11 blamed an **est/emission gap**: the sizing estimator was said to
+predict bottom-side wins the emitted board then lost. Wave-12 measured that
+claim at every stage boundary and it is **REFUTED**.
 
-**But 0 blocks moved and the board is byte-identical.** Unguarded, freeing the
-surface COST +1,217 mm of airwire at unchanged area: the greedy cascade is not
-monotone in free area (freed bottom -> already-bottom blocks resettle -> the
-`centers` map shifts -> later blocks pick different shapes). A monotonicity guard
-now runs the outline search under both reservation policies and keeps the strictly
-better on (area, est_cross), ties to the incumbent — so freedom can no longer hurt,
-at the price of a second search (build 210 s -> 300 s).
+- The estimator is a near-CONSTANT upper bound: **+315.0 / +315.0 / +321.7 /
+  +314.9 mm (2.06 % ± 0.03 %)** over the emitted cross on four conservative
+  plans, +199.9 on the freed plan. Its ranking matched the emitted ranking
+  **4 out of 4** times.
+- **No post-floorplan mover destroys a predicted win.** Per stage, l4_pull +
+  edge_seat + breathe + refit_facing + reorder are a NET **improvement** of
+  −171.9 / −170.9 / −171.5 / −76.6 mm on the four plans. `edge_seat` is already
+  replicated inside `_cross_estimator`.
+- Wave-11's "+1,217 mm at unchanged area" was a **comparison-frame artefact**:
+  with `power_mon` eligible the conservative plan is 185x164 / est 15,643.8 /
+  emitted 15,328.9 and the freed plan is 185x163 / est 16,736.0 / emitted
+  16,536.1. The guard's key is `(area, est_cross)` with area strictly first, so
+  it bought 185 mm² for +1,207 mm — as instructed, and the estimator predicted
+  that cost correctly (+1,092 mm).
 
-## DEFECT 3 — the search optimises a plan that is not the emitted board
+## The REAL model defect — the board is 100 % PACK-bound in BOTH dimensions
 
-The guard's judge IS the sizing estimator; it PREFERRED the freed plan, and the
-EMITTED board came out worse. So the est/emission gap is NOT a symptom of the false
-punch reservation (wave-10's hypothesis, refuted). It lives downstream of the
-lattice: `build_model` runs l4_pull, breathe, edge-seat, refit_facing, reorder and
-corridor eviction AFTER the plan is chosen, and none of them are modelled in the
-estimate. The search therefore cannot distinguish a good bottom-side plan from a
-bad one — which is why 8,156 mm² of released surface bought nothing.
+Of **2,868 candidate outlines** the sizing search tried, **14 packed and the
+LAW-5 airwire budget rejected NONE**. Airwire has never sized this board.
 
-Fix principle (wave 12): a stage that silently worsens the objective the search
-optimised is the defect. Either make those stages plan-preserving (accept a move
-only if it does not increase estimated cross-airwire — the same accept/reject
-discipline the monotonicity guard uses, never suppressing a move REQUIRED by
-D13/LAW-6/escape) or model their systematic effect in the estimate. Ordinary-via
-cost stays 2.2 INTERIM, now pending this gap alone (its 0+ step has vanished:
-0.0 and 2.2 emit the identical board).
+- **W = 185 is a proven geometric floor.** Every candidate below 185 — 2,186 of
+  them, 100 % — is rejected by the EDGE-RUN FIT guard, never reaching the
+  interior packer. The S-edge run
+  (`hdmi_tx` 17.155 + 20.0 cable + `hdmi_rx` 23.965 + 20.0 cable + `pmod` 41.765
+  + 0.700 + `pmod_expansion` 39.435, plus 1.750 end reach and 2 x `EDGE_MARGIN`,
+  less the 0.1 `run_overflow_tol` credit) needs **184.669 mm**; the best of all
+  24 orderings needs **184.269 mm** and still misses the 184 mm grid point. No
+  edge block owns a narrower shape variant (LAW-6 pins mating direction, so only
+  same-span mirrors are registered), and a side flip cannot compress a perimeter
+  run — the released bottom area is *interior surface*, the binder is *perimeter
+  length*.
+- **H = 163 is set by `power`**, the largest interior block (53.21 x 23.93) and
+  the LAST one placed, because the pack order is `(priority, −connectivity,
+  −area, name)` and a power stage has the lowest cross-subsystem connectivity.
+  `power` is **provably top-pinned** (user-facing `D20001-3`, `TP20001-4`), as
+  are `usb_jtag`, `power_som`, `uart_bridge` (face-up parts) and `fmc`,
+  `debug_boot` (seated connectors). The block that sets the height is the one
+  block that can never use the freed bottom surface.
+
+**That is why 8,156 mm² of released bottom bought nothing.** The bottom-opt-in
+ladder is exhausted: every interior block has now been measured, and every
+remaining one refuses the bottom face LOUDLY with a declared reason.
+
+The one measured lever that does move the board is the interior pack ORDER:
+area-first (first-fit-decreasing) emits **185x160 = 29,600 mm² (−1.84 %)** at
+**+9.0 % cross-airwire**, taking LAW-5 utilisation from 89.1 % to 98.0 %. That
+is an area-vs-airwire trade at the wall and is a USER decision, not an engine
+one — measured, quantified, and deliberately not landed.
