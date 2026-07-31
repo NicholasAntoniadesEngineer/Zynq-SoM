@@ -210,11 +210,17 @@ Sequencing: P1 starts after the wave-8 engine unit lands (same files).
   therefore downstream of the lattice (the post-floorplan movers `l4_pull` /
   `breathe` / `refit_facing` / `reorder` and pad-level geometry the block proxy
   cannot see), not the punch model. That is the next lever.
+  **[WAVE-12: REFUTED — see the wave-12 section. The guard preferred the freed
+  plan on AREA (30,155 vs 30,340), not on the estimator, which correctly priced
+  the freed plan +1,092 mm worse. No mover destroys the win; the movers are a
+  net −77 to −172 mm.]**
 - ORDINARY-VIA ROW: the wave-10 STEP at 0+ is GONE — 0.0 and 2.2 now emit the
   IDENTICAL best board (md5 `8c093a49…`). The whole swept range is one plateau,
   so there is no measured reason to move the constant: **2.2 STAYS** as its
   physically-derived member. Its registered basis is re-based on this
-  measurement; it remains INTERIM for the est/emission gap alone. (0.0 with the
+  measurement; it remains INTERIM for the est/emission gap alone
+  **[WAVE-12: re-based again — INTERIM because it is unmeasurable by area while
+  the search is pack-bound]**. (0.0 with the
   wave-10 re-test set `power_mon`+`usb_pd`+`bringup_en` emits 185x163 with cross
   16,526.7 — still negative.)
 
@@ -228,3 +234,51 @@ Sequencing: P1 starts after the wave-8 engine unit lands (same files).
   NOT MEASURABLE: its declaration makes the sizing search run >56 min at 98 %
   CPU (heapq-dominated, no board emitted) vs 3.2 min. None of these land; they
   are re-runnable once the punch model is fixed.
+
+## Wave-12 — the est/emission gap REFUTED; the board proven PACK-bound in both axes
+
+The wave-10/11 hypothesis (the sizing estimate misleads the search, so bottom
+opt-ins price well and emit badly) was measured at every stage boundary and is
+**wrong**. Instruments: `scripts/w12_stageprobe.py` (LAW-5 ratsnest kernel at
+every `StageTracker` boundary — its FINAL row reads the pinned 15,319.0),
+`w12_bound.py` (every outline candidate: packed? est? budget?),
+`w12_chain.py` (every `_attempt_pack` call classified by rejecter),
+`w12_order.py` (all edge-run orderings), `w12_why.py` (line-traced rejection
+site), `w12_shapes.py` (registered shape sets), `w12_patchrun.py`
+(byte-exact source-patch experiment runner).
+
+- **The estimator is honest.** It is a near-constant upper bound over the
+  emitted cross: +315.0 / +315.0 / +321.7 / +314.9 mm (2.06 % ± 0.03 %) on four
+  conservative plans, +199.9 on the freed plan; ranking agreement 4/4.
+- **No mover destroys a win.** Per stage, `l4_pull` + `edge_seat` + `breathe` +
+  `refit_facing` + `reorder` NET −171.9 / −170.9 / −171.5 / −76.6 mm. Only
+  `reorder` (±10 mm) accepts on a different objective (crossing count) than the
+  one being optimised; `edge_seat` is already replicated inside the estimator.
+- **Wave-11's "+1,217 mm at unchanged area" was a comparison-frame artefact.**
+  With `power_mon` eligible: conservative = 185x164 / est 15,643.8 / emitted
+  15,328.9; freed = 185x163 / est 16,736.0 / emitted 16,536.1. The guard's key
+  is `(area, est_cross)`, area strictly first — it bought 185 mm² for +1,207 mm
+  exactly as declared, and the estimator predicted that cost correctly.
+- **Airwire has never sized this board.** 2,868 candidate outlines tried, 14
+  packed, LAW-5 budget rejected 0.
+- **W = 185 is a proven geometric floor** (S-edge connector run: 184.669 mm
+  needed, 184.269 under the best of all 24 orderings, next grid point 184).
+  2,186 sub-185 candidates, 100 % rejected by the edge-run fit guard, none
+  reaching the interior packer. No edge block has a narrower variant; a side
+  flip cannot compress a perimeter run.
+- **H = 163 is set by `power`** — largest interior block, placed LAST because
+  the order key is `(priority, −connectivity, −area, name)`. It is provably
+  top-pinned (user-facing LEDs + test points).
+- **The bottom-eligibility ladder is EXHAUSTED.** `power`, `usb_jtag`,
+  `power_som`, `uart_bridge` refuse on face-up parts; `fmc`, `debug_boot` on
+  seated connectors; `mechanical` has no packable zone. Every refusal is LOUD.
+- **The one lever that moves the board (measured, NOT landed):** area-first
+  interior pack order emits **185x160 = 29,600 mm² (−1.84 %)** at cross
+  16,699.2 (+9.0 %), LAW-5 utilisation 89.1 % → 98.0 %, sizing estimate at
+  99.94 % of its own budget. An area-vs-airwire trade at the wall — the user's
+  call. Clean landing form if wanted: a registered `pack_order_retry` fallback
+  (retry area-first only when the connectivity order fails to pack), byte-inert
+  wherever the primary order succeeds.
+- ORDINARY-VIA ROW: still 2.2, still INTERIM, but for a RE-BASED reason — it is
+  **unmeasurable by area** while the search is pack-bound. No via cost can move
+  a board whose size no airwire term constrains.
