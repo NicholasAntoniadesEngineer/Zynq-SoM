@@ -28,6 +28,13 @@ LAW 6 makes the MECHANIZABLE rules a HARD gate (any failure fails the board):
       is unusable). This is the (b) check specialised to controls so the verdict
       names the exact unreachable control.
 
+  (d) USER-FACING PARTS PRESENT ON THE TOP FACE (wave-13). A test point you probe,
+      an LED you read and a switch you press are useless on B.Cu, and a
+      bottom-assigned block now LIFTS them out of its rigid template into the pack
+      that emits F.Cu. That lift is machinery, so the RESULT is gated here on the
+      emitted board with the placer's OWN predicate (placement._is_face_top_part —
+      one rule, no replica): any face=top part on B.Cu is a FAIL.
+
 LAW 4: strict — a misplaced connector or a part under the SoM is FIXED in the
 placer (rotate it to its edge, reserve the SoM body, relocate the control),
 never waived here. Numbers are reported so a regression shows as numbers.
@@ -96,6 +103,8 @@ class MechResult:
     under_som: list[str] = field(default_factory=list)
     controls_under_som: list[str] = field(default_factory=list)
     top_under_som: list[str] = field(default_factory=list)
+    face_top_on_bottom: list[str] = field(default_factory=list)
+    n_face_top: int = 0
     som_core: tuple | None = None
 
     def summary(self) -> str:
@@ -124,6 +133,10 @@ class MechResult:
                  f"{len(self.top_under_som)}")
         for t in self.top_under_som:
             L.append(f"    TOP-UNDER-SoM {t}")
+        L.append(f"  user-facing parts (TP/LED/SW): {self.n_face_top} "
+                 f"({len(self.face_top_on_bottom)} face-down)")
+        for f in self.face_top_on_bottom:
+            L.append(f"    FACE-DOWN {f}")
         return "\n".join(L)
 
 
@@ -208,6 +221,17 @@ def check(model: PcbModel) -> MechResult:
             if _is_control(inst.ref):
                 res.controls_under_som.append(row)
 
+    from schgen.generate.pcb.placement import _is_face_top_part
+    for inst in model.insts:
+        if not _is_face_top_part(inst.ref, inst.footprint, inst.footprint):
+            continue
+        res.n_face_top += 1
+        if inst.side == "bottom":
+            res.face_top_on_bottom.append(
+                f"{inst.ref} ({inst.sheet}) {inst.value} [{inst.footprint}] "
+                f"emits B.Cu — a user-facing part must present on the top face")
+
     res.ok = (not res.bad_connectors and not res.under_som
-              and not res.controls_under_som and not res.top_under_som)
+              and not res.controls_under_som and not res.top_under_som
+              and not res.face_top_on_bottom)
     return res
