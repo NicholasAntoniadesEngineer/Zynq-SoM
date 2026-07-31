@@ -35,6 +35,35 @@ def test_edge_rotation_points_mouth_off_board():
                 f"face {face} on {edge} edge: rot {rot} does not face off-board"
 
 
+def test_mouth_oracle_uses_kicads_true_rotation_sign():
+    """`test_edge_rotation_points_mouth_off_board` only proves the table and the
+    oracle AGREE, so a mirrored pair passes it — which is exactly what shipped:
+    both were derived math-CCW while every placed-geometry kernel
+    (`_inst_pad_geom`, `_rot_pad_bbox`, `_rot_bbox_cw`, `_inst_courtyard`) uses
+    KiCad's TRUE sign. They differ only at 90/270, so all N/S connectors were
+    right and the four E/W ones carried an inverted CONN_MATING_FACE label that
+    cancelled the error — until a truthfully-labelled +Y mouth (the HDMIs) was
+    asked for a vertical edge and was turned INBOARD, which is a dead board.
+
+    Measured against kicad-cli (an F.CrtYd spike along local +Y exported at
+    0/90/270): +Y -> +X at 90 and -> -X at 270. Pin the oracle to that sign by
+    measuring it against the emission kernel itself, not against the table."""
+    from schgen.generate.pcb.mating_face import _rot_bbox_cw
+
+    for face, vec in pcb._FACE_VEC.items():
+        for rot in (0.0, 90.0, 180.0, 270.0):
+            # the face point itself, carried through the SAME transform the
+            # emitted footprint's geometry gets
+            v = (float(vec[0]), float(vec[1]))
+            rb = _rot_bbox_cw((v[0], v[1], v[0], v[1]), rot)
+            geo = (int(round(rb[0])), int(round(rb[1])))
+            assert _mating_face_out_dir(face, rot) == geo, \
+                f"{face} at {rot}: oracle says {_mating_face_out_dir(face, rot)}" \
+                f" but the emitted geometry lands at {geo}"
+    assert _mating_face_out_dir("+Y", 90.0) == (1, 0)
+    assert _mating_face_out_dir("+Y", 270.0) == (-1, 0)
+
+
 def test_every_offboard_mpn_has_a_mating_face():
     """Every off-board connector family the floorplan can pin has a researched
     mating-face direction (so the placer can rotate it)."""

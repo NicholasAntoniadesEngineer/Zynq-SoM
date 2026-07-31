@@ -35,13 +35,16 @@ def _mating_face_out_dir(mating_face: str, rot: float) -> tuple[int, int]:
     connector flush. Returns one of (0,-1)=N, (0,1)=S, (1,0)=E, (-1,0)=W."""
     fx, fy = _FACE_VEC.get(mating_face, (0, 1))
     r = int(round(rot)) % 360
-    # KiCad rotates a point (x,y) CCW on a +y-DOWN screen as the matrix
-    # (x*cos - y*sin, x*sin + y*cos) with the screen-CCW convention used in
-    # _inst_pad_geom; for 90-deg steps this maps (0,-1)->(rot) deterministically.
+    # KiCad's TRUE placement rotation on the +y-DOWN page — the SAME matrix
+    # _inst_pad_geom and _rot_pad_bbox apply: (x cos + y sin, -x sin + y cos).
+    # Measured against kicad-cli (F.CrtYd spike along local +Y exported at
+    # 0/90/270: +Y -> +X at 90, -> -X at 270). The old math-CCW form here was
+    # the MIRROR at 90/270, so this oracle disagreed with the geometry the rest
+    # of the placer and every gate already measured.
     import math as _m
     a = _m.radians(r)
     cs, sn = round(_m.cos(a)), round(_m.sin(a))
-    return (fx * cs - fy * sn, fx * sn + fy * cs)
+    return (fx * cs + fy * sn, -fx * sn + fy * cs)
 
 
 def _rot_bbox(bbox: tuple[float, float, float, float],

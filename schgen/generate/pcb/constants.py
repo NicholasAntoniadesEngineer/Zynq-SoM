@@ -276,21 +276,17 @@ CONN_MATING_FACE: dict[str, str] = {
     "HDMI-019S":       "+Y",   # HDMI receptacle mouth (plug enters OPPOSITE the
                                # SMT contact row at -Y; verified from footprint
                                # geometry — was -Y, faced inward in the render)
-    "AFC07-S40FCA-00": "-Y",   # LCD FPC slot
-    "KH-5224-8P8C-D":  "-Y",   # RJ45 jack mouth (plug enters at the pin-1..8
-                               # CONTACT end at -Y; shield tails/posts at +Y are
-                               # the board-attach back — was +Y, faced inward)
+    "AFC07-S40FCA-00": "+Y",   # LCD FPC slot. The four E/W-seated connectors here
+                               # all read "-Y" while their courtyard overhangs
+                               # local +Y exactly like the HDMI/USB-C/microSD
+                               # mouths do: the label was inverted by render
+                               # inspection to cancel the mirrored _ROT_TABLES,
+                               # and both are corrected together (same rotation
+                               # emitted, mouth now derived rather than bent).
+    "KH-5224-8P8C-D":  "+Y",   # RJ45 jack mouth
     "TF-01A":          "+Y",   # microSD card slot
-    "SFW15R-1STE1LF":  "-Y",   # camera FFC slot opens away from the solder tabs
-                               # (posts at +Y -> cable entry at -Y), same as the
-                               # geometrically-identical AFC07 LCD FPC
-    "ZX-SH1.0-4PWT":   "-Y",   # QWIIC SH connector: mouth at the CONTACT-row side
-                               # (-Y, pads 1-4); the 2 big posts (pads 5,6) at +Y
-                               # are the BACK. Was +Y (faced the mouth INBOARD on
-                               # the E edge — user caught it); -Y seats the legs
-                               # inboard + opening toward the edge like the RJ45.
-                               # Render-verified (the .wrl open-face heuristic is
-                               # unreliable for these housings; the render decides).
+    "SFW15R-1STE1LF":  "+Y",   # camera FFC slot
+    "ZX-SH1.0-4PWT":   "+Y",   # QWIIC SH connector mouth
     "DS1024-2x6R2":    "+Y",   # PMOD 2x6 socket
     "XT60PW-M":        "+X",   # ESC power XT60 (motor_sense): side-entry, the
                                # plug mates onto the bullet contacts at local +X
@@ -398,23 +394,23 @@ THERMAL_COPPER: dict[str, dict] = {
 ISO_VOID_VALUES = ("HX5008", "KH-5224")
 ISO_VOID_MARGIN = 0.6           # courtyard grow for the plane void (mm)
 
-# EDGE -> placement rotation (deg, KiCad CCW) that turns the mating face OFF-BOARD.
-# Derived in the CODE's actual page frame (+y DOWN: N/top edge = MIN y, off-board
-# from N is toward -Y; S/bottom = MAX y, off-board +Y; E/right off-board +X;
-# W/left off-board -X) using the SAME rotation matrix _inst_pad_geom applies:
-# (x,y) -> (x cos r - y sin r, x sin r + y cos r). NOTE this differs from the
-# research spec's table by swapping N<->S: the research derived in a +y-UP frame
-# (it called +Y "North/away"), but this codebase places on a +y-DOWN page, so the
-# off-board direction of the top/bottom edges is the opposite sign. The
-# _mating_face_out_dir oracle (and the placement_mech gate that uses it) is the
-# ground truth that proves each mouth points off-board after rotation.
-_ROT_FACE_NEG_Y = {"N": 0.0, "S": 180.0, "E": 90.0, "W": 270.0}
-_ROT_FACE_POS_Y = {"N": 180.0, "S": 0.0, "E": 270.0, "W": 90.0}
+# EDGE -> placement rotation (deg) that turns the mating face OFF-BOARD, in
+# KiCad's TRUE rotation sign — the same matrix _inst_pad_geom / _rot_pad_bbox /
+# _rot_bbox_cw apply, (x,y) -> (x cos r + y sin r, -x sin r + y cos r) on the
+# +y-DOWN page (N/top = MIN y so off-board from N is -Y; S = +Y; E = +X; W = -X).
+# MEASURED against kicad-cli itself (a footprint carrying an F.CrtYd spike along
+# local +Y, exported at 0/90/270): +Y -> +X at 90 and -> -X at 270. The tables
+# below were previously derived from the math-CCW form, which is the MIRROR at
+# 90/270; it survived because 0/180 are mirror-invariant (so every N/S connector
+# was right) and because the four connectors that do sit on E/W had their
+# CONN_MATING_FACE label inverted by render inspection, cancelling the error.
+# Both are corrected together, so every placement rotation is UNCHANGED.
+_ROT_FACE_NEG_Y = {"N": 0.0, "S": 180.0, "E": 270.0, "W": 90.0}
+_ROT_FACE_POS_Y = {"N": 180.0, "S": 0.0, "E": 90.0, "W": 270.0}
 # +X/-X: an in-plane HORIZONTAL mouth along the footprint X axis (e.g. a side-
-# entry XT60 whose plug enters along +X). Derived the same way as +Y/-Y from
-# _mating_face_out_dir's rotation matrix (mouth (1,0) -> off-board edge).
-_ROT_FACE_POS_X = {"N": 270.0, "S": 90.0, "E": 0.0, "W": 180.0}
-_ROT_FACE_NEG_X = {"N": 90.0, "S": 270.0, "E": 180.0, "W": 0.0}
+# entry XT60 whose plug enters along +X). Same derivation, so N/S mirror too.
+_ROT_FACE_POS_X = {"N": 90.0, "S": 270.0, "E": 0.0, "W": 180.0}
+_ROT_FACE_NEG_X = {"N": 270.0, "S": 90.0, "E": 180.0, "W": 0.0}
 _ROT_TABLES = {"-Y": _ROT_FACE_NEG_Y, "+Y": _ROT_FACE_POS_Y,
                "+X": _ROT_FACE_POS_X, "-X": _ROT_FACE_NEG_X}
 _FACE_VEC = {"-Y": (0, -1), "+Y": (0, 1), "+X": (1, 0), "-X": (-1, 0)}
