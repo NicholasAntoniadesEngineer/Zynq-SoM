@@ -5,8 +5,8 @@ FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
   OFFENDERS (starved, worst slack first):
     (none)
   (tightest PASSING subjects:)
-    ok      SW33002   user_io            4pin clr=1.550 need=1.50 slack=+0.050
-    ok      U5004     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
     ok      U5005     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
-    ok      U5007     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
+    ok      U5006     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
     ok      U5008     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
+    ok      U5009     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
+    ok      D36002    motor_pwm          6pin clr=1.550 need=1.50 slack=+0.050

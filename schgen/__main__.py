@@ -1113,7 +1113,7 @@ def cmd_board(args: argparse.Namespace) -> int:
         if cg is not None:
             (rep_dir / "connector_spacing.txt").write_text(cg.summary() + "\n")
             print(f"CONNECTOR SPACING (LAW 6): {'PASS' if cg.ok else 'FAIL'} "
-                  f"({len(cg.pairs)} same-family pairs, "
+                  f"({len(cg.pairs)} overmold pairs, "
                   f"{len(cg.violations)} too-tight "
                   f"-> {rep_dir / 'connector_spacing.txt'})")
             for _v in cg.violations:

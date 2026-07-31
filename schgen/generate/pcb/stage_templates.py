@@ -772,6 +772,7 @@ _Attract = tuple[str, "tuple[str, ...] | None", float]
 _Repel = tuple[str, "str | None", float]
 
 _ROOT_GAP = 2.0            # deterministic gap between two independent roots (mm)
+_CONN_ROOT_CABLE_GAP = 20.0
 _NET_W = 0.1               # wiring-disorder weight in the candidate score (mm/mm)
 _OVEC = {"N": (0.0, -1.0), "S": (0.0, 1.0), "E": (1.0, 0.0), "W": (-1.0, 0.0)}
 _GRID_MAX_N = 60           # cap the candidate grid half-extent (30 mm at _CAND_STEP)
@@ -1501,18 +1502,15 @@ def _seat_multi(order: list[str], roots: set[str],
     placed: dict[str, _Part] = {}
     # ROOT ROW AXIS (LAW 6): roots lay along the EDGE-PARALLEL axis (an E/W edge
     # runs vertically, so its connectors spread along Y; N/S along X — interior
-    # sheets keep X). Two mating connectors on one sheet keep the CABLE gap
-    # (motor_sense's XT60 pair overlapped at 0.00 when both sat at y=0 and the
-    # edge-seat stacked them). Deterministic sorted order.
+    # sheets keep X). Two mating connectors on one sheet keep
+    # _CONN_ROOT_CABLE_GAP (motor_sense's XT60 pair overlapped at 0.00 when both
+    # sat at y=0 and the edge-seat stacked them). Deterministic sorted order.
     _along_y = outer_vec is not None and abs(outer_vec[0]) > abs(outer_vec[1])
     cursor = 0.0
     prev_conn = False
     for r in sorted(roots):
         is_conn = bool(conn_roots and r in conn_roots)
-        gap = _ROOT_GAP
-        if prev_conn and is_conn:
-            from schgen.generate.floorplan import CABLE_NEIGHBOR_GAP
-            gap = CABLE_NEIGHBOR_GAP
+        gap = _CONN_ROOT_CABLE_GAP if (prev_conn and is_conn) else _ROOT_GAP
         rr = (root_rot or {}).get(r, 0.0)
         p0 = _Part(r, resolvable[r], rr, "top", 0.0, 0.0)
         b0 = p0.local_box()
@@ -1760,9 +1758,18 @@ def _compose_clusters(clusters: list[list[_Part]],
     interior/N/S sheets, Y for E/W), each normalised and clearance-separated —
     collision-free by construction. On an EDGE sheet every cluster's mating-
     connector OUTER face is additionally ALIGNED to the common outer line, and
-    conn-bearing neighbours keep the CABLE gap, so the composed zone presents
-    ONE flush connector face for the edge-seat (slide ~= 0, contract adjacency
-    preserved). Single-cluster zones are re-anchored only."""
+    conn-bearing neighbours keep ``_CONN_ROOT_CABLE_GAP``, so the composed zone
+    presents ONE flush connector face for the edge-seat (slide ~= 0, contract
+    adjacency preserved). Single-cluster zones are re-anchored only.
+
+    ``_CONN_ROOT_CABLE_GAP`` (20.0 mm) is an INTRA-SHEET room-for-two-cable-bodies
+    reservation between two connector roots of ANY family — it is not gated on
+    overmold membership and is not the HDMI datum. It was set empirically by the
+    motor_sense XT60 stacking trap and it is spent inside one zone, before the
+    edge seat, where the along-edge run arithmetic (``floorplan._pair_gap``) has
+    not been applied yet. It used to alias ``floorplan.CABLE_NEIGHBOR_GAP``,
+    which made a datum-driven change to the HDMI pair charge silently move an
+    unrelated intra-sheet reservation; the two are now independent."""
     along_y = outer_vec is not None and abs(outer_vec[0]) > abs(outer_vec[1])
     vx, vy = outer_vec if outer_vec is not None else (0.0, 0.0)
     out: list[_Part] = []
@@ -1771,10 +1778,7 @@ def _compose_clusters(clusters: list[list[_Part]],
     placed_clusters: list[list[_Part]] = []
     for cl in clusters:
         has_conn = bool(conn_roots and any(p.bref in conn_roots for p in cl))
-        gap = _ROOT_GAP
-        if prev_conn and has_conn:
-            from schgen.generate.floorplan import CABLE_NEIGHBOR_GAP
-            gap = CABLE_NEIGHBOR_GAP
+        gap = _CONN_ROOT_CABLE_GAP if (prev_conn and has_conn) else _ROOT_GAP
         minx = min(p.local_box()[0] for p in cl)
         miny = min(p.local_box()[1] for p in cl)
         if along_y:

@@ -96,17 +96,30 @@ EDGE_DEPTH_CAP = 15.0    # edge block max depth into the board
 EDGE_INSET = 1.5         # depth-wise gap an edge block is held off the board edge
                          # (LAW 6: a flush off-board connector's pads must still
                          # clear the 0.3mm copper_edge_clearance after grid snap)
-# Minimum CLEAR gap (mm) beside a wide-overmold cable connector so two such cables
-# mate SIMULTANEOUSLY: an HDMI plug's overmold is ~18-22mm wide, so two adjacent
-# HDMI receptacles (TX + RX) need a real gap between them or only one cable fits at
-# a time (user-reported). Applied between any edge-block pair where at least one
-# block carries an overmold-cable connector.
 CABLE_NEIGHBOR_GAP = 20.0
 _OVERMOLD_FAMILIES = {"HDMI-019S"}
+OVERMOLD_PLUG_W_MAX = 22.0
+OVERMOLD_COPPER_HALF_W = 8.0
+OVERMOLD_SIDE_GAP = round(OVERMOLD_PLUG_W_MAX / 2.0 - OVERMOLD_COPPER_HALF_W, 4)
 
 
 def _is_overmold_block(b) -> bool:
-    """True if this edge block carries a wide-overmold cable connector (HDMI)."""
+    """True if this edge block carries a wide-overmold cable connector (HDMI).
+
+    OVERMOLD DATUM (the two constants above, and the only place they are set).
+    ``OVERMOLD_PLUG_W_MAX`` 22.0 mm is the ceiling of the mated HDMI Type-A cable
+    plug's moulded boot, taken about the receptacle centre-line: the plug's metal
+    shell is 13.9 x 4.45 mm (HDMI spec Type-A plug outline) and real cable hoods
+    measure ~20 mm across, so 22.0 is an UPPER BOUND, not a fitted value — no
+    first-party dimensioned hood drawing could be obtained (the L-com CTLHDMI-MM-1
+    outline drawing leaves the hood undimensioned: "UNDIMENSIONED FEATURES MAY
+    VARY"). ``OVERMOLD_COPPER_HALF_W`` 8.0 mm is MEASURED from
+    parts/HDMI-019S/HDMI-019S.kicad_mod: shield through-holes at x = +/-7.2499
+    with size 1.5, so the copper bbox is 15.9998 mm wide about the centre.
+    The receptacle body itself is 15.000 x 11.900 x 8.000 mm (HDMI-019S.wrl).
+
+    Everything downstream is derived from those two numbers; nothing else in the
+    tree may restate the boot width."""
     return any(v in _OVERMOLD_FAMILIES for (_r, v, _w, _h) in b.conns)
 
 
@@ -129,22 +142,43 @@ def _fanout_sep(a_reach: tuple, a_inset: tuple, b_reach: tuple, b_inset: tuple,
 
 
 def _pair_gap(a, b) -> float:
-    """Along-edge clearance between two adjacent edge blocks: the wide CABLE gap if
-    either carries an overmold cable connector, else the fan-out-aware default.
+    """Along-edge clearance between two adjacent edge blocks: the overmold charge
+    when one or both carry an overmold cable connector, else the fan-out default.
+
+    OVERMOLD IS NOT SYMMETRIC — the charge depends on how many boots meet in the
+    gap, not on whether one is present:
+
+    * BOTH overmold (HDMI <-> HDMI): two boots meet, ``CABLE_NEIGHBOR_GAP``.
+      Kept at its historical 20.0 mm. The datum-derived copper requirement is
+      ``OVERMOLD_PLUG_W_MAX - 2 * OVERMOLD_COPPER_HALF_W`` = 6.0 mm, but cutting
+      to it was MEASURED to buy nothing (174x162, worse than leaving it), so the
+      protective value stands.
+    * ONE overmold (HDMI <-> plain socket): only the HDMI's OWN boot enters the
+      gap, and it overhangs its own copper by at most
+      ``OVERMOLD_PLUG_W_MAX / 2 - OVERMOLD_COPPER_HALF_W`` = ``OVERMOLD_SIDE_GAP``
+      = 3.0 mm per side. Charging the full pair gap here double-counted a boot the
+      plain neighbour does not have: it billed 20.0 mm for a 3.0 mm requirement,
+      and since the charge is between BLOCK BOXES while the connectors sit
+      0.555-3.500 mm inside their own block edges, that 3.0 mm is itself already
+      conservative at the copper. ``connector_spacing_gate`` re-proves the derived
+      value on the emitted board, copper to copper.
 
     D13 FAN-OUT CLEARANCE: two abutting blocks in an edge RUN are laid along the
     edge axis (N/S runs spread along X, W/E runs along Y), so ``a`` sits before ``b``
     on that axis. They are held the sum of their FACING-side reaches apart (never
     below CLEAR) so a multi-pin subject whose zone-internal margin does not already
     cover its fan-out floor still gets that floor to the foreign part in the
-    neighbouring block. The cable gap always wins when present (>= any reach). The
-    facing sides are resolved from the edge orientation."""
-    if _is_overmold_block(a) or _is_overmold_block(b):
+    neighbouring block. The one-overmold charge composes with it by MAX (both are
+    floors on the same gap); the pair charge dominates any reach. The facing sides
+    are resolved from the edge orientation."""
+    om_a, om_b = _is_overmold_block(a), _is_overmold_block(b)
+    if om_a and om_b:
         return CABLE_NEIGHBOR_GAP
     # a run on the N/S edge spreads along X (a is to the W of b); a W/E run spreads
     # along Y (a is to the N of b). Use the facing-side reaches accordingly.
     axis = "E" if (a.edge or b.edge) in ("N", "S") else "S"
-    return round(max(CLEAR, _fanout_sep(a.fanout_reach, a.fanout_inset,
+    floor = OVERMOLD_SIDE_GAP if (om_a or om_b) else CLEAR
+    return round(max(floor, _fanout_sep(a.fanout_reach, a.fanout_inset,
                                         b.fanout_reach, b.fanout_inset, axis)), 4)
 
 

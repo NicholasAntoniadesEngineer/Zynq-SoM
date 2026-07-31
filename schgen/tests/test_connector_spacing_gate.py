@@ -104,6 +104,61 @@ def test_just_under_threshold_fails():
     assert not res.ok, res.summary()
 
 
+def _pmod(ref, x, y, rot=0.0):
+    mod = pcb.resolve_mod("DS1024-2x6R2:DS1024-2x6R2")
+    assert mod is not None, "DS1024-2x6R2 footprint missing"
+    return FootprintInst(ref=ref, value="DS1024-2x6R2",
+                         footprint="DS1024-2x6R2:DS1024-2x6R2",
+                         x=x, y=y, rotation=rot, pad_nets={}, mod_path=mod,
+                         sheet="pmod", side="top")
+
+
+def _model_hdmi_beside_pmod(dx):
+    """An HDMI and a plain PMOD socket side by side on the S edge, pad-bbox
+    centres ``dx`` apart on x."""
+    W, H = 170.0, 150.0
+    y = ORIGIN_Y + H - 10.0
+    return PcbModel(board_w=W, board_h=H,
+                    insts=[_hdmi("J12001", ORIGIN_X + 30.0, y),
+                           _pmod("J18001", ORIGIN_X + 30.0 + dx, y)],
+                    net_numbers={"": 0}, netclass_of={}, classes={}, placed=2,
+                    deferred=[])
+
+
+def test_one_sided_rule_polices_hdmi_beside_a_plain_neighbour():
+    """An HDMI beside a NON-family connector used to be policed by NOTHING while
+    the floorplan billed it the full pair gap. It is now charged, and proved on
+    the board at, the one boot's own overhang."""
+    model = _model_hdmi_beside_pmod(dx=60.0)
+    res = cs.check(model)
+    assert res.ok, res.summary()
+    rows = [p for p in res.pairs if p[2].endswith("|1")]
+    assert len(rows) == 1, res.summary()
+    assert {rows[0][0], rows[0][1]} == {"J12001", "J18001"}
+    assert rows[0][5] == cs._FAMILY_SIDE_GAP_MM["HDMI-019S"]
+
+
+def test_mutant_one_sided_boot_overhang_fails():
+    """Slide the plain neighbour under the HDMI's boot overhang — FAIL. The
+    threshold is the DERIVED per-side overhang, so this mutant also proves the
+    reduced floorplan charge is not unpoliced."""
+    need = cs._FAMILY_SIDE_GAP_MM["HDMI-019S"]
+    a = _inst_pad_bbox(_hdmi("X", ORIGIN_X, ORIGIN_Y))
+    b = _inst_pad_bbox(_pmod("Y", ORIGIN_X, ORIGIN_Y))
+    half = (a[2] - a[0]) / 2.0 + (b[2] - b[0]) / 2.0
+    model = _model_hdmi_beside_pmod(dx=half + need - 0.5)
+    res = cs.check(model)
+    assert not res.ok, res.summary()
+    assert any("one-sided" in v for v in res.violations), res.summary()
+
+
+def test_one_sided_rule_does_not_re_police_the_same_family():
+    """A same-family pair is charged the PAIR gap once, never additionally the
+    one-sided gap — the two rules must not double-count the same boot."""
+    res = cs.check(_model_with_two_hdmi(dx=40.0))
+    assert [p[2] for p in res.pairs] == ["HDMI-019S"], res.summary()
+
+
 def test_different_edges_not_compared():
     """Two HDMIs on PERPENDICULAR edges (one on S, one rotated on E) are not a
     side-by-side simultaneous-mate pair, so the spacing rule does not apply —

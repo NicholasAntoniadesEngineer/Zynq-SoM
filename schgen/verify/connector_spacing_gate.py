@@ -14,15 +14,25 @@ EACH connector individually. None of them looks at the BETWEEN-connector mating
 clearance for simultaneously-cabled neighbours. This makes that clearance a HARD
 gate (LAW 6 — mechanical buildability, NOT just electrical correctness).
 
-RULE (any violation HARD-FAILS the board):
-  For every pair of off-board connectors of the SAME overmold family on the SAME
-  board edge, the edge-to-edge gap between their COPPER (pad) bboxes — measured
-  ALONG the edge (the axis the two neighbours are separated on) — must be at least
-  the family's required overmold clearance ``_FAMILY_MIN_GAP_MM[family]``. A
-  smaller gap means the two plug overmolds would collide; FAIL.
+RULE (any violation HARD-FAILS the board), in two parts because an overmold is
+NOT symmetric — the clearance depends on how many boots meet in the gap:
 
-The min-gap table is small and per-family so a new wide connector is one entry:
-  HDMI-019S : 18 mm  (HDMI plug overmold boot ~18-22 mm wide)
+  PAIR (both connectors of the SAME overmold family, on the same board edge):
+  the edge-to-edge gap between their COPPER (pad) bboxes — measured ALONG the
+  edge (the axis the two neighbours are separated on) — must be at least
+  ``_FAMILY_MIN_GAP_MM[family]``. A smaller gap means the two plug overmolds
+  would collide; FAIL.
+
+  ONE-SIDED (an overmold connector beside ANY other off-board connector that is
+  not of its family): only the overmold's OWN boot enters the gap, so the
+  requirement is its per-side overhang past its own copper,
+  ``_FAMILY_SIDE_GAP_MM[family]``. Until this rule existed the pair was policed
+  by NOTHING (the audit's under-charge finding, VISUAL_PCB_AUDIT.md:139) while
+  the floorplan billed it the full pair gap — the check and the charge were both
+  wrong, in opposite directions.
+
+The tables are small and per-family so a new wide connector is two entries:
+  HDMI-019S : pair 18 mm, one-sided 3 mm (= floorplan.OVERMOLD_SIDE_GAP)
 
 LAW 4: strict — a too-tight pair is FIXED in the placer (spread the two
 connectors along the edge, or move one to a different edge), NEVER waived here.
@@ -33,18 +43,28 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from schgen.generate.floorplan import OVERMOLD_SIDE_GAP
 from schgen.generate.pcb import (
     CONN_MATING_FACE,
     PcbModel,
     _inst_pad_bbox,
 )
 
-# overmold-family -> minimum required edge-to-edge gap (mm) between two of that
-# family's connectors mating SIMULTANEOUSLY on the same edge. The value is the
-# cable-plug overmold/strain-relief boot width (the part wider than the PCB
-# footprint). Keyed by the connector MPN so adding a wide connector is one line.
+# overmold-family -> minimum required edge-to-edge gap (mm) between TWO of that
+# family's connectors mating SIMULTANEOUSLY on the same edge (two boots in one
+# gap). Conservative: the datum-derived copper requirement is the boot width
+# minus the two connectors' own copper half-widths, 22.0 - 2*8.0 = 6.0 mm, and
+# this table keeps the historical 18.0 because nothing measured asks it to move.
 _FAMILY_MIN_GAP_MM: dict[str, float] = {
-    "HDMI-019S": 18.0,   # HDMI Type-A plug overmold boot ~18-22 mm wide
+    "HDMI-019S": 18.0,
+}
+
+# overmold-family -> minimum edge-to-edge gap (mm) between one of that family's
+# connectors and a NON-family off-board neighbour: ONE boot in the gap, so the
+# requirement is its per-side overhang past its own copper. Derived, not fitted —
+# floorplan._is_overmold_block.__doc__ carries the datum and its sourcing.
+_FAMILY_SIDE_GAP_MM: dict[str, float] = {
+    "HDMI-019S": OVERMOLD_SIDE_GAP,
 }
 
 # the MPN -> overmold family. Today each wide MPN is its own family (two HDMIs
@@ -73,6 +93,23 @@ def _overlap_1d(a0: float, a1: float, b0: float, b1: float) -> float:
     return max(0.0, min(a1, b1) - max(a0, b0))
 
 
+def _same_edge_gap(a: tuple, b: tuple) -> tuple[str, float] | None:
+    """``(axis, copper gap mm)`` when two pad bboxes are side by side in ONE edge
+    band, else None: they share a band on one axis and are separated on the other
+    (y-band overlap + x separation => a horizontal edge, neighbours along x)."""
+    ox = _overlap_1d(a[0], a[2], b[0], b[2])
+    oy = _overlap_1d(a[1], a[3], b[1], b[3])
+    wx = min(a[2] - a[0], b[2] - b[0])
+    hy = min(a[3] - a[1], b[3] - b[1])
+    same_x_band = wx > 0 and ox >= _SAME_BAND_FRAC * wx
+    same_y_band = hy > 0 and oy >= _SAME_BAND_FRAC * hy
+    if same_y_band and not same_x_band:
+        return "x", max(a[0], b[0]) - min(a[2], b[2])
+    if same_x_band and not same_y_band:
+        return "y", max(a[1], b[1]) - min(a[3], b[3])
+    return None
+
+
 @dataclass
 class SpacingResult:
     ok: bool = True
@@ -84,7 +121,7 @@ class SpacingResult:
     def summary(self) -> str:
         L = [f"CONNECTOR OVERMOLD SPACING GATE: {'PASS' if self.ok else 'FAIL'} "
              f"(board {self.board_w:g} x {self.board_h:g} mm)"]
-        L.append(f"  same-family same-edge connector pairs: {len(self.pairs)} "
+        L.append(f"  same-edge overmold connector pairs: {len(self.pairs)} "
                  f"({len(self.violations)} too tight)")
         for ra, rb, fam, axis, gap, need, ok in self.pairs:
             mark = "OK " if ok else "BAD"
@@ -138,24 +175,10 @@ def check(model: PcbModel) -> SpacingResult:
             for j in range(i + 1, len(members)):
                 ra, a = members[i]
                 rb, b = members[j]
-                # overlap on each axis
-                ox = _overlap_1d(a[0], a[2], b[0], b[2])
-                oy = _overlap_1d(a[1], a[3], b[1], b[3])
-                wx = min(a[2] - a[0], b[2] - b[0])
-                hy = min(a[3] - a[1], b[3] - b[1])
-                same_x_band = wx > 0 and ox >= _SAME_BAND_FRAC * wx
-                same_y_band = hy > 0 and oy >= _SAME_BAND_FRAC * hy
-                # SAME EDGE = they share one band and are separated on the other
-                # axis: y-band overlap + x separation => a horizontal edge (N/S),
-                # neighbours separated ALONG x; vice-versa for E/W edges.
-                if same_y_band and not same_x_band:
-                    axis = "x"
-                    gap = max(a[0], b[0]) - min(a[2], b[2])
-                elif same_x_band and not same_y_band:
-                    axis = "y"
-                    gap = max(a[1], b[1]) - min(a[3], b[3])
-                else:
-                    continue              # not a same-edge side-by-side pair
+                hit = _same_edge_gap(a, b)
+                if hit is None:
+                    continue
+                axis, gap = hit
                 ok = gap >= need
                 res.pairs.append((ra, rb, fam, axis, gap, need, ok))
                 if not ok:
@@ -163,6 +186,27 @@ def check(model: PcbModel) -> SpacingResult:
                         f"{ra} <-> {rb} ({fam}): overmold gap {gap:.2f}mm along "
                         f"{axis} < required {need:g}mm — the two cable plugs' "
                         f"overmolds would collide; cannot mate both at once")
+
+    # ONE-SIDED: an overmold connector beside a NON-family off-board neighbour.
+    fam_of_ref = {inst.ref: _FAMILY_OF.get(_conn_mpn(inst) or "")
+                  for inst in model.insts if _conn_mpn(inst)}
+    for fam, members in by_family.items():
+        side_need = _FAMILY_SIDE_GAP_MM[fam]
+        for ra, a in sorted(members):
+            for rb, b in conns:
+                if fam_of_ref.get(rb) == fam:
+                    continue
+                hit = _same_edge_gap(a, b)
+                if hit is None:
+                    continue
+                axis, gap = hit
+                ok = gap >= side_need
+                res.pairs.append((ra, rb, f"{fam}|1", axis, gap, side_need, ok))
+                if not ok:
+                    res.violations.append(
+                        f"{ra} <-> {rb} ({fam} one-sided): gap {gap:.2f}mm along "
+                        f"{axis} < required {side_need:g}mm — the {fam} plug's "
+                        f"own boot overhangs its copper into the neighbour")
 
     res.pairs.sort(key=lambda p: p[4])
     res.ok = not res.violations
