@@ -92,19 +92,65 @@ def test_edge_run_fit_is_the_width_binder_and_its_floor_is_exact():
         fp.BOARD_W, fp.BOARD_H = saved
 
 
-def test_overmold_neighbours_are_charged_the_full_cable_gap():
-    """Two of the four terms on the binding S run are CABLE_NEIGHBOR_GAP (40 mm
-    of 164.8 = 23 %), charged whenever EITHER neighbour carries an overmold
-    cable connector. Softening this is LAW-4 forbidden — pin the charge."""
+def test_overmold_charge_is_asymmetric_pair_vs_one_sided():
+    """The overmold charge counts BOOTS IN THE GAP, not overmold membership.
+
+    Two boots (HDMI <-> HDMI) keep the full CABLE_NEIGHBOR_GAP — softening that
+    is LAW-4 forbidden and it is pinned here. ONE boot (HDMI <-> plain socket)
+    owes only that boot's own overhang past its own copper, OVERMOLD_SIDE_GAP;
+    charging it the pair gap billed a boot the plain neighbour does not have.
+    Both HDMI orderings must agree — the rule is commutative in the pair, not
+    symmetric in the membership."""
     plain = Block(name="p", kind="edge", w=10.0, h=10.0, edge="S")
     hdmi = Block(name="h", kind="edge", w=10.0, h=10.0, edge="S",
                  conns=[("J1", "HDMI-019S", 10.0, 10.0)])
     assert fp._is_overmold_block(hdmi)
     assert not fp._is_overmold_block(plain)
-    assert fp._pair_gap(hdmi, plain) == CABLE_NEIGHBOR_GAP
-    assert fp._pair_gap(plain, hdmi) == CABLE_NEIGHBOR_GAP
     assert fp._pair_gap(hdmi, hdmi) == CABLE_NEIGHBOR_GAP
+    assert fp._pair_gap(hdmi, plain) == pytest.approx(fp.OVERMOLD_SIDE_GAP)
+    assert fp._pair_gap(plain, hdmi) == pytest.approx(fp.OVERMOLD_SIDE_GAP)
     assert fp._pair_gap(plain, plain) == pytest.approx(CLEAR)
+    assert fp.OVERMOLD_SIDE_GAP < CABLE_NEIGHBOR_GAP
+
+
+def test_one_sided_overmold_gap_is_derived_from_the_datum():
+    """OVERMOLD_SIDE_GAP is not a tuned number: it is the plug boot's half-width
+    minus the receptacle's own copper half-width, both stated once as the datum.
+    The copper half-width must match the real HDMI-019S footprint (shield
+    through-holes at +/-7.2499, size 1.5 => 8.0 mm), so a footprint swap that
+    moved the copper without moving the datum is caught here."""
+    assert fp.OVERMOLD_SIDE_GAP == pytest.approx(
+        fp.OVERMOLD_PLUG_W_MAX / 2.0 - fp.OVERMOLD_COPPER_HALF_W)
+
+    from schgen.generate import pcb
+    from schgen.generate.pcb import FootprintInst, _inst_pad_bbox
+    mod = pcb.resolve_mod("HDMI-019S:HDMI-019S")
+    assert mod is not None, "HDMI-019S footprint missing"
+    inst = FootprintInst(ref="J1", value="HDMI-019S",
+                         footprint="HDMI-019S:HDMI-019S", x=0.0, y=0.0,
+                         rotation=0.0, pad_nets={}, mod_path=mod, sheet="h",
+                         side="top")
+    x0, _y0, x1, _y1 = _inst_pad_bbox(inst)
+    assert (x1 - x0) / 2.0 == pytest.approx(fp.OVERMOLD_COPPER_HALF_W, abs=0.01)
+
+
+def test_the_three_overmold_consumers_are_independent_constants():
+    """The overmold datum used to be ONE constant serving three unrelated
+    requirements. Each now has its own name, and the two that are not the
+    floorplan pair charge must not silently track it:
+
+      floorplan.CABLE_NEIGHBOR_GAP        two boots meeting between edge blocks
+      stage_templates._CONN_ROOT_CABLE_GAP  intra-sheet room for two cable bodies
+      connector_spacing_gate tables         copper-to-copper proof on the board
+    """
+    from schgen.generate.pcb import stage_templates as st
+    from schgen.verify import connector_spacing_gate as cs
+
+    assert "import CABLE_NEIGHBOR_GAP" not in inspect.getsource(st)
+    assert st._CONN_ROOT_CABLE_GAP == 20.0
+    assert cs._FAMILY_MIN_GAP_MM["HDMI-019S"] >= 18.0
+    assert cs._FAMILY_SIDE_GAP_MM["HDMI-019S"] == pytest.approx(
+        fp.OVERMOLD_SIDE_GAP)
 
 
 def test_run_length_is_invariant_under_reordering_of_equal_gap_blocks():
