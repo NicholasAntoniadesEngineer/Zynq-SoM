@@ -10,9 +10,22 @@ are step-4 connectors, the som_decoupling caps bottom-SMD, and the TPS26631
 (an SMD efuse whose footprint carries thru_hole EP stitch vias) stays SMD.
 Determinism: the markdown and a stage PNG are byte-identical across two
 renders of the same model.
+
+STALENESS GUARD (the wave-14 addition): the COMMITTED
+``<project>/manufacturing/ASSEMBLY.md`` and ``renders/assembly/*.png`` must
+byte-match what the live model generates. Wave-8 commit 7ed5219 deleted the
+``emit.generate`` hook on a stale base and the committed doc then described the
+183 x 164 mm / 564-part board for six waves while the board shrank to 185 x 162
+with 165 bottom parts — nothing failed, because the artifact was advisory and
+its absence was silent. These tests are that missing alarm: the doc guard fires
+whenever the committed artifact drifts from the model, and the WIRING guard
+(AST, not grep) fires the same day the hook or its report line is deleted.
 """
 
 from __future__ import annotations
+
+import ast
+from pathlib import Path
 
 import pytest
 
@@ -113,3 +126,115 @@ def test_markdown_and_png_deterministic(carrier_model, steps, phases,
     asm._png_stage(carrier_model, done, cur, b, "step 4/4 - determinism")
     assert a.read_bytes() == b.read_bytes()
     assert a.stat().st_size > 2000
+
+
+_REBUILD = ("rebuild the project (`python -m schgen board [--project X]`) "
+            "and commit the regenerated artifacts")
+
+
+def test_committed_markdown_is_current(carrier_model, steps, phases):
+    """STALENESS GUARD — the committed ASSEMBLY.md must equal what the live
+    placed model generates, byte for byte."""
+    from schgen.core.project import spec
+    live = asm._markdown(carrier_model, steps, phases, spec().name)
+    assert asm.ASSEMBLY_MD.exists(), f"{asm.ASSEMBLY_MD} missing — {_REBUILD}"
+    committed = asm.ASSEMBLY_MD.read_text()
+    if committed != live:
+        cl, ll = committed.splitlines(), live.splitlines()
+        first = next((f"line {i + 1}: committed {c!r} != live {v!r}"
+                      for i, (c, v) in enumerate(zip(cl, ll, strict=False))
+                      if c != v), f"length {len(cl)} != {len(ll)}")
+        raise AssertionError(
+            f"{asm.ASSEMBLY_MD} is STALE — {first}; {_REBUILD}")
+
+
+def test_committed_stage_pngs_are_current(carrier_model, steps, phases,
+                                          tmp_path):
+    """STALENESS GUARD — the committed per-stage PNG set must equal a fresh
+    render of the same model: same filenames (a phase added/dropped/renamed is
+    a rename here) and the same bytes."""
+    live = asm._stage_pngs(carrier_model, steps, phases, tmp_path)
+    have = sorted(p.name for p in asm.PNG_DIR.glob("*.png"))
+    want = sorted(p.name for p in live)
+    assert have == want, (
+        f"{asm.PNG_DIR}: stage set drifted "
+        f"(missing {sorted(set(want) - set(have))}, "
+        f"orphan {sorted(set(have) - set(want))}) — {_REBUILD}")
+    stale = [p.name for p in live
+             if (asm.PNG_DIR / p.name).read_bytes() != p.read_bytes()]
+    assert not stale, f"{asm.PNG_DIR}: {len(stale)} STALE PNGs {stale[:6]} — {_REBUILD}"
+
+
+def test_verdict_absence_and_error_are_failures():
+    """A MISSING result is the wave-8 defect itself: the hook was deleted, the
+    result key vanished, and the report said nothing. It must read FAIL."""
+    for empty in (None, {}, {"ok": True}):
+        ok, line = asm.verdict(empty)
+        assert not ok and line.startswith("ASSEMBLY: FAIL"), empty
+    ok, line = asm.verdict({"ok": False, "error": "PIL exploded"})
+    assert not ok and "PIL exploded" in line
+    ok, line = asm.verdict({
+        "ok": True, "md": asm.ASSEMBLY_MD, "png_dir": asm.PNG_DIR,
+        "n_steps": 4, "n_phases": 33, "n_parts": 502, "n_pngs": 37})
+    assert ok
+    assert line.startswith("ASSEMBLY: 4 steps + 33 phases, 502 parts -> ")
+    assert "(37 PNGs)" in line
+
+
+def test_generation_failure_is_a_ceiling_zero_fallback(tmp_path):
+    """The generator raising is a REGISTERED fallback, absent from every
+    committed baseline — so one throw fails the ratchet gate as well as the
+    report line, and lands counted in board_verdicts.json."""
+    import json
+
+    from schgen.core import fallbacks as fb
+    from schgen.verify import fallback_gate
+    assert fb.REGISTRY["assembly_generation_failed"].stage == "assembly_docs"
+    for proj in ("carrier", "devkit_mini"):
+        bl = json.loads((Path(asm.__file__).resolve().parents[2] / proj
+                         / "reports" / "fallback_baseline.json").read_text())
+        assert bl["counts"].get("assembly_generation_failed", 0) == 0
+    bl_path = tmp_path / "fallback_baseline.json"
+    bl_path.write_text(json.dumps({"counts": {n: 0 for n in fb.REGISTRY}}))
+    res = fallback_gate.check({n: 0 for n in fb.REGISTRY}, baseline_path=bl_path)
+    assert res.ok
+    res = fallback_gate.check({**{n: 0 for n in fb.REGISTRY},
+                               "assembly_generation_failed": 1},
+                              baseline_path=bl_path)
+    assert not res.ok and "assembly_generation_failed" in res.regressions[0]
+
+
+def _hook_call_targets(path: Path, func: str) -> set[str]:
+    """Every ``<alias>.<attr>`` called inside ``func``, where ``<alias>`` is
+    bound to ``schgen.generate.assembly`` by an import in that function or at
+    module level. AST, not grep: an alias rename stays green, a DELETED call
+    goes red the day it is deleted."""
+    tree = ast.parse(path.read_text())
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == func)
+    aliases = set()
+    for n in list(ast.walk(tree)):
+        if isinstance(n, ast.ImportFrom) and n.module == "schgen.generate":
+            aliases |= {a.asname or a.name for a in n.names
+                        if a.name == "assembly"}
+    return {f"{ast.unparse(n.func.value)}.{n.func.attr}"
+            for n in ast.walk(fn)
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+            and ast.unparse(n.func.value) in aliases}
+
+
+def test_build_wiring_is_present():
+    """THE DELETION TRIPWIRE. ``emit.generate`` must call the generator and
+    ``cmd_board`` must call ``assembly.verdict`` — the two lines wave-8 commit
+    7ed5219 silently dropped on a stale base."""
+    root = Path(asm.__file__).resolve().parents[2]
+    emit_calls = _hook_call_targets(root / "schgen" / "generate" / "pcb"
+                                    / "emit.py", "generate")
+    assert any(c.endswith(".generate") for c in emit_calls), (
+        "schgen/generate/pcb/emit.py: generate() no longer calls "
+        "assembly.generate — the ASSEMBLY artifacts would go stale silently")
+    main_calls = _hook_call_targets(root / "schgen" / "__main__.py",
+                                    "cmd_board")
+    assert any(c.endswith(".verdict") for c in main_calls), (
+        "schgen/__main__.py: cmd_board() no longer calls assembly.verdict — "
+        "a missing/failed ASSEMBLY step would print nothing")

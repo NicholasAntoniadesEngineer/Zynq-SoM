@@ -123,6 +123,18 @@ _register(
     "most ONCE per build_plan; `schgen board` calls build_plan twice (the PCB "
     "and the FLOORPLAN doc), so the carrier/devkit ceiling is 2.")
 
+_register(
+    "assembly_generation_failed", "assembly_docs",
+    "The ORDER-OF-ASSEMBLY generator (schgen/generate/assembly.py) raised "
+    "inside its advisory hook in emit.generate, so the build carried on with "
+    "the PREVIOUS manufacturing/ASSEMBLY.md + renders/assembly/*.png — i.e. a "
+    "STALE doc describing a board that no longer exists. Absent from every "
+    "baseline, so its ceiling is 0: one throw is a build failure here AND on "
+    "the ASSEMBLY report line (assembly.verdict). Registered because the "
+    "wave-7 hook's bare try/except was exactly the silent mode the no-legacy "
+    "law forbids — wave-8 commit 7ed5219 then deleted the call outright and "
+    "six waves shipped a doc for the 183x164 board.")
+
 _EVENTS: list[str] = []
 
 

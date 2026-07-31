@@ -36,7 +36,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from schgen.core.project import PROJECT_ROOT
+from schgen.core.project import PROJECT_ROOT, REPO_ROOT
 from schgen.generate import pcb as pcb_mod
 from schgen.generate.pcb import PcbModel, _inst_courtyard
 from schgen.generate.pcb.constants import (
@@ -668,7 +668,35 @@ def generate(model: PcbModel | None = None) -> dict:
     ASSEMBLY_MD.write_text(_markdown(model, steps, phases, name))
     pngs = _stage_pngs(model, steps, phases, PNG_DIR)
     return {
+        "ok": True,
         "md": ASSEMBLY_MD, "png_dir": PNG_DIR, "pngs": pngs,
         "n_steps": len(steps), "n_phases": len(phases),
-        "n_parts": len(assembly_insts(model)),
+        "n_parts": len(assembly_insts(model)), "n_pngs": len(pngs),
     }
+
+
+def verdict(res: dict | None) -> tuple[bool, str]:
+    """The board-report verdict for the assembly artifacts: ``(ok, line)``.
+
+    ABSENCE IS A FAILURE, not a skip. The doc's CONTENT is advisory (it fails no
+    placement rule), but its EMISSION is not: wave-8 commit 7ed5219 dropped the
+    ``emit.generate`` hook on a stale base and the committed ASSEMBLY.md went
+    stale for six waves because a missing result printed nothing at all. A
+    ``None``/empty result therefore reads as "the step did not run" and fails the
+    board exactly like the ratsnest / fallback-census "did not run" branches; a
+    raised generator error is the same verdict, additionally counted as the
+    ``assembly_generation_failed`` fallback (ceiling 0)."""
+    if not res:
+        return False, ("ASSEMBLY: FAIL — generation step did not run "
+                       "(emit.generate must call assembly.generate)")
+    if res.get("error"):
+        return False, f"ASSEMBLY: FAIL — {res['error']}"
+    missing = [k for k in ("md", "png_dir", "n_steps", "n_phases", "n_parts",
+                           "n_pngs") if res.get(k) is None]
+    if missing or not res.get("ok"):
+        return False, f"ASSEMBLY: FAIL — incomplete result {sorted(res)}"
+    return True, (f"ASSEMBLY: {res['n_steps']} steps + {res['n_phases']} "
+                  f"phases, {res['n_parts']} parts -> "
+                  f"{Path(res['md']).relative_to(REPO_ROOT)} + "
+                  f"{Path(res['png_dir']).relative_to(REPO_ROOT)} "
+                  f"({res['n_pngs']} PNGs)")
