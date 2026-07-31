@@ -1,6 +1,6 @@
 # Assembly order — devkit_mini
 
-Board 105 x 105 mm. 147 placed parts (52 top / 95 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 123 x 100 mm. 147 placed parts (92 top / 55 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -12,7 +12,7 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 | 3 | power | 51 | verify +5V at TP4001; verify +3V3 at TP4002; verify +1V8 at TP4003 |
 | 4 | power_som | 23 | verify +5V_SOM at TP6001 |
 | 5 | SoM interface (som_decoupling, som_j1, som_j2, som_j3) | 21 | — |
-| 6 | SoM module mate | 0 | boot/debug via debug_boot: J1001, J1002, SW1001, SW1002 |
+| 6 | SoM module mate | 0 | boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: DFU BSEL BSEL), SW1002 (RST) |
 | 7 | debug_boot | 10 | — |
 | 8 | uart_bridge | 10 | — |
 | 9 | usb_uart_connector | 5 | — |
@@ -22,7 +22,7 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 
 ![phase 1](../renders/assembly/phase_01_power_entry.png)
 
-13 parts (12 top / 1 bottom)
+13 parts (13 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -66,7 +66,7 @@ CHECKPOINT: verify +VIN at TP3002
 
 ![phase 3](../renders/assembly/phase_03_power.png)
 
-51 parts (13 top / 38 bottom)
+51 parts (46 top / 5 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -196,7 +196,7 @@ CHECKPOINT: verify +5V_SOM at TP6001
 
 No solder parts. Mate the SoM module onto J8001, J9002, J10003 after the rail checkpoints above.
 
-CHECKPOINT: boot/debug via debug_boot: J1001, J1002, SW1001, SW1002
+CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: DFU BSEL BSEL), SW1002 (RST)
 
 ### Phase 7 — debug_boot
 
@@ -221,7 +221,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001, J1002, SW1001, SW1002
 
 ![phase 8](../renders/assembly/phase_08_uart_bridge.png)
 
-10 parts (7 top / 3 bottom)
+10 parts (10 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -240,7 +240,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001, J1002, SW1001, SW1002
 
 ![phase 9](../renders/assembly/phase_09_usb_uart_connector.png)
 
-5 parts (2 top / 3 bottom)
+5 parts (5 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -269,33 +269,10 @@ CHECKPOINT: boot/debug via debug_boot: J1001, J1002, SW1001, SW1002
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-95 parts (0 top / 95 bottom)
+55 parts (0 top / 55 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
-| C4001 | 100n | C_0603_1608Metric | power |
-| C4002 | 10u | C_1206_3216Metric | power |
-| C4003 | 10u | C_1206_3216Metric | power |
-| C4004 | 100n | C_0603_1608Metric | power |
-| C4005 | 22u | C_0805_2012Metric | power |
-| C4006 | 22u | C_0805_2012Metric | power |
-| C4007 | 100n | C_0603_1608Metric | power |
-| C4008 | 22u | C_0805_2012Metric | power |
-| C4009 | 100n | C_0603_1608Metric | power |
-| C4010 | 22u | C_0805_2012Metric | power |
-| C4011 | 22u | C_0805_2012Metric | power |
-| C4012 | 1u | C_0603_1608Metric | power |
-| C4013 | 1u | C_0603_1608Metric | power |
-| C4023 | 22p | C_0603_1608Metric | power |
-| C4024 | 1u | C_0603_1608Metric | power |
-| C4025 | 100n | C_0603_1608Metric | power |
-| C4026 | 22u | C_0805_2012Metric | power |
-| C4027 | 22p | C_0603_1608Metric | power |
-| C4028 | 1u | C_0603_1608Metric | power |
-| C4029 | 100n | C_0603_1608Metric | power |
-| C4030 | 22u | C_0805_2012Metric | power |
-| C4031 | 1u | C_0603_1608Metric | power |
-| C4032 | 1u | C_0603_1608Metric | power |
 | C5001 | 100n | C_0603_1608Metric | power_mon |
 | C5002 | 100n | C_0603_1608Metric | power_mon |
 | C5003 | 10u | C_0805_2012Metric | power_mon |
@@ -328,29 +305,17 @@ CHECKPOINT: boot/debug via debug_boot: J1001, J1002, SW1001, SW1002
 | C7016 | 100n | C_0603_1608Metric | som_decoupling |
 | C7017 | 100n | C_0603_1608Metric | som_decoupling |
 | C7018 | 100n | C_0603_1608Metric | som_decoupling |
-| C12001 | 10u | C_0805_2012Metric | usb_uart_connector |
 | R1001 | 4k7 | R_0603_1608Metric | debug_boot |
 | R1002 | 4k7 | R_0603_1608Metric | debug_boot |
 | R1003 | 100R | R_0603_1608Metric | debug_boot |
 | R1004 | 10k | R_0603_1608Metric | debug_boot |
 | R1005 | 10k | R_0603_1608Metric | debug_boot |
 | R1006 | 10k | R_0603_1608Metric | debug_boot |
-| R3006 | 100k | R_0603_1608Metric | pd_input |
-| R4001 | 40.2k | R_0603_1608Metric | power |
-| R4002 | 10k | R_0603_1608Metric | power |
 | R4003 | 1k | R_0603_1608Metric | power |
-| R4004 | 23.2k | R_0603_1608Metric | power |
-| R4005 | 10k | R_0603_1608Metric | power |
 | R4006 | 330R | R_0603_1608Metric | power |
 | R4007 | 1k | R_0603_1608Metric | power |
 | R4008 | 100k | R_0603_1608Metric | power |
 | R4009 | 330R | R_0603_1608Metric | power |
-| R4010 | 22k | R_0603_1608Metric | power |
-| R4011 | 10R | R_0603_1608Metric | power |
-| R4012 | 1k | R_0603_1608Metric | power |
-| R4013 | 10R | R_0603_1608Metric | power |
-| R4014 | 22k | R_0603_1608Metric | power |
-| R4015 | 1k | R_0603_1608Metric | power |
 | R5001 | 10k | R_0603_1608Metric | power_mon |
 | R6012 | 10k | R_0603_1608Metric | power_som |
 | R6014 | 47.5k | R_0603_1608Metric | power_som |
@@ -359,11 +324,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001, J1002, SW1001, SW1002
 | R6017 | 10R | R_0603_1608Metric | power_som |
 | R6018 | 22k | R_0603_1608Metric | power_som |
 | R6019 | 1k | R_0603_1608Metric | power_som |
-| R11001 | 1k | R_0603_1608Metric | uart_bridge |
-| R11002 | 22k1 | R_0603_1608Metric | uart_bridge |
-| R11003 | 47k5 | R_0603_1608Metric | uart_bridge |
-| R12001 | 5.1k | R_0603_1608Metric | usb_uart_connector |
-| R12002 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | RS5001 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5002 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5003 | 10mR | RLM12FTCMR010 | power_mon |
@@ -373,17 +333,41 @@ CHECKPOINT: boot/debug via debug_boot: J1001, J1002, SW1001, SW1002
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-41 parts (41 top / 0 bottom)
+81 parts (81 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
 | C3001 | 100n | C_0603_1608Metric | pd_input |
 | C3002 | 10u | C_1210_3225Metric | pd_input |
 | C3003 | 47n | C_0603_1608Metric | pd_input |
+| C4001 | 100n | C_0603_1608Metric | power |
+| C4002 | 10u | C_1206_3216Metric | power |
+| C4003 | 10u | C_1206_3216Metric | power |
+| C4004 | 100n | C_0603_1608Metric | power |
+| C4005 | 22u | C_0805_2012Metric | power |
+| C4006 | 22u | C_0805_2012Metric | power |
+| C4007 | 100n | C_0603_1608Metric | power |
+| C4008 | 22u | C_0805_2012Metric | power |
+| C4009 | 100n | C_0603_1608Metric | power |
+| C4010 | 22u | C_0805_2012Metric | power |
+| C4011 | 22u | C_0805_2012Metric | power |
+| C4012 | 1u | C_0603_1608Metric | power |
+| C4013 | 1u | C_0603_1608Metric | power |
+| C4023 | 22p | C_0603_1608Metric | power |
+| C4024 | 1u | C_0603_1608Metric | power |
+| C4025 | 100n | C_0603_1608Metric | power |
+| C4026 | 22u | C_0805_2012Metric | power |
+| C4027 | 22p | C_0603_1608Metric | power |
+| C4028 | 1u | C_0603_1608Metric | power |
+| C4029 | 100n | C_0603_1608Metric | power |
+| C4030 | 22u | C_0805_2012Metric | power |
+| C4031 | 1u | C_0603_1608Metric | power |
+| C4032 | 1u | C_0603_1608Metric | power |
 | C11001 | 100n | C_0603_1608Metric | uart_bridge |
 | C11002 | 10u | C_0805_2012Metric | uart_bridge |
 | C11003 | 100n | C_0603_1608Metric | uart_bridge |
 | C11004 | 100n | C_0603_1608Metric | uart_bridge |
+| C12001 | 10u | C_0805_2012Metric | usb_uart_connector |
 | D3001 | SMBJ22A | D_SMB | pd_input |
 | D4001 | red | LED_0603_1608Metric | power |
 | D4002 | red | LED_0603_1608Metric | power |
@@ -397,6 +381,22 @@ CHECKPOINT: boot/debug via debug_boot: J1001, J1002, SW1001, SW1002
 | R3003 | 100k | R_0603_1608Metric | pd_input |
 | R3004 | 5.49k | R_0603_1608Metric | pd_input |
 | R3005 | 5.1k | R_0603_1608Metric | pd_input |
+| R3006 | 100k | R_0603_1608Metric | pd_input |
+| R4001 | 40.2k | R_0603_1608Metric | power |
+| R4002 | 10k | R_0603_1608Metric | power |
+| R4004 | 23.2k | R_0603_1608Metric | power |
+| R4005 | 10k | R_0603_1608Metric | power |
+| R4010 | 22k | R_0603_1608Metric | power |
+| R4011 | 10R | R_0603_1608Metric | power |
+| R4012 | 1k | R_0603_1608Metric | power |
+| R4013 | 10R | R_0603_1608Metric | power |
+| R4014 | 22k | R_0603_1608Metric | power |
+| R4015 | 1k | R_0603_1608Metric | power |
+| R11001 | 1k | R_0603_1608Metric | uart_bridge |
+| R11002 | 22k1 | R_0603_1608Metric | uart_bridge |
+| R11003 | 47k5 | R_0603_1608Metric | uart_bridge |
+| R12001 | 5.1k | R_0603_1608Metric | usb_uart_connector |
+| R12002 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | SW1001 | DIP-4 | DSHP04TSGER | debug_boot |
 | SW1002 | RESET | TS-1187A-B-A-B | debug_boot |
 | TP3001 | +VBUS_IN | TestPoint_Pad_D1.5mm | pd_input |
