@@ -1071,8 +1071,9 @@ def cmd_board(args: argparse.Namespace) -> int:
                   f"{len(mg.bad_connectors)} mis-placed; "
                   f"{len(mg.under_som)} non-passive under SoM; "
                   f"{len(mg.controls_under_som)} controls under SoM; "
-                  f"{len(mg.top_under_som)} TOP-side under SoM "
-                  f"-> {rep_dir / 'placement_mech.txt'})")
+                  f"{len(mg.top_under_som)} TOP-side under SoM; "
+                  f"{len(mg.face_top_on_bottom)}/{mg.n_face_top} user-facing "
+                  f"face-down -> {rep_dir / 'placement_mech.txt'})")
             for _b in mg.bad_connectors:
                 print(f"  PLACEMENT CONNECTOR: {_b}")
             for _u in mg.under_som:

@@ -76,10 +76,15 @@ _register(
 _register(
     "bottom_variant_contract_reject", "zone_pack",
     "A sheet DECLARED bottom-eligible (floorplan.json interior side "
-    "\"bottom\"/\"either\") whose KiCad-exact mirrored bottom shape failed the "
-    "re-measure of its authored placement contract (_mirror_contract_holds "
-    "on the mirrored geometry — primary members through their mirrored "
-    "documents) — the bottom variant is NOT offered and the block keeps its "
+    "\"bottom\"/\"either\") whose CONTRACT rejected the bottom variant, on "
+    "either of the two arbiters: (a) its KiCad-exact mirrored bottom shape "
+    "failed the re-measure of the authored placement contract "
+    "(_mirror_contract_holds on the mirrored geometry — primary members "
+    "through their mirrored documents); or (b) wave-13 — a face=top part the "
+    "variant would LIFT out of the rigid template into the secondary pack is "
+    "itself a CONSTRUCTED contract member, i.e. load-bearing stage geometry "
+    "the lift would move, so the variant is refused rather than forced. "
+    "Either way the bottom variant is NOT offered and the block keeps its "
     "top-side shape set (a correctness choice, never a silent degrade). "
     "Counted per zone-geometry pass; the board flow runs the shared packer "
     "twice, so one rejected sheet counts 2.")

@@ -639,34 +639,95 @@ def _mirror_pack(t_off: dict[str, tuple[float, float]],
     return mt, mb, extra, mods
 
 
+def _lift_face_top(t_off: dict[str, tuple[float, float]],
+                   b_off: dict[str, tuple[float, float]], zw: float,
+                   zh: float, lifted: list[str], bbox_of: dict,
+                   resolvable: dict, rot_of: dict[str, float]
+                   ) -> tuple[dict[str, tuple[float, float]],
+                              dict[str, tuple[float, float]], float, float]:
+    """LIFT a contracted sheet's face=top parts out of the rigid PRIMARY
+    template into the SECONDARY pack — the pack whose role flips to F.Cu in a
+    bottom-assigned block, so a TP/LED/SW still presents on the board top
+    (wave-13; the "extend the template" the old veto named).
+
+    Every REMAINING primary part keeps its datasheet stage offset and rotation
+    EXACTLY: the hole a lifted part leaves is never re-flowed, and the existing
+    secondary offsets are untouched too — only the lifted parts are seated, by
+    the SAME _shelf_pack the zone packer uses, against (a) the primary's
+    THROUGH-HOLE parts, whose pad copper is on every layer, and (b) every
+    secondary courtyard carrying its D13 fan-out demand. Each lifted part is
+    packed through its ROTATED (KiCad-CW, the emission convention) box at
+    rotation 0, so the seat is exact for a template-rotated part. The returned
+    box is the template's own extent unless the lifted parts overflow it.
+    Deterministic: sorted blockers, sorted lifted refs, 4dp rounding."""
+    keep = {r: o for r, o in t_off.items() if r not in set(lifted)}
+    fmeta = _fanout_meta([*keep, *b_off, *lifted], resolvable)
+
+    def _cbox(r: str, off: tuple[float, float]
+              ) -> tuple[float, float, float, float]:
+        cb = _rot_bbox_cw(bbox_of[r], rot_of.get(r, 0.0))
+        return (off[0] + cb[0] - PLACE_CLEAR / 2,
+                off[1] + cb[1] - PLACE_CLEAR / 2,
+                off[0] + cb[2] + PLACE_CLEAR / 2,
+                off[1] + cb[3] + PLACE_CLEAR / 2)
+
+    def _demand(r: str) -> tuple[float, bool]:
+        need, is_cp = fmeta.get(r, (PLACE_CLEAR, False))
+        return ((max(0.0, _q.quant_credit(need) - PLACE_CLEAR)
+                 if need > PLACE_CLEAR else 0.0), is_cp)
+
+    blk: list[tuple] = [_cbox(r, o) for r, o in sorted(keep.items())
+                        if has_thru_pads(resolvable[r])]
+    blk += [(*_cbox(r, o), *_demand(r)) for r, o in sorted(b_off.items())]
+    items = [(r, _rot_bbox_cw(bbox_of[r], rot_of.get(r, 0.0)), 0.0)
+             for r in lifted]
+    add, _pw, _ph = _shelf_pack(items, max(0.0, zw - 2 * ZONE_PAD), blk,
+                                fanout=fmeta)
+    sec = {**b_off, **add}
+    ext = [_cbox(r, o) for r, o in sorted(sec.items())]
+    return (keep, sec,
+            round(max(zw, max((b[2] for b in ext), default=0.0) + ZONE_PAD), 4),
+            round(max(zh, max((b[3] for b in ext), default=0.0) + ZONE_PAD), 4))
+
+
 def _bottom_zone_shapes(sheet: str, refs: list[str], side_of: dict[str, str],
                         bbox_of: dict, resolvable: dict,
                         face_top: frozenset[str],
-                        tmpl: tuple | None, tmpl_rot: dict[str, float]
+                        tmpl: tuple | None, tmpl_rot: dict[str, float],
+                        tmpl_members: frozenset[str] = frozenset()
                         ) -> list[ZoneShape]:
     """Side-tagged BOTTOM shape variants for one bottom-eligible sheet
     (bottom-side P1 + wave-9 chirality: the primary pack is the KiCad-exact
     chiral mirror, see _mirror_pack). A CONTRACTED (template) sheet offers
     ONE rigid mirror of its as-built layout (a datasheet stage layout is
-    never re-flowed), kept only when the sheet's authored contract
+    never re-flowed) with its face=top parts LIFTED into the secondary pack
+    (wave-13, _lift_face_top), kept only when the sheet's authored contract
     re-measures green on the mirrored geometry — a reject is a registered
-    fallback event, never a silent drop. A shelf sheet offers a REAL
-    role-flipped re-pack per ladder aspect (face-top parts forced
-    secondary), mirrored the same way. Deterministic: fixed aspect order,
-    sorted refs, 4dp rounding."""
+    fallback event, never a silent drop. A face=top part that is itself a
+    CONSTRUCTED member of the contract (``tmpl_members``) is load-bearing
+    stage geometry: lifting it would move a part the contract places, so the
+    whole bottom variant is rejected through the same registered event rather
+    than forced. A shelf sheet offers a REAL role-flipped re-pack per ladder
+    aspect (face-top parts forced secondary), mirrored the same way.
+    Deterministic: fixed aspect order, sorted refs, 4dp rounding."""
     out: list[ZoneShape] = []
     if tmpl is not None:
         t_off, b_off, zw, zh = tmpl
-        stranded = sorted(r for r in t_off if r in face_top)
-        if stranded:
-            raise ValueError(
-                f"bottom-side eligibility: {sheet} is declared bottom-eligible "
-                f"but its rigid template packs face=top part(s) "
-                f"{', '.join(stranded)} on the PRIMARY side (would emit B.Cu) "
-                f"— pin the sheet top in floorplan.json or extend the "
-                f"template; a user-facing part never emits face-down")
+        lifted = sorted(r for r in t_off if r in face_top)
+        if set(lifted) & tmpl_members:
+            _fb.record("bottom_variant_contract_reject")
+            return out
+        if lifted:
+            t_off, b_off, zw, zh = _lift_face_top(
+                t_off, b_off, zw, zh, lifted, bbox_of, resolvable, tmpl_rot)
         mt, mb, extra, mods = _mirror_pack(t_off, b_off, zw, dict(tmpl_rot),
                                            bbox_of, resolvable)
+        if set(mt) & face_top:
+            raise AssertionError(
+                f"bottom-side eligibility: {sheet} kept face=top part(s) "
+                f"{', '.join(sorted(set(mt) & face_top))} in the PRIMARY pack "
+                f"of its bottom variant (would emit B.Cu) — the lift did not "
+                f"run; a user-facing part never emits face-down")
         if _mirror_contract_holds(sheet, mt, mb, set(), extra, {},
                                   resolvable, mods=mods):
             out.append(ZoneShape(w=round(zw, 4), h=round(zh, 4), top_off=mt,
@@ -1092,9 +1153,11 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
         from . import stage_templates
         _contract = load_contract(sheet)
         _tmpl = None
+        _tmpl_members: frozenset[str] = frozenset()
         if _contract is not None:
             _members = stage_templates.contract_member_brefs(sheet, _contract,
                                                              resolvable)
+            _tmpl_members = frozenset(_members)
             for _m in _members:
                 side_of[_m] = "top"
             tmpl_rot: dict[str, float] = {}
@@ -1178,7 +1241,7 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                     uniq.extend(_bottom_zone_shapes(
                         sheet, refs_by_sheet[sheet], side_of, bbox_of,
                         resolvable, face_top, (t_off, b_off, zw, zh),
-                        tmpl_rot))
+                        tmpl_rot, _tmpl_members))
                 if len(uniq) >= 2:
                     zone_shapes[sheet] = tuple(uniq)
             elif sheet in sheet_conn_rot:
@@ -2254,6 +2317,12 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
         mod = resolvable[ref]
         bx, by = pos[ref]
         side = "top" if ref in fixed else side_of[ref]
+        if side == "bottom" and _is_face_top_part(ref, lib, footprint):
+            raise AssertionError(
+                f"EMISSION: user-facing part {ref} ({sheet}, {footprint}) is "
+                f"about to emit on B.Cu — a TP/LED/SW must present on the "
+                f"board TOP face (the secondary pack of a bottom-assigned "
+                f"block); a bottom shape leaked it into the primary pack")
         # pad -> net
         pad_nets: dict[str, tuple[int, str]] = {}
         for pad in pad_names(mod):

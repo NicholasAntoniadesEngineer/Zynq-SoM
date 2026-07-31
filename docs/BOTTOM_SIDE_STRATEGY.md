@@ -268,10 +268,14 @@ site), `w12_shapes.py` (registered shape sets), `w12_patchrun.py`
   flip cannot compress a perimeter run.
 - **H = 163 is set by `power`** — largest interior block, placed LAST because
   the order key is `(priority, −connectivity, −area, name)`. It is provably
-  top-pinned (user-facing LEDs + test points).
+  top-pinned (user-facing LEDs + test points). **[CORRECTED by wave-13: the
+  top-pin was the TEMPLATE VETO, not physics. Lifting the 7 face-up parts into
+  the secondary pack makes `power` bottom-eligible and H drops to 162.]**
 - **The bottom-eligibility ladder is EXHAUSTED.** `power`, `usb_jtag`,
   `power_som`, `uart_bridge` refuse on face-up parts; `fmc`, `debug_boot` on
   seated connectors; `mechanical` has no packable zone. Every refusal is LOUD.
+  **[CORRECTED by wave-13: the face-up refusal was a missing feature — all four
+  sheets are eligible now. The connector and no-zone refusals stand.]**
 - **The one lever that moves the board (measured, NOT landed):** area-first
   interior pack order emits **185x160 = 29,600 mm² (−1.84 %)** at cross
   16,699.2 (+9.0 %), LAW-5 utilisation 89.1 % → 98.0 %, sizing estimate at
@@ -282,3 +286,70 @@ site), `w12_shapes.py` (registered shape sets), `w12_patchrun.py`
 - ORDINARY-VIA ROW: still 2.2, still INTERIM, but for a RE-BASED reason — it is
   **unmeasurable by area** while the search is pack-bound. No via cost can move
   a board whose size no airwire term constrains.
+
+## Wave-13 — face=top parts LIFTED out of the rigid templates; `power` lands on B.Cu (185x162, 131 -> 165 bottom parts)
+
+- **THE DEFECT.** `_bottom_zone_shapes` treated a CONTRACTED sheet as
+  all-or-nothing: if the datasheet template packed ANY `face_top` part (TP /
+  LED / SW) on the primary side it RAISED, and the sheet lost bottom
+  eligibility entirely. Shelf sheets never had the problem — `_pack_one_zone`
+  already forces those parts into the SECONDARY pack per part. Four blocks
+  were vetoed by 15 small parts: `power` (7: TP20001-4 + D20001-3),
+  `usb_jtag` (4), `power_som` (2), `uart_bridge` (2).
+- **THE LIFT (`_lift_face_top`).** For a contracted sheet's BOTTOM variant the
+  face=top parts move out of the rigid primary into the secondary pack, seated
+  by the SAME `_shelf_pack` the zone packer uses against (a) the primary's
+  THROUGH-HOLE parts — pad copper is the only geometry on both faces — and
+  (b) every secondary courtyard carrying its D13 fan-out demand. Each lifted
+  part packs through its KiCad-CW ROTATED box at rotation 0, so the seat is
+  exact for a template-rotated part. **Nothing else moves**: every remaining
+  primary offset is the pure X-mirror of its template offset and every
+  pre-existing secondary offset is the same box-preserving mirror it always
+  was (pinned by `test_the_stage_is_never_reflowed_by_the_lift`). Measured: on
+  all four sheets the zone box does not grow at all.
+- **THE REFUSAL IS PROVED, NOT ASSUMED.** Two arbiters, both loud: a face=top
+  part that is itself a CONSTRUCTED contract member is load-bearing stage
+  geometry, so the variant is refused through the registered
+  `bottom_variant_contract_reject`; and the mirrored geometry still has to
+  re-measure green on the authored contract. On the carrier none of the 15
+  lifted parts is a contract member and all four re-measures pass.
+- **NEW HARD GATE (LAW 6 rule (d)).** A user-facing part on B.Cu FAILS the
+  mechanical gate, measured with the placer's OWN predicate
+  (`placement._is_face_top_part` — one rule, no replica), plus an emission-time
+  assertion in `build_model`. Carrier reports **93 user-facing parts, 0
+  face-down**.
+- **THE LADDER (emitted-board screens, `scripts/w13_rung.py`).**
+
+  | rung | board | area | cross | bottom parts | verdict |
+  |---|---|---|---|---|---|
+  | base | 185x163 | 30,155.0 | 15,319.0 | 131 | incumbent |
+  | `power` | 185x162 | **29,970.0** | 16,384.5 | **165** | LANDED |
+  | `usb_jtag` | 185x163 | 30,155.0 | 16,536.1 | 131 | rejected (airwire) |
+  | `power_som` | 185x163 | 30,155.0 | 15,319.0 | 131 | inert |
+  | `uart_bridge` | 185x163 | 30,155.0 | 15,319.0 | 131 | inert |
+  | `power`+`power_som`+`uart_bridge` | 185x162 | 29,970.0 | 16,384.5 | 165 | == `power` |
+  | all four | 185x162 | 29,970.0 | 16,384.5 | 165 | == `power` |
+
+  Every combination containing `power` converges on the same board, so the
+  landed spec is the MINIMAL one: `power` alone.
+- **ATTRIBUTION (`--cons-only`).** Under the CONSERVATIVE reservation policy
+  `power` eligible is byte-identical to base — the est chooser keeps it TOP.
+  The flip only wins on the wave-11 FREED punch plan, which is physically
+  right: the freed model is the one that stops falsely reserving the bottom
+  under edge blocks and the SoM. **Wave-13 makes the variant EXIST; wave-11
+  makes it WIN.** The monotonicity guard then keeps the freed plan because its
+  area is strictly smaller (29,970 < 30,155) — area strictly first, exactly
+  wave-12's open item #2. `punch_free_plan_rejected` 2 -> 0.
+- **THE TRADE, STATED PLAINLY.** −185 mm² (−0.61 %) and +34 bottom parts
+  (+26.0 %) for **+1,065.5 mm of cross-airwire (+7.0 %)**, LAW-5 utilisation
+  89.1 % -> 95.6 % of a 17,139 mm budget. `usb_jtag` alone shows the freed
+  plan costs +1,217.1 mm at UNCHANGED area with no side flip at all, so the
+  `power` flip is worth −185 mm² and −151.6 mm of airwire relative to the plan
+  it rides on; the +1,065.5 vs the shipping board is the guard adopting that
+  plan. If the user wants the airwire back, the knob is wave-12 open item #2
+  (the guard's `(area, est_cross)` key), not this lift.
+- **WHAT MOVED.** 39 parts top -> bottom (U20001-3, L20001-2, Q20001, 23 caps,
+  10 resistors — the whole power stage on B.Cu through its KiCad-exact
+  mirrored documents), 5 bottom -> top (R20003/6/7/8/9, the template's own
+  secondary members role-flipping to F.Cu), and the 7 face-up parts stay on
+  F.Cu. Net **131 -> 165 bottom of 507 placements**.

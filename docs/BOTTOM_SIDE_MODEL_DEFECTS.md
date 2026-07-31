@@ -99,9 +99,20 @@ LAW-5 airwire budget rejected NONE**. Airwire has never sized this board.
   `debug_boot` (seated connectors). The block that sets the height is the one
   block that can never use the freed bottom surface.
 
-**That is why 8,156 mm² of released bottom bought nothing.** The bottom-opt-in
-ladder is exhausted: every interior block has now been measured, and every
-remaining one refuses the bottom face LOUDLY with a declared reason.
+  > **DEFECT 4 — the "provably top-pinned" claim was WRONG (wave-13).** It was
+  > not physics, it was a MISSING FEATURE: `_bottom_zone_shapes` vetoed a whole
+  > CONTRACTED sheet when its rigid template packed any face-up part on the
+  > primary side, even though shelf sheets already forced those parts into the
+  > secondary (F.Cu) pack per part. Lifting `power`'s 7 face-up parts out of the
+  > template — nothing else moves, the zone box does not grow — makes `power`
+  > bottom-eligible, the est chooser flips it on the FREED plan, and the board
+  > goes **185x163 -> 185x162** with **131 -> 165 bottom parts**. The `fmc` /
+  > `debug_boot` connector refusals stand. See BOTTOM_SIDE_STRATEGY.md wave-13.
+
+**That is why 8,156 mm² of released bottom bought nothing** *until wave-13 gave
+the height-setting block a bottom variant to use it with.* The rest of the
+bottom-opt-in ladder is exhausted: every interior block has now been measured,
+and every remaining one refuses the bottom face LOUDLY with a declared reason.
 
 The one measured lever that does move the board is the interior pack ORDER:
 area-first (first-fit-decreasing) emits **185x160 = 29,600 mm² (−1.84 %)** at

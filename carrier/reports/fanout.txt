@@ -6,7 +6,7 @@ FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
     (none)
   (tightest PASSING subjects:)
     ok      SW33002   user_io            4pin clr=1.550 need=1.50 slack=+0.050
-    ok      D36002    motor_pwm          6pin clr=1.550 need=1.50 slack=+0.050
-    ok      J17001    pd_input          16pin clr=2.050 need=2.00 slack=+0.050
-    ok      J9001     debug_boot        14pin clr=2.050 need=2.00 slack=+0.050
-    ok      J9002     debug_boot        10pin clr=2.050 need=2.00 slack=+0.050
+    ok      U5004     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
+    ok      U5005     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
+    ok      U5007     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
+    ok      U5008     bringup_en_modules   5pin clr=1.550 need=1.50 slack=+0.050
