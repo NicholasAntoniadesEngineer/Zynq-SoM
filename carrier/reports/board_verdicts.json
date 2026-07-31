@@ -1,4 +1,11 @@
 {
+ "assembly": {
+  "n_parts": 564,
+  "n_phases": 34,
+  "n_pngs": 38,
+  "n_steps": 4,
+  "ok": true
+ },
  "board_h": 162.0,
  "board_ok": true,
  "board_w": 185.0,
@@ -530,11 +537,12 @@
  },
  "fallback_gate": {
   "n_fired": 2,
-  "n_names": 8,
+  "n_names": 9,
   "ok": true,
   "pinned": false
  },
  "fallbacks": {
+  "assembly_generation_failed": 0,
   "bottom_variant_contract_reject": 0,
   "cand_cap_truncated": 116,
   "corridor_evict_moved": 0,

@@ -1057,6 +1057,11 @@ def cmd_board(args: argparse.Namespace) -> int:
             print("RATSNEST (LAW 5): FAIL — gate did not run")
             ok_all = False
 
+        from schgen.generate import assembly as _asm_mod
+        _asm_ok, _asm_line = _asm_mod.verdict(pcb_res.get("assembly"))
+        print(_asm_line)
+        ok_all = ok_all and _asm_ok
+
         # LAW-6 MECHANICAL / USE-CASE PLACEMENT gate (HARD): the buildability
         # oracle DRC=0 + ratsnest-pass are blind to. The PCB step ran it on the
         # SAME placed model (no rebuild). FAIL the board on any off-board

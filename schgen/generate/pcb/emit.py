@@ -668,6 +668,13 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         # every build instead of an inert comment. Report-only (the hard gate stays
         # scoped to _WIRED_SHEETS); written to reports/contract_coverage.txt.
         result["contract_coverage"] = placement_contract_gate.coverage(model)
+    from schgen.core import fallbacks as _fb_asm
+    from schgen.generate import assembly as asm_mod
+    try:
+        result["assembly"] = asm_mod.generate(model)
+    except Exception as exc:  # noqa: BLE001 — reported by assembly.verdict
+        _fb_asm.record("assembly_generation_failed")
+        result["assembly"] = {"ok": False, "error": str(exc)}
     if run_drc:
         result["drc"] = run_pcb_drc(pcb_path)
     return result
