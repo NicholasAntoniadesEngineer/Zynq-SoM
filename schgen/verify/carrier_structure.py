@@ -1,42 +1,3 @@
-"""carrier_structure — HARD structure gate for the carrier subsystem packages.
-
-A carrier subsystem is one of TWO kinds, and the required on-disk shape differs:
-
-  ADAPTER — a thin wrapper that binds the project-agnostic ``subsystems/<name>/``
-    library via a META dict (``def circuit(): return _lib.circuit(META)``). The
-    library ALREADY owns the README / SPICE / __init__ artifacts, so duplicating
-    them carrier-side is pure bloat. An adapter is therefore a FLAT pair:
-
-        carrier/subsystems/<name>.py        the bind (circuit() + META)
-        carrier/subsystems/test_<name>.py   the LOCAL bind guard
-
-    and MUST NOT be foldered (no ``carrier/subsystems/<name>/`` dir).
-
-  LOCAL — a carrier-specific full netlist with NO generic library to point at
-    (the J1/J2/J3 connector sheets, power_som / power_mon, the bring-up sheets,
-    board-services HW, the carrier connectors). It stays a self-contained
-    FOLDERED package with the full 4-artifact parity the generic library uses:
-
-        carrier/subsystems/<name>/<name>.py        the netlist
-        carrier/subsystems/<name>/__init__.py       re-exports circuit()
-        carrier/subsystems/<name>/README.md         purpose / interface / parts
-        carrier/subsystems/<name>/test_<name>.py    the LOCAL correctness test
-        carrier/subsystems/<name>/<name>.cir        the SPICE passive network
-
-Classification is mechanical and authoritative: a name is an ADAPTER iff a
-generic library dir ``<repo>/subsystems/<name>/`` exists, else it is LOCAL.
-
-This gate proves every carrier subsystem has the SHAPE its kind requires and its
-``circuit()`` is importable + callable (adapters must also expose a ``META``
-dict). It is HARD (fails the board) — the carrier package layout cannot silently
-rot (an adapter must not re-bloat back into a folder; a local must not lose its
-folder). The generic top-level ``subsystems/`` library is policed separately by
-:mod:`schgen.verify.subsystem_structure`; this is the carrier-side mirror.
-
-Deterministic, offline (imports each subsystem by file path, builds the model —
-no kicad-cli). Run standalone: ``python -m schgen carrier-check``.
-"""
-
 from __future__ import annotations
 
 import importlib.util
@@ -51,17 +12,10 @@ LIBRARY_SUBSYSTEMS_DIR = REPO_ROOT / "subsystems"
 
 
 def is_adapter(name: str, lib_dir: Path = LIBRARY_SUBSYSTEMS_DIR) -> bool:
-    """A carrier subsystem is an ADAPTER iff the generic library owns a
-    ``subsystems/<name>/`` package it can bind; otherwise it is a carrier LOCAL."""
     return (lib_dir / name).is_dir()
 
 
 def required_files(name: str, adapter: bool) -> tuple[str, ...]:
-    """The on-disk artifacts the subsystem's KIND requires.
-
-    ADAPTER (flat): just the bind module + its local bind guard — the library
-    owns the README / SPICE / __init__. LOCAL (foldered): the full 4-artifact
-    parity package (the carrier owns everything, no library to defer to)."""
     if adapter:
         return (f"{name}.py", f"test_{name}.py")
     return (f"{name}.py", "__init__.py", "README.md", f"test_{name}.py",
@@ -144,8 +98,6 @@ class Result:
 
 
 def _subsystem_names(base: Path) -> list[str]:
-    """Every carrier subsystem NAME — the UNION of flat ``<name>.py`` modules and
-    foldered ``<name>/`` packages (excluding ``__init__`` / dunder / ``test_*``)."""
     names: set[str] = set()
     if not base.is_dir():
         return []
@@ -166,7 +118,6 @@ def check_package(name: str, base: Path = CARRIER_SUBSYSTEMS_DIR,
     rep = PackageReport(name=name, path=(base / name), adapter=adapter)
 
     if adapter:
-        # ADAPTER: flat <name>.py + flat test_<name>.py, and NO leftover folder.
         netlist = base / f"{name}.py"
         rep.path = netlist
         rep.missing = [f for f in required_files(name, adapter=True)
@@ -174,7 +125,6 @@ def check_package(name: str, base: Path = CARRIER_SUBSYSTEMS_DIR,
         if (base / name).is_dir():
             rep.missing.append(f"{name}/ (adapter must be FLAT, not foldered)")
     else:
-        # LOCAL: foldered <name>/ with the full 4-artifact parity package.
         pkg = base / name
         rep.path = pkg
         netlist = pkg / f"{name}.py"
@@ -194,7 +144,7 @@ def check_package(name: str, base: Path = CARRIER_SUBSYSTEMS_DIR,
         rep.has_circuit = callable(fn)
         rep.has_meta = isinstance(getattr(mod, "META", None), dict)
         if rep.has_circuit:
-            fn()  # must build without raising
+            fn()
     except Exception as exc:  # noqa: BLE001 — surface as a report line
         rep.errors.append(f"{type(exc).__name__}: {exc}")
     return rep

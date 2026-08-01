@@ -1,34 +1,3 @@
-"""RETURN-STITCH gate (return-path v2) — HARD, ANDed into the board verdict.
-
-The SoM pinout is FIXED, so the contact-level return-path gate
-(``return_path_gate``, K=2) is red BY MODULE DESIGN: 29 HS-capable contacts
-have no ground contact within K=2 steps and no carrier copper can change
-that.  What the carrier CAN do — and what this gate makes a HARD obligation —
-is escape-fanout return stitching: every v1-failing contact must have a
-carrier GND STITCH VIA (group "som_escape") within ``RETURN_VIA_RADIUS_MM``
-of its pad center, that via must be part of a file-visible GND ladder (F.Cu
-spine + >= 2 GND-pad stubs per remediated connector), and an In1.Cu GND plane
-zone must cover every via.
-
-Split of duties (codified 2026-07-02, T2 wave):
-  * v1 (``return_path_gate``) — REPORT-only, permanently.  Its verdict is a
-    measured fact of the mated SoM pinout, quoted VERBATIM here so the
-    SoM-design finding is never buried.  Nothing anywhere claims "return
-    path fixed" — the deliverable is *carrier escape-fanout return
-    stitching*.
-  * v2 (this gate) — the carrier-side hard obligation.  LAW 4: the radius is
-    fixed, non-tunable, and there is NO class-based exemption — triage
-    severities appear in the report ordering only.
-
-The gate re-derives the failing set from v1 LIVE (never cached) and pins
-v1's population scalars: a drift in the SoM interface (new pinout, new pair
-count) fails LOUDLY here so the stitching is re-derived deliberately, never
-silently reused.
-
-Reads copper via ``getattr(model, "copper", [])`` so the red-on-before
-fixture runs against a model that predates the copper fields.
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -39,20 +8,11 @@ from pathlib import Path
 
 from schgen.core.project import PROJECT_ROOT
 
-#: HARD admission radius (mm), contact pad center -> nearest som_escape GND
-#: via center.  Basis: K=2 admits a ground at ~2 contact steps; the channel
-#: geometry bounds the equivalent carrier-side spur at
-#: sqrt(1.47^2 + 1.355^2) ~= 2.0 | judgment:2.0.  Fixed, non-tunable (LAW 4).
 RETURN_VIA_RADIUS_MM = 2.0
 
-#: pinned v1 population scalars (drift alarm — see module docstring).
-#: Basis: measured 2026-07-02 on the live SoM interface; any change means the
-#: SoM contract moved and the stitching must be re-derived deliberately.
 V1_PINNED = {"n_pairs": 69, "n_pair_contacts": 138, "n_fail": 29,
              "worst_distance": 4}
 
-#: DRC rule minimums re-checked here (independent of the generator's
-#: construct margins): board clearance / hole clearance / hole-to-hole.
 RULE_CLEARANCE = 0.15
 RULE_HOLE_CLEARANCE = 0.2
 RULE_HOLE_TO_HOLE = 0.25
@@ -65,13 +25,12 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 class ReturnStitchResult:
     ok: bool = True
     radius: float = RETURN_VIA_RADIUS_MM
-    n_contacts: int = 0            # v1-failing contacts (the remediation set)
+    n_contacts: int = 0
     n_covered: int = 0
     worst_mm: float = 0.0
     n_vias: int = 0
     violations: list[str] = field(default_factory=list)
     coverage: list[tuple] = field(default_factory=list)
-    # (class_rank, class, ref, pad, function, dist_mm | None)
     per_conn: dict[str, tuple[int, int]] = field(default_factory=dict)
     v1_verdict: str = ""
     hash_ok: bool = True
@@ -117,14 +76,12 @@ def _som_interface_sha256() -> str:
 
 
 def check(model, pcb_path: Path | None = None) -> ReturnStitchResult:
-    """Run the v2 gate on a placed model (+ optional emitted-file parity)."""
     from schgen.verify import return_path_gate as rpg
     from schgen.verify import si_triage
     from schgen.verify.placement_contract_gate import _inst_pad_boxes
 
     res = ReturnStitchResult()
 
-    # ---- 1. the failing set, re-derived live + pinned-scalar cross-check ------
     v1 = rpg.check()
     res.v1_verdict = v1.summary()
     live = {"n_pairs": v1.n_pairs, "n_pair_contacts": v1.n_pair_contacts,
@@ -155,7 +112,6 @@ def check(model, pcb_path: Path | None = None) -> ReturnStitchResult:
 
     gnd_num = model.net_numbers.get("GND")
 
-    # ---- 2. net identity: every emitted primitive carries the GND net ----------
     for c in esc:
         if c.get("net") != gnd_num or c.get("net_name") != "GND":
             res.ok = False
@@ -164,7 +120,6 @@ def check(model, pcb_path: Path | None = None) -> ReturnStitchResult:
                 f"{c.get('net')}/{c.get('net_name')!r}, expected "
                 f"{gnd_num}/'GND' (LAW 0)")
 
-    # ---- 3. coverage: every failing contact -> nearest via <= radius ----------
     res.n_contacts = len(v1.violations)
     uncovered_by_conn: dict[str, int] = {r: 0 for r in ("J1", "J2", "J3")}
     contacts_by_conn: dict[str, int] = {r: 0 for r in ("J1", "J2", "J3")}
@@ -179,7 +134,7 @@ def check(model, pcb_path: Path | None = None) -> ReturnStitchResult:
         cx, cy = (bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2
         best = None
         for via in vias:
-            d = math.hypot(via["x"] - cx, via["y"] - cy)   # UNROUNDED compare
+            d = math.hypot(via["x"] - cx, via["y"] - cy)
             best = d if best is None else min(best, d)
         kl = si_triage.classify(viol.net)
         res.coverage.append((si_triage.RANK[kl.klass], kl.klass, viol.ref,
@@ -199,14 +154,11 @@ def check(model, pcb_path: Path | None = None) -> ReturnStitchResult:
     res.per_conn = {r: (contacts_by_conn[r], uncovered_by_conn[r])
                     for r in sorted(contacts_by_conn)}
 
-    # ---- 4. return-network integrity (independent connectivity re-check) -------
     if vias or segs:
         _check_network(model, conns, vias, segs, res)
 
-    # ---- 5. clearance re-check vs DRC rule minimums ----------------------------
     _check_clearance(model, conns, vias, segs, res)
 
-    # ---- 6. artifact hash -------------------------------------------------------
     meta = getattr(model, "escape_meta", None) or {}
     if meta:
         res.hash_ok = (meta.get("som_interface_sha256")
@@ -216,7 +168,6 @@ def check(model, pcb_path: Path | None = None) -> ReturnStitchResult:
             res.violations.append("escape_meta som_interface sha256 is STALE "
                                   "vs the live contract")
 
-    # ---- 7. emitted-file parity -------------------------------------------------
     if pcb_path is not None:
         msg = file_parity(Path(pcb_path), esc)
         res.file_parity = msg
@@ -228,11 +179,6 @@ def check(model, pcb_path: Path | None = None) -> ReturnStitchResult:
 
 
 def _check_network(model, conns, vias, segs, res) -> None:
-    """One GND-only ladder component per remediated connector; every via
-    spine-touched AND inside the CANONICAL In1 GND plane (GAP1 @ 28f8e15 —
-    T2 emits no zone of its own) and outside every ethernet ISO void;
-    >= 2 GND-pad stubs per ladder.  Union-find over BOARD-frame geometry —
-    a code path independent of the generator's local-frame self-check."""
     from schgen.generate.pcb.escape import _canonical_plane
     from schgen.verify.placement_contract_gate import _inst_pad_boxes
 
@@ -298,7 +244,6 @@ def _check_network(model, conns, vias, segs, res) -> None:
             res.violations.append(
                 f"{ref}: ladder+vias form {len(roots)} components (expected "
                 f"ONE GND-only component)")
-        # every via touches the spine (some F.Cu segment) + sits in the rect
         for v in group["vias"]:
             if not any(boxes_touch(node_box(("via", v)), seg_box(s))
                        for s in group["segs"]):
@@ -327,19 +272,10 @@ def _check_network(model, conns, vias, segs, res) -> None:
 
 
 def _check_clearance(model, conns, vias, segs, res) -> None:
-    """Emitted-primitive vs FOREIGN-pad clearance >= the DRC rule minimums
-    (independent of the generator's construct margins).  Netclass-aware: a
-    POWER-class foreign pad demands 0.2, everything else 0.15 (kicad-cli
-    applies max(netclass) per pair).  Pad geometry is the ONE unified
-    convention (== the emitted board; the historical bottom-mirror split and
-    its both-conventions workaround were removed when the model was
-    reconciled to emission), so the same-net GND exemption now applies on
-    BOTH sides — the stitch copper IS the GND net."""
     from schgen.verify.placement_contract_gate import _inst_pad_boxes
 
     if not (vias or segs):
         return
-    # foreign pad boxes near the escape region only (cheap prefilter)
     xs = ([v["x"] for v in vias] + [s["x1"] for s in segs]
           + [s["x2"] for s in segs])
     ys = ([v["y"] for v in vias] + [s["y1"] for s in segs]
@@ -350,9 +286,7 @@ def _check_clearance(model, conns, vias, segs, res) -> None:
         for pad, bb in sorted(_inst_pad_boxes(oi).items()):
             net = oi.pad_nets.get(pad, (0, ""))[1]
             if net == "GND":
-                continue        # same net as the stitch copper (both sides —
-                #                 the pad's position/net binding is trusted
-                #                 now that model == emission)
+                continue
             rule = 0.2 if model.netclass_of.get(net) == "POWER" else \
                 RULE_CLEARANCE
             if (bb[2] < win[0] or bb[0] > win[2] or bb[3] < win[1]
@@ -377,7 +311,7 @@ def _check_clearance(model, conns, vias, segs, res) -> None:
         sb = (min(s["x1"], s["x2"]), min(s["y1"], s["y2"]),
               max(s["x1"], s["x2"]), max(s["y1"], s["y2"]))
         for bb, side, rule, label in foreign:
-            if side != "top":                 # ladder copper is F.Cu only
+            if side != "top":
                 continue
             dx = max(bb[0] - sb[2], sb[0] - bb[2], 0.0)
             dy = max(bb[1] - sb[3], sb[1] - bb[3], 0.0)
@@ -390,8 +324,6 @@ def _check_clearance(model, conns, vias, segs, res) -> None:
 
 
 def file_parity(pcb_path: Path, esc: list[dict]) -> str:
-    """Every copper dict must appear in the WRITTEN board text (rounded
-    coordinates) — model-vs-file drift (or a stripped node) reds the gate."""
     if not pcb_path.exists():
         return f"board file missing: {pcb_path}"
     text = pcb_path.read_text()
@@ -415,8 +347,6 @@ def file_parity(pcb_path: Path, esc: list[dict]) -> str:
             if not re.search(pat, text):
                 return (f"segment ({c['x1']},{c['y1']})-({c['x2']},{c['y2']}) "
                         f"absent from {pcb_path.name}")
-    # the canonical In1 plane (GAP1 emission) must be in the written file —
-    # the stitch vias' buried return half depends on it
     if '(name "GND_plane_In1")' not in text:
         return f"canonical GND_plane_In1 zone absent from {pcb_path.name}"
     return "ok"

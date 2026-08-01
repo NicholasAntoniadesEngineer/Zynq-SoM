@@ -1,30 +1,3 @@
-"""bom_values — the LCSC-vs-declared-value gate (LAW 0, data-integrity).
-
-The unfakeable hole this closes: ERC, the netlist-equivalence gate, overlap and
-part_rules all trust the DECLARED value string ("40.2k") and never check what
-the distributor part behind the LCSC code actually IS. A single mis-keyed code
-nearly shipped a board-killer — power:R1 carried ``LCSC="C25750"`` ("40.2k" FB
-top), but C25750 is really a 120 kohm 0402 part; assembled as-ordered the +5 V
-buck divider would be 120k/10k -> ~13 V on the +5 V rail, destroying the SoM.
-Caught only by a live-LCSC sourcing pass, NOT by any gate.
-
-This gate carries a curated, LIVE-VERIFIED catalog (schgen/verify/data/
-lcsc_values.json: LCSC -> the part's real value + package, confirmed on
-lcsc.com). For every INLINE passive (Device:R / Device:C / Device:L) whose LCSC
-is catalogued, it normalises the declared value and the catalogued value to a
-canonical (class, magnitude) and FAILS the build on any disagreement. The
-known-bad C25750 -> 120k is a permanent POISON entry: re-keying any 40.2k/0603
-resistor to it fails immediately.
-
-Codes NOT in the catalog are reported as ``unverified`` (informational, never
-failing) — a visible verification backlog, not a silent pass. Dossier ICs
-(``use_part``) are exempt from the value check: their LCSC<->MPN binding is
-already locked by parts/<MPN>/, and their "value" is the MPN, not a magnitude.
-
-LAW 4: strict. A genuine value/code disagreement is fixed (correct the LCSC or
-the value) or the catalog is corrected against the datasheet — never relaxed.
-"""
-
 from __future__ import annotations
 
 import json
@@ -36,7 +9,6 @@ _DATA = Path(__file__).resolve().parent / "data" / "lcsc_values.json"
 
 _INLINE_PASSIVE = {"Device:R": "R", "Device:C": "C", "Device:L": "L"}
 
-# SI prefixes; 'm' is milli (shunt 10mR), 'M' is mega (case-sensitive).
 _PREFIX = {"p": 1e-12, "n": 1e-9, "u": 1e-6, "µ": 1e-6, "m": 1e-3,
            "k": 1e3, "K": 1e3, "M": 1e6, "G": 1e9}
 _PREFIX_CHARS = "pnuµmkKMG"
@@ -70,17 +42,10 @@ class BomValueResult:
 
 
 def _norm(value: str, cls_hint: str | None) -> tuple[str, float] | None:
-    """Normalise an R/C/L value string to (class, base-unit magnitude).
-
-    Handles unit suffix (Ω/Ohm/F/H), EIA R-notation (``4k7`` -> 4.7k,
-    ``49.9R`` -> 49.9), bare SI prefixes (``100n``, ``10u``). Returns None for
-    anything that is not a recognisable passive magnitude (e.g. an MPN string).
-    """
     s = value.strip()
     if not s:
         return None
     cls = cls_hint
-    # explicit unit suffix wins for class
     low = s.lower()
     if low.endswith("ohm"):
         cls, s = "R", s[:-3]
@@ -91,19 +56,15 @@ def _norm(value: str, cls_hint: str | None) -> tuple[str, float] | None:
     elif s.endswith("H"):
         cls, s = "L", s[:-1]
     elif s.endswith("R") or s.endswith("r"):
-        # trailing R is the ohm marker ONLY when the rest is purely numeric
-        # with an optional leading prefix (avoids eating MPN letters)
         if re.fullmatch(r"[0-9.]+[pnuµmkKMG]?[Rr]", s):
             cls, s = "R", s[:-1]
     if cls is None:
         return None
     s = s.strip()
-    # EIA embedded-prefix notation: a prefix letter acting as the decimal point
     m = re.fullmatch(r"(\d+)([pnuµmkKMG])(\d+)", s)
     if m:
         mag = float(f"{m.group(1)}.{m.group(3)}") * _PREFIX[m.group(2)]
         return (cls, mag)
-    # trailing/standalone prefix: <number><prefix?>
     m = re.fullmatch(r"(\d+(?:\.\d+)?)\s*([pnuµmkKMG]?)", s)
     if not m:
         return None
@@ -115,7 +76,7 @@ def _equal(a: tuple[str, float], b: tuple[str, float]) -> bool:
     if a[0] != b[0]:
         return False
     hi = max(abs(a[1]), abs(b[1]))
-    return hi == 0 or abs(a[1] - b[1]) <= 0.005 * hi   # 0.5 % tolerance
+    return hi == 0 or abs(a[1] - b[1]) <= 0.005 * hi
 
 
 def load_catalog() -> dict[str, dict]:
@@ -139,7 +100,7 @@ def run(sheets, rep_dir: Path | None = None,
                     f"(not in catalog)")
                 continue
             if cls_hint is None:
-                continue  # dossier IC — LCSC<->MPN locked by parts/<MPN>/
+                continue
             decl = _norm(part.value, cls_hint)
             real = _norm(str(entry.get("value", "")), None)
             if decl is None or real is None:

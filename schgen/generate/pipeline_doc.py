@@ -1,14 +1,3 @@
-"""GEOMETRY PIPELINE DOC — ``docs/GEOMETRY_PIPELINE.md`` generated from the
-stage manifest + quantization registry + fallback registry/baselines
-(governance U4, the FLOORPLAN.md pattern: the map is emitted from the same
-data the engine executes, so it cannot rot).
-
-Deterministic: content is a pure function of the committed code + the
-committed per-project fallback baselines (live counts print in the build
-report and land in ``board_verdicts.json``, never here — so the doc is
-byte-stable across projects and consecutive builds). Rewritten only when the
-content changes.
-"""
 from __future__ import annotations
 
 import json
@@ -26,7 +15,7 @@ def _project_baselines() -> dict[str, dict[str, int]]:
             raw = json.loads(bp.read_text())
             out[pj.parent.name] = {str(k): int(v)
                                    for k, v in raw["counts"].items()}
-        except Exception:  # noqa: BLE001 — unpinned project: no column
+        except Exception:  # noqa: BLE001
             continue
     return out
 

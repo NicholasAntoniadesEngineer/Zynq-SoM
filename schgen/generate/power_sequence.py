@@ -1,31 +1,3 @@
-"""Power-up sequence diagram (SVG) — the bring-up staging, drawn.
-
-``carrier/docs/power_sequence.svg``: a top-to-bottom staged view of how the
-board comes alive, derived from the SAME power-tree analysis the budget gate
-runs (``schgen.verify.powertree.analyze``) — so the drawn sequence can never
-drift from the netlist. It is the visual twin of the staged
-``carrier/docs/BRINGUP.md`` manual:
-
-  Stage 0  always-on (pre-DIP)  : the rails that exist before any DIP closes —
-           the USB-C source contract + every rail fed by an ALWAYS-ON
-           converter (no EN_* port) or a source, reachable from the inlet.
-  Stage 1  rail chain           : the DIP-gated core regulator chain, in
-           dependency (BFS-depth) order — each stage's input is the previous
-           stage's output, so the order is electrical, not cosmetic.
-  Stage 2+ gated module rails   : the load-switch module rails, grouped by the
-           parent rail they gate off.
-
-Each box names the rail (+ voltage/load) and, for a gated rail, the EN line /
-gate that turns it on. The arrows are dependency edges (parent rail -> child
-rail), so the diagram reads exactly like the BRINGUP.md "close one DIP at a
-time" procedure.
-
-Deterministic: sorted iteration throughout, content-derived geometry, no
-timestamps — re-running ``schgen board`` is byte-identical (proven by the
-cross-PYTHONHASHSEED determinism stage in scripts/check.sh, which rebuilds the
-whole board).
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -40,9 +12,6 @@ DEFAULT_OUT = PROJECT_ROOT / "docs" / "power_sequence.svg"
 
 _FONT = "ui-monospace, SFMono-Regular, Menlo, monospace"
 
-# rails alive before any DIP closes (always-on by design). +5V_SOM is fed by an
-# always-on buck (no EN port); +3V3_SC is the SoM SC LDO source. The detector
-# below also marks any source rail and any rail whose feeding reg has no EN.
 ALWAYS_ON_RAILS = ("+3V3_SC", "+5V_SOM")
 
 
@@ -51,8 +20,6 @@ def _esc(s: str) -> str:
 
 
 def _en_port_of(sheets, reg: Reg) -> str | None:
-    """The EN_* PORT net on the regulator's own pins, if any. A reg with an
-    EN port is DIP-gated; one without is always-on (strapped on)."""
     from schgen.core.model import NetClass
     by_name = {sc.name: sc.circuit for sc in sheets}
     c = by_name.get(reg.sheet)
@@ -70,9 +37,7 @@ def _en_port_of(sheets, reg: Reg) -> str | None:
 
 
 def _depth(res: Result) -> dict[str, int]:
-    """BFS depth of every rail from the sources (the dependency order)."""
     depth: dict[str, int] = {r: 0 for r in SOURCES}
-    # shunt-bridge endpoints share their source's depth lineage
     changed = True
     while changed:
         changed = False
@@ -90,15 +55,6 @@ def _depth(res: Result) -> dict[str, int]:
 
 
 def build(sheets, res: Result | None = None) -> dict:
-    """The sequence as a plain dict (pure; no I/O) so a test can assert on it
-    without rendering. Keys:
-      stage0  : sorted always-on rail names (pre-DIP)
-      chain   : list of {vout, vin, v, load, limit, en, kind, ref, sheet}
-                for the DIP-gated CORE chain (non-load_switch regs), in
-                dependency order
-      modules : list of same dicts for the load_switch module rails, sorted
-                by (parent rail, vout)
-    """
     if res is None:
         res = powertree.analyze(sheets)
     depth = _depth(res)
@@ -113,11 +69,6 @@ def build(sheets, res: Result | None = None) -> dict:
         }
 
     rows = [row(r) for r in res.regs]
-    # Stage 0 = the rails alive before any DIP closes: the source contracts +
-    # the documented always-on bucks/LDO outputs (those fed by a converter with
-    # NO EN_* port — strapped on by design, e.g. +5V_SOM). A load_switch rail is
-    # NEVER always-on (it is gated by a DIP/manual switch even when its EN is a
-    # local strap rather than an EN_* port), so it always lands in `modules`.
     always_on = set(SOURCES) | set(ALWAYS_ON_RAILS)
     for r in rows:
         if r["en"] is None and r["kind"] != "load_switch" and r["vout"] in depth:
@@ -134,11 +85,9 @@ def build(sheets, res: Result | None = None) -> dict:
     return {"stage0": stage0, "chain": chain, "modules": modules}
 
 
-# ---- SVG render ----------------------------------------------------------------
-
 _BOX_W, _ROW_H, _GAP = 250, 46, 26
 _LANE_X = 40
-_COL2_X = _LANE_X + _BOX_W + 120        # module column
+_COL2_X = _LANE_X + _BOX_W + 120
 
 
 def _rail_box(x: int, y: int, r: dict, fill: str, stroke: str) -> list[str]:
@@ -159,29 +108,22 @@ def _rail_box(x: int, y: int, r: dict, fill: str, stroke: str) -> list[str]:
 def render_svg(seq: dict, out: Path, *, ok: bool = True) -> Path:
     stage0, chain, modules = seq["stage0"], seq["chain"], seq["modules"]
 
-    # vertical layout: stage-0 strip, then one row per chain stage, then the
-    # module rails to the right of their parent (looked up by vout position).
     e: list[str] = []
     y = 84
-    # key -> box top y. Stage-0/chain keys are the rail name (str); module keys
-    # are ("MOD", rail) so a module rail and its parent rail can't collide.
     ypos: dict = {}
 
-    # ---- stage 0 (always-on, pre-DIP) ----
     s0_y = y
     for r in stage0:
         ypos[r] = y
         y += _ROW_H + _GAP
     chain_top = y + 14
 
-    # ---- chain stages ----
     y = chain_top
     for r in chain:
         ypos[r["vout"]] = y
         y += _ROW_H + _GAP
     chain_bottom = y
 
-    # ---- module rails: place each in column 2 at its own row ----
     mod_y0 = max(chain_top, s0_y)
     my = mod_y0
     for r in modules:
@@ -202,7 +144,6 @@ def render_svg(seq: dict, out: Path, *, ok: bool = True) -> Path:
              f'BRINGUP.md staging. Arrows = rail dependency (parent -&gt; '
              f'child).</text>')
 
-    # stage band labels
     e.append(f'<text x="{_LANE_X}" y="{s0_y - 8}" font-size="12" '
              f'font-weight="bold" fill="#92400e">'
              f'stage 0 — always-on (pre-DIP / pre-PD)</text>')
@@ -214,9 +155,6 @@ def render_svg(seq: dict, out: Path, *, ok: bool = True) -> Path:
                  f'font-weight="bold" fill="#065f46">'
                  f'stage 4 — gated module rails (SY6280 load switches)</text>')
 
-    # dependency edges: parent rail (by vout/source) -> child. Drawn first so
-    # boxes paint on top. Chain edges are vertical-ish in column 1; module
-    # edges run column 1 -> column 2.
     def cy(key) -> int | None:
         yy = ypos.get(key)
         return yy + _ROW_H // 2 if yy is not None else None
@@ -241,7 +179,6 @@ def render_svg(seq: dict, out: Path, *, ok: bool = True) -> Path:
                  f'{_COL2_X},{ch + _ROW_H // 2}" fill="none" '
                  f'stroke="{color}" stroke-width="1.2" stroke-opacity="0.6"/>')
 
-    # boxes
     for r in stage0:
         e += _rail_box(_LANE_X, ypos[r], {"vout": r, "v": rail_volts(r),
                        "load": 0.0, "limit": SOURCES.get(r, (0, 0, ""))[1]
@@ -259,12 +196,8 @@ def render_svg(seq: dict, out: Path, *, ok: bool = True) -> Path:
     return out
 
 
-# ---- entry points ----------------------------------------------------------------
-
 def generate(sheets, res: Result | None = None,
              out: Path = DEFAULT_OUT) -> Path:
-    """Render the power-up sequence SVG. ``res`` is the already-computed
-    power-tree Result from the board run (recomputed if absent)."""
     if res is None:
         res = powertree.analyze(sheets)
     seq = build(sheets, res)

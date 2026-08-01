@@ -1,15 +1,3 @@
-"""Programmatic SoM↔carrier interface extraction.
-
-The carrier's J1/J2/J3 sheets must mate the SoM's DF40 mezzanine connectors
-pin-for-pin. The ONLY source of truth is the SoM KiCad project itself: this
-module runs ``kicad-cli sch export netlist`` on the SoM and emits the
-connector pin→net contract as JSON. Nothing is hand-copied — re-run after any
-SoM change and the carrier rebuilds against the fresh contract.
-
-    python -m schgen som-interface som/Zynq_SoM.kicad_sch \
-        --refs J1,J2,J3 -o carrier/som_interface.json
-"""
-
 from __future__ import annotations
 
 import json
@@ -20,9 +8,6 @@ from pathlib import Path
 
 
 def extract(som_sch: Path, refs: list[str]) -> dict:
-    # TemporaryDirectory (auto-removed) — the old NamedTemporaryFile(delete=
-    # False) leaked one .net per call, same root cause as F3 in netlist_gate;
-    # this path runs on every board build via the J1/J2/J3 contract.
     with tempfile.TemporaryDirectory(prefix="schgen_som_") as td:
         net = Path(td) / "som.net"
         proc = subprocess.run(
@@ -67,17 +52,6 @@ def extract(som_sch: Path, refs: list[str]) -> dict:
 
 def extract_zynq(som_sch: Path, zynq_ref: str = "U2",
                  jrefs: tuple[str, ...] = ("J1", "J2", "J3")) -> dict:
-    """Programmatic Zynq ball map from the SoM netlist (NEVER hand-typed).
-
-    Returns, in one ``kicad-cli`` pass over the SoM project:
-    - ``pin_names``: ball -> the Zynq pin NAME (which carries the bank
-      suffix ``..._35`` and the MRCC/SRCC clock capability — the symbol is
-      the vendor pinout, so the bank map rides along for free),
-    - ``ball_net``:  ball -> SoM net name (every netted ``zynq_ref`` pin),
-    - ``jpin_net``:  "J2.20" -> SoM net name (the LIVE J-connector view,
-      cross-checked by the XDC generator against the committed
-      carrier/som_interface.json — a stale contract fails the build).
-    """
     with tempfile.TemporaryDirectory(prefix="schgen_som_") as td:
         net = Path(td) / "som.net"
         proc = subprocess.run(
@@ -89,7 +63,6 @@ def extract_zynq(som_sch: Path, zynq_ref: str = "U2",
                 f"kicad-cli failed on {som_sch}: {proc.stderr[-400:]}")
         root = ET.parse(net).getroot()
 
-    # component ref -> (lib, part) so the right libpart pin table is used
     libsource: dict[str, tuple[str, str]] = {}
     value = ""
     comps = root.find("components")

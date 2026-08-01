@@ -1,38 +1,3 @@
-"""T1 COMPOSITION — placement-contract TERM INDEX + the exact floorplan-frame
-EVALUATOR (spec: T1_COMPOSITION_SPEC.md §3, phase P2).
-
-WHAT THIS SOLVES. The composition gates (:mod:`placement_flow_gate`) judge the
-EMITTED board, but the floorplan packer that decides zone poses is blind to the
-contract terms it will be judged by — poses satisfy the terms only by luck (the
-measured F1/F3/F6/F7 defects). This module gives the ENGINE the same term
-vocabulary and an evaluator that predicts, for a candidate set of zone poses,
-EXACTLY what the emitted-board gate will measure — including the emit rounding
-chain (zones emit at their EXACT floorplan pose, the ``round(·, 4)`` position
-writes and the gate's own centroid/bbox rounding), so the P6 legalizer can make
-wired terms hold BY CONSTRUCTION.
-
-TWO EVALUATORS, ONE TRUTH: every metric kernel here is IMPORTED from the gates
-(:func:`placement_flow_gate.flow_budget` / ``bbox_gap`` / ``facing_dot`` — the
-P1 single-oracle publics); nothing is re-derived. The exactness test
-(test_floorplan_compose) ties evaluator and gate permanently: <= 1e-6 for
-L4-exempt/top-forced sheets, <= GUARD_MM for edge-snap partners, and a printed
-residual (FAR_L4_GUARD_MM) for L4-kept far-only participants.
-
-DISCOVERY: terms come from :func:`placement_contract_gate.discover_contract`
-over BOTH package roots (``subsystems/`` + ``carrier/subsystems/``) — wired or
-not. ``enforced`` mirrors the gate's own ``_WIRED_SHEETS`` scoping. Term ids
-are always derived from the live contract data, never a static list. Unknown
-external term kinds RAISE (fail-loud — a contract this module cannot express
-must never pass silently; ``region_void`` is explicitly unsupported until its
-engine lands).
-
-DETERMINISM: argument-pure (never reads ``fp.BOARD_W/BOARD_H`` globals — the
-2026-06-19 race class), sorted iteration everywhere, no RNG/env/wall-clock.
-
-All imports across the generate<->verify boundary are lazy (the emit.generate()
-house pattern).
-"""
-
 from __future__ import annotations
 
 import math
@@ -44,64 +9,24 @@ from schgen.core.project import PROJECT_ROOT
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# ---- constants (T1 spec §4 — every threshold carries a basis; none runtime-
-# configurable) ---------------------------------------------------------------
 
-# Post-floorplan connector edge-snap travel bound (LAW-6 seat step, the one
-# post-pose mover on snap-only sheets). The spec's derivation (EDGE_INSET 1.5
-# + EDGE_PAD_CLEAR 0.4 <= 1.9 -> 2.0) was REFUTED by the P5 measurement: the
-# snap also absorbs the connector's ZONE-INTERNAL offset, measured max
-# pad-bbox travel 3.54 mm (pd_input TYPE-C, P5 residual vector; board_qwiic
-# 0.81). GROWN 2.0 -> 4.0 (measured 3.54 + margin) - the constant MAY ONLY
-# GROW (never tightened to hide a residual); enforced by the exactness test.
 GUARD_MM = 4.0
 
-# Measured emitted-vs-floorplan TERM residual for far-only participants that
-# KEEP LEVER-L4 (decision D-2): their bottom passives slide toward the SoM
-# after the pose the evaluator sees, so far terms involving them carry a
-# measured guard. Values are MEASURED at phase start (P2/P5) and re-measured
-# whenever the exactness test's printed residual drifts > 1 mm.
-# ethernet guard = 14.0: the spec's measured figure ("ethernet ~= 14 today",
-# T1 spec §4, re-verified against this tree 2026-07-02); the P2 exactness run
-# prints the live residual next to it (t1_P2 evidence). A larger guard only
-# makes far terms HARDER to satisfy — safe direction, LAW-4 compliant.
-# power_som guard (P5b, 28f8e15 rebase): power_som KEEPS L4 until its P7
-# wave lands the buck template (its bottom caps must keep sliding clear of
-# U22004's datasheet thermal-via field — the rebase collision finding).
-# Guard = 25.0: measured max L4 centroid travel this tree 23.7 mm
-# (P2 residual vector: (12.88, 19.63)) + margin; re-measured at P7.
 FAR_L4_GUARD_MM: dict[str, float] = {"ethernet": 14.0, "power_som": 25.0}
 
-W_HOP = 1.0     # judgment:1.0 — hop length IS the contract objective
-W_SEED = 0.05   # judgment:0.05 — one order below term cost; uninvolved blocks
-#                 keep their LAW-5-shaped seats
-REPAIR_MAX = 16          # judgment: bounded deterministic termination
+W_HOP = 1.0
+W_SEED = 0.05
+REPAIR_MAX = 16
 CUT_MAX = 8
 MEDIAN_PASSES = 8
-EPS_FACE = 2.0           # mm — facing half-plane construction margin
-EPS_CUT = 0.5            # mm — cutting-plane step
-AREA_TARGET_MM2 = 24600.0  # judgment: pre-contract 154x152=23,408 mm^2 + the
-#                            recorded ~+5% wave-growth allowance (P10 trigger)
+EPS_FACE = 2.0
+EPS_CUT = 0.5
+AREA_TARGET_MM2 = 24600.0
 
-# D13 (Ring-0 injection) — inter-zone escape/channel reservation. Adjacent
-# zones with high inter-zone connectivity must keep a routing corridor:
-# CHANNEL_FLOOR_MM (judgment:2.0 — D13's per-side floor "2 x 0.1/0.1 mm lanes
-# + 1.0 mm clearance" ~= 1.4 mm, rounded up to a full extra lane-pair) plus a
-# demand-scaled term CHANNEL_PER_NET_MM per cross-airwire between the pair
-# (0.2 mm/net = one 0.1/0.1 trace+space lane per exiting net, D13's per-net
-# demand rule). Pairs at/above CHANNEL_MIN_NETS cross-airwires get a HARD
-# channel term in the P6 legalizer; below that the floor is CLEAR (0.3) as
-# today. Demand counts come from the live ratsnest MST
-# (:func:`cross_airwires_by_pair`), never a static table.
 CHANNEL_FLOOR_MM = 2.0
 CHANNEL_PER_NET_MM = 0.2
-CHANNEL_MIN_NETS = 6     # judgment: below ~6 shared airwires two zones are not
-#                          a routing channel hotspot (P0 measured pair table:
-#                          the hotspot pairs are 7-24 edges, the long tail <=5)
+CHANNEL_MIN_NETS = 6
 
-# ``media_faces_near_max`` is a TEMPLATE-orientation flag (T1 P7a), not a
-# composition term — it is known-and-ignored here (the proximity template consumes
-# it via ``placement._media_facing``; there is no floorplan-frame term to add).
 _KNOWN_EXTERNAL_KEYS = {"flow", "downstream", "output_roles", "far", "near_max",
                         "media_faces_near_max"}
 _SOM_TOKEN = "@som"
@@ -112,14 +37,6 @@ ESCAPE_SIDECAR = PROJECT_ROOT / "escape_block.json"
 
 def escape_corridors(path: Path | None = None
                      ) -> list[tuple[str, float, float, float, float]]:
-    """T2's escape-lane corridors from ``carrier/escape_block.json``
-    (``t1_constraints.corridors`` — the sidecar names THIS module as the
-    consumer): floorplan-frame rects the composition must never close
-    (Ring-0 D13 injection, per-IC/DF40 escape headroom). Empty when the
-    sidecar is absent (a non-carrier project). The rects currently sit
-    inside the SoM core keepout, so zone POSES cannot intrude today — the
-    corridors are load-bearing for the legalizer's fixed-rect set (P6-wire)
-    and MEASURED in the ledger so any future intrusion is loud."""
     import json as _json
     if path is None:
         path = ESCAPE_SIDECAR
@@ -138,19 +55,6 @@ def escape_corridors(path: Path | None = None
 
 def corridor_intrusions(model, corridors=None
                         ) -> tuple[list[str], list[str]]:
-    """(unmanaged, managed) PART-level intrusions into the T2 escape-lane
-    corridors — the D13 never-close obligation, measured on the emitted
-    model's PAD COPPER (a zone-HULL overlap is meaningless here: the hulls
-    sweep the SoM keepout and sliver-overlap the lanes with empty area —
-    22 false positives measured at the 4a45f99 reconciliation).
-
-    A part already carried in T2's OWN coexistence ledger
-    (``escape_meta.coexistence`` — STAY/CONSTRAINT verdicts, re-derived every
-    build against the live via windows) is MANAGED: T2 owns its verdict and
-    the eviction protocol. Anything else inside a lane corridor is an
-    UNMANAGED intrusion — loud, because no thread has judged it. Advisory
-    (the legalizer takes the corridors as fixed rects at P6-wire; T2's
-    return-stitch/escape gates protect the copper itself)."""
     import json as _json
 
     from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
@@ -171,10 +75,10 @@ def corridor_intrusions(model, corridors=None
     managed: list[str] = []
     for i in model.insts:
         if i.sheet.startswith("som_j"):
-            continue            # the mezzanine sheets own that space
+            continue
         try:
             boxes = _inst_pad_boxes(i)
-        except Exception:  # noqa: BLE001 — unparsable pads never crash a report
+        except Exception:  # noqa: BLE001
             continue
         hit = None
         for b in boxes.values():
@@ -195,27 +99,8 @@ def corridor_intrusions(model, corridors=None
     return sorted(unmanaged), sorted(managed)
 
 
-# ---- terms -------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class Term:
-    """One external composition term, normalized from a placement contract.
-
-    ``kind``       flow_hop | near_max | far_min | facing | near_intent
-    ``sheet``      the DECLARING sheet (contract owner)
-    ``subject``    the measured subject zone
-    ``target_raw`` the RAW dotted target string (``"ethernet.line_side"``,
-                   ``"@som"``); resolution uses the gate's own
-                   ``split('.', 1)[0]`` coarsening — reports echo the gate.
-    ``bound``      mm bound (near_max max / far min); None for flow_hop (the
-                   budget is board-size-dependent, computed live per candidate
-                   through the gate's ``flow_budget`` kernel) and facing/
-                   near_intent.
-    ``enforced``   True iff a declaring sheet is ENGINE-WIRED
-                   (``placement_contract_gate._WIRED_SHEETS``) — deduped terms
-                   OR their enforced flags.
-    ``output_roles``/``out_refs`` facing only: the contract's output roles and
-                   their resolved BOARD refs."""
     kind: str
     sheet: str
     subject: str
@@ -228,7 +113,6 @@ class Term:
 
     @property
     def target(self) -> str:
-        """Gate-coarsened target zone name (``zone.region`` -> ``zone``)."""
         return self.target_raw.split(".", 1)[0]
 
     @property
@@ -238,12 +122,8 @@ class Term:
 
 @dataclass(frozen=True)
 class TermIndex:
-    hard: tuple[Term, ...]      # enforced (declared by a wired sheet)
-    soft: tuple[Term, ...]      # advisory (unwired declarations + near_intent)
-    # n/a for the caller's sheet universe (the ACTIVE PROJECT's subsystem set
-    # on a real build): an endpoint names a subsystem the project does not
-    # instantiate (project-scoped resolution, E1) — listed in the composition
-    # ledger, never evaluated, never legalized against.
+    hard: tuple[Term, ...]
+    soft: tuple[Term, ...]
     na: tuple[Term, ...] = ()
 
     @property
@@ -252,11 +132,7 @@ class TermIndex:
 
 
 def build_term_index(sheet_names: list[str] | None = None) -> TermIndex:
-    """Discover + normalize every external contract term across BOTH contract
-    roots, plus the floorplan.json ``near`` intents that carry no contract
-    near_max (advisory ``near_intent`` terms). Deterministic: sorted sheets,
-    deduped by ``(kind, subject, target_raw)`` keep-min-bound + OR-enforced."""
-    from schgen.verify.placement_contract_gate import (  # lazy: verify boundary
+    from schgen.verify.placement_contract_gate import (
         _WIRED_SHEETS,
         _board_refs_by_sheet,
         discover_contract,
@@ -272,8 +148,6 @@ def build_term_index(sheet_names: list[str] | None = None) -> TermIndex:
         if old is None:
             merged[t.key] = t
             return
-        # dedupe: keep-min-bound + OR-enforced (IM7). Basis keeps the first
-        # declaration; the gate still reports every declaration verbatim.
         bound = old.bound
         if t.bound is not None and (bound is None or t.bound < bound):
             bound = t.bound
@@ -291,9 +165,6 @@ def build_term_index(sheet_names: list[str] | None = None) -> TermIndex:
         ext = contract.get("external") or {}
         unknown = set(ext) - _KNOWN_EXTERNAL_KEYS
         if unknown:
-            # fail-loud (E4' discipline): an external key this engine cannot
-            # express must never pass silently. region_void is named because
-            # the ethernet contract will grow one (its engine is a later unit).
             raise ValueError(
                 f"placement contract {sheet!r}: unsupported external term "
                 f"kind(s) {sorted(unknown)} — floorplan_compose has no "
@@ -330,9 +201,7 @@ def build_term_index(sheet_names: list[str] | None = None) -> TermIndex:
                       enforced=enforced, output_roles=output_roles,
                       out_refs=out_refs))
 
-    # near_intent: floorplan.json {"near": target} entries WITHOUT a contract
-    # near_max between the same pair — advisory, never gated (P4 driver scoring).
-    from schgen.generate.floorplan import load_floorplan_spec  # same package
+    from schgen.generate.floorplan import load_floorplan_spec
     spec = load_floorplan_spec()
     if spec is not None:
         near_max_pairs = {(t.subject, t.target)
@@ -361,28 +230,6 @@ def build_term_index(sheet_names: list[str] | None = None) -> TermIndex:
 
 def emit_mobile_sheets(zg, l4_exempt: frozenset[str] | None = None
                        ) -> dict[str, frozenset[str]]:
-    """Sheets whose emitted geometry can MOVE after the pose the floorplan
-    sees, with the REASON(s): ``{"l4"}`` (LEVER-L4 bottom-pull candidate — >= 2
-    bottom-side R/C/L passives, placement.py's mover filter replicated
-    verbatim) and/or ``{"snap"}`` (a LAW-6 edge-snapped connector,
-    ``zg.conn_edge``; bounded travel <= GUARD_MM).
-
-    ``l4_exempt`` is the P5 per-kind exemption set (default: the live
-    ``wired_term_participants()``) — exempt sheets never carry the "l4"
-    reason, so the exactness expectation TIGHTENS automatically as waves wire
-    more sheets (stale-scalar law: always the same-run model).
-
-    ``{"refit"}``: a sheet whose contract declares ``external.downstream``
-    and that seats no connector is REFIT-CAPABLE — build_model's final
-    position-aware ``refit_facing`` may turn the whole zone 180 deg on the
-    frozen frame (it fired for ``power`` the first time the multi-shape
-    outline moved its seat), so its emitted geometry is pose-predictable
-    only when the refit happens to no-op. Derived from the same-run
-    contracts, never a measured scalar.
-
-    P2 measured truth: only ``usb_pd`` (all-top template) and ``motor_pwm``
-    were emit-exact pre-P5 — the spec's "power exact" figure was STALE (power
-    carries L4-mobile bottom leftovers; centroid resid ~2.3 mm measured)."""
     if l4_exempt is None:
         from schgen.verify.placement_contract_gate import (
             wired_term_participants,
@@ -417,8 +264,6 @@ def emit_mobile_sheets(zg, l4_exempt: frozenset[str] | None = None
 
 
 def wired_term_sheets(index: TermIndex) -> set[str]:
-    """Every zone that PARTICIPATES in a hard term (subject or resolved target;
-    the ``@som`` token excluded — it is not a zone)."""
     out: set[str] = set()
     for t in index.hard:
         out.add(t.subject)
@@ -427,19 +272,8 @@ def wired_term_sheets(index: TermIndex) -> set[str]:
     return out
 
 
-# ---- zone-local metrics --------------------------------------------------------
-
 @dataclass(frozen=True)
 class LocalMetrics:
-    """Per-sheet zone-LOCAL geometry, replaying build_model's local transform so
-    the evaluator can predict the emitted-board gate measures from a zone pose.
-
-    ``offsets``   (ref, dx, dy) for every packed part (top + bottom), zone-local.
-    ``pad_union`` (ref, x0, y0, x1, y1) per-part PAD-union box, zone-local —
-                  the part's packed offset + its pad geometry under
-                  ``(conn_rot + zone_extra_rot) % 360`` (side-independent, the
-                  SAME transform ``placement_contract_gate._pad_boxes`` uses).
-    ``zone_wh``   the packed zone (w, h)."""
     offsets: tuple[tuple[str, float, float], ...]
     pad_union: tuple[tuple[str, float, float, float, float], ...]
     zone_wh: tuple[float, float]
@@ -452,7 +286,7 @@ class LocalMetrics:
 def _local_metrics_one(zg, t_off: dict, b_off: dict, extra_rot: dict,
                        zone_wh: tuple[float, float],
                        mods: dict | None = None) -> LocalMetrics:
-    from schgen.verify.placement_contract_gate import _pad_boxes  # lazy: verify
+    from schgen.verify.placement_contract_gate import _pad_boxes
     offs: list[tuple[str, float, float]] = []
     pads: list[tuple[str, float, float, float, float]] = []
     both = dict(t_off)
@@ -477,9 +311,6 @@ def _local_metrics_one(zg, t_off: dict, b_off: dict, extra_rot: dict,
 
 
 def zone_local_metrics(zg=None) -> dict[str, LocalMetrics]:
-    """Compute :class:`LocalMetrics` for every packed sheet from the SHARED zone
-    geometry (``subsystem_zone_geometry`` — the same packer the floorplan sizes
-    blocks from and the PCB places). Deterministic: sorted refs/sheets."""
     if zg is None:
         from schgen.generate import pcb as _pcb
         zg = _pcb.subsystem_zone_geometry(two_side=True)
@@ -493,11 +324,6 @@ def zone_local_metrics(zg=None) -> dict[str, LocalMetrics]:
 
 
 def zone_shape_metrics(zg) -> dict[tuple[str, int], LocalMetrics]:
-    """MULTI-SHAPE companion of :func:`zone_local_metrics`: LocalMetrics for
-    every NON-default shape variant (``ZoneGeom.shapes`` index >= 1), keyed
-    (sheet, shape_idx) — so the legalizer judges the geometry of the shape the
-    pack search actually chose. Deterministic: sorted sheets, fixed index
-    order."""
     out: dict[tuple[str, int], LocalMetrics] = {}
     for sheet in sorted(zg.shapes):
         for k, shp in enumerate(zg.shapes[sheet]):
@@ -509,14 +335,12 @@ def zone_shape_metrics(zg) -> dict[tuple[str, int], LocalMetrics]:
     return out
 
 
-# ---- the exact evaluator --------------------------------------------------------
-
 @dataclass(frozen=True)
 class TermEval:
     term: Term
-    measured: float      # mm (facing: angle in deg)
-    bound: float         # resolved bound (flow: the live budget; facing: 90.0)
-    margin: float        # > 0 == green (advisory kinds: margin vs their bound)
+    measured: float
+    bound: float
+    margin: float
     ok: bool
     note: str = ""
 
@@ -531,21 +355,12 @@ class TermEval:
 
 
 def _emitted_zone_frame(pose: tuple[float, float]) -> tuple[float, float]:
-    """The emit chain's zone-origin transform: IDENTITY — placement.py STEP 3
-    emits every zone at its EXACT floorplan pose (the historical per-zone
-    _gridify snap perturbed proven inter-block gaps, contract windows and
-    edge-seat distances by up to +/-0.635 mm per axis and was removed), so
-    a predicted pose IS the emitted pose."""
     return pose
 
 
 def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
                        refs: set[str] | None = None
                        ) -> tuple[float, float] | None:
-    """The PAGE-frame equal-weight instance centroid the gate will measure for
-    this zone at ``pose`` — full rounding chain replicated: per-part
-    ``round(ORIGIN + gz + off, 4)`` (the emit write) then the gate's
-    ``round(mean, 4)``. ``refs`` restricts to a subset (facing output parts)."""
     from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
     gzx, gzy = _emitted_zone_frame(pose)
     xs: list[float] = []
@@ -562,9 +377,6 @@ def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
 
 def predicted_bbox(pose: tuple[float, float], m: LocalMetrics
                    ) -> tuple[float, float, float, float] | None:
-    """The PAGE-frame pad-union bbox the gate will measure (zone_bboxes) for
-    this zone at ``pose`` — per-part rounded page position + pad-union box,
-    outer round(·, 4) exactly like the gate."""
     from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
     gzx, gzy = _emitted_zone_frame(pose)
     a: list[float] | None = None
@@ -594,16 +406,7 @@ def evaluate_terms(board_w: float, board_h: float,
                    far_guard: dict[str, float] | None = None,
                    som_j_rects: dict[str, tuple[float, float, float, float]]
                    | None = None) -> list[TermEval]:
-    """EXACT floorplan-frame evaluation of every term at the candidate ``poses``
-    (zone top-left origins, floorplan/board frame). Argument-pure: board size,
-    SoM rect (the PAGE-frame ``som_core_rect`` — the ``@som`` resolver), poses,
-    metrics and the index all arrive as parameters; nothing reads module
-    globals. Metric kernels are the gate's own (single oracle).
-
-    ``far_guard`` maps sheet -> extra mm demanded on far terms involving it
-    (the L4-kept participants' measured travel, D-2); defaults to
-    ``FAR_L4_GUARD_MM``."""
-    from schgen.verify.placement_flow_gate import (  # lazy: verify boundary
+    from schgen.verify.placement_flow_gate import (
         bbox_gap,
         facing_dot,
         flow_budget,
@@ -654,10 +457,6 @@ def evaluate_terms(board_w: float, board_h: float,
                                     False, "UNRESOLVED"))
                 continue
             d = math.hypot(ca[0] - cb[0], ca[1] - cb[1])
-            # L4-kept participants (P5b): the prediction is only good to the
-            # measured guard, so the evaluator demands the hop clear the
-            # budget MINUS the guards (conservative; the gate keeps judging
-            # the raw budget on the emitted board).
             g = (far_guard.get(t.subject, 0.0) + far_guard.get(t.target, 0.0))
             eff = budget - g
             note = f"incl L4 guard {g:g}mm" if g else ""
@@ -671,7 +470,7 @@ def evaluate_terms(board_w: float, board_h: float,
                                     t.kind == "near_intent", "UNRESOLVED"))
                 continue
             g = bbox_gap(ba, bb)
-            if t.kind == "near_intent":     # advisory: never red, value scored
+            if t.kind == "near_intent":
                 out.append(TermEval(t, g, 0.0, 0.0, True, "advisory"))
             else:
                 out.append(TermEval(t, g, t.bound or 0.0,
@@ -703,11 +502,6 @@ def evaluate_terms(board_w: float, board_h: float,
                 continue
             dot, angle = facing_dot(czone, cout, cdown)
             if far_guard.get(t.subject) or far_guard.get(t.target):
-                # an L4-kept participant makes the angle unpredictable at
-                # composition time (P5b): the evaluator ABSTAINS (ok) and the
-                # HARD GATE stays the arbiter on the emitted board (D-5) —
-                # the term graduates to constructive enforcement at the
-                # participant's own wave.
                 out.append(TermEval(t, angle, 90.0, round(90.0 - angle, 4),
                                     True,
                                     f"dot={dot:+.2f} L4-guarded participant "
@@ -715,18 +509,12 @@ def evaluate_terms(board_w: float, board_h: float,
             else:
                 out.append(TermEval(t, angle, 90.0, round(90.0 - angle, 4),
                                     dot > 0.0, f"dot={dot:+.2f}"))
-        else:  # pragma: no cover — build_term_index only emits known kinds
+        else:
             raise ValueError(f"unknown term kind {t.kind!r}")
     return out
 
 
-# ---- measured (emitted-model) term table + report -------------------------------
-
 def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
-    """The SAME term table measured on an EMITTED model via the gate's own
-    kernels (zone_centroids / zone_bboxes / facing_dot / flow_budget) — the
-    measured half of the exactness pairing. This is gate truth by construction:
-    every function is the gate's."""
     from schgen.verify.placement_contract_gate import _board_refs_by_sheet
     from schgen.verify.placement_flow_gate import (
         _members_centroid,
@@ -810,9 +598,6 @@ def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
 def cross_airwires_by_pair(model, npp: dict | None = None,
                            mst: dict | None = None
                            ) -> dict[tuple[str, str], tuple[int, float]]:
-    """Per-zone-pair cross-subsystem airwire (count, mm) over the SAME MST the
-    LAW-5 gate measures — the D13 channel-demand instrument. Deterministic
-    (sorted nets, sorted pair keys)."""
     from schgen.generate.pcb import net_pad_positions
     from schgen.generate.ratsnest import net_mst_edges
     pairs: dict[tuple[str, str], list[float]] = {}
@@ -832,9 +617,6 @@ def cross_airwires_by_pair(model, npp: dict | None = None,
 
 
 def channel_demand_mm(n_airwires: int) -> float:
-    """D13 channel reservation (mm) for a zone pair with ``n_airwires``
-    cross-airwires: floor + per-net demand. 0.0 below the hotspot threshold
-    (the ordinary CLEAR applies there)."""
     if n_airwires < CHANNEL_MIN_NETS:
         return 0.0
     return CHANNEL_FLOOR_MM + CHANNEL_PER_NET_MM * n_airwires
@@ -842,11 +624,6 @@ def channel_demand_mm(n_airwires: int) -> float:
 
 def compose_report(model, index: TermIndex | None = None,
                    npp: dict | None = None, mst: dict | None = None) -> str:
-    """The HARD+SOFT composition term ledger for the emitted ``model`` — one
-    line per term (measured, bound, margin, basis) + the aggregate-margin
-    scalar (informational, IM10) + the D13 channel-demand hotspot table.
-    Deterministic text; written to carrier/reports/floorplan_composition.txt
-    by ``schgen board``."""
     if index is None:
         index = build_term_index(sorted({i.sheet for i in model.insts}))
     evals = measure_terms(model, index)
@@ -854,8 +631,6 @@ def compose_report(model, index: TermIndex | None = None,
     soft = [e for e in evals if not e.term.enforced]
     n_red_hard = sum(1 for e in hard if not e.ok)
     n_red_soft = sum(1 for e in soft if not e.ok)
-    # aggregate margin (IM10): sum of HARD margins, min HARD margin — a single
-    # scalar time-series for the ledger; informational, never a gate.
     finite = [e.margin for e in hard if math.isfinite(e.margin)]
     agg = round(sum(finite), 2) if finite else 0.0
     mn = round(min(finite), 2) if finite else 0.0
@@ -894,14 +669,10 @@ def compose_report(model, index: TermIndex | None = None,
         L.append(f"    {a} | {b}: {n} airwires ({mm:.1f} mm) -> "
                  f"corridor >= {channel_demand_mm(n):.1f} mm")
     return "\n".join(L)
-# ---- T1 P6: the composition LEGALIZER (P6-core) -----------------------------------
-# Appended verbatim to schgen/generate/floorplan_compose.py once the rebase-gate
-# builds release the module. See docstrings for the stage map + v1 scoping.
 
 
 @dataclass
 class LegalizeVar:
-    """One movable block's solver state (floorplan frame, top-left origin)."""
     name: str
     w: float
     h: float
@@ -912,10 +683,6 @@ class LegalizeVar:
 
 @dataclass
 class _Sep:
-    """One L1 separation relation: ``lo`` precedes ``hi`` on ``axis`` by at
-    least ``gap`` mm. ``basis`` records why the gap is what it is (CLEAR or a
-    D13 channel). ``flippable`` relations may have their axis flipped by the
-    L3 repair loop (once each — determinism/termination)."""
     axis: str
     lo: str
     hi: str
@@ -926,8 +693,6 @@ class _Sep:
 
 def _pair_axis(a: tuple[float, float, float, float],
                b: tuple[float, float, float, float]) -> tuple[str, bool]:
-    """Separating AXIS for two seed rects: larger NORMALIZED gap (gap / mean
-    extent); ties x-then-lex. Returns (axis, a_precedes_b)."""
     gx = max(b[0] - a[2], a[0] - b[2])
     gy = max(b[1] - a[3], a[1] - b[3])
     nx = gx / max(1.0, ((a[2] - a[0]) + (b[2] - b[0])) / 2.0)
@@ -940,13 +705,6 @@ def _pair_axis(a: tuple[float, float, float, float],
 def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
                    near_max_pairs: set[frozenset], clear: float
                    ) -> tuple[float, str]:
-    """The L1 gap for pair (a, b): the D13 channel corridor when the pair is
-    a connectivity hotspot, else CLEAR. PRECEDENCE (judgment, recorded): a
-    HARD near_max on the same pair declares an intended tight adjacency whose
-    mutual nets TERMINATE at each other (D13's own 'terminus != obstruction'
-    nuance — the usb_pd seat's CC nets today, the ethernet|rj45 MDI pairs at
-    their wave), so the CITED/near_max adjacency WINS over the
-    judgment-grounded channel floor."""
     key = frozenset((a, b))
     if key in near_max_pairs:
         return clear, "near_max-adjacency(terminus)"
@@ -959,10 +717,6 @@ def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
 def _bellman_ford(nodes: list[str],
                   edges: list[tuple[str, str, float, object]]
                   ) -> tuple[dict[str, float] | None, list[object]]:
-    """Difference-constraint feasibility: edge (u, v, c) means x_v - x_u <= c.
-    ALL-ZERO init (virtual source). V sweeps — a relaxation in sweep V flags
-    infeasibility (spec §4: V, not V-1); the predecessor walk then runs V
-    steps to land ON the negative cycle and returns its edge tags."""
     dist = dict.fromkeys(nodes, 0.0)
     pred: dict[str, tuple[str, object]] = {}
     V = len(nodes)
@@ -1004,54 +758,14 @@ def legalize_compact(board_w: float, board_h: float,
                      log: list[str] | None = None,
                      som_j_rects: dict[str, tuple[float, float, float, float]]
                      | None = None) -> bool:
-    """T1 P6-core: make every WIRED composition term hold BY CONSTRUCTION for
-    one candidate board (spec §6 P6 + the Ring-0 D13 channel injection).
-
-    Stages (v1 scope — cutting planes for flow/facing windows are the pinned
-    follow-up; they are exact-checked here and reject when red):
-      L0  no hard term / no movable participant -> True, untouched.
-      L1  pairwise separations on the seed arrangement's axis, gap = CLEAR or
-          the D13 channel corridor (``channel_gap_mm`` precedence).
-      L2  HARD near_max windows: dominant-axis gap <= bound - GUARD_MM,
-          perpendicular overlap >= 0 (so the emitted bbox_gap is the
-          dominant component alone).
-      L3  seed-first: if the seeds already satisfy every edge, poses = seeds
-          (zero perturbation — the outer search's behavior is byte-identical
-          for green candidates, which is also the timing story). Else
-          Bellman-Ford feasibility; infeasible -> <= REPAIR_MAX deterministic
-          axis flips of cycle separations -> else False (candidate rejected,
-          outer grow — LAW 4). Feasible potentials seed a Gauss-Seidel
-          window pass that pulls every variable back toward its SEED (the
-          minimal-perturbation point of the polytope). Then EVERY edge on
-          both axes is re-verified: a repair flip lands its separation on the
-          other axis, and when that axis was already solved nothing enforces
-          it — an unsatisfied edge rejects the candidate.
-      L5  EXACT accept: ``evaluate_terms`` (full emit rounding chain, GUARD +
-          FAR_L4_GUARD) over ALL hard terms; any red -> False with the
-          binding term named in ``log``.
-      L4' optional COMPACTION (``compact=True``, the final pack only): the
-          weighted-median coordinate descent over deduped wired hop pulls
-          (W_HOP) + the seed anchor (W_SEED), quantize-Q-then-CLAMP,
-          MEDIAN_PASSES; GUARDED — if compaction turns any hard term red or
-          breaks a separation it is REVERTED wholesale (compaction is an
-          optimizer, never a risk).
-      L6  final-rect disjointness backstop (any residual overlap of a
-          movable with a fixed rect or another movable rejects — the module
-          NEVER returns True with overlapping rects), then write-back
-          round-4 into the vars.
-
-    Argument-pure: never reads ``fp.BOARD_W/BOARD_H`` (the 2026-06-19 race
-    class). Deterministic: sorted iteration, fixed caps, no RNG."""
     if som_j_rects:
-        # DF40 receptacle targets resolve like FIXED participants: pose =
-        # rect top-left (hull dims come from the rect in _near_max_edges).
         fixed_poses = {**fixed_poses,
                        **{n: (r[0], r[1]) for n, r in som_j_rects.items()}}
     if log is None:
         log = []
     hard = [t for t in index.hard]
     if not hard or not movable:
-        return True                                             # L0
+        return True
     names = sorted(v.name for v in movable)
     by_name = {v.name: v for v in movable}
     vset = set(names)
@@ -1078,7 +792,6 @@ def legalize_compact(board_w: float, board_h: float,
                   for t in hard if t.kind == "near_max"}
     frect = {fn: (x0, y0, x1, y1) for fn, x0, y0, x1, y1 in fixed_rects}
 
-    # ---- L1: separations (seed arrangement; D13 channel gaps) --------------
     seps: list[_Sep] = []
     seed_rect = {v.name: (v.x, v.y, v.x + v.w, v.y + v.h) for v in movable}
     for i, a in enumerate(names):
@@ -1094,7 +807,6 @@ def legalize_compact(board_w: float, board_h: float,
             lo, hi = (a, f"#{fn}") if first else (f"#{fn}", a)
             seps.append(_Sep(axis, lo, hi, gap, why, True))
 
-    # ---- constraint edges (x_v - x_u <= c), rebuilt after each repair ------
     def build_edges(axis: str) -> list[tuple[str, str, float, object]]:
         E: list[tuple[str, str, float, object]] = []
         for n in names:
@@ -1122,7 +834,6 @@ def legalize_compact(board_w: float, board_h: float,
                 v = by_name[s.lo]
                 w = v.w if axis == "x" else v.h
                 E.append((s.hi, s.lo, -(w + s.gap), ("sep", s)))
-        # L2: HARD near_max windows
         for t in hard:
             if t.kind != "near_max":
                 continue
@@ -1151,22 +862,18 @@ def legalize_compact(board_w: float, board_h: float,
         out: list[tuple[str, str, float, object]] = []
         i0, i2 = (0, 2) if dom == "x" else (1, 3)
         if axis == dom:
-            # (x_hi + hhi[i0]) - (x_lo + hlo[i2]) <= bound
             c = bound + hlo[i2] - hhi[i0]
             if lo in vset and hi in vset:
                 out.append((lo, hi, c, ("near_max", t)))
             elif lo in vset:
                 f = fixed_poses[hi][0 if dom == "x" else 1]
-                # x_lo >= f + hhi[i0] - bound - hlo[i2]
                 out.append((lo, "#0", -(f + hhi[i0] - bound - hlo[i2]),
                             ("near_max", t)))
             else:
                 f = fixed_poses[lo][0 if dom == "x" else 1]
-                # x_hi <= f + hlo[i2] + bound - hhi[i0]
                 out.append(("#0", hi, f + hlo[i2] + bound - hhi[i0],
                             ("near_max", t)))
         else:
-            # perpendicular overlap >= 0 on the NON-dominant axis
             j0, j2 = (1, 3) if dom == "x" else (0, 2)
             k = 1 if dom == "x" else 0
             a0, a2 = hs[j0], hs[j2]
@@ -1201,7 +908,7 @@ def legalize_compact(board_w: float, board_h: float,
                         if u == n and w2 != n:
                             lo = max(lo, pos.get(w2, 0.0) - c)
                     if lo > hi:
-                        continue           # transiently empty: keep position
+                        continue
                     i = 0 if axis == "x" else 1
                     pulls: list[tuple[float, float]] = []
                     if not seed_only:
@@ -1225,8 +932,6 @@ def legalize_compact(board_w: float, board_h: float,
                             elif other == _SOM_TOKEN:
                                 mid = (som_core_page[i]
                                        + som_core_page[i + 2]) / 2
-                                # som rect is page-frame; poses are
-                                # floorplan-frame — shift by the page origin
                                 from schgen.generate.pcb.constants import (
                                     ORIGIN_X,
                                     ORIGIN_Y,
@@ -1242,7 +947,7 @@ def legalize_compact(board_w: float, board_h: float,
                     for w2, p2 in pulls:
                         acc += w2
                         if acc >= tot / 2 - 1e-12:
-                            best = p2       # tie -> LOWER endpoint (sorted)
+                            best = p2
                             break
                     q = _q.legalize_pose_quantum(best)
                     q = max(lo, min(q, hi))
@@ -1253,8 +958,6 @@ def legalize_compact(board_w: float, board_h: float,
             if moved <= 1e-9:
                 break
 
-
-    # ---- L3: seed-first feasibility, else BF + repair, then seed-restore ---
     def edges_ok(axis: str, pos: dict[str, float]) -> bool:
         for u, v, c, _tag in build_edges(axis):
             pu = pos.get(u, 0.0)
@@ -1303,11 +1006,7 @@ def legalize_compact(board_w: float, board_h: float,
             else:
                 log.append(f"INFEASIBLE {axis}: REPAIR_MAX exhausted")
                 return False
-        # seed-restore: coordinate descent, each var clamped to its window's
-        # nearest point to the SEED (minimal perturbation), MEDIAN_PASSES.
         _descend(posx, posy, hops=(), seed_only=True)
-        # TRAP (measured: uart_bridge emitted INSIDE board_aux, DRC 41): a
-        # y-repair flip lands its sep on the ALREADY-SOLVED x axis unenforced.
         for axis, pos in (("x", posx), ("y", posy)):
             for u, v, c, tag in build_edges(axis):
                 if pos.get(v, 0.0) - pos.get(u, 0.0) > c + 1e-9:
@@ -1317,7 +1016,6 @@ def legalize_compact(board_w: float, board_h: float,
                                f"on an already-solved axis")
                     return False
 
-    # ---- L5: exact accept (pre-compaction) ----------------------------------
     def poses_now() -> dict[str, tuple[float, float]]:
         out = dict(fixed_poses)
         for n in names:
@@ -1338,7 +1036,6 @@ def legalize_compact(board_w: float, board_h: float,
                                for e in r1[:4]))
         return False
 
-    # ---- L4': guarded compaction (final pack only) --------------------------
     if compact:
         keepx, keepy = dict(posx), dict(posy)
         hops = tuple(t for t in hard if t.kind == "flow_hop")
@@ -1351,7 +1048,6 @@ def legalize_compact(board_w: float, board_h: float,
         else:
             log.append("compacted (wired hop pulls applied)")
 
-    # ---- L6: write-back ------------------------------------------------------
     rect = {n: (round(posx[n], 4), round(posy[n], 4),
                 round(posx[n], 4) + by_name[n].w,
                 round(posy[n], 4) + by_name[n].h) for n in names}

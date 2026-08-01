@@ -1,33 +1,3 @@
-"""part_rules — per-part RATING gate (verification).
-
-design_rules.py checks that a decap/pull/strap EXISTS; thermal.py checks Tj.
-Neither checks whether a part is RATED for the stress the netlist puts on it: a
-ceramic cap below (or insufficiently derated above) its rail voltage, a resistor
-past its package power, a regulator driven beyond its input abs-max. This gate
-adds that layer. Ratings come from schgen/verify/ratings.py (LCSC-keyed; EasyEDA gives
-no structured ratings and the load-bearing passives are inline c.part(...,
-LCSC=...) with no parts/ folder, so LCSC is the primary key); the regulator tree
-+ rail voltages are reused from schgen.verify.powertree (never recomputed).
-
-ENFORCED rules (hard FAIL), chosen so the CURRENT board passes (it already
-self-derates: the +VIN 20 V bulk is a 50 V part, the LCD boost-out is 50 V):
-  CAP_VOLTAGE  ceramic v_max >= 2x rail (DC-bias droop); C0G/NP0 >= 1.5x;
-               electrolytic/tantalum >= 1.5x.
-  IC_VIN       regulator/eFuse/load-switch/LDO vin_max (abs-max) >= the rail it
-               runs from (reused from powertree's Reg.vin).
-ADVISORY rules (reported as NOTES, never fail — too many shunt/divider edge
-cases to enforce a worst-case power model without false positives):
-  RES_POWER    resistor P = dV^2/R vs 2x-derated p_max, only when BOTH pins
-               resolve to a known voltage.
-
-FAIL-SOFT: a part with no ratings, or whose rail does not resolve, is reported
-UNSPEC and does NOT fail the gate (the testpoints.py idiom) — coverage is
-visible without blocking the board. A genuine tight-margin exception is
-``c.waive_part_rule(ref, reason)`` (verbatim in the report, never silence; LAW
-4 — never relax a derate, waive the one part). Deterministic; no timestamps.
-Report: carrier/reports/part_rules.txt. Run: ``python -m schgen part-rules``.
-"""
-
 from __future__ import annotations
 
 import re
@@ -37,11 +7,10 @@ from pathlib import Path
 from schgen.verify import powertree
 from schgen.verify.ratings import RATINGS_BY_LCSC, Ratings
 
-# ---- derating policy (LAW 4: a tight exception is WAIVED, never relaxed) --------
-DERATE_MLCC = 2.0     # X7R/X5R ceramic: DC-bias capacitance loss -> 2x the rail
-DERATE_C0G = 1.5      # C0G/NP0: no DC-bias droop, still derate
-DERATE_ELEC = 1.5     # electrolytic / tantalum
-DERATE_RES = 2.0      # 50% resistor power derating (advisory)
+DERATE_MLCC = 2.0
+DERATE_C0G = 1.5
+DERATE_ELEC = 1.5
+DERATE_RES = 2.0
 
 
 def _ratings_for(part) -> Ratings | None:
@@ -50,13 +19,12 @@ def _ratings_for(part) -> Ratings | None:
 
 
 def _ohms(value: str) -> float | None:
-    """Parse a resistor value ('10k','330R','4k7','0.01','10m') to ohms."""
     s = (value or "").strip().replace("Ω", "").replace("ohm", "")
-    m = re.fullmatch(r"(\d+)([RrKkMm])(\d+)", s)          # 4k7 -> 4700
+    m = re.fullmatch(r"(\d+)([RrKkMm])(\d+)", s)
     if m:
         mult = {"r": 1, "k": 1e3, "m": 1e-3}[m.group(2).lower()]
         if m.group(2).lower() == "m" and float(m.group(1)) >= 1:
-            mult = 1e-3                                    # 10m = milliohm
+            mult = 1e-3
         return (float(m.group(1)) + float(m.group(3)) / 10) * mult
     m = re.fullmatch(r"(\d+(?:\.\d+)?)([RrKkMm]?)", s)
     if not m:
@@ -67,7 +35,6 @@ def _ohms(value: str) -> float | None:
 
 
 def _pin_volts(c, ref) -> list[float]:
-    """The known rail voltages on a part's pins (GND=0; +5V=5; signal=skip)."""
     vs: list[float] = []
     for net in c.nets.values():
         if any(pr.ref == ref for pr in net.pins):
@@ -85,13 +52,11 @@ def _cap_derate(r: Ratings) -> float:
     return DERATE_MLCC
 
 
-# ---- result --------------------------------------------------------------------
-
 @dataclass
 class Result:
-    findings: list[str] = field(default_factory=list)      # hard fails
-    notes: list[str] = field(default_factory=list)         # advisory + waived
-    unspecced: list[str] = field(default_factory=list)     # no ratings / no rail
+    findings: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    unspecced: list[str] = field(default_factory=list)
     waived: dict[str, tuple[str, str]] = field(default_factory=dict)
     checked: int = 0
 
@@ -114,7 +79,6 @@ def analyze(sheets, pt_res: powertree.Result | None = None) -> Result:
     res = Result()
     res.waived = _collect_waivers(sheets)
 
-    # ---- CAP_VOLTAGE + RES_POWER: walk every part with ratings -------------
     for sc in sorted(sheets, key=lambda s: s.name):
         c = sc.circuit
         for ref, part in sorted(c.parts.items()):
@@ -132,7 +96,7 @@ def analyze(sheets, pt_res: powertree.Result | None = None) -> Result:
                     continue
                 v_rail = max(vs)
                 if v_rail <= 0:
-                    continue                              # GND-only / bypass net
+                    continue
                 res.checked += 1
                 need = _cap_derate(r) * v_rail
                 if r.v_max < need:
@@ -160,7 +124,6 @@ def analyze(sheets, pt_res: powertree.Result | None = None) -> Result:
                             f"rated {r.p_max*1000:.0f}mW — verify it is not a "
                             f"full-rail dissipator")
 
-    # ---- IC_VIN: reuse the powertree regulator tree ------------------------
     fp_lcsc: dict[tuple[str, str], str] = {}
     for sc in sheets:
         for ref, part in sc.circuit.parts.items():

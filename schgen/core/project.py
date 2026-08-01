@@ -1,17 +1,3 @@
-"""project — the PROJECT SPEC loader (P1 engine/project separation).
-
-Board-specific POLICY that previously lived as engine constants (wired sheet
-sets, the module pose, name-anchors, band prefixes, ref-keyed silk function
-labels) is data in the project's ``project.json``; the engine is pure
-MECHANISM reading it here. One project
-today (``carrier/``); the resolution root generalizes to ``--project`` in a
-later unit without touching any consumer.
-
-Deterministic: the spec is read once per process and cached; every field has
-the type the consumers need (frozensets / tuples), so consumers stay hashable
-and byte-stable. A missing or malformed spec FAILS LOUDLY — a project without
-a spec is a build error, not a silent default.
-"""
 from __future__ import annotations
 
 import json
@@ -20,9 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-# U1f: the project root is data, not engine — SCHGEN_PROJECT names a directory
-# (relative to the repo root, or absolute) holding project.json; the CLI's
-# --project sets it before engine modules resolve their paths.
 DEFAULT_PROJECT = "carrier"
 _PROJ = os.environ.get("SCHGEN_PROJECT", DEFAULT_PROJECT)
 PROJECT_ROOT = (Path(_PROJ) if Path(_PROJ).is_absolute()

@@ -1,33 +1,3 @@
-"""Signal-integrity CONSTRAINTS (not routing) for the carrier PCB.
-
-This is the SI-rule layer that sits ON TOP of the PCB foundation
-(``schgen/generate/pcb.py``). It does NOT route anything and does NOT touch
-the schematic netlist or any sheet render. It harvests every differential pair
-the schematic actually declares (via ``c.port_type(..., kind=<pair>,
-pair_with=..., impedance=...)``), joins each pair to the researched SI target
-table (``carrier/research/si_spec.json`` — 37 pairs with target Z_diff,
-intra-pair skew, group length-match tolerance, AC-coupling and a standard
-citation), and emits three artifacts a layout engineer needs:
-
-1. KiCad **differential-pair + matched-length design rules** appended to the
-   board ``.kicad_dru`` (``carrier/manufacturing/Zynq_Carrier_pcb.kicad_dru``):
-   per-pair ``(diff_pair_uncoupled ...)``/``skew`` intra-pair rules and per
-   length-match-GROUP ``(length ...)`` / ``skew`` rules keyed on the pair's PCB
-   net class. KiCad's DRC enforces these once the pairs are routed.
-2. A machine + human **SI_CONSTRAINTS.md** table
-   (``carrier/manufacturing/SI_CONSTRAINTS.md``): one row per pair with
-   interface, net_p, net_n, Z_diff, intra-pair skew, length-match group + group
-   tolerance, AC-coupled and the spec citation — the single page of rules.
-3. A light **assertion hook** (:func:`check`) the board flow runs: every
-   schematic-declared diff pair must have an emitted constraint. It returns a
-   verdict object; it does NOT raise, so it cannot flip an existing gate.
-
-DETERMINISM: pairs are sorted by (interface, net_p); groups by a stable key;
-the vendored si_spec is committed (no /tmp dependency), so output is
-byte-identical across runs and PYTHONHASHSEED. LAW 0: this only ADDS rule text;
-it never moves a wire, edits a net, or relaxes a validator (LAW 4).
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -44,11 +14,8 @@ SI_SPEC_PATH = CARRIER / "research" / "si_spec.json"
 MM_PER_MIL = 0.0254
 
 
-# ---- the researched SI target table ----------------------------------------------
-
 @dataclass(frozen=True)
 class PairSpec:
-    """One differential pair's researched SI targets (from si_spec.json)."""
     interface: str
     signal: str
     net_p: str
@@ -66,9 +33,6 @@ class PairSpec:
 
 
 def load_si_spec(path: Path = SI_SPEC_PATH) -> list[PairSpec]:
-    """Parse the vendored si_spec.json into PairSpec rows (deterministically
-    sorted). Raises if the file is missing — it is committed, so a build
-    without it is a real error, not a soft skip."""
     if not path.exists():
         raise FileNotFoundError(
             f"{path} not found — the vendored SI target table is required "
@@ -91,13 +55,7 @@ def load_si_spec(path: Path = SI_SPEC_PATH) -> list[PairSpec]:
     return sorted(out, key=lambda s: (s.interface, s.net_p))
 
 
-# ---- harvest the pairs the SCHEMATIC actually declares ---------------------------
-
 def declared_pairs(sheets) -> dict[frozenset[str], tuple[str, str, int]]:
-    """{ {net_p,net_n} : (sheet, kind, impedance) } for every differential pair
-    declared via ``c.port_type(kind=<pair>, pair_with=...)`` in the subsystem
-    models. The frozenset key makes the join order-independent (P/N either
-    way)."""
     from schgen.core.model import NetClass
     _PAIR_KINDS = {"diff_pair", "tmds_pair", "usb_hs_pair"}
     seen: dict[frozenset[str], tuple[str, str, int]] = {}
@@ -110,25 +68,14 @@ def declared_pairs(sheets) -> dict[frozenset[str], tuple[str, str, int]]:
             if pt.kind not in _PAIR_KINDS or not pt.pair_with:
                 continue
             key = frozenset((net.name, pt.pair_with))
-            # impedance is filled by port_type (usb_hs_pair defaults to 90,
-            # tmds_pair to 100); first sheet wins, both members agree.
             seen.setdefault(key, (sc.name, pt.kind, pt.impedance or 0))
     return seen
 
-
-# ---- length-match GROUPS ----------------------------------------------------------
-# A group is the set of pairs that must be length-matched TO EACH OTHER (e.g. the
-# 3 TMDS data lanes + clock of ONE HDMI port). We group by the pair's interface
-# string — every si_spec interface label already names exactly one such port /
-# bus instance (e.g. "HDMI TX (TMDS, source)", "MIPI CSI-2 D-PHY (camera)",
-# "FMC LPC (VITA 57.1)"). The group's match tolerance is the TIGHTEST (min)
-# match_tol_mil of its members (the conservative bound). Deterministic.
 
 _GROUP_RE = re.compile(r"[^A-Za-z0-9]+")
 
 
 def group_id(interface: str) -> str:
-    """Stable, KiCad-friendly group identifier from the interface label."""
     tok = _GROUP_RE.sub("_", interface).strip("_").upper()
     return f"LM_{tok}"
 
@@ -137,12 +84,11 @@ def group_id(interface: str) -> str:
 class LengthGroup:
     gid: str
     interface: str
-    members: tuple[PairSpec, ...]      # pairs in this group (sorted)
-    tol_mil: float                      # tightest (min) member match tolerance
+    members: tuple[PairSpec, ...]
+    tol_mil: float
 
 
 def length_groups(pairs: list[PairSpec]) -> list[LengthGroup]:
-    """Bucket pairs by interface into deterministic length-match groups."""
     by_iface: dict[str, list[PairSpec]] = {}
     for p in pairs:
         by_iface.setdefault(p.interface, []).append(p)
@@ -154,37 +100,26 @@ def length_groups(pairs: list[PairSpec]) -> list[LengthGroup]:
     return groups
 
 
-# ---- PCB net class of a pair ------------------------------------------------------
-# Reuse the SAME class names pcb.py / constraints.py assign so the .dru rules
-# (keyed on A.NetClass) line up with the net_settings classes KiCad loads.
-
 def net_class_of(kind: str, impedance: int) -> str:
     from schgen.generate.constraints import _net_class
     return _net_class(kind, impedance, None)
 
 
-# ---- the model -------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class SiModel:
-    pairs: tuple[PairSpec, ...]               # every diff pair (spec + present)
+    pairs: tuple[PairSpec, ...]
     groups: tuple[LengthGroup, ...]
-    declared: dict                            # frozenset -> (sheet, kind, imp)
-    missing_in_spec: tuple[frozenset[str], ...]   # declared but no spec row
-    missing_in_schematic: tuple[PairSpec, ...]    # spec row, not declared
+    declared: dict
+    missing_in_spec: tuple[frozenset[str], ...]
+    missing_in_schematic: tuple[PairSpec, ...]
 
 
 def build_model(sheets) -> SiModel:
     declared = declared_pairs(sheets)
-    # The vendored target table is REQUIRED exactly when the project declares
-    # diff pairs (a declared pair with no researched target is the real error);
-    # a project with zero declared pairs has nothing to constrain — its table
-    # is legitimately absent, never a crash.
     spec = ([] if not declared and not SI_SPEC_PATH.exists()
             else load_si_spec())
     spec_by_nets = {s.nets: s for s in spec}
 
-    # pairs we emit = spec rows whose nets are present in the schematic.
     emitted = [s for s in spec if s.nets in declared]
     missing_in_schematic = tuple(s for s in spec if s.nets not in declared)
     missing_in_spec = tuple(sorted(
@@ -198,19 +133,10 @@ def build_model(sheets) -> SiModel:
                    missing_in_schematic=missing_in_schematic)
 
 
-# ---- .kicad_dru emission ----------------------------------------------------------
-# We APPEND to the board .kicad_dru that pcb.write_dru already wrote (net-class
-# geometry). Here we add SI rules: per-pair intra-pair skew (matched-length
-# within the pair) and per-GROUP inter-pair length match. KiCad expresses these
-# with (constraint skew ...) on a diff-pair condition and (constraint length
-# ...) grouped via net-class. We key on the pair's net names so the rule is
-# unambiguous regardless of how the router names the coupled pair.
-
 _SI_BANNER = "# ==== SI CONSTRAINTS (schgen/generate/si_constraints.py) ===="
 
 
 def _dru_rules(model: SiModel) -> list[str]:
-    """The SI rule block to append to the board .kicad_dru."""
     L: list[str] = [
         "",
         _SI_BANNER,
@@ -221,7 +147,6 @@ def _dru_rules(model: SiModel) -> list[str]:
         "# KiCad DRC once the pairs are routed. NOT routing — constraints only.",
         "",
     ]
-    # per-pair intra-pair skew (P vs N matched length)
     for p in model.pairs:
         skew_mm = round(p.intra_pair_skew_mil * MM_PER_MIL, 4)
         L += [
@@ -236,12 +161,6 @@ def _dru_rules(model: SiModel) -> list[str]:
             ")",
             "",
         ]
-    # per-group inter-pair length match: a (constraint skew ...) keyed on every
-    # member net of the group. KiCad's `skew` constrains the *relative* length
-    # (delay) difference among all nets matching the condition — i.e. matched
-    # length across the port/bus — which is exactly the inter-pair tolerance.
-    # (We use skew, not an absolute `length` max, so it bounds the spread, not
-    # each net's total length.)
     for g in model.groups:
         tol_mm = round(g.tol_mil * MM_PER_MIL, 4)
         nets = []
@@ -261,19 +180,13 @@ def _dru_rules(model: SiModel) -> list[str]:
 
 
 def _safe(net: str) -> str:
-    """A KiCad-rule-name-safe token from a net name (no quotes/spaces/+/-)."""
     return re.sub(r"[^A-Za-z0-9]+", "_", net).strip("_")
 
 
 def append_dru(model: SiModel, dru_path: Path) -> Path:
-    """Append the SI rule block to the board .kicad_dru. Idempotent: any prior
-    SI block (from a previous run) is stripped first, so re-running yields a
-    byte-identical file (determinism) and never duplicates rules."""
     base = dru_path.read_text() if dru_path.exists() else "(version 1)\n"
-    # strip a previously-appended SI block (everything from the banner on)
     idx = base.find(_SI_BANNER)
     if idx != -1:
-        # back up to the blank line that precedes the banner, if any
         base = base[:idx].rstrip("\n")
     else:
         base = base.rstrip("\n")
@@ -282,8 +195,6 @@ def append_dru(model: SiModel, dru_path: Path) -> Path:
     dru_path.write_text(text)
     return dru_path
 
-
-# ---- SI_CONSTRAINTS.md emission ---------------------------------------------------
 
 def _md(model: SiModel) -> str:
     n_pairs = len(model.pairs)
@@ -344,7 +255,6 @@ def _md(model: SiModel) -> str:
             f"| {g.gid} | {g.interface} | {len(g.members)} "
             f"| +/-{g.tol_mil:g} mil ({tol_mm} mm) | {mem} |")
 
-    # honesty footer: anything declared-but-unspecced or specced-but-undeclared
     if model.missing_in_spec or model.missing_in_schematic:
         lines += ["", "## Notes / coverage gaps", ""]
         for fs in model.missing_in_spec:
@@ -364,14 +274,12 @@ def write_md(model: SiModel, md_path: Path) -> Path:
     return md_path
 
 
-# ---- the assertion hook (light gate) ----------------------------------------------
-
 @dataclass(frozen=True)
 class SiVerdict:
     ok: bool
     n_pairs: int
     n_groups: int
-    uncovered: tuple[frozenset[str], ...]     # declared pair w/ no emitted rule
+    uncovered: tuple[frozenset[str], ...]
 
     def summary(self) -> str:
         head = (f"SI constraints: {self.n_pairs} diff pairs, "
@@ -383,10 +291,6 @@ class SiVerdict:
 
 
 def check(model: SiModel) -> SiVerdict:
-    """Assertion: every schematic-declared diff pair has an emitted SI
-    constraint (i.e. a matching si_spec row). Returns a verdict; never raises,
-    so it cannot flip an existing gate's PASS/FAIL. ``missing_in_spec`` are
-    declared pairs with no spec row -> uncovered (the only failure)."""
     emitted_nets = {p.nets for p in model.pairs}
     declared_nets = set(model.declared)
     uncovered = tuple(sorted(
@@ -396,11 +300,7 @@ def check(model: SiModel) -> SiVerdict:
                      n_groups=len(model.groups), uncovered=uncovered)
 
 
-# ---- entry point ------------------------------------------------------------------
-
 def generate(sheets=None) -> dict:
-    """Build the SI model from the carrier sheets, append the .kicad_dru rules,
-    write SI_CONSTRAINTS.md, return a result dict (paths, counts, verdict)."""
     if sheets is None:
         from schgen.core.link import all_subsystem_paths, load_subsystem
         sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]

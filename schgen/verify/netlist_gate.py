@@ -1,19 +1,3 @@
-"""The unfakeable electrical gate: declared netlist == KiCad's extracted netlist.
-
-Runs ``kicad-cli sch export netlist`` on the EMITTED sheet and compares the
-result to the :class:`schgen.model.Circuit`, pin by pin, net by net.
-
-Failure modes this catches (all seen in the failed generator):
-- SHORT: one extracted net carries pins from >=2 declared nets.
-- OPEN: a declared net's pins split across >=2 extracted nets, or a pin with a
-  declared net lands on a single-pin ``unconnected-(...)`` net.
-- NC-CHEAT: a No-Connect emitted on a pin that has a declared net (KiCad then
-  reports the pin "connected" — ERC passes while the circuit is broken).
-- MISSING/EXTRA part or pin.
-
-ERC=0 is necessary but NOT sufficient; this gate is the electrical truth.
-"""
-
 from __future__ import annotations
 
 import subprocess
@@ -50,13 +34,6 @@ class GateResult:
 
 
 def extract_netlist(sch_path: Path) -> dict[str, list[PinRef]]:
-    """KiCad's own view of the emitted sheet: net name -> pins.
-
-    The kicad-cli output goes into a :func:`tempfile.TemporaryDirectory` that
-    is removed on exit — the old ``NamedTemporaryFile(delete=False)`` was never
-    unlinked and leaked one stale ``.net`` per build (2600+ observed in the
-    audit), growing without bound.
-    """
     with tempfile.TemporaryDirectory(prefix="schgen_netlist_") as td:
         out = Path(td) / "extracted.net"
         proc = subprocess.run(
@@ -79,16 +56,10 @@ def extract_netlist(sch_path: Path) -> dict[str, list[PinRef]]:
 
 
 def _norm(name: str) -> str:
-    """KiCad prefixes sheet-local nets with '/'; strip for comparison."""
     return name.lstrip("/")
 
 
 def _dead_two_terminal(circuit: Circuit) -> list[str]:
-    """Device:C/R/L parts with EVERY terminal declared on one net — electrically
-    dead (a bypass cap shorting its own pads, a resistor jumpered to itself).
-    DECLARED-side, needs no extraction: declared-vs-extracted equivalence stays
-    green for this (one net -> no SHORT, no split -> no OPEN, name matches), so
-    the historical 'capshort' class slips every other branch (LAW 0)."""
     ppins: dict[str, set[str]] = {}
     pnets: dict[str, set[str]] = {}
     for net in circuit.nets.values():
@@ -110,13 +81,11 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
     res = GateResult(ok=True)
     extracted = extract_netlist(sch_path)
 
-    # pin -> declared net name
     declared_of: dict[PinRef, str] = {}
     for net in circuit.nets.values():
         for pr in net.pins:
             declared_of[pr] = net.name
 
-    # pin -> extracted net name (skip power-symbol/PWR_FLAG virtual parts)
     extracted_of: dict[PinRef, str] = {}
     for name, pins in extracted.items():
         for pr in pins:
@@ -124,7 +93,6 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
                 continue
             extracted_of[pr] = name
 
-    # ---- SHORTS: one extracted net carrying >=2 declared nets ---------------
     for name, pins in extracted.items():
         decl = {declared_of[pr] for pr in pins if pr in declared_of}
         if len(decl) >= 2:
@@ -133,13 +101,11 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
                                 for pr in pins if pr in declared_of)
             res.shorts.append(f"extracted {name!r} merges {sorted(decl)} [{members}]")
 
-    # ---- DEAD 2-TERMINAL: both pins of a passive on ONE net (capshort) ------
     dead = _dead_two_terminal(circuit)
     if dead:
         res.ok = False
         res.shorts += dead
 
-    # ---- OPENS: declared net split / pin on unconnected-* -------------------
     for net in circuit.nets.values():
         ext_names = {extracted_of.get(pr) for pr in net.pins}
         ext_names.discard(None)
@@ -152,11 +118,6 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
             res.opens.append(
                 f"declared {net.name!r}: extracted as {sorted(ext_names)}"
                 + (f", stranded: {[str(p) for p in stranded]}" if stranded else ""))
-        # single-pin PORT/rail nets: the OPEN branch above needs >=2 pins, so a
-        # LONE POWER/GROUND/PORT pin that extracts bare (unconnected-* / absent)
-        # slips it. A real rail pin always carries its power symbol or hier
-        # label, so 'bare' here is a genuine open (e.g. a stranded mounting-hole
-        # CHASSIS_GND pad, or a single-pin rail whose symbol never emitted).
         if net.net_class in (NetClass.PORT, NetClass.POWER, NetClass.GROUND):
             for pr in net.pins:
                 e = extracted_of.get(pr) or ""
@@ -166,13 +127,6 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
                         f"{net.net_class.name} {net.name!r}: {pr} emitted bare "
                         f"({e!r})")
 
-    # ---- NC-CHEAT: no_connect in the emitted file on a declared-net pin -----
-    # KiCad reports an NC'd pin as connected; detect via the source s-expr.
-    # POSITIONAL check (the original count-based check had slack whenever
-    # placement legally emits fewer NC markers than declared NC pins, e.g.
-    # stacked pads — `schgen selftest` proved a stray-NC mutant survived it):
-    # every (no_connect) must land EXACTLY on a pin, and that pin must be
-    # net-free. An NC on a netted pin, or floating in space, FAILS.
     text = Path(sch_path).read_text(errors="ignore")
     if "(no_connect" in text:
         cheats = _emitted_nc_cheats(circuit, text)
@@ -180,13 +134,6 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
             res.ok = False
             res.nc_cheats += cheats
 
-    # ---- NAME discipline: POWER/GROUND/PORT nets must keep their names ------
-    # A declared rail/port that extracts as KiCad's auto-name 'Net-(Ref-Pin)'
-    # is a LOST-NAME rail: the power symbol / hier label did not attach, so the
-    # net survives unnamed. The old check exempted 'Net-(' (and `not in e`),
-    # which masked exactly that failure — a POWER/GROUND/PORT net ALWAYS carries
-    # an explicit name/symbol, so an auto-name extraction is never legitimate
-    # here (DEF-I gate hardening; LAW 4 — never exempt, flag it).
     for net in circuit.nets.values():
         if net.net_class in (NetClass.POWER, NetClass.GROUND, NetClass.PORT):
             for pr in net.pins:
@@ -200,12 +147,10 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
                         + (" [LOST-NAME rail: power symbol/label did not attach]"
                            if lost else ""))
 
-    # ---- parts present ------------------------------------------------------
     extracted_refs = {pr.ref for pins in extracted.values() for pr in pins
                       if not pr.ref.startswith("#")}
     for ref in circuit.parts:
         if ref not in extracted_refs:
-            # a part can be absent from nets only if ALL its pins are NC
             all_nc = all(PinRef(ref, pr.pin) in circuit.nc_pins
                          for pr in circuit.nc_pins if pr.ref == ref) and any(
                          pr.ref == ref for pr in circuit.nc_pins)
@@ -216,17 +161,6 @@ def check(circuit: Circuit, sch_path: Path) -> GateResult:
 
 
 def _emitted_nc_cheats(circuit: Circuit, sch_text: str) -> list[str]:
-    """Positional no_connect audit, self-contained from the emitted file.
-
-    Pin positions are recomputed from the file's own embedded ``lib_symbols``
-    + each instance's ``(at x y rot)`` through :func:`pin_page_position` — the
-    ONE coordinate transform in the program — so the check needs no library
-    search path and cannot drift from what KiCad sees. Flags:
-    - an NC marker sitting on a pin that carries a DECLARED net (the cheat:
-      NC is an authoring decision, never a layout fallback), and
-    - an NC marker that lands on no pin at all (a stray marker is emit junk).
-    An NC on an author-declared nc() pin is the only legal case.
-    """
     doc = sexpr.loads(sch_text)
     nc_pts = []
     for n in sexpr.find_all(doc, "no_connect"):
@@ -235,7 +169,6 @@ def _emitted_nc_cheats(circuit: Circuit, sch_text: str) -> list[str]:
     if not nc_pts:
         return []
 
-    # pin offsets per embedded lib_id (units are nested (symbol ...) blocks)
     lib_pins: dict[str, list[Pin]] = {}
     for block in sexpr.find_all(sexpr.find(doc, "lib_symbols") or [], "symbol"):
         pins: list[Pin] = []
@@ -256,7 +189,6 @@ def _emitted_nc_cheats(circuit: Circuit, sch_text: str) -> list[str]:
         walk(block)
         lib_pins[str(block[1])] = pins
 
-    # page position of every emitted instance pin
     pin_at: dict[tuple[float, float], list[PinRef]] = {}
     for inst in sexpr.find_all(doc, "symbol"):
         lid = sexpr.find(inst, "lib_id")

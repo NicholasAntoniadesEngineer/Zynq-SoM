@@ -1,17 +1,3 @@
-"""Generated bring-up manual (PLAN.md round 4).
-
-``schgen manual`` (also run by ``schgen board``) writes
-``carrier/docs/BRINGUP.md`` — the ordered bring-up procedure DERIVED from
-the authored netlists (DIP positions, EN cells, regulator chain, module
-load switches, monitors, debug headers all read programmatically via
-:mod:`schgen.bringup_facts`); narrative context (current budgets, PD
-behaviour, decode tables) is cited to its dossier per section. The manual
-cannot drift from the board: regenerating after a netlist change rewrites
-every derived fact.
-
-Deterministic: same inputs -> byte-identical output (no timestamps).
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -29,9 +15,6 @@ from schgen.generate import bringup_facts as bf
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = PROJECT_ROOT / "docs" / "BRINGUP.md"
 
-# The staged DIP-by-DIP procedure IS this document: every stage reads the
-# bring-up complement's netlists. A project without them has no such manual —
-# the board build SKIPs it loudly (missing_requirements), never crashes.
 REQUIRED_SHEETS = ("power", "power_mon", "bringup_rails", "bringup_en",
                    "bringup_en_modules", "bringup_modules", "debug_boot")
 
@@ -39,9 +22,7 @@ REQUIRED_SHEETS = ("power", "power_mon", "bringup_rails", "bringup_en",
 def missing_requirements() -> list[str]:
     return missing_subsystems(REQUIRED_SHEETS)
 
-# PLAN.md round-2 locked input contract (cited, not derived):
 PD_CONTRACT = "20 V / 3 A (60 W) USB-C PD"
-# power_mon dossier table 1 rail budgets (cited):
 RAIL_BUDGET_MA = {"+5V": 3000, "+3V3": 3000, "+1V8": 600, "+VIN": 3000}
 
 
@@ -51,8 +32,6 @@ def _load_all() -> dict[str, Circuit]:
 
 
 def _test_points(circuits: dict[str, Circuit]) -> dict[str, list[str]]:
-    """net -> ['sheet.TP1', ...] for any landed test points (a sheet part
-    with a TP reference prefix or a TestPoint lib symbol)."""
     tps: dict[str, list[str]] = {}
     for name, c in sorted(circuits.items()):
         for ref, part in sorted(c.parts.items()):
@@ -71,11 +50,10 @@ def _probe(net: str, tps: dict[str, list[str]]) -> str:
 
 
 def _always_on(circuits: dict[str, Circuit]) -> list[tuple[str, str]]:
-    """(sheet, 'U1 FUSB302BMPX, ...') for every IC powered from +3V3_SC."""
     rows = []
     for name, c in sorted(circuits.items()):
         if name.startswith("som_j"):
-            continue                       # the connectors themselves
+            continue
         refs = []
         for net in c.nets.values():
             if net.name != "+3V3_SC":
@@ -121,7 +99,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     tps = _test_points(circuits)
     stm32 = bf.stm32_pin_map()
 
-    # monitor channel per rail: rail (IN- side) -> (monitor index, channel)
     mon_of: dict[str, str] = {}
     for k, m in enumerate(monitors, 1):
         for ch, (inp, inn) in sorted(m.channels.items()):
@@ -154,7 +131,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
              "(carrier/research/bringup_power_gating.md, section 1).")
     L.append("")
 
-    # ---- stage 0 ---------------------------------------------------------------
     L.append("## Stage 0 — power-off checks")
     L.append("")
     L.append("Sources: `carrier/subsystems/pd_input/pd_input.py`, "
@@ -182,7 +158,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("   the module.")
     L.append("")
 
-    # ---- stage 1: first power -------------------------------------------------
     L.append("## Stage 1 — first power: PD negotiation, always-on domain")
     L.append("")
     L.append("Sources: `carrier/subsystems/pd_input/pd_input.py`, "
@@ -246,7 +221,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
              "section 2).")
     L.append("")
 
-    # ---- stage 2: rails ---------------------------------------------------------
     L.append("## Stage 2 — rails, one DIP at a time")
     L.append("")
     L.append("Sources: `carrier/subsystems/bringup_rails/bringup_rails.py` (SW1 map), "
@@ -297,7 +271,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
             L.append(f"- Telemetry: {mon}.")
         L.append("")
 
-    # ---- stage 3: user IO -------------------------------------------------------
     user_gate = next((g for g in gates if g.module == "USER_LED"), None)
     if user_gate is not None:
         cell = mod_cells[user_gate.enable]
@@ -317,7 +290,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
                  f"(active-LOW) and stay dark until gateware drives them.")
         L.append("")
 
-    # ---- stage 4: modules --------------------------------------------------------
     L.append("## Stage 4 — module load switches, one DIP at a time")
     L.append("")
     L.append("Sources: `carrier/subsystems/bringup_rails/bringup_rails.py` (SW2/SW6 "
@@ -343,7 +315,7 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
             continue
         sw, pos = dip_of[cell.dip_net]
         if g.module == "USER_LED":
-            continue                      # stage 3 above (SW1 spare)
+            continue
         cons = _consumers(circuits, g.rail_out, bringup_sheets)
         L.append(f"| `{sw}` pos {pos} | {g.module} | `{g.rail_in}` | "
                  f"`{g.rail_out}` | {g.ilim_ma} mA | "
@@ -370,7 +342,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
              "firmware`).")
     L.append("")
 
-    # ---- stage 5: boot + debug -----------------------------------------------------
     L.append("## Stage 5 — boot modes, JTAG, SWD")
     L.append("")
     L.append("Sources: `carrier/subsystems/debug_boot/debug_boot.py`, "
@@ -438,7 +409,6 @@ def generate(out: Path = DEFAULT_OUT) -> Path:
     L.append("verify QSPI/SD boots per the decode table above.")
     L.append("")
 
-    # ---- stage 6: board services (+3V3_AUX manual expansion) ---------------
     L.append("## Stage 6 — board services (+3V3_AUX expansion, optional)")
     L.append("")
     L.append("Sources: `carrier/subsystems/board_aux/board_aux.py`, "

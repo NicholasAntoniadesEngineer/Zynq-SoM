@@ -1,24 +1,3 @@
-"""devkit — build the examples/devkit_mini board from the REUSABLE subsystems.
-
-Proves the library architecture end-to-end: examples/devkit_mini/devkit_mini.py
-binds four project-agnostic ``subsystems/<name>/`` packages (usb_pd, usbc_otg,
-microsd, uart_bridge) to a SECOND board's net names via thin META adapters, with
-ZERO changes to the library. This builds that composition into real KiCad output
-(per-sheet schematics + hierarchy root + per-sheet renders) and PROVES the
-netlist with the same two oracles the carrier uses — the board netlist gate
-(build_board) and the geometry-only connected-components short/open check
-(cc_gate, LAW 0).
-
-It reuses the SAME generic machinery as the carrier (`place.place_and_route`,
-`output.emit`, `generate.board.build_board`, `verify.cc_gate`,
-`output.render.render_sheet_to_png`) — no carrier code is copied. The
-carrier-specific steps (the SoM DF40 contract, carrier/sheet_index.json, the
-carrier_structure gate, the SoM-centered floorplan) simply do not apply: the
-devkit has no SoM, so its sheets just share the board rails
-(+3V3_MINI / +5V_MINI / +VBUS_MINI / GND). cmd_board is left untouched, so the
-carrier output stays byte-identical.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -29,8 +8,6 @@ DEVKIT_DIR = REPO_ROOT / "examples" / "devkit_mini"
 
 
 def build_devkit(render: bool = True) -> bool:
-    """Build examples/devkit_mini -> schematics + hierarchy + renders, and prove
-    the netlist (board gate + cc gate). Returns True iff every gate passes."""
     from examples.devkit_mini import devkit_mini
     from schgen.core.symbols import Library
     from schgen.generate import board as board_mod
@@ -46,7 +23,6 @@ def build_devkit(render: bool = True) -> bool:
     for d in (sch_dir, ren_dir, rep_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    # the project's bound subsystem circuits (lib subsystem + this board's META)
     sheets = [SimpleNamespace(name=name, circuit=circ)
               for name, circ in devkit_mini.subsystem_circuits()]
 
@@ -72,15 +48,12 @@ def build_devkit(render: bool = True) -> bool:
         ok_all = ok_all and net_res.ok
         print(f"  {s.name}: netlist={'PASS' if net_res.ok else 'FAIL'}")
 
-    # LAW-0 short/open proof, geometry-only (independent of kicad-cli)
     cc_res = cc_gate.check_board(cc_prepared, lib)
     (rep_dir / "cc_gate.txt").write_text(cc_res.summary() + "\n")
     ok_all = ok_all and cc_res.ok
     print(f"  CC GATE: {'PASS' if cc_res.ok else 'FAIL'} "
           f"(0 shorts / 0 opens -> {rep_dir / 'cc_gate.txt'})")
 
-    # the openable hierarchy project + the board netlist gate (no SoM, no
-    # sheet_index — refdes bands fall back to sheet order)
     board_ok = board_mod.build_board(
         sheets, lib, DEVKIT_DIR, placements=placements,
         root_name="devkit_mini", sheet_subdir="schematic", reports_dir=rep_dir)
@@ -93,7 +66,7 @@ def build_devkit(render: bool = True) -> bool:
             try:
                 render_sheet_to_png(sch_dir / f"{s.name}.kicad_sch",
                                     ren_dir / f"{s.name}.png")
-            except Exception as exc:  # noqa: BLE001 — render is best-effort
+            except Exception as exc:  # noqa: BLE001
                 print(f"  render {s.name}: {exc}")
         print(f"  renders -> {ren_dir}/<name>.png")
 

@@ -1,33 +1,3 @@
-"""QUANTIZATION REGISTRY — every live geometry-touching snap / round / pad /
-credit in the placement pipeline is a NAMED transform defined HERE and called
-by name at its site (governance U1).
-
-Three waves of archaeology traced the same defect class to inline geometry
-perturbations no gate input had modelled (the zone ``_gridify`` snap, the
-blanket ``+GRID`` credit, the ``_pack_edges`` ``_r5`` snap, the ``+_SEAT_SLIDE``
-apron pad — all since retired). The rule this module enforces: a transform that
-quantizes a position, clearance, reservation or outline is not an anonymous
-arithmetic expression — it is a registered mechanism with a value, a basis and
-a proof class. The census lint (``schgen/verify/quantize_census.py``) scans
-``schgen/generate/**`` for raw quantization vocabulary outside this registry
-and HARD-FAILS the board on any NEW site vs its committed (empty) baseline.
-
-Proof classes:
-
-* ``pre-proof``        — applied BEFORE the proofs that judge the result (the
-                         gates/DRC measure the already-quantized geometry), so
-                         the transform can never invalidate a passed proof.
-* ``proof-preserving`` — strictly conservative: it only ever GROWS a
-                         reservation or SHRINKS an allowance, so every
-                         previously proven bound still holds.
-* ``re-validated``     — the perturbed result is re-checked by the applying
-                         stage itself (committed only if still legal, else
-                         retreated/aborted).
-
-Every function below replicates its historical call-site arithmetic
-bit-for-bit — routing through the registry is proven INERT by board
-byte-identity. Deterministic, stateless, no caching.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,47 +1,3 @@
-"""PLACEMENT-CONTRACT gate — enforce a subsystem's datasheet layout contract on
-the EMITTED board.
-
-The defect this closes is invisible to ERC, DRC, the netlist gate AND the LAW-5
-ratsnest/grouping gate: the PCB packer sorts a subsystem's passives by footprint
-SIZE, so a buck's 100 nF hot-loop cap, its bulk input caps and its whole FB
-divider land in a value-sorted grid on the BOTTOM side, far from the IC and its
-switch node. The netlist is perfectly connected, every courtyard is on-board and
-the cluster is contiguous — so no existing gate fires — yet the hot loop is
-smeared across vias and the FB sense sits under the switching node. The layout
-is electrically wrong in exactly the way the datasheet's layout section forbids.
-
-A PLACEMENT CONTRACT (``subsystems/<name>/placement_contract.py``) encodes those
-requirements as data — per structure (hot loop, bulk-in, bulk-out, SW node, FB
-cluster, boot, VCC, BIAS, RT, LDO, same-side), each with a distance limit and a
-``basis`` string (an SNVSBD5D citation or ``judgment:<value>``). THIS gate reads the
-contract, maps its LIBRARY refs to the emitted board refs via the same per-sheet
-band rename the netlist uses, and checks every structure against the placed
-footprint geometry, reporting each violation with its refs/pins, the measured mm
-and the basis.
-
-DISTANCE MEASURE: pad-edge-to-pad-edge. Every pad of every relevant footprint is
-transformed to an axis-aligned BOUNDING BOX in the board page frame (the
-footprint placement rotation in KiCad's true CLOCKWISE / +y-down sign,
-SIDE-INDEPENDENT — the emitted board applies NO F->B mirror to a bottom part's
-local coordinates; the SAME transform ``_inst_pad_geom`` / ``_rot_pad_bbox``
-use, so the boxes land where KiCad's copper does, pad size and
-rotation included). The distance between two pads is the gap between their boxes
-(0 if they overlap). A part-to-pin distance is the MIN over the part's pads to
-the target pin's box; a part-to-part distance the MIN over both pad sets.
-
-HOT-LOOP is EXISTENTIAL PER PIN-PAIR: each buck's VIN/PGND pin-pair must have
-SOME contract-listed 100 nF cap within the limit, on the same side as the IC.
-The interchangeable HF caps are never checked per-ref (a valid swapped layout
-must pass) — the gate checks the electrical requirement, not the ref binding.
-
-LAW 4 (strict, no softening): a structure that fails is FIXED in the placer /
-template (place the part where the datasheet requires), never waived here and
-never made configurable to weaken it. Every measured distance is reported AS A
-NUMBER in the verdict so a regression shows as a number, not a silent binary.
-
-The module has NO import side effects and touches no global state.
-"""
-
 from __future__ import annotations
 
 import math
@@ -58,65 +14,15 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SUBSYSTEMS_DIR = _REPO_ROOT / "subsystems"
 _PROJECT_SUBSYSTEMS_DIR = PROJECT_ROOT / "subsystems"
 
-# The two roots a placement contract can live under, tried in order: the
-# portable top-level library first, then the ACTIVE PROJECT's local package
-# (E1). A sheet name is unique across both (the sheet_index / discovery order
-# proves it), so a name resolves to at most one contract. The project root is
-# imported BY FILE PATH (contracts are plain data): a package-name import here
-# would bleed one project's contracts into another under --project.
 _CONTRACT_ROOTS: tuple[tuple[Path, str | None], ...] = (
     (_SUBSYSTEMS_DIR, "subsystems"),
     (_PROJECT_SUBSYSTEMS_DIR, None),
 )
 
-# ENGINE-WIRED sheets. A placement contract that merely EXISTS is authored data;
-# it is only ENGINE-ACTIVE (drives the stage-template placer + the emit gate
-# chain) once its sheet is listed here. This mirrors the SAME "power is the pilot"
-# scoping already hard-wired in two peers: ``stage_templates.build_zone`` returns
-# None unless ``subsystem == "power"``, and ``emit`` checks ``sheet_name="power"``.
-# WHY: ``load_contract`` is consumed by the placer's same-side override (it forces
-# every contract member to the IC side BEFORE packing). Until a sheet's TEMPLATE
-# is wired, that override would perturb an un-templated zone's geometry for no
-# gain (34 passives flip bottom->top, inflating the board) — so a contract stays
-# INERT to the placer/emit until it is wired here. The FULL set of authored
-# contracts is still discoverable for offline verification via ``discover_contract``
-# / ``check_all`` (the red-on-before proof), which do NOT consult this gate.
-#
-# ``usb_pd`` (D11 wiring): the FUSB302B bypass/CC-filter network is a PROXIMITY-only
-# contract driven by the generic proximity-cluster template (stage_templates
-# ``_build_proximity_zone``); all 6 parts are contracted so its stage template is
-# active and its intra-zone gate + external near_max (D11 edge-gap) are enforced.
-#
-# ``ethernet`` (T1 P7a wave): the Pulse HX5008NL magnetics (T1) with its media-side
-# Bob-Smith termination (R1-R4/C1-C4 at MCT pins 24/21/18/15) + the C5 barrier cap.
-# A PROXIMITY-only contract, same builder as usb_pd, with the media-row FACING turn
-# (stage_templates ``_apply_facing`` via the ``near`` anchor's edge) so T1's centre-
-# tap row faces the RJ45 jack. Its external near_max (rj45 edge-gap <=20mm, D11) and
-# far (power >=10mm) terms graduate from advisory to gated here; ethernet joins the
-# near_max L4-EXEMPT set by construction (``wired_term_participants``).
 _WIRED_SHEETS: frozenset[str] = _project_spec().wired_sheets
 
 
-# --- contract registry ------------------------------------------------------------
-# ``discover_contract(sheet)`` resolves the plain-data CONTRACT dict for ANY sheet
-# that carries a ``placement_contract.py`` under either root (E1) — pure authored
-# data, no wiring gate. ``load_contract(sheet)`` is the ENGINE-FACING entry: it
-# returns the contract ONLY for an engine-WIRED sheet (see ``_WIRED_SHEETS``), so
-# the placer/emit stay byte-identical to the pilot until a sheet is wired. Both
-# import ``<root>.<sheet>.placement_contract`` and read its ``CONTRACT`` constant.
-
 def discover_contract(sheet_name: str) -> dict | None:
-    """Resolve ``<root>/<sheet>/placement_contract.py``'s ``CONTRACT`` dict for
-    ANY authored contract (no wiring gate), or None if no root carries one. Both
-    the portable ``subsystems/`` library and the ACTIVE PROJECT's local
-    ``<project>/subsystems/`` package are searched (E1) — a project without
-    local contracts has none; another project's contracts are NEVER consulted.
-    Used by ``check_all`` and the offline red-on-before proof — sheets need NOT
-    be engine-wired to be discovered here. Every discovered contract passes the
-    load-time PIN-NAME chokepoint (:func:`validate_contract_pins`, memoised per
-    sheet) — a pin that is not a footprint pad id raises
-    :class:`ContractPinError` HERE, so both the gate and the stage-template
-    solver inherit the guard."""
     import importlib
     import importlib.util
     for root_dir, pkg_prefix in _CONTRACT_ROOTS:
@@ -140,29 +46,13 @@ def discover_contract(sheet_name: str) -> dict | None:
 
 
 def load_contract(sheet_name: str) -> dict | None:
-    """ENGINE-FACING loader: the CONTRACT dict for ``sheet_name`` IFF it is an
-    engine-WIRED sheet (``_WIRED_SHEETS``), else None. This keeps the stage-template
-    placer and the emit gate chain scoped to the pilot exactly as
-    ``stage_templates.build_zone`` / ``emit`` already are — an authored-but-unwired
-    contract is INERT here (it neither perturbs the placer nor gates the build)
-    until its template is wired. Use ``discover_contract`` to read a contract
-    regardless of wiring (offline verification / the red-on-before proof)."""
     if sheet_name not in _WIRED_SHEETS:
         return None
     return discover_contract(sheet_name)
 
 
-# --- pin-name validation (the load-time chokepoint) --------------------------------
-
 class ContractPinError(ValueError):
-    """A contract structure names a pin that is not a pad id of its part's
-    resolved footprint. Authors naturally write symbol pin NAMES ("ILIM",
-    "VDD", "+"); the gate and the stage-template solver consume FOOTPRINT pad
-    ids ("11", "4", "2") — a bad name previously surfaced only as a bare
-    ``ValueError: min() iterable argument is empty`` deep inside candidate
-    generation (``stage_templates._pin_box``). Raised at contract LOAD by
-    :func:`validate_contract_pins` with the sheet, structure index/type, part,
-    the missing pin and the sorted available pad ids."""
+    pass
 
 
 _PIN_FIELDS: dict[str, tuple[tuple[str, str], ...]] = {
@@ -184,8 +74,6 @@ _PIN_VALIDATED: set[str] = set()
 
 
 def _named_pins(v) -> list[str]:
-    """Flatten a pin-field value (str | list[str] | nested pin_pairs) to the
-    named pin strings."""
     if isinstance(v, str):
         return [v]
     out: list[str] = []
@@ -195,20 +83,6 @@ def _named_pins(v) -> list[str]:
 
 
 def validate_contract_pins(sheet_name: str, contract: dict) -> None:
-    """Assert every pin the contract's structures name (``anchor_pins``, the
-    typed fields in ``_PIN_FIELDS``, ``min_from[].pin``) EXISTS in the pad set
-    of the named part's resolved footprint (the SAME ``_pad_boxes`` pad ids the
-    gate measures and the solver seats against). ``_PIN_FIELDS`` maps each
-    structure type to its (part-ref key, pin-field key) pairs — the exact pin
-    selections the gate's ``check`` branches and the solver's structure
-    translations (``_buck_pins`` / ``_lay_buck`` / ``_build_ldo_stage`` /
-    ``_solve_contract``) read, each validated against the PART the field
-    measures to (``bulk_out.inductor_out_pin`` -> the inductor,
-    ``fb_cluster.foreign_sw_pin`` -> the foreign IC). A part that does not
-    resolve — absent from the subsystem netlist, no/unresolvable footprint —
-    is SKIPPED: soft-missing refs keep their existing unresolved handling
-    downstream; only a bad PIN NAME on a resolvable part raises
-    :class:`ContractPinError`."""
     from schgen.core.link import load_subsystem
     from schgen.generate.pcb.footprint import resolve_mod
 
@@ -253,20 +127,11 @@ def validate_contract_pins(sheet_name: str, contract: dict) -> None:
 
 
 def project_zone_names() -> frozenset[str]:
-    """Sheet names of every subsystem the ACTIVE PROJECT instantiates (the
-    discovery set) — the resolution domain for a contract's EXTERNAL terms. A
-    term endpoint outside this set (and not the ``@som`` token) names a
-    subsystem this project does not compose, so the term is N/A for the
-    project — distinct from a project subsystem that fails to PLACE, which
-    stays a strict UNRESOLVED failure (E1 project isolation)."""
     from schgen.core.link import all_subsystem_paths
     return frozenset(p.stem for p in all_subsystem_paths())
 
 
 def discover_all() -> dict[str, dict]:
-    """Every authored contract under both roots: sheet -> CONTRACT dict (T1 P5
-    thin helper; wired or not — discovery, no gating). Deterministic: sorted by
-    the subsystem discovery order's stems."""
     from schgen.core.link import all_subsystem_paths
     out: dict[str, dict] = {}
     for p in sorted(all_subsystem_paths()):
@@ -277,21 +142,11 @@ def discover_all() -> dict[str, dict]:
 
 
 def coverage(model) -> dict:
-    """Check EVERY authored contract (wired OR not) against the emitted ``model``,
-    using the SAME intra-zone measurement as the hard gate (``check``). Returns
-    ``sheet -> PlacementContractResult``. The hard gate stays scoped to
-    ``_WIRED_SHEETS``; this is the ACCOUNTABILITY layer — it surfaces the UN-wired
-    contracts whose authored SI/PI intent the placer does not yet enforce, so a
-    silently-violated decoupling/ESD proximity is VISIBLE in every build instead
-    of being an inert comment. Deterministic (discover_all is sorted)."""
     return {sheet: check(model, sheet, contract=c)
             for sheet, c in sorted(discover_all().items())}
 
 
 def coverage_report(cov: dict) -> tuple[str, int, int, int]:
-    """Format ``coverage()`` -> (text, n_wired, n_inert_met, n_inert_violated).
-    One line per authored contract: wired(gated) / inert-met / inert-VIOLATED +
-    the worst intra-zone violation. The tally is the enforcement-gap headline."""
     wired = met = viol = 0
     detail: list[str] = []
     for sheet in sorted(cov):
@@ -318,35 +173,6 @@ def coverage_report(cov: dict) -> tuple[str, int, int, int]:
 
 
 def wired_term_participants() -> tuple[frozenset[str], frozenset[str]]:
-    """(l4_exempt, l4_guarded) — the PER-KIND participants of the WIRED
-    sheets' external terms (T1 P5, decision D-2; partition REFINED at the
-    28f8e15 rebase — P5b).
-
-    ``l4_exempt`` (LEVER-L4 skips them; emitted geometry predictable from the
-    floorplan pose): participants of WIRED **near_max** terms — their windows
-    are GUARD_MM-tight, so mm-scale exactness is load-bearing — plus the
-    WIRED sheets themselves (their stage templates force contract members to
-    the top side, so their zones are THERMAL-VIA-FIELD-SAFE by construction;
-    measured: power kept 8/8 vias per buck under exemption).
-
-    ``l4_guarded`` (KEEP L4; the evaluator carries a measured per-sheet guard
-    from FAR_L4_GUARD_MM instead): every other hard-term participant — far
-    targets (ethernet) and un-templated flow/facing targets (power_som
-    today). REBASE FINDING (28f8e15, GAP1 copper): exempting the un-templated
-    power_som parked its bottom caps back inside the buck's DATASHEET
-    thermal-via field (U22004 dropped to 2/6 vias -> pour credit denied ->
-    thermal gate red at the bare 58.7 C/W, board FAIL). Until a sheet's own
-    wave lands its template (same_side override), its bottom cluster must
-    keep sliding clear of the via field — L4 does exactly that — and its
-    flow/facing budgets (123 mm / half-plane) tolerate the measured guard.
-    The sheet graduates to ``l4_exempt`` at its wiring wave (P7 for
-    power_som) — re-pin the participants test then.
-
-    The ``@som`` token is dropped (a fixed region, not a zone). Edge-pinned
-    sheets are NOT excluded: their POSE is fixed but their bottom passives
-    are L4-mobile (measured P2: pd_input centroid moved 10.8 mm under L4 —
-    the mobility that broke the usb_pd seat prediction; pd_input is
-    via-field-safe: its eFuse uses in-footprint EP via-pads, CD-03)."""
     exempt: set[str] = set(_WIRED_SHEETS)
     others: set[str] = set()
     for sheet, c in sorted(discover_all().items()):
@@ -371,22 +197,13 @@ def wired_term_participants() -> tuple[frozenset[str], frozenset[str]]:
     return frozenset(exempt), frozenset(others - exempt)
 
 
-# --- pad geometry (pad-edge-to-pad-edge) ------------------------------------------
-
 _pad_box_cache: dict[tuple[str, float], dict[str, tuple]] = {}
 
 
+# side-independent: the emitted board applies no F->B mirror to bottom locals
 def _pad_boxes(
     mod_path: Path, rotation: float
 ) -> dict[str, tuple[float, float, float, float]]:
-    """pad name -> axis-aligned board-local bbox (min_x,min_y,max_x,max_y),
-    relative to the footprint origin, after the placement ``rotation`` (KiCad
-    CLOCKWISE, +y-down). SIDE-INDEPENDENT: the emitted board keeps a bottom
-    footprint's local coordinates unchanged and KiCad applies only the rotation
-    at load (pcbnew-verified) — the historical bottom X-mirror here disagreed
-    with the emitted copper on every bottom part. Mirrors the transform in
-    ``mating_face._inst_pad_geom`` / ``_rot_pad_bbox`` (pad size + the pad's
-    own rotation included). Cached by (path, rotation)."""
     key = (str(mod_path), round(rotation or 0.0, 3))
     hit = _pad_box_cache.get(key)
     if hit is not None:
@@ -408,14 +225,12 @@ def _pad_boxes(
             float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float))
             else 0.0)
         sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 else (0.0, 0.0)
-        cx = px * cs + py * sn                # CW footprint rotation (+y-down)
+        cx = px * cs + py * sn
         cy = -px * sn + py * cs
-        tot = R + prot                        # pad-own rotation folded in
+        tot = R + prot
         ct, st = abs(math.cos(tot)), abs(math.sin(tot))
         hx = ct * sw / 2 + st * sh / 2
         hy = st * sw / 2 + ct * sh / 2
-        # a pad name may repeat (a split GND net); keep the UNION box so the
-        # per-pin box covers every copy of that pin.
         b = (cx - hx, cy - hy, cx + hx, cy + hy)
         if name in out:
             o = out[name]
@@ -426,7 +241,6 @@ def _pad_boxes(
 
 
 def _inst_pad_boxes(inst) -> dict[str, tuple[float, float, float, float]]:
-    """pad name -> board-page-frame bbox for a placed FootprintInst."""
     rel = _pad_boxes(inst.mod_path, inst.rotation or 0.0)
     return {n: (inst.x + b[0], inst.y + b[1], inst.x + b[2], inst.y + b[3])
             for n, b in rel.items()}
@@ -434,7 +248,6 @@ def _inst_pad_boxes(inst) -> dict[str, tuple[float, float, float, float]]:
 
 def _box_gap(a: tuple[float, float, float, float],
              b: tuple[float, float, float, float]) -> float:
-    """Edge-to-edge gap between two axis-aligned boxes (0 if they overlap)."""
     dx = max(a[0] - b[2], b[0] - a[2], 0.0)
     dy = max(a[1] - b[3], b[1] - a[3], 0.0)
     return math.hypot(dx, dy)
@@ -442,8 +255,6 @@ def _box_gap(a: tuple[float, float, float, float],
 
 def _pins_to_part(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
                   pins: list[str]) -> float | None:
-    """MIN pad-edge-to-pad-edge gap from any of the IC pins ``pins`` to any pad
-    of the part. None if no pin/part box is available."""
     best: float | None = None
     part = list(part_boxes.values())
     if not part:
@@ -468,15 +279,7 @@ def _part_to_part(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
     return best
 
 
-# --- ref mapping ------------------------------------------------------------------
-
 def _board_refs_by_sheet(sheet_name: str, parts=None) -> dict[str, str]:
-    """LIBRARY ref -> board-unique ref for ``sheet_name``, via the SAME per-sheet
-    band rename the netlist/board flow uses (``board._renamed_ref`` + the frozen
-    ``carrier/sheet_index.json`` band). So the contract's U1 resolves to the same
-    U20001 KiCad extracted, exactly like ``footprint.board_parts``. ``parts``
-    (an iterable of library refs) skips the subsystem reload when the caller
-    already holds the circuit (contract_coverage_lint)."""
     import json
 
     from schgen.generate.board import _renamed_ref
@@ -485,8 +288,6 @@ def _board_refs_by_sheet(sheet_name: str, parts=None) -> dict[str, str]:
                    if idx_path.exists() else {})
     idx = sheet_index.get(sheet_name)
     if idx is None:
-        # fall back to the 1-based discovery order (legacy / selftest); matches
-        # board_parts' own fallback so the two never disagree.
         from schgen.core.link import all_subsystem_paths
         order = [p.stem for p in all_subsystem_paths()]
         idx = order.index(sheet_name) + 1 if sheet_name in order else 1
@@ -497,16 +298,13 @@ def _board_refs_by_sheet(sheet_name: str, parts=None) -> dict[str, str]:
             for ref in parts}
 
 
-# --- result -----------------------------------------------------------------------
-
 @dataclass
 class PlacementContractResult:
     ok: bool = True
     sheet: str = ""
     have_contract: bool = False
-    checked: int = 0                 # structures examined
+    checked: int = 0
     violations: list[str] = field(default_factory=list)
-    # per-type counts, for a scalar regression signal
     hot_loop_fail: int = 0
     same_side_fail: int = 0
     bulk_fail: int = 0
@@ -544,17 +342,9 @@ class PlacementContractResult:
         return "\n".join(L)
 
 
-# --- the check --------------------------------------------------------------------
-
 def check(model: PcbModel, sheet_name: str = "power",
           contract: dict | None = None,
           ref_map: dict[str, str] | None = None) -> PlacementContractResult:
-    """Check the EMITTED board ``model`` against ``sheet_name``'s placement
-    contract. ``contract`` may be passed directly (tests); otherwise loaded from
-    the subsystem package. ``ref_map`` (LIBRARY ref -> board ref) may be injected
-    (synthetic unit tests use an identity map on a synthetic sheet); otherwise it
-    is derived from the frozen per-sheet band the real board uses. A subsystem
-    with no contract passes vacuously."""
     res = PlacementContractResult(sheet=sheet_name)
     if contract is None:
         contract = load_contract(sheet_name)
@@ -566,11 +356,9 @@ def check(model: PcbModel, sheet_name: str = "power",
 
     if ref_map is None:
         ref_map = _board_refs_by_sheet(sheet_name)
-    # board refs for THIS sheet only
     inst_by_bref = {i.ref: i for i in model.insts if i.sheet == sheet_name}
 
     def inst(lib_ref: str):
-        """Placed FootprintInst for a LIBRARY ref, or None (and record it)."""
         bref = ref_map.get(lib_ref)
         if bref is None or bref not in inst_by_bref:
             miss = f"{lib_ref}->{bref or '?'}"
@@ -598,15 +386,13 @@ def check(model: PcbModel, sheet_name: str = "power",
             basis = st["basis"]
             cap_data = [(cref, inst(cref), boxes(cref)) for cref in st["caps"]]
             for pair in st["pin_pairs"]:
-                # existential: SOME listed 100 nF within lim of the pin-pair,
-                # same side as the IC.
                 best_ref, best_d = None, None
                 for cref, cit, cboxes in cap_data:
                     if ic_boxes is None or cboxes is None or cit is None:
                         continue
                     if st.get("same_side") and ic_it is not None \
                             and cit.side != ic_it.side:
-                        continue                # wrong side: cannot satisfy
+                        continue
                     d = _pins_to_part(ic_boxes, cboxes, pair)
                     if d is None:
                         continue
@@ -636,11 +422,6 @@ def check(model: PcbModel, sheet_name: str = "power",
                         f"to VIN {st['vin_pins']} [{st['basis']}]")
 
         elif typ == "bulk_out":
-            # Universal (NOT existential): EVERY listed COUT must sit within the
-            # limit of the inductor's OUTPUT pad, on the same side as the IC — so a
-            # stray output cap cannot hide behind a compliant sibling. The distance
-            # is measured to the INDUCTOR's output pad (pad 2), not an IC pin,
-            # because that pad IS the output node the L->COUT->GND loop closes at.
             ic = st["ic"]
             ic_it = inst(ic)
             l_it = inst(st["inductor"])
@@ -683,10 +464,6 @@ def check(model: PcbModel, sheet_name: str = "power",
             ic = st["ic"]
             ic_boxes = boxes(ic)
             own_l = boxes(st["own_inductor"])
-            # E2: a single-buck sheet (e.g. power_som) has NO foreign switcher —
-            # the foreign_* keys are absent and the foreign-SW guard is an
-            # inter-zone concern carried by the composition gate, not intra-zone
-            # geometry. Tolerate their absence (no foreign check), never KeyError.
             foreign_ic_ref = st.get("foreign_ic")
             for_ic = boxes(foreign_ic_ref) if foreign_ic_ref else None
             foreign_l_ref = st.get("foreign_inductor")
@@ -699,7 +476,6 @@ def check(model: PcbModel, sheet_name: str = "power",
                 mb = boxes(mref)
                 if mb is None:
                     continue
-                # <= max_to_fb of the FB pin
                 if ic_boxes is not None:
                     d = _pins_to_part(ic_boxes, mb, [st["fb_pin"]])
                     if d is None or d > to_fb:
@@ -707,7 +483,6 @@ def check(model: PcbModel, sheet_name: str = "power",
                         add(f"fb_cluster {ic} {mref}: "
                             f"{'n/a' if d is None else f'{d:.2f}mm'} > {to_fb:g}mm "
                             f"to FB pin {st['fb_pin']} [{st['basis']}]")
-                # >= min from own SW pad / inductor
                 own_d = None
                 if ic_boxes is not None:
                     own_d = _pins_to_part(ic_boxes, mb, [st["own_sw_pin"]])
@@ -719,8 +494,6 @@ def check(model: PcbModel, sheet_name: str = "power",
                     res.fb_fail += 1
                     add(f"fb_cluster {ic} {mref}: {own_d:.2f}mm < {min_own:g}mm "
                         f"from own SW/L (too close) [{st['basis']}]")
-                # >= min from the OTHER buck's SW pad / inductor. E2: skipped
-                # entirely on a single-buck sheet (no foreign_* keys declared).
                 if foreign_ic_ref is not None:
                     for_d = None
                     if for_ic is not None and foreign_sw_pin is not None:
@@ -804,15 +577,6 @@ def check(model: PcbModel, sheet_name: str = "power",
                         f"to pin {pin} [{st['basis']}]")
 
         elif typ == "proximity":
-            # E4' — the GENERIC intra-zone structure (Decision D10): every member
-            # part must sit within ``max_mm`` pad-edge of the ANCHOR (a specific
-            # part), measured either to a set of the anchor's ``anchor_pins`` (if
-            # given) or to ANY pad of the anchor (absent). ``same_side`` (optional)
-            # requires each member on the anchor's PCB side. ``min_from`` (optional)
-            # is a list of {part, pin(optional), min_mm} clearances each member
-            # must respect. Universal per-member (every member checked); every
-            # measured distance is reported AS A NUMBER. Expresses EN clusters,
-            # BST networks, ESD arrays, kelvin filters alike (D10 vocabulary).
             _proximity(st, res, inst, boxes, add)
 
         elif typ == "same_side":
@@ -821,18 +585,10 @@ def check(model: PcbModel, sheet_name: str = "power",
                 ic_it = inst(ic)
                 if ic_it is None:
                     continue
-                # members = every role bound to this IC's stage. Stage membership
-                # is derived from the structures naming this IC (so a role that
-                # is not near any structure is still covered): union the caps /
-                # members / parts across every structure with ic==this.
                 members: set[str] = set()
                 for s2 in contract.get("structures", []):
                     if s2.get("type") == "same_side":
                         continue
-                    # buck-style structures key on ``ic``; the generic proximity
-                    # type keys on ``anchor`` — collect members from BOTH when the
-                    # anchoring part is this same_side ref, so a proximity-based
-                    # contract (E4') gets the same-side override too.
                     if s2.get("ic") != ic and s2.get("anchor") != ic:
                         continue
                     for k in ("cap", "inductor", "resistor", "cin", "cout"):
@@ -840,8 +596,6 @@ def check(model: PcbModel, sheet_name: str = "power",
                             members.add(s2[k])
                     for k in ("caps", "members"):
                         members.update(s2.get(k, []))
-                # also anything whose role text is bound to this IC via roles is
-                # covered by the structures above; that is sufficient for v1.
                 for mref in sorted(members):
                     mit = inst(mref)
                     if mit is None:
@@ -850,14 +604,9 @@ def check(model: PcbModel, sheet_name: str = "power",
                         res.same_side_fail += 1
                         add(f"same_side {ic} {mref}: on {mit.side} but IC is "
                             f"{ic_it.side} [{st['basis']}]")
-                # keep roles referenced so a future template can rely on it
                 _ = roles
 
         else:
-            # E4' FAIL LOUD: an unimplemented structure type is a VIOLATION, never
-            # a silent skip. A contract that declares a type this gate cannot check
-            # would otherwise pass vacuously (a false green — LAW 4). The count +
-            # the violation line name the type and the sheet.
             res.unknown_fail += 1
             add(f"UNKNOWN structure type {typ!r} — gate has no branch to check "
                 f"it (fail-loud) [{st.get('basis', '')}]")
@@ -866,31 +615,11 @@ def check(model: PcbModel, sheet_name: str = "power",
     return res
 
 
-# --- proximity (E4' / Decision D10 generic intra-zone type) ------------------------
-
 def _proximity(st: dict, res: PlacementContractResult, inst, boxes, add) -> None:
-    """Check ONE ``proximity`` structure against the placed geometry.
-
-    Schema (all distances pad-edge-to-pad-edge, mm):
-      ``members``      list of member part refs (LIBRARY refs). Universal — EVERY
-                       member is checked, so a stray one cannot hide behind a
-                       compliant sibling.
-      ``anchor``       the part the members cluster around.
-      ``anchor_pins``  optional list of anchor pin names; when given the distance
-                       is measured to those pins only, else to ANY pad of the
-                       anchor (absent = whole-part proximity).
-      ``max_mm``       each member must be within this of the anchor (pins).
-      ``same_side``    optional bool; each member must share the anchor's side.
-      ``min_from``     optional list of {part, pin (optional), min_mm}; each member
-                       must clear each named part (pin, or any pad) by >= min_mm.
-
-    Every measured distance is reported AS A NUMBER (LAW 4). The single
-    ``proximity_fail`` counter aggregates every failing (member, constraint) pair.
-    """
     anchor = st.get("anchor")
     anchor_it = inst(anchor) if anchor else None
     anchor_boxes = boxes(anchor) if anchor else None
-    anchor_pins = st.get("anchor_pins")     # None -> any pad of the anchor
+    anchor_pins = st.get("anchor_pins")
     max_mm = float(st["max_mm"])
     same_side = bool(st.get("same_side", False))
     basis = st.get("basis", "")
@@ -900,7 +629,6 @@ def _proximity(st: dict, res: PlacementContractResult, inst, boxes, add) -> None
         mit = inst(mref)
         if mb is None or anchor_boxes is None:
             continue
-        # --- max_mm to the anchor (pins if given, else any pad) ----------------
         if anchor_pins:
             d = _pins_to_part(anchor_boxes, mb, anchor_pins)
         else:
@@ -911,13 +639,11 @@ def _proximity(st: dict, res: PlacementContractResult, inst, boxes, add) -> None
             add(f"proximity {anchor} {mref}: "
                 f"{'n/a' if d is None else f'{d:.2f}mm'} > {max_mm:g}mm "
                 f"to {anchor} {tgt} [{basis}]")
-        # --- same_side (each member shares the anchor's PCB side) --------------
         if same_side and anchor_it is not None and mit is not None \
                 and mit.side != anchor_it.side:
             res.proximity_fail += 1
             add(f"proximity {anchor} {mref}: on {mit.side} but anchor "
                 f"{anchor} is {anchor_it.side} (same_side) [{basis}]")
-        # --- min_from clearances ----------------------------------------------
         for mf in st.get("min_from", []):
             other = mf.get("part")
             ob = boxes(other) if other else None
@@ -934,16 +660,7 @@ def _proximity(st: dict, res: PlacementContractResult, inst, boxes, add) -> None
                     f"{other} {otgt} (too close) [{basis}]")
 
 
-# --- check_all (discover + check every registered contract) ------------------------
-
 def check_all(model: PcbModel) -> dict[str, PlacementContractResult]:
-    """Run :func:`check` for EVERY authored placement contract present in the
-    board ``model`` (every sheet with a placed footprint that carries a contract),
-    WIRED OR NOT — it discovers via :func:`discover_contract`, bypassing the
-    engine-wiring gate, so it sees the full authored set (the red-on-before proof
-    needs the unwired sheets). Returns ``{sheet: PlacementContractResult}`` — the
-    intra-zone verdict per contracted subsystem. Deterministic: sheets are
-    iterated in sorted order."""
     out: dict[str, PlacementContractResult] = {}
     for sheet in sorted({i.sheet for i in model.insts}):
         c = discover_contract(sheet)

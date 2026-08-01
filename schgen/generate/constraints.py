@@ -1,35 +1,3 @@
-"""Layout constraints from typed ports — JLCPCB JLC04161H-7628 stackup.
-
-Emits, from the PORT types declared in the subsystem models:
-  - ``layout_constraints.kicad_dru``  — KiCad custom design rules (conditions
-    keyed on net-class names; import the classes from the CSV);
-  - ``layout_constraints.csv``        — the human/import table: one row per
-    typed port with class, geometry, pairing and length-match group.
-
-Stackup geometry — JLC04161H-7628 (4 layer, 1.6 mm; locked in
-carrier/PLAN.md round 2). Outer-layer microstrip referenced to the L2/L3
-plane through one sheet of 7628 prepreg (0.2104 mm, er~4.6). The width/gap
-numbers below are JLCPCB's own impedance-calculator output for THIS stackup
-(community-verified: eevblog thread "JLCPCB Impedance Calculator can't get
-100R or 90R"; jlcpcb.com/impedance lists the stackup, the calculator gives
-the geometry):
-
-  90R  differential (USB 2.0 HS):   width 10.28 mil = 0.2611 mm, gap 8 mil = 0.2032 mm
-  100R differential (TMDS/LVDS/MIPI/MDI): width 8.08 mil = 0.2052 mm,
-      gap 8 mil = 0.2032 mm
-
-NOTE: the often-quoted "90R at 0.127/0.127 mm" geometry belongs to the
-THINNER JLC04161H-3313 prepreg (0.0994 mm), not the 7628 stackup this
-project locked. Re-run jlcpcb.com/pcb-impedance-calculator before tape-out
-if the stackup changes.
-
-Length-match policy (documented defaults, override per-design later):
-  usb_hs_pair: intra-pair skew <= 1.27 mm (USB 2.0 HS budget)
-  diff_pair:   intra-pair skew <= 1.27 mm (1000BASE-T MDI class)
-  tmds_pair:   intra-pair skew <= 0.15 mm; inter-pair <= 5 mm (HDMI class)
-  sd_bus:      bus length match <= 2.5 mm to CLK
-"""
-
 from __future__ import annotations
 
 import csv
@@ -40,6 +8,8 @@ from schgen.core.model import NetClass
 
 MM_PER_MIL = 0.0254
 
+# Outer-layer microstrip referenced to the L2/L3 plane, one 7628 prepreg sheet.
+
 
 @dataclass(frozen=True)
 class DiffGeometry:
@@ -49,7 +19,6 @@ class DiffGeometry:
     source: str
 
 
-# JLC04161H-7628, outer layer vs L2/L3 plane (see module docstring)
 GEOMETRY: dict[int, DiffGeometry] = {
     90: DiffGeometry(90, round(10.28 * MM_PER_MIL, 4), round(8 * MM_PER_MIL, 4),
                      "JLCPCB calculator, JLC04161H-7628 outer/L2"),
@@ -81,8 +50,6 @@ def _net_class(kind: str, impedance: int | None, level_v: float | None) -> str:
 
 
 def export(sheets, outdir: Path) -> tuple[Path, Path]:
-    """``sheets``: list of schgen.link.SheetCircuit. Writes the .kicad_dru
-    and .csv into ``outdir``; returns both paths."""
     outdir.mkdir(parents=True, exist_ok=True)
 
     rows: list[dict] = []
@@ -126,7 +93,6 @@ def export(sheets, outdir: Path) -> tuple[Path, Path]:
                     geo.source if geo else ""))),
             })
 
-    # ---- .kicad_dru -----------------------------------------------------------
     dru_lines = [
         "(version 1)",
         "",
@@ -153,7 +119,6 @@ def export(sheets, outdir: Path) -> tuple[Path, Path]:
     dru_path = outdir / "layout_constraints.kicad_dru"
     dru_path.write_text("\n".join(dru_lines))
 
-    # ---- CSV ------------------------------------------------------------------
     csv_path = outdir / "layout_constraints.csv"
     fieldnames = ["net", "sheet", "kind", "net_class", "impedance_ohm",
                   "track_width_mm", "pair_gap_mm", "pair_with",

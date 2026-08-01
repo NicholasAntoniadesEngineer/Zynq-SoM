@@ -1,21 +1,3 @@
-"""schgen spice — analog spot-checks AUTO-EXTRACTED from the netlists
-(PLAN round 4: P5 pulled forward).
-
-WHAT RUNS, honestly:
-- The GATE is the closed-form analytic layer: resistive dividers (incl.
-  the BOOT0 1k5/100R contract network), RC debounce/reset ramps, the
-  SY7201 ISET law, and the TPS54302 FB dividers vs the datasheet VREF —
-  every check carries an EXPLICIT threshold and a violation exits non-zero.
-  These are exact linear-network solutions; SPICE adds no truth for them.
-- ngspice (brew install ngspice), when present and enabled, re-runs every
-  divider as a real .op netlist and every RC as a .tran, and must AGREE
-  with the analytic value within 1% — a deeper, independent layer, never a
-  substitute. The report states per-check which engine(s) ran.
-
-Extraction is from the same Circuit objects the schematics are emitted
-from: change a resistor value in a subsystem and the checks follow.
-"""
-
 from __future__ import annotations
 
 import re
@@ -28,42 +10,30 @@ from pathlib import Path
 from schgen.core.model import NetClass, PinRef
 from schgen.verify.powertree import parse_si, rail_volts
 
-# ---- electrical contract constants (documented, not guessed) --------------------
-
-VREF_TPS54302 = 0.596       # V, TI datasheet (internal FB reference)
-STM32_BOOT0_PULLDOWN = 1500.0   # SoM-side 1k5 on BOOT0 (debug_boot dossier,
-#                                 som system_controller sheet — contract)
+VREF_TPS54302 = 0.596
+STM32_BOOT0_PULLDOWN = 1500.0
 STM32_VDD = 3.3
-STM32_VIH = 0.7 * STM32_VDD     # BOOT0 sampled as an FT pin: VIH = 0.7*VDD
-STM32_NRST_PULLUP = 40_000.0    # STM32 internal NRST pull-up (~40k typ)
-SY7201_VFB = 0.2                # V, Silergy FB regulation point
-AO3400A_VGS_TH_MAX = 1.45       # V, max gate threshold (power.py PG sense)
-CP2102N_VBUS_MAX = 5.8          # V, abs-max on the VBUS sense pin
-CP2102N_VBUS_DETECT = 3.0       # V, treat >= as "VBUS present" (DS divider)
-LVCMOS33_VMAX = 3.465           # 3.3 V + 5% bank abs input
+STM32_VIH = 0.7 * STM32_VDD
+STM32_NRST_PULLUP = 40_000.0
+SY7201_VFB = 0.2
+AO3400A_VGS_TH_MAX = 1.45
+CP2102N_VBUS_MAX = 5.8
+CP2102N_VBUS_DETECT = 3.0
+LVCMOS33_VMAX = 3.465
 LVCMOS33_VIH = 2.0
-TPS2663_OVPR_MIN = 1.176        # V, OVP rising threshold -2% (SLVSE94G 6.5)
-TPS2663_OVPR_MAX = 1.224        # V, OVP rising threshold +2%
-PD_CONTRACT_VMAX = 21.0         # V, 20 V contract + 5% source tolerance
-SMBJ22A_VBR_MIN = 24.4          # V, inlet TVS min breakdown (pd_input D1)
+TPS2663_OVPR_MIN = 1.176
+TPS2663_OVPR_MAX = 1.224
+PD_CONTRACT_VMAX = 21.0
+SMBJ22A_VBR_MIN = 24.4
 
-# TPS54302 EN pin (SLVSDG6C): enable threshold 1.21 V typ (~1.3 V worst
-# high), recommended-max 5.5 V, absolute-max 7 V, NO internal clamp, only a
-# 1.55 uA hysteresis current source. PWR-1: the +5V_SOM always-on EN strap
-# is a series R + 5.1 V zener clamp; EN must stay inside this window across
-# the FULL VIN range the inlet eFuse passes (4.75 V default-contract low ..
-# 21 V = 20 V + 5%).
-TPS54302_EN_RISING = 1.21       # V, EN enable threshold typ
-TPS54302_EN_ENABLE_FLOOR = 1.5  # V, enable + margin (worst threshold ~1.3 V)
-TPS54302_EN_RECMAX = 5.5        # V, EN recommended-max (SLVSDG6C)
-TPS54302_EN_IHYS = 1.55e-6      # A, EN hysteresis current source
-PD_VIN_CONTRACT_LO = 4.75       # V, 5 V default-USB contract low
-# 5.1 V zener (MMSZ5231B-class) datasheet model: Vz at Izt=20 mA is the MPN
-# nominal +/-5%, dynamic impedance Zzt <= 17 ohm. The EN ceiling is judged
-# at the +5% bound (highest clamp); turn-on at the -5% bound (lowest EN).
+TPS54302_EN_RISING = 1.21
+TPS54302_EN_ENABLE_FLOOR = 1.5
+TPS54302_EN_RECMAX = 5.5
+TPS54302_EN_IHYS = 1.55e-6
+PD_VIN_CONTRACT_LO = 4.75
 ZENER_5V1_IZT = 20e-3
 ZENER_5V1_ZZT = 17.0
-ZENER_5V1_VZ = {"MMSZ5231B": (4.845, 5.1, 5.355),   # +/-5% (Diodes Inc)
+ZENER_5V1_VZ = {"MMSZ5231B": (4.845, 5.1, 5.355),
                 "BZT52C5V1": (4.845, 5.1, 5.355)}
 
 
@@ -71,7 +41,7 @@ ZENER_5V1_VZ = {"MMSZ5231B": (4.845, 5.1, 5.355),   # +/-5% (Diodes Inc)
 class Check:
     name: str
     sheet: str
-    kind: str            # divider | rc | iset | fb_divider
+    kind: str
     detail: str
     value: float
     unit: str
@@ -120,14 +90,11 @@ class Result:
         return len(self.checks)
 
 
-# ---- netlist navigation helpers ---------------------------------------------------
-
 def _net_of(c, ref: str, pin: str):
     return c.net_of(PinRef(ref, pin))
 
 
 def _resistors_on(c, net_name: str):
-    """(ref, ohms, other_net) for every 2-pin resistor touching the net."""
     out = []
     for ref, part in sorted(c.parts.items()):
         if not part.lib_id.endswith(":R"):
@@ -163,18 +130,11 @@ def _caps_on(c, net_name: str):
     return out
 
 
-# Non-rail divider sources whose voltage is an external contract (cable /
-# host VBUS). Used both to recognise divider tops on SIGNAL/PORT nets and
-# to evaluate them.
 SOURCE_VOLTS: dict[str, float] = {
-    "USB_UART_VBUS": 5.0,        # host USB VBUS at the bridge connector
-    "HDMI_RX_5V": 5.0,           # HDMI source's cable +5V
+    "USB_UART_VBUS": 5.0,
+    "HDMI_RX_5V": 5.0,
 }
 
-# named divider intents: mid net -> (EXPECTED source net,
-#   [(source volts, lo, hi, tag), ...], why). The expected-source check is
-# load-bearing: a divider moved onto the wrong rail must FAIL at that
-# rail's real voltage, never be silently evaluated at the intended one.
 NAMED_DIVIDERS: dict[str, tuple[str, list, str]] = {
     "CP2102N_VBUS_SNS": (
         "USB_UART_VBUS",
@@ -214,7 +174,6 @@ def extract_checks(sheets) -> Result:
         _buck_fb(sc.name, c, res)
         _en_clamp(sc.name, c, res)
         _boot0(sc.name, c, res)
-    # named dividers that the auto pass must have found
     found = {ch.name for ch in res.checks}
     for net, (_src, _subs, why) in NAMED_DIVIDERS.items():
         if any(net in n for n in found):
@@ -226,8 +185,6 @@ def extract_checks(sheets) -> Result:
 
 
 def _auto_dividers(sheet: str, c, res: Result) -> None:
-    """Every source -> R -> mid -> R -> GND chain with a sensed midpoint
-    (sources: POWER rails + the SOURCE_VOLTS cable/VBUS contract nets)."""
     for net in c.nets.values():
         if net.net_class not in (NetClass.SIGNAL, NetClass.PORT):
             continue
@@ -259,8 +216,6 @@ def _auto_dividers(sheet: str, c, res: Result) -> None:
         src_ok = src.name == expected_src
         for v, lo, hi, tag in subchecks:
             if not src_ok:
-                # WRONG SOURCE: evaluate at the actual net's real voltage —
-                # the threshold then judges the real circuit, not the intent
                 v = SOURCE_VOLTS.get(src.name, rail_volts(src.name) or 0.0)
                 tag = (f"{tag}; SOURCE IS {src.name} ({v:g} V), expected "
                        f"{expected_src}")
@@ -275,7 +230,6 @@ def _auto_dividers(sheet: str, c, res: Result) -> None:
 
 
 def _rc_networks(sheet: str, c, res: Result) -> None:
-    """Button debounce / reset RC: cap to GND + pull-up on the same net."""
     for net in c.nets.values():
         if net.net_class not in (NetClass.SIGNAL, NetClass.PORT):
             continue
@@ -310,7 +264,6 @@ def _rc_networks(sheet: str, c, res: Result) -> None:
 
 
 def _sy7201_iset(sheet: str, c, res: Result) -> None:
-    """SY7201 LED current law: I = VFB / R_ISET (lcd backlight)."""
     for ref, part in sorted(c.parts.items()):
         if not part.value.startswith("SY7201"):
             continue
@@ -339,14 +292,6 @@ def _sy7201_iset(sheet: str, c, res: Result) -> None:
 
 
 def _buck_fb(sheet: str, c, res: Result) -> None:
-    """Buck FB divider vs its part's VREF: Vout = VREF * (1 + Rtop/Rbot).
-
-    VREF is read PER PART from bringup_facts.FB_VREF (the single source of
-    truth: TPS54302 0.596 V, LMR33630/LM61460 1.0 V), never a hardcoded
-    constant — so a re-spec to a different-Vref buck (wt/buck: LMR33630 ->
-    LM61460) checks against the RIGHT reference. The FB net is found by
-    topology (the regulator's SIGNAL net carrying the 2-R divider), not a
-    fixed pin number, since each part numbers FB differently."""
     from schgen.generate.bringup_facts import FB_VREF
     from schgen.verify.powertree import _detect_regs
 
@@ -359,12 +304,10 @@ def _buck_fb(sheet: str, c, res: Result) -> None:
             continue
         vref = next((v for k, v in FB_VREF.items() if reg.value.startswith(k)),
                     None)
-        if vref is None:                           # unmodelled buck Vref: skip
+        if vref is None:
             res.notes.append(f"NOTE: {sheet}:{reg.ref} ({reg.value}) has no "
                              f"FB_VREF entry — FB divider unchecked")
             continue
-        # FB net = a SIGNAL net on the regulator carrying exactly a top R (to the
-        # output rail) + a bottom R (to GND). Topology-driven, pin-number-free.
         fb_net = None
         tops = bots = []
         for net in c.nets.values():
@@ -394,38 +337,15 @@ def _buck_fb(sheet: str, c, res: Result) -> None:
 
 
 def _en_pin(c, ref: str) -> str | None:
-    """The buck's enable pin NUMBER, resolved across parts. A use_part dossier
-    part carries a named pin table (pin_names) — the LM61460 names its enable
-    'EN/SYNC' (pin 7); accept any pin whose NAME starts 'EN'. A stock-symbol
-    override (lib_id=) has no name table -> fall back to the TPS54302 EN = pin
-    5. This keeps the PWR-1 EN-clamp regression lock firing after the U4
-    TPS54302 -> LM61460 swap (the enable moved from pin 5 to pin 7); WITHOUT
-    this, the hardcoded pin 5 hit the LM61460 PGOOD pin (NC) and the gate would
-    silently stop checking the always-on EN clamp — a LAW-4 softening."""
     part = c.parts.get(ref)
     if part is not None and part.pin_names:
         for name, nums in part.pin_names.items():
             if name.upper().startswith("EN") and nums:
                 return nums[0]
-    return "5"                                     # TPS54302 EN (no name table)
+    return "5"
 
 
 def _en_clamp(sheet: str, c, res: Result) -> None:
-    """Buck EN series-R + zener clamp (PWR-1, power_som +5V_SOM stage).
-
-    Topology: R_series from the input rail -> EN ; 5.1 V zener (cathode on
-    EN, anode on GND) ; optional EN bypass cap. ASSERTS EN stays inside
-    [enable + margin, recommended-max] across VIN = 4.75 V .. 21 V — the
-    full range the inlet eFuse passes pre/post PD contract. The buck must
-    turn on at the 5 V default contract yet never exceed the EN rec-max at
-    the 20 V (21 V) contract; a plain divider cannot do both, so the clamp
-    is the fix and this check is its regression lock. The EN pin is resolved
-    by NAME (_en_pin), so the check follows the part (TPS54302 EN=5,
-    LM61460 EN/SYNC=7) — it cannot silently lapse on a re-spec. The
-    TPS54302_EN_* window (rec-max 5.5 V) is the conservative envelope kept as
-    the assertion bound; the LM61460 EN abs-max is 42 V, so a clamp that holds
-    EN under 5.5 V is more than safe for it too.
-    """
     from schgen.verify.powertree import _detect_regs
 
     class _One:
@@ -436,13 +356,11 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
     for reg in regs:
         if reg.kind != "buck":
             continue
-        en_net = _net_of(c, reg.ref, _en_pin(c, reg.ref))   # EN pin by NAME
+        en_net = _net_of(c, reg.ref, _en_pin(c, reg.ref))
         if en_net is None or en_net.net_class is not NetClass.SIGNAL:
-            continue                               # bring-up-port EN: skip
-        # series R from a POWER rail (the input rail) onto EN
+            continue
         series = [(r, o, other) for r, o, other in _resistors_on(c, en_net.name)
                   if other.net_class is NetClass.POWER]
-        # clamp zener: a :D_Zener with one pin on EN, the other on GND
         zeners = []
         for ref, part in sorted(c.parts.items()):
             if not part.lib_id.endswith(":D_Zener"):
@@ -455,13 +373,8 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
                     n.net_class is NetClass.GROUND for n in (n1, n2)):
                 zeners.append((ref, part.value))
         if not series:
-            continue                               # no rail strap on EN
+            continue
         if not zeners:
-            # UNCLAMPED EN strap (series R, maybe a bottom divider R, but NO
-            # zener): the PWR-1 failure mode. Judge the bare resistor network
-            # at the 21 V contract — a plain divider that lands EN > rec-max
-            # MUST fail here (this is the regression lock that the old 22k/10k
-            # strap would now trip).
             r_ref, r_ohm, rail = series[0]
             v_rail = rail_volts(rail.name) or 0.0
             bots = [(r, o) for r, o, other in _resistors_on(c, en_net.name)
@@ -494,7 +407,6 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
         vz_lo, _vz_nom, vz_hi = ZENER_5V1_VZ[mpn]
 
         def en_at(vin: float, vz_test: float, r_ohm: float = r_ohm) -> float:
-            # zener off below its near-zero-current knee: EN = vin - I_hys*R
             vz_knee = vz_test - ZENER_5V1_IZT * ZENER_5V1_ZZT
             en_open = vin - TPS54302_EN_IHYS * r_ohm
             if en_open <= vz_knee:
@@ -503,10 +415,6 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
                   - r_ohm * TPS54302_EN_IHYS) / (r_ohm + ZENER_5V1_ZZT)
             return vz_test + (iz - ZENER_5V1_IZT) * ZENER_5V1_ZZT
 
-        # turn-on floor: lowest EN over the corner = high VIN is clamped but
-        # the binding turn-on case is the LOWEST contract VIN with the
-        # LOWEST-Vz part (most current shunted). Ceiling: highest VIN with
-        # the highest-Vz part. Check BOTH contract endpoints for the floor.
         en_turnon = min(en_at(PD_VIN_CONTRACT_LO, vz_lo),
                         en_at(PD_VIN_CONTRACT_LO, vz_hi))
         en_ceiling = en_at(PD_CONTRACT_VMAX, vz_hi)
@@ -531,8 +439,6 @@ def _en_clamp(sheet: str, c, res: Result) -> None:
 
 
 def _boot0(sheet: str, c, res: Result) -> None:
-    """BOOT0 strap: series R on the sheet vs the SoM's 1k5 pull-down —
-    prove VIH when the DIP is closed (debug_boot dossier contract)."""
     net = c.nets.get("BOOT0_SET")
     if net is None:
         return
@@ -550,15 +456,11 @@ def _boot0(sheet: str, c, res: Result) -> None:
         value=round(v, 3), unit="V", lo=STM32_VIH, hi=STM32_VDD))
 
 
-# ---- the optional ngspice layer ---------------------------------------------------
-
 def ngspice_available() -> str | None:
     return shutil.which("ngspice")
 
 
 def run_ngspice(res: Result) -> None:
-    """Re-run every divider as a real ngspice .op; values must agree with
-    the analytic solution within 1% (Check.ok enforces it)."""
     exe = ngspice_available()
     if exe is None:
         return
@@ -570,7 +472,7 @@ def run_ngspice(res: Result) -> None:
                       ch.detail)
         v = re.search(r"@ ([\d.]+) V", ch.detail)
         if ch.kind == "fb_divider":
-            continue   # FB law is algebraic on VREF, not a 2-R network op
+            continue
         if not m or not v:
             continue
         rt, rb, vs = float(m.group(1)), float(m.group(2)), float(v.group(1))
@@ -595,8 +497,6 @@ def run_ngspice(res: Result) -> None:
         res.notes.append("NOTE: ngspice present but no check was "
                          "cross-runnable")
 
-
-# ---- report / entry points --------------------------------------------------------
 
 def report(res: Result) -> str:
     lines = ["schgen spice / analytic spot-check gate", "=" * 64, ""]

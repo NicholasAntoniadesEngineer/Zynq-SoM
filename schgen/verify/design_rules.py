@@ -1,50 +1,3 @@
-"""DESIGN-RULE COMPLETENESS gate (verification P1): is the declared netlist
-electrically COMPLETE, not merely self-consistent?
-
-The netlist gate (schgen/verify/netlist_gate.py) proves the *drawing* matches
-the declared :class:`~schgen.model.Circuit`, pin for pin. NOTHING proves the
-netlist itself is electrically complete: a chip whose VDD has no bypass cap, an
-I2C bus with no pull-ups, a reset with no RC, a strap left floating all pass
-the netlist gate, ERC, and the zero-overlap visual gate untouched — and because
-every emitted pin etype on this board is the flat EasyEDA default ``passive``,
-KiCad's ERC cannot even SEE a power pin to complain. This gate closes that
-silent-pass blind spot.
-
-It reads ONLY the model (parts, nets, port types, library pin tables) — never
-geometry — and infers each pin's FUNCTION from its NAME (the etype is
-unreliable), via regex on the library's own pin table (``lib.get(lib_id).pins``
-gives ``(number, name, etype)`` for every part, inline or use_part alike). It is
-deterministic: same model in, same report out, no timestamps, sheets and pins
-sorted.
-
-Four rules, every one with an EXPLICIT author waiver (a waiver is documentation,
-never silence — the report lists every waiver verbatim):
-
-  DECAP   every multi-pin IC (>2 distinct pin numbers, not a bare R/C/L) must
-          carry, for each POWER-NAMED pin's net, at least one capacitor
-          (``lib_id`` ending ``:C``) from that net to a GROUND-class net,
-          declared on the SAME sheet.  Waiver: ``c.waive_decap(ref_or_pin, reason)``.
-
-  I2C     every I2C-typed bus net (a PORT whose ``PortType.kind == 'i2c'``) must
-          have a pull-up resistor to a POWER rail somewhere ACROSS the board.
-          Waiver: ``c.waive_pull(net, reason)``.
-
-  RESET   every net whose name matches reset/NRST/RST/SRST (minus an
-          internal-pull whitelist) must carry BOTH a cap-to-GROUND and a pull
-          resistor (the classic RC reset); a net missing either is flagged.
-          Waiver: ``c.waive_reset(net, reason)``.
-
-  STRAP   a config-input-named pin (nOE/OE/MODE/ADDR/Ax/SEL/CFG/STRAP/...) that
-          is NOT a typed PORT and sits on a passive-only, undriven net is
-          flagged as a floating control input (P7).  Waiver:
-          ``c.waive_strap(ref_or_pin, reason)``.
-
-LAW 4: the gate stays strict. A real exception is WAIVED (the author signs it
-with a reason the report prints), never relaxed. Run standalone with
-``python -m schgen design-rules`` (see ``cmd_design_rules``) or hook
-``run(sheets)`` into ``cmd_board``.
-"""
-
 from __future__ import annotations
 
 import re
@@ -53,19 +6,10 @@ from pathlib import Path
 
 from schgen.core.model import NetClass, PinRef
 
-# ---- pin-function inference (by NAME — etype on this board is flat 'passive') --
-
-# GROUND-class pin/net names. VSS family included so a 'VSS' power-named pin is
-# never mistaken for a supply that needs its own decap.
 _GROUND_RE = re.compile(
     r"^(GND|GNDA|GNDD|GNDPWR|AGND|DGND|PGND|VSS|VSSA|VSSIO|CHASSIS_GND)",
     re.IGNORECASE)
 
-# POWER-supply pin names (longest-prefix set). VOUT* is EXCLUDED (it is an
-# output rail the part SOURCES, not a supply input that needs local bypass);
-# VSS* is excluded as ground. Matched as: exact, or prefix followed by a digit
-# or '_' (so VDD1 / VCC_3V3 / VDDIO2 all match, but 'VLAN' never matches via the
-# VL prefix because a bare trailing letter does not extend the match).
 _POWER_PIN_PREFIXES = (
     "VDDIO", "VDDA", "VDDD", "VDDQ", "VDD",
     "VCCIO", "VCCA", "VCCB", "VCC5V", "VCC3V3", "VCC",
@@ -80,13 +24,6 @@ def _is_ground_name(name: str) -> bool:
 
 
 def is_power_pin_name(name: str) -> bool:
-    """True if a pin NAME denotes a supply INPUT that needs local decoupling.
-
-    Ground names and output rails (VOUT*) are excluded. A power prefix only
-    matches when it is the whole name or is followed by a digit/underscore, so
-    'VS' matches VS / VS1 / VS_3V3 but a hypothetical 'VSENSE' matches via the
-    VS prefix too (conservative: better to require a decap and let the author
-    waive a true sense pin than to silently miss a supply)."""
     if not name:
         return False
     up = name.upper()
@@ -95,10 +32,6 @@ def is_power_pin_name(name: str) -> bool:
     if up.startswith("VOUT") or up.startswith("VO_"):
         return False
     for pre in _POWER_PIN_PREFIXES:
-        # whole name, or prefix followed by a digit / '_' continuation. The
-        # full family spellings (VDDA, VDDD, VDDIO, VCCB, VCC5V, ...) are
-        # already explicit prefixes, so a bare trailing LETTER must NOT extend
-        # a match (that wrongly caught e.g. 'VLAN' via the VL prefix).
         if up == pre or (up.startswith(pre)
                          and (up[len(pre):][:1].isdigit()
                               or up[len(pre):][:1] == "_")):
@@ -106,61 +39,42 @@ def is_power_pin_name(name: str) -> bool:
     return False
 
 
-# config / strap INPUT pin names (P7 floating-control audit). NOT a switching
-# 'BOOT' bootstrap pin (that is a buck bootstrap cap node, not a config strap),
-# and NOT 'EN'/enable (enables are gated/driven control, audited elsewhere).
 _CONFIG_PIN_RE = re.compile(
     r"^(nOE|OE|nCS|CS|nCE|CE|MODE\d*|ADDR\d*|A\d{1,2}|SEL\d*|CFG\d*|"
     r"STRAP\d*|CONFIG\d*|SET|S\d|POL)$",
     re.IGNORECASE)
 
-# RESET net names. Matches NRST / RST_N / SRST / nRESET / *_RESET etc. The bare
-# token must stand alone or be bounded by a separator/polarity letter so a net
-# like 'WRST_BURST' or 'FIRST' never matches.
 _RESET_NET_RE = re.compile(
     r"(^|_)(N?RST|N?RESET|SRST|POR)(_?N|_?B|_|$)",
     re.IGNORECASE)
 
-# Reset nets with a part-internal pull (no external RC required by design).
-# The author still gets a per-net waiver; this whitelist suppresses the noise
-# for the well-known internal-pull silicon families.
 _RESET_INTERNAL_PULL = (
-    re.compile(r"STM32.*NRST", re.IGNORECASE),    # STM32 NRST: internal ~40k pull-up
+    re.compile(r"STM32.*NRST", re.IGNORECASE),
 )
 
-# Exposed/thermal-pad pin NAMES (the part's heat-spreader pad). An EP must be a
-# real netted pad on a GROUND net — never floating (nc) and never on a non-GND
-# net — or explicitly waived. validate() already forbids a floating pin; this
-# rule additionally forbids an EP that is nc'd or netted to a non-GND net (the
-# silent LAW-0 holes neither validate() nor KiCad ERC can see). Anchored to the
-# whole pin name so a signal like 'PADDR'/'EPHY' never trips it.
 _EP_PIN_RE = re.compile(
     r"^(EP\d*|E?PAD\d*|PPAD|THERMAL.*|GND_?PAD|DAP)$",
     re.IGNORECASE)
 
-# KiCad etypes that DRIVE a net (so a config input on such a net is not floating).
 _DRIVER_ETYPES = frozenset({
     "output", "bidirectional", "tri_state",
     "power_out", "open_collector", "open_emitter",
 })
 
-# library lib_id suffixes that are bare passives (never an "IC")
 _BARE_PASSIVE_SUFFIX = (":R", ":C", ":L")
 _CAP_SUFFIX = ":C"
 _RES_SUFFIX = ":R"
 
 
-# ---- result -------------------------------------------------------------------
-
 @dataclass
 class DesignRuleResult:
-    decap: list[str] = field(default_factory=list)        # missing-bypass findings
-    i2c: list[str] = field(default_factory=list)          # I2C-no-pullup findings
-    reset: list[str] = field(default_factory=list)        # reset-RC findings
-    strap: list[str] = field(default_factory=list)        # floating-strap findings
-    ep: list[str] = field(default_factory=list)           # exposed-pad-not-GND findings
-    waived: list[str] = field(default_factory=list)       # verbatim waivers honoured
-    checked: dict[str, int] = field(default_factory=dict)  # rule -> # of subjects
+    decap: list[str] = field(default_factory=list)
+    i2c: list[str] = field(default_factory=list)
+    reset: list[str] = field(default_factory=list)
+    strap: list[str] = field(default_factory=list)
+    ep: list[str] = field(default_factory=list)
+    waived: list[str] = field(default_factory=list)
+    checked: dict[str, int] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -232,19 +146,12 @@ class DesignRuleResult:
         return "\n".join(lines)
 
 
-# ---- waiver access (model-side dicts; tolerated absent) ------------------------
-# The author-facing waiver API lives on Circuit (model.py) — see this module's
-# waiver_mechanism note. Each is a dict the gate reads; getattr keeps the gate
-# importable BEFORE model.py grows the methods (it simply finds zero waivers).
-
 def _waivers(c, attr: str) -> dict:
     d = getattr(c, attr, None)
     return d if isinstance(d, dict) else {}
 
 
 def _decap_waived(c, ref: str, pin_num: str, net: str) -> str | None:
-    """A DECAP waiver may key on the part ref ('U1'), a specific pin
-    ('U1.3'), or the rail net ('+3V3'). Returns the reason if any match."""
     w = _waivers(c, "decap_waivers")
     for key in (f"{ref}.{pin_num}", ref, net):
         if key in w:
@@ -262,8 +169,6 @@ def _strap_waived(c, ref: str, pin_num: str, pin_name: str, net: str) -> str | N
 
 def _ep_waived(c, ref: str, pin_num: str, pin_name: str,
                net: str | None) -> str | None:
-    """An EP waiver may key on 'ref.pin', 'ref.NAME', the part ref, or the net
-    the pad sits on. Returns the reason if any match."""
     w = _waivers(c, "ep_waivers")
     for key in (f"{ref}.{pin_num}", f"{ref}.{pin_name}", ref, net):
         if key and key in w:
@@ -271,12 +176,7 @@ def _ep_waived(c, ref: str, pin_num: str, pin_name: str,
     return None
 
 
-# ---- library helpers ----------------------------------------------------------
-
 def _pins(lib, part):
-    """The (number, name, etype) pin table for a part via the symbol library;
-    [] if the symbol cannot be resolved (the part is then skipped, never
-    silently passed — an unresolved symbol fails the build's own gates)."""
     try:
         return lib.get(part.lib_id).pins
     except Exception:        # noqa: BLE001 — unresolved symbol: skip cleanly
@@ -290,16 +190,9 @@ def _is_multipin_ic(lib, part) -> bool:
     return len(nums) > 2
 
 
-# ---- the engine ---------------------------------------------------------------
-
 def check(sheets, lib) -> DesignRuleResult:
-    """Run all four rules over the loaded board sheets.
-
-    ``sheets`` is the linker's list of SheetCircuit (each ``.name`` /
-    ``.circuit``); ``lib`` is a ``schgen.symbols.Library``."""
     res = DesignRuleResult()
 
-    # board-wide index: net name -> list of (sheet, circuit, Net)
     nets_by_name: dict[str, list[tuple[str, object, object]]] = {}
     for sc in sheets:
         for net in sc.circuit.nets.values():
@@ -320,9 +213,6 @@ def _net_name_of(c, ref: str, pin_num: str) -> str | None:
 
 
 def _caps_to_ground_on_sheet(c, lib) -> dict[str, list[tuple[str, str]]]:
-    """rail-net-name -> [(cap_ref, value), ...] for every 2-terminal cap on this
-    sheet bridging that rail to a GROUND-class net. A cap counts as decoupling
-    ONLY when one side is the rail and the OTHER side is a ground net."""
     out: dict[str, list[tuple[str, str]]] = {}
     for ref, part in c.parts.items():
         if not part.lib_id.endswith(_CAP_SUFFIX):
@@ -347,11 +237,6 @@ def _check_decap(sheets, lib, res: DesignRuleResult) -> None:
             part = c.parts[ref]
             if not _is_multipin_ic(lib, part):
                 continue
-            # group supply pins by NAME so stacked VDD pads report once. A pin
-            # is a supply if its NAME is a power-rail name OR the symbol itself
-            # types it power_in (the name table misses families like CP2102N
-            # VIO/VREGIN — the etype on this board is NOT uniformly 'passive').
-            # GROUND-named power_in pins (VSS family) are excluded below.
             supply: dict[str, list[str]] = {}
             for p in _pins(lib, part):
                 if is_power_pin_name(p.name) or (
@@ -359,14 +244,12 @@ def _check_decap(sheets, lib, res: DesignRuleResult) -> None:
                     supply.setdefault(p.name, []).append(p.number)
             for pin_name in sorted(supply):
                 pnums = sorted(supply[pin_name])
-                # the rail(s) actually on these pins
                 rails: dict[str, list[str]] = {}
                 for pn in pnums:
                     rn = _net_name_of(c, ref, pn)
                     rails.setdefault(rn or "<unconnected>", []).append(pn)
                 for rail in sorted(rails):
                     if rail == "<unconnected>" or _is_ground_name(rail):
-                        # an NC/ground-tied supply pin needs no bypass
                         continue
                     n_checked += 1
                     wv = _decap_waived(c, ref, rails[rail][0], rail)
@@ -385,10 +268,6 @@ def _check_decap(sheets, lib, res: DesignRuleResult) -> None:
 
 
 def _resistor_pulls_to_rail(sheets, lib, net_name: str) -> list[str]:
-    """Board-wide: [(sheet:ref -> rail)] for every resistor with one pin on
-    ``net_name`` and the OTHER pin on a POWER rail. A pull-up (to a supply) and
-    a pull-down (to ground) are both resistor ties; for I2C we want a PULL-UP,
-    i.e. the other end is a POWER net specifically."""
     out: list[str] = []
     for sc in sheets:
         c = sc.circuit
@@ -409,9 +288,6 @@ def _resistor_pulls_to_rail(sheets, lib, net_name: str) -> list[str]:
 
 
 def _resistor_on_net(sheets, lib, net_name: str) -> list[str]:
-    """Board-wide [sheet:ref] for any resistor with a pin on ``net_name``
-    (pull-up OR pull-down — used by the RESET rule, where a pull-down to GND is
-    a legitimate held-reset)."""
     out: list[str] = []
     for sc in sheets:
         c = sc.circuit
@@ -428,7 +304,6 @@ def _resistor_on_net(sheets, lib, net_name: str) -> list[str]:
 
 
 def _cap_to_ground_anywhere(sheets, lib, net_name: str) -> list[str]:
-    """Board-wide [sheet:ref] for any cap bridging ``net_name`` to a GROUND net."""
     out: list[str] = []
     for sc in sheets:
         c = sc.circuit
@@ -445,8 +320,7 @@ def _cap_to_ground_anywhere(sheets, lib, net_name: str) -> list[str]:
 
 
 def _check_i2c(sheets, lib, nets_by_name, res: DesignRuleResult) -> None:
-    # collect i2c-typed PORT nets (board-wide, by name)
-    i2c_nets: dict[str, str] = {}        # net -> first sheet that typed it
+    i2c_nets: dict[str, str] = {}
     for sc in sheets:
         c = sc.circuit
         for name, pt in c.port_types.items():
@@ -454,7 +328,6 @@ def _check_i2c(sheets, lib, nets_by_name, res: DesignRuleResult) -> None:
                 i2c_nets.setdefault(name, sc.name)
     res.checked["i2c"] = len(i2c_nets)
     for net in sorted(i2c_nets):
-        # waiver may sit on ANY sheet that declares the net
         waived = None
         for _s, c, _n in nets_by_name.get(net, []):
             wv = _waivers(c, "pull_waivers").get(net)
@@ -475,17 +348,14 @@ def _check_i2c(sheets, lib, nets_by_name, res: DesignRuleResult) -> None:
 
 
 def _check_reset(sheets, lib, nets_by_name, res: DesignRuleResult) -> None:
-    reset_nets: dict[str, str] = {}      # net -> first sheet it appears on
+    reset_nets: dict[str, str] = {}
     for sc in sheets:
         for net in sc.circuit.nets.values():
             if _RESET_NET_RE.search(net.name):
                 reset_nets.setdefault(net.name, sc.name)
     res.checked["reset"] = len(reset_nets)
     for net in sorted(reset_nets):
-        # internal-pull whitelist
         if any(rx.search(net) for rx in _RESET_INTERNAL_PULL):
-            # whitelisted parts self-pull; suppress the finding but log it as a
-            # waiver so the suppression is visible, never silent.
             res.waived.append(
                 f"RESET {net} (on {reset_nets[net]}): internal-pull whitelist "
                 f"(part provides its own pull; external RC optional)")
@@ -532,14 +402,11 @@ def _check_strap(sheets, lib, res: DesignRuleResult) -> None:
                     continue
                 n = c.net_of(PinRef(ref, p.number))
                 if n is None:
-                    continue        # NC or unassigned (model gate owns that)
-                # a typed PORT, a POWER rail or a GROUND tie is, by definition,
-                # NOT floating — it is strapped / externally bound
+                    continue
                 if n.net_class in (NetClass.PORT, NetClass.POWER,
                                    NetClass.GROUND):
                     continue
                 n_checked += 1
-                # other pins on the net: any driver-class etype?
                 driven = False
                 for pr in n.pins:
                     if pr.ref == ref and pr.pin == p.number:
@@ -568,12 +435,6 @@ def _check_strap(sheets, lib, res: DesignRuleResult) -> None:
 
 
 def _check_ep(sheets, lib, res: DesignRuleResult) -> None:
-    """Every exposed/thermal pad (EP/PAD/...) must be a real netted pad on a
-    GROUND net — the LAW-0 'an EP is a pad+pin+GND net, never a prose layout
-    note' rule. validate() already forbids a floating pin; this additionally
-    forbids an EP that is nc'd (net is None here) or netted to a NON-GROUND net.
-    A pad deliberately on a non-GND heat-spreader island, or left unconnected,
-    is waived (waive_ep), never relaxed (LAW 4)."""
     n_checked = 0
     for sc in sheets:
         c = sc.circuit
@@ -585,7 +446,7 @@ def _check_ep(sheets, lib, res: DesignRuleResult) -> None:
                 n_checked += 1
                 n = c.net_of(PinRef(ref, p.number))
                 if n is not None and _is_ground_name(n.name):
-                    continue                          # netted to GND — correct
+                    continue
                 wv = _ep_waived(c, ref, p.number, p.name,
                                 n.name if n is not None else None)
                 if wv is not None:
@@ -607,12 +468,8 @@ def _check_ep(sheets, lib, res: DesignRuleResult) -> None:
     res.checked["ep"] = n_checked
 
 
-# ---- entry points -------------------------------------------------------------
-
 def run(sheets, reports_dir: Path | None = None,
         lib=None) -> DesignRuleResult:
-    """Gate entry point: run the four rules, optionally write the verdict
-    report to ``reports_dir/design_rules.txt`` (deterministic, no timestamp)."""
     if lib is None:
         from schgen.core.symbols import Library
         lib = Library()
@@ -624,7 +481,6 @@ def run(sheets, reports_dir: Path | None = None,
 
 
 def cmd_design_rules(args) -> int:
-    """Standalone CLI: ``python -m schgen design-rules [subsystems...]``."""
     from schgen.core.link import all_subsystem_paths, load_subsystem
     from schgen.core.symbols import Library
     names = args.subsystems or [p.stem for p in all_subsystem_paths()]

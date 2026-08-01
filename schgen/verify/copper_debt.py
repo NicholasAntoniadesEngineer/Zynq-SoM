@@ -1,34 +1,3 @@
-"""copper_debt — the COPPER-HONESTY ledger (report-only; GAP1 follow-through).
-
-Several gate basis strings and design-prose notes PRESUME board copper —
-pours, planes, via fields, bond stitches, plane voids — but a gate that
-passes on copper nobody emitted is fiction (the LM61460 thermal credit was
-exactly this: eff-RthJA 58.7 -> 30 C/W "PGND pads poured to GND + thermal-via
-field" while the emitted board contained ZERO zones/vias/segments; the
-backed-out Tj without the assumed copper was ~192 C against a 140 C bound).
-
-This module is the honesty ledger: it enumerates every copper-predicated
-claim in the repo, MEASURES what the emitter actually wrote into the
-.kicad_pcb this build (scan_board), and reports per entry:
-
-  assumes:  WHAT copper the claim presumes (with its datasheet/design basis)
-  where:    the file:line the assumption lives at (resolved by anchor-string
-            search at report time, so the line number cannot rot silently —
-            a vanished anchor is reported loudly)
-  emits:    what the board file ACTUALLY contains today (measured, never
-            hardcoded)
-  status:   EMITTED | PARTIAL | NOTHING (+ UNMEASURED when no board exists)
-  risk:     what breaks on real hardware if the copper never lands
-
-Report-only by design (carrier/reports/copper_debt.txt is not a hard gate):
-the thermal gate separately HARD-verifies its own pour credits against the
-same scan (schgen/verify/thermal.py imports scan_board from here), so the
-CRITICAL entry cannot pass on fiction regardless of this file. Deterministic:
-fixed entry order, sorted instance rows, no timestamps.
-
-Run standalone:  ``python3 -m schgen.verify.copper_debt``
-"""
-
 from __future__ import annotations
 
 import math
@@ -41,20 +10,16 @@ from schgen.core.sexpr import Sym
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# footprint value-prefixes whose PADS the scanner also harvests (the parts
-# whose in-footprint EP/thermal-via pads matter to a ledger entry)
 _PAD_PREFIXES = ("LM61460", "TLV75725", "TPS26631")
 
-
-# ---- the emitted-copper scan ----------------------------------------------------
 
 @dataclass(frozen=True)
 class ZoneInfo:
     name: str
     net_name: str
     layers: tuple[str, ...]
-    keepout: bool            # rule area (no copper), e.g. plane voids
-    filled: bool             # carries (fill yes ...) settings
+    keepout: bool
+    filled: bool
     bbox: tuple[float, float, float, float]
 
 
@@ -68,9 +33,9 @@ class ViaInfo:
 @dataclass(frozen=True)
 class PadInfo:
     name: str
-    dx: float                # offset from the footprint origin (local mm;
-    dy: float                # rotation-invariant for distance checks)
-    drill: float             # 0 => SMD
+    dx: float
+    dy: float
+    drill: float
     net_name: str
 
 
@@ -81,12 +46,11 @@ class FpInfo:
     x: float
     y: float
     layer: str
-    pads: tuple[PadInfo, ...]   # harvested only for _PAD_PREFIXES values
+    pads: tuple[PadInfo, ...]
 
 
 @dataclass
 class BoardCopper:
-    """What the emitted .kicad_pcb physically contains (copper-wise)."""
     path: Path
     zones: list[ZoneInfo] = field(default_factory=list)
     vias: list[ViaInfo] = field(default_factory=list)
@@ -94,7 +58,6 @@ class BoardCopper:
     footprints: list[FpInfo] = field(default_factory=list)
     net_names: set[str] = field(default_factory=set)
 
-    # -- queries -------------------------------------------------------------
     def fill_zones(self, net: str, layer: str) -> list[ZoneInfo]:
         return [z for z in self.zones
                 if not z.keepout and z.filled and z.net_name == net
@@ -122,8 +85,6 @@ class BoardCopper:
                       key=lambda z: z.name)
 
     def net_copper(self, net_substr: str) -> tuple[int, int]:
-        """(zones, vias) carrying a net whose name contains ``net_substr`` —
-        the 'is there ANY board-level copper on this net' probe."""
         zs = sum(1 for z in self.zones
                  if not z.keepout and net_substr in z.net_name)
         vs = sum(1 for v in self.vias if net_substr in v.net_name)
@@ -192,8 +153,6 @@ def _fp_info(node: list) -> FpInfo:
 
 
 def scan_board(pcb_path: Path) -> BoardCopper:
-    """Parse the emitted .kicad_pcb into the copper inventory the ledger (and
-    the thermal gate's pour-credit verification) measures against."""
     doc = sexpr.loads(Path(pcb_path).read_text())
     bc = BoardCopper(path=Path(pcb_path))
     for node in doc:
@@ -206,8 +165,6 @@ def scan_board(pcb_path: Path) -> BoardCopper:
             at = sexpr.find(node, "at")
             net = sexpr.find(node, "net")
             num = int(net[1]) if net and len(net) > 1 else 0
-            # net NUMBER for now; resolved to the net NAME below once the
-            # whole net table has been walked
             bc.vias.append(ViaInfo(float(at[1]), float(at[2]), str(num)))
         elif head == Sym("segment"):
             bc.segments += 1
@@ -215,7 +172,6 @@ def scan_board(pcb_path: Path) -> BoardCopper:
             bc.footprints.append(_fp_info(node))
         elif head == Sym("net") and len(node) > 2:
             bc.net_names.add(str(node[2]))
-    # resolve via net numbers -> names from the board net table
     num2name: dict[str, str] = {}
     for node in doc:
         if isinstance(node, list) and node and node[0] == Sym("net") \
@@ -226,12 +182,7 @@ def scan_board(pcb_path: Path) -> BoardCopper:
     return bc
 
 
-# ---- anchor-resolved WHERE ------------------------------------------------------
-
 def _where(rel_path: str, anchor: str) -> str:
-    """'path:NN' of the first line containing ``anchor`` — resolved at report
-    time so the ledger's line numbers cannot rot. A missing anchor is a LOUD
-    entry, never a stale number."""
     p = REPO_ROOT / rel_path
     if not p.exists():
         return f"{rel_path}:FILE-MISSING"
@@ -241,8 +192,6 @@ def _where(rel_path: str, anchor: str) -> str:
     return f"{rel_path}:ANCHOR-NOT-FOUND({anchor!r})"
 
 
-# ---- the ledger ------------------------------------------------------------------
-
 @dataclass
 class Entry:
     eid: str
@@ -250,7 +199,7 @@ class Entry:
     assumes: str
     where: list[str]
     emits: str
-    status: str              # EMITTED | PARTIAL | NOTHING | UNMEASURED
+    status: str
     risk: str
 
 
@@ -435,8 +384,6 @@ def _moat_entry(bc: BoardCopper | None) -> Entry:
     plane = bc.gnd_plane()
     emits = (f"In1 rule-area voids: {names}; corridor between them: "
              "NOT voided (debt)")
-    # bodies voided under both parts = PARTIAL by design until the corridor
-    # (and any keepout for tracks) lands with routing.
     if not plane:
         status = "NOTHING" if not voids else "PARTIAL"
     else:

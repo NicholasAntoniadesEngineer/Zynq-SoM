@@ -1,47 +1,3 @@
-"""CONTRACT COVERAGE LINT (advisory) — every wired-sheet part in >=1 contract
-structure or explicitly FREE.
-
-THE SYSTEMIC FINDING (2026-07-28 placement audit): every placement defect traced
-to UNGATED function passives. A part named by NO contract structure has no seat
-in the stage template and no intra-zone check, so the packer sweeps it into a
-boundary strip — crystal load caps landing opposite-side from their crystal,
-boost trains torn apart, ILIM straps exiled from their eFuse. The remedy is an
-authoring NET: every sheet part either appears in >=1 contract structure or is
-declared explicitly free, and this lint reports the gap per sheet.
-
-CLASSES (per wired sheet — ``project.json placement.wired_sheets`` — over every
-ref of the subsystem circuit):
-
-  STRUCTURED  named by >=1 contract structure: the union of the gate's typed
-              ref fields (``ic``/``anchor``/``cap``/``resistor``/``inductor``/
-              ``cin``/``cout``/``own_inductor``/``foreign_ic``/
-              ``foreign_inductor``), the list fields (``caps``/``members``/
-              ``ics``), ``min_from[].part``, and the ``roles`` keys — the SAME
-              traversal ``placement_contract_gate.check`` measures and
-              ``stage_templates.contract_member_brefs`` seats (roles drive the
-              placer's same-side override, so a roles-listed part IS
-              placement-governed).
-  FREE        matched by the optional contract key ``free``: a list of
-              ``{"ref": <lib ref>, "why": <one-line reason>}`` entries for
-              parts that legitimately float (test points, LEDs, mounting).
-              A free entry that names no sheet part, shadows a STRUCTURED ref,
-              or lacks a ``why`` is surfaced as a NOTE — the channel is
-              self-policing, never a silent waiver.
-  UNGATED     neither — the audit's defect class. Reported with the board ref
-              (same per-sheet band rename the netlist/board flow uses), the
-              part value and its nets from the subsystem circuit, so an author
-              can judge each part directly from the report.
-
-ADVISORY: the build writes ``report()`` to ``reports/contract_coverage_lint.txt``
-and prints ``summary_line()``; nothing fails. Flipping :data:`ENFORCE` to True
-is the ONE-LINE enforcement switch — ``__main__`` folds
-:attr:`CoverageLintResult.ok` (ungated == 0) into the gate verdict behind it.
-
-Hermetic: subsystem circuits + contract dicts only — no board model, no
-kicad-cli. Deterministic: sheets, refs, free entries, notes and nets are all
-emitted in sorted order. No import side effects.
-"""
-
 from __future__ import annotations
 
 import re
@@ -65,8 +21,6 @@ def _ref_key(ref: str) -> tuple[str, int, str]:
 
 
 def structured_lib_refs(contract: dict | None) -> frozenset[str]:
-    """Every LIBRARY ref the contract's structures (or roles) name — the
-    membership union described in the module docstring."""
     if not contract:
         return frozenset()
     libs: set[str] = set(contract.get("roles") or {})
@@ -85,7 +39,6 @@ def structured_lib_refs(contract: dict | None) -> frozenset[str]:
 
 
 def free_entries(contract: dict | None) -> tuple[dict[str, str], list[str]]:
-    """(lib ref -> why, malformed-entry notes) from the optional ``free`` key."""
     out: dict[str, str] = {}
     notes: list[str] = []
     for e in (contract or {}).get("free") or []:
@@ -128,12 +81,6 @@ class SheetCoverage:
 
 def lint_sheet(sheet_name: str, *, circuit=None, contract=_UNSET,
                ref_map: dict[str, str] | None = None) -> SheetCoverage:
-    """Classify every part of ``sheet_name`` as STRUCTURED / FREE / UNGATED.
-
-    ``circuit`` (anything with ``.parts``/``.nets`` mappings), ``contract`` and
-    ``ref_map`` (lib ref -> board ref) are injectable for hermetic tests;
-    defaults load the real subsystem, discover its authored contract and derive
-    the ref map from the frozen per-sheet band."""
     from schgen.verify import placement_contract_gate as _g
 
     if contract is _UNSET:
@@ -222,8 +169,6 @@ class CoverageLintResult:
 
 
 def lint_project(sheets: list[str] | None = None) -> CoverageLintResult:
-    """Lint every engine-wired sheet (default: the project spec's
-    ``wired_sheets``, sorted)."""
     if sheets is None:
         from schgen.core.project import spec as _spec
         sheets = sorted(_spec().wired_sheets)

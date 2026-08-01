@@ -1,22 +1,3 @@
-"""subsystem_scaffold — `schgen subsystem <name>` scaffolds a new reusable
-``subsystems/<name>/`` package skeleton, so migrating a subsystem into the
-library is mechanical.
-
-It writes the four contract artifacts the structure gate
-(schgen/verify/subsystem_structure.py) requires, each a working stub:
-
-  <name>.py        a circuit(meta=None) with a tiny abstract-port template + a
-                   declared INTERFACE; passes the structure gate as soon as the
-                   author fills in real parts.
-  README.md        the interface-table + design-notes template.
-  test_<name>.py   a local-correctness test stub (the same gate-slice shape as
-                   subsystems/usb_pd/test_<name>.py).
-  <name>.cir       a SPICE subckt stub with the abstract ports as subckt pins.
-  __init__.py      re-exports circuit + INTERFACE.
-
-Refuses to overwrite an existing package (the author edits in place after).
-"""
-
 from __future__ import annotations
 
 from pathlib import Path

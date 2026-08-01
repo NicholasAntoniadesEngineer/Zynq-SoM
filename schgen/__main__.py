@@ -1,31 +1,12 @@
-"""schgen CLI.
-
-    python -m schgen build <subsystem> [-o OUTDIR] [--no-render]
-    python -m schgen bom <subsystem>... [-o CSV]
-
-Builds carrier/subsystems/<subsystem>.py end-to-end: model -> place
-(feasibility loop) -> route (exclusive grid) -> emit -> THREE gates
-(netlist == declared, ERC errors == 0, visual zero-overlap) -> render PNG.
-Exit is non-zero unless every gate passes. The gates are judges, not knobs.
-
-`build` is a GATING/PREVIEW tool for ONE sheet: it emits the .kicad_sch and
-render into a transient tempdir (auto-removed) and persists NOTHING — the
-authoritative committed per-sheet renders come ONLY from `schgen board`
-(its standalone single-sheet render differs from the hierarchy render, so
-letting it write carrier/renders/ would drift the goldens). Pass `-o OUTDIR`
-to keep the artifacts somewhere of your choosing.
-
-`bom` exports a JLCPCB-assembly CSV (Comment,Designator,Footprint,LCSC) from
-the declared circuits — manufacture-ready part selection lives in the model.
-"""
+"""Netlist-first KiCad generator: subsystem sheets, board hierarchy, PCB
+foundation and the gates that judge them."""
 
 from __future__ import annotations
 
 import os as _os
 import sys as _sys
 
-# U1f: --project must be visible BEFORE engine modules import (their paths
-# resolve at import time from SCHGEN_PROJECT).
+# SCHGEN_PROJECT must be set BEFORE the engine imports below resolve their paths.
 if "--project" in _sys.argv:
     _i = _sys.argv.index("--project")
     if _i + 1 < len(_sys.argv):
@@ -59,11 +40,6 @@ def _subsystem_path(name_or_path: str) -> Path:
     path = Path(name_or_path)
     if not path.suffix == ".py":
         stem = Path(name_or_path).stem
-        # Support BOTH the flat carrier/subsystems/<name>.py layout AND the
-        # foldered carrier/subsystems/<name>/<name>.py package layout (the
-        # foldered form wins if both somehow exist) — same resolution as
-        # schgen.core.link._carrier_subsystem_file, so `schgen build`/`board`
-        # discover a folded carrier subsystem exactly as the linker does.
         foldered = SUBSYSTEMS_DIR / stem / f"{stem}.py"
         path = foldered if foldered.exists() else SUBSYSTEMS_DIR / f"{stem}.py"
     if not path.exists():
@@ -72,20 +48,12 @@ def _subsystem_path(name_or_path: str) -> Path:
 
 
 def _load_subsystem(name_or_path: str):
-    """Import a subsystem .py by name (carrier/subsystems/<name>.py) or path."""
     path = _subsystem_path(name_or_path)
     spec = importlib.util.spec_from_file_location(f"carrier_subsys_{path.stem}", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
 
-
-# ---- PURITY GATE: subsystem modules are netlist-only --------------------------
-# A subsystem .py may import schgen.core.model (and stdlib) — NOTHING geometric.
-# Manual placement is banned structurally: defining `placer` or importing any
-# placement/emit/route/text-metrics API fails the build BEFORE the module is
-# even executed (the scan is on the source, so a broken geometry import still
-# yields the clear gate message, not a stack trace).
 
 _BANNED_MODULES = ("schgen.layout.place", "schgen.output.emit",
                    "schgen.layout.route", "schgen.layout.textmetrics",
@@ -132,21 +100,11 @@ def _purity_violations(path: Path) -> list[str]:
                                f"geometry APIs are off-limits to subsystems")
     return out
 
-# Pin types KiCad's ERC accepts as net drivers (pin_not_driven test).
 _ERC_DRIVER_ETYPES = {"output", "bidirectional", "tri_state", "passive",
                   "power_out", "open_collector", "open_emitter"}
 
 
 def _check_inputs_driven(c: Circuit, lib: Library) -> list[str]:
-    """STRICT replacement for KiCad's pin_not_driven on fragment sheets.
-
-    Every 'input' pin must sit on a net that either (a) carries a real
-    same-sheet driver-class pin, (b) is a POWER/GROUND rail (power symbols +
-    PWR_FLAG drive it), or (c) is an explicit PORT net — the driver arrives
-    when the hierarchy is assembled, exactly like the carrier's hier-label
-    sheets. A non-PORT internal net feeding an input with no driver is a real
-    authoring bug and FAILS the build here, before any geometry exists.
-    """
     etype_of = {(ref, p.number): p.etype
                 for ref, part in c.parts.items()
                 for p in lib.get(part.lib_id).pins}
@@ -163,11 +121,6 @@ def _check_inputs_driven(c: Circuit, lib: Library) -> list[str]:
 
 
 def strip_report_timestamp(report: Path) -> None:
-    """kicad-cli stamps its ERC report with wall-clock time — the one
-    non-content byte in an otherwise fully content-derived regeneration.
-    Elide it from the SAVED artifact (the committed proof) so building the
-    board twice produces zero git diff. The gate itself is the kicad-cli
-    EXIT CODE plus the violation lines, both untouched."""
     if report.exists():
         first, _, rest = report.read_text().partition("\n")
         report.write_text(
@@ -176,13 +129,6 @@ def strip_report_timestamp(report: Path) -> None:
 
 
 def _erc(sch: Path, report: Path) -> tuple[bool, str]:
-    # Fragment-sheet ERC policy (matches boards/carrier/carrier.kicad_pro):
-    # pin_not_driven is demoted to WARNING because a standalone subsystem
-    # sheet's PORT-net inputs are, by construction, driven only after
-    # hierarchical assembly (KiCad counts no global-label shape as a driver).
-    # The build compensates with the STRICTER _check_inputs_driven above,
-    # which unlike KiCad's check cannot be silenced by a stray passive on a
-    # non-PORT net. Everything else stays at kicad-cli factory severity.
     pro = sch.with_suffix(".kicad_pro")
     pro.write_text(json.dumps({
         "meta": {"filename": pro.name, "version": 3},
@@ -209,11 +155,6 @@ def _render(sch: Path, png: Path, dpi: int = 300) -> bool:
 
 def cmd_build(args: argparse.Namespace) -> int:
     import tempfile
-    # `build` is a GATING/PREVIEW tool: with no -o it writes the emitted
-    # .kicad_sch + render into a transient TemporaryDirectory and persists
-    # NOTHING. The committed per-sheet renders come ONLY from `schgen board`
-    # (the hierarchy render), so a standalone build never overwrites
-    # carrier/renders/<name>.png (which would drift the goldens).
     if args.outdir is not None:
         return _build_into(args, args.outdir)
     with tempfile.TemporaryDirectory(prefix="schgen_build_") as tmp:
@@ -289,9 +230,6 @@ def _build_into(args: argparse.Namespace, outdir: Path) -> int:
 
 
 def cmd_bom(args: argparse.Namespace) -> int:
-    """JLCPCB assembly BOM: Comment,Designator,Footprint,LCSC (one row per
-    value+footprint+LCSC group). Parts missing an LCSC field are listed and
-    fail the export unless --allow-missing."""
     rows: dict[tuple[str, str, str], list[str]] = {}
     missing: list[str] = []
     for name in args.subsystems:
@@ -299,14 +237,11 @@ def cmd_bom(args: argparse.Namespace) -> int:
         c = mod.circuit()
         for ref, part in sorted(c.parts.items()):
             if part.fields.get("BOM") == "exclude":
-                continue       # pad-only test points: copper, no BOM line
+                continue
             lcsc = part.fields.get("LCSC", "")
             if not lcsc:
                 missing.append(f"{c.name}:{ref} ({part.value})")
             rows.setdefault((part.value, part.footprint, lcsc), []).append(ref)
-    # Standalone preview: default to the CWD (the authoritative per-board
-    # bom_jlc.csv is written into carrier/manufacturing/ by `schgen board`);
-    # pass -o to choose. Never carrier/out.
     out = args.output or (Path.cwd() / "bom_jlc.csv")
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", newline="") as f:
@@ -328,14 +263,10 @@ CARRIER = PROJECT_ROOT
 
 
 def _pcb_error_count(pcb_path: Path) -> int:
-    """kicad-cli pcb drc at ERROR severity → number of real (non-unrouted)
-    violations. Unrouted-net items are reported separately by kicad-cli and do
-    NOT count as DRC violations, so a clean foundation returns 0."""
     import tempfile as _tf
     with _tf.TemporaryDirectory(prefix="schgen_pcbdrc_") as td:
         rpt = Path(td) / "drc.json"
-        # --refill-zones: the emitted zones are unfilled on disk (byte
-        # determinism) — DRC must judge the REAL computed fill (LAW 0).
+        # Zones are unfilled on disk; --refill-zones makes DRC judge the real fill.
         subprocess.run(
             ["kicad-cli", "pcb", "drc", "--format", "json",
              "--severity-error", "--refill-zones",
@@ -351,7 +282,6 @@ def _pcb_error_count(pcb_path: Path) -> int:
 
 
 def _ahash(png: Path) -> str:
-    """16x16 average hash — perceptual, robust to PNG byte noise."""
     from PIL import Image
     im = Image.open(png).convert("L").resize((16, 16))
     px = list(im.getdata())
@@ -360,12 +290,6 @@ def _ahash(png: Path) -> str:
 
 
 def _golden_check(ren_dir: Path, bless: bool) -> None:
-    """Golden render snapshots: drift WARNS, --bless accepts new goldens.
-
-    Only the per-sheet SCHEMATIC renders are golden-tracked. The PCB ratsnest
-    images (ratsnest_top/bottom.png) are PLACEMENT renders that legitimately
-    change whenever the placer moves a part, and are gated separately by the
-    LAW-5 ratsnest gate — so they are excluded from the schematic golden set."""
     golden_path = ren_dir / "golden.json"
     cur = {p.stem: _ahash(p) for p in sorted(ren_dir.glob("*.png"))
            if not p.stem.startswith("ratsnest")}
@@ -403,9 +327,6 @@ def _net_ident(name: str) -> str:
 
 
 def cmd_nets(args: argparse.Namespace) -> int:
-    """GENERATE carrier/nets.py — the cross-sheet net-name contract as
-    Python attributes (SoM contract nets + the gated/board rails), so port
-    names are attrs, not strings to typo."""
     from schgen.core.link import all_subsystem_paths, load_som_contract, load_subsystem
     som = load_som_contract()
     rails: set[str] = set()
@@ -438,9 +359,6 @@ def cmd_nets(args: argparse.Namespace) -> int:
 
 
 def cmd_board(args: argparse.Namespace) -> int:
-    """ONE command: every sheet gated, link + board netlist gate, an
-    openable carrier KiCad project, constraints, block diagram, JLC BOM —
-    all written into the committed carrier/ output taxonomy."""
     import tempfile
 
     from schgen.core.link import (
@@ -468,12 +386,6 @@ def cmd_board(args: argparse.Namespace) -> int:
     verdicts: list[str] = []
     ok_all = True
 
-    # Per-phase wall-time breakdown (printed only with --timing; stdout-only, so
-    # it changes no committed artifact). Build observability: once the symbol-lib
-    # parse was cached process-globally (symbols._FILE_PARSE_CACHE — the verify +
-    # downstream phase fell 243 s -> 14 s), the build is dominated by the
-    # kicad-cli passes (per-sheet ERC/render + the root hierarchy ERC), NOT by
-    # Python place/route or the gates — `--timing` keeps speed work targeted.
     import time as _time
     _laps: list[tuple[str, float]] = []
     _t_mark = [_time.perf_counter()]
@@ -483,12 +395,8 @@ def cmd_board(args: argparse.Namespace) -> int:
         _laps.append((label, now - _t_mark[0]))
         _t_mark[0] = now
 
-    # Pass 1 (sequential, CPU-bound): purity / validate / place+route / emit /
-    # visual. Records the per-name outcome so the parallel gate pass and the
-    # verdict pass below preserve EXACT names-order semantics — gates.txt is
-    # written from `verdicts` and is order-sensitive.
-    prepared: list[tuple] = []            # sheets that reached the kicad-cli gates
-    early_fail: dict[str, str | None] = {}  # name -> gates.txt verdict (or None)
+    prepared: list[tuple] = []
+    early_fail: dict[str, str | None] = {}
     for name in names:
         spath = _subsystem_path(name)
         purity = _purity_violations(spath)
@@ -497,7 +405,7 @@ def cmd_board(args: argparse.Namespace) -> int:
             for v in purity:
                 print(f"  {v}")
             ok_all = False
-            early_fail[name] = None         # no gates.txt verdict (as before)
+            early_fail[name] = None
             continue
         sc = load_subsystem(name)
         c = sc.circuit
@@ -512,9 +420,7 @@ def cmd_board(args: argparse.Namespace) -> int:
             continue
         try:
             placement, routed, geo = place.place_and_route(c, lib)
-        except Exception as exc:  # noqa: BLE001 — one blocked sheet must not
-            # kill the whole board run: record the FAIL verdict (board exits
-            # non-zero) and keep gating/linking every other sheet.
+        except Exception as exc:  # noqa: BLE001
             msg = str(exc).splitlines()[-1][:140]
             early_fail[name] = f"{name}: place/route=FAIL ({msg})"
             print(early_fail[name])
@@ -532,12 +438,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         vis = visual_gate.check(geo)
         prepared.append((name, sc, c, sch, vis, placement.paper))
 
-    # Pass 2 (parallel): the three per-sheet kicad-cli gates are independent
-    # across sheets and dominate wall time. netlist export (unique tempdir),
-    # ERC (per-sheet .kicad_pro + report), render (per-sheet PNG) all write
-    # only per-sheet paths, so running the child processes concurrently is
-    # behaviour-preserving — each gate sees the exact same inputs/outputs as
-    # the serial run; only the dispatch is threaded.
     def _gate_one(item: tuple):
         name, _sc, c, sch, _vis, _paper = item
         net_res = netlist_gate.check(c, sch)
@@ -549,16 +449,12 @@ def cmd_board(args: argparse.Namespace) -> int:
     gate_out: dict[str, tuple] = {}
     if prepared:
         from concurrent.futures import ThreadPoolExecutor
-        # kicad-cli ops are I/O-bound subprocess waits, so use all cores (not the
-        # old min(8,...) cap) — more concurrent launches, same per-sheet inputs.
         with ThreadPoolExecutor(max_workers=(os.cpu_count() or 8)) as ex:
             for name, net_res, erc_ok in ex.map(_gate_one, prepared):
                 gate_out[name] = (net_res, erc_ok)
 
     _lap("pass1+2: place/route + per-sheet kicad-cli (netlist/erc/render)")
 
-    # Pass 3 (sequential, names order): assemble verdicts (-> gates.txt) and
-    # the ordered `sheets` list exactly as the original serial loop did.
     prep_by_name = {p[0]: p for p in prepared}
     for name in names:
         if name in early_fail:
@@ -576,13 +472,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(verdicts[-1])
         sheets.append(sc)
 
-    # INDEPENDENT connected-components gate (verification P4, no kicad-cli):
-    # rebuilds connectivity from the emitted GEOMETRY (net-blind union-find over
-    # wires/junctions/pins, legal same-name label/power merges) and compares to
-    # the declared nets — a SHORT = two declared nets in one component, an OPEN
-    # = one net split. A second oracle disjoint from kicad-cli, so the board
-    # never rests on a single netlist witness (LAW 0). Reuses the in-memory
-    # placements/prepared already built — no extra place/route.
     from schgen.verify import cc_gate
     cc_prepared = [(name, c, placements[name][0], placements[name][1])
                    for (name, sc, c, _sch, _vis, _paper) in prepared
@@ -596,10 +485,6 @@ def cmd_board(args: argparse.Namespace) -> int:
             print("  " + _r.summary().replace("\n", "\n  "))
     ok_all = ok_all and cc_res.ok
 
-    # SYMBOL-LAW gate (user decree "0 hand-built symbols"): every board part on
-    # a schgen-local lib_id must be a (power) rail flag, never a hand-drawn
-    # real-part symbol. HARD-FAIL the board on any violation (a tracked-pending
-    # exception list keeps a documented in-progress migration from blocking).
     from schgen.verify import symbol_law
     sl_res = symbol_law.check([sc.circuit for sc in sheets], lib)
     (rep_dir / "symbol_law.txt").write_text(sl_res.summary() + "\n")
@@ -609,7 +494,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  {_v}")
     ok_all = ok_all and sl_res.ok
 
-    # link + constraints + diagram
     som_nets = load_som_contract()
     res = link(sheets, som_nets)
     (rep_dir / "link_report.txt").write_text(res.report() + "\n")
@@ -619,12 +503,6 @@ def cmd_board(args: argparse.Namespace) -> int:
     constraints.export(sheets, man_dir)
     diagram.render(res, som_nets, REPO_ROOT / "docs" / "block_diagram.svg")
 
-    # STABLE refdes: a part's board-unique reference is a permanent identity.
-    # carrier/sheet_index.json is a FROZEN, APPEND-ONLY name->band-index map, so
-    # adding/removing/reordering a sheet never re-strides another sheet's refdes
-    # (the old scheme keyed the band on alphabetical position -> inserting a
-    # mid-alphabet sheet renumbered every later sheet). New sheets append at the
-    # next free index; the registry is committed so the assignment is permanent.
     _idx_path = CARRIER / "sheet_index.json"
     _sheet_index = json.loads(_idx_path.read_text()) if _idx_path.exists() else {}
     _new = sorted(sc.name for sc in sheets if sc.name not in _sheet_index)
@@ -637,7 +515,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"sheet-index: assigned {len(_new)} new sheet(s) a stable refdes "
               f"band -> {', '.join(f'{n}={_sheet_index[n]}' for n in _new)}")
 
-    # hierarchy: the openable carrier project + the board netlist gate
     board_ok = board_mod.build_board(
         sheets, lib, CARRIER, placements=placements,
         root_name="Zynq_Carrier", sheet_subdir="schematic",
@@ -646,13 +523,6 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     _lap("pass3 + cc_gate + link + build_board (hierarchy + board ERC)")
 
-    # SPEED: the PCB foundation + its kicad-cli DRC is independent of every
-    # verify gate + downstream doc generator that follows — nothing before the SI
-    # step (which extends the .dru it writes) reads the .kicad_pcb/.dru. Run it on
-    # a worker thread NOW so its kicad-cli wait overlaps the verify+downstream
-    # phase, and JOIN it just before SI. Outputs are content-derived, so
-    # concurrency changes not one emitted byte. (kicad-cli releases the GIL, so
-    # this overlap is real even though the Python gates do not.)
     import threading as _threading
 
     from schgen.generate import pcb as pcb_mod
@@ -661,18 +531,17 @@ def cmd_board(args: argparse.Namespace) -> int:
     def _run_pcb() -> None:
         try:
             _pcb_holder["res"] = pcb_mod.generate(run_drc=True)
-        except Exception as exc:  # noqa: BLE001 — re-raised at the join site
+        except Exception as exc:  # noqa: BLE001
             _pcb_holder["exc"] = exc
     _pcb_thread = _threading.Thread(target=_run_pcb, name="pcb+drc", daemon=True)
     _pcb_thread.start()
 
-    # JLC BOM across every sheet (missing LCSC = warning at board level)
     rows: dict[tuple[str, str, str], list[str]] = {}
     missing: list[str] = []
     for sc in sheets:
         for ref, part in sorted(sc.circuit.parts.items()):
             if part.fields.get("BOM") == "exclude":
-                continue       # pad-only test points: copper, no BOM line
+                continue
             lcsc = part.fields.get("LCSC", "")
             if not lcsc:
                 missing.append(f"{sc.name}:{ref} ({part.value})")
@@ -686,11 +555,6 @@ def cmd_board(args: argparse.Namespace) -> int:
     print(f"BOM: {man_dir / 'bom_jlc.csv'} ({len(rows)} line items"
           f"{f', {len(missing)} missing LCSC' if missing else ''})")
 
-    # BOM footprint gate (DEF-3): a BOM line with no footprint is un-orderable
-    # — JLC (and any assembler) cannot place it. Inline Device:C/Device:R now
-    # default a 0603/0805 footprint (model._default_footprint), so this gate
-    # backstops any remaining footprint-less BOM part (e.g. a use_part whose
-    # library FOOTPRINT is blank).
     no_fp = [(value, ",".join(refs))
              for (value, fp, lcsc), refs in rows.items() if not fp]
     if no_fp:
@@ -702,8 +566,6 @@ def cmd_board(args: argparse.Namespace) -> int:
     else:
         print(f"BOM FOOTPRINT GATE: PASS — all {len(rows)} BOM lines placeable")
 
-    # power-tree budget gate (round 4): regulator tree from the netlists +
-    # declared draws -> headroom proof, numbered SVG, verdict report.
     from schgen.verify import powertree
     pt_res = powertree.run(sheets, rep_dir, CARRIER / "docs")
     print(f"POWER TREE: {'PASS' if pt_res.ok else 'FAIL'} "
@@ -713,12 +575,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  POWER TREE ERROR: {e}")
     ok_all = ok_all and pt_res.ok
 
-    # RAIL AMPACITY: best-practice gate #5 / GAP5 — DF40 power-delivery contact
-    # adequacy. Reuses pt_res' rail tree (no recompute); counts the DF40 contacts
-    # assigned to each SoM-delivered rail (som_interface.json, linker rail maps)
-    # and HARD-FAILS any rail whose current exceeds n_contacts x 0.3 A (Hirose
-    # DF40 rated, CITED) x 0.8 derate. Same wiring pattern as thermal/return_stitch.
-    # Ring-0: keep this block minimal when reconciling with concurrent gate adds.
     from schgen.verify import rail_ampacity
     ra_res = rail_ampacity.run(sheets, rep_dir, pt_res=pt_res)
     print(f"RAIL AMPACITY: {'PASS' if ra_res.ok else 'FAIL'} "
@@ -729,14 +585,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  RAIL AMPACITY ERROR: {e}")
     ok_all = ok_all and ra_res.ok
 
-    # per-device thermal (Tj) gate: MOVED below, after the PCB emit + join —
-    # its pour-aware RthJA credits are granted only against copper VERIFIED in
-    # the just-emitted .kicad_pcb (LAW 0 / GAP1: prose is not evidence), so it
-    # must run once the board file is complete (never concurrently with the
-    # PCB worker thread writing it).
-
-    # test-point coverage gate (round 4): every rail + key single-ended bus
-    # owns a probe point or an explicit author waiver.
     from schgen.verify import testpoints
     tp_res = testpoints.check_coverage(sheets)
     (rep_dir / "testpoints.txt").write_text(tp_res.report() + "\n")
@@ -747,11 +595,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  TESTPOINT ERROR: {e}")
     ok_all = ok_all and tp_res.ok
 
-    # design-rule completeness gate (verification P1): infers pin FUNCTION by
-    # NAME (etypes are flat 'passive') and proves the netlist is electrically
-    # COMPLETE — every IC supply pin decoupled, every i2c bus pulled, every
-    # reset has an RC, no config strap floats. Strict (LAW 4): real exceptions
-    # are author-waived (c.waive_decap/_pull/_reset/_strap), never relaxed.
     from schgen.verify import design_rules
     dr_res = design_rules.run(sheets, rep_dir, lib=lib)
     print(f"DESIGN RULES: {'PASS' if dr_res.ok else 'FAIL'} "
@@ -761,10 +604,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  DESIGN RULE: {f}")
     ok_all = ok_all and dr_res.ok
 
-    # per-part RULE engine (verification): cap voltage derating + regulator
-    # input abs-max vs the rail the netlist puts each part on (ratings from
-    # schgen/ratings.py; rail tree reused from pt_res). Fail-soft on unspeced;
-    # tight margins are author-waived (c.waive_part_rule). LAW 4.
     from schgen.verify import part_rules
     pr_res = part_rules.run(sheets, rep_dir, pt_res=pt_res)
     print(f"PART RULES: {'PASS' if pr_res.ok else 'FAIL'} "
@@ -775,11 +614,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  PART RULE: {f}")
     ok_all = ok_all and pr_res.ok
 
-    # BOM value gate (data-integrity, LAW 0): the LCSC code behind every inline
-    # passive must resolve to the DECLARED value/package (live-verified catalog
-    # in schgen/verify/data/lcsc_values.json). Closes the C25750-class hole — a
-    # mis-keyed 40.2k FB resistor that was really a 120k part (~13 V on the 5 V
-    # rail). HARD-FAIL on a value mismatch; uncatalogued codes are reported.
     from schgen.verify import bom_values
     bv_res = bom_values.run(sheets, rep_dir)
     print(f"BOM VALUES: {'PASS' if bv_res.ok else 'FAIL'} "
@@ -789,13 +623,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  BOM VALUE: {m}")
     ok_all = ok_all and bv_res.ok
 
-    # footprint pad-coverage gate (LAW 0): every symbol pin NUMBER must exist as
-    # a PAD in the part's assigned footprint — a pin with no pad is a guaranteed
-    # OPEN that ERC/netlist/cc gates are all blind to (they reason about the
-    # SYMBOL, never the footprint). This is the exact hole that let ethernet:T1
-    # (HX5008NLT) use pins 25/26 on a 24-pad SOIC-24W — the 4th gigabit pair was
-    # dead copper. That T1 defect is now fixed (faithful 24-pad HX5008NL
-    # dossier), so the board has zero pin-without-pad and this gate is HARD-FAIL.
     from schgen.verify import footprint_pads
     fpp_res = footprint_pads.run(sheets, rep_dir, lib=lib)
     print(f"FOOTPRINT PADS: {'PASS' if fpp_res.ok else 'FAIL'} "
@@ -806,14 +633,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  FOOTPRINT PAD: {v}")
     ok_all = ok_all and fpp_res.ok
 
-    # pin-completeness gate (LAW 0): every multi-pin IC pin is netted or an
-    # explicit NC — a pin in neither is a silent float (probable missing
-    # connection). Circuit.validate() already enforces this at build time, so
-    # this is the standalone regression witness + the curated NC ALLOWLIST
-    # emitter (the artifact that lets the gate promote to hard-fail once every
-    # NC is blessed). REPORT-FIRST: reports the float count + NC allowlist and
-    # writes pin_completeness.txt but does NOT fail the board. PROMOTE TO
-    # HARD-FAIL once the NC allowlist is fully blessed (uncomment below).
     from schgen.verify import pin_completeness
     pc_res = pin_completeness.run(sheets, rep_dir, lib=lib)
     print(f"PIN COMPLETENESS: {'PASS' if pc_res.ok else 'REPORT'} "
@@ -822,17 +641,7 @@ def cmd_board(args: argparse.Namespace) -> int:
           f"{len(pc_res.nc_new)} to-bless -> {rep_dir / 'pin_completeness.txt'})")
     for f in pc_res.floats:
         print(f"  PIN COMPLETENESS: {f}")
-    # REPORT-FIRST: ok_all unchanged until the NC allowlist is fully blessed.
-    # ok_all = ok_all and pc_res.ok
 
-    # reusable-subsystem PACKAGE-STRUCTURE gate (REPORT-FIRST): every migrated
-    # subsystems/<name>/ library package has its four contract artifacts +
-    # a declared abstract INTERFACE that matches its netlist's externals. The
-    # HARD-FAIL (promoted 2026-06-15 once every portable subsystem was packaged):
-    # every subsystems/<name>/ package must be COMPLETE + well-formed (the four
-    # contract artifacts + a circuit(meta=) exposing a declared abstract
-    # INTERFACE that matches the built externals). An incomplete/ drifted package
-    # now FAILS the board — the reusable-subsystem library cannot silently rot.
     from schgen.verify import subsystem_structure
     ssr = subsystem_structure.run(rep_dir)
     print(f"SUBSYSTEM STRUCTURE: {'PASS' if ssr.ok else 'FAIL'} "
@@ -844,9 +653,6 @@ def cmd_board(args: argparse.Namespace) -> int:
                 print(f"  SUBSYSTEM {_p.name}: {_m}")
     ok_all = ok_all and ssr.ok
 
-    # carrier PACKAGE-STRUCTURE gate (HARD): every carrier/subsystems/<name>/ is
-    # a complete package (the four artifacts + __init__ + a callable circuit()),
-    # uniform with the generic library — adapters AND carrier-local sheets alike.
     from schgen.verify import carrier_structure
     csr = carrier_structure.run(rep_dir)
     print(f"CARRIER STRUCTURE: {'PASS' if csr.ok else 'FAIL'} "
@@ -858,11 +664,6 @@ def cmd_board(args: argparse.Namespace) -> int:
                 print(f"  CARRIER {_p.name}: {_m}")
     ok_all = ok_all and csr.ok
 
-    # SPICE/analytic spot-checks (round 4, P5 pulled forward): dividers,
-    # RC ramps, ISET/FB math auto-extracted from the netlists, thresholds
-    # hard. The closed-form analytics ARE the gate; the ngspice .op
-    # cross-check layer runs whenever ngspice is installed (1% agreement
-    # enforced) and degrades honestly to analytic-only when it is not.
     from schgen.verify import spice
     sp_res = spice.run(sheets, rep_dir, allow_ngspice=True)
     print(f"SPICE: {'PASS' if sp_res.ok else 'FAIL'} "
@@ -872,9 +673,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  SPICE ERROR: {e}")
     ok_all = ok_all and sp_res.ok
 
-    # Vivado pin constraints (round 4): every carrier PORT bound through
-    # J2/J3 to a Zynq PL ball, ball map live-extracted from the SoM project
-    # and cross-checked against the committed contract.
     from schgen.generate import xdc
     try:
         xres = xdc.generate(sheets, CARRIER / "fpga" / "Zynq_Carrier_pins.xdc")
@@ -884,9 +682,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"XDC: FAIL — {exc}")
         ok_all = False
 
-    # Vivado project-creation TCL (downstream P2): turns the generated XDC into
-    # a sourceable Vivado project — same device + clock-capable port set as the
-    # XDC, derived the same way (live SoM extraction).
     from schgen.generate import vivado
     try:
         vtcl = vivado.generate(sheets, CARRIER / "fpga" / "create_project.tcl")
@@ -895,11 +690,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"VIVADO: FAIL — {exc}")
         ok_all = False
 
-    # round-4 system artifacts, derived from the same netlists. Each generator
-    # resolves its input sheets against the ACTIVE PROJECT: absent optional
-    # inputs drop their sections; a generator whose REQUIRED role sheets the
-    # project does not carry SKIPs loudly (an honest capability verdict, not a
-    # failure — the project has no such artifact to generate).
     from schgen.generate import firmware, gallery, manual, testplan
     try:
         fw_out = firmware.generate()
@@ -923,8 +713,6 @@ def cmd_board(args: argparse.Namespace) -> int:
             print(f"BRINGUP MANUAL: FAIL — {exc}")
             ok_all = False
     try:
-        # measurable acceptance test plan (downstream P4 + DFM-3): SPICE
-        # expected/limit values joined to test-point probe pads + DIP stages.
         tp_out = testplan.generate(sheets=sheets)
         print(f"TEST PLAN: {tp_out}")
     except Exception as exc:  # noqa: BLE001
@@ -938,8 +726,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"GALLERY: FAIL — {exc}")
         ok_all = False
 
-    # PS-side device-tree fragment (downstream P3): the PS twin of the XDC —
-    # microSD bus + the bare PS MIO pins the XDC drops, into a commented .dtsi.
     from schgen.generate import devicetree
     try:
         dt_out = devicetree.generate(CARRIER / "firmware" / "carrier_pl.dtsi")
@@ -948,10 +734,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"DEVICETREE: FAIL — {exc}")
         ok_all = False
 
-    # SC bring-up firmware SCAFFOLD (Stream E): the IMPLEMENTATION twin of the
-    # firmware CONTRACT — portable C behind a sc_hal abstraction a Zephyr port
-    # backs (rail-sequencing state machine + I2C/EN/monitor tables + WDT/PD
-    # hooks), all netlist-derived. Additive; deterministic.
     from schgen.generate import scfw
     scfw_missing = scfw.missing_requirements()
     if scfw_missing:
@@ -967,20 +749,6 @@ def cmd_board(args: argparse.Namespace) -> int:
             print(f"SCFW SCAFFOLD: FAIL — {exc}")
             ok_all = False
 
-    # floorplan suggestion (SVG + MD) is built AFTER the PCB worker thread is
-    # joined (see below), NOT here. floorplan.generate calls fp.build_plan, which
-    # WRITES the module globals fp.BOARD_W/BOARD_H; the PCB worker thread (started
-    # above) is concurrently running build_model -> fp.build_plan, which WRITES
-    # those SAME globals and then READS them to emit Edge.Cuts. Running both
-    # build_plan calls at once raced the outline against the placement and tore
-    # the emitted board (160x150 ratsnest-over, 160x145 DRC-3). Deferring this
-    # call past _pcb_thread.join() removes the concurrent writer (LAW 0/5: the
-    # emitted outline now always matches the placement the gates measured).
-
-    # power-up SEQUENCE diagram (SVG), derived from the SAME pt_res power-tree
-    # analysis the budget gate above ran — the staged bring-up drawn (stage-0
-    # always-on rails -> the DIP-gated rail chain -> the gated module rails), so
-    # the diagram can never drift from the netlist. Deterministic; additive.
     from schgen.generate import power_sequence
     try:
         ps_out = power_sequence.generate(sheets, pt_res)
@@ -992,25 +760,15 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     _lap("verify gates (powertree..spice) + xdc/vivado + downstream doc generators")
 
-    # PCB FOUNDATION (Stream D): an openable .kicad_pcb seeded from the merged
-    # board netlist just emitted — outline + forced 4-layer Sig/GND/PWR/Sig
-    # stackup + net classes + .kicad_dru + every BOM footprint placed net-
-    # accurately (NOT routed). Additive: a DRC ERROR (beyond the expected
-    # unrouted-net items) fails the board; warnings (silk, lib-not-in-config)
-    # do not. Started on a worker thread right after build_board (above) so its
-    # ~70 s DRC overlaps the verify+downstream phase; JOINED here, before SI
-    # extends the .dru it wrote. It merged into the same .kicad_pro build_board
-    # opened (build_board finished before the thread started).
     pcb_res = None
     try:
+        # Joined here, before SI extends the .kicad_dru the PCB thread wrote.
         _pcb_thread.join()
         if "exc" in _pcb_holder:
             raise _pcb_holder["exc"]      # type: ignore[misc]
         pcb_res = _pcb_holder["res"]
         drc = pcb_res["drc"]
         derr = (drc or {}).get("n_violations", 0)
-        # n_violations counts errors+warnings; the gate is the error count via
-        # a second strict pass (severity-error only) inside run_pcb_drc's rc.
         pcb_errs = _pcb_error_count(pcb_res["pcb"])
         print(f"PCB: {pcb_res['pcb'].relative_to(REPO_ROOT)} "
               f"({pcb_res['board_w']:g} x {pcb_res['board_h']:g} mm, 4L "
@@ -1025,12 +783,6 @@ def cmd_board(args: argparse.Namespace) -> int:
             print(f"  PCB DRC: FAIL — {pcb_errs} non-unrouted error(s)")
             ok_all = False
 
-        # LAW-5 RATSNEST/PLACEMENT gate (HARD): the visual oracle DRC=0 can't be.
-        # The PCB step already drew the per-side ratsnest images + ran the gate
-        # on the SAME model (no rebuild). FAIL the board on any off-board part, a
-        # dispersed (non-grouped) subsystem, or a cross-subsystem airwire budget
-        # overrun. The IMAGES (carrier/renders/ratsnest_{top,bottom}.png +
-        # carrier/docs/RATSNEST.svg) are the human check this gate backstops.
         rg = pcb_res.get("ratsnest_gate")
         rimg = pcb_res.get("ratsnest") or {}
         if rg is not None:
@@ -1062,12 +814,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(_asm_line)
         ok_all = ok_all and _asm_ok
 
-        # LAW-6 MECHANICAL / USE-CASE PLACEMENT gate (HARD): the buildability
-        # oracle DRC=0 + ratsnest-pass are blind to. The PCB step ran it on the
-        # SAME placed model (no rebuild). FAIL the board on any off-board
-        # connector that is interior or inward-facing, any non-passive/test-
-        # point/control under the SoM module body. This is the gate LAW 6 exists
-        # to add — a densifier can never silently trade away connectability.
         mg = pcb_res.get("placement_mech")
         if mg is not None:
             (rep_dir / "placement_mech.txt").write_text(mg.summary() + "\n")
@@ -1089,9 +835,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("PLACEMENT (LAW 6): FAIL — gate did not run")
             ok_all = False
-        # LAW-6 connector 3D-MODEL ORIENTATION gate — a stray model rotate (or a
-        # mating-face typo) flips the rendered opening inward while every other
-        # gate stays green (the USB-C/HDMI/RJ45/FFC bug class).
         cmr = pcb_res.get("connector_model")
         if cmr is not None:
             (rep_dir / "connector_model.txt").write_text(cmr.summary() + "\n")
@@ -1107,8 +850,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("CONNECTOR MODEL (LAW 6): FAIL — gate did not run")
             ok_all = False
-        # LAW-6 connector OVERMOLD SPACING gate — two simultaneous-mate cable
-        # connectors (HDMI TX+RX) need a real gap or only one cable fits.
         cg = pcb_res.get("connector_spacing")
         if cg is not None:
             (rep_dir / "connector_spacing.txt").write_text(cg.summary() + "\n")
@@ -1122,8 +863,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("CONNECTOR SPACING (LAW 6): FAIL — gate did not run")
             ok_all = False
-        # LAW-1 SILK gate — no two VISIBLE reference designators overprint (the
-        # _declutter_refdes invariant), proven on the emitted board file.
         rg = pcb_res.get("refdes_silk")
         if rg is not None:
             print(f"REFDES SILK (LAW 1): {'PASS' if rg.ok else 'FAIL'} "
@@ -1135,11 +874,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("REFDES SILK (LAW 1): FAIL — gate did not run")
             ok_all = False
-        # PLACEMENT-CONTRACT gate (Phase L, HARD) — the datasheet intra-zone
-        # layout contract (hot loop / FB cluster / bulk_out / same-side ...)
-        # checked on the SAME placed model (no rebuild). A value-sorted power zone
-        # (the "before" defect) FAILS here even under DRC=0 + ratsnest/mech-pass;
-        # only ``power`` carries a contract today. LAW 4: no soft mode.
         pcg = pcb_res.get("placement_contract")
         if pcg is not None:
             (rep_dir / "placement_contract.txt").write_text(pcg.summary() + "\n")
@@ -1157,12 +891,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("PLACEMENT CONTRACT (Phase L): FAIL — gate did not run")
             ok_all = False
-        # CONTRACT COVERAGE (ADVISORY): EVERY authored contract vs the emitted
-        # board — not just the 3 _WIRED_SHEETS the hard gate covers. Surfaces the
-        # un-wired contracts' silently-violated intra-zone SI/PI proximities
-        # (decoupling far from its IC, ESD far from its connector) so the
-        # enforcement gap is VISIBLE + tracked, not an inert comment. Report-only
-        # (a wiring backlog); the hard PLACEMENT CONTRACT above stays the arbiter.
         cov = pcb_res.get("contract_coverage")
         if cov is not None:
             from schgen.verify import placement_contract_gate as _cov_g
@@ -1178,10 +906,6 @@ def cmd_board(args: argparse.Namespace) -> int:
               f"-> {rep_dir / 'contract_coverage_lint.txt'}")
         if _ccl.ENFORCE:
             ok_all = ok_all and _cl.ok
-        # COMPOSITION-LEVEL FLOW/FACING/FAR gate (Phase L, HARD) — the contract's
-        # EXTERNAL terms (power-chain adjacency, output facing downstream, analog
-        # moat) checked on the whole placed board (zone centroids). LAW 4: strict
-        # (an unresolved FAR/flow target FAILS, never a silent skip).
         pfg = pcb_res.get("placement_flow")
         if pfg is not None:
             (rep_dir / "placement_flow.txt").write_text(pfg.summary() + "\n")
@@ -1200,18 +924,12 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("PLACEMENT FLOW (Phase L): FAIL — gate did not run")
             ok_all = False
-        # T1 COMPOSITION term ledger (ADVISORY report, never a gate — D-5).
-        # Every authored external term (wired or not) + the D13 channel-demand
-        # hotspots, measured on the same emitted model by the gate's kernels.
         fcomp = pcb_res.get("floorplan_composition")
         if fcomp is not None:
             (rep_dir / "floorplan_composition.txt").write_text(fcomp + "\n")
             head = fcomp.splitlines()[0] if fcomp else ""
             print(f"COMPOSITION LEDGER (T1, advisory): {head} "
                   f"-> {rep_dir / 'floorplan_composition.txt'}")
-        # RETURN-STITCH gate (T2, return-path v2, HARD) — every v1-failing
-        # DF40 contact must have a carrier GND stitch via <= 2.0 mm, on a
-        # file-visible GND ladder, under the In1 plane.  Class-blind (LAW 4).
         rsg_ = pcb_res.get("return_stitch")
         if rsg_ is not None:
             (rep_dir / "return_stitch.txt").write_text(rsg_.summary() + "\n")
@@ -1226,8 +944,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("RETURN STITCH (T2 v2): FAIL — gate did not run")
             ok_all = False
-        # ESCAPE-LANE gate (T2 Tier-2 plan, HARD) — identity lane order,
-        # clearance pre-proof, 15-GENUINE pair terms, content key.
         elg_ = pcb_res.get("escape_lanes")
         if elg_ is not None:
             (rep_dir / "escape_lanes.txt").write_text(elg_.summary() + "\n")
@@ -1241,12 +957,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         else:
             print("ESCAPE LANES (T2 plan): FAIL — gate did not run")
             ok_all = False
-        # RETURN-PATH v1 — REPORT-ONLY, permanently (the SoM pinout is FIXED;
-        # the contact-level result is a measured fact of the mated interface,
-        # quoted verbatim; the carrier-side hard obligation is the
-        # return-stitch gate above).  Deliberately NOT in ok_all — a tested
-        # design decision (test_return_path_gate.py), never a LAW-4 softening:
-        # the v1 thresholds are untouched and its verdict is printed verbatim.
         rp_ = pcb_res.get("return_path")
         if rp_ is not None:
             (rep_dir / "return_path.txt").write_text(
@@ -1259,17 +969,6 @@ def cmd_board(args: argparse.Namespace) -> int:
                   f"{'PASS' if rp_.ok else 'FAIL — SoM-design fact'} "
                   f"({rp_.n_fail} contacts beyond K={rp_.k} steps "
                   f"-> {rep_dir / 'return_path.txt'})")
-        # FAN-OUT CLEARANCE gate (D13 NO-ROUTING wave, REPORT-FIRST RATCHET) — the
-        # intelligent-uniform placement floor: every multi-pin IC gets breathing
-        # room scaled to its pin count, measured to same-side FOREIGN parts only
-        # (own-cluster decoupling + DF40 plugs excluded). The offender list IS the
-        # deliverable (carrier/reports/fanout.txt). REPORT-FIRST: ``ok`` passes as
-        # long as the starved count does not EXCEED the ratchet baseline (a NEW
-        # starved IC — a placement change that crowds a previously-clear part —
-        # fails LOUDLY); the standing debt is visible + must only DECREASE. NOT
-        # hard-fail yet (many ICs are starved at the 0.5 mm pack floor; the
-        # templates retire the debt build over build). On a PASS the baseline is
-        # ratcheted DOWN to the live count (never up) so the debt can never regrow.
         fo_ = pcb_res.get("fanout")
         if fo_ is not None:
             (rep_dir / "fanout.txt").write_text(fo_.summary() + "\n")
@@ -1286,8 +985,6 @@ def cmd_board(args: argparse.Namespace) -> int:
                 print(f"  FAN-OUT REGRESSION: {_g}")
             ok_all = ok_all and fo_.ok
             if fo_.ok:
-                # ratchet the ceiling DOWN to the live count (write_baseline never
-                # raises it) so a future build that starves a new IC fails.
                 from schgen.verify import fanout_gate
                 fanout_gate.write_baseline(fo_.n_starved)
         else:
@@ -1297,16 +994,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"PCB: FAIL — {exc}")
         ok_all = False
 
-    # per-device thermal (Tj) gate (verification P2): turns the PWR-2/PWR-3
-    # thermal decisions (prose-only) into a regression lock. Reuses pt_res'
-    # regulator tree + I_out; FAILS on any device whose Tj = Ta + Pd*RthJA
-    # exceeds Tj_max - margin (real exceptions author-waived: c.waive_thermal).
-    # Runs HERE — after the PCB worker thread is joined — because the
-    # pour-aware RthJA credits are granted only against copper VERIFIED in the
-    # emitted .kicad_pcb (LAW 0 / GAP1: the 58.7->30 C/W LM61460 credit once
-    # passed on a via field that did not exist). If the PCB step failed, no
-    # evidence is passed and every credit is withheld (fail-closed) — the gate
-    # then fails on the honest bare-RthJA numbers instead of trusting prose.
     from schgen.verify import thermal
     _pcb_file = pcb_res["pcb"] if isinstance(pcb_res, dict) else None
     th_res = thermal.run(sheets, rep_dir, pt_res=pt_res, pcb_path=_pcb_file)
@@ -1319,11 +1006,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  THERMAL ERROR: {e}")
     ok_all = ok_all and th_res.ok
 
-    # COPPER-DEBT ledger (report-only, GAP1 follow-through): every gate basis
-    # string / design prose predicated on copper, measured against what the
-    # emitter actually wrote this build (carrier/reports/copper_debt.txt).
-    # Never flips the verdict — the thermal gate above already HARD-verifies
-    # the CRITICAL entries against the same scan.
     from schgen.verify import copper_debt
     try:
         cd_res = copper_debt.run(rep_dir, _pcb_file)
@@ -1337,12 +1019,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"COPPER DEBT: FAIL — {exc}")
         ok_all = False
 
-    # CPL / COMPONENT-PLACEMENT list (GAP3 assembly readiness): kicad-cli exports
-    # the pick-and-place position file from the just-emitted, DRC-clean .kicad_pcb
-    # into carrier/manufacturing/. It ships to the assembler alongside bom_jlc.csv;
-    # includes the fiducials (in_pos_files) so the P&P can register the stencil.
-    # Deterministic (position data derived from the board); best-effort — a missing
-    # kicad-cli WARNS and never fails the board (the .kicad_pcb is the source).
     if _pcb_file is not None:
         cpl_path = man_dir / "Zynq_Carrier_cpl.csv"
         try:
@@ -1361,12 +1037,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         except (OSError, subprocess.SubprocessError) as exc:
             print(f"CPL: skipped — {exc}")
 
-    # FAB PROFILE: DFM manufacturability gate (GAP3, HARD). Measures the emitted
-    # board's tightest demanded geometry (trace/clearance/drill/via-dia/via-annular/
-    # hole-to-hole) and FAILS if any is FINER than the pinned JLCPCB 4-layer
-    # capability floor (cited in the module). DRC cannot catch this — KiCad enforces
-    # the PROJECT rules, not the FAB's physical floor. PASSES today (reported per
-    # metric); a future change demanding sub-fab geometry fails the build. LAW 4.
     from schgen.verify import fab_profile
     fab_res = fab_profile.run(rep_dir)
     print(f"FAB PROFILE: {'PASS' if fab_res.ok else 'FAIL'} "
@@ -1377,10 +1047,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  FAB PROFILE ERROR: {e}")
     ok_all = ok_all and fab_res.ok
 
-    # floorplan suggestion (SVG + MD), derived from the same sheets/link. Built
-    # HERE — strictly AFTER _pcb_thread.join() above — so its fp.build_plan call
-    # no longer races the PCB thread's writes to fp.BOARD_W/BOARD_H. With the PCB
-    # thread finished, this build_plan runs serially and deterministically.
     from schgen.generate import floorplan
     try:
         fp_paths = floorplan.generate(sheets, res)
@@ -1391,8 +1057,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"FLOORPLAN: FAIL — {exc}")
         ok_all = False
 
-    # GOVERNANCE gates (U1-U4): census re-read HERE — after the floorplan
-    # step — so BOTH build_plan invocations of this run are counted.
     from schgen.core import fallbacks as _fbmod
     from schgen.verify import fallback_gate, quantize_census
     qc_res = quantize_census.check()
@@ -1450,16 +1114,6 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     _lap("pcb gen + DRC + ratsnest images + LAW-5 gate")
 
-    # 3D-MODEL COVERAGE (SOFT): every custom footprint at parts/<MPN>/ should
-    # reference a stock KiCad 3D model that EXISTS on disk so the carrier 3D
-    # viewer populates. A missing model is neither an ERC nor a DRC nor a
-    # netlist defect — no other gate sees it. HARD (LAW): every part's 3D model
-    # must RESOLVE on disk (or be documented-unmatched) — "no model" is the real
-    # bug (a bare/unresolvable .wrl path -> an empty 3D viewer). The SIZE MISFIT
-    # list is SOFT (reported, not failed): a connector housing legit exceeds its
-    # F.Fab pin-outline + the fab parse is format-fragile, so a hard size gate
-    # would false-fail real parts. The DEFINITIVE fit/position/orientation oracle
-    # is the rendered 3D (LAW 5, `schgen render3d`).
     from schgen.verify import model3d_gate
     m3d = model3d_gate.run(rep_dir)
     print(f"{m3d.line()} -> {rep_dir / 'model3d.txt'}")
@@ -1470,26 +1124,16 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  3D MODEL BROKEN: {_mpn}: {m3d.broken[_mpn]}")
     for _mpn in sorted(m3d.missing):
         print(f"  3D MODEL MISSING (model ...) clause: {_mpn}")
-    ok_all = ok_all and m3d.ok       # HARD: every part has a RESOLVING model
+    ok_all = ok_all and m3d.ok
 
-    # MULTI-ANGLE 3D RENDERS — regenerated every build (like the per-sheet
-    # schematic PNGs) so the tracked carrier/renders/3d_*.png always match the
-    # placed board: the definitive orientation/fit oracle (LAW 1/6, the human
-    # check the model3d gate can't be). Best-effort: a missing kicad-cli / 3D
-    # model library WARNS + skips and never fails the build (a raytraced PNG is
-    # not byte-deterministic, so these are not golden-gated).
     try:
         from schgen.output import render3d
         _pcb_path = pcb_res.get("pcb") if isinstance(pcb_res, dict) else None
         if getattr(args, "no_render", False):
-            _pcb_path = None                 # fast inner-loop: skip the 3D raytrace
+            _pcb_path = None
         if _pcb_path is not None:
             _r3d = render3d.render(Path(_pcb_path),
                                    PROJECT_ROOT / "renders")
-            # If THIS build just CREATED the 3D PNGs (a fresh tree where the
-            # gallery step above saw none on disk), re-splice the READMEs so the
-            # 3D gallery references the renders in this same build, not the next
-            # one. Idempotent + fast: a no-op once they are already embedded.
             if _r3d:
                 from schgen.generate import gallery as _gal
                 if _gal.generate():
@@ -1498,14 +1142,6 @@ def cmd_board(args: argparse.Namespace) -> int:
     except Exception as exc:  # noqa: BLE001
         print(f"3D RENDERS: skipped — {exc}")
 
-    # SIGNAL-INTEGRITY CONSTRAINTS (not routing): harvest every diff pair the
-    # schematic declares, join to the researched si_spec targets, and APPEND
-    # diff-pair + matched-length design rules to the board .kicad_dru just
-    # written by the PCB step, plus a human-readable SI_CONSTRAINTS.md. Runs
-    # AFTER the PCB foundation (it extends that .dru) and after every existing
-    # gate. The assertion (every declared pair has an emitted constraint) flips
-    # the board verdict ONLY if a declared pair is uncovered — additive, like
-    # the PCB hook above; it never relaxes an existing gate (LAW 4).
     from schgen.generate import si_constraints
     try:
         si_res = si_constraints.generate(sheets=sheets)
@@ -1527,11 +1163,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         + f"\nLINK: {'PASS' if res.ok else 'FAIL'}"
         + f"\nBOARD GATE: {'PASS' if board_ok else 'FAIL'}\n")
 
-    # design manifest (downstream P5, integration spine): machine-readable
-    # serialization of the state this run already holds (device, rails,
-    # i2c/gpio maps, xdc census, bom census, test-point coverage) + a sha256 of
-    # every generated carrier/ file. Deterministic; the stable contract other
-    # tools consume instead of scraping text.
     from schgen.generate import manifest
     try:
         man_out = manifest.generate(
@@ -1550,10 +1181,6 @@ def cmd_board(args: argparse.Namespace) -> int:
         for label, dt in sorted(_laps, key=lambda x: -x[1]):
             print(f"  {dt:7.2f}  ({100 * dt / total:4.1f}%)  {label}")
         print(f"  {total:7.2f}  TOTAL")
-    # MACHINE-READABLE VERDICTS (P4): every board gate's structured result ->
-    # reports/board_verdicts.json (scalars + string lists, generically pruned).
-    # The human report text + renders stay the authoritative channels (Principle
-    # 0); this file is the standing AI/tooling interface — no CLI flag, always on.
     if pcb_res is not None:
         import dataclasses as _dc
 
@@ -1589,10 +1216,6 @@ def cmd_board(args: argparse.Namespace) -> int:
 
 
 def cmd_model3d(args: argparse.Namespace) -> int:
-    """3D-MODEL COVERAGE check (SOFT): how many custom footprints reference a
-    stock KiCad 3D model that EXISTS on disk, and which are unmatched + why.
-    Prints the same one-line summary cmd_board emits plus the full report;
-    exit 0 always (SOFT) unless an UNEXPECTED broken/missing ref appears."""
     from schgen.verify import model3d_gate
     rep_dir = CARRIER / "reports"
     res = model3d_gate.run(rep_dir)
@@ -1603,31 +1226,16 @@ def cmd_model3d(args: argparse.Namespace) -> int:
 
 
 def cmd_devkit(args: argparse.Namespace) -> int:
-    """Build examples/devkit_mini — the SECOND board that consumes the reusable
-    subsystems/<name>/ library via thin META adapters — into real KiCad output
-    (schematics + hierarchy + renders), proving the library ports to a new
-    project with zero library changes. Reuses the generic build machinery; does
-    not touch the carrier."""
     from schgen.generate import devkit
     return devkit.cmd(args)
 
 
 def cmd_render3d(args: argparse.Namespace) -> int:
-    """3D board renders (top + perspective) for VISUAL verification (LAW 1,
-    extended to 3D): every part's 3D body eyeballed. Best-effort — skips with a
-    warning if kicad-cli / the KiCad 3D-model library is absent."""
     from schgen.output import render3d
     return render3d.cmd(args)
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    """The schgen regression bar (formerly scripts/check.sh): run the four gates
-    that must ALL pass before a commit, stopping at the first failure —
-      1. board    every sheet gated + board link/merge + cc/short detector
-      2. selftest gate MUTATION kills + cross-PYTHONHASHSEED determinism
-      3. m1_rc    the M1 RC-spine engine smoke sheet
-      4. pytest   the unit suite (model, gates, part-gen, foldering, ...)
-    Local only (no online CI by project policy)."""
     import subprocess
     stages = [
         ("1/4  board — all sheets + link + cc/short gate",
@@ -1804,7 +1412,6 @@ def main(argv: list[str] | None = None) -> int:
             return cr.repair(dry_run=args.dry_run,
                              allow_intent=args.allow_intent,
                              max_steps=args.max_steps)
-        # default / --measure: measurement only
         from schgen.generate.pcb.placement import build_model
         print("compose: measuring the emitted board (build_model + gates)...")
         led = cr.measure_ledger(build_model())

@@ -1,57 +1,3 @@
-"""thermal — per-device JUNCTION-TEMPERATURE gate (verification P2).
-
-The PWR-2/PWR-3 thermal *decisions* (the VADJ LDO DBV->DYD package swap, the
-"0.4 A honest continuous" derate, the always-on +5V_SOM buck duty) live today
-only as PROSE in fmc.py / power.py docstrings. A prose comment is not a
-regression lock: nothing FAILS the build if someone re-rates the VADJ LDO back
-to the bare DBV part, bumps a buck's output current past its thermal envelope,
-or drops the eFuse onto a hotter package. This module turns every one of those
-decisions into a netlist-driven Tj gate.
-
-HOW IT WORKS
-============
-The regulator TREE and the per-regulator output current ``I_out`` are NOT
-recomputed here — they are read straight from :mod:`schgen.powertree`
-(``powertree.analyze(sheets)`` -> ``Result.regs``, each ``Reg`` already
-carrying ``vin`` / ``vout`` / ``i_out`` / ``kind`` summed bottom-up through the
-declared ``c.draws`` budget). This gate adds only the THERMAL layer on top:
-
-  1. a per-part thermal-spec table (:data:`THERMAL_SPECS`), keyed by MPN prefix
-     (and disambiguated by FOOTPRINT where one MPN ships in several packages —
-     the VADJ LDO's DYD thermal-pad vs the bare DBV is exactly this case),
-     carrying ``RthJA`` (C/W, junction-to-ambient, per package), ``Tj_max``
-     (C), and the loss-model knobs (buck efficiency, switch/eFuse Rds_on). Every
-     number cites its datasheet — the SAME figures already in the fmc.md /
-     power.py docstrings.
-
-  2. a board ambient ``Ta`` (:data:`TA_AMBIENT`, 50 C — the value the fmc.md /
-     wave3_function_map.md thermal math is written against).
-
-  3. a dissipation model per device kind:
-       LDO          Pd = (Vin - Vout) * Iout
-       buck         Pd = (1/eff - 1) * Vout * Iout         (input-side loss shed)
-       load_switch / efuse:  Pd = Iout^2 * Rds_on          (conduction loss)
-
-  4. junction temperature  Tj = Ta + Pd * RthJA  and the verdict:
-       FAIL  when  Tj > Tj_max - MARGIN   (:data:`TJ_MARGIN`, 10 C guard band).
-
-A device whose MPN/footprint is not in the table is reported as UNSPECED (a
-finding, not a silent pass): the gate cannot prove an unlisted package's Tj, so
-it says so loudly. An author who has a legitimate exception (a part run hotter
-than the guard band on purpose, with a layout/derate justification) declares
-``c.waive_thermal(ref, reason)`` — listed verbatim in the report, never
-silence (the testpoints.py ``c.waive_tp`` idiom).
-
-OUTPUT
-======
-``carrier/reports/thermal.txt`` (next to ``power_tree.txt``): the full table
-(device | package | Vin->Vout | Iout | Pd | RthJA | Tj | limit | margin |
-verdict), the waivers, the findings, then PASS/FAIL. Deterministic, no
-timestamps.
-
-Run standalone:  ``python -m schgen thermal``   (or via cmd_thermal below).
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -59,143 +5,56 @@ from pathlib import Path
 
 from schgen.verify import powertree
 
-# ---- board thermal assumptions -------------------------------------------------
+TA_AMBIENT = 50.0
 
-# Ambient the dossier thermal math is written against (fmc.md section 3 /
-# wave3_function_map.md section 3.1 both use Ta = 50 C for the VADJ envelope).
-TA_AMBIENT = 50.0          # C
+TJ_MARGIN = 10.0
 
-# Guard band below Tj_max at which the gate FAILS. 10 C keeps a part off its
-# absolute junction limit (derating headroom for tolerance + aging + the
-# uncertainty in a single-number RthJA on a real 4-layer board).
-TJ_MARGIN = 10.0           # C
-
-# Conservative fixed buck efficiency for the dissipation model. The TPS54302
-# datasheet (SLVSDG6) shows 88-92% across this load range; 0.85 is the
-# deliberately pessimistic floor (more dissipation than reality), so a PASS
-# here is a true PASS. (powertree uses eta=0.90 for the INPUT-CURRENT budget;
-# this gate is intentionally a notch more conservative on the THERMAL side.)
 BUCK_EFF = 0.85
-
-
-# ---- per-device thermal spec table ---------------------------------------------
-
-# ---- pour-aware effective RthJA -------------------------------------------------
-#
-# The bare ``rth_ja`` figures below are the datasheet JEDEC RthJA (JESD51-7 high-K
-# 2s2p, or a vendor "Thermal Information" table). That number is a STANDARDIZED
-# COMPARISON figure on a minimal-copper board; every datasheet says so verbatim
-# (e.g. LM61460 SNVSBD5D 7.3: "The value of RthJA ... is only valid for comparison
-# with other packages and cannot be used for design"). A real power layout — the
-# exposed pad / power-ground pads soldered onto a large GND copper pour, stitched
-# to inner planes by a thermal-via field — moves heat through RthJC(bottom) +
-# RthJB into the board, dropping the EFFECTIVE RthJA far below the bare figure.
-#
-# To stop OVER-STATING Tj on EP/PowerPAD parts (which forced waivers), a spec may
-# carry ``rth_ja_pour``: the EFFECTIVE junction-to-ambient RthJA on THIS board's
-# poured copper + thermal vias. The gate uses ``rth_eff`` = ``rth_ja_pour`` when
-# set, else the bare ``rth_ja`` — so a part WITHOUT a pour figure keeps its exact
-# bare-RthJA verdict (no silent relaxation; every other speced part is unchanged).
-#
-# RULES for setting ``rth_ja_pour`` (LAW-4: never soften without a cited basis):
-#   1. It MUST be bounded by the datasheet's own data — i.e. it sits ABOVE the
-#      vendor's stated best-case poured/4-layer RthJA (we do NOT claim the full
-#      EVM credit), and BELOW the bare JEDEC RthJA. The credit is a fraction of
-#      the bare->poured delta, not the whole of it.
-#   2. ``pour_cite`` records the two datasheet anchor numbers (bare + poured) and
-#      the conservative value chosen between them, so the basis is auditable.
-#   3. It applies ONLY where the copper is EMITTED (LAW 0 — GAP1): a spec that
-#      claims the credit carries ``pour_evidence``, a key into POUR_EVIDENCE
-#      naming the copper the credit REQUIRES (In1 GND plane, per-instance
-#      thermal-via count within a radius, local pours per layer). The gate
-#      VERIFIES that copper in the emitted .kicad_pcb (copper_debt.scan_board)
-#      every run; missing copper -> the device is judged at the bare/no-copper
-#      RthJA and the withheld credit is reported loudly. Prose is never
-#      evidence. (The 2026-07 defect: 58.7->30 C/W credited on "PGND pads
-#      poured + via field" while the board contained ZERO zones/vias — Tj
-#      backed out to ~192 C vs the 140 C bound, PASS on fiction.)
-#      It is also NOT a blanket credit for a no-EP package (the TPS54302
-#      SOT-23-6 keeps its bare RthJA + author waiver — no pad to pour).
-#
-# HONESTY NOTE: a single-number effective RthJA is still an ESTIMATE; the chosen
-# value is deliberately pessimistic (well above the vendor 4-layer figure) to
-# leave margin for via count, pour area, ambient and aging — and the three
-# LM61460 bucks share ONE In1 plane (mutual heating is not in a single-number
-# model; part of the held-back margin covers it). Bench Tj at bring-up remains
-# the final arbiter; this model only stops the gate from failing a part that
-# the datasheet's own poured-board data shows is comfortably in spec.
 
 
 @dataclass(frozen=True)
 class ThermalSpec:
-    rth_ja: float              # bare JEDEC junction-to-ambient, C/W (comparison figure)
-    tj_max: float              # absolute max junction temp, C
-    rds_on: float = 0.0        # ohms (load_switch / efuse conduction loss)
-    eff: float = BUCK_EFF      # buck efficiency (buck only)
-    package: str = ""          # human label for the report
-    cite: str = ""             # datasheet provenance
-    rth_ja_pour: float | None = None   # EFFECTIVE RthJA on poured copper + vias
-    pour_cite: str = ""        # basis for rth_ja_pour (bare/poured anchors + value)
-    pour_evidence: str = ""    # POUR_EVIDENCE key — the EMITTED copper the
-    #                            credit requires (rule 3; "" = no credit claimed)
+    rth_ja: float
+    tj_max: float
+    rds_on: float = 0.0
+    eff: float = BUCK_EFF
+    package: str = ""
+    cite: str = ""
+    rth_ja_pour: float | None = None
+    pour_cite: str = ""
+    pour_evidence: str = ""
 
     @property
     def rth_eff(self) -> float:
-        """The best-case RthJA the spec can claim WITH its required copper
-        emitted. analyze() grants it ONLY after verifying that copper in the
-        emitted board (rule 3); a part without a pour figure keeps its exact
-        bare-RthJA verdict."""
         return self.rth_ja_pour if self.rth_ja_pour is not None else self.rth_ja
 
 
-# ---- emitted-copper evidence the pour credits REQUIRE (rule 3) -------------------
-
 @dataclass(frozen=True)
 class PourNeed:
-    """The copper a ``rth_ja_pour`` credit requires IN the emitted board:
-    the In1 GND plane, >= ``min_vias`` GND vias within ``radius_mm`` of every
-    placed instance of ``value_prefix``, and a local GND pour at the instance
-    on each of ``pour_layers``. Checked against copper_debt.scan_board — the
-    board FILE, never the model or prose."""
     value_prefix: str
     min_vias: int
     radius_mm: float
     pour_layers: tuple[str, ...]
 
 
+# ONE definition: pcb.embed imports this, so emitter and gate mirror alike
 LAYER_SWAP = {"F.Cu": "B.Cu", "B.Cu": "F.Cu"}
-"""Outer-copper swap of a MIRRORED instance. ONE definition, imported by the
-emitter (`pcb.embed._mirror_thermal_spec`, which builds the mirrored part's
-pour on these layers) so the gate below asks for the copper the emitter
-actually laid: a spec's `pour_layers` are LIBRARY-frame, and the pour of a
-part on B.Cu belongs on the part's OWN outer layer (JESD51-5). Emitter and
-gate reading two different tables is how a legitimate B.Cu placement of an
-asymmetric spec (TLV75725: F.Cu only) would have lost its credit and
-FALSE-FAILED at Tj 123.9 C against a 115.0 C threshold."""
 
 
 def pour_layers_for(need: PourNeed, layer: str) -> tuple[str, ...]:
-    """``need.pour_layers`` resolved for an instance emitted on ``layer``."""
     return (need.pour_layers if layer != "B.Cu"
             else tuple(LAYER_SWAP.get(la, la) for la in need.pour_layers))
 
 
 POUR_EVIDENCE: dict[str, PourNeed] = {
-    # LM61460 VQFN-HR: SNVSBD5D 11.1.1 field at PGND1/PGND2 (emitter drops 8;
-    # 6 is the credit floor) + local F.Cu/B.Cu pours + the In1 plane.
     "LM61460": PourNeed("LM61460", min_vias=6, radius_mm=5.2,
                         pour_layers=("F.Cu", "B.Cu")),
-    # TLV75725 DYD: JESD51-5 pad-adjacent vias (2) + local F.Cu pour + plane.
     "TLV75725_DYD": PourNeed("TLV75725", min_vias=2, radius_mm=3.0,
                              pour_layers=("F.Cu",)),
 }
 
 
 def _pour_evidence(copper, need: PourNeed) -> tuple[bool, str]:
-    """(granted, detail) for one credit against the scanned board copper.
-    Fail-closed: no scan / no instances / missing plane / short via field all
-    WITHHOLD the credit. ``detail`` is the deterministic, per-instance
-    measurement string printed in the report either way."""
     if copper is None:
         return False, "no emitted-board scan (fail-closed: credit withheld)"
     if not copper.gnd_plane():
@@ -219,55 +78,13 @@ def _pour_evidence(copper, need: PourNeed) -> tuple[bool, str]:
     return ok_all, "In1 GND plane + " + "; ".join(rows)
 
 
-# Keyed by part-VALUE prefix (powertree's Reg.value: power.py writes
-# 'TPS54302DDCR', fmc.py 'TLV75725PDYDR', bringup 'SY6280AAC', pd_input
-# 'TPS26631PWPR', power.py LDO 'AP2112K-1.8'). Where ONE mpn ships in several
-# packages with different RthJA (the VADJ LDO DBV vs DYD), a second key on the
-# FOOTPRINT substring disambiguates — see FOOTPRINT_SPECS below.
 THERMAL_SPECS: dict[str, ThermalSpec] = {
-    # TPS54302DDCR — the SOT-23-THIN (DDC) 6-pin synchronous buck, NO exposed
-    # pad. HONEST RE-BASE (thermal finding, 2026-06-16): the prior 70.6 C/W was
-    # a FABRICATED figure with no datasheet line and the 150 C Tj_max used the
-    # ABSOLUTE max, not the recommended-operating max — together they masked a
-    # real over-Tj on the >2 A bucks. The TI SLVSDG6C datasheet (Rev C, Mar
-    # 2026) §5.4 Thermal Information lists, for the DDC (SOT-23) 6-PIN package:
-    #   RthJA = 118.9 C/W (JESD51-7, 4-layer JEDEC sim) ; RthJA_EVM = 57.2 C/W
-    #   (official EVM board) — there is NO 70.6 figure anywhere in the DS.
-    # §5.3 Recommended Operating Conditions: Tj = -40..125 C (the orderable
-    # table likewise rates -40..125). §5.1 Abs-Max Tj = 150 C (NOT a design
-    # target). The package is a 2.9x2.8 mm 6-pin SOT-23-THIN with NO RthJC(bot)
-    # / no thermal pad in the DS — there is no pad to pour, so NO pour credit
-    # (rth_ja_pour stays None; LAW-4 rule 3). We carry the JEDEC 118.9 as the
-    # bare comparison figure; the gate Tj is judged against the 125 C rec-max.
-    # Even at the best-case EVM 57.2 C/W a >2 A load lands Tj > 125 C, which is
-    # exactly why power.py U2 (+3V3, 2.745 A) and power_som.py U4 (+5V_SOM,
-    # 2.004 A) were RESELECTED to the EP-equivalent LM61460 (below) — at the
-    # datasheet RthJA this part cannot carry those rails inside its rec-max.
     "TPS54302": ThermalSpec(
         rth_ja=118.9, tj_max=125.0, eff=BUCK_EFF,
         package="SOT-23-THIN-6 (DDC, no EP)",
         cite="TI SLVSDG6C 5.4 Thermal Information (RthJA 118.9 C/W JESD51-7; "
              "EVM 57.2 C/W) + 5.3 Rec-Op Tj-max 125 C (abs-max 150 C); no EP; "
              "eff floor 0.85 (DS plots 88-92%)"),
-    # power.py +5V buck U1 — RE-SPEC'd (wt/buck) from the LMR33630 (3 A) to the
-    # LM61460AANRJRR: TI 3-36 V / 6-A low-EMI synchronous buck, VQFN-HR (RJR
-    # "HotRod"). The board's heaviest converter (2.95 A @ 5 V). The VQFN-HR has
-    # NO center EP; its die-attach heat path is the PGND1/PGND2 power-ground pads
-    # + the wide SW pad. It EARNS a pour-aware effective RthJA ONLY because the
-    # emitter now WRITES the heat path into the board (rule 3 — verified per
-    # build against the .kicad_pcb, key "LM61460" in POUR_EVIDENCE):
-    #   * full-board In1.Cu GND plane (0.5 oz inner),
-    #   * an 8-via 0.6/0.3 field beside PGND1/PGND2 (SNVSBD5D 11.1.1),
-    #   * local F.Cu + B.Cu GND pours stitched by that field.
-    # DS anchors (7.3): bare 58.7 C/W (JESD51-7) vs 25 C/W achievable on a
-    # 4-layer board (DS note; the LM61460-Q1 EVM measures 25). HONEST RE-BASE
-    # with the emitted copper: 35 C/W — 10 C/W ABOVE the DS 4-layer 25 (~30%
-    # of the bare->4L delta held back for the 0.5-oz inner plane vs the EVM's
-    # heavy outer spreaders, the modest local pour area, and 3 bucks sharing
-    # one plane). The previous 30 C/W claimed MORE credit on copper that did
-    # not exist (the GAP1 defect). At eff 0.85, Pd = (1/0.85-1)*5*2.744 =
-    # 2.42 W -> Tj = 50 + 2.42*35 = 134.7 C < 140 C guard: real, tight margin
-    # (reported loudly; bench-verify at bring-up).
     "LM61460": ThermalSpec(
         rth_ja=58.7, tj_max=150.0, eff=BUCK_EFF,
         package="VQFN-HR-14 (RJR, PGND pads->GND pour)",
@@ -283,45 +100,23 @@ THERMAL_SPECS: dict[str, ThermalSpec] = {
                   "inner plane, modest pours vs the EVM, 3-buck mutual "
                   "heating)",
         pour_evidence="LM61460"),
-    # power.py +1V8 LDO. Diodes AP2112K-1.8, SOT-23-5: RthJA ~250 C/W,
-    # Tj_max 125 C (Diodes AP2112 DS). Load is tiny (~6 mA) so Tj ~= Ta.
     "AP2112K": ThermalSpec(
         rth_ja=250.0, tj_max=125.0, package="SOT-23-5",
         cite="Diodes AP2112 DS (SOT-23-5 RthJA ~250 C/W; Tj_max 125 C)"),
-    # fmc.py VADJ LDO. DEFAULT (no footprint match) is the conservative bare
-    # DBV number so a careless re-pin lands on the HOT package; the DYD
-    # thermal-pad part is matched by footprint in FOOTPRINT_SPECS and is the
-    # one fmc.py actually instantiates (PWR-3 swap).
     "TLV75725": ThermalSpec(
         rth_ja=231.0, tj_max=125.0, package="SOT-23-5 (DBV, no pad)",
         cite="TI TLV757P DS / fmc.md section 3 (DBV RthJA 231 C/W; "
              "Tj_max 125 C) — the HOT default; DYD pad variant below"),
-    # bringup_modules.py: 10x per-module load switch. Silergy SY6280AAC,
-    # SOT-23-5: typical Rds_on ~95 mohm, RthJA ~250 C/W, Tj_max 150 C.
     "SY6280": ThermalSpec(
         rth_ja=250.0, tj_max=150.0, rds_on=0.095, package="SOT-23-5",
         cite="Silergy SY6280 DS (SOT-23-5 RthJA ~250 C/W; Rds_on ~95 mohm; "
              "Tj_max 150 C)"),
-    # pd_input.py inlet eFuse. TI TPS26631, HTSSOP-20 PowerPAD: integrated FET
-    # Rds_on 31 mohm (DS typ), RthJA ~33.6 C/W with the EP soldered to copper
-    # (TI SLVSE94 Thermal Information, JEDEC 2s2p), Tj op-max 125 C.
     "TPS26631": ThermalSpec(
         rth_ja=33.6, tj_max=125.0, rds_on=0.031, package="HTSSOP-20 (PWP)",
         cite="TI SLVSE94 (HTSSOP-20 PowerPAD RthJA ~33.6 C/W 2s2p; FET "
              "Rds_on 31 mohm; Tj op-max 125 C)"),
 }
 
-# Footprint-substring overrides: same MPN, a package the bare-MPN row would
-# get WRONG. The VADJ LDO is the canonical case — fmc.py instantiates the DYD
-# thermal-pad variant (footprint 'TLV75725PDYDR:TLV75725PDYDR'). The DS DYD
-# RthJA ~92.5 C/W (PWR-3 / fmc.md section 3) is a JESD51-7 figure DEFINED with
-# JESD51-5 thermal vias into a buried plane — so it too is a pour CREDIT,
-# granted only when that copper is EMITTED (rule 3, key "TLV75725_DYD": In1
-# plane + 2 pad-adjacent vias + local F.Cu pour). Without the copper there is
-# no vias-less DYD number in the DS, so the gate falls back to the DBV bare
-# 231 C/W (the conservative no-thermal-pad-benefit figure this module already
-# uses for a careless re-pin) — which correctly FAILS the 0.4 A VADJ load.
-# Keyed (value-prefix, footprint-substring) -> spec.
 FOOTPRINT_SPECS: dict[tuple[str, str], ThermalSpec] = {
     ("TLV75725", "DYD"): ThermalSpec(
         rth_ja=231.0, tj_max=125.0,
@@ -341,8 +136,6 @@ FOOTPRINT_SPECS: dict[tuple[str, str], ThermalSpec] = {
 
 
 def _spec_for(value: str, footprint: str) -> ThermalSpec | None:
-    """Resolve the thermal spec: footprint-disambiguated row first (e.g. the
-    DYD thermal-pad VADJ LDO), else the bare MPN-prefix row."""
     for (vpfx, fpsub), spec in FOOTPRINT_SPECS.items():
         if value.startswith(vpfx) and fpsub in footprint:
             return spec
@@ -352,16 +145,8 @@ def _spec_for(value: str, footprint: str) -> ThermalSpec | None:
     return None
 
 
-# ---- dissipation model ---------------------------------------------------------
-
 def dissipation(kind: str, v_in: float, v_out: float, i_out: float,
                 spec: ThermalSpec) -> float:
-    """Worst-case device dissipation [W] for the device KIND.
-
-    LDO:          Pd = (Vin - Vout) * Iout               (linear pass loss)
-    buck:         Pd = (1/eff - 1) * Vout * Iout         (input-side loss shed)
-    load_switch / efuse:  Pd = Iout^2 * Rds_on           (conduction loss)
-    """
     if kind == "ldo":
         return max(0.0, (v_in - v_out)) * i_out
     if kind == "buck":
@@ -370,8 +155,6 @@ def dissipation(kind: str, v_in: float, v_out: float, i_out: float,
         return i_out * i_out * spec.rds_on
     return 0.0
 
-
-# ---- result --------------------------------------------------------------------
 
 @dataclass
 class Device:
@@ -386,15 +169,15 @@ class Device:
     v_out: float
     i_out: float
     pd: float
-    rth_ja: float          # EFFECTIVE RthJA used for Tj (pour-aware where credited)
+    rth_ja: float
     tj: float
     tj_max: float
-    margin: float          # Tj_max - TJ_MARGIN - Tj  (negative => over limit)
+    margin: float
     cite: str
-    rth_bare: float = 0.0  # bare JEDEC RthJA (== rth_ja unless a pour credit applies)
-    pour_cite: str = ""    # basis for the pour-aware effective RthJA (when credited)
-    pour_granted: bool = False   # emitted-copper evidence VERIFIED this run
-    evidence: str = ""     # the per-instance copper measurement (either way)
+    rth_bare: float = 0.0
+    pour_cite: str = ""
+    pour_granted: bool = False
+    evidence: str = ""
 
     @property
     def over(self) -> bool:
@@ -408,27 +191,20 @@ class Device:
 @dataclass
 class Result:
     devices: list[Device] = field(default_factory=list)
-    errors: list[str] = field(default_factory=list)        # over-Tj failures
-    findings: list[str] = field(default_factory=list)      # unspeced devices
-    # ref->(sheet,reason)
+    errors: list[str] = field(default_factory=list)
+    findings: list[str] = field(default_factory=list)
     waived: dict[str, tuple[str, str]] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
     ta: float = TA_AMBIENT
     margin: float = TJ_MARGIN
-    copper_src: str = ""   # what the pour-credit evidence was scanned from
+    copper_src: str = ""
 
     @property
     def ok(self) -> bool:
         return not self.errors
 
 
-# ---- waiver harvesting ---------------------------------------------------------
-
 def _collect_waivers(sheets) -> dict[str, tuple[str, str]]:
-    """Author thermal waivers: net them by part REF, keyed sheet-qualified
-    'sheet:ref'. Read from ``circuit.thermal_waivers`` (the model.py API added
-    by waive_thermal — see the waiver_mechanism snippet); absent attribute =>
-    no waivers, gate runs unchanged."""
     out: dict[str, tuple[str, str]] = {}
     for sc in sheets:
         waivers = getattr(sc.circuit, "thermal_waivers", {})
@@ -437,28 +213,18 @@ def _collect_waivers(sheets) -> dict[str, tuple[str, str]]:
     return out
 
 
-# ---- the gate ------------------------------------------------------------------
-
 def analyze(sheets, pt_res: powertree.Result | None = None,
             copper=None, copper_src: str = "") -> Result:
-    """Build the Tj table. The regulator tree + per-regulator I_out come from
-    powertree (computed once, reused — never recomputed here). ``copper`` is
-    the emitted-board scan (copper_debt.BoardCopper) the pour credits are
-    verified against — None WITHHOLDS every credit (fail-closed, LAW 0):
-    prose is not evidence, only copper in the .kicad_pcb is."""
     if pt_res is None:
         pt_res = powertree.analyze(sheets)
     res = Result()
     res.waived = _collect_waivers(sheets)
     res.copper_src = copper_src if copper is not None else ""
 
-    # verify each claimed pour credit ONCE against the emitted copper
     ev: dict[str, tuple[bool, str]] = {
         key: _pour_evidence(copper, need)
         for key, need in POUR_EVIDENCE.items()}
 
-    # footprint lookup: powertree's Reg does not carry the footprint, so read
-    # it from the part on its source sheet (sheet:ref is unique).
     fp_by: dict[tuple[str, str], str] = {}
     for sc in sheets:
         for ref, part in sc.circuit.parts.items():
@@ -478,7 +244,6 @@ def analyze(sheets, pt_res: powertree.Result | None = None,
         v_in = powertree.rail_volts(reg.vin) or 0.0
         v_out = powertree.rail_volts(reg.vout) or 0.0
         pd = dissipation(reg.kind, v_in, v_out, reg.i_out, spec)
-        # pour-aware RthJA ONLY when the required copper is verified emitted
         granted, detail = (ev.get(spec.pour_evidence, (False, ""))
                            if spec.rth_ja_pour is not None else (False, ""))
         rth_eff = spec.rth_ja_pour if granted else spec.rth_ja
@@ -521,8 +286,6 @@ def analyze(sheets, pt_res: powertree.Result | None = None,
                     f"[{spec.cite}]{withheld}")
     return res
 
-
-# ---- report --------------------------------------------------------------------
 
 def report(res: Result) -> str:
     lines = ["schgen per-device thermal (Tj) gate", "=" * 78, ""]
@@ -611,15 +374,9 @@ def report(res: Result) -> str:
     return "\n".join(lines)
 
 
-# ---- entry points --------------------------------------------------------------
-
 def run(sheets, reports_dir: Path,
         pt_res: powertree.Result | None = None,
         pcb_path: Path | None = None) -> Result:
-    """Analyze + write carrier/reports/thermal.txt (next to power_tree.txt).
-    ``pcb_path`` is the EMITTED board the pour credits are verified against
-    (copper_debt.scan_board); absent/missing -> credits withheld
-    (fail-closed)."""
     copper = None
     copper_src = ""
     if pcb_path is not None and Path(pcb_path).exists():

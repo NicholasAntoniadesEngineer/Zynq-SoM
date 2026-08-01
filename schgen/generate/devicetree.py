@@ -1,38 +1,3 @@
-"""Generated Zynq PS device-tree fragment (downstream P3).
-
-``schgen devicetree`` (also run by ``schgen board``) writes
-``carrier/firmware/carrier_pl.dtsi`` — a COMMENTED device-tree overlay
-fragment for the Zynq-7000 PS, the PS-side twin of the PL ``schgen xdc``
-(``carrier/fpga/Zynq_Carrier_pins.xdc``).
-
-The XDC constrains every carrier PORT that reaches a PL ball through
-J1/J2/J3.  Everything it DROPS on the PS side (a contract net that reaches
-no PL ball: the microSD bus and the bare PS MIO pins on J1) gets NOTHING
-downstream — yet the firmware/U-Boot/Linux side still needs to know which
-SoM MIO index each carrier signal lands on.  This fragment closes that gap:
-
-- the ``SDIO_*`` bus (SDIO_CLK/CMD/D0-D3 on J1) -> the PS SD-host controller
-  node (``sdhci``), as a commented overlay with the standard 4-bit-bus +
-  card-detect properties;
-- every bound ``ZYNQ_PS_MIO<n>`` contract net -> its MIO index ``<n>`` (the
-  index is IN the net name), as ``pinctrl`` MIO-line comments — including
-  the two function-renamed console pins (MIO10/11 -> PS UART0) and the two
-  VMODE boot straps (MIO7/VM0, MIO8\\VM1, on-SoM, carrier no-connect).
-
-Sources (all programmatic — nothing hand-typed):
-- carrier net -> J pin: the committed ``carrier/som_interface.json``
-  contract, the SAME walk ``schgen firmware`` / ``schgen xdc`` use;
-- carrier net -> PL ball (to PROVE a net is PS-side, i.e. reaches no PL
-  ball): ``schgen.som_interface.extract_zynq`` (kicad-cli on the SoM
-  project at generation time) — exactly as the XDC derives its PL set;
-- contract net -> carrier FUNCTION name: ``carrier/som_conn_gen`` FUNCTION_MAP
-  (so a renamed MIO resolves to its function PORT, never an orphan), the
-  SAME source the J-sheet generator and the linker use.
-
-Deterministic: same inputs -> byte-identical .dtsi (sorted by MIO index /
-SDIO line; no timestamps; the device string is read from the SoM netlist).
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -49,19 +14,10 @@ DEFAULT_SOM = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 DEFAULT_CONTRACT = CARRIER / "som_interface.json"
 DEFAULT_OUT = CARRIER / "firmware" / "carrier_pl.dtsi"
 
-# Zynq-7000 PS SD host controller node the carrier microSD bus lands on.
-# The SoM routes the carrier SDIO_* bus to PS SDIO0 (UG585 Tbl 2-4: SDIO0 =
-# sdhci@e0100000); the on-SoM eMMC/boot device, if any, is SDIO1.  This is a
-# COMMENTED template — the exact node label is the user's board .dts choice;
-# the MIO/EMIO routing itself is fixed on-module and is documented here.
-SDIO_NODE = "&sdhci0"            # PS SDIO0 = sdhci@e0100000 (UG585)
+SDIO_NODE = "&sdhci0"
 SDIO_NODE_ADDR = "e0100000"
-# Card-detect is a PL/EMIO net (bank 13, J2.17) — the XDC constrains it as a
-# get_ports pin; named here only so the SD node's cd-gpios story is complete.
 SD_CARD_DETECT_PORT = "SD_CARD_DETECT"
 
-# SDIO bus line -> its role in the SD-host node (sorted output order is the
-# tuple order: CLK, CMD, then the 4 data lines).
 SDIO_LINES = (
     ("SDIO_CLK", "clk"),
     ("SDIO_CMD", "cmd"),
@@ -79,9 +35,6 @@ class DeviceTreeError(ValueError):
 
 
 def _function_map() -> dict[str, str]:
-    """contract-net -> carrier FUNCTION net (carrier/som_conn_gen FUNCTION_MAP
-    + PUDC_STRAPS).  Loaded from the SAME source the J-sheets and the linker
-    use, so this generator's renames cannot drift from theirs."""
     import importlib.util
     gen_path = CARRIER / "som_conn_gen.py"
     spec = importlib.util.spec_from_file_location("_dt_som_conn_gen", gen_path)
@@ -93,9 +46,6 @@ def _function_map() -> dict[str, str]:
 
 
 def _pl_nets(som_sch: Path, refs: tuple[str, ...]) -> set[str]:
-    """The SoM contract nets that reach a Zynq PL ball (IO_* pin names) — the
-    set the XDC KEEPS.  Anything outside it on J1/J2/J3 is PS-side: exactly
-    what we emit here.  Derived from the live netlist, like the XDC."""
     live = extract_zynq(som_sch, jrefs=refs)
     return {net for ball, net in live["ball_net"].items()
             if live["pin_names"].get(ball, "").startswith("IO_")}
@@ -109,17 +59,11 @@ def generate(out: Path = DEFAULT_OUT, *,
              som_sch: Path = DEFAULT_SOM,
              contract_path: Path = DEFAULT_CONTRACT,
              refs: tuple[str, ...] = ("J1", "J2", "J3")) -> Path:
-    """Build + write the PS device-tree fragment. Raises
-    :class:`DeviceTreeError` if the contract carries no PS SDIO/MIO net (the
-    walk would silently emit nothing) or if an SDIO line is missing."""
     contract = json.loads(contract_path.read_text())["connectors"]
     func_map = _function_map()
     pl_nets = _pl_nets(som_sch, refs)
     device = _device(som_sch, refs)
 
-    # -- walk the contract, the SAME walk firmware.py / xdc.py use ------------
-    # contract net -> sorted J-pin locations (a PS net is a single J1 pin, but
-    # collect a list so a future fan-out is reported, not silently dropped).
     net_pins: dict[str, list[str]] = {}
     for jref in refs:
         if jref not in contract:
@@ -131,8 +75,7 @@ def generate(out: Path = DEFAULT_OUT, *,
     for locs in net_pins.values():
         locs.sort(key=lambda s: (s.split(".")[0], int(s.split(".")[1])))
 
-    # -- SDIO bus: every line PRESENT, PS-side (never on a PL ball) ----------
-    sdio_rows: list[tuple[str, str, str]] = []   # (net, role, jpin)
+    sdio_rows: list[tuple[str, str, str]] = []
     for net, role in SDIO_LINES:
         if net not in net_pins:
             raise DeviceTreeError(
@@ -144,10 +87,7 @@ def generate(out: Path = DEFAULT_OUT, *,
                 f"the XDC, not this fragment, owns it")
         sdio_rows.append((net, role, net_pins[net][0]))
 
-    # -- PS MIO pins: every bound ZYNQ_PS_MIO<n>, the index from the name ----
-    # (the XDC drops these — none reach a PL ball — so they get nothing
-    #  downstream without this fragment).  Sort by MIO index.
-    mio_rows: list[tuple[int, str, str, str]] = []  # (idx, raw, func, jpin)
+    mio_rows: list[tuple[int, str, str, str]] = []
     for som_net in net_pins:
         m = _MIO_RE.search(som_net)
         if not m:
@@ -208,7 +148,6 @@ def generate(out: Path = DEFAULT_OUT, *,
     L.append("/plugin/;")
     L.append("")
 
-    # -- section 1: PS pinmux table (carrier signal <-> MIO index) -----------
     L.append("/* " + "=" * 72 + " */")
     L.append("/* PS pinmux table -- carrier signal <-> Zynq PS MIO index "
              "(J1 pins).      */")
@@ -222,7 +161,6 @@ def generate(out: Path = DEFAULT_OUT, *,
         if func != raw:
             note = f"renamed from {raw}"
         elif "/" in raw or "\\" in raw:
-            # VMODE boot strap (MIO7/VM0, MIO8\VM1): on-SoM, carrier no-connect
             note = "VMODE boot strap (on-SoM, carrier NC)"
         else:
             note = "spare PS MIO (bare to J1)"
@@ -230,7 +168,6 @@ def generate(out: Path = DEFAULT_OUT, *,
     L.append("/* " + "=" * 72 + " */")
     L.append("")
 
-    # -- section 2: PS UART0 console (the renamed MIO10/11 group) ------------
     uart = {func: idx for idx, raw, func, jp in mio_rows}
     if "ZYNQ_PS_UART0_RXD" in uart and "ZYNQ_PS_UART0_TXD" in uart:
         rx, tx = uart["ZYNQ_PS_UART0_RXD"], uart["ZYNQ_PS_UART0_TXD"]
@@ -249,7 +186,6 @@ def generate(out: Path = DEFAULT_OUT, *,
         L.append(" */")
         L.append("")
 
-    # -- section 3: microSD on the PS SD-host controller --------------------
     L.append("/* ---- microSD -- PS SD-host controller (sdhci) "
              "------------------------ */")
     L.append("/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the "
@@ -281,8 +217,6 @@ def generate(out: Path = DEFAULT_OUT, *,
     L.append(" */")
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    # pure-ASCII (the contract carries a backslash in MIO8\VM1; comments use
-    # plain dashes) for portable dtc toolchains.
     text = "\n".join(L).replace("—", "--").replace("→", "->")
     out.write_text(text + "\n")
     return out

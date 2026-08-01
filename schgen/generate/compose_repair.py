@@ -1,26 +1,3 @@
-"""T1 COMPOSITION — the MEASUREMENT LEDGER (P2) and, from P4, the repair
-driver (``schgen compose``).
-
-``measure_ledger`` is the SINGLE measurement instrument (decision D12 scalar
-time-series): it runs the REAL gates on an emitted model — the wired
-placement_flow gate verbatim, PLUS a discover-injected advisory run over EVERY
-authored contract (wired or not), the LAW-5 ratsnest gate, the intra-zone
-contract register (``check_all`` counts) and the D13 channel-demand pair table.
-Advisory floors below are repair TRIGGERS only — never pass/fail (decision
-D-5: no new hard gate; the existing gates remain the sole arbiters).
-
-The contracts injection uses the None-filter (IM2): ``discover_contract``
-returns None for uncontracted sheets and the gate would crash on a None
-contract — the filter is load-bearing and hermetically tested.
-
-Ledger files (``carrier/reports/compose_ledger.json`` + ``.md``) are written
-by the DRIVER only (P4) — a plain ``schgen board`` never touches them (the
-board build writes ``floorplan_composition.txt`` instead).
-
-Determinism: sorted iteration, no wall-clock in the measured payload, no RNG.
-Lazy imports across the generate<->verify boundary (house pattern).
-"""
-
 from __future__ import annotations
 
 import json
@@ -34,20 +11,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 LEDGER_JSON = PROJECT_ROOT / "reports" / "compose_ledger.json"
 LEDGER_MD = PROJECT_ROOT / "reports" / "compose_ledger.md"
 
-# ---- advisory floors (T1 spec §4 — repair TRIGGERS, never pass/fail) -----------
-FLOOR_FLOW_MM = 10.0      # judgment: 2 x OUTLINE_SNAP (5.0) — a flow hop within
-#                           two outline quanta of its budget is one board-size
-#                           step from red
-FLOOR_NEAR_MAX_MM = 2.0   # judgment: 2 x occupancy STEP (1.0)
-FLOOR_FAR_MM = 5.0        # judgment: 5 x occupancy STEP (1.0)
-FLOOR_FACING_DEG = 15.0   # judgment: half the 30-degree facing cone
-FLOOR_CROSS_PCT = 5.0     # judgment: L4 credit granularity (3%) + 2%
-FLOOR_DISPERSION = 0.5    # judgment: 2 x observed per-wave dispersion jitter
+FLOOR_FLOW_MM = 10.0
+FLOOR_NEAR_MAX_MM = 2.0
+FLOOR_FAR_MM = 5.0
+FLOOR_FACING_DEG = 15.0
+FLOOR_CROSS_PCT = 5.0
+FLOOR_DISPERSION = 0.5
 
 
 def measure_ledger(model) -> dict:
-    """Measure EVERYTHING the composition program tracks, on one emitted
-    ``model``. Pure measurement — no writes, no globals."""
     from schgen.generate import floorplan_compose as fc
     from schgen.verify import placement_contract_gate as pcg
     from schgen.verify import placement_flow_gate as pfg
@@ -57,7 +29,6 @@ def measure_ledger(model) -> dict:
     ledger["board"] = {"w": model.board_w, "h": model.board_h,
                        "area_mm2": round(model.board_w * model.board_h, 1)}
 
-    # --- the WIRED hard gate, verbatim (the arbiter's own numbers) ------------
     fres = pfg.check(model)
     ledger["flow_gate"] = {
         "ok": fres.ok,
@@ -72,9 +43,6 @@ def measure_ledger(model) -> dict:
             for t in fres.terms],
     }
 
-    # --- discover-injected ADVISORY run over every authored contract ----------
-    # None-filter (IM2): discover returns None for contract-less sheets; the
-    # gate crashes on a None contract, so filter — hermetically tested.
     sheets = sorted({i.sheet for i in model.insts})
     injected = {s: c for s in sheets
                 if (c := pcg.discover_contract(s)) is not None}
@@ -91,7 +59,6 @@ def measure_ledger(model) -> dict:
             for t in ares.terms],
     }
 
-    # --- the deduped composition TERM table (compose module = same kernels) ---
     index = fc.build_term_index(sheets)
     evals = fc.measure_terms(model, index)
     ledger["terms"] = [
@@ -108,7 +75,6 @@ def measure_ledger(model) -> dict:
         "sum": round(sum(finite), 2) if finite else 0.0,
         "min": round(min(finite), 2) if finite else 0.0}
 
-    # --- LAW-5 ---------------------------------------------------------------
     rres = rg.check(model)
     slack = rres.cross_budget_mm - rres.cross_mm
     ledger["law5"] = {
@@ -123,12 +89,10 @@ def measure_ledger(model) -> dict:
             k: v for k, v in sorted(rg.dispersion_by_sheet(rres).items())},
     }
 
-    # --- intra-zone contract register (A7 no-worsen counts) -------------------
     call = pcg.check_all(model)
     ledger["contract_violations"] = {
         s: len(r.violations) for s, r in sorted(call.items())}
 
-    # --- D13 channel demand ----------------------------------------------------
     pairs = fc.cross_airwires_by_pair(model)
     ledger["channel_hotspots"] = {
         f"{a}|{b}": {"airwires": n, "mm": mm,
@@ -137,7 +101,6 @@ def measure_ledger(model) -> dict:
         if fc.channel_demand_mm(n) > 0.0
         and not (a.startswith("som_j") or b.startswith("som_j"))}
 
-    # --- advisory floors -> repair TRIGGERS (never pass/fail) ------------------
     triggers: list[str] = []
     for e in evals:
         if not math.isfinite(e.margin):
@@ -170,16 +133,11 @@ def measure_ledger(model) -> dict:
                         f"floor {FLOOR_CROSS_PCT}%")
     ledger["repair_triggers"] = sorted(triggers)
 
-    # --- seat-consistency advisory (decision D-1) ------------------------------
     ledger["seat_consistency"] = _seat_consistency(index)
     return ledger
 
 
 def _seat_consistency(index) -> list[str]:
-    """D-1 advisory: any WIRED near_max term whose SUBJECT is an interior block
-    anchored ``{"near": <edge block>}`` in floorplan.json (the exact `_anchor`
-    edge-seat precondition) must carry an exclusive PULL in the spec — else the
-    seat depends on packing luck. Reports the gap; never a gate."""
     from schgen.generate.floorplan import load_floorplan_spec
     spec = load_floorplan_spec()
     if spec is None:
@@ -194,7 +152,7 @@ def _seat_consistency(index) -> list[str]:
             continue
         near_tgt = anchor.get("near")
         if near_tgt is None or near_tgt not in edge_names:
-            continue           # not the @edge-block near-anchor precondition
+            continue
         pull = anchor.get("pull")
         if not (isinstance(pull, dict) and pull.get("exclusive")):
             flags.append(
@@ -205,22 +163,15 @@ def _seat_consistency(index) -> list[str]:
     return sorted(flags)
 
 
-# ---- SpecEdits (P4) ---------------------------------------------------------------
-
 @dataclass(frozen=True)
 class SpecEdit:
-    """One reviewable edit to carrier/floorplan.json. ``intent`` edits (edge
-    moves) are RATIFICATION-GATED: the driver proposes them only when named in
-    ``--allow-intent`` (IM5) — tuning edits (pulls) never move a block between
-    edges. ``target_key`` names the (kind, subject, target) TERM the edit
-    repairs — banded acceptance requires that term GREEN-or-improved."""
     intent: bool = False
     target_key: tuple | None = None
 
-    def apply(self, raw: dict) -> dict:  # pragma: no cover — abstract
+    def apply(self, raw: dict) -> dict:
         raise NotImplementedError
 
-    def describe(self) -> str:  # pragma: no cover — abstract
+    def describe(self) -> str:
         raise NotImplementedError
 
 
@@ -270,9 +221,6 @@ class SetPullWeight(SpecEdit):
 
 @dataclass(frozen=True)
 class MoveEdgeBlock(SpecEdit):
-    """INTENT edit (D-1 reviewed-JSON-diff rule): move a block between edge
-    lists (appended at the target edge's end). Only reachable via
-    ``--allow-intent NAME:FROM->TO`` — never proposed by tuning."""
     name: str = ""
     from_edge: str = ""
     to_edge: str = ""
@@ -295,8 +243,6 @@ class MoveEdgeBlock(SpecEdit):
 
 @dataclass(frozen=True)
 class CompositeEdit(SpecEdit):
-    """Atomic composite (IM8): e.g. an edge move + the pull that seats a
-    partner against it — evaluated and accepted as ONE candidate."""
     edits: tuple[SpecEdit, ...] = ()
 
     def __post_init__(self) -> None:
@@ -313,16 +259,10 @@ class CompositeEdit(SpecEdit):
         return " + ".join(e.describe() for e in self.edits)
 
 
-PULL_LADDER = (2.0, 5.0, 10.0, 20.0, 40.0, 60.0)   # judgment: doubling ladder
-#                bounded by the D11-proven 60.0 seat weight
+PULL_LADDER = (2.0, 5.0, 10.0, 20.0, 40.0, 60.0)
 
-
-# ---- candidate evaluation (plan replicas — ORDER only, IM9) -----------------------
 
 def _spec_from_raw(raw: dict, valid_names: set[str] | None):
-    """Validate + parse an edited RAW spec dict through the SAME loader the
-    build uses (written to a scratch file so every invariant applies — the
-    driver can never sneak an invalid spec past the validator)."""
     import json as _json
     import tempfile
 
@@ -335,13 +275,6 @@ def _spec_from_raw(raw: dict, valid_names: set[str] | None):
 
 
 def plan_replica_metrics(spec):
-    """Poses + evaluator inputs for a CANDIDATE spec, via the real build_plan /
-    zone packer with the spec INJECTED (IM1) — no file writes. ORDERING ONLY
-    (IM9): the evaluator's mobile-sheet error (mm on big zones, L4/snap) makes
-    these margins a ranking signal; the authoritative accept re-measures the
-    emitted board. Driver is contractually SINGLE-THREADED — build_plan rebinds
-    fp.BOARD_W/H module globals (the 2026-06-19 race class), so candidates are
-    evaluated strictly sequentially, never in parallel."""
     from schgen.core.link import (
         all_subsystem_paths,
         link,
@@ -372,8 +305,6 @@ def plan_replica_metrics(spec):
 
 def evaluate_candidate(raw_spec: dict, edit: SpecEdit,
                        valid_names: set[str] | None, index):
-    """Apply ``edit`` to the raw spec, validate, replica-evaluate every term.
-    Returns (term_evals, area, spilled) or raises on an invalid edit."""
     from schgen.generate import floorplan_compose as fc
     edited = edit.apply(raw_spec)
     spec = _spec_from_raw(edited, valid_names)
@@ -383,8 +314,6 @@ def evaluate_candidate(raw_spec: dict, edit: SpecEdit,
     return evals, ctx["area"], list(ctx["plan"].spilled), edited
 
 
-# ---- banded monotone acceptance (§5 law 3; hermetically testable) ------------------
-
 def _term_map(ledger: dict) -> dict[tuple, dict]:
     return {(t["kind"], t["subject"], t["target"]): t
             for t in ledger.get("terms", [])}
@@ -393,19 +322,6 @@ def _term_map(ledger: dict) -> dict[tuple, dict]:
 def banded_accept(before: dict, after: dict,
                   target_keys: set[tuple] | None = None,
                   allow_area_growth: bool = False) -> tuple[bool, list[str]]:
-    """The banded monotone acceptance over two measure_ledger dicts.
-
-    Clauses (each independently REJECTS with a named reason):
-      1. all gates PASS on the rebuilt model;
-      2. A' <= A (repair steps; ``allow_area_growth`` only defers the verdict
-         to the orchestrator's ratified-intent escalation — IM5 — and is set
-         ONLY for --allow-intent edits);
-      3. every target term GREEN or strictly improved margin;
-      4. no term leaves GREEN;
-      5. FRAGILE terms (enforced, below-floor margin before) never lose margin;
-      6. non-target RED terms never lose margin (IM3);
-      7. per-sheet contract_violations counts no-worsen.
-    """
     reasons: list[str] = []
     target_keys = target_keys or set()
 
@@ -457,8 +373,6 @@ def banded_accept(before: dict, after: dict,
     return (not reasons), reasons
 
 
-# ---- the repair driver (P4) --------------------------------------------------------
-
 def _parse_allow_intent(items: list[str]) -> list[MoveEdgeBlock]:
     out: list[MoveEdgeBlock] = []
     for it in items or []:
@@ -475,18 +389,6 @@ def _parse_allow_intent(items: list[str]) -> list[MoveEdgeBlock]:
 
 def propose(ledger: dict, raw_spec: dict,
             allow_intent: list[MoveEdgeBlock]) -> list[SpecEdit]:
-    """Deterministic candidate catalog from the ledger's repair triggers.
-
-    - near_max / flow / near_intent triggers whose SUBJECT is an interior
-      block: AddPull ladder toward the target (exclusive+inboard offered
-      when the block's ``near`` anchor already IS the edge-listed target —
-      the seat case); SetPullWeight ladder above an existing pull.
-    - a trigger whose subject is an EDGE block is only repairable by an edge
-      move — INTENT-gated: proposed IFF named in --allow-intent, else
-      reported as intent-gated (the D9 case).
-    - every --allow-intent move is also offered as a composite with the
-      matching partner pull when a near_max pairs the moved block (IM8).
-    """
     interior = raw_spec.get("interior", {})
     edge_names = {n for names in raw_spec.get("edges", {}).values()
                   for n in names}
@@ -521,8 +423,6 @@ def propose(ledger: dict, raw_spec: dict,
                 continue
             out.append(MoveEdgeBlock(name=m.name, from_edge=m.from_edge,
                                      to_edge=m.to_edge, target_key=tkey))
-            # composite: the move + a partner pull when the TARGET is an
-            # interior block that could seat against the moved block
             if tgt in interior and "pull" not in interior[tgt]:
                 out.append(CompositeEdit(target_key=tkey, edits=(
                     m, AddPull(block=tgt, to=subj, weight=10.0,
@@ -555,12 +455,6 @@ def propose(ledger: dict, raw_spec: dict,
 
 def repair(dry_run: bool = True, allow_intent: list[str] | None = None,
            max_steps: int = 4) -> int:
-    """ONE driver invocation = at most ONE applied step (risk table: attended,
-    serial). Measures, proposes, replica-ranks; with ``--dry-run`` prints the
-    ranked table + records the measurement ledger (driver-scoped) but NEVER
-    edits carrier/floorplan.json. Applying (not dry_run) writes the spec,
-    reruns the authoritative bar (full ``schgen board``) and REVERTS on any
-    banded-acceptance rejection."""
     import json as _json
     import subprocess
     import sys
@@ -586,13 +480,13 @@ def repair(dry_run: bool = True, allow_intent: list[str] | None = None,
         write_ledger(before, "measure (no candidates)")
         return 0
 
-    valid_names = None       # loader skips name validation; build re-validates
+    valid_names = None
     ranked: list[tuple[float, str, SpecEdit, dict]] = []
     for e in cands:
         try:
             evals, area, spilled, edited = evaluate_candidate(
                 raw, e, valid_names, index)
-        except Exception as exc:  # noqa: BLE001 — an invalid candidate is skipped loudly
+        except Exception as exc:  # noqa: BLE001
             print(f"  candidate {e.describe()}: INVALID ({exc})")
             continue
         if spilled:
@@ -606,8 +500,6 @@ def repair(dry_run: bool = True, allow_intent: list[str] | None = None,
         finite = [ev.margin for ev in evals
                   if ev.term.enforced and math.isfinite(ev.margin)]
         agg = sum(finite) if finite else 0.0
-        # primary: fix the triggered soft reds (count), then aggregate margin,
-        # then smaller area; deterministic tiebreak on describe()
         soft_red = sum(1 for ev in evals
                        if (not ev.term.enforced) and not ev.ok
                        and ev.term.kind != "near_intent")
@@ -624,7 +516,6 @@ def repair(dry_run: bool = True, allow_intent: list[str] | None = None,
         write_ledger(before, "measure/dry-run")
         return 0
 
-    # ---- apply the best candidate (ONE step), authoritative accept ---------
     best = ranked[0][2]
     print(f"compose: applying {best.describe()}")
     original = FLOORPLAN_SPEC.read_text()
@@ -636,11 +527,6 @@ def repair(dry_run: bool = True, allow_intent: list[str] | None = None,
     after = None
     if ok:
         after = measure_ledger(build_model())
-        # the FULL band always applies (A' <= A included) — IM5: an INTENT
-        # edit failing ONLY the area clause is not silently vetoed, it is
-        # ESCALATED with the measured growth for the orchestrator's ~+5%
-        # wave judgment; the file is still reverted (a human applies the
-        # ratified growth deliberately). Tuning edits never escalate.
         accepted, reasons = banded_accept(
             before, after,
             target_keys=({best.target_key} if best.target_key else None),
@@ -670,13 +556,9 @@ def repair(dry_run: bool = True, allow_intent: list[str] | None = None,
     return 0
 
 
-# ---- ledger writers (DRIVER-written only — P4) -----------------------------------
-
 def write_ledger(ledger: dict, step_label: str,
                  json_path: Path = LEDGER_JSON,
                  md_path: Path = LEDGER_MD) -> None:
-    """Append ``ledger`` (as a labelled step) to compose_ledger.json and rewrite
-    the .md view. DRIVER-ONLY: a plain board build never calls this."""
     history: list = []
     if json_path.exists():
         history = json.loads(json_path.read_text())

@@ -1,35 +1,3 @@
-"""ORDER-OF-ASSEMBLY doc + renders — the staged build sequence, from the data.
-
-``schgen board`` (via the PCB step) writes ``<project>/manufacturing/ASSEMBLY.md``
-plus one PNG per stage under ``<project>/renders/assembly/``. Two ORTHOGONAL
-partitions of the placed parts (every non-fiducial part appears in EXACTLY ONE
-of each — asserted):
-
-A. INCREMENTAL BRING-UP PHASES (primary): hand-assembly by SECTION in
-   dependency order, derived from the netlists — power-entry sheets (the
-   off-board connector sourcing the root rail of the module's supply chain, +
-   every sheet touching that root), then the rail chain ordered by regulator
-   depth (``powertree.analyze`` vin->vout edges, shunt bridges merged), then
-   the module interface (the sheets placed wholly inside the SoM keepout),
-   then the SoM MODULE MATE as its own solder-free phase, then the remaining
-   sections topologically ordered by produced->consumed rail edges (ties
-   alphabetical), mounting hardware last. Rail phases carry a CHECKPOINT line
-   only where a test point actually lands on a produced rail; the mate phase
-   checks boot/debug against the debug_boot interface. Nothing is invented.
-
-B. PRODUCTION PROCESS STEPS: (1) bottom SMD paste+reflow, (2) top SMD,
-   (3) through-hole non-connector parts short-to-tall (courtyard area is the
-   stated height proxy — no measured part heights exist in-tree), (4)
-   connectors + mechanical hardware. The joint class is derived from the
-   footprint pad types (majority thru_hole = THT), so an SMD part whose
-   footprint carries EP stitch vias or locating pegs stays SMD.
-
-Fiducials are bare-copper marks — no part to fit — and are excluded from both
-partitions (stated in the doc header). DETERMINISM: fixed palettes, natural
-ref sort, no timestamps — two builds are byte-identical (doc and PNGs).
-Advisory: emitted every build, gated by tests, never a board verdict.
-"""
-
 from __future__ import annotations
 
 import re
@@ -72,9 +40,6 @@ _joint_cache: dict[str, str] = {}
 
 
 def _joint(mod_path: Path) -> str:
-    """"tht" iff thru_hole pads OUTNUMBER smd pads: the TPS26631 EP stitch vias
-    and the USB-C shell posts are thru_hole pads on reflow parts, so any-thru
-    would misclassify them — majority is the honest joint class."""
     key = str(mod_path)
     if key not in _joint_cache:
         smd = thru = 0
@@ -114,10 +79,7 @@ def _area(inst: FootprintInst) -> float:
 
 
 def assembly_insts(model: PcbModel) -> list[FootprintInst]:
-    """Every placed part that is actually FITTED — fiducials (bare-copper
-    registration marks) are the sole exclusion, stated in the doc header."""
     return [i for i in model.insts if not _is_fiducial(i)]
-
 
 
 @dataclass(frozen=True)
@@ -166,8 +128,6 @@ def _polarity_notes(insts: tuple[FootprintInst, ...]) -> tuple[str, ...]:
 
 
 def _conn_desc(inst: FootprintInst) -> str:
-    """Ref-keyed header labels (project silk_labels data) win; else the
-    sheet-keyed connector descriptor."""
     if inst.ref in _INT_DESC:
         return _INT_DESC[inst.ref]
     return _CONN_DESC.get(inst.sheet, "")
@@ -197,9 +157,6 @@ def _connector_notes(insts: tuple[FootprintInst, ...],
 
 
 def process_steps(model: PcbModel) -> list[Step]:
-    """The 4-step PCBA process partition. Assignment order: connector/mech
-    class first (a THT header is a connector, not a step-3 part), then joint
-    class, then side."""
     parts = assembly_insts(model)
     b_smd: list[FootprintInst] = []
     t_smd: list[FootprintInst] = []
@@ -234,7 +191,6 @@ def process_steps(model: PcbModel) -> list[Step]:
     return steps
 
 
-
 @dataclass(frozen=True)
 class Phase:
     n: int
@@ -256,9 +212,6 @@ def _sheet_power_nets(model: PcbModel) -> dict[str, set[str]]:
 
 
 def _conn_root_rails(model: PcbModel, produced: set[str]) -> dict[str, set[str]]:
-    """sheet -> POWER rails entering ON an off-board connector's pads that no
-    regulator produces: the board's true supply entries (+VBUS_IN on the PD
-    inlet, +5V_DBG on the debug USB-C)."""
     out: dict[str, set[str]] = {}
     for i in model.insts:
         if i.mod_path.stem not in CONN_MATING_FACE:
@@ -282,8 +235,6 @@ def _tp_by_net(model: PcbModel) -> dict[str, str]:
 
 
 class _Rails:
-    """Bridge-merged rail groups + regulator depth from the supply roots."""
-
     def __init__(self, pt) -> None:
         self.parent: dict[str, str] = {}
         for _s, _r, a, b in pt.bridges:
@@ -352,8 +303,6 @@ def _checkpoint_lines(rail_set: set[str], rails: _Rails, tp_of: dict[str, str],
 
 
 def bringup_phases(model: PcbModel, sheets) -> list[Phase]:
-    """The section-by-section hand-assembly order (module docstring, part A),
-    every ordering decision read off the netlists/placement — no name lists."""
     from schgen.verify import powertree
     pt = powertree.analyze(sheets)
     rails = _Rails(pt)
@@ -476,7 +425,6 @@ def bringup_phases(model: PcbModel, sheets) -> list[Phase]:
     return phases
 
 
-
 def _table(insts: tuple[FootprintInst, ...], joint_col: bool = False
            ) -> list[str]:
     head = "| ref | value | package | sheet |"
@@ -561,7 +509,6 @@ def _markdown(model: PcbModel, steps: list[Step], phases: list[Phase],
         if s.notes:
             L.append("")
     return "\n".join(L) + "\n"
-
 
 
 def _png_stage(model: PcbModel, done: list[FootprintInst],
@@ -652,10 +599,7 @@ def _stage_pngs(model: PcbModel, steps: list[Step], phases: list[Phase],
     return out
 
 
-
 def generate(model: PcbModel | None = None) -> dict:
-    """Build both partitions, write ASSEMBLY.md + the per-stage PNGs. Pure
-    consumer of the placed model — reads it, never mutates it."""
     if model is None:
         model = pcb_mod.build_model()
     from schgen.core.link import all_subsystem_paths, load_subsystem
@@ -676,16 +620,6 @@ def generate(model: PcbModel | None = None) -> dict:
 
 
 def verdict(res: dict | None) -> tuple[bool, str]:
-    """The board-report verdict for the assembly artifacts: ``(ok, line)``.
-
-    ABSENCE IS A FAILURE, not a skip. The doc's CONTENT is advisory (it fails no
-    placement rule), but its EMISSION is not: wave-8 commit 7ed5219 dropped the
-    ``emit.generate`` hook on a stale base and the committed ASSEMBLY.md went
-    stale for six waves because a missing result printed nothing at all. A
-    ``None``/empty result therefore reads as "the step did not run" and fails the
-    board exactly like the ratsnest / fallback-census "did not run" branches; a
-    raised generator error is the same verdict, additionally counted as the
-    ``assembly_generation_failed`` fallback (ceiling 0)."""
     if not res:
         return False, ("ASSEMBLY: FAIL — generation step did not run "
                        "(emit.generate must call assembly.generate)")

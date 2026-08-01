@@ -1,28 +1,3 @@
-"""Test-point machinery (PLAN round 4): engine placement + the COVERAGE GATE.
-
-Authoring: ``c.testpoint(net)`` in a subsystem (model-only, purity intact)
-adds a KiCad ``Connector:TestPoint`` on a pad-only footprint
-(``TestPoint:TestPoint_Pad_D1.5mm`` — copper, no component, no BOM line:
-the BOM/preflight exporters skip ``BOM=exclude`` parts).
-
-Placement: the ENGINE owns all geometry. ``schgen.place.build`` strips the
-TP parts before the topology templates run (so a probe point can never
-perturb the circuit's own layout), then appends a dedicated PROBE ROW below
-the sheet extent — one cell per TP:
-
-- GROUND net:  TP (circle up) with a stub down to a GND symbol;
-- POWER rail:  rail symbol on top, stub down to the TP (circle down) — the
-  rail name is the TP's Value text, so it reads once;
-- PORT net:    a LOCAL label on the stub top — KiCad merges the islet by
-  name (route.py's labeled-islet rule), the netlist gate proves the merge.
-
-Coverage GATE (hooked into ``schgen board``): every POWER/GROUND rail and
-every key single-ended bus — i2c-typed ports, sd_bus CMD/CLK, UART RXD/TXD,
-and EN lines (bring-up philosophy: every enable is probeable) — must own a
-test point somewhere on the board, or carry an EXPLICIT author waiver
-``c.waive_tp(net, reason)``. Waivers are listed verbatim in the report.
-"""
-
 from __future__ import annotations
 
 import re
@@ -37,24 +12,19 @@ MH_LIB_ID = Circuit.MH_LIB_ID
 
 U = 1.27
 
+TALL_SHEET_MM = 244.0
+GROUND_CELL_LIFT = 2 * U
+
 
 def is_testpoint(part) -> bool:
     return part.lib_id == TP_LIB_ID
 
 
 def is_aux_pin(part) -> bool:
-    """One-pin parts the engine places in the auxiliary row instead of the
-    topology templates (the placer's _classify only takes multi-pin/2-pin
-    parts): probe points AND M3 mounting holes (Circuit.mounting_hole(), a
-    plated CHASSIS_GND bond — always a GROUND cell, drawn like a GROUND TP)."""
     return part.lib_id in (TP_LIB_ID, MH_LIB_ID)
 
 
 def split(c: Circuit) -> tuple[Circuit, list[str]]:
-    """A shallow working copy of ``c`` without the auxiliary 1-pin parts/pins
-    (the engine's templates see the UNCHANGED circuit topology), plus their
-    refs. Covers probe points AND mounting holes (is_aux_pin). The original
-    circuit is never mutated."""
     tp_refs = sorted((r for r, p in c.parts.items() if is_aux_pin(p)),
                      key=lambda r: (len(r), r))
     if not tp_refs:
@@ -72,9 +42,6 @@ def split(c: Circuit) -> tuple[Circuit, list[str]]:
 
 
 def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
-    """Append the probe row to the engine's placement. ``eng`` is the live
-    ``place._Engine`` (its ``pl``/``power``/``llabel`` factories already
-    carry the sheet's geometry); ``c`` is the FULL circuit (with TPs)."""
     if not tp_refs:
         return
     from schgen.layout import textmetrics as tm
@@ -84,23 +51,14 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
     sp = eng.sp
     pl = eng.pl
     ex0, ey0, ex1, ey1 = eng._extent()
-    # tall sheets (the FMC connector fan rides the A3 height budget): the
-    # probe row would push past the frame — stack a probe COLUMN to the
-    # right of the extent instead. Same cells, vertical rhythm.
-    vertical = (ey1 - ey0) > 244.0
+    vertical = (ey1 - ey0) > TALL_SHEET_MM
     if vertical:
         fx = gceil(ex1 + 8 * U)
         row_y = gsnap(ey0 + 4 * U)
         wrap_at = None
     else:
-        row_y = gceil(ey1 + 6 * U)      # top anchors of the probe row
+        row_y = gceil(ey1 + 6 * U)
         fx = gsnap(ex0 + 4 * U)
-        # the row lives in the page's BOTTOM band where the title block
-        # owns the right side: wrap into extra rows on the LEFT half so a
-        # wide probe row can never reach the frame's title block. The
-        # extent is centered on the page later, and the title block's left
-        # edge sits ~27 mm right of the page center on A4 (~88 mm on A3) —
-        # capping the row at extent-center + 20 mm clears both papers.
         wrap_at = min(ex0 + max(140.0, 0.5 * (ex1 - ex0)),
                       (ex0 + ex1) / 2 + 20.0)
     row_x0 = fx
@@ -114,16 +72,11 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
     for i, ref in enumerate(tp_refs):
         net = net_of_tp(ref)
         part = c.parts[ref]
-        # lookahead for the vertical-column pitch: a GROUND cell seats 2*U higher
-        # than a POWER/PORT cell, so the gap to a GROUND cell that FOLLOWS a
-        # non-GROUND one needs an extra 2*U (see the advance block below).
         next_is_ground_after_high = (
             net.net_class is not NetClass.GROUND
             and i + 1 < len(tp_refs)
             and net_of_tp(tp_refs[i + 1]).net_class is NetClass.GROUND)
         if not vertical:
-            # cell-width-aware wrap BEFORE placing: the ref/value texts and
-            # the label all extend right of the stub
             w_ref0, _ = tm.text_wh(ref)
             w_val0, _ = tm.text_wh(part.value)
             cell_right = max(0.76 + 0.42 + max(w_ref0, w_val0),
@@ -131,24 +84,22 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
             if wrap_at is not None and fx > row_x0 \
                     and fx + cell_right > wrap_at:
                 fx = row_x0
-                row_y = gceil(row_y + 13 * U)   # next probe row
+                row_y = gceil(row_y + 13 * U)
         if net.net_class is NetClass.GROUND:
-            # TP circle up at the row line, stub DOWN to the ground symbol
             tp_xy, rot = (fx, row_y), 0
             pl.plan(net.name, (fx, row_y), (fx, row_y + 2 * U))
             eng.power(net.name, fx, row_y + 2 * U,
                       eng._power_rot(net.name, True))
         elif net.net_class is NetClass.POWER:
-            # rail symbol on top (name shown once, as the TP Value)
             eng.power(net.name, fx, row_y, 0, show_value=False)
             pl.plan(net.name, (fx, row_y), (fx, row_y + 2 * U))
             tp_xy, rot = (fx, row_y + 2 * U), 180
-        else:                              # PORT: labeled islet (route.py)
+        else:
             eng.llabel(net.name, fx, row_y, 0)
             pl.plan(net.name, (fx, row_y), (fx, row_y + 2 * U))
             tp_xy, rot = (fx, row_y + 2 * U), 180
 
-        sdef = lib.get(part.lib_id)   # TP or mounting-hole symbol (per cell)
+        sdef = lib.get(part.lib_id)
         body = body_box_page(sdef, tp_xy[0], tp_xy[1], rot, "body", ref)
         w_ref, _ = tm.text_wh(ref)
         w_val, _ = tm.text_wh(part.value)
@@ -166,26 +117,14 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
         eng._done.add(ref)
 
         if vertical:
-            # advance DOWN one cell (stub + body + breathing room). A GROUND
-            # cell seats its TP body AT row_y (symbol BELOW) while a POWER/PORT
-            # cell seats it 2*U LOWER (symbol ABOVE) — so a GROUND cell following
-            # a POWER/PORT cell sits 2*U HIGHER than the nominal pitch allows,
-            # colliding the two cells' right-side ref/value texts (the tall A3
-            # power probe COLUMN exposed this: TP3 +5V over TP4 GND). Add the 2*U
-            # differential ONLY across that POWER/PORT -> GROUND transition; a
-            # uniform-class column (every existing vertical probe sheet —
-            # bringup_modules all-POWER, bringup_en_modules all-PORT) keeps the
-            # nominal pitch and stays byte-identical.
             row_y = gceil(row_y + 2 * U + 4.064 + 4 * U
-                          + (2 * U if next_is_ground_after_high else 0.0))
+                          + (GROUND_CELL_LIFT if next_is_ground_after_high
+                             else 0.0))
         else:
-            # advance RIGHT past this cell's widest feature
             right = max(body.x1 + 0.42 + w_ref, body.x1 + 0.42 + w_val,
                         fx + tm.text_wh(net.name)[0] + 1.0)
             fx = gceil(right + max(sp.flag_pitch - 6 * U, 2 * U) + 2 * U)
 
-
-# ---- the coverage gate -----------------------------------------------------------
 
 _UART_RE = re.compile(r"UART\d*_(TXD|RXD)$")
 _EN_RE = re.compile(r"(^EN_|_EN$)")
@@ -193,8 +132,8 @@ _EN_RE = re.compile(r"(^EN_|_EN$)")
 
 @dataclass
 class Coverage:
-    required: dict[str, str] = field(default_factory=dict)   # net -> why
-    have: dict[str, list[str]] = field(default_factory=dict)  # net -> TP locs
+    required: dict[str, str] = field(default_factory=dict)
+    have: dict[str, list[str]] = field(default_factory=dict)
     waived: dict[str, tuple[str, str]] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
     extras: dict[str, list[str]] = field(default_factory=dict)

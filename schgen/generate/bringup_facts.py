@@ -1,23 +1,3 @@
-"""bringup_facts — NETLIST-derived facts shared by the generated system
-artifacts (``schgen firmware`` -> SC contract header, ``schgen manual`` ->
-bring-up procedure).
-
-EVERYTHING in this module is read programmatically from the authored
-subsystem netlists (via :func:`schgen.link.load_subsystem`), the committed
-SoM contract (``carrier/som_interface.json``) and a live ``kicad-cli``
-extraction of the SoM STM32 (U9) pin map — never hand-typed. The only
-non-netlist constants are datasheet formulas/values, each tagged with its
-source:
-
-- SN74LVC1G08 gate pinout 1=A 2=B 3=GND 4=Y 5=VCC (TI DS; bringup dossier 1)
-- SY6280AAC  ILIM(A) = 6800 / RSET(ohm)           (Silergy DS; dossier 2)
-- TPS54302   VREF = 0.596 V (FB setpoint math)    (TI DS; power.py)
-- LM61460    VREF = 1.0 V   (FB setpoint math)    (TI SNVSBD5D; power.py U1)
-- TCA9535 7-bit base address 0b0100_A2A1A0 = 0x20 + straps  (TI SCPS201E)
-- INA3221 A0 strap decode GND/VS/SDA/SCL -> 0x40..0x43      (TI SBOS576)
-- FUSB302B fixed 7-bit address 0x22                          (onsemi DS)
-"""
-
 from __future__ import annotations
 
 import re
@@ -30,24 +10,22 @@ from schgen.core.model import Circuit, NetClass, PinRef
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SOM_SCH = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 
-# datasheet constants (sources in the module docstring)
-GATE_PIN_A, GATE_PIN_B, GATE_PIN_Y = "1", "2", "4"   # SN74LVC1G08
-SY6280_ILIM_NUMERATOR = 6800.0                       # ILIM(A) = 6800/RSET
-FB_VREF = {"TPS54302": 0.596, "LMR33630": 1.0,       # buck FB reference [V]
-           "LM61460": 1.0}                           # LM61460 Vref 1.0V (SNVSBD5D)
-TCA9535_BASE_ADDR = 0x20                             # 0b0100_A2A1A0
-INA3221_BASE_ADDR = 0x40                             # + A0 strap decode
-FUSB302B_ADDR = 0x22                                 # fixed (onsemi DS)
+LVC1G08_PIN_A, LVC1G08_PIN_B, LVC1G08_PIN_Y = "1", "2", "4"
+SY6280_ILIM_NUMERATOR = 6800.0
+FB_VREF = {"TPS54302": 0.596, "LMR33630": 1.0,
+           "LM61460": 1.0}
+TCA9535_BASE_ADDR = 0x20
+INA3221_BASE_ADDR = 0x40
+FUSB302B_ADDR = 0x22
 
 
 def parse_value_ohms(value: str) -> float | None:
-    """'73.2k' -> 73200.0, '4k7' -> 4700.0, '100R' -> 100.0, '10mR' -> 0.01."""
     v = value.strip()
     m = re.fullmatch(r"(\d+(?:\.\d+)?)\s*(m|k|M)?(?:R|ohm)?", v)
     if m:
         mult = {"m": 1e-3, "k": 1e3, "M": 1e6, None: 1.0}[m.group(2)]
         return float(m.group(1)) * mult
-    m = re.fullmatch(r"(\d+)(k|M)(\d+)", v)            # '4k7' style
+    m = re.fullmatch(r"(\d+)(k|M)(\d+)", v)
     if m:
         mult = {"k": 1e3, "M": 1e6}[m.group(2)]
         return float(f"{m.group(1)}.{m.group(3)}") * mult
@@ -55,7 +33,6 @@ def parse_value_ohms(value: str) -> float | None:
 
 
 def c_ident(net: str) -> str:
-    """Net name -> C identifier fragment ('+3V3_SC' -> 'P3V3_SC')."""
     ident = net.replace("+", "P").replace("-", "_")
     ident = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in ident)
     if ident and ident[0].isdigit():
@@ -69,7 +46,6 @@ def _net_at(c: Circuit, ref: str, pin: str) -> str | None:
 
 
 def _pin_name_of(c: Circuit, ref: str, num: str) -> str:
-    """Reverse lookup pin NUMBER -> NAME via the use_part pin table."""
     for name, nums in c.parts[ref].pin_names.items():
         if num in nums:
             return name
@@ -81,24 +57,15 @@ def _parts_by_value(c: Circuit, substr: str) -> list[str]:
                   if substr in p.value or substr in p.lib_id)
 
 
-# ---- STM32 (SoM U9) pin map -----------------------------------------------------
-
 @dataclass(frozen=True)
 class Stm32Net:
-    net: str                  # SoM net name, e.g. "STM32_GPIO6"
-    port: str                 # GPIO port letter, e.g. "A"
-    pin: int                  # GPIO pin number, e.g. 13
-    j_pins: tuple[str, ...]   # ("J1.45",) — empty for SoM-internal nets
+    net: str
+    port: str
+    pin: int
+    j_pins: tuple[str, ...]
 
 
 def stm32_pin_map(som_sch: Path = SOM_SCH, ref: str = "U9") -> dict:
-    """Live ``kicad-cli`` extraction of the SoM system controller (U9):
-    net -> STM32 GPIO port/pin, joined with the J-connector contract.
-
-    Returns {"value": "STM32G431CBUx", "nets": {net: Stm32Net},
-    "internal": {net: Stm32Net}} where "nets" are J-contract nets and
-    "internal" are STM32-driven SoM-internal nets (BMODE, PS_POR, ...).
-    """
     from schgen.core.som_interface import extract_zynq
     data = extract_zynq(som_sch, zynq_ref=ref)
     contract = load_som_contract()
@@ -109,7 +76,7 @@ def stm32_pin_map(som_sch: Path = SOM_SCH, ref: str = "U9") -> dict:
             continue
         m = re.fullmatch(r"P([A-G])(\d+)", data["pin_names"].get(num, ""))
         if not m:
-            continue                       # VDD/VSS/NRST-as-PG10 handled below
+            continue
         entry = Stm32Net(net=net, port=m.group(1), pin=int(m.group(2)),
                          j_pins=tuple(contract.get(net, [])))
         if entry.j_pins:
@@ -119,29 +86,20 @@ def stm32_pin_map(som_sch: Path = SOM_SCH, ref: str = "U9") -> dict:
     return {"value": data["value"], "nets": on_j, "internal": internal}
 
 
-# ---- DIP switches ----------------------------------------------------------------
-
 @dataclass(frozen=True)
 class DipPosition:
-    switch: str        # part ref on its sheet, e.g. "SW1"
-    position: int      # silkscreen position 1..N
-    net: str           # the strap net on the position's even pin
+    switch: str
+    position: int
+    net: str
 
 
 def dip_switch_refs(c: Circuit) -> list[str]:
-    """Every DSHP-style DIP switch on the sheet (sorted refs) — so the
-    generated manual/header follow when a new bring-up DIP is added
-    (round-5 SW6) instead of hard-coding SW1/SW2."""
     return _parts_by_value(c, "DSHP")
 
 
 def dip_positions(c: Circuit, ref: str,
                   common: tuple[str, ...] = ("+3V3_SC", "GND")) \
         -> list[DipPosition]:
-    """Silkscreen position -> strap net for a DSHP-style DIP: position n
-    pairs pins (n, 2N+1-n) (Kangshen DSHP footprint, bringup_rails.py).
-    Per position the SIGNAL side is reported: bus/common nets are dropped
-    and PORT-class nets win over sheet-internal nets."""
     part = c.parts[ref]
     total = len(part.pin_numbers)
     cand: dict[int, list] = {}
@@ -160,15 +118,13 @@ def dip_positions(c: Circuit, ref: str,
     return out
 
 
-# ---- EN cells (SN74LVC1G08 AND gates) --------------------------------------------
-
 @dataclass(frozen=True)
 class EnCell:
     sheet: str
-    gate: str          # gate ref, e.g. "U1"
-    dip_net: str       # A input (BU_DIP_*)
-    override_net: str  # B input (STM32_RAIL_EN_* / BU_OVR_*)
-    enable: str        # Y output (EN_*)
+    gate: str
+    dip_net: str
+    override_net: str
+    enable: str
 
 
 def en_cells(c: Circuit) -> list[EnCell]:
@@ -176,19 +132,17 @@ def en_cells(c: Circuit) -> list[EnCell]:
     for ref in _parts_by_value(c, "74LVC1G08"):
         cells.append(EnCell(
             sheet=c.name, gate=ref,
-            dip_net=_net_at(c, ref, GATE_PIN_A) or "?",
-            override_net=_net_at(c, ref, GATE_PIN_B) or "?",
-            enable=_net_at(c, ref, GATE_PIN_Y) or "?"))
+            dip_net=_net_at(c, ref, LVC1G08_PIN_A) or "?",
+            override_net=_net_at(c, ref, LVC1G08_PIN_B) or "?",
+            enable=_net_at(c, ref, LVC1G08_PIN_Y) or "?"))
     return cells
 
-
-# ---- TCA9535 expander ------------------------------------------------------------
 
 @dataclass(frozen=True)
 class Expander:
     ref: str
-    addr: int                      # 7-bit, derived from the A2/A1/A0 straps
-    ports: dict[str, str] = field(default_factory=dict)   # "P00" -> net
+    addr: int
+    ports: dict[str, str] = field(default_factory=dict)
 
 
 def expander(c: Circuit) -> Expander:
@@ -214,14 +168,11 @@ def expander(c: Circuit) -> Expander:
     return Expander(ref=ref, addr=addr, ports=ports)
 
 
-# ---- INA3221 monitors ------------------------------------------------------------
-
 @dataclass(frozen=True)
 class Monitor:
     ref: str
     addr: int
     channels: dict[int, tuple[str, str]] = field(default_factory=dict)
-    # channel -> (IN+ net, IN- net)
 
 
 def ina3221_monitors(c: Circuit) -> list[Monitor]:
@@ -232,7 +183,7 @@ def ina3221_monitors(c: Circuit) -> list[Monitor]:
         a0 = _net_at(c, ref, part.pin_names["A0"][0])
         sda = _net_at(c, ref, part.pin_names["SDA"][0])
         scl = _net_at(c, ref, part.pin_names["SCL"][0])
-        strap = {  # TI SBOS576 table: A0 = GND/VS/SDA/SCL -> +0..+3
+        strap = {
             "GND": 0, vs_net: 1, sda: 2, scl: 3}.get(a0)
         if strap is None:
             raise ValueError(f"{c.name}: {ref} A0 on {a0!r} — unknown strap")
@@ -245,21 +196,18 @@ def ina3221_monitors(c: Circuit) -> list[Monitor]:
     return sorted(out, key=lambda m: m.addr)
 
 
-# ---- power-tree regulator chain --------------------------------------------------
-
 @dataclass
 class RegulatorStage:
     ref: str
-    value: str         # "TPS54302DDCR" / "AP2112K-1.8"
-    enable: str        # EN_* port net on its EN pin
+    value: str
+    enable: str
     rail_in: str
     rail_out: str
-    vout: float | None         # FB-divider / fixed-LDO setpoint [V]
-    pg_led: str | None = None  # PG indicator LED ref (power sheet)
+    vout: float | None
+    pg_led: str | None = None
 
 
 def _rails_of(c: Circuit, ref: str) -> set[str]:
-    """POWER-class nets on the part's own pins (always-on SC rail excluded)."""
     rails = set()
     for net in c.nets.values():
         if net.net_class != NetClass.POWER or net.name == "+3V3_SC":
@@ -270,10 +218,6 @@ def _rails_of(c: Circuit, ref: str) -> set[str]:
 
 
 def _canonical_rail(a: str, b: str) -> tuple[str, str]:
-    """(board_rail, measurement_rail) for a shunt-bridged pair: the measurement
-    rail is the one whose name is the board rail plus a _REG/_SYS suffix
-    (+VIN_SYS -> +VIN, +5V_REG -> +5V); fall back to the longer name as the
-    measurement side."""
     for suf in ("_REG", "_SYS"):
         if a.endswith(suf) and a[:-len(suf)] == b:
             return b, a
@@ -283,10 +227,6 @@ def _canonical_rail(a: str, b: str) -> tuple[str, str]:
 
 
 def _shunt_aliases(monitor: Circuit | None) -> dict[str, str]:
-    """Rail aliases from the series sense shunts (e.g. power_mon RS1..RS4): a
-    2-pin passive bridging two POWER rails is a dead short for bring-up
-    sequencing, so its reg-side measurement rail aliases to its board rail.
-    Netlist-driven (same idiom as powertree._detect_bridges)."""
     if monitor is None:
         return {}
     netted: dict[str, list] = {}
@@ -306,7 +246,6 @@ def _shunt_aliases(monitor: Circuit | None) -> dict[str, str]:
 
 
 def _resolve_alias(rail: str, alias: dict[str, str]) -> str:
-    """Follow the alias map to the canonical board rail (cycle-guarded)."""
     seen: set[str] = set()
     while rail in alias and rail not in seen:
         seen.add(rail)
@@ -316,23 +255,11 @@ def _resolve_alias(rail: str, alias: dict[str, str]) -> str:
 
 def regulator_chain(power: Circuit, root: str = "+VIN",
                     monitor: Circuit | None = None) -> list[RegulatorStage]:
-    """The rail-sequencing order, derived from the power netlist topology:
-    each regulator = the part carrying an EN_* PORT pin; its candidate rails
-    are the POWER nets on its own pins plus those one inductor hop away
-    (buck SW node -> L -> output). Starting from the inlet rail, every stage
-    must consume exactly one already-known rail and produce exactly one new
-    one — anything else is a build error, never a guess.
-
-    ``monitor`` (power_mon) supplies the series sense-shunt bridges: each
-    shunt is a wire for sequencing, so its reg-side rail (+5V_REG) collapses
-    to its board rail (+5V) and the walk crosses the shunt transparently."""
-    # regulator refs = parts carrying an EN_* PORT pin
     regs: dict[str, str] = {}
     for net in power.nets.values():
         if net.net_class == NetClass.PORT and net.name.startswith("EN_"):
             for pr in net.pins:
                 regs[pr.ref] = net.name
-    # candidate rails per regulator (direct + one inductor hop)
     inductors = [r for r, p in power.parts.items() if p.lib_id == "Device:L"]
     cands: dict[str, set[str]] = {}
     for ref in regs:
@@ -346,13 +273,9 @@ def regulator_chain(power: Circuit, root: str = "+VIN",
             if shared:
                 rails |= _rails_of(power, lref)
         cands[ref] = rails
-    # series shunts are wires for sequencing: collapse each reg-side rail to
-    # its board rail so the walk crosses +VIN ->(RS1) +VIN_SYS, +5V_REG ->(RS2)
-    # +5V, ... transparently (else the rail split opens the chain).
     alias = _shunt_aliases(monitor)
     cands = {ref: {_resolve_alias(r, alias) for r in rails}
              for ref, rails in cands.items()}
-    # walk the chain from the inlet rail
     known = {_resolve_alias(root, alias)}
     stages: list[RegulatorStage] = []
     pending = dict(cands)
@@ -378,25 +301,12 @@ def regulator_chain(power: Circuit, root: str = "+VIN",
 
 
 def _stage_vout(power: Circuit, ref: str, value: str) -> float | None:
-    """Setpoint: fixed-LDO suffix ('AP2112K-1.8' -> 1.8 V) or the buck FB
-    divider Vout = VREF * (1 + Rtop/Rbot) computed from the netlist. The top
-    (output-sense) arm is the divider resistor that does NOT return to GND, so
-    the setpoint is correct regardless of the output rail's name (a series-
-    shunt split renames it, e.g. +5V -> +5V_REG)."""
     m = re.search(r"-(\d+(?:\.\d+)?)$", value)
     if m:
         return float(m.group(1))
     vref = next((v for k, v in FB_VREF.items() if k in value), None)
     if vref is None:
         return None
-    # FB net = a SIGNAL net on the regulator carrying the divider: a TOP R whose
-    # far end is a POWER rail (the output sense) and a BOTTOM R returning to GND.
-    # Classify by each resistor's far net, NOT by counting — a feedforward CFF+RFF
-    # chain (DS SNVSBD5D 9.2.2.10, LM61460 U1) adds a 3rd resistor (RFF) on the FB
-    # net whose far end is the CFF mid node (neither the rail nor GND); it is
-    # IGNORED, exactly as the spice gate's _buck_fb does, so the setpoint stays
-    # correct. (Mirrors _stage_vout's intent: the top arm is the R that does NOT
-    # return to GND AND lands on the output rail.)
     for net in power.nets.values():
         if net.net_class != NetClass.SIGNAL \
                 or not any(pr.ref == ref for pr in net.pins):
@@ -413,15 +323,12 @@ def _stage_vout(power: Circuit, ref: str, value: str) -> float | None:
                 bot = parse_value_ohms(power.parts[r].value)
             elif any(cls is NetClass.POWER for cls in other.values()):
                 top = parse_value_ohms(power.parts[r].value)
-            # else: RFF (far end is the CFF mid SIGNAL node) — ignore
         if top and bot:
             return round(vref * (1 + top / bot), 2)
     return None
 
 
 def _attach_pg_leds(power: Circuit, stages: list[RegulatorStage]) -> None:
-    """PG LED per stage: the LED whose net follows the sheet's PG_<token>
-    convention, token taken from the stage's EN_<token> port name."""
     for st in stages:
         token = st.enable.removeprefix("EN_")
         for net in power.nets.values():
@@ -430,7 +337,6 @@ def _attach_pg_leds(power: Circuit, stages: list[RegulatorStage]) -> None:
             for pr in net.pins:
                 if pr.ref.startswith("D"):
                     st.pg_led = pr.ref
-        # fall back: LED directly on the output rail
         if st.pg_led is None:
             for net in power.nets.values():
                 if net.name == st.rail_out:
@@ -439,15 +345,13 @@ def _attach_pg_leds(power: Circuit, stages: list[RegulatorStage]) -> None:
                             st.pg_led = pr.ref
 
 
-# ---- module load switches --------------------------------------------------------
-
 @dataclass(frozen=True)
 class ModuleGate:
-    ref: str           # SY6280 ref on bringup_modules
-    module: str        # "HDMI_TX" (from its EN_<module> port)
+    ref: str
+    module: str
     rail_in: str
     rail_out: str
-    enable: str        # EN_<module>
+    enable: str
     ilim_ma: int | None
     status_led: str | None
 

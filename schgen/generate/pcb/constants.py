@@ -1,9 +1,3 @@
-"""Module tunables, lookup tables and the PCB dataclasses (pure data — no
-function cross-dependencies). Split out of the old monolithic
-``schgen/generate/pcb.py`` (PURE MOVE, no behaviour change). Every other pcb
-submodule imports its constants from here, so this is the dependency leaf.
-"""
-
 from __future__ import annotations
 
 import os
@@ -20,19 +14,12 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 PARTS_DIR = REPO_ROOT / "parts"
 CARRIER = PROJECT_ROOT
 
-# KiCad-installed standard footprint libraries (the non-parts/ footprints —
-# Resistor_SMD, Capacitor_SMD, Package_*, Diode_SMD, LED_SMD, TestPoint,
-# MountingHole). Probed at the standard macOS/Linux locations.
 _KICAD_FP_DIRS = [
     Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints"),
     Path("/usr/share/kicad/footprints"),
     Path("/usr/local/share/kicad/footprints"),
 ]
 
-# A few footprint names this project authored that a given KiCad install may
-# ship under a near-identical dimensional name. Same body, same pads — the
-# substitution is dimensionally faithful and reported. (3225 vs 3216 is the
-# 1206 metric body; some KiCad lib versions ship one, some the other.)
 _FOOTPRINT_ALIASES = {
     "Capacitor_SMD:C_1206_3225Metric": "Capacitor_SMD:C_1206_3216Metric",
 }
@@ -45,58 +32,37 @@ def _kicad_fp_root() -> Path | None:
     return None
 
 
-# ---- board geometry --------------------------------------------------------------
-# The outline is DERIVED from the ACTUAL packed-zone extents (build_model): the
-# board grows until the centered SoM region + every per-subsystem zone + the 4
-# corner mounting holes + a perimeter keepout all fit, so EVERY footprint sits
-# inside Edge.Cuts (LAW 5 — no off-board parts). The coordinate frame is shifted
-# by ORIGIN_X/Y so the board sits in positive KiCad page space (KiCad's drawing
-# sheet origin is top-left, +y down).
-ORIGIN_X = 25.0          # board top-left in KiCad page mm
+ORIGIN_X = 25.0
 ORIGIN_Y = 25.0
-MH_INSET = 5.0          # M3 hole center inset from each board corner
+MH_INSET = 5.0
 GRID = _quantize.GRID_MM
 
-# --- fiducials (GAP3 / carrier/manufacturing/ASSEMBLY_NOTES.md) ----------------
-# Optical registration marks for fine-pitch pick-and-place. ASSEMBLY_NOTES REQUIRES
-# 3 GLOBAL fiducials in an L (asymmetric so the machine can resolve rotation), each
-# a 1 mm bare-copper dot + 2 mm solder-mask opening. We use the stock KiCad
-# Fiducial:Fiducial_1mm_Mask2mm footprint (1 mm F.Cu pad, 0.5 mm mask margin -> 2 mm
-# opening — EXACT match). A fiducial carries NO net (its pad name is "" -> net 0), no
-# BOM line: it is PCB-only fab-art injected as a synthetic FootprintInst in
-# build_model (NOT a schematic circuit part — a pinless part would trip the per-sheet
-# netlist "parts present" gate). Local pairs flank the densest 0.4 mm DF40 (J2) so
-# the assembler can register the fine-pitch stencil there too.
 FIDUCIAL_FOOTPRINT = "Fiducial:Fiducial_1mm_Mask2mm"
-FID_INSET = 9.0          # global fiducial center inset from each board corner
-#                          (> MH_INSET 5 so it sits INSIDE the corner mounting hole,
-#                          clear of the M3 3.2 mm pad + its keepout)
+FID_INSET = 9.0
 
-# --- subsystem-zone outline derivation (LAW 5) -------------------------------
-PERIM = 3.0              # perimeter keepout ring (no zone touches the edge)
-MH_KEEPOUT = 5.0         # extra inset reserving the corner mounting-hole pads
-SOM_HALO_PCB = 7.0       # routing/escape halo reserved around the SoM body
-SOM_CORE_CLEARANCE = 0.03  # grow the SoM-body silk outline + keepout 3% (1.5% per
-#                            side) past the bare DF40 span for mating clearance
-EDGE_BAND_PCB = 10.0     # nominal connector band each side (board-aspect seed)
-ZONE_FILL = 0.58         # zone-area packing efficiency for the seed board size
-ZONE_STEP = 2.54         # zone-placement raster scan step (mm)
-OUTLINE_GROW = 5.0       # board grow increment per fit attempt (mm)
+PERIM = 3.0
+MH_KEEPOUT = 5.0
+SOM_HALO_PCB = 7.0
+SOM_CORE_CLEARANCE = 0.03
+EDGE_BAND_PCB = 10.0
+ZONE_FILL = 0.58
+ZONE_STEP = 2.54
+OUTLINE_GROW = 5.0
 
 
 @dataclass
 class FootprintInst:
     ref: str
     value: str
-    footprint: str        # lib:name
-    x: float              # KiCad page mm (center)
+    footprint: str
+    x: float
     y: float
     rotation: float
-    pad_nets: dict[str, tuple[int, str]]   # pad name -> (net number, net name)
+    pad_nets: dict[str, tuple[int, str]]
     mod_path: Path
     sheet: str
-    side: str = "top"     # "top" (F.Cu) | "bottom" (B.Cu) — 2-side assembly
-    mirror: bool = False  # True: mod_path IS the mirrored doc (pcb/mirror.py)
+    side: str = "top"
+    mirror: bool = False
 
 
 @dataclass
@@ -104,258 +70,79 @@ class PcbModel:
     board_w: float
     board_h: float
     insts: list[FootprintInst]
-    net_numbers: dict[str, int]            # net name -> number (0 = no-net)
-    netclass_of: dict[str, str]            # net name -> net class
+    net_numbers: dict[str, int]
+    netclass_of: dict[str, str]
     classes: dict[str, cst.DiffGeometry | None]
     placed: int
     deferred: list[str]
-    som_keepout: tuple[float, float, float, float] | None = None  # x0,y0,x1,y1
+    som_keepout: tuple[float, float, float, float] | None = None
     n_top: int = 0
     n_bottom: int = 0
     two_side: bool = True
-    # SoM module-body CORE rectangle in the board page frame (NO halo) — the
-    # footprint of the plugged-in SoM. Under it ONLY low-profile passives may
-    # sit (LAW 6); the placement_mech gate enforces it.
-    som_core: tuple[float, float, float, float] | None = None  # x0,y0,x1,y1
-    # T2 escape wave — DF40 return-stitch copper (schgen/generate/pcb/escape.py):
-    # plain dicts (kind: via/segment/zone, board-frame mm, group="som_escape"),
-    # appended by emit_pcb AFTER the footprint loop and the silk passes.
-    # RECONCILIATION INTERFACE (GAP1 copper-spike wave): everything BELOW this
-    # list (embed._via_node/_segment_node/_gnd_plane_zone + the emit append
-    # block + the two --refill-zones DRC sites) is emission mechanics Ring-0
-    # reconciles at merge; the computed dicts themselves are wave-local.
+    som_core: tuple[float, float, float, float] | None = None
     copper: list = field(default_factory=list)
     escape_meta: dict = field(default_factory=dict)
     escape_plan: dict | None = None
-    # governance U3: per-stage moved-part counts from the StageTracker
-    # (stages.py) — observability only, never serialized into the board file.
     stage_moves: dict = field(default_factory=dict)
 
 
-# ---- footprint resolution + parsing ----------------------------------------------
-
 _PAD_RE = re.compile(r'\(pad\s+"([^"]+)"')
-# a pad that occupies EVERY copper layer (through-hole / NPTH) — its copper is
-# on both F.Cu and B.Cu, so a bottom-side SMD part placed at the same XY would
-# short to it. The 2-side packer reserves such top-side footprints on the
-# bottom too.
 _THRU_PAD_RE = re.compile(r'\(pad\s+"[^"]*"\s+(?:thru_hole|np_thru_hole)\b')
 
 
-# ---- net classes -----------------------------------------------------------------
-# Reuse the constraints exporter's class names + geometry: the high-speed diff
-# classes (DP90_USB / DP100_TMDS / DP<imp>_DIFF) plus a POWER class for rails.
-
 POWER_CLASS = "POWER"
-POWER_TRACK_MM = 0.4            # rail trace minimum (sensible default; user widens)
+POWER_TRACK_MM = 0.4
 POWER_CLEARANCE_MM = 0.2
-DEFAULT_TRACK_MM = 0.2032       # 8 mil — JLCPCB default minimum trace width
-# Board-wide copper clearance: 0.15 mm (6 mil) — a standard JLCPCB process
-# minimum. The 8-mil figure is the trace WIDTH target, not the pad-to-pad
-# clearance; several faithful fine-pitch QFN/SOT footprints in the BOM have an
-# intrinsic pad-to-EP gap of ~0.198 mm, so an 8-mil clearance rule would flag
-# the footprints' OWN geometry (350+ intra-footprint false positives) before a
-# single track is routed. 6 mil clears those and stays manufacturable.
+DEFAULT_TRACK_MM = 0.2032
 DEFAULT_CLEARANCE_MM = 0.15
 
 
-# ---- placement -------------------------------------------------------------------
-
-# Mandatory clearance between any two footprint courtyards AND between a
-# footprint and the board edge — so the emitted PCB has NO courtyard-overlap /
-# pad-clearance / copper-edge DRC errors (only the expected unrouted-net items).
-#
-# BOARD-GROWTH KNOB: the value is the baseline 0.5 unless overridden by the env
-# var SCHGEN_PLACE_CLEAR (a float mm). RAISING it loosens the FREE (non-contract)
-# cluster packing + inter-zone gaps -> the cramped clusters (bringup_modules,
-# usb_jtag, motor_pwm) get real fan-out breathing room; when the looser zones no
-# longer fit the current footprint the smallest-area packing board grows (see
-# PLACE_CLEAR_BASELINE below + the L4-corridor keepout it arms + TEMPLATE_CLEAR
-# which freezes the DATASHEET zones so a grow never perturbs a contracted layout).
-# Reading it from the env (default 0.5) keeps the shipping board BYTE-IDENTICAL
-# when unset, and lets a grow sweep drive the size WITHOUT editing this file per
-# level. A malformed value fails loudly at import.
-#
-# MEASURED SWEET SPOT (frozen-template sweep, all gates incl. escape/return-stitch
-# GREEN + byte-identical baseline): SCHGEN_PLACE_CLEAR=0.82 -> board 179x164 mm
-# (+1.2% area) with bringup_modules +33%, usb_jtag +6%, motor_pwm +4% cluster
-# fan-out. The clean ceiling is here: at >=0.85 (board 185x165, +5% area) a
-# motor_pwm bottom passive (R17006) lands on U17001's through-hole GND pad -> a
-# 2-error DRC short (a 2-side-packer PTH-reservation gap in the template path,
-# tracked separately). So the fan-out is nearly FREE in board area: the growth
-# knob buys +33% cluster room at +1.2% board, not the naive +5/10/15% board.
 try:
     PLACE_CLEAR = float(os.environ.get("SCHGEN_PLACE_CLEAR", "0.5"))
-except ValueError as _e:                       # pragma: no cover - operator error
+except ValueError as _e:
     raise ValueError(
         f"SCHGEN_PLACE_CLEAR must be a float mm, got "
         f"{os.environ.get('SCHGEN_PLACE_CLEAR')!r}") from _e
 
-# The BYTE-IDENTICAL baseline value of PLACE_CLEAR (the shipping 178x163 board,
-# md5 6a734353). RAISING PLACE_CLEAR above this GROWS the board for real fan-out
-# breathing room; that grow re-packs parts and can drag a B.Cu passive into a
-# DF40 escape seat band. The escape/return-stitch CORRIDOR keepout (placement.py
-# L4 bottom-pull) is therefore ARMED only when PLACE_CLEAR > this baseline — so at
-# the baseline it is a strict no-op (byte-identity holds) and it engages exactly
-# when a grow needs it. A single, honest grow signal; not a softened gate.
 PLACE_CLEAR_BASELINE = 0.5
 
-# DATASHEET-TEMPLATE clearance — FROZEN at the baseline, independent of the
-# PLACE_CLEAR growth knob. The contracted subsystems (power/power_som bucks,
-# usb_pd, etc.) lay out their parts against DATASHEET windows (SW<=3mm,
-# COUT<=5mm, hot-loop<=1mm) using stage-gap maths built on this clearance. If
-# those gaps grew with PLACE_CLEAR, the template parts would slide PAST their
-# datasheet windows (contract gate FAIL) and, once the inflated halo makes the
-# seating DFS infeasible, hit the node-budget fallback and COLLAPSE onto shared
-# coordinates (courtyard-overlap + net-short DRC, a LAW-0 break — observed at
-# PLACE_CLEAR=0.52: a power buck zone stacked 9 parts at one point -> 96 shorts).
-# Freezing template clearance at baseline keeps every datasheet zone
-# BYTE-IDENTICAL internally at any board-growth level, so a grow loosens only the
-# FREE clusters + inter-zone gaps (where fan-out room actually helps) and never
-# perturbs a contracted layout. == PLACE_CLEAR_BASELINE by construction.
 TEMPLATE_CLEAR = PLACE_CLEAR_BASELINE
-ZONE_PAD = 0.3            # padding inside a subsystem zone around its parts
-# N/S EDGE-connector subsystems pack WIDE + SHALLOW (their shelf target width is
-# multiplied by this) so the zone spreads ALONG the horizontal top/bottom edge
-# instead of eating deep into the interior behind the connector (a deep edge
-# block forces the board to grow). ~halves the depth of the deepest connector
-# blocks (microSD 30->20, pd_input 33->17, hdmi 29->20). W/E edges are left
-# squarish (a wide pack there would be DEEP into the board) — the floorplan
-# spreads them down the vertical edge as-is.
+ZONE_PAD = 0.3
 EDGE_ZONE_ASPECT = 2.2
 
-# LEVER L1: INTERIOR subsystems that pack TALLER than the SoM side-band (the
-# interior strip beside the centered SoM keepout, ~39.5 mm deep) force the board
-# WIDE because the interior packer (_Occupancy.place_near) does NOT rotate a
-# zone — each over-tall column eats a full board-height slot and the free area
-# fragments below ~165 mm width (PACK_NOFIT). Two complementary fixes make these
-# zones lie FLAT in the band so the board can narrow:
-#   (1) a wide-shallow aspect (like EDGE_ZONE_ASPECT) for any interior zone whose
-#       SHELF-packable parts are all short enough that re-flowing them wider drops
-#       the zone height under the band — this re-flows bringup_rails (50.6->~28)
-#       and user_io (41.8->~22) without touching any part; and
-#   (2) a 90-deg BLOCK rotation for a zone whose SINGLE TALLEST part is itself
-#       taller than the band (fmc: a rigid 2x40 header J11001 is 51.8 mm, so no
-#       re-flow can shrink the zone height) — rotating the whole packed zone lays
-#       that header flat (zone 15.5x52.9 -> 52.9x15.5). The part is NOT redrawn;
-#       only the BLOCK is turned, exactly as a hand layout would orient the header
-#       along the band (NEVER-redraw-parts memo honoured).
-INTERIOR_ZONE_ASPECT = 2.0       # wide-shallow target for over-tall interior zones
-SOM_SIDE_BAND_MM = 39.5          # depth of the interior strip beside the SoM keepout
-INTERIOR_ZONE_BAND_TARGET = 32.0 # re-flow/rotate an interior zone to <= this height
+INTERIOR_ZONE_ASPECT = 2.0
+SOM_SIDE_BAND_MM = 39.5
+INTERIOR_ZONE_BAND_TARGET = 32.0
 
-# MULTI-SHAPE candidates (interior fragmentation lever): every shelf-packed
-# INTERIOR zone additionally offers a REAL re-pack at each of these aspects; a
-# contracted interior zone offers {as-built, turned}. The floorplan pack search
-# picks per-block shapes (greedy best-local-fit, fixed shape order) so mismatched
-# rigid rects can tessellate instead of leaving slivers.
 INTERIOR_SHAPE_ASPECTS = (2.2, 1.0, 0.45)
 
-# ---- LAW 6: off-board connector ORIENTATION ---------------------------------------
-# Every connector that mates with an external cable/plug/card MUST sit on a board
-# EDGE with its mating face (the slot/mouth/cable-exit) pointing OFF-BOARD, so the
-# mate physically inserts. The placer ROTATES each such connector to its assigned
-# edge — never axis-aligned — and seats it flush at the edge; the rest of its
-# subsystem packs behind it, inward. DRC=0 + the ratsnest gate are blind to this
-# (an interior or inward-facing connector is not a DRC/airwire error), so this is
-# encoded here AND enforced by the placement_mech gate.
-#
-# MATING_FACE: the direction the connector's mouth points in its footprint LOCAL
-# frame at rotation 0 (researched from the parts/<MPN>/<MPN>.kicad_mod pad/post
-# asymmetry + datasheet). KiCad's page frame is +y DOWN, so -Y is toward the
-# board top (N edge) and +Y toward the bottom (S edge).
 CONN_MATING_FACE: dict[str, str] = {
-    "TYPE-C-31-M-12":  "+Y",   # USB-C receptacle: mouth is OPPOSITE the 12 SMT
-                               # signal-tail row (tails at local -Y; the hollow
-                               # shell mouth +Y) — same rule as HDMI/RJ45. Was "-Y"
-                               # which placed all 4 USB-C at rot 0 with the mouth
-                               # facing INBOARD on the N edge (user caught it; render
-                               # + .wrl end-cavity test (+Y 582 vs -Y 48) confirm).
-    "HDMI-019S":       "+Y",   # HDMI receptacle mouth (plug enters OPPOSITE the
-                               # SMT contact row at -Y; verified from footprint
-                               # geometry — was -Y, faced inward in the render)
-    "AFC07-S40FCA-00": "+Y",   # LCD FPC slot. The four E/W-seated connectors here
-                               # all read "-Y" while their courtyard overhangs
-                               # local +Y exactly like the HDMI/USB-C/microSD
-                               # mouths do: the label was inverted by render
-                               # inspection to cancel the mirrored _ROT_TABLES,
-                               # and both are corrected together (same rotation
-                               # emitted, mouth now derived rather than bent).
-    "KH-5224-8P8C-D":  "+Y",   # RJ45 jack mouth
-    "TF-01A":          "+Y",   # microSD card slot
-    "SFW15R-1STE1LF":  "+Y",   # camera FFC slot
-    "ZX-SH1.0-4PWT":   "+Y",   # QWIIC SH connector mouth
-    "DS1024-2x6R2":    "+Y",   # PMOD 2x6 socket
-    "XT60PW-M":        "+X",   # ESC power XT60 (motor_sense): side-entry, the
-                               # plug mates onto the bullet contacts at local +X
-                               # (signal pads 1/2 at x=+3; mounting tabs at -3).
-                               # In-plane HORIZONTAL mouth -> the +X table. Render-
-                               # verified the mouth seats toward the board edge.
+    "TYPE-C-31-M-12":  "+Y",
+    "HDMI-019S":       "+Y",
+    "AFC07-S40FCA-00": "+Y",
+    "KH-5224-8P8C-D":  "+Y",
+    "TF-01A":          "+Y",
+    "SFW15R-1STE1LF":  "+Y",
+    "ZX-SH1.0-4PWT":   "+Y",
+    "DS1024-2x6R2":    "+Y",
+    "XT60PW-M":        "+X",
 }
-# ---- emitted thermal copper (LAW-0 honesty: the thermal gate credits ONLY
-# copper that is actually IN the .kicad_pcb) ----------------------------------
-#
-# The board-wide GND plane on In1.Cu (the stackup's L2 GND layer) is emitted as
-# an UNFILLED zone carrying its fill settings: the on-disk file stays byte-
-# deterministic (no fill polygons; KiCad refills on demand), while DRC runs
-# with --refill-zones so connectivity/clearance of the REAL fill is what gets
-# checked. Geometry knobs:
-GND_PLANE_LAYER = "In1.Cu"      # the stackup L2 GND plane (Sig/GND/PWR/Sig)
+GND_PLANE_LAYER = "In1.Cu"
 MICROSTRIP_REFERENCE = {"F.Cu": "In1.Cu", "B.Cu": "In2.Cu"}
-"""Inner plane each OUTER copper face's microstrip references — the geometry
-constraints.py declares ("Outer-layer microstrip referenced to the L2/L3 plane
-through one sheet of 7628 prepreg"). Only GND_PLANE_LAYER is filled today, so
-B.Cu has NO reference plane and the impedance of a differential pair placed
-there is unmodelled; the bottom-side eligibility check refuses an
-impedance-carrying sheet on exactly this derivation."""
-GND_PLANE_EDGE_BACK = 0.5       # zone outline inset from Edge.Cuts (mm) — above
-#                                 the 0.3 min_copper_edge_clearance design rule
-GND_PLANE_CLEARANCE = 0.3       # plane-to-foreign-copper clearance (mm)
-POUR_CLEARANCE = 0.2            # local thermal-pour clearance (mm)
-ZONE_MIN_THICKNESS = 0.25       # fill min width (matches the project defaults)
-THERMAL_VIA_SIZE = 0.6          # thermal-stitch via copper dia (mm)
-THERMAL_VIA_DRILL = 0.3         # thermal-stitch via drill (mm, JLC standard)
-THERMAL_VIA_CLEAR = 0.25        # via-copper to FOREIGN pad-copper margin (mm)
-#                                 (> the 0.15 board clearance — slack on top)
-CLR_HOLE_SAMENET_PAD = 0.10     # via-hole EDGE to SAME-net solder-pad copper
-#                                 (mm): a hole in/at a solder pad wicks paste
-#                                 even on the same net (DFM rule adopted at the
-#                                 T2 wave — AI_LAYOUT_ROUTING_CONCEPT.md); the
-#                                 thermal vias seat OFF-pad in the pour, tied
-#                                 by fill, never in the solder joint
-THERMAL_VIA_H2H = 0.45          # via-hole EDGE to other hole EDGE margin (mm)
-#                                 (> the 0.25 min_hole_to_hole design rule)
-THERMAL_VIA_EDGE = 1.0          # via center keep-back from Edge.Cuts (mm)
-THERMAL_VIA_SPACING = 0.8       # min center spacing between emitted vias (mm)
-THERMAL_VIA_LATTICE_PITCH = 0.25  # exhaustive fallback-search step (mm) inside
-#                                 the part's own pour, walked nearest-first
-#                                 when neighbouring copper blocks the curated
-#                                 via_sites below (embed._fallback_via_sites)
+GND_PLANE_EDGE_BACK = 0.5
+GND_PLANE_CLEARANCE = 0.3
+POUR_CLEARANCE = 0.2
+ZONE_MIN_THICKNESS = 0.25
+THERMAL_VIA_SIZE = 0.6
+THERMAL_VIA_DRILL = 0.3
+THERMAL_VIA_CLEAR = 0.25
+CLR_HOLE_SAMENET_PAD = 0.10
+THERMAL_VIA_H2H = 0.45
+THERMAL_VIA_EDGE = 1.0
+THERMAL_VIA_SPACING = 0.8
+THERMAL_VIA_LATTICE_PITCH = 0.25
 
-# Per-part thermal-copper emission spec, keyed by part-VALUE prefix. For every
-# placed instance the emitter drops a local GND pour (rect in the footprint
-# LOCAL frame, rotated with the part) on the listed layers plus a thermal-via
-# field at the listed LOCAL candidate sites (filtered against neighbouring
-# foreign copper/holes; first max_vias survivors win — deterministic). The
-# sites are researched from the part's own .kicad_mod pad map:
-#   LM61460 VQFN-HR (RJR): PGND1/PGND2 = pads 9/11 at (1.825, +/-1.45); SW pad
-#   ends x=2.225; BOOT/bias row at y=+/-1.6 ends y=1.95. Sites hug the PGND
-#   pads (right column + above/below) per SNVSBD5D 11.1.1 ("place thermal vias
-#   near the PGND pins, connect to the internal ground plane").
-#   TLV75725 DYD: thermal pad = pad 6 at (0,0) rot 90 (0.975x1.7 -> x +/-0.85);
-#   signal rows at y=+/-1.3. Sites flank the pad on X per JESD51-5 (the DS DYD
-#   RthJA is defined WITH pad-adjacent thermal vias into the buried plane).
-# NOTE the candidate ORDER is the preference order; the +x column beside SW is
-# listed LAST because the hot-loop inductor legitimately owns that side (the
-# placement contract puts L on SW) — the surviving sites are the +/-y bands
-# above/below the PGND pads, exactly where the LM61460EVM stitches.
 THERMAL_COPPER: dict[str, dict] = {
-    # Row 1 hugs the PGND pads (y +/-2.5 — 0.55 off the pad copper); row 2
-    # seats BEYOND the hot-loop input caps (y +/-4.35): the caps' GND pads at
-    # local y ~3.4 are SOLDER JOINTS, and CLR_HOLE_SAMENET_PAD forbids a via
-    # hole in them (the first cut at y +/-3.35 put 10 via holes into cap/diode
-    # GND pads — caught by the same-net audit). Fallbacks cover the
-    # D22005/inductor variations around the power_som instance.
     "LM61460": {
         "via_sites": [(1.55, -2.5), (1.55, 2.5),
                       (2.45, -2.5), (2.45, 2.5),
@@ -366,17 +153,10 @@ THERMAL_COPPER: dict[str, dict] = {
                       (0.3, -2.6), (0.3, 2.6),
                       (2.85, -1.45), (2.85, 0.0), (2.85, 1.45)],
         "max_vias": 8,
-        "pour": (-3.0, -4.75, 4.4, 4.75),      # local-frame rect x0,y0,x1,y1
+        "pour": (-3.0, -4.75, 4.4, 4.75),
         "pour_layers": ("F.Cu", "B.Cu"),
         "cite": "TI SNVSBD5D 11.1.1 thermal-via field at PGND1/PGND2",
     },
-    # First pair = the TIGHTEST legal pad-adjacent flank (wave-8 U4): |x| =
-    # pad half-extent 0.85 (1.7/2, DYD thermal pad rot 90) + via hole radius
-    # 0.15 + CLR_HOLE_SAMENET_PAD 0.10 + 0.05 margin = 1.15 — the seats the
-    # exhaustive lattice measurably found when a neighbour blocked the old
-    # 1.75 ring (fmc U11001 3/3 lattice, scan B F11/L5); curating them
-    # retires that fallback and puts the vias closest to the pad per
-    # JESD51-5.
     "TLV75725": {
         "via_sites": [(-1.15, 0.0), (1.15, 0.0),
                       (-1.75, 0.0), (1.75, 0.0),
@@ -390,111 +170,33 @@ THERMAL_COPPER: dict[str, dict] = {
     },
 }
 
-# Ethernet isolation: the full-board In1 GND plane must NOT run under the
-# line-side magnetics / RJ45 media area (Pulse HX5008 layout guidance + the
-# Bob-Smith 2kV island) — a rule-area VOID (copperpour not_allowed on In1.Cu)
-# is emitted over each of these parts' courtyards, grown by the margin below.
-# The RJ45<->magnetics media CORRIDOR is NOT voided yet (routing-wave debt —
-# tracked in carrier/reports/copper_debt.txt).
 ISO_VOID_VALUES = ("HX5008", "KH-5224")
-ISO_VOID_MARGIN = 0.6           # courtyard grow for the plane void (mm)
+ISO_VOID_MARGIN = 0.6
 
-# EDGE -> placement rotation (deg) that turns the mating face OFF-BOARD, in
-# KiCad's TRUE rotation sign — the same matrix _inst_pad_geom / _rot_pad_bbox /
-# _rot_bbox_cw apply, (x,y) -> (x cos r + y sin r, -x sin r + y cos r) on the
-# +y-DOWN page (N/top = MIN y so off-board from N is -Y; S = +Y; E = +X; W = -X).
-# MEASURED against kicad-cli itself (a footprint carrying an F.CrtYd spike along
-# local +Y, exported at 0/90/270): +Y -> +X at 90 and -> -X at 270. The tables
-# below were previously derived from the math-CCW form, which is the MIRROR at
-# 90/270; it survived because 0/180 are mirror-invariant (so every N/S connector
-# was right) and because the four connectors that do sit on E/W had their
-# CONN_MATING_FACE label inverted by render inspection, cancelling the error.
-# Both are corrected together, so every placement rotation is UNCHANGED.
 _ROT_FACE_NEG_Y = {"N": 0.0, "S": 180.0, "E": 270.0, "W": 90.0}
 _ROT_FACE_POS_Y = {"N": 180.0, "S": 0.0, "E": 90.0, "W": 270.0}
-# +X/-X: an in-plane HORIZONTAL mouth along the footprint X axis (e.g. a side-
-# entry XT60 whose plug enters along +X). Same derivation, so N/S mirror too.
 _ROT_FACE_POS_X = {"N": 90.0, "S": 270.0, "E": 0.0, "W": 180.0}
 _ROT_FACE_NEG_X = {"N": 270.0, "S": 90.0, "E": 180.0, "W": 0.0}
 _ROT_TABLES = {"-Y": _ROT_FACE_NEG_Y, "+Y": _ROT_FACE_POS_Y,
                "+X": _ROT_FACE_POS_X, "-X": _ROT_FACE_NEG_X}
 _FACE_VEC = {"-Y": (0, -1), "+Y": (0, 1), "+X": (1, 0), "-X": (-1, 0)}
 
-# off-board connector seating: the outermost PAD sits this far (mm) from the
-# board edge — just clears the 0.3 mm copper_edge_clearance with grid-snap margin;
-# the connector's mouth/shell (ahead of the pads) then reaches/overhangs the edge
-# so a cable actually mates (LAW 6 — user: "connectors at the absolute edge").
 EDGE_PAD_CLEAR = 0.4
 
-# inter-button air gap (mm) inside the tactile-button grid — wider than the
-# generic PLACE_CLEAR so the buttons read as a spaced, finger-friendly array.
 BUTTON_GAP = 2.0
 
-# ---- 2-side assembly: layer-assignment policy ------------------------------------
-# JLCPCB assembles BOTH sides. The policy keeps the mechanically-/cable-/heat-
-# critical parts on TOP and pushes the small decoupling/bypass passives to the
-# BOTTOM (placed directly under their cluster), which roughly halves the
-# top-side area pressure. Default ON; a forced single-side build keeps all on
-# top (every classification then returns "top").
 
-# Footprint families that MUST stay on the top (component) side regardless of
-# size: the SoM mezzanine, every off-board edge connector, the mounting holes,
-# test points (probe from the top), and through-hole headers.
 _TOP_ALWAYS_LIBS = (
     "DF40C", "MountingHole", "Mechanical:", "TestPoint",
     "PinHeader", "PinSocket", "Connector", "Conn_",
 )
-# Active/large IC area floor (mm^2 of the footprint bbox): a part this big or
-# bigger is an IC/connector/magnetic and stays on top.
 TOP_AREA_MM2 = 12.0
 
-# how close (mm) a connector courtyard outer face must sit to the board edge to
-# count as "flush" (LAW 6 / placement_mech gate). The post-placement edge-snap
-# seats every off-board connector with its outer PAD at EDGE_PAD_CLEAR and its
-# mouth/shell reaching or overhanging the edge, so the courtyard outer face lands
-# at ~EDGE_PAD_CLEAR or NEGATIVE (overhang). The flush gate fails any connector
-# whose body courtyard is recessed more than EDGE_FLUSH_MM inboard of the edge.
-# TIGHTENED 9.0 -> 1.5 -> EDGE_PAD_CLEAR+0.2 (=0.6): a connector MUST reach the
-# very edge (user law). A pad-limited connector (its outer pad IS the mating face,
-# e.g. USB-C/QWIIC) can only reach EDGE_PAD_CLEAR (0.4 mm, the copper-edge-clearance
-# floor) — so the threshold is that floor + a hair, NOT the old slack 1.5/9.0 that
-# let a connector sit ~2.4 mm inboard and not mate. Overhang (negative flush)
-# passes; any recess beyond the pad-clearance floor FAILS the board.
-EDGE_FLUSH_MM = round(EDGE_PAD_CLEAR + 0.2, 3)   # 0.6 mm — "at the very edge" law
+EDGE_FLUSH_MM = round(EDGE_PAD_CLEAR + 0.2, 3)
 
-
-# ---- SHARED subsystem zone packing (ONE source of truth) -------------------------
-# Both the floorplan (block SIZING) and the PCB (block PLACEMENT) must agree on how
-# big each subsystem's 2-sided packed cluster is, or the FLOORPLAN.svg and the PCB
-# ratsnest diverge (the historical 235x215-vs-165x155 split). This function is the
-# single sizing oracle: it shelf-packs every subsystem's TOP + BOTTOM footprints
-# (the exact STEP-1 geometry the PCB places with) and returns the per-sheet packed
-# (w, h) + per-part offsets. It runs from the subsystem circuits + the stable
-# board-unique ref namespace (carrier/sheet_index.json), so it is identical whether
-# called standalone (`schgen floorplan`, no emitted root sch) or inside the board
-# flow — proven: per-sheet decoupling classification == merged classification, and
-# board-unique-ref packing is byte-identical to build_model's old inline packing.
 
 @dataclass(frozen=True)
 class ZoneShape:
-    """ONE legal shape of a subsystem zone: a REAL re-pack/turn with its own
-    (w, h) + per-part offsets + per-part extra placement rotations. Index 0 of a
-    sheet's shape tuple is ALWAYS the legacy single shape (the same data the
-    ZoneGeom flat views hold), so a shape-blind consumer stays byte-identical.
-
-    ``side`` (bottom-side P1): the copper face the block ASSIGNS its zone to.
-    ``top_off``/``bot_off`` always hold the packer's PRIMARY/SECONDARY lists;
-    for a ``side="bottom"`` shape the primary list emits on B.Cu and the
-    secondary on F.Cu (``apply_chosen_shapes`` flips each part's emitted side
-    by pack MEMBERSHIP, so a face=top part forced into the secondary list
-    still presents on the board top).
-
-    ``mirror`` (wave-9 chirality): PRIMARY ref -> its KiCad-exact mirrored
-    .kicad_mod (pcb/mirror.py). Every shape evaluator (fan-out reach,
-    occupancy comps, zone metrics, the cross estimator) and
-    ``apply_chosen_shapes`` resolve these refs' geometry through this map, so
-    a chiral part's bottom variant is judged and emitted with the mirrored
-    document. Empty for every top shape (byte-inert)."""
     w: float
     h: float
     top_off: dict[str, tuple[float, float]]
@@ -507,28 +209,22 @@ class ZoneShape:
 
 @dataclass
 class ZoneGeom:
-    zone_box: dict[str, tuple[float, float]]                # sheet -> (w, h)
-    top_off: dict[str, dict[str, tuple[float, float]]]      # sheet -> {bref:(x,y)}
+    zone_box: dict[str, tuple[float, float]]
+    top_off: dict[str, dict[str, tuple[float, float]]]
     bot_off: dict[str, dict[str, tuple[float, float]]]
-    side_of: dict[str, str]                                 # bref -> top|bottom
-    bbox_of: dict[str, tuple[float, float, float, float]]   # bref -> local bbox
-    resolvable: dict[str, Path]                             # bref -> .kicad_mod
-    refs_by_sheet: dict[str, list[str]]                     # sheet -> [bref,...]
-    mh_refs: list[str]                                      # mounting-hole brefs
+    side_of: dict[str, str]
+    bbox_of: dict[str, tuple[float, float, float, float]]
+    resolvable: dict[str, Path]
+    refs_by_sheet: dict[str, list[str]]
+    mh_refs: list[str]
     deferred: list[str]
-    conn_rot: dict[str, float] = field(default_factory=dict)  # bref -> LAW-6 rot
-    conn_edge: dict[str, str] = field(default_factory=dict)   # bref -> edge N/E/S/W
-    zone_extra_rot: dict[str, float] = field(default_factory=dict)  # bref -> +rot
-    #                                          from a LEVER-L1 90-deg zone rotation
+    conn_rot: dict[str, float] = field(default_factory=dict)
+    conn_edge: dict[str, str] = field(default_factory=dict)
+    zone_extra_rot: dict[str, float] = field(default_factory=dict)
     shapes: dict[str, tuple[ZoneShape, ...]] = field(default_factory=dict)
-    #                # sheet -> its legal shape set (only sheets with >= 2 shapes;
-    #                # [0] == the flat views above, the pack search picks per block)
     mirror_refs: frozenset = frozenset()
-    #                # refs apply_chosen_shapes rebound to their mirrored document
 
 
-# 4-layer controlled-impedance stackup: Sig / GND / PWR / Sig, JLC04161H-7628
-# 1.6 mm (the build schgen/generate/constraints.py already targets).
 _FOUR_LAYER = [
     (0, "F.Cu", "signal", "L1 (Sig)"),
     (1, "In1.Cu", "power", "L2 (GND)"),
@@ -555,27 +251,22 @@ _FOUR_LAYER = [
 ]
 
 
-# Short, human silk descriptor per off-board connector SHEET — so the bare board
-# is self-documenting ("which connector is which"). Keyed on the subsystem sheet
-# (1:1 with each connector's function); the 3 PMOD ports are numbered below.
 _CONN_DESC: dict[str, str] = {
-    "pd_input":            "PWR",        # USB-C PD power inlet (the only power-in)
-    "usbc_otg":            "USB OTG",    # USB 2.0 OTG data port
-    "usb_jtag_connector":  "JTAG",       # USB->JTAG debug/program bridge (CH347T)
-    "usb_uart_connector":  "UART",       # USB->UART serial console (CP2102N)
-    "microsd":             "microSD",    # microSD card slot
-    "hdmi_tx":             "HDMI TX",    # HDMI source
-    "hdmi_rx":             "HDMI RX",    # HDMI sink
-    "rj45_connector":      "ETH",        # 10/100 Ethernet
-    "board_qwiic":         "QWIIC",      # QWIIC/Stemma I2C
-    "camera":              "CAM",        # CSI camera FFC
-    "lcd":                 "LCD",        # display FFC
-    "pmod":                "PMOD",       # PMOD GPIO (numbered)
-    "pmod_expansion":      "PMOD",       # PMOD GPIO (numbered)
+    "pd_input":            "PWR",
+    "usbc_otg":            "USB OTG",
+    "usb_jtag_connector":  "JTAG",
+    "usb_uart_connector":  "UART",
+    "microsd":             "microSD",
+    "hdmi_tx":             "HDMI TX",
+    "hdmi_rx":             "HDMI RX",
+    "rj45_connector":      "ETH",
+    "board_qwiic":         "QWIIC",
+    "camera":              "CAM",
+    "lcd":                 "LCD",
+    "pmod":                "PMOD",
+    "pmod_expansion":      "PMOD",
 }
 
-# Ref-keyed interior-header/switch function labels are PROJECT data (refs
-# collide across projects — project.json "silk_labels" authors them per board).
 _INT_DESC: dict[str, str] = dict(_project_spec().header_desc)
 
 _SW_DESC: dict[str, str] = dict(_project_spec().switch_desc)

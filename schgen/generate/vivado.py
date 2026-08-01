@@ -1,37 +1,3 @@
-"""Generated Vivado project-creation TCL (downstream P2).
-
-``schgen vivado`` (also run by ``schgen board``) writes
-``carrier/fpga/create_project.tcl`` — the one script that turns the orphan
-``Zynq_Carrier_pins.xdc`` into a sourceable Vivado project:
-
-    cd carrier/fpga && vivado -mode batch -source create_project.tcl
-
-It emits, in order:
-- ``create_project`` + ``set_property part`` with the EXACT device string
-  schgen already knows for the XDC — sourced the SAME way ``schgen xdc``
-  gets it (``schgen.som_interface.extract_zynq`` on the SoM project, the
-  ``value`` field, e.g. ``XC7Z020-CLG484``).  NOTHING is hard-coded; if the
-  SoM device changes, the XDC and this TCL move together.
-- ``read_xdc`` of the generated pin constraints by RELATIVE path (the .tcl
-  and the .xdc live side-by-side in ``carrier/fpga/``), so the project picks
-  up every PACKAGE_PIN/IOSTANDARD the XDC already proved against the
-  hardware.
-- a commented Zynq7 PS instantiation stub (``create_bd_design`` +
-  ``create_bd_cell`` + a TODO to apply the PS preset), because the PS DDR /
-  MIO preset is board-revision intent that does not live in the carrier
-  netlist — left commented so ``source`` succeeds with zero PL design and the
-  user opts in.
-- the ``create_clock`` lines the XDC prints as templates: PROMOTED to real
-  ``create_clock`` where a port binds to an MRCC/SRCC ball AND a documented
-  period exists (``KNOWN_CLOCK_PERIODS_NS``); every other clock-capable port
-  stays a commented ``# create_clock ... -period <ns>`` template exactly as
-  in the XDC, so no fictitious timing constraint is ever asserted.
-
-Deterministic: the device + pin set + clock list all come from the same
-netlists the XDC reads, ordering is sorted, and no wall-clock timestamp is
-emitted — re-running yields a byte-identical file.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -48,22 +14,10 @@ DEFAULT_CONTRACT = PROJECT_ROOT / "som_interface.json"
 DEFAULT_OUT = PROJECT_ROOT / "fpga" / "create_project.tcl"
 DEFAULT_XDC = PROJECT_ROOT / "fpga" / "Zynq_Carrier_pins.xdc"
 
-# Vivado project + block-design names (stable identifiers, not timestamps).
 PROJECT_NAME = "zynq_carrier"
 BD_NAME = "system"
-# The carrier mates a Zynq SoM; the PS IP is the Processing System 7.
 PS_IP_VLNV = "xilinx.com:ip:processing_system7:5.5"
 
-# Documented FIXED PL clock periods (ns), keyed by carrier PORT net name.
-# A create_clock template is PROMOTED to a real constraint ONLY for a
-# P-side MRCC/SRCC port whose net appears here with a known source period.
-# It is INTENTIONALLY EMPTY: this carrier feeds its PL clock pins from
-# source-synchronous / recovered sources (HDMI RX TMDS clock, camera D-PHY
-# clock) and FPGA-driven outputs (LCD pixel clock), none of which has a
-# fixed board-level oscillator period to assert.  Asserting a made-up period
-# would be a fictitious timing constraint, so every clock-capable port stays
-# a commented template (matching the XDC).  Add an entry here only when a
-# real on-board oscillator with a known frequency drives that PL ball.
 KNOWN_CLOCK_PERIODS_NS: dict[str, float] = {}
 
 
@@ -72,20 +26,16 @@ class VivadoError(ValueError):
 
 
 def _rel(target: Path, start: Path) -> str:
-    """POSIX relative path from the .tcl's directory to ``target`` (Vivado
-    TCL is forward-slash on every platform)."""
     try:
         rel = Path(target).resolve().relative_to(start.resolve())
         return rel.as_posix()
     except ValueError:
-        # Different roots: fall back to os-level relpath, still POSIX-ised.
         import os
         return Path(os.path.relpath(Path(target).resolve(),
                                     start.resolve())).as_posix()
 
 
 def _fmt_period(p: float) -> str:
-    """Stable period rendering: integer if whole, else trimmed decimal."""
     if p == int(p):
         return str(int(p))
     return f"{p:g}"
@@ -96,17 +46,6 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
              contract_path: Path = DEFAULT_CONTRACT,
              xdc_path: Path = DEFAULT_XDC,
              refs: tuple[str, ...] = ("J1", "J2", "J3")) -> Path:
-    """Build + write ``create_project.tcl``.
-
-    The device string and the clock-capable port list are derived the SAME
-    way ``schgen xdc`` derives them: ``extract_zynq`` for the ``value``, and a
-    throwaway ``xdc.generate`` into a tempdir for the verified ``entries``
-    (so the TCL and the committed XDC cannot disagree about which ports are
-    MRCC/SRCC).  No XDC file is rewritten here.
-
-    Raises :class:`VivadoError` if the XDC derivation fails (the project
-    would be unsourceable) — surfaced as an :class:`xdc.XdcError` upstream.
-    """
     live = extract_zynq(som_sch, jrefs=tuple(refs))
     device = live["value"]
     if not device:
@@ -114,16 +53,12 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
             f"SoM Zynq {live['zynq_ref']} carries no value field in "
             f"{som_sch} — cannot determine the Vivado part")
 
-    # Re-derive the EXACT pin entries the XDC emits, by running the proven
-    # xdc generator into a tempdir (the committed XDC is left untouched).
     with tempfile.TemporaryDirectory(prefix="schgen_vivado_") as td:
         xres = xdc.generate(sheets, Path(td) / "pins.xdc",
                             som_sch=som_sch, contract_path=contract_path,
                             refs=refs)
     entries = xres.entries
 
-    # Clock-capable P-side ports (the ones the XDC prints a create_clock
-    # template for), sorted for determinism.
     clk_entries = sorted(
         (e for e in entries if e.clock_capable and e.p_side),
         key=lambda e: e.net)
@@ -176,7 +111,6 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
         "",
     ]
 
-    # ---- create_clock section -------------------------------------------------
     lines.append("# ---- clocks -----------------------------------------------------")
     lines.append("# MRCC/SRCC-capable PL ports the XDC flags as clock candidates.")
     if promoted:
@@ -208,7 +142,6 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
                      f"{'/'.join(refs)})")
     lines.append("")
 
-    # ---- Zynq7 PS stub --------------------------------------------------------
     lines += [
         "# ---- Zynq7 Processing System (PS) — COMMENTED STUB ---------------",
         "# The PS DDR/MIO preset is SoM-revision intent and does NOT live in",
@@ -244,8 +177,6 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
     out_path.write_text(text)
     return out_path
 
-
-# ---- CLI ----------------------------------------------------------------------
 
 def cmd_vivado(args: argparse.Namespace) -> int:
     from schgen.core.link import all_subsystem_paths, load_subsystem

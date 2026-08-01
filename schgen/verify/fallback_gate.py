@@ -1,17 +1,3 @@
-"""FALLBACK RATCHET GATE — no placement fallback may fire more often than its
-committed per-project baseline (governance U2, the D13-style ratchet over
-``schgen/core/fallbacks.py``).
-
-The census (``{name: count}`` read after board emission) is compared against
-``<project>/reports/fallback_baseline.json``. A name absent from the baseline
-is allowed ZERO firings — a NEW fallback path must start clean or have its
-measured debt explicitly committed. First run with no baseline file pins the
-live counts honestly (reviewable in git); a PASS ratchets each ceiling DOWN to
-the live count (never up), so retired debt can never regrow. Any count over
-its ceiling FAILS the board loudly, naming the fallback — a sheet silently
-dropping to a degraded path becomes a same-day build failure. This bounds how
-often the pipeline may degrade; it never relaxes any per-part rule (LAW 4).
-"""
 from __future__ import annotations
 
 import json

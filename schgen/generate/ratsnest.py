@@ -1,28 +1,3 @@
-"""Ratsnest IMAGE renderer — SEE the placed board (LAW 5).
-
-``schgen ratsnest`` (also run by ``schgen board``) draws the PLACED PCB so a
-human can verify, by eye, that the layout is RIGHT before trusting DRC=0:
-
-  - every footprint is a BOX at its placed (x, y), on its side, COLORED by its
-    owning subsystem — so each subsystem should read as one tight contiguous
-    block of one colour, never scattered confetti;
-  - the unrouted AIRWIRES (a thin line between pads on the same net, drawn as a
-    per-net minimum spanning tree) — INTRA-subsystem airwires are faint local
-    bundles; CROSS-subsystem airwires are drawn bold + red so a board-spanning
-    hairball is impossible to miss;
-  - the Edge.Cuts OUTLINE + the SoM-body KEEP-OUT, so an off-board part (LAW-5
-    forbidden) sticks out past the outline immediately.
-
-Two PNGs (``carrier/renders/ratsnest_top.png`` + ``ratsnest_bottom.png``) and
-one combined SVG (``carrier/docs/RATSNEST.svg``) are emitted every build. DRC=0
-hid the old board-spanning hairball + off-board connectors; this image is the
-LAW-5 visual oracle that no longer lets that pass silently.
-
-DETERMINISM: colours are assigned by SORTED subsystem name, element order is
-stable, there is no Date.now/random — two builds yield byte-identical images
-(the PNG via a fixed-palette deterministic raster, the SVG as sorted text).
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -46,15 +21,11 @@ PNG_TOP = CARRIER / "renders" / "ratsnest_top.png"
 PNG_BOTTOM = CARRIER / "renders" / "ratsnest_bottom.png"
 SVG_COMBINED = CARRIER / "docs" / "RATSNEST.svg"
 
-SCALE = 4.0              # image px per board mm
-PAD = 28.0              # px margin around the board in the image
+SCALE = 4.0
+PAD = 28.0
 
-
-# ---- deterministic per-subsystem palette ----------------------------------------
 
 def _palette(sheets: list[str]) -> dict[str, tuple[int, int, int]]:
-    """A stable colour per subsystem: evenly-spaced hues in SORTED name order,
-    so the same board always paints the same way. som_j* share one gold."""
     real = sorted(s for s in sheets if not s.startswith("som_j"))
     out: dict[str, tuple[int, int, int]] = {}
     n = max(1, len(real))
@@ -66,7 +37,7 @@ def _palette(sheets: list[str]) -> dict[str, tuple[int, int, int]]:
         out[name] = (int(r * 255), int(g * 255), int(b * 255))
     for s in sheets:
         if s.startswith("som_j"):
-            out[s] = (201, 148, 32)        # SoM mezzanine: gold
+            out[s] = (201, 148, 32)
     return out
 
 
@@ -74,14 +45,8 @@ def _hex(rgb: tuple[int, int, int]) -> str:
     return "#{:02x}{:02x}{:02x}".format(*rgb)
 
 
-# ---- per-net airwire MST (the unrouted ratsnest) --------------------------------
-
 def _mst_edges(pts: list[tuple[float, float, str, str]]
                ) -> list[tuple[int, int]]:
-    """Prim's MST over the pad centers of ONE net (city-block distance). The
-    edges ARE the airwires KiCad would show for that unrouted net — a tree, not
-    every pad-pair, so the picture is the real ratsnest, not a clutter ball.
-    Deterministic: ties break on index order."""
     n = len(pts)
     if n < 2:
         return []
@@ -91,7 +56,6 @@ def _mst_edges(pts: list[tuple[float, float, str, str]]
             for i in range(n)]
     edges: list[tuple[int, int]] = []
     for _ in range(n - 1):
-        # pick the nearest not-yet-in-tree vertex (stable on index)
         u = -1
         ud = None
         for i in range(n):
@@ -114,22 +78,15 @@ def _mst_edges(pts: list[tuple[float, float, str, str]]
 
 def net_mst_edges(model: PcbModel,
                   npp: dict | None = None) -> dict[str, list[tuple[int, int]]]:
-    """Per-net MST edges over ``net_pad_positions`` — pure; board-flow callers
-    compute it once (emit.generate) and thread it through as ``mst=``."""
     if npp is None:
         npp = net_pad_positions(model)
     return {net: _mst_edges(pts) for net, pts in sorted(npp.items())}
 
 
 def _airwires(model: PcbModel, side: str | None, npp: dict, mst: dict):
-    """Yield (x0,y0,x1,y1, cross) airwire segments for the given side (or both
-    if side is None). ``cross`` is True when the two pads belong to different
-    subsystems. Both endpoints are filtered to the requested side so the per-
-    side PNG shows only the airwires that touch that side's copper."""
     side_of_ref = {inst.ref: inst.side for inst in model.insts}
     out = []
     for _net, pts in sorted(npp.items()):
-        # de-duplicate identical pad centers within a net so the MST is stable
         for a, b in mst[_net]:
             xa, ya, ra, sa = pts[a]
             xb, yb, rb, sb = pts[b]
@@ -142,9 +99,6 @@ def _airwires(model: PcbModel, side: str | None, npp: dict, mst: dict):
 
 def cross_airwire_length(model: PcbModel, npp: dict | None = None,
                          mst: dict | None = None) -> tuple[float, float, int]:
-    """(cross-subsystem airwire mm, total airwire mm, cross count) over the MST
-    ratsnest — the LAW-5 budget metric. A small cross/total ratio means the
-    subsystems cluster (few long inter-block wires)."""
     side_of_ref = {inst.ref: inst.side for inst in model.insts}  # noqa: F841
     if npp is None:
         npp = net_pad_positions(model)
@@ -164,11 +118,9 @@ def cross_airwire_length(model: PcbModel, npp: dict | None = None,
     return round(cross, 1), round(total, 1), n_cross
 
 
-# ---- SVG ------------------------------------------------------------------------
-
 def _svg(model: PcbModel, palette: dict, npp: dict, mst: dict) -> str:
     bw, bh = model.board_w, model.board_h
-    W = int(bw * SCALE + 2 * PAD + 230)         # +legend column
+    W = int(bw * SCALE + 2 * PAD + 230)
     H = int(bh * SCALE + 2 * PAD + 40)
 
     def px(x):
@@ -181,11 +133,9 @@ def _svg(model: PcbModel, palette: dict, npp: dict, mst: dict) -> str:
     e.append(f'<svg xmlns="http://www.w3.org/2000/svg" '
              f'viewBox="0 0 {W} {H}" font-family="monospace" font-size="9">')
     e.append(f'<rect width="{W}" height="{H}" fill="#0f1115"/>')
-    # edge cuts
     e.append(f'<rect x="{px(ORIGIN_X)}" y="{py(ORIGIN_Y)}" '
              f'width="{round(bw * SCALE, 2)}" height="{round(bh * SCALE, 2)}" '
              f'fill="#161922" stroke="#e5e7eb" stroke-width="1.5"/>')
-    # SoM keepout
     if model.som_keepout:
         kx0, ky0, kx1, ky1 = model.som_keepout
         e.append(f'<rect x="{px(kx0)}" y="{py(ky0)}" '
@@ -193,7 +143,6 @@ def _svg(model: PcbModel, palette: dict, npp: dict, mst: dict) -> str:
                  f'height="{round((ky1 - ky0) * SCALE, 2)}" '
                  f'fill="none" stroke="#c99420" stroke-width="1" '
                  f'stroke-dasharray="4,3"/>')
-    # airwires (intra faint, cross bold red), bottom under top
     aw = _airwires(model, None, npp, mst)
     for x0, y0, x1, y1, cross in aw:
         if cross:
@@ -205,7 +154,6 @@ def _svg(model: PcbModel, palette: dict, npp: dict, mst: dict) -> str:
             e.append(f'<line x1="{px(x0)}" y1="{py(y0)}" x2="{px(x1)}" '
                      f'y2="{py(y1)}" stroke="#5b6472" stroke-width="0.35" '
                      f'opacity="0.5"/>')
-    # footprints (bottom first so top reads above), colored by subsystem
     for inst in sorted(model.insts, key=lambda i: (i.side != "bottom", i.ref)):
         x0, y0, x1, y1 = _inst_courtyard(inst)
         col = _hex(palette.get(inst.sheet, (140, 140, 140)))
@@ -214,7 +162,6 @@ def _svg(model: PcbModel, palette: dict, npp: dict, mst: dict) -> str:
                  f'width="{round((x1 - x0) * SCALE, 2)}" '
                  f'height="{round((y1 - y0) * SCALE, 2)}" fill="{col}" '
                  f'opacity="{op}" stroke="#0f1115" stroke-width="0.3"/>')
-    # legend
     lx = PAD + bw * SCALE + 16
     ly = PAD + 4
     e.append(f'<text x="{lx}" y="{ly}" fill="#e5e7eb" font-size="11" '
@@ -232,8 +179,6 @@ def _svg(model: PcbModel, palette: dict, npp: dict, mst: dict) -> str:
     return "\n".join(e) + "\n"
 
 
-# ---- PNG (PIL, deterministic) ---------------------------------------------------
-
 def _png(model: PcbModel, palette: dict, side: str, out: Path,
          npp: dict, mst: dict) -> None:
     from PIL import Image, ImageDraw
@@ -249,16 +194,13 @@ def _png(model: PcbModel, palette: dict, side: str, out: Path,
     def py(y):
         return PAD + (y - ORIGIN_Y) * SCALE
 
-    # edge cuts
     d.rectangle([px(ORIGIN_X), py(ORIGIN_Y),
                  px(ORIGIN_X) + bw * SCALE, py(ORIGIN_Y) + bh * SCALE],
                 fill=(22, 25, 34), outline=(229, 231, 235), width=2)
-    # SoM keepout
     if model.som_keepout:
         kx0, ky0, kx1, ky1 = model.som_keepout
         d.rectangle([px(kx0), py(ky0), px(kx1), py(ky1)],
                     outline=(201, 148, 32), width=1)
-    # airwires for this side (intra faint, cross bold red)
     for x0, y0, x1, y1, cross in _airwires(model, side, npp, mst):
         if cross:
             d.line([px(x0), py(y0), px(x1), py(y1)],
@@ -266,10 +208,8 @@ def _png(model: PcbModel, palette: dict, side: str, out: Path,
         else:
             d.line([px(x0), py(y0), px(x1), py(y1)],
                    fill=(120, 132, 150, 130), width=1)
-    # footprints on this side, colored by subsystem
     for inst in sorted(model.insts, key=lambda i: i.ref):
         if inst.side != side and not (side == "top" and inst.ref.startswith("H")):
-            # mounting holes (top, all-layer) draw on both sides for context
             if not (inst.mod_path.name.startswith("MountingHole")):
                 continue
         if inst.side != side:
@@ -358,9 +298,6 @@ def _png_sheet(model: PcbModel, sheet: str, refs: set[str], out: Path,
 
 def per_subsystem_pngs(model: PcbModel, npp: dict | None = None,
                        mst: dict | None = None) -> list[Path]:
-    """One ratsnest crop per subsystem (own parts colored top/bottom, foreign
-    context grey, intra airwires green, leaving airwires red) plus a composite
-    ``som.png`` for the module region — the per-sheet LAW-5 inspection set."""
     if npp is None:
         npp = net_pad_positions(model)
     if mst is None:
@@ -387,14 +324,8 @@ def per_subsystem_pngs(model: PcbModel, npp: dict | None = None,
     return out
 
 
-# ---- entry point -----------------------------------------------------------------
-
 def generate(model: PcbModel | None = None, npp: dict | None = None,
              mst: dict | None = None) -> dict:
-    """Emit the two per-side PNGs + the combined SVG from the placed board.
-    Returns paths + the cross-subsystem airwire budget metric. ``npp``/``mst``
-    (pad positions + per-net MST) are computed once here when not threaded in
-    by the board flow."""
     if model is None:
         model = pcb_mod.build_model()
     if npp is None:
