@@ -1,6 +1,6 @@
 # Assembly order — devkit_mini
 
-Board 123 x 100 mm. 147 placed parts (92 top / 55 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 100 x 100 mm. 147 placed parts (92 top / 55 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order

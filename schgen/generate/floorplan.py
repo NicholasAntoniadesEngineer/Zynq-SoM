@@ -91,7 +91,6 @@ EDGE_MARGIN = 10.0       # board corners kept clear of edge connectors AND the
 MH_CORNER_KO = 10.0      # corner square reserved for each corner-forced M3 hole
                          # (the PCB corner-forces a hole into each corner) so no
                          # edge/interior block overlaps it (was a DRC short)
-CONN_SIDE_MARGIN = 0.6   # block width = connector span + this each side
 EDGE_DEPTH_CAP = 15.0    # edge block max depth into the board
 EDGE_INSET = 1.5         # depth-wise gap an edge block is held off the board edge
                          # (LAW 6: a flush off-board connector's pads must still
@@ -362,8 +361,10 @@ CLEAR = 0.3              # block-to-block clearance — TIGHTENED (was 1.5). The
                          # this gap, so a smaller value pulls every subsystem
                          # closer, directly SHORTENING the cross-subsystem airwire
                          # (the binding LAW-5 term) and letting the grow loop stop
-                         # at a smaller board. 0.8 mm still clears the per-zone
-                         # ratsnest channels (DRC stays 0; the strict gate judges).
+                         # at a smaller board. It is a FLOOR, not the operative
+                         # gap: every pair that carries a D13 fan-out demand is
+                         # separated by _fanout_sep's pair-exact composition, which
+                         # is >= this. DRC stays 0; the strict gate judges.
 BIG_PART_MM2 = 40.0      # parts at/above this use raw courtyard area
 ROUTE_FACTOR = 3.5       # small-part area multiplier (escape + routing)
 
@@ -1260,11 +1261,12 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
             # >= the copper_edge_clearance rule (0.3 mm). The connector mouth
             # still sits at the perimeter (LAW 6 — the cable/plug overhangs the
             # inset), but no pad is at the edge.
-            # EXACT emission: blocks land at the run positions verbatim. The old
-            # per-block _r5 half-mm snap moved ADJACENT blocks independently by
-            # up to +/-0.25 each, eroding a reach-reserved pair gap by up to
-            # 0.5 mm (measured: pd_input/usbc_otg reserved 0.75, emitted 0.5446
-            # -> J17001 starved 0.890 < 1.00 vs C32001).
+            # EXACT emission: blocks land at the run positions verbatim — there
+            # is NO per-block position snap here (the old _r5 half-mm snap is
+            # retired; it moved ADJACENT blocks independently by up to +/-0.25
+            # each, eroding a reach-reserved pair gap by up to 0.5 mm —
+            # measured: pd_input/usbc_otg reserved 0.75, emitted 0.5446 ->
+            # J17001 starved 0.890 < 1.00 vs C32001).
             if edge == "N":
                 b.x, b.y = round(pos, 4), EDGE_INSET
             elif edge == "S":
@@ -1588,12 +1590,21 @@ class _Occupancy:
     def place_near(self, ax: float, ay: float, w: float,
                    h: float, reach: tuple[float, float, float, float] = _ZeroReach,
                    inset: tuple[float, float, float, float] = _ZeroReach,
-                   mask: int = OCC_PUNCH, comps: tuple[_Comp, ...] = ()
+                   mask: int = OCC_PUNCH, comps: tuple[_Comp, ...] = (),
+                   win: tuple[float, float, float, float] | None = None
                    ) -> tuple[float, float, float, float] | None:
         """Deterministic: scan lattice positions sorted by city-block distance
         of the block CENTER from the anchor; first fit wins. The block is placed
         AXIS-ALIGNED (no width/height swap) — the PCB places this same zone box
         un-rotated at this very (x, y), so a rotation here would diverge.
+
+        ``win`` = (x_lo, x_hi, y_lo, y_hi) restricts the lattice to an origin
+        window. It is an ACCELERATION, never a policy: the only caller is the
+        re-seat retry, which supplies a window its own eviction geometry proves
+        contains every cell this candidate can newly occupy, so the first fit
+        inside the window IS the first fit over the whole board (every excluded
+        cell provably does not fit). The legality predicate is untouched, and
+        the equivalence is pinned by a replay test.
 
         EXPANDING-RING (I2): byte-identical to the historical build-all-cells-
         then-sort scan, but it materialises cells lazily in nondecreasing true
@@ -1617,8 +1628,12 @@ class _Occupancy:
         hw = w / 2
         hh = h / 2
         # sorted (cost, coord) along each axis; ascending cost, coord tie-break.
-        xs = sorted((abs(ix * s + hw - ax), ix * s) for ix in range(nx))
-        ys = sorted((abs(iy * s + hh - ay), iy * s) for iy in range(ny))
+        wx0, wx1, wy0, wy1 = win or (-BOARD_W, 2 * BOARD_W,
+                                     -BOARD_H, 2 * BOARD_H)
+        xs = sorted((abs(ix * s + hw - ax), ix * s) for ix in range(nx)
+                    if wx0 <= ix * s <= wx1)
+        ys = sorted((abs(iy * s + hh - ay), iy * s) for iy in range(ny)
+                    if wy0 <= iy * s <= wy1)
         if not xs or not ys:
             return None
         _HALF = 0.05 + 1e-9    # rounding half-width + float margin
@@ -1970,8 +1985,7 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
 
     _pristine = {b.name: (b.shape_idx, b.fanout_reach, b.fanout_inset)
                  for b in plan.edge_blocks + interior}
-    _SNAP_FIELDS = ("x", "y", "w", "h", "area", "shape_idx", "side",
-                    "fanout_reach", "fanout_inset")
+    _SNAP_FIELDS = _SEAT_FIELDS
 
     def _reset_shapes() -> None:
         """Re-arm every block's pre-search shape state. _choose_conn_shapes
@@ -2622,6 +2636,12 @@ def _som_components(plan: Plan, som_occ: tuple, bands: list) -> tuple:
     return tuple(comps)
 
 
+_SEAT_FIELDS = ("x", "y", "w", "h", "area", "shape_idx", "side",
+                "fanout_reach", "fanout_inset")
+
+_RESEAT_EVICT_BUDGET = 3
+
+
 def _attempt_pack(plan: Plan, interior: list[Block],
                   edge_of: dict[str, str],
                   zbox: dict[str, tuple[float, float]],
@@ -2889,61 +2909,205 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
     placed: list[Block] = []
 
+    def _occ_put(bb: Block) -> None:
+        occ.add(bb.x, bb.y, bb.w, bb.h, bb.fanout_reach, bb.fanout_inset,
+                _side_mask(bb.side), _bcomps(bb))
+
+    def _occ_pull(bb: Block) -> None:
+        occ.remove(bb.x, bb.y, bb.w, bb.h, bb.fanout_reach, bb.fanout_inset,
+                   _side_mask(bb.side), _bcomps(bb))
+
+    def _evict_window(e: Block, w: float, h: float, rch: tuple,
+                      ins: tuple, cc: tuple) -> tuple:
+        """Origin window that provably contains EVERY lattice cell a
+        (w, h, rch, ins, cc) candidate can newly occupy once ``e`` is evicted.
+
+        The retry only ever runs after the SAME candidate's unwindowed
+        place_near returned None under the pre-eviction occupancy, so a cell
+        that fits now was blocked then by e's own rects ALONE — the candidate's
+        box, or one of its comps, must violate one of them. A violation on the
+        x axis pins the origin inside (r.x - ext_lo - g, r.x + r.w + g -
+        ext_hi), where ext_lo/ext_hi span the candidate's boxes about its
+        origin and g bounds the pair-exact required gap (max over e's rects and
+        all four facings of _fanout_sep, floored at CLEAR — the very terms
+        ``fits`` applies). The bbox of that union over e's rects is returned:
+        a SUPERSET window is equally sound, since the extra cells provably do
+        not fit either. Pure acceleration — same first-fit cell as the full
+        scan, at ~1/6 of the lattice."""
+        erects = [(e.x, e.y, e.w, e.h, e.fanout_reach, e.fanout_inset)]
+        erects += [(e.x + dx, e.y + dy, cw, ch, _ZeroReach, _ZeroReach)
+                   for dx, dy, cw, ch, _cm in _bcomps(e)]
+        g = max([CLEAR] + [_fanout_sep(a_r, a_i, r[4], r[5], axis)
+                           for r in erects
+                           for a_r, a_i in ((rch, ins),
+                                            (_ZeroReach, _ZeroReach))
+                           for axis in ("E", "W", "N", "S")])
+        ex_lo = max([w] + [dx + cw for dx, _dy, cw, _ch, _cm in cc])
+        ex_hi = min([0.0] + [dx for dx, _dy, _cw, _ch, _cm in cc])
+        ey_lo = max([h] + [dy + ch for _dx, dy, _cw, ch, _cm in cc])
+        ey_hi = min([0.0] + [dy for _dx, dy, _cw, _ch, _cm in cc])
+        return (min(r[0] for r in erects) - ex_lo - g,
+                max(r[0] + r[2] for r in erects) + g - ex_hi,
+                min(r[1] for r in erects) - ey_lo - g,
+                max(r[1] + r[3] for r in erects) + g - ey_hi)
+
+    def _seat_shape(b: Block, ax: float, ay: float,
+                    evicted: Block | None = None) -> bool:
+        """Choose b's shape + cell at anchor (ax, ay) and WRITE it onto b.
+        Returns False leaving b (and ``chosen_comps``) byte-untouched when no
+        registered shape fits — the caller owns what happens next. Verbatim
+        the historical loop body, hoisted so the retry below can re-run it;
+        ``evicted`` only narrows each place_near to that block's proven
+        window."""
+        cands = shapes.get(b.name) if shapes else None
+        if cands is None:
+            cc0 = comps_of.get((b.name, 0), ()) if comps_of else ()
+            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach,
+                                 b.fanout_inset, OCC_TOP, cc0,
+                                 None if evicted is None else _evict_window(
+                                     evicted, b.w, b.h, b.fanout_reach,
+                                     b.fanout_inset, cc0))
+            if pos is None:
+                return False
+            b.shape_idx = 0
+            b.side = "top"
+            chosen_comps[b.name] = cc0
+            b.x, b.y, b.w, b.h = pos
+            return True
+        by_side: dict[str, tuple] = {}
+        for k, (w, h, rch, ins, sd, cc) in enumerate(cands):
+            if w > BOARD_W - 2 * CLEAR or h > BOARD_H - 2 * CLEAR:
+                continue
+            p = occ.place_near(ax, ay, w, h, rch, ins, _side_mask(sd), cc,
+                               None if evicted is None else _evict_window(
+                                   evicted, w, h, rch, ins, cc))
+            if p is None:
+                continue
+            d = abs(p[0] + w / 2 - ax) + abs(p[1] + h / 2 - ay)
+            key = (round(d, 4), k)
+            if sd not in by_side or key < by_side[sd][0]:
+                by_side[sd] = (key, (k, p, rch, ins, sd, cc))
+        if not by_side:
+            return False
+        if len(by_side) == 1:
+            best = next(iter(by_side.values()))[1]
+        else:
+            def _est_of(cand, _b=b):
+                k2, p2, _r2, _i2, sd2, _c2 = cand
+                saved = (_b.x, _b.y, _b.w, _b.h, _b.shape_idx, _b.side)
+                _b.x, _b.y, _b.w, _b.h = p2
+                _b.shape_idx, _b.side = k2, sd2
+                v = side_est(plan.edge_blocks + placed + [_b], _b.name)
+                (_b.x, _b.y, _b.w, _b.h,
+                 _b.shape_idx, _b.side) = saved
+                return v
+
+            best = _pick_sided(sorted(by_side.values()),
+                               None if side_est is None else _est_of)
+        k, p, rch, ins, sd, cc = best
+        b.x, b.y, b.w, b.h = p
+        b.shape_idx = k
+        b.side = sd
+        chosen_comps[b.name] = cc
+        b.fanout_reach = rch
+        b.fanout_inset = ins
+        b.area = round(b.w * b.h, 1)
+        return True
+
+    def _blk_snap(bb: Block) -> tuple:
+        return (tuple(getattr(bb, f) for f in _SEAT_FIELDS),
+                chosen_comps.get(bb.name), centers.get(bb.name))
+
+    def _blk_restore(bb: Block, s: tuple) -> None:
+        for f, v in zip(_SEAT_FIELDS, s[0], strict=True):
+            setattr(bb, f, v)
+        for store, val in ((chosen_comps, s[1]), (centers, s[2])):
+            if val is None:
+                store.pop(bb.name, None)
+            else:
+                store[bb.name] = val
+
+    evict_budget = [_RESEAT_EVICT_BUDGET]
+
+    def _reseat_retry(b: Block, ax: float, ay: float) -> bool:
+        """BOUNDED RE-SEAT RETRY (wave-17). The greedy first-fit above has no
+        backtracking: when one block's every registered shape returns None the
+        whole candidate outline dies, and that — not any block's geometry — is
+        what walled the carrier at W = 172. Measured (wave-17 spec §3.1): at
+        W in [168, 171] one block is fatal in 48/48 interior rejects, yet
+        shrinking THAT block is worthless and non-monotone, while freeing 5 mm
+        at a NEIGHBOURING seat packs all four widths. A first-fit ordering
+        artefact, so the fix is search, not geometry.
+
+        On a seat failure, EVICT ONE already-placed block and re-seat it:
+        every ``placed`` block is a candidate, tried in ascending city-block
+        distance from its centre to b's anchor, ties by placement index then
+        name — a total order over a list, never a set/dict iteration over
+        geometry. A trial seats b with the full shape chooser and then re-seats
+        the evicted block AT ITS ALREADY-CHOSEN shape (the same
+        remove/place_near/add step the Lloyd passes below use, so the re-seat
+        cannot flip a copper face behind the estimator's back). A trial that
+        fails at either step restores the pre-trial occupancy and block state
+        exactly, and the next candidate is tried.
+
+        DEPTH 1 IS THE MEASURED SUFFICIENT DEPTH: evicting up to TWO blocks
+        per trial, and raising the budget to 6, were both measured to change
+        NOTHING (identical pack verdict, identical est, at W = 171/170/169/168
+        x 163) while costing ~10x the trials — so the pair search is not
+        shipped. What the cap-4 obstructor shortlist of the original design
+        DID cost was the whole win: with only the 4 nearest candidates the
+        pack still failed at all four widths.
+
+        Softens NOTHING: _Occupancy.fits is untouched, so every seat a retry
+        produces was always legal — the retry only reaches arrangements the
+        placement ORDER could not. Bounded and terminating: each success
+        consumes one unit of a per-_attempt_pack budget of
+        _RESEAT_EVICT_BUDGET, and a FAILED episode returns False from
+        _attempt_pack, so at most _RESEAT_EVICT_BUDGET + 1 episodes run per
+        call, each of at most |placed| < |interior| trials of at most
+        |shapes(b)| + 1 place_near calls. No recursion, no cross-call state,
+        no memoization."""
+        if evict_budget[0] < 1:
+            return False
+        pool = [p for _d, _i, _n, p in sorted(
+            (abs(p.x + p.w / 2 - ax) + abs(p.y + p.h / 2 - ay), i, p.name, p)
+            for i, p in enumerate(placed))]
+        for e in pool:
+            esnap, bsnap = _blk_snap(e), _blk_snap(b)
+            _occ_pull(e)
+            ok = _seat_shape(b, ax, ay, e)
+            if ok:
+                _occ_put(b)
+                centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+                eax, eay = _anchor(e)
+                epos = occ.place_near(eax, eay, e.w, e.h, e.fanout_reach,
+                                      e.fanout_inset, _side_mask(e.side),
+                                      _bcomps(e))
+                if epos is None:
+                    ok = False
+                    _occ_pull(b)
+                else:
+                    e.x, e.y = epos[0], epos[1]
+                    _occ_put(e)
+                    centers[e.name] = (e.x + e.w / 2, e.y + e.h / 2)
+            if ok:
+                evict_budget[0] -= 1
+                _fb.record("interior_reseat_retry")
+                return True
+            _blk_restore(b, bsnap)
+            _blk_restore(e, esnap)
+            _occ_put(e)
+        return False
+
     for b in order:
         b.w, b.h = zbox[b.name]
         b.area = round(b.w * b.h, 1)
         ax, ay = _anchor(b)
-        cands = shapes.get(b.name) if shapes else None
-        if cands is None:
-            b.shape_idx = 0
-            b.side = "top"
-            chosen_comps[b.name] = (comps_of.get((b.name, 0), ())
-                                    if comps_of else ())
-            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach,
-                                 b.fanout_inset, OCC_TOP, _bcomps(b))
-            if pos is None:
-                return False
-            b.x, b.y, b.w, b.h = pos
-        else:
-            by_side: dict[str, tuple] = {}
-            for k, (w, h, rch, ins, sd, cc) in enumerate(cands):
-                if w > BOARD_W - 2 * CLEAR or h > BOARD_H - 2 * CLEAR:
-                    continue
-                p = occ.place_near(ax, ay, w, h, rch, ins, _side_mask(sd), cc)
-                if p is None:
-                    continue
-                d = abs(p[0] + w / 2 - ax) + abs(p[1] + h / 2 - ay)
-                key = (round(d, 4), k)
-                if sd not in by_side or key < by_side[sd][0]:
-                    by_side[sd] = (key, (k, p, rch, ins, sd, cc))
-            if not by_side:
-                return False
-            if len(by_side) == 1:
-                best = next(iter(by_side.values()))[1]
-            else:
-                def _est_of(cand, _b=b):
-                    k2, p2, _r2, _i2, sd2, _c2 = cand
-                    saved = (_b.x, _b.y, _b.w, _b.h, _b.shape_idx, _b.side)
-                    _b.x, _b.y, _b.w, _b.h = p2
-                    _b.shape_idx, _b.side = k2, sd2
-                    v = side_est(plan.edge_blocks + placed + [_b], _b.name)
-                    (_b.x, _b.y, _b.w, _b.h,
-                     _b.shape_idx, _b.side) = saved
-                    return v
-
-                best = _pick_sided(sorted(by_side.values()),
-                                   None if side_est is None else _est_of)
-            k, p, rch, ins, sd, cc = best
-            b.x, b.y, b.w, b.h = p
-            b.shape_idx = k
-            b.side = sd
-            chosen_comps[b.name] = cc
-            b.fanout_reach = rch
-            b.fanout_inset = ins
-            b.area = round(b.w * b.h, 1)
-        occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
-                _side_mask(b.side), _bcomps(b))
-        centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+        if _seat_shape(b, ax, ay):
+            _occ_put(b)
+            centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+        elif not _reseat_retry(b, ax, ay):
+            return False
         placed.append(b)
 
     # ITERATIVE REFINEMENT: the first pass anchored blocks on whatever neighbours

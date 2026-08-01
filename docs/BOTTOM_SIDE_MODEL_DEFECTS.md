@@ -80,17 +80,32 @@ claim at every stage boundary and it is **REFUTED**.
 Of **2,868 candidate outlines** the sizing search tried, **14 packed and the
 LAW-5 airwire budget rejected NONE**. Airwire has never sized this board.
 
-- **W = 185 is a proven geometric floor.** Every candidate below 185 — 2,186 of
-  them, 100 % — is rejected by the EDGE-RUN FIT guard, never reaching the
-  interior packer. The S-edge run
+- **W = 185 was a geometric floor AT THIS WAVE, and it has since moved twice.**
+  Every candidate below 185 — 2,186 of them, 100 % — was rejected by the
+  EDGE-RUN FIT guard, never reaching the interior packer. The S-edge run
   (`hdmi_tx` 17.155 + 20.0 cable + `hdmi_rx` 23.965 + 20.0 cable + `pmod` 41.765
   + 0.700 + `pmod_expansion` 39.435, plus 1.750 end reach and 2 x `EDGE_MARGIN`,
-  less the 0.1 `run_overflow_tol` credit) needs **184.669 mm**; the best of all
-  24 orderings needs **184.269 mm** and still misses the 184 mm grid point. No
+  less the 0.1 `run_overflow_tol` credit) needed **184.669 mm**; the best of all
+  24 orderings needed **184.269 mm** and still missed the 184 mm grid point. No
   edge block owns a narrower shape variant (LAW-6 pins mating direction, so only
   same-span mirrors are registered), and a side flip cannot compress a perimeter
   run — the released bottom area is *interior surface*, the binder is *perimeter
   length*.
+
+  > **RECORD CORRECTION (wave-17).** The 20.0 mm `hdmi_rx <-> pmod` cable charge
+  > in that sum is now the one-sided `OVERMOLD_SIDE_GAP` 3.0, so the S run costs
+  > **167.7693 mm** (147.7693 of run + the two 10.0 `EDGE_MARGIN`s; 167.6693
+  > after the 0.1 `run_overflow_tol` credit) — measured on the live plan, with
+  > `pmod` 41.765 + `pmod_expansion` 39.435 = 48.4 % of it. Read that as a
+  > **WIDTH FLOOR, not as
+  > "the S run no longer binds W"**: the run's START is pinned, not floating
+  > (`lo = EDGE_MARGIN + hdmi_tx.reach_W = 11.7501` and `hdmi_tx.x` is exactly
+  > that — the affinity slide clamps to `lo`), so all of its apparent slack sits
+  > at the east end and is consumed 1:1 by shrinking W. At 167.7693 mm the run
+  > still sits **0.554 mm ABOVE** the interior chain it was said to have handed
+  > off to, and W <= 167 is 100 % edge-stage rejected at every H searched.
+  > Wave-17 took W from 172 to 168 without touching this run: the 172 wall was
+  > the interior packer's missing backtracking, not any perimeter length.
 - **H = 163 is set by `power`**, the largest interior block (53.21 x 23.93) and
   the LAST one placed, because the pack order is `(priority, −connectivity,
   −area, name)` and a power stage has the lowest cross-subsystem connectivity.

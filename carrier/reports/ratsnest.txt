@@ -1,21 +1,22 @@
-LAW-5 RATSNEST GATE: PASS (board 172 x 163 mm)
+LAW-5 RATSNEST GATE: PASS (board 168 x 163 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 16265.2 mm (budget 16576 mm, OK; 400 edges; 16265.2/23502.9 mm = 69.2% of total)
+  cross-subsystem airwire: 15904.7 mm (budget 16383 mm, OK; 437 edges; 15904.7/24029.8 mm = 66.2% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
-    debug_boot             n=10  bbox_area=    1513 disp=  4.8
-    board_services         n=9   bbox_area=    1691 disp=  4.7
+    board_services         n=9   bbox_area=    1809 disp=  5.0
+    bringup_modules        n=71  bbox_area=    1860 disp=  4.8
+    debug_boot             n=10  bbox_area=    1435 disp=  4.6
     user_io                n=17  bbox_area=     897 disp=  4.5
+    bringup_en_modules     n=54  bbox_area=    1456 disp=  4.0
     lcd                    n=20  bbox_area=    1121 disp=  3.7
     pmod_expansion         n=15  bbox_area=    1271 disp=  3.5
-    board_aux              n=18  bbox_area=     524 disp=  3.5
     usb_jtag               n=19  bbox_area=     895 disp=  3.4
     fmc                    n=8   bbox_area=    1109 disp=  3.1
     power_mon              n=10  bbox_area=     302 disp=  3.1
     usbc_otg               n=12  bbox_area=     577 disp=  2.9
     motor_pwm              n=13  bbox_area=     825 disp=  2.8
-    power                  n=51  bbox_area=    1246 disp=  2.8
+    power                  n=51  bbox_area=    1245 disp=  2.8
     power_som              n=23  bbox_area=     560 disp=  2.7
     camera                 n=13  bbox_area=     522 disp=  2.6
     pd_input               n=13  bbox_area=     578 disp=  2.6
@@ -23,6 +24,7 @@ LAW-5 RATSNEST GATE: PASS (board 172 x 163 mm)
     bringup_en             n=15  bbox_area=     224 disp=  2.2
     usb_pd                 n=6   bbox_area=      78 disp=  2.1
     hdmi_rx_term           n=10  bbox_area=      86 disp=  2.0
+    board_aux              n=18  bbox_area=     292 disp=  1.9
     hdmi_rx                n=10  bbox_area=     491 disp=  1.9
     microsd                n=15  bbox_area=     639 disp=  1.9
     usb_jtag_connector     n=6   bbox_area=     207 disp=  1.8
@@ -30,9 +32,7 @@ LAW-5 RATSNEST GATE: PASS (board 172 x 163 mm)
     hdmi_tx                n=12  bbox_area=     540 disp=  1.8
     board_qwiic            n=2   bbox_area=      76 disp=  1.7
     rj45_connector         n=3   bbox_area=     534 disp=  1.7
-    bringup_en_modules     n=54  bbox_area=     600 disp=  1.7
-    bringup_modules        n=71  bbox_area=     624 disp=  1.6
     motor_sense            n=10  bbox_area=    1286 disp=  1.6
     ethernet               n=10  bbox_area=     533 disp=  1.6
     usb_uart_connector     n=5   bbox_area=     157 disp=  1.5
-    bringup_rails          n=23  bbox_area=     640 disp=  1.4
+    bringup_rails          n=23  bbox_area=     688 disp=  1.5
