@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from schgen.core.artifacts import generated_pngs
 from schgen.generate import assembly as asm
 
 
@@ -125,7 +126,7 @@ def test_committed_markdown_is_current(carrier_model, steps, phases):
 def test_committed_stage_pngs_are_current(carrier_model, steps, phases,
                                           tmp_path):
     live = asm._stage_pngs(carrier_model, steps, phases, tmp_path)
-    have = sorted(p.name for p in asm.PNG_DIR.glob("*.png"))
+    have = sorted(p.name for p in generated_pngs(asm.PNG_DIR))
     want = sorted(p.name for p in live)
     assert have == want, (
         f"{asm.PNG_DIR}: stage set drifted "

@@ -24,6 +24,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from schgen.core.artifacts import generated_pngs
 from schgen.core.model import Circuit, NetClass
 from schgen.core.project import PROJECT_ROOT, stable_sheet_index
 from schgen.core.symbols import Library
@@ -291,7 +292,7 @@ def _ahash(png: Path) -> str:
 
 def _golden_check(ren_dir: Path, bless: bool) -> None:
     golden_path = ren_dir / "golden.json"
-    cur = {p.stem: _ahash(p) for p in sorted(ren_dir.glob("*.png"))
+    cur = {p.stem: _ahash(p) for p in generated_pngs(ren_dir)
            if not p.stem.startswith("ratsnest")}
     if bless or not golden_path.exists():
         golden_path.write_text(json.dumps(cur, indent=1, sort_keys=True)

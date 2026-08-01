@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 
+from schgen.core.artifacts import generated_pngs
 from schgen.core.link import all_subsystem_paths, load_subsystem
 from schgen.core.project import IS_DEFAULT_PROJECT, PROJECT_ROOT
 
@@ -92,9 +93,8 @@ def _ratsnest_lines(rel) -> list[str]:
              if (RENDERS / f"{stem}.png").exists()]
     if (RATSNEST_DIR / "som.png").exists():
         board.append((f"{_PROJ_REL}/renders/ratsnest/som.png", "SoM region"))
-    sheets = (sorted(p.stem for p in RATSNEST_DIR.glob("*.png")
-                     if p.stem != "som")
-              if RATSNEST_DIR.is_dir() else [])
+    sheets = sorted(p.stem for p in generated_pngs(RATSNEST_DIR)
+                    if p.stem != "som")
     if not board and not sheets:
         L += ["*(ratsnest renders pending — run `schgen board`.)*", ""]
         return L
