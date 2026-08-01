@@ -1,5 +1,3 @@
-"""camera reusable subsystem (RPi 15-pin FFC, 2-lane MIPI CSI-2 port)."""
-
-from subsystems.camera.camera import circuit, INTERFACE, RAILS, PORTS
+from subsystems.camera.camera import INTERFACE, PORTS, RAILS, circuit
 
 __all__ = ["circuit", "INTERFACE", "RAILS", "PORTS"]

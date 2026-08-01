@@ -1,5 +1,3 @@
-"""microsd reusable subsystem."""
-
-from subsystems.microsd.microsd import circuit, INTERFACE, RAILS, PORTS
+from subsystems.microsd.microsd import INTERFACE, PORTS, RAILS, circuit
 
 __all__ = ["circuit", "INTERFACE", "RAILS", "PORTS"]

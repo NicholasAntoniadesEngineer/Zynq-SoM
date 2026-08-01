@@ -1,6 +1,3 @@
-"""pmod_expansion reusable subsystem (manual-gated Pmod expansion port)."""
-
-from subsystems.pmod_expansion.pmod_expansion import (
-    circuit, INTERFACE, RAILS, PORTS)
+from subsystems.pmod_expansion.pmod_expansion import INTERFACE, PORTS, RAILS, circuit
 
 __all__ = ["circuit", "INTERFACE", "RAILS", "PORTS"]
