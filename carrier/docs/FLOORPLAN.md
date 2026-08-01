@@ -72,11 +72,11 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 
 | class | nets | geometry (track/gap mm) | match budget |
 |---|---|---|---|
-| DP100_DIFF | 50 | 0.2052 / 0.2032 | intra-pair <= 1.27 mm |
-| DP100_TMDS | 16 | 0.2052 / 0.2032 | intra-pair <= 0.15 mm; inter-pair <= 5 mm (policy) |
-| DP90_USB | 8 | 0.2611 / 0.2032 | intra-pair <= 1.27 mm |
+| DP100_DIFF | 50 | 0.2052 / 0.2032 | intra-pair <= 0.127..1.27 mm; inter-pair <= 0.127..1.27 mm |
+| DP100_TMDS | 16 | 0.2052 / 0.2032 | intra-pair <= 2.9972 mm; inter-pair <= 2.9972 mm |
+| DP90_USB | 8 | 0.2611 / 0.2032 | intra-pair <= 3.81 mm; inter-pair <= 3.81 mm |
 | I2C | 10 | - | - |
-| SD_1V8 | 6 | - | bus to CLK <= 2.5 mm |
+| SD_1V8 | 6 | - | bus to CLK <= 2.5 mm (policy) |
 
 Full per-net table: `carrier/manufacturing/layout_constraints.csv` (+ the `.kicad_dru` rules).
 

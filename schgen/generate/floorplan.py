@@ -2793,8 +2793,15 @@ def render_svg(plan: Plan, notes: list[Note], out: Path) -> Path:
     return out
 
 
+def _mm_range(label: str, mm: list[float]) -> str:
+    lo, hi = min(mm), max(mm)
+    return (f"{label} <= {lo:g} mm" if lo == hi
+            else f"{label} <= {lo:g}..{hi:g} mm")
+
+
 def render_md(plan: Plan, notes: list[Note], sheets, regs,
               out: Path) -> Path:
+    from schgen.core import si_spec
     from schgen.generate import constraints as cst
     from schgen.verify.powertree import rail_volts
 
@@ -2899,20 +2906,25 @@ def render_md(plan: Plan, notes: list[Note], sheets, regs,
                 continue
             ncls = cst._net_class(pt.kind, pt.impedance, pt.level_v)
             d = classes.setdefault(ncls, {"nets": set(), "kind": pt.kind,
-                                          "imp": pt.impedance})
+                                          "imp": pt.impedance,
+                                          "paired": bool(pt.pair_with)})
             d["nets"].add(name)
+    skews = cst.researched_skews(sheets)
     L.append("| class | nets | geometry (track/gap mm) | match budget |")
     L.append("|---|---|---|---|")
     for ncls, d in sorted(classes.items()):
         geo = cst.GEOMETRY.get(d["imp"]) if d["imp"] else None
         gtxt = (f"{geo.width_mm:g} / {geo.gap_mm:g}" if geo else "-")
-        if d["kind"] in cst.INTRA_PAIR_SKEW_MM:
-            match = (f"intra-pair <= "
-                     f"{cst.INTRA_PAIR_SKEW_MM[d['kind']]:g} mm")
-            if d["kind"] == "tmds_pair":
-                match += "; inter-pair <= 5 mm (policy)"
+        if d["paired"]:
+            specs = [si_spec.researched_pair(n, d["kind"], skews)
+                     for n in sorted(d["nets"])]
+            match = (_mm_range("intra-pair",
+                               [s.intra_pair_skew_mm for s in specs])
+                     + "; " + _mm_range("inter-pair",
+                                        [s.match_tol_mm for s in specs]))
         elif d["kind"] == "sd_bus":
-            match = f"bus to CLK <= {cst.SD_BUS_MATCH_MM:g} mm"
+            match = (f"bus to CLK <= "
+                     f"{cst.SD_BUS_MATCH_MM_UNCITED_POLICY:g} mm (policy)")
         else:
             match = "-"
         L.append(f"| {ncls} | {len(d['nets'])} | {gtxt} | {match} |")

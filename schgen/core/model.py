@@ -24,7 +24,7 @@ PORT_KINDS = frozenset({
     "i2c",
     "sd_bus",
 })
-_PAIR_KINDS = frozenset({"diff_pair", "usb_hs_pair", "tmds_pair"})
+PAIR_KINDS = frozenset({"diff_pair", "usb_hs_pair", "tmds_pair"})
 _DEFAULT_IMPEDANCE = {"usb_hs_pair": 90, "tmds_pair": 100}
 
 _POLARITY_SUFFIXES: tuple[tuple[str, str], ...] = (
@@ -241,7 +241,7 @@ class Circuit:
         n = self.nets.get(net)
         if n is None or n.net_class != NetClass.PORT:
             raise CircuitError(f"port_type({net!r}): not a declared PORT net")
-        if kind in _PAIR_KINDS:
+        if kind in PAIR_KINDS:
             if pair_with is None:
                 raise CircuitError(f"port_type({net!r}): {kind} needs pair_with=")
             comp = self.nets.get(pair_with)
@@ -273,7 +273,7 @@ class Circuit:
             raise CircuitError(
                 f"port_type({net!r}): retyped {prev} -> {pt} (conflict)")
         self.port_types[net] = pt
-        if kind in _PAIR_KINDS and pair_with is not None:
+        if kind in PAIR_KINDS and pair_with is not None:
             recip = PortType(kind=kind, pair_with=net, impedance=impedance,
                              bus=bus, expect=expect)
             comp_prev = self.port_types.get(pair_with)

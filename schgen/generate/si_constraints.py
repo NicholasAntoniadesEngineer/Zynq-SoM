@@ -1,63 +1,24 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from schgen.core.project import PROJECT_ROOT
+from schgen.core.si_spec import (
+    MM_PER_MIL,
+    SI_SPEC_PATH,
+    PairSpec,
+    load_si_spec,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CARRIER = PROJECT_ROOT
-SI_SPEC_PATH = CARRIER / "research" / "si_spec.json"
-MM_PER_MIL = 0.0254
-
-
-@dataclass(frozen=True)
-class PairSpec:
-    interface: str
-    signal: str
-    net_p: str
-    net_n: str
-    z_diff_ohm: int
-    match_tol_mil: float
-    intra_pair_skew_mil: float
-    ac_coupled: bool
-    spec_cite: str
-    notes: str
-
-    @property
-    def nets(self) -> frozenset[str]:
-        return frozenset((self.net_p, self.net_n))
-
-
-def load_si_spec(path: Path = SI_SPEC_PATH) -> list[PairSpec]:
-    if not path.exists():
-        raise FileNotFoundError(
-            f"{path} not found — the vendored SI target table is required "
-            f"(committed under the project's research/).")
-    data = json.loads(path.read_text())
-    out: list[PairSpec] = []
-    for p in data.get("pairs", []):
-        out.append(PairSpec(
-            interface=p["interface"],
-            signal=p.get("signal", ""),
-            net_p=p["net_p"],
-            net_n=p["net_n"],
-            z_diff_ohm=int(p["z_diff_ohm"]),
-            match_tol_mil=float(p["match_tol_mil"]),
-            intra_pair_skew_mil=float(p["intra_pair_skew_mil"]),
-            ac_coupled=bool(p["ac_coupled"]),
-            spec_cite=p["spec_cite"],
-            notes=p.get("notes", ""),
-        ))
-    return sorted(out, key=lambda s: (s.interface, s.net_p))
 
 
 def declared_pairs(sheets) -> dict[frozenset[str], tuple[str, str, int]]:
-    from schgen.core.model import NetClass
-    _PAIR_KINDS = {"diff_pair", "tmds_pair", "usb_hs_pair"}
+    from schgen.core.model import PAIR_KINDS, NetClass
     seen: dict[frozenset[str], tuple[str, str, int]] = {}
     for sc in sheets:
         c = sc.circuit
@@ -65,7 +26,7 @@ def declared_pairs(sheets) -> dict[frozenset[str], tuple[str, str, int]]:
             if net.net_class != NetClass.PORT:
                 continue
             pt = c.port_type_of(net.name)
-            if pt.kind not in _PAIR_KINDS or not pt.pair_with:
+            if pt.kind not in PAIR_KINDS or not pt.pair_with:
                 continue
             key = frozenset((net.name, pt.pair_with))
             seen.setdefault(key, (sc.name, pt.kind, pt.impedance or 0))
@@ -148,7 +109,7 @@ def _dru_rules(model: SiModel) -> list[str]:
         "",
     ]
     for p in model.pairs:
-        skew_mm = round(p.intra_pair_skew_mil * MM_PER_MIL, 4)
+        skew_mm = p.intra_pair_skew_mm
         L += [
             f'(rule "intra_skew_{_safe(p.net_p)}"',
             f"  # {p.interface} — {p.signal}; Zdiff {p.z_diff_ohm}ohm; "
@@ -234,8 +195,8 @@ def _md(model: SiModel) -> str:
         g = gid_of[p.nets]
         sheet, kind, imp = model.declared[p.nets]
         ncls = net_class_of(kind, imp or p.z_diff_ohm)
-        skew_mm = round(p.intra_pair_skew_mil * MM_PER_MIL, 3)
-        tol_mm = round(g.tol_mil * MM_PER_MIL, 3)
+        skew_mm = p.intra_pair_skew_mm
+        tol_mm = round(g.tol_mil * MM_PER_MIL, 4)
         lines.append(
             f"| {p.interface} | {p.signal} | `{p.net_p}` | `{p.net_n}` "
             f"| {p.z_diff_ohm} | +/-{p.intra_pair_skew_mil:g} mil "
@@ -250,7 +211,7 @@ def _md(model: SiModel) -> str:
               "|---|---|---|---|---|"]
     for g in model.groups:
         mem = ", ".join(f"`{m.net_p}`/`{m.net_n}`" for m in g.members)
-        tol_mm = round(g.tol_mil * MM_PER_MIL, 3)
+        tol_mm = round(g.tol_mil * MM_PER_MIL, 4)
         lines.append(
             f"| {g.gid} | {g.interface} | {len(g.members)} "
             f"| +/-{g.tol_mil:g} mil ({tol_mm} mm) | {mem} |")
@@ -280,14 +241,30 @@ class SiVerdict:
     n_pairs: int
     n_groups: int
     uncovered: tuple[frozenset[str], ...]
+    z_divergent: tuple[tuple[str, int, int], ...]
 
     def summary(self) -> str:
         head = (f"SI constraints: {self.n_pairs} diff pairs, "
                 f"{self.n_groups} length-match groups emitted")
         if self.ok:
             return head + " — every declared pair covered."
-        miss = "; ".join("/".join(sorted(fs)) for fs in self.uncovered)
-        return head + f" — UNCOVERED declared pair(s): {miss}"
+        parts = []
+        if self.uncovered:
+            parts.append("UNCOVERED declared pair(s): " + "; ".join(
+                "/".join(sorted(fs)) for fs in self.uncovered))
+        if self.z_divergent:
+            parts.append("DECLARED impedance != researched z_diff_ohm: "
+                         + "; ".join(f"{n} {d}R vs {r}R"
+                                     for n, d, r in self.z_divergent))
+        return head + " — " + " | ".join(parts)
+
+
+def declared_impedance_divergences(
+        model: SiModel) -> tuple[tuple[str, int, int], ...]:
+    return tuple(sorted(
+        (sorted(p.nets)[0], model.declared[p.nets][2], p.z_diff_ohm)
+        for p in model.pairs
+        if model.declared[p.nets][2] != p.z_diff_ohm))
 
 
 def check(model: SiModel) -> SiVerdict:
@@ -296,8 +273,10 @@ def check(model: SiModel) -> SiVerdict:
     uncovered = tuple(sorted(
         (fs for fs in declared_nets if fs not in emitted_nets),
         key=lambda fs: tuple(sorted(fs))))
-    return SiVerdict(ok=not uncovered, n_pairs=len(model.pairs),
-                     n_groups=len(model.groups), uncovered=uncovered)
+    z_divergent = declared_impedance_divergences(model)
+    return SiVerdict(ok=not uncovered and not z_divergent,
+                     n_pairs=len(model.pairs), n_groups=len(model.groups),
+                     uncovered=uncovered, z_divergent=z_divergent)
 
 
 def generate(sheets=None) -> dict:
