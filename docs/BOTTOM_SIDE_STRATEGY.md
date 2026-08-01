@@ -353,3 +353,108 @@ site), `w12_shapes.py` (registered shape sets), `w12_patchrun.py`
   mirrored documents), 5 bottom -> top (R20003/6/7/8/9, the template's own
   secondary members role-flipping to F.Cu), and the 7 face-up parts stay on
   F.Cu. Net **131 -> 165 bottom of 507 placements**.
+
+## Wave-18 — the shelf path's ROLE INVERSION fixed (165 -> 176 of 507 on B.Cu at an UNCHANGED 168x163)
+
+The user, looking at four render crops of populated top-side regions: *"Except
+for the test points and connectors, these are all parts that can go on the
+bottom side or space where connectors can be shifted."*
+
+- **THE DEFECT — the shelf path meant the OPPOSITE of the contracted path.**
+  `_bottom_zone_shapes`'s shelf branch handed `_pack_one_zone` the unmodified
+  two-side classifier map. In a bottom-assigned block the PRIMARY pack emits
+  B.Cu and the SECONDARY emits F.Cu, so the classifier's "push the small
+  passives to the bottom to relieve top pressure" population is exactly the
+  one that lands FACE-UP once its block flips — only the big ICs go face-down.
+  Measured on the shipping board: `board_aux` (declared `either`) emitted
+  **16 F.Cu / 2 B.Cu**, `bringup_rails` **22 F.Cu / 1 B.Cu**, while `power` —
+  CONTRACTED, and therefore through `_lift_face_top`, which lifts ONLY
+  `face_top` — emitted **12 F.Cu / 39 B.Cu**. Two blocks the spec had already
+  declared bottom-eligible were delivering 3 of 41 parts to B.Cu instead of 27.
+  That is what the user was looking at.
+- **THE FIX — role assignment is now a registered SHAPE, judged like any
+  other.** A shelf sheet offers, per ladder aspect, BOTH `bottom-a{asp}`
+  (everything except `face_top` in the primary — the contracted path's own
+  rule, so "bottom" finally means one thing in both zone kinds) and
+  `bottom-split-a{asp}` (the classifier's split). Role-aware is registered
+  FIRST and the existing box de-dup drops the split companion whenever the two
+  pack to the same rectangle, so an exactly-equal geometry resolves toward the
+  bottom face at ZERO area cost — the shape chooser's same-face tie-break is
+  the registered index. The shelf primary pack also gained the `face_top`-leak
+  `AssertionError` the contracted path already carried (LAW-6 rule (d)).
+- **MEASURED, both projects.** Carrier **168 x 163 = 27,384 mm2 UNCHANGED**,
+  md5 `06308484dd95ffb65b09ef456bd64547`, **B.Cu 165 -> 176 of 507
+  placements** (569 footprints: 404/165 -> 393/176), cross-airwire
+  15,904.7 -> 15,946.3 of a 16,383 budget (97.08 % -> 97.34 %), 29 gates,
+  DRC 0, D13 110/0, contract 190/0, LAW-6 **0/93 user-facing face-down**;
+  two builds byte-identical, 11m17s. Devkit **byte-identical to the pin**
+  (100x100, md5 `8eecadfde74d523af5f185812f62163c`) — the change cannot fire
+  where no shelf sheet is declared. Exactly two blocks move: `board_aux`
+  (7.78x43.264 -> 7.78x30.183, block area -30.3 %) and `mechanical`.
+- **THE REPLACE FORM IS A TRADE, NOT A WIN — deliberately not taken.**
+  Dropping the split companions (equivalently: pruning them as geometrically
+  dominated — on both live shelf sheets EVERY split variant is dominated on
+  (w, h)) reaches 174x162 = 28,188 mm2 (**+804 mm2, +2.94 %**) for ~189 parts
+  on B.Cu. The dominated shape turns out to be load-bearing for the 168-wide
+  outline: the greedy pack is non-monotone in shape freedom, exactly as
+  waves 11 and 17 measured. The split variant therefore stays as real shape
+  freedom, not as a legacy path.
+- **THE ELIGIBILITY LADDER IS EXHAUSTED (PLAN-MEASURED).** All 7 declarable
+  non-impedance interior sheets at once (`board_services`, `bringup_en`,
+  `bringup_en_modules`, `bringup_modules`, `power_mon`, `power_som`,
+  `usb_pd`): **177x163 = 28,851 mm2 (+5.36 %) and B.Cu DOWN to 142**. Every
+  one of the 7 was offered a bottom variant and **the est side-chooser kept
+  all 7 on TOP**; the damage is pure greedy perturbation (`power` lost its
+  bottom variant). Declaring more sheets buys nothing the judge wants.
+
+## Wave-18 — NEW RULE: B.Cu has no reference plane, so impedance sheets may not take it
+
+- Measured on the emitted board: filled GND zones per layer are **F.Cu 4,
+  In1.Cu 1, In2.Cu 0, B.Cu 3**. The stackup is Sig/GND/PWR/Sig and
+  `constraints.py` declares the DP90/DP100 geometry as an OUTER-layer
+  microstrip referenced to the ADJACENT inner plane, so a differential pair on
+  B.Cu references **nothing** — its 90/100 ohm geometry is a fiction. No gate
+  forbade it; the only pressure was the advisory `est_via_cost` impedance row.
+- The bottom-eligibility check now raises LOUDLY with that derivation
+  (`_unreferenced_imp_sheets`). The charged set is DERIVED, never listed — a
+  sheet pays iff one of its nets' routing classes carries a `DiffGeometry`,
+  the same derivation `est_via_cost` prices with — and the refusal **empties
+  itself** the day In2.Cu is filled (`MICROSTRIP_REFERENCE["B.Cu"] ==
+  GND_PLANE_LAYER`). Byte-inert on the shipping spec: none of `board_aux`,
+  `bringup_rails`, `power` carries an impedance net.
+- RECORD CORRECTION: wave-9 P2 named `hdmi_rx_term` an "achiral-safe opt-in
+  frontier" candidate. It carries DP100_TMDS and is now refused. The
+  declared-`either` unit-test fixture moved to `power_mon`.
+
+## Wave-18 — thermal pour credit follows the PART, and the fallback census
+## finally describes the EMITTED board
+
+- **POUR CREDIT (latent FALSE-FAIL, fixed).** `thermal._pour_evidence` asked
+  `pour_at` for the LIBRARY literal `need.pour_layers` while the emitter
+  swapped `F.Cu <-> B.Cu` for a mirrored instance. Symmetric specs (LM61460,
+  `("F.Cu","B.Cu")`) hid it; `TLV75725_DYD` is `("F.Cu",)`, so a legitimate
+  B.Cu placement would have poured on B.Cu, been queried on F.Cu, lost the
+  credit, fallen back to the bare 231 C/W and **FALSE-FAILED at Tj 123.9 C
+  against the 115.0 C threshold**. A CORRECTION, not a relaxation: JESD51-5
+  wants the pad's local pour on the part's OWN outer layer, which is what the
+  emitter builds. `LAYER_SWAP` + `pour_layers_for` now live beside
+  `POUR_EVIDENCE` and the emitter imports them; the emitter's two transforms
+  are split by their real triggers — `_mirror_thermal_spec` does the
+  DOCUMENT-frame y-flip on `inst.mirror`, `_side_thermal_spec` does the LAYER
+  swap on `inst.side`. Board byte-inert; `reports/thermal.txt` now honestly
+  reads "local B+F pour" for the two B.Cu LM61460s.
+- **FALLBACK CENSUS (double count, fixed; every carrier ceiling TIGHTENED).**
+  `fallbacks.snapshot`'s own contract is that "the census must describe the
+  EMITTED board, never a search the guard threw away", and the wave-11
+  punch-policy guard honours it — but `_choose_conn_shapes` did not: a
+  REJECTED mirror trial leaves TWO whole-board packs the board does not
+  contain (the trial, and the restore re-run whose events duplicate the
+  incumbent's). That is why `legalize_only_compaction`'s registered meaning
+  had to say its count "scales with trials". Rolled back through the same
+  mechanism. Carrier ceilings ratchet DOWN: `legalize_only_compaction`
+  **12 -> 4**, `interior_reseat_retry` **92 -> 36**; devkit
+  `legalize_only_compaction` **6 -> 2**, `interior_reseat_retry` **76 -> 72**.
+  Both boards byte-identical across the change — it touches only the ledger.
+  OPEN, recorded not fixed: an ACCEPTED mirror trial still leaves the
+  incumbent's events beside its own, and the outline search appends the events
+  of all ~2,200 candidate packs, of which one is the board.

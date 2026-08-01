@@ -163,6 +163,23 @@ class PourNeed:
     pour_layers: tuple[str, ...]
 
 
+LAYER_SWAP = {"F.Cu": "B.Cu", "B.Cu": "F.Cu"}
+"""Outer-copper swap of a MIRRORED instance. ONE definition, imported by the
+emitter (`pcb.embed._mirror_thermal_spec`, which builds the mirrored part's
+pour on these layers) so the gate below asks for the copper the emitter
+actually laid: a spec's `pour_layers` are LIBRARY-frame, and the pour of a
+part on B.Cu belongs on the part's OWN outer layer (JESD51-5). Emitter and
+gate reading two different tables is how a legitimate B.Cu placement of an
+asymmetric spec (TLV75725: F.Cu only) would have lost its credit and
+FALSE-FAILED at Tj 123.9 C against a 115.0 C threshold."""
+
+
+def pour_layers_for(need: PourNeed, layer: str) -> tuple[str, ...]:
+    """``need.pour_layers`` resolved for an instance emitted on ``layer``."""
+    return (need.pour_layers if layer != "B.Cu"
+            else tuple(LAYER_SWAP.get(la, la) for la in need.pour_layers))
+
+
 POUR_EVIDENCE: dict[str, PourNeed] = {
     # LM61460 VQFN-HR: SNVSBD5D 11.1.1 field at PGND1/PGND2 (emitter drops 8;
     # 6 is the credit floor) + local F.Cu/B.Cu pours + the In1 plane.
@@ -190,12 +207,13 @@ def _pour_evidence(copper, need: PourNeed) -> tuple[bool, str]:
     ok_all = True
     for f in insts:
         nv = copper.gnd_vias_within(f.x, f.y, need.radius_mm)
-        pours = all(copper.pour_at(f.x, f.y, lay) for lay in need.pour_layers)
+        lays = pour_layers_for(need, f.layer)
+        pours = all(copper.pour_at(f.x, f.y, lay) for lay in lays)
         ok = nv >= need.min_vias and pours
         ok_all = ok_all and ok
         rows.append(
             f"{f.ref}: {nv}/{need.min_vias} GND vias<={need.radius_mm:g}mm, "
-            f"local {'+'.join(lay.split('.')[0] for lay in need.pour_layers)} "
+            f"local {'+'.join(lay.split('.')[0] for lay in lays)} "
             f"pour {'YES' if pours else 'MISSING'}"
             + ("" if ok else " [INSUFFICIENT]"))
     return ok_all, "In1 GND plane + " + "; ".join(rows)

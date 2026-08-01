@@ -764,21 +764,33 @@ def _report_via_shortfall(inst, chosen: list[tuple[float, float]],
     return line
 
 
-_LAYER_SWAP = {"F.Cu": "B.Cu", "B.Cu": "F.Cu"}
-
-
 def _mirror_thermal_spec(spec: dict) -> dict:
-    """The THERMAL_COPPER curated geometry of a MIRRORED instance: the spec
+    """The THERMAL_COPPER curated GEOMETRY of a MIRRORED instance: the spec
     rects/sites live in the LIBRARY local frame, so a mirrored part (whose
     document frame is the pcbnew M_y mirror) needs y -> -y on the pour rect
-    and every via site, and its own-side outer pour swaps F.Cu <-> B.Cu —
-    the same one transform pcb/mirror.py applies to the footprint itself."""
+    and every via site — the same one transform pcb/mirror.py applies to the
+    footprint itself. The LAYER swap is a separate question with a separate
+    trigger (`_side_thermal_spec`): the document frame and the copper face are
+    independent — the achiral-swap convention emits B.Cu from an unmirrored
+    document."""
     p = spec["pour"]
     return {**spec,
             "pour": (p[0], 0.0 - p[3], p[2], 0.0 - p[1]),
-            "via_sites": [(sx, 0.0 - sy) for sx, sy in spec["via_sites"]],
-            "pour_layers": tuple(_LAYER_SWAP[la]
-                                 for la in spec["pour_layers"])}
+            "via_sites": [(sx, 0.0 - sy) for sx, sy in spec["via_sites"]]}
+
+
+def _side_thermal_spec(spec: dict, side: str) -> dict:
+    """The same spec's OUTER-COPPER layers for an instance emitted on ``side``:
+    a part's local pour belongs on the part's OWN outer layer (JESD51-5), so a
+    B.Cu instance of an F.Cu-only spec pours on B.Cu. Keyed on the EMITTED
+    FACE, which is exactly what the thermal gate reads back off the board, and
+    swapped through the gate's own `thermal.LAYER_SWAP` — one table, so the
+    copper this lays and the copper the credit demands cannot drift."""
+    from schgen.verify.thermal import LAYER_SWAP
+    if side != "bottom":
+        return spec
+    return {**spec, "pour_layers": tuple(LAYER_SWAP[la]
+                                         for la in spec["pour_layers"])}
 
 
 def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]:
@@ -807,6 +819,7 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
             continue
         if inst.mirror:
             spec = _mirror_thermal_spec(spec)
+        spec = _side_thermal_spec(spec, inst.side)
         # local pours (per layer; the B.Cu twin gives the buck a second outer
         # spreader stitched by the same via field)
         corners = _corners_rot(spec["pour"], inst, model)
