@@ -96,7 +96,7 @@ each PNG passing the netlist, ERC and visual gates.
 
 <img src="carrier/renders/3d_persp.png" alt="Generated 3D board render (perspective)" width="900">
 
-<img src="docs/block_diagram.svg" alt="Generated block diagram" width="900">
+<img src="carrier/docs/block_diagram.svg" alt="Generated block diagram" width="900">
 
 [<img src="carrier/renders/ratsnest_top.png" alt="Board ratsnest (top)" width="420">](carrier/README.md#ratsnest-views)<br>**[Ratsnest views](carrier/README.md#ratsnest-views)** — airwires per subsystem.
 

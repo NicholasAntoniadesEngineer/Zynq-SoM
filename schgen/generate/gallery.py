@@ -10,9 +10,10 @@ from schgen.core.project import IS_DEFAULT_PROJECT, PROJECT_ROOT
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RENDERS = PROJECT_ROOT / "renders"
-DIAGRAM = REPO_ROOT / "docs" / "block_diagram.svg"
+DIAGRAM = PROJECT_ROOT / "docs" / "block_diagram.svg"
 _PROJ_REL = (PROJECT_ROOT.relative_to(REPO_ROOT).as_posix()
              if PROJECT_ROOT.is_relative_to(REPO_ROOT) else PROJECT_ROOT.name)
+_DIAGRAM_REL = f"{_PROJ_REL}/docs/block_diagram.svg"
 
 BEGIN = "<!-- schgen:gallery -->"
 END = "<!-- /schgen:gallery -->"
@@ -147,7 +148,7 @@ def _full_section(readme_dir: Path) -> str:
              f"`schgen board` —")
     L.append("every PNG below passed the netlist, ERC and visual gates.")
     L.append("")
-    L.append(f'<img src="{rel("docs/block_diagram.svg")}" '
+    L.append(f'<img src="{rel(_DIAGRAM_REL)}" '
              f'alt="Generated block diagram" width="900">')
     L.append("")
     L.append("| " + " | ".join([" "] * COLS) + " |")
@@ -198,7 +199,7 @@ def _compact_section(readme_dir: Path) -> str:
               f'alt="Generated 3D board render (perspective)" width="900">',
               ""]
     L += [
-        f'<img src="{rel("docs/block_diagram.svg")}" '
+        f'<img src="{rel(_DIAGRAM_REL)}" '
         f'alt="Generated block diagram" width="900">',
         "",
     ]

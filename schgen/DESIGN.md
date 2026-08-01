@@ -117,7 +117,7 @@ Build FAILS (non-zero exit) unless ALL gates pass.
   0.2052/0.2032 mm, JLCPCB calculator values for THIS stackup; the 0.127/0.127
   figures circulating belong to the thinner 3313 prepreg), net classes per typed
   port, length-match groups per pair/bus.
-- **Diagram** (`diagram.py`): `docs/block_diagram.svg` from the port graph.
+- **Diagram** (`diagram.py`): `<project>/docs/block_diagram.svg` from the port graph.
 
 ## Milestones
 M1: model + gates + emit a hand-placed trivial RC subsystem end-to-end (proves the
