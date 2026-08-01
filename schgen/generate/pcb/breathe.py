@@ -15,7 +15,7 @@ from schgen.verify.fanout_gate import (
 
 from .constants import ORIGIN_X, ORIGIN_Y, PLACE_CLEAR
 from .footprint import has_thru_pads, pad_names
-from .mating_face import _rot_bbox_cw
+from .turn import turn_box
 
 # EDGE_MARGIN and ZONE_GROW below duplicate placement.py and escape.py by value.
 EDGE_MARGIN = 0.6
@@ -50,7 +50,7 @@ class BreatheStats:
 
 def _eff_box(bbox: tuple[float, float, float, float], rot: float,
              px: float, py: float) -> tuple[float, float, float, float]:
-    ex0, ey0, ex1, ey1 = _rot_bbox_cw(bbox, rot)
+    ex0, ey0, ex1, ey1 = turn_box(bbox, rot)
     return (px + ex0, py + ey0, px + ex1, py + ey1)
 
 

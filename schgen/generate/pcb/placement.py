@@ -44,12 +44,11 @@ from .footprint import (
 )
 from .mating_face import (
     _inst_pad_geom,
-    _rot_bbox,
-    _rot_bbox_cw,
     _rot_pad_bbox,
     connector_edge_rotation,
 )
 from .stages import StageTracker
+from .turn import turn_box
 
 _BREATHE_PHASES: tuple[str, ...] = ("A", "B")
 
@@ -92,7 +91,7 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     extra_of: dict[str, float] = {}
     iscp_of: dict[str, bool] = {}
     for ref, bbox, rot in items:
-        rb = _rot_bbox(bbox, rot)
+        rb = turn_box(bbox, rot)
         halo[ref] = (rb[0] - PLACE_CLEAR / 2, rb[1] - PLACE_CLEAR / 2,
                      rb[2] + PLACE_CLEAR / 2, rb[3] + PLACE_CLEAR / 2)
         need, is_cp = fanout.get(ref, (PLACE_CLEAR, False))
@@ -312,7 +311,7 @@ def _member_mirror_shape(sheet: str, t_off: dict[str, tuple[float, float]],
 
     def _box(r: str, o: tuple[float, float], rot: float
              ) -> tuple[float, float, float, float]:
-        bb = _rot_bbox_cw(bbox_of[r], rot)
+        bb = turn_box(bbox_of[r], rot)
         return (o[0] + bb[0], o[1] + bb[1], o[0] + bb[2], o[1] + bb[3])
 
     mboxes = [_box(r, o, base_rot.get(r, 0.0)) for r, o, _s in members]
@@ -428,7 +427,7 @@ def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
                       ) -> dict[str, tuple[float, float]]:
     out: dict[str, tuple[float, float]] = {}
     for r, (ox, oy) in off.items():
-        cb = _rot_bbox_cw(bbox_of[r], rot_of.get(r, 0.0))
+        cb = turn_box(bbox_of[r], rot_of.get(r, 0.0))
         out[r] = (round(zw - ox - cb[0] - cb[2], 4), oy)
     return out
 
@@ -458,7 +457,7 @@ def _lift_face_top(t_off: dict[str, tuple[float, float]],
 
     def _cbox(r: str, off: tuple[float, float]
               ) -> tuple[float, float, float, float]:
-        cb = _rot_bbox_cw(bbox_of[r], rot_of.get(r, 0.0))
+        cb = turn_box(bbox_of[r], rot_of.get(r, 0.0))
         return (off[0] + cb[0] - PLACE_CLEAR / 2,
                 off[1] + cb[1] - PLACE_CLEAR / 2,
                 off[0] + cb[2] + PLACE_CLEAR / 2,
@@ -472,7 +471,7 @@ def _lift_face_top(t_off: dict[str, tuple[float, float]],
     blk: list[tuple] = [_cbox(r, o) for r, o in sorted(keep.items())
                         if has_thru_pads(resolvable[r])]
     blk += [(*_cbox(r, o), *_demand(r)) for r, o in sorted(b_off.items())]
-    items = [(r, _rot_bbox_cw(bbox_of[r], rot_of.get(r, 0.0)), 0.0)
+    items = [(r, turn_box(bbox_of[r], rot_of.get(r, 0.0)), 0.0)
              for r in lifted]
     add, _pw, _ph = _shelf_pack(items, max(0.0, zw - 2 * ZONE_PAD), blk,
                                 fanout=fmeta)
@@ -553,7 +552,7 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
 
     horiz = outer_dir in ("N", "S")
     def hbox(r, _side):
-        rb = _rot_bbox(bbox_of[r], conn_rot.get(r, 0.0))
+        rb = turn_box(bbox_of[r], conn_rot.get(r, 0.0))
         return (rb[0] - PLACE_CLEAR / 2, rb[1] - PLACE_CLEAR / 2,
                 rb[2] + PLACE_CLEAR / 2, rb[3] + PLACE_CLEAR / 2)
 
@@ -620,7 +619,7 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
     for side in ("top", "bottom"):
         for r, (ox, oy) in placed[side].items():
             if r in conn_rot:
-                rb2 = _rot_bbox(bbox_of[r], conn_rot.get(r, 0.0))
+                rb2 = turn_box(bbox_of[r], conn_rot.get(r, 0.0))
             else:
                 rb2 = bbox_of[r]
             zw = max(zw, ox + rb2[2] + PLACE_CLEAR / 2)
@@ -634,7 +633,7 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
         for side in ("top", "bottom"):
             for r, (ox, oy) in placed[side].items():
                 if r in conn_rot:
-                    rb2 = _rot_bbox(bbox_of[r], conn_rot.get(r, 0.0))
+                    rb2 = turn_box(bbox_of[r], conn_rot.get(r, 0.0))
                 else:
                     rb2 = bbox_of[r]
                 if flip_y:
@@ -1097,7 +1096,7 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
             if len(members) < 2:
                 continue
             gset = set(members)
-            eb = _rot_bbox_cw(bbox_of[members[0]], gk[2])
+            eb = turn_box(bbox_of[members[0]], gk[2])
             tol_x = max(0.6, (eb[2] - eb[0]) / 2)
             tol_y = max(0.6, (eb[3] - eb[1]) / 2)
             clusters: list[tuple[str, list[str]]] = []
@@ -1377,7 +1376,7 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
 
         def _eff_box(ref: str, px: float, py: float
                      ) -> tuple[float, float, float, float]:
-            ex0, ey0, ex1, ey1 = _rot_bbox_cw(bbox_of[ref],
+            ex0, ey0, ex1, ey1 = turn_box(bbox_of[ref],
                                               fixed_rot.get(ref, 0.0))
             return (px + ex0, py + ey0, px + ex1, py + ey1)
 
@@ -1629,7 +1628,7 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
 
         def _ebox(ref: str, px: float, py: float
                   ) -> tuple[float, float, float, float]:
-            eb = _rot_bbox_cw(bbox_of[ref], fixed_rot.get(ref, 0.0))
+            eb = turn_box(bbox_of[ref], fixed_rot.get(ref, 0.0))
             return (px + eb[0], py + eb[1], px + eb[2], py + eb[3])
 
         def _collide(bb, boxes) -> bool:

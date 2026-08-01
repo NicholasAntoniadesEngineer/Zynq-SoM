@@ -120,7 +120,7 @@ def test_a_contract_constructed_face_top_part_is_refused_not_forced(zg_lift):
 def test_lift_keeps_the_lifted_part_off_every_primary_through_hole_pad(zg_lift):
     from schgen.generate.pcb.constants import PLACE_CLEAR
     from schgen.generate.pcb.footprint import has_thru_pads
-    from schgen.generate.pcb.mating_face import _rot_bbox_cw
+    from schgen.generate.pcb.turn import turn_box
     for sheet in LIFT_SHEETS:
         tmpl = zg_lift.shapes[sheet][0]
         rot = tmpl.extra_rot
@@ -131,7 +131,7 @@ def test_lift_keeps_the_lifted_part_off_every_primary_through_hole_pad(zg_lift):
             zg_lift.bbox_of, zg_lift.resolvable, rot)
 
         def _box(r, off, _rot=rot):
-            cb = _rot_bbox_cw(zg_lift.bbox_of[r], _rot.get(r, 0.0))
+            cb = turn_box(zg_lift.bbox_of[r], _rot.get(r, 0.0))
             return (off[0] + cb[0], off[1] + cb[1],
                     off[0] + cb[2], off[1] + cb[3])
 

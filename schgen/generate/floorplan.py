@@ -96,7 +96,8 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
                      side: str, mods: dict | None = None,
                      pad_punch: bool = True) -> tuple:
     from schgen.generate.pcb.footprint import _footprint_bbox, has_thru_pads
-    from schgen.generate.pcb.mating_face import _rot_bbox_cw, thru_pad_boxes
+    from schgen.generate.pcb.mating_face import thru_pad_boxes
+    from schgen.generate.pcb.turn import turn_box
     rot_of = dict(zg.conn_rot)
     for r, e in extra_rot.items():
         rot_of[r] = (rot_of.get(r, 0.0) + e) % 360.0
@@ -107,7 +108,7 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
         bb = _footprint_bbox(mp) if mp is not None else zg.bbox_of.get(r)
         if bb is None:
             return None
-        c = _rot_bbox_cw(bb, rot_of.get(r, 0.0))
+        c = turn_box(bb, rot_of.get(r, 0.0))
         return (ox + c[0], oy + c[1], ox + c[2], oy + c[3])
 
     comps: list[tuple] = []
@@ -150,7 +151,7 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg,
                        mods: dict | None = None) -> tuple[tuple, tuple]:
     from schgen.generate.pcb import placement as _pl
     from schgen.generate.pcb.footprint import _footprint_bbox
-    from schgen.generate.pcb.mating_face import _rot_bbox_cw
+    from schgen.generate.pcb.turn import turn_box
     from schgen.verify.fanout_gate import (
         MIN_SUBJECT_PINS,
         intelligent_need,
@@ -169,7 +170,7 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg,
                 continue
             if "Fiducial" in mod.stem or is_testpoint_ref(ref):
                 continue
-            rb = _rot_bbox_cw(bbox, rot_of.get(ref, 0.0))
+            rb = turn_box(bbox, rot_of.get(ref, 0.0))
             cx0, cy0 = ox + rb[0], oy + rb[1]
             cx1, cy1 = ox + rb[2], oy + rb[3]
             mw, me = cx0, zw - cx1

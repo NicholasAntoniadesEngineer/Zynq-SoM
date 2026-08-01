@@ -56,7 +56,7 @@ CD-07  DP90/DP100 L2 reference plane   [EMITTED]
 
 CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
   assumes: the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine
-  where:   schgen/generate/pcb/embed.py:329
+  where:   schgen/generate/pcb/embed.py:332
   emits:   GND vias inside the SoM body zone: 7 (SoM zone found); rail fanout vias: none emitted
   risk:    until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists
 

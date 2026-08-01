@@ -17,7 +17,7 @@ from schgen.generate.pcb.embed import (
     _side_thermal_spec,
 )
 from schgen.generate.pcb.footprint import _footprint_bbox, pad_names
-from schgen.generate.pcb.mating_face import _inst_pad_geom, _rot_bbox_cw
+from schgen.generate.pcb.mating_face import _inst_pad_geom
 from schgen.generate.pcb.mirror import (
     MIRROR_DIR,
     MirrorUnsupported,
@@ -29,6 +29,7 @@ from schgen.generate.pcb.placement import (
     apply_chosen_shapes,
     subsystem_zone_geometry,
 )
+from schgen.generate.pcb.turn import turn_box
 
 _CHIRAL_PARTS = [
     "AP2112K-3.3TRG1",
@@ -246,9 +247,9 @@ def test_bottom_shape_carries_kicad_exact_mirror(zg_either_pair):
             assert bs.extra_rot[r] == (180.0 - s0.extra_rot.get(r, 0.0)) % 360.0
             ox, oy = s0.top_off[r]
             assert bs.top_off[r] == (round(bs.w - ox, 4), oy)
-            c0 = _rot_bbox_cw(zg.bbox_of[r], s0.extra_rot.get(r, 0.0))
+            c0 = turn_box(zg.bbox_of[r], s0.extra_rot.get(r, 0.0))
             b0 = (ox + c0[0], oy + c0[1], ox + c0[2], oy + c0[3])
-            cm = _rot_bbox_cw(_footprint_bbox(mp), bs.extra_rot[r])
+            cm = turn_box(_footprint_bbox(mp), bs.extra_rot[r])
             mx, my = bs.top_off[r]
             bm = (mx + cm[0], my + cm[1], mx + cm[2], my + cm[3])
             exp = (bs.w - b0[2], b0[1], bs.w - b0[0], b0[3])

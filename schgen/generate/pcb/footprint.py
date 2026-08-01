@@ -15,6 +15,15 @@ from .constants import (
     POWER_CLASS,
     _kicad_fp_root,
 )
+from .turn import pad_half_extent
+
+BBOX_DECIMALS = 3
+
+
+def pad_half_size(at: list, size: list) -> tuple[float, float]:
+    deg = (float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float))
+           else 0.0)
+    return pad_half_extent(float(size[1]), float(size[2]), deg)
 
 
 def resolve_mod(footprint: str) -> Path | None:
@@ -142,20 +151,20 @@ def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
                 size = sexpr.find(sub, "size")
                 if at and len(at) >= 3 and size and len(size) >= 3:
                     px, py = float(at[1]), float(at[2])
-                    sw, sh = float(size[1]) / 2, float(size[2]) / 2
-                    rot = int(float(at[3])) % 180 if len(at) > 3 else 0
-                    if rot == 90:
-                        sw, sh = sh, sw
-                    add(px - sw, py - sh)
-                    add(px + sw, py + sh)
+                    hx, hy = pad_half_size(at, size)
+                    add(px - hx, py - hy)
+                    add(px + hx, py + hy)
             else:
                 walk(sub)
 
     walk(doc)
     if not xs:
-        bbox = (-1.0, -1.0, 1.0, 1.0)
-    else:
-        bbox = (round(min(xs), 3), round(min(ys), 3),
-                round(max(xs), 3), round(max(ys), 3))
+        raise AssertionError(
+            f"{mod_path} carries neither a courtyard outline nor a single "
+            f"sized pad — it has no measurable extent, and every consumer of "
+            f"this bbox (courtyard, clearance, zone packing) would be reading "
+            f"invented geometry. Fix the footprint document.")
+    bbox = (round(min(xs), BBOX_DECIMALS), round(min(ys), BBOX_DECIMALS),
+            round(max(xs), BBOX_DECIMALS), round(max(ys), BBOX_DECIMALS))
     _bbox_cache[key] = bbox
     return bbox

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 from schgen.core import sexpr
@@ -14,6 +13,11 @@ from .constants import (
     PcbModel,
 )
 from .footprint import _footprint_bbox
+from .turn import pad_half_extent, turn_box, turn_point
+
+PAD_DECIMALS = 3
+COURTYARD_DECIMALS = 4
+DEFAULT_FACE = "+Y"
 
 
 def connector_edge_rotation(mating_face: str, edge: str) -> float:
@@ -21,30 +25,9 @@ def connector_edge_rotation(mating_face: str, edge: str) -> float:
 
 
 def _mating_face_out_dir(mating_face: str, rot: float) -> tuple[int, int]:
-    fx, fy = _FACE_VEC.get(mating_face, (0, 1))
-    r = int(round(rot)) % 360
-    import math as _m
-    a = _m.radians(r)
-    cs, sn = round(_m.cos(a)), round(_m.sin(a))
-    return (fx * cs + fy * sn, -fx * sn + fy * cs)
-
-
-def _rot_bbox(bbox: tuple[float, float, float, float],
-              rot: float) -> tuple[float, float, float, float]:
-    bx0, by0, bx1, by1 = bbox
-    r = int(round(rot)) % 360
-    if r == 90:
-        return (-by1, bx0, -by0, bx1)
-    if r == 180:
-        return (-bx1, -by1, -bx0, -by0)
-    if r == 270:
-        return (by0, -bx1, by1, -bx0)
-    return bbox
-
-
-def _rot_bbox_cw(bbox: tuple[float, float, float, float],
-                 rot: float) -> tuple[float, float, float, float]:
-    return _rot_bbox(bbox, (360.0 - (int(round(rot)) % 360)) % 360)
+    fx, fy = _FACE_VEC.get(mating_face, _FACE_VEC[DEFAULT_FACE])
+    ox, oy = turn_point(float(fx), float(fy), rot)
+    return (int(round(ox)), int(round(oy)))
 
 
 _PAD_ROW_CACHE: dict[str, tuple[tuple[str, float, float, float,
@@ -75,21 +58,13 @@ def _pad_rows(mod_path: Path) -> tuple[tuple[str, float, float, float,
     return _PAD_ROW_CACHE[key]
 
 
-# KiCad rotation is CLOCKWISE on the +y-DOWN page and a B.Cu footprint keeps its
-# local pad coords at load — no F->B X-mirror anywhere in this module.
 def _pad_boxes_local(mod_path: Path, rotation: float
                      ) -> list[tuple[str, float, float, float, float]]:
-    R = math.radians(rotation or 0.0)
-    cs, sn = math.cos(R), math.sin(R)
+    rot = rotation or 0.0
     out: list[tuple[str, float, float, float, float]] = []
     for ptype, px, py, prot_deg, sw, sh in _pad_rows(mod_path):
-        prot = math.radians(prot_deg)
-        cx = px * cs + py * sn
-        cy = -px * sn + py * cs
-        tot = R + prot
-        ct, st = abs(math.cos(tot)), abs(math.sin(tot))
-        hx = ct * sw / 2 + st * sh / 2
-        hy = st * sw / 2 + ct * sh / 2
+        cx, cy = turn_point(px, py, rot)
+        hx, hy = pad_half_extent(sw, sh, rot + prot_deg)
         out.append((ptype, cx - hx, cy - hy, cx + hx, cy + hy))
     return out
 
@@ -113,8 +88,7 @@ def _rot_pad_bbox(mod_path: Path,
 def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
     out: list[tuple[str, float, float, str]] = []
     doc = sexpr.loads(inst.mod_path.read_text())
-    rot = math.radians(inst.rotation or 0.0)
-    cs, sn = math.cos(rot), math.sin(rot)
+    rot = inst.rotation or 0.0
     for node in doc:
         if not (isinstance(node, list) and node and node[0] == Sym("pad")):
             continue
@@ -122,26 +96,29 @@ def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
         at = sexpr.find(node, "at")
         if not (at and len(at) >= 3):
             continue
-        px, py = float(at[1]), float(at[2])
-        rx = px * cs + py * sn
-        ry = -px * sn + py * cs
+        rx, ry = turn_point(float(at[1]), float(at[2]), rot)
         _num, nname = inst.pad_nets.get(name, (0, ""))
-        out.append((name, round(inst.x + rx, 3), round(inst.y + ry, 3), nname))
+        out.append((name, round(inst.x + rx, PAD_DECIMALS),
+                    round(inst.y + ry, PAD_DECIMALS), nname))
     return out
 
 
 def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
-    rb = _rot_bbox_cw(_footprint_bbox(inst.mod_path), inst.rotation or 0.0)
-    return (round(inst.x + rb[0], 4), round(inst.y + rb[1], 4),
-            round(inst.x + rb[2], 4), round(inst.y + rb[3], 4))
+    rb = turn_box(_footprint_bbox(inst.mod_path), inst.rotation or 0.0)
+    return (round(inst.x + rb[0], COURTYARD_DECIMALS),
+            round(inst.y + rb[1], COURTYARD_DECIMALS),
+            round(inst.x + rb[2], COURTYARD_DECIMALS),
+            round(inst.y + rb[3], COURTYARD_DECIMALS))
 
 
 def _inst_pad_bbox(inst: FootprintInst) -> tuple[float, float, float, float]:
     pb = _rot_pad_bbox(inst.mod_path, inst.rotation or 0.0)
     if pb is None:
         return _inst_courtyard(inst)
-    return (round(inst.x + pb[0], 3), round(inst.y + pb[1], 3),
-            round(inst.x + pb[2], 3), round(inst.y + pb[3], 3))
+    return (round(inst.x + pb[0], PAD_DECIMALS),
+            round(inst.y + pb[1], PAD_DECIMALS),
+            round(inst.x + pb[2], PAD_DECIMALS),
+            round(inst.y + pb[3], PAD_DECIMALS))
 
 
 def net_pad_positions(

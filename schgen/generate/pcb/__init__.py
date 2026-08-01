@@ -10,10 +10,11 @@ from . import footprint as _footprint
 from . import mating_face as _mating_face
 from . import placement as _placement
 from . import silk as _silk
+from . import turn as _turn
 
 # Dependency layering — a later submodule's name wins over an earlier one's.
-_submods = (_constants, _footprint, _mating_face, _placement, _embed, _silk,
-            _emit)
+_submods = (_turn, _constants, _footprint, _mating_face, _placement, _embed,
+            _silk, _emit)
 for _m in _submods:
     for _name in dir(_m):
         if _name.startswith("__"):

@@ -22,12 +22,12 @@ def test_edge_rotation_points_mouth_off_board():
 
 
 def test_mouth_oracle_uses_kicads_true_rotation_sign():
-    from schgen.generate.pcb.mating_face import _rot_bbox_cw
+    from schgen.generate.pcb.turn import turn_box
 
     for face, vec in pcb._FACE_VEC.items():
         for rot in (0.0, 90.0, 180.0, 270.0):
             v = (float(vec[0]), float(vec[1]))
-            rb = _rot_bbox_cw((v[0], v[1], v[0], v[1]), rot)
+            rb = turn_box((v[0], v[1], v[0], v[1]), rot)
             geo = (int(round(rb[0])), int(round(rb[1])))
             assert _mating_face_out_dir(face, rot) == geo, \
                 f"{face} at {rot}: oracle says {_mating_face_out_dir(face, rot)}" \
@@ -56,11 +56,11 @@ def _passing_model():
     bx0, by0 = ORIGIN_X, ORIGIN_Y
     _bx1, by1 = ORIGIN_X + W, ORIGIN_Y + H
     r_usbc = connector_edge_rotation(pcb.CONN_MATING_FACE["TYPE-C-31-M-12"], "N")
-    ub = pcb._rot_bbox(pcb._footprint_bbox(
+    ub = pcb.turn_box(pcb._footprint_bbox(
         pcb.resolve_mod("TYPE-C-31-M-12:TYPE-C-31-M-12")), r_usbc)
     j_usbc = _inst("J1", "TYPE-C-31-M-12", bx0 + 20, by0 - ub[1] + 0.1, r_usbc)
     r_sd = connector_edge_rotation(pcb.CONN_MATING_FACE["TF-01A"], "S")
-    sb = pcb._rot_bbox(pcb._footprint_bbox(
+    sb = pcb.turn_box(pcb._footprint_bbox(
         pcb.resolve_mod("TF-01A:TF-01A")), r_sd)
     j_sd = _inst("J2", "TF-01A", bx0 + 60, by1 - sb[3] - 0.1, r_sd)
     som_core = (bx0 + 40, by0 + 30, bx0 + 60, by0 + 50)

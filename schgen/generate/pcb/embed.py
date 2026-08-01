@@ -32,6 +32,12 @@ from .constants import (
     ZONE_MIN_THICKNESS,
     PcbModel,
 )
+from .footprint import pad_half_size
+from .turn import pad_half_extent, turn_point
+
+COPPER_DECIMALS = 4
+CORNER_DECIMALS = 3
+VIA_DECIMALS = 3
 
 
 def _flip_layer_token(name: str) -> str:
@@ -151,10 +157,7 @@ def _pad_geom(node: list) -> tuple[float, float, float, float] | None:
     size = sexpr.find(node, "size")
     if not (at and len(at) >= 3 and size and len(size) >= 3):
         return None
-    hw, hh = float(size[1]) / 2, float(size[2]) / 2
-    rot = int(float(at[3])) % 180 if len(at) > 3 else 0
-    if rot == 90:
-        hw, hh = hh, hw
+    hw, hh = pad_half_size(at, size)
     return float(at[1]), float(at[2]), hw, hh
 
 
@@ -354,18 +357,17 @@ def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
 def _corners_rot(rect: tuple[float, float, float, float], inst,
                  model: PcbModel) -> list[tuple[float, float]]:
     x0, y0, x1, y1 = rect
-    r = math.radians(inst.rotation or 0.0)
-    cs, sn = math.cos(r), math.sin(r)
+    rot = inst.rotation or 0.0
     lo_x = ORIGIN_X + GND_PLANE_EDGE_BACK
     lo_y = ORIGIN_Y + GND_PLANE_EDGE_BACK
     hi_x = ORIGIN_X + model.board_w - GND_PLANE_EDGE_BACK
     hi_y = ORIGIN_Y + model.board_h - GND_PLANE_EDGE_BACK
     out: list[tuple[float, float]] = []
     for px, py in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)):
-        bx = inst.x + px * cs + py * sn
-        by = inst.y - px * sn + py * cs
-        out.append((round(min(max(bx, lo_x), hi_x), 3),
-                    round(min(max(by, lo_y), hi_y), 3)))
+        tx, ty = turn_point(px, py, rot)
+        bx, by = inst.x + tx, inst.y + ty
+        out.append((round(min(max(bx, lo_x), hi_x), CORNER_DECIMALS),
+                    round(min(max(by, lo_y), hi_y), CORNER_DECIMALS)))
     return out
 
 
@@ -466,19 +468,14 @@ def _mod_pads(mod_path) -> list[tuple[str, float, float, float, float, float, fl
 
 
 def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float, str]]:
-    r = math.radians(inst.rotation or 0.0)
-    cs, sn = math.cos(r), math.sin(r)
+    rot = inst.rotation or 0.0
     out: list[tuple[float, float, float, float, str, float, str]] = []
     for name, px, py, prot, sw, sh, drill in _mod_pads(inst.mod_path):
-        pr = math.radians(prot)
-        cx = inst.x + px * cs + py * sn
-        cy = inst.y - px * sn + py * cs
-        tot = r + pr
-        ct, st = abs(math.cos(tot)), abs(math.sin(tot))
-        hx = ct * sw / 2 + st * sh / 2
-        hy = st * sw / 2 + ct * sh / 2
+        tx, ty = turn_point(px, py, rot)
+        hx, hy = pad_half_extent(sw, sh, rot + prot)
         nname = inst.pad_nets.get(name, (0, ""))[1]
-        out.append((round(cx, 4), round(cy, 4), hx, hy, nname, drill,
+        out.append((round(inst.x + tx, COPPER_DECIMALS),
+                    round(inst.y + ty, COPPER_DECIMALS), hx, hy, nname, drill,
                     f"{inst.ref}.{name}"))
     return out
 
@@ -616,8 +613,7 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
             zone_geom.append((layer, corners, z))
         reach = max(abs(v) for site in spec["via_sites"] for v in site) + 20.0
         obstacles = _via_obstacles(model, inst, reach)
-        r = math.radians(inst.rotation or 0.0)
-        cs, sn = math.cos(r), math.sin(r)
+        rot = inst.rotation or 0.0
         chosen: list[tuple[float, float]] = []
         vetoes: dict[str, int] = {}
         n_curated = len(spec["via_sites"])
@@ -626,8 +622,9 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
         for ci, (sx, sy) in enumerate(candidates):
             if len(chosen) >= spec["max_vias"]:
                 break
-            vx = round(inst.x + sx * cs + sy * sn, 3)
-            vy = round(inst.y - sx * sn + sy * cs, 3)
+            tx, ty = turn_point(sx, sy, rot)
+            vx = round(inst.x + tx, VIA_DECIMALS)
+            vy = round(inst.y + ty, VIA_DECIMALS)
             veto = _via_site_blocker(vx, vy, model, obstacles, placed + chosen)
             if veto is None:
                 chosen.append((vx, vy))
