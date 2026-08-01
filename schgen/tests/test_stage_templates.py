@@ -156,12 +156,12 @@ def test_all_contract_members_are_top_side(_power_inputs):
 def test_no_courtyard_overlap_in_zone(_power_inputs):
     (top_off, bot_off, _zw, _zh), rot, _side = _run_template(_power_inputs)
     _refs, _side_in, bbox_of, resolvable = _power_inputs
-    from schgen.generate.pcb.mating_face import _rot_bbox_cw
+    from schgen.generate.pcb.turn import turn_box
 
     for off in (top_off, bot_off):
         boxes: list[tuple[str, tuple[float, float, float, float]]] = []
         for ref, (ox, oy) in off.items():
-            rb = _rot_bbox_cw(bbox_of[ref], rot.get(ref, 0.0))
+            rb = turn_box(bbox_of[ref], rot.get(ref, 0.0))
             boxes.append((ref, (ox + rb[0], oy + rb[1], ox + rb[2], oy + rb[3])))
         halo = PLACE_CLEAR / 2.0
         for i in range(len(boxes)):

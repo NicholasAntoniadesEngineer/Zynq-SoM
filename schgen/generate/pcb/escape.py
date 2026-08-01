@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -23,6 +24,11 @@ from .constants import CLR_HOLE_SAMENET_PAD  # noqa: E402
 
 CLR_TRACK_FOREIGN = 0.15
 CLR_EDGE = 0.30
+CLR_VIA_ROW = 0.15
+COEX_MARGIN = 0.50
+
+# EasyEDA exports on a 1e-4 grid: measured DF40 column gaps stray 2e-4 from pitch
+PITCH_TOL_MM = 0.001
 
 SPINE_W = 0.30
 STUB_W_PAIR = 0.30
@@ -40,6 +46,47 @@ _SHEET2REF = {"som_j1": "J1", "som_j2": "J2", "som_j3": "J3"}
 
 class EscapeError(RuntimeError):
     pass
+
+
+@dataclass(frozen=True)
+class _Contacts:
+    row_v: float
+    half_w: float
+    half_h: float
+    span_u: float
+    pitch: float
+
+
+def _contact_geometry(mod_path: Path) -> _Contacts:
+    from schgen.core import sexpr
+    from schgen.core.sexpr import Sym
+
+    pads: list[tuple[float, float, float, float]] = []
+    for node in sexpr.loads(mod_path.read_text()):
+        if not (isinstance(node, list) and node and node[0] == Sym("pad")):
+            continue
+        body = {str(s[0]): s[1:] for s in node[3:] if isinstance(s, list) and s}
+        at, size = body.get("at"), body.get("size")
+        if at is None or size is None:
+            raise EscapeError(f"{mod_path.name} pad {node[1]}: no at/size — "
+                              f"contact geometry underivable")
+        pads.append((float(at[0]), float(at[1]),
+                     float(size[0]), float(size[1])))
+    if not pads:
+        raise EscapeError(f"{mod_path.name}: no pads — contact geometry "
+                          f"underivable")
+    tally = Counter((w, h) for _u, _v, w, h in pads)
+    w, h = min(tally, key=lambda s: (-tally[s], s))
+    contacts = [(u, v) for u, v, pw, ph in pads if (pw, ph) == (w, h)]
+    cols = sorted({round(u, 4) for u, _v in contacts})
+    gaps = sorted(b - a for a, b in zip(cols, cols[1:], strict=False))
+    if not gaps:
+        raise EscapeError(f"{mod_path.name}: {len(cols)} contact column(s) — "
+                          f"pitch underivable")
+    return _Contacts(row_v=max(abs(v) for _u, v in contacts),
+                     half_w=w / 2, half_h=h / 2,
+                     span_u=max(abs(u) for u, _v, _w, _h in pads),
+                     pitch=gaps[len(gaps) // 2])
 
 
 def _canonical_plane(model) -> tuple[tuple, list[tuple]]:
@@ -247,7 +294,7 @@ def _via_feasible(u: float, v: float, dia: float, drill: float,
     return True
 
 
-def _seat_band(members: list[_Member], obs: _Obstacles, v_rows: float,
+def _seat_band(members: list[_Member], obs: _Obstacles, contacts: _Contacts,
                ledger: list[dict], conn: str, depth: int = 0,
                ) -> list[dict]:
     us = sorted({m.u for m in members})
@@ -257,8 +304,8 @@ def _seat_band(members: list[_Member], obs: _Obstacles, v_rows: float,
 
     for dia, drill in VIA_LADDER:
         rv = dia / 2
-        v_max = 1.025 - rv - 0.15
-        reach = math.sqrt(max(R_CONSTRUCT ** 2 - v_rows ** 2, 0.0))
+        v_max = contacts.row_v - contacts.half_h - rv - CLR_VIA_ROW
+        reach = math.sqrt(max(R_CONSTRUCT ** 2 - contacts.row_v ** 2, 0.0))
         lo = u_last - reach
         hi = u_first + reach
         i0 = math.ceil(lo / LATTICE_MM - 1e-9)
@@ -293,8 +340,8 @@ def _seat_band(members: list[_Member], obs: _Obstacles, v_rows: float,
                        "members": [m.pad for m in members], "depth": depth})
         left = [m for m in members if m.u < cut]
         right = [m for m in members if m.u > cut]
-        return (_seat_band(left, obs, v_rows, ledger, conn, depth + 1)
-                + _seat_band(right, obs, v_rows, ledger, conn, depth + 1))
+        return (_seat_band(left, obs, contacts, ledger, conn, depth + 1)
+                + _seat_band(right, obs, contacts, ledger, conn, depth + 1))
 
     rows = sorted({m.v for m in members})
     if len(rows) > 1:
@@ -303,7 +350,7 @@ def _seat_band(members: list[_Member], obs: _Obstacles, v_rows: float,
         out: list[dict] = []
         for rv_ in rows:
             sub = [m for m in members if m.v == rv_]
-            out += _seat_band(sub, obs, abs(rv_), ledger, conn, depth + 1)
+            out += _seat_band(sub, obs, contacts, ledger, conn, depth + 1)
         return out
 
     raise EscapeError(
@@ -402,7 +449,7 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
 
     band_jobs: list[tuple[int, str, float, list[_Member]]] = []
     obstacles: dict[str, _Obstacles] = {}
-    v_rows_by_conn: dict[str, float] = {}
+    contacts_by_conn: dict[str, _Contacts] = {}
     for ref in sorted(failing):
         inst = conns[ref]
         pads_local = rpg._parse_pad_positions(inst.mod_path)
@@ -415,9 +462,9 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
             triage_table[f"{ref}.{viol.pad}"] = {
                 "net": viol.net, "function": kl.function, "class": kl.klass,
                 "basis": kl.basis}
-        v_rows = max(abs(m.v) for m in members)
-        v_rows_by_conn[ref] = v_rows
-        reach = math.sqrt(max(R_CONSTRUCT ** 2 - v_rows ** 2, 0.0))
+        contacts = _contact_geometry(inst.mod_path)
+        contacts_by_conn[ref] = contacts
+        reach = math.sqrt(max(R_CONSTRUCT ** 2 - contacts.row_v ** 2, 0.0))
         pts = [(m.u, m.pad) for m in members]
         by_pad = {m.pad: m for m in members}
         us = sorted({round(x, 3) for x, _ in pts})
@@ -431,7 +478,7 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
 
     for _rank, ref, _u_first, bm in sorted(
             band_jobs, key=lambda j: (j[0], j[1], j[2])):
-        seats = _seat_band(bm, obstacles[ref], v_rows_by_conn[ref], ledger,
+        seats = _seat_band(bm, obstacles[ref], contacts_by_conn[ref], ledger,
                            ref)
         for s in seats:
             s["conn"] = ref
@@ -476,6 +523,7 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
     for ref, vias in sorted(vias_by_conn.items()):
         inst = conns[ref]
         pads_local = rpg._parse_pad_positions(inst.mod_path)
+        contacts = _contact_geometry(inst.mod_path)
         gnd_pads = sorted(
             (round(pads_local[p][0], 4), round(pads_local[p][1], 4), p)
             for p, (num, name) in inst.pad_nets.items()
@@ -484,14 +532,14 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
         for u, v, _p in gnd_pads:
             cols.setdefault(u, set()).add(v)
         both_rows = sorted(u for u, vs in cols.items() if len(vs) >= 2)
-        pair_gaps = [round((a + b) / 2, 4)
-                     for a, b in zip(both_rows, both_rows[1:], strict=False)
-                     if abs(b - a - 0.4) < 1e-6]
+        adjacent = [(a, b)
+                    for a, b in zip(both_rows, both_rows[1:], strict=False)
+                    if abs(b - a - contacts.pitch) < PITCH_TOL_MM]
         attaches: list[tuple[float, str, object]] = []
         used_cols: set[float] = set()
-        for g in pair_gaps:
-            attaches.append((g, "pair", g))
-            used_cols.update({round(g - 0.2, 4), round(g + 0.2, 4)})
+        for a, b in adjacent:
+            attaches.append((round((a + b) / 2, 4), "pair", (a, b)))
+            used_cols.update((a, b))
         for u in both_rows:
             if u not in used_cols:
                 attaches.append((u, "column", u))
@@ -522,21 +570,18 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
         stub_segs: list[dict] = []
         for u, kind, payload in needed:
             if kind == "pair":
-                stub_segs.append({"a": (u, -1.355), "b": (u, 1.355),
+                stub_segs.append({"a": (u, -contacts.row_v),
+                                  "b": (u, contacts.row_v),
                                   "w": STUB_W_PAIR, "role": "stub_pair"})
             elif kind == "column":
-                stub_segs.append({"a": (u, -1.355), "b": (u, 1.355),
+                stub_segs.append({"a": (u, -contacts.row_v),
+                                  "b": (u, contacts.row_v),
                                   "w": STUB_W_SINGLE, "role": "stub_column"})
             else:
                 pu, pv, _p = payload
-                stub_segs.append({"a": (pu, pv), "b": (pu, 0.0),
+                stub_segs.append({"a": (pu, math.copysign(contacts.row_v, pv)),
+                                  "b": (pu, 0.0),
                                   "w": STUB_W_SINGLE, "role": "stub_pad"})
-        row_v = max(abs(v) for _u, v, _p in gnd_pads) if gnd_pads else 1.355
-        for sseg in stub_segs:
-            sseg["a"] = (sseg["a"][0], math.copysign(row_v, sseg["a"][1])
-                         if sseg["a"][1] else 0.0)
-            sseg["b"] = (sseg["b"][0], math.copysign(row_v, sseg["b"][1])
-                         if sseg["b"][1] else 0.0)
         for s in vias:
             if abs(s["v"]) > 1e-9:
                 stub_segs.append({"a": (s["u"], 0.0), "b": (s["u"], s["v"]),
@@ -624,6 +669,7 @@ def _self_check(conns, vias_by_conn, ladder_segs, zone, gnd_num) -> None:
     for ref in sorted(vias_by_conn):
         inst = conns[ref]
         pads_local = rpg._parse_pad_positions(inst.mod_path)
+        contacts = _contact_geometry(inst.mod_path)
         gnd_pads = [(round(pads_local[p][0], 4), round(pads_local[p][1], 4), p)
                     for p, (num, name) in inst.pad_nets.items()
                     if num > 0 and name == "GND" and p in pads_local]
@@ -643,6 +689,10 @@ def _self_check(conns, vias_by_conn, ladder_segs, zone, gnd_num) -> None:
         def union(i, j, parent=parent):
             parent[find(i)] = find(j)
 
+        def pad_box(vb, g=contacts):
+            pu, pv, _ = vb
+            return (pu - g.half_w, pv - g.half_h, pu + g.half_w, pv + g.half_h)
+
         def touches(a, b) -> bool:
             ka, va = a
             kb, vb = b
@@ -657,13 +707,11 @@ def _self_check(conns, vias_by_conn, ladder_segs, zone, gnd_num) -> None:
                                       (vb["u"], vb["v"], vb["u"], vb["v"]))
                         <= va["w"] / 2 + vb["dia"] / 2 + 1e-9)
             if ka == "seg" and kb == "pad":
-                pu, pv, _ = vb
-                box = (pu - 0.1, pv - 0.33, pu + 0.1, pv + 0.33)
-                return _seg_box_dist(va["a"], va["b"], box) <= va["w"] / 2 + 1e-9
+                return (_seg_box_dist(va["a"], va["b"], pad_box(vb))
+                        <= va["w"] / 2 + 1e-9)
             if ka == "via" and kb == "pad":
-                pu, pv, _ = vb
-                box = (pu - 0.1, pv - 0.33, pu + 0.1, pv + 0.33)
-                return _box_dist(va["u"], va["v"], box) <= va["dia"] / 2 + 1e-9
+                return (_box_dist(va["u"], va["v"], pad_box(vb))
+                        <= va["dia"] / 2 + 1e-9)
             if ka == "via" and kb == "via":
                 return (math.hypot(va["u"] - vb["u"], va["v"] - vb["v"])
                         <= (va["dia"] + vb["dia"]) / 2 + 1e-9)
@@ -704,7 +752,10 @@ def _coexistence(model, conns, ledger) -> list[dict]:
     escal_conns = {e["conn"] for e in ledger
                    if e["kind"] in ("split_u", "split_row")}
     for ref, inst in sorted(conns.items()):
-        region_v = 1.685 + LANE_HANDLE + 0.5
+        contacts = _contact_geometry(inst.mod_path)
+        region_u = contacts.span_u + COEX_MARGIN
+        region_v = (contacts.row_v + contacts.half_h + LANE_HANDLE
+                    + COEX_MARGIN)
         for oi in sorted(model.insts, key=lambda i: i.ref):
             if oi.side != "bottom" or oi.ref == inst.ref:
                 continue
@@ -715,7 +766,7 @@ def _coexistence(model, conns, ledger) -> list[dict]:
                       for y in (bb[1], bb[3])]
                 xs = [p[0] for p in cs]
                 ys = [p[1] for p in cs]
-                if (max(xs) >= -10.765 and min(xs) <= 10.765
+                if (max(xs) >= -region_u and min(xs) <= region_u
                         and max(ys) >= -region_v and min(ys) <= region_v):
                     hit = True
                     break
@@ -769,7 +820,8 @@ def build_escape_plan(model) -> dict:
     corridors: dict[str, dict] = {}
     for ref, inst in sorted(conns.items()):
         pads_local = rpg._parse_pad_positions(inst.mod_path)
-        pad_outer_tip = max(abs(v) for _u, v in pads_local.values()) + 0.33
+        contacts = _contact_geometry(inst.mod_path)
+        pad_outer_tip = contacts.row_v + contacts.half_h
         escape_v = pad_outer_tip + LANE_HANDLE
         rows: dict[int, list] = {}
         n_netted = 0

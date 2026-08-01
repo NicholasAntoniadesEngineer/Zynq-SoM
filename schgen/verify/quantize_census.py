@@ -22,6 +22,7 @@ GEOMETRY_FILES: tuple[str, ...] = (
     "pcb/emit.py",
     "pcb/footprint.py",
     "pcb/mating_face.py",
+    "pcb/turn.py",
     "pcb/constants.py",
     "pcb/stages.py",
 )

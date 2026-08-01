@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 import math
+from pathlib import Path
 
 import pytest
 
@@ -10,6 +11,10 @@ from schgen.generate.pcb import escape
 from schgen.generate.pcb.emit import emit_pcb
 from schgen.verify import escape_lane_gate as elg
 from schgen.verify import return_stitch_gate as rsg
+
+_DP = "DF40C-100DP-0.4V_51"
+_DP_CONTACTS = escape._contact_geometry(
+    Path(__file__).resolve().parents[2] / "parts" / _DP / f"{_DP}.kicad_mod")
 
 
 @pytest.fixture(scope="module")
@@ -241,7 +246,7 @@ def test_band_cover_tiebreak_deterministic():
 def test_seat_band_prefers_on_axis():
     m = escape._Member(pad="1", net="X", u=0.4, v=-1.355, klass="LOW")
     obs = escape._Obstacles()
-    seats = escape._seat_band([m], obs, 1.355, [], "JX")
+    seats = escape._seat_band([m], obs, _DP_CONTACTS, [], "JX")
     assert len(seats) == 1
     assert seats[0]["v"] == 0.0 and abs(seats[0]["u"] - 0.4) < 1e-9
     assert (seats[0]["dia"], seats[0]["drill"]) == escape.VIA_LADDER[0]
@@ -251,7 +256,7 @@ def test_seat_band_obstacle_accumulation_hole_to_hole():
     m = escape._Member(pad="1", net="X", u=0.0, v=-1.355, klass="LOW")
     obs = escape._Obstacles()
     obs.holes.append((0.0, 0.0, 0.15, "prior-via"))
-    seats = escape._seat_band([m], obs, 1.355, [], "JX")
+    seats = escape._seat_band([m], obs, _DP_CONTACTS, [], "JX")
     (s,) = seats
     d = math.hypot(s["u"], s["v"])
     assert d >= 0.5 + 0.15 + s["drill"] / 2 - 1e-9
@@ -262,7 +267,7 @@ def test_seat_band_blocked_channel_raises_with_audit():
     obs = escape._Obstacles()
     obs.b_cu.append((-5.0, -5.0, 5.0, 5.0, 0.15, "WALL(everything).1"))
     with pytest.raises(escape.EscapeError) as exc:
-        escape._seat_band([m], obs, 1.355, [], "JX")
+        escape._seat_band([m], obs, _DP_CONTACTS, [], "JX")
     assert "WALL" in str(exc.value)
     assert "bottom-channel-keepout" in str(exc.value)
 

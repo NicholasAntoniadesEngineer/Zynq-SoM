@@ -17,8 +17,9 @@ from schgen.verify.fanout_gate import (
 from .constants import CONN_MATING_FACE, EDGE_PAD_CLEAR, TEMPLATE_CLEAR, ZONE_PAD
 from .footprint import _footprint_bbox
 from .footprint import has_thru_pads as _has_thru_pads
-from .mating_face import _rot_bbox_cw, _rot_pad_bbox, connector_edge_rotation
+from .mating_face import _rot_pad_bbox, connector_edge_rotation
 from .placement import _shelf_pack
+from .turn import turn_box
 
 _IND_BODY_GAP = 1.0
 _LDO_GAP = 0.6
@@ -48,7 +49,7 @@ class _Part:
                 for n, b in rel.items()}
 
     def local_box(self) -> tuple[float, float, float, float]:
-        rb = _rot_bbox_cw(_footprint_bbox(self.mod), self.rot)
+        rb = turn_box(_footprint_bbox(self.mod), self.rot)
         return (self.ox + rb[0], self.oy + rb[1], self.ox + rb[2], self.oy + rb[3])
 
 
@@ -59,7 +60,7 @@ def _pad_half(mod: Path) -> tuple[float, float]:
 
 
 def _crtyd_half(mod: Path, rot: float) -> tuple[float, float]:
-    rb = _rot_bbox_cw(_footprint_bbox(mod), rot)
+    rb = turn_box(_footprint_bbox(mod), rot)
     return (rb[2] - rb[0]) / 2.0, (rb[3] - rb[1]) / 2.0
 
 
@@ -929,7 +930,7 @@ def _gc_scan_fast(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
     scored: list[tuple[float, float, float, float, _Part]] = []
     for rot in rots:
         rel = rel_pads[rot]
-        rb0, rb1, rb2, rb3 = _rot_bbox_cw(_footprint_bbox(mod), rot)
+        rb0, rb1, rb2, rb3 = turn_box(_footprint_bbox(mod), rot)
         ru = _gc_union(rel)
         ru0 = ru1 = ru2 = ru3 = 0.0
         if ru is not None:
