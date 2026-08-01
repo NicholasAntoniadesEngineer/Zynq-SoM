@@ -353,6 +353,13 @@ def cmd_nets(args: argparse.Namespace) -> int:
     return 0
 
 
+def _fallback_ceiling(rep_dir: Path, name: str) -> int:
+    path = rep_dir / "fallback_baseline.json"
+    if not path.exists():
+        return -1
+    return int(json.loads(path.read_text()).get("counts", {}).get(name, 0))
+
+
 def cmd_board(args: argparse.Namespace) -> int:
     import tempfile
 
@@ -374,6 +381,11 @@ def cmd_board(args: argparse.Namespace) -> int:
     for d in (sch_dir, ren_dir, rep_dir, man_dir):
         d.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(prefix="schgen_board_"))
+
+    from schgen.core import ledger as _led
+    from schgen.core import quantize as _quant
+    _led.reset()
+    _quant.reset_engagements()
 
     names = [p.stem for p in all_subsystem_paths()]
     sheets = []
@@ -467,6 +479,12 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(verdicts[-1])
         sheets.append(sc)
 
+    with _led.step("netlist"):
+        _n_somj = sum(1 for sc in sheets if sc.name.startswith("som_j"))
+        _n_dec = sum(1 for sc in sheets if sc.name == "som_decoupling")
+        _led.calc("sheet_census", len(sheets) - _n_somj - _n_dec,
+                  n_sheets=len(sheets), n_som_j=_n_somj, n_decoupling=_n_dec)
+
     from schgen.verify import cc_gate
     cc_prepared = [(name, c, placements[name][0], placements[name][1])
                    for (name, sc, c, _sch, _vis, _paper) in prepared
@@ -491,6 +509,16 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     som_nets = load_som_contract()
     res = link(sheets, som_nets)
+    with _led.step("link"):
+        _sheet_nets = {n for sc in sheets for n in sc.circuit.nets}
+        _multi: dict[str, int] = {}
+        for sc in sheets:
+            for n in sc.circuit.nets:
+                _multi[n] = _multi.get(n, 0) + 1
+        _led.calc("board_net_census", len(_sheet_nets | set(som_nets)),
+                  n_sheet_nets=len(_sheet_nets),
+                  n_som_contract_nets=len(som_nets),
+                  n_cross_sheet=sum(1 for v in _multi.values() if v >= 2))
     (rep_dir / "link_report.txt").write_text(res.report() + "\n")
     print(f"LINK: {'PASS' if res.ok else 'FAIL'} "
           f"({len(res.errors)} errors, {len(res.warnings)} warnings)")
@@ -1035,9 +1063,24 @@ def cmd_board(args: argparse.Namespace) -> int:
         print(f"  FAB PROFILE ERROR: {e}")
     ok_all = ok_all and fab_res.ok
 
+    _rg = pcb_res.get("ratsnest_gate") if isinstance(pcb_res, dict) else None
+    _fo = pcb_res.get("fanout") if isinstance(pcb_res, dict) else None
+    if _rg is not None and _fo is not None:
+        with _led.step("gates"):
+            _led.calc("law5_airwire_measured", round(_rg.cross_mm, 1),
+                      cross_mm=round(_rg.cross_mm, 1),
+                      budget_mm=round(_rg.cross_budget_mm, 1),
+                      headroom_mm=round(_rg.cross_budget_mm - _rg.cross_mm, 1),
+                      n_cross=_rg.n_cross, n_subsystems=_rg.n_subsystems,
+                      board_w=pcb_res["board_w"], board_h=pcb_res["board_h"])
+            _led.calc("fanout_d13_gate", _fo.n_subjects,
+                      n_subjects=_fo.n_subjects, n_starved=_fo.n_starved,
+                      baseline=(-1 if _fo.baseline is None else _fo.baseline))
+
     from schgen.generate import floorplan
     try:
-        fp_paths = floorplan.generate(sheets, res)
+        with _led.step("docs.floorplan"):
+            fp_paths = floorplan.generate(sheets, res)
         print("FLOORPLAN: " + " + ".join(
             str(p.relative_to(REPO_ROOT)) for p in fp_paths)
             + " (suggestion, not constraint)")
@@ -1197,6 +1240,38 @@ def cmd_board(args: argparse.Namespace) -> int:
             json.dumps(_verd, indent=1, default=str, sort_keys=True) + "\n")
         print(f"VERDICTS: {rep_dir / 'board_verdicts.json'} "
               f"({len(_verd)} gates, machine-readable)")
+
+    _fbcensus = _fbmod.census()
+    _qcensus = _quant.engagements()
+    with _led.step("census"):
+        for _name, _n in sorted(_qcensus.items()):
+            if not _n:
+                continue
+            _qd = _quant.REGISTRY[_name]
+            _led.calc("quantize_engagement", _n, label=_name, klass=_qd.klass,
+                      value=_qd.value.split("\n")[0][:60])
+        for _name, _n in sorted(_fbcensus.items()):
+            if not _n:
+                continue
+            _led.calc("fallback_engagement", _n, label=_name,
+                      stage=_fbmod.REGISTRY[_name].stage,
+                      ceiling=_fallback_ceiling(rep_dir, _name))
+        _led.calc("register_silence",
+                  sum(1 for _v in _qcensus.values() if not _v)
+                  + sum(1 for _v in _fbcensus.values() if not _v),
+                  quantize_registered=len(_qcensus),
+                  quantize_engaged=sum(1 for _v in _qcensus.values() if _v),
+                  fallback_registered=len(_fbcensus),
+                  fallback_fired=sum(1 for _v in _fbcensus.values() if _v))
+
+    from schgen.verify import ledger_gate
+    lg_res = ledger_gate.check()
+    _ledger_path = rep_dir / "build_ledger.txt"
+    _ledger_path.write_text(_led.render() + "\n")
+    print()
+    print(_led.render())
+    print(lg_res.summary() + f" -> {_ledger_path}")
+    ok_all = ok_all and lg_res.ok
 
     print(f"BOARD: {'PASS' if ok_all else 'FAIL'} "
           f"({len(sheets)} sheets -> {CARRIER / 'Zynq_Carrier.kicad_pro'})")

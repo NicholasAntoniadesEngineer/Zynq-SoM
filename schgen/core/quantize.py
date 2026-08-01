@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass
 
 GRID_MM = 1.27
@@ -27,6 +28,31 @@ REGISTRY: dict[str, Quantization] = {}
 
 _CLASSES = ("pre-proof", "proof-preserving", "re-validated")
 
+_LOCAL = threading.local()
+_TALLIES: list[dict[str, int]] = []
+
+
+def _bump(name: str) -> None:
+    counts = getattr(_LOCAL, "counts", None)
+    if counts is None:
+        counts = {}
+        _LOCAL.counts = counts
+        _TALLIES.append(counts)
+    counts[name] = counts.get(name, 0) + 1
+
+
+def engagements() -> dict[str, int]:
+    out = dict.fromkeys(sorted(REGISTRY), 0)
+    for tally in _TALLIES:
+        for name, n in tally.items():
+            out[name] += n
+    return out
+
+
+def reset_engagements() -> None:
+    for tally in _TALLIES:
+        tally.clear()
+
 
 def _register(name: str, value: str, basis: str, klass: str) -> None:
     if klass not in _CLASSES:
@@ -50,6 +76,7 @@ _register(
 
 
 def fixed_part_grid(v: float) -> float:
+    _bump("fixed_part_grid")
     return round(round(v / GRID_MM) * GRID_MM, 4)
 
 
@@ -67,6 +94,7 @@ _register(
 
 
 def evict_corridor_grid(origin: float, v: float) -> float:
+    _bump("evict_corridor_grid")
     return round(fixed_part_grid(origin + v) - origin, 4)
 
 
@@ -83,6 +111,7 @@ _register(
 
 
 def breathe_anchor_grid(v: float) -> float:
+    _bump("breathe_anchor_grid")
     return round(round(v / GRID_MM) * GRID_MM, 4)
 
 
@@ -95,6 +124,7 @@ _register(
 
 
 def som_pose_half_mm(v: float) -> float:
+    _bump("som_pose_half_mm")
     return round(round(v * 2) / 2, 1)
 
 
@@ -108,6 +138,7 @@ _register(
 
 
 def placeholder_zone_half_mm(v: float) -> float:
+    _bump("placeholder_zone_half_mm")
     return round(round(v * 2) / 2, 1)
 
 
@@ -121,6 +152,7 @@ _register(
 
 
 def quant_credit(v: float) -> float:
+    _bump("quant_credit")
     return v + CREDIT_MM
 
 
@@ -146,6 +178,7 @@ _register(
 
 
 def snap_erosion_bound(bound: float) -> float:
+    _bump("snap_erosion_bound")
     return bound - SNAP_EROSION_MM if bound >= 5.0 else bound
 
 
@@ -160,6 +193,7 @@ _register(
 
 
 def snap_erosion_pad(mm: float) -> float:
+    _bump("snap_erosion_pad")
     return mm + (SNAP_EROSION_MM if mm >= 5.0 else 0.0)
 
 
@@ -175,6 +209,7 @@ _register(
 
 
 def seat_slide() -> float:
+    _bump("seat_slide")
     return SEAT_SLIDE_MM
 
 
@@ -191,6 +226,7 @@ _register(
 
 
 def run_overflow_tol() -> float:
+    _bump("run_overflow_tol")
     return 0.1
 
 
@@ -270,6 +306,7 @@ _register(
 
 
 def est_via_cost(impedance_controlled: bool) -> float:
+    _bump("est_via_cost")
     return EST_VIA_COST_MM["impedance" if impedance_controlled
                            else "ordinary"]
 
@@ -285,6 +322,7 @@ _register(
 
 
 def legalize_pose_quantum(v: float) -> float:
+    _bump("legalize_pose_quantum")
     return round(round(v / HALF_MM) * HALF_MM, 4)
 
 
@@ -297,6 +335,7 @@ _register(
 
 
 def outline_snap_up(v: float) -> float:
+    _bump("outline_snap_up")
     n = int((v + OUTLINE_SNAP_MM - 1e-6) / OUTLINE_SNAP_MM)
     return round(n * OUTLINE_SNAP_MM, 1)
 
@@ -310,6 +349,7 @@ _register(
 
 
 def outline_grow(k: int) -> float:
+    _bump("outline_grow_step")
     return k * OUTLINE_SNAP_MM
 
 
@@ -324,6 +364,7 @@ _register(
 
 
 def fine_shrink(base: float, k: int) -> float:
+    _bump("outline_fine_grid")
     return round(base - k * FINE_SNAP_MM, 1)
 
 

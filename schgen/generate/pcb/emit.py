@@ -465,16 +465,22 @@ def write_dru(model: PcbModel, dru_path: Path) -> None:
 
 def generate(*, run_drc: bool = True, two_side: bool = True,
              ratsnest: bool = True) -> dict:
+    from schgen.core import ledger as _led
     model = build_model(two_side=two_side)
 
-    pcb_path = CARRIER / "Zynq_Carrier.kicad_pcb"
-    emit_pcb(model, pcb_path)
+    with _led.step("pcb.emission"):
+        pcb_path = CARRIER / "Zynq_Carrier.kicad_pcb"
+        emit_pcb(model, pcb_path)
 
-    pro_path = CARRIER / "Zynq_Carrier.kicad_pro"
-    write_project(model, pro_path)
+        pro_path = CARRIER / "Zynq_Carrier.kicad_pro"
+        write_project(model, pro_path)
 
-    dru_path = CARRIER / "manufacturing" / "Zynq_Carrier_pcb.kicad_dru"
-    write_dru(model, dru_path)
+        dru_path = CARRIER / "manufacturing" / "Zynq_Carrier_pcb.kicad_dru"
+        write_dru(model, dru_path)
+        _led.calc("board_emission", model.placed, board_w=model.board_w,
+                  board_h=model.board_h, placed=model.placed,
+                  n_top=model.n_top, n_bottom=model.n_bottom,
+                  nets=len([n for n in model.net_numbers if n]))
 
     n_fid = sum(1 for i in model.insts
                 if i.footprint == FIDUCIAL_FOOTPRINT)

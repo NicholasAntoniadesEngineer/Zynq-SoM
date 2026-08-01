@@ -1,0 +1,157 @@
+STEP   netlist
+  ASSUME schematic_char_width           = 0.95          mm/char    [policy] config.CHAR_W — symbol-text advance used by the schematic placer
+  ASSUME schematic_overlap_max          = 0.2           mm         [policy] config.MISPLACED_OVERLAP — largest symbol-body overlap the schematic gate tolerates
+  ASSUME schematic_clearance            = 0.2           mm         [policy] config.VISUAL_CLEARANCE_MM — wire-to-body clearance the visual gate enforces
+  ASSUME route_factor                   = 3.5           x          [policy] floorplan.ROUTE_FACTOR — small-part area inflation that turns schematic area into zone area
+  ASSUME big_part_area                  = 40            mm^2       [policy] floorplan.BIG_PART_MM2 — footprint area above which route_factor no longer inflates
+  CALC   sheet_census                   = 8             sheets     <- n_sheets=12 n_som_j=3 n_decoupling=1  ::  n_sheets - n_som_j - n_decoupling
+STEP   link
+  CALC   board_net_census               = 277           nets       <- n_sheet_nets=266 n_som_contract_nets=213 n_cross_sheet=35  ::  len(union(sheet nets, som contract nets))
+STEP   floorplan.sizing
+  ASSUME edge_margin                    = 10            mm         [policy] floorplan.EDGE_MARGIN — edge-run keep-in from each board corner
+  ASSUME mh_corner_keepout              = 10            mm         [policy] floorplan.MH_CORNER_KO — M3 corner mounting-hole exclusion square
+  ASSUME edge_depth_cap                 = 15            mm         [policy] floorplan.EDGE_DEPTH_CAP — deepest inboard reach allowed to an edge block
+  ASSUME edge_band_relief               = 4             mm         [policy] floorplan.EDGE_BAND_RELIEF — seed-outline relief subtracted from edge_depth_cap
+  ASSUME edge_inset                     = 1.5           mm         [policy] floorplan.EDGE_INSET — connector face inset from the board outline
+  ASSUME cable_neighbor_gap             = 20            mm         [physical] floorplan.CABLE_NEIGHBOR_GAP — clear span between two overmolded cable plugs, charged ONCE per pair
+  ASSUME overmold_plug_width            = 22            mm         [physical] floorplan.OVERMOLD_PLUG_W_MAX — widest HDMI overmold shell a mated cable presents
+  ASSUME overmold_copper_half_width     = 8             mm         [physical] floorplan.OVERMOLD_COPPER_HALF_W — half the receptacle copper footprint the shell overhangs
+  ASSUME block_clearance                = 0.3           mm         [policy] floorplan.CLEAR — minimum gap between two packed subsystem zones
+  ASSUME perimeter_keepout              = 3             mm         [policy] floorplan.PERIM_KEEPOUT — seed-outline perimeter band added on every side
+  ASSUME som_halo                       = 7             mm         [policy] floorplan.SOM_HALO — keepout ring around the SoM body in the floorplan frame
+  ASSUME pack_efficiency                = 0.6           ratio      [fitted] floorplan.PACK_EFFICIENCY — seed-outline area fill; the real pack re-proves it
+  ASSUME occ_top_mask                   = 1             bitmask    [policy] floorplan.OCC_TOP — occupancy bit for the top copper face
+  ASSUME occ_bottom_mask                = 2             bitmask    [policy] floorplan.OCC_BOTTOM — occupancy bit for the bottom copper face
+  ASSUME occ_step                       = 1             mm         [policy] floorplan.OCC_STEP_MM — candidate-pose lattice step of the occupancy search
+  ASSUME frontier_half                  = 0.05          mm         [policy] floorplan.FRONTIER_HALF_MM — half-width of the place_near frontier bucket
+  ASSUME som_seat_band                  = 6             mm         [policy] floorplan.SOM_SEAT_BAND_MM — band reserved around each DF40 receptacle
+  ASSUME som_occ_pad                    = 1.5           mm         [policy] floorplan.SOM_OCC_PAD_MM — pad grown around the SoM body rectangle when occupied
+  ASSUME anchor_zone_weight             = 0.25          weight     [policy] floorplan.ANCHOR_ZONE_W — zone-centroid term of the interior seat anchor
+  ASSUME anchor_som_weight              = 7             weight     [policy] floorplan.ANCHOR_SOM_W — SoM-pull term of the interior seat anchor
+  ASSUME anchor_affinity_power          = 1.6           exponent   [policy] floorplan.ANCHOR_AFF_POW — exponent applied to net affinity in the seat anchor
+  ASSUME reseat_evict_budget            = 3             evictions  [policy] floorplan._RESEAT_EVICT_BUDGET — successful eviction episodes one pack attempt may spend
+  ASSUME cross_k                        = 3             mm/mm/subsystem [fitted] config.CROSS_K — LAW-5 airwire coefficient, fitted from two boards; NOT a physical law
+  ASSUME dispersion_max                 = 9             x          [policy] ratsnest.DISPERSION_MAX — worst cluster bbox/ideal ratio the LAW-5 gate accepts
+  ASSUME dispersion_small_n             = 3             parts      [policy] ratsnest.SMALL_N — cluster size below which dispersion is not judged
+  ASSUME place_grid                     = 1.27          mm         [standard] quantize.GRID_MM — KiCad placement grid the emitted SoM-J and MH poses snap to
+  ASSUME half_grid                      = 0.5           mm         [policy] quantize.HALF_MM — coarse 0.5 mm quantum of the legalizer and the SoM pose
+  ASSUME quant_credit                   = 0.05          mm         [policy] quantize.CREDIT_MM — credit that keeps a proven reach from rounding away
+  ASSUME snap_erosion                   = 0.75          mm         [policy] quantize.SNAP_EROSION_MM — declared margin on template bounds >= 5 mm
+  ASSUME seat_slide                     = 1.2           mm         [policy] quantize.SEAT_SLIDE_MM — edge-seat courtyard-to-pad-flush slide allowance
+  ASSUME outline_snap                   = 5             mm         [policy] quantize.OUTLINE_SNAP_MM — coarse outline grid every candidate board rounds up to
+  ASSUME refine_span                    = 40            mm         [policy] quantize.REFINE_SPAN_MM — window below the aspect-best that the fine scan sweeps
+  ASSUME fine_snap                      = 1             mm         [policy] quantize.FINE_SNAP_MM — fine outline grid; packing feasibility is jagged at 1 mm
+  ASSUME via_size                       = 0.6           mm         [physical] quantize.VIA_SIZE_MM — via barrel diameter charged by the sizing estimator
+  ASSUME via_clearance                  = 0.25          mm         [physical] quantize.VIA_CLEAR_MM — annulus each via barrel takes out of a routing channel
+  ASSUME stack_thickness                = 1.6           mm         [datasheet] quantize.STACK_THICKNESS_MM — JLC04161H-7628 4-layer finished thickness
+  ASSUME zone_pad                       = 0.3           mm         [policy] pcbconst.ZONE_PAD — pad kept between a zone box and the parts packed inside it
+  ASSUME place_clear_baseline           = 0.5           mm         [policy] pcbconst.PLACE_CLEAR_BASELINE — shipped part-to-part clearance floor inside a zone
+  ASSUME place_clear                    = 0.5           mm         [policy] pcbconst.PLACE_CLEAR — part-to-part clearance in force (SCHGEN_PLACE_CLEAR)
+  ASSUME zone_pack_fill                 = 0.62          ratio      [fitted] pcbconst.ZONE_PACK_FILL — shelf-pack target fill that sets each zone aspect
+  ASSUME zone_step                      = 2.54          mm         [standard] pcbconst.ZONE_STEP — 0.1 inch zone lattice pitch
+  ASSUME edge_zone_aspect               = 2.2           w/h        [policy] pcbconst.EDGE_ZONE_ASPECT — target width/height of a connector-bearing zone
+  ASSUME interior_zone_aspect           = 2             w/h        [policy] pcbconst.INTERIOR_ZONE_ASPECT — target width/height of an interior zone
+  ASSUME interior_band_target           = 32            mm         [policy] pcbconst.INTERIOR_ZONE_BAND_TARGET — band height an interior zone aims to fit
+  ASSUME som_side_band                  = 39.5          mm         [policy] pcbconst.SOM_SIDE_BAND_MM — usable band beside the SoM body
+  ASSUME som_decoupling_inset           = 6             mm         [policy] placement.SOM_DECOUPLING_INSET — inset of the bottom-side decoupling grid inside the SoM shadow
+  ASSUME d13_min_subject_pins           = 3             pins       [policy] fanout.MIN_SUBJECT_PINS — pin count below which a part gets no D13 reach
+  ASSUME d13_df40_min_pins              = 40            pins       [physical] fanout.DF40_MIN_PINS — pin count that identifies a DF40 receptacle
+  CALC   overmold_side_gap              = 3             mm         <- plug_width=22 copper_half_width=8  ::  plug_width / 2 - copper_half_width
+  CALC   edge_band                      = 11            mm         <- edge_depth_cap=15 edge_band_relief=4  ::  edge_depth_cap - edge_band_relief
+  CALC   occ_punch_mask                 = 3             bitmask    <- occ_top=1 occ_bottom=2  ::  occ_top | occ_bottom
+  CALC   est_via_ordinary               = 2.2           mm         <- via_size=0.6 via_clearance=0.25  ::  2 * (via_size + 2 * via_clearance)
+  CALC   est_via_impedance              = 7.6           mm         <- via_size=0.6 via_clearance=0.25 stack_thickness=1.6  ::  2 * 2 * (via_size + 2 * via_clearance) + 2 * stack_thickness
+  CALC   subsystem_count                = 8             subsystems <- n_sheets=12 n_som_j=3 n_mechanical_only=1  ::  n_sheets - n_som_j - n_mechanical_only
+  CALC   seed_outline                   = 95x85         mm         <- som_w=50 som_h=42 som_halo=7 edge_band=11 component_area=1118.6 pack_efficiency=0.6 perimeter_keepout=3 seed_w=95 seed_h=85  ::  max(som+2*halo+2*band, sqrt(area/fill + keepout_area) * aspect) + 2 * perimeter_keepout, snapped up to outline_snap
+  CALC   d13_tier_population            = 20            parts      <- n_subjects=20 tier_le2_0p20=0 tier_le8_1p50=6 tier_ge9_2p00=14  ::  intelligent_need(pins): pins<=2 -> 0.20, pins<=8 -> 1.50, else 2.00
+  CALC   decoupling_grid                = 18            caps       <- n_caps=18 som_w=50 som_h=42 inset=6 grid_w=38 grid_h=30 cols=5 rows=4  ::  grid = som - 2*inset; cols = max(1, min(n, round(sqrt(n*gw/gh)))); rows = ceil(n / cols)
+  CALC   est_via_class_split            = 4             nets       <- n_cross_nets=35 n_impedance=4 n_ordinary=31 impedance_classes=DP90_USB  ::  n_impedance = count(net whose class carries a DiffGeometry)
+  STEP   sizing.pass  punch=conservative
+    CALC   outline_candidates             = 1705          candidates <- generated=1705 reject_aspect=465 reject_min_area=127 reject_not_smaller=7 reject_pack=1090 reject_law5_budget=0 accepted=16  ::  generated = reject_aspect + reject_min_area + reject_not_smaller + reject_pack + reject_law5_budget + accepted
+    CALC   law5_airwire_budget            = 2400          mm         <- cross_k=3 board_w=100 board_h=100 n_subsystems=8  ::  cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+    CALC   pass_winner                    = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1355.6 budget=2400 headroom=1044.4  ::  headroom = budget - est_cross
+  STEP   sizing.pass  punch=free
+    CALC   outline_candidates             = 1705          candidates <- generated=1705 reject_aspect=465 reject_min_area=127 reject_not_smaller=7 reject_pack=1090 reject_law5_budget=0 accepted=16  ::  generated = reject_aspect + reject_min_area + reject_not_smaller + reject_pack + reject_law5_budget + accepted
+    CALC   law5_airwire_budget            = 2400          mm         <- cross_k=3 board_w=100 board_h=100 n_subsystems=8  ::  cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+    CALC   pass_winner                    = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1355.6 budget=2400 headroom=1044.4  ::  headroom = budget - est_cross
+  CALC   plan_choice                    = conservative  plan       <- conservative_area=10000 conservative_est=1355.6 free_area=10000 free_est=1355.6  ::  keep free iff free_area < conservative_area or (equal area and free_est < conservative_est)
+  CALC   side_fixed[debug_boot]         = top           side       <- offered=top shape_idx=2  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[power]              = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[power_mon]          = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[power_som]          = top           side       <- offered=top shape_idx=1  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[uart_bridge]        = top           side       <- offered=top shape_idx=3  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_census                    = 5             blocks     <- n_blocks=5 n_two_face=0 n_chose_bottom=0 n_single_face=5  ::  n_blocks = n_two_face + n_single_face
+  CALC   sizing_winner                  = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1355.6 budget=2400 headroom=1044.4 plan=conservative  ::  headroom = budget - est_cross
+STEP   pcb.placement
+  ASSUME origin_x                       = 25            mm         [policy] pcbconst.ORIGIN_X — page-frame origin the board rectangle is drawn from
+  ASSUME origin_y                       = 25            mm         [policy] pcbconst.ORIGIN_Y — page-frame origin the board rectangle is drawn from
+  ASSUME mh_inset                       = 5             mm         [policy] pcbconst.MH_INSET — corner mounting-hole centre inset from the board edge
+  ASSUME mh_keepout                     = 5             mm         [policy] pcbconst.MH_KEEPOUT — copper keepout radius around a mounting hole
+  ASSUME fiducial_inset                 = 9             mm         [policy] pcbconst.FID_INSET — fiducial centre inset from the board corner
+  ASSUME perimeter_band                 = 3             mm         [policy] pcbconst.PERIM — PCB-frame perimeter band kept clear of parts
+  ASSUME som_halo_pcb                   = 7             mm         [policy] pcbconst.SOM_HALO_PCB — keepout ring around the SoM body in the PCB frame
+  ASSUME som_core_clearance             = 0.03          ratio      [policy] pcbconst.SOM_CORE_CLEARANCE — fractional grow of the SoM core rectangle
+  ASSUME edge_band_pcb                  = 10            mm         [policy] pcbconst.EDGE_BAND_PCB — PCB-frame band reserved for edge-seated blocks
+  ASSUME board_edge_margin              = 0.6           mm         [policy] pcbconst.BOARD_EDGE_MARGIN — part-body keep-in from the board outline
+  ASSUME som_zone_grow                  = 2             mm         [policy] pcbconst.SOM_ZONE_GROW — grow applied to the SoM keepout by breathe and escape
+  ASSUME outline_grow_pcb               = 5             mm         [policy] pcbconst.OUTLINE_GROW — PCB-frame outline grow step
+  ASSUME edge_pad_clear                 = 0.4           mm         [policy] pcbconst.EDGE_PAD_CLEAR — copper-to-outline clearance at a seated connector pad
+  ASSUME button_gap                     = 2             mm         [policy] pcbconst.BUTTON_GAP — finger clearance kept around a user-pressed button
+  ASSUME top_area_max                   = 12            mm^2       [policy] pcbconst.TOP_AREA_MM2 — footprint area above which a part stays on the top face
+  ASSUME iso_void_margin                = 0.6           mm         [policy] pcbconst.ISO_VOID_MARGIN — plane void margin around an isolation barrier part
+  ASSUME conn_rest_gap                  = 2             mm         [policy] placement.CONN_REST_GAP — gap behind a connector row before the rest of the zone
+  ASSUME disp_cap_l4                    = 5             x          [policy] placement.DISP_CAP_L4 — dispersion ceiling the L4 bottom pull may not exceed
+  ASSUME l4_pull_step                   = 1             mm         [policy] placement.L4_PULL_STEP — step the L4 pull walks a part inboard by
+  ASSUME l4_pull_span                   = 40            mm         [policy] placement.L4_PULL_SPAN — furthest the L4 pull will move a part
+  ASSUME d13_touch_eps                  = 0.0001        mm         [policy] fanout._TOUCH_EPS — tolerance below which a D13 clearance counts as met
+  ASSUME edge_flush_relief              = 0.2           mm         [policy] pcbconst.EDGE_FLUSH_RELIEF — body relief added to edge_pad_clear when seating
+  CALC   edge_flush                     = 0.6           mm         <- edge_pad_clear=0.4 flush_relief=0.2  ::  edge_pad_clear + flush_relief
+  CALC   template_clear                 = 0.5           mm         <- place_clear_baseline=0.5  ::  place_clear_baseline
+  CALC   stage_movement                 = 109           parts      <- l4_pull=32 edge_seat=2 breathe=0 refit_facing=51 reorder=16 corridor_eviction=8  ::  parts whose pose a stage changed, counted per stage
+STEP   pcb.escape
+  CALC   escape_coverage                = 1.4819        mm         <- contacts=29 worst_cover=1.4819 vias=7 coverage=2  ::  worst_cover = max over DF40 contacts of the uncovered span
+STEP   pcb.emission
+  ASSUME power_track                    = 0.4           mm         [policy] pcbconst.POWER_TRACK_MM — POWER net-class track width written to the board
+  ASSUME power_clearance                = 0.2           mm         [policy] pcbconst.POWER_CLEARANCE_MM — POWER net-class clearance written to the board
+  ASSUME default_track                  = 0.2032        mm         [policy] pcbconst.DEFAULT_TRACK_MM — Default net-class track width written to the board
+  ASSUME default_clearance              = 0.15          mm         [policy] pcbconst.DEFAULT_CLEARANCE_MM — Default net-class clearance written to the board
+  ASSUME gnd_plane_edge_back            = 0.5           mm         [policy] pcbconst.GND_PLANE_EDGE_BACK — plane pull-back from the board outline
+  ASSUME gnd_plane_clearance            = 0.3           mm         [policy] pcbconst.GND_PLANE_CLEARANCE — plane-to-copper clearance in the poured zones
+  ASSUME pour_clearance                 = 0.2           mm         [policy] pcbconst.POUR_CLEARANCE — thermal-pour clearance around a device pad
+  ASSUME zone_min_thickness             = 0.25          mm         [standard] pcbconst.ZONE_MIN_THICKNESS — minimum poured copper sliver the fab will hold
+  ASSUME thermal_via_size               = 0.6           mm         [standard] pcbconst.THERMAL_VIA_SIZE — thermal via pad diameter
+  ASSUME thermal_via_drill              = 0.3           mm         [standard] pcbconst.THERMAL_VIA_DRILL — thermal via drill diameter
+  ASSUME thermal_via_clear              = 0.25          mm         [standard] pcbconst.THERMAL_VIA_CLEAR — clearance ring around a thermal via
+  ASSUME thermal_via_h2h                = 0.45          mm         [standard] pcbconst.THERMAL_VIA_H2H — hole-to-hole floor between two thermal vias
+  ASSUME thermal_via_edge               = 1             mm         [policy] pcbconst.THERMAL_VIA_EDGE — thermal via keep-in from the pour edge
+  ASSUME thermal_via_spacing            = 0.8           mm         [policy] pcbconst.THERMAL_VIA_SPACING — preferred pitch of a thermal via field
+  ASSUME thermal_via_lattice            = 0.25          mm         [policy] pcbconst.THERMAL_VIA_LATTICE_PITCH — exhaustive lattice pitch used when a curated site is blocked
+  ASSUME hole_to_samenet_pad            = 0.1           mm         [standard] pcbconst.CLR_HOLE_SAMENET_PAD — hole-to-same-net-pad clearance rule
+  CALC   board_emission                 = 152           footprints <- board_w=100 board_h=100 placed=152 n_top=97 n_bottom=55 nets=266  ::  placed = n_top + n_bottom
+STEP   gates
+  CALC   law5_airwire_measured          = 1324.3        mm         <- cross_mm=1324.3 budget_mm=2400 headroom_mm=1075.7 n_cross=72 n_subsystems=8 board_w=100 board_h=100  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+  CALC   fanout_d13_gate                = 17            subjects   <- n_subjects=17 n_starved=0 baseline=0  ::  starved = clearance < intelligent_need(pins) - touch_eps
+STEP   docs.floorplan
+  ASSUME floorplan_svg_scale            = 6             px/mm      [policy] floorplan.SCALE — pixel scale of the FLOORPLAN.svg drawing
+  REPLAY floorplan.sizing pass=2 identical=yes lines=74
+STEP   census
+  CALC   quantize_engagement[breathe_anchor_grid] = 12            calls      <- klass=re-validated value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[est_via_cost] = 70            calls      <- klass=pre-proof value={impedance: 2 legs * 2 layers * (0.6 + 2 * 0.25) + 2 legs *   ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[evict_corridor_grid] = 6             calls      <- klass=pre-proof value=round(round(round((origin + v) / 1.27) * 1.27, 4) - origin,   ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[fixed_part_grid] = 1028          calls      <- klass=proof-preserving value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_pose_quantum] = 992           calls      <- klass=re-validated value=round(round(v / 0.5) * 0.5, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_fine_grid] = 328           calls      <- klass=pre-proof value=round(base - k * 1.0, 1) over a 40.0 mm window  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_grow_step] = 96            calls      <- klass=pre-proof value=k * 5.0  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_snap_up] = 196           calls      <- klass=pre-proof value=ceil(v / 5.0) * 5.0  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placeholder_zone_half_mm] = 4             calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[quant_credit] = 465           calls      <- klass=proof-preserving value=v + 0.05  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[run_overflow_tol] = 17744         calls      <- klass=proof-preserving value=0.1  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[seat_slide] = 4             calls      <- klass=pre-proof value=1.2  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[snap_erosion_bound] = 22563         calls      <- klass=proof-preserving value=bound - 0.75 if bound >= 5.0 else bound  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[som_pose_half_mm] = 8860          calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
+  CALC   fallback_engagement[cand_cap_truncated] = 7             firings    <- stage=zone_pack ceiling=7  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[corridor_evict_moved] = 8             firings    <- stage=corridor_eviction ceiling=8  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[interior_reseat_retry] = 72            firings    <- stage=plan_lattice ceiling=72  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[legalize_only_compaction] = 2             firings    <- stage=plan_lattice ceiling=2  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[punch_free_plan_rejected] = 2             firings    <- stage=plan_lattice ceiling=2  ::  count of times this registered degraded path bound
+  CALC   register_silence               = 6             registrations <- quantize_registered=15 quantize_engaged=14 fallback_registered=10 fallback_fired=5  ::  registered - engaged = declared machinery this build never used

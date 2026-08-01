@@ -5,10 +5,12 @@ import json
 import os
 import re
 from dataclasses import dataclass, field
+from functools import wraps
 from heapq import heappop, heappush
 from pathlib import Path
 
 from schgen.core import fallbacks as _fb
+from schgen.core import ledger as _led
 from schgen.core import quantize as _q
 from schgen.core.project import PROJECT_ROOT
 from schgen.core.project import spec as _project_spec
@@ -38,6 +40,7 @@ SOM_DY = float(os.environ.get("SCHGEN_SOM_DY",
 EDGE_MARGIN = 10.0
 MH_CORNER_KO = 10.0
 EDGE_DEPTH_CAP = 15.0
+EDGE_BAND_RELIEF = 4.0
 EDGE_INSET = 1.5
 CABLE_NEIGHBOR_GAP = 20.0
 _OVERMOLD_FAMILIES = {"HDMI-019S"}
@@ -202,7 +205,7 @@ ROUTE_FACTOR = 3.5
 
 PERIM_KEEPOUT = 3.0
 SOM_HALO = 7.0
-EDGE_BAND = EDGE_DEPTH_CAP - 4.0
+EDGE_BAND = EDGE_DEPTH_CAP - EDGE_BAND_RELIEF
 PACK_EFFICIENCY = 0.60
 
 FONT = "ui-monospace, SFMono-Regular, Menlo, monospace"
@@ -900,6 +903,13 @@ _SPATIAL_TRACE = os.environ.get("SCHGEN_SPATIAL_TRACE", "") == "1"
 OCC_TOP = 1
 OCC_BOTTOM = 2
 OCC_PUNCH = OCC_TOP | OCC_BOTTOM
+OCC_STEP_MM = 1.0
+FRONTIER_HALF_MM = 0.05 + 1e-9
+SOM_SEAT_BAND_MM = 6.0
+SOM_OCC_PAD_MM = 1.5
+ANCHOR_ZONE_W = 0.25
+ANCHOR_SOM_W = 7.0
+ANCHOR_AFF_POW = 1.6
 
 _Comp = tuple[float, float, float, float, int]
 
@@ -939,8 +949,6 @@ def _spatial_bounds(far_ceil: float = 0.0,
 
 
 class _Occupancy:
-    STEP = 1.0
-
     def __init__(self, far_ceil: float = 0.0,
                  max_reach: float | None = None) -> None:
         self.rects: list[_Rect] = []
@@ -1136,7 +1144,7 @@ class _Occupancy:
                    mask: int = OCC_PUNCH, comps: tuple[_Comp, ...] = (),
                    win: tuple[float, float, float, float] | None = None
                    ) -> tuple[float, float, float, float] | None:
-        s = self.STEP
+        s = OCC_STEP_MM
         nx = int(BOARD_W / s) + 1
         ny = int(BOARD_H / s) + 1
         hw = w / 2
@@ -1149,7 +1157,6 @@ class _Occupancy:
                     if wy0 <= iy * s <= wy1)
         if not xs or not ys:
             return None
-        _HALF = 0.05 + 1e-9
         heap = [(xs[0][0] + ys[0][0], 0, 0)]
         seen = {(0, 0)}
         buckets: dict[float, list[tuple[float, float]]] = {}
@@ -1172,7 +1179,7 @@ class _Occupancy:
                 seen.add((i, j + 1))
                 heappush(heap, (xs[i][0] + ys[j + 1][0], i, j + 1))
             frontier = heap[0][0] if heap else float("inf")
-            thresh = frontier - _HALF
+            thresh = frontier - FRONTIER_HALF_MM
             while bkeys and bkeys[0] <= thresh:
                 for x, y in sorted(buckets.pop(heappop(bkeys))):
                     if self.fits(x, y, w, h, reach, inset, mask, comps):
@@ -1201,6 +1208,83 @@ def _zone_anchor(plan: Plan, zone: str) -> tuple[float, float]:
     }[zone]
 
 
+def _in_sizing_step(fn):
+    @wraps(fn)
+    def run(*args, **kwargs):
+        with _led.step("floorplan.sizing"):
+            return fn(*args, **kwargs)
+    return run
+
+
+def _ledger_margins() -> None:
+    _led.calc("overmold_side_gap", OVERMOLD_SIDE_GAP,
+              plug_width=OVERMOLD_PLUG_W_MAX,
+              copper_half_width=OVERMOLD_COPPER_HALF_W)
+    _led.calc("edge_band", EDGE_BAND, edge_depth_cap=EDGE_DEPTH_CAP,
+              edge_band_relief=EDGE_BAND_RELIEF)
+    _led.calc("occ_punch_mask", OCC_PUNCH, occ_top=OCC_TOP,
+              occ_bottom=OCC_BOTTOM)
+    _led.calc("est_via_ordinary", _q.EST_VIA_COST_MM["ordinary"],
+              via_size=_q.VIA_SIZE_MM, via_clearance=_q.VIA_CLEAR_MM)
+    _led.calc("est_via_impedance", _q.EST_VIA_COST_MM["impedance"],
+              via_size=_q.VIA_SIZE_MM, via_clearance=_q.VIA_CLEAR_MM,
+              stack_thickness=_q.STACK_THICKNESS_MM)
+
+
+def _ledger_tiers(zg) -> None:
+    from schgen.generate.pcb.footprint import pad_names as _pads
+    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS, intelligent_need
+    tiers: dict[float, int] = {}
+    for sheet in sorted(zg.zone_box):
+        for side_off in (zg.top_off.get(sheet, {}), zg.bot_off.get(sheet, {})):
+            for ref in sorted(side_off):
+                mod = zg.resolvable.get(ref)
+                if mod is None:
+                    continue
+                pins = len(_pads(mod))
+                if pins < MIN_SUBJECT_PINS:
+                    continue
+                need = intelligent_need(pins)[0]
+                tiers[need] = tiers.get(need, 0) + 1
+    _led.calc("d13_tier_population", sum(tiers.values()),
+              n_subjects=sum(tiers.values()),
+              tier_le2_0p20=tiers.get(0.20, 0),
+              tier_le8_1p50=tiers.get(1.50, 0),
+              tier_ge9_2p00=tiers.get(2.00, 0))
+
+
+def _ledger_decoupling(plan: Plan, n_dec: int) -> None:
+    from schgen.generate.pcb.placement import SOM_DECOUPLING_INSET as _inset
+    gw = max(1.0, plan.som.w - 2 * _inset)
+    gh = max(1.0, plan.som.h - 2 * _inset)
+    cols = max(1, min(n_dec, round((n_dec * gw / gh) ** 0.5))) if n_dec else 1
+    rows = max(1, (n_dec + cols - 1) // cols) if n_dec else 1
+    _led.calc("decoupling_grid", n_dec, n_caps=n_dec, som_w=plan.som.w,
+              som_h=plan.som.h, inset=_inset, grid_w=round(gw, 4),
+              grid_h=round(gh, 4), cols=cols, rows=rows)
+
+
+def _ledger_sides() -> None:
+    n_two = n_bottom = n_single = 0
+    for name in sorted(_SIDE_OFFERS):
+        offered, chosen, shape_idx, est_in, est_ch = _SIDE_OFFERS[name]
+        if est_in is None:
+            n_single += 1
+            _led.calc("side_fixed", chosen, label=name, offered=offered,
+                      shape_idx=shape_idx)
+            continue
+        n_two += 1
+        n_bottom += 1 if chosen == "bottom" else 0
+        _led.calc("side_choice", chosen, label=name, offered=offered,
+                  est_incumbent=round(est_in, 1),
+                  est_challenger=round(est_ch, 1),
+                  margin=round(est_in - est_ch, 3))
+    _led.calc("side_census", n_two + n_single, n_blocks=n_two + n_single,
+              n_two_face=n_two, n_chose_bottom=n_bottom,
+              n_single_face=n_single)
+
+
+@_in_sizing_step
 def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                ) -> Plan:
     som = extract_som()
@@ -1409,7 +1493,25 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         compose = (compose_index, _fc.zone_local_metrics(zg), _channels,
                    _fc.escape_corridors(), _fc.zone_shape_metrics(zg))
 
+    _n_som_j = sum(1 for sc in sheets if sc.name.startswith("som_j"))
+    _ledger_margins()
+    _led.calc("subsystem_count", n_sub, n_sheets=len(sheets),
+              n_som_j=_n_som_j,
+              n_mechanical_only=len(sheets) - n_sub - _n_som_j)
+    _led.calc("seed_outline", f"{outline.w:g}x{outline.h:g}", som_w=som.w,
+              som_h=som.h, som_halo=SOM_HALO, edge_band=EDGE_BAND,
+              component_area=round(_raw_component_area(sheets), 1),
+              pack_efficiency=PACK_EFFICIENCY,
+              perimeter_keepout=PERIM_KEEPOUT, seed_w=outline.w,
+              seed_h=outline.h)
+    _ledger_tiers(zg)
+    _ledger_decoupling(plan, plan.dec_bank[0])
     est_cross = _cross_estimator(plan, zg, sheets)
+    _led.calc("est_via_class_split", _VIA_SPLIT[1], n_cross_nets=_VIA_SPLIT[0],
+              n_impedance=_VIA_SPLIT[1],
+              n_ordinary=_VIA_SPLIT[0] - _VIA_SPLIT[1],
+              impedance_classes=_VIA_SPLIT[2])
+    _SIDE_OFFERS.clear()
 
     _pristine = {b.name: (b.shape_idx, b.fanout_reach, b.fanout_inset)
                  for b in plan.edge_blocks + interior}
@@ -1423,7 +1525,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         return (BOARD_W, BOARD_H, plan.som_x, plan.som_y, plan.punch_free,
                 list(plan.spilled), list(plan.composition),
                 {b.name: tuple(getattr(b, f) for f in _SNAP_FIELDS)
-                 for b in plan.edge_blocks + interior})
+                 for b in plan.edge_blocks + interior},
+                dict(_SIDE_OFFERS))
 
     def _plan_restore(s: tuple) -> None:
         global BOARD_W, BOARD_H
@@ -1433,6 +1536,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         for b in plan.edge_blocks + interior:
             for f, v in zip(_SNAP_FIELDS, s[7][b.name], strict=True):
                 setattr(b, f, v)
+        _SIDE_OFFERS.clear()
+        _SIDE_OFFERS.update(s[8])
 
     def _guarded(run):
         try:
@@ -1479,6 +1584,16 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
             _fb.record("punch_free_plan_rejected")
         plan.interior_blocks = interior
         budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
+        _led.calc("plan_choice", "fixed",
+                  conservative_area=round(BOARD_W * BOARD_H, 1),
+                  conservative_est=round(est_real, 1),
+                  free_area=round(BOARD_W * BOARD_H, 1),
+                  free_est=(0.0 if free_er is None else round(free_er, 1)))
+        _ledger_sides()
+        _led.calc("sizing_winner", f"{BOARD_W:g}x{BOARD_H:g}", board_w=BOARD_W,
+                  board_h=BOARD_H, area=round(BOARD_W * BOARD_H, 1),
+                  est_cross=round(est_real, 1), budget=round(budget, 1),
+                  headroom=round(budget - est_real, 1), plan="fixed")
         OUTLINE_NOTE = (f"FIXED outline {BOARD_W:g}x{BOARD_H:g} mm declared in "
                         f"carrier/floorplan.json; estimated cross-subsystem "
                         f"airwire {est_real:.0f} mm (LAW-5 budget {budget:.0f} "
@@ -1492,6 +1607,10 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         shape_sets = sets_by_policy[pad_punch]
         comps_of = comps_by_policy[pad_punch]
         plan.punch_free = pad_punch
+        tally = dict.fromkeys(
+            ("generated", "reject_aspect", "reject_min_area",
+             "reject_not_smaller", "reject_pack", "reject_law5_budget",
+             "accepted"), 0)
         best: tuple | None = None
         fit_seen = False
         _min_pack_area = som.w * som.h + sum(
@@ -1503,9 +1622,12 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                 grow = _q.outline_grow(_try)
                 w = _q.outline_snap_up(outline.w + grow * (aspect / seed_aspect))
                 h = _q.outline_snap_up(outline.h + grow)
+                tally["generated"] += 1
                 if w < h:
+                    tally["reject_aspect"] += 1
                     continue
                 if w * h < _min_pack_area:
+                    tally["reject_min_area"] += 1
                     continue
                 BOARD_W, BOARD_H = w, h
                 plan.som_x = _q.som_pose_half_mm((BOARD_W - som.w) / 2 + SOM_DX)
@@ -1515,10 +1637,13 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                                      far_ceil=far_ceil, max_reach=max_reach,
                                      shapes=shape_sets, comps_of=comps_of,
                                      side_est=est_cross):
+                    tally["reject_pack"] += 1
                     continue
                 fit_seen = True
                 budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
                 est_real = est_cross(plan.edge_blocks + interior)
+                tally["accepted" if est_real <= budget
+                      else "reject_law5_budget"] += 1
                 if est_real <= budget:
                     area = round(BOARD_W * BOARD_H, 1)
                     cand = (area, BOARD_W, BOARD_H, est_real, budget)
@@ -1541,9 +1666,11 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                                  far_ceil=far_ceil, max_reach=max_reach,
                                  shapes=shape_sets, comps_of=comps_of,
                                  side_est=est_cross):
+                tally["reject_pack"] += 1
                 return False, 0.0, 0.0
             bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
             er = est_cross(plan.edge_blocks + interior)
+            tally["accepted" if er <= bud else "reject_law5_budget"] += 1
             return (er <= bud), er, bud
 
         _area, bw, bh, best_er, best_bud = best
@@ -1554,8 +1681,15 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         hs = [_q.fine_shrink(bh0, k) for k in range(0, nsteps)]
         for w in ws:
             for h in hs:
-                if (w <= 0 or h <= 0 or w < h or w * h >= bw * bh - 1e-6
-                        or w * h < _min_pack_area):
+                tally["generated"] += 1
+                if w <= 0 or h <= 0 or w < h:
+                    tally["reject_aspect"] += 1
+                    continue
+                if w * h >= bw * bh - 1e-6:
+                    tally["reject_not_smaller"] += 1
+                    continue
+                if w * h < _min_pack_area:
+                    tally["reject_min_area"] += 1
                     continue
                 ok, er, bud = _passes(w, h)
                 if ok:
@@ -1575,28 +1709,51 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
         _choose_conn_shapes(plan, interior, edge_of, zbox, affinity, som_pull,
                             compose, True, far_ceil, max_reach, shape_sets,
                             comps_of, zg, est_cross)
+        _led.calc("outline_candidates", tally["generated"], **tally)
+        _led.calc("law5_airwire_budget", round(budget, 1),
+                  cross_k=CROSS_BUDGET_K, board_w=BOARD_W, board_h=BOARD_H,
+                  n_subsystems=n_sub)
+        _led.calc("pass_winner", f"{BOARD_W:g}x{BOARD_H:g}", board_w=BOARD_W,
+                  board_h=BOARD_H, area=_area, est_cross=round(est_real, 1),
+                  budget=round(budget, 1),
+                  headroom=round(budget - est_real, 1))
         return best
 
     _fb_entry = _fb.snapshot()
     _reset_shapes()
-    best = _search(False)
+    with _led.step("sizing.pass", "punch=conservative"):
+        best = _search(False)
+    cons_best = best
     cons_snap = _plan_snapshot()
     cons_fb = _fb.snapshot()
     _fb.restore(_fb_entry)
     _reset_shapes()
-    free_best = _guarded(_search)
+    with _led.step("sizing.pass", "punch=free"):
+        free_best = _guarded(_search)
     if free_best is not None and (
             free_best[0] < best[0] - 1e-6
             or (free_best[0] <= best[0] + 1e-6
                 and free_best[3] < best[3] - 1e-6)):
         best = free_best
+        chosen_plan = "free"
     else:
         _plan_restore(cons_snap)
         _fb.restore(cons_fb)
         _fb.record("punch_free_plan_rejected")
+        chosen_plan = "conservative"
 
     _area, BOARD_W, BOARD_H, est_real, budget = best
     plan.interior_blocks = interior
+    _led.calc("plan_choice", chosen_plan,
+              conservative_area=cons_best[0],
+              conservative_est=round(cons_best[3], 1),
+              free_area=(0.0 if free_best is None else free_best[0]),
+              free_est=(0.0 if free_best is None else round(free_best[3], 1)))
+    _ledger_sides()
+    _led.calc("sizing_winner", f"{BOARD_W:g}x{BOARD_H:g}", board_w=BOARD_W,
+              board_h=BOARD_H, area=_area, est_cross=round(est_real, 1),
+              budget=round(budget, 1),
+              headroom=round(budget - est_real, 1), plan=chosen_plan)
     OUTLINE_NOTE = (
         f"{outline.note}; then SMALLEST-AREA search over aspects "
         f"{', '.join(f'{a:g}' for a in aspects)} -> {BOARD_W:g}x{BOARD_H:g} mm "
@@ -1637,6 +1794,7 @@ def _cross_estimator(plan: Plan, zg, sheets):
     )
     from schgen.generate.pcb.footprint import _net_classes, resolve_mod
     from schgen.generate.pcb.mating_face import _inst_pad_geom, _rot_pad_bbox
+    from schgen.generate.pcb.placement import SOM_DECOUPLING_INSET
     from schgen.generate.ratsnest import _mst_edges
 
     idx_path = PROJECT_ROOT / "sheet_index.json"
@@ -1773,13 +1931,18 @@ def _cross_estimator(plan: Plan, zg, sheets):
     _cls_geo, _cls_of = _net_classes(sheets)
     via_of = {n: _q.est_via_cost(_cls_geo.get(_cls_of.get(n, "")) is not None)
               for n in net_names}
+    _imp_of = {n: _cls_of.get(n, "") for n in net_names
+               if _cls_geo.get(_cls_of.get(n, "")) is not None}
+    _VIA_SPLIT[:] = [len(net_names), len(_imp_of),
+                     ",".join(sorted(set(_imp_of.values())))]
 
     conn_pb = {ref: _rot_pad_bbox(mod_of[ref], rot_of.get(ref, 0.0))
                for ref in sorted(zg.conn_edge) if ref in owner_of}
     n_dec = len(dec_refs)
     dec_cols = max(1, min(n_dec, round(
-        (n_dec * max(1.0, plan.som.w - 12.0)
-         / max(1.0, plan.som.h - 12.0)) ** 0.5))) if n_dec else 1
+        (n_dec * max(1.0, plan.som.w - 2 * SOM_DECOUPLING_INSET)
+         / max(1.0, plan.som.h - 2 * SOM_DECOUPLING_INSET)) ** 0.5))) \
+        if n_dec else 1
     dec_rows = max(1, (n_dec + dec_cols - 1) // dec_cols) if n_dec else 1
 
     def evaluate(blocks: list[Block], only_sheet: str | None = None) -> float:
@@ -1796,8 +1959,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
         corners = ((MH_INSET, MH_INSET), (BOARD_W - MH_INSET, MH_INSET),
                    (BOARD_W - MH_INSET, BOARD_H - MH_INSET),
                    (MH_INSET, BOARD_H - MH_INSET))
-        rw = max(1.0, plan.som.w - 12.0)
-        rh = max(1.0, plan.som.h - 12.0)
+        rw = max(1.0, plan.som.w - 2 * SOM_DECOUPLING_INSET)
+        rh = max(1.0, plan.som.h - 2 * SOM_DECOUPLING_INSET)
         part_pos: dict[str, tuple[float, float]] = {}
         for bref, (kind, key) in owner_of.items():
             if kind == "zone":
@@ -1814,8 +1977,10 @@ def _cross_estimator(plan: Plan, zg, sheets):
             elif kind == "dec":
                 cxi, cyi = key % dec_cols, key // dec_cols
                 part_pos[bref] = (
-                    round(ORIGIN_X + som_x + 6.0 + rw * (cxi + 0.5) / dec_cols, 4),
-                    round(ORIGIN_Y + som_y + 6.0 + rh * (cyi + 0.5) / dec_rows, 4))
+                    round(ORIGIN_X + som_x + SOM_DECOUPLING_INSET
+                          + rw * (cxi + 0.5) / dec_cols, 4),
+                    round(ORIGIN_Y + som_y + SOM_DECOUPLING_INSET
+                          + rh * (cyi + 0.5) / dec_rows, 4))
             else:
                 cx, cy = corners[key]
                 part_pos[bref] = (_q.fixed_part_grid(ORIGIN_X + cx),
@@ -1873,6 +2038,12 @@ def _nets_by_sheet(net_pts: dict) -> dict[str, tuple[str, ...]]:
     return {s: tuple(ns) for s, ns in out.items()}
 
 
+_VIA_SPLIT: list = [0, 0, ""]
+_SIDE_OFFERS: dict[str, tuple] = {}
+_LAST_SIDE_EST: list[float] = [0.0, 0.0]
+_LAST_SIDE_NAME: list[str] = ["", ""]
+
+
 def _pick_sided(finalists: list[tuple], est_of) -> tuple:
     if est_of is None:
         raise AssertionError(
@@ -1880,8 +2051,10 @@ def _pick_sided(finalists: list[tuple], est_of) -> tuple:
             "estimator judge was wired — pass side_est to _attempt_pack; "
             "the side choice may not fall back to anchor distance")
     incumbent, challenger = finalists[0][1], finalists[1][1]
-    return challenger if est_of(challenger) < est_of(incumbent) - 1e-6 \
-        else incumbent
+    est_inc, est_chal = est_of(incumbent), est_of(challenger)
+    _LAST_SIDE_EST[:] = [est_inc, est_chal]
+    _LAST_SIDE_NAME[:] = [incumbent[4], challenger[4]]
+    return challenger if est_chal < est_inc - 1e-6 else incumbent
 
 
 def _edge_components(b: Block, comps: tuple) -> tuple:
@@ -1946,16 +2119,14 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 or near + span_b > dim - EDGE_MARGIN + _q.run_overflow_tol()):
             return False
 
-    _SEAT_BAND = 6.0
-    _SOM_OCC_PAD = 1.5
-    som_rects = [(plan.som_x - _SOM_OCC_PAD, plan.som_y - _SOM_OCC_PAD,
-                  plan.som_x + plan.som.w + _SOM_OCC_PAD,
-                  plan.som_y + plan.som.h + _SOM_OCC_PAD)]
+    som_rects = [(plan.som_x - SOM_OCC_PAD_MM, plan.som_y - SOM_OCC_PAD_MM,
+                  plan.som_x + plan.som.w + SOM_OCC_PAD_MM,
+                  plan.som_y + plan.som.h + SOM_OCC_PAD_MM)]
     for j in plan.som.js:
-        som_rects.append((plan.som_x + j.x - j.w / 2 - _SEAT_BAND,
-                          plan.som_y + j.y - j.h / 2 - _SEAT_BAND,
-                          plan.som_x + j.x + j.w / 2 + _SEAT_BAND,
-                          plan.som_y + j.y + j.h / 2 + _SEAT_BAND))
+        som_rects.append((plan.som_x + j.x - j.w / 2 - SOM_SEAT_BAND_MM,
+                          plan.som_y + j.y - j.h / 2 - SOM_SEAT_BAND_MM,
+                          plan.som_x + j.x + j.w / 2 + SOM_SEAT_BAND_MM,
+                          plan.som_y + j.y + j.h / 2 + SOM_SEAT_BAND_MM))
     for b in plan.edge_blocks:
         for rx0, ry0, rx1, ry1 in som_rects:
             if (min(b.x + b.w, rx1) - max(b.x, rx0) > 1e-6
@@ -1981,8 +2152,8 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
     free = plan.punch_free
     som_mask = OCC_TOP if free else OCC_PUNCH
-    som_occ = (plan.som_x - _SOM_OCC_PAD, plan.som_y - _SOM_OCC_PAD,
-               plan.som.w + 2 * _SOM_OCC_PAD, plan.som.h + 2 * _SOM_OCC_PAD)
+    som_occ = (plan.som_x - SOM_OCC_PAD_MM, plan.som_y - SOM_OCC_PAD_MM,
+               plan.som.w + 2 * SOM_OCC_PAD_MM, plan.som.h + 2 * SOM_OCC_PAD_MM)
     som_comps = _som_components(plan, som_occ, som_rects[1:]) if free else ()
     edge_mask = OCC_TOP if free else OCC_PUNCH
     edge_comps = {b.name: _edge_components(
@@ -2008,10 +2179,6 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     def _conn(b: Block) -> float:
         return (sum(affinity.get(b.name, {}).values())
                 + 3.0 * som_pull.get(b.name, 0.0))
-
-    ZONE_W = 0.25
-    SOM_W = 7.0
-    AFF_POW = 1.6
 
     def _anchor(b: Block) -> tuple[float, float]:
         _mfa = _project_spec().module_face_anchors
@@ -2048,8 +2215,8 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 elif edge == "E":
                     zax, zay = eb2.x - b.w / 2, eb2.cy
         else:
-            zw = ZONE_W
-            sp = SOM_W * max(som_pull.get(b.name, 0.0), 0.0)
+            zw = ANCHOR_ZONE_W
+            sp = ANCHOR_SOM_W * max(som_pull.get(b.name, 0.0), 0.0)
         wsum = zw + sp
         ax = zw * zax + sp * som_cx
         ay = zw * zay + sp * som_cy
@@ -2063,7 +2230,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         for nb, w in affinity.get(b.name, {}).items():
             if nb in centers:
                 ncx, ncy = centers[nb]
-                pw = w ** AFF_POW
+                pw = w ** ANCHOR_AFF_POW
                 ax += pw * ncx
                 ay += pw * ncy
                 wsum += pw
@@ -2144,6 +2311,8 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             return False
         if len(by_side) == 1:
             best = next(iter(by_side.values()))[1]
+            _SIDE_OFFERS[b.name] = (next(iter(by_side)), best[4], best[0],
+                                    None, None)
         else:
             def _est_of(cand, _b=b):
                 k2, p2, _r2, _i2, sd2, _c2 = cand
@@ -2157,6 +2326,9 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
             best = _pick_sided(sorted(by_side.values()),
                                None if side_est is None else _est_of)
+            _SIDE_OFFERS[b.name] = (
+                f"{_LAST_SIDE_NAME[0]}(incumbent)/{_LAST_SIDE_NAME[1]}",
+                best[4], best[0], _LAST_SIDE_EST[0], _LAST_SIDE_EST[1])
         k, p, rch, ins, sd, cc = best
         b.x, b.y, b.w, b.h = p
         b.shape_idx = k
@@ -2280,10 +2452,10 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             movable_names = sorted(parts_ & inames & set(_exempt))
             if movable_names:
                 fixed_rects: list[tuple[str, float, float, float, float]] = [
-                    ("som", plan.som_x - _SOM_OCC_PAD,
-                     plan.som_y - _SOM_OCC_PAD,
-                     plan.som_x + plan.som.w + _SOM_OCC_PAD,
-                     plan.som_y + plan.som.h + _SOM_OCC_PAD)]
+                    ("som", plan.som_x - SOM_OCC_PAD_MM,
+                     plan.som_y - SOM_OCC_PAD_MM,
+                     plan.som_x + plan.som.w + SOM_OCC_PAD_MM,
+                     plan.som_y + plan.som.h + SOM_OCC_PAD_MM)]
                 for kx, ky in ((0.0, 0.0), (BOARD_W - MH_CORNER_KO, 0.0),
                                (BOARD_W - MH_CORNER_KO,
                                 BOARD_H - MH_CORNER_KO),
