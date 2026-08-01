@@ -1,5 +1,3 @@
-"""usbc_otg reusable subsystem."""
-
-from subsystems.usbc_otg.usbc_otg import circuit, INTERFACE, RAILS, PORTS
+from subsystems.usbc_otg.usbc_otg import INTERFACE, PORTS, RAILS, circuit
 
 __all__ = ["circuit", "INTERFACE", "RAILS", "PORTS"]

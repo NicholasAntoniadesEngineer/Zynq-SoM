@@ -1,5 +1,3 @@
-"""power reusable subsystem (multi-rail regulator tree: buck+buck+LDO, PG LEDs)."""
-
-from subsystems.power.power import circuit, INTERFACE, RAILS, PORTS
+from subsystems.power.power import INTERFACE, PORTS, RAILS, circuit
 
 __all__ = ["circuit", "INTERFACE", "RAILS", "PORTS"]

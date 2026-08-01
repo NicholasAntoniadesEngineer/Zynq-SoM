@@ -1,5 +1,3 @@
-"""ethernet reusable subsystem (HX5008NL gigabit magnetics + Bob-Smith)."""
-
-from subsystems.ethernet.ethernet import circuit, INTERFACE, RAILS, PORTS
+from subsystems.ethernet.ethernet import INTERFACE, PORTS, RAILS, circuit
 
 __all__ = ["circuit", "INTERFACE", "RAILS", "PORTS"]

@@ -1,31 +1,3 @@
-"""LOCAL electrical-correctness test for the pmod reusable subsystem.
-
-Runs the SUBSYSTEM-LOCAL slices of the board's own verify gates on JUST this
-subsystem's circuit, standalone and offline (model + symbol pin tables +
-ratings catalog; no kicad-cli, no network, no board). Co-located with the
-package so a future migration of any other subsystem follows the same shape
-(see subsystems/usb_pd/test_usb_pd.py for the worked exemplar).
-
-pmod is a PURE CONNECTOR sheet (two DS1024 Pmod sockets) plus inline passives —
-no active IC — so the LOCAL checks it can prove about ITSELF are:
-  * declared abstract interface  — RAILS/PORTS present with the right net class,
-    every connector pin netted-or-NC (model completeness), the 16 host signals
-    typed as PORTs carrying their linker-deferral payload (when bound).
-  * protection + bypass network   — the Digilent-standard 200R series resistor on
-    every one of the 16 IOs (host signal -> 200R -> private socket-IO net), and
-    each port's VCC pins carry a 100n + 10u local bypass to GND.
-  * part ratings                  — every BOM passive's LCSC resolves in the
-    ratings catalog and each bypass cap is voltage-derated for +VCC_PMOD.
-  * SPICE passives                — the .cir subckt's passive network matches the
-    netlist one-for-one (parse_si), and the analytic spice slice runs clean.
-  * the bind contract             — abstract -> real renames only externals,
-    rejects SIGNAL/typo/collision, and a carrier-style bind is order-preserving.
-
-CROSS-BOARD checks deliberately stay at board level (not duplicated here): the
-full power-tree headroom, the link/port-driver graph, board ERC, and the board
-netlist merge. Those are aggregated by `schgen board`.
-"""
-
 from __future__ import annotations
 
 import re
@@ -34,19 +6,16 @@ from pathlib import Path
 
 import pytest
 
+import subsystems.pmod.pmod as pmod
 from schgen.core.model import Circuit, CircuitError, NetClass, PinRef
 from schgen.core.symbols import Library
 from schgen.verify import design_rules, part_rules, spice
 from schgen.verify.powertree import parse_si
 from schgen.verify.ratings import RATINGS_BY_LCSC
 
-import subsystems.pmod.pmod as pmod
-
 HERE = Path(__file__).resolve().parent
 CIR = HERE / "pmod.cir"
 
-# A carrier-style binding (abstract -> real) used only to exercise bind(); the
-# authoritative carrier map lives in carrier/subsystems/pmod.py.
 _CARRIER_PORT_NETS = {
     "PMOD0": ["IO_L2_P_13", "IO_L2_N_13", "IO_L3_P_13", "IO_L3_N_13",
               "IO_L4_P_13", "IO_L4_N_13", "IO_L5P_13", "IO_L5_N_13"],
@@ -66,7 +35,6 @@ def lib() -> Library:
 
 @pytest.fixture
 def c() -> Circuit:
-    """The standalone subsystem (abstract names)."""
     return pmod.circuit()
 
 
@@ -74,21 +42,15 @@ def _sheet(c: Circuit):
     return types.SimpleNamespace(name=c.name, circuit=c)
 
 
-# ---- declared abstract interface ------------------------------------------------
-
 def test_interface_is_abstract_and_carrier_free(c: Circuit):
-    """Every externally-visible net is one of the declared abstract names — no
-    carrier/board net name leaked into the library."""
     externals = {n.name for n in c.nets.values()
                  if n.net_class is not NetClass.SIGNAL}
     assert externals == set(pmod.INTERFACE), externals
-    # the abstract names must not be carrier SoM bank-13 net names
     assert not any(n.endswith("_13") or n == "+3V3_PMOD" for n in externals), \
         externals
 
 
 def test_interface_shape(c: Circuit):
-    """The interface is exactly the two rails + 16 host signals (8 per port)."""
     assert pmod.RAILS == ("+VCC_PMOD", "GND")
     assert len(pmod.PORTS) == 16
     assert pmod.PORTS[:8] == tuple(f"PMOD0_SIG{i}" for i in range(1, 9))
@@ -105,8 +67,6 @@ def test_rail_and_port_classes(c: Circuit):
 
 
 def test_internal_io_nets_stay_private_signal(c: Circuit):
-    """The 200R -> socket-pin span (PMOD{n}_IO{m}) is a PRIVATE SIGNAL net — it
-    is never an external and is never exposed for binding."""
     signal = {n.name for n in c.nets.values()
               if n.net_class is NetClass.SIGNAL}
     assert signal == {f"PMOD{p}_IO{io}"
@@ -115,36 +75,22 @@ def test_internal_io_nets_stay_private_signal(c: Circuit):
 
 
 def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
-    """Model completeness: every physical pin of every part (both 12-pad sockets,
-    every R and C, the four TPD4E1U06 ESD arrays) is netted or NC — the same hard
-    check the board build runs (LAW 0: no silent floats). The only intentional NCs
-    are pin 5 of each 4-channel TPD4E1U06 array."""
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
     assert {str(p) for p in c.nc_pins} == {"U1.5", "U2.5", "U3.5", "U4.5"}, \
         {str(p) for p in c.nc_pins}
 
 
 def test_four_esd_arrays_clamp_all_sixteen_io(c: Circuit):
-    """Protection regression (audit 2026-06-19 MEDIUM): each of the 16 cable-facing
-    Pmod IO (2 ports x 8) carries a GND-referenced TPD4E1U06 shunt clamp at the
-    socket. Four 4-channel arrays, each grounded on pin 2, and every PMOD{n}_IO{m}
-    socket net must TOUCH an array channel pin (a pure shunt, never in series —
-    LAW-0). Matches the peer pmod_expansion protection policy."""
     esd_refs = {ref for ref, p in c.parts.items() if p.value == "TPD4E1U06"}
     assert esd_refs == {"U1", "U2", "U3", "U4"}, esd_refs
-    for ref in esd_refs:                                   # arrays grounded on pin 2
+    for ref in esd_refs:
         assert c.net_of(PinRef(ref, "2")).name == "GND"
-    # every host-signal (SoM-side, FPGA-pin) net reaches an ESD-array channel pin
     for port_net in pmod.PORTS:
         net = c.nets[port_net]
         assert any(p.ref in esd_refs for p in net.pins), (port_net, net.pins)
 
 
-# ---- protection + bypass network ------------------------------------------------
-
 def test_200r_series_on_every_io(c: Circuit):
-    """Digilent-standard protection: every one of the 16 host signals enters
-    through a 200R series resistor onto a private socket-IO net."""
     res = [(ref, p) for ref, p in c.parts.items() if p.lib_id.endswith(":R")]
     assert len(res) == 16, [r for r, _ in res]
     assert {p.value for _, p in res} == {"200R"}
@@ -152,7 +98,6 @@ def test_200r_series_on_every_io(c: Circuit):
         for io in range(1, 9):
             sig = f"{port}_SIG{io}"
             iol = f"{port}_IO{io}"
-            # exactly one resistor straddles the host signal and the socket-IO net
             bridging = [ref for ref, _ in res
                         if {n.name for n in (c.net_of(PinRef(ref, "1")),
                                              c.net_of(PinRef(ref, "2"))) if n}
@@ -161,8 +106,6 @@ def test_200r_series_on_every_io(c: Circuit):
 
 
 def test_each_port_has_a_local_vcc_bypass(c: Circuit):
-    """Each of the two ports carries a 100n + 10u local bypass on +VCC_PMOD ->
-    GND (4 caps total, two 100n + two 10u)."""
     bypass = []
     for ref, p in c.parts.items():
         if not p.lib_id.endswith(":C"):
@@ -175,18 +118,11 @@ def test_each_port_has_a_local_vcc_bypass(c: Circuit):
 
 
 def test_design_rules_slice_runs_clean(c: Circuit, lib: Library):
-    """The board's design-rule engine raises no DECAP/EP/STRAP finding (a plain
-    connector has no IC supply pin, no exposed pad, no config strap)."""
     r = design_rules.check([_sheet(c)], lib)
     assert not (r.decap or r.ep or r.strap), r.findings
 
 
-# ---- part ratings (part_rules catalog + local derate) ---------------------------
-
 def test_every_bom_passive_has_a_ratings_row(c: Circuit):
-    """Local rating coverage: every passive's LCSC resolves in the ratings
-    catalog (a part_rules.run on abstract rails reports caps as 'rail
-    unresolved', so we assert the catalog coverage directly here)."""
     missing = []
     for ref, p in sorted(c.parts.items()):
         if not (p.lib_id.endswith(":C") or p.lib_id.endswith(":R")):
@@ -198,8 +134,6 @@ def test_every_bom_passive_has_a_ratings_row(c: Circuit):
 
 
 def test_bypass_caps_voltage_derated_for_rail(c: Circuit):
-    """Each VCC bypass cap is voltage-rated for +VCC_PMOD (3.3 V class) with a
-    >=1.3x ceramic margin."""
     rail_v = pmod.RAIL_NOM_V["+VCC_PMOD"]
     seen = 0
     for ref, p in sorted(c.parts.items()):
@@ -217,17 +151,11 @@ def test_bypass_caps_voltage_derated_for_rail(c: Circuit):
 
 
 def test_part_rules_slice_runs_clean(c: Circuit, tmp_path):
-    """The board's per-part rating engine raises NO hard finding on this
-    subsystem (caps read as 'rail unresolved' on abstract rails — fail-soft —
-    which is acceptable for a standalone subsystem)."""
     r = part_rules.run([_sheet(c)], tmp_path)
     assert r.ok, r.findings
 
 
-# ---- SPICE subckt <-> netlist passives ------------------------------------------
-
 def _cir_passives() -> dict[str, float]:
-    """Parse the .cir R/C lines inside the pmod subckt into {refdes: value}."""
     out = {}
     in_subckt = False
     for line in CIR.read_text().splitlines():
@@ -245,10 +173,7 @@ def _cir_passives() -> dict[str, float]:
 
 
 def test_cir_subckt_pins_are_the_abstract_interface():
-    """The .cir subckt declares the abstract ports as its pins (a project wires
-    them to real nets, exactly as the netlist bind does)."""
     text = CIR.read_text()
-    # the subckt header may use line continuations ('+'), so stitch them first
     lines = text.splitlines()
     hdr = []
     started = False
@@ -267,14 +192,11 @@ def test_cir_subckt_pins_are_the_abstract_interface():
     want = ["VCC_PMOD"] + [f"PMOD{p}_SIG{io}"
                            for p in (0, 1) for io in range(1, 9)] + ["GND"]
     assert pins == want, pins
-    # every subckt pin is a real abstract interface net (sans the '+' rail mark)
     iface = {n.lstrip("+") for n in pmod.INTERFACE}
     assert all(p in iface for p in pins), pins
 
 
 def test_cir_passives_match_netlist(c: Circuit):
-    """The subckt's passive network equals the netlist's R+C, value-for-value
-    (the .cir cannot silently drift from the circuit)."""
     netlist = sorted(parse_si(p.value) for ref, p in c.parts.items()
                      if p.lib_id.endswith(":R") or p.lib_id.endswith(":C"))
     cir = sorted(_cir_passives().values())
@@ -282,35 +204,21 @@ def test_cir_passives_match_netlist(c: Circuit):
 
 
 def test_spice_analytic_slice_runs_clean(c: Circuit):
-    """The analytic spice gate finds no divider/RC/FB violation on this
-    subsystem (it has none — series protection + bypass only) and no error."""
     res = spice.extract_checks([_sheet(c)])
     assert res.ok, res.errors
 
 
-# ---- the bind contract (the reuse API) ------------------------------------------
-
 def test_bind_renames_only_externals_byte_stable():
-    """A carrier-style bind renames every external to the real net and touches
-    nothing else: part set, refs, internal SIGNAL nets and draw budgets are
-    preserved, and the nets dict keeps insertion order (byte-identical emit)."""
     base = pmod.circuit()
     bound = pmod.circuit({"bind": _CARRIER_BIND})
-    # same parts/refs
     assert set(bound.parts) == set(base.parts)
-    # externals renamed exactly per the map; internal SIGNAL nets untouched; order
-    # preserved across the whole nets dict
     expect = [_CARRIER_BIND.get(n, n) for n in base.nets]
     assert list(bound.nets) == expect
-    # the internal IO SIGNAL nets are NOT in the bind map and survive verbatim
     assert "PMOD0_IO1" in bound.nets and "PMOD1_IO8" in bound.nets
-    # the draw budget followed the renamed rail
     assert "+3V3_PMOD" in bound.loads and "+VCC_PMOD" not in bound.loads
 
 
 def test_bind_carries_port_deferral_payload():
-    """When the adapter supplies expects=, the bound host-signal ports carry the
-    linker-deferral string (the carrier defers all 16 to its J2 sheet)."""
     bound = pmod.circuit({
         "bind": _CARRIER_BIND,
         "expects": {f"{port}_SIG{io}": "som_j2_connector"
@@ -327,19 +235,16 @@ def test_bind_identity_is_noop():
 
 
 def test_meta_notes_override_house_style():
-    """notes["draws"] overrides the power-tree note without changing the netlist
-    topology (a project restores its own house-style metadata)."""
     base = pmod.circuit()
     m = pmod.circuit({"notes": {"draws": "custom note"}})
     assert set(m.parts) == set(base.parts)
     assert list(m.nets) == list(base.nets)
-    assert m.loads["+VCC_PMOD"][0][1] == "custom note"   # (amps, note)
+    assert m.loads["+VCC_PMOD"][0][1] == "custom note"
 
 
 def test_meta_rejects_unknown_key():
-    """A typo'd top-level meta key is a hard error (never silently dropped)."""
     with pytest.raises(CircuitError, match="unknown subsystem meta key"):
-        pmod.circuit({"note": {"draws": "X"}})           # 'note' != 'notes'
+        pmod.circuit({"note": {"draws": "X"}})
 
 
 def test_bind_rejects_unknown_name():
@@ -349,7 +254,6 @@ def test_bind_rejects_unknown_name():
 
 
 def test_bind_rejects_signal_net():
-    """An internal SIGNAL net is private wiring — binding one is a hard error."""
     c = pmod.circuit()
     assert c.nets["PMOD0_IO1"].net_class is NetClass.SIGNAL
     with pytest.raises(CircuitError, match="SIGNAL"):
