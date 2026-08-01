@@ -1,12 +1,3 @@
-"""Trace-differential harness for the stage-template seat solver fast kernels
-(schgen/generate/pcb/stage_templates): the verbatim reference pose scan
-(``_gc_scan_ref``) and the fast scan (``_gc_scan_fast``) must return IDENTICAL
-pose lists on real contract solves; the ``_seat_all`` expanded-box DFS must
-agree with the ``_boxes_overlap`` kernel on every decision; the union-box lower
-bound can never exceed the exact pad-edge gap; and the permanent skeleton-clear
-tripwire raises loudly when its invariant is violated. The same traced kernels
-are selectable on a live build via SCHGEN_SEAT_TRACE=1."""
-
 from __future__ import annotations
 
 import pytest
@@ -28,10 +19,6 @@ def _solve(monkeypatch, sheet, trace):
 
 
 def test_camera_trace_differential_and_identity(monkeypatch):
-    """Camera (the multi-anchor archetype) solved cold with SCHGEN_SEAT_TRACE
-    semantics: every _gcandidates call runs BOTH scan kernels (divergence
-    raises inside), and the traced result equals the untraced fast result
-    exactly — trace mode observes, never steers."""
     res_t, rot_t, _resolvable, _c = _solve(monkeypatch, "camera", True)
     res_f, rot_f, _resolvable2, _c2 = _solve(monkeypatch, "camera", False)
     assert res_t is not None
@@ -40,10 +27,6 @@ def test_camera_trace_differential_and_identity(monkeypatch):
 
 
 def test_usb_pd_trace_differential_and_identity(monkeypatch):
-    """usb_pd (frozen pilot star) drives the single-anchor ``_seat_all`` DFS:
-    under trace every backtracking decision is double-checked against the
-    original ``any(_boxes_overlap(...))`` kernel, and the result is identical
-    to the untraced solve."""
     res_t, rot_t, _resolvable, _c = _solve(monkeypatch, "usb_pd", True)
     res_f, rot_f, _resolvable2, _c2 = _solve(monkeypatch, "usb_pd", False)
     assert res_t is not None
@@ -52,10 +35,6 @@ def test_usb_pd_trace_differential_and_identity(monkeypatch):
 
 
 def test_union_lower_bound_never_exceeds_exact_gap():
-    """The fast scan's rejection logic rests on lb <= exact best (union boxes
-    only ever move pad pairs closer). Sweep a real anchor/member pad geometry
-    (usb_pd U1 vs its C1 bypass) over a coarse offset grid and verify the bound
-    against the verbatim exact kernel at every pose."""
     from schgen.verify import placement_contract_gate as g
 
     _refs, _side, _bbox, resolvable, _cr, _od = _subsystem_inputs("usb_pd")
@@ -96,9 +75,6 @@ def test_union_lower_bound_never_exceeds_exact_gap():
 
 
 def test_seat_dfs_skeleton_tripwire_raises(monkeypatch):
-    """The permanent _seat_all tripwire: a candidate that is NOT skeleton-clear
-    (the invariant _candidates guarantees and the fast DFS relies on) raises
-    loudly instead of seating a silently divergent layout."""
     _refs, _side, _bbox, resolvable, _cr, _od = _subsystem_inputs("usb_pd")
     mod = sorted(resolvable.values())[0]
     anchor = T._Part("U1", mod, 0.0, "top", 0.0, 0.0)

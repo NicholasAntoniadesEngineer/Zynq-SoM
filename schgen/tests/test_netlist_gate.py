@@ -1,16 +1,3 @@
-"""Tests for the unfakeable electrical gate (schgen/verify/netlist_gate.py):
-declared netlist == kicad-cli's extracted netlist, pin for pin.
-
-This gate's ONLY oracle is ``kicad-cli sch export netlist`` on an EMITTED sheet,
-so its tests EMIT a tiny hand-placed sheet (the M1 RC divider) into a tempdir
-and run the real kicad-cli — local, no network, deterministic. They skip
-cleanly when kicad-cli is absent.
-
-Locks: the net-name normaliser; the clean M1 sheet PASSES (declared == extracted);
-a stray wire that merges two declared nets is caught as a SHORT (and the rail
-loses its name); and a wire leg removed so a pin strands is caught as an OPEN.
-Also a parser unit test (extract_netlist round-trip) that needs no emit."""
-
 from __future__ import annotations
 
 import shutil
@@ -34,7 +21,6 @@ def test_norm_strips_kicad_sheet_prefix():
 
 
 def _build_and_check(mutate=None):
-    """Emit the M1 RC divider (optionally mutated) and run the netlist gate."""
     from schgen.tests import m1_rc
     c, d, lib = m1_rc.build()
     if mutate is not None:
@@ -54,8 +40,6 @@ def test_clean_sheet_passes():
 
 @_needs_kicad
 def test_short_two_nets_fails():
-    # a stray vertical wire across R1 bridges R1.1 (+3V3) to R1.2 (MID): the
-    # two declared nets merge into one extracted net -> SHORT (+ LOST-NAME rail).
     def short(d):
         d.wires.append(Wire(101.6, 77.47, 101.6, 85.09))
     r = _build_and_check(short)
@@ -64,19 +48,16 @@ def test_short_two_nets_fails():
 
 
 def test_dead_two_terminal_flags_capshort():
-    """A 2-pin passive with both terminals on ONE net is electrically dead
-    (capshort) and must be flagged DECLARED-side — needs no kicad-cli, since
-    declared-vs-extracted equivalence stays green for it."""
     from schgen.core.model import Circuit
     c = Circuit("t", "capshort test")
     c.part("C1", "Device:C", "100n", "Capacitor_SMD:C_0603_1608Metric")
     c.net("+3V3", "C1.1")
-    c.net("GND", "C1.2")                        # healthy decoupling cap
+    c.net("GND", "C1.2")
     c.part("C2", "Device:C", "100n", "Capacitor_SMD:C_0603_1608Metric")
-    c.net("GND", "C2.1", "C2.2")               # both pins on GND -> DEAD
+    c.net("GND", "C2.1", "C2.2")
     c.part("R9", "Device:R", "0", "Resistor_SMD:R_0603_1608Metric")
     c.net("NETA", "R9.1")
-    c.net("NETB", "R9.2")                       # healthy 0R link across 2 nets
+    c.net("NETB", "R9.2")
     dead = netlist_gate._dead_two_terminal(c)
     assert any("C2" in s for s in dead), dead
     assert not any("C1" in s or "R9" in s for s in dead), dead
@@ -84,8 +65,6 @@ def test_dead_two_terminal_flags_capshort():
 
 @_needs_kicad
 def test_open_strands_pin_fails():
-    # drop the tap->R2.1 wire (101.6,91.44)->(101.6,97.79): R2.1 strands off the
-    # MID net -> OPEN (MID's pins split across extracted nets).
     def open_(d):
         d.wires = [w for w in d.wires
                    if not (w.x0 == 101.6 and w.y0 == 91.44

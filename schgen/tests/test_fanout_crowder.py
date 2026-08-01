@@ -1,17 +1,3 @@
-"""THE foreign-neighbour predicate (fanout_gate.counts_as_crowder) + the
-net-class-aware est via cost (wave-10 U1 / user decree 2026-07-30).
-
-U1 root cause, pinned here so it cannot return: BREATHE carried a PRIVATE copy
-of the gate's foreign-neighbour rule that omitted the test-point exemption. A
-TP pad therefore read as a crowder, which (a) faked starvation, (b) aimed the
-away-from-crowder march at a part the gate does not count, and (c) neutered the
-mover's own no-regression floor min(need, current clearance). Measured live on
-the 185x163 bringup_rails outline: U5001 (bringup_en_modules, 5 pin, TOP) saw
-its phantom clearance as 0.500 to TP5002, marched away from it, and collapsed
-its REAL 2.640 gap to C15002 (lcd, TOP) down to 1.380 against a 1.50 need — the
-single D13 red of that board. Both sides now call ONE predicate.
-"""
-
 from __future__ import annotations
 
 import pytest
@@ -51,9 +37,6 @@ def test_breathe_foreign_predicate_is_the_gates_predicate():
 
 
 def test_regression_guard_floor_uses_the_gate_clearance():
-    """min(need, old_clr) is only a real floor when old_clr is measured the
-    gate's way: with a TP counted the U1 case read old_clr=0.500 and licensed a
-    2.640 -> 1.380 collapse against a 1.50 need."""
     need = fg.intelligent_need(5)[0]
     phantom_old = 0.500
     honest_old = 2.640
@@ -65,10 +48,6 @@ def test_regression_guard_floor_uses_the_gate_clearance():
 
 
 def test_breathe_never_marches_away_from_a_testpoint():
-    """The U1 shape, synthetically: an 8-pin subject with a TP pad hard against
-    its LEFT edge and open board to the right. With the TP counted the pass saw
-    clr=0 and marched EAST; with the gate's predicate the subject is already
-    clear of every countable foreign part and must not move at all."""
     from schgen.generate import pcb
     from schgen.generate.pcb.footprint import _footprint_bbox
     ic = pcb.resolve_mod("Package_SO:SOIC-8_3.9x4.9mm_P1.27mm")
@@ -108,12 +87,6 @@ def test_est_via_cost_high_speed_set_is_derived_not_listed():
 
 
 def test_impedance_row_dominates_the_ordinary_row():
-    """The decree's intent: high-speed pays materially more. Wave-10 measured a
-    STEP at 0+ and blamed the punch model; wave-11 fixed the punch model and
-    re-swept — the step is GONE (0.0 and 2.2 emit the identical best board), so
-    the row stays 2.2 as the physically-derived member of one flat plateau. It
-    is still INTERIM, now for the est/emission gap alone, and the basis must
-    carry BOTH measurements so the caveat can never quietly become folklore."""
     assert q.est_via_cost(True) >= 3.0 * q.est_via_cost(False)
     assert q.est_via_cost(False) > 0.0
     basis = q.REGISTRY["est_via_cost"].basis

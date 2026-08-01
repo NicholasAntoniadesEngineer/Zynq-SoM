@@ -1,17 +1,9 @@
-"""The board-services AUX I2C devices (ID-EEPROM 0x51, RTC 0x52) must appear in
-EVERY downstream artifact's I2C map — firmware, testplan, manifest — all
-single-sourced from firmware._id_eeprom_addr. These lock the audit-3 downstream-
-completeness fixes so a future board-HW edit can't silently drop them from one
-generator. Pure, offline (no kicad-cli, no board build)."""
-
 from __future__ import annotations
 
 from schgen.core.link import load_subsystem
 
 
 def _services_only():
-    # the AUX devices are defined on board_services; the generators scan all
-    # sheets, so a one-sheet list is enough to exercise the AUX branch.
     return [load_subsystem("board_services")]
 
 
@@ -20,7 +12,7 @@ def test_manifest_i2c_map_has_aux_devices():
     rows = {r["addr"]: r for r in _i2c_map(_services_only())}
     assert 0x51 in rows, "manifest i2c_map missing the ID-EEPROM (0x51)"
     assert 0x52 in rows, "manifest i2c_map missing the RTC (0x52)"
-    assert rows[0x51]["bus"] == "AUX_I2C"           # the isolated segment
+    assert rows[0x51]["bus"] == "AUX_I2C"
     assert rows[0x52]["bus"] == "AUX_I2C"
     assert "24AA025E48" in rows[0x51]["device"]
 
@@ -34,7 +26,6 @@ def test_testplan_i2c_devices_marks_aux_conditional():
 
 
 def test_all_three_generators_agree_on_the_eeprom_address():
-    # one source of truth: firmware._id_eeprom_addr (strap-derived 0x51)
     from schgen.generate.firmware import _id_eeprom_addr
     from schgen.generate.manifest import _i2c_map
     from schgen.generate.testplan import _i2c_devices

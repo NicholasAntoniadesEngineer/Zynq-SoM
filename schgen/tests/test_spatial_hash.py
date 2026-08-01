@@ -1,10 +1,3 @@
-"""Trace-differential harness for the _Occupancy spatial neighborhood index
-(schgen/generate/floorplan.py): the exhaustive separation scan and the
-uniform-grid hashed scan must return IDENTICAL accept/reject booleans on
-every query — dense-pack and sparse-spread stress layouts, add/remove churn,
-place_near first-fit equivalence, and the loud static-bound raises. The same
-traced kernel is selectable on a live build via SCHGEN_SPATIAL_TRACE=1."""
-
 from __future__ import annotations
 
 import pytest

@@ -1,9 +1,3 @@
-"""Fast unit tests for schgen.place pure geometry helpers: gsnap / gceil /
-gfloor land on the 1.27 mm grid, bracket the input correctly, and the
-Spacing.expanded() feasibility-loop widening grows whitespace (never relaxes
-a rule). No placement run, no Library, no board.
-"""
-
 from __future__ import annotations
 
 import pytest
@@ -11,7 +5,7 @@ import pytest
 from schgen.core.symbols import GRID
 from schgen.layout.place import Spacing, gceil, gfloor, gsnap
 
-U = GRID  # 1.27 mm
+U = GRID
 
 
 def _on_grid(v: float) -> bool:
@@ -25,22 +19,22 @@ def test_helpers_land_on_grid(fn, v):
 
 
 def test_gsnap_rounds_to_nearest():
-    assert gsnap(0.6) == 0.0        # < half-grid down
-    assert gsnap(0.7) == U          # > half-grid up
-    assert gsnap(U) == U            # exact stays put
-    assert gsnap(1.9) == U          # 1.9 / 1.27 = 1.49.. -> 1
+    assert gsnap(0.6) == 0.0
+    assert gsnap(0.7) == U
+    assert gsnap(U) == U
+    assert gsnap(1.9) == U
 
 
 def test_gceil_rounds_up_and_is_idempotent_on_grid():
     assert gceil(1.3) == 2 * U
-    assert gceil(U) == U            # already on grid -> unchanged
+    assert gceil(U) == U
     assert gceil(0.0) == 0.0
 
 
 def test_gfloor_rounds_down_and_is_idempotent_on_grid():
     assert gfloor(1.3) == U
-    assert gfloor(2 * U) == 2 * U   # already on grid -> unchanged
-    assert gfloor(2.6) == 2 * U     # 2.6 / 1.27 = 2.04.. -> 2
+    assert gfloor(2 * U) == 2 * U
+    assert gfloor(2.6) == 2 * U
 
 
 def test_gfloor_le_v_le_gceil():
@@ -56,21 +50,16 @@ def test_snap_ceil_floor_agree_on_grid_points():
         assert gsnap(v) == v == gceil(v) == gfloor(v)
 
 
-# --------------------------------------------------------------------------- #
-# Spacing.expanded() — the feasibility loop grows whitespace
-# --------------------------------------------------------------------------- #
 def test_expanded_grows_port_run_and_stays_on_grid():
     s = Spacing()
     e = s.expanded()
     assert e.port_run > s.port_run
-    assert _on_grid(e.port_run)        # widened value still snaps to grid
+    assert _on_grid(e.port_run)
     assert e.cluster_dx > s.cluster_dx
     assert _on_grid(e.cluster_dx)
 
 
 def test_expanded_preserves_fixed_attachment_gaps():
-    # label_tap_gap / hang_stub are deliberately NOT widened (attachment
-    # geometry is fixed; only the airy whitespace grows)
     s = Spacing()
     e = s.expanded()
     assert e.label_tap_gap == s.label_tap_gap

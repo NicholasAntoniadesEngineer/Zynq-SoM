@@ -1,10 +1,3 @@
-"""Deliberately-broken self-tests for the governance mechanisms (U1-U4):
-the quantize census must TRIP on a fake raw snap, the fallback ratchet must
-TRIP on a forced fallback, the stage tracker must TRIP on movement in a
-``may_move=no`` stage — loud, named errors, never silent — plus inertness
-spot-proofs for every registered transform and determinism of the generated
-pipeline doc. Pure/offline: no board build, no kicad-cli."""
-
 from __future__ import annotations
 
 import json

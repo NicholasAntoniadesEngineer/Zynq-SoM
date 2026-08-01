@@ -1,10 +1,3 @@
-"""Bottom-side P1 guards (docs/BOTTOM_SIDE_STRATEGY.md): the two-layer +
-punch occupancy legality, the mirrored re-pack determinism, the face=top
-constraint inside bottom variants, the floorplan.json layer-side parsing,
-and — the landing gate's unit form — zero-opt-in inertness (no bottom shape
-exists, no side flips, no via-cost term) with the real project spec. The
-board-level control is the byte-identical .kicad_pcb md5 pair."""
-
 from __future__ import annotations
 
 import dataclasses
@@ -152,9 +145,6 @@ def test_punch_default_matches_legacy(monkeypatch):
 
 
 def test_zero_optin_no_bottom_machinery(real_spec):
-    """The INERTNESS control is the spec with every copper-face declaration
-    stripped (the landed tree legitimately declares board_aux "either", so
-    the raw spec is no longer the zero-opt-in world)."""
     stripped = dataclasses.replace(real_spec, interior={
         name: {k: v for k, v in entry.items()
                if k != "layer" and not (k == "side"
@@ -246,10 +236,6 @@ def test_conn_and_zoneless_declarations_raise(real_spec):
 
 
 def test_impedance_sheet_refused_while_bcu_has_no_reference(real_spec):
-    """B.Cu's microstrip reference plane is In2.Cu and the emitter fills only
-    In1.Cu, so a DP90/DP100 pair placed face-down has no reference at all. The
-    refusal is LOUD and DERIVED from the net classes (the est_via_cost
-    derivation), not from a sheet list."""
     spec_imp = dataclasses.replace(
         real_spec, interior={**real_spec.interior,
                              "hdmi_rx_term": {"side": "either"}})
@@ -265,11 +251,6 @@ def test_impedance_sheet_refused_while_bcu_has_no_reference(real_spec):
 
 
 def test_role_aware_bottom_variant_maximises_bcu(real_spec):
-    """A shelf sheet's `bottom-a*` variant puts EVERY part except `face_top`
-    on the face the block was assigned — the same rule the contracted path's
-    `_lift_face_top` applies. The `bottom-split-a*` companions carry the
-    classifier's split (the arrangement with the FEWEST parts face-down) and
-    are registered AFTER, so an equal box resolves toward the bottom face."""
     spec2 = _either_spec(real_spec, sheet="board_services")
     shapes = subsystem_zone_geometry(two_side=True,
                                      spec=spec2).shapes["board_services"]

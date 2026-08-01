@@ -1,11 +1,3 @@
-"""Unit tests for the LAW-6 mechanical/use-case placement gate
-(schgen.verify.placement_mech) + the connector edge-rotation helpers it relies
-on. The gate's whole reason to exist is to KILL a board that is electrically
-clean (DRC=0, ratsnest-pass) but mechanically UNBUILDABLE, so every test here is
-a mutant: a synthetic placed model that should PASS, then a single-defect
-mutation that must FAIL — proving the gate bites.
-"""
-
 from __future__ import annotations
 
 from schgen.generate import pcb
@@ -19,15 +11,9 @@ from schgen.generate.pcb import (
 )
 from schgen.verify import placement_mech as pm
 
-# ---- the rotation contract: a connector ON an edge must face OFF-BOARD --------
 
 def test_edge_rotation_points_mouth_off_board():
-    """For every connector face direction and every edge, the chosen placement
-    rotation turns the mating mouth toward the OFF-BOARD side of that edge."""
     edge_out = {"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0)}
-    # every mating-face the engine supports (-Y/+Y in-plane + the +X/-X mouths
-    # added for horizontal edge connectors like the XT60) must, on every edge,
-    # rotate so the mouth points OFF the board.
     for face in pcb._ROT_TABLES:
         for edge in ("N", "S", "E", "W"):
             rot = connector_edge_rotation(face, edge)
@@ -36,24 +22,10 @@ def test_edge_rotation_points_mouth_off_board():
 
 
 def test_mouth_oracle_uses_kicads_true_rotation_sign():
-    """`test_edge_rotation_points_mouth_off_board` only proves the table and the
-    oracle AGREE, so a mirrored pair passes it — which is exactly what shipped:
-    both were derived math-CCW while every placed-geometry kernel
-    (`_inst_pad_geom`, `_rot_pad_bbox`, `_rot_bbox_cw`, `_inst_courtyard`) uses
-    KiCad's TRUE sign. They differ only at 90/270, so all N/S connectors were
-    right and the four E/W ones carried an inverted CONN_MATING_FACE label that
-    cancelled the error — until a truthfully-labelled +Y mouth (the HDMIs) was
-    asked for a vertical edge and was turned INBOARD, which is a dead board.
-
-    Measured against kicad-cli (an F.CrtYd spike along local +Y exported at
-    0/90/270): +Y -> +X at 90 and -> -X at 270. Pin the oracle to that sign by
-    measuring it against the emission kernel itself, not against the table."""
     from schgen.generate.pcb.mating_face import _rot_bbox_cw
 
     for face, vec in pcb._FACE_VEC.items():
         for rot in (0.0, 90.0, 180.0, 270.0):
-            # the face point itself, carried through the SAME transform the
-            # emitted footprint's geometry gets
             v = (float(vec[0]), float(vec[1]))
             rb = _rot_bbox_cw((v[0], v[1], v[0], v[1]), rot)
             geo = (int(round(rb[0])), int(round(rb[1])))
@@ -65,18 +37,13 @@ def test_mouth_oracle_uses_kicads_true_rotation_sign():
 
 
 def test_every_offboard_mpn_has_a_mating_face():
-    """Every off-board connector family the floorplan can pin has a researched
-    mating-face direction (so the placer can rotate it)."""
     for mpn, face in pcb.CONN_MATING_FACE.items():
         assert face in pcb._ROT_TABLES, \
             f"{mpn} has an unsupported mating face {face!r} " \
             "(not in the rotation engine)"
 
 
-# ---- a synthetic placed model: PASS, then per-rule mutants must FAIL ----------
-
 def _inst(ref, mpn, x, y, rot, sheet="t"):
-    """A real-footprint FootprintInst placed at (x, y) with rotation ``rot``."""
     mod = pcb.resolve_mod(f"{mpn}:{mpn}")
     assert mod is not None, f"{mpn} footprint missing"
     return FootprintInst(ref=ref, value=mpn, footprint=f"{mpn}:{mpn}",
@@ -85,26 +52,17 @@ def _inst(ref, mpn, x, y, rot, sheet="t"):
 
 
 def _passing_model():
-    """A small board: a USB-C flush on the N edge facing off-board, a microSD
-    flush on the S edge facing off-board, an R passive under the SoM core (GOOD),
-    and a clear SoM core. Should PASS the LAW-6 gate."""
     W, H = 100.0, 80.0
     bx0, by0 = ORIGIN_X, ORIGIN_Y
     _bx1, by1 = ORIGIN_X + W, ORIGIN_Y + H
-    # USB-C (-Y face) on the N edge: the gate-derived rotation faces the mouth
-    # off-board (top); seat it flush so its top courtyard face is at the edge.
     r_usbc = connector_edge_rotation(pcb.CONN_MATING_FACE["TYPE-C-31-M-12"], "N")
     ub = pcb._rot_bbox(pcb._footprint_bbox(
         pcb.resolve_mod("TYPE-C-31-M-12:TYPE-C-31-M-12")), r_usbc)
     j_usbc = _inst("J1", "TYPE-C-31-M-12", bx0 + 20, by0 - ub[1] + 0.1, r_usbc)
-    # microSD (+Y face) on the S edge: the gate-derived rotation faces +Y/bottom.
     r_sd = connector_edge_rotation(pcb.CONN_MATING_FACE["TF-01A"], "S")
     sb = pcb._rot_bbox(pcb._footprint_bbox(
         pcb.resolve_mod("TF-01A:TF-01A")), r_sd)
     j_sd = _inst("J2", "TF-01A", bx0 + 60, by1 - sb[3] - 0.1, r_sd)
-    # a BOTTOM-side passive UNDER the SoM core (allowed — opposite face from the
-    # SoM) + the SoM core rectangle. A TOP-side part here is forbidden (the SoM's
-    # own bottom components sit in the standoff gap — see the top-keepout mutant).
     som_core = (bx0 + 40, by0 + 30, bx0 + 60, by0 + 50)
     rmod = pcb.resolve_mod("Resistor_SMD:R_0603_1608Metric")
     r_under = FootprintInst(ref="R5", value="10k",
@@ -127,27 +85,20 @@ def test_passing_model_passes():
 
 
 def test_mutant_connector_interior_fails():
-    """Drag the USB-C off its edge into the board interior — the cable can no
-    longer plug in. The gate MUST fail (this is the exact densifier defect)."""
     model = _passing_model()
     j = next(i for i in model.insts if i.ref == "J1")
     j.x += 25.0
-    j.y += 25.0           # now ~25 mm interior of the N edge
+    j.y += 25.0
     res = pm.check(model)
     assert not res.ok, "interior off-board connector must FAIL the gate"
     assert any("J1" in b for b in res.bad_connectors), res.summary()
 
 
 def test_mutant_connector_recessed_off_edge_fails():
-    """A connector left RECESSED ~1 mm inboard of the edge (its body no longer
-    reaches the edge, so the cable's overmold hits the board first) MUST FAIL the
-    strict edge gate — even though 1 mm passed the OLD slack 1.5 mm threshold. The
-    law is "at the very edge": only the pad-clearance floor (~0.4 mm) or an overhang
-    is allowed."""
     model = _passing_model()
     assert pm.check(model).ok, "baseline (flush) must pass"
     j = next(i for i in model.insts if i.ref == "J1")
-    j.y += 1.0            # slide the USB-C ~1 mm inboard of the N edge
+    j.y += 1.0
     res = pm.check(model)
     assert not res.ok, "a connector recessed ~1mm off the edge must FAIL"
     assert any("J1" in b and ("interior" in b or "recess" in b.lower()
@@ -155,13 +106,8 @@ def test_mutant_connector_recessed_off_edge_fails():
 
 
 def test_mutant_connector_inward_facing_fails():
-    """Keep the USB-C on the N edge but rotate it 180 so its mouth faces INWARD
-    (you cannot insert the cable). The gate MUST fail even though it is on-edge."""
     model = _passing_model()
     j = next(i for i in model.insts if i.ref == "J1")
-    # flip 180 FROM the correctly-seated rotation so the mouth turns INWARD,
-    # whatever the seated value is (USB-C now seats at 180, so a hard-coded 180
-    # would be a no-op — flip relative to the seat).
     j.rotation = (j.rotation + 180.0) % 360.0
     res = pm.check(model)
     assert not res.ok, "inward-facing edge connector must FAIL the gate"
@@ -170,23 +116,16 @@ def test_mutant_connector_inward_facing_fails():
 
 
 def test_mutant_top_passive_under_som_fails():
-    """A carrier TOP-side passive under the SoM body collides with the SoM's own
-    bottom-side components in the standoff gap and stops it mating. The gate MUST
-    fail it as TOP-under-SoM — even though the SAME passive on the BOTTOM is fine."""
     model = _passing_model()
     r = next(i for i in model.insts if i.ref == "R5")
     assert pm.check(model).ok, "baseline (bottom passive) must pass"
-    r.side = "top"                       # flip the allowed bottom passive to top
+    r.side = "top"
     res = pm.check(model)
     assert not res.ok, "a TOP-side passive under the SoM must FAIL the gate"
     assert any("R5" in t for t in res.top_under_som), res.summary()
 
 
 def test_bottom_active_under_som_is_ok():
-    """A carrier BOTTOM-side active (IC) under the SoM is FINE — it sits on the
-    OPPOSITE face from the module (full clearance), so it is allowed (user: actives
-    may go on the bottom; only connectors must be top). Only the TOP under the SoM
-    is the keepout. The SAME IC on the TOP must FAIL (see test_mutant_ic_under_som)."""
     model = _passing_model()
     sc = model.som_core
     ic_mod = pcb.resolve_mod("USBLC6-2SC6:USBLC6-2SC6")
@@ -201,8 +140,6 @@ def test_bottom_active_under_som_is_ok():
 
 
 def test_mutant_ic_under_som_fails():
-    """Place an IC under the SoM module body — the module physically crushes it.
-    The gate MUST fail (non-passive under the core)."""
     model = _passing_model()
     sc = model.som_core
     ic_mod = pcb.resolve_mod("USBLC6-2SC6:USBLC6-2SC6")
@@ -217,8 +154,6 @@ def test_mutant_ic_under_som_fails():
 
 
 def test_mutant_button_under_som_fails():
-    """A tactile button under the SoM is unreachable. The gate MUST fail and
-    name it as a control-under-SoM."""
     model = _passing_model()
     sc = model.som_core
     sw_mod = pcb.resolve_mod("TS-1187A-B-A-B:TS-1187A-B-A-B")
@@ -233,7 +168,5 @@ def test_mutant_button_under_som_fails():
 
 
 def test_passive_under_som_is_allowed():
-    """A discrete R/C/L under the SoM is GOOD (it uses otherwise-dead space) —
-    the gate must NOT flag it."""
     res = pm.check(_passing_model())
     assert not res.under_som, res.summary()

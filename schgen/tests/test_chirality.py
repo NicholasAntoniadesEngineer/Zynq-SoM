@@ -1,17 +1,3 @@
-"""Wave-9 CHIRALITY: KiCad-exact mirrored bottom emission (pcb/mirror.py).
-
-PINNED GROUND TRUTH (pcbnew 10.0.2 FOOTPRINT::Flip LEFT_RIGHT, measured on
-AP2112K SOT-23-5 at rots 0/37/90 and CP2102N QFN24 rot 30 with rot-90 oval
-pads, runtime objects + saved file): stored local y -> -y, stored local
-angles -> -a, instance rotation t -> (180 - t) % 360, layers/justify via the
-unchanged embed._flip_to_bottom, (model ...) untouched. The full-strength
-proof lives in the wave ledger: a 32-footprint fixture emitted by
-embed._embed_footprint matched pcbnew's own flip objects pad-for-pad at
-0.0 nm (584 pads) with kicad-cli DRC at 0 violations. These tests pin the
-transform, the placed-pattern mirror identity R_cw(180-t)*M_y == M_x*R_cw(t)
-on the emitted file, the zone-variant algebra, and the loud failure modes.
-"""
-
 from __future__ import annotations
 
 import dataclasses
@@ -139,8 +125,6 @@ def test_mirrored_mod_cache_and_location(tmp_path):
 
 
 def _emitted_pad_globals(node: list) -> dict[str, list[tuple[float, float]]]:
-    """pcbnew loader math on an emitted (footprint ...) node: pad center =
-    fp_at + R_cw(fp_rot) . stored_local, side-blind (the pinned rule)."""
     at = next(x for x in node
               if isinstance(x, list) and x and x[0] == Sym("at"))
     fx, fy = float(at[1]), float(at[2])
@@ -164,10 +148,6 @@ def _mk_inst(ref, name, mod, x, y, rot, side, mirror):
 
 
 def test_emitted_bottom_is_exact_xmirror_of_top():
-    """THE chirality theorem on the emitted file: the mirrored bottom
-    instance's pad-net pattern is the exact X-mirror (about the instance
-    center) of the top instance's — per pad NAME, so a chiral part's pin 1
-    lands where physically flipping the part puts it."""
     seqs: dict[str, int] = {}
 
     def uid(kind: str) -> str:
@@ -233,12 +213,7 @@ def test_embed_guard_rejects_malformed_mirror_insts():
             _mk_inst("X1", "a", src, 10.0, 10.0, 0.0, "bottom", True), uid)
 
 
-def test_thermal_spec_mirror():
-    """The DOCUMENT mirror is a FRAME transform only. The outer-copper swap has
-    a different trigger — the emitted FACE, not the document — and lives in
-    `_side_thermal_spec` (see test_thermal_gate); keeping it here would put a
-    B.Cu part's pour on the far face whenever the achiral-swap convention emits
-    it from an unmirrored document."""
+def test_document_mirror_is_a_frame_transform_not_an_outer_copper_swap():
     spec = {"pour": (-3.0, -4.75, 4.4, 4.75),
             "via_sites": [(1.55, -2.5), (2.85, 0.0)],
             "max_vias": 8, "pour_layers": ("F.Cu", "B.Cu"), "cite": "x"}
@@ -344,10 +319,6 @@ _KICAD = shutil.which("kicad-cli")
 
 @pytest.mark.skipif(_KICAD is None, reason="kicad-cli not on PATH")
 def test_fixture_board_drc_clean_both_sides(tmp_path):
-    """Emit one chiral part top + mirrored bottom through the REAL embed
-    path and run KiCad's own DRC: zero violations (courtyards, clearance,
-    mask, silk — both sides). Unconnected items are the unrouted rats of the
-    single-net fixture, exactly like the unrouted foundation board."""
     from schgen.generate.pcb.embed import _edge_rect, _layers_node, _stackup_node
     seqs: dict[str, int] = {}
 

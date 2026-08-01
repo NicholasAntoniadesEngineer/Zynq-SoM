@@ -1,13 +1,3 @@
-"""The bank -> VCCO rail map lives in TWO independent places that must agree
-(re-audit finding): the project's ``project.json`` ``fpga.bank_rails`` chooses
-each pin's IOSTANDARD, and the project's ``som_conn_gen.py`` VCCO_RAIL_MAP
-drives the real +VCCO_<bank> net sourcing. If they drift, the XDC emits the
-wrong IOSTANDARD on a re-railed bank — a board-bring-up fault no other gate
-catches. xdc.generate() gates on their agreement; this locks the same invariant
-as a fast, offline unit (and documents that under C3 a SoM / bank re-rail MUST
-touch both).
-"""
-
 from __future__ import annotations
 
 from schgen.core.link import _vcco_rail_map
@@ -24,8 +14,6 @@ def test_bank_rail_matches_vcco_rail_map():
 
 
 def test_every_bank_has_a_known_iostandard_voltage():
-    # each mapped rail must resolve to a voltage xdc can turn into a LVCMOS std,
-    # so no bank is left without an IOSTANDARD
     from schgen.generate.xdc import _IOSTD_SINGLE, _rail_volts
     for bank, rail in bank_rail_map().items():
         assert _rail_volts(rail) in _IOSTD_SINGLE, (

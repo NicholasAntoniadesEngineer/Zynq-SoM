@@ -1,13 +1,3 @@
-"""Tests for the SC bring-up firmware scaffold (`schgen scfw`).
-
-These lock the two properties the generator must hold (same discipline as the
-rest of schgen): the emitted scaffold is DETERMINISTIC (re-run -> byte-
-identical, no timestamps) and the rail-sequencing order it derives matches the
-power netlist / BRINGUP.md (+VIN -> +5V -> +3V3 -> +1V8, then the module gates,
-with the watchdog C2 guard present). Offline: builds the model from the
-authored netlists, no kicad-cli, no board build.
-"""
-
 from __future__ import annotations
 
 import pytest
@@ -21,24 +11,16 @@ def model():
 
 
 def test_regulator_chain_order(model):
-    # the derived sequencing must match BRINGUP.md Stage 2 exactly
     order = [(st.rail_in, st.rail_out) for st in model.chain]
     assert order == [("+VIN", "+5V"), ("+5V", "+3V3"), ("+3V3", "+1V8")]
 
 
 def test_setpoints_derived(model):
-    # The SC firmware DERIVES each rail setpoint from the netlist FB divider. +3V3
-    # = Vref 1.0 * (1 + 23.2k/10k) = 3.32 V after the 2026-06-20 audit re-centred
-    # the divider R4 22.1k->23.2k (C23346) — the old 22.1k/10k sat at 3.21 V with
-    # its worst-case low corner on the -5% floor. +5V (U1, 5.02 V) and +1V8 unchanged.
     mv = {st.rail_out: round(st.vout * 1000) for st in model.chain}
     assert mv == {"+5V": 5020, "+3V3": 3320, "+1V8": 1800}
 
 
 def test_always_on_rails_include_sc_and_inlet(model):
-    # the always-on set is DERIVED (rails consumed but never produced) + the
-    # SC's own rail -- it must contain +3V3_SC (pre-PD) and the +VIN inlet,
-    # and must NOT contain any sequenced output rail.
     assert "+3V3_SC" in model.always_on
     assert "+VIN" in model.always_on
     produced = {st.rail_out for st in model.chain}
@@ -47,7 +29,6 @@ def test_always_on_rails_include_sc_and_inlet(model):
 
 def test_module_gates_present(model):
     modules = {g.module for g in model.gates}
-    # the BRINGUP.md Stage 4 module set (a representative subset)
     for m in ("HDMI_TX", "HDMI_RX", "LCD", "CAM", "SD", "USB", "PMOD"):
         assert m in modules
 
@@ -58,8 +39,6 @@ def test_i2c_map_addresses(model):
 
 
 def test_scaffold_is_deterministic(tmp_path):
-    # two emissions into distinct dirs must be byte-identical (no timestamps,
-    # no hashseed dependence within a single interpreter run)
     a, b = tmp_path / "a", tmp_path / "b"
     scfw.generate(a)
     scfw.generate(b)
@@ -71,8 +50,6 @@ def test_scaffold_is_deterministic(tmp_path):
 
 
 def test_no_zephyr_include_in_compiled_sources(tmp_path):
-    # toolchain-agnostic mandate: NO compiled file may #include a zephyr header
-    # (the reference port is a .txt, excluded).
     scfw.generate(tmp_path)
     for p in tmp_path.iterdir():
         if p.suffix in (".c", ".h"):
@@ -82,19 +59,14 @@ def test_no_zephyr_include_in_compiled_sources(tmp_path):
 
 
 def test_watchdog_c2_guard_emitted(tmp_path):
-    # C2: the stepper must not arm/kick the watchdog; the WDT impl must gate
-    # kicks behind the armed latch.
     scfw.generate(tmp_path)
     seq = (tmp_path / "sc_seq.c").read_text()
-    # structural guarantee: the stepper does not even include the WDT header,
-    # so it CANNOT arm/kick during the sequence (a comment may mention C2).
     assert '#include "sc_wdt.h"' not in seq
-    assert "sc_wdt_arm(" not in seq       # no arm call
-    assert "sc_wdt_kick(" not in seq      # no kick call
+    assert "sc_wdt_arm(" not in seq
+    assert "sc_wdt_kick(" not in seq
     wdt = (tmp_path / "sc_wdt.c").read_text()
-    assert "if (!s_wdt_armed) return" in wdt   # kicks are no-ops pre-arm
+    assert "if (!s_wdt_armed) return" in wdt
     app = (tmp_path / "sc_app.c").read_text()
-    # the example arms the WDT only AFTER a successful sequence
     assert app.index("sc_seq_run") < app.index("sc_wdt_arm")
 
 

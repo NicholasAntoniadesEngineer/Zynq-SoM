@@ -1,11 +1,3 @@
-"""T1 P4 — the compose repair driver (schgen/generate/compose_repair.py).
-
-Hermetic red tests: every banded-acceptance clause has a violating
-before/after ledger pair that is REJECTED with a named reason; the candidate
-catalog is deterministic, never proposes an unratified intent edit, and
-reports edge-subject triggers as intent-gated (the D9 case). Board-scale
-dry-run is env-gated (``SCHGEN_BOARD_TESTS=1``)."""
-
 from __future__ import annotations
 
 import os
@@ -16,10 +8,6 @@ from schgen.generate import compose_repair as cr
 
 _BOARD = os.environ.get("SCHGEN_BOARD_TESTS") == "1"
 
-
-# ---------------------------------------------------------------------------
-# synthetic ledgers
-# ---------------------------------------------------------------------------
 
 def _ledger(area=25670.0, terms=None, contract=None, flow_ok=True,
             law5_ok=True) -> dict:
@@ -38,10 +26,6 @@ def _term(kind, subj, tgt, margin, ok, enforced=True):
             "measured": 0.0, "bound": 0.0, "margin": margin, "ok": ok,
             "enforced": enforced}
 
-
-# ---------------------------------------------------------------------------
-# banded_accept — every clause rejects
-# ---------------------------------------------------------------------------
 
 def test_accept_identical_ledgers():
     b = _ledger(terms=[_term("flow_hop", "a", "b", 20.0, True)])
@@ -64,7 +48,6 @@ def test_reject_area_growth_and_intent_escalation_path():
     a = _ledger(area=25800.0)
     ok, reasons = cr.banded_accept(b, a)
     assert not ok and any("area grew" in r for r in reasons)
-    # the IM5 escalation path: an INTENT edit may defer the area verdict
     ok2, _ = cr.banded_accept(b, a, allow_area_growth=True)
     assert ok2
 
@@ -77,8 +60,6 @@ def test_reject_term_leaving_green():
 
 
 def test_reject_fragile_margin_loss():
-    """A below-floor (FRAGILE) enforced term must never lose margin, even
-    while staying green."""
     b = _ledger(terms=[_term("flow_hop", "a", "b",
                              cr.FLOOR_FLOW_MM - 1.0, True)])
     a = _ledger(terms=[_term("flow_hop", "a", "b",
@@ -88,14 +69,12 @@ def test_reject_fragile_margin_loss():
 
 
 def test_reject_nontarget_red_deepening():
-    """IM3: a RED term that is not the repair target must never lose margin."""
     b = _ledger(terms=[_term("near_max", "m", "n", -48.0, False,
                              enforced=False)])
     a = _ledger(terms=[_term("near_max", "m", "n", -50.0, False,
                              enforced=False)])
     ok, reasons = cr.banded_accept(b, a)
     assert not ok and any("non-target RED" in r for r in reasons)
-    # as the TARGET it must IMPROVE — equal margin is a rejection too
     ok2, r2 = cr.banded_accept(b, a, target_keys={("near_max", "m", "n")})
     assert not ok2 and any("target" in r for r in r2)
     a3 = _ledger(terms=[_term("near_max", "m", "n", -40.0, False,
@@ -110,10 +89,6 @@ def test_reject_contract_count_worsening():
     ok, reasons = cr.banded_accept(b, a)
     assert not ok and any("ethernet" in r for r in reasons)
 
-
-# ---------------------------------------------------------------------------
-# SpecEdits
-# ---------------------------------------------------------------------------
 
 def _raw_spec() -> dict:
     return {
@@ -154,16 +129,10 @@ def test_composite_is_intent_iff_a_member_is():
     assert move.intent is True and pull.intent is False
 
 
-# ---------------------------------------------------------------------------
-# propose — deterministic, intent-gated
-# ---------------------------------------------------------------------------
-
 def _trigger_ledger() -> dict:
     return _ledger(terms=[
-        # advisory RED whose subject is an EDGE block (the D9 shape)
         _term("near_max", "motor_sense", "motor_pwm", -48.0, False,
               enforced=False),
-        # advisory RED whose subject is an interior near-anchored block
         _term("near_max", "ethernet", "rj45_connector", -3.0, False,
               enforced=False),
     ])
@@ -186,9 +155,6 @@ def test_propose_offers_ratified_move_and_composite():
 
 
 def test_propose_interior_near_target_gets_exclusive_ladder():
-    """ethernet is near-anchored at rj45_connector; rj45 is NOT on an edge
-    list in this synthetic spec, so the pulls must be non-exclusive; put rj45
-    on an edge and the seat (exclusive+inboard) ladder appears."""
     led = _trigger_ledger()
     cands = cr.propose(led, _raw_spec(), allow_intent=[])
     eth = [c for c in cands if isinstance(c, cr.AddPull)
@@ -208,7 +174,6 @@ def test_propose_interior_near_target_gets_exclusive_ladder():
 def test_propose_existing_pull_gets_weight_ladder_above_current():
     led = _ledger(terms=[
         _term("near_max", "usb_pd", "pd_input", 1.0, True, enforced=True)])
-    # enforced + below near_max floor (2.0) -> FRAGILE trigger
     cands = cr.propose(led, _raw_spec(), allow_intent=[])
     ups = [c for c in cands if isinstance(c, cr.SetPullWeight)]
     assert not ups, "60.0 is already the ladder top — nothing above"
@@ -232,15 +197,8 @@ def test_allow_intent_parse_rejects_garbage():
         cr._parse_allow_intent(["motor_sense=E,W"])
 
 
-# ---------------------------------------------------------------------------
-# board-scale dry-run (env-gated)
-# ---------------------------------------------------------------------------
-
 @pytest.mark.skipif(not _BOARD, reason="board-scale; SCHGEN_BOARD_TESTS=1")
 def test_dry_run_on_the_carrier_proposes_no_unratified_intent(capsys):
-    """The carrier's only trigger today is the motor advisory RED; its subject
-    is an edge block, so a dry-run proposes ZERO unratified edits and reports
-    D9 as intent-gated."""
     rc = cr.repair(dry_run=True, allow_intent=[])
     out = capsys.readouterr().out
     assert rc == 0

@@ -1,41 +1,11 @@
-"""Block diagram (SVG) generated from the linked port graph. No deps.
-
-A layered, left-to-right system map (a documentation drawing — it carries NO
-electrical meaning, so junctions/crossings here are cosmetic, never a net).
-
-Layout (BD-1..8):
-  * every sheet is assigned a ROLE LAYER (column): power/bring-up sources on
-    the left, the SoM connector sheets + the SoM contract spine in the middle,
-    peripherals next, physical connectors on the right.  Within each column the
-    node order is refined by barycentre sweeps to reduce edge crossings.
-  * sheet<->sheet PORT links are AGGREGATED to one edge per sheet-pair carrying
-    a net COUNT + a dominant-kind summary (the full net list lives in the edge
-    <title> tooltip).
-  * the SoM contract is a TALL central node; each incoming edge gets its own
-    entry y so the old "star into one pixel" is gone.
-  * edges route orthogonally (Manhattan) through the inter-column gutters with
-    per-edge lanes; boxes are painted on top of the edges.
-  * colour/​weight is driven by the dominant ptype.kind (power rails vs
-    diff/tmds/usb pairs vs i2c vs single); a legend explains it.
-  * sheets sit inside labelled subsystem CLUSTER containers.
-
-Deterministic: sorted iteration, content-derived geometry, no timestamps —
-re-running is byte-identical.
-"""
-
 from __future__ import annotations
 
 from collections import Counter, defaultdict
 from pathlib import Path
 
-# ---- type -> colour / weight (BD-5) -------------------------------------------
-# NOTE on legibility: this drawing is embedded in the READMEs at width=900, so
-# every absolute size below is chosen so it survives that downscale.  The canvas
-# is kept narrow-ish (few, taller columns) to keep the 900px scale factor high.
 FONT = "Segoe UI, Helvetica, Arial, sans-serif"
 LABEL_PX = 13
 
-# dominant kind -> (stroke colour, stroke width, human group label)
 KIND_STYLE: dict[str, tuple[str, float, str]] = {
     "power":        ("#b45309", 2.6, "power rail"),
     "diff_pair":    ("#7c3aed", 2.0, "diff pair"),
@@ -45,12 +15,9 @@ KIND_STYLE: dict[str, tuple[str, float, str]] = {
     "sd_bus":       ("#ca8a04", 1.9, "SD bus"),
     "single":       ("#2563eb", 1.4, "signal"),
 }
-SOM_EDGE = ("#1d4ed8", 2.0)        # sheet -> SoM contract spine
-DEFER_EDGE = ("#9ca3af", 1.4)      # deferred (dashed)
+SOM_EDGE = ("#1d4ed8", 2.0)
+DEFER_EDGE = ("#9ca3af", 1.4)
 
-# ---- subsystem clusters (BD-7) -------------------------------------------------
-# (cluster key -> (human title, fill, stroke)).  Order here is the column order
-# of clusters within a layer when several clusters share a layer.
 CLUSTERS: dict[str, tuple[str, str, str]] = {
     "power":   ("Power & bring-up",   "#fff7ed", "#fdba74"),
     "som":     ("SoM connectors",     "#fffbeb", "#fcd34d"),
@@ -60,11 +27,7 @@ CLUSTERS: dict[str, tuple[str, str, str]] = {
     "io":      ("FMC / user IO",      "#eff6ff", "#93c5fd"),
 }
 
-# sheet -> (cluster, role-layer).  Layer 0 = sources (left); the SoM connector
-# sheets sit at layer 1 next to the contract spine; peripherals at 2; physical
-# connectors / leaf sheets at 3.  Anything unlisted defaults to ("io", 2).
 SHEET_ROLE: dict[str, tuple[str, int]] = {
-    # layer 0 — power input + bring-up control sources
     "pd_input":           ("power", 0),
     "power":              ("power", 0),
     "power_mon":          ("power", 0),
@@ -72,11 +35,9 @@ SHEET_ROLE: dict[str, tuple[str, int]] = {
     "bringup_en":         ("power", 0),
     "bringup_en_modules": ("power", 0),
     "bringup_modules":    ("power", 0),
-    # layer 1 — the SoM connector sheets (the contract spine sits between them)
     "som_j1":             ("som", 1),
     "som_j2":             ("som", 1),
     "som_j3":             ("som", 1),
-    # layer 2 — peripherals fed off the SoM
     "hdmi_tx":            ("video", 2),
     "hdmi_rx":            ("video", 2),
     "lcd":               ("video", 2),
@@ -90,22 +51,19 @@ SHEET_ROLE: dict[str, tuple[str, int]] = {
     "pmod":              ("io", 2),
     "user_io":           ("io", 2),
     "debug_boot":        ("io", 2),
-    # layer 3 — physical connectors / termination leaves
     "hdmi_rx_term":      ("video", 3),
     "rj45_connector":    ("net", 3),
     "usb_uart_connector": ("storage", 3),
 }
 DEFAULT_ROLE = ("io", 2)
 
-# ---- geometry -----------------------------------------------------------------
-# Sizes are deliberately large so the 900px-wide README render stays legible.
 BOX_W = 172
 BOX_H = 56
-COL_GAP = 128           # gutter between column body edges (lanes live here)
-ROW_GAP = 36            # vertical gap between boxes in a column
-COL0_X = 150            # left margin before first column
-TOP = 120              # space for title + legend
-SOM_W = 168             # the central contract spine width
+COL_GAP = 128
+ROW_GAP = 36
+COL0_X = 150
+TOP = 120
+SOM_W = 168
 CLUSTER_PAD = 15
 
 
@@ -113,13 +71,11 @@ def _esc(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-# ---- edge label grammar (BD-6) ------------------------------------------------
 def _net_word(n: int) -> str:
     return "net" if n == 1 else "nets"
 
 
 def _dominant_kind(kinds: list[str]) -> str:
-    """The most common non-'single' kind, else 'single'. Deterministic."""
     c = Counter(kinds)
     ranked = sorted(c.items(), key=lambda kv: (-kv[1], kv[0]))
     for k, _ in ranked:
@@ -129,18 +85,15 @@ def _dominant_kind(kinds: list[str]) -> str:
 
 
 def _edge_label(items: list[tuple[str, str]]) -> tuple[str, str]:
-    """items = [(net, kind), ...] -> (short label, dominant kind)."""
     n = len(items)
     dom = _dominant_kind([k for _, k in items])
     grp = KIND_STYLE[dom][2]
     return f"{n} {_net_word(n)} · {grp}", dom
 
 
-# ---- the renderer -------------------------------------------------------------
 def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
     sheets = sorted(sc.name for sc in link_result.sheets)
 
-    # --- harvest the graph from the bindings ----------------------------------
     som_bound: dict[str, list[tuple[str, str]]] = defaultdict(list)
     deferred: dict[str, list[str]] = defaultdict(list)
     peer: dict[tuple[str, str], list[tuple[str, str]]] = defaultdict(list)
@@ -156,18 +109,12 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
                 pk = t.split()[1].split(":")[0]
                 a, c = sorted((b.sheet, pk))
                 peer[(a, c)].append((b.net, kind))
-    # peer lists carry both directions of every shared net once each — de-dup.
     for k in list(peer):
         peer[k] = sorted(set(peer[k]))
 
     rails = sorted({r.split(" ", 1)[0] for r in link_result.rail_bindings
                     if "SoM" in r})
 
-    # --- pull fully-isolated sheets OUT of the column flow (BD-layout) ---------
-    # A sheet with no SoM, peer or deferred link adds a box but no connectivity;
-    # leaving it in a column needlessly lengthens that column (worsening the
-    # downscale).  Collect them into a compact footer strip drawn in the
-    # otherwise-empty space below the columns.
     degree: dict[str, int] = defaultdict(int)
     for (a, c) in peer:
         degree[a] += 1
@@ -180,28 +127,16 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
     iso_set = set(isolated)
     laid_sheets = [s for s in sheets if s not in iso_set]
 
-    # --- assign each sheet a (cluster, layer) ---------------------------------
     role = {s: SHEET_ROLE.get(s, DEFAULT_ROLE) for s in sheets}
     layer_of = {s: role[s][1] for s in sheets}
     cluster_of = {s: role[s][0] for s in sheets}
 
-    # The SoM contract spine is a virtual node in its OWN column, placed just
-    # right of the SoM-connector layer (so connector/source layers sit to its
-    # left and peripheral/connector layers to its right).
     SPINE = "\x00SoM"
     cl_order = list(CLUSTERS)
 
-    # --- pack each role layer into physical COLUMNS, capped in height ----------
-    # A single layer may hold many sheets (peripherals); splitting it across a
-    # couple of columns keeps the canvas LANDSCAPE.  Splits fall on cluster
-    # boundaries so a cluster never straddles two columns, and the per-column
-    # box budget keeps every column under the height target.
     MAX_PER_COL = 12
 
     def _split_run(run: list[str]) -> list[list[str]]:
-        """Split one (already cluster-grouped) run into balanced chunks of
-        <=MAX_PER_COL, so a single huge cluster (e.g. the catch-all `io`) does
-        not produce one towering column that forces an extreme-aspect canvas."""
         if len(run) <= MAX_PER_COL:
             return [run]
         import math
@@ -210,10 +145,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         return [run[i:i + size] for i in range(0, len(run), size)]
 
     def layer_columns(members: list[str]) -> list[list[str]]:
-        """Order a layer's sheets by cluster then pack into <=MAX_PER_COL
-        columns.  Small clusters share a column; a cluster bigger than the
-        budget is split into balanced sub-columns of its own (it never shares
-        a column with another cluster once split, so cluster identity reads)."""
         by_cl: dict[str, list[str]] = defaultdict(list)
         for s in sorted(members):
             by_cl[cluster_of[s]].append(s)
@@ -239,8 +170,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
     layer_members = {lv: [s for s in laid_sheets if layer_of[s] == lv]
                      for lv in layers}
 
-    # Build the ordered list of physical columns, inserting the spine column
-    # immediately after the SoM-connector layer (role layer 1).
     columns: dict[int, list[str]] = {}
     col_is_spine: dict[int, bool] = {}
     ci = 0
@@ -249,12 +178,12 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
             columns[ci] = col
             col_is_spine[ci] = False
             ci += 1
-        if lv == 1:                       # spine sits right after connectors
+        if lv == 1:
             columns[ci] = []
             col_is_spine[ci] = True
             SPINE_COL = ci
             ci += 1
-    if not any(col_is_spine.values()):    # no layer-1 sheets: spine at front
+    if not any(col_is_spine.values()):
         SPINE_COL = 0
         columns = {k + 1: v for k, v in columns.items()}
         col_is_spine = {k + 1: v for k, v in col_is_spine.items()}
@@ -266,7 +195,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
     def physical_col(s: str) -> int:
         return col_of[s]
 
-    # --- adjacency for crossing-reduction ordering ----------------------------
     adj: dict[str, list[str]] = defaultdict(list)
     for (a, c) in peer:
         adj[a].append(c)
@@ -281,7 +209,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         for mem in columns.values():
             for i, s in enumerate(mem):
                 pos_in_col[s] = i
-        # spine pseudo-position: mean of its bound sheets' positions
         bp = [pos_in_col[s] for s in som_bound if s in pos_in_col]
         pos_in_col[SPINE] = sum(bp) / len(bp) if bp else 0
     reindex()
@@ -291,7 +218,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         vals = [pos_in_col.get(n, 0) for n in ns]
         return sum(vals) / len(vals) if vals else pos_in_col.get(s, 0)
 
-    # 3 barycentre sweeps (deterministic; N is tiny), keeping clusters grouped
     for _ in range(3):
         for cidx in sorted(columns):
             order = columns[cidx]
@@ -310,7 +236,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
             columns[cidx] = new
             reindex()
 
-    # --- vertical layout: stack boxes per column, grouped by cluster ----------
     def col_runs(cidx: int) -> list[tuple[str, list[str]]]:
         runs: list[tuple[str, list[str]]] = []
         for s in columns[cidx]:
@@ -338,16 +263,13 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
             cluster_rects.append((cl, x - CLUSTER_PAD, top - 22,
                                   BOX_W + 2 * CLUSTER_PAD,
                                   (bottom - top) + 22 + CLUSTER_PAD))
-            y += 26   # gap between clusters in a column
+            y += 26
         col_height[cidx] = y
         x += (SOM_W if col_is_spine[cidx] else BOX_W) + COL_GAP
 
     total_w = x - COL_GAP + COL0_X
     body_h = max(col_height.values())
 
-    # gutter[gcol] = (x just right of column gcol's boxes,
-    #                 x just left of column gcol+1's boxes) — the empty band
-    # where vertical edge legs and their labels live (never over a box).
     col_w = {ci: (SOM_W if col_is_spine[ci] else BOX_W) for ci in columns}
     gutter_bounds: dict[int, tuple[float, float]] = {}
     cols_sorted = sorted(columns)
@@ -356,12 +278,10 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         lo = col_x[ci] + col_w[ci] + 6
         hi = col_x[nxt] - 6
         gutter_bounds[ci] = (lo, hi)
-    # a trailing gutter past the last column (for any rightmost same-col hops)
     last = cols_sorted[-1]
     gutter_bounds[last] = (col_x[last] + col_w[last] + 6,
                            col_x[last] + col_w[last] + 6 + COL_GAP * 0.6)
 
-    # --- SoM spine geometry (BD-3): tall, centred, one anchor per bound sheet --
     spine_x = col_x[SPINE_COL]
     n_bound = max(1, len(som_bound))
     spine_top = TOP + 18
@@ -369,24 +289,14 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
     spine_bottom = spine_top + spine_h
     content_h = max(body_h, spine_bottom + 56)
 
-    # --- bottom HIGHWAY band (de-tangles the centre) --------------------------
-    # Peer edges that span >=2 columns (e.g. a SoM-connector sheet to a far
-    # peripheral) used to drive a long horizontal leg straight THROUGH the spine
-    # and the intermediate columns at the destination's entry-y — 30-odd of them
-    # stacked = the central tangle.  Instead we drop those edges into a stack of
-    # dedicated horizontal lanes in the (previously empty) band below the
-    # columns: down the source-side gutter, across its own clear lane, up the
-    # destination-side gutter.  Short (<=1 col) edges keep their direct route.
-    HW_LANE_GAP = 7.5          # vertical spacing between highway lanes
-    highway_ids: set[int] = set()   # set later once edges exist; reserve room
+    HW_LANE_GAP = 7.5
+    highway_ids: set[int] = set()
     n_span2 = sum(1 for (a, c) in peer
                   if abs(physical_col(a) - physical_col(c)) >= 2)
     hw_band_top = content_h + 16
     hw_h = (24 + n_span2 * HW_LANE_GAP + 10) if n_span2 else 0
     hw_band_bottom = hw_band_top + hw_h
 
-    # --- footer strip for the fully-isolated sheets (fills the empty space) ----
-    # Lay them in a horizontal band of compact boxes across the canvas width.
     ISO_BOX_W = BOX_W
     ISO_GAP = 28
     iso_xy: dict[str, tuple[float, float]] = {}
@@ -405,7 +315,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         iso_bottom = content_h
     total_h = max(content_h, iso_bottom) + 24
 
-    # --- begin SVG ------------------------------------------------------------
     W, H = round(total_w), round(total_h)
     e: list[str] = []
     e.append(f'<svg xmlns="http://www.w3.org/2000/svg" '
@@ -422,7 +331,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
 
     _legend(e, W)
 
-    # --- cluster containers (painted first, behind everything) ----------------
     for cl, cx, cy, cw, ch in sorted(cluster_rects, key=lambda r: (r[1], r[2])):
         title, fill, stroke = CLUSTERS[cl]
         e.append(f'<rect x="{cx:.0f}" y="{cy:.0f}" width="{cw:.0f}" '
@@ -431,8 +339,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         e.append(f'<text x="{cx + 11:.0f}" y="{cy + 16:.0f}" font-size="14" '
                  f'font-weight="700" fill="{stroke}">{_esc(title)}</text>')
 
-    # --- highway band backdrop (behind its edges): a labelled channel for the
-    # cross-board links that would otherwise tangle through the centre ----------
     if n_span2:
         e.append(f'<rect x="{COL0_X - CLUSTER_PAD:.0f}" '
                  f'y="{hw_band_top:.0f}" '
@@ -445,13 +351,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
                  f'({n_span2} edges spanning &#8805;2 columns, routed clear of '
                  f'the centre)</text>')
 
-    # --- plan every edge, then route + label with anti-collision ---------------
-    # Each edge is (left_node, right_node, items, kind-style, role) where the
-    # node may be a sheet or the SPINE.  We give every edge a distinct EXIT slot
-    # on its source box (so edges fan out instead of stacking on the centre) and
-    # a distinct vertical LANE in the gutter it crosses; the label sits on that
-    # lane's vertical segment, so labels separate horizontally by construction.
-
     bound_sheets = sorted(som_bound)
 
     edges: list[dict] = []
@@ -463,7 +362,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
                           right_is_spine=right_is_spine,
                           left_is_spine=left_is_spine))
 
-    # peer edges
     for (a, c) in sorted(peer):
         items = peer[(a, c)]
         ca, cc = physical_col(a), physical_col(c)
@@ -471,7 +369,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         label, dom = _edge_label(items)
         colour, width, _ = KIND_STYLE[dom]
         add_edge(left, right, items, colour, width, "peer")
-    # SoM-contract edges
     for s in bound_sheets:
         colour, width = SOM_EDGE
         if physical_col(s) < SPINE_COL:
@@ -480,17 +377,12 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         else:
             add_edge(SPINE, s, som_bound[s], colour, width, "som",
                      left_is_spine=True)
-    # deferred edges
     for s in sorted(deferred):
         dcol, dwid = DEFER_EDGE
         items = [(n, "single") for n in sorted(deferred[s])]
         add_edge(s, "\x00LATER", items, dcol, dwid, "defer", dash="5,4",
                  right_is_spine=True)
 
-    # ---- distribute EXIT slots along each source/target box edge -------------
-    # group edges by the box they leave on the right and the box they enter on
-    # the left; order by the partner's vertical position so lines don't cross
-    # near the box.
     def partner_y(edge, of_left):
         other = edge["right"] if of_left else edge["left"]
         if other in ("\x00LATER", SPINE):
@@ -506,13 +398,12 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         if not edge["right_is_spine"] and edge["right"] != "\x00LATER":
             left_groups[edge["right"]].append(edge)
 
-    exit_y: dict[int, float] = {}     # id(edge) -> source y
-    entry_y: dict[int, float] = {}    # id(edge) -> target y
+    exit_y: dict[int, float] = {}
+    entry_y: dict[int, float] = {}
 
     def slot_ys(box, edge_list, of_left):
         bx, by = box_xy[box]
         n = len(edge_list)
-        # usable inner band of the box edge
         lo, hi = by + 10, by + BOX_H - 10
         ordered = sorted(edge_list, key=lambda ed: partner_y(ed, of_left))
         for i, ed in enumerate(ordered):
@@ -526,14 +417,12 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         for ed, y in slot_ys(box, el, of_left=False):
             entry_y[id(ed)] = y
 
-    # spine entry anchors: one distributed y per bound sheet (BD-3)
     spine_anchor: dict[str, float] = {}
     if bound_sheets:
         step = spine_h / (len(bound_sheets) + 1)
         for i, s in enumerate(bound_sheets, 1):
             spine_anchor[s] = spine_top + step * i
 
-    # ---- resolve every edge's endpoints + its gutter -------------------------
     def endpoints(edge):
         left, right = edge["left"], edge["right"]
         if edge["left_is_spine"]:
@@ -562,7 +451,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
     ordered_edges = sorted(edges, key=lambda ed: (ed["role"], str(ed["left"]),
                                                   str(ed["right"])))
 
-    # ---- classify HIGHWAY edges (peer edges spanning >=2 columns) -------------
     def is_highway(edge) -> bool:
         if edge["role"] != "peer":
             return False
@@ -572,7 +460,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         if is_highway(edge):
             highway_ids.add(id(edge))
 
-    # group the SHORT (direct-route) edges by gutter for unique lane x's
     by_gutter: dict[int, list] = defaultdict(list)
     for edge in ordered_edges:
         if id(edge) in highway_ids:
@@ -583,18 +470,12 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
     for gcol, el in by_gutter.items():
         g_lo, g_hi = gutter_bounds[gcol]
         n = len(el)
-        # order lanes by the vertical midpoint of the edge so adjacent lanes
-        # carry adjacent edges (fewer crossings inside the gutter)
         el_sorted = sorted(el, key=lambda ed: (lambda p: (p[1] + p[3]) / 2)
                            (endpoints(ed)))
         for i, ed in enumerate(el_sorted):
             frac = (i + 1) / (n + 1)
             lane_x[id(ed)] = g_lo + (g_hi - g_lo) * frac
 
-    # ---- highway geometry: one horizontal lane per highway edge in the bottom
-    # band, plus a drop-lane x in the source-side and dest-side gutters.  Sort by
-    # source column then source-y so neighbouring sources keep neighbouring
-    # lanes (fewer crossings where they dive into the band).
     hw_edges = [ed for ed in ordered_edges if id(ed) in highway_ids]
     hw_lane_y: dict[int, float] = {}
     hw_src_x: dict[int, float] = {}
@@ -608,13 +489,12 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         hw_edges,
         key=lambda ed: (_ep_cols(ed)[0], endpoints(ed)[1], str(ed["left"]),
                         str(ed["right"])))
-    # per source-side gutter, allocate distinct drop x's; same for dest side
     src_gutter: dict[int, list] = defaultdict(list)
     dst_gutter: dict[int, list] = defaultdict(list)
     for ed in hw_sorted:
         lcol, rcol = _ep_cols(ed)
-        src_gutter[lcol].append(ed)        # drop just right of the left box
-        dst_gutter[rcol - 1].append(ed)    # rise in the gutter left of dest
+        src_gutter[lcol].append(ed)
+        dst_gutter[rcol - 1].append(ed)
     for g, el in src_gutter.items():
         g_lo, g_hi = gutter_bounds[g]
         for i, ed in enumerate(el):
@@ -627,7 +507,7 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         hw_lane_y[id(ed)] = hw_band_top + 24 + i * HW_LANE_GAP
 
     edges_svg: list[str] = []
-    label_plan: list[tuple] = []   # (x, y, text, colour, lo, hi)
+    label_plan: list[tuple] = []
 
     for edge in ordered_edges:
         left, right = edge["left"], edge["right"]
@@ -636,15 +516,11 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         gcol, same = edge_gutter(edge)
         is_hw = id(edge) in highway_ids
         if is_hw:
-            # left box always sits left of right box for highway edges (peer,
-            # span>=2). Route: out the left box -> down its gutter -> across a
-            # dedicated bottom lane -> up the dest gutter -> into the right box.
             sx, dx = hw_src_x[id(edge)], hw_dst_x[id(edge)]
             hy = hw_lane_y[id(edge)]
             d = (f"M{x0:.1f},{y0:.1f} H{sx:.1f} V{hy:.1f} H{dx:.1f} "
                  f"V{y1:.1f} H{x1:.1f}")
         elif same:
-            # deterministic small stagger keyed on the pair name (no id()):
             jitter = (sum(map(ord, str(left) + str(right))) % 5) * 7
             mx = max(x0, x1) + 14 + jitter
             d = f"M{x0:.1f},{y0:.1f} H{mx:.1f} V{y1:.1f} H{x1:.1f}"
@@ -667,51 +543,40 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         if edge["left_is_spine"]:
             edges_svg.append(f'<circle cx="{x0:.1f}" cy="{y0:.1f}" r="2.6" '
                              f'fill="{colour}"/>')
-        # label candidate: count + dominant group.  Anchor it just OUTSIDE the
-        # destination box, on the horizontal entry segment — destinations have
-        # few incoming edges each, so labels separate vertically by box-row and
-        # stay out of the congested source gutter.
         if edge["role"] == "defer":
             text = f"{len(edge['items'])} {_net_word(len(edge['items']))} deferred"
         else:
             text, _dom = _edge_label(edge["items"])
-        # choose the endpoint with more clearance: the SoM spine entry (roomy,
-        # distributed) for SoM edges, else the right/destination box entry.
         if right == SPINE:
-            ax, ay = x1 - 6, y1            # at the spine's left entry
+            ax, ay = x1 - 6, y1
             anchor = "end"
             lo, hi = spine_top + 6, spine_bottom - 6
         elif edge["left_is_spine"]:
-            ax, ay = x0 + 6, y0            # at the spine's right entry
+            ax, ay = x0 + 6, y0
             anchor = "start"
             lo, hi = spine_top + 6, spine_bottom - 6
         elif right == "\x00LATER":
             ax, ay, anchor = x0 + 8, y0, "start"
             lo, hi = y0 - 6, y0 + 30
         else:
-            ax, ay = x1 - 6, y1            # just left of the destination box
+            ax, ay = x1 - 6, y1
             anchor = "end"
             lo, hi = y1 - 40, y1 + 40
         label_plan.append((ax, ay, text, colour, anchor, lo, hi))
 
     e.extend(edges_svg)
 
-    # ---- labels: anchored at the (roomy) endpoint, nudged to dodge neighbours,
-    # SKIP on collision (detail stays in the edge <title> tooltip).  Readability
-    # beats completeness (LAW 1).
-    LBL_PX = 13            # edge-label font size
-    LBL_CH = 6.7           # ~per-char advance at LBL_PX
-    LBL_VGAP = 16          # min vertical centre-to-centre for two labels
+    LBL_PX = 13
+    LBL_CH = 6.7
+    LBL_VGAP = 16
     label_svg: list[str] = []
-    placed: list[tuple[float, float, float]] = []   # cx, cy, half-width
+    placed: list[tuple[float, float, float]] = []
     label_plan.sort(key=lambda t: (round(t[0]), t[1], t[2]))
     for ax, ay, text, colour, anchor, lo, hi in label_plan:
         w = LBL_CH * len(text) + 12
-        # the label box's centre x depends on the anchor
         cx = ax - w / 2 if anchor == "end" else ax + w / 2
         half = w / 2
         yy = ay
-        # search up and down for a clear vertical slot within [lo, hi]
         found = False
         for step in range(0, 48):
             for sgn in ((0,) if step == 0 else (-1, 1)):
@@ -731,7 +596,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
             continue
         placed.append((cx, yy, half))
         a = f' text-anchor="{anchor}"' if anchor != "start" else ""
-        # solid white pill so the count reads crisply over the wire bundle
         label_svg.append(
             f'<rect x="{cx - half:.1f}" y="{yy - 9.5:.1f}" width="{w:.1f}" '
             f'height="17" rx="5" fill="#ffffff" fill-opacity="0.97" '
@@ -741,7 +605,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
             f'font-weight="600" fill="{colour}">{_esc(text)}</text>')
     e.extend(label_svg)
 
-    # --- SoM contract spine (BD-3) -------------------------------------------
     e.append(f'<rect x="{spine_x:.0f}" y="{spine_top:.0f}" width="{SOM_W}" '
              f'height="{spine_h:.0f}" rx="12" fill="#fef3c7" '
              f'stroke="#b45309" stroke-width="2.4"/>')
@@ -754,7 +617,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
     e.append(f'<text x="{spine_x + SOM_W / 2:.0f}" y="{spine_top + 62:.0f}" '
              f'text-anchor="middle" font-size="11" fill="#92400e">'
              f'{len(som_nets)} nets</text>')
-    # rail summary down the spine
     ry = spine_top + 86
     e.append(f'<text x="{spine_x + SOM_W / 2:.0f}" y="{ry:.0f}" '
              f'text-anchor="middle" font-size="10.5" font-weight="600" '
@@ -769,7 +631,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
              f'text-anchor="middle" font-size="10" fill="#a16207">'
              f'{nub} unbound (later)</text>')
 
-    # later-waves tag (under the spine; deferred edges route here)
     if deferred:
         n_def = sum(len(v) for v in deferred.values())
         later_x = spine_x + SOM_W / 2
@@ -782,7 +643,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
                  f'text-anchor="middle" font-size="11" fill="#6b7280">'
                  f'later waves · {n_def}</text>')
 
-    # --- sheet boxes (on top of edges) ----------------------------------------
     for s in laid_sheets:
         bx, by = box_xy[s]
         _, fill, stroke = CLUSTERS[cluster_of[s]]
@@ -803,7 +663,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
         e.append(f'<text x="{bx + 11:.0f}" y="{by + 43:.0f}" font-size="12.5" '
                  f'fill="#64748b">{_esc(" · ".join(sub) or "—")}</text>')
 
-    # --- footer strip: fully-isolated sheets (no SoM/peer/deferred link) -------
     if isolated:
         e.append(f'<text x="{COL0_X:.0f}" y="{iso_top + 6:.0f}" font-size="13" '
                  f'font-weight="700" fill="#475569">'
@@ -827,7 +686,6 @@ def render(link_result, som_nets: dict[str, list[str]], out: Path) -> Path:
 
 
 def _legend(e: list[str], W: int) -> None:
-    """Colour/weight legend (BD-5), top-right."""
     items = [(KIND_STYLE["power"], "power rail"),
              (KIND_STYLE["diff_pair"], "diff pair"),
              (KIND_STYLE["tmds_pair"], "TMDS pair"),

@@ -1,14 +1,3 @@
-"""Tests for the CONTRACT COVERAGE LINT (schgen/verify/contract_coverage_lint).
-
-(1) SYNTHETIC: a four-part sheet (anchored IC, clustered cap, declared-free TP,
-    naked pull-up) exercises all three classes — STRUCTURED / FREE / UNGATED —
-    plus the free channel's self-policing notes, on an injected circuit,
-    contract and ref_map. Hermetic: no real sheet, no board build.
-(2) REAL SWEEP: ``lint_project()`` over the 23 wired sheets runs clean, every
-    part lands in exactly one class, and two independent runs emit
-    byte-identical reports (determinism).
-"""
-
 from __future__ import annotations
 
 from types import SimpleNamespace

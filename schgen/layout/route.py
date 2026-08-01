@@ -1,23 +1,3 @@
-"""Exclusive-ownership grid router (1.27 mm integer grid).
-
-INVARIANTS (structural, enforced during construction — never patched after):
-- A grid cell is owned by AT MOST ONE net, ever. Vertex-disjoint nets can
-  neither touch nor cross; a junction can only ever merge ONE net (LAW 0).
-- Every wire endpoint lands EXACTLY on a pin / label-anchor / power-pin grid
-  point (no eps anywhere; off-grid is an error at intake, not a mis-land later).
-- Junction dots only where the SAME net meets with degree >= 3.
-- POWER/GROUND nets terminate at power symbols (pin-exact or short exclusive
-  stubs); each drawn islet of such a net must carry a power symbol — KiCad
-  merges them by name. SIGNAL/PORT nets must be ONE drawn component; a net
-  that cannot be drawn raises RouteError so PLACEMENT expands — rules never
-  relax, labels never substitute for internal wiring, NC is never a fallback.
-
-Placement hands over explicit waypoint paths ("plans") for every connection
-plus the blocked geometry (bodies, all text boxes). The router claims cells
-for the plans, BFS-routes any residual connection over free cells only, and
-proves coverage net-by-net.
-"""
-
 from __future__ import annotations
 
 from collections import deque
@@ -51,7 +31,6 @@ def point_of(c: Cell) -> Point:
 
 
 def cells_between(a: Point, b: Point) -> list[Cell]:
-    """All grid cells on the orthogonal segment a->b, inclusive."""
     ca, cb = cell_of(a), cell_of(b)
     if ca[0] != cb[0] and ca[1] != cb[1]:
         raise RouteError(f"segment {a}->{b} is not orthogonal")
@@ -63,8 +42,6 @@ def cells_between(a: Point, b: Point) -> list[Cell]:
 
 
 class Grid:
-    """Cell -> owner map. Owners: net names, 'nc:<pin>', or '#blocked'."""
-
     def __init__(self) -> None:
         self.owner: dict[Cell, str] = {}
 
@@ -77,7 +54,6 @@ class Grid:
             self.owner[c] = owner
 
     def block_box(self, box: tuple[float, float, float, float]) -> None:
-        """Block all UNOWNED cells whose center lies strictly inside box."""
         x0, y0, x1, y1 = box
         i0, i1 = int(x0 / GRID) - 1, int(x1 / GRID) + 2
         j0, j1 = int(y0 / GRID) - 1, int(y1 / GRID) + 2
@@ -101,16 +77,9 @@ class RoutedSheet:
 @dataclass
 class _NetGeom:
     legs: list[tuple[Point, Point]] = field(default_factory=list)
-    # terminal points by flavor
-    pin_parts: dict[Point, set[str]] = field(default_factory=dict)   # part refs
+    pin_parts: dict[Point, set[str]] = field(default_factory=dict)
     power_pts: set[Point] = field(default_factory=set)
     label_pts: set[Point] = field(default_factory=set)
-    # same-pad bonds: a symbol carrying DUPLICATE pin numbers (flow-through
-    # parts, e.g. an inline ESD companion whose TMDS line enters one edge and
-    # leaves the other) exposes ONE physical pad at several geometry points.
-    # KiCad nets them as one pin (duplicate_pin_numbers_are_jumpers — proven
-    # against kicad-cli netlist export); the connectivity proof must use the
-    # same electrical truth. Bonds add adjacency only — no cells, no wires.
     bonds: list[tuple[Point, Point]] = field(default_factory=list)
 
 
@@ -119,11 +88,8 @@ def _leg_cells(a: Point, b: Point) -> list[Cell]:
 
 
 def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
-    """``placement`` duck-type: .parts (PlacedPart), .powers (PlacedPower),
-    .hlabels (HierLabel), .plans {net: [path,...]}, .boxes (visual Box list)."""
     grid = Grid()
 
-    # ---- net lookup ---------------------------------------------------------
     net_of_pin: dict[str, str] = {}
     for net in circuit.nets.values():
         for pr in net.pins:
@@ -131,8 +97,7 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
 
     geoms: dict[str, _NetGeom] = {n: _NetGeom() for n in circuit.nets}
 
-    # ---- 1. claim every component pin stem for its net (or NC owner) --------
-    pad_tips: dict[tuple[str, str], list[Point]] = {}   # (ref, number) -> tips
+    pad_tips: dict[tuple[str, str], list[Point]] = {}
     for part in placement.parts:
         sdef = lib.get(part.lib_id)
         for pin in sdef.pins:
@@ -140,7 +105,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
             key = f"{part.ref}.{pin.number}"
             net = net_of_pin.get(key)
             owner = net if net is not None else f"nc:{key}"
-            # cells from the tip toward the body root, in grid steps
             steps = int(pin.length / GRID + 1e-6)
             cells = [cell_of(tip)]
             dx, dy = _stem_dir(pin.rotation, part.rotation)
@@ -152,13 +116,10 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                 g = geoms[net]
                 g.pin_parts.setdefault(tip, set()).add(part.ref)
                 pad_tips.setdefault((part.ref, pin.number), []).append(tip)
-    # duplicate pin numbers on one part = ONE physical pad (KiCad jumper-pin
-    # semantics): bond their tips so connectivity is judged electrically
     for (_ref, _num), tips in pad_tips.items():
         for a, b in zip(tips, tips[1:], strict=False):
             geoms[net_of_pin[f"{_ref}.{_num}"]].bonds.append((a, b))
 
-    # ---- 2. power symbol pins -----------------------------------------------
     for pw in placement.powers:
         net = pw.net_name
         if net == "PWR_FLAG":
@@ -169,8 +130,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
         grid.claim(net, [cell_of(pt)], f"power {pw.ref}")
         geoms[net].power_pts.add(pt)
 
-    # ---- 3. label anchors (hierarchical AND local: both are KiCad
-    #         connectivity anchors that merge a net by name) ------------------
     for h in placement.hlabels:
         if h.name not in geoms:
             raise RouteError(f"label {h.name!r} is not a declared net")
@@ -184,11 +143,9 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
         grid.claim(ll.name, [cell_of(pt)], f"llabel {ll.name}")
         geoms[ll.name].label_pts.add(pt)
 
-    # ---- 4. block all body/text geometry (never over an owned cell) ---------
     for box in placement.boxes:
         grid.block_box((box.x0, box.y0, box.x1, box.y1))
 
-    # ---- 5. claim the planned wire paths -------------------------------------
     for net, paths in placement.plans.items():
         if net not in geoms:
             raise RouteError(f"plan for undeclared net {net!r}")
@@ -201,28 +158,13 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                 grid.claim(net, _leg_cells(a, b), f"wire {net}")
                 geoms[net].legs.append((a, b))
 
-    # SAME-NET planarization: a net's own legs may meet — a label anchored
-    # mid-wire, a tap branching off a bus run (T), or two runs crossing (X).
-    # Every such meeting is electrically a single node of ONE net (never a
-    # short — cross-net cells stay grid-exclusive), but it must be DRAWN as a
-    # shared leg ENDPOINT, not an unsplit T / X / collinear double-draw, so the
-    # connectivity graph and the junction-degree count see it. Split every leg
-    # at every same-net node lying on its interior — label anchors, OTHER legs'
-    # endpoints, and interior crossings with a perpendicular leg — then drop
-    # exact-duplicate sub-legs (a collinear over-draw collapses to one wire).
-    # A net whose legs do not meet mid-span is untouched (byte-identical), so
-    # only the geometry that previously ERRORED changes.
     for _net, g in geoms.items():
-        # candidate split cells per net: all label anchors + all leg endpoints
         anchors: set[Cell] = {cell_of(p) for p in g.label_pts}
         for a, b in g.legs:
             anchors.add(cell_of(a))
             anchors.add(cell_of(b))
-        # iterate to a fixed point: splitting can expose a new endpoint that
-        # taps a third leg; bounded by total grid cells, terminates.
         for _ in range(64):
             changed = False
-            # recompute endpoints each round (new splits add endpoints)
             endpts: set[Cell] = set(anchors)
             for a, b in g.legs:
                 endpts.add(cell_of(a))
@@ -231,7 +173,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
             for a, b in g.legs:
                 cells = _leg_cells(a, b)
                 ca, cb = cells[0], cells[-1]
-                # the first interior cell that is a same-net node OR a crossing
                 cut: Cell | None = None
                 interior = cells[1:-1]
                 interior_set = set(interior)
@@ -240,7 +181,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                         cut = c
                         break
                 if cut is None:
-                    # interior crossing with a PERPENDICULAR same-net leg
                     for a2, b2 in g.legs:
                         if (a2, b2) == (a, b):
                             continue
@@ -260,7 +200,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
             g.legs = out_legs
             if not changed:
                 break
-        # drop exact-duplicate / zero-length sub-legs (collinear over-draw)
         uniq: list[tuple[Point, Point]] = []
         seen_seg: set[tuple[Point, Point]] = set()
         for a, b in g.legs:
@@ -273,10 +212,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
             uniq.append((a, b))
         g.legs = uniq
 
-    # same-net discipline: after planarization no leg interior may carry a
-    # same-net node or another leg's cell — a tap MUST be a shared endpoint
-    # (the residual check; anything planarization could not resolve still
-    # raises so PLACEMENT expands — rules never relax).
     for net, g in geoms.items():
         seen_interior: set[Cell] = set()
         endpoints: set[Cell] = set()
@@ -292,7 +227,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                         f"{point_of(c)} (split legs at taps)")
                 seen_interior.add(c)
 
-    # ---- 6. connectivity proof + BFS completion ------------------------------
     for net_obj in circuit.nets.values():
         net = net_obj.name
         g = geoms[net]
@@ -305,16 +239,9 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                         f"no {net} power symbol — opens forbidden")
         else:
             bridged = net in getattr(placement, "label_bridged", set()) or (
-                # a PORT net whose every islet carries its hier label is
-                # merged by NAME (cable-flip pads labeled on both sides);
-                # the netlist gate proves the merge
                 net_obj.net_class == NetClass.PORT and len(comps) > 1
                 and all(comp & g.label_pts for comp in comps))
             if bridged:
-                # placement chose the datasheet label idiom for this net
-                # (shunt/ESD banks, pull-up ranks, demoted channels): every
-                # drawn islet must carry a label anchor — KiCad merges the
-                # islets by NAME, and the netlist gate proves the merge.
                 for comp in comps:
                     if not comp & g.label_pts:
                         raise RouteError(
@@ -323,7 +250,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                             f"opens forbidden")
             else:
                 while len(comps) > 1:
-                    # wire-heavy mandate: BFS-join the two nearest components
                     comps.sort(key=len, reverse=True)
                     path = _bfs_join(grid, net, comps[0], comps[1])
                     for a, b in zip(path, path[1:], strict=False):
@@ -336,7 +262,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
                     and not (comps[0] & g.label_pts):
                 raise RouteError(f"PORT net {net}: label not on the drawn net")
 
-    # ---- 7. junctions: same-net degree >= 3 ----------------------------------
     out = RoutedSheet()
     for net_obj in circuit.nets.values():
         g = geoms[net_obj.name]
@@ -349,10 +274,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
             deg[pt] = deg.get(pt, 0) + len(parts)
         for pt in g.power_pts:
             deg[pt] = deg.get(pt, 0) + 1
-        # sorted: junction EMIT order seeds the uuid ordinals (emit.py), so it
-        # must not depend on dict/set iteration order — sort by coordinate so
-        # output is byte-identical regardless of PYTHONHASHSEED (selftest gates
-        # this with a cross-seed build).
         for pt, d in sorted(deg.items()):
             if d >= 3:
                 out.junctions.append(pt)
@@ -360,8 +281,6 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
 
 
 def _stem_dir(pin_rot: int, part_rot: int) -> tuple[int, int]:
-    """Unit grid direction from pin TIP toward the symbol body, page coords."""
-    # pin rotation: direction the pin points (toward the body), symbol space
     sym = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}[pin_rot % 360]
     import math
     r = math.radians(part_rot % 360)
@@ -370,7 +289,6 @@ def _stem_dir(pin_rot: int, part_rot: int) -> tuple[int, int]:
 
 
 def _components(g: _NetGeom) -> list[set[Point]]:
-    """Connected components over leg endpoints + terminal points."""
     pts: set[Point] = set(g.pin_parts) | g.power_pts | g.label_pts
     adj: dict[Point, set[Point]] = {p: set() for p in pts}
     for a, b in list(g.legs) + list(g.bonds):
@@ -397,13 +315,6 @@ def _components(g: _NetGeom) -> list[set[Point]]:
 
 def _bfs_join(grid: Grid, net: str, comp_a: set[Point],
               comp_b: set[Point]) -> list[Point]:
-    """Shortest orthogonal path over free/own cells from comp_a to comp_b,
-    returned as corner waypoints. RouteError if no path exists.
-
-    The search is BOUNDED to the sheet's occupied extent plus a margin:
-    the grid is an infinite free plane, so an enclosed component would
-    otherwise flood outward forever instead of failing fast back to the
-    placement feasibility loop."""
     starts = {cell_of(p) for p in comp_a}
     goals = {cell_of(p) for p in comp_b}
     occ = list(grid.owner) + list(starts) + list(goals)
@@ -436,7 +347,6 @@ def _bfs_join(grid: Grid, net: str, comp_a: set[Point],
         chain.append(prev[chain[-1]])          # type: ignore[arg-type]
     chain.reverse()
     pts = [point_of(c) for c in chain]
-    # compress collinear runs to corner waypoints
     way = [pts[0]]
     for i in range(1, len(pts) - 1):
         (x0, y0), (x1, y1), (x2, y2) = pts[i - 1], pts[i], pts[i + 1]

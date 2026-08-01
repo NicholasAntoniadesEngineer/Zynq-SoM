@@ -1,10 +1,3 @@
-"""Bottom-side P2 — the EST-DRIVEN SIDE CHOICE (_pick_sided) + the restricted
-estimator it consumes. The distance chooser was measured side-blind (P1:
-top/bottom tie at 0.403, tie-break keeps top); P2 judges cross-face finalists
-by the sizing estimator (cross-airwire + registered est_via_cost). Board-level
-controls live in the build ladder: zero-opt-in byte-identity on both projects,
-and the judged live probe (126 firings, 0 dishonest flips)."""
-
 from __future__ import annotations
 
 import dataclasses
@@ -82,10 +75,6 @@ def either_ctx():
 
 
 def test_restricted_estimator_delta_equals_full(either_ctx, monkeypatch):
-    """The side judge consumes evaluate(..., only_sheet=SHEET): between two
-    candidate poses/shapes of that sheet's block the restricted difference
-    must equal the full-kernel difference EXACTLY (no other net moves), and
-    every evaluation must be deterministic."""
     zg, sheets = either_ctx
     monkeypatch.setattr(fp, "BOARD_W", 185.0)
     monkeypatch.setattr(fp, "BOARD_H", 166.0)

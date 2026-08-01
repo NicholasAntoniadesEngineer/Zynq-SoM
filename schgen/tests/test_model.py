@@ -1,12 +1,3 @@
-"""Fast unit tests for schgen.model — the netlist truth layer.
-
-Pure, deterministic, millisecond: no kicad-cli, no board build. Covers net
-classification, the decouple/pullup/series macros, the DEF-3 default-footprint
-rule, port_type pair-polarity inference + conflict errors, duplicate-ref and
-bad-pin CircuitError, and net_of correctness. Every assertion checks the REAL
-API as it exists; known-BAD inputs assert the gate raises.
-"""
-
 from __future__ import annotations
 
 import pytest
@@ -23,9 +14,6 @@ from schgen.core.model import (
 )
 
 
-# --------------------------------------------------------------------------- #
-# net classification
-# --------------------------------------------------------------------------- #
 @pytest.mark.parametrize("name", ["GND", "GNDA", "DGND", "AGND", "PGND",
                                   "VSS", "VSS_CORE", "CHASSIS_GND"])
 def test_classify_ground(name):
@@ -41,20 +29,14 @@ def test_classify_power(name):
 @pytest.mark.parametrize("name", ["MID", "USB_DP", "SDA", "RESET_N",
                                   "TMDS0_P", "vbus_lower"])
 def test_classify_signal(name):
-    # only ^+ / ^VBUS$ / ^VDD / ^VCC are power; bare 'VBUS' is power but a
-    # lower-case or suffixed near-miss is a plain signal.
     assert Circuit.classify(name) is NetClass.SIGNAL
 
 
 def test_classify_vbus_is_anchored():
-    # _POWER_RE is ^VBUS$ — exact only; a longer name beginning VBUS is NOT power
     assert Circuit.classify("VBUS") is NetClass.POWER
     assert Circuit.classify("VBUS_DET") is NetClass.SIGNAL
 
 
-# --------------------------------------------------------------------------- #
-# DEF-3 default footprint + _passive_uF
-# --------------------------------------------------------------------------- #
 def test_default_footprint_resistor_0603():
     assert _default_footprint("Device:R", "1k") == "Resistor_SMD:R_0603_1608Metric"
     assert _default_footprint("Device:R", "22k1") == "Resistor_SMD:R_0603_1608Metric"
@@ -67,7 +49,6 @@ def test_default_footprint_small_cap_0603():
 
 def test_default_footprint_bulk_cap_0805():
     assert _default_footprint("Device:C", "10u") == "Capacitor_SMD:C_0805_2012Metric"
-    # the 1.0 uF boundary is inclusive (>= 1.0 -> 0805)
     assert _default_footprint("Device:C", "1u") == "Capacitor_SMD:C_0805_2012Metric"
 
 
@@ -78,7 +59,7 @@ def test_default_footprint_non_passive_is_empty():
 
 @pytest.mark.parametrize("value,uF", [
     ("100n", 0.1), ("10u", 10.0), ("1u", 1.0), ("200p", 200e-6),
-    ("4u7", None),  # not parseable by the p/n/u single-decimal grammar
+    ("4u7", None),
 ])
 def test_passive_uF(value, uF):
     if uF is None:
@@ -101,9 +82,6 @@ def test_part_explicit_footprint_wins_over_def3():
     assert c.parts["C1"].footprint == "Capacitor_SMD:C_0402_1005Metric"
 
 
-# --------------------------------------------------------------------------- #
-# decouple / pullup / series macros
-# --------------------------------------------------------------------------- #
 def test_decouple_makes_caps_on_rail_and_gnd():
     c = Circuit("t")
     c.part("U1", "Device:R", "x")
@@ -111,18 +89,16 @@ def test_decouple_makes_caps_on_rail_and_gnd():
     caps = c.decouple("U1.1", "100n", "10u")
     assert [p.ref for p in caps] == ["C1", "C2"]
     assert [p.value for p in caps] == ["100n", "10u"]
-    # rail gets each cap's pin .1, GND gets each cap's pin .2
     assert "C1.1" in {str(p) for p in c.nets["+3V3"].pins}
     assert "C2.1" in {str(p) for p in c.nets["+3V3"].pins}
     assert {str(p) for p in c.nets["GND"].pins} == {"C1.2", "C2.2"}
-    # DEF-3 applied: 100n -> 0603, 10u -> 0805
     assert c.parts["C1"].footprint.endswith("0603_1608Metric")
     assert c.parts["C2"].footprint.endswith("0805_2012Metric")
 
 
 def test_decouple_unknown_rail_raises():
     c = Circuit("t")
-    c.part("U1", "Device:R", "x")  # U1.1 is on no net yet
+    c.part("U1", "Device:R", "x")
     with pytest.raises(CircuitError):
         c.decouple("U1.1", "100n")
 
@@ -133,7 +109,6 @@ def test_pullup_ties_signal_to_rail_via_resistor():
     c.net("SDA", "U1.1")
     r = c.pullup("U1.1", "4k7", "+3V3")
     assert r.ref == "R1" and r.value == "4k7"
-    # R pin .2 joins the signal, pin .1 joins the rail
     assert "R1.2" in {str(p) for p in c.nets["SDA"].pins}
     assert "R1.1" in {str(p) for p in c.nets["+3V3"].pins}
 
@@ -159,9 +134,6 @@ def test_series_custom_prefix():
     assert f.ref == "FB1"
 
 
-# --------------------------------------------------------------------------- #
-# pair_polarity + port_type inference / conflict errors
-# --------------------------------------------------------------------------- #
 @pytest.mark.parametrize("name,pol", [
     ("USB_DP", "P"), ("USB_DM", "N"), ("TMDS0_P", "P"), ("TMDS0_N", "N"),
     ("CC1_DP", "P"), ("LANE_DN", "N"), ("D+", "P"), ("D-", "N"),
@@ -182,7 +154,6 @@ def test_port_type_usb_pair_defaults_90R_and_reciprocates():
     c.port("USB_DM", "U1.2")
     pt = c.port_type("USB_DP", kind="usb_hs_pair", pair_with="USB_DM")
     assert pt.kind == "usb_hs_pair" and pt.impedance == 90
-    # reciprocal type auto-registered on the complement, pointing back
     recip = c.port_types["USB_DM"]
     assert recip.kind == "usb_hs_pair" and recip.pair_with == "USB_DP"
 
@@ -203,7 +174,6 @@ def test_port_type_diff_pair_requires_explicit_impedance():
     c.port("A_N", "U1.2")
     with pytest.raises(CircuitError):
         c.port_type("A_P", kind="diff_pair", pair_with="A_N")
-    # supplying impedance succeeds
     pt = c.port_type("A_P", kind="diff_pair", pair_with="A_N", impedance=100)
     assert pt.impedance == 100
 
@@ -220,7 +190,7 @@ def test_port_type_pair_with_must_be_a_port():
     c = Circuit("t")
     c.part("U1", "Device:R", "x")
     c.port("X_P", "U1.1")
-    c.net("X_N", "U1.2")  # plain SIGNAL, not a PORT
+    c.net("X_N", "U1.2")
     with pytest.raises(CircuitError):
         c.port_type("X_P", kind="usb_hs_pair", pair_with="X_N")
 
@@ -236,7 +206,7 @@ def test_port_type_unknown_kind_raises():
 def test_port_type_on_non_port_net_raises():
     c = Circuit("t")
     c.part("U1", "Device:R", "x")
-    c.net("SIG", "U1.1")  # SIGNAL, not PORT
+    c.net("SIG", "U1.1")
     with pytest.raises(CircuitError):
         c.port_type("SIG", kind="single")
 
@@ -283,13 +253,11 @@ def test_port_type_idempotent_same_type_ok():
     c.part("U1", "Device:R", "x")
     c.port("S", "U1.1")
     c.port_type("S", kind="single")
-    # re-declaring the identical type must NOT raise
     c.port_type("S", kind="single")
     assert c.port_type_of("S").kind == "single"
 
 
 def test_port_kwargs_forward_through_port():
-    # port() forwards kind= + kwargs straight to port_type()
     c = Circuit("t")
     c.part("U1", "Device:R", "x")
     c.port("DM", "U1.2")
@@ -302,12 +270,9 @@ def test_port_type_of_untyped_reads_single():
     c = Circuit("t")
     c.part("U1", "Device:R", "x")
     c.port("S", "U1.1")
-    assert c.port_type_of("S") == PortType()  # default kind 'single'
+    assert c.port_type_of("S") == PortType()
 
 
-# --------------------------------------------------------------------------- #
-# duplicate-ref + bad-pin CircuitError
-# --------------------------------------------------------------------------- #
 def test_duplicate_reference_raises():
     c = Circuit("t")
     c.part("U1", "Device:R", "x")
@@ -319,17 +284,16 @@ def test_bad_pin_spec_missing_dot_raises():
     c = Circuit("t")
     c.part("U1", "Device:R", "x")
     with pytest.raises(CircuitError):
-        c.net("N", "U1")  # no '.PIN'
+        c.net("N", "U1")
 
 
 def test_unknown_part_in_pin_raises():
     c = Circuit("t")
     with pytest.raises(CircuitError):
-        c.net("N", "U9.1")  # U9 was never declared
+        c.net("N", "U9.1")
 
 
 def test_bad_inline_pin_number_raises():
-    # Device:R has pins 1 and 2 only; pin 7 is invalid and validated eagerly
     c = Circuit("t")
     c.part("R1", "Device:R", "10k")
     with pytest.raises(CircuitError):
@@ -355,14 +319,11 @@ def test_nc_then_net_conflict_raises():
 def test_net_reclassify_conflict_raises():
     c = Circuit("t")
     c.part("R1", "Device:R", "10k")
-    c.net("FOO", "R1.1")  # classifies SIGNAL
+    c.net("FOO", "R1.1")
     with pytest.raises(CircuitError):
         c.net("FOO", net_class=NetClass.POWER)
 
 
-# --------------------------------------------------------------------------- #
-# net_of correctness
-# --------------------------------------------------------------------------- #
 def test_net_of_finds_owning_net():
     c = Circuit("t")
     c.part("R1", "Device:R", "10k")
@@ -383,6 +344,6 @@ def test_net_extends_existing_and_dedups():
     c.part("R2", "Device:R", "10k")
     c.net("SIG", "R1.1")
     c.net("SIG", "R2.1")
-    c.net("SIG", "R1.1")  # repeat must not duplicate
+    c.net("SIG", "R1.1")
     pins = [str(p) for p in c.nets["SIG"].pins]
     assert pins == ["R1.1", "R2.1"]

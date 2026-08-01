@@ -1,22 +1,3 @@
-"""render3d — 3D board renders for VISUAL verification (LAW 1, extended to 3D).
-
-`schgen render3d` — also run best-effort by `schgen board` on EVERY build (like
-the per-sheet schematic PNGs) — shells out to ``kicad-cli pcb render`` to write a
-MULTI-ANGLE set of 3D views of the placed board to ``carrier/renders/3d_*.png``:
-the top + bottom faces, the four edge profiles (left/right/front/back — where the
-off-board connectors live), and two perspective hero views from opposite corners.
-They are NOT golden-checked (a raytraced PNG is not byte-deterministic) — they
-exist so every component's 3D body + every connector mouth can be eyeballed from
-multiple angles (does every part have a model? do the connectors / ICs sit right?
-any part floating or mis-oriented? does each off-board mouth face OUT?). The
-model3d gate counts coverage; this render is the human check the gate can't be —
-the XT60-facing-inward bug was caught in exactly such a view.
-
-Best-effort + portable: it auto-detects the installed KiCad 3D-model library and
-the ``KICAD<major>_3DMODEL_DIR`` var the footprints reference, and if kicad-cli
-or the model library is absent it WARNS and skips (never fails the build).
-"""
-
 from __future__ import annotations
 
 import re
@@ -24,7 +5,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-# Common install locations for the stock KiCad 3D-model library, newest first.
 _MODEL_DIR_CANDIDATES = (
     "/Applications/KiCad/KiCad.app/Contents/SharedSupport/3dmodels",
     "/usr/share/kicad/3dmodels",
@@ -33,8 +13,6 @@ _MODEL_DIR_CANDIDATES = (
 
 
 def _kicad_major() -> int:
-    """Major version of the installed kicad-cli (for the KICAD<N>_3DMODEL_DIR
-    var name the footprints use). Falls back to 10."""
     try:
         out = subprocess.run(["kicad-cli", "version"], capture_output=True,
                              text=True, timeout=20).stdout
@@ -56,8 +34,6 @@ def find_model_dir() -> Path | None:
 
 def render(pcb: Path, out_dir: Path, quality: str = "high",
            width: int = 1600, height: int = 1200) -> list[Path]:
-    """Render top + perspective 3D views. Returns the written PNGs (possibly
-    empty if skipped). Never raises — a missing kicad-cli / model dir WARNS."""
     if shutil.which("kicad-cli") is None:
         print("render3d: kicad-cli not found — skipping 3D render")
         return []
@@ -66,24 +42,11 @@ def render(pcb: Path, out_dir: Path, quality: str = "high",
         print("render3d: KiCad 3D-model library not found — skipping 3D render")
         return []
     var = f"KICAD{_kicad_major()}_3DMODEL_DIR"
-    # our part .wrl models reference ${KIPRJMOD}/../parts/<MPN>/<MPN>.wrl;
-    # KIPRJMOD is the .kicad_pcb's project dir (carrier/) — pass it so kicad-cli
-    # resolves them (the GUI sets KIPRJMOD itself).
     kiprjmod = str(pcb.resolve().parent)
     out_dir.mkdir(parents=True, exist_ok=True)
-    # kicad-cli opens the PROJECT to render and rewrites .kicad_pro into KiCad's
-    # full expanded schema (adds 3dviewports/ipc2581/boards, drops schgen's
-    # meta/erc blocks) — silently dirtying the tracked, schgen-emitted project
-    # file. Snapshot it and restore byte-for-byte afterwards so a render never
-    # mutates a source artifact (the .kicad_pro stays exactly what `schgen board`
-    # wrote; only the render PNGs change).
     pro = pcb.with_suffix(".kicad_pro")
+    # trap: kicad-cli rewrites .kicad_pro on open; restore or the render dirties it
     pro_snapshot = pro.read_bytes() if pro.exists() else None
-    # A multi-angle set so every face + every off-board connector mouth is
-    # inspectable each build (LAW 5/6 — the rendered 3D is the definitive
-    # orientation/fit oracle; the XT60-facing-inward bug was caught in exactly
-    # such a view). 6 orthographic faces (top/bottom + the 4 edge profiles where
-    # the connectors live) + 2 perspective hero views from opposite corners.
     views = (("top", ["--side", "top"]),
              ("bottom", ["--side", "bottom"]),
              ("left", ["--side", "left"]),
@@ -109,7 +72,6 @@ def render(pcb: Path, out_dir: Path, quality: str = "high",
                       f"{(r.stderr or r.stdout)[-200:]}")
         except Exception as exc:  # noqa: BLE001
             print(f"render3d: {name} view error: {exc}")
-    # restore the schgen-emitted project file kicad-cli clobbered (see above)
     if pro_snapshot is not None and pro.read_bytes() != pro_snapshot:
         pro.write_bytes(pro_snapshot)
     if written:

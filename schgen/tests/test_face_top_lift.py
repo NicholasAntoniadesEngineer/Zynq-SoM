@@ -1,25 +1,3 @@
-"""WAVE-13 — face=top parts LIFTED out of a rigid stage template.
-
-The defect closed: a CONTRACTED sheet's bottom variant was all-or-nothing, so a
-handful of test points and LEDs packed by the datasheet template on the primary
-side VETOED the whole sheet from bottom eligibility (the biggest blocks on the
-carrier — `power`, `usb_jtag`, `power_som`, `uart_bridge`). The lift moves those
-parts into the SECONDARY pack (which emits F.Cu inside a bottom-assigned block)
-and moves NOTHING else.
-
-`usb_jtag` and `uart_bridge` both carry DP90_USB and are refused bottom
-eligibility outright by the wave-18 reference-plane rule (B.Cu references the
-unfilled In2.Cu), so the fixture exercises the two that remain — the mechanism
-under test here is the lift, not the sheet list.
-
-Every test here is a property of the mechanism, not of one board: the stage
-survives the lift byte-exactly, the lifted part presents on the top face while
-its block's primary is on B.Cu, a lift that would move CONTRACT-CONSTRUCTED
-geometry is refused through the registered fallback (never forced), the
-seated-connector refusals still stand, and the emitted board is gated — a
-user-facing part on B.Cu FAILS LAW 6.
-"""
-
 from __future__ import annotations
 
 import dataclasses
@@ -62,8 +40,6 @@ def _bottom_shape(zg, sheet):
 
 
 def test_every_vetoed_sheet_now_offers_a_bottom_variant(zg_lift):
-    """The four sheets the veto locked out are bottom-eligible again, and the
-    face=top parts that caused the veto are all on the SECONDARY (F.Cu) side."""
     for sheet in LIFT_SHEETS:
         shp = _bottom_shape(zg_lift, sheet)
         face_top = {r for r in zg_lift.refs_by_sheet[sheet]
@@ -77,11 +53,6 @@ def test_every_vetoed_sheet_now_offers_a_bottom_variant(zg_lift):
 
 
 def test_the_stage_is_never_reflowed_by_the_lift(zg_lift):
-    """Every part that STAYS in the primary keeps its datasheet stage offset
-    exactly: the bottom primary is the pure X-mirror of shape 0's template
-    offsets about the zone mid-axis, part for part — and the pre-existing
-    SECONDARY offsets are the same box-preserving mirror they always were. Only
-    the lifted refs are new."""
     for sheet in LIFT_SHEETS:
         tmpl = zg_lift.shapes[sheet][0]
         shp = _bottom_shape(zg_lift, sheet)
@@ -105,8 +76,6 @@ def test_the_stage_is_never_reflowed_by_the_lift(zg_lift):
 
 def test_a_lifted_part_emits_top_copper_while_its_block_primary_is_bottom(
         zg_lift):
-    """The whole point: bind the bottom shape and the lifted TP/LED/SW is on
-    the board TOP face while the block it belongs to is on B.Cu."""
     for sheet in LIFT_SHEETS:
         idx = next(k for k, s in enumerate(zg_lift.shapes[sheet])
                    if s.side == "bottom")
@@ -125,10 +94,6 @@ def test_a_lifted_part_emits_top_copper_while_its_block_primary_is_bottom(
 
 
 def test_a_contract_constructed_face_top_part_is_refused_not_forced(zg_lift):
-    """A face=top part that the CONTRACT itself places is load-bearing stage
-    geometry — lifting it would move a part the contract owns, so the whole
-    bottom variant is refused through the registered fallback. Loud, counted,
-    never a silent drop and never a forced lift."""
     sheet = "power"
     tmpl = zg_lift.shapes[sheet][0]
     victim = next(r for r in sorted(tmpl.top_off)
@@ -153,9 +118,6 @@ def test_a_contract_constructed_face_top_part_is_refused_not_forced(zg_lift):
 
 
 def test_lift_keeps_the_lifted_part_off_every_primary_through_hole_pad(zg_lift):
-    """A lifted part seats on the opposite copper face, so only THROUGH-HOLE
-    pad copper (present on every layer) can collide. The lift reserves against
-    exactly those parts and against every secondary courtyard."""
     from schgen.generate.pcb.constants import PLACE_CLEAR
     from schgen.generate.pcb.footprint import has_thru_pads
     from schgen.generate.pcb.mating_face import _rot_bbox_cw
@@ -189,9 +151,6 @@ def test_lift_keeps_the_lifted_part_off_every_primary_through_hole_pad(zg_lift):
 
 
 def test_seated_connector_sheets_still_refuse_bottom(real_spec):
-    """The lift extends the TEMPLATE, not the eligibility rules: a sheet with a
-    seated off-board connector, a connector-class part, or no packable zone
-    still raises when it declares a copper face."""
     spec_conn = dataclasses.replace(
         real_spec,
         edges={e: tuple(n for n in ns if n != "microsd")
@@ -224,9 +183,6 @@ def _tp_model(side: str) -> PcbModel:
 
 
 def test_law6_gate_fails_a_user_facing_part_on_bottom_copper():
-    """The emitted-board arbiter: a test point on B.Cu is unprobeable, so LAW 6
-    FAILS it — the same predicate the placer classifies with, so the gate can
-    never under-detect what the lift is responsible for."""
     good = pm.check(_tp_model("top"))
     assert good.ok and good.n_face_top == 1 and not good.face_top_on_bottom
     bad = pm.check(_tp_model("bottom"))
