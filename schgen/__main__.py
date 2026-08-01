@@ -501,7 +501,7 @@ def cmd_board(args: argparse.Namespace) -> int:
           f"({len(res.errors)} errors, {len(res.warnings)} warnings)")
     ok_all = ok_all and res.ok
     constraints.export(sheets, man_dir)
-    diagram.render(res, som_nets, REPO_ROOT / "docs" / "block_diagram.svg")
+    diagram.render(res, som_nets, CARRIER / "docs" / "block_diagram.svg")
 
     _idx_path = CARRIER / "sheet_index.json"
     _sheet_index = json.loads(_idx_path.read_text()) if _idx_path.exists() else {}

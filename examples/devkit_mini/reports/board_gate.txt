@@ -21,7 +21,7 @@ board netlist gate
   ok   port 'USB2_HOST_EN': 1 net, 3 pins across 1 sheet(s) [usbc_otg]
   ok   port 'USB2_HOST_FLT_N': 1 net, 2 pins across 1 sheet(s) [usbc_otg]
   ok   port 'USB2_HOST_ID': 1 net, 1 pins across 1 sheet(s) [usbc_otg]
-  ok   port 'USB2_HOST_VBUS': 1 net, 7 pins across 1 sheet(s) [usbc_otg]
+  ok   port 'USB2_HOST_VBUS': 1 net, 8 pins across 1 sheet(s) [usbc_otg]
   ok   port 'USB2_UART_DM': 1 net, 1 pins across 1 sheet(s) [uart_bridge]
   ok   port 'USB2_UART_DP': 1 net, 1 pins across 1 sheet(s) [uart_bridge]
   ok   port 'USB2_UART_VBUS': 1 net, 1 pins across 1 sheet(s) [uart_bridge]
@@ -30,7 +30,7 @@ board netlist gate
   ok   rail '+5V_DEV': 1 net, 2 pins across 1 sheet(s) [usbc_otg]
   ok   rail '+VBUS_RAW': 1 net, 2 pins across 1 sheet(s) [usb_pd]
   ok   rail 'CHASSIS_GND': 1 net, 4 pins across 1 sheet(s) [usbc_otg]
-  ok   rail 'GND': 1 net, 37 pins across 4 sheet(s) [microsd, uart_bridge, usb_pd, usbc_otg]
+  ok   rail 'GND': 1 net, 38 pins across 4 sheet(s) [microsd, uart_bridge, usb_pd, usbc_otg]
   (info) undriven-input PORT check: 2 input-bearing PORT nets examined (14 expect-deferred)
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0

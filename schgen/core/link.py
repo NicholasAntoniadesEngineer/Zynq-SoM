@@ -496,7 +496,8 @@ def cmd_link(args: argparse.Namespace) -> int:
     rep_dir = override or (carrier / "reports")
     man_dir = override or (carrier / "manufacturing")
     diag_path = (override / "block_diagram.svg" if override
-                 else REPO_ROOT / "docs" / "block_diagram.svg")
+                 else carrier / "docs" / "block_diagram.svg")
+    diag_path.parent.mkdir(parents=True, exist_ok=True)
     rep_dir.mkdir(parents=True, exist_ok=True)
     man_dir.mkdir(parents=True, exist_ok=True)
 

@@ -12,20 +12,20 @@ emitted copper inventory: 7 fill zones (with In1.Cu GND plane), 1 rule areas, 31
 
 CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
   assumes: full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)
-  where:   schgen/verify/thermal.py:271
+  where:   schgen/verify/thermal.py:88
            carrier/subsystems/power.py:24
   emits:   In1.Cu GND plane: YES; U4001: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U4002: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U6004: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
   risk:    without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build.
 
 CD-02  TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)   [PARTIAL]
   assumes: DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)
-  where:   schgen/verify/thermal.py:326
+  where:   schgen/verify/thermal.py:121
   emits:   In1.Cu GND plane: YES; 
   risk:    at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper
 
 CD-03  TPS26631 PWP 2s2p RthJA (33.6 C/W)   [EMITTED]
   assumes: HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)
-  where:   schgen/verify/thermal.py:308
+  where:   schgen/verify/thermal.py:114
   emits:   In1.Cu GND plane: YES; U3001: 4 in-footprint EP via-pads (GND, PTH)
   risk:    low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed
 
@@ -50,7 +50,7 @@ CD-06  Ethernet isolation moat (In1 plane voids)   [NOTHING]
 
 CD-07  DP90/DP100 L2 reference plane   [EMITTED]
   assumes: the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet
-  where:   schgen/generate/constraints.py:11
+  where:   schgen/generate/constraints.py:12
   emits:   In1.Cu GND plane zone 25.5,25.5 -> 124.5,124.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
   risk:    without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)
 
