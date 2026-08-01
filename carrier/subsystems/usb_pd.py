@@ -1,81 +1,64 @@
-"""usb_pd — carrier ADAPTER for the reusable FUSB302B USB-PD sink subsystem.
-
-THIN ADAPTER. The portable circuit lives in the project-agnostic library
-``subsystems/usb_pd/`` (netlist + README + SPICE + local test). This file is the
-carrier-specific GLUE: it imports the library subsystem and BINDS its abstract
-ports/rails to the carrier's real net names, returning the bound Circuit. The
-board build discovers it exactly as before (``circuit()`` exposed here), and the
-binding reproduces the EXACT same net names the hand-written sheet used, so the
-emitted carrier/schematic/usb_pd.kicad_sch + its golden render are unchanged.
-
-CARRIER BINDING RATIONALE (the carrier net names + why):
-
-  +VDD_LOGIC  -> +3V3_SC   FUSB302B VDD/INT live on the SoM system-controller
-                           rail (+3V3_SC), an ALWAYS-ON rail, NEVER a DIP-gated
-                           carrier rail. Bring-up dossier risk R1
-                           (carrier/research/bringup_power_gating.md): PD
-                           negotiation must happen BEFORE any DIP-gated carrier
-                           rail exists — the board boots on default 5 V VBUS.
-  +VBUS_SENSE -> +VBUS_IN  the RAW receptacle VBUS, AHEAD of the round-5
-                           TPS26631 inlet eFuse (pd_input): the PD PHY must
-                           observe vSafe5V/vbus at the connector itself for
-                           attach detection, not the dVdT-ramped rail behind the
-                           eFuse. AMX-1: U1.2 sits at its 21.0 V recommended-max
-                           at the legal 20 V+5% contract (abs-max 28 V); +VBUS_IN
-                           is bounded only by the SMBJ22A TVS (pd_input D1).
-  GND         -> GND       (identity).
-
-  CC1/CC2 -> STM32_USB_CC1/2   the receptacle CC lines (pd_input.J1). PD-CC-1
-                           (firmware contract): the FUSB302B OWNS CC1/CC2 (Rd/Rp,
-                           vRd sensing, BMC PHY, VCONN switching). The SoM/STM32
-                           SC firmware MUST NOT enable its native UCPD on these
-                           lines (double-termination corrupts advertised current
-                           + garbles BMC framing). The SoM-side CC pins are STM32
-                           PB6 (CC1)/PB4 (CC2) brought bare to J1.29/31; firmware
-                           holds them input-only/Hi-Z. The SC talks PD only over
-                           I2C (0x22) + INT_N.
-  I2C_SDA/SCL -> STM32_I2C2_SDA/SCL   the shared STM32_I2C2 bus. The bus
-                           pull-ups (4k7 to +3V3_SC) live ONCE on bringup_rails
-                           with the TCA9535 — not duplicated here.
-  INT_N   -> SC_INT_N      G2 (wave3_function_map.md sec 1.1): the FUSB302 INT
-                           and the TCA9535 INT# wire-OR onto the SINGLE shared SC
-                           interrupt SC_INT_N (STM32_GPIO4=PA15). ONE pull-up per
-                           net: the bringup_rails 10k pull is the only one — none
-                           here.
-
-These ports bind on the generated J1 sheet (som_conn_gen FUNCTION_MAP), so the
-adapter declares that linker deferral via the library's ``expects`` hook.
-"""
+"""usb_pd project bind — circuit + component basis: subsystems/usb_pd/."""
 
 from __future__ import annotations
 
-from subsystems.usb_pd import usb_pd as _lib
+from carrier.basis import bind
 from schgen.core.model import Circuit
+from subsystems.usb_pd import usb_pd as _lib
 
-# The generated J1 sheet (som_conn_gen FUNCTION_MAP) carries the GPIO->I2C2/INT
-# function map, so these ports bind there by name. EXPLICIT linker deferral so a
-# standalone link reports them as awaiting-J1, never a silent open.
+_SUB = "usb_pd"
 _J1_MAP = "som_j1_connector (wave 3 STM32 GPIO function map)"
 
-# The ONE standard adapter contract (schgen.core.subsystem.Meta) — the entire
-# carrier-specific surface of this subsystem. Per-net rationale is in the module
-# docstring above.
-#   bind    abstract subsystem net -> carrier real net
-#   expects ports that bind on the generated J1 sheet -> explicit linker deferral
-#   buses   the FUSB302 I2C sits on the carrier STM32_I2C2 bus
-#   notes   power-tree draw note cites the G2 wire-OR / bringup_rails wording
-# (buses/notes keep the carrier's derived artifacts — layout_constraints.csv bus
-#  grouping, power_tree.txt note — byte-identical to the hand-written sheet.)
+_VDD_LOGIC = bind(
+    _SUB, "+VDD_LOGIC", "+3V3_SC",
+    "FUSB302B VDD/INT ride the always-on SoM system-controller rail, NEVER a "
+    "DIP-gated carrier rail: PD negotiation must complete BEFORE any gated rail "
+    "exists, since the board boots on default 5 V VBUS (bringup dossier R1).",
+    "policy")
+
+_VBUS_SENSE = bind(
+    _SUB, "+VBUS_SENSE", "+VBUS_IN",
+    "Raw receptacle VBUS AHEAD of the TPS26631 inlet eFuse: attach detection "
+    "needs vSafe5V at the connector, not the dVdT-ramped rail behind the eFuse. "
+    "AMX-1: U1.2 sits at its 21.0 V recommended max (abs max 28 V) on the legal "
+    "20 V+5% contract; +VBUS_IN is bounded only by the pd_input SMBJ22A.",
+    "datasheet")
+
+_CC1 = bind(
+    _SUB, "CC1", "STM32_USB_CC1",
+    "PD-CC-1 firmware contract: the FUSB302B OWNS CC1/CC2 (Rd/Rp, vRd sensing, "
+    "BMC PHY, VCONN). SC firmware must hold STM32 PB6/PB4 input-only — enabling "
+    "native UCPD double-terminates and garbles BMC framing. The SC talks PD "
+    "only over I2C 0x22 + INT_N.",
+    "datasheet")
+_CC2 = bind(_SUB, "CC2", "STM32_USB_CC2",
+            "Twin of CC1 — see the PD-CC-1 contract on usb_pd.CC1.", "datasheet")
+
+_INT_N = bind(
+    _SUB, "INT_N", "SC_INT_N",
+    "G2 (wave3_function_map 1.1): the FUSB302 INT and the TCA9535 INT# wire-OR "
+    "onto ONE shared SC interrupt (STM32_GPIO4 = PA15). ONE pull-up per net — "
+    "the bringup_rails 10k is the only one, none here.",
+    "policy")
+
+_I2C = {
+    port: bind(_SUB, port, net,
+               "Shared STM32_I2C2 trunk; the 4k7 pull-ups to +3V3_SC live ONCE "
+               "on bringup_rails with the TCA9535, never duplicated here.",
+               "policy")
+    for port, net in (("I2C_SDA", "STM32_I2C2_SDA"),
+                      ("I2C_SCL", "STM32_I2C2_SCL"))
+}
+
 META = {
     "bind": {
-        "+VDD_LOGIC": "+3V3_SC",
-        "+VBUS_SENSE": "+VBUS_IN",
+        "+VDD_LOGIC": _VDD_LOGIC,
+        "+VBUS_SENSE": _VBUS_SENSE,
         "GND": "GND",
-        "CC1": "STM32_USB_CC1",
-        "CC2": "STM32_USB_CC2",
-        "I2C_SDA": "STM32_I2C2_SDA",
-        "I2C_SCL": "STM32_I2C2_SCL",
-        "INT_N": "SC_INT_N",
+        "CC1": _CC1,
+        "CC2": _CC2,
+        **_I2C,
+        "INT_N": _INT_N,
     },
     "expects": {
         "I2C_SDA": _J1_MAP,

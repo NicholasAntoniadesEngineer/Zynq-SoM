@@ -1,20 +1,3 @@
-"""LOCAL electrical-correctness test for the bringup_modules subsystem.
-
-Runs the SUBSYSTEM-LOCAL slices of the board's verify gates on JUST this
-subsystem's circuit, standalone and offline. bringup_modules is a
-CARRIER-LOCAL subsystem (real carrier net names, no abstract bind map), so the
-checks assert the 10-gate SY6280 load-switch topology this sheet OWNS.
-
-LOCAL checks: model completeness, rail/port classes, the design_rules
-DECAP/STRAP/EP slice (clean), part_rules + spice slices, the gate invariants
-(10 SY6280 switches, the 10 gated POWER OUT rails, the RSET value set, the
-status LEDs + series R, the per-rail testpoints, the power-draw notes), and the
-.cir <-> netlist passive match.
-
-CROSS-BOARD checks (the EN-source link, the module-sheet rail consumers) stay at
-board level — run by `schgen board`.
-"""
-
 from __future__ import annotations
 
 import re
@@ -55,8 +38,6 @@ def _sheet(c: Circuit):
     return types.SimpleNamespace(name=c.name, circuit=c)
 
 
-# ---- model + interface ---------------------------------------------------------
-
 def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
     assert not c.nc_pins
@@ -77,8 +58,6 @@ def test_gated_rails_are_power_nets(c: Circuit):
         assert cls[en] is NetClass.PORT, (en, cls.get(en))
 
 
-# ---- decoupling / part / spice slices ------------------------------------------
-
 def test_design_rules_slice_clean(c: Circuit, lib: Library):
     r = design_rules.check([_sheet(c)], lib)
     assert not r.decap, r.decap
@@ -96,19 +75,13 @@ def test_spice_analytic_slice_runs_clean(c: Circuit):
     assert res.ok, res.errors
 
 
-# ---- the gate invariants this sheet owns ---------------------------------------
-
 def test_each_switch_has_in_and_out_decoupling(c: Circuit):
-    """100 nF on each switch IN and OUT (dossier 3.2). With 10 switches that is
-    20 decoupling caps, all 100n."""
     caps = [p.value for p in c.parts.values() if p.lib_id.endswith(":C")]
     assert len(caps) == 20, len(caps)
     assert set(caps) == {"100n"}, set(caps)
 
 
 def test_rset_value_set(c: Circuit):
-    """ISET RSET sets ILIM = 6800/RSET; the dossier uses only the verified
-    Basic E-values 13k (523 mA) and 6.8k (1.0 A)."""
     rset = [p.value for ref, p in c.parts.items()
             if p.lib_id.endswith(":R")
             and any((n := c.net_of(PinRef(ref, pn))) and
@@ -118,11 +91,9 @@ def test_rset_value_set(c: Circuit):
 
 
 def test_each_gated_output_has_a_status_led(c: Circuit):
-    """A red KT-0603R + series R on every gated output (dossier 3.3)."""
     leds = [p for p in c.parts.values() if p.lib_id.endswith(":LED")]
     assert len(leds) == 10, len(leds)
     assert all(p.value == "red" for p in leds)
-    # series R on each BU_PG_<module> node
     pg_rs = [p.value for ref, p in c.parts.items()
              if p.lib_id.endswith(":R")
              and any((n := c.net_of(PinRef(ref, pn))) and
@@ -147,8 +118,6 @@ def test_power_draw_declared_on_each_gated_rail(c: Circuit):
     for rail in GATED_RAILS:
         assert rail in c.loads, rail
 
-
-# ---- SPICE subckt <-> netlist passives -----------------------------------------
 
 def _cir_passives() -> tuple[list[float], list[float], int]:
     res, caps, leds = [], [], 0

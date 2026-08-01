@@ -13,7 +13,7 @@ emitted copper inventory: 8 fill zones (with In1.Cu GND plane), 3 rule areas, 34
 CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
   assumes: full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)
   where:   schgen/verify/thermal.py:88
-           carrier/subsystems/power.py:24
+           carrier/subsystems/power.py:15
   emits:   In1.Cu GND plane: YES; U20001: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U20002: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U22004: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
   risk:    without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build.
 
@@ -31,7 +31,7 @@ CD-03  TPS26631 PWP 2s2p RthJA (33.6 C/W)   [EMITTED]
 
 CD-04  CHASSIS_GND island + single-point GND bond   [NOTHING]
   assumes: a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)
-  where:   carrier/subsystems/mechanical/mechanical.py:3
+  where:   carrier/subsystems/mechanical/mechanical.py:10
   emits:   CHASSIS_GND board-level copper: 0 zones, 0 vias (pads only otherwise); no bond stitch emitted
   risk:    fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted
 

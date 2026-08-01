@@ -1,20 +1,3 @@
-"""BIND GUARD for the usbc_otg carrier adapter package.
-
-Offline (model only; no kicad-cli, no network, no board). Proves the foldered
-carrier adapter is EXACTLY the reusable library subsystem bound to the carrier
-META — the byte-identical-sheet contract restated as a net-level invariant:
-
-  * the adapter circuit's net list == the library circuit bound to this META
-    (same nets, same order), and its parts set matches;
-  * every carrier REAL net the bind map produces is present;
-  * NO abstract library interface name (the renamed-away rails/ports) leaks
-    into the bound carrier circuit.
-
-If any of these trips, the fold drifted from the hand-written sheet (or the
-generic library changed under the adapter) — the golden-render byte check would
-also fail downstream, but this catches it locally and offline.
-"""
-
 from __future__ import annotations
 
 from schgen.core.link import load_subsystem
@@ -38,11 +21,8 @@ def test_carrier_real_nets_present():
 
 
 def test_no_abstract_library_name_leaks():
-    """Every abstract interface name the META renames away must be ABSENT from
-    the bound carrier circuit (only identity binds like GND/CHASSIS_GND/USB_ID
-    survive verbatim)."""
     adapter = load_subsystem("usbc_otg").circuit
     bind = META["bind"]
     for abstract in lib.INTERFACE:
-        if bind.get(abstract, abstract) != abstract:   # renamed away
+        if bind.get(abstract, abstract) != abstract:
             assert abstract not in adapter.nets, abstract

@@ -1,70 +1,79 @@
-"""motor_pwm — 8-channel PWM/ESC output buffer (benchtop drone demo).
-
-The OUTPUT half of the carrier's generic motor interface (the telemetry +
-motor-rail half is `motor_sense`; split so neither sheet is dense enough to
-defeat the placer's rail-stub router). KEPT GENERIC: a reusable robotics PWM
-breakout — the ESCs, props and battery are all OFF board.
-
-The Zynq PL drives 8 LVCMOS33 fabric pins (8 genuinely-free bank-33 contract
-pins, verified vs som_interface.json + the XDC) into an octal 74HCT245 buffer
-(U1) that level-translates 3.3 V -> 5 V (HCT TTL thresholds accept the 3.3 V
-inputs at a 5 V VCC) and ISOLATES the PL: an ESC-side fault only reaches the 5 V
-B-side, never a PL pin. The buffered 5 V outputs go to the 3x8 output header J1
-(per channel: SIG / +5V / GND). Standard PWM or DShot in fabric.
-
-FAIL-SAFE ARM: the PL drives #OE low to enable; a 10 k pull-up holds the buffer
-outputs HiZ (no spurious ESC pulses) until the PL explicitly arms.
-
-OUTPUT SERIES-DAMPING: each buffered output passes through a 33 R series element
-(RN1/RN2, two isolated 4D03WGJ0330T5E arrays — RN1 ch0-3, RN2 ch4-7) before the
-header SIG row, for EMI / DShot edge integrity into the off-board leads. Element j
-of a 4D03 spans pin (j+1)<->pin(8-j) (footprint-verified vertical pad pairs): the
-buffered ESC_SIG{i} enters the top pad, the damped ESC_OUT{i} leaves the facing
-pad onto J1.SIG{1+i}. ISOLATED elements (no internal common) so a faulted ESC lead
-cannot back-feed a sibling. The two arrays reconverging on the 24-pin header form a
-tree the chain placer strung wide; the within-component row-wrap in place.py
-(PAPER_W_BUDGET) lands it on A3 — demoting the crossed channel to labeled stubs
-(KiCad merges by name, netlist untouched), a strict no-op for every other sheet.
-
-SERVO-RAIL PROTECTION: the header's middle (+5 V) row is gated by a SY6280 load
-switch (U3) whose current-limit (ILIM = 6800/13 k = 523 mA) protects board +5 V
-against a shorted servo lead. The buffer itself runs off RAW +5 V so it is always
-alive (armed by #OE); only the servo power is limited. ESC leads use SIG+GND only
-(their BEC stays off the rail) — see the README silk note.
-
-PL pin ledger (all FREE; XDC "unclaimed (wave-3 function map)"; IO->ESC renames
-live in som_conn_gen.FUNCTION_MAP):
-  ESC_PWM_IN0..3 = IO_L14_SRCC_P/N_33, IO_L11_SRCC_P/N_33  (J2.81/83/93/91)
-  ESC_PWM_IN4..7 = IO_L3_DQS_P/N_33,   IO_L5_P/N_33         (J3.91/93/92/94)
-  ESC_BUF_OE_N   = IO_L1P_13  (J2.57)
-
-OUTPUT ESD (LAW 7, landed): two SRV05-4 5-line arrays (5 V standoff — safe for the
-5 V buffered signals, unlike the spec's 3.3 V PESD3V3L4UG which would clamp them)
-clamp the 8 ESC leads to +5V/GND at the connector, ahead of the 33 R + buffer.
-KiCad symbol (pinout built-in) + stock SOT-23-6 — no fetched part (the EasyEDA CAD
-API was rate-limited); LCSC C2836319 (MSKSEMI SRV05-4, 375 k stock).
-"""
-
 from __future__ import annotations
 
+from carrier.basis import register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
 
-LCSC_100N = "C14663"   # 100n X7R 50V 0603
-LCSC_10U = "C15850"    # 10u 0805
-LCSC_10K = "C25804"    # 10k 1% 0603
-LCSC_13K = "C22797"    # 13k 1% 0603 -> SY6280 ILIM 523 mA
-LCSC_33R_ARRAY = "C25508"   # 4x33R 0603x4 isolated array (output series-damping)
-LCSC_SRV05 = "C2836319"     # SRV05-4 5-line ESD array, SOT-23-6 (MSKSEMI, 375k stock)
+LCSC_100N = "C14663"
+LCSC_10U = "C15850"
+LCSC_10K = "C25804"
+LCSC_13K = "C22797"
+LCSC_33R_ARRAY = "C25508"
+LCSC_SRV05 = "C2836319"
 SOT23_6 = "Package_TO_SOT_SMD:SOT-23-6"
 
 J2_MAP = "som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)"
 J3_MAP = "som_j3_connector (bank 33 PL — ESC PWM 4-7)"
 
-# 8 PWM channels: (buffer A-pin, buffer B-pin, source connector for the PL input)
+BUFFER_PART = register(
+    "motor_pwm.buffer", "SN74HCT245PWR", "part",
+    "Octal buffer level-translating 3.3 V -> 5 V (HCT TTL thresholds accept "
+    "the LVCMOS33 inputs at a 5 V VCC) and isolating the PL: an ESC-side fault "
+    "reaches only the 5 V B-side, never a PL pin. DIR high = A->B.",
+    "datasheet")
+
+OE_PULLUP = register(
+    "motor_pwm.oe_pullup", "10k", "ohm",
+    "FAIL-SAFE ARM: holds #OE high so the buffer outputs stay HiZ and emit no "
+    "spurious ESC pulses until the PL explicitly drives #OE low. LCSC C25804.",
+    "datasheet")
+
+DAMPING_ARRAY = register(
+    "motor_pwm.damping_array", "4D03WGJ0330T5E", "part",
+    "4x33R series damping into the off-board ESC leads for EMI / DShot edge "
+    "integrity. ISOLATED elements — no internal common — so a faulted lead "
+    "cannot back-feed a sibling. Element j spans pin (j+1) <-> pin (8-j) on the "
+    "verified footprint: buffered signal in the top pad, damped signal out the "
+    "facing pad. LCSC C25508.",
+    "datasheet")
+
+ESD_ARRAY = register(
+    "motor_pwm.esd_array", "SRV05-4", "part",
+    "5 V standoff, so it does NOT clamp the 5 V buffered signals — the 3.3 V "
+    "PESD3V3L4UG the spec named would. Clamps the 8 leads at the connector, "
+    "ahead of the damping array and the buffer. KiCad SOT-23-6 pin map "
+    "1=IO1 2=VN 3=IO2 4=IO3 5=VP 6=IO4; schgen binds by pad NUMBER, not name. "
+    "LCSC C2836319.",
+    "datasheet")
+
+OUTPUT_HEADER = register(
+    "motor_pwm.output_header", "HX_PZ2.54-3x8P_ZZ", "part",
+    "3x8 output header, per channel SIG / +5V / GND: SIG on 1..8, +5V on 9..16, "
+    "GND on 17..24.",
+    "datasheet")
+
+SERVO_ISET = register(
+    "motor_pwm.servo_iset", "13k", "ohm",
+    "SY6280 ILIM = 6800/13k = 523 mA, protecting board +5V against a shorted "
+    "servo lead. Only the servo POWER row is limited; the buffer runs off raw "
+    "+5V so it is always alive, armed by #OE. LCSC C22797.",
+    "datasheet")
+
+SWITCH_DECAP = register("motor_pwm.switch_decap", "100n", "F",
+                        "HF companion to the SY6280's recommended input cap, "
+                        "and the HCT245 VCC bypass. LCSC C14663.", "datasheet")
+
+SERVO_HOLDUP = register("motor_pwm.servo_holdup", "10u", "F",
+                        "Servo-rail hold-up at U3.OUT, the SY6280-recommended "
+                        "output cap. LCSC C15850.", "datasheet")
+
+BUFFER_DRAW_A = register("motor_pwm.buffer_draw", 0.080, "A",
+                         "HCT245 buffer plus a light servo allowance under the "
+                         "523 mA ILIM.", "datasheet")
+
 _CH = [
     ("A1", "B1", J2_MAP), ("A2", "B2", J2_MAP),
     ("A3", "B3", J2_MAP), ("A4", "B4", J2_MAP),
@@ -72,75 +81,67 @@ _CH = [
     ("A7", "B7", J3_MAP), ("A8", "B8", J3_MAP),
 ]
 
+_CHANNELS_PER_ARRAY = 4
+_ARRAY_TOP_PIN = 1
+_ARRAY_SPAN = 8
+_SIG_FIRST_PIN = 1
+_RAIL_ROW = range(9, 17)
+_GND_ROW = range(17, 25)
+_ESD_ARRAYS = 2
+_ESD_IO_PINS = (1, 3, 4, 6)
+_ESD_VP_PIN = 5
+_ESD_VN_PIN = 2
+
 
 def circuit() -> Circuit:
     c = Circuit("motor_pwm", "8-ch PWM/ESC output buffer (5V, PL-isolating)")
 
-    # ===== U1: octal 3.3V->5V output buffer (PL PWM -> ESC) ==================
-    c.use_part("SN74HCT245PWR", ref="U1")
-    c.net("+5V", "U1.VCC", "U1.DIR")            # DIR high = A->B (PL -> ESC)
+    c.use_part(BUFFER_PART, ref="U1")
+    c.net("+5V", "U1.VCC", "U1.DIR")
     c.net("GND", "U1.GND")
-    for cap in c.decouple("U1.VCC", "100n", footprint=C_FP):
+    for cap in c.decouple("U1.VCC", SWITCH_DECAP, footprint=C_FP):
         cap.fields["LCSC"] = LCSC_100N
     c.port("ESC_BUF_OE_N", "U1.#OE", expect=J2_MAP)
-    c.pullup("U1.#OE", "10k", "+5V", footprint=R_FP).fields["LCSC"] = LCSC_10K
+    c.pullup("U1.#OE", OE_PULLUP, "+5V",
+             footprint=R_FP).fields["LCSC"] = LCSC_10K
 
-    # ===== 8 PWM channels: PL -> U1.A; U1.B (5V buffered) -> 33R damp -> SIG ===
-    # Per-channel 33 R series-damping into the off-board ESC leads (EMI / DShot
-    # edge integrity). Two 4-element isolated arrays (4D03WGJ0330T5E, C25508):
-    # RN1 = ch0-3, RN2 = ch4-7. Footprint-verified vertical pad pairs — element
-    # j of a 4D03 spans pin (j+1) <-> pin (8-j): the buffered B output enters the
-    # TOP pad (pins 1-4), the damped output leaves the facing BOTTOM pad (8-5)
-    # into the header SIG row. ISOLATED elements: no internal common (each R is
-    # its own 2-pad device), so a faulted ESC lead cannot back-feed a sibling.
-    c.use_part("4D03WGJ0330T5E", ref="RN1")     # ch0-3 series-damping array
-    c.use_part("4D03WGJ0330T5E", ref="RN2")     # ch4-7 series-damping array
-    c.use_part("HX_PZ2.54-3x8P_ZZ", ref="J1")
+    c.use_part(DAMPING_ARRAY, ref="RN1")
+    c.use_part(DAMPING_ARRAY, ref="RN2")
+    c.use_part(OUTPUT_HEADER, ref="J1")
     for i, (apin, bpin, src) in enumerate(_CH):
-        rn = "RN1" if i < 4 else "RN2"          # array; j = element within it
-        j = i % 4                                # 0..3 -> pins (j+1) top, (8-j) bot
-        c.port(f"ESC_PWM_IN{i}", f"U1.{apin}", expect=src)      # PL -> buffer A
-        c.net(f"ESC_SIG{i}", f"U1.{bpin}", f"{rn}.{j + 1}")     # buffered -> R in
-        c.net(f"ESC_OUT{i}", f"{rn}.{8 - j}", f"J1.{1 + i}")    # R out -> SIG row
-    c.net("+5V_MOTOR_IO", *[f"J1.{p}" for p in range(9, 17)])    # +5V row (9-16)
-    c.net("GND", *[f"J1.{p}" for p in range(17, 25)])            # GND row (17-24)
+        rn = "RN1" if i < _CHANNELS_PER_ARRAY else "RN2"
+        j = i % _CHANNELS_PER_ARRAY
+        c.port(f"ESC_PWM_IN{i}", f"U1.{apin}", expect=src)
+        c.net(f"ESC_SIG{i}", f"U1.{bpin}", f"{rn}.{j + _ARRAY_TOP_PIN}")
+        c.net(f"ESC_OUT{i}", f"{rn}.{_ARRAY_SPAN - j}",
+              f"J1.{_SIG_FIRST_PIN + i}")
+    c.net("+5V_MOTOR_IO", *[f"J1.{p}" for p in _RAIL_ROW])
+    c.net("GND", *[f"J1.{p}" for p in _GND_ROW])
 
-    # ===== 5V-rated ESD on the 8 off-board PWM output lines =================
-    # SRV05-4: 4 steering diodes per line into a surge-TVS rail, 5 V standoff ->
-    # does NOT clamp the 5 V buffered signals (unlike the 3.3 V part the spec
-    # named). Two arrays (ch0-3, ch4-7) clamp ESD/transients from the ESC leads to
-    # +5V/GND right at the connector, ahead of the 33 R + buffer. KiCad symbol
-    # (pinout built-in: IO1/IO2/IO3/IO4, VP=+5V rail, VN=GND), stock SOT-23-6, no
-    # fetched part. VP -> +5V (the rail the signals swing against), VN -> GND.
-    # SOT-23-6 pin map (KiCad SRV05-4 symbol): 1=IO1 2=VN(GND) 3=IO2 4=IO3 5=VP(+5V)
-    # 6=IO4 — bind by pad NUMBER (schgen resolves pins by number, not name).
-    for arr in range(2):
-        ed = c.part(c.auto_ref("D"), "Power_Protection:SRV05-4", "SRV05-4",
+    for arr in range(_ESD_ARRAYS):
+        ed = c.part(c.auto_ref("D"), "Power_Protection:SRV05-4", ESD_ARRAY,
                     SOT23_6, LCSC=LCSC_SRV05)
-        b = arr * 4
-        c.net(f"ESC_OUT{b + 0}", f"{ed.ref}.1")    # IO1
-        c.net(f"ESC_OUT{b + 1}", f"{ed.ref}.3")    # IO2
-        c.net(f"ESC_OUT{b + 2}", f"{ed.ref}.4")    # IO3
-        c.net(f"ESC_OUT{b + 3}", f"{ed.ref}.6")    # IO4
-        c.net("+5V", f"{ed.ref}.5")                # VP  (clamp rail)
-        c.net("GND", f"{ed.ref}.2")                # VN
+        b = arr * _CHANNELS_PER_ARRAY
+        for k, pad in enumerate(_ESD_IO_PINS):
+            c.net(f"ESC_OUT{b + k}", f"{ed.ref}.{pad}")
+        c.net("+5V", f"{ed.ref}.{_ESD_VP_PIN}")
+        c.net("GND", f"{ed.ref}.{_ESD_VN_PIN}")
 
-    # ===== U3: SY6280 gates +5V -> +5V_MOTOR_IO (servo-rail current limit) ====
-    # default-ON (EN high): the ILIM (523 mA) protects board +5V from a shorted
-    # servo lead; the buffer runs off raw +5V (always alive, armed by #OE).
     c.use_part("SY6280AAC", ref="U3")
     c.net("+5V", "U3.IN", "U3.EN")
     c.net("+5V_MOTOR_IO", "U3.OUT")
     c.net("GND", "U3.GND")
-    rset = c.part(c.auto_ref("R"), "Device:R", "13k", R_FP, LCSC=LCSC_13K)
+    rset = c.part(c.auto_ref("R"), "Device:R", SERVO_ISET, R_FP, LCSC=LCSC_13K)
     c.net("MIO_ISET", "U3.ISET", f"{rset.ref}.1")
     c.net("GND", f"{rset.ref}.2")
-    for cap in c.decouple("U3.IN", "100n", footprint=C_FP):
+    for cap in c.decouple("U3.IN", SWITCH_DECAP, footprint=C_FP):
         cap.fields["LCSC"] = LCSC_100N
-    cblk = c.part(c.auto_ref("C"), "Device:C", "10u", C0805, LCSC=LCSC_10U)
-    c.net("+5V_MOTOR_IO", f"{cblk.ref}.1")      # servo-rail hold-up (SY6280 rec.)
+    cblk = c.part(c.auto_ref("C"), "Device:C", SERVO_HOLDUP, C0805,
+                  LCSC=LCSC_10U)
+    c.net("+5V_MOTOR_IO", f"{cblk.ref}.1")
     c.net("GND", f"{cblk.ref}.2")
 
-    c.draws("+5V", 0.080, "HCT245 buffer + light servo allowance (ILIM 523mA)")
-    c.testpoint("+5V_MOTOR_IO")                 # gated servo rail
+    c.draws("+5V", BUFFER_DRAW_A,
+            "HCT245 buffer + light servo allowance (ILIM 523mA)")
+    c.testpoint("+5V_MOTOR_IO")
     return c

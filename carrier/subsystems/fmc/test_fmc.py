@@ -1,24 +1,3 @@
-"""LOCAL electrical-correctness test for the fmc CARRIER subsystem.
-
-Runs the SUBSYSTEM-LOCAL slices of the carrier's verify gates on JUST this
-subsystem's circuit, standalone and offline. The fmc site is now a generic
-2x20 2.54 mm header breaking out the SoM bank-35 IO (was a Samtec FMC LPC
-connector — see fmc.py history): the 14 LA/CLK diff pairs + the +2V5_VADJ LDO
-are retained; the FMC-mezzanine management (GA/PRSNT/PG/JTAG/EEPROM/VITA grid)
-is gone with the connector.
-
-LOCAL checks:
-  * model completeness  — every header pin (40) + LDO pin netted or NC.
-  * header pinout       — the documented P/N/GND/power pin assignment.
-  * VADJ LDO            — TLV75725 (DYD thermal-pad) makes +2V5_VADJ from +3V3,
-    EN strapped on, EP pad (pin 6) netted to GND (DEF-E), in/out caps.
-  * LA / CLK pairs      — the 14 populated pairs are typed 100R diff pairs.
-  * design-rules slice  — DECAP/EP/STRAP clean, NO local findings (no shared-bus
-    I2C tap anymore).
-  * part ratings        — every BOM passive's LCSC resolves; part_rules clean.
-  * SPICE passives      — the .cir subckt's C network matches the netlist.
-"""
-
 from __future__ import annotations
 
 import re
@@ -61,17 +40,12 @@ def _pin_net(c: Circuit, pin: str) -> str | None:
     return n.name if n else None
 
 
-# ---- model completeness ---------------------------------------------------------
-
 def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
-    """Every physical pin netted or NC (validate() raises on a silent float)."""
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
-    # the LDO's unused NC pin (pin 4) is the only authored NC
     assert "U1.4" in {str(p) for p in c.nc_pins}
 
 
 def test_all_forty_header_pins_assigned(c: Circuit):
-    """Every one of the 40 header pins is on a net (no dangling breakout pad)."""
     for pin in range(1, 41):
         assert _pin_net(c, f"J1.{pin}") is not None, f"header pin {pin} unconnected"
 
@@ -89,8 +63,6 @@ def test_rail_classes(c: Circuit):
     assert cls["GND"] is NetClass.GROUND
 
 
-# ---- header pinout --------------------------------------------------------------
-
 def test_power_and_ground_pins(c: Circuit):
     assert _pin_net(c, "J1.1") == "+3V3"
     assert _pin_net(c, "J1.2") == "+2V5_VADJ"
@@ -105,19 +77,16 @@ def test_each_pair_on_its_documented_pins(c: Circuit):
         assert _pin_net(c, f"J1.{n_pin}") == f"{stem}_N", (stem, n_pin)
 
 
-# ---- VADJ LDO -------------------------------------------------------------------
-
 def test_vadj_ldo_present_in_out_and_ep_to_gnd(c: Circuit):
-    """TLV75725 (DYD thermal-pad) makes +2V5_VADJ from +3V3, EN on, EP -> GND."""
     ldos = [ref for ref, p in c.parts.items()
             if p.lib_id.endswith("TLV75725PDYDR")]
     assert ldos, "TLV75725 VADJ LDO missing"
     (u1,) = ldos
-    assert _pin_net(c, f"{u1}.1") == "+3V3"          # IN
-    assert _pin_net(c, f"{u1}.2") == "GND"           # GND
-    assert _pin_net(c, f"{u1}.3") == "+3V3"          # EN strapped on
-    assert _pin_net(c, f"{u1}.5") == "+2V5_VADJ"     # OUT
-    assert _pin_net(c, f"{u1}.6") == "GND"           # EP -> GND (DEF-E)
+    assert _pin_net(c, f"{u1}.1") == "+3V3"
+    assert _pin_net(c, f"{u1}.2") == "GND"
+    assert _pin_net(c, f"{u1}.3") == "+3V3"
+    assert _pin_net(c, f"{u1}.5") == "+2V5_VADJ"
+    assert _pin_net(c, f"{u1}.6") == "GND"
 
     def caps_on(rail: str) -> list[str]:
         out = []
@@ -138,8 +107,6 @@ def test_vadj_rail_has_a_testpoint(c: Circuit):
     assert "+2V5_VADJ" in tp_nets, tp_nets
 
 
-# ---- LA / CLK diff pairs --------------------------------------------------------
-
 def test_fourteen_la_clk_diff_pairs_typed_100ohm(c: Circuit):
     for stem in POPULATED_STEMS:
         pn, nn = f"{stem}_P", f"{stem}_N"
@@ -151,21 +118,14 @@ def test_fourteen_la_clk_diff_pairs_typed_100ohm(c: Circuit):
     assert len(POPULATED_STEMS) == 14
 
 
-# ---- design-rules slice (no shared-bus I2C tap -> fully clean) -------------------
-
 def test_design_rules_clean(c: Circuit, lib: Library):
-    """DECAP/EP/STRAP clean and NO findings: the LDO is decoupled, its EP is on
-    GND, no config strap floats, and (unlike the old FMC site) there is no
-    shared-bus I2C tap, so the local slice is finding-free."""
     r = design_rules.check([_sheet(c)], lib)
     assert not r.decap, r.decap
     assert not r.ep, r.ep
     assert not r.strap, r.strap
-    assert r.checked.get("ep", 0) >= 1     # the LDO EP rule is exercised
+    assert r.checked.get("ep", 0) >= 1
     assert not r.findings, r.findings
 
-
-# ---- part ratings ---------------------------------------------------------------
 
 def test_every_bom_passive_has_a_ratings_row(c: Circuit):
     missing = []
@@ -182,8 +142,6 @@ def test_part_rules_slice_runs_clean(c: Circuit, tmp_path):
     r = part_rules.run([_sheet(c)], tmp_path)
     assert r.ok, r.findings
 
-
-# ---- SPICE subckt <-> netlist passives ------------------------------------------
 
 def _cir_passives() -> dict[str, float]:
     out = {}
@@ -203,8 +161,6 @@ def _cir_passives() -> dict[str, float]:
 
 
 def test_cir_passives_match_netlist(c: Circuit):
-    """The subckt's C network equals the netlist value-for-value (the LDO is
-    active and not a subckt passive; its in/out caps + the bypass ARE)."""
     netlist = sorted(parse_si(p.value) for ref, p in c.parts.items()
                      if p.lib_id == "Device:R" or p.lib_id.endswith(":C"))
     cir = sorted(_cir_passives().values())
@@ -215,8 +171,6 @@ def test_spice_analytic_slice_runs_clean(c: Circuit):
     res = spice.extract_checks([_sheet(c)])
     assert res.ok, res.errors
 
-
-# ---- power-tree intent ----------------------------------------------------------
 
 def test_draws_on_3v3_and_vadj(c: Circuit):
     assert "+3V3" in c.loads

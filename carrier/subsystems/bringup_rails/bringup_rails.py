@@ -1,219 +1,213 @@
-"""bringup_rails — bring-up control surfaces: DIP switches, override
-expander, buttons (carrier/research/bringup_power_gating.md sections 1, 3.4,
-3.5, 4).
-
-The staged bring-up contract is one uniform EN cell per enable — "DIP is the
-master, STM32 is a veto" — implemented as SN74LVC1G08 AND gates on the
-bringup_en sheet. THIS sheet carries the human/software control surfaces the
-cells consume:
-
-* SW1 (DSHP04TSGER): rail DIP — silkscreen positions 1=+5V, 2=+3V3, 3=+1V8,
-  4=USER_LED (the rail DIP's spare position runs module switch #8 so SW2
-  keeps all eight positions for real modules). One contact of every position
-  is bused to +3V3_SC (the SoM system-controller rail, alive from default
-  5 V VBUS before any carrier rail); the other contact is the cell's A-input
-  net BU_DIP_* (100k pulldown lives at the gate, bringup_en).
-  Position->pin map per the Kangshen DSHP footprint (counterclockwise DIP
-  numbering, position n = pins n & 2N+1-n): the +3V3_SC side uses the odd
-  pins, the BU_DIP nets land on even pins 8/2/6/4 for positions 1/2/3/4.
-* SW2 (DSHP08TSGER): module DIP — positions 1=HDMI_TX, 2=HDMI_RX, 3=LCD,
-  4=CAM, 5=SD, 6=USB, 7=PMOD, 8=spare (EN_LCD_BL provision). Position n =
-  pins n & 17-n: BU_DIP nets on even pins 16/2/14/4/12/6/10/8.
-* SW6 (DSHP04TSGER): the PLAN round-5 EXTENSION DIP. SW1's four and SW2's
-  eight positions were ALL in use when the round-5 decision added module
-  gates for the (previously unsourced) +5V_HDMI_TX and +5V_LCD rails, so
-  the bit map extends HONESTLY with a third DIP rather than overloading an
-  existing position: silkscreen 1=HDMI_TX_5V, 2=LCD_5V, 3/4=spare (even
-  pins 6/4 author-NC; the odd +3V3_SC bus covers all four positions so a
-  future gate only adds the BU_DIP port). Same DSHP04 position->pin map
-  as SW1 (pos n = pins n & 9-n, signals on even pins 8/2).
-* U1 (TCA9535PWR, I2C addr 0x20 — A0=A1=A2=GND; FUSB302B at 0x22 shares the
-  bus, no clash): the STM32 override expander. POR state is all-inputs, so
-  with the cells' 100k pull-ups everything defaults to DIP control — a blank
-  system controller boots stage-1 "switches only". P00..P07 are the eight
-  module veto lines BU_OVR_*; P10 is the EN_LCD_BL provision driver
-  (BU_OVR_LCD_BL, 100k pulldown — the spare cell is OFF until software
-  raises it); P12/P13 are the round-5 veto lines BU_OVR_HDMI_TX_5V /
-  BU_OVR_LCD_5V (100k pull-ups at their gates, like P00..P07); P11 stays
-  a 100k-to-GND spare RESERVED for power_mon's PMON_ALERT_N (its dossier
-  + the firmware header both name it); P14..P17 have no internal pulls
-  and must not float: 100k to GND each. SDA/SCL ride STM32_I2C2 (usb_pd's
-  FUSB302 bus) with 4k7 pull-ups to +3V3_SC (dossier risk R1: the bus
-  must live before any carrier rail). INT# is open-drain: 10k to +3V3_SC,
-  port STM32_BRINGUP_INT (J3 GPIO4 function map, wave-3 deferral).
-* Buttons (TS-1187A-B-A-B, pads 1/2 and 3/4 are internally bridged pairs):
-  two user buttons to PL pins — active-LOW, 10k pull-up to +3V3 (the bank
-  VCCO of the PL pins) + 100n across the contacts for RC debounce — and the
-  reset button on STM32_NRST (J3.47; the STM32's internal ~40k pull-up, no
-  external resistor) + 100n.
-
-All parts live-verified on LCSC/JLCPCB 2026-06-10 (dossier section 2).
-"""
-
 from __future__ import annotations
 
+from carrier.basis import register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 
-LCSC_100K = "C25803"       # 0603 100k 1%
-LCSC_10K = "C25804"        # 0603 10k 1%
-LCSC_4K7 = "C23162"        # 0603 4.7k 1%
-LCSC_100N = "C14663"        # CC0603KRX7R9BB104 100n 50V X7R 0603 (JLC Basic)
+LCSC_100K = "C25803"
+LCSC_10K = "C25804"
+LCSC_4K7 = "C23162"
+LCSC_100N = "C14663"
 
 J3_MAP = "som_j3_connector (wave 3 STM32 GPIO function map)"
+J12_MAP = "som_j1_j2 bank-33 PL pin assignment (P3 linker)"
+EXPECT_EN = "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
 
-# SW1 rail DIP: silkscreen position -> (even pin, BU_DIP net). DSHP04
-# pairing: pos n = pins (n, 9-n); odd pins 1/3/5/7 carry the +3V3_SC side.
+EXPANDER_ADDR = register(
+    "bringup_rails.expander_addr", "0x20", "i2c-addr",
+    "A0=A1=A2=GND. FUSB302B at 0x22 shares the bus, no clash. POR state is "
+    "all-inputs, so with the cells' 100k pull-ups everything defaults to DIP "
+    "control and a blank system controller still boots stage 1.",
+    "datasheet")
+
+I2C_SPEED_HZ = register("bringup_rails.i2c_speed", 400_000, "Hz",
+                        "Fast-mode STM32_I2C2.", "datasheet")
+
+BUS_PULLUP = register(
+    "bringup_rails.bus_pullup", "4k7", "ohm",
+    "The STM32_I2C2 pull-ups live ONCE, here, on +3V3_SC — dossier risk R1: the "
+    "bus must be alive before any carrier rail exists, because PD negotiation "
+    "precedes them all. LCSC C23162.",
+    "datasheet")
+
+INT_PULLUP = register(
+    "bringup_rails.int_pullup", "10k", "ohm",
+    "This sheet OWNS the single pull-up for the merged SC_INT_N net (the "
+    "TCA9535 INT# wire-ORed with the FUSB302 INT, G2). usb_pd's redundant 4k7 "
+    "was deleted — one pull per net. LCSC C25804.",
+    "datasheet")
+
+SPARE_PULLDOWN = register(
+    "bringup_rails.spare_pulldown", "100k", "ohm",
+    "The TCA9535 has NO internal pulls (unlike the PCA9555), so an unused port "
+    "must not float. P10 also carries this pulldown so the LCD_BL provision "
+    "defaults OFF until software raises it. LCSC C25803.",
+    "datasheet")
+
+BUTTON_PULLUP = register(
+    "bringup_rails.button_pullup", "10k", "ohm",
+    "Active-LOW PL buttons pulled to +3V3, the bank VCCO of those PL pins. "
+    "LCSC C25804.",
+    "datasheet")
+
+DEBOUNCE_CAP = register("bringup_rails.debounce_cap", "100n", "F",
+                        "RC debounce across the tact contacts. LCSC C14663.",
+                        "datasheet")
+
+EXPANDER_DECAP = register("bringup_rails.expander_decap", "100n", "F",
+                          "TCA9535 VCC bypass. LCSC C14663.", "datasheet")
+
+PUDC_STRAP = register(
+    "bringup_rails.pudc_strap", "10k", "ohm",
+    "IO_L3P_PUDC_34 has NO resistor on the SoM. PUDC LOW during config ENABLES "
+    "the internal pull-ups (UG470), which suits the LCD 'DISP defaults on' 10k "
+    "and the active-low PL buttons. The strap is a carrier-side part so it "
+    "lives on this config-strap sheet, not the connector-only J3 sheet. "
+    "LCSC C25804.",
+    "datasheet")
+
+SC_DRAW_A = register(
+    "bringup_rails.sc_draw", 0.005, "A",
+    "TCA9535 uA-class + 14 closed-DIP pull currents at 33 uA each + the "
+    "I2C/INT pull-ups when sinking. Dossier R3 caps this subsystem at 5 mA.",
+    "datasheet")
+
+BUTTON_DRAW_A = register("bringup_rails.button_draw", 0.001, "A",
+                         "Two user-button 10k pull-ups when pressed.",
+                         "datasheet")
+
+DIP4_PAIRING = register(
+    "bringup_rails.dip4_pairing", "pos n = pins (n, 9-n)", "pin-map",
+    "DSHP04 (SW1, SW6) pairs a position diagonally, so the odd pins carry the "
+    "+3V3_SC bus side and the BU_DIP nets land on the even pins.",
+    "datasheet")
+
+DIP8_PAIRING = register(
+    "bringup_rails.dip8_pairing", "pos n = pins (n, n+8)", "pin-map",
+    "DSHP08 (SW2) numbers its bottom row 9..16 left-to-right, so a rocker "
+    "bridges the two pads in the SAME COLUMN — a STRAIGHT pairing, NOT the "
+    "DSHP04 diagonal. Using the diagonal here SHORTED enable pairs (audit "
+    "2026-06-19 CRITICAL); fixed in this map, never by renumbering the "
+    "faithful EasyEDA footprint.",
+    "measured")
+
+N_PL_BUTTONS = 2
+FIRST_BUTTON_REF = 3
+
 SW1_MAP = (("8", "BU_DIP_5V0"), ("2", "BU_DIP_3V3"),
            ("6", "BU_DIP_1V8"), ("4", "BU_DIP_USER_LED"))
-# SW2 module DIP (DSHP08). Each rocker bridges the two pads in the SAME COLUMN;
-# the DSHP08 footprint numbers its bottom row 9..16 left-to-right (UNLIKE DSHP04,
-# whose bottom row is 8..5), so a position n bridges pins (n, n+8) — a STRAIGHT
-# pairing, NOT the (n, 9-n) diagonal of DSHP04. Top row 1-8 carry +3V3_SC;
-# the bottom-row pin (n+8) carries the BU_DIP net, so flipping position n pulls
-# that module's enable to +3V3_SC. (Audit 2026-06-19 CRITICAL: the old map used
-# DSHP04's (n,17-n) diagonal and shorted enable pairs — fixed here in the ADAPTER,
-# NOT by renumbering the faithful EasyEDA footprint.)
 SW2_MAP = (("9", "BU_DIP_HDMI_TX"), ("10", "BU_DIP_HDMI_RX"),
            ("11", "BU_DIP_LCD"), ("12", "BU_DIP_CAM"),
            ("13", "BU_DIP_SD"), ("14", "BU_DIP_USB"),
            ("15", "BU_DIP_PMOD"), ("16", "BU_DIP_SPARE"))
-# SW6 round-5 extension DIP (DSHP04, same pairing as SW1): positions 1/2
-# carry the 5V module gates, 3/4 spare (even pins 6/4 author-NC below).
 SW6_MAP = (("8", "BU_DIP_HDMI_TX_5V"), ("2", "BU_DIP_LCD_5V"))
-# TCA9535 P00..P07 (pins 4..11) -> module veto nets, dossier section 3.2.
 P0_MAP = ("BU_OVR_HDMI_TX", "BU_OVR_HDMI_RX", "BU_OVR_LCD", "BU_OVR_CAM",
           "BU_OVR_SD", "BU_OVR_USB", "BU_OVR_PMOD", "BU_OVR_USER_LED")
-# TCA9535 P12/P13 -> round-5 veto nets (P10 = LCD_BL provision, P11
-# reserved for PMON_ALERT_N, P14..P17 spare 100k-to-GND).
 P1_MAP = (("P12", "BU_OVR_HDMI_TX_5V"), ("P13", "BU_OVR_LCD_5V"))
-EXPECT_EN = "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+
+FLAG_PORT_POLICY = register(
+    "bringup_rails.flag_ports", "P11/P14/P15", "pin-map",
+    "The three telemetry flags land on expander INPUTS because the STM32 has "
+    "zero free direct GPIOs (G4 census). Their pull-ups live on the OWNING "
+    "sheets, so these ports get NO don't-float resistor here — one would fight "
+    "the real pull and form a sloppy divider. P12/P13 are taken by the round-5 "
+    "5 V module gates, which is why USBOTG_FLT_N is on P14, not the dossier's "
+    "stale P12.",
+    "policy")
+
+_FLAG_PORTS = (
+    ("PMON_ALERT_N", "P11",
+     "power_mon (INA3221 CRITICAL wire-OR, 10k PU +3V3_SC)"),
+    ("USBOTG_FLT_N", "P14", "usbc_otg (TPS2051C FLT#, 100k PU +3V3_SC)"),
+    ("PD_FLT_N", "P15", "pd_input (TPS26631 eFuse FLT#, 100k PU +3V3_SC)"),
+)
 
 
 def circuit() -> Circuit:
     c = Circuit("bringup_rails",
                 "Bring-up controls: rail/module DIPs + TCA9535 + buttons")
 
-    # ---- SW1 / SW2: DIP switches, one side bused to +3V3_SC ----------------
-    c.use_part("DSHP04TSGER", ref="SW1")        # position pins stay numeric
+    c.use_part("DSHP04TSGER", ref="SW1")
     c.net("+3V3_SC", "SW1.1", "SW1.3", "SW1.5", "SW1.7")
     for pin, net in SW1_MAP:
         c.port(net, f"SW1.{pin}", expect=EXPECT_EN)
     c.use_part("DSHP08TSGER", ref="SW2")
-    # +3V3_SC on the TOP row (pins 1-8); each BU_DIP net lands on the bottom-row
-    # pin (n+8) of the same column (see SW2_MAP) so every rocker bridges
-    # +3V3_SC -> its module-enable net.
     c.net("+3V3_SC", "SW2.1", "SW2.2", "SW2.3", "SW2.4",
           "SW2.5", "SW2.6", "SW2.7", "SW2.8")
     for pin, net in SW2_MAP:
         c.port(net, f"SW2.{pin}", expect=EXPECT_EN)
-    # SW6: round-5 extension DIP (docstring) — positions 3/4 spare
     c.use_part("DSHP04TSGER", ref="SW6")
     c.net("+3V3_SC", "SW6.1", "SW6.3", "SW6.5", "SW6.7")
     for pin, net in SW6_MAP:
         c.port(net, f"SW6.{pin}", expect=EXPECT_EN)
-    c.nc("SW6.4", "SW6.6")                 # spare positions 4/3
+    c.nc("SW6.4", "SW6.6")
 
-    # ---- U1: TCA9535 override expander @0x20 -------------------------------
     c.use_part("TCA9535PWR", ref="U1")
     c.net("+3V3_SC", "U1.VCC")
-    for cap in c.decouple("U1.VCC", "100n", footprint=C_FP):          # C1
+    for cap in c.decouple("U1.VCC", EXPANDER_DECAP, footprint=C_FP):
         cap.fields["LCSC"] = LCSC_100N
-    c.net("GND", "U1.GND", "U1.A1", "U1.A2", "U1.A0")        # addr = 0x20
+    c.net("GND", "U1.GND", "U1.A1", "U1.A2", "U1.A0")
     for k, net in enumerate(P0_MAP):
         c.port(net, f"U1.P0{k}", expect=EXPECT_EN)
-    # P10 = EN_LCD_BL provision driver; unused P1x 100k to GND (no internal
-    # pulls in the TCA9535 — unlike PCA9555 — so unused ports must not float)
     c.port("BU_OVR_LCD_BL", "U1.P10", expect=EXPECT_EN)
-    r = c.part(c.auto_ref("R"), "Device:R", "100k", R_FP, LCSC=LCSC_100K)
+    r = c.part(c.auto_ref("R"), "Device:R", SPARE_PULLDOWN, R_FP,
+               LCSC=LCSC_100K)
     c.net("BU_OVR_LCD_BL", f"{r.ref}.1")
     c.net("GND", f"{r.ref}.2")
-    # P12/P13 = round-5 module veto lines (their 100k pull-UPS live at the
-    # gates on bringup_en_modules, exactly like the P00..P07 cells)
     for pname, net in P1_MAP:
         c.port(net, f"U1.{pname}", expect=EXPECT_EN)
-    # G4 (wave3_function_map.md sec 1.2 + round-5 reconciliation): the two
-    # SC-side telemetry flags land on the next free expander ports as INPUTS
-    # (the STM32 has zero free direct GPIOs — section 1 census). Their pull-ups
-    # live on the OWNING sheets, so NO 100k-to-GND "don't float" resistor here
-    # (it would fight the real pull / form a sloppy divider):
-    #  * P11 = PMON_ALERT_N — INA3221 CRITICAL wire-OR, 10k PU +3V3_SC on
-    #    power_mon (R1). [reserved here all along per the dossier + fw header]
-    #  * P14 = USBOTG_FLT_N — TPS2051C open-drain fault, 100k PU re-railed to
-    #    +3V3_SC on usbc_otg (R3; +5V on a TCA9535 IO would break its VCC+0.5
-    #    abs-max). P12/P13 are taken by the round-5 5V module gates, so the
-    #    next free port is P14 (NOT the dossier's stale "P12").
-    #  * P15 = PD_FLT_N — TPS26631 +VIN eFuse open-drain fault (the board's ONLY
-    #    +VIN protection device), 100k PU +3V3_SC on pd_input (R6). DEF-F: was a
-    #    spare 100k-to-GND port; now the SC sees the inlet eFuse trip.
-    c.port("PMON_ALERT_N", "U1.P11",
-           expect="power_mon (INA3221 CRITICAL wire-OR, 10k PU +3V3_SC)")
-    c.port("USBOTG_FLT_N", "U1.P14",
-           expect="usbc_otg (TPS2051C FLT#, 100k PU +3V3_SC)")
-    c.port("PD_FLT_N", "U1.P15",
-           expect="pd_input (TPS26631 eFuse FLT#, 100k PU +3V3_SC)")
-    for k in (6, 7):                       # P16/P17 spare — must not float
+    for net, pin, owner in _FLAG_PORTS:
+        c.port(net, f"U1.{pin}", expect=owner)
+    for k in (6, 7):
         net = f"BU_P1{k}"
-        rr = c.part(c.auto_ref("R"), "Device:R", "100k", R_FP, LCSC=LCSC_100K)
+        rr = c.part(c.auto_ref("R"), "Device:R", SPARE_PULLDOWN, R_FP,
+                    LCSC=LCSC_100K)
         c.net(net, f"U1.P1{k}", f"{rr.ref}.1")
         c.net("GND", f"{rr.ref}.2")
-    # I2C: shared STM32 bus (FUSB302 @0x22 on usb_pd) — pull-ups on +3V3_SC
-    # per dossier risk R1 (PD negotiation precedes every carrier rail)
     c.port("STM32_I2C2_SCL", "U1.SCL",
-           kind="i2c", role="scl", bus="STM32_I2C2", speed_hz=400_000,
+           kind="i2c", role="scl", bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ,
            expect=J3_MAP)
     c.port("STM32_I2C2_SDA", "U1.SDA",
-           kind="i2c", role="sda", bus="STM32_I2C2", speed_hz=400_000,
+           kind="i2c", role="sda", bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ,
            expect=J3_MAP)
-    c.pullup("U1.SCL", "4k7", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_4K7
-    c.pullup("U1.SDA", "4k7", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_4K7
-    # INT#: open-drain, wired-OR with the FUSB302 INT onto the ONE shared SC
-    # interrupt SC_INT_N (STM32_GPIO4 = PA15, wave3_function_map.md sec 1.1,
-    # G2). This sheet OWNS the single pull-up for the merged net: 10k to
-    # +3V3_SC (usb_pd's redundant 4k7 was deleted — one pull per net).
+    c.pullup("U1.SCL", BUS_PULLUP, "+3V3_SC",
+             footprint=R_FP).fields["LCSC"] = LCSC_4K7
+    c.pullup("U1.SDA", BUS_PULLUP, "+3V3_SC",
+             footprint=R_FP).fields["LCSC"] = LCSC_4K7
     c.port("SC_INT_N", "U1.INT#", expect=J3_MAP)
-    c.pullup("U1.INT#", "10k", "+3V3_SC", footprint=R_FP).fields["LCSC"] = LCSC_10K
+    c.pullup("U1.INT#", INT_PULLUP, "+3V3_SC",
+             footprint=R_FP).fields["LCSC"] = LCSC_10K
 
-    # ---- user buttons: active-LOW, 10k to +3V3 (bank VCCO), 100n debounce --
-    J12_MAP = "som_j1_j2 bank-33 PL pin assignment (P3 linker)"
-    for k in range(2):
-        sw = c.use_part("TS-1187A-B-A-B", ref=f"SW{3 + k}")
+    for k in range(N_PL_BUTTONS):
+        sw = c.use_part("TS-1187A-B-A-B", ref=f"SW{FIRST_BUTTON_REF + k}")
         net = f"PL_BTN{k}"
-        cd = c.part(c.auto_ref("C"), "Device:C", "100n", C_FP, LCSC=LCSC_100N)
+        cd = c.part(c.auto_ref("C"), "Device:C", DEBOUNCE_CAP, C_FP,
+                    LCSC=LCSC_100N)
         c.port(net, f"{sw.ref}.1", f"{sw.ref}.2", f"{cd.ref}.1",
                expect=J12_MAP)
         c.net("GND", f"{sw.ref}.3", f"{sw.ref}.4", f"{cd.ref}.2")
-        c.pullup(f"{sw.ref}.1", "10k", "+3V3",
+        c.pullup(f"{sw.ref}.1", BUTTON_PULLUP, "+3V3",
                  footprint=R_FP).fields["LCSC"] = LCSC_10K
 
-    # ---- reset button: STM32_NRST (J3.47), internal pull-up, 100n ----------
+    # The reset button resets the SC = whole-system reset; the SoM provides its
+    # own RC, so only the 100n across the contacts is fitted here.
     c.use_part("TS-1187A-B-A-B", ref="SW5")
-    cr = c.part(c.auto_ref("C"), "Device:C", "100n", C_FP, LCSC=LCSC_100N)
+    cr = c.part(c.auto_ref("C"), "Device:C", DEBOUNCE_CAP, C_FP,
+                LCSC=LCSC_100N)
     c.port("STM32_NRST", "SW5.1", "SW5.2", f"{cr.ref}.1")
     c.net("GND", "SW5.3", "SW5.4", f"{cr.ref}.2")
 
-    # ---- bank-34 PUDC config strap (wave3_function_map.md sec 3.3 / UG470) --
-    # IO_L3P_PUDC_34 (J3.39, port PUDC_34 on som_j3) has NO resistor on the SoM.
-    # PUDC LOW during config = internal pull-ups ENABLED — friendly to the LCD
-    # "DISP defaults on" 10k and the active-low PL buttons. 10k to GND. The
-    # strap is a carrier-side part; it lives HERE (the config-strap surface
-    # sheet) rather than on the connector-only J3 sheet, and binds J3<->here.
-    rp = c.part(c.auto_ref("R"), "Device:R", "10k", R_FP, LCSC=LCSC_10K)
+    rp = c.part(c.auto_ref("R"), "Device:R", PUDC_STRAP, R_FP, LCSC=LCSC_10K)
     c.port("PUDC_34", f"{rp.ref}.2", expect=J3_MAP)
     c.net("GND", f"{rp.ref}.1")
 
-    # round-4 coverage gate: the always-on SC rail + the shared SC I2C bus
-    # are probed HERE (the sheet that owns the bus pull-ups)
     c.testpoint("+3V3_SC")
     c.testpoint("STM32_I2C2_SDA")
     c.testpoint("STM32_I2C2_SCL")
 
-    # power-tree budget (round 4, dossier R3: subsystem total < 5 mA):
-    # TCA9535 uA-class + 14 closed-DIP pull currents (33 uA each) + I2C/INT
-    # pull-ups when sinking
-    c.draws("+3V3_SC", 0.005, "TCA9535 + DIP/I2C/INT pull networks "
-                              "(dossier R3 < 5 mA)")
-    c.draws("+3V3", 0.001, "2x user-button 10k pull-ups when pressed")
+    c.draws("+3V3_SC", SC_DRAW_A, "TCA9535 + DIP/I2C/INT pull networks "
+                                  "(dossier R3 < 5 mA)")
+    c.draws("+3V3", BUTTON_DRAW_A, "2x user-button 10k pull-ups when pressed")
     return c

@@ -97,6 +97,50 @@ All placement is derived from circuit topology by `schgen/layout/place.py`.
   [`FLOORPLAN.md`](docs/FLOORPLAN.md), and the generated diagrams
   `block_diagram.svg` / `power_tree.svg` / `power_sequence.svg`.
 
+## Assembly + bring-up procedure
+
+Human steps the netlist cannot carry. Everything else — every component value
+and every bind decision — is a registered basis entry in `carrier/basis.py`
+(`REGISTRY` for values, `BINDS` for net binds), not prose.
+
+**Before fab**
+
+- **QWIIC pad order (`board_qwiic` J1).** Pads 1–4 are the QWIIC standard
+  GND / +3V3 / SDA / SCL looking into the receptacle; pads 5/6 are the shell
+  tabs. Confirm pad 1's location against the J1 footprint silk before release —
+  a swapped power pad damages every external module plugged in.
+- **Chassis star stitch (`mechanical`).** `GND` ↔ `CHASSIS_GND` must be joined
+  at exactly one point in copper. See
+  [`subsystems/mechanical/README.md`](subsystems/mechanical/README.md).
+
+**Stuffing**
+
+- **RTC backup cell (`board_services` BT1).** Fit a **rechargeable ML1220**
+  (Mn-Li). The SC firmware enables the RV-3028 trickle charger, so the cell
+  tops up whenever the board is powered. Do **NOT** fit a primary CR1220 (it
+  would be charged) and do **NOT** fit a LIR Li-ion (its 4.2 V charge target
+  exceeds the 3.3 V supply). The KH-CR1220-2 holder accepts both 12.5 mm
+  chemistries, so the holder will not stop the wrong cell.
+- **HDMI-RX termination (`hdmi_rx_term`).** The 8 × 49.9 Ω sink terminations
+  belong physically next to Zynq bank 33, not at the connector. An optional
+  0 Ω / ferrite may be fitted in the +3V3 → AVCC trace to island the supply.
+- **Camera terminations (`camera` R1–R3).** Place the 100 Ω differential
+  terminations at the **SoM-connector** end of the traces, not at the FFC.
+
+**Powering up**
+
+- Every rail and module enable is a DIP switch ANDed with a system-controller
+  override, so a blank SC still boots "switches only". Bring rails up one at a
+  time and read the per-rail power-good LED.
+- `+5V_SOM`, `+3V3_SC` and the debug island (`+5V_DBG` / `+3V3_DBG`, alive only
+  with the debug USB-C cable plugged) are **always-on by design** — they are not
+  gated and will be live before you touch a switch.
+- Probe every EN line and every gated rail at its own test point; the gated
+  rails are probed at the SY6280 output, on the source side of the module
+  connector.
+- ESC leads on the `motor_pwm` header use SIG + GND only — keep the ESC's own
+  BEC off the +5 V row.
+
 ## Build + gate discipline
 
 There is **no CI** — instead every local `schgen build <sheet>` /

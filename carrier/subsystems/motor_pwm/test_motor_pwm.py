@@ -1,10 +1,3 @@
-"""LOCAL correctness test for the carrier motor_pwm subsystem (8-ch PWM/ESC out).
-
-Runs the SUBSYSTEM-LOCAL gate slices on JUST this sheet (model + ratings + spice;
-no kicad-cli, no network, no board). Cross-board checks (link/driver graph, full
-power-tree, board ERC + netlist merge) stay at board level.
-"""
-
 from __future__ import annotations
 
 import re
@@ -58,34 +51,25 @@ def test_eight_pwm_inputs_plus_oe_published(c: Circuit):
 
 
 def test_buffer_failsafe_and_direction(c: Circuit):
-    # net pins stringify REF.NUMBER; HCT245 DIR=1, VCC=20, #OE=19
-    # DIR + VCC tied to +5V (A->B, always-alive buffer); #OE pulled up = HiZ
     assert {"U1.1", "U1.20"} <= {str(p) for p in c.nets["+5V"].pins}
     assert any(str(p) == "U1.19" for p in c.nets["ESC_BUF_OE_N"].pins)
 
 
 def test_servo_rail_gated_by_sy6280(c: Circuit):
-    # SY6280: OUT=1, IN=5
     assert any(str(p) == "U3.1" for p in c.nets["+5V_MOTOR_IO"].pins)
     assert any(str(p) == "U3.5" for p in c.nets["+5V"].pins)
-    # the header's +5V row (pads 9-16) rides the gated rail
     rail = {str(p) for p in c.nets["+5V_MOTOR_IO"].pins}
     assert "J1.9" in rail and "J1.16" in rail
 
 
 def test_each_buffered_output_lands_on_the_header_sig_row(c: Circuit):
-    # buffer B output (5V) -> 33R series-damp array -> header SIG pad 1..8.
-    # Two isolated 4-element arrays (RN1 ch0-3, RN2 ch4-7); element j of a
-    # 4D03 spans pin (j+1)<->pin(8-j) — the buffered ESC_SIG{i} enters the top
-    # pad (j+1), the damped ESC_OUT{i} leaves the facing pad (8-j) onto SIG.
+    """Element j of a 4D03 array spans facing pads j+1 and 8-j, not adjacent pads."""
     for i in range(8):
         rn = "RN1" if i < 4 else "RN2"
         j = i % 4
         assert c.parts[rn].lib_id.endswith("4D03WGJ0330T5E")
-        # buffer -> array input (top pad j+1)
         assert f"ESC_SIG{i}" in c.nets
         assert any(str(p) == f"{rn}.{j + 1}" for p in c.nets[f"ESC_SIG{i}"].pins)
-        # array output (bottom pad 8-j) -> header SIG pad (1+i), one net per ch
         assert f"ESC_OUT{i}" in c.nets
         out_pins = {str(p) for p in c.nets[f"ESC_OUT{i}"].pins}
         assert f"{rn}.{8 - j}" in out_pins

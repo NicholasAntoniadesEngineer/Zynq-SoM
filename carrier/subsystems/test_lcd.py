@@ -1,26 +1,3 @@
-"""BIND-PARITY guard for the carrier lcd ADAPTER.
-
-The carrier lcd subsystem is a THIN ADAPTER: it imports the project-agnostic
-library subsystem ``subsystems/lcd/`` and BINDS its abstract ports/rails to the
-carrier's real net names via the standard ``META`` contract. The library's own
-electrical correctness is proven by ``subsystems/lcd/test_lcd.py``; this co-located
-test proves the ONE thing the adapter is responsible for — that the bind is a
-faithful, byte-stable rename and nothing else:
-
-  * the adapter's circuit() is EXACTLY ``_lib.circuit(META)`` — same parts, same
-    nets in the same insertion order (byte-identical emit), same NCs.
-  * every carrier real net the META binds actually appears in the built circuit.
-  * NO abstract library interface name leaks through the bind (the contract is
-    fully applied — no half-bound externals).
-
-It does NOT re-test the library electricals (decap / boost topology / ratings /
-SPICE), which stay in the library package's own test and are aggregated by
-``schgen board``. The SPICE subckt now lives ONLY in the library
-(``subsystems/lcd/lcd.cir``): the carrier ``.cir`` was de-bloated away together
-with the adapter folder (the library owns it), so the old carrier-.cir parse
-check is gone with the file it tested.
-"""
-
 from __future__ import annotations
 
 import importlib.util
@@ -32,25 +9,13 @@ import pytest
 from schgen.core.model import NetClass
 
 NAME = "lcd"
-HERE = Path(__file__).resolve().parent          # carrier/subsystems/ (flat adapter)
-REPO = HERE.parents[1]                            # repo root
-CARRIER = HERE.parents[0]                         # carrier/
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[1]
+CARRIER = HERE.parents[0]
 
 
 def _resolve_library_imports() -> None:
-    """Make the bare ``subsystems`` package the adapter imports resolve to the
-    TOP-LEVEL library (``<repo>/subsystems``), not to ``carrier/subsystems``.
-
-    pytest roots carrier tests at ``carrier/`` (carrier has no ``__init__.py``),
-    so ``carrier/`` lands first on sys.path and ``carrier/subsystems/__init__.py``
-    gets imported AS the top-level ``subsystems`` package — which would shadow the
-    library with the carrier adapter package and break the adapter's
-    ``from subsystems.<name> import <name>``. We pin the repo root ahead of it and
-    evict ONLY the poisoned ``subsystems`` / ``subsystems.<name>`` library-name
-    cache entries that point into ``carrier/`` (never any test module), so the
-    adapter import re-resolves to the real library. Pytest-only; the board build
-    runs under ``PYTHONPATH=.`` where the repo root already wins, untouched.
-    """
+    """The test rootdir precedes the repo root on sys.path and shadows `subsystems`."""
     if str(REPO) in sys.path:
         sys.path.remove(str(REPO))
     sys.path.insert(0, str(REPO))
@@ -83,8 +48,6 @@ def lib():
 
 
 def test_adapter_is_thin_bind_of_library(adapter, lib):
-    """The adapter circuit equals the library circuit built with the adapter's
-    META — identical parts and identical net insertion order (byte-stable emit)."""
     a = adapter.circuit()
     b = lib.circuit(adapter.META)
     assert a.name == b.name == NAME
@@ -94,8 +57,6 @@ def test_adapter_is_thin_bind_of_library(adapter, lib):
 
 
 def test_carrier_real_names_present(adapter):
-    """Every carrier real net the META binds to appears in the built circuit
-    (the bind landed), including the carrier-specific gated rails + bus rename."""
     a = adapter.circuit()
     for real in set(adapter.META["bind"].values()):
         assert real in a.nets, real
@@ -105,9 +66,6 @@ def test_carrier_real_names_present(adapter):
 
 
 def test_no_abstract_interface_leak(adapter):
-    """No abstract library interface name survives the bind: every externally-
-    visible (non-SIGNAL) net is a carrier real net the META produced, never a
-    library abstract one the META was supposed to rebind."""
     a = adapter.circuit()
     bind = adapter.META["bind"]
     externals = {n.name for n in a.nets.values()

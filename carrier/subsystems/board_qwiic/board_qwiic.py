@@ -1,58 +1,61 @@
-"""board_qwiic — QWIIC / STEMMA-QT expansion connector + its ESD array.
-
-The carrier exposes its gated +3V3_AUX rail and the isolated AUX I2C bus on a
-standard 4-pin JST-SH (QWIIC) connector so daughter sensor/IO modules hang off
-the board. Following the carrier's connectors-get-their-own-sheet idiom
-(rj45_connector, usb_uart_connector), the connector and its protection live
-here; the EEPROM/RTC/watchdog that share the bus are on board_services and the
-gate + isolator on board_aux.
-
-ESD (the board protects EVERY external connector).  QWIIC is hot-plugged by
-hand, so its SDA/SCL are clamped at the connector by a USBLC6-2SC6 — the
-carrier's standard low-capacitance ESD array (~3.5 pF/line, fine for 400 kHz
-I2C), using the same 1<->6 / 3<->4 passthrough idiom as usbc_otg / usb_uart:
-the external connector lines sit on U1.1/U1.3, the protected pair that reaches
-the isolated bus on U1.6/U1.4, GND on U1.2. The clamp reference (U1.5) is the
-ALWAYS-ON +3V3 (not the gated +3V3_AUX): the USBLC6 is passive (its I/O diodes
-are reverse-biased in normal operation, so referencing +3V3 draws ~0 and never
-back-feeds the gated rail), and an always-on reference keeps the ESD clamp valid
-in EVERY power state — including the most ESD-exposed one, a module hot-plugged
-while the connector rail is OFF. The connector POWER (J1.2) stays gated +3V3_AUX
-(constraint C1). Because the bus is also behind the board_aux PCA9306 isolator,
-a strike here is both clamped AND cut off from the always-on management bus.
-
-QWIIC PAD ORDER — VERIFY AT LAYOUT: pads 1..4 are wired to the QWIIC standard
-GND / +3V3 / SDA / SCL (looking into the receptacle); confirm pad 1's location
-against the J1 footprint silk before fab, since a swapped power pad would
-damage external modules. Pads 5/6 are the shell/mounting tabs -> GND.
-"""
-
 from __future__ import annotations
 
+from carrier.basis import register
 from schgen.core.model import Circuit
 
 AUX_BUS = "board_aux / board_services (the isolated AUX I2C bus)"
+
+RECEPTACLE = register(
+    "board_qwiic.receptacle", "ZX-SH1.0-4PWT", "part",
+    "Standard 4-pin JST-SH QWIIC / STEMMA-QT receptacle. Pads 1..4 are the "
+    "QWIIC standard GND / +3V3 / SDA / SCL looking into the shell; pads 5/6 are "
+    "the mounting tabs. Pad-1 location is a pre-fab layout check — see "
+    "carrier/README.md.",
+    "datasheet")
+
+ESD_ARRAY = register(
+    "board_qwiic.esd_array", "USBLC6-2SC6", "part",
+    "Low-capacitance ESD array (~3.5 pF/line, fine at 400 kHz) on the "
+    "hand-hot-plugged SDA/SCL, using the 1<->6 / 3<->4 passthrough idiom shared "
+    "with usbc_otg and usb_uart.",
+    "datasheet")
+
+CLAMP_RAIL = register(
+    "board_qwiic.clamp_rail", "+3V3", "net",
+    "The clamp reference is the ALWAYS-ON +3V3, not the gated +3V3_AUX. The "
+    "USBLC6 is passive (I/O diodes reverse-biased normally), so referencing "
+    "+3V3 draws ~0 and never back-feeds the gated rail, and the clamp stays "
+    "valid in the most ESD-exposed state: a module hot-plugged while the "
+    "connector rail is OFF. Connector POWER (J1.2) stays gated (C1).",
+    "policy")
+
+I2C_SPEED_HZ = register("board_qwiic.i2c_speed", 400_000, "Hz",
+                        "Fast-mode AUX_I2C.", "datasheet")
+
+MODULE_DRAW_A = register("board_qwiic.module_draw", 0.200, "A",
+                         "External QWIIC module headroom on the gated rail, "
+                         "under the board_aux SY6280 523 mA limit.",
+                         "policy")
 
 
 def circuit() -> Circuit:
     c = Circuit("board_qwiic",
                 "QWIIC / STEMMA-QT expansion connector + USBLC6 ESD array")
 
-    c.use_part("ZX-SH1.0-4PWT", ref="J1")                # QWIIC receptacle
+    c.use_part(RECEPTACLE, ref="J1")
     c.net("GND", "J1.1")
     c.net("+3V3_AUX", "J1.2")
-    c.net("GND", "J1.5", "J1.6")                          # shell/mounting tabs
+    c.net("GND", "J1.5", "J1.6")
 
-    c.use_part("USBLC6-2SC6", ref="U1")                  # low-cap ESD array
-    c.net("QWIIC_SDA", "J1.3", "U1.1")                   # external SDA
-    c.net("QWIIC_SCL", "J1.4", "U1.3")                   # external SCL
+    c.use_part(ESD_ARRAY, ref="U1")
+    c.net("QWIIC_SDA", "J1.3", "U1.1")
+    c.net("QWIIC_SCL", "J1.4", "U1.3")
     c.port("AUX_I2C_SDA", "U1.6", kind="i2c", role="sda", bus="AUX_I2C",
-           speed_hz=400_000, expect=AUX_BUS)              # protected -> bus
+           speed_hz=I2C_SPEED_HZ, expect=AUX_BUS)
     c.port("AUX_I2C_SCL", "U1.4", kind="i2c", role="scl", bus="AUX_I2C",
-           speed_hz=400_000, expect=AUX_BUS)
-    c.net("+3V3", "U1.5")                                # ALWAYS-ON clamp ref
+           speed_hz=I2C_SPEED_HZ, expect=AUX_BUS)
+    c.net(CLAMP_RAIL, "U1.5")
     c.net("GND", "U1.2")
 
-    # power-tree budget: external module headroom on the gated rail
-    c.draws("+3V3_AUX", 0.200, "QWIIC external module budget (200 mA)")
+    c.draws("+3V3_AUX", MODULE_DRAW_A, "QWIIC external module budget (200 mA)")
     return c

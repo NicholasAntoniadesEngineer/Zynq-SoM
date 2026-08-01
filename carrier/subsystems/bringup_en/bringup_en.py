@@ -1,45 +1,6 @@
-"""bringup_en — the three RAIL EN cells: "DIP AND STM32-override" for every
-enable in the system (carrier/research/bringup_power_gating.md section 3.1,
-3.2; one uniform cell, dossier section 1):
-
-    +3V3_SC                       +3V3_SC
-       |                             |
-      [DIP pos n]                 [100k pullup]      SN74LVC1G08 (VCC=+3V3_SC)
-       |________ A _________________ |              .----------.
-                 |                   +---- B ------>|A      Y  |--> EN_<thing>
-               [100k pulldown]       |              |B         |
-                 |             STM32 GPIO /         '----------'
-                GND            TCA9535 P0x (Hi-Z at reset => B=1)
-
-AND, not OR: the DIP is the master, software is a VETO (force-OFF only) —
-an unprogrammed STM32 / unconfigured TCA9535 (POR = all inputs) leaves B
-pulled high, so stage-1 bring-up works with switches alone, and software can
-never force a probe-shorted module ON behind a human's back. Gate:
-SN74LVC1G08DBVR (SOT-23-5, pinout 1=A 2=B 3=GND 4=Y 5=VCC, inputs 5.5 V
-tolerant, 32 mA rail-to-rail output — drives any regulator/load-switch EN
-directly), VCC = +3V3_SC (alive from default VBUS before PD), 100 nF each.
-
-Fourteen cells board-wide: 3 rails HERE (+5V/+3V3/+1V8 — A from SW1,
-B from STM32_GPIO1..3 direct so rails stay controllable even if I2C is
-down), 10 modules on bringup_en_modules (A from SW2/SW6, B from TCA9535
-P00..P07 + P12/P13 — the round-5 5 V gates extend the map), and the spare
-cell (A = SW2 position 8, B = TCA9535 P10) emitting the EN_LCD_BL
-provision for the LCD backlight boost — B rides P10's 100k pullDOWN
-(bringup_rails), so the provision is OFF until software raises it. Every
-A-input carries the cell's 100k pulldown, every rail/module B-input its
-100k pullup to +3V3_SC; both live HERE at the gate so each cell is
-complete on this sheet.
-
-EN_5V0/EN_3V3/EN_1V8 bind to the power subsystem's regulator EN pins
-(3.3 V CMOS, active-high, push-pull — the LM61460 EN/SYNC VIH ~1.2 V typ,
-abs-max 42 V, and the AP2112K EN both accept the 3.3 V drive rail-to-rail).
-The +5V/+3V3 bucks were re-spec'd TPS54302 -> LM61460AANRJRR; the EN drive is
-even more comfortable for the LM61460. EN_<module> bind to the SY6280 gates on
-bringup_modules.
-"""
-
 from __future__ import annotations
 
+from carrier.basis import register
 from schgen.core.model import Circuit
 
 GATE_LIB = "74xGxx:74LVC1G08"
@@ -47,7 +8,7 @@ GATE_FP = "Package_TO_SOT_SMD:SOT-23-5"
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 
-LCSC_GATE = "C7666"        # SN74LVC1G08DBVR (TI) — live-verified 2026-06-10
+LCSC_GATE = "C7666"
 LCSC_100K = "C25803"
 LCSC_100N = "C14663"
 
@@ -57,9 +18,36 @@ EXPECT_MODULES = "bringup_modules (SY6280 load-switch cells)"
 EXPECT_POWER = "power (regulator EN pins, dossier section 3.1)"
 EXPECT_LCD = "lvds_lcd_power (backlight boost EN provision, dossier 3.2)"
 
+GATE_PART = register(
+    "bringup_en.gate", "SN74LVC1G08", "part",
+    "One uniform AND cell per enable implements the dossier contract 'DIP is "
+    "the master, STM32 is a veto'. TI SN74LVC1G08DBVR, LCSC C7666, "
+    "live-verified 2026-06-10.",
+    "datasheet")
+
+DIP_PULLDOWN = register(
+    "bringup_en.dip_pulldown", "100k", "ohm",
+    "A-input pulldown, so an OPEN DIP reads 0 and a closed DIP reads 1. "
+    "LCSC C25803.",
+    "datasheet")
+
+OVERRIDE_PULLUP = register(
+    "bringup_en.override_pullup", "100k", "ohm",
+    "B-input pull to +3V3_SC, so a Hi-Z override source means ENABLED. That is "
+    "what lets a blank system controller boot 'switches only'. LCSC C25803.",
+    "datasheet")
+
+GATE_DECAP = register("bringup_en.gate_decap", "100n", "F",
+                      "One bypass per gate on +3V3_SC. LCSC C14663.",
+                      "datasheet")
+
+SC_DRAW_A = register("bringup_en.sc_draw", 0.002, "A",
+                     "Three LVC gates (uA static) plus the A/B 100k pull "
+                     "networks at 33 uA each when driven.",
+                     "datasheet")
+
 # (cell, A net <- DIP, B net <- override, Y net -> enable, B pullup?, Y expect)
 CELLS = (
-    # rails: B = direct STM32 GPIOs (robust even if I2C is down)
     ("5V0", "BU_DIP_5V0", "STM32_RAIL_EN_5V0", "EN_5V0", True, EXPECT_POWER),
     ("3V3", "BU_DIP_3V3", "STM32_RAIL_EN_3V3", "EN_3V3", True, EXPECT_POWER),
     ("1V8", "BU_DIP_1V8", "STM32_RAIL_EN_1V8", "EN_1V8", True, EXPECT_POWER),
@@ -70,34 +58,25 @@ def circuit() -> Circuit:
     c = Circuit("bringup_en",
                 "Bring-up EN cells: 3x SN74LVC1G08 rail DIP-AND-override")
     for k, (name, a_net, b_net, y_net, b_pull, y_expect) in enumerate(CELLS):
-        u = c.part(f"U{k + 1}", GATE_LIB, "SN74LVC1G08", GATE_FP,
-                   LCSC=LCSC_GATE)
-        # A: DIP contact net + the cell's 100k pulldown (closed DIP = 1)
+        u = c.part(f"U{k + 1}", GATE_LIB, GATE_PART, GATE_FP, LCSC=LCSC_GATE)
         c.port(a_net, f"{u.ref}.1", expect=EXPECT_RAILS)
-        rd = c.part(c.auto_ref("R"), "Device:R", "100k", R_FP,
+        rd = c.part(c.auto_ref("R"), "Device:R", DIP_PULLDOWN, R_FP,
                     LCSC=LCSC_100K)
         c.net(a_net, f"{rd.ref}.1")
         c.net("GND", f"{rd.ref}.2")
-        # B: override veto, pulled to +3V3_SC (Hi-Z source => enabled)
         c.port(b_net, f"{u.ref}.2",
                expect=J3_MAP if b_net.startswith("STM32") else EXPECT_RAILS)
         if b_pull:
-            c.pullup(f"{u.ref}.2", "100k", "+3V3_SC",
+            c.pullup(f"{u.ref}.2", OVERRIDE_PULLUP, "+3V3_SC",
                      footprint=R_FP).fields["LCSC"] = LCSC_100K
-        # Y: the enable, 3.3 V CMOS push-pull, active-high
         c.port(y_net, f"{u.ref}.4", expect=y_expect)
-        # supply: +3V3_SC, 100n per gate
         c.net("+3V3_SC", f"{u.ref}.5")
         c.net("GND", f"{u.ref}.3")
-        for cap in c.decouple(f"{u.ref}.5", "100n", footprint=C_FP):
+        for cap in c.decouple(f"{u.ref}.5", GATE_DECAP, footprint=C_FP):
             cap.fields["LCSC"] = LCSC_100N
 
-    # round-4 coverage gate: every EN line is probeable (bring-up
-    # philosophy — stage 1 is debugged with a meter on the EN cells)
     for _name, _a, _b, y_net, _p, _e in CELLS:
         c.testpoint(y_net)
 
-    # power-tree budget (round 4): 3 LVC gates (uA static) + A/B 100k pull
-    # networks (33 uA each when driven)
-    c.draws("+3V3_SC", 0.002, "3x SN74LVC1G08 + 100k pull networks")
+    c.draws("+3V3_SC", SC_DRAW_A, "3x SN74LVC1G08 + 100k pull networks")
     return c

@@ -1,109 +1,123 @@
-"""motor_sense — ESC motor-rail telemetry + in-line current sense (drone demo).
-
-The TELEMETRY half of the carrier's generic motor interface (the 8-ch PWM output
-half is `motor_pwm`). KEPT GENERIC: a reusable in-line power-sense pass-through —
-ESCs, props and battery are all OFF board, no flight hardware here.
-
-The ESC battery / bench supply passes IN-LINE through the carrier: J2 (XT60 in)
--> RS1 10 mΩ shunt -> J3 (XT60 out) -> off-board ESCs. An INA3221 (U2) reads
-current (across RS1) AND bus voltage (at IN-1, the load side) on ONE channel, on
-the always-on STM32_I2C2 SC bus at 0x42 (0x40/0x41 are power_mon). Its CRITICAL
-open-drain alert is a fast over-current event back to the PL (ESC_FAULT_N).
-
-ISOLATION / SAFETY (bench-only, no flight): the dirty motor rail shares only GND
-with logic; PL pins never see it. SMBJ28A (D1) clamps hot-plug / inductive
-transients on the ESC bus. The INA3221 common-mode abs-max is 26 V and its TVS
-clamps ABOVE that, so the ESC rail is bounded <= 4S (<= ~20 V) for margin (silk +
-README), not by the TVS — the on-board Cb bulk + a current-limited bench supply
-keep hot-plug transients out of the monitor.
-
-PL pin ledger (FREE; XDC "unclaimed"; rename in som_conn_gen.FUNCTION_MAP):
-  ESC_FAULT_N = IO_L1_N_13  (J2.37)
-
-ON-BOARD BULK (LAW 7, landed): Cb = 470 uF / 35 V electrolytic on the LOAD-side
-rail ESC_VRAIL (post-shunt, by J3 -> ESCs) — local energy store for the ESC
-commutation pulses + it stabilises the bus-V node the INA3221 meters; the input
-TVS (D1) + the 100 n HF bypass + the <= 4S bound cover the hot-plug edge. Stock
-D10 SMD land pattern (no fetched part needed — the EasyEDA CAD API was rate-
-limited); LCSC C976030 (DMBJ RVT1V471M1010) confirmed on the LCSC product page.
-"""
-
 from __future__ import annotations
 
+from carrier.basis import register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
 C_FP = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
-# D10 SMD electrolytic can — stock KiCad land pattern (no fetched part needed);
-# the LCSC C976030 (DMBJ RVT1V471M1010, D10x10.2) seats on the D10x10.5 footprint.
 CP_ELEC_D10 = "Capacitor_SMD:CP_Elec_10x10.5"
 
-LCSC_100N = "C14663"   # 100n X7R 50V 0603
-LCSC_10U = "C15850"    # 10u 0805
-LCSC_10K = "C25804"    # 10k 1% 0603
-LCSC_470U = "C976030"  # 470u 35V SMD electrolytic (DMBJ RVT1V471M1010, D10)
+LCSC_100N = "C14663"
+LCSC_10U = "C15850"
+LCSC_10K = "C25804"
+LCSC_470U = "C976030"
 
 J1_MAP = "som_j1_connector (STM32_I2C2 SC management bus)"
 J2_MAP = "som_j2_connector (bank 13 PL — ESC_FAULT_N)"
+
+RAIL_CONNECTOR = register(
+    "motor_sense.rail_connector", "XT60PW-M", "part",
+    "ESC battery / bench-supply inlet and the outlet to the off-board ESCs. "
+    "The rail passes IN-LINE through the shunt, so J2 is pre-shunt and J3 "
+    "post-shunt.",
+    "datasheet")
+
+RAIL_TVS = register(
+    "motor_sense.rail_tvs", "SMBJ28A", "part",
+    "28 V standoff TVS clamping the hot-plug edge on the ESC bus, ahead of the "
+    "shunt and the INA3221 sense pins.",
+    "datasheet")
+
+SHUNT = register(
+    "motor_sense.shunt", "10mR", "ohm",
+    "In-line current-sense element, RLM12FTCMR010 1206. The rail splits at it: "
+    "ESC_VRAIL_IN is the high side, ESC_VRAIL the load side the INA3221 also "
+    "uses as its bus-voltage sense node.",
+    "datasheet")
+
+MONITOR_ADDR = register(
+    "motor_sense.monitor_addr", "0x42", "i2c-addr",
+    "A0 strapped to SDA selects 0x42 per the INA3221 address table, clear of "
+    "the power_mon pair at 0x40/0x41.",
+    "datasheet")
+
+I2C_SPEED_HZ = register("motor_sense.i2c_speed", 400_000, "Hz",
+                        "Fast-mode STM32_I2C2.", "datasheet")
+
+RAIL_HF = register("motor_sense.rail_hf", "100n", "F",
+                   "HF bypass on the pre-shunt ESC bus. LCSC C14663.",
+                   "datasheet")
+
+SUPPLY_HF = register("motor_sense.supply_hf", "100n", "F",
+                     "INA3221 VS bypass. LCSC C14663.", "datasheet")
+
+SUPPLY_BULK = register("motor_sense.supply_bulk", "10u", "F",
+                       "Local +3V3_SC bulk. LCSC C15850.", "datasheet")
+
+FAULT_PULLUP = register("motor_sense.fault_pullup", "10k", "ohm",
+                        "Defined-high pull for the open-drain CRITICAL "
+                        "over-current alert. LCSC C25804.", "datasheet")
+
+RAIL_BULK = register(
+    "motor_sense.rail_bulk", "470uF/35V", "F",
+    "Local energy store for the ESC commutation-current pulses that also "
+    "stabilises the bus-V node U2 meters. 35 V covers a 4S rail with >1.5x "
+    "margin; the input TVS clamps the hot-plug edge. Placed on the LOAD-side "
+    "net, not the dense pre-shunt trunk. LCSC C976030 (DMBJ RVT1V471M1010, "
+    "D10x10.2) seats on the stock D10x10.5 land pattern.",
+    "datasheet")
+
+SC_DRAW_A = register("motor_sense.sc_draw", 0.002, "A",
+                     "INA3221 ~0.35 mA + the CRITICAL pull-up.", "datasheet")
 
 
 def circuit() -> Circuit:
     c = Circuit("motor_sense",
                 "ESC motor-rail telemetry: INA3221 + 10mR shunt (I2C 0x42)")
 
-    # ===== motor power IN-LINE: J2 (XT60 in) -> RS1 shunt -> J3 (XT60 out) ====
-    c.use_part("XT60PW-M", ref="J2")            # ESC battery / bench-supply IN
+    c.use_part(RAIL_CONNECTOR, ref="J2")
     c.net("ESC_VRAIL_IN", "J2.+")
-    c.net("GND", "J2.-", "J2.3", "J2.4")        # +/- + 2 mounting tabs to GND
-    c.use_part("SMBJ28A", ref="D1")             # TVS clamp on the ESC bus
+    c.net("GND", "J2.-", "J2.3", "J2.4")
+    c.use_part(RAIL_TVS, ref="D1")
     c.net("ESC_VRAIL_IN", "D1.K")
     c.net("GND", "D1.A")
-    chf = c.part(c.auto_ref("C"), "Device:C", "100n", C_FP, LCSC=LCSC_100N)
-    c.net("ESC_VRAIL_IN", f"{chf.ref}.1")       # HF bypass
+    chf = c.part(c.auto_ref("C"), "Device:C", RAIL_HF, C_FP, LCSC=LCSC_100N)
+    c.net("ESC_VRAIL_IN", f"{chf.ref}.1")
     c.net("GND", f"{chf.ref}.2")
-    c.use_part("RLM12FTCMR010", ref="RS1", value="10mR")
+    c.use_part("RLM12FTCMR010", ref="RS1", value=SHUNT)
     c.net("ESC_VRAIL_IN", "RS1.1")
-    c.net("ESC_VRAIL", "RS1.2")                 # post-shunt / load side
-    c.use_part("XT60PW-M", ref="J3")            # ESC rail OUT (to off-board ESCs)
+    c.net("ESC_VRAIL", "RS1.2")
+    c.use_part(RAIL_CONNECTOR, ref="J3")
     c.net("ESC_VRAIL", "J3.+")
     c.net("GND", "J3.-", "J3.3", "J3.4")
 
-    # ===== U2: INA3221 rail telemetry on STM32_I2C2 (0x42) ===================
     c.use_part("INA3221AIRGVR", ref="U2")
-    c.net("ESC_VRAIL_IN", "U2.IN+1")            # shunt high side
-    c.net("ESC_VRAIL", "U2.IN-1")               # shunt low side = bus-V sense
-    c.net("GND", "U2.IN+2", "U2.IN-2", "U2.IN+3", "U2.IN-3")  # unused ch -> GND
-    c.net("+3V3_SC", "U2.VS", "U2.VPU")         # always-on SC rail
+    c.net("ESC_VRAIL_IN", "U2.IN+1")
+    c.net("ESC_VRAIL", "U2.IN-1")
+    c.net("GND", "U2.IN+2", "U2.IN-2", "U2.IN+3", "U2.IN-3")
+    c.net("+3V3_SC", "U2.VS", "U2.VPU")
     c.net("GND", "U2.GND", "U2.PAD")
-    for cap in c.decouple("U2.VS", "100n", footprint=C_FP):
+    for cap in c.decouple("U2.VS", SUPPLY_HF, footprint=C_FP):
         cap.fields["LCSC"] = LCSC_100N
-    c2 = c.part(c.auto_ref("C"), "Device:C", "10u", C0805, LCSC=LCSC_10U)
+    c2 = c.part(c.auto_ref("C"), "Device:C", SUPPLY_BULK, C0805, LCSC=LCSC_10U)
     c.net("+3V3_SC", f"{c2.ref}.1")
     c.net("GND", f"{c2.ref}.2")
-    # A0 strapped to SDA -> I2C address 0x42 (datasheet address table)
     c.port("STM32_I2C2_SDA", "U2.SDA", "U2.A0", kind="i2c", role="sda",
-           bus="STM32_I2C2", speed_hz=400_000, expect=J1_MAP)
+           bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ, expect=J1_MAP)
     c.port("STM32_I2C2_SCL", "U2.SCL", kind="i2c", role="scl",
-           bus="STM32_I2C2", speed_hz=400_000, expect=J1_MAP)
-    # CRITICAL over-current alert (open drain) -> PL fast-shutdown event
+           bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ, expect=J1_MAP)
     c.port("ESC_FAULT_N", "U2.CRITICAL", expect=J2_MAP)
-    c.pullup("U2.CRITICAL", "10k", "+3V3_SC", footprint=R_FP).fields["LCSC"] = \
-        LCSC_10K
-    c.nc("U2.WARNING", "U2.PV", "U2.TC")        # I2C-readable, unused
+    c.pullup("U2.CRITICAL", FAULT_PULLUP, "+3V3_SC",
+             footprint=R_FP).fields["LCSC"] = LCSC_10K
+    c.nc("U2.WARNING", "U2.PV", "U2.TC")
 
-    # ON-BOARD BULK on the LOAD-side rail (ESC_VRAIL, post-shunt, by J3 -> ESCs):
-    # local energy store for the ESC commutation-current pulses AND it stabilises
-    # the bus-V node the INA3221 meters; the input TVS (D1) clamps the hot-plug
-    # edge. 470 uF / 35 V polarised electrolytic (>= 4S rail + >1.5x V margin),
-    # stock D10 SMD can; + to the rail, - to GND. (Sits on the lighter post-shunt
-    # net, not the dense ESC_VRAIL_IN trunk.)
-    cb = c.part(c.auto_ref("C"), "Device:C_Polarized", "470uF/35V", CP_ELEC_D10,
+    cb = c.part(c.auto_ref("C"), "Device:C_Polarized", RAIL_BULK, CP_ELEC_D10,
                 LCSC=LCSC_470U)
     c.net("ESC_VRAIL", f"{cb.ref}.1")
     c.net("GND", f"{cb.ref}.2")
 
-    c.draws("+3V3_SC", 0.002, "INA3221 ~0.35 mA + CRITICAL pull-up")
-    # ESC_VRAIL is externally sourced + metered by U2 over I2C; probe it at the
-    # J2/J3 XT60 terminals (no on-board TP pad).
+    c.draws("+3V3_SC", SC_DRAW_A, "INA3221 ~0.35 mA + CRITICAL pull-up")
+    # ESC_VRAIL is externally sourced and metered over I2C — probe it at the
+    # XT60 terminals; there is deliberately no on-board TP pad.
     return c
