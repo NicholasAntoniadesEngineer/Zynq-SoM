@@ -13,7 +13,7 @@ from pathlib import Path
 
 from schgen.core import sexpr
 from schgen.core.model import Circuit, NetClass, PinRef
-from schgen.core.project import PROJECT_ROOT
+from schgen.core.project import PROJECT_ROOT, positional_sheet_index
 from schgen.core.sexpr import Sym
 from schgen.core.symbols import GRID, Library, pin_page_position
 from schgen.layout import place
@@ -604,10 +604,13 @@ def _mg_port_rename(lib: Library, tmp: Path):
         return out
 
     base_out = tmp / "board_base"
-    base_ok = board.build_board(_board_fixture_sheets(), lib, base_out,
-                                root_name="board")
+    _fx = _board_fixture_sheets()
+    _fx_index = positional_sheet_index(sc.name for sc in _fx)
+    base_ok = board.build_board(_fx, lib, base_out, root_name="board",
+                                sheet_index=_fx_index)
     mut_out = tmp / "board_mut"
-    board.build_board(_board_fixture_sheets(), lib, mut_out, root_name="board")
+    board.build_board(_board_fixture_sheets(), lib, mut_out,
+                      root_name="board", sheet_index=_fx_index)
     root = mut_out / "board.kicad_sch"
     txt = root.read_text()
     new = _re.sub(r'(\(global_label\s+)"SELFTEST_LINK"',

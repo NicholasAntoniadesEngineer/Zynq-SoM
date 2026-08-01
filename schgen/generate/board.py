@@ -133,7 +133,7 @@ def build_board(sheets, lib: Library, outdir: Path, *,
                 placements: dict | None = None,
                 root_name: str = "board",
                 sheet_subdir: str = "",
-                sheet_index: dict | None = None,
+                sheet_index: dict[str, int],
                 reports_dir: Path | None = None) -> bool:
     outdir.mkdir(parents=True, exist_ok=True)
     sheet_dir = outdir / sheet_subdir if sheet_subdir else outdir
@@ -141,8 +141,8 @@ def build_board(sheets, lib: Library, outdir: Path, *,
     board_uuid = stable_uuid(root_name, "root")
 
     placed: list[tuple[str, PlacedDesign, str]] = []
-    for i, sc in enumerate(sheets, start=1):
-        idx = sheet_index.get(sc.name, i) if sheet_index else i
+    for sc in sheets:
+        idx = sheet_index[sc.name]
         if placements and sc.name in placements:
             placement, routed = placements[sc.name]
         else:
@@ -252,10 +252,11 @@ def build_board(sheets, lib: Library, outdir: Path, *,
             y += h + SHEET_GAP
     root_path = outdir / f"{root_name}.kicad_sch"
     emit(root, root_path, lib, sheet_uuid=board_uuid, project=root_name)
-    (outdir / f"{root_name}.kicad_pro").write_text(json.dumps({
-        "meta": {"filename": f"{root_name}.kicad_pro", "version": 3},
-        "erc": {"rule_severities": {"pin_not_driven": "warning"}},
-    }, indent=2) + "\n")
+    pro_path = outdir / f"{root_name}.kicad_pro"
+    pro = json.loads(pro_path.read_text()) if pro_path.exists() else {}
+    pro["meta"] = {"filename": f"{root_name}.kicad_pro", "version": 3}
+    pro["erc"] = {"rule_severities": {"pin_not_driven": "warning"}}
+    pro_path.write_text(json.dumps(pro, indent=2) + "\n")
     print(f"board: emitted {root_path} (+{len(placed)} sub-sheets, "
           f"root labels bind ports by canonical name)")
 

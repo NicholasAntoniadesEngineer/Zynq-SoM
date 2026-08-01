@@ -53,3 +53,24 @@ def spec() -> ProjectSpec:
                          for k, v in lbl.get("switches", {}).items()},
         )
     return _CACHE
+
+
+SHEET_INDEX_PATH = PROJECT_ROOT / "sheet_index.json"
+FIRST_SHEET_BAND = 1
+
+
+def positional_sheet_index(sheet_names) -> dict[str, int]:
+    return {n: i for i, n in enumerate(sheet_names, start=FIRST_SHEET_BAND)}
+
+
+def stable_sheet_index(sheet_names) -> tuple[dict[str, int], list[str]]:
+    index = (json.loads(SHEET_INDEX_PATH.read_text())
+             if SHEET_INDEX_PATH.exists() else {})
+    unseen = sorted(n for n in sheet_names if n not in index)
+    if unseen:
+        band = max(index.values(), default=FIRST_SHEET_BAND - 1) + 1
+        for name in unseen:
+            index[name] = band
+            band += 1
+        SHEET_INDEX_PATH.write_text(json.dumps(index, indent=2) + "\n")
+    return index, unseen

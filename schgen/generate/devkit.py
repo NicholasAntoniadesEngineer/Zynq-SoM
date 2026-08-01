@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+from schgen.core.project import positional_sheet_index
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEVKIT_DIR = REPO_ROOT / "examples" / "devkit_mini"
 
@@ -56,7 +58,9 @@ def build_devkit(render: bool = True) -> bool:
 
     board_ok = board_mod.build_board(
         sheets, lib, DEVKIT_DIR, placements=placements,
-        root_name="devkit_mini", sheet_subdir="schematic", reports_dir=rep_dir)
+        root_name="devkit_mini", sheet_subdir="schematic",
+        sheet_index=positional_sheet_index(sc.name for sc in sheets),
+        reports_dir=rep_dir)
     ok_all = ok_all and board_ok
     print(f"  BOARD NETLIST GATE: {'PASS' if board_ok else 'FAIL'}")
 

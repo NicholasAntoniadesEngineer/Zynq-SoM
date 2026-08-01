@@ -516,14 +516,17 @@ def cmd_link(args: argparse.Namespace) -> int:
 
     board_ok = True
     if not args.no_board:
+        from schgen.core.project import stable_sheet_index
         from schgen.generate import board
+        sheet_index, _ = stable_sheet_index(sc.name for sc in sheets)
         if override:
-            board_ok = board.build_board(sheets, lib, override / "board")
+            board_ok = board.build_board(sheets, lib, override / "board",
+                                         sheet_index=sheet_index)
         else:
             board_ok = board.build_board(
                 sheets, lib, carrier, placements=None,
                 root_name="Zynq_Carrier", sheet_subdir="schematic",
-                reports_dir=rep_dir)
+                sheet_index=sheet_index, reports_dir=rep_dir)
 
     ok = res.ok and board_ok
     print(f"LINK CMD: {'PASS' if ok else 'FAIL'}")
