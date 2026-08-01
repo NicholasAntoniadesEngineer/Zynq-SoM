@@ -1,22 +1,3 @@
-"""STAGE MANIFEST + MOVEMENT TRIPWIRE for ``build_model`` (governance U3).
-
-The geometry pipeline's stage ORDER is load-bearing: refit_facing once mutated
-positions AFTER guards had judged them, and the reorder pass's nothing-moves-
-after-me constraint lived only in prose. This module makes the order a DECLARED
-artifact: ``PLACEMENT_STAGES`` is the one ordered manifest of build_model's
-geometry stages, each entry declaring whether the stage may move parts and
-what validates the movement. ``build_model`` drops a ``StageTracker``
-checkpoint at every stage boundary; movement observed in a ``may_move=False``
-stage raises ``StageMovementError`` LOUDLY, naming the stage and the first
-moved refs. Always on, deterministic, one dict snapshot per boundary.
-
-Snapshots are per-DOMAIN (``board`` = the pos/rot dict build_model mutates;
-``page`` = the emitted FootprintInst frame): a stage is compared only against
-the previous snapshot of its own domain, and the first snapshot of a domain is
-its baseline. Checkpoints must arrive in manifest order (stages may be
-skipped, never reordered). ``docs/GEOMETRY_PIPELINE.md`` is generated from
-this manifest so the map cannot rot.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -125,11 +106,6 @@ Snapshot = dict[str, tuple]
 
 
 class StageTracker:
-    """One per ``build_model`` call. ``checkpoint(stage, snap)`` hashes the
-    (ref -> pose) snapshot at a stage boundary, enforces manifest order,
-    counts movement vs the previous same-domain snapshot into ``moves``, and
-    raises ``StageMovementError`` on movement in a ``may_move=False`` stage."""
-
     def __init__(self) -> None:
         self._last: dict[str, Snapshot] = {}
         self._idx = -1

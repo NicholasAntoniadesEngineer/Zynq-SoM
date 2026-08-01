@@ -1,30 +1,3 @@
-"""QUANTIZE CENSUS — the lint that keeps the quantization registry honest
-(governance U1, the enforcement half of ``schgen/core/quantize.py``).
-
-Scans the GEOMETRY DATA-FLOW modules of ``schgen/generate/**`` (AST, so
-strings/comments never false-positive) for raw quantization vocabulary that
-bypasses the registry:
-
-* ``compound-round``  — ``round(...)`` whose argument arithmetic contains a
-                        nested ``round``/``int`` call (the grid-snap shape:
-                        ``round(round(v / g) * g, n)``).
-* ``lattice-mult``    — multiplication by an ``int(a / b)`` term (the
-                        ceil/floor snap shape: ``int((v + s) / s) * s``).
-* ``credit-0.05``     — a ``+/- 0.05`` on an expression whose identifiers name
-                        needs/reaches/clearances (the quantization credit).
-* ``banned-const``    — a numeric-literal (re)definition of a retired raw
-                        constant (``_SNAP_EROSION``, ``_SEAT_SLIDE``,
-                        ``OUTLINE_SNAP``, ``FINE_SNAP``, ...).
-* ``banned-call``     — a call to a retired raw snapper (``_gridify``,
-                        ``_r5``, ``_snap_up``, ``_snap_up_fp``).
-
-Every live transform is routed through the registry, so the committed baseline
-(``schgen/verify/data/quantize_census_baseline.json``) is EMPTY and any site
-this census finds is NEW -> the board HARD-FAILS. Plain rounding for OUTPUT
-formatting (report text, SVG coords, silk, images) is out of scope: the
-scanned set below is the placement/copper geometry data flow only.
-Deterministic: fixed file order, fixed detector order, pure source scan.
-"""
 from __future__ import annotations
 
 import ast

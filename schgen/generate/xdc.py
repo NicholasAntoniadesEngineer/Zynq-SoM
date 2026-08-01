@@ -1,32 +1,3 @@
-"""Generated Vivado pin constraints (PLAN.md round 4) — zero hand-typed pins.
-
-For every carrier PORT net bound through J2/J3 to a Zynq PL ball, emit
-``set_property -dict {PACKAGE_PIN <ball> IOSTANDARD <std>} [get_ports …]``
-into ``carrier/fpga/Zynq_Carrier_pins.xdc`` so the PL design starts with
-zero pin-mapping work and CANNOT drift from the hardware.
-
-Sources (all programmatic — a hand-typed ball map is banned):
-- J-pin -> Zynq ball: ``schgen.som_interface.extract_zynq`` runs kicad-cli
-  on the SoM project at generation time; the Zynq symbol's vendor pin NAMES
-  carry the bank suffix (``..._34``) and clock capability (MRCC/SRCC).
-- carrier net -> J-pin: the committed ``carrier/som_interface.json``
-  contract, CROSS-CHECKED pin-for-pin against the live SoM netlist — if
-  the contract is stale the build FAILS and says to re-extract it.
-- electrical type: the carrier subsystems' typed-port registry
-  (``pair_with`` pairs the diff lines; LVDS_25/TMDS_33 as typed).
-
-IOSTANDARD comes from the project's VCCO bank-rail decision
-(``project.json`` ``fpga.bank_rails`` — board policy, not engine data),
-cross-checked against the rail the project's ``som_conn_gen.VCCO_RAIL_MAP``
-actually drives. A bank with no rail decision FAILS the build — never a
-silent default.
-
-MRCC/SRCC-capable P-side balls get a commented ``create_clock`` template.
-Contract nets not yet claimed by a function sheet are still constrained
-(they ARE bound carrier ports on the som_j2/som_j3 sheets) and marked
-unclaimed; the wave-3 function-map regen renames them in place.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -46,30 +17,19 @@ DEFAULT_SOM = REPO_ROOT / "som" / "Zynq_SoM.kicad_sch"
 DEFAULT_CONTRACT = PROJECT_ROOT / "som_interface.json"
 DEFAULT_OUT = PROJECT_ROOT / "fpga" / "Zynq_Carrier_pins.xdc"
 
-# Carrier spelling of SoM rail names (mirror of link.RAIL_ALIASES — the one
-# enumerated rail alias; signals are NEVER respelled).
 RAIL_SPELLING = {"VIN": "+VIN"}
 
 
 def _function_map() -> dict[str, str]:
-    """The wave-3 SoM-contract-net -> carrier-function-net renames the J-sheet
-    generator (carrier/som_conn_gen.FUNCTION_MAP) applies. The XDC walks the
-    raw contract to reach each PL ball, then must look up the carrier PORT
-    under its FUNCTION name (e.g. IO_L18_N_13 -> ZYNQ_PS_UART0_RTS_N) — exactly
-    as som_conn_gen renamed it — or every renamed pin would read as an orphan.
-    Loaded from the SAME source the J-sheets use, so the two cannot drift."""
     import importlib.util
     gen_path = PROJECT_ROOT / "som_conn_gen.py"
     spec = importlib.util.spec_from_file_location("_xdc_som_conn_gen", gen_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     m = dict(mod.FUNCTION_MAP)
-    m.update(mod.PUDC_STRAPS)   # PUDC_34: the strap part lives on bringup_rails
+    m.update(mod.PUDC_STRAPS)
     return m
 
-# bank id -> the project rail powering +VCCO_<bank> on the SoM. The bank LIST
-# is discovered from the Zynq pin names; the RAIL per bank is PROJECT policy
-# (project.json fpga.bank_rails), never an engine constant.
 def bank_rail_map() -> dict[str, str]:
     return dict(_project_spec().bank_rails)
 
@@ -91,11 +51,11 @@ def _rail_volts(rail: str) -> float:
 
 @dataclass
 class PinEntry:
-    net: str            # carrier PORT net name (== get_ports name)
-    jpin: str           # "J2.20"
-    ball: str           # "W6"
-    pin_name: str       # "IO_L2P_T0_13"
-    bank: str           # "13"
+    net: str
+    jpin: str
+    ball: str
+    pin_name: str
+    bank: str
     iostd: str = ""
     consumers: list[str] = field(default_factory=list)
     ptype: PortType = field(default_factory=PortType)
@@ -116,7 +76,7 @@ class PinEntry:
 class XdcResult:
     path: Path
     entries: list[PinEntry]
-    checks: list[str]            # human-readable proof of each cross-check
+    checks: list[str]
 
     @property
     def count(self) -> int:
@@ -125,8 +85,6 @@ class XdcResult:
 
 def _port_registry(sheets) -> tuple[dict[str, list[str]],
                                     dict[str, PortType]]:
-    """PORT net -> consumer sheets, and the merged PortType per net (the
-    linker separately proves cross-sheet type agreement)."""
     consumers: dict[str, list[str]] = {}
     ptypes: dict[str, PortType] = {}
     for sc in sheets:
@@ -145,27 +103,11 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
              som_sch: Path = DEFAULT_SOM,
              contract_path: Path = DEFAULT_CONTRACT,
              refs: tuple[str, ...] = ("J1", "J2", "J3")) -> XdcResult:
-    """Build + verify + write the XDC. Raises :class:`XdcError` on ANY
-    orphan, ambiguity, stale contract or unmapped bank.
-
-    ALL THREE connectors are walked (SYS-2): the PL also fans out on J1 —
-    the bank-35 FMC LA08-11 LVDS pairs land on J1 (LA08 J1.74/92, LA09
-    J1.80/84, LA10 J1.90/88, LA11 J1.78/76). Their balls reach no constraint
-    unless J1 is in the walk. Every PACKAGE_PIN is still cross-checked against
-    the live SoM netlist; J1's PS/SC nets (no PL ball) and rails are skipped
-    exactly as on J2/J3, and the bank-35 spare singles (IO_0_35 J1.86,
-    IO_L2_N_35 J1.100) constrain as unclaimed ports the way J2/J3 spares do."""
     contract = json.loads(contract_path.read_text())["connectors"]
     live = extract_zynq(som_sch, jrefs=tuple(refs))
     consumers, ptypes = _port_registry(sheets)
     func_map = _function_map()
 
-    # SYS-1 consistency gate: the project's declared bank railing (which picks
-    # each pin's IOSTANDARD) MUST agree with the rail som_conn_gen actually
-    # drives onto +VCCO_<bank> (the real hardware). They are two independent
-    # declarations; if a bank re-rail (C3) edits one and not the other, the XDC
-    # would emit the wrong IOSTANDARD on the re-railed bank — a board-bring-up
-    # fault no other gate catches. Assert they agree.
     bank_rail = bank_rail_map()
     _vcco = {k.removeprefix("+VCCO_"): v for k, v in _vcco_rail_map().items()}
     _drift = {b: {"bank_rails": bank_rail.get(b), "VCCO_RAIL_MAP": _vcco.get(b)}
@@ -178,13 +120,11 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
             f"the wrong IOSTANDARD on a re-railed bank: {_drift}")
     checks: list[str] = []
 
-    # net -> PL balls (Zynq side, live netlist; IO_* names are PL I/O)
     net_balls: dict[str, list[str]] = {}
     for ball, net in live["ball_net"].items():
         if live["pin_names"].get(ball, "").startswith("IO_"):
             net_balls.setdefault(net, []).append(ball)
 
-    # -- cross-check 0: committed contract == live SoM netlist, pin for pin --
     for jref in refs:
         if jref not in contract:
             raise XdcError(f"{jref} missing from {contract_path}")
@@ -204,7 +144,6 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
         checks.append(f"{jref}: all {len(cpins)} contract pins match the "
                       f"live SoM netlist verbatim")
 
-    # -- walk the contract: every J2/J3 net that reaches a PL ball ------------
     entries: list[PinEntry] = []
     seen_balls: dict[str, str] = {}
     seen_nets: dict[str, str] = {}
@@ -213,24 +152,20 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
                                    key=lambda kv: int(kv[0])):
             if som_net.startswith("unconnected-"):
                 continue
-            # contract net -> carrier net: rail spelling, then the wave-3
-            # FUNCTION map (the J-sheet generator's same rename) so a renamed
-            # PL pin resolves to its function PORT, not an orphan.
             carrier_net = RAIL_SPELLING.get(som_net, som_net)
             carrier_net = func_map.get(carrier_net, carrier_net)
             if Circuit.classify(carrier_net) in (NetClass.POWER,
                                                  NetClass.GROUND):
-                continue                       # rails are not get_ports
+                continue
             balls = net_balls.get(som_net, [])
             if not balls:
-                continue                       # not a PL net (PS/SC side)
+                continue
             if len(balls) > 1:
                 raise XdcError(
                     f"{som_net!r}: reaches {len(balls)} PL balls "
                     f"({sorted(balls)}) — ambiguous LOC, refusing to guess")
             ball = balls[0]
             pin_name = live["pin_names"][ball]
-            # ORPHAN check: the net must be a bound carrier PORT
             if carrier_net not in consumers:
                 raise XdcError(
                     f"orphan: {jref}.{pin} net {som_net!r} reaches PL ball "
@@ -261,7 +196,6 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
         raise XdcError(f"no carrier port reaches a PL ball through "
                        f"{'/'.join(refs)} — wrong refs?")
 
-    # -- IOSTANDARD per entry (rail map + typed ports) ------------------------
     by_net = {e.net: e for e in entries}
     for e in entries:
         rail = bank_rail.get(e.bank)
@@ -295,8 +229,6 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
                                f"{volts} V rail {rail}")
             e.iostd = std
 
-    # -- sanity: emitted count vs the LIVE netlist's PL population ------------
-    # (independent derivation: J pins from the live netlist, not the contract)
     expect = len({nn for jp, nn in live["jpin_net"].items()
                   if jp.split(".")[0] in refs and nn in net_balls})
     if len(entries) != expect:
@@ -308,7 +240,6 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
     checks.append(f"{len(seen_balls)} unique balls, {len(seen_nets)} unique "
                   f"ports (no double-claims)")
 
-    # -- write -----------------------------------------------------------------
     text = _render(entries, live, refs, contract_path, som_sch, bank_rail)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(text)
@@ -383,8 +314,6 @@ def _render(entries: list[PinEntry], live: dict, refs: tuple[str, ...],
                 emitted.add(g.net)
     return "\n".join(lines) + "\n"
 
-
-# ---- CLI --------------------------------------------------------------------------
 
 def cmd_xdc(args: argparse.Namespace) -> int:
     from schgen.core.link import all_subsystem_paths, load_subsystem

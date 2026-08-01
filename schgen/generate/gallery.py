@@ -1,23 +1,3 @@
-"""README render gallery (PLAN.md round 4: "the repo demos itself").
-
-``schgen gallery`` (also run by ``schgen board``) regenerates a marked
-section in two READMEs, WITHOUT duplicating the giant table:
-
-- ``carrier/README.md`` gets the FULL gallery (it lives next to the
-  renders): a thumbnail grid of the placed-board 3D views, the ratsnest views
-  (board-wide + SoM composite + one crop per subsystem), the block diagram
-  inline, a thumbnail grid of every sheet, and a name->description table.
-- the root ``README.md`` gets a COMPACT block: a 3D board hero + the block
-  diagram inline + a board-ratsnest hero line + one line linking to the
-  carrier README for the full galleries.
-
-Idempotent: content lives between ``<!-- schgen:gallery --> ...
-<!-- /schgen:gallery -->`` markers and is replaced in place (appended on
-first run). Deterministic: sheets sorted by name, no timestamps. Thumbnails
-use GitHub-flavored-markdown-safe inline HTML (``<img width=...>`` inside a
-pipe table, relative links).
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -39,9 +19,6 @@ END = "<!-- /schgen:gallery -->"
 THUMB_W = 220
 COLS = 3
 
-# Placed-board 3D views written by ``render3d`` on every ``schgen board`` (see
-# schgen/output/render3d.py), in display order: the two hero perspectives, the
-# two faces, then the four edge profiles. (stem -> friendly label.)
 RENDER3D_VIEWS = [
     ("3d_persp", "Perspective (front)"),
     ("3d_persp_rear", "Perspective (rear)"),
@@ -52,7 +29,7 @@ RENDER3D_VIEWS = [
     ("3d_left", "Left edge"),
     ("3d_right", "Right edge"),
 ]
-RENDER3D_HERO = "3d_persp"   # the one inlined into the root README compact block
+RENDER3D_HERO = "3d_persp"
 RENDER3D_COLS = 4
 RENDER3D_THUMB_W = 200
 
@@ -69,8 +46,6 @@ RATSNEST_THUMB_W = 200
 
 
 def _thumb_grid(cells_md: list[str], cols: int) -> list[str]:
-    """A GFM pipe-table thumbnail grid from pre-rendered cell markdown (each
-    cell is the full ``[<img ...>](link)<br>**label**`` string)."""
     L = ["| " + " | ".join([" "] * cols) + " |", "|" + "---|" * cols]
     for i in range(0, len(cells_md), cols):
         chunk = cells_md[i:i + cols]
@@ -80,9 +55,6 @@ def _thumb_grid(cells_md: list[str], cols: int) -> list[str]:
 
 
 def _render3d_lines(rel) -> list[str]:
-    """The '## Generated 3D board views' subsection: a thumbnail grid of the
-    placed-board 3D renders (``carrier/renders/3d_*.png``), mirroring the sheet
-    grid. ``rel`` maps a repo-relative target to a README-relative link."""
     have = [(stem, label) for stem, label in RENDER3D_VIEWS
             if (RENDERS / f"{stem}.png").exists()]
     L: list[str] = ["## Generated 3D board views", ""]
@@ -113,9 +85,6 @@ def _wired_sheets() -> frozenset[str]:
 
 
 def _ratsnest_lines(rel) -> list[str]:
-    """The '## Ratsnest views' subsection: board-wide top/bottom + the SoM
-    composite, then one airwire crop per subsystem
-    (``carrier/renders/ratsnest/*.png``), wired sheets labelled."""
     L: list[str] = ["## Ratsnest views", ""]
     board = [(f"{_PROJ_REL}/renders/{stem}.png", label)
              for stem, label in RATSNEST_BOARD
@@ -153,7 +122,6 @@ def _ratsnest_lines(rel) -> list[str]:
 
 
 def _sheet_rows() -> list[tuple[str, str, bool]]:
-    """(name, description, has_render) per subsystem, sorted by name."""
     rows = []
     for p in all_subsystem_paths():
         c = load_subsystem(p.stem).circuit
@@ -162,8 +130,6 @@ def _sheet_rows() -> list[tuple[str, str, bool]]:
 
 
 def _full_section(readme_dir: Path) -> str:
-    """The FULL gallery (carrier/README.md): block diagram + thumbnail grid
-    + description table, links relative to the README's directory."""
     def rel(target: str) -> str:
         return os.path.relpath(REPO_ROOT / target, readme_dir)
 
@@ -184,7 +150,6 @@ def _full_section(readme_dir: Path) -> str:
     L.append(f'<img src="{rel("docs/block_diagram.svg")}" '
              f'alt="Generated block diagram" width="900">')
     L.append("")
-    # thumbnail grid: COLS sheets per table row (GFM pipe table + <img>)
     L.append("| " + " | ".join([" "] * COLS) + " |")
     L.append("|" + "---|" * COLS)
     for i in range(0, n, COLS):
@@ -211,9 +176,6 @@ def _full_section(readme_dir: Path) -> str:
 
 
 def _compact_section(readme_dir: Path) -> str:
-    """The COMPACT block (root README.md): block diagram inline + a board-
-    ratsnest hero line + one line linking to the carrier README's full sheet
-    gallery (no duplicated table)."""
     def rel(target: str) -> str:
         return os.path.relpath(REPO_ROOT / target, readme_dir)
 
@@ -258,7 +220,6 @@ def _compact_section(readme_dir: Path) -> str:
 
 
 def _splice(readme: Path, section: str) -> bool:
-    """Replace the marked section (or append it). True if the file changed."""
     text = readme.read_text() if readme.exists() else ""
     if BEGIN in text and END in text:
         head, _, rest = text.partition(BEGIN)
@@ -274,10 +235,6 @@ def _splice(readme: Path, section: str) -> bool:
 
 
 def generate() -> list[Path]:
-    """De-duplicated: the FULL gallery goes ONLY into the project's README.md
-    (next to the renders). The repo-root README.md is the DEFAULT project's
-    front page — its COMPACT block is spliced only when the default project is
-    the one being built, so two projects never fight over one file."""
     changed = []
     project_md = PROJECT_ROOT / "README.md"
     if IS_DEFAULT_PROJECT:

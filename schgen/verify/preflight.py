@@ -1,27 +1,3 @@
-"""schgen preflight — live JLC/LCSC availability + cost check for subsystems.
-
-``schgen preflight <subsystem>...`` resolves every part's ``LCSC`` field
-against the JLCPCB parts library (the API the jlcpcb.com parts browser uses;
-anonymous POST, verified live 2026-06-10) and reports per line item:
-
-    stock, Basic/Extended, unit price at the required qty, extended cost
-
-plus a rollup: total BOM cost, number of Extended reels (each Extended part
-costs a JLC feeder-loading fee), and every part that is missing/not found/
-out of stock. Exit is non-zero when any part is out of stock or not found —
-and, unless ``--allow-missing``, when any part has no LCSC id yet (a part
-that cannot be ordered is a ghost; carrier/PLAN.md: preflight fails on
-ghosts).
-
-Endpoints:
-- primary: POST https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/
-  smtGood/selectSmtComponentList  (keyword search; exact componentCode match)
-- fallback: GET https://wmsc.lcsc.com/ftps/wm/product/detail?productCode=C…
-  (LCSC catalog detail; NOTE: its stock fields read 0 without a region
-  cookie, so it is used only to distinguish "exists on LCSC but not at JLC
-  assembly" from "not found anywhere").
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -46,8 +22,6 @@ def _load_subsystem(name_or_path: str):
     path = Path(name_or_path)
     if path.suffix != ".py":
         stem = Path(name_or_path).stem
-        # folder-aware: prefer carrier/subsystems/<name>/<name>.py, else the
-        # flat carrier/subsystems/<name>.py (same resolution as link.py).
         foldered = SUBSYSTEMS_DIR / stem / f"{stem}.py"
         path = foldered if foldered.exists() else SUBSYSTEMS_DIR / f"{stem}.py"
     if not path.exists():
@@ -59,12 +33,7 @@ def _load_subsystem(name_or_path: str):
     return mod
 
 
-# ---------------------------------------------------------------------------
-# queries
-# ---------------------------------------------------------------------------
-
 def query_jlc(lcsc_id: str, timeout: int = 20) -> dict | None:
-    """Exact-match JLCPCB parts-library lookup. None = not in JLC library."""
     body = json.dumps({"keyword": lcsc_id, "currentPage": 1,
                        "pageSize": 5}).encode()
     req = urllib.request.Request(
@@ -100,7 +69,6 @@ def query_jlc(lcsc_id: str, timeout: int = 20) -> dict | None:
 
 
 def query_lcsc_exists(lcsc_id: str, timeout: int = 20) -> bool:
-    """Does the part exist in the LCSC catalog at all? (fallback signal)"""
     req = urllib.request.Request(LCSC_DETAIL_URL.format(code=lcsc_id),
                                  headers={"User-Agent": (
                               "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -115,7 +83,6 @@ def query_lcsc_exists(lcsc_id: str, timeout: int = 20) -> bool:
 
 
 def unit_price(prices: list[tuple[int, float]], qty: int) -> float:
-    """Price at the ladder rung covering ``qty`` (first rung below min qty)."""
     if not prices:
         return 0.0
     best = prices[0][1]
@@ -125,20 +92,10 @@ def unit_price(prices: list[tuple[int, float]], qty: int) -> float:
     return best
 
 
-# ---------------------------------------------------------------------------
-# stock policy (SRC-2): a procurement floor + a pure, testable verdict
-# ---------------------------------------------------------------------------
-
-STOCK_FLOOR = 50   # below this, even stock >= need is a procurement risk (WARN)
+STOCK_FLOOR = 50
 
 
 def assess_stock(stock: int, need: int, floor: int = STOCK_FLOOR) -> tuple[str, str]:
-    """Pure stock verdict (no network). status in {ok, low, insufficient, out}.
-
-    A part with 10 units in stock is a landmine even when need <= 10 — one
-    other order exhausts it — so stock below the floor is flagged 'low' (a
-    WARNING, not a hard fail), so a single-feeder part can never pass clean.
-    """
     if stock <= 0:
         return "out", "** OUT OF STOCK **"
     if stock < need:
@@ -148,16 +105,12 @@ def assess_stock(stock: int, need: int, floor: int = STOCK_FLOOR) -> tuple[str, 
     return "ok", ""
 
 
-# ---------------------------------------------------------------------------
-# report
-# ---------------------------------------------------------------------------
-
 @dataclass
 class LineItem:
     lcsc: str
     value: str
     refs: list[str] = field(default_factory=list)
-    alt_lcsc: list[str] = field(default_factory=list)   # SRC-1 second sources
+    alt_lcsc: list[str] = field(default_factory=list)
 
 
 def cmd_preflight(args: argparse.Namespace) -> int:
@@ -170,7 +123,7 @@ def cmd_preflight(args: argparse.Namespace) -> int:
         c = mod.circuit()
         for ref, part in sorted(c.parts.items()):
             if (part.fields or {}).get("BOM") == "exclude":
-                continue       # pad-only test points: copper, no BOM line
+                continue
             lcsc = (part.fields or {}).get("LCSC", "").strip()
             label = f"{c.name}:{ref}"
             if not lcsc:
@@ -181,7 +134,7 @@ def cmd_preflight(args: argparse.Namespace) -> int:
             for a in (part.fields or {}).get("ALT_LCSC", "").split(","):
                 a = a.strip()
                 if a and a not in it.alt_lcsc:
-                    it.alt_lcsc.append(a)             # SRC-1 second source(s)
+                    it.alt_lcsc.append(a)
 
     print(f"preflight: {len(items)} LCSC line item(s), {len(missing)} part(s) "
           f"without an LCSC id, {qty_boards} board(s)")
@@ -216,7 +169,7 @@ def cmd_preflight(args: argparse.Namespace) -> int:
         flag = f"  {flag}" if flag else ""
         if status != "ok":
             chosen = None
-            for alt in it.alt_lcsc:                  # try the committed 2nd sources
+            for alt in it.alt_lcsc:
                 ainfo = query_jlc(alt)
                 if ainfo and assess_stock(ainfo["stock"], need, floor)[0] == "ok":
                     chosen = (alt, ainfo)
@@ -231,7 +184,7 @@ def cmd_preflight(args: argparse.Namespace) -> int:
                 tried = (f"; no alternate clears it (tried {','.join(it.alt_lcsc)})"
                          if it.alt_lcsc else "")
                 failures.append(f"{lcsc} ({info['mpn']}): {status.upper()}{tried}")
-            else:  # low stock, no healthy alternate -> procurement WARNING
+            else:
                 warnings.append(
                     f"{lcsc} ({info['mpn']}): LOW STOCK {info['stock']} < floor "
                     f"{floor}" + ("; no healthier alternate" if it.alt_lcsc

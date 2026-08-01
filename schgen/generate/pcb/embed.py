@@ -1,10 +1,3 @@
-"""Footprint EMBEDDING into the .kicad_pcb (parse the .kicad_mod, set placement
-+ pad nets + side flip + content-derived uuids) plus the board-level emit
-helpers (layers table, stackup, edge rectangle, SoM body silk + keepout zone).
-PURE MOVE out of the old monolithic ``schgen/generate/pcb.py`` — no behaviour
-change.
-"""
-
 from __future__ import annotations
 
 import math
@@ -42,7 +35,6 @@ from .constants import (
 
 
 def _flip_layer_token(name: str) -> str:
-    """F.<x> -> B.<x> (and vice-versa, idempotent for non-F/B layers)."""
     if name.startswith("F."):
         return "B." + name[2:]
     if name.startswith("B."):
@@ -51,21 +43,6 @@ def _flip_layer_token(name: str) -> str:
 
 
 def _flip_to_bottom(node: list) -> None:
-    """Recursively flip a footprint subtree from the top (F.Cu) to the bottom
-    (B.Cu) side: swap every (layer ...)/(layers ...) F.* token to its B.* twin,
-    and add (justify mirror) to text effects so the glyphs read correctly from
-    the back. Local coordinates are NOT touched, and KiCad applies NO position
-    mirror at load or render — a B.Cu footprint's stored coordinates ARE the
-    final front-view frame (pcbnew-verified; the whole in-process model shares
-    this convention). CONSEQUENCE for a LIBRARY document (inst.mirror=False,
-    the 2-side classifier population): the emitted bottom land pattern is the
-    CHIRAL MIRROR of the part's top-side pattern, so that population is
-    restricted to mirror-symmetric, non-polarized parts (guarded by
-    tests/test_bottom_convention.py). A MIRRORED document (inst.mirror=True,
-    pcb/mirror.py — block bottom variants) already carries the KiCad-exact
-    mirrored geometry, so this same layer flip completes a byte-equivalent
-    pcbnew LEFT_RIGHT flip and ANY part is legal. Deterministic and
-    reversible (re-running on a B.* tree is a no-op for the layers)."""
     for sub in node:
         if not isinstance(sub, list) or not sub:
             continue
@@ -75,7 +52,6 @@ def _flip_to_bottom(node: list) -> None:
                 if isinstance(sub[i], str):
                     sub[i] = _flip_layer_token(sub[i])
         elif head == Sym("effects"):
-            # add (justify mirror) if no justify present; else ensure mirror
             just = next((x for x in sub if isinstance(x, list) and x
                          and x[0] == Sym("justify")), None)
             if just is None:
@@ -88,24 +64,15 @@ def _flip_to_bottom(node: list) -> None:
 
 
 def _embed_footprint(inst, uid) -> list:
-    """Parse the .kicad_mod, set its placement + pad nets, return the
-    (footprint ...) node for the .kicad_pcb. Every nested uuid is content-
-    derived so regeneration is byte-identical."""
     mod = sexpr.loads(inst.mod_path.read_text())
     assert isinstance(mod, list) and mod and mod[0] == Sym("footprint")
 
-    # lib_id (footprint name) -> the full "lib:name". Use the RESOLVED name so
-    # an aliased footprint (e.g. C_1206_3225Metric -> _3216Metric) carries the
-    # name of the .kicad_mod actually embedded, not the requested one.
     mod[1] = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
 
-    # placement: (at x y rot) at the top level (after version/generator/layer)
-    # remove any existing (at ...) then insert ours right after (layer ...).
     body = [x for x in mod
             if not (isinstance(x, list) and x and x[0] == Sym("at"))]
     at_node = [Sym("at"), inst.x, inst.y] + (
         [inst.rotation] if inst.rotation else [])
-    # find insert point: after the first (layer ...) child
     out: list = []
     inserted = False
     for x in body:
@@ -116,12 +83,6 @@ def _embed_footprint(inst, uid) -> list:
     if not inserted:
         out.insert(1, at_node)
 
-    # 2-side assembly: a bottom-side footprint flips to B.Cu. The local
-    # pad/graphic COORDINATES stay unchanged and only every F.* layer token
-    # swaps to its B.* twin, plus a (justify mirror) on text glyphs. KiCad
-    # applies NO position mirror on load — the stored frame IS the front-view
-    # frame (see _flip_to_bottom). Done before the uuid/net pass so the
-    # flipped tree is what gets stamped.
     if inst.mirror:
         from .mirror import is_mirrored_path
         assert inst.side == "bottom" and is_mirrored_path(inst.mod_path), (
@@ -131,18 +92,10 @@ def _embed_footprint(inst, uid) -> list:
     if inst.side == "bottom":
         _flip_to_bottom(out)
 
-    # stamp a stable top-level uuid, replace placement+pad uuids deterministically
     _set_or_add(out, [Sym("uuid"), uid(f"fp:{inst.ref}")])
 
-    # thermal-via inheritance: a faithful EP-bearing footprint carries blank
-    # ("") no-net thermal vias/pads SITTING INSIDE its exposed pad's copper
-    # (e.g. the TPS26631 EP + its thermal vias). They are physically the SAME
-    # copper as the EP, so they inherit the EP pad's net — that removes the
-    # false "no-net via vs GND EP" clearance/mask error without touching the
-    # footprint geometry (we only assign nets, exactly like every other pad).
     inherit = _thermal_via_nets(out, inst.pad_nets)
 
-    # set Reference/Value property text + assign pad nets + restamp child uuids
     pad_seq = 0
     prop_seq = 0
     for node in out:
@@ -152,15 +105,6 @@ def _embed_footprint(inst, uid) -> list:
         if head == Sym("property") and len(node) > 2:
             if node[1] == "Reference":
                 node[2] = inst.ref
-                # OFF-BOARD CONNECTORS: hide the J-ref on silk — the human
-                # FUNCTION label (_connector_descriptors: PWR/JTAG/HDMI/...) is
-                # what the user reads on the board, and the ref clutters the only
-                # clear spot beside the connector. The ref stays in the footprint
-                # data (netlist/BOM), just not printed.
-                # TEST POINTS: same treatment — a TP is identified by the NET it
-                # probes (its Value), not its TPxxxx ref; the dense bring-up TP
-                # fields otherwise overprint each other (LAW 1). Keyed on the
-                # TestPoint footprint, not a 'TP' ref prefix (robust).
                 if (inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC
                         or inst.ref in _SW_DESC or "TestPoint" in inst.footprint):
                     hb = next((x for x in node if isinstance(x, list) and x
@@ -179,12 +123,6 @@ def _embed_footprint(inst, uid) -> list:
             if (num, nname) == (0, "") and pad_seq in inherit:
                 num, nname = inherit[pad_seq]
             _set_pad_net(node, num, nname)
-            # propagate the footprint rotation into each pad's LOCAL orientation
-            # — KiCad's native representation of a rotated footprint (its own
-            # SoM J1/J2/J3 store (at x y <fp-rot>) on every pad). Without this a
-            # non-square rect pad authored for the 0-deg frame keeps its 0-deg
-            # orientation and KiCad's pad-clearance check sees the rect's long
-            # side fall along the pitch axis -> false intra-footprint shorts.
             if inst.rotation:
                 _rotate_pad(node, inst.rotation)
             _restamp_uuid(node, uid(f"fp:{inst.ref}:pad:{pad_seq}"))
@@ -196,11 +134,6 @@ def _embed_footprint(inst, uid) -> list:
 
 
 def _rotate_pad(pad: list, fp_rot: float) -> None:
-    """Add ``fp_rot`` to a pad's LOCAL (at x y [rot]) orientation, matching how
-    KiCad stores a rotated footprint (every pad carries the footprint rotation
-    in its own (at)). The pad's local x/y are NOT changed — KiCad rotates the
-    positions by the footprint (at) at load; only the pad's own rect must turn
-    so a non-square pad keeps its correct orientation relative to the row."""
     at = next((x for x in pad
                if isinstance(x, list) and x and x[0] == Sym("at")), None)
     if at is None:
@@ -214,7 +147,6 @@ def _rotate_pad(pad: list, fp_rot: float) -> None:
 
 
 def _pad_geom(node: list) -> tuple[float, float, float, float] | None:
-    """(cx, cy, half_w, half_h) of a (pad ...) node, in footprint-local mm."""
     at = sexpr.find(node, "at")
     size = sexpr.find(node, "size")
     if not (at and len(at) >= 3 and size and len(size) >= 3):
@@ -227,9 +159,6 @@ def _pad_geom(node: list) -> tuple[float, float, float, float] | None:
 
 
 def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
-    """pad ORDINAL -> inherited (net number, name) for blank no-net pads whose
-    center lies inside a netted pad's copper of the same footprint. Returns
-    only the inheritances (empty for the common no-thermal-via case)."""
     pads = [n for n in out if isinstance(n, list) and n and n[0] == Sym("pad")]
     netted: list[tuple[float, float, float, float, int, str]] = []
     for n in pads:
@@ -244,7 +173,7 @@ def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
     for seq, n in enumerate(pads):
         nm = str(n[1]) if len(n) > 1 else ""
         if pad_nets.get(nm, (0, ""))[0] > 0 or nm not in ("", " "):
-            continue                       # only blank, currently-no-net pads
+            continue
         g = _pad_geom(n)
         if g is None:
             continue
@@ -274,14 +203,10 @@ def _restamp_uuid(node: list, new: str) -> None:
 
 
 def _set_pad_net(pad: list, num: int, name: str) -> None:
-    """Insert/replace the pad's (net N "name"). Drop any stale net first; net 0
-    (no net) gets NO net node (KiCad treats the absence as the no-net pad)."""
     pad[:] = [x for x in pad
               if not (isinstance(x, list) and x and x[0] == Sym("net"))]
     if num <= 0:
         return
-    # net node must precede (pintype ...)/(uuid ...) but KiCad accepts it
-    # anywhere inside the pad; append before the uuid for tidiness.
     net_node = [Sym("net"), num, name]
     for i, x in enumerate(pad):
         if isinstance(x, list) and x and x[0] == Sym("uuid"):
@@ -301,10 +226,6 @@ def _layers_node() -> list:
 
 
 def _stackup_node() -> list:
-    """JLC04161H-7628 1.6 mm 4-layer build. Outer signal layers reference the
-    L2 GND plane through one sheet of 7628 prepreg (0.2104 mm, er~4.6) — the
-    geometry schgen/generate/constraints.py's diff-pair widths are calculated
-    for. L2/L3 core is 1.065 mm; total ~1.6 mm."""
     def cu(name, th):
         return [Sym("layer"), name, [Sym("type"), "copper"],
                 [Sym("thickness"), th]]
@@ -335,7 +256,6 @@ def _stackup_node() -> list:
 
 
 def _edge_rect(x0, y0, x1, y1, uid) -> list:
-    """Four Edge.Cuts lines forming the board outline rectangle."""
     pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
     out: list = []
     for i in range(4):
@@ -351,15 +271,8 @@ def _edge_rect(x0, y0, x1, y1, uid) -> list:
 
 
 def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
-    """Top-silk outline of the SoM module body (the DF40 mezzanine footprint) on
-    the carrier, so an assembler sees exactly where the module lands and that its
-    shadow is a passives-only keepout (LAW 6). Drawn at the module-body edge — the
-    carrier DF40 receptacles + any under-SoM passives sit inboard of it, so the
-    line never crosses a pad. A pin-1 corner chamfer + a small corner label give
-    orientation. The user explicitly called out that this outline was missing."""
     x0, y0, x1, y1 = box
     out: list = []
-    # body rectangle
     pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
     for i in range(4):
         ax, ay = pts[i]
@@ -371,7 +284,6 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
                      [Sym("type"), Sym("default")]],
                     [Sym("layer"), "F.SilkS"],
                     [Sym("uuid"), uid(f"som-silk:{i}")]])
-    # pin-1 / orientation chamfer across the top-left corner
     ch = 3.0
     out.append([Sym("gr_line"),
                 [Sym("start"), round(x0, 3), round(y0 + ch, 3)],
@@ -380,7 +292,6 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
                  [Sym("type"), Sym("default")]],
                 [Sym("layer"), "F.SilkS"],
                 [Sym("uuid"), uid("som-silk:ch")]])
-    # corner label just OUTSIDE the top-left corner (clear of the module shadow)
     out.append([Sym("gr_text"), "Zynq SoM",
                 [Sym("at"), round(x0 + 1.0, 3), round(y0 - 1.2, 3), 0],
                 [Sym("layer"), "F.SilkS"],
@@ -391,21 +302,7 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
     return out
 
 
-# ---- T2 escape copper emission (RECONCILED with GAP1 @ 28f8e15) -------------------
-# The GENERAL via/segment node builders.  Interface decision (flagged for
-# Ring-0): T2's dict-driven builders are the general implementation — any
-# size/drill/net, optional (locked yes), caller-chosen uid key — so GAP1's
-# fixed-size thermal-via emission now routes through _via_node (byte-identical
-# output: without "locked" the node shape matches GAP1's original inline
-# construction exactly, and the uid key is passed through unchanged).  Zones
-# are GAP1's territory (_fill_zone/_gnd_plane_zone/_iso_void_zones below):
-# T2 emits NO zone — its stitch vias land on GAP1's canonical In1 GND plane.
-# (locked yes) probe-verified on kicad-cli 10.0.2 (T2 P0): parses + DRCs clean.
-
 def _via_node(c: dict, uid, uid_key: str = "stitch-via") -> list:
-    """A board-level GND via node.  ``c`` keys: x, y, size, drill, net,
-    optional locked (default True — the T2 escape vias are Freerouting
-    fixed-preroute; GAP1's thermal vias pass locked=False)."""
     node = [Sym("via"),
             [Sym("at"), c["x"], c["y"]],
             [Sym("size"), c["size"]],
@@ -419,7 +316,6 @@ def _via_node(c: dict, uid, uid_key: str = "stitch-via") -> list:
 
 
 def _segment_node(c: dict, uid) -> list:
-    """A locked ladder segment (spine / GND-pad stub / via stub)."""
     return [Sym("segment"),
             [Sym("start"), c["x1"], c["y1"]],
             [Sym("end"), c["x2"], c["y2"]],
@@ -430,15 +326,8 @@ def _segment_node(c: dict, uid) -> list:
             [Sym("uuid"), uid("stitch-seg")]]
 
 
+# Marker only — planes + fanout vias right beneath the connector stay legal.
 def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
-    """A rule-area MARKER over the SoM body on both copper layers (drawn in the
-    ratsnest view + KiCad as a hatched region). It is PERMISSIVE: under an SMD
-    DF40 mezzanine the shadow is the most power-critical region — it must carry
-    full GND/PWR planes, the bottom-side rail-entry decoupling (som_decoupling)
-    and its fanout vias right beneath the connector. An old restrictive keepout
-    (no tracks/vias/pour) would have starved the SoM of power planes and left the
-    under-SoM decoupling unroutable (a LAW-0 open). So everything is allowed; the
-    zone only LABELS the mezzanine shadow. Drawn as the rectangle's 4 corners."""
     x0, y0, x1, y1 = box
     corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
     pts = [Sym("pts")] + [[Sym("xy"), round(px, 3), round(py, 3)]
@@ -451,10 +340,6 @@ def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
             [Sym("hatch"), Sym("edge"), 0.5],
             [Sym("connect_pads"), [Sym("clearance"), 0]],
             [Sym("min_thickness"), 0.25],
-            # PERMISSIVE marker: the SoM shadow is the power-entry region — it
-            # carries the GND/PWR planes, the bottom-side rail decoupling and its
-            # vias beneath the SMD mezzanine. Everything is allowed; the zone
-            # only labels the region (see docstring).
             [Sym("keepout"),
              [Sym("tracks"), Sym("allowed")],
              [Sym("vias"), Sym("allowed")],
@@ -466,29 +351,8 @@ def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
             [Sym("polygon"), pts]]
 
 
-# ---- EMITTED thermal copper: In1 GND plane + per-part via fields + pours ---------
-#
-# LAW-0 honesty: the thermal gate (schgen/verify/thermal.py) credits a
-# pour-aware effective RthJA ONLY against copper that is actually in the
-# emitted .kicad_pcb. These emitters put that copper there:
-#   * a board-interior GND plane zone on In1.Cu (the stackup L2 GND layer),
-#   * per-buck/LDO local GND pours + thermal-via fields at the power-ground
-#     pads (SNVSBD5D 11.1.1 / JESD51-5), keyed on the part's placed position,
-#   * rule-area plane VOIDS under the ethernet magnetics/RJ45 (isolation).
-# DETERMINISM: every zone is emitted UNFILLED but with (fill yes ...) settings
-# — the file carries no fill polygons, so build-twice is byte-identical; the
-# build's DRC runs kicad-cli with --refill-zones, so the REAL computed fill
-# (connectivity, clearance, starved thermals) is what gets checked, in memory,
-# without rewriting the board.
-
 def _corners_rot(rect: tuple[float, float, float, float], inst,
                  model: PcbModel) -> list[tuple[float, float]]:
-    """A footprint-LOCAL rect's 4 corners placed on the board with the KiCad
-    CW (+y-down) placement rotation, then clamped into the board interior
-    (GND_PLANE_EDGE_BACK inside Edge.Cuts). NO bottom-side mirror: KiCad
-    stores a B.Cu footprint's local coordinates in the FINAL (front-view)
-    frame and applies only the rotation at load — verified against pcbnew
-    (bottom 4D03 network + rot-90 bottom caps land at at+R(rot)·(px,py))."""
     x0, y0, x1, y1 = rect
     r = math.radians(inst.rotation or 0.0)
     cs, sn = math.cos(r), math.sin(r)
@@ -508,10 +372,6 @@ def _corners_rot(rect: tuple[float, float, float, float], inst,
 def _fill_zone(net_num: int, net_name: str, zname: str, layer: str,
                corners: list[tuple[float, float]], uid_key: str, uid,
                clearance: float, solid: bool) -> list:
-    """A REAL copper zone (net + fill settings), emitted UNFILLED (see the
-    determinism note above). ``solid`` picks solid pad connection (the local
-    thermal pours — the whole point is dumping heat through the pads); the
-    plane keeps thermal reliefs so TH parts stay hand-solderable."""
     pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
     connect = ([Sym("connect_pads"), Sym("yes"), [Sym("clearance"), clearance]]
                if solid else
@@ -531,10 +391,6 @@ def _fill_zone(net_num: int, net_name: str, zname: str, layer: str,
 
 
 def _gnd_plane_zone(model: PcbModel, uid) -> list | None:
-    """The board-interior GND plane on In1.Cu (stackup L2): outline inset
-    GND_PLANE_EDGE_BACK from Edge.Cuts (above the 0.3 mm copper-edge design
-    rule). This is the plane the DP90/DP100 microstrip geometry references and
-    the buried half of every emitted thermal-via path."""
     num = model.net_numbers.get("GND")
     if not num:
         return None
@@ -548,13 +404,6 @@ def _gnd_plane_zone(model: PcbModel, uid) -> list | None:
 
 
 def _iso_void_zones(model: PcbModel, uid) -> list[list]:
-    """Rule-area VOIDS (copperpour not_allowed on In1.Cu) punched in the GND
-    plane under the ethernet line-side parts (ISO_VOID_VALUES: HX5008
-    magnetics + RJ45): Pulse layout guidance + the Bob-Smith 2kV island say no
-    ground plane belongs under the isolation transformer / media pins. Tracks
-    and vias stay allowed (the media pairs must still cross); ONLY the plane
-    pour is voided. The RJ45<->magnetics corridor is routing-wave debt
-    (carrier/reports/copper_debt.txt)."""
     from .mating_face import _inst_courtyard
     out: list[list] = []
     for inst in model.insts:
@@ -587,13 +436,10 @@ def _iso_void_zones(model: PcbModel, uid) -> list[list]:
     return out
 
 
-# per-.kicad_mod pad table cache: [(px, py, prot_deg, sw, sh, drill), ...]
 _MOD_PAD_CACHE: dict[str, list[tuple[float, float, float, float, float, float]]] = {}
 
 
 def _mod_pads(mod_path) -> list[tuple[str, float, float, float, float, float, float]]:
-    """(pad_name, px, py, prot_deg, sw, sh, drill) rows of a .kicad_mod, in the
-    footprint LOCAL frame (drill 0 => SMD). Cached per path."""
     key = str(mod_path)
     cached = _MOD_PAD_CACHE.get(key)
     if cached is not None:
@@ -620,13 +466,6 @@ def _mod_pads(mod_path) -> list[tuple[str, float, float, float, float, float, fl
 
 
 def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float, str]]:
-    """Every pad of a placed footprint as an axis-aligned obstacle
-    (cx, cy, half_w, half_h, net_name, drill, label) in the BOARD frame: the
-    KiCad CW rotation, NO bottom mirror (a B.Cu footprint's stored coordinates
-    are already the final front-view frame — pcbnew-verified; an X-mirror here
-    put a thermal via onto C16003's +3V3_SD pad while the model thought the
-    spot was that cap's GND pad). ``label`` is the ref.pad the shortfall
-    diagnostic names when this pad vetoes a via site."""
     r = math.radians(inst.rotation or 0.0)
     cs, sn = math.cos(r), math.sin(r)
     out: list[tuple[float, float, float, float, str, float, str]] = []
@@ -646,11 +485,6 @@ def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float, s
 
 def _via_obstacles(model: PcbModel, inst, reach: float) \
         -> list[tuple[float, float, float, float, str, float, str]]:
-    """Everything a thermal-via candidate around ``inst`` must dodge: the pads
-    of every footprint whose origin is within ``reach``, plus the T2 escape
-    vias already planned on the model (``model.copper``) — an emitted via hole
-    takes the same hole-to-hole margin as a drilled pad, and the exhaustive
-    lattice search below reaches ground the curated site list never visited."""
     names = {num: nm for nm, num in model.net_numbers.items()}
     out: list[tuple[float, float, float, float, str, float, str]] = []
     for other in model.insts:
@@ -674,15 +508,6 @@ def _via_site_blocker(vx: float, vy: float, model: PcbModel,
                       obstacles: list[tuple[float, float, float, float,
                                             str, float, str]],
                       chosen: list[tuple[float, float]]) -> str | None:
-    """The object that vetoes a thermal-via candidate (named, with its
-    coordinates, for the shortfall diagnostic) — None when the site is legal.
-    A candidate survives when its barrel keeps THERMAL_VIA_CLEAR to every
-    FOREIGN (non-GND) pad's copper, its HOLE edge keeps CLR_HOLE_SAMENET_PAD
-    to SAME-net (GND) solder-pad copper (a via hole in a pad wicks the joint's
-    solder even on the same net — the T2-wave DFM rule; the via ties to the pad
-    through the POUR, never in the joint), THERMAL_VIA_H2H hole-edge spacing to
-    every drilled pad (any net), THERMAL_VIA_EDGE to Edge.Cuts, and
-    THERMAL_VIA_SPACING to the vias already chosen."""
     if not (ORIGIN_X + THERMAL_VIA_EDGE <= vx
             <= ORIGIN_X + model.board_w - THERMAL_VIA_EDGE
             and ORIGIN_Y + THERMAL_VIA_EDGE <= vy
@@ -709,11 +534,6 @@ def _via_site_blocker(vx: float, vy: float, model: PcbModel,
 
 
 def _fallback_via_sites(spec: dict) -> list[tuple[float, float]]:
-    """Every lattice site inside the part's OWN thermal pour (inset by the via
-    radius so the barrel's copper stays in poured copper), NEAREST-TO-ORIGIN
-    first — the exhaustive search the curated preference list falls back to
-    when a neighbour's pads block the preferred sites. Deterministic: a fixed
-    pitch and a total order on (radius, y, x)."""
     x0, y0, x1, y1 = spec["pour"]
     m = THERMAL_VIA_SIZE / 2
     x0, y0, x1, y1 = x0 + m, y0 + m, x1 - m, y1 - m
@@ -727,10 +547,6 @@ def _fallback_via_sites(spec: dict) -> list[tuple[float, float]]:
 
 
 def _pour_credit_need(value: str):
-    """The emitted-copper floor the THERMAL gate credits this part against,
-    READ from schgen.verify.thermal.POUR_EVIDENCE (never duplicated, so the
-    emitter's target and the gate's requirement cannot drift): the strictest
-    matching PourNeed, or None for a part that claims no pour credit."""
     from schgen.verify.thermal import POUR_EVIDENCE
     needs = [n for n in POUR_EVIDENCE.values()
              if value.startswith(n.value_prefix)]
@@ -739,11 +555,6 @@ def _pour_credit_need(value: str):
 
 def _report_via_shortfall(inst, chosen: list[tuple[float, float]],
                           vetoes: dict[str, int], n_cand: int) -> str | None:
-    """LOUD, actionable line when a part's emitted via field lands UNDER the
-    pour-credit floor after the exhaustive search: how many seats it got, out
-    of how many candidate sites, and the objects that vetoed the most sites
-    (ranked, named, with coordinates) — the parts a human must move. Returns
-    the line (printed) or None when the field is whole."""
     need = _pour_credit_need(inst.value)
     if need is None:
         return None
@@ -765,14 +576,6 @@ def _report_via_shortfall(inst, chosen: list[tuple[float, float]],
 
 
 def _mirror_thermal_spec(spec: dict) -> dict:
-    """The THERMAL_COPPER curated GEOMETRY of a MIRRORED instance: the spec
-    rects/sites live in the LIBRARY local frame, so a mirrored part (whose
-    document frame is the pcbnew M_y mirror) needs y -> -y on the pour rect
-    and every via site — the same one transform pcb/mirror.py applies to the
-    footprint itself. The LAYER swap is a separate question with a separate
-    trigger (`_side_thermal_spec`): the document frame and the copper face are
-    independent — the achiral-swap convention emits B.Cu from an unmirrored
-    document."""
     p = spec["pour"]
     return {**spec,
             "pour": (p[0], 0.0 - p[3], p[2], 0.0 - p[1]),
@@ -780,12 +583,6 @@ def _mirror_thermal_spec(spec: dict) -> dict:
 
 
 def _side_thermal_spec(spec: dict, side: str) -> dict:
-    """The same spec's OUTER-COPPER layers for an instance emitted on ``side``:
-    a part's local pour belongs on the part's OWN outer layer (JESD51-5), so a
-    B.Cu instance of an F.Cu-only spec pours on B.Cu. Keyed on the EMITTED
-    FACE, which is exactly what the thermal gate reads back off the board, and
-    swapped through the gate's own `thermal.LAYER_SWAP` — one table, so the
-    copper this lays and the copper the credit demands cannot drift."""
     from schgen.verify.thermal import LAYER_SWAP
     if side != "bottom":
         return spec
@@ -794,17 +591,6 @@ def _side_thermal_spec(spec: dict, side: str) -> dict:
 
 
 def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]:
-    """(zones, vias) for every placed THERMAL_COPPER part: a local GND pour per
-    listed layer (rotated with the part, solid pad connection) + a GND
-    thermal-via field at the LOCAL candidate sites that survive the obstacle
-    filter — the curated preference list first, then the EXHAUSTIVE
-    nearest-first lattice over the part's own pour (``_fallback_via_sites``)
-    when a neighbour's copper blocks the preferred sites, so the field is short
-    only where no legal seat exists at all (deterministic: fixed site order,
-    fixed inst order, first max_vias win). A field that still lands under the
-    pour-credit floor prints a shortfall line naming the blocking objects. The
-    vias tie the power-ground pads through the local pour into the In1 GND
-    plane — the copper the thermal gate's pour credit is verified against."""
     num = model.net_numbers.get("GND")
     if not num:
         return [], []
@@ -820,8 +606,6 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
         if inst.mirror:
             spec = _mirror_thermal_spec(spec)
         spec = _side_thermal_spec(spec, inst.side)
-        # local pours (per layer; the B.Cu twin gives the buck a second outer
-        # spreader stitched by the same via field)
         corners = _corners_rot(spec["pour"], inst, model)
         for layer in spec["pour_layers"]:
             z = _fill_zone(
@@ -860,10 +644,6 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
         placed.extend(chosen)
         _report_via_shortfall(inst, chosen, vetoes, len(candidates))
         for i, (vx, vy) in enumerate(chosen):
-            # through the unified builder (T2 reconciliation): locked=False
-            # keeps the node shape + uid key byte-identical to the original
-            # inline construction — thermal vias stay unlocked (their seats
-            # re-derive per placement; only the T2 escape preroute is locked).
             vias.append(_via_node(
                 {"x": vx, "y": vy, "size": THERMAL_VIA_SIZE,
                  "drill": THERMAL_VIA_DRILL, "net": num, "locked": False},
@@ -874,8 +654,6 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
 
 def _quads_overlap(a: list[tuple[float, float]],
                    b: list[tuple[float, float]]) -> bool:
-    """Separating-axis test for two convex quads; exact edge-touch counts as
-    separated (only a real area overlap trips KiCad's zones_intersect)."""
     for poly in (a, b):
         for i in range(len(poly)):
             x0, y0 = poly[i]
@@ -890,12 +668,6 @@ def _quads_overlap(a: list[tuple[float, float]],
 
 def _stagger_overlapping_pours(
         zone_geom: list[tuple[str, list[tuple[float, float]], list]]) -> None:
-    """Two same-net local pours on one layer may legitimately overlap on a
-    dense board (two regulators side by side) — electrically one copper region,
-    but KiCad's DRC demands DISTINCT zone priorities for intersecting zones.
-    Give each overlap component's later members priorities 1..k (emission
-    order; the first keeps the implicit 0). Boards whose pours never overlap
-    emit no priority token — byte-identical output."""
     by_layer: dict[str, list[tuple[list[tuple[float, float]], list]]] = {}
     for layer, corners, z in zone_geom:
         by_layer.setdefault(layer, []).append((corners, z))

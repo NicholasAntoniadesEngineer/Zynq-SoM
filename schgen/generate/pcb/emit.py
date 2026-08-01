@@ -1,9 +1,3 @@
-"""Board serialisation (emit_pcb), the .kicad_pro net-settings / design-settings
-writer, the .kicad_dru writer and the ``schgen pcb`` entry point (generate /
-run_pcb_drc / cmd_pcb). PURE MOVE out of the old monolithic
-``schgen/generate/pcb.py`` — no behaviour change.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -50,14 +44,6 @@ from .silk import (
 
 
 def _check_wired_contracts(model: PcbModel, gate_mod):
-    """Run the intra-zone placement-contract gate on EVERY engine-WIRED sheet
-    (``gate_mod._WIRED_SHEETS``) and MERGE the per-sheet results into one
-    ``PlacementContractResult``: ``ok`` is the AND, ``checked`` / the per-type fail
-    counters / ``violations`` / ``missing_refs`` are summed, and ``summary()`` is
-    the concatenation of every sheet's summary. So a regression on ANY wired sheet
-    (power OR usb_pd) fails the board, and the report shows both. Deterministic:
-    wired sheets are iterated in sorted order. Falls back to the pure ``power``
-    result if no sheet is wired (never happens today)."""
     wired = sorted(gate_mod._WIRED_SHEETS)
     per = [gate_mod.check(model, sheet_name=s) for s in wired]
     if not per:
@@ -76,7 +62,6 @@ def _check_wired_contracts(model: PcbModel, gate_mod):
     for r in per:
         merged.violations.extend(r.violations)
         merged.missing_refs.extend(r.missing_refs)
-    # a concatenated, per-sheet summary the report writer prints verbatim.
     merged._sheet_summaries = [r.summary() for r in per]  # type: ignore[attr-defined]
     merged.summary = (  # type: ignore[method-assign]
         lambda: "\n\n".join(merged._sheet_summaries))
@@ -84,7 +69,6 @@ def _check_wired_contracts(model: PcbModel, gate_mod):
 
 
 def emit_pcb(model: PcbModel, out_path: Path) -> Path:
-    """Serialise the .kicad_pcb."""
     board_uuid = stable_uuid("Zynq_Carrier", "pcb")
     seqs: dict[str, int] = {}
 
@@ -111,34 +95,23 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
         _layers_node(),
     ]
 
-    # setup: stackup + a couple of standard knobs. allow_soldermask_bridges_
-    # in_footprints=yes accepts the intra-footprint mask apertures shared by a
-    # faithful part's EP/thermal-via group (e.g. the TPS26631 EP + its thermal
-    # vias) — a footprint-internal property, never a placement defect.
     doc.append([Sym("setup"),
                 _stackup_node(),
                 [Sym("pad_to_mask_clearance"), 0],
                 [Sym("allow_soldermask_bridges_in_footprints"), Sym("yes")],
                 [Sym("aux_axis_origin"), ORIGIN_X, ORIGIN_Y]])
 
-    # net table (net 0 first, then by number)
     by_num = sorted(model.net_numbers.items(), key=lambda kv: kv[1])
     for name, num in by_num:
         doc.append([Sym("net"), num, name])
 
-    # board outline rectangle on Edge.Cuts
     x0, y0 = ORIGIN_X, ORIGIN_Y
     x1, y1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
     doc.extend(_edge_rect(x0, y0, x1, y1, uid))
 
-    # SoM body keep-out (A1) — nothing routes/places under the mezzanine.
     if model.som_keepout is not None:
         doc.append(_som_keepout_zone(model.som_keepout, uid))
 
-    # EMITTED copper (LAW-0 honesty — the thermal gate credits only what is in
-    # this file): the In1.Cu GND plane, its ethernet-isolation voids, and the
-    # per-buck/LDO local GND pours. All zones are UNFILLED-with-fill-settings
-    # (byte-deterministic; DRC refills in memory via --refill-zones below).
     plane = _gnd_plane_zone(model, uid)
     if plane is not None:
         doc.append(plane)
@@ -146,47 +119,26 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     thermal_zones, thermal_vias = _thermal_copper_nodes(model, uid)
     doc.extend(thermal_zones)
 
-    # SoM module-body OUTLINE on the top silk (LAW 6 documentation) — the
-    # rectangle around the DF40 receptacles the user expected to see.
     if model.som_core is not None:
         doc.extend(_som_body_silk(model.som_core, uid))
 
-    # footprints (fixed ref order — determinism)
     for inst in model.insts:
         doc.append(_embed_footprint(inst, uid))
 
-    # LAW 1 (bottom silk): hide the refs of the under-SoM bottom-cap grid (no room
-    # for a legible ref on a ~2mm pitch) BEFORE the declutter pass sees them.
     _hide_undersom_bottom_refs(model, doc)
 
-    # short function label beside each connector, header + switch (self-documenting
-    # board); interior labels are placed overlap-aware against the emitted designators
     doc.extend(_connector_descriptors(model, uid, doc))
 
-    # LAW 1: relocate any interior refdes that overprints another (dense diode/IC
-    # strings). Runs last so it clears every courtyard AND the labels just placed.
     _declutter_refdes(model, uid, doc)
 
-    # the per-buck thermal-via fields (board-level GND vias keyed on each
-    # part's placed position) — appended after the text passes above, which
-    # scan ``doc`` for footprint/label nodes only.
     doc.extend(thermal_vias)
 
-    # T2 escape copper (DF40 return stitching) — appended AFTER the footprint
-    # loop and after every silk pass so the segment/via nodes are invisible to
-    # the refdes/descriptor scans (dedicated transparency test).  Per-kind uids
-    # (stitch-via / stitch-seg) ride the existing uid() sequencer, so every
-    # pre-existing uuid stream stays byte-identical.  RECONCILED with GAP1
-    # (28f8e15): the In1.Cu GND plane is GAP1's board-interior zone above —
-    # the escape generator emits NO zone of its own; its vias LAND ON that
-    # plane (escape.py verifies coverage/void non-overlap; the return-stitch
-    # gate re-verifies independently).
     for c in getattr(model, "copper", None) or []:
         if c["kind"] == "via":
             doc.append(_via_node(c, uid))
         elif c["kind"] == "segment":
             doc.append(_segment_node(c, uid))
-        else:  # pragma: no cover - generator emits only the two kinds
+        else:
             raise ValueError(f"unknown escape copper kind {c['kind']!r}")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -194,14 +146,7 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
     return out_path
 
 
-# ---- .kicad_pro net classes + .kicad_dru ----------------------------------------
-
 def _design_settings() -> dict:
-    """The COMPLETE KiCad-10 board.design_settings block. KiCad's GUI writes
-    every one of these keys on save; emitting them all here means opening the
-    project in KiCad changes nothing (build twice -> clean .kicad_pro). Carrier-
-    specific rule minimums are kept; all other values are the KiCad 10 defaults
-    so the block round-trips byte-stable."""
     return {
         "defaults": {
             "apply_defaults_to_fp_barcodes": False,
@@ -417,8 +362,6 @@ def _design_settings() -> dict:
 
 
 def _class_dict(name: str, geo, *, is_power: bool, is_default: bool) -> dict:
-    """A KiCad net_settings class dict. Diff classes carry the impedance
-    geometry; POWER widens the track; Default is the JLC minimum."""
     track = DEFAULT_TRACK_MM
     clearance = DEFAULT_CLEARANCE_MM
     dp_w = 0.2
@@ -452,23 +395,12 @@ def _class_dict(name: str, geo, *, is_power: bool, is_default: bool) -> dict:
 
 
 def write_project(model: PcbModel, pro_path: Path) -> None:
-    """Add net_settings (classes + per-net patterns) to the carrier .kicad_pro,
-    preserving the existing keys (ERC severities). The schematic flow owns the
-    rest of the project file; this is additive."""
     data: dict = {}
     if pro_path.exists():
         data = json.loads(pro_path.read_text())
     data.setdefault("meta", {"filename": pro_path.name, "version": 3})
     data.setdefault("erc", {"rule_severities": {"pin_not_driven": "warning"}})
 
-    # board.design_settings — the COMPLETE KiCad-10 design-settings block, not a
-    # minimal subset. KiCad's GUI rewrites the WHOLE block (defaults / severities
-    # / rules / teardrops / track+via+diff-pair tables / tuning / zones) on the
-    # first save, so a partial emit shows the project DIRTY after every build/
-    # open. Emitting the full block (the values KiCad would write) makes a GUI
-    # open a no-op: build twice -> git diff empty on the .kicad_pro. The carrier
-    # rules (min_hole_clearance 0.2 for USB-C NPTH posts, min_hole_to_hole 0.25)
-    # are kept; every other key matches the KiCad 10 default so it round-trips.
     data["board"] = data.get("board", {})
     data["board"]["design_settings"] = _design_settings()
 
@@ -486,16 +418,11 @@ def write_project(model: PcbModel, pro_path: Path) -> None:
         "netclass_assignments": None,
         "netclass_patterns": patterns,
     }
-    # a minimal pcbnew block so KiCad does not complain about a bare project
     data.setdefault("pcbnew", {"last_paths": {}, "page_layout_descr_file": ""})
     pro_path.write_text(json.dumps(data, indent=2) + "\n")
 
 
 def write_dru(model: PcbModel, dru_path: Path) -> None:
-    """A board-level .kicad_dru: default clearance/width minimums + the
-    impedance-controlled diff geometry per class + a POWER track-width floor.
-    Distinct from the schematic-flow layout_constraints.kicad_dru (which is the
-    typed-port table); this one is keyed on the PCB net classes."""
     L = [
         "(version 1)",
         "",
@@ -536,16 +463,8 @@ def write_dru(model: PcbModel, dru_path: Path) -> None:
     dru_path.write_text("\n".join(L))
 
 
-# ---- entry point -----------------------------------------------------------------
-
 def generate(*, run_drc: bool = True, two_side: bool = True,
              ratsnest: bool = True) -> dict:
-    """Build + write the PCB foundation. Returns a result dict (paths, counts,
-    drc verdict, LAW-5 ratsnest gate + images). ``two_side`` (default ON, the
-    JLCPCB both-sides assembly policy) pushes decoupling/small passives to the
-    bottom; set False for a forced single-side build (everything on top).
-    ``ratsnest`` (default ON) emits the per-side ratsnest images + runs the
-    LAW-5 placement gate on the SAME model (no rebuild)."""
     model = build_model(two_side=two_side)
 
     pcb_path = CARRIER / "Zynq_Carrier.kicad_pcb"
@@ -557,8 +476,6 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
     dru_path = CARRIER / "manufacturing" / "Zynq_Carrier_pcb.kicad_dru"
     write_dru(model, dru_path)
 
-    # fiducials are PCB-only synthetic footprints (GAP3) — not in board_parts()
-    # (the schematic-derived set), so add their count to keep placed == total.
     n_fid = sum(1 for i in model.insts
                 if i.footprint == FIDUCIAL_FOOTPRINT)
     result = {
@@ -578,26 +495,15 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         "return_stitch": None, "escape_lanes": None, "return_path": None,
         "fanout": None,
     }
-    # census read AFTER emit_pcb so thermal-via lattice events are counted
     from schgen.core import fallbacks as _fbk
     result["fallbacks"] = _fbk.census()
     result["stage_movement"] = dict(model.stage_moves)
-    # FAN-OUT CLEARANCE gate (D13 NO-ROUTING wave, REPORT-FIRST ratchet) — the
-    # intelligent-uniform placement floor: every multi-pin IC gets breathing room
-    # scaled to its pin count, measured to same-side FOREIGN parts only (own-cluster
-    # decoupling + DF40 plugs excluded). Runs on the SAME placed model (no rebuild).
     from schgen.verify import fanout_gate
     result["fanout"] = fanout_gate.check(model)
-    # T2 escape gates — return-stitch v2 (HARD) on the SAME model, with
-    # emitted-file parity against the .kicad_pcb just written; the escape-lane
-    # gate (HARD) on the Tier-2 plan; v1 return-path REPORT-only (the
-    # SoM-design fact, quoted verbatim in the board report — never in ok_all).
     from schgen.verify import escape_lane_gate, return_path_gate, return_stitch_gate
     result["return_stitch"] = return_stitch_gate.check(model, pcb_path)
     result["escape_lanes"] = escape_lane_gate.check(model)
     result["return_path"] = return_path_gate.check()
-    # the portable Tier-2 escape block artifact (ports + pairs + triage +
-    # the T1 composition-legalizer sidecar constraints), hash-keyed.
     if model.escape_plan is not None:
         block_path = CARRIER / "escape_block.json"
         payload = dict(model.escape_plan)
@@ -623,56 +529,25 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         mst = rn_mod.net_mst_edges(model, npp)
         result["ratsnest"] = rn_mod.generate(model, npp, mst)
         result["ratsnest_gate"] = ratsnest_gate.check(model, npp, mst)
-        # LAW-6 mechanical/use-case gate — runs on the SAME placed model (no
-        # rebuild) so its connector-edge/orientation + SoM-keepout verdict is
-        # exactly the board just emitted.
         result["placement_mech"] = placement_mech.check(model)
-        # LAW-6 connector hardening (catch the recurring orientation + spacing
-        # bug classes the other gates miss): 3D-model rotate must not flip the
-        # rendered opening vs the pads, and simultaneous-mate cable connectors
-        # (HDMI TX+RX) need an overmold gap.
         result["connector_model"] = connector_model_gate.check(model)
         result["connector_spacing"] = connector_spacing_gate.check(model)
-        # LAW-1 silk: no two VISIBLE refdes overprint on EITHER side (the
-        # _declutter_refdes invariant), proven on the just-emitted board file.
         from schgen.verify import refdes_overlap_gate
         result["refdes_silk"] = refdes_overlap_gate.check(
             pcb_path, enforce_bottom=True)
-        # PLACEMENT-CONTRACT gate (Phase L) — the datasheet intra-zone layout
-        # contract (hot loop / FB cluster / bulk_out / same-side / proximity ...)
-        # checked on the SAME placed model. HARD: a value-sorted zone (the "before"
-        # defect) FAILS here even under DRC=0 / ratsnest-pass. The gate runs on
-        # EVERY engine-WIRED sheet (``_WIRED_SHEETS`` — power + usb_pd today), not
-        # just power; the per-sheet results are merged into one verdict (ok = AND,
-        # summaries concatenated) so a regression on ANY wired sheet fails the board.
         from schgen.verify import placement_contract_gate, placement_flow_gate
         result["placement_contract"] = _check_wired_contracts(
             model, placement_contract_gate)
-        # COMPOSITION-LEVEL FLOW/FACING/FAR gate — the contract's EXTERNAL terms
-        # (power chain adjacency, output facing downstream, analog moat) checked
-        # on the whole placed board (zone centroids). HARD.
         result["placement_flow"] = placement_flow_gate.check(model)
-        # T1 COMPOSITION term ledger (ADVISORY, P2): every authored external
-        # term — wired or not — measured on the SAME model via the gate's own
-        # kernels, plus the D13 channel-demand table. A report, never a gate
-        # (decision D-5: the hard gates above remain the sole arbiters);
-        # ``schgen board`` writes it to reports/floorplan_composition.txt.
         from schgen.generate import floorplan_compose
         result["floorplan_composition"] = floorplan_compose.compose_report(
             model, npp=npp, mst=mst)
-        # CONTRACT COVERAGE (ADVISORY): check EVERY authored placement contract
-        # (wired or not) against the emitted board, not just the 3 _WIRED_SHEETS
-        # the hard gate covers. Surfaces the un-wired contracts whose authored
-        # SI/PI intent (decoupling <=2mm, ESD-at-connector, term-at-receiver) the
-        # placer does not yet enforce — so a silently-violated contract is VISIBLE
-        # every build instead of an inert comment. Report-only (the hard gate stays
-        # scoped to _WIRED_SHEETS); written to reports/contract_coverage.txt.
         result["contract_coverage"] = placement_contract_gate.coverage(model)
     from schgen.core import fallbacks as _fb_asm
     from schgen.generate import assembly as asm_mod
     try:
         result["assembly"] = asm_mod.generate(model)
-    except Exception as exc:  # noqa: BLE001 — reported by assembly.verdict
+    except Exception as exc:  # noqa: BLE001
         _fb_asm.record("assembly_generation_failed")
         result["assembly"] = {"ok": False, "error": str(exc)}
     if run_drc:
@@ -681,16 +556,10 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
 
 
 def run_pcb_drc(pcb_path: Path) -> dict:
-    """Run kicad-cli pcb drc; classify violations. Unrouted-net violations are
-    expected (no routing); clearance/overlap errors are not."""
     import subprocess
     import tempfile
     with tempfile.TemporaryDirectory(prefix="schgen_drc_") as td:
         rpt = Path(td) / "drc.json"
-        # --refill-zones: the emitted zones are UNFILLED on disk (byte
-        # determinism); DRC computes the real fill in memory so the plane/pour
-        # connectivity + clearance are actually checked (the file is NOT
-        # rewritten — no --save-board).
         proc = subprocess.run(
             ["kicad-cli", "pcb", "drc", "--format", "json",
              "--severity-error", "--severity-warning", "--refill-zones",
@@ -711,7 +580,6 @@ def run_pcb_drc(pcb_path: Path) -> dict:
         by_type[t] = by_type.get(t, 0) + 1
         if t not in ("silk_overlap", "silk_over_copper",
                      "courtyards_overlap", "footprint_type_mismatch"):
-            # collect a few non-silk violation descriptions for the report
             if len(other) < 12:
                 other.append(t)
     return {

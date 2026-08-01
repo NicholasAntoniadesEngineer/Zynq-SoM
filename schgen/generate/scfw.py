@@ -1,32 +1,3 @@
-"""Generated SC bring-up firmware SCAFFOLD (Stream E, Zephyr-abstracted).
-
-``schgen scfw`` (also run by ``schgen board``) writes a portable-C bring-up
-firmware scaffold for the SoM STM32 system controller into
-``carrier/firmware/sc/``.  Where ``schgen firmware`` emits the hardware
-CONTRACT (the ``zynq_carrier_contract.h`` #defines: J1 pins, GPIOs, I2C
-addresses, the EN map), THIS generator emits the IMPLEMENTATION that consumes
-that contract:
-
-- a rail-sequencing STATE MACHINE derived from
-  ``bringup_facts.regulator_chain`` (enable order, PG-wait per stage, the
-  always-on rails, then the SY6280 module gates) — a STEP TABLE plus a
-  portable STEPPER, *not* hard-coded HAL;
-- TABLES: the I2C device map, the GPIO/EN map (rail + module enables), the
-  TPS3823 watchdog kick (C2: NEVER armed/kicked during power-up), and the
-  FUSB302B PD negotiate entry points;
-- a HAL ABSTRACTION header (``sc_hal.h``) declaring the platform ops
-  (``gpio_set``, ``i2c_xfer``, ``delay_ms`` ...) a Zephyr port implements,
-  plus a Zephyr-friendly drop-in description (devicetree overlay + Kconfig/
-  board-port note + a commented reference port).
-
-The generated C is TOOLCHAIN-AGNOSTIC: it does NOT ``#include`` any Zephyr
-header — it only calls the ``sc_hal`` abstraction, which a Zephyr port backs.
-
-Deterministic: same inputs -> byte-identical output (no timestamps).  Every
-table value is read from the authored subsystem netlists via
-``bringup_facts`` (and through it, the live SoM U9 pin map) — never hand-typed.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -39,9 +10,6 @@ from schgen.generate import bringup_facts as bf
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = PROJECT_ROOT / "firmware" / "sc"
 
-# Every table/state machine below reads the FULL bring-up complement; a project
-# that lacks any of these sheets has no SC bring-up scaffold to generate — the
-# board build SKIPs it loudly (missing_requirements), never crashes.
 REQUIRED_SHEETS = ("power", "power_mon", "bringup_en", "bringup_modules",
                    "bringup_rails", "usb_pd", "board_services",
                    "bringup_en_modules")
@@ -50,7 +18,7 @@ REQUIRED_SHEETS = ("power", "power_mon", "bringup_en", "bringup_modules",
 def missing_requirements() -> list[str]:
     return missing_subsystems(REQUIRED_SHEETS)
 
-CONTRACT_HEADER = "zynq_carrier_contract.h"   # the SC contract (schgen firmware)
+CONTRACT_HEADER = "zynq_carrier_contract.h"
 
 SOURCES = (
     "carrier/firmware/zynq_carrier_contract.h (the SC hardware contract)",
@@ -69,11 +37,7 @@ class ScfwError(ValueError):
     pass
 
 
-# ---- small emit helpers ----------------------------------------------------------
-
 def _banner(title: str) -> list[str]:
-    # each line is a SELF-CONTAINED block comment (no spanning), so the banner
-    # can never swallow following code and gcc -Wcomment stays quiet.
     rule = "/* " + "=" * 72 + " */"
     return [rule, f"/* {title:<72} */", rule]
 
@@ -92,11 +56,7 @@ def _file_header(fname: str, what: str, device: str) -> list[str]:
     return L
 
 
-# ---- the model the scaffold is built from ----------------------------------------
-
 class Model:
-    """Everything the scaffold needs, read once from the netlists."""
-
     def __init__(self) -> None:
         power = load_subsystem("power").circuit
         pmon = load_subsystem("power_mon").circuit
@@ -121,15 +81,10 @@ class Model:
             raise ScfwError("board_services no longer carries a TPS3823 -- "
                             "the watchdog hooks would be stale")
 
-        # always-on rails (pre-PD): every rail consumed but never PRODUCED by a
-        # sequenced regulator stage, plus the SC's own +3V3_SC. Derived, not
-        # hard-coded: a rail is "always-on" if no stage's rail_out names it.
         produced = {st.rail_out for st in self.chain}
         consumed = {st.rail_in for st in self.chain}
         self.always_on = sorted((consumed - produced) | {"+3V3_SC"})
 
-
-# ---- step-table enum / identifiers -----------------------------------------------
 
 def _rail_enum(rail_out: str) -> str:
     return "SC_RAIL_" + bf.c_ident(rail_out).lstrip("_")
@@ -138,10 +93,6 @@ def _rail_enum(rail_out: str) -> str:
 def _module_enum(enable: str) -> str:
     return "SC_MOD_" + bf.c_ident(enable.removeprefix("EN_"))
 
-
-# ==================================================================================
-#  sc_hal.h  -- the platform abstraction a Zephyr (or bare-metal) port implements
-# ==================================================================================
 
 def gen_sc_hal_h(m: Model) -> str:
     L = _file_header("sc_hal.h",
@@ -216,9 +167,6 @@ def gen_sc_hal_h(m: Model) -> str:
         "}",
         "",
     ]
-    # NOTE: this whole block is ONE C comment.  It must contain no nested
-    # '/*' or '*/' (illegal/ambiguous in C) -- so the devicetree snippet below
-    # uses '//' for its own remarks and the prose avoids the '/*' digraph.
     L += _banner("ZEPHYR PORT NOTE  (how this drops into a Zephyr app)")
     L += [
         "/*",
@@ -268,10 +216,6 @@ def gen_sc_hal_h(m: Model) -> str:
     return "\n".join(L) + "\n"
 
 
-# ==================================================================================
-#  sc_tables.h / sc_tables.c  -- the netlist-derived tables
-# ==================================================================================
-
 def gen_sc_tables_h(m: Model) -> str:
     L = _file_header("sc_tables.h",
                      "netlist-derived SC tables (rails, I2C, EN map, monitors)",
@@ -280,7 +224,6 @@ def gen_sc_tables_h(m: Model) -> str:
           "#include <stdint.h>", "#include <stdbool.h>",
           "#include \"sc_hal.h\"", ""]
 
-    # rail enum
     L += _banner("Rail bring-up step table (order = the regulator chain)")
     L += ["/* The order below IS the power.py regulator chain: each stage's     */",
           "/* input is the previous stage's output, so it is not optional       */",
@@ -293,7 +236,6 @@ def gen_sc_tables_h(m: Model) -> str:
     L.append("} sc_rail_id_t;")
     L.append("")
 
-    # rail step struct
     L += [
         "/* One sequenced rail stage.  `en_override` is the SC's VETO GPIO on   */",
         "/* the EN cell (EN = DIP AND override): drive it LOW to force the rail */",
@@ -321,7 +263,6 @@ def gen_sc_tables_h(m: Model) -> str:
         "",
     ]
 
-    # module gates
     L += _banner("Module load-switch gate table (SY6280, current-limited)")
     L += ["/* Each module rail is gated by a SY6280 behind its own EN cell and  */",
           "/* current limit (BRINGUP.md Stage 3/4).  These are enabled AFTER    */",
@@ -350,7 +291,6 @@ def gen_sc_tables_h(m: Model) -> str:
         "",
     ]
 
-    # I2C device map
     L += _banner("I2C device map (bus = STM32_I2C2; 7-bit addresses)")
     L += ["/* The bus is a firmware BIT-BANG on PA4/PA5 (the contract's         */",
           "/* ZC_I2C_BITBANG_* lines): the real I2C2 AF pins are the on-module  */",
@@ -370,8 +310,6 @@ def gen_sc_tables_h(m: Model) -> str:
 
 
 def _i2c_rows(m: Model) -> list[tuple[str, str, str]]:
-    """(macro-or-literal addr expr, label, contract macro) rows for the device
-    map.  We reference the contract #defines so the two cannot drift."""
     rows: list[tuple[str, str, str]] = [
         ("bring-up override expander (TCA9535)", "ZC_I2C_ADDR_TCA9535"),
         ("USB-PD PHY (FUSB302B)", "ZC_I2C_ADDR_FUSB302B"),
@@ -392,14 +330,11 @@ def gen_sc_tables_c(m: Model) -> str:
     L += [f"#include \"{CONTRACT_HEADER}\"",
           "#include \"sc_tables.h\"", ""]
 
-    # rail steps
     L.append("const sc_rail_step_t sc_rail_steps[SC_RAIL_COUNT] = {")
     for st in m.chain:
         ovr = _override_gpio(m, st)
         pmon_addr, pmon_ch, shunt = _telemetry(m, st)
         mv = round(st.vout * 1000) if st.vout is not None else 0
-        # settle time: bucks ramp slower than the fixed LDO; both well within
-        # the SY6280/INA3221 ready time. Conservative, sequencing-only value.
         settle = 5
         L.append("    {")
         L.append(f"        .id = {_rail_enum(st.rail_out)},")
@@ -415,14 +350,12 @@ def gen_sc_tables_c(m: Model) -> str:
     L.append("};")
     L.append("")
 
-    # always-on rails
     L.append("const char *const sc_always_on_rails[SC_ALWAYS_ON_COUNT] = {")
     for r in m.always_on:
         L.append(f"    \"{r}\",")
     L.append("};")
     L.append("")
 
-    # module gates
     bit_of = _tca_bit_map(m)
     L.append("const sc_module_gate_t sc_module_gates[SC_MOD_COUNT] = {")
     for g in m.gates:
@@ -441,7 +374,6 @@ def gen_sc_tables_c(m: Model) -> str:
     L.append("};")
     L.append("")
 
-    # i2c device map
     L.append("const sc_i2c_dev_t sc_i2c_devices[SC_I2C_DEV_COUNT] = {")
     for _macro, label, cmac in _i2c_rows(m):
         L.append(f"    {{ \"{label}\", {cmac} }},")
@@ -450,13 +382,8 @@ def gen_sc_tables_c(m: Model) -> str:
 
 
 def _override_gpio(m: Model, st: bf.RegulatorStage) -> str:
-    """The C initializer for the rail's veto GPIO, referencing the contract's
-    ZC_RAILk_OVERRIDE_GPIO_* macros (so the (port,pin) cannot drift). Index k =
-    position in the chain (same order schgen firmware emits)."""
     k = m.chain.index(st)
     cell = m.rail_cells.get(st.enable)
-    # the contract only emits the override macro when the EN cell has a mapped
-    # rail-override GPIO; mirror that (else a no-veto sentinel: port 0).
     from schgen.generate.firmware import RAIL_OVERRIDE_GPIO
     if cell is not None and cell.override_net in RAIL_OVERRIDE_GPIO:
         return (f"{{ .port = ZC_RAIL{k}_OVERRIDE_GPIO_PORT, "
@@ -465,9 +392,6 @@ def _override_gpio(m: Model, st: bf.RegulatorStage) -> str:
 
 
 def _telemetry(m: Model, st: bf.RegulatorStage) -> tuple[str, int, int]:
-    """(addr-macro-expr, channel, shunt_mohm) of the INA3221 channel that
-    senses this rail -- looked up by the rail name in the monitor channel map.
-    Returns ('0', 0, 0) if the rail is not monitored."""
     from schgen.generate.firmware import _shunt_mohm
     pmon = load_subsystem("power_mon").circuit
     for k, mon in enumerate(m.monitors, 1):
@@ -479,10 +403,6 @@ def _telemetry(m: Model, st: bf.RegulatorStage) -> tuple[str, int, int]:
 
 
 def _tca_bit_map(m: Model) -> dict[str, int]:
-    """EN_* net -> TCA9535 output-word bit index, from the expander port map.
-    P00=bit0 ... P17=bit15 (same convention as the contract header)."""
-    # the override net feeding each gate's EN cell sits on a TCA9535 Pxx port;
-    # we read it from bringup_en_modules joined to the expander ports.
     enm = load_subsystem("bringup_en_modules").circuit
     cell_of = {c.enable: c for c in bf.en_cells(enm)}
     out: dict[str, int] = {}
@@ -494,10 +414,6 @@ def _tca_bit_map(m: Model) -> dict[str, int]:
                 out[g.enable] = bit
     return out
 
-
-# ==================================================================================
-#  sc_seq.h / sc_seq.c  -- the portable rail-sequencing stepper
-# ==================================================================================
 
 def gen_sc_seq_h(m: Model) -> str:
     L = _file_header("sc_seq.h", "portable rail-sequencing state machine",
@@ -652,10 +568,6 @@ def gen_sc_seq_c(m: Model) -> str:
     return "\n".join(L) + "\n"
 
 
-# ==================================================================================
-#  sc_wdt.h / sc_wdt.c  -- TPS3823 watchdog (C2: not during power-up)
-# ==================================================================================
-
 def gen_sc_wdt_h(m: Model) -> str:
     L = _file_header("sc_wdt.h", "TPS3823 external watchdog (WDI strobe)",
                      m.device)
@@ -710,10 +622,6 @@ def gen_sc_wdt_c(m: Model) -> str:
     ]
     return "\n".join(L) + "\n"
 
-
-# ==================================================================================
-#  sc_pd.h / sc_pd.c  -- FUSB302B PD negotiate entry points
-# ==================================================================================
 
 def gen_sc_pd_h(m: Model) -> str:
     L = _file_header("sc_pd.h", "FUSB302B USB-PD negotiate hooks", m.device)
@@ -782,10 +690,6 @@ def gen_sc_pd_c(m: Model) -> str:
     ]
     return "\n".join(L) + "\n"
 
-
-# ==================================================================================
-#  sc_rtc.h / sc_rtc.c  -- RV-3028 trickle charger (rechargeable ML1220 backup)
-# ==================================================================================
 
 def gen_sc_rtc_h(m: Model) -> str:
     L = _file_header("sc_rtc.h", "RV-3028 RTC trickle charger (ML1220 backup)",
@@ -893,10 +797,6 @@ def gen_sc_rtc_c(m: Model) -> str:
     return "\n".join(L) + "\n"
 
 
-# ==================================================================================
-#  sc_app.c  -- a tiny example main wiring it together (portable, HAL-backed)
-# ==================================================================================
-
 def gen_sc_app_c(m: Model) -> str:
     L = _file_header("sc_app.c", "example bring-up app (portable, HAL-backed)",
                      m.device)
@@ -936,10 +836,6 @@ def gen_sc_app_c(m: Model) -> str:
     ]
     return "\n".join(L) + "\n"
 
-
-# ==================================================================================
-#  sc_hal_zephyr.c.txt  -- a COMMENTED reference Zephyr port (no zephyr headers)
-# ==================================================================================
 
 def gen_zephyr_port_ref(m: Model) -> str:
     L = [
@@ -1017,10 +913,6 @@ def gen_zephyr_port_ref(m: Model) -> str:
     ]
     return "\n".join(L) + "\n"
 
-
-# ==================================================================================
-#  README + manifest of the scaffold
-# ==================================================================================
 
 def gen_readme(m: Model, files: list[str]) -> str:
     L = [
@@ -1105,11 +997,6 @@ def gen_readme(m: Model, files: list[str]) -> str:
     return "\n".join(L) + "\n"
 
 
-# ==================================================================================
-#  the orchestrator
-# ==================================================================================
-
-# emit order is fixed (deterministic); name -> generator
 _FILES = [
     ("sc_hal.h", gen_sc_hal_h),
     ("sc_tables.h", gen_sc_tables_h),
@@ -1128,13 +1015,10 @@ _FILES = [
 
 
 def _ascii(text: str) -> str:
-    # pure-ASCII for embedded toolchains (mirrors firmware.py/devicetree.py)
     return text.replace("—", "--").replace("→", "->")
 
 
 def generate(out_dir: Path = DEFAULT_OUT) -> list[Path]:
-    """Build + write the whole SC firmware scaffold into ``out_dir``.  Returns
-    the written paths in deterministic emit order."""
     m = Model()
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []

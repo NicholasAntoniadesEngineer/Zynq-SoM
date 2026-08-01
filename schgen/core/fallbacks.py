@@ -1,27 +1,3 @@
-"""FALLBACK EVENT REGISTRY — every degraded/fallback path in the placement
-pipeline is a NAMED event recorded HERE when it fires (governance U2).
-
-The defect class this closes: silent fallbacks. motor_sense sat on the legacy
-zone packer for WEEKS (its template solver was infeasible and the None return
-fell through without a trace, 12 contract terms adrift). That legacy branch is
-now DELETED — a solver-infeasible contract zone raises ``ZoneInfeasible``
-(stage_templates), a loud build failure, per the user law: no backwards
-compatibility, no legacy, no silent fallbacks. What REMAINS registered here
-are the surviving alternate paths that are legitimate correctness choices
-(rejecting an ILLEGAL compaction) or bounded-search caps — and every one must
-be LOUD: ``schgen board`` prints the census, writes it into
-``board_verdicts.json`` and the ratchet gate
-(``schgen/verify/fallback_gate.py``) FAILS the build the moment any count
-exceeds its committed per-project baseline — a path silently degrading more
-often becomes a same-day build failure.
-
-Recording an UNREGISTERED name raises: a new fallback path must be declared
-here (name, stage, meaning) before it may fire. ``build_model`` resets the
-recorder at entry; the census is read after board emission, so events fired
-anywhere in the build_model -> emit_pcb window are counted. Single writer
-(the build runs the placement pipeline on one thread), deterministic order,
-no caching.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -170,9 +146,7 @@ def record(name: str) -> None:
 
 
 def snapshot() -> tuple[str, ...]:
-    """Freeze the event log so a REJECTED exploratory pass can be rolled back —
-    the census must describe the EMITTED board, never a search the guard threw
-    away. Paired with ``restore``; the log is append-only otherwise."""
+    """Freeze the log so a REJECTED exploratory pass can be rolled back."""
     return tuple(_EVENTS)
 
 

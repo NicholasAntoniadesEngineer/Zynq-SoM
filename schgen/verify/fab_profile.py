@@ -1,53 +1,3 @@
-"""fab_profile — DFM manufacturability gate (GAP3): the emitted board's tightest
-demanded geometry vs a pinned fab CAPABILITY profile.
-
-A board that DESIGN-RULE-passes KiCad's own DRC can still be un-manufacturable at
-a given fab: KiCad enforces the rules the PROJECT sets (``.kicad_pro`` +
-``.kicad_dru``), not the FAB's physical floor. This gate closes that gap — it
-measures what the board ACTUALLY demands (from the emitted ``.kicad_pcb`` geometry
-AND the effective project design-rule floors) and HARD-FAILS if any metric is
-FINER than the fab can produce. It never relaxes a rule (LAW 4); it is a second,
-independent oracle that DRC cannot be (DRC has no notion of a house profile).
-
-Per-metric, board-demand vs profile:
-  - min trace width      (emitted segment widths + the .dru ``track_width`` floor)
-  - min clearance        (the .dru ``clearance`` floor)
-  - min drill            (every emitted pad/via drill)
-  - min via diameter     (every emitted via outer diameter)
-  - min via annular      ((via_dia - drill)/2 over every emitted VIA)
-  - min hole-to-hole     (the .kicad_pro ``min_hole_to_hole`` floor)
-
-VIA vs PTH-PAD ANNULAR — deliberately distinct. JLC's headline "min annular ring
-0.13 mm" is the floor for a DRILLED COMPONENT PAD (a PTH pad's copper ring). A
-plated VIA is a separate capability: JLC's preferred via is 0.20 mm hole / 0.35 mm
-diameter, i.e. 0.075 mm annular per side — so a 0.075 mm VIA annular is exactly
-JLC's preferred via, NOT a violation. This gate checks the VIA annular against the
-0.075 mm via floor; the ``.kicad_pro`` ``min_via_annular_width`` (a permissive DRC
-floor, 0.05 mm) is reported for context but is NOT the fab demand — the emitted via
-copper is.
-
-PROFILE — JLCPCB standard 4-layer service (1 oz outer copper), cited:
-  min trace/space  0.09 / 0.09 mm  (3.5 mil)
-  min via drill    0.15 mm ;  min via diameter 0.25 mm ; preferred via 0.20/0.35 mm
-  min via annular  0.075 mm  (per side, from the 0.20/0.35 preferred via)
-  min drill        0.15 mm  (mechanical/PTH)
-  min hole-to-hole 0.15 mm
-  (PTH-pad annular 0.13 mm — recorded but not a metric here; the board emits no
-   sub-0.13 mm PTH-pad annular, its component pads are 0603+ standard land.)
-  Source: JLCPCB "PCB Manufacturing & Assembly Capabilities"
-  (https://jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A
-  (min via hole 0.15 mm; preferred via 0.20/0.35 mm; PTH annular 0.13 mm),
-  retrieved 2026-07.
-
-This PASSES on the current board (drawn to a conservative 0.2032 mm track /
-0.3 mm via-drill / 0.45 mm via-dia = 0.075 mm via annular — all AT OR COARSER than
-the JLC floor) and the gate reports each margin honestly. It exists so a future
-placement/routing/escape change that quietly demands sub-fab geometry FAILS the
-build instead of shipping an unbuildable board.
-
-Run standalone:  ``python3 -m schgen.verify.fab_profile``
-"""
-
 from __future__ import annotations
 
 import re
@@ -64,13 +14,8 @@ _DRU = PROJECT_ROOT / "manufacturing" / "Zynq_Carrier_pcb.kicad_dru"
 _PRO = PROJECT_ROOT / "Zynq_Carrier.kicad_pro"
 
 
-# ---- the fab capability profile (PINNED, CITED) --------------------------------
-
 @dataclass(frozen=True)
 class FabProfile:
-    """A fab's physical manufacturing floor. Every field is the FINEST feature
-    the fab can reliably produce; the board must stay AT OR ABOVE each one."""
-
     name: str
     min_trace_mm: float
     min_clearance_mm: float
@@ -81,14 +26,13 @@ class FabProfile:
     source: str
 
 
-# JLCPCB standard 4-layer (1 oz), cited above.
 JLCPCB_4L = FabProfile(
     name="JLCPCB standard 4-layer (1oz)",
     min_trace_mm=0.09,
     min_clearance_mm=0.09,
     min_drill_mm=0.15,
     min_via_dia_mm=0.25,
-    min_via_annular_mm=0.075,   # per side; JLC preferred via 0.20/0.35 mm
+    min_via_annular_mm=0.075,
     min_hole_to_hole_mm=0.15,
     source="JLCPCB PCB Manufacturing & Assembly Capabilities "
            "(jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; "
@@ -96,21 +40,15 @@ JLCPCB_4L = FabProfile(
 )
 
 
-# ---- what the board DEMANDS (measured, never hardcoded) ------------------------
-
 @dataclass
 class BoardDemand:
-    """The finest geometry the emitted board actually asks for. ``None`` where the
-    board carries no such feature yet (e.g. no routed tracks -> min_trace only
-    from the .dru floor)."""
-
-    min_trace_mm: float | None = None     # tightest of (emitted segments, .dru)
-    min_clearance_mm: float | None = None  # .dru clearance floor
-    min_drill_mm: float | None = None     # smallest emitted pad/via drill
-    min_via_dia_mm: float | None = None   # smallest emitted via outer dia
-    min_via_annular_mm: float | None = None  # min (via_dia-drill)/2 over EMITTED vias
-    min_hole_to_hole_mm: float | None = None  # .kicad_pro floor
-    pro_via_annular_mm: float | None = None   # .kicad_pro permissive DRC floor (info)
+    min_trace_mm: float | None = None
+    min_clearance_mm: float | None = None
+    min_drill_mm: float | None = None
+    min_via_dia_mm: float | None = None
+    min_via_annular_mm: float | None = None
+    min_hole_to_hole_mm: float | None = None
+    pro_via_annular_mm: float | None = None
     n_segments: int = 0
     n_vias: int = 0
     n_drills: int = 0
@@ -133,9 +71,6 @@ def _pro_rule(pro_text: str, key: str) -> float | None:
 
 def measure_board(pcb_path: Path = _PCB, dru_path: Path = _DRU,
                   pro_path: Path = _PRO) -> BoardDemand:
-    """Scan the emitted board + its effective design-rule floors. Self-contained
-    (no dependence on the in-process model) so the gate is an independent oracle
-    against exactly the file a fab would receive."""
     d = BoardDemand()
     if not pcb_path.exists():
         return d
@@ -168,7 +103,6 @@ def measure_board(pcb_path: Path = _PCB, dru_path: Path = _DRU,
                     via_annuli.append(round((dia - drill) / 2.0, 6))
             elif head == Sym("pad"):
                 dr = sexpr.find(sub, "drill")
-                # a pad drill may be `(drill 0.3)` or `(drill oval 0.3 0.5)`
                 if dr:
                     nums = [float(x) for x in dr[1:]
                             if isinstance(x, (int, float))]
@@ -193,16 +127,11 @@ def measure_board(pcb_path: Path = _PCB, dru_path: Path = _DRU,
     d.min_drill_mm = min(drills) if drills else None
     d.min_via_dia_mm = min(via_dias) if via_dias else None
 
-    # VIA annular = the tightest ring the board ACTUALLY emitted (measured copper),
-    # NOT the .kicad_pro permissive DRC floor (which is only what KiCad would ALLOW,
-    # not what is on the board). The pro floor is carried for context only.
     d.min_via_annular_mm = min(via_annuli) if via_annuli else None
     d.pro_via_annular_mm = _pro_rule(pro_text, "min_via_annular_width")
     d.min_hole_to_hole_mm = _pro_rule(pro_text, "min_hole_to_hole")
     return d
 
-
-# ---- the gate ------------------------------------------------------------------
 
 @dataclass
 class FabResult:
@@ -210,7 +139,7 @@ class FabResult:
     profile: FabProfile
     demand: BoardDemand
     rows: list[tuple[str, float | None, float, bool]] = field(
-        default_factory=list)   # (metric, board_demand, fab_floor, ok)
+        default_factory=list)
     errors: list[str] = field(default_factory=list)
 
     def report(self) -> str:
@@ -243,8 +172,6 @@ class FabResult:
         return "\n".join(L)
 
 
-# a metric passes when the board's demand is >= the fab floor (coarser or equal).
-# A demand of None (no such feature emitted) trivially passes.
 _METRICS = (
     ("min trace width", "min_trace_mm", "min_trace_mm"),
     ("min clearance", "min_clearance_mm", "min_clearance_mm"),
@@ -254,8 +181,6 @@ _METRICS = (
     ("min hole-to-hole", "min_hole_to_hole_mm", "min_hole_to_hole_mm"),
 )
 
-# floating-point slack so an exact-equality design (demand == floor) never
-# false-fails on a representation wobble.
 _EPS = 1e-6
 
 
@@ -284,7 +209,6 @@ def check(profile: FabProfile = JLCPCB_4L,
 def run(rep_dir: Path, profile: FabProfile = JLCPCB_4L,
         pcb_path: Path = _PCB, dru_path: Path = _DRU,
         pro_path: Path = _PRO) -> FabResult:
-    """check() + write carrier/reports/fab_profile.txt. Deterministic."""
     res = check(profile, pcb_path, dru_path, pro_path)
     rep_dir.mkdir(parents=True, exist_ok=True)
     (rep_dir / "fab_profile.txt").write_text(res.report() + "\n")

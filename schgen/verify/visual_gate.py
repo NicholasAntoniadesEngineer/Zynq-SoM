@@ -1,19 +1,3 @@
-"""Visual gate: ZERO overlap of anything, ZERO crossings — no exemptions.
-
-Operates on schgen's emitted geometry primitives (the emit layer hands back a
-:class:`SheetGeometry` of everything it wrote, in page coordinates). Every text
-box (pin name/number, Reference, Value, label), every body outline, and every
-wire is checked pairwise. Two things touching in the render = FAIL. There are
-deliberately NO carve-outs: the old generator's validator exemptions (junctioned
-crossings, same-symbol text) are exactly where shorts and pile-ups hid.
-
-Allowed contacts (electrical necessity, not exemptions):
-- a wire ENDPOINT exactly on a pin point / another wire of the SAME net;
-- a junction dot at a same-net degree>=3 vertex (provided by the router, which
-  guarantees by construction that no two nets share a cell — so any wire-wire
-  contact here is same-net).
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -27,8 +11,8 @@ class Box:
     y0: float
     x1: float
     y1: float
-    kind: str      # body | pin_name | pin_number | reference | value | label
-    owner: str     # "U1", "label:STM32_USB_CC1", …
+    kind: str
+    owner: str
 
     def intersects(self, o: Box, pad: float = 0.0) -> bool:
         return (self.x0 - pad < o.x1 and self.x1 + pad > o.x0
@@ -80,7 +64,6 @@ _TEXT = {"pin_name", "pin_number", "reference", "value", "label"}
 
 
 def _cross(a: Seg, b: Seg) -> bool:
-    """Perpendicular interior crossing (endpoint touching excluded)."""
     if a.horizontal and b.vertical:
         h, v = a, b
     elif a.vertical and b.horizontal:
@@ -107,10 +90,6 @@ def _collinear_overlap(a: Seg, b: Seg) -> bool:
 
 
 def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
-    """Does (px, py) lie on orthogonal segment ``s``? With
-    ``interior_only`` the endpoints are excluded (strict interior); otherwise
-    the closed segment (endpoints included) is tested. The same point/segment
-    incidence the router enforces in cell space, in mm space here."""
     eps = 1e-6
     if s.horizontal:
         if abs(py - s.y0) > eps:
@@ -120,7 +99,7 @@ def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
         if abs(px - s.x0) > eps:
             return False
         lo, hi = sorted((s.y0, s.y1))
-    else:                                  # router emits only orthogonal segs
+    else:
         return False
     coord = px if s.horizontal else py
     if interior_only:
@@ -129,21 +108,10 @@ def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
 
 
 def _foreign_t_touch(a: Seg, b: Seg) -> tuple[float, float] | None:
-    """A different-net T-touch: an ENDPOINT of one wire sits ON the other
-    wire (interior OR endpoint) while the two wires belong to DIFFERENT nets.
-
-    This is the LAW-0 short the perpendicular-crossing test misses: a wire
-    that *stops exactly on* another net's wire (a tee, or an end-to-end butt
-    join) connects them in KiCad with no junction dot and no interior
-    crossing — overlap=0 and ERC=0 both stay silent. Same-net contacts are
-    legal (that is how the router grows one net's tree) and never flagged.
-    Returns the offending contact point, or None."""
     if a.net == b.net:
         return None
     for (ex, ey), other in (((a.x0, a.y0), b), ((a.x1, a.y1), b),
                             ((b.x0, b.y0), a), ((b.x1, b.y1), a)):
-        # endpoint-on-interior is unambiguous; endpoint-on-endpoint is also a
-        # short between different nets, so include the closed segment.
         if _point_on_seg(ex, ey, other, interior_only=False):
             return (ex, ey)
     return None
@@ -160,37 +128,30 @@ def check(
 ) -> VisualResult:
     res = VisualResult(ok=True)
 
-    # text/body vs text/body — nothing may touch anything it doesn't own
     bs = geo.boxes
     for i in range(len(bs)):
         for j in range(i + 1, len(bs)):
             a, b = bs[i], bs[j]
             if a.owner == b.owner and not (a.kind in _TEXT and b.kind in _TEXT):
-                continue  # a part's own texts may touch its body outline region
+                continue
             if a.owner == b.owner and a.kind in _TEXT and b.kind in _TEXT:
-                pass      # same part's two texts must still not overlap each other
+                pass
             if a.intersects(b, pad=clearance_mm):
                 res.ok = False
                 res.findings.append(
                     f"{a.kind}({a.owner}) overlaps {b.kind}({b.owner})")
 
-    # wires vs text/body
     for s in geo.wires:
         wb = _seg_box(s)
         for b in geo.boxes:
             if b.kind == "body" and "net:" in b.owner:
                 continue
-            # a net's OWN label is ATTACHED to the wire: zero-distance
-            # contact at the anchor is the attachment itself (modelled at
-            # exactly the wire half-width), never a visual defect. Real
-            # text-through-wire still flags; foreign labels stay strict.
             pad = -0.14 if (b.kind == "label"
                             and b.owner == f"label:{s.net}") else 0.0
             if b.kind in _TEXT and wb.intersects(b, pad=pad):
                 res.ok = False
                 res.findings.append(f"wire({s.net}) over {b.kind}({b.owner})")
 
-    # wire vs wire: crossings and different-net collinear overlap
     ws = geo.wires
     for i in range(len(ws)):
         for j in range(i + 1, len(ws)):
@@ -201,18 +162,10 @@ def check(
                     f"wires CROSS: {a.net} x {b.net} "
                     f"@({a.x0:.2f},{a.y0:.2f})-({b.x0:.2f},{b.y0:.2f})")
             if _collinear_overlap(a, b):
-                # cross-net collinear overlap = SHORT; SAME-net collinear overlap
-                # = a doubled-back / duplicated trace (a wire ON a wire), a LAW-1
-                # defect the router's BFS-completion can produce — previously the
-                # check was cross-net-only (HIGH-8) so same-net pile-ups passed.
                 res.ok = False
                 tag = ("same-net wire-over-wire" if a.net == b.net
                        else "collinear overlap")
                 res.findings.append(f"{tag}: {a.net} ~ {b.net}")
-            # different-net T-touch: an endpoint of one wire landing ON the
-            # other net's wire (tee or butt-join) is a short with no
-            # junction dot and no interior crossing — invisible to _cross /
-            # _collinear_overlap, the F2 hole.
             tt = _foreign_t_touch(a, b)
             if tt is not None:
                 res.ok = False
@@ -220,11 +173,6 @@ def check(
                     f"different-net T-touch: {a.net} endpoint on {b.net} "
                     f"@({tt[0]:.2f},{tt[1]:.2f})")
 
-    # junction net-identity: a junction dot connects EVERY wire incident at its
-    # point in KiCad, so if two of those wires are different nets the dot is a
-    # SHORT. The gate previously NEVER received the junctions (trusting an
-    # unverified router invariant — CRITICAL-1); now every incident wire at a
-    # junction must share one net, else FAIL (LAW 0).
     for jn in geo.junctions:
         nets = {s.net for s in geo.wires
                 if _point_on_seg(jn.x, jn.y, s, interior_only=False)}

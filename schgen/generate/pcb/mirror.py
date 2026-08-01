@@ -1,36 +1,3 @@
-"""KiCad-EXACT chiral mirror of a .kicad_mod for bottom-side (B.Cu) emission.
-
-pcbnew 10.0.2 GROUND TRUTH (``FOOTPRINT::Flip`` LEFT_RIGHT about the footprint
-origin — derived by flipping real parts (AP2112K SOT-23-5 at 0/37/90,
-CP2102N QFN24 with rot-90 oval pads at 30) and reading both the runtime pad
-objects and the saved board file):
-
-* every stored LOCAL coordinate:   ``y -> -y``   (x is NOT touched),
-* every stored LOCAL angle:        ``a -> -a``   (pad and text ``(at)``),
-* the instance placement rotation: ``theta -> (180 - theta) % 360``,
-* layer tokens F.* <-> B.* and ``(justify mirror)`` on text glyphs — applied
-  at embed time by ``embed._flip_to_bottom`` exactly as for the achiral-swap
-  population (this module NEVER touches layers),
-* the ``(model ...)`` 3D node is untouched (KiCad renders back-side flips).
-
-KiCad loads a footprint side-blind (pad center = fp_at + R_cw(fp_rot)·local),
-so a document mirrored here and placed at ``(180 - t) % 360`` lands the exact
-X-mirror of the part's top-side pattern about its origin:
-``R_cw(180 - t)·M_y == M_x·R_cw(t)`` — the physically correct land pattern
-for a part flipped onto the bottom copper, for ANY (chiral) footprint.
-
-The mirrored document is materialised as a REAL .kicad_mod under
-``.mirrored_fp/`` at the repo root (derived cache, gitignored,
-content-addressed rewrite — deliberately OUTSIDE parts/, which gates census).
-A mirrored instance is then simply an instance whose ``mod_path`` IS the
-mirrored file: every geometry kernel (``_pad_boxes`` / ``_rot_pad_bbox`` /
-``_footprint_bbox`` / ``_inst_pad_geom`` / ``_mod_pads`` / ``has_thru_pads``)
-and the embed writer stay correct with zero side-dependent branches, and the
-board file carries exactly what a pcbnew flip of the library part would
-store. Any construct this transform has not been proven against raises
-``MirrorUnsupported`` — never a silent partial mirror.
-"""
-
 from __future__ import annotations
 
 import os
@@ -136,8 +103,6 @@ _FP_PLAIN = {
 
 
 def mirror_fp_doc(doc: list) -> None:
-    """In-place pcbnew-LEFT_RIGHT geometry mirror of a parsed ``(footprint``
-    document (layers untouched — ``embed._flip_to_bottom`` owns those)."""
     assert isinstance(doc, list) and doc and doc[0] == Sym("footprint"), \
         "mirror_fp_doc wants a parsed (footprint ...) document"
     name = doc[1] if len(doc) > 1 else "?"
@@ -176,8 +141,6 @@ _CACHE: dict[str, Path] = {}
 
 
 def mirrored_mod(src: Path) -> Path:
-    """The KiCad-exact mirrored twin of ``src`` as a real .kicad_mod under
-    parts/_mirrored/ (content-addressed rewrite; deterministic; cached)."""
     key = str(src)
     got = _CACHE.get(key)
     if got is not None:

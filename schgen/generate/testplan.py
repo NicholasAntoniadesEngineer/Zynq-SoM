@@ -1,34 +1,3 @@
-"""Generated acceptance TEST PLAN (downstream P4 + board-headroom DFM-3).
-
-``schgen testplan`` (also run by ``schgen board``) writes
-``carrier/docs/TEST_PLAN.md`` — a MEASURABLE bring-up/acceptance checklist
-that is purely a JOIN + FORMAT of three artifacts already derived from the
-authored netlists, with NO new electrical derivation:
-
-- :mod:`schgen.spice` — the analytic/ngspice spot-check gate. ``run()``
-  yields ~21 :class:`schgen.spice.Check` rows, each carrying an expected
-  value plus min/max limits (divider/RC/ISET/FB/EN-clamp/BOOT0). Each row
-  becomes one acceptance step with its expected/min/max columns.
-- :mod:`schgen.testpoints` — ``check_coverage()`` knows the probe pad
-  (``sheet:TP``) and net for every rail + key single-ended bus. The probe
-  pad joins onto each step's net.
-- :mod:`schgen.manual` + :mod:`schgen.bringup_facts` — the staged DIP
-  power-on sequence (Stage 0 power-off, Stage 1 first-power/always-on,
-  Stage 2 rails one DIP at a time, Stage 3 user IO, Stage 4 module load
-  switches, Stage 5 boot/debug). Every acceptance step is GROUPED under the
-  bring-up stage that brings its net live, so the test plan reads in the
-  exact order a technician closes DIPs.
-
-Output: a markdown table per stage —
-``step | net | probe pad | expected | min | max | [ ] measured | pass?`` —
-plus an I2C-scan expectation section (the strapped addresses, derived from
-the netlists) and a per-module functional checklist.
-
-Every column already exists upstream; this module only joins and formats.
-Deterministic: same inputs -> byte-identical output (no timestamps; the
-ordering is fully sorted / derived from the netlist topology).
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -43,8 +12,6 @@ from schgen.verify import spice, testpoints
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = PROJECT_ROOT / "docs" / "TEST_PLAN.md"
 
-# The six bring-up stages, in the order schgen.manual stages them. Each
-# acceptance step is assigned to exactly one of these by the net it tests.
 STAGE_TITLES = {
     0: "Stage 0 — power-off continuity",
     1: "Stage 1 — first power: PD + always-on +3V3_SC domain",
@@ -61,30 +28,15 @@ def _load_all() -> dict:
 
 
 def _net_of_check(ch) -> str | None:
-    """The primary net a spice Check measures, recovered from its name/detail.
-
-    The spice gate names every check after its net or part:
-      'divider +VIN ...'      -> +VIN
-      'RC STM32_NRST'         -> STM32_NRST
-      'SY7201 ISET (R3)'      -> (no net in name; pull from detail)
-      '+5V FB (+5V_SOM)'      -> +5V_SOM (rail in parens)
-      'EN clamp turn-on (U4)' -> the buck's output rail (from detail)
-      'BOOT0 strap VIH'       -> BOOT0_SET (from detail)
-    No new electrical work — only string recovery onto the existing net."""
     name = ch.name
-    # 'divider <NET> [...]' / 'RC <NET>'
     m = re.match(r"(?:divider|RC)\s+([^\s\[]+)", name)
     if m:
         return m.group(1)
-    # '<rail> FB (<RAIL>)' — the FB target rail in parens
     m = re.search(r"FB \(([^)]+)\)", name)
     if m:
         return m.group(1)
-    # BOOT0 strap -> the strap net the detail names
     if name.startswith("BOOT0"):
         return "BOOT0_SET"
-    # EN clamp (U4) — recover the rail off the detail's '<RAIL>=...V EN strap'
-    # or the leading '<RAIL>=...V -[' clause.
     m = re.search(r"([+\-][0-9A-Z_]+)=\S+V", ch.detail)
     if m:
         return m.group(1)
@@ -92,19 +44,14 @@ def _net_of_check(ch) -> str | None:
 
 
 def _probe_index(sheets) -> dict[str, str]:
-    """net -> 'sheet:TP, ...' probe-pad string, from the testpoint coverage
-    gate (it already maps every landed test point to its net + location)."""
     cov = testpoints.check_coverage(sheets)
     return {net: ", ".join(locs) for net, locs in cov.have.items()}
 
 
 def _rail_stage(sheets) -> dict[str, int]:
-    """net -> bring-up stage index, derived the SAME way schgen.manual stages
-    the board (regulator chain, EN cells, DIP map, module gates)."""
     circuits = {sc.name: sc.circuit for sc in sheets}
     stage: dict[str, int] = {}
 
-    # Stage 1: the always-on domain + the inlet rail are live at first power.
     stage["+3V3_SC"] = 1
     stage["+VIN"] = 1
     stage["+VBUS_IN"] = 1
@@ -112,22 +59,18 @@ def _rail_stage(sheets) -> dict[str, int]:
     stage["CP2102N_VBUS_SNS"] = 1
     stage["PD_OVP_SET"] = 1
 
-    # Stage 2: every regulator output rail (the power-tree chain).
     if "power" in circuits:
         try:
             chain = bf.regulator_chain(
                 circuits["power"], monitor=circuits.get("power_mon"))
             for st in chain:
                 stage.setdefault(st.rail_out, 2)
-                # the buck's PG / FB sense nets ride the same stage
-            # PG sense dividers (e.g. PG_1V8_G) follow their rail's stage
             for net in circuits["power"].nets.values():
                 if net.name.startswith("PG_"):
                     stage.setdefault(net.name, 2)
-        except Exception:  # noqa: BLE001 — never let a topology hiccup break
-            pass            # the doc; unstaged nets fall through to "general"
+        except Exception:  # noqa: BLE001
+            pass
 
-    # Stage 4: module load-switch outputs (SY6280 cells); USER_LED is stage 3.
     if "bringup_modules" in circuits:
         try:
             for g in bf.module_gates(circuits["bringup_modules"]):
@@ -135,15 +78,11 @@ def _rail_stage(sheets) -> dict[str, int]:
         except Exception:  # noqa: BLE001
             pass
 
-    # Stage 5: boot/reset straps.
     stage.setdefault("BOOT0_SET", 5)
     stage.setdefault("STM32_NRST", 5)
 
-    # Stage 6: the manually-gated board-services rail (board_aux SW1, default
-    # OFF) — self-contained, so it is not in the central regulator/module walk.
     stage["+3V3_AUX"] = 6
 
-    # Cable-presence detects on module sheets become live with their module.
     stage.setdefault("HDMI_RX_5V", 4)
     stage.setdefault("HDMI_RX_5V_DET", 4)
     return stage
@@ -154,7 +93,6 @@ def _stage_of(net: str | None, rail_stage: dict[str, int]) -> int:
         return 2
     if net in rail_stage:
         return rail_stage[net]
-    # an RC/divider whose top rail is a staged rail rides that rail's stage
     return 2
 
 
@@ -165,10 +103,6 @@ def _fmt(v: float | None, unit: str) -> str:
 
 
 def _i2c_devices(sheets) -> list[tuple[int, str, str, bool]]:
-    """(addr, ref, kind, aux) for every strapped I2C device, addresses DERIVED
-    from the netlists. ``aux`` = it sits on the gated +3V3_AUX segment behind
-    the board_aux PCA9306 isolator, so it ACKs only with board_aux SW1 on
-    (Stage 6) — not in the always-on scan. Sorted by address."""
     circuits = {sc.name: sc.circuit for sc in sheets}
     out: list[tuple[int, str, str, bool]] = []
     if "bringup_rails" in circuits:
@@ -206,7 +140,6 @@ def generate(out: Path = DEFAULT_OUT, sheets=None) -> Path:
     probes = _probe_index(sheets)
     rail_stage = _rail_stage(sheets)
 
-    # join: one acceptance step per spice check, grouped by bring-up stage
     by_stage: dict[int, list] = {}
     for ch in sp_res.checks:
         net = _net_of_check(ch)
@@ -249,7 +182,6 @@ def generate(out: Path = DEFAULT_OUT, sheets=None) -> Path:
              f"{sp_res.engine}.")
     L.append("")
 
-    # ---- the staged acceptance tables ----------------------------------------
     L.append("## Electrical acceptance — by bring-up stage")
     L.append("")
     for st in sorted(STAGE_TITLES):
@@ -270,7 +202,6 @@ def generate(out: Path = DEFAULT_OUT, sheets=None) -> Path:
             L.append(f"| {st}.{i} {ch.name} | {netcell} | {pad} | "
                      f"{exp} | {lo} | {hi} | `______` | [ ] |")
         L.append("")
-        # the detail of each step, so the technician knows what is being tested
         L.append("<details><summary>step rationale (from the spice gate "
                  "detail)</summary>")
         L.append("")
@@ -280,7 +211,6 @@ def generate(out: Path = DEFAULT_OUT, sheets=None) -> Path:
         L.append("</details>")
         L.append("")
 
-    # ---- I2C scan expectation -------------------------------------------------
     devs = _i2c_devices(sheets)
     L.append("## I2C-scan expectation (SC firmware running)")
     L.append("")
@@ -310,7 +240,6 @@ def generate(out: Path = DEFAULT_OUT, sheets=None) -> Path:
                  "`carrier/docs/BRINGUP.md`.")
     L.append("")
 
-    # ---- per-module functional checklist --------------------------------------
     L.append("## Per-module functional checklist")
     L.append("")
     L.append("Each module rail comes up behind its own current-limited load "
@@ -327,7 +256,6 @@ def generate(out: Path = DEFAULT_OUT, sheets=None) -> Path:
             gates = bf.module_gates(circuits["bringup_modules"])
         except Exception:  # noqa: BLE001
             gates = []
-    # consumer sheets per gated rail (which subsystem sheets the rail feeds)
     bringup_sheets = ("bringup_modules", "bringup_rails", "bringup_en",
                       "bringup_en_modules", "power", "power_mon")
     func_hint = {

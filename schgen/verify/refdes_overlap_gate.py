@@ -1,18 +1,3 @@
-"""LAW-1 silk gate: VISIBLE reference designators must not overprint each other.
-
-KiCad stamps each footprint's refdes at the author's local position; in dense
-clusters those collide. ``_declutter_refdes`` (schgen/generate/pcb.py) relocates
-the colliding top-side ones and test-point refs are hidden. This gate proves the
-result on the ACTUAL emitted board — it parses the .kicad_pcb, composes every
-visible ``property "Reference"`` to its board position, and counts padded-box
-overlaps, so a future placement change cannot silently regress the zero-overlap
-invariant.
-
-F.SilkS (top) is the enforced surface — the side ``_declutter_refdes`` owns. The
-B.SilkS (bottom, under-SoM cap grid) count is reported for visibility but not
-hard-failed (tracked separately as OPEN-1b); flip ``enforce_bottom`` once the
-bottom side is decluttered too.
-"""
 from __future__ import annotations
 
 import math
@@ -27,7 +12,7 @@ def _tokenize(s: str):
 
 def _build(toks, i):
     node = []
-    i += 1                                    # consume '('
+    i += 1
     while toks[i] != ')':
         if toks[i] == '(':
             sub, i = _build(toks, i)
@@ -47,11 +32,6 @@ def _sub(node, name):
 
 
 def _text_box(txt, x, y, size, m=0.15):
-    # Match KiCad's rendered stroke extent (min_silk_clearance=0): the Newstroke
-    # font advances ~1.0*size per glyph (refdes = caps/digits) and the box grows
-    # by the stroke thickness on every side. The old 0.72 aspect under-measured
-    # width ~28%, so refdes ~5 mm apart read clear here while KiCad's strokes
-    # touched. Kept in sync with pcb.py:_text_box (LAW 4: tighten, never soften).
     thick = max(0.12, size * 0.15)
     w = max(len(txt), 1) * size * 1.0 + thick
     h = size + thick
@@ -98,10 +78,6 @@ def _collect(pcb_path: Path, layer: str):
         frot = (float(fat[3]) if len(fat) > 3 and re.match(r'-?[\d.]+$', str(fat[3]))
                 else 0.0)
         ca, sa = math.cos(math.radians(frot)), math.sin(math.radians(frot))
-        # a B.Cu footprint is MIRRORED — its child board position is the mirror of
-        # the top compose: fp + R(-frot)·(lx,ly), verified vs the KiCad renderer.
-        # (On THIS board every B.SilkS ref has lx=0 so the two only differ in the
-        # frot=90 y-term, but the mirror must be right for any lx!=0 part.)
         for c in node:
             if not (isinstance(c, list) and len(c) > 2 and c[0] == "property"
                     and c[1] == "Reference"):
@@ -113,11 +89,6 @@ def _collect(pcb_path: Path, layer: str):
             if lat is None:
                 continue
             lx, ly = float(lat[1]), float(lat[2])
-            # KiCad composes a footprint child with a CLOCKWISE rotation in screen
-            # coords (y-down). The top compose was CCW, mis-placing a rotated ref's
-            # box ~14 mm off its render spot (U11001 rot-90), so the gate gave false
-            # confidence for rotated parts. Both sides now use the CW form (kept in
-            # sync with pcb.py:_declutter_refdes — LAW 4: match KiCad, never soften).
             bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
             refs.append((c[2], _text_box(c[2], bx, by, _font_size(c))))
     return refs

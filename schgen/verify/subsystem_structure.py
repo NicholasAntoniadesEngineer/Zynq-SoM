@@ -1,33 +1,3 @@
-"""subsystem_structure — the reusable-subsystem PACKAGE-STRUCTURE gate.
-
-The re-architecture turns each portable subsystem into a self-contained,
-project-agnostic library package under the top-level ``subsystems/<name>/``.
-This gate proves each such package is COMPLETE and well-formed:
-
-  REQUIRED FILES   every ``subsystems/<name>/`` has exactly the four artifacts
-                   the contract mandates: ``<name>.py`` (the netlist with
-                   abstract ports), ``README.md`` (the interface table + design
-                   notes), ``test_<name>.py`` (the local correctness test), and
-                   ``<name>.cir`` (the SPICE subckt).
-
-  ABSTRACT IFACE   ``<name>.py`` exposes a top-level ``circuit(meta=None)`` that
-                   accepts the standard ``meta`` adapter dict (see
-                   :mod:`schgen.core.subsystem`) AND a declared abstract
-                   ``INTERFACE`` (the externally-visible port + rail names a
-                   project binds). The circuit built standalone must contain
-                   exactly those nets as its externals — so the declared
-                   interface cannot drift from the netlist.
-
-REPORT-FIRST (LAW: prove exemplars before the gate hard-fails). The migration is
-incremental: most subsystems still live only as carrier adapters. So this gate
-REPORTS the state of ``subsystems/`` and does NOT fail the board yet. Promote it
-to hard-fail (``run(..., strict=True)`` / flip the board hook) once every
-intended subsystem has been migrated into a package. Deterministic; no
-timestamps; offline (imports the package, reads the model — no kicad-cli).
-
-Run standalone: ``python -m schgen subsystem-check`` (see ``cmd``).
-"""
-
 from __future__ import annotations
 
 import importlib
@@ -48,12 +18,12 @@ def required_files(name: str) -> tuple[str, ...]:
 class PackageReport:
     name: str
     path: Path
-    missing: list[str] = field(default_factory=list)      # required files absent
+    missing: list[str] = field(default_factory=list)
     has_circuit: bool = False
     accepts_meta: bool = False
     declared_interface: tuple[str, ...] = ()
-    interface_drift: list[str] = field(default_factory=list)  # declared vs built
-    errors: list[str] = field(default_factory=list)       # import / build errors
+    interface_drift: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -121,7 +91,6 @@ def _package_names() -> list[str]:
 
 
 def _import_circuit(name: str):
-    """Import subsystems.<name>.<name> and return its module (None on failure)."""
     return importlib.import_module(f"subsystems.{name}.{name}")
 
 
@@ -133,7 +102,6 @@ def check_package(name: str) -> PackageReport:
     rep.missing = [f for f in required_files(name)
                    if not (pkg_dir / f).exists()]
 
-    # only attempt the import / interface check if the netlist file is present
     if f"{name}.py" in rep.missing:
         return rep
     try:
@@ -155,7 +123,6 @@ def check_package(name: str) -> PackageReport:
     if isinstance(iface, (list, tuple)) and iface:
         rep.declared_interface = tuple(iface)
 
-    # build standalone and compare the declared interface to the real externals
     try:
         c = fn()
     except Exception as exc:  # noqa: BLE001
@@ -184,9 +151,6 @@ def check() -> Result:
 
 
 def run(reports_dir: Path | None = None, strict: bool = False) -> Result:
-    """Gate entry point. REPORT-FIRST: returns a Result whose ``.ok`` reflects
-    completeness, but the board hook treats it as report-only until ``strict``.
-    Writes ``reports_dir/subsystem_structure.txt`` when given."""
     res = check()
     if reports_dir is not None:
         reports_dir.mkdir(parents=True, exist_ok=True)
@@ -200,7 +164,6 @@ def cmd(args) -> int:
     res = run(repo / "carrier" / "reports")
     print(res.summary())
     print(f"\nreport: {repo / 'carrier' / 'reports' / 'subsystem_structure.txt'}")
-    # REPORT-FIRST: exit 0 even when incomplete, UNLESS --strict is given.
     if getattr(args, "strict", False):
         return 0 if res.ok else 1
     return 0

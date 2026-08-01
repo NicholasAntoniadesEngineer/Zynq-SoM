@@ -1,16 +1,7 @@
-"""Minimal KiCad s-expression reader/writer.
-
-Parses ``.kicad_sym`` / ``.kicad_sch`` into nested Python lists of
-``Sym`` (bare token) and ``str`` (quoted string) and numbers, and serialises
-back byte-faithfully enough for KiCad. No third-party deps, no hidden
-coordinate transforms — schgen owns every number it writes.
-"""
-
 from __future__ import annotations
 
 
 class Sym(str):
-    """A bare (unquoted) s-expression token."""
     __slots__ = ()
 
 
@@ -91,7 +82,6 @@ def dumps(node: object, indent: int = 0) -> str:
     if isinstance(node, list):
         if not node:
             return "()"
-        # short leaf lists inline; nested lists one-per-line
         has_list = any(isinstance(x, list) for x in node)
         inner = [dumps(x, indent + 1) for x in node]
         if not has_list and sum(len(s) for s in inner) < 90:

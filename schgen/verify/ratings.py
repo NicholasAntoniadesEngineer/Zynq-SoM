@@ -1,22 +1,3 @@
-"""schgen/ratings.py — per-part electrical RATINGS, keyed by LCSC.
-
-The rule-engine gate (schgen/verify/part_rules.py) checks capacitor voltage
-derating, resistor power, and regulator input-voltage abs-max against how the
-netlist uses each part. It needs each part's ratings, but EasyEDA gives NO
-structured rating data (only a free-text description, rich for passives and
-empty for most ICs), and the load-bearing passives are declared INLINE in the
-subsystems (`c.part(..., LCSC="C…")`) with no parts/<MPN>/ folder. So the
-authoritative ratings source is this LCSC-keyed table.
-
-Provenance: passive ratings (v_max/tol/dielectric) are the JLCPCB parts-API
-description token (e.g. "100nF ±10% 50V X7R"); resistor p_max is derived from
-the footprint package (R0603 = 0.10 W); cap temp_max is derived from dielectric
-(C0G/X7R = 125, X5R = 85); IC vin_max (abs-max input) is datasheet-sourced.
-Fields that could not be determined are OMITTED — the gate then reports the part
-as UNSPEC (fail-soft), never a false PASS. A part NOT in this table is also
-UNSPEC. Curated 2026-06-14 (a research sweep of the live JLC API + datasheets).
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,20 +5,18 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Ratings:
-    kind: str                      # mlcc|elec|tant|film|res|ind|ic|diode|other
-    v_max: float | None = None     # rated DC voltage (V) — caps / TVS standoff
-    i_max: float | None = None     # continuous current (A) — L / ic / LED abs
-    p_max: float | None = None     # rated power (W) — resistors
-    tol: str | None = None         # "±10%"
-    dielectric: str | None = None  # X7R | X5R | C0G | ...
-    temp_max: float | None = None  # max op temp (°C)
-    vin_max: float | None = None   # IC abs-max input (V)
-    source: str = ""               # provenance
+    kind: str
+    v_max: float | None = None
+    i_max: float | None = None
+    p_max: float | None = None
+    tol: str | None = None
+    dielectric: str | None = None
+    temp_max: float | None = None
+    vin_max: float | None = None
+    source: str = ""
 
 
 def from_part_module(mod) -> Ratings | None:
-    """Tier-2: build Ratings from a parts/<MPN>/<MPN>.py module's RATINGS dict
-    (for use_part parts that part_gen may later annotate). None if absent."""
     r = getattr(mod, "RATINGS", None)
     if not isinstance(r, dict) or not r.get("kind"):
         return None
@@ -47,9 +26,7 @@ def from_part_module(mod) -> Ratings | None:
     return Ratings(**{k: v for k, v in fields.items() if v is not None})
 
 
-# Keyed by LCSC. The PRIMARY rating source (inline passives have no parts/ dir).
 RATINGS_BY_LCSC: dict[str, Ratings] = {
-    # ---- MLCC ceramic caps (v_max=rated DC; temp_max from dielectric) -------
     "C14663": Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125,
         source="JLC desc CC0603KRX7R9BB104 100nF 50V X7R"),
     "C1591":  Ratings("mlcc", v_max=50.0, tol="±10%", dielectric="X7R", temp_max=125,
@@ -88,7 +65,6 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
         source="JLC desc CL10C220JB8NNNC 22pF 50V C0G (buck FB feedforward)"),
     "C49326329":Ratings("mlcc",v_max=100.0,tol="±5%", dielectric="C0G", temp_max=125,
         source="JLC desc 0603C0G470J101NT 47pF 100V C0G"),
-    # ---- resistors (p_max from footprint; v_max = working voltage) ----------
     "C22769": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155,
         source="JLC desc 0603WAF150KT5E 1.5R 100mW 75V"),
     "C22775": Ratings("res", v_max=75.0, p_max=0.10, tol="±1%", temp_max=155,
@@ -148,12 +124,10 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
     "C25508": Ratings("res", p_max=0.0625, tol="±5%", temp_max=155,
         source="4D03WGJ0330T5E 4x33R 0603x4 isolated array, 1/16W/elem (motor_io "
         "ESC-output series-damping)"),
-    # ---- inductors ----------------------------------------------------------
     "C38117": Ratings("ind", i_max=2.4, tol="±20%",
         source="JLC desc SWPA4030S100MT 10uH Isat 2.4A"),
     "C37429": Ratings("ind", i_max=4.1, tol="±20%",
         source="JLC desc SWPA8040S100MT 10uH Isat 4.1A"),
-    # ---- diodes / TVS / Zener / Schottky / LED ------------------------------
     "C8678":  Ratings("diode", v_max=40.0, i_max=3.0, temp_max=125,
         source="JLC desc SS34 Schottky 40V 3A"),
     "C22452": Ratings("diode", v_max=40.0, i_max=5.0, temp_max=125,
@@ -190,10 +164,8 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
         source="MSKSEMI SRV05-4 5-line steering-diode + surge-TVS ESD array: VRWM 5V "
         "(rated for 5V lines), VBR ~6V, clamp ~12.5-17V, SOT-23-6 (motor_pwm 8-ch "
         "ESC-output 5V ESD)"),
-    # ---- MOSFET (Vds in vin_max for awareness; no derate rule fires) --------
     "C20917": Ratings("other", v_max=30.0, i_max=5.7, p_max=1.4, temp_max=150,
         source="AO3400A N-ch 30V Vds 5.7A SOT-23"),
-    # ---- regulators / DC-DC / eFuse / load-switch / LDO (vin_max=abs-max) ---
     "C90761": Ratings("ic", vin_max=28.0, i_max=3.0, temp_max=150,
         source="TPS54331DDAR buck recommended 3.5-28V 3A"),
     "C311983":Ratings("ic", vin_max=28.0, i_max=3.0, temp_max=125,
@@ -213,7 +185,6 @@ RATINGS_BY_LCSC: dict[str, Ratings] = {
         source="SY7201ABC boost abs-max 32V"),
     "C129581":Ratings("ic", vin_max=7.0, i_max=0.5, temp_max=125,
         source="TPS2051C USB switch abs-max 7V"),
-    # ---- other ICs (digital/interface) — vin_max for awareness --------------
     "C132291":Ratings("ic", vin_max=6.0, temp_max=125,
         source="FUSB302B PD PHY abs-max VDD 6V"),
     "C181255":Ratings("ic", vin_max=6.0, temp_max=125,
