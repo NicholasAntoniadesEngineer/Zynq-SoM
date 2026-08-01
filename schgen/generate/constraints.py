@@ -4,6 +4,7 @@ import csv
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core import si_spec
 from schgen.core.model import NetClass
 
 MM_PER_MIL = 0.0254
@@ -26,12 +27,17 @@ GEOMETRY: dict[int, DiffGeometry] = {
                       "JLCPCB calculator, JLC04161H-7628 outer/L2"),
 }
 
-INTRA_PAIR_SKEW_MM = {
-    "usb_hs_pair": 1.27,
-    "diff_pair": 1.27,
-    "tmds_pair": 0.15,
-}
-SD_BUS_MATCH_MM = 2.5
+SD_BUS_MATCH_MM_UNCITED_POLICY = 2.5
+
+
+def researched_skews(sheets) -> dict[str, si_spec.PairSpec]:
+    for sc in sheets:
+        c = sc.circuit
+        for net in c.nets.values():
+            if (net.net_class == NetClass.PORT
+                    and c.port_type_of(net.name).pair_with):
+                return si_spec.spec_by_net()
+    return {}
 
 
 def _net_class(kind: str, impedance: int | None, level_v: float | None) -> str:
@@ -55,6 +61,7 @@ def export(sheets, outdir: Path) -> tuple[Path, Path]:
     rows: list[dict] = []
     classes: dict[str, DiffGeometry | None] = {}
     pair_groups_seen: set[frozenset[str]] = set()
+    skews = researched_skews(sheets)
 
     for sc in sheets:
         c = sc.circuit
@@ -65,15 +72,17 @@ def export(sheets, outdir: Path) -> tuple[Path, Path]:
             ncls = _net_class(pt.kind, pt.impedance, pt.level_v)
             geo = GEOMETRY.get(pt.impedance) if pt.impedance else None
             classes.setdefault(ncls, geo)
-            group, tol = "", ""
+            group, tol, skew_cite = "", "", ""
             if pt.pair_with:
                 key = frozenset((net.name, pt.pair_with))
                 pair_groups_seen.add(key)
                 group = "PAIR:" + "/".join(sorted(key))
-                tol = f"{INTRA_PAIR_SKEW_MM[pt.kind]:g}"
+                spec = si_spec.researched_pair(net.name, pt.kind, skews)
+                tol = f"{spec.intra_pair_skew_mm:g}"
+                skew_cite = f"skew: {spec.spec_cite}"
             elif pt.kind == "sd_bus":
                 group = f"BUS:{pt.bus or 'SD'}"
-                tol = f"{SD_BUS_MATCH_MM:g}"
+                tol = f"{SD_BUS_MATCH_MM_UNCITED_POLICY:g}"
             rows.append({
                 "net": net.name,
                 "sheet": sc.name,
@@ -90,7 +99,7 @@ def export(sheets, outdir: Path) -> tuple[Path, Path]:
                     f"speed={pt.speed_hz}Hz" if pt.speed_hz else "",
                     f"level={pt.level_v:g}V" if pt.level_v is not None else "",
                     f"deferred: {pt.expect}" if pt.expect else "",
-                    geo.source if geo else ""))),
+                    geo.source if geo else "", skew_cite))),
             })
 
     dru_lines = [

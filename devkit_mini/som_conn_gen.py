@@ -158,7 +158,8 @@ def connector_circuit(jref: str, name: str, title: str) -> Circuit:
             if net in seen_ports:
                 raise ValueError(
                     f"{jref}: contract net {net!r} repeats on this connector "
-                    f"— the engine's connector fan assumes one row per signal; extend it")
+                    f"— the engine's connector fan assumes one row per signal; "
+                    f"extend it")
             seen_ports.add(net)
             c.port(net, f"{jref}.{pin}")
     # typed pairs: the verbatim contract pairs (ethernet/USB) AND the wave-3

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from schgen.core.link import _vcco_rail_map
-from schgen.core.model import Circuit, NetClass, PortType
+from schgen.core.model import PAIR_KINDS, Circuit, NetClass, PortType
 from schgen.core.project import PROJECT_ROOT
 from schgen.core.project import spec as _project_spec
 from schgen.core.som_interface import extract_zynq
@@ -35,7 +35,6 @@ def bank_rail_map() -> dict[str, str]:
 
 
 _IOSTD_SINGLE = {3.3: "LVCMOS33", 2.5: "LVCMOS25", 1.8: "LVCMOS18"}
-_PAIR_KINDS = {"diff_pair", "usb_hs_pair", "tmds_pair"}
 
 
 class XdcError(ValueError):
@@ -204,7 +203,7 @@ def generate(sheets, out_path: Path = DEFAULT_OUT, *,
                            f"rail decision in project.json fpga.bank_rails — "
                            f"decide the rail there, never default")
         volts = _rail_volts(rail)
-        if e.ptype.kind in _PAIR_KINDS:
+        if e.ptype.kind in PAIR_KINDS:
             comp = e.ptype.pair_with
             if comp not in by_net:
                 raise XdcError(
@@ -293,7 +292,7 @@ def _render(entries: list[PinEntry], live: dict, refs: tuple[str, ...],
             if e.net in emitted:
                 continue
             group = [e]
-            if e.ptype.kind in _PAIR_KINDS:
+            if e.ptype.kind in PAIR_KINDS:
                 comp = next(x for x in entries if x.net == e.ptype.pair_with)
                 group = sorted([e, comp], key=lambda x: not x.p_side)
                 lines.append(f"# {e.ptype.kind} ({e.ptype.impedance}R): "

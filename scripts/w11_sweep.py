@@ -44,6 +44,8 @@ try:
     ok = "BOARD: PASS" in r.stdout
     v = json.loads(VERD.read_text())
     txt = PCB.read_text()
+    reds = [k for k, val in v.items()
+            if isinstance(val, dict) and val.get("ok") is False]
     print(f"SWEEP ord={mm} sheets={','.join(sheets) or '-'}: pass={ok} "
           f"md5={hashlib.md5(txt.encode()).hexdigest()} "
           f"{v['board_w']:g}x{v['board_h']:g} "
@@ -51,7 +53,7 @@ try:
           f"cross={v['ratsnest']['cross_mm']} "
           f"n_bottom={v['ratsnest']['n_bottom']} "
           f"fb={v.get('fallbacks', {}).get('punch_free_plan_rejected')} "
-          f"reds={[k for k, val in v.items() if isinstance(val, dict) and val.get('ok') is False]}")
+          f"reds={reds}")
     if not ok:
         print("STDOUT TAIL:\n" + "\n".join(r.stdout.splitlines()[-10:]))
         print(r.stderr[-1500:])
