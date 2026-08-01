@@ -28,6 +28,7 @@ from schgen.generate.pcb.constants import PARTS_DIR, FootprintInst
 from schgen.generate.pcb.embed import (
     _embed_footprint,
     _mirror_thermal_spec,
+    _side_thermal_spec,
 )
 from schgen.generate.pcb.footprint import _footprint_bbox, pad_names
 from schgen.generate.pcb.mating_face import _inst_pad_geom, _rot_bbox_cw
@@ -233,13 +234,19 @@ def test_embed_guard_rejects_malformed_mirror_insts():
 
 
 def test_thermal_spec_mirror():
+    """The DOCUMENT mirror is a FRAME transform only. The outer-copper swap has
+    a different trigger — the emitted FACE, not the document — and lives in
+    `_side_thermal_spec` (see test_thermal_gate); keeping it here would put a
+    B.Cu part's pour on the far face whenever the achiral-swap convention emits
+    it from an unmirrored document."""
     spec = {"pour": (-3.0, -4.75, 4.4, 4.75),
             "via_sites": [(1.55, -2.5), (2.85, 0.0)],
             "max_vias": 8, "pour_layers": ("F.Cu", "B.Cu"), "cite": "x"}
     m = _mirror_thermal_spec(spec)
     assert m["pour"] == (-3.0, -4.75, 4.4, 4.75)
     assert m["via_sites"] == [(1.55, 2.5), (2.85, 0.0)]
-    assert m["pour_layers"] == ("B.Cu", "F.Cu")
+    assert m["pour_layers"] == ("F.Cu", "B.Cu")
+    assert _side_thermal_spec(m, "bottom")["pour_layers"] == ("B.Cu", "F.Cu")
     assert m["max_vias"] == 8 and spec["via_sites"][0] == (1.55, -2.5)
 
 
@@ -247,13 +254,13 @@ def test_thermal_spec_mirror():
 def zg_either_pair():
     spec = load_floorplan_spec()
     spec2 = dataclasses.replace(
-        spec, interior={**spec.interior, "hdmi_rx_term": {"side": "either"}})
+        spec, interior={**spec.interior, "power_mon": {"side": "either"}})
     return subsystem_zone_geometry(two_side=True, spec=spec2)
 
 
 def test_bottom_shape_carries_kicad_exact_mirror(zg_either_pair):
     zg = zg_either_pair
-    shapes = zg.shapes["hdmi_rx_term"]
+    shapes = zg.shapes["power_mon"]
     bots = [s for s in shapes if s.side == "bottom"]
     assert bots
     s0 = shapes[0]
@@ -276,9 +283,9 @@ def test_bottom_shape_carries_kicad_exact_mirror(zg_either_pair):
 
 def test_apply_chosen_shapes_rebinds_mirrored_docs(zg_either_pair):
     zg = zg_either_pair
-    shapes = zg.shapes["hdmi_rx_term"]
+    shapes = zg.shapes["power_mon"]
     k = next(i for i, s in enumerate(shapes) if s.side == "bottom")
-    zg2 = apply_chosen_shapes(zg, {"hdmi_rx_term": k})
+    zg2 = apply_chosen_shapes(zg, {"power_mon": k})
     for r in shapes[k].top_off:
         assert zg2.side_of[r] == "bottom"
         assert r in zg2.mirror_refs
@@ -299,13 +306,13 @@ def test_zone_shape_metrics_uses_mirrored_pads(zg_either_pair):
         zone_shape_metrics,
     )
     zg = zg_either_pair
-    shapes = zg.shapes["hdmi_rx_term"]
+    shapes = zg.shapes["power_mon"]
     k = next(i for i, s in enumerate(shapes) if s.side == "bottom")
     bs = shapes[k]
     s0 = shapes[0]
     m0 = _local_metrics_one(zg, s0.top_off, s0.bot_off, s0.extra_rot,
                             (s0.w, s0.h))
-    mk = zone_shape_metrics(zg)[("hdmi_rx_term", k)]
+    mk = zone_shape_metrics(zg)[("power_mon", k)]
     pu0 = {r: (x0, y0, x1, y1) for r, x0, y0, x1, y1 in m0.pad_union}
     puk = {r: (x0, y0, x1, y1) for r, x0, y0, x1, y1 in mk.pad_union}
     for r in bs.mirror:

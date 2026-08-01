@@ -74,7 +74,7 @@ def either_ctx():
     spec = load_floorplan_spec()
     spec2 = dataclasses.replace(
         spec, interior={**spec.interior,
-                        "hdmi_rx_term": {"side": "either"}})
+                        "power_mon": {"side": "either"}})
     zg = subsystem_zone_geometry(two_side=True, spec=spec2)
     from schgen.core.link import all_subsystem_paths, load_subsystem
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
@@ -91,11 +91,11 @@ def test_restricted_estimator_delta_equals_full(either_ctx, monkeypatch):
     monkeypatch.setattr(fp, "BOARD_H", 166.0)
     plan = Plan(extract_som())
     ev = fp._cross_estimator(plan, zg, sheets)
-    k_bot = next(i for i, s in enumerate(zg.shapes["hdmi_rx_term"])
+    k_bot = next(i for i, s in enumerate(zg.shapes["power_mon"])
                  if s.side == "bottom")
 
     def blocks(x: float, y: float, k: int) -> list[Block]:
-        b = Block(name="hdmi_rx_term", kind="interior")
+        b = Block(name="power_mon", kind="interior")
         b.x, b.y, b.shape_idx = x, y, k
         w, h = zg.zone_box["hdmi_rx"]
         eb = Block(name="hdmi_rx", kind="edge")
@@ -104,10 +104,10 @@ def test_restricted_estimator_delta_equals_full(either_ctx, monkeypatch):
 
     a, b_ = blocks(70.0, 110.0, 0), blocks(90.0, 120.0, k_bot)
     full_a, full_b = ev(a), ev(b_)
-    rest_a = ev(a, only_sheet="hdmi_rx_term")
-    rest_b = ev(b_, only_sheet="hdmi_rx_term")
+    rest_a = ev(a, only_sheet="power_mon")
+    rest_b = ev(b_, only_sheet="power_mon")
     assert full_a > rest_a > 0.0
     assert full_a - full_b == pytest.approx(rest_a - rest_b, abs=1e-9)
     assert ev(a) == full_a
-    assert ev(a, only_sheet="hdmi_rx_term") == rest_a
+    assert ev(a, only_sheet="power_mon") == rest_a
     assert ev(a, only_sheet="no_such_sheet") == 0.0

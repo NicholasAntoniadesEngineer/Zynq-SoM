@@ -301,6 +301,13 @@ CONN_MATING_FACE: dict[str, str] = {
 # with --refill-zones so connectivity/clearance of the REAL fill is what gets
 # checked. Geometry knobs:
 GND_PLANE_LAYER = "In1.Cu"      # the stackup L2 GND plane (Sig/GND/PWR/Sig)
+MICROSTRIP_REFERENCE = {"F.Cu": "In1.Cu", "B.Cu": "In2.Cu"}
+"""Inner plane each OUTER copper face's microstrip references — the geometry
+constraints.py declares ("Outer-layer microstrip referenced to the L2/L3 plane
+through one sheet of 7628 prepreg"). Only GND_PLANE_LAYER is filled today, so
+B.Cu has NO reference plane and the impedance of a differential pair placed
+there is unmodelled; the bottom-side eligibility check refuses an
+impedance-carrying sheet on exactly this derivation."""
 GND_PLANE_EDGE_BACK = 0.5       # zone outline inset from Edge.Cuts (mm) — above
 #                                 the 0.3 min_copper_edge_clearance design rule
 GND_PLANE_CLEARANCE = 0.3       # plane-to-foreign-copper clearance (mm)

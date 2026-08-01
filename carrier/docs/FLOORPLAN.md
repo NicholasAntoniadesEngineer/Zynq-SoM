@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **168 x 163 mm**; SoM origin at **(49, 66.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 168x163 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 16140 <= LAW-5 budget 16383 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 168x163 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 16194 <= LAW-5 budget 16383 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -49,7 +49,7 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (133, 45, 7.78 x 43.264) | 18 | 336.6 |  |
+| board_aux | E | (133, 52, 7.78 x 30.183) | 18 | 234.8 |  |
 | board_services | W | (14, 12, 22.8 x 21.06) | 9 | 480.2 |  |
 | bringup_en | E | (81, 111, 19.5 x 7.5) | 15 | 146.2 |  |
 | bringup_en_modules | E | (61, 34, 39.1 x 12.45) | 54 | 486.8 |  |
@@ -59,7 +59,7 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 | ethernet | @rj45_connector | (29, 35, 21.745 x 25.2576) | 10 | 549.2 | (15) |
 | fmc | S | (28, 61, 18.685 x 61.63) | 8 | 1151.6 | (16) |
 | hdmi_rx_term | S | (68, 112.59, 11.805 x 7.805) | 10 | 92.1 |  |
-| mechanical | E | (154, 11, 13 x 13) | 4 | 169 |  |
+| mechanical | E | (131, 73, 13 x 13) | 4 | 169 |  |
 | power | E | (114.36, 114, 53.2104 x 23.9349) | 51 | 1273.6 | (17) |
 | power_mon | @power_som | (33, 125, 26.7565 x 12.1635) | 10 | 325.5 | (18) |
 | power_som | E | (106, 69, 23.9349 x 24.335) | 23 | 582.5 |  |

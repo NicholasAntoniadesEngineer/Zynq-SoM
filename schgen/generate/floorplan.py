@@ -3335,7 +3335,18 @@ def _choose_conn_shapes(plan: Plan, interior: list[Block],
     mirror iff the pack stays legal AND the airwire kernel (the LAW-5 gate's
     _mst_edges) strictly improves. Deterministic: sorted blocks, strict <; on
     reject the incumbent pack is restored by re-running the identical
-    deterministic pack."""
+    deterministic pack.
+
+    A REJECTED trial leaves TWO whole-board packs the emitted board does not
+    contain — the trial itself and the restore re-run, whose events are by
+    construction the ones the incumbent pack already logged. Both are rolled
+    back through `fallbacks.snapshot`/`restore`, the mechanism whose own
+    contract is that "the census must describe the EMITTED board, never a
+    search the guard threw away" (the wave-11 punch-policy guard is the other
+    user). Without it a fallback firing in one discarded pack was counted as
+    many times as this chooser re-packed, which is why the registered meaning
+    of `legalize_only_compaction` had to say its count "scales with trials"
+    — measured on the carrier: 12 of 14 fires were discarded packs."""
 
     def _repack() -> bool:
         return _attempt_pack(plan, interior, edge_of, zbox, affinity,
@@ -3350,6 +3361,7 @@ def _choose_conn_shapes(plan: Plan, interior: list[Block],
             continue
         base_cross = est_cross(plan.edge_blocks + interior)
         base_ri = (b.fanout_reach, b.fanout_inset)
+        fb_state = _fb.snapshot()
         b.fanout_reach, b.fanout_inset = _shape_fanout_reach(variants[1], zg)
         b.shape_idx = 1
         if _repack() and est_cross(plan.edge_blocks + interior) \
@@ -3362,6 +3374,7 @@ def _choose_conn_shapes(plan: Plan, interior: list[Block],
                 f"floorplan: restoring the incumbent pack after rejecting "
                 f"{b.name}'s mirror shape failed — the deterministic re-pack "
                 f"must reproduce the accepted board")
+        _fb.restore(fb_state)
 
 
 # ---- notes ------------------------------------------------------------------------

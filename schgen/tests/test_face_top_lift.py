@@ -7,6 +7,11 @@ carrier — `power`, `usb_jtag`, `power_som`, `uart_bridge`). The lift moves tho
 parts into the SECONDARY pack (which emits F.Cu inside a bottom-assigned block)
 and moves NOTHING else.
 
+`usb_jtag` and `uart_bridge` both carry DP90_USB and are refused bottom
+eligibility outright by the wave-18 reference-plane rule (B.Cu references the
+unfilled In2.Cu), so the fixture exercises the two that remain — the mechanism
+under test here is the lift, not the sheet list.
+
 Every test here is a property of the mechanism, not of one board: the stage
 survives the lift byte-exactly, the lifted part presents on the top face while
 its block's primary is on B.Cu, a lift that would move CONTRACT-CONSTRUCTED
@@ -35,7 +40,7 @@ from schgen.generate.pcb.placement import (
 )
 from schgen.verify import placement_mech as pm
 
-LIFT_SHEETS = ("power", "usb_jtag", "power_som", "uart_bridge")
+LIFT_SHEETS = ("power", "power_som")
 
 
 @pytest.fixture(scope="module")

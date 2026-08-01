@@ -134,3 +134,70 @@ area-first (first-fit-decreasing) emits **185x160 = 29,600 mm² (−1.84 %)** at
 **+9.0 % cross-airwire**, taking LAW-5 utilisation from 89.1 % to 98.0 %. That
 is an area-vs-airwire trade at the wall and is a USER decision, not an engine
 one — measured, quantified, and deliberately not landed.
+
+## DEFECT 5 (wave-18) — the SHELF path's bottom variants were ROLE-INVERTED
+
+`_bottom_zone_shapes`'s shelf branch reused the two-side CLASSIFIER map for a
+bottom-assigned block. Primary emits B.Cu, secondary emits F.Cu, so the
+classifier's "small passives to the bottom" population is precisely the one
+that presents FACE-UP once the block flips — only the ICs go face-down.
+Measured on the shipping board: `board_aux` 16 F.Cu / 2 B.Cu, `bringup_rails`
+22 / 1, against `power` (CONTRACTED, through `_lift_face_top`) 12 / 39. The
+contracted path was right and the shelf path was its opposite. Fixed by
+offering BOTH role assignments as registered shapes, role-aware first — see
+BOTTOM_SIDE_STRATEGY.md wave-18. Carrier 165 -> 176 of 507 at an unchanged
+168x163.
+
+## RECORD CORRECTIONS (wave-18, measured)
+
+- The `fmc` / `debug_boot` refusals are **NOT** seated-connector refusals as
+  written above and in the wave-12 tracker entry — they fire on the CONN-CLASS
+  branch, naming J11001 and J9001. Different branch, different fix. Also
+  `debug_boot` has TWO conn-class parts (J9001 878311420 THT, J9002
+  HX_JN1.27-2x5), not one.
+- The conn-class veto is a POLICY, not LAW 6: `placement_mech` scopes LAW-6
+  rule (a) to `CONN_MATING_FACE` instances only, so a connector's SUPPORT
+  parts are unconstrained. It holds 144 of the 281 movable F.Cu parts. It was
+  NOT relaxed here, for three measured reasons: (i) `_lift_face_top` is the
+  CONTRACTED path and `debug_boot` is a SHELF sheet, so the obvious mechanism
+  does not apply; (ii) `fmc`'s J11001 is a 2x20 THROUGH-HOLE header whose 40
+  pads pierce, and `_pack_one_zone` protects the SECONDARY pack from PRIMARY
+  through-hole pads but **not the reverse** — a lifted THT connector would sit
+  over B.Cu primary courtyards unprotected; (iii) neither J9001 nor J11001 is
+  in `CONN_MATING_FACE` and `_is_face_top_part` excludes connectors, so LAW-6
+  rule (d) is BLIND to a face-down mating header — this veto is today the only
+  guard, and wave-9 added it to close exactly that hole. Relaxing it without
+  extending the rule-(d) predicate in the same change would be a softening.
+- Second-reflow MASS is genuinely unmodelled — no part-mass datum exists in
+  the repo. Named exposure: C37004 (470uF can), T10001 (HX5008 magnetics),
+  L22003 (SWPA8040), BT3001 (coin-cell holder). None moves in wave-18.
+- Non-connector THROUGH-HOLE parts on B.Cu are unguarded. Exposure is zero
+  today by accident (all 22 THT footprints are F.Cu), but U17001
+  (TPS26631PWPR, HTSSOP-20 PowerPAD, `pd_input`) is a non-connector THT part,
+  so "conn-class covers the THT population" is FALSE.
+
+## CONNECTOR SHIFT — DO NOT RETRY (gate-proven negative)
+
+Relocating any S-edge connector (`pmod`, `pmod_expansion`, `hdmi_tx`,
+`hdmi_rx`) to N / E / W is refuted: 13 scenarios, 11 built a plan, **0 got
+narrower than 168 mm** (minimum width over every buildable scenario 174 mm),
+area +0.83 % to +23.63 %, 2 outright INFEASIBLE (the compact re-pack refuses
+loudly). The single best row, `hdmi_tx` -> E at 177x156 (+0.83 %), FAILS its
+build: DRC 9 `malformed_courtyard` (a class ABSENT on master) plus three
+fallback ratchet regressions — and it moves **25 parts OFF B.Cu** (165 ->
+140), so it is negative for the bottom-side goal too. Mechanism, measured with
+a forced-outline frontier probe: relieving the S run does not let the packer
+into the vacated width, it pushes the vacated block into interior DEPTH on a
+vertical edge or re-clamps the other horizontal run on N — zero-sum on the two
+horizontal runs, strictly negative on the interior. Two facts found in
+passing: `floorplan.json` `edges` is a PREFERENCE (overflow spills around a
+fixed W->S->N->E->W cycle, recorded in `plan.spilled`), and "both PMODs -> W"
+is the first configuration in the campaign where the LAW-5 est budget, not the
+packer, is the rejector — so "the board is 100 % pack-bound" is true of the
+shipping design and FALSE off it.
+
+SCOPE THIS ENTRY CAREFULLY: it refutes RELOCATION to another edge. It says
+nothing about putting an S-edge connector on B.Cu at the SAME edge —
+`_pack_edges` has zero `.side` references, so an edge block is charged its
+full span regardless of face; that buys 0 mm today only because the packer is
+side-blind, and it is an untested ENGINE lever, not a data experiment.

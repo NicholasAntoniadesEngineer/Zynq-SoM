@@ -260,3 +260,54 @@ def test_dyd_ldo_credit_gated_on_copper():
     dev2 = next(d for d in r2.devices if d.ref == "U1")
     assert dev2.rth_ja == 231.0 and dev2.over and not r2.ok, \
         f"DYD without copper must fail at the DBV fallback: Tj {dev2.tj:.1f}"
+
+
+def _bottom_copper(value: str, pour_layers, x: float = 100.0, y: float = 100.0,
+                   n_vias: int = 2) -> BoardCopper:
+    """``_synthetic_copper`` with the instance emitted on B.Cu — the only
+    difference that matters to the pour check."""
+    bc = _synthetic_copper(value, x=x, y=y, n_vias=n_vias,
+                           pour_layers=pour_layers)
+    bc.footprints[:] = [FpInfo("U1", value, x, y, "B.Cu", ())]
+    return bc
+
+
+def test_pour_credit_follows_the_part_to_bcu():
+    """A part's local pour belongs on the part's OWN outer layer (JESD51-5),
+    which is what the EMITTER lays for a bottom instance. The gate must ask
+    for that copper, not for the library-frame literal: an asymmetric spec
+    (TLV75725, F.Cu only) placed on B.Cu keeps its credit, and a bottom part
+    whose pour was (wrongly) laid on the far face loses it."""
+    assert thermal.pour_layers_for(
+        thermal.POUR_EVIDENCE["TLV75725_DYD"], "F.Cu") == ("F.Cu",)
+    assert thermal.pour_layers_for(
+        thermal.POUR_EVIDENCE["TLV75725_DYD"], "B.Cu") == ("B.Cu",)
+    sheets = _dyd_ldo_sheet()
+    pt = powertree.analyze(sheets)
+    ok = thermal.analyze(sheets, pt_res=pt, copper_src="synth",
+                         copper=_bottom_copper("TLV75725PDYDR", ("B.Cu",)))
+    dev = next(d for d in ok.devices if d.ref == "U1")
+    assert dev.poured and dev.rth_ja == 92.5 and ok.ok, \
+        f"B.Cu DYD with its own-side pour must keep the credit: {ok.errors}"
+    bad = thermal.analyze(sheets, pt_res=pt, copper_src="synth",
+                          copper=_bottom_copper("TLV75725PDYDR", ("F.Cu",)))
+    dev2 = next(d for d in bad.devices if d.ref == "U1")
+    assert dev2.rth_ja == 231.0 and dev2.over and not bad.ok, \
+        "a bottom part poured only on the FAR face must lose the credit"
+
+
+def test_emitter_and_gate_share_one_layer_swap():
+    """The emitter's mirrored-spec layer swap IS the gate's table — one
+    definition, so the copper laid and the copper demanded cannot drift."""
+    from schgen.generate.pcb import embed
+    assert embed._side_thermal_spec(
+        {"pour_layers": ("F.Cu",)}, "bottom")["pour_layers"] == ("B.Cu",)
+    assert embed._side_thermal_spec(
+        {"pour_layers": ("F.Cu",)}, "top")["pour_layers"] == ("F.Cu",)
+    spec = {"pour": (-3.0, -4.75, 4.4, 4.75), "via_sites": [(1.55, -2.5)],
+            "pour_layers": ("F.Cu", "B.Cu")}
+    mir = embed._mirror_thermal_spec(spec)
+    assert mir["pour"] == (-3.0, -4.75, 4.4, 4.75)
+    assert mir["via_sites"] == [(1.55, 2.5)]
+    assert mir["pour_layers"] == ("F.Cu", "B.Cu"), \
+        "the DOCUMENT mirror must not touch layers — the FACE decides those"

@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "52a403c6b08d3fee4623021ae7fbadce140109bdbbe96812ce5e1801560e2b35"
+      "sha256": "4b45325d224e6376dc43b871484357fad50b1705b37b0389e2c746683c4022f7"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -26,15 +26,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "3c8a490c92c91e47541a32a84966552aa41d97d0a340c3ae45f67343a530e63d"
+      "sha256": "18d30450f5dc015e542a45a54f3231dbafa1b79c759c26a4157544b82fcb3fc0"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "585864d540cc3f60314c0ec84744f054a309d92320c51afc84e640d2351efe60"
+      "sha256": "364f38c48937728f96bf37c2c381f2d65f6698503c75f2b06848df1169f96deb"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "85d72d32728ec2ad7099463f12401ef882343203838cfbb5d1c0800492690141"
+      "sha256": "c60a0a4bc5234e158508604e4cdda8bb786a371a7e54b1fd2ee20487c357ede1"
     },
     {
       "path": "docs/power_sequence.svg",
@@ -58,7 +58,7 @@
     },
     {
       "path": "manufacturing/Zynq_Carrier_cpl.csv",
-      "sha256": "6509c3e57a8debf9f9399d26948b932c3af092cf145e4fd4dabbc728763aa505"
+      "sha256": "d7ffacfa5b4b190589624924d8fa98656442f218b2c1ded63fd031fc69fcb7d1"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -114,7 +114,7 @@
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "c34989345545d87db2a622fcb5eccc3977ffa2983afc996cff9cdd0b9111fc18"
+      "sha256": "c47c2ed9ae2395902acf320e874e6acf9c7527d4156cce69d43b512894db74d3"
     },
     {
       "path": "reports/design_rules.txt",
@@ -190,7 +190,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "e23a1dee44e4c4a092e141a80b04fac7b07519627ee4ac6df31e4af73b6f4e3b"
+      "sha256": "46161a7df0b7be12e4a95bdd8ffe46f10f6301160881b6014c592576651a5d53"
     },
     {
       "path": "reports/return_path.txt",
@@ -218,7 +218,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "b25056e99ff85e6abc8a872ba9da5571ae7aa3f6c96252a59ed4a742200de7a8"
+      "sha256": "ba1e61724d421328aa9c3759051002868fc8d5ad88283ebe9963470d196a4746"
     },
     {
       "path": "schematic/board_aux.kicad_sch",

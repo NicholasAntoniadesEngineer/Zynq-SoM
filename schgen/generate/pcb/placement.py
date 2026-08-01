@@ -23,10 +23,12 @@ from .constants import (
     EDGE_ZONE_ASPECT,
     FID_INSET,
     FIDUCIAL_FOOTPRINT,
+    GND_PLANE_LAYER,
     INTERIOR_SHAPE_ASPECTS,
     INTERIOR_ZONE_ASPECT,
     INTERIOR_ZONE_BAND_TARGET,
     MH_INSET,
+    MICROSTRIP_REFERENCE,
     ORIGIN_X,
     ORIGIN_Y,
     PLACE_CLEAR,
@@ -601,6 +603,30 @@ def _is_face_top_part(bref: str, lib_id: str, footprint: str) -> bool:
 _CONN_CLASS_TOKENS = ("PinHeader", "PinSocket", "Conn", "DF40")
 
 
+def _unreferenced_imp_sheets(sheets) -> dict[str, set[str]]:
+    """sheet -> its impedance-controlled net classes, for every sheet that may
+    NOT take the bottom face because that face has no reference plane.
+
+    The stackup is Sig/GND/PWR/Sig and the declared geometry is an OUTER-layer
+    microstrip over the ADJACENT inner plane (`MICROSTRIP_REFERENCE`), but the
+    emitter fills only `GND_PLANE_LAYER`: In2.Cu is empty, so a DP90/DP100 pair
+    on B.Cu references nothing and its 90/100 ohm geometry is a fiction. The
+    charged set is DERIVED, never listed — a net pays iff its routing class
+    carries a `DiffGeometry`, the same derivation `est_via_cost` prices with,
+    so a future impedance class is covered for free. Fills In2.Cu and this
+    refusal empties itself."""
+    if MICROSTRIP_REFERENCE["B.Cu"] in (GND_PLANE_LAYER,):
+        return {}
+    geo, cls_of = _net_classes(sheets)
+    out: dict[str, set[str]] = {}
+    for sc in sheets:
+        for nname in sc.circuit.nets:
+            k = cls_of.get(nname)
+            if k and geo.get(k) is not None:
+                out.setdefault(sc.name, set()).add(k)
+    return out
+
+
 def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
                       rot_of: dict[str, float], zw: float
                       ) -> dict[str, tuple[float, float]]:
@@ -709,7 +735,25 @@ def _bottom_zone_shapes(sheet: str, refs: list[str], side_of: dict[str, str],
     whole bottom variant is rejected through the same registered event rather
     than forced. A shelf sheet offers a REAL role-flipped re-pack per ladder
     aspect (face-top parts forced secondary), mirrored the same way.
-    Deterministic: fixed aspect order, sorted refs, 4dp rounding."""
+    Deterministic: fixed aspect order, sorted refs, 4dp rounding.
+
+    ROLE-AWARE PRIMARY (wave-18). A shelf sheet's bottom variants come in two
+    role assignments, both real re-packs, offered together so the pack search
+    judges them on geometry:
+      * ROLE-AWARE (`bottom-a*`) — every part except `face_top` in the PRIMARY
+        pack, i.e. everything that may emit face-down does. This is the
+        contracted path's own rule (`_lift_face_top` lifts ONLY face_top), so
+        both zone kinds now mean the same thing by "bottom".
+      * CLASSIFIER-SPLIT (`bottom-split-a*`) — the two-side classifier's own
+        top/bottom split kept as the primary/secondary roles. Inside a
+        bottom-assigned block that puts the ICs face-down and the small
+        passives face-UP: a legal, sometimes-tighter arrangement, but the one
+        with the FEWEST parts on B.Cu (measured: `board_aux` 2 of 18, where
+        role-aware seats 13).
+    Role-aware is registered FIRST and the box de-dup drops the split variant
+    whenever the two pack to the same rectangle, so an exactly-equal geometry
+    resolves toward the bottom face at zero area cost (the shape chooser's
+    same-face tie-break is the registered index)."""
     out: list[ZoneShape] = []
     if tmpl is not None:
         t_off, b_off, zw, zh = tmpl
@@ -737,18 +781,27 @@ def _bottom_zone_shapes(sheet: str, refs: list[str], side_of: dict[str, str],
             _fb.record("bottom_variant_contract_reject")
         return out
     seen: set[tuple[float, float]] = set()
-    for asp in (1.0, *INTERIOR_SHAPE_ASPECTS):
-        vt, vb, vw, vh = _pack_one_zone(refs, side_of, bbox_of, resolvable,
-                                        asp, face_top=face_top)
-        key = (round(vw, 4), round(vh, 4))
-        if key in seen:
-            continue
-        seen.add(key)
-        mt, mb, extra, mods = _mirror_pack(vt, vb, vw, {}, bbox_of,
-                                           resolvable)
-        out.append(ZoneShape(
-            w=vw, h=vh, top_off=mt, bot_off=mb, extra_rot=extra,
-            tag=f"bottom-a{asp:g}", side="bottom", mirror=mods))
+    role_split = (("bottom-a{}", {r: "top" for r in refs}),
+                  ("bottom-split-a{}", side_of))
+    for tag_fmt, so in role_split:
+        for asp in (1.0, *INTERIOR_SHAPE_ASPECTS):
+            vt, vb, vw, vh = _pack_one_zone(refs, so, bbox_of, resolvable,
+                                            asp, face_top=face_top)
+            key = (round(vw, 4), round(vh, 4))
+            if key in seen:
+                continue
+            seen.add(key)
+            mt, mb, extra, mods = _mirror_pack(vt, vb, vw, {}, bbox_of,
+                                               resolvable)
+            if set(mt) & face_top:
+                raise AssertionError(
+                    f"bottom-side eligibility: {sheet} packed face=top "
+                    f"part(s) {', '.join(sorted(set(mt) & face_top))} into "
+                    f"the PRIMARY pack of its bottom variant (would emit "
+                    f"B.Cu) — a user-facing part never emits face-down")
+            out.append(ZoneShape(
+                w=vw, h=vh, top_off=mt, bot_off=mb, extra_rot=extra,
+                tag=tag_fmt.format(f"{asp:g}"), side="bottom", mirror=mods))
     return out
 
 
@@ -1106,6 +1159,7 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
             sheet_conn_rot.setdefault(sheet, {})[bref] = rot
             sheet_outer[sheet] = edge
 
+    imp_of = _unreferenced_imp_sheets(sheets)
     for sheet in sorted(s for s, p in layer_pref.items()
                         if p in ("bottom", "either")):
         why = None
@@ -1118,6 +1172,14 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
             why = (f"it contains connector-class part {conn_class_of[sheet]} "
                    f"(blocks with seated connectors stay top-pinned, user "
                    f"decision 2026-07-29)")
+        elif sheet in imp_of:
+            why = (f"it carries impedance-controlled net class(es) "
+                   f"{', '.join(sorted(imp_of[sheet]))} and B.Cu's microstrip "
+                   f"reference plane {MICROSTRIP_REFERENCE['B.Cu']} carries no "
+                   f"emitted copper (only {GND_PLANE_LAYER} is filled) — a "
+                   f"controlled-impedance pair placed face-down has NO "
+                   f"reference and its geometry is unmodelled, not merely "
+                   f"unrouted")
         if why:
             raise ValueError(
                 f"floorplan.json: {sheet} declares copper-face "

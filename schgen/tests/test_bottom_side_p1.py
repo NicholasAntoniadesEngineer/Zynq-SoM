@@ -13,6 +13,7 @@ import json
 import pytest
 
 from schgen.core import quantize as q
+from schgen.core.link import all_subsystem_paths, load_subsystem
 from schgen.generate import floorplan as fp
 from schgen.generate.floorplan import (
     OCC_BOTTOM,
@@ -22,9 +23,14 @@ from schgen.generate.floorplan import (
     _Occupancy,
     load_floorplan_spec,
 )
+from schgen.generate.pcb.constants import (
+    GND_PLANE_LAYER,
+    MICROSTRIP_REFERENCE,
+)
 from schgen.generate.pcb.placement import (
     _mirror_offsets_x,
     _pack_one_zone,
+    _unreferenced_imp_sheets,
     apply_chosen_shapes,
     subsystem_zone_geometry,
 )
@@ -40,7 +46,7 @@ def zg_real(real_spec):
     return subsystem_zone_geometry(two_side=True, spec=real_spec)
 
 
-def _either_spec(real_spec, sheet="hdmi_rx_term"):
+def _either_spec(real_spec, sheet="power_mon"):
     return dataclasses.replace(
         real_spec, interior={**real_spec.interior, sheet: {"side": "either"}})
 
@@ -171,10 +177,10 @@ def test_zero_optin_no_bottom_machinery(real_spec):
 
 def test_bottom_variant_offered_and_deterministic(zg_real, zg_either):
     a, b = zg_either
-    sa = a.shapes["hdmi_rx_term"]
-    sb = b.shapes["hdmi_rx_term"]
+    sa = a.shapes["power_mon"]
+    sb = b.shapes["power_mon"]
     assert sa == sb
-    base = zg_real.shapes.get("hdmi_rx_term", ())
+    base = zg_real.shapes.get("power_mon", ())
     assert sa[:len(base)] == base
     bots = [s for s in sa if s.side == "bottom"]
     assert bots, "declared-either sheet offered no bottom variant"
@@ -195,9 +201,9 @@ def test_bottom_variant_offered_and_deterministic(zg_real, zg_either):
 
 def test_bottom_choice_flips_sides_by_membership(zg_either):
     a, _b = zg_either
-    shapes = a.shapes["hdmi_rx_term"]
+    shapes = a.shapes["power_mon"]
     k = next(i for i, s in enumerate(shapes) if s.side == "bottom")
-    zg2 = apply_chosen_shapes(a, {"hdmi_rx_term": k})
+    zg2 = apply_chosen_shapes(a, {"power_mon": k})
     for r in shapes[k].top_off:
         assert zg2.side_of[r] == "bottom"
         assert a.side_of[r] == "top"
@@ -237,3 +243,43 @@ def test_conn_and_zoneless_declarations_raise(real_spec):
                              "mechanical": {"side": "bottom"}})
     with pytest.raises(ValueError, match="no packable zone"):
         subsystem_zone_geometry(two_side=True, spec=spec_mech)
+
+
+def test_impedance_sheet_refused_while_bcu_has_no_reference(real_spec):
+    """B.Cu's microstrip reference plane is In2.Cu and the emitter fills only
+    In1.Cu, so a DP90/DP100 pair placed face-down has no reference at all. The
+    refusal is LOUD and DERIVED from the net classes (the est_via_cost
+    derivation), not from a sheet list."""
+    spec_imp = dataclasses.replace(
+        real_spec, interior={**real_spec.interior,
+                             "hdmi_rx_term": {"side": "either"}})
+    with pytest.raises(ValueError, match="impedance-controlled net class"):
+        subsystem_zone_geometry(two_side=True, spec=spec_imp)
+    sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
+    imp = _unreferenced_imp_sheets(sheets)
+    assert imp["hdmi_rx_term"] == {"DP100_TMDS"}
+    for landed in ("board_aux", "bringup_rails", "power"):
+        assert landed not in imp, landed
+    assert MICROSTRIP_REFERENCE["F.Cu"] == GND_PLANE_LAYER
+    assert MICROSTRIP_REFERENCE["B.Cu"] != GND_PLANE_LAYER
+
+
+def test_role_aware_bottom_variant_maximises_bcu(real_spec):
+    """A shelf sheet's `bottom-a*` variant puts EVERY part except `face_top`
+    on the face the block was assigned — the same rule the contracted path's
+    `_lift_face_top` applies. The `bottom-split-a*` companions carry the
+    classifier's split (the arrangement with the FEWEST parts face-down) and
+    are registered AFTER, so an equal box resolves toward the bottom face."""
+    spec2 = _either_spec(real_spec, sheet="board_services")
+    shapes = subsystem_zone_geometry(two_side=True,
+                                     spec=spec2).shapes["board_services"]
+    ra = [s for s in shapes if s.tag.startswith("bottom-a")]
+    sp = [s for s in shapes if s.tag.startswith("bottom-split-a")]
+    assert ra and sp
+    assert shapes.index(ra[0]) < shapes.index(sp[0])
+    refs = set(shapes[0].top_off) | set(shapes[0].bot_off)
+    for s in ra:
+        assert set(s.top_off) | set(s.bot_off) == refs
+        assert len(s.top_off) > len(sp[0].top_off)
+    for s in ra + sp:
+        assert set(s.mirror) == set(s.top_off)

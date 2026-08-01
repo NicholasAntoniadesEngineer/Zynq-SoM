@@ -1,6 +1,6 @@
 # Assembly order — carrier
 
-Board 168 x 163 mm. 564 placed parts (399 top / 165 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 168 x 163 mm. 564 placed parts (388 top / 176 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -251,7 +251,7 @@ CHECKPOINT: boot/debug via debug_boot: J9001 (JTAG), J9002 (SWD), SW9001 (BOOT: 
 
 ![phase 8](../renders/assembly/phase_08_board_aux.png)
 
-18 parts (16 top / 2 bottom)
+18 parts (5 top / 13 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -949,10 +949,15 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-165 parts (0 top / 165 bottom)
+176 parts (0 top / 176 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
+| C1001 | 100n | C_0603_1608Metric | board_aux |
+| C1002 | 100n | C_0603_1608Metric | board_aux |
+| C1003 | 10u | C_0805_2012Metric | board_aux |
+| C1004 | 100n | C_0603_1608Metric | board_aux |
+| C1005 | 100n | C_0603_1608Metric | board_aux |
 | C3001 | 100n | C_0603_1608Metric | board_services |
 | C3002 | 100n | C_0603_1608Metric | board_services |
 | C3003 | 100n | C_0603_1608Metric | board_services |
@@ -1035,6 +1040,12 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | L20001 | 10uH | SWPA8040S100MT | power |
 | L20002 | 10uH | SWPA8040S100MT | power |
 | Q20001 | AO3400A | SOT-23 | power |
+| R1001 | 13k | R_0603_1608Metric | board_aux |
+| R1002 | 100k | R_0603_1608Metric | board_aux |
+| R1003 | 330R | R_0603_1608Metric | board_aux |
+| R1004 | 100k | R_0603_1608Metric | board_aux |
+| R1005 | 4k7 | R_0603_1608Metric | board_aux |
+| R1006 | 4k7 | R_0603_1608Metric | board_aux |
 | R3001 | 10k | R_0603_1608Metric | board_services |
 | R3002 | 1k | R_0603_1608Metric | board_services |
 | R4001 | 100k | R_0603_1608Metric | bringup_en |
@@ -1125,16 +1136,11 @@ NOTES: pin-1 orientation (Q20001, U1001, U1002, U7001, U20001, U20002, U20003): 
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-372 parts (372 top / 0 bottom)
+361 parts (361 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
 | BT3001 | KH-CR1220-2 | KH-CR1220-2 | board_services |
-| C1001 | 100n | C_0603_1608Metric | board_aux |
-| C1002 | 100n | C_0603_1608Metric | board_aux |
-| C1003 | 10u | C_0805_2012Metric | board_aux |
-| C1004 | 100n | C_0603_1608Metric | board_aux |
-| C1005 | 100n | C_0603_1608Metric | board_aux |
 | C7001 | 100n | C_0603_1608Metric | bringup_rails |
 | C7002 | 100n | C_0603_1608Metric | bringup_rails |
 | C7003 | 100n | C_0603_1608Metric | bringup_rails |
@@ -1250,12 +1256,6 @@ NOTES: pin-1 orientation (Q20001, U1001, U1002, U7001, U20001, U20002, U20003): 
 | D37001 | SMBJ28A | SMBJ28A | motor_sense |
 | L15001 | 10uH | SWPA4030S100MT | lcd |
 | L22003 | 10uH | SWPA8040S100MT | power_som |
-| R1001 | 13k | R_0603_1608Metric | board_aux |
-| R1002 | 100k | R_0603_1608Metric | board_aux |
-| R1003 | 330R | R_0603_1608Metric | board_aux |
-| R1004 | 100k | R_0603_1608Metric | board_aux |
-| R1005 | 4k7 | R_0603_1608Metric | board_aux |
-| R1006 | 4k7 | R_0603_1608Metric | board_aux |
 | R7001 | 100k | R_0603_1608Metric | bringup_rails |
 | R7002 | 100k | R_0603_1608Metric | bringup_rails |
 | R7003 | 100k | R_0603_1608Metric | bringup_rails |
