@@ -1,10 +1,4 @@
-"""Wave-9 chirality ladder rung runner (scratch tooling, worktree-local).
-
-Usage: python3 scripts/chir_rung.py <tag> [sheet ...]
-Patches carrier/floorplan.json (adds "layer": "either" to each named sheet's
-interior entry), runs `schgen board --no-render`, prints ONE summary line
-from reports/board_verdicts.json + the board md5, then RESTORES the spec
-byte-exactly. No sheets = control rung (no patch)."""
+"""Usage: python3 scripts/chir_rung.py <tag> [sheet ...]  (no sheets = control)."""
 import hashlib
 import json
 import subprocess
@@ -18,6 +12,11 @@ VERD = REPO / "carrier" / "reports" / "board_verdicts.json"
 
 BASE = REPO / "carrier" / "reports" / "fallback_baseline.json"
 
+SPEC_INDENT = 1
+VIA_LINE_PREFIX = "\n\t(via"
+STDOUT_TAIL_LINES = 12
+STDERR_TAIL_CHARS = 2000
+
 tag = sys.argv[1]
 sheets = sys.argv[2:]
 orig = SPEC.read_bytes()
@@ -27,7 +26,7 @@ try:
         d = json.loads(orig)
         for s in sheets:
             d["interior"].setdefault(s, {})["layer"] = "either"
-        SPEC.write_text(json.dumps(d, indent=1) + "\n")
+        SPEC.write_text(json.dumps(d, indent=SPEC_INDENT) + "\n")
     r = subprocess.run([sys.executable, "-m", "schgen", "board",
                         "--no-render"], capture_output=True, text=True,
                        cwd=REPO)
@@ -42,12 +41,12 @@ try:
     print(f"RUNG {tag}: pass={ok} md5={md5} "
           f"{v['board_w']:g}x{v['board_h']:g} "
           f"area={v['board_w'] * v['board_h']:g} cross={rn['cross_mm']} "
-          f"vias={pcb_text.count(chr(10) + chr(9) + '(via')} "
+          f"vias={pcb_text.count(VIA_LINE_PREFIX)} "
           f"n_top={rn['n_top']} n_bottom={rn['n_bottom']} "
           f"fallbacks={fb} reds={reds}")
     if not ok:
-        tail = "\n".join(r.stdout.splitlines()[-12:])
-        print(f"RUNG {tag} STDOUT TAIL:\n{tail}\n{r.stderr[-2000:]}")
+        tail = "\n".join(r.stdout.splitlines()[-STDOUT_TAIL_LINES:])
+        print(f"RUNG {tag} STDOUT TAIL:\n{tail}\n{r.stderr[-STDERR_TAIL_CHARS:]}")
 finally:
     SPEC.write_bytes(orig)
     BASE.write_bytes(orig_base)

@@ -1,66 +1,15 @@
-"""lcd — carrier ADAPTER for the reusable 40-pin TTL RGB LCD + backlight subsystem.
-
-THIN ADAPTER. The portable circuit lives in the project-agnostic library
-``subsystems/lcd/`` (netlist + README + SPICE + local test). This file is the
-carrier-specific GLUE: it imports the library subsystem and BINDS its abstract
-ports/rails to the carrier's real net names, returning the bound Circuit. The
-board build discovers it exactly as before (``circuit()`` exposed here), and the
-binding reproduces the EXACT net names the hand-written sheet used, so the
-emitted carrier/schematic/lcd.kicad_sch + its golden render are unchanged.
-
-Authored per carrier/research/lcd_backlight.md: AFC07-S40FCA-00 40-pin 0.5 mm
-bottom-contact FFC (LCSC C262572) carries the panel + capacitive-touch I2C on
-pins 37-40; the SY7201ABC boost drives the LED string at 133 mA (I = 0.2V /
-R_ISET, 1.5R), PWM-dimmable on EN, fed from the gated +5V_LCD rail; panel logic
-on gated +3V3_LCD. LCD-1 (electrical audit): the boost output cap is 2.2uF/50V
-X7R (C125847), not 1uF — at the 9-25V open-LED OVP output the X7R DC-bias
-derating eats well over half of a 1uF, so 2.2uF keeps real capacitance and
-ripple/loop margin healthy while staying 50V-rated.
-
-CARRIER BINDING RATIONALE (the carrier net names + why):
-
-  +VBOOST_IN    -> +5V_LCD   the gated 5V module rail (sourced by the round-5
-                             bringup_modules SY6280, like +5V_USB) feeding the
-                             SY7201 boost input. A powered-down module fully
-                             kills the backlight boost.
-  +VDD_LCD      -> +3V3_LCD  the gated 3.3V module rail for panel logic + touch;
-                             a peer of +3V3_PMOD / +3V3_SD. The DISP / touch
-                             pull-ups land here so a powered-down panel is not
-                             back-fed through them.
-  +VDD_TP_CLAMP -> +3V3      the ALWAYS-ON +3V3 (= the bank-13 VCCO) referencing
-                             the USBLC6 touch-I2C ESD clamp, so protection is
-                             valid even when the gated +3V3_LCD panel rail is off.
-  GND           -> GND       (identity).
-
-  RGB/sync/control ports -> the carrier's LCD_* names, destined for PL bank 34
-  via the generated J3 sheet (USER DECISION 2026-06-11: bank 13 was
-  oversubscribed by lcd+pmod+user_io; +VCCO_34 = 3.3V for the TTL panel):
-    LCD_R0..R7/G0..G7/B0..B7, LCD_DISP/HSYNC/VSYNC/DE, LCD_PCLK, BL_PWM
-    -> the identically-named carrier nets (LCD_BL_PWM for BL_PWM).
-  Touch I2C + reset/interrupt stay on bank 13 via the generated J2 sheet:
-    TP_SDA/TP_SCL -> LCD_CTP_SDA/LCD_CTP_SCL (the LCD_CTP bus),
-    TP_RST/TP_INT -> LCD_CTP_RST/LCD_CTP_INT.
-
-These ports bind on the generated J2/J3 connector sheets (som_conn_gen
-FUNCTION_MAP), so the adapter declares that linker deferral via the library's
-``expects`` hook: the panel video/control on J3 bank 34, the touch group on J2
-bank 13.
-"""
+"""lcd project bind — circuit + component basis: subsystems/lcd/."""
 
 from __future__ import annotations
 
-from subsystems.lcd import lcd as _lib
+from carrier.basis import bind
 from schgen.core.model import Circuit
+from subsystems.lcd import lcd as _lib
 
-# The generated J2/J3 sheets (som_conn_gen FUNCTION_MAP) carry the bank-34 TTL
-# panel video/control and the bank-13 touch I2C, so these ports bind there by
-# name. EXPLICIT linker deferral so a standalone link reports them as awaiting
-# their connector sheet, never a silent open. (Same deferral strings the hand-
-# written sheet used.)
+_SUB = "lcd"
 _J3_MAP = "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
 _J2_MAP = "som_j2_connector (PL bank 13 — touch I2C only)"
 
-# Carrier real-net names for the RGB/sync/control ports (identity except BL_PWM).
 _PANEL_PORTS = (
     "LCD_R0", "LCD_R1", "LCD_R2", "LCD_R3", "LCD_R4", "LCD_R5", "LCD_R6", "LCD_R7",
     "LCD_G0", "LCD_G1", "LCD_G2", "LCD_G3", "LCD_G4", "LCD_G5", "LCD_G6", "LCD_G7",
@@ -68,36 +17,63 @@ _PANEL_PORTS = (
     "LCD_DISP", "LCD_HSYNC", "LCD_VSYNC", "LCD_DE", "LCD_PCLK",
 )
 
-# The ONE standard adapter contract (schgen.core.subsystem.Meta) — the entire
-# carrier-specific surface of this subsystem. Per-net rationale is in the module
-# docstring above.
-#   bind    abstract subsystem net -> carrier real net
-#   expects ports that bind on the generated J2/J3 sheets -> explicit linker
-#           deferral (panel video/control -> J3 bank 34; touch -> J2 bank 13)
-#   buses   the touch I2C is the carrier LCD_CTP bus
-#   notes   power-tree draw notes cite the carrier dossier wording (lcd_backlight.md)
-# (buses/notes keep the carrier's derived artifacts — layout_constraints.csv bus
-#  grouping, power_tree.txt notes — byte-identical to the hand-written sheet.)
+_VBOOST_IN = bind(
+    _SUB, "+VBOOST_IN", "+5V_LCD",
+    "Gated 5 V module rail (round-5 bringup_modules SY6280, like +5V_USB) into "
+    "the SY7201 boost input, so a powered-down module fully kills the backlight.",
+    "policy")
+
+_VDD_LCD = bind(
+    _SUB, "+VDD_LCD", "+3V3_LCD",
+    "Gated 3.3 V module rail for panel logic + touch, peer of +3V3_PMOD / "
+    "+3V3_SD. The DISP and touch pull-ups land here so a powered-down panel is "
+    "not back-fed through them.",
+    "policy")
+
+_TP_CLAMP = bind(
+    _SUB, "+VDD_TP_CLAMP", "+3V3",
+    "The USBLC6 touch-I2C ESD clamp references the ALWAYS-ON +3V3 (the bank-13 "
+    "VCCO), not the gated panel rail — protection must stay valid while "
+    "+3V3_LCD is off.",
+    "datasheet")
+
+_PANEL = {
+    p: bind(_SUB, p, p,
+            "TTL panel video/control on PL bank 34: user decision 2026-06-11 "
+            "moved these off bank 13, which lcd+pmod+user_io had "
+            "oversubscribed; +VCCO_34 = 3.3 V suits the TTL panel.",
+            "policy")
+    for p in _PANEL_PORTS
+}
+
+_BL_PWM = bind(_SUB, "BL_PWM", "LCD_BL_PWM",
+               "The only non-identity panel rename — the carrier prefixes the "
+               "backlight PWM to keep it distinct from the panel data bus.",
+               "policy")
+
+_TOUCH = {
+    port: bind(_SUB, port, net,
+               "Touch group stays on bank 13 via J2 while the panel moved to "
+               "bank 34, so the LCD_CTP bus spans two connector sheets.",
+               "policy")
+    for port, net in (("TP_SDA", "LCD_CTP_SDA"), ("TP_SCL", "LCD_CTP_SCL"),
+                      ("TP_RST", "LCD_CTP_RST"), ("TP_INT", "LCD_CTP_INT"))
+}
+
 META = {
     "bind": {
-        "+VBOOST_IN": "+5V_LCD",
-        "+VDD_LCD": "+3V3_LCD",
-        "+VDD_TP_CLAMP": "+3V3",
+        "+VBOOST_IN": _VBOOST_IN,
+        "+VDD_LCD": _VDD_LCD,
+        "+VDD_TP_CLAMP": _TP_CLAMP,
         "GND": "GND",
-        **{p: p for p in _PANEL_PORTS},
-        "BL_PWM": "LCD_BL_PWM",
-        "TP_SDA": "LCD_CTP_SDA",
-        "TP_SCL": "LCD_CTP_SCL",
-        "TP_RST": "LCD_CTP_RST",
-        "TP_INT": "LCD_CTP_INT",
+        **_PANEL,
+        "BL_PWM": _BL_PWM,
+        **_TOUCH,
     },
     "expects": {
         **{p: _J3_MAP for p in _PANEL_PORTS},
         "BL_PWM": _J3_MAP,
-        "TP_SDA": _J2_MAP,
-        "TP_SCL": _J2_MAP,
-        "TP_RST": _J2_MAP,
-        "TP_INT": _J2_MAP,
+        **{p: _J2_MAP for p in _TOUCH},
     },
     "buses": {"i2c": "LCD_CTP"},
     "notes": {

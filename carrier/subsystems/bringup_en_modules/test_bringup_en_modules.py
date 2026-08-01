@@ -1,19 +1,3 @@
-"""LOCAL electrical-correctness test for the bringup_en_modules subsystem.
-
-Runs the SUBSYSTEM-LOCAL slices of the board's verify gates on JUST this
-subsystem's circuit, standalone and offline. bringup_en_modules is a
-CARRIER-LOCAL subsystem (real carrier net names, no abstract bind map), so the
-checks assert the 11-cell module-EN topology this sheet OWNS.
-
-LOCAL checks: model completeness, rail/port classes, the design_rules
-DECAP/STRAP/EP slice, part_rules + spice slices, the cell invariants (the 11 EN
-nets, the per-cell 100k A-pulldown, the 10 B-pull-ups + the ONE spare with no
-pull-up, the per-Y testpoints), and the .cir <-> netlist passive match.
-
-CROSS-BOARD checks (the EN->SY6280 link, the DIP/TCA9535 sources) stay at board
-level — run by `schgen board`.
-"""
-
 from __future__ import annotations
 
 import re
@@ -34,11 +18,10 @@ CIR = HERE / "bringup_en_modules.cir"
 
 EN_NETS = ("EN_HDMI_TX", "EN_HDMI_RX", "EN_LCD", "EN_CAM", "EN_SD", "EN_USB",
            "EN_PMOD", "EN_USER_LED", "EN_LCD_BL", "EN_HDMI_TX_5V", "EN_LCD_5V")
-# B nets WITH a 100k pull-up here (every cell except the spare LCD_BL):
 B_PULLED = ("BU_OVR_HDMI_TX", "BU_OVR_HDMI_RX", "BU_OVR_LCD", "BU_OVR_CAM",
             "BU_OVR_SD", "BU_OVR_USB", "BU_OVR_PMOD", "BU_OVR_USER_LED",
             "BU_OVR_HDMI_TX_5V", "BU_OVR_LCD_5V")
-B_NO_PULL = "BU_OVR_LCD_BL"     # spare: pulled DOWN on bringup_rails, not here
+B_NO_PULL = "BU_OVR_LCD_BL"
 A_NETS = ("BU_DIP_HDMI_TX", "BU_DIP_HDMI_RX", "BU_DIP_LCD", "BU_DIP_CAM",
           "BU_DIP_SD", "BU_DIP_USB", "BU_DIP_PMOD", "BU_DIP_USER_LED",
           "BU_DIP_SPARE", "BU_DIP_HDMI_TX_5V", "BU_DIP_LCD_5V")
@@ -70,8 +53,6 @@ def _resistors_on(c: Circuit, net: str):
     return out
 
 
-# ---- model + interface ---------------------------------------------------------
-
 def test_model_complete_every_pin_netted_or_nc(c: Circuit, lib: Library):
     c.validate({r: lib.pin_numbers(p.lib_id) for r, p in c.parts.items()})
     assert not c.nc_pins
@@ -91,8 +72,6 @@ def test_rail_and_port_classes(c: Circuit):
         assert cls[en] is NetClass.PORT, (en, cls.get(en))
 
 
-# ---- decoupling / part / spice slices ------------------------------------------
-
 def test_decoupling_complete(c: Circuit, lib: Library):
     r = design_rules.check([_sheet(c)], lib)
     assert not r.decap, r.decap
@@ -111,8 +90,6 @@ def test_spice_analytic_slice_runs_clean(c: Circuit):
     assert res.ok, res.errors
 
 
-# ---- the cell invariants this sheet owns ---------------------------------------
-
 def test_each_A_input_has_a_100k_pulldown_to_gnd(c: Circuit):
     for a in A_NETS:
         pulls = [v for v, nets in _resistors_on(c, a) if "GND" in nets]
@@ -126,16 +103,13 @@ def test_pulled_B_inputs_have_a_100k_pullup_to_3v3sc(c: Circuit):
 
 
 def test_spare_lcd_bl_has_no_pullup_here(c: Circuit):
-    """The spare cell's B is pulled DOWN on bringup_rails (P10), so NO pull-up
-    lives here — the provision defaults OFF until software raises it."""
+    """bringup_rails P10 pulls this B down; a pull-up here would fight it."""
     pulls = [v for v, nets in _resistors_on(c, B_NO_PULL)
              if "+3V3_SC" in nets]
     assert pulls == [], (B_NO_PULL, pulls)
 
 
 def test_pullup_count_is_ten(c: Circuit):
-    """Exactly 11 A-pulldowns + 10 B-pull-ups = 21 resistors (one spare cell
-    has no B pull-up)."""
     rs = [p for p in c.parts.values() if p.lib_id.endswith(":R")]
     assert len(rs) == 21, len(rs)
     to_sc = sum(1 for ref, p in c.parts.items() if p.lib_id.endswith(":R")
@@ -160,8 +134,6 @@ def test_every_enable_is_probeable(c: Circuit):
 def test_power_draw_declared(c: Circuit):
     assert "+3V3_SC" in c.loads
 
-
-# ---- SPICE subckt <-> netlist passives -----------------------------------------
 
 def _cir_passives() -> tuple[list[float], list[float]]:
     res, caps = [], []

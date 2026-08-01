@@ -1,12 +1,4 @@
-"""Wave-11 ordinary-via-row sweep (scratch tooling, worktree-local).
-
-Usage: python3 scripts/w11_sweep.py <mm> [sheet ...]
-Patches schgen/core/quantize.py's EST_VIA_ORDINARY_MM to <mm> (and, when
-sheets are named, adds "layer": "either" to each one's floorplan.json interior
-entry), runs `schgen board --no-render`, prints ONE summary line, then RESTORES
-both files byte-exactly. The registered basis string is left untouched — this
-is a MEASUREMENT harness, not a landing.
-"""
+"""Usage: python3 scripts/w11_sweep.py <mm> [sheet ...] — measures only, restores."""
 import hashlib
 import json
 import re
@@ -21,6 +13,11 @@ BASE = REPO / "carrier" / "reports" / "fallback_baseline.json"
 PCB = REPO / "carrier" / "Zynq_Carrier.kicad_pcb"
 VERD = REPO / "carrier" / "reports" / "board_verdicts.json"
 
+SPEC_INDENT = 1
+EXPECTED_MATCHES = 1
+STDOUT_TAIL_LINES = 10
+STDERR_TAIL_CHARS = 1500
+
 mm = sys.argv[1]
 sheets = sys.argv[2:]
 orig_q = QUANT.read_bytes()
@@ -30,14 +27,14 @@ try:
     src = orig_q.decode()
     new, n = re.subn(r"^EST_VIA_ORDINARY_MM = .*$",
                      f"EST_VIA_ORDINARY_MM = {mm}", src, flags=re.M)
-    if n != 1:
+    if n != EXPECTED_MATCHES:
         raise SystemExit(f"EST_VIA_ORDINARY_MM not found ({n} matches)")
     QUANT.write_text(new)
     if sheets:
         d = json.loads(orig_s)
         for s in sheets:
             d["interior"].setdefault(s, {})["layer"] = "either"
-        SPEC.write_text(json.dumps(d, indent=1) + "\n")
+        SPEC.write_text(json.dumps(d, indent=SPEC_INDENT) + "\n")
     r = subprocess.run([sys.executable, "-m", "schgen", "board",
                         "--no-render"], capture_output=True, text=True,
                        cwd=REPO)
@@ -55,8 +52,9 @@ try:
           f"fb={v.get('fallbacks', {}).get('punch_free_plan_rejected')} "
           f"reds={reds}")
     if not ok:
-        print("STDOUT TAIL:\n" + "\n".join(r.stdout.splitlines()[-10:]))
-        print(r.stderr[-1500:])
+        print("STDOUT TAIL:\n"
+              + "\n".join(r.stdout.splitlines()[-STDOUT_TAIL_LINES:]))
+        print(r.stderr[-STDERR_TAIL_CHARS:])
 finally:
     QUANT.write_bytes(orig_q)
     SPEC.write_bytes(orig_s)
