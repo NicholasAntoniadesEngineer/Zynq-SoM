@@ -124,6 +124,24 @@ _register(
     "and the FLOORPLAN doc), so the carrier/devkit ceiling is 2.")
 
 _register(
+    "interior_reseat_retry", "plan_lattice",
+    "The interior packer BACKTRACKED: a block whose every registered shape "
+    "returned None from place_near was seated only after evicting already-"
+    "placed neighbours and re-seating them (wave-17 bounded re-seat retry, "
+    "floorplan._attempt_pack). Counted once per SUCCESSFUL retry episode, on "
+    "every candidate outline the search touches — not just the winner. It is "
+    "NOT a degrade: the legality predicate (_Occupancy.fits) is untouched and "
+    "every seat a retry produces was always legal, so the retry only reaches "
+    "arrangements the greedy first-fit could not order its way into. It is "
+    "registered and ratcheted because it is an ALTERNATE path through the "
+    "packer and the no-silent-fallback law owns those: a build where it "
+    "suddenly fires more often is a search that got harder, and that must be "
+    "a same-day failure rather than a quiet slowdown. Bounded per "
+    "_attempt_pack call: <= _RESEAT_EVICT_BUDGET (3) successful evictions and "
+    "at most one FAILED episode (which returns False), so <= 4 episodes of "
+    "<= |placed| single-block trials each.")
+
+_register(
     "assembly_generation_failed", "assembly_docs",
     "The ORDER-OF-ASSEMBLY generator (schgen/generate/assembly.py) raised "
     "inside its advisory hook in emit.generate, so the build carried on with "

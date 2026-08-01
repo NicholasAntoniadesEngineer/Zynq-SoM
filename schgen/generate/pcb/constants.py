@@ -214,8 +214,6 @@ PLACE_CLEAR_BASELINE = 0.5
 # FREE clusters + inter-zone gaps (where fan-out room actually helps) and never
 # perturbs a contracted layout. == PLACE_CLEAR_BASELINE by construction.
 TEMPLATE_CLEAR = PLACE_CLEAR_BASELINE
-EDGE_CLEAR = 2.0
-ZONE_GAP = 0.8             # gap between two adjacent subsystem zones
 ZONE_PAD = 0.3            # padding inside a subsystem zone around its parts
 # N/S EDGE-connector subsystems pack WIDE + SHALLOW (their shelf target width is
 # multiplied by this) so the zone spreads ALONG the horizontal top/bottom edge

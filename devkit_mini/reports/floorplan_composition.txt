@@ -1,22 +1,21 @@
 FLOORPLAN COMPOSITION (T1): 3 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
-  aggregate hard margin: sum 169.04 mm, min 37.53 mm (informational)
+  aggregate hard margin: sum 139.6 mm, min 37.53 mm (informational)
   hard terms:
-    HARD facing power->power_som: 9.03 vs 90.00 (margin +80.97) ok [facing/output_roles [placement/v2]] dot=+754.99
-    HARD flow_hop power->power_som: 55.54 vs 106.08 (margin +50.53) ok [flow chain [placement/v2]]
+    HARD facing power->power_som: 47.66 vs 90.00 (margin +42.34) ok [facing/output_roles [placement/v2]] dot=+394.23
+    HARD flow_hop power->power_som: 42.53 vs 102.26 (margin +59.73) ok [flow chain [placement/v2]]
     HARD near_max uart_bridge->usb_uart_connector: 2.47 vs 40.00 (margin +37.53) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft near_intent power_mon->power_som: 0.14 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_intent power_mon->power_som: 12.51 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
   n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
     n/a far_min power->ethernet.line_side [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
     n/a flow_hop usb_pd->power [flow chain [placement/v2]]
   T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 7 T2-coexistence-managed
-    managed C6022 (power_som) in escape:J2:N [T2 STAY]
-    managed C6025 (power_som) in escape:J2:N [T2 STAY]
-    managed R5001 (power_mon) in escape:J3:S [T2 STAY]
-    managed RS5001 (power_mon) in escape:J3:N [T2 STAY]
-    managed RS5002 (power_mon) in escape:J3:S [T2 STAY]
+    managed C5001 (power_mon) in escape:J3:S [T2 STAY]
+    managed C5002 (power_mon) in escape:J3:S [T2 STAY]
+    managed C5003 (power_mon) in escape:J3:N [T2 STAY]
+    managed R6012 (power_som) in escape:J2:N [T2 STAY]
+    managed R6014 (power_som) in escape:J2:N [T2 STAY]
     managed RS5003 (power_mon) in escape:J3:N [T2 STAY]
-    managed RS5004 (power_mon) in escape:J3:S [T2 STAY]
+    managed RS5004 (power_mon) in escape:J3:N [T2 STAY]
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    power | power_mon: 9 airwires (185.0 mm) -> corridor >= 3.8 mm
-    power_som | som_decoupling: 6 airwires (29.5 mm) -> corridor >= 3.2 mm
+    power | power_mon: 8 airwires (221.3 mm) -> corridor >= 3.6 mm
