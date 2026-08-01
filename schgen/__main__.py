@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 from schgen.core.model import Circuit, NetClass
-from schgen.core.project import PROJECT_ROOT
+from schgen.core.project import PROJECT_ROOT, stable_sheet_index
 from schgen.core.symbols import Library
 from schgen.layout import place
 from schgen.output.emit import Junction as EJunction
@@ -503,15 +503,8 @@ def cmd_board(args: argparse.Namespace) -> int:
     constraints.export(sheets, man_dir)
     diagram.render(res, som_nets, CARRIER / "docs" / "block_diagram.svg")
 
-    _idx_path = CARRIER / "sheet_index.json"
-    _sheet_index = json.loads(_idx_path.read_text()) if _idx_path.exists() else {}
-    _new = sorted(sc.name for sc in sheets if sc.name not in _sheet_index)
+    _sheet_index, _new = stable_sheet_index(sc.name for sc in sheets)
     if _new:
-        _nxt = max(_sheet_index.values(), default=0) + 1
-        for _n in _new:
-            _sheet_index[_n] = _nxt
-            _nxt += 1
-        _idx_path.write_text(json.dumps(_sheet_index, indent=2) + "\n")
         print(f"sheet-index: assigned {len(_new)} new sheet(s) a stable refdes "
               f"band -> {', '.join(f'{n}={_sheet_index[n]}' for n in _new)}")
 
