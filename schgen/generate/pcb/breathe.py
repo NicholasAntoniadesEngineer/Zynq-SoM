@@ -13,18 +13,20 @@ from schgen.verify.fanout_gate import (
     is_testpoint_ref,
 )
 
-from .constants import ORIGIN_X, ORIGIN_Y, PLACE_CLEAR
+from .constants import (
+    BOARD_EDGE_MARGIN,
+    ORIGIN_X,
+    ORIGIN_Y,
+    PLACE_CLEAR,
+    SOM_ZONE_GROW,
+)
 from .footprint import has_thru_pads, pad_names
 from .turn import turn_box
-
-# EDGE_MARGIN and ZONE_GROW below duplicate placement.py and escape.py by value.
-EDGE_MARGIN = 0.6
 
 CELL = 0.25
 STEP = 0.25
 SLACK_MARGIN = 2.0
 DF40_BAND = 6.0
-ZONE_GROW = 2.0
 BREATHE_MARGIN = 1.0
 DISP_GATE = 9.0
 DISP_CAP = 8.0
@@ -201,12 +203,12 @@ def breathe_fanout(
     x0, y0 = ORIGIN_X, ORIGIN_Y
     x1, y1 = ORIGIN_X + board_w, ORIGIN_Y + board_h
     for g in (grid_top, grid_bot):
-        g.stamp((x0, y0, x1, y0 + EDGE_MARGIN))
-        g.stamp((x0, y1 - EDGE_MARGIN, x1, y1))
-        g.stamp((x0, y0, x0 + EDGE_MARGIN, y1))
-        g.stamp((x1 - EDGE_MARGIN, y0, x1, y1))
+        g.stamp((x0, y0, x1, y0 + BOARD_EDGE_MARGIN))
+        g.stamp((x0, y1 - BOARD_EDGE_MARGIN, x1, y1))
+        g.stamp((x0, y0, x0 + BOARD_EDGE_MARGIN, y1))
+        g.stamp((x1 - BOARD_EDGE_MARGIN, y0, x1, y1))
         g.stamp(som_keepout)
-        g.stamp(_halo(som_keepout, ZONE_GROW))
+        g.stamp(_halo(som_keepout, SOM_ZONE_GROW))
         for band in df40_pad_boxes:
             g.stamp(band)
 

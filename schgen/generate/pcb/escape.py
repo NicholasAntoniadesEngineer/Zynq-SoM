@@ -20,7 +20,7 @@ LATTICE_MM = 0.05
 CLR_MARGIN = 0.10
 CLR_HOLE_FOREIGN = 0.30
 CLR_HOLE_HOLE = 0.50
-from .constants import CLR_HOLE_SAMENET_PAD  # noqa: E402
+from .constants import CLR_HOLE_SAMENET_PAD, SOM_ZONE_GROW  # noqa: E402
 
 CLR_TRACK_FOREIGN = 0.15
 CLR_EDGE = 0.30
@@ -33,8 +33,6 @@ PITCH_TOL_MM = 0.001
 SPINE_W = 0.30
 STUB_W_PAIR = 0.30
 STUB_W_SINGLE = 0.25
-
-ZONE_GROW = 2.0
 
 MIN_VIAS_PER_CONN = 2
 REDUNDANCY_OFFSET = 1.0
@@ -396,7 +394,8 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
     if model.som_keepout is None:
         raise EscapeError("model has no SoM keepout — escape region underivable")
     kx0, ky0, kx1, ky1 = model.som_keepout
-    zone = (kx0 - ZONE_GROW, ky0 - ZONE_GROW, kx1 + ZONE_GROW, ky1 + ZONE_GROW)
+    zone = (kx0 - SOM_ZONE_GROW, ky0 - SOM_ZONE_GROW,
+            kx1 + SOM_ZONE_GROW, ky1 + SOM_ZONE_GROW)
     plane_rect, void_rects = _canonical_plane(model)
     if not (plane_rect[0] <= zone[0] and plane_rect[1] <= zone[1]
             and plane_rect[2] >= zone[2] and plane_rect[3] >= zone[3]):
@@ -640,7 +639,7 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
                     "track_foreign": CLR_TRACK_FOREIGN, "edge": CLR_EDGE},
             "widths": {"spine": SPINE_W, "stub_pair": STUB_W_PAIR,
                        "stub_single": STUB_W_SINGLE},
-            "zone_grow": ZONE_GROW},
+            "zone_grow": SOM_ZONE_GROW},
         "v1_verdict": v1_text,
         "v1_scalars": {"n_pairs": v1.n_pairs,
                        "n_pair_contacts": v1.n_pair_contacts,

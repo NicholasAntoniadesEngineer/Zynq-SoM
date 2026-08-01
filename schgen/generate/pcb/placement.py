@@ -4,14 +4,18 @@ import re
 from pathlib import Path
 
 from schgen.core import fallbacks as _fb
+from schgen.core import ledger as _led
 from schgen.core import quantize as _q
 
 from .constants import (
     _INT_DESC,
     _TOP_ALWAYS_LIBS,
+    BOARD_EDGE_MARGIN,
     BUTTON_GAP,
     CARRIER,
     CONN_MATING_FACE,
+    EDGE_FLUSH_MM,
+    EDGE_FLUSH_RELIEF,
     EDGE_PAD_CLEAR,
     EDGE_ZONE_ASPECT,
     FID_INSET,
@@ -25,8 +29,11 @@ from .constants import (
     ORIGIN_X,
     ORIGIN_Y,
     PLACE_CLEAR,
+    PLACE_CLEAR_BASELINE,
     SOM_CORE_CLEARANCE,
+    TEMPLATE_CLEAR,
     TOP_AREA_MM2,
+    ZONE_PACK_FILL,
     ZONE_PAD,
     FootprintInst,
     PcbModel,
@@ -239,7 +246,7 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
                    for r in sheet_refs)
-    target_w = max(8.0, (tot_area * 0.62) ** 0.5) * aspect
+    target_w = max(8.0, (tot_area * ZONE_PACK_FILL) ** 0.5) * aspect
     fmeta = _fanout_meta(sheet_refs, resolvable)
     top_btns = [r for r in sr["top"] if _is_button(resolvable[r])]
     if len(top_btns) >= 2:
@@ -584,13 +591,13 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
             conn_depth = max(conn_depth, ZONE_PAD + hw)
         placed[side][r] = (round(ox, 4), round(oy, 4))
 
-    CONN_REST_GAP = 2.0
     behind = conn_depth + CONN_REST_GAP
     tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
                    for r in rest_top + rest_bot)
     row_span = max(cursor, 8.0)
-    target_w = max(row_span - ZONE_PAD, (tot_area * 0.62) ** 0.5 * aspect)
+    target_w = max(row_span - ZONE_PAD,
+                   (tot_area * ZONE_PACK_FILL) ** 0.5 * aspect)
 
     fmeta = _fanout_meta(rest_top + rest_bot, resolvable)
     rt = [(r, bbox_of[r], 0.0) for r in rest_top]
@@ -1210,6 +1217,10 @@ def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
 
 
 SOM_DECOUPLING_INSET = 6.0
+CONN_REST_GAP = 2.0
+DISP_CAP_L4 = 5.0
+L4_PULL_STEP = 1.0
+L4_PULL_SPAN = 40.0
 
 
 def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
@@ -1288,6 +1299,11 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     link_result = link(sheets, load_som_contract())
     regs = powertree.analyze(sheets).regs
     plan = fp.build_plan(sheets, link_result, regs, spec=spec)
+    _led.open_step("pcb.placement")
+    _led.calc("edge_flush", EDGE_FLUSH_MM, edge_pad_clear=EDGE_PAD_CLEAR,
+              flush_relief=EDGE_FLUSH_RELIEF)
+    _led.calc("template_clear", TEMPLATE_CLEAR,
+              place_clear_baseline=PLACE_CLEAR_BASELINE)
     _trk.checkpoint("plan_lattice", {})
     zg = apply_chosen_shapes(zg, {b.name: b.shape_idx for b in plan.blocks})
     _trk.checkpoint("shape_bind", {})
@@ -1415,9 +1431,6 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                 for r in sorted(som_j_refs)
                 if r in resolvable and r in pos]
 
-        DISP_CAP_L4 = 5.0
-        EDGE_MARGIN = 0.6
-        STEP = 1.0
         from schgen.verify.fanout_gate import (
             MIN_SUBJECT_PINS,
             intelligent_need,
@@ -1465,16 +1478,17 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                            * (_eff_box(r, 0.0, 0.0)[3] - _eff_box(r, 0.0, 0.0)[1])
                            for r in allr) or 1.0
             chosen = 0.0
-            for k in range(int(min(dist, 40.0) / STEP), 0, -1):
-                shift = k * STEP
+            for k in range(int(min(dist, L4_PULL_SPAN) / L4_PULL_STEP), 0, -1):
+                shift = k * L4_PULL_STEP
                 ok = True
                 shifted: dict[str, tuple[float, float]] = {}
                 for r in movers:
                     nx, ny = pos[r][0] + ux * shift, pos[r][1] + uy * shift
                     bb = _eff_box(r, nx, ny)
-                    if (bb[0] < EDGE_MARGIN or bb[1] < EDGE_MARGIN
-                            or bb[2] > board_w - EDGE_MARGIN
-                            or bb[3] > board_h - EDGE_MARGIN):
+                    if (bb[0] < BOARD_EDGE_MARGIN
+                            or bb[1] < BOARD_EDGE_MARGIN
+                            or bb[2] > board_w - BOARD_EDGE_MARGIN
+                            or bb[3] > board_h - BOARD_EDGE_MARGIN):
                         ok = False
                         break
                     hb = _halo(bb, PLACE_CLEAR / 2)
@@ -1635,7 +1649,6 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             return any(bb[0] < o[2] and bb[2] > o[0]
                        and bb[1] < o[3] and bb[3] > o[1] for o in boxes)
 
-        _EDGE_M = 0.6
         _bot = {r: _ebox(r, pos[r][0], pos[r][1]) for r in pos
                 if side_of.get(r) == "bottom" and r in bbox_of}
         _tht = [_ebox(r, pos[r][0], pos[r][1]) for r in pos
@@ -1677,9 +1690,10 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                     nx = round(pos[ref][0] + sx, 4)
                     ny = round(pos[ref][1] + sy, 4)
                     nb = _ebox(ref, nx, ny)
-                    if (nb[0] < _EDGE_M or nb[1] < _EDGE_M
-                            or nb[2] > board_w - _EDGE_M
-                            or nb[3] > board_h - _EDGE_M):
+                    if (nb[0] < BOARD_EDGE_MARGIN
+                            or nb[1] < BOARD_EDGE_MARGIN
+                            or nb[2] > board_w - BOARD_EDGE_MARGIN
+                            or nb[3] > board_h - BOARD_EDGE_MARGIN):
                         continue
                     if _collide(nb, _corr0):
                         continue
@@ -1706,6 +1720,13 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                 _fb.record("corridor_stray_unmovable")
 
     _trk.checkpoint("corridor_eviction", _pose_snap())
+    _led.calc("stage_movement", sum(_trk.moves.values()),
+              l4_pull=_trk.moves.get("l4_pull", 0),
+              edge_seat=_trk.moves.get("edge_seat", 0),
+              breathe=_trk.moves.get("breathe", 0),
+              refit_facing=_trk.moves.get("refit_facing", 0),
+              reorder=_trk.moves.get("reorder", 0),
+              corridor_eviction=_trk.moves.get("corridor_eviction", 0))
 
     insts: list[FootprintInst] = []
     placed = 0
@@ -1783,9 +1804,18 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                      ORIGIN_X + kx1, ORIGIN_Y + ky1),
         n_top=n_top, n_bottom=n_bottom, two_side=two_side,
         som_core=som_core)
+    _led.close_step("pcb.placement")
     from .escape import build_escape_copper, build_escape_plan
-    model.copper, model.escape_meta = build_escape_copper(model)
-    model.escape_plan = build_escape_plan(model)
+    with _led.step("pcb.escape"):
+        model.copper, model.escape_meta = build_escape_copper(model)
+        model.escape_plan = build_escape_plan(model)
+        _meta = model.escape_meta
+        _led.calc("escape_coverage", _meta.get("worst_cover_mm", 0.0),
+                  contacts=sum(len(v) for v
+                               in _meta.get("coverage_mm", {}).values()),
+                  worst_cover=_meta.get("worst_cover_mm", 0.0),
+                  vias=sum(_meta.get("vias", {}).values()),
+                  coverage=len(_meta.get("coverage_mm", {})))
     _trk.checkpoint("escape_copper", _page_snap())
     model.stage_moves = dict(_trk.moves)
     return model
