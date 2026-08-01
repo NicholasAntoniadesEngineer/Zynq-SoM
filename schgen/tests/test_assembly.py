@@ -1,27 +1,3 @@
-"""Tests for the ORDER-OF-ASSEMBLY generator (schgen/generate/assembly).
-
-Property layer on the REAL board model (shared ``carrier_model`` fixture):
-the two partitions (process steps / bring-up phases) each cover every
-non-fiducial part EXACTLY once, the phase order respects the derived rail
-chain (entry -> rail sheets -> SoM interface -> mate -> the rest -> mounting
-hardware), and every emitted CHECKPOINT names a real test point sitting on
-the named rail. Classification pin-checks lock the known traps: the XT60s
-are step-4 connectors, the som_decoupling caps bottom-SMD, and the TPS26631
-(an SMD efuse whose footprint carries thru_hole EP stitch vias) stays SMD.
-Determinism: the markdown and a stage PNG are byte-identical across two
-renders of the same model.
-
-STALENESS GUARD (the wave-14 addition): the COMMITTED
-``<project>/manufacturing/ASSEMBLY.md`` and ``renders/assembly/*.png`` must
-byte-match what the live model generates. Wave-8 commit 7ed5219 deleted the
-``emit.generate`` hook on a stale base and the committed doc then described the
-183 x 164 mm / 564-part board for six waves while the board shrank to 185 x 162
-with 165 bottom parts — nothing failed, because the artifact was advisory and
-its absence was silent. These tests are that missing alarm: the doc guard fires
-whenever the committed artifact drifts from the model, and the WIRING guard
-(AST, not grep) fires the same day the hook or its report line is deleted.
-"""
-
 from __future__ import annotations
 
 import ast
@@ -133,8 +109,6 @@ _REBUILD = ("rebuild the project (`python -m schgen board [--project X]`) "
 
 
 def test_committed_markdown_is_current(carrier_model, steps, phases):
-    """STALENESS GUARD — the committed ASSEMBLY.md must equal what the live
-    placed model generates, byte for byte."""
     from schgen.core.project import spec
     live = asm._markdown(carrier_model, steps, phases, spec().name)
     assert asm.ASSEMBLY_MD.exists(), f"{asm.ASSEMBLY_MD} missing — {_REBUILD}"
@@ -150,9 +124,6 @@ def test_committed_markdown_is_current(carrier_model, steps, phases):
 
 def test_committed_stage_pngs_are_current(carrier_model, steps, phases,
                                           tmp_path):
-    """STALENESS GUARD — the committed per-stage PNG set must equal a fresh
-    render of the same model: same filenames (a phase added/dropped/renamed is
-    a rename here) and the same bytes."""
     live = asm._stage_pngs(carrier_model, steps, phases, tmp_path)
     have = sorted(p.name for p in asm.PNG_DIR.glob("*.png"))
     want = sorted(p.name for p in live)
@@ -166,8 +137,6 @@ def test_committed_stage_pngs_are_current(carrier_model, steps, phases,
 
 
 def test_verdict_absence_and_error_are_failures():
-    """A MISSING result is the wave-8 defect itself: the hook was deleted, the
-    result key vanished, and the report said nothing. It must read FAIL."""
     for empty in (None, {}, {"ok": True}):
         ok, line = asm.verdict(empty)
         assert not ok and line.startswith("ASSEMBLY: FAIL"), empty
@@ -182,9 +151,6 @@ def test_verdict_absence_and_error_are_failures():
 
 
 def test_generation_failure_is_a_ceiling_zero_fallback(tmp_path):
-    """The generator raising is a REGISTERED fallback, absent from every
-    committed baseline — so one throw fails the ratchet gate as well as the
-    report line, and lands counted in board_verdicts.json."""
     import json
 
     from schgen.core import fallbacks as fb
@@ -205,10 +171,6 @@ def test_generation_failure_is_a_ceiling_zero_fallback(tmp_path):
 
 
 def _hook_call_targets(path: Path, func: str) -> set[str]:
-    """Every ``<alias>.<attr>`` called inside ``func``, where ``<alias>`` is
-    bound to ``schgen.generate.assembly`` by an import in that function or at
-    module level. AST, not grep: an alias rename stays green, a DELETED call
-    goes red the day it is deleted."""
     tree = ast.parse(path.read_text())
     fn = next(n for n in ast.walk(tree)
               if isinstance(n, ast.FunctionDef) and n.name == func)
@@ -223,10 +185,7 @@ def _hook_call_targets(path: Path, func: str) -> set[str]:
             and ast.unparse(n.func.value) in aliases}
 
 
-def test_build_wiring_is_present():
-    """THE DELETION TRIPWIRE. ``emit.generate`` must call the generator and
-    ``cmd_board`` must call ``assembly.verdict`` — the two lines wave-8 commit
-    7ed5219 silently dropped on a stale base."""
+def test_emit_calls_the_generator_and_cmd_board_calls_assembly_verdict():
     root = Path(asm.__file__).resolve().parents[2]
     emit_calls = _hook_call_targets(root / "schgen" / "generate" / "pcb"
                                     / "emit.py", "generate")

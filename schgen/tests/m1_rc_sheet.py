@@ -1,11 +1,3 @@
-"""m1_rc — the M1 smoke-test sheet: RC divider, engine-placed.
-
-+3V3 -- R1 -- MID(port) -- R2 -- GND, with C1 from MID to GND. The original
-M1 milestone hand-placed this circuit (schgen/tests/m1_rc.py); this sheet is
-the same NETLIST with zero geometry — the placement engine derives the
-divider stack, the hanging cap and the MID port label from topology alone.
-"""
-
 from __future__ import annotations
 
 from schgen.core.model import Circuit

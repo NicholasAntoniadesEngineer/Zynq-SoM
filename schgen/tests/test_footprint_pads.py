@@ -1,15 +1,3 @@
-"""Tests for the footprint pad-coverage gate (schgen/verify/footprint_pads.py).
-
-Locks the LAW-0 invariant: a symbol pin NUMBER with no PAD in the assigned
-footprint is a guaranteed OPEN and must be flagged. A part whose every symbol
-pin has a pad passes; a pad-number parse covers both the single-line and the
-multi-line .kicad_mod formats; and the CURRENT board is CLEAN — the ethernet:T1
-25/26 open that motivated the gate is fixed (faithful 24-pad HX5008NL), so the
-hard-fail gate passes with zero pin-without-pad.
-
-Synthetic footprints are written to a tmp dir and referenced by bare path, so
-the tests are pure/offline (no dependency on the KiCad install)."""
-
 from __future__ import annotations
 
 import types
@@ -22,7 +10,6 @@ def _sheet(name, c):
     return types.SimpleNamespace(name=name, circuit=c)
 
 
-# Minimal .kicad_mod bodies in BOTH pad layouts schgen meets in the wild.
 def _mod_singleline(nums) -> str:
     pads = "\n".join(
         f'  (pad "{n}" smd roundrect (at 0 0) (size 1 1) (layers "F.Cu"))'
@@ -47,14 +34,12 @@ def test_pad_regex_both_formats():
         b.write_text(_mod_multiline(["1", "2", "15"]))
         assert footprint_pads._read_pad_numbers(a) == {"1", "2", "3"}
         assert footprint_pads._read_pad_numbers(b) == {"1", "2", "15"}
-        # an empty-number pad (NPTH/fiducial) is dropped, never referenced.
         c = pathlib.Path(td) / "c.kicad_mod"
         c.write_text(_mod_singleline(["1", "", "2"]))
         assert footprint_pads._read_pad_numbers(c) == {"1", "2"}
 
 
 def test_pin_exceeding_pads_is_detected():
-    # A 3-pad footprint with a symbol that uses pin 4 -> pin 4 is a dead OPEN.
     import pathlib
     import tempfile
     with tempfile.TemporaryDirectory() as td:
@@ -62,13 +47,13 @@ def test_pin_exceeding_pads_is_detected():
         mod.write_text(_mod_singleline(["1", "2", "3"]))
 
         class _Lib:
-            def pin_numbers(self, lib_id):     # symbol uses 1..4
+            def pin_numbers(self, lib_id):
                 return {"1", "2", "3", "4"}
 
         c = Circuit("t", "t")
         c.part("U1", "X:Y", "PART", str(mod))
         c.net("A", "U1.1")
-        c.net("A", "U1.2")   # geometry irrelevant here
+        c.net("A", "U1.2")
         r = footprint_pads.run([_sheet("t", c)], lib=_Lib())
         assert not r.ok, "pin 4 with no pad must be a VIOLATION"
         assert r.checked == 1
@@ -107,18 +92,15 @@ def test_unresolved_footprint_is_reported_not_crashing():
             return {"1", "2"}
 
     r = footprint_pads.run([_sheet("t", c)], lib=_Lib())
-    assert r.ok                          # unresolved never fails the build
+    assert r.ok
     assert r.checked == 0
     assert any("NoSuchFootprint" in u for u in r.unresolved)
 
 
 def test_current_board_clean():
-    # After the HX5008NL rebuild (faithful 24-pad dossier), the board has ZERO
-    # pin-without-pad: every symbol pin lands on a real footprint pad. The gate
-    # is hard-fail and must PASS on the current board.
     from schgen.core.link import all_subsystem_paths, load_subsystem
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     r = footprint_pads.run(sheets)
-    assert r.checked > 100, r.checked      # broad real coverage, not a no-op
+    assert r.checked > 100, r.checked
     assert r.ok, f"unexpected pin-without-pad: {r.violations}"
     assert not r.violations, r.violations

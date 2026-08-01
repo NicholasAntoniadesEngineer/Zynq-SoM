@@ -1,20 +1,3 @@
-"""Tests for the 3D-model coverage gate (schgen/verify/model3d_gate.py).
-
-Locks the SOFT-gate contract:
-  * a footprint whose (model ...) path RESOLVES to a file on disk counts as
-    covered; a bare/missing/broken ref does NOT;
-  * a documented-unmatched part keeps the gate GREEN (ok=True) and lands in
-    .unmatched (not .broken / .missing);
-  * an UNDOCUMENTED broken/missing ref flips ok=False (visible regression);
-  * the one-line summary + report are DETERMINISTIC (sorted by MPN);
-  * the CURRENT real parts/ tree is covered (every custom footprint either
-    resolves a stock model or is a documented unmatched part — no surprise
-    gaps), proving the gate passes on the shipped board.
-
-Synthetic footprints are written to a tmp dir with a fake 3D-model dir, so the
-core resolution logic is pure/offline; one test also runs against the real
-parts/ tree to lock the shipped coverage."""
-
 from __future__ import annotations
 
 import pathlib
@@ -65,7 +48,6 @@ def test_resolving_model_is_covered(monkeypatch):
 
 
 def test_bare_wrl_ref_is_broken_and_fails(monkeypatch):
-    # The pre-fix EasyEDA bare-filename ref: a relative path never resolves.
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         parts = root / "parts"
@@ -75,14 +57,14 @@ def test_bare_wrl_ref_is_broken_and_fails(monkeypatch):
         res = g.check(model_dir=root / "3dmodels")
         assert res.covered == 0
         assert "X1" in res.broken
-        assert res.ok is False          # undocumented broken ref -> regression
+        assert res.ok is False
 
 
 def test_missing_model_clause_fails(monkeypatch):
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         parts = root / "parts"
-        _make_parts(parts, {"X2": None})       # no (model ...) at all
+        _make_parts(parts, {"X2": None})
         _patch(monkeypatch, parts, known={})
         res = g.check(model_dir=root / "3dmodels")
         assert res.covered == 0
@@ -91,8 +73,6 @@ def test_missing_model_clause_fails(monkeypatch):
 
 
 def test_documented_unmatched_stays_green(monkeypatch):
-    # A part on the documented unmatched list with NO model clause is a KNOWN
-    # gap: it lands in .unmatched, NOT .missing/.broken, and keeps ok=True.
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         parts = root / "parts"
@@ -108,36 +88,26 @@ def test_line_and_report_deterministic(monkeypatch):
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         parts = root / "parts"
-        # two unmatched, declared OUT of sorted order on disk creation
         _make_parts(parts, {"ZZ": None, "AA": None})
         _patch(monkeypatch, parts, known={"ZZ": "z", "AA": "a"})
         res = g.check(model_dir=root / "3dmodels")
-        # unmatched list in the one-line summary is sorted by MPN
         assert res.line() == ("3D MODELS: 0/2 footprints; 2 unmatched: "
                               "[AA, ZZ]")
-        # report stable across calls
         assert res.report() == g.check(model_dir=root / "3dmodels").report()
 
 
 def test_real_parts_tree_is_covered_or_documented():
-    """The shipped parts/ tree: every custom footprint either resolves a stock
-    3D model or is a documented unmatched part — NO undocumented gap, so the
-    SOFT gate is green on the real board."""
     res = g.check()
-    assert res.total >= 50            # ~56 custom footprints
-    assert res.covered >= 50          # the overwhelming majority have a model
-    assert res.ok is True             # no broken/missing undocumented ref
+    assert res.total >= 50
+    assert res.covered >= 50
+    assert res.ok is True
     assert not res.broken
     assert not res.missing
-    # every gap is an explicitly documented unmatched part
     for mpn in res.unmatched:
         assert mpn in g._KNOWN_UNMATCHED
 
 
-# ---- the per-part FIT law (a model must MATCH the footprint, not just exist) ----
-
 def _fitwrl(w_in, h_in):
-    """A minimal VRML box w_in x h_in (in 0.1-inch VRML units -> x2.54 mm)."""
     return ("#VRML V2.0 utf8\nShape{geometry IndexedFaceSet{coord Coordinate{"
             f"point [{-w_in/2} {-h_in/2} 0, {w_in/2} {-h_in/2} 0, "
             f"{w_in/2} {h_in/2} 0, {-w_in/2} {h_in/2} 0] }}}}\n")
@@ -154,34 +124,26 @@ def _fitfp(w_mm, h_mm):
 def test_fit_law_passes_a_matching_model_and_fails_a_misfit(tmp_path):
     from schgen.verify import model3d_gate as g
     mod = tmp_path / "X.kicad_mod"
-    # footprint body ~5.08 x 5.08 mm; a VRML box of 2.0 x 2.0 (0.1in) = 5.08 mm
     mod.write_text(_fitfp(5.08, 5.08))
     good = tmp_path / "good.wrl"
     good.write_text(_fitwrl(2.0, 2.0))
     body = "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 0))"
-    assert g._fit_ok(mod, body, good) is None              # matches -> OK
+    assert g._fit_ok(mod, body, good) is None
 
-    # a 4x-oversized body must FAIL (the wrong-size-stock-model class of bug)
     big = tmp_path / "big.wrl"
     big.write_text(_fitwrl(8.0, 8.0))
     assert g._fit_ok(mod, body, big) is not None
 
-    # a 90deg-rotated NON-square model flips the aspect outside the band
-    mod.write_text(_fitfp(10.16, 2.54))                       # 10.16 x 2.54 mm body
+    mod.write_text(_fitfp(10.16, 2.54))
     rot = tmp_path / "rot.wrl"
-    rot.write_text(_fitwrl(4.0, 1.0))   # 10.16 x 2.54
+    rot.write_text(_fitwrl(4.0, 1.0))
     assert g._fit_ok(mod, "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 0))",
-                     rot) is None                          # aligned -> OK
+                     rot) is None
     assert g._fit_ok(mod, "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 90))",
-                     rot) is not None                      # 90deg -> MISFIT
+                     rot) is not None
 
-
-# ---- the per-part POSITION law (a model must sit ON its pads, not beside them) -
-# HARD: catches the EasyEDA c_origin unit-mismatch that planted SOT-23 bodies
-# ~5.4 mm off their pads (0% overlap) while the SOFT size-fit check passed.
 
 def _padfp():
-    """A footprint with two SMD pads spanning ~3 mm (a SOT-23-ish pad field)."""
     return ('(footprint "X"\n'
             '  (pad "1" smd roundrect (at -1.0 0) (size 0.8 1.6) (layers "F.Cu"))\n'
             '  (pad "2" smd roundrect (at 1.0 0) (size 0.8 1.6) (layers "F.Cu"))\n'
@@ -193,22 +155,18 @@ def test_position_law_fails_a_body_planted_off_its_pads(tmp_path):
     mod = tmp_path / "X.kicad_mod"
     mod.write_text(_padfp())
     wrl = tmp_path / "m.wrl"
-    wrl.write_text(_fitwrl(1.0, 0.8))        # ~2.54 x 2.03 mm body, centred at 0,0
+    wrl.write_text(_fitwrl(1.0, 0.8))
     scale_rot = "\n(scale (xyz 1 1 1))\n(rotate (xyz 0 0 0))"
 
-    # centred offset -> body sits over the pads -> OK
     assert g._placed_ok(mod, "(offset (xyz 0 0 0))" + scale_rot, wrl) is None
 
-    # the real bug: a 5.4 mm offset plants the body clean off the pads -> MISPLACED
     bad = g._placed_ok(mod, "(offset (xyz -5.4 1.5 0))" + scale_rot, wrl)
     assert bad is not None and "off its pads" in bad
 
-    # a small (sub-mm) offset stays within the overlap band -> OK (no false-fail)
     assert g._placed_ok(mod, "(offset (xyz 0.3 0 0))" + scale_rot, wrl) is None
 
 
 def test_position_law_is_hard_in_the_result():
-    """The real parts must all pass the HARD position check (board ships clean)."""
     from schgen.verify import model3d_gate as g
     r = g.check()
     assert not r.misplaced, f"models planted off their pads: {dict(r.misplaced)}"

@@ -1,9 +1,3 @@
-"""Tests for the per-part rule engine (schgen/verify/part_rules.py).
-
-Locks: the CURRENT board passes (0 findings — it self-derates); a synthetic
-under-rated cap FAILS the CAP_VOLTAGE rule; the value parser; and a waiver
-demotes a finding to a note. Pure/offline (powertree.rail_volts only)."""
-
 from __future__ import annotations
 
 import types
@@ -29,12 +23,10 @@ def test_current_board_passes_part_rules():
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     r = part_rules.analyze(sheets)
     assert r.ok, f"unexpected findings: {r.findings}"
-    assert r.checked > 50            # real coverage, not a no-op
+    assert r.checked > 50
 
 
 def test_underrated_cap_fails():
-    # a 25 V X5R cap (C15850) directly across the 20 V +VIN rail needs >= 2x =
-    # 40 V -> must FAIL CAP_VOLTAGE.
     c = Circuit("t", "t")
     c.part("C1", "Device:C", "10u", "Capacitor_SMD:C_0805_2012Metric",
            LCSC="C15850")
@@ -45,7 +37,6 @@ def test_underrated_cap_fails():
 
 
 def test_adequately_rated_cap_passes():
-    # the same 25 V cap on +3V3 (needs 2x = 6.6 V) is fine.
     c = Circuit("t", "t")
     c.part("C1", "Device:C", "10u", "Capacitor_SMD:C_0805_2012Metric",
            LCSC="C15850")
@@ -63,5 +54,5 @@ def test_waiver_demotes_cap_finding_to_note():
     c.net("GND", "C1.2")
     c.waive_part_rule("C1", "bench-validated under the actual DC bias")
     r = part_rules.analyze([_sheet("t", c)], pt_res=powertree.Result())
-    assert r.ok                                   # no hard finding
+    assert r.ok
     assert any("WAIVED" in n and "C1" in n for n in r.notes), r.notes

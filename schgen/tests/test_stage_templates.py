@@ -1,27 +1,3 @@
-"""Tests for the STAGE-TEMPLATE placement engine (schgen/generate/pcb/
-stage_templates) — the Phase-L ``power`` pilot.
-
-Four layers, in the order the spec ranks them:
-
-(1) BYTE-IDENTITY for every OTHER sheet — the decisive regression test. Compute
-    the shared ZoneGeom once with the placement-contract registry DISABLED
-    (``load_contract`` monkeypatched to return None everywhere) and once ENABLED,
-    and assert every per-sheet field (zone_box / top_off / bot_off / side_of /
-    conn_rot / zone_extra_rot) is EXACTLY equal for every sheet except ``power``.
-    The template must touch nothing but its own contracted zone.
-
-(2) GATE-GREEN integration — build the real board with the template active and
-    assert ``placement_contract_gate.check`` returns ok=True, 0 violations, no
-    unresolved refs. The full summary is printed for the orchestrator.
-
-(3) UNIT — the template output is deterministic (two runs identical); every
-    contract member lands top-side; and no two members' courtyards overlap within
-    the zone (reusing the gate's pad boxes + PLACE_CLEAR halo).
-
-The build_model-backed tests are module-scoped fixtures (~60-120 s each) so the
-board is built at most a couple of times.
-"""
-
 from __future__ import annotations
 
 import pytest
@@ -31,35 +7,19 @@ from schgen.generate.pcb.constants import PLACE_CLEAR
 from schgen.verify import placement_contract_gate as g
 
 _POWER = "power"
-# Every engine-WIRED sheet gets a stage template, so its zone geometry LEGITIMATELY
-# differs registry-on vs -off; only these sheets may change. usb_pd joined in the
-# D11 wave (its proximity-cluster template). Read the live set so a future wiring
-# needs no test edit.
 _WIRED = set(g._WIRED_SHEETS)
 
 
-# ---------------------------------------------------------------------------
-# BOARD-GROWTH KNOB invariants (frozen datasheet template)
-# ---------------------------------------------------------------------------
-
 def test_template_clear_frozen_at_baseline():
-    """The datasheet-stage geometry must use TEMPLATE_CLEAR, FROZEN at the
-    byte-identical baseline, so a board-growth PLACE_CLEAR never slides a
-    contract member past its datasheet window nor collapses a template zone.
-    Guards the frozen-template swap (constants.TEMPLATE_CLEAR ==
-    PLACE_CLEAR_BASELINE, and stage_templates imports it)."""
     from schgen.generate.pcb.constants import (
         PLACE_CLEAR_BASELINE,
         TEMPLATE_CLEAR,
     )
     assert TEMPLATE_CLEAR == PLACE_CLEAR_BASELINE == 0.5
-    assert T.TEMPLATE_CLEAR == 0.5           # the name the templates actually use
+    assert T.TEMPLATE_CLEAR == 0.5
 
 
 def test_place_clear_env_default_is_baseline(monkeypatch):
-    """With SCHGEN_PLACE_CLEAR unset, PLACE_CLEAR is the baseline 0.5 (shipping
-    board byte-identical). A set value is read as a float; a malformed value
-    fails loudly."""
     import importlib
 
     from schgen.generate.pcb import constants as C
@@ -72,20 +32,11 @@ def test_place_clear_env_default_is_baseline(monkeypatch):
     monkeypatch.setenv("SCHGEN_PLACE_CLEAR", "not-a-float")
     with pytest.raises(ValueError):
         importlib.reload(C)
-    # restore the module to the baseline value for any later test in this session
     monkeypatch.delenv("SCHGEN_PLACE_CLEAR", raising=False)
     importlib.reload(C)
 
 
-# ---------------------------------------------------------------------------
-# helpers to drive subsystem_zone_geometry with the registry on/off
-# ---------------------------------------------------------------------------
-
 def _zone_geom_with_contract(enabled: bool):
-    """Compute the shared ZoneGeom with the placement-contract registry either
-    ENABLED (real) or DISABLED (``load_contract`` -> None for every sheet, so the
-    template hook always falls through to the legacy packer). Restores the real
-    loader afterwards."""
     from schgen.generate.pcb import placement
     real = g.load_contract
     try:
@@ -96,14 +47,7 @@ def _zone_geom_with_contract(enabled: bool):
         g.load_contract = real                          # type: ignore[assignment]
 
 
-# ---------------------------------------------------------------------------
-# (1) BYTE-IDENTITY for every sheet except `power`
-# ---------------------------------------------------------------------------
-
 def test_every_other_sheet_is_byte_identical():
-    """The decisive regression test: enabling the templates changes ONLY the
-    engine-WIRED zones (``power`` + ``usb_pd``); every OTHER sheet's geometry is
-    byte-identical (the legacy packer is untouched)."""
     off = _zone_geom_with_contract(enabled=False)
     on = _zone_geom_with_contract(enabled=True)
 
@@ -121,9 +65,6 @@ def test_every_other_sheet_is_byte_identical():
             changed.append(sheet)
     assert not changed, f"template perturbed non-wired sheets: {changed}"
 
-    # per-ref side / conn_rot / zone_extra_rot: identical for every ref that is
-    # NOT a wired-sheet ref (the templates' same-side override + rotations are the
-    # only intended deltas, and they live entirely on the wired sheets).
     wired_refs: set[str] = set()
     for s in _WIRED:
         wired_refs |= set(on.refs_by_sheet.get(s, [])) \
@@ -143,30 +84,21 @@ def test_every_other_sheet_is_byte_identical():
             continue
         assert off.zone_extra_rot.get(ref) == on.zone_extra_rot.get(ref), ref
 
-    # and the wired zones MUST have actually changed (proves the templates ran).
     for s in _WIRED:
         assert off.zone_box.get(s) != on.zone_box.get(s), \
             f"the template did not change the {s} zone at all"
 
 
-# ---------------------------------------------------------------------------
-# (3) UNIT — determinism, top-side, no courtyard overlap (no board build)
-# ---------------------------------------------------------------------------
-
 @pytest.fixture(scope="module")
 def _power_inputs():
-    """side_of / bbox_of / resolvable / refs for the ``power`` sheet, built the
-    SAME way subsystem_zone_geometry does (per-sheet decoupling classification on
-    the board-unique ref namespace), so build_zone gets exactly its real inputs —
-    with no full board build."""
     from schgen.core.link import load_subsystem
     from schgen.core.model import PinRef
     from schgen.generate.board import _renamed_ref
     from schgen.generate.pcb.footprint import _footprint_bbox, resolve_mod
     from schgen.generate.pcb.placement import _classify_side, _decoupling_caps
 
-    band = g._board_refs_by_sheet(_POWER)  # noqa: F841 — force the band load path
-    idx = 20                               # power sheet band (carrier/sheet_index)
+    band = g._board_refs_by_sheet(_POWER)  # noqa: F841
+    idx = 20
     sc = load_subsystem(_POWER)
     snets: dict[str, list[PinRef]] = {}
     for nname, net in sc.circuit.nets.items():
@@ -194,7 +126,6 @@ def _power_inputs():
 
 def _run_template(inputs):
     refs, side_of, bbox_of, resolvable = inputs
-    # force the same-side override the hook applies before templating
     side = dict(side_of)
     for m in T.contract_member_brefs(_POWER, g.load_contract(_POWER),
                                      resolvable):
@@ -206,7 +137,6 @@ def _run_template(inputs):
 
 
 def test_template_is_deterministic(_power_inputs):
-    """Two runs produce byte-identical offsets / zone / rotations."""
     r1, rot1, _ = _run_template(_power_inputs)
     r2, rot2, _ = _run_template(_power_inputs)
     assert r1 is not None and r2 is not None
@@ -215,8 +145,6 @@ def test_template_is_deterministic(_power_inputs):
 
 
 def test_all_contract_members_are_top_side(_power_inputs):
-    """Every constructed member is on the top offset map (never bottom) — the
-    same_side override (SNVSBD5D 11.1 loop-area rule)."""
     (top_off, bot_off, _zw, _zh), _rot, _side = _run_template(_power_inputs)
     members = T.contract_member_brefs(
         _POWER, g.load_contract(_POWER), _power_inputs[3])
@@ -226,19 +154,10 @@ def test_all_contract_members_are_top_side(_power_inputs):
 
 
 def test_no_courtyard_overlap_in_zone(_power_inputs):
-    """No two placed parts' courtyards overlap within the emitted zone (reusing
-    the gate's pad boxes + a PLACE_CLEAR halo — the template asserts this by
-    construction and widens gaps on any collision)."""
     (top_off, bot_off, _zw, _zh), rot, _side = _run_template(_power_inputs)
     _refs, _side_in, bbox_of, resolvable = _power_inputs
     from schgen.generate.pcb.mating_face import _rot_bbox_cw
 
-    # Courtyard overlap is a PER-SIDE property: a TOP part and a BOTTOM part at the
-    # same XY do NOT collide (different copper layers) — this is exactly how the
-    # legacy packer overlays its top+bottom sub-packs on one XY area, and the
-    # template's leftovers follow suit. Check overlaps WITHIN each side only (top
-    # holds every contract member + top leftovers; bottom holds bottom leftovers).
-    # Bbox transform is SIDE-INDEPENDENT (unified no-bottom-mirror convention).
     for off in (top_off, bot_off):
         boxes: list[tuple[str, tuple[float, float, float, float]]] = []
         for ref, (ox, oy) in off.items():
@@ -255,10 +174,6 @@ def test_no_courtyard_overlap_in_zone(_power_inputs):
 
 
 def test_bulk_out_caps_seated_at_inductor_output(_power_inputs):
-    """v2: the template seats every COUT (bulk_out) cap within the contract's
-    5 mm bound of its stage's inductor OUTPUT pad, on the top side. Reads the
-    contract to find the caps/inductor, then measures with the gate's pad boxes —
-    the same measure the gate applies to the emitted board."""
     (top_off, _bot_off, _zw, _zh), rot, _side = _run_template(_power_inputs)
     contract = g.load_contract(_POWER)
     band = g._board_refs_by_sheet(_POWER)
@@ -287,43 +202,19 @@ def test_bulk_out_caps_seated_at_inductor_output(_power_inputs):
 
 
 def test_power_zone_width_within_budget(_power_inputs):
-    """v2 acceptance (hard): the rebuilt power ZONE width is <= 48 mm — the
-    multi-row layout search stacked the bucks so the E-band no longer inflates."""
     (_top, _bot, zw, _zh), _rot, _side = _run_template(_power_inputs)
     assert zw <= 48.0, f"power zone width {zw:.2f}mm exceeds the 48 mm budget"
 
-
-# ---------------------------------------------------------------------------
-# (1b) PROXIMITY-CLUSTER template — usb_pd (D11 wiring), no board build
-# ---------------------------------------------------------------------------
-# The generic proximity-cluster builder anchors the IC at the origin and seats the
-# 6-part FUSB302B bypass/CC network by the SAME backtracking search the buck uses.
-# These drive build_zone on usb_pd's REAL inputs (its band + footprints), with NO
-# full board build, and assert: it produces a result, it is deterministic, every
-# member lands top-side, and the emitted geometry PASSES usb_pd's intra-zone gate.
 
 _USB_PD = "usb_pd"
 
 
 def _hook_facing(sheet: str, contract: dict) -> str | None:
-    """The FACING hint exactly as the subsystem_zone_geometry hook derives it
-    (``_downstream_facing`` or ``_media_facing`` on the declarative floorplan)."""
     from schgen.generate.pcb.placement import _downstream_facing, _media_facing
     return _downstream_facing(sheet, contract) or _media_facing(sheet, contract)
 
 
 def _subsystem_inputs(sheet: str):
-    """side_of / bbox_of / resolvable / refs for ``sheet``, built the SAME way
-    subsystem_zone_geometry does (per-sheet decoupling classification on the
-    board-unique ref namespace), so build_zone gets its real inputs — no board
-    build. Mirrors ``_power_inputs`` for an arbitrary contracted sheet.
-
-    Also derives ``conn_rot`` (bref -> LAW-6 placement rotation for every
-    off-board mating connector) and ``outer_dir`` (the sheet's floorplan board
-    edge) EXACTLY as subsystem_zone_geometry does — same helpers
-    (``_connector_sheet_edges`` on carrier/floorplan.json ``edges``,
-    ``connector_edge_rotation`` on ``CONN_MATING_FACE[part.value]``) — so the
-    harness solves and renders the SAME frame the emitted board builds."""
     import json
 
     from schgen.core.link import load_subsystem
@@ -385,8 +276,6 @@ def _run_prox(inputs):
 
 
 def test_proximity_zone_is_deterministic(_usb_pd_inputs):
-    """Two runs of the proximity-cluster template are byte-identical (no
-    randomness — the same discipline as the buck template)."""
     r1, rot1, _, _ = _run_prox(_usb_pd_inputs)
     r2, rot2, _, _ = _run_prox(_usb_pd_inputs)
     assert r1 is not None and r1 == r2, "proximity template not deterministic"
@@ -394,8 +283,6 @@ def test_proximity_zone_is_deterministic(_usb_pd_inputs):
 
 
 def test_proximity_all_members_top_side(_usb_pd_inputs):
-    """Every one of usb_pd's 6 contracted parts (U1 + the 5 caps) lands on the
-    top offset map — the same_side override (FUSB302B EVB co-location)."""
     (top_off, bot_off, _zw, _zh), _rot, _side, _c = _run_prox(_usb_pd_inputs)
     members = T.contract_member_brefs(_USB_PD, g.load_contract(_USB_PD),
                                       _usb_pd_inputs[3])
@@ -406,9 +293,6 @@ def test_proximity_all_members_top_side(_usb_pd_inputs):
 
 
 def test_proximity_zone_passes_its_own_gate(_usb_pd_inputs):
-    """The emitted proximity geometry PASSES usb_pd's intra-zone placement
-    contract (all 5 proximity structures + same_side), measured with the gate's
-    pad boxes — the same measure the gate applies to the real board."""
     (top_off, _bot, _zw, _zh), rot, _side, contract = _run_prox(_usb_pd_inputs)
     band = g._board_refs_by_sheet(_USB_PD)
     resolvable = _usb_pd_inputs[3]
@@ -440,20 +324,12 @@ def test_proximity_zone_passes_its_own_gate(_usb_pd_inputs):
     assert res.proximity_fail == 0 and res.same_side_fail == 0, res.summary()
 
 
-# ---------------------------------------------------------------------------
-# (2) GATE-GREEN integration — the template makes the real board pass
-# ---------------------------------------------------------------------------
-
 @pytest.fixture(scope="module")
 def _real_model(carrier_model):
-    """The REAL templated board — session-shared build, per-module copy."""
     return carrier_model
 
 
 def test_gate_is_green_on_the_templated_board(_real_model):
-    """The placement-contract gate PASSES every WIRED sheet's zone (power + the
-    usb_pd proximity cluster): ok=True, no violations, no unresolved refs. Prints
-    each summary for the orchestrator."""
     for sheet in sorted(g._WIRED_SHEETS):
         res = g.check(_real_model, sheet)
         print(f"\n--- {sheet} ---\n" + res.summary())
@@ -463,10 +339,7 @@ def test_gate_is_green_on_the_templated_board(_real_model):
         assert not res.violations, res.summary()
 
 
-def test_wired_zone_coordinate_dumps(_real_model):
-    """Print a sorted (ref, x, y, rot, side) dump of every WIRED zone (power +
-    usb_pd) so the orchestrator can pre-check the layout before rendering. Always
-    passes — it is a report."""
+def test_wired_zone_coordinate_dump_is_a_report_that_always_passes(_real_model):
     for sheet in sorted(g._WIRED_SHEETS):
         rows = sorted(
             (i.ref, round(i.x, 3), round(i.y, 3), round(i.rotation, 1), i.side)
@@ -477,24 +350,7 @@ def test_wired_zone_coordinate_dumps(_real_model):
         assert rows
 
 
-# ---------------------------------------------------------------------------
-# (4) MULTI-ANCHOR contract solver — the general reusable mechanic. A contract
-#     whose proximity structures form a MULTI-ANCHOR graph (camera: J1->U1/U2,
-#     U1->R1/R2/R3 with min_from J1, R1->R2/R3) cannot be satisfied by the
-#     single-anchor cluster builder (its non-primary-anchor members fall to the
-#     unconstrained leftover shelf-pack). These drive build_zone on the sheet's
-#     REAL inputs (no board build) and assert the emitted geometry PASSES the
-#     sheet's own contract gate — the same measure the real board is held to.
-# ---------------------------------------------------------------------------
-
 def _zone_model(sheet: str, top_off, bot_off, rot, resolvable):
-    """Synthesize a minimal PcbModel from a build_zone offset result so the
-    placement-contract gate can measure it — the SAME construction the usb_pd
-    gate test uses, but including BOTH sides so a member that (wrongly) lands
-    bottom is still seen by the gate rather than silently dropped. ``rot`` must
-    be the FINAL per-part board rotation (``_run_zone`` folds the LAW-6
-    conn_rot in), so an edge sheet's mating connector renders exactly as the
-    emitted board places it."""
     from schgen.generate.pcb import (
         ORIGIN_X,
         ORIGIN_Y,
@@ -520,14 +376,6 @@ def _zone_model(sheet: str, top_off, bot_off, rot, resolvable):
 
 
 def _run_zone(sheet: str):
-    """build_zone on a sheet's real inputs using its DISCOVERED contract (works
-    for un-wired sheets too), with contract members forced top-side (the
-    same_side override the hook applies before templating), the hook's own
-    facing hint, and the sheet's REAL floorplan ``outer_dir`` — then the LAW-6
-    ``conn_rot`` folded into ``rot`` exactly as build_model composes
-    ``fixed_rot`` (conn_rot + zone_extra_rot; the solver's rot_out never
-    carries a mating connector), so ``rot`` is each part's FINAL board
-    rotation."""
     refs, side_of, bbox_of, resolvable, conn_rot, outer_dir = \
         _subsystem_inputs(sheet)
     contract = g.discover_contract(sheet)
@@ -544,12 +392,6 @@ def _run_zone(sheet: str):
 
 
 def test_fmc_header_root_is_flipped_and_members_follow():
-    """The generic root ORIENTATION chooser: fmc's 2x20 header (J11001) is
-    pad-180-symmetric, non-mating, and its inter-sheet nets land dominantly on
-    som_j3 with the pin sequence ANTI-aligned (inversions 229 vs 25), so the
-    zone must BUILD it at rot 180 and the header-cap members (C1/C2/C5 at
-    anchor pins 1/2) must seat within the 8 mm bound at the FLIPPED pin-1/2
-    end — while the same offsets against an UN-flipped header would miss it."""
     res, rot, resolvable, _contract = _run_zone("fmc")
     assert res is not None
     top_off, bot_off, _zw, _zh = res
@@ -567,7 +409,6 @@ def test_fmc_header_root_is_flipped_and_members_follow():
 
 
 def test_flip_chooser_excludes_mating_and_small_parts():
-    """LAW-6 exclusion + the >=10-pin floor, on the decision kernel itself."""
     from schgen.core.link import load_subsystem
     from schgen.generate.pcb.footprint import resolve_mod
     pmod = load_subsystem("pmod")
@@ -581,13 +422,6 @@ def test_flip_chooser_excludes_mating_and_small_parts():
 
 
 def test_camera_multi_anchor_contract_is_satisfied():
-    """CAMERA is the multi-anchor archetype: the FFC (J1) anchors the two ESD
-    arrays (<=5 mm), U1 anchors the three D-PHY terminations (<=40 mm) which must
-    ALSO clear the FFC by >=8 mm (min_from J1 — the receiver-end SI truth), and
-    R1 anchors the term cluster (<=6 mm). The single-anchor builder drops the
-    U1/R1-anchored members to the leftover pack (violating both the U1 proximity
-    and the >=8 mm FFC clearance). The general multi-anchor solver must place all
-    six parts so the camera contract's gate reports ZERO proximity violations."""
     res, rot, resolvable, contract = _run_zone("camera")
     assert res is not None, "build_zone returned None for camera"
     top_off, bot_off, _zw, _zh = res
@@ -601,11 +435,6 @@ def test_camera_multi_anchor_contract_is_satisfied():
 
 
 def _proximity_sheets() -> list[str]:
-    """Every discovered contract whose structures carry a ``proximity`` (so the
-    zone builder runs) but NO ``hot_loop`` (a buck — its own datasheet path). This
-    is exactly the set the general solver must satisfy: the wired usb_pd/ethernet
-    plus every currently-inert proximity contract. Data-driven so a future contract
-    is covered with no test edit."""
     out = []
     for sheet, c in g.discover_all().items():
         types = {s.get("type") for s in c.get("structures", [])}
@@ -616,11 +445,6 @@ def _proximity_sheets() -> list[str]:
 
 @pytest.mark.parametrize("sheet", _proximity_sheets())
 def test_proximity_contract_is_solved(sheet):
-    """The general zone builder places EVERY proximity contract so its own gate
-    reports zero proximity/same_side violations — measured on synthesized geometry
-    with the gate's pad boxes, no board build. This is the reusable-mechanic proof:
-    the placer satisfies any authored proximity/min_from/same_side graph (single-
-    or multi-anchor) programmatically, with no per-sheet intervention."""
     res, rot, resolvable, contract = _run_zone(sheet)
     assert res is not None, f"build_zone returned None for {sheet}"
     top_off, bot_off, _zw, _zh = res

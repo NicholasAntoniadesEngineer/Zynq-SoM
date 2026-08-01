@@ -1,18 +1,3 @@
-"""Emit a .kicad_sch from placed geometry. Every coordinate written verbatim.
-
-The emitter is intentionally dumb: placement/routing decide everything; this
-file just serialises. The only logic is symbol-definition embedding (copying
-the library s-expr into ``lib_symbols`` with the full lib_id name) and uuid
-generation. No transforms, no fallbacks, no repairs.
-
-DETERMINISM: every id is CONTENT-DERIVED — uuid5 over a fixed schgen
-namespace + the file's own (content-derived) sheet uuid + element kind +
-emission ordinal. Building the same design twice yields byte-identical
-files (zero diff churn on regeneration), while ids stay KiCad-unique:
-unique within a file because (kind, ordinal) never repeats, unique across
-a project because every file's sheet uuid (the scope) differs.
-"""
-
 from __future__ import annotations
 
 import copy
@@ -37,24 +22,19 @@ class PlacedPart:
     y: float
     rotation: int = 0
     footprint: str = ""
-    # property text positions (page coords) + rotation; None = hide
     ref_pos: tuple[float, float, int] | None = None
     val_pos: tuple[float, float, int] | None = None
 
 
 @dataclass
 class PlacedPower:
-    """A power/GND symbol instance; net name == value (KiCad derives the
-    global net from the Value field). ``net`` overrides for PWR_FLAG, whose
-    value is not a net name. ``show_value`` renders the rail name text at
-    ``val_pos`` (page coords) — placement owns that position like any text."""
-    lib_id: str          # power:GND / power:+3V3 …
-    value: str           # GND / +3V3 …
-    ref: str             # #PWR01 …
+    lib_id: str
+    value: str
+    ref: str
     x: float
     y: float
     rotation: int = 0
-    net: str = ""                                    # default: value
+    net: str = ""
     val_pos: tuple[float, float, int] | None = None
     show_value: bool = False
 
@@ -79,23 +59,15 @@ class Junction:
 
 @dataclass
 class HierLabel:
-    """A PORT-net label. Emitted as a GLOBAL label when the design is built
-    standalone (a hier label on a root sheet is an ERC error — no parent to
-    bind to; a once-only global label is explicitly ignored by ERC). Hierarchy
-    assembly later flips ``PlacedDesign.standalone`` and gets true hier labels."""
     name: str
     x: float
     y: float
-    rotation: int = 0          # 0 text-right, 180 text-left …
+    rotation: int = 0
     shape: str = "bidirectional"
 
 
 @dataclass
 class LocalLabel:
-    """A sheet-local net-name label placed ON a drawn wire. It never replaces
-    wiring (the net is fully drawn); it gives an internal SIGNAL net its name —
-    required because kicad-cli's netlist export omits unnamed nets, which would
-    blind the netlist gate to a purely-drawn net."""
     name: str
     x: float
     y: float
@@ -110,9 +82,6 @@ class NoConnect:
 
 @dataclass
 class SheetPin:
-    """A hierarchical pin on a sheet symbol (root-side of a sub-sheet's
-    hierarchical_label of the same name). ``rotation`` encodes the edge the
-    pin sits on, KiCad-style: 0 right edge, 180 left edge."""
     name: str
     x: float
     y: float
@@ -122,11 +91,8 @@ class SheetPin:
 
 @dataclass
 class SheetSymbol:
-    """A sub-sheet instance on a (root) sheet. ``uuid`` is fixed by the board
-    generator because it is a component of every symbol-instance path inside
-    the sub-sheet file ("/<root-uuid>/<this-uuid>")."""
-    name: str            # Sheetname property
-    file: str            # Sheetfile property (relative path)
+    name: str
+    file: str
     x: float
     y: float
     w: float
@@ -148,24 +114,17 @@ class PlacedDesign:
     no_connects: list[NoConnect] = field(default_factory=list)
     sheets: list[SheetSymbol] = field(default_factory=list)
     paper: str = PAPER_DEFAULT
-    standalone: bool = True   # True: PORT labels emit as global_label
+    standalone: bool = True
 
 
-# Fixed namespace for every schgen-generated id (uuid5 = SHA-1, stable
-# across runs/machines/Python versions — never random).
 _NS = uuid.uuid5(uuid.NAMESPACE_DNS, "schgen.kicad-id")
 
 
 def stable_uuid(*parts: object) -> str:
-    """Content-derived uuid: identical inputs -> identical id, forever."""
     return str(uuid.uuid5(_NS, "/".join(str(p) for p in parts)))
 
 
 class _IdFactory:
-    """Per-file id source: uuid5(scope, kind, ordinal). ``scope`` is the
-    file's sheet uuid, itself content-derived — so ids are deterministic
-    AND unique within the file (ordinal) and across the project (scope)."""
-
     def __init__(self, scope: str) -> None:
         self._scope = scope
         self._n: dict[str, int] = {}
@@ -194,7 +153,7 @@ def _prop(name: str, value: str, x: float, y: float, rot: int = 0,
 
 def _embed_symbol(lib: Library, lib_id: str) -> list:
     block = copy.deepcopy(lib.get(lib_id).raw)
-    block[1] = lib_id            # "R" -> "Device:R"
+    block[1] = lib_id
     return block
 
 
@@ -202,21 +161,10 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
          instance_path: str | None = None,
          project: str | None = None,
          sheet_uuid: str | None = None) -> Path:
-    """Serialise one sheet.
-
-    Standalone (default): the sheet is its own root; the file uuid doubles as
-    the symbol-instance path. Hierarchy mode (board linker): the parent
-    generator owns the uuids — ``sheet_uuid`` is this file's uuid and
-    ``instance_path`` is the full root-to-here path ("/<root>/<sheet-symbol>")
-    each symbol instance must carry, with ``project`` the root project name.
-    """
     c = design.circuit
-    # The root sheet uuid MUST also be the symbol-instance path ("/<uuid>"):
-    # with a bare "/" KiCad cannot resolve instance references, and every net
-    # whose name would be pad-derived (no label, no power symbol) silently
-    # drops out of ERC and the exported netlist.
     inst_project = project or c.name
     root_uuid = sheet_uuid or stable_uuid(inst_project, c.name, "sheet")
+    # trap: a bare "/" instance path drops every pad-derived net from ERC + netlist
     inst_path = instance_path or f"/{root_uuid}"
     uid = _IdFactory(root_uuid)
     doc: list = [Sym("kicad_sch"),
@@ -225,11 +173,6 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                  [Sym("generator_version"), "1.0"],
                  [Sym("uuid"), root_uuid],
                  [Sym("paper"), design.paper],
-                 # TITLE-1: a populated title block (a blank Title/Rev/Date is
-                 # the clearest 'not a real schematic' tell). Title = the sheet
-                 # circuit's title; company fixed; a generated-by comment. NO
-                 # date node — a wall-clock date would break byte-determinism;
-                 # the content-derived fields keep every rebuild identical.
                  [Sym("title_block"),
                   [Sym("title"), c.title],
                   [Sym("company"), "Zynq SoM Carrier"],
@@ -303,7 +246,7 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                       val_pos: tuple[float, float, int] | None,
                       hide_ref: bool, hide_val: bool,
                       extra_fields: dict[str, str] | None = None) -> list:
-        extra_fields = dict(extra_fields or {})   # never mutate the caller's
+        extra_fields = dict(extra_fields or {})
         sdef = lib.get(lib_id)
         node: list = [Sym("symbol"),
                       [Sym("lib_id"), lib_id],
@@ -319,13 +262,8 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
         node.append(_prop("Reference", ref, rp[0], rp[1], rp[2], hide=hide_ref))
         node.append(_prop("Value", value, vp[0], vp[1], vp[2], hide=hide_val))
         node.append(_prop("Footprint", footprint, x, y, 0, hide=True))
-        # Datasheet is a KiCad-reserved property: source it from the
-        # authored fields (use_part lib-override) — emitting it again below
-        # as an extra field would be an illegal duplicate property.
         node.append(_prop("Datasheet", extra_fields.pop("Datasheet", ""),
                           x, y, 0, hide=True))
-        # Extra authored fields (LCSC part number, MPN, ...) — hidden, but in
-        # the file so KiCad BOM tools and JLC assembly see them.
         for fname, fval in extra_fields.items():
             node.append(_prop(fname, fval, x, y, 0, hide=True))
         for p in sdef.pins:

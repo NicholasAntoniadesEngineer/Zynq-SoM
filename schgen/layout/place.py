@@ -1,28 +1,3 @@
-"""Placement ENGINE v2: ALL geometry derived from circuit TOPOLOGY.
-
-A subsystem ``.py`` contains the NETLIST (plus optional declarative hints —
-net names and style keywords, never coordinates). This engine derives every
-anchor, wire plan and text position from the circuit structure:
-
-- SIGNAL-FLOW CHAIN: multi-pin parts ordered left->right by flow (the part
-  with the most PORT pins leftmost, connector-class sinks rightmost, middle
-  parts by shared-net adjacency); nets shared between adjacent parts route
-  straight across the channel as drawn wires.
-- TRUNK BUS / LADDER: a net with many same-structure taps (R||C legs onto a
-  common net, multi-part pins, a terminating safety cap) renders as one
-  trunk + vertical taps + junction dots — detected, not scripted.
-- REGULATOR STAGES: buck IC + L + FB divider + in/out caps (and LDO rows)
-  recognised from part roles and stacked as datasheet stage rows.
-- CONNECTOR FAN: a lone >=40-pin connector renders as the two-column label
-  fan with per-rail trunks (the SoM mezzanine sheets).
-- Per-side machinery shared by all templates: port fans, pull-up/filter
-  attachments, divider stacks, rail buses, decoupling clusters, PWR_FLAG
-  corner rows, collision-aware reference/value text placement.
-
-Feasibility loop: if routing fails or the visual gate objects, spacing is
-EXPANDED and the template re-runs. Rules never relax; whitespace grows.
-"""
-
 from __future__ import annotations
 
 import itertools
@@ -42,35 +17,13 @@ from schgen.verify import visual_gate
 from schgen.verify.visual_gate import Box, Junction, SheetGeometry
 
 U = GRID
-# Full diagonal extent of the no-connect 'X' marker KiCad renders at a pin
-# point (~1.27 mm across). Value/Reference/label text must clear its box.
 NC_MARKER = 1.27
 A4_CENTER = (148.59, 100.33)
 A3_CENTER = (210.82, 148.59)
-# Standard KiCad worksheet title block sits in the bottom-RIGHT corner of the
-# drawing frame. Measured from the emitted A3 render, its top-left inner corner
-# is at x~300, y~253 mm (frame right border ~408). Page content placed in the
-# bottom y-band must therefore stay LEFT of this x or it overruns the frame —
-# a LAW-1 defect the geometry-only visual gate cannot see. Left edge less a
-# small margin is the keepout the placer (and the gate) hold content out of.
 A3_TITLEBLOCK_LEFT = 300.0
 A3_TITLEBLOCK_TOP = 252.9
 TITLEBLOCK_MARGIN = 4.0
-# Tallest content a sheet may carry: the A3 budget place_and_route enforces
-# (265 mm), less the flags row every sheet appends below the extent.
-# Band stacking that would overrun this opens a NEW COLUMN instead.
 PAPER_H_BUDGET = 240.0
-# Widest a SINGLE connected component's row may grow before the chain template
-# WRAPS the offending part to a new row below (within-component wrap; demoting
-# the crossed channel to labeled stubs). The metric is ``ax - row_left`` — the
-# part's prospective anchor relative to the current row's left edge, measured at
-# placement time on the FIRST place_and_route spacing pass. PAPER_W_BUDGET is set
-# strictly ABOVE the widest such value any A3-fitting sheet reaches — instrumented
-# via SCHGEN_WRAP_INSTR, the widest is lcd's U1 at 292.7 mm (lcd is a legitimately
-# wide 3-part channel string that fits A3) — and strictly BELOW the overflowing
-# tree — motor_pwm's two reconverging 4-element 33R arrays put RN2 at 370.1 mm.
-# The (292.7, 370.1) gap makes 330 a clean separator: a STRICT NO-OP for every
-# fitting sheet (proven byte-identical), tripping only the genuine A3 overflow.
 PAPER_W_BUDGET = 330.0
 
 POWER_LIBS = {
@@ -81,7 +34,6 @@ POWER_LIBS = {
     "VBUS": "power:VBUS",
     "+VIN": "schgen:+VIN",
     "CHASSIS_GND": "schgen:CHASSIS_GND",
-    # gated module rails (bringup_power_gating dossier: SY6280 outputs)
     "+3V3_HDMI_TX": "schgen:+3V3_HDMI_TX",
     "+5V_HDMI_TX": "schgen:+5V_HDMI_TX",
     "+3V3_HDMI_RX": "schgen:+3V3_HDMI_RX",
@@ -89,7 +41,6 @@ POWER_LIBS = {
     "+3V3_SD": "schgen:+3V3_SD",
     "+3V3_LCD": "schgen:+3V3_LCD",
     "+5V_LCD": "schgen:+5V_LCD",
-    # SoM-provided rails (J-sheets / system controller)
     "+3V3_SC": "schgen:+3V3_SC",
     "+VCCO_13": "schgen:+VCCO_13",
     "+VCCO_33": "schgen:+VCCO_33",
@@ -97,7 +48,6 @@ POWER_LIBS = {
     "+VCCO_35": "schgen:+VCCO_35",
 }
 
-# KiCad ERC: a power_in pin needs a power_out / PWR_FLAG driver on its net.
 _FLAG_DRIVER_ETYPES = {"power_out", "output"}
 
 
@@ -119,14 +69,14 @@ def gceil(v: float) -> float:
 
 @dataclass
 class Spacing:
-    port_run: float = 10.16       # pin tip -> first (innermost) label anchor
-    label_tap_gap: float = 2.54   # label anchor -> attachment tap point
-    hang_stub: float = 2.54       # line -> first attachment pin
-    stagger_extra: float = 1.27   # clearance past the previous label's text
-    cap_pitch: float = 10.16      # decoupling-cluster column pitch
-    cluster_dx: float = 38.10     # IC anchor -> leftmost cluster column
-    cluster_dy: float = 20.32     # IC anchor -> cluster cap-anchor row
-    flags_dy: float = 16.51       # cluster row -> power-flag row
+    port_run: float = 10.16
+    label_tap_gap: float = 2.54
+    hang_stub: float = 2.54
+    stagger_extra: float = 1.27
+    cap_pitch: float = 10.16
+    cluster_dx: float = 38.10
+    cluster_dy: float = 20.32
+    flags_dy: float = 16.51
     flag_pitch: float = 10.16
 
     def expanded(self) -> Spacing:
@@ -152,9 +102,6 @@ class Placement:
     no_connects: list[NoConnect] = field(default_factory=list)
     plans: dict[str, list[list[tuple[float, float]]]] = field(default_factory=dict)
     boxes: list[Box] = field(default_factory=list)
-    # nets the engine deliberately drew as SEVERAL labeled islets (the
-    # datasheet idiom for ESD/shunt banks, pull-up ranks, demoted channels):
-    # the router accepts the split ONLY when every islet carries a label.
     label_bridged: set[str] = field(default_factory=set)
     paper: str = "A4"
 
@@ -162,8 +109,6 @@ class Placement:
         self.plans.setdefault(net, []).append(
             [(round(p[0], 3), round(p[1], 3)) for p in pts])
 
-
-# ---- geometry helpers --------------------------------------------------------
 
 def _xform(x: float, y: float, ax: float, ay: float,
            rot: int) -> tuple[float, float]:
@@ -192,7 +137,6 @@ def _value_anchor(sdef: SymbolDef, ax: float, ay: float,
 
 
 def _pin_text_boxes(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
-    """Conservative boxes for the rendered pin-number and pin-name texts."""
     out: list[Box] = []
     for pin in sdef.pins:
         if pin.hidden:
@@ -205,30 +149,30 @@ def _pin_text_boxes(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
         horiz = dy == 0
         if not sdef.pin_numbers_hidden and pin.number:
             w, h = tm.text_wh(pin.number)
-            if horiz:   # number above the stem
+            if horiz:
                 out.append(Box(mid[0] - w / 2, tip[1] - 0.2 - h,
                                mid[0] + w / 2, tip[1] - 0.2,
                                "pin_number", part.ref))
-            else:       # number left of the stem, text rotated
+            else:
                 out.append(Box(tip[0] - 0.2 - h, mid[1] - w / 2,
                                tip[0] - 0.2, mid[1] + w / 2,
                                "pin_number", part.ref))
         if not sdef.pin_names_hidden and pin.name not in ("", "~"):
             w, h = tm.text_wh(pin.name)
             w += 0.5
-            if dx > 0:      # left-side pin, name runs right into the body
+            if dx > 0:
                 out.append(Box(root[0] + 0.2, tip[1] - h / 2,
                                root[0] + 0.2 + w, tip[1] + h / 2,
                                "pin_name", part.ref))
-            elif dx < 0:    # right-side pin
+            elif dx < 0:
                 out.append(Box(root[0] - 0.2 - w, tip[1] - h / 2,
                                root[0] - 0.2, tip[1] + h / 2,
                                "pin_name", part.ref))
-            elif dy > 0:    # top-side pin, name runs down into the body
+            elif dy > 0:
                 out.append(Box(tip[0] - h / 2, root[1] + 0.2,
                                tip[0] + h / 2, root[1] + 0.2 + w,
                                "pin_name", part.ref))
-            else:           # bottom-side pin
+            else:
                 out.append(Box(tip[0] - h / 2, root[1] - 0.2 - w,
                                tip[0] + h / 2, root[1] - 0.2,
                                "pin_name", part.ref))
@@ -245,64 +189,42 @@ def _pin(sdef: SymbolDef, number: str) -> Pin:
 _SIDE_OF_ROT = {0: "left", 180: "right", 270: "top", 90: "bottom"}
 
 
-# ---- topology records ----------------------------------------------------------
-
 @dataclass
 class _Line:
-    """One fanned-out interface line on a part's left or right side."""
     net: str
     pin_pt: tuple[float, float]
-    attach: str | None        # ref of pull-up R / filter C tapping this line
+    attach: str | None
     attach_div: tuple[str, str] | None = None
     net_class: NetClass = NetClass.PORT
     pin_etype: str = ""
-    # connector-scale fan: the line's attachments were deferred to the
-    # rank rows below the flow — the line itself MUST carry a label so
-    # KiCad merges the islets by name (the netlist gate proves it)
     force_label: bool = False
 
 
 @dataclass
 class _FloatChain:
-    """A series chain through passive-only nets, linearised top->bottom.
-
-    kind: 'rail'  — POWER rail at the top, GROUND at the bottom (LED columns,
-                    standalone dividers);
-          'trunk' — rooted on a trunk net at the top;
-          'pin'   — rooted on a multi-part pin (rendered as a pin stack).
-    """
     kind: str
-    root: str                                   # rail / trunk net / multi net
-    legs: list[tuple[str, str, str]]            # (ref, upper_net, lower_net)
-    hangs: dict[str, list[str]] = field(default_factory=dict)  # net -> caps
+    root: str
+    legs: list[tuple[str, str, str]]
+    hangs: dict[str, list[str]] = field(default_factory=dict)
 
 
 @dataclass
 class _Trunk:
     net: str
-    zone: str = "below"                          # 'above' | 'below'
-    direct: list = field(default_factory=list)   # (tip, side) multi-part pins
-    rungs: list = field(default_factory=list)    # (far_net, tip, side, [refs])
-    terms: list[str] = field(default_factory=list)   # hangcaps to GROUND-class
+    zone: str = "below"
+    direct: list = field(default_factory=list)
+    rungs: list = field(default_factory=list)
+    terms: list[str] = field(default_factory=list)
     chains: list[_FloatChain] = field(default_factory=list)
     nodes: list[float] = field(default_factory=list)
     y: float = 0.0
 
-
-# ---- the engine -----------------------------------------------------------------
 
 class _Engine:
     def __init__(self, c: Circuit, lib: Library, sp: Spacing) -> None:
         self.c = c
         self.lib = lib
         self.sp = sp
-        # PinRef -> Net index. net_of() is called ~1M times during a dense
-        # sheet's escape-router BFS; the bare Circuit.net_of is an O(nets x
-        # pins) linear scan. The circuit is immutable throughout placement
-        # (this engine only READS c.nets; board.uniquify deep-copies before a
-        # fresh place), so a once-built index is exactly equivalent. setdefault
-        # preserves net_of's first-match-wins order (a pin in two nets would be
-        # a short the netlist gate rejects, so the case never arises here).
         self._pin2net: dict = {}
         for _n in self.c.nets.values():
             for _p in _n.pins:
@@ -310,27 +232,21 @@ class _Engine:
         self.pl = Placement()
         self._pwr = 0
         self._flg = 0
-        self._n_box_bucks = 0                     # stacked box-buck stages (LM61460)
-        self._done: set[str] = set()             # placed part refs
-        self._pin_islets: set[str] = set()       # divider midpoints drawn as
-        #     top/bottom labeled islets, reassembled by _pin_divider_columns
-        self._rung_islets: list[tuple[str, str, str]] = []   # (trunk, far_net,
-        #     leg) trunk rungs whose escape lane wedged -> a rank column
-        self._sig_rows: list[float] = []         # SIGNAL/PORT side-pin rows on
-        #     the fan currently being placed (rail value text must dodge them)
-        self._rail_row_net: dict[float, str] = {}  # y-row -> rail net name for
-        #     every POWER/GROUND side pin (a rail symbol must clear FOREIGN rows)
+        self._n_box_bucks = 0
+        self._done: set[str] = set()
+        self._pin_islets: set[str] = set()
+        self._rung_islets: list[tuple[str, str, str]] = []
+        self._sig_rows: list[float] = []
+        self._rail_row_net: dict[float, str] = {}
         self._deferred_texts: list[tuple[PlacedPart, Box]] = []
-        self.orient: dict[str, int] = {}         # per-part rotation (0/180)
+        self.orient: dict[str, int] = {}
         self._classify()
 
-    # -- small factories ------------------------------------------------------
     def _power_lib(self, net: str) -> str:
         try:
             return POWER_LIBS[net]
         except KeyError:
             if net.startswith("+"):
-                # gated/cluster rails: schgen synthesizes the symbol
                 return f"schgen:{net}"
             raise PlaceError(f"no power symbol mapped for rail {net!r}") from None
 
@@ -354,13 +270,6 @@ class _Engine:
 
     def _dodge_value_off_nc(self, text: str, vp: tuple[float, float],
                             ax: float, ay: float) -> tuple[float, float]:
-        """If a power symbol's default Value-text box lands on a no-connect 'X'
-        marker (a neighbouring part's unused pin), nudge it clear ALONG the
-        symbol's value axis — away from the body — to the first position that
-        clears every NC marker (LAW 1). When the default position is already
-        clear (every existing sheet), this is an exact no-op so the byte output
-        of clean sheets is unchanged. Only NC markers steer the nudge here; the
-        anchor is otherwise authored to dodge the symbol's own geometry."""
         def hits_nc(px: float, py: float) -> bool:
             bx = tm.centered_box(text, px, py)
             for (nx0, ny0, nx1, ny1) in self._nc_boxes():
@@ -370,9 +279,6 @@ class _Engine:
             return False
         if not hits_nc(vp[0], vp[1]):
             return vp
-        # The value sits offset from the pin point along the symbol axis; step
-        # it further the SAME way (down for an up-arrow rail, etc.) past the NC
-        # row. The axis sign is (vp - pin) projected onto the dominant offset.
         dx, dy = vp[0] - ax, vp[1] - ay
         if abs(dy) >= abs(dx):
             step = (0.0, U if dy >= 0 else -U)
@@ -396,7 +302,6 @@ class _Engine:
 
     def passive(self, ref: str, x: float, y: float, rot: int,
                 text_side: str = "right") -> None:
-        """Place a 2-pin passive; ref above value beside the body."""
         part = self.c.parts[ref]
         sdef = self.lib.get(part.lib_id)
         body = body_box_page(sdef, x, y, rot, "body", ref)
@@ -433,7 +338,6 @@ class _Engine:
         self.pl.boxes.append(Box(*tm.llabel_box(net, x, y, rot),
                                  "label", f"label:{net}"))
 
-    # -- net query helpers ------------------------------------------------------
     def net_of(self, ref: str, pin: str):
         return self._pin2net.get(PinRef(ref, pin))
 
@@ -451,7 +355,6 @@ class _Engine:
                 return p
         raise PlaceError(f"{ref}: no pin on net {net!r}")
 
-    # -- free-space probes --------------------------------------------------------
     def _plan_seg_boxes(self):
         for paths in self.pl.plans.values():
             for path in paths:
@@ -461,12 +364,6 @@ class _Engine:
                     yield (x0 - 0.127, y0 - 0.127, x1 + 0.127, y1 + 0.127)
 
     def _nc_boxes(self):
-        """Bounding boxes for every placed no-connect 'X' marker. The marker
-        is an X of full extent NC_MARKER (KiCad draws ~1.27 mm across), so a
-        box of half-extent NC_MARKER/2 about its pin point. Value/Reference
-        text and labels must never overprint these (LAW 1) — they are NOT in
-        ``self.pl.boxes`` (kept out so the router does not block the unused pin
-        tip cell), so the dodge probes consult them separately here."""
         h = NC_MARKER / 2
         for nc in self.pl.no_connects:
             yield (nc.x - h, nc.y - h, nc.x + h, nc.y + h)
@@ -500,7 +397,6 @@ class _Engine:
 
     def _band_edge(self, y0: float, y1: float, side: int,
                    default: float) -> float:
-        """Outermost x edge of geometry intersecting the y band [y0, y1]."""
         edge = default
         for b in self.pl.boxes:
             if b.y0 < y1 and b.y1 > y0:
@@ -510,7 +406,6 @@ class _Engine:
                 edge = min(edge, sx0) if side < 0 else max(edge, sx1)
         return edge
 
-    # ---- classification --------------------------------------------------------
     def _classify(self) -> None:
         c, lib = self.c, self.lib
         self.multi = [r for r, p in c.parts.items()
@@ -545,11 +440,6 @@ class _Engine:
                 self.hang.setdefault(sig.name, []).append(ref)
             else:
                 self.series.append((ref, n1.name, n2.name))
-        # trunks: SIGNAL nets with many taps (or hinted); channel nets are
-        # subtracted later by the chain template. A PORT net spanning several
-        # multi-pin parts with many taps (e.g. a switched VBUS feeding the
-        # connector, the ESD array and CC pull-ups) is the same topology and
-        # renders as a trunk too — its label becomes a hier label on the bus.
         self.trunks: dict[str, _Trunk] = {}
         for n in c.nets.values():
             mp = {pr.ref for pr in n.pins if pr.ref in mset}
@@ -560,23 +450,6 @@ class _Engine:
             elif n.net_class is NetClass.PORT:
                 if len(n.pins) >= 4 and len(mp) >= 2:
                     self.trunks[n.name] = _Trunk(net=n.name)
-        # SHUNT parts (ESD/protection banks): every SIGNAL/PORT net on the
-        # part is carried by >= 2 OTHER multi-pin parts — the part shunts
-        # lines it does not source or sink. Datasheet idiom: a detached cell
-        # with a labeled stub per line (labels merge the net by name).
-        #
-        # A "pure protector" (a GND-referenced ESD/TVS clamp) is admitted with
-        # just ONE other multi-pin part: the canonical connector-edge ESD
-        # topology is one connector + one clamp (e.g. the HDMI-RX jack + a
-        # TPD4E02B04 array), so the protected line touches only the connector
-        # besides the clamp. We gate the relaxed threshold on a clamp
-        # SIGNATURE — every one of the part's signal/port pins is `passive`
-        # etype, it has a GROUND-class pin, and it has NO power-supply
-        # (POWER-class) pin — so a real series/inline or powered IC (a
-        # non-passive signal pin, no ground reference, OR a supply rail — e.g.
-        # an INA3221 current monitor with a VS rail + POWER-net sense pins, or a
-        # regulator) keeps the strict >= 2 rule and is never mis-routed through
-        # the shunt idiom (LAW 4). A pure protector touches only signals + GND.
         self.shunts: list[str] = []
         for ref in self.multi:
             sdef = lib.get(c.parts[ref].lib_id)
@@ -588,12 +461,12 @@ class _Engine:
                           for n in pin_nets)
             has_power = any(n is not None and n.net_class is NetClass.POWER
                             for n in pin_nets)
-            is_clamp = (ref[0] != "J"               # a connector is no clamp
+            is_clamp = (ref[0] != "J"
                         and bool(sig_pins)
                         and all(p.etype == "passive" for p in sig_pins)
-                        and has_gnd                  # GND-referenced ...
-                        and not has_power)           # ... and not a powered IC
-            thresh = 1 if is_clamp else 2     # connector+clamp: one peer is ok
+                        and has_gnd
+                        and not has_power)
+            thresh = 1 if is_clamp else 2
             sig = [n for n in c.nets.values()
                    if n.net_class in (NetClass.SIGNAL, NetClass.PORT)
                    and any(pr.ref == ref for pr in n.pins)]
@@ -605,13 +478,11 @@ class _Engine:
         self._extract_float_chains()
 
     def _extract_float_chains(self) -> None:
-        """Linearise passive-only net components into _FloatChains."""
         c = self.c
         floating = {n.name for n in c.nets.values()
                     if n.net_class in (NetClass.SIGNAL, NetClass.PORT)
                     and n.name not in self.multi_nets
                     and n.name not in self.trunks}
-        # legs touching each floating net: (ref, far_net, far_kind)
         legs: dict[str, list[tuple[str, str, str]]] = {f: [] for f in floating}
 
         def kind_of(net: str) -> str:
@@ -646,7 +517,7 @@ class _Engine:
 
         self.float_chains: list[_FloatChain] = []
         seen: set[str] = set()
-        for f in sorted(floating):   # set order is hash-seed noise
+        for f in sorted(floating):
             if f in seen or not legs[f]:
                 continue
             comp = {f}
@@ -661,13 +532,8 @@ class _Engine:
             if (len(comp) == 1
                     and self.c.nets[f].net_class is NetClass.PORT
                     and len(legs[f]) == 1 and legs[f][0][2] == "pin"):
-                # a PORT net reaching the flow through ONE series passive
-                # (Pmod-style series dampers): the part's fan draws it
-                # inline (_series_inline) — not a strap column
                 continue
             self.float_chains.append(self._linearise(comp, legs))
-        # chain legs are the CHAIN's to place — purge them from the
-        # pull/hang/series registries so no other machinery places them too
         used_refs = {ref for ch in self.float_chains
                      for ref, _u, _l in ch.legs} | \
                     {r for ch in self.float_chains
@@ -684,18 +550,16 @@ class _Engine:
 
     def _linearise(self, comp: set[str],
                    legs: dict[str, list[tuple[str, str, str]]]) -> _FloatChain:
-        ends: list[tuple[str, str, str, str]] = []   # (ref, net, far, kind)
+        ends: list[tuple[str, str, str, str]] = []
         for n in sorted(comp):
             for ref, far, fk in legs[n]:
                 if fk != "float":
                     ends.append((ref, n, far, fk))
-        # top end preference: trunk > pin > rail
         order = {"trunk": 0, "pin": 1, "rail": 2, "gnd": 3}
         ends.sort(key=lambda e: order[e[3]])
         if not ends:
             raise PlaceError(f"floating nets {sorted(comp)}: no rail/pin end")
         top = ends[0]
-        # bottom end: prefer GROUND through a resistor-ish part, else rail
         def is_cap(ref: str) -> bool:
             return self.c.parts[ref].lib_id.endswith(":C")
         bottoms = [e for e in ends[1:]]
@@ -723,7 +587,6 @@ class _Engine:
             used.add(ref)
             chain_legs.append((ref, cur, far))
             break
-        # leftover legs become hangs (caps to GND beside the chain)
         for n in sorted(comp):
             for ref, _far, fk in legs[n]:
                 if ref in used:
@@ -744,10 +607,6 @@ class _Engine:
                               legs: dict[str, list[tuple[str, str, str]]],
                               ends: list[tuple[str, str, str, str]]
                               ) -> _FloatChain:
-        """Single-ended chain: a floating PORT net strapped through passives
-        to ONE rail/GND end (e.g. a USB_ID 1k strap to GND). Renders as a
-        label-topped column — kind 'port', root = the PORT net at the open
-        (label) end, legs ordered top->bottom toward the rail/GND end."""
         if len(ends) != 1 or ends[0][3] not in ("rail", "gnd"):
             raise PlaceError(f"floating nets {sorted(comp)}: single-ended "
                              f"chain without a rail/GND end")
@@ -783,12 +642,9 @@ class _Engine:
         return _FloatChain(kind="port", root=root,
                            legs=list(reversed(rev)), hangs=hangs)
 
-    # ---- vertical / horizontal 2-pin placement helpers ---------------------------
     def _vertical_2pin(self, ref: str, x: float, y_attach: float,
                        attach_net: str, downward: bool,
                        text_side: str = "right") -> tuple[tuple[float, float], str]:
-        """Place ``ref`` vertically with its ``attach_net`` pin exactly at
-        (x, y_attach); the chain continues at the returned far point."""
         part = self.c.parts[ref]
         sdef = self.lib.get(part.lib_id)
         att_no = self._pin_of_net(ref, attach_net)
@@ -796,11 +652,11 @@ class _Engine:
         far_net = self.net_of(ref, far_no)
         assert far_net is not None
         p_att = _pin(sdef, att_no)
-        if abs(p_att.y) > 1e-6:                  # y-axis pin pair (R/C/L)
+        if abs(p_att.y) > 1e-6:
             off = abs(p_att.y)
             up = p_att.y > 0
             rot = (0 if up else 180) if downward else (180 if up else 0)
-        else:                                    # x-axis pin pair (LED)
+        else:
             off = abs(p_att.x)
             right = p_att.x > 0
             rot = (90 if right else 270) if downward else (270 if right else 90)
@@ -811,8 +667,6 @@ class _Engine:
 
     def _horizontal_2pin(self, ref: str, x: float, y: float,
                          left_net: str, text_side: str = "right") -> None:
-        """Place ``ref`` horizontally at anchor (x, y), the ``left_net`` pin
-        landing on the left."""
         part = self.c.parts[ref]
         sdef = self.lib.get(part.lib_id)
         left_no = self._pin_of_net(ref, left_net)
@@ -823,7 +677,6 @@ class _Engine:
             rot = 0 if p_left.x < 0 else 180
         self.passive(ref, x, y, rot, text_side=text_side)
 
-    # ---- part cell: body, texts, fans -------------------------------------------
     def _place_body(self, ref: str, ax: float, ay: float):
         part = self.c.parts[ref]
         rot = self.orient.get(ref, 0)
@@ -849,8 +702,6 @@ class _Engine:
         return pp, sdef, body, sides
 
     def _part_texts(self, pp: PlacedPart, body: Box) -> None:
-        """Collision-aware Reference / Value placement (checked against every
-        box and wire placed so far)."""
         for kind, text in (("reference", pp.ref), ("value", pp.value)):
             w, h = tm.text_wh(text)
             above = body.y0 - 1.905
@@ -870,7 +721,6 @@ class _Engine:
                     cands += [(cx, below + j * 2.54) for cx in xs]
                 for j in rows:
                     cands += [(cx, above - j * 2.54) for cx in xs]
-            # beside the body (for parts with pinless flanks)
             for j in (0, 1, 2):
                 cands.append((body.x1 + 0.8 + w / 2, pp.y + j * 2.54))
                 cands.append((body.x0 - 0.8 - w / 2, pp.y + j * 2.54))
@@ -889,19 +739,13 @@ class _Engine:
             self.pl.boxes.append(Box(*tm.centered_box(text, pos[0], pos[1]),
                                      kind, pp.ref))
 
-    # ---- side fan (left/right) ----------------------------------------------------
     def _fan_side(self, ref: str, side: str,
                   items: list[tuple[Pin, tuple[float, float]]],
                   handled: set[tuple[str, str, str]]) -> None:
         sp = self.sp
         sgn = -1 if side == "left" else 1
-        # snapshot: the rail comb (if any) hugs THIS fan's own geometry —
-        # measuring the whole sheet would drag its bar across foreign
-        # bands (a stage row beside the connector column)
         boxes_mark = len(self.pl.boxes)
         plans_mark = {n: len(ps) for n, ps in self.pl.plans.items()}
-        # ALL rows on this side (handled pins carry channel/trunk wires
-        # straight out — risers must dodge those rows too)
         rows_all = [pt for _pin, pt in items]
         items_all = list(items)
         handled_rows = [pt[1] for pin, pt in items
@@ -924,14 +768,6 @@ class _Engine:
                 runs[-1].append((pin, pt, net))
             else:
                 runs.append([(pin, pt, net)])
-        # connector-scale detection: a rail net whose pins pepper this side
-        # in MANY separate runs (the VITA-connector idiom) cannot carry a
-        # power symbol per pin between the fan lines. The dominant such net
-        # becomes a vertical COMB trunk OUTSIDE the label fan (the
-        # som-connector x_g pattern); the OTHER rails place after the
-        # labels so their dodge scans SEE the fan texts; pulls/hangs defer
-        # to the rank rows below the flow (an attach stem would cross the
-        # comb taps).
         rail_run_count: dict[str, int] = {}
         for run in runs:
             n0 = run[0][2]
@@ -944,24 +780,6 @@ class _Engine:
                        key=lambda n: rail_run_count[n])
             if rail_run_count[best] >= 6:
                 comb_net = best
-        # The y-rows of SIGNAL/PORT side pins: their escape lines run out
-        # HORIZONTALLY here LATER (in the lines loop below), so a rail symbol's
-        # VALUE TEXT must not sit on one of those rows — the line is not planned
-        # yet, so the rail dodge cannot see it, and the box-symbol pathology
-        # (CP2102N VIO/VREGIN bus directly below the D- port) drops the rail
-        # value onto the port wire. _fan_rail_run's multi-pin-bus dodge rejects
-        # a value box overlapping one of these rows. An EMPTY set (rail-only
-        # side) makes that an exact no-op, so every existing sheet stays
-        # byte-identical; a non-empty set only ADDS a constraint the original
-        # dodge already satisfied on the clean sheets (verified).
-        # ALSO every HANDLED signal/port pin row: those pins carry a channel /
-        # chain wire that runs straight out HORIZONTALLY across this side (the
-        # connector->ESD passthrough — board_qwiic J1.4 QWIIC_SCL into U1), so a
-        # rail riser dropped off an ADJACENT pin must dodge that row too. The
-        # handled rows are not in `runs` (they were filtered out at line ~899),
-        # so without this a GND bus off J1.5/6 drops its triangle+"GND" onto the
-        # QWIIC_SCL wire one pin below. Rail handled rows stay out (the rail
-        # comb/own-net handles them); only foreign SIGNAL/PORT channel rows.
         handled_sig_rows = {round(pt[1], 3) for pin, pt in items_all
                             if (ref, pin.number, side) in handled
                             and (n := self.net_of(ref, pin.number)) is not None
@@ -971,15 +789,6 @@ class _Engine:
                                  and n.net_class in (NetClass.SIGNAL,
                                                      NetClass.PORT)}
                                 | handled_sig_rows)
-        # y-row -> rail net name for EVERY POWER/GROUND side pin. A rail
-        # symbol (riser/bus) drawn off one run must not seat its body or
-        # value text on a row that carries a DIFFERENT rail's horizontal
-        # escape wire — those wires are planned later (run order), so the
-        # dodge's _corridor_free cannot yet see them, and a downward GND
-        # bus drops its triangle + "GND" text straight onto an adjacent
-        # foreign-rail feed (INA3221 GND on IN+3 over the +3V3_SC VS/A0
-        # rows — power_mon/board_qwiic). Keyed by net so a run's OWN rows
-        # are excluded; an all-same-rail side is a no-op (byte-identical).
         self._rail_row_net = {round(pt[1], 3): n.name
                               for run in runs
                               for _p, pt, n in run if n is not None
@@ -1001,16 +810,9 @@ class _Engine:
                 else:
                     self._fan_rail_run(run, sgn, rows_all)
                 continue
-            # same-net SIGNAL/PORT pin group (stacked duplicate pads, paired
-            # connector pins): bus bar on the tip column, ONE line from the
-            # topmost pin
             for (_pa, pa, _na), (_pb, pb, _nb) in zip(run, run[1:], strict=False):
                 self.pl.plan(net0.name, pa, pb)
             pin0, pt0, _ = run[0]
-            # a SIGNAL net COMPLETE inside this pin group (a connector
-            # loop-back, e.g. a JTAG TDI->TDO bypass strap) needs no line
-            # out: the bus bar IS the whole net — a line would dangle.
-            # PORT nets always run out to their hier label.
             if net0.net_class is NetClass.SIGNAL and len(run) > 1 \
                     and {(pr.ref, pr.pin) for pr in net0.pins} <= {
                         (ref, p.number) for p, _pt, _n in run}:
@@ -1023,14 +825,8 @@ class _Engine:
                     and self._net_shared(net0.name, ref)
                     and (net0.name not in self.trunks
                          or ref in self.shunts)):
-                # labeled islet line: its pull-up belongs to the pull-up
-                # RANK below the flow (attach columns would march the fan
-                # outward); filter caps stay at the pin
                 pulls = []
             if comb_net is not None and (pulls or hangs):
-                # connector-scale side: attachments go to the rank rows
-                # below the flow (their stems cannot cross the comb taps);
-                # the line itself runs out as a LABELED islet
                 pulls, hangs = [], []
                 force_label = True
             if pulls and hangs:
@@ -1061,9 +857,6 @@ class _Engine:
                 self._fan_rail_comb(comb_net, comb_pts, sgn,
                                     boxes_mark, plans_mark)
             return
-        # attachment columns leave the fan on the side their attach rows
-        # are NEARER to; a direction crossing a handled (channel / trunk)
-        # row — whose wire spans the whole gap — is vetoed
         hang_sgn = -1 if side == "left" else 1
         attach_rows = [ln.pin_pt[1] for ln in lines if ln.attach]
         side_rows = [pt[1] for pt in rows_all]
@@ -1093,9 +886,6 @@ class _Engine:
                     and (ln.net not in self.trunks or ref in self.shunts)
                     and self._series_of(ln.net) is None)
 
-        # two-column label fan (the som-connector pattern): attach-free
-        # labels on clashing adjacent rows alternate inner/outer; attach
-        # columns keep the monotonic push past every text they must clear.
         label_clash_dy = tm.GLABEL_H * tm.SIZE + 0.5
         cols: dict[int, str] = {}
         prev_cy = prev_col = None
@@ -1112,7 +902,7 @@ class _Engine:
                          if cols.get(i) == "inner"), default=0.0)
 
         prev_gb: tuple[float, float, float, float] | None = None
-        lane_edge: float | None = None           # outermost text edge so far
+        lane_edge: float | None = None
 
         def approx_box(ln: _Line, ax: float):
             ll = label_len(ln)
@@ -1125,8 +915,6 @@ class _Engine:
             if cols.get(idx) == "outer":
                 lx += sgn * gceil(inner_len + 1.27)
             if prev_gb is not None:
-                # push past the previous label ONLY when the boxes truly
-                # clash (a column-cleared neighbour never forces a push)
                 bx = approx_box(ln, lx)
                 if (bx[0] - 0.5 < prev_gb[2] and bx[2] + 0.5 > prev_gb[0]
                         and bx[1] - 0.5 < prev_gb[3]
@@ -1138,9 +926,6 @@ class _Engine:
             labeled = is_labeled(ln)
             rot = 180 if side == "left" else 0
             if ln.attach or ln.attach_div:
-                # find a CLEAR column for the attachment: free vertical band
-                # down/up to the rank plus a free horizontal corridor from
-                # the pin — verified, never a blind push
                 depth = 12 * U
                 band_l, band_r = self._attach_band(ln)
                 if ln.attach_div:
@@ -1163,17 +948,6 @@ class _Engine:
                     lx = tx + sgn * sp.label_tap_gap
             else:
                 tap = (lx, py)
-            # the horizontal escape leaves the pin at row ``py`` and runs out to
-            # the attach column / label at ``tap``. When a FOREIGN body straddles
-            # that row mid-span (the LCD touch-RST run grazing the U2 ESD array,
-            # whose body bottom edge lands exactly on the connector pin row), the
-            # straight run would draw ON the body outline — a LAW-1 defect the
-            # strict-interior corridor test missed. Route AROUND the offending
-            # body with a local rectangular dodge (down/up past it on its clear
-            # flank, then back to the run row); the run + tap + attach drop +
-            # label all stay on ``py``. A corridor that is already body-clear
-            # emits the single straight leg unchanged (byte-identical) — only a
-            # blocked corridor detours.
             for a, b in self._escape_run_legs(ln.net, px, py, tap[0]):
                 self.pl.plan(ln.net, a, b)
             edge = None
@@ -1209,9 +983,6 @@ class _Engine:
                 self.label(ln.net, lx, py, rot, shape=shape)
                 gb = tm.glabel_box(ln.net, lx, py, rot)
             else:
-                # shared internal net drawn as labeled islets (the net is
-                # wired and labeled at each of its parts; KiCad merges by
-                # name, the netlist gate proves the merge)
                 self.llabel(ln.net, lx, py, rot)
                 self._bridge(ln.net)
                 gb = tm.llabel_box(ln.net, lx, py, rot)
@@ -1221,8 +992,6 @@ class _Engine:
                          and sgn < 0 else
                          max(lane_edge, edge) if lane_edge is not None
                          else edge)
-        # deferred rails (connector-scale side): placed AFTER the labels so
-        # their dodge scans see the fan's texts, the comb outermost
         for run in rail_jobs:
             self._fan_rail_run(run, sgn, rows_all)
         if comb_pts:
@@ -1231,13 +1000,6 @@ class _Engine:
 
     def _foreign_rows_clear(self, box: tuple[float, float, float, float],
                             net: str, own_ys: set[float]) -> bool:
-        """True if the vertical span of `box` does not cross a side pin row
-        that carries a DIFFERENT net whose horizontal escape wire will be
-        planned later in run order. Covers both foreign RAIL rows (a GND bus
-        dropped onto an adjacent +3V3_SC feed — power_mon) AND foreign
-        SIGNAL/PORT rows (the GND riser triangle+text dropped onto a connector
-        SCL escape one pin below — board_qwiic J1: pins 5/6 GND, pin 4
-        QWIIC_SCL). `own_ys` is the rail run's own rows."""
         y0, y1 = box[1], box[3]
         for r, rnet in self._rail_row_net.items():
             if rnet == net or r in own_ys:
@@ -1253,32 +1015,18 @@ class _Engine:
 
     def _fan_rail_run(self, run: list, sgn: int,
                       rows_all: list[tuple[float, float]]) -> None:
-        """One POWER/GROUND pin run on a side fan: an outer-row riser, a
-        sideways strip symbol between fan lines, or a short bus for
-        adjacent pins — every candidate spot is dodge-scanned."""
         net0 = run[0][2]
-        # the rail symbol's value text must clear the part body
         w_val = tm.text_wh(net0.name)[0]
         jx_off = max(3.81, gceil(w_val / 2 + 0.7
                                  - run[0][0].length))
         jx = run[0][1][0] + sgn * jx_off
         if len(run) == 1:
             pt = run[0][1]
-            # the riser must not cross the other fan lines on this
-            # side: flip away from them when the pin is the outermost
-            # row in the flipped direction (e.g. a VIN pin at the
-            # bottom of the side, ports above -> symbol points down)
             rows_other = [q[1] for q in rows_all if q != pt]
             up = net0.net_class is NetClass.POWER
             above = any(y < pt[1] - 1e-6 for y in rows_other)
             below = any(y > pt[1] + 1e-6 for y in rows_other)
             if above and below:
-                # a riser would cross a neighbouring line: lay the
-                # symbol SIDEWAYS on the pin row instead (the
-                # connector-strip pattern). Pick the rotation whose
-                # glyph extends OUTWARD (GND glyphs sit on -y in
-                # symbol coords, power glyphs on +y — they rotate
-                # opposite ways).
                 rot = 90 if sgn < 0 else 270
                 sdef_p = self.lib.get(self._power_lib(net0.name))
                 bb = body_box_page(sdef_p, jx, pt[1], rot, "body", "?")
@@ -1335,29 +1083,11 @@ class _Engine:
         ys = [pt[1] for _, pt, _ in run]
         sdef_p = self.lib.get(self._power_lib(net0.name))
         px0 = run[0][1][0]
-        # The bus symbol sits at one END (POWER off the top, GND off the
-        # bottom) and its body+value extends past it. The DEFAULT end is tried
-        # first (the original placement, byte-identical for every existing
-        # sheet); only if its outward dodge cannot seat the symbol+value clear
-        # do we FALL BACK to the other end — the case a faithful box symbol
-        # creates by sandwiching a power-name bus between signal/port pins
-        # (CP2102N VIO/VREGIN between D-/RSTb), where the default end's value
-        # would land on a not-yet-placed neighbour. (rot default 0 matches the
-        # original unset rot; the flipped end points the glyph outward.)
         is_gnd = net0.net_class is NetClass.GROUND
         own_ys = {round(y, 3) for y in ys}
-        # Two seating candidates: the DEFAULT end (byte-identical baseline) and
-        # the FLIPPED end. For each we find the first outward dodge that clears
-        # everything the BASELINE required (value/body spot-free, sig-row clear,
-        # corridor clear). Among the candidates that seat at all, we PREFER one
-        # whose glyph+value also clears FOREIGN rail rows (the adjacent +3V3_SC
-        # VS/A0 feed an INA3221 GND bus points into — power_mon/board_qwiic).
-        # The foreign check is only a PREFERENCE, never a hard gate: if neither
-        # end clears the foreign rows we keep the baseline default end, so a
-        # rail-dense side can never march the dodge off-page (motor_pwm).
-        best = None            # (foreign_clear, want_top, end_y, rot, jxc)
-        fallback = None        # last attempted seat if nothing clears (baseline)
-        for want_top in (not is_gnd, is_gnd):          # default end first
+        best = None
+        fallback = None
+        for want_top in (not is_gnd, is_gnd):
             end_y = ys[0] if want_top else ys[-1]
             rot = 0 if (is_gnd != want_top) else 180
             seated = False
@@ -1367,18 +1097,6 @@ class _Engine:
                 vbox = tm.centered_box(net0.name, vp[0], vp[1])
                 sbox = body_box_page(sdef_p, jxc, end_y, rot, "body", "?")
                 sbb = (sbox.x0, sbox.y0, sbox.x1, sbox.y1)
-                # the rail VALUE TEXT *and* the symbol BODY must not straddle a
-                # FOREIGN signal/port pin row: that pin's horizontal escape line
-                # is planned later and would run through the (not-yet-visible)
-                # value OR through the symbol's hatch/bar graphic. The value
-                # was always checked; the BODY box matters when the symbol seats
-                # at the bus end that points TOWARD a neighbouring foreign row
-                # (a GND symbol off the bottom pin whose ~3.8mm hatch reaches
-                # down into the next pin row — usb_jtag_connector's CHASSIS_GND
-                # over the CC2 escape wire). Both are no-ops for clean sheets
-                # whose body+value already sit BETWEEN rows; they only reject
-                # the end that drops glyph/text ON a foreign pin row, steering
-                # the dodge to the clear (flipped) end.
                 rows_clear = not any(
                     r not in own_ys
                     and (vbox[1] - 1e-6 < r < vbox[3] + 1e-6
@@ -1397,21 +1115,16 @@ class _Engine:
                         sbb, net0.name, own_ys) and self._foreign_rows_clear(
                         vbox, net0.name, own_ys)
                     cand = (fclear, want_top, end_y, rot, jxc)
-                    # keep the DEFAULT end unless the flipped end is the only
-                    # one that clears the foreign rows
                     if best is None or (fclear and not best[0]):
                         best = cand
                     seated = True
                     break
-            # if THIS end never seated, remember its last dodge as the baseline
-            # fall-through target (the flipped end, k=39 — matches the original
-            # which proceeded with the last loop variables when nothing seated)
             if not seated:
                 fallback = (False, want_top, end_y, rot, jxc)
             if best is not None and best[0]:
-                break                       # default end already foreign-clear
+                break
         if best is None:
-            best = fallback                 # nothing cleared: baseline placement
+            best = fallback
         _f, _wt, end_y, rot, jxc = best
         jx = jxc
         for _, pt, _ in run:
@@ -1423,11 +1136,6 @@ class _Engine:
     def _fan_rail_comb(self, net: str, pts: list[tuple[float, float]],
                        sgn: int, boxes_mark: int,
                        plans_mark: dict[str, int]) -> None:
-        """Connector-scale rail comb: one tap per pin THROUGH the label fan
-        onto a vertical trunk bar outside it, ONE symbol at the outer end
-        (the som-connector x_g idiom — a 61-pin ground cannot carry a
-        power symbol per pin between the fan lines). The bar hugs the
-        FAN'S OWN extent (geometry since the marks), never the sheet's."""
         pts = sorted(pts, key=lambda p: p[1])
         ys = sorted({p[1] for p in pts})
         y0, y1 = ys[0] - 2 * U, ys[-1] + 2 * U
@@ -1458,15 +1166,11 @@ class _Engine:
         self.pl.label_bridged.add(net)
 
     def _net_shared(self, net: str, ref: str) -> bool:
-        """Does ``net`` reach at least one OTHER multi-pin part?"""
         mset = set(self.multi)
         return any(pr.ref in mset and pr.ref != ref
                    for pr in self.c.nets[net].pins)
 
     def _series_of(self, net: str):
-        """The single series passive linking ``net`` to another multi-part
-        net (boost diodes, inline dampers) — None when the pattern does not
-        apply (trunk rungs and float-chain legs are other machinery's)."""
         cand = [s for s in self.series if net in (s[1], s[2])]
         if len(cand) != 1:
             return None
@@ -1482,11 +1186,6 @@ class _Engine:
     def _series_inline(self, ser: tuple[str, str, str], net: str,
                        tap: tuple[float, float], sgn: int,
                        avoid_gb: tuple | None = None):
-        """Place a series passive INLINE on a fan line (the line continues
-        through it); the far net ends on a labeled stub — its own geometry
-        (channel run, fan) carries a matching label. Returns (outer text
-        edge, the far label's box). ``avoid_gb``: the previous label's box;
-        the inline shifts outward until its far label clears it."""
         sref = ser[0]
         far = ser[2] if ser[1] == net else ser[1]
         part = self.c.parts[sref]
@@ -1517,8 +1216,6 @@ class _Engine:
         self.pl.plan(far, far_tip, (lx, tap[1]))
         rot = 180 if sgn < 0 else 0
         if self.c.nets[far].net_class is NetClass.PORT:
-            # the far side IS the sheet interface (series damper to a
-            # contract net): hier label right on the stub
             self.label(far, lx, tap[1], rot)
             lb = tm.glabel_box(far, lx, tap[1], rot)
         else:
@@ -1529,8 +1226,6 @@ class _Engine:
         return (lb[0] if sgn < 0 else lb[2]), lb
 
     def _attach_halfw(self, ln: _Line) -> float:
-        """Outward half-extent of an attachment column's widest text (the
-        rail symbol's value is centered on the column)."""
         refs = [ln.attach] if ln.attach else list(ln.attach_div or ())
         w = 0.0
         for ref in refs:
@@ -1543,11 +1238,6 @@ class _Engine:
         return w / 2 + 0.7
 
     def _attach_band(self, ln: _Line) -> tuple[float, float]:
-        """FULL occupied band of an attachment column around its x: the
-        centered rail-symbol value (left+right) PLUS the passive's own
-        Reference/Value texts, which ``passive()`` hangs off the body's
-        right flank — a clearance probe that ignores them plants the next
-        column's body under this one's texts."""
         base = self._attach_halfw(ln)
         refs = [ln.attach] if ln.attach else list(ln.attach_div or ())
         text_w = 0.0
@@ -1564,7 +1254,6 @@ class _Engine:
         return (max(base, body_half),
                 max(base, body_half + 0.42 + text_w))
 
-    # -- attachment column (pull-up to rail / filter cap to ground) -----------------
     def _attach_column(self, ln: _Line, tap: tuple[float, float],
                        rank_pin_y: float, down: bool) -> float:
         ref = ln.attach
@@ -1576,8 +1265,6 @@ class _Engine:
         return self._attach_halfw(ln)
 
     def _power_rot(self, net: str, downward: bool) -> int:
-        """Upright (0) when the glyph points away from the wire: GND-family
-        below, rails above; 180 when the column runs the other way."""
         is_gnd = self.c.nets[net].net_class is NetClass.GROUND
         return 0 if (is_gnd == downward) else 180
 
@@ -1590,15 +1277,11 @@ class _Engine:
             self.power(far, *far_pt, self._power_rot(far, below))
         return self._attach_halfw(ln)
 
-    # ---- top/bottom machinery -------------------------------------------------------
     def _rail_rot(self, net: str, side: str) -> int:
-        """Upright (0) when the symbol glyph points away from the body:
-        GND-family below a bottom edge, power rails above a top edge."""
         is_gnd = self.c.nets[net].net_class is NetClass.GROUND
         return 0 if (is_gnd == (side == "bottom")) else 180
 
     def _rail_stub(self, net: str, pt: tuple[float, float], side: str) -> None:
-        """Power/GND stub off a top or bottom pin, dodging existing texts."""
         up = side == "top"
         dy = -2.54 if up else 2.54
         sdef = self.lib.get(self._power_lib(net))
@@ -1632,8 +1315,6 @@ class _Engine:
 
     def _rail_bus(self, net: str, pts: list[tuple[float, float]],
                   side: str) -> None:
-        """Several adjacent same-rail pins on the top/bottom edge: short
-        drops onto one bar, a single symbol at the bar's middle node."""
         dy = -2.54 if side == "top" else 2.54
         rot = self._rail_rot(net, side)
         bar_y = round(pts[0][1] + dy, 3)
@@ -1646,17 +1327,6 @@ class _Engine:
         self.power(net, mid, bar_y, rot)
 
     def _local_drop_chain(self, net_name: str, this_ref: str):
-        """A synthetic pin-rooted _FloatChain for a top/bottom SIGNAL pin whose
-        net is otherwise ONLY one local 2-pin passive hung to GND or a rail — a
-        buck VCC bias-bypass cap, an RC bias node. The float-chain extractor
-        skips such a net (it touches a multi-pin part, so it is a 'multi_net'),
-        leaving the top/bottom dispatch with no branch; this lets it route via
-        the SAME side-parameterized _stack_from_pin used for pin stacks (NEVER
-        by moving a symbol pin — the part is faithful, the engine extends).
-
-        Returns None when the net has any OTHER multi-pin tap (a real
-        inter-part net -> trunk/label) or anything but exactly one local
-        passive (ambiguous: let the raise stand — LAW 4, never mis-route)."""
         n = self.c.nets[net_name]
         mset = set(self.multi)
         multi_pins = [pr for pr in n.pins if pr.ref in mset]
@@ -1675,24 +1345,11 @@ class _Engine:
 
     def _signal_islet_drop(self, net: str, pt: tuple[float, float],
                            side: str) -> None:
-        """A SIGNAL net on a TOP/BOTTOM edge pin, rendered as a LABELED ISLET:
-        a short stem straight out of the edge (away from the body) to a local
-        label, the net then BRIDGED so its passives place in the leftover
-        column drainers and merge back by name. The vertical twin of the
-        LEFT/RIGHT fan's labeled-islet branch — no symbol pin is moved."""
-        sgn = -1 if side == "top" else 1          # outward: top=up(-y), bot=+y
+        sgn = -1 if side == "top" else 1
         end = (pt[0], round(pt[1] + sgn * self.sp.port_run, 3))
         self.pl.plan(net, pt, end)
-        # horizontal local label (rot 0) reading rightward off the stem end;
-        # the box dodge in label()/the visual gate keeps it clear of texts.
         self.llabel(net, *end, 0)
         self._bridge(net)
-        # A divider whose midpoint is THIS net (one series arm to an external
-        # port/rail + one hang/pull arm to GND/rail) is reassembled as a single
-        # self-contained column by _pin_divider_columns — registering it here
-        # keeps both passives out of the two independent leftover placers (which
-        # would otherwise march to colliding x). A plain inter-part islet (no
-        # local passives) needs no column: the label merge is the whole job.
         ser = [s for s in self.series if net in (s[1], s[2])]
         n_arms = len(self.hang.get(net, [])) + len(self.pull.get(net, []))
         if len(ser) == 1 and n_arms == 1:
@@ -1700,10 +1357,6 @@ class _Engine:
 
     def _stack_from_pin(self, chain: _FloatChain, pt: tuple[float, float],
                         side: str, text_side: str = "right") -> None:
-        """Pin-rooted series chain stacked straight off a top/bottom pin.
-        ``text_side`` reads the stacked passive's ref/value away from a busy
-        neighbour (e.g. a VCC-bypass cap whose default right-side text would
-        land on the adjacent VIN bus of a box-symbol buck)."""
         downward = side == "bottom"
         cur_net = chain.root
         cur = pt
@@ -1721,7 +1374,6 @@ class _Engine:
 
     def _chain_mid_features(self, chain: _FloatChain, net: str,
                             at: tuple[float, float]) -> None:
-        """Label + hanging caps for a chain's intermediate net."""
         nclass = self.c.nets[net].net_class
         if nclass in (NetClass.POWER, NetClass.GROUND):
             return
@@ -1741,7 +1393,6 @@ class _Engine:
         for xa, xb in zip(nodes, nodes[1:], strict=False):
             self.pl.plan(net, (xa, y), (xb, y))
 
-    # ---- generic part cell ----------------------------------------------------------
     def _cell(self, ref: str, ax: float, ay: float,
               handled: set[tuple[str, str, str]],
               trunk_jobs: dict[str, _Trunk],
@@ -1788,26 +1439,10 @@ class _Engine:
                     self._stack_from_pin(local, pt, side)
                     continue
                 if net.net_class is NetClass.SIGNAL:
-                    # A SIGNAL net on a TOP/BOTTOM edge pin that fits none of
-                    # the structured patterns above (trunk / rail / pin-stack /
-                    # local-drop). This is the same situation the LEFT/RIGHT fan
-                    # resolves with a LABELED ISLET (a local label merged by
-                    # name, the netlist gate proving the merge): a generated box
-                    # symbol may place a pin on the top/bottom edge by NAME
-                    # (group_pins) when its net is actually a sensed signal
-                    # (e.g. a CP2102N VBUS-sense divider tap on the VBUS pin) or
-                    # any inter-part / divider node. Route a short stem straight
-                    # OUT of the edge to a local label and BRIDGE the net; its
-                    # series / pull / hang passives then place in the leftover
-                    # column drainers (_pull_rank_columns / _series_port_columns),
-                    # each re-labeling the same net so KiCad merges them. No
-                    # symbol pin is moved — the part stays faithful, the engine
-                    # extends (the never-redraw-parts law).
                     self._signal_islet_drop(net.name, pt, side)
                     continue
                 raise PlaceError(f"{ref}.{pin.number} ({net.name}) on the "
                                  f"{side} edge: no engine pattern applies")
-            # buses first (fixed position), then stubs (they dodge texts)
             for net, pts in rail_groups:
                 if len(pts) > 1:
                     self._rail_bus(net, pts, side)
@@ -1815,7 +1450,6 @@ class _Engine:
                 if len(pts) == 1:
                     self._rail_stub(net, pts[0], side)
 
-        # bottom PORT drops + trunk-rung drops: rows below the cell
         if port_drops or rung_drops:
             x0, x1 = body.x0 - 15.0, body.x1 + 15.0
             base = self._cell_floor(x0, x1)
@@ -1854,9 +1488,6 @@ class _Engine:
 
     def _bottom_port_drop(self, ref: str, pin: Pin, pt: tuple[float, float],
                           row: float, direction: int) -> None:
-        """A PORT net on a bottom pin: drop to its own row, run out toward
-        the sheet edge (``direction``) to a label; a pull-up attachment taps
-        the run just inside the label."""
         net = self.net_of(ref, pin.number)
         assert net is not None
         name = net.name
@@ -1869,7 +1500,6 @@ class _Engine:
             raise PlaceError(f"net {name}: bottom-drop attachments beyond "
                              f"one pull-up — extend the engine")
         if pulls:
-            # the pull-up column needs a clear vertical lane above the row
             start = lx if direction < 0 else max(lx, pt[0] + 2 * U)
             tap_x = self._lane_x(direction, row - 12 * U, row - 0.1,
                                  start=start)
@@ -1889,7 +1519,6 @@ class _Engine:
                                                            "bidirectional")
         self.label(name, lx, row, 180 if direction < 0 else 0, shape=shape)
 
-    # ---- trunk builder -----------------------------------------------------------
     def _build_trunk(self, t: _Trunk) -> None:
         votes = 0
         for _pt, side in t.direct:
@@ -1903,7 +1532,6 @@ class _Engine:
             ty = gfloor(ey0 - 4 * U)
         else:
             ty = gceil(ey1 + 4 * U)
-        # ladder rungs raise the trunk further when below: rung depth
         if t.zone == "below" and t.rungs:
             max_legs = max(len(legs) for (_n, _pt, _k, legs, _r) in t.rungs)
             bar = gceil(max(pt[1] for (_n, pt, _k, _l, _r) in t.rungs) + 4 * U)
@@ -1911,23 +1539,9 @@ class _Engine:
         t.y = ty
         nodes: list[float] = []
 
-        # LEFT/RIGHT escapes (direct pins and side rungs) are lane-nested:
-        # the pin NEAREST the trunk takes the innermost lane, so L-shaped
-        # escapes on one side can never cross; every horizontal escape run
-        # is corridor-checked against all geometry placed so far.
         side_jobs: list[tuple[str, tuple[float, float], int, object]] = []
         for pt, side in t.direct:
             if side in ("top", "bottom"):
-                # straight vertical drop to the trunk row — BUT only when that
-                # column is clear. A top-edge tap whose trunk sits BELOW it (or a
-                # bottom tap with an above trunk) would otherwise plow straight
-                # DOWN through its own part body: the HDMI-RX cable-5V trunk has
-                # a top-edge EEPROM VCC pin pulling 'above' and a flipped-
-                # connector +5V pin pulling 'below', so one side always faces
-                # away from the chosen zone. When the vertical column is blocked,
-                # route the tap as an orthogonal escape (out the pin, around the
-                # body, into the trunk row) — the same proven escape the side
-                # taps use, never a body-crossing wire (LAW 1).
                 if self._corridor_clear_vert(pt[0], pt[1], ty, t.net):
                     self.pl.plan(t.net, pt, (pt[0], ty))
                     nodes.append(pt[0])
@@ -1944,11 +1558,6 @@ class _Engine:
                 if len(legs) == 1:
                     side_jobs.append(("rung", pt, sgn, (far_net, legs[0])))
                 else:
-                    # a side rung with N PARALLEL passives (e.g. the four
-                    # Ethernet Bob-Smith media centre taps: 75R || 1n each):
-                    # a horizontal escape onto a side ladder whose N legs drop
-                    # to the trunk. Deferred so its lane search nests with the
-                    # single-passive side jobs (innermost-tap-first ordering).
                     side_jobs.append(("ladder", pt, sgn, (far_net, legs)))
             elif t.zone == "below":
                 bar = gceil(self._rung_bar_y(t))
@@ -1960,11 +1569,6 @@ class _Engine:
                 if len(legs) != 1:
                     raise PlaceError(f"{t.net}: flank rung with {len(legs)} "
                                      f"legs — extend the engine")
-                # if the rung's far net is a label-islet (it ALSO appears as a
-                # named stub elsewhere — e.g. HPD pulled to the cable-5 V trunk
-                # via R1 AND tapped by the slow-line ESD array), this rung islet
-                # must carry the name too, or KiCad sees an unlabeled island
-                # (route.py opens-forbidden). Drop a local label on the run.
                 if far_net in self.pl.label_bridged:
                     self.llabel(far_net, round(pt[0] - 2 * U, 3), row, 180)
                 far_pt, far = self._vertical_2pin(legs[0], fx, row,
@@ -1978,31 +1582,17 @@ class _Engine:
         for kind, pt, sgn, payload in side_jobs:
             own = t.net if kind == "direct" else payload[0]
             if kind == "direct":
-                # a direct tap carries only a wire — it can take any orthogonal
-                # detour the free-cell BFS finds when a straight lane is wedged
                 way = self._escape_path(sgn, pt, ty, own)
                 self.pl.plan(t.net, *way)
                 nodes.append(way[-1][0])
             elif kind == "ladder":
-                # side multi-leg Bob-Smith rung: spread N parallel legs
                 far_net, legs = payload
                 nodes += self._side_ladder_rung(t, far_net, pt, sgn, legs, ty)
             else:
-                # a side rung seats a passive in its lane: a single clean
-                # vertical column is mandatory (bidirectional, no detour)
                 far_net, leg = payload
                 try:
                     fx = self._escape_lane(sgn, pt, ty, own)
                 except PlaceError:
-                    # No clean lane: the rung pin is boxed in (a dense
-                    # connector edge where the trunk spans the full sheet, e.g.
-                    # the HDMI-RX cable-5V trunk reaching the EEPROM with the
-                    # HPD pull-up wedged between connector and EEPROM bodies).
-                    # Re-home the rung as a LABELED ISLET pair: the far-net pin
-                    # gets a short labeled stub here; its series leg + the trunk
-                    # link are drawn in a rank column below the flow, both ends
-                    # re-labeled so KiCad merges by name (the datasheet idiom,
-                    # never a forced crossing — LAW 4). Defer to _rung_islets.
                     self._rung_islet_drop(far_net, pt, sgn)
                     self._rung_islets.append((t.net, far_net, leg))
                     continue
@@ -2015,7 +1605,6 @@ class _Engine:
                 self.pl.plan(t.net, far_pt, (fx, ty))
                 nodes.append(fx)
 
-        # rooted chains hang below the trunk on free columns
         for ch in t.chains:
             ex0b, _, _, _ = self._extent()
             band0, band1 = (ty, ty + 24.0)
@@ -2037,9 +1626,6 @@ class _Engine:
                 self.pl.plan(cur_net, cur, end_c)
                 self.power(cur_net, *end_c, self._power_rot(cur_net, True))
 
-        # terminators (caps to a ground-class net) at whichever outer end
-        # grows the sheet LESS — the band is exactly the trunk row plus the
-        # cap's own drop, so far-away rows cannot push the cap off the page
         for _i, ref in enumerate(self.hang.pop(t.net, [])):
             ex0c, _, ex1c, _ = self._extent()
             edge_r = gceil(self._band_edge(ty - 2 * U, ty + 10 * U, +1,
@@ -2060,8 +1646,6 @@ class _Engine:
         if len(nodes) < 2:
             raise PlaceError(f"trunk {t.net}: fewer than 2 taps after build")
 
-        # ERC: a power_in pin on a SIGNAL trunk needs a PWR_FLAG driver.
-        # Pick the stub BEFORE drawing legs so it becomes a split node.
         if self._needs_flag(t.net):
             gaps = sorted(zip(nodes, nodes[1:], strict=False),
                           key=lambda ab: ab[1] - ab[0])
@@ -2075,8 +1659,6 @@ class _Engine:
         for xa, xb in zip(nodes, nodes[1:], strict=False):
             self.pl.plan(t.net, (xa, ty), (xb, ty))
         if self.c.nets[t.net].net_class is NetClass.PORT:
-            # the trunk IS the sheet's external interface: hier label on a
-            # short extension past whichever end grows the sheet less
             ex0c, _, ex1c, _ = self._extent()
             w_lab = self._glabel_len(t.net)
             grow_r = max(0.0, nodes[-1] + 2 * U + w_lab - ex1c)
@@ -2097,7 +1679,6 @@ class _Engine:
             self.pl.plan(t.net, (nx, ty), (lx, ty))
             self.label(t.net, lx, ty, rot)
             return
-        # net name ON the trunk wire, wherever its box is free
         for lx, rot in ((nodes[-1], 0), (nodes[0], 180),
                         (nodes[0] + 1.27, 0)):
             if self._spot_free(tm.llabel_box(t.net, lx, ty, rot), pad=0.1):
@@ -2108,7 +1689,6 @@ class _Engine:
 
     def _chain_mid_features_left(self, chain: _FloatChain, net: str,
                                  at: tuple[float, float]) -> None:
-        """Chain features for under-trunk columns: label stub runs LEFT."""
         nclass = self.c.nets[net].net_class
         if nclass in (NetClass.POWER, NetClass.GROUND):
             return
@@ -2135,8 +1715,6 @@ class _Engine:
 
     def _ladder_rung(self, t: _Trunk, far_net: str, pt: tuple[float, float],
                      legs: list[str], bar: float) -> list[float]:
-        """One Bob-Smith-style rung: drop, bar, vertical legs, trunk taps."""
-        # resistive legs first, caps after (datasheet order)
         legs = sorted(legs, key=lambda r: self.c.parts[r].lib_id.endswith(":C"))
         x0 = pt[0]
         cols = [round(x0 + i * 6 * U, 3) for i in range(len(legs))]
@@ -2158,20 +1736,6 @@ class _Engine:
     def _side_ladder_rung(self, t: _Trunk, far_net: str,
                           pt: tuple[float, float], sgn: int,
                           legs: list[str], ty: float) -> list[float]:
-        """A side rung carrying N PARALLEL passives (a Bob-Smith media-tap:
-        75R || 1n). The side pin escapes horizontally onto a bar at its own
-        row, OUTBOARD of the side label fan; N legs hang from the bar — one
-        free column each, marching outward in ``sgn`` — and drop to the trunk
-        row ``ty`` below. Legs STAGGER down by one ladder pitch (the proven
-        _ladder_rung idiom): a resistor and a cap thus never share a row, so
-        their value texts cannot collide; the trunk depth set by _build_trunk
-        (bar + 7.62*max_legs) already reserves the staggered drop. Resistive
-        legs first (datasheet order), matching _ladder_rung.
-
-        Every column is chosen by a full-box free search (body + texts), so
-        the ladder nests cleanly outboard of the fan labels and of any inner
-        rung already placed — the single-passive side rung's exclusive-lane
-        discipline, generalised to N legs and validated against text boxes."""
         legs = sorted(legs,
                       key=lambda r: self.c.parts[r].lib_id.endswith(":C"))
         bar_y = pt[1]
@@ -2181,13 +1745,9 @@ class _Engine:
         bar_from = pt
         for i, ref in enumerate(legs):
             att_y = round(bar_y + i * pitch, 3)
-            # first column outboard of bar_from whose body+texts are clear for
-            # the whole drop att_y -> ty (search marches in ``sgn``)
             start = bar_from[0] + sgn * (pitch if cols else 3 * U)
             fx = self._free_drop_col(sgn, start, att_y, ty, ref, far_net,
                                      text_side)
-            # bar: extend the far-net rail out to this column, then down to the
-            # leg's attach row (the stagger step)
             self.pl.plan(far_net, bar_from, (fx, bar_y))
             if att_y != bar_y:
                 self.pl.plan(far_net, (fx, bar_y), (fx, att_y))
@@ -2197,18 +1757,12 @@ class _Engine:
             self.pl.plan(t.net, far_pt, (fx, ty))
             cols.append(fx)
             bar_from = (fx, bar_y)
-        # one local net-name on the bar (kicad-cli omits unnamed nets)
         self.llabel(far_net, round(pt[0] + sgn * 2 * U, 3), bar_y,
                     0 if sgn > 0 else 180)
         return cols
 
     def _free_drop_col(self, sgn: int, start: float, att_y: float, ty: float,
                        ref: str, attach_net: str, text_side: str) -> float:
-        """First grid column at/outside ``start`` (marching in ``sgn``) where
-        the vertical passive ``ref`` — its body AND its value/reference texts —
-        fits for the drop att_y->ty without touching any placed box or foreign
-        wire. The trial box is the passive's own footprint extent at that
-        column; the drop wire below is corridor-checked the same way."""
         sdef = self.lib.get(self.c.parts[ref].lib_id)
         att_no = self._pin_of_net(ref, attach_net)
         off = abs(_pin(sdef, att_no).y) or abs(_pin(sdef, att_no).x)
@@ -2236,8 +1790,6 @@ class _Engine:
         raise PlaceError(f"{attach_net}: no free ladder column from {start}")
 
     def _lane_x(self, sgn: int, y0: float, y1: float, start: float) -> float:
-        """First grid column at/outside ``start`` whose vertical band
-        [y0, y1] is free of every box placed so far."""
         x = gfloor(start) if sgn < 0 else gceil(start)
         for _ in range(120):
             band = (x - 0.7, y0 - 0.3, x + 0.7, y1 + 0.3)
@@ -2249,21 +1801,9 @@ class _Engine:
     def _escape_run_legs(self, net: str, px: float, py: float,
                          tx: float) -> list[tuple[tuple[float, float],
                                                   tuple[float, float]]]:
-        """Orthogonal polyline (px, py) -> (tx, py) that DODGES every foreign
-        body grazing row ``py`` along the way. A body whose y-extent straddles
-        ``py`` (within the wire half-width) and whose x-extent lies between the
-        pin and the tap forces a local rectangular detour: drop/rise one grid
-        past the body's nearer flank, traverse its x-span there, return. Picks
-        the flank (below first, then above) whose detour row is itself clear of
-        all geometry over the body's full x-window. When the straight run is
-        already clear, returns the single leg unchanged (byte-identical)."""
         sgn = 1.0 if tx >= px else -1.0
         ec = 0.127
         bx0r, bx1r = min(px, tx), max(px, tx)
-        # foreign body clusters grazing this row, ordered along the run. A
-        # blocker's box is grown to also enclose its part's OWN Reference /
-        # Value texts (same owner) — the detour must clear those too, else the
-        # vertical risers around the body would cross the part's value text.
         blockers: list[tuple[float, float, float, float]] = []
         for b in self.pl.boxes:
             if b.kind != "body" or not (b.y0 - ec < py < b.y1 + ec):
@@ -2278,8 +1818,6 @@ class _Engine:
             blockers.append((ox0, oy0, ox1, oy1))
         if not blockers:
             return [((px, py), (tx, py))]
-        # merge x-overlapping bodies (plus their texts) into clusters; widen by
-        # one grid so the detour clears the outline, not just touches it.
         spans = sorted(((bx0, bx1, by0, by1) for bx0, by0, bx1, by1 in blockers))
         clusters: list[tuple[float, float, float, float]] = []
         for x0, x1, y0, y1 in spans:
@@ -2289,19 +1827,13 @@ class _Engine:
                                 min(cy0, y0), max(cy1, y1))
             else:
                 clusters.append((x0, x1, y0, y1))
-        # walk pin -> tap, dodging each cluster in run order
         ordered = sorted(clusters, key=lambda c: c[0], reverse=(sgn < 0))
         legs: list[tuple[tuple[float, float], tuple[float, float]]] = []
         cur_x = px
         for cx0, cx1, cy0, cy1 in ordered:
-            # detour x-window (a grid clear of the cluster on each side)
             enter = gfloor(cx0 - U) if sgn > 0 else gceil(cx1 + U)
             exitx = gceil(cx1 + U) if sgn > 0 else gfloor(cx0 - U)
             lo, hi = sorted((enter, exitx))
-            # pick a clear detour row, stepping OUTWARD below (then above) the
-            # cluster until the detour row AND the two vertical risers are clear
-            # of all geometry over the detour x-window (the cluster's own
-            # Reference/Value texts push the clear row further out).
             dy = None
             for direction in (1, -1):
                 base = (gceil(cy1 + 2 * U) if direction > 0
@@ -2309,11 +1841,6 @@ class _Engine:
                 for k in range(0, 14):
                     cand = round(base + direction * k * U, 3)
                     ry0, ry1 = sorted((py, cand))
-                    # the detour ROW (at cand, across the window) and the two
-                    # vertical RISERS (thin strips at enter/exitx, from the run
-                    # row to the detour row) must each clear all geometry. The
-                    # risers sit OUTSIDE the cluster x, so they never touch the
-                    # body the run is dodging.
                     if self._corridor_free(cand, lo, hi, {net}) \
                             and self._spot_free(
                                 (enter - 0.1, ry0, enter + 0.1, ry1),
@@ -2328,8 +1855,6 @@ class _Engine:
                 if dy is not None:
                     break
             if dy is None:
-                # no clean flank: fall back to a straight leg (the visual gate
-                # still judges it — never silently force a bad route)
                 continue
             legs.append(((cur_x, py), (enter, py)))
             legs.append(((enter, py), (enter, dy)))
@@ -2341,8 +1866,6 @@ class _Engine:
 
     def _corridor_free(self, y: float, xa: float, xb: float,
                        skip: set[str]) -> bool:
-        """Is the horizontal corridor at row ``y`` spanning [xa, xb] clear of
-        bodies/texts, foreign planned wires and foreign pin stems?"""
         x0, x1 = sorted((xa, xb))
         for b in self.pl.boxes:
             if b.y0 + 1e-6 < y < b.y1 - 1e-6 and b.x0 < x1 and b.x1 > x0:
@@ -2378,7 +1901,6 @@ class _Engine:
 
     def _vband_stem_free(self, x: float, y0: float, y1: float,
                          skip: set[str]) -> bool:
-        """No foreign pin stem crosses the vertical band at column ``x``."""
         for part in self.pl.parts:
             sdef = self.lib.get(part.lib_id)
             for pin in sdef.pins:
@@ -2400,9 +1922,6 @@ class _Engine:
 
     def _lane_in_dir(self, sgn: int, pt: tuple[float, float], ty: float,
                      net: str) -> float | None:
-        """First L-lane column in ONE direction ``sgn`` whose vertical band
-        [pt.y, ty] is free AND whose horizontal run from the pin tip is clear;
-        None if no such column within the scan window."""
         y0, y1 = sorted((pt[1], ty))
         x = gfloor(pt[0] + sgn * 3 * U) if sgn < 0 \
             else gceil(pt[0] + sgn * 3 * U)
@@ -2416,19 +1935,13 @@ class _Engine:
 
     def _corridor_clear_vert(self, x: float, y_pin: float, ty: float,
                              net: str) -> bool:
-        """Is the vertical column at ``x`` from the pin tip ``y_pin`` to the
-        trunk row ``ty`` clear of bodies/texts and foreign wires? The pin's own
-        stem cell at y_pin is excluded (a tap always starts on its own pin)."""
         y0, y1 = sorted((y_pin, ty))
-        # body / text boxes strictly inside the span (a box whose edge merely
-        # touches y_pin is the pin's own — exclude the pin endpoint)
         for b in self.pl.boxes:
             if b.x0 - 0.2 < x < b.x1 + 0.2 \
                     and b.y0 < y1 - 1e-6 and b.y1 > y0 + 1e-6 \
                     and not (abs(b.y0 - y_pin) < 1e-6 or abs(b.y1 - y_pin)
                              < 1e-6):
                 return False
-        # foreign planned wires crossing the column
         for n2, paths in self.pl.plans.items():
             if n2 == net:
                 continue
@@ -2444,15 +1957,6 @@ class _Engine:
 
     def _escape_lane(self, sgn: int, pt: tuple[float, float], ty: float,
                      net: str) -> float:
-        """Lane column for a straight L-shaped side escape from pin ``pt`` to
-        the trunk row ``ty``: the vertical band must be free AND the
-        horizontal run from the pin tip to the lane must clear everything.
-
-        Used where a single CLEAN vertical column is mandatory (a side rung
-        seats a passive in the lane). The pin's natural side ``sgn`` is tried
-        first; if that direction is wedged, the OTHER direction is tried
-        before failing — a side tap is reachable from either flank, and only
-        a genuinely enclosed pin has no straight lane at all."""
         for s in (sgn, -sgn):
             fx = self._lane_in_dir(s, pt, ty, net)
             if fx is not None:
@@ -2460,9 +1964,6 @@ class _Engine:
         raise PlaceError(f"{net}: no free escape lane from {pt}")
 
     def _cell_free(self, x: float, y: float, net: str) -> bool:
-        """Is the single grid cell at (x, y) free for ``net``'s wire? Clear of
-        every body/text box, of FOREIGN planned wires, and of FOREIGN pin
-        stems (own-net geometry is allowed — taps share the net)."""
         for b in self.pl.boxes:
             if b.x0 + 1e-6 < x < b.x1 - 1e-6 and b.y0 + 1e-6 < y < b.y1 - 1e-6:
                 return False
@@ -2497,22 +1998,6 @@ class _Engine:
 
     def _escape_path(self, sgn: int, pt: tuple[float, float], ty: float,
                      net: str) -> list[tuple[float, float]]:
-        """Orthogonal escape ROUTE from a trunk side pin ``pt`` to the trunk
-        row ``ty``, returned as corner waypoints (pt … (fx, ty)).
-
-        The straight L (out to a lane column, then up/down to the trunk) is
-        the ideal and is tried first in the pin's natural side ``sgn``, then
-        the opposite flank. When BOTH flanks are wedged — a side pin boxed in
-        by foreign channels above/below and a body wall outboard, the dense-
-        connector case — a free-cell BFS finds a detour (a Z/C bend) over the
-        same blocked-geometry model the router enforces. Vertex-disjoint by
-        construction: every cell on the path is proven free for ``net`` (own
-        geometry excepted), so it can never short or cross a foreign net.
-
-        Returning a generic waypoint path (not just a single lane column)
-        keeps the escape exclusive-ownership-correct while removing the
-        single-direction-L limitation that strands an otherwise-routable tap
-        back into the spacing-expansion loop."""
         for s in (sgn, -sgn):
             fx = self._lane_in_dir(s, pt, ty, net)
             if fx is not None:
@@ -2521,17 +2006,6 @@ class _Engine:
 
     def _bfs_escape(self, pt: tuple[float, float], ty: float,
                     net: str) -> list[tuple[float, float]]:
-        """Minimum-bend orthogonal route from pin tip ``pt`` to the trunk row
-        ``y == ty`` over free cells, bounded to the placed extent plus a
-        margin (the page is an infinite plane; an enclosed pin must fail fast
-        to the spacing loop, not flood forever).
-
-        The search minimises CORNERS first, wire length second — a Dijkstra
-        whose state is (cell, heading) and whose dominant edge cost is a turn
-        penalty. That yields the hand-drawn route a human would pick (a clean
-        L or C around the obstruction), never a cell-count-minimal spiral
-        through the fragmented free space. Collinear runs collapse to corner
-        waypoints on the way out."""
         ex0, ey0, ex1, ey1 = self._extent()
         margin = 16 * U
         i0 = int(gfloor(min(ex0, pt[0]) - margin) / U)
@@ -2541,11 +2015,9 @@ class _Engine:
         start = (int(round(pt[0] / U)), int(round(pt[1] / U)))
         jty = int(round(ty / U))
         DIRS = ((1, 0), (-1, 0), (0, 1), (0, -1))
-        TURN = 1000           # a corner costs far more than a grid step
+        TURN = 1000
 
         import heapq
-        # state = (cell, came_dir); cost dominated by turns, then length.
-        # prev maps a state back to the state it was reached from.
         dist: dict[tuple[tuple[int, int], int], int] = {(start, -1): 0}
         prev: dict[tuple[tuple[int, int], int],
                    tuple[tuple[int, int], int] | None] = {(start, -1): None}
@@ -2597,16 +2069,7 @@ class _Engine:
         ets = {etype_of.get((pr.ref, pr.pin), "?") for pr in pins}
         return "power_in" in ets and not (ets & _FLAG_DRIVER_ETYPES)
 
-    # ---- cluster + flags ------------------------------------------------------------
     def _farm_row_right_bound(self, ex0: float, ex1_flow: float) -> float:
-        """Largest LOCAL x a farm-row cap may occupy and still clear the title
-        block after center_on_sheet. The farm stays within the flow's x-extent
-        (it is laid under it), so the centering that matters is the flow's:
-        center_on_sheet maps the flow centre onto the page centre, then A3
-        promotion shifts by (A3_CENTER - A4_CENTER). final_x ~= local_x +
-        (A3_CENTER.x - flow_centre_x). Invert at the title-block left edge
-        (less a margin) to get the local bound. Half a cap pitch of slack keeps
-        the rightmost cap's value text clear too."""
         flow_centre = (ex0 + ex1_flow) / 2.0
         dx = A3_CENTER[0] - flow_centre
         local_limit = (A3_TITLEBLOCK_LEFT - TITLEBLOCK_MARGIN) - dx
@@ -2620,69 +2083,29 @@ class _Engine:
             return
         span = (n_caps - 1) * sp.cap_pitch
         if n_caps > 5:
-            # a cap FARM: its own row under the whole flow. Up to 5 caps still
-            # cluster compactly inline beside/under the cell (a 5-wide cluster
-            # spans 4*cap_pitch ~= 40.6 mm — still tidy); only genuinely large
-            # banks need the full-width farm row. Demoting the farm to inline
-            # for the 5-cap case keeps a regulator + its in/out decoupling
-            # (e.g. the fmc VADJ LDO: in/out caps + the connector bypass) off
-            # an extra bottom row, which the A3 height budget cannot spare.
             ex0, _, ex1_flow, ey1 = self._extent()
             col_x = gsnap(ex0 + 4 * U)
-            # TITLE-BLOCK KEEPOUT (LAW 1): the farm is the bottom-most row, so
-            # its caps + GND feet sit in the sheet's bottom y-band — exactly the
-            # y-band the standard KiCad title block occupies in the bottom-RIGHT
-            # corner. A wide farm whose tail marches past the title-block left
-            # edge therefore overruns the frame. Bound the row's LOCAL right edge
-            # so that, after center_on_sheet maps the flow centre onto the page
-            # centre, the rightmost cap lands clear of the title block; overflow
-            # caps WRAP onto an additional row stacked just BELOW (still left of
-            # the title block, where the bottom-left of the sheet is empty). A
-            # narrow farm never reaches the bound, so single-row farms
-            # (bringup_modules, the 8-cap power farm) stay byte-identical.
             farm_left = col_x
-            # wrapped rows stack DOWNWARD (toward the sheet bottom, left of the
-            # title block — that corner is empty). A cap column spans rail
-            # symbol -> cap -> GND symbol + value text (~13 mm); the row pitch
-            # must exceed that PLUS the next row's rail-symbol reach so a row's
-            # GND feet never meet the row below's bar (a route contention).
             row_step = gceil(8 * U)
             max_right = self._farm_row_right_bound(ex0, ex1_flow)
-            # STACKED box-bucks (2+ LM61460 on one sheet) defer their BIAS-bypass
-            # caps to the rank columns, which land in the farm's left x-band right
-            # above it; the farm's rail-bar symbols ride ~6.35 mm ABOVE the cap
-            # row, so the standard 8*U gap let a rail bar's upward value text meet
-            # a rank BIAS-GND symbol's downward value (the two-LM61460 power
-            # sheet's +5V farm bar vs U1's BIAS-bypass GND). Add 4*U ONLY for that
-            # stacked-box-buck case; every other farm — a single box-buck does not
-            # take this path (its 4-cap cluster is the inline form) and the stock
-            # multi-rail farms (bringup_modules / _en_modules, _n_box_bucks == 0)
-            # — keeps the 8*U gap and stays byte-identical.
             cy = gceil(ey1 + (12 if self._n_box_bucks >= 2 else 8) * U)
         else:
             col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
             cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
-            # below anything already occupying the cluster's column band
-            # (attach columns, fan labels — the cluster dodges, never
-            # collides)
             floor = self._cell_floor(col_x - 2 * sp.cap_pitch,
                                      col_x + span + 2 * sp.cap_pitch)
             cy = max(cy, gceil(floor + 4 * sp.hang_stub))
-            farm_left = col_x          # the small-cluster path never wraps
+            farm_left = col_x
             row_step = 0.0
             max_right = float("inf")
         prev_rail_w: float | None = None
         for rail, caps in self.cluster.items():
             if prev_rail_w is not None:
-                # adjacent rails' value texts must not collide
                 col_x = gceil(col_x - sp.cap_pitch
                               + max(sp.cap_pitch,
                                     prev_rail_w / 2
                                     + tm.text_wh(rail)[0] / 2 + 1.27))
             prev_rail_w = tm.text_wh(rail)[0]
-            # the caps of THIS rail, split into per-row runs as the farm wraps
-            # at the title-block bound. Each run gets its own bar + rail symbol
-            # (same net, so multiple drivers are electrically identical).
             runs: list[tuple[float, list[float]]] = []
             cur: list[float] = []
             for ref in caps:
@@ -2717,8 +2140,6 @@ class _Engine:
                     if n_by_pin[p] and n_by_pin[p].net_class == NetClass.POWER][0]
         rail_net = n_by_pin[rail_pin]
         assert rail_net is not None
-        # orientation-agnostic (TVS diodes have x-axis pins): rail pin lands
-        # exactly on the bar row, the far pin gets its ground symbol
         far_pt, far = self._vertical_2pin(ref, x, cy - 3.81, rail_net.name,
                                           downward=True)
         self.power(far, *far_pt, self._power_rot(far, True))
@@ -2734,7 +2155,7 @@ class _Engine:
                 continue
             ets = {etype_of.get((pr.ref, pr.pin), "?") for pr in n.pins}
             if ets & _FLAG_DRIVER_ETYPES:
-                continue                  # a real driver powers this rail
+                continue
             rails.append(n)
         if not rails:
             return
@@ -2757,7 +2178,6 @@ class _Engine:
                 self.flag(net.name, fx, fy + 2.54, 180)
             prev_w = w
 
-    # ---- template: stack columns only (no multi-pin parts) ---------------------------
     def _stack_columns_template(self) -> Placement:
         x = 0.0
         for ch in self.float_chains:
@@ -2785,39 +2205,28 @@ class _Engine:
                 self.power(cur_net, *end_c, self._power_rot(cur_net, True))
             _, _, ex1, _ = self._extent()
             x = gceil(ex1 + 2 * self.sp.cap_pitch)
-        self._rail_decoupling_columns()   # both-pins-rail caps (no IC anchor)
+        self._rail_decoupling_columns()
         self._flags_row()
         return self.pl
 
     def _rail_decoupling_columns(self) -> None:
-        """Drain self.cluster on an IC-less (stack) sheet: each POWER/GROUND
-        decoupling cap is a SELF-ANCHORED column — a rail power-symbol on top,
-        the cap stacked downward, a GROUND symbol at the foot. The 'both-pins-
-        rail' idiom: the cap's anchoring rail IS the rail it bypasses, so there
-        is no IC body to hang a _decoupling_cluster off (the sheet has no multi-
-        pin part). _stack_columns_template's chain loop also skips it (it has no
-        SIGNAL/PORT float net), so it would otherwise survive to the `missing`
-        gate. One column per cap, marching right below the termination flow —
-        same spacing discipline as _leftover_chains_columns/_port_strap_columns,
-        so the columns cannot collide with the R columns or each other."""
         if not self.cluster:
             return
         ex0, _, _, ey1 = self._extent()
         x = gsnap(ex0 + 8 * U)
-        y0 = gceil(ey1 + 8 * U)             # a clear row below the flow
-        for rail in sorted(self.cluster):           # determinism: sorted rails
+        y0 = gceil(ey1 + 8 * U)
+        for rail in sorted(self.cluster):
             for ref in self.cluster[rail]:
-                self.power(rail, x, y0)             # rail symbol points up
+                self.power(rail, x, y0)
                 far_pt, far = self._vertical_2pin(ref, x, y0, rail,
                                                   downward=True)
                 assert self.c.nets[far].net_class is NetClass.GROUND, (
                     f"{ref}: rail-decoupling cap far pin on {far!r} is not "
                     f"GROUND (a true rail-to-rail cap has no GND foot)")
-                self.power(far, *far_pt, self._power_rot(far, True))  # GND foot
+                self.power(far, *far_pt, self._power_rot(far, True))
                 x = gceil(x + 2 * self.sp.cap_pitch)
         self.cluster = {}
 
-    # ---- template: connector fan (SoM mezzanine sheets) ----------------------------
     CONN_RUN = 10.16
     CONN_COL_GAP = 1.27
     CONN_MID_GAP = 2.54
@@ -2832,8 +2241,6 @@ class _Engine:
 
     def _power_at(self, net: str, x: float, y: float, rot: int,
                   val_pos: tuple[float, float] | None) -> None:
-        """Power symbol with an engine-owned value position (sideways rails
-        need property rot 90 so the text reads horizontally)."""
         lib_id = self._power_lib(net)
         sdef = self.lib.get(lib_id)
         self._pwr += 1
@@ -2883,10 +2290,6 @@ class _Engine:
             for (px, py), pin in rows:
                 net = c.net_of(PinRef(jref, pin.number))
                 if net is None:
-                    # author-declared NC (model.validate has already proven
-                    # every unnetted pin is an explicit c.nc) — same idiom
-                    # as the chain/fan templates: a no-connect cross at the
-                    # pin, no fan row (round-5 isolated SoM rail pins)
                     pl.no_connects.append(NoConnect(px, py))
                     continue
                 if net.net_class is NetClass.PORT:
@@ -2933,23 +2336,10 @@ class _Engine:
                 for y0, y1 in zip(ys, ys[1:], strict=False):
                     pl.plan(net, (x_r, y0), (x_r, y1))
 
-            # A POWER rail may tap a DF40 side in SEVERAL non-contiguous
-            # clusters: e.g. the carrier +3V3 sources both Zynq bank 13
-            # (+VCCO_13, J2.1-3, top) AND bank 33 (+VCCO_33, J2.98-100,
-            # bottom) — once those VCCO pins merge onto +3V3 (som_conn_gen
-            # VCCO_RAIL_MAP) one net taps the top AND bottom of the left
-            # column with ports/GND between. A single trunk over that span
-            # is illegal (it would cross foreign rows). So each rail is split
-            # into CONTIGUOUS tap clusters (a break wherever the next tap is
-            # not the adjacent pin row) and EACH cluster gets its own short
-            # local trunk + power symbol — the GND-style local-tap idiom, one
-            # symbol per cluster (KiCad merges them by the rail net name; the
-            # netlist gate proves the single merged net). A rail with one
-            # cluster (the common case) is unchanged.
             def cluster_taps(taps: list[tuple[float, float]]
                              ) -> list[list[tuple[float, float]]]:
                 groups: list[list[tuple[float, float]]] = []
-                for t in taps:               # taps are row-sorted (py asc)
+                for t in taps:
                     if groups and abs(t[0] - groups[-1][-1][0]
                                       - self.CONN_ROW) < 1e-6:
                         groups[-1].append(t)
@@ -2963,24 +2353,21 @@ class _Engine:
                                     lx_inner=lx_inner, y_hi=y_hi,
                                     mid_x=mid_x) -> None:
                 ys = [y for y, _ in taps]
-                # by construction a contiguous cluster has no foreign row in
-                # its own (ys[0], ys[-1]) span — assert it stays true so the
-                # invariant is checked, never assumed
                 foreign = [y for rn, rt in rails.items() if rn != net
                            for y, _ in rt if ys[0] < y < ys[-1]]
                 assert not foreign, (f"{net}: foreign rail row inside cluster "
                                      f"span on side {sgn} — extend the engine")
-                if ys[-1] < y_lo:                 # cluster above the port fan
+                if ys[-1] < y_lo:
                     trunk(net, taps, lx_inner)
                     pl.plan(net, (lx_inner, ys[0]),
                             (lx_inner, ys[0] - self.CONN_EXT))
                     self.power(net, lx_inner, ys[0] - self.CONN_EXT, 0)
-                elif ys[0] > y_hi:                # cluster below the port fan
+                elif ys[0] > y_hi:
                     trunk(net, taps, lx_inner)
                     pl.plan(net, (lx_inner, ys[-1]),
                             (lx_inner, ys[-1] + self.CONN_EXT))
                     self.power(net, lx_inner, ys[-1] + self.CONN_EXT, 180)
-                else:                             # cluster amid the ports
+                else:
                     nonlocal strip_reach
                     trunk(net, taps, mid_x)
                     y_end = ys[0]
@@ -3025,18 +2412,12 @@ class _Engine:
             fx += sp.flag_pitch
         return pl
 
-    # ---- template: regulator stage rows --------------------------------------------
     def _detect_stages(self) -> dict[str, dict]:
         stages: dict[str, dict] = {}
         for ref in self.multi:
             part = self.c.parts[ref]
             sdef = self.lib.get(part.lib_id)
             for p in sdef.pins:
-                # a regulator's switch/output pin: 'power_out' (TPS54302 SW,
-                # AP2112K VOUT) OR 'output' — some stock symbols type the SW
-                # node 'output' (e.g. Regulator_Switching:LMR33640ADDA pin 8
-                # SW). LDO detection (POWER-net branch) stays strict to
-                # power_out so a stray 'output' pin can't fake a regulator.
                 if p.etype not in ("power_out", "output"):
                     continue
                 net = self.net_of(ref, p.number)
@@ -3055,42 +2436,20 @@ class _Engine:
                                        "l": r, "out": out_rail}
                         break
             if ref not in stages:
-                # ETYPE-INDEPENDENT buck detection (faithful dossier symbols):
-                # a `schgen part add` box symbol types EVERY pin 'passive'
-                # (EasyEDA gives no usable etypes), so the SW node above is
-                # never 'power_out'/'output'. Fall back to pure NETLIST
-                # TOPOLOGY, which no etype can fake: the buck SW node is the
-                # unique SIGNAL net that (a) taps THIS multi-pin part and (b)
-                # feeds an inductor (Device:L) whose OTHER end is a POWER rail
-                # (the output). A part that also sits on a POWER input rail is
-                # then a buck producing that output rail. This is exactly the
-                # LM61460 case the lib_id override used to paper over.
                 st = self._detect_buck_topology(ref, sdef)
                 if st is not None:
                     stages[ref] = st
         return stages
 
     def _detect_buck_topology(self, ref: str, sdef: SymbolDef) -> dict | None:
-        """Buck stage from netlist topology alone (no reliance on pin etype):
-        a SIGNAL pin of ``ref`` whose net runs through a Device:L inductor to a
-        POWER rail is the SW node; that rail is the output. Returns the stage
-        dict or None. Grounded in the inductor link the netlist gate proves, so
-        it cannot false-positive on a non-switching part.
-
-        The inductor lands in EITHER ``self.series`` (SW node to another SIGNAL)
-        OR ``self.pull`` (SW SIGNAL node straight to the POWER output rail — the
-        usual case, where _classify files a SIGNAL<->POWER 2-pin as a 'pull').
-        Both are checked, exactly like the etype-keyed path above."""
         for p in sdef.pins:
             net = self.net_of(ref, p.number)
             if net is None or net.net_class is not NetClass.SIGNAL:
                 continue
-            # inductor to a POWER rail recorded as a SIGNAL->POWER 'pull'
             for r, out_rail in self.pull.get(net.name, []):
                 if self.c.parts[r].lib_id == "Device:L":
                     return {"kind": "buck", "sw": net.name,
                             "l": r, "out": out_rail}
-            # or as a SIGNAL<->SIGNAL/other series whose far end is POWER
             for r, a, b in self.series:
                 if net.name not in (a, b) \
                         or self.c.parts[r].lib_id != "Device:L":
@@ -3103,8 +2462,6 @@ class _Engine:
 
     def _regulator_template(self, stages: dict[str, dict]) -> Placement:
         c = self.c
-        # cap assignment per rail: producer's output run takes the first
-        # ceil(n/2) declared caps when the rail also feeds a later stage.
         produced = {st["out"]: ref for ref, st in stages.items()}
         consumed: dict[str, str] = {}
         for ref in self.multi:
@@ -3114,13 +2471,6 @@ class _Engine:
             out_rail = stages[ref]["out"]
             for p in sdef.pins:
                 n = self.net_of(ref, p.number)
-                # input rail = a POWER net the stage taps that is NOT GND and
-                # NOT its own output. ETYPE-INDEPENDENT: a faithful dossier
-                # symbol types VIN 'passive' (no 'power_in'), so keying on the
-                # pin etype would miss it (the LM61460 case). The net's
-                # POWER-class membership is the ground truth, and excluding the
-                # stage's own output rail keeps the producer/consumer split
-                # correct — no etype can fake either.
                 if n is not None and n.net_class is NetClass.POWER \
                         and not n.name.startswith("GND") and n.name != out_rail:
                     consumed.setdefault(n.name, ref)
@@ -3140,7 +2490,6 @@ class _Engine:
             else:
                 continue
             del self.cluster[rail]
-        # stage order: a stage whose input rail no stage produces goes first
         order: list[str] = []
         avail = {r for r in consumed if r not in produced}
         pool = [r for r in self.multi if r in stages]
@@ -3155,16 +2504,6 @@ class _Engine:
             else:
                 order.append(pool.pop(0))
         aux = [r for r in self.multi if r not in stages]
-        # A box-symbol buck (LM61460 dossier) carries dense LEFT-edge columns (FB
-        # divider + CFF feedforward) plus labeled-islet escapes for its BIAS/RT/
-        # VCC straps; when a SECOND such buck STACKS below the first (the power
-        # sheet now carries U1 +5V over U2 +3V3, both LM61460 since the no-EP
-        # TPS54302 thermal re-spec), the standard 10*U inter-stage gap leaves no
-        # clear band for the lower buck's top-edge left pins / VCC cap to escape
-        # into. Widen the gap to 28*U after a box-buck that is followed by another
-        # stage so the escapes clear; the sheet rides the A3 height budget. Single-
-        # stage sheets, the last stage, and stock-symbol stages keep the 10*U gap
-        # -> byte-identical.
         box_buck = {r for r, s in stages.items()
                     if s.get("kind") == "buck"
                     and not self._stage_has_left_input(r)}
@@ -3178,7 +2517,6 @@ class _Engine:
             ay = gceil(self._extent()[3] + gap)
         handled: set = set()
         for ref in aux:
-            # an upward pin-stack off this part's top edge needs headroom
             reach = 0.0
             sdef = self.lib.get(c.parts[ref].lib_id)
             for p in sdef.pins:
@@ -3191,26 +2529,16 @@ class _Engine:
                     if ch.kind == "pin" and ch.root == n.name:
                         reach = max(reach, len(ch.legs) * 7.62 + 10 * U
                                     - p.y - sdef.body[3])
-            # the cell anchor is the SYMBOL ORIGIN and the body extends
-            # ABOVE it (-bb.y0): a connector-scale aux part would otherwise
-            # plow through the stage rows already placed — budget the head
-            # so the body top clears the extent (small parts, whose head
-            # fits inside the standard 10*U band gap, keep their position)
             rot = self.orient.get(ref, 0)
             bb = body_box_page(sdef, 0.0, 0.0, rot, "body", ref)
             ex0, ey0, ex1, ey1 = self._extent()
             ay_ref = gceil(max(ay + reach, ey1 + 4 * U - bb.y0))
-            # post-passes append MORE rows below the extent: reserve their
-            # height before deciding the stack fits the paper
             pending = 0.0
             if self.pull or self.hang:
-                pending += 24 * U               # rank row below the flow
+                pending += 24 * U
             if self.float_chains:
-                pending += 24 * U               # leftover chain columns
+                pending += 24 * U
             if ay_ref + bb.y1 - ey0 > PAPER_H_BUDGET - pending and ex1 > ex0:
-                # stacking below would overrun the tallest sheet (A3):
-                # open a NEW COLUMN beside the extent, its left fan
-                # (labels, risers, attach columns) budgeted clear
                 ax = gceil(ex1 + self._side_reach(ref, "left") + 4 * U)
                 self._cell(ref, ax, gceil(ey0 - bb.y0), handled, {})
             else:
@@ -3220,11 +2548,6 @@ class _Engine:
         self._port_strap_columns()
         self._pull_rank_columns()
         if self.cluster:
-            # a BOX-symbol stage (VIN on the top edge) hands its input
-            # decoupling back to self.cluster rather than cramming it above the
-            # VIN bus; lay it out as the shared decoupling ROW below the flow
-            # (a no-op when no cluster survives, so stock-symbol regulator
-            # sheets stay byte-identical). Anchor off the first stage's body.
             first = next((r for r in self.multi if r in stages), None)
             if first is not None:
                 pp0 = next(p for p in self.pl.parts if p.ref == first)
@@ -3241,18 +2564,13 @@ class _Engine:
     def _stage_in_rail(self, ref: str) -> str | None:
         sdef = self.lib.get(self.c.parts[ref].lib_id)
         for p in sdef.pins:
-            if p.etype == "power_in" and p.rotation == 0:   # left-side pin
+            if p.etype == "power_in" and p.rotation == 0:
                 n = self.net_of(ref, p.number)
                 if n is not None and n.net_class is NetClass.POWER:
                     return n.name
         return None
 
     def _is_fb_pin(self, pin: Pin, net: str, out_rail: str) -> bool:
-        """Is ``pin`` the regulator FB sense pin (vs a sibling biased-aux pin
-        such as the LM61460 BIAS->VOUT tie, which is ALSO a pull+hang on a left
-        pin)? FB has the datasheet pin name 'FB'/'FEEDBACK' AND a top resistor
-        to the OUTPUT rail. A stock symbol whose FB pin carries no usable name
-        still passes via the rail+resistor-divider test."""
         nm = (pin.name or "").upper().replace("/", "").replace("_", "")
         named_fb = nm in ("FB", "FEEDBACK", "VFB", "VSENSE", "FBVSENSE")
         named_other = nm in ("BIAS", "VCC", "RT", "PGOOD", "SS", "COMP",
@@ -3266,8 +2584,6 @@ class _Engine:
         return named_fb or top_to_out
 
     def _stage_fb_net(self, ref: str, st: dict) -> str | None:
-        """The FB net of a box buck (the net on the pin named 'FB'), so
-        _buck_box_stage's left-edge pass can skip the pin _buck_right drew."""
         out_rail = st.get("out")
         for p in self.lib.get(self.c.parts[ref].lib_id).pins:
             n = self.net_of(ref, p.number)
@@ -3279,13 +2595,8 @@ class _Engine:
         return None
 
     def _stage_has_left_input(self, ref: str) -> bool:
-        """True when the stage's INPUT rail has a pin on the LEFT edge (the
-        stock-buck convention _stage_row's layout assumes). False for a faithful
-        box symbol that group_pins put the VIN pins on the TOP edge."""
         in_rail = self._stage_in_rail(ref)
         if in_rail is None:
-            # _stage_in_rail keys on power_in+left; a box symbol's passive VIN
-            # is invisible to it -> treat as no-left-input (box path).
             return False
         sdef = self.lib.get(self.c.parts[ref].lib_id)
         for p in sdef.pins:
@@ -3299,30 +2610,11 @@ class _Engine:
     def _buck_box_stage(self, ref: str, st: dict, ay: float,
                         in_caps: dict[str, list[str]],
                         out_caps: dict[str, list[str]]) -> None:
-        """Faithful layout for a BOX-symbol buck (e.g. the LM61460 dossier):
-        VIN on the TOP edge, GND on the bottom, FB/BIAS/RT on the LEFT, SW/BOOT/
-        EN on the RIGHT. The stock-buck _stage_row assumes VIN on the LEFT, so
-        this is a separate ADDITIVE path (the stock stages stay byte-identical).
-
-        Topology, not pin etype, drives every role (a `schgen part add` symbol
-        types all pins 'passive'):
-          * TOP    — the input rail (POWER) + its decoupling bank fan UP to rail
-                     symbols; any TOP SIGNAL pin (VCC bias) drops its bypass cap.
-          * BOTTOM — every GND pin gets a ground symbol.
-          * RIGHT  — SW -> inductor -> output rail run (output caps + FB feed-
-                     forward + BOOT loop), reusing _buck_right; the EN port and
-                     any other RIGHT signal fan out to labels.
-          * LEFT   — FB divider (R top to out rail, R/C bottom to GND) + BIAS
-                     biased-aux + RT/aux locals as labeled left columns.
-        """
         sp = self.sp
         in_rail = self._stage_in_rail_box(ref)
         pp, sdef, body, sides = self._place_body(ref, 0.0, ay)
         pins = {p.number: pin_page_position(p, 0.0, ay, 0) for p in sdef.pins}
 
-        # ---- TOP edge: input rail bus + decoupling, VCC bias bypass ----------
-        # Reuse the proven rail-bus / rail-stub / local-drop machinery so the
-        # spacing + dodge discipline matches every other sheet.
         top_pins = sorted(((pins[p.number], p) for p in sdef.pins
                            if p.rotation == 270), key=lambda t: t[0][0])
         in_pts = [pt for pt, p in top_pins
@@ -3332,9 +2624,6 @@ class _Engine:
             self._rail_bus(in_rail, in_pts, "top")
         elif in_pts:
             self._rail_stub(in_rail, in_pts[0], "top")
-        # TOP signal pins (VCC bias): a local bypass cap stacked UP off the pin.
-        # Its ref/value text reads AWAY from the VIN bus (which sits to VCC's
-        # right on the LM61460), so the cap value never lands on the bus bar.
         in_xs = [pt[0] for pt in in_pts]
         for pt, p in top_pins:
             n = self.net_of(ref, p.number)
@@ -3348,24 +2637,14 @@ class _Engine:
             if chain is not None:
                 tside = "left" if (in_xs and pt[0] < min(in_xs)) else "right"
                 self._stack_from_pin(chain, pt, "top", text_side=tside)
-                # the synthetic local-drop chain is NOT in self.float_chains, so
-                # its bypass cap is still registered in self.hang/self.pull —
-                # purge it so the leftover rank placer does not place the SAME
-                # cap a second time (a double-draw + a stray duplicate-name
-                # label islet; the VCC-on-top LM61460 box exposed this).
                 for _cref, _u, _l in chain.legs:
                     self.hang.pop(n.name, None)
                     self.pull.pop(n.name, None)
             else:
                 self._signal_islet_drop(n.name, pt, "top")
-        # input decoupling: returned to self.cluster so the shared decoupling-
-        # ROW placer lays it out below the flow (a clean, well-spaced bank of
-        # rail->cap->GND columns that merges to the input rail by symbol name)
-        # rather than cramming caps into the narrow top edge above the VIN bus.
         for refc in in_caps.pop(in_rail, []):
             self.cluster.setdefault(in_rail, []).append(refc)
 
-        # ---- BOTTOM edge: GND pins on a shared bus (one symbol) --------------
         gnd_groups: dict[str, list] = {}
         for p in sdef.pins:
             if p.rotation != 90:
@@ -3382,11 +2661,6 @@ class _Engine:
             else:
                 self._rail_stub(gnet, gpts[0], "bottom")
 
-        # ---- RIGHT edge: SW->L->out run (+ caps, BOOT, FB feedfwd), EN port ---
-        # _buck_right draws SW/BOOT/output caps AND (for a LEFT-edge FB box
-        # symbol) the FB divider+feedforward via _fb_left_network — which pops
-        # FB's pull/hang. Cache the FB net NOW so the LEFT-edge pass below can
-        # still recognize and skip it after the pop.
         fb_net_name = self._stage_fb_net(ref, st)
         self._buck_right(ref, st, ay, pins, sdef, out_caps)
         for p in sdef.pins:
@@ -3396,7 +2670,7 @@ class _Engine:
             if n is None:
                 continue
             if n.name == fb_net_name:
-                continue                          # FB drawn by _buck_right
+                continue
             if n.net_class is NetClass.PORT:
                 pe = pins[p.number]
                 lx = round(pe[0] + sp.port_run, 3)
@@ -3406,27 +2680,8 @@ class _Engine:
                 self.label(n.name, lx, pe[1], 0, shape=shape)
             elif n.net_class is NetClass.SIGNAL and (
                     n.name in self.pull or n.name in self.hang):
-                # RIGHT-edge SIGNAL strap (always-on EN-UVLO/EN-clamp): the
-                # LM61460 dossier places EN/SYNC on the RIGHT edge (pin 7),
-                # unlike the stock TPS54302 whose EN sat on the LEFT (handled by
-                # _stage_row's p_en_uvlo branch). The always-on +5V_SOM buck
-                # strap (series-R to the input rail + 5.1 V zener + bypass cap to
-                # GND, PWR-1) is a SIGNAL net with entries in self.pull/self.hang
-                # -> draw it as a labeled islet escaping RIGHT and bridge it, so
-                # the strap R/zener/cap lay out in the generic rank columns and
-                # merge back by name (the labeled-islet idiom, no symbol pin
-                # moved). A plain bring-up-port EN is PORT-class (handled above);
-                # a strapless EN with no local passives falls through to the NC/
-                # float handling like any other unused right pin.
                 self._box_right_pin_islet(n.name, pins[p.number])
 
-        # ---- LEFT edge: every non-FB left pin is drawn as a LABELED ISLET, its
-        # local R/C left in self.pull/hang so the generic _pull_rank_columns
-        # lays them out as labeled rank columns below the flow that merge back
-        # by name. _box_left_pin_islet escapes each pin cleanly (short
-        # horizontal stub into the gap when it fits, else a vertical drop into
-        # the clear band below the body) — never a runaway left run across the
-        # FB network the right-edge pass placed (LAW 1).
         left_pins = sorted(((pins[p.number], p) for p in sdef.pins
                             if p.rotation == 0), key=lambda t: -t[0][1])
         for pt, p in left_pins:
@@ -3435,23 +2690,12 @@ class _Engine:
                 self.pl.no_connects.append(NoConnect(*pt))
                 continue
             name = n.name
-            # FB sense net is drawn by _buck_right (its divider + feedforward
-            # column already ran, with fb_left=True routing the sense wire) —
-            # skip it here so it is not double-drawn.
             if name == fb_net_name:
                 continue
             self._box_left_pin_islet(name, pt, body)
         self._part_texts(pp, body)
 
     def _box_right_pin_islet(self, name: str, pt: tuple[float, float]) -> None:
-        """Escape a box-buck RIGHT-edge SIGNAL pin (the LM61460 EN/SYNC always-on
-        strap) to a labeled islet reading rightward; its local strap elements
-        (series-R + clamp zener + bypass cap) are deferred to the generic rank
-        columns and merge back by name (the same labeled-islet idiom as the
-        left-edge non-FB pins, mirrored to the right). A short horizontal stub
-        right to a rot-0 label, dodging right a BOUNDED few steps to the first
-        clear spot — never a runaway run across the SW/output network the
-        right-edge pass placed (LAW 1)."""
         sp = self.sp
         rx = round(pt[0] + sp.port_run, 3)
         for _k in range(8):
@@ -3467,23 +2711,7 @@ class _Engine:
 
     def _box_left_pin_islet(self, name: str, pt: tuple[float, float],
                             body: Box) -> None:
-        """Escape a box-buck LEFT-edge signal pin to a labeled islet (its local
-        R/C are deferred to the rank columns and merge back by name).
-
-        Two clean escapes, in order — never a blind/runaway push (LAW 1):
-          1. SHORT HORIZONTAL stub left to a rot-180 label, dodging left a
-             BOUNDED few steps. Used when there is clear room left of the pin
-             (the common case on a sparse left edge) — this is the exact short
-             islet the original code drew, so a buck whose left edge has room
-             stays byte-identical.
-          2. VERTICAL DROP: when the FB column (placed left of the body by
-             _buck_right) blocks every short left label, run a short stub left
-             into the body<->FB gap, then drop straight DOWN past the body into
-             the open band below the stage and label there (rot 0). Guaranteed
-             clear space, so a dense left edge (FB network + BIAS + RT, the
-             LM61460 dossier) routes with zero crossings."""
         sp = self.sp
-        # 1) short horizontal-left islet (BOUNDED dodge — 6 steps max)
         lx = round(pt[0] - sp.port_run, 3)
         for _k in range(6):
             lb = tm.llabel_box(name, lx, pt[1], 180)
@@ -3494,14 +2722,6 @@ class _Engine:
                 self._bridge(name)
                 return
             lx = gfloor(lx - 2 * U)
-        # 1b) STRAIGHT VERTICAL DROP from the pin tip (no horizontal move): when
-        # the pin's own y-row is blocked left (an adjacent FB/rank column sits at
-        # exactly this row so no horizontal corridor opens), a riser at the pin
-        # tip x — if its vertical band is clear — reaches the open band above or
-        # below the stage directly. Try DOWN first (the open band below the whole
-        # stage, the most reliable on a stacked sheet), then UP. This is what
-        # rescues a top-half left pin (e.g. U2 BIAS_3V3 on the two-buck power
-        # sheet) whose every left-corridor riser is walled off by U1's columns.
         xv = pt[0]
         for down in (True, False):
             edge = body.y1 if down else body.y0
@@ -3523,24 +2743,13 @@ class _Engine:
                     self._bridge(name)
                     return
                 dy = round(dy + step, 3)
-        # 2) VERTICAL ESCAPE: the FB column (placed left of the body by the
-        # right-edge pass) blocks every short left label. Run a short stub left
-        # into the body<->FB gap, then a clean vertical riser to a free row
-        # BEYOND the body's near edge. Try the PREFERRED direction first — UP for
-        # a pin in the body's top half (clears into the top-left corner), DOWN
-        # for the bottom half (the open band below the stage) — then FALL BACK to
-        # the opposite direction. The preferred-only rule is correct for a single
-        # stage, but when bucks STACK (the power sheet now carries TWO LM61460
-        # box-bucks, U1 above U2) a top-half pin's UP escape collides with the
-        # stage above; the down fallback then finds the open inter-stage band.
-        # The riser x is nudged left to a clear lane; the label reads rightward.
         body_mid = (body.y0 + body.y1) / 2
-        prefer_up = pt[1] < body_mid          # page-y: smaller = higher = top
+        prefer_up = pt[1] < body_mid
         for up in (prefer_up, not prefer_up):
-            xv = gfloor(pt[0] - 2 * U)        # just left of the pin tip
+            xv = gfloor(pt[0] - 2 * U)
             edge = body.y0 if up else body.y1
             b0 = (edge - 24 * U, edge - U) if up else (edge + U, edge + 24 * U)
-            for _kx in range(8):              # nudge the riser left to a clear x
+            for _kx in range(8):
                 if self._vband_stem_free(xv, b0[0], b0[1], {name}) \
                         and self._corridor_free(pt[1], pt[0] - 0.01, xv, {name}):
                     break
@@ -3548,7 +2757,7 @@ class _Engine:
             step = -2 * U if up else 2 * U
             dy = gfloor(edge - 4 * U) if up else gceil(edge + 4 * U)
             for _ky in range(24):
-                lbl = (round(xv + sp.port_run, 3), dy)  # label right of riser
+                lbl = (round(xv + sp.port_run, 3), dy)
                 lb = tm.llabel_box(name, lbl[0], lbl[1], 0)
                 ylo, yhi = sorted((pt[1], dy))
                 if self._spot_free(lb) \
@@ -3563,8 +2772,6 @@ class _Engine:
         raise PlaceError(f"box-buck left pin {name}: no clear islet escape")
 
     def _stage_in_rail_box(self, ref: str) -> str:
-        """The input rail of a box-symbol stage, found by NET ROLE: the POWER
-        net (not GND, not the output) the part taps. Etype-independent."""
         out_rail = self._stages_out(ref)
         for p in self.lib.get(self.c.parts[ref].lib_id).pins:
             n = self.net_of(ref, p.number)
@@ -3581,11 +2788,6 @@ class _Engine:
     def _stage_row(self, ref: str, st: dict, ay: float,
                    in_caps: dict[str, list[str]],
                    out_caps: dict[str, list[str]]) -> None:
-        # BOX-SYMBOL stage (faithful `schgen part add` symbol): group_pins puts
-        # the power-named VIN pins on the TOP edge (rot 270), not the LEFT edge
-        # the stock-buck _stage_row layout assumes. Detected by NET ROLE (the
-        # input rail has no LEFT pin) and routed by a dedicated faithful path,
-        # leaving the stock-symbol stages (VIN on the left) byte-identical.
         if st["kind"] == "buck" and not self._stage_has_left_input(ref):
             self._buck_box_stage(ref, st, ay, in_caps, out_caps)
             return
@@ -3594,12 +2796,10 @@ class _Engine:
         pins = {p.number: pin_page_position(p, 0.0, ay, 0)
                 for p in sdef.pins}
         p_in = p_en = p_gnd = p_en_uvlo = None
-        p_aux: list = []      # left-edge aux power_out (e.g. LMR33630 VCC bias)
-        p_biased: list = []   # left-edge pin: series-R UP to a NON-input rail +
-        #                       bypass-C DOWN to GND (e.g. LM61460 BIAS->VOUT,
-        #                       DS SNVSBD5D 9.2.2.9) — labeled, R/C in rank cols
-        gnd_pts: list = []    # ALL distinct bottom GND/EP points (incl. the EP)
-        in_rail_name = self._stage_in_rail(ref)   # the buck's VIN rail (or None)
+        p_aux: list = []
+        p_biased: list = []
+        gnd_pts: list = []
+        in_rail_name = self._stage_in_rail(ref)
         for p in sdef.pins:
             net = self.net_of(ref, p.number)
             if net is None:
@@ -3612,34 +2812,14 @@ class _Engine:
             elif p.rotation == 0 and p.etype == "power_out" \
                     and net.net_class is NetClass.SIGNAL \
                     and self._local_drop_chain(net.name, ref) is not None:
-                # an internal-LDO BIAS output (e.g. the LMR33630 VCC pin) with a
-                # single local bypass cap to GND: dropped in its own left column
-                # (Edit 3 below). Without this it matches no role and falls to
-                # the raise — the "U1_VCC islet, opens forbidden" failure.
                 p_aux.append((pins[p.number], net.name))
             elif p.rotation == 0 and net.net_class is NetClass.SIGNAL \
                     and len(self.pull.get(net.name, [])) == 1 \
                     and len(self.hang.get(net.name, [])) == 1 \
                     and self.pull[net.name][0][1] != in_rail_name:
-                # BIASED-AUX idiom (NOT an EN-UVLO strap): a left-side pin whose
-                # SIGNAL net has exactly ONE series R UP to a power rail that is
-                # NOT the input rail (the OUTPUT rail) plus ONE bypass C DOWN to
-                # GND. This is the LM61460 BIAS->VOUT tie (DS SNVSBD5D 9.2.2.9):
-                # R = 1-10 ohm series VOUT->BIAS, C = 1 uF BIAS bypass. It cannot
-                # ride the input-rail run (its R taps the OUTPUT), so it is drawn
-                # as a labeled pin with its R/C in the generic rank columns (see
-                # the render block below). Kept ABOVE the EN-UVLO branch so a real
-                # EN strap (whose top IS the input rail) still falls through.
                 p_biased.append((pins[p.number], net.name))
             elif p.rotation == 0 and net.net_class is NetClass.SIGNAL \
                     and net.name in self.pull and net.name in self.hang:
-                # EN-UVLO-divider idiom (always-on regulators, e.g. power.py's
-                # +5V_SOM stage): a left-side IC pin whose SIGNAL net is a
-                # resistor divider — top R to a POWER rail, bottom R to GND.
-                # Drawn as a left-side divider column off the input rail run,
-                # mirroring the right-side FB divider. No port/label: it is an
-                # internal strap. Only the divider whose top sits on the
-                # input rail rides the in-rail run (the general case here).
                 p_en_uvlo = (pins[p.number], net.name)
             elif p.rotation == 90 and net.net_class is NetClass.GROUND:
                 p_gnd = (pins[p.number], net.name)
@@ -3647,7 +2827,6 @@ class _Engine:
         if p_in is None or p_gnd is None:
             raise PlaceError(f"{ref}: regulator stage without VIN/GND pins")
 
-        # left: EN port + input rail with its cap bank
         if p_en is not None:
             (pe, en_net, etype) = p_en
             lx = pe[0] - sp.port_run
@@ -3655,9 +2834,6 @@ class _Engine:
             self.label(en_net, lx, pe[1], 180,
                        shape="input" if etype == "input" else "bidirectional")
         (pv, in_rail) = p_in
-        # EN-strap idiom: any OTHER left-side pin tied to the SAME input
-        # rail (EN strapped to VIN, duplicate VIN pins) joins the rail run
-        # via a short elbow tap — silently skipping it would be an OPEN
         straps: list[tuple[float, float]] = []
         for p in sdef.pins:
             net = self.net_of(ref, p.number)
@@ -3670,13 +2846,6 @@ class _Engine:
         cin = in_caps.pop(in_rail, [])
         cols = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
                 for i in range(len(cin))]
-        # EN-UVLO / EN-CLAMP strap rides the input rail run as its own
-        # column block, left of the last cap column (mirrors the FB divider
-        # on the output run). The TOP element is a SERIES resistor from THIS
-        # rail to the EN midpoint; the GROUND side is one OR MORE shunt
-        # elements (clamp zener, EN bypass cap, optional bottom divider R) —
-        # each gets its own sub-column sharing the midpoint, so the generic
-        # series-R + zener + cap clamp (PWR-1) renders without a sheet hack.
         uvlo_col = None
         uvlo_gnd = []
         if p_en_uvlo is not None:
@@ -3687,12 +2856,9 @@ class _Engine:
                     f"{ref}: EN-UVLO top {uvlo_rt} sits on "
                     f"{uvlo_top_rail!r}, not the input rail {in_rail!r} — "
                     f"unhandled topology, extend the engine")
-            # deterministic order (set/dict order is hash-seed noise)
             uvlo_gnd = sorted(self.hang[uvlo_net])
             base = gfloor(pv[0] - sp.cluster_dx + len(cin) * -sp.cap_pitch)
             uvlo_col = base
-            # only the SERIES-R column rides the input-rail run; the extra
-            # ground-side columns branch off the midpoint, not the rail.
             cols = cols + [uvlo_col]
         nodes = [pv[0]] + cols + [tx for tx, _ in strap_taps]
         nodes_sorted = sorted(set(nodes))
@@ -3710,23 +2876,11 @@ class _Engine:
             self.power(far, *far_pt)
         if p_en_uvlo is not None and uvlo_col is not None:
             (pe_u, uvlo_net) = p_en_uvlo
-            # SERIES element: in_rail -> midpoint (rides the rail column)
             (uvlo_rt, _rail) = self.pull.pop(uvlo_net)[0]
             mid_pt, _ = self._vertical_2pin(uvlo_rt, uvlo_col, pv[1],
                                             in_rail, downward=True)
             y_mid = mid_pt[1]
-            # GROUND-side shunt elements: bottom divider R, clamp zener, EN
-            # bypass cap. The first rides the series column straight to GND;
-            # any extras get their own column one cap-pitch further left and
-            # tie back to the midpoint with a short horizontal run.
             self.hang.pop(uvlo_net)
-            # The EN elbow + clamp midpoint run left at a single CLEAR track. On
-            # a stage that OWNS its input cap bank (e.g. the isolated +5V_SOM
-            # sheet) the input-cap GND power symbols sit between uvlo_col and the
-            # EN column at ~y_mid; route the midpoint + EN BELOW them (y_tie) so
-            # the EN wire never collides with a GND symbol. When the stage rides
-            # a producer's input run there are no such caps -> cap_floor<=y_mid
-            # -> y_tie==y_mid -> geometry identical to before.
             xv = round(pe_u[0] - 2.54, 3)
             cap_floor = max([y_mid] + [b.y1 for b in self.pl.boxes
                                        if b.kind == "body" and b.owner
@@ -3734,7 +2888,7 @@ class _Engine:
                                        and uvlo_col < b.x0 and b.x1 < xv
                                        and b.y0 > pv[1]])
             y_tie = y_mid if cap_floor <= y_mid else gceil(cap_floor + 2 * U)
-            if y_tie > y_mid:           # sink the series column to the clear track
+            if y_tie > y_mid:
                 self.pl.plan(uvlo_net, (uvlo_col, y_mid), (uvlo_col, y_tie))
             mid_xs = [uvlo_col]
             for k, gref in enumerate(uvlo_gnd):
@@ -3745,36 +2899,17 @@ class _Engine:
                 far_pt2, far2 = self._vertical_2pin(gref, gcol, y_tie,
                                                     uvlo_net, downward=True)
                 self.power(far2, *far_pt2)
-            # midpoint rail tying the shunt columns + the EN drop together
             mid_xs_sorted = sorted(set(mid_xs + [xv]))
             for xa, xb in zip(mid_xs_sorted, mid_xs_sorted[1:], strict=False):
                 self.pl.plan(uvlo_net, (xa, y_tie), (xb, y_tie))
-            # EN pin elbows down its own column into the clear track
             self.pl.plan(uvlo_net, pe_u, (xv, pe_u[1]), (xv, y_tie))
         (_pg, gnd_net) = p_gnd
-        for gpt in sorted(set(gnd_pts)):          # ALL distinct bottom GND/EP pts
+        for gpt in sorted(set(gnd_pts)):
             self.power(gnd_net, *gpt)
-        # aux left pins (VCC/RT/...): each drops its ONE local element in a left
-        # column clear of the body, STAGGERED one cap-pitch each so multiple aux
-        # pins (e.g. the LM61460 VCC + RT) never share an x. The symbol places
-        # aux pins OUT of the input-rail's vertical band (VIN at one page edge,
-        # aux at the other) so these short left columns never cross an input-cap
-        # drop — the column is local to the aux pin, not pushed past the cap bank.
-        # Route TOP aux pins (smallest page-y) into the FURTHEST-left columns so
-        # the L-shaped runs NEST monotonically: the higher pin's longer run sits
-        # above, drops at the leftmost column; each lower pin takes a column one
-        # pitch closer to the body, its shorter run staying RIGHT of every higher
-        # pin's vertical drop. Without this nesting two adjacent aux drops (the
-        # LM61460 VCC + RT) cross. (n-1-rank gives the topmost pin the max offset.)
         _aux_sorted = sorted(p_aux, key=lambda pn: pn[0][1])
         _naux = len(_aux_sorted)
-        for _rank, (pa, aux_net) in enumerate(_aux_sorted):  # aux: ONE local 2-pin
+        for _rank, (pa, aux_net) in enumerate(_aux_sorted):
             ia = _naux - 1 - _rank
-            # the single local element drops to GND (self.hang — VCC/BIAS bypass
-            # cap, RT freq resistor) OR up to a rail (self.pull — a PGOOD pull-up
-            # resistor to the output rail). _local_drop_chain already proved
-            # exactly one local passive exists; route it to whichever net its far
-            # pin lands on (self.power handles GND or a POWER rail).
             if aux_net in self.hang:
                 rcref = self.hang[aux_net][0]
             else:
@@ -3786,20 +2921,7 @@ class _Engine:
             self.hang.pop(aux_net, None)
             self.pull.pop(aux_net, None)
             self.pl.plan(aux_net, pa, (xcol, pa[1]))
-        # BIASED-AUX pins (LM61460 BIAS->VOUT, DS 9.2.2.9): the BIAS net taps the
-        # OUTPUT rail through a series R and bypasses to GND — it can NOT ride the
-        # input-rail run, and a self-contained left column would cross the input
-        # rail in this congested left edge. Render it the datasheet way the engine
-        # already uses for leftover straps: a LOCAL LABEL off the pin (extending
-        # left), leaving the series R + bypass C in self.pull/self.hang so the
-        # generic _pull_rank_columns draws them as labeled rank columns (R in its
-        # rail group, C in the GND group) that merge back by the net label. No
-        # column collisions, no wire over the input rail.
         for (pb, bias_net) in sorted(p_biased, key=lambda pn: pn[0][1]):
-            # extend the stub LEFT past any EN port label at an adjacent pin so
-            # the two labels never overlap (BIAS sits one pin above EN here): the
-            # stub clears the leftmost edge of every already-placed left label
-            # whose y-band overlaps this one.
             lx = round(pb[0] - sp.port_run, 3)
             for b in self.pl.boxes:
                 if b.kind == "label" and b.x1 <= pb[0] \
@@ -3807,7 +2929,7 @@ class _Engine:
                     lx = min(lx, gfloor(b.x0 - 2 * U))
             self.pl.plan(bias_net, pb, (lx, pb[1]))
             self.llabel(bias_net, lx, pb[1], 180)
-        for p in sdef.pins:                       # explicit NC for authored NCs
+        for p in sdef.pins:
             if self.net_of(ref, p.number) is None and p.etype != "no_connect":
                 self.pl.no_connects.append(NoConnect(*pins[p.number]))
 
@@ -3819,18 +2941,9 @@ class _Engine:
 
     def _fb_left_network(self, ref: str, st: dict, p_fb: tuple[float, float],
                          fb_net: str, out_rail: str) -> None:
-        """The FB feedback divider + feedforward of a LEFT-edge box buck, drawn
-        as a SELF-CONTAINED column just left of the FB pin. The top resistor and
-        any feedforward reference the output rail through a LOCAL out_rail power
-        symbol (merged by name with the right-side output rail), so the network
-        never reaches across the body. Topology, not geometry, drives roles:
-          out_rail symbol -> Rtop -> [FB midpoint] -> Rbot -> GND,
-          with the FB pin tapping the midpoint and the CFF/RFF feedforward
-          (a fb_net-rooted trunk float-chain) on a parallel column."""
         sp = self.sp
         x = gfloor(p_fb[0] - sp.port_run - 4 * U)
         y_top = round(p_fb[1] - 4 * U, 3)
-        # local output-rail symbol at the column top (merges by name)
         self.power(out_rail, x, y_top, self._power_rot(out_rail, False))
         fb_pulls = self.pull.pop(fb_net)
         (rt, _rail) = fb_pulls[0]
@@ -3840,10 +2953,8 @@ class _Engine:
         rb = self.hang.pop(fb_net)[0]
         far_pt2, far2 = self._vertical_2pin(rb, x, y_mid, fb_net, downward=True)
         self.power(far2, *far_pt2, self._power_rot(far2, True))
-        # FB sense: pin -> short stub left -> down to y_mid -> into the column
         xv = round(p_fb[0] - 2 * U, 3)
         self.pl.plan(fb_net, p_fb, (xv, p_fb[1]), (xv, y_mid), (x, y_mid))
-        # plain feedforward cap(s) across Rtop: a parallel column one pitch left
         xcol = gfloor(x - sp.cap_pitch)
         for cff in plain_ff:
             self.power(out_rail, xcol, y_top, self._power_rot(out_rail, False))
@@ -3851,9 +2962,6 @@ class _Engine:
                                             downward=True)
             self.pl.plan(fb_net, (x, y_mid), (xcol, y_mid), (xcol, ff_far[1]))
             xcol = gfloor(xcol - sp.cap_pitch)
-        # CFF + RFF feedforward chain (out_rail -[CFF]- mid -[RFF]- fb_net):
-        # CFF drops from a local out_rail symbol, RFF runs horizontally into the
-        # FB midpoint — mirror of the right-side idiom, marching LEFT.
         ff_chains = [ch for ch in self.float_chains
                      if ch.kind == "trunk" and ch.root == fb_net
                      and len(ch.legs) == 2 and ch.legs[-1][2] == out_rail]
@@ -3861,10 +2969,6 @@ class _Engine:
             (rff_ref, _a0, mid_net) = ch.legs[0]
             (cff_ref, _a1, _rail) = ch.legs[1]
             rhl = 3.81
-            # leftward mirror: the divider midpoint is to the RIGHT of this
-            # column, so RFF's fb_net pin must be its RIGHT pin and its CFF-mid
-            # pin the LEFT. _horizontal_2pin lands left_net on the LEFT pin, so
-            # pass mid_net as left_net (left pin) -> fb_net falls on the right.
             x_rff = xcol
             self._horizontal_2pin(rff_ref, x_rff, y_mid, mid_net)
             self.pl.plan(fb_net, (x, y_mid), (x_rff + rhl, y_mid))
@@ -3872,8 +2976,6 @@ class _Engine:
             self.power(out_rail, x_ff, y_top, self._power_rot(out_rail, False))
             cff_far, _ = self._vertical_2pin(cff_ref, x_ff, y_top, out_rail,
                                              downward=True)
-            # CFF-mid: RFF left pin (x_rff - rhl) -> jog at a clear x between the
-            # RFF and the CFF column -> down to the CFF far pin.
             x_jog = gsnap((x_rff - rhl + x_ff) / 2)
             self.pl.plan(mid_net, (x_rff - rhl, y_mid), (x_jog, y_mid),
                          (x_jog, cff_far[1]), (x_ff, cff_far[1]))
@@ -3885,11 +2987,10 @@ class _Engine:
         sp = self.sp
         c = self.c
         sw_net, out_rail, l_ref = st["sw"], st["out"], st["l"]
-        # role pins from topology
         p_sw = p_boot = p_fb = None
         boot_net = fb_net = None
         boot_cap = None
-        fb_left = False           # box-symbol bucks place FB on the LEFT edge
+        fb_left = False
         for p in sdef.pins:
             if p.rotation not in (0, 180):
                 continue
@@ -3909,14 +3010,6 @@ class _Engine:
                         and net.name != boot_net \
                         and self._is_fb_pin(p, net.name, out_rail) \
                         and p_fb is None:
-                    # FB sense pin (top R to out rail + bottom R/C to GND). The
-                    # stock buck symbol places it on the RIGHT (rot 180); a
-                    # faithful box symbol (LM61460 dossier) places it on the
-                    # LEFT (rot 0). Either edge is accepted; the divider column
-                    # still sits to the right of the SW run, the FB sense wire
-                    # routed from whichever edge the pin is on. _is_fb_pin keeps
-                    # a sibling biased-aux net (e.g. LM61460 BIAS->VOUT, also a
-                    # pull+hang on a left pin) from being mistaken for FB.
                     p_fb = pin_page_position(p, 0.0, ay, 0)
                     fb_net = net.name
                     fb_left = p.rotation == 0
@@ -3925,36 +3018,24 @@ class _Engine:
         x0 = p_sw[0]
         y_sw = p_sw[1]
         x_l = round(x0 + 26.67, 3)
-        slot = gceil(x_l + 9 * U)                      # first out-run column
-        # extra BOOT pins on the same net (e.g. the LM61460 RBOOT+CBOOT = one
-        # BOOT_5V0 node, the "RBOOT shorted to CBOOT" 0R): bond every right-edge
-        # boot pin to the chosen p_boot with a short outboard rail so none is
-        # left an unrouted island.
+        slot = gceil(x_l + 9 * U)
         boot_extra = [pin_page_position(p, 0.0, ay, 0) for p in sdef.pins
                       if p.rotation == 180 and p_boot is not None
                       and (n2 := self.net_of(ref, p.number)) is not None
                       and n2.name == boot_net
                       and pin_page_position(p, 0.0, ay, 0) != p_boot]
-        # BOOT loop over the SW run
         if p_boot is not None and boot_cap is not None:
             xv = round(x0 + 2.54, 3)
             xc = round(x0 + 10.16, 3)
             xj = round(x0 + 20.32, 3)
             boot_ys = [p_boot[1], *(pt[1] for pt in boot_extra)]
-            # Place the boot-cap track on the side of the SW pin the boot pins
-            # are on, so the riser tying the boot pins to the cap NEVER crosses
-            # the SW horizontal run. Stock symbol: BOOT above SW -> the original
-            # `min(...) - 5.08` (above). LM61460 box symbol: BOOT pins (RBOOT=13,
-            # CBOOT=14) sit BELOW SW=10 in PAGE coords... but ABOVE in symbol-y;
-            # the decisive test is the actual page y of the pins vs SW.
-            boot_above = min(boot_ys) > y_sw + 1e-6   # boot pins above SW (page)
+            boot_above = min(boot_ys) > y_sw + 1e-6
             if boot_above:
                 yb = round(max(boot_ys) + 5.08, 3)
                 riser_from = min(boot_ys)
             else:
                 yb = round(min(boot_ys) - 5.08, 3)
                 riser_from = max(boot_ys)
-            # tie all boot pins onto the xv riser, then out to the boot cap
             for pt in [p_boot, *boot_extra]:
                 self.pl.plan(boot_net, pt, (xv, pt[1]))
             self.pl.plan(boot_net, (xv, riser_from), (xv, yb),
@@ -3966,13 +3047,11 @@ class _Engine:
             self.pl.plan(sw_net, (xj, y_sw), (x0 + 26.67 - 3.81, y_sw))
         else:
             self.pl.plan(sw_net, p_sw, (x0 + 26.67 - 3.81, y_sw))
-        # inductor
         self._horizontal_2pin(l_ref, x_l, y_sw, sw_net)
         self.pull.get(sw_net) and self.pull[sw_net].remove(
             (l_ref, out_rail))
         if self.pull.get(sw_net) == []:
             del self.pull[sw_net]
-        # output run
         nodes = [round(x_l + 3.81, 3)]
         for refc in out_caps.pop(out_rail, []):
             nodes.append(slot)
@@ -3980,24 +3059,14 @@ class _Engine:
                                               out_rail, downward=True)
             self.power(far, *far_pt)
             slot = gceil(slot + sp.cap_pitch)
-        # FB divider — LEFT-edge box symbol: a SELF-CONTAINED column near the
-        # FB pin. Its top resistor (and feedforward) reference the output rail
-        # through a LOCAL out_rail power symbol (KiCad merges by name with the
-        # right-side output rail), so nothing crosses the body. Stock symbols
-        # (FB on the right) keep the right-side run unchanged.
         if p_fb is not None and fb_net is not None and fb_left:
             self._fb_left_network(ref, st, p_fb, fb_net, out_rail)
-            p_fb = None         # done; skip the right-side block below
-        # FB divider column (stock right-edge symbols)
+            p_fb = None
         if p_fb is not None and fb_net is not None:
             x_div = slot
             slot = gceil(slot + sp.cap_pitch)
             nodes.append(x_div)
             self.pl.plan(out_rail, (x_div, y_sw), (x_div, y_sw + 5.08))
-            # the FB pull list is the top resistor PLUS any FB feedforward cap
-            # (PWR-4: a C in parallel with the top R, also out_rail -> fb_net).
-            # Place the top R here; the feedforward cap(s) get their own
-            # parallel column straddling out_rail -> fb_net at the same midpoint.
             fb_pulls = self.pull.pop(fb_net)
             (rt, _rail) = fb_pulls[0]
             feedfwd = [r for r, _ra in fb_pulls[1:]]
@@ -4011,9 +3080,6 @@ class _Engine:
             xv = round(x0 + 2.54, 3)
             self.pl.plan(fb_net, p_fb, (xv, p_fb[1]), (xv, y_mid),
                          (x_div, y_mid))
-            # FB feedforward cap(s): a parallel out_rail -> fb_net column to
-            # the right of the divider, joined to the divider midpoint on
-            # fb_net. The out_rail top run is extended to the new column.
             for cff in feedfwd:
                 x_ff = slot
                 nodes.append(x_ff)
@@ -4021,52 +3087,30 @@ class _Engine:
                 self.pl.plan(out_rail, (x_ff, y_sw), (x_ff, y_sw + 5.08))
                 far_ff, _ = self._vertical_2pin(cff, x_ff, y_sw + 5.08,
                                                 out_rail, downward=True)
-                # tie the cap's fb_net pin to the divider midpoint
                 self.pl.plan(fb_net, (x_div, y_mid), (x_ff, y_mid),
                              (x_ff, far_ff[1]))
-            # CFF + RFF feedforward chain (DS SNVSBD5D 9.2.2.10, LM61460 U1): a
-            # CFF across the FB-top R with a 1-k RFF IN SERIES into the FB node to
-            # damp the noise path. Topology = out_rail -[CFF]- mid -[RFF]- fb_net,
-            # extracted as a trunk float-chain rooted on fb_net (NOT a bare cap in
-            # self.pull, so the loop above does not see it). Render it as a
-            # parallel column to the right of the divider: CFF drops VERTICALLY
-            # from the out_rail run to the CFF_mid node (same as a plain feedfwd
-            # cap), and RFF runs HORIZONTALLY back along that node's level into the
-            # divider midpoint (fb_net) — so the two-element series never stacks
-            # into a wire-over-part overlap.
             ff_chains = [ch for ch in self.float_chains
                          if ch.kind == "trunk" and ch.root == fb_net
                          and len(ch.legs) == 2
                          and ch.legs[-1][2] == out_rail]
             for ch in ff_chains:
-                (rff_ref, _a0, mid_net) = ch.legs[0]    # fb_net <-> CFF_mid
-                (cff_ref, _a1, _rail) = ch.legs[1]      # CFF_mid <-> out_rail
-                rhl = 3.81                               # Device:R half-length
-                # RFF runs HORIZONTALLY at the divider-midpoint level y_mid, so
-                # the fb_net tie is a single CLEAR horizontal run from the divider
-                # (exactly mirroring how a plain feedforward cap ties at y_mid).
-                # Its left pin = fb_net, right pin = CFF_mid.
+                (rff_ref, _a0, mid_net) = ch.legs[0]
+                (cff_ref, _a1, _rail) = ch.legs[1]
+                rhl = 3.81
                 x_rff = slot
                 nodes.append(x_rff)
                 self._horizontal_2pin(rff_ref, x_rff, y_mid, fb_net)
                 self.pl.plan(fb_net, (x_div, y_mid), (x_rff - rhl, y_mid))
-                # CFF drops VERTICALLY from the out_rail run one column further
-                # right; its CFF_mid far pin ties back to the RFF right pin at
-                # y_mid via a short L (down its own column, across at y_mid).
                 x_ff = gceil(x_rff + sp.cap_pitch)
                 nodes.append(x_ff)
                 slot = gceil(x_ff + sp.cap_pitch)
                 self.pl.plan(out_rail, (x_ff, y_sw), (x_ff, y_sw + 5.08))
                 cff_far, _ = self._vertical_2pin(cff_ref, x_ff, y_sw + 5.08,
                                                  out_rail, downward=True)
-                # CFF_mid: RFF right pin (y_mid) -> jog down at a CLEAR x between
-                # the two columns -> across to the CFF far pin (below y_mid), so
-                # no vertical run sits over the CFF body at x_ff.
                 x_jog = gsnap((x_rff + rhl + x_ff) / 2)
                 self.pl.plan(mid_net, (x_rff + rhl, y_mid), (x_jog, y_mid),
                              (x_jog, cff_far[1]), (x_ff, cff_far[1]))
                 self.float_chains.remove(ch)
-        # rail-rooted chains (PG LED columns)
         for ch in [ch for ch in self.float_chains
                    if ch.kind == "rail" and ch.root == out_rail]:
             nodes.append(slot)
@@ -4081,8 +3125,6 @@ class _Engine:
                 self.power(cur_net, *cur)
             self.float_chains.remove(ch)
             slot = gceil(slot + sp.cap_pitch)
-        # rail symbol riser at the end of the run (half-pitch SNAPPED:
-        # an expanded cap_pitch can be an odd grid multiple)
         x_r = gsnap(slot - sp.cap_pitch / 2)
         nodes.append(x_r)
         nodes = sorted(set(nodes))
@@ -4118,9 +3160,6 @@ class _Engine:
         self.power(out_rail, x_r, y_r - 5.08)
 
     def _leftover_chains_columns(self) -> None:
-        """Rail-rooted chains not consumed by a stage run: a row of columns.
-        One or two ride to the right of the flow; a BANK of them (the
-        per-module status LEDs) gets its own row below."""
         chains = [c for c in self.float_chains if c.kind == "rail"]
         if not chains:
             return
@@ -4155,10 +3194,6 @@ class _Engine:
                 x = round(x + pitch, 3)
 
     def _port_strap_columns(self) -> None:
-        """PORT-strap chains: a floating PORT net through passives to ONE
-        rail/GND end renders as a label-topped column (hier label up top,
-        the strap below it, the rail/GND symbol at the bottom) — one ROW of
-        columns below the main flow."""
         straps = [c for c in self.float_chains if c.kind == "port"]
         if not straps:
             return
@@ -4189,8 +3224,6 @@ class _Engine:
     def _collect_trunk_pins(self, ref: str, ax: float, ay: float,
                             trunk_jobs: dict[str, _Trunk],
                             srung_keys: set[tuple[str, str, str]]) -> None:
-        """Register a placed part's trunk direct pins and side rungs at
-        page coordinates."""
         for t in trunk_jobs.values():
             for (_r, num, side, tip) in self._side_tips(ref):
                 if self._on_net(ref, num, t.net):
@@ -4210,9 +3243,6 @@ class _Engine:
                             side, legs, 0.0))
 
     def _shunt_cells(self, handled: set[tuple[str, str, str]]) -> None:
-        """ESD/protection banks: detached cells BELOW the flow, every signal
-        line a labeled stub (KiCad merges by name; the netlist gate proves
-        it). Rails and NCs use the ordinary cell machinery."""
         for ref in self.shunts:
             if ref in self._done:
                 continue
@@ -4227,11 +3257,6 @@ class _Engine:
             self._cell(ref, ax, ay, handled, {})
 
     def _pull_rank_columns(self) -> None:
-        """Leftover pull-ups/downs (their nets run as labeled wires
-        elsewhere): the datasheet rank — pull-ups share a rail bar with a
-        labeled elbow below each column; pull-downs MIRROR it (labeled
-        elbow on top, the ground-class symbol at each column's foot). All
-        rails share ONE row, groups marching right."""
         if not (self.pull or self.hang):
             return
         by_rail: dict[str, list[tuple[str, str]]] = {}
@@ -4256,9 +3281,6 @@ class _Engine:
             for pref, sig in cols:
                 xs.append(x)
                 if is_gnd:
-                    # pull-DOWN (a ground rank only ever comes from hangs,
-                    # per _classify): labeled signal elbow on top, the
-                    # ground symbol under the column
                     knee = (x, round(bar_y - 2 * U, 3))
                     elbow = (round(x + 2 * U, 3), knee[1])
                     self.pl.plan(sig, knee, (x, bar_y))
@@ -4276,8 +3298,6 @@ class _Engine:
                 assert far == sig
                 if self.c.nets[sig].net_class in (NetClass.POWER,
                                                   NetClass.GROUND):
-                    # rail-to-rail series element (current shunt): the far
-                    # side ends on its own power symbol
                     self.power(sig, *far_pt, self._power_rot(sig, True))
                 else:
                     elbow = (round(far_pt[0] + 2 * U, 3),
@@ -4288,7 +3308,7 @@ class _Engine:
                     self._bridge(sig)
                 x = round(x + pitch, 3)
             if is_gnd:
-                pass  # pull-down columns carry their own ground symbols
+                pass
             elif len(xs) == 1:
                 self.power(rail, xs[0], bar_y)
             else:
@@ -4298,13 +3318,9 @@ class _Engine:
                     self.pl.plan(rail, (a, bar_y), (b, bar_y))
                 self.pl.plan(rail, (xm, bar_y), (xm, bar_y - 2 * U))
                 self.power(rail, xm, bar_y - 2 * U)
-            x = round(x + 2 * U, 3)         # inter-group air
+            x = round(x + 2 * U, 3)
 
     def _series_port_columns(self) -> None:
-        """Leftover series passives bridging TWO PORT nets (differential
-        terminations): a labeled column below the flow — hier label up top,
-        the element, hier label below. Each net's fan label is the other
-        islet; KiCad merges by name, the netlist gate proves it."""
         left = [s for s in self.series
                 if self.c.nets[s[1]].net_class is NetClass.PORT
                 and self.c.nets[s[2]].net_class is NetClass.PORT]
@@ -4329,23 +3345,9 @@ class _Engine:
             x = round(x + pitch, 3)
 
     def _trunk_series_columns(self) -> None:
-        """ABSOLUTE last-resort drain: a 2-pin series element bridging two SIGNAL
-        TRUNK nets that no template placed — e.g. an in-line current-sense shunt
-        across two multi-tap rail/trunk buses (motor_sense's RS1: ESC_VRAIL_IN <->
-        ESC_VRAIL, with the INA3221 + XT60s tapping both sides). Drawn as a
-        labeled column below the flow, both ends a stub-to-local-label that merges
-        by name with the bus's own islet (the idiom of _rung_islet_columns). Fires
-        ONLY for a part still UNPLACED after every other drain (``s[0] not in
-        self._done``) — so every existing sheet, which leaves no such element
-        unplaced, stays byte-identical; lingering already-placed series tuples are
-        skipped, never re-drawn."""
         c = self.c
 
         def named_sig(net: str) -> bool:
-            # a SIGNAL net already drawn-and-named elsewhere: a trunk, a bridged
-            # net, or one already locally/hier labelled (by the time this last
-            # drain runs an earlier drain may have bridged/labelled the shunt's
-            # trunk ends, so test all four — not just self.trunks)
             if c.nets[net].net_class is not NetClass.SIGNAL:
                 return False
             return (net in self.trunks or net in self.pl.label_bridged
@@ -4363,14 +3365,14 @@ class _Engine:
         pitch = gceil(2 * self.sp.cap_pitch)
         for s in left:
             ref, a, b = s
-            self.llabel(a, round(x - 2 * U, 3), y0, 180)       # top trunk islet
+            self.llabel(a, round(x - 2 * U, 3), y0, 180)
             self._bridge(a)
             self.pl.plan(a, (round(x - 2 * U, 3), y0), (x, y0))
             cur = (x, round(y0 + 2 * U, 3))
             self.pl.plan(a, (x, y0), cur)
             far_pt, far = self._vertical_2pin(ref, x, cur[1], a, downward=True)
             assert far == b
-            end = (round(x - 2 * U, 3), far_pt[1])             # bottom trunk islet
+            end = (round(x - 2 * U, 3), far_pt[1])
             self.pl.plan(b, far_pt, end)
             self.llabel(b, *end, 180)
             self._bridge(b)
@@ -4379,22 +3381,12 @@ class _Engine:
 
     def _rung_islet_drop(self, far_net: str, pt: tuple[float, float],
                          sgn: int) -> None:
-        """The wedged rung pin's labeled stub: a short horizontal run out of
-        the pin to a local label (merged by name with the rank column the leg
-        passive lands in). Bridges the far net so the route open-check accepts
-        the islet."""
         lx = round(pt[0] + sgn * self.sp.port_run, 3)
         self.pl.plan(far_net, pt, (lx, pt[1]))
         self.llabel(far_net, lx, pt[1], 0 if sgn > 0 else 180)
         self._bridge(far_net)
 
     def _rung_islet_columns(self) -> None:
-        """Leg passives of trunk rungs whose escape lane wedged: each is drawn
-        as a self-contained column below the flow — the TRUNK net (a local
-        label, since the trunk is itself a labeled net) on top, the leg
-        passive, the FAR net (local label) below. Both ends merge by name with
-        their islets at the pins (the netlist gate proves the merge). The
-        general fallback for a rung the straight-lane escape could not seat."""
         if not self._rung_islets:
             return
         ex0, _, _, ey1 = self._extent()
@@ -4402,7 +3394,6 @@ class _Engine:
         y0 = gceil(ey1 + 12 * U)
         pitch = gceil(3 * self.sp.cap_pitch)
         for trunk_net, far_net, leg in self._rung_islets:
-            # top end = trunk net (label it so the islet carries a name)
             self.llabel(trunk_net, round(x - 2 * U, 3), y0, 180)
             self._bridge(trunk_net)
             cur = (x, round(y0 + 2 * U, 3))
@@ -4419,16 +3410,6 @@ class _Engine:
         self._rung_islets = []
 
     def _pin_divider_columns(self) -> None:
-        """Resolve a DIVIDER whose midpoint is a SIGNAL net already drawn as a
-        labeled islet off a top/bottom IC pin (``self._pin_islets``). The full
-        divider — top end (PORT hier label or POWER rail symbol) -> series R ->
-        the islet midpoint -> hang R -> GND/rail — is rendered as ONE
-        self-contained column below the flow, so its two passives never land in
-        two different leftover placers at colliding x. The midpoint carries a
-        local label that merges by name with the islet at the IC pin (the
-        netlist gate proves the merge). A generic top/bottom divider tap — the
-        common case being a sensed-rail divider on a pin the symbol placed on
-        the power edge by NAME (e.g. CP2102N VBUS sense)."""
         if not self._pin_islets:
             return
         ex0, _, _, ey1 = self._extent()
@@ -4440,11 +3421,9 @@ class _Engine:
             hangs = list(self.hang.get(mid, []))
             pulls = list(self.pull.get(mid, []))
             if len(ser) != 1 or (len(hangs) + len(pulls)) != 1:
-                continue                       # not a clean 2-arm divider
+                continue
             top_ref, na, nb = ser[0]
             top_net = nb if na == mid else na
-            # TOP arm: the series element from the external (port/rail) end
-            # down to the midpoint label.
             if self.c.nets[top_net].net_class is NetClass.PORT:
                 self.label(top_net, x, y0, 90)
             else:
@@ -4455,16 +3434,10 @@ class _Engine:
                                               downward=True)
             assert far == mid
             self.series.remove(ser[0])
-            # MIDPOINT label (merges with the islet at the IC pin): a short
-            # horizontal stub LEFT off the column so the label anchor sits ON a
-            # wire of THIS islet (the route open-check requires every islet to
-            # carry its label anchor — LAW 0). Left-pointing (rot 180) keeps it
-            # clear of the passive value text, which sits on the column's right.
             lx = round(far_pt[0] - 2 * U, 3)
             self.pl.plan(mid, far_pt, (lx, far_pt[1]))
             self.llabel(mid, lx, far_pt[1], 180)
             self._bridge(mid)
-            # BOTTOM arm: the hang/pull element down to its GND/rail symbol.
             bot_ref = hangs[0] if hangs else pulls[0][0]
             fp2, far2 = self._vertical_2pin(bot_ref, x, far_pt[1], mid,
                                             downward=True)
@@ -4476,15 +3449,7 @@ class _Engine:
             x = round(x + pitch, 3)
         self._pin_islets = set()
 
-    # ---- template: signal-flow chain -----------------------------------------------
     def _chain_order(self) -> list[str]:
-        """Multi-pin parts in left->right flow order, shunt banks excluded.
-
-        Parts sharing NO SIGNAL/PORT net (rails only) must not be chained:
-        the shared-net graph is split into COMPONENTS, each ordered by the
-        flow heuristic, then each component's direction and per-part
-        orientation (0/180) are chosen to MAXIMIZE facing shared-net pin
-        groups between neighbours (`self.orient` is set as a side effect)."""
         chain = [r for r in self.multi if r not in self.shunts]
         conns = [r for r in chain if r[0] == "J"]
         others = [r for r in chain if r[0] != "J"]
@@ -4506,7 +3471,6 @@ class _Engine:
         pool = sorted(others, key=lambda r: -port_pins(r)) + conns
         if not pool:
             return []
-        # connectivity components over shared SIGNAL/PORT nets
         comp_of: dict[str, int] = {}
         for ref in pool:
             comp_of[ref] = pool.index(ref)
@@ -4532,8 +3496,7 @@ class _Engine:
                 sub_order.append(sub.pop(0))
             fwd, o_fwd = self._eval_chain(sub_order)
             rev, o_rev = self._eval_chain(list(reversed(sub_order)))
-            if rev > fwd:  # tuple compare: pairs first, then fewer
-                           # interior-facing labels
+            if rev > fwd:
                 sub_order = list(reversed(sub_order))
                 self.orient.update(o_rev)
             else:
@@ -4543,10 +3506,6 @@ class _Engine:
         return order
 
     def _eval_chain(self, order: list[str]):
-        """Exhaustive orientation choice (0/180 per part, components are
-        small). Primary objective: facing shared-net groups between
-        neighbours. Secondary: the fewest labeled pins facing INTO the
-        chain interior (labels read outward, channels stay clear)."""
         saved = dict(self.orient)
         best = ((-1, 0, 0), {})
         for combo in itertools.product((0, 180), repeat=len(order)):
@@ -4565,8 +3524,6 @@ class _Engine:
                                          []).append(ta[1])
                     chan_rows.setdefault((order[i], "left"),
                                          []).append(tb[1])
-            # a side rung whose lane to its trunk's zone must cross a
-            # channel row is unroutable — heavily penalized
             blocked = 0
             for tname, _t in self.trunks.items():
                 votes = 0
@@ -4616,10 +3573,6 @@ class _Engine:
 
     @staticmethod
     def _tip_group(tips: list[tuple[float, float]]):
-        """One tip, or several same-net tips at CONSECUTIVE rows on one side
-        (stacked duplicate pads, paired connector pins): entry = topmost tip,
-        the rest joined by a bus bar on the tip column. None if the tips do
-        not form one contiguous group (a bar would cross foreign rows)."""
         tips = sorted(tips, key=lambda t: t[1])
         if len(tips) == 1:
             return tips[0], []
@@ -4629,9 +3582,6 @@ class _Engine:
         return tips[0], tips[1:]
 
     def _facing_pairs(self, a_ref: str, b_ref: str):
-        """Shared nets with one tip GROUP on A's right and one on B's left
-        side -> [(net, a_entry, b_entry_rel, a_extra, b_extra)] with B at
-        anchor (0, 0). Extras are the non-entry tips of a bused group."""
         out = []
         a_sides = self._side_tips(a_ref)
         b_sides = self._side_tips(b_ref)
@@ -4640,9 +3590,6 @@ class _Engine:
         for net in self.c.nets.values():
             if net.net_class in (NetClass.POWER, NetClass.GROUND):
                 continue
-            # a net reaching a THIRD chain part needs bus topology (trunk),
-            # never a point-to-point channel (shunt-bank taps are labeled
-            # islets and don't count)
             others = {pr.ref for pr in net.pins
                       if pr.ref in mset and pr.ref not in sset} \
                 - {a_ref, b_ref}
@@ -4689,13 +3636,11 @@ class _Engine:
         order = self._chain_order()
         anchors: dict[str, tuple[float, float]] = {}
         handled: set[tuple[str, str, str]] = set()
-        channels: list[tuple[str, str, str]] = []   # (net, a_ref, b_ref)
+        channels: list[tuple[str, str, str]] = []
         chan_tips: dict[str, tuple] = {}
         ays: dict[str, float] = {order[0]: 0.0}
         binfo: dict[str, list] = {order[0]: []}
 
-        # PASS 1 — rows and classification (x-free): facing pairs per
-        # boundary, the alignment dy, jog/demote split, handled marks.
         for i in range(1, len(order)):
             a_ref, b_ref = order[i - 1], order[i]
             pairs = self._facing_pairs(a_ref, b_ref)
@@ -4708,11 +3653,6 @@ class _Engine:
                    for _n, ta, tb, _ea, _eb in pairs]
             dy = max(sorted(set(dys)), key=lambda d: (dys.count(d), -abs(d)))
             aligned = [p for p, d in zip(pairs, dys, strict=False) if d == dy]
-            # misaligned rows: JOG (Z through a staircase lane past every
-            # fan label) unless the staircase vertical would cross an
-            # ALIGNED run (which spans the whole channel) or the jogs
-            # mutually deadlock; then DEMOTE to labeled fan islets — the
-            # datasheet idiom, never a crossing.
             aligned_rows = {round(ay_a + p[1][1], 3) for p in aligned}
             spans: dict[str, tuple[float, float]] = {}
             cand: list = []
@@ -4728,9 +3668,6 @@ class _Engine:
                 else:
                     spans[p[0]] = (ya, yb)
                     cand.append(p)
-            # lane-order constraints: jog i's vertical must not cross jog
-            # j's horizontal pieces — topological lane assignment, cycles
-            # demote the offender
             jogged: list = []
             if cand:
                 after: dict[str, set[str]] = {p[0]: set() for p in cand}
@@ -4742,9 +3679,9 @@ class _Engine:
                         lo, hi = sorted(spans[pi[0]])
                         ya_j, yb_j = spans[pj[0]]
                         if lo + 1e-6 < ya_j < hi - 1e-6:
-                            after[pi[0]].add(pj[0])   # need jx_j < jx_i
+                            after[pi[0]].add(pj[0])
                         if lo + 1e-6 < yb_j < hi - 1e-6:
-                            after[pj[0]].add(pi[0])   # need jx_i < jx_j
+                            after[pj[0]].add(pi[0])
                 names = {p[0]: p for p in cand}
                 placed: list[str] = []
                 pending = dict(after)
@@ -4752,7 +3689,6 @@ class _Engine:
                     ready = [n2 for n2, deps in pending.items()
                              if not (deps - set(placed))]
                     if not ready:
-                        # deadlocked jogs: demote one and retry
                         worst = sorted(pending)[-1]
                         demoted.append(names[worst])
                         del pending[worst]
@@ -4778,12 +3714,6 @@ class _Engine:
             ays[b_ref] = gsnap(dy)
             binfo[b_ref] = [(p, p in jogged) for p in aligned + jogged]
 
-        # DEMOTE structureless side-pin trunks to labeled fan islets: a
-        # SIGNAL net whose multi-part pins all sit on LEFT/RIGHT sides of
-        # >=2 chain parts that did NOT channel-pair, with no ladder legs and
-        # no rooted chains, has no clean bus corridor — the datasheet idiom
-        # is a named stub at each pin. (Shunt-bank taps always count as
-        # labeled islets.)
         mset = set(self.multi)
         sset = set(self.shunts)
         for tname in list(self.trunks):
@@ -4807,16 +3737,12 @@ class _Engine:
                 self.trunks.pop(tname)
                 self._bridge(tname)
 
-        # trunk jobs: mark their direct pins handled before cells run
         trunk_jobs = dict(self.trunks)
         for t in trunk_jobs.values():
             for ref in order:
                 for (_r, num, side, _tip) in self._side_tips(ref):
                     if self._on_net(ref, num, t.net):
                         handled.add((ref, num, side))
-        # side rungs: a LEFT/RIGHT pin whose net reaches a trunk through one
-        # series passive (e.g. CC pull-ups onto a VBUS trunk) — escape lane +
-        # vertical leg, built with the trunk. Mark handled before fans run.
         srung_keys: set[tuple[str, str, str]] = set()
         for ref in order:
             for (_r, num, side, _tip) in self._side_tips(ref):
@@ -4828,17 +3754,11 @@ class _Engine:
                 if self._rung_of(n.name, trunk_jobs) is not None:
                     handled.add((ref, num, side))
                     srung_keys.add((ref, num, side))
-        # PASS 2 — cells left->right, each anchor x MEASURED off the real
-        # extent of everything already placed (estimates can never trail
-        # reality: attach columns, staggered labels, escape lanes all count).
-        # DISCONNECTED components stack as rows (never one endless strip).
         comp_dy = 0.0
         row_y0 = -1e9
         for i, ref in enumerate(order):
             new_row = False
             if i and ref in self._comp_starts:
-                # next component: continue the current row until it nears
-                # the page-width budget, then WRAP to a new row below
                 row_edge = self._band_edge(row_y0, 1e9, +1, default=0.0) \
                     if row_y0 > -1e8 else self._extent()[2]
                 row_left = self._band_edge(row_y0, 1e9, -1, default=0.0) \
@@ -4876,7 +3796,6 @@ class _Engine:
                 ax = gsnap(gceil(jog_base + n_jogs * 2 * U + reach_b + margin)
                            - b_left)
                 if pairs:
-                    # the channel also hosts its hang caps and signal names
                     ll = max((tm.llabel_box(p[0], 0, 0, 0)[2]
                               for p, _j in pairs
                               if c.nets[p[0]].net_class is NetClass.SIGNAL),
@@ -4886,42 +3805,14 @@ class _Engine:
                     ax = max(ax, gsnap(a_right
                                        + gceil(max(2 * sp.port_run, ll + 8 * U))
                                        - min(p[2][0] for p, _j in pairs)))
-                # WITHIN-COMPONENT WRAP: a single connected component whose
-                # parts string left->right can overflow even A3 (the motor_pwm
-                # output: two 4-element 33R arrays reconverging on a 24-pin
-                # header form a TREE the chain strings to >400 mm). Now that the
-                # prospective anchor ``ax`` is known, if placing this part keeps
-                # the CURRENT row growing past the page-width budget, WRAP it to
-                # a fresh row below and DEMOTE this boundary's channel(s) to
-                # labeled fan stubs (the demote idiom already used for misaligned
-                # rows): un-handle both endpoints so each draws a named escape
-                # label, and BRIDGE the net so the downstream drains treat it as
-                # merged-by-name. The netlist is untouched (KiCad merges the
-                # labels by name), and no part or pin is ever moved.
-                #
-                # The metric is ``ax - row_left`` — the anchor relative to the
-                # current row's left edge, measured BEFORE the cell so the wrap
-                # needs no un-placing. PAPER_W_BUDGET is set strictly above the
-                # widest such value any A3-fitting sheet reaches (instrumented:
-                # lcd's U1 at 292.7 mm) and below the overflowing tree
-                # (motor_pwm's RN2 at 370.1 mm), so this is a STRICT NO-OP for
-                # every fitting sheet and trips only the overflow.
                 row_left = self._band_edge(row_y0, 1e9, -1, default=0.0) \
                     if row_y0 > -1e8 else self._extent()[0]
                 if os.environ.get("SCHGEN_WRAP_INSTR"):
-                    # budget-tuning instrumentation (stdout-only, no artifact):
-                    # dumps the ``ax - row_left`` metric per chain part so the
-                    # PAPER_W_BUDGET separator can be re-derived if topology
-                    # changes. Strictly off unless the env flag is set.
                     print(f"[wrap-instr] {c.name} step {i} {ref}: "
                           f"ax-rl={ax - row_left:.1f}", file=sys.stderr)
                 if pairs and (ax - row_left) > PAPER_W_BUDGET:
                     for p, _j in pairs:
                         n, ta, tb, ea, eb = p
-                        # the PREDECESSOR (a_ref) is already placed: its tip was
-                        # left handled (a bare channel stub, the wire drawn later
-                        # by the channel loop we now skip). Draw the labeled
-                        # escape here so the demoted net is named on BOTH sides.
                         for tip in [ta] + ea:
                             handled.discard(
                                 (a_ref, self._pin_num_at(a_ref, tip, "right"),
@@ -4931,14 +3822,12 @@ class _Engine:
                             ex = round(tx + sp.port_run, 3)
                             self.pl.plan(n, (tx, ty), (ex, ty))
                             self.llabel(n, ex, ty, 0)
-                        # the SUCCESSOR (ref) is placed below as a fresh-row cell;
-                        # un-handling its tip lets _fan_side draw its own label.
                         for tip in [tb] + eb:
                             handled.discard(
                                 (ref, self._pin_num_at(ref, tip, "left"),
                                  "left"))
                         self._bridge(n)
-                    binfo[ref] = []        # no channel crosses the wrap now
+                    binfo[ref] = []
                     _, _, _, ey1c = self._extent()
                     comp_dy = gceil(ey1c + 14 * U) - ays[ref]
                     row_y0 = gceil(ey1c + 2 * U)
@@ -4959,7 +3848,6 @@ class _Engine:
                     if is_jog:
                         jx = jog_x
                         jog_x = round(jog_x + 2 * U, 3)
-                    # bused groups: bar on the tip column
                     for t0, t1 in zip([ta] + ea, ea, strict=False):
                         self.pl.plan(n, (round(ax_a + t0[0], 3),
                                          round(ay_a + t0[1], 3)),
@@ -4981,7 +3869,6 @@ class _Engine:
                        drop_dir=+1 if (len(order) > 1 and ref == order[-1])
                        else -1)
 
-        # channel runs (straight, or a Z-jog through its staircase lane)
         for n, _a_ref, _b_ref in channels:
             (ta, tb, jx) = chan_tips[n]
             if jx is not None:
@@ -5011,8 +3898,6 @@ class _Engine:
                 mid, y_lab = gsnap((start_x + tb[0]) / 2), y
             if c.nets[n].net_class is NetClass.PORT \
                     and not any(h.name == n for h in self.pl.hlabels):
-                # the channel IS the sheet interface: short riser off the
-                # run to an upward hier label (the port-strap idiom)
                 for k in range(20):
                     lx2 = round(mid + (k // 2 + k % 2) * 2 * U
                                 * (1 if k % 2 else -1), 3)
@@ -5031,21 +3916,15 @@ class _Engine:
             for xa, xb in zip(nodes, nodes[1:], strict=False):
                 self.pl.plan(n, (xa, y), (xb, y))
             if c.nets[n].net_class is NetClass.SIGNAL:
-                # mid-run: clear of the a-part's risers and the b-side caps
                 self.llabel(n, mid, y_lab)
 
-        # trunks
         for t in trunk_jobs.values():
             self._build_trunk(t)
 
-        # texts last: they dodge every wire/box, never the other way round
         for pp, body in self._deferred_texts:
             self._part_texts(pp, body)
         self._deferred_texts = []
 
-        # decoupling cluster (anchored off the first part), then shunt
-        # banks, leftover pull-up ranks, rail chains, port straps, flags —
-        # all of which place themselves below/clear of the current extent
         first = order[0]
         pp0 = next(p for p in self.pl.parts if p.ref == first)
         sdef0 = self.lib.get(pp0.lib_id)
@@ -5053,13 +3932,11 @@ class _Engine:
                               "body", first)
         self._decoupling_cluster(pp0.x, pp0.y, body0)
         self._shunt_cells(handled)
-        self._rung_islet_columns()       # rungs whose escape lane wedged: a
-        #     self-contained labeled column (set during _build_trunk above)
-        self._pin_divider_columns()      # before the rank/series placers so a
-        #     top/bottom divider tap is drawn as ONE column, not split in two
+        self._rung_islet_columns()
+        self._pin_divider_columns()
         self._pull_rank_columns()
         self._series_port_columns()
-        self._trunk_series_columns()     # in-line shunt across two SIGNAL trunks
+        self._trunk_series_columns()
         for _ch in [ch for ch in self.float_chains if ch.kind == "rail"]:
             self._leftover_chains_columns()
             break
@@ -5076,16 +3953,12 @@ class _Engine:
     def _side_reach(self, ref: str, side: str,
                     trunk_jobs: dict[str, _Trunk] | None = None,
                     exclude: set[str] | None = None) -> float:
-        """How far a part's side fan will extend from its pin tips: labels
-        (row-aware two-column assignment), rail risers, plus one escape
-        lane per trunk-direct / side-rung pin on that side. ``exclude`` =
-        nets already accounted for (the boundary's own channels)."""
         sp = self.sp
         trunk_jobs = self.trunks if trunk_jobs is None else trunk_jobs
         exclude = exclude or set()
         out = 2 * U
         lanes = 0
-        rows: list[tuple[float, float]] = []          # (row, label len)
+        rows: list[tuple[float, float]] = []
         for (_r, num, s, t) in self._side_tips(ref):
             if s != side:
                 continue
@@ -5130,7 +4003,6 @@ class _Engine:
             else:
                 out = max(out, sp.port_run + 4 * U)
         if rows:
-            # row-aware two-column assignment (mirrors the fan layout)
             clash = tm.GLABEL_H * tm.SIZE + 0.5
             rows.sort()
             inner_len = outer_len = 0.0
@@ -5150,7 +4022,6 @@ class _Engine:
             out += 3 * U + 2 * U * lanes
         return out
 
-    # ---- dispatch -------------------------------------------------------------------
     def run(self) -> Placement:
         c = self.c
         if not self.multi:
@@ -5180,8 +4051,6 @@ class _Engine:
                              f"no topology pattern matched them")
         return pl
 
-
-# ---- top level ------------------------------------------------------------------
 
 def _translate(pl: Placement, dx: float, dy: float) -> None:
     def mv(t):
@@ -5215,7 +4084,6 @@ def _translate(pl: Placement, dx: float, dy: float) -> None:
 
 
 def center_on_sheet(pl: Placement) -> Placement:
-    """Translate a placement so its bounding box centers on the A4 sheet."""
     xs = [v for b in pl.boxes for v in (b.x0, b.x1)]
     ys = [v for b in pl.boxes for v in (b.y0, b.y1)]
     for paths in pl.plans.values():
@@ -5230,9 +4098,6 @@ def center_on_sheet(pl: Placement) -> Placement:
 
 
 def build(c: Circuit, lib: Library, sp: Spacing) -> Placement:
-    # Test points are stripped BEFORE the topology templates run (a probe
-    # point must never perturb the circuit's own layout), then the engine
-    # appends the dedicated probe row below the sheet extent.
     from schgen.verify import testpoints
     core, tp_refs = testpoints.split(c)
     eng = _Engine(core, lib, sp)
@@ -5242,11 +4107,6 @@ def build(c: Circuit, lib: Library, sp: Spacing) -> Placement:
 
 
 def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
-    """Feasibility loop: route + visual gate as the oracle; spacing expands,
-    rules never relax. Returns (placement, routed, SheetGeometry).
-
-    There is NO per-subsystem builder hook: every sheet's geometry is derived
-    from its netlist topology by the engine (purity is a build gate)."""
     sp = Spacing()
     last = "?"
     for _ in range(max_attempts):
@@ -5262,10 +4122,6 @@ def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
                                        for x, y in routed.junctions])
         vis = visual_gate.check(geo)
         if vis.ok:
-            # the sheet must FIT its frame — clipped content renders
-            # "clean" to every box check and is still garbage to a human.
-            # Dense sheets are PROMOTED to A3 (standard practice), never
-            # silently clipped.
             xs = [v for b in pl.boxes for v in (b.x0, b.x1)] + \
                  [v for s in routed.segs for v in (s.x0, s.x1)]
             ys = [v for b in pl.boxes for v in (b.y0, b.y1)] + \
@@ -5274,7 +4130,6 @@ def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
             if w <= 272.0 and h <= 180.0:
                 return pl, routed, geo
             if w <= 390.0 and h <= 265.0:
-                # recenter placement, wires and geometry on the A3 sheet
                 ddx = gsnap(A3_CENTER[0] - A4_CENTER[0])
                 ddy = gsnap(A3_CENTER[1] - A4_CENTER[1])
                 _translate(pl, ddx, ddy)
@@ -5299,20 +4154,6 @@ def place_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
                      f"last failure:\n{last}")
 
 
-# ---- DEF-J: congestion-triggered auto-pagination --------------------------------
-# A subsystem that overflows A3 is SPLIT across pages instead of failing the
-# build (user directive: sheet density must never be a blocker). The cut is
-# along POWER/GROUND/PORT nets ONLY (they merge by name across sheets); SIGNAL-
-# connected parts are kept whole. Circuit.subset() is the LAW-0 chokepoint — a
-# cut SIGNAL net raises PartitionError before any emit. Each page goes back
-# through the UNMODIFIED place_and_route, so every page independently passes the
-# visual gate + A3 fit; a non-congested subsystem takes the single-page path and
-# is byte-identical to before.
-
-# Structural engine gaps (a pin/topology the engine genuinely cannot route).
-# Pagination must NOT paper over these — they need an engine fix and would fail
-# identically on a page. Everything else that exhausts the feasibility loop
-# (size over A3, persistent route contention, visual overlap) IS congestion.
 _STRUCTURAL_MARKERS = (
     "no engine pattern applies", "no power symbol mapped",
     "regulator stage without", "multi-element divider",
@@ -5329,19 +4170,6 @@ def _is_congestion(err: PlaceError) -> bool:
 
 
 def _signal_blobs(c: Circuit, lib: Library) -> list[set[str]]:
-    """Indivisible part groups for pagination. A blob is a multi-pin part (IC)
-    plus everything SIGNAL-connected to it (FB divider, boot, inductor, EN
-    clamp, ...) PLUS its rail-only satellite passives (decoupling/bulk caps).
-
-    Two passes:
-      1. union parts joined by a SIGNAL net (both pins of any SIGNAL net thus
-         land in ONE blob, so a page of whole blobs can NEVER cut a SIGNAL net);
-      2. fold each leftover rail-only satellite (a 2-pin cap whose pins are just
-         POWER/GROUND) into the blob of a multi-pin part sharing its power rail
-         (non-GND preferred) — a lone cap on its own page has no anchor and the
-         engine can't place it. A satellite joins ONE stage; it never merges two.
-
-    Order: (-size, min-ref) -> stable/deterministic."""
     parent = {r: r for r in c.parts}
 
     def find(x: str) -> str:
@@ -5355,42 +4183,38 @@ def _signal_blobs(c: Circuit, lib: Library) -> list[set[str]]:
         if ra != rb:
             parent[max(ra, rb)] = min(ra, rb)
 
-    for net in c.nets.values():                       # pass 1: SIGNAL connectivity
+    for net in c.nets.values():
         if net.net_class is NetClass.SIGNAL:
             refs = [pr.ref for pr in net.pins if pr.ref in c.parts]
             for r in refs[1:]:
                 union(refs[0], r)
 
-    groups: dict[str, set[str]] = {}                   # SIGNAL components (pass 1)
+    groups: dict[str, set[str]] = {}
     for r in c.parts:
         groups.setdefault(find(r), set()).add(r)
 
-    # pass 2: fold each lone satellite (a size-1 passive blob) into the stage
-    # blob sharing its power rail. SET-level merge (NOT union-find) so it can
-    # never chain two ICs together through a shared rail — a satellite joins
-    # exactly ONE stage. POWER (non-GND) preferred; GND is the last resort.
     multi = {r for r in c.parts
              if len(lib.pin_numbers(c.parts[r].lib_id)) > 2}
-    group_of = {r: find(r) for r in c.parts}           # ref -> its pass-1 root
-    rail_groups: dict[str, list[str]] = {}             # rail -> stage roots on it
+    group_of = {r: find(r) for r in c.parts}
+    rail_groups: dict[str, list[str]] = {}
     for net in c.nets.values():
         if net.net_class in (NetClass.POWER, NetClass.GROUND):
             roots = sorted({group_of[pr.ref] for pr in net.pins
                             if pr.ref in multi})
             if roots:
                 rail_groups[net.name] = roots
-    for root in list(groups):                          # iterate a snapshot
+    for root in list(groups):
         refs = groups.get(root)
         if refs is None or len(refs) != 1:
             continue
         (ref,) = refs
         if ref in multi:
-            continue                                   # a lone IC -> own page
+            continue
         rails = sorted(
             (n for n in c.nets.values()
              if n.net_class in (NetClass.POWER, NetClass.GROUND)
              and any(p.ref == ref for p in n.pins)),
-            key=lambda n: (n.net_class is NetClass.GROUND, n.name))  # POWER first
+            key=lambda n: (n.net_class is NetClass.GROUND, n.name))
         for rail in rails:
             cands = [g for g in rail_groups.get(rail.name, []) if g != root]
             if cands:
@@ -5401,9 +4225,6 @@ def _signal_blobs(c: Circuit, lib: Library) -> list[set[str]]:
 
 
 def _fits_a3(c: Circuit, lib: Library) -> bool:
-    """Fit/no-fit oracle for bin-packing: does this (sub)circuit place within A3?
-    A bounded probe (2 attempts) — any failure means 'no' (conservative). The
-    authoritative full-attempt placement happens later in paginate_and_route."""
     try:
         place_and_route(c, lib, max_attempts=2)
         return True
@@ -5412,15 +4233,11 @@ def _fits_a3(c: Circuit, lib: Library) -> bool:
 
 
 def partition_pages(c: Circuit, lib: Library) -> list[Circuit]:
-    """Split a congested subsystem into pages. SIGNAL-connected parts stay
-    together (blobs); blobs are bin-packed first-fit-decreasing into pages each
-    PROVEN to fit A3. Returns >=2 child Circuits, or [c] when it cannot split (a
-    single indivisible blob that overflows — surfaced as an honest failure)."""
     blobs = _signal_blobs(c, lib)
     if len(blobs) < 2:
         return [c]
     bins: list[set[str]] = []
-    for blob in blobs:                              # sorted -size, min-ref
+    for blob in blobs:
         for b in bins:
             if _fits_a3(c.subset(b | blob, page=0), lib):
                 b |= blob
@@ -5433,11 +4250,6 @@ def partition_pages(c: Circuit, lib: Library) -> list[Circuit]:
 
 
 def paginate_and_route(c: Circuit, lib: Library, max_attempts: int = 8):
-    """place_and_route, but split a sheet across pages on A3-overflow congestion
-    instead of failing. Returns a list of (circuit, placement, routed, geo):
-    ONE entry for a sheet that fits (identical to place_and_route), N for a split
-    one. A structural engine failure still raises (pagination can't fix a pin the
-    engine cannot route)."""
     try:
         return [(c, *place_and_route(c, lib, max_attempts))]
     except PlaceError as e:

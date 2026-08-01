@@ -1,38 +1,3 @@
-"""BOTTOM-SIDE CONVENTION guards — model pad geometry == EMITTED pad geometry.
-
-THE DEFECT (fixed by the hardening wave, this file is its permanent
-instrument): the in-process pad-geometry convention X-MIRRORED bottom-side
-footprints (placement._eff_bbox_for, mating_face._inst_pad_geom/_rot_pad_bbox/
-_inst_courtyard, placement_contract_gate._pad_boxes) while EMISSION
-(embed._flip_to_bottom) keeps local coordinates unchanged and KiCad stores a
-B.Cu footprint's coordinates in the FINAL front-view frame, applying ONLY the
-placement rotation at load.
-
-GROUND TRUTH (pinned): verified with KiCad's own pcbnew 10.0.2 module loading
-the emitted board — every pad's global position equals
-``fp_at + R_cw(fp_rot)·(px, py)`` on BOTH sides (worst residual 0.7 um, pure
-rounding); independently DRC-proven on C22025 by the T2 wave and by GAP1's
-scan.  RED-ON-BEFORE (measured on the live board before unification): the pad
-POSITION multiset happened to agree (all bottom parts are X-symmetric
-passives) but the NET-at-position was wrong on 319/319 bottom parts — all 650
-bottom pads — with per-pad displacement 0.79..2.96 mm (e.g. a microsd 0805's
-+3V3_SD modeled 1.90 mm away at its GND pad's true spot; a 4D03 network's
-ESC_SIG0 2.40 mm off).  Ratsnest airwire endpoints, contract-gate distances
-and escape obstacles all consumed those wrong positions; the escape generator
-carried a union-of-both-conventions workaround (now removed).
-
-CONSEQUENCE GUARDED FOREVER (rescoped by wave-9 chirality): a bottom part
-emitted from an UNCHANGED library document (inst.mirror=False — the 2-side
-classifier population) lands the CHIRAL MIRROR of its top-side pattern, so
-that population stays restricted to mirror-symmetric, non-polarized parts
-(test_bottom_parts_achiral_nonpolarized). A part emitted from its
-pcb/mirror.py MIRRORED document (inst.mirror=True — block bottom variants,
-KiCad-exact pcbnew LEFT_RIGHT flip encoding, proven object-equal at 0.0 nm)
-carries the physically correct flipped pattern, so ANY footprint may emit
-that way; the guard instead demands the mirrored document + bottom side
-(tests/test_chirality.py holds the transform pins).
-"""
-
 from __future__ import annotations
 
 import math
@@ -63,13 +28,7 @@ def board(model, tmp_path_factory):
     return out
 
 
-# ---------------------------------------------------------------------------
-# the KiCad-loader reference math (pcbnew-pinned, see module docstring):
-# pad center = fp_at + R_cw(fp_rot) · (px, py), IDENTICAL for F.Cu and B.Cu.
-# ---------------------------------------------------------------------------
 def _emitted_pads(board_path: Path):
-    """ref -> (side, [(pad_name, gx, gy, net_name), ...]) parsed from the
-    emitted .kicad_pcb with the pcbnew-verified loader transform."""
     doc = sexpr.loads(board_path.read_text())
     out: dict[str, tuple[str, list[tuple[str, float, float, str]]]] = {}
     for node in doc:
@@ -94,7 +53,6 @@ def _emitted_pads(board_path: Path):
             pat = sexpr.find(p, "at")
             pnet = sexpr.find(p, "net")
             px, py = float(pat[1]), float(pat[2])
-            # KiCad CW (+y-down) rotation — NO side-dependent mirror.
             gx = fx + px * cs + py * sn
             gy = fy - px * sn + py * cs
             pads.append((str(p[1]), gx, gy,
@@ -104,15 +62,6 @@ def _emitted_pads(board_path: Path):
 
 
 def test_model_pad_geometry_equals_emitted(model, board):
-    """PARITY INSTRUMENT: for EVERY footprint (both sides), the in-process
-    model's pad positions + nets (_inst_pad_geom) equal the emitted board's,
-    read back with the pcbnew-pinned loader math. Catches anyone reintroducing
-    a side-dependent mirror in EITHER the model helpers OR embed/emission.
-
-    Net exemption (documented): pads whose MODEL net is "" may carry a net in
-    the file — embed._thermal_via_nets assigns the EP net to blank thermal-via
-    pads at EMBED time, downstream of the model (conservative: the model
-    treats them as no-net obstacles)."""
     emitted = _emitted_pads(board)
     checked_bottom = checked = 0
     for inst in model.insts:
@@ -141,23 +90,11 @@ def test_model_pad_geometry_equals_emitted(model, board):
             checked += 1
             if inst.side == "bottom":
                 checked_bottom += 1
-    # the instrument must actually bite: a real 2-side board with a populated
-    # bottom (319 parts / 650 pads at unification time).
     assert checked_bottom >= 100, "bottom side unexpectedly empty"
     assert checked >= 1000
 
 
-# ---------------------------------------------------------------------------
-# entry guard: only PROVEN mirror-safe parts may be classified bottom.
-# ---------------------------------------------------------------------------
-
-# multi-pad bottom parts must be individually proven mirror-safe and listed
-# here WITH the basis; anything else fails the guard until a human proves it.
 _MIRROR_SAFE_MULTIPAD = {
-    # 4-element ISOLATED equal-value (33R) convex array; every element spans
-    # straight across the two pad rows (1-8, 2-7, 3-6, 4-5), so the X-mirror
-    # permutes identical elements onto identical elements — electrically
-    # mirror-invariant.
     "4D03WGJ0330T5E",
 }
 
@@ -165,17 +102,6 @@ _POLARIZED_FP_TOKENS = ("CP_", "D_", "LED", "Diode", "Polar", "Tantal")
 
 
 def test_bottom_parts_achiral_nonpolarized(model):
-    """ENTRY GUARD (tripwire): every NON-MIRRORED bottom part must be (a) a
-    passive ref class, (b) a non-polarized footprint, (c) geometrically
-    ACHIRAL — its pad (position, size) multiset invariant under the X-mirror —
-    and (d) if it has >2 pads, individually proven mirror-safe above. An
-    unchanged library document emitted on B.Cu lands the chiral mirror of the
-    part's top-side pattern (embed._flip_to_bottom keeps local coordinates,
-    KiCad applies no mirror), so any such part failing these tests would
-    assemble reversed — a LAW-0 defect the netlist/DRC gates cannot see.
-    inst.mirror=True parts are EXEMPT from achirality (their document IS the
-    KiCad-exact mirror, any footprint legal) but must carry that mirrored
-    document on the bottom side — enforced here and by the embed guard."""
     from schgen.generate.pcb.constants import _INT_DESC, CONN_MATING_FACE
     from schgen.generate.pcb.mirror import is_mirrored_path
     seen_bottom = 0
@@ -199,7 +125,6 @@ def test_bottom_parts_achiral_nonpolarized(model):
             f"land pattern). Place it top, or prove mirror-safety here.")
         assert not any(t in inst.footprint for t in _POLARIZED_FP_TOKENS), (
             f"{inst.ref}: polarized footprint {inst.footprint} on the BOTTOM")
-        # chirality: pad (x, y, w, h) multiset must equal its own X-mirror.
         pads = _pad_footprint_pads(inst.mod_path)
         plain = sorted((round(x, 3), round(y, 3), round(w, 3), round(h, 3))
                        for x, y, w, h in pads)
@@ -218,7 +143,6 @@ def test_bottom_parts_achiral_nonpolarized(model):
 
 
 def _pad_footprint_pads(mod_path: Path):
-    """(x, y, w, h) per pad from a .kicad_mod (local frame, rot 0)."""
     doc = sexpr.loads(mod_path.read_text())
     out = []
     for node in doc:
@@ -234,12 +158,6 @@ def _pad_footprint_pads(mod_path: Path):
     return out
 
 
-# ---------------------------------------------------------------------------
-# red-on-before: the OLD mirrored convention, recomputed inline, must disagree
-# with the unified truth on every off-axis bottom pad (pins the measured
-# pre-fix delta: pad-pitch-scale displacement, 0.79..2.96 mm on the live
-# board, 100% of bottom parts affected).
-# ---------------------------------------------------------------------------
 def test_red_on_before_old_mirror_convention_was_wrong(model):
     affected = total = 0
     worst = 0.0
@@ -251,7 +169,6 @@ def test_red_on_before_old_mirror_convention_was_wrong(model):
         cs, sn = math.cos(rot), math.sin(rot)
         deltas = []
         for name, ux, uy, _net in _inst_pad_geom(inst):
-            # the OLD convention: px = -px before the CW rotation
             pads = {str(n[1]): (float(sexpr.find(n, "at")[1]),
                                 float(sexpr.find(n, "at")[2]))
                     for n in sexpr.loads(inst.mod_path.read_text())
@@ -263,23 +180,13 @@ def test_red_on_before_old_mirror_convention_was_wrong(model):
         if any(d > 0.5 for d in deltas):
             affected += 1
             worst = max(worst, max(deltas))
-    # every bottom part WITH off-axis pads shows the old-convention
-    # displacement (full-wire leftovers put on-axis single-pad TPs on the
-    # bottom too — those are geometrically immune to the mirror bug and
-    # excluded from the pin by the 0.5mm delta floor above).
     assert total >= 100
     assert affected >= 100 and affected >= total * 0.9, (
         f"only {affected}/{total} bottom parts show the old-convention "
         f"displacement — the red-on-before pin no longer reproduces")
-    # full-wire bottom set: worst measured 1.90 (was 2.96 pre-wire) — still
-    # 2x the 0402 pad pitch, decisively wrong.
     assert worst > 1.5, f"worst old-convention delta {worst:.3f} mm"
 
 
-# ---------------------------------------------------------------------------
-# fast unit (no board build): side-independence of every pad-geometry helper
-# on a synthetic ASYMMETRIC footprint — the case the old convention broke.
-# ---------------------------------------------------------------------------
 _ASYM_MOD = """(footprint "test:asym"
   (layer "F.Cu")
   (pad "1" smd rect (at 1 0.5) (size 0.6 0.4) (layers "F.Cu"))
@@ -291,8 +198,6 @@ _ASYM_MOD = """(footprint "test:asym"
 def test_helpers_side_independent_on_asymmetric_part(tmp_path):
     mod = tmp_path / "asym.kicad_mod"
     mod.write_text(_ASYM_MOD)
-    # _pad_boxes / _rot_pad_bbox are side-free by signature now; the placed
-    # instance transform must be identical for top and bottom.
     for rot in (0.0, 90.0, 180.0, 270.0):
         boxes = _pad_boxes(mod, rot)
         assert set(boxes) == {"1", "2"}
@@ -307,8 +212,6 @@ def test_helpers_side_independent_on_asymmetric_part(tmp_path):
         gb = sorted(_inst_pad_geom(insts["bottom"]))
         assert gt == gb, f"rot={rot}: pad geometry differs by side"
         assert _rot_pad_bbox(mod, rot) is not None
-    # spot-check the absolute transform at rot 90 (CW, +y-down):
-    # (px,py)=(1,0.5) -> (px·cos+py·sin, -px·sin+py·cos) = (0.5, -1).
     b90 = FootprintInst(
         ref="X1", value="v", footprint="test:asym", x=100.0, y=50.0,
         rotation=90.0, pad_nets={"1": (1, "A"), "2": (2, "B")},

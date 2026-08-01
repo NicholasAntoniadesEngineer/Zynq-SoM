@@ -1,29 +1,3 @@
-"""DEFECT-INJECTION CORPUS — the Principle-0 validation battery (P2, U2a).
-
-One place enumerating the historically EYE-CAUGHT defect classes and proving, per
-class, that the mechanized gate FIRES on an injected defect and stays SILENT on the
-clean twin (no false positives). This is the promotion battery any fast check must
-pass before standing in for a visual check (docs/AI_PLATFORM_ROADMAP.md Principle 0)
-AND standing regression armor that the gates keep guarding their class.
-
-Fast + hermetic: synthetic PcbModels from real footprints via the build_zone harness —
-no board build, no kicad-cli.
-
-Classes covered HERE (gate <- defect):
-  ratsnest_gate      <- off-board part; dispersed subsystem cluster
-  placement_mech     <- interior connector; inward mating face; part on the SoM-TOP
-                        keepout (amended LAW 6); control under the module;
-                        bottom-under-SoM exemption (clean twin)
-  placement_contract <- scattered decoupling (member beyond contract distance)
-  fanout_gate        <- starved multi-pin fan-out (foreign non-passive crowding)
-
-Classes covered by their OWN suites (not duplicated; listed for the battery ledger):
-  facing-away/flow            test_placement_flow_gate (synthetic kernel harness)
-  silk refdes overprint       test_refdes overlap suite (board-file based)
-  DF40 corridor intrusion     test_return_stitch_gate / escape seat-audit fail path
-  schematic short/open        netlist gate + shorts detector suites (LAW 0)
-  courtyard overlap           kicad-cli DRC (external oracle)
-"""
 from __future__ import annotations
 
 import pytest
@@ -54,7 +28,6 @@ def _model(insts, som_core=None):
 
 @pytest.fixture(scope="module")
 def usb_pd_zone():
-    """The solved usb_pd cluster (contract-clean by construction) at (40, 40)."""
     res, rot, resolvable, contract = _run_zone("usb_pd")
     assert res is not None
     top, bot, _zw, _zh = res
@@ -70,8 +43,6 @@ def usbc_mods():
     return {"typec": resolvable[band["J2"]], "esd": resolvable[band["U2"]],
             "switch": resolvable[band["U1"]]}
 
-
-# --- ratsnest ---------------------------------------------------------------------
 
 def test_clean_cluster_passes_ratsnest(usb_pd_zone):
     insts, *_ = usb_pd_zone
@@ -95,8 +66,6 @@ def test_dispersed_cluster_fires(usb_pd_zone):
     res = ratsnest_gate.check(_model(mut))
     assert res.dispersed and not res.ok
 
-
-# --- placement_mech (LAW 6) -------------------------------------------------------
 
 def test_interior_connector_fires(usbc_mods):
     j = _inst("J1", usbc_mods["typec"], _BW / 2, _BH / 2,
@@ -142,8 +111,6 @@ def test_control_under_som_fires(usbc_mods):
     assert res.under_som and res.controls_under_som and not res.ok
 
 
-# --- placement_contract (scattered decoupling) ------------------------------------
-
 def test_scattered_decoupling_fires(usb_pd_zone):
     insts, resolvable, contract, rot = usb_pd_zone
     band = g._board_refs_by_sheet("usb_pd")
@@ -163,8 +130,6 @@ def test_clean_zone_passes_contract(usb_pd_zone):
                   ref_map=g._board_refs_by_sheet("usb_pd"))
     assert chk.ok and chk.proximity_fail == 0
 
-
-# --- fanout -----------------------------------------------------------------------
 
 def test_starved_fanout_fires(usbc_mods):
     ic = _inst("U9001", usbc_mods["switch"], 100.0, 100.0, sheet="a")
