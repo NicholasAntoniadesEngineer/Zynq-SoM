@@ -202,6 +202,10 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg,
 CLEAR = 0.3
 BIG_PART_MM2 = 40.0
 ROUTE_FACTOR = 3.5
+AFFINITY_FLOOR = 0.05
+PLACEHOLDER_ASPECT = 1.6
+PLACEHOLDER_MIN_MM = 8.0
+PLACEHOLDER_MAX_MM = 30.0
 
 PERIM_KEEPOUT = 3.0
 SOM_HALO = 7.0
@@ -876,7 +880,8 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
             sp = span_of(b, edge)
             offs.append(acc + sp / 2)
             acc += sp + (gaps[i] if i < len(gaps) else 0.0)
-        wts = [max(sum(b.j_aff.values()), 0.0) + 0.05 for b in blocks]
+        wts = [max(sum(b.j_aff.values()), 0.0) + AFFINITY_FLOOR
+               for b in blocks]
         tgts = [_edge_target(b, edge, plan) for b in blocks]
         wsum = sum(wts)
         start = sum(
@@ -1192,8 +1197,9 @@ class _Occupancy:
 
 
 def _interior_dims(area: float) -> tuple[float, float]:
-    h = _q.placeholder_zone_half_mm(min(30.0, max(8.0, (area / 1.6) ** 0.5)))
-    w = _q.placeholder_zone_half_mm(max(8.0, area / h))
+    h = _q.placeholder_zone_half_mm(min(PLACEHOLDER_MAX_MM, max(
+        PLACEHOLDER_MIN_MM, (area / PLACEHOLDER_ASPECT) ** 0.5)))
+    w = _q.placeholder_zone_half_mm(max(PLACEHOLDER_MIN_MM, area / h))
     return w, h
 
 
@@ -1253,12 +1259,20 @@ def _ledger_tiers(zg) -> None:
               tier_ge9_2p00=tiers.get(2.00, 0))
 
 
+def _decoupling_parts(sheet) -> list[tuple[str, Path]]:
+    from schgen.generate.pcb.footprint import resolve_mod as _dec_resolve
+    if sheet is None:
+        return []
+    return [(r, m) for r, m in
+            ((r, _dec_resolve(p.footprint))
+             for r, p in sorted(sheet.circuit.parts.items()))
+            if m is not None]
+
+
 def _ledger_decoupling(plan: Plan, n_dec: int) -> None:
     from schgen.generate.pcb.placement import SOM_DECOUPLING_INSET as _inset
-    gw = max(1.0, plan.som.w - 2 * _inset)
-    gh = max(1.0, plan.som.h - 2 * _inset)
-    cols = max(1, min(n_dec, round((n_dec * gw / gh) ** 0.5))) if n_dec else 1
-    rows = max(1, (n_dec + cols - 1) // cols) if n_dec else 1
+    from schgen.generate.pcb.placement import som_decoupling_grid
+    gw, gh, cols, rows = som_decoupling_grid(plan.som.w, plan.som.h, n_dec)
     _led.calc("decoupling_grid", n_dec, n_caps=n_dec, som_w=plan.som.w,
               som_h=plan.som.h, inset=_inset, grid_w=round(gw, 4),
               grid_h=round(gh, 4), cols=cols, rows=rows)
@@ -1437,13 +1451,8 @@ def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                         mods=s.mirror, pad_punch=_pad_punch)
         comps_by_policy[_pad_punch] = _co
     from schgen.generate.pcb.footprint import _footprint_bbox as _dec_bbox
-    from schgen.generate.pcb.footprint import resolve_mod as _dec_resolve
-    _dec_sheet = by_name.get("som_decoupling")
-    _dec_boxes = [] if _dec_sheet is None else [
-        _dec_bbox(m) for m in
-        (_dec_resolve(p.footprint)
-         for _r, p in sorted(_dec_sheet.circuit.parts.items()))
-        if m is not None]
+    _dec_boxes = [_dec_bbox(m) for _r, m in
+                  _decoupling_parts(by_name.get("som_decoupling"))]
     plan.dec_bank = (len(_dec_boxes),
                      max((max((bb[0] ** 2 + bb[1] ** 2) ** 0.5,
                               (bb[2] ** 2 + bb[1] ** 2) ** 0.5,
@@ -1794,7 +1803,10 @@ def _cross_estimator(plan: Plan, zg, sheets):
     )
     from schgen.generate.pcb.footprint import _net_classes, resolve_mod
     from schgen.generate.pcb.mating_face import _inst_pad_geom, _rot_pad_bbox
-    from schgen.generate.pcb.placement import SOM_DECOUPLING_INSET
+    from schgen.generate.pcb.placement import (
+        SOM_DECOUPLING_INSET,
+        som_decoupling_grid,
+    )
     from schgen.generate.ratsnest import _mst_edges
 
     idx_path = PROJECT_ROOT / "sheet_index.json"
@@ -1849,9 +1861,10 @@ def _cross_estimator(plan: Plan, zg, sheets):
                 owner_of[bref] = ("som_j", jn)
                 rot_of[bref] = som_rot[jn]
         elif sc.name == "som_decoupling":
-            for ref, part in sorted(sc.circuit.parts.items()):
+            dec_mods = dict(_decoupling_parts(sc))
+            for ref in sorted(sc.circuit.parts):
                 bref = _renamed_ref(ref, band, sheet=sc.name)
-                mod = resolve_mod(part.footprint)
+                mod = dec_mods.get(ref)
                 if mod is None:
                     continue
                 mod_of[bref] = mod
@@ -1939,11 +1952,8 @@ def _cross_estimator(plan: Plan, zg, sheets):
     conn_pb = {ref: _rot_pad_bbox(mod_of[ref], rot_of.get(ref, 0.0))
                for ref in sorted(zg.conn_edge) if ref in owner_of}
     n_dec = len(dec_refs)
-    dec_cols = max(1, min(n_dec, round(
-        (n_dec * max(1.0, plan.som.w - 2 * SOM_DECOUPLING_INSET)
-         / max(1.0, plan.som.h - 2 * SOM_DECOUPLING_INSET)) ** 0.5))) \
-        if n_dec else 1
-    dec_rows = max(1, (n_dec + dec_cols - 1) // dec_cols) if n_dec else 1
+    dec_rw, dec_rh, dec_cols, dec_rows = som_decoupling_grid(
+        plan.som.w, plan.som.h, n_dec)
 
     def evaluate(blocks: list[Block], only_sheet: str | None = None) -> float:
         by_name = {b.name: b for b in blocks}
@@ -1959,8 +1969,6 @@ def _cross_estimator(plan: Plan, zg, sheets):
         corners = ((MH_INSET, MH_INSET), (BOARD_W - MH_INSET, MH_INSET),
                    (BOARD_W - MH_INSET, BOARD_H - MH_INSET),
                    (MH_INSET, BOARD_H - MH_INSET))
-        rw = max(1.0, plan.som.w - 2 * SOM_DECOUPLING_INSET)
-        rh = max(1.0, plan.som.h - 2 * SOM_DECOUPLING_INSET)
         part_pos: dict[str, tuple[float, float]] = {}
         for bref, (kind, key) in owner_of.items():
             if kind == "zone":
@@ -1978,9 +1986,9 @@ def _cross_estimator(plan: Plan, zg, sheets):
                 cxi, cyi = key % dec_cols, key // dec_cols
                 part_pos[bref] = (
                     round(ORIGIN_X + som_x + SOM_DECOUPLING_INSET
-                          + rw * (cxi + 0.5) / dec_cols, 4),
+                          + dec_rw * (cxi + 0.5) / dec_cols, 4),
                     round(ORIGIN_Y + som_y + SOM_DECOUPLING_INSET
-                          + rh * (cyi + 0.5) / dec_rows, 4))
+                          + dec_rh * (cyi + 0.5) / dec_rows, 4))
             else:
                 cx, cy = corners[key]
                 part_pos[bref] = (_q.fixed_part_grid(ORIGIN_X + cx),

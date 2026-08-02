@@ -38,6 +38,7 @@ MIN_VIAS_PER_CONN = 2
 REDUNDANCY_OFFSET = 1.0
 
 LANE_HANDLE = 1.0
+OBSTACLE_MARGIN = 6.0
 
 _SHEET2REF = {"som_j1": "J1", "som_j2": "J2", "som_j3": "J3"}
 
@@ -135,6 +136,7 @@ def _box_dist(x: float, y: float, box: tuple[float, float, float, float]) -> flo
 
 
 CORRIDOR_V_MARGIN = 0.15
+CORRIDOR_LIP = 0.3
 
 
 def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
@@ -467,7 +469,8 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
         pts = [(m.u, m.pad) for m in members]
         by_pad = {m.pad: m for m in members}
         us = sorted({round(x, 3) for x, _ in pts})
-        region = (min(us) - 6.0, -6.0, max(us) + 6.0, 6.0)
+        region = (min(us) - OBSTACLE_MARGIN, -OBSTACLE_MARGIN,
+                  max(us) + OBSTACLE_MARGIN, OBSTACLE_MARGIN)
         obstacles[ref] = _collect_obstacles(model, inst, _inst_pad_boxes,
                                             region)
         for band in band_cover(pts, reach):
@@ -879,7 +882,7 @@ def build_escape_plan(model) -> dict:
             c0 = _to_board(conns[ref], min(us) - 0.5,
                            math.copysign(pad_outer_tip, sgn))
             c1 = _to_board(conns[ref], max(us) + 0.5,
-                           math.copysign(escape_v + 0.3, sgn))
+                           math.copysign(escape_v + CORRIDOR_LIP, sgn))
             corridors[f"{ref}:{'S' if sgn > 0 else 'N'}"] = {
                 "rect": tuple(round(c, 4) for c in
                               (min(c0[0], c1[0]), min(c0[1], c1[1]),

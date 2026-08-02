@@ -1223,6 +1223,15 @@ L4_PULL_STEP = 1.0
 L4_PULL_SPAN = 40.0
 
 
+def som_decoupling_grid(som_w: float, som_h: float, n: int
+                        ) -> tuple[float, float, int, int]:
+    rw = max(1.0, som_w - 2 * SOM_DECOUPLING_INSET)
+    rh = max(1.0, som_h - 2 * SOM_DECOUPLING_INSET)
+    cols = max(1, min(n, round((n * rw / rh) ** 0.5))) if n else 1
+    rows = max(1, (n + cols - 1) // cols) if n else 1
+    return rw, rh, cols, rows
+
+
 def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
                          som_h: float, n: int
                          ) -> list[tuple[float, float]]:
@@ -1230,10 +1239,7 @@ def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
         return []
     rx0 = som_x + SOM_DECOUPLING_INSET
     ry0 = som_y + SOM_DECOUPLING_INSET
-    rw = max(1.0, som_w - 2 * SOM_DECOUPLING_INSET)
-    rh = max(1.0, som_h - 2 * SOM_DECOUPLING_INSET)
-    cols = max(1, min(n, round((n * rw / rh) ** 0.5)))
-    rows = max(1, (n + cols - 1) // cols)
+    rw, rh, cols, rows = som_decoupling_grid(som_w, som_h, n)
     return [(round(rx0 + rw * (i % cols + 0.5) / cols, 4),
              round(ry0 + rh * (i // cols + 0.5) / rows, 4))
             for i in range(n)]
@@ -1375,7 +1381,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     udec = sorted(r for r, (sh, _f, _v, _l) in parts.items()
                   if sh == "som_decoupling" and r in resolvable)
     for ref, cell in zip(udec, som_decoupling_cells(
-            plan.som_x, plan.som_y, som.w, som.h, len(udec)), strict=True):
+            plan.som_x, plan.som_y, som.w, som.h, plan.dec_bank[0]),
+            strict=True):
         pos[ref] = cell
         side_of[ref] = "bottom"
         grid_placed.add(ref)

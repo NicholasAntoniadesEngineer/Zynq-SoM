@@ -23,6 +23,8 @@ MODULE_ALIAS: dict[str, str] = {
     "floorplan": "schgen.generate.floorplan",
     "pcbconst": "schgen.generate.pcb.constants",
     "placement": "schgen.generate.pcb.placement",
+    "stagetpl": "schgen.generate.pcb.stage_templates",
+    "escape": "schgen.generate.pcb.escape",
     "fanout": "schgen.verify.fanout_gate",
     "ratsnest": "schgen.verify.ratsnest_gate",
 }
@@ -346,6 +348,17 @@ _assume("anchor_affinity_power", "floorplan.sizing",
 _assume("reseat_evict_budget", "floorplan.sizing",
         "floorplan._RESEAT_EVICT_BUDGET", "evictions", "policy",
         "successful eviction episodes one pack attempt may spend")
+_assume("affinity_floor", "floorplan.sizing", "floorplan.AFFINITY_FLOOR",
+        "affinity", "policy",
+        "floor on every edge block's weight; it orders the zero-affinity ones")
+_assume("placeholder_aspect", "floorplan.sizing",
+        "floorplan.PLACEHOLDER_ASPECT", "w/h", "policy",
+        "target width/height of a reservation-only block's landing rectangle")
+_assume("placeholder_min", "floorplan.sizing", "floorplan.PLACEHOLDER_MIN_MM",
+        "mm", "policy", "shortest side a placeholder landing rectangle may take")
+_assume("placeholder_max", "floorplan.sizing", "floorplan.PLACEHOLDER_MAX_MM",
+        "mm", "policy",
+        "tallest a placeholder rectangle grows before it is widened instead")
 _assume("cross_k", "floorplan.sizing", "config.CROSS_K",
         "mm/mm/subsystem", "fitted",
         "LAW-5 airwire coefficient, fitted from two boards; NOT a physical law")
@@ -538,6 +551,12 @@ _assume("d13_touch_eps", "pcb.placement", "fanout._TOUCH_EPS", "mm", "policy",
         "tolerance below which a D13 clearance counts as met")
 _assume("edge_flush_relief", "pcb.placement", "pcbconst.EDGE_FLUSH_RELIEF",
         "mm", "policy", "body relief added to edge_pad_clear when seating")
+_assume("nonsw_relief", "pcb.placement", "stagetpl._NONSW_RELIEF", "mm",
+        "policy", "gap added to template_clear between two non-switching stages")
+_assume("candidate_radius", "pcb.placement", "stagetpl._CAND_RADIUS", "mm",
+        "policy", "reach of the template candidate lattice around its pin box")
+_assume("relax_step", "pcb.placement", "stagetpl._RELAX_STEP", "mm", "policy",
+        "clearance a template solve adds per failed attempt before it retries")
 
 _calc("edge_flush", "pcb.placement", "mm",
       ("edge_pad_clear", "flush_relief"), "edge_pad_clear + flush_relief",
@@ -552,6 +571,11 @@ _calc("stage_movement", "pcb.placement", "parts",
        "corridor_eviction"),
       "parts whose pose a stage changed, counted per stage",
       "which post-plan stage moved how many parts")
+
+_assume("obstacle_margin", "pcb.escape", "escape.OBSTACLE_MARGIN", "mm",
+        "policy", "how far past the DF40 contact row the solver reads obstacles")
+_assume("corridor_lip", "pcb.escape", "escape.CORRIDOR_LIP", "mm", "policy",
+        "outer lip past the escape depth when the lane corridor is cut")
 
 _calc("escape_coverage", "pcb.escape", "mm",
       ("contacts", "worst_cover", "vias", "coverage"),

@@ -26,9 +26,11 @@ _LDO_GAP = 0.6
 _COUT_GAP = 1.0
 _LEFTOVER_BAND_GAP = 2.0
 _INTERSTAGE_GAP0 = 6.0
-_NONSW_STAGE_GAP = round(TEMPLATE_CLEAR + 0.7, 4)
+_NONSW_RELIEF = 0.7
+_NONSW_STAGE_GAP = round(TEMPLATE_CLEAR + _NONSW_RELIEF, 4)
 _ROW_WIDTH_BUDGET = 46.0
 _INTERROW_BUCK_GAP = 8.0
+_RELAX_STEP = 0.25
 
 
 class _Part:
@@ -101,7 +103,7 @@ def _build_buck_stage(ic_bref: str, members: dict[str, str],
     parts: list[_Part] = []
     solved = False
     for scale in range(0, 20):
-        pad = scale * 0.25
+        pad = scale * _RELAX_STEP
         parts = _lay_buck(ic_bref, ic_mod, resolvable, hf_caps, bulk_caps,
                           out_caps, inductor, fb_members, boot_cap, vcc_cap,
                           bias_r, bias_c, rt_r, pins, pad)
@@ -246,6 +248,7 @@ class ZoneInfeasible(RuntimeError):
 
 _CAND_STEP = 0.5
 _CAND_CAP = 400
+_CAND_RADIUS = 9.0
 _SEAT_TRACE = os.environ.get("SCHGEN_SEAT_TRACE", "") == "1"
 
 _Demand = tuple[str, "list[str] | None", float, "list[str] | None", float]
@@ -266,7 +269,7 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
                max(b[2] for b in allb), max(b[3] for b in allb))
     tcx, tcy = (tgt[0] + tgt[2]) / 2.0, (tgt[1] + tgt[3]) / 2.0
     all_pins = list(ib) if not target_pins else target_pins
-    n = int((9.0 + pad) / _CAND_STEP)
+    n = int((_CAND_RADIUS + pad) / _CAND_STEP)
     halo = TEMPLATE_CLEAR + pad
     scored: list[tuple[float, float, float, _Part, tuple]] = []
     for rot in (90.0, 0.0):
@@ -473,7 +476,7 @@ def _build_proximity_cluster(anchor_bref: str, contract: dict,
     seated: list[_Part] = []
     solved = False
     for scale in range(0, 20):
-        pad = scale * 0.25
+        pad = scale * _RELAX_STEP
         seated = _seat_all(demands, resolvable, ib, icb, [anchor], pad,
                            forbid_plus_x=False)
         if (not _any_overlap([anchor, *seated])
@@ -790,7 +793,8 @@ def _gc_head(bref: str, mod: Path,
                              or is_testpoint_ref(pp.bref)):
             subjects.append((pp.local_box(), _q.quant_credit(own_need)))
     t_half = max(tgt[2] - tgt[0], tgt[3] - tgt[1]) / 2.0
-    n = min(int((t_half + pbound + 9.0 + pad) / _CAND_STEP), _GRID_MAX_N)
+    n = min(int((t_half + pbound + _CAND_RADIUS + pad) / _CAND_STEP),
+            _GRID_MAX_N)
     mem_nets: dict[str, str] = {}
     net_pts: dict[str, list[tuple[float, float]]] = {}
     if pad_net and member_pins >= 4:
@@ -1302,7 +1306,7 @@ def _solve_component(comp: set[str], members: set[str],
             f"no seat order exists")
     for scale in range(0, 24):
         placed = _seat_multi(order, roots_c, attractors, repulsors,
-                             resolvable, scale * 0.25,
+                             resolvable, scale * _RELAX_STEP,
                              conn_roots=(conn_roots or set()) & comp,
                              outer_vec=outer_vec, root_rot=root_rot,
                              pad_net=pad_net)
@@ -1408,7 +1412,7 @@ def _build_ldo_stage(ic_bref: str, resolvable: dict[str, Path],
                      ) -> list[_Part]:
     ic_mod = resolvable[ic_bref]
     for scale in range(0, 12):
-        pad = scale * 0.25
+        pad = scale * _RELAX_STEP
         ic = _Part(ic_bref, ic_mod, 0.0, "top", 0.0, 0.0)
         ib = ic.pad_boxes()
         parts = [ic]
