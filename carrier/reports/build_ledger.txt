@@ -124,12 +124,48 @@ STEP   pcb.placement
   ASSUME nonsw_relief                   = 0.7           mm         [policy] stagetpl._NONSW_RELIEF — gap added to template_clear between two non-switching stages
   ASSUME candidate_radius               = 9             mm         [policy] stagetpl._CAND_RADIUS — reach of the template candidate lattice around its pin box
   ASSUME relax_step                     = 0.25          mm         [policy] stagetpl._RELAX_STEP — clearance a template solve adds per failed attempt before it retries
+  ASSUME ind_body_gap                   = 1             mm         [policy] stagetpl._IND_BODY_GAP — gap from the buck IC courtyard to the inductor body
+  ASSUME ldo_cap_gap                    = 0.6           mm         [policy] stagetpl._LDO_GAP — gap from an LDO pin box to its input or output capacitor
+  ASSUME cout_column_gap                = 1             mm         [policy] stagetpl._COUT_GAP — gap from the inductor output pad to the output-cap column
+  ASSUME leftover_band_gap              = 2             mm         [policy] stagetpl._LEFTOVER_BAND_GAP — gap below the stage rows where leftover parts are banded
+  ASSUME interstage_sw_gap              = 6             mm         [policy] stagetpl._INTERSTAGE_GAP0 — gap between two adjacent stages that BOTH carry a switching node
+  ASSUME row_width_budget               = 46            mm         [policy] stagetpl._ROW_WIDTH_BUDGET — width above which a candidate stage-row layout is rejected
+  ASSUME interrow_buck_gap              = 8             mm         [policy] stagetpl._INTERROW_BUCK_GAP — row-to-row gap when both rows contain a switching stage
+  ASSUME candidate_step                 = 0.5           mm         [policy] stagetpl._CAND_STEP — lattice step the template candidate search walks
+  ASSUME candidate_cap                  = 400           candidates [policy] stagetpl._CAND_CAP — length the scored candidate list is truncated to
+  ASSUME template_node_budget           = 300000        nodes      [policy] stagetpl._NODE_BUDGET — search nodes one template backtrack may spend before it gives up
+  ASSUME root_row_gap                   = 2             mm         [policy] stagetpl._ROOT_GAP — gap between two consecutive ordinary parts in the root row
+  ASSUME conn_root_cable_gap            = 20            mm         [physical] stagetpl._CONN_ROOT_CABLE_GAP — clear span between two overmolded plugs; independent of floorplan by test
+  ASSUME net_align_weight               = 0.1           weight     [policy] stagetpl._NET_W — weight on the net-alignment term of the candidate score
+  ASSUME grid_max_steps                 = 60            steps      [policy] stagetpl._GRID_MAX_N — cap on the half-width, in steps, of the candidate lattice
+  ASSUME flip_min_pins                  = 10            pins       [policy] stagetpl._FLIP_MIN_PINS — pin count below which the SoM-facing flip heuristic does not run
+  ASSUME flip_symmetry_tol              = 0.1           mm         [policy] stagetpl._FLIP_SYM_TOL — tolerance for judging a pad set 180-degree symmetric
+  ASSUME flip_dominance_pct             = 60            percent    [policy] stagetpl._FLIP_DOM_PCT — share of inter-sheet nets one DF40 must own to be called the flip partner
   CALC   edge_flush                     = 0.6           mm         <- edge_pad_clear=0.4 flush_relief=0.2  ::  edge_pad_clear + flush_relief
   CALC   template_clear                 = 0.5           mm         <- place_clear_baseline=0.5  ::  place_clear_baseline
+  CALC   nonsw_stage_gap                = 1.2           mm         <- template_clear=0.5 nonsw_relief=0.7  ::  template_clear + nonsw_relief
   CALC   stage_movement                 = 306           parts      <- l4_pull=102 edge_seat=16 breathe=30 refit_facing=51 reorder=107 corridor_eviction=0  ::  parts whose pose a stage changed, counted per stage
 STEP   pcb.escape
   ASSUME obstacle_margin                = 6             mm         [policy] escape.OBSTACLE_MARGIN — how far past the DF40 contact row the solver reads obstacles
   ASSUME corridor_lip                   = 0.3           mm         [policy] escape.CORRIDOR_LIP — outer lip past the escape depth when the lane corridor is cut
+  ASSUME escape_construct_radius        = 1.8           mm         [policy] escape.R_CONSTRUCT — reach from a DF40 contact within which a via counts as covering it
+  ASSUME escape_lattice                 = 0.05          mm         [policy] escape.LATTICE_MM — step of the lattice the escape solver searches via positions on
+  ASSUME escape_clearance_margin        = 0.1           mm         [policy] escape.CLR_MARGIN — margin added over the net-class rule when testing a foreign box
+  ASSUME hole_to_foreign_pad            = 0.3           mm         [policy] escape.CLR_HOLE_FOREIGN — house floor from an escape via hole to a foreign pad
+  ASSUME clr_hole_hole_relief           = 0.05          mm         [policy] escape.CLR_HOLE_HOLE_RELIEF — relief the escape solver adds over the thermal via hole-to-hole floor
+  ASSUME track_to_foreign               = 0.15          mm         [policy] escape.CLR_TRACK_FOREIGN — house floor from an escape track edge to foreign copper
+  ASSUME escape_edge_clearance          = 0.3           mm         [policy] escape.CLR_EDGE — copper-to-edge figure REPORTED in the escape audit, never enforced
+  ASSUME via_to_contact_row             = 0.15          mm         [policy] escape.CLR_VIA_ROW — house floor from an escape via to the DF40 contact row
+  ASSUME coexistence_margin             = 0.5           mm         [policy] escape.COEX_MARGIN — margin grown around the DF40 body when testing bottom-side coexistence
+  ASSUME contact_pitch_tolerance        = 0.001         mm         [fitted] escape.PITCH_TOL_MM — set from measured DF40 column gaps straying 2e-4 on the 1e-4 export grid
+  ASSUME escape_spine_width             = 0.3           mm         [policy] escape.SPINE_W — track width of the GND spine the escape copper lays
+  ASSUME escape_stub_pair_width         = 0.3           mm         [policy] escape.STUB_W_PAIR — track width of an escape stub serving a differential pair
+  ASSUME escape_stub_single_width       = 0.25          mm         [policy] escape.STUB_W_SINGLE — track width of an escape stub serving a single-ended contact
+  ASSUME min_vias_per_connector         = 2             vias       [policy] escape.MIN_VIAS_PER_CONN — return vias below which a DF40 gets a redundancy search
+  ASSUME redundancy_offset              = 1             mm         [policy] escape.REDUNDANCY_OFFSET — offset each way the redundancy search walks to find a second via
+  ASSUME lane_handle                    = 1             mm         [policy] escape.LANE_HANDLE — escape depth past the outer contact-pad tip that a lane reserves
+  ASSUME corridor_v_margin              = 0.15          mm         [policy] escape.CORRIDOR_V_MARGIN — margin past the outermost obstacle when the corridor half-height is set
+  CALC   clr_hole_hole                  = 0.5           mm         <- thermal_via_h2h=0.45 relief=0.05  ::  thermal_via_h2h + relief
   CALC   escape_coverage                = 1.4819        mm         <- contacts=29 worst_cover=1.4819 vias=7 coverage=2  ::  worst_cover = max over DF40 contacts of the uncovered span
 STEP   pcb.emission
   ASSUME power_track                    = 0.4           mm         [policy] pcbconst.POWER_TRACK_MM — POWER net-class track width written to the board
@@ -143,17 +179,29 @@ STEP   pcb.emission
   ASSUME thermal_via_size               = 0.6           mm         [standard] pcbconst.THERMAL_VIA_SIZE — thermal via pad diameter
   ASSUME thermal_via_drill              = 0.3           mm         [standard] pcbconst.THERMAL_VIA_DRILL — thermal via drill diameter
   ASSUME thermal_via_clear              = 0.25          mm         [standard] pcbconst.THERMAL_VIA_CLEAR — clearance ring around a thermal via
-  ASSUME thermal_via_h2h                = 0.45          mm         [standard] pcbconst.THERMAL_VIA_H2H — hole-to-hole floor between two thermal vias
+  ASSUME hole_to_hole_fab               = 0.15          mm         [datasheet] pcbconst.HOLE_TO_HOLE_FAB — JLCPCB 4-layer hole-to-hole floor; the ONE cited figure, see fab_profile
+  ASSUME hole_to_hole_drc_margin        = 0.1           mm         [policy] pcbconst.HOLE_TO_HOLE_DRC_MARGIN — house margin over the fab floor carried by the board-wide DRC rule
+  ASSUME hole_to_hole_thermal_margin    = 0.3           mm         [policy] pcbconst.HOLE_TO_HOLE_THERMAL_MARGIN — house margin over the fab floor carried by the thermal via field
   ASSUME thermal_via_edge               = 1             mm         [policy] pcbconst.THERMAL_VIA_EDGE — thermal via keep-in from the pour edge
   ASSUME thermal_via_spacing            = 0.8           mm         [policy] pcbconst.THERMAL_VIA_SPACING — preferred pitch of a thermal via field
   ASSUME thermal_via_lattice            = 0.25          mm         [policy] pcbconst.THERMAL_VIA_LATTICE_PITCH — exhaustive lattice pitch used when a curated site is blocked
   ASSUME hole_to_samenet_pad            = 0.1           mm         [standard] pcbconst.CLR_HOLE_SAMENET_PAD — hole-to-same-net-pad clearance rule
+  CALC   min_hole_to_hole               = 0.25          mm         <- fab_floor=0.15 drc_margin=0.1  ::  fab_floor + drc_margin
+  CALC   thermal_via_h2h                = 0.45          mm         <- fab_floor=0.15 thermal_margin=0.3  ::  fab_floor + thermal_margin
   CALC   board_emission                 = 569           footprints <- board_w=168 board_h=163 placed=569 n_top=393 n_bottom=176 nets=452  ::  placed = n_top + n_bottom
 STEP   gates
   CALC   law5_airwire_measured          = 15946.3       mm         <- cross_mm=15946.3 budget_mm=16382.6 headroom_mm=436.3 n_cross=435 n_subsystems=33 board_w=168 board_h=163  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
   CALC   fanout_d13_gate                = 110           subjects   <- n_subjects=110 n_starved=0 baseline=0  ::  starved = clearance < intelligent_need(pins) - touch_eps
 STEP   docs.floorplan
   ASSUME floorplan_svg_scale            = 6             px/mm      [policy] floorplan.SCALE — pixel scale of the FLOORPLAN.svg drawing
+  ASSUME floorplan_svg_origin_x         = 46            px         [policy] floorplan.OX — left origin the FLOORPLAN.svg board rectangle is drawn from
+  ASSUME floorplan_svg_origin_y         = 64            px         [policy] floorplan.OY — top origin the FLOORPLAN.svg board rectangle is drawn from
+  ASSUME svg_right_pad                  = 30            px         [policy] floorplan.SVG_RIGHT_PAD — canvas padding right of the board before the legend column
+  ASSUME svg_legend_width               = 400           px         [policy] floorplan.SVG_LEGEND_W — width of the FLOORPLAN.svg legend column
+  ASSUME svg_bottom_pad                 = 56            px         [policy] floorplan.SVG_BOTTOM_PAD — canvas padding below the board rectangle
+  ASSUME svg_legend_top                 = 130           px         [policy] floorplan.SVG_LEGEND_TOP — y at which the legend rows start
+  ASSUME svg_legend_row                 = 22            px         [policy] floorplan.SVG_LEGEND_ROW — height of one legend row
+  ASSUME svg_legend_tail                = 20            px         [policy] floorplan.SVG_LEGEND_TAIL — canvas padding below the last legend row
   REPLAY floorplan.sizing pass=2 identical=yes lines=90
 STEP   census
   CALC   quantize_engagement[breathe_anchor_grid] = 70            calls      <- klass=re-validated value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform

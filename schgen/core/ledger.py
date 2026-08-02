@@ -557,6 +557,43 @@ _assume("candidate_radius", "pcb.placement", "stagetpl._CAND_RADIUS", "mm",
         "policy", "reach of the template candidate lattice around its pin box")
 _assume("relax_step", "pcb.placement", "stagetpl._RELAX_STEP", "mm", "policy",
         "clearance a template solve adds per failed attempt before it retries")
+_assume("ind_body_gap", "pcb.placement", "stagetpl._IND_BODY_GAP", "mm",
+        "policy", "gap from the buck IC courtyard to the inductor body")
+_assume("ldo_cap_gap", "pcb.placement", "stagetpl._LDO_GAP", "mm", "policy",
+        "gap from an LDO pin box to its input or output capacitor")
+_assume("cout_column_gap", "pcb.placement", "stagetpl._COUT_GAP", "mm",
+        "policy", "gap from the inductor output pad to the output-cap column")
+_assume("leftover_band_gap", "pcb.placement", "stagetpl._LEFTOVER_BAND_GAP",
+        "mm", "policy", "gap below the stage rows where leftover parts are banded")
+_assume("interstage_sw_gap", "pcb.placement", "stagetpl._INTERSTAGE_GAP0", "mm",
+        "policy", "gap between two adjacent stages that BOTH carry a switching node")
+_assume("row_width_budget", "pcb.placement", "stagetpl._ROW_WIDTH_BUDGET", "mm",
+        "policy", "width above which a candidate stage-row layout is rejected")
+_assume("interrow_buck_gap", "pcb.placement", "stagetpl._INTERROW_BUCK_GAP",
+        "mm", "policy", "row-to-row gap when both rows contain a switching stage")
+_assume("candidate_step", "pcb.placement", "stagetpl._CAND_STEP", "mm",
+        "policy", "lattice step the template candidate search walks")
+_assume("candidate_cap", "pcb.placement", "stagetpl._CAND_CAP", "candidates",
+        "policy", "length the scored candidate list is truncated to")
+_assume("template_node_budget", "pcb.placement", "stagetpl._NODE_BUDGET",
+        "nodes", "policy",
+        "search nodes one template backtrack may spend before it gives up")
+_assume("root_row_gap", "pcb.placement", "stagetpl._ROOT_GAP", "mm", "policy",
+        "gap between two consecutive ordinary parts in the root row")
+_assume("conn_root_cable_gap", "pcb.placement",
+        "stagetpl._CONN_ROOT_CABLE_GAP", "mm", "physical",
+        "clear span between two overmolded plugs; independent of floorplan by test")
+_assume("net_align_weight", "pcb.placement", "stagetpl._NET_W", "weight",
+        "policy", "weight on the net-alignment term of the candidate score")
+_assume("grid_max_steps", "pcb.placement", "stagetpl._GRID_MAX_N", "steps",
+        "policy", "cap on the half-width, in steps, of the candidate lattice")
+_assume("flip_min_pins", "pcb.placement", "stagetpl._FLIP_MIN_PINS", "pins",
+        "policy", "pin count below which the SoM-facing flip heuristic does not run")
+_assume("flip_symmetry_tol", "pcb.placement", "stagetpl._FLIP_SYM_TOL", "mm",
+        "policy", "tolerance for judging a pad set 180-degree symmetric")
+_assume("flip_dominance_pct", "pcb.placement", "stagetpl._FLIP_DOM_PCT",
+        "percent", "policy",
+        "share of inter-sheet nets one DF40 must own to be called the flip partner")
 
 _calc("edge_flush", "pcb.placement", "mm",
       ("edge_pad_clear", "flush_relief"), "edge_pad_clear + flush_relief",
@@ -566,6 +603,10 @@ _calc("template_clear", "pcb.placement", "mm", ("place_clear_baseline",),
       "place_clear_baseline",
       "clearance the rigid stage templates are solved at",
       covers=("pcbconst.TEMPLATE_CLEAR",))
+_calc("nonsw_stage_gap", "pcb.placement", "mm",
+      ("template_clear", "nonsw_relief"), "template_clear + nonsw_relief",
+      "gap between two adjacent stages when at most one carries a switching node",
+      covers=("stagetpl._NONSW_STAGE_GAP",))
 _calc("stage_movement", "pcb.placement", "parts",
       ("l4_pull", "edge_seat", "breathe", "refit_facing", "reorder",
        "corridor_eviction"),
@@ -576,7 +617,49 @@ _assume("obstacle_margin", "pcb.escape", "escape.OBSTACLE_MARGIN", "mm",
         "policy", "how far past the DF40 contact row the solver reads obstacles")
 _assume("corridor_lip", "pcb.escape", "escape.CORRIDOR_LIP", "mm", "policy",
         "outer lip past the escape depth when the lane corridor is cut")
+_assume("escape_construct_radius", "pcb.escape", "escape.R_CONSTRUCT", "mm",
+        "policy", "reach from a DF40 contact within which a via counts as covering it")
+_assume("escape_lattice", "pcb.escape", "escape.LATTICE_MM", "mm", "policy",
+        "step of the lattice the escape solver searches via positions on")
+_assume("escape_clearance_margin", "pcb.escape", "escape.CLR_MARGIN", "mm",
+        "policy", "margin added over the net-class rule when testing a foreign box")
+_assume("hole_to_foreign_pad", "pcb.escape", "escape.CLR_HOLE_FOREIGN", "mm",
+        "policy", "house floor from an escape via hole to a foreign pad")
+_assume("clr_hole_hole_relief", "pcb.escape", "escape.CLR_HOLE_HOLE_RELIEF",
+        "mm", "policy",
+        "relief the escape solver adds over the thermal via hole-to-hole floor")
+_assume("track_to_foreign", "pcb.escape", "escape.CLR_TRACK_FOREIGN", "mm",
+        "policy", "house floor from an escape track edge to foreign copper")
+_assume("escape_edge_clearance", "pcb.escape", "escape.CLR_EDGE", "mm",
+        "policy", "copper-to-edge figure REPORTED in the escape audit, never enforced")
+_assume("via_to_contact_row", "pcb.escape", "escape.CLR_VIA_ROW", "mm",
+        "policy", "house floor from an escape via to the DF40 contact row")
+_assume("coexistence_margin", "pcb.escape", "escape.COEX_MARGIN", "mm",
+        "policy",
+        "margin grown around the DF40 body when testing bottom-side coexistence")
+_assume("contact_pitch_tolerance", "pcb.escape", "escape.PITCH_TOL_MM", "mm",
+        "fitted",
+        "set from measured DF40 column gaps straying 2e-4 on the 1e-4 export grid")
+_assume("escape_spine_width", "pcb.escape", "escape.SPINE_W", "mm", "policy",
+        "track width of the GND spine the escape copper lays")
+_assume("escape_stub_pair_width", "pcb.escape", "escape.STUB_W_PAIR", "mm",
+        "policy", "track width of an escape stub serving a differential pair")
+_assume("escape_stub_single_width", "pcb.escape", "escape.STUB_W_SINGLE", "mm",
+        "policy", "track width of an escape stub serving a single-ended contact")
+_assume("min_vias_per_connector", "pcb.escape", "escape.MIN_VIAS_PER_CONN",
+        "vias", "policy", "return vias below which a DF40 gets a redundancy search")
+_assume("redundancy_offset", "pcb.escape", "escape.REDUNDANCY_OFFSET", "mm",
+        "policy", "offset each way the redundancy search walks to find a second via")
+_assume("lane_handle", "pcb.escape", "escape.LANE_HANDLE", "mm", "policy",
+        "escape depth past the outer contact-pad tip that a lane reserves")
+_assume("corridor_v_margin", "pcb.escape", "escape.CORRIDOR_V_MARGIN", "mm",
+        "policy",
+        "margin past the outermost obstacle when the corridor half-height is set")
 
+_calc("clr_hole_hole", "pcb.escape", "mm", ("thermal_via_h2h", "relief"),
+      "thermal_via_h2h + relief",
+      "escape-solver hole-to-hole floor; TIGHTEST of the three, placer-enforced",
+      covers=("escape.CLR_HOLE_HOLE",))
 _calc("escape_coverage", "pcb.escape", "mm",
       ("contacts", "worst_cover", "vias", "coverage"),
       "worst_cover = max over DF40 contacts of the uncovered span",
@@ -604,8 +687,15 @@ _assume("thermal_via_drill", "pcb.emission", "pcbconst.THERMAL_VIA_DRILL",
         "mm", "standard", "thermal via drill diameter")
 _assume("thermal_via_clear", "pcb.emission", "pcbconst.THERMAL_VIA_CLEAR",
         "mm", "standard", "clearance ring around a thermal via")
-_assume("thermal_via_h2h", "pcb.emission", "pcbconst.THERMAL_VIA_H2H", "mm",
-        "standard", "hole-to-hole floor between two thermal vias")
+_assume("hole_to_hole_fab", "pcb.emission", "pcbconst.HOLE_TO_HOLE_FAB", "mm",
+        "datasheet",
+        "JLCPCB 4-layer hole-to-hole floor; the ONE cited figure, see fab_profile")
+_assume("hole_to_hole_drc_margin", "pcb.emission",
+        "pcbconst.HOLE_TO_HOLE_DRC_MARGIN", "mm", "policy",
+        "house margin over the fab floor carried by the board-wide DRC rule")
+_assume("hole_to_hole_thermal_margin", "pcb.emission",
+        "pcbconst.HOLE_TO_HOLE_THERMAL_MARGIN", "mm", "policy",
+        "house margin over the fab floor carried by the thermal via field")
 _assume("thermal_via_edge", "pcb.emission", "pcbconst.THERMAL_VIA_EDGE", "mm",
         "policy", "thermal via keep-in from the pour edge")
 _assume("thermal_via_spacing", "pcb.emission", "pcbconst.THERMAL_VIA_SPACING",
@@ -615,6 +705,15 @@ _assume("thermal_via_lattice", "pcb.emission",
         "exhaustive lattice pitch used when a curated site is blocked")
 _assume("hole_to_samenet_pad", "pcb.emission", "pcbconst.CLR_HOLE_SAMENET_PAD",
         "mm", "standard", "hole-to-same-net-pad clearance rule")
+
+_calc("min_hole_to_hole", "pcb.emission", "mm", ("fab_floor", "drc_margin"),
+      "fab_floor + drc_margin",
+      "emitted DRC floor; LOOSEST of the three — vendor footprints cap it at 0.3354",
+      covers=("pcbconst.MIN_HOLE_TO_HOLE",))
+_calc("thermal_via_h2h", "pcb.emission", "mm",
+      ("fab_floor", "thermal_margin"), "fab_floor + thermal_margin",
+      "placer floor for a thermal via field; tighter than the emitted DRC rule",
+      covers=("pcbconst.THERMAL_VIA_H2H",))
 
 _calc("board_emission", "pcb.emission", "footprints",
       ("board_w", "board_h", "placed", "n_top", "n_bottom", "nets"),
@@ -633,6 +732,22 @@ _calc("fanout_d13_gate", "gates", "subjects",
 
 _assume("floorplan_svg_scale", "docs.floorplan", "floorplan.SCALE", "px/mm",
         "policy", "pixel scale of the FLOORPLAN.svg drawing")
+_assume("floorplan_svg_origin_x", "docs.floorplan", "floorplan.OX", "px",
+        "policy", "left origin the FLOORPLAN.svg board rectangle is drawn from")
+_assume("floorplan_svg_origin_y", "docs.floorplan", "floorplan.OY", "px",
+        "policy", "top origin the FLOORPLAN.svg board rectangle is drawn from")
+_assume("svg_right_pad", "docs.floorplan", "floorplan.SVG_RIGHT_PAD", "px",
+        "policy", "canvas padding right of the board before the legend column")
+_assume("svg_legend_width", "docs.floorplan", "floorplan.SVG_LEGEND_W", "px",
+        "policy", "width of the FLOORPLAN.svg legend column")
+_assume("svg_bottom_pad", "docs.floorplan", "floorplan.SVG_BOTTOM_PAD", "px",
+        "policy", "canvas padding below the board rectangle")
+_assume("svg_legend_top", "docs.floorplan", "floorplan.SVG_LEGEND_TOP", "px",
+        "policy", "y at which the legend rows start")
+_assume("svg_legend_row", "docs.floorplan", "floorplan.SVG_LEGEND_ROW", "px",
+        "policy", "height of one legend row")
+_assume("svg_legend_tail", "docs.floorplan", "floorplan.SVG_LEGEND_TAIL", "px",
+        "policy", "canvas padding below the last legend row")
 
 _calc("quantize_engagement", "census", "calls", ("klass", "value"),
       "count of calls that ran this registered transform",

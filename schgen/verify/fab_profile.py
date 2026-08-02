@@ -7,6 +7,7 @@ from pathlib import Path
 from schgen.core import sexpr
 from schgen.core.project import PROJECT_ROOT
 from schgen.core.sexpr import Sym
+from schgen.generate.pcb.constants import HOLE_TO_HOLE_FAB
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 _PCB = PROJECT_ROOT / "Zynq_Carrier.kicad_pcb"
@@ -33,7 +34,7 @@ JLCPCB_4L = FabProfile(
     min_drill_mm=0.15,
     min_via_dia_mm=0.25,
     min_via_annular_mm=0.075,
-    min_hole_to_hole_mm=0.15,
+    min_hole_to_hole_mm=HOLE_TO_HOLE_FAB,
     source="JLCPCB PCB Manufacturing & Assembly Capabilities "
            "(jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; "
            "retrieved 2026-07",

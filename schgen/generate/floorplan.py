@@ -2795,7 +2795,14 @@ def build_notes(plan: Plan, sheets, regs) -> list[Note]:
     return notes
 
 
-OX, OY = 46.0, 64.0
+OX = 46.0
+OY = 64.0
+SVG_RIGHT_PAD = 30
+SVG_LEGEND_W = 400
+SVG_BOTTOM_PAD = 56
+SVG_LEGEND_TOP = 130
+SVG_LEGEND_ROW = 22
+SVG_LEGEND_TAIL = 20
 
 
 def _esc(s: str) -> str:
@@ -2817,16 +2824,19 @@ def render_svg(plan: Plan, notes: list[Note], out: Path) -> Path:
             note_of.setdefault(nt.block, []).append(nt.n)
     legend = [nt for nt in notes if nt.n]
 
-    W = int(OX + BOARD_W * SCALE + 30 + 400)
-    H = int(max(OY + BOARD_H * SCALE + 56, 130 + len(legend) * 22 + 20))
+    canvas_w = int(OX + BOARD_W * SCALE + SVG_RIGHT_PAD + SVG_LEGEND_W)
+    canvas_h = int(max(OY + BOARD_H * SCALE + SVG_BOTTOM_PAD,
+                       SVG_LEGEND_TOP + len(legend) * SVG_LEGEND_ROW
+                       + SVG_LEGEND_TAIL))
     e: list[str] = []
     e.append(f'<svg xmlns="http://www.w3.org/2000/svg" '
-             f'viewBox="0 0 {W} {H}" font-family="{FONT}" font-size="11">')
+             f'viewBox="0 0 {canvas_w} {canvas_h}" '
+             f'font-family="{FONT}" font-size="11">')
     e.append('<defs><pattern id="keepout" width="6" height="6" '
              'patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
              '<line x1="0" y1="0" x2="0" y2="6" stroke="#dc2626" '
              'stroke-width="1.2"/></pattern></defs>')
-    e.append(f'<rect width="{W}" height="{H}" fill="white"/>')
+    e.append(f'<rect width="{canvas_w}" height="{canvas_h}" fill="white"/>')
     e.append(f'<text x="{OX}" y="26" font-size="16" font-weight="bold">'
              f'carrier floorplan — SUGGESTION, not constraint</text>')
     e.append(f'<text x="{OX}" y="44" fill="#6b7280">to scale; derived from '

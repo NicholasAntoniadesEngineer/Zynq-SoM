@@ -32,6 +32,7 @@ from .constants import (
     PLACE_CLEAR_BASELINE,
     SOM_CORE_CLEARANCE,
     TEMPLATE_CLEAR,
+    THERMAL_VIA_H2H,
     TOP_AREA_MM2,
     ZONE_PACK_FILL,
     ZONE_PAD,
@@ -1310,6 +1311,9 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
               flush_relief=EDGE_FLUSH_RELIEF)
     _led.calc("template_clear", TEMPLATE_CLEAR,
               place_clear_baseline=PLACE_CLEAR_BASELINE)
+    from .stage_templates import _NONSW_RELIEF, _NONSW_STAGE_GAP
+    _led.calc("nonsw_stage_gap", _NONSW_STAGE_GAP,
+              template_clear=TEMPLATE_CLEAR, nonsw_relief=_NONSW_RELIEF)
     _trk.checkpoint("plan_lattice", {})
     zg = apply_chosen_shapes(zg, {b.name: b.shape_idx for b in plan.blocks})
     _trk.checkpoint("shape_bind", {})
@@ -1814,6 +1818,10 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     _led.close_step("pcb.placement")
     from .escape import build_escape_copper, build_escape_plan
     with _led.step("pcb.escape"):
+        from .escape import CLR_HOLE_HOLE, CLR_HOLE_HOLE_RELIEF
+        _led.calc("clr_hole_hole", CLR_HOLE_HOLE,
+                  thermal_via_h2h=THERMAL_VIA_H2H,
+                  relief=CLR_HOLE_HOLE_RELIEF)
         model.copper, model.escape_meta = build_escape_copper(model)
         model.escape_plan = build_escape_plan(model)
         _meta = model.escape_meta

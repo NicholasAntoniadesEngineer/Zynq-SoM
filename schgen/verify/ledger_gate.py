@@ -15,6 +15,8 @@ CENSUS_FILES: dict[str, str] = {
     "floorplan": "schgen/generate/floorplan.py",
     "pcbconst": "schgen/generate/pcb/constants.py",
     "placement": "schgen/generate/pcb/placement.py",
+    "stagetpl": "schgen/generate/pcb/stage_templates.py",
+    "escape": "schgen/generate/pcb/escape.py",
     "fanout": "schgen/verify/fanout_gate.py",
     "ratsnest": "schgen/verify/ratsnest_gate.py",
 }
@@ -71,27 +73,45 @@ def _numeric(node: ast.AST, known: set[str]) -> bool:
     return False
 
 
-def _targets(node: ast.AST) -> list[str]:
-    if isinstance(node, ast.Assign):
-        return [t.id for t in node.targets if isinstance(t, ast.Name)]
+def _bindings(node: ast.AST) -> list[tuple[str, ast.AST]]:
     if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-        return [node.target.id]
-    return []
+        return [(node.target.id, node.value)] if node.value else []
+    if not isinstance(node, ast.Assign) or node.value is None:
+        return []
+    out: list[tuple[str, ast.AST]] = []
+    for t in node.targets:
+        if isinstance(t, ast.Name):
+            out.append((t.id, node.value))
+        elif isinstance(t, ast.Tuple) and isinstance(node.value, ast.Tuple):
+            out += [(e.id, v)
+                    for e, v in zip(t.elts, node.value.elts, strict=False)
+                    if isinstance(e, ast.Name)]
+    return out
 
 
 def _is_upper(name: str) -> bool:
     return name.lstrip("_").isupper() and any(c.isalpha() for c in name)
 
 
+def _imported_numbers(alias: str) -> set[str]:
+    module = ledger.MODULE_ALIAS.get(alias)
+    if module is None:
+        return set()
+    mod = importlib.import_module(module)
+    return {n for n in dir(mod)
+            if isinstance(getattr(mod, n), (int, float))
+            and not isinstance(getattr(mod, n), bool)}
+
+
 def scan(alias: str, path: Path) -> tuple[list[str], list[str]]:
     tree = ast.parse(path.read_text())
-    known: set[str] = set()
+    known: set[str] = _imported_numbers(alias)
     top: list[str] = []
     for node in tree.body:
         if not isinstance(node, (ast.Assign, ast.AnnAssign)):
             continue
-        for name in _targets(node):
-            if node.value is not None and _numeric(node.value, known):
+        for name, value in _bindings(node):
+            if _numeric(value, known):
                 known.add(name)
                 top.append(f"{alias}.{name}")
     buried: list[str] = []
@@ -102,9 +122,8 @@ def scan(alias: str, path: Path) -> tuple[list[str], list[str]]:
         for sub in ast.walk(node):
             if not isinstance(sub, (ast.Assign, ast.AnnAssign)):
                 continue
-            for name in _targets(sub):
-                if (_is_upper(name) and sub.value is not None
-                        and _numeric(sub.value, known)):
+            for name, value in _bindings(sub):
+                if _is_upper(name) and _numeric(value, known):
                     buried.append(
                         f"{CENSUS_FILES[alias]}:{sub.lineno} "
                         f"{node.name}.{name}")
