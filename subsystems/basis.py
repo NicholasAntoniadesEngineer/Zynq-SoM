@@ -1,37 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from schgen.core.basis import SOURCE_CLASSES, Registry
 
-
-@dataclass(frozen=True)
-class ComponentBasis:
-    name: str
-    value: str
-    unit: str
-    basis: str
-    klass: str
-
-
-REGISTRY: dict[str, ComponentBasis] = {}
-
-_CLASSES = ("datasheet", "measured", "policy")
+_CLASSES = SOURCE_CLASSES
 _UNITS = ("ohm", "F", "H", "Hz")
 
-
-def _register(name: str, value: str, unit: str, basis: str, klass: str) -> str:
-    if klass not in _CLASSES:
-        raise AssertionError(f"basis: unknown source class {klass!r}")
-    if unit not in _UNITS:
-        raise AssertionError(f"basis: unknown unit {unit!r} for {name!r}")
-    entry = ComponentBasis(name=name, value=value, unit=unit, basis=basis,
-                           klass=klass)
-    prior = REGISTRY.get(name)
-    if prior is not None and prior != entry:
-        raise AssertionError(
-            f"basis: conflicting registration {name!r} — {prior.value!r}/"
-            f"{prior.klass} vs {value!r}/{klass}")
-    REGISTRY[name] = entry
-    return value
+_BASIS = Registry(units=_UNITS)
+REGISTRY = _BASIS.entries
+_register = _BASIS.register
 
 
 CAMERA_LANE_TERM = _register(

@@ -5,15 +5,16 @@ Every gate basis string / design-prose note that PRESUMES board copper,
 measured against what the emitter actually wrote into the .kicad_pcb this
 build. REPORT-ONLY (not a hard gate) — but the thermal gate HARD-verifies
 its pour credits against the same scan, so CD-01/CD-02 cannot pass on
-fiction regardless of this file. 'where' lines are anchor-resolved at
-report time (a vanished anchor reads ANCHOR-NOT-FOUND, never a stale line).
+fiction regardless of this file. 'where' lines are anchor-resolved at report
+time against STRUCTURE (code / a registered basis entry name); a vanished or
+prose-resolving anchor FAILS the build, never a stale line and never a marker.
 
 emitted copper inventory: 8 fill zones (with In1.Cu GND plane), 3 rule areas, 34 vias (34 GND), 9 segments
 
 CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
   assumes: full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)
   where:   schgen/verify/thermal.py:88
-           carrier/subsystems/power.py:15
+           carrier/subsystems/power.py:13
   emits:   In1.Cu GND plane: YES; U20001: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U20002: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U22004: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
   risk:    without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build.
 
@@ -31,13 +32,13 @@ CD-03  TPS26631 PWP 2s2p RthJA (33.6 C/W)   [EMITTED]
 
 CD-04  CHASSIS_GND island + single-point GND bond   [NOTHING]
   assumes: a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)
-  where:   carrier/subsystems/mechanical/mechanical.py:10
+  where:   carrier/subsystems/mechanical/mechanical.py:9
   emits:   CHASSIS_GND board-level copper: 0 zones, 0 vias (pads only otherwise); no bond stitch emitted
   risk:    fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted
 
 CD-05  Bob-Smith trunk copper (BS_COMMON island)   [NOTHING]
   assumes: a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)
-  where:   subsystems/ethernet/ethernet.py:58
+  where:   subsystems/ethernet/ethernet.py:63
   emits:   BS_COMMON board-level copper: 0 zones, 0 vias (pads only)
   risk:    without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island
 
@@ -50,13 +51,13 @@ CD-06  Ethernet isolation moat (In1 plane voids)   [PARTIAL]
 
 CD-07  DP90/DP100 L2 reference plane   [EMITTED]
   assumes: the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet
-  where:   schgen/generate/constraints.py:12
+  where:   schgen/generate/constraints.py:23
   emits:   In1.Cu GND plane zone 25.5,25.5 -> 192.5,187.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
   risk:    without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)
 
 CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
   assumes: the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine
-  where:   schgen/generate/pcb/embed.py:332
+  where:   schgen/generate/pcb/embed.py:342
   emits:   GND vias inside the SoM body zone: 7 (SoM zone found); rail fanout vias: none emitted
   risk:    until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists
 

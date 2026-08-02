@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import ast
+import io
 import math
+import tokenize
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -182,14 +185,44 @@ def scan_board(pcb_path: Path) -> BoardCopper:
     return bc
 
 
-def _where(rel_path: str, anchor: str) -> str:
+class AnchorError(RuntimeError):
+    pass
+
+
+_ANCHOR_RULE = ("anchors bind to STRUCTURE — code, or a registered basis "
+                "entry name — never to a sentence that a prose purge deletes")
+
+
+def _prose_lines(src: str) -> set[int]:
+    lines = {t.start[0] for t in tokenize.generate_tokens(
+        io.StringIO(src).readline) if t.type == tokenize.COMMENT}
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) \
+                and isinstance(node.value.value, str):
+            end = node.end_lineno or node.lineno
+            lines.update(range(node.lineno, end + 1))
+    return lines
+
+
+def _where(eid: str, rel_path: str, anchor: str) -> str:
     p = REPO_ROOT / rel_path
     if not p.exists():
-        return f"{rel_path}:FILE-MISSING"
-    for n, line in enumerate(p.read_text().splitlines(), 1):
-        if anchor in line:
-            return f"{rel_path}:{n}"
-    return f"{rel_path}:ANCHOR-NOT-FOUND({anchor!r})"
+        raise AnchorError(
+            f"copper_debt {eid}: anchor file {rel_path} does not exist — the "
+            f"claim is unmoored ({_ANCHOR_RULE})")
+    src = p.read_text()
+    prose = _prose_lines(src)
+    for n, line in enumerate(src.splitlines(), 1):
+        if anchor not in line:
+            continue
+        if n in prose:
+            raise AnchorError(
+                f"copper_debt {eid}: anchor {anchor!r} resolves to PROSE at "
+                f"{rel_path}:{n} — {_ANCHOR_RULE}")
+        return f"{rel_path}:{n}"
+    raise AnchorError(
+        f"copper_debt {eid}: anchor {anchor!r} is not in {rel_path} — "
+        f"{_ANCHOR_RULE}")
 
 
 @dataclass
@@ -218,9 +251,9 @@ class Result:
 
 def _lm61460_entry(bc: BoardCopper | None) -> Entry:
     where = [
-        _where("schgen/verify/thermal.py", '"LM61460": ThermalSpec('),
-        _where("carrier/subsystems/power.py",
-               "thermal gate now credits a CONSERVATIVE"),
+        _where("CD-01", "schgen/verify/thermal.py", '"LM61460": ThermalSpec('),
+        _where("CD-01", "carrier/subsystems/power.py",
+               '"power.thermal_credit"'),
     ]
     if bc is None:
         return Entry(
@@ -260,7 +293,8 @@ _LM_RISK = ("without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at "
 
 
 def _dyd_entry(bc: BoardCopper | None) -> Entry:
-    where = [_where("schgen/verify/thermal.py", '("TLV75725", "DYD")')]
+    where = [_where("CD-02", "schgen/verify/thermal.py",
+                    '("TLV75725", "DYD")')]
     assumes = ("DYD thermal pad soldered to GND copper + JESD51-5 "
                "pad-adjacent thermal vias into the buried plane (the DS DYD "
                "RthJA ~92.5 C/W is DEFINED on that stackup; without it the "
@@ -292,7 +326,8 @@ def _dyd_entry(bc: BoardCopper | None) -> Entry:
 
 
 def _tps26631_entry(bc: BoardCopper | None) -> Entry:
-    where = [_where("schgen/verify/thermal.py", '"TPS26631": ThermalSpec(')]
+    where = [_where("CD-03", "schgen/verify/thermal.py",
+                    '"TPS26631": ThermalSpec(')]
     assumes = ("HTSSOP-20 PowerPAD EP soldered to copper with thermal vias "
                "into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC "
                "2s2p figure — it presumes internal planes)")
@@ -323,8 +358,8 @@ def _tps26631_entry(bc: BoardCopper | None) -> Entry:
 
 
 def _chassis_entry(bc: BoardCopper | None) -> Entry:
-    where = [_where("carrier/subsystems/mechanical/mechanical.py",
-                    "SINGLE-POINT STAR STITCH")]
+    where = [_where("CD-04", "carrier/subsystems/mechanical/mechanical.py",
+                    '"mechanical.chassis_bond"')]
     assumes = ("a CHASSIS_GND copper island (connector shells + mounting "
                "ring) joined to signal GND at EXACTLY ONE point (bonding pad "
                "/ 0R / via stitch near power entry)")
@@ -345,8 +380,8 @@ def _chassis_entry(bc: BoardCopper | None) -> Entry:
 
 
 def _bobsmith_entry(bc: BoardCopper | None) -> Entry:
-    where = [_where("subsystems/ethernet/ethernet.py",
-                    "Bob-Smith: each MEDIA centre tap")]
+    where = [_where("CD-05", "subsystems/ethernet/ethernet.py",
+                    'c.net("BS_COMMON", f"R{ch + 1}.2", f"C{ch + 1}.2")')]
     assumes = ("a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) "
                "laid in copper on the chassis-side island, spaced for the "
                "2kV surge rating (IEEE 802.3 40.7.1)")
@@ -366,9 +401,10 @@ def _bobsmith_entry(bc: BoardCopper | None) -> Entry:
 
 
 def _moat_entry(bc: BoardCopper | None) -> Entry:
-    where = [_where("subsystems/ethernet/ethernet.py",
-                    "chassis-ground island"),
-             _where("schgen/generate/pcb/constants.py", "ISO_VOID_VALUES")]
+    where = [_where("CD-06", "subsystems/ethernet/ethernet.py",
+                    'RAILS = ("CHASSIS_GND",)'),
+             _where("CD-06", "schgen/generate/pcb/constants.py",
+                    "ISO_VOID_VALUES = (")]
     assumes = ("NO GND plane under the ethernet magnetics line side / RJ45 "
                "media pins (Pulse HX5008 layout guidance; the 2kV isolation "
                "moat) — the full-board In1 plane must be VOIDED there")
@@ -393,8 +429,8 @@ def _moat_entry(bc: BoardCopper | None) -> Entry:
 
 
 def _dp_ref_entry(bc: BoardCopper | None) -> Entry:
-    where = [_where("schgen/generate/constraints.py",
-                    "Outer-layer microstrip referenced to the L2/L3")]
+    where = [_where("CD-07", "schgen/generate/constraints.py",
+                    "GEOMETRY: dict[int, DiffGeometry] = {")]
     assumes = ("the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the "
                ".kicad_dru + net classes) is an OUTER-layer microstrip "
                "referenced to a CONTINUOUS L2 GND plane through one 7628 "
@@ -422,8 +458,8 @@ def _dp_ref_entry(bc: BoardCopper | None) -> Entry:
 
 
 def _som_fanout_entry(bc: BoardCopper | None) -> Entry:
-    where = [_where("schgen/generate/pcb/embed.py",
-                    "fanout vias right beneath the connector")]
+    where = [_where("CD-08", "schgen/generate/pcb/embed.py",
+                    '[Sym("name"), "SoM_body_keepout"]')]
     assumes = ("the under-SoM bottom-side rail-entry decoupling "
                "(som_decoupling) reaches the rails/planes through fanout "
                "vias directly beneath the DF40 mezzanine")
@@ -488,9 +524,11 @@ def report(res: Result) -> str:
          "its pour credits against the same scan, so CD-01/CD-02 cannot "
          "pass on",
          "fiction regardless of this file. 'where' lines are anchor-resolved "
-         "at",
-         "report time (a vanished anchor reads ANCHOR-NOT-FOUND, never a "
-         "stale line).",
+         "at report",
+         "time against STRUCTURE (code / a registered basis entry name); a "
+         "vanished or",
+         "prose-resolving anchor FAILS the build, never a stale line and "
+         "never a marker.",
          "",
          f"emitted copper inventory: {res.inventory}",
          ""]
