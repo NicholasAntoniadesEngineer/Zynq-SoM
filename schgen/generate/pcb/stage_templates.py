@@ -249,6 +249,7 @@ class ZoneInfeasible(RuntimeError):
 _CAND_STEP = 0.5
 _CAND_CAP = 400
 _CAND_RADIUS = 9.0
+_NODE_BUDGET = 300_000
 _SEAT_TRACE = os.environ.get("SCHGEN_SEAT_TRACE", "") == "1"
 
 _Demand = tuple[str, "list[str] | None", float, "list[str] | None", float]
@@ -313,7 +314,6 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
     chosen: dict[str, tuple[float, float, float, float]] = {}
     picked: dict[str, _Part] = {}
 
-    _NODE_BUDGET = 300_000
     nodes = [0]
     n_ord = len(order)
 

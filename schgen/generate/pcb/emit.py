@@ -13,12 +13,17 @@ from .constants import (
     DEFAULT_CLEARANCE_MM,
     DEFAULT_TRACK_MM,
     FIDUCIAL_FOOTPRINT,
+    HOLE_TO_HOLE_DRC_MARGIN,
+    HOLE_TO_HOLE_FAB,
+    HOLE_TO_HOLE_THERMAL_MARGIN,
+    MIN_HOLE_TO_HOLE,
     ORIGIN_X,
     ORIGIN_Y,
     POWER_CLASS,
     POWER_CLEARANCE_MM,
     POWER_TRACK_MM,
     REPO_ROOT,
+    THERMAL_VIA_H2H,
     PcbModel,
 )
 from .embed import (
@@ -293,7 +298,7 @@ def _design_settings() -> dict:
             "min_copper_edge_clearance": 0.3,
             "min_groove_width": 0.0,
             "min_hole_clearance": 0.2,
-            "min_hole_to_hole": 0.25,
+            "min_hole_to_hole": MIN_HOLE_TO_HOLE,
             "min_microvia_diameter": 0.2,
             "min_microvia_drill": 0.1,
             "min_resolved_spokes": 2,
@@ -469,6 +474,12 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
     model = build_model(two_side=two_side)
 
     with _led.step("pcb.emission"):
+        _led.calc("min_hole_to_hole", MIN_HOLE_TO_HOLE,
+                  fab_floor=HOLE_TO_HOLE_FAB,
+                  drc_margin=HOLE_TO_HOLE_DRC_MARGIN)
+        _led.calc("thermal_via_h2h", THERMAL_VIA_H2H,
+                  fab_floor=HOLE_TO_HOLE_FAB,
+                  thermal_margin=HOLE_TO_HOLE_THERMAL_MARGIN)
         pcb_path = CARRIER / "Zynq_Carrier.kicad_pcb"
         emit_pcb(model, pcb_path)
 
