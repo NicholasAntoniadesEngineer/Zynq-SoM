@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from schgen.core import sexpr
+from schgen.core.quantize import STACK_THICKNESS_MM
 from schgen.core.sexpr import Sym
 from schgen.output.emit import stable_uuid
 
@@ -87,7 +88,7 @@ def emit_pcb(model: PcbModel, out_path: Path) -> Path:
         [Sym("version"), 20260206],
         [Sym("generator"), "schgen"],
         [Sym("generator_version"), "1.0"],
-        [Sym("general"), [Sym("thickness"), 1.6],
+        [Sym("general"), [Sym("thickness"), STACK_THICKNESS_MM],
          [Sym("legacy_teardrops"), Sym("no")]],
         [Sym("paper"), "A3"],
         [Sym("title_block"),
