@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import pytest
+
 from schgen.core import sexpr
 from schgen.generate.pcb import embed
 from schgen.generate.pcb.constants import (
@@ -202,8 +204,8 @@ def test_copper_debt_ledger_complete_and_deterministic():
     assert ids == [f"CD-0{i}" for i in range(1, 9)], ids
     for e in res1.entries:
         for w in e.where:
-            assert "ANCHOR-NOT-FOUND" not in w and "FILE-MISSING" not in w, \
-                f"{e.eid}: unresolved anchor {w}"
+            rel, _, line = w.rpartition(":")
+            assert (REPO / rel).is_file() and line.isdigit(), f"{e.eid}: {w}"
     by = {e.eid: e for e in res1.entries}
     assert by["CD-01"].status == "EMITTED", by["CD-01"].emits
     assert by["CD-02"].status == "EMITTED", by["CD-02"].emits
@@ -213,6 +215,30 @@ def test_copper_debt_ledger_complete_and_deterministic():
     assert by["CD-06"].status == "PARTIAL"
     assert by["CD-08"].status == "PARTIAL", by["CD-08"].emits
     assert "rail fanout vias: none emitted" in by["CD-08"].emits
+
+
+def _anchor_fixture(tmp_path, monkeypatch) -> None:
+    (tmp_path / "m.py").write_text(
+        '"""a docstring claim."""\n# a comment claim\nANCHOR_HOME = ()\n')
+    monkeypatch.setattr(copper_debt, "REPO_ROOT", tmp_path)
+
+
+def test_a_dead_anchor_fails_loudly_naming_the_claim(tmp_path, monkeypatch):
+    _anchor_fixture(tmp_path, monkeypatch)
+    with pytest.raises(copper_debt.AnchorError) as gone:
+        copper_debt._where("CD-99", "m.py", "a phrase no structure carries")
+    assert "CD-99" in str(gone.value) and "no structure carries" in str(
+        gone.value)
+    with pytest.raises(copper_debt.AnchorError, match="CD-99"):
+        copper_debt._where("CD-99", "vanished.py", "anything at all")
+
+
+def test_an_anchor_may_not_bind_to_prose(tmp_path, monkeypatch):
+    _anchor_fixture(tmp_path, monkeypatch)
+    for prose in ("a comment claim", "a docstring claim"):
+        with pytest.raises(copper_debt.AnchorError, match="PROSE"):
+            copper_debt._where("CD-99", "m.py", prose)
+    assert copper_debt._where("CD-99", "m.py", "ANCHOR_HOME = ()") == "m.py:3"
 
 
 def test_copper_debt_unmeasured_without_board():

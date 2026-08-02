@@ -9,7 +9,6 @@ from subsystems.power import power as _lib
 _SUB = "power"
 _BRINGUP = "bringup (wave 2 rail-enable cells, dossier section 3.1)"
 
-# ANCHOR: copper_debt CD-01 greps this file for the phrase below — one line.
 THERMAL_CREDIT_C_PER_W = register(
     "power.thermal_credit", 30, "C/W",
     "The thermal gate now credits a CONSERVATIVE pour-aware effective RthJA "

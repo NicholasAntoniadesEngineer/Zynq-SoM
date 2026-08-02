@@ -9,7 +9,6 @@ C_FP = "Capacitor_SMD:C_1206_3225Metric"
 LCSC_BOB_SMITH_R = "C4275"
 LCSC_BOB_SMITH_C = "C9196"
 
-# CHASSIS_GND is a chassis-ground island, star-bonded to signal GND off-sheet.
 RAILS = ("CHASSIS_GND",)
 MDI_PORTS = (
     "MDI0_P", "MDI0_N",
@@ -55,8 +54,6 @@ def circuit(meta: Meta | dict | None = None) -> Circuit:
                     pair_with=f"MX{n}_N", impedance=PAIR_IMPEDANCE,
                     **meta.expect_kw(f"MX{n}_P"))
 
-    # Bob-Smith: each MEDIA centre tap -> 75R || 1n(2kV) into the BS_COMMON
-    # trunk, which reaches CHASSIS_GND through one 2kV isolation cap.
     for ch, _td_p, _td_n, _mx_p, _mx_n, mct, _tct in CHANNELS:
         c.part(f"R{ch + 1}", "Device:R", ETHERNET_BOB_SMITH_R, R_FP,
                LCSC=LCSC_BOB_SMITH_R)
