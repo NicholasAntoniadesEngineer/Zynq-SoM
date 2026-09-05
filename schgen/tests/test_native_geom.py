@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import copy
 import math
 
 import pytest
 
 from schgen.core import native as nat
 from schgen.generate import floorplan as fp
-from schgen.generate.floorplan import _fanout_sep, _Occupancy
+from schgen.generate.floorplan import _fanout_sep, _fanout_sep_py, _Occupancy
 
 _REACHES = (
     (0.0, 0.0, 0.0, 0.0),
@@ -43,7 +44,9 @@ def test_fanout_sep_matches_python(geom):
     bi = (0.1, 0.0, 0.0, 0.2)
     for axis in ("E", "W", "N", "S"):
         assert geom.fanout_sep(a, ai, b, bi, axis) == pytest.approx(
-            _fanout_sep(a, ai, b, bi, axis))
+            _fanout_sep_py(a, ai, b, bi, axis))
+        assert _fanout_sep(a, ai, b, bi, axis) == _fanout_sep_py(
+            a, ai, b, bi, axis)
 
 
 def test_boxes_separated_kernel(geom):
@@ -99,14 +102,35 @@ def test_place_near_matches_python(geom, monkeypatch):
 
 
 def test_box_gap_matches_python(geom):
-    from schgen.verify.placement_contract_gate import _box_gap
+    from schgen.verify.fanout_gate import _rect_gap, _rect_gap_py
+    from schgen.verify.placement_contract_gate import _box_gap, _box_gap_py
     pairs = (
         ((0.0, 0.0, 2.0, 1.0), (3.0, 0.0, 4.0, 1.0)),
         ((0.0, 0.0, 2.0, 1.0), (1.0, 0.5, 1.5, 0.8)),
         ((-2.0, -1.0, 0.0, 0.0), (0.5, 0.5, 1.0, 1.0)),
+        ((0.0, 0.0, 10.0, 8.0), (12.0, 1.0, 20.0, 9.0)),
+        ((0.0, 0.0, 10.0, 8.0), (8.0, 4.0, 14.0, 12.0)),
     )
     for a, b in pairs:
-        assert geom.box_gap(a, b) == pytest.approx(_box_gap(a, b))
+        assert geom.box_gap(a, b) == pytest.approx(_box_gap_py(a, b))
+        assert _box_gap(a, b) == _box_gap_py(a, b)
+        assert geom.bbox_gap(a, b) == pytest.approx(_box_gap_py(a, b))
+        assert geom.rect_gap(a, b) == pytest.approx(_rect_gap_py(a, b))
+        assert _rect_gap(a, b) == _rect_gap_py(a, b)
+    pins = {"1": (0.0, 0.0, 1.0, 1.0), "2": (4.0, 0.0, 5.0, 1.0)}
+    part = {"U1": (8.0, 0.0, 12.0, 4.0)}
+    from schgen.verify.placement_contract_gate import (
+        _part_to_part,
+        _part_to_part_py,
+        _pins_to_part,
+        _pins_to_part_py,
+    )
+    assert geom.min_box_gap(list(pins.values()), list(part.values())) == (
+        _pins_to_part_py(pins, part, ["1", "2"]))
+    assert _pins_to_part(pins, part, ["1", "2"]) == _pins_to_part_py(
+        pins, part, ["1", "2"])
+    assert _part_to_part(pins, part) == _part_to_part_py(pins, part)
+    assert geom.min_box_gap([], list(part.values())) is None
 
 
 def test_seat_dfs_picks_first_non_overlapping(geom):
@@ -587,6 +611,71 @@ def test_quantize_matches_python(geom):
         assert geom.gsnap(v, u) == round(round(v / u) * u, 3)
         assert geom.gfloor(v, u) == round(math.floor(v / u + 1e-6) * u, 3)
         assert geom.gceil(v, u) == round(math.ceil(v / u - 1e-6) * u, 3)
+
+
+def test_mst_and_median_match_python(geom):
+    from schgen.generate.floorplan_compose import (
+        weighted_median,
+        weighted_median_py,
+    )
+    from schgen.generate.ratsnest import _mst_edges, _mst_edges_py
+    pts = [
+        (0.0, 0.0, "A", "1"),
+        (3.0, 0.0, "B", "1"),
+        (0.0, 4.0, "C", "1"),
+        (3.0, 4.0, "D", "1"),
+        (1.5, 2.0, "E", "1"),
+    ]
+    assert geom.mst_manhattan([(p[0], p[1]) for p in pts]) == _mst_edges_py(pts)
+    assert _mst_edges(pts) == _mst_edges_py(pts)
+    assert geom.mst_manhattan([]) == []
+    assert geom.mst_manhattan([(0.0, 0.0)]) == []
+    pulls = [(1.0, 4.0), (0.05, 1.0), (1.0, 2.0), (1.0, 2.0)]
+    assert geom.weighted_median(pulls) == weighted_median_py(pulls)
+    assert weighted_median(pulls) == weighted_median_py(pulls)
+    src = [0, 1]
+    dst = [1, 0]
+    cost = [5.0, -0.3]
+    assert geom.constraint_edges_ok(src, dst, cost, [0.0, 4.0]) is True
+    assert geom.constraint_edges_ok(src, dst, cost, [0.0, 6.0]) is False
+
+
+def test_boxes_overlap_and_flip_to_bottom(geom):
+    from schgen.core.sexpr import Sym, _from_tagged, dumps
+    from schgen.generate.pcb.embed import (
+        _flip_to_bottom,
+        _flip_to_bottom_py,
+    )
+    from schgen.generate.pcb.stage_templates import (
+        _boxes_overlap,
+        _boxes_overlap_py,
+    )
+    a = (0.0, 0.0, 10.0, 8.0)
+    b = (10.2, 0.0, 16.0, 8.0)
+    assert geom.boxes_overlap(a, b, 0.3) is _boxes_overlap_py(a, b, 0.3)
+    assert _boxes_overlap(a, b, 0.3) is _boxes_overlap_py(a, b, 0.3)
+    assert geom.boxes_overlap(a, b, 0.3) is True
+    assert geom.boxes_overlap(a, b, 0.1) is False
+    node = [
+        Sym("footprint"), "Lib:FP",
+        [Sym("layer"), "F.Cu"],
+        [Sym("fp_text"), Sym("reference"), "R1",
+         [Sym("at"), 0.0, 0.0, 0.0],
+         [Sym("layer"), "F.SilkS"],
+         [Sym("effects"),
+          [Sym("font"), [Sym("size"), 1.0, 1.0]],
+          [Sym("justify"), Sym("left")]]],
+        [Sym("pad"), "1", Sym("smd"), Sym("rect"),
+         [Sym("at"), 1.0, 0.0],
+         [Sym("layers"), "F.Cu", "F.Paste", "F.Mask"]],
+    ]
+    py_node = copy.deepcopy(node)
+    cpp_node = copy.deepcopy(node)
+    _flip_to_bottom_py(py_node)
+    _flip_to_bottom(cpp_node)
+    assert dumps(cpp_node) == dumps(py_node)
+    tagged = geom.flip_to_bottom(copy.deepcopy(node))
+    assert dumps(_from_tagged(tagged)) == dumps(py_node)
 
 
 def test_timing_span_records():

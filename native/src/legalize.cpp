@@ -111,6 +111,21 @@ double bbox_gap(const Box4& a, const Box4& b) {
     return std::hypot(dx, dy);
 }
 
+double rect_gap(const Box4& a, const Box4& b) {
+    const double dx = std::max(std::max(b.x0 - a.x1, a.x0 - b.x1), 0.0);
+    const double dy = std::max(std::max(b.y0 - a.y1, a.y0 - b.y1), 0.0);
+    if (dx == 0.0 && dy == 0.0) {
+        return 0.0;
+    }
+    if (dx == 0.0) {
+        return dy;
+    }
+    if (dy == 0.0) {
+        return dx;
+    }
+    return std::sqrt(dx * dx + dy * dy);
+}
+
 std::pair<double, double> facing_dot(double zone_x, double zone_y,
                                      double out_x, double out_y,
                                      double down_x, double down_y) {
@@ -242,6 +257,121 @@ double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
         return 0.0;
     }
     return floor_mm + per_net_mm * static_cast<double>(n_airwires);
+}
+
+std::vector<std::pair<int, int>> mst_manhattan(
+    const std::vector<std::pair<double, double>>& pts) {
+    const int n = static_cast<int>(pts.size());
+    if (n < 2) {
+        return {};
+    }
+    std::vector<char> in_tree(static_cast<std::size_t>(n), 0);
+    in_tree[0] = 1;
+    std::vector<double> best_d(static_cast<std::size_t>(n));
+    std::vector<int> best_u(static_cast<std::size_t>(n), 0);
+    for (int i = 0; i < n; ++i) {
+        best_d[static_cast<std::size_t>(i)] =
+            std::fabs(pts[static_cast<std::size_t>(i)].first - pts[0].first)
+            + std::fabs(pts[static_cast<std::size_t>(i)].second - pts[0].second);
+    }
+    std::vector<std::pair<int, int>> edges;
+    edges.reserve(static_cast<std::size_t>(n - 1));
+    for (int step = 0; step < n - 1; ++step) {
+        int u = -1;
+        double ud = 0.0;
+        bool have = false;
+        for (int i = 0; i < n; ++i) {
+            if (in_tree[static_cast<std::size_t>(i)]) {
+                continue;
+            }
+            if (!have || best_d[static_cast<std::size_t>(i)] < ud) {
+                ud = best_d[static_cast<std::size_t>(i)];
+                u = i;
+                have = true;
+            }
+        }
+        if (u < 0) {
+            break;
+        }
+        in_tree[static_cast<std::size_t>(u)] = 1;
+        edges.emplace_back(best_u[static_cast<std::size_t>(u)], u);
+        for (int i = 0; i < n; ++i) {
+            if (in_tree[static_cast<std::size_t>(i)]) {
+                continue;
+            }
+            const double d =
+                std::fabs(pts[static_cast<std::size_t>(i)].first
+                          - pts[static_cast<std::size_t>(u)].first)
+                + std::fabs(pts[static_cast<std::size_t>(i)].second
+                            - pts[static_cast<std::size_t>(u)].second);
+            if (d < best_d[static_cast<std::size_t>(i)]) {
+                best_d[static_cast<std::size_t>(i)] = d;
+                best_u[static_cast<std::size_t>(i)] = u;
+            }
+        }
+    }
+    return edges;
+}
+
+double weighted_median(const std::vector<std::pair<double, double>>& pulls) {
+    if (pulls.empty()) {
+        throw std::runtime_error("weighted_median: pulls required");
+    }
+    std::vector<std::pair<double, double>> ordered = pulls;
+    std::stable_sort(ordered.begin(), ordered.end(),
+                     [](const std::pair<double, double>& a,
+                        const std::pair<double, double>& b) {
+                         return a.second < b.second;
+                     });
+    double tot = 0.0;
+    for (const auto& p : ordered) {
+        tot += p.first;
+    }
+    double acc = 0.0;
+    double best = ordered[0].second;
+    for (const auto& p : ordered) {
+        acc += p.first;
+        if (acc >= tot / 2.0 - 1e-12) {
+            best = p.second;
+            break;
+        }
+    }
+    return best;
+}
+
+bool constraint_edges_ok(const std::vector<int>& src,
+                         const std::vector<int>& dst,
+                         const std::vector<double>& cost,
+                         const std::vector<double>& pos) {
+    if (src.size() != dst.size() || src.size() != cost.size()) {
+        throw std::runtime_error("constraint_edges_ok: edge arrays required");
+    }
+    const int n = static_cast<int>(pos.size());
+    for (std::size_t i = 0; i < src.size(); ++i) {
+        if (src[i] < 0 || dst[i] < 0 || src[i] >= n || dst[i] >= n) {
+            throw std::runtime_error("constraint_edges_ok: endpoint out of range");
+        }
+        const double pu = pos[static_cast<std::size_t>(src[i])];
+        const double pv = pos[static_cast<std::size_t>(dst[i])];
+        if (pv - pu > cost[i] + 1e-9) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::optional<double> min_box_gap(const std::vector<Box4>& a,
+                                  const std::vector<Box4>& b) {
+    if (a.empty() || b.empty()) {
+        return std::nullopt;
+    }
+    double best = bbox_gap(a[0], b[0]);
+    for (const Box4& aa : a) {
+        for (const Box4& bb : b) {
+            best = std::min(best, bbox_gap(aa, bb));
+        }
+    }
+    return best;
 }
 
 }  // namespace schgen

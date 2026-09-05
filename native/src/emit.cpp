@@ -318,6 +318,68 @@ Sexpr emit_symbol(const std::string& lib_id, double x, double y, double rot,
     return Sexpr{std::move(node)};
 }
 
+namespace {
+
+bool is_sym_named(const Sexpr& node, const char* name) {
+    return std::holds_alternative<Sexpr::Sym>(node.v)
+        && std::get<Sexpr::Sym>(node.v).name == name;
+}
+
+}  // namespace
+
+void flip_to_bottom(Sexpr& node) {
+    if (!std::holds_alternative<SexprList>(node.v)) {
+        return;
+    }
+    SexprList& lst = std::get<SexprList>(node.v);
+    for (Sexpr& sub : lst) {
+        if (!std::holds_alternative<SexprList>(sub.v)) {
+            continue;
+        }
+        SexprList& sl = std::get<SexprList>(sub.v);
+        if (sl.empty()) {
+            continue;
+        }
+        if (is_sym_named(sl[0], "layer") || is_sym_named(sl[0], "layers")) {
+            for (std::size_t i = 1; i < sl.size(); ++i) {
+                if (std::holds_alternative<std::string>(sl[i].v)) {
+                    sl[i] = Sexpr{flip_layer_token(std::get<std::string>(sl[i].v))};
+                }
+            }
+        } else if (is_sym_named(sl[0], "effects")) {
+            Sexpr* just = nullptr;
+            for (Sexpr& child : sl) {
+                if (!std::holds_alternative<SexprList>(child.v)) {
+                    continue;
+                }
+                SexprList& cl = std::get<SexprList>(child.v);
+                if (!cl.empty() && is_sym_named(cl[0], "justify")) {
+                    just = &child;
+                    break;
+                }
+            }
+            if (just == nullptr) {
+                sl.push_back(L({S("justify"), S("mirror")}));
+            } else {
+                SexprList& jl = std::get<SexprList>(just->v);
+                bool has_mirror = false;
+                for (const Sexpr& tok : jl) {
+                    if (is_sym_named(tok, "mirror")) {
+                        has_mirror = true;
+                        break;
+                    }
+                }
+                if (!has_mirror) {
+                    jl.push_back(S("mirror"));
+                }
+            }
+            flip_to_bottom(sub);
+        } else {
+            flip_to_bottom(sub);
+        }
+    }
+}
+
 std::string flip_layer_token(const std::string& name) {
     if (name.size() >= 2 && name[0] == 'F' && name[1] == '.') {
         return "B." + name.substr(2);

@@ -33,6 +33,32 @@ _KNOWN_EXTERNAL_KEYS = {"flow", "downstream", "output_roles", "far", "near_max",
 _SOM_TOKEN = "@som"
 
 
+def weighted_median_py(pulls: list[tuple[float, float]]) -> float:
+    ordered = sorted(pulls, key=lambda pp: pp[1])
+    tot = sum(w for w, _ in ordered)
+    acc = 0.0
+    best = ordered[0][1]
+    for weight, pos in ordered:
+        acc += weight
+        if acc >= tot / 2 - 1e-12:
+            best = pos
+            break
+    return best
+
+
+def weighted_median(pulls: list[tuple[float, float]]) -> float:
+    if _nat.loaded():
+        got = _nat.module().weighted_median(pulls)
+        if _nat.trace():
+            ref = weighted_median_py(pulls)
+            if got != ref:
+                raise AssertionError(
+                    "native weighted_median DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return weighted_median_py(pulls)
+
+
 ESCAPE_SIDECAR = PROJECT_ROOT / "escape_block.json"
 
 
@@ -1032,15 +1058,7 @@ def legalize_compact(board_w: float, board_h: float,
                                 pulls.append((W_HOP, mid - co[i]))
                     pulls.append((W_SEED if not seed_only else 1.0,
                                   v.seed[i]))
-                    pulls.sort(key=lambda pp: pp[1])
-                    tot = sum(w for w, _ in pulls)
-                    acc = 0.0
-                    best = pulls[0][1]
-                    for w2, p2 in pulls:
-                        acc += w2
-                        if acc >= tot / 2 - 1e-12:
-                            best = p2
-                            break
+                    best = weighted_median(pulls)
                     q = _q.legalize_pose_quantum(best)
                     q = max(lo, min(q, hi))
                     old = pos[n]
@@ -1051,7 +1069,41 @@ def legalize_compact(board_w: float, board_h: float,
                 break
 
     def edges_ok(axis: str, pos: dict[str, float]) -> bool:
-        for u, v, c, _tag in build_edges(axis):
+        edges = build_edges(axis)
+        if _nat.loaded():
+            nodes: list[str] = []
+            index: dict[str, int] = {}
+            src: list[int] = []
+            dst: list[int] = []
+            cost: list[float] = []
+            for u, v, c, _tag in edges:
+                ui = index.get(u)
+                if ui is None:
+                    ui = len(nodes)
+                    index[u] = ui
+                    nodes.append(u)
+                vi = index.get(v)
+                if vi is None:
+                    vi = len(nodes)
+                    index[v] = vi
+                    nodes.append(v)
+                src.append(ui)
+                dst.append(vi)
+                cost.append(c)
+            posv = [pos.get(n, 0.0) for n in nodes]
+            got = _nat.module().constraint_edges_ok(src, dst, cost, posv)
+            if _nat.trace():
+                ref = True
+                for u, v, c, _tag in edges:
+                    if pos.get(v, 0.0) - pos.get(u, 0.0) > c + 1e-9:
+                        ref = False
+                        break
+                if got is not ref:
+                    raise AssertionError(
+                        "native constraint_edges_ok DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        for u, v, c, _tag in edges:
             pu = pos.get(u, 0.0)
             pv = pos.get(v, 0.0)
             if pv - pu > c + 1e-9:

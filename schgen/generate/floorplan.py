@@ -55,12 +55,26 @@ def _is_overmold_block(b) -> bool:
     return any(v in _OVERMOLD_FAMILIES for (_r, v, _w, _h) in b.conns)
 
 
-def _fanout_sep(a_reach: tuple, a_inset: tuple, b_reach: tuple, b_inset: tuple,
-                axis: str) -> float:
+def _fanout_sep_py(a_reach: tuple, a_inset: tuple, b_reach: tuple,
+                   b_inset: tuple, axis: str) -> float:
     ia, ib = {"W": (0, 1), "E": (1, 0), "N": (2, 3), "S": (3, 2)}[axis]
     sa = a_reach[ia] - b_inset[ib] if a_reach[ia] > 0.0 else 0.0
     sb = b_reach[ib] - a_inset[ia] if b_reach[ib] > 0.0 else 0.0
     return max(sa, sb)
+
+
+def _fanout_sep(a_reach: tuple, a_inset: tuple, b_reach: tuple, b_inset: tuple,
+                axis: str) -> float:
+    if _nat.loaded():
+        got = _nat.module().fanout_sep(a_reach, a_inset, b_reach, b_inset, axis)
+        if _nat.trace():
+            ref = _fanout_sep_py(a_reach, a_inset, b_reach, b_inset, axis)
+            if got != ref:
+                raise AssertionError(
+                    "native fanout_sep DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _fanout_sep_py(a_reach, a_inset, b_reach, b_inset, axis)
 
 
 def _pair_gap(a, b) -> float:
@@ -945,9 +959,9 @@ def _pairs_hold_py(ents: list, n_interior: int) -> bool:
                 for (bx, by, bw, bh, br, bi, bm, bpm, bmn) in ents[j]:
                     if not _occ_pair_active(am, apm, amn, bm, bpm, bmn):
                         continue
-                    gx = max(CLEAR, _fanout_sep(
+                    gx = max(CLEAR, _fanout_sep_py(
                         ar, ai, br, bi, "E" if ax <= bx else "W"))
-                    gy = max(CLEAR, _fanout_sep(
+                    gy = max(CLEAR, _fanout_sep_py(
                         ar, ai, br, bi, "S" if ay <= by else "N"))
                     if not (ax + aw + gx <= bx or bx + bw + gx <= ax
                             or ay + ah + gy <= by or by + bh + gy <= ay):

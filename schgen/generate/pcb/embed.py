@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import math
 
 from schgen.core import fallbacks as _fbk
@@ -62,7 +63,7 @@ def _flip_layer_token(name: str) -> str:
     return _flip_layer_token_py(name)
 
 
-def _flip_to_bottom(node: list) -> None:
+def _flip_to_bottom_py(node: list) -> None:
     for sub in node:
         if not isinstance(sub, list) or not sub:
             continue
@@ -70,7 +71,7 @@ def _flip_to_bottom(node: list) -> None:
         if head in (Sym("layer"), Sym("layers")):
             for i in range(1, len(sub)):
                 if isinstance(sub[i], str):
-                    sub[i] = _flip_layer_token(sub[i])
+                    sub[i] = _flip_layer_token_py(sub[i])
         elif head == Sym("effects"):
             just = next((x for x in sub if isinstance(x, list) and x
                          and x[0] == Sym("justify")), None)
@@ -78,9 +79,24 @@ def _flip_to_bottom(node: list) -> None:
                 sub.append([Sym("justify"), Sym("mirror")])
             elif Sym("mirror") not in just:
                 just.append(Sym("mirror"))
-            _flip_to_bottom(sub)
+            _flip_to_bottom_py(sub)
         else:
-            _flip_to_bottom(sub)
+            _flip_to_bottom_py(sub)
+
+
+def _flip_to_bottom(node: list) -> None:
+    if _nat.loaded():
+        got = _from_tagged(_nat.module().flip_to_bottom(node))
+        if _nat.trace():
+            ref = copy.deepcopy(node)
+            _flip_to_bottom_py(ref)
+            if sexpr.dumps(got) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native flip_to_bottom DIVERGENCE: "
+                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+        node[:] = got
+        return
+    _flip_to_bottom_py(node)
 
 
 def _embed_footprint(inst, uid) -> list:

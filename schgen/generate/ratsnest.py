@@ -4,6 +4,7 @@ import argparse
 import colorsys
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core.project import PROJECT_ROOT
 from schgen.generate import pcb as pcb_mod
 from schgen.generate.pcb import (
@@ -45,8 +46,8 @@ def _hex(rgb: tuple[int, int, int]) -> str:
     return "#{:02x}{:02x}{:02x}".format(*rgb)
 
 
-def _mst_edges(pts: list[tuple[float, float, str, str]]
-               ) -> list[tuple[int, int]]:
+def _mst_edges_py(pts: list[tuple[float, float, str, str]]
+                  ) -> list[tuple[int, int]]:
     n = len(pts)
     if n < 2:
         return []
@@ -74,6 +75,21 @@ def _mst_edges(pts: list[tuple[float, float, str, str]]
             if d < best[i][0]:
                 best[i] = (d, u)
     return edges
+
+
+def _mst_edges(pts: list[tuple[float, float, str, str]]
+               ) -> list[tuple[int, int]]:
+    if _nat.loaded():
+        got = [(int(a), int(b))
+               for a, b in _nat.module().mst_manhattan(
+                   [(p[0], p[1]) for p in pts])]
+        if _nat.trace():
+            ref = _mst_edges_py(pts)
+            if got != ref:
+                raise AssertionError(
+                    f"native mst_manhattan DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _mst_edges_py(pts)
 
 
 def net_mst_edges(model: PcbModel,

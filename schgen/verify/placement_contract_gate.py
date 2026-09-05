@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
 from schgen.core.project import PROJECT_ROOT
 from schgen.core.project import spec as _project_spec
@@ -246,15 +247,28 @@ def _inst_pad_boxes(inst) -> dict[str, tuple[float, float, float, float]]:
             for n, b in rel.items()}
 
 
-def _box_gap(a: tuple[float, float, float, float],
-             b: tuple[float, float, float, float]) -> float:
+def _box_gap_py(a: tuple[float, float, float, float],
+                b: tuple[float, float, float, float]) -> float:
     dx = max(a[0] - b[2], b[0] - a[2], 0.0)
     dy = max(a[1] - b[3], b[1] - a[3], 0.0)
     return math.hypot(dx, dy)
 
 
-def _pins_to_part(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
-                  pins: list[str]) -> float | None:
+def _box_gap(a: tuple[float, float, float, float],
+             b: tuple[float, float, float, float]) -> float:
+    if _nat.loaded():
+        got = _nat.module().box_gap(a, b)
+        if _nat.trace():
+            ref = _box_gap_py(a, b)
+            if got != ref:
+                raise AssertionError(
+                    f"native box_gap DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _box_gap_py(a, b)
+
+
+def _pins_to_part_py(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
+                     pins: list[str]) -> float | None:
     best: float | None = None
     part = list(part_boxes.values())
     if not part:
@@ -264,19 +278,50 @@ def _pins_to_part(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
         if pb is None:
             continue
         for qb in part:
-            g = _box_gap(pb, qb)
+            g = _box_gap_py(pb, qb)
+            best = g if best is None else min(best, g)
+    return best
+
+
+def _pins_to_part(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
+                  pins: list[str]) -> float | None:
+    part = list(part_boxes.values())
+    pin_hits = [pin_boxes[p] for p in pins if p in pin_boxes]
+    if _nat.loaded():
+        got = _nat.module().min_box_gap(pin_hits, part)
+        if _nat.trace():
+            ref = _pins_to_part_py(pin_boxes, part_boxes, pins)
+            if got != ref:
+                raise AssertionError(
+                    "native min_box_gap DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _pins_to_part_py(pin_boxes, part_boxes, pins)
+
+
+def _part_to_part_py(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
+                     ) -> float | None:
+    best: float | None = None
+    for ab in a_boxes.values():
+        for bb in b_boxes.values():
+            g = _box_gap_py(ab, bb)
             best = g if best is None else min(best, g)
     return best
 
 
 def _part_to_part(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
                   ) -> float | None:
-    best: float | None = None
-    for ab in a_boxes.values():
-        for bb in b_boxes.values():
-            g = _box_gap(ab, bb)
-            best = g if best is None else min(best, g)
-    return best
+    if _nat.loaded():
+        got = _nat.module().min_box_gap(list(a_boxes.values()),
+                                        list(b_boxes.values()))
+        if _nat.trace():
+            ref = _part_to_part_py(a_boxes, b_boxes)
+            if got != ref:
+                raise AssertionError(
+                    "native min_box_gap DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _part_to_part_py(a_boxes, b_boxes)
 
 
 def _board_refs_by_sheet(sheet_name: str, parts=None) -> dict[str, str]:

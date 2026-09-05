@@ -5,6 +5,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.generate.pcb import PcbModel, _inst_courtyard
 
 _TIERS: tuple[tuple[int, float, str], ...] = (
@@ -68,7 +69,7 @@ def intelligent_need(pins: int) -> tuple[float, str]:
     return _TIER_TOP
 
 
-def _rect_gap(a, b) -> float:
+def _rect_gap_py(a, b) -> float:
     ax0, ay0, ax1, ay1 = a
     bx0, by0, bx1, by1 = b
     dx = max(bx0 - ax1, ax0 - bx1, 0.0)
@@ -80,6 +81,18 @@ def _rect_gap(a, b) -> float:
     if dy == 0.0:
         return dx
     return (dx * dx + dy * dy) ** 0.5
+
+
+def _rect_gap(a, b) -> float:
+    if _nat.loaded():
+        got = _nat.module().rect_gap(a, b)
+        if _nat.trace():
+            ref = _rect_gap_py(a, b)
+            if got != ref:
+                raise AssertionError(
+                    f"native rect_gap DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _rect_gap_py(a, b)
 
 
 @dataclass

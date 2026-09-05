@@ -74,10 +74,24 @@ def _pin_box(ic_boxes: dict[str, tuple], pins: list[str]
             max(b[2] for b in boxes), max(b[3] for b in boxes))
 
 
-def _boxes_overlap(a: tuple[float, float, float, float],
-                   b: tuple[float, float, float, float], halo: float) -> bool:
+def _boxes_overlap_py(a: tuple[float, float, float, float],
+                      b: tuple[float, float, float, float], halo: float) -> bool:
     return (a[0] - halo < b[2] and a[2] + halo > b[0]
             and a[1] - halo < b[3] and a[3] + halo > b[1])
+
+
+def _boxes_overlap(a: tuple[float, float, float, float],
+                   b: tuple[float, float, float, float], halo: float) -> bool:
+    if _nat.loaded():
+        got = _nat.module().boxes_overlap(a, b, halo)
+        if _nat.trace():
+            ref = _boxes_overlap_py(a, b, halo)
+            if got is not ref:
+                raise AssertionError(
+                    "native boxes_overlap DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _boxes_overlap_py(a, b, halo)
 
 
 _BUCK_CACHE: dict[tuple, list[tuple[float, float, float]]] = {}

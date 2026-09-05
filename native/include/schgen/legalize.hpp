@@ -32,6 +32,7 @@ BellmanResult bellman_ford(std::size_t node_count,
 double flow_budget(double board_w, double board_h,
                    const std::optional<Box4>& som_core);
 double bbox_gap(const Box4& a, const Box4& b);
+double rect_gap(const Box4& a, const Box4& b);
 std::pair<double, double> facing_dot(double zone_x, double zone_y,
                                      double out_x, double out_y,
                                      double down_x, double down_y);
@@ -43,6 +44,15 @@ std::optional<std::pair<double, double>> predicted_centroid(
 
 double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
                          double per_net_mm);
+std::vector<std::pair<int, int>> mst_manhattan(
+    const std::vector<std::pair<double, double>>& pts);
+double weighted_median(const std::vector<std::pair<double, double>>& pulls);
+bool constraint_edges_ok(const std::vector<int>& src,
+                         const std::vector<int>& dst,
+                         const std::vector<double>& cost,
+                         const std::vector<double>& pos);
+std::optional<double> min_box_gap(const std::vector<Box4>& a,
+                                  const std::vector<Box4>& b);
 std::optional<Box4> pad_union_hull(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         pad_union);

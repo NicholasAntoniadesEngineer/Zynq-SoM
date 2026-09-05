@@ -223,6 +223,11 @@ NB_MODULE(_geom, m) {
              const std::tuple<double, double, double, double>& b) {
               return schgen::bbox_gap(as_box(a), as_box(b));
           });
+    m.def("rect_gap",
+          [](const std::tuple<double, double, double, double>& a,
+             const std::tuple<double, double, double, double>& b) {
+              return schgen::rect_gap(as_box(a), as_box(b));
+          });
     m.def("facing_dot",
           [](double zx, double zy, double ox, double oy, double dx,
              double dy) {
@@ -259,6 +264,42 @@ NB_MODULE(_geom, m) {
               return std::make_tuple(hit->x0, hit->y0, hit->x1, hit->y1);
           });
     m.def("channel_demand_mm", &schgen::channel_demand_mm);
+    m.def("mst_manhattan",
+          [](const std::vector<PtTup>& pts) {
+              auto edges = schgen::mst_manhattan(as_pts(pts));
+              std::vector<std::tuple<int, int>> out;
+              out.reserve(edges.size());
+              for (const auto& e : edges) {
+                  out.emplace_back(e.first, e.second);
+              }
+              return out;
+          });
+    m.def("weighted_median",
+          [](const std::vector<std::tuple<double, double>>& pulls) {
+              std::vector<std::pair<double, double>> rows;
+              rows.reserve(pulls.size());
+              for (const auto& p : pulls) {
+                  rows.emplace_back(std::get<0>(p), std::get<1>(p));
+              }
+              return schgen::weighted_median(rows);
+          });
+    m.def("constraint_edges_ok",
+          [](const std::vector<int>& src, const std::vector<int>& dst,
+             const std::vector<double>& cost, const std::vector<double>& pos) {
+              return schgen::constraint_edges_ok(src, dst, cost, pos);
+          });
+    m.def("min_box_gap",
+          [](const std::vector<std::tuple<double, double, double, double>>& a,
+             const std::vector<std::tuple<double, double, double, double>>& b)
+              -> std::optional<double> {
+              return schgen::min_box_gap(as_boxes(a), as_boxes(b));
+          });
+    m.def("flip_to_bottom",
+          [](nb::handle node) {
+              auto tree = sexpr_from_py(node);
+              schgen::flip_to_bottom(tree);
+              return sexpr_to_tagged(tree);
+          });
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);
