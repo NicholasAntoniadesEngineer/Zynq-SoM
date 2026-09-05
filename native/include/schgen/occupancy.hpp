@@ -114,5 +114,7 @@ bool boxes_separated(double ax, double ay, double aw, double ah,
                      double gx, double gy);
 bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
                 std::size_t subject_count, double clear);
+bool quads_overlap(const std::vector<std::pair<double, double>>& a,
+                   const std::vector<std::pair<double, double>>& b);
 
 }  // namespace schgen

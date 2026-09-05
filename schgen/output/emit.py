@@ -137,6 +137,9 @@ class _IdFactory:
 
 
 def _effects(size: float = 1.27, hide: bool = False, justify: str | None = None):
+    if _nat.loaded():
+        return _from_tagged(_nat.module().emit_effects(
+            size, hide, justify or ""))
     e: list = [Sym("effects"), [Sym("font"), [Sym("size"), size, size]]]
     if justify:
         e.append([Sym("justify"), *[Sym(t) for t in justify.split()]])
@@ -147,6 +150,9 @@ def _effects(size: float = 1.27, hide: bool = False, justify: str | None = None)
 
 def _prop(name: str, value: str, x: float, y: float, rot: int = 0,
           hide: bool = False) -> list:
+    if _nat.loaded():
+        return _from_tagged(_nat.module().emit_property(
+            name, value, x, y, float(rot), hide))
     return [Sym("property"), name, value,
             [Sym("at"), x, y, rot],
             _effects(hide=hide)]
@@ -213,17 +219,27 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
     for h in design.hlabels:
         just = "right" if h.rotation in (180, 270) else "left"
         tag = "global_label" if design.standalone else "hierarchical_label"
-        doc.append([Sym(tag), h.name,
-                    [Sym("shape"), Sym(h.shape)],
-                    [Sym("at"), h.x, h.y, h.rotation],
-                    _effects(justify=just),
-                    [Sym("uuid"), uid("hlabel")]])
+        if _nat.loaded():
+            doc.append(_from_tagged(_nat.module().emit_sch_label(
+                tag, h.name, h.shape, h.x, h.y, float(h.rotation), just,
+                uid("hlabel"))))
+        else:
+            doc.append([Sym(tag), h.name,
+                        [Sym("shape"), Sym(h.shape)],
+                        [Sym("at"), h.x, h.y, h.rotation],
+                        _effects(justify=just),
+                        [Sym("uuid"), uid("hlabel")]])
     for ll in design.llabels:
         just = "right bottom" if ll.rotation == 180 else "left bottom"
-        doc.append([Sym("label"), ll.name,
-                    [Sym("at"), ll.x, ll.y, ll.rotation],
-                    _effects(justify=just),
-                    [Sym("uuid"), uid("llabel")]])
+        if _nat.loaded():
+            doc.append(_from_tagged(_nat.module().emit_sch_label(
+                "label", ll.name, "", ll.x, ll.y, float(ll.rotation), just,
+                uid("llabel"))))
+        else:
+            doc.append([Sym("label"), ll.name,
+                        [Sym("at"), ll.x, ll.y, ll.rotation],
+                        _effects(justify=just),
+                        [Sym("uuid"), uid("llabel")]])
     for sh in design.sheets:
         node: list = [Sym("sheet"),
                       [Sym("at"), sh.x, sh.y],

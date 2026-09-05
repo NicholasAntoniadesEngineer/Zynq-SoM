@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
@@ -59,6 +60,17 @@ std::vector<schgen::Seg2> as_segs(const std::vector<BoxTup>& raw) {
     for (const auto& t : raw) {
         out.push_back(schgen::Seg2{std::get<0>(t), std::get<1>(t),
                                    std::get<2>(t), std::get<3>(t)});
+    }
+    return out;
+}
+
+using PtTup = std::tuple<double, double>;
+
+std::vector<std::pair<double, double>> as_pts(const std::vector<PtTup>& raw) {
+    std::vector<std::pair<double, double>> out;
+    out.reserve(raw.size());
+    for (const auto& t : raw) {
+        out.emplace_back(std::get<0>(t), std::get<1>(t));
     }
     return out;
 }
@@ -404,6 +416,15 @@ NB_MODULE(_geom, m) {
               return sexpr_to_tagged(schgen::emit_segment(
                   x1, y1, x2, y2, width, layer, net, uuid));
           });
+    m.def("emit_gr_line",
+          [](double ax, double ay, double bx, double by, double width,
+             const char* layer, const char* uuid) {
+              if (layer == nullptr || uuid == nullptr) {
+                  throw std::runtime_error("emit_gr_line: layer and uuid required");
+              }
+              return sexpr_to_tagged(schgen::emit_gr_line(
+                  ax, ay, bx, by, width, layer, uuid));
+          });
     m.def("emit_edge_line",
           [](double ax, double ay, double bx, double by, const char* uuid) {
               if (uuid == nullptr) {
@@ -411,6 +432,76 @@ NB_MODULE(_geom, m) {
               }
               return sexpr_to_tagged(
                   schgen::emit_edge_line(ax, ay, bx, by, uuid));
+          });
+    m.def("emit_gr_text",
+          [](const char* text, double x, double y, double rot,
+             const char* layer, const char* uuid, double font_size,
+             double thickness, const char* justify) {
+              if (text == nullptr || layer == nullptr || uuid == nullptr
+                  || justify == nullptr) {
+                  throw std::runtime_error(
+                      "emit_gr_text: text, layer, uuid, justify required");
+              }
+              return sexpr_to_tagged(schgen::emit_gr_text(
+                  text, x, y, rot, layer, uuid, font_size, thickness,
+                  justify));
+          });
+    m.def("emit_fill_zone",
+          [](double net, const char* net_name, const char* zname,
+             const char* layer, const std::vector<PtTup>& corners,
+             const char* uuid, double clearance, bool solid,
+             double min_thickness) {
+              if (net_name == nullptr || zname == nullptr || layer == nullptr
+                  || uuid == nullptr) {
+                  throw std::runtime_error(
+                      "emit_fill_zone: net_name, zname, layer, uuid required");
+              }
+              return sexpr_to_tagged(schgen::emit_fill_zone(
+                  net, net_name, zname, layer, as_pts(corners), uuid,
+                  clearance, solid, min_thickness));
+          });
+    m.def("emit_keepout_zone",
+          [](const std::vector<PtTup>& corners, const char* uuid,
+             const char* name) {
+              if (uuid == nullptr || name == nullptr) {
+                  throw std::runtime_error(
+                      "emit_keepout_zone: uuid and name required");
+              }
+              return sexpr_to_tagged(
+                  schgen::emit_keepout_zone(as_pts(corners), uuid, name));
+          });
+    m.def("emit_effects",
+          [](double size, bool hide, const char* justify) {
+              if (justify == nullptr) {
+                  throw std::runtime_error("emit_effects: justify required");
+              }
+              return sexpr_to_tagged(schgen::emit_effects(size, hide, justify));
+          });
+    m.def("emit_property",
+          [](const char* name, const char* value, double x, double y,
+             double rot, bool hide) {
+              if (name == nullptr || value == nullptr) {
+                  throw std::runtime_error(
+                      "emit_property: name and value required");
+              }
+              return sexpr_to_tagged(
+                  schgen::emit_property(name, value, x, y, rot, hide));
+          });
+    m.def("emit_sch_label",
+          [](const char* tag, const char* name, const char* shape, double x,
+             double y, double rot, const char* justify, const char* uuid) {
+              if (tag == nullptr || name == nullptr || shape == nullptr
+                  || justify == nullptr || uuid == nullptr) {
+                  throw std::runtime_error(
+                      "emit_sch_label: tag, name, shape, justify, uuid "
+                      "required");
+              }
+              return sexpr_to_tagged(schgen::emit_sch_label(
+                  tag, name, shape, x, y, rot, justify, uuid));
+          });
+    m.def("quads_overlap",
+          [](const std::vector<PtTup>& a, const std::vector<PtTup>& b) {
+              return schgen::quads_overlap(as_pts(a), as_pts(b));
           });
     m.def("emit_wire",
           [](double x0, double y0, double x1, double y1, const char* uuid) {

@@ -284,9 +284,15 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
     x0, y0, x1, y1 = box
     out: list = []
     pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
+    geom = _nat.module() if _nat.loaded() else None
     for i in range(4):
         ax, ay = pts[i]
         bx, by = pts[i + 1]
+        if geom is not None:
+            out.append(_from_tagged(geom.emit_gr_line(
+                round(ax, 3), round(ay, 3), round(bx, 3), round(by, 3),
+                0.15, "F.SilkS", uid(f"som-silk:{i}"))))
+            continue
         out.append([Sym("gr_line"),
                     [Sym("start"), round(ax, 3), round(ay, 3)],
                     [Sym("end"), round(bx, 3), round(by, 3)],
@@ -295,6 +301,14 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
                     [Sym("layer"), "F.SilkS"],
                     [Sym("uuid"), uid(f"som-silk:{i}")]])
     ch = 3.0
+    if geom is not None:
+        out.append(_from_tagged(geom.emit_gr_line(
+            round(x0, 3), round(y0 + ch, 3), round(x0 + ch, 3), round(y0, 3),
+            0.15, "F.SilkS", uid("som-silk:ch"))))
+        out.append(_from_tagged(geom.emit_gr_text(
+            "Zynq SoM", round(x0 + 1.0, 3), round(y0 - 1.2, 3), 0.0,
+            "F.SilkS", uid("som-silk:label"), 1.4, 0.25, "left bottom")))
+        return out
     out.append([Sym("gr_line"),
                 [Sym("start"), round(x0, 3), round(y0 + ch, 3)],
                 [Sym("end"), round(x0 + ch, 3), round(y0, 3)],
@@ -348,9 +362,14 @@ def _segment_node(c: dict, uid) -> list:
 # Marker only — planes + fanout vias right beneath the connector stay legal.
 def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
     x0, y0, x1, y1 = box
-    corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-    pts = [Sym("pts")] + [[Sym("xy"), round(px, 3), round(py, 3)]
-                          for px, py in corners]
+    corners = [(round(x0, 3), round(y0, 3)),
+               (round(x1, 3), round(y0, 3)),
+               (round(x1, 3), round(y1, 3)),
+               (round(x0, 3), round(y1, 3))]
+    if _nat.loaded():
+        return _from_tagged(_nat.module().emit_keepout_zone(
+            corners, uid("som-keepout"), "SoM_body_keepout"))
+    pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
     return [Sym("zone"),
             [Sym("net"), 0], [Sym("net_name"), ""],
             [Sym("layers"), "F.Cu", "B.Cu"],
@@ -390,6 +409,10 @@ def _corners_rot(rect: tuple[float, float, float, float], inst,
 def _fill_zone(net_num: int, net_name: str, zname: str, layer: str,
                corners: list[tuple[float, float]], uid_key: str, uid,
                clearance: float, solid: bool) -> list:
+    if _nat.loaded():
+        return _from_tagged(_nat.module().emit_fill_zone(
+            float(net_num), net_name, zname, layer, corners, uid(uid_key),
+            clearance, solid, ZONE_MIN_THICKNESS))
     pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
     connect = ([Sym("connect_pads"), Sym("yes"), [Sym("clearance"), clearance]]
                if solid else
@@ -665,8 +688,8 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
     return zones, vias
 
 
-def _quads_overlap(a: list[tuple[float, float]],
-                   b: list[tuple[float, float]]) -> bool:
+def _quads_overlap_py(a: list[tuple[float, float]],
+                      b: list[tuple[float, float]]) -> bool:
     for poly in (a, b):
         for i in range(len(poly)):
             x0, y0 = poly[i]
@@ -677,6 +700,19 @@ def _quads_overlap(a: list[tuple[float, float]],
             if max(pa) <= min(pb) + 1e-9 or max(pb) <= min(pa) + 1e-9:
                 return False
     return True
+
+
+def _quads_overlap(a: list[tuple[float, float]],
+                   b: list[tuple[float, float]]) -> bool:
+    if _nat.loaded():
+        got = _nat.module().quads_overlap(a, b)
+        if _nat.trace():
+            ref = _quads_overlap_py(a, b)
+            if got is not ref:
+                raise AssertionError(
+                    f"native quads_overlap DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _quads_overlap_py(a, b)
 
 
 def _stagger_overlapping_pours(

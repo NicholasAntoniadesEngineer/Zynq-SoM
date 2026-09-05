@@ -203,6 +203,51 @@ bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
     return true;
 }
 
+bool quads_overlap(const std::vector<std::pair<double, double>>& a,
+                   const std::vector<std::pair<double, double>>& b) {
+    if (a.size() < 3 || b.size() < 3) {
+        throw std::runtime_error("quads_overlap: each polygon needs 3 points");
+    }
+    const std::vector<std::pair<double, double>>* polys[2] = {&a, &b};
+    for (const auto* poly : polys) {
+        const std::size_t n = poly->size();
+        for (std::size_t i = 0; i < n; ++i) {
+            const double x0 = (*poly)[i].first;
+            const double y0 = (*poly)[i].second;
+            const double x1 = (*poly)[(i + 1) % n].first;
+            const double y1 = (*poly)[(i + 1) % n].second;
+            const double nx = y1 - y0;
+            const double ny = x0 - x1;
+            double pa_min = 0.0;
+            double pa_max = 0.0;
+            double pb_min = 0.0;
+            double pb_max = 0.0;
+            for (std::size_t k = 0; k < a.size(); ++k) {
+                const double d = a[k].first * nx + a[k].second * ny;
+                if (k == 0) {
+                    pa_min = pa_max = d;
+                } else {
+                    pa_min = std::min(pa_min, d);
+                    pa_max = std::max(pa_max, d);
+                }
+            }
+            for (std::size_t k = 0; k < b.size(); ++k) {
+                const double d = b[k].first * nx + b[k].second * ny;
+                if (k == 0) {
+                    pb_min = pb_max = d;
+                } else {
+                    pb_min = std::min(pb_min, d);
+                    pb_max = std::max(pb_max, d);
+                }
+            }
+            if (pa_max <= pb_min + 1e-9 || pb_max <= pa_min + 1e-9) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 Occupancy::Occupancy(double board_w, double board_h, double clear,
                      double bucket, double reach_bound, double step,
                      double frontier_half)

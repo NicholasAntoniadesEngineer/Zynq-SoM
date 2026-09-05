@@ -177,6 +177,82 @@ def test_emit_nodes_match_python(geom):
     assert dumps(via) == dumps(want)
     wire = _from_tagged(geom.emit_wire(0.0, 0.0, 2.54, 0.0, "uid-wire"))
     assert wire[0] == Sym("wire")
+    line = _from_tagged(geom.emit_gr_line(
+        1.0, 2.0, 3.0, 4.0, 0.15, "F.SilkS", "uid-silk"))
+    assert dumps(line) == dumps([
+        Sym("gr_line"),
+        [Sym("start"), 1.0, 2.0], [Sym("end"), 3.0, 4.0],
+        [Sym("stroke"), [Sym("width"), 0.15], [Sym("type"), Sym("default")]],
+        [Sym("layer"), "F.SilkS"],
+        [Sym("uuid"), "uid-silk"],
+    ])
+    text = _from_tagged(geom.emit_gr_text(
+        "Zynq SoM", 10.0, 20.0, 0.0, "F.SilkS", "uid-txt", 1.4, 0.25,
+        "left bottom"))
+    assert dumps(text) == dumps([
+        Sym("gr_text"), "Zynq SoM",
+        [Sym("at"), 10.0, 20.0, 0.0],
+        [Sym("layer"), "F.SilkS"],
+        [Sym("uuid"), "uid-txt"],
+        [Sym("effects"),
+         [Sym("font"), [Sym("size"), 1.4, 1.4], [Sym("thickness"), 0.25]],
+         [Sym("justify"), Sym("left"), Sym("bottom")]],
+    ])
+    zone = _from_tagged(geom.emit_fill_zone(
+        1.0, "GND", "GND_plane_In1", "In1.Cu",
+        [(0.0, 0.0), (10.0, 0.0), (10.0, 8.0), (0.0, 8.0)],
+        "uid-zone", 0.3, False, 0.25))
+    assert dumps(zone) == dumps([
+        Sym("zone"),
+        [Sym("net"), 1], [Sym("net_name"), "GND"],
+        [Sym("layer"), "In1.Cu"],
+        [Sym("uuid"), "uid-zone"],
+        [Sym("name"), "GND_plane_In1"],
+        [Sym("hatch"), Sym("edge"), 0.5],
+        [Sym("connect_pads"), [Sym("clearance"), 0.3]],
+        [Sym("min_thickness"), 0.25],
+        [Sym("filled_areas_thickness"), Sym("no")],
+        [Sym("fill"), Sym("yes"), [Sym("thermal_gap"), 0.5],
+         [Sym("thermal_bridge_width"), 0.5]],
+        [Sym("polygon"),
+         [Sym("pts"),
+          [Sym("xy"), 0.0, 0.0], [Sym("xy"), 10.0, 0.0],
+          [Sym("xy"), 10.0, 8.0], [Sym("xy"), 0.0, 8.0]]],
+    ])
+    keep = _from_tagged(geom.emit_keepout_zone(
+        [(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 2.0)],
+        "uid-ko", "SoM_body_keepout"))
+    assert keep[0] == Sym("zone")
+    lab = _from_tagged(geom.emit_sch_label(
+        "global_label", "USB_DP", "bidirectional", 12.7, 5.08, 180.0,
+        "right", "uid-lab"))
+    assert dumps(lab) == dumps([
+        Sym("global_label"), "USB_DP",
+        [Sym("shape"), Sym("bidirectional")],
+        [Sym("at"), 12.7, 5.08, 180.0],
+        [Sym("effects"),
+         [Sym("font"), [Sym("size"), 1.27, 1.27]],
+         [Sym("justify"), Sym("right")]],
+        [Sym("uuid"), "uid-lab"],
+    ])
+    prop = _from_tagged(geom.emit_property(
+        "Reference", "R1", 0.0, -2.54, 0.0, False))
+    assert dumps(prop) == dumps([
+        Sym("property"), "Reference", "R1",
+        [Sym("at"), 0.0, -2.54, 0.0],
+        [Sym("effects"), [Sym("font"), [Sym("size"), 1.27, 1.27]]],
+    ])
+
+
+def test_quads_overlap_matches_python(geom):
+    from schgen.generate.pcb.embed import _quads_overlap_py
+    a = [(0.0, 0.0), (4.0, 0.0), (4.0, 3.0), (0.0, 3.0)]
+    b = [(3.0, 1.0), (7.0, 1.0), (7.0, 4.0), (3.0, 4.0)]
+    c = [(10.0, 0.0), (12.0, 0.0), (12.0, 2.0), (10.0, 2.0)]
+    assert geom.quads_overlap(a, b) is True
+    assert geom.quads_overlap(a, c) is False
+    assert geom.quads_overlap(a, b) == _quads_overlap_py(a, b)
+    assert geom.quads_overlap(a, c) == _quads_overlap_py(a, c)
 
 
 def test_pairs_hold_matches_python(geom):
