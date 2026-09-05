@@ -218,6 +218,34 @@ NB_MODULE(_geom, m) {
               auto hit = schgen::pair_axis(as_box(a), as_box(b));
               return std::make_tuple(hit.axis_x ? "x" : "y", hit.a_first);
           });
+    m.def("wall_sep_edges",
+          [](bool axis_x, const std::vector<std::string>& names,
+             const std::vector<double>& sizes, double span, double clear,
+             const std::vector<std::tuple<bool, std::string, std::string,
+                                          double>>& seps,
+             const std::vector<std::tuple<std::string, BoxTup>>& frects) {
+              std::vector<schgen::SepSpec> spec;
+              spec.reserve(seps.size());
+              for (const auto& s : seps) {
+                  spec.push_back(schgen::SepSpec{std::get<0>(s), std::get<1>(s),
+                                                 std::get<2>(s), std::get<3>(s)});
+              }
+              std::vector<std::pair<std::string, schgen::Box4>> fr;
+              fr.reserve(frects.size());
+              for (const auto& r : frects) {
+                  fr.emplace_back(std::get<0>(r), as_box(std::get<1>(r)));
+              }
+              auto rows = schgen::wall_sep_edges(axis_x, names, sizes, span,
+                                                 clear, spec, fr);
+              std::vector<std::tuple<std::string, std::string, double,
+                                     std::string, int, std::string>> out;
+              out.reserve(rows.size());
+              for (const auto& e : rows) {
+                  out.emplace_back(e.src, e.dst, e.cost, e.kind, e.sep_index,
+                                   e.wall_name);
+              }
+              return out;
+          });
     m.def("near_max_edges",
           [](const std::string& subject, const std::string& target,
              double bound, const char* axis, const BoxTup& hs,

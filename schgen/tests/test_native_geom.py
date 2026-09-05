@@ -959,6 +959,23 @@ def test_near_max_edges_matches_pair_axis(geom):
     assert rows_y[0][3] is True
 
 
+def test_wall_sep_edges_matches_python(geom):
+    names = ["usb", "hdmi"]
+    sizes = [12.0, 10.0]
+    seps = [
+        (True, "usb", "hdmi", 1.5),
+        (True, "#som", "usb", 2.0),
+        (False, "usb", "hdmi", 0.8),
+    ]
+    frects = [("som", (20.0, 30.0, 70.0, 80.0))]
+    rows = geom.wall_sep_edges(True, names, sizes, 168.0, 0.3, seps, frects)
+    assert ("#0", "usb", 168.0 - 0.3 - 12.0, "wall-hi", -1, "usb") in [
+        tuple(r) for r in rows]
+    assert any(r[3] == "sep" and r[0] == "hdmi" and r[1] == "usb" for r in rows)
+    assert any(r[3] == "sep" and r[0] == "usb" and r[1] == "#0" for r in rows)
+    assert all(r[3] != "sep" or seps[r[4]][0] is True for r in rows)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

@@ -72,6 +72,28 @@ struct NearMaxEdge {
     bool perp = false;
 };
 
+struct WallSepEdge {
+    std::string src;
+    std::string dst;
+    double cost = 0.0;
+    std::string kind;
+    int sep_index = -1;
+    std::string wall_name;
+};
+
+struct SepSpec {
+    bool axis_x = true;
+    std::string lo;
+    std::string hi;
+    double gap = 0.0;
+};
+
+std::vector<WallSepEdge> wall_sep_edges(
+    bool axis_x, const std::vector<std::string>& names,
+    const std::vector<double>& sizes, double span, double clear,
+    const std::vector<SepSpec>& seps,
+    const std::vector<std::pair<std::string, Box4>>& frects);
+
 std::vector<NearMaxEdge> near_max_edges(
     const std::string& subject, const std::string& target, double bound,
     bool axis_x, const Box4& hull_s, const Box4& hull_g, const Box4& seed_s,

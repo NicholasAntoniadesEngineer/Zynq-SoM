@@ -403,6 +403,73 @@ std::optional<double> min_box_gap(const std::vector<Box4>& a,
     return best;
 }
 
+std::vector<WallSepEdge> wall_sep_edges(
+    bool axis_x, const std::vector<std::string>& names,
+    const std::vector<double>& sizes, double span, double clear,
+    const std::vector<SepSpec>& seps,
+    const std::vector<std::pair<std::string, Box4>>& frects) {
+    if (names.size() != sizes.size()) {
+        throw std::runtime_error("wall_sep_edges: names and sizes required same length");
+    }
+    std::unordered_map<std::string, double> size_of;
+    size_of.reserve(names.size());
+    for (std::size_t i = 0; i < names.size(); ++i) {
+        size_of[names[i]] = sizes[i];
+    }
+    std::unordered_map<std::string, Box4> frect;
+    frect.reserve(frects.size());
+    for (const auto& row : frects) {
+        frect[row.first] = row.second;
+    }
+    std::vector<WallSepEdge> out;
+    out.reserve(names.size() * 2 + seps.size());
+    for (std::size_t i = 0; i < names.size(); ++i) {
+        const std::string& n = names[i];
+        const double w = sizes[i];
+        out.push_back(WallSepEdge{"#0", n, span - clear - w, "wall-hi", -1, n});
+        out.push_back(WallSepEdge{n, "#0", -clear, "wall-lo", -1, n});
+    }
+    for (int si = 0; si < static_cast<int>(seps.size()); ++si) {
+        const SepSpec& s = seps[static_cast<std::size_t>(si)];
+        if (s.axis_x != axis_x) {
+            continue;
+        }
+        const bool lo_f = !s.lo.empty() && s.lo[0] == '#';
+        const bool hi_f = !s.hi.empty() && s.hi[0] == '#';
+        if (lo_f && hi_f) {
+            continue;
+        }
+        if (lo_f) {
+            const auto it = frect.find(s.lo.substr(1));
+            if (it == frect.end()) {
+                throw std::runtime_error("wall_sep_edges: fixed lo missing");
+            }
+            const double hi = axis_x ? it->second.x1 : it->second.y1;
+            out.push_back(WallSepEdge{s.hi, "#0", -(hi + s.gap), "sep", si, ""});
+        } else if (hi_f) {
+            const auto it = frect.find(s.hi.substr(1));
+            if (it == frect.end()) {
+                throw std::runtime_error("wall_sep_edges: fixed hi missing");
+            }
+            const auto sz = size_of.find(s.lo);
+            if (sz == size_of.end()) {
+                throw std::runtime_error("wall_sep_edges: movable lo missing");
+            }
+            const double lo = axis_x ? it->second.x0 : it->second.y0;
+            out.push_back(WallSepEdge{"#0", s.lo, lo - s.gap - sz->second, "sep",
+                                      si, ""});
+        } else {
+            const auto sz = size_of.find(s.lo);
+            if (sz == size_of.end()) {
+                throw std::runtime_error("wall_sep_edges: movable pair missing");
+            }
+            out.push_back(WallSepEdge{s.hi, s.lo, -(sz->second + s.gap), "sep",
+                                      si, ""});
+        }
+    }
+    return out;
+}
+
 std::vector<NearMaxEdge> near_max_edges(
     const std::string& subject, const std::string& target, double bound,
     bool axis_x, const Box4& hull_s, const Box4& hull_g, const Box4& seed_s,

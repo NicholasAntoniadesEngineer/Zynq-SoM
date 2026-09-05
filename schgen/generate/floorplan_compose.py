@@ -925,7 +925,7 @@ def legalize_compact(board_w: float, board_h: float,
             lo, hi = (a, f"#{fn}") if first else (f"#{fn}", a)
             seps.append(_Sep(axis, lo, hi, gap, why, True))
 
-    def build_edges(axis: str) -> list[tuple[str, str, float, object]]:
+    def build_edges_py(axis: str) -> list[tuple[str, str, float, object]]:
         E: list[tuple[str, str, float, object]] = []
         for n in names:
             v = by_name[n]
@@ -957,6 +957,44 @@ def legalize_compact(board_w: float, board_h: float,
                 continue
             for e in _near_max_edges(t, axis):
                 E.append(e)
+        return E
+
+    def _edge_key(e: tuple) -> tuple:
+        src, dst, cost, tag = e
+        if isinstance(tag, tuple) and tag[0] == "sep":
+            return (src, dst, cost, "sep", tag[1].lo, tag[1].hi, tag[1].axis)
+        if isinstance(tag, tuple) and tag[0] in ("near_max", "near_max-perp"):
+            return (src, dst, cost, tag[0], tag[1].subject, tag[1].target)
+        if isinstance(tag, tuple):
+            return (src, dst, cost, tag[0], tag[1])
+        return (src, dst, cost, str(tag))
+
+    def build_edges(axis: str) -> list[tuple[str, str, float, object]]:
+        if not _nat.loaded():
+            return build_edges_py(axis)
+        span = board_w if axis == "x" else board_h
+        sizes = [by_name[n].w if axis == "x" else by_name[n].h for n in names]
+        sep_in = [(s.axis == "x", s.lo, s.hi, s.gap) for s in seps]
+        frects = [(fn, r) for fn, r in frect.items()]
+        rows = _nat.module().wall_sep_edges(
+            axis == "x", names, sizes, span, clear, sep_in, frects)
+        E: list[tuple[str, str, float, object]] = []
+        for src, dst, cost, kind, sep_i, wall_n in rows:
+            if kind == "sep":
+                E.append((src, dst, cost, ("sep", seps[sep_i])))
+            else:
+                E.append((src, dst, cost, (kind, wall_n)))
+        for t in hard:
+            if t.kind != "near_max":
+                continue
+            E.extend(_near_max_edges(t, axis))
+        if _nat.trace():
+            ref = build_edges_py(axis)
+            if [_edge_key(e) for e in E] != [_edge_key(e) for e in ref]:
+                raise AssertionError(
+                    "native wall_sep_edges DIVERGENCE: "
+                    f"cpp={[ _edge_key(e) for e in E]} "
+                    f"python={[ _edge_key(e) for e in ref]}")
         return E
 
     def _near_max_edges_py(t: Term, axis: str
