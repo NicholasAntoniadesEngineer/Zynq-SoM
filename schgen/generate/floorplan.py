@@ -880,7 +880,7 @@ class Plan:
         return self.edge_blocks + self.interior_blocks
 
 
-def _edge_target(b: Block, edge: str, plan: Plan) -> float:
+def _edge_target_py(b: Block, edge: str, plan: Plan) -> float:
     jpos = {j.ref: (plan.som_x + j.x, plan.som_y + j.y) for j in plan.som.js}
     axis = 0 if edge in ("N", "S") else 1
     aff = {jn: w for jn, w in b.j_aff.items() if jn in jpos}
@@ -891,7 +891,74 @@ def _edge_target(b: Block, edge: str, plan: Plan) -> float:
         else (plan.som_y + plan.som.h / 2)
 
 
+def _edge_target(b: Block, edge: str, plan: Plan) -> float:
+    if _nat.loaded():
+        jacks = [(j.ref, plan.som_x + j.x, plan.som_y + j.y)
+                 for j in plan.som.js]
+        got = _nat.module().edge_target(
+            edge, plan.som_x, plan.som_y, plan.som.w, plan.som.h,
+            list(b.j_aff.items()), jacks)
+        if _nat.trace():
+            ref = _edge_target_py(b, edge, plan)
+            if got != ref:
+                raise AssertionError(
+                    "native edge_target DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _edge_target_py(b, edge, plan)
+
+
+def _pack_edges_rows(plan: Plan, edge_of: dict[str, str]):
+    rows = [(b.name, b.w, b.h,
+             None if b.order_hint is None else float(b.order_hint),
+             tuple(b.fanout_reach), tuple(b.fanout_inset),
+             list(b.j_aff.items()), _is_overmold_block(b), b.edge,
+             edge_of[b.name])
+            for b in plan.edge_blocks]
+    jacks = [(j.ref, plan.som_x + j.x, plan.som_y + j.y) for j in plan.som.js]
+    return rows, jacks
+
+
+def _apply_pack_edges(plan: Plan, poses, spilled) -> None:
+    by_name = {name: (edge, x, y) for name, edge, x, y in poses}
+    for b in plan.edge_blocks:
+        hit = by_name.get(b.name)
+        if hit is not None:
+            b.edge, b.x, b.y = hit
+    plan.spilled.extend(spilled)
+
+
 def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
+    if _nat.loaded():
+        rows, jacks = _pack_edges_rows(plan, edge_of)
+        poses, spilled = _nat.module().pack_edges(
+            rows, jacks, BOARD_W, BOARD_H, EDGE_MARGIN, EDGE_INSET, CLEAR,
+            CABLE_NEIGHBOR_GAP, OVERMOLD_SIDE_GAP, AFFINITY_FLOOR,
+            plan.som_x, plan.som_y, plan.som.w, plan.som.h)
+        if _nat.trace():
+            snap = [(b.edge, b.x, b.y) for b in plan.edge_blocks]
+            spilled0 = list(plan.spilled)
+            _pack_edges_py(plan, edge_of)
+            ref_poses = [(b.name, b.edge, b.x, b.y) for b in plan.edge_blocks]
+            ref_spill = plan.spilled[len(spilled0):]
+            for b, s in zip(plan.edge_blocks, snap, strict=True):
+                b.edge, b.x, b.y = s
+            plan.spilled[:] = spilled0
+            got_map = {name: (edge, x, y) for name, edge, x, y in poses}
+            got_poses = [(b.name, *got_map[b.name]) if b.name in got_map
+                         else (b.name, b.edge, b.x, b.y)
+                         for b in plan.edge_blocks]
+            if got_poses != ref_poses or list(spilled) != list(ref_spill):
+                raise AssertionError(
+                    "native pack_edges DIVERGENCE: "
+                    f"cpp={(got_poses, list(spilled))} "
+                    f"python={(ref_poses, list(ref_spill))}")
+        _apply_pack_edges(plan, poses, spilled)
+        return
+    _pack_edges_py(plan, edge_of)
+
+
+def _pack_edges_py(plan: Plan, edge_of: dict[str, str]) -> None:
     def span_of(b: Block, edge: str) -> float:
         return b.w if edge in ("N", "S") else b.h
 
@@ -926,7 +993,7 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
         def _ord_key(bb: Block, _edge: str = edge) -> tuple:
             if bb.order_hint is not None:
                 return (0, float(bb.order_hint), bb.name)
-            return (1, _edge_target(bb, _edge, plan), bb.name)
+            return (1, _edge_target_py(bb, _edge, plan), bb.name)
         blocks = sorted(placed[edge], key=_ord_key)
         if not blocks:
             continue
@@ -934,7 +1001,7 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
         lo_r = blocks[0].fanout_reach[0 if edge in ("N", "S") else 2]
         hi_r = blocks[-1].fanout_reach[1 if edge in ("N", "S") else 3]
         lo, hi = EDGE_MARGIN + lo_r, span - EDGE_MARGIN - hi_r
-        gaps = [_pair_gap(blocks[i], blocks[i + 1])
+        gaps = [_pair_gap_py(blocks[i], blocks[i + 1])
                 for i in range(len(blocks) - 1)]
         total = sum(span_of(bb, edge) for bb in blocks) + sum(gaps)
         offs: list[float] = []
@@ -945,7 +1012,7 @@ def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
             acc += sp + (gaps[i] if i < len(gaps) else 0.0)
         wts = [max(sum(b.j_aff.values()), 0.0) + AFFINITY_FLOOR
                for b in blocks]
-        tgts = [_edge_target(b, edge, plan) for b in blocks]
+        tgts = [_edge_target_py(b, edge, plan) for b in blocks]
         wsum = sum(wts)
         start = sum(
             w * (t - o) for w, t, o in zip(wts, tgts, offs, strict=False)
@@ -2217,6 +2284,15 @@ def _pick_sided(finalists: list[tuple], est_of) -> tuple:
     est_inc, est_chal = est_of(incumbent), est_of(challenger)
     _LAST_SIDE_EST[:] = [est_inc, est_chal]
     _LAST_SIDE_NAME[:] = [incumbent[4], challenger[4]]
+    if _nat.loaded():
+        chal = _nat.module().pick_sided_challenger(est_inc, est_chal, 1e-6)
+        if _nat.trace():
+            ref = est_chal < est_inc - 1e-6
+            if chal is not ref:
+                raise AssertionError(
+                    "native pick_sided DIVERGENCE: "
+                    f"cpp={chal} python={ref}")
+        return challenger if chal else incumbent
     return challenger if est_chal < est_inc - 1e-6 else incumbent
 
 
@@ -2611,9 +2687,25 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     def _reseat_retry(b: Block, ax: float, ay: float) -> bool:
         if evict_budget[0] < 1:
             return False
-        pool = [p for _d, _i, _n, p in sorted(
-            (abs(p.x + p.w / 2 - ax) + abs(p.y + p.h / 2 - ay), i, p.name, p)
-            for i, p in enumerate(placed))]
+        rows = [(p.x, p.y, p.w, p.h, p.name) for p in placed]
+        if _nat.loaded():
+            idxs = [int(i) for i in _nat.module().reseat_rank(ax, ay, rows)]
+            pool = [placed[i] for i in idxs]
+            if _nat.trace():
+                ref = [p for _d, _i, _n, p in sorted(
+                    (abs(p.x + p.w / 2 - ax) + abs(p.y + p.h / 2 - ay),
+                     i, p.name, p)
+                    for i, p in enumerate(placed))]
+                if [p.name for p in pool] != [p.name for p in ref]:
+                    raise AssertionError(
+                        "native reseat_rank DIVERGENCE: "
+                        f"cpp={[p.name for p in pool]} "
+                        f"python={[p.name for p in ref]}")
+        else:
+            pool = [p for _d, _i, _n, p in sorted(
+                (abs(p.x + p.w / 2 - ax) + abs(p.y + p.h / 2 - ay),
+                 i, p.name, p)
+                for i, p in enumerate(placed))]
         for e in pool:
             esnap, bsnap = _blk_snap(e), _blk_snap(b)
             _occ_pull(e)

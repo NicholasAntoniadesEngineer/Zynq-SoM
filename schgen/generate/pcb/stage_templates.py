@@ -258,8 +258,17 @@ def _hf_cap(mod: Path, ib: dict[str, tuple], pair: list[str], direction: str,
             gap: float, ind_left: float, bref: str) -> _Part:
     p = _beside(mod, 0.0, "top", _pin_box(ib, pair), direction, gap)
     hx, _hy = _crtyd_half(mod, 0.0)
-    ox = ind_left - TEMPLATE_CLEAR - hx
-    return _Part(bref, mod, 0.0, "top", round(ox, 4), p.oy)
+    if _nat.loaded():
+        ox, oy = _nat.module().hf_cap_pose(p.oy, ind_left, TEMPLATE_CLEAR, hx)
+        if _nat.trace():
+            ref = (round(ind_left - TEMPLATE_CLEAR - hx, 4), p.oy)
+            if (ox, oy) != ref:
+                raise AssertionError(
+                    "native hf_cap_pose DIVERGENCE: "
+                    f"cpp={(ox, oy)} python={ref}")
+        return _Part(bref, mod, 0.0, "top", ox, oy)
+    return _Part(bref, mod, 0.0, "top",
+                 round(ind_left - TEMPLATE_CLEAR - hx, 4), p.oy)
 
 
 def _bulk_cap_py(mod: Path, hf: _Part, direction: str, gap: float,

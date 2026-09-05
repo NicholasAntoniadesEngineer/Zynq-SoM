@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -20,6 +21,7 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/pack_anchor.hpp"
+#include "schgen/pack_edges.hpp"
 #include "schgen/place_search.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/route.hpp"
@@ -1035,6 +1037,98 @@ NB_MODULE(_geom, m) {
                   hit.moved, hit.local_x, hit.local_y, hit.size,
                   hit.add_box.x0, hit.add_box.y0, hit.add_box.x1,
                   hit.add_box.y1);
+          });
+    m.def("edge_target",
+          [](const std::string& edge, double som_x, double som_y, double som_w,
+             double som_h,
+             const std::vector<std::pair<std::string, double>>& j_aff,
+             const std::vector<std::tuple<std::string, double, double>>&
+                 jacks) {
+              if (edge.size() != 1) {
+                  throw std::runtime_error("edge_target: edge required");
+              }
+              schgen::PackEdgesSpec spec;
+              spec.som_x = som_x;
+              spec.som_y = som_y;
+              spec.som_w = som_w;
+              spec.som_h = som_h;
+              std::vector<schgen::PackEdgeJack> rows;
+              rows.reserve(jacks.size());
+              for (const auto& j : jacks) {
+                  rows.push_back(schgen::PackEdgeJack{
+                      std::get<0>(j), std::get<1>(j), std::get<2>(j)});
+              }
+              return schgen::edge_target(edge[0], spec, j_aff, rows);
+          });
+    m.def("pick_sided_challenger", &schgen::pick_sided_challenger);
+    m.def("reseat_rank",
+          [](double ax, double ay,
+             const std::vector<std::tuple<double, double, double, double,
+                                          std::string>>& placed) {
+              return schgen::reseat_rank(ax, ay, placed);
+          });
+    m.def("hf_cap_pose",
+          [](double beside_oy, double inductor_left, double template_clear,
+             double hx) {
+              auto p = schgen::hf_cap_pose(beside_oy, inductor_left,
+                                           template_clear, hx);
+              return std::make_tuple(p.first, p.second);
+          });
+    m.def("pack_edges",
+          [](const std::vector<std::tuple<
+                 std::string, double, double, std::optional<double>,
+                 std::tuple<double, double, double, double>,
+                 std::tuple<double, double, double, double>,
+                 std::vector<std::pair<std::string, double>>, bool,
+                 std::string, std::string>>& blocks,
+             const std::vector<std::tuple<std::string, double, double>>& jacks,
+             double board_w, double board_h, double edge_margin,
+             double edge_inset, double clear, double cable_neighbor_gap,
+             double overmold_side_gap, double affinity_floor, double som_x,
+             double som_y, double som_w, double som_h) {
+              schgen::PackEdgesSpec spec;
+              spec.board_w = board_w;
+              spec.board_h = board_h;
+              spec.edge_margin = edge_margin;
+              spec.edge_inset = edge_inset;
+              spec.clear = clear;
+              spec.cable_neighbor_gap = cable_neighbor_gap;
+              spec.overmold_side_gap = overmold_side_gap;
+              spec.affinity_floor = affinity_floor;
+              spec.som_x = som_x;
+              spec.som_y = som_y;
+              spec.som_w = som_w;
+              spec.som_h = som_h;
+              std::vector<schgen::PackEdgeBlock> rows;
+              rows.reserve(blocks.size());
+              for (const auto& b : blocks) {
+                  schgen::PackEdgeBlock row;
+                  row.name = std::get<0>(b);
+                  row.w = std::get<1>(b);
+                  row.h = std::get<2>(b);
+                  row.order_hint = std::get<3>(b);
+                  row.reach = as_halo(std::get<4>(b));
+                  row.inset = as_halo(std::get<5>(b));
+                  row.j_aff = std::get<6>(b);
+                  row.overmold = std::get<7>(b);
+                  row.current_edge = std::get<8>(b);
+                  row.assigned_edge = std::get<9>(b);
+                  rows.push_back(std::move(row));
+              }
+              std::vector<schgen::PackEdgeJack> jack_rows;
+              jack_rows.reserve(jacks.size());
+              for (const auto& j : jacks) {
+                  jack_rows.push_back(schgen::PackEdgeJack{
+                      std::get<0>(j), std::get<1>(j), std::get<2>(j)});
+              }
+              auto hit = schgen::pack_edges(rows, jack_rows, spec);
+              std::vector<std::tuple<std::string, std::string, double, double>>
+                  poses;
+              poses.reserve(hit.poses.size());
+              for (const auto& p : hit.poses) {
+                  poses.emplace_back(p.name, p.edge, p.x, p.y);
+              }
+              return std::make_tuple(poses, hit.spilled);
           });
     m.def("turn_point",
           [](double x, double y, double deg) {

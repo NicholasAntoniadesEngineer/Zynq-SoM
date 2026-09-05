@@ -1315,6 +1315,60 @@ def test_bfs_escape_and_place_refdes(geom):
         ref[0], ref[1], ref[2], ref[3], ref[4])
 
 
+def test_pack_edges_and_hf_pose(geom):
+    from schgen.generate.floorplan import (
+        AFFINITY_FLOOR,
+        BOARD_H,
+        BOARD_W,
+        CABLE_NEIGHBOR_GAP,
+        CLEAR,
+        EDGE_INSET,
+        EDGE_MARGIN,
+        OVERMOLD_SIDE_GAP,
+        Block,
+        Plan,
+        SomGeom,
+        _edge_target_py,
+        _pack_edges_py,
+    )
+    from schgen.generate.pcb.stage_templates import TEMPLATE_CLEAR
+
+    som = SomGeom(w=50.0, h=42.0, js=[], source="test")
+    plan = Plan(som)
+    plan.som_x, plan.som_y = 40.0, 30.0
+    a = Block(name="a", kind="edge", w=12.0, h=8.0, edge="S",
+              fanout_reach=(1.0, 0.5, 0.0, 0.0), j_aff={"J1": 2.0})
+    b = Block(name="b", kind="edge", w=10.0, h=8.0, edge="S")
+    plan.edge_blocks = [a, b]
+    edge_of = {"a": "S", "b": "S"}
+    _pack_edges_py(plan, edge_of)
+    ref = [(blk.name, blk.edge, blk.x, blk.y) for blk in plan.edge_blocks]
+    zero = (0.0, 0.0, 0.0, 0.0)
+    rows = [(blk.name, blk.w, blk.h, None, blk.fanout_reach, zero,
+             list(blk.j_aff.items()), False, blk.edge, edge_of[blk.name])
+            for blk in (a, b)]
+    poses, spilled = geom.pack_edges(
+        rows, [], BOARD_W, BOARD_H, EDGE_MARGIN, EDGE_INSET, CLEAR,
+        CABLE_NEIGHBOR_GAP, OVERMOLD_SIDE_GAP, AFFINITY_FLOOR,
+        plan.som_x, plan.som_y, plan.som.w, plan.som.h)
+    got = [(n, e, x, y) for n, e, x, y in poses]
+    assert got == ref
+    assert list(spilled) == []
+    tgt = geom.edge_target(
+        "S", plan.som_x, plan.som_y, plan.som.w, plan.som.h,
+        list(a.j_aff.items()), [])
+    assert tgt == _edge_target_py(a, "S", plan)
+    assert geom.pick_sided_challenger(1.0, 0.5, 1e-6) is True
+    assert geom.pick_sided_challenger(1.0, 0.999999, 1e-6) is False
+    assert geom.reseat_rank(0.0, 0.0, [
+        (10.0, 0.0, 2.0, 2.0, "far"),
+        (1.0, 0.0, 2.0, 2.0, "near"),
+        (1.0, 0.0, 2.0, 2.0, "also"),
+    ]) == [1, 2, 0]
+    assert tuple(geom.hf_cap_pose(3.25, 10.0, TEMPLATE_CLEAR, 1.1)) == (
+        round(10.0 - TEMPLATE_CLEAR - 1.1, 4), 3.25)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()
