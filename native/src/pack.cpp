@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <limits>
 #include <stdexcept>
 
@@ -233,6 +234,115 @@ std::pair<Halo, Halo> zone_fanout_reach(
              py_round(rs, 4)},
         Halo{py_round(iw, 4), py_round(ie, 4), py_round(in_n, 4),
              py_round(is_s, 4)}};
+}
+
+double overlap_area(const Box4& a, const Box4& b) {
+    const double dx = std::min(a.x1, b.x1) - std::max(a.x0, b.x0);
+    const double dy = std::min(a.y1, b.y1) - std::max(a.y0, b.y0);
+    if (dx > 0.0 && dy > 0.0) {
+        return dx * dy;
+    }
+    return 0.0;
+}
+
+Box4 text_box(const std::string& txt, double x, double y, double size,
+              double margin) {
+    const double thick = std::max(0.12, size * 0.15);
+    const double n = static_cast<double>(std::max<std::size_t>(txt.size(), 1));
+    const double w = n * size + thick;
+    const double h = size + thick;
+    return Box4{x - w / 2.0 - margin, y - h / 2.0 - margin,
+                x + w / 2.0 + margin, y + h / 2.0 + margin};
+}
+
+double point_box_dist(double x, double y, const Box4& box) {
+    const double dx = std::max(std::max(box.x0 - x, x - box.x1), 0.0);
+    const double dy = std::max(std::max(box.y0 - y, y - box.y1), 0.0);
+    return std::hypot(dx, dy);
+}
+
+double seg_box_dist(double x1, double y1, double x2, double y2,
+                    const Box4& box) {
+    const double lo_x = std::min(x1, x2);
+    const double hi_x = std::max(x1, x2);
+    const double lo_y = std::min(y1, y2);
+    const double hi_y = std::max(y1, y2);
+    const double dx = std::max(std::max(box.x0 - hi_x, lo_x - box.x1), 0.0);
+    const double dy = std::max(std::max(box.y0 - hi_y, lo_y - box.y1), 0.0);
+    return std::hypot(dx, dy);
+}
+
+std::vector<std::vector<std::pair<double, std::string>>> band_cover(
+    const std::vector<std::pair<double, std::string>>& points, double reach) {
+    std::vector<std::pair<double, std::string>> pts = points;
+    std::stable_sort(pts.begin(), pts.end(),
+                     [](const std::pair<double, std::string>& a,
+                        const std::pair<double, std::string>& b) {
+                         const double au = py_round(a.first, 4);
+                         const double bu = py_round(b.first, 4);
+                         if (au != bu) {
+                             return au < bu;
+                         }
+                         return std::stoi(a.second) < std::stoi(b.second);
+                     });
+    std::vector<std::vector<std::pair<double, std::string>>> bands;
+    std::size_t i = 0;
+    while (i < pts.size()) {
+        const double u0 = pts[i].first;
+        std::size_t j = i;
+        while (j < pts.size() && pts[j].first <= u0 + 2.0 * reach) {
+            ++j;
+        }
+        bands.emplace_back(pts.begin() + static_cast<std::ptrdiff_t>(i),
+                           pts.begin() + static_cast<std::ptrdiff_t>(j));
+        i = j;
+    }
+    return bands;
+}
+
+std::pair<bool, double> coverage_ok(
+    double u, double v, const std::vector<std::pair<double, double>>& members,
+    double bound) {
+    double worst = 0.0;
+    for (const auto& m : members) {
+        const double d = std::hypot(u - m.first, v - m.second);
+        worst = std::max(worst, d);
+        if (d > bound) {
+            return {false, worst};
+        }
+    }
+    return {true, worst};
+}
+
+bool point_on_seg(double px, double py, double x0, double y0, double x1,
+                  double y1, bool interior_only) {
+    const double eps = 1e-6;
+    const bool horizontal = std::fabs(y0 - y1) < eps;
+    const bool vertical = std::fabs(x0 - x1) < eps;
+    double lo = 0.0;
+    double hi = 0.0;
+    double coord = 0.0;
+    if (horizontal) {
+        if (std::fabs(py - y0) > eps) {
+            return false;
+        }
+        lo = std::min(x0, x1);
+        hi = std::max(x0, x1);
+        coord = px;
+    } else if (vertical) {
+        if (std::fabs(px - x0) > eps) {
+            return false;
+        }
+        lo = std::min(y0, y1);
+        hi = std::max(y0, y1);
+        coord = py;
+    } else {
+        return false;
+    }
+    if (interior_only) {
+        return lo + eps < coord && coord < hi - eps;
+    }
+    return lo - eps <= coord && coord <= hi + eps;
 }
 
 }  // namespace schgen

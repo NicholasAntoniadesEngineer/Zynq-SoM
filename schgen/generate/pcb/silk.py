@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+from schgen.core import native as _nat
 from schgen.core.sexpr import Sym
 
 from .constants import (
@@ -17,15 +18,40 @@ from .mating_face import _inst_courtyard
 _REFDES_MIN_SIZE = 0.8
 
 
-def _rects_overlap(a, b) -> bool:
+def _rects_overlap_py(a, b) -> bool:
     return not (a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1])
 
 
-def _text_box(txt: str, x: float, y: float, size: float, m: float = 0.15):
+def _rects_overlap(a, b) -> bool:
+    if _nat.loaded():
+        got = _nat.module().boxes_overlap(a, b, 0.0)
+        if _nat.trace():
+            ref = _rects_overlap_py(a, b)
+            if got is not ref:
+                raise AssertionError(
+                    "native boxes_overlap DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _rects_overlap_py(a, b)
+
+
+def _text_box_py(txt: str, x: float, y: float, size: float, m: float = 0.15):
     thick = max(0.12, size * 0.15)
     w = max(len(txt), 1) * size * 1.0 + thick
     h = size + thick
     return (x - w / 2 - m, y - h / 2 - m, x + w / 2 + m, y + h / 2 + m)
+
+
+def _text_box(txt: str, x: float, y: float, size: float, m: float = 0.15):
+    if _nat.loaded():
+        got = tuple(_nat.module().text_box(txt, x, y, size, m))
+        if _nat.trace():
+            ref = _text_box_py(txt, x, y, size, m)
+            if got != ref:
+                raise AssertionError(
+                    f"native text_box DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _text_box_py(txt, x, y, size, m)
 
 
 def _sub(node, name):
@@ -135,10 +161,22 @@ def _emitted_text_boxes(doc: list, include_silk_gfx: bool = False) -> list:
     return boxes
 
 
-def _overlap_area(a, b) -> float:
+def _overlap_area_py(a, b) -> float:
     dx = min(a[2], b[2]) - max(a[0], b[0])
     dy = min(a[3], b[3]) - max(a[1], b[1])
     return dx * dy if (dx > 0.0 and dy > 0.0) else 0.0
+
+
+def _overlap_area(a, b) -> float:
+    if _nat.loaded():
+        got = _nat.module().overlap_area(a, b)
+        if _nat.trace():
+            ref = _overlap_area_py(a, b)
+            if got != ref:
+                raise AssertionError(
+                    f"native overlap_area DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _overlap_area_py(a, b)
 
 
 class _BoxIndex:

@@ -7,6 +7,8 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core import native as _nat
+
 R_CONSTRUCT = 1.8
 
 
@@ -135,10 +137,24 @@ def _to_local(inst, bx: float, by: float) -> tuple[float, float]:
     return (qx * c - qy * s, qx * s + qy * c)
 
 
-def _box_dist(x: float, y: float, box: tuple[float, float, float, float]) -> float:
+def _box_dist_py(x: float, y: float, box: tuple[float, float, float, float]
+                 ) -> float:
     dx = max(box[0] - x, x - box[2], 0.0)
     dy = max(box[1] - y, y - box[3], 0.0)
     return math.hypot(dx, dy)
+
+
+def _box_dist(x: float, y: float, box: tuple[float, float, float, float]) -> float:
+    if _nat.loaded():
+        got = _nat.module().point_box_dist(x, y, box)
+        if _nat.trace():
+            ref = _box_dist_py(x, y, box)
+            if got != ref:
+                raise AssertionError(
+                    "native point_box_dist DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _box_dist_py(x, y, box)
 
 
 CORRIDOR_V_MARGIN = 0.15
@@ -166,14 +182,28 @@ def corridor_board_rect(mod_path, cx: float, cy: float, rot: float
             round(max(xs), 4), round(max(ys), 4))
 
 
-def _seg_box_dist(a: tuple[float, float], b: tuple[float, float],
-                  box: tuple[float, float, float, float]) -> float:
+def _seg_box_dist_py(a: tuple[float, float], b: tuple[float, float],
+                     box: tuple[float, float, float, float]) -> float:
     (x1, y1), (x2, y2) = a, b
     lo_x, hi_x = min(x1, x2), max(x1, x2)
     lo_y, hi_y = min(y1, y2), max(y1, y2)
     dx = max(box[0] - hi_x, lo_x - box[2], 0.0)
     dy = max(box[1] - hi_y, lo_y - box[3], 0.0)
     return math.hypot(dx, dy)
+
+
+def _seg_box_dist(a: tuple[float, float], b: tuple[float, float],
+                  box: tuple[float, float, float, float]) -> float:
+    if _nat.loaded():
+        got = _nat.module().seg_box_dist(a[0], a[1], b[0], b[1], box)
+        if _nat.trace():
+            ref = _seg_box_dist_py(a, b, box)
+            if got != ref:
+                raise AssertionError(
+                    "native seg_box_dist DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _seg_box_dist_py(a, b, box)
 
 
 @dataclass
@@ -236,8 +266,8 @@ def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
     return obs
 
 
-def band_cover(points: list[tuple[float, str]], reach: float,
-               ) -> list[list[tuple[float, str]]]:
+def band_cover_py(points: list[tuple[float, str]], reach: float,
+                  ) -> list[list[tuple[float, str]]]:
     pts = sorted(points, key=lambda t: (round(t[0], 4), int(t[1])))
     bands: list[list[tuple[float, str]]] = []
     i = 0
@@ -251,6 +281,20 @@ def band_cover(points: list[tuple[float, str]], reach: float,
     return bands
 
 
+def band_cover(points: list[tuple[float, str]], reach: float,
+               ) -> list[list[tuple[float, str]]]:
+    if _nat.loaded():
+        got = [[(float(u), p) for u, p in band]
+               for band in _nat.module().band_cover(points, reach)]
+        if _nat.trace():
+            ref = band_cover_py(points, reach)
+            if got != ref:
+                raise AssertionError(
+                    f"native band_cover DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return band_cover_py(points, reach)
+
+
 @dataclass
 class _Member:
     pad: str
@@ -260,8 +304,8 @@ class _Member:
     klass: str
 
 
-def _coverage_ok(u: float, v: float, members: list[_Member],
-                 bound: float) -> tuple[bool, float]:
+def _coverage_ok_py(u: float, v: float, members: list[_Member],
+                    bound: float) -> tuple[bool, float]:
     worst = 0.0
     for m in members:
         d = math.hypot(u - m.u, v - m.v)
@@ -269,6 +313,21 @@ def _coverage_ok(u: float, v: float, members: list[_Member],
         if d > bound:
             return False, worst
     return True, worst
+
+
+def _coverage_ok(u: float, v: float, members: list[_Member],
+                 bound: float) -> tuple[bool, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().coverage_ok(
+            u, v, [(m.u, m.v) for m in members], bound))
+        if _nat.trace():
+            ref = _coverage_ok_py(u, v, members, bound)
+            if got != ref:
+                raise AssertionError(
+                    "native coverage_ok DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _coverage_ok_py(u, v, members, bound)
 
 
 def _via_feasible(u: float, v: float, dia: float, drill: float,

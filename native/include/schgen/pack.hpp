@@ -74,6 +74,20 @@ std::vector<std::pair<double, double>> fallback_via_sites(
     double x0, double y0, double x1, double y1, double via_size,
     double pitch);
 
+double overlap_area(const Box4& a, const Box4& b);
+Box4 text_box(const std::string& txt, double x, double y, double size,
+              double margin);
+double point_box_dist(double x, double y, const Box4& box);
+double seg_box_dist(double x1, double y1, double x2, double y2,
+                    const Box4& box);
+std::vector<std::vector<std::pair<double, std::string>>> band_cover(
+    const std::vector<std::pair<double, std::string>>& points, double reach);
+std::pair<bool, double> coverage_ok(
+    double u, double v, const std::vector<std::pair<double, double>>& members,
+    double bound);
+bool point_on_seg(double px, double py, double x0, double y0, double x1,
+                  double y1, bool interior_only);
+
 std::pair<Halo, Halo> zone_fanout_reach(
     double zw, double zh,
     const std::vector<std::tuple<double, double, double, double, int, double>>&

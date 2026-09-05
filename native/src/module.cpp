@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <utility>
 
@@ -379,6 +380,52 @@ NB_MODULE(_geom, m) {
                   std::make_tuple(hit.second.w, hit.second.e, hit.second.n,
                                   hit.second.s));
           });
+    m.def("overlap_area",
+          [](const BoxTup& a, const BoxTup& b) {
+              return schgen::overlap_area(as_box(a), as_box(b));
+          });
+    m.def("text_box",
+          [](const std::string& txt, double x, double y, double size,
+             double margin) {
+              auto b = schgen::text_box(txt, x, y, size, margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("point_box_dist",
+          [](double x, double y, const BoxTup& box) {
+              return schgen::point_box_dist(x, y, as_box(box));
+          });
+    m.def("seg_box_dist",
+          [](double x1, double y1, double x2, double y2, const BoxTup& box) {
+              return schgen::seg_box_dist(x1, y1, x2, y2, as_box(box));
+          });
+    m.def("band_cover",
+          [](const std::vector<std::tuple<double, std::string>>& points,
+             double reach) {
+              std::vector<std::pair<double, std::string>> pts;
+              pts.reserve(points.size());
+              for (const auto& t : points) {
+                  pts.emplace_back(std::get<0>(t), std::get<1>(t));
+              }
+              auto bands = schgen::band_cover(pts, reach);
+              std::vector<std::vector<std::tuple<double, std::string>>> out;
+              out.reserve(bands.size());
+              for (const auto& band : bands) {
+                  std::vector<std::tuple<double, std::string>> row;
+                  row.reserve(band.size());
+                  for (const auto& p : band) {
+                      row.emplace_back(p.first, p.second);
+                  }
+                  out.push_back(std::move(row));
+              }
+              return out;
+          });
+    m.def("coverage_ok",
+          [](double u, double v, const std::vector<PtTup>& members,
+             double bound) {
+              auto hit = schgen::coverage_ok(u, v, as_pts(members), bound);
+              return std::make_tuple(hit.first, hit.second);
+          });
+    m.def("point_on_seg", &schgen::point_on_seg);
     m.def("min_box_gap",
           [](const std::vector<std::tuple<double, double, double, double>>& a,
              const std::vector<std::tuple<double, double, double, double>>& b)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from schgen.core import native as _nat
 from schgen.core.config import VISUAL_CLEARANCE_MM
 
 
@@ -15,6 +16,10 @@ class Box:
     owner: str
 
     def intersects(self, o: Box, pad: float = 0.0) -> bool:
+        if _nat.loaded():
+            return _nat.module().boxes_overlap(
+                (self.x0, self.y0, self.x1, self.y1),
+                (o.x0, o.y0, o.x1, o.y1), pad)
         return (self.x0 - pad < o.x1 and self.x1 + pad > o.x0
                 and self.y0 - pad < o.y1 and self.y1 + pad > o.y0)
 
@@ -89,7 +94,7 @@ def _collinear_overlap(a: Seg, b: Seg) -> bool:
     return False
 
 
-def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
+def _point_on_seg_py(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
     eps = 1e-6
     if s.horizontal:
         if abs(py - s.y0) > eps:
@@ -105,6 +110,20 @@ def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
     if interior_only:
         return lo + eps < coord < hi - eps
     return lo - eps <= coord <= hi + eps
+
+
+def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
+    if _nat.loaded():
+        got = _nat.module().point_on_seg(px, py, s.x0, s.y0, s.x1, s.y1,
+                                         interior_only)
+        if _nat.trace():
+            ref = _point_on_seg_py(px, py, s, interior_only=interior_only)
+            if got is not ref:
+                raise AssertionError(
+                    "native point_on_seg DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _point_on_seg_py(px, py, s, interior_only=interior_only)
 
 
 def _foreign_t_touch(a: Seg, b: Seg) -> tuple[float, float] | None:

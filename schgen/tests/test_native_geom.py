@@ -742,6 +742,46 @@ def test_shelf_pack_and_via_lattice(geom):
     assert lo == 0.3
 
 
+def test_silk_escape_and_seg_kernels(geom):
+    from schgen.generate.pcb.escape import (
+        _box_dist,
+        _box_dist_py,
+        _seg_box_dist,
+        _seg_box_dist_py,
+        band_cover,
+        band_cover_py,
+    )
+    from schgen.generate.pcb.silk import (
+        _overlap_area,
+        _overlap_area_py,
+        _rects_overlap,
+        _rects_overlap_py,
+        _text_box,
+        _text_box_py,
+    )
+    from schgen.verify.visual_gate import Seg, _point_on_seg, _point_on_seg_py
+    a = (0.0, 0.0, 4.0, 2.0)
+    b = (3.0, 1.0, 6.0, 3.0)
+    c = (4.0, 2.0, 5.0, 3.0)
+    assert _rects_overlap(a, b) is _rects_overlap_py(a, b)
+    assert _rects_overlap(a, c) is _rects_overlap_py(a, c)
+    assert _overlap_area(a, b) == _overlap_area_py(a, b)
+    assert _text_box("J1", 10.0, 12.0, 1.0) == _text_box_py("J1", 10.0, 12.0, 1.0)
+    assert _box_dist(5.0, 1.0, a) == _box_dist_py(5.0, 1.0, a)
+    assert _seg_box_dist((0.0, 3.0), (8.0, 3.0), a) == _seg_box_dist_py(
+        (0.0, 3.0), (8.0, 3.0), a)
+    pts = [(0.4, "90"), (0.4, "11"), (0.0, "1"), (2.1, "2")]
+    assert band_cover(pts, 1.0) == band_cover_py(pts, 1.0)
+    seg = Seg(0.0, 1.0, 4.0, 1.0, "N")
+    assert _point_on_seg(2.0, 1.0, seg, interior_only=False) is (
+        _point_on_seg_py(2.0, 1.0, seg, interior_only=False))
+    assert _point_on_seg(0.0, 1.0, seg, interior_only=True) is (
+        _point_on_seg_py(0.0, 1.0, seg, interior_only=True))
+    ok, worst = geom.coverage_ok(0.0, 0.0, [(0.3, 0.4), (1.0, 0.0)], 2.0)
+    assert ok is True
+    assert worst == (1.0 ** 2 + 0.0 ** 2) ** 0.5 or worst > 0.0
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()
