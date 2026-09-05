@@ -336,22 +336,41 @@ def _place_clear_label_py(cx0, cy0, cx1, cy1, label, size, occupied,
 def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
     if isinstance(occupied, list):
         occupied = _BoxIndex(occupied)
-    if _nat.loaded() and occupied._cpp is not None:
-        got = _nat.module().place_clear_label(
-            cx0, cy0, cx1, cy1, label, size, occupied._cpp, bounds)
-        out = (got[0], got[1], (got[2], got[3], got[4], got[5]), got[6])
-        if _nat.trace():
-            ref = _place_clear_label_py(
-                cx0, cy0, cx1, cy1, label, size,
-                _BoxIndexPy(occupied._boxes), bounds)
-            if out != ref:
-                raise AssertionError(
-                    "native place_clear_label DIVERGENCE: "
-                    f"cpp={out} python={ref}")
-        return out
+    if _nat.loaded():
+        occ_cpp = None
+        placed = None
+        boxes_a = None
+        boxes_b = None
+        if isinstance(occupied, _PairIndex):
+            if occupied.a._cpp is not None and occupied.b._cpp is not None:
+                occ_cpp = occupied.a._cpp
+                placed = occupied.b._cpp
+                boxes_a = occupied.a._boxes
+                boxes_b = occupied.b._boxes
+        elif occupied._cpp is not None:
+            occ_cpp = occupied._cpp
+            boxes_a = occupied._boxes
+        if occ_cpp is not None:
+            got = _nat.module().place_clear_label(
+                cx0, cy0, cx1, cy1, label, size, occ_cpp, placed, bounds)
+            out = (got[0], got[1], (got[2], got[3], got[4], got[5]), got[6])
+            if _nat.trace():
+                if boxes_b is None:
+                    py_occ = _BoxIndexPy(boxes_a)
+                else:
+                    py_occ = _PairIndex(_BoxIndexPy(boxes_a),
+                                        _BoxIndexPy(boxes_b))
+                ref = _place_clear_label_py(
+                    cx0, cy0, cx1, cy1, label, size, py_occ, bounds)
+                if out != ref:
+                    raise AssertionError(
+                        "native place_clear_label DIVERGENCE: "
+                        f"cpp={out} python={ref}")
+            return out
+    if isinstance(occupied, _BoxIndex) and occupied._py is None:
+        occupied = occupied._boxes
     return _place_clear_label_py(cx0, cy0, cx1, cy1, label, size,
-                                 occupied._boxes if occupied._py is None
-                                 else occupied, bounds)
+                                 occupied, bounds)
 
 
 def _silk_text(txt: str, x: float, y: float, size: float, uuid) -> list:

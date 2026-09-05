@@ -446,16 +446,21 @@ NB_MODULE(_geom, m) {
           [](double cx0, double cy0, double cx1, double cy1,
              const std::string& label, double size,
              const schgen::SilkBoxIndex& occupied,
+             const schgen::SilkBoxIndex* placed,
              const std::optional<BoxTup>& bounds) {
               std::optional<schgen::Box4> box;
               if (bounds.has_value()) {
                   box = as_box(*bounds);
               }
               auto hit = schgen::place_clear_label(cx0, cy0, cx1, cy1, label,
-                                                   size, occupied, box);
+                                                   size, occupied, placed,
+                                                   box);
               return std::make_tuple(hit.x, hit.y, hit.box.x0, hit.box.y0,
                                      hit.box.x1, hit.box.y1, hit.extra);
-          });
+          },
+          nb::arg("cx0"), nb::arg("cy0"), nb::arg("cx1"), nb::arg("cy1"),
+          nb::arg("label"), nb::arg("size"), nb::arg("occupied"),
+          nb::arg("placed") = nb::none(), nb::arg("bounds") = nb::none());
     m.def("segments_cross", &schgen::segments_cross);
     m.def("point_on_seg", &schgen::point_on_seg);
     m.def("min_box_gap",

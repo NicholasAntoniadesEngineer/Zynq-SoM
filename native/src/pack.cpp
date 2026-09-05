@@ -492,6 +492,7 @@ bool onboard_box(const Box4& box, const std::optional<Box4>& bounds) {
 ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
                              const std::string& label, double size,
                              const SilkBoxIndex& occupied,
+                             const SilkBoxIndex* placed,
                              const std::optional<Box4>& bounds) {
     const double midx = (cx0 + cx1) / 2.0;
     const double midy = (cy0 + cy1) / 2.0;
@@ -524,7 +525,8 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
             const Box4 box = text_box(label, cand[0], cand[1], size, 0.15);
             const Box4 gb{box.x0 - 0.02, box.y0 - 0.02, box.x1 + 0.02,
                           box.y1 + 0.02};
-            const double pen = occupied.pen(gb);
+            const double pen = occupied.pen(gb)
+                + (placed == nullptr ? 0.0 : placed->pen(gb));
             const bool onboard = onboard_box(box, bounds);
             const ClearLabel hit{cand[0], cand[1], box, extra};
             if (onboard) {
@@ -560,7 +562,8 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
             }
             const Box4 gb{box.x0 - 0.02, box.y0 - 0.02, box.x1 + 0.02,
                           box.y1 + 0.02};
-            const double pen = occupied.pen(gb);
+            const double pen = occupied.pen(gb)
+                + (placed == nullptr ? 0.0 : placed->pen(gb));
             const ClearLabel hit{tx, ty, box, extra};
             if (pen == 0.0) {
                 return hit;

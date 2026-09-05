@@ -868,18 +868,28 @@ def test_place_clear_label_matches_python(geom):
     idx = geom.SilkBoxIndex(8.0)
     for b in boxes:
         idx.add(b)
-    got = geom.place_clear_label(*court, "U1", 1.0, idx, None)
+    got = geom.place_clear_label(*court, "U1", 1.0, idx, None, None)
     ref = _place_clear_label_py(*court, "U1", 1.0, _BoxIndexPy(boxes))
     assert got[:2] == ref[:2]
     assert got[2:6] == ref[2]
     assert got[6] == ref[3]
     bounded = (0.0, 0.0, 100.0, 100.0)
-    got_b = geom.place_clear_label(*court, "PMOD0", 1.1, idx, bounded)
+    got_b = geom.place_clear_label(*court, "PMOD0", 1.1, idx, None, bounded)
     ref_b = _place_clear_label_py(*court, "PMOD0", 1.1, _BoxIndexPy(boxes),
                                   bounded)
     assert got_b[:2] == ref_b[:2]
     assert got_b[2:6] == ref_b[2]
     assert got_b[6] == ref_b[3]
+    placed = geom.SilkBoxIndex(8.0)
+    placed.add((48.0, 54.0, 52.0, 58.0))
+    from schgen.generate.pcb.silk import _PairIndex
+    got_p = geom.place_clear_label(*court, "U2", 1.0, idx, placed, None)
+    ref_p = _place_clear_label_py(
+        *court, "U2", 1.0,
+        _PairIndex(_BoxIndexPy(boxes), _BoxIndexPy([(48.0, 54.0, 52.0, 58.0)])))
+    assert got_p[:2] == ref_p[:2]
+    assert got_p[2:6] == ref_p[2]
+    assert got_p[6] == ref_p[3]
 
 
 def test_segments_cross_matches_python(geom):

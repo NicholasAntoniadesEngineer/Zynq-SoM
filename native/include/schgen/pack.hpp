@@ -135,6 +135,7 @@ struct ClearLabel {
 ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
                              const std::string& label, double size,
                              const SilkBoxIndex& occupied,
+                             const SilkBoxIndex* placed,
                              const std::optional<Box4>& bounds);
 bool segments_cross(double ax0, double ay0, double ax1, double ay1,
                     double bx0, double by0, double bx1, double by1);
