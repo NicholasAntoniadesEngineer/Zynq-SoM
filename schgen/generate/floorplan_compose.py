@@ -359,9 +359,9 @@ def _emitted_zone_frame(pose: tuple[float, float]) -> tuple[float, float]:
     return pose
 
 
-def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
-                       refs: set[str] | None = None
-                       ) -> tuple[float, float] | None:
+def predicted_centroid_py(pose: tuple[float, float], m: LocalMetrics,
+                          refs: set[str] | None = None
+                          ) -> tuple[float, float] | None:
     from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
     gzx, gzy = _emitted_zone_frame(pose)
     xs: list[float] = []
@@ -376,8 +376,27 @@ def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
     return (round(sum(xs) / len(xs), 4), round(sum(ys) / len(ys), 4))
 
 
-def predicted_bbox(pose: tuple[float, float], m: LocalMetrics
-                   ) -> tuple[float, float, float, float] | None:
+def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
+                       refs: set[str] | None = None
+                       ) -> tuple[float, float] | None:
+    if _nat.loaded():
+        from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+        gzx, gzy = _emitted_zone_frame(pose)
+        allow = None if refs is None else list(refs)
+        got = _nat.module().predicted_centroid(
+            gzx, gzy, ORIGIN_X, ORIGIN_Y, list(m.offsets), allow)
+        if _nat.trace():
+            ref = predicted_centroid_py(pose, m, refs)
+            if got != ref:
+                raise AssertionError(
+                    "native predicted_centroid DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return predicted_centroid_py(pose, m, refs)
+
+
+def predicted_bbox_py(pose: tuple[float, float], m: LocalMetrics
+                      ) -> tuple[float, float, float, float] | None:
     from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
     gzx, gzy = _emitted_zone_frame(pose)
     a: list[float] | None = None
@@ -397,6 +416,23 @@ def predicted_bbox(pose: tuple[float, float], m: LocalMetrics
     if a is None:
         return None
     return (round(a[0], 4), round(a[1], 4), round(a[2], 4), round(a[3], 4))
+
+
+def predicted_bbox(pose: tuple[float, float], m: LocalMetrics
+                   ) -> tuple[float, float, float, float] | None:
+    if _nat.loaded():
+        from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+        gzx, gzy = _emitted_zone_frame(pose)
+        got = _nat.module().predicted_bbox(
+            gzx, gzy, ORIGIN_X, ORIGIN_Y, list(m.offsets), list(m.pad_union))
+        if _nat.trace():
+            ref = predicted_bbox_py(pose, m)
+            if got != ref:
+                raise AssertionError(
+                    "native predicted_bbox DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return predicted_bbox_py(pose, m)
 
 
 def evaluate_terms(board_w: float, board_h: float,

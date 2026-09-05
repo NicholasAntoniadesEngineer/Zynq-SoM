@@ -228,6 +228,35 @@ NB_MODULE(_geom, m) {
               auto hit = schgen::facing_dot(zx, zy, ox, oy, dx, dy);
               return std::make_tuple(hit.first, hit.second);
           });
+    m.def("predicted_centroid",
+          [](double pose_x, double pose_y, double origin_x, double origin_y,
+             const std::vector<std::tuple<std::string, double, double>>& offsets,
+             std::optional<std::vector<std::string>> refs)
+              -> std::optional<std::tuple<double, double>> {
+              const std::vector<std::string>* allow = nullptr;
+              if (refs.has_value()) {
+                  allow = &(*refs);
+              }
+              auto hit = schgen::predicted_centroid(pose_x, pose_y, origin_x,
+                                                    origin_y, offsets, allow);
+              if (!hit) {
+                  return std::nullopt;
+              }
+              return std::make_tuple(hit->first, hit->second);
+          });
+    m.def("predicted_bbox",
+          [](double pose_x, double pose_y, double origin_x, double origin_y,
+             const std::vector<std::tuple<std::string, double, double>>& offsets,
+             const std::vector<std::tuple<std::string, double, double, double,
+                                          double>>& pad_union)
+              -> std::optional<std::tuple<double, double, double, double>> {
+              auto hit = schgen::predicted_bbox(pose_x, pose_y, origin_x,
+                                                origin_y, offsets, pad_union);
+              if (!hit) {
+                  return std::nullopt;
+              }
+              return std::make_tuple(hit->x0, hit->y0, hit->x1, hit->y1);
+          });
     m.def("boxes_overlap",
           [](const std::tuple<double, double, double, double>& a,
              const std::tuple<double, double, double, double>& b,

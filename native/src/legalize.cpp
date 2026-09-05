@@ -1,8 +1,13 @@
 #include "schgen/legalize.hpp"
 
+#include "schgen/occupancy.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -122,6 +127,75 @@ std::pair<double, double> facing_dot(double zone_x, double zone_y,
         angle = std::acos(c) * (180.0 / 3.141592653589793);
     }
     return {dot, angle};
+}
+
+std::optional<std::pair<double, double>> predicted_centroid(
+    double pose_x, double pose_y, double origin_x, double origin_y,
+    const std::vector<std::tuple<std::string, double, double>>& offsets,
+    const std::vector<std::string>* refs) {
+    std::unordered_set<std::string> allow;
+    if (refs != nullptr) {
+        allow.insert(refs->begin(), refs->end());
+    }
+    double xs = 0.0;
+    double ys = 0.0;
+    int n = 0;
+    for (const auto& off : offsets) {
+        const std::string& ref = std::get<0>(off);
+        if (refs != nullptr && allow.find(ref) == allow.end()) {
+            continue;
+        }
+        xs += py_round(origin_x + pose_x + std::get<1>(off), 4);
+        ys += py_round(origin_y + pose_y + std::get<2>(off), 4);
+        ++n;
+    }
+    if (n == 0) {
+        return std::nullopt;
+    }
+    return std::make_pair(py_round(xs / static_cast<double>(n), 4),
+                          py_round(ys / static_cast<double>(n), 4));
+}
+
+std::optional<Box4> predicted_bbox(
+    double pose_x, double pose_y, double origin_x, double origin_y,
+    const std::vector<std::tuple<std::string, double, double>>& offsets,
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        pad_union) {
+    std::unordered_map<std::string, std::pair<double, double>> off;
+    off.reserve(offsets.size());
+    for (const auto& row : offsets) {
+        off[std::get<0>(row)] = {std::get<1>(row), std::get<2>(row)};
+    }
+    bool any = false;
+    Box4 acc;
+    for (const auto& pad : pad_union) {
+        const auto it = off.find(std::get<0>(pad));
+        if (it == off.end()) {
+            throw std::runtime_error("predicted_bbox: pad ref missing offset");
+        }
+        const double dx = it->second.first;
+        const double dy = it->second.second;
+        const double px = py_round(origin_x + pose_x + dx, 4);
+        const double py = py_round(origin_y + pose_y + dy, 4);
+        const double x0 = px + (std::get<1>(pad) - dx);
+        const double y0 = py + (std::get<2>(pad) - dy);
+        const double x1 = px + (std::get<3>(pad) - dx);
+        const double y1 = py + (std::get<4>(pad) - dy);
+        if (!any) {
+            acc = Box4{x0, y0, x1, y1};
+            any = true;
+        } else {
+            acc.x0 = std::min(acc.x0, x0);
+            acc.y0 = std::min(acc.y0, y0);
+            acc.x1 = std::max(acc.x1, x1);
+            acc.y1 = std::max(acc.y1, y1);
+        }
+    }
+    if (!any) {
+        return std::nullopt;
+    }
+    return Box4{py_round(acc.x0, 4), py_round(acc.y0, 4),
+                py_round(acc.x1, 4), py_round(acc.y1, 4)};
 }
 
 }  // namespace schgen

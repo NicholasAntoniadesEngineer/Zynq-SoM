@@ -357,6 +357,33 @@ def test_flow_kernels_match_python(geom):
         (5.0, 5.0), (5.0, 5.0), (8.0, 9.0))
 
 
+def test_predicted_metrics_match_python(geom):
+    from schgen.generate.floorplan_compose import (
+        LocalMetrics,
+        predicted_bbox_py,
+        predicted_centroid_py,
+    )
+    m = LocalMetrics(
+        offsets=(("R1", 1.2, -0.4), ("C2", 4.8, 2.1), ("U1", 0.0, 0.0)),
+        pad_union=(
+            ("R1", 0.7, -0.9, 1.7, 0.1),
+            ("C2", 4.3, 1.6, 5.3, 2.6),
+            ("U1", -2.0, -2.0, 2.0, 2.0),
+        ),
+        zone_wh=(12.0, 8.0),
+    )
+    pose = (37.3155, 12.3456)
+    assert predicted_centroid_py(pose, m) == geom.predicted_centroid(
+        pose[0], pose[1], 25.0, 25.0, list(m.offsets), None)
+    assert predicted_centroid_py(pose, m, {"R1", "U1"}) == geom.predicted_centroid(
+        pose[0], pose[1], 25.0, 25.0, list(m.offsets), ["R1", "U1"])
+    assert predicted_centroid_py(pose, m, set()) is None
+    assert geom.predicted_centroid(
+        pose[0], pose[1], 25.0, 25.0, list(m.offsets), []) is None
+    assert predicted_bbox_py(pose, m) == geom.predicted_bbox(
+        pose[0], pose[1], 25.0, 25.0, list(m.offsets), list(m.pad_union))
+
+
 def test_quantize_matches_python(geom):
     from schgen.core import quantize
     samples = (37.3, 0.0, -12.7, 104.229, 51.4999, 11.24955, 40.74095)
