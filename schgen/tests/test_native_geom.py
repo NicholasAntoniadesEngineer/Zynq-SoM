@@ -808,6 +808,28 @@ def test_breathe_grid_matches_python(geom):
         assert wrapped.free(box) is py.free(box)
 
 
+def test_silk_box_index_matches_python(geom):
+    from schgen.generate.pcb.silk import _BoxIndex, _BoxIndexPy
+    boxes = (
+        (0.0, 0.0, 4.0, 2.0),
+        (10.0, 8.0, 14.0, 12.0),
+        (-3.0, -2.0, 1.0, 1.0),
+        (20.0, 20.0, 21.0, 21.0),
+    )
+    py = _BoxIndexPy(boxes)
+    wrapped = _BoxIndex(boxes)
+    probes = (
+        (1.0, 0.5, 3.0, 1.5),
+        (9.0, 7.0, 11.0, 9.0),
+        (50.0, 50.0, 51.0, 51.0),
+        (-2.0, -1.0, 0.0, 0.0),
+    )
+    for gb in probes:
+        assert wrapped.pen(gb) == py.pen(gb)
+        assert wrapped.hits(gb) is py.hits(gb)
+        assert geom.SilkBoxIndex(8.0).pen(gb) == 0.0
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

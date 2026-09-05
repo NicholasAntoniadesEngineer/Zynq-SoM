@@ -179,7 +179,7 @@ def _overlap_area(a, b) -> float:
     return _overlap_area_py(a, b)
 
 
-class _BoxIndex:
+class _BoxIndexPy:
     __slots__ = ("cell", "cells", "boxes")
 
     def __init__(self, boxes=(), cell: float = 8.0):
@@ -211,11 +211,53 @@ class _BoxIndex:
 
     def pen(self, gb) -> float:
         bx = self.boxes
-        return sum(_overlap_area(gb, bx[i]) for i in self._near(gb))
+        return sum(_overlap_area_py(gb, bx[i]) for i in self._near(gb))
 
     def hits(self, gb) -> bool:
         bx = self.boxes
-        return any(_overlap_area(gb, bx[i]) > 0.0 for i in self._near(gb))
+        return any(_overlap_area_py(gb, bx[i]) > 0.0 for i in self._near(gb))
+
+
+class _BoxIndex:
+    __slots__ = ("_cpp", "_py")
+
+    def __init__(self, boxes=(), cell: float = 8.0):
+        self._cpp = None
+        self._py = None
+        if _nat.loaded():
+            self._cpp = _nat.module().SilkBoxIndex(cell)
+            for b in boxes:
+                self._cpp.add(b)
+            if _nat.trace():
+                self._py = _BoxIndexPy(boxes, cell)
+        else:
+            self._py = _BoxIndexPy(boxes, cell)
+
+    def add(self, b) -> None:
+        if self._cpp is not None:
+            self._cpp.add(b)
+        if self._py is not None:
+            self._py.add(b)
+
+    def pen(self, gb) -> float:
+        if self._cpp is not None:
+            got = self._cpp.pen(gb)
+            if self._py is not None and got != self._py.pen(gb):
+                raise AssertionError(
+                    f"native SilkBoxIndex.pen DIVERGENCE: "
+                    f"cpp={got} python={self._py.pen(gb)}")
+            return got
+        return self._py.pen(gb)
+
+    def hits(self, gb) -> bool:
+        if self._cpp is not None:
+            got = self._cpp.hits(gb)
+            if self._py is not None and got is not self._py.hits(gb):
+                raise AssertionError(
+                    "native SilkBoxIndex.hits DIVERGENCE: "
+                    f"cpp={got} python={self._py.hits(gb)}")
+            return got
+        return self._py.hits(gb)
 
 
 class _PairIndex:
@@ -226,12 +268,7 @@ class _PairIndex:
         self.b = b
 
     def pen(self, gb) -> float:
-        pen = 0
-        for i in self.a._near(gb):
-            pen += _overlap_area(gb, self.a.boxes[i])
-        for i in self.b._near(gb):
-            pen += _overlap_area(gb, self.b.boxes[i])
-        return pen
+        return self.a.pen(gb) + self.b.pen(gb)
 
 
 def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -88,6 +89,23 @@ std::pair<bool, double> coverage_ok(
     double bound);
 bool point_on_seg(double px, double py, double x0, double y0, double x1,
                   double y1, bool interior_only);
+
+class SilkBoxIndex {
+public:
+    explicit SilkBoxIndex(double cell);
+    void add(const Box4& box);
+    double pen(const Box4& gb) const;
+    bool hits(const Box4& gb) const;
+
+private:
+    int cell_of(double value) const;
+    std::uint64_t key(int gx, int gy) const;
+    std::vector<int> near(const Box4& box) const;
+
+    double cell_ = 8.0;
+    std::vector<Box4> boxes_;
+    std::unordered_map<std::uint64_t, std::vector<int>> cells_;
+};
 
 class BreatheGrid {
 public:

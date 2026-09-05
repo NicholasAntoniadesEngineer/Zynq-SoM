@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <set>
 #include <stdexcept>
 
 namespace schgen {
@@ -312,6 +313,77 @@ std::pair<bool, double> coverage_ok(
         }
     }
     return {true, worst};
+}
+
+SilkBoxIndex::SilkBoxIndex(double cell) : cell_(cell) {
+    if (cell <= 0.0) {
+        throw std::runtime_error("SilkBoxIndex: cell required");
+    }
+}
+
+int SilkBoxIndex::cell_of(double value) const {
+    return static_cast<int>(std::floor(value / cell_));
+}
+
+std::uint64_t SilkBoxIndex::key(int gx, int gy) const {
+    return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(gx)) << 32)
+        | static_cast<std::uint32_t>(gy);
+}
+
+void SilkBoxIndex::add(const Box4& box) {
+    const int i = static_cast<int>(boxes_.size());
+    boxes_.push_back(box);
+    const int gx0 = cell_of(box.x0);
+    const int gy0 = cell_of(box.y0);
+    const int gx1 = cell_of(box.x1);
+    const int gy1 = cell_of(box.y1);
+    for (int gx = gx0; gx <= gx1; ++gx) {
+        for (int gy = gy0; gy <= gy1; ++gy) {
+            cells_[key(gx, gy)].push_back(i);
+        }
+    }
+}
+
+std::vector<int> SilkBoxIndex::near(const Box4& box) const {
+    const int gx0 = cell_of(box.x0);
+    const int gy0 = cell_of(box.y0);
+    const int gx1 = cell_of(box.x1);
+    const int gy1 = cell_of(box.y1);
+    if (gx0 == gx1 && gy0 == gy1) {
+        auto it = cells_.find(key(gx0, gy0));
+        if (it == cells_.end()) {
+            return {};
+        }
+        return it->second;
+    }
+    std::set<int> uniq;
+    for (int gx = gx0; gx <= gx1; ++gx) {
+        for (int gy = gy0; gy <= gy1; ++gy) {
+            auto it = cells_.find(key(gx, gy));
+            if (it == cells_.end()) {
+                continue;
+            }
+            uniq.insert(it->second.begin(), it->second.end());
+        }
+    }
+    return {uniq.begin(), uniq.end()};
+}
+
+double SilkBoxIndex::pen(const Box4& gb) const {
+    double acc = 0.0;
+    for (int i : near(gb)) {
+        acc += overlap_area(gb, boxes_[static_cast<std::size_t>(i)]);
+    }
+    return acc;
+}
+
+bool SilkBoxIndex::hits(const Box4& gb) const {
+    for (int i : near(gb)) {
+        if (overlap_area(gb, boxes_[static_cast<std::size_t>(i)]) > 0.0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 BreatheGrid::BreatheGrid(double board_w, double board_h, double cell,

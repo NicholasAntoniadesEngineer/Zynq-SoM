@@ -1032,6 +1032,20 @@ NB_MODULE(_geom, m) {
                  return std::make_tuple(hit->x, hit->y, hit->w, hit->h);
              })
         .def_prop_ro("rect_count", &schgen::Occupancy::rect_count);
+    nb::class_<schgen::SilkBoxIndex>(m, "SilkBoxIndex")
+        .def(nb::init<double>(), nb::arg("cell") = 8.0)
+        .def("add",
+             [](schgen::SilkBoxIndex& self, const BoxTup& box) {
+                 self.add(as_box(box));
+             })
+        .def("pen",
+             [](const schgen::SilkBoxIndex& self, const BoxTup& gb) {
+                 return self.pen(as_box(gb));
+             })
+        .def("hits",
+             [](const schgen::SilkBoxIndex& self, const BoxTup& gb) {
+                 return self.hits(as_box(gb));
+             });
     nb::class_<schgen::BreatheGrid>(m, "BreatheGrid")
         .def(nb::init<double, double, double, double, double>())
         .def("stamp",
