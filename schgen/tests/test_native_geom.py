@@ -858,6 +858,45 @@ def test_evict_window_matches_python(geom):
     assert got == want
 
 
+def test_place_clear_label_matches_python(geom):
+    from schgen.generate.pcb.silk import (
+        _BoxIndexPy,
+        _place_clear_label_py,
+    )
+    court = (49.0, 49.0, 51.0, 51.0)
+    boxes = [(30.0, 30.0, 70.0, 70.0), (10.0, 80.0, 20.0, 90.0)]
+    idx = geom.SilkBoxIndex(8.0)
+    for b in boxes:
+        idx.add(b)
+    got = geom.place_clear_label(*court, "U1", 1.0, idx, None)
+    ref = _place_clear_label_py(*court, "U1", 1.0, _BoxIndexPy(boxes))
+    assert got[:2] == ref[:2]
+    assert got[2:6] == ref[2]
+    assert got[6] == ref[3]
+    bounded = (0.0, 0.0, 100.0, 100.0)
+    got_b = geom.place_clear_label(*court, "PMOD0", 1.1, idx, bounded)
+    ref_b = _place_clear_label_py(*court, "PMOD0", 1.1, _BoxIndexPy(boxes),
+                                  bounded)
+    assert got_b[:2] == ref_b[:2]
+    assert got_b[2:6] == ref_b[2]
+    assert got_b[6] == ref_b[3]
+
+
+def test_segments_cross_matches_python(geom):
+    from schgen.generate.pcb.placement import _segments_cross_py
+    cases = (
+        (((0.0, 0.0), (2.0, 2.0)), ((0.0, 2.0), (2.0, 0.0))),
+        (((0.0, 0.0), (1.0, 0.0)), ((2.0, 0.0), (3.0, 0.0))),
+        (((0.0, 0.0), (1.0, 1.0)), ((1.0, 1.0), (2.0, 0.0))),
+        (((0.0, 0.0), (2.0, 0.0)), ((1.0, -1.0), (1.0, 1.0))),
+    )
+    for s1, s2 in cases:
+        (p1, p2), (p3, p4) = s1, s2
+        got = geom.segments_cross(p1[0], p1[1], p2[0], p2[1],
+                                  p3[0], p3[1], p4[0], p4[1])
+        assert got is _segments_cross_py(s1, s2)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

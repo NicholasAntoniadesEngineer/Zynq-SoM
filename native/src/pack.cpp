@@ -477,4 +477,121 @@ bool point_on_seg(double px, double py, double x0, double y0, double x1,
     return lo - eps <= coord && coord <= hi + eps;
 }
 
+namespace {
+
+bool onboard_box(const Box4& box, const std::optional<Box4>& bounds) {
+    if (!bounds.has_value()) {
+        return true;
+    }
+    return box.x0 >= bounds->x0 && box.y0 >= bounds->y0
+        && box.x1 <= bounds->x1 && box.y1 <= bounds->y1;
+}
+
+}  // namespace
+
+ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
+                             const std::string& label, double size,
+                             const SilkBoxIndex& occupied,
+                             const std::optional<Box4>& bounds) {
+    const double midx = (cx0 + cx1) / 2.0;
+    const double midy = (cy0 + cy1) / 2.0;
+    const double thick = std::max(0.12, size * 0.15);
+    const double n = static_cast<double>(std::max<std::size_t>(label.size(), 1));
+    const double w = n * size + thick;
+    const double h = size + thick;
+    const double g = 0.9;
+    bool have_best = false;
+    bool have_any = false;
+    double best_pen = 0.0;
+    double best_any_pen = 0.0;
+    ClearLabel best;
+    ClearLabel best_any;
+    static const double kRing[] = {0.0, 2.2, 4.4, 6.6, 9.0, 12.0, 15.0, 18.0};
+    for (double extra : kRing) {
+        const double dy = g + extra + h / 2.0;
+        const double dx = g + extra + w / 2.0;
+        const double cands[8][2] = {
+            {midx, cy1 + dy},
+            {midx, cy0 - dy},
+            {cx1 + dx, midy},
+            {cx0 - dx, midy},
+            {cx1 + dx, cy1 + dy},
+            {cx0 - dx, cy1 + dy},
+            {cx1 + dx, cy0 - dy},
+            {cx0 - dx, cy0 - dy},
+        };
+        for (const auto& cand : cands) {
+            const Box4 box = text_box(label, cand[0], cand[1], size, 0.15);
+            const Box4 gb{box.x0 - 0.02, box.y0 - 0.02, box.x1 + 0.02,
+                          box.y1 + 0.02};
+            const double pen = occupied.pen(gb);
+            const bool onboard = onboard_box(box, bounds);
+            const ClearLabel hit{cand[0], cand[1], box, extra};
+            if (onboard) {
+                if (pen == 0.0) {
+                    return hit;
+                }
+                if (!have_best || pen < best_pen) {
+                    best_pen = pen;
+                    best = hit;
+                    have_best = true;
+                }
+            }
+            if (!have_any || pen < best_any_pen) {
+                best_any_pen = pen;
+                best_any = hit;
+                have_any = true;
+            }
+        }
+    }
+    static const double kOrbit[] = {2.2, 4.4, 6.6, 9.0, 12.0, 15.0, 18.0, 21.0,
+                                    24.0, 28.0, 32.0};
+    static const double kTau = 6.283185307179586;
+    for (double extra : kOrbit) {
+        const double rx = (cx1 - cx0) / 2.0 + g + extra + w / 2.0;
+        const double ry = (cy1 - cy0) / 2.0 + g + extra + h / 2.0;
+        for (int k = 0; k < 16; ++k) {
+            const double a = kTau * static_cast<double>(k) / 16.0;
+            const double tx = midx + rx * std::cos(a);
+            const double ty = midy + ry * std::sin(a);
+            const Box4 box = text_box(label, tx, ty, size, 0.15);
+            if (!onboard_box(box, bounds)) {
+                continue;
+            }
+            const Box4 gb{box.x0 - 0.02, box.y0 - 0.02, box.x1 + 0.02,
+                          box.y1 + 0.02};
+            const double pen = occupied.pen(gb);
+            const ClearLabel hit{tx, ty, box, extra};
+            if (pen == 0.0) {
+                return hit;
+            }
+            if (!have_best || pen < best_pen) {
+                best_pen = pen;
+                best = hit;
+                have_best = true;
+            }
+        }
+    }
+    return have_best ? best : best_any;
+}
+
+bool segments_cross(double ax0, double ay0, double ax1, double ay1,
+                    double bx0, double by0, double bx1, double by1) {
+    const double eps = 1e-9;
+    if ((ax0 == bx0 && ay0 == by0) || (ax0 == bx1 && ay0 == by1)
+        || (ax1 == bx0 && ay1 == by0) || (ax1 == bx1 && ay1 == by1)) {
+        return false;
+    }
+    const auto cross = [](double ox, double oy, double ax, double ay,
+                          double bx, double by) {
+        return (ax - ox) * (by - oy) - (ay - oy) * (bx - ox);
+    };
+    const double d1 = cross(bx0, by0, bx1, by1, ax0, ay0);
+    const double d2 = cross(bx0, by0, bx1, by1, ax1, ay1);
+    const double d3 = cross(ax0, ay0, ax1, ay1, bx0, by0);
+    const double d4 = cross(ax0, ay0, ax1, ay1, bx1, by1);
+    return (((d1 > eps && d2 < -eps) || (d1 < -eps && d2 > eps))
+            && ((d3 > eps && d4 < -eps) || (d3 < -eps && d4 > eps)));
+}
+
 }  // namespace schgen

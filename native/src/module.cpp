@@ -442,6 +442,21 @@ NB_MODULE(_geom, m) {
               auto hit = schgen::coverage_ok(u, v, as_pts(members), bound);
               return std::make_tuple(hit.first, hit.second);
           });
+    m.def("place_clear_label",
+          [](double cx0, double cy0, double cx1, double cy1,
+             const std::string& label, double size,
+             const schgen::SilkBoxIndex& occupied,
+             const std::optional<BoxTup>& bounds) {
+              std::optional<schgen::Box4> box;
+              if (bounds.has_value()) {
+                  box = as_box(*bounds);
+              }
+              auto hit = schgen::place_clear_label(cx0, cy0, cx1, cy1, label,
+                                                   size, occupied, box);
+              return std::make_tuple(hit.x, hit.y, hit.box.x0, hit.box.y0,
+                                     hit.box.x1, hit.box.y1, hit.extra);
+          });
+    m.def("segments_cross", &schgen::segments_cross);
     m.def("point_on_seg", &schgen::point_on_seg);
     m.def("min_box_gap",
           [](const std::vector<std::tuple<double, double, double, double>>& a,

@@ -1071,7 +1071,7 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
                        bbox_of=bbox_of, mirror_refs=frozenset(mirror_refs))
 
 
-def _segments_cross(s1: tuple, s2: tuple) -> bool:
+def _segments_cross_py(s1: tuple, s2: tuple) -> bool:
     (p1, p2), (p3, p4) = s1, s2
     eps = 1e-9
     if {(p1[0], p1[1]), (p2[0], p2[1])} & {(p3[0], p3[1]), (p4[0], p4[1])}:
@@ -1084,6 +1084,21 @@ def _segments_cross(s1: tuple, s2: tuple) -> bool:
     d3, d4 = d(p1, p2, p3), d(p1, p2, p4)
     return (((d1 > eps and d2 < -eps) or (d1 < -eps and d2 > eps))
             and ((d3 > eps and d4 < -eps) or (d3 < -eps and d4 > eps)))
+
+
+def _segments_cross(s1: tuple, s2: tuple) -> bool:
+    if _nat.loaded():
+        (p1, p2), (p3, p4) = s1, s2
+        got = _nat.module().segments_cross(
+            p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], p4[0], p4[1])
+        if _nat.trace():
+            ref = _segments_cross_py(s1, s2)
+            if got is not ref:
+                raise AssertionError(
+                    "native segments_cross DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _segments_cross_py(s1, s2)
 
 
 def _reorder_interchangeable(pos: dict[str, tuple[float, float]],

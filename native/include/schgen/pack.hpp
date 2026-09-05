@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -96,6 +97,7 @@ public:
     void add(const Box4& box);
     double pen(const Box4& gb) const;
     bool hits(const Box4& gb) const;
+    const std::vector<Box4>& boxes() const { return boxes_; }
 
 private:
     int cell_of(double value) const;
@@ -122,6 +124,20 @@ private:
     double origin_y_ = 0.0;
     std::vector<std::uint8_t> cells_;
 };
+
+struct ClearLabel {
+    double x = 0.0;
+    double y = 0.0;
+    Box4 box;
+    double extra = 0.0;
+};
+
+ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
+                             const std::string& label, double size,
+                             const SilkBoxIndex& occupied,
+                             const std::optional<Box4>& bounds);
+bool segments_cross(double ax0, double ay0, double ax1, double ay1,
+                    double bx0, double by0, double bx1, double by1);
 
 std::pair<Halo, Halo> zone_fanout_reach(
     double zw, double zh,

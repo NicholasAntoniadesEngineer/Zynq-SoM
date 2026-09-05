@@ -219,11 +219,12 @@ class _BoxIndexPy:
 
 
 class _BoxIndex:
-    __slots__ = ("_cpp", "_py")
+    __slots__ = ("_cpp", "_py", "_boxes")
 
     def __init__(self, boxes=(), cell: float = 8.0):
         self._cpp = None
         self._py = None
+        self._boxes = list(boxes)
         if _nat.loaded():
             self._cpp = _nat.module().SilkBoxIndex(cell)
             for b in boxes:
@@ -234,6 +235,7 @@ class _BoxIndex:
             self._py = _BoxIndexPy(boxes, cell)
 
     def add(self, b) -> None:
+        self._boxes.append(b)
         if self._cpp is not None:
             self._cpp.add(b)
         if self._py is not None:
@@ -271,9 +273,10 @@ class _PairIndex:
         return self.a.pen(gb) + self.b.pen(gb)
 
 
-def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
+def _place_clear_label_py(cx0, cy0, cx1, cy1, label, size, occupied,
+                          bounds=None):
     if isinstance(occupied, list):
-        occupied = _BoxIndex(occupied)
+        occupied = _BoxIndexPy(occupied)
     midx, midy = (cx0 + cx1) / 2.0, (cy0 + cy1) / 2.0
     thick = max(0.12, size * 0.15)
     w = max(len(label), 1) * size * 1.0 + thick
@@ -294,7 +297,7 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
                        (cx0 - dx, cy1 + dy),
                        (cx1 + dx, cy0 - dy),
                        (cx0 - dx, cy0 - dy)):
-            box = _text_box(label, tx, ty, size)
+            box = _text_box_py(label, tx, ty, size)
             gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
             pen = occupied.pen(gb)
             onboard = bounds is None or (
@@ -315,7 +318,7 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
             a = math.tau * k / 16.0
             tx = midx + rx * math.cos(a)
             ty = midy + ry * math.sin(a)
-            box = _text_box(label, tx, ty, size)
+            box = _text_box_py(label, tx, ty, size)
             onboard = bounds is None or (
                 box[0] >= bounds[0] and box[1] >= bounds[1]
                 and box[2] <= bounds[2] and box[3] <= bounds[3])
@@ -328,6 +331,27 @@ def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
             if best_pen is None or pen < best_pen:
                 best_pen, best = pen, (tx, ty, box, extra)
     return best if best is not None else best_any
+
+
+def _place_clear_label(cx0, cy0, cx1, cy1, label, size, occupied, bounds=None):
+    if isinstance(occupied, list):
+        occupied = _BoxIndex(occupied)
+    if _nat.loaded() and occupied._cpp is not None:
+        got = _nat.module().place_clear_label(
+            cx0, cy0, cx1, cy1, label, size, occupied._cpp, bounds)
+        out = (got[0], got[1], (got[2], got[3], got[4], got[5]), got[6])
+        if _nat.trace():
+            ref = _place_clear_label_py(
+                cx0, cy0, cx1, cy1, label, size,
+                _BoxIndexPy(occupied._boxes), bounds)
+            if out != ref:
+                raise AssertionError(
+                    "native place_clear_label DIVERGENCE: "
+                    f"cpp={out} python={ref}")
+        return out
+    return _place_clear_label_py(cx0, cy0, cx1, cy1, label, size,
+                                 occupied._boxes if occupied._py is None
+                                 else occupied, bounds)
 
 
 def _silk_text(txt: str, x: float, y: float, size: float, uuid) -> list:
