@@ -77,14 +77,35 @@ def _fanout_sep(a_reach: tuple, a_inset: tuple, b_reach: tuple, b_inset: tuple,
     return _fanout_sep_py(a_reach, a_inset, b_reach, b_inset, axis)
 
 
-def _pair_gap(a, b) -> float:
+def _pair_gap_py(a, b) -> float:
     om_a, om_b = _is_overmold_block(a), _is_overmold_block(b)
     if om_a and om_b:
         return CABLE_NEIGHBOR_GAP
     axis = "E" if (a.edge or b.edge) in ("N", "S") else "S"
     floor = OVERMOLD_SIDE_GAP if (om_a or om_b) else CLEAR
-    return round(max(floor, _fanout_sep(a.fanout_reach, a.fanout_inset,
-                                        b.fanout_reach, b.fanout_inset, axis)), 4)
+    return round(max(floor, _fanout_sep_py(a.fanout_reach, a.fanout_inset,
+                                           b.fanout_reach, b.fanout_inset,
+                                           axis)), 4)
+
+
+def _pair_gap(a, b) -> float:
+    if _nat.loaded():
+        om_a, om_b = _is_overmold_block(a), _is_overmold_block(b)
+        if om_a and om_b:
+            got = CABLE_NEIGHBOR_GAP
+        else:
+            axis = "E" if (a.edge or b.edge) in ("N", "S") else "S"
+            floor = OVERMOLD_SIDE_GAP if (om_a or om_b) else CLEAR
+            got = _nat.module().pair_gap(
+                a.fanout_reach, a.fanout_inset,
+                b.fanout_reach, b.fanout_inset, axis, floor)
+        if _nat.trace():
+            ref = _pair_gap_py(a, b)
+            if got != ref:
+                raise AssertionError(
+                    f"native pair_gap DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _pair_gap_py(a, b)
 
 
 _ZeroReach = (0.0, 0.0, 0.0, 0.0)

@@ -549,6 +549,28 @@ NB_MODULE(_geom, m) {
                                           line_h, width_pad, gap);
               return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
           });
+    m.def("silk_gfx_extent",
+          [](const std::vector<PtTup>& pts, double fx, double fy, double ca,
+             double sa, double hw) -> std::optional<BoxTup> {
+              auto hit = schgen::silk_gfx_extent(as_pts(pts), fx, fy, ca, sa,
+                                                 hw);
+              if (!hit) {
+                  return std::nullopt;
+              }
+              return std::make_tuple(hit->x0, hit->y0, hit->x1, hit->y1);
+          });
+    m.def("pair_gap",
+          [](const std::tuple<double, double, double, double>& ar,
+             const std::tuple<double, double, double, double>& ai,
+             const std::tuple<double, double, double, double>& br,
+             const std::tuple<double, double, double, double>& bi,
+             const char* axis, double floor) {
+              if (axis == nullptr || axis[0] == '\0') {
+                  throw std::runtime_error("pair_gap: axis required");
+              }
+              return schgen::pair_gap(as_halo(ar), as_halo(ai), as_halo(br),
+                                      as_halo(bi), axis[0], floor);
+          });
     m.def("glabel_box",
           [](const std::string& text, double x, double y, int rotation,
              double size, double char_w, double line_h, double pad_len,

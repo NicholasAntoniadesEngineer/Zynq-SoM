@@ -147,6 +147,12 @@ Box4 centered_box(const std::string& text, double cx, double cy, double size,
 Box4 llabel_box(const std::string& text, double x, double y, int rotation,
                 double size, double char_w, double line_h, double width_pad,
                 double gap);
+std::optional<Box4> silk_gfx_extent(
+    const std::vector<std::pair<double, double>>& pts, double fx, double fy,
+    double ca, double sa, double hw);
+double pair_gap(const Halo& a_reach, const Halo& a_inset, const Halo& b_reach,
+                const Halo& b_inset, char axis, double floor);
+
 Box4 glabel_box(const std::string& text, double x, double y, int rotation,
                 double size, double char_w, double line_h, double pad_len,
                 double glabel_h, double inset);

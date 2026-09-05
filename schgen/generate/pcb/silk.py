@@ -68,7 +68,7 @@ def _font_size(node, default: float = 1.0) -> float:
     return float(szn[1]) if szn is not None else default
 
 
-def _silk_gfx_box(c, fx, fy, ca, sa):
+def _silk_gfx_pts(c):
     tag = str(c[0])
     pts: list = []
     if tag == "fp_circle":
@@ -88,14 +88,35 @@ def _silk_gfx_box(c, fx, fy, ca, sa):
             for xy in ptsn:
                 if isinstance(xy, list) and xy and str(xy[0]) == "xy" and len(xy) >= 3:
                     pts.append((float(xy[1]), float(xy[2])))
+    stroke = _sub(c, "stroke")
+    wn = _sub(stroke, "width") if stroke is not None else None
+    hw = (float(wn[1]) / 2.0) if (wn is not None and len(wn) >= 2) else 0.06
+    return pts, hw
+
+
+def _silk_gfx_box_py(c, fx, fy, ca, sa):
+    pts, hw = _silk_gfx_pts(c)
     if not pts:
         return None
     bxs = [fx + lx * ca + ly * sa for lx, ly in pts]
     bys = [fy - lx * sa + ly * ca for lx, ly in pts]
-    stroke = _sub(c, "stroke")
-    wn = _sub(stroke, "width") if stroke is not None else None
-    hw = (float(wn[1]) / 2.0) if (wn is not None and len(wn) >= 2) else 0.06
     return (min(bxs) - hw, min(bys) - hw, max(bxs) + hw, max(bys) + hw)
+
+
+def _silk_gfx_box(c, fx, fy, ca, sa):
+    if _nat.loaded():
+        pts, hw = _silk_gfx_pts(c)
+        got = _nat.module().silk_gfx_extent(pts, fx, fy, ca, sa, hw)
+        if got is not None:
+            got = tuple(got)
+        if _nat.trace():
+            ref = _silk_gfx_box_py(c, fx, fy, ca, sa)
+            if got != ref:
+                raise AssertionError(
+                    "native silk_gfx_extent DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _silk_gfx_box_py(c, fx, fy, ca, sa)
 
 
 def _emitted_text_boxes(doc: list, include_silk_gfx: bool = False) -> list:

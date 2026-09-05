@@ -696,4 +696,39 @@ Box4 glabel_box(const std::string& text, double x, double y, int rotation,
     throw std::runtime_error("glabel_box: unsupported label rotation");
 }
 
+std::optional<Box4> silk_gfx_extent(
+    const std::vector<std::pair<double, double>>& pts, double fx, double fy,
+    double ca, double sa, double hw) {
+    if (pts.empty()) {
+        return std::nullopt;
+    }
+    double min_x = 0.0;
+    double min_y = 0.0;
+    double max_x = 0.0;
+    double max_y = 0.0;
+    bool any = false;
+    for (const auto& p : pts) {
+        const double bx = fx + p.first * ca + p.second * sa;
+        const double by = fy - p.first * sa + p.second * ca;
+        if (!any) {
+            min_x = max_x = bx;
+            min_y = max_y = by;
+            any = true;
+        } else {
+            min_x = std::min(min_x, bx);
+            min_y = std::min(min_y, by);
+            max_x = std::max(max_x, bx);
+            max_y = std::max(max_y, by);
+        }
+    }
+    return Box4{min_x - hw, min_y - hw, max_x + hw, max_y + hw};
+}
+
+double pair_gap(const Halo& a_reach, const Halo& a_inset, const Halo& b_reach,
+                const Halo& b_inset, char axis, double floor) {
+    return py_round(std::max(floor, fanout_sep(a_reach, a_inset, b_reach,
+                                               b_inset, axis)),
+                    4);
+}
+
 }  // namespace schgen

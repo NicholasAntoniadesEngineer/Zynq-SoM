@@ -976,6 +976,25 @@ def test_wall_sep_edges_matches_python(geom):
     assert all(r[3] != "sep" or seps[r[4]][0] is True for r in rows)
 
 
+def test_silk_gfx_extent_and_pair_gap(geom):
+    from schgen.generate.floorplan import CLEAR, _fanout_sep_py
+    pts = [(0.0, 0.0), (2.0, 1.0), (-0.5, 1.5)]
+    fx, fy, ca, sa, hw = 10.0, 20.0, 0.0, 1.0, 0.06
+    got = tuple(geom.silk_gfx_extent(pts, fx, fy, ca, sa, hw))
+    bxs = [fx + lx * ca + ly * sa for lx, ly in pts]
+    bys = [fy - lx * sa + ly * ca for lx, ly in pts]
+    want = (min(bxs) - hw, min(bys) - hw, max(bxs) + hw, max(bys) + hw)
+    assert got == want
+    assert geom.silk_gfx_extent([], fx, fy, ca, sa, hw) is None
+    ar = (1.2, 0.0, 0.4, 0.0)
+    ai = (0.0, 0.0, 0.0, 0.0)
+    br = (0.0, 0.8, 0.0, 0.3)
+    bi = ai
+    axis = "E"
+    want_g = round(max(CLEAR, _fanout_sep_py(ar, ai, br, bi, axis)), 4)
+    assert geom.pair_gap(ar, ai, br, bi, axis, CLEAR) == want_g
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()
