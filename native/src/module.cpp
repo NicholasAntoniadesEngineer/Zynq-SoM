@@ -13,6 +13,7 @@
 #include "schgen/emit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
+#include "schgen/quantize.hpp"
 #include "schgen/route.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
@@ -177,6 +178,20 @@ NB_MODULE(_geom, m) {
                                         clear);
           });
     m.def("py_round", &schgen::py_round);
+    m.def("fixed_part_grid", &schgen::fixed_part_grid);
+    m.def("evict_corridor_grid", &schgen::evict_corridor_grid);
+    m.def("som_pose_half_mm", &schgen::som_pose_half_mm);
+    m.def("legalize_pose_quantum", &schgen::legalize_pose_quantum);
+    m.def("quant_credit", &schgen::quant_credit);
+    m.def("snap_erosion_bound", &schgen::snap_erosion_bound);
+    m.def("snap_erosion_pad", &schgen::snap_erosion_pad);
+    m.def("outline_snap_up", &schgen::outline_snap_up);
+    m.def("outline_grow", &schgen::outline_grow);
+    m.def("fine_shrink", &schgen::fine_shrink);
+    m.def("est_via_cost", &schgen::est_via_cost);
+    m.def("gsnap", &schgen::gsnap);
+    m.def("gfloor", &schgen::gfloor);
+    m.def("gceil", &schgen::gceil);
     m.def("pair_axis",
           [](const std::tuple<double, double, double, double>& a,
              const std::tuple<double, double, double, double>& b) {

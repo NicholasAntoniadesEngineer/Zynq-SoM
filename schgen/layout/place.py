@@ -57,14 +57,20 @@ class PlaceError(ValueError):
 
 
 def gsnap(v: float) -> float:
+    if _nat.loaded():
+        return _nat.module().gsnap(v, U)
     return round(round(v / U) * U, 3)
 
 
 def gfloor(v: float) -> float:
+    if _nat.loaded():
+        return _nat.module().gfloor(v, U)
     return round(math.floor(v / U + 1e-6) * U, 3)
 
 
 def gceil(v: float) -> float:
+    if _nat.loaded():
+        return _nat.module().gceil(v, U)
     return round(math.ceil(v / U - 1e-6) * U, 3)
 
 

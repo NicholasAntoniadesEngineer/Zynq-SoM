@@ -324,6 +324,32 @@ def test_bellman_ford_matches_python(geom):
             assert dist == [py[0][n] for n in nodes]
 
 
+def test_quantize_matches_python(geom):
+    from schgen.core import quantize
+    samples = (37.3, 0.0, -12.7, 104.229, 51.4999, 11.24955, 40.74095)
+    for v in samples:
+        assert geom.fixed_part_grid(v) == round(round(v / 1.27) * 1.27, 4)
+        assert geom.som_pose_half_mm(v) == round(round(v * 2) / 2, 1)
+        assert geom.legalize_pose_quantum(v) == round(round(v / 0.5) * 0.5, 4)
+        assert geom.quant_credit(v) == v + 0.05
+        assert quantize.fixed_part_grid(v) == geom.fixed_part_grid(v)
+        assert quantize.legalize_pose_quantum(v) == geom.legalize_pose_quantum(v)
+    assert geom.snap_erosion_bound(6.0) == 5.25
+    assert geom.snap_erosion_bound(4.99) == 4.99
+    assert geom.outline_snap_up(161.0001) == 165.0
+    assert geom.outline_grow(3) == 15.0
+    assert geom.fine_shrink(183.0, 2) == 181.0
+    assert geom.est_via_cost(True) == 7.6
+    assert geom.est_via_cost(False) == 2.2
+    assert geom.evict_corridor_grid(25.0, 37.3) == round(
+        geom.fixed_part_grid(25.0 + 37.3) - 25.0, 4)
+    u = 1.27
+    for v in samples:
+        assert geom.gsnap(v, u) == round(round(v / u) * u, 3)
+        assert geom.gfloor(v, u) == round(math.floor(v / u + 1e-6) * u, 3)
+        assert geom.gceil(v, u) == round(math.ceil(v / u - 1e-6) * u, 3)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

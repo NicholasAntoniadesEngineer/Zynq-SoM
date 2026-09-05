@@ -1,5 +1,6 @@
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
+#include "schgen/quantize.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
 
@@ -23,6 +24,9 @@ int main(int argc, char** argv) {
         occ.add(55.0, 45.0, 50.0, 50.0, {}, {}, 3, {});
         if (!occ.fits_hashed(10.0, 10.0, 16.0, 10.0, {}, {}, 3, {})) {
             throw std::runtime_error("schgen: occupancy rejected a free pose");
+        }
+        if (schgen::outline_snap_up(161.0001) != 165.0) {
+            throw std::runtime_error("schgen: outline_snap_up missed the 5 mm grid");
         }
         const auto axis = schgen::pair_axis(a, b);
         if (!axis.axis_x || !axis.a_first) {
