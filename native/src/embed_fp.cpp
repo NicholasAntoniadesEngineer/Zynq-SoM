@@ -5,8 +5,11 @@
 #include "schgen/turn.hpp"
 
 #include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -176,6 +179,144 @@ std::pair<double, double> beside_offset(
         offset_x = along_center.has_value() ? *along_center : target_center_x;
     }
     return {py_round(offset_x, 4), py_round(offset_y, 4)};
+}
+
+namespace {
+
+std::string py_str(const Sexpr& node) {
+    if (std::holds_alternative<std::string>(node.v)) {
+        return std::get<std::string>(node.v);
+    }
+    if (std::holds_alternative<Sexpr::Sym>(node.v)) {
+        return std::get<Sexpr::Sym>(node.v).name;
+    }
+    if (std::holds_alternative<double>(node.v)) {
+        const double value = std::get<double>(node.v);
+        const auto as_int = static_cast<std::int64_t>(value);
+        if (static_cast<double>(as_int) == value) {
+            return std::to_string(as_int);
+        }
+        return sexpr_fmt_num(value);
+    }
+    if (std::holds_alternative<bool>(node.v)) {
+        return std::get<bool>(node.v) ? "True" : "False";
+    }
+    throw std::runtime_error("embed_footprint_decorate: cannot stringify");
+}
+
+void hide_reference_property(SexprList& prop) {
+    for (Sexpr& child : prop) {
+        if (!is_tagged_list(child, "hide")) {
+            continue;
+        }
+        SexprList& hide = std::get<SexprList>(child.v);
+        if (hide.size() < 2) {
+            hide.push_back(S("yes"));
+        } else {
+            hide[1] = S("yes");
+        }
+        return;
+    }
+    insert_at(prop, 3, L({S("hide"), S("yes")}));
+}
+
+void rotate_pad_node(SexprList& pad, double footprint_rotation) {
+    for (Sexpr& child : pad) {
+        if (!is_tagged_list(child, "at")) {
+            continue;
+        }
+        SexprList& at = std::get<SexprList>(child.v);
+        const double current =
+            (at.size() > 3 && std::holds_alternative<double>(at[3].v))
+                ? std::get<double>(at[3].v)
+                : 0.0;
+        const double next = rotate_pad_angle(current, footprint_rotation);
+        if (at.size() > 3) {
+            at[3] = N(next);
+        } else {
+            at.push_back(N(next));
+        }
+        return;
+    }
+}
+
+bool is_gfx_head(const Sexpr& head) {
+    return is_sym(head, "fp_text") || is_sym(head, "fp_line")
+        || is_sym(head, "fp_rect") || is_sym(head, "fp_circle")
+        || is_sym(head, "fp_arc") || is_sym(head, "fp_poly");
+}
+
+}  // namespace
+
+Sexpr embed_footprint_decorate(
+    Sexpr footprint_tree, const std::string& instance_ref,
+    const std::string& instance_value, double instance_rotation,
+    bool hide_reference,
+    const std::unordered_map<std::string, std::pair<int, std::string>>&
+        pad_nets,
+    const std::unordered_map<int, std::pair<int, std::string>>& inherit,
+    const std::function<std::string(const std::string&)>& uid) {
+    if (!std::holds_alternative<SexprList>(footprint_tree.v)) {
+        throw std::runtime_error(
+            "embed_footprint_decorate: footprint list required");
+    }
+    if (!uid) {
+        throw std::runtime_error("embed_footprint_decorate: uid required");
+    }
+    SexprList& out = std::get<SexprList>(footprint_tree.v);
+    int pad_seq = 0;
+    int prop_seq = 0;
+    for (Sexpr& node : out) {
+        if (!std::holds_alternative<SexprList>(node.v)) {
+            continue;
+        }
+        SexprList& lst = std::get<SexprList>(node.v);
+        if (lst.empty()) {
+            continue;
+        }
+        if (is_sym(lst[0], "property") && lst.size() > 2) {
+            const std::string name = py_str(lst[1]);
+            if (name == "Reference") {
+                lst[2] = T(instance_ref);
+                if (hide_reference) {
+                    hide_reference_property(lst);
+                }
+            } else if (name == "Value") {
+                lst[2] = T(instance_value);
+            }
+            restamp_uuid(node, uid("fp:" + instance_ref + ":prop:"
+                                  + std::to_string(prop_seq)));
+            ++prop_seq;
+        } else if (is_sym(lst[0], "pad") && lst.size() > 1) {
+            const std::string pad_name = py_str(lst[1]);
+            int num = 0;
+            std::string nname;
+            auto found = pad_nets.find(pad_name);
+            if (found != pad_nets.end()) {
+                num = found->second.first;
+                nname = found->second.second;
+            }
+            if (num == 0 && nname.empty()) {
+                auto inherited = inherit.find(pad_seq);
+                if (inherited != inherit.end()) {
+                    num = inherited->second.first;
+                    nname = inherited->second.second;
+                }
+            }
+            set_pad_net(node, num, nname);
+            if (instance_rotation != 0.0) {
+                rotate_pad_node(lst, instance_rotation);
+            }
+            restamp_uuid(node, uid("fp:" + instance_ref + ":pad:"
+                                  + std::to_string(pad_seq)));
+            ++pad_seq;
+        } else if (is_gfx_head(lst[0])) {
+            restamp_uuid(node, uid("fp:" + instance_ref + ":gfx:"
+                                  + std::to_string(pad_seq) + ":"
+                                  + std::to_string(prop_seq)));
+        }
+    }
+    return footprint_tree;
 }
 
 }  // namespace schgen

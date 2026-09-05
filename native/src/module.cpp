@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 
 #include <nanobind/nanobind.h>
@@ -828,6 +829,32 @@ NB_MODULE(_geom, m) {
               auto tree = sexpr_from_py(node);
               return sexpr_to_tagged(schgen::embed_footprint_body(
                   std::move(tree), x, y, rotation, side, uuid));
+          });
+    m.def("embed_footprint_decorate",
+          [](nb::handle node, const std::string& ref, const std::string& value,
+             double rotation, bool hide_reference,
+             const std::vector<std::tuple<std::string, int, std::string>>&
+                 pad_nets,
+             const std::vector<std::tuple<int, int, std::string>>& inherit,
+             nb::callable uid) {
+              std::unordered_map<std::string, std::pair<int, std::string>>
+                  nets;
+              for (const auto& row : pad_nets) {
+                  nets[std::get<0>(row)] = {std::get<1>(row),
+                                            std::get<2>(row)};
+              }
+              std::unordered_map<int, std::pair<int, std::string>> inherited;
+              for (const auto& row : inherit) {
+                  inherited[std::get<0>(row)] = {std::get<1>(row),
+                                                 std::get<2>(row)};
+              }
+              auto tree = sexpr_from_py(node);
+              auto uid_fn = [&](const std::string& kind) {
+                  return nb::cast<std::string>(uid(kind));
+              };
+              return sexpr_to_tagged(schgen::embed_footprint_decorate(
+                  std::move(tree), ref, value, rotation, hide_reference, nets,
+                  inherited, uid_fn));
           });
     m.def("pad_geom",
           [](nb::handle node)

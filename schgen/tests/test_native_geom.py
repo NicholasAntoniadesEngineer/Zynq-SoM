@@ -1165,6 +1165,27 @@ def test_cc_and_embed_kernels(geom):
     pad = [Sym("pad"), "1", [Sym("at"), 0.5, 0.0, 90.0],
            [Sym("size"), 0.6, 0.3]]
     assert tuple(geom.pad_geom(pad)) == _pad_geom_py(pad)
+    from schgen.generate.pcb.embed import _embed_footprint_decorate_py
+    from types import SimpleNamespace as _NS
+    deco = [Sym("footprint"), "R_0402",
+            [Sym("property"), "Reference", "R?", [Sym("uuid"), "u1"]],
+            [Sym("property"), "Value", "10k", [Sym("uuid"), "u2"]],
+            [Sym("pad"), "1", [Sym("at"), 0.5, 0.0], [Sym("size"), 0.6, 0.3]],
+            [Sym("fp_line"), [Sym("uuid"), "g1"]]]
+    inst = _NS(ref="R12", value="10k", rotation=90.0, footprint="R_0402",
+               pad_nets={"1": (3, "N1")})
+    seq = {"n": 0}
+
+    def uid(kind: str) -> str:
+        seq["n"] += 1
+        return f"uuid-{seq['n']}-{kind}"
+
+    ref_tree = _embed_footprint_decorate_py(
+        copy.deepcopy(deco), inst, {}, uid)
+    seq["n"] = 0
+    got_tree = _from_tagged(geom.embed_footprint_decorate(
+        deco, "R12", "10k", 90.0, False, [("1", 3, "N1")], [], uid))
+    assert dumps(got_tree) == dumps(ref_tree)
     ox, oy = geom.beside_offset(1.2, 0.8, (0.0, 0.0, 4.0, 2.0), "R", 0.5, None)
     from pathlib import Path
     dummy = _beside_py(Path("x"), 0.0, "top", (0.0, 0.0, 4.0, 2.0), "R", 0.5,

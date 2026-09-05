@@ -3,8 +3,10 @@
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
 
+#include <functional>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace schgen {
@@ -48,5 +50,14 @@ std::pair<double, double> beside_offset(
     double courtyard_hx, double courtyard_hy, const Box4& target,
     const std::string& direction, double gap,
     const std::optional<double>& along_center);
+
+Sexpr embed_footprint_decorate(
+    Sexpr footprint_tree, const std::string& instance_ref,
+    const std::string& instance_value, double instance_rotation,
+    bool hide_reference,
+    const std::unordered_map<std::string, std::pair<int, std::string>>&
+        pad_nets,
+    const std::unordered_map<int, std::pair<int, std::string>>& inherit,
+    const std::function<std::string(const std::string&)>& uid);
 
 }  // namespace schgen

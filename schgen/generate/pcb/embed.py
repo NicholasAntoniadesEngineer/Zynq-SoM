@@ -149,7 +149,50 @@ def _embed_footprint(inst, uid) -> list:
             mod, inst.x, inst.y, inst.rotation or 0.0, inst.side, fp_uuid)
 
     inherit = _thermal_via_nets(out, inst.pad_nets)
+    hide_ref = (inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC
+                or inst.ref in _SW_DESC or "TestPoint" in inst.footprint)
+    if _nat.loaded():
+        nets = [(str(k), int(v[0]), str(v[1]))
+                for k, v in inst.pad_nets.items()]
+        inherited = [(int(k), int(v[0]), str(v[1]))
+                     for k, v in inherit.items()]
+        if _nat.trace():
+            recorded: list[tuple[str, str]] = []
 
+            def record_uid(kind: str) -> str:
+                token = uid(kind)
+                recorded.append((kind, token))
+                return token
+
+            ref = _embed_footprint_decorate_py(
+                copy.deepcopy(out), inst, inherit, record_uid)
+            replay = iter(recorded)
+
+            def replay_uid(kind: str) -> str:
+                used, token = next(replay)
+                if used != kind:
+                    raise AssertionError(
+                        "native embed_footprint_decorate uid DIVERGENCE: "
+                        f"cpp={kind!r} python={used!r}")
+                return token
+
+            got = _from_tagged(_nat.module().embed_footprint_decorate(
+                out, inst.ref, inst.value, inst.rotation or 0.0, hide_ref,
+                nets, inherited, replay_uid))
+            if sexpr.dumps(got) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native embed_footprint_decorate DIVERGENCE: "
+                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+            return got
+        return _from_tagged(_nat.module().embed_footprint_decorate(
+            out, inst.ref, inst.value, inst.rotation or 0.0, hide_ref, nets,
+            inherited, uid))
+    return _embed_footprint_decorate_py(out, inst, inherit, uid)
+
+
+def _embed_footprint_decorate_py(out: list, inst, inherit: dict, uid) -> list:
+    hide_ref = (inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC
+                or inst.ref in _SW_DESC or "TestPoint" in inst.footprint)
     pad_seq = 0
     prop_seq = 0
     for node in out:
@@ -159,8 +202,7 @@ def _embed_footprint(inst, uid) -> list:
         if head == Sym("property") and len(node) > 2:
             if node[1] == "Reference":
                 node[2] = inst.ref
-                if (inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC
-                        or inst.ref in _SW_DESC or "TestPoint" in inst.footprint):
+                if hide_ref:
                     hb = next((x for x in node if isinstance(x, list) and x
                                and x[0] == Sym("hide")), None)
                     if hb is None:
