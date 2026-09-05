@@ -22,6 +22,7 @@
 #include "schgen/pack.hpp"
 #include "schgen/pack_anchor.hpp"
 #include "schgen/pack_edges.hpp"
+#include "schgen/pcb_scan.hpp"
 #include "schgen/place_search.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/route.hpp"
@@ -1130,6 +1131,43 @@ NB_MODULE(_geom, m) {
               }
               return std::make_tuple(poses, hit.spilled);
           });
+    m.def("thermal_via_scan",
+          [](nb::handle footprint,
+             const std::vector<std::tuple<std::string, int, std::string>>&
+                 nets) {
+              std::unordered_map<std::string, std::pair<int, std::string>>
+                  pad_nets;
+              for (const auto& n : nets) {
+                  pad_nets.emplace(std::get<0>(n),
+                                   std::make_pair(std::get<1>(n),
+                                                  std::get<2>(n)));
+              }
+              return schgen::thermal_via_scan(sexpr_from_py(footprint),
+                                              pad_nets);
+          });
+    m.def("silk_gfx_pts",
+          [](nb::handle node) {
+              auto hit = schgen::silk_gfx_pts(sexpr_from_py(node));
+              return std::make_tuple(hit.first, hit.second);
+          });
+    m.def("collect_fp_silk_gfx",
+          [](nb::handle footprint) {
+              auto hit = schgen::collect_fp_silk_gfx(sexpr_from_py(footprint));
+              std::vector<std::tuple<double, double, double, double>> top;
+              std::vector<std::tuple<double, double, double, double>> bot;
+              top.reserve(hit.first.size());
+              bot.reserve(hit.second.size());
+              for (const auto& b : hit.first) {
+                  top.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              for (const auto& b : hit.second) {
+                  bot.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return std::make_tuple(top, bot);
+          });
+    m.def("farm_row_right_bound", &schgen::farm_row_right_bound);
+    m.def("conn_port_columns", &schgen::conn_port_columns);
+    m.def("conn_cluster_groups", &schgen::conn_cluster_groups);
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

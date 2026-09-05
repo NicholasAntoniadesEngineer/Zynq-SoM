@@ -267,13 +267,13 @@ def _pad_geom(node: list) -> tuple[float, float, float, float] | None:
     return _pad_geom_py(node)
 
 
-def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
+def _thermal_via_nets_py(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
     pads = [n for n in out if isinstance(n, list) and n and n[0] == Sym("pad")]
     netted: list[tuple[float, float, float, float, int, str]] = []
     for n in pads:
         nm = str(n[1]) if len(n) > 1 else ""
         net = pad_nets.get(nm)
-        g = _pad_geom(n)
+        g = _pad_geom_py(n)
         if net and net[0] > 0 and g is not None:
             netted.append((*g, net[0], net[1]))
     if not netted:
@@ -283,31 +283,30 @@ def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
         nm = str(n[1]) if len(n) > 1 else ""
         if pad_nets.get(nm, (0, ""))[0] > 0 or nm not in ("", " "):
             continue
-        g = _pad_geom(n)
+        g = _pad_geom_py(n)
         if g is None:
             continue
         cx, cy, _hw, _hh = g
-        if _nat.loaded():
-            hit = _nat.module().thermal_via_inherit(cx, cy, netted)
-            if _nat.trace():
-                ref = None
-                for px, py, phw, phh, num, name in netted:
-                    if abs(cx - px) <= phw and abs(cy - py) <= phh:
-                        ref = (num, name)
-                        break
-                got = tuple(hit) if hit is not None else None
-                if got != ref:
-                    raise AssertionError(
-                        "native thermal_via_inherit DIVERGENCE: "
-                        f"cpp={got} python={ref}")
-            if hit is not None:
-                out_map[seq] = (int(hit[0]), hit[1])
-            continue
         for px, py, phw, phh, num, name in netted:
             if abs(cx - px) <= phw and abs(cy - py) <= phh:
                 out_map[seq] = (num, name)
                 break
     return out_map
+
+
+def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
+    if _nat.loaded():
+        nets = [(str(k), int(v[0]), str(v[1])) for k, v in pad_nets.items()]
+        hits = _nat.module().thermal_via_scan(out, nets)
+        got = {int(seq): (int(num), name) for seq, num, name in hits}
+        if _nat.trace():
+            ref = _thermal_via_nets_py(out, pad_nets)
+            if got != ref:
+                raise AssertionError(
+                    "native thermal_via_scan DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _thermal_via_nets_py(out, pad_nets)
 
 
 def _set_or_add_py(node: list, kv: list) -> None:

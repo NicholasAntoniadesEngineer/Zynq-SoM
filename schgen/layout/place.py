@@ -74,6 +74,40 @@ def gceil(v: float) -> float:
     return round(math.ceil(v / U - 1e-6) * U, 3)
 
 
+def _farm_row_right_bound_py(ex0: float, ex1_flow: float, a3_center_x: float,
+                             titleblock_left: float, titleblock_margin: float,
+                             cap_pitch: float) -> float:
+    flow_centre = (ex0 + ex1_flow) / 2.0
+    dx = a3_center_x - flow_centre
+    local_limit = (titleblock_left - titleblock_margin) - dx
+    return local_limit - cap_pitch / 2.0
+
+
+def _conn_port_columns_py(ys: list[float], row_pitch: float,
+                          eps: float) -> list[str]:
+    cols: list[str] = []
+    prev_y = prev_col = None
+    for y in ys:
+        col = ("outer" if prev_y is not None
+               and abs(y - prev_y - row_pitch) < eps
+               and prev_col == "inner"
+               else "inner")
+        cols.append(col)
+        prev_y, prev_col = y, col
+    return cols
+
+
+def _conn_cluster_groups_py(ys: list[float], row_pitch: float,
+                            eps: float) -> list[list[int]]:
+    groups: list[list[int]] = []
+    for i, y in enumerate(ys):
+        if groups and abs(y - ys[groups[-1][-1]] - row_pitch) < eps:
+            groups[-1].append(i)
+        else:
+            groups.append([i])
+    return groups
+
+
 @dataclass
 class Spacing:
     port_run: float = 10.16
@@ -2339,10 +2373,22 @@ class _Engine:
         return "power_in" in ets and not (ets & _FLAG_DRIVER_ETYPES)
 
     def _farm_row_right_bound(self, ex0: float, ex1_flow: float) -> float:
-        flow_centre = (ex0 + ex1_flow) / 2.0
-        dx = A3_CENTER[0] - flow_centre
-        local_limit = (A3_TITLEBLOCK_LEFT - TITLEBLOCK_MARGIN) - dx
-        return local_limit - self.sp.cap_pitch / 2.0
+        if _nat.loaded():
+            got = _nat.module().farm_row_right_bound(
+                ex0, ex1_flow, A3_CENTER[0], A3_TITLEBLOCK_LEFT,
+                TITLEBLOCK_MARGIN, self.sp.cap_pitch)
+            if _nat.trace():
+                ref = _farm_row_right_bound_py(
+                    ex0, ex1_flow, A3_CENTER[0], A3_TITLEBLOCK_LEFT,
+                    TITLEBLOCK_MARGIN, self.sp.cap_pitch)
+                if got != ref:
+                    raise AssertionError(
+                        "native farm_row_right_bound DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return _farm_row_right_bound_py(
+            ex0, ex1_flow, A3_CENTER[0], A3_TITLEBLOCK_LEFT,
+            TITLEBLOCK_MARGIN, self.sp.cap_pitch)
 
     def _decoupling_cluster(self, ax: float, ay: float, body: Box) -> None:
         sp = self.sp
@@ -2567,15 +2613,18 @@ class _Engine:
                     rails.setdefault(net.name, []).append((py, px))
 
             lx_inner = sgn * (5.08 + self.CONN_RUN)
-            cols: list[str] = []
-            prev_y = prev_col = None
-            for y, _, _ in ports:
-                col = ("outer" if prev_y is not None
-                       and abs(y - prev_y - self.CONN_ROW) < 1e-6
-                       and prev_col == "inner"
-                       else "inner")
-                cols.append(col)
-                prev_y, prev_col = y, col
+            port_ys = [y for y, _, _ in ports]
+            if _nat.loaded():
+                cols = list(_nat.module().conn_port_columns(
+                    port_ys, self.CONN_ROW, 1e-6))
+                if _nat.trace():
+                    ref = _conn_port_columns_py(port_ys, self.CONN_ROW, 1e-6)
+                    if list(cols) != ref:
+                        raise AssertionError(
+                            "native conn_port_columns DIVERGENCE: "
+                            f"cpp={list(cols)} python={ref}")
+            else:
+                cols = _conn_port_columns_py(port_ys, self.CONN_ROW, 1e-6)
             inner_len = max((self._glabel_len(n)
                              for (y, x, n), cl in zip(ports, cols, strict=False)
                              if cl == "inner"), default=0.0)
@@ -2607,14 +2656,19 @@ class _Engine:
 
             def cluster_taps(taps: list[tuple[float, float]]
                              ) -> list[list[tuple[float, float]]]:
-                groups: list[list[tuple[float, float]]] = []
-                for t in taps:
-                    if groups and abs(t[0] - groups[-1][-1][0]
-                                      - self.CONN_ROW) < 1e-6:
-                        groups[-1].append(t)
-                    else:
-                        groups.append([t])
-                return groups
+                ys = [t[0] for t in taps]
+                if _nat.loaded():
+                    idxs = [list(g) for g in _nat.module().conn_cluster_groups(
+                        ys, self.CONN_ROW, 1e-6)]
+                    if _nat.trace():
+                        ref = _conn_cluster_groups_py(ys, self.CONN_ROW, 1e-6)
+                        if idxs != ref:
+                            raise AssertionError(
+                                "native conn_cluster_groups DIVERGENCE: "
+                                f"cpp={idxs} python={ref}")
+                else:
+                    idxs = _conn_cluster_groups_py(ys, self.CONN_ROW, 1e-6)
+                return [[taps[i] for i in g] for g in idxs]
 
             def place_power_cluster(net: str,
                                     taps: list[tuple[float, float]],

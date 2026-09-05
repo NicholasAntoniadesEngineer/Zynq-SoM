@@ -1369,6 +1369,68 @@ def test_pack_edges_and_hf_pose(geom):
         round(10.0 - TEMPLATE_CLEAR - 1.1, 4), 3.25)
 
 
+def test_pcb_scan_and_place_helpers(geom):
+    from schgen.core.sexpr import Sym
+    from schgen.generate.pcb.embed import _thermal_via_nets_py
+    from schgen.generate.pcb.silk import (
+        _collect_fp_silk_gfx_py,
+        _silk_gfx_pts_py,
+    )
+    from schgen.layout.place import (
+        A3_CENTER,
+        A3_TITLEBLOCK_LEFT,
+        TITLEBLOCK_MARGIN,
+        _conn_cluster_groups_py,
+        _conn_port_columns_py,
+        _farm_row_right_bound_py,
+    )
+
+    line = [Sym("fp_line"),
+            [Sym("start"), 0.0, 0.0],
+            [Sym("end"), 2.0, 0.0],
+            [Sym("layer"), Sym("F.SilkS")],
+            [Sym("stroke"), [Sym("width"), 0.12]]]
+    pts, hw = geom.silk_gfx_pts(line)
+    ref_pts, ref_hw = _silk_gfx_pts_py(line)
+    assert [tuple(p) for p in pts] == ref_pts
+    assert hw == ref_hw
+    circ = [Sym("fp_circle"),
+            [Sym("center"), 1.0, 1.0],
+            [Sym("end"), 2.0, 1.0],
+            [Sym("layer"), Sym("B.SilkS")]]
+    cpts, chw = geom.silk_gfx_pts(circ)
+    rpts, rhw = _silk_gfx_pts_py(circ)
+    assert [tuple(p) for p in cpts] == rpts
+    assert chw == rhw
+    fp = [Sym("footprint"), "X",
+          [Sym("at"), 10.0, 20.0, 90.0],
+          line, circ]
+    top, bot = geom.collect_fp_silk_gfx(fp)
+    rtop, rbot = _collect_fp_silk_gfx_py(fp)
+    assert [tuple(b) for b in top] == rtop
+    assert [tuple(b) for b in bot] == rbot
+    pad_net = [Sym("pad"), "1",
+               [Sym("at"), 0.0, 0.0],
+               [Sym("size"), 1.0, 1.0]]
+    via = [Sym("pad"), " ",
+           [Sym("at"), 0.1, 0.0],
+           [Sym("size"), 0.3, 0.3]]
+    tree = [Sym("footprint"), "Y", pad_net, via]
+    hits = {int(s): (int(n), name)
+            for s, n, name in geom.thermal_via_scan(tree, [("1", 3, "GND")])}
+    assert hits == _thermal_via_nets_py(tree, {"1": (3, "GND")})
+    assert geom.farm_row_right_bound(
+        0.0, 40.0, A3_CENTER[0], A3_TITLEBLOCK_LEFT, TITLEBLOCK_MARGIN,
+        10.16) == _farm_row_right_bound_py(
+            0.0, 40.0, A3_CENTER[0], A3_TITLEBLOCK_LEFT, TITLEBLOCK_MARGIN,
+            10.16)
+    ys = [0.0, 2.54, 7.62, 10.16]
+    assert list(geom.conn_port_columns(ys, 2.54, 1e-6)) == (
+        _conn_port_columns_py(ys, 2.54, 1e-6))
+    assert [list(g) for g in geom.conn_cluster_groups(ys, 2.54, 1e-6)] == (
+        _conn_cluster_groups_py(ys, 2.54, 1e-6))
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

@@ -68,7 +68,7 @@ def _font_size(node, default: float = 1.0) -> float:
     return float(szn[1]) if szn is not None else default
 
 
-def _silk_gfx_pts(c):
+def _silk_gfx_pts_py(c):
     tag = str(c[0])
     pts: list = []
     if tag == "fp_circle":
@@ -94,13 +94,56 @@ def _silk_gfx_pts(c):
     return pts, hw
 
 
+def _silk_gfx_pts(c):
+    if _nat.loaded():
+        pts, hw = _nat.module().silk_gfx_pts(c)
+        got = ([tuple(p) for p in pts], hw)
+        if _nat.trace():
+            ref = _silk_gfx_pts_py(c)
+            if got != ref:
+                raise AssertionError(
+                    "native silk_gfx_pts DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _silk_gfx_pts_py(c)
+
+
 def _silk_gfx_box_py(c, fx, fy, ca, sa):
-    pts, hw = _silk_gfx_pts(c)
+    pts, hw = _silk_gfx_pts_py(c)
     if not pts:
         return None
     bxs = [fx + lx * ca + ly * sa for lx, ly in pts]
     bys = [fy - lx * sa + ly * ca for lx, ly in pts]
     return (min(bxs) - hw, min(bys) - hw, max(bxs) + hw, max(bys) + hw)
+
+
+def _collect_fp_silk_gfx_py(node):
+    import math
+    top: list = []
+    bot: list = []
+    fat = _sub(node, "at")
+    if fat is None:
+        return top, bot
+    gfx, gfy = float(fat[1]), float(fat[2])
+    ga = math.radians(float(fat[3])) if (
+        len(fat) > 3 and isinstance(fat[3], (int, float))) else 0.0
+    gca, gsa = math.cos(ga), math.sin(ga)
+    for c in node:
+        if not (isinstance(c, list) and c and isinstance(c[0], Sym)):
+            continue
+        if str(c[0]) not in ("fp_line", "fp_rect", "fp_circle",
+                             "fp_arc", "fp_poly"):
+            continue
+        lyr = _sub(c, "layer")
+        if lyr is None:
+            continue
+        ln = str(lyr[1])
+        if ln not in ("F.SilkS", "B.SilkS"):
+            continue
+        gb = _silk_gfx_box_py(c, gfx, gfy, gca, gsa)
+        if gb is not None:
+            (top if ln == "F.SilkS" else bot).append(gb)
+    return top, bot
 
 
 def _silk_gfx_box(c, fx, fy, ca, sa):
@@ -576,28 +619,22 @@ def _declutter_refdes(model, uid, doc: list) -> int:
     for node in doc:
         if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
             continue
-        fat = _sub(node, "at")
-        if fat is None:
+        if _nat.loaded():
+            top, bot = _nat.module().collect_fp_silk_gfx(node)
+            top = [tuple(b) for b in top]
+            bot = [tuple(b) for b in bot]
+            if _nat.trace():
+                ref_top, ref_bot = _collect_fp_silk_gfx_py(node)
+                if top != ref_top or bot != ref_bot:
+                    raise AssertionError(
+                        "native collect_fp_silk_gfx DIVERGENCE: "
+                        f"cpp={(top, bot)} python={(ref_top, ref_bot)}")
+            silk_gfx_top.extend(top)
+            silk_gfx_bot.extend(bot)
             continue
-        gfx, gfy = float(fat[1]), float(fat[2])
-        ga = math.radians(float(fat[3])) if (
-            len(fat) > 3 and isinstance(fat[3], (int, float))) else 0.0
-        gca, gsa = math.cos(ga), math.sin(ga)
-        for c in node:
-            if not (isinstance(c, list) and c and isinstance(c[0], Sym)):
-                continue
-            if str(c[0]) not in ("fp_line", "fp_rect", "fp_circle",
-                                 "fp_arc", "fp_poly"):
-                continue
-            lyr = _sub(c, "layer")
-            if lyr is None:
-                continue
-            ln = str(lyr[1])
-            if ln not in ("F.SilkS", "B.SilkS"):
-                continue
-            gb = _silk_gfx_box(c, gfx, gfy, gca, gsa)
-            if gb is not None:
-                (silk_gfx_top if ln == "F.SilkS" else silk_gfx_bot).append(gb)
+        top, bot = _collect_fp_silk_gfx_py(node)
+        silk_gfx_top.extend(top)
+        silk_gfx_bot.extend(bot)
     occupied += silk_gfx_top
     occupied = _BoxIndex(occupied)
     occupied_bot = _BoxIndex(
