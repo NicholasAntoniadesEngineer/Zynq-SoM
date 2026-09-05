@@ -7,6 +7,7 @@
 #include <queue>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_set>
 #include <utility>
 
@@ -540,6 +541,60 @@ std::optional<Pose> Occupancy::place_near(
         return hit;
     }
     return std::nullopt;
+}
+
+std::tuple<double, double, double, double> evict_window(
+    double ex, double ey, double ew, double eh, const Halo& e_reach,
+    const Halo& e_inset, const std::vector<Comp>& e_comps, double w, double h,
+    const Halo& rch, const Halo& ins, const std::vector<Comp>& cc,
+    double clear) {
+    struct ERect {
+        double x = 0.0;
+        double y = 0.0;
+        double ww = 0.0;
+        double hh = 0.0;
+        Halo reach;
+        Halo inset;
+    };
+    std::vector<ERect> erects;
+    erects.push_back(ERect{ex, ey, ew, eh, e_reach, e_inset});
+    const Halo zero{};
+    for (const Comp& c : e_comps) {
+        erects.push_back(ERect{ex + c.dx, ey + c.dy, c.w, c.h, zero, zero});
+    }
+    double g = clear;
+    const Halo reaches[2] = {rch, zero};
+    const Halo insets[2] = {ins, zero};
+    const char axes[4] = {'E', 'W', 'N', 'S'};
+    for (const ERect& r : erects) {
+        for (int k = 0; k < 2; ++k) {
+            for (char axis : axes) {
+                g = std::max(g, fanout_sep(reaches[k], insets[k], r.reach,
+                                           r.inset, axis));
+            }
+        }
+    }
+    double ex_lo = w;
+    double ex_hi = 0.0;
+    double ey_lo = h;
+    double ey_hi = 0.0;
+    for (const Comp& c : cc) {
+        ex_lo = std::max(ex_lo, c.dx + c.w);
+        ex_hi = std::min(ex_hi, c.dx);
+        ey_lo = std::max(ey_lo, c.dy + c.h);
+        ey_hi = std::min(ey_hi, c.dy);
+    }
+    double x0 = erects[0].x;
+    double x1 = erects[0].x + erects[0].ww;
+    double y0 = erects[0].y;
+    double y1 = erects[0].y + erects[0].hh;
+    for (const ERect& r : erects) {
+        x0 = std::min(x0, r.x);
+        x1 = std::max(x1, r.x + r.ww);
+        y0 = std::min(y0, r.y);
+        y1 = std::max(y1, r.y + r.hh);
+    }
+    return {x0 - ex_lo - g, x1 + g - ex_hi, y0 - ey_lo - g, y1 + g - ey_hi};
 }
 
 }  // namespace schgen

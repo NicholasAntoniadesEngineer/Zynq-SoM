@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -114,6 +115,11 @@ bool boxes_separated(double ax, double ay, double aw, double ah,
                      double gx, double gy);
 bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
                 std::size_t subject_count, double clear);
+std::tuple<double, double, double, double> evict_window(
+    double ex, double ey, double ew, double eh, const Halo& e_reach,
+    const Halo& e_inset, const std::vector<Comp>& e_comps, double w, double h,
+    const Halo& rch, const Halo& ins, const std::vector<Comp>& cc,
+    double clear);
 bool quads_overlap(const std::vector<std::pair<double, double>>& a,
                    const std::vector<std::pair<double, double>>& b);
 

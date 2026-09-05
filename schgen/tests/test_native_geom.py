@@ -830,6 +830,34 @@ def test_silk_box_index_matches_python(geom):
         assert geom.SilkBoxIndex(8.0).pen(gb) == 0.0
 
 
+def test_evict_window_matches_python(geom):
+    from schgen.generate.floorplan import CLEAR, _fanout_sep_py, _ZeroReach
+    e_reach = (1.5, 0.0, 0.3, 0.0)
+    e_inset = _ZeroReach
+    rch = (0.0, 2.0, 0.0, 0.5)
+    ins = _ZeroReach
+    e_comps = [(2.0, 0.0, 3.0, 2.0, 1)]
+    cc = [(-1.0, -0.5, 2.0, 1.0, 1)]
+    got = geom.evict_window(
+        10.0, 12.0, 8.0, 6.0, e_reach, e_inset, e_comps,
+        9.0, 7.0, rch, ins, cc, CLEAR)
+    erects = [(10.0, 12.0, 8.0, 6.0, e_reach, e_inset),
+              (12.0, 12.0, 3.0, 2.0, _ZeroReach, _ZeroReach)]
+    g = max([CLEAR] + [_fanout_sep_py(a_r, a_i, r[4], r[5], axis)
+                       for r in erects
+                       for a_r, a_i in ((rch, ins), (_ZeroReach, _ZeroReach))
+                       for axis in ("E", "W", "N", "S")])
+    ex_lo = max([9.0] + [dx + cw for dx, _dy, cw, _ch, _cm in cc])
+    ex_hi = min([0.0] + [dx for dx, _dy, _cw, _ch, _cm in cc])
+    ey_lo = max([7.0] + [dy + ch for _dx, dy, _cw, ch, _cm in cc])
+    ey_hi = min([0.0] + [dy for _dx, dy, _cw, _ch, _cm in cc])
+    want = (min(r[0] for r in erects) - ex_lo - g,
+            max(r[0] + r[2] for r in erects) + g - ex_hi,
+            min(r[1] for r in erects) - ey_lo - g,
+            max(r[1] + r[3] for r in erects) + g - ey_hi)
+    assert got == want
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

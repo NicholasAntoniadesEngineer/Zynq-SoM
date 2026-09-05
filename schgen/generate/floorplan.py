@@ -2385,12 +2385,12 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         occ.remove(bb.x, bb.y, bb.w, bb.h, bb.fanout_reach, bb.fanout_inset,
                    _side_mask(bb.side), _bcomps(bb))
 
-    def _evict_window(e: Block, w: float, h: float, rch: tuple,
-                      ins: tuple, cc: tuple) -> tuple:
+    def _evict_window_py(e: Block, w: float, h: float, rch: tuple,
+                         ins: tuple, cc: tuple) -> tuple:
         erects = [(e.x, e.y, e.w, e.h, e.fanout_reach, e.fanout_inset)]
         erects += [(e.x + dx, e.y + dy, cw, ch, _ZeroReach, _ZeroReach)
                    for dx, dy, cw, ch, _cm in _bcomps(e)]
-        g = max([CLEAR] + [_fanout_sep(a_r, a_i, r[4], r[5], axis)
+        g = max([CLEAR] + [_fanout_sep_py(a_r, a_i, r[4], r[5], axis)
                            for r in erects
                            for a_r, a_i in ((rch, ins),
                                             (_ZeroReach, _ZeroReach))
@@ -2403,6 +2403,21 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 max(r[0] + r[2] for r in erects) + g - ex_hi,
                 min(r[1] for r in erects) - ey_lo - g,
                 max(r[1] + r[3] for r in erects) + g - ey_hi)
+
+    def _evict_window(e: Block, w: float, h: float, rch: tuple,
+                      ins: tuple, cc: tuple) -> tuple:
+        if _nat.loaded():
+            got = tuple(_nat.module().evict_window(
+                e.x, e.y, e.w, e.h, e.fanout_reach, e.fanout_inset,
+                list(_bcomps(e)), w, h, rch, ins, list(cc), CLEAR))
+            if _nat.trace():
+                ref = _evict_window_py(e, w, h, rch, ins, cc)
+                if got != ref:
+                    raise AssertionError(
+                        "native evict_window DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return _evict_window_py(e, w, h, rch, ins, cc)
 
     def _seat_shape(b: Block, ax: float, ay: float,
                     evicted: Block | None = None) -> bool:

@@ -145,6 +145,23 @@ NB_MODULE(_geom, m) {
               return schgen::fanout_sep(as_halo(ar), as_halo(ai), as_halo(br),
                                         as_halo(bi), axis[0]);
           });
+    m.def("evict_window",
+          [](double ex, double ey, double ew, double eh,
+             const std::tuple<double, double, double, double>& e_reach,
+             const std::tuple<double, double, double, double>& e_inset,
+             const std::vector<std::tuple<double, double, double, double, int>>&
+                 e_comps,
+             double w, double h,
+             const std::tuple<double, double, double, double>& rch,
+             const std::tuple<double, double, double, double>& ins,
+             const std::vector<std::tuple<double, double, double, double, int>>&
+                 cc,
+             double clear) {
+              return schgen::evict_window(
+                  ex, ey, ew, eh, as_halo(e_reach), as_halo(e_inset),
+                  as_comps(e_comps), w, h, as_halo(rch), as_halo(ins),
+                  as_comps(cc), clear);
+          });
     m.def("boxes_separated", &schgen::boxes_separated);
     m.def("pairs_hold",
           [](const std::vector<std::vector<std::tuple<
