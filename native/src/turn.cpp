@@ -83,6 +83,10 @@ Box4 turn_box(const Box4& box, double deg) {
     return Box4{min_x, min_y, max_x, max_y};
 }
 
+double rotate_pad_angle(double current_deg, double footprint_deg) {
+    return py_round(py_mod(current_deg + footprint_deg, 360.0), 4);
+}
+
 std::pair<double, double> pad_half_extent(double size_w, double size_h,
                                           double deg) {
     const auto cs_sn = quadrant_exact_cos_sin(deg);

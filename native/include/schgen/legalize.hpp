@@ -43,6 +43,12 @@ std::optional<std::pair<double, double>> predicted_centroid(
 
 double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
                          double per_net_mm);
+std::optional<Box4> pad_union_hull(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        pad_union);
+std::pair<double, double> centroid_offset(
+    const std::vector<std::tuple<std::string, double, double>>& offsets,
+    double half_w, double half_h);
 
 std::optional<Box4> predicted_bbox(
     double pose_x, double pose_y, double origin_x, double origin_y,

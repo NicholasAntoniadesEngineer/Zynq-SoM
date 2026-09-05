@@ -343,6 +343,60 @@ def test_iso_void_and_channel_demand_match_python(geom):
             CHANNEL_PER_NET_MM) == channel_demand_mm_py(n)
 
 
+def test_sheet_flip_hull_and_pad_angle_match_python(geom):
+    from schgen.core.sexpr import Sym, _from_tagged, dumps
+    from schgen.generate.pcb.embed import _flip_layer_token_py
+    pins = [("USB_DP", "bidirectional", 10.0, 20.0, 180.0, "right", "uid-p0")]
+    sheet = _from_tagged(geom.emit_sheet(
+        12.7, 25.4, 50.8, 38.1, "uid-sh", "usb", "usb.kicad_sch",
+        "Zynq_Carrier", "/root-uuid", "3", pins))
+    want = [Sym("sheet"),
+            [Sym("at"), 12.7, 25.4],
+            [Sym("size"), 50.8, 38.1],
+            [Sym("exclude_from_sim"), Sym("no")],
+            [Sym("in_bom"), Sym("yes")],
+            [Sym("on_board"), Sym("yes")],
+            [Sym("dnp"), Sym("no")],
+            [Sym("fields_autoplaced"), Sym("yes")],
+            [Sym("stroke"), [Sym("width"), 0.1524],
+             [Sym("type"), Sym("solid")]],
+            [Sym("fill"), [Sym("color"), 0, 0, 0, 0.0]],
+            [Sym("uuid"), "uid-sh"],
+            [Sym("property"), "Sheetname", "usb",
+             [Sym("at"), 12.7, 25.4 - 0.7116, 0],
+             [Sym("effects"),
+              [Sym("font"), [Sym("size"), 1.27, 1.27]],
+              [Sym("justify"), Sym("left"), Sym("bottom")]]],
+            [Sym("property"), "Sheetfile", "usb.kicad_sch",
+             [Sym("at"), 12.7, 25.4 + 38.1 + 0.5846, 0],
+             [Sym("effects"),
+              [Sym("font"), [Sym("size"), 1.27, 1.27]],
+              [Sym("justify"), Sym("left"), Sym("top")]]],
+            [Sym("pin"), "USB_DP", Sym("bidirectional"),
+             [Sym("at"), 10.0, 20.0, 180.0],
+             [Sym("effects"),
+              [Sym("font"), [Sym("size"), 1.27, 1.27]],
+              [Sym("justify"), Sym("right")]],
+             [Sym("uuid"), "uid-p0"]],
+            [Sym("instances"),
+             [Sym("project"), "Zynq_Carrier",
+              [Sym("path"), "/root-uuid", [Sym("page"), "3"]]]]]
+    assert dumps(sheet) == dumps(want)
+    assert geom.flip_layer_token("F.Cu") == "B.Cu"
+    assert geom.flip_layer_token("B.SilkS") == "B.SilkS"
+    assert geom.flip_layer_token("In1.Cu") == "In1.Cu"
+    for name in ("F.Cu", "B.Cu", "F.SilkS", "Edge.Cuts", "In1.Cu"):
+        assert geom.flip_layer_token(name) == _flip_layer_token_py(name)
+    assert geom.rotate_pad_angle(10.0, 90.0) == round((10.0 + 90.0) % 360.0, 4)
+    assert geom.rotate_pad_angle(350.0, 20.0) == round((350.0 + 20.0) % 360.0, 4)
+    pads = [("R1", 0.0, 0.0, 2.0, 1.0), ("C1", -1.0, 0.5, 3.0, 4.0)]
+    assert geom.pad_union_hull(pads) == (-1.0, 0.0, 3.0, 4.0)
+    assert geom.pad_union_hull([]) is None
+    offs = [("R1", 1.0, 2.0), ("C1", 3.0, 4.0)]
+    assert geom.centroid_offset(offs, 9.0, 8.0) == (2.0, 3.0)
+    assert geom.centroid_offset([], 9.0, 8.0) == (9.0, 8.0)
+
+
 def test_pairs_hold_matches_python(geom):
     from schgen.generate.floorplan import (
         CLEAR,

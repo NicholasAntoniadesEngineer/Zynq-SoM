@@ -41,12 +41,25 @@ CORNER_DECIMALS = 3
 VIA_DECIMALS = 3
 
 
-def _flip_layer_token(name: str) -> str:
+def _flip_layer_token_py(name: str) -> str:
     if name.startswith("F."):
         return "B." + name[2:]
     if name.startswith("B."):
         return name
     return name
+
+
+def _flip_layer_token(name: str) -> str:
+    if _nat.loaded():
+        got = _nat.module().flip_layer_token(name)
+        if _nat.trace():
+            ref = _flip_layer_token_py(name)
+            if got != ref:
+                raise AssertionError(
+                    "native flip_layer_token DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _flip_layer_token_py(name)
 
 
 def _flip_to_bottom(node: list) -> None:
@@ -146,7 +159,10 @@ def _rotate_pad(pad: list, fp_rot: float) -> None:
     if at is None:
         return
     cur = float(at[3]) if len(at) > 3 else 0.0
-    new = round((cur + fp_rot) % 360.0, 4)
+    if _nat.loaded():
+        new = _nat.module().rotate_pad_angle(cur, fp_rot)
+    else:
+        new = round((cur + fp_rot) % 360.0, 4)
     if len(at) > 3:
         at[3] = new
     else:

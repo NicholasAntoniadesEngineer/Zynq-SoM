@@ -37,6 +37,24 @@ Sexpr emit_property(const std::string& name, const std::string& value,
 Sexpr emit_sch_label(const std::string& tag, const std::string& name,
                      const std::string& shape, double x, double y, double rot,
                      const std::string& justify, const std::string& uuid);
+
+struct SheetPin {
+    std::string name;
+    std::string shape;
+    double x = 0.0;
+    double y = 0.0;
+    double rot = 0.0;
+    std::string justify;
+    std::string uuid;
+};
+
+Sexpr emit_sheet(double x, double y, double w, double h,
+                 const std::string& uuid, const std::string& name,
+                 const std::string& file, const std::string& inst_project,
+                 const std::string& path, const std::string& page,
+                 const std::vector<SheetPin>& pins);
+
+std::string flip_layer_token(const std::string& name);
 Sexpr emit_layers_node();
 Sexpr emit_stackup_node();
 Sexpr emit_wire(double x0, double y0, double x1, double y1,

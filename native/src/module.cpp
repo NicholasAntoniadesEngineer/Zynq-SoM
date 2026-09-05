@@ -596,6 +596,61 @@ NB_MODULE(_geom, m) {
           []() { return sexpr_to_tagged(schgen::emit_layers_node()); });
     m.def("emit_stackup_node",
           []() { return sexpr_to_tagged(schgen::emit_stackup_node()); });
+    m.def("emit_sheet",
+          [](double x, double y, double w, double h, const char* uuid,
+             const char* name, const char* file, const char* inst_project,
+             const char* path, const char* page,
+             const std::vector<std::tuple<std::string, std::string, double,
+                                          double, double, std::string,
+                                          std::string>>& pins) {
+              if (uuid == nullptr || name == nullptr || file == nullptr
+                  || inst_project == nullptr || path == nullptr
+                  || page == nullptr) {
+                  throw std::runtime_error(
+                      "emit_sheet: uuid, name, file, project, path, page "
+                      "required");
+              }
+              std::vector<schgen::SheetPin> rows;
+              rows.reserve(pins.size());
+              for (const auto& p : pins) {
+                  schgen::SheetPin pin;
+                  pin.name = std::get<0>(p);
+                  pin.shape = std::get<1>(p);
+                  pin.x = std::get<2>(p);
+                  pin.y = std::get<3>(p);
+                  pin.rot = std::get<4>(p);
+                  pin.justify = std::get<5>(p);
+                  pin.uuid = std::get<6>(p);
+                  rows.push_back(std::move(pin));
+              }
+              return sexpr_to_tagged(schgen::emit_sheet(
+                  x, y, w, h, uuid, name, file, inst_project, path, page,
+                  rows));
+          });
+    m.def("flip_layer_token",
+          [](const char* name) {
+              if (name == nullptr) {
+                  throw std::runtime_error("flip_layer_token: name required");
+              }
+              return schgen::flip_layer_token(name);
+          });
+    m.def("rotate_pad_angle", &schgen::rotate_pad_angle);
+    m.def("pad_union_hull",
+          [](const std::vector<std::tuple<std::string, double, double, double,
+                                          double>>& pads)
+              -> std::optional<std::tuple<double, double, double, double>> {
+              auto hit = schgen::pad_union_hull(pads);
+              if (!hit) {
+                  return std::nullopt;
+              }
+              return std::make_tuple(hit->x0, hit->y0, hit->x1, hit->y1);
+          });
+    m.def("centroid_offset",
+          [](const std::vector<std::tuple<std::string, double, double>>& offsets,
+             double half_w, double half_h) {
+              auto hit = schgen::centroid_offset(offsets, half_w, half_h);
+              return std::make_tuple(hit.first, hit.second);
+          });
     m.def("emit_sch_label",
           [](const char* tag, const char* name, const char* shape, double x,
              double y, double rot, const char* justify, const char* uuid) {

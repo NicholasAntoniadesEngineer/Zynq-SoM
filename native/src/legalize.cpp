@@ -198,6 +198,41 @@ std::optional<Box4> predicted_bbox(
                 py_round(acc.x1, 4), py_round(acc.y1, 4)};
 }
 
+std::optional<Box4> pad_union_hull(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        pad_union) {
+    if (pad_union.empty()) {
+        return std::nullopt;
+    }
+    double x0 = std::get<1>(pad_union[0]);
+    double y0 = std::get<2>(pad_union[0]);
+    double x1 = std::get<3>(pad_union[0]);
+    double y1 = std::get<4>(pad_union[0]);
+    for (std::size_t i = 1; i < pad_union.size(); ++i) {
+        x0 = std::min(x0, std::get<1>(pad_union[i]));
+        y0 = std::min(y0, std::get<2>(pad_union[i]));
+        x1 = std::max(x1, std::get<3>(pad_union[i]));
+        y1 = std::max(y1, std::get<4>(pad_union[i]));
+    }
+    return Box4{x0, y0, x1, y1};
+}
+
+std::pair<double, double> centroid_offset(
+    const std::vector<std::tuple<std::string, double, double>>& offsets,
+    double half_w, double half_h) {
+    if (offsets.empty()) {
+        return {half_w, half_h};
+    }
+    double xs = 0.0;
+    double ys = 0.0;
+    for (const auto& off : offsets) {
+        xs += std::get<1>(off);
+        ys += std::get<2>(off);
+    }
+    const double n = static_cast<double>(offsets.size());
+    return {xs / n, ys / n};
+}
+
 double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
                          double per_net_mm) {
     if (min_nets <= 0) {

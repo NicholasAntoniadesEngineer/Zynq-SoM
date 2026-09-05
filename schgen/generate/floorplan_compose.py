@@ -862,6 +862,8 @@ def legalize_compact(board_w: float, board_h: float,
         m = metrics.get(sheet)
         if m is None or not m.pad_union:
             return None
+        if _nat.loaded():
+            return _nat.module().pad_union_hull(list(m.pad_union))
         return (min(b[1] for b in m.pad_union),
                 min(b[2] for b in m.pad_union),
                 max(b[3] for b in m.pad_union),
@@ -872,6 +874,8 @@ def legalize_compact(board_w: float, board_h: float,
         if m is None or not m.offsets:
             v = by_name.get(sheet)
             return (v.w / 2, v.h / 2) if v else (0.0, 0.0)
+        if _nat.loaded():
+            return _nat.module().centroid_offset(list(m.offsets), 0.0, 0.0)
         xs = [dx for _r, dx, _dy in m.offsets]
         ys = [dy for _r, _dx, dy in m.offsets]
         return (sum(xs) / len(xs), sum(ys) / len(ys))

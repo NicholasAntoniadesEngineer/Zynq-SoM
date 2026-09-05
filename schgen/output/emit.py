@@ -241,6 +241,16 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                         _effects(justify=just),
                         [Sym("uuid"), uid("llabel")]])
     for sh in design.sheets:
+        if _nat.loaded():
+            pins = []
+            for sp in sh.pins:
+                just = "right" if sp.rotation in (180, 270) else "left"
+                pins.append((sp.name, sp.shape, sp.x, sp.y,
+                             float(sp.rotation), just, uid("sheet-pin")))
+            doc.append(_from_tagged(_nat.module().emit_sheet(
+                sh.x, sh.y, sh.w, sh.h, sh.uuid, sh.name, sh.file,
+                inst_project, f"/{root_uuid}", sh.page, pins)))
+            continue
         node: list = [Sym("sheet"),
                       [Sym("at"), sh.x, sh.y],
                       [Sym("size"), sh.w, sh.h],

@@ -235,6 +235,58 @@ Sexpr emit_property(const std::string& name, const std::string& value,
     });
 }
 
+Sexpr emit_sheet(double x, double y, double w, double h,
+                 const std::string& uuid, const std::string& name,
+                 const std::string& file, const std::string& inst_project,
+                 const std::string& path, const std::string& page,
+                 const std::vector<SheetPin>& pins) {
+    SexprList node{
+        S("sheet"),
+        L({S("at"), N(x), N(y)}),
+        L({S("size"), N(w), N(h)}),
+        L({S("exclude_from_sim"), S("no")}),
+        L({S("in_bom"), S("yes")}),
+        L({S("on_board"), S("yes")}),
+        L({S("dnp"), S("no")}),
+        L({S("fields_autoplaced"), S("yes")}),
+        L({S("stroke"), L({S("width"), N(0.1524)}), L({S("type"), S("solid")})}),
+        L({S("fill"), L({S("color"), N(0), N(0), N(0), N(0.0)})}),
+        L({S("uuid"), T(uuid)}),
+        L({S("property"), T("Sheetname"), T(name),
+           L({S("at"), N(x), N(y - 0.7116), N(0)}),
+           emit_effects(1.27, false, "left bottom")}),
+        L({S("property"), T("Sheetfile"), T(file),
+           L({S("at"), N(x), N(y + h + 0.5846), N(0)}),
+           emit_effects(1.27, false, "left top")}),
+    };
+    for (const auto& pin : pins) {
+        node.push_back(L({
+            S("pin"),
+            T(pin.name),
+            Sexpr{Sexpr::Sym{pin.shape}},
+            L({S("at"), N(pin.x), N(pin.y), N(pin.rot)}),
+            emit_effects(1.27, false, pin.justify),
+            L({S("uuid"), T(pin.uuid)}),
+        }));
+    }
+    node.push_back(L({
+        S("instances"),
+        L({S("project"), T(inst_project),
+           L({S("path"), T(path), L({S("page"), T(page)})})}),
+    }));
+    return Sexpr{std::move(node)};
+}
+
+std::string flip_layer_token(const std::string& name) {
+    if (name.size() >= 2 && name[0] == 'F' && name[1] == '.') {
+        return "B." + name.substr(2);
+    }
+    if (name.size() >= 2 && name[0] == 'B' && name[1] == '.') {
+        return name;
+    }
+    return name;
+}
+
 Sexpr emit_sch_label(const std::string& tag, const std::string& name,
                      const std::string& shape, double x, double y, double rot,
                      const std::string& justify, const std::string& uuid) {
