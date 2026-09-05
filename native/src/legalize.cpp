@@ -198,4 +198,15 @@ std::optional<Box4> predicted_bbox(
                 py_round(acc.x1, 4), py_round(acc.y1, 4)};
 }
 
+double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
+                         double per_net_mm) {
+    if (min_nets <= 0) {
+        throw std::runtime_error("channel_demand_mm: min_nets required");
+    }
+    if (n_airwires < min_nets) {
+        return 0.0;
+    }
+    return floor_mm + per_net_mm * static_cast<double>(n_airwires);
+}
+
 }  // namespace schgen

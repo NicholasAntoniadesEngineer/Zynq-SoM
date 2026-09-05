@@ -401,8 +401,9 @@ def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
             [Sym("polygon"), pts]]
 
 
-def _corners_rot(rect: tuple[float, float, float, float], inst,
-                 model: PcbModel) -> list[tuple[float, float]]:
+def _corners_rot_py(rect: tuple[float, float, float, float], inst,
+                    model: PcbModel) -> list[tuple[float, float]]:
+    from .turn import turn_point_py
     x0, y0, x1, y1 = rect
     rot = inst.rotation or 0.0
     lo_x = ORIGIN_X + GND_PLANE_EDGE_BACK
@@ -411,11 +412,31 @@ def _corners_rot(rect: tuple[float, float, float, float], inst,
     hi_y = ORIGIN_Y + model.board_h - GND_PLANE_EDGE_BACK
     out: list[tuple[float, float]] = []
     for px, py in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)):
-        tx, ty = turn_point(px, py, rot)
+        tx, ty = turn_point_py(px, py, rot)
         bx, by = inst.x + tx, inst.y + ty
         out.append((round(min(max(bx, lo_x), hi_x), CORNER_DECIMALS),
                     round(min(max(by, lo_y), hi_y), CORNER_DECIMALS)))
     return out
+
+
+def _corners_rot(rect: tuple[float, float, float, float], inst,
+                 model: PcbModel) -> list[tuple[float, float]]:
+    rot = inst.rotation or 0.0
+    lo_x = ORIGIN_X + GND_PLANE_EDGE_BACK
+    lo_y = ORIGIN_Y + GND_PLANE_EDGE_BACK
+    hi_x = ORIGIN_X + model.board_w - GND_PLANE_EDGE_BACK
+    hi_y = ORIGIN_Y + model.board_h - GND_PLANE_EDGE_BACK
+    if _nat.loaded():
+        got = [tuple(p) for p in _nat.module().corners_rot(
+            rect, rot, inst.x, inst.y, lo_x, lo_y, hi_x, hi_y,
+            CORNER_DECIMALS)]
+        if _nat.trace():
+            ref = _corners_rot_py(rect, inst, model)
+            if got != ref:
+                raise AssertionError(
+                    f"native corners_rot DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _corners_rot_py(rect, inst, model)
 
 
 def _fill_zone(net_num: int, net_name: str, zname: str, layer: str,
@@ -468,12 +489,18 @@ def _iso_void_zones(model: PcbModel, uid) -> list[list]:
                    (round(cx1 + m, 3), round(cy0 - m, 3)),
                    (round(cx1 + m, 3), round(cy1 + m, 3)),
                    (round(cx0 - m, 3), round(cy1 + m, 3))]
+        name = f"ethernet_isolation_void_{inst.ref}"
+        zuid = uid(f"iso-void:{inst.ref}")
+        if _nat.loaded():
+            out.append(_from_tagged(_nat.module().emit_iso_void_zone(
+                corners, zuid, name, GND_PLANE_LAYER, ZONE_MIN_THICKNESS)))
+            continue
         pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
         out.append([Sym("zone"),
                     [Sym("net"), 0], [Sym("net_name"), ""],
                     [Sym("layers"), GND_PLANE_LAYER],
-                    [Sym("uuid"), uid(f"iso-void:{inst.ref}")],
-                    [Sym("name"), f"ethernet_isolation_void_{inst.ref}"],
+                    [Sym("uuid"), zuid],
+                    [Sym("name"), name],
                     [Sym("hatch"), Sym("edge"), 0.5],
                     [Sym("connect_pads"), [Sym("clearance"), 0]],
                     [Sym("min_thickness"), ZONE_MIN_THICKNESS],

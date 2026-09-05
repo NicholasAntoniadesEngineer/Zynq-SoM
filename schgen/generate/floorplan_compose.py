@@ -653,10 +653,25 @@ def cross_airwires_by_pair(model, npp: dict | None = None,
     return {k: (len(v), round(sum(v), 1)) for k, v in sorted(pairs.items())}
 
 
-def channel_demand_mm(n_airwires: int) -> float:
+def channel_demand_mm_py(n_airwires: int) -> float:
     if n_airwires < CHANNEL_MIN_NETS:
         return 0.0
     return CHANNEL_FLOOR_MM + CHANNEL_PER_NET_MM * n_airwires
+
+
+def channel_demand_mm(n_airwires: int) -> float:
+    if _nat.loaded():
+        got = _nat.module().channel_demand_mm(
+            n_airwires, CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM,
+            CHANNEL_PER_NET_MM)
+        if _nat.trace():
+            ref = channel_demand_mm_py(n_airwires)
+            if got != ref:
+                raise AssertionError(
+                    "native channel_demand_mm DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return channel_demand_mm_py(n_airwires)
 
 
 def compose_report(model, index: TermIndex | None = None,

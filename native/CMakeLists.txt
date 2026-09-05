@@ -31,9 +31,11 @@ endif()
 
 nanobind_add_module(_geom src/module.cpp src/occupancy.cpp src/seat.cpp
                     src/sexpr.cpp src/route.cpp src/emit.cpp src/legalize.cpp
-                    src/quantize.cpp)
+                    src/quantize.cpp src/turn.cpp)
 target_include_directories(_geom PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(_geom PRIVATE -Wall -Wextra -Wpedantic -Werror)
+set_source_files_properties(src/turn.cpp PROPERTIES
+    COMPILE_OPTIONS "-ffp-contract=off")
 
 set(_geom_out "${CMAKE_CURRENT_SOURCE_DIR}/../schgen")
 set_target_properties(_geom PROPERTIES
@@ -42,7 +44,7 @@ set_target_properties(_geom PROPERTIES
 
 add_executable(schgen src/main.cpp src/occupancy.cpp src/seat.cpp
                src/sexpr.cpp src/route.cpp src/emit.cpp src/legalize.cpp
-               src/quantize.cpp)
+               src/quantize.cpp src/turn.cpp)
 target_include_directories(schgen PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(schgen PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(schgen PROPERTIES

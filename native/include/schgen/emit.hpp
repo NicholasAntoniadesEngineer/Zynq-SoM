@@ -28,6 +28,9 @@ Sexpr emit_fill_zone(double net, const std::string& net_name,
                      double min_thickness);
 Sexpr emit_keepout_zone(const std::vector<std::pair<double, double>>& corners,
                         const std::string& uuid, const std::string& name);
+Sexpr emit_iso_void_zone(const std::vector<std::pair<double, double>>& corners,
+                         const std::string& uuid, const std::string& name,
+                         const std::string& layer, double min_thickness);
 Sexpr emit_effects(double size, bool hide, const std::string& justify);
 Sexpr emit_property(const std::string& name, const std::string& value,
                     double x, double y, double rot, bool hide);

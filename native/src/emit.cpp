@@ -185,6 +185,34 @@ Sexpr emit_keepout_zone(const std::vector<std::pair<double, double>>& corners,
     });
 }
 
+Sexpr emit_iso_void_zone(const std::vector<std::pair<double, double>>& corners,
+                         const std::string& uuid, const std::string& name,
+                         const std::string& layer, double min_thickness) {
+    if (corners.size() < 3) {
+        throw std::runtime_error("emit_iso_void_zone: polygon needs 3 points");
+    }
+    return L({
+        S("zone"),
+        L({S("net"), N(0)}),
+        L({S("net_name"), T("")}),
+        L({S("layers"), T(layer)}),
+        L({S("uuid"), T(uuid)}),
+        L({S("name"), T(name)}),
+        L({S("hatch"), S("edge"), N(0.5)}),
+        L({S("connect_pads"), L({S("clearance"), N(0)})}),
+        L({S("min_thickness"), N(min_thickness)}),
+        L({S("keepout"),
+           L({S("tracks"), S("allowed")}),
+           L({S("vias"), S("allowed")}),
+           L({S("pads"), S("allowed")}),
+           L({S("copperpour"), S("not_allowed")}),
+           L({S("footprints"), S("allowed")})}),
+        L({S("fill"), L({S("thermal_gap"), N(0.5)}),
+           L({S("thermal_bridge_width"), N(0.5)})}),
+        L({S("polygon"), pts_node(corners)}),
+    });
+}
+
 Sexpr emit_effects(double size, bool hide, const std::string& justify) {
     SexprList e{S("effects"), L({S("font"), L({S("size"), N(size), N(size)})})};
     if (!justify.empty()) {

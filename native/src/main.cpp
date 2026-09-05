@@ -3,6 +3,7 @@
 #include "schgen/quantize.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
+#include "schgen/turn.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -24,6 +25,11 @@ int main(int argc, char** argv) {
         occ.add(55.0, 45.0, 50.0, 50.0, {}, {}, 3, {});
         if (!occ.fits_hashed(10.0, 10.0, 16.0, 10.0, {}, {}, 3, {})) {
             throw std::runtime_error("schgen: occupancy rejected a free pose");
+        }
+        const auto turned = schgen::turn_box({1.0, -2.0, 9.0, 2.0}, 90.0);
+        if (turned.x0 != -2.0 || turned.y0 != -9.0 || turned.x1 != 2.0
+            || turned.y1 != -1.0) {
+            throw std::runtime_error("schgen: turn_box missed a quarter turn");
         }
         if (schgen::outline_snap_up(161.0001) != 165.0) {
             throw std::runtime_error("schgen: outline_snap_up missed the 5 mm grid");

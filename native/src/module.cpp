@@ -17,6 +17,7 @@
 #include "schgen/route.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
+#include "schgen/turn.hpp"
 
 namespace nb = nanobind;
 
@@ -256,6 +257,36 @@ NB_MODULE(_geom, m) {
                   return std::nullopt;
               }
               return std::make_tuple(hit->x0, hit->y0, hit->x1, hit->y1);
+          });
+    m.def("channel_demand_mm", &schgen::channel_demand_mm);
+    m.def("turn_point",
+          [](double x, double y, double deg) {
+              auto p = schgen::turn_point(x, y, deg);
+              return std::make_tuple(p.first, p.second);
+          });
+    m.def("turn_box",
+          [](const std::tuple<double, double, double, double>& box,
+             double deg) {
+              auto b = schgen::turn_box(as_box(box), deg);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("pad_half_extent",
+          [](double size_w, double size_h, double deg) {
+              auto p = schgen::pad_half_extent(size_w, size_h, deg);
+              return std::make_tuple(p.first, p.second);
+          });
+    m.def("corners_rot",
+          [](const std::tuple<double, double, double, double>& rect,
+             double rot, double inst_x, double inst_y, double lo_x,
+             double lo_y, double hi_x, double hi_y, int decimals) {
+              auto pts = schgen::corners_rot(as_box(rect), rot, inst_x, inst_y,
+                                             lo_x, lo_y, hi_x, hi_y, decimals);
+              std::vector<std::tuple<double, double>> out;
+              out.reserve(pts.size());
+              for (const auto& p : pts) {
+                  out.emplace_back(p.first, p.second);
+              }
+              return out;
           });
     m.def("boxes_overlap",
           [](const std::tuple<double, double, double, double>& a,
@@ -533,6 +564,16 @@ NB_MODULE(_geom, m) {
               }
               return sexpr_to_tagged(
                   schgen::emit_keepout_zone(as_pts(corners), uuid, name));
+          });
+    m.def("emit_iso_void_zone",
+          [](const std::vector<PtTup>& corners, const char* uuid,
+             const char* name, const char* layer, double min_thickness) {
+              if (uuid == nullptr || name == nullptr || layer == nullptr) {
+                  throw std::runtime_error(
+                      "emit_iso_void_zone: uuid, name, and layer required");
+              }
+              return sexpr_to_tagged(schgen::emit_iso_void_zone(
+                  as_pts(corners), uuid, name, layer, min_thickness));
           });
     m.def("emit_effects",
           [](double size, bool hide, const char* justify) {

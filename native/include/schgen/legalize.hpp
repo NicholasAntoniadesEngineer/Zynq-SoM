@@ -41,6 +41,9 @@ std::optional<std::pair<double, double>> predicted_centroid(
     const std::vector<std::tuple<std::string, double, double>>& offsets,
     const std::vector<std::string>* refs);
 
+double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
+                         double per_net_mm);
+
 std::optional<Box4> predicted_bbox(
     double pose_x, double pose_y, double origin_x, double origin_y,
     const std::vector<std::tuple<std::string, double, double>>& offsets,

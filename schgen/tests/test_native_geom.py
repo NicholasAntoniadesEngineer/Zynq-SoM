@@ -264,6 +264,85 @@ def test_layers_and_stackup_match_python(geom):
         _stackup_node_py())
 
 
+def test_turn_kernels_match_python(geom):
+    from schgen.generate.pcb.turn import (
+        pad_half_extent_py,
+        turn_box_py,
+        turn_point_py,
+    )
+    box = (1.0, -2.0, 9.0, 2.0)
+    assert geom.turn_box(box, 90.0) == (-2.0, -9.0, 2.0, -1.0)
+    for deg in (0.0, 45.0, 90.0, 135.0, 180.0, 270.0, 359.0, -90.0):
+        assert geom.turn_point(14.64, -3.0, deg) == turn_point_py(
+            14.64, -3.0, deg)
+        assert geom.turn_box(box, deg) == turn_box_py(box, deg)
+        assert geom.pad_half_extent(1.6, 0.8, deg) == pad_half_extent_py(
+            1.6, 0.8, deg)
+
+
+def test_corners_rot_matches_python(geom):
+    from types import SimpleNamespace
+
+    from schgen.generate.pcb.constants import (
+        GND_PLANE_EDGE_BACK,
+        ORIGIN_X,
+        ORIGIN_Y,
+    )
+    from schgen.generate.pcb.embed import CORNER_DECIMALS, _corners_rot_py
+    inst = SimpleNamespace(x=40.0, y=55.0, rotation=90.0)
+    model = SimpleNamespace(board_w=168.0, board_h=163.0)
+    rect = (-2.0, -1.0, 6.0, 3.0)
+    lo_x = ORIGIN_X + GND_PLANE_EDGE_BACK
+    lo_y = ORIGIN_Y + GND_PLANE_EDGE_BACK
+    hi_x = ORIGIN_X + model.board_w - GND_PLANE_EDGE_BACK
+    hi_y = ORIGIN_Y + model.board_h - GND_PLANE_EDGE_BACK
+    got = [tuple(p) for p in geom.corners_rot(
+        rect, inst.rotation, inst.x, inst.y, lo_x, lo_y, hi_x, hi_y,
+        CORNER_DECIMALS)]
+    assert got == _corners_rot_py(rect, inst, model)
+
+
+def test_iso_void_and_channel_demand_match_python(geom):
+    from schgen.core.sexpr import Sym, _from_tagged, dumps
+    from schgen.generate.floorplan_compose import (
+        CHANNEL_FLOOR_MM,
+        CHANNEL_MIN_NETS,
+        CHANNEL_PER_NET_MM,
+        channel_demand_mm_py,
+    )
+    from schgen.generate.pcb.constants import GND_PLANE_LAYER, ZONE_MIN_THICKNESS
+    corners = [(1.0, 2.0), (4.0, 2.0), (4.0, 5.0), (1.0, 5.0)]
+    void = _from_tagged(geom.emit_iso_void_zone(
+        corners, "uid-iso", "ethernet_isolation_void_U1", GND_PLANE_LAYER,
+        ZONE_MIN_THICKNESS))
+    assert dumps(void) == dumps([
+        Sym("zone"),
+        [Sym("net"), 0], [Sym("net_name"), ""],
+        [Sym("layers"), GND_PLANE_LAYER],
+        [Sym("uuid"), "uid-iso"],
+        [Sym("name"), "ethernet_isolation_void_U1"],
+        [Sym("hatch"), Sym("edge"), 0.5],
+        [Sym("connect_pads"), [Sym("clearance"), 0]],
+        [Sym("min_thickness"), ZONE_MIN_THICKNESS],
+        [Sym("keepout"),
+         [Sym("tracks"), Sym("allowed")],
+         [Sym("vias"), Sym("allowed")],
+         [Sym("pads"), Sym("allowed")],
+         [Sym("copperpour"), Sym("not_allowed")],
+         [Sym("footprints"), Sym("allowed")]],
+        [Sym("fill"), [Sym("thermal_gap"), 0.5],
+         [Sym("thermal_bridge_width"), 0.5]],
+        [Sym("polygon"),
+         [Sym("pts"),
+          [Sym("xy"), 1.0, 2.0], [Sym("xy"), 4.0, 2.0],
+          [Sym("xy"), 4.0, 5.0], [Sym("xy"), 1.0, 5.0]]],
+    ])
+    for n in (0, 5, 6, 12):
+        assert geom.channel_demand_mm(
+            n, CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM,
+            CHANNEL_PER_NET_MM) == channel_demand_mm_py(n)
+
+
 def test_pairs_hold_matches_python(geom):
     from schgen.generate.floorplan import (
         CLEAR,
