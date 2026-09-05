@@ -55,6 +55,16 @@ Sexpr emit_sheet(double x, double y, double w, double h,
                  const std::vector<SheetPin>& pins);
 
 std::string flip_layer_token(const std::string& name);
+
+Sexpr emit_symbol(const std::string& lib_id, double x, double y, double rot,
+                  const std::string& uuid, const std::string& ref,
+                  double ref_x, double ref_y, double ref_rot, bool hide_ref,
+                  const std::string& value, double val_x, double val_y,
+                  double val_rot, bool hide_val, const std::string& footprint,
+                  const std::vector<std::pair<std::string, std::string>>&
+                      extra_fields,
+                  const std::vector<std::pair<std::string, std::string>>& pins,
+                  const std::string& inst_project, const std::string& inst_path);
 Sexpr emit_layers_node();
 Sexpr emit_stackup_node();
 Sexpr emit_wire(double x0, double y0, double x1, double y1,

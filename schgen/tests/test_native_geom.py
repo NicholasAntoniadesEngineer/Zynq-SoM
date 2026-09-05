@@ -343,6 +343,52 @@ def test_iso_void_and_channel_demand_match_python(geom):
             CHANNEL_PER_NET_MM) == channel_demand_mm_py(n)
 
 
+def test_emit_symbol_matches_python(geom):
+    from schgen.core.sexpr import Sym, _from_tagged, dumps
+    node = _from_tagged(geom.emit_symbol(
+        "Device:R", 10.0, 20.0, 90.0, "uid-sym", "R1",
+        10.0, 17.46, 0.0, False, "10k", 10.0, 22.54, 0.0, False,
+        "R_0603", [("Datasheet", ""), ("MPN", "RC0603")],
+        [("1", "uid-p1"), ("2", "uid-p2")], "Zynq_Carrier", "/root"))
+    want = [Sym("symbol"),
+            [Sym("lib_id"), "Device:R"],
+            [Sym("at"), 10.0, 20.0, 90.0],
+            [Sym("unit"), 1],
+            [Sym("exclude_from_sim"), Sym("no")],
+            [Sym("in_bom"), Sym("yes")],
+            [Sym("on_board"), Sym("yes")],
+            [Sym("dnp"), Sym("no")],
+            [Sym("uuid"), "uid-sym"],
+            [Sym("property"), "Reference", "R1",
+             [Sym("at"), 10.0, 17.46, 0.0],
+             [Sym("effects"), [Sym("font"), [Sym("size"), 1.27, 1.27]]]],
+            [Sym("property"), "Value", "10k",
+             [Sym("at"), 10.0, 22.54, 0.0],
+             [Sym("effects"), [Sym("font"), [Sym("size"), 1.27, 1.27]]]],
+            [Sym("property"), "Footprint", "R_0603",
+             [Sym("at"), 10.0, 20.0, 0.0],
+             [Sym("effects"),
+              [Sym("font"), [Sym("size"), 1.27, 1.27]],
+              [Sym("hide"), Sym("yes")]]],
+            [Sym("property"), "Datasheet", "",
+             [Sym("at"), 10.0, 20.0, 0.0],
+             [Sym("effects"),
+              [Sym("font"), [Sym("size"), 1.27, 1.27]],
+              [Sym("hide"), Sym("yes")]]],
+            [Sym("property"), "MPN", "RC0603",
+             [Sym("at"), 10.0, 20.0, 0.0],
+             [Sym("effects"),
+              [Sym("font"), [Sym("size"), 1.27, 1.27]],
+              [Sym("hide"), Sym("yes")]]],
+            [Sym("pin"), "1", [Sym("uuid"), "uid-p1"]],
+            [Sym("pin"), "2", [Sym("uuid"), "uid-p2"]],
+            [Sym("instances"),
+             [Sym("project"), "Zynq_Carrier",
+              [Sym("path"), "/root",
+               [Sym("reference"), "R1"], [Sym("unit"), 1]]]]]
+    assert dumps(node) == dumps(want)
+
+
 def test_sheet_flip_hull_and_pad_angle_match_python(geom):
     from schgen.core.sexpr import Sym, _from_tagged, dumps
     from schgen.generate.pcb.embed import _flip_layer_token_py

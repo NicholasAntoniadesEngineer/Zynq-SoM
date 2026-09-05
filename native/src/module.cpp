@@ -627,6 +627,37 @@ NB_MODULE(_geom, m) {
                   x, y, w, h, uuid, name, file, inst_project, path, page,
                   rows));
           });
+    m.def("emit_symbol",
+          [](const char* lib_id, double x, double y, double rot,
+             const char* uuid, const char* ref, double ref_x, double ref_y,
+             double ref_rot, bool hide_ref, const char* value, double val_x,
+             double val_y, double val_rot, bool hide_val,
+             const char* footprint,
+             const std::vector<std::tuple<std::string, std::string>>& fields,
+             const std::vector<std::tuple<std::string, std::string>>& pins,
+             const char* inst_project, const char* inst_path) {
+              if (lib_id == nullptr || uuid == nullptr || ref == nullptr
+                  || value == nullptr || footprint == nullptr
+                  || inst_project == nullptr || inst_path == nullptr) {
+                  throw std::runtime_error(
+                      "emit_symbol: lib_id, uuid, ref, value, footprint, "
+                      "project, and path required");
+              }
+              std::vector<std::pair<std::string, std::string>> extra;
+              extra.reserve(fields.size());
+              for (const auto& f : fields) {
+                  extra.emplace_back(std::get<0>(f), std::get<1>(f));
+              }
+              std::vector<std::pair<std::string, std::string>> pin_rows;
+              pin_rows.reserve(pins.size());
+              for (const auto& p : pins) {
+                  pin_rows.emplace_back(std::get<0>(p), std::get<1>(p));
+              }
+              return sexpr_to_tagged(schgen::emit_symbol(
+                  lib_id, x, y, rot, uuid, ref, ref_x, ref_y, ref_rot,
+                  hide_ref, value, val_x, val_y, val_rot, hide_val, footprint,
+                  extra, pin_rows, inst_project, inst_path));
+          });
     m.def("flip_layer_token",
           [](const char* name) {
               if (name == nullptr) {

@@ -277,6 +277,47 @@ Sexpr emit_sheet(double x, double y, double w, double h,
     return Sexpr{std::move(node)};
 }
 
+Sexpr emit_symbol(const std::string& lib_id, double x, double y, double rot,
+                  const std::string& uuid, const std::string& ref,
+                  double ref_x, double ref_y, double ref_rot, bool hide_ref,
+                  const std::string& value, double val_x, double val_y,
+                  double val_rot, bool hide_val, const std::string& footprint,
+                  const std::vector<std::pair<std::string, std::string>>&
+                      extra_fields,
+                  const std::vector<std::pair<std::string, std::string>>& pins,
+                  const std::string& inst_project,
+                  const std::string& inst_path) {
+    SexprList node{
+        S("symbol"),
+        L({S("lib_id"), T(lib_id)}),
+        L({S("at"), N(x), N(y), N(rot)}),
+        L({S("unit"), N(1)}),
+        L({S("exclude_from_sim"), S("no")}),
+        L({S("in_bom"), S("yes")}),
+        L({S("on_board"), S("yes")}),
+        L({S("dnp"), S("no")}),
+        L({S("uuid"), T(uuid)}),
+        emit_property("Reference", ref, ref_x, ref_y, ref_rot, hide_ref),
+        emit_property("Value", value, val_x, val_y, val_rot, hide_val),
+        emit_property("Footprint", footprint, x, y, 0.0, true),
+    };
+    for (const auto& field : extra_fields) {
+        node.push_back(emit_property(field.first, field.second, x, y, 0.0,
+                                     true));
+    }
+    for (const auto& pin : pins) {
+        node.push_back(L({S("pin"), T(pin.first),
+                          L({S("uuid"), T(pin.second)})}));
+    }
+    node.push_back(L({
+        S("instances"),
+        L({S("project"), T(inst_project),
+           L({S("path"), T(inst_path), L({S("reference"), T(ref)}),
+              L({S("unit"), N(1)})})}),
+    }));
+    return Sexpr{std::move(node)};
+}
+
 std::string flip_layer_token(const std::string& name) {
     if (name.size() >= 2 && name[0] == 'F' && name[1] == '.') {
         return "B." + name.substr(2);

@@ -289,6 +289,18 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                       extra_fields: dict[str, str] | None = None) -> list:
         extra_fields = dict(extra_fields or {})
         sdef = lib.get(lib_id)
+        rp = ref_pos or (x, y - 2.54, 0)
+        vp = val_pos or (x, y + 2.54, 0)
+        if _nat.loaded():
+            fields = [("Datasheet", extra_fields.pop("Datasheet", ""))]
+            fields.extend(extra_fields.items())
+            symbol_uuid = uid("symbol")
+            pin_rows = [(p.number, uid("pin")) for p in sdef.pins]
+            return _from_tagged(_nat.module().emit_symbol(
+                lib_id, x, y, float(rot), symbol_uuid, ref,
+                rp[0], rp[1], float(rp[2]), hide_ref, value,
+                vp[0], vp[1], float(vp[2]), hide_val, footprint,
+                fields, pin_rows, inst_project, inst_path))
         node: list = [Sym("symbol"),
                       [Sym("lib_id"), lib_id],
                       [Sym("at"), x, y, rot],
@@ -298,8 +310,6 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                       [Sym("on_board"), Sym("yes")],
                       [Sym("dnp"), Sym("no")],
                       [Sym("uuid"), uid("symbol")]]
-        rp = ref_pos or (x, y - 2.54, 0)
-        vp = val_pos or (x, y + 2.54, 0)
         node.append(_prop("Reference", ref, rp[0], rp[1], rp[2], hide=hide_ref))
         node.append(_prop("Value", value, vp[0], vp[1], vp[2], hide=hide_val))
         node.append(_prop("Footprint", footprint, x, y, 0, hide=True))
