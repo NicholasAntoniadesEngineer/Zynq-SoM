@@ -34,6 +34,8 @@ Sexpr emit_property(const std::string& name, const std::string& value,
 Sexpr emit_sch_label(const std::string& tag, const std::string& name,
                      const std::string& shape, double x, double y, double rot,
                      const std::string& justify, const std::string& uuid);
+Sexpr emit_layers_node();
+Sexpr emit_stackup_node();
 Sexpr emit_wire(double x0, double y0, double x1, double y1,
                 const std::string& uuid);
 Sexpr emit_junction(double x, double y, const std::string& uuid);

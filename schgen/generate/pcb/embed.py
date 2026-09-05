@@ -219,7 +219,7 @@ def _set_pad_net(pad: list, num: int, name: str) -> None:
     pad.append(net_node)
 
 
-def _layers_node() -> list:
+def _layers_node_py() -> list:
     node: list = [Sym("layers")]
     for idx, name, ltype, user in _FOUR_LAYER:
         entry = [idx, name, Sym(ltype)]
@@ -229,7 +229,13 @@ def _layers_node() -> list:
     return node
 
 
-def _stackup_node() -> list:
+def _layers_node() -> list:
+    if _nat.loaded():
+        return _from_tagged(_nat.module().emit_layers_node())
+    return _layers_node_py()
+
+
+def _stackup_node_py() -> list:
     def cu(name, th):
         return [Sym("layer"), name, [Sym("type"), "copper"],
                 [Sym("thickness"), th]]
@@ -257,6 +263,12 @@ def _stackup_node() -> list:
             [Sym("layer"), "B.SilkS", [Sym("type"), "Bottom Silk Screen"]],
             [Sym("copper_finish"), "ENIG"],
             [Sym("dielectric_constraints"), Sym("no")]]
+
+
+def _stackup_node() -> list:
+    if _nat.loaded():
+        return _from_tagged(_nat.module().emit_stackup_node())
+    return _stackup_node_py()
 
 
 def _edge_rect(x0, y0, x1, y1, uid) -> list:

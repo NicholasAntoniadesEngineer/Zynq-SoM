@@ -255,6 +255,15 @@ def test_quads_overlap_matches_python(geom):
     assert geom.quads_overlap(a, c) == _quads_overlap_py(a, c)
 
 
+def test_layers_and_stackup_match_python(geom):
+    from schgen.core.sexpr import _from_tagged, dumps
+    from schgen.generate.pcb.embed import _layers_node_py, _stackup_node_py
+    assert dumps(_from_tagged(geom.emit_layers_node())) == dumps(
+        _layers_node_py())
+    assert dumps(_from_tagged(geom.emit_stackup_node())) == dumps(
+        _stackup_node_py())
+
+
 def test_pairs_hold_matches_python(geom):
     from schgen.generate.floorplan import (
         CLEAR,

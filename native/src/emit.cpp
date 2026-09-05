@@ -220,6 +220,81 @@ Sexpr emit_sch_label(const std::string& tag, const std::string& name,
     return Sexpr{std::move(node)};
 }
 
+Sexpr emit_layers_node() {
+    struct Layer {
+        int idx;
+        const char* name;
+        const char* ltype;
+        const char* user;
+    };
+    const Layer layers[] = {
+        {0, "F.Cu", "signal", "L1 (Sig)"},
+        {1, "In1.Cu", "power", "L2 (GND)"},
+        {2, "In2.Cu", "power", "L3 (PWR)"},
+        {31, "B.Cu", "signal", "L4 (Sig)"},
+        {32, "B.Adhes", "user", "B.Adhesive"},
+        {33, "F.Adhes", "user", "F.Adhesive"},
+        {34, "B.Paste", "user", nullptr},
+        {35, "F.Paste", "user", nullptr},
+        {36, "B.SilkS", "user", "B.Silkscreen"},
+        {37, "F.SilkS", "user", "F.Silkscreen"},
+        {38, "B.Mask", "user", nullptr},
+        {39, "F.Mask", "user", nullptr},
+        {40, "Dwgs.User", "user", "User.Drawings"},
+        {41, "Cmts.User", "user", "User.Comments"},
+        {42, "Eco1.User", "user", "User.Eco1"},
+        {43, "Eco2.User", "user", "User.Eco2"},
+        {44, "Edge.Cuts", "user", nullptr},
+        {45, "Margin", "user", nullptr},
+        {46, "B.CrtYd", "user", "B.Courtyard"},
+        {47, "F.CrtYd", "user", "F.Courtyard"},
+        {48, "B.Fab", "user", nullptr},
+        {49, "F.Fab", "user", nullptr},
+    };
+    SexprList node{S("layers")};
+    for (const Layer& layer : layers) {
+        SexprList entry{N(static_cast<double>(layer.idx)), T(layer.name),
+                        S(layer.ltype)};
+        if (layer.user != nullptr) {
+            entry.push_back(T(layer.user));
+        }
+        node.push_back(Sexpr{std::move(entry)});
+    }
+    return Sexpr{std::move(node)};
+}
+
+Sexpr emit_stackup_node() {
+    auto cu = [](const char* name, double th) {
+        return L({S("layer"), T(name), L({S("type"), T("copper")}),
+                  L({S("thickness"), N(th)})});
+    };
+    auto diel = [](const char* name, const char* dtype, double th, double er) {
+        return L({S("layer"), T(name), L({S("type"), T(dtype)}),
+                  L({S("thickness"), N(th)}), L({S("material"), T("FR4")}),
+                  L({S("epsilon_r"), N(er)}), L({S("loss_tangent"), N(0.02)})});
+    };
+    return L({
+        S("stackup"),
+        L({S("layer"), T("F.SilkS"), L({S("type"), T("Top Silk Screen")})}),
+        L({S("layer"), T("F.Paste"), L({S("type"), T("Top Solder Paste")})}),
+        L({S("layer"), T("F.Mask"), L({S("type"), T("Top Solder Mask")}),
+           L({S("thickness"), N(0.01)})}),
+        cu("F.Cu", 0.035),
+        diel("dielectric 1", "prepreg", 0.2104, 4.6),
+        cu("In1.Cu", 0.0152),
+        diel("dielectric 2", "core", 1.065, 4.6),
+        cu("In2.Cu", 0.0152),
+        diel("dielectric 3", "prepreg", 0.2104, 4.6),
+        cu("B.Cu", 0.035),
+        L({S("layer"), T("B.Mask"), L({S("type"), T("Bottom Solder Mask")}),
+           L({S("thickness"), N(0.01)})}),
+        L({S("layer"), T("B.Paste"), L({S("type"), T("Bottom Solder Paste")})}),
+        L({S("layer"), T("B.SilkS"), L({S("type"), T("Bottom Silk Screen")})}),
+        L({S("copper_finish"), T("ENIG")}),
+        L({S("dielectric_constraints"), S("no")}),
+    });
+}
+
 Sexpr emit_wire(double x0, double y0, double x1, double y1,
                 const std::string& uuid) {
     return L({

@@ -522,6 +522,10 @@ NB_MODULE(_geom, m) {
               return sexpr_to_tagged(
                   schgen::emit_property(name, value, x, y, rot, hide));
           });
+    m.def("emit_layers_node",
+          []() { return sexpr_to_tagged(schgen::emit_layers_node()); });
+    m.def("emit_stackup_node",
+          []() { return sexpr_to_tagged(schgen::emit_stackup_node()); });
     m.def("emit_sch_label",
           [](const char* tag, const char* name, const char* shape, double x,
              double y, double rot, const char* justify, const char* uuid) {
