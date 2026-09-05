@@ -198,6 +198,56 @@ def test_pairs_hold_matches_python(geom):
     assert geom.pairs_hold(groups_bad, 1, CLEAR) == _pairs_hold_py(groups_bad, 1)
 
 
+def test_pair_axis_matches_python(geom):
+    from schgen.generate.floorplan_compose import _pair_axis, _pair_axis_py
+    cases = (
+        ((0.0, 0.0, 10.0, 8.0), (12.0, 0.0, 16.0, 8.0)),
+        ((0.0, 0.0, 10.0, 8.0), (0.0, 10.0, 10.0, 18.0)),
+        ((20.0, 4.0, 30.0, 12.0), (0.0, 0.0, 8.0, 20.0)),
+        ((5.0, 5.0, 15.0, 15.0), (6.0, 6.0, 14.0, 14.0)),
+    )
+    for a, b in cases:
+        assert geom.pair_axis(a, b) == _pair_axis_py(a, b)
+        assert _pair_axis(a, b) == _pair_axis_py(a, b)
+
+
+def test_bellman_ford_matches_python(geom):
+    from schgen.generate.floorplan_compose import (
+        _bellman_ford,
+        _bellman_ford_py,
+    )
+    nodes = ["#0", "a", "b"]
+    feasible = [
+        ("#0", "a", 20.0, "wall-hi-a"),
+        ("a", "#0", -0.3, "wall-lo-a"),
+        ("#0", "b", 30.0, "wall-hi-b"),
+        ("b", "#0", -0.3, "wall-lo-b"),
+        ("b", "a", -10.3, "sep"),
+    ]
+    cycle = [
+        ("#0", "a", 5.0, "hi"),
+        ("a", "#0", -6.0, "neg"),
+        ("#0", "b", 8.0, "hib"),
+        ("b", "#0", -0.3, "lob"),
+    ]
+    for edges in (feasible, cycle):
+        py = _bellman_ford_py(nodes, edges)
+        wrapped = _bellman_ford(nodes, edges)
+        src = [nodes.index(u) for u, _v, _c, _t in edges]
+        dst = [nodes.index(v) for _u, v, _c, _t in edges]
+        cost = [c for _u, _v, c, _t in edges]
+        ok, dist, cyc = geom.bellman_ford(len(nodes), src, dst, cost)
+        if py[0] is None:
+            assert ok is False
+            assert wrapped[0] is None
+            assert wrapped[1] == py[1]
+            assert [edges[i][3] for i in cyc] == py[1]
+        else:
+            assert ok is True
+            assert wrapped == py
+            assert dist == [py[0][n] for n in nodes]
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

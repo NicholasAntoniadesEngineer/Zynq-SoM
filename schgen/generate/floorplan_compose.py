@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
 from schgen.core.project import PROJECT_ROOT
 
@@ -691,8 +692,8 @@ class _Sep:
     flippable: bool
 
 
-def _pair_axis(a: tuple[float, float, float, float],
-               b: tuple[float, float, float, float]) -> tuple[str, bool]:
+def _pair_axis_py(a: tuple[float, float, float, float],
+                  b: tuple[float, float, float, float]) -> tuple[str, bool]:
     gx = max(b[0] - a[2], a[0] - b[2])
     gy = max(b[1] - a[3], a[1] - b[3])
     nx = gx / max(1.0, ((a[2] - a[0]) + (b[2] - b[0])) / 2.0)
@@ -700,6 +701,19 @@ def _pair_axis(a: tuple[float, float, float, float],
     if nx >= ny:
         return "x", a[0] <= b[0]
     return "y", a[1] <= b[1]
+
+
+def _pair_axis(a: tuple[float, float, float, float],
+               b: tuple[float, float, float, float]) -> tuple[str, bool]:
+    if _nat.loaded():
+        got = _nat.module().pair_axis(a, b)
+        if _nat.trace():
+            ref = _pair_axis_py(a, b)
+            if got != ref:
+                raise AssertionError(
+                    f"native pair_axis DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _pair_axis_py(a, b)
 
 
 def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
@@ -714,9 +728,9 @@ def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
     return clear, "CLEAR"
 
 
-def _bellman_ford(nodes: list[str],
-                  edges: list[tuple[str, str, float, object]]
-                  ) -> tuple[dict[str, float] | None, list[object]]:
+def _bellman_ford_py(nodes: list[str],
+                     edges: list[tuple[str, str, float, object]]
+                     ) -> tuple[dict[str, float] | None, list[object]]:
     dist = dict.fromkeys(nodes, 0.0)
     pred: dict[str, tuple[str, object]] = {}
     V = len(nodes)
@@ -743,6 +757,29 @@ def _bellman_ford(nodes: list[str],
         if node == start or len(tags) > V + 1:
             break
     return None, tags
+
+
+def _bellman_ford(nodes: list[str],
+                  edges: list[tuple[str, str, float, object]]
+                  ) -> tuple[dict[str, float] | None, list[object]]:
+    if not _nat.loaded():
+        return _bellman_ford_py(nodes, edges)
+    index = {name: i for i, name in enumerate(nodes)}
+    src = [index[u] for u, _v, _c, _tag in edges]
+    dst = [index[v] for _u, v, _c, _tag in edges]
+    cost = [c for _u, _v, c, _tag in edges]
+    ok, dist, cycle = _nat.module().bellman_ford(len(nodes), src, dst, cost)
+    if ok:
+        got: tuple[dict[str, float] | None, list[object]] = (
+            {name: dist[i] for i, name in enumerate(nodes)}, [])
+    else:
+        got = (None, [edges[i][3] for i in cycle])
+    if _nat.trace():
+        ref = _bellman_ford_py(nodes, edges)
+        if got != ref:
+            raise AssertionError(
+                f"native bellman_ford DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def legalize_compact(board_w: float, board_h: float,

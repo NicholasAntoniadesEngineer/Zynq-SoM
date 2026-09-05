@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <tuple>
@@ -9,6 +10,7 @@
 #include <nanobind/stl/vector.h>
 
 #include "schgen/emit.hpp"
+#include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/route.hpp"
 #include "schgen/seat.hpp"
@@ -163,6 +165,22 @@ NB_MODULE(_geom, m) {
                                         clear);
           });
     m.def("py_round", &schgen::py_round);
+    m.def("pair_axis",
+          [](const std::tuple<double, double, double, double>& a,
+             const std::tuple<double, double, double, double>& b) {
+              auto hit = schgen::pair_axis(as_box(a), as_box(b));
+              return std::make_tuple(hit.axis_x ? "x" : "y", hit.a_first);
+          });
+    m.def("bellman_ford",
+          [](int node_count, const std::vector<int>& src,
+             const std::vector<int>& dst, const std::vector<double>& cost) {
+              if (node_count <= 0) {
+                  throw std::runtime_error("bellman_ford: node_count required");
+              }
+              auto hit = schgen::bellman_ford(
+                  static_cast<std::size_t>(node_count), src, dst, cost);
+              return std::make_tuple(hit.feasible, hit.dist, hit.cycle_edges);
+          });
     m.def("boxes_overlap",
           [](const std::tuple<double, double, double, double>& a,
              const std::tuple<double, double, double, double>& b,
