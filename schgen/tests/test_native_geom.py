@@ -678,6 +678,70 @@ def test_boxes_overlap_and_flip_to_bottom(geom):
     assert dumps(_from_tagged(tagged)) == dumps(py_node)
 
 
+def test_shelf_pack_and_via_lattice(geom):
+    from schgen.generate.pcb.constants import (
+        ORIGIN_X,
+        ORIGIN_Y,
+        THERMAL_VIA_LATTICE_PITCH,
+        THERMAL_VIA_SIZE,
+    )
+    from schgen.generate.pcb.embed import (
+        _fallback_via_sites,
+        _fallback_via_sites_py,
+        _via_site_blocker,
+        _via_site_blocker_py,
+    )
+    from schgen.generate.pcb.placement import _shelf_pack, _shelf_pack_py
+    items = [
+        ("U1", (-4.0, -2.0, 4.0, 2.0), 0.0),
+        ("R1", (-1.0, -0.5, 1.0, 0.5), 0.0),
+        ("C2", (-1.2, -0.6, 1.2, 0.6), 90.0),
+    ]
+    fanout = {"U1": (2.0, False), "R1": (0.5, True), "C2": (0.5, True)}
+    blockers = [(0.3, 0.3, 4.0, 2.0, 0.0, False)]
+    assert _shelf_pack(items, 18.0, blockers, fanout) == _shelf_pack_py(
+        items, 18.0, blockers, fanout)
+    empty = _shelf_pack([], 10.0)
+    assert empty == _shelf_pack_py([], 10.0)
+    spec = {"pour": (10.0, 12.0, 16.0, 18.0)}
+    assert _fallback_via_sites(spec) == _fallback_via_sites_py(spec)
+    assert geom.fallback_via_sites(
+        10.0, 12.0, 16.0, 18.0, THERMAL_VIA_SIZE,
+        THERMAL_VIA_LATTICE_PITCH) == _fallback_via_sites_py(spec)
+
+    class _Board:
+        board_w = 168.0
+        board_h = 163.0
+
+    model = _Board()
+    obstacles = [
+        (ORIGIN_X + 20.0, ORIGIN_Y + 20.0, 0.4, 0.3, "GND", 0.3, "pad U1.1"),
+        (ORIGIN_X + 24.0, ORIGIN_Y + 20.0, 0.5, 0.5, "3V3", 0.0, "pad U1.2"),
+    ]
+    chosen = [(ORIGIN_X + 22.0, ORIGIN_Y + 22.0)]
+    sites = (
+        (ORIGIN_X + 5.0, ORIGIN_Y + 5.0),
+        (ORIGIN_X + 0.2, ORIGIN_Y + 5.0),
+        (ORIGIN_X + 20.0, ORIGIN_Y + 20.0),
+        (ORIGIN_X + 22.0, ORIGIN_Y + 22.1),
+        (ORIGIN_X + 30.0, ORIGIN_Y + 30.0),
+    )
+    for vx, vy in sites:
+        assert _via_site_blocker(vx, vy, model, obstacles, chosen) == (
+            _via_site_blocker_py(vx, vy, model, obstacles, chosen))
+    members = [(1.0, 1.0, 4.0, 3.0, 8, 1.55),
+               (16.0, 8.0, 19.0, 11.0, 2, 0.0)]
+    reach, inset = geom.zone_fanout_reach(20.0, 12.0, members, 3)
+    assert reach == (0.55, 0.0, 0.55, 0.0)
+    assert inset == (1.0, 1.0, 1.0, 1.0)
+    src = [0, 1]
+    dst = [1, 0]
+    cost = [5.0, -0.3]
+    lo, hi = geom.constraint_bounds(1, src, dst, cost, [0.0, 4.0])
+    assert hi == 5.0
+    assert lo == 0.3
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

@@ -166,8 +166,9 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
     return tuple(comps)
 
 
-def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg,
-                       mods: dict | None = None) -> tuple[tuple, tuple]:
+def _zone_fanout_members(side_offs, rot_of: dict, zg,
+                         mods: dict | None = None
+                         ) -> list[tuple[float, float, float, float, int, float]]:
     from schgen.generate.pcb import placement as _pl
     from schgen.generate.pcb.footprint import _footprint_bbox
     from schgen.generate.pcb.turn import turn_box
@@ -176,8 +177,7 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg,
         intelligent_need,
         is_testpoint_ref,
     )
-    rw = re = rn = rs = 0.0
-    iw = ie = in_ = is_ = float("inf")
+    members: list[tuple[float, float, float, float, int, float]] = []
     for side_off in side_offs:
         for ref, (ox, oy) in side_off.items():
             mod = zg.resolvable.get(ref)
@@ -190,29 +190,55 @@ def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg,
             if "Fiducial" in mod.stem or is_testpoint_ref(ref):
                 continue
             rb = turn_box(bbox, rot_of.get(ref, 0.0))
-            cx0, cy0 = ox + rb[0], oy + rb[1]
-            cx1, cy1 = ox + rb[2], oy + rb[3]
-            mw, me = cx0, zw - cx1
-            mn, ms = cy0, zh - cy1
-            iw, ie = min(iw, mw), min(ie, me)
-            in_, is_ = min(in_, mn), min(is_, ms)
             pins = len(_pl.pad_names(mod))
-            if pins < MIN_SUBJECT_PINS:
-                continue
-            need = intelligent_need(pins)[0]
-            lim = _q.quant_credit(need)
-            if mw <= lim:
-                rw = max(rw, lim - mw)
-            if me <= lim:
-                re = max(re, lim - me)
-            if mn <= lim:
-                rn = max(rn, lim - mn)
-            if ms <= lim:
-                rs = max(rs, lim - ms)
+            lim = (_q.quant_credit(intelligent_need(pins)[0])
+                   if pins >= MIN_SUBJECT_PINS else 0.0)
+            members.append((ox + rb[0], oy + rb[1], ox + rb[2], oy + rb[3],
+                            pins, lim))
+    return members
+
+
+def _zone_fanout_reach_py(zw: float, zh: float, side_offs, rot_of: dict, zg,
+                          mods: dict | None = None) -> tuple[tuple, tuple]:
+    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS
+    rw = re = rn = rs = 0.0
+    iw = ie = in_ = is_ = float("inf")
+    for cx0, cy0, cx1, cy1, pins, lim in _zone_fanout_members(
+            side_offs, rot_of, zg, mods):
+        mw, me = cx0, zw - cx1
+        mn, ms = cy0, zh - cy1
+        iw, ie = min(iw, mw), min(ie, me)
+        in_, is_ = min(in_, mn), min(is_, ms)
+        if pins < MIN_SUBJECT_PINS:
+            continue
+        if mw <= lim:
+            rw = max(rw, lim - mw)
+        if me <= lim:
+            re = max(re, lim - me)
+        if mn <= lim:
+            rn = max(rn, lim - mn)
+        if ms <= lim:
+            rs = max(rs, lim - ms)
     if iw == float("inf"):
         iw = ie = in_ = is_ = 0.0
     return ((round(rw, 4), round(re, 4), round(rn, 4), round(rs, 4)),
             (round(iw, 4), round(ie, 4), round(in_, 4), round(is_, 4)))
+
+
+def _zone_fanout_reach(zw: float, zh: float, side_offs, rot_of: dict, zg,
+                       mods: dict | None = None) -> tuple[tuple, tuple]:
+    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS
+    if _nat.loaded():
+        members = _zone_fanout_members(side_offs, rot_of, zg, mods)
+        got = _nat.module().zone_fanout_reach(zw, zh, members, MIN_SUBJECT_PINS)
+        if _nat.trace():
+            ref = _zone_fanout_reach_py(zw, zh, side_offs, rot_of, zg, mods)
+            if got != ref:
+                raise AssertionError(
+                    "native zone_fanout_reach DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _zone_fanout_reach_py(zw, zh, side_offs, rot_of, zg, mods)
 
 
 CLEAR = 0.3

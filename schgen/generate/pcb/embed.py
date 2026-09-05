@@ -611,10 +611,27 @@ def _via_obstacles(model: PcbModel, inst, reach: float) \
     return out
 
 
-def _via_site_blocker(vx: float, vy: float, model: PcbModel,
-                      obstacles: list[tuple[float, float, float, float,
-                                            str, float, str]],
-                      chosen: list[tuple[float, float]]) -> str | None:
+def _via_block_text(kind: str, label: str, nname: str,
+                    x: float, y: float) -> str:
+    if kind == "edge":
+        return "Edge.Cuts keep-back"
+    if kind == "thermal":
+        return f"thermal via @({x:.3f},{y:.3f})"
+    return f"{label} [{nname or 'no-net'}] @({x:.3f},{y:.3f})"
+
+
+def _via_site_spec(model: PcbModel
+                   ) -> tuple[float, float, float, float, float, float, float,
+                              float, float, float, float]:
+    return (ORIGIN_X, ORIGIN_Y, model.board_w, model.board_h, THERMAL_VIA_EDGE,
+            THERMAL_VIA_SIZE, THERMAL_VIA_DRILL, THERMAL_VIA_CLEAR,
+            CLR_HOLE_SAMENET_PAD, THERMAL_VIA_H2H, THERMAL_VIA_SPACING)
+
+
+def _via_site_blocker_py(vx: float, vy: float, model: PcbModel,
+                         obstacles: list[tuple[float, float, float, float,
+                                               str, float, str]],
+                         chosen: list[tuple[float, float]]) -> str | None:
     if not (ORIGIN_X + THERMAL_VIA_EDGE <= vx
             <= ORIGIN_X + model.board_w - THERMAL_VIA_EDGE
             and ORIGIN_Y + THERMAL_VIA_EDGE <= vy
@@ -640,7 +657,25 @@ def _via_site_blocker(vx: float, vy: float, model: PcbModel,
     return None
 
 
-def _fallback_via_sites(spec: dict) -> list[tuple[float, float]]:
+def _via_site_blocker(vx: float, vy: float, model: PcbModel,
+                      obstacles: list[tuple[float, float, float, float,
+                                            str, float, str]],
+                      chosen: list[tuple[float, float]]) -> str | None:
+    if _nat.loaded():
+        hit = _nat.module().via_site_blocker(
+            vx, vy, _via_site_spec(model), obstacles, chosen)
+        got = None if hit is None else _via_block_text(*hit)
+        if _nat.trace():
+            ref = _via_site_blocker_py(vx, vy, model, obstacles, chosen)
+            if got != ref:
+                raise AssertionError(
+                    "native via_site_blocker DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _via_site_blocker_py(vx, vy, model, obstacles, chosen)
+
+
+def _fallback_via_sites_py(spec: dict) -> list[tuple[float, float]]:
     x0, y0, x1, y1 = spec["pour"]
     m = THERMAL_VIA_SIZE / 2
     x0, y0, x1, y1 = x0 + m, y0 + m, x1 - m, y1 - m
@@ -651,6 +686,21 @@ def _fallback_via_sites(spec: dict) -> list[tuple[float, float]]:
             sy = round(y0 + j * THERMAL_VIA_LATTICE_PITCH, 3)
             ranked.append((round(math.hypot(sx, sy), 4), sy, sx))
     return [(sx, sy) for _r, sy, sx in sorted(ranked)]
+
+
+def _fallback_via_sites(spec: dict) -> list[tuple[float, float]]:
+    if _nat.loaded():
+        x0, y0, x1, y1 = spec["pour"]
+        got = [(float(a), float(b)) for a, b in _nat.module().fallback_via_sites(
+            x0, y0, x1, y1, THERMAL_VIA_SIZE, THERMAL_VIA_LATTICE_PITCH)]
+        if _nat.trace():
+            ref = _fallback_via_sites_py(spec)
+            if got != ref:
+                raise AssertionError(
+                    "native fallback_via_sites DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _fallback_via_sites_py(spec)
 
 
 def _pour_credit_need(value: str):

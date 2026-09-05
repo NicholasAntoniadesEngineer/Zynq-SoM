@@ -51,6 +51,11 @@ bool constraint_edges_ok(const std::vector<int>& src,
                          const std::vector<int>& dst,
                          const std::vector<double>& cost,
                          const std::vector<double>& pos);
+std::pair<double, double> constraint_bounds(int node,
+                                            const std::vector<int>& src,
+                                            const std::vector<int>& dst,
+                                            const std::vector<double>& cost,
+                                            const std::vector<double>& pos);
 std::optional<double> min_box_gap(const std::vector<Box4>& a,
                                   const std::vector<Box4>& b);
 std::optional<Box4> pad_union_hull(

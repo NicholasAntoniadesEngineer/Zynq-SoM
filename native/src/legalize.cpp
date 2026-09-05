@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
@@ -358,6 +359,34 @@ bool constraint_edges_ok(const std::vector<int>& src,
         }
     }
     return true;
+}
+
+std::pair<double, double> constraint_bounds(int node,
+                                            const std::vector<int>& src,
+                                            const std::vector<int>& dst,
+                                            const std::vector<double>& cost,
+                                            const std::vector<double>& pos) {
+    if (src.size() != dst.size() || src.size() != cost.size()) {
+        throw std::runtime_error("constraint_bounds: edge arrays required");
+    }
+    const int n = static_cast<int>(pos.size());
+    if (node < 0 || node >= n) {
+        throw std::runtime_error("constraint_bounds: node out of range");
+    }
+    double lo = -std::numeric_limits<double>::infinity();
+    double hi = std::numeric_limits<double>::infinity();
+    for (std::size_t i = 0; i < src.size(); ++i) {
+        if (src[i] < 0 || dst[i] < 0 || src[i] >= n || dst[i] >= n) {
+            throw std::runtime_error("constraint_bounds: endpoint out of range");
+        }
+        if (dst[i] == node && src[i] != node) {
+            hi = std::min(hi, pos[static_cast<std::size_t>(src[i])] + cost[i]);
+        }
+        if (src[i] == node && dst[i] != node) {
+            lo = std::max(lo, pos[static_cast<std::size_t>(dst[i])] - cost[i]);
+        }
+    }
+    return {lo, hi};
 }
 
 std::optional<double> min_box_gap(const std::vector<Box4>& a,

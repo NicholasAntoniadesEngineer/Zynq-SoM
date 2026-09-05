@@ -13,6 +13,7 @@
 #include "schgen/emit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
+#include "schgen/pack.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/route.hpp"
 #include "schgen/seat.hpp"
@@ -287,6 +288,96 @@ NB_MODULE(_geom, m) {
           [](const std::vector<int>& src, const std::vector<int>& dst,
              const std::vector<double>& cost, const std::vector<double>& pos) {
               return schgen::constraint_edges_ok(src, dst, cost, pos);
+          });
+    m.def("constraint_bounds",
+          [](int node, const std::vector<int>& src, const std::vector<int>& dst,
+             const std::vector<double>& cost, const std::vector<double>& pos) {
+              auto hit = schgen::constraint_bounds(node, src, dst, cost, pos);
+              return std::make_tuple(hit.first, hit.second);
+          });
+    m.def("shelf_pack",
+          [](const std::vector<std::tuple<std::string, double, double, double,
+                                          double, double, bool>>& items,
+             double target_w,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, bool>>& blockers,
+             double zone_pad) {
+              std::vector<schgen::ShelfItem> rows;
+              rows.reserve(items.size());
+              for (const auto& t : items) {
+                  rows.push_back(schgen::ShelfItem{
+                      std::get<0>(t),
+                      schgen::Box4{std::get<1>(t), std::get<2>(t),
+                                   std::get<3>(t), std::get<4>(t)},
+                      std::get<5>(t), std::get<6>(t)});
+              }
+              std::vector<schgen::ShelfOcc> occ;
+              occ.reserve(blockers.size());
+              for (const auto& t : blockers) {
+                  occ.push_back(schgen::ShelfOcc{
+                      schgen::Box4{std::get<0>(t), std::get<1>(t),
+                                   std::get<2>(t), std::get<3>(t)},
+                      std::get<4>(t), std::get<5>(t)});
+              }
+              auto packed = schgen::shelf_pack(rows, target_w, occ, zone_pad);
+              return std::make_tuple(packed.placed, packed.packed_w,
+                                     packed.packed_h);
+          });
+    m.def("via_site_blocker",
+          [](double vx, double vy,
+             const std::tuple<double, double, double, double, double, double,
+                              double, double, double, double, double>& spec,
+             const std::vector<std::tuple<double, double, double, double,
+                                          std::string, double, std::string>>&
+                 obstacles,
+             const std::vector<PtTup>& chosen)
+              -> std::optional<std::tuple<std::string, std::string, std::string,
+                                          double, double>> {
+              const schgen::ViaSiteSpec site{
+                  std::get<0>(spec), std::get<1>(spec), std::get<2>(spec),
+                  std::get<3>(spec), std::get<4>(spec), std::get<5>(spec),
+                  std::get<6>(spec), std::get<7>(spec), std::get<8>(spec),
+                  std::get<9>(spec), std::get<10>(spec)};
+              std::vector<schgen::ViaObstacle> obs;
+              obs.reserve(obstacles.size());
+              for (const auto& t : obstacles) {
+                  obs.push_back(schgen::ViaObstacle{
+                      std::get<0>(t), std::get<1>(t), std::get<2>(t),
+                      std::get<3>(t), std::get<4>(t), std::get<5>(t),
+                      std::get<6>(t)});
+              }
+              auto hit = schgen::via_site_blocker(vx, vy, site, obs,
+                                                  as_pts(chosen));
+              if (!hit.blocked) {
+                  return std::nullopt;
+              }
+              return std::make_tuple(hit.kind, hit.label, hit.nname, hit.x,
+                                     hit.y);
+          });
+    m.def("fallback_via_sites",
+          [](double x0, double y0, double x1, double y1, double via_size,
+             double pitch) {
+              auto pts = schgen::fallback_via_sites(x0, y0, x1, y1, via_size,
+                                                    pitch);
+              std::vector<std::tuple<double, double>> out;
+              out.reserve(pts.size());
+              for (const auto& p : pts) {
+                  out.emplace_back(p.first, p.second);
+              }
+              return out;
+          });
+    m.def("zone_fanout_reach",
+          [](double zw, double zh,
+             const std::vector<std::tuple<double, double, double, double, int,
+                                          double>>& members,
+             int min_subject_pins) {
+              auto hit = schgen::zone_fanout_reach(zw, zh, members,
+                                                   min_subject_pins);
+              return std::make_tuple(
+                  std::make_tuple(hit.first.w, hit.first.e, hit.first.n,
+                                  hit.first.s),
+                  std::make_tuple(hit.second.w, hit.second.e, hit.second.n,
+                                  hit.second.s));
           });
     m.def("min_box_gap",
           [](const std::vector<std::tuple<double, double, double, double>>& a,

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from schgen.core import fallbacks as _fb
 from schgen.core import ledger as _led
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
 
 from .constants import (
@@ -84,17 +85,11 @@ def _fanout_meta(refs: list[str], resolvable: dict[str, Path]
     return out
 
 
-def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
-                blockers: list[tuple[float, float, float, float]] | None = None,
-                fanout: dict[str, tuple[float, bool]] | None = None
-                ) -> tuple[dict[str, tuple[float, float]], float, float]:
-    blk = list(blockers or [])
-    placed: dict[str, tuple[float, float]] = {}
+def _shelf_meta(items: list[tuple[str, tuple, float]],
+                fanout: dict[str, tuple[float, bool]] | None
+                ) -> tuple[dict[str, tuple[float, float, float, float]],
+                           dict[str, float], dict[str, bool]]:
     fanout = fanout or {}
-    occ: list[tuple[float, float, float, float, float, bool]] = [
-        (b[0], b[1], b[2], b[3],
-         b[4] if len(b) > 4 else 0.0,
-         b[5] if len(b) > 5 else False) for b in blk]
     halo: dict[str, tuple[float, float, float, float]] = {}
     extra_of: dict[str, float] = {}
     iscp_of: dict[str, bool] = {}
@@ -106,6 +101,23 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
         extra_of[ref] = (max(0.0, _q.quant_credit(need) - PLACE_CLEAR)
                          if need > PLACE_CLEAR else 0.0)
         iscp_of[ref] = is_cp
+    return halo, extra_of, iscp_of
+
+
+def _shelf_blockers(blockers: list | None
+                    ) -> list[tuple[float, float, float, float, float, bool]]:
+    return [(b[0], b[1], b[2], b[3],
+             b[4] if len(b) > 4 else 0.0,
+             b[5] if len(b) > 5 else False) for b in (blockers or [])]
+
+
+def _shelf_pack_py(items: list[tuple[str, tuple, float]], target_w: float,
+                   blockers: list[tuple[float, float, float, float]] | None = None,
+                   fanout: dict[str, tuple[float, bool]] | None = None
+                   ) -> tuple[dict[str, tuple[float, float]], float, float]:
+    placed: dict[str, tuple[float, float]] = {}
+    occ = _shelf_blockers(blockers)
+    halo, extra_of, iscp_of = _shelf_meta(items, fanout)
     order = sorted(items, key=lambda it: (
         -(halo[it[0]][3] - halo[it[0]][1]),
         -(halo[it[0]][2] - halo[it[0]][0]), it[0]))
@@ -150,6 +162,28 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     packed_w = round(max(used_w, ZONE_PAD) + ZONE_PAD, 4)
     packed_h = round(max(used_h, ZONE_PAD) + ZONE_PAD, 4)
     return placed, packed_w, packed_h
+
+
+def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
+                blockers: list[tuple[float, float, float, float]] | None = None,
+                fanout: dict[str, tuple[float, bool]] | None = None
+                ) -> tuple[dict[str, tuple[float, float]], float, float]:
+    if _nat.loaded():
+        halo, extra_of, iscp_of = _shelf_meta(items, fanout)
+        rows = [(ref, halo[ref][0], halo[ref][1], halo[ref][2], halo[ref][3],
+                 extra_of[ref], iscp_of[ref]) for ref, _bbox, _rot in items]
+        placed_rows, packed_w, packed_h = _nat.module().shelf_pack(
+            rows, target_w, _shelf_blockers(blockers), ZONE_PAD)
+        got = ({ref: (ox, oy) for ref, ox, oy in placed_rows},
+               packed_w, packed_h)
+        if _nat.trace():
+            ref = _shelf_pack_py(items, target_w, blockers, fanout)
+            if got != ref:
+                raise AssertionError(
+                    "native shelf_pack DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _shelf_pack_py(items, target_w, blockers, fanout)
 
 
 def _is_button(mod_path: Path) -> bool:

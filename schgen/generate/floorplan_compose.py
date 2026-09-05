@@ -1019,12 +1019,51 @@ def legalize_compact(board_w: float, board_h: float,
             for n in names:
                 v = by_name[n]
                 for axis, pos in (("x", px), ("y", py)):
-                    lo, hi = -math.inf, math.inf
-                    for u, w2, c, _tag in build_edges(axis):
-                        if w2 == n and u != n:
-                            hi = min(hi, pos.get(u, 0.0) + c)
-                        if u == n and w2 != n:
-                            lo = max(lo, pos.get(w2, 0.0) - c)
+                    edges = build_edges(axis)
+                    if _nat.loaded():
+                        nodes: list[str] = []
+                        index: dict[str, int] = {}
+                        src: list[int] = []
+                        dst: list[int] = []
+                        cost: list[float] = []
+                        for u, w2, c, _tag in edges:
+                            ui = index.get(u)
+                            if ui is None:
+                                ui = len(nodes)
+                                index[u] = ui
+                                nodes.append(u)
+                            vi = index.get(w2)
+                            if vi is None:
+                                vi = len(nodes)
+                                index[w2] = vi
+                                nodes.append(w2)
+                            src.append(ui)
+                            dst.append(vi)
+                            cost.append(c)
+                        if n not in index:
+                            index[n] = len(nodes)
+                            nodes.append(n)
+                        posv = [pos.get(nm, 0.0) for nm in nodes]
+                        lo, hi = _nat.module().constraint_bounds(
+                            index[n], src, dst, cost, posv)
+                        if _nat.trace():
+                            rlo, rhi = -math.inf, math.inf
+                            for u, w2, c, _tag in edges:
+                                if w2 == n and u != n:
+                                    rhi = min(rhi, pos.get(u, 0.0) + c)
+                                if u == n and w2 != n:
+                                    rlo = max(rlo, pos.get(w2, 0.0) - c)
+                            if (lo, hi) != (rlo, rhi):
+                                raise AssertionError(
+                                    "native constraint_bounds DIVERGENCE: "
+                                    f"cpp={(lo, hi)} python={(rlo, rhi)}")
+                    else:
+                        lo, hi = -math.inf, math.inf
+                        for u, w2, c, _tag in edges:
+                            if w2 == n and u != n:
+                                hi = min(hi, pos.get(u, 0.0) + c)
+                            if u == n and w2 != n:
+                                lo = max(lo, pos.get(w2, 0.0) - c)
                     if lo > hi:
                         continue
                     i = 0 if axis == "x" else 1
