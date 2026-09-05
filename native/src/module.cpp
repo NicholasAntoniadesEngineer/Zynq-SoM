@@ -1032,4 +1032,15 @@ NB_MODULE(_geom, m) {
                  return std::make_tuple(hit->x, hit->y, hit->w, hit->h);
              })
         .def_prop_ro("rect_count", &schgen::Occupancy::rect_count);
+    nb::class_<schgen::BreatheGrid>(m, "BreatheGrid")
+        .def(nb::init<double, double, double, double, double>())
+        .def("stamp",
+             [](schgen::BreatheGrid& self, const BoxTup& box, int val) {
+                 self.stamp(as_box(box), val);
+             },
+             nb::arg("box"), nb::arg("val") = 1)
+        .def("free",
+             [](const schgen::BreatheGrid& self, const BoxTup& box) {
+                 return self.free(as_box(box));
+             });
 }

@@ -314,6 +314,66 @@ std::pair<bool, double> coverage_ok(
     return {true, worst};
 }
 
+BreatheGrid::BreatheGrid(double board_w, double board_h, double cell,
+                         double origin_x, double origin_y)
+    : cell_(cell), origin_x_(origin_x), origin_y_(origin_y) {
+    if (cell <= 0.0) {
+        throw std::runtime_error("BreatheGrid: cell required");
+    }
+    nx_ = static_cast<int>(board_w / cell) + 2;
+    ny_ = static_cast<int>(board_h / cell) + 2;
+    if (nx_ <= 0 || ny_ <= 0) {
+        throw std::runtime_error("BreatheGrid: board extent required");
+    }
+    cells_.assign(static_cast<std::size_t>(nx_) * static_cast<std::size_t>(ny_),
+                  0);
+}
+
+void BreatheGrid::stamp(const Box4& box, int val) {
+    const int c0 = static_cast<int>((box.x0 - origin_x_) / cell_);
+    const int r0 = static_cast<int>((box.y0 - origin_y_) / cell_);
+    const int c1 = static_cast<int>((box.x1 - origin_x_) / cell_);
+    const int r1 = static_cast<int>((box.y1 - origin_y_) / cell_);
+    if (c1 < 0 || r1 < 0 || c0 >= nx_ || r0 >= ny_) {
+        return;
+    }
+    const int cc0 = std::max(0, c0);
+    const int rr0 = std::max(0, r0);
+    const int cc1 = std::min(nx_ - 1, c1);
+    const int rr1 = std::min(ny_ - 1, r1);
+    const std::uint8_t v = val ? 1 : 0;
+    for (int r = rr0; r <= rr1; ++r) {
+        const int base = r * nx_;
+        for (int c = cc0; c <= cc1; ++c) {
+            cells_[static_cast<std::size_t>(base + c)] = v;
+        }
+    }
+}
+
+bool BreatheGrid::free(const Box4& box) const {
+    const double c0f = (box.x0 - origin_x_) / cell_;
+    const double r0f = (box.y0 - origin_y_) / cell_;
+    const double c1f = (box.x1 - origin_x_) / cell_;
+    const double r1f = (box.y1 - origin_y_) / cell_;
+    if (c0f < 0.0 || r0f < 0.0 || c1f >= static_cast<double>(nx_)
+        || r1f >= static_cast<double>(ny_)) {
+        return false;
+    }
+    const int c0 = static_cast<int>(c0f);
+    const int r0 = static_cast<int>(r0f);
+    const int c1 = static_cast<int>(c1f);
+    const int r1 = static_cast<int>(r1f);
+    for (int r = r0; r <= r1; ++r) {
+        const int base = r * nx_;
+        for (int c = c0; c <= c1; ++c) {
+            if (cells_[static_cast<std::size_t>(base + c)]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool point_on_seg(double px, double py, double x0, double y0, double x1,
                   double y1, bool interior_only) {
     const double eps = 1e-6;

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from math import hypot, pi
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
 from schgen.verify.fanout_gate import (
     _is_cluster_passive,
@@ -61,7 +62,7 @@ def _halo(b: tuple[float, float, float, float], m: float
     return (b[0] - m, b[1] - m, b[2] + m, b[3] + m)
 
 
-class _Grid:
+class _GridPy:
     __slots__ = ("nx", "ny", "cells")
 
     def __init__(self, board_w: float, board_h: float) -> None:
@@ -104,6 +105,41 @@ class _Grid:
                 if self.cells[base + c]:
                     return False
         return True
+
+
+class _Grid:
+    __slots__ = ("_cpp", "_py")
+
+    def __init__(self, board_w: float, board_h: float) -> None:
+        self._cpp = None
+        self._py = None
+        if _nat.loaded():
+            self._cpp = _nat.module().BreatheGrid(
+                board_w, board_h, CELL, ORIGIN_X, ORIGIN_Y)
+            if _nat.trace():
+                self._py = _GridPy(board_w, board_h)
+        else:
+            self._py = _GridPy(board_w, board_h)
+
+    def stamp(self, box: tuple[float, float, float, float], val: int = 1) -> None:
+        if self._cpp is not None:
+            self._cpp.stamp(box, val)
+            if self._py is not None:
+                self._py.stamp(box, val)
+            return
+        self._py.stamp(box, val)
+
+    def free(self, box: tuple[float, float, float, float]) -> bool:
+        if self._cpp is not None:
+            got = self._cpp.free(box)
+            if self._py is not None:
+                ref = self._py.free(box)
+                if got is not ref:
+                    raise AssertionError(
+                        "native BreatheGrid.free DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._py.free(box)
 
 
 def _is_fixed(ref: str, sheet: str, footprint: str, *,

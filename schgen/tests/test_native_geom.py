@@ -782,6 +782,32 @@ def test_silk_escape_and_seg_kernels(geom):
     assert worst == (1.0 ** 2 + 0.0 ** 2) ** 0.5 or worst > 0.0
 
 
+def test_breathe_grid_matches_python(geom):
+    from schgen.generate.pcb.breathe import CELL, _Grid, _GridPy
+    from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+    py = _GridPy(80.0, 60.0)
+    cpp = geom.BreatheGrid(80.0, 60.0, CELL, ORIGIN_X, ORIGIN_Y)
+    wrapped = _Grid(80.0, 60.0)
+    boxes = (
+        (ORIGIN_X + 2.0, ORIGIN_Y + 2.0, ORIGIN_X + 10.0, ORIGIN_Y + 8.0),
+        (ORIGIN_X + 20.0, ORIGIN_Y + 15.0, ORIGIN_X + 28.0, ORIGIN_Y + 22.0),
+        (ORIGIN_X - 1.0, ORIGIN_Y + 1.0, ORIGIN_X + 1.0, ORIGIN_Y + 3.0),
+    )
+    probes = (
+        (ORIGIN_X + 3.0, ORIGIN_Y + 3.0, ORIGIN_X + 5.0, ORIGIN_Y + 5.0),
+        (ORIGIN_X + 40.0, ORIGIN_Y + 40.0, ORIGIN_X + 42.0, ORIGIN_Y + 42.0),
+        (ORIGIN_X + 19.0, ORIGIN_Y + 14.0, ORIGIN_X + 21.0, ORIGIN_Y + 16.0),
+        (ORIGIN_X + 79.0, ORIGIN_Y + 59.0, ORIGIN_X + 81.0, ORIGIN_Y + 61.0),
+    )
+    for box in boxes:
+        py.stamp(box)
+        cpp.stamp(box)
+        wrapped.stamp(box)
+    for box in probes:
+        assert cpp.free(box) is py.free(box)
+        assert wrapped.free(box) is py.free(box)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

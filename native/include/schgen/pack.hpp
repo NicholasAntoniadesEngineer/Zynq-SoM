@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -87,6 +88,22 @@ std::pair<bool, double> coverage_ok(
     double bound);
 bool point_on_seg(double px, double py, double x0, double y0, double x1,
                   double y1, bool interior_only);
+
+class BreatheGrid {
+public:
+    BreatheGrid(double board_w, double board_h, double cell, double origin_x,
+                double origin_y);
+    void stamp(const Box4& box, int val);
+    bool free(const Box4& box) const;
+
+private:
+    int nx_ = 0;
+    int ny_ = 0;
+    double cell_ = 0.0;
+    double origin_x_ = 0.0;
+    double origin_y_ = 0.0;
+    std::vector<std::uint8_t> cells_;
+};
 
 std::pair<Halo, Halo> zone_fanout_reach(
     double zw, double zh,
