@@ -592,6 +592,36 @@ NB_MODULE(_geom, m) {
               schgen::flip_to_bottom(tree);
               return sexpr_to_tagged(tree);
           });
+    m.def("restamp_uuid",
+          [](nb::handle node, const std::string& uuid) {
+              auto tree = sexpr_from_py(node);
+              schgen::restamp_uuid(tree, uuid);
+              return sexpr_to_tagged(tree);
+          });
+    m.def("set_or_add",
+          [](nb::handle node, nb::handle kv) {
+              auto tree = sexpr_from_py(node);
+              auto child = sexpr_from_py(kv);
+              schgen::set_or_add(tree, child);
+              return sexpr_to_tagged(tree);
+          });
+    m.def("set_pad_net",
+          [](nb::handle pad, int num, const std::string& name) {
+              auto tree = sexpr_from_py(pad);
+              schgen::set_pad_net(tree, num, name);
+              return sexpr_to_tagged(tree);
+          });
+    m.def("thermal_via_inherit",
+          [](double cx, double cy,
+             const std::vector<std::tuple<double, double, double, double, int,
+                                          std::string>>& netted)
+              -> std::optional<std::tuple<int, std::string>> {
+              auto hit = schgen::thermal_via_inherit(cx, cy, netted);
+              if (!hit) {
+                  return std::nullopt;
+              }
+              return std::make_tuple(hit->first, hit->second);
+          });
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

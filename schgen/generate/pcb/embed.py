@@ -214,6 +214,22 @@ def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
         if g is None:
             continue
         cx, cy, _hw, _hh = g
+        if _nat.loaded():
+            hit = _nat.module().thermal_via_inherit(cx, cy, netted)
+            if _nat.trace():
+                ref = None
+                for px, py, phw, phh, num, name in netted:
+                    if abs(cx - px) <= phw and abs(cy - py) <= phh:
+                        ref = (num, name)
+                        break
+                got = tuple(hit) if hit is not None else None
+                if got != ref:
+                    raise AssertionError(
+                        "native thermal_via_inherit DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            if hit is not None:
+                out_map[seq] = (int(hit[0]), hit[1])
+            continue
         for px, py, phw, phh, num, name in netted:
             if abs(cx - px) <= phw and abs(cy - py) <= phh:
                 out_map[seq] = (num, name)
@@ -221,7 +237,7 @@ def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
     return out_map
 
 
-def _set_or_add(node: list, kv: list) -> None:
+def _set_or_add_py(node: list, kv: list) -> None:
     tag = kv[0]
     for i, x in enumerate(node):
         if isinstance(x, list) and x and x[0] == tag:
@@ -230,7 +246,22 @@ def _set_or_add(node: list, kv: list) -> None:
     node.append(kv)
 
 
-def _restamp_uuid(node: list, new: str) -> None:
+def _set_or_add(node: list, kv: list) -> None:
+    if _nat.loaded():
+        got = _from_tagged(_nat.module().set_or_add(node, kv))
+        if _nat.trace():
+            ref = copy.deepcopy(node)
+            _set_or_add_py(ref, kv)
+            if sexpr.dumps(got) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native set_or_add DIVERGENCE: "
+                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+        node[:] = got
+        return
+    _set_or_add_py(node, kv)
+
+
+def _restamp_uuid_py(node: list, new: str) -> None:
     for i, x in enumerate(node):
         if isinstance(x, list) and x and x[0] == Sym("uuid"):
             node[i] = [Sym("uuid"), new]
@@ -238,7 +269,22 @@ def _restamp_uuid(node: list, new: str) -> None:
     node.append([Sym("uuid"), new])
 
 
-def _set_pad_net(pad: list, num: int, name: str) -> None:
+def _restamp_uuid(node: list, new: str) -> None:
+    if _nat.loaded():
+        got = _from_tagged(_nat.module().restamp_uuid(node, new))
+        if _nat.trace():
+            ref = copy.deepcopy(node)
+            _restamp_uuid_py(ref, new)
+            if sexpr.dumps(got) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native restamp_uuid DIVERGENCE: "
+                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+        node[:] = got
+        return
+    _restamp_uuid_py(node, new)
+
+
+def _set_pad_net_py(pad: list, num: int, name: str) -> None:
     pad[:] = [x for x in pad
               if not (isinstance(x, list) and x and x[0] == Sym("net"))]
     if num <= 0:
@@ -249,6 +295,21 @@ def _set_pad_net(pad: list, num: int, name: str) -> None:
             pad.insert(i, net_node)
             return
     pad.append(net_node)
+
+
+def _set_pad_net(pad: list, num: int, name: str) -> None:
+    if _nat.loaded():
+        got = _from_tagged(_nat.module().set_pad_net(pad, num, name))
+        if _nat.trace():
+            ref = copy.deepcopy(pad)
+            _set_pad_net_py(ref, num, name)
+            if sexpr.dumps(got) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native set_pad_net DIVERGENCE: "
+                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+        pad[:] = got
+        return
+    _set_pad_net_py(pad, num, name)
 
 
 def _layers_node_py() -> list:

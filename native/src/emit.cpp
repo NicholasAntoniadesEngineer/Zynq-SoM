@@ -1,6 +1,10 @@
 #include "schgen/emit.hpp"
 
+#include <cmath>
+#include <cstddef>
+#include <optional>
 #include <stdexcept>
+#include <tuple>
 
 namespace schgen {
 namespace {
@@ -378,6 +382,100 @@ void flip_to_bottom(Sexpr& node) {
             flip_to_bottom(sub);
         }
     }
+}
+
+void restamp_uuid(Sexpr& node, const std::string& uuid) {
+    if (!std::holds_alternative<SexprList>(node.v)) {
+        throw std::runtime_error("restamp_uuid: list node required");
+    }
+    SexprList& lst = std::get<SexprList>(node.v);
+    const Sexpr repl = L({S("uuid"), T(uuid)});
+    for (Sexpr& sub : lst) {
+        if (!std::holds_alternative<SexprList>(sub.v)) {
+            continue;
+        }
+        SexprList& sl = std::get<SexprList>(sub.v);
+        if (!sl.empty() && is_sym_named(sl[0], "uuid")) {
+            sub = repl;
+            return;
+        }
+    }
+    lst.push_back(repl);
+}
+
+void set_or_add(Sexpr& node, const Sexpr& kv) {
+    if (!std::holds_alternative<SexprList>(node.v)
+        || !std::holds_alternative<SexprList>(kv.v)) {
+        throw std::runtime_error("set_or_add: list nodes required");
+    }
+    SexprList& lst = std::get<SexprList>(node.v);
+    const SexprList& kvlist = std::get<SexprList>(kv.v);
+    if (kvlist.empty() || !std::holds_alternative<Sexpr::Sym>(kvlist[0].v)) {
+        throw std::runtime_error("set_or_add: tagged child required");
+    }
+    const std::string& tag = std::get<Sexpr::Sym>(kvlist[0].v).name;
+    for (Sexpr& sub : lst) {
+        if (!std::holds_alternative<SexprList>(sub.v)) {
+            continue;
+        }
+        SexprList& sl = std::get<SexprList>(sub.v);
+        if (!sl.empty() && is_sym_named(sl[0], tag.c_str())) {
+            sub = kv;
+            return;
+        }
+    }
+    lst.push_back(kv);
+}
+
+void set_pad_net(Sexpr& pad, int num, const std::string& name) {
+    if (!std::holds_alternative<SexprList>(pad.v)) {
+        throw std::runtime_error("set_pad_net: list node required");
+    }
+    SexprList& lst = std::get<SexprList>(pad.v);
+    SexprList kept;
+    kept.reserve(lst.size());
+    for (Sexpr& sub : lst) {
+        if (std::holds_alternative<SexprList>(sub.v)) {
+            SexprList& sl = std::get<SexprList>(sub.v);
+            if (!sl.empty() && is_sym_named(sl[0], "net")) {
+                continue;
+            }
+        }
+        kept.push_back(std::move(sub));
+    }
+    lst = std::move(kept);
+    if (num <= 0) {
+        return;
+    }
+    Sexpr netn = L({S("net"), N(static_cast<double>(num)), T(name)});
+    for (std::size_t i = 0; i < lst.size(); ++i) {
+        if (!std::holds_alternative<SexprList>(lst[i].v)) {
+            continue;
+        }
+        SexprList& sl = std::get<SexprList>(lst[i].v);
+        if (!sl.empty() && is_sym_named(sl[0], "uuid")) {
+            lst.insert(lst.begin() + static_cast<std::ptrdiff_t>(i),
+                       std::move(netn));
+            return;
+        }
+    }
+    lst.push_back(std::move(netn));
+}
+
+std::optional<std::pair<int, std::string>> thermal_via_inherit(
+    double cx, double cy,
+    const std::vector<std::tuple<double, double, double, double, int,
+                                 std::string>>& netted) {
+    for (const auto& row : netted) {
+        const double px = std::get<0>(row);
+        const double py = std::get<1>(row);
+        const double phw = std::get<2>(row);
+        const double phh = std::get<3>(row);
+        if (std::fabs(cx - px) <= phw && std::fabs(cy - py) <= phh) {
+            return std::make_pair(std::get<4>(row), std::get<5>(row));
+        }
+    }
+    return std::nullopt;
 }
 
 std::string flip_layer_token(const std::string& name) {

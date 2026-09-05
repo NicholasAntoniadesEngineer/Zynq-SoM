@@ -995,6 +995,34 @@ def test_silk_gfx_extent_and_pair_gap(geom):
     assert geom.pair_gap(ar, ai, br, bi, axis, CLEAR) == want_g
 
 
+def test_embed_sexpr_helpers(geom):
+    from schgen.core.sexpr import Sym, _from_tagged, dumps
+    from schgen.generate.pcb.embed import (
+        _restamp_uuid_py,
+        _set_or_add_py,
+        _set_pad_net_py,
+    )
+    node = [Sym("footprint"), "R", [Sym("layer"), "F.Cu"], [Sym("uuid"), "old"]]
+    got = _from_tagged(geom.restamp_uuid(node, "new"))
+    ref = [c for c in node]
+    _restamp_uuid_py(ref, "new")
+    assert dumps(got) == dumps(ref)
+    node2 = [Sym("footprint"), "R", [Sym("layer"), "F.Cu"]]
+    got2 = _from_tagged(geom.set_or_add(node2, [Sym("uuid"), "u1"]))
+    ref2 = [c for c in node2]
+    _set_or_add_py(ref2, [Sym("uuid"), "u1"])
+    assert dumps(got2) == dumps(ref2)
+    pad = [Sym("pad"), "1", [Sym("at"), 0, 0], [Sym("uuid"), "p"]]
+    got3 = _from_tagged(geom.set_pad_net(pad, 7, "GND"))
+    ref3 = [c for c in pad]
+    _set_pad_net_py(ref3, 7, "GND")
+    assert dumps(got3) == dumps(ref3)
+    assert geom.thermal_via_inherit(1.0, 1.0, [(1.0, 1.0, 0.5, 0.5, 3, "GND")]) \
+        == (3, "GND")
+    assert geom.thermal_via_inherit(4.0, 4.0, [(1.0, 1.0, 0.5, 0.5, 3, "GND")]) \
+        is None
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()
