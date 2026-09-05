@@ -9,8 +9,11 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <map>
 #include <optional>
+#include <queue>
 #include <string>
 #include <tuple>
 
@@ -407,6 +410,107 @@ std::vector<LabeledBox> pin_text_boxes(
         }
     }
     return out;
+}
+
+std::optional<std::vector<std::pair<double, double>>> bfs_escape(
+    double pt_x, double pt_y, double ty, double unit, double extent_x0,
+    double extent_y0, double extent_x1, double extent_y1, double margin_cells,
+    const std::vector<Box4>& boxes, const std::vector<Seg2>& segs,
+    double cell_pad) {
+    const double margin = margin_cells * unit;
+    const int i0 = static_cast<int>(
+        gfloor(std::min(extent_x0, pt_x) - margin, unit) / unit);
+    const int i1 = static_cast<int>(
+        gceil(std::max(extent_x1, pt_x) + margin, unit) / unit);
+    const int j0 = static_cast<int>(
+        gfloor(std::min(std::min(extent_y0, pt_y), ty) - margin, unit) / unit);
+    const int j1 = static_cast<int>(
+        gceil(std::max(std::max(extent_y1, pt_y), ty) + margin, unit) / unit);
+    const int start_i = static_cast<int>(py_round(pt_x / unit, 0));
+    const int start_j = static_cast<int>(py_round(pt_y / unit, 0));
+    const int jty = static_cast<int>(py_round(ty / unit, 0));
+    constexpr std::int64_t kUnreachable = 1LL << 60;
+    constexpr std::int64_t kTurn = 1000;
+    const int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    using State = std::tuple<int, int, int>;
+    using Item = std::tuple<std::int64_t, int, int, int>;
+    std::map<State, std::int64_t> dist;
+    std::map<State, std::optional<State>> prev;
+    const State start{start_i, start_j, -1};
+    dist[start] = 0;
+    prev[start] = std::nullopt;
+    std::priority_queue<Item, std::vector<Item>, std::greater<Item>> pq;
+    pq.push({0, start_i, start_j, -1});
+    std::optional<State> hit;
+    while (!pq.empty()) {
+        const auto [cost, cell_i, cell_j, came] = pq.top();
+        pq.pop();
+        const State cell{cell_i, cell_j, came};
+        auto it = dist.find(cell);
+        if (it != dist.end() && it->second < cost) {
+            continue;
+        }
+        if (cell_j == jty && !(cell_i == start_i && cell_j == start_j)) {
+            hit = cell;
+            break;
+        }
+        for (int di = 0; di < 4; ++di) {
+            const int ni = cell_i + dirs[di][0];
+            const int nj = cell_j + dirs[di][1];
+            if (!(i0 <= ni && ni <= i1 && j0 <= nj && nj <= j1)) {
+                continue;
+            }
+            const double wx = py_round(static_cast<double>(ni) * unit, 3);
+            const double wy = py_round(static_cast<double>(nj) * unit, 3);
+            if (!cell_free_point(wx, wy, boxes, segs, cell_pad)) {
+                continue;
+            }
+            const std::int64_t nc =
+                cost + 1 + ((came != -1 && came != di) ? kTurn : 0);
+            const State st{ni, nj, di};
+            auto found = dist.find(st);
+            const std::int64_t cur =
+                found == dist.end() ? kUnreachable : found->second;
+            if (nc < cur) {
+                dist[st] = nc;
+                prev[st] = cell;
+                pq.push({nc, ni, nj, di});
+            }
+        }
+    }
+    if (!hit) {
+        return std::nullopt;
+    }
+    std::vector<std::pair<int, int>> chain;
+    std::optional<State> st = hit;
+    while (st) {
+        chain.emplace_back(std::get<0>(*st), std::get<1>(*st));
+        st = prev[*st];
+    }
+    std::reverse(chain.begin(), chain.end());
+    std::vector<std::pair<double, double>> pts;
+    pts.reserve(chain.size());
+    for (const auto& c : chain) {
+        pts.emplace_back(py_round(static_cast<double>(c.first) * unit, 3),
+                         py_round(static_cast<double>(c.second) * unit, 3));
+    }
+    if (pts.empty()) {
+        return std::nullopt;
+    }
+    std::vector<std::pair<double, double>> way;
+    way.push_back(pts.front());
+    for (std::size_t k = 1; k + 1 < pts.size(); ++k) {
+        const auto& a = pts[k - 1];
+        const auto& b = pts[k];
+        const auto& c = pts[k + 1];
+        const bool horiz = a.second == b.second && b.second == c.second;
+        const bool vert = a.first == b.first && b.first == c.first;
+        if (!(horiz || vert)) {
+            way.push_back(b);
+        }
+    }
+    way.push_back(pts.back());
+    return way;
 }
 
 }  // namespace schgen

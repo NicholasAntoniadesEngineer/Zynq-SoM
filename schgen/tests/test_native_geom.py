@@ -1261,6 +1261,39 @@ def test_pin_escape_and_buck_kernels(geom):
                         round(1.0 + 0.4 + 0.6, 4))
 
 
+def test_bfs_escape_and_place_refdes(geom):
+    from schgen.generate.pcb.silk import _BoxIndex, _place_refdes_py
+
+    way = geom.bfs_escape(
+        0.0, 0.0, 5.08, 1.27, -2.0, -2.0, 8.0, 8.0, 16.0,
+        [(10.0, 10.0, 12.0, 12.0)], [], 0.3)
+    assert way is not None
+    pts = [tuple(p) for p in way]
+    assert pts[0] == (0.0, 0.0)
+    assert pts[-1][1] == 5.08
+    blocked = geom.bfs_escape(
+        0.0, 0.0, 2.54, 1.27, -1.0, -1.0, 3.0, 3.0, 2.0,
+        [(-10.0, 0.5, 10.0, 2.0)], [], 0.3)
+    assert blocked is None
+    occ = geom.SilkBoxIndex(8.0)
+    occ.add((0.0, 0.0, 4.0, 2.0))
+    plc = geom.SilkBoxIndex(8.0)
+    court = (0.0, 0.0, 4.0, 2.0)
+    box = (1.0, 0.5, 3.0, 1.5)
+    moved, lx, ly, size, *add = geom.place_refdes(
+        court, "R1", 1.0, box, occ, plc, (-20.0, -20.0, 40.0, 40.0),
+        2.0, 1.0, 1.0, 0.0, 0.8, 0.02, 8.0, 1e-9, 0.5, (0.78, 0.62))
+    assert moved is True
+    assert size <= 1.0
+    py_occ = _BoxIndex([(0.0, 0.0, 4.0, 2.0)])
+    py_plc = _BoxIndex()
+    ref = _place_refdes_py(
+        py_occ, py_plc, court, "R1", 1.0, box, 2.0, 1.0, 1.0, 0.0,
+        (-20.0, -20.0, 40.0, 40.0))
+    assert (moved, lx, ly, size, tuple(add)) == (
+        ref[0], ref[1], ref[2], ref[3], ref[4])
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

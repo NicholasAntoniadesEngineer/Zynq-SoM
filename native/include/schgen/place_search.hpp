@@ -88,4 +88,10 @@ std::vector<LabeledBox> pin_text_boxes(
     int part_rot, bool pin_numbers_hidden, bool pin_names_hidden,
     double char_w, double line_h, double size);
 
+std::optional<std::vector<std::pair<double, double>>> bfs_escape(
+    double pt_x, double pt_y, double ty, double unit, double extent_x0,
+    double extent_y0, double extent_x1, double extent_y1, double margin_cells,
+    const std::vector<Box4>& boxes, const std::vector<Seg2>& segs,
+    double cell_pad);
+
 }  // namespace schgen

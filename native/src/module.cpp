@@ -972,6 +972,43 @@ NB_MODULE(_geom, m) {
                                              template_clear);
               return std::make_tuple(p.first, p.second);
           });
+    m.def("bfs_escape",
+          [](double pt_x, double pt_y, double ty, double unit,
+             double extent_x0, double extent_y0, double extent_x1,
+             double extent_y1, double margin_cells,
+             const std::vector<BoxTup>& boxes,
+             const std::vector<BoxTup>& segs, double cell_pad)
+              -> std::optional<std::vector<PtTup>> {
+              auto hit = schgen::bfs_escape(
+                  pt_x, pt_y, ty, unit, extent_x0, extent_y0, extent_x1,
+                  extent_y1, margin_cells, as_boxes(boxes), as_segs(segs),
+                  cell_pad);
+              if (!hit) {
+                  return std::nullopt;
+              }
+              std::vector<PtTup> out;
+              out.reserve(hit->size());
+              for (const auto& p : *hit) {
+                  out.emplace_back(p.first, p.second);
+              }
+              return out;
+          });
+    m.def("place_refdes",
+          [](const BoxTup& court, const std::string& ref, double size,
+             const BoxTup& box, const schgen::SilkBoxIndex& occupied,
+             const schgen::SilkBoxIndex& placed, const BoxTup& bounds,
+             double fx, double fy, double ca, double sa, double min_size,
+             double box_pad, double far_off, double pen_eps,
+             double off_improve, const std::vector<double>& shrinks) {
+              auto hit = schgen::place_refdes(
+                  as_box(court), ref, size, as_box(box), occupied, placed,
+                  as_box(bounds), fx, fy, ca, sa, min_size, box_pad, far_off,
+                  pen_eps, off_improve, shrinks);
+              return std::make_tuple(
+                  hit.moved, hit.local_x, hit.local_y, hit.size,
+                  hit.add_box.x0, hit.add_box.y0, hit.add_box.x1,
+                  hit.add_box.y1);
+          });
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

@@ -2250,6 +2250,31 @@ class _Engine:
 
     def _bfs_escape(self, pt: tuple[float, float], ty: float,
                     net: str) -> list[tuple[float, float]]:
+        if _nat.loaded():
+            ex0, ey0, ex1, ey1 = self._extent()
+            boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = (list(self._plan_raw_segs({net}))
+                    + list(self._stem_segs({net})))
+            raw = _nat.module().bfs_escape(
+                pt[0], pt[1], ty, U, ex0, ey0, ex1, ey1, 16.0, boxes, segs,
+                0.3)
+            got = None if raw is None else [tuple(p) for p in raw]
+            if _nat.trace():
+                try:
+                    ref = self._bfs_escape_py(pt, ty, net)
+                except PlaceError:
+                    ref = None
+                if got != ref:
+                    raise AssertionError(
+                        "native bfs_escape DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            if got is None:
+                raise PlaceError(f"{net}: no free escape lane from {pt}")
+            return got
+        return self._bfs_escape_py(pt, ty, net)
+
+    def _bfs_escape_py(self, pt: tuple[float, float], ty: float,
+                       net: str) -> list[tuple[float, float]]:
         ex0, ey0, ex1, ey1 = self._extent()
         margin = 16 * U
         i0 = int(gfloor(min(ex0, pt[0]) - margin) / U)

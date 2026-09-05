@@ -872,4 +872,58 @@ std::pair<double, double> bulk_cap_pose(
     return {py_round(ox, 4), py_round(cy, 4)};
 }
 
+RefdesMove place_refdes(
+    const Box4& court, const std::string& ref, double size, const Box4& box,
+    const SilkBoxIndex& occupied, const SilkBoxIndex& placed,
+    const Box4& bounds, double fx, double fy, double ca, double sa,
+    double min_size, double box_pad, double far_off, double pen_eps,
+    double off_improve, const std::vector<double>& shrinks) {
+    const Box4 padded{box.x0 - box_pad, box.y0 - box_pad, box.x1 + box_pad,
+                      box.y1 + box_pad};
+    if (!occupied.hits(padded) && !placed.hits(padded)) {
+        return RefdesMove{false, 0.0, 0.0, size, box};
+    }
+    const std::optional<Box4> bound_opt{bounds};
+    ClearLabel hit = place_clear_label(court.x0, court.y0, court.x1, court.y1,
+                                       ref, size, occupied, &placed,
+                                       bound_opt);
+    double tx = hit.x;
+    double ty = hit.y;
+    Box4 nbox = hit.box;
+    double off = hit.extra;
+    double new_size = size;
+    double cur_pen = occupied.pen(nbox) + placed.pen(nbox);
+    if (off > far_off || cur_pen > 0.0) {
+        std::set<double> tried;
+        tried.insert(py_round(size, 3));
+        for (double shrink : shrinks) {
+            const double s2 = std::max(py_round(size * shrink, 3), min_size);
+            if (tried.count(s2) != 0 || s2 >= size) {
+                continue;
+            }
+            tried.insert(s2);
+            ClearLabel alt = place_clear_label(
+                court.x0, court.y0, court.x1, court.y1, ref, s2, occupied,
+                &placed, bound_opt);
+            const double pen2 = occupied.pen(alt.box) + placed.pen(alt.box);
+            if ((pen2 < cur_pen - pen_eps)
+                || (cur_pen <= 0.0 && alt.extra < off - off_improve)) {
+                tx = alt.x;
+                ty = alt.y;
+                nbox = alt.box;
+                off = alt.extra;
+                new_size = s2;
+                cur_pen = pen2;
+                if (cur_pen <= 0.0 && off <= far_off) {
+                    break;
+                }
+            }
+        }
+    }
+    const double dx = tx - fx;
+    const double dy = ty - fy;
+    return RefdesMove{true, py_round(dx * ca - dy * sa, 4),
+                      py_round(dx * sa + dy * ca, 4), new_size, nbox};
+}
+
 }  // namespace schgen

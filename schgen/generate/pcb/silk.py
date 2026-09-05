@@ -522,6 +522,41 @@ def _hide_undersom_bottom_refs(model, doc: list) -> int:
     return n
 
 
+def _place_refdes_py(occ, plc, court, ref, size, box, fx, fy, ca, sa, bounds):
+    gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
+    if not (occ.hits(gb) or plc.hits(gb)):
+        return False, 0.0, 0.0, size, box
+    tx, ty, nbox, off = _place_clear_label(
+        court[0], court[1], court[2], court[3], ref, size,
+        _PairIndex(occ, plc), bounds=bounds)
+
+    def _pen(bx, _occ=occ, _plc=plc) -> float:
+        return _occ.pen(bx) + _plc.pen(bx)
+
+    new_size = size
+    cur_pen = _pen(nbox)
+    if off > 8.0 or cur_pen > 0.0:
+        tried = {round(size, 3)}
+        for shrink in (0.78, 0.62):
+            s2 = max(round(size * shrink, 3), _REFDES_MIN_SIZE)
+            if s2 in tried or s2 >= size:
+                continue
+            tried.add(s2)
+            tx2, ty2, nbox2, off2 = _place_clear_label(
+                court[0], court[1], court[2], court[3], ref, s2,
+                _PairIndex(occ, plc), bounds=bounds)
+            pen2 = _pen(nbox2)
+            if (pen2 < cur_pen - 1e-9) or (
+                    cur_pen <= 0.0 and off2 < off - 0.5):
+                tx, ty, nbox, off, new_size = tx2, ty2, nbox2, off2, s2
+                cur_pen = pen2
+                if cur_pen <= 0.0 and off <= 8.0:
+                    break
+    dx, dy = tx - fx, ty - fy
+    return True, round(dx * ca - dy * sa, 4), round(dx * sa + dy * ca, 4), \
+        new_size, nbox
+
+
 # Must run after the footprint loop AND _connector_descriptors — it reads their
 # courtyards and function labels as the occupied set.
 def _declutter_refdes(model, uid, doc: list) -> int:
@@ -616,41 +651,41 @@ def _declutter_refdes(model, uid, doc: list) -> int:
     for ref, c, lat, fx, fy, ca, sa, court, size, box, bottom in refs:
         occ = occupied_bot if bottom else occupied
         plc = placed_bot if bottom else placed_top
-        gb = (box[0] - 0.02, box[1] - 0.02, box[2] + 0.02, box[3] + 0.02)
-        if not (occ.hits(gb) or plc.hits(gb)):
-            plc.add(box)
+        if (_nat.loaded() and occ._cpp is not None
+                and plc._cpp is not None):
+            got = _nat.module().place_refdes(
+                court, ref, size, box, occ._cpp, plc._cpp,
+                (ex0, ey0, ex1, ey1), fx, fy, ca, sa, _REFDES_MIN_SIZE,
+                0.02, 8.0, 1e-9, 0.5, (0.78, 0.62))
+            moved_hit, lx, ly, new_size, ax0, ay0, ax1, ay1 = got
+            add_box = (ax0, ay0, ax1, ay1)
+            if _nat.trace():
+                ref_move, ref_lx, ref_ly, ref_size, ref_box = (
+                    _place_refdes_py(
+                        occ, plc, court, ref, size, box, fx, fy, ca, sa,
+                        (ex0, ey0, ex1, ey1)))
+                if (moved_hit, lx, ly, new_size, add_box) != (
+                        ref_move, ref_lx, ref_ly, ref_size, ref_box):
+                    raise AssertionError(
+                        "native place_refdes DIVERGENCE: "
+                        f"cpp={(moved_hit, lx, ly, new_size, add_box)} "
+                        f"python={(ref_move, ref_lx, ref_ly, ref_size, ref_box)}")
+            plc.add(add_box)
+            if moved_hit:
+                lat[1] = lx
+                lat[2] = ly
+                if new_size != size:
+                    _set_font_size(c, new_size)
+                moved += 1
             continue
-        tx, ty, nbox, off = _place_clear_label(
-            court[0], court[1], court[2], court[3], ref, size,
-            _PairIndex(occ, plc), bounds=(ex0, ey0, ex1, ey1))
-
-        def _pen(bx, _occ=occ, _plc=plc) -> float:
-            return _occ.pen(bx) + _plc.pen(bx)
-
-        new_size = size
-        cur_pen = _pen(nbox)
-        if off > 8.0 or cur_pen > 0.0:
-            tried = {round(size, 3)}
-            for shrink in (0.78, 0.62):
-                s2 = max(round(size * shrink, 3), _REFDES_MIN_SIZE)
-                if s2 in tried or s2 >= size:
-                    continue
-                tried.add(s2)
-                tx2, ty2, nbox2, off2 = _place_clear_label(
-                    court[0], court[1], court[2], court[3], ref, s2,
-                    _PairIndex(occ, plc), bounds=(ex0, ey0, ex1, ey1))
-                pen2 = _pen(nbox2)
-                if (pen2 < cur_pen - 1e-9) or (
-                        cur_pen <= 0.0 and off2 < off - 0.5):
-                    tx, ty, nbox, off, new_size = tx2, ty2, nbox2, off2, s2
-                    cur_pen = pen2
-                    if cur_pen <= 0.0 and off <= 8.0:
-                        break
-        dx, dy = tx - fx, ty - fy
-        lat[1] = round(dx * ca - dy * sa, 4)
-        lat[2] = round(dx * sa + dy * ca, 4)
-        if new_size != size:
-            _set_font_size(c, new_size)
-        plc.add(nbox)
-        moved += 1
+        moved_hit, lx, ly, new_size, add_box = _place_refdes_py(
+            occ, plc, court, ref, size, box, fx, fy, ca, sa,
+            (ex0, ey0, ex1, ey1))
+        plc.add(add_box)
+        if moved_hit:
+            lat[1] = lx
+            lat[2] = ly
+            if new_size != size:
+                _set_font_size(c, new_size)
+            moved += 1
     return moved

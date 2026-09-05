@@ -185,4 +185,19 @@ std::pair<double, double> bulk_cap_pose(
     double hf_ox, const Box4& hf_box, const std::string& direction, double gap,
     double hx, double hy, double inductor_left, double template_clear);
 
+struct RefdesMove {
+    bool moved = false;
+    double local_x = 0.0;
+    double local_y = 0.0;
+    double size = 0.0;
+    Box4 add_box;
+};
+
+RefdesMove place_refdes(
+    const Box4& court, const std::string& ref, double size, const Box4& box,
+    const SilkBoxIndex& occupied, const SilkBoxIndex& placed,
+    const Box4& bounds, double fx, double fy, double ca, double sa,
+    double min_size, double box_pad, double far_off, double pen_eps,
+    double off_improve, const std::vector<double>& shrinks);
+
 }  // namespace schgen
