@@ -312,12 +312,24 @@ def route(circuit: Circuit, placement, lib: Library) -> RoutedSheet:
     return out
 
 
-def _stem_dir(pin_rot: int, part_rot: int) -> tuple[int, int]:
+def _stem_dir_py(pin_rot: int, part_rot: int) -> tuple[int, int]:
     sym = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}[pin_rot % 360]
     import math
     r = math.radians(part_rot % 360)
     c, s = round(math.cos(r)), round(math.sin(r))
     return (sym[0] * c - sym[1] * s, -sym[0] * s - sym[1] * c)
+
+
+def _stem_dir(pin_rot: int, part_rot: int) -> tuple[int, int]:
+    if _nat.loaded():
+        got = tuple(_nat.module().stem_dir(int(pin_rot), int(part_rot)))
+        if _nat.trace():
+            ref = _stem_dir_py(pin_rot, part_rot)
+            if got != ref:
+                raise AssertionError(
+                    f"native stem_dir DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _stem_dir_py(pin_rot, part_rot)
 
 
 def _components(g: _NetGeom) -> list[set[Point]]:

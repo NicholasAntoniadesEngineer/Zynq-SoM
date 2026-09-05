@@ -173,5 +173,16 @@ std::tuple<double, double, int, int> som_decoupling_grid(double som_w,
 std::vector<std::pair<double, double>> som_decoupling_cells(
     double som_x, double som_y, double som_w, double som_h, int n,
     double inset);
+std::vector<Comp> som_components(
+    double origin_x, double origin_y, double radius,
+    const std::vector<std::pair<double, double>>& cells,
+    const std::vector<Box4>& bands, int bottom_mask, int punch_mask);
+bool any_boxes_overlap(const std::vector<Box4>& boxes, double halo);
+std::vector<std::pair<double, double>> cout_column_centers(
+    const Box4& inductor_out, double pad, double cout_gap,
+    double template_clear, const std::vector<std::pair<double, double>>& halves);
+std::pair<double, double> bulk_cap_pose(
+    double hf_ox, const Box4& hf_box, const std::string& direction, double gap,
+    double hx, double hy, double inductor_left, double template_clear);
 
 }  // namespace schgen

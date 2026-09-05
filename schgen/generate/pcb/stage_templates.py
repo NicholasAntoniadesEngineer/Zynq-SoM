@@ -67,11 +67,28 @@ def _crtyd_half(mod: Path, rot: float) -> tuple[float, float]:
     return (rb[2] - rb[0]) / 2.0, (rb[3] - rb[1]) / 2.0
 
 
-def _pin_box(ic_boxes: dict[str, tuple], pins: list[str]
-             ) -> tuple[float, float, float, float]:
+def _pin_box_py(ic_boxes: dict[str, tuple], pins: list[str]
+                ) -> tuple[float, float, float, float]:
     boxes = [ic_boxes[p] for p in pins if p in ic_boxes]
     return (min(b[0] for b in boxes), min(b[1] for b in boxes),
             max(b[2] for b in boxes), max(b[3] for b in boxes))
+
+
+def _pin_box(ic_boxes: dict[str, tuple], pins: list[str]
+             ) -> tuple[float, float, float, float]:
+    boxes = [ic_boxes[p] for p in pins if p in ic_boxes]
+    if _nat.loaded():
+        got = _nat.module().boxes_union(boxes)
+        if got is None:
+            raise ValueError("pin box: no pads")
+        hit = tuple(got)
+        if _nat.trace():
+            ref = _pin_box_py(ic_boxes, pins)
+            if hit != ref:
+                raise AssertionError(
+                    f"native pin_box DIVERGENCE: cpp={hit} python={ref}")
+        return hit
+    return _pin_box_py(ic_boxes, pins)
 
 
 def _boxes_overlap_py(a: tuple[float, float, float, float],
@@ -245,8 +262,8 @@ def _hf_cap(mod: Path, ib: dict[str, tuple], pair: list[str], direction: str,
     return _Part(bref, mod, 0.0, "top", round(ox, 4), p.oy)
 
 
-def _bulk_cap(mod: Path, hf: _Part, direction: str, gap: float,
-              ind_left: float, bref: str) -> _Part:
+def _bulk_cap_py(mod: Path, hf: _Part, direction: str, gap: float,
+                 ind_left: float, bref: str) -> _Part:
     hfb = hf.local_box()
     hx, hy = _crtyd_half(mod, 90.0)
     cy = (hfb[3] + gap + hy) if direction == "D" else (hfb[1] - gap - hy)
@@ -254,9 +271,26 @@ def _bulk_cap(mod: Path, hf: _Part, direction: str, gap: float,
     return _Part(bref, mod, 90.0, "top", round(ox, 4), round(cy, 4))
 
 
-def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
-                 ind_out_box: tuple[float, float, float, float],
-                 pad: float) -> list[_Part]:
+def _bulk_cap(mod: Path, hf: _Part, direction: str, gap: float,
+              ind_left: float, bref: str) -> _Part:
+    if _nat.loaded():
+        hx, hy = _crtyd_half(mod, 90.0)
+        ox, oy = _nat.module().bulk_cap_pose(
+            hf.ox, hf.local_box(), direction, gap, hx, hy, ind_left,
+            TEMPLATE_CLEAR)
+        if _nat.trace():
+            ref = _bulk_cap_py(mod, hf, direction, gap, ind_left, bref)
+            if (ox, oy) != (ref.ox, ref.oy):
+                raise AssertionError(
+                    "native bulk_cap_pose DIVERGENCE: "
+                    f"cpp={(ox, oy)} python={(ref.ox, ref.oy)}")
+        return _Part(bref, mod, 90.0, "top", ox, oy)
+    return _bulk_cap_py(mod, hf, direction, gap, ind_left, bref)
+
+
+def _cout_column_py(resolvable: dict[str, Path], out_caps: list[str],
+                    ind_out_box: tuple[float, float, float, float],
+                    pad: float) -> list[_Part]:
     if not out_caps:
         return []
     mods = [resolvable[c] for c in out_caps]
@@ -274,6 +308,31 @@ def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
         parts.append(_Part(c, m, 90.0, "top", col_x, round(cy, 4)))
         y += 2 * chy + step
     return parts
+
+
+def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
+                 ind_out_box: tuple[float, float, float, float],
+                 pad: float) -> list[_Part]:
+    if not out_caps:
+        return []
+    if _nat.loaded():
+        mods = [resolvable[c] for c in out_caps]
+        halves = [_crtyd_half(m, 90.0) for m in mods]
+        centers = [tuple(p) for p in _nat.module().cout_column_centers(
+            ind_out_box, pad, _COUT_GAP, TEMPLATE_CLEAR, halves)]
+        parts = [_Part(c, m, 90.0, "top", cx, cy)
+                 for c, m, (cx, cy) in zip(out_caps, mods, centers,
+                                           strict=True)]
+        if _nat.trace():
+            ref = _cout_column_py(resolvable, out_caps, ind_out_box, pad)
+            hit = [(p.bref, p.ox, p.oy) for p in parts]
+            want = [(p.bref, p.ox, p.oy) for p in ref]
+            if hit != want:
+                raise AssertionError(
+                    "native cout_column_centers DIVERGENCE: "
+                    f"cpp={hit} python={want}")
+        return parts
+    return _cout_column_py(resolvable, out_caps, ind_out_box, pad)
 
 
 class ZoneInfeasible(RuntimeError):
@@ -1633,21 +1692,51 @@ def _build_ldo_stage(ic_bref: str, resolvable: dict[str, Path],
     return parts
 
 
-def _any_overlap(parts: list[_Part]) -> bool:
-    boxes = [(p.bref, p.local_box()) for p in parts]
+def _any_overlap_py(boxes: list[tuple[float, float, float, float]]) -> bool:
     for i in range(len(boxes)):
         for j in range(i + 1, len(boxes)):
-            if _boxes_overlap(boxes[i][1], boxes[j][1], TEMPLATE_CLEAR):
+            if _boxes_overlap_py(boxes[i], boxes[j], TEMPLATE_CLEAR):
                 return True
     return False
 
 
-def _stage_extent(parts: list[_Part]) -> tuple[float, float, float, float]:
+def _any_overlap(parts: list[_Part]) -> bool:
+    boxes = [p.local_box() for p in parts]
+    if _nat.loaded():
+        got = _nat.module().any_boxes_overlap(boxes, TEMPLATE_CLEAR)
+        if _nat.trace():
+            ref = _any_overlap_py(boxes)
+            if got is not ref:
+                raise AssertionError(
+                    "native any_boxes_overlap DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _any_overlap_py(boxes)
+
+
+def _stage_extent_py(parts: list[_Part]) -> tuple[float, float, float, float]:
     xs0 = [p.local_box()[0] for p in parts]
     ys0 = [p.local_box()[1] for p in parts]
     xs1 = [p.local_box()[2] for p in parts]
     ys1 = [p.local_box()[3] for p in parts]
     return (min(xs0), min(ys0), max(xs1), max(ys1))
+
+
+def _stage_extent(parts: list[_Part]) -> tuple[float, float, float, float]:
+    boxes = [p.local_box() for p in parts]
+    if _nat.loaded():
+        got = _nat.module().boxes_union(boxes)
+        if got is None:
+            raise ValueError("stage extent: no parts")
+        hit = tuple(got)
+        if _nat.trace():
+            ref = _stage_extent_py(parts)
+            if hit != ref:
+                raise AssertionError(
+                    "native stage_extent DIVERGENCE: "
+                    f"cpp={hit} python={ref}")
+        return hit
+    return _stage_extent_py(parts)
 
 
 def contract_member_brefs(sheet_name: str, contract: dict,

@@ -802,4 +802,74 @@ std::vector<std::pair<double, double>> som_decoupling_cells(
     return out;
 }
 
+std::vector<Comp> som_components(
+    double origin_x, double origin_y, double radius,
+    const std::vector<std::pair<double, double>>& cells,
+    const std::vector<Box4>& bands, int bottom_mask, int punch_mask) {
+    std::vector<Comp> out;
+    out.reserve(cells.size() + bands.size());
+    const double diam = py_round(2.0 * radius, 4);
+    for (const auto& cell : cells) {
+        out.push_back(Comp{py_round(cell.first - radius - origin_x, 4),
+                           py_round(cell.second - radius - origin_y, 4), diam,
+                           diam, bottom_mask});
+    }
+    for (const Box4& band : bands) {
+        out.push_back(Comp{py_round(band.x0 - origin_x, 4),
+                           py_round(band.y0 - origin_y, 4),
+                           py_round(band.x1 - band.x0, 4),
+                           py_round(band.y1 - band.y0, 4), punch_mask});
+    }
+    return out;
+}
+
+bool any_boxes_overlap(const std::vector<Box4>& boxes, double halo) {
+    for (std::size_t i = 0; i < boxes.size(); ++i) {
+        for (std::size_t j = i + 1; j < boxes.size(); ++j) {
+            if (boxes_overlap(boxes[i], boxes[j], halo)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+std::vector<std::pair<double, double>> cout_column_centers(
+    const Box4& inductor_out, double pad, double cout_gap,
+    double template_clear, const std::vector<std::pair<double, double>>& halves) {
+    std::vector<std::pair<double, double>> out;
+    if (halves.empty()) {
+        return out;
+    }
+    double hx = halves[0].first;
+    for (const auto& half : halves) {
+        hx = std::max(hx, half.first);
+    }
+    const double col_x = py_round(inductor_out.x1 + cout_gap + pad + hx, 4);
+    const double pad_cy = (inductor_out.y0 + inductor_out.y1) / 2.0;
+    const double step = template_clear + pad;
+    double total = 0.0;
+    for (const auto& half : halves) {
+        total += 2.0 * half.second;
+    }
+    total += step * static_cast<double>(halves.size() - 1);
+    double y = pad_cy - total / 2.0;
+    out.reserve(halves.size());
+    for (const auto& half : halves) {
+        const double cy = y + half.second;
+        out.emplace_back(col_x, py_round(cy, 4));
+        y += 2.0 * half.second + step;
+    }
+    return out;
+}
+
+std::pair<double, double> bulk_cap_pose(
+    double hf_ox, const Box4& hf_box, const std::string& direction, double gap,
+    double hx, double hy, double inductor_left, double template_clear) {
+    const double cy = direction == "D" ? (hf_box.y1 + gap + hy)
+                                       : (hf_box.y0 - gap - hy);
+    const double ox = std::min(hf_ox, inductor_left - template_clear - hx);
+    return {py_round(ox, 4), py_round(cy, 4)};
+}
+
 }  // namespace schgen

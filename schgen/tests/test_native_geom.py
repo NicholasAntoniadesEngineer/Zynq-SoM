@@ -1172,6 +1172,95 @@ def test_cc_and_embed_kernels(geom):
     assert (ox, oy) == (dummy.ox, dummy.oy)
 
 
+def test_som_lane_and_stage_kernels(geom):
+    from schgen.generate.floorplan import OCC_BOTTOM, OCC_PUNCH
+    from schgen.generate.pcb.placement import som_decoupling_cells_py
+    from schgen.generate.pcb.stage_templates import TEMPLATE_CLEAR
+
+    cells = som_decoupling_cells_py(10.0, 12.0, 53.0, 45.0, 4)
+    bands = [(8.0, 10.0, 20.0, 11.0)]
+    got = [tuple(c) for c in geom.som_components(
+        10.0, 12.0, 0.5, cells, bands, OCC_BOTTOM, OCC_PUNCH)]
+    want = []
+    for cx, cy in cells:
+        want.append((round(cx - 0.5 - 10.0, 4), round(cy - 0.5 - 12.0, 4),
+                     round(1.0, 4), round(1.0, 4), OCC_BOTTOM))
+    want.append((round(8.0 - 10.0, 4), round(10.0 - 12.0, 4),
+                 round(12.0, 4), round(1.0, 4), OCC_PUNCH))
+    assert got == want
+    boxes = [(0.0, 0.0, 1.0, 1.0), (2.0, 0.0, 3.0, 1.0),
+             (0.8, 0.8, 1.2, 1.2)]
+    assert geom.any_boxes_overlap(boxes[:2], 0.0) is False
+    assert geom.any_boxes_overlap(boxes, 0.0) is True
+    assert geom.any_boxes_overlap(boxes[:2], 1.1) is True
+    parts = [(0.0, 0.0, 2.0, 4.0)]
+    lane = geom.lane_in_dir(
+        1, 3.0, 2.0, 6.0, 1.27, 0.7, 0.3, 0.0, 0.3, 0.01,
+        parts, [], [], parts, [])
+    assert lane is not None
+    union = geom.boxes_union([(0.0, 1.0, 2.0, 3.0), (1.0, 0.0, 4.0, 2.0)])
+    assert tuple(union) == (0.0, 0.0, 4.0, 3.0)
+    assert geom.boxes_union([]) is None
+    assert geom.any_boxes_overlap([], TEMPLATE_CLEAR) is False
+
+
+def test_pin_escape_and_buck_kernels(geom):
+    from schgen.core.config import CHAR_W
+    from schgen.core.symbols import Pin, pin_page_position_py
+    from schgen.layout.route import _stem_dir_py
+    from schgen.layout.textmetrics import LINE_H, SIZE
+
+    pin = Pin(number="1", name="VIN", etype="passive", x=2.54, y=-1.27,
+              rotation=0, length=2.54, hidden=False)
+    for rot in (0, 90, 180, 270, -90, 450):
+        assert tuple(geom.pin_page_position(
+            pin.x, pin.y, 10.0, 20.0, rot)) == pin_page_position_py(
+            pin, 10.0, 20.0, rot)
+    for pin_rot in (0, 90, 180, 270):
+        for part_rot in (0, 90, 180, 270, -90):
+            assert tuple(geom.stem_dir(pin_rot, part_rot)) == _stem_dir_py(
+                pin_rot, part_rot)
+    from schgen.core.symbols import SymbolDef
+    from schgen.layout.place import _pin_text_boxes_py
+    from schgen.output.emit import PlacedPart
+
+    pins_obj = [
+        Pin(number="1", name="VIN", etype="passive", x=2.54, y=-1.27,
+            rotation=0, length=2.54, hidden=False),
+        Pin(number="2", name="GND", etype="passive", x=2.54, y=1.27,
+            rotation=180, length=2.54, hidden=False),
+        Pin(number="3", name="NC", etype="passive", x=0.0, y=0.0,
+            rotation=90, length=2.54, hidden=True),
+    ]
+    sdef = SymbolDef(lib_id="U", raw=[], pins=pins_obj, body=(0, 0, 1, 1),
+                     pin_names_hidden=False, pin_numbers_hidden=False)
+    part = PlacedPart(ref="U1", lib_id="U", value="x", x=10.0, y=20.0,
+                      rotation=0)
+    pins = [(p.x, p.y, int(p.rotation), p.length, bool(p.hidden),
+             p.number, p.name) for p in pins_obj]
+    got = [tuple(r) for r in geom.pin_text_boxes(
+        pins, 10.0, 20.0, 0, False, False, CHAR_W, LINE_H, SIZE)]
+    ref = [(b.x0, b.y0, b.x1, b.y1, b.kind)
+           for b in _pin_text_boxes_py(sdef, part)]
+    assert got == ref
+    legs = [tuple(r) for r in geom.escape_run_legs(
+        0.0, 5.0, 20.0, 1.27, 0.127,
+        [(8.0, 4.0, 12.0, 6.0, "U1", "body")],
+        [(8.0, 4.0, 12.0, 6.0)], [], [],
+        [(8.0, 4.0, 12.0, 6.0)], [], [], 0.0, 0.3, 0.3)]
+    assert legs
+    assert legs[0][:2] == (0.0, 5.0)
+    assert legs[-1][2:] == (20.0, 5.0)
+    centers = [tuple(p) for p in geom.cout_column_centers(
+        (0.0, 0.0, 4.0, 2.0), 0.2, 1.0, 0.3, [(1.0, 0.5), (1.2, 0.8)])]
+    assert len(centers) == 2
+    assert centers[0][0] == centers[1][0]
+    ox, oy = geom.bulk_cap_pose(1.0, (0.0, 0.0, 2.0, 1.0), "D", 0.4,
+                                0.8, 0.6, 5.0, 0.3)
+    assert (ox, oy) == (round(min(1.0, 5.0 - 0.3 - 0.8), 4),
+                        round(1.0 + 0.4 + 0.6, 4))
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

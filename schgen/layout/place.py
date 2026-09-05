@@ -167,7 +167,7 @@ def _value_anchor(sdef: SymbolDef, ax: float, ay: float,
     return (ax, ay - 3.556)
 
 
-def _pin_text_boxes(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
+def _pin_text_boxes_py(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
     out: list[Box] = []
     for pin in sdef.pins:
         if pin.hidden:
@@ -208,6 +208,27 @@ def _pin_text_boxes(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
                                tip[0] + h / 2, root[1] - 0.2,
                                "pin_name", part.ref))
     return out
+
+
+def _pin_text_boxes(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
+    if _nat.loaded():
+        pins = [(p.x, p.y, int(p.rotation), p.length, bool(p.hidden),
+                 p.number, p.name) for p in sdef.pins]
+        got = [Box(x0, y0, x1, y1, kind, part.ref)
+               for x0, y0, x1, y1, kind in _nat.module().pin_text_boxes(
+                   pins, part.x, part.y, int(part.rotation),
+                   bool(sdef.pin_numbers_hidden), bool(sdef.pin_names_hidden),
+                   CHAR_W, tm.LINE_H, tm.SIZE)]
+        if _nat.trace():
+            ref = _pin_text_boxes_py(sdef, part)
+            hit = [(b.x0, b.y0, b.x1, b.y1, b.kind, b.owner) for b in got]
+            want = [(b.x0, b.y0, b.x1, b.y1, b.kind, b.owner) for b in ref]
+            if hit != want:
+                raise AssertionError(
+                    "native pin_text_boxes DIVERGENCE: "
+                    f"cpp={hit} python={want}")
+        return got
+    return _pin_text_boxes_py(sdef, part)
 
 
 def _pin(sdef: SymbolDef, number: str) -> Pin:
@@ -1924,6 +1945,32 @@ class _Engine:
     def _escape_run_legs(self, net: str, px: float, py: float,
                          tx: float) -> list[tuple[tuple[float, float],
                                                   tuple[float, float]]]:
+        if _nat.loaded():
+            owned = [(b.x0, b.y0, b.x1, b.y1, b.owner, b.kind)
+                     for b in self.pl.boxes]
+            parts = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            spot_segs = list(self._plan_seg_boxes())
+            ncs = list(self._nc_boxes())
+            skip = {net}
+            corr_segs = (list(self._plan_raw_segs(skip))
+                         + list(self._stem_segs(skip)))
+            stems = list(self._stem_segs(skip))
+            raw = _nat.module().escape_run_legs(
+                px, py, tx, U, 0.127, owned, parts, spot_segs, ncs, parts,
+                corr_segs, stems, 0.0, 0.3, 0.3)
+            got = [((a, b), (c, d)) for a, b, c, d in raw]
+            if _nat.trace():
+                ref = self._escape_run_legs_py(net, px, py, tx)
+                if got != ref:
+                    raise AssertionError(
+                        "native escape_run_legs DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._escape_run_legs_py(net, px, py, tx)
+
+    def _escape_run_legs_py(self, net: str, px: float, py: float,
+                            tx: float) -> list[tuple[tuple[float, float],
+                                                     tuple[float, float]]]:
         sgn = 1.0 if tx >= px else -1.0
         ec = 0.127
         bx0r, bx1r = min(px, tx), max(px, tx)
@@ -2089,6 +2136,27 @@ class _Engine:
 
     def _lane_in_dir(self, sgn: int, pt: tuple[float, float], ty: float,
                      net: str) -> float | None:
+        if _nat.loaded():
+            parts = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            spot_segs = list(self._plan_seg_boxes())
+            ncs = list(self._nc_boxes())
+            corr_boxes = parts
+            corr_segs = (list(self._plan_raw_segs({net}))
+                         + list(self._stem_segs({net})))
+            got = _nat.module().lane_in_dir(
+                int(sgn), pt[0], pt[1], ty, U, 0.7, 0.3, 0.0, 0.3, 0.01,
+                parts, spot_segs, ncs, corr_boxes, corr_segs)
+            if _nat.trace():
+                ref = self._lane_in_dir_py(sgn, pt, ty, net)
+                if got != ref:
+                    raise AssertionError(
+                        "native lane_in_dir DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._lane_in_dir_py(sgn, pt, ty, net)
+
+    def _lane_in_dir_py(self, sgn: int, pt: tuple[float, float], ty: float,
+                        net: str) -> float | None:
         y0, y1 = sorted((pt[1], ty))
         x = gfloor(pt[0] + sgn * 3 * U) if sgn < 0 \
             else gceil(pt[0] + sgn * 3 * U)

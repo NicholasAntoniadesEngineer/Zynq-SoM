@@ -130,4 +130,51 @@ std::pair<double, double> sch_xform(double x, double y, double ax, double ay,
             py_round(ay - x * s - y * c, 3)};
 }
 
+std::pair<double, double> pin_page_position(double pin_x, double pin_y,
+                                            double anchor_x, double anchor_y,
+                                            int rotation) {
+    int deg = rotation % 360;
+    if (deg < 0) {
+        deg += 360;
+    }
+    const double rad = static_cast<double>(deg) * (3.141592653589793 / 180.0);
+    const double c = py_round(std::cos(rad), 0);
+    const double s = py_round(std::sin(rad), 0);
+    return {py_round(anchor_x + pin_x * c - pin_y * s, 4),
+            py_round(anchor_y - pin_x * s - pin_y * c, 4)};
+}
+
+std::pair<double, double> stem_dir(int pin_rot, int part_rot) {
+    int deg = pin_rot % 360;
+    if (deg < 0) {
+        deg += 360;
+    }
+    double sx = 0.0;
+    double sy = 0.0;
+    if (deg == 0) {
+        sx = 1.0;
+        sy = 0.0;
+    } else if (deg == 90) {
+        sx = 0.0;
+        sy = 1.0;
+    } else if (deg == 180) {
+        sx = -1.0;
+        sy = 0.0;
+    } else if (deg == 270) {
+        sx = 0.0;
+        sy = -1.0;
+    } else {
+        throw std::runtime_error(
+            "stem_dir: pin rotation must be a cardinal angle");
+    }
+    int part_deg = part_rot % 360;
+    if (part_deg < 0) {
+        part_deg += 360;
+    }
+    const double rad = static_cast<double>(part_deg) * (3.141592653589793 / 180.0);
+    const double c = py_round(std::cos(rad), 0);
+    const double s = py_round(std::sin(rad), 0);
+    return {sx * c - sy * s, -sx * s - sy * c};
+}
+
 }  // namespace schgen

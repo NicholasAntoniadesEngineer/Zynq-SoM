@@ -846,6 +846,132 @@ NB_MODULE(_geom, m) {
                                              gap, along);
               return std::make_tuple(p.first, p.second);
           });
+    m.def("som_components",
+          [](double origin_x, double origin_y, double radius,
+             const std::vector<PtTup>& cells, const std::vector<BoxTup>& bands,
+             int bottom_mask, int punch_mask) {
+              auto rows = schgen::som_components(
+                  origin_x, origin_y, radius, as_pts(cells), as_boxes(bands),
+                  bottom_mask, punch_mask);
+              std::vector<std::tuple<double, double, double, double, int>> out;
+              out.reserve(rows.size());
+              for (const auto& c : rows) {
+                  out.emplace_back(c.dx, c.dy, c.w, c.h, c.mask);
+              }
+              return out;
+          });
+    m.def("any_boxes_overlap",
+          [](const std::vector<BoxTup>& boxes, double halo) {
+              return schgen::any_boxes_overlap(as_boxes(boxes), halo);
+          });
+    m.def("lane_in_dir",
+          [](int sgn, double pt_x, double pt_y, double ty, double unit,
+             double half_w, double y_pad, double spot_pad,
+             double corridor_pad, double x_nudge,
+             const std::vector<BoxTup>& parts,
+             const std::vector<BoxTup>& spot_segs,
+             const std::vector<BoxTup>& ncs,
+             const std::vector<BoxTup>& corridor_boxes,
+             const std::vector<BoxTup>& corridor_segs)
+              -> std::optional<double> {
+              return schgen::lane_in_dir(
+                  sgn, pt_x, pt_y, ty, unit, half_w, y_pad, spot_pad,
+                  corridor_pad, x_nudge, as_boxes(parts), as_boxes(spot_segs),
+                  as_boxes(ncs), as_boxes(corridor_boxes),
+                  as_segs(corridor_segs));
+          });
+    m.def("pin_page_position",
+          [](double pin_x, double pin_y, double anchor_x, double anchor_y,
+             int rotation) {
+              auto p = schgen::pin_page_position(pin_x, pin_y, anchor_x,
+                                                 anchor_y, rotation);
+              return std::make_tuple(p.first, p.second);
+          });
+    m.def("stem_dir",
+          [](int pin_rot, int part_rot) {
+              auto p = schgen::stem_dir(pin_rot, part_rot);
+              return std::make_tuple(p.first, p.second);
+          });
+    m.def("pin_text_boxes",
+          [](const std::vector<std::tuple<double, double, int, double, bool,
+                                          std::string, std::string>>& pins,
+             double part_x, double part_y, int part_rot,
+             bool pin_numbers_hidden, bool pin_names_hidden, double char_w,
+             double line_h, double size) {
+              std::vector<schgen::PinTextIn> rows;
+              rows.reserve(pins.size());
+              for (const auto& p : pins) {
+                  rows.push_back(schgen::PinTextIn{
+                      std::get<0>(p), std::get<1>(p), std::get<2>(p),
+                      std::get<3>(p), std::get<4>(p), std::get<5>(p),
+                      std::get<6>(p)});
+              }
+              auto boxes = schgen::pin_text_boxes(
+                  rows, part_x, part_y, part_rot, pin_numbers_hidden,
+                  pin_names_hidden, char_w, line_h, size);
+              std::vector<std::tuple<double, double, double, double,
+                                     std::string>> out;
+              out.reserve(boxes.size());
+              for (const auto& b : boxes) {
+                  out.emplace_back(b.box.x0, b.box.y0, b.box.x1, b.box.y1,
+                                   b.kind);
+              }
+              return out;
+          });
+    m.def("escape_run_legs",
+          [](double px, double py, double tx, double unit, double edge_clear,
+             const std::vector<std::tuple<double, double, double, double,
+                                          std::string, std::string>>& boxes,
+             const std::vector<BoxTup>& parts,
+             const std::vector<BoxTup>& spot_segs,
+             const std::vector<BoxTup>& ncs,
+             const std::vector<BoxTup>& corridor_boxes,
+             const std::vector<BoxTup>& corridor_segs,
+             const std::vector<BoxTup>& stem_segs, double spot_pad,
+             double corridor_pad, double stem_pad) {
+              std::vector<schgen::OwnedBox> owned;
+              owned.reserve(boxes.size());
+              for (const auto& b : boxes) {
+                  owned.push_back(schgen::OwnedBox{
+                      schgen::Box4{std::get<0>(b), std::get<1>(b),
+                                   std::get<2>(b), std::get<3>(b)},
+                      std::get<4>(b), std::get<5>(b)});
+              }
+              auto legs = schgen::escape_run_legs(
+                  px, py, tx, unit, edge_clear, owned, as_boxes(parts),
+                  as_boxes(spot_segs), as_boxes(ncs), as_boxes(corridor_boxes),
+                  as_segs(corridor_segs), as_boxes(stem_segs), spot_pad,
+                  corridor_pad, stem_pad);
+              std::vector<std::tuple<double, double, double, double>> out;
+              out.reserve(legs.size());
+              for (const auto& leg : legs) {
+                  out.emplace_back(leg.first.first, leg.first.second,
+                                   leg.second.first, leg.second.second);
+              }
+              return out;
+          });
+    m.def("cout_column_centers",
+          [](const BoxTup& inductor_out, double pad, double cout_gap,
+             double template_clear, const std::vector<PtTup>& halves) {
+              auto rows = schgen::cout_column_centers(
+                  as_box(inductor_out), pad, cout_gap, template_clear,
+                  as_pts(halves));
+              std::vector<PtTup> out;
+              out.reserve(rows.size());
+              for (const auto& p : rows) {
+                  out.emplace_back(p.first, p.second);
+              }
+              return out;
+          });
+    m.def("bulk_cap_pose",
+          [](double hf_ox, const BoxTup& hf_box, const std::string& direction,
+             double gap, double hx, double hy, double inductor_left,
+             double template_clear) {
+              auto p = schgen::bulk_cap_pose(hf_ox, as_box(hf_box), direction,
+                                             gap, hx, hy, inductor_left,
+                                             template_clear);
+              return std::make_tuple(p.first, p.second);
+          });
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

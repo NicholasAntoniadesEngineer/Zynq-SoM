@@ -2250,17 +2250,36 @@ def _edge_components(b: Block, comps: tuple) -> tuple:
     return _edge_components_py(b, comps)
 
 
-def _som_components(plan: Plan, som_occ: tuple, bands: list) -> tuple:
-    from schgen.generate.pcb.placement import som_decoupling_cells
+def _som_components_py(plan: Plan, som_occ: tuple, bands: list) -> tuple:
+    from schgen.generate.pcb.placement import som_decoupling_cells_py
     ox, oy = som_occ[0], som_occ[1]
     n, r = plan.dec_bank
     comps = [(round(cx - r - ox, 4), round(cy - r - oy, 4),
               round(2 * r, 4), round(2 * r, 4), OCC_BOTTOM)
-             for cx, cy in som_decoupling_cells(
+             for cx, cy in som_decoupling_cells_py(
                  plan.som_x, plan.som_y, plan.som.w, plan.som.h, n)]
     comps += [(round(x0 - ox, 4), round(y0 - oy, 4), round(x1 - x0, 4),
                round(y1 - y0, 4), OCC_PUNCH) for x0, y0, x1, y1 in bands]
     return tuple(comps)
+
+
+def _som_components(plan: Plan, som_occ: tuple, bands: list) -> tuple:
+    from schgen.generate.pcb.placement import som_decoupling_cells
+    if _nat.loaded():
+        n, r = plan.dec_bank
+        cells = som_decoupling_cells(
+            plan.som_x, plan.som_y, plan.som.w, plan.som.h, n)
+        got = tuple(tuple(c) for c in _nat.module().som_components(
+            som_occ[0], som_occ[1], r, cells, list(bands), OCC_BOTTOM,
+            OCC_PUNCH))
+        if _nat.trace():
+            ref = _som_components_py(plan, som_occ, bands)
+            if got != ref:
+                raise AssertionError(
+                    "native som_components DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _som_components_py(plan, som_occ, bands)
 
 
 _SEAT_FIELDS = ("x", "y", "w", "h", "area", "shape_idx", "side",
