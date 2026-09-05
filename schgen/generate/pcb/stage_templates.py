@@ -136,11 +136,10 @@ def _build_buck_stage(ic_bref: str, members: dict[str, str],
     return parts
 
 
-def _beside(mod: Path, rot: float, side: str,
-            target: tuple[float, float, float, float],
-            direction: str, gap: float,
-            along_center: float | None = None) -> _Part:
-    hx, hy = _crtyd_half(mod, rot)
+def _beside_py(mod: Path, rot: float, side: str,
+               target: tuple[float, float, float, float],
+               direction: str, gap: float,
+               along_center: float | None, hx: float, hy: float) -> _Part:
     tcx = (target[0] + target[2]) / 2.0
     tcy = (target[1] + target[3]) / 2.0
     if direction == "L":
@@ -156,6 +155,26 @@ def _beside(mod: Path, rot: float, side: str,
         oy = target[3] + gap + hy
         ox = along_center if along_center is not None else tcx
     return _Part("", mod, rot, side, round(ox, 4), round(oy, 4))
+
+
+def _beside(mod: Path, rot: float, side: str,
+            target: tuple[float, float, float, float],
+            direction: str, gap: float,
+            along_center: float | None = None) -> _Part:
+    hx, hy = _crtyd_half(mod, rot)
+    if _nat.loaded():
+        ox, oy = _nat.module().beside_offset(
+            hx, hy, target, direction, gap, along_center)
+        if _nat.trace():
+            ref = _beside_py(mod, rot, side, target, direction, gap,
+                             along_center, hx, hy)
+            if (ox, oy) != (ref.ox, ref.oy):
+                raise AssertionError(
+                    "native beside_offset DIVERGENCE: "
+                    f"cpp={(ox, oy)} python={(ref.ox, ref.oy)}")
+        return _Part("", mod, rot, side, ox, oy)
+    return _beside_py(mod, rot, side, target, direction, gap, along_center,
+                      hx, hy)
 
 
 def _rebref(p: _Part, bref: str) -> _Part:

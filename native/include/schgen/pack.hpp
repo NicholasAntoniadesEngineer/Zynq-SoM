@@ -163,4 +163,15 @@ std::pair<Halo, Halo> zone_fanout_reach(
         members,
     int min_subject_pins);
 
+std::vector<Comp> edge_components(char edge, double block_x, double block_y,
+                                  double board_w, double board_h,
+                                  int punch_mask,
+                                  const std::vector<Comp>& comps);
+std::tuple<double, double, int, int> som_decoupling_grid(double som_w,
+                                                         double som_h, int n,
+                                                         double inset);
+std::vector<std::pair<double, double>> som_decoupling_cells(
+    double som_x, double som_y, double som_w, double som_h, int n,
+    double inset);
+
 }  // namespace schgen

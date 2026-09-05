@@ -1023,6 +1023,155 @@ def test_embed_sexpr_helpers(geom):
         is None
 
 
+def test_place_search_and_extents(geom):
+    from schgen.core.config import CHAR_W, GRID
+    from schgen.layout.place import _xform_py
+    from schgen.layout.textmetrics import LINE_H, SIZE, centered_box_py
+
+    box = geom.body_box(-2.54, -1.27, 2.54, 1.27, 10.0, 20.0, 90)
+    pts = [_xform_py(px, py, 10.0, 20.0, 90)
+           for px in (-2.54, 2.54) for py in (-1.27, 1.27)]
+    want = (min(p[0] for p in pts), min(p[1] for p in pts),
+            max(p[0] for p in pts), max(p[1] for p in pts))
+    assert tuple(box) == want
+    assert tuple(geom.boxes_paths_extent(
+        [(1.0, 2.0, 3.0, 4.0)], [(0.0, 5.0), (4.0, 1.0)])) == (
+        0.0, 1.0, 4.0, 5.0)
+    assert tuple(geom.boxes_paths_extent([], [])) == (0.0, 0.0, 0.0, 0.0)
+    boxes = [(0.0, 0.0, 4.0, 2.0), (8.0, 1.0, 12.0, 3.0)]
+    segs = [(1.0, 0.5, 9.0, 1.5)]
+    assert geom.band_edge(0.0, 2.5, -1, 100.0, boxes, segs) == 0.0
+    assert geom.band_edge(0.0, 2.5, 1, -100.0, boxes, segs) == 12.0
+    assert geom.cell_floor(0.5, 3.5, boxes, segs) == 2.0
+    ncs = [(10.0, 10.0, 12.0, 12.0)]
+    vp = (11.0, 11.0)
+    got = tuple(geom.dodge_value_off_nc(
+        "GND", vp[0], vp[1], 11.0, 8.0, GRID, CHAR_W, LINE_H, SIZE, ncs, 0.2))
+    assert got != vp
+    bx = centered_box_py("GND", got[0], got[1])
+    assert not (bx[0] - 0.2 < 12.0 and bx[2] + 0.2 > 10.0
+                and bx[1] - 0.2 < 12.0 and bx[3] + 0.2 > 10.0)
+    stems = [(0.0, 0.0, 0.0, 5.0)]
+    assert geom.vband_stem_free(0.0, 1.0, 2.0, stems, 0.3) is False
+    assert geom.vband_stem_free(2.0, 1.0, 2.0, stems, 0.3) is True
+    lane = geom.lane_x(1, 0.0, 4.0, 1.0, GRID, 0.7, 0.3, 0.0,
+                       [(0.0, 0.0, 2.0, 4.0)], [], [])
+    assert lane is not None
+    assert geom.foreign_rows_clear((0.0, 1.0, 2.0, 3.0), [2.0], 1e-6) is False
+    assert geom.foreign_rows_clear((0.0, 1.0, 2.0, 3.0), [4.0], 1e-6) is True
+    gap, idx = geom.nearest_rect_gap(
+        (0.0, 0.0, 1.0, 1.0), [(3.0, 0.0, 4.0, 1.0), (10.0, 0.0, 11.0, 1.0)],
+        1e-4)
+    assert idx == 0
+    assert gap == pytest.approx(2.0)
+
+
+def test_pack_anchor_and_decoupling(geom):
+    from schgen.generate.floorplan import (
+        ANCHOR_AFF_POW,
+        ANCHOR_SOM_W,
+        ANCHOR_ZONE_W,
+        BOARD_H,
+        BOARD_W,
+        OCC_PUNCH,
+        SOM_HALO,
+        _zone_anchor_py,
+    )
+    from schgen.generate.pcb.placement import (
+        SOM_DECOUPLING_INSET,
+        som_decoupling_cells_py,
+        som_decoupling_grid_py,
+    )
+    from types import SimpleNamespace
+
+    plan = SimpleNamespace(som_x=40.0, som_y=30.0,
+                           som=SimpleNamespace(w=50.0, h=40.0))
+    for zone in "NESW":
+        got = tuple(geom.zone_anchor(zone, plan.som_x, plan.som_y,
+                                     plan.som.w, plan.som.h, BOARD_W, BOARD_H))
+        assert got == _zone_anchor_py(plan, zone)
+    face = geom.pack_anchor(
+        True, "E", 40.0, 30.0, 50.0, 40.0, SOM_HALO, 12.0, 8.0,
+        0.0, 0.0, False, False, False, "", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, False, 0.0, 0.0, ANCHOR_ZONE_W, ANCHOR_SOM_W, 0.0, ANCHOR_AFF_POW,
+        65.0, 50.0, [])
+    assert tuple(face) == (40.0 + 50.0 + SOM_HALO + 6.0, 30.0 + 20.0)
+    weighted = geom.pack_anchor(
+        False, "", 40.0, 30.0, 50.0, 40.0, SOM_HALO, 12.0, 8.0,
+        80.0, 20.0, False, False, False, "", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, False, 0.0, 0.0, ANCHOR_ZONE_W, ANCHOR_SOM_W, 1.0, ANCHOR_AFF_POW,
+        65.0, 50.0, [(10.0, 12.0, 2.0)])
+    zw = ANCHOR_ZONE_W
+    sp = ANCHOR_SOM_W * 1.0
+    pw = 2.0 ** ANCHOR_AFF_POW
+    wsum = zw + sp + pw
+    want = ((zw * 80.0 + sp * 65.0 + pw * 10.0) / wsum,
+            (zw * 20.0 + sp * 50.0 + pw * 12.0) / wsum)
+    assert tuple(weighted) == pytest.approx(want)
+    comps = geom.edge_components(
+        "N", 12.0, 5.0, BOARD_W, BOARD_H, OCC_PUNCH,
+        [(1.0, 2.0, 3.0, 4.0, OCC_PUNCH), (0.5, 0.5, 1.0, 1.0, 1)])
+    assert comps[0] == (round(1.0, 4), round(-5.0, 4),
+                        round(3.0, 4), round(5.0 + 2.0 + 4.0, 4), OCC_PUNCH)
+    assert comps[1] == (round(0.5, 4), round(0.5, 4),
+                        round(1.0, 4), round(1.0, 4), 1)
+    for n in (0, 1, 4, 8, 9):
+        g = tuple(geom.som_decoupling_grid(53.0, 45.0, n, SOM_DECOUPLING_INSET))
+        ref = som_decoupling_grid_py(53.0, 45.0, n)
+        assert (g[0], g[1], int(g[2]), int(g[3])) == (
+            ref[0], ref[1], int(ref[2]), int(ref[3]))
+        cells = [tuple(p) for p in geom.som_decoupling_cells(
+            10.0, 12.0, 53.0, 45.0, n, SOM_DECOUPLING_INSET)]
+        assert cells == som_decoupling_cells_py(10.0, 12.0, 53.0, 45.0, n)
+
+
+def test_cc_and_embed_kernels(geom):
+    from schgen.core.sexpr import Sym, _from_tagged, dumps
+    from schgen.generate.pcb.embed import (
+        _embed_footprint_body_py,
+        _pad_geom_py,
+    )
+    from schgen.generate.pcb.stage_templates import _beside_py
+    from schgen.verify.cc_gate import _UF, _key_py, _seed_geometry_unions_py
+    from schgen.verify.visual_gate import Seg
+    from types import SimpleNamespace
+
+    assert tuple(geom.geom_key(1.23456, -2.5)) == _key_py(1.23456, -2.5)
+    nodes = {
+        _key_py(0.0, 0.0): SimpleNamespace(key=_key_py(0.0, 0.0), x=0.0, y=0.0),
+        _key_py(2.0, 0.0): SimpleNamespace(key=_key_py(2.0, 0.0), x=2.0, y=0.0),
+        _key_py(1.0, 0.0): SimpleNamespace(key=_key_py(1.0, 0.0), x=1.0, y=0.0),
+    }
+    segs = [Seg(0.0, 0.0, 2.0, 0.0, "A")]
+    uf = _UF()
+    _seed_geometry_unions_py(nodes, uf, segs, [])
+    raw_nodes = [(n.key[0], n.key[1], n.x, n.y) for n in nodes.values()]
+    roots = [tuple(r) for r in geom.seed_geometry_unions(
+        raw_nodes, [(0.0, 0.0, 2.0, 0.0)], [])]
+    ref = [uf.find(n.key) for n in nodes.values()]
+    assert roots == ref
+
+    mod = [Sym("footprint"), "R_0402",
+           [Sym("layer"), "F.Cu"],
+           [Sym("at"), 0, 0],
+           [Sym("uuid"), "old"],
+           [Sym("pad"), "1", [Sym("at"), 0.5, 0.0],
+            [Sym("size"), 0.6, 0.3]]]
+    got = _from_tagged(geom.embed_footprint_body(
+        mod, 12.0, 8.0, 90.0, "top", "fp-u1"))
+    ref_tree = _embed_footprint_body_py(
+        copy.deepcopy(mod), 12.0, 8.0, 90.0, "top", "fp-u1")
+    assert dumps(got) == dumps(ref_tree)
+    pad = [Sym("pad"), "1", [Sym("at"), 0.5, 0.0, 90.0],
+           [Sym("size"), 0.6, 0.3]]
+    assert tuple(geom.pad_geom(pad)) == _pad_geom_py(pad)
+    ox, oy = geom.beside_offset(1.2, 0.8, (0.0, 0.0, 4.0, 2.0), "R", 0.5, None)
+    from pathlib import Path
+    dummy = _beside_py(Path("x"), 0.0, "top", (0.0, 0.0, 4.0, 2.0), "R", 0.5,
+                       None, 1.2, 0.8)
+    assert (ox, oy) == (dummy.ox, dummy.oy)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

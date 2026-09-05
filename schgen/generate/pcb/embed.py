@@ -99,16 +99,11 @@ def _flip_to_bottom(node: list) -> None:
     _flip_to_bottom_py(node)
 
 
-def _embed_footprint(inst, uid) -> list:
-    mod = sexpr.loads(inst.mod_path.read_text())
-    assert isinstance(mod, list) and mod and mod[0] == Sym("footprint")
-
-    mod[1] = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
-
+def _embed_footprint_body_py(mod: list, inst_x: float, inst_y: float,
+                             inst_rot: float, side: str, uuid: str) -> list:
     body = [x for x in mod
             if not (isinstance(x, list) and x and x[0] == Sym("at"))]
-    at_node = [Sym("at"), inst.x, inst.y] + (
-        [inst.rotation] if inst.rotation else [])
+    at_node = [Sym("at"), inst_x, inst_y] + ([inst_rot] if inst_rot else [])
     out: list = []
     inserted = False
     for x in body:
@@ -118,6 +113,17 @@ def _embed_footprint(inst, uid) -> list:
             inserted = True
     if not inserted:
         out.insert(1, at_node)
+    if side == "bottom":
+        _flip_to_bottom_py(out)
+    _set_or_add_py(out, [Sym("uuid"), uuid])
+    return out
+
+
+def _embed_footprint(inst, uid) -> list:
+    mod = sexpr.loads(inst.mod_path.read_text())
+    assert isinstance(mod, list) and mod and mod[0] == Sym("footprint")
+
+    mod[1] = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
 
     if inst.mirror:
         from .mirror import is_mirrored_path
@@ -125,10 +131,22 @@ def _embed_footprint(inst, uid) -> list:
             f"{inst.ref}: mirror=True demands side=bottom + a .mirrored_fp "
             f"document (got side={inst.side!r}, mod={inst.mod_path}) — a "
             f"mirrored instance emitted any other way is chiral-wrong copper")
-    if inst.side == "bottom":
-        _flip_to_bottom(out)
 
-    _set_or_add(out, [Sym("uuid"), uid(f"fp:{inst.ref}")])
+    fp_uuid = uid(f"fp:{inst.ref}")
+    if _nat.loaded():
+        out = _from_tagged(_nat.module().embed_footprint_body(
+            mod, inst.x, inst.y, inst.rotation or 0.0, inst.side, fp_uuid))
+        if _nat.trace():
+            ref = _embed_footprint_body_py(
+                copy.deepcopy(mod), inst.x, inst.y, inst.rotation or 0.0,
+                inst.side, fp_uuid)
+            if sexpr.dumps(out) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native embed_footprint_body DIVERGENCE: "
+                    f"cpp={sexpr.dumps(out)} python={sexpr.dumps(ref)}")
+    else:
+        out = _embed_footprint_body_py(
+            mod, inst.x, inst.y, inst.rotation or 0.0, inst.side, fp_uuid)
 
     inherit = _thermal_via_nets(out, inst.pad_nets)
 
@@ -185,13 +203,26 @@ def _rotate_pad(pad: list, fp_rot: float) -> None:
         at.append(new)
 
 
-def _pad_geom(node: list) -> tuple[float, float, float, float] | None:
+def _pad_geom_py(node: list) -> tuple[float, float, float, float] | None:
     at = sexpr.find(node, "at")
     size = sexpr.find(node, "size")
     if not (at and len(at) >= 3 and size and len(size) >= 3):
         return None
     hw, hh = pad_half_size(at, size)
     return float(at[1]), float(at[2]), hw, hh
+
+
+def _pad_geom(node: list) -> tuple[float, float, float, float] | None:
+    if _nat.loaded():
+        got = _nat.module().pad_geom(node)
+        hit = tuple(got) if got is not None else None
+        if _nat.trace():
+            ref = _pad_geom_py(node)
+            if hit != ref:
+                raise AssertionError(
+                    f"native pad_geom DIVERGENCE: cpp={hit} python={ref}")
+        return hit
+    return _pad_geom_py(node)
 
 
 def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:

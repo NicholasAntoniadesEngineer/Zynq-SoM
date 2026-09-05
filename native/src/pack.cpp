@@ -6,6 +6,7 @@
 #include <limits>
 #include <set>
 #include <stdexcept>
+#include <tuple>
 
 namespace schgen {
 namespace {
@@ -729,6 +730,76 @@ double pair_gap(const Halo& a_reach, const Halo& a_inset, const Halo& b_reach,
     return py_round(std::max(floor, fanout_sep(a_reach, a_inset, b_reach,
                                                b_inset, axis)),
                     4);
+}
+
+std::vector<Comp> edge_components(char edge, double block_x, double block_y,
+                                  double board_w, double board_h,
+                                  int punch_mask,
+                                  const std::vector<Comp>& comps) {
+    std::vector<Comp> out;
+    out.reserve(comps.size());
+    for (Comp c : comps) {
+        if (c.mask == punch_mask) {
+            if (edge == 'N') {
+                c.h = block_y + c.dy + c.h;
+                c.dy = -block_y;
+            } else if (edge == 'S') {
+                c.h = board_h - block_y - c.dy;
+            } else if (edge == 'W') {
+                c.w = block_x + c.dx + c.w;
+                c.dx = -block_x;
+            } else if (edge == 'E') {
+                c.w = board_w - block_x - c.dx;
+            }
+        }
+        out.push_back(Comp{py_round(c.dx, 4), py_round(c.dy, 4),
+                           py_round(c.w, 4), py_round(c.h, 4), c.mask});
+    }
+    return out;
+}
+
+std::tuple<double, double, int, int> som_decoupling_grid(double som_w,
+                                                         double som_h, int n,
+                                                         double inset) {
+    const double rw = std::max(1.0, som_w - 2.0 * inset);
+    const double rh = std::max(1.0, som_h - 2.0 * inset);
+    int cols = 1;
+    int rows = 1;
+    if (n != 0) {
+        const double raw =
+            py_round(std::sqrt(static_cast<double>(n) * rw / rh), 0);
+        cols = std::max(1, static_cast<int>(
+                               std::min(static_cast<double>(n), raw)));
+        rows = std::max(1, (n + cols - 1) / cols);
+    }
+    return {rw, rh, cols, rows};
+}
+
+std::vector<std::pair<double, double>> som_decoupling_cells(
+    double som_x, double som_y, double som_w, double som_h, int n,
+    double inset) {
+    if (n <= 0) {
+        return {};
+    }
+    const double rx0 = som_x + inset;
+    const double ry0 = som_y + inset;
+    const auto grid = som_decoupling_grid(som_w, som_h, n, inset);
+    const double rw = std::get<0>(grid);
+    const double rh = std::get<1>(grid);
+    const int cols = std::get<2>(grid);
+    const int rows = std::get<3>(grid);
+    std::vector<std::pair<double, double>> out;
+    out.reserve(static_cast<std::size_t>(n));
+    for (int i = 0; i < n; ++i) {
+        out.emplace_back(
+            py_round(rx0 + rw * (static_cast<double>(i % cols) + 0.5)
+                         / static_cast<double>(cols),
+                     4),
+            py_round(ry0 + rh * (static_cast<double>(i / cols) + 0.5)
+                         / static_cast<double>(rows),
+                     4));
+    }
+    return out;
 }
 
 }  // namespace schgen

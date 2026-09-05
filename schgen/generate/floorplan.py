@@ -1337,7 +1337,7 @@ def _interior_dims(area: float) -> tuple[float, float]:
     return w, h
 
 
-def _zone_anchor(plan: Plan, zone: str) -> tuple[float, float]:
+def _zone_anchor_py(plan: Plan, zone: str) -> tuple[float, float]:
     sx, sy = plan.som_x, plan.som_y
     sw, sh = plan.som.w, plan.som.h
     return {
@@ -1346,6 +1346,21 @@ def _zone_anchor(plan: Plan, zone: str) -> tuple[float, float]:
         "W": (sx / 2, sy + sh / 2),
         "E": ((sx + sw + BOARD_W) / 2, BOARD_H / 2),
     }[zone]
+
+
+def _zone_anchor(plan: Plan, zone: str) -> tuple[float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().zone_anchor(
+            zone, plan.som_x, plan.som_y, plan.som.w, plan.som.h,
+            BOARD_W, BOARD_H))
+        if _nat.trace():
+            ref = _zone_anchor_py(plan, zone)
+            if got != ref:
+                raise AssertionError(
+                    "native zone_anchor DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _zone_anchor_py(plan, zone)
 
 
 def _in_sizing_step(fn):
@@ -2205,7 +2220,7 @@ def _pick_sided(finalists: list[tuple], est_of) -> tuple:
     return challenger if est_chal < est_inc - 1e-6 else incumbent
 
 
-def _edge_components(b: Block, comps: tuple) -> tuple:
+def _edge_components_py(b: Block, comps: tuple) -> tuple:
     out = []
     for dx, dy, cw, ch, cm in comps:
         if cm == OCC_PUNCH:
@@ -2219,6 +2234,20 @@ def _edge_components(b: Block, comps: tuple) -> tuple:
                 cw = BOARD_W - b.x - dx
         out.append((round(dx, 4), round(dy, 4), round(cw, 4), round(ch, 4), cm))
     return tuple(out)
+
+
+def _edge_components(b: Block, comps: tuple) -> tuple:
+    if _nat.loaded():
+        got = tuple(tuple(r) for r in _nat.module().edge_components(
+            b.edge, b.x, b.y, BOARD_W, BOARD_H, OCC_PUNCH, list(comps)))
+        if _nat.trace():
+            ref = _edge_components_py(b, comps)
+            if got != ref:
+                raise AssertionError(
+                    "native edge_components DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _edge_components_py(b, comps)
 
 
 def _som_components(plan: Plan, som_occ: tuple, bands: list) -> tuple:
@@ -2328,7 +2357,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         return (sum(affinity.get(b.name, {}).values())
                 + 3.0 * som_pull.get(b.name, 0.0))
 
-    def _anchor(b: Block) -> tuple[float, float]:
+    def _anchor_py(b: Block) -> tuple[float, float]:
         _mfa = _project_spec().module_face_anchors
         if b.name in _mfa and (SOM_DX or SOM_DY):
             _face = _mfa[b.name]
@@ -2345,7 +2374,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             eb = edge_pos[b.zone[1:]]
             zax, zay = eb.cx, eb.cy
         else:
-            zax, zay = _zone_anchor(
+            zax, zay = _zone_anchor_py(
                 plan, b.zone if b.zone in ("N", "E", "S", "W") else "E")
         pull = b.pull
         exclusive = bool(pull and pull.get("exclusive", False))
@@ -2383,6 +2412,49 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 ay += pw * ncy
                 wsum += pw
         return ax / wsum, ay / wsum
+
+    def _anchor(b: Block) -> tuple[float, float]:
+        if not _nat.loaded():
+            return _anchor_py(b)
+        _mfa = _project_spec().module_face_anchors
+        face_override = b.name in _mfa and bool(SOM_DX or SOM_DY)
+        face = _mfa[b.name] if face_override else ""
+        zone_is_at_edge = (b.zone.startswith("@")
+                           and b.zone[1:] in edge_pos)
+        if zone_is_at_edge:
+            eb = edge_pos[b.zone[1:]]
+            zax, zay = eb.cx, eb.cy
+            eb_x, eb_y, eb_w, eb_h, eb_cx, eb_cy = (
+                eb.x, eb.y, eb.w, eb.h, eb.cx, eb.cy)
+            edge = getattr(eb, "edge", "")
+        else:
+            zax, zay = _zone_anchor(
+                plan, b.zone if b.zone in ("N", "E", "S", "W") else "E")
+            eb_x = eb_y = eb_w = eb_h = eb_cx = eb_cy = 0.0
+            edge = ""
+        pull = b.pull
+        exclusive = bool(pull and pull.get("exclusive", False))
+        inboard = bool(pull and pull.get("face", "center") == "inboard")
+        pull_weight = float(pull["weight"]) if pull else 0.0
+        pt = centers.get(pull["to"]) if pull and not exclusive else None
+        has_soft_pull = pt is not None
+        pull_x, pull_y = (pt if has_soft_pull else (0.0, 0.0))
+        aff = [(centers[nb][0], centers[nb][1], w)
+               for nb, w in affinity.get(b.name, {}).items() if nb in centers]
+        got = tuple(_nat.module().pack_anchor(
+            face_override, face, plan.som_x, plan.som_y, plan.som.w,
+            plan.som.h, SOM_HALO, b.w, b.h, zax, zay, exclusive, inboard,
+            zone_is_at_edge, edge, eb_x, eb_y, eb_w, eb_h, eb_cx, eb_cy,
+            pull_weight, has_soft_pull, pull_x, pull_y, ANCHOR_ZONE_W,
+            ANCHOR_SOM_W, som_pull.get(b.name, 0.0), ANCHOR_AFF_POW,
+            som_cx, som_cy, aff))
+        if _nat.trace():
+            ref = _anchor_py(b)
+            if got != ref:
+                raise AssertionError(
+                    "native pack_anchor DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
 
     _mfa_prio = _project_spec().module_face_anchors
     order = sorted(

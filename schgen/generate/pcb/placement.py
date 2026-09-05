@@ -1273,8 +1273,8 @@ L4_PULL_STEP = 1.0
 L4_PULL_SPAN = 40.0
 
 
-def som_decoupling_grid(som_w: float, som_h: float, n: int
-                        ) -> tuple[float, float, int, int]:
+def som_decoupling_grid_py(som_w: float, som_h: float, n: int
+                           ) -> tuple[float, float, int, int]:
     rw = max(1.0, som_w - 2 * SOM_DECOUPLING_INSET)
     rh = max(1.0, som_h - 2 * SOM_DECOUPLING_INSET)
     cols = max(1, min(n, round((n * rw / rh) ** 0.5))) if n else 1
@@ -1282,17 +1282,50 @@ def som_decoupling_grid(som_w: float, som_h: float, n: int
     return rw, rh, cols, rows
 
 
-def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
-                         som_h: float, n: int
-                         ) -> list[tuple[float, float]]:
+def som_decoupling_grid(som_w: float, som_h: float, n: int
+                        ) -> tuple[float, float, int, int]:
+    if _nat.loaded():
+        got = tuple(_nat.module().som_decoupling_grid(
+            som_w, som_h, n, SOM_DECOUPLING_INSET))
+        got = (got[0], got[1], int(got[2]), int(got[3]))
+        if _nat.trace():
+            ref = som_decoupling_grid_py(som_w, som_h, n)
+            ref = (ref[0], ref[1], int(ref[2]), int(ref[3]))
+            if got != ref:
+                raise AssertionError(
+                    "native som_decoupling_grid DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return som_decoupling_grid_py(som_w, som_h, n)
+
+
+def som_decoupling_cells_py(som_x: float, som_y: float, som_w: float,
+                            som_h: float, n: int
+                            ) -> list[tuple[float, float]]:
     if n <= 0:
         return []
     rx0 = som_x + SOM_DECOUPLING_INSET
     ry0 = som_y + SOM_DECOUPLING_INSET
-    rw, rh, cols, rows = som_decoupling_grid(som_w, som_h, n)
+    rw, rh, cols, rows = som_decoupling_grid_py(som_w, som_h, n)
     return [(round(rx0 + rw * (i % cols + 0.5) / cols, 4),
              round(ry0 + rh * (i // cols + 0.5) / rows, 4))
             for i in range(n)]
+
+
+def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
+                         som_h: float, n: int
+                         ) -> list[tuple[float, float]]:
+    if _nat.loaded():
+        got = [tuple(p) for p in _nat.module().som_decoupling_cells(
+            som_x, som_y, som_w, som_h, n, SOM_DECOUPLING_INSET)]
+        if _nat.trace():
+            ref = som_decoupling_cells_py(som_x, som_y, som_w, som_h, n)
+            if got != ref:
+                raise AssertionError(
+                    "native som_decoupling_cells DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return som_decoupling_cells_py(som_x, som_y, som_w, som_h, n)
 
 
 def build_model(two_side: bool = True, spec=None) -> PcbModel:
