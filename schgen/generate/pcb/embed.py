@@ -3,8 +3,9 @@ from __future__ import annotations
 import math
 
 from schgen.core import fallbacks as _fbk
+from schgen.core import native as _nat
 from schgen.core import sexpr
-from schgen.core.sexpr import Sym
+from schgen.core.sexpr import Sym, _from_tagged
 
 from .constants import (
     _FOOTPRINT_ALIASES,
@@ -260,6 +261,12 @@ def _stackup_node() -> list:
 
 def _edge_rect(x0, y0, x1, y1, uid) -> list:
     pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
+    if _nat.loaded():
+        geom = _nat.module()
+        return [_from_tagged(geom.emit_edge_line(
+            pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1],
+            uid(f"edge:{i}")))
+                for i in range(4)]
     out: list = []
     for i in range(4):
         ax, ay = pts[i]
@@ -306,6 +313,10 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
 
 
 def _via_node(c: dict, uid, uid_key: str = "stitch-via") -> list:
+    if _nat.loaded():
+        return _from_tagged(_nat.module().emit_via(
+            float(c["x"]), float(c["y"]), float(c["size"]), float(c["drill"]),
+            float(c["net"]), uid(uid_key), bool(c.get("locked", True))))
     node = [Sym("via"),
             [Sym("at"), c["x"], c["y"]],
             [Sym("size"), c["size"]],
@@ -319,6 +330,11 @@ def _via_node(c: dict, uid, uid_key: str = "stitch-via") -> list:
 
 
 def _segment_node(c: dict, uid) -> list:
+    if _nat.loaded():
+        return _from_tagged(_nat.module().emit_segment(
+            float(c["x1"]), float(c["y1"]), float(c["x2"]), float(c["y2"]),
+            float(c["width"]), str(c["layer"]), float(c["net"]),
+            uid("stitch-seg")))
     return [Sym("segment"),
             [Sym("start"), c["x1"], c["y1"]],
             [Sym("end"), c["x2"], c["y2"]],

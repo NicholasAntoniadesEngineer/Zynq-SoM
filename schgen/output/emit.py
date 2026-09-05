@@ -5,9 +5,10 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
 from schgen.core.model import Circuit
-from schgen.core.sexpr import Sym
+from schgen.core.sexpr import Sym, _from_tagged
 from schgen.core.symbols import Library
 
 PAPER_DEFAULT = "A4"
@@ -184,17 +185,31 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
     doc.append([Sym("lib_symbols"), *[_embed_symbol(lib, lid) for lid in lib_ids]])
 
     for w in design.wires:
-        doc.append([Sym("wire"),
-                    [Sym("pts"), [Sym("xy"), w.x0, w.y0], [Sym("xy"), w.x1, w.y1]],
-                    [Sym("stroke"), [Sym("width"), 0], [Sym("type"), Sym("default")]],
-                    [Sym("uuid"), uid("wire")]])
+        if _nat.loaded():
+            doc.append(_from_tagged(_nat.module().emit_wire(
+                w.x0, w.y0, w.x1, w.y1, uid("wire"))))
+        else:
+            doc.append([Sym("wire"),
+                        [Sym("pts"), [Sym("xy"), w.x0, w.y0],
+                         [Sym("xy"), w.x1, w.y1]],
+                        [Sym("stroke"), [Sym("width"), 0],
+                         [Sym("type"), Sym("default")]],
+                        [Sym("uuid"), uid("wire")]])
     for j in design.junctions:
-        doc.append([Sym("junction"), [Sym("at"), j.x, j.y],
-                    [Sym("diameter"), 0], [Sym("color"), 0, 0, 0, 0],
-                    [Sym("uuid"), uid("junction")]])
+        if _nat.loaded():
+            doc.append(_from_tagged(_nat.module().emit_junction(
+                j.x, j.y, uid("junction"))))
+        else:
+            doc.append([Sym("junction"), [Sym("at"), j.x, j.y],
+                        [Sym("diameter"), 0], [Sym("color"), 0, 0, 0, 0],
+                        [Sym("uuid"), uid("junction")]])
     for nc in design.no_connects:
-        doc.append([Sym("no_connect"), [Sym("at"), nc.x, nc.y],
-                    [Sym("uuid"), uid("no_connect")]])
+        if _nat.loaded():
+            doc.append(_from_tagged(_nat.module().emit_no_connect(
+                nc.x, nc.y, uid("no_connect"))))
+        else:
+            doc.append([Sym("no_connect"), [Sym("at"), nc.x, nc.y],
+                        [Sym("uuid"), uid("no_connect")]])
     for h in design.hlabels:
         just = "right" if h.rotation in (180, 270) else "left"
         tag = "global_label" if design.standalone else "hierarchical_label"

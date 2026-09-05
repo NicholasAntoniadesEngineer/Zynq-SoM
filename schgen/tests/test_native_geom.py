@@ -1,0 +1,188 @@
+from __future__ import annotations
+
+import math
+
+import pytest
+
+from schgen.core import native as nat
+from schgen.generate import floorplan as fp
+from schgen.generate.floorplan import _fanout_sep, _Occupancy
+
+_REACHES = (
+    (0.0, 0.0, 0.0, 0.0),
+    (1.5, 0.3, 0.0, 2.2),
+    (3.32, 3.32, 3.32, 3.32),
+    (0.0, 1.48, 0.5, 0.0),
+)
+_ZERO = (0.0, 0.0, 0.0, 0.0)
+
+
+@pytest.fixture(scope="module")
+def geom():
+    if not nat.loaded():
+        pytest.skip("schgen._geom not built — run scripts/build_native.sh")
+    return nat.module()
+
+
+def test_py_round_matches_occupancy_inputs(geom):
+    samples = (
+        0.0, 1.0, -1.0, 1.23456, 1.23454, 37.3155, 12.3456,
+        55.0 + 0.25, 3.0 + 16.0, 80.5 + 70.25,
+        11.24955, 40.74095, 0.00005, -0.00005, -11.24955,
+        8.9163 + 5 * 0.5, -8.9163 + 3 * 0.5, 4.1537, -0.1537,
+    )
+    for v in samples:
+        assert geom.py_round(v, 4) == round(v, 4)
+        assert geom.py_round(v, 1) == round(v, 1)
+
+
+def test_fanout_sep_matches_python(geom):
+    a = (1.5, 0.0, 2.2, 0.3)
+    b = (0.0, 1.27, 0.5, 0.0)
+    ai = _ZERO
+    bi = (0.1, 0.0, 0.0, 0.2)
+    for axis in ("E", "W", "N", "S"):
+        assert geom.fanout_sep(a, ai, b, bi, axis) == pytest.approx(
+            _fanout_sep(a, ai, b, bi, axis))
+
+
+def test_boxes_separated_kernel(geom):
+    assert geom.boxes_separated(0, 0, 10, 8, 12, 0, 4, 8, 0.3, 0.3)
+    assert not geom.boxes_separated(0, 0, 10, 8, 10.1, 0, 4, 8, 0.3, 0.3)
+
+
+def test_occupancy_fits_matches_python(geom, monkeypatch):
+    monkeypatch.setattr(fp, "BOARD_W", 200.0)
+    monkeypatch.setattr(fp, "BOARD_H", 180.0)
+    occ = _Occupancy(far_ceil=10.0, max_reach=3.32)
+    assert occ._cpp is not None
+    k = 0
+    for i in range(8):
+        for j in range(6):
+            occ.add(3.0 + i * 16.0, 2.5 + j * 17.5, 9.0, 7.5, _REACHES[k % 4])
+            k += 1
+    disagreements = 0
+    x = 0.0
+    while x < fp.BOARD_W:
+        y = 0.0
+        while y < fp.BOARD_H:
+            for reach in _REACHES:
+                py = occ._fits_hashed(x, y, 10.0, 8.0, reach)
+                cpp = occ._cpp.fits_hashed(x, y, 10.0, 8.0, reach, _ZERO,
+                                           fp.OCC_PUNCH, [])
+                if py is not cpp:
+                    disagreements += 1
+            y += 5.0
+        x += 5.0
+    assert disagreements == 0
+
+
+def test_place_near_matches_python(geom, monkeypatch):
+    monkeypatch.setattr(fp, "BOARD_W", 160.0)
+    monkeypatch.setattr(fp, "BOARD_H", 140.0)
+    hashed = _Occupancy(far_ceil=10.0, max_reach=3.32)
+    assert hashed._cpp is not None
+    hashed.add(55.0, 45.0, 50.0, 50.0)
+    hashed.add(10.0, 10.0, 30.0, 12.0, _REACHES[1])
+    hashed.add(110.0, 100.0, 24.0, 20.0, _REACHES[3])
+    for ax, ay, w, h, reach in (
+            (80.0, 70.0, 20.0, 15.0, _REACHES[1]),
+            (12.0, 12.0, 16.0, 10.0, _REACHES[0]),
+            (150.0, 20.0, 25.0, 22.0, _REACHES[2])):
+        py = hashed._place_near_py(ax, ay, w, h, reach, _ZERO, fp.OCC_PUNCH,
+                                   (), None)
+        cpp = hashed._cpp.place_near(ax, ay, w, h, reach, _ZERO, fp.OCC_PUNCH,
+                                     [], -160.0, 320.0, -140.0, 280.0)
+        assert cpp == py
+        assert py is not None
+        hashed.add(*py, reach)
+
+
+def test_box_gap_matches_python(geom):
+    from schgen.verify.placement_contract_gate import _box_gap
+    pairs = (
+        ((0.0, 0.0, 2.0, 1.0), (3.0, 0.0, 4.0, 1.0)),
+        ((0.0, 0.0, 2.0, 1.0), (1.0, 0.5, 1.5, 0.8)),
+        ((-2.0, -1.0, 0.0, 0.0), (0.5, 0.5, 1.0, 1.0)),
+    )
+    for a, b in pairs:
+        assert geom.box_gap(a, b) == pytest.approx(_box_gap(a, b))
+
+
+def test_seat_dfs_picks_first_non_overlapping(geom):
+    a = (0.0, 0.0, 2.0, 2.0)
+    b_hit = (0.5, 0.5, 2.5, 2.5)
+    b_free = (4.0, 0.0, 6.0, 2.0)
+    solved, budget, nodes, pick = geom.seat_dfs([[a], [b_hit, b_free]], [], 0.3,
+                                                1000)
+    assert solved is True
+    assert budget is False
+    assert nodes >= 2
+    assert list(pick) == [0, 1]
+
+
+def test_sexpr_roundtrip_matches_python(geom):
+    from schgen.core import sexpr
+    samples = (
+        "(kicad_pcb (version 20241229) (generator \"schgen\"))",
+        "(xy 1.5 0)",
+        "(general (thickness 1.6))",
+        "(" + " ".join(["n"] * 40) + ")",
+        "(descr \"TF-SMD_TF-01A — TF-01A (TF-SMD_TF-01A) (EasyEDA/LCSC C91145, faithful conversion)\")",
+    )
+    for text in samples:
+        assert geom.sexpr_roundtrip(text) == sexpr._dumps_py(sexpr._loads_py(text))
+        tree = sexpr.loads(text)
+        assert sexpr.dumps(tree) == sexpr._dumps_py(tree)
+    for v in (0.0, 1.0, 1.6, 12.3456, -0.75, 168.0):
+        assert geom.sexpr_fmt_num(v) == sexpr._fmt_num_py(v)
+
+
+def test_corridor_and_cell_kernels(geom):
+    boxes = [(0.0, 0.0, 10.0, 8.0)]
+    segs = [(12.0, 1.0, 20.0, 1.0)]
+    assert geom.corridor_free(1.0, 12.5, 18.0, boxes, segs, 0.3) is False
+    assert geom.corridor_free(4.0, 12.5, 18.0, boxes, segs, 0.3) is True
+    assert geom.cell_free_point(5.0, 4.0, boxes, segs, 0.3) is False
+    assert geom.cell_free_point(15.0, 4.0, boxes, segs, 0.3) is True
+
+
+def test_route_grid_and_bfs(geom):
+    from schgen.core.config import GRID
+    from schgen.layout import route as R
+    assert geom.route_cell_of(0.0, 1.27, GRID) == (0, 1)
+    assert geom.route_point_of(0, 1, GRID) == R.point_of((0, 1))
+    assert list(geom.route_cells_between(0.0, 0.0, 2.54, 0.0, GRID)) == [
+        (0, 0), (1, 0), (2, 0)]
+    grid = geom.RouteGrid()
+    grid.claim("A", [(0, 0), (1, 0)], "stem")
+    grid.block_box(-1.0, 2.0, 4.0, 5.0, GRID)
+    way = geom.route_bfs_join(grid, "A", [(0.0, 0.0)], [(5.08, 0.0)], GRID)
+    assert way[0] == (0.0, 0.0)
+    assert way[-1] == (5.08, 0.0)
+
+
+def test_emit_nodes_match_python(geom):
+    from schgen.core.sexpr import Sym, _from_tagged, dumps
+    via = _from_tagged(geom.emit_via(1.25, 2.5, 0.6, 0.3, 3.0, "uid-via", True))
+    want = [Sym("via"),
+            [Sym("at"), 1.25, 2.5],
+            [Sym("size"), 0.6],
+            [Sym("drill"), 0.3],
+            [Sym("layers"), "F.Cu", "B.Cu"],
+            [Sym("locked"), Sym("yes")],
+            [Sym("net"), 3],
+            [Sym("uuid"), "uid-via"]]
+    assert dumps(via) == dumps(want)
+    wire = _from_tagged(geom.emit_wire(0.0, 0.0, 2.54, 0.0, "uid-wire"))
+    assert wire[0] == Sym("wire")
+
+
+def test_timing_span_records():
+    from schgen.core import timing
+    timing.reset()
+    with timing.span("unit.example"):
+        math.sqrt(2.0)
+    text = timing.report()
+    assert "unit.example" in text
+    timing.reset()

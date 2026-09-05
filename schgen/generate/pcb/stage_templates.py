@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from schgen.core import fallbacks as _fb
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
 from schgen.core.project import spec as _project_spec
 from schgen.verify import placement_contract_gate as _g
@@ -262,6 +263,65 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
                 bound: float, keep_pins: list[str] | None, keep_min: float,
                 pad: float, skel_boxes: list[tuple[float, float, float, float]],
                 forbid_plus_x: bool = True) -> list[_Cand]:
+    if _nat.loaded():
+        got = _candidates_native(bref, mod, ib, icb, target_pins, bound,
+                                 keep_pins, keep_min, pad, skel_boxes,
+                                 forbid_plus_x)
+        if _nat.trace():
+            ref = _candidates_py(bref, mod, ib, icb, target_pins, bound,
+                                 keep_pins, keep_min, pad, skel_boxes,
+                                 forbid_plus_x)
+            a = [(p.rot, p.ox, p.oy) for p, _b in got]
+            b = [(p.rot, p.ox, p.oy) for p, _b in ref]
+            if a != b:
+                raise AssertionError(
+                    f"native candidates DIVERGENCE: {bref} cpp={a[:6]} "
+                    f"python={b[:6]} n={len(a)}/{len(b)}")
+        return got
+    return _candidates_py(bref, mod, ib, icb, target_pins, bound,
+                          keep_pins, keep_min, pad, skel_boxes,
+                          forbid_plus_x)
+
+
+def _candidates_native(bref: str, mod: Path, ib: dict[str, tuple],
+                       icb: tuple[float, float, float, float],
+                       target_pins: list[str] | None,
+                       bound: float, keep_pins: list[str] | None,
+                       keep_min: float, pad: float,
+                       skel_boxes: list[tuple[float, float, float, float]],
+                       forbid_plus_x: bool) -> list[_Cand]:
+    if target_pins:
+        tgt = _pin_box(ib, target_pins)
+        all_pins = target_pins
+    else:
+        allb = list(ib.values())
+        tgt = (min(b[0] for b in allb), min(b[1] for b in allb),
+               max(b[2] for b in allb), max(b[3] for b in allb))
+        all_pins = list(ib)
+    tcx, tcy = (tgt[0] + tgt[2]) / 2.0, (tgt[1] + tgt[3]) / 2.0
+    n = int((_CAND_RADIUS + pad) / _CAND_STEP)
+    halo = TEMPLATE_CLEAR + pad
+    rots = (90.0, 0.0)
+    bodies = [turn_box(_footprint_bbox(mod), rot) for rot in rots]
+    rel_pads = [list(_g._pad_boxes(mod, rot).values()) for rot in rots]
+    target_boxes = [ib[p] for p in all_pins if p in ib]
+    keep_boxes = [ib[p] for p in keep_pins if p in ib] if keep_pins else []
+    hits, truncated = _nat.module().seat_candidates(
+        tcx, tcy, n, _CAND_STEP, halo, _q.snap_erosion_bound(bound),
+        keep_min, forbid_plus_x, _CAND_CAP, icb, list(skel_boxes),
+        list(rots), bodies, rel_pads, target_boxes, keep_boxes)
+    if truncated:
+        _fb.record("cand_cap_truncated")
+    return [(_Part(bref, mod, rot, "top", cx, cy), (x0, y0, x1, y1))
+            for _d, _ax, _ay, rot, cx, cy, x0, y0, x1, y1 in hits]
+
+
+def _candidates_py(bref: str, mod: Path, ib: dict[str, tuple],
+                   icb: tuple[float, float, float, float],
+                   target_pins: list[str] | None,
+                   bound: float, keep_pins: list[str] | None, keep_min: float,
+                   pad: float, skel_boxes: list[tuple[float, float, float, float]],
+                   forbid_plus_x: bool = True) -> list[_Cand]:
     if target_pins:
         tgt = _pin_box(ib, target_pins)
     else:
@@ -303,6 +363,57 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
               ib: dict[str, tuple], icb: tuple[float, float, float, float],
               skeleton: list[_Part], pad: float,
               forbid_plus_x: bool = True) -> list[_Part]:
+    if _nat.loaded():
+        got = _seat_all_native(demands, resolvable, ib, icb, skeleton, pad,
+                               forbid_plus_x)
+        if _nat.trace():
+            ref = _seat_all_py(demands, resolvable, ib, icb, skeleton, pad,
+                               forbid_plus_x)
+            a = [(p.bref, p.rot, p.ox, p.oy) for p in got]
+            b = [(p.bref, p.rot, p.ox, p.oy) for p in ref]
+            if a != b:
+                raise AssertionError(
+                    f"native seat_dfs DIVERGENCE: cpp={a} python={b}")
+        return got
+    return _seat_all_py(demands, resolvable, ib, icb, skeleton, pad,
+                        forbid_plus_x)
+
+
+def _seat_all_native(demands: list[_Demand], resolvable: dict[str, Path],
+                     ib: dict[str, tuple], icb: tuple[float, float, float, float],
+                     skeleton: list[_Part], pad: float,
+                     forbid_plus_x: bool) -> list[_Part]:
+    halo = TEMPLATE_CLEAR + pad
+    skel_boxes = [s.local_box() for s in skeleton]
+    cand: dict[str, list[_Cand]] = {}
+    for bref, tpins, bound, keep, kmin in demands:
+        cand[bref] = _candidates(bref, resolvable[bref], ib, icb, tpins, bound,
+                                 keep, kmin, pad, skel_boxes,
+                                 forbid_plus_x=forbid_plus_x)
+    order = sorted((d[0] for d in demands), key=lambda r: len(cand[r]))
+    rows = [[b for _p, b in cand[r]] for r in order]
+    try:
+        solved, budget_hit, _nodes, pick = _nat.module().seat_dfs(
+            rows, skel_boxes, halo, _NODE_BUDGET)
+    except RuntimeError as exc:
+        if "TRIPWIRE" in str(exc):
+            raise AssertionError(str(exc)) from exc
+        raise
+    if budget_hit:
+        _fb.record("seat_node_budget")
+    if solved:
+        picked = {order[i]: cand[order[i]][pick[i]][0]
+                  for i in range(len(order))}
+        return [picked[d[0]] for d in demands]
+    return [(cand[d[0]][0][0] if cand[d[0]]
+             else _Part(d[0], resolvable[d[0]], 90.0, "top", icb[0] - 1.0, 0.0))
+            for d in demands]
+
+
+def _seat_all_py(demands: list[_Demand], resolvable: dict[str, Path],
+                 ib: dict[str, tuple], icb: tuple[float, float, float, float],
+                 skeleton: list[_Part], pad: float,
+                 forbid_plus_x: bool = True) -> list[_Part]:
     halo = TEMPLATE_CLEAR + pad
     skel_boxes = [s.local_box() for s in skeleton]
     cand: dict[str, list[_Cand]] = {}
@@ -924,7 +1035,51 @@ def _gc_union(boxes):
             max(b[2] for b in boxes), max(b[3] for b in boxes))
 
 
+def _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes,
+                    subjects, att_pre, rep_pre, rots, align, rel_pads):
+    geom = _nat.module()
+    bodies = [turn_box(_footprint_bbox(mod), rot) for rot in rots]
+    hits, truncated = geom.seat_scan(
+        tcx, tcy, n, _CAND_STEP, halo, _NET_W, _CAND_CAP,
+        list(placed_boxes), list(forbid or ()),
+        [(sb, need) for sb, need in subjects],
+        [(tboxes, eff) for tboxes, eff in att_pre],
+        [(tboxes, mmv) for tboxes, mmv in rep_pre],
+        list(rots),
+        [list(rel_pads[rot]) for rot in rots],
+        bodies,
+        [list(align[rot]) for rot in rots])
+    if truncated:
+        _fb.record("cand_cap_truncated")
+    if _nat.trace():
+        ref = _gc_scan_fast_py(bref, mod, forbid, tcx, tcy, n, halo,
+                               placed_boxes, subjects, att_pre, rep_pre,
+                               rots, align, rel_pads)
+        got = [(h[3], h[4], h[5]) for h in hits]
+        want = [(q.rot, q.ox, q.oy) for q in ref]
+        if got != want:
+            idx = next((i for i, (a, b) in enumerate(zip(got, want, strict=False))
+                        if a != b), min(len(got), len(want)))
+            raise AssertionError(
+                f"native seat DIVERGENCE: {bref} at {idx} "
+                f"cpp={got[idx:idx + 4]} python={want[idx:idx + 4]} "
+                f"n={len(got)}/{len(want)}")
+    return [_Part(bref, mod, rot, "top", cx, cy)
+            for _s, _ax, _ay, rot, cx, cy in hits]
+
+
 def _gc_scan_fast(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
+                  att_pre, rep_pre, rots, align, rel_pads):
+    if _nat.loaded():
+        return _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo,
+                               placed_boxes, subjects, att_pre, rep_pre,
+                               rots, align, rel_pads)
+    return _gc_scan_fast_py(bref, mod, forbid, tcx, tcy, n, halo,
+                            placed_boxes, subjects, att_pre, rep_pre,
+                            rots, align, rel_pads)
+
+
+def _gc_scan_fast_py(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
                   att_pre, rep_pre, rots, align, rel_pads):
     _hypot = math.hypot
     att3 = [(tboxes, eff, _gc_union(tboxes)) for tboxes, eff in att_pre]

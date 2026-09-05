@@ -6,6 +6,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
 from schgen.core.config import GRID
 from schgen.core.model import Circuit, NetClass, PinRef
@@ -370,6 +371,11 @@ class _Engine:
 
     def _spot_free(self, bx: tuple[float, float, float, float],
                    pad: float = 0.25) -> bool:
+        if _nat.loaded():
+            parts = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_seg_boxes())
+            ncs = list(self._nc_boxes())
+            return _nat.module().spot_free(bx, pad, parts, segs, ncs)
         x0, y0, x1, y1 = bx
         for b in self.pl.boxes:
             if x0 - pad < b.x1 and x1 + pad > b.x0 \
@@ -1864,8 +1870,35 @@ class _Engine:
         legs.append(((cur_x, py), (tx, py)))
         return legs
 
+    def _plan_raw_segs(self, skip: set[str]):
+        for net, paths in self.pl.plans.items():
+            if net in skip:
+                continue
+            for path in paths:
+                for a, bb in zip(path, path[1:], strict=False):
+                    yield (a[0], a[1], bb[0], bb[1])
+
+    def _stem_segs(self, skip: set[str]):
+        for part in self.pl.parts:
+            sdef = self.lib.get(part.lib_id)
+            for pin in sdef.pins:
+                if pin.hidden:
+                    continue
+                n = self.net_of(part.ref, pin.number)
+                if n is not None and n.name in skip:
+                    continue
+                tip = pin_page_position(pin, part.x, part.y, part.rotation)
+                dxn, dyn = route._stem_dir(pin.rotation, part.rotation)
+                root = (round(tip[0] + dxn * pin.length, 3),
+                        round(tip[1] + dyn * pin.length, 3))
+                yield (tip[0], tip[1], root[0], root[1])
+
     def _corridor_free(self, y: float, xa: float, xb: float,
                        skip: set[str]) -> bool:
+        if _nat.loaded():
+            boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_raw_segs(skip)) + list(self._stem_segs(skip))
+            return _nat.module().corridor_free(y, xa, xb, boxes, segs, 0.3)
         x0, x1 = sorted((xa, xb))
         for b in self.pl.boxes:
             if b.y0 + 1e-6 < y < b.y1 - 1e-6 and b.x0 < x1 and b.x1 > x0:
@@ -1901,6 +1934,14 @@ class _Engine:
 
     def _vband_stem_free(self, x: float, y0: float, y1: float,
                          skip: set[str]) -> bool:
+        if _nat.loaded():
+            segs = list(self._stem_segs(skip))
+            for sx0, sy0, sx1, sy1 in segs:
+                a, b = sorted((sx0, sx1))
+                c, d = sorted((sy0, sy1))
+                if a - 0.3 <= x <= b + 0.3 and c - 0.3 <= y1 and d + 0.3 >= y0:
+                    return False
+            return True
         for part in self.pl.parts:
             sdef = self.lib.get(part.lib_id)
             for pin in sdef.pins:
@@ -1935,6 +1976,11 @@ class _Engine:
 
     def _corridor_clear_vert(self, x: float, y_pin: float, ty: float,
                              net: str) -> bool:
+        if _nat.loaded():
+            boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_raw_segs({net}))
+            return _nat.module().corridor_clear_vert(
+                x, y_pin, ty, boxes, segs, 0.2)
         y0, y1 = sorted((y_pin, ty))
         for b in self.pl.boxes:
             if b.x0 - 0.2 < x < b.x1 + 0.2 \
@@ -1964,6 +2010,10 @@ class _Engine:
         raise PlaceError(f"{net}: no free escape lane from {pt}")
 
     def _cell_free(self, x: float, y: float, net: str) -> bool:
+        if _nat.loaded():
+            boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_raw_segs({net})) + list(self._stem_segs({net}))
+            return _nat.module().cell_free_point(x, y, boxes, segs, 0.3)
         for b in self.pl.boxes:
             if b.x0 + 1e-6 < x < b.x1 - 1e-6 and b.y0 + 1e-6 < y < b.y1 - 1e-6:
                 return False

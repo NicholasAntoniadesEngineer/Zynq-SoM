@@ -11,7 +11,9 @@ from pathlib import Path
 
 from schgen.core import fallbacks as _fb
 from schgen.core import ledger as _led
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
+from schgen.core import timing as _tim
 from schgen.core.project import PROJECT_ROOT
 from schgen.core.project import spec as _project_spec
 
@@ -971,6 +973,11 @@ class _Occupancy:
         self._reach_bound = reach_bound
         self._bucket = envelope
         self._cells: dict[tuple[int, int], list[_Rect]] = {}
+        self._cpp = None
+        if _nat.loaded():
+            self._cpp = _nat.occupancy(
+                BOARD_W, BOARD_H, CLEAR, self._bucket, self._reach_bound,
+                OCC_STEP_MM, FRONTIER_HALF_MM)
 
     def _add_one(self, x: float, y: float, w: float, h: float,
                  reach: tuple, inset: tuple, mask: int, pmask: int,
@@ -1003,6 +1010,8 @@ class _Occupancy:
         for dx, dy, cw, ch, cm in comps:
             self._add_one(round(x + dx, 4), round(y + dy, 4), cw, ch,
                           _ZeroReach, _ZeroReach, cm, mask, False)
+        if self._cpp is not None:
+            self._cpp.add(x, y, w, h, reach, inset, mask, list(comps))
 
     def _remove_one(self, x: float, y: float, w: float, h: float,
                     reach: tuple, inset: tuple, mask: int, pmask: int,
@@ -1031,6 +1040,8 @@ class _Occupancy:
         for dx, dy, cw, ch, cm in comps:
             self._remove_one(round(x + dx, 4), round(y + dy, 4), cw, ch,
                              _ZeroReach, _ZeroReach, cm, mask, False)
+        if self._cpp is not None:
+            self._cpp.remove(x, y, w, h, reach, inset, mask, list(comps))
 
     def _fits_exhaustive(self, x: float, y: float, w: float, h: float,
                          reach: tuple[float, float, float, float] = _ZeroReach,
@@ -1141,7 +1152,32 @@ class _Occupancy:
                 f"reach bound={self._reach_bound:.4f})")
         return new
 
-    fits = _fits_traced if _SPATIAL_TRACE else _fits_hashed
+    def _fits_native(self, x: float, y: float, w: float, h: float,
+                     reach: tuple[float, float, float, float] = _ZeroReach,
+                     inset: tuple[float, float, float, float] = _ZeroReach,
+                     mask: int = OCC_PUNCH,
+                     comps: tuple[_Comp, ...] = ()) -> bool:
+        if self._cpp is None:
+            raise AssertionError(
+                "occupancy: _fits_native called without a loaded C++ kernel")
+        self._cpp.set_board(BOARD_W, BOARD_H)
+        hit = self._cpp.fits_hashed(x, y, w, h, reach, inset, mask,
+                                    list(comps))
+        if _nat.trace():
+            ref = self._fits_hashed(x, y, w, h, reach, inset, mask, comps)
+            if hit is not ref:
+                raise AssertionError(
+                    f"native occupancy DIVERGENCE: python={ref} cpp={hit} "
+                    f"for query x={x} y={y} w={w} h={h} reach={reach} "
+                    f"inset={inset} mask={mask} comps={comps}")
+        return hit
+
+    if _SPATIAL_TRACE:
+        fits = _fits_traced
+    elif _nat.loaded():
+        fits = _fits_native
+    else:
+        fits = _fits_hashed
 
     def place_near(self, ax: float, ay: float, w: float,
                    h: float, reach: tuple[float, float, float, float] = _ZeroReach,
@@ -1149,6 +1185,26 @@ class _Occupancy:
                    mask: int = OCC_PUNCH, comps: tuple[_Comp, ...] = (),
                    win: tuple[float, float, float, float] | None = None
                    ) -> tuple[float, float, float, float] | None:
+        if self._cpp is not None:
+            self._cpp.set_board(BOARD_W, BOARD_H)
+            wx0, wx1, wy0, wy1 = win or (-BOARD_W, 2 * BOARD_W,
+                                         -BOARD_H, 2 * BOARD_H)
+            hit = self._cpp.place_near(
+                ax, ay, w, h, reach, inset, mask, list(comps),
+                wx0, wx1, wy0, wy1)
+            if _nat.trace():
+                ref = self._place_near_py(ax, ay, w, h, reach, inset, mask,
+                                          comps, win)
+                if hit != ref:
+                    raise AssertionError(
+                        f"native place_near DIVERGENCE: python={ref} "
+                        f"cpp={hit} anchor=({ax},{ay}) size=({w},{h})")
+            return hit
+        return self._place_near_py(ax, ay, w, h, reach, inset, mask, comps,
+                                   win)
+
+    def _place_near_py(self, ax, ay, w, h, reach, inset, mask, comps, win
+                       ) -> tuple[float, float, float, float] | None:
         s = OCC_STEP_MM
         nx = int(BOARD_W / s) + 1
         ny = int(BOARD_H / s) + 1
@@ -1301,6 +1357,12 @@ def _ledger_sides() -> None:
 @_in_sizing_step
 def build_plan(sheets, link_result, regs, spec: FloorplanSpec | None = None
                ) -> Plan:
+    with _tim.span("floorplan.build_plan"):
+        return _build_plan_body(sheets, link_result, regs, spec)
+
+
+def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
+                     ) -> Plan:
     som = extract_som()
     global BOARD_W, BOARD_H, OUTLINE_NOTE
     outline = derive_outline(sheets, som)
@@ -2572,6 +2634,14 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                         return False
                     _fb.record("legalize_only_compaction")
     return True
+
+
+_attempt_pack_impl = _attempt_pack
+
+
+def _attempt_pack(*args, **kwargs):
+    with _tim.span("floorplan.attempt_pack"):
+        return _attempt_pack_impl(*args, **kwargs)
 
 
 def _choose_conn_shapes(plan: Plan, interior: list[Block],

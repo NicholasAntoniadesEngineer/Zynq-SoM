@@ -1275,7 +1275,9 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             if not pr.ref.startswith("#"):
                 pin_net[(pr.ref, pr.pin)] = (num, name)
 
-    zg = subsystem_zone_geometry(two_side=two_side, spec=spec)
+    from schgen.core import timing as _tim
+    with _tim.span("pcb.zone_pack"):
+        zg = subsystem_zone_geometry(two_side=two_side, spec=spec)
     _trk.checkpoint("zone_pack", {})
     zone_box = zg.zone_box
     top_off = zg.top_off
@@ -1305,7 +1307,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     link_result = link(sheets, load_som_contract())
     regs = powertree.analyze(sheets).regs
-    plan = fp.build_plan(sheets, link_result, regs, spec=spec)
+    with _tim.span("pcb.build_plan"):
+        plan = fp.build_plan(sheets, link_result, regs, spec=spec)
     _led.open_step("pcb.placement")
     _led.calc("edge_flush", EDGE_FLUSH_MM, edge_pad_clear=EDGE_PAD_CLEAR,
               flush_relief=EDGE_FLUSH_RELIEF)

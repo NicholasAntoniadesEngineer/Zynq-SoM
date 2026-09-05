@@ -472,7 +472,9 @@ def write_dru(model: PcbModel, dru_path: Path) -> None:
 def generate(*, run_drc: bool = True, two_side: bool = True,
              ratsnest: bool = True) -> dict:
     from schgen.core import ledger as _led
-    model = build_model(two_side=two_side)
+    from schgen.core import timing as _tim
+    with _tim.span("pcb.build_model"):
+        model = build_model(two_side=two_side)
 
     with _led.step("pcb.emission"):
         _led.calc("min_hole_to_hole", MIN_HOLE_TO_HOLE,
@@ -569,7 +571,8 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         _fb_asm.record("assembly_generation_failed")
         result["assembly"] = {"ok": False, "error": str(exc)}
     if run_drc:
-        result["drc"] = run_pcb_drc(pcb_path)
+        with _tim.span("pcb.drc"):
+            result["drc"] = run_pcb_drc(pcb_path)
     return result
 
 

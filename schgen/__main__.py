@@ -384,8 +384,12 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     from schgen.core import ledger as _led
     from schgen.core import quantize as _quant
+    from schgen.core import timing as _tim
     _led.reset()
     _quant.reset_engagements()
+    _tim.reset()
+    if getattr(args, "timing", False):
+        _tim.enable()
 
     names = [p.stem for p in all_subsystem_paths()]
     sheets = []
@@ -1206,12 +1210,14 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     _golden_check(ren_dir, bless=args.bless)
     _lap("si_constraints + manifest + golden check")
-    if getattr(args, "timing", False):
+    if getattr(args, "timing", False) or _tim.enabled():
         total = sum(d for _, d in _laps)
         print("\n=== board phase timing (wall s) ===")
         for label, dt in sorted(_laps, key=lambda x: -x[1]):
             print(f"  {dt:7.2f}  ({100 * dt / total:4.1f}%)  {label}")
         print(f"  {total:7.2f}  TOTAL")
+        print()
+        print(_tim.report())
     if pcb_res is not None:
         import dataclasses as _dc
 
