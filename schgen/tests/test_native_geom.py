@@ -907,6 +907,58 @@ def test_segments_cross_matches_python(geom):
         assert got is _segments_cross_py(s1, s2)
 
 
+def test_boxes_union_and_text_metrics(geom):
+    from schgen.core.config import CHAR_W
+    from schgen.layout.textmetrics import (
+        _LLABEL_GAP,
+        _LLABEL_WIDTH_PAD,
+        GLABEL_H,
+        GLABEL_INSET,
+        GLABEL_PAD_LEN,
+        LINE_H,
+        SIZE,
+        centered_box_py,
+        glabel_box_py,
+        llabel_box_py,
+        text_wh_py,
+    )
+    assert geom.boxes_union([]) is None
+    assert tuple(geom.boxes_union([(1.0, 2.0, 3.0, 4.0), (0.0, 1.5, 3.5, 3.0)])) \
+        == (0.0, 1.5, 3.5, 4.0)
+    for txt in ("GND", "~{GND}", "VCC_3V3", ""):
+        assert tuple(geom.text_wh(txt, SIZE, CHAR_W, LINE_H)) == text_wh_py(txt)
+        assert tuple(geom.centered_box(txt, 10.0, 20.0, SIZE, CHAR_W, LINE_H,
+                                       False)) == centered_box_py(txt, 10.0, 20.0)
+        assert tuple(geom.llabel_box(txt, 5.0, 6.0, 0, SIZE, CHAR_W, LINE_H,
+                                     _LLABEL_WIDTH_PAD, _LLABEL_GAP)) \
+            == llabel_box_py(txt, 5.0, 6.0, 0)
+        assert tuple(geom.glabel_box(txt, 5.0, 6.0, 90, SIZE, CHAR_W, LINE_H,
+                                     GLABEL_PAD_LEN, GLABEL_H, GLABEL_INSET)) \
+            == glabel_box_py(txt, 5.0, 6.0, 90)
+
+
+def test_sch_xform_matches_python(geom):
+    from schgen.layout.place import _xform_py
+    for rot in (0, 90, 180, 270, -90, 450):
+        got = tuple(geom.sch_xform(2.54, -1.27, 10.0, 20.0, rot))
+        assert got == _xform_py(2.54, -1.27, 10.0, 20.0, rot)
+
+
+def test_near_max_edges_matches_pair_axis(geom):
+    hs = (0.0, 0.0, 8.0, 4.0)
+    hg = (0.0, 0.0, 6.0, 3.0)
+    sr = (10.0, 12.0, 18.0, 16.0)
+    gr = (22.0, 11.0, 28.0, 14.0)
+    rows = geom.near_max_edges(
+        "usb", "som", 6.0, "x", hs, hg, sr, gr, True, False, None, (20.0, 10.0))
+    assert rows
+    assert rows[0][0] in ("usb", "#0")
+    rows_y = geom.near_max_edges(
+        "usb", "som", 6.0, "y", hs, hg, sr, gr, True, True, None, None)
+    assert len(rows_y) == 2
+    assert rows_y[0][3] is True
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

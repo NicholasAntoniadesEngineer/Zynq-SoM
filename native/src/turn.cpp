@@ -117,4 +117,17 @@ std::vector<std::pair<double, double>> corners_rot(
     return out;
 }
 
+std::pair<double, double> sch_xform(double x, double y, double ax, double ay,
+                                    int rot) {
+    int deg = rot % 360;
+    if (deg < 0) {
+        deg += 360;
+    }
+    const double rad = static_cast<double>(deg) * (3.141592653589793 / 180.0);
+    const double c = py_round(std::cos(rad), 0);
+    const double s = py_round(std::sin(rad), 0);
+    return {py_round(ax + x * c - y * s, 3),
+            py_round(ay - x * s - y * c, 3)};
+}
+
 }  // namespace schgen

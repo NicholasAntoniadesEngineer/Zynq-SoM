@@ -959,8 +959,8 @@ def legalize_compact(board_w: float, board_h: float,
                 E.append(e)
         return E
 
-    def _near_max_edges(t: Term, axis: str
-                        ) -> list[tuple[str, str, float, object]]:
+    def _near_max_edges_py(t: Term, axis: str
+                           ) -> list[tuple[str, str, float, object]]:
         s, g = t.subject, t.target
         _jr = (som_j_rects or {}).get(g) if g.startswith("som_j") else None
         hs, hg = hull(s), (hull(g) if _jr is None
@@ -1008,6 +1008,40 @@ def legalize_compact(board_w: float, board_h: float,
                 out.append((g, "#0", -(f + a0 - b2), ("near_max-perp", t)))
                 out.append(("#0", g, f + a2 - b0, ("near_max-perp", t)))
         return out
+
+    def _near_max_edges(t: Term, axis: str
+                        ) -> list[tuple[str, str, float, object]]:
+        if not _nat.loaded():
+            return _near_max_edges_py(t, axis)
+        s, g = t.subject, t.target
+        _jr = (som_j_rects or {}).get(g) if g.startswith("som_j") else None
+        hs, hg = hull(s), (hull(g) if _jr is None
+                           else (0.0, 0.0, _jr[2] - _jr[0], _jr[3] - _jr[1]))
+        bound = (t.bound or 0.0) - GUARD_MM
+        if hs is None or hg is None or bound < 0 \
+                or (s not in vset and g not in vset):
+            return []
+        sr = (seed_rect[s] if s in vset
+              else _abs(fixed_poses[s], hs))
+        gr = (_jr if _jr is not None
+              else seed_rect[g] if g in vset
+              else _abs(fixed_poses[g], hg))
+        rows = _nat.module().near_max_edges(
+            s, g, bound, axis, hs, hg, sr, gr,
+            s in vset, g in vset,
+            None if s in vset else fixed_poses[s],
+            None if g in vset else fixed_poses[g])
+        got = [(src, dst, cost, (("near_max-perp" if perp else "near_max"), t))
+               for src, dst, cost, perp in rows]
+        if _nat.trace():
+            ref = _near_max_edges_py(t, axis)
+            g2 = [(a, b, c, k[0]) for a, b, c, k in got]
+            r2 = [(a, b, c, k[0]) for a, b, c, k in ref]
+            if g2 != r2:
+                raise AssertionError(
+                    "native near_max_edges DIVERGENCE: "
+                    f"cpp={g2} python={r2}")
+        return got
 
     def _abs(p: tuple[float, float], h: tuple[float, float, float, float]):
         return (p[0] + h[0], p[1] + h[1], p[0] + h[2], p[1] + h[3])

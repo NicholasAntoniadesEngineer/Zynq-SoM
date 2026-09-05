@@ -1042,11 +1042,25 @@ def _gc_scan_ref(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
     return [t[4] for t in scored[:_CAND_CAP]]
 
 
-def _gc_union(boxes):
+def _gc_union_py(boxes):
     if not boxes:
         return None
     return (min(b[0] for b in boxes), min(b[1] for b in boxes),
             max(b[2] for b in boxes), max(b[3] for b in boxes))
+
+
+def _gc_union(boxes):
+    if _nat.loaded():
+        got = _nat.module().boxes_union(list(boxes))
+        if got is not None:
+            got = tuple(got)
+        if _nat.trace():
+            ref = _gc_union_py(boxes)
+            if got != ref:
+                raise AssertionError(
+                    f"native boxes_union DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _gc_union_py(boxes)
 
 
 def _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes,

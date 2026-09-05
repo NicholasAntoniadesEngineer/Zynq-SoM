@@ -597,4 +597,103 @@ bool segments_cross(double ax0, double ay0, double ax1, double ay1,
             && ((d3 > eps && d4 < -eps) || (d3 < -eps && d4 > eps)));
 }
 
+namespace {
+
+int pos_mod(int value, int modulus) {
+    int rem = value % modulus;
+    if (rem < 0) {
+        rem += modulus;
+    }
+    return rem;
+}
+
+std::string markup_visible(const std::string& text) {
+    std::string out;
+    out.reserve(text.size());
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        if (text[i] == '~' && i + 1 < text.size() && text[i + 1] == '{') {
+            const std::size_t end = text.find('}', i + 2);
+            if (end != std::string::npos) {
+                out.append(text, i + 2, end - (i + 2));
+                i = end;
+                continue;
+            }
+        }
+        out.push_back(text[i]);
+    }
+    return out;
+}
+
+}  // namespace
+
+std::optional<Box4> boxes_union(const std::vector<Box4>& boxes) {
+    if (boxes.empty()) {
+        return std::nullopt;
+    }
+    Box4 acc = boxes[0];
+    for (std::size_t i = 1; i < boxes.size(); ++i) {
+        acc.x0 = std::min(acc.x0, boxes[i].x0);
+        acc.y0 = std::min(acc.y0, boxes[i].y0);
+        acc.x1 = std::max(acc.x1, boxes[i].x1);
+        acc.y1 = std::max(acc.y1, boxes[i].y1);
+    }
+    return acc;
+}
+
+std::pair<double, double> text_wh(const std::string& text, double size,
+                                  double char_w, double line_h) {
+    const std::string visible = markup_visible(text);
+    const double n = static_cast<double>(std::max<std::size_t>(visible.size(), 1));
+    return {n * char_w * size, line_h * size};
+}
+
+Box4 centered_box(const std::string& text, double cx, double cy, double size,
+                  double char_w, double line_h, bool vertical) {
+    auto wh = text_wh(text, size, char_w, line_h);
+    double w = wh.first;
+    double h = wh.second;
+    if (vertical) {
+        std::swap(w, h);
+    }
+    return Box4{cx - w / 2.0, cy - h / 2.0, cx + w / 2.0, cy + h / 2.0};
+}
+
+Box4 llabel_box(const std::string& text, double x, double y, int rotation,
+                double size, double char_w, double line_h, double width_pad,
+                double gap) {
+    auto wh = text_wh(text, size, char_w, line_h);
+    const double w = wh.first + width_pad;
+    const double h = wh.second;
+    const int r = pos_mod(rotation, 360);
+    if (r == 0) {
+        return Box4{x, y - gap - h, x + w, y - gap};
+    }
+    if (r == 180) {
+        return Box4{x - w, y - gap - h, x, y - gap};
+    }
+    throw std::runtime_error("llabel_box: unsupported local-label rotation");
+}
+
+Box4 glabel_box(const std::string& text, double x, double y, int rotation,
+                double size, double char_w, double line_h, double pad_len,
+                double glabel_h, double inset) {
+    auto wh = text_wh(text, size, char_w, line_h);
+    const double length = wh.first + pad_len * size;
+    const double half_h = glabel_h * size / 2.0;
+    const int r = pos_mod(rotation, 360);
+    if (r == 0) {
+        return Box4{x + inset, y - half_h, x + length, y + half_h};
+    }
+    if (r == 180) {
+        return Box4{x - length, y - half_h, x - inset, y + half_h};
+    }
+    if (r == 90) {
+        return Box4{x - half_h, y - length, x + half_h, y - inset};
+    }
+    if (r == 270) {
+        return Box4{x - half_h, y + inset, x + half_h, y + length};
+    }
+    throw std::runtime_error("glabel_box: unsupported label rotation");
+}
+
 }  // namespace schgen

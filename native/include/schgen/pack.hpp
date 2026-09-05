@@ -139,6 +139,17 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
                              const std::optional<Box4>& bounds);
 bool segments_cross(double ax0, double ay0, double ax1, double ay1,
                     double bx0, double by0, double bx1, double by1);
+std::optional<Box4> boxes_union(const std::vector<Box4>& boxes);
+std::pair<double, double> text_wh(const std::string& text, double size,
+                                  double char_w, double line_h);
+Box4 centered_box(const std::string& text, double cx, double cy, double size,
+                  double char_w, double line_h, bool vertical);
+Box4 llabel_box(const std::string& text, double x, double y, int rotation,
+                double size, double char_w, double line_h, double width_pad,
+                double gap);
+Box4 glabel_box(const std::string& text, double x, double y, int rotation,
+                double size, double char_w, double line_h, double pad_len,
+                double glabel_h, double inset);
 
 std::pair<Halo, Halo> zone_fanout_reach(
     double zw, double zh,

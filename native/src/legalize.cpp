@@ -403,4 +403,71 @@ std::optional<double> min_box_gap(const std::vector<Box4>& a,
     return best;
 }
 
+std::vector<NearMaxEdge> near_max_edges(
+    const std::string& subject, const std::string& target, double bound,
+    bool axis_x, const Box4& hull_s, const Box4& hull_g, const Box4& seed_s,
+    const Box4& seed_g, bool s_movable, bool g_movable,
+    const std::optional<std::pair<double, double>>& pose_s,
+    const std::optional<std::pair<double, double>>& pose_g) {
+    if (bound < 0.0 || (!s_movable && !g_movable)) {
+        return {};
+    }
+    const PairAxis pa = pair_axis(seed_s, seed_g);
+    const bool dom_x = pa.axis_x;
+    const std::string& lo = pa.a_first ? subject : target;
+    const std::string& hi = pa.a_first ? target : subject;
+    const Box4& hlo = pa.a_first ? hull_s : hull_g;
+    const Box4& hhi = pa.a_first ? hull_g : hull_s;
+    const bool lo_mov = pa.a_first ? s_movable : g_movable;
+    const bool hi_mov = pa.a_first ? g_movable : s_movable;
+    auto pose_of = [&](const std::string& name)
+        -> const std::optional<std::pair<double, double>>& {
+        return name == subject ? pose_s : pose_g;
+    };
+    auto axis_coord = [](const std::optional<std::pair<double, double>>& pose,
+                         bool use_x) {
+        if (!pose.has_value()) {
+            throw std::runtime_error("near_max_edges: fixed pose required");
+        }
+        return use_x ? pose->first : pose->second;
+    };
+    auto c0 = [](const Box4& b, bool use_x) { return use_x ? b.x0 : b.y0; };
+    auto c1 = [](const Box4& b, bool use_x) { return use_x ? b.x1 : b.y1; };
+    std::vector<NearMaxEdge> out;
+    if (axis_x == dom_x) {
+        const double cost = bound + c1(hlo, dom_x) - c0(hhi, dom_x);
+        if (lo_mov && hi_mov) {
+            out.push_back(NearMaxEdge{lo, hi, cost, false});
+        } else if (lo_mov) {
+            const double f = axis_coord(pose_of(hi), dom_x);
+            out.push_back(NearMaxEdge{
+                lo, "#0", -(f + c0(hhi, dom_x) - bound - c1(hlo, dom_x)),
+                false});
+        } else {
+            const double f = axis_coord(pose_of(lo), dom_x);
+            out.push_back(NearMaxEdge{
+                "#0", hi, f + c1(hlo, dom_x) + bound - c0(hhi, dom_x), false});
+        }
+    } else {
+        const bool perp_x = !dom_x;
+        const double a0 = c0(hull_s, perp_x);
+        const double a2 = c1(hull_s, perp_x);
+        const double b0 = c0(hull_g, perp_x);
+        const double b2 = c1(hull_g, perp_x);
+        if (s_movable && g_movable) {
+            out.push_back(NearMaxEdge{subject, target, a2 - b0, true});
+            out.push_back(NearMaxEdge{target, subject, b2 - a0, true});
+        } else if (s_movable) {
+            const double f = axis_coord(pose_g, perp_x);
+            out.push_back(NearMaxEdge{subject, "#0", -(f + b0 - a2), true});
+            out.push_back(NearMaxEdge{"#0", subject, f + b2 - a0, true});
+        } else {
+            const double f = axis_coord(pose_s, perp_x);
+            out.push_back(NearMaxEdge{target, "#0", -(f + a0 - b2), true});
+            out.push_back(NearMaxEdge{"#0", target, f + a2 - b0, true});
+        }
+    }
+    return out;
+}
+
 }  // namespace schgen

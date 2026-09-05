@@ -218,6 +218,36 @@ NB_MODULE(_geom, m) {
               auto hit = schgen::pair_axis(as_box(a), as_box(b));
               return std::make_tuple(hit.axis_x ? "x" : "y", hit.a_first);
           });
+    m.def("near_max_edges",
+          [](const std::string& subject, const std::string& target,
+             double bound, const char* axis, const BoxTup& hs,
+             const BoxTup& hg, const BoxTup& sr, const BoxTup& gr,
+             bool s_movable, bool g_movable,
+             const std::optional<std::tuple<double, double>>& pose_s,
+             const std::optional<std::tuple<double, double>>& pose_g) {
+              if (axis == nullptr || (axis[0] != 'x' && axis[0] != 'y')) {
+                  throw std::runtime_error("near_max_edges: axis required");
+              }
+              std::optional<std::pair<double, double>> ps;
+              std::optional<std::pair<double, double>> pg;
+              if (pose_s.has_value()) {
+                  ps = {std::get<0>(*pose_s), std::get<1>(*pose_s)};
+              }
+              if (pose_g.has_value()) {
+                  pg = {std::get<0>(*pose_g), std::get<1>(*pose_g)};
+              }
+              auto rows = schgen::near_max_edges(
+                  subject, target, bound, axis[0] == 'x', as_box(hs),
+                  as_box(hg), as_box(sr), as_box(gr), s_movable, g_movable,
+                  ps, pg);
+              std::vector<std::tuple<std::string, std::string, double, bool>>
+                  out;
+              out.reserve(rows.size());
+              for (const auto& e : rows) {
+                  out.emplace_back(e.src, e.dst, e.cost, e.perp);
+              }
+              return out;
+          });
     m.def("bellman_ford",
           [](int node_count, const std::vector<int>& src,
              const std::vector<int>& dst, const std::vector<double>& cost) {
@@ -462,6 +492,43 @@ NB_MODULE(_geom, m) {
           nb::arg("label"), nb::arg("size"), nb::arg("occupied"),
           nb::arg("placed") = nb::none(), nb::arg("bounds") = nb::none());
     m.def("segments_cross", &schgen::segments_cross);
+    m.def("boxes_union",
+          [](const std::vector<BoxTup>& boxes) -> std::optional<BoxTup> {
+              auto hit = schgen::boxes_union(as_boxes(boxes));
+              if (!hit) {
+                  return std::nullopt;
+              }
+              return std::make_tuple(hit->x0, hit->y0, hit->x1, hit->y1);
+          });
+    m.def("text_wh",
+          [](const std::string& text, double size, double char_w,
+             double line_h) {
+              auto wh = schgen::text_wh(text, size, char_w, line_h);
+              return std::make_tuple(wh.first, wh.second);
+          });
+    m.def("centered_box",
+          [](const std::string& text, double cx, double cy, double size,
+             double char_w, double line_h, bool vertical) {
+              auto b = schgen::centered_box(text, cx, cy, size, char_w, line_h,
+                                            vertical);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("llabel_box",
+          [](const std::string& text, double x, double y, int rotation,
+             double size, double char_w, double line_h, double width_pad,
+             double gap) {
+              auto b = schgen::llabel_box(text, x, y, rotation, size, char_w,
+                                          line_h, width_pad, gap);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("glabel_box",
+          [](const std::string& text, double x, double y, int rotation,
+             double size, double char_w, double line_h, double pad_len,
+             double glabel_h, double inset) {
+              auto b = schgen::glabel_box(text, x, y, rotation, size, char_w,
+                                          line_h, pad_len, glabel_h, inset);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
     m.def("point_on_seg", &schgen::point_on_seg);
     m.def("min_box_gap",
           [](const std::vector<std::tuple<double, double, double, double>>& a,
@@ -882,6 +949,11 @@ NB_MODULE(_geom, m) {
               return schgen::flip_layer_token(name);
           });
     m.def("rotate_pad_angle", &schgen::rotate_pad_angle);
+    m.def("sch_xform",
+          [](double x, double y, double ax, double ay, int rot) {
+              auto p = schgen::sch_xform(x, y, ax, ay, rot);
+              return std::make_tuple(p.first, p.second);
+          });
     m.def("pad_union_hull",
           [](const std::vector<std::tuple<std::string, double, double, double,
                                           double>>& pads)

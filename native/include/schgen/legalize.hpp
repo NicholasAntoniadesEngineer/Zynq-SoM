@@ -65,6 +65,20 @@ std::pair<double, double> centroid_offset(
     const std::vector<std::tuple<std::string, double, double>>& offsets,
     double half_w, double half_h);
 
+struct NearMaxEdge {
+    std::string src;
+    std::string dst;
+    double cost = 0.0;
+    bool perp = false;
+};
+
+std::vector<NearMaxEdge> near_max_edges(
+    const std::string& subject, const std::string& target, double bound,
+    bool axis_x, const Box4& hull_s, const Box4& hull_g, const Box4& seed_s,
+    const Box4& seed_g, bool s_movable, bool g_movable,
+    const std::optional<std::pair<double, double>>& pose_s,
+    const std::optional<std::pair<double, double>>& pose_g);
+
 std::optional<Box4> predicted_bbox(
     double pose_x, double pose_y, double origin_x, double origin_y,
     const std::vector<std::tuple<std::string, double, double>>& offsets,

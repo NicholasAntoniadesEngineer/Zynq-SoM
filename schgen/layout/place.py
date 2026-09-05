@@ -117,11 +117,24 @@ class Placement:
             [(round(p[0], 3), round(p[1], 3)) for p in pts])
 
 
-def _xform(x: float, y: float, ax: float, ay: float,
-           rot: int) -> tuple[float, float]:
+def _xform_py(x: float, y: float, ax: float, ay: float,
+              rot: int) -> tuple[float, float]:
     r = math.radians(rot % 360)
     c, s = round(math.cos(r)), round(math.sin(r))
     return (round(ax + x * c - y * s, 3), round(ay - x * s - y * c, 3))
+
+
+def _xform(x: float, y: float, ax: float, ay: float,
+           rot: int) -> tuple[float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().sch_xform(x, y, ax, ay, rot))
+        if _nat.trace():
+            ref = _xform_py(x, y, ax, ay, rot)
+            if got != ref:
+                raise AssertionError(
+                    f"native sch_xform DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _xform_py(x, y, ax, ay, rot)
 
 
 def body_box_page(sdef: SymbolDef, ax: float, ay: float, rot: int,
