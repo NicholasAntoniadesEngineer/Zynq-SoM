@@ -128,7 +128,8 @@ def test_sexpr_roundtrip_matches_python(geom):
         "(xy 1.5 0)",
         "(general (thickness 1.6))",
         "(" + " ".join(["n"] * 40) + ")",
-        "(descr \"TF-SMD_TF-01A — TF-01A (TF-SMD_TF-01A) (EasyEDA/LCSC C91145, faithful conversion)\")",
+        '(descr "TF-SMD_TF-01A — TF-01A (TF-SMD_TF-01A) '
+        '(EasyEDA/LCSC C91145, faithful conversion)")',
     )
     for text in samples:
         assert geom.sexpr_roundtrip(text) == sexpr._dumps_py(sexpr._loads_py(text))
@@ -176,6 +177,25 @@ def test_emit_nodes_match_python(geom):
     assert dumps(via) == dumps(want)
     wire = _from_tagged(geom.emit_wire(0.0, 0.0, 2.54, 0.0, "uid-wire"))
     assert wire[0] == Sym("wire")
+
+
+def test_pairs_hold_matches_python(geom):
+    from schgen.generate.floorplan import (
+        CLEAR,
+        OCC_PUNCH,
+        _pairs_hold_py,
+        _ZeroReach,
+    )
+    z = _ZeroReach
+    interior = [[(10.0, 10.0, 20.0, 15.0, z, z, OCC_PUNCH, OCC_PUNCH, True)]]
+    other = [[(40.0, 10.0, 12.0, 12.0, z, z, OCC_PUNCH, OCC_PUNCH, True)]]
+    hit = [[(18.0, 12.0, 20.0, 10.0, z, z, OCC_PUNCH, OCC_PUNCH, True)]]
+    groups_ok = interior + other
+    groups_bad = interior + hit
+    assert geom.pairs_hold(groups_ok, 1, CLEAR) is True
+    assert geom.pairs_hold(groups_bad, 1, CLEAR) is False
+    assert geom.pairs_hold(groups_ok, 1, CLEAR) == _pairs_hold_py(groups_ok, 1)
+    assert geom.pairs_hold(groups_bad, 1, CLEAR) == _pairs_hold_py(groups_bad, 1)
 
 
 def test_timing_span_records():

@@ -128,6 +128,40 @@ NB_MODULE(_geom, m) {
                                         as_halo(bi), axis[0]);
           });
     m.def("boxes_separated", &schgen::boxes_separated);
+    m.def("pairs_hold",
+          [](const std::vector<std::vector<std::tuple<
+                 double, double, double, double,
+                 std::tuple<double, double, double, double>,
+                 std::tuple<double, double, double, double>,
+                 int, int, bool>>>& groups,
+             int subject_count, double clear) {
+              if (subject_count < 0) {
+                  throw std::runtime_error("pairs_hold: subject_count required");
+              }
+              std::vector<std::vector<schgen::Rect>> rows;
+              rows.reserve(groups.size());
+              for (const auto& group : groups) {
+                  std::vector<schgen::Rect> row;
+                  row.reserve(group.size());
+                  for (const auto& t : group) {
+                      schgen::Rect r;
+                      r.x = std::get<0>(t);
+                      r.y = std::get<1>(t);
+                      r.w = std::get<2>(t);
+                      r.h = std::get<3>(t);
+                      r.reach = as_halo(std::get<4>(t));
+                      r.inset = as_halo(std::get<5>(t));
+                      r.mask = std::get<6>(t);
+                      r.pmask = std::get<7>(t);
+                      r.main = std::get<8>(t);
+                      row.push_back(r);
+                  }
+                  rows.push_back(std::move(row));
+              }
+              return schgen::pairs_hold(rows,
+                                        static_cast<std::size_t>(subject_count),
+                                        clear);
+          });
     m.def("py_round", &schgen::py_round);
     m.def("boxes_overlap",
           [](const std::tuple<double, double, double, double>& a,

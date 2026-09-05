@@ -112,5 +112,7 @@ double py_round(double value, int digits);
 bool boxes_separated(double ax, double ay, double aw, double ah,
                      double bx, double by, double bw, double bh,
                      double gx, double gy);
+bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
+                std::size_t subject_count, double clear);
 
 }  // namespace schgen

@@ -171,6 +171,38 @@ bool boxes_separated(double ax, double ay, double aw, double ah,
         || ay + ah + gy <= by || by + bh + gy <= ay;
 }
 
+bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
+                std::size_t subject_count, double clear) {
+    if (subject_count > groups.size()) {
+        throw std::runtime_error("pairs_hold: subject_count exceeds groups");
+    }
+    for (std::size_t i = 0; i < subject_count; ++i) {
+        for (std::size_t j = i + 1; j < groups.size(); ++j) {
+            for (const Rect& a : groups[i]) {
+                for (const Rect& b : groups[j]) {
+                    if (!occ_pair_active(a.mask, a.pmask, a.main,
+                                         b.mask, b.pmask, b.main)) {
+                        continue;
+                    }
+                    const char ax = a.x <= b.x ? 'E' : 'W';
+                    const char ay = a.y <= b.y ? 'S' : 'N';
+                    const double gx = std::max(
+                        clear, fanout_sep(a.reach, a.inset, b.reach, b.inset,
+                                          ax));
+                    const double gy = std::max(
+                        clear, fanout_sep(a.reach, a.inset, b.reach, b.inset,
+                                          ay));
+                    if (!boxes_separated(a.x, a.y, a.w, a.h, b.x, b.y, b.w,
+                                         b.h, gx, gy)) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
 Occupancy::Occupancy(double board_w, double board_h, double clear,
                      double bucket, double reach_bound, double step,
                      double frontier_half)

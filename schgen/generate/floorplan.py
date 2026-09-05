@@ -938,6 +938,23 @@ def _occ_pair_active(a_mask: int, a_pmask: int, a_main: bool,
     return not (a_pmask & b_pmask)
 
 
+def _pairs_hold_py(ents: list, n_interior: int) -> bool:
+    for i in range(n_interior):
+        for j in range(i + 1, len(ents)):
+            for (ax, ay, aw, ah, ar, ai, am, apm, amn) in ents[i]:
+                for (bx, by, bw, bh, br, bi, bm, bpm, bmn) in ents[j]:
+                    if not _occ_pair_active(am, apm, amn, bm, bpm, bmn):
+                        continue
+                    gx = max(CLEAR, _fanout_sep(
+                        ar, ai, br, bi, "E" if ax <= bx else "W"))
+                    gy = max(CLEAR, _fanout_sep(
+                        ar, ai, br, bi, "S" if ay <= by else "N"))
+                    if not (ax + aw + gx <= bx or bx + bw + gx <= ax
+                            or ay + ah + gy <= by or by + bh + gy <= ay):
+                        return False
+    return True
+
+
 def _halo4(reach: tuple, inset: tuple) -> tuple[float, float, float, float]:
     return (max(reach[0], -inset[0], 0.0), max(reach[1], -inset[1], 0.0),
             max(reach[2], -inset[2], 0.0), max(reach[3], -inset[3], 0.0))
@@ -2586,27 +2603,17 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                                 (BOARD_W - MH_CORNER_KO,
                                  BOARD_H - MH_CORNER_KO),
                                 (0.0, BOARD_H - MH_CORNER_KO))])
-                    for i in range(len(interior)):
-                        for j in range(i + 1, len(ents)):
-                            for (ax, ay, aw, ah, ar, ai, am, apm,
-                                 amn) in ents[i]:
-                                for (bx, by, bw, bh, br, bi, bm, bpm,
-                                     bmn) in ents[j]:
-                                    if not _occ_pair_active(
-                                            am, apm, amn, bm, bpm, bmn):
-                                        continue
-                                    gx = max(CLEAR, _fanout_sep(
-                                        ar, ai, br, bi,
-                                        "E" if ax <= bx else "W"))
-                                    gy = max(CLEAR, _fanout_sep(
-                                        ar, ai, br, bi,
-                                        "S" if ay <= by else "N"))
-                                    if not (ax + aw + gx <= bx
-                                            or bx + bw + gx <= ax
-                                            or ay + ah + gy <= by
-                                            or by + bh + gy <= ay):
-                                        return False
-                    return True
+                    if _nat.loaded():
+                        got = _nat.module().pairs_hold(ents, len(interior),
+                                                       CLEAR)
+                        if _nat.trace():
+                            ref = _pairs_hold_py(ents, len(interior))
+                            if got is not ref:
+                                raise AssertionError(
+                                    "native pairs_hold DIVERGENCE: "
+                                    f"cpp={got} python={ref}")
+                        return got
+                    return _pairs_hold_py(ents, len(interior))
 
                 def _legalize(do_compact: bool) -> bool:
                     for b in interior:
