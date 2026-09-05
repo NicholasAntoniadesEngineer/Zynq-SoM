@@ -89,4 +89,39 @@ BellmanResult bellman_ford(std::size_t node_count,
     return BellmanResult{false, {}, tags};
 }
 
+double flow_budget(double board_w, double board_h,
+                   const std::optional<Box4>& som_core) {
+    const double area = std::max(board_w * board_h, 1.0);
+    double som_diag = 0.0;
+    if (som_core.has_value()) {
+        const Box4& s = *som_core;
+        som_diag = std::hypot(s.x1 - s.x0, s.y1 - s.y0);
+    }
+    return 0.35 * std::sqrt(area) + 1.0 * som_diag;
+}
+
+double bbox_gap(const Box4& a, const Box4& b) {
+    const double dx = std::max(std::max(a.x0 - b.x1, b.x0 - a.x1), 0.0);
+    const double dy = std::max(std::max(a.y0 - b.y1, b.y0 - a.y1), 0.0);
+    return std::hypot(dx, dy);
+}
+
+std::pair<double, double> facing_dot(double zone_x, double zone_y,
+                                     double out_x, double out_y,
+                                     double down_x, double down_y) {
+    const double ox = out_x - zone_x;
+    const double oy = out_y - zone_y;
+    const double dx = down_x - zone_x;
+    const double dy = down_y - zone_y;
+    const double dot = ox * dx + oy * dy;
+    const double mo = std::hypot(ox, oy);
+    const double md = std::hypot(dx, dy);
+    double angle = 180.0;
+    if (mo > 1e-9 && md > 1e-9) {
+        const double c = std::max(-1.0, std::min(1.0, dot / (mo * md)));
+        angle = std::acos(c) * (180.0 / 3.141592653589793);
+    }
+    return {dot, angle};
+}
+
 }  // namespace schgen

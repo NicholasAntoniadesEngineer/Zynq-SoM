@@ -208,6 +208,26 @@ NB_MODULE(_geom, m) {
                   static_cast<std::size_t>(node_count), src, dst, cost);
               return std::make_tuple(hit.feasible, hit.dist, hit.cycle_edges);
           });
+    m.def("flow_budget",
+          [](double board_w, double board_h,
+             std::optional<std::tuple<double, double, double, double>> som) {
+              std::optional<schgen::Box4> core;
+              if (som.has_value()) {
+                  core = as_box(*som);
+              }
+              return schgen::flow_budget(board_w, board_h, core);
+          });
+    m.def("bbox_gap",
+          [](const std::tuple<double, double, double, double>& a,
+             const std::tuple<double, double, double, double>& b) {
+              return schgen::bbox_gap(as_box(a), as_box(b));
+          });
+    m.def("facing_dot",
+          [](double zx, double zy, double ox, double oy, double dx,
+             double dy) {
+              auto hit = schgen::facing_dot(zx, zy, ox, oy, dx, dy);
+              return std::make_tuple(hit.first, hit.second);
+          });
     m.def("boxes_overlap",
           [](const std::tuple<double, double, double, double>& a,
              const std::tuple<double, double, double, double>& b,

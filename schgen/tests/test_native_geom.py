@@ -324,6 +324,30 @@ def test_bellman_ford_matches_python(geom):
             assert dist == [py[0][n] for n in nodes]
 
 
+def test_flow_kernels_match_python(geom):
+    from schgen.verify.placement_flow_gate import (
+        bbox_gap_py,
+        facing_dot_py,
+        flow_budget_py,
+    )
+    som = (40.0, 50.0, 90.0, 100.0)
+    assert geom.flow_budget(168.0, 163.0, som) == flow_budget_py(
+        168.0, 163.0, som)
+    assert geom.flow_budget(100.0, 100.0, None) == flow_budget_py(
+        100.0, 100.0, None)
+    a = (0.0, 0.0, 10.0, 8.0)
+    b = (12.0, 1.0, 20.0, 9.0)
+    c = (8.0, 4.0, 14.0, 12.0)
+    assert geom.bbox_gap(a, b) == bbox_gap_py(a, b)
+    assert geom.bbox_gap(a, c) == bbox_gap_py(a, c)
+    assert geom.facing_dot(0.0, 0.0, 1.0, 0.0, 2.0, 0.0) == facing_dot_py(
+        (0.0, 0.0), (1.0, 0.0), (2.0, 0.0))
+    assert geom.facing_dot(0.0, 0.0, 1.0, 0.0, 0.0, 1.0) == facing_dot_py(
+        (0.0, 0.0), (1.0, 0.0), (0.0, 1.0))
+    assert geom.facing_dot(5.0, 5.0, 5.0, 5.0, 8.0, 9.0) == facing_dot_py(
+        (5.0, 5.0), (5.0, 5.0), (8.0, 9.0))
+
+
 def test_quantize_matches_python(geom):
     from schgen.core import quantize
     samples = (37.3, 0.0, -12.7, 104.229, 51.4999, 11.24955, 40.74095)
