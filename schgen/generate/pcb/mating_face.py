@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
 from schgen.core.sexpr import Sym
 
@@ -58,8 +59,8 @@ def _pad_rows(mod_path: Path) -> tuple[tuple[str, float, float, float,
     return _PAD_ROW_CACHE[key]
 
 
-def _pad_boxes_local(mod_path: Path, rotation: float
-                     ) -> list[tuple[str, float, float, float, float]]:
+def _pad_boxes_local_py(mod_path: Path, rotation: float
+                        ) -> list[tuple[str, float, float, float, float]]:
     rot = rotation or 0.0
     out: list[tuple[str, float, float, float, float]] = []
     for ptype, px, py, prot_deg, sw, sh in _pad_rows(mod_path):
@@ -67,6 +68,22 @@ def _pad_boxes_local(mod_path: Path, rotation: float
         hx, hy = pad_half_extent(sw, sh, rot + prot_deg)
         out.append((ptype, cx - hx, cy - hy, cx + hx, cy + hy))
     return out
+
+
+def _pad_boxes_local(mod_path: Path, rotation: float
+                     ) -> list[tuple[str, float, float, float, float]]:
+    rot = rotation or 0.0
+    if _nat.loaded():
+        rows = list(_pad_rows(mod_path))
+        got = [tuple(r) for r in _nat.module().pad_boxes_local(rows, rot)]
+        if _nat.trace():
+            ref = _pad_boxes_local_py(mod_path, rotation)
+            if got != ref:
+                raise AssertionError(
+                    "native pad_boxes_local DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _pad_boxes_local_py(mod_path, rotation)
 
 
 def thru_pad_boxes(mod_path: Path, rotation: float
@@ -103,7 +120,7 @@ def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
     return out
 
 
-def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
+def _inst_courtyard_py(inst: FootprintInst) -> tuple[float, float, float, float]:
     rb = turn_box(_footprint_bbox(inst.mod_path), inst.rotation or 0.0)
     return (round(inst.x + rb[0], COURTYARD_DECIMALS),
             round(inst.y + rb[1], COURTYARD_DECIMALS),
@@ -111,10 +128,38 @@ def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
             round(inst.y + rb[3], COURTYARD_DECIMALS))
 
 
+def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().inst_placed_box(
+            _footprint_bbox(inst.mod_path), inst.x, inst.y,
+            inst.rotation or 0.0, COURTYARD_DECIMALS))
+        if _nat.trace():
+            ref = _inst_courtyard_py(inst)
+            if got != ref:
+                raise AssertionError(
+                    "native inst_placed_box DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _inst_courtyard_py(inst)
+
+
 def _inst_pad_bbox(inst: FootprintInst) -> tuple[float, float, float, float]:
     pb = _rot_pad_bbox(inst.mod_path, inst.rotation or 0.0)
     if pb is None:
         return _inst_courtyard(inst)
+    if _nat.loaded():
+        got = tuple(_nat.module().inst_placed_box(
+            pb, inst.x, inst.y, 0.0, PAD_DECIMALS))
+        if _nat.trace():
+            ref = (round(inst.x + pb[0], PAD_DECIMALS),
+                   round(inst.y + pb[1], PAD_DECIMALS),
+                   round(inst.x + pb[2], PAD_DECIMALS),
+                   round(inst.y + pb[3], PAD_DECIMALS))
+            if got != ref:
+                raise AssertionError(
+                    "native inst_placed_box pad DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
     return (round(inst.x + pb[0], PAD_DECIMALS),
             round(inst.y + pb[1], PAD_DECIMALS),
             round(inst.x + pb[2], PAD_DECIMALS),

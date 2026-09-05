@@ -1429,6 +1429,29 @@ def test_pcb_scan_and_place_helpers(geom):
         _conn_port_columns_py(ys, 2.54, 1e-6))
     assert [list(g) for g in geom.conn_cluster_groups(ys, 2.54, 1e-6)] == (
         _conn_cluster_groups_py(ys, 2.54, 1e-6))
+    from schgen.generate.pcb.mating_face import COURTYARD_DECIMALS
+    from schgen.generate.pcb.silk import _collect_gr_text_boxes_py
+    from schgen.generate.pcb.turn import pad_half_extent, turn_box, turn_point
+
+    rows = [("smd", 1.0, 0.5, 90.0, 1.2, 0.6)]
+    got_pads = [tuple(r) for r in geom.pad_boxes_local(rows, 90.0)]
+    cx, cy = turn_point(1.0, 0.5, 90.0)
+    hx, hy = pad_half_extent(1.2, 0.6, 180.0)
+    assert got_pads == [("smd", cx - hx, cy - hy, cx + hx, cy + hy)]
+    local = (-2.0, -1.0, 2.0, 1.0)
+    rb = turn_box(local, 90.0)
+    assert tuple(geom.inst_placed_box(local, 10.0, 20.0, 90.0,
+                                      COURTYARD_DECIMALS)) == (
+        round(10.0 + rb[0], COURTYARD_DECIMALS),
+        round(20.0 + rb[1], COURTYARD_DECIMALS),
+        round(10.0 + rb[2], COURTYARD_DECIMALS),
+        round(20.0 + rb[3], COURTYARD_DECIMALS))
+    doc = [Sym("kicad_pcb"),
+           [Sym("gr_text"), "PWR",
+            [Sym("at"), 5.0, 6.0],
+            [Sym("effects"), [Sym("font"), [Sym("size"), 1.2, 1.2]]]]]
+    assert [tuple(b) for b in geom.collect_gr_text_boxes(doc, 1.0)] == (
+        _collect_gr_text_boxes_py(doc))
 
 
 def test_timing_span_records():

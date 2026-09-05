@@ -1168,6 +1168,30 @@ NB_MODULE(_geom, m) {
     m.def("farm_row_right_bound", &schgen::farm_row_right_bound);
     m.def("conn_port_columns", &schgen::conn_port_columns);
     m.def("conn_cluster_groups", &schgen::conn_cluster_groups);
+    m.def("pad_boxes_local",
+          [](const std::vector<std::tuple<std::string, double, double, double,
+                                          double, double>>& rows,
+             double rotation) {
+              return schgen::pad_boxes_local(rows, rotation);
+          });
+    m.def("inst_placed_box",
+          [](const std::tuple<double, double, double, double>& local,
+             double inst_x, double inst_y, double rotation, int decimals) {
+              auto b = schgen::inst_placed_box(as_box(local), inst_x, inst_y,
+                                              rotation, decimals);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("collect_gr_text_boxes",
+          [](nb::handle doc, double default_size) {
+              auto boxes = schgen::collect_gr_text_boxes(sexpr_from_py(doc),
+                                                         default_size);
+              std::vector<std::tuple<double, double, double, double>> out;
+              out.reserve(boxes.size());
+              for (const auto& b : boxes) {
+                  out.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return out;
+          });
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

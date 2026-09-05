@@ -2,8 +2,10 @@
 
 #include "schgen/embed_fp.hpp"
 #include "schgen/emit.hpp"
+#include "schgen/occupancy.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/sexpr.hpp"
+#include "schgen/turn.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -76,6 +78,22 @@ bool is_gfx_geom(const Sexpr& head) {
     const std::string tag = py_str(head);
     return tag == "fp_line" || tag == "fp_rect" || tag == "fp_circle"
         || tag == "fp_arc" || tag == "fp_poly";
+}
+
+double font_size_of(const SexprList& node, double default_size) {
+    const SexprList* effects = find_tagged_child(node, "effects");
+    if (effects == nullptr) {
+        return default_size;
+    }
+    const SexprList* font = find_tagged_child(*effects, "font");
+    if (font == nullptr) {
+        return default_size;
+    }
+    const SexprList* size = find_tagged_child(*font, "size");
+    if (size == nullptr || size->size() < 2 || !is_number((*size)[1])) {
+        return default_size;
+    }
+    return std::get<double>((*size)[1].v);
 }
 
 }  // namespace
@@ -277,6 +295,62 @@ std::vector<std::string> conn_port_columns(const std::vector<double>& ys,
         have_prev = true;
     }
     return cols;
+}
+
+std::vector<std::tuple<std::string, double, double, double, double>>
+pad_boxes_local(
+    const std::vector<std::tuple<std::string, double, double, double, double,
+                                 double>>& rows,
+    double rotation) {
+    std::vector<std::tuple<std::string, double, double, double, double>> out;
+    out.reserve(rows.size());
+    const double rot = rotation;
+    for (const auto& row : rows) {
+        const auto turned = turn_point(std::get<1>(row), std::get<2>(row), rot);
+        const auto half = pad_half_extent(std::get<4>(row), std::get<5>(row),
+                                          rot + std::get<3>(row));
+        out.emplace_back(std::get<0>(row), turned.first - half.first,
+                         turned.second - half.second,
+                         turned.first + half.first,
+                         turned.second + half.second);
+    }
+    return out;
+}
+
+Box4 inst_placed_box(const Box4& local_bbox, double inst_x, double inst_y,
+                     double rotation, int decimals) {
+    const Box4 rotated = turn_box(local_bbox, rotation);
+    return Box4{py_round(inst_x + rotated.x0, decimals),
+                py_round(inst_y + rotated.y0, decimals),
+                py_round(inst_x + rotated.x1, decimals),
+                py_round(inst_y + rotated.y1, decimals)};
+}
+
+std::vector<Box4> collect_gr_text_boxes(const Sexpr& doc, double default_size) {
+    std::vector<Box4> out;
+    if (!std::holds_alternative<SexprList>(doc.v)) {
+        return out;
+    }
+    for (const Sexpr& node : std::get<SexprList>(doc.v)) {
+        if (!std::holds_alternative<SexprList>(node.v)) {
+            continue;
+        }
+        const SexprList& lst = std::get<SexprList>(node.v);
+        if (lst.size() < 2 || py_str(lst[0]) != "gr_text"
+            || !std::holds_alternative<std::string>(lst[1].v)) {
+            continue;
+        }
+        const SexprList* at = find_tagged_child(lst, "at");
+        if (at == nullptr || at->size() < 3 || !is_number((*at)[1])
+            || !is_number((*at)[2])) {
+            continue;
+        }
+        out.push_back(text_box(std::get<std::string>(lst[1].v),
+                               std::get<double>((*at)[1].v),
+                               std::get<double>((*at)[2].v),
+                               font_size_of(lst, default_size), 0.15));
+    }
+    return out;
 }
 
 std::vector<std::vector<int>> conn_cluster_groups(

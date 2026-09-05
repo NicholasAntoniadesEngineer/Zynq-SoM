@@ -32,4 +32,15 @@ std::vector<std::string> conn_port_columns(const std::vector<double>& ys,
 std::vector<std::vector<int>> conn_cluster_groups(
     const std::vector<double>& ys, double row_pitch, double eps);
 
+std::vector<std::tuple<std::string, double, double, double, double>>
+pad_boxes_local(
+    const std::vector<std::tuple<std::string, double, double, double, double,
+                                 double>>& rows,
+    double rotation);
+
+Box4 inst_placed_box(const Box4& local_bbox, double inst_x, double inst_y,
+                     double rotation, int decimals);
+
+std::vector<Box4> collect_gr_text_boxes(const Sexpr& doc, double default_size);
+
 }  // namespace schgen

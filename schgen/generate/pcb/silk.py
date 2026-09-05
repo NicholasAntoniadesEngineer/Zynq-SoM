@@ -117,6 +117,18 @@ def _silk_gfx_box_py(c, fx, fy, ca, sa):
     return (min(bxs) - hw, min(bys) - hw, max(bxs) + hw, max(bys) + hw)
 
 
+def _collect_gr_text_boxes_py(doc: list) -> list:
+    boxes: list = []
+    for node in doc:
+        if (isinstance(node, list) and node and str(node[0]) == "gr_text"
+                and isinstance(node[1], str)):
+            at = _sub(node, "at")
+            if at is not None:
+                boxes.append(_text_box_py(node[1], float(at[1]), float(at[2]),
+                                          _font_size(node)))
+    return boxes
+
+
 def _collect_fp_silk_gfx_py(node):
     import math
     top: list = []
@@ -607,13 +619,17 @@ def _declutter_refdes(model, uid, doc: list) -> int:
     ex0, ey0 = ORIGIN_X, ORIGIN_Y
     ex1, ey1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
     occupied = [_inst_courtyard(i) for i in model.insts]
-    for node in doc:
-        if (isinstance(node, list) and node and str(node[0]) == "gr_text"
-                and isinstance(node[1], str)):
-            at = _sub(node, "at")
-            if at is not None:
-                occupied.append(_text_box(node[1], float(at[1]), float(at[2]),
-                                          _font_size(node)))
+    if _nat.loaded():
+        texts = [tuple(b) for b in _nat.module().collect_gr_text_boxes(doc, 1.0)]
+        if _nat.trace():
+            ref = _collect_gr_text_boxes_py(doc)
+            if texts != ref:
+                raise AssertionError(
+                    "native collect_gr_text_boxes DIVERGENCE: "
+                    f"cpp={texts} python={ref}")
+        occupied.extend(texts)
+    else:
+        occupied.extend(_collect_gr_text_boxes_py(doc))
     silk_gfx_top: list = []
     silk_gfx_bot: list = []
     for node in doc:
