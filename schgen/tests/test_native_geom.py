@@ -1571,7 +1571,9 @@ def test_pack_legalize_preflight_kernels(geom):
     assert hold is True
     assert fail is False
     assert geom.edge_run_margin_ok(
-        "N", 10.0, 0.0, 20.0, 8.0, 80.0, 60.0, 10.0, 0.1) is False
+        "N", 5.0, 0.0, 20.0, 8.0, 80.0, 60.0, 10.0, 0.1) is False
+    assert geom.edge_run_margin_ok(
+        "N", 12.0, 0.0, 20.0, 8.0, 80.0, 60.0, 10.0, 0.1) is True
     assert geom.edge_runs_margin_ok(
         [("S", 12.0, 42.0, 20.0, 8.0)], 80.0, 60.0, 10.0, 0.1) is True
     assert list(geom.pack_interior_order(
