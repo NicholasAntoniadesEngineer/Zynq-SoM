@@ -24,6 +24,7 @@
 #include "schgen/pack_edges.hpp"
 #include "schgen/pack_refine.hpp"
 #include "schgen/pcb_scan.hpp"
+#include "schgen/place_geom.hpp"
 #include "schgen/place_search.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/route.hpp"
@@ -1360,6 +1361,23 @@ NB_MODULE(_geom, m) {
                   sexpr_from_py(doc), x0, y0, x1, y1);
               return std::make_tuple(sexpr_to_tagged(hit.first), hit.second);
           });
+    m.def("next_flag_x", &schgen::next_flag_x);
+    m.def("flags_row_origin",
+          [](double extent_x0, double extent_y1, double unit) {
+              auto hit = schgen::flags_row_origin(extent_x0, extent_y1, unit);
+              return std::make_tuple(hit.first, hit.second);
+          });
+    m.def("conn_signed_ceil", &schgen::conn_signed_ceil);
+    m.def("conn_gnd_x", &schgen::conn_gnd_x);
+    m.def("farm_wrap_advance",
+          [](double col_x, double max_right, bool has_cur, double farm_left,
+             double cy, double row_step, double unit) {
+              auto hit = schgen::farm_wrap_advance(
+                  col_x, max_right, has_cur, farm_left, cy, row_step, unit);
+              return std::make_tuple(hit.wrapped, hit.col_x, hit.cy);
+          });
+    m.def("conn_flag_y", &schgen::conn_flag_y);
+    m.def("conn_flag_x0", &schgen::conn_flag_x0);
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

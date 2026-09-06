@@ -1529,6 +1529,19 @@ def test_pcb_scan_and_place_helpers(geom):
     assert hidden == 1
     assert str(hid[1][4][3][0]) == "hide"
     assert str(hid[1][4][3][1]) == "yes"
+    assert geom.next_flag_x(10.0, 7.62, 4.0, 4.0, U, 2.54) == gceil(
+        10.0 + max(7.62, 2.0 + 2.0 + 2.54))
+    assert tuple(geom.flags_row_origin(0.0, 10.0, U)) == (
+        gsnap(0.0 + 4 * U), gceil(10.0 + 6 * U))
+    assert geom.conn_signed_ceil(-1, 12.3, U) == -gceil(12.3)
+    assert geom.conn_gnd_x(1, 20.0, 8.0, 3.0, 5.08, U) == gceil(
+        max(20.0, 8.0 + 3.0) + 5.08)
+    assert tuple(geom.farm_wrap_advance(30.0, 20.0, True, 5.0, 12.0, 8.0, U)
+                 ) == (True, 5.0, gceil(12.0 + 8.0))
+    assert tuple(geom.farm_wrap_advance(10.0, 20.0, True, 5.0, 12.0, 8.0, U)
+                 ) == (False, 10.0, 12.0)
+    assert geom.conn_flag_y(10.0, U) == gceil(10.0 + 8 * U)
+    assert geom.conn_flag_x0(7.62, 3, U) == gsnap(-7.62 * 2 / 2)
 
 
 def test_timing_span_records():
