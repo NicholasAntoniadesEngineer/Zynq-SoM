@@ -2590,3 +2590,126 @@ def test_part_catalog_rejects_unknown_mpn(geom, tmp_path):
     geom.catalog_close()
     from schgen.core import native as nat_mod
     nat_mod._CATALOG_OPEN = False
+
+
+def test_group_and_reorder_interchangeable_match_python(geom):
+    from schgen.generate.pcb.placement import (
+        _group_interchangeable_py,
+        _reorder_interchangeable_from_pads_py,
+    )
+
+    rows = [
+        ("R2", "top", "/fp/0402", 0.04, True),
+        ("R1", "top", "/fp/0402", 359.96, True),
+        ("C1", "bottom", "/fp/0402", 90.0, True),
+        ("C2", "bottom", "/fp/0402", 90.04, True),
+        ("U1", "top", "/fp/qfn", 0.0, False),
+        ("R3", "top", "/fp/0603", -0.06, True),
+        ("R4", "top", "/fp/0402", 0.0, True),
+    ]
+    ref = _group_interchangeable_py(rows)
+    got = [(side, fp, float(rot), bool(pas), list(mems))
+           for side, fp, rot, pas, mems in geom.group_interchangeable(rows)]
+    assert got == ref
+    assert any(mems == ["R1", "R2", "R4"] for *_k, mems in ref)
+    assert any(mems == ["C1", "C2"] for *_k, mems in ref)
+    assert any(round(rot, 1) % 360.0 == 359.9 and mems == ["R3"]
+               for _s, _f, rot, _p, mems in ref)
+
+    pos = {
+        "R1": (0.0, 0.0),
+        "R2": (4.0, 0.0),
+        "U1": (4.0, 10.0),
+        "U2": (0.0, 10.0),
+        "R9": (0.0, 8.0),
+    }
+    refs_by_sheet = {
+        "pwr": ["R2", "R1", "U1", "U2"],
+        "skip": ["R9"],
+    }
+    members = [
+        ("R1", "top", "/fp/0402", 0.0, True),
+        ("R2", "top", "/fp/0402", 0.0, True),
+        ("R9", "top", "/fp/0402", 0.0, True),
+    ]
+    bbox_of = {
+        "R1": (-1.0, -0.5, 1.0, 0.5),
+        "R2": (-1.0, -0.5, 1.0, 0.5),
+        "R9": (-1.0, -0.5, 1.0, 0.5),
+    }
+    pad_names_of = {
+        "R1": ["1"],
+        "R2": ["1"],
+        "R9": ["1"],
+    }
+    pad_local = {
+        "R1": {"1": (0.0, 0.0)},
+        "R2": {"1": (0.0, 0.0)},
+        "R9": {"1": (0.0, 0.0)},
+        "U1": {"1": (0.0, 0.0)},
+        "U2": {"1": (0.0, 0.0)},
+    }
+    pin_net = {
+        ("R1", "1"): "N1",
+        ("R2", "1"): "N2",
+        ("U1", "1"): "N1",
+        ("U2", "1"): "N2",
+        ("R9", "1"): "N1",
+    }
+    nets = {
+        "N1": [("R1", "1"), ("U1", "1")],
+        "N2": [("R2", "1"), ("U2", "1")],
+    }
+    resolvable = {"R1", "R2", "U1", "U2", "R9"}
+    skip_sheets = {"skip"}
+    conn_seated: set[str] = set()
+
+    ref_pos, ref_rep = _reorder_interchangeable_from_pads_py(
+        pos, refs_by_sheet, skip_sheets, conn_seated, members, bbox_of,
+        pad_names_of, pad_local, pin_net, nets, resolvable)
+    pos_rows, report_rows = geom.reorder_interchangeable(
+        [(r, xy[0], xy[1]) for r, xy in pos.items()],
+        [(s, list(refs)) for s, refs in refs_by_sheet.items()],
+        list(skip_sheets), list(conn_seated), members,
+        [(r, *b) for r, b in bbox_of.items()],
+        [(r, list(p)) for r, p in pad_names_of.items()],
+        [(r, [(p, xy[0], xy[1]) for p, xy in offs.items()])
+         for r, offs in pad_local.items()],
+        [(r, p, n) for (r, p), n in pin_net.items()],
+        [(n, list(pins)) for n, pins in nets.items()],
+        list(resolvable),
+    )
+    got_pos = {r: (x, y) for r, x, y in pos_rows}
+    got_rep: dict[str, list[tuple[str, int, int]]] = {}
+    for sheet, label, before, best in report_rows:
+        got_rep.setdefault(sheet, []).append(
+            (label, int(before), int(best)))
+    assert got_pos == ref_pos
+    assert got_rep == ref_rep
+    assert "pwr" in ref_rep
+    assert ref_pos["R1"] != pos["R1"] or ref_pos["R2"] != pos["R2"]
+    assert ref_pos["R9"] == pos["R9"]
+
+    seated_pos, seated_rep = _reorder_interchangeable_from_pads_py(
+        pos, refs_by_sheet, set(), {"R1"}, members, bbox_of,
+        pad_names_of, pad_local, pin_net, nets, resolvable)
+    seated_rows, seated_report = geom.reorder_interchangeable(
+        [(r, xy[0], xy[1]) for r, xy in pos.items()],
+        [(s, list(refs)) for s, refs in refs_by_sheet.items()],
+        [], ["R1"], members,
+        [(r, *b) for r, b in bbox_of.items()],
+        [(r, list(p)) for r, p in pad_names_of.items()],
+        [(r, [(p, xy[0], xy[1]) for p, xy in offs.items()])
+         for r, offs in pad_local.items()],
+        [(r, p, n) for (r, p), n in pin_net.items()],
+        [(n, list(pins)) for n, pins in nets.items()],
+        list(resolvable),
+    )
+    assert {r: (x, y) for r, x, y in seated_rows} == seated_pos
+    seated_got: dict[str, list[tuple[str, int, int]]] = {}
+    for sheet, label, before, best in seated_report:
+        seated_got.setdefault(sheet, []).append(
+            (label, int(before), int(best)))
+    assert seated_got == seated_rep
+    assert seated_pos["R1"] == pos["R1"]
+    assert seated_pos["R2"] == pos["R2"]

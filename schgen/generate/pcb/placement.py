@@ -1261,17 +1261,166 @@ def _nearest_manhattan(
     return _nearest_manhattan_py(px, py, pts)
 
 
-def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
-                             refs_by_sheet: dict[str, list[str]],
-                             side_of: dict[str, str],
-                             resolvable: dict[str, Path],
-                             fixed_rot: dict[str, float],
-                             bbox_of: dict,
-                             nets: dict,
-                             pin_net: dict[tuple[str, str], tuple[int, str]],
-                             conn_seated: set[str],
-                             skip_sheets: set[str]
-                             ) -> dict[str, list[tuple[str, int, int]]]:
+def _group_interchangeable_py(
+    rows: list[tuple[str, str, str, float, bool]],
+) -> list[tuple[str, str, float, bool, list[str]]]:
+    groups: dict[tuple, list[str]] = {}
+    for ref, side, fp, rot, passive in rows:
+        gk = (side, fp, round(rot, 1) % 360.0, passive)
+        groups.setdefault(gk, []).append(ref)
+    return [(gk[0], gk[1], gk[2], gk[3], sorted(members))
+            for gk, members in sorted(groups.items())]
+
+
+def _cluster_slot_segs_py(
+    pad_offs: list[tuple[str, float, float]],
+    pad_nets: list[str],
+    slots: list[tuple[float, float]],
+    static_rows: list[tuple[str, list[tuple[float, float]]]],
+) -> list[list[tuple[float, float, float, float]]]:
+    pts_of = {n: list(pts) for n, pts in static_rows}
+    out: list[list[tuple[float, float, float, float]]] = []
+    for sx, sy in slots:
+        segs: list[tuple[float, float, float, float]] = []
+        for (_p, dx, dy), net in zip(pad_offs, pad_nets):
+            if not net:
+                continue
+            pts = pts_of.get(net)
+            if not pts:
+                continue
+            px, py = sx + dx, sy + dy
+            tx, ty = _nearest_manhattan_py(px, py, pts)
+            segs.append((px, py, tx, ty))
+        out.append(segs)
+    return out
+
+
+def _reorder_interchangeable_from_pads_py(
+    pos: dict[str, tuple[float, float]],
+    refs_by_sheet: dict[str, list[str]],
+    skip_sheets: set[str],
+    conn_seated: set[str],
+    members: list[tuple[str, str, str, float, bool]],
+    bbox_of: dict[str, tuple[float, float, float, float]],
+    pad_names_of: dict[str, list[str]],
+    pad_local: dict[str, dict[str, tuple[float, float]]],
+    pin_net: dict[tuple[str, str], str],
+    nets: dict[str, list[tuple[str, str]]],
+    resolvable: set[str],
+) -> tuple[dict[str, tuple[float, float]],
+           dict[str, list[tuple[str, int, int]]]]:
+    from schgen.generate.pcb.turn import turn_box_py
+    pos = dict(pos)
+    meta = {r: (side, fp, rot, passive)
+            for r, side, fp, rot, passive in members}
+    report: dict[str, list[tuple[str, int, int]]] = {}
+    for sheet in sorted(refs_by_sheet):
+        if sheet in skip_sheets:
+            continue
+        rows = []
+        for r in refs_by_sheet[sheet]:
+            if r not in pos or r not in resolvable or r in conn_seated:
+                continue
+            hit = meta.get(r)
+            if hit is None:
+                continue
+            side, fp, rot, passive = hit
+            rows.append((r, side, fp, rot, passive))
+        for _side, _fp, rot_key, _passive, mems in _group_interchangeable_py(
+                rows):
+            if len(mems) < 2:
+                continue
+            gset = set(mems)
+            eb = turn_box_py(bbox_of[mems[0]], rot_key)
+            tol_x = max(0.6, (eb[2] - eb[0]) / 2)
+            tol_y = max(0.6, (eb[3] - eb[1]) / 2)
+            clusters = _cluster_interchangeable_rows_py(
+                pos, mems, tol_x, tol_y)
+            for axis, cluster in clusters:
+                ai = 0 if axis == "x" else 1
+                mlist = sorted(cluster)
+                slots = sorted((pos[m] for m in cluster),
+                               key=lambda p: (p[ai], p[1 - ai]))
+                static_pts: dict[str, list[tuple[float, float]]] = {}
+                for m in mlist:
+                    for pad in pad_names_of.get(m, ()):
+                        n = pin_net.get((m, pad), "")
+                        if not n or n in static_pts or n not in nets:
+                            continue
+                        pts = []
+                        for pr_ref, pr_pin in nets[n]:
+                            if (pr_ref in gset or pr_ref.startswith("#")
+                                    or pr_ref not in pos
+                                    or pr_ref not in resolvable):
+                                continue
+                            offs = pad_local.get(pr_ref, {})
+                            if pr_pin not in offs:
+                                continue
+                            dx, dy = offs[pr_pin]
+                            pts.append((dx + pos[pr_ref][0],
+                                        dy + pos[pr_ref][1]))
+                        static_pts[n] = pts
+                order0 = sorted(cluster, key=lambda m: (pos[m][ai], m))
+                assign_map = {m: i for i, m in enumerate(order0)}
+                segs_xy = []
+                static_rows = [(n, pts) for n, pts in static_pts.items()]
+                for m in mlist:
+                    offs = pad_local.get(m, {})
+                    pad_offs = [(p, offs[p][0], offs[p][1])
+                                for p in sorted(offs)]
+                    pad_nets = [pin_net.get((m, p), "")
+                                for p, _dx, _dy in pad_offs]
+                    segs_xy.append(_cluster_slot_segs_py(
+                        pad_offs, pad_nets, slots, static_rows))
+                init = [assign_map[m] for m in mlist]
+                before, best, out = _reorder_cluster_assign_py(
+                    segs_xy, init, 6)
+                if best == before:
+                    continue
+                for i, m in enumerate(mlist):
+                    pos[m] = slots[out[i]]
+                report.setdefault(sheet, []).append(
+                    (f"{axis}-{len(cluster)}", before, best))
+    return pos, report
+
+
+def _reorder_collect_pads(
+    pos: dict[str, tuple[float, float]],
+    resolvable: dict[str, Path],
+    fixed_rot: dict[str, float],
+) -> tuple[dict[str, list[str]], dict[str, dict[str, tuple[float, float]]]]:
+    pad_names_of: dict[str, list[str]] = {}
+    pad_local: dict[str, dict[str, tuple[float, float]]] = {}
+    rotpads: dict[tuple[str, float], dict[str, tuple[float, float]]] = {}
+    for ref in pos:
+        if ref not in resolvable:
+            continue
+        path = resolvable[ref]
+        pad_names_of[ref] = pad_names(path)
+        rk = (str(path), fixed_rot.get(ref, 0.0))
+        base = rotpads.get(rk)
+        if base is None:
+            stub = FootprintInst(
+                ref=ref, value="", footprint="", x=0.0, y=0.0,
+                rotation=rk[1], pad_nets={}, mod_path=path,
+                sheet="", side="top")
+            base = {n: (x, y) for n, x, y, _nn in _inst_pad_geom(stub)}
+            rotpads[rk] = base
+        pad_local[ref] = base
+    return pad_names_of, pad_local
+
+
+def _reorder_interchangeable_py(pos: dict[str, tuple[float, float]],
+                                refs_by_sheet: dict[str, list[str]],
+                                side_of: dict[str, str],
+                                resolvable: dict[str, Path],
+                                fixed_rot: dict[str, float],
+                                bbox_of: dict,
+                                nets: dict,
+                                pin_net: dict[tuple[str, str], tuple[int, str]],
+                                conn_seated: set[str],
+                                skip_sheets: set[str]
+                                ) -> dict[str, list[tuple[str, int, int]]]:
     from schgen.verify.fanout_gate import _is_cluster_passive
 
     rotpads: dict[tuple[str, float], dict[str, tuple[float, float]]] = {}
@@ -1362,6 +1511,64 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
                     pos[m] = slots[out[i]]
                 report.setdefault(sheet, []).append(
                     (f"{axis}-{len(cluster)}", before, best))
+    return report
+
+
+def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
+                             refs_by_sheet: dict[str, list[str]],
+                             side_of: dict[str, str],
+                             resolvable: dict[str, Path],
+                             fixed_rot: dict[str, float],
+                             bbox_of: dict,
+                             nets: dict,
+                             pin_net: dict[tuple[str, str], tuple[int, str]],
+                             conn_seated: set[str],
+                             skip_sheets: set[str]
+                             ) -> dict[str, list[tuple[str, int, int]]]:
+    from schgen.verify.fanout_gate import _is_cluster_passive
+    pad_names_of, pad_local = _reorder_collect_pads(pos, resolvable, fixed_rot)
+    members = []
+    for _sheet, refs in refs_by_sheet.items():
+        for r in refs:
+            if r not in pos or r not in resolvable:
+                continue
+            pins = len(pad_names_of[r])
+            members.append((
+                r, side_of.get(r, "top"), str(resolvable[r]),
+                fixed_rot.get(r, 0.0), _is_cluster_passive(r, pins)))
+    pos_rows = [(r, xy[0], xy[1]) for r, xy in pos.items()]
+    sheet_rows = [(s, list(refs)) for s, refs in refs_by_sheet.items()]
+    bbox_rows = [(r, b[0], b[1], b[2], b[3]) for r, b in bbox_of.items()]
+    pad_name_rows = [(r, list(p)) for r, p in pad_names_of.items()]
+    pad_local_rows = [
+        (r, [(p, xy[0], xy[1]) for p, xy in offs.items()])
+        for r, offs in pad_local.items()]
+    pin_net_rows = [(r, p, n) for (r, p), (_num, n) in pin_net.items()]
+    net_rows = [(n, [(pr.ref, pr.pin) for pr in pins])
+                for n, pins in nets.items()]
+    pos_out, report_rows = _nat.module().reorder_interchangeable(
+        pos_rows, sheet_rows, list(skip_sheets), list(conn_seated), members,
+        bbox_rows, pad_name_rows, pad_local_rows, pin_net_rows, net_rows,
+        list(resolvable))
+    if _nat.trace():
+        pos_ref = dict(pos)
+        report_ref = _reorder_interchangeable_py(
+            pos_ref, refs_by_sheet, side_of, resolvable, fixed_rot, bbox_of,
+            nets, pin_net, conn_seated, skip_sheets)
+        report_got: dict[str, list[tuple[str, int, int]]] = {}
+        for sheet, label, before, best in report_rows:
+            report_got.setdefault(sheet, []).append(
+                (label, int(before), int(best)))
+        pos_got = {r: (x, y) for r, x, y in pos_out}
+        if report_got != report_ref or pos_got != pos_ref:
+            raise AssertionError(
+                "native reorder_interchangeable DIVERGENCE: "
+                f"cpp=({pos_got}, {report_got}) python=({pos_ref}, {report_ref})")
+    for r, x, y in pos_out:
+        pos[r] = (x, y)
+    report: dict[str, list[tuple[str, int, int]]] = {}
+    for sheet, label, before, best in report_rows:
+        report.setdefault(sheet, []).append((label, int(before), int(best)))
     return report
 
 

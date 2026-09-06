@@ -35,7 +35,7 @@ nanobind_add_module(_geom src/module.cpp src/occupancy.cpp src/seat.cpp
                     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp
                     src/embed_fp.cpp src/pack_edges.cpp src/pcb_scan.cpp
                     src/pack_refine.cpp src/place_geom.cpp src/catalog.cpp
-                    src/json.cpp src/circuit.cpp)
+                    src/json.cpp src/circuit.cpp src/reorder.cpp)
 target_include_directories(_geom PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(_geom PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_source_files_properties(src/turn.cpp src/pack_anchor.cpp
@@ -53,7 +53,7 @@ add_executable(schgen src/main.cpp src/occupancy.cpp src/seat.cpp
                src/pack_anchor.cpp src/place_search.cpp src/cc.cpp
                src/embed_fp.cpp src/pack_edges.cpp src/pcb_scan.cpp
                src/pack_refine.cpp src/place_geom.cpp src/catalog.cpp
-               src/json.cpp src/circuit.cpp)
+               src/json.cpp src/circuit.cpp src/reorder.cpp)
 add_custom_command(TARGET schgen POST_BUILD
     COMMAND "$<TARGET_FILE:schgen>" catalog-compile
             "${CMAKE_CURRENT_SOURCE_DIR}/../parts"

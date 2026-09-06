@@ -29,6 +29,7 @@
 #include "schgen/place_geom.hpp"
 #include "schgen/place_search.hpp"
 #include "schgen/quantize.hpp"
+#include "schgen/reorder.hpp"
 #include "schgen/route.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
@@ -1243,6 +1244,8 @@ NB_MODULE(_geom, m) {
               }
               return out;
           });
+    m.def("group_interchangeable", &schgen::group_interchangeable);
+    m.def("reorder_interchangeable", &schgen::reorder_interchangeable);
     m.def("scan_floats", &schgen::scan_floats);
     m.def("font_size",
           [](nb::handle node, double default_size) {
