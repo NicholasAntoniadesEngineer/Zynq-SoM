@@ -324,6 +324,78 @@ def _part_to_part(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
     return _part_to_part_py(a_boxes, b_boxes)
 
 
+def _gap_over(dist: float | None, lim: float) -> bool:
+    if _nat.loaded():
+        got = bool(_nat.module().gap_over_limit(dist, lim))
+        if _nat.trace():
+            ref = dist is None or dist > lim
+            if got is not ref:
+                raise AssertionError(
+                    "native gap_over_limit DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return dist is None or dist > lim
+
+
+def _gap_under(dist: float | None, lim: float) -> bool:
+    if _nat.loaded():
+        got = bool(_nat.module().gap_under_limit(dist, lim))
+        if _nat.trace():
+            ref = dist is not None and dist < lim
+            if got is not ref:
+                raise AssertionError(
+                    "native gap_under_limit DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return dist is not None and dist < lim
+
+
+def _min_present(a: float | None, b: float | None) -> float | None:
+    if _nat.loaded():
+        got = _nat.module().min_present(a, b)
+        if _nat.trace():
+            if a is None:
+                ref = b
+            elif b is None:
+                ref = a
+            else:
+                ref = min(a, b)
+            if got != ref:
+                raise AssertionError(
+                    "native min_present DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return min(a, b)
+
+
+def _nearest_named(rows: list[tuple[str, float]]) -> tuple[str | None, float | None]:
+    if _nat.loaded():
+        got = _nat.module().nearest_named(rows)
+        if got is not None:
+            got = (got[0], float(got[1]))
+        if _nat.trace():
+            ref = None
+            for name, dist in rows:
+                if ref is None or dist < ref[1]:
+                    ref = (name, dist)
+            if got != ref:
+                raise AssertionError(
+                    "native nearest_named DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        if got is None:
+            return None, None
+        return got
+    best_ref, best_d = None, None
+    for name, dist in rows:
+        if best_d is None or dist < best_d:
+            best_ref, best_d = name, dist
+    return best_ref, best_d
+
+
 def _board_refs_by_sheet(sheet_name: str, parts=None) -> dict[str, str]:
     import json
 
@@ -431,7 +503,7 @@ def check(model: PcbModel, sheet_name: str = "power",
             basis = st["basis"]
             cap_data = [(cref, inst(cref), boxes(cref)) for cref in st["caps"]]
             for pair in st["pin_pairs"]:
-                best_ref, best_d = None, None
+                rows = []
                 for cref, cit, cboxes in cap_data:
                     if ic_boxes is None or cboxes is None or cit is None:
                         continue
@@ -441,9 +513,9 @@ def check(model: PcbModel, sheet_name: str = "power",
                     d = _pins_to_part(ic_boxes, cboxes, pair)
                     if d is None:
                         continue
-                    if best_d is None or d < best_d:
-                        best_ref, best_d = cref, d
-                if best_d is None or best_d > lim:
+                    rows.append((cref, d))
+                best_ref, best_d = _nearest_named(rows)
+                if _gap_over(best_d, lim):
                     res.hot_loop_fail += 1
                     detail = (f"none within {lim:g}mm same-side"
                               if best_d is None
@@ -460,7 +532,7 @@ def check(model: PcbModel, sheet_name: str = "power",
                 if ic_boxes is None or cb is None:
                     continue
                 d = _pins_to_part(ic_boxes, cb, st["vin_pins"])
-                if d is None or d > lim:
+                if _gap_over(d, lim):
                     res.bulk_fail += 1
                     add(f"bulk_in {ic} {cref}: "
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
@@ -485,7 +557,7 @@ def check(model: PcbModel, sheet_name: str = "power",
                         f"{ic_it.side} (same_side) [{st['basis']}]")
                     continue
                 d = _pins_to_part(l_boxes, cb, [out_pin])
-                if d is None or d > lim:
+                if _gap_over(d, lim):
                     res.bulk_out_fail += 1
                     add(f"bulk_out {ic} {cref}: "
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
@@ -499,7 +571,7 @@ def check(model: PcbModel, sheet_name: str = "power",
             lim = float(st["max_pad_to_pin_mm"])
             if ic_boxes is not None and lb is not None:
                 d = _pins_to_part(ic_boxes, lb, [st["sw_pin"]])
-                if d is None or d > lim:
+                if _gap_over(d, lim):
                     res.sw_node_fail += 1
                     add(f"sw_node {ic} L={st['inductor']}: "
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
@@ -523,7 +595,7 @@ def check(model: PcbModel, sheet_name: str = "power",
                     continue
                 if ic_boxes is not None:
                     d = _pins_to_part(ic_boxes, mb, [st["fb_pin"]])
-                    if d is None or d > to_fb:
+                    if _gap_over(d, to_fb):
                         res.fb_fail += 1
                         add(f"fb_cluster {ic} {mref}: "
                             f"{'n/a' if d is None else f'{d:.2f}mm'} > {to_fb:g}mm "
@@ -533,9 +605,8 @@ def check(model: PcbModel, sheet_name: str = "power",
                     own_d = _pins_to_part(ic_boxes, mb, [st["own_sw_pin"]])
                 if own_l is not None:
                     dl = _part_to_part(mb, own_l)
-                    own_d = dl if own_d is None else (
-                        dl if dl is not None and dl < own_d else own_d)
-                if own_d is not None and own_d < min_own:
+                    own_d = _min_present(own_d, dl)
+                if _gap_under(own_d, min_own):
                     res.fb_fail += 1
                     add(f"fb_cluster {ic} {mref}: {own_d:.2f}mm < {min_own:g}mm "
                         f"from own SW/L (too close) [{st['basis']}]")
@@ -545,9 +616,8 @@ def check(model: PcbModel, sheet_name: str = "power",
                         for_d = _pins_to_part(for_ic, mb, [foreign_sw_pin])
                     if for_l is not None:
                         dl = _part_to_part(mb, for_l)
-                        for_d = dl if for_d is None else (
-                            dl if dl is not None and dl < for_d else for_d)
-                    if for_d is not None and for_d < min_for:
+                        for_d = _min_present(for_d, dl)
+                    if _gap_under(for_d, min_for):
                         res.fb_fail += 1
                         add(f"fb_cluster {ic} {mref}: {for_d:.2f}mm < "
                             f"{min_for:g}mm from foreign {foreign_ic_ref} SW/L "
@@ -560,7 +630,7 @@ def check(model: PcbModel, sheet_name: str = "power",
             lim = float(st["max_pad_to_pin_mm"])
             if ic_boxes is not None and cb is not None:
                 d = _pins_to_part(ic_boxes, cb, st["pins"])
-                if d is None or d > lim:
+                if _gap_over(d, lim):
                     res.boot_fail += 1
                     add(f"boot {ic} {st['cap']}: "
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
@@ -573,7 +643,7 @@ def check(model: PcbModel, sheet_name: str = "power",
             lim = float(st["max_pad_to_pin_mm"])
             if ic_boxes is not None and cb is not None:
                 d = _pins_to_part(ic_boxes, cb, [st["pin"]])
-                if d is None or d > lim:
+                if _gap_over(d, lim):
                     res.vcc_fail += 1
                     add(f"vcc_cap {ic} {st['cap']}: "
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
@@ -586,7 +656,7 @@ def check(model: PcbModel, sheet_name: str = "power",
             lim = float(st["max_pad_to_pin_mm"])
             if ic_boxes is not None and cb is not None:
                 d = _pins_to_part(ic_boxes, cb, [st["pin"]])
-                if d is None or d > lim:
+                if _gap_over(d, lim):
                     res.bias_fail += 1
                     add(f"bias_cap {ic} {st['cap']}: "
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
@@ -599,7 +669,7 @@ def check(model: PcbModel, sheet_name: str = "power",
             lim = float(st["max_pad_to_pin_mm"])
             if ic_boxes is not None and rb is not None:
                 d = _pins_to_part(ic_boxes, rb, [st["pin"]])
-                if d is None or d > lim:
+                if _gap_over(d, lim):
                     res.rt_fail += 1
                     add(f"rt_r {ic} {st['resistor']}: "
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
@@ -615,7 +685,7 @@ def check(model: PcbModel, sheet_name: str = "power",
                 if ic_boxes is None or cb is None:
                     continue
                 d = _pins_to_part(ic_boxes, cb, [pin])
-                if d is None or d > lim:
+                if _gap_over(d, lim):
                     res.ldo_fail += 1
                     add(f"ldo_stage {ic} {role}={cref}: "
                         f"{'n/a' if d is None else f'{d:.2f}mm'} > {lim:g}mm "
@@ -679,7 +749,7 @@ def _proximity(st: dict, res: PlacementContractResult, inst, boxes, add) -> None
         else:
             d = _part_to_part(anchor_boxes, mb)
         tgt = (f"pins {'/'.join(anchor_pins)}" if anchor_pins else "any pad")
-        if d is None or d > max_mm:
+        if _gap_over(d, max_mm):
             res.proximity_fail += 1
             add(f"proximity {anchor} {mref}: "
                 f"{'n/a' if d is None else f'{d:.2f}mm'} > {max_mm:g}mm "
@@ -699,7 +769,7 @@ def _proximity(st: dict, res: PlacementContractResult, inst, boxes, add) -> None
             fd = (_pins_to_part(ob, mb, [opin]) if opin
                   else _part_to_part(ob, mb))
             otgt = (f"pin {opin}" if opin else "any pad")
-            if fd is not None and fd < mm:
+            if _gap_under(fd, mm):
                 res.proximity_fail += 1
                 add(f"proximity {anchor} {mref}: {fd:.2f}mm < {mm:g}mm from "
                     f"{other} {otgt} (too close) [{basis}]")

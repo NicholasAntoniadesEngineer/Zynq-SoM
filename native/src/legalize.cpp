@@ -403,6 +403,39 @@ std::optional<double> min_box_gap(const std::vector<Box4>& a,
     return best;
 }
 
+bool gap_over_limit(std::optional<double> dist, double lim) {
+    return !dist.has_value() || *dist > lim;
+}
+
+bool gap_under_limit(std::optional<double> dist, double lim) {
+    return dist.has_value() && *dist < lim;
+}
+
+std::optional<double> min_present(std::optional<double> a,
+                                  std::optional<double> b) {
+    if (!a.has_value()) {
+        return b;
+    }
+    if (!b.has_value()) {
+        return a;
+    }
+    return std::min(*a, *b);
+}
+
+std::optional<std::pair<std::string, double>> nearest_named(
+    const std::vector<std::pair<std::string, double>>& rows) {
+    if (rows.empty()) {
+        return std::nullopt;
+    }
+    auto best = rows[0];
+    for (const auto& row : rows) {
+        if (row.second < best.second) {
+            best = row;
+        }
+    }
+    return best;
+}
+
 std::vector<WallSepEdge> wall_sep_edges(
     bool axis_x, const std::vector<std::string>& names,
     const std::vector<double>& sizes, double span, double clear,

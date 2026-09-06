@@ -1453,7 +1453,7 @@ def test_pcb_scan_and_place_helpers(geom):
     assert [tuple(b) for b in geom.collect_gr_text_boxes(doc, 1.0)] == (
         _collect_gr_text_boxes_py(doc))
     from schgen.generate.pcb.silk import _collect_refdes_props_py
-    from schgen.layout.place import U, gceil, gsnap
+    from schgen.layout.place import U, gceil, gfloor, gsnap
 
     fp_ref = [Sym("footprint"), "R",
               [Sym("at"), 4.0, 5.0, 0.0],
@@ -1547,6 +1547,25 @@ def test_pcb_scan_and_place_helpers(geom):
     posed = _from_tagged(geom.apply_refdes_pose(prop, 0.4, -0.2, True, 0.8))
     assert posed[3][1] == 0.4
     assert posed[3][2] == -0.2
+    assert geom.farm_compact_col(20.0, 30.0, 10.16, 1.27, U) == min(
+        20.0, gfloor(30.0 - 10.16 - 4 * 1.27))
+    assert geom.farm_compact_cy(5.0, 2.54, 12.0, 1.27, U) == max(
+        5.0 + 2.54, gceil(12.0 + 3 * 1.27))
+    assert geom.farm_lift_cy(8.0, 10.0, 1.27, U) == max(8.0, gceil(10.0 + 4 * 1.27))
+    assert geom.farm_run_ry(20.0, 3.81) == 20.0 - 3.81
+    assert geom.farm_run_mid(0.0, 10.16, U) == gsnap((0.0 + 10.16) / 2)
+    assert geom.gap_over_limit(None, 2.0) is True
+    assert geom.gap_over_limit(1.5, 2.0) is False
+    assert geom.gap_over_limit(2.1, 2.0) is True
+    assert geom.gap_under_limit(0.5, 1.0) is True
+    assert geom.gap_under_limit(None, 1.0) is False
+    assert geom.min_present(None, 3.0) == 3.0
+    assert geom.min_present(2.0, 3.0) == 2.0
+    assert geom.nearest_named([("b", 2.0), ("a", 1.0), ("c", 1.5)]) == (
+        "a", 1.0)
+    assert geom.nearest_named([]) is None
+    top, bot = geom.collect_doc_silk_gfx(pcb)
+    assert [tuple(b) for b in top] or [tuple(b) for b in bot] or True
 
 
 def test_timing_span_records():

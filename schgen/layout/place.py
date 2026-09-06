@@ -2431,11 +2431,41 @@ class _Engine:
                 cy = gceil(ey1 + (12 if self._n_box_bucks >= 2 else 8) * U)
             max_right = self._farm_row_right_bound(ex0, ex1_flow)
         else:
-            col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
-            cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
+            if _nat.loaded():
+                nxt = _nat.module().farm_compact_col(
+                    col_x, body.x0, span, sp.hang_stub, U)
+                if _nat.trace():
+                    ref = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
+                    if nxt != ref:
+                        raise AssertionError(
+                            "native farm_compact_col DIVERGENCE: "
+                            f"cpp={nxt} python={ref}")
+                col_x = nxt
+                cy = _nat.module().farm_compact_cy(
+                    ay, sp.cluster_dy, body.y1, sp.hang_stub, U)
+                if _nat.trace():
+                    ref = max(ay + sp.cluster_dy,
+                              gceil(body.y1 + 3 * sp.hang_stub))
+                    if cy != ref:
+                        raise AssertionError(
+                            "native farm_compact_cy DIVERGENCE: "
+                            f"cpp={cy} python={ref}")
+            else:
+                col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
+                cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
             floor = self._cell_floor(col_x - 2 * sp.cap_pitch,
                                      col_x + span + 2 * sp.cap_pitch)
-            cy = max(cy, gceil(floor + 4 * sp.hang_stub))
+            if _nat.loaded():
+                lifted = _nat.module().farm_lift_cy(cy, floor, sp.hang_stub, U)
+                if _nat.trace():
+                    ref = max(cy, gceil(floor + 4 * sp.hang_stub))
+                    if lifted != ref:
+                        raise AssertionError(
+                            "native farm_lift_cy DIVERGENCE: "
+                            f"cpp={lifted} python={ref}")
+                cy = lifted
+            else:
+                cy = max(cy, gceil(floor + 4 * sp.hang_stub))
             farm_left = col_x
             row_step = 0.0
             max_right = float("inf")
@@ -2492,11 +2522,29 @@ class _Engine:
             if cur:
                 runs.append((cy, cur))
             for run_cy, tops in runs:
-                ry = run_cy - 3.81
+                if _nat.loaded():
+                    ry = _nat.module().farm_run_ry(run_cy, 3.81)
+                    if _nat.trace():
+                        ref = run_cy - 3.81
+                        if ry != ref:
+                            raise AssertionError(
+                                "native farm_run_ry DIVERGENCE: "
+                                f"cpp={ry} python={ref}")
+                else:
+                    ry = run_cy - 3.81
                 if len(tops) == 1:
                     self.power(rail, tops[0], ry)
                 else:
-                    xm = gsnap((tops[0] + tops[-1]) / 2)
+                    if _nat.loaded():
+                        xm = _nat.module().farm_run_mid(tops[0], tops[-1], U)
+                        if _nat.trace():
+                            ref = gsnap((tops[0] + tops[-1]) / 2)
+                            if xm != ref:
+                                raise AssertionError(
+                                    "native farm_run_mid DIVERGENCE: "
+                                    f"cpp={xm} python={ref}")
+                    else:
+                        xm = gsnap((tops[0] + tops[-1]) / 2)
                     nodes = sorted(set(tops + [xm]))
                     for a, b in zip(nodes, nodes[1:], strict=False):
                         self.pl.plan(rail, (a, ry), (b, ry))

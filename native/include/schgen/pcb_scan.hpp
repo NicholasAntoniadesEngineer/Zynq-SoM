@@ -22,6 +22,9 @@ std::pair<std::vector<std::pair<double, double>>, double> silk_gfx_pts(
 std::pair<std::vector<Box4>, std::vector<Box4>> collect_fp_silk_gfx(
     const Sexpr& footprint);
 
+std::pair<std::vector<Box4>, std::vector<Box4>> collect_doc_silk_gfx(
+    const Sexpr& doc);
+
 double farm_row_right_bound(double extent_x0, double extent_x1_flow,
                             double a3_center_x, double titleblock_left,
                             double titleblock_margin, double cap_pitch);

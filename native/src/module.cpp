@@ -597,6 +597,10 @@ NB_MODULE(_geom, m) {
               -> std::optional<double> {
               return schgen::min_box_gap(as_boxes(a), as_boxes(b));
           });
+    m.def("gap_over_limit", &schgen::gap_over_limit);
+    m.def("gap_under_limit", &schgen::gap_under_limit);
+    m.def("min_present", &schgen::min_present);
+    m.def("nearest_named", &schgen::nearest_named);
     m.def("flip_to_bottom",
           [](nb::handle node) {
               auto tree = sexpr_from_py(node);
@@ -1167,6 +1171,21 @@ NB_MODULE(_geom, m) {
               }
               return std::make_tuple(top, bot);
           });
+    m.def("collect_doc_silk_gfx",
+          [](nb::handle doc) {
+              auto hit = schgen::collect_doc_silk_gfx(sexpr_from_py(doc));
+              std::vector<std::tuple<double, double, double, double>> top;
+              std::vector<std::tuple<double, double, double, double>> bot;
+              top.reserve(hit.first.size());
+              bot.reserve(hit.second.size());
+              for (const auto& b : hit.first) {
+                  top.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              for (const auto& b : hit.second) {
+                  bot.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return std::make_tuple(top, bot);
+          });
     m.def("farm_row_right_bound", &schgen::farm_row_right_bound);
     m.def("conn_port_columns", &schgen::conn_port_columns);
     m.def("conn_cluster_groups", &schgen::conn_cluster_groups);
@@ -1389,6 +1408,11 @@ NB_MODULE(_geom, m) {
                                                       unit);
               return std::make_tuple(hit.first, hit.second);
           });
+    m.def("farm_compact_col", &schgen::farm_compact_col);
+    m.def("farm_compact_cy", &schgen::farm_compact_cy);
+    m.def("farm_lift_cy", &schgen::farm_lift_cy);
+    m.def("farm_run_ry", &schgen::farm_run_ry);
+    m.def("farm_run_mid", &schgen::farm_run_mid);
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

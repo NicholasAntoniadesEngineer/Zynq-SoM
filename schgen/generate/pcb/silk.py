@@ -257,6 +257,18 @@ def _collect_fp_silk_gfx_py(node):
     return top, bot
 
 
+def _collect_doc_silk_gfx_py(doc: list) -> tuple[list, list]:
+    top: list = []
+    bot: list = []
+    for node in doc:
+        if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
+            continue
+        fp_top, fp_bot = _collect_fp_silk_gfx_py(node)
+        top.extend(fp_top)
+        bot.extend(fp_bot)
+    return top, bot
+
+
 def _silk_gfx_box(c, fx, fy, ca, sa):
     if _nat.loaded():
         pts, hw = _silk_gfx_pts(c)
@@ -791,25 +803,19 @@ def _declutter_refdes(model, uid, doc: list) -> int:
         occupied.extend(_collect_gr_text_boxes_py(doc))
     silk_gfx_top: list = []
     silk_gfx_bot: list = []
-    for node in doc:
-        if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
-            continue
-        if _nat.loaded():
-            top, bot = _nat.module().collect_fp_silk_gfx(node)
-            top = [tuple(b) for b in top]
-            bot = [tuple(b) for b in bot]
-            if _nat.trace():
-                ref_top, ref_bot = _collect_fp_silk_gfx_py(node)
-                if top != ref_top or bot != ref_bot:
-                    raise AssertionError(
-                        "native collect_fp_silk_gfx DIVERGENCE: "
-                        f"cpp={(top, bot)} python={(ref_top, ref_bot)}")
-            silk_gfx_top.extend(top)
-            silk_gfx_bot.extend(bot)
-            continue
-        top, bot = _collect_fp_silk_gfx_py(node)
-        silk_gfx_top.extend(top)
-        silk_gfx_bot.extend(bot)
+    if _nat.loaded():
+        top, bot = _nat.module().collect_doc_silk_gfx(doc)
+        silk_gfx_top = [tuple(b) for b in top]
+        silk_gfx_bot = [tuple(b) for b in bot]
+        if _nat.trace():
+            ref_top, ref_bot = _collect_doc_silk_gfx_py(doc)
+            if silk_gfx_top != ref_top or silk_gfx_bot != ref_bot:
+                raise AssertionError(
+                    "native collect_doc_silk_gfx DIVERGENCE: "
+                    f"cpp={(silk_gfx_top, silk_gfx_bot)} "
+                    f"python={(ref_top, ref_bot)}")
+    else:
+        silk_gfx_top, silk_gfx_bot = _collect_doc_silk_gfx_py(doc)
     occupied += silk_gfx_top
     occupied = _BoxIndex(occupied)
     occupied_bot = _BoxIndex(

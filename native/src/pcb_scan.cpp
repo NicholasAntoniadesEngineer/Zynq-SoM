@@ -229,6 +229,36 @@ std::pair<std::vector<Box4>, std::vector<Box4>> collect_fp_silk_gfx(
     return {std::move(top), std::move(bot)};
 }
 
+std::pair<std::vector<Box4>, std::vector<Box4>> collect_doc_silk_gfx(
+    const Sexpr& doc) {
+    std::vector<Box4> top;
+    std::vector<Box4> bot;
+    if (!std::holds_alternative<SexprList>(doc.v)) {
+        return {top, bot};
+    }
+    const SexprList& nodes = std::get<SexprList>(doc.v);
+    for (const Sexpr& node : nodes) {
+        if (!std::holds_alternative<SexprList>(node.v)) {
+            continue;
+        }
+        const SexprList& lst = std::get<SexprList>(node.v);
+        if (lst.empty()) {
+            continue;
+        }
+        try {
+            if (py_str(lst[0]) != "footprint") {
+                continue;
+            }
+        } catch (const std::runtime_error&) {
+            continue;
+        }
+        auto hit = collect_fp_silk_gfx(node);
+        top.insert(top.end(), hit.first.begin(), hit.first.end());
+        bot.insert(bot.end(), hit.second.begin(), hit.second.end());
+    }
+    return {std::move(top), std::move(bot)};
+}
+
 std::vector<std::tuple<int, int, std::string>> thermal_via_scan(
     const Sexpr& footprint,
     const std::unordered_map<std::string, std::pair<int, std::string>>&

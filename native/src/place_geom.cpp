@@ -66,4 +66,26 @@ std::pair<double, double> rail_decouple_origin(double extent_x0,
             gceil(extent_y1 + 8.0 * unit, unit)};
 }
 
+double farm_compact_col(double col_x, double body_x0, double span,
+                        double hang_stub, double unit) {
+    return std::min(col_x, gfloor(body_x0 - span - 4.0 * hang_stub, unit));
+}
+
+double farm_compact_cy(double ay, double cluster_dy, double body_y1,
+                       double hang_stub, double unit) {
+    return std::max(ay + cluster_dy, gceil(body_y1 + 3.0 * hang_stub, unit));
+}
+
+double farm_lift_cy(double cy, double floor, double hang_stub, double unit) {
+    return std::max(cy, gceil(floor + 4.0 * hang_stub, unit));
+}
+
+double farm_run_ry(double run_cy, double drop) {
+    return run_cy - drop;
+}
+
+double farm_run_mid(double first, double last, double unit) {
+    return gsnap((first + last) / 2.0, unit);
+}
+
 }  // namespace schgen

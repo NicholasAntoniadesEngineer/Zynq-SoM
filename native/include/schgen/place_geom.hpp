@@ -32,4 +32,16 @@ double conn_flag_x0(double flag_pitch, int rail_count, double unit);
 std::pair<double, double> rail_decouple_origin(double extent_x0,
                                                double extent_y1, double unit);
 
+double farm_compact_col(double col_x, double body_x0, double span,
+                        double hang_stub, double unit);
+
+double farm_compact_cy(double ay, double cluster_dy, double body_y1,
+                       double hang_stub, double unit);
+
+double farm_lift_cy(double cy, double floor, double hang_stub, double unit);
+
+double farm_run_ry(double run_cy, double drop);
+
+double farm_run_mid(double first, double last, double unit);
+
 }  // namespace schgen

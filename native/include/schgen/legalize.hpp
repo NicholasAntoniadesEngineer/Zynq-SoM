@@ -58,6 +58,16 @@ std::pair<double, double> constraint_bounds(int node,
                                             const std::vector<double>& pos);
 std::optional<double> min_box_gap(const std::vector<Box4>& a,
                                   const std::vector<Box4>& b);
+
+bool gap_over_limit(std::optional<double> dist, double lim);
+
+bool gap_under_limit(std::optional<double> dist, double lim);
+
+std::optional<double> min_present(std::optional<double> a,
+                                  std::optional<double> b);
+
+std::optional<std::pair<std::string, double>> nearest_named(
+    const std::vector<std::pair<std::string, double>>& rows);
 std::optional<Box4> pad_union_hull(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         pad_union);
