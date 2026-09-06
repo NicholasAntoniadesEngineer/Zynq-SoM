@@ -2307,7 +2307,6 @@ def _cross_estimator(plan: Plan, zg, sheets):
         SOM_DECOUPLING_INSET,
         som_decoupling_grid,
     )
-    from schgen.generate.ratsnest import _mst_edges
 
     idx_path = PROJECT_ROOT / "sheet_index.json"
     sheet_index = (_json.loads(idx_path.read_text())
@@ -2519,23 +2518,57 @@ def _cross_estimator(plan: Plan, zg, sheets):
         cross = 0.0
         for nname in (nets_by_sheet.get(only_sheet, ())
                       if only_sheet else net_names):
-            pts = [(round(part_pos[r][0] + rx, 3),
-                    round(part_pos[r][1] + ry, 3), r, s)
-                   for r, s, byk in net_pts[nname] if r in part_pos
-                   for rx, ry in byk[sel.get(s, 0) if len(byk) > 1 else 0]]
-            via_mm = via_of[nname]
-            for a, b in _mst_edges(pts):
-                if pts[a][3] != pts[b][3]:
-                    cross += ((pts[a][0] - pts[b][0]) ** 2
-                              + (pts[a][1] - pts[b][1]) ** 2) ** 0.5
-                    if (via_mm and bot_sel
-                            and (pts[a][3] in bot_sel or pts[b][3] in bot_sel)
-                            and _pt_side(pts[a][2], pts[a][3])
-                            != _pt_side(pts[b][2], pts[b][3])):
-                        cross += via_mm
+            pts: list[tuple[float, float, str, str]] = []
+            sides: list[str] = []
+            for r, s, byk in net_pts[nname]:
+                if r not in part_pos:
+                    continue
+                for rx, ry in byk[sel.get(s, 0) if len(byk) > 1 else 0]:
+                    pts.append((round(part_pos[r][0] + rx, 3),
+                                round(part_pos[r][1] + ry, 3), r, s))
+                    sides.append(_pt_side(r, s))
+            cross += _cross_net_cost(pts, via_of[nname], bot_sel, sides)
         return cross
 
     return evaluate
+
+
+def _cross_net_cost_py(pts, via_mm, bot_sel, sides) -> float:
+    from schgen.generate.ratsnest import _mst_edges
+    cross = 0.0
+    for a, b in _mst_edges(pts):
+        if pts[a][3] != pts[b][3]:
+            cross += ((pts[a][0] - pts[b][0]) ** 2
+                      + (pts[a][1] - pts[b][1]) ** 2) ** 0.5
+            if (via_mm and bot_sel
+                    and (pts[a][3] in bot_sel or pts[b][3] in bot_sel)
+                    and sides[a] != sides[b]):
+                cross += via_mm
+    return cross
+
+
+def _cross_net_cost(pts, via_mm, bot_sel, sides) -> float:
+    if _nat.loaded():
+        sheet_ids: dict[str, int] = {}
+        sheet_list: list[str] = []
+        encoded: list[tuple[float, float, int, int]] = []
+        for (x, y, _ref, sheet), side in zip(pts, sides, strict=True):
+            sid = sheet_ids.get(sheet)
+            if sid is None:
+                sid = len(sheet_list)
+                sheet_ids[sheet] = sid
+                sheet_list.append(sheet)
+            encoded.append((x, y, sid, 0 if side == "top" else 1))
+        flags = [1 if sheet in bot_sel else 0 for sheet in sheet_list]
+        got = float(_nat.module().cross_net_cost(encoded, float(via_mm), flags))
+        if _nat.trace():
+            ref = _cross_net_cost_py(pts, via_mm, bot_sel, sides)
+            if got != ref:
+                raise AssertionError(
+                    "native cross_net_cost DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _cross_net_cost_py(pts, via_mm, bot_sel, sides)
 
 
 def _nets_by_sheet(net_pts: dict) -> dict[str, tuple[str, ...]]:

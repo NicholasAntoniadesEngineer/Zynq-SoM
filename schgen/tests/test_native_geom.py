@@ -2083,6 +2083,80 @@ def test_courtyard_pad_scan_and_fanout_policy_match_python(geom, monkeypatch):
     assert _zone_fanout_members_rows(rows) == ref
 
 
+def test_cross_reorder_and_visual_kernels_match_python(geom, monkeypatch):
+    from schgen.generate.floorplan import _cross_net_cost, _cross_net_cost_py
+    from schgen.generate.pcb.placement import (
+        _reorder_cluster_assign,
+        _reorder_cluster_assign_py,
+    )
+    from schgen.verify.visual_gate import (
+        Seg,
+        _collinear_overlap,
+        _collinear_overlap_py,
+        _cross,
+        _cross_py,
+    )
+    from schgen.generate.pcb import placement as pl
+    from schgen.verify import visual_gate as vg
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    monkeypatch.setattr(pl._nat, "trace", lambda: True)
+    monkeypatch.setattr(vg._nat, "trace", lambda: True)
+
+    pts = [
+        (0.0, 0.0, "R1", "power"),
+        (4.0, 0.0, "R2", "io"),
+        (4.0, 3.0, "U1", "io"),
+        (1.0, 2.0, "C1", "power"),
+    ]
+    sides = ["top", "bottom", "bottom", "top"]
+    bot_sel = {"io": 1}
+    for via in (0.0, 0.8):
+        ref = _cross_net_cost_py(pts, via, bot_sel, sides)
+        encoded = []
+        sheets = []
+        ids = {}
+        for (x, y, _r, s), side in zip(pts, sides):
+            if s not in ids:
+                ids[s] = len(sheets)
+                sheets.append(s)
+            encoded.append((x, y, ids[s], 0 if side == "top" else 1))
+        flags = [1 if s in bot_sel else 0 for s in sheets]
+        assert geom.cross_net_cost(encoded, via, flags) == ref
+        assert _cross_net_cost(pts, via, bot_sel, sides) == ref
+
+    segs = [
+        [[(0.0, 0.0, 2.0, 2.0), (0.0, 1.0, 3.0, 1.0)],
+         [(1.0, 0.0, 1.0, 3.0)]],
+        [[(0.5, 0.5, 2.5, 2.5)],
+         [(2.0, 0.0, 2.0, 3.0), (0.0, 2.0, 3.0, 2.0)]],
+    ]
+    init = [0, 1]
+    ref = _reorder_cluster_assign_py(segs, init, 6)
+    got = geom.reorder_cluster_assign(segs, init, 6)
+    assert (int(got[0]), int(got[1]), [int(v) for v in got[2]]) == ref
+    assert _reorder_cluster_assign(segs, init, 6) == ref
+
+    pairs = (
+        Seg(0.0, 1.0, 4.0, 1.0, "a"),
+        Seg(2.0, 0.0, 2.0, 3.0, "b"),
+        Seg(0.0, 1.0, 2.0, 1.0, "c"),
+        Seg(1.5, 1.0, 3.5, 1.0, "d"),
+        Seg(0.0, 0.0, 0.0, 2.0, "e"),
+        Seg(0.0, 1.5, 0.0, 3.0, "f"),
+        Seg(0.0, 0.0, 1.0, 1.0, "g"),
+    )
+    for a in pairs:
+        for b in pairs:
+            assert geom.visual_hv_cross(
+                a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1) == _cross_py(
+                    a, b)
+            assert _cross(a, b) == _cross_py(a, b)
+            assert geom.collinear_overlap(
+                a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1) == (
+                    _collinear_overlap_py(a, b))
+            assert _collinear_overlap(a, b) == _collinear_overlap_py(a, b)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

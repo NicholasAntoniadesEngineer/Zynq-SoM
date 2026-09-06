@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <limits>
 #include <stdexcept>
@@ -428,6 +429,48 @@ std::vector<std::pair<int, int>> mst_manhattan(
         }
     }
     return edges;
+}
+
+double cross_net_cost(
+    const std::vector<std::tuple<double, double, int, int>>& pts,
+    double via_mm, const std::vector<std::uint8_t>& sheet_is_bot) {
+    std::vector<std::pair<double, double>> xy;
+    xy.reserve(pts.size());
+    for (const auto& p : pts) {
+        xy.emplace_back(std::get<0>(p), std::get<1>(p));
+    }
+    const auto edges = mst_manhattan(xy);
+    bool have_bot = false;
+    for (std::uint8_t flag : sheet_is_bot) {
+        if (flag != 0) {
+            have_bot = true;
+            break;
+        }
+    }
+    double cross = 0.0;
+    for (const auto& e : edges) {
+        const auto& a = pts[static_cast<std::size_t>(e.first)];
+        const auto& b = pts[static_cast<std::size_t>(e.second)];
+        if (std::get<2>(a) == std::get<2>(b)) {
+            continue;
+        }
+        const double dx = std::get<0>(a) - std::get<0>(b);
+        const double dy = std::get<1>(a) - std::get<1>(b);
+        cross += std::sqrt(dx * dx + dy * dy);
+        const int sa = std::get<2>(a);
+        const int sb = std::get<2>(b);
+        const bool a_bot =
+            sa >= 0 && sa < static_cast<int>(sheet_is_bot.size())
+            && sheet_is_bot[static_cast<std::size_t>(sa)] != 0;
+        const bool b_bot =
+            sb >= 0 && sb < static_cast<int>(sheet_is_bot.size())
+            && sheet_is_bot[static_cast<std::size_t>(sb)] != 0;
+        if (via_mm != 0.0 && have_bot && (a_bot || b_bot)
+            && std::get<3>(a) != std::get<3>(b)) {
+            cross += via_mm;
+        }
+    }
+    return cross;
 }
 
 double weighted_median(const std::vector<std::pair<double, double>>& pulls) {

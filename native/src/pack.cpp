@@ -1178,4 +1178,149 @@ zone_fanout_members_rows(
     return out;
 }
 
+namespace {
+
+int fan_cross_count(const std::vector<std::vector<std::vector<Seg2>>>& segs,
+                    const std::vector<int>& assign) {
+    std::vector<Seg2> flat;
+    for (std::size_t i = 0; i < assign.size(); ++i) {
+        const int slot = assign[i];
+        if (slot < 0
+            || static_cast<std::size_t>(slot) >= segs[i].size()) {
+            throw std::runtime_error("reorder_cluster_assign: slot");
+        }
+        const auto& row = segs[i][static_cast<std::size_t>(slot)];
+        flat.insert(flat.end(), row.begin(), row.end());
+    }
+    int n = 0;
+    for (std::size_t a = 0; a < flat.size(); ++a) {
+        for (std::size_t b = a + 1; b < flat.size(); ++b) {
+            if (segments_cross(flat[a].x0, flat[a].y0, flat[a].x1, flat[a].y1,
+                               flat[b].x0, flat[b].y0, flat[b].x1,
+                               flat[b].y1)) {
+                ++n;
+            }
+        }
+    }
+    return n;
+}
+
+}  // namespace
+
+ReorderAssign reorder_cluster_assign(
+    const std::vector<std::vector<std::vector<Seg2>>>& segs,
+    const std::vector<int>& assign0, int sweeps) {
+    if (sweeps < 0) {
+        throw std::runtime_error("reorder_cluster_assign: sweeps required");
+    }
+    if (segs.size() != assign0.size()) {
+        throw std::runtime_error("reorder_cluster_assign: assign size");
+    }
+    std::vector<int> assign = assign0;
+    const int before = fan_cross_count(segs, assign);
+    ReorderAssign out;
+    out.before = before;
+    out.best = before;
+    out.assign = assign;
+    if (before == 0) {
+        return out;
+    }
+    for (int sweep = 0; sweep < sweeps; ++sweep) {
+        bool improved = false;
+        for (std::size_t a = 0; a < assign.size(); ++a) {
+            for (std::size_t b = a + 1; b < assign.size(); ++b) {
+                std::swap(assign[a], assign[b]);
+                const int trial = fan_cross_count(segs, assign);
+                if (trial < out.best) {
+                    out.best = trial;
+                    improved = true;
+                } else {
+                    std::swap(assign[a], assign[b]);
+                }
+            }
+        }
+        if (!improved) {
+            break;
+        }
+    }
+    out.assign = assign;
+    return out;
+}
+
+bool visual_hv_cross(double ax0, double ay0, double ax1, double ay1,
+                     double bx0, double by0, double bx1, double by1) {
+    const double eps = 1e-6;
+    const bool a_h = std::fabs(ay0 - ay1) < eps;
+    const bool a_v = std::fabs(ax0 - ax1) < eps;
+    const bool b_h = std::fabs(by0 - by1) < eps;
+    const bool b_v = std::fabs(bx0 - bx1) < eps;
+    double hx0 = 0.0;
+    double hx1 = 0.0;
+    double hy = 0.0;
+    double vx = 0.0;
+    double vy0 = 0.0;
+    double vy1 = 0.0;
+    if (a_h && b_v) {
+        hx0 = ax0;
+        hx1 = ax1;
+        hy = ay0;
+        vx = bx0;
+        vy0 = by0;
+        vy1 = by1;
+    } else if (a_v && b_h) {
+        hx0 = bx0;
+        hx1 = bx1;
+        hy = by0;
+        vx = ax0;
+        vy0 = ay0;
+        vy1 = ay1;
+    } else {
+        return false;
+    }
+    if (hx0 > hx1) {
+        std::swap(hx0, hx1);
+    }
+    if (vy0 > vy1) {
+        std::swap(vy0, vy1);
+    }
+    return (hx0 + eps < vx && vx < hx1 - eps)
+        && (vy0 + eps < hy && hy < vy1 - eps);
+}
+
+bool collinear_overlap(double ax0, double ay0, double ax1, double ay1,
+                       double bx0, double by0, double bx1, double by1) {
+    const double eps = 1e-6;
+    const bool a_h = std::fabs(ay0 - ay1) < eps;
+    const bool b_h = std::fabs(by0 - by1) < eps;
+    const bool a_v = std::fabs(ax0 - ax1) < eps;
+    const bool b_v = std::fabs(bx0 - bx1) < eps;
+    if (a_h && b_h && std::fabs(ay0 - by0) < eps) {
+        double a0 = ax0;
+        double a1 = ax1;
+        double b0 = bx0;
+        double b1 = bx1;
+        if (a0 > a1) {
+            std::swap(a0, a1);
+        }
+        if (b0 > b1) {
+            std::swap(b0, b1);
+        }
+        return std::min(a1, b1) - std::max(a0, b0) > eps;
+    }
+    if (a_v && b_v && std::fabs(ax0 - bx0) < eps) {
+        double a0 = ay0;
+        double a1 = ay1;
+        double b0 = by0;
+        double b1 = by1;
+        if (a0 > a1) {
+            std::swap(a0, a1);
+        }
+        if (b0 > b1) {
+            std::swap(b0, b1);
+        }
+        return std::min(a1, b1) - std::max(a0, b0) > eps;
+    }
+    return false;
+}
+
 }  // namespace schgen

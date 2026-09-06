@@ -639,6 +639,11 @@ NB_MODULE(_geom, m) {
               }
               return out;
           });
+    m.def("cross_net_cost",
+          [](const std::vector<std::tuple<double, double, int, int>>& pts,
+             double via_mm, const std::vector<std::uint8_t>& sheet_is_bot) {
+              return schgen::cross_net_cost(pts, via_mm, sheet_is_bot);
+          });
     m.def("weighted_median",
           [](const std::vector<std::tuple<double, double>>& pulls) {
               std::vector<std::pair<double, double>> rows;
@@ -808,6 +813,24 @@ NB_MODULE(_geom, m) {
           nb::arg("label"), nb::arg("size"), nb::arg("occupied"),
           nb::arg("placed") = nb::none(), nb::arg("bounds") = nb::none());
     m.def("segments_cross", &schgen::segments_cross);
+    m.def("visual_hv_cross", &schgen::visual_hv_cross);
+    m.def("collinear_overlap", &schgen::collinear_overlap);
+    m.def("reorder_cluster_assign",
+          [](const std::vector<std::vector<std::vector<BoxTup>>>& segs,
+             const std::vector<int>& assign0, int sweeps) {
+              std::vector<std::vector<std::vector<schgen::Seg2>>> rows;
+              rows.reserve(segs.size());
+              for (const auto& member : segs) {
+                  std::vector<std::vector<schgen::Seg2>> slots;
+                  slots.reserve(member.size());
+                  for (const auto& slot : member) {
+                      slots.push_back(as_segs(slot));
+                  }
+                  rows.push_back(std::move(slots));
+              }
+              auto hit = schgen::reorder_cluster_assign(rows, assign0, sweeps);
+              return std::make_tuple(hit.before, hit.best, hit.assign);
+          });
     m.def("boxes_union",
           [](const std::vector<BoxTup>& boxes) -> std::optional<BoxTup> {
               auto hit = schgen::boxes_union(as_boxes(boxes));

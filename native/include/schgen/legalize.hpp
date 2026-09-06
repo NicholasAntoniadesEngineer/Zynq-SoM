@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -124,6 +125,9 @@ std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes(
     double hop_weight, double seed_weight, int median_passes);
 std::vector<std::pair<int, int>> mst_manhattan(
     const std::vector<std::pair<double, double>>& pts);
+double cross_net_cost(
+    const std::vector<std::tuple<double, double, int, int>>& pts,
+    double via_mm, const std::vector<std::uint8_t>& sheet_is_bot);
 double weighted_median(const std::vector<std::pair<double, double>>& pulls);
 bool constraint_edges_ok(const std::vector<int>& src,
                          const std::vector<int>& dst,

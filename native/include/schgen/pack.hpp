@@ -239,4 +239,19 @@ zone_fanout_members_rows(
     int min_subject_pins,
     const std::vector<std::tuple<int, double>>& need_tiers, double top_need);
 
+struct ReorderAssign {
+    int before = 0;
+    int best = 0;
+    std::vector<int> assign;
+};
+
+ReorderAssign reorder_cluster_assign(
+    const std::vector<std::vector<std::vector<Seg2>>>& segs,
+    const std::vector<int>& assign0, int sweeps);
+
+bool visual_hv_cross(double ax0, double ay0, double ax1, double ay1,
+                     double bx0, double by0, double bx1, double by1);
+bool collinear_overlap(double ax0, double ay0, double ax1, double ay1,
+                       double bx0, double by0, double bx1, double by1);
+
 }  // namespace schgen

@@ -1101,6 +1101,59 @@ def _segments_cross(s1: tuple, s2: tuple) -> bool:
     return _segments_cross_py(s1, s2)
 
 
+def _reorder_cluster_assign_py(
+    segs_xy: list[list[list[tuple[float, float, float, float]]]],
+    assign0: list[int],
+    sweeps: int,
+) -> tuple[int, int, list[int]]:
+    def fan(assign: list[int]) -> int:
+        segs = [((x0, y0), (x1, y1))
+                for i, slot in enumerate(assign)
+                for x0, y0, x1, y1 in segs_xy[i][slot]]
+        return sum(1 for a in range(len(segs))
+                   for b in range(a + 1, len(segs))
+                   if _segments_cross(segs[a], segs[b]))
+
+    assign = list(assign0)
+    before = fan(assign)
+    best = before
+    if before == 0:
+        return before, best, assign
+    for _sweep in range(sweeps):
+        improved = False
+        for a in range(len(assign)):
+            for b in range(a + 1, len(assign)):
+                assign[a], assign[b] = assign[b], assign[a]
+                trial = fan(assign)
+                if trial < best:
+                    best = trial
+                    improved = True
+                else:
+                    assign[a], assign[b] = assign[b], assign[a]
+        if not improved:
+            break
+    return before, best, assign
+
+
+def _reorder_cluster_assign(
+    segs_xy: list[list[list[tuple[float, float, float, float]]]],
+    assign0: list[int],
+    sweeps: int,
+) -> tuple[int, int, list[int]]:
+    if _nat.loaded():
+        before, best, out = _nat.module().reorder_cluster_assign(
+            segs_xy, list(assign0), sweeps)
+        got = (int(before), int(best), [int(v) for v in out])
+        if _nat.trace():
+            ref = _reorder_cluster_assign_py(segs_xy, assign0, sweeps)
+            if got != ref:
+                raise AssertionError(
+                    "native reorder_cluster_assign DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _reorder_cluster_assign_py(segs_xy, assign0, sweeps)
+
+
 def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
                              refs_by_sheet: dict[str, list[str]],
                              side_of: dict[str, str],
@@ -1220,38 +1273,21 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
                             segs.append(((px, py), (tgt[0], tgt[1])))
                         seg_of[(m, si)] = segs
 
-                def fan(assign: dict[str, int],
-                        _seg=seg_of, _ml=mlist) -> int:
-                    segs = [s for m in _ml for s in _seg[(m, assign[m])]]
-                    return sum(1 for a in range(len(segs))
-                               for b in range(a + 1, len(segs))
-                               if _segments_cross(segs[a], segs[b]))
-
                 order0 = sorted(cluster, key=lambda m: (pos[m][ai], m))
-                assign = {m: i for i, m in enumerate(order0)}
-                before = fan(assign)
-                if before == 0:
-                    continue
-                best = before
-                for _sweep in range(6):
-                    improved = False
-                    for a in range(len(mlist)):
-                        for b in range(a + 1, len(mlist)):
-                            ma, mb = mlist[a], mlist[b]
-                            assign[ma], assign[mb] = assign[mb], assign[ma]
-                            trial = fan(assign)
-                            if trial < best:
-                                best = trial
-                                improved = True
-                            else:
-                                assign[ma], assign[mb] = \
-                                    assign[mb], assign[ma]
-                    if not improved:
-                        break
+                assign_map = {m: i for i, m in enumerate(order0)}
+                segs_xy = []
+                for m in mlist:
+                    segs_xy.append([
+                        [(p[0][0], p[0][1], p[1][0], p[1][1])
+                         for p in seg_of[(m, si)]]
+                        for si in range(len(slots))
+                    ])
+                init = [assign_map[m] for m in mlist]
+                before, best, out = _reorder_cluster_assign(segs_xy, init, 6)
                 if best == before:
                     continue
-                for m in mlist:
-                    pos[m] = slots[assign[m]]
+                for i, m in enumerate(mlist):
+                    pos[m] = slots[out[i]]
                 report.setdefault(sheet, []).append(
                     (f"{axis}-{len(cluster)}", before, best))
     return report

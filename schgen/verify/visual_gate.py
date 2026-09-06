@@ -68,7 +68,7 @@ class VisualResult:
 _TEXT = {"pin_name", "pin_number", "reference", "value", "label"}
 
 
-def _cross(a: Seg, b: Seg) -> bool:
+def _cross_py(a: Seg, b: Seg) -> bool:
     if a.horizontal and b.vertical:
         h, v = a, b
     elif a.vertical and b.horizontal:
@@ -81,7 +81,21 @@ def _cross(a: Seg, b: Seg) -> bool:
     return (hx0 + eps < v.x0 < hx1 - eps) and (vy0 + eps < h.y0 < vy1 - eps)
 
 
-def _collinear_overlap(a: Seg, b: Seg) -> bool:
+def _cross(a: Seg, b: Seg) -> bool:
+    if _nat.loaded():
+        got = bool(_nat.module().visual_hv_cross(
+            a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1))
+        if _nat.trace():
+            ref = _cross_py(a, b)
+            if got is not ref:
+                raise AssertionError(
+                    "native visual_hv_cross DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _cross_py(a, b)
+
+
+def _collinear_overlap_py(a: Seg, b: Seg) -> bool:
     eps = 1e-6
     if a.horizontal and b.horizontal and abs(a.y0 - b.y0) < eps:
         a0, a1 = sorted((a.x0, a.x1))
@@ -92,6 +106,20 @@ def _collinear_overlap(a: Seg, b: Seg) -> bool:
         b0, b1 = sorted((b.y0, b.y1))
         return min(a1, b1) - max(a0, b0) > eps
     return False
+
+
+def _collinear_overlap(a: Seg, b: Seg) -> bool:
+    if _nat.loaded():
+        got = bool(_nat.module().collinear_overlap(
+            a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1))
+        if _nat.trace():
+            ref = _collinear_overlap_py(a, b)
+            if got is not ref:
+                raise AssertionError(
+                    "native collinear_overlap DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _collinear_overlap_py(a, b)
 
 
 def _point_on_seg_py(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
