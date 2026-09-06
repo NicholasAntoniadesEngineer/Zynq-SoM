@@ -204,4 +204,18 @@ RefdesMove place_refdes(
     double min_size, double box_pad, double far_off, double pen_eps,
     double off_improve, const std::vector<double>& shrinks);
 
+std::vector<Box4> som_keepout_rects(
+    double som_x, double som_y, double som_w, double som_h, double occ_pad,
+    const std::vector<std::tuple<double, double, double, double>>& connectors,
+    double seat_band);
+
+std::vector<Comp> zone_components_assemble(
+    const std::vector<Box4>& minor_boxes, const std::vector<Box4>& punch_boxes,
+    int minor_mask, int punch_mask);
+
+std::pair<double, double> part_dims_from_name(
+    const std::string& name,
+    const std::vector<std::tuple<std::string, double, double>>& fixed_dims,
+    double default_w, double default_h);
+
 }  // namespace schgen

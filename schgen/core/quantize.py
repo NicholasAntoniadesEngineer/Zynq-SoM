@@ -99,6 +99,8 @@ _register(
 
 def evict_corridor_grid(origin: float, v: float) -> float:
     _bump("evict_corridor_grid")
+    if _nat.loaded():
+        return _nat.module().evict_corridor_grid(origin, v)
     return round(fixed_part_grid(origin + v) - origin, 4)
 
 

@@ -9,6 +9,7 @@
 #include "schgen/turn.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -643,6 +644,397 @@ std::pair<Sexpr, int> hide_undersom_bottom_refs(
         }
     }
     return {std::move(doc), hidden};
+}
+
+namespace {
+
+void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
+                         std::vector<double>* ys) {
+    for (const Sexpr& child : node) {
+        if (!std::holds_alternative<SexprList>(child.v)) {
+            continue;
+        }
+        const SexprList& sub = std::get<SexprList>(child.v);
+        if (sub.empty()) {
+            continue;
+        }
+        const bool gfx = is_sym(sub[0], "fp_line") || is_sym(sub[0], "fp_rect")
+            || is_sym(sub[0], "fp_poly") || is_sym(sub[0], "fp_circle")
+            || is_sym(sub[0], "fp_arc");
+        if (gfx) {
+            const SexprList* lyr = find_tagged_child(sub, "layer");
+            if (lyr == nullptr || lyr->size() <= 1) {
+                continue;
+            }
+            const std::string layer = py_str((*lyr)[1]);
+            if (layer.find("CrtYd") == std::string::npos) {
+                continue;
+            }
+            if (is_sym(sub[0], "fp_circle")) {
+                const SexprList* ctr = find_tagged_child(sub, "center");
+                const SexprList* end = find_tagged_child(sub, "end");
+                if (ctr != nullptr && end != nullptr && ctr->size() >= 3
+                    && end->size() >= 3 && is_number((*ctr)[1])
+                    && is_number((*ctr)[2]) && is_number((*end)[1])
+                    && is_number((*end)[2])) {
+                    const double cxf = std::get<double>((*ctr)[1].v);
+                    const double cyf = std::get<double>((*ctr)[2].v);
+                    const double dx = std::get<double>((*end)[1].v) - cxf;
+                    const double dy = std::get<double>((*end)[2].v) - cyf;
+                    const double radius = std::sqrt(dx * dx + dy * dy);
+                    xs->push_back(cxf - radius);
+                    ys->push_back(cyf - radius);
+                    xs->push_back(cxf + radius);
+                    ys->push_back(cyf + radius);
+                }
+            }
+            for (const char* tag : {"start", "end", "mid", "center"}) {
+                const SexprList* p = find_tagged_child(sub, tag);
+                if (p != nullptr && p->size() >= 3 && is_number((*p)[1])
+                    && is_number((*p)[2])) {
+                    xs->push_back(std::get<double>((*p)[1].v));
+                    ys->push_back(std::get<double>((*p)[2].v));
+                }
+            }
+            const SexprList* ptsn = find_tagged_child(sub, "pts");
+            if (ptsn != nullptr) {
+                for (const Sexpr& xy : *ptsn) {
+                    if (!std::holds_alternative<SexprList>(xy.v)) {
+                        continue;
+                    }
+                    const SexprList& row = std::get<SexprList>(xy.v);
+                    if (row.size() >= 3 && is_sym(row[0], "xy")
+                        && is_number(row[1]) && is_number(row[2])) {
+                        xs->push_back(std::get<double>(row[1].v));
+                        ys->push_back(std::get<double>(row[2].v));
+                    }
+                }
+            }
+            continue;
+        }
+        if (is_sym(sub[0], "pad")) {
+            const SexprList* at = find_tagged_child(sub, "at");
+            const SexprList* size = find_tagged_child(sub, "size");
+            if (at == nullptr || size == nullptr || at->size() < 3
+                || size->size() < 3 || !is_number((*at)[1])
+                || !is_number((*at)[2]) || !is_number((*size)[1])
+                || !is_number((*size)[2])) {
+                continue;
+            }
+            const double px = std::get<double>((*at)[1].v);
+            const double py = std::get<double>((*at)[2].v);
+            double deg = 0.0;
+            if (at->size() > 3 && is_number((*at)[3])) {
+                deg = std::get<double>((*at)[3].v);
+            }
+            const auto half = pad_half_extent(std::get<double>((*size)[1].v),
+                                              std::get<double>((*size)[2].v),
+                                              deg);
+            xs->push_back(px - half.first);
+            ys->push_back(py - half.second);
+            xs->push_back(px + half.first);
+            ys->push_back(py + half.second);
+            continue;
+        }
+        footprint_bbox_walk(sub, xs, ys);
+    }
+}
+
+std::vector<double> scan_floats(const std::string& text) {
+    std::vector<double> out;
+    const std::size_t n = text.size();
+    std::size_t i = 0;
+    while (i < n) {
+        if (text[i] == '-' && i + 1 < n
+            && std::isdigit(static_cast<unsigned char>(text[i + 1]))) {
+            const std::size_t start = i;
+            i += 2;
+            while (i < n && std::isdigit(static_cast<unsigned char>(text[i]))) {
+                ++i;
+            }
+            if (i < n && text[i] == '.' && i + 1 < n
+                && std::isdigit(static_cast<unsigned char>(text[i + 1]))) {
+                i += 2;
+                while (i < n
+                       && std::isdigit(static_cast<unsigned char>(text[i]))) {
+                    ++i;
+                }
+            }
+            out.push_back(std::stod(text.substr(start, i - start)));
+            continue;
+        }
+        if (std::isdigit(static_cast<unsigned char>(text[i]))) {
+            const std::size_t start = i;
+            ++i;
+            while (i < n && std::isdigit(static_cast<unsigned char>(text[i]))) {
+                ++i;
+            }
+            if (i < n && text[i] == '.' && i + 1 < n
+                && std::isdigit(static_cast<unsigned char>(text[i + 1]))) {
+                i += 2;
+                while (i < n
+                       && std::isdigit(static_cast<unsigned char>(text[i]))) {
+                    ++i;
+                }
+            }
+            out.push_back(std::stod(text.substr(start, i - start)));
+            continue;
+        }
+        ++i;
+    }
+    return out;
+}
+
+std::string trim_copy(const std::string& raw) {
+    std::size_t a = 0;
+    std::size_t b = raw.size();
+    while (a < b && std::isspace(static_cast<unsigned char>(raw[a]))) {
+        ++a;
+    }
+    while (b > a && std::isspace(static_cast<unsigned char>(raw[b - 1]))) {
+        --b;
+    }
+    return raw.substr(a, b - a);
+}
+
+}  // namespace
+
+Box4 footprint_bbox(const Sexpr& doc, int decimals) {
+    if (decimals < 0) {
+        throw std::runtime_error("footprint_bbox: decimals required");
+    }
+    if (!std::holds_alternative<SexprList>(doc.v)) {
+        throw std::runtime_error("footprint_bbox: list required");
+    }
+    std::vector<double> xs;
+    std::vector<double> ys;
+    footprint_bbox_walk(std::get<SexprList>(doc.v), &xs, &ys);
+    if (xs.empty()) {
+        throw std::runtime_error("footprint_bbox: no measurable extent");
+    }
+    const auto [xmin, xmax] = std::minmax_element(xs.begin(), xs.end());
+    const auto [ymin, ymax] = std::minmax_element(ys.begin(), ys.end());
+    return Box4{py_round(*xmin, decimals), py_round(*ymin, decimals),
+                py_round(*xmax, decimals), py_round(*ymax, decimals)};
+}
+
+SomOutline extract_som_scan(const std::string& text) {
+    std::vector<std::pair<double, double>> edge_pts;
+    std::unordered_map<std::string, std::tuple<double, double, double, double,
+                                               double>>
+        js_raw;
+    bool in_gr = false;
+    std::vector<std::pair<double, double>> gr_pts;
+    bool in_fp = false;
+    bool have_fp_at = false;
+    double fp_x = 0.0;
+    double fp_y = 0.0;
+    double fp_rot = 0.0;
+    std::string fp_ref;
+    std::vector<double> pad_xs;
+    std::vector<double> pad_ys;
+    bool pad_pending = false;
+    bool have_pad_at = false;
+    double pad_at_x = 0.0;
+    double pad_at_y = 0.0;
+
+    auto commit_fp = [&]() {
+        if (in_fp && (fp_ref == "J1" || fp_ref == "J2" || fp_ref == "J3")
+            && have_fp_at && !pad_xs.empty()) {
+            const auto [xmin, xmax] = std::minmax_element(pad_xs.begin(),
+                                                          pad_xs.end());
+            const auto [ymin, ymax] = std::minmax_element(pad_ys.begin(),
+                                                          pad_ys.end());
+            js_raw[fp_ref] = std::make_tuple(fp_x, fp_y, fp_rot, *xmax - *xmin,
+                                             *ymax - *ymin);
+        }
+        in_fp = false;
+    };
+
+    std::size_t line_start = 0;
+    while (line_start <= text.size()) {
+        std::size_t line_end = text.find('\n', line_start);
+        if (line_end == std::string::npos) {
+            line_end = text.size();
+        }
+        const std::string raw = text.substr(line_start, line_end - line_start);
+        if (line_end == text.size()) {
+            line_start = text.size() + 1;
+        } else {
+            line_start = line_end + 1;
+        }
+        const std::string s = trim_copy(raw);
+        if (s.rfind("(gr_line", 0) == 0 || s.rfind("(gr_arc", 0) == 0) {
+            commit_fp();
+            in_gr = true;
+            gr_pts.clear();
+            continue;
+        }
+        if (in_gr) {
+            if (s.rfind("(start ", 0) == 0 || s.rfind("(mid ", 0) == 0
+                || s.rfind("(end ", 0) == 0) {
+                const auto vals = scan_floats(s);
+                if (vals.size() >= 2) {
+                    gr_pts.emplace_back(vals[0], vals[1]);
+                }
+            } else if (s.rfind("(layer ", 0) == 0) {
+                if (s.find("\"Edge.Cuts\"") != std::string::npos) {
+                    edge_pts.insert(edge_pts.end(), gr_pts.begin(),
+                                    gr_pts.end());
+                }
+                in_gr = false;
+            }
+            continue;
+        }
+        if (s.rfind("(footprint ", 0) == 0) {
+            commit_fp();
+            in_fp = true;
+            have_fp_at = false;
+            fp_ref.clear();
+            pad_xs.clear();
+            pad_ys.clear();
+            pad_pending = false;
+            have_pad_at = false;
+            continue;
+        }
+        if (!in_fp) {
+            continue;
+        }
+        if (!have_fp_at && s.rfind("(at ", 0) == 0) {
+            const auto vals = scan_floats(s);
+            if (vals.size() < 2) {
+                throw std::runtime_error("extract_som_scan: footprint at");
+            }
+            fp_x = vals[0];
+            fp_y = vals[1];
+            fp_rot = vals.size() > 2 ? vals[2] : 0.0;
+            have_fp_at = true;
+        } else if (s.rfind("(property \"Reference\"", 0) == 0) {
+            std::vector<std::string> quotes;
+            std::size_t q = 0;
+            while (true) {
+                const auto a = s.find('"', q);
+                if (a == std::string::npos) {
+                    break;
+                }
+                const auto b = s.find('"', a + 1);
+                if (b == std::string::npos) {
+                    break;
+                }
+                quotes.push_back(s.substr(a + 1, b - a - 1));
+                q = b + 1;
+            }
+            if (quotes.size() >= 2) {
+                fp_ref = quotes[1];
+            }
+        } else if (s.rfind("(pad ", 0) == 0) {
+            pad_pending = true;
+            have_pad_at = false;
+        } else if (pad_pending && s.rfind("(at ", 0) == 0) {
+            const auto vals = scan_floats(s);
+            if (vals.size() < 2) {
+                throw std::runtime_error("extract_som_scan: pad at");
+            }
+            pad_at_x = vals[0];
+            pad_at_y = vals[1];
+            have_pad_at = true;
+        } else if (pad_pending && have_pad_at && s.rfind("(size ", 0) == 0) {
+            const auto vals = scan_floats(s);
+            if (vals.size() < 2) {
+                throw std::runtime_error("extract_som_scan: pad size");
+            }
+            pad_xs.push_back(pad_at_x - vals[0] / 2.0);
+            pad_xs.push_back(pad_at_x + vals[0] / 2.0);
+            pad_ys.push_back(pad_at_y - vals[1] / 2.0);
+            pad_ys.push_back(pad_at_y + vals[1] / 2.0);
+            pad_pending = false;
+        }
+    }
+    commit_fp();
+    if (edge_pts.empty()) {
+        throw std::runtime_error("extract_som_scan: Edge.Cuts required");
+    }
+    if (js_raw.find("J1") == js_raw.end() || js_raw.find("J2") == js_raw.end()
+        || js_raw.find("J3") == js_raw.end()) {
+        throw std::runtime_error("extract_som_scan: J1 J2 J3 required");
+    }
+    double x0 = edge_pts[0].first;
+    double y0 = edge_pts[0].second;
+    double x1 = x0;
+    double y1 = y0;
+    for (const auto& p : edge_pts) {
+        x0 = std::min(x0, p.first);
+        y0 = std::min(y0, p.second);
+        x1 = std::max(x1, p.first);
+        y1 = std::max(y1, p.second);
+    }
+    const double w = x1 - x0;
+    const double h = y1 - y0;
+    SomOutline out;
+    out.w = py_round(w, 3);
+    out.h = py_round(h, 3);
+    for (const char* ref : {"J1", "J2", "J3"}) {
+        const auto& row = js_raw[ref];
+        const double px = std::get<0>(row);
+        const double py = std::get<1>(row);
+        const double rot = std::get<2>(row);
+        const double pw = std::get<3>(row);
+        const double ph = std::get<4>(row);
+        const bool swap = std::fmod(rot, 180.0) == 90.0;
+        const double ew = swap ? ph : pw;
+        const double eh = swap ? pw : ph;
+        SomJGeom j;
+        j.ref = ref;
+        j.pcb_x = px;
+        j.pcb_y = py;
+        j.rot = rot;
+        j.x = py_round(w - (px - x0), 3);
+        j.y = py_round(py - y0, 3);
+        j.w = py_round(ew, 3);
+        j.h = py_round(eh, 3);
+        out.js.push_back(j);
+    }
+    return out;
+}
+
+std::vector<std::tuple<std::string, double, double, double, double>>
+pad_boxes_named(
+    const std::vector<std::tuple<std::string, double, double, double, double,
+                                 double>>& rows,
+    double rotation) {
+    const double turn = rotation * (M_PI / 180.0);
+    const double cs = std::cos(turn);
+    const double sn = std::sin(turn);
+    std::vector<std::tuple<std::string, double, double, double, double>> out;
+    std::unordered_map<std::string, std::size_t> index;
+    for (const auto& row : rows) {
+        const std::string& name = std::get<0>(row);
+        const double px = std::get<1>(row);
+        const double py = std::get<2>(row);
+        const double prot = std::get<3>(row) * (M_PI / 180.0);
+        const double sw = std::get<4>(row);
+        const double sh = std::get<5>(row);
+        const double cx = px * cs + py * sn;
+        const double cy = -px * sn + py * cs;
+        const double tot = turn + prot;
+        const double ct = std::fabs(std::cos(tot));
+        const double st = std::fabs(std::sin(tot));
+        const double hx = ct * sw / 2.0 + st * sh / 2.0;
+        const double hy = st * sw / 2.0 + ct * sh / 2.0;
+        Box4 box{cx - hx, cy - hy, cx + hx, cy + hy};
+        const auto it = index.find(name);
+        if (it == index.end()) {
+            index[name] = out.size();
+            out.emplace_back(name, box.x0, box.y0, box.x1, box.y1);
+        } else {
+            auto& hit = out[it->second];
+            std::get<1>(hit) = std::min(std::get<1>(hit), box.x0);
+            std::get<2>(hit) = std::min(std::get<2>(hit), box.y0);
+            std::get<3>(hit) = std::max(std::get<3>(hit), box.x1);
+            std::get<4>(hit) = std::max(std::get<4>(hit), box.y1);
+        }
+    }
+    return out;
 }
 
 }  // namespace schgen

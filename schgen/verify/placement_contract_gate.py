@@ -201,19 +201,10 @@ def wired_term_participants() -> tuple[frozenset[str], frozenset[str]]:
 _pad_box_cache: dict[tuple[str, float], dict[str, tuple]] = {}
 
 
-# side-independent: the emitted board applies no F->B mirror to bottom locals
-def _pad_boxes(
-    mod_path: Path, rotation: float
-) -> dict[str, tuple[float, float, float, float]]:
-    key = (str(mod_path), round(rotation or 0.0, 3))
-    hit = _pad_box_cache.get(key)
-    if hit is not None:
-        return hit
-    doc = sexpr.loads(mod_path.read_text())
-    R = math.radians(rotation or 0.0)
-    cs, sn = math.cos(R), math.sin(R)
-    out: dict[str, tuple[float, float, float, float]] = {}
-    for node in doc:
+def _pad_named_rows(mod_path: Path
+                    ) -> list[tuple[str, float, float, float, float, float]]:
+    rows: list[tuple[str, float, float, float, float, float]] = []
+    for node in sexpr.loads(mod_path.read_text()):
         if not (isinstance(node, list) and node and node[0] == Sym("pad")):
             continue
         name = str(node[1]) if len(node) > 1 else ""
@@ -221,11 +212,22 @@ def _pad_boxes(
         sz = sexpr.find(node, "size")
         if not (at and len(at) >= 3):
             continue
-        px, py = float(at[1]), float(at[2])
-        prot = math.radians(
-            float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float))
-            else 0.0)
-        sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 else (0.0, 0.0)
+        prot = float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float)) \
+            else 0.0
+        sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 \
+            else (0.0, 0.0)
+        rows.append((name, float(at[1]), float(at[2]), prot, sw, sh))
+    return rows
+
+
+def _pad_boxes_py(
+    mod_path: Path, rotation: float
+) -> dict[str, tuple[float, float, float, float]]:
+    R = math.radians(rotation or 0.0)
+    cs, sn = math.cos(R), math.sin(R)
+    out: dict[str, tuple[float, float, float, float]] = {}
+    for name, px, py, prot_deg, sw, sh in _pad_named_rows(mod_path):
+        prot = math.radians(prot_deg)
         cx = px * cs + py * sn
         cy = -px * sn + py * cs
         tot = R + prot
@@ -237,6 +239,30 @@ def _pad_boxes(
             o = out[name]
             b = (min(o[0], b[0]), min(o[1], b[1]), max(o[2], b[2]), max(o[3], b[3]))
         out[name] = b
+    return out
+
+
+def _pad_boxes(
+    mod_path: Path, rotation: float
+) -> dict[str, tuple[float, float, float, float]]:
+    key = (str(mod_path), round(rotation or 0.0, 3))
+    hit = _pad_box_cache.get(key)
+    if hit is not None:
+        return hit
+    if _nat.loaded():
+        rows = _pad_named_rows(mod_path)
+        got = {n: (x0, y0, x1, y1)
+               for n, x0, y0, x1, y1 in _nat.module().pad_boxes_named(
+                   rows, rotation or 0.0)}
+        if _nat.trace():
+            ref = _pad_boxes_py(mod_path, rotation)
+            if got != ref:
+                raise AssertionError(
+                    "native pad_boxes_named DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        _pad_box_cache[key] = got
+        return got
+    out = _pad_boxes_py(mod_path, rotation)
     _pad_box_cache[key] = out
     return out
 

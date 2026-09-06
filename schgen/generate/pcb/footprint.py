@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
 from schgen.core.sexpr import Sym
 from schgen.generate import constraints as cst
@@ -107,11 +108,7 @@ def _net_classes(sheets) -> tuple[dict[str, cst.DiffGeometry | None],
 _bbox_cache: dict[str, tuple[float, float, float, float]] = {}
 
 
-def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
-    key = str(mod_path)
-    if key in _bbox_cache:
-        return _bbox_cache[key]
-    doc = sexpr.loads(mod_path.read_text())
+def _footprint_bbox_from_doc_py(doc: list) -> tuple[float, float, float, float]:
     xs: list[float] = []
     ys: list[float] = []
 
@@ -160,11 +157,43 @@ def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
     walk(doc)
     if not xs:
         raise AssertionError(
+            "footprint carries neither a courtyard outline nor a single "
+            "sized pad — it has no measurable extent, and every consumer of "
+            "this bbox (courtyard, clearance, zone packing) would be reading "
+            "invented geometry. Fix the footprint document.")
+    return (round(min(xs), BBOX_DECIMALS), round(min(ys), BBOX_DECIMALS),
+            round(max(xs), BBOX_DECIMALS), round(max(ys), BBOX_DECIMALS))
+
+
+def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
+    key = str(mod_path)
+    if key in _bbox_cache:
+        return _bbox_cache[key]
+    text = mod_path.read_text()
+    if _nat.loaded():
+        try:
+            got = tuple(_nat.module().footprint_bbox(text, BBOX_DECIMALS))
+        except RuntimeError as exc:
+            raise AssertionError(
+                f"{mod_path} carries neither a courtyard outline nor a single "
+                f"sized pad — it has no measurable extent, and every consumer of "
+                f"this bbox (courtyard, clearance, zone packing) would be reading "
+                f"invented geometry. Fix the footprint document.") from exc
+        if _nat.trace():
+            ref = _footprint_bbox_from_doc_py(sexpr.loads(text))
+            if got != ref:
+                raise AssertionError(
+                    "native footprint_bbox DIVERGENCE: "
+                    f"cpp={got} python={ref} path={mod_path}")
+        _bbox_cache[key] = got
+        return got
+    try:
+        bbox = _footprint_bbox_from_doc_py(sexpr.loads(text))
+    except AssertionError as exc:
+        raise AssertionError(
             f"{mod_path} carries neither a courtyard outline nor a single "
             f"sized pad — it has no measurable extent, and every consumer of "
             f"this bbox (courtyard, clearance, zone packing) would be reading "
-            f"invented geometry. Fix the footprint document.")
-    bbox = (round(min(xs), BBOX_DECIMALS), round(min(ys), BBOX_DECIMALS),
-            round(max(xs), BBOX_DECIMALS), round(max(ys), BBOX_DECIMALS))
+            f"invented geometry. Fix the footprint document.") from exc
     _bbox_cache[key] = bbox
     return bbox

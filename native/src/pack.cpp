@@ -1,12 +1,14 @@
 #include "schgen/pack.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <numeric>
 #include <set>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 
 namespace schgen {
@@ -953,6 +955,132 @@ RefdesMove place_refdes(
     const double dy = ty - fy;
     return RefdesMove{true, py_round(dx * ca - dy * sa, 4),
                       py_round(dx * sa + dy * ca, 4), new_size, nbox};
+}
+
+std::vector<Box4> som_keepout_rects(
+    double som_x, double som_y, double som_w, double som_h, double occ_pad,
+    const std::vector<std::tuple<double, double, double, double>>& connectors,
+    double seat_band) {
+    std::vector<Box4> out;
+    out.push_back(Box4{som_x - occ_pad, som_y - occ_pad,
+                       som_x + som_w + occ_pad, som_y + som_h + occ_pad});
+    for (const auto& row : connectors) {
+        const double jx = std::get<0>(row);
+        const double jy = std::get<1>(row);
+        const double jw = std::get<2>(row);
+        const double jh = std::get<3>(row);
+        out.push_back(Box4{som_x + jx - jw / 2.0 - seat_band,
+                           som_y + jy - jh / 2.0 - seat_band,
+                           som_x + jx + jw / 2.0 + seat_band,
+                           som_y + jy + jh / 2.0 + seat_band});
+    }
+    return out;
+}
+
+std::vector<Comp> zone_components_assemble(
+    const std::vector<Box4>& minor_boxes, const std::vector<Box4>& punch_boxes,
+    int minor_mask, int punch_mask) {
+    std::vector<Comp> out;
+    if (!minor_boxes.empty()) {
+        double x0 = minor_boxes[0].x0;
+        double y0 = minor_boxes[0].y0;
+        double x1 = minor_boxes[0].x1;
+        double y1 = minor_boxes[0].y1;
+        for (const auto& box : minor_boxes) {
+            x0 = std::min(x0, box.x0);
+            y0 = std::min(y0, box.y0);
+            x1 = std::max(x1, box.x1);
+            y1 = std::max(y1, box.y1);
+        }
+        out.push_back(Comp{py_round(x0, 4), py_round(y0, 4),
+                           py_round(x1 - x0, 4), py_round(y1 - y0, 4),
+                           minor_mask});
+    }
+    for (const auto& box : punch_boxes) {
+        out.push_back(Comp{py_round(box.x0, 4), py_round(box.y0, 4),
+                           py_round(box.x1 - box.x0, 4),
+                           py_round(box.y1 - box.y0, 4), punch_mask});
+    }
+    return out;
+}
+
+namespace {
+
+bool parse_plain_number(const std::string& text, std::size_t start,
+                        std::size_t* end, double* value) {
+    if (start >= text.size()
+        || !std::isdigit(static_cast<unsigned char>(text[start]))) {
+        return false;
+    }
+    std::size_t i = start + 1;
+    while (i < text.size()
+           && std::isdigit(static_cast<unsigned char>(text[i]))) {
+        ++i;
+    }
+    if (i < text.size() && text[i] == '.' && i + 1 < text.size()
+        && std::isdigit(static_cast<unsigned char>(text[i + 1]))) {
+        i += 2;
+        while (i < text.size()
+               && std::isdigit(static_cast<unsigned char>(text[i]))) {
+            ++i;
+        }
+    }
+    *end = i;
+    *value = std::stod(text.substr(start, i - start));
+    return true;
+}
+
+}  // namespace
+
+std::pair<double, double> part_dims_from_name(
+    const std::string& name,
+    const std::vector<std::tuple<std::string, double, double>>& fixed_dims,
+    double default_w, double default_h) {
+    for (const auto& row : fixed_dims) {
+        if (name.find(std::get<0>(row)) != std::string::npos) {
+            return {std::get<1>(row), std::get<2>(row)};
+        }
+    }
+    for (std::size_t i = 0; i + 3 < name.size(); ++i) {
+        if (name[i] != '_') {
+            continue;
+        }
+        std::size_t after_w = 0;
+        double width = 0.0;
+        if (!parse_plain_number(name, i + 1, &after_w, &width)) {
+            continue;
+        }
+        if (after_w >= name.size() || name[after_w] != 'x') {
+            continue;
+        }
+        std::size_t after_h = 0;
+        double height = 0.0;
+        if (!parse_plain_number(name, after_w + 1, &after_h, &height)) {
+            continue;
+        }
+        if (after_h + 1 < name.size() && name.compare(after_h, 2, "mm") == 0) {
+            return {width, height};
+        }
+    }
+    for (std::size_t i = 0; i + 11 <= name.size(); ++i) {
+        if (name[i] != '_') {
+            continue;
+        }
+        bool digits = true;
+        for (std::size_t k = 1; k <= 4; ++k) {
+            if (!std::isdigit(static_cast<unsigned char>(name[i + k]))) {
+                digits = false;
+                break;
+            }
+        }
+        if (!digits || name.compare(i + 5, 6, "Metric") != 0) {
+            continue;
+        }
+        const int a = (name[i + 1] - '0') * 10 + (name[i + 2] - '0');
+        const int b = (name[i + 3] - '0') * 10 + (name[i + 4] - '0');
+        return {static_cast<double>(a) / 10.0, static_cast<double>(b) / 10.0};
+    }
+    return {default_w, default_h};
 }
 
 }  // namespace schgen

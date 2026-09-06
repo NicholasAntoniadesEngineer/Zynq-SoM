@@ -1889,6 +1889,105 @@ def test_place_geom_wrappers_match_python(geom, monkeypatch):
     assert wrap == (False, 40.0, 5.0)
 
 
+def test_evict_corridor_and_part_dims_match_python(geom, monkeypatch):
+    from schgen.core import quantize as qz
+    from schgen.generate.floorplan import (
+        _DEFAULT_DIMS,
+        _FIXED_DIMS,
+        _part_dims_from_name,
+        _part_dims_from_name_py,
+    )
+    monkeypatch.setattr(qz._nat, "trace", lambda: True)
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    assert qz.evict_corridor_grid(25.0, 37.3) == geom.evict_corridor_grid(
+        25.0, 37.3)
+    keys = [(k, w, h) for k, (w, h) in sorted(
+        _FIXED_DIMS.items(), key=lambda kv: len(kv[0]), reverse=True)]
+    names = (
+        "Device:SOT-23-5",
+        "Device:SOT-23",
+        "R_0603_1608Metric",
+        "C_0402_1005Metric",
+        "Thing_3.2x1.6mm_Pad",
+        "UnknownPart",
+        "Package_SO:TSOT-23-6",
+    )
+    for name in names:
+        got = tuple(geom.part_dims_from_name(
+            name, keys, _DEFAULT_DIMS[0], _DEFAULT_DIMS[1]))
+        ref = _part_dims_from_name_py(name)
+        assert got == ref
+        assert _part_dims_from_name(name) == ref
+
+
+def test_footprint_bbox_and_som_scan_match_python(geom, monkeypatch):
+    from pathlib import Path
+
+    from schgen.generate.floorplan import (
+        SOM_PCB,
+        extract_som,
+        extract_som_py,
+    )
+    from schgen.generate.pcb.footprint import (
+        BBOX_DECIMALS,
+        _footprint_bbox,
+        _footprint_bbox_from_doc_py,
+        resolve_mod,
+    )
+    from schgen.core import sexpr
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    py = extract_som_py(SOM_PCB)
+    w, h, rows = geom.extract_som_scan(SOM_PCB.read_text())
+    assert (w, h) == (py.w, py.h)
+    assert [(r[0], r[4], r[5], r[6], r[7]) for r in rows] == [
+        (j.ref, j.x, j.y, j.w, j.h) for j in py.js]
+    assert extract_som(SOM_PCB) == py
+    samples = (
+        "Device:R_0603_1608Metric",
+        "Connector_FFC-FPC:Hirose_FH12-15S-0.5SH_1x15-1MP_P0.50mm_Horizontal",
+    )
+    from schgen.generate.pcb import footprint as fpp
+    monkeypatch.setattr(fpp._nat, "trace", lambda: True)
+    for fp_id in samples:
+        mod = resolve_mod(fp_id)
+        if mod is None:
+            continue
+        text = Path(mod).read_text()
+        got = tuple(geom.footprint_bbox(text, BBOX_DECIMALS))
+        ref = _footprint_bbox_from_doc_py(sexpr.loads(text))
+        assert got == ref
+        fpp._bbox_cache.clear()
+        assert _footprint_bbox(mod) == ref
+
+
+def test_som_keepout_and_zone_assemble_match_python(geom, monkeypatch):
+    from types import SimpleNamespace
+
+    from schgen.generate.floorplan import (
+        OCC_BOTTOM,
+        OCC_PUNCH,
+        _som_keepout_rects,
+        _som_keepout_rects_py,
+        _zone_components_assemble,
+        _zone_components_assemble_py,
+    )
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    plan = SimpleNamespace(
+        som_x=40.0, som_y=30.0,
+        som=SimpleNamespace(w=50.0, h=42.0, js=(
+            SimpleNamespace(x=0.0, y=21.0, w=8.0, h=4.0),
+            SimpleNamespace(x=25.0, y=0.0, w=6.0, h=10.0),
+        )))
+    assert _som_keepout_rects(plan) == _som_keepout_rects_py(plan)
+    minor = [(1.0, 2.0, 4.0, 6.0), (0.5, 1.5, 3.0, 5.5)]
+    punches = [(10.0, 11.0, 12.5, 13.0)]
+    ref = _zone_components_assemble_py(minor, punches, OCC_BOTTOM)
+    got = tuple(tuple(r) for r in geom.zone_components_assemble(
+        minor, punches, OCC_BOTTOM, OCC_PUNCH))
+    assert got == ref
+    assert _zone_components_assemble(minor, punches, OCC_BOTTOM) == ref
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

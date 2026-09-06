@@ -82,4 +82,31 @@ Sexpr set_font_size(Sexpr prop, double size);
 std::pair<Sexpr, int> hide_undersom_bottom_refs(
     Sexpr doc, double x0, double y0, double x1, double y1);
 
+Box4 footprint_bbox(const Sexpr& doc, int decimals);
+
+struct SomJGeom {
+    std::string ref;
+    double pcb_x = 0.0;
+    double pcb_y = 0.0;
+    double rot = 0.0;
+    double x = 0.0;
+    double y = 0.0;
+    double w = 0.0;
+    double h = 0.0;
+};
+
+struct SomOutline {
+    double w = 0.0;
+    double h = 0.0;
+    std::vector<SomJGeom> js;
+};
+
+SomOutline extract_som_scan(const std::string& text);
+
+std::vector<std::tuple<std::string, double, double, double, double>>
+pad_boxes_named(
+    const std::vector<std::tuple<std::string, double, double, double, double,
+                                 double>>& rows,
+    double rotation);
+
 }  // namespace schgen

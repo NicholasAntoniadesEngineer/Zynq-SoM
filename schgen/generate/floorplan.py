@@ -132,6 +132,44 @@ def _shape_fanout_reach(shape, zg) -> tuple[tuple, tuple]:
                               mods=shape.mirror)
 
 
+def _zone_components_assemble_py(
+    minor: list[tuple[float, float, float, float]],
+    punches: list[tuple[float, float, float, float]],
+    minor_mask: int,
+) -> tuple:
+    comps: list[tuple] = []
+    if minor:
+        x0 = min(b[0] for b in minor)
+        y0 = min(b[1] for b in minor)
+        x1 = max(b[2] for b in minor)
+        y1 = max(b[3] for b in minor)
+        comps.append((round(x0, 4), round(y0, 4), round(x1 - x0, 4),
+                      round(y1 - y0, 4), minor_mask))
+    for p in punches:
+        comps.append((round(p[0], 4), round(p[1], 4),
+                      round(p[2] - p[0], 4), round(p[3] - p[1], 4),
+                      OCC_PUNCH))
+    return tuple(comps)
+
+
+def _zone_components_assemble(
+    minor: list[tuple[float, float, float, float]],
+    punches: list[tuple[float, float, float, float]],
+    minor_mask: int,
+) -> tuple:
+    if _nat.loaded():
+        got = tuple(tuple(r) for r in _nat.module().zone_components_assemble(
+            list(minor), list(punches), minor_mask, OCC_PUNCH))
+        if _nat.trace():
+            ref = _zone_components_assemble_py(minor, punches, minor_mask)
+            if got != ref:
+                raise AssertionError(
+                    "native zone_components_assemble DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _zone_components_assemble_py(minor, punches, minor_mask)
+
+
 def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
                      side: str, mods: dict | None = None,
                      pad_punch: bool = True) -> tuple:
@@ -151,17 +189,9 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
         c = turn_box(bb, rot_of.get(r, 0.0))
         return (ox + c[0], oy + c[1], ox + c[2], oy + c[3])
 
-    comps: list[tuple] = []
     minor = [b for b in (_cb(r, *o) for r, o in sorted(b_off.items()))
              if b is not None]
-    if minor:
-        x0 = min(b[0] for b in minor)
-        y0 = min(b[1] for b in minor)
-        x1 = max(b[2] for b in minor)
-        y1 = max(b[3] for b in minor)
-        comps.append((round(x0, 4), round(y0, 4), round(x1 - x0, 4),
-                      round(y1 - y0, 4),
-                      OCC_TOP if side == "bottom" else OCC_BOTTOM))
+    punches: list[tuple[float, float, float, float]] = []
     for off in (t_off, b_off):
         for r, (ox, oy) in sorted(off.items()):
             mod = (mods or {}).get(r) or zg.resolvable.get(r)
@@ -170,9 +200,7 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
             if not pad_punch:
                 c = _cb(r, ox, oy)
                 if c is not None:
-                    comps.append((round(c[0], 4), round(c[1], 4),
-                                  round(c[2] - c[0], 4), round(c[3] - c[1], 4),
-                                  OCC_PUNCH))
+                    punches.append(c)
                 continue
             boxes = thru_pad_boxes(mod, rot_of.get(r, 0.0))
             if not boxes:
@@ -181,10 +209,9 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
                     f"the pad kernel found none — the punch set would silently "
                     f"lose the geometry that pierces both copper faces")
             for p in boxes:
-                comps.append((round(ox + p[0], 4), round(oy + p[1], 4),
-                              round(p[2] - p[0], 4), round(p[3] - p[1], 4),
-                              OCC_PUNCH))
-    return tuple(comps)
+                punches.append((ox + p[0], oy + p[1], ox + p[2], oy + p[3]))
+    return _zone_components_assemble(
+        minor, punches, OCC_TOP if side == "bottom" else OCC_BOTTOM)
 
 
 def _zone_fanout_members(side_offs, rot_of: dict, zg,
@@ -306,7 +333,7 @@ def _floats(s: str) -> list[float]:
     return [float(m) for m in _NUMS.findall(s)]
 
 
-def extract_som(pcb: Path = SOM_PCB) -> SomGeom:
+def extract_som_py(pcb: Path = SOM_PCB) -> SomGeom:
     edge_pts: list[tuple[float, float]] = []
     js_raw: dict[str, tuple[float, float, float, float, float]] = {}
 
@@ -394,6 +421,23 @@ def extract_som(pcb: Path = SOM_PCB) -> SomGeom:
                    source=str(pcb.relative_to(REPO_ROOT)))
 
 
+def extract_som(pcb: Path = SOM_PCB) -> SomGeom:
+    if _nat.loaded():
+        w, h, rows = _nat.module().extract_som_scan(pcb.read_text())
+        js = tuple(SomJ(ref=ref, pcb_x=px, pcb_y=py, rot=rot,
+                        x=x, y=y, w=jw, h=jh)
+                   for ref, px, py, rot, x, y, jw, jh in rows)
+        got = SomGeom(w=w, h=h, js=js, source=str(pcb.relative_to(REPO_ROOT)))
+        if _nat.trace():
+            ref = extract_som_py(pcb)
+            if got != ref:
+                raise AssertionError(
+                    "native extract_som_scan DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return extract_som_py(pcb)
+
+
 _DIMS_IN_NAME = re.compile(r"_(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)mm")
 _METRIC = re.compile(r"_(\d{2})(\d{2})Metric")
 _FIXED_DIMS = {
@@ -439,12 +483,7 @@ def _courtyard_dims(lib: str) -> tuple[float, float] | None:
     return dims
 
 
-def part_dims(footprint: str) -> tuple[float, float]:
-    lib, _, name = footprint.partition(":")
-    if lib:
-        d = _courtyard_dims(lib)
-        if d:
-            return d
+def _part_dims_from_name_py(name: str) -> tuple[float, float]:
     for key in sorted(_FIXED_DIMS, key=len, reverse=True):
         if key in name:
             return _FIXED_DIMS[key]
@@ -455,6 +494,31 @@ def part_dims(footprint: str) -> tuple[float, float]:
     if m:
         return (int(m.group(1)) / 10.0, int(m.group(2)) / 10.0)
     return _DEFAULT_DIMS
+
+
+def _part_dims_from_name(name: str) -> tuple[float, float]:
+    keys = [(k, w, h) for k, (w, h) in sorted(
+        _FIXED_DIMS.items(), key=lambda kv: len(kv[0]), reverse=True)]
+    if _nat.loaded():
+        got = tuple(_nat.module().part_dims_from_name(
+            name, keys, _DEFAULT_DIMS[0], _DEFAULT_DIMS[1]))
+        if _nat.trace():
+            ref = _part_dims_from_name_py(name)
+            if got != ref:
+                raise AssertionError(
+                    "native part_dims_from_name DIVERGENCE: "
+                    f"cpp={got} python={ref} name={name!r}")
+        return got
+    return _part_dims_from_name_py(name)
+
+
+def part_dims(footprint: str) -> tuple[float, float]:
+    lib, _, name = footprint.partition(":")
+    if lib:
+        d = _courtyard_dims(lib)
+        if d:
+            return d
+    return _part_dims_from_name(name)
 
 
 def sheet_area(c, factor: float) -> float:
@@ -1128,6 +1192,34 @@ SOM_OCC_PAD_MM = 1.5
 ANCHOR_ZONE_W = 0.25
 ANCHOR_SOM_W = 7.0
 ANCHOR_AFF_POW = 1.6
+
+
+def _som_keepout_rects_py(plan: Plan) -> list[tuple[float, float, float, float]]:
+    rows = [(plan.som_x - SOM_OCC_PAD_MM, plan.som_y - SOM_OCC_PAD_MM,
+             plan.som_x + plan.som.w + SOM_OCC_PAD_MM,
+             plan.som_y + plan.som.h + SOM_OCC_PAD_MM)]
+    for j in plan.som.js:
+        rows.append((plan.som_x + j.x - j.w / 2 - SOM_SEAT_BAND_MM,
+                     plan.som_y + j.y - j.h / 2 - SOM_SEAT_BAND_MM,
+                     plan.som_x + j.x + j.w / 2 + SOM_SEAT_BAND_MM,
+                     plan.som_y + j.y + j.h / 2 + SOM_SEAT_BAND_MM))
+    return rows
+
+
+def _som_keepout_rects(plan: Plan) -> list[tuple[float, float, float, float]]:
+    if _nat.loaded():
+        js = [(j.x, j.y, j.w, j.h) for j in plan.som.js]
+        got = [tuple(r) for r in _nat.module().som_keepout_rects(
+            plan.som_x, plan.som_y, plan.som.w, plan.som.h, SOM_OCC_PAD_MM,
+            js, SOM_SEAT_BAND_MM)]
+        if _nat.trace():
+            ref = _som_keepout_rects_py(plan)
+            if got != ref:
+                raise AssertionError(
+                    "native som_keepout_rects DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _som_keepout_rects_py(plan)
 
 _Comp = tuple[float, float, float, float, int]
 
@@ -2558,14 +2650,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                     or near + span_b > dim - EDGE_MARGIN + overflow_tol):
                 return False
 
-    som_rects = [(plan.som_x - SOM_OCC_PAD_MM, plan.som_y - SOM_OCC_PAD_MM,
-                  plan.som_x + plan.som.w + SOM_OCC_PAD_MM,
-                  plan.som_y + plan.som.h + SOM_OCC_PAD_MM)]
-    for j in plan.som.js:
-        som_rects.append((plan.som_x + j.x - j.w / 2 - SOM_SEAT_BAND_MM,
-                          plan.som_y + j.y - j.h / 2 - SOM_SEAT_BAND_MM,
-                          plan.som_x + j.x + j.w / 2 + SOM_SEAT_BAND_MM,
-                          plan.som_y + j.y + j.h / 2 + SOM_SEAT_BAND_MM))
+    som_rects = _som_keepout_rects(plan)
     edge_boxes = [(b.x, b.y, b.x + b.w, b.y + b.h) for b in plan.edge_blocks]
     if _nat.loaded():
         hit = _nat.module().rects_overlap_any(edge_boxes, som_rects, 1e-6)

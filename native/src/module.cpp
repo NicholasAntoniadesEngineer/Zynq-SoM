@@ -1465,6 +1465,73 @@ NB_MODULE(_geom, m) {
              double rotation) {
               return schgen::pad_boxes_local(rows, rotation);
           });
+    m.def("pad_boxes_named",
+          [](const std::vector<std::tuple<std::string, double, double, double,
+                                          double, double>>& rows,
+             double rotation) {
+              return schgen::pad_boxes_named(rows, rotation);
+          });
+    m.def("footprint_bbox",
+          [](const char* text, int decimals) {
+              if (text == nullptr) {
+                  throw std::runtime_error("footprint_bbox: text required");
+              }
+              auto box = schgen::footprint_bbox(schgen::sexpr_loads(text),
+                                                decimals);
+              return std::make_tuple(box.x0, box.y0, box.x1, box.y1);
+          });
+    m.def("extract_som_scan",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("extract_som_scan: text required");
+              }
+              auto hit = schgen::extract_som_scan(text);
+              std::vector<std::tuple<std::string, double, double, double,
+                                     double, double, double, double>>
+                  js;
+              js.reserve(hit.js.size());
+              for (const auto& j : hit.js) {
+                  js.emplace_back(j.ref, j.pcb_x, j.pcb_y, j.rot, j.x, j.y,
+                                  j.w, j.h);
+              }
+              return std::make_tuple(hit.w, hit.h, js);
+          });
+    m.def("som_keepout_rects",
+          [](double som_x, double som_y, double som_w, double som_h,
+             double occ_pad,
+             const std::vector<std::tuple<double, double, double, double>>&
+                 connectors,
+             double seat_band) {
+              auto boxes = schgen::som_keepout_rects(
+                  som_x, som_y, som_w, som_h, occ_pad, connectors, seat_band);
+              std::vector<std::tuple<double, double, double, double>> out;
+              out.reserve(boxes.size());
+              for (const auto& b : boxes) {
+                  out.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return out;
+          });
+    m.def("zone_components_assemble",
+          [](const std::vector<BoxTup>& minor, const std::vector<BoxTup>& punch,
+             int minor_mask, int punch_mask) {
+              auto rows = schgen::zone_components_assemble(
+                  as_boxes(minor), as_boxes(punch), minor_mask, punch_mask);
+              std::vector<std::tuple<double, double, double, double, int>> out;
+              out.reserve(rows.size());
+              for (const auto& c : rows) {
+                  out.emplace_back(c.dx, c.dy, c.w, c.h, c.mask);
+              }
+              return out;
+          });
+    m.def("part_dims_from_name",
+          [](const std::string& name,
+             const std::vector<std::tuple<std::string, double, double>>&
+                 fixed_dims,
+             double default_w, double default_h) {
+              auto hit = schgen::part_dims_from_name(name, fixed_dims,
+                                                     default_w, default_h);
+              return std::make_tuple(hit.first, hit.second);
+          });
     m.def("inst_placed_box",
           [](const std::tuple<double, double, double, double>& local,
              double inst_x, double inst_y, double rotation, int decimals) {
