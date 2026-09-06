@@ -2446,6 +2446,7 @@ def test_courtyard_pad_scan_and_fanout_policy_match_python(geom, monkeypatch):
         pad_names_py,
     )
     from schgen.generate.pcb.embed import _MOD_PAD_CACHE, _mod_pads, _mod_pads_py
+    from schgen.generate.pcb.escape import thru_pad_names, thru_pad_names_py
     from schgen.generate.pcb.mating_face import _pad_rows, _pad_rows_py
     from schgen.verify import fanout_gate as fg
     from schgen.verify.placement_contract_gate import (
@@ -2456,10 +2457,12 @@ def test_courtyard_pad_scan_and_fanout_policy_match_python(geom, monkeypatch):
     monkeypatch.setattr(fp._nat, "trace", lambda: True)
     monkeypatch.setattr(fg._nat, "trace", lambda: True)
     from schgen.generate.pcb import embed as emb
+    from schgen.generate.pcb import escape as esc
     from schgen.generate.pcb import footprint as fpp
     from schgen.generate.pcb import mating_face as mf
     from schgen.verify import placement_contract_gate as pcg
     monkeypatch.setattr(emb._nat, "trace", lambda: True)
+    monkeypatch.setattr(esc._nat, "trace", lambda: True)
     monkeypatch.setattr(fpp._nat, "trace", lambda: True)
     monkeypatch.setattr(mf._nat, "trace", lambda: True)
     monkeypatch.setattr(pcg._nat, "trace", lambda: True)
@@ -2498,6 +2501,8 @@ def test_courtyard_pad_scan_and_fanout_policy_match_python(geom, monkeypatch):
             text)
         _MOD_PAD_CACHE.clear()
         assert _mod_pads(mod) == _mod_pads_py(text)
+        assert list(geom.thru_pad_names(text)) == thru_pad_names_py(text)
+        assert thru_pad_names(text) == thru_pad_names_py(text)
 
     refs = ("R1", "C12", "L3", "RS1", "RJ45", "RN2", "LED1", "U7", "TP3",
             "J1", "1R", "TP")

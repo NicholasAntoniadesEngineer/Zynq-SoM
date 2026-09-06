@@ -593,12 +593,34 @@ def _net_rule(model, net: str) -> float:
     return got
 
 
+def thru_pad_names_py(text: str) -> list[str]:
+    from schgen.core import sexpr
+    from schgen.core.sexpr import Sym
+    names: list[str] = []
+    for node in sexpr.loads(text):
+        if (isinstance(node, list) and node and node[0] == Sym("pad")
+                and len(node) > 2
+                and node[2] in (Sym("thru_hole"), Sym("np_thru_hole"))):
+            names.append(str(node[1]))
+    return names
+
+
+def thru_pad_names(text: str) -> list[str]:
+    if not _nat.loaded():
+        raise RuntimeError("native thru_pad_names required")
+    got = [str(n) for n in _nat.module().thru_pad_names(text)]
+    if _nat.trace():
+        ref = thru_pad_names_py(text)
+        if got != ref:
+            raise AssertionError(
+                "native thru_pad_names DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
                                                                 float, float],
                        ) -> _Obstacles:
-    from schgen.core import sexpr
-    from schgen.core.sexpr import Sym
-
     obs = _Obstacles()
     u0, v0, u1, v1 = region
 
@@ -610,12 +632,7 @@ def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
         boxes = pad_boxes_fn(oi)
         thru: set[str] = set()
         try:
-            doc = sexpr.loads(oi.mod_path.read_text())
-            for node in doc:
-                if (isinstance(node, list) and node and node[0] == Sym("pad")
-                        and len(node) > 2
-                        and node[2] in (Sym("thru_hole"), Sym("np_thru_hole"))):
-                    thru.add(str(node[1]))
+            thru = set(thru_pad_names(oi.mod_path.read_text()))
         except Exception:  # noqa: BLE001
             pass
         for pad, bb in sorted(boxes.items()):
@@ -1025,23 +1042,16 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
                 f"{zone} — the return plane under the DF40 field would be "
                 f"perforated (a placement wave moved the ethernet media "
                 f"parts under the SoM?); fail loud")
-    from schgen.core import sexpr
-    from schgen.core.sexpr import Sym
     foreign_barrels: list[str] = []
     for oi in sorted(model.insts, key=lambda i: i.ref):
         try:
-            doc = sexpr.loads(oi.mod_path.read_text())
+            text = oi.mod_path.read_text()
         except Exception:  # noqa: BLE001
             continue
         boxes = None
-        for node in doc:
-            if not (isinstance(node, list) and node and node[0] == Sym("pad")
-                    and len(node) > 2
-                    and node[2] in (Sym("thru_hole"), Sym("np_thru_hole"))):
-                continue
+        for pad in thru_pad_names(text):
             if boxes is None:
                 boxes = _inst_pad_boxes(oi)
-            pad = str(node[1])
             net = oi.pad_nets.get(pad, (0, ""))[1]
             if net == "GND":
                 continue

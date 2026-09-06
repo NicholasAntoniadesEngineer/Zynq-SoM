@@ -142,6 +142,7 @@ scan_pad_nodes(const Sexpr& doc);
 std::vector<std::tuple<std::string, double, double, double, double, double,
                        double>>
 scan_mod_pads(const Sexpr& doc);
+std::vector<std::string> thru_pad_names(const Sexpr& doc);
 
 std::vector<double> scan_floats(const std::string& text);
 

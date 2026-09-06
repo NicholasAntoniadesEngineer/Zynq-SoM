@@ -2275,6 +2275,13 @@ NB_MODULE(_geom, m) {
               }
               return schgen::scan_mod_pads(schgen::sexpr_loads(text));
           });
+    m.def("thru_pad_names",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("thru_pad_names: text required");
+              }
+              return schgen::thru_pad_names(schgen::sexpr_loads(text));
+          });
     m.def("ref_prefix", &schgen::ref_prefix);
     m.def("is_testpoint_ref", &schgen::is_testpoint_ref);
     m.def("is_cluster_passive",

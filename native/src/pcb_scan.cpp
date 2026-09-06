@@ -1413,6 +1413,17 @@ scan_mod_pads(const Sexpr& doc) {
     return out;
 }
 
+std::vector<std::string> thru_pad_names(const Sexpr& doc) {
+    std::vector<std::string> out;
+    for (const auto& row : scan_pad_nodes(doc)) {
+        const std::string& ptype = std::get<1>(row);
+        if (ptype == "thru_hole" || ptype == "np_thru_hole") {
+            out.push_back(std::get<0>(row));
+        }
+    }
+    return out;
+}
+
 double font_size(const Sexpr& node, double default_size) {
     if (!std::holds_alternative<SexprList>(node.v)) {
         return default_size;
