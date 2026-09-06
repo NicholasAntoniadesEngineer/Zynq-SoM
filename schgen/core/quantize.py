@@ -79,9 +79,9 @@ _register(
 
 def fixed_part_grid(v: float) -> float:
     _bump("fixed_part_grid")
-    if _nat.loaded():
-        return _nat.module().fixed_part_grid(v)
-    return round(round(v / GRID_MM) * GRID_MM, 4)
+    if not _nat.loaded():
+        raise RuntimeError("native fixed_part_grid required")
+    return _nat.module().fixed_part_grid(v)
 
 
 _register(
@@ -99,9 +99,9 @@ _register(
 
 def evict_corridor_grid(origin: float, v: float) -> float:
     _bump("evict_corridor_grid")
-    if _nat.loaded():
-        return _nat.module().evict_corridor_grid(origin, v)
-    return round(fixed_part_grid(origin + v) - origin, 4)
+    if not _nat.loaded():
+        raise RuntimeError("native evict_corridor_grid required")
+    return _nat.module().evict_corridor_grid(origin, v)
 
 
 _register(
@@ -118,9 +118,9 @@ _register(
 
 def breathe_anchor_grid(v: float) -> float:
     _bump("breathe_anchor_grid")
-    if _nat.loaded():
-        return _nat.module().fixed_part_grid(v)
-    return round(round(v / GRID_MM) * GRID_MM, 4)
+    if not _nat.loaded():
+        raise RuntimeError("native fixed_part_grid required")
+    return _nat.module().fixed_part_grid(v)
 
 
 _register(
@@ -133,9 +133,9 @@ _register(
 
 def som_pose_half_mm(v: float) -> float:
     _bump("som_pose_half_mm")
-    if _nat.loaded():
-        return _nat.module().som_pose_half_mm(v)
-    return round(round(v * 2) / 2, 1)
+    if not _nat.loaded():
+        raise RuntimeError("native som_pose_half_mm required")
+    return _nat.module().som_pose_half_mm(v)
 
 
 _register(
@@ -149,9 +149,9 @@ _register(
 
 def placeholder_zone_half_mm(v: float) -> float:
     _bump("placeholder_zone_half_mm")
-    if _nat.loaded():
-        return _nat.module().som_pose_half_mm(v)
-    return round(round(v * 2) / 2, 1)
+    if not _nat.loaded():
+        raise RuntimeError("native som_pose_half_mm required")
+    return _nat.module().som_pose_half_mm(v)
 
 
 _register(
@@ -165,9 +165,9 @@ _register(
 
 def quant_credit(v: float) -> float:
     _bump("quant_credit")
-    if _nat.loaded():
-        return _nat.module().quant_credit(v)
-    return v + CREDIT_MM
+    if not _nat.loaded():
+        raise RuntimeError("native quant_credit required")
+    return _nat.module().quant_credit(v)
 
 
 _register(
@@ -193,9 +193,9 @@ _register(
 
 def snap_erosion_bound(bound: float) -> float:
     _bump("snap_erosion_bound")
-    if _nat.loaded():
-        return _nat.module().snap_erosion_bound(bound)
-    return bound - SNAP_EROSION_MM if bound >= 5.0 else bound
+    if not _nat.loaded():
+        raise RuntimeError("native snap_erosion_bound required")
+    return _nat.module().snap_erosion_bound(bound)
 
 
 _register(
@@ -210,9 +210,9 @@ _register(
 
 def snap_erosion_pad(mm: float) -> float:
     _bump("snap_erosion_pad")
-    if _nat.loaded():
-        return _nat.module().snap_erosion_pad(mm)
-    return mm + (SNAP_EROSION_MM if mm >= 5.0 else 0.0)
+    if not _nat.loaded():
+        raise RuntimeError("native snap_erosion_pad required")
+    return _nat.module().snap_erosion_pad(mm)
 
 
 _register(
@@ -325,10 +325,9 @@ _register(
 
 def est_via_cost(impedance_controlled: bool) -> float:
     _bump("est_via_cost")
-    if _nat.loaded():
-        return _nat.module().est_via_cost(impedance_controlled)
-    return EST_VIA_COST_MM["impedance" if impedance_controlled
-                           else "ordinary"]
+    if not _nat.loaded():
+        raise RuntimeError("native est_via_cost required")
+    return _nat.module().est_via_cost(impedance_controlled)
 
 
 _register(
@@ -343,9 +342,9 @@ _register(
 
 def legalize_pose_quantum(v: float) -> float:
     _bump("legalize_pose_quantum")
-    if _nat.loaded():
-        return _nat.module().legalize_pose_quantum(v)
-    return round(round(v / HALF_MM) * HALF_MM, 4)
+    if not _nat.loaded():
+        raise RuntimeError("native legalize_pose_quantum required")
+    return _nat.module().legalize_pose_quantum(v)
 
 
 _register(
@@ -358,10 +357,9 @@ _register(
 
 def outline_snap_up(v: float) -> float:
     _bump("outline_snap_up")
-    if _nat.loaded():
-        return _nat.module().outline_snap_up(v)
-    n = int((v + OUTLINE_SNAP_MM - 1e-6) / OUTLINE_SNAP_MM)
-    return round(n * OUTLINE_SNAP_MM, 1)
+    if not _nat.loaded():
+        raise RuntimeError("native outline_snap_up required")
+    return _nat.module().outline_snap_up(v)
 
 
 _register(
@@ -374,9 +372,9 @@ _register(
 
 def outline_grow(k: int) -> float:
     _bump("outline_grow_step")
-    if _nat.loaded():
-        return _nat.module().outline_grow(k)
-    return k * OUTLINE_SNAP_MM
+    if not _nat.loaded():
+        raise RuntimeError("native outline_grow required")
+    return _nat.module().outline_grow(k)
 
 
 _register(
@@ -391,9 +389,9 @@ _register(
 
 def fine_shrink(base: float, k: int) -> float:
     _bump("outline_fine_grid")
-    if _nat.loaded():
-        return _nat.module().fine_shrink(base, k)
-    return round(base - k * FINE_SNAP_MM, 1)
+    if not _nat.loaded():
+        raise RuntimeError("native fine_shrink required")
+    return _nat.module().fine_shrink(base, k)
 
 
 def fine_steps() -> int:
