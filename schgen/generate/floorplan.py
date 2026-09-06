@@ -484,23 +484,42 @@ class Outline:
     note: str
 
 
-def derive_outline(sheets, som: SomGeom) -> Outline:
-    core_w = som.w + 2 * SOM_HALO
-    core_h = som.h + 2 * SOM_HALO
+def _derive_outline_wh_py(som_w: float, som_h: float, comp_area: float
+                          ) -> tuple[float, float, float, float, float, float]:
+    core_w = som_w + 2 * SOM_HALO
+    core_h = som_h + 2 * SOM_HALO
     banded_w = core_w + 2 * EDGE_BAND
     banded_h = core_h + 2 * EDGE_BAND
-
-    comp_area = _raw_component_area(sheets)
-    som_keepout = (som.w + 2 * SOM_HALO) * (som.h + 2 * SOM_HALO)
+    som_keepout = core_w * core_h
     need_area = comp_area / PACK_EFFICIENCY + som_keepout
     aspect = banded_w / banded_h
     area_w = (need_area * aspect) ** 0.5
     area_h = (need_area / aspect) ** 0.5
+    w = _q.outline_snap_up(max(banded_w, area_w) + 2 * PERIM_KEEPOUT)
+    h = _q.outline_snap_up(max(banded_h, area_h) + 2 * PERIM_KEEPOUT)
+    return w, h, banded_w, banded_h, area_w, area_h
 
-    w = max(banded_w, area_w) + 2 * PERIM_KEEPOUT
-    h = max(banded_h, area_h) + 2 * PERIM_KEEPOUT
 
-    w, h = _q.outline_snap_up(w), _q.outline_snap_up(h)
+def _derive_outline_wh(som_w: float, som_h: float, comp_area: float
+                       ) -> tuple[float, float, float, float, float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().derive_outline_wh(
+            som_w, som_h, SOM_HALO, EDGE_BAND, PERIM_KEEPOUT,
+            PACK_EFFICIENCY, comp_area))
+        if _nat.trace():
+            ref = _derive_outline_wh_py(som_w, som_h, comp_area)
+            if got != ref:
+                raise AssertionError(
+                    "native derive_outline_wh DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _derive_outline_wh_py(som_w, som_h, comp_area)
+
+
+def derive_outline(sheets, som: SomGeom) -> Outline:
+    comp_area = _raw_component_area(sheets)
+    w, h, banded_w, banded_h, area_w, area_h = _derive_outline_wh(
+        som.w, som.h, comp_area)
     note = (f"SoM {som.w:g}x{som.h:g} + {SOM_HALO:g}mm halo + {EDGE_BAND:g}mm "
             f"connector band/edge -> core {banded_w:g}x{banded_h:g}; "
             f"component area {comp_area:.0f}mm2 / {PACK_EFFICIENCY:g} fill "
@@ -561,39 +580,103 @@ class Block:
         return self.y + self.h / 2
 
 
+def _affinity_j_from_expect_py(expect: str) -> list[str]:
+    return [f"J{m.group(1)}" for m in _J_IN_EXPECT.finditer(expect)]
+
+
+def _affinity_j_from_expect(expect: str) -> list[str]:
+    if _nat.loaded():
+        got = list(_nat.module().affinity_j_from_expect(expect))
+        if _nat.trace():
+            ref = _affinity_j_from_expect_py(expect)
+            if got != ref:
+                raise AssertionError(
+                    "native affinity_j_from_expect DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _affinity_j_from_expect_py(expect)
+
+
+def _affinity_j_from_target_py(target: str) -> str | None:
+    name = None
+    if target.startswith("sheet som_j"):
+        name = "J" + target.split()[1][len("som_j"):].split(":")[0]
+    elif target.startswith("SoM ") and "(J" in target:
+        name = target.split("(", 1)[1][:2]
+    if name in ("J1", "J2", "J3"):
+        return name
+    return None
+
+
+def _affinity_j_from_target(target: str) -> str | None:
+    if _nat.loaded():
+        got = _nat.module().affinity_j_from_target(target)
+        if _nat.trace():
+            ref = _affinity_j_from_target_py(target)
+            if got != ref:
+                raise AssertionError(
+                    "native affinity_j_from_target DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _affinity_j_from_target_py(target)
+
+
 def _j_affinity(sheets, link_result) -> dict[str, dict[str, int]]:
     aff: dict[str, dict[str, int]] = {sc.name: {} for sc in sheets}
     for b in link_result.bindings:
         d = aff.setdefault(b.sheet, {})
         if b.status == "deferred" and b.ptype.expect:
-            for m in _J_IN_EXPECT.finditer(b.ptype.expect):
-                jn = f"J{m.group(1)}"
-                d[jn] = d.get(jn, 0) + 1
+            for name in _affinity_j_from_expect(b.ptype.expect):
+                d[name] = d.get(name, 0) + 1
             continue
         for t in b.targets:
-            jn = None
-            if t.startswith("sheet som_j"):
-                jn = "J" + t.split()[1][len("som_j"):].split(":")[0]
-            elif t.startswith("SoM ") and "(J" in t:
-                jn = t.split("(", 1)[1][:2]
-            if jn in ("J1", "J2", "J3"):
-                d[jn] = d.get(jn, 0) + 1
+            name = _affinity_j_from_target(t)
+            if name is not None:
+                d[name] = d.get(name, 0) + 1
     return aff
 
 
-def _dominant_j(aff: dict[str, int]) -> str | None:
+def _dominant_j_py(aff: dict[str, int]) -> str | None:
     if not aff:
         return None
     return sorted(aff.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
 
 
-def _j_edge_map(som: SomGeom) -> dict[str, str]:
+def _dominant_j(aff: dict[str, int]) -> str | None:
+    if _nat.loaded():
+        got = _nat.module().dominant_j(list(aff.items()))
+        if _nat.trace():
+            ref = _dominant_j_py(aff)
+            if got != ref:
+                raise AssertionError(
+                    "native dominant_j DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _dominant_j_py(aff)
+
+
+def _j_edge_map_py(som: SomGeom) -> dict[str, str]:
     out: dict[str, str] = {}
     for j in som.js:
         cands = [(j.y, "N"), (som.h - j.y, "S"),
                  (j.x, "W"), (som.w - j.x, "E")]
         out[j.ref] = min(cands)[1]
     return out
+
+
+def _j_edge_map(som: SomGeom) -> dict[str, str]:
+    if _nat.loaded():
+        rows = [(j.ref, j.x, j.y) for j in som.js]
+        got = {ref: edge for ref, edge in _nat.module().j_edge_map(
+            rows, som.w, som.h)}
+        if _nat.trace():
+            ref = _j_edge_map_py(som)
+            if got != ref:
+                raise AssertionError(
+                    "native j_edge_map DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _j_edge_map_py(som)
 
 
 @dataclass(frozen=True)
@@ -1057,13 +1140,29 @@ def _side_mask(side: str) -> int:
     return OCC_BOTTOM if side == "bottom" else OCC_TOP
 
 
-def _occ_pair_active(a_mask: int, a_pmask: int, a_main: bool,
-                     b_mask: int, b_pmask: int, b_main: bool) -> bool:
+def _occ_pair_active_py(a_mask: int, a_pmask: int, a_main: bool,
+                        b_mask: int, b_pmask: int, b_main: bool) -> bool:
     if not (a_mask & b_mask):
         return False
     if a_main and b_main:
         return True
     return not (a_pmask & b_pmask)
+
+
+def _occ_pair_active(a_mask: int, a_pmask: int, a_main: bool,
+                     b_mask: int, b_pmask: int, b_main: bool) -> bool:
+    if _nat.loaded():
+        got = _nat.module().occ_pair_active(
+            a_mask, a_pmask, a_main, b_mask, b_pmask, b_main)
+        if _nat.trace():
+            ref = _occ_pair_active_py(
+                a_mask, a_pmask, a_main, b_mask, b_pmask, b_main)
+            if got is not ref:
+                raise AssertionError(
+                    "native occ_pair_active DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _occ_pair_active_py(a_mask, a_pmask, a_main, b_mask, b_pmask, b_main)
 
 
 def _pairs_hold_py(ents: list, n_interior: int) -> bool:
@@ -1083,13 +1182,25 @@ def _pairs_hold_py(ents: list, n_interior: int) -> bool:
     return True
 
 
-def _halo4(reach: tuple, inset: tuple) -> tuple[float, float, float, float]:
+def _halo4_py(reach: tuple, inset: tuple) -> tuple[float, float, float, float]:
     return (max(reach[0], -inset[0], 0.0), max(reach[1], -inset[1], 0.0),
             max(reach[2], -inset[2], 0.0), max(reach[3], -inset[3], 0.0))
 
 
-def _spatial_bounds(far_ceil: float = 0.0,
-                    max_reach: float | None = None) -> tuple[float, float]:
+def _halo4(reach: tuple, inset: tuple) -> tuple[float, float, float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().halo4(reach, inset))
+        if _nat.trace():
+            ref = _halo4_py(reach, inset)
+            if got != ref:
+                raise AssertionError(
+                    f"native halo4 DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _halo4_py(reach, inset)
+
+
+def _spatial_bounds_py(far_ceil: float = 0.0,
+                       max_reach: float | None = None) -> tuple[float, float]:
     from schgen.generate.pcb.constants import PLACE_CLEAR
     from schgen.verify.fanout_gate import _TIER_TOP, _TIERS
     need_ceil = max(_TIER_TOP[0], max(n for _p, n, _b in _TIERS))
@@ -1098,6 +1209,25 @@ def _spatial_bounds(far_ceil: float = 0.0,
     envelope = max(CLEAR, PLACE_CLEAR, 2 * reach_bound,
                    CABLE_NEIGHBOR_GAP, far_ceil)
     return reach_bound, envelope
+
+
+def _spatial_bounds(far_ceil: float = 0.0,
+                    max_reach: float | None = None) -> tuple[float, float]:
+    if _nat.loaded():
+        from schgen.generate.pcb.constants import PLACE_CLEAR
+        from schgen.verify.fanout_gate import _TIER_TOP, _TIERS
+        need_ceil = max(_TIER_TOP[0], max(n for _p, n, _b in _TIERS))
+        got = tuple(_nat.module().spatial_bounds(
+            far_ceil, max_reach or 0.0, CLEAR, PLACE_CLEAR,
+            CABLE_NEIGHBOR_GAP, need_ceil))
+        if _nat.trace():
+            ref = _spatial_bounds_py(far_ceil, max_reach)
+            if got != ref:
+                raise AssertionError(
+                    "native spatial_bounds DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _spatial_bounds_py(far_ceil, max_reach)
 
 
 class _Occupancy:
@@ -1397,11 +1527,25 @@ class _Occupancy:
         return None
 
 
-def _interior_dims(area: float) -> tuple[float, float]:
+def _interior_dims_py(area: float) -> tuple[float, float]:
     h = _q.placeholder_zone_half_mm(min(PLACEHOLDER_MAX_MM, max(
         PLACEHOLDER_MIN_MM, (area / PLACEHOLDER_ASPECT) ** 0.5)))
     w = _q.placeholder_zone_half_mm(max(PLACEHOLDER_MIN_MM, area / h))
     return w, h
+
+
+def _interior_dims(area: float) -> tuple[float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().interior_dims(
+            area, PLACEHOLDER_ASPECT, PLACEHOLDER_MIN_MM, PLACEHOLDER_MAX_MM))
+        if _nat.trace():
+            ref = _interior_dims_py(area)
+            if got != ref:
+                raise AssertionError(
+                    "native interior_dims DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _interior_dims_py(area)
 
 
 def _zone_anchor_py(plan: Plan, zone: str) -> tuple[float, float]:

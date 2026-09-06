@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -45,5 +47,14 @@ std::pair<double, double> pack_anchor(const PackAnchorIn& in);
 std::pair<double, double> zone_anchor(char zone, double som_x, double som_y,
                                       double som_w, double som_h,
                                       double board_w, double board_h);
+std::string j_edge_of(double connector_x, double connector_y, double som_w,
+                      double som_h);
+std::vector<std::pair<std::string, std::string>> j_edge_map(
+    const std::vector<std::tuple<std::string, double, double>>& connectors,
+    double som_w, double som_h);
+std::optional<std::string> dominant_j(
+    const std::vector<std::pair<std::string, int>>& affinity);
+std::vector<std::string> affinity_j_from_expect(const std::string& expect);
+std::optional<std::string> affinity_j_from_target(const std::string& target);
 
 }  // namespace schgen

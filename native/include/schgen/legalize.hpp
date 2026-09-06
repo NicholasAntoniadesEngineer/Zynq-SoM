@@ -185,4 +185,33 @@ std::optional<Box4> predicted_bbox(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         pad_union);
 
+std::pair<double, double> interior_dims(double area, double aspect,
+                                        double min_mm, double max_mm);
+std::tuple<double, double, double, double, double, double> derive_outline_wh(
+    double som_w, double som_h, double halo, double edge_band, double perim,
+    double pack_eff, double comp_area);
+
+struct RepairSep {
+    bool axis_x = true;
+    std::string lo;
+    std::string hi;
+    double gap = 0.0;
+    bool flippable = true;
+};
+
+struct RepairAxisResult {
+    bool ok = false;
+    std::vector<double> pos;
+    std::vector<RepairSep> seps;
+    std::vector<std::tuple<std::string, std::string, bool>> flips;
+    std::string fail;
+};
+
+RepairAxisResult legalize_repair_axis(
+    bool axis_x, const std::vector<std::string>& names,
+    const std::vector<double>& sizes, double span, double clear,
+    const std::vector<RepairSep>& seps_in,
+    const std::vector<std::pair<std::string, Box4>>& frects,
+    const std::vector<NamedEdge>& extra, int repair_max);
+
 }  // namespace schgen

@@ -1037,4 +1037,135 @@ std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes(
     return {px, py};
 }
 
+std::pair<double, double> interior_dims(double area, double aspect,
+                                        double min_mm, double max_mm) {
+    if (aspect <= 0.0) {
+        throw std::runtime_error("interior_dims: aspect required");
+    }
+    if (min_mm <= 0.0 || max_mm <= 0.0) {
+        throw std::runtime_error("interior_dims: min_mm and max_mm required");
+    }
+    const double raw = std::sqrt(area / aspect);
+    const double h = placeholder_zone_half_mm(
+        std::min(max_mm, std::max(min_mm, raw)));
+    const double w = placeholder_zone_half_mm(std::max(min_mm, area / h));
+    return {w, h};
+}
+
+std::tuple<double, double, double, double, double, double> derive_outline_wh(
+    double som_w, double som_h, double halo, double edge_band, double perim,
+    double pack_eff, double comp_area) {
+    if (pack_eff <= 0.0) {
+        throw std::runtime_error("derive_outline_wh: pack_eff required");
+    }
+    const double core_w = som_w + 2.0 * halo;
+    const double core_h = som_h + 2.0 * halo;
+    const double banded_w = core_w + 2.0 * edge_band;
+    const double banded_h = core_h + 2.0 * edge_band;
+    const double som_keepout = core_w * core_h;
+    const double need_area = comp_area / pack_eff + som_keepout;
+    const double aspect = banded_w / banded_h;
+    const double area_w = std::sqrt(need_area * aspect);
+    const double area_h = std::sqrt(need_area / aspect);
+    const double w = outline_snap_up(std::max(banded_w, area_w) + 2.0 * perim);
+    const double h = outline_snap_up(std::max(banded_h, area_h) + 2.0 * perim);
+    return {w, h, banded_w, banded_h, area_w, area_h};
+}
+
+RepairAxisResult legalize_repair_axis(
+    bool axis_x, const std::vector<std::string>& names,
+    const std::vector<double>& sizes, double span, double clear,
+    const std::vector<RepairSep>& seps_in,
+    const std::vector<std::pair<std::string, Box4>>& frects,
+    const std::vector<NamedEdge>& extra, int repair_max) {
+    if (names.size() != sizes.size()) {
+        throw std::runtime_error(
+            "legalize_repair_axis: names and sizes required same length");
+    }
+    if (repair_max < 0) {
+        throw std::runtime_error("legalize_repair_axis: repair_max required");
+    }
+    RepairAxisResult out;
+    out.seps = seps_in;
+    for (int rep = 0; rep <= repair_max; ++rep) {
+        std::vector<SepSpec> spec;
+        spec.reserve(out.seps.size());
+        for (const auto& sep : out.seps) {
+            spec.push_back(SepSpec{sep.axis_x, sep.lo, sep.hi, sep.gap});
+        }
+        const auto wall = wall_sep_edges(axis_x, names, sizes, span, clear,
+                                         spec, frects);
+        std::vector<NamedEdge> edges;
+        std::vector<int> sep_of_edge;
+        edges.reserve(wall.size() + extra.size());
+        sep_of_edge.reserve(wall.size() + extra.size());
+        for (const auto& edge : wall) {
+            edges.push_back(NamedEdge{edge.src, edge.dst, edge.cost});
+            sep_of_edge.push_back(edge.kind == "sep" ? edge.sep_index : -1);
+        }
+        for (const auto& edge : extra) {
+            edges.push_back(edge);
+            sep_of_edge.push_back(-1);
+        }
+        std::vector<std::string> nodes;
+        std::unordered_map<std::string, int> index;
+        collect_nodes(edges, names, &nodes, &index);
+        std::vector<int> src;
+        std::vector<int> dst;
+        std::vector<double> cost;
+        edges_to_arrays(edges, index, &src, &dst, &cost);
+        const BellmanResult hit = bellman_ford(nodes.size(), src, dst, cost);
+        if (hit.feasible) {
+            const auto base_it = index.find("#0");
+            if (base_it == index.end()) {
+                throw std::runtime_error("legalize_repair_axis: #0 required");
+            }
+            const double base =
+                hit.dist[static_cast<std::size_t>(base_it->second)];
+            out.pos.resize(names.size());
+            for (std::size_t i = 0; i < names.size(); ++i) {
+                const auto nit = index.find(names[i]);
+                if (nit == index.end()) {
+                    throw std::runtime_error(
+                        "legalize_repair_axis: name missing from graph");
+                }
+                out.pos[i] =
+                    hit.dist[static_cast<std::size_t>(nit->second)] - base;
+            }
+            out.ok = true;
+            return out;
+        }
+        bool flipped = false;
+        for (int edge_i : hit.cycle_edges) {
+            if (edge_i < 0
+                || edge_i >= static_cast<int>(sep_of_edge.size())) {
+                continue;
+            }
+            const int sep_i = sep_of_edge[static_cast<std::size_t>(edge_i)];
+            if (sep_i < 0 || sep_i >= static_cast<int>(out.seps.size())) {
+                continue;
+            }
+            RepairSep& sep = out.seps[static_cast<std::size_t>(sep_i)];
+            if (!sep.flippable) {
+                continue;
+            }
+            out.flips.emplace_back(sep.lo, sep.hi, sep.axis_x);
+            RepairSep moved = sep;
+            moved.axis_x = !moved.axis_x;
+            moved.flippable = false;
+            out.seps.erase(out.seps.begin()
+                           + static_cast<std::ptrdiff_t>(sep_i));
+            out.seps.push_back(moved);
+            flipped = true;
+            break;
+        }
+        if (!flipped) {
+            out.fail = "cycle";
+            return out;
+        }
+    }
+    out.fail = "exhausted";
+    return out;
+}
+
 }  // namespace schgen

@@ -5,6 +5,7 @@ namespace schgen {
 double fixed_part_grid(double value);
 double evict_corridor_grid(double origin, double value);
 double som_pose_half_mm(double value);
+double placeholder_zone_half_mm(double value);
 double legalize_pose_quantum(double value);
 double quant_credit(double value);
 double snap_erosion_bound(double bound);

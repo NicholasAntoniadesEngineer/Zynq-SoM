@@ -5,8 +5,10 @@
 #endif
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 
 namespace schgen {
@@ -104,6 +106,136 @@ std::pair<double, double> pack_anchor(const PackAnchorIn& in) {
         throw std::runtime_error("pack_anchor: weight sum required");
     }
     return {anchor_x / weight_sum, anchor_y / weight_sum};
+}
+
+std::string j_edge_of(double connector_x, double connector_y, double som_w,
+                      double som_h) {
+    struct Candidate {
+        double distance;
+        const char* edge;
+    };
+    const Candidate candidates[4] = {
+        {connector_y, "N"},
+        {som_h - connector_y, "S"},
+        {connector_x, "W"},
+        {som_w - connector_x, "E"},
+    };
+    const Candidate* best = &candidates[0];
+    for (int i = 1; i < 4; ++i) {
+        const Candidate& row = candidates[i];
+        if (row.distance < best->distance
+            || (row.distance == best->distance
+                && std::string(row.edge) < std::string(best->edge))) {
+            best = &row;
+        }
+    }
+    return best->edge;
+}
+
+std::vector<std::pair<std::string, std::string>> j_edge_map(
+    const std::vector<std::tuple<std::string, double, double>>& connectors,
+    double som_w, double som_h) {
+    std::vector<std::pair<std::string, std::string>> out;
+    out.reserve(connectors.size());
+    for (const auto& row : connectors) {
+        out.emplace_back(std::get<0>(row),
+                         j_edge_of(std::get<1>(row), std::get<2>(row), som_w,
+                                   som_h));
+    }
+    return out;
+}
+
+std::optional<std::string> dominant_j(
+    const std::vector<std::pair<std::string, int>>& affinity) {
+    if (affinity.empty()) {
+        return std::nullopt;
+    }
+    std::pair<std::string, int> best = affinity.front();
+    for (const auto& row : affinity) {
+        if (row.second > best.second
+            || (row.second == best.second && row.first < best.first)) {
+            best = row;
+        }
+    }
+    return best.first;
+}
+
+namespace {
+
+bool is_alnum_char(char value) {
+    return std::isalnum(static_cast<unsigned char>(value)) != 0;
+}
+
+}  // namespace
+
+std::vector<std::string> affinity_j_from_expect(const std::string& expect) {
+    std::vector<std::string> out;
+    for (std::size_t i = 0; i < expect.size(); ++i) {
+        const char mark = expect[i];
+        if (mark != 'j' && mark != 'J') {
+            continue;
+        }
+        if (i + 1 >= expect.size()) {
+            continue;
+        }
+        const char digit = expect[i + 1];
+        if (digit != '1' && digit != '2' && digit != '3') {
+            continue;
+        }
+        if (i > 0 && is_alnum_char(expect[i - 1])) {
+            continue;
+        }
+        if (i + 2 < expect.size() && is_alnum_char(expect[i + 2])) {
+            continue;
+        }
+        out.push_back(std::string("J") + digit);
+    }
+    return out;
+}
+
+std::optional<std::string> affinity_j_from_target(const std::string& target) {
+    const std::string sheet_prefix = "sheet som_j";
+    if (target.size() >= sheet_prefix.size()
+        && target.compare(0, sheet_prefix.size(), sheet_prefix) == 0) {
+        const auto first_space = target.find(' ');
+        if (first_space == std::string::npos
+            || first_space + 1 >= target.size()) {
+            throw std::runtime_error(
+                "affinity_j_from_target: sheet token required");
+        }
+        const auto second_space = target.find(' ', first_space + 1);
+        const std::string token = target.substr(
+            first_space + 1,
+            second_space == std::string::npos
+                ? std::string::npos
+                : second_space - first_space - 1);
+        const std::string som_j = "som_j";
+        std::string rest = token.size() >= som_j.size()
+                               ? token.substr(som_j.size())
+                               : token;
+        const auto colon = rest.find(':');
+        if (colon != std::string::npos) {
+            rest = rest.substr(0, colon);
+        }
+        const std::string name = "J" + rest;
+        if (name == "J1" || name == "J2" || name == "J3") {
+            return name;
+        }
+        return std::nullopt;
+    }
+    const std::string som_prefix = "SoM ";
+    if (target.size() >= som_prefix.size()
+        && target.compare(0, som_prefix.size(), som_prefix) == 0) {
+        const auto open = target.find("(J");
+        if (open == std::string::npos || open + 3 > target.size()) {
+            return std::nullopt;
+        }
+        const std::string name = target.substr(open + 1, 2);
+        if (name == "J1" || name == "J2" || name == "J3") {
+            return name;
+        }
+    }
+    return std::nullopt;
 }
 
 }  // namespace schgen

@@ -30,6 +30,10 @@ double som_pose_half_mm(double value) {
     return py_round(py_round(value * 2.0, 0) / 2.0, 1);
 }
 
+double placeholder_zone_half_mm(double value) {
+    return som_pose_half_mm(value);
+}
+
 double legalize_pose_quantum(double value) {
     return py_round(py_round(value / kHalfMm, 0) * kHalfMm, 4);
 }

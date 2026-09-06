@@ -1,5 +1,7 @@
 #include "schgen/occupancy.hpp"
 
+#include "schgen/quantize.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -152,6 +154,16 @@ bool occ_pair_active(int a_mask, int a_pmask, bool a_main,
         return true;
     }
     return (a_pmask & b_pmask) == 0;
+}
+
+std::pair<double, double> spatial_bounds(double far_ceil, double max_reach,
+                                         double clear, double place_clear,
+                                         double cable_gap, double need_ceil) {
+    const double reach_floor = py_round(quant_credit(need_ceil), 4);
+    const double reach_bound = std::max(reach_floor, max_reach);
+    const double envelope = std::max({clear, place_clear, 2.0 * reach_bound,
+                                      cable_gap, far_ceil});
+    return {reach_bound, envelope};
 }
 
 double fanout_sep(const Halo& a_reach, const Halo& a_inset,

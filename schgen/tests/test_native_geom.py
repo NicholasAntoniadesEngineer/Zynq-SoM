@@ -1731,6 +1731,147 @@ def test_legalize_descend_matches_python(geom, monkeypatch):
     assert ny[0] == keep_y["a"]
 
 
+def test_halo_and_spatial_bounds_match_python(geom, monkeypatch):
+    from schgen.generate.floorplan import (
+        CABLE_NEIGHBOR_GAP,
+        CLEAR,
+        _halo4,
+        _halo4_py,
+        _occ_pair_active,
+        _occ_pair_active_py,
+        _spatial_bounds,
+        _spatial_bounds_py,
+    )
+    from schgen.generate.pcb.constants import PLACE_CLEAR
+    from schgen.verify.fanout_gate import _TIER_TOP, _TIERS
+
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    reach = (1.5, 0.0, 2.2, 0.3)
+    inset = (0.1, -0.4, 0.0, -1.0)
+    assert geom.halo4(reach, inset) == _halo4_py(reach, inset)
+    assert _halo4(reach, inset) == _halo4_py(reach, inset)
+    assert geom.occ_pair_active(1, 0, True, 1, 0, True) is True
+    assert geom.occ_pair_active(1, 2, False, 1, 2, False) is False
+    assert _occ_pair_active(2, 1, False, 2, 0, True) is (
+        _occ_pair_active_py(2, 1, False, 2, 0, True))
+    need_ceil = max(_TIER_TOP[0], max(n for _p, n, _b in _TIERS))
+    assert tuple(geom.spatial_bounds(
+        10.0, 3.32, CLEAR, PLACE_CLEAR, CABLE_NEIGHBOR_GAP, need_ceil)) == (
+        _spatial_bounds_py(10.0, 3.32))
+    assert _spatial_bounds(10.0, 3.32) == _spatial_bounds_py(10.0, 3.32)
+    assert _spatial_bounds(0.0, None) == _spatial_bounds_py(0.0, None)
+
+
+def test_outline_and_interior_dims_match_python(geom, monkeypatch):
+    from schgen.generate.floorplan import (
+        EDGE_BAND,
+        PACK_EFFICIENCY,
+        PERIM_KEEPOUT,
+        PLACEHOLDER_ASPECT,
+        PLACEHOLDER_MAX_MM,
+        PLACEHOLDER_MIN_MM,
+        SOM_HALO,
+        _derive_outline_wh,
+        _derive_outline_wh_py,
+        _interior_dims,
+        _interior_dims_py,
+    )
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    for area in (40.0, 120.0, 480.0, 1600.0):
+        assert tuple(geom.interior_dims(
+            area, PLACEHOLDER_ASPECT, PLACEHOLDER_MIN_MM,
+            PLACEHOLDER_MAX_MM)) == _interior_dims_py(area)
+        assert _interior_dims(area) == _interior_dims_py(area)
+    for som_w, som_h, comp in ((50.0, 42.0, 8200.0), (40.0, 40.0, 1200.0)):
+        got = tuple(geom.derive_outline_wh(
+            som_w, som_h, SOM_HALO, EDGE_BAND, PERIM_KEEPOUT,
+            PACK_EFFICIENCY, comp))
+        ref = _derive_outline_wh_py(som_w, som_h, comp)
+        assert got == ref
+        assert _derive_outline_wh(som_w, som_h, comp) == ref
+
+
+def test_legalize_repair_axis_matches_python(geom):
+    names = ["a", "b"]
+    sizes = [10.0, 8.0]
+    seps = [
+        (True, "a", "b", 0.3, True),
+        (True, "b", "a", 200.0, True),
+    ]
+    ok, pos, newseps, flips, fail = geom.legalize_repair_axis(
+        True, names, sizes, 80.0, 0.3, seps, [], [], 16)
+    assert ok is True
+    assert fail == ""
+    assert len(pos) == 2
+    ok2, _pos2, _seps2, _flips2, fail2 = geom.legalize_repair_axis(
+        True, names, sizes, 80.0, 0.3,
+        [(True, "a", "b", 0.3, False), (True, "b", "a", 200.0, False)],
+        [], [], 0)
+    assert ok2 is False
+    assert fail2 in ("cycle", "exhausted")
+
+
+def test_j_edge_and_affinity_tokens_match_python(geom, monkeypatch):
+    from types import SimpleNamespace
+
+    from schgen.generate.floorplan import (
+        _affinity_j_from_expect,
+        _affinity_j_from_expect_py,
+        _affinity_j_from_target,
+        _affinity_j_from_target_py,
+        _dominant_j,
+        _dominant_j_py,
+        _j_edge_map,
+        _j_edge_map_py,
+    )
+
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    som = SimpleNamespace(
+        w=50.0, h=42.0,
+        js=(
+            SimpleNamespace(ref="J1", x=0.0, y=21.0),
+            SimpleNamespace(ref="J2", x=25.0, y=0.0),
+            SimpleNamespace(ref="J3", x=50.0, y=42.0),
+        ))
+    assert dict(geom.j_edge_map(
+        [(j.ref, j.x, j.y) for j in som.js], som.w, som.h)) == (
+        _j_edge_map_py(som))
+    assert _j_edge_map(som) == _j_edge_map_py(som)
+    assert geom.j_edge_of(25.0, 21.0, 50.0, 42.0) == min([
+        (21.0, "N"), (21.0, "S"), (25.0, "W"), (25.0, "E")])[1]
+    assert geom.dominant_j([]) is None
+    assert geom.dominant_j([("J2", 1), ("J1", 1)]) == "J1"
+    assert geom.dominant_j([("J3", 4), ("J1", 2)]) == "J3"
+    assert _dominant_j({"J2": 1, "J1": 1}) == _dominant_j_py({"J2": 1, "J1": 1})
+    assert _dominant_j({}) is None
+    expects = (
+        "j1 connector",
+        "foo J2 bar",
+        "xj1 no",
+        "j12 no",
+        "use j3 and j1",
+        "",
+    )
+    for text in expects:
+        assert list(geom.affinity_j_from_expect(text)) == (
+            _affinity_j_from_expect_py(text))
+        assert _affinity_j_from_expect(text) == (
+            _affinity_j_from_expect_py(text))
+    targets = (
+        "sheet som_j1:HDMI",
+        "sheet som_j2",
+        "SoM east (J3)",
+        "SoM west (J1) extra",
+        "other",
+        "sheet other",
+    )
+    for text in targets:
+        assert geom.affinity_j_from_target(text) == (
+            _affinity_j_from_target_py(text))
+        assert _affinity_j_from_target(text) == (
+            _affinity_j_from_target_py(text))
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

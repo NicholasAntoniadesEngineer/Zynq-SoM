@@ -174,6 +174,15 @@ NB_MODULE(_geom, m) {
                   as_comps(cc), clear);
           });
     m.def("boxes_separated", &schgen::boxes_separated);
+    m.def("halo4",
+          [](const std::tuple<double, double, double, double>& reach,
+             const std::tuple<double, double, double, double>& inset) {
+              const schgen::Halo hit =
+                  schgen::halo4(as_halo(reach), as_halo(inset));
+              return std::make_tuple(hit.w, hit.e, hit.n, hit.s);
+          });
+    m.def("occ_pair_active", &schgen::occ_pair_active);
+    m.def("spatial_bounds", &schgen::spatial_bounds);
     m.def("pairs_hold",
           [](const std::vector<std::vector<std::tuple<
                  double, double, double, double,
@@ -212,6 +221,9 @@ NB_MODULE(_geom, m) {
     m.def("fixed_part_grid", &schgen::fixed_part_grid);
     m.def("evict_corridor_grid", &schgen::evict_corridor_grid);
     m.def("som_pose_half_mm", &schgen::som_pose_half_mm);
+    m.def("placeholder_zone_half_mm", &schgen::placeholder_zone_half_mm);
+    m.def("interior_dims", &schgen::interior_dims);
+    m.def("derive_outline_wh", &schgen::derive_outline_wh);
     m.def("legalize_pose_quantum", &schgen::legalize_pose_quantum);
     m.def("quant_credit", &schgen::quant_credit);
     m.def("snap_erosion_bound", &schgen::snap_erosion_bound);
@@ -500,6 +512,47 @@ NB_MODULE(_geom, m) {
                   names, pos_x, pos_y, seed_x, seed_y, ex, ey, hops, cents,
                   fixed, som_mid_x, som_mid_y, has_som, seed_only, hop_weight,
                   seed_weight, median_passes);
+          });
+    m.def("legalize_repair_axis",
+          [](bool axis_x, const std::vector<std::string>& names,
+             const std::vector<double>& sizes, double span, double clear,
+             const std::vector<std::tuple<bool, std::string, std::string,
+                                          double, bool>>& seps,
+             const std::vector<std::tuple<std::string, BoxTup>>& frects,
+             const std::vector<std::tuple<std::string, std::string, double>>&
+                 extra,
+             int repair_max) {
+              std::vector<schgen::RepairSep> spec;
+              spec.reserve(seps.size());
+              for (const auto& s : seps) {
+                  spec.push_back(schgen::RepairSep{
+                      std::get<0>(s), std::get<1>(s), std::get<2>(s),
+                      std::get<3>(s), std::get<4>(s)});
+              }
+              std::vector<std::pair<std::string, schgen::Box4>> fr;
+              fr.reserve(frects.size());
+              for (const auto& r : frects) {
+                  fr.emplace_back(std::get<0>(r), as_box(std::get<1>(r)));
+              }
+              std::vector<schgen::NamedEdge> extra_e;
+              extra_e.reserve(extra.size());
+              for (const auto& e : extra) {
+                  extra_e.push_back(schgen::NamedEdge{
+                      std::get<0>(e), std::get<1>(e), std::get<2>(e)});
+              }
+              auto hit = schgen::legalize_repair_axis(
+                  axis_x, names, sizes, span, clear, spec, fr, extra_e,
+                  repair_max);
+              std::vector<std::tuple<bool, std::string, std::string, double,
+                                     bool>>
+                  seps_out;
+              seps_out.reserve(hit.seps.size());
+              for (const auto& s : hit.seps) {
+                  seps_out.emplace_back(s.axis_x, s.lo, s.hi, s.gap,
+                                        s.flippable);
+              }
+              return std::make_tuple(hit.ok, hit.pos, seps_out, hit.flips,
+                                     hit.fail);
           });
     m.def("rects_overlap_any",
           [](const std::vector<BoxTup>& probes,
@@ -866,6 +919,18 @@ NB_MODULE(_geom, m) {
               auto p = schgen::zone_anchor(zone[0], som_x, som_y, som_w,
                                            som_h, board_w, board_h);
               return std::make_tuple(p.first, p.second);
+          });
+    m.def("j_edge_of", &schgen::j_edge_of);
+    m.def("j_edge_map", &schgen::j_edge_map);
+    m.def("dominant_j",
+          [](const std::vector<std::pair<std::string, int>>& affinity)
+              -> std::optional<std::string> {
+              return schgen::dominant_j(affinity);
+          });
+    m.def("affinity_j_from_expect", &schgen::affinity_j_from_expect);
+    m.def("affinity_j_from_target",
+          [](const std::string& target) -> std::optional<std::string> {
+              return schgen::affinity_j_from_target(target);
           });
     m.def("pack_anchor",
           [](bool face_override, const char* face, double som_x, double som_y,

@@ -1357,39 +1357,98 @@ def legalize_compact(board_w: float, board_h: float,
     posy["#0"] = 0.0
     seed_feasible = edges_ok("x", posx) and edges_ok("y", posy)
 
+    def _repair_axis_py(axis: str, pos: dict[str, float]) -> bool:
+        for _rep in range(REPAIR_MAX + 1):
+            E = build_edges(axis)
+            dist, cycle = _bellman_ford(["#0"] + names, E)
+            if dist is not None:
+                base = dist["#0"]
+                for n in names:
+                    pos[n] = dist[n] - base
+                return True
+            flipped = False
+            for tag in cycle:
+                if isinstance(tag, tuple) and tag[0] == "sep" \
+                        and tag[1].flippable:
+                    sp = tag[1]
+                    seps.remove(sp)
+                    seps.append(_Sep("y" if sp.axis == "x" else "x",
+                                     sp.lo, sp.hi, sp.gap,
+                                     sp.basis + "|flipped", False))
+                    log.append(f"repair: flip {sp.lo}|{sp.hi} off "
+                               f"{sp.axis}")
+                    flipped = True
+                    break
+            if not flipped:
+                log.append(
+                    "INFEASIBLE " + axis + ": negative cycle ["
+                    + ", ".join(
+                        (t[1].lo + "|" + t[1].hi if isinstance(t, tuple)
+                         and t[0] == "sep" else str(t))
+                        for t in cycle[:6]) + "]")
+                return False
+        log.append(f"INFEASIBLE {axis}: REPAIR_MAX exhausted")
+        return False
+
+    def _repair_axis(axis: str, pos: dict[str, float]) -> bool:
+        if not _nat.loaded():
+            return _repair_axis_py(axis, pos)
+        span = board_w if axis == "x" else board_h
+        sizes = [by_name[n].w if axis == "x" else by_name[n].h for n in names]
+        sep_in = [(s.axis == "x", s.lo, s.hi, s.gap, s.flippable) for s in seps]
+        frects = [(fn, r) for fn, r in frect.items()]
+        extra = [(u, v, c)
+                 for t in hard if t.kind == "near_max"
+                 for u, v, c, _tag in _near_max_edges(t, axis)]
+        keep_seps = list(seps)
+        keep_pos = dict(pos)
+        keep_log = list(log)
+        ok, newpos, newseps, flips, fail = _nat.module().legalize_repair_axis(
+            axis == "x", names, sizes, span, clear, sep_in, frects, extra,
+            REPAIR_MAX)
+        basis_of = {(s.lo, s.hi): s.basis for s in seps}
+        flipped_keys = {(lo, hi) for lo, hi, _was in flips}
+        seps.clear()
+        for ax, lo, hi, gap, flip in newseps:
+            basis = basis_of.get((lo, hi), "")
+            if (lo, hi) in flipped_keys and not basis.endswith("|flipped"):
+                basis = (basis + "|flipped") if basis else "flipped"
+            seps.append(_Sep("x" if ax else "y", lo, hi, gap, basis, flip))
+        if ok:
+            for i, n in enumerate(names):
+                pos[n] = newpos[i]
+            for lo, hi, was_x in flips:
+                log.append(f"repair: flip {lo}|{hi} off "
+                           f"{'x' if was_x else 'y'}")
+        if _nat.trace():
+            seps[:] = keep_seps
+            pos.clear()
+            pos.update(keep_pos)
+            log[:] = keep_log
+            ref_ok = _repair_axis_py(axis, pos)
+            if ok is not ref_ok:
+                raise AssertionError(
+                    "native legalize_repair_axis DIVERGENCE: "
+                    f"cpp_ok={ok} python_ok={ref_ok} fail={fail}")
+            if ok:
+                got = {n: newpos[i] for i, n in enumerate(names)}
+                refp = {n: pos[n] for n in names}
+                if got != refp:
+                    raise AssertionError(
+                        "native legalize_repair_axis DIVERGENCE: "
+                        f"cpp={got} python={refp}")
+            return ref_ok
+        if not ok:
+            if fail == "exhausted":
+                log.append(f"INFEASIBLE {axis}: REPAIR_MAX exhausted")
+            else:
+                log.append(f"INFEASIBLE {axis}: negative cycle")
+            return False
+        return True
+
     if not seed_feasible:
         for axis, pos in (("x", posx), ("y", posy)):
-            for _rep in range(REPAIR_MAX + 1):
-                E = build_edges(axis)
-                dist, cycle = _bellman_ford(["#0"] + names, E)
-                if dist is not None:
-                    base = dist["#0"]
-                    for n in names:
-                        pos[n] = dist[n] - base
-                    break
-                flipped = False
-                for tag in cycle:
-                    if isinstance(tag, tuple) and tag[0] == "sep" \
-                            and tag[1].flippable:
-                        sp = tag[1]
-                        seps.remove(sp)
-                        seps.append(_Sep("y" if sp.axis == "x" else "x",
-                                         sp.lo, sp.hi, sp.gap,
-                                         sp.basis + "|flipped", False))
-                        log.append(f"repair: flip {sp.lo}|{sp.hi} off "
-                                   f"{sp.axis}")
-                        flipped = True
-                        break
-                if not flipped:
-                    log.append(
-                        "INFEASIBLE " + axis + ": negative cycle ["
-                        + ", ".join(
-                            (t[1].lo + "|" + t[1].hi if isinstance(t, tuple)
-                             and t[0] == "sep" else str(t))
-                            for t in cycle[:6]) + "]")
-                    return False
-            else:
-                log.append(f"INFEASIBLE {axis}: REPAIR_MAX exhausted")
+            if not _repair_axis(axis, pos):
                 return False
         _descend(posx, posy, hops=(), seed_only=True)
         for axis, pos in (("x", posx), ("y", posy)):
