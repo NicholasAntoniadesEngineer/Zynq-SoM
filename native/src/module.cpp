@@ -57,6 +57,44 @@ std::vector<schgen::Comp> as_comps(
 }
 
 using BoxTup = std::tuple<double, double, double, double>;
+using HaloTup = std::tuple<double, double, double, double>;
+using EntTup = std::tuple<double, double, double, double, HaloTup, HaloTup, int,
+                          int, bool>;
+using CompTup = std::tuple<double, double, double, double, int>;
+using BlockTup = std::tuple<double, double, double, double, HaloTup, HaloTup,
+                            int, std::vector<CompTup>>;
+
+EntTup as_ent(const schgen::Rect& rect) {
+    return EntTup{rect.x, rect.y, rect.w, rect.h,
+                  HaloTup{rect.reach.w, rect.reach.e, rect.reach.n,
+                          rect.reach.s},
+                  HaloTup{rect.inset.w, rect.inset.e, rect.inset.n,
+                          rect.inset.s},
+                  rect.mask, rect.pmask, rect.main};
+}
+
+schgen::PairsBlock as_pairs_block(const BlockTup& row) {
+    schgen::PairsBlock block;
+    block.x = std::get<0>(row);
+    block.y = std::get<1>(row);
+    block.w = std::get<2>(row);
+    block.h = std::get<3>(row);
+    block.reach = as_halo(std::get<4>(row));
+    block.inset = as_halo(std::get<5>(row));
+    block.mask = std::get<6>(row);
+    block.comps = as_comps(std::get<7>(row));
+    return block;
+}
+
+std::vector<schgen::PairsBlock> as_pairs_blocks(
+    const std::vector<BlockTup>& rows) {
+    std::vector<schgen::PairsBlock> out;
+    out.reserve(rows.size());
+    for (const auto& row : rows) {
+        out.push_back(as_pairs_block(row));
+    }
+    return out;
+}
 
 schgen::Box4 as_box(const BoxTup& t) {
     return schgen::Box4{std::get<0>(t), std::get<1>(t), std::get<2>(t),
@@ -422,6 +460,56 @@ NB_MODULE(_geom, m) {
               return schgen::pairs_hold(rows,
                                         static_cast<std::size_t>(subject_count),
                                         clear);
+          });
+    m.def("pairs_entity",
+          [](double x, double y, double w, double h, const HaloTup& reach,
+             const HaloTup& inset, int mask, const std::vector<CompTup>& comps) {
+              auto rows = schgen::pairs_entity(x, y, w, h, as_halo(reach),
+                                               as_halo(inset), mask,
+                                               as_comps(comps));
+              std::vector<EntTup> out;
+              out.reserve(rows.size());
+              for (const auto& rect : rows) {
+                  out.push_back(as_ent(rect));
+              }
+              return out;
+          });
+    m.def("pairs_hold_groups",
+          [](const std::vector<BlockTup>& interior,
+             const std::vector<BlockTup>& edges, const BoxTup& som_occ,
+             int som_mask, const std::vector<CompTup>& som_comps,
+             double board_w, double board_h, double mh_corner_ko,
+             int punch_mask) {
+              auto groups = schgen::pairs_hold_groups(
+                  as_pairs_blocks(interior), as_pairs_blocks(edges),
+                  std::get<0>(som_occ), std::get<1>(som_occ),
+                  std::get<2>(som_occ), std::get<3>(som_occ), som_mask,
+                  as_comps(som_comps), board_w, board_h, mh_corner_ko,
+                  punch_mask);
+              std::vector<std::vector<EntTup>> out;
+              out.reserve(groups.size());
+              for (const auto& group : groups) {
+                  std::vector<EntTup> row;
+                  row.reserve(group.size());
+                  for (const auto& rect : group) {
+                      row.push_back(as_ent(rect));
+                  }
+                  out.push_back(std::move(row));
+              }
+              return out;
+          });
+    m.def("pairs_hold_from_layout",
+          [](const std::vector<BlockTup>& interior,
+             const std::vector<BlockTup>& edges, const BoxTup& som_occ,
+             int som_mask, const std::vector<CompTup>& som_comps,
+             double board_w, double board_h, double mh_corner_ko,
+             int punch_mask, double clear) {
+              return schgen::pairs_hold_from_layout(
+                  as_pairs_blocks(interior), as_pairs_blocks(edges),
+                  std::get<0>(som_occ), std::get<1>(som_occ),
+                  std::get<2>(som_occ), std::get<3>(som_occ), som_mask,
+                  as_comps(som_comps), board_w, board_h, mh_corner_ko,
+                  punch_mask, clear);
           });
     m.def("py_round", &schgen::py_round);
     m.def("fixed_part_grid", &schgen::fixed_part_grid);
@@ -1103,6 +1191,16 @@ NB_MODULE(_geom, m) {
               auto b = schgen::offset_turned_box(as_box(bbox), rot, ox, oy);
               return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
           });
+    m.def("offset_boxes",
+          [](const std::vector<BoxTup>& boxes, double ox, double oy) {
+              auto rows = schgen::offset_boxes(as_boxes(boxes), ox, oy);
+              std::vector<BoxTup> out;
+              out.reserve(rows.size());
+              for (const auto& box : rows) {
+                  out.emplace_back(box.x0, box.y0, box.x1, box.y1);
+              }
+              return out;
+          });
     m.def("grid_controls",
           [](const std::vector<std::tuple<std::string, double, double, double,
                                           double>>& items,
@@ -1187,6 +1285,25 @@ NB_MODULE(_geom, m) {
                                       e.worst, e.at, e.depth, e.members);
               }
               return std::make_tuple(vias, ledger, hit.audit);
+          });
+    m.def("escape_ladder_plan",
+          [](const std::vector<std::tuple<double, double, std::string>>&
+                 gnd_pads,
+             const std::vector<std::pair<double, double>>& vias, double pitch,
+             double pitch_tol, double row_v, double stub_w_pair,
+             double stub_w_single, double spine_w) {
+              auto rows = schgen::escape_ladder_plan(
+                  gnd_pads, vias, pitch, pitch_tol, row_v, stub_w_pair,
+                  stub_w_single, spine_w);
+              std::vector<std::tuple<double, double, double, double, double,
+                                     std::string>>
+                  out;
+              out.reserve(rows.size());
+              for (const auto& seg : rows) {
+                  out.emplace_back(seg.ax, seg.ay, seg.bx, seg.by, seg.w,
+                                   seg.role);
+              }
+              return out;
           });
     m.def("is_passive_ref", &schgen::is_passive_ref);
     m.def("classify_side",

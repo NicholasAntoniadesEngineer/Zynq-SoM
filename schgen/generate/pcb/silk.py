@@ -25,16 +25,16 @@ def _rects_overlap_py(a, b) -> bool:
 
 
 def _rects_overlap(a, b) -> bool:
-    if _nat.loaded():
-        got = _nat.module().boxes_overlap(a, b, 0.0)
-        if _nat.trace():
-            ref = _rects_overlap_py(a, b)
-            if got is not ref:
-                raise AssertionError(
-                    "native boxes_overlap DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _rects_overlap_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native boxes_overlap required")
+    got = _nat.module().boxes_overlap(a, b, 0.0)
+    if _nat.trace():
+        ref = _rects_overlap_py(a, b)
+        if got is not ref:
+            raise AssertionError(
+                "native boxes_overlap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _text_box_py(txt: str, x: float, y: float, size: float, m: float = 0.15):
@@ -45,15 +45,15 @@ def _text_box_py(txt: str, x: float, y: float, size: float, m: float = 0.15):
 
 
 def _text_box(txt: str, x: float, y: float, size: float, m: float = 0.15):
-    if _nat.loaded():
-        got = tuple(_nat.module().text_box(txt, x, y, size, m))
-        if _nat.trace():
-            ref = _text_box_py(txt, x, y, size, m)
-            if got != ref:
-                raise AssertionError(
-                    f"native text_box DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _text_box_py(txt, x, y, size, m)
+    if not _nat.loaded():
+        raise RuntimeError("native text_box required")
+    got = tuple(_nat.module().text_box(txt, x, y, size, m))
+    if _nat.trace():
+        ref = _text_box_py(txt, x, y, size, m)
+        if got != ref:
+            raise AssertionError(
+                f"native text_box DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def _sub(node, name):

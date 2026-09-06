@@ -297,6 +297,8 @@ std::pair<double, double> mirror_offset_x(double ox, double oy, const Box4& cb,
                                           double zone_w);
 
 Box4 offset_turned_box(const Box4& bbox, double rot, double ox, double oy);
+std::vector<Box4> offset_boxes(const std::vector<Box4>& boxes, double ox,
+                               double oy);
 
 struct GridControls {
     std::vector<std::tuple<std::string, double, double>> offs;
@@ -404,6 +406,21 @@ Box4 canonical_plane_rect(double origin_x, double origin_y, double board_w,
 Box4 isolation_void_rect(const Box4& court, double margin);
 
 Box4 board_box_to_uv(double cx, double cy, double rot, const Box4& box);
+
+struct EscapeLadderSeg {
+    double ax = 0.0;
+    double ay = 0.0;
+    double bx = 0.0;
+    double by = 0.0;
+    double w = 0.0;
+    std::string role;
+};
+
+std::vector<EscapeLadderSeg> escape_ladder_plan(
+    const std::vector<std::tuple<double, double, std::string>>& gnd_pads,
+    const std::vector<std::pair<double, double>>& vias, double pitch,
+    double pitch_tol, double row_v, double stub_w_pair,
+    double stub_w_single, double spine_w);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

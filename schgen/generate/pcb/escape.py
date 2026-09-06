@@ -124,17 +124,17 @@ def _to_board_py(inst, u: float, v: float) -> tuple[float, float]:
 
 
 def _to_board(inst, u: float, v: float) -> tuple[float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().uv_to_board(
-            inst.x, inst.y, u, v, inst.rotation or 0.0))
-        if _nat.trace():
-            ref = _to_board_py(inst, u, v)
-            if got != ref:
-                raise AssertionError(
-                    "native uv_to_board DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _to_board_py(inst, u, v)
+    if not _nat.loaded():
+        raise RuntimeError("native uv_to_board required")
+    got = tuple(_nat.module().uv_to_board(
+        inst.x, inst.y, u, v, inst.rotation or 0.0))
+    if _nat.trace():
+        ref = _to_board_py(inst, u, v)
+        if got != ref:
+            raise AssertionError(
+                "native uv_to_board DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _to_local_py(inst, bx: float, by: float) -> tuple[float, float]:
@@ -144,17 +144,17 @@ def _to_local_py(inst, bx: float, by: float) -> tuple[float, float]:
 
 
 def _to_local(inst, bx: float, by: float) -> tuple[float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().board_to_uv(
-            inst.x, inst.y, bx, by, inst.rotation or 0.0))
-        if _nat.trace():
-            ref = _to_local_py(inst, bx, by)
-            if got != ref:
-                raise AssertionError(
-                    "native board_to_uv DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _to_local_py(inst, bx, by)
+    if not _nat.loaded():
+        raise RuntimeError("native board_to_uv required")
+    got = tuple(_nat.module().board_to_uv(
+        inst.x, inst.y, bx, by, inst.rotation or 0.0))
+    if _nat.trace():
+        ref = _to_local_py(inst, bx, by)
+        if got != ref:
+            raise AssertionError(
+                "native board_to_uv DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _box_dist_py(x: float, y: float, box: tuple[float, float, float, float]
@@ -165,16 +165,16 @@ def _box_dist_py(x: float, y: float, box: tuple[float, float, float, float]
 
 
 def _box_dist(x: float, y: float, box: tuple[float, float, float, float]) -> float:
-    if _nat.loaded():
-        got = _nat.module().point_box_dist(x, y, box)
-        if _nat.trace():
-            ref = _box_dist_py(x, y, box)
-            if got != ref:
-                raise AssertionError(
-                    "native point_box_dist DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _box_dist_py(x, y, box)
+    if not _nat.loaded():
+        raise RuntimeError("native point_box_dist required")
+    got = _nat.module().point_box_dist(x, y, box)
+    if _nat.trace():
+        ref = _box_dist_py(x, y, box)
+        if got != ref:
+            raise AssertionError(
+                "native point_box_dist DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 CORRIDOR_V_MARGIN = 0.15
@@ -193,17 +193,17 @@ def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
     from schgen.verify import return_path_gate as rpg
     pads = rpg._parse_pad_positions(mod_path)
     uv = list(pads.values())
-    if _nat.loaded():
-        got = tuple(_nat.module().corridor_local_from_uv(
-            uv, R_CONSTRUCT, CORRIDOR_V_MARGIN))
-        if _nat.trace():
-            ref = df40_corridor_local_py(pads)
-            if got != ref:
-                raise AssertionError(
-                    "native corridor_local_from_uv DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return df40_corridor_local_py(pads)
+    if not _nat.loaded():
+        raise RuntimeError("native corridor_local_from_uv required")
+    got = tuple(_nat.module().corridor_local_from_uv(
+        uv, R_CONSTRUCT, CORRIDOR_V_MARGIN))
+    if _nat.trace():
+        ref = df40_corridor_local_py(pads)
+        if got != ref:
+            raise AssertionError(
+                "native corridor_local_from_uv DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def corridor_board_rect_py(local, cx: float, cy: float, rot: float
@@ -220,17 +220,17 @@ def corridor_board_rect_py(local, cx: float, cy: float, rot: float
 def corridor_board_rect(mod_path, cx: float, cy: float, rot: float
                         ) -> tuple[float, float, float, float]:
     local = df40_corridor_local(mod_path)
-    if _nat.loaded():
-        got = tuple(_nat.module().corridor_board_rect(
-            local, cx, cy, rot or 0.0))
-        if _nat.trace():
-            ref = corridor_board_rect_py(local, cx, cy, rot)
-            if got != ref:
-                raise AssertionError(
-                    "native corridor_board_rect DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return corridor_board_rect_py(local, cx, cy, rot)
+    if not _nat.loaded():
+        raise RuntimeError("native corridor_board_rect required")
+    got = tuple(_nat.module().corridor_board_rect(
+        local, cx, cy, rot or 0.0))
+    if _nat.trace():
+        ref = corridor_board_rect_py(local, cx, cy, rot)
+        if got != ref:
+            raise AssertionError(
+                "native corridor_board_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _seg_box_dist_py(a: tuple[float, float], b: tuple[float, float],
@@ -245,16 +245,16 @@ def _seg_box_dist_py(a: tuple[float, float], b: tuple[float, float],
 
 def _seg_box_dist(a: tuple[float, float], b: tuple[float, float],
                   box: tuple[float, float, float, float]) -> float:
-    if _nat.loaded():
-        got = _nat.module().seg_box_dist(a[0], a[1], b[0], b[1], box)
-        if _nat.trace():
-            ref = _seg_box_dist_py(a, b, box)
-            if got != ref:
-                raise AssertionError(
-                    "native seg_box_dist DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _seg_box_dist_py(a, b, box)
+    if not _nat.loaded():
+        raise RuntimeError("native seg_box_dist required")
+    got = _nat.module().seg_box_dist(a[0], a[1], b[0], b[1], box)
+    if _nat.trace():
+        ref = _seg_box_dist_py(a, b, box)
+        if got != ref:
+            raise AssertionError(
+                "native seg_box_dist DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 @dataclass
@@ -331,16 +331,16 @@ def band_cover_py(points: list[tuple[float, str]], reach: float,
 
 def band_cover(points: list[tuple[float, str]], reach: float,
                ) -> list[list[tuple[float, str]]]:
-    if _nat.loaded():
-        got = [[(float(u), p) for u, p in band]
-               for band in _nat.module().band_cover(points, reach)]
-        if _nat.trace():
-            ref = band_cover_py(points, reach)
-            if got != ref:
-                raise AssertionError(
-                    f"native band_cover DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return band_cover_py(points, reach)
+    if not _nat.loaded():
+        raise RuntimeError("native band_cover required")
+    got = [[(float(u), p) for u, p in band]
+           for band in _nat.module().band_cover(points, reach)]
+    if _nat.trace():
+        ref = band_cover_py(points, reach)
+        if got != ref:
+            raise AssertionError(
+                f"native band_cover DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 @dataclass
@@ -363,19 +363,103 @@ def _coverage_ok_py(u: float, v: float, members: list[_Member],
     return True, worst
 
 
+def escape_ladder_plan_py(gnd_pads: list, vias: list, pitch: float,
+                          pitch_tol: float, row_v: float, stub_w_pair: float,
+                          stub_w_single: float, spine_w: float) -> list:
+    pads = sorted((round(u, 4), round(v, 4), p) for u, v, p in gnd_pads)
+    cols: dict[float, set[float]] = {}
+    for pad_u, pad_v, _pad in pads:
+        cols.setdefault(pad_u, set()).add(pad_v)
+    both_rows = sorted(col_u for col_u, vs in cols.items() if len(vs) >= 2)
+    attaches: list[tuple] = []
+    used_cols: set[float] = set()
+    for left_u, right_u in zip(both_rows, both_rows[1:], strict=False):
+        if abs(right_u - left_u - pitch) < pitch_tol:
+            attaches.append((round((left_u + right_u) / 2, 4), "pair",
+                             (left_u, right_u)))
+            used_cols.update((left_u, right_u))
+    for col_u in both_rows:
+        if col_u not in used_cols:
+            attaches.append((col_u, "column", col_u))
+    for pad_u, pad_v, pad in pads:
+        if pad_u not in both_rows:
+            attaches.append((pad_u, "pad", (pad_u, pad_v, pad)))
+    attaches.sort()
+    if not attaches:
+        raise EscapeError("no GND attach options on the connector")
+    needed: list[tuple] = []
+    for via_u, _via_v in sorted(vias, key=lambda row: row[0]):
+        left = [row for row in attaches if row[0] <= via_u]
+        right = [row for row in attaches if row[0] >= via_u]
+        picks = []
+        if left:
+            picks.append(left[-1])
+        if right:
+            picks.append(right[0])
+        if len(picks) < 2:
+            picks = sorted(attaches,
+                           key=lambda row: (abs(row[0] - via_u), row[0]))[:2]
+        for pick in picks:
+            if pick not in needed:
+                needed.append(pick)
+    needed.sort()
+    stub_segs: list[tuple] = []
+    for attach_u, kind, payload in needed:
+        if kind == "pair":
+            stub_segs.append((attach_u, -row_v, attach_u, row_v, stub_w_pair,
+                              "stub_pair"))
+        elif kind == "column":
+            stub_segs.append((attach_u, -row_v, attach_u, row_v,
+                              stub_w_single, "stub_column"))
+        else:
+            pad_u, pad_v, _pad = payload
+            stub_segs.append((pad_u, math.copysign(row_v, pad_v), pad_u, 0.0,
+                              stub_w_single, "stub_pad"))
+    for via_u, via_v in vias:
+        if abs(via_v) > 1e-9:
+            stub_segs.append((via_u, 0.0, via_u, via_v, stub_w_single,
+                              "stub_via"))
+    attach_us = [row[0] for row in needed] + [via_u for via_u, _via_v in vias]
+    spine = (min(attach_us), 0.0, max(attach_us), 0.0, spine_w, "spine")
+    return [spine] + stub_segs
+
+
+def escape_ladder_plan(gnd_pads: list, vias: list, pitch: float,
+                       pitch_tol: float, row_v: float, stub_w_pair: float,
+                       stub_w_single: float, spine_w: float) -> list:
+    if not _nat.loaded():
+        raise RuntimeError("native escape_ladder_plan required")
+    try:
+        got = [tuple(row) for row in _nat.module().escape_ladder_plan(
+            [(float(u), float(v), str(p)) for u, v, p in gnd_pads],
+            [(float(u), float(v)) for u, v in vias],
+            pitch, pitch_tol, row_v, stub_w_pair, stub_w_single, spine_w)]
+    except RuntimeError as exc:
+        raise EscapeError(str(exc)) from exc
+    if _nat.trace():
+        ref = escape_ladder_plan_py(
+            gnd_pads, vias, pitch, pitch_tol, row_v, stub_w_pair,
+            stub_w_single, spine_w)
+        if got != ref:
+            raise AssertionError(
+                "native escape_ladder_plan DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _coverage_ok(u: float, v: float, members: list[_Member],
                  bound: float) -> tuple[bool, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().coverage_ok(
-            u, v, [(m.u, m.v) for m in members], bound))
-        if _nat.trace():
-            ref = _coverage_ok_py(u, v, members, bound)
-            if got != ref:
-                raise AssertionError(
-                    "native coverage_ok DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _coverage_ok_py(u, v, members, bound)
+    if not _nat.loaded():
+        raise RuntimeError("native coverage_ok required")
+    got = tuple(_nat.module().coverage_ok(
+        u, v, [(m.u, m.v) for m in members], bound))
+    if _nat.trace():
+        ref = _coverage_ok_py(u, v, members, bound)
+        if got != ref:
+            raise AssertionError(
+                "native coverage_ok DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _via_clear() -> tuple[float, float, float, float]:
@@ -598,68 +682,15 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
             (round(pads_local[p][0], 4), round(pads_local[p][1], 4), p)
             for p, (num, name) in inst.pad_nets.items()
             if num > 0 and name == "GND" and p in pads_local)
-        cols: dict[float, set[float]] = {}
-        for u, v, _p in gnd_pads:
-            cols.setdefault(u, set()).add(v)
-        both_rows = sorted(u for u, vs in cols.items() if len(vs) >= 2)
-        adjacent = [(a, b)
-                    for a, b in zip(both_rows, both_rows[1:], strict=False)
-                    if abs(b - a - contacts.pitch) < PITCH_TOL_MM]
-        attaches: list[tuple[float, str, object]] = []
-        used_cols: set[float] = set()
-        for a, b in adjacent:
-            attaches.append((round((a + b) / 2, 4), "pair", (a, b)))
-            used_cols.update((a, b))
-        for u in both_rows:
-            if u not in used_cols:
-                attaches.append((u, "column", u))
-        for u, v, p in gnd_pads:
-            if u not in both_rows:
-                attaches.append((u, "pad", (u, v, p)))
-        attaches.sort()
-        if not attaches:
-            raise EscapeError(f"{ref}: no GND attach options on the connector")
-
-        needed: list[tuple[float, str, object]] = []
-        for s in sorted(vias, key=lambda x: x["u"]):
-            left = [a for a in attaches if a[0] <= s["u"]]
-            right = [a for a in attaches if a[0] >= s["u"]]
-            picks = []
-            if left:
-                picks.append(left[-1])
-            if right:
-                picks.append(right[0])
-            if len(picks) < 2:
-                picks = sorted(attaches,
-                               key=lambda a: (abs(a[0] - s["u"]), a[0]))[:2]
-            for pk in picks:
-                if pk not in needed:
-                    needed.append(pk)
-        needed.sort()
-
-        stub_segs: list[dict] = []
-        for u, kind, payload in needed:
-            if kind == "pair":
-                stub_segs.append({"a": (u, -contacts.row_v),
-                                  "b": (u, contacts.row_v),
-                                  "w": STUB_W_PAIR, "role": "stub_pair"})
-            elif kind == "column":
-                stub_segs.append({"a": (u, -contacts.row_v),
-                                  "b": (u, contacts.row_v),
-                                  "w": STUB_W_SINGLE, "role": "stub_column"})
-            else:
-                pu, pv, _p = payload
-                stub_segs.append({"a": (pu, math.copysign(contacts.row_v, pv)),
-                                  "b": (pu, 0.0),
-                                  "w": STUB_W_SINGLE, "role": "stub_pad"})
-        for s in vias:
-            if abs(s["v"]) > 1e-9:
-                stub_segs.append({"a": (s["u"], 0.0), "b": (s["u"], s["v"]),
-                                  "w": STUB_W_SINGLE, "role": "stub_via"})
-        attach_us = ([a[0] for a in needed] + [s["u"] for s in vias])
-        spine = {"a": (min(attach_us), 0.0), "b": (max(attach_us), 0.0),
-                 "w": SPINE_W, "role": "spine"}
-        segs = [spine] + stub_segs
+        via_uv = [(s["u"], s["v"]) for s in vias]
+        try:
+            planned = escape_ladder_plan(
+                gnd_pads, via_uv, contacts.pitch, PITCH_TOL_MM,
+                contacts.row_v, STUB_W_PAIR, STUB_W_SINGLE, SPINE_W)
+        except EscapeError as exc:
+            raise EscapeError(f"{ref}: {exc}") from exc
+        segs = [{"a": (ax, ay), "b": (bx, by), "w": width, "role": role}
+                for ax, ay, bx, by, width, role in planned]
 
         for sseg in segs:
             for bx in obstacles[ref].f_cu:

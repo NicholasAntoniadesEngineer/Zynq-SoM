@@ -119,6 +119,33 @@ bool boxes_separated(double ax, double ay, double aw, double ah,
 bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
                 std::size_t subject_count, double clear);
 
+struct PairsBlock {
+    double x = 0.0;
+    double y = 0.0;
+    double w = 0.0;
+    double h = 0.0;
+    Halo reach;
+    Halo inset;
+    int mask = 0;
+    std::vector<Comp> comps;
+};
+
+std::vector<Rect> pairs_entity(double x, double y, double w, double h,
+                               const Halo& reach, const Halo& inset, int mask,
+                               const std::vector<Comp>& comps);
+std::vector<std::vector<Rect>> pairs_hold_groups(
+    const std::vector<PairsBlock>& interior,
+    const std::vector<PairsBlock>& edges, double som_x, double som_y,
+    double som_w, double som_h, int som_mask,
+    const std::vector<Comp>& som_comps, double board_w, double board_h,
+    double mh_corner_ko, int punch_mask);
+bool pairs_hold_from_layout(const std::vector<PairsBlock>& interior,
+                            const std::vector<PairsBlock>& edges, double som_x,
+                            double som_y, double som_w, double som_h,
+                            int som_mask, const std::vector<Comp>& som_comps,
+                            double board_w, double board_h,
+                            double mh_corner_ko, int punch_mask, double clear);
+
 struct EdgeFanoutBlock {
     double x = 0.0;
     double y = 0.0;

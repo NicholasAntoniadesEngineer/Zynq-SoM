@@ -486,6 +486,100 @@ def test_pairs_hold_matches_python(geom):
     assert geom.pairs_hold(groups_bad, 1, CLEAR) == _pairs_hold_py(groups_bad, 1)
 
 
+def test_pairs_entity_and_layout_match_python(geom):
+    from schgen.generate.floorplan import (
+        CLEAR,
+        MH_CORNER_KO,
+        OCC_BOTTOM,
+        OCC_PUNCH,
+        OCC_TOP,
+        _offset_boxes,
+        _offset_boxes_py,
+        _pairs_entity,
+        _pairs_entity_py,
+        _pairs_hold_from_layout,
+        _pairs_hold_groups_py,
+        _pairs_hold_py,
+        _ZeroReach,
+    )
+    z = _ZeroReach
+    comps = ((1.25, -0.5, 2.0, 1.5, OCC_BOTTOM),
+             (0.0, 3.0, 4.0, 1.0, OCC_PUNCH))
+    ref_ent = _pairs_entity_py(10.0, 12.0, 8.0, 6.0, (1.0, 0.2, 0.0, 0.4),
+                               z, OCC_TOP, comps)
+    got_ent = [tuple(row) for row in geom.pairs_entity(
+        10.0, 12.0, 8.0, 6.0, (1.0, 0.2, 0.0, 0.4), z, OCC_TOP, list(comps))]
+    assert got_ent == ref_ent
+    assert _pairs_entity(10.0, 12.0, 8.0, 6.0, (1.0, 0.2, 0.0, 0.4),
+                         z, OCC_TOP, comps) == ref_ent
+
+    interior_rows = [
+        (12.0, 14.0, 10.0, 8.0, (0.5, 0.0, 0.2, 0.0), z, OCC_TOP,
+         ((0.25, 0.25, 1.0, 1.0, OCC_BOTTOM),)),
+        (40.0, 20.0, 6.0, 6.0, z, z, OCC_BOTTOM, ()),
+    ]
+    edge_rows = [
+        (0.0, 20.0, 8.0, 12.0, (0.0, 1.2, 0.0, 0.0), z, OCC_PUNCH,
+         ((-1.0, 0.0, 2.0, 4.0, OCC_PUNCH),)),
+    ]
+    som_occ = (30.0, 30.0, 20.0, 16.0)
+    som_comps = ((1.1111, 2.2222, 3.0, 1.0, OCC_BOTTOM),)
+    board_w, board_h = 80.0, 70.0
+    ref_groups = _pairs_hold_groups_py(
+        interior_rows, edge_rows, som_occ, OCC_TOP, som_comps, board_w,
+        board_h, MH_CORNER_KO, OCC_PUNCH)
+    got_groups = [[tuple(row) for row in group]
+                  for group in geom.pairs_hold_groups(
+                      interior_rows, edge_rows, som_occ, OCC_TOP,
+                      list(som_comps), board_w, board_h, MH_CORNER_KO,
+                      OCC_PUNCH)]
+    assert got_groups == ref_groups
+    assert geom.pairs_hold_from_layout(
+        interior_rows, edge_rows, som_occ, OCC_TOP, list(som_comps),
+        board_w, board_h, MH_CORNER_KO, OCC_PUNCH, CLEAR) == _pairs_hold_py(
+            ref_groups, len(interior_rows))
+    assert _pairs_hold_from_layout(
+        interior_rows, edge_rows, som_occ, OCC_TOP, som_comps, board_w,
+        board_h, MH_CORNER_KO, OCC_PUNCH, CLEAR) == _pairs_hold_py(
+            ref_groups, len(interior_rows))
+
+    boxes = ((-1.0, -0.5, 1.0, 0.5), (2.0, 3.0, 4.5, 6.25))
+    assert [tuple(row) for row in geom.offset_boxes(boxes, 5.0, -2.0)] == (
+        _offset_boxes_py(boxes, 5.0, -2.0))
+    assert _offset_boxes(boxes, 5.0, -2.0) == _offset_boxes_py(boxes, 5.0, -2.0)
+
+
+def test_escape_ladder_plan_matches_python(geom):
+    from schgen.generate.pcb.escape import (
+        PITCH_TOL_MM,
+        SPINE_W,
+        STUB_W_PAIR,
+        STUB_W_SINGLE,
+        escape_ladder_plan,
+        escape_ladder_plan_py,
+    )
+    gnd_pads = [
+        (-1.6, 0.4, "1"), (-1.6, -0.4, "2"),
+        (0.0, 0.4, "3"), (0.0, -0.4, "4"),
+        (1.6, 0.4, "5"), (1.6, -0.4, "6"),
+        (3.2, 0.4, "7"),
+        (4.8, -0.4, "8"),
+    ]
+    vias = [(0.8, 1.2), (-0.4, 0.0), (2.4, -0.9)]
+    pitch = 1.6
+    row_v = 0.4
+    ref = escape_ladder_plan_py(
+        gnd_pads, vias, pitch, PITCH_TOL_MM, row_v, STUB_W_PAIR,
+        STUB_W_SINGLE, SPINE_W)
+    got = [tuple(row) for row in geom.escape_ladder_plan(
+        gnd_pads, vias, pitch, PITCH_TOL_MM, row_v, STUB_W_PAIR,
+        STUB_W_SINGLE, SPINE_W)]
+    assert got == ref
+    assert escape_ladder_plan(
+        gnd_pads, vias, pitch, PITCH_TOL_MM, row_v, STUB_W_PAIR,
+        STUB_W_SINGLE, SPINE_W) == ref
+
+
 def test_pair_axis_matches_python(geom):
     from schgen.generate.floorplan_compose import _pair_axis, _pair_axis_py
     cases = (

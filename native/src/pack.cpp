@@ -1589,6 +1589,17 @@ Box4 offset_turned_box(const Box4& bbox, double rot, double ox, double oy) {
                 oy + turned.y1};
 }
 
+std::vector<Box4> offset_boxes(const std::vector<Box4>& boxes, double ox,
+                               double oy) {
+    std::vector<Box4> out;
+    out.reserve(boxes.size());
+    for (const auto& box : boxes) {
+        out.push_back(Box4{ox + box.x0, oy + box.y0, ox + box.x1,
+                           oy + box.y1});
+    }
+    return out;
+}
+
 GridControls grid_controls(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         items,
@@ -2129,6 +2140,251 @@ std::vector<std::vector<Seg2>> cluster_slot_segs(
         out.push_back(std::move(segs));
     }
     return out;
+}
+
+namespace {
+
+struct EscapeAttach {
+    double u = 0.0;
+    std::string kind;
+    double a = 0.0;
+    double b = 0.0;
+    std::string pad;
+};
+
+int attach_kind_rank(const std::string& kind) {
+    if (kind == "column") {
+        return 0;
+    }
+    if (kind == "pad") {
+        return 1;
+    }
+    if (kind == "pair") {
+        return 2;
+    }
+    throw std::runtime_error("escape_ladder_plan: unknown attach kind");
+}
+
+bool attach_less(const EscapeAttach& left, const EscapeAttach& right) {
+    if (left.u != right.u) {
+        return left.u < right.u;
+    }
+    const int left_rank = attach_kind_rank(left.kind);
+    const int right_rank = attach_kind_rank(right.kind);
+    if (left_rank != right_rank) {
+        return left_rank < right_rank;
+    }
+    if (left.kind == "column") {
+        return false;
+    }
+    if (left.a != right.a) {
+        return left.a < right.a;
+    }
+    if (left.b != right.b) {
+        return left.b < right.b;
+    }
+    return left.pad < right.pad;
+}
+
+bool attach_same(const EscapeAttach& left, const EscapeAttach& right) {
+    return left.u == right.u && left.kind == right.kind && left.a == right.a
+        && left.b == right.b && left.pad == right.pad;
+}
+
+}
+
+std::vector<EscapeLadderSeg> escape_ladder_plan(
+    const std::vector<std::tuple<double, double, std::string>>& gnd_pads,
+    const std::vector<std::pair<double, double>>& vias, double pitch,
+    double pitch_tol, double row_v, double stub_w_pair,
+    double stub_w_single, double spine_w) {
+    if (gnd_pads.empty()) {
+        throw std::runtime_error("escape_ladder_plan: GND pads required");
+    }
+    if (vias.empty()) {
+        throw std::runtime_error("escape_ladder_plan: vias required");
+    }
+    if (pitch_tol < 0.0) {
+        throw std::runtime_error("escape_ladder_plan: pitch_tol required");
+    }
+    std::vector<std::tuple<double, double, std::string>> pads = gnd_pads;
+    for (auto& pad : pads) {
+        std::get<0>(pad) = py_round(std::get<0>(pad), 4);
+        std::get<1>(pad) = py_round(std::get<1>(pad), 4);
+    }
+    std::sort(pads.begin(), pads.end());
+    std::map<double, std::set<double>> cols;
+    for (const auto& pad : pads) {
+        cols[std::get<0>(pad)].insert(std::get<1>(pad));
+    }
+    std::vector<double> both_rows;
+    for (const auto& col : cols) {
+        if (col.second.size() >= 2) {
+            both_rows.push_back(col.first);
+        }
+    }
+    std::vector<EscapeAttach> attaches;
+    std::set<double> used_cols;
+    for (std::size_t i = 0; i + 1 < both_rows.size(); ++i) {
+        const double left_u = both_rows[i];
+        const double right_u = both_rows[i + 1];
+        if (std::abs(right_u - left_u - pitch) < pitch_tol) {
+            EscapeAttach attach;
+            attach.u = py_round((left_u + right_u) / 2.0, 4);
+            attach.kind = "pair";
+            attach.a = left_u;
+            attach.b = right_u;
+            attaches.push_back(attach);
+            used_cols.insert(left_u);
+            used_cols.insert(right_u);
+        }
+    }
+    for (double col_u : both_rows) {
+        if (used_cols.find(col_u) == used_cols.end()) {
+            EscapeAttach attach;
+            attach.u = col_u;
+            attach.kind = "column";
+            attach.a = col_u;
+            attaches.push_back(attach);
+        }
+    }
+    for (const auto& pad : pads) {
+        const double pad_u = std::get<0>(pad);
+        if (std::find(both_rows.begin(), both_rows.end(), pad_u)
+            == both_rows.end()) {
+            EscapeAttach attach;
+            attach.u = pad_u;
+            attach.kind = "pad";
+            attach.a = pad_u;
+            attach.b = std::get<1>(pad);
+            attach.pad = std::get<2>(pad);
+            attaches.push_back(attach);
+        }
+    }
+    std::sort(attaches.begin(), attaches.end(), attach_less);
+    if (attaches.empty()) {
+        throw std::runtime_error("escape_ladder_plan: no GND attach options");
+    }
+    std::vector<std::pair<double, double>> via_rows = vias;
+    std::sort(via_rows.begin(), via_rows.end(),
+              [](const std::pair<double, double>& left,
+                 const std::pair<double, double>& right) {
+                  return left.first < right.first;
+              });
+    std::vector<EscapeAttach> needed;
+    for (const auto& via : via_rows) {
+        std::vector<EscapeAttach> left;
+        std::vector<EscapeAttach> right;
+        for (const auto& attach : attaches) {
+            if (attach.u <= via.first) {
+                left.push_back(attach);
+            }
+            if (attach.u >= via.first) {
+                right.push_back(attach);
+            }
+        }
+        std::vector<EscapeAttach> picks;
+        if (!left.empty()) {
+            picks.push_back(left.back());
+        }
+        if (!right.empty()) {
+            picks.push_back(right.front());
+        }
+        if (picks.size() < 2) {
+            picks = attaches;
+            std::stable_sort(
+                picks.begin(), picks.end(),
+                [&](const EscapeAttach& left_a, const EscapeAttach& right_a) {
+                    const double left_d = std::abs(left_a.u - via.first);
+                    const double right_d = std::abs(right_a.u - via.first);
+                    if (left_d != right_d) {
+                        return left_d < right_d;
+                    }
+                    if (left_a.u != right_a.u) {
+                        return left_a.u < right_a.u;
+                    }
+                    return false;
+                });
+            if (picks.size() > 2) {
+                picks.resize(2);
+            }
+        }
+        for (const auto& pick : picks) {
+            bool seen = false;
+            for (const auto& have : needed) {
+                if (attach_same(have, pick)) {
+                    seen = true;
+                    break;
+                }
+            }
+            if (!seen) {
+                needed.push_back(pick);
+            }
+        }
+    }
+    std::sort(needed.begin(), needed.end(), attach_less);
+    std::vector<EscapeLadderSeg> stub_segs;
+    for (const auto& attach : needed) {
+        EscapeLadderSeg seg;
+        if (attach.kind == "pair") {
+            seg.ax = attach.u;
+            seg.ay = -row_v;
+            seg.bx = attach.u;
+            seg.by = row_v;
+            seg.w = stub_w_pair;
+            seg.role = "stub_pair";
+        } else if (attach.kind == "column") {
+            seg.ax = attach.u;
+            seg.ay = -row_v;
+            seg.bx = attach.u;
+            seg.by = row_v;
+            seg.w = stub_w_single;
+            seg.role = "stub_column";
+        } else {
+            seg.ax = attach.a;
+            seg.ay = std::copysign(row_v, attach.b);
+            seg.bx = attach.a;
+            seg.by = 0.0;
+            seg.w = stub_w_single;
+            seg.role = "stub_pad";
+        }
+        stub_segs.push_back(seg);
+    }
+    for (const auto& via : vias) {
+        if (std::abs(via.second) > 1e-9) {
+            EscapeLadderSeg seg;
+            seg.ax = via.first;
+            seg.ay = 0.0;
+            seg.bx = via.first;
+            seg.by = via.second;
+            seg.w = stub_w_single;
+            seg.role = "stub_via";
+            stub_segs.push_back(seg);
+        }
+    }
+    std::vector<double> attach_us;
+    attach_us.reserve(needed.size() + vias.size());
+    for (const auto& attach : needed) {
+        attach_us.push_back(attach.u);
+    }
+    for (const auto& via : vias) {
+        attach_us.push_back(via.first);
+    }
+    if (attach_us.empty()) {
+        throw std::runtime_error("escape_ladder_plan: spine span required");
+    }
+    EscapeLadderSeg spine;
+    spine.ax = *std::min_element(attach_us.begin(), attach_us.end());
+    spine.ay = 0.0;
+    spine.bx = *std::max_element(attach_us.begin(), attach_us.end());
+    spine.by = 0.0;
+    spine.w = spine_w;
+    spine.role = "spine";
+    std::vector<EscapeLadderSeg> segs;
+    segs.reserve(1 + stub_segs.size());
+    segs.push_back(spine);
+    segs.insert(segs.end(), stub_segs.begin(), stub_segs.end());
+    return segs;
 }
 
 }  // namespace schgen

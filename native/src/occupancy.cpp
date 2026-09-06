@@ -278,6 +278,90 @@ bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
     return true;
 }
 
+std::vector<Rect> pairs_entity(double x, double y, double w, double h,
+                               const Halo& reach, const Halo& inset, int mask,
+                               const std::vector<Comp>& comps) {
+    std::vector<Rect> entity;
+    entity.reserve(1 + comps.size());
+    Rect main;
+    main.x = x;
+    main.y = y;
+    main.w = w;
+    main.h = h;
+    main.reach = reach;
+    main.inset = inset;
+    main.mask = mask;
+    main.pmask = mask;
+    main.main = true;
+    entity.push_back(main);
+    const Halo zero{};
+    for (const Comp& comp : comps) {
+        Rect child;
+        child.x = py_round(x + comp.dx, 4);
+        child.y = py_round(y + comp.dy, 4);
+        child.w = comp.w;
+        child.h = comp.h;
+        child.reach = zero;
+        child.inset = zero;
+        child.mask = comp.mask;
+        child.pmask = mask;
+        child.main = false;
+        entity.push_back(child);
+    }
+    return entity;
+}
+
+std::vector<std::vector<Rect>> pairs_hold_groups(
+    const std::vector<PairsBlock>& interior,
+    const std::vector<PairsBlock>& edges, double som_x, double som_y,
+    double som_w, double som_h, int som_mask,
+    const std::vector<Comp>& som_comps, double board_w, double board_h,
+    double mh_corner_ko, int punch_mask) {
+    if (mh_corner_ko < 0.0) {
+        throw std::runtime_error("pairs_hold_groups: mh_corner_ko required");
+    }
+    std::vector<std::vector<Rect>> groups;
+    groups.reserve(interior.size() + edges.size() + 5);
+    for (const PairsBlock& block : interior) {
+        groups.push_back(pairs_entity(block.x, block.y, block.w, block.h,
+                                      block.reach, block.inset, block.mask,
+                                      block.comps));
+    }
+    for (const PairsBlock& block : edges) {
+        groups.push_back(pairs_entity(block.x, block.y, block.w, block.h,
+                                      block.reach, block.inset, block.mask,
+                                      block.comps));
+    }
+    const Halo zero{};
+    groups.push_back(pairs_entity(som_x, som_y, som_w, som_h, zero, zero,
+                                  som_mask, som_comps));
+    const std::pair<double, double> corners[4] = {
+        {0.0, 0.0},
+        {board_w - mh_corner_ko, 0.0},
+        {board_w - mh_corner_ko, board_h - mh_corner_ko},
+        {0.0, board_h - mh_corner_ko},
+    };
+    for (const auto& corner : corners) {
+        groups.push_back(pairs_entity(corner.first, corner.second,
+                                      mh_corner_ko, mh_corner_ko, zero, zero,
+                                      punch_mask, {}));
+    }
+    return groups;
+}
+
+bool pairs_hold_from_layout(const std::vector<PairsBlock>& interior,
+                            const std::vector<PairsBlock>& edges, double som_x,
+                            double som_y, double som_w, double som_h,
+                            int som_mask, const std::vector<Comp>& som_comps,
+                            double board_w, double board_h,
+                            double mh_corner_ko, int punch_mask,
+                            double clear) {
+    return pairs_hold(pairs_hold_groups(interior, edges, som_x, som_y, som_w,
+                                        som_h, som_mask, som_comps, board_w,
+                                        board_h, mh_corner_ko, punch_mask),
+                      interior.size(), clear);
+}
+
 bool quads_overlap(const std::vector<std::pair<double, double>>& a,
                    const std::vector<std::pair<double, double>>& b) {
     if (a.size() < 3 || b.size() < 3) {
