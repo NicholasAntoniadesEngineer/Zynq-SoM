@@ -1308,6 +1308,7 @@ NB_MODULE(_geom, m) {
     m.def("turn_origin_180", &schgen::turn_origin_180);
     m.def("rotate_origin", &schgen::rotate_origin);
     m.def("named_box_center_sigs", &schgen::named_box_center_sigs);
+    m.def("cross_budget", &schgen::cross_budget);
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);

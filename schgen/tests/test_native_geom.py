@@ -3216,3 +3216,5 @@ def test_stage_flow_and_verify_leftover_kernels_match_python(geom, monkeypatch):
     sigs = [tuple(r) for r in geom.named_box_center_sigs(
         [("N1", 0.0, 0.0, 2.0, 2.0), ("N0", 4.0, 1.0, 6.0, 3.0)], 2)]
     assert sigs == [(1.0, 1.0, "N1"), (5.0, 2.0, "N0")]
+    assert geom.cross_budget(168.0, 163.0, 12.0, 0.08) == (
+        0.08 * (168.0 * 163.0) ** 0.5 * 12.0)

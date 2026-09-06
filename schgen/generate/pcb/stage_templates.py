@@ -2573,8 +2573,8 @@ def _sheet_cross_mst(sheet_name: str,
                         r, sheet_name))
         for a, b in _mst_edges(pts):
             if pts[a][3] != pts[b][3]:
-                total += ((pts[a][0] - pts[b][0]) ** 2
-                          + (pts[a][1] - pts[b][1]) ** 2) ** 0.5
+                total += _nat.module().hypot_xy(
+                    pts[a][0], pts[a][1], pts[b][0], pts[b][1])
     return total
 
 

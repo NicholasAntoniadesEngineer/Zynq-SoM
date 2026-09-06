@@ -1886,10 +1886,10 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                       and not r.startswith(("RJ", "LED"))]
             if len(movers) < 2:
                 continue
-            gcx = sum(pos[r][0] for r in movers) / len(movers)
-            gcy = sum(pos[r][1] for r in movers) / len(movers)
+            gcx, gcy = _nat.module().points_centroid(
+                [pos[r] for r in movers])
             vx, vy = som_cx - gcx, som_cy - gcy
-            dist = (vx * vx + vy * vy) ** 0.5
+            dist = _nat.module().hypot_xy(0.0, 0.0, vx, vy)
             if dist < 1.0:
                 continue
             ux, uy = vx / dist, vy / dist

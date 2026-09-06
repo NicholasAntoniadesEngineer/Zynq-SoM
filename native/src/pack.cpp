@@ -3175,4 +3175,12 @@ std::vector<std::tuple<double, double, std::string>> named_box_center_sigs(
     return out;
 }
 
+double cross_budget(double board_w, double board_h, double n_sub, double k) {
+    const double area = board_w * board_h;
+    if (area < 0.0) {
+        throw std::runtime_error("cross_budget: area must be non-negative");
+    }
+    return k * std::sqrt(area) * n_sub;
+}
+
 }  // namespace schgen

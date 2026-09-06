@@ -551,6 +551,7 @@ std::vector<std::tuple<double, double, std::string>> named_box_center_sigs(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         boxes,
     int digits);
+double cross_budget(double board_w, double board_h, double n_sub, double k);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

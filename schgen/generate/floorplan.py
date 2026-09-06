@@ -2269,7 +2269,8 @@ def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
             _fb.restore(cons_fb)
             _fb.record("punch_free_plan_rejected")
         plan.interior_blocks = interior
-        budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
+        budget = _nat.module().cross_budget(
+            BOARD_W, BOARD_H, n_sub, CROSS_BUDGET_K)
         _led.calc("plan_choice", "fixed",
                   conservative_area=round(BOARD_W * BOARD_H, 1),
                   conservative_est=round(est_real, 1),
@@ -2326,7 +2327,8 @@ def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
                     tally["reject_pack"] += 1
                     continue
                 fit_seen = True
-                budget = CROSS_BUDGET_K * (BOARD_W * BOARD_H) ** 0.5 * n_sub
+                budget = _nat.module().cross_budget(
+                    BOARD_W, BOARD_H, n_sub, CROSS_BUDGET_K)
                 est_real = est_cross(plan.edge_blocks + interior)
                 tally["accepted" if est_real <= budget
                       else "reject_law5_budget"] += 1
@@ -2354,7 +2356,7 @@ def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
                                  side_est=est_cross):
                 tally["reject_pack"] += 1
                 return False, 0.0, 0.0
-            bud = CROSS_BUDGET_K * (w * h) ** 0.5 * n_sub
+            bud = _nat.module().cross_budget(w, h, n_sub, CROSS_BUDGET_K)
             er = est_cross(plan.edge_blocks + interior)
             tally["accepted" if er <= bud else "reject_law5_budget"] += 1
             return (er <= bud), er, bud

@@ -126,7 +126,7 @@ def cross_airwire_length(model: PcbModel, npp: dict | None = None,
         for a, b in mst[_net]:
             xa, ya, _ra, sa = pts[a]
             xb, yb, _rb, sb = pts[b]
-            d = ((xa - xb) ** 2 + (ya - yb) ** 2) ** 0.5
+            d = _nat.module().hypot_xy(xa, ya, xb, yb)
             total += d
             if sa != sb:
                 cross += d
