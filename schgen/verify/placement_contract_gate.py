@@ -323,15 +323,15 @@ def _box_gap_py(a: tuple[float, float, float, float],
 
 def _box_gap(a: tuple[float, float, float, float],
              b: tuple[float, float, float, float]) -> float:
-    if _nat.loaded():
-        got = _nat.module().box_gap(a, b)
-        if _nat.trace():
-            ref = _box_gap_py(a, b)
-            if got != ref:
-                raise AssertionError(
-                    f"native box_gap DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _box_gap_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native box_gap required")
+    got = _nat.module().box_gap(a, b)
+    if _nat.trace():
+        ref = _box_gap_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                f"native box_gap DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def _pins_to_part_py(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
@@ -354,16 +354,16 @@ def _pins_to_part(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
                   pins: list[str]) -> float | None:
     part = list(part_boxes.values())
     pin_hits = [pin_boxes[p] for p in pins if p in pin_boxes]
-    if _nat.loaded():
-        got = _nat.module().min_box_gap(pin_hits, part)
-        if _nat.trace():
-            ref = _pins_to_part_py(pin_boxes, part_boxes, pins)
-            if got != ref:
-                raise AssertionError(
-                    "native min_box_gap DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _pins_to_part_py(pin_boxes, part_boxes, pins)
+    if not _nat.loaded():
+        raise RuntimeError("native min_box_gap required")
+    got = _nat.module().min_box_gap(pin_hits, part)
+    if _nat.trace():
+        ref = _pins_to_part_py(pin_boxes, part_boxes, pins)
+        if got != ref:
+            raise AssertionError(
+                "native min_box_gap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _part_to_part_py(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
@@ -378,17 +378,17 @@ def _part_to_part_py(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
 
 def _part_to_part(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
                   ) -> float | None:
-    if _nat.loaded():
-        got = _nat.module().min_box_gap(list(a_boxes.values()),
-                                        list(b_boxes.values()))
-        if _nat.trace():
-            ref = _part_to_part_py(a_boxes, b_boxes)
-            if got != ref:
-                raise AssertionError(
-                    "native min_box_gap DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _part_to_part_py(a_boxes, b_boxes)
+    if not _nat.loaded():
+        raise RuntimeError("native min_box_gap required")
+    got = _nat.module().min_box_gap(list(a_boxes.values()),
+                                    list(b_boxes.values()))
+    if _nat.trace():
+        ref = _part_to_part_py(a_boxes, b_boxes)
+        if got != ref:
+            raise AssertionError(
+                "native min_box_gap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _board_refs_by_sheet(sheet_name: str, parts=None) -> dict[str, str]:

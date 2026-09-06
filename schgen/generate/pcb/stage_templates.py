@@ -615,15 +615,11 @@ def _seat_all_py(demands: list[_Demand], resolvable: dict[str, Path],
 
 def _pins_to_target(p: _Part, ib: dict[str, tuple],
                     target_pins: list[str]) -> float:
-    best = 1e9
-    pads = list(p.pad_boxes().values())
-    for pin in target_pins:
-        pb = ib.get(pin)
-        if pb is None:
-            continue
-        for qb in pads:
-            best = min(best, _g._box_gap(pb, qb))
-    return best
+    pin_boxes = {pin: ib[pin] for pin in target_pins if pin in ib}
+    got = _g._pins_to_part(pin_boxes, p.pad_boxes(), list(pin_boxes))
+    if got is None:
+        return 1e9
+    return float(got)
 
 
 _PROX_CACHE: dict[tuple, list[tuple[float, float, float]]] = {}
