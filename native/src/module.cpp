@@ -911,6 +911,150 @@ NB_MODULE(_geom, m) {
               }
               return std::make_tuple(hit.offs, occ, hit.packed_w, hit.packed_h);
           });
+    m.def("contact_geometry",
+          [](const std::vector<std::tuple<double, double, double, double>>&
+                 pads) {
+              auto hit = schgen::contact_geometry(pads);
+              return std::make_tuple(hit.row_v, hit.half_w, hit.half_h,
+                                     hit.span_u, hit.pitch);
+          });
+    m.def("via_feasible",
+          [](double u, double v, double dia, double drill,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& front_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& back_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& samenet,
+             const std::vector<std::tuple<double, double, double, std::string>>&
+                 holes,
+             const std::tuple<double, double, double, double>& clear,
+             bool want_audit) {
+              schgen::ViaClear vc;
+              vc.margin = std::get<0>(clear);
+              vc.hole_foreign = std::get<1>(clear);
+              vc.hole_samenet = std::get<2>(clear);
+              vc.hole_hole = std::get<3>(clear);
+              return schgen::via_feasible(u, v, dia, drill, front_cu, back_cu,
+                                          samenet, holes, vc, want_audit);
+          });
+    m.def("seat_band",
+          [](const std::vector<std::tuple<std::string, double, double>>&
+                 members,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& front_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& back_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& samenet,
+             const std::vector<std::tuple<double, double, double, std::string>>&
+                 holes,
+             double row_v, double half_h,
+             const std::vector<std::pair<double, double>>& ladder,
+             const std::tuple<double, double, double, double>& clear,
+             double via_row, double r_construct, double lattice,
+             const char* conn, int depth) {
+              schgen::ViaClear vc;
+              vc.margin = std::get<0>(clear);
+              vc.hole_foreign = std::get<1>(clear);
+              vc.hole_samenet = std::get<2>(clear);
+              vc.hole_hole = std::get<3>(clear);
+              auto hit = schgen::seat_band(
+                  members, front_cu, back_cu, samenet, holes, row_v, half_h,
+                  ladder, vc, via_row, r_construct, lattice,
+                  conn == nullptr ? "" : conn, depth);
+              std::vector<std::tuple<double, double, double, double, double,
+                                     std::vector<std::string>>>
+                  vias;
+              vias.reserve(hit.vias.size());
+              for (const auto& v : hit.vias) {
+                  vias.emplace_back(v.u, v.v, v.dia, v.drill, v.worst,
+                                    v.members);
+              }
+              std::vector<std::tuple<std::string, std::string, double, double,
+                                     double, double, double, double, int,
+                                     std::vector<std::string>>>
+                  ledger;
+              ledger.reserve(hit.ledger.size());
+              for (const auto& e : hit.ledger) {
+                  ledger.emplace_back(e.kind, e.conn, e.u, e.v, e.dia, e.drill,
+                                      e.worst, e.at, e.depth, e.members);
+              }
+              return std::make_tuple(vias, ledger, hit.audit);
+          });
+    m.def("is_passive_ref", &schgen::is_passive_ref);
+    m.def("classify_side",
+          [](const char* ref, const char* lib,
+             const std::tuple<double, double, double, double>& bbox,
+             bool in_decoupling, bool two_side, double top_area,
+             const std::vector<std::string>& top_always) {
+              return schgen::classify_side(
+                  ref == nullptr ? "" : ref, lib == nullptr ? "" : lib,
+                  as_box(bbox), in_decoupling, two_side, top_area, top_always);
+          });
+    m.def("decoupling_caps", &schgen::decoupling_caps);
+    m.def("zone_target_w", &schgen::zone_target_w);
+    m.def("connector_target_w", &schgen::connector_target_w);
+    m.def("canonical_plane_rect",
+          [](double origin_x, double origin_y, double board_w, double board_h,
+             double edge_back) {
+              auto b = schgen::canonical_plane_rect(origin_x, origin_y, board_w,
+                                                    board_h, edge_back);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("isolation_void_rect",
+          [](const std::tuple<double, double, double, double>& court,
+             double margin) {
+              auto b = schgen::isolation_void_rect(as_box(court), margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("board_box_to_uv",
+          [](double cx, double cy, double rot,
+             const std::tuple<double, double, double, double>& box) {
+              auto b = schgen::board_box_to_uv(cx, cy, rot, as_box(box));
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("cluster_slot_segs",
+          [](const std::vector<std::tuple<std::string, double, double>>&
+                 pad_offs,
+             const std::vector<std::string>& pad_nets,
+             const std::vector<std::pair<double, double>>& slots,
+             const std::vector<std::tuple<
+                 std::string, std::vector<std::pair<double, double>>>>&
+                 static_pts) {
+              auto hit = schgen::cluster_slot_segs(pad_offs, pad_nets, slots,
+                                                   static_pts);
+              std::vector<std::vector<
+                  std::tuple<double, double, double, double>>>
+                  out;
+              out.reserve(hit.size());
+              for (const auto& segs : hit) {
+                  std::vector<std::tuple<double, double, double, double>> row;
+                  row.reserve(segs.size());
+                  for (const auto& s : segs) {
+                      row.emplace_back(s.x0, s.y0, s.x1, s.y1);
+                  }
+                  out.push_back(std::move(row));
+              }
+              return out;
+          });
+    m.def("scan_floats", &schgen::scan_floats);
+    m.def("font_size",
+          [](nb::handle node, double default_size) {
+              return schgen::font_size(sexpr_from_py(node), default_size);
+          });
+    m.def("inst_pad_xy", &schgen::inst_pad_xy);
+    m.def("collect_emitted_text_boxes",
+          [](nb::handle doc, bool include_silk_gfx, double default_size) {
+              auto boxes = schgen::collect_emitted_text_boxes(
+                  sexpr_from_py(doc), include_silk_gfx, default_size);
+              std::vector<std::tuple<double, double, double, double>> out;
+              out.reserve(boxes.size());
+              for (const auto& b : boxes) {
+                  out.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return out;
+          });
     m.def("boxes_union",
           [](const std::vector<BoxTup>& boxes) -> std::optional<BoxTup> {
               auto hit = schgen::boxes_union(as_boxes(boxes));

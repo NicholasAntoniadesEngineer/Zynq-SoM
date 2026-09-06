@@ -63,8 +63,6 @@ int main(int argc, char** argv) {
         }
         std::cout << "schgen native occupancy+seat+route+sexpr+emit"
                   << " — kernel self-check ok\n";
-        std::cout << "full board generate is still `python -m schgen board` "
-                     "until gates and the design DSL land in this binary\n";
         return 0;
     } catch (const std::exception& exc) {
         std::cerr << "schgen: " << exc.what() << "\n";

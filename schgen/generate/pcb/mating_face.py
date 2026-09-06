@@ -151,20 +151,14 @@ def _rot_pad_bbox(mod_path: Path,
 
 
 def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
+    rows = _nat.module().scan_pad_nodes(sexpr.loads(inst.mod_path.read_text()))
+    local = [(name, x, y) for name, _ptype, x, y, _prot, _sw, _sh in rows]
+    placed = _nat.module().inst_pad_xy(
+        local, inst.x, inst.y, inst.rotation or 0.0, PAD_DECIMALS)
     out: list[tuple[str, float, float, str]] = []
-    doc = sexpr.loads(inst.mod_path.read_text())
-    rot = inst.rotation or 0.0
-    for node in doc:
-        if not (isinstance(node, list) and node and node[0] == Sym("pad")):
-            continue
-        name = str(node[1]) if len(node) > 1 else ""
-        at = sexpr.find(node, "at")
-        if not (at and len(at) >= 3):
-            continue
-        rx, ry = turn_point(float(at[1]), float(at[2]), rot)
+    for name, px, py in placed:
         _num, nname = inst.pad_nets.get(name, (0, ""))
-        out.append((name, round(inst.x + rx, PAD_DECIMALS),
-                    round(inst.y + ry, PAD_DECIMALS), nname))
+        out.append((name, float(px), float(py), nname))
     return out
 
 

@@ -310,4 +310,106 @@ GridControls grid_controls(
         items,
     double target_w, double button_gap, double zone_pad, double place_clear);
 
+struct ContactGeom {
+    double row_v = 0.0;
+    double half_w = 0.0;
+    double half_h = 0.0;
+    double span_u = 0.0;
+    double pitch = 0.0;
+};
+
+ContactGeom contact_geometry(
+    const std::vector<std::tuple<double, double, double, double>>& pads);
+
+struct ViaClear {
+    double margin = 0.0;
+    double hole_foreign = 0.0;
+    double hole_samenet = 0.0;
+    double hole_hole = 0.0;
+};
+
+std::pair<bool, std::string> via_feasible(
+    double u, double v, double dia, double drill,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& front_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& back_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& samenet,
+    const std::vector<std::tuple<double, double, double, std::string>>& holes,
+    const ViaClear& clear, bool want_audit);
+
+struct SeatVia {
+    double u = 0.0;
+    double v = 0.0;
+    double dia = 0.0;
+    double drill = 0.0;
+    double worst = 0.0;
+    std::vector<std::string> members;
+};
+
+struct SeatLedger {
+    std::string kind;
+    std::string conn;
+    double u = 0.0;
+    double v = 0.0;
+    double dia = 0.0;
+    double drill = 0.0;
+    double worst = 0.0;
+    double at = 0.0;
+    int depth = 0;
+    std::vector<std::string> members;
+};
+
+struct SeatBandResult {
+    std::vector<SeatVia> vias;
+    std::vector<SeatLedger> ledger;
+    std::vector<std::string> audit;
+};
+
+SeatBandResult seat_band(
+    const std::vector<std::tuple<std::string, double, double>>& members,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& front_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& back_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& samenet,
+    const std::vector<std::tuple<double, double, double, std::string>>& holes,
+    double row_v, double half_h,
+    const std::vector<std::pair<double, double>>& ladder, const ViaClear& clear,
+    double via_row, double r_construct, double lattice, const std::string& conn,
+    int depth);
+
+bool is_passive_ref(const std::string& ref);
+
+std::string classify_side(const std::string& ref, const std::string& lib,
+                          const Box4& bbox, bool in_decoupling, bool two_side,
+                          double top_area,
+                          const std::vector<std::string>& top_always);
+
+std::vector<std::string> decoupling_caps(
+    const std::vector<std::tuple<std::string, std::vector<std::string>>>&
+        net_refs);
+
+double zone_target_w(double tot_area, double fill, double aspect,
+                     double floor_mm);
+
+double connector_target_w(double row_span, double zone_pad, double tot_area,
+                          double fill, double aspect);
+
+Box4 canonical_plane_rect(double origin_x, double origin_y, double board_w,
+                          double board_h, double edge_back);
+
+Box4 isolation_void_rect(const Box4& court, double margin);
+
+Box4 board_box_to_uv(double cx, double cy, double rot, const Box4& box);
+
+std::vector<std::vector<Seg2>> cluster_slot_segs(
+    const std::vector<std::tuple<std::string, double, double>>& pad_offs,
+    const std::vector<std::string>& pad_nets,
+    const std::vector<std::pair<double, double>>& slots,
+    const std::vector<std::tuple<std::string, std::vector<std::pair<double, double>>>>&
+        static_pts);
+
 }  // namespace schgen

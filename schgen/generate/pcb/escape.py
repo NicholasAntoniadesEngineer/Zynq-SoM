@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -82,18 +81,14 @@ def _contact_geometry(mod_path: Path) -> _Contacts:
     if not pads:
         raise EscapeError(f"{mod_path.name}: no pads — contact geometry "
                           f"underivable")
-    tally = Counter((w, h) for _u, _v, w, h in pads)
-    w, h = min(tally, key=lambda s: (-tally[s], s))
-    contacts = [(u, v) for u, v, pw, ph in pads if (pw, ph) == (w, h)]
-    cols = sorted({round(u, 4) for u, _v in contacts})
-    gaps = sorted(b - a for a, b in zip(cols, cols[1:], strict=False))
-    if not gaps:
-        raise EscapeError(f"{mod_path.name}: {len(cols)} contact column(s) — "
-                          f"pitch underivable")
-    return _Contacts(row_v=max(abs(v) for _u, v in contacts),
-                     half_w=w / 2, half_h=h / 2,
-                     span_u=max(abs(u) for u, _v, _w, _h in pads),
-                     pitch=gaps[len(gaps) // 2])
+    try:
+        row_v, half_w, half_h, span_u, pitch = _nat.module().contact_geometry(
+            pads)
+    except RuntimeError as exc:
+        raise EscapeError(f"{mod_path.name}: {exc}") from exc
+    return _Contacts(row_v=float(row_v), half_w=float(half_w),
+                     half_h=float(half_h), span_u=float(span_u),
+                     pitch=float(pitch))
 
 
 def _canonical_plane(model) -> tuple[tuple, list[tuple]]:
@@ -105,18 +100,15 @@ def _canonical_plane(model) -> tuple[tuple, list[tuple]]:
         ORIGIN_Y,
     )
     from .mating_face import _inst_courtyard
-    b = GND_PLANE_EDGE_BACK
-    plane = (round(ORIGIN_X + b, 3), round(ORIGIN_Y + b, 3),
-             round(ORIGIN_X + model.board_w - b, 3),
-             round(ORIGIN_Y + model.board_h - b, 3))
+    geom = _nat.module()
+    plane = tuple(geom.canonical_plane_rect(
+        ORIGIN_X, ORIGIN_Y, model.board_w, model.board_h, GND_PLANE_EDGE_BACK))
     voids: list[tuple] = []
     for inst in model.insts:
         if not inst.value.startswith(ISO_VOID_VALUES):
             continue
-        cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
-        m = ISO_VOID_MARGIN
-        voids.append(((round(cx0 - m, 3), round(cy0 - m, 3),
-                       round(cx1 + m, 3), round(cy1 + m, 3)),
+        voids.append((tuple(geom.isolation_void_rect(
+            _inst_courtyard(inst), ISO_VOID_MARGIN)),
                       f"ethernet_isolation_void_{inst.ref}"))
     return plane, voids
 
@@ -287,11 +279,8 @@ def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
     u0, v0, u1, v1 = region
 
     def _local_box(bx):
-        cs = [_to_local(inst, x, y) for x in (bx[0], bx[2])
-              for y in (bx[1], bx[3])]
-        xs = [p[0] for p in cs]
-        ys = [p[1] for p in cs]
-        return (min(xs), min(ys), max(xs), max(ys))
+        return tuple(_nat.module().board_box_to_uv(
+            inst.x, inst.y, inst.rotation or 0.0, bx))
 
     for oi in sorted(model.insts, key=lambda i: i.ref):
         boxes = pad_boxes_fn(oi)
@@ -389,101 +378,56 @@ def _coverage_ok(u: float, v: float, members: list[_Member],
     return _coverage_ok_py(u, v, members, bound)
 
 
+def _via_clear() -> tuple[float, float, float, float]:
+    return (CLR_MARGIN, CLR_HOLE_FOREIGN, CLR_HOLE_SAMENET_PAD, CLR_HOLE_HOLE)
+
+
 def _via_feasible(u: float, v: float, dia: float, drill: float,
                   obs: _Obstacles, audit: list[str] | None = None) -> bool:
-    rv, rh = dia / 2, drill / 2
-
-    def fail(msg: str) -> bool:
-        if audit is not None:
-            audit.append(msg)
-        return False
-
-    for layer, boxes in (("F.Cu", obs.f_cu), ("B.Cu", obs.b_cu)):
-        for bx in boxes:
-            d = _box_dist(u, v, bx[:4])
-            need = rv + bx[4] + CLR_MARGIN
-            if d < need:
-                return fail(f"{layer} {bx[5]} annulus {d:.4f} < {need:.4f}")
-            if d < rh + CLR_HOLE_FOREIGN:
-                return fail(f"{layer} {bx[5]} hole {d:.4f}")
-    for bx in obs.samenet_pads:
-        d = _box_dist(u, v, bx[:4])
-        if d < rh + CLR_HOLE_SAMENET_PAD:
-            return fail(f"same-net {bx[5]} drill {d:.4f} < "
-                        f"{rh + CLR_HOLE_SAMENET_PAD:.4f} (via-in-pad DFM)")
-    for hu, hv, hr, lbl in obs.holes:
-        d = math.hypot(u - hu, v - hv)
-        if d < hr + rh + CLR_HOLE_HOLE:
-            return fail(f"hole-hole {lbl} {d:.4f}")
-    return True
+    ok, msg = _nat.module().via_feasible(
+        u, v, dia, drill, obs.f_cu, obs.b_cu, obs.samenet_pads, obs.holes,
+        _via_clear(), audit is not None)
+    if not ok and audit is not None and msg:
+        audit.append(msg)
+    return bool(ok)
 
 
 def _seat_band(members: list[_Member], obs: _Obstacles, contacts: _Contacts,
                ledger: list[dict], conn: str, depth: int = 0,
                ) -> list[dict]:
-    us = sorted({m.u for m in members})
-    u_first, u_last = us[0], us[-1]
-    center = (u_first + u_last) / 2
-    audit: list[str] = []
-
-    for dia, drill in VIA_LADDER:
-        rv = dia / 2
-        v_max = contacts.row_v - contacts.half_h - rv - CLR_VIA_ROW
-        reach = math.sqrt(max(R_CONSTRUCT ** 2 - contacts.row_v ** 2, 0.0))
-        lo = u_last - reach
-        hi = u_first + reach
-        i0 = math.ceil(lo / LATTICE_MM - 1e-9)
-        i1 = math.floor(hi / LATTICE_MM + 1e-9)
-        u_cands = sorted(
-            (round(i * LATTICE_MM, 6) for i in range(i0, i1 + 1)),
-            key=lambda x: (abs(x - center), -x))
-        v_cands = sorted(
-            (round(k * LATTICE_MM, 6)
-             for k in range(-int(v_max / LATTICE_MM),
-                            int(v_max / LATTICE_MM) + 1)),
-            key=lambda x: (abs(x), -x))
-        for v in v_cands:
-            for u in u_cands:
-                ok_cov, worst = _coverage_ok(u, v, members, R_CONSTRUCT)
-                if not ok_cov:
-                    continue
-                if _via_feasible(u, v, dia, drill, obs, audit):
-                    ledger.append({
-                        "conn": conn, "kind": "seat",
-                        "members": [m.pad for m in members],
-                        "u": u, "v": v, "dia": dia, "drill": drill,
-                        "worst_cover_mm": round(worst, 4), "depth": depth})
-                    return [{"u": u, "v": v, "dia": dia, "drill": drill,
-                             "members": members, "worst": worst}]
-
-    if len(us) > 1:
-        gaps = [(us[i + 1] - us[i], i) for i in range(len(us) - 1)]
-        gaps.sort(key=lambda g: (-g[0], abs(us[g[1]] - center)))
-        cut = (us[gaps[0][1]] + us[gaps[0][1] + 1]) / 2
-        ledger.append({"conn": conn, "kind": "split_u", "at": round(cut, 4),
-                       "members": [m.pad for m in members], "depth": depth})
-        left = [m for m in members if m.u < cut]
-        right = [m for m in members if m.u > cut]
-        return (_seat_band(left, obs, contacts, ledger, conn, depth + 1)
-                + _seat_band(right, obs, contacts, ledger, conn, depth + 1))
-
-    rows = sorted({m.v for m in members})
-    if len(rows) > 1:
-        ledger.append({"conn": conn, "kind": "split_row",
-                       "members": [m.pad for m in members], "depth": depth})
-        out: list[dict] = []
-        for rv_ in rows:
-            sub = [m for m in members if m.v == rv_]
-            out += _seat_band(sub, obs, contacts, ledger, conn, depth + 1)
-        return out
-
-    raise EscapeError(
-        f"{conn}: no feasible stitch-via seat for contacts "
-        f"{[m.pad for m in members]} (nets {[m.net for m in members]}) at "
-        f"R_CONSTRUCT={R_CONSTRUCT}; candidate audit (last 40): "
-        f"{audit[-40:]} — remedy is the queued bottom-channel-keepout unit "
-        f"(move the blocking B.Cu strays in a reviewed byte-diff wave), "
-        f"never a threshold relax")
+    by_pad = {m.pad: m for m in members}
+    vias, led_rows, audit = _nat.module().seat_band(
+        [(m.pad, m.u, m.v) for m in members],
+        obs.f_cu, obs.b_cu, obs.samenet_pads, obs.holes,
+        contacts.row_v, contacts.half_h, list(VIA_LADDER), _via_clear(),
+        CLR_VIA_ROW, R_CONSTRUCT, LATTICE_MM, conn, depth)
+    for kind, led_conn, u, v, dia, drill, worst, at, dep, pads in led_rows:
+        if kind == "seat":
+            ledger.append({
+                "conn": led_conn, "kind": "seat", "members": list(pads),
+                "u": u, "v": v, "dia": dia, "drill": drill,
+                "worst_cover_mm": worst, "depth": int(dep)})
+        elif kind == "split_u":
+            ledger.append({"conn": led_conn, "kind": "split_u",
+                           "at": at, "members": list(pads),
+                           "depth": int(dep)})
+        elif kind == "split_row":
+            ledger.append({"conn": led_conn, "kind": "split_row",
+                           "members": list(pads), "depth": int(dep)})
+    if not vias:
+        raise EscapeError(
+            f"{conn}: no feasible stitch-via seat for contacts "
+            f"{[m.pad for m in members]} (nets {[m.net for m in members]}) at "
+            f"R_CONSTRUCT={R_CONSTRUCT}; candidate audit (last 40): "
+            f"{list(audit)[-40:]} — remedy is the queued bottom-channel-keepout "
+            f"unit (move the blocking B.Cu strays in a reviewed byte-diff "
+            f"wave), never a threshold relax")
+    out: list[dict] = []
+    for u, v, dia, drill, worst, pads in vias:
+        out.append({"u": u, "v": v, "dia": dia, "drill": drill,
+                    "members": [by_pad[p] for p in pads if p in by_pad],
+                    "worst": worst})
+    return out
 
 
 def build_escape_copper(model) -> tuple[list[dict], dict]:

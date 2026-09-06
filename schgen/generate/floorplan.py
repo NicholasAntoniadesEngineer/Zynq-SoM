@@ -360,11 +360,8 @@ class SomGeom:
     source: str
 
 
-_NUMS = re.compile(r"-?\d+(?:\.\d+)?")
-
-
 def _floats(s: str) -> list[float]:
-    return [float(m) for m in _NUMS.findall(s)]
+    return [float(v) for v in _nat.module().scan_floats(s)]
 
 
 def extract_som_py(pcb: Path = SOM_PCB) -> SomGeom:

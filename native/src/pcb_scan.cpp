@@ -741,6 +741,8 @@ void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
     }
 }
 
+}  // namespace
+
 std::vector<double> scan_floats(const std::string& text) {
     std::vector<double> out;
     const std::size_t n = text.size();
@@ -785,6 +787,8 @@ std::vector<double> scan_floats(const std::string& text) {
     }
     return out;
 }
+
+namespace {
 
 std::string trim_copy(const std::string& raw) {
     std::size_t a = 0;
@@ -1327,6 +1331,176 @@ scan_pad_nodes(const Sexpr& doc) {
                          std::get<double>((*at)[2].v), prot, sw, sh);
     }
     return out;
+}
+
+double font_size(const Sexpr& node, double default_size) {
+    if (!std::holds_alternative<SexprList>(node.v)) {
+        return default_size;
+    }
+    return font_size_of(std::get<SexprList>(node.v), default_size);
+}
+
+std::vector<std::tuple<std::string, double, double>> inst_pad_xy(
+    const std::vector<std::tuple<std::string, double, double>>& pads,
+    double inst_x, double inst_y, double rotation, int decimals) {
+    std::vector<std::tuple<std::string, double, double>> out;
+    out.reserve(pads.size());
+    for (const auto& pad : pads) {
+        const auto turned =
+            turn_point(std::get<1>(pad), std::get<2>(pad), rotation);
+        out.emplace_back(std::get<0>(pad),
+                         py_round(inst_x + turned.first, decimals),
+                         py_round(inst_y + turned.second, decimals));
+    }
+    return out;
+}
+
+std::vector<Box4> collect_emitted_text_boxes(const Sexpr& doc,
+                                             bool include_silk_gfx,
+                                             double default_size) {
+    std::vector<Box4> boxes;
+    if (!std::holds_alternative<SexprList>(doc.v)) {
+        return boxes;
+    }
+    for (const Sexpr& node : std::get<SexprList>(doc.v)) {
+        if (!std::holds_alternative<SexprList>(node.v)) {
+            continue;
+        }
+        const SexprList& lst = std::get<SexprList>(node.v);
+        if (lst.empty()) {
+            continue;
+        }
+        std::string head;
+        try {
+            head = py_str(lst[0]);
+        } catch (const std::runtime_error&) {
+            continue;
+        }
+        if (head == "gr_text" && lst.size() >= 2
+            && std::holds_alternative<std::string>(lst[1].v)) {
+            const SexprList* at = find_tagged_child(lst, "at");
+            if (at != nullptr && at->size() >= 3 && is_number((*at)[1])
+                && is_number((*at)[2])) {
+                boxes.push_back(text_box(std::get<std::string>(lst[1].v),
+                                         std::get<double>((*at)[1].v),
+                                         std::get<double>((*at)[2].v),
+                                         font_size_of(lst, default_size),
+                                         0.15));
+            }
+            continue;
+        }
+        if (head != "footprint") {
+            continue;
+        }
+        const SexprList* fat = find_tagged_child(lst, "at");
+        if (fat == nullptr || fat->size() < 3 || !is_number((*fat)[1])
+            || !is_number((*fat)[2])) {
+            continue;
+        }
+        const double fx = std::get<double>((*fat)[1].v);
+        const double fy = std::get<double>((*fat)[2].v);
+        double frot = 0.0;
+        if (fat->size() > 3 && is_number((*fat)[3])) {
+            frot = std::get<double>((*fat)[3].v);
+        }
+        const double angle = frot * (M_PI / 180.0);
+        const double ca = std::cos(angle);
+        const double sa = std::sin(angle);
+        if (include_silk_gfx) {
+            for (const Sexpr& child : lst) {
+                if (!std::holds_alternative<SexprList>(child.v)) {
+                    continue;
+                }
+                const SexprList& c = std::get<SexprList>(child.v);
+                if (c.empty()) {
+                    continue;
+                }
+                try {
+                    if (!is_gfx_geom(c[0])) {
+                        continue;
+                    }
+                } catch (const std::runtime_error&) {
+                    continue;
+                }
+                const SexprList* lyr = find_tagged_child(c, "layer");
+                if (lyr == nullptr || lyr->size() < 2
+                    || py_str((*lyr)[1]) != "F.SilkS") {
+                    continue;
+                }
+                auto pts_hw = silk_gfx_pts(child);
+                auto hit = silk_gfx_extent(pts_hw.first, fx, fy, ca, sa,
+                                           pts_hw.second);
+                if (hit.has_value()) {
+                    boxes.push_back(*hit);
+                }
+            }
+        }
+        for (const Sexpr& child : lst) {
+            if (!std::holds_alternative<SexprList>(child.v)) {
+                continue;
+            }
+            const SexprList& c = std::get<SexprList>(child.v);
+            if (c.empty()) {
+                continue;
+            }
+            std::string tag;
+            try {
+                tag = py_str(c[0]);
+            } catch (const std::runtime_error&) {
+                continue;
+            }
+            std::string txt;
+            bool have_txt = false;
+            if (tag == "fp_text" && c.size() > 2) {
+                std::string kind;
+                if (std::holds_alternative<Sexpr::Sym>(c[1].v)) {
+                    kind = std::get<Sexpr::Sym>(c[1].v).name;
+                }
+                if (kind != "reference" && kind != "value") {
+                    continue;
+                }
+                if (std::holds_alternative<std::string>(c[2].v)) {
+                    txt = std::get<std::string>(c[2].v);
+                    have_txt = true;
+                }
+            } else if (tag == "property" && c.size() > 2) {
+                std::string name;
+                if (std::holds_alternative<std::string>(c[1].v)) {
+                    name = std::get<std::string>(c[1].v);
+                }
+                if (name != "Reference" && name != "Value") {
+                    continue;
+                }
+                const SexprList* lyr = find_tagged_child(c, "layer");
+                if (lyr == nullptr || lyr->size() < 2
+                    || py_str((*lyr)[1]) != "F.SilkS") {
+                    continue;
+                }
+                if (std::holds_alternative<std::string>(c[2].v)) {
+                    txt = std::get<std::string>(c[2].v);
+                    have_txt = true;
+                }
+            } else {
+                continue;
+            }
+            const SexprList* hide = find_tagged_child(c, "hide");
+            if (hide != nullptr
+                && (hide->size() < 2 || py_str((*hide)[1]) == "yes")) {
+                continue;
+            }
+            const SexprList* lat = find_tagged_child(c, "at");
+            if (lat == nullptr || lat->size() < 3 || !is_number((*lat)[1])
+                || !is_number((*lat)[2]) || !have_txt) {
+                continue;
+            }
+            const double lx = std::get<double>((*lat)[1].v);
+            const double ly = std::get<double>((*lat)[2].v);
+            boxes.push_back(text_box(txt, fx + lx * ca + ly * sa,
+                                     fy - lx * sa + ly * ca,
+                                     font_size_of(c, default_size), 0.15));
+        }
+    }
+    return boxes;
 }
 
 }  // namespace schgen

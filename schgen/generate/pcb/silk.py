@@ -64,10 +64,7 @@ def _sub(node, name):
 
 
 def _font_size(node, default: float = 1.0) -> float:
-    eff = _sub(node, "effects")
-    fnt = _sub(eff, "font") if eff is not None else None
-    szn = _sub(fnt, "size") if fnt is not None else None
-    return float(szn[1]) if szn is not None else default
+    return float(_nat.module().font_size(node, default))
 
 
 def _silk_gfx_pts_py(c):
@@ -296,66 +293,8 @@ def _silk_gfx_box(c, fx, fy, ca, sa):
 
 
 def _emitted_text_boxes(doc: list, include_silk_gfx: bool = False) -> list:
-    import math
-    boxes: list = []
-    for node in doc:
-        if not (isinstance(node, list) and node and isinstance(node[0], Sym)):
-            continue
-        head = str(node[0])
-        if head == "gr_text" and isinstance(node[1], str):
-            at = _sub(node, "at")
-            if at is not None:
-                boxes.append(_text_box(node[1], float(at[1]), float(at[2]),
-                                       _font_size(node)))
-        elif head == "footprint":
-            fat = _sub(node, "at")
-            if fat is None:
-                continue
-            fx, fy = float(fat[1]), float(fat[2])
-            a = math.radians(float(fat[3])) if len(fat) > 3 else 0.0
-            ca, sa = math.cos(a), math.sin(a)
-            if include_silk_gfx:
-                for c in node:
-                    if not (isinstance(c, list) and c and isinstance(c[0], Sym)):
-                        continue
-                    if str(c[0]) not in ("fp_line", "fp_rect", "fp_circle",
-                                         "fp_arc", "fp_poly"):
-                        continue
-                    lyr = _sub(c, "layer")
-                    if lyr is None or str(lyr[1]) != "F.SilkS":
-                        continue
-                    gb = _silk_gfx_box(c, fx, fy, ca, sa)
-                    if gb is not None:
-                        boxes.append(gb)
-            for c in node:
-                if not (isinstance(c, list) and c and isinstance(c[0], Sym)):
-                    continue
-                tag = str(c[0])
-                if tag == "fp_text":
-                    kind = str(c[1]) if isinstance(c[1], Sym) else ""
-                    if kind not in ("reference", "value"):
-                        continue
-                    txt = c[2] if isinstance(c[2], str) else None
-                elif tag == "property":
-                    name = c[1] if isinstance(c[1], str) else ""
-                    if name not in ("Reference", "Value"):
-                        continue
-                    lyr = _sub(c, "layer")
-                    if lyr is None or str(lyr[1]) != "F.SilkS":
-                        continue
-                    txt = c[2] if isinstance(c[2], str) else None
-                else:
-                    continue
-                hide = _sub(c, "hide")
-                if hide is not None and (len(hide) < 2 or str(hide[1]) == "yes"):
-                    continue
-                lat = _sub(c, "at")
-                if lat is None or txt is None:
-                    continue
-                lx, ly = float(lat[1]), float(lat[2])
-                boxes.append(_text_box(txt, fx + lx * ca + ly * sa,
-                                       fy - lx * sa + ly * ca, _font_size(c)))
-    return boxes
+    return [tuple(b) for b in _nat.module().collect_emitted_text_boxes(
+        doc, include_silk_gfx, 1.0)]
 
 
 def _overlap_area_py(a, b) -> float:

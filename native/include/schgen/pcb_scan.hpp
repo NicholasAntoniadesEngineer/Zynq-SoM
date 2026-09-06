@@ -121,4 +121,16 @@ std::vector<std::tuple<std::string, std::string, double, double, double, double,
                        double>>
 scan_pad_nodes(const Sexpr& doc);
 
+std::vector<double> scan_floats(const std::string& text);
+
+double font_size(const Sexpr& node, double default_size);
+
+std::vector<std::tuple<std::string, double, double>> inst_pad_xy(
+    const std::vector<std::tuple<std::string, double, double>>& pads,
+    double inst_x, double inst_y, double rotation, int decimals);
+
+std::vector<Box4> collect_emitted_text_boxes(const Sexpr& doc,
+                                             bool include_silk_gfx,
+                                             double default_size);
+
 }  // namespace schgen

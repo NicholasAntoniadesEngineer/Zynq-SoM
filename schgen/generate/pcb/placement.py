@@ -241,41 +241,19 @@ def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
 
 
 def _is_passive_ref(ref: str) -> bool:
-    return ref[:1] in ("R", "C", "L") and not ref.startswith(("RJ", "LED"))
+    return bool(_nat.module().is_passive_ref(ref))
 
 
 def _decoupling_caps(nets: dict[str, list]) -> set[str]:
-    cap_nets: dict[str, set[str]] = {}
-    for name, pins in nets.items():
-        if name.startswith("unconnected-"):
-            continue
-        for pr in pins:
-            if pr.ref.startswith("C") and not pr.ref.startswith("#"):
-                cap_nets.setdefault(pr.ref, set()).add(name)
-    out: set[str] = set()
-    for ref, ns in cap_nets.items():
-        has_gnd = "GND" in ns
-        rails = {n for n in ns if n != "GND"}
-        if has_gnd and len(rails) == 1 and len(ns) == 2:
-            out.add(ref)
-    return out
+    rows = [(name, [pr.ref for pr in pins]) for name, pins in nets.items()]
+    return set(_nat.module().decoupling_caps(rows))
 
 
 def _classify_side(ref: str, lib: str, bbox: tuple,
                    decoupling: set[str], two_side: bool) -> str:
-    if not two_side:
-        return "top"
-    if any(tok in lib for tok in _TOP_ALWAYS_LIBS):
-        return "top"
-    bx0, by0, bx1, by1 = bbox
-    area = (bx1 - bx0) * (by1 - by0)
-    if area >= TOP_AREA_MM2:
-        return "top"
-    if ref in decoupling:
-        return "bottom"
-    if _is_passive_ref(ref):
-        return "bottom"
-    return "top"
+    return str(_nat.module().classify_side(
+        ref, lib, bbox, ref in decoupling, two_side, TOP_AREA_MM2,
+        list(_TOP_ALWAYS_LIBS)))
 
 
 def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
@@ -302,7 +280,7 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
                    for r in sheet_refs)
-    target_w = max(8.0, (tot_area * ZONE_PACK_FILL) ** 0.5) * aspect
+    target_w = _nat.module().zone_target_w(tot_area, ZONE_PACK_FILL, aspect, 8.0)
     fmeta = _fanout_meta(sheet_refs, resolvable)
     top_btns = [r for r in sr["top"] if _is_button(resolvable[r])]
     if len(top_btns) >= 2:
@@ -690,8 +668,8 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
                    for r in rest_top + rest_bot)
     row_span = max(cursor, 8.0)
-    target_w = max(row_span - ZONE_PAD,
-                   (tot_area * ZONE_PACK_FILL) ** 0.5 * aspect)
+    target_w = _nat.module().connector_target_w(
+        row_span, ZONE_PAD, tot_area, ZONE_PACK_FILL, aspect)
 
     fmeta = _fanout_meta(rest_top + rest_bot, resolvable)
     rt = [(r, bbox_of[r], 0.0) for r in rest_top]
@@ -1360,31 +1338,21 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
                             if xy is not None:
                                 pts.append(xy)
                         static_pts[n] = pts
-                seg_of: dict[tuple[str, int], list[tuple]] = {}
-                for m in mlist:
-                    offs = {p: (x - pos[m][0], y - pos[m][1])
-                            for p, (x, y) in pad_xy(m).items()}
-                    for si, sp in enumerate(slots):
-                        segs = []
-                        for pad in sorted(offs):
-                            _num, n = pin_net.get((m, pad), (0, ""))
-                            pts = static_pts.get(n) if n else None
-                            if not pts:
-                                continue
-                            dx, dy = offs[pad]
-                            px, py = sp[0] + dx, sp[1] + dy
-                            tgt = _nearest_manhattan(px, py, pts)
-                            segs.append(((px, py), (tgt[0], tgt[1])))
-                        seg_of[(m, si)] = segs
-
                 order0 = sorted(cluster, key=lambda m: (pos[m][ai], m))
                 assign_map = {m: i for i, m in enumerate(order0)}
                 segs_xy = []
+                static_rows = [(n, pts) for n, pts in static_pts.items()]
                 for m in mlist:
+                    offs = {p: (x - pos[m][0], y - pos[m][1])
+                            for p, (x, y) in pad_xy(m).items()}
+                    pad_offs = [(p, offs[p][0], offs[p][1])
+                                for p in sorted(offs)]
+                    pad_nets = [pin_net.get((m, p), (0, ""))[1]
+                                for p, _dx, _dy in pad_offs]
                     segs_xy.append([
-                        [(p[0][0], p[0][1], p[1][0], p[1][1])
-                         for p in seg_of[(m, si)]]
-                        for si in range(len(slots))
+                        [(s[0], s[1], s[2], s[3]) for s in row]
+                        for row in _nat.module().cluster_slot_segs(
+                            pad_offs, pad_nets, slots, static_rows)
                     ])
                 init = [assign_map[m] for m in mlist]
                 before, best, out = _reorder_cluster_assign(segs_xy, init, 6)

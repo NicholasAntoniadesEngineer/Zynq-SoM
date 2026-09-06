@@ -12,7 +12,9 @@ _LOAD_ERROR: str = ""
 def _load() -> ModuleType | None:
     global _MOD, _LOAD_ERROR
     if _REQUIRE == "0":
-        return None
+        raise RuntimeError(
+            "SCHGEN_NATIVE=0 is removed — the engine is C++ only. "
+            "Build scripts/build_native.sh")
     if _MOD is not None or _LOAD_ERROR:
         return _MOD
     try:
@@ -21,8 +23,7 @@ def _load() -> ModuleType | None:
         _LOAD_ERROR = str(exc)
         raise RuntimeError(
             f"schgen._geom failed to import: {exc}. Build it with "
-            f"scripts/build_native.sh, or set SCHGEN_NATIVE=0 to force "
-            f"the Python kernels") from exc
+            f"scripts/build_native.sh") from exc
     _MOD = mod
     return _MOD
 

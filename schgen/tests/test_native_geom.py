@@ -2366,6 +2366,102 @@ def test_escape_frame_corridor_and_grid_match_python(geom, monkeypatch):
     assert _grid_controls(refs, boxes, {}, 12.0) == ref_grid
 
 
+def test_escape_seat_classify_and_scan_kernels(geom):
+    from schgen.core.sexpr import Sym
+    from schgen.generate.floorplan import _floats
+    from schgen.generate.pcb.escape import (
+        CLR_HOLE_FOREIGN,
+        CLR_HOLE_HOLE,
+        CLR_HOLE_SAMENET_PAD,
+        CLR_MARGIN,
+        _via_clear,
+    )
+    from schgen.generate.pcb.placement import (
+        _classify_side,
+        _decoupling_caps,
+        _is_passive_ref,
+    )
+    from schgen.generate.pcb.silk import _font_size
+
+    pads = [
+        (-1.6, 0.4, 0.3, 0.25),
+        (1.6, 0.4, 0.3, 0.25),
+        (-1.6, -0.4, 0.3, 0.25),
+        (1.6, -0.4, 0.3, 0.25),
+        (0.0, 0.0, 1.0, 1.0),
+    ]
+    row_v, half_w, half_h, span_u, pitch = geom.contact_geometry(pads)
+    assert row_v == 0.4
+    assert half_w == 0.15
+    assert half_h == 0.125
+    assert span_u == 1.6
+    assert pitch == 3.2
+
+    clear = (CLR_MARGIN, CLR_HOLE_FOREIGN, CLR_HOLE_SAMENET_PAD, CLR_HOLE_HOLE)
+    assert _via_clear() == clear
+    ok, _msg = geom.via_feasible(
+        0.0, 0.0, 0.45, 0.3, [], [], [], [], clear, False)
+    assert ok is True
+    ok, msg = geom.via_feasible(
+        0.0, 0.0, 0.45, 0.3,
+        [( -0.1, -0.1, 0.1, 0.1, 0.2, "U1.1")],
+        [], [], [], clear, True)
+    assert ok is False
+    assert "F.Cu" in msg and "annulus" in msg
+
+    assert geom.is_passive_ref("C12") is True
+    assert geom.is_passive_ref("RJ45") is False
+    assert geom.is_passive_ref("LED1") is False
+    assert _is_passive_ref("R2") is True
+    assert geom.classify_side(
+        "C1", "Capacitor_SMD:C_0402", (-0.5, -0.25, 0.5, 0.25),
+        True, True, 12.0, ["DF40C", "Connector"]) == "bottom"
+    assert _classify_side(
+        "U1", "DF40C-100", (-2, -2, 2, 2), set(), True) == "top"
+
+    class _Pin:
+        def __init__(self, ref):
+            self.ref = ref
+    nets = {
+        "+3V3": [_Pin("C1"), _Pin("U1")],
+        "GND": [_Pin("C1"), _Pin("U1")],
+        "unconnected-C2": [_Pin("C2")],
+    }
+    assert _decoupling_caps(nets) == {"C1"}
+    assert set(geom.decoupling_caps(
+        [("+3V3", ["C1", "U1"]), ("GND", ["C1", "U1"])])) == {"C1"}
+
+    assert geom.zone_target_w(100.0, 0.62, 1.0, 8.0) == max(
+        8.0, (100.0 * 0.62) ** 0.5)
+    plane = tuple(geom.canonical_plane_rect(25.0, 25.0, 100.0, 80.0, 0.5))
+    assert plane == (25.5, 25.5, 124.5, 104.5)
+    void = tuple(geom.isolation_void_rect((10.0, 12.0, 14.0, 16.0), 0.6))
+    assert void == (9.4, 11.4, 14.6, 16.6)
+
+    uv = tuple(geom.board_box_to_uv(0.0, 0.0, 0.0, (1.0, 2.0, 3.0, 4.0)))
+    assert uv == (1.0, 2.0, 3.0, 4.0)
+
+    segs = geom.cluster_slot_segs(
+        [("1", 0.5, 0.0), ("2", -0.5, 0.0)],
+        ["N1", "N2"],
+        [(0.0, 0.0), (2.0, 0.0)],
+        [("N1", [(10.0, 0.0)]), ("N2", [(0.0, 10.0)])],
+    )
+    assert len(segs) == 2
+    assert len(segs[0]) == 2
+
+    assert _floats("x=-1.25 y=3") == [-1.25, 3.0]
+    assert geom.scan_floats("x=-1.25 y=3") == [-1.25, 3.0]
+    node = [Sym("property"), "Reference", "R1",
+            [Sym("effects"), [Sym("font"), [Sym("size"), 1.2, 1.2]]]]
+    assert geom.font_size(node, 1.0) == 1.2
+    assert _font_size(node) == 1.2
+    placed = geom.inst_pad_xy([("1", 1.0, 0.0)], 10.0, 20.0, 90.0, 3)
+    assert placed[0][0] == "1"
+    assert placed[0][1] == 10.0
+    assert placed[0][2] == 19.0
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()
