@@ -471,6 +471,23 @@ som_jack_rects(
     double som_x, double som_y,
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         jacks);
+Box4 grow_rect(const Box4& box, double margin);
+Box4 offset_rect(const Box4& box, double dx, double dy);
+bool rect_covers(const Box4& outer, const Box4& inner);
+bool rects_intersect_open(const Box4& a, const Box4& b);
+bool point_in_rect(double x, double y, const Box4& box);
+std::pair<double, double> rect_center(const Box4& box);
+std::pair<double, double> coexistence_region(double span_u, double row_v,
+                                             double half_h, double lane_handle,
+                                             double margin);
+double construct_reach(double r_construct, double row_v);
+Box4 obstacle_scan_region(const std::vector<double>& us, double margin);
+std::pair<double, double> escape_lane_extents(double row_v, double half_h,
+                                              double lane_handle);
+Box4 aabb_from_corners(double x0, double y0, double x1, double y1, int digits);
+double min_hypot_to_points(
+    double u, double v,
+    const std::vector<std::pair<double, double>>& pts);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

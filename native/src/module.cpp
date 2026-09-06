@@ -1202,6 +1202,50 @@ NB_MODULE(_geom, m) {
               return out;
           });
     m.def("som_jack_rects", &schgen::som_jack_rects);
+    m.def("grow_rect",
+          [](const BoxTup& box, double margin) {
+              auto b = schgen::grow_rect(as_box(box), margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("offset_rect",
+          [](const BoxTup& box, double dx, double dy) {
+              auto b = schgen::offset_rect(as_box(box), dx, dy);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("rect_covers",
+          [](const BoxTup& outer, const BoxTup& inner) {
+              return schgen::rect_covers(as_box(outer), as_box(inner));
+          });
+    m.def("rects_intersect_open",
+          [](const BoxTup& a, const BoxTup& b) {
+              return schgen::rects_intersect_open(as_box(a), as_box(b));
+          });
+    m.def("point_in_rect",
+          [](double x, double y, const BoxTup& box) {
+              return schgen::point_in_rect(x, y, as_box(box));
+          });
+    m.def("rect_center",
+          [](const BoxTup& box) {
+              return schgen::rect_center(as_box(box));
+          });
+    m.def("coexistence_region", &schgen::coexistence_region);
+    m.def("construct_reach", &schgen::construct_reach);
+    m.def("obstacle_scan_region",
+          [](const std::vector<double>& us, double margin) {
+              auto b = schgen::obstacle_scan_region(us, margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("escape_lane_extents", &schgen::escape_lane_extents);
+    m.def("aabb_from_corners",
+          [](double x0, double y0, double x1, double y1, int digits) {
+              auto b = schgen::aabb_from_corners(x0, y0, x1, y1, digits);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("min_hypot_to_points",
+          [](double u, double v,
+             const std::vector<std::pair<double, double>>& pts) {
+              return schgen::min_hypot_to_points(u, v, pts);
+          });
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);

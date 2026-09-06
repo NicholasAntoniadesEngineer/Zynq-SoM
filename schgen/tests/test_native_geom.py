@@ -2156,6 +2156,75 @@ def test_escape_region_legalize_rects_and_stagger_match_python(geom):
         0, 1, 0]
 
 
+def test_escape_zone_cover_reach_and_halo_match_python(geom, monkeypatch):
+    from schgen.generate.pcb import breathe as br
+    from schgen.generate.pcb import escape as esc
+    from schgen.generate.pcb.escape import (
+        aabb_from_corners,
+        aabb_from_corners_py,
+        coexistence_region,
+        coexistence_region_py,
+        construct_reach,
+        construct_reach_py,
+        escape_lane_extents,
+        escape_lane_extents_py,
+        grow_rect,
+        grow_rect_py,
+        min_hypot_to_points,
+        min_hypot_to_points_py,
+        obstacle_scan_region,
+        obstacle_scan_region_py,
+        offset_rect,
+        offset_rect_py,
+        point_in_rect,
+        point_in_rect_py,
+        rect_center,
+        rect_center_py,
+        rect_covers,
+        rect_covers_py,
+        rects_intersect_open,
+        rects_intersect_open_py,
+    )
+    monkeypatch.setattr(esc._nat, "trace", lambda: True)
+    monkeypatch.setattr(br._nat, "trace", lambda: True)
+    keepout = (10.0, 20.0, 40.0, 50.0)
+    zone = grow_rect(keepout, 2.0)
+    assert zone == grow_rect_py(keepout, 2.0)
+    assert tuple(geom.grow_rect(keepout, 2.0)) == (8.0, 18.0, 42.0, 52.0)
+    plane = (5.0, 15.0, 50.0, 60.0)
+    void = (41.0, 18.5, 43.0, 22.0)
+    miss = (43.0, 18.5, 45.0, 22.0)
+    assert rect_covers(plane, zone) is True
+    assert rect_covers_py(plane, zone) is True
+    assert rect_covers((8.1, 18.0, 42.0, 52.0), zone) is False
+    assert rects_intersect_open(void, zone) is True
+    assert rects_intersect_open_py(void, zone) is True
+    assert rects_intersect_open(miss, zone) is False
+    assert rects_intersect_open_py(keepout, (40.0, 20.0, 41.0, 21.0)) is False
+    assert point_in_rect(10.0, 20.0, keepout) is True
+    assert point_in_rect_py(40.0, 50.0, keepout) is True
+    assert point_in_rect(9.9, 20.0, keepout) is False
+    assert rect_center(keepout) == rect_center_py(keepout) == (25.0, 35.0)
+    assert coexistence_region(4.2, 1.1, 0.4, 1.0, 0.5) == (
+        coexistence_region_py(4.2, 1.1, 0.4, 1.0, 0.5))
+    assert construct_reach(1.8, 0.9) == construct_reach_py(1.8, 0.9)
+    assert construct_reach(1.8, 2.0) == 0.0
+    assert obstacle_scan_region([-1.2, 0.0, 3.4], 6.0) == (
+        obstacle_scan_region_py([-1.2, 0.0, 3.4], 6.0))
+    assert escape_lane_extents(1.1, 0.4, 1.0) == escape_lane_extents_py(
+        1.1, 0.4, 1.0)
+    assert aabb_from_corners(12.34567, 9.1, 8.2, 11.87654, 4) == (
+        aabb_from_corners_py(12.34567, 9.1, 8.2, 11.87654, 4))
+    seats = [(0.0, 0.0), (1.5, -0.4), (-0.2, 0.8)]
+    assert min_hypot_to_points(0.1, 0.2, seats) == min_hypot_to_points_py(
+        0.1, 0.2, seats)
+    assert offset_rect(keepout, 3.0, -1.5) == offset_rect_py(
+        keepout, 3.0, -1.5)
+    assert br._halo(keepout, 2.0) == br._halo_py(keepout, 2.0)
+    assert br._eff_box((0.0, 0.0, 4.0, 2.0), 90.0, 10.0, 20.0) == (
+        br._eff_box_py((0.0, 0.0, 4.0, 2.0), 90.0, 10.0, 20.0))
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

@@ -177,6 +177,242 @@ def _box_dist(x: float, y: float, box: tuple[float, float, float, float]) -> flo
     return got
 
 
+def grow_rect_py(box: tuple[float, float, float, float], margin: float
+                 ) -> tuple[float, float, float, float]:
+    return (box[0] - margin, box[1] - margin, box[2] + margin, box[3] + margin)
+
+
+def grow_rect(box: tuple[float, float, float, float], margin: float
+              ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native grow_rect required")
+    got = tuple(_nat.module().grow_rect(box, margin))
+    if _nat.trace():
+        ref = grow_rect_py(box, margin)
+        if got != ref:
+            raise AssertionError(
+                "native grow_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def offset_rect_py(box: tuple[float, float, float, float], dx: float, dy: float
+                   ) -> tuple[float, float, float, float]:
+    return (box[0] + dx, box[1] + dy, box[2] + dx, box[3] + dy)
+
+
+def offset_rect(box: tuple[float, float, float, float], dx: float, dy: float
+                ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native offset_rect required")
+    got = tuple(_nat.module().offset_rect(box, dx, dy))
+    if _nat.trace():
+        ref = offset_rect_py(box, dx, dy)
+        if got != ref:
+            raise AssertionError(
+                "native offset_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rect_covers_py(outer: tuple[float, float, float, float],
+                   inner: tuple[float, float, float, float]) -> bool:
+    return (outer[0] <= inner[0] and outer[1] <= inner[1]
+            and outer[2] >= inner[2] and outer[3] >= inner[3])
+
+
+def rect_covers(outer: tuple[float, float, float, float],
+                inner: tuple[float, float, float, float]) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native rect_covers required")
+    got = bool(_nat.module().rect_covers(outer, inner))
+    if _nat.trace():
+        ref = rect_covers_py(outer, inner)
+        if got is not ref:
+            raise AssertionError(
+                "native rect_covers DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rects_intersect_open_py(a: tuple[float, float, float, float],
+                            b: tuple[float, float, float, float]) -> bool:
+    return a[0] < b[2] and a[2] > b[0] and a[1] < b[3] and a[3] > b[1]
+
+
+def rects_intersect_open(a: tuple[float, float, float, float],
+                         b: tuple[float, float, float, float]) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native rects_intersect_open required")
+    got = bool(_nat.module().rects_intersect_open(a, b))
+    if _nat.trace():
+        ref = rects_intersect_open_py(a, b)
+        if got is not ref:
+            raise AssertionError(
+                "native rects_intersect_open DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def point_in_rect_py(x: float, y: float,
+                     box: tuple[float, float, float, float]) -> bool:
+    return box[0] <= x <= box[2] and box[1] <= y <= box[3]
+
+
+def point_in_rect(x: float, y: float,
+                  box: tuple[float, float, float, float]) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native point_in_rect required")
+    got = bool(_nat.module().point_in_rect(x, y, box))
+    if _nat.trace():
+        ref = point_in_rect_py(x, y, box)
+        if got is not ref:
+            raise AssertionError(
+                "native point_in_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rect_center_py(box: tuple[float, float, float, float]
+                   ) -> tuple[float, float]:
+    return ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
+
+
+def rect_center(box: tuple[float, float, float, float]
+                ) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native rect_center required")
+    got = tuple(_nat.module().rect_center(box))
+    if _nat.trace():
+        ref = rect_center_py(box)
+        if got != ref:
+            raise AssertionError(
+                "native rect_center DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def coexistence_region_py(span_u: float, row_v: float, half_h: float,
+                          lane_handle: float, margin: float
+                          ) -> tuple[float, float]:
+    return (span_u + margin, row_v + half_h + lane_handle + margin)
+
+
+def coexistence_region(span_u: float, row_v: float, half_h: float,
+                       lane_handle: float, margin: float
+                       ) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native coexistence_region required")
+    got = tuple(_nat.module().coexistence_region(
+        span_u, row_v, half_h, lane_handle, margin))
+    if _nat.trace():
+        ref = coexistence_region_py(span_u, row_v, half_h, lane_handle, margin)
+        if got != ref:
+            raise AssertionError(
+                "native coexistence_region DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def construct_reach_py(r_construct: float, row_v: float) -> float:
+    return math.sqrt(max(r_construct ** 2 - row_v ** 2, 0.0))
+
+
+def construct_reach(r_construct: float, row_v: float) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native construct_reach required")
+    got = float(_nat.module().construct_reach(r_construct, row_v))
+    if _nat.trace():
+        ref = construct_reach_py(r_construct, row_v)
+        if got != ref:
+            raise AssertionError(
+                "native construct_reach DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def obstacle_scan_region_py(us: list[float], margin: float
+                            ) -> tuple[float, float, float, float]:
+    if not us:
+        raise RuntimeError("obstacle_scan_region: us required")
+    return (min(us) - margin, -margin, max(us) + margin, margin)
+
+
+def obstacle_scan_region(us: list[float], margin: float
+                         ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native obstacle_scan_region required")
+    got = tuple(_nat.module().obstacle_scan_region(us, margin))
+    if _nat.trace():
+        ref = obstacle_scan_region_py(us, margin)
+        if got != ref:
+            raise AssertionError(
+                "native obstacle_scan_region DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def escape_lane_extents_py(row_v: float, half_h: float, lane_handle: float
+                           ) -> tuple[float, float]:
+    pad_outer_tip = row_v + half_h
+    return (pad_outer_tip, pad_outer_tip + lane_handle)
+
+
+def escape_lane_extents(row_v: float, half_h: float, lane_handle: float
+                        ) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native escape_lane_extents required")
+    got = tuple(_nat.module().escape_lane_extents(row_v, half_h, lane_handle))
+    if _nat.trace():
+        ref = escape_lane_extents_py(row_v, half_h, lane_handle)
+        if got != ref:
+            raise AssertionError(
+                "native escape_lane_extents DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def aabb_from_corners_py(x0: float, y0: float, x1: float, y1: float,
+                         digits: int) -> tuple[float, float, float, float]:
+    return (round(min(x0, x1), digits), round(min(y0, y1), digits),
+            round(max(x0, x1), digits), round(max(y0, y1), digits))
+
+
+def aabb_from_corners(x0: float, y0: float, x1: float, y1: float,
+                      digits: int) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native aabb_from_corners required")
+    got = tuple(_nat.module().aabb_from_corners(x0, y0, x1, y1, digits))
+    if _nat.trace():
+        ref = aabb_from_corners_py(x0, y0, x1, y1, digits)
+        if got != ref:
+            raise AssertionError(
+                "native aabb_from_corners DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def min_hypot_to_points_py(u: float, v: float,
+                           pts: list[tuple[float, float]]) -> float:
+    if not pts:
+        raise RuntimeError("min_hypot_to_points: pts required")
+    return min(math.hypot(p[0] - u, p[1] - v) for p in pts)
+
+
+def min_hypot_to_points(u: float, v: float,
+                        pts: list[tuple[float, float]]) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native min_hypot_to_points required")
+    got = float(_nat.module().min_hypot_to_points(u, v, pts))
+    if _nat.trace():
+        ref = min_hypot_to_points_py(u, v, pts)
+        if got != ref:
+            raise AssertionError(
+                "native min_hypot_to_points DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 CORRIDOR_V_MARGIN = 0.15
 CORRIDOR_LIP = 0.3
 
@@ -697,19 +933,15 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
 
     if model.som_keepout is None:
         raise EscapeError("model has no SoM keepout — escape region underivable")
-    kx0, ky0, kx1, ky1 = model.som_keepout
-    zone = (kx0 - SOM_ZONE_GROW, ky0 - SOM_ZONE_GROW,
-            kx1 + SOM_ZONE_GROW, ky1 + SOM_ZONE_GROW)
+    zone = grow_rect(tuple(model.som_keepout), SOM_ZONE_GROW)
     plane_rect, void_rects = _canonical_plane(model)
-    if not (plane_rect[0] <= zone[0] and plane_rect[1] <= zone[1]
-            and plane_rect[2] >= zone[2] and plane_rect[3] >= zone[3]):
+    if not rect_covers(plane_rect, zone):
         raise EscapeError(
             f"the canonical In1 GND plane {plane_rect} does not cover the "
             f"escape region {zone} — the return stitching has no plane to "
             f"land on (GAP1 geometry changed; re-derive deliberately)")
     for vr, label in void_rects:
-        if (vr[0] < zone[2] and vr[2] > zone[0]
-                and vr[1] < zone[3] and vr[3] > zone[1]):
+        if rects_intersect_open(vr, zone):
             raise EscapeError(
                 f"In1 plane VOID {label} {vr} intersects the escape region "
                 f"{zone} — the return plane under the DF40 field would be "
@@ -738,8 +970,8 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
             bb = boxes.get(pad)
             if bb is None:
                 continue
-            cx, cy = (bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2
-            if zone[0] <= cx <= zone[2] and zone[1] <= cy <= zone[3]:
+            cx, cy = rect_center(bb)
+            if point_in_rect(cx, cy, zone):
                 foreign_barrels.append(f"{oi.ref}.{pad} ({net or 'no-net'}) "
                                        f"at ({cx:.2f},{cy:.2f})")
     if foreign_barrels:
@@ -767,12 +999,11 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
                 "basis": kl.basis}
         contacts = _contact_geometry(inst.mod_path)
         contacts_by_conn[ref] = contacts
-        reach = math.sqrt(max(R_CONSTRUCT ** 2 - contacts.row_v ** 2, 0.0))
+        reach = construct_reach(R_CONSTRUCT, contacts.row_v)
         pts = [(m.u, m.pad) for m in members]
         by_pad = {m.pad: m for m in members}
         us = sorted({round(x, 3) for x, _ in pts})
-        region = (min(us) - OBSTACLE_MARGIN, -OBSTACLE_MARGIN,
-                  max(us) + OBSTACLE_MARGIN, OBSTACLE_MARGIN)
+        region = obstacle_scan_region(us, OBSTACLE_MARGIN)
         obstacles[ref] = _collect_obstacles(model, inst, _inst_pad_boxes,
                                             region)
         for band in band_cover(pts, reach):
@@ -790,7 +1021,8 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
             obstacles[ref].holes.append(
                 (s["u"], s["v"], s["drill"] / 2, f"escape-via {ref}"))
         for m in bm:
-            best = min(math.hypot(s["u"] - m.u, s["v"] - m.v) for s in seats)
+            best = min_hypot_to_points(
+                m.u, m.v, [(s["u"], s["v"]) for s in seats])
             coverage.setdefault(ref, {})[m.pad] = best
 
     for ref, vias in sorted(vias_by_conn.items()):
@@ -952,9 +1184,9 @@ def _coexistence(model, conns, ledger) -> list[dict]:
                    if e["kind"] in ("split_u", "split_row")}
     for ref, inst in sorted(conns.items()):
         contacts = _contact_geometry(inst.mod_path)
-        region_u = contacts.span_u + COEX_MARGIN
-        region_v = (contacts.row_v + contacts.half_h + LANE_HANDLE
-                    + COEX_MARGIN)
+        region_u, region_v = coexistence_region(
+            contacts.span_u, contacts.row_v, contacts.half_h, LANE_HANDLE,
+            COEX_MARGIN)
         for oi in sorted(model.insts, key=lambda i: i.ref):
             if oi.side != "bottom" or oi.ref == inst.ref:
                 continue
@@ -1031,8 +1263,8 @@ def build_escape_plan(model) -> dict:
     for ref, inst in sorted(conns.items()):
         pads_local = rpg._parse_pad_positions(inst.mod_path)
         contacts = _contact_geometry(inst.mod_path)
-        pad_outer_tip = contacts.row_v + contacts.half_h
-        escape_v = pad_outer_tip + LANE_HANDLE
+        pad_outer_tip, escape_v = escape_lane_extents(
+            contacts.row_v, contacts.half_h, LANE_HANDLE)
         rows: dict[int, list] = {}
         n_netted = 0
         for pad, (num, name) in sorted(inst.pad_nets.items(),
@@ -1092,9 +1324,7 @@ def build_escape_plan(model) -> dict:
             c1 = _to_board(conns[ref], max(us) + 0.5,
                            math.copysign(escape_v + CORRIDOR_LIP, sgn))
             corridors[f"{ref}:{'S' if sgn > 0 else 'N'}"] = {
-                "rect": tuple(round(c, 4) for c in
-                              (min(c0[0], c1[0]), min(c0[1], c1[1]),
-                               max(c0[0], c1[0]), max(c0[1], c1[1]))),
+                "rect": aabb_from_corners(c0[0], c0[1], c1[0], c1[1], 4),
                 "purpose": "DF40 escape-lane corridor (T2) — composition "
                            "legalizer must keep parts + zones out"}
 

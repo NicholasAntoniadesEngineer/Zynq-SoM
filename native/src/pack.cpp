@@ -2716,4 +2716,79 @@ som_jack_rects(
     return out;
 }
 
+Box4 grow_rect(const Box4& box, double margin) {
+    return {box.x0 - margin, box.y0 - margin, box.x1 + margin,
+            box.y1 + margin};
+}
+
+Box4 offset_rect(const Box4& box, double dx, double dy) {
+    return {box.x0 + dx, box.y0 + dy, box.x1 + dx, box.y1 + dy};
+}
+
+bool rect_covers(const Box4& outer, const Box4& inner) {
+    return outer.x0 <= inner.x0 && outer.y0 <= inner.y0
+        && outer.x1 >= inner.x1 && outer.y1 >= inner.y1;
+}
+
+bool rects_intersect_open(const Box4& a, const Box4& b) {
+    return a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+}
+
+bool point_in_rect(double x, double y, const Box4& box) {
+    return box.x0 <= x && x <= box.x1 && box.y0 <= y && y <= box.y1;
+}
+
+std::pair<double, double> rect_center(const Box4& box) {
+    return {(box.x0 + box.x1) / 2.0, (box.y0 + box.y1) / 2.0};
+}
+
+std::pair<double, double> coexistence_region(double span_u, double row_v,
+                                             double half_h, double lane_handle,
+                                             double margin) {
+    return {span_u + margin, row_v + half_h + lane_handle + margin};
+}
+
+double construct_reach(double r_construct, double row_v) {
+    return std::sqrt(std::max(r_construct * r_construct - row_v * row_v, 0.0));
+}
+
+Box4 obstacle_scan_region(const std::vector<double>& us, double margin) {
+    if (us.empty()) {
+        throw std::runtime_error("obstacle_scan_region: us required");
+    }
+    double min_u = us.front();
+    double max_u = us.front();
+    for (double u : us) {
+        min_u = std::min(min_u, u);
+        max_u = std::max(max_u, u);
+    }
+    return {min_u - margin, -margin, max_u + margin, margin};
+}
+
+std::pair<double, double> escape_lane_extents(double row_v, double half_h,
+                                              double lane_handle) {
+    const double pad_outer_tip = row_v + half_h;
+    return {pad_outer_tip, pad_outer_tip + lane_handle};
+}
+
+Box4 aabb_from_corners(double x0, double y0, double x1, double y1, int digits) {
+    return {py_round(std::min(x0, x1), digits),
+            py_round(std::min(y0, y1), digits),
+            py_round(std::max(x0, x1), digits),
+            py_round(std::max(y0, y1), digits)};
+}
+
+double min_hypot_to_points(
+    double u, double v,
+    const std::vector<std::pair<double, double>>& pts) {
+    if (pts.empty()) {
+        throw std::runtime_error("min_hypot_to_points: pts required");
+    }
+    double best = std::hypot(pts.front().first - u, pts.front().second - v);
+    for (const auto& pt : pts) {
+        best = std::min(best, std::hypot(pt.first - u, pt.second - v));
+    }
+    return best;
+}
+
 }  // namespace schgen
