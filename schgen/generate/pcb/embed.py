@@ -631,17 +631,13 @@ def _iso_void_zones(model: PcbModel, uid) -> list[list]:
     return out
 
 
-_MOD_PAD_CACHE: dict[str, list[tuple[float, float, float, float, float, float]]] = {}
+_MOD_PAD_CACHE: dict[str, list[tuple[str, float, float, float, float, float, float]]] = {}
 
 
-def _mod_pads(mod_path) -> list[tuple[str, float, float, float, float, float, float]]:
-    key = str(mod_path)
-    cached = _MOD_PAD_CACHE.get(key)
-    if cached is not None:
-        return cached  # type: ignore[return-value]
-    rows: list = []
-    doc = sexpr.loads(mod_path.read_text())
-    for node in doc:
+def _mod_pads_py(text: str
+                 ) -> list[tuple[str, float, float, float, float, float, float]]:
+    rows: list[tuple[str, float, float, float, float, float, float]] = []
+    for node in sexpr.loads(text):
         if not (isinstance(node, list) and node and node[0] == Sym("pad")):
             continue
         name = str(node[1]) if len(node) > 1 else ""
@@ -656,8 +652,29 @@ def _mod_pads(mod_path) -> list[tuple[str, float, float, float, float, float, fl
             isinstance(dr[1], (int, float)) else 0.0
         rows.append((name, float(at[1]), float(at[2]), prot,
                      float(sz[1]), float(sz[2]), drill))
-    _MOD_PAD_CACHE[key] = rows
     return rows
+
+
+def _mod_pads(mod_path) -> list[tuple[str, float, float, float, float, float, float]]:
+    key = str(mod_path)
+    cached = _MOD_PAD_CACHE.get(key)
+    if cached is not None:
+        return cached
+    text = mod_path.read_text()
+    if not _nat.loaded():
+        raise RuntimeError("native scan_mod_pads required")
+    got = [(n, float(px), float(py), float(prot), float(sw), float(sh),
+            float(drill))
+           for n, px, py, prot, sw, sh, drill in
+           _nat.module().scan_mod_pads(text)]
+    if _nat.trace():
+        ref = _mod_pads_py(text)
+        if got != ref:
+            raise AssertionError(
+                "native scan_mod_pads DIVERGENCE: "
+                f"cpp={got} python={ref} path={mod_path}")
+    _MOD_PAD_CACHE[key] = got
+    return got
 
 
 def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float, str]]:

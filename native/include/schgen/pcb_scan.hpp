@@ -139,6 +139,9 @@ bool has_thru_pads_from_text(const std::string& text);
 std::vector<std::tuple<std::string, std::string, double, double, double, double,
                        double>>
 scan_pad_nodes(const Sexpr& doc);
+std::vector<std::tuple<std::string, double, double, double, double, double,
+                       double>>
+scan_mod_pads(const Sexpr& doc);
 
 std::vector<double> scan_floats(const std::string& text);
 

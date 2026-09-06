@@ -1367,6 +1367,52 @@ scan_pad_nodes(const Sexpr& doc) {
     return out;
 }
 
+std::vector<std::tuple<std::string, double, double, double, double, double,
+                       double>>
+scan_mod_pads(const Sexpr& doc) {
+    std::vector<std::tuple<std::string, double, double, double, double, double,
+                           double>>
+        out;
+    if (!std::holds_alternative<SexprList>(doc.v)) {
+        return out;
+    }
+    for (const Sexpr& child : std::get<SexprList>(doc.v)) {
+        if (!is_tagged_list(child, "pad")) {
+            continue;
+        }
+        const SexprList& lst = std::get<SexprList>(child.v);
+        std::string name;
+        if (lst.size() > 1) {
+            try {
+                name = py_str(lst[1]);
+            } catch (const std::runtime_error&) {
+                name.clear();
+            }
+        }
+        const SexprList* at = find_tagged_child(lst, "at");
+        const SexprList* size = find_tagged_child(lst, "size");
+        if (at == nullptr || at->size() < 3 || !is_number((*at)[1])
+            || !is_number((*at)[2]) || size == nullptr || size->size() < 3
+            || !is_number((*size)[1]) || !is_number((*size)[2])) {
+            continue;
+        }
+        double prot = 0.0;
+        if (at->size() > 3 && is_number((*at)[3])) {
+            prot = std::get<double>((*at)[3].v);
+        }
+        double drill = 0.0;
+        const SexprList* dr = find_tagged_child(lst, "drill");
+        if (dr != nullptr && dr->size() > 1 && is_number((*dr)[1])) {
+            drill = std::get<double>((*dr)[1].v);
+        }
+        out.emplace_back(name, std::get<double>((*at)[1].v),
+                         std::get<double>((*at)[2].v), prot,
+                         std::get<double>((*size)[1].v),
+                         std::get<double>((*size)[2].v), drill);
+    }
+    return out;
+}
+
 double font_size(const Sexpr& node, double default_size) {
     if (!std::holds_alternative<SexprList>(node.v)) {
         return default_size;
