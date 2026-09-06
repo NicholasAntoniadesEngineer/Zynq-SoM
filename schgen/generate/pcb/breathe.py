@@ -111,15 +111,11 @@ class _Grid:
     __slots__ = ("_cpp", "_py")
 
     def __init__(self, board_w: float, board_h: float) -> None:
-        self._cpp = None
-        self._py = None
-        if _nat.loaded():
-            self._cpp = _nat.module().BreatheGrid(
-                board_w, board_h, CELL, ORIGIN_X, ORIGIN_Y)
-            if _nat.trace():
-                self._py = _GridPy(board_w, board_h)
-        else:
-            self._py = _GridPy(board_w, board_h)
+        if not _nat.loaded():
+            raise RuntimeError("native BreatheGrid required")
+        self._cpp = _nat.module().BreatheGrid(
+            board_w, board_h, CELL, ORIGIN_X, ORIGIN_Y)
+        self._py = _GridPy(board_w, board_h) if _nat.trace() else None
 
     def stamp(self, box: tuple[float, float, float, float], val: int = 1) -> None:
         if self._cpp is not None:

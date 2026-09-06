@@ -77,18 +77,18 @@ def _pin_box_py(ic_boxes: dict[str, tuple], pins: list[str]
 def _pin_box(ic_boxes: dict[str, tuple], pins: list[str]
              ) -> tuple[float, float, float, float]:
     boxes = [ic_boxes[p] for p in pins if p in ic_boxes]
-    if _nat.loaded():
-        got = _nat.module().boxes_union(boxes)
-        if got is None:
-            raise ValueError("pin box: no pads")
-        hit = tuple(got)
-        if _nat.trace():
-            ref = _pin_box_py(ic_boxes, pins)
-            if hit != ref:
-                raise AssertionError(
-                    f"native pin_box DIVERGENCE: cpp={hit} python={ref}")
-        return hit
-    return _pin_box_py(ic_boxes, pins)
+    if not _nat.loaded():
+        raise RuntimeError("native pin_box required")
+    got = _nat.module().boxes_union(boxes)
+    if got is None:
+        raise ValueError("pin box: no pads")
+    hit = tuple(got)
+    if _nat.trace():
+        ref = _pin_box_py(ic_boxes, pins)
+        if hit != ref:
+            raise AssertionError(
+                f"native pin_box DIVERGENCE: cpp={hit} python={ref}")
+    return hit
 
 
 def _boxes_overlap_py(a: tuple[float, float, float, float],
@@ -99,16 +99,16 @@ def _boxes_overlap_py(a: tuple[float, float, float, float],
 
 def _boxes_overlap(a: tuple[float, float, float, float],
                    b: tuple[float, float, float, float], halo: float) -> bool:
-    if _nat.loaded():
-        got = _nat.module().boxes_overlap(a, b, halo)
-        if _nat.trace():
-            ref = _boxes_overlap_py(a, b, halo)
-            if got is not ref:
-                raise AssertionError(
-                    "native boxes_overlap DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _boxes_overlap_py(a, b, halo)
+    if not _nat.loaded():
+        raise RuntimeError("native boxes_overlap required")
+    got = _nat.module().boxes_overlap(a, b, halo)
+    if _nat.trace():
+        ref = _boxes_overlap_py(a, b, halo)
+        if got is not ref:
+            raise AssertionError(
+                "native boxes_overlap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _BUCK_CACHE: dict[tuple, list[tuple[float, float, float]]] = {}
@@ -179,19 +179,18 @@ def _beside(mod: Path, rot: float, side: str,
             direction: str, gap: float,
             along_center: float | None = None) -> _Part:
     hx, hy = _crtyd_half(mod, rot)
-    if _nat.loaded():
-        ox, oy = _nat.module().beside_offset(
-            hx, hy, target, direction, gap, along_center)
-        if _nat.trace():
-            ref = _beside_py(mod, rot, side, target, direction, gap,
-                             along_center, hx, hy)
-            if (ox, oy) != (ref.ox, ref.oy):
-                raise AssertionError(
-                    "native beside_offset DIVERGENCE: "
-                    f"cpp={(ox, oy)} python={(ref.ox, ref.oy)}")
-        return _Part("", mod, rot, side, ox, oy)
-    return _beside_py(mod, rot, side, target, direction, gap, along_center,
-                      hx, hy)
+    if not _nat.loaded():
+        raise RuntimeError("native beside required")
+    ox, oy = _nat.module().beside_offset(
+        hx, hy, target, direction, gap, along_center)
+    if _nat.trace():
+        ref = _beside_py(mod, rot, side, target, direction, gap,
+                         along_center, hx, hy)
+        if (ox, oy) != (ref.ox, ref.oy):
+            raise AssertionError(
+                "native beside_offset DIVERGENCE: "
+                f"cpp={(ox, oy)} python={(ref.ox, ref.oy)}")
+    return _Part("", mod, rot, side, ox, oy)
 
 
 def _rebref(p: _Part, bref: str) -> _Part:
@@ -258,17 +257,16 @@ def _hf_cap(mod: Path, ib: dict[str, tuple], pair: list[str], direction: str,
             gap: float, ind_left: float, bref: str) -> _Part:
     p = _beside(mod, 0.0, "top", _pin_box(ib, pair), direction, gap)
     hx, _hy = _crtyd_half(mod, 0.0)
-    if _nat.loaded():
-        ox, oy = _nat.module().hf_cap_pose(p.oy, ind_left, TEMPLATE_CLEAR, hx)
-        if _nat.trace():
-            ref = (round(ind_left - TEMPLATE_CLEAR - hx, 4), p.oy)
-            if (ox, oy) != ref:
-                raise AssertionError(
-                    "native hf_cap_pose DIVERGENCE: "
-                    f"cpp={(ox, oy)} python={ref}")
-        return _Part(bref, mod, 0.0, "top", ox, oy)
-    return _Part(bref, mod, 0.0, "top",
-                 round(ind_left - TEMPLATE_CLEAR - hx, 4), p.oy)
+    if not _nat.loaded():
+        raise RuntimeError("native hf_cap_pose required")
+    ox, oy = _nat.module().hf_cap_pose(p.oy, ind_left, TEMPLATE_CLEAR, hx)
+    if _nat.trace():
+        ref = (round(ind_left - TEMPLATE_CLEAR - hx, 4), p.oy)
+        if (ox, oy) != ref:
+            raise AssertionError(
+                "native hf_cap_pose DIVERGENCE: "
+                f"cpp={(ox, oy)} python={ref}")
+    return _Part(bref, mod, 0.0, "top", ox, oy)
 
 
 def _bulk_cap_py(mod: Path, hf: _Part, direction: str, gap: float,
@@ -282,19 +280,19 @@ def _bulk_cap_py(mod: Path, hf: _Part, direction: str, gap: float,
 
 def _bulk_cap(mod: Path, hf: _Part, direction: str, gap: float,
               ind_left: float, bref: str) -> _Part:
-    if _nat.loaded():
-        hx, hy = _crtyd_half(mod, 90.0)
-        ox, oy = _nat.module().bulk_cap_pose(
-            hf.ox, hf.local_box(), direction, gap, hx, hy, ind_left,
-            TEMPLATE_CLEAR)
-        if _nat.trace():
-            ref = _bulk_cap_py(mod, hf, direction, gap, ind_left, bref)
-            if (ox, oy) != (ref.ox, ref.oy):
-                raise AssertionError(
-                    "native bulk_cap_pose DIVERGENCE: "
-                    f"cpp={(ox, oy)} python={(ref.ox, ref.oy)}")
-        return _Part(bref, mod, 90.0, "top", ox, oy)
-    return _bulk_cap_py(mod, hf, direction, gap, ind_left, bref)
+    if not _nat.loaded():
+        raise RuntimeError("native bulk_cap required")
+    hx, hy = _crtyd_half(mod, 90.0)
+    ox, oy = _nat.module().bulk_cap_pose(
+        hf.ox, hf.local_box(), direction, gap, hx, hy, ind_left,
+        TEMPLATE_CLEAR)
+    if _nat.trace():
+        ref = _bulk_cap_py(mod, hf, direction, gap, ind_left, bref)
+        if (ox, oy) != (ref.ox, ref.oy):
+            raise AssertionError(
+                "native bulk_cap_pose DIVERGENCE: "
+                f"cpp={(ox, oy)} python={(ref.ox, ref.oy)}")
+    return _Part(bref, mod, 90.0, "top", ox, oy)
 
 
 def _cout_column_py(resolvable: dict[str, Path], out_caps: list[str],
@@ -324,24 +322,24 @@ def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
                  pad: float) -> list[_Part]:
     if not out_caps:
         return []
-    if _nat.loaded():
-        mods = [resolvable[c] for c in out_caps]
-        halves = [_crtyd_half(m, 90.0) for m in mods]
-        centers = [tuple(p) for p in _nat.module().cout_column_centers(
-            ind_out_box, pad, _COUT_GAP, TEMPLATE_CLEAR, halves)]
-        parts = [_Part(c, m, 90.0, "top", cx, cy)
-                 for c, m, (cx, cy) in zip(out_caps, mods, centers,
-                                           strict=True)]
-        if _nat.trace():
-            ref = _cout_column_py(resolvable, out_caps, ind_out_box, pad)
-            hit = [(p.bref, p.ox, p.oy) for p in parts]
-            want = [(p.bref, p.ox, p.oy) for p in ref]
-            if hit != want:
-                raise AssertionError(
-                    "native cout_column_centers DIVERGENCE: "
-                    f"cpp={hit} python={want}")
-        return parts
-    return _cout_column_py(resolvable, out_caps, ind_out_box, pad)
+    if not _nat.loaded():
+        raise RuntimeError("native cout_column required")
+    mods = [resolvable[c] for c in out_caps]
+    halves = [_crtyd_half(m, 90.0) for m in mods]
+    centers = [tuple(p) for p in _nat.module().cout_column_centers(
+        ind_out_box, pad, _COUT_GAP, TEMPLATE_CLEAR, halves)]
+    parts = [_Part(c, m, 90.0, "top", cx, cy)
+             for c, m, (cx, cy) in zip(out_caps, mods, centers,
+                                       strict=True)]
+    if _nat.trace():
+        ref = _cout_column_py(resolvable, out_caps, ind_out_box, pad)
+        hit = [(p.bref, p.ox, p.oy) for p in parts]
+        want = [(p.bref, p.ox, p.oy) for p in ref]
+        if hit != want:
+            raise AssertionError(
+                "native cout_column_centers DIVERGENCE: "
+                f"cpp={hit} python={want}")
+    return parts
 
 
 class ZoneInfeasible(RuntimeError):
@@ -364,24 +362,22 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
                 bound: float, keep_pins: list[str] | None, keep_min: float,
                 pad: float, skel_boxes: list[tuple[float, float, float, float]],
                 forbid_plus_x: bool = True) -> list[_Cand]:
-    if _nat.loaded():
-        got = _candidates_native(bref, mod, ib, icb, target_pins, bound,
-                                 keep_pins, keep_min, pad, skel_boxes,
-                                 forbid_plus_x)
-        if _nat.trace():
-            ref = _candidates_py(bref, mod, ib, icb, target_pins, bound,
-                                 keep_pins, keep_min, pad, skel_boxes,
-                                 forbid_plus_x)
-            a = [(p.rot, p.ox, p.oy) for p, _b in got]
-            b = [(p.rot, p.ox, p.oy) for p, _b in ref]
-            if a != b:
-                raise AssertionError(
-                    f"native candidates DIVERGENCE: {bref} cpp={a[:6]} "
-                    f"python={b[:6]} n={len(a)}/{len(b)}")
-        return got
-    return _candidates_py(bref, mod, ib, icb, target_pins, bound,
-                          keep_pins, keep_min, pad, skel_boxes,
-                          forbid_plus_x)
+    if not _nat.loaded():
+        raise RuntimeError("native candidates required")
+    got = _candidates_native(bref, mod, ib, icb, target_pins, bound,
+                             keep_pins, keep_min, pad, skel_boxes,
+                             forbid_plus_x)
+    if _nat.trace():
+        ref = _candidates_py(bref, mod, ib, icb, target_pins, bound,
+                             keep_pins, keep_min, pad, skel_boxes,
+                             forbid_plus_x)
+        a = [(p.rot, p.ox, p.oy) for p, _b in got]
+        b = [(p.rot, p.ox, p.oy) for p, _b in ref]
+        if a != b:
+            raise AssertionError(
+                f"native candidates DIVERGENCE: {bref} cpp={a[:6]} "
+                f"python={b[:6]} n={len(a)}/{len(b)}")
+    return got
 
 
 def _candidates_native(bref: str, mod: Path, ib: dict[str, tuple],
@@ -464,20 +460,19 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
               ib: dict[str, tuple], icb: tuple[float, float, float, float],
               skeleton: list[_Part], pad: float,
               forbid_plus_x: bool = True) -> list[_Part]:
-    if _nat.loaded():
-        got = _seat_all_native(demands, resolvable, ib, icb, skeleton, pad,
-                               forbid_plus_x)
-        if _nat.trace():
-            ref = _seat_all_py(demands, resolvable, ib, icb, skeleton, pad,
-                               forbid_plus_x)
-            a = [(p.bref, p.rot, p.ox, p.oy) for p in got]
-            b = [(p.bref, p.rot, p.ox, p.oy) for p in ref]
-            if a != b:
-                raise AssertionError(
-                    f"native seat_dfs DIVERGENCE: cpp={a} python={b}")
-        return got
-    return _seat_all_py(demands, resolvable, ib, icb, skeleton, pad,
-                        forbid_plus_x)
+    if not _nat.loaded():
+        raise RuntimeError("native seat_all required")
+    got = _seat_all_native(demands, resolvable, ib, icb, skeleton, pad,
+                           forbid_plus_x)
+    if _nat.trace():
+        ref = _seat_all_py(demands, resolvable, ib, icb, skeleton, pad,
+                           forbid_plus_x)
+        a = [(p.bref, p.rot, p.ox, p.oy) for p in got]
+        b = [(p.bref, p.rot, p.ox, p.oy) for p in ref]
+        if a != b:
+            raise AssertionError(
+                f"native seat_dfs DIVERGENCE: cpp={a} python={b}")
+    return got
 
 
 def _seat_all_native(demands: list[_Demand], resolvable: dict[str, Path],
@@ -1137,17 +1132,17 @@ def _gc_union_py(boxes):
 
 
 def _gc_union(boxes):
-    if _nat.loaded():
-        got = _nat.module().boxes_union(list(boxes))
-        if got is not None:
-            got = tuple(got)
-        if _nat.trace():
-            ref = _gc_union_py(boxes)
-            if got != ref:
-                raise AssertionError(
-                    f"native boxes_union DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _gc_union_py(boxes)
+    if not _nat.loaded():
+        raise RuntimeError("native gc_union required")
+    got = _nat.module().boxes_union(list(boxes))
+    if got is not None:
+        got = tuple(got)
+    if _nat.trace():
+        ref = _gc_union_py(boxes)
+        if got != ref:
+            raise AssertionError(
+                f"native boxes_union DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes,
@@ -1185,13 +1180,11 @@ def _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes,
 
 def _gc_scan_fast(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
                   att_pre, rep_pre, rots, align, rel_pads):
-    if _nat.loaded():
-        return _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo,
-                               placed_boxes, subjects, att_pre, rep_pre,
-                               rots, align, rel_pads)
-    return _gc_scan_fast_py(bref, mod, forbid, tcx, tcy, n, halo,
-                            placed_boxes, subjects, att_pre, rep_pre,
-                            rots, align, rel_pads)
+    if not _nat.loaded():
+        raise RuntimeError("native gc_scan_fast required")
+    return _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo,
+                           placed_boxes, subjects, att_pre, rep_pre,
+                           rots, align, rel_pads)
 
 
 def _gc_scan_fast_py(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
@@ -1711,16 +1704,16 @@ def _any_overlap_py(boxes: list[tuple[float, float, float, float]]) -> bool:
 
 def _any_overlap(parts: list[_Part]) -> bool:
     boxes = [p.local_box() for p in parts]
-    if _nat.loaded():
-        got = _nat.module().any_boxes_overlap(boxes, TEMPLATE_CLEAR)
-        if _nat.trace():
-            ref = _any_overlap_py(boxes)
-            if got is not ref:
-                raise AssertionError(
-                    "native any_boxes_overlap DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _any_overlap_py(boxes)
+    if not _nat.loaded():
+        raise RuntimeError("native any_overlap required")
+    got = _nat.module().any_boxes_overlap(boxes, TEMPLATE_CLEAR)
+    if _nat.trace():
+        ref = _any_overlap_py(boxes)
+        if got is not ref:
+            raise AssertionError(
+                "native any_boxes_overlap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _stage_extent_py(parts: list[_Part]) -> tuple[float, float, float, float]:
@@ -1733,19 +1726,19 @@ def _stage_extent_py(parts: list[_Part]) -> tuple[float, float, float, float]:
 
 def _stage_extent(parts: list[_Part]) -> tuple[float, float, float, float]:
     boxes = [p.local_box() for p in parts]
-    if _nat.loaded():
-        got = _nat.module().boxes_union(boxes)
-        if got is None:
-            raise ValueError("stage extent: no parts")
-        hit = tuple(got)
-        if _nat.trace():
-            ref = _stage_extent_py(parts)
-            if hit != ref:
-                raise AssertionError(
-                    "native stage_extent DIVERGENCE: "
-                    f"cpp={hit} python={ref}")
-        return hit
-    return _stage_extent_py(parts)
+    if not _nat.loaded():
+        raise RuntimeError("native stage_extent required")
+    got = _nat.module().boxes_union(boxes)
+    if got is None:
+        raise ValueError("stage extent: no parts")
+    hit = tuple(got)
+    if _nat.trace():
+        ref = _stage_extent_py(parts)
+        if hit != ref:
+            raise AssertionError(
+                "native stage_extent DIVERGENCE: "
+                f"cpp={hit} python={ref}")
+    return hit
 
 
 def contract_member_brefs(sheet_name: str, contract: dict,

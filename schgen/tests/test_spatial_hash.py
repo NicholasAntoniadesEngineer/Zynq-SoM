@@ -120,12 +120,10 @@ def test_reach_bound_raises_loud():
 def test_trace_kernel_selected_by_env():
     if fp._SPATIAL_TRACE:
         expect = _Occupancy._fits_traced
-    elif fp._nat.loaded():
-        expect = _Occupancy._fits_native
     else:
-        expect = _Occupancy._fits_hashed
+        expect = _Occupancy._fits_native
     assert _Occupancy.fits is expect
     src = fp.Path(fp.__file__).read_text()
     assert "fits = _fits_traced" in src
     assert "fits = _fits_native" in src
-    assert "fits = _fits_hashed" in src
+    assert "native occupancy fits required" in src

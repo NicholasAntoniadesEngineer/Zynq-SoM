@@ -51,16 +51,16 @@ def _flip_layer_token_py(name: str) -> str:
 
 
 def _flip_layer_token(name: str) -> str:
-    if _nat.loaded():
-        got = _nat.module().flip_layer_token(name)
-        if _nat.trace():
-            ref = _flip_layer_token_py(name)
-            if got != ref:
-                raise AssertionError(
-                    "native flip_layer_token DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _flip_layer_token_py(name)
+    if not _nat.loaded():
+        raise RuntimeError("native flip_layer_token required")
+    got = _nat.module().flip_layer_token(name)
+    if _nat.trace():
+        ref = _flip_layer_token_py(name)
+        if got != ref:
+            raise AssertionError(
+                "native flip_layer_token DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _flip_to_bottom_py(node: list) -> None:
@@ -85,18 +85,17 @@ def _flip_to_bottom_py(node: list) -> None:
 
 
 def _flip_to_bottom(node: list) -> None:
-    if _nat.loaded():
-        got = _from_tagged(_nat.module().flip_to_bottom(node))
-        if _nat.trace():
-            ref = copy.deepcopy(node)
-            _flip_to_bottom_py(ref)
-            if sexpr.dumps(got) != sexpr.dumps(ref):
-                raise AssertionError(
-                    "native flip_to_bottom DIVERGENCE: "
-                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
-        node[:] = got
-        return
-    _flip_to_bottom_py(node)
+    if not _nat.loaded():
+        raise RuntimeError("native flip_to_bottom required")
+    got = _from_tagged(_nat.module().flip_to_bottom(node))
+    if _nat.trace():
+        ref = copy.deepcopy(node)
+        _flip_to_bottom_py(ref)
+        if sexpr.dumps(got) != sexpr.dumps(ref):
+            raise AssertionError(
+                "native flip_to_bottom DIVERGENCE: "
+                f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+    node[:] = got
 
 
 def _embed_footprint_body_py(mod: list, inst_x: float, inst_y: float,
@@ -124,97 +123,88 @@ def _embed_footprint(inst, uid) -> list:
     assert isinstance(mod, list) and mod and mod[0] == Sym("footprint")
 
     aliases = list(_FOOTPRINT_ALIASES.items())
-    if _nat.loaded():
-        aliased = _nat.module().footprint_alias(inst.footprint, aliases)
-        if _nat.trace():
-            ref = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
-            if aliased != ref:
-                raise AssertionError(
-                    "native footprint_alias DIVERGENCE: "
-                    f"cpp={aliased!r} python={ref!r}")
-        mod[1] = aliased
-    else:
-        mod[1] = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
-
+    if not _nat.loaded():
+        raise RuntimeError("native embed_footprint required")
+    aliased = _nat.module().footprint_alias(inst.footprint, aliases)
+    if _nat.trace():
+        ref = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
+        if aliased != ref:
+            raise AssertionError(
+                "native footprint_alias DIVERGENCE: "
+                f"cpp={aliased!r} python={ref!r}")
+    mod[1] = aliased
     from .mirror import is_mirrored_path
     mirrored = is_mirrored_path(inst.mod_path)
-    if _nat.loaded():
-        ok = _nat.module().mirror_assert_ok(bool(inst.mirror), inst.side,
-                                            mirrored)
-        if _nat.trace():
-            ref = (not inst.mirror) or (
-                inst.side == "bottom" and mirrored)
-            if ok is not ref:
-                raise AssertionError(
-                    "native mirror_assert_ok DIVERGENCE: "
-                    f"cpp={ok} python={ref}")
-        if not ok:
+    if not _nat.loaded():
+        raise RuntimeError("native mirror_assert_ok required")
+    ok = _nat.module().mirror_assert_ok(bool(inst.mirror), inst.side,
+                                        mirrored)
+    if _nat.trace():
+        ref = (not inst.mirror) or (
+            inst.side == "bottom" and mirrored)
+        if ok is not ref:
             raise AssertionError(
-                f"{inst.ref}: mirror=True demands side=bottom + a .mirrored_fp "
-                f"document (got side={inst.side!r}, mod={inst.mod_path}) — a "
-                f"mirrored instance emitted any other way is chiral-wrong copper")
-    elif inst.mirror:
-        assert inst.side == "bottom" and mirrored, (
+                "native mirror_assert_ok DIVERGENCE: "
+                f"cpp={ok} python={ref}")
+    if not ok:
+        raise AssertionError(
             f"{inst.ref}: mirror=True demands side=bottom + a .mirrored_fp "
             f"document (got side={inst.side!r}, mod={inst.mod_path}) — a "
             f"mirrored instance emitted any other way is chiral-wrong copper")
 
     fp_uuid = uid(f"fp:{inst.ref}")
-    if _nat.loaded():
-        out = _from_tagged(_nat.module().embed_footprint_body(
-            mod, inst.x, inst.y, inst.rotation or 0.0, inst.side, fp_uuid))
-        if _nat.trace():
-            ref = _embed_footprint_body_py(
-                copy.deepcopy(mod), inst.x, inst.y, inst.rotation or 0.0,
-                inst.side, fp_uuid)
-            if sexpr.dumps(out) != sexpr.dumps(ref):
-                raise AssertionError(
-                    "native embed_footprint_body DIVERGENCE: "
-                    f"cpp={sexpr.dumps(out)} python={sexpr.dumps(ref)}")
-    else:
-        out = _embed_footprint_body_py(
-            mod, inst.x, inst.y, inst.rotation or 0.0, inst.side, fp_uuid)
-
+    if not _nat.loaded():
+        raise RuntimeError("native embed_footprint required")
+    out = _from_tagged(_nat.module().embed_footprint_body(
+        mod, inst.x, inst.y, inst.rotation or 0.0, inst.side, fp_uuid))
+    if _nat.trace():
+        ref = _embed_footprint_body_py(
+            copy.deepcopy(mod), inst.x, inst.y, inst.rotation or 0.0,
+            inst.side, fp_uuid)
+        if sexpr.dumps(out) != sexpr.dumps(ref):
+            raise AssertionError(
+                "native embed_footprint_body DIVERGENCE: "
+                f"cpp={sexpr.dumps(out)} python={sexpr.dumps(ref)}")
     inherit = _thermal_via_nets(out, inst.pad_nets)
     hide_ref = (inst.value in CONN_MATING_FACE or inst.ref in _INT_DESC
                 or inst.ref in _SW_DESC or "TestPoint" in inst.footprint)
-    if _nat.loaded():
-        nets = [(str(k), int(v[0]), str(v[1]))
-                for k, v in inst.pad_nets.items()]
-        inherited = [(int(k), int(v[0]), str(v[1]))
-                     for k, v in inherit.items()]
-        if _nat.trace():
-            recorded: list[tuple[str, str]] = []
+    if not _nat.loaded():
+        raise RuntimeError("native embed_footprint required")
+    nets = [(str(k), int(v[0]), str(v[1]))
+            for k, v in inst.pad_nets.items()]
+    inherited = [(int(k), int(v[0]), str(v[1]))
+                 for k, v in inherit.items()]
+    if _nat.trace():
+        recorded: list[tuple[str, str]] = []
 
-            def record_uid(kind: str) -> str:
-                token = uid(kind)
-                recorded.append((kind, token))
-                return token
+        def record_uid(kind: str) -> str:
+            token = uid(kind)
+            recorded.append((kind, token))
+            return token
 
-            ref = _embed_footprint_decorate_py(
-                copy.deepcopy(out), inst, inherit, record_uid)
-            replay = iter(recorded)
+        ref = _embed_footprint_decorate_py(
+            copy.deepcopy(out), inst, inherit, record_uid)
+        replay = iter(recorded)
 
-            def replay_uid(kind: str) -> str:
-                used, token = next(replay)
-                if used != kind:
-                    raise AssertionError(
-                        "native embed_footprint_decorate uid DIVERGENCE: "
-                        f"cpp={kind!r} python={used!r}")
-                return token
-
-            got = _from_tagged(_nat.module().embed_footprint_decorate(
-                out, inst.ref, inst.value, inst.rotation or 0.0, hide_ref,
-                nets, inherited, replay_uid))
-            if sexpr.dumps(got) != sexpr.dumps(ref):
+        def replay_uid(kind: str) -> str:
+            used, token = next(replay)
+            if used != kind:
                 raise AssertionError(
-                    "native embed_footprint_decorate DIVERGENCE: "
-                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
-            return got
-        return _from_tagged(_nat.module().embed_footprint_decorate(
-            out, inst.ref, inst.value, inst.rotation or 0.0, hide_ref, nets,
-            inherited, uid))
-    return _embed_footprint_decorate_py(out, inst, inherit, uid)
+                    "native embed_footprint_decorate uid DIVERGENCE: "
+                    f"cpp={kind!r} python={used!r}")
+            return token
+
+        got = _from_tagged(_nat.module().embed_footprint_decorate(
+            out, inst.ref, inst.value, inst.rotation or 0.0, hide_ref,
+            nets, inherited, replay_uid))
+        if sexpr.dumps(got) != sexpr.dumps(ref):
+            raise AssertionError(
+                "native embed_footprint_decorate DIVERGENCE: "
+                f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+        return got
+    return _from_tagged(_nat.module().embed_footprint_decorate(
+        out, inst.ref, inst.value, inst.rotation or 0.0, hide_ref, nets,
+        inherited, uid))
 
 
 def _embed_footprint_decorate_py(out: list, inst, inherit: dict, uid) -> list:
@@ -262,10 +252,9 @@ def _rotate_pad(pad: list, fp_rot: float) -> None:
     if at is None:
         return
     cur = float(at[3]) if len(at) > 3 else 0.0
-    if _nat.loaded():
-        new = _nat.module().rotate_pad_angle(cur, fp_rot)
-    else:
-        new = round((cur + fp_rot) % 360.0, 4)
+    if not _nat.loaded():
+        raise RuntimeError("native rotate_pad required")
+    new = _nat.module().rotate_pad_angle(cur, fp_rot)
     if len(at) > 3:
         at[3] = new
     else:
@@ -282,16 +271,16 @@ def _pad_geom_py(node: list) -> tuple[float, float, float, float] | None:
 
 
 def _pad_geom(node: list) -> tuple[float, float, float, float] | None:
-    if _nat.loaded():
-        got = _nat.module().pad_geom(node)
-        hit = tuple(got) if got is not None else None
-        if _nat.trace():
-            ref = _pad_geom_py(node)
-            if hit != ref:
-                raise AssertionError(
-                    f"native pad_geom DIVERGENCE: cpp={hit} python={ref}")
-        return hit
-    return _pad_geom_py(node)
+    if not _nat.loaded():
+        raise RuntimeError("native pad_geom required")
+    got = _nat.module().pad_geom(node)
+    hit = tuple(got) if got is not None else None
+    if _nat.trace():
+        ref = _pad_geom_py(node)
+        if hit != ref:
+            raise AssertionError(
+                f"native pad_geom DIVERGENCE: cpp={hit} python={ref}")
+    return hit
 
 
 def _thermal_via_nets_py(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
@@ -322,18 +311,18 @@ def _thermal_via_nets_py(out: list, pad_nets: dict) -> dict[int, tuple[int, str]
 
 
 def _thermal_via_nets(out: list, pad_nets: dict) -> dict[int, tuple[int, str]]:
-    if _nat.loaded():
-        nets = [(str(k), int(v[0]), str(v[1])) for k, v in pad_nets.items()]
-        hits = _nat.module().thermal_via_scan(out, nets)
-        got = {int(seq): (int(num), name) for seq, num, name in hits}
-        if _nat.trace():
-            ref = _thermal_via_nets_py(out, pad_nets)
-            if got != ref:
-                raise AssertionError(
-                    "native thermal_via_scan DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _thermal_via_nets_py(out, pad_nets)
+    if not _nat.loaded():
+        raise RuntimeError("native thermal_via_nets required")
+    nets = [(str(k), int(v[0]), str(v[1])) for k, v in pad_nets.items()]
+    hits = _nat.module().thermal_via_scan(out, nets)
+    got = {int(seq): (int(num), name) for seq, num, name in hits}
+    if _nat.trace():
+        ref = _thermal_via_nets_py(out, pad_nets)
+        if got != ref:
+            raise AssertionError(
+                "native thermal_via_scan DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _set_or_add_py(node: list, kv: list) -> None:
@@ -346,18 +335,17 @@ def _set_or_add_py(node: list, kv: list) -> None:
 
 
 def _set_or_add(node: list, kv: list) -> None:
-    if _nat.loaded():
-        got = _from_tagged(_nat.module().set_or_add(node, kv))
-        if _nat.trace():
-            ref = copy.deepcopy(node)
-            _set_or_add_py(ref, kv)
-            if sexpr.dumps(got) != sexpr.dumps(ref):
-                raise AssertionError(
-                    "native set_or_add DIVERGENCE: "
-                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
-        node[:] = got
-        return
-    _set_or_add_py(node, kv)
+    if not _nat.loaded():
+        raise RuntimeError("native set_or_add required")
+    got = _from_tagged(_nat.module().set_or_add(node, kv))
+    if _nat.trace():
+        ref = copy.deepcopy(node)
+        _set_or_add_py(ref, kv)
+        if sexpr.dumps(got) != sexpr.dumps(ref):
+            raise AssertionError(
+                "native set_or_add DIVERGENCE: "
+                f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+    node[:] = got
 
 
 def _restamp_uuid_py(node: list, new: str) -> None:
@@ -369,18 +357,17 @@ def _restamp_uuid_py(node: list, new: str) -> None:
 
 
 def _restamp_uuid(node: list, new: str) -> None:
-    if _nat.loaded():
-        got = _from_tagged(_nat.module().restamp_uuid(node, new))
-        if _nat.trace():
-            ref = copy.deepcopy(node)
-            _restamp_uuid_py(ref, new)
-            if sexpr.dumps(got) != sexpr.dumps(ref):
-                raise AssertionError(
-                    "native restamp_uuid DIVERGENCE: "
-                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
-        node[:] = got
-        return
-    _restamp_uuid_py(node, new)
+    if not _nat.loaded():
+        raise RuntimeError("native restamp_uuid required")
+    got = _from_tagged(_nat.module().restamp_uuid(node, new))
+    if _nat.trace():
+        ref = copy.deepcopy(node)
+        _restamp_uuid_py(ref, new)
+        if sexpr.dumps(got) != sexpr.dumps(ref):
+            raise AssertionError(
+                "native restamp_uuid DIVERGENCE: "
+                f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+    node[:] = got
 
 
 def _set_pad_net_py(pad: list, num: int, name: str) -> None:
@@ -397,18 +384,17 @@ def _set_pad_net_py(pad: list, num: int, name: str) -> None:
 
 
 def _set_pad_net(pad: list, num: int, name: str) -> None:
-    if _nat.loaded():
-        got = _from_tagged(_nat.module().set_pad_net(pad, num, name))
-        if _nat.trace():
-            ref = copy.deepcopy(pad)
-            _set_pad_net_py(ref, num, name)
-            if sexpr.dumps(got) != sexpr.dumps(ref):
-                raise AssertionError(
-                    "native set_pad_net DIVERGENCE: "
-                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
-        pad[:] = got
-        return
-    _set_pad_net_py(pad, num, name)
+    if not _nat.loaded():
+        raise RuntimeError("native set_pad_net required")
+    got = _from_tagged(_nat.module().set_pad_net(pad, num, name))
+    if _nat.trace():
+        ref = copy.deepcopy(pad)
+        _set_pad_net_py(ref, num, name)
+        if sexpr.dumps(got) != sexpr.dumps(ref):
+            raise AssertionError(
+                "native set_pad_net DIVERGENCE: "
+                f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+    pad[:] = got
 
 
 def _layers_node_py() -> list:
@@ -422,9 +408,9 @@ def _layers_node_py() -> list:
 
 
 def _layers_node() -> list:
-    if _nat.loaded():
-        return _from_tagged(_nat.module().emit_layers_node())
-    return _layers_node_py()
+    if not _nat.loaded():
+        raise RuntimeError("native layers_node required")
+    return _from_tagged(_nat.module().emit_layers_node())
 
 
 def _stackup_node_py() -> list:
@@ -458,109 +444,60 @@ def _stackup_node_py() -> list:
 
 
 def _stackup_node() -> list:
-    if _nat.loaded():
-        return _from_tagged(_nat.module().emit_stackup_node())
-    return _stackup_node_py()
+    if not _nat.loaded():
+        raise RuntimeError("native stackup_node required")
+    return _from_tagged(_nat.module().emit_stackup_node())
 
 
 def _edge_rect(x0, y0, x1, y1, uid) -> list:
     pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
-    if _nat.loaded():
-        geom = _nat.module()
-        return [_from_tagged(geom.emit_edge_line(
-            pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1],
-            uid(f"edge:{i}")))
-                for i in range(4)]
-    out: list = []
-    for i in range(4):
-        ax, ay = pts[i]
-        bx, by = pts[i + 1]
-        out.append([Sym("gr_line"),
-                    [Sym("start"), ax, ay], [Sym("end"), bx, by],
-                    [Sym("stroke"), [Sym("width"), 0.1],
-                     [Sym("type"), Sym("default")]],
-                    [Sym("layer"), "Edge.Cuts"],
-                    [Sym("uuid"), uid(f"edge:{i}")]])
-    return out
+    if not _nat.loaded():
+        raise RuntimeError("native emit_edge_line required")
+    geom = _nat.module()
+    return [_from_tagged(geom.emit_edge_line(
+        pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1],
+        uid(f"edge:{i}")))
+            for i in range(4)]
 
 
 def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
     x0, y0, x1, y1 = box
     out: list = []
     pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
-    geom = _nat.module() if _nat.loaded() else None
+    if not _nat.loaded():
+        raise RuntimeError("native emit_gr_line required")
+    geom = _nat.module()
     for i in range(4):
         ax, ay = pts[i]
         bx, by = pts[i + 1]
-        if geom is not None:
-            out.append(_from_tagged(geom.emit_gr_line(
-                round(ax, 3), round(ay, 3), round(bx, 3), round(by, 3),
-                0.15, "F.SilkS", uid(f"som-silk:{i}"))))
-            continue
-        out.append([Sym("gr_line"),
-                    [Sym("start"), round(ax, 3), round(ay, 3)],
-                    [Sym("end"), round(bx, 3), round(by, 3)],
-                    [Sym("stroke"), [Sym("width"), 0.15],
-                     [Sym("type"), Sym("default")]],
-                    [Sym("layer"), "F.SilkS"],
-                    [Sym("uuid"), uid(f"som-silk:{i}")]])
-    ch = 3.0
-    if geom is not None:
         out.append(_from_tagged(geom.emit_gr_line(
-            round(x0, 3), round(y0 + ch, 3), round(x0 + ch, 3), round(y0, 3),
-            0.15, "F.SilkS", uid("som-silk:ch"))))
-        out.append(_from_tagged(geom.emit_gr_text(
-            "Zynq SoM", round(x0 + 1.0, 3), round(y0 - 1.2, 3), 0.0,
-            "F.SilkS", uid("som-silk:label"), 1.4, 0.25, "left bottom")))
-        return out
-    out.append([Sym("gr_line"),
-                [Sym("start"), round(x0, 3), round(y0 + ch, 3)],
-                [Sym("end"), round(x0 + ch, 3), round(y0, 3)],
-                [Sym("stroke"), [Sym("width"), 0.15],
-                 [Sym("type"), Sym("default")]],
-                [Sym("layer"), "F.SilkS"],
-                [Sym("uuid"), uid("som-silk:ch")]])
-    out.append([Sym("gr_text"), "Zynq SoM",
-                [Sym("at"), round(x0 + 1.0, 3), round(y0 - 1.2, 3), 0],
-                [Sym("layer"), "F.SilkS"],
-                [Sym("uuid"), uid("som-silk:label")],
-                [Sym("effects"),
-                 [Sym("font"), [Sym("size"), 1.4, 1.4], [Sym("thickness"), 0.25]],
-                 [Sym("justify"), Sym("left"), Sym("bottom")]]])
+            round(ax, 3), round(ay, 3), round(bx, 3), round(by, 3),
+            0.15, "F.SilkS", uid(f"som-silk:{i}"))))
+    ch = 3.0
+    out.append(_from_tagged(geom.emit_gr_line(
+        round(x0, 3), round(y0 + ch, 3), round(x0 + ch, 3), round(y0, 3),
+        0.15, "F.SilkS", uid("som-silk:ch"))))
+    out.append(_from_tagged(geom.emit_gr_text(
+        "Zynq SoM", round(x0 + 1.0, 3), round(y0 - 1.2, 3), 0.0,
+        "F.SilkS", uid("som-silk:label"), 1.4, 0.25, "left bottom")))
     return out
 
 
 def _via_node(c: dict, uid, uid_key: str = "stitch-via") -> list:
-    if _nat.loaded():
-        return _from_tagged(_nat.module().emit_via(
-            float(c["x"]), float(c["y"]), float(c["size"]), float(c["drill"]),
-            float(c["net"]), uid(uid_key), bool(c.get("locked", True))))
-    node = [Sym("via"),
-            [Sym("at"), c["x"], c["y"]],
-            [Sym("size"), c["size"]],
-            [Sym("drill"), c["drill"]],
-            [Sym("layers"), "F.Cu", "B.Cu"]]
-    if c.get("locked", True):
-        node.append([Sym("locked"), Sym("yes")])
-    node.append([Sym("net"), c["net"]])
-    node.append([Sym("uuid"), uid(uid_key)])
-    return node
+    if not _nat.loaded():
+        raise RuntimeError("native emit_via required")
+    return _from_tagged(_nat.module().emit_via(
+        float(c["x"]), float(c["y"]), float(c["size"]), float(c["drill"]),
+        float(c["net"]), uid(uid_key), bool(c.get("locked", True))))
 
 
 def _segment_node(c: dict, uid) -> list:
-    if _nat.loaded():
-        return _from_tagged(_nat.module().emit_segment(
-            float(c["x1"]), float(c["y1"]), float(c["x2"]), float(c["y2"]),
-            float(c["width"]), str(c["layer"]), float(c["net"]),
-            uid("stitch-seg")))
-    return [Sym("segment"),
-            [Sym("start"), c["x1"], c["y1"]],
-            [Sym("end"), c["x2"], c["y2"]],
-            [Sym("width"), c["width"]],
-            [Sym("layer"), c["layer"]],
-            [Sym("locked"), Sym("yes")],
-            [Sym("net"), c["net"]],
-            [Sym("uuid"), uid("stitch-seg")]]
+    if not _nat.loaded():
+        raise RuntimeError("native emit_segment required")
+    return _from_tagged(_nat.module().emit_segment(
+        float(c["x1"]), float(c["y1"]), float(c["x2"]), float(c["y2"]),
+        float(c["width"]), str(c["layer"]), float(c["net"]),
+        uid("stitch-seg")))
 
 
 # Marker only — planes + fanout vias right beneath the connector stay legal.
@@ -570,27 +507,10 @@ def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
                (round(x1, 3), round(y0, 3)),
                (round(x1, 3), round(y1, 3)),
                (round(x0, 3), round(y1, 3))]
-    if _nat.loaded():
-        return _from_tagged(_nat.module().emit_keepout_zone(
-            corners, uid("som-keepout"), "SoM_body_keepout"))
-    pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
-    return [Sym("zone"),
-            [Sym("net"), 0], [Sym("net_name"), ""],
-            [Sym("layers"), "F.Cu", "B.Cu"],
-            [Sym("uuid"), uid("som-keepout")],
-            [Sym("name"), "SoM_body_keepout"],
-            [Sym("hatch"), Sym("edge"), 0.5],
-            [Sym("connect_pads"), [Sym("clearance"), 0]],
-            [Sym("min_thickness"), 0.25],
-            [Sym("keepout"),
-             [Sym("tracks"), Sym("allowed")],
-             [Sym("vias"), Sym("allowed")],
-             [Sym("pads"), Sym("allowed")],
-             [Sym("copperpour"), Sym("allowed")],
-             [Sym("footprints"), Sym("allowed")]],
-            [Sym("fill"), [Sym("thermal_gap"), 0.5],
-             [Sym("thermal_bridge_width"), 0.5]],
-            [Sym("polygon"), pts]]
+    if not _nat.loaded():
+        raise RuntimeError("native emit_keepout_zone required")
+    return _from_tagged(_nat.module().emit_keepout_zone(
+        corners, uid("som-keepout"), "SoM_body_keepout"))
 
 
 def _corners_rot_py(rect: tuple[float, float, float, float], inst,
@@ -618,42 +538,27 @@ def _corners_rot(rect: tuple[float, float, float, float], inst,
     lo_y = ORIGIN_Y + GND_PLANE_EDGE_BACK
     hi_x = ORIGIN_X + model.board_w - GND_PLANE_EDGE_BACK
     hi_y = ORIGIN_Y + model.board_h - GND_PLANE_EDGE_BACK
-    if _nat.loaded():
-        got = [tuple(p) for p in _nat.module().corners_rot(
-            rect, rot, inst.x, inst.y, lo_x, lo_y, hi_x, hi_y,
-            CORNER_DECIMALS)]
-        if _nat.trace():
-            ref = _corners_rot_py(rect, inst, model)
-            if got != ref:
-                raise AssertionError(
-                    f"native corners_rot DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _corners_rot_py(rect, inst, model)
+    if not _nat.loaded():
+        raise RuntimeError("native corners_rot required")
+    got = [tuple(p) for p in _nat.module().corners_rot(
+        rect, rot, inst.x, inst.y, lo_x, lo_y, hi_x, hi_y,
+        CORNER_DECIMALS)]
+    if _nat.trace():
+        ref = _corners_rot_py(rect, inst, model)
+        if got != ref:
+            raise AssertionError(
+                f"native corners_rot DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def _fill_zone(net_num: int, net_name: str, zname: str, layer: str,
                corners: list[tuple[float, float]], uid_key: str, uid,
                clearance: float, solid: bool) -> list:
-    if _nat.loaded():
-        return _from_tagged(_nat.module().emit_fill_zone(
-            float(net_num), net_name, zname, layer, corners, uid(uid_key),
-            clearance, solid, ZONE_MIN_THICKNESS))
-    pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
-    connect = ([Sym("connect_pads"), Sym("yes"), [Sym("clearance"), clearance]]
-               if solid else
-               [Sym("connect_pads"), [Sym("clearance"), clearance]])
-    return [Sym("zone"),
-            [Sym("net"), net_num], [Sym("net_name"), net_name],
-            [Sym("layer"), layer],
-            [Sym("uuid"), uid(uid_key)],
-            [Sym("name"), zname],
-            [Sym("hatch"), Sym("edge"), 0.5],
-            connect,
-            [Sym("min_thickness"), ZONE_MIN_THICKNESS],
-            [Sym("filled_areas_thickness"), Sym("no")],
-            [Sym("fill"), Sym("yes"), [Sym("thermal_gap"), 0.5],
-             [Sym("thermal_bridge_width"), 0.5]],
-            [Sym("polygon"), pts]]
+    if not _nat.loaded():
+        raise RuntimeError("native emit_fill_zone required")
+    return _from_tagged(_nat.module().emit_fill_zone(
+        float(net_num), net_name, zname, layer, corners, uid(uid_key),
+        clearance, solid, ZONE_MIN_THICKNESS))
 
 
 def _gnd_plane_zone(model: PcbModel, uid) -> list | None:
@@ -683,28 +588,10 @@ def _iso_void_zones(model: PcbModel, uid) -> list[list]:
                    (round(cx0 - m, 3), round(cy1 + m, 3))]
         name = f"ethernet_isolation_void_{inst.ref}"
         zuid = uid(f"iso-void:{inst.ref}")
-        if _nat.loaded():
-            out.append(_from_tagged(_nat.module().emit_iso_void_zone(
-                corners, zuid, name, GND_PLANE_LAYER, ZONE_MIN_THICKNESS)))
-            continue
-        pts = [Sym("pts")] + [[Sym("xy"), px, py] for px, py in corners]
-        out.append([Sym("zone"),
-                    [Sym("net"), 0], [Sym("net_name"), ""],
-                    [Sym("layers"), GND_PLANE_LAYER],
-                    [Sym("uuid"), zuid],
-                    [Sym("name"), name],
-                    [Sym("hatch"), Sym("edge"), 0.5],
-                    [Sym("connect_pads"), [Sym("clearance"), 0]],
-                    [Sym("min_thickness"), ZONE_MIN_THICKNESS],
-                    [Sym("keepout"),
-                     [Sym("tracks"), Sym("allowed")],
-                     [Sym("vias"), Sym("allowed")],
-                     [Sym("pads"), Sym("allowed")],
-                     [Sym("copperpour"), Sym("not_allowed")],
-                     [Sym("footprints"), Sym("allowed")]],
-                    [Sym("fill"), [Sym("thermal_gap"), 0.5],
-                     [Sym("thermal_bridge_width"), 0.5]],
-                    [Sym("polygon"), pts]])
+        if not _nat.loaded():
+            raise RuntimeError("native emit_iso_void_zone required")
+        out.append(_from_tagged(_nat.module().emit_iso_void_zone(
+            corners, zuid, name, GND_PLANE_LAYER, ZONE_MIN_THICKNESS)))
     return out
 
 
@@ -821,18 +708,18 @@ def _via_site_blocker(vx: float, vy: float, model: PcbModel,
                       obstacles: list[tuple[float, float, float, float,
                                             str, float, str]],
                       chosen: list[tuple[float, float]]) -> str | None:
-    if _nat.loaded():
-        hit = _nat.module().via_site_blocker(
-            vx, vy, _via_site_spec(model), obstacles, chosen)
-        got = None if hit is None else _via_block_text(*hit)
-        if _nat.trace():
-            ref = _via_site_blocker_py(vx, vy, model, obstacles, chosen)
-            if got != ref:
-                raise AssertionError(
-                    "native via_site_blocker DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _via_site_blocker_py(vx, vy, model, obstacles, chosen)
+    if not _nat.loaded():
+        raise RuntimeError("native via_site_blocker required")
+    hit = _nat.module().via_site_blocker(
+        vx, vy, _via_site_spec(model), obstacles, chosen)
+    got = None if hit is None else _via_block_text(*hit)
+    if _nat.trace():
+        ref = _via_site_blocker_py(vx, vy, model, obstacles, chosen)
+        if got != ref:
+            raise AssertionError(
+                "native via_site_blocker DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _fallback_via_sites_py(spec: dict) -> list[tuple[float, float]]:
@@ -849,18 +736,18 @@ def _fallback_via_sites_py(spec: dict) -> list[tuple[float, float]]:
 
 
 def _fallback_via_sites(spec: dict) -> list[tuple[float, float]]:
-    if _nat.loaded():
-        x0, y0, x1, y1 = spec["pour"]
-        got = [(float(a), float(b)) for a, b in _nat.module().fallback_via_sites(
-            x0, y0, x1, y1, THERMAL_VIA_SIZE, THERMAL_VIA_LATTICE_PITCH)]
-        if _nat.trace():
-            ref = _fallback_via_sites_py(spec)
-            if got != ref:
-                raise AssertionError(
-                    "native fallback_via_sites DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _fallback_via_sites_py(spec)
+    if not _nat.loaded():
+        raise RuntimeError("native fallback_via_sites required")
+    x0, y0, x1, y1 = spec["pour"]
+    got = [(float(a), float(b)) for a, b in _nat.module().fallback_via_sites(
+        x0, y0, x1, y1, THERMAL_VIA_SIZE, THERMAL_VIA_LATTICE_PITCH)]
+    if _nat.trace():
+        ref = _fallback_via_sites_py(spec)
+        if got != ref:
+            raise AssertionError(
+                "native fallback_via_sites DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _pour_credit_need(value: str):
@@ -985,15 +872,15 @@ def _quads_overlap_py(a: list[tuple[float, float]],
 
 def _quads_overlap(a: list[tuple[float, float]],
                    b: list[tuple[float, float]]) -> bool:
-    if _nat.loaded():
-        got = _nat.module().quads_overlap(a, b)
-        if _nat.trace():
-            ref = _quads_overlap_py(a, b)
-            if got is not ref:
-                raise AssertionError(
-                    f"native quads_overlap DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _quads_overlap_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native quads_overlap required")
+    got = _nat.module().quads_overlap(a, b)
+    if _nat.trace():
+        ref = _quads_overlap_py(a, b)
+        if got is not ref:
+            raise AssertionError(
+                f"native quads_overlap DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def _stagger_overlapping_pours(

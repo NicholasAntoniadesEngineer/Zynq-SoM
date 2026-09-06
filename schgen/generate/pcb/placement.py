@@ -168,22 +168,22 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
                 blockers: list[tuple[float, float, float, float]] | None = None,
                 fanout: dict[str, tuple[float, bool]] | None = None
                 ) -> tuple[dict[str, tuple[float, float]], float, float]:
-    if _nat.loaded():
-        halo, extra_of, iscp_of = _shelf_meta(items, fanout)
-        rows = [(ref, halo[ref][0], halo[ref][1], halo[ref][2], halo[ref][3],
-                 extra_of[ref], iscp_of[ref]) for ref, _bbox, _rot in items]
-        placed_rows, packed_w, packed_h = _nat.module().shelf_pack(
-            rows, target_w, _shelf_blockers(blockers), ZONE_PAD)
-        got = ({ref: (ox, oy) for ref, ox, oy in placed_rows},
-               packed_w, packed_h)
-        if _nat.trace():
-            ref = _shelf_pack_py(items, target_w, blockers, fanout)
-            if got != ref:
-                raise AssertionError(
-                    "native shelf_pack DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _shelf_pack_py(items, target_w, blockers, fanout)
+    if not _nat.loaded():
+        raise RuntimeError("native shelf_pack required")
+    halo, extra_of, iscp_of = _shelf_meta(items, fanout)
+    rows = [(ref, halo[ref][0], halo[ref][1], halo[ref][2], halo[ref][3],
+             extra_of[ref], iscp_of[ref]) for ref, _bbox, _rot in items]
+    placed_rows, packed_w, packed_h = _nat.module().shelf_pack(
+        rows, target_w, _shelf_blockers(blockers), ZONE_PAD)
+    got = ({ref: (ox, oy) for ref, ox, oy in placed_rows},
+           packed_w, packed_h)
+    if _nat.trace():
+        ref = _shelf_pack_py(items, target_w, blockers, fanout)
+        if got != ref:
+            raise AssertionError(
+                "native shelf_pack DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _is_button(mod_path: Path) -> bool:
@@ -225,19 +225,19 @@ def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
                               list[tuple[float, float, float, float]],
                               float, float]:
     items = [(r, *bbox_of[r]) for r in refs]
-    if _nat.loaded():
-        offs, occ, pw, ph = _nat.module().grid_controls(
-            items, target_w, BUTTON_GAP, ZONE_PAD, PLACE_CLEAR)
-        got = ({r: (x, y) for r, x, y in offs},
-               [tuple(b) for b in occ], float(pw), float(ph))
-        if _nat.trace():
-            ref = _grid_controls_py(refs, bbox_of, resolvable, target_w)
-            if got != ref:
-                raise AssertionError(
-                    "native grid_controls DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _grid_controls_py(refs, bbox_of, resolvable, target_w)
+    if not _nat.loaded():
+        raise RuntimeError("native grid_controls required")
+    offs, occ, pw, ph = _nat.module().grid_controls(
+        items, target_w, BUTTON_GAP, ZONE_PAD, PLACE_CLEAR)
+    got = ({r: (x, y) for r, x, y in offs},
+           [tuple(b) for b in occ], float(pw), float(ph))
+    if _nat.trace():
+        ref = _grid_controls_py(refs, bbox_of, resolvable, target_w)
+        if got != ref:
+            raise AssertionError(
+                "native grid_controls DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _is_passive_ref(ref: str) -> bool:
@@ -331,17 +331,17 @@ def _rotate_offsets_90(
     offs: dict[str, tuple[float, float]], zone_w: float
 ) -> dict[str, tuple[float, float]]:
     rows = [(ref, dx, dy) for ref, (dx, dy) in offs.items()]
-    if _nat.loaded():
-        got = {ref: (x, y) for ref, x, y in
-               _nat.module().rotate_offsets_90(rows, zone_w)}
-        if _nat.trace():
-            ref = _rotate_offsets_90_py(offs, zone_w)
-            if got != ref:
-                raise AssertionError(
-                    "native rotate_offsets_90 DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _rotate_offsets_90_py(offs, zone_w)
+    if not _nat.loaded():
+        raise RuntimeError("native rotate_offsets_90 required")
+    got = {ref: (x, y) for ref, x, y in
+           _nat.module().rotate_offsets_90(rows, zone_w)}
+    if _nat.trace():
+        ref = _rotate_offsets_90_py(offs, zone_w)
+        if got != ref:
+            raise AssertionError(
+                "native rotate_offsets_90 DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _rotate_zone_90(t_off: dict[str, tuple[float, float]],
@@ -496,19 +496,19 @@ def _mirror_offsets_x_py(off: dict[str, tuple[float, float]], bbox_of: dict,
 def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
                       rot_of: dict[str, float], zw: float
                       ) -> dict[str, tuple[float, float]]:
-    if _nat.loaded():
-        out: dict[str, tuple[float, float]] = {}
-        for r, (ox, oy) in off.items():
-            cb = turn_box(bbox_of[r], rot_of.get(r, 0.0))
-            out[r] = tuple(_nat.module().mirror_offset_x(ox, oy, cb, zw))
-        if _nat.trace():
-            ref = _mirror_offsets_x_py(off, bbox_of, rot_of, zw)
-            if out != ref:
-                raise AssertionError(
-                    "native mirror_offset_x DIVERGENCE: "
-                    f"cpp={out} python={ref}")
-        return out
-    return _mirror_offsets_x_py(off, bbox_of, rot_of, zw)
+    if not _nat.loaded():
+        raise RuntimeError("native mirror_offsets_x required")
+    out: dict[str, tuple[float, float]] = {}
+    for r, (ox, oy) in off.items():
+        cb = turn_box(bbox_of[r], rot_of.get(r, 0.0))
+        out[r] = tuple(_nat.module().mirror_offset_x(ox, oy, cb, zw))
+    if _nat.trace():
+        ref = _mirror_offsets_x_py(off, bbox_of, rot_of, zw)
+        if out != ref:
+            raise AssertionError(
+                "native mirror_offset_x DIVERGENCE: "
+                f"cpp={out} python={ref}")
+    return out
 
 
 def _mirror_pack(t_off: dict[str, tuple[float, float]],
@@ -1124,18 +1124,18 @@ def _segments_cross_py(s1: tuple, s2: tuple) -> bool:
 
 
 def _segments_cross(s1: tuple, s2: tuple) -> bool:
-    if _nat.loaded():
-        (p1, p2), (p3, p4) = s1, s2
-        got = _nat.module().segments_cross(
-            p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], p4[0], p4[1])
-        if _nat.trace():
-            ref = _segments_cross_py(s1, s2)
-            if got is not ref:
-                raise AssertionError(
-                    "native segments_cross DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _segments_cross_py(s1, s2)
+    if not _nat.loaded():
+        raise RuntimeError("native segments_cross required")
+    (p1, p2), (p3, p4) = s1, s2
+    got = _nat.module().segments_cross(
+        p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], p4[0], p4[1])
+    if _nat.trace():
+        ref = _segments_cross_py(s1, s2)
+        if got is not ref:
+            raise AssertionError(
+                "native segments_cross DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _reorder_cluster_assign_py(
@@ -1177,18 +1177,18 @@ def _reorder_cluster_assign(
     assign0: list[int],
     sweeps: int,
 ) -> tuple[int, int, list[int]]:
-    if _nat.loaded():
-        before, best, out = _nat.module().reorder_cluster_assign(
-            segs_xy, list(assign0), sweeps)
-        got = (int(before), int(best), [int(v) for v in out])
-        if _nat.trace():
-            ref = _reorder_cluster_assign_py(segs_xy, assign0, sweeps)
-            if got != ref:
-                raise AssertionError(
-                    "native reorder_cluster_assign DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _reorder_cluster_assign_py(segs_xy, assign0, sweeps)
+    if not _nat.loaded():
+        raise RuntimeError("native reorder_cluster_assign required")
+    before, best, out = _nat.module().reorder_cluster_assign(
+        segs_xy, list(assign0), sweeps)
+    got = (int(before), int(best), [int(v) for v in out])
+    if _nat.trace():
+        ref = _reorder_cluster_assign_py(segs_xy, assign0, sweeps)
+        if got != ref:
+            raise AssertionError(
+                "native reorder_cluster_assign DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _cluster_interchangeable_rows_py(
@@ -1227,17 +1227,17 @@ def _cluster_interchangeable_rows(
     tol_x: float, tol_y: float,
 ) -> list[tuple[str, list[str]]]:
     rows = [(m, pos[m][0], pos[m][1]) for m in members]
-    if _nat.loaded():
-        got = [(axis, list(refs)) for axis, refs in
-               _nat.module().cluster_interchangeable_rows(rows, tol_x, tol_y)]
-        if _nat.trace():
-            ref = _cluster_interchangeable_rows_py(pos, members, tol_x, tol_y)
-            if got != ref:
-                raise AssertionError(
-                    "native cluster_interchangeable_rows DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _cluster_interchangeable_rows_py(pos, members, tol_x, tol_y)
+    if not _nat.loaded():
+        raise RuntimeError("native cluster_interchangeable_rows required")
+    got = [(axis, list(refs)) for axis, refs in
+           _nat.module().cluster_interchangeable_rows(rows, tol_x, tol_y)]
+    if _nat.trace():
+        ref = _cluster_interchangeable_rows_py(pos, members, tol_x, tol_y)
+        if got != ref:
+            raise AssertionError(
+                "native cluster_interchangeable_rows DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _nearest_manhattan_py(
@@ -1249,16 +1249,16 @@ def _nearest_manhattan_py(
 def _nearest_manhattan(
     px: float, py: float, pts: list[tuple[float, float]]
 ) -> tuple[float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().nearest_manhattan(px, py, pts))
-        if _nat.trace():
-            ref = _nearest_manhattan_py(px, py, pts)
-            if got != ref:
-                raise AssertionError(
-                    "native nearest_manhattan DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _nearest_manhattan_py(px, py, pts)
+    if not _nat.loaded():
+        raise RuntimeError("native nearest_manhattan required")
+    got = tuple(_nat.module().nearest_manhattan(px, py, pts))
+    if _nat.trace():
+        ref = _nearest_manhattan_py(px, py, pts)
+        if got != ref:
+            raise AssertionError(
+                "native nearest_manhattan DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _group_interchangeable_py(
@@ -1583,18 +1583,18 @@ def som_core_rect_py(som_x: float, som_y: float, som_w: float, som_h: float
 
 def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
                   ) -> tuple[float, float, float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().som_core_rect(
-            som_x, som_y, som_w, som_h, ORIGIN_X, ORIGIN_Y,
-            SOM_CORE_CLEARANCE))
-        if _nat.trace():
-            ref = som_core_rect_py(som_x, som_y, som_w, som_h)
-            if got != ref:
-                raise AssertionError(
-                    "native som_core_rect DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return som_core_rect_py(som_x, som_y, som_w, som_h)
+    if not _nat.loaded():
+        raise RuntimeError("native som_core_rect required")
+    got = tuple(_nat.module().som_core_rect(
+        som_x, som_y, som_w, som_h, ORIGIN_X, ORIGIN_Y,
+        SOM_CORE_CLEARANCE))
+    if _nat.trace():
+        ref = som_core_rect_py(som_x, som_y, som_w, som_h)
+        if got != ref:
+            raise AssertionError(
+                "native som_core_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 SOM_DECOUPLING_INSET = 6.0
@@ -1615,19 +1615,19 @@ def som_decoupling_grid_py(som_w: float, som_h: float, n: int
 
 def som_decoupling_grid(som_w: float, som_h: float, n: int
                         ) -> tuple[float, float, int, int]:
-    if _nat.loaded():
-        got = tuple(_nat.module().som_decoupling_grid(
-            som_w, som_h, n, SOM_DECOUPLING_INSET))
-        got = (got[0], got[1], int(got[2]), int(got[3]))
-        if _nat.trace():
-            ref = som_decoupling_grid_py(som_w, som_h, n)
-            ref = (ref[0], ref[1], int(ref[2]), int(ref[3]))
-            if got != ref:
-                raise AssertionError(
-                    "native som_decoupling_grid DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return som_decoupling_grid_py(som_w, som_h, n)
+    if not _nat.loaded():
+        raise RuntimeError("native som_decoupling_grid required")
+    got = tuple(_nat.module().som_decoupling_grid(
+        som_w, som_h, n, SOM_DECOUPLING_INSET))
+    got = (got[0], got[1], int(got[2]), int(got[3]))
+    if _nat.trace():
+        ref = som_decoupling_grid_py(som_w, som_h, n)
+        ref = (ref[0], ref[1], int(ref[2]), int(ref[3]))
+        if got != ref:
+            raise AssertionError(
+                "native som_decoupling_grid DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def som_decoupling_cells_py(som_x: float, som_y: float, som_w: float,
@@ -1646,17 +1646,17 @@ def som_decoupling_cells_py(som_x: float, som_y: float, som_w: float,
 def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
                          som_h: float, n: int
                          ) -> list[tuple[float, float]]:
-    if _nat.loaded():
-        got = [tuple(p) for p in _nat.module().som_decoupling_cells(
-            som_x, som_y, som_w, som_h, n, SOM_DECOUPLING_INSET)]
-        if _nat.trace():
-            ref = som_decoupling_cells_py(som_x, som_y, som_w, som_h, n)
-            if got != ref:
-                raise AssertionError(
-                    "native som_decoupling_cells DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return som_decoupling_cells_py(som_x, som_y, som_w, som_h, n)
+    if not _nat.loaded():
+        raise RuntimeError("native som_decoupling_cells required")
+    got = [tuple(p) for p in _nat.module().som_decoupling_cells(
+        som_x, som_y, som_w, som_h, n, SOM_DECOUPLING_INSET)]
+    if _nat.trace():
+        ref = som_decoupling_cells_py(som_x, som_y, som_w, som_h, n)
+        if got != ref:
+            raise AssertionError(
+                "native som_decoupling_cells DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def build_model(two_side: bool = True, spec=None) -> PcbModel:

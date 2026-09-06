@@ -451,20 +451,20 @@ def extract_som_py(pcb: Path = SOM_PCB) -> SomGeom:
 
 
 def extract_som(pcb: Path = SOM_PCB) -> SomGeom:
-    if _nat.loaded():
-        w, h, rows = _nat.module().extract_som_scan(pcb.read_text())
-        js = tuple(SomJ(ref=ref, pcb_x=px, pcb_y=py, rot=rot,
-                        x=x, y=y, w=jw, h=jh)
-                   for ref, px, py, rot, x, y, jw, jh in rows)
-        got = SomGeom(w=w, h=h, js=js, source=str(pcb.relative_to(REPO_ROOT)))
-        if _nat.trace():
-            ref = extract_som_py(pcb)
-            if got != ref:
-                raise AssertionError(
-                    "native extract_som_scan DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return extract_som_py(pcb)
+    if not _nat.loaded():
+        raise RuntimeError("native extract_som required")
+    w, h, rows = _nat.module().extract_som_scan(pcb.read_text())
+    js = tuple(SomJ(ref=ref, pcb_x=px, pcb_y=py, rot=rot,
+                    x=x, y=y, w=jw, h=jh)
+               for ref, px, py, rot, x, y, jw, jh in rows)
+    got = SomGeom(w=w, h=h, js=js, source=str(pcb.relative_to(REPO_ROOT)))
+    if _nat.trace():
+        ref = extract_som_py(pcb)
+        if got != ref:
+            raise AssertionError(
+                "native extract_som_scan DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _DIMS_IN_NAME = re.compile(r"_(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)mm")
@@ -506,18 +506,18 @@ def _courtyard_dims_from_text_py(text: str) -> tuple[float, float] | None:
 
 
 def _courtyard_dims_from_text(text: str) -> tuple[float, float] | None:
-    if _nat.loaded():
-        got = _nat.module().courtyard_dims_from_text(text)
-        if got is not None:
-            got = (float(got[0]), float(got[1]))
-        if _nat.trace():
-            ref = _courtyard_dims_from_text_py(text)
-            if got != ref:
-                raise AssertionError(
-                    "native courtyard_dims_from_text DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _courtyard_dims_from_text_py(text)
+    if not _nat.loaded():
+        raise RuntimeError("native courtyard_dims_from_text required")
+    got = _nat.module().courtyard_dims_from_text(text)
+    if got is not None:
+        got = (float(got[0]), float(got[1]))
+    if _nat.trace():
+        ref = _courtyard_dims_from_text_py(text)
+        if got != ref:
+            raise AssertionError(
+                "native courtyard_dims_from_text DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _courtyard_dims(lib: str) -> tuple[float, float] | None:
@@ -547,17 +547,17 @@ def _part_dims_from_name_py(name: str) -> tuple[float, float]:
 def _part_dims_from_name(name: str) -> tuple[float, float]:
     keys = [(k, w, h) for k, (w, h) in sorted(
         _FIXED_DIMS.items(), key=lambda kv: len(kv[0]), reverse=True)]
-    if _nat.loaded():
-        got = tuple(_nat.module().part_dims_from_name(
-            name, keys, _DEFAULT_DIMS[0], _DEFAULT_DIMS[1]))
-        if _nat.trace():
-            ref = _part_dims_from_name_py(name)
-            if got != ref:
-                raise AssertionError(
-                    "native part_dims_from_name DIVERGENCE: "
-                    f"cpp={got} python={ref} name={name!r}")
-        return got
-    return _part_dims_from_name_py(name)
+    if not _nat.loaded():
+        raise RuntimeError("native part_dims_from_name required")
+    got = tuple(_nat.module().part_dims_from_name(
+        name, keys, _DEFAULT_DIMS[0], _DEFAULT_DIMS[1]))
+    if _nat.trace():
+        ref = _part_dims_from_name_py(name)
+        if got != ref:
+            raise AssertionError(
+                "native part_dims_from_name DIVERGENCE: "
+                f"cpp={got} python={ref} name={name!r}")
+    return got
 
 
 def part_dims(footprint: str) -> tuple[float, float]:
@@ -614,18 +614,18 @@ def _derive_outline_wh_py(som_w: float, som_h: float, comp_area: float
 
 def _derive_outline_wh(som_w: float, som_h: float, comp_area: float
                        ) -> tuple[float, float, float, float, float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().derive_outline_wh(
-            som_w, som_h, SOM_HALO, EDGE_BAND, PERIM_KEEPOUT,
-            PACK_EFFICIENCY, comp_area))
-        if _nat.trace():
-            ref = _derive_outline_wh_py(som_w, som_h, comp_area)
-            if got != ref:
-                raise AssertionError(
-                    "native derive_outline_wh DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _derive_outline_wh_py(som_w, som_h, comp_area)
+    if not _nat.loaded():
+        raise RuntimeError("native derive_outline_wh required")
+    got = tuple(_nat.module().derive_outline_wh(
+        som_w, som_h, SOM_HALO, EDGE_BAND, PERIM_KEEPOUT,
+        PACK_EFFICIENCY, comp_area))
+    if _nat.trace():
+        ref = _derive_outline_wh_py(som_w, som_h, comp_area)
+        if got != ref:
+            raise AssertionError(
+                "native derive_outline_wh DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def derive_outline(sheets, som: SomGeom) -> Outline:
@@ -697,16 +697,16 @@ def _affinity_j_from_expect_py(expect: str) -> list[str]:
 
 
 def _affinity_j_from_expect(expect: str) -> list[str]:
-    if _nat.loaded():
-        got = list(_nat.module().affinity_j_from_expect(expect))
-        if _nat.trace():
-            ref = _affinity_j_from_expect_py(expect)
-            if got != ref:
-                raise AssertionError(
-                    "native affinity_j_from_expect DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _affinity_j_from_expect_py(expect)
+    if not _nat.loaded():
+        raise RuntimeError("native affinity_j_from_expect required")
+    got = list(_nat.module().affinity_j_from_expect(expect))
+    if _nat.trace():
+        ref = _affinity_j_from_expect_py(expect)
+        if got != ref:
+            raise AssertionError(
+                "native affinity_j_from_expect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _affinity_j_from_target_py(target: str) -> str | None:
@@ -721,16 +721,16 @@ def _affinity_j_from_target_py(target: str) -> str | None:
 
 
 def _affinity_j_from_target(target: str) -> str | None:
-    if _nat.loaded():
-        got = _nat.module().affinity_j_from_target(target)
-        if _nat.trace():
-            ref = _affinity_j_from_target_py(target)
-            if got != ref:
-                raise AssertionError(
-                    "native affinity_j_from_target DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _affinity_j_from_target_py(target)
+    if not _nat.loaded():
+        raise RuntimeError("native affinity_j_from_target required")
+    got = _nat.module().affinity_j_from_target(target)
+    if _nat.trace():
+        ref = _affinity_j_from_target_py(target)
+        if got != ref:
+            raise AssertionError(
+                "native affinity_j_from_target DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _j_affinity(sheets, link_result) -> dict[str, dict[str, int]]:
@@ -755,16 +755,16 @@ def _dominant_j_py(aff: dict[str, int]) -> str | None:
 
 
 def _dominant_j(aff: dict[str, int]) -> str | None:
-    if _nat.loaded():
-        got = _nat.module().dominant_j(list(aff.items()))
-        if _nat.trace():
-            ref = _dominant_j_py(aff)
-            if got != ref:
-                raise AssertionError(
-                    "native dominant_j DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _dominant_j_py(aff)
+    if not _nat.loaded():
+        raise RuntimeError("native dominant_j required")
+    got = _nat.module().dominant_j(list(aff.items()))
+    if _nat.trace():
+        ref = _dominant_j_py(aff)
+        if got != ref:
+            raise AssertionError(
+                "native dominant_j DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _j_edge_map_py(som: SomGeom) -> dict[str, str]:
@@ -777,18 +777,18 @@ def _j_edge_map_py(som: SomGeom) -> dict[str, str]:
 
 
 def _j_edge_map(som: SomGeom) -> dict[str, str]:
-    if _nat.loaded():
-        rows = [(j.ref, j.x, j.y) for j in som.js]
-        got = {ref: edge for ref, edge in _nat.module().j_edge_map(
-            rows, som.w, som.h)}
-        if _nat.trace():
-            ref = _j_edge_map_py(som)
-            if got != ref:
-                raise AssertionError(
-                    "native j_edge_map DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _j_edge_map_py(som)
+    if not _nat.loaded():
+        raise RuntimeError("native j_edge_map required")
+    rows = [(j.ref, j.x, j.y) for j in som.js]
+    got = {ref: edge for ref, edge in _nat.module().j_edge_map(
+        rows, som.w, som.h)}
+    if _nat.trace():
+        ref = _j_edge_map_py(som)
+        if got != ref:
+            raise AssertionError(
+                "native j_edge_map DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 @dataclass(frozen=True)
@@ -1087,20 +1087,20 @@ def _edge_target_py(b: Block, edge: str, plan: Plan) -> float:
 
 
 def _edge_target(b: Block, edge: str, plan: Plan) -> float:
-    if _nat.loaded():
-        jacks = [(j.ref, plan.som_x + j.x, plan.som_y + j.y)
-                 for j in plan.som.js]
-        got = _nat.module().edge_target(
-            edge, plan.som_x, plan.som_y, plan.som.w, plan.som.h,
-            list(b.j_aff.items()), jacks)
-        if _nat.trace():
-            ref = _edge_target_py(b, edge, plan)
-            if got != ref:
-                raise AssertionError(
-                    "native edge_target DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _edge_target_py(b, edge, plan)
+    if not _nat.loaded():
+        raise RuntimeError("native edge_target required")
+    jacks = [(j.ref, plan.som_x + j.x, plan.som_y + j.y)
+             for j in plan.som.js]
+    got = _nat.module().edge_target(
+        edge, plan.som_x, plan.som_y, plan.som.w, plan.som.h,
+        list(b.j_aff.items()), jacks)
+    if _nat.trace():
+        ref = _edge_target_py(b, edge, plan)
+        if got != ref:
+            raise AssertionError(
+                "native edge_target DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _pack_edges_rows(plan: Plan, edge_of: dict[str, str]):
@@ -1124,33 +1124,32 @@ def _apply_pack_edges(plan: Plan, poses, spilled) -> None:
 
 
 def _pack_edges(plan: Plan, edge_of: dict[str, str]) -> None:
-    if _nat.loaded():
-        rows, jacks = _pack_edges_rows(plan, edge_of)
-        poses, spilled = _nat.module().pack_edges(
-            rows, jacks, BOARD_W, BOARD_H, EDGE_MARGIN, EDGE_INSET, CLEAR,
-            CABLE_NEIGHBOR_GAP, OVERMOLD_SIDE_GAP, AFFINITY_FLOOR,
-            plan.som_x, plan.som_y, plan.som.w, plan.som.h)
-        if _nat.trace():
-            snap = [(b.edge, b.x, b.y) for b in plan.edge_blocks]
-            spilled0 = list(plan.spilled)
-            _pack_edges_py(plan, edge_of)
-            ref_poses = [(b.name, b.edge, b.x, b.y) for b in plan.edge_blocks]
-            ref_spill = plan.spilled[len(spilled0):]
-            for b, s in zip(plan.edge_blocks, snap, strict=True):
-                b.edge, b.x, b.y = s
-            plan.spilled[:] = spilled0
-            got_map = {name: (edge, x, y) for name, edge, x, y in poses}
-            got_poses = [(b.name, *got_map[b.name]) if b.name in got_map
-                         else (b.name, b.edge, b.x, b.y)
-                         for b in plan.edge_blocks]
-            if got_poses != ref_poses or list(spilled) != list(ref_spill):
-                raise AssertionError(
-                    "native pack_edges DIVERGENCE: "
-                    f"cpp={(got_poses, list(spilled))} "
-                    f"python={(ref_poses, list(ref_spill))}")
-        _apply_pack_edges(plan, poses, spilled)
-        return
-    _pack_edges_py(plan, edge_of)
+    if not _nat.loaded():
+        raise RuntimeError("native pack_edges required")
+    rows, jacks = _pack_edges_rows(plan, edge_of)
+    poses, spilled = _nat.module().pack_edges(
+        rows, jacks, BOARD_W, BOARD_H, EDGE_MARGIN, EDGE_INSET, CLEAR,
+        CABLE_NEIGHBOR_GAP, OVERMOLD_SIDE_GAP, AFFINITY_FLOOR,
+        plan.som_x, plan.som_y, plan.som.w, plan.som.h)
+    if _nat.trace():
+        snap = [(b.edge, b.x, b.y) for b in plan.edge_blocks]
+        spilled0 = list(plan.spilled)
+        _pack_edges_py(plan, edge_of)
+        ref_poses = [(b.name, b.edge, b.x, b.y) for b in plan.edge_blocks]
+        ref_spill = plan.spilled[len(spilled0):]
+        for b, s in zip(plan.edge_blocks, snap, strict=True):
+            b.edge, b.x, b.y = s
+        plan.spilled[:] = spilled0
+        got_map = {name: (edge, x, y) for name, edge, x, y in poses}
+        got_poses = [(b.name, *got_map[b.name]) if b.name in got_map
+                     else (b.name, b.edge, b.x, b.y)
+                     for b in plan.edge_blocks]
+        if got_poses != ref_poses or list(spilled) != list(ref_spill):
+            raise AssertionError(
+                "native pack_edges DIVERGENCE: "
+                f"cpp={(got_poses, list(spilled))} "
+                f"python={(ref_poses, list(ref_spill))}")
+    _apply_pack_edges(plan, poses, spilled)
 
 
 def _pack_edges_py(plan: Plan, edge_of: dict[str, str]) -> None:
@@ -1255,19 +1254,19 @@ def _som_keepout_rects_py(plan: Plan) -> list[tuple[float, float, float, float]]
 
 
 def _som_keepout_rects(plan: Plan) -> list[tuple[float, float, float, float]]:
-    if _nat.loaded():
-        js = [(j.x, j.y, j.w, j.h) for j in plan.som.js]
-        got = [tuple(r) for r in _nat.module().som_keepout_rects(
-            plan.som_x, plan.som_y, plan.som.w, plan.som.h, SOM_OCC_PAD_MM,
-            js, SOM_SEAT_BAND_MM)]
-        if _nat.trace():
-            ref = _som_keepout_rects_py(plan)
-            if got != ref:
-                raise AssertionError(
-                    "native som_keepout_rects DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _som_keepout_rects_py(plan)
+    if not _nat.loaded():
+        raise RuntimeError("native som_keepout_rects required")
+    js = [(j.x, j.y, j.w, j.h) for j in plan.som.js]
+    got = [tuple(r) for r in _nat.module().som_keepout_rects(
+        plan.som_x, plan.som_y, plan.som.w, plan.som.h, SOM_OCC_PAD_MM,
+        js, SOM_SEAT_BAND_MM)]
+    if _nat.trace():
+        ref = _som_keepout_rects_py(plan)
+        if got != ref:
+            raise AssertionError(
+                "native som_keepout_rects DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 _Comp = tuple[float, float, float, float, int]
 
@@ -1291,18 +1290,18 @@ def _occ_pair_active_py(a_mask: int, a_pmask: int, a_main: bool,
 
 def _occ_pair_active(a_mask: int, a_pmask: int, a_main: bool,
                      b_mask: int, b_pmask: int, b_main: bool) -> bool:
-    if _nat.loaded():
-        got = _nat.module().occ_pair_active(
+    if not _nat.loaded():
+        raise RuntimeError("native occ_pair_active required")
+    got = _nat.module().occ_pair_active(
+        a_mask, a_pmask, a_main, b_mask, b_pmask, b_main)
+    if _nat.trace():
+        ref = _occ_pair_active_py(
             a_mask, a_pmask, a_main, b_mask, b_pmask, b_main)
-        if _nat.trace():
-            ref = _occ_pair_active_py(
-                a_mask, a_pmask, a_main, b_mask, b_pmask, b_main)
-            if got is not ref:
-                raise AssertionError(
-                    "native occ_pair_active DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _occ_pair_active_py(a_mask, a_pmask, a_main, b_mask, b_pmask, b_main)
+        if got is not ref:
+            raise AssertionError(
+                "native occ_pair_active DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _pairs_entity_py(x: float, y: float, w: float, h: float, reach: tuple,
@@ -1409,15 +1408,15 @@ def _halo4_py(reach: tuple, inset: tuple) -> tuple[float, float, float, float]:
 
 
 def _halo4(reach: tuple, inset: tuple) -> tuple[float, float, float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().halo4(reach, inset))
-        if _nat.trace():
-            ref = _halo4_py(reach, inset)
-            if got != ref:
-                raise AssertionError(
-                    f"native halo4 DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _halo4_py(reach, inset)
+    if not _nat.loaded():
+        raise RuntimeError("native halo4 required")
+    got = tuple(_nat.module().halo4(reach, inset))
+    if _nat.trace():
+        ref = _halo4_py(reach, inset)
+        if got != ref:
+            raise AssertionError(
+                f"native halo4 DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def _spatial_bounds_py(far_ceil: float = 0.0,
@@ -1434,21 +1433,21 @@ def _spatial_bounds_py(far_ceil: float = 0.0,
 
 def _spatial_bounds(far_ceil: float = 0.0,
                     max_reach: float | None = None) -> tuple[float, float]:
-    if _nat.loaded():
-        from schgen.generate.pcb.constants import PLACE_CLEAR
-        from schgen.verify.fanout_gate import _TIER_TOP, _TIERS
-        need_ceil = max(_TIER_TOP[0], max(n for _p, n, _b in _TIERS))
-        got = tuple(_nat.module().spatial_bounds(
-            far_ceil, max_reach or 0.0, CLEAR, PLACE_CLEAR,
-            CABLE_NEIGHBOR_GAP, need_ceil))
-        if _nat.trace():
-            ref = _spatial_bounds_py(far_ceil, max_reach)
-            if got != ref:
-                raise AssertionError(
-                    "native spatial_bounds DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _spatial_bounds_py(far_ceil, max_reach)
+    if not _nat.loaded():
+        raise RuntimeError("native spatial_bounds required")
+    from schgen.generate.pcb.constants import PLACE_CLEAR
+    from schgen.verify.fanout_gate import _TIER_TOP, _TIERS
+    need_ceil = max(_TIER_TOP[0], max(n for _p, n, _b in _TIERS))
+    got = tuple(_nat.module().spatial_bounds(
+        far_ceil, max_reach or 0.0, CLEAR, PLACE_CLEAR,
+        CABLE_NEIGHBOR_GAP, need_ceil))
+    if _nat.trace():
+        ref = _spatial_bounds_py(far_ceil, max_reach)
+        if got != ref:
+            raise AssertionError(
+                "native spatial_bounds DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 class _Occupancy:
@@ -1469,11 +1468,11 @@ class _Occupancy:
         self._reach_bound = reach_bound
         self._bucket = envelope
         self._cells: dict[tuple[int, int], list[_Rect]] = {}
-        self._cpp = None
-        if _nat.loaded():
-            self._cpp = _nat.occupancy(
-                BOARD_W, BOARD_H, CLEAR, self._bucket, self._reach_bound,
-                OCC_STEP_MM, FRONTIER_HALF_MM)
+        if not _nat.loaded():
+            raise RuntimeError("native occupancy required")
+        self._cpp = _nat.occupancy(
+            BOARD_W, BOARD_H, CLEAR, self._bucket, self._reach_bound,
+            OCC_STEP_MM, FRONTIER_HALF_MM)
 
     def _add_one(self, x: float, y: float, w: float, h: float,
                  reach: tuple, inset: tuple, mask: int, pmask: int,
@@ -1670,10 +1669,10 @@ class _Occupancy:
 
     if _SPATIAL_TRACE:
         fits = _fits_traced
-    elif _nat.loaded():
-        fits = _fits_native
+    elif not _nat.loaded():
+        raise RuntimeError("native occupancy fits required")
     else:
-        fits = _fits_hashed
+        fits = _fits_native
 
     def place_near(self, ax: float, ay: float, w: float,
                    h: float, reach: tuple[float, float, float, float] = _ZeroReach,
@@ -1696,8 +1695,7 @@ class _Occupancy:
                         f"native place_near DIVERGENCE: python={ref} "
                         f"cpp={hit} anchor=({ax},{ay}) size=({w},{h})")
             return hit
-        return self._place_near_py(ax, ay, w, h, reach, inset, mask, comps,
-                                   win)
+        raise RuntimeError("native occupancy place_near required")
 
     def _place_near_py(self, ax, ay, w, h, reach, inset, mask, comps, win
                        ) -> tuple[float, float, float, float] | None:
@@ -1756,17 +1754,17 @@ def _interior_dims_py(area: float) -> tuple[float, float]:
 
 
 def _interior_dims(area: float) -> tuple[float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().interior_dims(
-            area, PLACEHOLDER_ASPECT, PLACEHOLDER_MIN_MM, PLACEHOLDER_MAX_MM))
-        if _nat.trace():
-            ref = _interior_dims_py(area)
-            if got != ref:
-                raise AssertionError(
-                    "native interior_dims DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _interior_dims_py(area)
+    if not _nat.loaded():
+        raise RuntimeError("native interior_dims required")
+    got = tuple(_nat.module().interior_dims(
+        area, PLACEHOLDER_ASPECT, PLACEHOLDER_MIN_MM, PLACEHOLDER_MAX_MM))
+    if _nat.trace():
+        ref = _interior_dims_py(area)
+        if got != ref:
+            raise AssertionError(
+                "native interior_dims DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _zone_anchor_py(plan: Plan, zone: str) -> tuple[float, float]:
@@ -1781,18 +1779,18 @@ def _zone_anchor_py(plan: Plan, zone: str) -> tuple[float, float]:
 
 
 def _zone_anchor(plan: Plan, zone: str) -> tuple[float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().zone_anchor(
-            zone, plan.som_x, plan.som_y, plan.som.w, plan.som.h,
-            BOARD_W, BOARD_H))
-        if _nat.trace():
-            ref = _zone_anchor_py(plan, zone)
-            if got != ref:
-                raise AssertionError(
-                    "native zone_anchor DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _zone_anchor_py(plan, zone)
+    if not _nat.loaded():
+        raise RuntimeError("native zone_anchor required")
+    got = tuple(_nat.module().zone_anchor(
+        zone, plan.som_x, plan.som_y, plan.som.w, plan.som.h,
+        BOARD_W, BOARD_H))
+    if _nat.trace():
+        ref = _zone_anchor_py(plan, zone)
+        if got != ref:
+            raise AssertionError(
+                "native zone_anchor DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _in_sizing_step(fn):
@@ -2635,27 +2633,27 @@ def _cross_net_cost_py(pts, via_mm, bot_sel, sides) -> float:
 
 
 def _cross_net_cost(pts, via_mm, bot_sel, sides) -> float:
-    if _nat.loaded():
-        sheet_ids: dict[str, int] = {}
-        sheet_list: list[str] = []
-        encoded: list[tuple[float, float, int, int]] = []
-        for (x, y, _ref, sheet), side in zip(pts, sides, strict=True):
-            sid = sheet_ids.get(sheet)
-            if sid is None:
-                sid = len(sheet_list)
-                sheet_ids[sheet] = sid
-                sheet_list.append(sheet)
-            encoded.append((x, y, sid, 0 if side == "top" else 1))
-        flags = [1 if sheet in bot_sel else 0 for sheet in sheet_list]
-        got = float(_nat.module().cross_net_cost(encoded, float(via_mm), flags))
-        if _nat.trace():
-            ref = _cross_net_cost_py(pts, via_mm, bot_sel, sides)
-            if got != ref:
-                raise AssertionError(
-                    "native cross_net_cost DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _cross_net_cost_py(pts, via_mm, bot_sel, sides)
+    if not _nat.loaded():
+        raise RuntimeError("native cross_net_cost required")
+    sheet_ids: dict[str, int] = {}
+    sheet_list: list[str] = []
+    encoded: list[tuple[float, float, int, int]] = []
+    for (x, y, _ref, sheet), side in zip(pts, sides, strict=True):
+        sid = sheet_ids.get(sheet)
+        if sid is None:
+            sid = len(sheet_list)
+            sheet_ids[sheet] = sid
+            sheet_list.append(sheet)
+        encoded.append((x, y, sid, 0 if side == "top" else 1))
+    flags = [1 if sheet in bot_sel else 0 for sheet in sheet_list]
+    got = float(_nat.module().cross_net_cost(encoded, float(via_mm), flags))
+    if _nat.trace():
+        ref = _cross_net_cost_py(pts, via_mm, bot_sel, sides)
+        if got != ref:
+            raise AssertionError(
+                "native cross_net_cost DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _nets_by_sheet(net_pts: dict) -> dict[str, tuple[str, ...]]:
@@ -2682,16 +2680,16 @@ def _pick_sided(finalists: list[tuple], est_of) -> tuple:
     est_inc, est_chal = est_of(incumbent), est_of(challenger)
     _LAST_SIDE_EST[:] = [est_inc, est_chal]
     _LAST_SIDE_NAME[:] = [incumbent[4], challenger[4]]
-    if _nat.loaded():
-        chal = _nat.module().pick_sided_challenger(est_inc, est_chal, 1e-6)
-        if _nat.trace():
-            ref = est_chal < est_inc - 1e-6
-            if chal is not ref:
-                raise AssertionError(
-                    "native pick_sided DIVERGENCE: "
-                    f"cpp={chal} python={ref}")
-        return challenger if chal else incumbent
-    return challenger if est_chal < est_inc - 1e-6 else incumbent
+    if not _nat.loaded():
+        raise RuntimeError("native pick_sided_challenger required")
+    chal = _nat.module().pick_sided_challenger(est_inc, est_chal, 1e-6)
+    if _nat.trace():
+        ref = est_chal < est_inc - 1e-6
+        if chal is not ref:
+            raise AssertionError(
+                "native pick_sided DIVERGENCE: "
+                f"cpp={chal} python={ref}")
+    return challenger if chal else incumbent
 
 
 def _edge_components_py(b: Block, comps: tuple) -> tuple:
@@ -2711,17 +2709,17 @@ def _edge_components_py(b: Block, comps: tuple) -> tuple:
 
 
 def _edge_components(b: Block, comps: tuple) -> tuple:
-    if _nat.loaded():
-        got = tuple(tuple(r) for r in _nat.module().edge_components(
-            b.edge, b.x, b.y, BOARD_W, BOARD_H, OCC_PUNCH, list(comps)))
-        if _nat.trace():
-            ref = _edge_components_py(b, comps)
-            if got != ref:
-                raise AssertionError(
-                    "native edge_components DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _edge_components_py(b, comps)
+    if not _nat.loaded():
+        raise RuntimeError("native edge_components required")
+    got = tuple(tuple(r) for r in _nat.module().edge_components(
+        b.edge, b.x, b.y, BOARD_W, BOARD_H, OCC_PUNCH, list(comps)))
+    if _nat.trace():
+        ref = _edge_components_py(b, comps)
+        if got != ref:
+            raise AssertionError(
+                "native edge_components DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _som_components_py(plan: Plan, som_occ: tuple, bands: list) -> tuple:
@@ -2739,21 +2737,21 @@ def _som_components_py(plan: Plan, som_occ: tuple, bands: list) -> tuple:
 
 def _som_components(plan: Plan, som_occ: tuple, bands: list) -> tuple:
     from schgen.generate.pcb.placement import som_decoupling_cells
-    if _nat.loaded():
-        n, r = plan.dec_bank
-        cells = som_decoupling_cells(
-            plan.som_x, plan.som_y, plan.som.w, plan.som.h, n)
-        got = tuple(tuple(c) for c in _nat.module().som_components(
-            som_occ[0], som_occ[1], r, cells, list(bands), OCC_BOTTOM,
-            OCC_PUNCH))
-        if _nat.trace():
-            ref = _som_components_py(plan, som_occ, bands)
-            if got != ref:
-                raise AssertionError(
-                    "native som_components DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _som_components_py(plan, som_occ, bands)
+    if not _nat.loaded():
+        raise RuntimeError("native som_components required")
+    n, r = plan.dec_bank
+    cells = som_decoupling_cells(
+        plan.som_x, plan.som_y, plan.som.w, plan.som.h, n)
+    got = tuple(tuple(c) for c in _nat.module().som_components(
+        som_occ[0], som_occ[1], r, cells, list(bands), OCC_BOTTOM,
+        OCC_PUNCH))
+    if _nat.trace():
+        ref = _som_components_py(plan, som_occ, bands)
+        if got != ref:
+            raise AssertionError(
+                "native som_components DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _SEAT_FIELDS = ("x", "y", "w", "h", "area", "shape_idx", "side",
@@ -2951,7 +2949,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
     def _anchor(b: Block) -> tuple[float, float]:
         if not _nat.loaded():
-            return _anchor_py(b)
+            raise RuntimeError("native pack_anchor required")
         _mfa = _project_spec().module_face_anchors
         face_override = b.name in _mfa and bool(SOM_DX or SOM_DY)
         face = _mfa[b.name] if face_override else ""
@@ -3108,31 +3106,30 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             return found
 
         by_side: dict[str, tuple] = {}
-        if _nat.loaded() and occ._cpp is not None:
-            rows = []
-            for k, (w, h, rch, ins, sd, cc) in enumerate(cands):
-                wx0, wx1, wy0, wy1 = _cand_win(w, h, rch, ins, cc)
-                rows.append((k, w, h, rch, ins, _side_mask(sd), sd, list(cc),
-                             wx0, wx1, wy0, wy1))
-            hits = _nat.module().seat_shape_sides(
-                occ._cpp, ax, ay, rows, BOARD_W, BOARD_H, CLEAR)
-            for side, idx, x, y, w, h, _rch, _ins, _comps, dist_key in hits:
-                _w, _h, rch, ins, sd, cc = cands[int(idx)]
-                p = (x, y, w, h)
-                by_side[side] = ((dist_key, int(idx)),
-                                 (int(idx), p, rch, ins, sd, cc))
-            if _nat.trace():
-                ref = _seat_shape_by_side_py()
-                got = {sd: (key, (row[0], row[1], row[2], row[3], row[4]))
-                       for sd, (key, row) in by_side.items()}
-                exp = {sd: (key, (row[0], row[1], row[2], row[3], row[4]))
-                       for sd, (key, row) in ref.items()}
-                if got != exp:
-                    raise AssertionError(
-                        "native seat_shape_sides DIVERGENCE: "
-                        f"cpp={got} python={exp}")
-        else:
-            by_side = _seat_shape_by_side_py()
+        if not _nat.loaded() or occ._cpp is None:
+            raise RuntimeError("native seat_shape_sides required")
+        rows = []
+        for k, (w, h, rch, ins, sd, cc) in enumerate(cands):
+            wx0, wx1, wy0, wy1 = _cand_win(w, h, rch, ins, cc)
+            rows.append((k, w, h, rch, ins, _side_mask(sd), sd, list(cc),
+                         wx0, wx1, wy0, wy1))
+        hits = _nat.module().seat_shape_sides(
+            occ._cpp, ax, ay, rows, BOARD_W, BOARD_H, CLEAR)
+        for side, idx, x, y, w, h, _rch, _ins, _comps, dist_key in hits:
+            _w, _h, rch, ins, sd, cc = cands[int(idx)]
+            p = (x, y, w, h)
+            by_side[side] = ((dist_key, int(idx)),
+                             (int(idx), p, rch, ins, sd, cc))
+        if _nat.trace():
+            ref = _seat_shape_by_side_py()
+            got = {sd: (key, (row[0], row[1], row[2], row[3], row[4]))
+                   for sd, (key, row) in by_side.items()}
+            exp = {sd: (key, (row[0], row[1], row[2], row[3], row[4]))
+                   for sd, (key, row) in ref.items()}
+            if got != exp:
+                raise AssertionError(
+                    "native seat_shape_sides DIVERGENCE: "
+                    f"cpp={got} python={exp}")
         if not by_side:
             return False
         if len(by_side) == 1:
@@ -3302,35 +3299,34 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             if not moved:
                 break
 
-    if _nat.loaded() and occ._cpp is not None:
-        ref_poses = None
-        if _nat.trace():
-            snap = [(b.x, b.y) for b in order]
-            snap_c = dict(centers)
-            _refine_passes_py()
-            ref_poses = [(b.x, b.y) for b in order]
-            for b, (ox, oy) in zip(order, snap, strict=True):
-                if (b.x, b.y) == (ox, oy):
-                    continue
-                occ.remove(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
-                           _side_mask(b.side), _bcomps(b))
-                b.x, b.y = ox, oy
-                occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
-                        _side_mask(b.side), _bcomps(b))
-            centers.clear()
-            centers.update(snap_c)
-        rows = [_refine_anchor_row(b) for b in order]
-        center_rows = [(n, c[0], c[1]) for n, c in centers.items()]
-        poses, _passes = _nat.module().refine_pack_passes(
-            occ._cpp, rows, center_rows, 16, BOARD_W, BOARD_H)
-        got = [(float(x), float(y)) for x, y in poses]
-        if ref_poses is not None and got != ref_poses:
-            raise AssertionError(
-                "native refine_pack_passes DIVERGENCE: "
-                f"cpp={got} python={ref_poses}")
-        _refine_apply(got)
-    else:
+    if not _nat.loaded() or occ._cpp is None:
+        raise RuntimeError("native refine_pack_passes required")
+    ref_poses = None
+    if _nat.trace():
+        snap = [(b.x, b.y) for b in order]
+        snap_c = dict(centers)
         _refine_passes_py()
+        ref_poses = [(b.x, b.y) for b in order]
+        for b, (ox, oy) in zip(order, snap, strict=True):
+            if (b.x, b.y) == (ox, oy):
+                continue
+            occ.remove(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
+                       _side_mask(b.side), _bcomps(b))
+            b.x, b.y = ox, oy
+            occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
+                    _side_mask(b.side), _bcomps(b))
+        centers.clear()
+        centers.update(snap_c)
+    rows = [_refine_anchor_row(b) for b in order]
+    center_rows = [(n, c[0], c[1]) for n, c in centers.items()]
+    poses, _passes = _nat.module().refine_pack_passes(
+        occ._cpp, rows, center_rows, 16, BOARD_W, BOARD_H)
+    got = [(float(x), float(y)) for x, y in poses]
+    if ref_poses is not None and got != ref_poses:
+        raise AssertionError(
+            "native refine_pack_passes DIVERGENCE: "
+            f"cpp={got} python={ref_poses}")
+    _refine_apply(got)
 
     if compose is not None:
         c_index, c_metrics, c_channels, c_corridors, c_shape_metrics = compose
