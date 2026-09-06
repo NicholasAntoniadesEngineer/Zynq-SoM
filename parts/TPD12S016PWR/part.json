@@ -1,0 +1,141 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TPD12S016PWR",
+  "safe_name": "TPD12S016PWR",
+  "lcsc": "C201665",
+  "description": "TPD12S016PWR (TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C201665.pdf",
+  "product_url": "https://lcsc.com/product-detail/_TI_TPD12S016PWR_TPD12S016PWR_C201665.html",
+  "lib_id": "TPD12S016PWR:TPD12S016PWR",
+  "footprint": "TPD12S016PWR:TPD12S016PWR",
+  "models_3d": [
+    "TPD12S016PWR.wrl",
+    "TPD12S016PWR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "CEC_A",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "SCL_A",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "SDA_A",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "HPD_A-",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "LS_OE",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "CEC_B",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "SCL_B",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "SDA_B",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "HPD_B-",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "VCC5V",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "CT_HPD",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "5V_OUT",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "CLK-",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "CLK+",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "D0-",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "D0+",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "D1-",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "D1+",
+      "etype": "passive"
+    },
+    {
+      "num": "22",
+      "name": "D2-",
+      "etype": "passive"
+    },
+    {
+      "num": "23",
+      "name": "D2+",
+      "etype": "passive"
+    },
+    {
+      "num": "24",
+      "name": "VCCA",
+      "etype": "passive"
+    }
+  ]
+}

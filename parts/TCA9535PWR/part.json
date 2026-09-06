@@ -1,0 +1,141 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TCA9535PWR",
+  "safe_name": "TCA9535PWR",
+  "lcsc": "C130204",
+  "description": "TCA9535PWR_C130204 (TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C130204.pdf",
+  "product_url": "https://lcsc.com/product-detail/Interface-ICs_TI_TCA9535PWR_TCA9535PWR_C130204.html",
+  "lib_id": "TCA9535PWR:TCA9535PWR",
+  "footprint": "TCA9535PWR:TCA9535PWR",
+  "models_3d": [
+    "TCA9535PWR.wrl",
+    "TCA9535PWR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "INT#",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "A1",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "A2",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "P00",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "P01",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "P02",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "P03",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "P04",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "P05",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "P06",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "P07",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "P10",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "P11",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "P12",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "P13",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "P14",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "P15",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "P16",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "P17",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "A0",
+      "etype": "passive"
+    },
+    {
+      "num": "22",
+      "name": "SCL",
+      "etype": "passive"
+    },
+    {
+      "num": "23",
+      "name": "SDA",
+      "etype": "passive"
+    },
+    {
+      "num": "24",
+      "name": "VCC",
+      "etype": "passive"
+    }
+  ]
+}

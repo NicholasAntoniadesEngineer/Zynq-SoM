@@ -1,0 +1,91 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "LM61460AANRJRR",
+  "safe_name": "LM61460AANRJRR",
+  "lcsc": "C2864505",
+  "description": "LM61460AANRJRR (VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C2864505.pdf",
+  "product_url": "",
+  "lib_id": "LM61460AANRJRR:LM61460AANRJRR",
+  "footprint": "LM61460AANRJRR:LM61460AANRJRR",
+  "models_3d": [
+    "LM61460AANRJRR.wrl",
+    "LM61460AANRJRR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "BIAS",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "VCC",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "AGND",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "FB",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "PGOOD",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "RT",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "EN/SYNC",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "VIN1",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "PGND1",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "SW",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "PGND2",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "VIN2",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "RBOOT",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "CBOOT",
+      "etype": "passive"
+    }
+  ]
+}

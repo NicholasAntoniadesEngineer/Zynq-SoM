@@ -23,23 +23,25 @@ _CONTRACT_ROOTS: tuple[tuple[Path, str | None], ...] = (
 _WIRED_SHEETS: frozenset[str] = _project_spec().wired_sheets
 
 
+def read_contract_file(path: Path) -> dict:
+    import json
+    try:
+        payload = json.loads(path.read_text())
+    except Exception as exc:
+        raise RuntimeError(
+            f"placement contract {path} is not valid JSON: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"placement contract {path} must be a JSON object")
+    return payload
+
+
 def discover_contract(sheet_name: str) -> dict | None:
-    import importlib
-    import importlib.util
-    for root_dir, pkg_prefix in _CONTRACT_ROOTS:
-        pkg = root_dir / sheet_name / "placement_contract.py"
+    for root_dir, _ in _CONTRACT_ROOTS:
+        pkg = root_dir / sheet_name / "placement_contract.json"
         if not pkg.exists():
             continue
-        if pkg_prefix is not None:
-            mod = importlib.import_module(
-                f"{pkg_prefix}.{sheet_name}.placement_contract")
-        else:
-            spec = importlib.util.spec_from_file_location(
-                f"_project_contract_{sheet_name}", pkg)
-            mod = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
-        contract = getattr(mod, "CONTRACT", None)
-        if contract is not None and sheet_name not in _PIN_VALIDATED:
+        contract = read_contract_file(pkg)
+        if sheet_name not in _PIN_VALIDATED:
             validate_contract_pins(sheet_name, contract)
             _PIN_VALIDATED.add(sheet_name)
         return contract

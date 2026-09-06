@@ -2470,3 +2470,56 @@ def test_timing_span_records():
     text = timing.report()
     assert "unit.example" in text
     timing.reset()
+
+
+def test_part_catalog_matches_every_part_json(geom, tmp_path):
+    from pathlib import Path
+    import json
+    from schgen.core.model import Circuit
+
+    parts_root = Path(__file__).resolve().parents[2] / "parts"
+    json_paths = sorted(parts_root.glob("*/part.json"))
+    assert len(json_paths) == 62
+    catalog_bin = tmp_path / "catalog.bin"
+    assert geom.catalog_compile(str(parts_root), str(catalog_bin)) is True
+    assert geom.catalog_open(str(catalog_bin)) is True
+    assert geom.catalog_count() == 62
+    for json_path in json_paths:
+        payload = json.loads(json_path.read_text())
+        rec = geom.catalog_lookup(payload["safe_name"])
+        assert rec["mpn"] == payload["mpn"]
+        assert rec["safe_name"] == payload["safe_name"]
+        assert rec["lcsc"] == payload["lcsc"]
+        assert rec["prefix"] == payload["prefix"]
+        assert rec["lib_id"] == payload["lib_id"]
+        assert rec["footprint"] == payload["footprint"]
+        assert rec["datasheet"] == payload["datasheet"]
+        assert list(rec["models_3d"]) == payload["models_3d"]
+        assert [(a, b, c) for a, b, c in rec["pins"]] == [
+            (p["num"], p["name"], p["etype"]) for p in payload["pins"]]
+        if payload["mpn"] != payload["safe_name"]:
+            alias = geom.catalog_lookup(payload["mpn"])
+            assert alias["safe_name"] == payload["safe_name"]
+    geom.catalog_close()
+    from schgen.core import native as nat_mod
+    nat_mod._CATALOG_OPEN = False
+    c = Circuit("catalog_identity")
+    part = c.use_part("TPS54302DDCR", ref="U1")
+    assert part.lib_id == "TPS54302DDCR:TPS54302DDCR"
+    assert part.footprint == "TPS54302DDCR:TPS54302DDCR"
+    assert part.fields["LCSC"] == "C311983"
+    assert "GND" in part.pin_names
+    assert "1" in part.pin_numbers
+
+
+def test_part_catalog_rejects_unknown_mpn(geom, tmp_path):
+    from pathlib import Path
+    parts_root = Path(__file__).resolve().parents[2] / "parts"
+    catalog_bin = tmp_path / "catalog.bin"
+    assert geom.catalog_compile(str(parts_root), str(catalog_bin)) is True
+    assert geom.catalog_open(str(catalog_bin)) is True
+    with pytest.raises(RuntimeError, match="unknown mpn"):
+        geom.catalog_lookup("NOT-A-REAL-MPN")
+    geom.catalog_close()
+    from schgen.core import native as nat_mod
+    nat_mod._CATALOG_OPEN = False

@@ -14,6 +14,7 @@
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
 
+#include "schgen/catalog.hpp"
 #include "schgen/cc.hpp"
 #include "schgen/embed_fp.hpp"
 #include "schgen/emit.hpp"
@@ -143,7 +144,44 @@ schgen::Sexpr sexpr_from_py(nb::handle handle) {
 }  // namespace
 
 NB_MODULE(_geom, m) {
-    m.doc() = "schgen native kernels — occupancy, seat, sexpr";
+    m.doc() = "schgen native kernels — occupancy, seat, sexpr, catalog";
+    m.def("catalog_compile",
+          [](const std::string& parts_dir, const std::string& catalog_path) {
+              return schgen::compile_part_catalog(parts_dir, catalog_path);
+          });
+    m.def("catalog_open",
+          [](const std::string& catalog_path) {
+              return schgen::open_part_catalog(catalog_path);
+          });
+    m.def("catalog_close", []() { return schgen::close_part_catalog(); });
+    m.def("catalog_count", []() { return schgen::part_catalog_count(); });
+    m.def("catalog_lookup", [](const std::string& mpn) {
+        const schgen::CatalogPart part = schgen::lookup_part_catalog(mpn);
+        nb::dict rec;
+        rec["mpn"] = part.mpn;
+        rec["safe_name"] = part.safe_name;
+        rec["lcsc"] = part.lcsc;
+        rec["description"] = part.description;
+        rec["manufacturer"] = part.manufacturer;
+        rec["package"] = part.package;
+        rec["jlc_class"] = part.jlc_class;
+        rec["prefix"] = part.prefix;
+        rec["datasheet"] = part.datasheet;
+        rec["product_url"] = part.product_url;
+        rec["lib_id"] = part.lib_id;
+        rec["footprint"] = part.footprint;
+        nb::list models;
+        for (const std::string& model : part.models_3d) {
+            models.append(model);
+        }
+        rec["models_3d"] = models;
+        nb::list pins;
+        for (const schgen::CatalogPin& pin : part.pins) {
+            pins.append(nb::make_tuple(pin.number, pin.name, pin.etype));
+        }
+        rec["pins"] = pins;
+        return rec;
+    });
     m.def("fanout_sep",
           [](const std::tuple<double, double, double, double>& ar,
              const std::tuple<double, double, double, double>& ai,

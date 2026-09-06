@@ -1,0 +1,51 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "24AA025E48T-I/OT",
+  "safe_name": "24AA025E48T-I_OT",
+  "lcsc": "C129895",
+  "description": "24AA025E48T-I/OT (SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR)",
+  "manufacturer": "MICROCHIP(美国微芯)",
+  "package": "SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C129895.pdf",
+  "product_url": "https://lcsc.com/product-detail/EEPROM_MICROCHIP_24AA025E48T-I-OT_24AA025E48T-I-OT_C129895.html",
+  "lib_id": "24AA025E48T-I_OT:24AA025E48T-I_OT",
+  "footprint": "24AA025E48T-I_OT:24AA025E48T-I_OT",
+  "models_3d": [
+    "24AA025E48T-I_OT.wrl",
+    "24AA025E48T-I_OT.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "SCL",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "VSS",
+      "etype": "power_in"
+    },
+    {
+      "num": "3",
+      "name": "SDA",
+      "etype": "bidirectional"
+    },
+    {
+      "num": "4",
+      "name": "A1",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "A0",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "VCC",
+      "etype": "power_in"
+    }
+  ]
+}

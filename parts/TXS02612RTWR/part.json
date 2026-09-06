@@ -1,0 +1,146 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TXS02612RTWR",
+  "safe_name": "TXS02612RTWR",
+  "lcsc": "C140276",
+  "description": "TXS02612RTWR (WQFN-24_L4.0-W4.0-P0.50-TL-EP2.5)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "WQFN-24_L4.0-W4.0-P0.50-TL-EP2.5",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C140276.pdf",
+  "product_url": "https://lcsc.com/product-detail/Interface-ICs_TI_TXS02612RTWR_TXS02612RTWR_C140276.html",
+  "lib_id": "TXS02612RTWR:TXS02612RTWR",
+  "footprint": "TXS02612RTWR:TXS02612RTWR",
+  "models_3d": [
+    "TXS02612RTWR.wrl",
+    "TXS02612RTWR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "DAT2A",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "DAT3A",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "CMDA",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "VCCA",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "DAT0A",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "DAT1A",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "DAT2B1",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "CLKA",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "DAT3B1",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "CMDB1",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "CLKB1",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "DAT0B1",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "DAT1B1",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "DAT1B0",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "VCCB1",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "DAT0B0",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "CLKB0",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "CMDB0",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "VCCB0",
+      "etype": "passive"
+    },
+    {
+      "num": "22",
+      "name": "DAT3B0",
+      "etype": "passive"
+    },
+    {
+      "num": "23",
+      "name": "DAT2B0",
+      "etype": "passive"
+    },
+    {
+      "num": "24",
+      "name": "SEL",
+      "etype": "passive"
+    },
+    {
+      "num": "25",
+      "name": "EP",
+      "etype": "passive"
+    }
+  ]
+}

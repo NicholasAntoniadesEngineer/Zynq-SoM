@@ -150,31 +150,41 @@ class Circuit:
                  value: str | None = None, lcsc: str | None = None,
                  lib_id: str | None = None,
                  footprint: str | None = None) -> Part:
-        import importlib.util as _ilu
         from pathlib import Path as _P
+        from schgen.core import native as _nat
         safe = re.sub(r"[^A-Za-z0-9._-]+", "_", mpn).strip("_")
         parts_dir = _P(__file__).resolve().parents[2] / "parts"
-        meta = parts_dir / safe / f"{safe}.py"
+        meta = parts_dir / safe / "part.json"
         if not meta.exists():
             raise CircuitError(
-                f"use_part({mpn!r}): parts/{safe}/ is missing — generate it "
-                f"with:  schgen part add {lcsc or 'C<LCSC-id>'} --name {safe}")
-        spec = _ilu.spec_from_file_location(f"_part_{safe}", meta)
-        mod = _ilu.module_from_spec(spec)
-        spec.loader.exec_module(mod)          # type: ignore[union-attr]
+                f"use_part({mpn!r}): parts/{safe}/part.json is missing — "
+                f"generate it with:  schgen part add "
+                f"{lcsc or 'C<LCSC-id>'} --name {safe}")
+        try:
+            rec = _nat.catalog_part(safe)
+        except Exception as exc:
+            raise CircuitError(
+                f"use_part({mpn!r}): catalog lookup failed — {exc}") from exc
+        if rec["safe_name"] != safe:
+            raise CircuitError(
+                f"use_part({mpn!r}): catalog safe_name {rec['safe_name']!r} "
+                f"does not match folder {safe!r}")
         if ref is None:
-            ref = self.auto_ref(getattr(mod, "PREFIX", "U") or "U")
-        fields = {"LCSC": getattr(mod, "LCSC", "") or (lcsc or "")}
+            prefix = rec["prefix"]
+            if not prefix:
+                raise CircuitError(f"use_part({mpn!r}): catalog prefix is empty")
+            ref = self.auto_ref(prefix)
+        fields = {"LCSC": rec["lcsc"] or (lcsc or "")}
         if lib_id is not None:
-            fields["MPN"] = mod.MPN
-            if getattr(mod, "DATASHEET", ""):
-                fields["Datasheet"] = mod.DATASHEET
-        p = self.part(ref, lib_id or mod.LIB_ID, value or mod.MPN,
-                      footprint or mod.FOOTPRINT, **fields)
+            fields["MPN"] = rec["mpn"]
+            if rec["datasheet"]:
+                fields["Datasheet"] = rec["datasheet"]
+        p = self.part(ref, lib_id or rec["lib_id"], value or rec["mpn"],
+                      footprint or rec["footprint"], **fields)
         if lib_id is None:
             names: dict[str, list[str]] = {}
             nums: set[str] = set()
-            for num, name, _et in mod.PINS:
+            for num, name, _et in rec["pins"]:
                 nums.add(str(num))
                 names.setdefault(str(name), []).append(str(num))
             p.pin_names = names

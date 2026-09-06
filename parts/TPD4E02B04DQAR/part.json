@@ -1,0 +1,71 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TPD4E02B04DQAR",
+  "safe_name": "TPD4E02B04DQAR",
+  "lcsc": "C106794",
+  "description": "4-Channel ESD Protection Diode for USB Type-C and HDMI 2.0 10-USON -40 to 125",
+  "manufacturer": "TI(德州仪器)",
+  "package": "USON-10_L2.5-W1.0-P0.50-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "D",
+  "datasheet": "https://www.lcsc.com/datasheet/C106794.pdf",
+  "product_url": "https://lcsc.com/product-detail/Others_Texas-Instruments_TPD4E02B04DQAR_Texas-Instruments-TI-TPD4E02B04DQAR_C106794.html",
+  "lib_id": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+  "footprint": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+  "models_3d": [
+    "TPD4E02B04DQAR.wrl",
+    "TPD4E02B04DQAR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "IO1",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "IO2",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "IO3",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "IO4",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "GND",
+      "etype": "passive"
+    }
+  ]
+}

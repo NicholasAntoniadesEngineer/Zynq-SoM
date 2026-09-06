@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "0603WAF2702T5E",
+  "safe_name": "0603WAF2702T5E",
+  "lcsc": "C22967",
+  "description": "27KΩ (2702) ±1%",
+  "manufacturer": "UNI-ROYAL(厚声)",
+  "package": "R0603",
+  "jlc_class": "Basic Part",
+  "prefix": "R",
+  "datasheet": "https://www.lcsc.com/datasheet/C22967.pdf",
+  "product_url": "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount-UniOhm_27KR-2702-1_C22967.html",
+  "lib_id": "0603WAF2702T5E:0603WAF2702T5E",
+  "footprint": "0603WAF2702T5E:0603WAF2702T5E",
+  "models_3d": [
+    "0603WAF2702T5E.wrl",
+    "0603WAF2702T5E.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    }
+  ]
+}

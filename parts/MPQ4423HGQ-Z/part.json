@@ -1,0 +1,63 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "MPQ4423HGQ-Z",
+  "safe_name": "MPQ4423HGQ-Z",
+  "lcsc": "C3192119",
+  "description": "MPQ4423HGQ-Z (QFN-8_L3.0-W3.0-P0.65-TL-MPQ4423HGQ-Z)",
+  "manufacturer": "MPS(芯源)",
+  "package": "QFN-8_L3.0-W3.0-P0.65-TL-MPQ4423HGQ-Z",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C3192119.pdf",
+  "product_url": "",
+  "lib_id": "MPQ4423HGQ-Z:MPQ4423HGQ-Z",
+  "footprint": "MPQ4423HGQ-Z:MPQ4423HGQ-Z",
+  "models_3d": [],
+  "pins": [
+    {
+      "num": "1",
+      "name": "FB",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "VCC",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "EN/SYNC",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "BST",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "SW",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "IN",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "PG",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "EP",
+      "etype": "passive"
+    }
+  ]
+}

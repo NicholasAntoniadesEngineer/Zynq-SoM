@@ -1,3 +1,4 @@
+#include "schgen/catalog.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/quantize.hpp"
@@ -10,9 +11,18 @@
 #include <string>
 
 int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
     try {
+        if (argc >= 2 && std::string(argv[1]) == "catalog-compile") {
+            if (argc != 4) {
+                throw std::runtime_error(
+                    "usage: schgen catalog-compile <parts_dir> <catalog.bin>");
+            }
+            if (!schgen::compile_part_catalog(argv[2], argv[3])) {
+                throw std::runtime_error("catalog-compile returned false");
+            }
+            std::cout << "catalog compiled " << argv[3] << "\n";
+            return 0;
+        }
         const schgen::Box4 a{0.0, 0.0, 10.0, 8.0};
         const schgen::Box4 b{12.0, 0.0, 16.0, 8.0};
         if (schgen::boxes_overlap(a, b, 0.3)) {

@@ -1,0 +1,86 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "KH-5224-8P8C-D",
+  "safe_name": "KH-5224-8P8C-D",
+  "lcsc": "C2828085",
+  "description": "KH-5224-8P8C-D (RJ45-TH_KH-5224-8P8C-D)",
+  "manufacturer": "kinghelm(金航标)",
+  "package": "RJ45-TH_KH-5224-8P8C-D",
+  "jlc_class": "Extended Part",
+  "prefix": "RJ",
+  "datasheet": "https://www.lcsc.com/datasheet/C2828085.pdf",
+  "product_url": "",
+  "lib_id": "KH-5224-8P8C-D:KH-5224-8P8C-D",
+  "footprint": "KH-5224-8P8C-D:KH-5224-8P8C-D",
+  "models_3d": [
+    "KH-5224-8P8C-D.wrl",
+    "KH-5224-8P8C-D.step"
+  ],
+  "pins": [
+    {
+      "num": "10",
+      "name": "LED-L-",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "LED-L+",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "8",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "7",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "LED-R+",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "LED-R-",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "SHELL",
+      "etype": "passive"
+    }
+  ]
+}

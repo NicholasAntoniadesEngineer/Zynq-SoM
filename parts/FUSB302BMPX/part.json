@@ -1,0 +1,96 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "FUSB302BMPX",
+  "safe_name": "FUSB302BMPX",
+  "lcsc": "C132291",
+  "description": "FUSB302BMPX (MLP-14_L2.5-W2.5-P0.50-BL-EP)",
+  "manufacturer": "onsemi(安森美)",
+  "package": "MLP-14_L2.5-W2.5-P0.50-BL-EP",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C132291.pdf",
+  "product_url": "https://lcsc.com/product-detail/USB_ON_FUSB302BMPX_FUSB302BMPX_C132291.html",
+  "lib_id": "FUSB302BMPX:FUSB302BMPX",
+  "footprint": "FUSB302BMPX:FUSB302BMPX",
+  "models_3d": [
+    "FUSB302BMPX.wrl",
+    "FUSB302BMPX.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "CC2",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "VBUS",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "VDD",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "VDD",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "INT_N",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "SCL",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "SDA",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "CC1",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "CC1",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "VCONN",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "VCONN",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "CC2",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "EP",
+      "etype": "passive"
+    }
+  ]
+}

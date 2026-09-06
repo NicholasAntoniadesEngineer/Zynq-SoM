@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "KH-CR1220-2",
+  "safe_name": "KH-CR1220-2",
+  "lcsc": "C5365933",
+  "description": "KH-CR1220-2 (BAT-SMD_CR1220-2)",
+  "manufacturer": "kinghelm(金航标)",
+  "package": "BAT-SMD_CR1220-2",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C5365933.pdf",
+  "product_url": "",
+  "lib_id": "KH-CR1220-2:KH-CR1220-2",
+  "footprint": "KH-CR1220-2:KH-CR1220-2",
+  "models_3d": [
+    "KH-CR1220-2.wrl",
+    "KH-CR1220-2.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    }
+  ]
+}

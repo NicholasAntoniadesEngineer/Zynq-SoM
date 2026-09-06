@@ -20,3 +20,7 @@ cmake -S "${REPO_ROOT}/native" -B "${REPO_ROOT}/native/build" \
     -DCMAKE_BUILD_TYPE=Release
 cmake --build "${REPO_ROOT}/native/build" --parallel
 "${PYTHON}" -c "from schgen import _geom; print('schgen._geom', _geom.__file__)"
+if [ ! -f "${REPO_ROOT}/native/catalog.bin" ]; then
+    echo "native/catalog.bin missing after build" >&2
+    exit 1
+fi

@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "SMBJ28A",
+  "safe_name": "SMBJ28A",
+  "lcsc": "C42440491",
+  "description": "SMBJ28A_C42440491 (DO-214AA_L5.6-W4.0-RD)",
+  "manufacturer": "TECH PUBLIC(台舟)",
+  "package": "DO-214AA_L5.6-W4.0-RD",
+  "jlc_class": "",
+  "prefix": "D",
+  "datasheet": "https://www.lcsc.com/datasheet/C42440491.pdf",
+  "product_url": "",
+  "lib_id": "SMBJ28A:SMBJ28A",
+  "footprint": "SMBJ28A:SMBJ28A",
+  "models_3d": [
+    "SMBJ28A.wrl",
+    "SMBJ28A.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "A",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "K",
+      "etype": "passive"
+    }
+  ]
+}

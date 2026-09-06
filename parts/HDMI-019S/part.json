@@ -1,0 +1,136 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "HDMI-019S",
+  "safe_name": "HDMI-019S",
+  "lcsc": "C111617",
+  "description": "HDMI-019S (HDMI-SMD_HDMI-019S)",
+  "manufacturer": "SOFNG(硕方)",
+  "package": "HDMI-SMD_HDMI-019S",
+  "jlc_class": "Extended Part",
+  "prefix": "HDMI",
+  "datasheet": "https://www.lcsc.com/datasheet/C111617.pdf",
+  "product_url": "https://lcsc.com/product-detail/_HDMI-019S_C111617.html",
+  "lib_id": "HDMI-019S:HDMI-019S",
+  "footprint": "HDMI-019S:HDMI-019S",
+  "models_3d": [
+    "HDMI-019S.wrl",
+    "HDMI-019S.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "D2+",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "D2_SHIELD",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "D2-",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "D1+",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "D1_SHIELD",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "D1-",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "D0+",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "D0_SHIELD",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "D0-",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "CK+",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "CK_SHIELD",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "CK-",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "CEC",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "HEC",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "I2C-CLK",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "I2C_DATA",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "+5V",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "HOT_PLUG_DET",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "SHD",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "SHD",
+      "etype": "passive"
+    },
+    {
+      "num": "22",
+      "name": "SHD",
+      "etype": "passive"
+    },
+    {
+      "num": "23",
+      "name": "SHD",
+      "etype": "passive"
+    }
+  ]
+}

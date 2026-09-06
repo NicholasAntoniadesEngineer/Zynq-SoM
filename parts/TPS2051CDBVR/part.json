@@ -1,0 +1,46 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TPS2051CDBVR",
+  "safe_name": "TPS2051CDBVR",
+  "lcsc": "C129581",
+  "description": "TPS2051CDBVR (SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C129581.pdf",
+  "product_url": "https://lcsc.com/product-detail/PMIC-Power-Distribution-Switches_TI_TPS2051CDBVR_TPS2051CDBVR_C129581.html",
+  "lib_id": "TPS2051CDBVR:TPS2051CDBVR",
+  "footprint": "TPS2051CDBVR:TPS2051CDBVR",
+  "models_3d": [
+    "TPS2051CDBVR.wrl",
+    "TPS2051CDBVR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "OUT",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "FLT#",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "EN(EN#)",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "IN",
+      "etype": "passive"
+    }
+  ]
+}

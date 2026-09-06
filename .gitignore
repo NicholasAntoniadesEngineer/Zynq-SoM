@@ -64,6 +64,7 @@ som/.som_audit_*.js
 # C++ extension build (scripts/build_native.sh)
 native/build/
 native/bin/
+native/catalog.bin
 schgen/_geom*.so
 schgen/_geom*.dylib
 schgen/*.so
