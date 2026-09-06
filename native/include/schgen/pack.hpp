@@ -519,6 +519,22 @@ offset_named_boxes(
         boxes,
     double dx, double dy);
 
+int inversion_count(
+    const std::vector<std::tuple<double, double, std::string>>& pairs);
+std::pair<double, double> points_centroid(
+    const std::vector<std::pair<double, double>>& pts);
+std::pair<double, double> rounded_centroid(
+    const std::vector<std::pair<double, double>>& pts, int digits);
+double hypot_xy(double ax, double ay, double bx, double by);
+std::pair<double, double> boxes_center(const std::vector<Box4>& boxes);
+std::pair<double, double> row_extent(const std::vector<Box4>& boxes,
+                                     double zone_pad);
+std::vector<std::pair<std::string, double>> long_axis_coords(
+    const std::vector<std::tuple<std::string, double, double>>& centers);
+std::optional<std::vector<std::string>> topo_order(
+    const std::vector<std::string>& parts,
+    const std::vector<std::pair<std::string, std::vector<std::string>>>& deps);
+
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,
     const std::vector<std::string>& pad_nets,

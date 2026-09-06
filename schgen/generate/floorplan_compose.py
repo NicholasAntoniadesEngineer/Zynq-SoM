@@ -686,7 +686,8 @@ def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
             if model.som_core is None:
                 return None
             x0, y0, x1, y1 = model.som_core
-            return (round((x0 + x1) / 2.0, 4), round((y0 + y1) / 2.0, 4))
+            return tuple(_nat.module().round_xy(
+                (x0 + x1) / 2.0, (y0 + y1) / 2.0, 4))
         return centroids.get(name)
 
     def bbox_of(name: str) -> tuple[float, float, float, float] | None:
@@ -702,7 +703,7 @@ def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
                 out.append(TermEval(t, math.inf, round(budget, 4), -math.inf,
                                     False, "UNRESOLVED"))
                 continue
-            d = math.hypot(ca[0] - cb[0], ca[1] - cb[1])
+            d = _nat.module().hypot_xy(ca[0], ca[1], cb[0], cb[1])
             out.append(TermEval(t, d, round(budget, 4),
                                 round(budget - d, 4), d <= budget))
         elif t.kind in ("near_max", "near_intent"):
@@ -724,7 +725,7 @@ def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
                 out.append(TermEval(t, math.inf, t.bound or 0.0, -math.inf,
                                     False, "UNRESOLVED"))
                 continue
-            d = math.hypot(ca[0] - cb[0], ca[1] - cb[1])
+            d = _nat.module().hypot_xy(ca[0], ca[1], cb[0], cb[1])
             out.append(TermEval(t, d, t.bound or 0.0,
                                 round(d - (t.bound or 0.0), 4),
                                 d >= (t.bound or 0.0)))
@@ -762,7 +763,8 @@ def cross_airwires_by_pair(model, npp: dict | None = None,
             if sa == sb:
                 continue
             key = (sa, sb) if sa < sb else (sb, sa)
-            pairs.setdefault(key, []).append(math.hypot(xa - xb, ya - yb))
+            pairs.setdefault(key, []).append(
+                _nat.module().hypot_xy(xa, ya, xb, yb))
     return {k: (len(v), round(sum(v), 1)) for k, v in sorted(pairs.items())}
 
 

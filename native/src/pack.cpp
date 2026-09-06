@@ -2923,4 +2923,156 @@ offset_named_boxes(
     return out;
 }
 
+int inversion_count(
+    const std::vector<std::tuple<double, double, std::string>>& pairs) {
+    std::vector<std::tuple<double, double, std::string>> sorted = pairs;
+    std::stable_sort(sorted.begin(), sorted.end(), [](const auto& left,
+                                                      const auto& right) {
+        if (std::get<0>(left) != std::get<0>(right)) {
+            return std::get<0>(left) < std::get<0>(right);
+        }
+        return std::get<2>(left) < std::get<2>(right);
+    });
+    std::vector<double> seq;
+    seq.reserve(sorted.size());
+    for (const auto& row : sorted) {
+        seq.push_back(std::get<1>(row));
+    }
+    int inversions = 0;
+    for (std::size_t i = 0; i < seq.size(); ++i) {
+        for (std::size_t j = i + 1; j < seq.size(); ++j) {
+            if (seq[i] > seq[j] + 1e-9) {
+                ++inversions;
+            }
+        }
+    }
+    return inversions;
+}
+
+std::pair<double, double> points_centroid(
+    const std::vector<std::pair<double, double>>& pts) {
+    if (pts.empty()) {
+        throw std::runtime_error("points_centroid: pts required");
+    }
+    double sum_x = 0.0;
+    double sum_y = 0.0;
+    for (const auto& pt : pts) {
+        sum_x += pt.first;
+        sum_y += pt.second;
+    }
+    const double count = static_cast<double>(pts.size());
+    return {sum_x / count, sum_y / count};
+}
+
+std::pair<double, double> rounded_centroid(
+    const std::vector<std::pair<double, double>>& pts, int digits) {
+    const auto center = points_centroid(pts);
+    return {py_round(center.first, digits), py_round(center.second, digits)};
+}
+
+double hypot_xy(double ax, double ay, double bx, double by) {
+    return std::hypot(ax - bx, ay - by);
+}
+
+std::pair<double, double> boxes_center(const std::vector<Box4>& boxes) {
+    if (boxes.empty()) {
+        throw std::runtime_error("boxes_center: boxes required");
+    }
+    double min_x = boxes[0].x0;
+    double max_x = boxes[0].x0;
+    double min_y = boxes[0].y0;
+    double max_y = boxes[0].y0;
+    for (const auto& box : boxes) {
+        min_x = std::min(min_x, std::min(box.x0, box.x1));
+        max_x = std::max(max_x, std::max(box.x0, box.x1));
+        min_y = std::min(min_y, std::min(box.y0, box.y1));
+        max_y = std::max(max_y, std::max(box.y0, box.y1));
+    }
+    return {(min_x + max_x) / 2.0, (min_y + max_y) / 2.0};
+}
+
+std::pair<double, double> row_extent(const std::vector<Box4>& boxes,
+                                     double zone_pad) {
+    if (boxes.empty()) {
+        throw std::runtime_error("row_extent: boxes required");
+    }
+    double max_x1 = boxes[0].x1;
+    double max_y1 = boxes[0].y1;
+    for (const auto& box : boxes) {
+        max_x1 = std::max(max_x1, box.x1);
+        max_y1 = std::max(max_y1, box.y1);
+    }
+    return {py_round(max_x1 + zone_pad, 4), py_round(max_y1 + zone_pad, 4)};
+}
+
+std::vector<std::pair<std::string, double>> long_axis_coords(
+    const std::vector<std::tuple<std::string, double, double>>& centers) {
+    if (centers.empty()) {
+        throw std::runtime_error("long_axis_coords: centers required");
+    }
+    double min_x = std::get<1>(centers[0]);
+    double max_x = min_x;
+    double min_y = std::get<2>(centers[0]);
+    double max_y = min_y;
+    for (const auto& row : centers) {
+        min_x = std::min(min_x, std::get<1>(row));
+        max_x = std::max(max_x, std::get<1>(row));
+        min_y = std::min(min_y, std::get<2>(row));
+        max_y = std::max(max_y, std::get<2>(row));
+    }
+    const bool use_x = (max_x - min_x) >= (max_y - min_y);
+    std::vector<std::pair<std::string, double>> out;
+    out.reserve(centers.size());
+    for (const auto& row : centers) {
+        out.emplace_back(std::get<0>(row),
+                         use_x ? std::get<1>(row) : std::get<2>(row));
+    }
+    return out;
+}
+
+std::optional<std::vector<std::string>> topo_order(
+    const std::vector<std::string>& parts,
+    const std::vector<std::pair<std::string, std::vector<std::string>>>& deps) {
+    std::set<std::string> part_set(parts.begin(), parts.end());
+    std::map<std::string, std::set<std::string>> dep_map;
+    for (const auto& row : deps) {
+        dep_map[row.first].insert(row.second.begin(), row.second.end());
+    }
+    std::map<std::string, int> indeg;
+    for (const auto& part : part_set) {
+        const auto it = dep_map.find(part);
+        indeg[part] = (it == dep_map.end())
+            ? 0
+            : static_cast<int>(it->second.size());
+    }
+    std::vector<std::string> ready;
+    for (const auto& part : part_set) {
+        if (indeg[part] == 0) {
+            ready.push_back(part);
+        }
+    }
+    std::sort(ready.begin(), ready.end());
+    std::vector<std::string> sorted_parts(part_set.begin(), part_set.end());
+    std::vector<std::string> out;
+    while (!ready.empty()) {
+        const std::string part = ready.front();
+        ready.erase(ready.begin());
+        out.push_back(part);
+        for (const auto& other : sorted_parts) {
+            const auto it = dep_map.find(other);
+            if (it != dep_map.end() && it->second.count(part) != 0) {
+                indeg[other] -= 1;
+                if (indeg[other] == 0) {
+                    ready.push_back(other);
+                }
+            }
+        }
+        std::sort(ready.begin(), ready.end());
+    }
+    if (out.size() != part_set.size()) {
+        return std::nullopt;
+    }
+    return out;
+}
+
 }  // namespace schgen

@@ -15,13 +15,23 @@ class Box:
     kind: str
     owner: str
 
-    def intersects(self, o: Box, pad: float = 0.0) -> bool:
-        if _nat.loaded():
-            return _nat.module().boxes_overlap(
-                (self.x0, self.y0, self.x1, self.y1),
-                (o.x0, o.y0, o.x1, o.y1), pad)
+    def intersects_py(self, o: Box, pad: float = 0.0) -> bool:
         return (self.x0 - pad < o.x1 and self.x1 + pad > o.x0
                 and self.y0 - pad < o.y1 and self.y1 + pad > o.y0)
+
+    def intersects(self, o: Box, pad: float = 0.0) -> bool:
+        if not _nat.loaded():
+            raise RuntimeError("native boxes_overlap required")
+        got = bool(_nat.module().boxes_overlap(
+            (self.x0, self.y0, self.x1, self.y1),
+            (o.x0, o.y0, o.x1, o.y1), pad))
+        if _nat.trace():
+            ref = self.intersects_py(o, pad)
+            if got is not ref:
+                raise AssertionError(
+                    "native boxes_overlap DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
 
 
 @dataclass(frozen=True)
@@ -82,17 +92,17 @@ def _cross_py(a: Seg, b: Seg) -> bool:
 
 
 def _cross(a: Seg, b: Seg) -> bool:
-    if _nat.loaded():
-        got = bool(_nat.module().visual_hv_cross(
-            a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1))
-        if _nat.trace():
-            ref = _cross_py(a, b)
-            if got is not ref:
-                raise AssertionError(
-                    "native visual_hv_cross DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _cross_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native visual_hv_cross required")
+    got = bool(_nat.module().visual_hv_cross(
+        a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1))
+    if _nat.trace():
+        ref = _cross_py(a, b)
+        if got is not ref:
+            raise AssertionError(
+                "native visual_hv_cross DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _collinear_overlap_py(a: Seg, b: Seg) -> bool:
@@ -109,17 +119,17 @@ def _collinear_overlap_py(a: Seg, b: Seg) -> bool:
 
 
 def _collinear_overlap(a: Seg, b: Seg) -> bool:
-    if _nat.loaded():
-        got = bool(_nat.module().collinear_overlap(
-            a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1))
-        if _nat.trace():
-            ref = _collinear_overlap_py(a, b)
-            if got is not ref:
-                raise AssertionError(
-                    "native collinear_overlap DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _collinear_overlap_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native collinear_overlap required")
+    got = bool(_nat.module().collinear_overlap(
+        a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1))
+    if _nat.trace():
+        ref = _collinear_overlap_py(a, b)
+        if got is not ref:
+            raise AssertionError(
+                "native collinear_overlap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _point_on_seg_py(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
@@ -141,17 +151,17 @@ def _point_on_seg_py(px: float, py: float, s: Seg, *, interior_only: bool) -> bo
 
 
 def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
-    if _nat.loaded():
-        got = _nat.module().point_on_seg(px, py, s.x0, s.y0, s.x1, s.y1,
-                                         interior_only)
-        if _nat.trace():
-            ref = _point_on_seg_py(px, py, s, interior_only=interior_only)
-            if got is not ref:
-                raise AssertionError(
-                    "native point_on_seg DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _point_on_seg_py(px, py, s, interior_only=interior_only)
+    if not _nat.loaded():
+        raise RuntimeError("native point_on_seg required")
+    got = _nat.module().point_on_seg(px, py, s.x0, s.y0, s.x1, s.y1,
+                                     interior_only)
+    if _nat.trace():
+        ref = _point_on_seg_py(px, py, s, interior_only=interior_only)
+        if got is not ref:
+            raise AssertionError(
+                "native point_on_seg DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _foreign_t_touch_py(a: Seg, b: Seg) -> tuple[float, float] | None:
@@ -165,18 +175,18 @@ def _foreign_t_touch_py(a: Seg, b: Seg) -> tuple[float, float] | None:
 
 
 def _foreign_t_touch(a: Seg, b: Seg) -> tuple[float, float] | None:
-    if _nat.loaded():
-        hit = _nat.module().foreign_t_touch(
-            a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1, a.net == b.net)
-        got = None if hit is None else (float(hit[0]), float(hit[1]))
-        if _nat.trace():
-            ref = _foreign_t_touch_py(a, b)
-            if got != ref:
-                raise AssertionError(
-                    "native foreign_t_touch DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _foreign_t_touch_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native foreign_t_touch required")
+    hit = _nat.module().foreign_t_touch(
+        a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1, a.net == b.net)
+    got = None if hit is None else (float(hit[0]), float(hit[1]))
+    if _nat.trace():
+        ref = _foreign_t_touch_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                "native foreign_t_touch DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _seg_box(s: Seg, half: float = 0.127) -> Box:

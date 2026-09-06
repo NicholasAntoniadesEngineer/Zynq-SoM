@@ -37,16 +37,16 @@ def _overlap_1d_py(a0: float, a1: float, b0: float, b1: float) -> float:
 
 
 def _overlap_1d(a0: float, a1: float, b0: float, b1: float) -> float:
-    if _nat.loaded():
-        got = float(_nat.module().overlap_1d(a0, a1, b0, b1))
-        if _nat.trace():
-            ref = _overlap_1d_py(a0, a1, b0, b1)
-            if got != ref:
-                raise AssertionError(
-                    "native overlap_1d DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _overlap_1d_py(a0, a1, b0, b1)
+    if not _nat.loaded():
+        raise RuntimeError("native overlap_1d required")
+    got = float(_nat.module().overlap_1d(a0, a1, b0, b1))
+    if _nat.trace():
+        ref = _overlap_1d_py(a0, a1, b0, b1)
+        if got != ref:
+            raise AssertionError(
+                "native overlap_1d DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _same_edge_gap_py(a: tuple, b: tuple) -> tuple[str, float] | None:
@@ -64,17 +64,17 @@ def _same_edge_gap_py(a: tuple, b: tuple) -> tuple[str, float] | None:
 
 
 def _same_edge_gap(a: tuple, b: tuple) -> tuple[str, float] | None:
-    if _nat.loaded():
-        hit = _nat.module().same_edge_gap(a, b, _SAME_BAND_FRAC)
-        got = None if hit is None else (str(hit[0]), float(hit[1]))
-        if _nat.trace():
-            ref = _same_edge_gap_py(a, b)
-            if got != ref:
-                raise AssertionError(
-                    "native same_edge_gap DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _same_edge_gap_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native same_edge_gap required")
+    hit = _nat.module().same_edge_gap(a, b, _SAME_BAND_FRAC)
+    got = None if hit is None else (str(hit[0]), float(hit[1]))
+    if _nat.trace():
+        ref = _same_edge_gap_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                "native same_edge_gap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 @dataclass

@@ -835,7 +835,7 @@ def _sheet_inter_nets(sheet_name: str) -> dict[str, dict[str, tuple[str, ...]]]:
     return per_ref
 
 
-def _long_axis_coords(mod: Path, rot: float) -> dict[str, float]:
+def _long_axis_coords_py(mod: Path, rot: float) -> dict[str, float]:
     boxes = _g._pad_boxes(mod, rot)
     cs = {n: ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0)
           for n, b in boxes.items()}
@@ -845,7 +845,25 @@ def _long_axis_coords(mod: Path, rot: float) -> dict[str, float]:
     return {n: c[ax] for n, c in cs.items()}
 
 
-def _inversion_count(pairs: list[tuple[float, float, str]]) -> int:
+def _long_axis_coords(mod: Path, rot: float) -> dict[str, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native long_axis_coords required")
+    boxes = _g._pad_boxes(mod, rot)
+    if not boxes:
+        raise RuntimeError("long_axis_coords: centers required")
+    centers = [(n, (b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0)
+               for n, b in boxes.items()]
+    got = {n: v for n, v in _nat.module().long_axis_coords(centers)}
+    if _nat.trace():
+        ref = _long_axis_coords_py(mod, rot)
+        if got != ref:
+            raise AssertionError(
+                "native long_axis_coords DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _inversion_count_py(pairs: list[tuple[float, float, str]]) -> int:
     seq = [b for _a, b, _n in sorted(pairs, key=lambda t: (t[0], t[2]))]
     inv = 0
     for i in range(len(seq)):
@@ -853,6 +871,19 @@ def _inversion_count(pairs: list[tuple[float, float, str]]) -> int:
             if seq[i] > seq[j] + 1e-9:
                 inv += 1
     return inv
+
+
+def _inversion_count(pairs: list[tuple[float, float, str]]) -> int:
+    if not _nat.loaded():
+        raise RuntimeError("native inversion_count required")
+    got = int(_nat.module().inversion_count(pairs))
+    if _nat.trace():
+        ref = _inversion_count_py(pairs)
+        if got != ref:
+            raise AssertionError(
+                "native inversion_count DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _som_flip_rot(sheet_name: str, lib_ref: str, mod: Path) -> float:
@@ -894,7 +925,7 @@ def _som_flip_rot(sheet_name: str, lib_ref: str, mod: Path) -> float:
     return rot
 
 
-def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
+def _topo_order_py(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
     indeg = {p: len(deps.get(p, set())) for p in parts}
     ready = sorted(p for p in parts if indeg[p] == 0)
     out: list[str] = []
@@ -908,6 +939,21 @@ def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
                     ready.append(q)
         ready.sort()
     return out if len(out) == len(parts) else None
+
+
+def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
+    if not _nat.loaded():
+        raise RuntimeError("native topo_order required")
+    raw = _nat.module().topo_order(
+        list(parts), [(k, list(v)) for k, v in deps.items()])
+    got = None if raw is None else list(raw)
+    if _nat.trace():
+        ref = _topo_order_py(parts, deps)
+        if got != ref:
+            raise AssertionError(
+                "native topo_order DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _SHEET_NETS_CACHE: dict[str, dict[tuple[str, str], str]] = {}
@@ -2357,11 +2403,25 @@ def _foreign_ok(placed: dict[str, _Part], contract: dict,
     return True
 
 
-def _row_extent(placed: dict[str, _Part]) -> tuple[float, float]:
+def _row_extent_py(placed: dict[str, _Part]) -> tuple[float, float]:
     allb = [pp.local_box() for pp in placed.values()]
     zw = round(max(b[2] for b in allb) + ZONE_PAD, 4)
     zh = round(max(b[3] for b in allb) + ZONE_PAD, 4)
     return zw, zh
+
+
+def _row_extent(placed: dict[str, _Part]) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native row_extent required")
+    allb = [pp.local_box() for pp in placed.values()]
+    got = tuple(_nat.module().row_extent(allb, ZONE_PAD))
+    if _nat.trace():
+        ref = _row_extent_py(placed)
+        if got != ref:
+            raise AssertionError(
+                "native row_extent DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _FACING_VEC: dict[str, tuple[float, float]] = {
@@ -2369,16 +2429,42 @@ _FACING_VEC: dict[str, tuple[float, float]] = {
 }
 
 
-def _pad_center(p: _Part) -> tuple[float, float]:
+def _pad_center_py(p: _Part) -> tuple[float, float]:
     b = p.pad_boxes().values()
     xs = [x for bb in b for x in (bb[0], bb[2])]
     ys = [y for bb in b for y in (bb[1], bb[3])]
     return ((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0)
 
 
-def _centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
+def _pad_center(p: _Part) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native boxes_center required")
+    got = tuple(_nat.module().boxes_center(list(p.pad_boxes().values())))
+    if _nat.trace():
+        ref = _pad_center_py(p)
+        if got != ref:
+            raise AssertionError(
+                "native boxes_center DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _centroid_py(pts: list[tuple[float, float]]) -> tuple[float, float]:
     return (sum(p[0] for p in pts) / len(pts),
             sum(p[1] for p in pts) / len(pts))
+
+
+def _centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native points_centroid required")
+    got = tuple(_nat.module().points_centroid(pts))
+    if _nat.trace():
+        ref = _centroid_py(pts)
+        if got != ref:
+            raise AssertionError(
+                "native points_centroid DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _turn_zone_180(placed: dict[str, _Part]) -> dict[str, _Part]:

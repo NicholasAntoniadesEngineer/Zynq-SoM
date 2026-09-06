@@ -1284,6 +1284,20 @@ NB_MODULE(_geom, m) {
               return schgen::closed_rect_pts(as_box(box), digits);
           });
     m.def("offset_named_boxes", &schgen::offset_named_boxes);
+    m.def("inversion_count", &schgen::inversion_count);
+    m.def("points_centroid", &schgen::points_centroid);
+    m.def("rounded_centroid", &schgen::rounded_centroid);
+    m.def("hypot_xy", &schgen::hypot_xy);
+    m.def("boxes_center",
+          [](const std::vector<BoxTup>& boxes) {
+              return schgen::boxes_center(as_boxes(boxes));
+          });
+    m.def("row_extent",
+          [](const std::vector<BoxTup>& boxes, double zone_pad) {
+              return schgen::row_extent(as_boxes(boxes), zone_pad);
+          });
+    m.def("long_axis_coords", &schgen::long_axis_coords);
+    m.def("topo_order", &schgen::topo_order);
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);

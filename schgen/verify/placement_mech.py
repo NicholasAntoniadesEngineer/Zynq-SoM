@@ -47,16 +47,16 @@ def _rect_overlap_area_py(a, b) -> float:
 
 
 def _rect_overlap_area(a, b) -> float:
-    if _nat.loaded():
-        got = float(_nat.module().overlap_area(a, b))
-        if _nat.trace():
-            ref = _rect_overlap_area_py(a, b)
-            if got != ref:
-                raise AssertionError(
-                    "native overlap_area DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _rect_overlap_area_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native overlap_area required")
+    got = float(_nat.module().overlap_area(a, b))
+    if _nat.trace():
+        ref = _rect_overlap_area_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                "native overlap_area DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 @dataclass

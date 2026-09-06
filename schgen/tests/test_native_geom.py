@@ -3148,3 +3148,48 @@ def test_group_and_reorder_interchangeable_match_python(geom):
     assert seated_got == seated_rep
     assert seated_pos["R1"] == pos["R1"]
     assert seated_pos["R2"] == pos["R2"]
+
+
+def test_stage_flow_and_verify_leftover_kernels_match_python(geom, monkeypatch):
+    from schgen.generate.pcb import stage_templates as st
+    from schgen.verify import placement_flow_gate as pfg
+    from schgen.verify import visual_gate as vg
+
+    monkeypatch.setattr(st._nat, "trace", lambda: True)
+    monkeypatch.setattr(pfg._nat, "trace", lambda: True)
+    monkeypatch.setattr(vg._nat, "trace", lambda: True)
+
+    pairs = [(1.0, 3.0, "n1"), (0.0, 4.0, "n0"), (2.0, 1.0, "n2")]
+    assert st._inversion_count(pairs) == st._inversion_count_py(pairs)
+    assert geom.inversion_count(pairs) == st._inversion_count_py(pairs)
+
+    pts = [(0.0, 0.0), (4.0, 2.0), (2.0, 6.0)]
+    assert st._centroid(pts) == st._centroid_py(pts)
+    assert tuple(geom.points_centroid(pts)) == st._centroid_py(pts)
+    assert tuple(geom.rounded_centroid(pts, 4)) == (
+        round(sum(p[0] for p in pts) / len(pts), 4),
+        round(sum(p[1] for p in pts) / len(pts), 4))
+    assert geom.hypot_xy(0.0, 0.0, 3.0, 4.0) == 5.0
+    assert pfg._dist((0.0, 0.0), (3.0, 4.0)) == 5.0
+
+    boxes = [(0.0, 0.0, 2.0, 1.0), (3.0, -1.0, 5.0, 4.0)]
+    assert tuple(geom.boxes_center(boxes)) == (2.5, 1.5)
+    assert tuple(geom.row_extent(boxes, 0.8)) == (
+        round(5.0 + 0.8, 4), round(4.0 + 0.8, 4))
+
+    centers = [("1", 0.0, 1.0), ("2", 4.0, 1.2), ("3", 2.0, 0.8)]
+    got = dict(geom.long_axis_coords(centers))
+    assert got == {"1": 0.0, "2": 4.0, "3": 2.0}
+
+    parts = {"c", "a", "b"}
+    deps = {"b": {"a"}, "c": {"b"}}
+    assert st._topo_order(parts, deps) == st._topo_order_py(parts, deps) == [
+        "a", "b", "c"]
+    cycle = {"a": {"b"}, "b": {"a"}}
+    assert st._topo_order({"a", "b"}, cycle) is None
+    assert st._topo_order_py({"a", "b"}, cycle) is None
+
+    a = vg.Box(0.0, 0.0, 2.0, 2.0, "body", "U1")
+    b = vg.Box(1.5, 1.5, 3.0, 3.0, "body", "U2")
+    assert a.intersects(b, 0.0) is a.intersects_py(b, 0.0)
+    assert a.intersects(b, 0.6) is a.intersects_py(b, 0.6)

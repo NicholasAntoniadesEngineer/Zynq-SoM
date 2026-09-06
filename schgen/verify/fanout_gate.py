@@ -246,40 +246,29 @@ def check(model: PcbModel, baseline: int | None = None) -> FanoutResult:
                     and counts_as_crowder(other.ref, other.sheet,
                                           len(other.pad_nets), other.footprint,
                                           inst.sheet)]
-        if _nat.loaded():
-            others = [obox for _o, obox in crowders]
-            clearance, idx = _nat.module().nearest_rect_gap(
-                my_box, others, _TOUCH_EPS)
-            if _nat.trace():
-                best_gap = float("inf")
-                best_i = -1
-                for i, (_o, obox) in enumerate(crowders):
-                    gap = _rect_gap_py(my_box, obox)
-                    if gap < best_gap:
-                        best_gap = gap
-                        best_i = i
-                ref_clr = 0.0 if best_gap < _TOUCH_EPS else best_gap
-                if (clearance, idx) != (ref_clr, best_i):
-                    raise AssertionError(
-                        "native nearest_rect_gap DIVERGENCE: "
-                        f"cpp={(clearance, idx)} python={(ref_clr, best_i)}")
-            if idx < 0:
-                best_ref, best_sheet = "", ""
-            else:
-                best_ref = crowders[idx][0].ref
-                best_sheet = crowders[idx][0].sheet
-        else:
+        if not _nat.loaded():
+            raise RuntimeError("native nearest_rect_gap required")
+        others = [obox for _o, obox in crowders]
+        clearance, idx = _nat.module().nearest_rect_gap(
+            my_box, others, _TOUCH_EPS)
+        if _nat.trace():
             best_gap = float("inf")
-            best_ref = ""
-            best_sheet = ""
-            for other, obox in crowders:
-                gap = _rect_gap(my_box, obox)
+            best_i = -1
+            for i, (_o, obox) in enumerate(crowders):
+                gap = _rect_gap_py(my_box, obox)
                 if gap < best_gap:
                     best_gap = gap
-                    best_ref = other.ref
-                    best_sheet = other.sheet
-            clearance = 0.0 if best_gap < _TOUCH_EPS else (
-                best_gap if best_gap != float("inf") else float("inf"))
+                    best_i = i
+            ref_clr = 0.0 if best_gap < _TOUCH_EPS else best_gap
+            if (clearance, idx) != (ref_clr, best_i):
+                raise AssertionError(
+                    "native nearest_rect_gap DIVERGENCE: "
+                    f"cpp={(clearance, idx)} python={(ref_clr, best_i)}")
+        if idx < 0:
+            best_ref, best_sheet = "", ""
+        else:
+            best_ref = crowders[idx][0].ref
+            best_sheet = crowders[idx][0].sheet
         res.records.append(FanoutRec(
             ref=inst.ref, sheet=inst.sheet, pins=pins, side=inst.side,
             clearance=clearance, need=need,
